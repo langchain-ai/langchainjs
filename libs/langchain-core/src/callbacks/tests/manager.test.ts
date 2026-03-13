@@ -15,6 +15,7 @@ const handlerInstance = new TestHandler();
 beforeAll(() => {
   process.env.LANGCHAIN_TRACING_V2 = "false";
   process.env.LANGSMITH_TRACING_V2 = "false";
+  process.env.LANGSMITH_TRACING = "false";
   process.env.__TEST_VAR = "false";
 });
 

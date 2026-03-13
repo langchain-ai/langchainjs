@@ -6,10 +6,54 @@ import { AIMessage } from "@langchain/core/messages";
 
 import { ChatXAI } from "../index.js";
 
+const TEST_MODEL = process.env.XAI_TEST_MODEL ?? "grok-3-fast";
+
+test("withStructuredOutput nullable fields with jsonSchema method", async () => {
+  const model = new ChatXAI({
+    temperature: 0,
+    model: TEST_MODEL,
+  });
+
+  const schema = z.object({
+    name: z.string(),
+    createdAt: z.string().datetime().nullable().optional(),
+    items: z.array(
+      z.object({
+        value: z.number(),
+        note: z.string().nullable(),
+      })
+    ),
+  });
+
+  const modelWithStructuredOutput = model.withStructuredOutput(schema, {
+    name: "extract",
+    includeRaw: true,
+  });
+
+  const result = await modelWithStructuredOutput.invoke([
+    {
+      role: "system",
+      content: "You are a helpful assistant.",
+    },
+    {
+      role: "user",
+      content: "Create a shopping list with 3 items. Set createdAt to null.",
+    },
+  ]);
+
+  expect(result.parsed).not.toBeNull();
+  expect(result.parsed.name).toBeDefined();
+  expect(result.parsed.createdAt).toBeNull();
+  expect(result.parsed.items).toHaveLength(3);
+  for (const item of result.parsed.items) {
+    expect(typeof item.value).toBe("number");
+  }
+});
+
 test("withStructuredOutput zod schema function calling", async () => {
   const model = new ChatXAI({
     temperature: 0,
-    model: "grok-2-1212",
+    model: TEST_MODEL,
   });
 
   const calculatorSchema = z.object({
@@ -39,7 +83,7 @@ test("withStructuredOutput zod schema function calling", async () => {
 test("withStructuredOutput zod schema JSON mode", async () => {
   const model = new ChatXAI({
     temperature: 0,
-    model: "grok-2-1212",
+    model: TEST_MODEL,
   });
 
   const calculatorSchema = z.object({
@@ -78,7 +122,7 @@ Respond with a JSON object containing three keys:
 test("withStructuredOutput JSON schema function calling", async () => {
   const model = new ChatXAI({
     temperature: 0,
-    model: "grok-2-1212",
+    model: TEST_MODEL,
   });
 
   const calculatorSchema = z.object({
@@ -108,7 +152,7 @@ test("withStructuredOutput JSON schema function calling", async () => {
 test("withStructuredOutput OpenAI function definition function calling", async () => {
   const model = new ChatXAI({
     temperature: 0,
-    model: "grok-2-1212",
+    model: TEST_MODEL,
   });
 
   const calculatorSchema = z.object({
@@ -136,7 +180,7 @@ test("withStructuredOutput OpenAI function definition function calling", async (
 test("withStructuredOutput JSON schema JSON mode", async () => {
   const model = new ChatXAI({
     temperature: 0,
-    model: "grok-2-1212",
+    model: TEST_MODEL,
   });
 
   const calculatorSchema = z.object({
@@ -175,7 +219,7 @@ Respond with a JSON object containing three keys:
 test("withStructuredOutput JSON schema", async () => {
   const model = new ChatXAI({
     temperature: 0,
-    model: "grok-2-1212",
+    model: TEST_MODEL,
   });
 
   const jsonSchema = {
@@ -216,7 +260,7 @@ Respond with a JSON object containing three keys:
 test("withStructuredOutput includeRaw true", async () => {
   const model = new ChatXAI({
     temperature: 0,
-    model: "grok-2-1212",
+    model: TEST_MODEL,
   });
 
   const calculatorSchema = z.object({

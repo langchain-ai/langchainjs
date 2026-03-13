@@ -493,6 +493,7 @@ export class ChatOpenRouter extends BaseChatModel<
           undefined,
           undefined,
           undefined,
+          undefined,
           { chunk: generationChunk }
         );
       }

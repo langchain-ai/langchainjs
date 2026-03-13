@@ -1,5 +1,15 @@
 # @langchain/google
 
+## 0.1.6
+
+### Patch Changes
+
+- [#10300](https://github.com/langchain-ai/langchainjs/pull/10300) [`a26dc7d`](https://github.com/langchain-ai/langchainjs/commit/a26dc7d2a5b8dae811852e80f5478301b9c4bc93) Thanks [@MaxwellCalkin](https://github.com/MaxwellCalkin)! - resolve functionResponse.name from tool_calls in legacy converter
+
+- [#10314](https://github.com/langchain-ai/langchainjs/pull/10314) [`418a3fc`](https://github.com/langchain-ai/langchainjs/commit/418a3fc1ff2bd4dc73ba52414ff8ec6710bd5572) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - add getLsParams for LangSmith tracing metadata
+
+- [#10267](https://github.com/langchain-ai/langchainjs/pull/10267) [`b68f083`](https://github.com/langchain-ai/langchainjs/commit/b68f083dfeb433aa535c50223935a4059a25be8e) Thanks [@afirstenberg](https://github.com/afirstenberg)! - feat(@langchain/google) Test Gemini 3.1 Flash-Lite
+
 ## 0.1.5
 
 ### Patch Changes

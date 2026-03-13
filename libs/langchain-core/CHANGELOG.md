@@ -1,5 +1,32 @@
 # @langchain/core
 
+## 1.1.32
+
+### Patch Changes
+
+- [#10330](https://github.com/langchain-ai/langchainjs/pull/10330) [`26488b5`](https://github.com/langchain-ai/langchainjs/commit/26488b596f01b7b7fe2f1d97d07164e52365ade5) Thanks [@hntrl](https://github.com/hntrl)! - fix(core): treat empty string tool call chunk IDs as missing during merge
+
+  Fixed `_mergeLists` in message base to treat empty string `""` IDs the same as `null`/`undefined` when merging tool call chunks. This fixes old completions-style streaming where follow-up chunks carry `id: ""` instead of `undefined`, which previously prevented chunks from being merged by index.
+
+- [#10167](https://github.com/langchain-ai/langchainjs/pull/10167) [`ca826f6`](https://github.com/langchain-ai/langchainjs/commit/ca826f6fecae6087bf0dee7781ee80b587396ec1) Thanks [@colifran](https://github.com/colifran)! - feat: implement type inference for tool streams
+
+- [#10334](https://github.com/langchain-ai/langchainjs/pull/10334) [`a602c42`](https://github.com/langchain-ai/langchainjs/commit/a602c42db75d7e7e01cab38b12e0b65b9c0cce95) Thanks [@maahir30](https://github.com/maahir30)! - fix(core): add JSDoc docstrings to fakeModel builder API and export FakeBuiltModel
+
+- [#10254](https://github.com/langchain-ai/langchainjs/pull/10254) [`db7d017`](https://github.com/langchain-ai/langchainjs/commit/db7d017f7ce13cb937147aabcbfa3847d80bde9d) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(core): preserve thoughtSignature in array content during streaming with thinking models
+
+## 1.1.31
+
+### Patch Changes
+
+- [#10271](https://github.com/langchain-ai/langchainjs/pull/10271) [`7373b4c`](https://github.com/langchain-ai/langchainjs/commit/7373b4cd6a78bee105a952a11838c573fd1aafae) Thanks [@jacoblee93](https://github.com/jacoblee93)! - feat(core): Use uuid7 instead of v4 for generating run ids
+
+- [#10262](https://github.com/langchain-ai/langchainjs/pull/10262) [`b0175a5`](https://github.com/langchain-ai/langchainjs/commit/b0175a5d3b68e8fba44a85bc23879bd06def2f52) Thanks [@maahir30](https://github.com/maahir30)! - fix: Move fakeModel from utils/testing to testing namespace
+  move to updated namespace
+
+- [#10185](https://github.com/langchain-ai/langchainjs/pull/10185) [`414f6ed`](https://github.com/langchain-ai/langchainjs/commit/414f6ed402ac6f1c0fd6cce4bed64fa3708eea3d) Thanks [@maahir30](https://github.com/maahir30)! - feat: add custom Vitest matchers for LangChain message and tool call assertions
+
+  Adds a new `@langchain/core/testing/matchers` export containing custom Vitest matchers (`toBeHumanMessage`, `toBeAIMessage`, `toBeSystemMessage`, `toBeToolMessage`, `toHaveToolCalls`, `toHaveToolCallCount`, `toContainToolCall`, `toHaveToolMessages`, `toHaveBeenInterrupted`, `toHaveStructuredResponse`) that external users can register via `expect.extend(langchainMatchers)` in their Vitest setup files. Re-exported from `langchain` for convenience.
+
 ## 1.1.30
 
 ### Patch Changes

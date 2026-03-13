@@ -1,5 +1,12 @@
 # @langchain/google-gauth
 
+## 2.1.25
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-common@2.1.25
+
 ## 2.1.24
 
 ### Patch Changes

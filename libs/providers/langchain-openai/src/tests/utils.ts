@@ -1,4 +1,3 @@
-/* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable no-process-env */
 
 // * THIS IS INLINED FROM /internal/test-helpers/src/env.ts

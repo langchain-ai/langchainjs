@@ -1,4 +1,4 @@
-/* eslint-disable import/no-extraneous-dependencies */
+/* eslint-disable import-x/no-extraneous-dependencies */
 import { async as glob } from "fast-glob";
 import fs from "fs";
 import path from "path";

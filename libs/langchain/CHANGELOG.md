@@ -1,5 +1,38 @@
 # langchain
 
+## 1.2.32
+
+### Patch Changes
+
+- [#10405](https://github.com/langchain-ai/langchainjs/pull/10405) [`afbf5f1`](https://github.com/langchain-ai/langchainjs/commit/afbf5f1b1a9c6014f994829ab92bbfcaecb8a30b) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): add browser export
+
+## 1.2.31
+
+### Patch Changes
+
+- [#10265](https://github.com/langchain-ai/langchainjs/pull/10265) [`2647b48`](https://github.com/langchain-ai/langchainjs/commit/2647b4841bc4ae28dc6c8b245532df8620611a74) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): export todo schema
+
+- [#10167](https://github.com/langchain-ai/langchainjs/pull/10167) [`ca826f6`](https://github.com/langchain-ai/langchainjs/commit/ca826f6fecae6087bf0dee7781ee80b587396ec1) Thanks [@colifran](https://github.com/colifran)! - feat: implement type inference for tool streams
+
+- [#10290](https://github.com/langchain-ai/langchainjs/pull/10290) [`a596d3f`](https://github.com/langchain-ai/langchainjs/commit/a596d3f7395c0ab27357aa0cd30bafb2d5d967c1) Thanks [@colifran](https://github.com/colifran)! - fix(langchain): serializable schemas aren't exposed on create agent response format
+
+- Updated dependencies [[`26488b5`](https://github.com/langchain-ai/langchainjs/commit/26488b596f01b7b7fe2f1d97d07164e52365ade5), [`ca826f6`](https://github.com/langchain-ai/langchainjs/commit/ca826f6fecae6087bf0dee7781ee80b587396ec1), [`a602c42`](https://github.com/langchain-ai/langchainjs/commit/a602c42db75d7e7e01cab38b12e0b65b9c0cce95), [`db7d017`](https://github.com/langchain-ai/langchainjs/commit/db7d017f7ce13cb937147aabcbfa3847d80bde9d)]:
+  - @langchain/core@1.1.32
+
+## 1.2.30
+
+### Patch Changes
+
+- [#10262](https://github.com/langchain-ai/langchainjs/pull/10262) [`b0175a5`](https://github.com/langchain-ai/langchainjs/commit/b0175a5d3b68e8fba44a85bc23879bd06def2f52) Thanks [@maahir30](https://github.com/maahir30)! - fix: Move fakeModel from utils/testing to testing namespace
+  move to updated namespace
+
+- [#10185](https://github.com/langchain-ai/langchainjs/pull/10185) [`414f6ed`](https://github.com/langchain-ai/langchainjs/commit/414f6ed402ac6f1c0fd6cce4bed64fa3708eea3d) Thanks [@maahir30](https://github.com/maahir30)! - feat: add custom Vitest matchers for LangChain message and tool call assertions
+
+  Adds a new `@langchain/core/testing/matchers` export containing custom Vitest matchers (`toBeHumanMessage`, `toBeAIMessage`, `toBeSystemMessage`, `toBeToolMessage`, `toHaveToolCalls`, `toHaveToolCallCount`, `toContainToolCall`, `toHaveToolMessages`, `toHaveBeenInterrupted`, `toHaveStructuredResponse`) that external users can register via `expect.extend(langchainMatchers)` in their Vitest setup files. Re-exported from `langchain` for convenience.
+
+- Updated dependencies [[`7373b4c`](https://github.com/langchain-ai/langchainjs/commit/7373b4cd6a78bee105a952a11838c573fd1aafae), [`b0175a5`](https://github.com/langchain-ai/langchainjs/commit/b0175a5d3b68e8fba44a85bc23879bd06def2f52), [`414f6ed`](https://github.com/langchain-ai/langchainjs/commit/414f6ed402ac6f1c0fd6cce4bed64fa3708eea3d)]:
+  - @langchain/core@1.1.31
+
 ## 1.2.29
 
 ### Patch Changes

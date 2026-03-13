@@ -1,0 +1,41 @@
+import { test, expect, vi } from "vitest";
+import { TogetherAI } from "../togetherai.js";
+
+test("TogetherAI should provide helpful error for chat models", async () => {
+  const model = new TogetherAI({
+    modelName: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
+    apiKey: "test-api-key",
+  });
+
+  vi.spyOn(model, "completionWithRetry").mockResolvedValue({
+    // Response without output or choices fields
+    error: "Invalid model",
+  });
+
+  await expect(model.invoke("Hello")).rejects.toThrow(
+    /may require the ChatTogetherAI class/
+  );
+});
+
+test("TogetherAI should warn when using chat models", () => {
+  const originalWarn = console.warn;
+  const mockWarn = vi.fn();
+  console.warn = mockWarn;
+
+  try {
+    const model = new TogetherAI({
+      modelName: "meta-llama/Llama-3.2-11B-Vision-Instruct-Turbo",
+      apiKey: "test-api-key",
+    });
+
+    expect(model).toBeDefined();
+    expect(mockWarn).toHaveBeenCalledWith(
+      expect.stringContaining("appears to be a chat/instruct model")
+    );
+    expect(mockWarn).toHaveBeenCalledWith(
+      expect.stringContaining("Consider using ChatTogetherAI")
+    );
+  } finally {
+    console.warn = originalWarn;
+  }
+});

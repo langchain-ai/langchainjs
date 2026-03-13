@@ -17,9 +17,6 @@ describe("wrapAnthropicClientError", () => {
       "prompt is too long"
     );
     expect((wrapped as ContextOverflowError).cause).toBe(originalError);
-    expect((wrapped as ContextOverflowError).lc_error_code).toBe(
-      "CONTEXT_OVERFLOW"
-    );
   });
 
   test("should not wrap non-context-overflow 400 errors", () => {

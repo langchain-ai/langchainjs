@@ -1,5 +1,6 @@
 import {
   afterEach,
+  assertType,
   beforeEach,
   describe,
   expect,
@@ -8,12 +9,16 @@ import {
   vi,
 } from "vitest";
 import * as fs from "node:fs";
+import { z } from "zod/v3";
 import { ApiClient } from "../../clients/index.js";
 import { GoogleRequestRecorder } from "../../utils/handler.js";
 import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import { ChatGoogle, ChatGoogleParams } from "../index.js";
+import { ChatGoogle as ChatGoogleNode } from "../node.js";
 import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
 import { OutputParserException } from "@langchain/core/output_parsers";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import type { Runnable } from "@langchain/core/runnables";
 import type { Gemini } from "../types.js";
 
 interface MockResponseParameters {
@@ -278,6 +283,46 @@ describe("Google Mock", () => {
     );
   });
 
+  test("getLsParams normalizes provider and includes model metadata for web and node", () => {
+    const webApiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const webModel = new ChatGoogle({
+      model: "gemini-2.5-flash",
+      apiClient: webApiClient,
+      temperature: 0.25,
+      maxOutputTokens: 256,
+    });
+
+    expect(webModel.getLsParams({ stop: ["END"] })).toEqual({
+      ls_provider: "google",
+      ls_model_name: "gemini-2.5-flash",
+      ls_model_type: "chat",
+      ls_temperature: 0.25,
+      ls_max_tokens: 256,
+      ls_stop: ["END"],
+    });
+
+    const nodeApiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const nodeModel = new ChatGoogleNode({
+      model: "gemini-2.5-pro",
+      apiClient: nodeApiClient,
+      temperature: 0.5,
+      maxOutputTokens: 512,
+    });
+
+    expect(nodeModel.getLsParams({ stop: ["STOP"] })).toEqual({
+      ls_provider: "google",
+      ls_model_name: "gemini-2.5-pro",
+      ls_model_type: "chat",
+      ls_temperature: 0.5,
+      ls_max_tokens: 512,
+      ls_stop: ["STOP"],
+    });
+  });
+
   type TestReasoning = {
     model: string;
     maxReasoningTokens?: number;
@@ -327,7 +372,7 @@ describe("Google Mock", () => {
     {
       model: "gemini-2.5-flash-lite",
       maxReasoningTokens: -1,
-      expectIncludeThoughts: true,
+      expectIncludeThoughts: false,
       expectThinkingBudget: -1,
     },
     {
@@ -430,6 +475,36 @@ describe("Google Mock", () => {
     },
     {
       model: "gemini-3-flash",
+      maxReasoningTokens: 20000,
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "HIGH",
+    },
+    {
+      model: "gemini-3.1-flash-lite",
+      maxReasoningTokens: -1,
+      expectIncludeThoughts: false,
+      expectThinkingLevel: "MINIMAL",
+    },
+    {
+      model: "gemini-3.1-flash-lite",
+      maxReasoningTokens: 0,
+      expectIncludeThoughts: false,
+      expectThinkingLevel: "MINIMAL",
+    },
+    {
+      model: "gemini-3.1-flash-lite",
+      maxReasoningTokens: 1000,
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "LOW",
+    },
+    {
+      model: "gemini-3.1-flash-lite",
+      maxReasoningTokens: 8000,
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "MEDIUM",
+    },
+    {
+      model: "gemini-3.1-flash-lite",
       maxReasoningTokens: 20000,
       expectIncludeThoughts: true,
       expectThinkingLevel: "HIGH",
@@ -578,6 +653,30 @@ describe("Google Mock", () => {
     },
     {
       model: "gemini-3-flash",
+      reasoningEffort: "high",
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "HIGH",
+    },
+    {
+      model: "gemini-3.1-flash-lite",
+      reasoningEffort: "minimal",
+      expectIncludeThoughts: false,
+      expectThinkingLevel: "MINIMAL",
+    },
+    {
+      model: "gemini-3.1-flash-lite",
+      reasoningEffort: "low",
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "LOW",
+    },
+    {
+      model: "gemini-3.1-flash-lite",
+      reasoningEffort: "medium",
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "MEDIUM",
+    },
+    {
+      model: "gemini-3.1-flash-lite",
       reasoningEffort: "high",
       expectIncludeThoughts: true,
       expectThinkingLevel: "HIGH",
@@ -1143,5 +1242,51 @@ describe("withStructuredOutput with SerializableSchema", () => {
     await expect(async () => {
       await structured.invoke("What is your name?");
     }).rejects.toThrow(OutputParserException);
+  });
+});
+
+describe("withStructuredOutput type narrowing", () => {
+  const model = new ChatGoogle({
+    model: "gemini-2.5-flash",
+    apiKey: "test",
+  });
+
+  const schema = z.object({
+    name: z.string(),
+    age: z.number(),
+  });
+
+  test("is pipeable with ChatPromptTemplate when includeRaw is false", () => {
+    const prompt = ChatPromptTemplate.fromMessages([
+      ["system", "Extract info."],
+      ["human", "{input}"],
+    ]);
+    const structuredModel = model.withStructuredOutput(schema, {
+      includeRaw: false,
+    });
+    const chain = prompt.pipe(structuredModel);
+    assertType<Runnable>(chain);
+  });
+
+  test("is pipeable with ChatPromptTemplate when config is omitted", () => {
+    const prompt = ChatPromptTemplate.fromMessages([
+      ["system", "Extract info."],
+      ["human", "{input}"],
+    ]);
+    const structuredModel = model.withStructuredOutput(schema);
+    const chain = prompt.pipe(structuredModel);
+    assertType<Runnable>(chain);
+  });
+
+  test("returns non-union type when includeRaw is false", () => {
+    const result = model.withStructuredOutput(schema, { includeRaw: false });
+    const _check: typeof result extends Runnable ? true : never = true;
+    assertType<true>(_check);
+  });
+
+  test("returns non-union type when config is omitted", () => {
+    const result = model.withStructuredOutput(schema);
+    const _check: typeof result extends Runnable ? true : never = true;
+    assertType<true>(_check);
   });
 });
