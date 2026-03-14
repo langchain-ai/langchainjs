@@ -108,7 +108,7 @@ describe("convertGeminiPartsToToolCalls", () => {
 });
 
 describe("convertMessagesToGeminiContents", () => {
-  test("passes tool_call_id through as functionResponse.id (legacy path)", () => {
+  test("does not include functionResponse.id in legacy path", () => {
     const messages = [
       new HumanMessage("hello"),
       new AIMessage({
@@ -131,7 +131,7 @@ describe("convertMessagesToGeminiContents", () => {
 
     const contents = convertMessagesToGeminiContents(messages);
 
-    const toolResponseContent = contents.find((c) => c.role === "function");
+    const toolResponseContent = contents.find((c) => c.role === "user");
     expect(toolResponseContent).toBeDefined();
 
     const functionResponsePart = toolResponseContent!.parts.find(
@@ -141,7 +141,7 @@ describe("convertMessagesToGeminiContents", () => {
     expect(
       (functionResponsePart as Gemini.Part.FunctionResponse).functionResponse!
         .id
-    ).toBe("tool-call-abc");
+    ).toBeUndefined();
   });
 
   test("resolves functionResponse.name from tool_calls (legacy path)", () => {
@@ -270,8 +270,8 @@ describe("convertMessagesToGeminiContents", () => {
       (p) => "functionResponse" in p
     ) as Gemini.Part.FunctionResponse[];
     expect(responses).toHaveLength(2);
-    expect(responses[0].functionResponse!.id).toBe("call-paris");
-    expect(responses[1].functionResponse!.id).toBe("call-london");
+    expect(responses[0].functionResponse!.id).toBeUndefined();
+    expect(responses[1].functionResponse!.id).toBeUndefined();
   });
 
   test("falls back to ToolMessage.name when tool call lookup succeeds (legacy path)", () => {
@@ -338,6 +338,56 @@ describe("convertMessagesToGeminiContents", () => {
     expect(functionCallPart.functionCall!.args).toEqual({ city: "London" });
   });
 
+  test("legacy AIMessage content does not duplicate functionCall parts when tool_calls are also present", () => {
+    const messages = [
+      new HumanMessage("hello"),
+      new AIMessage({
+        content: [
+          {
+            type: "functionCall",
+            functionCall: {
+              name: "list_directory",
+              args: { path: "." },
+            },
+          },
+          {
+            type: "functionCall",
+            functionCall: {
+              name: "read_file",
+              args: { path: "filewithgoodcode.js" },
+            },
+          },
+        ],
+        tool_calls: [
+          {
+            name: "list_directory",
+            args: { path: "." },
+            id: "call-1",
+            type: "tool_call",
+          },
+          {
+            name: "read_file",
+            args: { path: "filewithgoodcode.js" },
+            id: "call-2",
+            type: "tool_call",
+          },
+        ],
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+
+    const functionCallParts = modelContent!.parts.filter(
+      (part) => "functionCall" in part && part.functionCall
+    ) as Gemini.Part.FunctionCall[];
+    expect(functionCallParts).toHaveLength(2);
+    expect(functionCallParts[0].functionCall!.name).toBe("list_directory");
+    expect(functionCallParts[1].functionCall!.name).toBe("read_file");
+  });
+
   test("AIMessage with tool_calls produces model turn with functionCall parts (v1 path)", () => {
     const aiMsg = new AIMessage({
       content: "",
@@ -372,6 +422,70 @@ describe("convertMessagesToGeminiContents", () => {
     expect(functionCallPart).toBeDefined();
     expect(functionCallPart.functionCall!.name).toBe("get_weather");
     expect(functionCallPart.functionCall!.args).toEqual({ city: "London" });
+  });
+
+  test("v1 path ignores raw functionCall and tool_call content blocks when tool_calls are present", () => {
+    const aiMsg = new AIMessage({
+      content: [
+        {
+          type: "functionCall",
+          functionCall: {
+            name: "list_directory",
+            args: { path: "." },
+          },
+        },
+        {
+          type: "functionCall",
+          functionCall: {
+            name: "read_file",
+            args: { path: "filewithgoodcode.js" },
+          },
+        },
+        {
+          type: "tool_call",
+          id: "call-1",
+          name: "list_directory",
+          args: { path: "." },
+        },
+        {
+          type: "tool_call",
+          id: "call-2",
+          name: "read_file",
+          args: { path: "filewithgoodcode.js" },
+        },
+      ],
+      tool_calls: [
+        {
+          name: "list_directory",
+          args: { path: "." },
+          id: "call-1",
+          type: "tool_call",
+        },
+        {
+          name: "read_file",
+          args: { path: "filewithgoodcode.js" },
+          id: "call-2",
+          type: "tool_call",
+        },
+      ],
+    });
+    aiMsg.response_metadata = { output_version: "v1" };
+
+    const contents = convertMessagesToGeminiContents([
+      new HumanMessage("hello"),
+      aiMsg,
+    ]);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+
+    const functionCallParts = modelContent!.parts.filter(
+      (part) => "functionCall" in part && part.functionCall
+    ) as Gemini.Part.FunctionCall[];
+
+    expect(functionCallParts).toHaveLength(2);
+    expect(functionCallParts[0].functionCall!.name).toBe("list_directory");
+    expect(functionCallParts[1].functionCall!.name).toBe("read_file");
   });
 
   test("ToolMessage name resolved from tool_calls (v1 path)", () => {
@@ -445,7 +559,7 @@ describe("convertMessagesToGeminiContents", () => {
 
     const contents = convertMessagesToGeminiContents(messages);
 
-    const toolResponseContents = contents.filter((c) => c.role === "function");
+    const toolResponseContents = contents.filter((c) => c.role === "user");
     expect(toolResponseContents).toHaveLength(2);
 
     const firstResponse = toolResponseContents[0].parts.find(
@@ -459,7 +573,7 @@ describe("convertMessagesToGeminiContents", () => {
     expect(secondResponse.functionResponse!.name).toBe("get_time");
   });
 
-  test("passes tool_call_id through as functionResponse.id (v1 standard path)", () => {
+  test("does not include functionResponse.id in v1 standard path", () => {
     const messages = [
       new HumanMessage("hello"),
       new AIMessage({
@@ -483,7 +597,7 @@ describe("convertMessagesToGeminiContents", () => {
 
     const contents = convertMessagesToGeminiContents(messages);
 
-    const toolResponseContent = contents.find((c) => c.role === "function");
+    const toolResponseContent = contents.find((c) => c.role === "user");
     expect(toolResponseContent).toBeDefined();
 
     const functionResponsePart = toolResponseContent!.parts.find(
@@ -493,7 +607,7 @@ describe("convertMessagesToGeminiContents", () => {
     expect(
       (functionResponsePart as Gemini.Part.FunctionResponse).functionResponse!
         .id
-    ).toBe("tool-call-xyz");
+    ).toBeUndefined();
   });
 
   test("v1 contentBlocks: text-plain block produces fileData part", () => {

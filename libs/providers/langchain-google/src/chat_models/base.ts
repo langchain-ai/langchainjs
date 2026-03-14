@@ -589,12 +589,20 @@ export abstract class BaseChatGoogle<
 
               // Only emit if we have content
               if (parts.length > 0 || candidate.finishReason) {
+                const normalizedContent =
+                  toolCalls.length > 0 && !Array.isArray(message.content)
+                    ? []
+                    : message.content;
+                const chunkResponseMetadata: Record<string, unknown> = {
+                  model_provider: "google",
+                  ...(Array.isArray(normalizedContent) || toolCalls.length > 0
+                    ? { output_version: "v1" }
+                    : {}),
+                };
                 const messageChunkParams: AIMessageChunkFields = {
-                  content: message.content,
+                  content: normalizedContent,
                   tool_calls: toolCalls,
-                  response_metadata: {
-                    model_provider: "google",
-                  },
+                  response_metadata: chunkResponseMetadata,
                   additional_kwargs: {
                     ...(message.additional_kwargs.originalTextContentBlock
                       ? {
