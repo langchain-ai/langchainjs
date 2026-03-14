@@ -1,4 +1,4 @@
-import { AIMessage, ToolMessage } from "@langchain/core/messages";
+import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { z as z4 } from "zod/v4";
 import { z } from "zod/v3";
 import type { InferInteropZodInput } from "@langchain/core/utils/types";
@@ -60,6 +60,33 @@ function buildFinalAIMessageContent(
 
   const limitsText = exceededLimits.join(" and ");
   return `${toolDesc} call limit reached: ${limitsText}.`;
+}
+
+/**
+ * Build the warning message content for proactive tool call budget notices.
+ *
+ * This message is injected as an ephemeral HumanMessage before the model call
+ * to inform the model about its remaining tool call budget.
+ *
+ * @param remaining - Number of tool calls remaining.
+ * @param toolName - Tool name being limited (if specific tool), or undefined for all tools.
+ * @returns A system notice string warning the model about remaining budget.
+ */
+function buildWarningContent(
+  remaining: number,
+  toolName: string | undefined
+): string {
+  const toolDesc = toolName ? ` for '${toolName}'` : "";
+  if (remaining <= 0) {
+    return (
+      `[System notice: You have exhausted your tool call budget${toolDesc}. ` +
+      "Do NOT call any more tools. Summarize what you have so far.]"
+    );
+  }
+  return (
+    `[System notice: You have ${remaining} tool call(s) remaining${toolDesc}. ` +
+    "Plan your tool usage carefully.]"
+  );
 }
 
 /**
@@ -151,11 +178,36 @@ export const ToolCallLimitOptionsSchema = z.object({
    * @default "continue"
    */
   exitBehavior: exitBehaviorSchema,
+  /**
+   * Whether to enable proactive warnings via wrapModelCall.
+   * When true, an ephemeral HumanMessage is injected before the model call
+   * when the remaining tool call budget is at or below warningThreshold.
+   *
+   * @default false
+   */
+  proactive: z.boolean().default(false),
+  /**
+   * Number of remaining tool calls at which to start injecting warnings.
+   * Only used when proactive is true.
+   *
+   * @default 5
+   */
+  warningThreshold: z.number().min(0).default(5),
 });
 
 export type ToolCallLimitConfig = InferInteropZodInput<
   typeof ToolCallLimitOptionsSchema
->;
+> & {
+  /**
+   * Custom function to build the warning message content.
+   * Only used when proactive is true.
+   *
+   * @param remaining - Number of tool calls remaining.
+   * @param toolName - Tool name being limited (if specific tool), or undefined for all tools.
+   * @returns A warning message string to inject as a HumanMessage.
+   */
+  warningBuilder?: (remaining: number, toolName: string | undefined) => string;
+};
 
 /**
  * Middleware state schema to track the number of model calls made at the thread and run level.
@@ -188,8 +240,15 @@ const DEFAULT_TOOL_COUNT_KEY = "__all__";
  *   - "continue": Block exceeded tools with error messages, let other tools continue. Model decides when to end. (default)
  *   - "error": Raise a ToolCallLimitExceededError exception
  *   - "end": Stop execution immediately with a ToolMessage + AI message for the single tool call that exceeded the limit. Raises NotImplementedError if there are multiple tool calls.
+ * @param options.proactive - Whether to enable proactive warnings via wrapModelCall. When true, an ephemeral
+ *   HumanMessage is injected before the model call when the remaining tool call budget is at or below
+ *   warningThreshold. The warning never persists in conversation state. Defaults to false.
+ * @param options.warningThreshold - Number of remaining tool calls at which to start injecting warnings.
+ *   Only used when proactive is true. Defaults to 5.
+ * @param options.warningBuilder - Custom function to build the warning message content.
+ *   Only used when proactive is true. Receives (remaining, toolName) and returns a string.
  *
- * @throws {Error} If both limits are undefined, if exitBehavior is invalid, or if runLimit exceeds threadLimit.
+ * @throws {Error} If both limits are undefined, if exitBehavior is invalid, if runLimit exceeds threadLimit, or if warningThreshold is negative.
  * @throws {NotImplementedError} If exitBehavior is "end" and there are multiple tool calls.
  *
  * @example Continue execution with blocked tools (default)
@@ -246,6 +305,22 @@ const DEFAULT_TOOL_COUNT_KEY = "__all__";
  *   }
  * }
  * ```
+ *
+ * @example Proactive warnings
+ * ```ts
+ * // Warn the model when budget is running low
+ * const limiter = toolCallLimitMiddleware({
+ *   runLimit: 10,
+ *   proactive: true,
+ *   warningThreshold: 3,
+ * });
+ *
+ * const agent = createAgent({
+ *   model: "openai:gpt-4o",
+ *   tools: [searchTool],
+ *   middleware: [limiter]
+ * });
+ * ```
  */
 export function toolCallLimitMiddleware(options: ToolCallLimitConfig) {
   /**
@@ -281,6 +356,17 @@ export function toolCallLimitMiddleware(options: ToolCallLimitConfig) {
   }
 
   /**
+   * Proactive warning configuration
+   */
+  const proactive = options.proactive ?? false;
+  const warningThreshold = options.warningThreshold ?? 5;
+  const warningBuilder = options.warningBuilder ?? buildWarningContent;
+
+  if (warningThreshold < 0) {
+    throw new Error("warningThreshold must be >= 0");
+  }
+
+  /**
    * Generate the middleware name based on the tool name
    */
   const middlewareName = options.toolName
@@ -290,6 +376,37 @@ export function toolCallLimitMiddleware(options: ToolCallLimitConfig) {
   return createMiddleware({
     name: middlewareName,
     stateSchema,
+    wrapModelCall: proactive
+      ? (request, handler) => {
+          const countKey = options.toolName ?? DEFAULT_TOOL_COUNT_KEY;
+          const threadCounts = request.state.threadToolCallCount ?? {};
+          const runCounts = request.state.runToolCallCount ?? {};
+
+          let remaining = Infinity;
+          if (options.threadLimit !== undefined) {
+            remaining = Math.min(
+              remaining,
+              options.threadLimit - ((threadCounts as Record<string, number>)[countKey] ?? 0)
+            );
+          }
+          if (options.runLimit !== undefined) {
+            remaining = Math.min(
+              remaining,
+              options.runLimit - ((runCounts as Record<string, number>)[countKey] ?? 0)
+            );
+          }
+
+          if (remaining <= warningThreshold) {
+            const warning = warningBuilder(remaining, options.toolName);
+            return handler({
+              ...request,
+              messages: [...request.messages, new HumanMessage(warning)],
+            });
+          }
+
+          return handler(request);
+        }
+      : undefined,
     afterModel: {
       canJumpTo: ["end"],
       hook: (state) => {
