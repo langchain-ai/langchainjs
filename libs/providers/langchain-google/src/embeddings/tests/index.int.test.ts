@@ -17,6 +17,8 @@ import {
   GoogleEmbeddingsParams as GoogleEmbeddingsNodeParams,
 } from "../../node.js";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { ContentBlock } from "@langchain/core/messages";
+import fs from "fs/promises";
 
 // function buildTestCallbacks(
 //   recorder: GoogleRequestRecorder
@@ -62,6 +64,7 @@ const allModelInfo: ModelInfo[] = [
   {
     model: "multimodalembedding@001",
     testConfig: {
+      isMultimodal: true,
       defaultDimensions: 1408,
       testDimensions: [128, 256, 512],
       useApiKey: false,
@@ -235,5 +238,91 @@ describe.each(coreModelInfo)(
       expect(Array.isArray(result[0])).toBe(true);
       expect(typeof result[0][0]).toBe("number");
     });
+
+    test("embedContent text", async () => {
+      const embeddings = newGoogleEmbeddings();
+      const document: ContentBlock.Text = {
+        type: "text",
+        text: "What is 1 + 1?",
+      }
+      const result = await embeddings.embedContent(document);
+
+      expect(Array.isArray(result)).toBe(true);
+      expect(result?.length).toEqual(testConfig?.defaultDimensions);
+      expect(typeof result?.[0]).toBe("number");
+    })
+  }
+);
+
+const multimodalModelInfo: ModelInfo[] = filterTestableModels([
+  (info) => info.testConfig?.isMultimodal || false,
+]);
+
+describe.each(multimodalModelInfo)(
+  "Google Multimodal Embeddings ($model) $testConfig",
+  ({ model, defaultGoogleParams, testConfig }: ModelInfo) => {
+    let warnSpy: MockInstance<any>;
+
+    function newGoogleEmbeddings(
+      fields?: DefaultGoogleParams
+    ): GoogleEmbeddings | GoogleEmbeddingsNode {
+      // recorder = new GoogleRequestRecorder();
+      // callbacks = buildTestCallbacks(recorder);
+
+      const configParams:
+        | GoogleEmbeddingsParams
+        | GoogleEmbeddingsNodeParams
+        | Record<string, any> = {};
+      const useNode = testConfig?.node ?? false;
+      const useApiKey = testConfig?.useApiKey ?? !useNode;
+      if (useApiKey) {
+        configParams.apiKey = getEnvironmentVariable("TEST_API_KEY");
+      }
+
+      const params = {
+        model,
+        ...configParams,
+        ...(defaultGoogleParams ?? {}),
+        ...(fields ?? {}),
+      };
+
+      if (useNode) {
+        return new GoogleEmbeddingsNode(params);
+      } else {
+        return new GoogleEmbeddings(params);
+      }
+    }
+
+    beforeEach(async () => {
+      warnSpy = vi.spyOn(global.console, "warn");
+      const delay = testConfig?.delay ?? 0;
+      if (delay) {
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    });
+
+    afterEach(() => {
+      warnSpy.mockRestore();
+    });
+
+    test("embedContent image data", async () => {
+      const embeddings = newGoogleEmbeddings();
+
+      const dataPath = "src/chat_models/tests/data/blue-square.png";
+      const dataType = "image/png";
+      const data = await fs.readFile(dataPath);
+      const data64 = data.toString("base64");
+      const document: ContentBlock.Multimodal.Image = {
+        type: "image",
+        data: data64,
+        mimeType: dataType,
+      }
+      const result = await embeddings.embedContent(document);
+
+      expect(Array.isArray(result)).toBe(true);
+      expect(result?.length).toEqual(testConfig?.defaultDimensions);
+      expect(typeof result?.[0]).toBe("number");
+    })
+
   }
 );
