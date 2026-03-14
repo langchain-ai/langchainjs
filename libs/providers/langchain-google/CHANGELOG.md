@@ -1,5 +1,17 @@
 # @langchain/google
 
+## 0.1.7
+
+### Patch Changes
+
+- [#10343](https://github.com/langchain-ai/langchainjs/pull/10343) [`a1062b7`](https://github.com/langchain-ai/langchainjs/commit/a1062b74ceb3bfde08765237db92b28eddf3e22e) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix: merge consecutive same-role Gemini content blocks
+
+- [#10313](https://github.com/langchain-ai/langchainjs/pull/10313) [`bc4cd65`](https://github.com/langchain-ai/langchainjs/commit/bc4cd6549b043a811021ae3641f9344ff6537a38) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(langchain-google): parse JSON error bodies from non-JSON content types
+
+- [#10397](https://github.com/langchain-ai/langchainjs/pull/10397) [`955ef6b`](https://github.com/langchain-ai/langchainjs/commit/955ef6b81da7a155bb829ed67ea20f0ad4c3f901) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(google): fix v1 converter dropping tool_calls, text-plain and file blocks
+
+- [#10402](https://github.com/langchain-ai/langchainjs/pull/10402) [`9099f53`](https://github.com/langchain-ai/langchainjs/commit/9099f5362ce1d424b0d820b69ed1ca8fec6be9d3) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(google): use dynamic ls_provider based on platform instead of hardcoded "google"
+
 ## 0.1.6
 
 ### Patch Changes

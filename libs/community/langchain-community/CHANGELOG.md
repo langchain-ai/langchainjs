@@ -1,5 +1,24 @@
 # @langchain/community
 
+## 1.2.0
+
+### Minor Changes
+
+- [#10004](https://github.com/langchain-ai/langchainjs/pull/10004) [`a40ddc7`](https://github.com/langchain-ai/langchainjs/commit/a40ddc78a5fa83383afe5b7eb70e00f1f2909fb8) Thanks [@aditya-gg04](https://github.com/aditya-gg04)! - fix/community-better-sqlite3-node24-support
+
+- [#10298](https://github.com/langchain-ai/langchainjs/pull/10298) [`aad77ab`](https://github.com/langchain-ai/langchainjs/commit/aad77ab2522ff50c575321e4cca75cc2e6cceb9f) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(community): Add multimodal content support to Bedrock Anthropic formatter
+
+### Patch Changes
+
+- [#10399](https://github.com/langchain-ai/langchainjs/pull/10399) [`1edc658`](https://github.com/langchain-ai/langchainjs/commit/1edc658c927f6bb89b995f37ef5edd56301eb762) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - add missing AWS inference profile region prefixes (au, jp, global)
+
+- [#10413](https://github.com/langchain-ai/langchainjs/pull/10413) [`7a3774a`](https://github.com/langchain-ai/langchainjs/commit/7a3774a79dc8abb38a007a389ce0930d633af242) Thanks [@shivamtiwari3](https://github.com/shivamtiwari3)! - fix(community): update PPTXLoader to use officeparser v6 API (fixes [#10168](https://github.com/langchain-ai/langchainjs/issues/10168))
+
+- Updated dependencies [[`6db417b`](https://github.com/langchain-ai/langchainjs/commit/6db417b03ecb5e2ace413389d982294e0ac88433), [`af9bbd3`](https://github.com/langchain-ai/langchainjs/commit/af9bbd3f48d96de8963f492ebbf75ca0762f7e57)]:
+  - @langchain/core@1.1.33
+  - @langchain/openai@1.3.0
+  - @langchain/classic@1.0.24
+
 ## 1.1.23
 
 ### Patch Changes
