@@ -392,13 +392,15 @@ function convertStandardContentMessageToGeminiContent(
   }
 
   let role: Gemini.Role;
+  let isToolResponseMessage = false;
   if (HumanMessage.isInstance(message)) {
     role = "user";
   } else if (AIMessage.isInstance(message)) {
     role = "model";
   } else if (ToolMessage.isInstance(message)) {
-    // Tool messages in Gemini are represented as function responses
-    role = "function";
+    // Current Gemini/Vertex docs place functionResponse parts in a user turn.
+    role = "user";
+    isToolResponseMessage = true;
   } else if (ChatMessage.isInstance(message)) {
     // Map ChatMessage roles to Gemini roles
     const msgRole = message.role.toLowerCase();
@@ -411,7 +413,8 @@ function convertStandardContentMessageToGeminiContent(
     ) {
       role = "model";
     } else if (msgRole === "function" || msgRole === "tool") {
-      role = "function";
+      role = "user";
+      isToolResponseMessage = true;
     } else {
       // Default to user for unknown roles
       role = "user";
@@ -428,6 +431,13 @@ function convertStandardContentMessageToGeminiContent(
     ? message.contentBlocks
     : [];
   contentBlocks.forEach((block: ContentBlock.Standard) => {
+    if (
+      typeof block === "object" &&
+      block !== null &&
+      ("type" in block && (block.type === "functionCall" || block.type === "tool_call"))
+    ) {
+      return;
+    }
     const contentBlock =
       (message.additional_kwargs
         .originalTextContentBlock as ContentBlock.Standard) || block;
@@ -439,9 +449,45 @@ function convertStandardContentMessageToGeminiContent(
   });
 
   // Convert AIMessage tool_calls to functionCall parts
+  const hasFunctionCallParts = parts.some(
+    (part) => "functionCall" in part && !!part.functionCall
+  );
+
   if (AIMessage.isInstance(message) && message.tool_calls?.length) {
+    let functionCallIndex = 0;
+    for (const part of parts) {
+      if (
+        "functionCall" in part &&
+        part.functionCall &&
+        !part.thoughtSignature
+      ) {
+        const matchedToolCall =
+          message.tool_calls.find(
+            (toolCall) =>
+              toolCall.name === part.functionCall?.name &&
+              JSON.stringify(toolCall.args ?? {}) ===
+                JSON.stringify(part.functionCall?.args ?? {})
+          ) ?? message.tool_calls[functionCallIndex];
+        if (matchedToolCall?.thoughtSignature) {
+          part.thoughtSignature = matchedToolCall.thoughtSignature;
+        }
+        functionCallIndex += 1;
+      } else if ("functionCall" in part && part.functionCall) {
+        functionCallIndex += 1;
+      }
+    }
+  }
+
+  if (
+    AIMessage.isInstance(message) &&
+    message.tool_calls?.length &&
+    !hasFunctionCallParts
+  ) {
     for (const toolCall of message.tool_calls) {
       parts.push({
+        ...(toolCall.thoughtSignature
+          ? { thoughtSignature: toolCall.thoughtSignature }
+          : {}),
         functionCall: {
           name: toolCall.name,
           args: toolCall.args ?? {},
@@ -467,11 +513,22 @@ function convertStandardContentMessageToGeminiContent(
     );
     parts.push({
       functionResponse: {
-        id: message.tool_call_id,
         name: matchedToolCall?.name ?? message.name ?? "unknown",
         response: { result: responseContent },
       },
     });
+  }
+
+  if (isToolResponseMessage) {
+    return parts.some((part) => "functionResponse" in part)
+      ? {
+          role,
+          parts: parts.filter(
+            (part): part is Gemini.Part.FunctionResponse =>
+              "functionResponse" in part
+          ),
+        }
+      : null;
   }
 
   // Only return content if we have parts
@@ -736,9 +793,45 @@ function convertLegacyContentMessageToGeminiContent(
   }
 
   // Convert AIMessage tool_calls to functionCall parts
+  const hasFunctionCallParts = parts.some(
+    (part) => "functionCall" in part && !!part.functionCall
+  );
+
   if (AIMessage.isInstance(message) && message.tool_calls?.length) {
+    let functionCallIndex = 0;
+    for (const part of parts) {
+      if (
+        "functionCall" in part &&
+        part.functionCall &&
+        !part.thoughtSignature
+      ) {
+        const matchedToolCall =
+          message.tool_calls.find(
+            (toolCall) =>
+              toolCall.name === part.functionCall?.name &&
+              JSON.stringify(toolCall.args ?? {}) ===
+                JSON.stringify(part.functionCall?.args ?? {})
+          ) ?? message.tool_calls[functionCallIndex];
+        if (matchedToolCall?.thoughtSignature) {
+          part.thoughtSignature = matchedToolCall.thoughtSignature;
+        }
+        functionCallIndex += 1;
+      } else if ("functionCall" in part && part.functionCall) {
+        functionCallIndex += 1;
+      }
+    }
+  }
+
+  if (
+    AIMessage.isInstance(message) &&
+    message.tool_calls?.length &&
+    !hasFunctionCallParts
+  ) {
     for (const toolCall of message.tool_calls) {
       parts.push({
+        ...(toolCall.thoughtSignature
+          ? { thoughtSignature: toolCall.thoughtSignature }
+          : {}),
         functionCall: {
           name: toolCall.name,
           args: toolCall.args ?? {},
@@ -767,7 +860,6 @@ function convertLegacyContentMessageToGeminiContent(
     );
     parts.push({
       functionResponse: {
-        id: message.tool_call_id,
         name: matchedToolCall?.name ?? message.name ?? "unknown",
         response: { result: responseContent },
       },
@@ -1183,6 +1275,9 @@ export const convertGeminiCandidateToAIMessage: Converter<
 
   const response_metadata: Record<string, unknown> = {
     model_provider: "google",
+    ...(Array.isArray(content) || toolCalls.length > 0
+      ? { output_version: "v1" }
+      : {}),
     finish_reason: candidate.finishReason,
     safety_ratings: candidate.safetyRatings,
     citation_metadata: candidate.citationMetadata,
