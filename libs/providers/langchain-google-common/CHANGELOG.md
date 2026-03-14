@@ -1,5 +1,16 @@
 # @langchain/google-common
 
+## 2.1.26
+
+### Patch Changes
+
+- [#9987](https://github.com/langchain-ai/langchainjs/pull/9987) [`561224b`](https://github.com/langchain-ai/langchainjs/commit/561224b8495dad61946ad7c0f84340d64729c3fb) Thanks [@mbarinov](https://github.com/mbarinov)! - fix(google-common): prevent 400 error when AIMessage has empty text content
+
+- [#9979](https://github.com/langchain-ai/langchainjs/pull/9979) [`6a2da5b`](https://github.com/langchain-ai/langchainjs/commit/6a2da5b63b39bec4b87b6a1d1769810677ad3458) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(google): add support for ContentBlock.Multimodal types in Google providers
+
+- Updated dependencies [[`6db417b`](https://github.com/langchain-ai/langchainjs/commit/6db417b03ecb5e2ace413389d982294e0ac88433), [`af9bbd3`](https://github.com/langchain-ai/langchainjs/commit/af9bbd3f48d96de8963f492ebbf75ca0762f7e57)]:
+  - @langchain/core@1.1.33
+
 ## 2.1.25
 
 ### Patch Changes

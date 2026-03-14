@@ -1,5 +1,17 @@
 # @langchain/core
 
+## 1.1.33
+
+### Patch Changes
+
+- [#10412](https://github.com/langchain-ai/langchainjs/pull/10412) [`6db417b`](https://github.com/langchain-ai/langchainjs/commit/6db417b03ecb5e2ace413389d982294e0ac88433) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(core): respect timeout option in streamEvents v2
+
+- [#10317](https://github.com/langchain-ai/langchainjs/pull/10317) [`af9bbd3`](https://github.com/langchain-ai/langchainjs/commit/af9bbd3f48d96de8963f492ebbf75ca0762f7e57) Thanks [@hntrl](https://github.com/hntrl)! - feat(openai): support tool search and defer_loading
+  - Add `tools.toolSearch()` factory for the OpenAI Responses API `tool_search` built-in tool, supporting both server-executed and client-executed modes.
+  - Propagate `defer_loading` from LangChain tool `extras` through `bindTools()` and into the Responses API payload, enabling on-demand tool discovery.
+  - Handle `tool_search_call` and `tool_search_output` response items in both streaming and non-streaming converters.
+  - Add core block translator support to convert `tool_search_call` → `server_tool_call` and `tool_search_output` → `server_tool_call_result`.
+
 ## 1.1.32
 
 ### Patch Changes
