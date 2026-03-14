@@ -2308,6 +2308,32 @@ test("Runnable streamEvents method should respect passed signal", async () => {
   }).rejects.toThrowError();
 });
 
+test("Runnable streamEvents v2 should respect timeout option", async () => {
+  // Regression: ensureConfig() converts `timeout` into config.signal (v2 path).
+  // consumeRunnableStream must read config.signal, not options.signal.
+  const RUNNABLE_DELAY_MS = 1000;
+  const TIMEOUT_MS = 300;
+
+  const slowRunnable = RunnableLambda.from(async (input: string) => {
+    await new Promise((resolve) => setTimeout(resolve, RUNNABLE_DELAY_MS));
+    return input;
+  });
+
+  const start = Date.now();
+  await expect(async () => {
+    const stream = slowRunnable.streamEvents("hello", {
+      version: "v2",
+      timeout: TIMEOUT_MS,
+    });
+    for await (const _ of stream) {
+      // drain
+    }
+  }).rejects.toThrow(/timeout/i);
+
+  // Should abort near TIMEOUT_MS, well before RUNNABLE_DELAY_MS
+  expect(Date.now() - start).toBeLessThan(1500);
+});
+
 test("streamEvents method handles errors", async () => {
   let caughtError: unknown;
   const model = new FakeListChatModel({
