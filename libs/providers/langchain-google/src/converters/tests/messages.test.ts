@@ -258,11 +258,12 @@ describe("convertMessagesToGeminiContents", () => {
 
     const contents = convertMessagesToGeminiContents(messages);
 
-    // Should produce: user, function (single merged turn)
-    // The AIMessage with empty content and tool_calls produces no model content block
-    expect(contents).toHaveLength(2);
+    // Should produce: user, model (functionCall parts), function (single merged turn)
+    expect(contents).toHaveLength(3);
 
-    const functionTurn = contents[1];
+    expect(contents[1].role).toBe("model");
+
+    const functionTurn = contents[2];
     expect(functionTurn.role).toBe("function");
     expect(functionTurn.parts).toHaveLength(2);
 
@@ -445,18 +446,16 @@ describe("convertMessagesToGeminiContents", () => {
 
     const contents = convertMessagesToGeminiContents(messages);
 
+    // Consecutive ToolMessages with the same "function" role are merged into one content
     const toolResponseContents = contents.filter((c) => c.role === "function");
-    expect(toolResponseContents).toHaveLength(2);
+    expect(toolResponseContents).toHaveLength(1);
 
-    const firstResponse = toolResponseContents[0].parts.find(
+    const mergedParts = toolResponseContents[0].parts.filter(
       (p) => "functionResponse" in p && p.functionResponse
-    ) as Gemini.Part.FunctionResponse;
-    expect(firstResponse.functionResponse!.name).toBe("get_weather");
-
-    const secondResponse = toolResponseContents[1].parts.find(
-      (p) => "functionResponse" in p && p.functionResponse
-    ) as Gemini.Part.FunctionResponse;
-    expect(secondResponse.functionResponse!.name).toBe("get_time");
+    ) as Gemini.Part.FunctionResponse[];
+    expect(mergedParts).toHaveLength(2);
+    expect(mergedParts[0].functionResponse!.name).toBe("get_weather");
+    expect(mergedParts[1].functionResponse!.name).toBe("get_time");
   });
 
   test("passes tool_call_id through as functionResponse.id (v1 standard path)", () => {
