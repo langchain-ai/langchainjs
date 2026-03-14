@@ -452,10 +452,30 @@ function convertStandardContentMessageToGeminiContent(
 
   // Handle tool messages as function responses
   if (ToolMessage.isInstance(message) && message.tool_call_id) {
-    const responseContent =
-      typeof message.content === "string"
-        ? message.content
-        : JSON.stringify(message.content);
+    let responseContent: string;
+    if (typeof message.content === "string") {
+      responseContent = message.content;
+    } else {
+      // Exclude media items — they are already converted to inlineData/fileData parts above
+      const textOnlyContent = (
+        message.content as Array<MessageContentComplex | string>
+      ).filter((item) => {
+        if (typeof item === "string") return true;
+        if (typeof item !== "object" || item === null) return true;
+        if (isDataContentBlock(item)) return false;
+        if ("image_url" in item) return false;
+        const type = (item as { type?: string }).type;
+        return (
+          type !== "media" &&
+          type !== "image" &&
+          type !== "audio" &&
+          type !== "video" &&
+          type !== "file"
+        );
+      });
+      responseContent =
+        textOnlyContent.length > 0 ? JSON.stringify(textOnlyContent) : "";
+    }
     // Find the matching tool call in a preceding AIMessage to get the function name
     const aiMsg = messages
       .filter(AIMessage.isInstance)
@@ -472,6 +492,14 @@ function convertStandardContentMessageToGeminiContent(
         response: { result: responseContent },
       },
     });
+
+    // For tool responses, keep only functionResponse and media parts.
+    // Text parts are redundant — their content is in functionResponse.response.result.
+    const keptParts = parts.filter(
+      (part) =>
+        "functionResponse" in part || "inlineData" in part || "fileData" in part
+    );
+    parts.splice(0, parts.length, ...keptParts);
   }
 
   // Only return content if we have parts
@@ -749,10 +777,25 @@ function convertLegacyContentMessageToGeminiContent(
 
   // Handle tool messages as function responses
   if (ToolMessage.isInstance(message) && message.tool_call_id) {
-    const responseContent =
-      typeof message.content === "string"
-        ? message.content
-        : JSON.stringify(message.content);
+    let responseContent: string;
+    if (typeof message.content === "string") {
+      responseContent = message.content;
+    } else {
+      // Exclude media items — they will be kept as sibling inlineData/fileData parts
+      const textOnlyContent = (
+        message.content as Array<MessageContentComplex | string>
+      ).filter(
+        (item) =>
+          typeof item === "string" ||
+          (typeof item === "object" &&
+            item !== null &&
+            !isMessageContentImageUrl(item) &&
+            !isMessageContentMedia(item) &&
+            !isDataContentBlock(item))
+      );
+      responseContent =
+        textOnlyContent.length > 0 ? JSON.stringify(textOnlyContent) : "";
+    }
     // Find the matching tool call in a preceding AIMessage to get the function name
     const aiMsg = messages
       .filter(AIMessage.isInstance)
@@ -774,9 +817,13 @@ function convertLegacyContentMessageToGeminiContent(
     });
   }
 
-  // Remove non-functionResponse parts if this is a tool response
+  // For tool responses, keep functionResponse and media parts (inlineData/fileData)
+  // as siblings. Text parts are excluded — their content is in functionResponse.response.result.
   if (role === "function") {
-    parts = parts.filter((part) => "functionResponse" in part);
+    parts = parts.filter(
+      (part) =>
+        "functionResponse" in part || "inlineData" in part || "fileData" in part
+    );
   }
 
   // Only add content if we have parts
