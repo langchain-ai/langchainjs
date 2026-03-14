@@ -429,6 +429,19 @@ function _convertLangChainContentToPart(
         data: content.data,
       },
     };
+  } else if (content.type === "thinking") {
+    const thinkingContent = content as {
+      type: "thinking";
+      thinking: string;
+      signature?: string;
+    };
+    return {
+      text: thinkingContent.thinking,
+      thought: true,
+      ...(thinkingContent.signature
+        ? { thoughtSignature: thinkingContent.signature }
+        : {}),
+    } as Part;
   } else if ("functionCall" in content) {
     // No action needed here — function calls will be added later from message.tool_calls
     return undefined;
