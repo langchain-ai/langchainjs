@@ -916,7 +916,6 @@ export abstract class Runnable<
     const outerThis = this;
     async function consumeRunnableStream() {
       let signal;
-      let listener: (() => void) | null = null;
 
       try {
         if (config.signal) {
@@ -928,15 +927,22 @@ export abstract class Runnable<
               config.signal,
             ]);
           } else {
-            // Fallback for Node 18 and below - just use the provided signal
-            signal = config.signal;
-            // Ensure we still abort our controller when the parent signal aborts
+            // Fallback for Node 18 and below - compose both signals
+            // through a bridging controller so that either source
+            // (timeout/user signal OR early consumer break) cancels
+            // the inner stream.
+            const composed = new AbortController();
 
-            listener = () => {
-              abortController.abort();
-            };
+            config.signal.addEventListener("abort", () => composed.abort(), {
+              once: true,
+            });
+            abortController.signal.addEventListener(
+              "abort",
+              () => composed.abort(),
+              { once: true }
+            );
 
-            config.signal.addEventListener("abort", listener, { once: true });
+            signal = composed.signal;
           }
         } else {
           signal = abortController.signal;
@@ -955,10 +961,6 @@ export abstract class Runnable<
         }
       } finally {
         await eventStreamer.finish();
-
-        if (signal && listener) {
-          signal.removeEventListener("abort", listener);
-        }
       }
     }
     const runnableStreamConsumePromise = consumeRunnableStream();
