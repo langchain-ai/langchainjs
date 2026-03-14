@@ -316,11 +316,12 @@ export abstract class BaseGoogleEmbeddings<TOutput = number[]>
         return prediction.textEmbedding ?? [];
       } else if ("imageEmbedding" in prediction) {
         return prediction.imageEmbedding ?? [];
-      } else if ("videoEmbedding" in prediction) {
+      } else if ("videoEmbeddings" in prediction) {
         const videoEmbeddings = (prediction as Vertex.VideoEmbeddings).videoEmbeddings;
         const videoEmbedding = videoEmbeddings?.[0];
         return videoEmbedding?.embedding ?? [];
       } else {
+        console.error(`Could not determine prediction type: ${Object.keys(prediction ?? {})}`);
         return [];
       }
     })

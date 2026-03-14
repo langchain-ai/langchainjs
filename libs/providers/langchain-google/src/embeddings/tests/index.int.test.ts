@@ -324,5 +324,24 @@ describe.each(multimodalModelInfo)(
       expect(typeof result?.[0]).toBe("number");
     })
 
+    test("embedContent video data", async () => {
+      const embeddings = newGoogleEmbeddings();
+
+      const dataPath = "src/chat_models/tests/data/rainbow.mp4";
+      const dataType = "video/mp4";
+      const data = await fs.readFile(dataPath);
+      const data64 = data.toString("base64");
+      const document: ContentBlock.Multimodal.Video = {
+        type: "video",
+        data: data64,
+        mimeType: dataType,
+      }
+      const result = await embeddings.embedContent(document);
+
+      expect(Array.isArray(result)).toBe(true);
+      expect(result?.length).toEqual(testConfig?.defaultDimensions);
+      expect(typeof result?.[0]).toBe("number");
+    })
+
   }
 );
