@@ -338,6 +338,32 @@ describe("convertMessagesToGeminiContents", () => {
     expect(functionCallPart.functionCall!.args).toEqual({ city: "London" });
   });
 
+  test("legacy path preserves thoughtSignature on functionCall parts rebuilt from tool_calls", () => {
+    const messages = [
+      new HumanMessage("hello"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "get_weather",
+            args: { city: "London" },
+            id: "call-1",
+            type: "tool_call",
+            thoughtSignature: "sig-legacy-1",
+          },
+        ],
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+    const modelContent = contents.find((c) => c.role === "model");
+    const functionCallPart = modelContent!.parts.find(
+      (p) => "functionCall" in p && p.functionCall
+    ) as Gemini.Part.FunctionCall;
+
+    expect(functionCallPart.thoughtSignature).toBe("sig-legacy-1");
+  });
+
   test("legacy AIMessage content does not duplicate functionCall parts when tool_calls are also present", () => {
     const messages = [
       new HumanMessage("hello"),
@@ -388,6 +414,40 @@ describe("convertMessagesToGeminiContents", () => {
     expect(functionCallParts[1].functionCall!.name).toBe("read_file");
   });
 
+  test("legacy path backfills thoughtSignature onto existing functionCall parts", () => {
+    const messages = [
+      new HumanMessage("hello"),
+      new AIMessage({
+        content: [
+          {
+            type: "functionCall",
+            functionCall: {
+              name: "list_directory",
+              args: { path: "." },
+            },
+          },
+        ],
+        tool_calls: [
+          {
+            name: "list_directory",
+            args: { path: "." },
+            id: "call-1",
+            type: "tool_call",
+            thoughtSignature: "sig-existing-legacy",
+          },
+        ],
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+    const modelContent = contents.find((c) => c.role === "model");
+    const functionCallPart = modelContent!.parts.find(
+      (part) => "functionCall" in part && part.functionCall
+    ) as Gemini.Part.FunctionCall;
+
+    expect(functionCallPart.thoughtSignature).toBe("sig-existing-legacy");
+  });
+
   test("AIMessage with tool_calls produces model turn with functionCall parts (v1 path)", () => {
     const aiMsg = new AIMessage({
       content: "",
@@ -422,6 +482,34 @@ describe("convertMessagesToGeminiContents", () => {
     expect(functionCallPart).toBeDefined();
     expect(functionCallPart.functionCall!.name).toBe("get_weather");
     expect(functionCallPart.functionCall!.args).toEqual({ city: "London" });
+  });
+
+  test("v1 path preserves thoughtSignature on functionCall parts rebuilt from tool_calls", () => {
+    const aiMsg = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          name: "get_weather",
+          args: { city: "London" },
+          id: "call-1",
+          type: "tool_call",
+          thoughtSignature: "sig-v1-1",
+        },
+      ],
+    });
+    aiMsg.response_metadata = { output_version: "v1" };
+
+    const contents = convertMessagesToGeminiContents([
+      new HumanMessage("hello"),
+      aiMsg,
+    ]);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    const functionCallPart = modelContent!.parts.find(
+      (p) => "functionCall" in p && p.functionCall
+    ) as Gemini.Part.FunctionCall;
+
+    expect(functionCallPart.thoughtSignature).toBe("sig-v1-1");
   });
 
   test("v1 path ignores raw functionCall and tool_call content blocks when tool_calls are present", () => {
@@ -486,6 +574,43 @@ describe("convertMessagesToGeminiContents", () => {
     expect(functionCallParts).toHaveLength(2);
     expect(functionCallParts[0].functionCall!.name).toBe("list_directory");
     expect(functionCallParts[1].functionCall!.name).toBe("read_file");
+  });
+
+  test("v1 path backfills thoughtSignature onto existing functionCall parts", () => {
+    const aiMsg = new AIMessage({
+      content: [
+        {
+          type: "functionCall",
+          functionCall: {
+            name: "list_directory",
+            args: { path: "." },
+          },
+          thoughtSignature: undefined,
+        },
+      ],
+      tool_calls: [
+        {
+          name: "list_directory",
+          args: { path: "." },
+          id: "call-1",
+          type: "tool_call",
+          thoughtSignature: "sig-existing-v1",
+        },
+      ],
+    });
+    aiMsg.response_metadata = { output_version: "v1" };
+
+    const contents = convertMessagesToGeminiContents([
+      new HumanMessage("hello"),
+      aiMsg,
+    ]);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    const functionCallPart = modelContent!.parts.find(
+      (part) => "functionCall" in part && part.functionCall
+    ) as Gemini.Part.FunctionCall;
+
+    expect(functionCallPart.thoughtSignature).toBe("sig-existing-v1");
   });
 
   test("ToolMessage name resolved from tool_calls (v1 path)", () => {

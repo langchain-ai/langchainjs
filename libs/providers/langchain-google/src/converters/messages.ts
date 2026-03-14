@@ -453,6 +453,31 @@ function convertStandardContentMessageToGeminiContent(
     (part) => "functionCall" in part && !!part.functionCall
   );
 
+  if (AIMessage.isInstance(message) && message.tool_calls?.length) {
+    let functionCallIndex = 0;
+    for (const part of parts) {
+      if (
+        "functionCall" in part &&
+        part.functionCall &&
+        !part.thoughtSignature
+      ) {
+        const matchedToolCall =
+          message.tool_calls.find(
+            (toolCall) =>
+              toolCall.name === part.functionCall?.name &&
+              JSON.stringify(toolCall.args ?? {}) ===
+                JSON.stringify(part.functionCall?.args ?? {})
+          ) ?? message.tool_calls[functionCallIndex];
+        if (matchedToolCall?.thoughtSignature) {
+          part.thoughtSignature = matchedToolCall.thoughtSignature;
+        }
+        functionCallIndex += 1;
+      } else if ("functionCall" in part && part.functionCall) {
+        functionCallIndex += 1;
+      }
+    }
+  }
+
   if (
     AIMessage.isInstance(message) &&
     message.tool_calls?.length &&
@@ -460,6 +485,9 @@ function convertStandardContentMessageToGeminiContent(
   ) {
     for (const toolCall of message.tool_calls) {
       parts.push({
+        ...(toolCall.thoughtSignature
+          ? { thoughtSignature: toolCall.thoughtSignature }
+          : {}),
         functionCall: {
           name: toolCall.name,
           args: toolCall.args ?? {},
@@ -769,6 +797,31 @@ function convertLegacyContentMessageToGeminiContent(
     (part) => "functionCall" in part && !!part.functionCall
   );
 
+  if (AIMessage.isInstance(message) && message.tool_calls?.length) {
+    let functionCallIndex = 0;
+    for (const part of parts) {
+      if (
+        "functionCall" in part &&
+        part.functionCall &&
+        !part.thoughtSignature
+      ) {
+        const matchedToolCall =
+          message.tool_calls.find(
+            (toolCall) =>
+              toolCall.name === part.functionCall?.name &&
+              JSON.stringify(toolCall.args ?? {}) ===
+                JSON.stringify(part.functionCall?.args ?? {})
+          ) ?? message.tool_calls[functionCallIndex];
+        if (matchedToolCall?.thoughtSignature) {
+          part.thoughtSignature = matchedToolCall.thoughtSignature;
+        }
+        functionCallIndex += 1;
+      } else if ("functionCall" in part && part.functionCall) {
+        functionCallIndex += 1;
+      }
+    }
+  }
+
   if (
     AIMessage.isInstance(message) &&
     message.tool_calls?.length &&
@@ -776,6 +829,9 @@ function convertLegacyContentMessageToGeminiContent(
   ) {
     for (const toolCall of message.tool_calls) {
       parts.push({
+        ...(toolCall.thoughtSignature
+          ? { thoughtSignature: toolCall.thoughtSignature }
+          : {}),
         functionCall: {
           name: toolCall.name,
           args: toolCall.args ?? {},
