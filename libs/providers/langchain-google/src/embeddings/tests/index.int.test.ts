@@ -35,6 +35,9 @@ type ModelInfoConfig = {
   only?: boolean;
   skip?: boolean;
   delay?: number;
+  defaultDimensions?: number;
+  testDimensions?: number[];
+  isMultimodal?: boolean;
 };
 
 type DefaultGoogleParams = Omit<
@@ -50,10 +53,35 @@ type ModelInfo = {
 
 const allModelInfo: ModelInfo[] = [
   {
+    model: "text-embedding-005",
+    testConfig: {
+      defaultDimensions: 768,
+      useApiKey: false,
+    }
+  },
+  {
+    model: "multimodalembedding@001",
+    testConfig: {
+      defaultDimensions: 1408,
+      testDimensions: [128, 256, 512],
+      useApiKey: false,
+
+    }
+  },
+  {
     model: "gemini-embedding-001",
+    testConfig: {
+      defaultDimensions: 3072,
+      testDimensions: [768, 1536],
+    }
   },
   {
     model: "gemini-embedding-2-preview",
+    testConfig: {
+      isMultimodal: true,
+      defaultDimensions: 3072,
+      testDimensions: [768, 1536],
+    }
   },
 ];
 
@@ -76,12 +104,14 @@ function filterTestableModels(
   );
 
   let filteredModels = skippedModels;
+  let allFilters: ModelInfoTest[] = [];
   if (filters) {
-    const allFilters = Array.isArray(filters) ? filters : [filters];
-    allFilters.forEach((filter: ModelInfoTest) => {
-      filteredModels = filteredModels.filter(filter);
-    });
+    allFilters = Array.isArray(filters) ? filters : [filters];
   }
+  allFilters.push((info) => info.testConfig?.useApiKey || info.testConfig?.node || false)
+  allFilters.forEach((filter: ModelInfoTest) => {
+    filteredModels = filteredModels.filter(filter);
+  });
 
   return filteredModels;
 }
@@ -192,7 +222,7 @@ describe.each(coreModelInfo)(
       const result = await embeddings.embedQuery("What is 1 + 1?");
 
       expect(Array.isArray(result)).toBe(true);
-      expect(result.length).toBeGreaterThan(0);
+      expect(result.length).toEqual(testConfig?.defaultDimensions);
       expect(typeof result[0]).toBe("number");
     });
     
