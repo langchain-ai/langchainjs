@@ -363,11 +363,7 @@ describe("Round-trip thinking content handling", () => {
     const aiMessage = chatResult.generations[0].message;
 
     // LangChain AIMessage -> Gemini parts (outgoing direction)
-    const roundTrippedParts = convertMessageContentToParts(
-      aiMessage,
-      true,
-      []
-    );
+    const roundTrippedParts = convertMessageContentToParts(aiMessage, true, []);
 
     expect(roundTrippedParts).toHaveLength(2);
     expect(roundTrippedParts[0]).toEqual({
