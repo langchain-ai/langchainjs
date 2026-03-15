@@ -1,6 +1,17 @@
-import { afterAll, afterEach, describe, expect, vi, test } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  vi,
+  test,
+} from "vitest";
 import { AIMessage, ToolMessage } from "@langchain/core/messages";
 import { ChatAlibabaTongyi } from "../alibaba_tongyi.js";
+
+const fetchMock = vi.fn();
+const originalFetch = globalThis.fetch;
 
 const weatherTool = {
   type: "function" as const,
@@ -20,16 +31,18 @@ const weatherTool = {
   },
 };
 
-function createJsonResponse(payload: unknown): Response {
-  return new Response(JSON.stringify(payload), {
-    status: 200,
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
+function createJsonResponse(payload: unknown): Promise<Response> {
+  return Promise.resolve(
+    new Response(JSON.stringify(payload), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+  );
 }
 
-function createSseResponse(events: unknown[]): Response {
+function createSseResponse(events: unknown[]): Promise<Response> {
   const encoder = new TextEncoder();
   const data = events
     .map((event) => `data: ${JSON.stringify(event)}\n`)
@@ -40,15 +53,17 @@ function createSseResponse(events: unknown[]): Response {
       controller.close();
     },
   });
-  return new Response(stream, {
-    status: 200,
-    headers: {
-      "Content-Type": "text/event-stream",
-    },
-  });
+  return Promise.resolve(
+    new Response(stream, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/event-stream",
+      },
+    })
+  );
 }
 
-function getRequestBody(fetchMock: ReturnType<typeof vi.spyOn>) {
+function getRequestBody() {
   const lastCall = fetchMock.mock.calls.at(-1);
   if (!lastCall) {
     throw new Error("No fetch call found.");
@@ -86,7 +101,19 @@ function getRequestBody(fetchMock: ReturnType<typeof vi.spyOn>) {
   };
 }
 
-function getRequestHeaders(fetchMock: ReturnType<typeof vi.spyOn>) {
+function getRequestUrl(): string {
+  const lastCall = fetchMock.mock.calls.at(-1);
+  if (!lastCall) {
+    throw new Error("No fetch call found.");
+  }
+  const [url] = lastCall;
+  if (typeof url !== "string") {
+    throw new Error("Expected URL to be a string.");
+  }
+  return url;
+}
+
+function getRequestHeaders() {
   const lastCall = fetchMock.mock.calls.at(-1);
   if (!lastCall) {
     throw new Error("No fetch call found.");
@@ -96,14 +123,16 @@ function getRequestHeaders(fetchMock: ReturnType<typeof vi.spyOn>) {
 }
 
 describe("ChatAlibabaTongyi tool calling", () => {
-  const fetchMock = vi.spyOn(globalThis, "fetch");
+  beforeAll(() => {
+    vi.stubGlobal("fetch", fetchMock);
+  });
 
   afterEach(() => {
     fetchMock.mockReset();
   });
 
   afterAll(() => {
-    fetchMock.mockRestore();
+    vi.stubGlobal("fetch", originalFetch);
   });
 
   test("bindTools serializes tools into parameters and switches to message format", async () => {
@@ -140,7 +169,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
         ([url]) => typeof url === "string" && url.includes("dashscope")
       )
     ).toHaveLength(1);
-    const body = getRequestBody(fetchMock);
+    const body = getRequestBody();
     expect(body.parameters.result_format).toBe("message");
     expect(body.parameters.tools?.[0]?.type).toBe("function");
     expect(body.parameters.tools?.[0]?.function.name).toBe(
@@ -169,7 +198,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
     });
 
     const response = await model.invoke("hello");
-    const body = getRequestBody(fetchMock);
+    const body = getRequestBody();
     expect(body.parameters.result_format).toBe("text");
     expect(body.parameters.tools).toBeUndefined();
     expect(response.content).toBe("Plain text response.");
@@ -374,7 +403,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
 
     await model.invoke([assistantMessage, toolMessage]);
 
-    const body = getRequestBody(fetchMock);
+    const body = getRequestBody();
     expect(body.input.messages[0].role).toBe("assistant");
     expect(body.input.messages[0].tool_calls?.[0]?.function?.name).toBe(
       "get_current_weather"
@@ -416,7 +445,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
     });
 
     await model.invoke("hello");
-    const body = getRequestBody(fetchMock);
+    const body = getRequestBody();
     expect(body.parameters.tool_choice).toBe("none");
   });
 
@@ -455,7 +484,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
     });
 
     await model.invoke("hello");
-    const body = getRequestBody(fetchMock);
+    const body = getRequestBody();
     expect(body.parameters.tool_choice).toEqual(forcedToolChoice);
   });
 
@@ -489,7 +518,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
     });
 
     await model.invoke("hello");
-    const body = getRequestBody(fetchMock);
+    const body = getRequestBody();
     expect(body.parameters.tool_choice).toEqual({
       type: "function",
       function: { name: "get_current_weather" },
@@ -528,7 +557,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
 
     try {
       await model.invoke("hello");
-      const body = getRequestBody(fetchMock);
+      const body = getRequestBody();
       expect(body.parameters.tool_choice).toBe("auto");
       expect(warnSpy).toHaveBeenCalledWith(
         expect.stringContaining('received tool_choice="any"')
@@ -573,7 +602,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
 
     try {
       await model.invoke("hello");
-      const body = getRequestBody(fetchMock);
+      const body = getRequestBody();
       expect(body.parameters.tool_choice).toBe("auto");
       expect(warnSpy).toHaveBeenCalledWith(
         expect.stringContaining('received tool_choice="required"')
@@ -837,7 +866,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
     });
 
     await model.invoke("hello");
-    const body = getRequestBody(fetchMock);
+    const body = getRequestBody();
     expect(body.parameters.tools?.[0]?.type).toBe("function");
     expect(body.parameters.tools?.[0]?.function.name).toBe(
       "get_current_weather"
@@ -874,7 +903,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
     });
 
     await bindToolsModel.invoke("hello");
-    const bindToolsBody = getRequestBody(fetchMock);
+    const bindToolsBody = getRequestBody();
     expect(bindToolsBody.parameters.parallel_tool_calls).toBe(true);
 
     fetchMock.mockImplementation(() =>
@@ -907,7 +936,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
     });
 
     await withConfigModel.invoke("hello");
-    const withConfigBody = getRequestBody(fetchMock);
+    const withConfigBody = getRequestBody();
     expect(withConfigBody.parameters.parallel_tool_calls).toBe(false);
   });
 
@@ -940,7 +969,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
     }).bindTools([weatherTool]);
 
     await model.invoke("hello");
-    const body = getRequestBody(fetchMock);
+    const body = getRequestBody();
     expect(body.parameters.parallel_tool_calls).toBe(true);
   });
 
@@ -975,7 +1004,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
     });
 
     await model.invoke("hello");
-    const headers = getRequestHeaders(fetchMock);
+    const headers = getRequestHeaders();
     expect(headers.get("Accept")).toBe("text/event-stream");
     expect(headers.get("X-DashScope-SSE")).toBe("enable");
   });
@@ -1017,7 +1046,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
 
     expect(chunks).toHaveLength(1);
     expect(chunks[0].content).toBe("ok");
-    const headers = getRequestHeaders(fetchMock);
+    const headers = getRequestHeaders();
     expect(headers.get("Accept")).toBe("text/event-stream");
     expect(headers.get("X-DashScope-SSE")).toBe("enable");
   });
@@ -1077,7 +1106,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
       location: "San Francisco",
       unit: "celsius",
     });
-    const body = getRequestBody(fetchMock);
+    const body = getRequestBody();
     expect(body.parameters.tools?.[0]?.function.name).toBe("extract_weather");
     expect(body.parameters.result_format).toBe("message");
   });
@@ -1253,7 +1282,7 @@ describe("ChatAlibabaTongyi tool calling", () => {
     });
 
     await model.invoke("hello");
-    const nonStreamingBody = getRequestBody(fetchMock);
+    const nonStreamingBody = getRequestBody();
     expect(nonStreamingBody.parameters.repetition_penalty).toBe(1.1);
 
     fetchMock.mockImplementation(() =>
@@ -1286,8 +1315,103 @@ describe("ChatAlibabaTongyi tool calling", () => {
       streaming: true,
     });
     await streamingModel.invoke("hello");
-    const streamingBody = getRequestBody(fetchMock);
+    const streamingBody = getRequestBody();
     expect(streamingBody.parameters.repetition_penalty).toBeUndefined();
     expect(streamingBody.parameters.incremental_output).toBe(true);
+  });
+});
+
+describe("ChatAlibabaTongyi apiUrl and VL model detection", () => {
+  beforeAll(() => {
+    vi.stubGlobal("fetch", fetchMock);
+  });
+
+  afterEach(() => {
+    fetchMock.mockReset();
+  });
+
+  afterAll(() => {
+    vi.stubGlobal("fetch", originalFetch);
+  });
+
+  const simpleResponse = {
+    request_id: "req-url-test",
+    usage: { input_tokens: 1, output_tokens: 1, total_tokens: 2 },
+    output: {
+      text: "ok",
+      finish_reason: "stop",
+    },
+  };
+
+  test("default model uses text-generation endpoint", async () => {
+    fetchMock.mockImplementation(() => createJsonResponse(simpleResponse));
+
+    const model = new ChatAlibabaTongyi({
+      alibabaApiKey: "test-api-key",
+    });
+
+    await model.invoke("hello");
+    const url = getRequestUrl();
+    expect(url).toContain("text-generation/generation");
+    expect(url).not.toContain("multimodal-generation");
+  });
+
+  test("VL model auto-detects multimodal endpoint", async () => {
+    fetchMock.mockImplementation(() => createJsonResponse(simpleResponse));
+
+    const model = new ChatAlibabaTongyi({
+      alibabaApiKey: "test-api-key",
+      model: "qwen-vl-plus",
+    });
+
+    await model.invoke("hello");
+    const url = getRequestUrl();
+    expect(url).toContain("multimodal-generation/generation");
+    expect(url).not.toContain("text-generation");
+  });
+
+  test("custom apiUrl overrides auto-detection", async () => {
+    fetchMock.mockImplementation(() => createJsonResponse(simpleResponse));
+
+    const customUrl = "https://custom.example.com/api/v1/chat";
+    const model = new ChatAlibabaTongyi({
+      alibabaApiKey: "test-api-key",
+      model: "qwen-vl-plus",
+      apiUrl: customUrl,
+    });
+
+    await model.invoke("hello");
+    const url = getRequestUrl();
+    expect(url).toBe(customUrl);
+  });
+
+  test("various VL model name patterns select multimodal endpoint", () => {
+    const vlModels = [
+      "qwen-vl-plus",
+      "qwen3-vl-72b",
+      "qwen2.5-vl-7b-instruct",
+      "qwen-vl",
+    ];
+
+    for (const modelName of vlModels) {
+      const model = new ChatAlibabaTongyi({
+        alibabaApiKey: "test-api-key",
+        model: modelName,
+      });
+      expect(model.apiUrl).toContain("multimodal-generation/generation");
+    }
+  });
+
+  test("non-VL model names select text-generation endpoint", () => {
+    const textModels = ["qwen-turbo", "qwen-plus", "qwen-max", "qwen-7b-chat"];
+
+    for (const modelName of textModels) {
+      const model = new ChatAlibabaTongyi({
+        alibabaApiKey: "test-api-key",
+        model: modelName,
+      });
+      expect(model.apiUrl).toContain("text-generation/generation");
+      expect(model.apiUrl).not.toContain("multimodal-generation");
+    }
   });
 });
