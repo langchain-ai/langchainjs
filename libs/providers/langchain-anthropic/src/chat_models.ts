@@ -1215,8 +1215,11 @@ export class ChatAnthropicMessages<
     };
 
     if (this.thinking.type === "enabled" || this.thinking.type === "adaptive") {
-      if (this.topP !== undefined && this.topK !== -1) {
+      if (this.topK !== undefined) {
         throw new Error("topK is not supported when thinking is enabled");
+      }
+      if (this.topP !== undefined) {
+        throw new Error("topP is not supported when thinking is enabled");
       }
       if (this.temperature !== undefined && this.temperature !== 1) {
         throw new Error(
@@ -1225,8 +1228,12 @@ export class ChatAnthropicMessages<
       }
     } else {
       // Only set temperature, top_k, and top_p if thinking is disabled
-      output.temperature = this.temperature;
-      output.top_k = this.topK;
+      if (this.temperature !== undefined) {
+        output.temperature = this.temperature;
+      }
+      if (this.topK !== undefined) {
+        output.top_k = this.topK;
+      }
       if (this.topP !== undefined) {
         output.top_p = this.topP;
       }
