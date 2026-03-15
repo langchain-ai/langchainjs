@@ -233,6 +233,12 @@ interface AlibabaTongyiChatInput {
 
   /** Experimental passthrough to allow parallel tool calls. */
   parallelToolCalls?: boolean;
+
+  /** Custom API URL. Overrides auto-detected URL based on region and model type.
+   * If not provided, text models use the text-generation endpoint and
+   * VL (vision-language) models use the multimodal-generation endpoint.
+   */
+  apiUrl?: string;
 }
 
 /**
@@ -691,6 +697,10 @@ export class ChatAlibabaTongyi
     return regionUrls[region];
   }
 
+  private isMultimodalModel(modelName: string): boolean {
+    return /[-_]vl([-_.]|$)/i.test(modelName);
+  }
+
   constructor(
     fields: Partial<AlibabaTongyiChatInput> & BaseChatModelParams = {}
   ) {
@@ -703,10 +713,28 @@ export class ChatAlibabaTongyi
     }
 
     // Set region (default to china)
-    this.region = fields.region ?? "china";
+    this.region =
+      fields.region ??
+      (getEnvironmentVariable("ALIBABA_REGION") as
+        | "china"
+        | "singapore"
+        | "us"
+        | undefined) ??
+      "china";
 
-    // Set API URL based on region
-    this.apiUrl = `${this.getRegionBaseUrl(this.region)}api/v1/services/aigc/text-generation/generation`;
+    // Model must be known before computing apiUrl
+    this.modelName = fields?.model ?? fields.modelName ?? "qwen-turbo";
+    this.model = this.modelName;
+
+    // Set API URL: explicit override > auto-detect from model name
+    if (fields.apiUrl) {
+      this.apiUrl = fields.apiUrl;
+    } else {
+      const servicePath = this.isMultimodalModel(this.model)
+        ? "api/v1/services/aigc/multimodal-generation/generation"
+        : "api/v1/services/aigc/text-generation/generation";
+      this.apiUrl = `${this.getRegionBaseUrl(this.region)}${servicePath}`;
+    }
 
     this.lc_serializable = true;
     this.streaming = fields.streaming ?? false;
@@ -719,8 +747,6 @@ export class ChatAlibabaTongyi
     this.repetitionPenalty = fields.repetitionPenalty;
     this.enableSearch = fields.enableSearch;
     this.parallelToolCalls = fields.parallelToolCalls;
-    this.modelName = fields?.model ?? fields.modelName ?? "qwen-turbo";
-    this.model = this.modelName;
   }
 
   /**
