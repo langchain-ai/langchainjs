@@ -107,8 +107,16 @@ describe("convertGeminiPartsToToolCalls", () => {
   });
 });
 
+/** Helper: find the content entry whose parts contain a functionResponse. */
+const findFunctionResponseContent = (contents: Gemini.Content[]) =>
+  contents.find((c) => c.parts?.some((p) => "functionResponse" in p));
+
+/** Helper: filter content entries whose parts contain a functionResponse. */
+const filterFunctionResponseContents = (contents: Gemini.Content[]) =>
+  contents.filter((c) => c.parts?.some((p) => "functionResponse" in p));
+
 describe("convertMessagesToGeminiContents", () => {
-  test("passes tool_call_id through as functionResponse.id (legacy path)", () => {
+  test("resolves functionResponse.name from tool_call_id match (legacy path)", () => {
     const messages = [
       new HumanMessage("hello"),
       new AIMessage({
@@ -131,7 +139,7 @@ describe("convertMessagesToGeminiContents", () => {
 
     const contents = convertMessagesToGeminiContents(messages);
 
-    const toolResponseContent = contents.find((c) => c.role === "function");
+    const toolResponseContent = findFunctionResponseContent(contents);
     expect(toolResponseContent).toBeDefined();
 
     const functionResponsePart = toolResponseContent!.parts?.find(
@@ -140,8 +148,8 @@ describe("convertMessagesToGeminiContents", () => {
     expect(functionResponsePart).toBeDefined();
     expect(
       (functionResponsePart as Gemini.Part.FunctionResponse).functionResponse!
-        .id
-    ).toBe("tool-call-abc");
+        .name
+    ).toBe("my_tool");
   });
 
   test("resolves functionResponse.name from tool_calls (legacy path)", () => {
@@ -166,7 +174,7 @@ describe("convertMessagesToGeminiContents", () => {
 
     const contents = convertMessagesToGeminiContents(messages);
 
-    const toolResponseContent = contents.find((c) => c.role === "function");
+    const toolResponseContent = findFunctionResponseContent(contents);
     expect(toolResponseContent).toBeDefined();
 
     const functionResponsePart = toolResponseContent!.parts?.find(
@@ -211,7 +219,7 @@ describe("convertMessagesToGeminiContents", () => {
 
     const contents = convertMessagesToGeminiContents(messages);
 
-    const toolResponseContents = contents.filter((c) => c.role === "function");
+    const toolResponseContents = filterFunctionResponseContents(contents);
     expect(toolResponseContents).toHaveLength(1);
 
     const parts = toolResponseContents[0].parts?.filter(
@@ -258,20 +266,21 @@ describe("convertMessagesToGeminiContents", () => {
 
     const contents = convertMessagesToGeminiContents(messages);
 
-    // Should produce: user, function (single merged turn)
-    // The AIMessage with empty content and tool_calls produces no model content block
-    expect(contents).toHaveLength(2);
+    // Should produce: user, model (functionCall parts), user (merged functionResponse parts)
+    expect(contents).toHaveLength(3);
 
-    const functionTurn = contents[1];
-    expect(functionTurn.role).toBe("function");
+    expect(contents[1].role).toBe("model");
+
+    const functionTurn = contents[2];
+    expect(functionTurn.role).toBe("user");
     expect(functionTurn.parts).toHaveLength(2);
 
     const responses = functionTurn.parts?.filter(
       (p) => "functionResponse" in p
     ) as Gemini.Part.FunctionResponse[];
     expect(responses).toHaveLength(2);
-    expect(responses[0].functionResponse!.id).toBe("call-paris");
-    expect(responses[1].functionResponse!.id).toBe("call-london");
+    expect(responses[0].functionResponse!.name).toBe("get_weather");
+    expect(responses[1].functionResponse!.name).toBe("get_weather");
   });
 
   test("falls back to ToolMessage.name when tool call lookup succeeds (legacy path)", () => {
@@ -298,7 +307,7 @@ describe("convertMessagesToGeminiContents", () => {
 
     const contents = convertMessagesToGeminiContents(messages);
 
-    const toolResponseContent = contents.find((c) => c.role === "function");
+    const toolResponseContent = findFunctionResponseContent(contents);
     const functionResponsePart = toolResponseContent!.parts?.find(
       (p) => "functionResponse" in p && p.functionResponse
     ) as Gemini.Part.FunctionResponse;
@@ -399,7 +408,7 @@ describe("convertMessagesToGeminiContents", () => {
 
     const contents = convertMessagesToGeminiContents(messages);
 
-    const toolResponseContent = contents.find((c) => c.role === "function");
+    const toolResponseContent = findFunctionResponseContent(contents);
     expect(toolResponseContent).toBeDefined();
 
     const functionResponsePart = toolResponseContent!.parts?.find(
@@ -445,21 +454,19 @@ describe("convertMessagesToGeminiContents", () => {
 
     const contents = convertMessagesToGeminiContents(messages);
 
-    const toolResponseContents = contents.filter((c) => c.role === "function");
-    expect(toolResponseContents).toHaveLength(2);
+    // Consecutive ToolMessages with the same "user" role are merged into one content
+    const toolResponseContents = filterFunctionResponseContents(contents);
+    expect(toolResponseContents).toHaveLength(1);
 
-    const firstResponse = toolResponseContents[0].parts?.find(
+    const mergedParts = toolResponseContents[0].parts?.filter(
       (p) => "functionResponse" in p && p.functionResponse
-    ) as Gemini.Part.FunctionResponse;
-    expect(firstResponse.functionResponse!.name).toBe("get_weather");
-
-    const secondResponse = toolResponseContents[1].parts?.find(
-      (p) => "functionResponse" in p && p.functionResponse
-    ) as Gemini.Part.FunctionResponse;
-    expect(secondResponse.functionResponse!.name).toBe("get_time");
+    ) as Gemini.Part.FunctionResponse[];
+    expect(mergedParts).toHaveLength(2);
+    expect(mergedParts[0].functionResponse!.name).toBe("get_weather");
+    expect(mergedParts[1].functionResponse!.name).toBe("get_time");
   });
 
-  test("passes tool_call_id through as functionResponse.id (v1 standard path)", () => {
+  test("resolves functionResponse.name from tool_call_id match (v1 standard path)", () => {
     const messages = [
       new HumanMessage("hello"),
       new AIMessage({
@@ -483,7 +490,7 @@ describe("convertMessagesToGeminiContents", () => {
 
     const contents = convertMessagesToGeminiContents(messages);
 
-    const toolResponseContent = contents.find((c) => c.role === "function");
+    const toolResponseContent = findFunctionResponseContent(contents);
     expect(toolResponseContent).toBeDefined();
 
     const functionResponsePart = toolResponseContent!.parts?.find(
@@ -492,8 +499,8 @@ describe("convertMessagesToGeminiContents", () => {
     expect(functionResponsePart).toBeDefined();
     expect(
       (functionResponsePart as Gemini.Part.FunctionResponse).functionResponse!
-        .id
-    ).toBe("tool-call-xyz");
+        .name
+    ).toBe("my_tool");
   });
 
   test("v1 contentBlocks: text-plain block produces fileData part", () => {
@@ -681,7 +688,7 @@ describe("convertMessagesToGeminiContents", () => {
     ];
 
     const contents = convertMessagesToGeminiContents(messages);
-    const functionTurn = contents.find((c) => c.role === "function");
+    const functionTurn = findFunctionResponseContent(contents);
     expect(functionTurn).toBeDefined();
 
     const functionResponsePart = functionTurn!.parts?.find(
@@ -724,7 +731,7 @@ describe("convertMessagesToGeminiContents", () => {
     ];
 
     const contents = convertMessagesToGeminiContents(messages);
-    const functionTurn = contents.find((c) => c.role === "function");
+    const functionTurn = findFunctionResponseContent(contents);
     expect(functionTurn).toBeDefined();
 
     const functionResponsePart = functionTurn!.parts?.find(
@@ -762,7 +769,7 @@ describe("convertMessagesToGeminiContents", () => {
     ];
 
     const contents = convertMessagesToGeminiContents(messages);
-    const functionTurn = contents.find((c) => c.role === "function");
+    const functionTurn = findFunctionResponseContent(contents);
     expect(functionTurn).toBeDefined();
 
     const functionResponsePart = functionTurn!.parts?.find(
@@ -805,7 +812,7 @@ describe("convertMessagesToGeminiContents", () => {
     ];
 
     const contents = convertMessagesToGeminiContents(messages);
-    const functionTurn = contents.find((c) => c.role === "function");
+    const functionTurn = findFunctionResponseContent(contents);
     expect(functionTurn).toBeDefined();
 
     const functionResponsePart = functionTurn!.parts?.find(
@@ -852,7 +859,7 @@ describe("convertMessagesToGeminiContents", () => {
     ];
 
     const contents = convertMessagesToGeminiContents(messages);
-    const functionTurn = contents.find((c) => c.role === "function");
+    const functionTurn = findFunctionResponseContent(contents);
     expect(functionTurn).toBeDefined();
 
     // Should have a fileData sibling for URL-based image
@@ -909,7 +916,7 @@ describe("convertMessagesToGeminiContents", () => {
     ];
 
     const contents = convertMessagesToGeminiContents(messages);
-    const functionTurn = contents.find((c) => c.role === "function");
+    const functionTurn = findFunctionResponseContent(contents);
     expect(functionTurn).toBeDefined();
 
     // Should have 1 functionResponse + 2 inlineData parts
@@ -967,7 +974,7 @@ describe("convertMessagesToGeminiContents", () => {
     const messages = [new HumanMessage("take a screenshot"), aiMsg, toolMsg];
 
     const contents = convertMessagesToGeminiContents(messages);
-    const functionTurn = contents.find((c) => c.role === "function");
+    const functionTurn = findFunctionResponseContent(contents);
     expect(functionTurn).toBeDefined();
 
     const functionResponsePart = functionTurn!.parts?.find(
@@ -1011,7 +1018,7 @@ describe("convertMessagesToGeminiContents", () => {
     const messages = [new HumanMessage("hello"), aiMsg2, toolMsg];
 
     const contents = convertMessagesToGeminiContents(messages);
-    const functionTurn = contents.find((c) => c.role === "function");
+    const functionTurn = findFunctionResponseContent(contents);
     expect(functionTurn).toBeDefined();
 
     const functionResponsePart = functionTurn!.parts?.find(
