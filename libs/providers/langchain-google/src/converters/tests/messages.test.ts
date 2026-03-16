@@ -134,7 +134,7 @@ describe("convertMessagesToGeminiContents", () => {
     const toolResponseContent = contents.find((c) => c.role === "function");
     expect(toolResponseContent).toBeDefined();
 
-    const functionResponsePart = toolResponseContent!.parts.find(
+    const functionResponsePart = toolResponseContent!.parts?.find(
       (p) => "functionResponse" in p && p.functionResponse
     );
     expect(functionResponsePart).toBeDefined();
@@ -169,7 +169,7 @@ describe("convertMessagesToGeminiContents", () => {
     const toolResponseContent = contents.find((c) => c.role === "function");
     expect(toolResponseContent).toBeDefined();
 
-    const functionResponsePart = toolResponseContent!.parts.find(
+    const functionResponsePart = toolResponseContent!.parts?.find(
       (p) => "functionResponse" in p && p.functionResponse
     );
     expect(functionResponsePart).toBeDefined();
@@ -214,15 +214,15 @@ describe("convertMessagesToGeminiContents", () => {
     const toolResponseContents = contents.filter((c) => c.role === "function");
     expect(toolResponseContents).toHaveLength(1);
 
-    const parts = toolResponseContents[0].parts.filter(
+    const parts = toolResponseContents[0].parts?.filter(
       (p) => "functionResponse" in p && p.functionResponse
     );
     expect(parts).toHaveLength(2);
 
-    const firstResponse = parts[0] as Gemini.Part.FunctionResponse;
+    const firstResponse = parts?.[0] as Gemini.Part.FunctionResponse;
     expect(firstResponse.functionResponse!.name).toBe("get_weather");
 
-    const secondResponse = parts[1] as Gemini.Part.FunctionResponse;
+    const secondResponse = parts?.[1] as Gemini.Part.FunctionResponse;
     expect(secondResponse.functionResponse!.name).toBe("get_time");
   });
 
@@ -266,7 +266,7 @@ describe("convertMessagesToGeminiContents", () => {
     expect(functionTurn.role).toBe("function");
     expect(functionTurn.parts).toHaveLength(2);
 
-    const responses = functionTurn.parts.filter(
+    const responses = functionTurn.parts?.filter(
       (p) => "functionResponse" in p
     ) as Gemini.Part.FunctionResponse[];
     expect(responses).toHaveLength(2);
@@ -299,7 +299,7 @@ describe("convertMessagesToGeminiContents", () => {
     const contents = convertMessagesToGeminiContents(messages);
 
     const toolResponseContent = contents.find((c) => c.role === "function");
-    const functionResponsePart = toolResponseContent!.parts.find(
+    const functionResponsePart = toolResponseContent!.parts?.find(
       (p) => "functionResponse" in p && p.functionResponse
     ) as Gemini.Part.FunctionResponse;
     expect(functionResponsePart.functionResponse!.name).toBe("get_weather");
@@ -330,7 +330,7 @@ describe("convertMessagesToGeminiContents", () => {
     const modelContent = contents.find((c) => c.role === "model");
     expect(modelContent).toBeDefined();
 
-    const functionCallPart = modelContent!.parts.find(
+    const functionCallPart = modelContent!.parts?.find(
       (p) => "functionCall" in p && p.functionCall
     ) as Gemini.Part.FunctionCall;
     expect(functionCallPart).toBeDefined();
@@ -366,7 +366,7 @@ describe("convertMessagesToGeminiContents", () => {
     const modelContent = contents.find((c) => c.role === "model");
     expect(modelContent).toBeDefined();
 
-    const functionCallPart = modelContent!.parts.find(
+    const functionCallPart = modelContent!.parts?.find(
       (p) => "functionCall" in p && p.functionCall
     ) as Gemini.Part.FunctionCall;
     expect(functionCallPart).toBeDefined();
@@ -402,7 +402,7 @@ describe("convertMessagesToGeminiContents", () => {
     const toolResponseContent = contents.find((c) => c.role === "function");
     expect(toolResponseContent).toBeDefined();
 
-    const functionResponsePart = toolResponseContent!.parts.find(
+    const functionResponsePart = toolResponseContent!.parts?.find(
       (p) => "functionResponse" in p && p.functionResponse
     ) as Gemini.Part.FunctionResponse;
     expect(functionResponsePart).toBeDefined();
@@ -448,12 +448,12 @@ describe("convertMessagesToGeminiContents", () => {
     const toolResponseContents = contents.filter((c) => c.role === "function");
     expect(toolResponseContents).toHaveLength(2);
 
-    const firstResponse = toolResponseContents[0].parts.find(
+    const firstResponse = toolResponseContents[0].parts?.find(
       (p) => "functionResponse" in p && p.functionResponse
     ) as Gemini.Part.FunctionResponse;
     expect(firstResponse.functionResponse!.name).toBe("get_weather");
 
-    const secondResponse = toolResponseContents[1].parts.find(
+    const secondResponse = toolResponseContents[1].parts?.find(
       (p) => "functionResponse" in p && p.functionResponse
     ) as Gemini.Part.FunctionResponse;
     expect(secondResponse.functionResponse!.name).toBe("get_time");
@@ -486,7 +486,7 @@ describe("convertMessagesToGeminiContents", () => {
     const toolResponseContent = contents.find((c) => c.role === "function");
     expect(toolResponseContent).toBeDefined();
 
-    const functionResponsePart = toolResponseContent!.parts.find(
+    const functionResponsePart = toolResponseContent!.parts?.find(
       (p) => "functionResponse" in p && p.functionResponse
     );
     expect(functionResponsePart).toBeDefined();
@@ -516,7 +516,7 @@ describe("convertMessagesToGeminiContents", () => {
     expect(userContent).toBeDefined();
     expect(userContent!.parts).toHaveLength(1);
 
-    const part = userContent!.parts[0] as Gemini.Part.FileData;
+    const part = userContent!.parts?.[0] as Gemini.Part.FileData;
     expect(part.fileData).toBeDefined();
     expect(part.fileData!.fileUri).toBe("gs://bucket/readme.txt");
     expect(part.fileData!.mimeType).toBe("text/plain");
@@ -542,7 +542,7 @@ describe("convertMessagesToGeminiContents", () => {
     expect(userContent).toBeDefined();
     expect(userContent!.parts).toHaveLength(1);
 
-    const part = userContent!.parts[0] as Gemini.Part.FileData;
+    const part = userContent!.parts?.[0] as Gemini.Part.FileData;
     expect(part.fileData).toBeDefined();
     expect(part.fileData!.fileUri).toBe("gs://bucket/doc.pdf");
     expect(part.fileData!.mimeType).toBe("application/pdf");
@@ -568,7 +568,7 @@ describe("convertMessagesToGeminiContents", () => {
     expect(userContent).toBeDefined();
     expect(userContent!.parts).toHaveLength(1);
 
-    const part = userContent!.parts[0] as Gemini.Part.InlineData;
+    const part = userContent!.parts?.[0] as Gemini.Part.InlineData;
     expect(part.inlineData).toBeDefined();
     expect(part.inlineData!.mimeType).toBe("text/plain");
     expect(part.inlineData!.data).toBe("SGVsbG8gd29ybGQ=");
@@ -594,7 +594,7 @@ describe("convertMessagesToGeminiContents", () => {
     expect(userContent).toBeDefined();
     expect(userContent!.parts).toHaveLength(1);
 
-    const part = userContent!.parts[0] as Gemini.Part.InlineData;
+    const part = userContent!.parts?.[0] as Gemini.Part.InlineData;
     expect(part.inlineData).toBeDefined();
     expect(part.inlineData!.mimeType).toBe("application/pdf");
     expect(part.inlineData!.data).toBe("JVBERi0xLjQ=");
@@ -632,20 +632,20 @@ describe("convertMessagesToGeminiContents", () => {
     expect(userContent!.parts).toHaveLength(4);
 
     // text part
-    expect((userContent!.parts[0] as Gemini.Part.Text).text).toBe(
+    expect((userContent!.parts?.[0] as Gemini.Part.Text).text).toBe(
       "Summarize these files"
     );
     // image part
     expect(
-      (userContent!.parts[1] as Gemini.Part.FileData).fileData
+      (userContent!.parts?.[1] as Gemini.Part.FileData).fileData
     ).toBeDefined();
     // text-plain part
     expect(
-      (userContent!.parts[2] as Gemini.Part.FileData).fileData!.fileUri
+      (userContent!.parts?.[2] as Gemini.Part.FileData).fileData!.fileUri
     ).toBe("gs://bucket/notes.txt");
     // file part
     expect(
-      (userContent!.parts[3] as Gemini.Part.FileData).fileData!.fileUri
+      (userContent!.parts?.[3] as Gemini.Part.FileData).fileData!.fileUri
     ).toBe("gs://bucket/report.pdf");
   });
 
@@ -684,7 +684,7 @@ describe("convertMessagesToGeminiContents", () => {
     const functionTurn = contents.find((c) => c.role === "function");
     expect(functionTurn).toBeDefined();
 
-    const functionResponsePart = functionTurn!.parts.find(
+    const functionResponsePart = functionTurn!.parts?.find(
       (p) => "functionResponse" in p
     ) as Gemini.Part.FunctionResponse;
     expect(functionResponsePart).toBeDefined();
@@ -694,7 +694,7 @@ describe("convertMessagesToGeminiContents", () => {
     expect(result).not.toContain("iVBORw0KGgoAAAANS");
 
     // Should have an inlineData sibling
-    const inlineDataPart = functionTurn!.parts.find(
+    const inlineDataPart = functionTurn!.parts?.find(
       (p) => "inlineData" in p
     ) as Gemini.Part.InlineData;
     expect(inlineDataPart).toBeDefined();
@@ -727,7 +727,7 @@ describe("convertMessagesToGeminiContents", () => {
     const functionTurn = contents.find((c) => c.role === "function");
     expect(functionTurn).toBeDefined();
 
-    const functionResponsePart = functionTurn!.parts.find(
+    const functionResponsePart = functionTurn!.parts?.find(
       (p) => "functionResponse" in p
     ) as Gemini.Part.FunctionResponse;
     expect(functionResponsePart.functionResponse!.response.result).toBe(
@@ -765,7 +765,7 @@ describe("convertMessagesToGeminiContents", () => {
     const functionTurn = contents.find((c) => c.role === "function");
     expect(functionTurn).toBeDefined();
 
-    const functionResponsePart = functionTurn!.parts.find(
+    const functionResponsePart = functionTurn!.parts?.find(
       (p) => "functionResponse" in p
     ) as Gemini.Part.FunctionResponse;
     const result = functionResponsePart.functionResponse!.response.result;
@@ -808,14 +808,14 @@ describe("convertMessagesToGeminiContents", () => {
     const functionTurn = contents.find((c) => c.role === "function");
     expect(functionTurn).toBeDefined();
 
-    const functionResponsePart = functionTurn!.parts.find(
+    const functionResponsePart = functionTurn!.parts?.find(
       (p) => "functionResponse" in p
     ) as Gemini.Part.FunctionResponse;
     // Result should be empty since all content was media
     expect(functionResponsePart.functionResponse!.response.result).toBe("");
 
     // Should have an inlineData sibling
-    const inlineDataPart = functionTurn!.parts.find(
+    const inlineDataPart = functionTurn!.parts?.find(
       (p) => "inlineData" in p
     ) as Gemini.Part.InlineData;
     expect(inlineDataPart).toBeDefined();
@@ -856,7 +856,7 @@ describe("convertMessagesToGeminiContents", () => {
     expect(functionTurn).toBeDefined();
 
     // Should have a fileData sibling for URL-based image
-    const fileDataPart = functionTurn!.parts.find(
+    const fileDataPart = functionTurn!.parts?.find(
       (p) => "fileData" in p
     ) as Gemini.Part.FileData;
     expect(fileDataPart).toBeDefined();
@@ -865,7 +865,7 @@ describe("convertMessagesToGeminiContents", () => {
     );
 
     // functionResponse result should not contain the URL as serialized content
-    const functionResponsePart = functionTurn!.parts.find(
+    const functionResponsePart = functionTurn!.parts?.find(
       (p) => "functionResponse" in p
     ) as Gemini.Part.FunctionResponse;
     expect(
@@ -913,12 +913,12 @@ describe("convertMessagesToGeminiContents", () => {
     expect(functionTurn).toBeDefined();
 
     // Should have 1 functionResponse + 2 inlineData parts
-    const functionResponseParts = functionTurn!.parts.filter(
+    const functionResponseParts = functionTurn!.parts?.filter(
       (p) => "functionResponse" in p
     );
     expect(functionResponseParts).toHaveLength(1);
 
-    const inlineDataParts = functionTurn!.parts.filter(
+    const inlineDataParts = functionTurn!.parts?.filter(
       (p) => "inlineData" in p
     ) as Gemini.Part.InlineData[];
     expect(inlineDataParts).toHaveLength(2);
@@ -926,7 +926,7 @@ describe("convertMessagesToGeminiContents", () => {
     expect(inlineDataParts[1].inlineData!.data).toBe("img2data");
 
     // Result should not contain image data
-    const result = (functionResponseParts[0] as Gemini.Part.FunctionResponse)
+    const result = (functionResponseParts?.[0] as Gemini.Part.FunctionResponse)
       .functionResponse!.response.result;
     expect(result).not.toContain("img1data");
     expect(result).not.toContain("img2data");
@@ -970,7 +970,7 @@ describe("convertMessagesToGeminiContents", () => {
     const functionTurn = contents.find((c) => c.role === "function");
     expect(functionTurn).toBeDefined();
 
-    const functionResponsePart = functionTurn!.parts.find(
+    const functionResponsePart = functionTurn!.parts?.find(
       (p) => "functionResponse" in p
     ) as Gemini.Part.FunctionResponse;
     expect(functionResponsePart).toBeDefined();
@@ -980,7 +980,7 @@ describe("convertMessagesToGeminiContents", () => {
     expect(result).not.toContain("abc123");
 
     // Should have an inlineData sibling
-    const inlineDataPart = functionTurn!.parts.find(
+    const inlineDataPart = functionTurn!.parts?.find(
       (p) => "inlineData" in p
     ) as Gemini.Part.InlineData;
     expect(inlineDataPart).toBeDefined();
@@ -1014,7 +1014,7 @@ describe("convertMessagesToGeminiContents", () => {
     const functionTurn = contents.find((c) => c.role === "function");
     expect(functionTurn).toBeDefined();
 
-    const functionResponsePart = functionTurn!.parts.find(
+    const functionResponsePart = functionTurn!.parts?.find(
       (p) => "functionResponse" in p
     ) as Gemini.Part.FunctionResponse;
     expect(functionResponsePart.functionResponse!.response.result).toBe(

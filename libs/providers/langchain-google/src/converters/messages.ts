@@ -25,6 +25,10 @@ import type { Gemini } from "../chat_models/types.js";
 import { iife } from "../utils/misc.js";
 import { InvalidInputError, ToolCallNotFoundError } from "../utils/errors.js";
 
+/** Narrow accessor for the Google-specific `thoughtSignature` that lives on
+ *  tool-call objects at runtime but is not part of the core ToolCall type. */
+type WithThoughtSignature = { thoughtSignature?: string };
+
 /**
  * Standard content block converter for Google Gemini API.
  * Converts deprecated Data content blocks to Gemini Part format.
@@ -447,7 +451,7 @@ function convertStandardContentMessageToGeminiContent(
           name: toolCall.name,
           args: toolCall.args ?? {},
         },
-        thoughtSignature: toolCall.thoughtSignature,
+        thoughtSignature: (toolCall as WithThoughtSignature).thoughtSignature,
       } as Gemini.Part.FunctionCall);
     }
   }
@@ -552,7 +556,8 @@ function convertStandardContentMessageToGeminiContent(
         name: matchedToolCall?.name ?? message.name ?? "unknown",
         response: { result: responseContent },
       },
-      thoughtSignature: matchedToolCall?.thoughtSignature,
+      thoughtSignature: (matchedToolCall as WithThoughtSignature | undefined)
+        ?.thoughtSignature,
     });
 
     // For tool responses, keep only functionResponse and media parts.
@@ -841,7 +846,7 @@ function convertLegacyContentMessageToGeminiContent(
           name: toolCall.name,
           args: toolCall.args ?? {},
         },
-        thoughtSignature: toolCall.thoughtSignature,
+        thoughtSignature: (toolCall as WithThoughtSignature).thoughtSignature,
       } as Gemini.Part.FunctionCall);
     }
   }
@@ -884,7 +889,8 @@ function convertLegacyContentMessageToGeminiContent(
         name: matchedToolCall?.name ?? message.name ?? "unknown",
         response: { result: responseContent },
       },
-      thoughtSignature: matchedToolCall?.thoughtSignature,
+      thoughtSignature: (matchedToolCall as WithThoughtSignature | undefined)
+        ?.thoughtSignature,
     });
   }
 
@@ -967,7 +973,7 @@ export const convertMessagesToGeminiContents: Converter<
     if (content) {
       const prev = contents[contents.length - 1];
       if (prev && prev.role === content.role) {
-        prev.parts.push(...content.parts);
+        prev.parts?.push(...(content.parts ?? ([] as Gemini.Part[])));
       } else {
         contents.push(content);
       }
