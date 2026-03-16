@@ -972,8 +972,8 @@ export const convertMessagesToGeminiContents: Converter<
     });
     if (content) {
       const prev = contents[contents.length - 1];
-      if (prev && prev.role === content.role) {
-        prev.parts?.push(...(content.parts ?? ([] as Gemini.Part[])));
+      if (prev && prev.parts && prev.role === content.role) {
+        prev.parts.push(...(content.parts ?? []));
       } else {
         contents.push(content);
       }
