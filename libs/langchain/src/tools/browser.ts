@@ -42,7 +42,7 @@ export type BrowserToolFields<SchemaT extends InteropZodObject> =
  */
 export type BrowserTool<
   SchemaT extends InteropZodObject = InteropZodObject,
-  OutputT = unknown
+  OutputT = unknown,
 > = DynamicStructuredTool<SchemaT> & {
   /**
    * The execute function for client-side use.
@@ -104,7 +104,7 @@ export type BrowserTool<
  */
 export function browserTool<
   SchemaT extends InteropZodObject,
-  OutputT = unknown
+  OutputT = unknown,
 >(
   execute: (args: InferInteropZodOutput<SchemaT>) => Promise<OutputT>,
   fields: BrowserToolFields<SchemaT>

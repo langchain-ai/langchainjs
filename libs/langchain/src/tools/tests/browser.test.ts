@@ -41,22 +41,19 @@ describe("browserTool", () => {
 
 describe("browserTool schema validation", () => {
   it("should create a tool with complex schema", () => {
-    const complexTool = browserTool(
-      async (args) => args,
-      {
-        name: "complex_tool",
-        description: "A tool with complex schema",
-        schema: z.object({
-          required: z.string(),
-          optional: z.number().optional(),
-          nested: z
-            .object({
-              field: z.boolean(),
-            })
-            .optional(),
-        }),
-      }
-    );
+    const complexTool = browserTool(async (args) => args, {
+      name: "complex_tool",
+      description: "A tool with complex schema",
+      schema: z.object({
+        required: z.string(),
+        optional: z.number().optional(),
+        nested: z
+          .object({
+            field: z.boolean(),
+          })
+          .optional(),
+      }),
+    });
 
     expect(complexTool.name).toBe("complex_tool");
     expect(complexTool.metadata).toEqual({ browserTool: true });
