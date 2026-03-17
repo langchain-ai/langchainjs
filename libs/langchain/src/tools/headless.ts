@@ -131,10 +131,7 @@ export type HeadlessTool<
  * @param fields - The tool configuration (name, description, schema)
  * @returns A headless tool that interrupts on every invocation
  */
-export function tool<
-  SchemaT extends InteropZodObject,
-  NameT extends string,
->(
+export function tool<SchemaT extends InteropZodObject, NameT extends string>(
   fields: HeadlessToolFields<SchemaT, NameT>
 ): HeadlessTool<SchemaT, NameT> {
   const { name, description, schema } = fields;
@@ -164,14 +161,17 @@ export function tool<
     }
   );
 
-  const headlessTool: HeadlessTool<SchemaT, NameT> = Object.assign(wrappedTool, {
-    implement: <OutputT>(
-      execute: (args: InferInteropZodOutput<SchemaT>) => Promise<OutputT>
-    ): HeadlessToolImplementation<SchemaT, OutputT, NameT> => ({
-      tool: headlessTool,
-      execute,
-    }),
-  }) as HeadlessTool<SchemaT, NameT>;
+  const headlessTool: HeadlessTool<SchemaT, NameT> = Object.assign(
+    wrappedTool,
+    {
+      implement: <OutputT>(
+        execute: (args: InferInteropZodOutput<SchemaT>) => Promise<OutputT>
+      ): HeadlessToolImplementation<SchemaT, OutputT, NameT> => ({
+        tool: headlessTool,
+        execute,
+      }),
+    }
+  ) as HeadlessTool<SchemaT, NameT>;
 
   return headlessTool;
 }
