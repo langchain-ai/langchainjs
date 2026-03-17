@@ -9,7 +9,7 @@ const baseSchema = z.object({
 
 test("Google AI - Generate structured output without errors", async () => {
   const model = new ChatGoogleGenerativeAI({
-    model: "gemini-2.0-flash",
+    model: "gemini-2.5-flash",
     temperature: 0.7,
   });
   const structuredLlm = model.withStructuredOutput(baseSchema);
@@ -29,7 +29,7 @@ test("Google AI - Validate nested schema structures", async () => {
     }),
   });
   const model = new ChatGoogleGenerativeAI({
-    model: "gemini-2.0-flash",
+    model: "gemini-2.5-flash",
     temperature: 0.7,
   });
   const structuredLlm = model.withStructuredOutput(schema);
@@ -47,7 +47,7 @@ test("Google AI - Handle optional fields in schema", async () => {
     email: z.string().optional(),
   });
   const model = new ChatGoogleGenerativeAI({
-    model: "gemini-2.0-flash",
+    model: "gemini-2.5-flash",
     temperature: 0.7,
   });
   const structuredLlm = model.withStructuredOutput(schema);
@@ -56,7 +56,7 @@ test("Google AI - Handle optional fields in schema", async () => {
   expect(result).toBeDefined();
   expect(result).toHaveProperty("name");
   expect(result).toHaveProperty("age");
-  expect(result).toHaveProperty("email");
+  // email is optional — model may or may not include it
 });
 
 test("Google AI - Validate schema with large payloads", async () => {
@@ -68,7 +68,7 @@ test("Google AI - Validate schema with large payloads", async () => {
     email: z.string(),
   });
   const model = new ChatGoogleGenerativeAI({
-    model: "gemini-2.0-flash",
+    model: "gemini-2.5-flash",
     temperature: 0.7,
   });
   const structuredLlm = model.withStructuredOutput(schema);
@@ -99,7 +99,7 @@ test("Google AI - Handle schema with deeply nested structures", async () => {
     }),
   });
   const model = new ChatGoogleGenerativeAI({
-    model: "gemini-2.0-flash",
+    model: "gemini-2.5-flash",
     temperature: 0.7,
   });
   const structuredLlm = model.withStructuredOutput(schema);
@@ -120,7 +120,7 @@ test("Google AI - Handle schema with enum fields", async () => {
     role: z.enum(["admin", "editor", "viewer"]),
   });
   const model = new ChatGoogleGenerativeAI({
-    model: "gemini-2.0-flash",
+    model: "gemini-2.5-flash",
     temperature: 0.7,
   });
   const structuredLlm = model.withStructuredOutput(schema);
@@ -153,7 +153,7 @@ test("Google AI - Handle JSON schema", async () => {
     required: ["reasoning", "score"],
   };
   const model = new ChatGoogleGenerativeAI({
-    model: "gemini-2.0-flash",
+    model: "gemini-2.5-flash",
     temperature: 0.7,
   });
   const structuredLlm = model.withStructuredOutput(schema);

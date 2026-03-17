@@ -624,6 +624,7 @@ export function mapGenerateContentResultToChatResult(
   response: EnhancedGenerateContentResponse,
   extra?: {
     usageMetadata: UsageMetadata | undefined;
+    model?: string;
   }
 ): ChatResult {
   // if rejected or error, return empty generations with reason in filters
@@ -753,6 +754,10 @@ export function mapGenerateContentResultToChatResult(
         ...generationInfo,
         [_FUNCTION_CALL_THOUGHT_SIGNATURES_MAP_KEY]: functionThoughtSignatures,
       },
+      response_metadata: {
+        model_provider: "google-genai",
+        ...(extra?.model ? { model: extra.model } : {}),
+      },
       usage_metadata: extra?.usageMetadata,
     }),
     generationInfo,
@@ -775,6 +780,7 @@ export function convertResponseContentToChatGenerationChunk(
   extra: {
     usageMetadata?: UsageMetadata | undefined;
     index: number;
+    model?: string;
   }
 ): ChatGenerationChunk | null {
   if (!response.candidates || response.candidates.length === 0) {
@@ -904,6 +910,7 @@ export function convertResponseContentToChatGenerationChunk(
       },
       response_metadata: {
         model_provider: "google-genai",
+        ...(extra.model ? { model: extra.model } : {}),
       },
       usage_metadata: extra.usageMetadata,
     }),

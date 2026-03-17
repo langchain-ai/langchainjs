@@ -3,7 +3,7 @@ import { AIMessage } from "@langchain/core/messages";
 import { convertBaseMessagesToContent } from "../utils/common.js";
 import { z } from "zod";
 import { tool } from "@langchain/core/tools";
-import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import { ChatGoogleGenerativeAI } from "../chat_models.js";
 
 test("converts standard tool_call content blocks to Google functionCall format", () => {
   // Create AIMessage with standard tool_call content block
@@ -47,7 +47,7 @@ test("converts standard tool_call content blocks to Google functionCall format",
 describe("Gemini Tool Schema Validation - Empty String in Enum", () => {
   test("should throw descriptive error for empty string in z.enum", () => {
     const model = new ChatGoogleGenerativeAI({
-      model: "gemini-2.0-flash-exp",
+      model: "gemini-2.5-flash",
       apiKey: "fake-api-key",
     });
 
@@ -74,7 +74,7 @@ describe("Gemini Tool Schema Validation - Empty String in Enum", () => {
     }
 
     const model = new ChatGoogleGenerativeAI({
-      model: "gemini-2.0-flash-exp",
+      model: "gemini-2.5-flash",
       apiKey: "fake-api-key",
     });
 
