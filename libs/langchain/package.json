@@ -24,8 +24,7 @@
     "hub.d.cts",
     "hub.cjs",
     "hub.d.ts",
-    "hub.js",
-    "tools"
+    "hub.js"
   ],
   "repository": {
     "type": "git",
