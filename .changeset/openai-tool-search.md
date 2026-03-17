@@ -1,6 +1,5 @@
 ---
 "@langchain/openai": minor
-"@langchain/core": patch
 ---
 
 feat(openai): support tool search and defer_loading
