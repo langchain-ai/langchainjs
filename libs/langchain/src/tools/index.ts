@@ -7,7 +7,8 @@
  */
 
 export {
-  browserTool,
-  type BrowserTool,
-  type BrowserToolFields,
-} from "./browser.js";
+  tool,
+  type HeadlessTool,
+  type HeadlessToolFields,
+  type HeadlessToolImplementation,
+} from "./headless.js";

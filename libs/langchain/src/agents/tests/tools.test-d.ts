@@ -2,7 +2,7 @@ import { z } from "zod/v3";
 import { describe, it, expectTypeOf } from "vitest";
 import { tool, type DynamicStructuredTool } from "@langchain/core/tools";
 
-import { browserTool } from "../../tools/browser.js";
+import { tool as headlessTool } from "../../tools/headless.js";
 import { createMiddleware } from "../middleware.js";
 import { createAgent } from "../index.js";
 import type { InferAgentTools } from "../types.js";
@@ -113,21 +113,14 @@ describe("tools", () => {
     >();
   });
 
-  it("should allow to infer tool types from browser tool primitive", () => {
-    const tool = browserTool(
-      async (args) => {
-        return {
-          output: args.message,
-        };
-      },
-      {
-        name: "test",
-        description: "Test",
-        schema: z.object({
-          message: z.string(),
-        }),
-      }
-    );
+  it("should allow to infer tool types from headless tool primitive", () => {
+    const tool = headlessTool({
+      name: "test",
+      description: "Test",
+      schema: z.object({
+        message: z.string(),
+      }),
+    });
 
     const agent = createAgent({
       tools: [tool],

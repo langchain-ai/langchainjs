@@ -24,7 +24,8 @@
     "hub.d.cts",
     "hub.cjs",
     "hub.d.ts",
-    "hub.js"
+    "hub.js",
+    "tools"
   ],
   "repository": {
     "type": "git",
@@ -115,6 +116,17 @@
       "import": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
+      }
+    },
+    "./tools": {
+      "input": "./src/tools/index.ts",
+      "require": {
+        "types": "./dist/tools/index.d.cts",
+        "default": "./dist/tools/index.cjs"
+      },
+      "import": {
+        "types": "./dist/tools/index.d.ts",
+        "default": "./dist/tools/index.js"
       }
     },
     "./browser": {

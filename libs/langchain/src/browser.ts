@@ -39,13 +39,13 @@ export {
 } from "@langchain/core/tools";
 
 /**
- * Browser Tools
+ * Headless Tools
  */
 export {
-  browserTool,
-  type BrowserTool,
-  type BrowserToolFields,
-} from "./tools/browser.js";
+  type HeadlessTool,
+  type HeadlessToolFields,
+  type HeadlessToolImplementation,
+} from "./tools/headless.js";
 
 /**
  * LangChain utilities
