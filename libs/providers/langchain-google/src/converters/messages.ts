@@ -56,13 +56,13 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
           typeof block.data === "string"
             ? block.data
             : typeof block.data === "object" && block.data !== null
-              ? // Convert Uint8Array to base64 string
-                btoa(
-                  Array.from(block.data as Uint8Array)
-                    .map((byte) => String.fromCharCode(byte))
-                    .join("")
-                )
-              : String(block.data);
+            ? // Convert Uint8Array to base64 string
+              btoa(
+                Array.from(block.data as Uint8Array)
+                  .map((byte) => String.fromCharCode(byte))
+                  .join("")
+              )
+            : String(block.data);
         return {
           inlineData: {
             mimeType: block.mime_type,
@@ -129,13 +129,13 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
           typeof block.data === "string"
             ? block.data
             : typeof block.data === "object" && block.data !== null
-              ? // Convert Uint8Array to base64 string
-                btoa(
-                  Array.from(block.data as Uint8Array)
-                    .map((byte) => String.fromCharCode(byte))
-                    .join("")
-                )
-              : String(block.data);
+            ? // Convert Uint8Array to base64 string
+              btoa(
+                Array.from(block.data as Uint8Array)
+                  .map((byte) => String.fromCharCode(byte))
+                  .join("")
+              )
+            : String(block.data);
         return {
           inlineData: {
             mimeType: block.mime_type,
@@ -202,13 +202,13 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
           typeof block.data === "string"
             ? block.data
             : typeof block.data === "object" && block.data !== null
-              ? // Convert Uint8Array to base64 string
-                btoa(
-                  Array.from(block.data as Uint8Array)
-                    .map((byte) => String.fromCharCode(byte))
-                    .join("")
-                )
-              : String(block.data);
+            ? // Convert Uint8Array to base64 string
+              btoa(
+                Array.from(block.data as Uint8Array)
+                  .map((byte) => String.fromCharCode(byte))
+                  .join("")
+              )
+            : String(block.data);
         return {
           inlineData: {
             mimeType: block.mime_type,
