@@ -85,15 +85,21 @@ describe("tools", () => {
         ],
       });
 
-      const toolA = tool(async () => {
-        invocationOrder.push("tool_a");
-        return "result_a";
-      }, { name: "tool_a", description: "tool a", schema: z.object({}) });
+      const toolA = tool(
+        async () => {
+          invocationOrder.push("tool_a");
+          return "result_a";
+        },
+        { name: "tool_a", description: "tool a", schema: z.object({}) }
+      );
 
-      const toolB = tool(async () => {
-        invocationOrder.push("tool_b");
-        return "result_b";
-      }, { name: "tool_b", description: "tool b", schema: z.object({}) });
+      const toolB = tool(
+        async () => {
+          invocationOrder.push("tool_b");
+          return "result_b";
+        },
+        { name: "tool_b", description: "tool b", schema: z.object({}) }
+      );
 
       const agent = createAgent({
         model,
@@ -130,18 +136,25 @@ describe("tools", () => {
         ],
       });
 
-      const toolA = tool(async () => {
-        invocationOrder.push("tool_a");
-        return "result_a";
-      }, { name: "tool_a", description: "tool a", schema: z.object({}) });
+      const toolA = tool(
+        async () => {
+          invocationOrder.push("tool_a");
+          return "result_a";
+        },
+        { name: "tool_a", description: "tool a", schema: z.object({}) }
+      );
 
-      const toolB = tool(async () => {
-        invocationOrder.push("tool_b");
-        return "result_b";
-      }, { name: "tool_b", description: "tool b", schema: z.object({}) });
+      const toolB = tool(
+        async () => {
+          invocationOrder.push("tool_b");
+          return "result_b";
+        },
+        { name: "tool_b", description: "tool b", schema: z.object({}) }
+      );
 
       // afterModel middleware forces the #createAfterModelRouter code path
       const afterModelMiddleware = createMiddleware({
+        name: "afterModelMiddleware",
         afterModel: async ({ messages }) => ({ messages }),
       });
 
