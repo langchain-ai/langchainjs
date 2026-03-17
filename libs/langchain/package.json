@@ -118,17 +118,6 @@
         "default": "./dist/index.js"
       }
     },
-    "./tools": {
-      "input": "./src/tools/index.ts",
-      "require": {
-        "types": "./dist/tools/index.d.cts",
-        "default": "./dist/tools/index.cjs"
-      },
-      "import": {
-        "types": "./dist/tools/index.d.ts",
-        "default": "./dist/tools/index.js"
-      }
-    },
     "./browser": {
       "input": "./src/browser.ts",
       "require": {
