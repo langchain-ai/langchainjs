@@ -83,10 +83,7 @@ describe("tool (normal)", () => {
     );
 
     const result = await getWeather.invoke({ city: "Tokyo" });
-    expect(execute).toHaveBeenCalledWith(
-      { city: "Tokyo" },
-      expect.anything()
-    );
+    expect(execute).toHaveBeenCalledWith({ city: "Tokyo" }, expect.anything());
     expect(result).toBe("sunny");
   });
 });
