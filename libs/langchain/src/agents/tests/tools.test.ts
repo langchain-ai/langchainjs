@@ -123,6 +123,67 @@ describe("tools", () => {
       );
     });
 
+    it("dispatches each tool call as a separate Send task (version: 'v2') when afterModel middleware is present", async () => {
+      // Track which tool_call_id each tool invocation received.
+      // With v2 + afterModel the ToolNode is entered once per tool call via
+      // Send, so each invocation sees only its own single call_id.
+      const seenCallIds: Record<string, string[]> = { tool_a: [], tool_b: [] };
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [
+          [
+            { type: "tool_call", name: "tool_a", args: {}, id: "call_a" },
+            { type: "tool_call", name: "tool_b", args: {}, id: "call_b" },
+          ],
+          [],
+        ],
+      });
+
+      const toolA = tool(
+        async (_input, runtime: ToolRuntime) => {
+          seenCallIds.tool_a.push(runtime.toolCallId!);
+          return "result_a";
+        },
+        { name: "tool_a", description: "tool a", schema: z.object({}) }
+      );
+
+      const toolB = tool(
+        async (_input, runtime: ToolRuntime) => {
+          seenCallIds.tool_b.push(runtime.toolCallId!);
+          return "result_b";
+        },
+        { name: "tool_b", description: "tool b", schema: z.object({}) }
+      );
+
+      const afterModelMiddleware = createMiddleware({
+        name: "after-model",
+        afterModel: async ({ messages }) => ({ messages }),
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [toolA, toolB],
+        middleware: [afterModelMiddleware],
+        // v2 is the default; explicit here for clarity
+        version: "v2",
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("run both tools")],
+      });
+
+      // Both tools must have been called exactly once
+      expect(seenCallIds.tool_a).toEqual(["call_a"]);
+      expect(seenCallIds.tool_b).toEqual(["call_b"]);
+
+      // Both ToolMessages appear in the conversation
+      const toolMessages = result.messages.filter(ToolMessage.isInstance);
+      expect(toolMessages).toHaveLength(2);
+      expect(toolMessages.map((m) => m.tool_call_id).sort()).toEqual(
+        ["call_a", "call_b"].sort()
+      );
+    });
+
     it("runs pending tool calls via ToolNode (not Send) when afterModel middleware is present", async () => {
       const invocationOrder: string[] = [];
 
@@ -154,7 +215,7 @@ describe("tools", () => {
 
       // afterModel middleware forces the #createAfterModelRouter code path
       const afterModelMiddleware = createMiddleware({
-        name: "afterModelMiddleware",
+        name: "after-model",
         afterModel: async ({ messages }) => ({ messages }),
       });
 
