@@ -18,7 +18,6 @@ import type {
   InferInteropZodInput,
   InferInteropZodOutput,
 } from "@langchain/core/utils/types";
-import { interrupt } from "@langchain/langgraph";
 
 /**
  * Check if we're running in a browser environment.
@@ -142,6 +141,7 @@ export function browserTool<
        * On server: interrupt and wait for client to execute
        * The interrupt value contains the tool call details for the client
        */
+      const { interrupt } = await import("@langchain/langgraph");
       return interrupt({
         type: "browser_tool",
         toolCall: {
