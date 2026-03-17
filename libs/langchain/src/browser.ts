@@ -39,6 +39,15 @@ export {
 } from "@langchain/core/tools";
 
 /**
+ * Browser Tools
+ */
+export {
+  browserTool,
+  type BrowserTool,
+  type BrowserToolFields,
+} from "./tools/browser.js";
+
+/**
  * LangChain utilities
  */
 export { context } from "@langchain/core/utils/context";
