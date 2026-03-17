@@ -919,6 +919,14 @@ export class ReactAgent<
         (call) => !toolMessages.some((m) => m.tool_call_id === call.id)
       );
       if (pendingToolCalls && pendingToolCalls.length > 0) {
+        /**
+         * v1: route the full message to the ToolNode; it filters already-processed
+         * calls internally and runs the remaining ones via Promise.all.
+         * v2: dispatch each pending call as a separate Send task.
+         */
+        if (this.#toolBehaviorVersion === "v1") {
+          return TOOLS_NODE_NAME;
+        }
         return pendingToolCalls.map(
           (toolCall) =>
             new Send(TOOLS_NODE_NAME, { ...state, lg_tool_call: toolCall })
