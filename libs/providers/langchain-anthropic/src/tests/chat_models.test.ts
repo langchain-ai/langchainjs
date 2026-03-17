@@ -330,6 +330,87 @@ test("invocationParams returns empty array when tools is empty array", () => {
   expect(params.tools).toEqual([]);
 });
 
+test("invocationParams omits temperature/top_k/top_p keys when not set", () => {
+  const model = new ChatAnthropic({
+    model: "claude-haiku-4-5-20251001",
+    apiKey: "testing",
+  });
+
+  const params = model.invocationParams({});
+
+  expect("temperature" in params).toBe(false);
+  expect("top_k" in params).toBe(false);
+  expect("top_p" in params).toBe(false);
+});
+
+test("invocationParams includes temperature/top_k/top_p when explicitly set", () => {
+  const model = new ChatAnthropic({
+    model: "claude-haiku-4-5-20251001",
+    apiKey: "testing",
+    temperature: 0,
+    topK: 10,
+    topP: 0.9,
+  });
+
+  const params = model.invocationParams({});
+
+  expect(params.temperature).toBe(0);
+  expect(params.top_k).toBe(10);
+  expect(params.top_p).toBe(0.9);
+});
+
+test("thinking enabled throws on topK even without topP", () => {
+  const model = new ChatAnthropic({
+    model: "claude-sonnet-4-6-20250514",
+    apiKey: "testing",
+    topK: 5,
+    thinking: { type: "enabled", budget_tokens: 1000 },
+  });
+
+  expect(() => model.invocationParams({})).toThrow(
+    "topK is not supported when thinking is enabled"
+  );
+});
+
+test("thinking enabled throws on topP", () => {
+  const model = new ChatAnthropic({
+    model: "claude-sonnet-4-6-20250514",
+    apiKey: "testing",
+    topP: 0.9,
+    thinking: { type: "enabled", budget_tokens: 1000 },
+  });
+
+  expect(() => model.invocationParams({})).toThrow(
+    "topP is not supported when thinking is enabled"
+  );
+});
+
+test("adaptive thinking throws on topK", () => {
+  const model = new ChatAnthropic({
+    model: "claude-opus-4-6",
+    apiKey: "testing",
+    topK: 5,
+    thinking: { type: "adaptive" },
+  });
+
+  expect(() => model.invocationParams({})).toThrow(
+    "topK is not supported when thinking is enabled"
+  );
+});
+
+test("adaptive thinking throws on topP", () => {
+  const model = new ChatAnthropic({
+    model: "claude-opus-4-6",
+    apiKey: "testing",
+    topP: 0.9,
+    thinking: { type: "adaptive" },
+  });
+
+  expect(() => model.invocationParams({})).toThrow(
+    "topP is not supported when thinking is enabled"
+  );
+});
+
 test("Can properly format messages with container_upload blocks", async () => {
   const messageHistory = [
     new HumanMessage({
