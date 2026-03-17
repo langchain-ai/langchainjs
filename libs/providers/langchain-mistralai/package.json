@@ -1,6 +1,6 @@
 {
   "name": "@langchain/mistralai",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "MistralAI integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -12,7 +12,7 @@
     "type": "git",
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
-  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-mistralai/",
+  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/providers/langchain-mistralai/",
   "scripts": {
     "build": "turbo build:compile --filter @langchain/mistralai --output-logs new-only",
     "build:compile": "tsdown",

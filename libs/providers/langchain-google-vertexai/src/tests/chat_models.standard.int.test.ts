@@ -1,5 +1,4 @@
-import { test, expect } from "@jest/globals";
-import { ChatModelIntegrationTests } from "@langchain/standard-tests";
+import { ChatModelIntegrationTests } from "@langchain/standard-tests/vitest";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { GoogleAIBaseLanguageModelCallOptions } from "@langchain/google-common";
 import { ChatVertexAI } from "../chat_models.js";
@@ -57,8 +56,4 @@ class ChatVertexAIStandardIntegrationTests extends ChatModelIntegrationTests<
 }
 
 const testClass = new ChatVertexAIStandardIntegrationTests();
-
-test("ChatVertexAIStandardIntegrationTests", async () => {
-  const testResults = await testClass.runTests();
-  expect(testResults).toBe(true);
-});
+testClass.runTests("ChatVertexAIStandardIntegrationTests");

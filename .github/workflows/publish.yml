@@ -4,6 +4,9 @@ name: 🦋 Changesets Release
 on:
   workflow_call:
 
+permissions:
+  contents: read
+
 env:
   CI: true
 

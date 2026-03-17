@@ -65,7 +65,7 @@ const citationsModelName = "claude-sonnet-4-5-20250929";
 const pdfModelName = "claude-haiku-4-5-20251001";
 
 // Use this model for all other tests
-const modelName = "claude-3-haiku-20240307";
+const modelName = "claude-haiku-4-5-20251001";
 
 test("Test ChatAnthropic", async () => {
   const chat = new ChatAnthropic({
@@ -894,6 +894,9 @@ test("system prompt caching", async () => {
   expect(agg!.usage_metadata?.input_token_details?.cache_read).toBeGreaterThan(
     0
   );
+  expect(agg!.usage_metadata?.input_tokens).toBeGreaterThan(
+    agg!.usage_metadata?.input_token_details?.cache_read ?? 0
+  );
 });
 
 // TODO: Add proper test with long tool content
@@ -1001,6 +1004,20 @@ test("human message caching", async () => {
   );
   expect(res2.usage_metadata?.input_tokens).toBeGreaterThan(
     res2.usage_metadata?.input_token_details?.cache_read ?? 0
+  );
+
+  const stream = await model.stream(messages);
+  let agg;
+  for await (const chunk of stream) {
+    agg = agg === undefined ? chunk : concat(agg, chunk);
+  }
+  expect(agg).toBeDefined();
+  expect(agg!.usage_metadata?.input_token_details?.cache_creation).toBe(0);
+  expect(agg!.usage_metadata?.input_token_details?.cache_read).toBeGreaterThan(
+    0
+  );
+  expect(agg!.usage_metadata?.input_tokens).toBeGreaterThan(
+    agg!.usage_metadata?.input_token_details?.cache_read ?? 0
   );
 });
 

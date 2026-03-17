@@ -1,5 +1,17 @@
 # @langchain/groq
 
+## 1.1.5
+
+### Patch Changes
+
+- [#10134](https://github.com/langchain-ai/langchainjs/pull/10134) [`a46d28c`](https://github.com/langchain-ai/langchainjs/commit/a46d28c769da3875916987618058765a572cd163) Thanks [@YJack0000](https://github.com/YJack0000)! - feat(groq): add reasoning_effort support to ChatGroq
+
+## 1.1.4
+
+### Patch Changes
+
+- [#10210](https://github.com/langchain-ai/langchainjs/pull/10210) [`6d5d1bf`](https://github.com/langchain-ai/langchainjs/commit/6d5d1bf96a9b76a595661a8a1ea7ea4f89c9a500) Thanks [@colifran](https://github.com/colifran)! - feat(groq): implement standard schema support for structured output
+
 ## 1.1.3
 
 ### Patch Changes

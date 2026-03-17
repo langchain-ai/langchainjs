@@ -1,6 +1,6 @@
 {
   "name": "@langchain/deepseek",
-  "version": "1.0.15",
+  "version": "1.0.18",
   "description": "Deepseek integration for LangChain.js",
   "type": "module",
   "author": "LangChain",
@@ -12,7 +12,7 @@
     "type": "git",
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
-  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-deepseek",
+  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/providers/langchain-deepseek",
   "scripts": {
     "build": "turbo build:compile --filter @langchain/deepseek --output-logs new-only",
     "build:compile": "tsdown",

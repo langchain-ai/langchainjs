@@ -1,5 +1,5 @@
 import { z } from "zod/v3";
-import { v4 as uuidv4 } from "uuid";
+import { v7 as uuidv7 } from "uuid";
 
 import {
   type TraceableFunction,
@@ -382,7 +382,7 @@ export abstract class Runnable<
     let output;
     try {
       const promise = func.call(this, input, config, runManager);
-      output = await raceWithSignal(promise, options?.signal);
+      output = await raceWithSignal(promise, config.signal);
     } catch (e) {
       await runManager?.handleChainError(e);
       throw e;
@@ -525,7 +525,7 @@ export abstract class Runnable<
             undefined,
             { lc_defers_inputs: true }
           ),
-        options?.signal,
+        config.signal,
         config
       );
       delete config.runId;
@@ -898,7 +898,7 @@ export abstract class Runnable<
       autoClose: false,
     });
     const config = ensureConfig(options);
-    const runId = config.runId ?? uuidv4();
+    const runId = config.runId ?? uuidv7();
     config.runId = runId;
     const callbacks = config.callbacks;
     if (callbacks === undefined) {
@@ -916,27 +916,33 @@ export abstract class Runnable<
     const outerThis = this;
     async function consumeRunnableStream() {
       let signal;
-      let listener: (() => void) | null = null;
 
       try {
-        if (options?.signal) {
+        if (config.signal) {
           if ("any" in AbortSignal) {
             // Use native AbortSignal.any() if available (Node 19+)
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             signal = (AbortSignal as any).any([
               abortController.signal,
-              options.signal,
+              config.signal,
             ]);
           } else {
-            // Fallback for Node 18 and below - just use the provided signal
-            signal = options.signal;
-            // Ensure we still abort our controller when the parent signal aborts
+            // Fallback for Node 18 and below - compose both signals
+            // through a bridging controller so that either source
+            // (timeout/user signal OR early consumer break) cancels
+            // the inner stream.
+            const composed = new AbortController();
 
-            listener = () => {
-              abortController.abort();
-            };
+            config.signal.addEventListener("abort", () => composed.abort(), {
+              once: true,
+            });
+            abortController.signal.addEventListener(
+              "abort",
+              () => composed.abort(),
+              { once: true }
+            );
 
-            options.signal.addEventListener("abort", listener, { once: true });
+            signal = composed.signal;
           }
         } else {
           signal = abortController.signal;
@@ -955,10 +961,6 @@ export abstract class Runnable<
         }
       } finally {
         await eventStreamer.finish();
-
-        if (signal && listener) {
-          signal.removeEventListener("abort", listener);
-        }
       }
     }
     const runnableStreamConsumePromise = consumeRunnableStream();
@@ -1907,11 +1909,11 @@ export class RunnableSequence<
             ),
           })
         );
-        nextStepInput = await raceWithSignal(promise, options?.signal);
+        nextStepInput = await raceWithSignal(promise, config.signal);
       }
       // TypeScript can't detect that the last output of the sequence returns RunOutput, so call it out of the loop here
-      if (options?.signal?.aborted) {
-        throw getAbortSignalError(options.signal);
+      if (config.signal?.aborted) {
+        throw getAbortSignalError(config.signal);
       }
       finalOutput = await this.last.invoke(
         nextStepInput,
@@ -2249,7 +2251,7 @@ export class RunnableMap<
           );
         }
       );
-      await raceWithSignal(Promise.all(promises), options?.signal);
+      await raceWithSignal(Promise.all(promises), config.signal);
     } catch (e) {
       await runManager?.handleChainError(e);
       throw e;

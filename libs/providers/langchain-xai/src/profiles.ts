@@ -3,34 +3,6 @@
  */
 import type { ModelProfile } from "@langchain/core/language_models/profile";
 const PROFILES: Record<string, ModelProfile> = {
-  "grok-2-1212": {
-    maxInputTokens: 131072,
-    imageInputs: false,
-    audioInputs: false,
-    pdfInputs: false,
-    videoInputs: false,
-    maxOutputTokens: 8192,
-    reasoningOutput: false,
-    imageOutputs: false,
-    audioOutputs: false,
-    videoOutputs: false,
-    toolCalling: true,
-    structuredOutput: false,
-  },
-  "grok-2": {
-    maxInputTokens: 131072,
-    imageInputs: false,
-    audioInputs: false,
-    pdfInputs: false,
-    videoInputs: false,
-    maxOutputTokens: 8192,
-    reasoningOutput: false,
-    imageOutputs: false,
-    audioOutputs: false,
-    videoOutputs: false,
-    toolCalling: true,
-    structuredOutput: false,
-  },
   "grok-3-fast-latest": {
     maxInputTokens: 131072,
     imageInputs: false,
@@ -43,7 +15,7 @@ const PROFILES: Record<string, ModelProfile> = {
     audioOutputs: false,
     videoOutputs: false,
     toolCalling: true,
-    structuredOutput: false,
+    structuredOutput: true,
   },
   "grok-2-vision": {
     maxInputTokens: 8192,
@@ -57,7 +29,7 @@ const PROFILES: Record<string, ModelProfile> = {
     audioOutputs: false,
     videoOutputs: false,
     toolCalling: true,
-    structuredOutput: false,
+    structuredOutput: true,
   },
   "grok-3": {
     maxInputTokens: 131072,
@@ -71,7 +43,7 @@ const PROFILES: Record<string, ModelProfile> = {
     audioOutputs: false,
     videoOutputs: false,
     toolCalling: true,
-    structuredOutput: false,
+    structuredOutput: true,
   },
   "grok-code-fast-1": {
     maxInputTokens: 256000,
@@ -85,7 +57,7 @@ const PROFILES: Record<string, ModelProfile> = {
     audioOutputs: false,
     videoOutputs: false,
     toolCalling: true,
-    structuredOutput: false,
+    structuredOutput: true,
   },
   "grok-2-vision-1212": {
     maxInputTokens: 8192,
@@ -99,7 +71,7 @@ const PROFILES: Record<string, ModelProfile> = {
     audioOutputs: false,
     videoOutputs: false,
     toolCalling: true,
-    structuredOutput: false,
+    structuredOutput: true,
   },
   "grok-4-1-fast-non-reasoning": {
     maxInputTokens: 2000000,
@@ -113,21 +85,7 @@ const PROFILES: Record<string, ModelProfile> = {
     audioOutputs: false,
     videoOutputs: false,
     toolCalling: true,
-    structuredOutput: false,
-  },
-  "grok-beta": {
-    maxInputTokens: 131072,
-    imageInputs: false,
-    audioInputs: false,
-    pdfInputs: false,
-    videoInputs: false,
-    maxOutputTokens: 4096,
-    reasoningOutput: false,
-    imageOutputs: false,
-    audioOutputs: false,
-    videoOutputs: false,
-    toolCalling: true,
-    structuredOutput: false,
+    structuredOutput: true,
   },
   "grok-3-mini-fast": {
     maxInputTokens: 131072,
@@ -141,7 +99,7 @@ const PROFILES: Record<string, ModelProfile> = {
     audioOutputs: false,
     videoOutputs: false,
     toolCalling: true,
-    structuredOutput: false,
+    structuredOutput: true,
   },
   "grok-4-fast": {
     maxInputTokens: 2000000,
@@ -155,7 +113,7 @@ const PROFILES: Record<string, ModelProfile> = {
     audioOutputs: false,
     videoOutputs: false,
     toolCalling: true,
-    structuredOutput: false,
+    structuredOutput: true,
   },
   "grok-4": {
     maxInputTokens: 256000,
@@ -169,7 +127,7 @@ const PROFILES: Record<string, ModelProfile> = {
     audioOutputs: false,
     videoOutputs: false,
     toolCalling: true,
-    structuredOutput: false,
+    structuredOutput: true,
   },
   "grok-3-latest": {
     maxInputTokens: 131072,
@@ -183,7 +141,7 @@ const PROFILES: Record<string, ModelProfile> = {
     audioOutputs: false,
     videoOutputs: false,
     toolCalling: true,
-    structuredOutput: false,
+    structuredOutput: true,
   },
   "grok-4-1-fast": {
     maxInputTokens: 2000000,
@@ -197,7 +155,7 @@ const PROFILES: Record<string, ModelProfile> = {
     audioOutputs: false,
     videoOutputs: false,
     toolCalling: true,
-    structuredOutput: false,
+    structuredOutput: true,
   },
   "grok-2-vision-latest": {
     maxInputTokens: 8192,
@@ -211,7 +169,7 @@ const PROFILES: Record<string, ModelProfile> = {
     audioOutputs: false,
     videoOutputs: false,
     toolCalling: true,
-    structuredOutput: false,
+    structuredOutput: true,
   },
   "grok-3-mini-latest": {
     maxInputTokens: 131072,
@@ -225,7 +183,7 @@ const PROFILES: Record<string, ModelProfile> = {
     audioOutputs: false,
     videoOutputs: false,
     toolCalling: true,
-    structuredOutput: false,
+    structuredOutput: true,
   },
   "grok-3-mini": {
     maxInputTokens: 131072,
@@ -239,7 +197,7 @@ const PROFILES: Record<string, ModelProfile> = {
     audioOutputs: false,
     videoOutputs: false,
     toolCalling: true,
-    structuredOutput: false,
+    structuredOutput: true,
   },
   "grok-3-mini-fast-latest": {
     maxInputTokens: 131072,
@@ -253,7 +211,7 @@ const PROFILES: Record<string, ModelProfile> = {
     audioOutputs: false,
     videoOutputs: false,
     toolCalling: true,
-    structuredOutput: false,
+    structuredOutput: true,
   },
   "grok-2-latest": {
     maxInputTokens: 131072,
@@ -267,7 +225,7 @@ const PROFILES: Record<string, ModelProfile> = {
     audioOutputs: false,
     videoOutputs: false,
     toolCalling: true,
-    structuredOutput: false,
+    structuredOutput: true,
   },
   "grok-4-fast-non-reasoning": {
     maxInputTokens: 2000000,
@@ -281,7 +239,7 @@ const PROFILES: Record<string, ModelProfile> = {
     audioOutputs: false,
     videoOutputs: false,
     toolCalling: true,
-    structuredOutput: false,
+    structuredOutput: true,
   },
   "grok-vision-beta": {
     maxInputTokens: 8192,
@@ -295,7 +253,7 @@ const PROFILES: Record<string, ModelProfile> = {
     audioOutputs: false,
     videoOutputs: false,
     toolCalling: true,
-    structuredOutput: false,
+    structuredOutput: true,
   },
   "grok-3-fast": {
     maxInputTokens: 131072,
@@ -309,7 +267,7 @@ const PROFILES: Record<string, ModelProfile> = {
     audioOutputs: false,
     videoOutputs: false,
     toolCalling: true,
-    structuredOutput: false,
+    structuredOutput: true,
   },
 };
 export default PROFILES;

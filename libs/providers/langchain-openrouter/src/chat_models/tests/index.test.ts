@@ -245,6 +245,7 @@ describe("stream callbacks", () => {
               _idx?: number,
               _runId?: string,
               _parentRunId?: string,
+              _tags?: string[],
               fields?: Record<string, unknown>
             ) => {
               tokens.push(token);
