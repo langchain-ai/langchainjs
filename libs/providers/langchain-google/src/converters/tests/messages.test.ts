@@ -133,7 +133,9 @@ describe("convertMessagesToGeminiContents", () => {
 
     const contents = convertMessagesToGeminiContents(messages);
 
-    const toolResponseContent = contents.find((c) => c.role === "function");
+    const toolResponseContent = contents.find(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
     expect(toolResponseContent).toBeDefined();
 
     const functionResponsePart = toolResponseContent!.parts!.find(
@@ -168,7 +170,9 @@ describe("convertMessagesToGeminiContents", () => {
 
     const contents = convertMessagesToGeminiContents(messages);
 
-    const toolResponseContent = contents.find((c) => c.role === "function");
+    const toolResponseContent = contents.find(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
     expect(toolResponseContent).toBeDefined();
 
     const functionResponsePart = toolResponseContent!.parts.find(
@@ -213,7 +217,9 @@ describe("convertMessagesToGeminiContents", () => {
 
     const contents = convertMessagesToGeminiContents(messages);
 
-    const toolResponseContents = contents.filter((c) => c.role === "function");
+    const toolResponseContents = contents.filter(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
     expect(toolResponseContents).toHaveLength(1);
 
     const parts = toolResponseContents[0].parts.filter(
@@ -260,13 +266,13 @@ describe("convertMessagesToGeminiContents", () => {
 
     const contents = convertMessagesToGeminiContents(messages);
 
-    // Should produce: user, model (functionCall parts), function (single merged turn)
+    // Should produce: user, model (functionCall parts), user (single merged turn with functionResponses)
     expect(contents).toHaveLength(3);
 
     expect(contents[1].role).toBe("model");
 
     const functionTurn = contents[2];
-    expect(functionTurn.role).toBe("function");
+    expect(functionTurn.role).toBe("user");
     expect(functionTurn.parts).toHaveLength(2);
 
     const responses = functionTurn.parts.filter(
@@ -301,7 +307,9 @@ describe("convertMessagesToGeminiContents", () => {
 
     const contents = convertMessagesToGeminiContents(messages);
 
-    const toolResponseContent = contents.find((c) => c.role === "function");
+    const toolResponseContent = contents.find(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
     const functionResponsePart = toolResponseContent!.parts.find(
       (p) => "functionResponse" in p && p.functionResponse
     ) as Gemini.Part.FunctionResponse;
@@ -402,7 +410,9 @@ describe("convertMessagesToGeminiContents", () => {
 
     const contents = convertMessagesToGeminiContents(messages);
 
-    const toolResponseContent = contents.find((c) => c.role === "function");
+    const toolResponseContent = contents.find(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
     expect(toolResponseContent).toBeDefined();
 
     const functionResponsePart = toolResponseContent!.parts.find(
@@ -448,8 +458,10 @@ describe("convertMessagesToGeminiContents", () => {
 
     const contents = convertMessagesToGeminiContents(messages);
 
-    // Consecutive ToolMessages with the same "function" role are merged into one content
-    const toolResponseContents = contents.filter((c) => c.role === "function");
+    // Consecutive ToolMessages with the same "user" role are merged into one content
+    const toolResponseContents = contents.filter(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
     expect(toolResponseContents).toHaveLength(1);
 
     const mergedParts = toolResponseContents[0].parts.filter(
@@ -484,7 +496,9 @@ describe("convertMessagesToGeminiContents", () => {
 
     const contents = convertMessagesToGeminiContents(messages);
 
-    const toolResponseContent = contents.find((c) => c.role === "function");
+    const toolResponseContent = contents.find(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
     expect(toolResponseContent).toBeDefined();
 
     const functionResponsePart = toolResponseContent!.parts!.find(
@@ -520,7 +534,9 @@ describe("convertMessagesToGeminiContents", () => {
 
     const contents = convertMessagesToGeminiContents(messages);
 
-    const toolResponseContent = contents.find((c) => c.role === "function");
+    const toolResponseContent = contents.find(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
     expect(toolResponseContent).toBeDefined();
 
     const functionResponsePart = toolResponseContent!.parts!.find(
@@ -557,7 +573,9 @@ describe("convertMessagesToGeminiContents", () => {
 
     const contents = convertMessagesToGeminiContents(messages);
 
-    const toolResponseContent = contents.find((c) => c.role === "function");
+    const toolResponseContent = contents.find(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
     expect(toolResponseContent).toBeDefined();
 
     const functionResponsePart = toolResponseContent!.parts!.find(
