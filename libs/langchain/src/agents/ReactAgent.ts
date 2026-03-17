@@ -187,7 +187,9 @@ export class ReactAgent<
     >,
     defaultConfig?: RunnableConfig
   ) {
-    this.#defaultConfig = defaultConfig ?? {};
+    this.#defaultConfig = mergeConfigs(defaultConfig ?? {}, {
+      metadata: { ls_integration: "langchain_create_agent" },
+    });
     if (options.name) {
       this.#defaultConfig = mergeConfigs(this.#defaultConfig, {
         metadata: { lc_agent_name: options.name },
