@@ -482,10 +482,7 @@ export function _convertMessagesToAnthropicPayload(
     } else {
       throw new Error(`Message type "${message.type}" is not supported.`);
     }
-    if (
-      AIMessage.isInstance(message) &&
-      message.response_metadata?.output_version === "v1"
-    ) {
+    if (message.response_metadata?.output_version === "v1") {
       return {
         role,
         content: _formatStandardContent(message),
