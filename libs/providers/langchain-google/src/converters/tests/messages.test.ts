@@ -40,7 +40,7 @@ describe("convertGeminiPartsToToolCalls", () => {
 
     expect(toolCalls).toHaveLength(1);
     expect(toolCalls[0].id).toBeDefined();
-    expect(toolCalls[0].id).not.toBe("call_0");
+    expect(toolCalls[0].id!.startsWith("lc-tool-call-")).toEqual(true);
   });
 
   test("generates unique IDs across multiple invocations", () => {
@@ -57,6 +57,8 @@ describe("convertGeminiPartsToToolCalls", () => {
     const secondCallToolCalls = convertGeminiPartsToToolCalls(parts);
 
     expect(firstCallToolCalls[0].id).not.toBe(secondCallToolCalls[0].id);
+    expect(firstCallToolCalls[0].id!.startsWith("lc-tool-call-"));
+    expect(secondCallToolCalls[0].id!.startsWith("lc-tool-call-"));
   });
 
   test("generates unique IDs for multiple tool calls in the same response", () => {
@@ -134,7 +136,7 @@ describe("convertMessagesToGeminiContents", () => {
     const toolResponseContent = contents.find((c) => c.role === "function");
     expect(toolResponseContent).toBeDefined();
 
-    const functionResponsePart = toolResponseContent!.parts.find(
+    const functionResponsePart = toolResponseContent!.parts!.find(
       (p) => "functionResponse" in p && p.functionResponse
     );
     expect(functionResponsePart).toBeDefined();
@@ -485,7 +487,7 @@ describe("convertMessagesToGeminiContents", () => {
     const toolResponseContent = contents.find((c) => c.role === "function");
     expect(toolResponseContent).toBeDefined();
 
-    const functionResponsePart = toolResponseContent!.parts.find(
+    const functionResponsePart = toolResponseContent!.parts!.find(
       (p) => "functionResponse" in p && p.functionResponse
     );
     expect(functionResponsePart).toBeDefined();
@@ -493,6 +495,79 @@ describe("convertMessagesToGeminiContents", () => {
       (functionResponsePart as Gemini.Part.FunctionResponse).functionResponse!
         .id
     ).toBe("tool-call-xyz");
+  });
+
+  test("omits generated tool_call_id from functionResponse.id (legacy path)", () => {
+    const messages = [
+      new HumanMessage("hello"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "my_tool",
+            args: { query: "test" },
+            id: "lc-tool-call-abc",
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: "result",
+        tool_call_id: "lc-tool-call-abc",
+        name: "my_tool",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const toolResponseContent = contents.find((c) => c.role === "function");
+    expect(toolResponseContent).toBeDefined();
+
+    const functionResponsePart = toolResponseContent!.parts!.find(
+      (p) => "functionResponse" in p && p.functionResponse
+    );
+    expect(functionResponsePart).toBeDefined();
+    expect(
+      (functionResponsePart as Gemini.Part.FunctionResponse).functionResponse!
+        .id
+    ).toBeUndefined();
+  });
+
+  test("omits generated tool_call_id from functionResponse.id (v1 standard path)", () => {
+    const messages = [
+      new HumanMessage("hello"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "my_tool",
+            args: { query: "test" },
+            id: "lc-tool-call-xyz",
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: "result",
+        tool_call_id: "lc-tool-call-xyz",
+        name: "my_tool",
+        response_metadata: { output_version: "v1" },
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const toolResponseContent = contents.find((c) => c.role === "function");
+    expect(toolResponseContent).toBeDefined();
+
+    const functionResponsePart = toolResponseContent!.parts!.find(
+      (p) => "functionResponse" in p && p.functionResponse
+    );
+    expect(functionResponsePart).toBeDefined();
+    expect(
+      (functionResponsePart as Gemini.Part.FunctionResponse).functionResponse!
+        .id
+    ).toBeUndefined();
   });
 
   test("v1 contentBlocks: text-plain block produces fileData part", () => {
