@@ -10,7 +10,9 @@ describe("gcp-auth", () => {
     const { normalizeGCPCredentials } = await import("../gcp-auth.js");
 
     expect(
-      normalizeGCPCredentials('{"type":"service_account","project_id":"p","private_key_id":"k","private_key":"pem","client_id":"c","client_email":"a@b.c","auth_uri":"https://auth","token_uri":"https://token","auth_provider_x509_cert_url":"https://cert","client_x509_cert_url":"https://client-cert"}')
+      normalizeGCPCredentials(
+        '{"type":"service_account","project_id":"p","private_key_id":"k","private_key":"pem","client_id":"c","client_email":"a@b.c","auth_uri":"https://auth","token_uri":"https://token","auth_provider_x509_cert_url":"https://cert","client_x509_cert_url":"https://client-cert"}'
+      )
     ).toMatchObject({
       project_id: "p",
       private_key_id: "k",
