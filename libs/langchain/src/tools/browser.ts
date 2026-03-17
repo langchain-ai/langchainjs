@@ -15,6 +15,7 @@ import {
 } from "@langchain/core/tools";
 import type {
   InteropZodObject,
+  InferInteropZodInput,
   InferInteropZodOutput,
 } from "@langchain/core/utils/types";
 import { interrupt } from "@langchain/langgraph";
@@ -30,9 +31,11 @@ const isBrowserEnvironment = (): boolean =>
 /**
  * Configuration fields for creating a browser tool.
  */
-export type BrowserToolFields<SchemaT extends InteropZodObject> =
-  ToolWrapperParams<SchemaT> &
-    Required<Pick<ToolWrapperParams<SchemaT>, "description" | "schema">>;
+export type BrowserToolFields<
+  SchemaT extends InteropZodObject,
+  NameT extends string = string,
+> = ToolWrapperParams<SchemaT, NameT> &
+  Required<Pick<ToolWrapperParams<SchemaT, NameT>, "description" | "schema">>;
 
 /**
  * A browser tool that can be used in both server and client environments.
@@ -43,7 +46,15 @@ export type BrowserToolFields<SchemaT extends InteropZodObject> =
 export type BrowserTool<
   SchemaT extends InteropZodObject = InteropZodObject,
   OutputT = unknown,
-> = DynamicStructuredTool<SchemaT> & {
+  NameT extends string = string,
+> = DynamicStructuredTool<
+  SchemaT,
+  InferInteropZodOutput<SchemaT>,
+  InferInteropZodInput<SchemaT>,
+  OutputT,
+  unknown,
+  NameT
+> & {
   /**
    * The execute function for client-side use.
    * Called by `useStream` when the interrupt is received.
@@ -105,25 +116,32 @@ export type BrowserTool<
 export function browserTool<
   SchemaT extends InteropZodObject,
   OutputT = unknown,
+  NameT extends string = string,
 >(
   execute: (args: InferInteropZodOutput<SchemaT>) => Promise<OutputT>,
-  fields: BrowserToolFields<SchemaT>
-): BrowserTool<SchemaT, OutputT> {
+  fields: BrowserToolFields<SchemaT, NameT>
+): BrowserTool<SchemaT, OutputT, NameT> {
   const { name, description, schema } = fields;
 
-  // Create the underlying tool using @langchain/core's tool function
+  /**
+   * Create the underlying tool using @langchain/core's tool function
+   */
   const wrappedTool = coreTool(
     async (
       args: InferInteropZodOutput<SchemaT>,
       config?: ToolRunnableConfig
     ) => {
-      // In browser: execute the tool directly
+      /**
+       * In browser: execute the tool directly
+       */
       if (isBrowserEnvironment()) {
         return execute(args);
       }
 
-      // On server: interrupt and wait for client to execute
-      // The interrupt value contains the tool call details for the client
+      /**
+       * On server: interrupt and wait for client to execute
+       * The interrupt value contains the tool call details for the client
+       */
       return interrupt({
         type: "browser_tool",
         toolCall: {
@@ -137,16 +155,21 @@ export function browserTool<
       name,
       description,
       schema,
-      // Mark as browser tool in metadata for detection
+      /**
+       * Mark as browser tool in metadata for detection
+       */
       metadata: {
         browserTool: true,
       },
     }
   );
 
-  // Attach the execute function for explicit client-side use (e.g., in useStream)
+  /**
+   * Attach the execute function for explicit client-side use (e.g., in useStream)
+   */
   return Object.assign(wrappedTool, { execute }) as BrowserTool<
     SchemaT,
-    OutputT
+    OutputT,
+    NameT
   >;
 }
