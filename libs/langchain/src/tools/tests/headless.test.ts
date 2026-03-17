@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { z } from "zod";
 
 import { tool } from "../headless.js";
@@ -63,5 +63,30 @@ describe("tool (headless) schema validation", () => {
     expect(complexTool.name).toBe("complex_tool");
     expect(complexTool.metadata).toEqual({ headlessTool: true });
     expect(typeof complexTool.implement).toBe("function");
+  });
+});
+
+describe("tool (normal)", () => {
+  it("should create a normal tool when called with a function", async () => {
+    const execute = vi.fn().mockResolvedValue("sunny");
+
+    const getWeather = tool(execute, {
+      name: "get_weather",
+      description: "Get the weather",
+      schema: z.object({ city: z.string() }),
+    });
+
+    expect(getWeather.name).toBe("get_weather");
+    expect(getWeather.description).toBe("Get the weather");
+    expect(typeof (getWeather as { implement?: unknown }).implement).toBe(
+      "undefined"
+    );
+
+    const result = await getWeather.invoke({ city: "Tokyo" });
+    expect(execute).toHaveBeenCalledWith(
+      { city: "Tokyo" },
+      expect.anything()
+    );
+    expect(result).toBe("sunny");
   });
 });

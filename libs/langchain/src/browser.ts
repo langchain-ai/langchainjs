@@ -30,7 +30,6 @@ export { initChatModel } from "./chat_models/universal.js";
  * LangChain Tools
  */
 export {
-  tool,
   Tool,
   type ToolRuntime,
   DynamicTool,
@@ -39,9 +38,10 @@ export {
 } from "@langchain/core/tools";
 
 /**
- * Headless Tools
+ * LangChain tool primitive (supports both normal and headless tools)
  */
 export {
+  tool,
   type HeadlessTool,
   type HeadlessToolFields,
   type HeadlessToolImplementation,

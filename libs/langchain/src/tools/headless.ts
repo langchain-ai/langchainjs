@@ -1,9 +1,10 @@
 /**
- * Headless Tools for LangChain Agents
+ * Unified Tool Primitive for LangChain Agents
  *
- * This module provides the `tool` primitive for creating headless tools that
- * interrupt agent execution and delegate their implementation to the client
- * (e.g. via `useStream({ tools: [...] })`).
+ * This module re-exports the `tool` primitive from `@langchain/core/tools` with
+ * an additional overload: when called without an implementation function, it
+ * creates a **headless tool** that interrupts agent execution and delegates the
+ * implementation to the client (e.g. via `useStream({ tools: [...] })`).
  *
  * @module
  */
@@ -80,60 +81,10 @@ export type HeadlessTool<
   ) => HeadlessToolImplementation<SchemaT, OutputT, NameT>;
 };
 
-/**
- * Creates a headless tool that interrupts agent execution on the server.
- *
- * Headless tools are defined without an implementation. When the agent calls
- * the tool, execution is interrupted and the tool call details are surfaced to
- * the client. The client provides the implementation separately via
- * `useStream({ tools: [...] })`.
- *
- * @example
- * ```typescript
- * import { tool } from "langchain/tools";
- * import { z } from "zod";
- *
- * // Define the headless tool — no implementation needed here
- * export const getLocation = tool({
- *   name: "get_location",
- *   description: "Get the user's current GPS location",
- *   schema: z.object({
- *     highAccuracy: z.boolean().optional().describe("Request high accuracy GPS"),
- *   }),
- * });
- *
- * // Use in createAgent (server)
- * const agent = createAgent({
- *   model: "openai:gpt-4o",
- *   tools: [getLocation],
- * });
- *
- * // Provide the implementation in useStream (client)
- * const stream = useStream({
- *   assistantId: "agent",
- *   tools: [
- *     getLocation.implement(async ({ highAccuracy }) => {
- *       return new Promise((resolve, reject) => {
- *         navigator.geolocation.getCurrentPosition(
- *           (pos) => resolve({
- *             latitude: pos.coords.latitude,
- *             longitude: pos.coords.longitude,
- *           }),
- *           (err) => reject(new Error(err.message)),
- *           { enableHighAccuracy: highAccuracy }
- *         );
- *       });
- *     }),
- *   ],
- * });
- * ```
- *
- * @param fields - The tool configuration (name, description, schema)
- * @returns A headless tool that interrupts on every invocation
- */
-export function tool<SchemaT extends InteropZodObject, NameT extends string>(
-  fields: HeadlessToolFields<SchemaT, NameT>
-): HeadlessTool<SchemaT, NameT> {
+function createHeadlessTool<
+  SchemaT extends InteropZodObject,
+  NameT extends string,
+>(fields: HeadlessToolFields<SchemaT, NameT>): HeadlessTool<SchemaT, NameT> {
   const { name, description, schema } = fields;
 
   const wrappedTool = coreTool(
@@ -175,3 +126,97 @@ export function tool<SchemaT extends InteropZodObject, NameT extends string>(
 
   return headlessTool;
 }
+
+/**
+ * The headless overload signature added to the core `tool` function.
+ *
+ * When called **without** an implementation function — just `tool({ name, description, schema })` —
+ * returns a {@link HeadlessTool} that interrupts on every agent invocation.
+ * The client provides the implementation via `useStream({ tools: [...] })`.
+ */
+type HeadlessToolOverload = {
+  <SchemaT extends InteropZodObject, NameT extends string>(
+    fields: HeadlessToolFields<SchemaT, NameT>
+  ): HeadlessTool<SchemaT, NameT>;
+};
+
+/**
+ * Unified tool primitive for LangChain agents.
+ *
+ * Enhances the `tool` function from `@langchain/core/tools` with a headless
+ * overload: when called **without** an implementation function, the tool
+ * interrupts agent execution and lets the client supply the implementation.
+ *
+ * ---
+ *
+ * **Normal tool** — pass an implementation function as the first argument:
+ *
+ * ```typescript
+ * import { tool } from "langchain/tools";
+ * import { z } from "zod";
+ *
+ * const getWeather = tool(
+ *   async ({ city }) => `The weather in ${city} is sunny.`,
+ *   {
+ *     name: "get_weather",
+ *     description: "Get the weather for a city",
+ *     schema: z.object({ city: z.string() }),
+ *   }
+ * );
+ * ```
+ *
+ * ---
+ *
+ * **Headless tool** — omit the implementation; the client provides it later:
+ *
+ * ```typescript
+ * import { tool } from "langchain/tools";
+ * import { z } from "zod";
+ *
+ * // Server: define the tool shape — no implementation needed
+ * export const getLocation = tool({
+ *   name: "get_location",
+ *   description: "Get the user's current GPS location",
+ *   schema: z.object({
+ *     highAccuracy: z.boolean().optional().describe("Request high accuracy GPS"),
+ *   }),
+ * });
+ *
+ * // Server: register with the agent
+ * const agent = createAgent({
+ *   model: "openai:gpt-4o",
+ *   tools: [getLocation],
+ * });
+ *
+ * // Client: provide the implementation in useStream
+ * const stream = useStream({
+ *   assistantId: "agent",
+ *   tools: [
+ *     getLocation.implement(async ({ highAccuracy }) => {
+ *       return new Promise((resolve, reject) => {
+ *         navigator.geolocation.getCurrentPosition(
+ *           (pos) => resolve({
+ *             latitude: pos.coords.latitude,
+ *             longitude: pos.coords.longitude,
+ *           }),
+ *           (err) => reject(new Error(err.message)),
+ *           { enableHighAccuracy: highAccuracy }
+ *         );
+ *       });
+ *     }),
+ *   ],
+ * });
+ * ```
+ */
+export const tool: HeadlessToolOverload & typeof coreTool = ((
+  funcOrFields: unknown,
+  fields?: unknown
+) => {
+  if (typeof funcOrFields !== "function") {
+    return createHeadlessTool(
+      funcOrFields as HeadlessToolFields<InteropZodObject, string>
+    );
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (coreTool as any)(funcOrFields, fields);
+}) as HeadlessToolOverload & typeof coreTool;
