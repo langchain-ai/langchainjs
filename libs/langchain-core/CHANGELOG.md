@@ -1,5 +1,13 @@
 # @langchain/core
 
+## 1.1.33
+
+### Patch Changes
+
+- [#10412](https://github.com/langchain-ai/langchainjs/pull/10412) [`6db417b`](https://github.com/langchain-ai/langchainjs/commit/6db417b03ecb5e2ace413389d982294e0ac88433) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(core): respect timeout option in streamEvents v2
+
+- [#10424](https://github.com/langchain-ai/langchainjs/pull/10424) [`d69dfcc`](https://github.com/langchain-ai/langchainjs/commit/d69dfcca97503cf1c0b7e70ccf5fb7d507c60982) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(core): preserve multimodal content in getBufferString as placeholders
+
 ## 1.1.32
 
 ### Patch Changes

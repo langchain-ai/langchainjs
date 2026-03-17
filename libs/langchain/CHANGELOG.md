@@ -1,5 +1,16 @@
 # langchain
 
+## 1.2.33
+
+### Patch Changes
+
+- [#9862](https://github.com/langchain-ai/langchainjs/pull/9862) [`5b250b1`](https://github.com/langchain-ai/langchainjs/commit/5b250b1a273df0ab4126b22d140dc2420130421f) Thanks [@stellarrover](https://github.com/stellarrover)! - fix(langchain/agents): Fix ReactAgent routing with returnDirect + beforeModel middleware
+
+  This fixes a routing error when an agent has both tools with returnDirect: true and middleware with beforeModel hooks (e.g., summarizationMiddleware). Before this fix, non-returnDirect tools would fail with "Branch condition returned unknown or null destination".
+
+- Updated dependencies [[`6db417b`](https://github.com/langchain-ai/langchainjs/commit/6db417b03ecb5e2ace413389d982294e0ac88433), [`d69dfcc`](https://github.com/langchain-ai/langchainjs/commit/d69dfcca97503cf1c0b7e70ccf5fb7d507c60982)]:
+  - @langchain/core@1.1.33
+
 ## 1.2.32
 
 ### Patch Changes
