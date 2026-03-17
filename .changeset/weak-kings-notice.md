@@ -1,6 +1,6 @@
 ---
 "@langchain/core": patch
-"langchain": patch
+"langchain": minor
 ---
 
 feat(core): support for browser tools
