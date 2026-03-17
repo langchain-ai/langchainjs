@@ -3,4 +3,4 @@
 "langchain": minor
 ---
 
-feat(core): support for browser tools
+feat(langchain): support for browser tools
