@@ -982,9 +982,7 @@ export class ReactAgent<
         return TOOLS_NODE_NAME;
       }
 
-      const regularToolCalls = (
-        lastMessage as AIMessage
-      ).tool_calls!.filter(
+      const regularToolCalls = (lastMessage as AIMessage).tool_calls!.filter(
         (toolCall) => !toolCall.name.startsWith("extract-")
       );
 
