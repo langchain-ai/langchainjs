@@ -971,10 +971,31 @@ export class ReactAgent<
       }
 
       /**
-       * For routing from afterModel nodes, always use simple string paths
-       * The Send API is handled at the model_request node level
+       * v1: route the full AIMessage to a single ToolNode invocation so all
+       * tool calls run concurrently via Promise.all.
+       *
+       * v2: dispatch each regular tool call as a separate Send task, matching
+       * the behaviour of #createModelRouter when no afterModel middleware is
+       * present.
        */
-      return TOOLS_NODE_NAME;
+      if (this.#toolBehaviorVersion === "v1") {
+        return TOOLS_NODE_NAME;
+      }
+
+      const regularToolCalls = (
+        lastMessage as AIMessage
+      ).tool_calls!.filter(
+        (toolCall) => !toolCall.name.startsWith("extract-")
+      );
+
+      if (regularToolCalls.length === 0) {
+        return exitNode;
+      }
+
+      return regularToolCalls.map(
+        (toolCall) =>
+          new Send(TOOLS_NODE_NAME, { ...state, lg_tool_call: toolCall })
+      );
     };
   }
 
