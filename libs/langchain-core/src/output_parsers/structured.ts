@@ -18,6 +18,7 @@ import {
   type JsonSchema7NumberType,
   type JsonSchema7NullableType,
 } from "../utils/json_schema.js";
+import type { BaseMessage } from "../messages/index.js";
 
 export type JsonMarkdownStructuredOutputParserInput = {
   interpolationDepth?: number;
@@ -129,6 +130,10 @@ ${JSON.stringify(toJsonSchema(this.schema))}
         text
       );
     }
+  }
+
+  protected _baseMessageToString(message: BaseMessage): string {
+    return message.text;
   }
 }
 
