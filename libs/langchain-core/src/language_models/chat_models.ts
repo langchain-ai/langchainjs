@@ -427,9 +427,7 @@ export abstract class BaseChatModel<
    * This ensures the integration tag is present even when
    * partner packages fully override getLsParams().
    */
-  getLsParamsWithDefaults(
-    options: this["ParsedCallOptions"]
-  ): LangSmithParams {
+  getLsParamsWithDefaults(options: this["ParsedCallOptions"]): LangSmithParams {
     return {
       ...this.getLsParams(options),
       ls_integration: "langchain_chat_model",
