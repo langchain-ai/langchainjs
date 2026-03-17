@@ -1276,6 +1276,11 @@ export const convertGeminiGenerateContentResponseToUsageMetadata: Converter<
   addModalityCounts(usageMetadata?.promptTokensDetails, input_token_details);
   input_token_details.cache_read = usageMetadata?.cachedContentTokenCount ?? 0;
 
+  // Avoid double-counting: Gemini's text modality count includes cached tokens
+  if (input_token_details.text && input_token_details.cache_read) {
+    input_token_details.text = Math.max(0, input_token_details.text - input_token_details.cache_read);
+  }
+
   const output_token_details: OutputTokenDetails = {};
   addModalityCounts(
     usageMetadata?.candidatesTokensDetails,
