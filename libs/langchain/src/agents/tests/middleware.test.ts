@@ -2975,4 +2975,78 @@ describe("middleware", () => {
       expect(val).toBeDefined();
     }
   });
+
+  it("should propagate store to wrapToolCall middleware runtime", async () => {
+    const store = new InMemoryStore();
+    let capturedStore: unknown;
+    let capturedConfigurable: unknown;
+
+    const testTool = tool(async () => "tool result", {
+      name: "test_tool",
+      description: "A test tool",
+      schema: z.object({}),
+    });
+
+    const middleware = createMiddleware({
+      name: "storeCheck",
+      wrapToolCall: async (request, handler) => {
+        capturedStore = request.runtime.store;
+        capturedConfigurable = request.runtime.configurable;
+        return handler(request);
+      },
+    });
+
+    const model = new FakeToolCallingModel({
+      toolCalls: [[{ name: "test_tool", args: {}, id: "1" }]],
+    });
+
+    const agent = createAgent({
+      model,
+      tools: [testTool],
+      store,
+      middleware: [middleware],
+    });
+
+    await agent.invoke({
+      messages: [new HumanMessage("call the tool")],
+    });
+
+    // Verify store is propagated to wrapToolCall (wrapped in AsyncBatchedStore)
+    expect(capturedStore).toBeDefined();
+    expect(capturedStore).not.toBeNull();
+    // Verify configurable is also propagated
+    expect(capturedConfigurable).toBeDefined();
+  });
+
+  it("should propagate store to wrapModelCall middleware runtime", async () => {
+    const store = new InMemoryStore();
+    let capturedStore: unknown;
+
+    const middleware = createMiddleware({
+      name: "storeCheck",
+      wrapModelCall: async (request, handler) => {
+        capturedStore = request.runtime.store;
+        return handler(request);
+      },
+    });
+
+    const model = new FakeToolCallingChatModel({
+      responses: [new AIMessage("hello")],
+    });
+
+    const agent = createAgent({
+      model,
+      tools: [],
+      store,
+      middleware: [middleware],
+    });
+
+    await agent.invoke({
+      messages: [new HumanMessage("hi")],
+    });
+
+    // Verify store is propagated to wrapModelCall (wrapped in AsyncBatchedStore)
+    expect(capturedStore).toBeDefined();
+    expect(capturedStore).not.toBeNull();
+  });
 });
