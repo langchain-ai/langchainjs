@@ -567,7 +567,7 @@ describe.each(coreModelInfo)(
           tool_calls: [
             {
               type: "tool_call",
-              id: "test-id",
+              id: "lc-tool-call-test-id",
               name: "test",
               args: {
                 testName: "cobalt",
@@ -575,7 +575,7 @@ describe.each(coreModelInfo)(
             },
           ],
         }),
-        new ToolMessage(JSON.stringify(toolResult), "test-id"),
+        new ToolMessage(JSON.stringify(toolResult), "lc-tool-call-test-id"),
       ];
       const res = await llm.stream(messages);
       const resArray: BaseMessageChunk[] = [];

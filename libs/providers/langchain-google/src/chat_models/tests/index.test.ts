@@ -135,7 +135,7 @@ class MockChunkStreamingResponse implements Response {
   readonly type: ResponseType = "basic";
   readonly url: string = "http://localhost";
   readonly bodyUsed: boolean = false;
-  readonly body: ReadableStream<Uint8Array>;
+  readonly body: ReadableStream<Uint8Array<ArrayBuffer>>;
 
   constructor(chunks: object[]) {
     const encoder = new TextEncoder();
@@ -165,7 +165,7 @@ class MockChunkStreamingResponse implements Response {
   async text(): Promise<string> {
     throw new Error("Not implemented");
   }
-  async bytes(): Promise<Uint8Array> {
+  async bytes(): Promise<Uint8Array<ArrayBuffer>> {
     throw new Error("Not implemented");
   }
   clone(): Response {
@@ -983,11 +983,11 @@ describe("Google Mock", () => {
         {
           handleLLMNewToken(
             token: string,
-            _idx: unknown,
-            _runId: unknown,
-            _parentRunId: unknown,
-            _tags: unknown,
-            fields: { chunk?: unknown }
+            _idx,
+            _runId,
+            _parentRunId,
+            _tags,
+            fields
           ) {
             newTokenCalls.push({ text: token, chunk: fields?.chunk });
           },
@@ -1100,11 +1100,11 @@ describe("Google Mock", () => {
         {
           handleLLMNewToken(
             token: string,
-            _idx: unknown,
-            _runId: unknown,
-            _parentRunId: unknown,
-            _tags: unknown,
-            fields: { chunk?: unknown }
+            _idx,
+            _runId,
+            _parentRunId,
+            _tags,
+            fields
           ) {
             newTokenCalls.push({ text: token, chunk: fields?.chunk });
           },
