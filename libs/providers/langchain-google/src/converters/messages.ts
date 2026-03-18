@@ -474,8 +474,6 @@ function convertStandardContentMessageToGeminiContent(
       },
     });
 
-    // For tool messages, only keep functionResponse parts since the text content
-    // is already included in the functionResponse.response.result
     parts = parts.filter((part) => "functionResponse" in part);
   }
 
