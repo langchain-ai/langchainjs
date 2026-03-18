@@ -53,7 +53,15 @@ export class PDFLoader extends BufferLoader {
     raw: Buffer,
     metadata: Document["metadata"]
   ): Promise<Document[]> {
-    const { getDocument, version } = await this.pdfjs();
+    const pdfjsResult = await this.pdfjs();
+
+    // Handle pdf-parse v2 API
+    if (pdfjsResult.isV2) {
+      return this.parseWithV2(raw, metadata, pdfjsResult.PDFParse);
+    }
+
+    // Handle pdf-parse v1 API
+    const { getDocument, version } = pdfjsResult;
     const pdf = await getDocument({
       data: new Uint8Array(raw.buffer),
       useWorkerFetch: false,
@@ -131,18 +139,100 @@ export class PDFLoader extends BufferLoader {
       }),
     ];
   }
+
+  /**
+   * Parse PDF using pdf-parse v2 API (PDFParse class).
+   */
+  private async parseWithV2(
+    raw: Buffer,
+    metadata: Document["metadata"],
+    PDFParseClass: typeof import("pdf-parse").PDFParse
+  ): Promise<Document[]> {
+    const parser = new PDFParseClass({ data: new Uint8Array(raw.buffer) });
+
+    try {
+      const [textResult, infoResult] = await Promise.all([
+        parser.getText(),
+        parser.getInfo(),
+      ]);
+
+      const documents: Document[] = [];
+
+      for (const page of textResult.pages) {
+        const text = page.text;
+        if (!text || text.trim().length === 0) {
+          continue;
+        }
+
+        documents.push(
+          new Document({
+            pageContent: text,
+            metadata: {
+              ...metadata,
+              pdf: {
+                version: infoResult.metadata?.format || "unknown",
+                info: infoResult.info,
+                metadata: infoResult.metadata,
+                totalPages: textResult.total,
+              },
+              loc: {
+                pageNumber: page.num,
+              },
+            },
+          })
+        );
+      }
+
+      if (this.splitPages) {
+        return documents;
+      }
+
+      if (documents.length === 0) {
+        return [];
+      }
+
+      return [
+        new Document({
+          pageContent: documents.map((doc) => doc.pageContent).join("\n\n"),
+          metadata: {
+            ...metadata,
+            pdf: {
+              version: infoResult.metadata?.format || "unknown",
+              info: infoResult.info,
+              metadata: infoResult.metadata,
+              totalPages: textResult.total,
+            },
+          },
+        }),
+      ];
+    } finally {
+      await parser.destroy();
+    }
+  }
 }
 
 async function PDFLoaderImports() {
+  // Try pdf-parse v2 first (main export)
+  try {
+    const pdfParseModule = await import("pdf-parse");
+    if ("PDFParse" in pdfParseModule) {
+      // v2 API: return a marker and the PDFParse class
+      return { isV2: true as const, PDFParse: pdfParseModule.PDFParse };
+    }
+  } catch (e) {
+    // Fall through to v1 fallback
+  }
+
+  // Fallback to pdf-parse v1 (internal path)
   try {
     const { default: mod } =
       await import("pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js");
     const { getDocument, version } = mod;
-    return { getDocument, version };
+    return { isV2: false as const, getDocument, version };
   } catch (e) {
     console.error(e);
     throw new Error(
-      "Failed to load pdf-parse. This loader currently supports pdf-parse v1 only. Please install v1, e.g. `npm install pdf-parse@^1` (v2 is not yet supported)."
+      "Failed to load pdf-parse. Please install pdf-parse v1 or v2, e.g. `npm install pdf-parse@^1` or `npm install pdf-parse@^2`."
     );
   }
 }
