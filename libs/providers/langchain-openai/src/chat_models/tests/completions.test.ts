@@ -11,6 +11,19 @@ describe("ChatOpenAICompletions constructor", () => {
     expect(model.model).toBe("gpt-4o-mini");
     expect(model.temperature).toBe(0.1);
   });
+
+  it("supports seed with call-time override precedence", () => {
+    const model = new ChatOpenAICompletions({
+      model: "gpt-4o-mini",
+      seed: 42,
+    });
+
+    const defaultParams = model.invocationParams({});
+    expect(defaultParams.seed).toBe(42);
+
+    const overriddenParams = model.invocationParams({ seed: 99 });
+    expect(overriddenParams.seed).toBe(99);
+  });
 });
 
 describe("ChatOpenAICompletions streaming usage_metadata callback", () => {
