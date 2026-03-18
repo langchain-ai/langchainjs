@@ -1251,6 +1251,60 @@ export const convertStandardContentMessageToResponsesInput: Converter<
 };
 
 /**
+ * Converts LangChain content blocks to Responses API native format.
+ * Shared by both the ToolMessage and HumanMessage paths.
+ */
+const convertContentBlocksToResponsesFormat = (
+  content: ContentBlock[]
+): unknown[] =>
+  content.flatMap((item) => {
+    if (isDataContentBlock(item)) {
+      return convertToProviderContentBlock(
+        item,
+        completionsApiContentBlockConverter
+      );
+    }
+    if (item.type === "text") {
+      return { type: "input_text", text: item.text };
+    }
+    if (item.type === "image_url") {
+      const imageUrl = iife(() => {
+        if (typeof item.image_url === "string") {
+          return item.image_url;
+        } else if (
+          typeof item.image_url === "object" &&
+          item.image_url !== null &&
+          "url" in item.image_url
+        ) {
+          return item.image_url.url;
+        }
+        return undefined;
+      });
+      const detail = iife(() => {
+        if (typeof item.image_url === "string") {
+          return "auto";
+        } else if (
+          typeof item.image_url === "object" &&
+          item.image_url !== null &&
+          "detail" in item.image_url
+        ) {
+          return item.image_url.detail;
+        }
+        return undefined;
+      });
+      return { type: "input_image", image_url: imageUrl, detail };
+    }
+    if (
+      item.type === "input_text" ||
+      item.type === "input_image" ||
+      item.type === "input_file"
+    ) {
+      return item;
+    }
+    return [];
+  });
+
+/**
  * - MCP (Model Context Protocol) approval responses
  * - Zero Data Retention (ZDR) mode handling
  *
@@ -1383,29 +1437,22 @@ export const convertMessagesToResponsesInput: Converter<
           };
         }
 
-        // Check if content contains provider-native OpenAI content blocks
-        // that should be passed through without stringification
-        const isProviderNativeContent =
-          Array.isArray(toolMessage.content) &&
-          toolMessage.content.every(
-            (item) =>
-              typeof item === "object" &&
-              item !== null &&
-              "type" in item &&
-              (item.type === "input_file" ||
-                item.type === "input_image" ||
-                item.type === "input_text")
-          );
+        if (Array.isArray(toolMessage.content)) {
+          return {
+            type: "function_call_output",
+            call_id: toolMessage.tool_call_id,
+            id: toolMessage.id?.startsWith("fc_") ? toolMessage.id : undefined,
+            output: convertContentBlocksToResponsesFormat(
+              toolMessage.content as ContentBlock[]
+            ),
+          } as ResponsesInputItem;
+        }
 
         return {
           type: "function_call_output",
           call_id: toolMessage.tool_call_id,
           id: toolMessage.id?.startsWith("fc_") ? toolMessage.id : undefined,
-          output: isProviderNativeContent
-            ? (toolMessage.content as OpenAIClient.Responses.ResponseFunctionCallOutputItemList)
-            : typeof toolMessage.content !== "string"
-              ? JSON.stringify(toolMessage.content)
-              : toolMessage.content,
+          output: toolMessage.content as string,
         };
       }
 
@@ -1561,7 +1608,8 @@ export const convertMessagesToResponsesInput: Converter<
         }
 
         const messages: ResponsesInputItem[] = [];
-        const content = (lcMsg.content as ContentBlock[]).flatMap((item) => {
+        const contentBlocks = lcMsg.content as ContentBlock[];
+        for (const item of contentBlocks) {
           if (item.type === "mcp_approval_response") {
             messages.push({
               type: "mcp_approval_response",
@@ -1569,58 +1617,8 @@ export const convertMessagesToResponsesInput: Converter<
               approve: item.approve as boolean,
             });
           }
-          if (isDataContentBlock(item)) {
-            return convertToProviderContentBlock(
-              item,
-              completionsApiContentBlockConverter
-            );
-          }
-          if (item.type === "text") {
-            return {
-              type: "input_text",
-              text: item.text,
-            };
-          }
-          if (item.type === "image_url") {
-            const imageUrl = iife(() => {
-              if (typeof item.image_url === "string") {
-                return item.image_url;
-              } else if (
-                typeof item.image_url === "object" &&
-                item.image_url !== null &&
-                "url" in item.image_url
-              ) {
-                return item.image_url.url;
-              }
-              return undefined;
-            });
-            const detail = iife(() => {
-              if (typeof item.image_url === "string") {
-                return "auto";
-              } else if (
-                typeof item.image_url === "object" &&
-                item.image_url !== null &&
-                "detail" in item.image_url
-              ) {
-                return item.image_url.detail;
-              }
-              return undefined;
-            });
-            return {
-              type: "input_image",
-              image_url: imageUrl,
-              detail,
-            };
-          }
-          if (
-            item.type === "input_text" ||
-            item.type === "input_image" ||
-            item.type === "input_file"
-          ) {
-            return item;
-          }
-          return [];
-        });
+        }
+        const content = convertContentBlocksToResponsesFormat(contentBlocks);
 
         if (content.length > 0) {
           messages.push({

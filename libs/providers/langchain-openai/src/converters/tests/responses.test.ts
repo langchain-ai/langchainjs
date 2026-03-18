@@ -1077,7 +1077,7 @@ describe("convertMessagesToResponsesInput", () => {
       ]);
     });
 
-    it("stringifies non-native array content", () => {
+    it("converts text content blocks to input_text format", () => {
       const toolMessage = new ToolMessage({
         tool_call_id: "call_obj",
         content: [
@@ -1099,7 +1099,12 @@ describe("convertMessagesToResponsesInput", () => {
           type: "function_call_output",
           call_id: "call_obj",
           id: undefined,
-          output: '[{"type":"text","text":"Result from tool"}]',
+          output: [
+            {
+              type: "input_text",
+              text: "Result from tool",
+            },
+          ],
         },
       ]);
     });
@@ -2083,5 +2088,211 @@ describe("tool_search support", () => {
 
       expect(result).toEqual([toolSearchCall, toolSearchOutput, functionCall]);
     });
+  });
+});
+
+describe("convertMessagesToResponsesInput - ToolMessage content block conversion", () => {
+  const convertToolMessage = (toolMessage: ToolMessage) =>
+    convertMessagesToResponsesInput({
+      messages: [toolMessage],
+      zdrEnabled: false,
+      model: "gpt-4o",
+    });
+
+  it("should convert image_url content blocks to input_image format", () => {
+    const toolMessage = new ToolMessage({
+      content: [
+        { type: "text", text: "Here is the screenshot" },
+        {
+          type: "image_url",
+          image_url: { url: "data:image/png;base64,abc123" },
+        },
+      ],
+      tool_call_id: "call_1",
+    });
+
+    const result = convertToolMessage(toolMessage);
+
+    expect(result).toEqual([
+      {
+        type: "function_call_output",
+        call_id: "call_1",
+        id: undefined,
+        output: [
+          { type: "input_text", text: "Here is the screenshot" },
+          {
+            type: "input_image",
+            image_url: "data:image/png;base64,abc123",
+            detail: undefined,
+          },
+        ],
+      },
+    ]);
+  });
+
+  it("should convert image_url string format to input_image", () => {
+    const toolMessage = new ToolMessage({
+      content: [
+        {
+          type: "image_url",
+          image_url: "data:image/png;base64,abc123",
+        },
+      ],
+      tool_call_id: "call_2",
+    });
+
+    const result = convertToolMessage(toolMessage);
+
+    expect(result).toEqual([
+      {
+        type: "function_call_output",
+        call_id: "call_2",
+        id: undefined,
+        output: [
+          {
+            type: "input_image",
+            image_url: "data:image/png;base64,abc123",
+            detail: "auto",
+          },
+        ],
+      },
+    ]);
+  });
+
+  it("should preserve image_url detail parameter", () => {
+    const toolMessage = new ToolMessage({
+      content: [
+        {
+          type: "image_url",
+          image_url: {
+            url: "data:image/png;base64,abc123",
+            detail: "high",
+          },
+        },
+      ],
+      tool_call_id: "call_3",
+    });
+
+    const result = convertToolMessage(toolMessage);
+
+    expect(result).toEqual([
+      {
+        type: "function_call_output",
+        call_id: "call_3",
+        id: undefined,
+        output: [
+          {
+            type: "input_image",
+            image_url: "data:image/png;base64,abc123",
+            detail: "high",
+          },
+        ],
+      },
+    ]);
+  });
+
+  it("should convert text content blocks to input_text format", () => {
+    const toolMessage = new ToolMessage({
+      content: [
+        { type: "text", text: "Result line 1" },
+        { type: "text", text: "Result line 2" },
+      ],
+      tool_call_id: "call_4",
+    });
+
+    const result = convertToolMessage(toolMessage);
+
+    expect(result).toEqual([
+      {
+        type: "function_call_output",
+        call_id: "call_4",
+        id: undefined,
+        output: [
+          { type: "input_text", text: "Result line 1" },
+          { type: "input_text", text: "Result line 2" },
+        ],
+      },
+    ]);
+  });
+
+  it("should pass through already-native content blocks", () => {
+    const toolMessage = new ToolMessage({
+      content: [
+        { type: "input_text", text: "native text" },
+        { type: "input_image", image_url: "data:image/png;base64,xyz" },
+      ] as any,
+      tool_call_id: "call_5",
+    });
+
+    const result = convertToolMessage(toolMessage);
+
+    expect(result).toEqual([
+      {
+        type: "function_call_output",
+        call_id: "call_5",
+        id: undefined,
+        output: [
+          { type: "input_text", text: "native text" },
+          { type: "input_image", image_url: "data:image/png;base64,xyz" },
+        ],
+      },
+    ]);
+  });
+
+  it("should still handle string content as before", () => {
+    const toolMessage = new ToolMessage({
+      content: "plain string result",
+      tool_call_id: "call_6",
+    });
+
+    const result = convertToolMessage(toolMessage);
+
+    expect(result).toEqual([
+      {
+        type: "function_call_output",
+        call_id: "call_6",
+        id: undefined,
+        output: "plain string result",
+      },
+    ]);
+  });
+
+  it("should convert standard data content blocks via isDataContentBlock", () => {
+    const toolMessage = new ToolMessage({
+      content: [
+        {
+          type: "image",
+          source_type: "url",
+          url: "https://example.com/image.png",
+          metadata: { detail: "low" },
+        },
+      ] as any,
+      tool_call_id: "call_7",
+    });
+
+    const result = convertToolMessage(toolMessage);
+
+    // isDataContentBlock items go through completionsApiContentBlockConverter
+    // which produces image_url format, then the image_url → input_image
+    // conversion in the same flatMap does NOT re-process them (consistent
+    // with the HumanMessage legacy path behavior at line ~1294).
+    // The result is still an array (not JSON.stringify'd), which is the
+    // key fix — OpenAI's SDK accepts this format.
+    expect(result).toEqual([
+      {
+        type: "function_call_output",
+        call_id: "call_7",
+        id: undefined,
+        output: [
+          {
+            type: "image_url",
+            image_url: {
+              detail: "low",
+              url: "https://example.com/image.png",
+            },
+          },
+        ],
+      },
+    ]);
   });
 });
