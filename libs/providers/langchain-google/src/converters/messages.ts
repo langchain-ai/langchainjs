@@ -421,7 +421,7 @@ function convertStandardContentMessageToGeminiContent(
     role = "user";
   }
 
-  const parts: Gemini.Part[] = [];
+  let parts: Gemini.Part[] = [];
 
   // Process standard content blocks
   const contentBlocks = Array.isArray(message.contentBlocks)
@@ -473,6 +473,10 @@ function convertStandardContentMessageToGeminiContent(
         response: { result: responseContent },
       },
     });
+
+    // For tool messages, only keep functionResponse parts since the text content
+    // is already included in the functionResponse.response.result
+    parts = parts.filter((part) => "functionResponse" in part);
   }
 
   // Only return content if we have parts
