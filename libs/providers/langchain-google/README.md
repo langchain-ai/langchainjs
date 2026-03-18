@@ -113,5 +113,5 @@ GOOGLE_TEST_MODELS=gemini-3.1-pro-preview GOOGLE_TEST_AUTH=adc pnpm --filter @la
 
 Running one specific test:
 ```bash
-GOOGLE_TEST_MODELS=gemini-3.1-pro-preview GOOGLE_TEST_AUTH=adc pnpm --filter @langchain/google test:int src/chat_models/tests/index.int.test.ts -t "function - stream tools - multiple tools simultaneously"
+GOOGLE_TEST_MODELS=gemini-3.1-pro-preview GOOGLE_TEST_AUTH=adc pnpm --filter @langchain/google test:int src/chat_models/tests/index.int.test.ts -t "function - stream tools - parallel tool calling"
 ```
