@@ -1,0 +1,11 @@
+# Wrangler configuration for @langchain/core v1 Cloudflare Workers tests
+#
+# @langchain/core uses dynamic imports with graceful fallback for node:async_hooks.
+# This allows it to run in Cloudflare Workers WITHOUT the nodejs_compat flag.
+#
+# Note: Context propagation features will use a mock implementation
+# in environments without node:async_hooks.
+
+name = "test-exports-cf-core"
+main = "src/index.core.ts"
+compatibility_date = "2024-09-23"
