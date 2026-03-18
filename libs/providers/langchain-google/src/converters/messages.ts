@@ -362,8 +362,19 @@ function convertStandardContentBlockToGeminiPart(
   block: ContentBlock.Standard
 ): Gemini.Part | null {
   switch (block.type) {
-    case "text":
-      return { text: block.text };
+    case "text": {
+      const textPart: Gemini.Part = { text: block.text };
+      // Preserve thinking metadata for multi-turn conversations with thinking models
+      const blockRecord = block as Record<string, unknown>;
+      if (blockRecord.thought !== undefined) {
+        (textPart as Record<string, unknown>).thought = blockRecord.thought;
+      }
+      if (blockRecord.thoughtSignature) {
+        (textPart as Record<string, unknown>).thoughtSignature =
+          blockRecord.thoughtSignature;
+      }
+      return textPart;
+    }
     case "image":
     case "audio":
     case "text-plain":
@@ -714,7 +725,17 @@ function convertLegacyContentMessageToGeminiContent(
         parts.push({ text: item });
       } else if (typeof item === "object" && item !== null) {
         if (isMessageContentText(item)) {
-          parts.push({ text: item.text });
+          const textPart: Gemini.Part = { text: item.text };
+          // Preserve thinking metadata for multi-turn conversations
+          const itemRecord = item as Record<string, unknown>;
+          if (itemRecord.thought !== undefined) {
+            (textPart as Record<string, unknown>).thought = itemRecord.thought;
+          }
+          if (itemRecord.thoughtSignature) {
+            (textPart as Record<string, unknown>).thoughtSignature =
+              itemRecord.thoughtSignature;
+          }
+          parts.push(textPart);
         } else if (isDataContentBlock(item)) {
           parts.push(
             convertToProviderContentBlock(item, geminiContentBlockConverter)
