@@ -60,7 +60,11 @@ import { ModelAbortError } from "../errors/index.js";
 import { callbackHandlerPrefersStreaming } from "../callbacks/base.js";
 import { toJsonSchema } from "../utils/json_schema.js";
 import { getEnvironmentVariable } from "../utils/env.js";
-import { castStandardMessageContent, iife } from "./utils.js";
+import {
+  castStandardMessageContent,
+  iife,
+  parseMetadataInvocationParams,
+} from "./utils.js";
 import {
   isSerializableSchema,
   type SerializableSchema,
@@ -320,11 +324,8 @@ export abstract class BaseChatModel<
         ...this.getLsParams(callOptions),
       };
       const invocationParams = this?.invocationParams(callOptions);
-      const metadataInvocationParams = Object.fromEntries(
-        Object.entries(invocationParams).filter(
-          ([k, v]) => k !== "tools" && v !== null && v !== undefined
-        )
-      );
+      const metadataInvocationParams =
+        parseMetadataInvocationParams(invocationParams);
       const callbackManager_ = CallbackManager.configure(
         runnableConfig.callbacks,
         this.callbacks,
@@ -453,11 +454,8 @@ export abstract class BaseChatModel<
         ...this.getLsParams(parsedOptions),
       };
       const invocationParams = this?.invocationParams(parsedOptions);
-      const metadataInvocationParams = Object.fromEntries(
-        Object.entries(invocationParams).filter(
-          ([k, v]) => k !== "tools" && v !== null && v !== undefined
-        )
-      );
+      const metadataInvocationParams =
+        parseMetadataInvocationParams(invocationParams);
       // create callback manager and start run
       const callbackManager_ = CallbackManager.configure(
         handledOptions.callbacks,
@@ -665,11 +663,8 @@ export abstract class BaseChatModel<
       ...this.getLsParams(parsedOptions),
     };
     const invocationParams = this?.invocationParams(parsedOptions);
-    const metadataInvocationParams = Object.fromEntries(
-      Object.entries(invocationParams).filter(
-        ([k, v]) => k !== "tools" && v !== null && v !== undefined
-      )
-    );
+    const metadataInvocationParams =
+      parseMetadataInvocationParams(invocationParams);
     // create callback manager and start run
     const callbackManager_ = CallbackManager.configure(
       handledOptions.callbacks,

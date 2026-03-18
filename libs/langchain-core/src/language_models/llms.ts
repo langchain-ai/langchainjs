@@ -21,6 +21,7 @@ import type { RunnableConfig } from "../runnables/config.js";
 import type { BaseCache } from "../caches/index.js";
 import { concat } from "../utils/stream.js";
 import { callbackHandlerPrefersStreaming } from "../callbacks/base.js";
+import { parseMetadataInvocationParams } from "./utils.js";
 
 export type SerializedLLM = {
   _model: string;
@@ -101,11 +102,8 @@ export abstract class BaseLLM<
       const [runnableConfig, callOptions] =
         this._separateRunnableConfigFromCallOptionsCompat(options);
       const invocationParams = this?.invocationParams(callOptions);
-      const metadataInvocationParams = Object.fromEntries(
-        Object.entries(invocationParams).filter(
-          ([k, v]) => k !== "tools" && v !== null && v !== undefined
-        )
-      );
+      const metadataInvocationParams =
+        parseMetadataInvocationParams(invocationParams);
       const callbackManager_ = CallbackManager.configure(
         runnableConfig.callbacks,
         this.callbacks,
@@ -243,11 +241,8 @@ export abstract class BaseLLM<
       runManagers = startedRunManagers;
     } else {
       const invocationParams = this?.invocationParams(parsedOptions);
-      const metadataInvocationParams = Object.fromEntries(
-        Object.entries(invocationParams).filter(
-          ([k, v]) => k !== "tools" && v !== null && v !== undefined
-        )
-      );
+      const metadataInvocationParams =
+        parseMetadataInvocationParams(invocationParams);
       const callbackManager_ = CallbackManager.configure(
         handledOptions.callbacks,
         this.callbacks,
@@ -360,11 +355,8 @@ export abstract class BaseLLM<
     }
   > {
     const invocationParams = this?.invocationParams(parsedOptions);
-    const metadataInvocationParams = Object.fromEntries(
-      Object.entries(invocationParams).filter(
-        ([k, v]) => k !== "tools" && v !== null && v !== undefined
-      )
-    );
+    const metadataInvocationParams =
+      parseMetadataInvocationParams(invocationParams);
     const callbackManager_ = CallbackManager.configure(
       handledOptions.callbacks,
       this.callbacks,
