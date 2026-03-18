@@ -358,23 +358,21 @@ function convertStandardVideoContentBlockToGeminiPart(
  *
  * This is intended to be called from `convertStandardContentMessageToGeminiContent`
  */
+function textBlockToGeminiPart(
+  block: Record<string, unknown> & { text: string }
+): Gemini.Part {
+  const part: Record<string, unknown> = { text: block.text };
+  if ("thought" in block) part.thought = block.thought;
+  if ("thoughtSignature" in block) part.thoughtSignature = block.thoughtSignature;
+  return part as Gemini.Part;
+}
+
 function convertStandardContentBlockToGeminiPart(
   block: ContentBlock.Standard
 ): Gemini.Part | null {
   switch (block.type) {
-    case "text": {
-      const textPart: Gemini.Part = { text: block.text };
-      // Preserve thinking metadata for multi-turn conversations with thinking models
-      const blockRecord = block as Record<string, unknown>;
-      if (blockRecord.thought !== undefined) {
-        (textPart as Record<string, unknown>).thought = blockRecord.thought;
-      }
-      if (blockRecord.thoughtSignature) {
-        (textPart as Record<string, unknown>).thoughtSignature =
-          blockRecord.thoughtSignature;
-      }
-      return textPart;
-    }
+    case "text":
+      return textBlockToGeminiPart(block);
     case "image":
     case "audio":
     case "text-plain":
@@ -725,17 +723,7 @@ function convertLegacyContentMessageToGeminiContent(
         parts.push({ text: item });
       } else if (typeof item === "object" && item !== null) {
         if (isMessageContentText(item)) {
-          const textPart: Gemini.Part = { text: item.text };
-          // Preserve thinking metadata for multi-turn conversations
-          const itemRecord = item as Record<string, unknown>;
-          if (itemRecord.thought !== undefined) {
-            (textPart as Record<string, unknown>).thought = itemRecord.thought;
-          }
-          if (itemRecord.thoughtSignature) {
-            (textPart as Record<string, unknown>).thoughtSignature =
-              itemRecord.thoughtSignature;
-          }
-          parts.push(textPart);
+          parts.push(textBlockToGeminiPart(item as Record<string, unknown> & { text: string }));
         } else if (isDataContentBlock(item)) {
           parts.push(
             convertToProviderContentBlock(item, geminiContentBlockConverter)

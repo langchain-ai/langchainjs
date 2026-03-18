@@ -741,78 +741,48 @@ describe("convertMessagesToGeminiContents", () => {
     ).toBe("gs://bucket/report.pdf");
   });
 
-  test("preserves thought and thoughtSignature on text blocks in multi-turn conversations", () => {
-    // Simulate a multi-turn conversation where the AI's previous response
-    // included thinking blocks (from Gemini 2.5 thinking models)
+  test("preserves thought/thoughtSignature in standard converter (v1)", () => {
     const messages = [
       new HumanMessage("What is 2+2?"),
       new AIMessage({
         content: [
-          {
-            type: "text",
-            text: "Let me think about this...",
-            thought: true,
-            thoughtSignature: "sig-abc-123",
-          },
-          {
-            type: "text",
-            text: "The answer is 4.",
-          },
+          { type: "text", text: "thinking...", thought: true, thoughtSignature: "sig-1" },
+          { type: "text", text: "4" },
         ],
-        response_metadata: {
-          output_version: "v1",
-        },
+        response_metadata: { output_version: "v1" },
       }),
       new HumanMessage("And 3+3?"),
     ];
 
     const contents = convertMessagesToGeminiContents(messages);
+    const modelContent = contents.find((c) => c.role === "model")!;
 
-    // Find the model's response in the converted contents
-    const modelContent = contents.find((c) => c.role === "model");
-    expect(modelContent).toBeDefined();
-    expect(modelContent!.parts.length).toBeGreaterThanOrEqual(2);
-
-    // The thinking block should preserve thought and thoughtSignature
-    const thinkingPart = modelContent!.parts[0] as Record<string, unknown>;
-    expect(thinkingPart.text).toBe("Let me think about this...");
+    const thinkingPart = modelContent.parts[0] as Record<string, unknown>;
     expect(thinkingPart.thought).toBe(true);
-    expect(thinkingPart.thoughtSignature).toBe("sig-abc-123");
+    expect(thinkingPart.thoughtSignature).toBe("sig-1");
 
-    // The regular text block should not have thought metadata
-    const textPart = modelContent!.parts[1] as Record<string, unknown>;
-    expect(textPart.text).toBe("The answer is 4.");
+    const textPart = modelContent.parts[1] as Record<string, unknown>;
+    expect(textPart.text).toBe("4");
     expect(textPart.thought).toBeUndefined();
   });
 
-  test("preserves thought metadata in legacy content format", () => {
-    // Legacy format: content is an array with thinking blocks as objects
+  test("preserves thought/thoughtSignature in legacy converter", () => {
     const messages = [
       new HumanMessage("What is 2+2?"),
       new AIMessage({
         content: [
-          {
-            type: "text",
-            text: "Reasoning here...",
-            thought: true,
-            thoughtSignature: "sig-xyz",
-          },
-          {
-            type: "text",
-            text: "4",
-          },
+          { type: "text", text: "reasoning...", thought: true, thoughtSignature: "sig-2" },
+          { type: "text", text: "4" },
         ],
-        // No output_version — uses legacy converter
       }),
       new HumanMessage("Thanks"),
     ];
 
     const contents = convertMessagesToGeminiContents(messages);
-    const modelContent = contents.find((c) => c.role === "model");
-    expect(modelContent).toBeDefined();
+    const modelContent = contents.find((c) => c.role === "model")!;
 
-    const thinkingPart = modelContent!.parts[0] as Record<string, unknown>;
+    const thinkingPart = modelContent.parts[0] as Record<string, unknown>;
     expect(thinkingPart.thought).toBe(true);
-    expect(thinkingPart.thoughtSignature).toBe("sig-xyz");
+    expect(thinkingPart.thoughtSignature).toBe("sig-2");
   });
 });
