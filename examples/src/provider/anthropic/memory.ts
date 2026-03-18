@@ -33,13 +33,8 @@ const filesystem = new StateFileSystem(files, [], (files) => {
   Object.assign(files, files);
 });
 
-const agent = createAgent({
+export const agent = createAgent({
   model,
   tools: [tools.memory({ filesystem })],
 });
 
-const result = await agent.invoke({
-  messages: "What is the weather in Tokyo?",
-});
-
-console.log(result);
