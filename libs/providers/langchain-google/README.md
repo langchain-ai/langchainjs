@@ -95,3 +95,23 @@ pnpm lint && pnpm format
 ### Adding new entrypoints
 
 If you add a new file to be exported, either import & re-export from `src/index.ts`, or add it to the `exports` field in the `package.json` file and run `pnpm build` to generate the new entrypoint.
+
+## Running Integration Tests
+
+You can filter integration tests using the following environment variables:
+
+- `GOOGLE_TEST_MODELS`: Comma-separated list of models to run (e.g., `gemini-3.1-pro-preview`). If unset, all models will be tested.
+- `GOOGLE_TEST_AUTH`: Can be set to `adc` (Application Default Credentials) or `apikey`.
+    - `adc`: Tests will run exclusively using the GCP Node environment without API keys.
+    - `apikey`: Tests will run using only the API key configuration.
+    - If unset, the default test matrix (both Node/ADC and API key) will run.
+
+Example:
+```bash
+GOOGLE_TEST_MODELS=gemini-3.1-pro-preview GOOGLE_TEST_AUTH=adc pnpm --filter @langchain/google test:int
+```
+
+Running one specific test:
+```bash
+GOOGLE_TEST_MODELS=gemini-3.1-pro-preview GOOGLE_TEST_AUTH=adc pnpm --filter @langchain/google test:int src/chat_models/tests/index.int.test.ts -t "function - stream tools - multiple tools simultaneously"
+```
