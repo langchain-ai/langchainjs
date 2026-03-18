@@ -1,0 +1,146 @@
+import { test } from "vitest";
+import { GithubRepoLoader } from "../web/github.js";
+
+test("Test GithubRepoLoader", async () => {
+  const loader = new GithubRepoLoader(
+    "https://github.com/langchain-ai/langchainjs",
+    { branch: "main", recursive: false, unknown: "warn" }
+  );
+  const documents = await loader.load();
+  expect(
+    documents.filter(
+      (document) => document.metadata.source === "pnpm-lock.yaml"
+    ).length
+  ).toBe(1);
+  expect(
+    documents.filter((document) => document.metadata.source === "README.md")
+      .length
+  ).toBe(1);
+  // console.log(documents[0].pageContent);
+});
+
+test("Test ignoreFiles with GithubRepoLoader", async () => {
+  const loader = new GithubRepoLoader(
+    "https://github.com/langchain-ai/langchainjs",
+    {
+      branch: "main",
+      recursive: false,
+      unknown: "warn",
+      ignoreFiles: ["pnpm-lock.yaml", "README.md"],
+    }
+  );
+  const documents = await loader.load();
+  expect(
+    documents.filter(
+      (document) => document.metadata.source === "pnpm-lock.yaml"
+    ).length
+  ).toBe(0);
+  expect(
+    documents.filter((document) => document.metadata.source === "README.md")
+      .length
+  ).toBe(0);
+  // console.log(documents[0].pageContent);
+});
+
+test("Test ignorePaths with GithubRepoLoader", async () => {
+  const loader = new GithubRepoLoader(
+    "https://github.com/langchain-ai/langchainjs",
+    {
+      branch: "main",
+      recursive: false,
+      unknown: "warn",
+      ignorePaths: ["pnpm-lock.yaml", "*.md"],
+    }
+  );
+  const documents = await loader.load();
+  expect(
+    documents.filter(
+      (document) => document.metadata.source === "pnpm-lock.yaml"
+    ).length
+  ).toBe(0);
+  expect(
+    documents.filter((document) => document.metadata.source.endsWith(".md"))
+      .length
+  ).toBe(0);
+  // console.log(documents[0].pageContent);
+});
+
+test("Test streaming documents from GithubRepoLoader", async () => {
+  const loader = new GithubRepoLoader(
+    "https://github.com/langchain-ai/langchainjs",
+    {
+      branch: "main",
+      recursive: false,
+      unknown: "warn",
+    }
+  );
+
+  const documents = [];
+  for await (const document of loader.loadAsStream()) {
+    documents.push(document);
+  }
+
+  expect(
+    documents.filter(
+      (document) => document.metadata.source === "pnpm-lock.yaml"
+    ).length
+  ).toBe(1);
+  expect(
+    documents.filter((document) => document.metadata.source === "README.md")
+      .length
+  ).toBe(1);
+});
+
+test("Test ignorePaths streaming with GithubRepoLoader", async () => {
+  const loader = new GithubRepoLoader(
+    "https://github.com/langchain-ai/langchainjs",
+    {
+      branch: "main",
+      recursive: false,
+      unknown: "warn",
+      ignorePaths: ["pnpm-lock.yaml", "*.md"],
+    }
+  );
+
+  const documents = [];
+  for await (const document of loader.loadAsStream()) {
+    documents.push(document);
+  }
+
+  expect(
+    documents.filter(
+      (document) => document.metadata.source === "pnpm-lock.yaml"
+    ).length
+  ).toBe(0);
+  expect(
+    documents.filter((document) => document.metadata.source.endsWith(".md"))
+      .length
+  ).toBe(0);
+});
+
+test("Test ignoreFiles streaming with GithubRepoLoader", async () => {
+  const loader = new GithubRepoLoader(
+    "https://github.com/langchain-ai/langchainjs",
+    {
+      branch: "main",
+      recursive: false,
+      unknown: "warn",
+      ignoreFiles: ["pnpm-lock.yaml", "README.md"],
+    }
+  );
+
+  const documents = [];
+  for await (const document of loader.loadAsStream()) {
+    documents.push(document);
+  }
+
+  expect(
+    documents.filter(
+      (document) => document.metadata.source === "pnpm-lock.yaml"
+    ).length
+  ).toBe(0);
+  expect(
+    documents.filter((document) => document.metadata.source === "README.md")
+      .length
+  ).toBe(0);
+});

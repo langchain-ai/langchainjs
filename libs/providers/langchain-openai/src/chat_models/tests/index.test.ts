@@ -580,6 +580,55 @@ describe("ChatOpenAI", () => {
     });
   });
 
+  test("bindTools propagates defer_loading from tool extras", async () => {
+    const model = new ChatOpenAI({
+      model: "gpt-5.3",
+    });
+
+    const deferredTool = tool(async () => "result", {
+      name: "deferred_tool",
+      description: "A deferred tool",
+      schema: z.object({ input: z.string() }),
+      extras: { defer_loading: true },
+    });
+
+    const normalTool = tool(async () => "result", {
+      name: "normal_tool",
+      description: "A normal tool",
+      schema: z.object({ input: z.string() }),
+    });
+
+    const modelWithTools = model.bindTools([
+      deferredTool,
+      normalTool,
+    ]) as ChatOpenAI;
+
+    // @ts-expect-error - defaultOptions is protected
+    const tools = modelWithTools.defaultOptions.tools;
+    expect(tools).toHaveLength(2);
+    expect(tools[0]).toHaveProperty("defer_loading", true);
+    expect(tools[0]).toHaveProperty("type", "function");
+    expect(tools[0].function.name).toBe("deferred_tool");
+    expect(tools[1]).not.toHaveProperty("defer_loading");
+    expect(tools[1]).toHaveProperty("type", "function");
+    expect(tools[1].function.name).toBe("normal_tool");
+  });
+
+  test("bindTools passes through tool_search as built-in tool", async () => {
+    const model = new ChatOpenAI({
+      model: "gpt-5.3",
+    });
+
+    const modelWithTools = model.bindTools([
+      { type: "tool_search" },
+    ]) as ChatOpenAI;
+
+    // @ts-expect-error - defaultOptions is protected
+    const tools = modelWithTools.defaultOptions.tools;
+    expect(tools).toHaveLength(1);
+    expect(tools[0]).toEqual({ type: "tool_search" });
+  });
+
   // https://github.com/langchain-ai/langchainjs/issues/8586
   test("multiple bindTools calls will not override each other", async () => {
     const model = new ChatOpenAI({
@@ -782,6 +831,8 @@ describe("ChatOpenAI", () => {
       expect(isReasoningModel("gpt-5.1-mini")).toBe(true);
       expect(isReasoningModel("gpt-5.2")).toBe(true);
       expect(isReasoningModel("gpt-5.2-pro")).toBe(true);
+      expect(isReasoningModel("gpt-5.4")).toBe(true);
+      expect(isReasoningModel("gpt-5.4-pro")).toBe(true);
     });
 
     it("should return true for codex models based on gpt-5", () => {
@@ -822,6 +873,10 @@ describe("ChatOpenAI", () => {
       expect(_modelPrefersResponsesAPI("gpt-5.2-pro-2025-12-11")).toBe(true);
     });
 
+    it("should return true for gpt-5.4-pro", () => {
+      expect(_modelPrefersResponsesAPI("gpt-5.4-pro")).toBe(true);
+    });
+
     it("should return true for codex models", () => {
       expect(_modelPrefersResponsesAPI("codex-mini-latest")).toBe(true);
       expect(_modelPrefersResponsesAPI("gpt-5-codex")).toBe(true);
@@ -839,6 +894,7 @@ describe("ChatOpenAI", () => {
       expect(_modelPrefersResponsesAPI("gpt-5")).toBe(false);
       expect(_modelPrefersResponsesAPI("gpt-5.1")).toBe(false);
       expect(_modelPrefersResponsesAPI("gpt-5.2")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-5.4")).toBe(false);
       expect(_modelPrefersResponsesAPI("o3")).toBe(false);
       expect(_modelPrefersResponsesAPI("o4-mini")).toBe(false);
     });

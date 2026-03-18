@@ -353,7 +353,7 @@ export abstract class BaseMessage<
       typeof obj === "object" &&
       obj !== null &&
       MESSAGE_SYMBOL in obj &&
-      obj[MESSAGE_SYMBOL] === true &&
+      (obj as Record<symbol, unknown>)[MESSAGE_SYMBOL] === true &&
       isMessage(obj)
     );
   }
@@ -558,9 +558,10 @@ export function _mergeLists<Content extends ContentBlock>(
           if (!hasMergeableIndex(leftItem)) return false;
 
           const indiciesMatch = leftItem.index === item.index;
-          const idsMatch =
-            leftItem.id != null && item.id != null && leftItem.id === item.id;
-          const eitherItemMissingID = leftItem.id == null || item.id == null;
+          const leftHasId = leftItem.id != null && leftItem.id !== "";
+          const rightHasId = item.id != null && item.id !== "";
+          const idsMatch = leftHasId && rightHasId && leftItem.id === item.id;
+          const eitherItemMissingID = !leftHasId || !rightHasId;
           return indiciesMatch && (idsMatch || eitherItemMissingID);
         });
 

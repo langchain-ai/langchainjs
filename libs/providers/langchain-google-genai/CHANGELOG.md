@@ -1,5 +1,25 @@
 # @langchain/google-genai
 
+## 2.1.26
+
+### Patch Changes
+
+- [#10415](https://github.com/langchain-ai/langchainjs/pull/10415) [`d7d0bc7`](https://github.com/langchain-ai/langchainjs/commit/d7d0bc70cdb2ea92b365807600fa85ec107ffd0e) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(genai): round-trip thinking content blocks in multi-turn convos
+
+- [#9979](https://github.com/langchain-ai/langchainjs/pull/9979) [`6a2da5b`](https://github.com/langchain-ai/langchainjs/commit/6a2da5b63b39bec4b87b6a1d1769810677ad3458) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(google): add support for ContentBlock.Multimodal types in Google providers
+
+- Updated dependencies [[`6db417b`](https://github.com/langchain-ai/langchainjs/commit/6db417b03ecb5e2ace413389d982294e0ac88433), [`d69dfcc`](https://github.com/langchain-ai/langchainjs/commit/d69dfcca97503cf1c0b7e70ccf5fb7d507c60982)]:
+  - @langchain/core@1.1.33
+
+## 2.1.25
+
+### Patch Changes
+
+- [#10319](https://github.com/langchain-ai/langchainjs/pull/10319) [`c8c5840`](https://github.com/langchain-ai/langchainjs/commit/c8c58406d71c994d29b25469a9f4db8cc0dfc3ee) Thanks [@budde377](https://github.com/budde377)! - Fix optional chaining for candidateContent in reduce
+
+- Updated dependencies [[`26488b5`](https://github.com/langchain-ai/langchainjs/commit/26488b596f01b7b7fe2f1d97d07164e52365ade5), [`ca826f6`](https://github.com/langchain-ai/langchainjs/commit/ca826f6fecae6087bf0dee7781ee80b587396ec1), [`a602c42`](https://github.com/langchain-ai/langchainjs/commit/a602c42db75d7e7e01cab38b12e0b65b9c0cce95), [`db7d017`](https://github.com/langchain-ai/langchainjs/commit/db7d017f7ce13cb937147aabcbfa3847d80bde9d)]:
+  - @langchain/core@1.1.32
+
 ## 2.1.24
 
 ### Patch Changes

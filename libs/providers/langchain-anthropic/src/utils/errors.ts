@@ -32,7 +32,10 @@ export function wrapAnthropicClientError(e: any) {
     typeof e.message === "string" &&
     e.message.includes("prompt is too long")
   ) {
-    error = ContextOverflowError.fromError(e);
+    error = addLangChainErrorFields(
+      ContextOverflowError.fromError(e),
+      "CONTEXT_OVERFLOW"
+    );
   } else if (e.status === 400 && e.message.includes("tool")) {
     error = addLangChainErrorFields(e, "INVALID_TOOL_RESULTS");
   } else if (e.status === 401) {

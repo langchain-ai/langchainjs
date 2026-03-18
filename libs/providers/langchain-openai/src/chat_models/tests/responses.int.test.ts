@@ -1252,3 +1252,119 @@ test("ChatOpenAI with service_tier and useResponsesApi", async () => {
   const res = await model.invoke("Hello");
   expect(res.content).toBeDefined();
 });
+
+describe("tool search", () => {
+  const getWeather = tool(
+    async (input: { location: string }) =>
+      `Weather in ${input.location}: sunny, 72°F`,
+    {
+      name: "get_weather",
+      description: "Get the current weather for a location",
+      schema: z.object({
+        location: z.string().describe("The city to get weather for"),
+      }),
+      extras: { defer_loading: true },
+    }
+  );
+
+  const getPopulation = tool(
+    async (input: { city: string }) => `Population of ${input.city}: 873,965`,
+    {
+      name: "get_population",
+      description: "Get the population of a city",
+      schema: z.object({
+        city: z.string().describe("The city to look up"),
+      }),
+      extras: { defer_loading: true },
+    }
+  );
+
+  it("server-executed tool search discovers deferred tools and completes agent loop", async () => {
+    const model = new ChatOpenAI({ model: "gpt-5.3" });
+
+    const modelWithTools = model.bindTools([
+      { type: "tool_search" },
+      getWeather,
+      getPopulation,
+    ]);
+
+    const messages: BaseMessage[] = [
+      new HumanMessage("What is the weather in San Francisco?"),
+    ];
+
+    let response = await modelWithTools.invoke(messages);
+    expect(AIMessage.isInstance(response)).toBe(true);
+
+    const aiResponse = response as AIMessage;
+    expect(aiResponse.tool_calls).toBeDefined();
+    expect(aiResponse.tool_calls!.length).toBeGreaterThan(0);
+
+    const toolCall = aiResponse.tool_calls![0];
+    expect(toolCall.name).toBe("get_weather");
+
+    const matchingTool = [getWeather, getPopulation].find(
+      (t) => t.name === toolCall.name
+    );
+    expect(matchingTool).toBeDefined();
+
+    const toolResult = await matchingTool!.invoke(toolCall);
+    messages.push(aiResponse, toolResult);
+
+    response = await modelWithTools.invoke(messages);
+    expect(AIMessage.isInstance(response)).toBe(true);
+    expect(typeof (response as AIMessage).content).not.toBe("");
+  });
+
+  it("server-executed tool search works with streaming", async () => {
+    const model = new ChatOpenAI({ model: "gpt-5.3" });
+
+    const modelWithTools = model.bindTools([
+      { type: "tool_search" },
+      getWeather,
+    ]);
+
+    const stream = await modelWithTools.stream(
+      "What is the weather in San Francisco?"
+    );
+    let full: AIMessageChunk | undefined;
+    for await (const chunk of stream) {
+      full = full ? (concat(full, chunk) as AIMessageChunk) : chunk;
+    }
+
+    expect(full).toBeDefined();
+    expect(full!.tool_calls!.length).toBeGreaterThan(0);
+    expect(full!.tool_calls![0].name).toBe("get_weather");
+  });
+
+  it("tool_search_call and tool_search_output appear in block translator output", async () => {
+    const model = new ChatOpenAI({ model: "gpt-5.3" });
+
+    const modelWithTools = model.bindTools([
+      { type: "tool_search" },
+      getWeather,
+    ]);
+
+    const response = (await modelWithTools.invoke(
+      "What is the weather in San Francisco?"
+    )) as AIMessage;
+
+    const blocks = response.contentBlocks;
+    const serverToolCalls = blocks.filter(
+      (b) => b.type === "server_tool_call"
+    ) as ContentBlock.Tools.ServerToolCall[];
+    const serverToolResults = blocks.filter(
+      (b) => b.type === "server_tool_call_result"
+    ) as ContentBlock.Tools.ServerToolCallResult[];
+
+    const toolSearchCall = serverToolCalls.find(
+      (b) => b.name === "tool_search"
+    );
+    const toolSearchResult = serverToolResults.find(
+      (b) => b.extras?.name === "tool_search"
+    );
+
+    expect(toolSearchCall).toBeDefined();
+    expect(toolSearchResult).toBeDefined();
+    expect(toolSearchResult!.output).toHaveProperty("tools");
+  });
+});

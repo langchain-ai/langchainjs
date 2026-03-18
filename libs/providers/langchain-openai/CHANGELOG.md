@@ -1,5 +1,29 @@
 # @langchain/openai
 
+## 1.3.0
+
+### Minor Changes
+
+- [#10317](https://github.com/langchain-ai/langchainjs/pull/10317) [`af9bbd3`](https://github.com/langchain-ai/langchainjs/commit/af9bbd3f48d96de8963f492ebbf75ca0762f7e57) Thanks [@hntrl](https://github.com/hntrl)! - feat(openai): support tool search and defer_loading
+  - Add `tools.toolSearch()` factory for the OpenAI Responses API `tool_search` built-in tool, supporting both server-executed and client-executed modes.
+  - Propagate `defer_loading` from LangChain tool `extras` through `bindTools()` and into the Responses API payload, enabling on-demand tool discovery.
+  - Handle `tool_search_call` and `tool_search_output` response items in both streaming and non-streaming converters.
+  - Add core block translator support to convert `tool_search_call` → `server_tool_call` and `tool_search_output` → `server_tool_call_result`.
+
+### Patch Changes
+
+- Updated dependencies [[`6db417b`](https://github.com/langchain-ai/langchainjs/commit/6db417b03ecb5e2ace413389d982294e0ac88433), [`d69dfcc`](https://github.com/langchain-ai/langchainjs/commit/d69dfcca97503cf1c0b7e70ccf5fb7d507c60982)]:
+  - @langchain/core@1.1.33
+
+## 1.2.13
+
+### Patch Changes
+
+- [#10311](https://github.com/langchain-ai/langchainjs/pull/10311) [`aacbe87`](https://github.com/langchain-ai/langchainjs/commit/aacbe872014a6e089c188336520d91dcac2f0287) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(openai): add gpt-5.4 to profiles
+
+- Updated dependencies [[`26488b5`](https://github.com/langchain-ai/langchainjs/commit/26488b596f01b7b7fe2f1d97d07164e52365ade5), [`ca826f6`](https://github.com/langchain-ai/langchainjs/commit/ca826f6fecae6087bf0dee7781ee80b587396ec1), [`a602c42`](https://github.com/langchain-ai/langchainjs/commit/a602c42db75d7e7e01cab38b12e0b65b9c0cce95), [`db7d017`](https://github.com/langchain-ai/langchainjs/commit/db7d017f7ce13cb937147aabcbfa3847d80bde9d)]:
+  - @langchain/core@1.1.32
+
 ## 1.2.12
 
 ### Patch Changes

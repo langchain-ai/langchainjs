@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { beforeEach, expect, test } from "@jest/globals";
+import { beforeEach, describe, expect, test } from "vitest";
 import { InMemoryStore } from "@langchain/core/stores";
 import { SerializedConstructor } from "@langchain/core/load/serializable";
 import { load } from "@langchain/core/load";
@@ -18,6 +18,7 @@ import { getAnthropicAPI } from "../utils/anthropic.js";
 import {
   GeminiPartFileData,
   GeminiPartInlineData,
+  GeminiPartText,
   GeminiRequest,
 } from "../types.js";
 import {
@@ -1008,5 +1009,86 @@ describe("gemini image URL handling", () => {
     expect(imagePart).toBeDefined();
     expect(imagePart?.fileData.mimeType).toBe("image/jpeg");
     expect(imagePart?.fileData.fileUri).toBe("not-a-valid-url.jpg");
+  });
+});
+
+describe("gemini empty text content handling", () => {
+  test("AIMessage with empty string content produces a valid text part", async () => {
+    const api = getGeminiAPI();
+    const messages = [
+      new HumanMessage("Hello"),
+      new AIMessage(""),
+      new HumanMessage("What is up?"),
+    ];
+
+    const formatted = (await api.formatData(messages, {})) as GeminiRequest;
+
+    // The AIMessage("") should produce a model content entry with a text part
+    const modelContent = formatted.contents?.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+    expect(modelContent?.parts.length).toBeGreaterThanOrEqual(1);
+
+    const textPart = modelContent?.parts[0] as GeminiPartText;
+    expect(textPart).toBeDefined();
+    expect(textPart).toHaveProperty("text");
+    expect(textPart.text).toBe("");
+  });
+
+  test("AIMessage with empty string in complex content produces a valid text part", async () => {
+    const api = getGeminiAPI();
+    const messages = [
+      new HumanMessage("Hello"),
+      new AIMessage({
+        content: [{ type: "text", text: "" }],
+      }),
+      new HumanMessage("Follow up"),
+    ];
+
+    const formatted = (await api.formatData(messages, {})) as GeminiRequest;
+
+    const modelContent = formatted.contents?.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+    expect(modelContent?.parts.length).toBeGreaterThanOrEqual(1);
+
+    const textPart = modelContent?.parts[0] as GeminiPartText;
+    expect(textPart).toHaveProperty("text");
+    expect(textPart.text).toBe("");
+  });
+
+  test("AIMessage with empty content and tool calls does not add empty text part", async () => {
+    const api = getGeminiAPI();
+    const messages = [
+      new HumanMessage("Search for LangChain"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          { id: "call_1", name: "search", args: { query: "LangChain" } },
+        ],
+      }),
+    ];
+
+    const formatted = (await api.formatData(messages, {})) as GeminiRequest;
+
+    const modelContent = formatted.contents?.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+    expect(modelContent?.parts.length).toBe(1);
+    expect(modelContent?.parts[0]).toHaveProperty("functionCall");
+  });
+
+  test("AIMessage with non-empty text content still works correctly", async () => {
+    const api = getGeminiAPI();
+    const messages = [
+      new HumanMessage("Hello"),
+      new AIMessage("I am doing well"),
+      new HumanMessage("Great"),
+    ];
+
+    const formatted = (await api.formatData(messages, {})) as GeminiRequest;
+
+    const modelContent = formatted.contents?.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+
+    const textPart = modelContent?.parts[0] as GeminiPartText;
+    expect(textPart.text).toBe("I am doing well");
   });
 });

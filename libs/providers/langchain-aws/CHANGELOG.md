@@ -1,5 +1,20 @@
 # @langchain/aws
 
+## 1.3.3
+
+### Patch Changes
+
+- [#10409](https://github.com/langchain-ai/langchainjs/pull/10409) [`e3fb76b`](https://github.com/langchain-ai/langchainjs/commit/e3fb76b2b019c6aa033c960014d248c322c7d645) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - feat(aws): add defaultHeaders to ChatBedrockConverse
+
+## 1.3.2
+
+### Patch Changes
+
+- [#10288](https://github.com/langchain-ai/langchainjs/pull/10288) [`93e6180`](https://github.com/langchain-ai/langchainjs/commit/93e6180be4a252b575ea0ec9d5f9cab2c3dcb637) Thanks [@hntrl](https://github.com/hntrl)! - feat(aws): Add bedrockApiKey, bedrockApiSecret, and bedrockApiSessionToken to ChatBedrockConverse
+  - New constructor fields allow passing AWS credentials directly instead of relying solely on the default credential provider chain
+  - Falls back to BEDROCK_AWS_ACCESS_KEY_ID, BEDROCK_AWS_SECRET_ACCESS_KEY, and BEDROCK_AWS_SESSION_TOKEN environment variables
+  - Explicit `credentials` field still takes highest priority
+
 ## 1.3.1
 
 ### Patch Changes
