@@ -2273,11 +2273,9 @@ describe("convertMessagesToResponsesInput - ToolMessage content block conversion
     const result = convertToolMessage(toolMessage);
 
     // isDataContentBlock items go through completionsApiContentBlockConverter
-    // which produces image_url format, then the image_url → input_image
-    // conversion in the same flatMap does NOT re-process them (consistent
-    // with the HumanMessage legacy path behavior at line ~1294).
+    // then get post-processed to Responses API native format (input_image).
     // The result is still an array (not JSON.stringify'd), which is the
-    // key fix — OpenAI's SDK accepts this format.
+    // key fix.
     expect(result).toEqual([
       {
         type: "function_call_output",
@@ -2285,13 +2283,29 @@ describe("convertMessagesToResponsesInput - ToolMessage content block conversion
         id: undefined,
         output: [
           {
-            type: "image_url",
-            image_url: {
-              detail: "low",
-              url: "https://example.com/image.png",
-            },
+            type: "input_image",
+            image_url: "https://example.com/image.png",
+            detail: "low",
           },
         ],
+      },
+    ]);
+  });
+
+  it("should handle empty array content as string output", () => {
+    const toolMessage = new ToolMessage({
+      content: [] as any,
+      tool_call_id: "call_8",
+    });
+
+    const result = convertToolMessage(toolMessage);
+
+    expect(result).toEqual([
+      {
+        type: "function_call_output",
+        call_id: "call_8",
+        id: undefined,
+        output: "[]",
       },
     ]);
   });

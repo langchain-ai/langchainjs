@@ -1259,10 +1259,29 @@ const convertContentBlocksToResponsesFormat = (
 ): unknown[] =>
   content.flatMap((item) => {
     if (isDataContentBlock(item)) {
-      return convertToProviderContentBlock(
+      const converted = convertToProviderContentBlock(
         item,
         completionsApiContentBlockConverter
       );
+      // The completions converter produces Completions API format (e.g.
+      // image_url, text). Post-process to Responses API native format.
+      if (converted && typeof converted === "object" && "type" in converted) {
+        const block = converted as Record<string, unknown>;
+        if (block.type === "image_url" && "image_url" in block) {
+          const imgUrl = block.image_url as
+            | string
+            | { url?: string; detail?: string };
+          return {
+            type: "input_image",
+            image_url: typeof imgUrl === "string" ? imgUrl : imgUrl?.url,
+            detail: typeof imgUrl === "object" ? imgUrl?.detail : undefined,
+          };
+        }
+        if (block.type === "text" && "text" in block) {
+          return { type: "input_text", text: block.text };
+        }
+      }
+      return converted;
     }
     if (item.type === "text") {
       return { type: "input_text", text: item.text };
@@ -1437,7 +1456,10 @@ export const convertMessagesToResponsesInput: Converter<
           };
         }
 
-        if (Array.isArray(toolMessage.content)) {
+        if (
+          Array.isArray(toolMessage.content) &&
+          toolMessage.content.length > 0
+        ) {
           return {
             type: "function_call_output",
             call_id: toolMessage.tool_call_id,
@@ -1452,7 +1474,10 @@ export const convertMessagesToResponsesInput: Converter<
           type: "function_call_output",
           call_id: toolMessage.tool_call_id,
           id: toolMessage.id?.startsWith("fc_") ? toolMessage.id : undefined,
-          output: toolMessage.content as string,
+          output:
+            typeof toolMessage.content === "string"
+              ? toolMessage.content
+              : JSON.stringify(toolMessage.content),
         };
       }
 
