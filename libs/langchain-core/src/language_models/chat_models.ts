@@ -197,6 +197,7 @@ export type LangSmithParams = {
   ls_temperature?: number;
   ls_max_tokens?: number;
   ls_stop?: Array<string>;
+  ls_integration?: string;
 };
 
 export type BindToolsInput =
@@ -321,7 +322,7 @@ export abstract class BaseChatModel<
 
       const inheritableMetadata = {
         ...runnableConfig.metadata,
-        ...this.getLsParams(callOptions),
+        ...this.getLsParamsWithDefaults(callOptions),
       };
       const invocationParams = this?.invocationParams(callOptions);
       const metadataInvocationParams =
@@ -431,6 +432,18 @@ export abstract class BaseChatModel<
     };
   }
 
+  /**
+   * Wraps getLsParams() and always appends ls_integration.
+   * This ensures the integration tag is present even when
+   * partner packages fully override getLsParams().
+   */
+  getLsParamsWithDefaults(options: this["ParsedCallOptions"]): LangSmithParams {
+    return {
+      ...this.getLsParams(options),
+      ls_integration: "langchain_chat_model",
+    };
+  }
+
   /** @ignore */
   async _generateUncached(
     messages: BaseMessageLike[][],
@@ -451,7 +464,7 @@ export abstract class BaseChatModel<
     } else {
       const inheritableMetadata = {
         ...handledOptions.metadata,
-        ...this.getLsParams(parsedOptions),
+        ...this.getLsParamsWithDefaults(parsedOptions),
       };
       const invocationParams = this?.invocationParams(parsedOptions);
       const metadataInvocationParams =
@@ -660,7 +673,7 @@ export abstract class BaseChatModel<
 
     const inheritableMetadata = {
       ...handledOptions.metadata,
-      ...this.getLsParams(parsedOptions),
+      ...this.getLsParamsWithDefaults(parsedOptions),
     };
     const invocationParams = this?.invocationParams(parsedOptions);
     const metadataInvocationParams =
