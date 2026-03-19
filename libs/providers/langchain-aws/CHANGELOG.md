@@ -1,5 +1,11 @@
 # @langchain/aws
 
+## 1.3.3
+
+### Patch Changes
+
+- [#10409](https://github.com/langchain-ai/langchainjs/pull/10409) [`e3fb76b`](https://github.com/langchain-ai/langchainjs/commit/e3fb76b2b019c6aa033c960014d248c322c7d645) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - feat(aws): add defaultHeaders to ChatBedrockConverse
+
 ## 1.3.2
 
 ### Patch Changes
