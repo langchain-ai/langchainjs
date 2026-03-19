@@ -298,6 +298,8 @@ export class ToolNode<
     const lgConfig = config as LangGraphRunnableConfig;
     const runtime = {
       context: lgConfig?.context,
+      store: lgConfig?.store,
+      configurable: lgConfig?.configurable,
       writer: lgConfig?.writer,
       interrupt: lgConfig?.interrupt,
       signal: lgConfig?.signal,
