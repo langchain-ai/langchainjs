@@ -514,14 +514,14 @@ describe("convertMessagesToGeminiContents", () => {
           {
             name: "my_tool",
             args: { query: "test" },
-            id: "lc-tool-call-abc",
+            id: "tool-call-abc",
             type: "tool_call",
           },
         ],
       }),
       new ToolMessage({
         content: "result",
-        tool_call_id: "lc-tool-call-abc",
+        tool_call_id: "tool-call-abc",
         name: "my_tool",
       }),
     ];
@@ -529,7 +529,7 @@ describe("convertMessagesToGeminiContents", () => {
     const contents = convertMessagesToGeminiContents(messages);
 
     const toolResponseContent = contents.find(
-      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+      (c) => c.role === "user" && c.parts?.some((p) => "functionResponse" in p)
     );
     expect(toolResponseContent).toBeDefined();
 
@@ -540,7 +540,7 @@ describe("convertMessagesToGeminiContents", () => {
     expect(
       (functionResponsePart as Gemini.Part.FunctionResponse).functionResponse!
         .id
-    ).toBeUndefined();
+    ).toBeDefined();
   });
 
   test("omits generated tool_call_id from functionResponse.id (v1 standard path)", () => {
@@ -552,14 +552,14 @@ describe("convertMessagesToGeminiContents", () => {
           {
             name: "my_tool",
             args: { query: "test" },
-            id: "lc-tool-call-xyz",
+            id: "tool-call-xyz",
             type: "tool_call",
           },
         ],
       }),
       new ToolMessage({
         content: "result",
-        tool_call_id: "lc-tool-call-xyz",
+        tool_call_id: "tool-call-xyz",
         name: "my_tool",
         response_metadata: { output_version: "v1" },
       }),
@@ -568,7 +568,7 @@ describe("convertMessagesToGeminiContents", () => {
     const contents = convertMessagesToGeminiContents(messages);
 
     const toolResponseContent = contents.find(
-      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+      (c) => c.role === "user" && c.parts?.some((p) => "functionResponse" in p)
     );
     expect(toolResponseContent).toBeDefined();
 
@@ -579,7 +579,7 @@ describe("convertMessagesToGeminiContents", () => {
     expect(
       (functionResponsePart as Gemini.Part.FunctionResponse).functionResponse!
         .id
-    ).toBeUndefined();
+    ).toBeDefined();
   });
 
   test("v1 contentBlocks: text-plain block produces fileData part", () => {

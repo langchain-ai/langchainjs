@@ -550,7 +550,6 @@ function convertStandardContentMessageToGeminiContent(
     const matchedToolCall = aiMsg?.tool_calls?.find(
       (tc) => tc.id === message.tool_call_id
     );
-    const isGeneratedId = message.tool_call_id.startsWith("lc-tool-call-");
     parts.push({
       functionResponse: {
         id: message.tool_call_id,
@@ -769,8 +768,8 @@ function convertLegacyContentMessageToGeminiContent(
     } else if (AIMessage.isInstance(message)) {
       return "model";
     } else if (ToolMessage.isInstance(message)) {
-      // Tool messages in Gemini are represented as function responses
-      return "function";
+      // Tool messages in Gemini are represented as `function` responses, but now are `user`
+      return "user";
     } else if (ChatMessage.isInstance(message)) {
       // Map ChatMessage roles to Gemini roles
       const msgRole = message.role.toLowerCase();
@@ -881,7 +880,6 @@ function convertLegacyContentMessageToGeminiContent(
     if (!aiMsg) {
       throw new ToolCallNotFoundError(message.tool_call_id);
     }
-    const isGeneratedId = message.tool_call_id.startsWith("lc-tool-call-");
     const matchedToolCall = aiMsg.tool_calls?.find(
       (tc) => tc.id === message.tool_call_id
     );
@@ -894,10 +892,15 @@ function convertLegacyContentMessageToGeminiContent(
       thoughtSignature: (matchedToolCall as WithThoughtSignature | undefined)
         ?.thoughtSignature,
     });
+  }
 
-  // Remove non-functionResponse parts if this is a tool response
-  if (role === "function") {
-    parts = parts.filter((part) => "functionResponse" in part);
+  // For tool responses, keep only functionResponse and media parts.
+  // Text parts are redundant — their content is in functionResponse.response.result.
+  if (ToolMessage.isInstance(message) && message.tool_call_id) {
+    parts = parts.filter(
+      (part) =>
+        "functionResponse" in part || "inlineData" in part || "fileData" in part
+    );
   }
 
   // Only add content if we have parts

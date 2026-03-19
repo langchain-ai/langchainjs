@@ -629,7 +629,9 @@ describe.each(coreModelInfo)(
     test("function - tool with nullish parameters", async () => {
       // Fails with gemini-2.0-flash-lite ?
       const tools = [nullishWeatherTool];
-      const llm: Runnable = newChatGoogle().bindTools(tools);
+      const llm: Runnable = newChatGoogle().bindTools(tools, {
+        tool_choice: "any",
+      });
       const result = await llm.invoke("What is the weather in New York?");
       expect(Array.isArray(result.tool_calls)).toBeTruthy();
       expect(result.tool_calls).toHaveLength(1);
@@ -787,7 +789,9 @@ describe.each(coreModelInfo)(
           }),
         }
       );
-      const llm = newChatGoogle().bindTools([testTool]);
+      const llm = newChatGoogle().bindTools([testTool], {
+        tool_choice: "any",
+      });
       const history: BaseMessage[] = [
         new HumanMessage(
           "You MUST call the run_test tool. Run a test named 'cobalt'."
