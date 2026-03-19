@@ -1412,7 +1412,7 @@ export class ReactAgent<
   /**
    * @internal
    */
-  getSubgraphAsync(namespace?: string, recurse?: boolean) {
+  getSubgraphsAsync(namespace?: string, recurse?: boolean) {
     return this.#graph.getSubgraphsAsync(namespace, recurse) as never;
   }
   /**
