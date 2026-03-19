@@ -13,7 +13,9 @@ import {
   tool as coreTool,
   DynamicStructuredTool,
   type ToolRunnableConfig,
+  type ToolWrapperParams,
 } from "@langchain/core/tools";
+import type { RunnableFunc } from "@langchain/core/runnables";
 import type {
   InteropZodObject,
   InferInteropZodInput,
@@ -217,6 +219,12 @@ export const tool: HeadlessToolOverload & typeof coreTool = ((
       funcOrFields as HeadlessToolFields<InteropZodObject, string>
     );
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (coreTool as any)(funcOrFields, fields);
+  return coreTool(
+    funcOrFields as RunnableFunc<
+      InferInteropZodOutput<unknown>,
+      unknown,
+      ToolRunnableConfig
+    >,
+    fields as ToolWrapperParams<InteropZodObject, string>
+  );
 }) as HeadlessToolOverload & typeof coreTool;
