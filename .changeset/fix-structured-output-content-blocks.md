@@ -2,4 +2,4 @@
 "@langchain/core": patch
 ---
 
-fix(core): handle content blocks in structured and standard schema output parsers
+fix(core): extract text from content block messages in base output parsers

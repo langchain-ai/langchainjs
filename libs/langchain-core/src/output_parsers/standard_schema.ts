@@ -1,7 +1,6 @@
 import { StandardSchemaV1 } from "@standard-schema/spec";
 import { BaseOutputParser, OutputParserException } from "./base.js";
 import { parseJsonMarkdown } from "./json.js";
-import type { BaseMessage } from "../messages/index.js";
 
 export class StandardSchemaOutputParser<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -41,10 +40,6 @@ export class StandardSchemaOutputParser<
         text
       );
     }
-  }
-
-  protected _baseMessageToString(message: BaseMessage): string {
-    return message.text;
   }
 
   getFormatInstructions(): string {
