@@ -1,5 +1,14 @@
 # langchain
 
+## 1.2.35
+
+### Patch Changes
+
+- [#10466](https://github.com/langchain-ai/langchainjs/pull/10466) [`4b1a874`](https://github.com/langchain-ai/langchainjs/commit/4b1a874a93d8475a98421e157fe7a1e65ec94076) Thanks [@hntrl](https://github.com/hntrl)! - fix: renamed getSubgraphAsync -> getSubgraphsAsync
+
+- Updated dependencies [[`bfb7944`](https://github.com/langchain-ai/langchainjs/commit/bfb7944a105470eee98fe4a0eef91e586600e1de)]:
+  - @langchain/core@1.1.34
+
 ## 1.2.34
 
 ### Patch Changes
