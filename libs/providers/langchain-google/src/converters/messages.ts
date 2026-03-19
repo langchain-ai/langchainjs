@@ -363,7 +363,8 @@ function textBlockToGeminiPart(
 ): Gemini.Part {
   const part: Record<string, unknown> = { text: block.text };
   if ("thought" in block) part.thought = block.thought;
-  if ("thoughtSignature" in block) part.thoughtSignature = block.thoughtSignature;
+  if ("thoughtSignature" in block)
+    part.thoughtSignature = block.thoughtSignature;
   return part as Gemini.Part;
 }
 
@@ -723,7 +724,11 @@ function convertLegacyContentMessageToGeminiContent(
         parts.push({ text: item });
       } else if (typeof item === "object" && item !== null) {
         if (isMessageContentText(item)) {
-          parts.push(textBlockToGeminiPart(item as Record<string, unknown> & { text: string }));
+          parts.push(
+            textBlockToGeminiPart(
+              item as Record<string, unknown> & { text: string }
+            )
+          );
         } else if (isDataContentBlock(item)) {
           parts.push(
             convertToProviderContentBlock(item, geminiContentBlockConverter)

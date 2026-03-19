@@ -746,7 +746,12 @@ describe("convertMessagesToGeminiContents", () => {
       new HumanMessage("What is 2+2?"),
       new AIMessage({
         content: [
-          { type: "text", text: "thinking...", thought: true, thoughtSignature: "sig-1" },
+          {
+            type: "text",
+            text: "thinking...",
+            thought: true,
+            thoughtSignature: "sig-1",
+          },
           { type: "text", text: "4" },
         ],
         response_metadata: { output_version: "v1" },
@@ -771,7 +776,12 @@ describe("convertMessagesToGeminiContents", () => {
       new HumanMessage("What is 2+2?"),
       new AIMessage({
         content: [
-          { type: "text", text: "reasoning...", thought: true, thoughtSignature: "sig-2" },
+          {
+            type: "text",
+            text: "reasoning...",
+            thought: true,
+            thoughtSignature: "sig-2",
+          },
           { type: "text", text: "4" },
         ],
       }),
