@@ -740,4 +740,29 @@ describe("convertMessagesToGeminiContents", () => {
       (userContent!.parts[3] as Gemini.Part.FileData).fileData!.fileUri
     ).toBe("gs://bucket/report.pdf");
   });
+
+  test("standard converter filters non-functionResponse parts for ToolMessage", () => {
+    const messages = [
+      new HumanMessage("search"),
+      new AIMessage({
+        content: [{ type: "text", text: "calling tool" }],
+        tool_calls: [{ id: "call_1", name: "search", args: { q: "test" } }],
+        response_metadata: { output_version: "v1" },
+      }),
+      new ToolMessage({
+        tool_call_id: "call_1",
+        content: "result data",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+    const functionContent = contents.find((c) =>
+      c.parts.some((p) => "functionResponse" in p)
+    )!;
+
+    expect(functionContent.parts).toHaveLength(1);
+    expect(
+      (functionContent.parts[0] as Record<string, unknown>).functionResponse
+    ).toBeDefined();
+  });
 });
