@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
 import type { Gemini } from "../../chat_models/types.js";
 import {
+  convertGeminiCandidateToAIMessage,
   convertGeminiPartsToToolCalls,
   convertMessagesToGeminiContents,
 } from "../messages.js";
@@ -744,8 +745,8 @@ describe("convertMessagesToGeminiContents", () => {
   test("AIMessage with functionCall in content AND tool_calls does not produce duplicate functionCall parts (legacy path)", () => {
     // When Gemini returns parallel tool calls, convertGeminiCandidateToAIMessage
     // stores them in both AIMessage.content (as { type: "functionCall", ... }
-    // blocks, preserving metadata like thoughtSignature) and tool_calls.
-    // The legacy converter must not serialize functionCall from both sources.
+    // blocks) and tool_calls. The legacy converter must not serialize
+    // functionCall from both sources.
     const messages = [
       new HumanMessage("Get weather in Tokyo and BTC price"),
       new AIMessage({
@@ -753,7 +754,6 @@ describe("convertMessagesToGeminiContents", () => {
           {
             type: "functionCall",
             functionCall: { name: "get_weather", args: { city: "Tokyo" } },
-            thoughtSignature: "abc123",
           },
           {
             type: "functionCall",
@@ -797,9 +797,6 @@ describe("convertMessagesToGeminiContents", () => {
       (p) => "functionCall" in p
     );
     expect(functionCallParts).toHaveLength(2);
-
-    // The content-sourced parts should preserve thoughtSignature
-    expect((functionCallParts[0] as any).thoughtSignature).toBe("abc123");
 
     // user/function turn should have exactly 2 functionResponse parts
     const responseTurn = contents.find(
@@ -846,5 +843,161 @@ describe("convertMessagesToGeminiContents", () => {
     expect(
       (functionCallParts[0] as Gemini.Part.FunctionCall).functionCall!.name
     ).toBe("search");
+  });
+
+  test("thoughtSignature is stored in additional_kwargs, not on content blocks or tool_calls", () => {
+    // convertGeminiCandidateToAIMessage should store thoughtSignature in
+    // additional_kwargs.__gemini_function_call_thought_signatures__ (keyed
+    // by tool call ID), keeping content blocks and tool_calls clean.
+    // This prevents issues with serialization frameworks (e.g. LangSmith)
+    // that may replay stale signatures or pass them as tool arguments.
+    const candidate: Gemini.Candidate = {
+      content: {
+        parts: [
+          {
+            functionCall: { name: "get_weather", args: { city: "Tokyo" } },
+            thoughtSignature: "sig-abc",
+          } as Gemini.Part.FunctionCall,
+          {
+            functionCall: { name: "get_price", args: { symbol: "BTC" } },
+          } as Gemini.Part.FunctionCall,
+        ],
+        role: "model",
+      },
+      finishReason: "STOP",
+    };
+
+    const aiMessage = convertGeminiCandidateToAIMessage(candidate);
+
+    // Content blocks should NOT have thoughtSignature
+    expect(Array.isArray(aiMessage.content)).toBe(true);
+    for (const block of aiMessage.content as any[]) {
+      expect(block.thoughtSignature).toBeUndefined();
+    }
+
+    // tool_calls should NOT have thoughtSignature
+    expect(aiMessage.tool_calls).toHaveLength(2);
+    for (const tc of aiMessage.tool_calls) {
+      expect((tc as any).thoughtSignature).toBeUndefined();
+    }
+
+    // additional_kwargs should contain the signature keyed by tool call ID
+    const sigs = aiMessage.additional_kwargs
+      .__gemini_function_call_thought_signatures__ as Record<string, string>;
+    expect(sigs).toBeDefined();
+    const firstToolCallId = aiMessage.tool_calls[0].id;
+    expect(sigs[firstToolCallId]).toBe("sig-abc");
+    // Second tool call had no signature
+    const secondToolCallId = aiMessage.tool_calls[1].id;
+    expect(sigs[secondToolCallId]).toBeUndefined();
+  });
+
+  test("thoughtSignature from additional_kwargs is re-attached to functionCall parts in legacy converter", () => {
+    // When the legacy converter processes an AIMessage whose content blocks
+    // don't have thoughtSignature (clean serialization), it should read
+    // from additional_kwargs and re-attach to the Gemini API request.
+    const messages = [
+      new HumanMessage("Get weather"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "get_weather",
+            args: { city: "Tokyo" },
+            id: "call-w",
+            type: "tool_call" as const,
+          },
+          {
+            name: "get_price",
+            args: { symbol: "BTC" },
+            id: "call-p",
+            type: "tool_call" as const,
+          },
+        ],
+        additional_kwargs: {
+          __gemini_function_call_thought_signatures__: {
+            "call-w": "sig-weather-123",
+          },
+        },
+      }),
+      new ToolMessage({
+        content: '{"temp":"22C"}',
+        tool_call_id: "call-w",
+        name: "get_weather",
+      }),
+      new ToolMessage({
+        content: '{"price":67500}',
+        tool_call_id: "call-p",
+        name: "get_price",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+    const functionCallParts = modelContent!.parts.filter(
+      (p) => "functionCall" in p
+    );
+    expect(functionCallParts).toHaveLength(2);
+
+    // First functionCall should have thoughtSignature re-attached
+    expect(
+      (functionCallParts[0] as Gemini.Part.FunctionCall).thoughtSignature
+    ).toBe("sig-weather-123");
+
+    // Second functionCall had no signature
+    expect(
+      (functionCallParts[1] as Gemini.Part.FunctionCall).thoughtSignature
+    ).toBeUndefined();
+  });
+
+  test("thoughtSignature from additional_kwargs is re-attached in content block path (legacy)", () => {
+    // When content blocks already contain functionCall items (dedup guard
+    // skips tool_calls path), the converter should still re-attach
+    // thoughtSignature from additional_kwargs.
+    const messages = [
+      new HumanMessage("Get weather"),
+      new AIMessage({
+        content: [
+          {
+            type: "functionCall",
+            functionCall: { name: "get_weather", args: { city: "Tokyo" } },
+          },
+        ],
+        tool_calls: [
+          {
+            name: "get_weather",
+            args: { city: "Tokyo" },
+            id: "call-w",
+            type: "tool_call" as const,
+          },
+        ],
+        additional_kwargs: {
+          __gemini_function_call_thought_signatures__: {
+            "call-w": "sig-content-456",
+          },
+        },
+      }),
+      new ToolMessage({
+        content: '{"temp":"22C"}',
+        tool_call_id: "call-w",
+        name: "get_weather",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+    const functionCallParts = modelContent!.parts.filter(
+      (p) => "functionCall" in p
+    );
+    expect(functionCallParts).toHaveLength(1);
+
+    // thoughtSignature should be re-attached from additional_kwargs
+    expect(
+      (functionCallParts[0] as Gemini.Part.FunctionCall).thoughtSignature
+    ).toBe("sig-content-456");
   });
 });

@@ -442,11 +442,10 @@ function convertStandardContentMessageToGeminiContent(
   // the content blocks don't already contain functionCall parts.
   // When convertGeminiCandidateToAIMessage processes a response with
   // parallel tool calls, it stores them in BOTH AIMessage.content
-  // (as { type: "functionCall", ... } blocks with metadata like
-  // thoughtSignature) and AIMessage.tool_calls. Serializing from both
-  // sources doubles the functionCall count, causing the Gemini API to
-  // reject the request with "number of function response parts is not
-  // equal to the number of function call parts".
+  // (as { type: "functionCall", ... } blocks) and AIMessage.tool_calls.
+  // Serializing from both sources doubles the functionCall count, causing
+  // the Gemini API to reject the request with "number of function response
+  // parts is not equal to the number of function call parts".
   const contentAlreadyHasFunctionCall = parts.some(
     (p) => "functionCall" in p
   );
@@ -455,13 +454,22 @@ function convertStandardContentMessageToGeminiContent(
     message.tool_calls?.length &&
     !contentAlreadyHasFunctionCall
   ) {
+    const v1ThoughtSigs = message.additional_kwargs
+      ?.__gemini_function_call_thought_signatures__ as
+      | Record<string, string>
+      | undefined;
     for (const toolCall of message.tool_calls) {
-      parts.push({
+      const part: Gemini.Part = {
         functionCall: {
           name: toolCall.name,
           args: toolCall.args ?? {},
         },
-      } as Gemini.Part.FunctionCall);
+      } as Gemini.Part.FunctionCall;
+      if (v1ThoughtSigs && toolCall.id && v1ThoughtSigs[toolCall.id]) {
+        (part as Gemini.Part.FunctionCall).thoughtSignature =
+          v1ThoughtSigs[toolCall.id];
+      }
+      parts.push(part);
     }
   }
 
@@ -716,6 +724,15 @@ function convertLegacyContentMessageToGeminiContent(
 
   let parts: Gemini.Part[] = [];
 
+  // Read thought signatures stored in additional_kwargs by
+  // convertGeminiCandidateToAIMessage. These are re-attached to the
+  // corresponding functionCall parts so the Gemini API can validate them.
+  const thoughtSigs = message.additional_kwargs
+    ?.__gemini_function_call_thought_signatures__ as
+    | Record<string, string>
+    | undefined;
+  let functionCallIdx = 0;
+
   // Handle legacy content formats
   if (typeof message.content === "string") {
     // Simple string content
@@ -735,7 +752,15 @@ function convertLegacyContentMessageToGeminiContent(
             convertToProviderContentBlock(item, geminiContentBlockConverter)
           );
         } else if (item?.type === "functionCall") {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { type, functionCall, ...etc } = item;
+          if (!etc.thoughtSignature && thoughtSigs && message.tool_calls) {
+            const tcId = message.tool_calls[functionCallIdx]?.id;
+            if (tcId && thoughtSigs[tcId]) {
+              etc.thoughtSignature = thoughtSigs[tcId];
+            }
+          }
+          functionCallIdx++;
           parts.push({
             ...etc,
             functionCall,
@@ -755,6 +780,7 @@ function convertLegacyContentMessageToGeminiContent(
   // the content blocks don't already contain functionCall parts.
   // See the comment in convertStandardContentMessageToGeminiContent
   // for the full explanation of this deduplication guard.
+  // Also re-attach thoughtSignature from additional_kwargs if present.
   const legacyContentAlreadyHasFunctionCall = parts.some(
     (p) => "functionCall" in p
   );
@@ -764,12 +790,17 @@ function convertLegacyContentMessageToGeminiContent(
     !legacyContentAlreadyHasFunctionCall
   ) {
     for (const toolCall of message.tool_calls) {
-      parts.push({
+      const part: Gemini.Part = {
         functionCall: {
           name: toolCall.name,
           args: toolCall.args ?? {},
         },
-      } as Gemini.Part.FunctionCall);
+      } as Gemini.Part.FunctionCall;
+      if (thoughtSigs && toolCall.id && thoughtSigs[toolCall.id]) {
+        (part as Gemini.Part.FunctionCall).thoughtSignature =
+          thoughtSigs[toolCall.id];
+      }
+      parts.push(part);
     }
   }
 
@@ -1009,7 +1040,6 @@ export const convertGeminiPartsToToolCalls: Converter<
           `lc-tool-call-${uuidv4().replace(/-/g, "")}`,
         name: functionCallPart.functionCall.name,
         args: functionCallPart.functionCall.args ?? {},
-        thoughtSignature: functionCallPart.thoughtSignature,
       });
     }
   }
@@ -1062,7 +1092,6 @@ export const convertGeminiPartToContentBlock: Converter<
   });
   const ret: ContentBlock = {
     thought: part.thought,
-    thoughtSignature: part.thoughtSignature,
     partMetadata: part.partMetadata,
     ...block,
   };
@@ -1141,6 +1170,23 @@ export const convertGeminiCandidateToAIMessage: Converter<
   // Extract tool calls from function call parts
   const toolCalls = convertGeminiPartsToToolCalls(parts);
 
+  // Collect thoughtSignatures from functionCall parts and store them
+  // keyed by tool call ID. This mirrors the approach used by
+  // @langchain/google-genai (additional_kwargs.signatures) to keep
+  // thoughtSignature out of content blocks and tool_calls, avoiding
+  // issues with serialization frameworks (e.g. LangSmith) that may
+  // replay stale signatures or pass them as tool arguments.
+  const thoughtSignatures: Record<string, string> = {};
+  let tcIdx = 0;
+  for (const part of parts) {
+    if ("functionCall" in part && part.functionCall) {
+      if (part.thoughtSignature && toolCalls[tcIdx]) {
+        thoughtSignatures[toolCalls[tcIdx].id] = part.thoughtSignature;
+      }
+      tcIdx++;
+    }
+  }
+
   // Convert parts to content format that the translator understands
   // Format: array of objects with type field matching the part type
   let content: string | ContentBlock[];
@@ -1207,6 +1253,11 @@ export const convertGeminiCandidateToAIMessage: Converter<
     avgLogprobs: candidate.avgLogprobs,
     logprobsResult: candidate.logprobsResult,
     originalTextContentBlock,
+    ...(Object.keys(thoughtSignatures).length > 0
+      ? {
+          __gemini_function_call_thought_signatures__: thoughtSignatures,
+        }
+      : {}),
   };
 
   const response_metadata: Record<string, unknown> = {
