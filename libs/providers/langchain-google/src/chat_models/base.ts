@@ -445,6 +445,7 @@ export abstract class BaseChatGoogle<
           "Content-Type": "application/json",
         },
         body: JSON.stringify(body),
+        signal: options.signal,
       })
     );
 
