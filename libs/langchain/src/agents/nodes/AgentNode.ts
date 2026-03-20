@@ -175,7 +175,9 @@ export class AgentNode<
     let resolvedModel: LanguageModelLike | undefined;
     if (isConfigurableModel(model)) {
       resolvedModel = await (
-        model as unknown as { _getModelInstance: () => Promise<LanguageModelLike> }
+        model as unknown as {
+          _getModelInstance: () => Promise<LanguageModelLike>;
+        }
       )._getModelInstance();
     } else if (typeof model !== "string") {
       resolvedModel = model;
@@ -360,7 +362,9 @@ export class AgentNode<
        */
       validateLLMHasNoBoundTools(request.model);
 
-      const structuredResponseFormat = await this.#getResponseFormat(request.model);
+      const structuredResponseFormat = await this.#getResponseFormat(
+        request.model
+      );
       const modelWithTools = await this.#bindTools(
         request.model,
         request,
