@@ -78,7 +78,7 @@ export type ToolReturnType<TInput, TConfig, TOutput> =
  * Base type that establishes the types of input schemas that can be used for LangChain tool
  * definitions.
  */
-export type ToolInputSchemaBase = z3.ZodTypeAny | JSONSchema;
+export type ToolInputSchemaBase = InteropZodType | JSONSchema;
 
 /**
  * Parameters for the Tool classes.
