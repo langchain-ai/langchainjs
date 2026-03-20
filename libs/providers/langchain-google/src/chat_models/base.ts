@@ -111,7 +111,6 @@ export interface BaseChatGoogleParams
 
   /**
    * Default headers to include with every request to the API.
-   *
    */
   additionalHeaders?: Record<string, string> | undefined;
 
@@ -442,8 +441,8 @@ export abstract class BaseChatGoogle<
       new Request(url, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
           ...this._additionalHeaders,
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(body),
       })
@@ -534,8 +533,8 @@ export abstract class BaseChatGoogle<
       new Request(url, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
           ...this._additionalHeaders,
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(body),
         signal: options.signal,
