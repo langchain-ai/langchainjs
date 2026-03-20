@@ -79,7 +79,7 @@ type ModelInfoConfig = {
 
 type DefaultGoogleParams = Omit<
   ChatGoogleParams | ChatGoogleNodeParams,
-  "model"
+  "model" | "apiClient" | "callbacks"
 >;
 
 type ModelInfo = {
@@ -160,41 +160,31 @@ const allModelInfo: ModelInfo[] = [
   },
 ];
 
-type ModelInfoTest = (modelInfo: ModelInfo) => boolean;
-
 function filterTestableModels(
-  filters?: ModelInfoTest | ModelInfoTest[]
+  filters: ((modelInfo: ModelInfo) => boolean)[]
 ): ModelInfo[] {
-  // Add all the explansion info to every model
-  const expandedModelInfo = expandAllModelInfo();
+  // Add all the expansion info to every model
+  const allModels = expandAllModelInfo();
+  let filteredModels = allModels.filter((modelInfo) => {
+    return filters.every((filter) => filter(modelInfo));
+  });
 
   // If any of them have "only: true", then we use just those
-  const modelsWithOnly = expandedModelInfo.filter(
-    (modelInfo) => modelInfo.testConfig?.only === true
+  const hasOnly = filteredModels.some(
+    (modelInfo) => modelInfo.testConfig?.only
   );
-
-  const startingModels =
-    modelsWithOnly.length > 0 ? modelsWithOnly : expandedModelInfo;
-
-  // If anything has "skip: true" set, remove those
-  const skippedModels = startingModels.filter(
-    (modelInfo) => modelInfo.testConfig?.skip !== true
-  );
-
-  // Apply any specific models.
-  let filteredModels = skippedModels;
-  if (filters) {
-    const allFilters = Array.isArray(filters) ? filters : [filters];
-    allFilters.forEach((filter: ModelInfoTest) => {
-      filteredModels = filteredModels.filter(filter);
-    });
+  if (hasOnly) {
+    filteredModels = filteredModels.filter(
+      (modelInfo) => modelInfo.testConfig?.only
+    );
   }
 
-  return filteredModels;
+  // If anything has "skip: true" set, remove those
+  return filteredModels.filter((modelInfo) => !modelInfo.testConfig?.skip);
 }
 
 // These are added to every element in `allModelInfo`
-const expansionInfo: Partial<ModelInfo>[] = [
+const defaultExpansionInfo: Partial<ModelInfo>[] = [
   {
     testConfig: {
       useApiKey: true,
@@ -214,11 +204,31 @@ const expansionInfo: Partial<ModelInfo>[] = [
   },
 ];
 
+function getExpansionInfo(): Partial<ModelInfo>[] {
+  const authEnv = process.env.GOOGLE_TEST_AUTH;
+  if (authEnv === "adc") {
+    return [{ testConfig: { node: true, useApiKey: false } }];
+  }
+  if (authEnv === "apikey") {
+    return [{ testConfig: { useApiKey: true } }];
+  }
+  return defaultExpansionInfo;
+}
+
 function expandAllModelInfo(): ModelInfo[] {
+  const testModelsEnv = process.env.GOOGLE_TEST_MODELS;
+  const targetModels = testModelsEnv
+    ? testModelsEnv.split(",").map((s) => s.trim())
+    : null;
+
+  const configs = getExpansionInfo();
   const ret: ModelInfo[] = [];
 
   allModelInfo.forEach((modelInfo: ModelInfo) => {
-    expansionInfo.forEach((addl: Partial<ModelInfo>) => {
+    if (targetModels && !targetModels.includes(modelInfo.model)) {
+      return;
+    }
+    configs.forEach((addl: Partial<ModelInfo>) => {
       const newInfo: ModelInfo = {
         model: modelInfo.model,
         defaultGoogleParams: modelInfo.defaultGoogleParams,
@@ -727,6 +737,83 @@ describe.each(coreModelInfo)(
       expect(toolCalls[0].name).toBe("current_weather_tool");
       expect(toolCalls[0].args).toHaveProperty("location");
     });
+
+    test(`function - stream tools - parallel tool calling`, async () => {
+      const model = newChatGoogle();
+
+      const weatherTool = tool(
+        (_) => "The weather in San Francisco today is 18 degrees and sunny.",
+        {
+          name: "current_weather_tool",
+          description: "Get the current weather for a given location.",
+          schema: z.object({
+            location: z
+              .string()
+              .describe("The location to get the weather for."),
+          }),
+        }
+      );
+
+      const populationTool = tool(
+        (_) => "The population of San Francisco is 800,000.",
+        {
+          name: "population_tool",
+          description: "Get the population for a given location.",
+          schema: z.object({
+            location: z
+              .string()
+              .describe("The location to get the population for."),
+          }),
+        }
+      );
+
+      const modelWithTools: Runnable = model.bindTools([
+        weatherTool,
+        populationTool,
+      ]);
+      const stream = await modelWithTools.stream(
+        "Call current_weather_tool and population_tool tools in parallel with param San Francisco?"
+      );
+      let finalChunk: AIMessageChunk | undefined;
+      let toolCalls: any[] = [];
+      for await (const chunk of stream) {
+        finalChunk = !finalChunk ? chunk : concat(finalChunk, chunk);
+        if (chunk.tool_calls && Array.isArray(chunk.tool_calls)) {
+          toolCalls = [...toolCalls, ...chunk.tool_calls];
+        }
+      }
+      expect(finalChunk).toBeDefined();
+      expect(toolCalls.length).toBe(2);
+
+      const toolNames = toolCalls.map((tc) => tc.name);
+      expect(toolNames).toContain("current_weather_tool");
+      expect(toolNames).toContain("population_tool");
+
+      // Feed tool responses back to the model to complete the conversation
+      const toolMap: Record<string, typeof weatherTool | typeof populationTool> =
+        {
+          current_weather_tool: weatherTool,
+          population_tool: populationTool,
+        };
+
+      const history: BaseMessage[] = [
+        new HumanMessage(
+          "Call current_weather_tool and population_tool tools in parallel with param San Francisco?"
+        ),
+        finalChunk,
+      ];
+
+      for (const tc of finalChunk.tool_calls!) {
+        const toolToCall = toolMap[tc.name];
+        const toolMessage = await toolToCall.invoke(tc);
+        history.push(toolMessage);
+      }
+
+      const result = await modelWithTools.invoke(history);
+      expect(result.content).toBeDefined();
+      expect(typeof result.content === "string").toBeTruthy();
+      expect((result.content as string).length).toBeGreaterThan(0);
+    }, 240000);
 
     test("Can stream GoogleSearchRetrievalTool", async () => {
       // gemini-2.0-flash-lite-001: Not supported
