@@ -358,12 +358,22 @@ function convertStandardVideoContentBlockToGeminiPart(
  *
  * This is intended to be called from `convertStandardContentMessageToGeminiContent`
  */
+function textBlockToGeminiPart(
+  block: Record<string, unknown> & { text: string }
+): Gemini.Part {
+  const part: Record<string, unknown> = { text: block.text };
+  if ("thought" in block) part.thought = block.thought;
+  if ("thoughtSignature" in block)
+    part.thoughtSignature = block.thoughtSignature;
+  return part as Gemini.Part;
+}
+
 function convertStandardContentBlockToGeminiPart(
   block: ContentBlock.Standard
 ): Gemini.Part | null {
   switch (block.type) {
     case "text":
-      return { text: block.text };
+      return textBlockToGeminiPart(block);
     case "image":
     case "audio":
     case "text-plain":
@@ -714,7 +724,11 @@ function convertLegacyContentMessageToGeminiContent(
         parts.push({ text: item });
       } else if (typeof item === "object" && item !== null) {
         if (isMessageContentText(item)) {
-          parts.push({ text: item.text });
+          parts.push(
+            textBlockToGeminiPart(
+              item as Record<string, unknown> & { text: string }
+            )
+          );
         } else if (isDataContentBlock(item)) {
           parts.push(
             convertToProviderContentBlock(item, geminiContentBlockConverter)
