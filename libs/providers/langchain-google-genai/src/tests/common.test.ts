@@ -127,6 +127,67 @@ describe("Thinking content handling", () => {
     expect(typeof result.generations[0].message.content).toBe("string");
     expect(result.generations[0].message.content).toBe("Regular response");
   });
+
+  test("should filter out empty parts from response", () => {
+    const mockResponse = createMockResponse([
+      {
+        content: {
+          role: "model",
+          parts: [
+            {
+              functionCall: { name: "get_weather", args: { city: "NYC" } },
+            },
+            {} as GoogleGenerativeAIPart,
+          ] as GoogleGenerativeAIPart[],
+        },
+        finishReason: "STOP" as FinishReason,
+        index: 0,
+        safetyRatings: [],
+      },
+    ]);
+
+    const result = mapGenerateContentResultToChatResult(mockResponse);
+    const content = result.generations[0].message.content;
+
+    expect(Array.isArray(content)).toBe(true);
+    if (!Array.isArray(content)) return;
+    // Empty {} part should be filtered out, leaving only the functionCall
+    expect(content.length).toBe(1);
+    expect(content[0]).toHaveProperty("type", "functionCall");
+  });
+
+  test("should filter out empty parts while keeping valid parts", () => {
+    const mockResponse = createMockResponse([
+      {
+        content: {
+          role: "model",
+          parts: [
+            {
+              text: "Let me think...",
+              thought: true,
+            },
+            {} as GoogleGenerativeAIPart,
+            {
+              text: "Here is the answer.",
+            },
+            {} as GoogleGenerativeAIPart,
+          ] as GoogleGenerativeAIPart[],
+        },
+        finishReason: "STOP" as FinishReason,
+        index: 0,
+        safetyRatings: [],
+      },
+    ]);
+
+    const result = mapGenerateContentResultToChatResult(mockResponse);
+    const content = result.generations[0].message.content;
+
+    expect(Array.isArray(content)).toBe(true);
+    if (!Array.isArray(content)) return;
+    expect(content.length).toBe(2);
+    expect((content[0] as ThinkingBlock).type).toBe("thinking");
+    expect((content[1] as TextBlock).type).toBe("text");
+  });
 });
 
 describe("Streaming thinking content handling", () => {
@@ -267,5 +328,75 @@ describe("Streaming thinking content handling", () => {
     // Should NOT be a concatenated string like "Thinking...Answer"
     expect(typeof content).not.toBe("string");
     expect(Array.isArray(content)).toBe(true);
+  });
+
+  test("should filter out empty parts from streaming response", () => {
+    const mockResponse = createMockResponse([
+      {
+        content: {
+          role: "model",
+          parts: [
+            {
+              functionCall: { name: "get_weather", args: { city: "NYC" } },
+            },
+            {} as GoogleGenerativeAIPart,
+          ] as GoogleGenerativeAIPart[],
+        },
+        finishReason: "STOP" as FinishReason,
+        index: 0,
+        safetyRatings: [],
+      },
+    ]);
+
+    const result = convertResponseContentToChatGenerationChunk(mockResponse, {
+      index: 0,
+    });
+
+    expect(result).not.toBeNull();
+    const content = result!.message.content;
+
+    expect(Array.isArray(content)).toBe(true);
+    if (!Array.isArray(content)) return;
+    // Empty {} part should be filtered out
+    expect(content.length).toBe(1);
+    expect(content[0]).toHaveProperty("type", "functionCall");
+  });
+
+  test("should filter empty parts while keeping valid parts in streaming", () => {
+    const mockResponse = createMockResponse([
+      {
+        content: {
+          role: "model",
+          parts: [
+            {
+              text: "Thinking...",
+              thought: true,
+            },
+            {} as GoogleGenerativeAIPart,
+            {
+              text: "The result is 42.",
+            },
+            {} as GoogleGenerativeAIPart,
+          ] as GoogleGenerativeAIPart[],
+        },
+        finishReason: "STOP" as FinishReason,
+        index: 0,
+        safetyRatings: [],
+      },
+    ]);
+
+    const result = convertResponseContentToChatGenerationChunk(mockResponse, {
+      index: 0,
+    });
+
+    expect(result).not.toBeNull();
+    const content = result!.message.content;
+
+    expect(Array.isArray(content)).toBe(true);
+    if (!Array.isArray(content)) return;
+    expect(content.length).toBe(2);
+    expect((content[0] as ThinkingBlock).type).toBe("thinking");
+    expect((content[1] as TextBlock).type).toBe("text");
+    expect((content[1] as TextBlock).text).toBe("The result is 42.");
   });
 });
