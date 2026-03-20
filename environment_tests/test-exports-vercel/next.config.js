@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  turbopack: {},
   webpack: (config, { isServer, nextRuntime, webpack }) => {
     // Handle node: protocol imports
     const nodeImports = [
