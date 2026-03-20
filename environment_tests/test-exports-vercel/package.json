@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "next lint"
+    "test": "next build"
   },
   "dependencies": {
     "@langchain/anthropic": "workspace:*",

@@ -1,16 +1,20 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Turbopack config (Next.js 16+ default bundler)
+  // Turbopack is the default bundler in Next.js 16+.
+  // Stub out Node.js built-ins that are unavailable in the browser.
+  // The { browser: ... } conditional only applies the alias for client builds,
+  // leaving server/SSR/API builds with the real Node.js modules.
   turbopack: {
     resolveAlias: {
-      // Alias node: protocol imports to their non-prefixed equivalents
-      "node:async_hooks": "async_hooks",
-      "node:fs": "fs",
-      "node:fs/promises": "fs",
-      "node:path": "path",
-      // Disable Node.js modules that aren't available in browser/edge
-      async_hooks: { browser: false },
-      typeorm: { browser: false },
+      "node:async_hooks": { browser: "./src/empty.cjs" },
+      "node:fs": { browser: "./src/empty.cjs" },
+      "node:fs/promises": { browser: "./src/empty.cjs" },
+      "node:path": { browser: "./src/empty.cjs" },
+      async_hooks: { browser: "./src/empty.cjs" },
+      fs: { browser: "./src/empty.cjs" },
+      "fs/promises": { browser: "./src/empty.cjs" },
+      path: { browser: "./src/empty.cjs" },
+      typeorm: { browser: "./src/empty.cjs" },
     },
   },
 };
