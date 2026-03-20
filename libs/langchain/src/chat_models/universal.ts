@@ -103,6 +103,10 @@ export const MODEL_PROVIDER_CONFIG = {
     package: "@langchain/aws",
     className: "ChatBedrockConverse",
   },
+  aws: {
+    package: "@langchain/aws",
+    className: "ChatBedrockConverse",
+  },
   deepseek: {
     package: "@langchain/deepseek",
     className: "ChatDeepSeek",
