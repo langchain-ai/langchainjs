@@ -954,6 +954,12 @@ export class AgentNode<
         },
 
         /**
+         * Google-style options
+         * Used by ChatGoogle and other Gemini-based providers.
+         */
+        responseSchema: structuredResponseFormat.strategy.schema,
+
+        /**
          * for LangSmith structured output tracing
          */
         ls_structured_output_format: {
