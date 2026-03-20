@@ -8,7 +8,11 @@ import { AIMessage } from "@langchain/core/messages";
 import type { SerializableSchema } from "@langchain/core/utils/standard_schema";
 
 import { createAgent, toolStrategy, providerStrategy } from "../index.js";
-import { FakeToolCallingModel, FakeToolCallingChatModel } from "./utils.js";
+import {
+  FakeToolCallingModel,
+  FakeToolCallingChatModel,
+  FakeGoogleChatModel,
+} from "./utils.js";
 import {
   hasSupportForJsonSchemaOutput,
   ProviderStrategy,
@@ -723,6 +727,89 @@ describe("hasSupportForJsonSchemaOutput", () => {
     ).toBe(false);
     expect(hasSupportForJsonSchemaOutput("claude-sonnet-4-5-20250929")).toBe(
       false
+    );
+  });
+
+  it("should return true for Google Gemini models that support JSON schema output", () => {
+    const model = new FakeGoogleChatModel({
+      model: "gemini-2.5-flash",
+    });
+    expect(hasSupportForJsonSchemaOutput(model)).toBe(true);
+
+    const model2 = new FakeGoogleChatModel({
+      model: "gemini-2.5-pro",
+    });
+    expect(hasSupportForJsonSchemaOutput(model2)).toBe(true);
+
+    expect(hasSupportForJsonSchemaOutput("google:gemini-2.5-flash")).toBe(true);
+    expect(hasSupportForJsonSchemaOutput("gemini-2.5-pro")).toBe(true);
+    expect(hasSupportForJsonSchemaOutput("gemini-2.0-flash")).toBe(true);
+  });
+});
+
+describe("providerStrategy with Google (Gemini)", () => {
+  it("should return structured response when using providerStrategy with a Google model", async () => {
+    const schema = z.object({
+      phrase: z.string(),
+      movie_title: z.string(),
+    });
+
+    const jsonResponse = JSON.stringify({
+      phrase: "Spider-Pig, Spider-Pig, does whatever a Spider-Pig does.",
+      movie_title: "The Simpsons Movie",
+    });
+
+    const model = new FakeGoogleChatModel({
+      model: "gemini-2.5-flash",
+      responses: [new AIMessage({ content: jsonResponse })],
+    });
+
+    const agent = createAgent({
+      model,
+      tools: [],
+      responseFormat: providerStrategy(schema),
+    });
+
+    const result = await agent.invoke({
+      messages: [{ role: "user", content: "spider pig" }],
+    });
+
+    expect(result.structuredResponse).toEqual({
+      phrase: "Spider-Pig, Spider-Pig, does whatever a Spider-Pig does.",
+      movie_title: "The Simpsons Movie",
+    });
+  });
+
+  it("should pass responseSchema in bindTools kwargs for Google models", async () => {
+    const schema = z.object({
+      foo: z.string(),
+    });
+
+    const jsonResponse = JSON.stringify({ foo: "bar" });
+    const model = new FakeGoogleChatModel({
+      model: "gemini-2.5-flash",
+      responses: [new AIMessage({ content: jsonResponse })],
+    });
+
+    const agent = createAgent({
+      model,
+      tools: [],
+      responseFormat: providerStrategy(schema),
+    });
+
+    await agent.invoke({
+      messages: [{ role: "user", content: "hi" }],
+    });
+
+    expect(model.lastBindToolsKwargs).toBeDefined();
+    expect(model.lastBindToolsKwargs).toHaveProperty("responseSchema");
+    expect(model.lastBindToolsKwargs!.responseSchema).toEqual(
+      expect.objectContaining({
+        type: "object",
+        properties: {
+          foo: expect.objectContaining({ type: "string" }),
+        },
+      })
     );
   });
 });

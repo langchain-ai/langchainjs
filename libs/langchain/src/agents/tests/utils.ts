@@ -490,6 +490,72 @@ export class FakeToolCallingModel extends BaseChatModel {
   }
 }
 
+/**
+ * Fake model that mimics ChatGoogle (Gemini) for testing.
+ * Returns "ChatGoogle" from getName() and spreads bindTools kwargs
+ * via withConfig — the same pattern the real ChatGoogle uses.
+ */
+export class FakeGoogleChatModel extends BaseChatModel {
+  static lc_name() {
+    return "ChatGoogle";
+  }
+
+  model: string;
+
+  lastBindToolsKwargs?: Record<string, unknown>;
+
+  private responses: BaseMessage[];
+
+  private idx = 0;
+
+  constructor(
+    fields: {
+      model?: string;
+      responses?: BaseMessage[];
+    } & BaseChatModelParams = {}
+  ) {
+    super(fields);
+    this.model = fields.model ?? "gemini-2.5-flash";
+    this.responses = fields.responses ?? [];
+  }
+
+  _llmType() {
+    return "google";
+  }
+
+  bindTools(
+    tools: BindToolsInput[],
+    kwargs?: Record<string, unknown>
+  ): Runnable<any> {
+    this.lastBindToolsKwargs = kwargs;
+    return this.withConfig({
+      tools,
+      ...kwargs,
+    } as BaseChatModelCallOptions);
+  }
+
+  async _generate(
+    messages: BaseMessage[],
+    _options?: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): Promise<ChatResult> {
+    const msg =
+      this.responses.length > 0
+        ? this.responses[this.idx % this.responses.length]
+        : new AIMessage({ content: messages[messages.length - 1].content });
+    this.idx += 1;
+
+    return {
+      generations: [
+        {
+          text: typeof msg.content === "string" ? msg.content : "",
+          message: msg,
+        },
+      ],
+    };
+  }
+}
+
 export class SearchAPI extends StructuredTool {
   name = "search_api";
 

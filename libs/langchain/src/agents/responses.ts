@@ -675,7 +675,12 @@ export type JsonSchemaFormat = {
   __brand?: never;
 };
 
-const CHAT_MODELS_THAT_SUPPORT_JSON_SCHEMA_OUTPUT = ["ChatOpenAI", "ChatXAI"];
+const CHAT_MODELS_THAT_SUPPORT_JSON_SCHEMA_OUTPUT = [
+  "ChatOpenAI",
+  "ChatXAI",
+  "ChatGoogle",
+  "ChatGoogleGenerativeAI",
+];
 const MODEL_NAMES_THAT_SUPPORT_JSON_SCHEMA_OUTPUT = [
   "grok",
   "gpt-5",
@@ -684,6 +689,7 @@ const MODEL_NAMES_THAT_SUPPORT_JSON_SCHEMA_OUTPUT = [
   "gpt-oss",
   "o3-pro",
   "o3-mini",
+  "gemini",
 ];
 
 /**
