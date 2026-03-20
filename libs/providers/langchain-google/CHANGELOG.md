@@ -1,5 +1,12 @@
 # @langchain/google
 
+## 0.1.8
+
+### Patch Changes
+
+- [#10471](https://github.com/langchain-ai/langchainjs/pull/10471) [`8f15dd1`](https://github.com/langchain-ai/langchainjs/commit/8f15dd13256647f6c0f40abf6ee7ed949492bd4f) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(@langchain/google): pass abort signal to fetch in non-streaming invoke
+  - Added `signal: options.signal` to the `Request` constructor in `_generate`'s non-streaming branch, mirroring what `_streamResponseChunks` already does
+
 ## 0.1.7
 
 ### Patch Changes
