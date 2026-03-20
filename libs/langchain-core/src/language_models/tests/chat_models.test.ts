@@ -8,6 +8,10 @@ import { getBufferString } from "../../messages/utils.js";
 import { AIMessage } from "../../messages/ai.js";
 import { RunCollectorCallbackHandler } from "../../tracers/run_collector.js";
 import { StandardJSONSchemaV1, StandardSchemaV1 } from "@standard-schema/spec";
+import { BaseChatModel } from "../chat_models.js";
+import type { CallbackManagerForLLMRun } from "../../callbacks/manager.js";
+import type { BaseMessage } from "../../messages/index.js";
+import type { ChatResult } from "../../outputs.js";
 
 test("Test ChatModel accepts array shorthand for messages", async () => {
   const model = new FakeChatModel({});
@@ -446,4 +450,34 @@ test("Test ChatModel withStructuredOutput with Standard Schema", async () => {
     test: true,
     nested: { somethingelse: "somevalue" },
   });
+});
+
+// Regression test for https://github.com/langchain-ai/langchainjs/issues/9545
+// When a model's _generate returns an empty generations array, invoke() used to
+// throw a cryptic "Cannot read properties of undefined (reading 'message')" error.
+// It should now throw a clear, actionable error message.
+test("Test ChatModel.invoke throws clear error when _generate returns empty generations", async () => {
+  class EmptyGenerationsChatModel extends BaseChatModel {
+    _llmType() {
+      return "empty-generations-fake";
+    }
+
+    _combineLLMOutput() {
+      return {};
+    }
+
+    async _generate(
+      _messages: BaseMessage[],
+      _options: this["ParsedCallOptions"],
+      _runManager?: CallbackManagerForLLMRun
+    ): Promise<ChatResult> {
+      // Simulates a provider that returns no generations (e.g., filtered response)
+      return { generations: [] };
+    }
+  }
+
+  const model = new EmptyGenerationsChatModel({});
+  await expect(model.invoke("Hello")).rejects.toThrowError(
+    "Chat model returned no generations."
+  );
 });
