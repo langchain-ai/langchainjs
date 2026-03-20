@@ -1204,7 +1204,9 @@ describe("ContentBlock.Multimodal.Image format support", () => {
           {
             type: "image",
             url: "https://example.com/image.png",
-            cache_control: { type: "ephemeral" },
+            metadata: {
+              cache_control: { type: "ephemeral" },
+            },
           },
         ],
       }),
@@ -1498,6 +1500,185 @@ describe("File ContentBlock handling", () => {
         url: "https://example.com/doc.pdf",
       },
       cache_control: { type: "ephemeral" },
+    });
+  });
+});
+
+describe("HumanMessage with contentBlocks (standard content block API)", () => {
+  test("converts file contentBlocks with URL to document block", () => {
+    const message = new HumanMessage({
+      contentBlocks: [
+        { type: "text", text: "Summarize this document" },
+        {
+          type: "file",
+          url: "https://example.com/document.pdf",
+          mimeType: "application/pdf",
+        },
+      ],
+    });
+
+    const payload = _convertMessagesToAnthropicPayload([message]);
+
+    expect(payload.messages).toHaveLength(1);
+    expect(payload.messages[0].role).toBe("user");
+    const content = payload.messages[0]
+      .content as AnthropicContentBlockParam[];
+    expect(content).toHaveLength(2);
+    expect(content[0]).toEqual({
+      type: "text",
+      text: "Summarize this document",
+    });
+    expect(content[1]).toMatchObject({
+      type: "document",
+      source: {
+        type: "url",
+        url: "https://example.com/document.pdf",
+      },
+    });
+  });
+
+  test("converts file contentBlocks with base64 data to document block", () => {
+    const base64Data = "JVBERi0xLjQKJeLjz9M=";
+    const message = new HumanMessage({
+      contentBlocks: [
+        { type: "text", text: "What is in this file?" },
+        {
+          type: "file",
+          data: base64Data,
+          mimeType: "application/pdf",
+        },
+      ],
+    });
+
+    const payload = _convertMessagesToAnthropicPayload([message]);
+
+    const content = payload.messages[0]
+      .content as AnthropicContentBlockParam[];
+    expect(content).toHaveLength(2);
+    expect(content[1]).toMatchObject({
+      type: "document",
+      source: {
+        type: "base64",
+        media_type: "application/pdf",
+        data: base64Data,
+      },
+    });
+  });
+
+  test("converts file contentBlocks with fileId to document block", () => {
+    const message = new HumanMessage({
+      contentBlocks: [
+        { type: "text", text: "Analyze this" },
+        {
+          type: "file",
+          fileId: "file-abc123",
+          mimeType: "application/pdf",
+        },
+      ],
+    });
+
+    const payload = _convertMessagesToAnthropicPayload([message]);
+
+    const content = payload.messages[0]
+      .content as AnthropicContentBlockParam[];
+    expect(content).toHaveLength(2);
+    expect(content[1]).toMatchObject({
+      type: "document",
+      source: {
+        type: "file",
+        file_id: "file-abc123",
+      },
+    });
+  });
+
+  test("converts image contentBlocks to image block", () => {
+    const message = new HumanMessage({
+      contentBlocks: [
+        { type: "text", text: "Describe this image" },
+        {
+          type: "image",
+          url: "https://example.com/photo.jpg",
+        },
+      ],
+    });
+
+    const payload = _convertMessagesToAnthropicPayload([message]);
+
+    const content = payload.messages[0]
+      .content as AnthropicContentBlockParam[];
+    expect(content).toHaveLength(2);
+    expect(content[1]).toMatchObject({
+      type: "image",
+      source: {
+        type: "url",
+        url: "https://example.com/photo.jpg",
+      },
+    });
+  });
+
+  test("converts text-plain contentBlocks to document block", () => {
+    const message = new HumanMessage({
+      contentBlocks: [
+        { type: "text", text: "Summarize this document" },
+        {
+          type: "text-plain",
+          text: "This is the document content.",
+          data: "This is the document content.",
+          mimeType: "text/plain",
+        },
+      ],
+    });
+
+    const payload = _convertMessagesToAnthropicPayload([message]);
+
+    const content = payload.messages[0]
+      .content as AnthropicContentBlockParam[];
+    expect(content).toHaveLength(2);
+    expect(content[0]).toEqual({
+      type: "text",
+      text: "Summarize this document",
+    });
+    expect(content[1]).toMatchObject({
+      type: "document",
+      source: {
+        type: "text",
+        data: "This is the document content.",
+        media_type: "text/plain",
+      },
+    });
+  });
+
+  test("preserves file metadata (citations, context, title) via contentBlocks", () => {
+    const message = new HumanMessage({
+      contentBlocks: [
+        {
+          type: "file",
+          fileId: "file-456",
+          metadata: {
+            cache_control: { type: "ephemeral" },
+            citations: { enabled: true },
+            context: "source context",
+            title: "My Document",
+          },
+        },
+      ],
+    });
+
+    const payload = _convertMessagesToAnthropicPayload([message]);
+
+    const content = payload.messages[0]
+      .content as AnthropicContentBlockParam[];
+    expect(content).toHaveLength(1);
+    expect(content[0]).toMatchObject({
+      type: "document",
+      source: {
+        type: "file",
+        file_id: "file-456",
+      },
+      cache_control: { type: "ephemeral" },
+      citations: { enabled: true },
+      context: "source context",
+      title: "My Document",
     });
   });
 });
