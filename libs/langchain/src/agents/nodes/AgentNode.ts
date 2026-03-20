@@ -31,6 +31,7 @@ import {
   hasToolCalls,
   isClientTool,
 } from "../utils.js";
+import { isConfigurableModel } from "../model.js";
 import { mergeAbortSignals, toPartialZodObject } from "../nodes/utils.js";
 import { CreateAgentParams } from "../types.js";
 import type { InternalAgentState, Runtime } from "../runtime.js";
@@ -164,17 +165,26 @@ export class AgentNode<
    * @param model - The model to get the response format for.
    * @returns The response format.
    */
-  #getResponseFormat(
+  async #getResponseFormat(
     model: string | LanguageModelLike
-  ): ResponseFormat | undefined {
+  ): Promise<ResponseFormat | undefined> {
     if (!this.#options.responseFormat) {
       return undefined;
+    }
+
+    let resolvedModel: LanguageModelLike | undefined;
+    if (isConfigurableModel(model)) {
+      resolvedModel = await (
+        model as unknown as { _getModelInstance: () => Promise<LanguageModelLike> }
+      )._getModelInstance();
+    } else if (typeof model !== "string") {
+      resolvedModel = model;
     }
 
     const strategies = transformResponseFormat(
       this.#options.responseFormat,
       undefined,
-      model
+      resolvedModel
     );
 
     /**
@@ -350,7 +360,7 @@ export class AgentNode<
        */
       validateLLMHasNoBoundTools(request.model);
 
-      const structuredResponseFormat = this.#getResponseFormat(request.model);
+      const structuredResponseFormat = await this.#getResponseFormat(request.model);
       const modelWithTools = await this.#bindTools(
         request.model,
         request,
