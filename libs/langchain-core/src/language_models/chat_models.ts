@@ -569,6 +569,9 @@ export abstract class BaseChatModel<
         if (aggregated === undefined) {
           throw new Error("Received empty response from chat model call.");
         }
+        if (outputVersion === "v1") {
+          aggregated.message = castStandardMessageContent(aggregated.message);
+        }
         generations.push([aggregated]);
         await runManagers?.[0].handleLLMEnd({
           generations,
