@@ -3,8 +3,9 @@ import {
   convertResponseContentToChatGenerationChunk,
   convertMessageContentToParts,
   mapGenerateContentResultToChatResult,
+  convertBaseMessagesToContent,
 } from "../utils/common.js";
-import { AIMessage } from "@langchain/core/messages";
+import { AIMessage, ToolMessage, HumanMessage } from "@langchain/core/messages";
 import type {
   EnhancedGenerateContentResponse,
   FinishReason,
@@ -374,5 +375,77 @@ describe("Round-trip thinking content handling", () => {
     expect(roundTrippedParts[1]).toEqual({
       text: "The final answer is 7.",
     });
+  });
+});
+
+// https://github.com/langchain-ai/langchainjs/issues/10342
+describe("Consecutive ToolMessage merging for parallel function calling", () => {
+  test("merges consecutive ToolMessages into a single user turn", () => {
+    const messages = [
+      new HumanMessage("What's the weather and time?"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          { id: "call_1", name: "get_weather", args: { city: "NYC" } },
+          { id: "call_2", name: "get_time", args: { tz: "EST" } },
+        ],
+      }),
+      new ToolMessage({
+        tool_call_id: "call_1",
+        content: '{"temp": 72}',
+      }),
+      new ToolMessage({
+        tool_call_id: "call_2",
+        content: '{"time": "3pm"}',
+      }),
+    ];
+
+    const result = convertBaseMessagesToContent(messages, true, false);
+
+    // Should produce 3 content entries: user, model, user (merged)
+    expect(result).toHaveLength(3);
+    expect(result[0].role).toBe("user");
+    expect(result[1].role).toBe("model");
+    expect(result[2].role).toBe("user");
+
+    // The third entry should have BOTH function responses merged
+    expect(result[2].parts).toHaveLength(2);
+    expect(result[2].parts[0]).toHaveProperty("functionResponse");
+    expect(result[2].parts[1]).toHaveProperty("functionResponse");
+  });
+
+  test("merges 3+ consecutive ToolMessages into a single user turn", () => {
+    const messages = [
+      new HumanMessage("Do three things"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          { id: "call_1", name: "tool_a", args: {} },
+          { id: "call_2", name: "tool_b", args: {} },
+          { id: "call_3", name: "tool_c", args: {} },
+        ],
+      }),
+      new ToolMessage({ tool_call_id: "call_1", content: "result_a" }),
+      new ToolMessage({ tool_call_id: "call_2", content: "result_b" }),
+      new ToolMessage({ tool_call_id: "call_3", content: "result_c" }),
+    ];
+
+    const result = convertBaseMessagesToContent(messages, true, false);
+
+    expect(result).toHaveLength(3);
+    // All 3 tool responses merged into one user turn
+    expect(result[2].role).toBe("user");
+    expect(result[2].parts).toHaveLength(3);
+  });
+
+  test("still throws for consecutive non-function messages with same role", () => {
+    const messages = [
+      new HumanMessage("First"),
+      new HumanMessage("Second"),
+    ];
+
+    expect(() =>
+      convertBaseMessagesToContent(messages, true, false)
+    ).toThrow("Google Generative AI requires alternate messages between authors");
   });
 });
