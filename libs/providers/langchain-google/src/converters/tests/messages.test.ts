@@ -740,4 +740,111 @@ describe("convertMessagesToGeminiContents", () => {
       (userContent!.parts[3] as Gemini.Part.FileData).fileData!.fileUri
     ).toBe("gs://bucket/report.pdf");
   });
+
+  test("AIMessage with functionCall in content AND tool_calls does not produce duplicate functionCall parts (legacy path)", () => {
+    // When Gemini returns parallel tool calls, convertGeminiCandidateToAIMessage
+    // stores them in both AIMessage.content (as { type: "functionCall", ... }
+    // blocks, preserving metadata like thoughtSignature) and tool_calls.
+    // The legacy converter must not serialize functionCall from both sources.
+    const messages = [
+      new HumanMessage("Get weather in Tokyo and BTC price"),
+      new AIMessage({
+        content: [
+          {
+            type: "functionCall",
+            functionCall: { name: "get_weather", args: { city: "Tokyo" } },
+            thoughtSignature: "abc123",
+          },
+          {
+            type: "functionCall",
+            functionCall: { name: "get_price", args: { symbol: "BTC" } },
+          },
+        ],
+        tool_calls: [
+          {
+            name: "get_weather",
+            args: { city: "Tokyo" },
+            id: "call-w",
+            type: "tool_call" as const,
+          },
+          {
+            name: "get_price",
+            args: { symbol: "BTC" },
+            id: "call-p",
+            type: "tool_call" as const,
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: '{"temp":"22C"}',
+        tool_call_id: "call-w",
+        name: "get_weather",
+      }),
+      new ToolMessage({
+        content: '{"price":67500}',
+        tool_call_id: "call-p",
+        name: "get_price",
+      }),
+      new HumanMessage("Thanks!"),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    // model turn should have exactly 2 functionCall parts (not 4)
+    const modelContent = contents.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+    const functionCallParts = modelContent!.parts.filter(
+      (p) => "functionCall" in p
+    );
+    expect(functionCallParts).toHaveLength(2);
+
+    // The content-sourced parts should preserve thoughtSignature
+    expect((functionCallParts[0] as any).thoughtSignature).toBe("abc123");
+
+    // user/function turn should have exactly 2 functionResponse parts
+    const responseTurn = contents.find(
+      (c) => c.parts.some((p) => "functionResponse" in p)
+    );
+    expect(responseTurn).toBeDefined();
+    const functionResponseParts = responseTurn!.parts.filter(
+      (p) => "functionResponse" in p
+    );
+    expect(functionResponseParts).toHaveLength(2);
+  });
+
+  test("AIMessage with empty content and tool_calls still produces functionCall parts (legacy path)", () => {
+    // When AIMessage.content is empty (no functionCall blocks in content),
+    // tool_calls should be serialized as functionCall parts normally.
+    const messages = [
+      new HumanMessage("hello"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "search",
+            args: { q: "test" },
+            id: "call-s",
+            type: "tool_call" as const,
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: "results",
+        tool_call_id: "call-s",
+        name: "search",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+    const functionCallParts = modelContent!.parts.filter(
+      (p) => "functionCall" in p
+    );
+    expect(functionCallParts).toHaveLength(1);
+    expect(
+      (functionCallParts[0] as Gemini.Part.FunctionCall).functionCall!.name
+    ).toBe("search");
+  });
 });

@@ -438,8 +438,23 @@ function convertStandardContentMessageToGeminiContent(
     }
   });
 
-  // Convert AIMessage tool_calls to functionCall parts
-  if (AIMessage.isInstance(message) && message.tool_calls?.length) {
+  // Convert AIMessage tool_calls to functionCall parts, but only if
+  // the content blocks don't already contain functionCall parts.
+  // When convertGeminiCandidateToAIMessage processes a response with
+  // parallel tool calls, it stores them in BOTH AIMessage.content
+  // (as { type: "functionCall", ... } blocks with metadata like
+  // thoughtSignature) and AIMessage.tool_calls. Serializing from both
+  // sources doubles the functionCall count, causing the Gemini API to
+  // reject the request with "number of function response parts is not
+  // equal to the number of function call parts".
+  const contentAlreadyHasFunctionCall = parts.some(
+    (p) => "functionCall" in p
+  );
+  if (
+    AIMessage.isInstance(message) &&
+    message.tool_calls?.length &&
+    !contentAlreadyHasFunctionCall
+  ) {
     for (const toolCall of message.tool_calls) {
       parts.push({
         functionCall: {
@@ -736,8 +751,18 @@ function convertLegacyContentMessageToGeminiContent(
     }
   }
 
-  // Convert AIMessage tool_calls to functionCall parts
-  if (AIMessage.isInstance(message) && message.tool_calls?.length) {
+  // Convert AIMessage tool_calls to functionCall parts, but only if
+  // the content blocks don't already contain functionCall parts.
+  // See the comment in convertStandardContentMessageToGeminiContent
+  // for the full explanation of this deduplication guard.
+  const legacyContentAlreadyHasFunctionCall = parts.some(
+    (p) => "functionCall" in p
+  );
+  if (
+    AIMessage.isInstance(message) &&
+    message.tool_calls?.length &&
+    !legacyContentAlreadyHasFunctionCall
+  ) {
     for (const toolCall of message.tool_calls) {
       parts.push({
         functionCall: {
