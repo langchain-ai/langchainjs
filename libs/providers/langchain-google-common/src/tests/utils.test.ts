@@ -1092,3 +1092,81 @@ describe("gemini empty text content handling", () => {
     expect(textPart.text).toBe("I am doing well");
   });
 });
+
+describe("gemini tool message formatting", () => {
+  test("passes JSON object content directly in FunctionResponse", async () => {
+    const api = getGeminiAPI();
+    const messages = [
+      new HumanMessage("What is the weather?"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          { id: "call_1", name: "get_weather", args: { city: "SF" } },
+        ],
+      }),
+      new ToolMessage({
+        tool_call_id: "call_1",
+        content: JSON.stringify({ temperature: 72, unit: "F" }),
+      }),
+    ];
+
+    const formatted = (await api.formatData(messages, {})) as GeminiRequest;
+    const functionContent = formatted.contents?.find(
+      (c) => c.role === "function"
+    );
+    const part = functionContent?.parts[0] as any;
+    expect(part.functionResponse.response.temperature).toBe(72);
+    expect(part.functionResponse.response.unit).toBe("F");
+  });
+
+  test("wraps plain string content in result field", async () => {
+    const api = getGeminiAPI();
+    const messages = [
+      new HumanMessage("What is the weather?"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          { id: "call_1", name: "get_weather", args: { city: "SF" } },
+        ],
+      }),
+      new ToolMessage({
+        tool_call_id: "call_1",
+        content: "sunny and 72°F",
+      }),
+    ];
+
+    const formatted = (await api.formatData(messages, {})) as GeminiRequest;
+    const functionContent = formatted.contents?.find(
+      (c) => c.role === "function"
+    );
+    const part = functionContent?.parts[0] as any;
+    expect(part.functionResponse.response).toEqual({ result: "sunny and 72°F" });
+  });
+
+  test("wraps JSON array content in result field", async () => {
+    const api = getGeminiAPI();
+    const messages = [
+      new HumanMessage("Search"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          { id: "call_1", name: "search", args: { q: "restaurants" } },
+        ],
+      }),
+      new ToolMessage({
+        tool_call_id: "call_1",
+        content: JSON.stringify([{ name: "A" }, { name: "B" }]),
+      }),
+    ];
+
+    const formatted = (await api.formatData(messages, {})) as GeminiRequest;
+    const functionContent = formatted.contents?.find(
+      (c) => c.role === "function"
+    );
+    const part = functionContent?.parts[0] as any;
+    expect(part.functionResponse.response.result).toEqual([
+      { name: "A" },
+      { name: "B" },
+    ]);
+  });
+});

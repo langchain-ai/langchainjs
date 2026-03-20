@@ -893,41 +893,38 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
             },
             ""
           );
-    // Hacky :(
     const responseName =
       (isAIMessage(prevMessage) && !!prevMessage.tool_calls?.length
         ? prevMessage.tool_calls[0].name
         : prevMessage.name) ?? message.tool_call_id;
+
+    // Gemini accepts any JSON object as FunctionResponse.response.
+    // Parse JSON strings to pass structured data directly instead of
+    // wrapping in { content: stringified }.
+    let response: Record<string, unknown>;
     try {
-      const content = JSON.parse(contentStr);
-      return [
-        {
-          role: "function",
-          parts: [
-            {
-              functionResponse: {
-                name: responseName,
-                response: { content },
-              },
-            },
-          ],
-        },
-      ];
+      const parsed = JSON.parse(contentStr);
+      response =
+        typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)
+          ? parsed
+          : { result: parsed };
     } catch (_) {
-      return [
-        {
-          role: "function",
-          parts: [
-            {
-              functionResponse: {
-                name: responseName,
-                response: { content: contentStr },
-              },
-            },
-          ],
-        },
-      ];
+      response = { result: contentStr };
     }
+
+    return [
+      {
+        role: "function",
+        parts: [
+          {
+            functionResponse: {
+              name: responseName,
+              response,
+            },
+          },
+        ],
+      },
+    ];
   }
 
   async function baseMessageToContent(
