@@ -14,6 +14,8 @@ import { StructuredPrompt } from "../structured.js";
 import { load } from "../../load/index.js";
 
 class FakeStructuredChatModel extends FakeListChatModel {
+  lastWithStructuredOutputOptions?: Record<string, any>;
+
   withStructuredOutput<
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
@@ -53,6 +55,7 @@ class FakeStructuredChatModel extends FakeListChatModel {
         { raw: BaseMessage; parsed: RunOutput },
         RunnableConfig
       > {
+    this.lastWithStructuredOutputOptions = _config as Record<string, any>;
     if (!_config?.includeRaw) {
       if (typeof _params === "object") {
         const func = RunnableLambda.from(
@@ -97,10 +100,74 @@ test("Test format", async () => {
   const revivedChain = revived.pipe(model);
 
   await expect(revivedChain.invoke({})).resolves.toEqual(schema);
+});
 
-  const boundModel = model.withConfig({ runName: "boundModel" });
+test("Test method is passed to withStructuredOutput", async () => {
+  const schema = {
+    name: "yo",
+    description: "a structured output",
+    parameters: {
+      name: { type: "string" },
+      value: { type: "integer" },
+    },
+  };
+  const prompt = StructuredPrompt.fromMessagesAndSchema(
+    [["human", "I'm very structured, how about you?"]],
+    schema,
+    "jsonMode"
+  );
 
-  const chainWithBoundModel = prompt.pipe(boundModel);
+  const model = new FakeStructuredChatModel({ responses: [] });
 
-  await expect(chainWithBoundModel.invoke({})).resolves.toEqual(schema);
+  const chain = prompt.pipe(model);
+  await chain.invoke({});
+
+  expect(model.lastWithStructuredOutputOptions).toEqual({ method: "jsonMode" });
+});
+
+test("Test no method passes no extra args to withStructuredOutput", async () => {
+  const schema = {
+    name: "yo",
+    description: "a structured output",
+    parameters: {
+      name: { type: "string" },
+      value: { type: "integer" },
+    },
+  };
+  const prompt = StructuredPrompt.fromMessagesAndSchema(
+    [["human", "I'm very structured, how about you?"]],
+    schema
+  );
+
+  const model = new FakeStructuredChatModel({ responses: [] });
+
+  const chain = prompt.pipe(model);
+  await chain.invoke({});
+
+  expect(model.lastWithStructuredOutputOptions).toBeUndefined();
+});
+
+test("Test pipe with RunnableSequence collects steps after model", async () => {
+  const schema = {
+    name: "yo",
+    description: "a structured output",
+    parameters: {
+      name: { type: "string" },
+      value: { type: "integer" },
+    },
+  };
+  const prompt = StructuredPrompt.fromMessagesAndSchema(
+    [["human", "I'm very structured, how about you?"]],
+    schema
+  );
+
+  const model = new FakeStructuredChatModel({ responses: [] });
+  const postProcess = RunnableLambda.from(
+    (input: Record<string, any>) => ({ ...input, extra: true })
+  );
+
+  const chain = prompt.pipe(model.pipe(postProcess));
+
+  const result = await chain.invoke({});
+  expect(result).toEqual({ ...schema, extra: true });
 });
