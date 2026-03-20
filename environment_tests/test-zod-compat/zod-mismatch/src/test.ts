@@ -1,16 +1,25 @@
 /**
  * Zod version mismatch test — critical OOM regression test.
  *
- * Simulates the real-world scenario from the original issue:
- *   - @langchain/core and langchain were built against zod@4.x
- *   - The consumer's project resolves zod@3.25.x
- *   - TypeScript must check assignability across the version boundary
+ * The run.sh script sets up the following node_modules layout:
  *
- * Before the fix, this caused TS2589 / OOM because the .d.ts files
- * referenced real zod types, forcing deep structural comparison of
- * ~3,400+ lines of mutually-recursive generics.
+ *   node_modules/
+ *     zod/                          <-- 3.25.76 (consumer's top-level copy)
+ *     @langchain/core/
+ *       node_modules/
+ *         zod/                      <-- 4.3.6 (different copy, nested)
  *
- * tsc --noEmit must complete without OOM (512MB limit, 120s timeout).
+ * This means TypeScript resolves TWO distinct copies of zod's .d.ts files.
+ * When @langchain/core's types reference real zod types (the old approach),
+ * TypeScript cannot use nominal identity across the two copies and falls back
+ * to a full structural comparison of ~3,400+ lines of deeply-nested,
+ * mutually-recursive generics — causing OOM or TS2589 errors.
+ *
+ * After the fix, @langchain/core's exported .d.ts files use lightweight
+ * structural interfaces (ZodV3Like, ZodV4Like, etc.) with no zod imports,
+ * so the two different copies never trigger deep structural comparison.
+ *
+ * tsc --noEmit must complete without OOM (512MB heap limit, 120s timeout).
  */
 import { z } from "zod/v3";
 import { tool } from "@langchain/core/tools";
@@ -93,23 +102,31 @@ const documentTool = tool(
         tags: z.array(z.string()),
         version: z.number().default(1),
       }),
-      sections: z.array(z.object({
-        heading: z.string(),
-        body: z.string(),
-        subsections: z.array(z.object({
-          title: z.string(),
-          content: z.string(),
-        })).optional(),
-      })),
+      sections: z.array(
+        z.object({
+          heading: z.string(),
+          body: z.string(),
+          subsections: z
+            .array(
+              z.object({
+                title: z.string(),
+                content: z.string(),
+              })
+            )
+            .optional(),
+        })
+      ),
     }),
   }
 );
 
 // StructuredOutputParser
-const parser = StructuredOutputParser.fromZodSchema(z.object({
-  name: z.string(),
-  age: z.number(),
-}));
+const parser = StructuredOutputParser.fromZodSchema(
+  z.object({
+    name: z.string(),
+    age: z.number(),
+  })
+);
 
 // Middleware
 const loggingMiddleware = createMiddleware({
@@ -142,11 +159,13 @@ const rateLimitMiddleware = createMiddleware({
 const AnalysisResult = z.object({
   summary: z.string(),
   confidence: z.number(),
-  findings: z.array(z.object({
-    category: z.enum(["positive", "negative", "neutral"]),
-    text: z.string(),
-    score: z.number(),
-  })),
+  findings: z.array(
+    z.object({
+      category: z.enum(["positive", "negative", "neutral"]),
+      text: z.string(),
+      score: z.number(),
+    })
+  ),
 });
 
 // createAgent — basic

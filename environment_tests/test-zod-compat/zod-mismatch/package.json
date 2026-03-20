@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Verify @langchain/core does not OOM when consumer resolves a different zod than core was built with",
+  "description": "Verify @langchain/core does not OOM when two different zod versions exist in the node_modules tree (consumer has v3 at top level, core has v4 nested)",
   "scripts": {
     "test": "tsc --noEmit"
   },
