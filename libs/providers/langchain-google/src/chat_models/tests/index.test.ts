@@ -315,6 +315,46 @@ describe("Google Mock", () => {
     );
   });
 
+  test("includes additionalHeaders on invoke requests", async () => {
+    const apiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const llm = new ChatGoogle({
+      model: "gemini-3-pro-preview",
+      apiClient,
+      additionalHeaders: {
+        "X-LC-Test": "invoke-value",
+      },
+    });
+    await llm.invoke("What is 1+1?");
+    expect(apiClient.request.headers.get("X-LC-Test")).toBe("invoke-value");
+    expect(apiClient.request.headers.get("Content-Type")).toBe(
+      "application/json"
+    );
+  });
+
+  test("includes additionalHeaders on streaming requests", async () => {
+    const apiClient = new MockApiClient({
+      fileName: "gemini-stream-001.txt",
+      streaming: true,
+    });
+    const llm = new ChatGoogle({
+      model: "gemini-2.5-flash",
+      apiClient,
+      streaming: true,
+      additionalHeaders: {
+        "X-LC-Test": "stream-value",
+      },
+    });
+    for await (const _chunk of await llm.stream("Why is the sky blue?")) {
+      // consume stream so fetch completes
+    }
+    expect(apiClient.request.headers.get("X-LC-Test")).toBe("stream-value");
+    expect(apiClient.request.headers.get("Content-Type")).toBe(
+      "application/json"
+    );
+  });
+
   test("surfaces JSON error bodies from GCP streaming responses labeled as text/event-stream", async () => {
     const apiClient = new MockErrorApiClient({
       status: 400,
