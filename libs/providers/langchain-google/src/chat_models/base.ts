@@ -470,6 +470,10 @@ export abstract class BaseChatGoogle<
     // Use the first candidate
     const candidate = data.candidates[0];
     const message = convertGeminiCandidateToAIMessage(candidate);
+    message.response_metadata = {
+      ...message.response_metadata,
+      ...(data.modelVersion ? { model: data.modelVersion } : {}),
+    };
 
     // Extract text content from the message
     const text = convertAIMessageToText(message);
@@ -595,6 +599,9 @@ export abstract class BaseChatGoogle<
                   tool_calls: toolCalls,
                   response_metadata: {
                     model_provider: "google",
+                    ...(chunk.modelVersion
+                      ? { model: chunk.modelVersion }
+                      : {}),
                   },
                   additional_kwargs: {
                     ...(message.additional_kwargs.originalTextContentBlock
@@ -766,6 +773,10 @@ export abstract class BaseChatGoogle<
       // Use JSON mode with responseSchema
       llm = this.withConfig({
         responseSchema: schema,
+        ls_structured_output_format: {
+          kwargs: { method: "jsonSchema" },
+          schema: toJsonSchema(schema),
+        },
       } as Partial<CallOptions>);
 
       outputParser = RunnableLambda.from<BaseMessage, RunOutput>(
@@ -831,6 +842,10 @@ export abstract class BaseChatGoogle<
       ];
       llm = this.bindTools(tools).withConfig({
         tool_choice: functionName,
+        ls_structured_output_format: {
+          kwargs: { method: "functionCalling" },
+          schema: toJsonSchema(schema),
+        },
       } as Partial<CallOptions>);
 
       outputParser = createFunctionCallingParser(schema, functionName);
