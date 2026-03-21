@@ -39,7 +39,6 @@ import {
   convertAIMessageToText,
   convertGeminiCandidateToAIMessage,
   convertGeminiGenerateContentResponseToUsageMetadata,
-  convertGeminiPartsToToolCalls,
   convertMessagesToGeminiContents,
   convertMessagesToGeminiSystemInstruction,
 } from "../converters/messages.js";
@@ -586,13 +585,14 @@ export abstract class BaseChatGoogle<
               const text = convertAIMessageToText(message);
 
               const parts = candidate.content?.parts ?? [];
-              const toolCalls = convertGeminiPartsToToolCalls(parts);
 
               // Only emit if we have content
               if (parts.length > 0 || candidate.finishReason) {
                 const messageChunkParams: AIMessageChunkFields = {
                   content: message.content,
-                  tool_calls: toolCalls,
+                  // Reuse tool_calls from the already-converted AIMessage to keep
+                  // IDs consistent with __gemini_function_call_thought_signatures__
+                  tool_calls: message.tool_calls ?? [],
                   response_metadata: {
                     model_provider: "google",
                   },
@@ -601,6 +601,14 @@ export abstract class BaseChatGoogle<
                       ? {
                           originalTextContentBlock:
                             message.additional_kwargs.originalTextContentBlock,
+                        }
+                      : {}),
+                    ...(message.additional_kwargs
+                      .__gemini_function_call_thought_signatures__
+                      ? {
+                          __gemini_function_call_thought_signatures__:
+                            message.additional_kwargs
+                              .__gemini_function_call_thought_signatures__,
                         }
                       : {}),
                     ...(candidate.finishReason
