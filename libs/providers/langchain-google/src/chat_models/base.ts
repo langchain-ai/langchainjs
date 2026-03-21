@@ -163,6 +163,8 @@ export abstract class BaseChatGoogle<
 
   protected _endpoint?: string;
 
+  protected _additionalHeaders?: Record<string, string>;
+
   protected _location?: string;
 
   protected _apiVersion?: string;
@@ -183,6 +185,7 @@ export abstract class BaseChatGoogle<
     this.model = params.model;
     this._platform = convertParamsToPlatformType(params);
     this._endpoint = params.endpoint;
+    this._additionalHeaders = params.additionalHeaders;
     this._location = params.location;
     this._apiVersion = params.apiVersion;
 
@@ -433,6 +436,8 @@ export abstract class BaseChatGoogle<
       new Request(url, {
         method: "POST",
         headers: {
+          ...this._additionalHeaders,
+          ...options.additionalHeaders,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(body),
@@ -525,6 +530,8 @@ export abstract class BaseChatGoogle<
       new Request(url, {
         method: "POST",
         headers: {
+          ...this._additionalHeaders,
+          ...options.additionalHeaders,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(body),

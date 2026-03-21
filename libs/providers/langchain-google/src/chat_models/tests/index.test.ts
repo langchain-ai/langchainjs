@@ -330,6 +330,114 @@ describe("Google Mock", () => {
     expect(apiClient.request.signal.aborted).toBe(true);
   });
 
+  test("includes additionalHeaders on invoke requests", async () => {
+    const apiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const llm = new ChatGoogle({
+      model: "gemini-3-pro-preview",
+      apiClient,
+      additionalHeaders: {
+        "X-LC-Test": "invoke-value",
+      },
+    });
+    await llm.invoke("What is 1+1?");
+    expect(apiClient.request.headers.get("X-LC-Test")).toBe("invoke-value");
+    expect(apiClient.request.headers.get("Content-Type")).toBe(
+      "application/json"
+    );
+  });
+
+  test("includes additionalHeaders on streaming requests", async () => {
+    const apiClient = new MockApiClient({
+      fileName: "gemini-stream-001.txt",
+      streaming: true,
+    });
+    const llm = new ChatGoogle({
+      model: "gemini-2.5-flash",
+      apiClient,
+      streaming: true,
+      additionalHeaders: {
+        "X-LC-Test": "stream-value",
+      },
+    });
+    for await (const _chunk of await llm.stream("Why is the sky blue?")) {
+      // consume stream so fetch completes
+    }
+    expect(apiClient.request.headers.get("X-LC-Test")).toBe("stream-value");
+    expect(apiClient.request.headers.get("Content-Type")).toBe(
+      "application/json"
+    );
+  });
+
+  test("includes per-invocation additionalHeaders on invoke requests", async () => {
+    const apiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const llm = new ChatGoogle({
+      model: "gemini-3-pro-preview",
+      apiClient,
+    });
+    await llm.invoke("What is 1+1?", {
+      additionalHeaders: {
+        "X-Per-Call": "per-call-value",
+      },
+    });
+    expect(apiClient.request.headers.get("X-Per-Call")).toBe("per-call-value");
+    expect(apiClient.request.headers.get("Content-Type")).toBe(
+      "application/json"
+    );
+  });
+
+  test("per-invocation additionalHeaders override constructor headers", async () => {
+    const apiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const llm = new ChatGoogle({
+      model: "gemini-3-pro-preview",
+      apiClient,
+      additionalHeaders: {
+        "X-Shared": "constructor-value",
+        "X-Constructor-Only": "stays",
+      },
+    });
+    await llm.invoke("What is 1+1?", {
+      additionalHeaders: {
+        "X-Shared": "per-call-value",
+        "X-Call-Only": "added",
+      },
+    });
+    expect(apiClient.request.headers.get("X-Shared")).toBe("per-call-value");
+    expect(apiClient.request.headers.get("X-Constructor-Only")).toBe("stays");
+    expect(apiClient.request.headers.get("X-Call-Only")).toBe("added");
+    expect(apiClient.request.headers.get("Content-Type")).toBe(
+      "application/json"
+    );
+  });
+
+  test("includes per-invocation additionalHeaders on streaming requests", async () => {
+    const apiClient = new MockApiClient({
+      fileName: "gemini-stream-001.txt",
+      streaming: true,
+    });
+    const llm = new ChatGoogle({
+      model: "gemini-2.5-flash",
+      apiClient,
+      streaming: true,
+    });
+    for await (const _chunk of await llm.stream("Why is the sky blue?", {
+      additionalHeaders: {
+        "X-Per-Call": "stream-per-call",
+      },
+    })) {
+      // consume stream so fetch completes
+    }
+    expect(apiClient.request.headers.get("X-Per-Call")).toBe("stream-per-call");
+    expect(apiClient.request.headers.get("Content-Type")).toBe(
+      "application/json"
+    );
+  });
+
   test("surfaces JSON error bodies from GCP streaming responses labeled as text/event-stream", async () => {
     const apiClient = new MockErrorApiClient({
       status: 400,
