@@ -441,11 +441,17 @@ function convertStandardContentMessageToGeminiContent(
   // Convert AIMessage tool_calls to functionCall parts
   if (AIMessage.isInstance(message) && message.tool_calls?.length) {
     for (const toolCall of message.tool_calls) {
+      const isGeneratedId = toolCall.id?.startsWith("lc-tool-call-");
+      const { thoughtSignature } = toolCall as typeof toolCall & {
+        thoughtSignature?: string;
+      };
       parts.push({
         functionCall: {
           name: toolCall.name,
           args: toolCall.args ?? {},
+          ...(!isGeneratedId && toolCall.id ? { id: toolCall.id } : {}),
         },
+        ...(thoughtSignature ? { thoughtSignature } : {}),
       } as Gemini.Part.FunctionCall);
     }
   }
@@ -736,15 +742,33 @@ function convertLegacyContentMessageToGeminiContent(
     }
   }
 
-  // Convert AIMessage tool_calls to functionCall parts
+  // Convert AIMessage tool_calls to functionCall parts, but skip when the
+  // content array already emitted functionCall blocks (avoids duplicates).
   if (AIMessage.isInstance(message) && message.tool_calls?.length) {
-    for (const toolCall of message.tool_calls) {
-      parts.push({
-        functionCall: {
-          name: toolCall.name,
-          args: toolCall.args ?? {},
-        },
-      } as Gemini.Part.FunctionCall);
+    const contentHasFunctionCalls =
+      Array.isArray(message.content) &&
+      message.content.some(
+        (item) =>
+          typeof item === "object" &&
+          item !== null &&
+          "type" in item &&
+          item.type === "functionCall"
+      );
+    if (!contentHasFunctionCalls) {
+      for (const toolCall of message.tool_calls) {
+        const isGeneratedId = toolCall.id?.startsWith("lc-tool-call-");
+        const { thoughtSignature } = toolCall as typeof toolCall & {
+          thoughtSignature?: string;
+        };
+        parts.push({
+          functionCall: {
+            name: toolCall.name,
+            args: toolCall.args ?? {},
+            ...(!isGeneratedId && toolCall.id ? { id: toolCall.id } : {}),
+          },
+          ...(thoughtSignature ? { thoughtSignature } : {}),
+        } as Gemini.Part.FunctionCall);
+      }
     }
   }
 

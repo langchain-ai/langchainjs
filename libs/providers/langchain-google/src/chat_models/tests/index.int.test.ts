@@ -536,52 +536,27 @@ describe.each(coreModelInfo)(
     });
 
     test("function reply", async () => {
-      const tools: Gemini.Tool[] = [
-        {
-          functionDeclarations: [
-            {
-              name: "test",
-              description:
-                "Run a test with a specific name and get if it passed or failed",
-              parameters: {
-                type: "object",
-                properties: {
-                  testName: {
-                    type: "string",
-                    description: "The name of the test that should be run.",
-                  },
-                },
-                required: ["testName"],
-              },
-            },
-          ],
-        },
-      ];
+      const tools = [weatherTool];
       const llm = newChatGoogle().bindTools(tools);
-      const toolResult = {
-        testPassed: true,
-      };
-      const messages: BaseMessage[] = [
-        new HumanMessage("Run a test on the cobalt project."),
-        new AIMessage({
-          tool_calls: [
-            {
-              type: "tool_call",
-              id: "lc-tool-call-test-id",
-              name: "test",
-              args: {
-                testName: "cobalt",
-              },
-            },
-          ],
-        }),
-        new ToolMessage(JSON.stringify(toolResult), "lc-tool-call-test-id"),
+      const history: BaseMessage[] = [
+        new HumanMessage("What is the weather in New York?"),
       ];
-      const res = await llm.stream(messages);
+
+      const result1 = await llm.invoke(history);
+      history.push(result1);
+
+      const toolCalls = result1.tool_calls!;
+      expect(toolCalls.length).toBeGreaterThanOrEqual(1);
+
+      const toolMessage = await weatherTool.invoke(toolCalls[0]);
+      history.push(toolMessage);
+
+      const res = await llm.stream(history);
       const resArray: BaseMessageChunk[] = [];
       for await (const chunk of res) {
         resArray.push(chunk);
       }
+      expect(resArray.length).toBeGreaterThanOrEqual(1);
     });
 
     test("function - force tool", async () => {

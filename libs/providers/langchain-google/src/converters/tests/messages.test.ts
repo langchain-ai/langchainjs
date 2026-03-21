@@ -588,6 +588,164 @@ describe("convertMessagesToGeminiContents", () => {
     ).toBeUndefined();
   });
 
+  test("no duplicate functionCall when content array already has functionCall blocks (legacy path)", () => {
+    const aiMsg = new AIMessage({
+      content: [
+        {
+          type: "functionCall",
+          functionCall: {
+            name: "get_weather",
+            args: { location: "New York" },
+            id: "server-id-1",
+          },
+          thoughtSignature: "fake-sig-abc",
+        },
+      ],
+      tool_calls: [
+        {
+          name: "get_weather",
+          args: { location: "New York" },
+          id: "server-id-1",
+          type: "tool_call" as const,
+        },
+      ],
+    });
+    const messages = [
+      new HumanMessage("What is the weather?"),
+      aiMsg,
+      new ToolMessage({
+        content: '{"temp": 21}',
+        tool_call_id: "server-id-1",
+        name: "get_weather",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+
+    const functionCallParts = modelContent!.parts!.filter(
+      (p) => "functionCall" in p && p.functionCall
+    );
+    expect(functionCallParts).toHaveLength(1);
+
+    const part = functionCallParts[0] as Gemini.Part.FunctionCall;
+    expect(part.thoughtSignature).toBe("fake-sig-abc");
+    expect(part.functionCall!.name).toBe("get_weather");
+  });
+
+  test("tool_calls with thoughtSignature and id are preserved in functionCall parts (legacy path)", () => {
+    const aiMsg = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          name: "get_weather",
+          args: { city: "London" },
+          id: "native-id-42",
+          type: "tool_call" as const,
+        },
+      ],
+    });
+    // Gemini responses carry thoughtSignature as an extra property on tool calls
+    (aiMsg.tool_calls![0] as Record<string, unknown>).thoughtSignature =
+      "sig-xyz-123";
+
+    const messages = [
+      new HumanMessage("hello"),
+      aiMsg,
+      new ToolMessage({
+        content: '{"temp": 15}',
+        tool_call_id: "native-id-42",
+        name: "get_weather",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+
+    const part = modelContent!.parts!.find(
+      (p) => "functionCall" in p && p.functionCall
+    ) as Gemini.Part.FunctionCall;
+    expect(part).toBeDefined();
+    expect(part.thoughtSignature).toBe("sig-xyz-123");
+    expect(part.functionCall!.id).toBe("native-id-42");
+  });
+
+  test("tool_calls with thoughtSignature and id are preserved in functionCall parts (v1 path)", () => {
+    const aiMsg = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          name: "get_weather",
+          args: { city: "London" },
+          id: "native-id-42",
+          type: "tool_call" as const,
+        },
+      ],
+    });
+    aiMsg.response_metadata = { output_version: "v1" };
+    (aiMsg.tool_calls![0] as Record<string, unknown>).thoughtSignature =
+      "sig-xyz-123";
+
+    const messages = [
+      new HumanMessage("hello"),
+      aiMsg,
+      new ToolMessage({
+        content: '{"temp": 15}',
+        tool_call_id: "native-id-42",
+        response_metadata: { output_version: "v1" },
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+
+    const part = modelContent!.parts!.find(
+      (p) => "functionCall" in p && p.functionCall
+    ) as Gemini.Part.FunctionCall;
+    expect(part).toBeDefined();
+    expect(part.thoughtSignature).toBe("sig-xyz-123");
+    expect(part.functionCall!.id).toBe("native-id-42");
+  });
+
+  test("generated lc-tool-call IDs are omitted from functionCall.id (legacy path)", () => {
+    const messages = [
+      new HumanMessage("hello"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "get_weather",
+            args: { city: "London" },
+            id: "lc-tool-call-abc123",
+            type: "tool_call" as const,
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: '{"temp": 15}',
+        tool_call_id: "lc-tool-call-abc123",
+        name: "get_weather",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+
+    const part = modelContent!.parts!.find(
+      (p) => "functionCall" in p && p.functionCall
+    ) as Gemini.Part.FunctionCall;
+    expect(part).toBeDefined();
+    expect(part.functionCall!.id).toBeUndefined();
+  });
+
   test("v1 contentBlocks: text-plain block produces fileData part", () => {
     const messages = [
       new HumanMessage({
