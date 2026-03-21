@@ -1,5 +1,6 @@
 import { expect, test } from "vitest";
 import { z } from "zod/v3";
+import { AIMessage } from "@langchain/core/messages";
 import { StructuredOutputParser } from "../structured.js";
 
 test("StructuredOutputParser handles valid JSON wrapped in triple backticks", async () => {
@@ -98,4 +99,26 @@ test("StructuredOutputParser throws error for JSON with backticks both inside an
     'Some random text ```json\n{"name": "John ```Doe```", "age": 30}```';
 
   await expect(parser.parse(text)).rejects.toThrow("Failed to parse");
+});
+
+test("StructuredOutputParser parses text from ContentBlock[] messages", async () => {
+  const parser = StructuredOutputParser.fromZodSchema(
+    z.object({
+      answer: z.string().describe("Parsed answer"),
+    })
+  );
+  const message = new AIMessage({
+    content: [
+      {
+        type: "reasoning",
+        reasoning: "internal reasoning",
+      },
+      {
+        type: "text",
+        text: '{"answer":"4"}',
+      },
+    ],
+  });
+
+  await expect(parser.invoke(message)).resolves.toEqual({ answer: "4" });
 });

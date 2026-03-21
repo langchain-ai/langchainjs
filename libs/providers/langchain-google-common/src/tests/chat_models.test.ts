@@ -2306,6 +2306,34 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(data.generationConfig.responseMimeType).toBe("application/json");
   });
 
+  test("4. Functions withStructuredOutput - jsonSchema parses response with reasoning blocks", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-json-schema-thinking-mock.json",
+    };
+
+    const schema = z.object({
+      testName: z.string().describe("The name of the test that should be run."),
+    });
+
+    const baseModel = new ChatGoogle({
+      authOptions,
+      thinkingBudget: 100,
+    });
+    const model = baseModel.withStructuredOutput(schema, {
+      method: "jsonSchema",
+    });
+
+    const result = await model.invoke("What?");
+
+    expect(result).toEqual({
+      testName: "cobalt",
+    });
+  });
+
   test("4. Functions withStructuredOutput - default uses jsonSchema method", async () => {
     const record: Record<string, any> = {};
     const projectId = mockId();
@@ -3462,6 +3490,28 @@ describe("withStructuredOutput - StandardSchema", () => {
       "string"
     );
     expect(data.generationConfig.responseMimeType).toBe("application/json");
+  });
+
+  test("jsonSchema parses response with reasoning blocks", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-json-schema-thinking-mock.json",
+    };
+
+    const baseModel = new ChatGoogle({ authOptions, thinkingBudget: 100 });
+    const schema = makeSerializableSchema();
+    const model = baseModel.withStructuredOutput(schema, {
+      method: "jsonSchema",
+    });
+
+    const result = await model.invoke("What?");
+
+    expect(result).toEqual({
+      testName: "cobalt",
+    });
   });
 
   test("default method uses jsonSchema with StandardSchema", async () => {

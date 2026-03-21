@@ -1,6 +1,7 @@
 import { test, expect } from "vitest";
 import { FakeStreamingLLM } from "../../utils/testing/index.js";
 import { XMLOutputParser } from "../xml.js";
+import { AIMessage } from "../../messages/index.js";
 
 const XML_EXAMPLE = `<?xml version="1.0" encoding="UTF-8"?>
 <userProfile>
@@ -66,6 +67,25 @@ test("Can parse backtick wrapped XML", async () => {
   const parser = new XMLOutputParser();
 
   const result = await parser.invoke(BACKTICK_WRAPPED_XML);
+  expect(result).toStrictEqual(expectedResult);
+});
+
+test("Can parse XML from ContentBlock[] messages", async () => {
+  const parser = new XMLOutputParser();
+  const message = new AIMessage({
+    content: [
+      {
+        type: "reasoning",
+        reasoning: "internal reasoning",
+      },
+      {
+        type: "text",
+        text: XML_EXAMPLE,
+      },
+    ],
+  });
+
+  const result = await parser.invoke(message);
   expect(result).toStrictEqual(expectedResult);
 });
 

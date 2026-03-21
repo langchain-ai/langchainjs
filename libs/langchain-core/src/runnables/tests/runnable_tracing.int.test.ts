@@ -1,5 +1,5 @@
 import { Client } from "langsmith";
-import { test } from "vitest";
+import { expect, test } from "vitest";
 import { LangChainTracer } from "../../tracers/tracer_langchain.js";
 import {
   BaseOutputParser,

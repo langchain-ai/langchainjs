@@ -6,6 +6,7 @@ import { describe, expect, test } from "vitest";
 import { OutputParserException } from "../base.js";
 import { StructuredOutputParser } from "../structured.js";
 import { InteropZodObject, InteropZodType } from "../../utils/types/zod.js";
+import { AIMessage } from "../../messages/index.js";
 
 test("StructuredOutputParser.fromNamesAndDescriptions", async () => {
   const parser = StructuredOutputParser.fromNamesAndDescriptions({
@@ -432,5 +433,30 @@ describe("StructuredOutputParser.fromZodSchema parsing json with backticks", () 
     };
     test("zod v3", testCase(zod3Schema));
     test("zod v4", testCase(zod4Schema));
+  });
+});
+
+describe("StructuredOutputParser with ContentBlock messages", () => {
+  test("ignores reasoning blocks and parses text blocks", async () => {
+    const parser = StructuredOutputParser.fromZodSchema(
+      z.object({
+        answer: z.string(),
+      })
+    );
+
+    const message = new AIMessage({
+      content: [
+        {
+          type: "reasoning" as const,
+          reasoning: "internal reasoning",
+        },
+        {
+          type: "text" as const,
+          text: '{"answer":"4"}',
+        },
+      ],
+    });
+
+    await expect(parser.invoke(message)).resolves.toEqual({ answer: "4" });
   });
 });

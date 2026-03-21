@@ -20,6 +20,38 @@ test("Google AI - Generate structured output without errors", async () => {
   expect(result).toHaveProperty("age");
 });
 
+test("Google AI - Generate structured output with reasoning and includeRaw", async () => {
+  const schema = z.object({
+    conclusion: z.boolean(),
+    reason: z.string(),
+  });
+
+  const model = new ChatGoogleGenerativeAI({
+    model: "gemini-3-pro-preview",
+    temperature: 0,
+    maxRetries: 0,
+    thinkingConfig: {
+      includeThoughts: true,
+      thinkingBudget: 100,
+    },
+  });
+  const structuredLlm = model.withStructuredOutput(schema, {
+    includeRaw: true,
+  });
+
+  const result = await structuredLlm.invoke(
+    "Is the sky blue? Return a boolean conclusion and a reason."
+  );
+
+  expect(result).toHaveProperty("raw");
+  expect(result).toHaveProperty("parsed");
+  expect(result.parsed).toHaveProperty("conclusion");
+  expect(result.parsed).toHaveProperty("reason");
+  expect(result.raw.contentBlocks.some((block) => block.type === "reasoning")).toBe(
+    true
+  );
+});
+
 test("Google AI - Validate nested schema structures", async () => {
   const schema = z.object({
     name: z.string(),
