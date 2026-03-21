@@ -1,6 +1,11 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 describe("gcp-auth", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.resetModules();
+  });
+
   it("does not import jose eagerly when loading the auth helpers", async () => {
     vi.resetModules();
     vi.doMock("jose", () => {

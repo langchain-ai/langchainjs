@@ -441,11 +441,14 @@ function convertStandardContentMessageToGeminiContent(
   // Convert AIMessage tool_calls to functionCall parts
   if (AIMessage.isInstance(message) && message.tool_calls?.length) {
     for (const toolCall of message.tool_calls) {
+      const thoughtSignature = (toolCall as { thoughtSignature?: string })
+        .thoughtSignature;
       parts.push({
         functionCall: {
           name: toolCall.name,
           args: toolCall.args ?? {},
         },
+        ...(thoughtSignature ? { thoughtSignature } : {}),
       } as Gemini.Part.FunctionCall);
     }
   }
@@ -739,11 +742,14 @@ function convertLegacyContentMessageToGeminiContent(
   // Convert AIMessage tool_calls to functionCall parts
   if (AIMessage.isInstance(message) && message.tool_calls?.length) {
     for (const toolCall of message.tool_calls) {
+      const thoughtSignature = (toolCall as { thoughtSignature?: string })
+        .thoughtSignature;
       parts.push({
         functionCall: {
           name: toolCall.name,
           args: toolCall.args ?? {},
         },
+        ...(thoughtSignature ? { thoughtSignature } : {}),
       } as Gemini.Part.FunctionCall);
     }
   }
@@ -850,7 +856,7 @@ export const convertMessagesToGeminiContents: Converter<
     if (content) {
       const prev = contents[contents.length - 1];
       if (prev && prev.role === content.role) {
-        prev.parts.push(...content.parts);
+        prev.parts?.push(...(content?.parts ?? []));
       } else {
         contents.push(content);
       }

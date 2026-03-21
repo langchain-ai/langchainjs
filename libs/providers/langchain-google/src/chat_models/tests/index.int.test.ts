@@ -362,6 +362,47 @@ describe.each(coreModelInfo)(
       expect(contentBlock.text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
     });
 
+    test("invoke with constructor additionalHeaders", async () => {
+      const llm = newChatGoogle({
+        additionalHeaders: {
+          "X-Custom-Header": "test-value",
+        },
+      });
+      const result = await llm.invoke("What is 1 + 1?");
+
+      expect(AIMessage.isInstance(result)).to.equal(true);
+      expect(result.text as string).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
+    });
+
+    test("invoke with per-invocation additionalHeaders", async () => {
+      const llm = newChatGoogle();
+      const result = await llm.invoke("What is 1 + 1?", {
+        additionalHeaders: {
+          "X-Custom-Header": "test-value",
+        },
+      });
+
+      expect(AIMessage.isInstance(result)).to.equal(true);
+      expect(result.text as string).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
+    });
+
+    test("stream with additionalHeaders", async () => {
+      const llm = newChatGoogle({
+        additionalHeaders: {
+          "X-Custom-Header": "test-value",
+        },
+      });
+      const stream = await llm.stream("What is 1 + 1?");
+
+      let finalChunk: AIMessageChunk | undefined;
+      for await (const chunk of stream) {
+        finalChunk = finalChunk ? concat(finalChunk, chunk) : chunk;
+      }
+
+      expect(finalChunk).toBeDefined();
+      expect(finalChunk!.text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
+    });
+
     test("invoke seed", async () => {
       const llm = newChatGoogle({
         seed: 6,
@@ -516,7 +557,10 @@ describe.each(coreModelInfo)(
       expect(call.args.location).toBe("New York");
     });
 
-    test("function conversation", async () => {
+    // Thinking models may return only reasoning blocks without text content
+    // after processing tool results, so skip this assertion for them.
+    // See "thought signature - function reply round-trip" for the thinking-model equivalent.
+    test.skipIf(testConfig?.isThinking)("function conversation", async () => {
       const tools = [weatherTool];
       const llm = newChatGoogle().bindTools(tools);
       const history: BaseMessage[] = [
@@ -535,7 +579,9 @@ describe.each(coreModelInfo)(
       expect(result2.content).toMatch(/21/);
     });
 
-    test("function reply", async () => {
+    // Thinking models require a valid thoughtSignature on functionCall parts,
+    // which cannot be fabricated in a manually constructed message history.
+    test.skipIf(testConfig?.isThinking)("function reply", async () => {
       const tools: Gemini.Tool[] = [
         {
           functionDeclarations: [
@@ -663,6 +709,12 @@ describe.each(coreModelInfo)(
       // Not available on Gemini 1.5
       // Not available on Gemini 2.0 Flash
       if (model.startsWith("gemini-2.0-flash")) {
+        return;
+      }
+      // Gemini 3 preview models do not reliably return urlContextMetadata
+      // via REST API (known Google API issue):
+      // https://discuss.ai.google.dev/t/url-context-via-rest-api-not-working-hallucinated-output-empty-metadata-but-works-in-ai-studio/125380
+      if (model.startsWith("gemini-3")) {
         return;
       }
       // Not available on Vertex
@@ -860,7 +912,9 @@ describe.each(coreModelInfo)(
     });
 
     test("image - legacy", async () => {
-      const model = newChatGoogle({});
+      const model = newChatGoogle({
+        ...(testConfig?.isThinking ? { reasoningEffort: "low" } : {}),
+      });
 
       const dataPath = "src/chat_models/tests/data/blue-square.png";
       const dataType = "image/png";
@@ -872,7 +926,7 @@ describe.each(coreModelInfo)(
       const content = [
         {
           type: "text",
-          text: "What is in this image?",
+          text: "What color is the shape in this image?",
         },
         {
           type: "image_url",
@@ -890,20 +944,19 @@ describe.each(coreModelInfo)(
       expect(res).toBeDefined();
       expect(res._getType()).toEqual("ai");
 
-      const aiMessage = res as AIMessageChunk;
-      expect(aiMessage.content).toBeDefined();
+      expect(res).toBeDefined();
+      expect(AIMessage.isInstance(res)).toEqual(true);
+      expect(res.text).toMatch(/blue/);
 
-      expect(typeof aiMessage.content).toBe("string");
-      const text = aiMessage.content as string;
-      expect(text).toMatch(/blue/);
-
-      expect(
-        aiMessage?.usage_metadata?.input_token_details?.image
-      ).toBeGreaterThan(0);
+      expect(res?.usage_metadata?.input_token_details?.image).toBeGreaterThan(
+        0
+      );
     });
 
     test("image - ContentBlock.Standard", async () => {
-      const model = newChatGoogle({});
+      const model = newChatGoogle({
+        ...(testConfig?.isThinking ? { reasoningEffort: "low" } : {}),
+      });
 
       const dataPath = "src/chat_models/tests/data/blue-square.png";
       const dataType = "image/png";
@@ -913,7 +966,7 @@ describe.each(coreModelInfo)(
       const content: ContentBlock.Standard[] = [
         {
           type: "text",
-          text: "What is in this image?",
+          text: "What color is the shape in this image?",
         },
         {
           type: "image",
@@ -931,21 +984,17 @@ describe.each(coreModelInfo)(
 
       expect(res).toBeDefined();
       expect(AIMessage.isInstance(res)).toEqual(true);
+      expect(res.text).toMatch(/blue/);
 
-      const aiMessage = res as AIMessageChunk;
-      expect(aiMessage.content).toBeDefined();
-
-      expect(typeof aiMessage.content).toBe("string");
-      const text = aiMessage.content as string;
-      expect(text).toMatch(/blue/);
-
-      expect(
-        aiMessage?.usage_metadata?.input_token_details?.image
-      ).toBeGreaterThan(0);
+      expect(res?.usage_metadata?.input_token_details?.image).toBeGreaterThan(
+        0
+      );
     });
 
     test("video - legacy", async () => {
-      const model = newChatGoogle({});
+      const model = newChatGoogle({
+        ...(testConfig?.isThinking ? { reasoningEffort: "low" } : {}),
+      });
 
       const dataPath = "src/chat_models/tests/data/rainbow.mp4";
       const dataType = "video/mp4";
@@ -972,21 +1021,15 @@ describe.each(coreModelInfo)(
       const res1 = await model.invoke(messages1);
 
       expect(res1).toBeDefined();
-      expect(res1._getType()).toEqual("ai");
+      expect(AIMessage.isInstance(res1)).toEqual(true);
+      expect(res1.text).toMatch(/rainbow/);
 
-      const aiMessage1 = res1 as AIMessageChunk;
-      expect(aiMessage1.content).toBeDefined();
-
-      expect(typeof aiMessage1.content).toBe("string");
-      const text = aiMessage1.content as string;
-      expect(text).toMatch(/rainbow/);
-
-      const videoTokens1 = aiMessage1?.usage_metadata?.input_token_details
+      const videoTokens1 = res1?.usage_metadata?.input_token_details
         ?.video as number;
       expect(typeof videoTokens1).toEqual("number");
       expect(videoTokens1).toBeGreaterThan(712);
       expect(
-        aiMessage1?.usage_metadata?.input_token_details?.video ?? 0
+        res1?.usage_metadata?.input_token_details?.video ?? 0
       ).toBeGreaterThan(0);
 
       // Now run it again, but this time sample two frames / second
@@ -1011,16 +1054,16 @@ describe.each(coreModelInfo)(
       ];
 
       const res2 = await model.invoke(messages2);
-      const aiMessage2 = res2 as AIMessageChunk;
 
-      const videoTokens2 =
-        aiMessage2?.usage_metadata?.input_token_details?.video;
+      const videoTokens2 = res2?.usage_metadata?.input_token_details?.video;
       expect(typeof videoTokens2).toEqual("number");
       expect(videoTokens2).toBeGreaterThan(videoTokens1);
     }, 90000);
 
     test("video - ContentBlock.Standard", async () => {
-      const model = newChatGoogle({});
+      const model = newChatGoogle({
+        ...(testConfig?.isThinking ? { reasoningEffort: "low" } : {}),
+      });
 
       const dataPath = "src/chat_models/tests/data/rainbow.mp4";
       const dataType = "video/mp4";
@@ -1060,21 +1103,15 @@ describe.each(coreModelInfo)(
       const res1 = await model.invoke(messages1);
 
       expect(res1).toBeDefined();
-      expect(res1._getType()).toEqual("ai");
+      expect(AIMessage.isInstance(res1)).toEqual(true);
+      expect(res1.text).toMatch(/rainbow/);
 
-      const aiMessage1 = res1 as AIMessageChunk;
-      expect(aiMessage1.content).toBeDefined();
-
-      expect(typeof aiMessage1.content).toBe("string");
-      const text = aiMessage1.content as string;
-      expect(text).toMatch(/rainbow/);
-
-      const videoTokens1 = aiMessage1?.usage_metadata?.input_token_details
+      const videoTokens1 = res1?.usage_metadata?.input_token_details
         ?.video as number;
       expect(typeof videoTokens1).toEqual("number");
       expect(videoTokens1).toBeGreaterThan(712);
       expect(
-        aiMessage1?.usage_metadata?.input_token_details?.video ?? 0
+        res1?.usage_metadata?.input_token_details?.video ?? 0
       ).toBeGreaterThan(0);
 
       // Now run it again, but this time sample two frames / second
@@ -1118,10 +1155,8 @@ describe.each(coreModelInfo)(
       ];
 
       const res2 = await model.invoke(messages2);
-      const aiMessage2 = res2 as AIMessageChunk;
 
-      const videoTokens2 =
-        aiMessage2?.usage_metadata?.input_token_details?.video;
+      const videoTokens2 = res2?.usage_metadata?.input_token_details?.video;
       expect(typeof videoTokens2).toEqual("number");
       expect(videoTokens2).toBeGreaterThan(videoTokens1);
     }, 90000);
@@ -1315,6 +1350,47 @@ describe.each(thinkingModelInfo)(
       expect(hasThoughtSignature).toBe(true);
     });
 
+    test("thought signature - function reply round-trip", async () => {
+      const tools = [weatherTool];
+      const llm = newChatGoogle({
+        reasoningEffort: "low",
+      }).bindTools(tools);
+
+      // Step 1: Get a real tool call (with thoughtSignature) from the model
+      const result1 = await llm.invoke([
+        new HumanMessage("What is the weather in New York?"),
+      ]);
+      expect(result1.tool_calls?.length).toBeGreaterThanOrEqual(1);
+
+      // Verify the tool call has a thoughtSignature
+      const hasThoughtSignature = result1.contentBlocks.some(
+        (b: ContentBlock.Standard) => "thoughtSignature" in b
+      );
+      expect(hasThoughtSignature).toBe(true);
+
+      // Step 2: Execute the tool and stream the reply back
+      const toolCall = result1.tool_calls![0];
+      const toolMessage = await weatherTool.invoke(toolCall);
+
+      const history: BaseMessage[] = [
+        new HumanMessage("What is the weather in New York?"),
+        result1,
+        toolMessage,
+      ];
+      const resArray: BaseMessageChunk[] = [];
+      for await (const chunk of await llm.stream(history)) {
+        resArray.push(chunk);
+      }
+      const merged = resArray.reduce(
+        (acc, chunk) => (acc ? concat(acc, chunk) : chunk),
+        null as BaseMessageChunk | null
+      );
+      expect(merged).toBeDefined();
+      // Thinking models may return reasoning blocks without text content,
+      // so check that we received any content at all rather than requiring text.
+      expect(resArray.length).toBeGreaterThan(0);
+    });
+
     test("thinking - invoke", async () => {
       const llm = newChatGoogle({
         reasoningEffort: "high",
@@ -1411,9 +1487,15 @@ describe.each(imageModelInfo)(
       }
     });
 
-    afterEach(() => {
+    const tmpFiles: string[] = [];
+
+    afterEach(async () => {
       testSeq++;
       warnSpy.mockRestore();
+      for (const f of tmpFiles) {
+        await fs.unlink(f).catch(() => {});
+      }
+      tmpFiles.length = 0;
     });
 
     async function openFile(block: ContentBlock.Multimodal.File) {
@@ -1434,7 +1516,9 @@ describe.each(imageModelInfo)(
         `langchain-gemini-test-${Date.now()}-${testSeq}-${imageSeq++}.${ext}`
       );
       await fs.writeFile(filePath, buffer);
-      exec(`open "${filePath}"`);
+      tmpFiles.push(filePath);
+      const child = exec(`open "${filePath}"`);
+      child.unref();
     }
 
     async function handleResult(
@@ -1575,9 +1659,15 @@ describe.sequential.each(ttsModelInfo)(
       }
     });
 
-    afterEach(() => {
+    const tmpFiles: string[] = [];
+
+    afterEach(async () => {
       testSeq++;
       warnSpy.mockRestore();
+      for (const f of tmpFiles) {
+        await fs.unlink(f).catch(() => {});
+      }
+      tmpFiles.length = 0;
     });
 
     async function openFile(block: ContentBlock.Multimodal.File) {
@@ -1636,7 +1726,9 @@ describe.sequential.each(ttsModelInfo)(
       const wavBuffer = Buffer.concat([header, buffer]);
 
       await fs.writeFile(wavFile, wavBuffer);
-      exec(`afplay "${wavFile}"`);
+      tmpFiles.push(wavFile);
+      const child = exec(`afplay "${wavFile}"`);
+      child.unref();
     }
 
     async function handleResult(blocks: ContentBlock.Standard[]) {

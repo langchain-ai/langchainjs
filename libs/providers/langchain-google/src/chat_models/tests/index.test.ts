@@ -1284,6 +1284,10 @@ function makeSerializableSchema() {
 }
 
 describe("withStructuredOutput with SerializableSchema", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   test("functionCalling with valid output parses correctly", async () => {
     const apiClient = new MockApiClient({
       fileName: "gemini-chat-001.json",
