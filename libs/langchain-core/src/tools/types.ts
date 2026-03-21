@@ -1,4 +1,4 @@
-import type { z as z3 } from "zod/v3";
+import type { ZodV3Like } from "../utils/types/zod.js";
 import { CallbackManagerForToolRun } from "../callbacks/manager.js";
 import type {
   BaseLangChainParams,
@@ -78,7 +78,8 @@ export type ToolReturnType<TInput, TConfig, TOutput> =
  * Base type that establishes the types of input schemas that can be used for LangChain tool
  * definitions.
  */
-export type ToolInputSchemaBase = z3.ZodTypeAny | JSONSchema;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ToolInputSchemaBase = ZodV3Like<any, any> | JSONSchema;
 
 /**
  * Parameters for the Tool classes.
@@ -199,12 +200,8 @@ export type StructuredToolCallInput<
  * This is primarily used for creating simple string-based tools where the LLM
  * only needs to provide a single text value as input to the tool.
  */
-export type StringInputToolSchema = z3.ZodType<
-  string | undefined,
-  z3.ZodTypeDef,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  any
->;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type StringInputToolSchema = ZodV3Like<string | undefined, any>;
 
 /**
  * Defines the type for input to a tool's call method.
