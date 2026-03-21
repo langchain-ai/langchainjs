@@ -25,12 +25,17 @@ class TestServers {
 
   async createHTTP(
     name: string,
-    opts?: { supportSSEFallback?: boolean; testHeaders?: boolean }
+    opts?: {
+      supportSSEFallback?: boolean;
+      testHeaders?: boolean;
+      requireAuth?: boolean;
+    }
   ): Promise<{ baseUrl: string }> {
     return new Promise((resolve, reject) => {
       const app = createDummyHttpServer(name, {
         supportSSEFallback: Boolean(opts?.supportSSEFallback),
         testHeaders: Boolean(opts?.testHeaders),
+        requireAuth: Boolean(opts?.requireAuth),
       });
       const httpServer = app.listen(0, "127.0.0.1", (err?: Error) => {
         if (err) return reject(err);
@@ -247,6 +252,110 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
         await client.close();
       }
     });
+  });
+
+  test("beforeToolCall headers preserve static auth headers for HTTP", async () => {
+    const { baseUrl } = await servers.createHTTP("http-auth", {
+      requireAuth: true,
+      testHeaders: true,
+    });
+    const client = new MultiServerMCPClient({
+      mcpServers: {
+        http: {
+          transport: "http",
+          url: `${baseUrl}/mcp`,
+          automaticSSEFallback: true,
+          headers: { Authorization: "Bearer test-token" },
+        },
+      },
+      beforeToolCall: () => ({
+        headers: { "X-Check": "present" },
+      }),
+    });
+
+    try {
+      const tools = await client.getTools();
+      const checkHeadersTool = tools.find((tool) =>
+        tool.name.includes("check_headers")
+      );
+      const authResult = await checkHeadersTool!.invoke({
+        headerName: "Authorization",
+      });
+      const result = await checkHeadersTool!.invoke({ headerName: "X-Check" });
+      expect(authResult).toBe("Bearer test-token");
+      expect(result).toBe("present");
+    } finally {
+      await client.close();
+    }
+  });
+
+  test("beforeToolCall headers preserve static auth headers for SSE", async () => {
+    const { baseUrl } = await servers.createHTTP("sse-auth", {
+      requireAuth: true,
+      supportSSEFallback: true,
+      testHeaders: true,
+    });
+    const client = new MultiServerMCPClient({
+      mcpServers: {
+        sse: {
+          transport: "sse",
+          url: `${baseUrl}/sse`,
+          headers: { Authorization: "Bearer test-token" },
+        },
+      },
+      beforeToolCall: () => ({
+        headers: { "X-Check": "present" },
+      }),
+    });
+
+    try {
+      const tools = await client.getTools();
+      const checkHeadersTool = tools.find((tool) =>
+        tool.name.includes("check_headers")
+      );
+      const authResult = await checkHeadersTool!.invoke({
+        headerName: "Authorization",
+      });
+      const result = await checkHeadersTool!.invoke({ headerName: "X-Check" });
+      expect(authResult).toBe("Bearer test-token");
+      expect(result).toBe("present");
+    } finally {
+      await client.close();
+    }
+  });
+
+  test("beforeToolCall headers preserve static auth headers for inferred HTTP transports", async () => {
+    const { baseUrl } = await servers.createHTTP("http-implicit-auth", {
+      requireAuth: true,
+      testHeaders: true,
+    });
+    const client = new MultiServerMCPClient({
+      mcpServers: {
+        http: {
+          url: `${baseUrl}/mcp`,
+          automaticSSEFallback: true,
+          headers: { Authorization: "Bearer test-token" },
+        },
+      },
+      beforeToolCall: () => ({
+        headers: { "X-Check": "present" },
+      }),
+    });
+
+    try {
+      const tools = await client.getTools();
+      const checkHeadersTool = tools.find((tool) =>
+        tool.name.includes("check_headers")
+      );
+      const authResult = await checkHeadersTool!.invoke({
+        headerName: "Authorization",
+      });
+      const result = await checkHeadersTool!.invoke({ headerName: "X-Check" });
+      expect(authResult).toBe("Bearer test-token");
+      expect(result).toBe("present");
+    } finally {
+      await client.close();
+    }
   });
 
   test("onProgress and onLog hooks", async () => {
