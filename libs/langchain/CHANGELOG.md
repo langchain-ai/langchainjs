@@ -1,5 +1,34 @@
 # langchain
 
+## 1.2.35
+
+### Patch Changes
+
+- [#10466](https://github.com/langchain-ai/langchainjs/pull/10466) [`4b1a874`](https://github.com/langchain-ai/langchainjs/commit/4b1a874a93d8475a98421e157fe7a1e65ec94076) Thanks [@hntrl](https://github.com/hntrl)! - fix: renamed getSubgraphAsync -> getSubgraphsAsync
+
+- Updated dependencies [[`bfb7944`](https://github.com/langchain-ai/langchainjs/commit/bfb7944a105470eee98fe4a0eef91e586600e1de)]:
+  - @langchain/core@1.1.34
+
+## 1.2.34
+
+### Patch Changes
+
+- [#10443](https://github.com/langchain-ai/langchainjs/pull/10443) [`ff6822e`](https://github.com/langchain-ai/langchainjs/commit/ff6822e43c38c4328d3f2c0ef1cf67998741339a) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): respect version:"v1" in afterModel router's pending tool call path
+
+- [#10446](https://github.com/langchain-ai/langchainjs/pull/10446) [`888224c`](https://github.com/langchain-ai/langchainjs/commit/888224c64e4c95935836a5089f8b28a8c90da5e6) Thanks [@hntrl](https://github.com/hntrl)! - fix(agents): propagate store and configurable to ToolNode middleware runtime
+
+- [#10444](https://github.com/langchain-ai/langchainjs/pull/10444) [`82d56cb`](https://github.com/langchain-ai/langchainjs/commit/82d56cbdfb59b48b3f8d98a294e4d4720e12c733) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain/agents): dispatch tool calls via Send in afterModel router for version:"v2"
+
+  **Breaking change for `version: "v2"` + `afterModel` middleware users.**
+
+  Previously, when `afterModel` middleware was present, `createAgent` always routed all tool calls from an `AIMessage` to a single `ToolNode` invocation — regardless of the `version` option. This meant `version: "v2"` silently behaved like `version: "v1"` (parallel via `Promise.all` in one node) whenever `afterModel` middleware was used.
+
+  `#createAfterModelRouter` now correctly respects `#toolBehaviorVersion`:
+  - `version: "v1"` — routes the full `AIMessage` to a single `ToolNode` invocation; all tool calls run concurrently via `Promise.all` (unchanged behaviour).
+  - `version: "v2"` — dispatches each tool call as a separate `Send` task, matching the behaviour of `#createModelRouter` when no `afterModel` middleware is present, and matching Python LangGraph's `post_model_hook_router`.
+
+  **Migration:** If you use `version: "v2"` (the default) together with `afterModel` middleware and rely on the previous single-node parallel execution, switch to `version: "v1"` to preserve that behaviour. See the `version` JSDoc on `CreateAgentParams` for guidance on which option to choose.
+
 ## 1.2.33
 
 ### Patch Changes
