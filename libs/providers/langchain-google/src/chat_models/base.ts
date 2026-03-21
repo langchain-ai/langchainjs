@@ -110,11 +110,6 @@ export interface BaseChatGoogleParams
   endpoint?: string;
 
   /**
-   * Default headers to include with every request to the API.
-   */
-  additionalHeaders?: Record<string, string> | undefined;
-
-  /**
    * Region where the LLM is stored (if this is running on GCP)
    * Defaults to "global"
    **/
@@ -442,6 +437,7 @@ export abstract class BaseChatGoogle<
         method: "POST",
         headers: {
           ...this._additionalHeaders,
+          ...options.additionalHeaders,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(body),
@@ -535,6 +531,7 @@ export abstract class BaseChatGoogle<
         method: "POST",
         headers: {
           ...this._additionalHeaders,
+          ...options.additionalHeaders,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(body),

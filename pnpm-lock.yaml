@@ -2690,9 +2690,9 @@ importers:
       '@langchain/standard-tests':
         specifier: workspace:*
         version: link:../../../internal/standard-tests
-      '@tsconfig/recommended':
-        specifier: ^1.0.10
-        version: 1.0.13
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
       dpdm:
         specifier: ^3.14.0
         version: 3.15.1

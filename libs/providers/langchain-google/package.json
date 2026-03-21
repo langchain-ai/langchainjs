@@ -47,7 +47,7 @@
     "@langchain/core": "workspace:^",
     "@langchain/eslint": "workspace:*",
     "@langchain/standard-tests": "workspace:*",
-    "@tsconfig/recommended": "^1.0.10",
+    "@langchain/tsconfig": "workspace:*",
     "dpdm": "^3.14.0",
     "eslint": "^9.34.0",
     "prettier": "^2.8.3",

@@ -164,6 +164,13 @@ export interface ChatGoogleFields {
    * An alias for `reasoningEffort` for compatibility.
    */
   thinkingLevel?: GeminiBase.ThinkingLevel;
+
+  /**
+   * Additional headers to include with every request to the API.
+   * When set on both constructor params and per-invocation call options,
+   * per-invocation headers take precedence for matching keys.
+   */
+  additionalHeaders?: Record<string, string>;
 }
 
 export type GooglePlatformType = "gai" | "gcp";
