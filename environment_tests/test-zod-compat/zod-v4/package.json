@@ -1,0 +1,15 @@
+{
+  "name": "test-zod-compat-v4",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Verify @langchain/core works with zod@4.x",
+  "scripts": {
+    "test": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^4",
+    "typescript": "^5.9.3",
+    "@types/node": "^22"
+  }
+}
