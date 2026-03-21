@@ -535,6 +535,39 @@ describe.each(coreModelInfo)(
       expect(result2.content).toMatch(/21/);
     });
 
+    test("function conversation with parallel tool calls", async () => {
+      const tools = [weatherTool, calculatorTool];
+      const llm = newChatGoogle().bindTools(tools);
+
+      // Turn 1: request that triggers parallel tool calls
+      const history: BaseMessage[] = [
+        new HumanMessage(
+          "What is the weather in New York? Also calculate 1836 + 7262."
+        ),
+      ];
+      const result1 = await llm.invoke(history);
+      history.push(result1);
+
+      // Should have at least 1 tool call (model may or may not parallelize)
+      expect(result1.tool_calls.length).toBeGreaterThanOrEqual(1);
+
+      // Execute all tool calls and add results
+      for (const tc of result1.tool_calls) {
+        const matchingTool = tools.find((t) => t.name === tc.name);
+        if (matchingTool) {
+          const toolMessage = await matchingTool.invoke(tc);
+          history.push(toolMessage);
+        }
+      }
+
+      // Turn 2: model responds with tool results — previously failed with
+      // "function response parts != function call parts" due to duplicate
+      // functionCall parts in the converter
+      const result2 = await llm.invoke(history);
+      expect(result2.content).toBeDefined();
+      expect((result2.content as string).length).toBeGreaterThan(0);
+    });
+
     test("function reply", async () => {
       const tools: Gemini.Tool[] = [
         {
@@ -1354,6 +1387,84 @@ describe.each(thinkingModelInfo)(
         (b) => "thoughtSignature" in b
       );
       expect(hasThoughtSignature).toBe(true);
+    });
+
+    test("thoughtSignature stored in additional_kwargs, not on tool_calls", async () => {
+      const tools = [weatherTool];
+      const llm = newChatGoogle({
+        reasoningEffort: "low",
+      }).bindTools(tools);
+      const result = await llm.invoke("What is the weather in New York?");
+
+      // tool_calls should be clean — no thoughtSignature leaked
+      for (const tc of result.tool_calls) {
+        expect((tc as any).thoughtSignature).toBeUndefined();
+      }
+
+      // additional_kwargs should carry signatures keyed by tool call ID
+      const sigs = result.additional_kwargs
+        .__gemini_function_call_thought_signatures__ as
+        | Record<string, string>
+        | undefined;
+      expect(sigs).toBeDefined();
+      if (sigs) {
+        const sigValues = Object.values(sigs).filter(Boolean);
+        expect(sigValues.length).toBeGreaterThan(0);
+      }
+    });
+
+    test("multi-turn tool conversation succeeds with thinking model", async () => {
+      const tools = [weatherTool];
+      const llm = newChatGoogle({
+        reasoningEffort: "low",
+      }).bindTools(tools);
+
+      // Turn 1: model calls a tool
+      const history: BaseMessage[] = [
+        new HumanMessage("What is the weather in New York?"),
+      ];
+      const result1 = await llm.invoke(history);
+      history.push(result1);
+
+      expect(result1.tool_calls).toHaveLength(1);
+
+      // Execute tool and add result
+      const toolCall = result1.tool_calls[0];
+      const toolMessage = await weatherTool.invoke(toolCall);
+      history.push(toolMessage);
+
+      // Turn 2: model responds with the tool result — should not throw
+      // "function response parts != function call parts" or
+      // "thought_signature is not valid" errors
+      const result2 = await llm.invoke(history);
+      expect(result2.content).toBeDefined();
+      expect(result2.content.length).toBeGreaterThan(0);
+    });
+
+    test("multi-turn tool conversation succeeds via streaming with thinking model", async () => {
+      const tools = [weatherTool];
+      const llm = newChatGoogle({
+        streaming: true,
+        reasoningEffort: "low",
+      }).bindTools(tools);
+
+      // Turn 1: model calls a tool (streamed)
+      const history: BaseMessage[] = [
+        new HumanMessage("What is the weather in New York?"),
+      ];
+      const result1 = await llm.invoke(history);
+      history.push(result1);
+
+      expect(result1.tool_calls.length).toBeGreaterThanOrEqual(1);
+
+      // Execute tool and add result
+      const toolCall = result1.tool_calls[0];
+      const toolMessage = await weatherTool.invoke(toolCall);
+      history.push(toolMessage);
+
+      // Turn 2: model responds — should not throw thoughtSignature errors
+      const result2 = await llm.invoke(history);
+      expect(result2.content).toBeDefined();
     });
   }
 );
