@@ -1,5 +1,11 @@
 # @langchain/core
 
+## 1.1.34
+
+### Patch Changes
+
+- [#10312](https://github.com/langchain-ai/langchainjs/pull/10312) [`bfb7944`](https://github.com/langchain-ai/langchainjs/commit/bfb7944a105470eee98fe4a0eef91e586600e1de) Thanks [@jacoblee93](https://github.com/jacoblee93)! - feat(core): Add all invocation params as part of metadata
+
 ## 1.1.33
 
 ### Patch Changes

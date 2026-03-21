@@ -1,5 +1,4 @@
-import type { ZodType as ZodTypeV3 } from "zod/v3";
-import type { $ZodType as ZodTypeV4 } from "zod/v4/core";
+import type { ZodV3Like, ZodV4Like } from "../utils/types/zod.js";
 import {
   AIMessage,
   type BaseMessage,
@@ -60,7 +59,11 @@ import { ModelAbortError } from "../errors/index.js";
 import { callbackHandlerPrefersStreaming } from "../callbacks/base.js";
 import { toJsonSchema } from "../utils/json_schema.js";
 import { getEnvironmentVariable } from "../utils/env.js";
-import { castStandardMessageContent, iife } from "./utils.js";
+import {
+  castStandardMessageContent,
+  iife,
+  parseMetadataInvocationParams,
+} from "./utils.js";
 import {
   isSerializableSchema,
   type SerializableSchema,
@@ -193,6 +196,7 @@ export type LangSmithParams = {
   ls_temperature?: number;
   ls_max_tokens?: number;
   ls_stop?: Array<string>;
+  ls_integration?: string;
 };
 
 export type BindToolsInput =
@@ -317,20 +321,26 @@ export abstract class BaseChatModel<
 
       const inheritableMetadata = {
         ...runnableConfig.metadata,
-        ...this.getLsParams(callOptions),
+        ...this.getLsParamsWithDefaults(callOptions),
       };
-      const callbackManager_ = await CallbackManager.configure(
+      const invocationParams = this?.invocationParams(callOptions);
+      const metadataInvocationParams =
+        parseMetadataInvocationParams(invocationParams);
+      const callbackManager_ = CallbackManager.configure(
         runnableConfig.callbacks,
         this.callbacks,
         runnableConfig.tags,
         this.tags,
         inheritableMetadata,
-        this.metadata,
+        {
+          ...metadataInvocationParams,
+          ...this.metadata,
+        },
         { verbose: this.verbose }
       );
       const extra = {
         options: callOptions,
-        invocation_params: this?.invocationParams(callOptions),
+        invocation_params: invocationParams,
         batch_size: 1,
       };
       const outputVersion = callOptions.outputVersion ?? this.outputVersion;
@@ -421,6 +431,18 @@ export abstract class BaseChatModel<
     };
   }
 
+  /**
+   * Wraps getLsParams() and always appends ls_integration.
+   * This ensures the integration tag is present even when
+   * partner packages fully override getLsParams().
+   */
+  getLsParamsWithDefaults(options: this["ParsedCallOptions"]): LangSmithParams {
+    return {
+      ...this.getLsParams(options),
+      ls_integration: "langchain_chat_model",
+    };
+  }
+
   /** @ignore */
   async _generateUncached(
     messages: BaseMessageLike[][],
@@ -441,21 +463,27 @@ export abstract class BaseChatModel<
     } else {
       const inheritableMetadata = {
         ...handledOptions.metadata,
-        ...this.getLsParams(parsedOptions),
+        ...this.getLsParamsWithDefaults(parsedOptions),
       };
+      const invocationParams = this?.invocationParams(parsedOptions);
+      const metadataInvocationParams =
+        parseMetadataInvocationParams(invocationParams);
       // create callback manager and start run
-      const callbackManager_ = await CallbackManager.configure(
+      const callbackManager_ = CallbackManager.configure(
         handledOptions.callbacks,
         this.callbacks,
         handledOptions.tags,
         this.tags,
         inheritableMetadata,
-        this.metadata,
+        {
+          ...metadataInvocationParams,
+          ...this.metadata,
+        },
         { verbose: this.verbose }
       );
       const extra = {
         options: parsedOptions,
-        invocation_params: this?.invocationParams(parsedOptions),
+        invocation_params: invocationParams,
         batch_size: 1,
       };
       runManagers = await callbackManager_?.handleChatModelStart(
@@ -644,21 +672,27 @@ export abstract class BaseChatModel<
 
     const inheritableMetadata = {
       ...handledOptions.metadata,
-      ...this.getLsParams(parsedOptions),
+      ...this.getLsParamsWithDefaults(parsedOptions),
     };
+    const invocationParams = this?.invocationParams(parsedOptions);
+    const metadataInvocationParams =
+      parseMetadataInvocationParams(invocationParams);
     // create callback manager and start run
-    const callbackManager_ = await CallbackManager.configure(
+    const callbackManager_ = CallbackManager.configure(
       handledOptions.callbacks,
       this.callbacks,
       handledOptions.tags,
       this.tags,
       inheritableMetadata,
-      this.metadata,
+      {
+        ...metadataInvocationParams,
+        ...this.metadata,
+      },
       { verbose: this.verbose }
     );
     const extra = {
       options: parsedOptions,
-      invocation_params: this?.invocationParams(parsedOptions),
+      invocation_params: invocationParams,
       batch_size: 1,
     };
     const runManagers = await callbackManager_?.handleChatModelStart(
@@ -908,7 +942,7 @@ export abstract class BaseChatModel<
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
-      | ZodTypeV4<RunOutput>
+      | ZodV4Like<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
@@ -919,7 +953,7 @@ export abstract class BaseChatModel<
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
-      | ZodTypeV4<RunOutput>
+      | ZodV4Like<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
@@ -930,7 +964,7 @@ export abstract class BaseChatModel<
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
-      | ZodTypeV3<RunOutput>
+      | ZodV3Like<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
@@ -941,7 +975,7 @@ export abstract class BaseChatModel<
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
-      | ZodTypeV3<RunOutput>
+      | ZodV3Like<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
