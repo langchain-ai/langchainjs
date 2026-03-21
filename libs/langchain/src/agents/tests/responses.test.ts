@@ -687,42 +687,32 @@ describe("hasSupportForJsonSchemaOutput", () => {
     expect(hasSupportForJsonSchemaOutput(undefined)).toBe(false);
   });
 
-  it("should return true for models that support JSON schema output", () => {
+  it("should use model.profile.structuredOutput to determine support", () => {
     const model = new FakeToolCallingModel({});
     expect(hasSupportForJsonSchemaOutput(model)).toBe(false);
     const model2 = new FakeToolCallingChatModel({});
     expect(hasSupportForJsonSchemaOutput(model2)).toBe(true);
   });
 
-  it("should return true for OpenAI models that support JSON schema output", () => {
+  it("should return true for OpenAI models whose profile reports structuredOutput", () => {
     const model = new ChatOpenAI({
       model: "gpt-4o",
     });
     expect(hasSupportForJsonSchemaOutput(model)).toBe(true);
-    expect(hasSupportForJsonSchemaOutput("openai:gpt-4o")).toBe(true);
-    expect(hasSupportForJsonSchemaOutput("gpt-4o-mini")).toBe(true);
   });
 
-  it("should return false for OpenAI models that do not support JSON schema output", () => {
+  it("should return false for OpenAI models whose profile does not report structuredOutput", () => {
     const model = new ChatOpenAI({
       model: "gpt-3.5-turbo",
     });
     expect(hasSupportForJsonSchemaOutput(model)).toBe(false);
-    expect(hasSupportForJsonSchemaOutput("openai:gpt-3.5-turbo")).toBe(false);
-    expect(hasSupportForJsonSchemaOutput("gpt-3.5-turbo")).toBe(false);
   });
 
-  it("should return false for Anthropic models that don't support JSON schema output", () => {
+  it("should return false for Anthropic models whose profile does not report structuredOutput", () => {
     const model = new ChatAnthropic({
       model: "claude-sonnet-4-5-20250929",
       anthropicApiKey: "foobar",
     });
     expect(hasSupportForJsonSchemaOutput(model)).toBe(false);
-    expect(
-      hasSupportForJsonSchemaOutput("anthropic:claude-sonnet-4-5-20250929")
-    ).toBe(false);
-    expect(hasSupportForJsonSchemaOutput("claude-sonnet-4-5-20250929")).toBe(
-      false
-    );
   });
 });
