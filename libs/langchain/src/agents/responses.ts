@@ -19,7 +19,7 @@ import {
   StructuredOutputParsingError,
   MultipleStructuredOutputsError,
 } from "./errors.js";
-import { isConfigurableModel, isBaseChatModel } from "./model.js";
+import { isBaseChatModel } from "./model.js";
 
 /**
  * Special type to indicate that no response format is provided.
@@ -311,7 +311,7 @@ export function transformResponseFormat(
     | ToolStrategy<any>[]
     | ResponseFormatUndefined,
   options?: ToolStrategyOptions,
-  model?: LanguageModelLike | string
+  model?: LanguageModelLike
 ): ResponseFormat[] {
   if (!responseFormat) {
     return [];
@@ -675,76 +675,29 @@ export type JsonSchemaFormat = {
   __brand?: never;
 };
 
-const CHAT_MODELS_THAT_SUPPORT_JSON_SCHEMA_OUTPUT = ["ChatOpenAI", "ChatXAI"];
-const MODEL_NAMES_THAT_SUPPORT_JSON_SCHEMA_OUTPUT = [
-  "grok",
-  "gpt-5",
-  "gpt-4.1",
-  "gpt-4o",
-  "gpt-oss",
-  "o3-pro",
-  "o3-mini",
-];
-
 /**
- * Identifies the models that support JSON schema output
- * @param model - The model to check
+ * Identifies the models that support JSON schema output by reading
+ * the model's profile metadata.
+ *
+ * @param model - A resolved model instance to check. Callers should resolve
+ *   string model names and ConfigurableModel wrappers before calling this.
  * @returns True if the model supports JSON schema output, false otherwise
  */
 export function hasSupportForJsonSchemaOutput(
-  model?: LanguageModelLike | string
+  model?: LanguageModelLike
 ): boolean {
-  if (!model) {
-    return false;
-  }
-
-  if (typeof model === "string") {
-    const modelName = model.split(":").pop() as string;
-    return MODEL_NAMES_THAT_SUPPORT_JSON_SCHEMA_OUTPUT.some(
-      (modelNameSnippet) => modelName.includes(modelNameSnippet)
-    );
-  }
-
-  if (isConfigurableModel(model)) {
-    const configurableModel = model as unknown as {
-      _defaultConfig: { model: string };
-    };
-    return hasSupportForJsonSchemaOutput(
-      configurableModel._defaultConfig.model
-    );
-  }
-
-  if (!isBaseChatModel(model)) {
-    return false;
-  }
-
-  const chatModelClass = model.getName();
-
-  /**
-   * for testing purposes only
-   */
-  if (chatModelClass === "FakeToolCallingChatModel") {
-    return true;
-  }
-
   if (
-    CHAT_MODELS_THAT_SUPPORT_JSON_SCHEMA_OUTPUT.includes(chatModelClass) &&
-    /**
-     * OpenAI models
-     */ (("model" in model &&
-      MODEL_NAMES_THAT_SUPPORT_JSON_SCHEMA_OUTPUT.some(
-        (modelNameSnippet) =>
-          typeof model.model === "string" &&
-          model.model.includes(modelNameSnippet)
-      )) ||
-      /**
-       * for testing purposes only
-       */
-      (chatModelClass === "FakeToolCallingModel" &&
-        "structuredResponse" in model))
+    !model ||
+    !isBaseChatModel(model) ||
+    !("profile" in model) ||
+    typeof model.profile !== "object" ||
+    !model.profile
   ) {
-    return true;
+    return false;
   }
 
-  return false;
+  return (
+    "structuredOutput" in model.profile &&
+    model.profile.structuredOutput === true
+  );
 }
