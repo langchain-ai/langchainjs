@@ -16,7 +16,7 @@ class ChatGoogleGenerativeAIStandardUnitTests extends ChatModelUnitTests<
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
       constructorArgs: {
-        model: "gemini-2.0-flash",
+        model: "gemini-2.5-flash",
       },
     });
     // This must be set so method like `.bindTools` or `.withStructuredOutput`

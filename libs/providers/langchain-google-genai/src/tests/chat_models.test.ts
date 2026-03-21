@@ -12,7 +12,10 @@ import {
   type MessageContentComplex,
 } from "@langchain/core/messages";
 import { OutputParserException } from "@langchain/core/output_parsers";
-import { ChatGoogleGenerativeAI } from "../chat_models.js";
+import {
+  ChatGoogleGenerativeAI,
+  type GoogleGenerativeAIChatCallOptions,
+} from "../chat_models.js";
 import { removeAdditionalProperties } from "../utils/zod_to_genai_parameters.js";
 import {
   convertBaseMessagesToContent,
@@ -38,23 +41,23 @@ test("Google AI - `temperature` must be in range [0.0,2.0]", async () => {
     () =>
       new ChatGoogleGenerativeAI({
         temperature: -1.0,
-        model: "gemini-2.0-flash",
+        model: "gemini-2.5-flash",
       })
   ).toThrow();
   expect(
     () =>
       new ChatGoogleGenerativeAI({
         temperature: 2.1,
-        model: "gemini-2.0-flash",
+        model: "gemini-2.5-flash",
       })
   ).toThrow();
 });
 
 test("Google AI - supports string model shorthand constructor", async () => {
-  const model = new ChatGoogleGenerativeAI("models/gemini-2.0-flash", {
+  const model = new ChatGoogleGenerativeAI("models/gemini-2.5-flash", {
     temperature: 0.1,
   });
-  expect(model.model).toBe("gemini-2.0-flash");
+  expect(model.model).toBe("gemini-2.5-flash");
 });
 
 test("Google AI - `maxOutputTokens` must be positive", async () => {
@@ -62,7 +65,7 @@ test("Google AI - `maxOutputTokens` must be positive", async () => {
     () =>
       new ChatGoogleGenerativeAI({
         maxOutputTokens: -1,
-        model: "gemini-2.0-flash",
+        model: "gemini-2.5-flash",
       })
   ).toThrow();
 });
@@ -72,7 +75,7 @@ test("Google AI - `topP` must be positive", async () => {
     () =>
       new ChatGoogleGenerativeAI({
         topP: -1,
-        model: "gemini-2.0-flash",
+        model: "gemini-2.5-flash",
       })
   ).toThrow();
 });
@@ -82,7 +85,7 @@ test("Google AI - `topP` must be in the range [0,1]", async () => {
     () =>
       new ChatGoogleGenerativeAI({
         topP: 3,
-        model: "gemini-2.0-flash",
+        model: "gemini-2.5-flash",
       })
   ).toThrow();
 });
@@ -92,7 +95,7 @@ test("Google AI - `topK` must be positive", async () => {
     () =>
       new ChatGoogleGenerativeAI({
         topK: -1,
-        model: "gemini-2.0-flash",
+        model: "gemini-2.5-flash",
       })
   ).toThrow();
 });
@@ -101,7 +104,7 @@ test("Google AI - `safetySettings` category array must be unique", async () => {
   expect(
     () =>
       new ChatGoogleGenerativeAI({
-        model: "gemini-2.0-flash",
+        model: "gemini-2.5-flash",
         safetySettings: [
           {
             category: "HARM_CATEGORY_HARASSMENT" as HarmCategory,
@@ -1011,6 +1014,33 @@ test("convertBaseMessagesToContent should handle AIMessages with custom names", 
   expect(result).toHaveLength(2);
   expect(result[0].role).toBe("user");
   expect(result[1].role).toBe("model");
+});
+
+test("invocationParams produces toolConfig with mode NONE when tools is empty and tool_choice is 'none'", () => {
+  const model = new ChatGoogleGenerativeAI({
+    model: "gemini-2.5-flash",
+    apiKey: "test-key",
+  });
+  const params = model.invocationParams({
+    tools: [],
+    tool_choice: "none",
+  } as Partial<GoogleGenerativeAIChatCallOptions>);
+  expect(params).toEqual({
+    toolConfig: {
+      functionCallingConfig: { mode: "NONE" },
+    },
+  });
+});
+
+test("invocationParams produces empty params when tools is empty and no tool_choice", () => {
+  const model = new ChatGoogleGenerativeAI({
+    model: "gemini-2.5-flash",
+    apiKey: "test-key",
+  });
+  const params = model.invocationParams({
+    tools: [],
+  } as Partial<GoogleGenerativeAIChatCallOptions>);
+  expect(params).toEqual({});
 });
 
 describe("withStructuredOutput - StandardSchema", () => {

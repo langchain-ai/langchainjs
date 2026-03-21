@@ -11,6 +11,7 @@ import {
   RequestOptions,
   type CachedContent,
   Schema,
+  FunctionCallingMode,
 } from "@google/generative-ai";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
@@ -37,6 +38,7 @@ import {
   InteropZodType,
   isInteropZodSchema,
 } from "@langchain/core/utils/types";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
   schemaToGenerativeAIParameters,
   removeAdditionalProperties,
@@ -842,11 +844,15 @@ export class ChatGoogleGenerativeAI
         : undefined;
     }
 
+    const toolConfig =
+      toolsAndConfig?.toolConfig ??
+      (options?.tool_choice === "none"
+        ? { functionCallingConfig: { mode: FunctionCallingMode.NONE } }
+        : undefined);
+
     return {
       ...(toolsAndConfig?.tools ? { tools: toolsAndConfig.tools } : {}),
-      ...(toolsAndConfig?.toolConfig
-        ? { toolConfig: toolsAndConfig.toolConfig }
-        : {}),
+      ...(toolConfig ? { toolConfig } : {}),
     };
   }
 
@@ -909,6 +915,7 @@ export class ChatGoogleGenerativeAI
       res.response,
       {
         usageMetadata,
+        model: this.model,
       }
     );
     // may not have generations in output if there was a refusal for safety reasons, malformed function call, etc.
@@ -1002,6 +1009,7 @@ export class ChatGoogleGenerativeAI
       const chunk = convertResponseContentToChatGenerationChunk(response, {
         usageMetadata,
         index,
+        model: this.model,
       });
       index += 1;
       if (!chunk) {
@@ -1099,7 +1107,7 @@ export class ChatGoogleGenerativeAI
       > {
     const schema = outputSchema;
     const name = config?.name;
-    const method = config?.method;
+    const method = config?.method ?? "functionCalling";
     const includeRaw = config?.includeRaw;
 
     if (method === "jsonMode") {
@@ -1149,6 +1157,10 @@ export class ChatGoogleGenerativeAI
       ];
       llm = this.bindTools(tools).withConfig({
         allowedFunctionNames: [functionName],
+        ls_structured_output_format: {
+          kwargs: { method: "functionCalling" },
+          schema: toJsonSchema(schema),
+        },
       });
 
       outputParser = createFunctionCallingParser(
@@ -1160,6 +1172,10 @@ export class ChatGoogleGenerativeAI
       const jsonSchema = schemaToGenerativeAIParameters(schema);
       llm = this.withConfig({
         responseSchema: jsonSchema as Schema,
+        ls_structured_output_format: {
+          kwargs: { method: "jsonSchema" },
+          schema: toJsonSchema(schema),
+        },
       });
       outputParser = createContentParser(schema);
     }

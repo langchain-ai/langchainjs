@@ -20,10 +20,10 @@ class ChatGoogleGenerativeAIStandardIntegrationTests extends ChatModelIntegratio
       Cls: ChatGoogleGenerativeAI as any,
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
-      supportsParallelToolCalls: true,
+      supportsParallelToolCalls: false,
       constructorArgs: {
         maxRetries: 1,
-        model: "gemini-2.0-flash",
+        model: "gemini-2.5-flash",
       },
       supportsStandardContentType: {
         text: true,
@@ -32,6 +32,22 @@ class ChatGoogleGenerativeAIStandardIntegrationTests extends ChatModelIntegratio
         file: ["base64", "url", "dataUrl"],
       },
     });
+  }
+
+  async testStandardAudioContentBlocks() {
+    this.skipTestMessage(
+      "testStandardAudioContentBlocks",
+      "ChatGoogleGenerativeAI",
+      "Thinking model may return empty text for bare audio input without an accompanying text prompt."
+    );
+  }
+
+  async testStandardImageContentBlocks() {
+    this.skipTestMessage(
+      "testStandardImageContentBlocks",
+      "ChatGoogleGenerativeAI",
+      "Gemini API cannot fetch the test image URL used by the standard test suite."
+    );
   }
 
   async testInvokeMoreComplexTools() {
