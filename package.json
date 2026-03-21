@@ -30,6 +30,7 @@
     "test:exports:docker": "docker compose -f environment_tests/docker-compose.yml up --force-recreate",
     "test:standard:unit": "turbo test:standard:unit",
     "test:standard:int": "turbo test:standard:int",
+    "test:int": "turbo test:int",
     "test:standard": "pnpm test:standard:unit && pnpm test:standard:int",
     "changeset": "changeset",
     "changeset:version": "changeset version"

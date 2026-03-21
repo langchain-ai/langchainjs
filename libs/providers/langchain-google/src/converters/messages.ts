@@ -25,6 +25,10 @@ import type { Gemini } from "../chat_models/types.js";
 import { iife } from "../utils/misc.js";
 import { InvalidInputError, ToolCallNotFoundError } from "../utils/errors.js";
 
+/** Narrow accessor for the Google-specific `thoughtSignature` that lives on
+ *  tool-call objects at runtime but is not part of the core ToolCall type. */
+type WithThoughtSignature = { thoughtSignature?: string };
+
 /**
  * Standard content block converter for Google Gemini API.
  * Converts deprecated Data content blocks to Gemini Part format.
@@ -446,16 +450,97 @@ function convertStandardContentMessageToGeminiContent(
           name: toolCall.name,
           args: toolCall.args ?? {},
         },
+        thoughtSignature: (toolCall as WithThoughtSignature).thoughtSignature,
       } as Gemini.Part.FunctionCall);
     }
   }
 
   // Handle tool messages as function responses
   if (ToolMessage.isInstance(message) && message.tool_call_id) {
-    const responseContent =
-      typeof message.content === "string"
-        ? message.content
-        : JSON.stringify(message.content);
+    // When contentBlocks is empty but the message has legacy array content
+    // with media items (image_url, media, data blocks), extract them as
+    // sibling inlineData/fileData parts so the model can see the media.
+    if (contentBlocks.length === 0 && Array.isArray(message.content)) {
+      for (const item of message.content as Array<
+        MessageContentComplex | string
+      >) {
+        if (typeof item !== "object" || item === null) continue;
+        if ("image_url" in item) {
+          const url =
+            typeof item.image_url === "string"
+              ? item.image_url
+              : item.image_url?.url;
+          if (url) {
+            const dataUrl = parseBase64DataUrl({ dataUrl: url });
+            if (dataUrl?.data && dataUrl?.mime_type) {
+              parts.push({
+                inlineData: {
+                  data: dataUrl.data,
+                  mimeType: dataUrl.mime_type,
+                },
+              });
+            } else {
+              parts.push({
+                fileData: {
+                  mimeType: "image/png",
+                  fileUri: url,
+                },
+              });
+            }
+          }
+        } else if (isDataContentBlock(item)) {
+          parts.push(
+            convertToProviderContentBlock(item, geminiContentBlockConverter)
+          );
+        } else if (
+          typeof item === "object" &&
+          "type" in item &&
+          item.type === "media" &&
+          "mimeType" in item
+        ) {
+          if ("data" in item) {
+            parts.push({
+              inlineData: {
+                mimeType: (item as Record<string, string>).mimeType,
+                data: (item as Record<string, string>).data,
+              },
+            });
+          } else if ("fileUri" in item) {
+            parts.push({
+              fileData: {
+                mimeType: (item as Record<string, string>).mimeType,
+                fileUri: (item as Record<string, string>).fileUri,
+              },
+            });
+          }
+        }
+      }
+    }
+
+    let responseContent: string;
+    if (typeof message.content === "string") {
+      responseContent = message.content;
+    } else {
+      // Exclude media items — they are already converted to inlineData/fileData parts above
+      const textOnlyContent = (
+        message.content as Array<MessageContentComplex | string>
+      ).filter((item) => {
+        if (typeof item === "string") return true;
+        if (typeof item !== "object" || item === null) return true;
+        if (isDataContentBlock(item)) return false;
+        if ("image_url" in item) return false;
+        const type = (item as { type?: string }).type;
+        return (
+          type !== "media" &&
+          type !== "image" &&
+          type !== "audio" &&
+          type !== "video" &&
+          type !== "file"
+        );
+      });
+      responseContent =
+        textOnlyContent.length > 0 ? JSON.stringify(textOnlyContent) : "";
+    }
     // Find the matching tool call in a preceding AIMessage to get the function name
     const aiMsg = messages
       .filter(AIMessage.isInstance)
@@ -465,14 +550,23 @@ function convertStandardContentMessageToGeminiContent(
     const matchedToolCall = aiMsg?.tool_calls?.find(
       (tc) => tc.id === message.tool_call_id
     );
-    const isGeneratedId = message.tool_call_id.startsWith("lc-tool-call-");
     parts.push({
       functionResponse: {
-        ...(isGeneratedId ? {} : { id: message.tool_call_id }),
+        id: message.tool_call_id,
         name: matchedToolCall?.name ?? message.name ?? "unknown",
         response: { result: responseContent },
       },
+      thoughtSignature: (matchedToolCall as WithThoughtSignature | undefined)
+        ?.thoughtSignature,
     });
+
+    // For tool responses, keep only functionResponse and media parts.
+    // Text parts are redundant — their content is in functionResponse.response.result.
+    const keptParts = parts.filter(
+      (part) =>
+        "functionResponse" in part || "inlineData" in part || "fileData" in part
+    );
+    parts.splice(0, parts.length, ...keptParts);
   }
 
   // Only return content if we have parts
@@ -674,7 +768,7 @@ function convertLegacyContentMessageToGeminiContent(
     } else if (AIMessage.isInstance(message)) {
       return "model";
     } else if (ToolMessage.isInstance(message)) {
-      // Tool messages in Gemini were represented as function responses, but now are "user"
+      // Tool messages in Gemini are represented as `function` responses, but now are `user`
       return "user";
     } else if (ChatMessage.isInstance(message)) {
       // Map ChatMessage roles to Gemini roles
@@ -720,11 +814,18 @@ function convertLegacyContentMessageToGeminiContent(
             convertToProviderContentBlock(item, geminiContentBlockConverter)
           );
         } else if (item?.type === "functionCall") {
-          const { type, functionCall, ...etc } = item;
-          parts.push({
-            ...etc,
-            functionCall,
-          } as Gemini.Part.FunctionCall);
+          // Only emit functionCall from content when tool_calls is absent.
+          // When tool_calls exists, functionCall parts are added below from
+          // tool_calls (which carry the canonical thoughtSignature), so
+          // emitting them here too would produce duplicates that cause
+          // Vertex AI to reject the request with a count mismatch error.
+          if (!(AIMessage.isInstance(message) && message.tool_calls?.length)) {
+            const { type, functionCall, ...etc } = item;
+            parts.push({
+              ...etc,
+              functionCall,
+            } as Gemini.Part.FunctionCall);
+          }
         } else if (isMessageContentImageUrl(item)) {
           parts.push(messageContentImageUrl(item));
         } else if (isMessageContentMedia(item)) {
@@ -744,16 +845,32 @@ function convertLegacyContentMessageToGeminiContent(
           name: toolCall.name,
           args: toolCall.args ?? {},
         },
+        thoughtSignature: (toolCall as WithThoughtSignature).thoughtSignature,
       } as Gemini.Part.FunctionCall);
     }
   }
 
   // Handle tool messages as function responses
   if (ToolMessage.isInstance(message) && message.tool_call_id) {
-    const responseContent =
-      typeof message.content === "string"
-        ? message.content
-        : JSON.stringify(message.content);
+    let responseContent: string;
+    if (typeof message.content === "string") {
+      responseContent = message.content;
+    } else {
+      // Exclude media items — they will be kept as sibling inlineData/fileData parts
+      const textOnlyContent = (
+        message.content as Array<MessageContentComplex | string>
+      ).filter(
+        (item) =>
+          typeof item === "string" ||
+          (typeof item === "object" &&
+            item !== null &&
+            !isMessageContentImageUrl(item) &&
+            !isMessageContentMedia(item) &&
+            !isDataContentBlock(item))
+      );
+      responseContent =
+        textOnlyContent.length > 0 ? JSON.stringify(textOnlyContent) : "";
+    }
     // Find the matching tool call in a preceding AIMessage to get the function name
     const aiMsg = messages
       .filter(AIMessage.isInstance)
@@ -763,21 +880,27 @@ function convertLegacyContentMessageToGeminiContent(
     if (!aiMsg) {
       throw new ToolCallNotFoundError(message.tool_call_id);
     }
-    const isGeneratedId = message.tool_call_id.startsWith("lc-tool-call-");
     const matchedToolCall = aiMsg.tool_calls?.find(
       (tc) => tc.id === message.tool_call_id
     );
     parts.push({
       functionResponse: {
-        ...(isGeneratedId ? {} : { id: message.tool_call_id }),
+        id: message.tool_call_id,
         name: matchedToolCall?.name ?? message.name ?? "unknown",
         response: { result: responseContent },
       },
+      thoughtSignature: (matchedToolCall as WithThoughtSignature | undefined)
+        ?.thoughtSignature,
     });
+  }
 
-    // For tool messages, only keep functionResponse parts since the text content
-    // is already included in the functionResponse.response.result
-    parts = parts.filter((part) => "functionResponse" in part);
+  // For tool responses, keep only functionResponse and media parts.
+  // Text parts are redundant — their content is in functionResponse.response.result.
+  if (ToolMessage.isInstance(message) && message.tool_call_id) {
+    parts = parts.filter(
+      (part) =>
+        "functionResponse" in part || "inlineData" in part || "fileData" in part
+    );
   }
 
   // Only add content if we have parts
@@ -849,8 +972,8 @@ export const convertMessagesToGeminiContents: Converter<
     });
     if (content) {
       const prev = contents[contents.length - 1];
-      if (prev && prev.role === content.role) {
-        prev.parts.push(...content.parts);
+      if (prev && prev.parts && prev.role === content.role) {
+        prev.parts.push(...(content.parts ?? []));
       } else {
         contents.push(content);
       }
