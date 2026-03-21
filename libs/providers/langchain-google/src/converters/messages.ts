@@ -364,6 +364,9 @@ function convertStandardContentBlockToGeminiPart(
   switch (block.type) {
     case "text":
       return { text: block.text };
+    case "reasoning":
+      // Convert standard reasoning blocks back to Gemini's native format
+      return { text: (block as ContentBlock.Reasoning).reasoning, thought: true };
     case "image":
     case "audio":
     case "text-plain":
@@ -751,6 +754,15 @@ function convertLegacyContentMessageToGeminiContent(
           parts.push(
             convertToProviderContentBlock(item, geminiContentBlockConverter)
           );
+        } else if (
+          item?.type === "reasoning" &&
+          (item as ContentBlock.Reasoning)?.reasoning
+        ) {
+          // Convert standard reasoning blocks back to Gemini's native format
+          parts.push({
+            text: (item as ContentBlock.Reasoning).reasoning,
+            thought: true,
+          } as Gemini.Part);
         } else if (item?.type === "functionCall") {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { type, functionCall, ...etc } = item;
@@ -1052,7 +1064,15 @@ export const convertGeminiPartToContentBlock: Converter<
   ContentBlock
 > = (part: Gemini.Part): ContentBlock => {
   const block: ContentBlock = iife(() => {
-    if ("text" in part && typeof part.text === "string") {
+    // Gemini's native thinking parts have { text, thought: true }. Convert them
+    // to the standard LangChain { type: "reasoning", reasoning } content block,
+    // consistent with @langchain/openai (o1/o3) and @langchain/google-common.
+    if ("text" in part && typeof part.text === "string" && part.thought) {
+      return {
+        type: "reasoning",
+        reasoning: part.text,
+      };
+    } else if ("text" in part && typeof part.text === "string") {
       return {
         type: "text",
         text: part.text,
@@ -1091,7 +1111,11 @@ export const convertGeminiPartToContentBlock: Converter<
     return part as unknown as ContentBlock;
   });
   const ret: ContentBlock = {
-    thought: part.thought,
+    // Don't add thought flag for reasoning blocks — it's already represented
+    // by the standard type: "reasoning" block type.
+    ...(part.thought && block.type === "reasoning"
+      ? {}
+      : { thought: part.thought }),
     partMetadata: part.partMetadata,
     ...block,
   };
