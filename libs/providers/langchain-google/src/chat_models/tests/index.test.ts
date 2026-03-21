@@ -315,6 +315,21 @@ describe("Google Mock", () => {
     );
   });
 
+  test("passes abort signal to fetch in non-streaming invoke", async () => {
+    const apiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const llm = new ChatGoogle({
+      model: "gemini-2.5-flash",
+      apiClient,
+    });
+    const controller = new AbortController();
+    await llm.invoke("Hello", { signal: controller.signal });
+    expect(apiClient.request.signal.aborted).toBe(false);
+    controller.abort();
+    expect(apiClient.request.signal.aborted).toBe(true);
+  });
+
   test("surfaces JSON error bodies from GCP streaming responses labeled as text/event-stream", async () => {
     const apiClient = new MockErrorApiClient({
       status: 400,

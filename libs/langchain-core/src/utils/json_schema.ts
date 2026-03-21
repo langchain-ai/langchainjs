@@ -1,4 +1,4 @@
-import { toJSONSchema } from "zod/v4/core";
+import { toJSONSchema, type $ZodType } from "zod/v4/core";
 import { dereference, type Schema } from "@cfworker/json-schema";
 import {
   isZodSchemaV3,
@@ -6,7 +6,6 @@ import {
   InteropZodType,
   interopZodObjectStrict,
   isZodObjectV4,
-  ZodObjectV4,
   interopZodTransformInputSchema,
 } from "./types/zod.js";
 import {
@@ -40,17 +39,14 @@ export function toJsonSchema(
   if (isZodSchemaV4(schema)) {
     const inputSchema = interopZodTransformInputSchema(schema, true);
     if (isZodObjectV4(inputSchema)) {
-      const strictSchema = interopZodObjectStrict(
-        inputSchema,
-        true
-      ) as ZodObjectV4;
-      return toJSONSchema(strictSchema, params);
+      const strictSchema = interopZodObjectStrict(inputSchema, true);
+      return toJSONSchema(strictSchema as unknown as $ZodType, params);
     } else {
-      return toJSONSchema(schema, params);
+      return toJSONSchema(schema as unknown as $ZodType, params);
     }
   }
   if (isZodSchemaV3(schema)) {
-    return zodToJsonSchema(schema);
+    return zodToJsonSchema(schema as never);
   }
   return schema as JSONSchema;
 }
