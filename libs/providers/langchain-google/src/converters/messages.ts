@@ -736,18 +736,6 @@ function convertLegacyContentMessageToGeminiContent(
     }
   }
 
-  // Convert AIMessage tool_calls to functionCall parts
-  if (AIMessage.isInstance(message) && message.tool_calls?.length) {
-    for (const toolCall of message.tool_calls) {
-      parts.push({
-        functionCall: {
-          name: toolCall.name,
-          args: toolCall.args ?? {},
-        },
-      } as Gemini.Part.FunctionCall);
-    }
-  }
-
   // Handle tool messages as function responses
   if (ToolMessage.isInstance(message) && message.tool_call_id) {
     const responseContent =
