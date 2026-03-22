@@ -82,6 +82,7 @@ const MODEL_DEFAULT_MAX_OUTPUT_TOKENS: Partial<
 > = {
   // Claude 4.6 — 128K max output
   "claude-opus-4-6": 16384,
+  "claude-sonnet-4-6": 16384,
   // Claude 4.5 — 64K max output
   "claude-opus-4-5": 16384,
   "claude-sonnet-4-5": 16384,
@@ -101,7 +102,7 @@ const MODEL_DEFAULT_MAX_OUTPUT_TOKENS: Partial<
   "claude-3-sonnet": 4096,
   "claude-3-haiku": 4096,
 };
-const FALLBACK_MAX_OUTPUT_TOKENS = 2048;
+const FALLBACK_MAX_OUTPUT_TOKENS = 4096;
 
 function defaultMaxOutputTokensForModel(model?: Anthropic.Model): number {
   if (!model) {

@@ -441,16 +441,12 @@ function convertStandardContentMessageToGeminiContent(
   // Convert AIMessage tool_calls to functionCall parts
   if (AIMessage.isInstance(message) && message.tool_calls?.length) {
     for (const toolCall of message.tool_calls) {
-      const part: Gemini.Part.FunctionCall = {
+      parts.push({
         functionCall: {
           name: toolCall.name,
           args: toolCall.args ?? {},
         },
-      };
-      if (toolCall.thoughtSignature) {
-        part.thoughtSignature = toolCall.thoughtSignature;
-      }
-      parts.push(part);
+      } as Gemini.Part.FunctionCall);
     }
   }
 
@@ -724,8 +720,11 @@ function convertLegacyContentMessageToGeminiContent(
             convertToProviderContentBlock(item, geminiContentBlockConverter)
           );
         } else if (item?.type === "functionCall") {
-          // Skip functionCall blocks here — they are handled below
-          // via message.tool_calls to avoid duplication.
+          const { type, functionCall, ...etc } = item;
+          parts.push({
+            ...etc,
+            functionCall,
+          } as Gemini.Part.FunctionCall);
         } else if (isMessageContentImageUrl(item)) {
           parts.push(messageContentImageUrl(item));
         } else if (isMessageContentMedia(item)) {
@@ -734,22 +733,6 @@ function convertLegacyContentMessageToGeminiContent(
           parts.push(item as Gemini.Part);
         }
       }
-    }
-  }
-
-  // Convert AIMessage tool_calls to functionCall parts
-  if (AIMessage.isInstance(message) && message.tool_calls?.length) {
-    for (const toolCall of message.tool_calls) {
-      const part: Gemini.Part.FunctionCall = {
-        functionCall: {
-          name: toolCall.name,
-          args: toolCall.args ?? {},
-        },
-      };
-      if (toolCall.thoughtSignature) {
-        part.thoughtSignature = toolCall.thoughtSignature;
-      }
-      parts.push(part);
     }
   }
 

@@ -1,5 +1,25 @@
 # langchain
 
+## 1.2.36
+
+### Patch Changes
+
+- [#10489](https://github.com/langchain-ai/langchainjs/pull/10489) [`21094f3`](https://github.com/langchain-ai/langchainjs/commit/21094f31d99e30a9c8433072523cb08b8539c1ab) Thanks [@maahir30](https://github.com/maahir30)! - support structured output (providerStrategy) for Google Gemini models in createAgent
+
+- [#10433](https://github.com/langchain-ai/langchainjs/pull/10433) [`7af0b65`](https://github.com/langchain-ai/langchainjs/commit/7af0b65d5ab9a173b528d6a821d269a79fbabdc6) Thanks [@tanushree-sharma](https://github.com/tanushree-sharma)! - feat: Add LangSmith integration metadata to createAgent and initChatModel
+
+- Updated dependencies [[`5dc11b5`](https://github.com/langchain-ai/langchainjs/commit/5dc11b55cccfe35e4dad910a33e904cf49b3088a), [`7af0b65`](https://github.com/langchain-ai/langchainjs/commit/7af0b65d5ab9a173b528d6a821d269a79fbabdc6)]:
+  - @langchain/core@1.1.35
+
+## 1.2.35
+
+### Patch Changes
+
+- [#10466](https://github.com/langchain-ai/langchainjs/pull/10466) [`4b1a874`](https://github.com/langchain-ai/langchainjs/commit/4b1a874a93d8475a98421e157fe7a1e65ec94076) Thanks [@hntrl](https://github.com/hntrl)! - fix: renamed getSubgraphAsync -> getSubgraphsAsync
+
+- Updated dependencies [[`bfb7944`](https://github.com/langchain-ai/langchainjs/commit/bfb7944a105470eee98fe4a0eef91e586600e1de)]:
+  - @langchain/core@1.1.34
+
 ## 1.2.34
 
 ### Patch Changes

@@ -1,5 +1,21 @@
 # @langchain/core
 
+## 1.1.35
+
+### Patch Changes
+
+- [#10327](https://github.com/langchain-ai/langchainjs/pull/10327) [`5dc11b5`](https://github.com/langchain-ai/langchainjs/commit/5dc11b55cccfe35e4dad910a33e904cf49b3088a) Thanks [@hntrl](https://github.com/hntrl)! - fix(core): replace exported zod type references with structural duck-type interfaces to fix TypeScript OOM
+
+  Replaces all exported Zod type references (`z3.ZodType`, `z4.$ZodType`, etc.) in `@langchain/core`'s public API with minimal structural ("duck-type") interfaces. This prevents TypeScript from performing expensive deep structural comparisons (~3,400+ lines of mutually recursive generics) when downstream packages resolve a different Zod version than `@langchain/core`, which was causing OOM crashes and unresponsive language servers in monorepo setups.
+
+- [#10433](https://github.com/langchain-ai/langchainjs/pull/10433) [`7af0b65`](https://github.com/langchain-ai/langchainjs/commit/7af0b65d5ab9a173b528d6a821d269a79fbabdc6) Thanks [@tanushree-sharma](https://github.com/tanushree-sharma)! - feat: Add LangSmith integration metadata to createAgent and initChatModel
+
+## 1.1.34
+
+### Patch Changes
+
+- [#10312](https://github.com/langchain-ai/langchainjs/pull/10312) [`bfb7944`](https://github.com/langchain-ai/langchainjs/commit/bfb7944a105470eee98fe4a0eef91e586600e1de) Thanks [@jacoblee93](https://github.com/jacoblee93)! - feat(core): Add all invocation params as part of metadata
+
 ## 1.1.33
 
 ### Patch Changes
