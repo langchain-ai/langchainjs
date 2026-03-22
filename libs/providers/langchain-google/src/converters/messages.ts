@@ -438,7 +438,10 @@ function convertStandardContentMessageToGeminiContent(
     }
   });
 
-  // Convert AIMessage tool_calls to functionCall parts
+  // Convert AIMessage tool_calls to functionCall parts.
+  // Preserve thoughtSignature if present (round-tripped Gemini messages);
+  // otherwise use Google's documented dummy value to skip validation on Gemini 3.0+.
+  // See: https://ai.google.dev/gemini-api/docs/thought-signatures#function-calling
   if (AIMessage.isInstance(message) && message.tool_calls?.length) {
     for (const toolCall of message.tool_calls) {
       parts.push({
@@ -446,6 +449,8 @@ function convertStandardContentMessageToGeminiContent(
           name: toolCall.name,
           args: toolCall.args ?? {},
         },
+        thoughtSignature:
+          toolCall.thoughtSignature ?? "context_engineering_is_the_way_to_go",
       } as Gemini.Part.FunctionCall);
     }
   }
@@ -739,6 +744,9 @@ function convertLegacyContentMessageToGeminiContent(
   // Convert AIMessage tool_calls to functionCall parts, but only if the content
   // array didn't already produce them (avoids duplicates for round-tripped messages
   // while still handling manually constructed AIMessages with only tool_calls).
+  // Preserve thoughtSignature if present (round-tripped Gemini messages);
+  // otherwise use Google's documented dummy value to skip validation on Gemini 3.0+.
+  // See: https://ai.google.dev/gemini-api/docs/thought-signatures#function-calling
   if (AIMessage.isInstance(message) && message.tool_calls?.length) {
     const hasExistingFunctionCalls = parts.some((p) => "functionCall" in p);
     if (!hasExistingFunctionCalls) {
@@ -748,6 +756,8 @@ function convertLegacyContentMessageToGeminiContent(
             name: toolCall.name,
             args: toolCall.args ?? {},
           },
+          thoughtSignature:
+            toolCall.thoughtSignature ?? "context_engineering_is_the_way_to_go",
         } as Gemini.Part.FunctionCall);
       }
     }
