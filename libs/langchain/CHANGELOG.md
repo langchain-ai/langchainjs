@@ -1,5 +1,16 @@
 # langchain
 
+## 1.2.36
+
+### Patch Changes
+
+- [#10489](https://github.com/langchain-ai/langchainjs/pull/10489) [`21094f3`](https://github.com/langchain-ai/langchainjs/commit/21094f31d99e30a9c8433072523cb08b8539c1ab) Thanks [@maahir30](https://github.com/maahir30)! - support structured output (providerStrategy) for Google Gemini models in createAgent
+
+- [#10433](https://github.com/langchain-ai/langchainjs/pull/10433) [`7af0b65`](https://github.com/langchain-ai/langchainjs/commit/7af0b65d5ab9a173b528d6a821d269a79fbabdc6) Thanks [@tanushree-sharma](https://github.com/tanushree-sharma)! - feat: Add LangSmith integration metadata to createAgent and initChatModel
+
+- Updated dependencies [[`5dc11b5`](https://github.com/langchain-ai/langchainjs/commit/5dc11b55cccfe35e4dad910a33e904cf49b3088a), [`7af0b65`](https://github.com/langchain-ai/langchainjs/commit/7af0b65d5ab9a173b528d6a821d269a79fbabdc6)]:
+  - @langchain/core@1.1.35
+
 ## 1.2.35
 
 ### Patch Changes
