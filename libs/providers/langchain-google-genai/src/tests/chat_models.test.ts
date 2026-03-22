@@ -1162,3 +1162,30 @@ describe("withStructuredOutput - StandardSchema", () => {
     expect((result as any).parsed).toEqual({ name: "cobalt" });
   });
 });
+
+test("passes abort signal to completionWithRetry in non-streaming invoke", async () => {
+  const model = new ChatGoogleGenerativeAI({
+    model: "gemini-2.0-flash",
+    apiKey: "testing",
+  });
+
+  const controller = new AbortController();
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const spy = vi.spyOn(model as any, "completionWithRetry").mockResolvedValue({
+    response: {
+      candidates: [
+        { content: { parts: [{ text: "Hello" }], role: "model" } },
+      ],
+    },
+  });
+
+  await model.invoke("Hello", { signal: controller.signal });
+
+  expect(spy).toHaveBeenCalledWith(
+    expect.any(Object),
+    expect.objectContaining({ signal: controller.signal })
+  );
+
+  spy.mockRestore();
+});
