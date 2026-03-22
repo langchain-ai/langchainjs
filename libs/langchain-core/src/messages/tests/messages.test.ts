@@ -39,14 +39,17 @@ describe("isMessage", () => {
       const value = { type: "ai" };
       expect(isMessage(value)).toBe(false);
     });
-    it("returns false when 'content' is neither string nor array (e.g., object/function)", () => {
-      const cases = [
-        { type: "ai", content: {} },
-        { type: "ai", content: () => "hi" },
-      ];
-      for (const value of cases) {
-        expect(isMessage(value)).toBe(false);
-      }
+    it("returns true when 'content' is a plain object (e.g., tool output)", () => {
+      expect(isMessage({ type: "tool", content: {} })).toBe(true);
+      expect(
+        isMessage({
+          type: "tool",
+          content: { status: "ok", value: 42, items: ["foo", "bar"] },
+        })
+      ).toBe(true);
+    });
+    it("returns false when 'content' is a function", () => {
+      expect(isMessage({ type: "ai", content: () => "hi" })).toBe(false);
     });
     it("returns false for iterable but non-array 'content' (e.g., Set/generator)", () => {
       function* gen() {

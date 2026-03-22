@@ -854,6 +854,10 @@ export function isMessage(message: unknown): message is Message {
     message !== null &&
     "type" in message &&
     "content" in message &&
-    (typeof message.content === "string" || Array.isArray(message.content))
+    (typeof message.content === "string" ||
+      Array.isArray(message.content) ||
+      (typeof message.content === "object" &&
+        message.content !== null &&
+        message.content.constructor === Object))
   );
 }
