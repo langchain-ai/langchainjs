@@ -736,6 +736,23 @@ function convertLegacyContentMessageToGeminiContent(
     }
   }
 
+  // Convert AIMessage tool_calls to functionCall parts, but only if the content
+  // array didn't already produce them (avoids duplicates for round-tripped messages
+  // while still handling manually constructed AIMessages with only tool_calls).
+  if (AIMessage.isInstance(message) && message.tool_calls?.length) {
+    const hasExistingFunctionCalls = parts.some((p) => "functionCall" in p);
+    if (!hasExistingFunctionCalls) {
+      for (const toolCall of message.tool_calls) {
+        parts.push({
+          functionCall: {
+            name: toolCall.name,
+            args: toolCall.args ?? {},
+          },
+        } as Gemini.Part.FunctionCall);
+      }
+    }
+  }
+
   // Handle tool messages as function responses
   if (ToolMessage.isInstance(message) && message.tool_call_id) {
     const responseContent =
