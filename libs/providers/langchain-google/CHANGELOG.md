@@ -1,5 +1,15 @@
 # @langchain/google
 
+## 0.1.8
+
+### Patch Changes
+
+- [#10471](https://github.com/langchain-ai/langchainjs/pull/10471) [`8f15dd1`](https://github.com/langchain-ai/langchainjs/commit/8f15dd13256647f6c0f40abf6ee7ed949492bd4f) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(@langchain/google): pass abort signal to fetch in non-streaming invoke
+  - Added `signal: options.signal` to the `Request` constructor in `_generate`'s non-streaming branch, mirroring what `_streamResponseChunks` already does
+
+- [#10493](https://github.com/langchain-ai/langchainjs/pull/10493) [`63b7268`](https://github.com/langchain-ai/langchainjs/commit/63b72689a1f245037aaa7d910ea4b881ead84856) Thanks [@afirstenberg](https://github.com/afirstenberg)! - Undo regression introduced in [#10397](https://github.com/langchain-ai/langchainjs/issues/10397) in legacy content processing path.
+  Fixes issues with a false duplicate functionCall sent in response ([#10474](https://github.com/langchain-ai/langchainjs/issues/10474)).
+
 ## 0.1.7
 
 ### Patch Changes
