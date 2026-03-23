@@ -2085,3 +2085,126 @@ describe("tool_search support", () => {
     });
   });
 });
+
+describe("convertResponsesDeltaToChatGenerationChunk - json_schema with tool calls only (#10505)", () => {
+  it("should not throw when response.completed has json_schema format but empty text (function call only)", () => {
+    // When the model responds with only a function_call (e.g. tool_choice: required),
+    // msg.text is "" but event.response.text.format.type is still "json_schema".
+    // Previously JSON.parse("") threw SyntaxError.
+    const event = {
+      type: "response.completed",
+      response: {
+        id: "resp_test",
+        model: "gpt-4o",
+        object: "response",
+        created_at: 1700000000,
+        status: "completed",
+        incomplete_details: null,
+        metadata: {},
+        user: null,
+        service_tier: null,
+        output: [
+          {
+            type: "function_call",
+            id: "fc_001",
+            call_id: "call_abc",
+            name: "lookup",
+            arguments: '{"query":"What is LangChain?"}',
+          },
+        ],
+        text: {
+          format: {
+            type: "json_schema",
+            name: "response",
+            strict: true,
+            schema: {
+              type: "object",
+              additionalProperties: false,
+              required: ["answer"],
+              properties: { answer: { type: "string" } },
+            },
+          },
+        },
+        usage: {
+          input_tokens: 50,
+          output_tokens: 20,
+          total_tokens: 70,
+          input_tokens_details: { cached_tokens: 0 },
+          output_tokens_details: { reasoning_tokens: 0 },
+        },
+      },
+    };
+
+    const result = convertResponsesDeltaToChatGenerationChunk(event as any);
+    expect(result).not.toBeNull();
+
+    const message = result!.message as AIMessageChunk;
+    // No parsed content since the model only returned a tool call
+    expect(message.additional_kwargs.parsed).toBeUndefined();
+    // Usage metadata should still be populated
+    expect(result!.message.usage_metadata).toBeDefined();
+    expect(result!.message.usage_metadata!.input_tokens).toBe(50);
+  });
+
+  it("should parse text correctly when response.completed has json_schema format with actual text", () => {
+    // Normal case: json_schema format with actual text content
+    const event = {
+      type: "response.completed",
+      response: {
+        id: "resp_test2",
+        model: "gpt-4o",
+        object: "response",
+        created_at: 1700000000,
+        status: "completed",
+        incomplete_details: null,
+        metadata: {},
+        user: null,
+        service_tier: null,
+        output: [
+          {
+            type: "message",
+            id: "msg_001",
+            role: "assistant",
+            status: "completed",
+            content: [
+              {
+                type: "output_text",
+                text: '{"answer":"LangChain is a framework"}',
+                annotations: [],
+              },
+            ],
+          },
+        ],
+        text: {
+          format: {
+            type: "json_schema",
+            name: "response",
+            strict: true,
+            schema: {
+              type: "object",
+              additionalProperties: false,
+              required: ["answer"],
+              properties: { answer: { type: "string" } },
+            },
+          },
+        },
+        usage: {
+          input_tokens: 50,
+          output_tokens: 20,
+          total_tokens: 70,
+          input_tokens_details: { cached_tokens: 0 },
+          output_tokens_details: { reasoning_tokens: 0 },
+        },
+      },
+    };
+
+    const result = convertResponsesDeltaToChatGenerationChunk(event as any);
+    expect(result).not.toBeNull();
+
+    const message = result!.message as AIMessageChunk;
+    // Should parse the JSON text into additional_kwargs.parsed
+    expect(message.additional_kwargs.parsed).toEqual({
+      answer: "LangChain is a framework",
+    });
+  });
+});
