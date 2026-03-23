@@ -2085,3 +2085,212 @@ describe("tool_search support", () => {
     });
   });
 });
+
+describe("phase parameter support", () => {
+  describe("convertResponsesMessageToAIMessage", () => {
+    it("should preserve phase on text content blocks", () => {
+      const response = {
+        id: "resp_123",
+        model: "gpt-5.4",
+        created_at: 1234567890,
+        object: "response",
+        status: "completed",
+        output: [
+          {
+            type: "message",
+            id: "msg_123",
+            role: "assistant",
+            phase: "commentary",
+            content: [
+              {
+                type: "output_text",
+                text: "Let me check that for you.",
+                annotations: [],
+              },
+            ],
+          },
+        ],
+        usage: {
+          input_tokens: 10,
+          output_tokens: 20,
+          total_tokens: 30,
+        },
+      };
+
+      const result = convertResponsesMessageToAIMessage(response as any);
+      const contentArray = result.content as ContentBlock.Text[];
+      expect(contentArray).toHaveLength(1);
+      expect(contentArray[0]).toMatchObject({
+        type: "text",
+        text: "Let me check that for you.",
+        phase: "commentary",
+      });
+    });
+
+    it("should preserve final_answer phase", () => {
+      const response = {
+        id: "resp_456",
+        model: "gpt-5.4",
+        created_at: 1234567890,
+        object: "response",
+        status: "completed",
+        output: [
+          {
+            type: "message",
+            id: "msg_456",
+            role: "assistant",
+            phase: "final_answer",
+            content: [
+              {
+                type: "output_text",
+                text: "The weather is sunny.",
+                annotations: [],
+              },
+            ],
+          },
+        ],
+        usage: {
+          input_tokens: 10,
+          output_tokens: 20,
+          total_tokens: 30,
+        },
+      };
+
+      const result = convertResponsesMessageToAIMessage(response as any);
+      const contentArray = result.content as ContentBlock.Text[];
+      expect(contentArray[0]).toMatchObject({
+        type: "text",
+        text: "The weather is sunny.",
+        phase: "final_answer",
+      });
+    });
+
+    it("should not include phase when not present", () => {
+      const response = {
+        id: "resp_789",
+        model: "gpt-4o",
+        created_at: 1234567890,
+        object: "response",
+        status: "completed",
+        output: [
+          {
+            type: "message",
+            id: "msg_789",
+            role: "assistant",
+            content: [
+              {
+                type: "output_text",
+                text: "Hello!",
+                annotations: [],
+              },
+            ],
+          },
+        ],
+        usage: {
+          input_tokens: 10,
+          output_tokens: 20,
+          total_tokens: 30,
+        },
+      };
+
+      const result = convertResponsesMessageToAIMessage(response as any);
+      const contentArray = result.content as ContentBlock.Text[];
+      expect(contentArray[0].phase).toBeUndefined();
+    });
+  });
+
+  describe("convertResponsesDeltaToChatGenerationChunk", () => {
+    it("should include phase on response.output_item.added with message that has phase", () => {
+      const event = {
+        type: "response.output_item.added",
+        output_index: 0,
+        item: {
+          type: "message",
+          id: "msg_123",
+          role: "assistant",
+          phase: "commentary",
+          content: [],
+        },
+      };
+
+      const result = convertResponsesDeltaToChatGenerationChunk(event as any);
+      const aiMessageChunk = result?.message as AIMessageChunk;
+      const contentArray = aiMessageChunk.content as ContentBlock.Text[];
+      expect(contentArray).toHaveLength(1);
+      expect(contentArray[0]).toMatchObject({
+        type: "text",
+        text: "",
+        phase: "commentary",
+        index: 0,
+      });
+    });
+
+    it("should not include phase content block when message has no phase", () => {
+      const event = {
+        type: "response.output_item.added",
+        output_index: 0,
+        item: {
+          type: "message",
+          id: "msg_123",
+          role: "assistant",
+          content: [],
+        },
+      };
+
+      const result = convertResponsesDeltaToChatGenerationChunk(event as any);
+      const aiMessageChunk = result?.message as AIMessageChunk;
+      const contentArray = aiMessageChunk.content as ContentBlock[];
+      const phaseBlocks = contentArray.filter(
+        (block) => "phase" in block && block.phase != null
+      );
+      expect(phaseBlocks).toHaveLength(0);
+    });
+  });
+
+  describe("convertMessagesToResponsesInput round-trip", () => {
+    it("should round-trip phase on text content blocks", () => {
+      const aiMessage = new AIMessage({
+        id: "msg_123",
+        content: [
+          {
+            type: "text",
+            text: "Let me check that for you.",
+            phase: "commentary",
+          } as ContentBlock.Text,
+        ],
+      });
+
+      const result = convertMessagesToResponsesInput({
+        messages: [aiMessage],
+        zdrEnabled: false,
+        model: "gpt-5.4",
+      });
+
+      const messageItem = result.find((item) => item.type === "message") as any;
+      expect(messageItem).toBeDefined();
+      expect(messageItem.phase).toBe("commentary");
+    });
+
+    it("should not include phase on message item when content has no phase", () => {
+      const aiMessage = new AIMessage({
+        id: "msg_123",
+        content: [
+          {
+            type: "text",
+            text: "Hello!",
+          } as ContentBlock.Text,
+        ],
+      });
+
+      const result = convertMessagesToResponsesInput({
+        messages: [aiMessage],
+        zdrEnabled: false,
+        model: "gpt-4o",
+      });
+
+      const messageItem = result.find((item) => item.type === "message") as any;
+      expect(messageItem).toBeDefined();
+      expect(messageItem.phase).toBeUndefined();
+    });
+  });
+});

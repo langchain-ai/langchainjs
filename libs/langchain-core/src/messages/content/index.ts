@@ -83,6 +83,10 @@ export declare namespace ContentBlock {
      * Citations and other annotations.
      */
     annotations?: Array<Citation | BaseContentBlock>;
+    /**
+     * Phase of the response, e.g. "commentary" or "final_answer".
+     */
+    phase?: string;
   }
 
   /**

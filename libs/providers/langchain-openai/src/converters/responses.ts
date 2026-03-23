@@ -381,19 +381,27 @@ export const convertResponsesMessageToAIMessage: Converter<
   for (const item of response.output) {
     if (item.type === "message") {
       messageId = item.id;
+      const phase =
+        "phase" in item && typeof item.phase === "string"
+          ? item.phase
+          : undefined;
       content.push(
         ...item.content.flatMap((part) => {
           if (part.type === "output_text") {
             if ("parsed" in part && part.parsed != null) {
               additional_kwargs.parsed = part.parsed;
             }
-            return {
+            const textBlock: ContentBlock.Text = {
               type: "text",
               text: part.text,
               annotations: part.annotations.map(
                 convertOpenAIAnnotationToLangChain
               ),
-            } satisfies ContentBlock.Text;
+            };
+            if (phase != null) {
+              textBlock.phase = phase;
+            }
+            return textBlock;
           }
 
           if (part.type === "refusal") {
@@ -677,6 +685,18 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
     event.item.type === "message"
   ) {
     id = event.item.id;
+    const phase =
+      "phase" in event.item && typeof event.item.phase === "string"
+        ? event.item.phase
+        : undefined;
+    if (phase != null) {
+      content.push({
+        type: "text",
+        text: "",
+        phase,
+        index: event.output_index,
+      } satisfies ContentBlock.Text);
+    }
   } else if (
     event.type === "response.output_item.added" &&
     event.item.type === "function_call"
@@ -1452,12 +1472,25 @@ export const convertMessagesToResponsesInput: Converter<
         }
 
         if (typeof content === "string" || content.length > 0) {
+          let phase: string | undefined;
+          if (typeof content !== "string") {
+            for (const item of content) {
+              if (
+                item.type === "text" &&
+                "phase" in item &&
+                typeof item.phase === "string"
+              ) {
+                phase = item.phase;
+              }
+            }
+          }
           input.push({
             type: "message",
             role: "assistant",
             ...(lcMsg.id && !zdrEnabled && lcMsg.id.startsWith("msg_")
               ? { id: lcMsg.id }
               : {}),
+            ...(phase != null ? { phase } : {}),
             content: iife(() => {
               if (typeof content === "string") {
                 return content;
@@ -1481,7 +1514,7 @@ export const convertMessagesToResponsesInput: Converter<
                 return [];
               });
             }) as ResponseInputMessageContentList,
-          });
+          } as ResponsesInputItem);
         }
 
         const functionCallIds = additional_kwargs?.[_FUNCTION_CALL_IDS_MAP_KEY];
