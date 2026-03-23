@@ -1,5 +1,45 @@
 # @langchain/google
 
+## 0.1.8
+
+### Patch Changes
+
+- [#10471](https://github.com/langchain-ai/langchainjs/pull/10471) [`8f15dd1`](https://github.com/langchain-ai/langchainjs/commit/8f15dd13256647f6c0f40abf6ee7ed949492bd4f) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(@langchain/google): pass abort signal to fetch in non-streaming invoke
+  - Added `signal: options.signal` to the `Request` constructor in `_generate`'s non-streaming branch, mirroring what `_streamResponseChunks` already does
+
+- [#10493](https://github.com/langchain-ai/langchainjs/pull/10493) [`63b7268`](https://github.com/langchain-ai/langchainjs/commit/63b72689a1f245037aaa7d910ea4b881ead84856) Thanks [@afirstenberg](https://github.com/afirstenberg)! - Undo regression introduced in [#10397](https://github.com/langchain-ai/langchainjs/issues/10397) in legacy content processing path.
+  Fixes issues with a false duplicate functionCall sent in response ([#10474](https://github.com/langchain-ai/langchainjs/issues/10474)).
+
+## 0.1.7
+
+### Patch Changes
+
+- [#10343](https://github.com/langchain-ai/langchainjs/pull/10343) [`a1062b7`](https://github.com/langchain-ai/langchainjs/commit/a1062b74ceb3bfde08765237db92b28eddf3e22e) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix: merge consecutive same-role Gemini content blocks
+
+- [#10313](https://github.com/langchain-ai/langchainjs/pull/10313) [`bc4cd65`](https://github.com/langchain-ai/langchainjs/commit/bc4cd6549b043a811021ae3641f9344ff6537a38) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(langchain-google): parse JSON error bodies from non-JSON content types
+
+- [#10397](https://github.com/langchain-ai/langchainjs/pull/10397) [`955ef6b`](https://github.com/langchain-ai/langchainjs/commit/955ef6b81da7a155bb829ed67ea20f0ad4c3f901) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(google): fix v1 converter dropping tool_calls, text-plain and file blocks
+
+- [#10402](https://github.com/langchain-ai/langchainjs/pull/10402) [`9099f53`](https://github.com/langchain-ai/langchainjs/commit/9099f5362ce1d424b0d820b69ed1ca8fec6be9d3) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(google): use dynamic ls_provider based on platform instead of hardcoded "google"
+
+- [#10415](https://github.com/langchain-ai/langchainjs/pull/10415) [`d7d0bc7`](https://github.com/langchain-ai/langchainjs/commit/d7d0bc70cdb2ea92b365807600fa85ec107ffd0e) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(genai): round-trip thinking content blocks in multi-turn convos
+
+- [#10407](https://github.com/langchain-ai/langchainjs/pull/10407) [`c2960fe`](https://github.com/langchain-ai/langchainjs/commit/c2960fe97a299ed1b748eeab53806badbfd35704) Thanks [@fahe1em1](https://github.com/fahe1em1)! - lazy-load jose in CJS auth helpers
+
+- [#10292](https://github.com/langchain-ai/langchainjs/pull/10292) [`e4193f8`](https://github.com/langchain-ai/langchainjs/commit/e4193f8934b5fdb5f553a7068aca2e945d0e3763) Thanks [@afirstenberg](https://github.com/afirstenberg)! - fixes for Vertex function calls
+
+- [#10400](https://github.com/langchain-ai/langchainjs/pull/10400) [`a870750`](https://github.com/langchain-ai/langchainjs/commit/a870750d6edc002b7987f867fd1aae3b1eabe089) Thanks [@afirstenberg](https://github.com/afirstenberg)! - support role name for function response in Vertex
+
+## 0.1.6
+
+### Patch Changes
+
+- [#10300](https://github.com/langchain-ai/langchainjs/pull/10300) [`a26dc7d`](https://github.com/langchain-ai/langchainjs/commit/a26dc7d2a5b8dae811852e80f5478301b9c4bc93) Thanks [@MaxwellCalkin](https://github.com/MaxwellCalkin)! - resolve functionResponse.name from tool_calls in legacy converter
+
+- [#10314](https://github.com/langchain-ai/langchainjs/pull/10314) [`418a3fc`](https://github.com/langchain-ai/langchainjs/commit/418a3fc1ff2bd4dc73ba52414ff8ec6710bd5572) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - add getLsParams for LangSmith tracing metadata
+
+- [#10267](https://github.com/langchain-ai/langchainjs/pull/10267) [`b68f083`](https://github.com/langchain-ai/langchainjs/commit/b68f083dfeb433aa535c50223935a4059a25be8e) Thanks [@afirstenberg](https://github.com/afirstenberg)! - feat(@langchain/google) Test Gemini 3.1 Flash-Lite
+
 ## 0.1.5
 
 ### Patch Changes

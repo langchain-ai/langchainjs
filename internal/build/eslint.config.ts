@@ -5,7 +5,7 @@ const config: ConfigArray = [
   {
     rules: {
       "no-process-env": "off",
-      "import/extensions": "off",
+      "import-x/extensions": "off",
     },
   },
 ];

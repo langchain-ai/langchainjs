@@ -1,5 +1,6 @@
 import {
   afterEach,
+  assertType,
   beforeEach,
   describe,
   expect,
@@ -8,12 +9,17 @@ import {
   vi,
 } from "vitest";
 import * as fs from "node:fs";
+import { z } from "zod/v3";
 import { ApiClient } from "../../clients/index.js";
 import { GoogleRequestRecorder } from "../../utils/handler.js";
+import { RequestError } from "../../utils/errors.js";
 import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import { ChatGoogle, ChatGoogleParams } from "../index.js";
+import { ChatGoogle as ChatGoogleNode } from "../node.js";
 import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
 import { OutputParserException } from "@langchain/core/output_parsers";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import type { Runnable } from "@langchain/core/runnables";
 import type { Gemini } from "../types.js";
 
 interface MockResponseParameters {
@@ -129,7 +135,7 @@ class MockChunkStreamingResponse implements Response {
   readonly type: ResponseType = "basic";
   readonly url: string = "http://localhost";
   readonly bodyUsed: boolean = false;
-  readonly body: ReadableStream<Uint8Array>;
+  readonly body: ReadableStream<Uint8Array<ArrayBuffer>>;
 
   constructor(chunks: object[]) {
     const encoder = new TextEncoder();
@@ -159,7 +165,7 @@ class MockChunkStreamingResponse implements Response {
   async text(): Promise<string> {
     throw new Error("Not implemented");
   }
-  async bytes(): Promise<Uint8Array> {
+  async bytes(): Promise<Uint8Array<ArrayBuffer>> {
     throw new Error("Not implemented");
   }
   clone(): Response {
@@ -182,6 +188,37 @@ class MockStreamingApiClient extends ApiClient {
   async fetch(request: Request): Promise<Response> {
     this.request = request;
     this.response = new MockChunkStreamingResponse(this.chunks);
+    return this.response;
+  }
+
+  hasApiKey(): boolean {
+    return false;
+  }
+}
+
+interface MockErrorApiClientOptions {
+  bodyText: string;
+  status: number;
+  statusText?: string;
+  headers?: HeadersInit;
+}
+
+class MockErrorApiClient extends ApiClient {
+  request: Request;
+
+  response: Response;
+
+  constructor(private options: MockErrorApiClientOptions) {
+    super();
+  }
+
+  async fetch(request: Request): Promise<Response> {
+    this.request = request;
+    this.response = new Response(this.options.bodyText, {
+      status: this.options.status,
+      statusText: this.options.statusText,
+      headers: this.options.headers,
+    });
     return this.response;
   }
 
@@ -276,6 +313,123 @@ describe("Google Mock", () => {
     expect(recorder?.request?.body?.generationConfig?.candidateCount).toEqual(
       1
     );
+  });
+
+  test("passes abort signal to fetch in non-streaming invoke", async () => {
+    const apiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const llm = new ChatGoogle({
+      model: "gemini-2.5-flash",
+      apiClient,
+    });
+    const controller = new AbortController();
+    await llm.invoke("Hello", { signal: controller.signal });
+    expect(apiClient.request.signal.aborted).toBe(false);
+    controller.abort();
+    expect(apiClient.request.signal.aborted).toBe(true);
+  });
+
+  test("surfaces JSON error bodies from GCP streaming responses labeled as text/event-stream", async () => {
+    const apiClient = new MockErrorApiClient({
+      status: 400,
+      statusText: "Bad Request",
+      headers: {
+        "content-type": "text/event-stream",
+      },
+      bodyText: JSON.stringify({
+        error: {
+          message:
+            "Invalid JSON payload received. Unknown name \"const\" at 'tools[0]'",
+        },
+      }),
+    });
+
+    const llm = new ChatGoogle({
+      model: "gemini-2.5-flash",
+      platformType: "gcp",
+      streaming: true,
+      apiClient,
+    });
+
+    let caughtError: unknown;
+    try {
+      await llm.invoke("What is 1+1?");
+    } catch (error) {
+      caughtError = error;
+    }
+
+    expect(apiClient.request.url).toContain("streamGenerateContent?alt=sse");
+    expect(apiClient.request.url).toContain("aiplatform.googleapis.com");
+    expect(caughtError).toBeInstanceOf(RequestError);
+    expect((caughtError as RequestError).message).toContain(
+      'Unknown name "const"'
+    );
+    expect((caughtError as RequestError).message).not.toContain(
+      "Request failed with status code 400"
+    );
+  });
+
+  test("getLsParams normalizes provider and includes model metadata for web and node", () => {
+    const webApiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const webModel = new ChatGoogle({
+      model: "gemini-2.5-flash",
+      apiClient: webApiClient,
+      temperature: 0.25,
+      maxOutputTokens: 256,
+      platformType: "gai",
+    });
+
+    expect(webModel.getLsParams({ stop: ["END"] })).toEqual({
+      ls_provider: "google_genai",
+      ls_model_name: "gemini-2.5-flash",
+      ls_model_type: "chat",
+      ls_temperature: 0.25,
+      ls_max_tokens: 256,
+      ls_stop: ["END"],
+    });
+
+    const nodeApiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const nodeModel = new ChatGoogleNode({
+      model: "gemini-2.5-pro",
+      apiClient: nodeApiClient,
+      temperature: 0.5,
+      maxOutputTokens: 512,
+      platformType: "gai",
+    });
+
+    expect(nodeModel.getLsParams({ stop: ["STOP"] })).toEqual({
+      ls_provider: "google_genai",
+      ls_model_name: "gemini-2.5-pro",
+      ls_model_type: "chat",
+      ls_temperature: 0.5,
+      ls_max_tokens: 512,
+      ls_stop: ["STOP"],
+    });
+
+    const vertexApiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const vertexModel = new ChatGoogleNode({
+      model: "gemini-2.5-flash",
+      apiClient: vertexApiClient,
+      temperature: 0.3,
+      maxOutputTokens: 1024,
+      vertexai: true,
+    });
+
+    expect(vertexModel.getLsParams({ stop: ["DONE"] })).toEqual({
+      ls_provider: "google_vertexai",
+      ls_model_name: "gemini-2.5-flash",
+      ls_model_type: "chat",
+      ls_temperature: 0.3,
+      ls_max_tokens: 1024,
+      ls_stop: ["DONE"],
+    });
   });
 
   type TestReasoning = {
@@ -844,11 +998,11 @@ describe("Google Mock", () => {
         {
           handleLLMNewToken(
             token: string,
-            _idx: unknown,
-            _runId: unknown,
-            _parentRunId: unknown,
-            _tags: unknown,
-            fields: { chunk?: unknown }
+            _idx,
+            _runId,
+            _parentRunId,
+            _tags,
+            fields
           ) {
             newTokenCalls.push({ text: token, chunk: fields?.chunk });
           },
@@ -961,11 +1115,11 @@ describe("Google Mock", () => {
         {
           handleLLMNewToken(
             token: string,
-            _idx: unknown,
-            _runId: unknown,
-            _parentRunId: unknown,
-            _tags: unknown,
-            fields: { chunk?: unknown }
+            _idx,
+            _runId,
+            _parentRunId,
+            _tags,
+            fields
           ) {
             newTokenCalls.push({ text: token, chunk: fields?.chunk });
           },
@@ -1197,5 +1351,51 @@ describe("withStructuredOutput with SerializableSchema", () => {
     await expect(async () => {
       await structured.invoke("What is your name?");
     }).rejects.toThrow(OutputParserException);
+  });
+});
+
+describe("withStructuredOutput type narrowing", () => {
+  const model = new ChatGoogle({
+    model: "gemini-2.5-flash",
+    apiKey: "test",
+  });
+
+  const schema = z.object({
+    name: z.string(),
+    age: z.number(),
+  });
+
+  test("is pipeable with ChatPromptTemplate when includeRaw is false", () => {
+    const prompt = ChatPromptTemplate.fromMessages([
+      ["system", "Extract info."],
+      ["human", "{input}"],
+    ]);
+    const structuredModel = model.withStructuredOutput(schema, {
+      includeRaw: false,
+    });
+    const chain = prompt.pipe(structuredModel);
+    assertType<Runnable>(chain);
+  });
+
+  test("is pipeable with ChatPromptTemplate when config is omitted", () => {
+    const prompt = ChatPromptTemplate.fromMessages([
+      ["system", "Extract info."],
+      ["human", "{input}"],
+    ]);
+    const structuredModel = model.withStructuredOutput(schema);
+    const chain = prompt.pipe(structuredModel);
+    assertType<Runnable>(chain);
+  });
+
+  test("returns non-union type when includeRaw is false", () => {
+    const result = model.withStructuredOutput(schema, { includeRaw: false });
+    const _check: typeof result extends Runnable ? true : never = true;
+    assertType<true>(_check);
+  });
+
+  test("returns non-union type when config is omitted", () => {
+    const result = model.withStructuredOutput(schema);
+    const _check: typeof result extends Runnable ? true : never = true;
+    assertType<true>(_check);
   });
 });

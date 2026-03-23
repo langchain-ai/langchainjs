@@ -82,6 +82,7 @@ const MODEL_DEFAULT_MAX_OUTPUT_TOKENS: Partial<
 > = {
   // Claude 4.6 — 128K max output
   "claude-opus-4-6": 16384,
+  "claude-sonnet-4-6": 16384,
   // Claude 4.5 — 64K max output
   "claude-opus-4-5": 16384,
   "claude-sonnet-4-5": 16384,
@@ -101,7 +102,7 @@ const MODEL_DEFAULT_MAX_OUTPUT_TOKENS: Partial<
   "claude-3-sonnet": 4096,
   "claude-3-haiku": 4096,
 };
-const FALLBACK_MAX_OUTPUT_TOKENS = 2048;
+const FALLBACK_MAX_OUTPUT_TOKENS = 4096;
 
 function defaultMaxOutputTokensForModel(model?: Anthropic.Model): number {
   if (!model) {
@@ -1215,8 +1216,11 @@ export class ChatAnthropicMessages<
     };
 
     if (this.thinking.type === "enabled" || this.thinking.type === "adaptive") {
-      if (this.topP !== undefined && this.topK !== -1) {
+      if (this.topK !== undefined) {
         throw new Error("topK is not supported when thinking is enabled");
+      }
+      if (this.topP !== undefined) {
+        throw new Error("topP is not supported when thinking is enabled");
       }
       if (this.temperature !== undefined && this.temperature !== 1) {
         throw new Error(
@@ -1225,8 +1229,12 @@ export class ChatAnthropicMessages<
       }
     } else {
       // Only set temperature, top_k, and top_p if thinking is disabled
-      output.temperature = this.temperature;
-      output.top_k = this.topK;
+      if (this.temperature !== undefined) {
+        output.temperature = this.temperature;
+      }
+      if (this.topK !== undefined) {
+        output.top_k = this.topK;
+      }
       if (this.topP !== undefined) {
         output.top_p = this.topP;
       }

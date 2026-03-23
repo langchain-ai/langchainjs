@@ -1,5 +1,75 @@
 # langchain
 
+## 1.2.36
+
+### Patch Changes
+
+- [#10489](https://github.com/langchain-ai/langchainjs/pull/10489) [`21094f3`](https://github.com/langchain-ai/langchainjs/commit/21094f31d99e30a9c8433072523cb08b8539c1ab) Thanks [@maahir30](https://github.com/maahir30)! - support structured output (providerStrategy) for Google Gemini models in createAgent
+
+- [#10433](https://github.com/langchain-ai/langchainjs/pull/10433) [`7af0b65`](https://github.com/langchain-ai/langchainjs/commit/7af0b65d5ab9a173b528d6a821d269a79fbabdc6) Thanks [@tanushree-sharma](https://github.com/tanushree-sharma)! - feat: Add LangSmith integration metadata to createAgent and initChatModel
+
+- Updated dependencies [[`5dc11b5`](https://github.com/langchain-ai/langchainjs/commit/5dc11b55cccfe35e4dad910a33e904cf49b3088a), [`7af0b65`](https://github.com/langchain-ai/langchainjs/commit/7af0b65d5ab9a173b528d6a821d269a79fbabdc6)]:
+  - @langchain/core@1.1.35
+
+## 1.2.35
+
+### Patch Changes
+
+- [#10466](https://github.com/langchain-ai/langchainjs/pull/10466) [`4b1a874`](https://github.com/langchain-ai/langchainjs/commit/4b1a874a93d8475a98421e157fe7a1e65ec94076) Thanks [@hntrl](https://github.com/hntrl)! - fix: renamed getSubgraphAsync -> getSubgraphsAsync
+
+- Updated dependencies [[`bfb7944`](https://github.com/langchain-ai/langchainjs/commit/bfb7944a105470eee98fe4a0eef91e586600e1de)]:
+  - @langchain/core@1.1.34
+
+## 1.2.34
+
+### Patch Changes
+
+- [#10443](https://github.com/langchain-ai/langchainjs/pull/10443) [`ff6822e`](https://github.com/langchain-ai/langchainjs/commit/ff6822e43c38c4328d3f2c0ef1cf67998741339a) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): respect version:"v1" in afterModel router's pending tool call path
+
+- [#10446](https://github.com/langchain-ai/langchainjs/pull/10446) [`888224c`](https://github.com/langchain-ai/langchainjs/commit/888224c64e4c95935836a5089f8b28a8c90da5e6) Thanks [@hntrl](https://github.com/hntrl)! - fix(agents): propagate store and configurable to ToolNode middleware runtime
+
+- [#10444](https://github.com/langchain-ai/langchainjs/pull/10444) [`82d56cb`](https://github.com/langchain-ai/langchainjs/commit/82d56cbdfb59b48b3f8d98a294e4d4720e12c733) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain/agents): dispatch tool calls via Send in afterModel router for version:"v2"
+
+  **Breaking change for `version: "v2"` + `afterModel` middleware users.**
+
+  Previously, when `afterModel` middleware was present, `createAgent` always routed all tool calls from an `AIMessage` to a single `ToolNode` invocation — regardless of the `version` option. This meant `version: "v2"` silently behaved like `version: "v1"` (parallel via `Promise.all` in one node) whenever `afterModel` middleware was used.
+
+  `#createAfterModelRouter` now correctly respects `#toolBehaviorVersion`:
+  - `version: "v1"` — routes the full `AIMessage` to a single `ToolNode` invocation; all tool calls run concurrently via `Promise.all` (unchanged behaviour).
+  - `version: "v2"` — dispatches each tool call as a separate `Send` task, matching the behaviour of `#createModelRouter` when no `afterModel` middleware is present, and matching Python LangGraph's `post_model_hook_router`.
+
+  **Migration:** If you use `version: "v2"` (the default) together with `afterModel` middleware and rely on the previous single-node parallel execution, switch to `version: "v1"` to preserve that behaviour. See the `version` JSDoc on `CreateAgentParams` for guidance on which option to choose.
+
+## 1.2.33
+
+### Patch Changes
+
+- [#9862](https://github.com/langchain-ai/langchainjs/pull/9862) [`5b250b1`](https://github.com/langchain-ai/langchainjs/commit/5b250b1a273df0ab4126b22d140dc2420130421f) Thanks [@stellarrover](https://github.com/stellarrover)! - fix(langchain/agents): Fix ReactAgent routing with returnDirect + beforeModel middleware
+
+  This fixes a routing error when an agent has both tools with returnDirect: true and middleware with beforeModel hooks (e.g., summarizationMiddleware). Before this fix, non-returnDirect tools would fail with "Branch condition returned unknown or null destination".
+
+- Updated dependencies [[`6db417b`](https://github.com/langchain-ai/langchainjs/commit/6db417b03ecb5e2ace413389d982294e0ac88433), [`d69dfcc`](https://github.com/langchain-ai/langchainjs/commit/d69dfcca97503cf1c0b7e70ccf5fb7d507c60982)]:
+  - @langchain/core@1.1.33
+
+## 1.2.32
+
+### Patch Changes
+
+- [#10405](https://github.com/langchain-ai/langchainjs/pull/10405) [`afbf5f1`](https://github.com/langchain-ai/langchainjs/commit/afbf5f1b1a9c6014f994829ab92bbfcaecb8a30b) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): add browser export
+
+## 1.2.31
+
+### Patch Changes
+
+- [#10265](https://github.com/langchain-ai/langchainjs/pull/10265) [`2647b48`](https://github.com/langchain-ai/langchainjs/commit/2647b4841bc4ae28dc6c8b245532df8620611a74) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): export todo schema
+
+- [#10167](https://github.com/langchain-ai/langchainjs/pull/10167) [`ca826f6`](https://github.com/langchain-ai/langchainjs/commit/ca826f6fecae6087bf0dee7781ee80b587396ec1) Thanks [@colifran](https://github.com/colifran)! - feat: implement type inference for tool streams
+
+- [#10290](https://github.com/langchain-ai/langchainjs/pull/10290) [`a596d3f`](https://github.com/langchain-ai/langchainjs/commit/a596d3f7395c0ab27357aa0cd30bafb2d5d967c1) Thanks [@colifran](https://github.com/colifran)! - fix(langchain): serializable schemas aren't exposed on create agent response format
+
+- Updated dependencies [[`26488b5`](https://github.com/langchain-ai/langchainjs/commit/26488b596f01b7b7fe2f1d97d07164e52365ade5), [`ca826f6`](https://github.com/langchain-ai/langchainjs/commit/ca826f6fecae6087bf0dee7781ee80b587396ec1), [`a602c42`](https://github.com/langchain-ai/langchainjs/commit/a602c42db75d7e7e01cab38b12e0b65b9c0cce95), [`db7d017`](https://github.com/langchain-ai/langchainjs/commit/db7d017f7ce13cb937147aabcbfa3847d80bde9d)]:
+  - @langchain/core@1.1.32
+
 ## 1.2.30
 
 ### Patch Changes

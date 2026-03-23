@@ -1,5 +1,21 @@
 # @langchain/xai
 
+## 1.3.10
+
+### Patch Changes
+
+- Updated dependencies [[`af9bbd3`](https://github.com/langchain-ai/langchainjs/commit/af9bbd3f48d96de8963f492ebbf75ca0762f7e57)]:
+  - @langchain/openai@1.3.0
+
+## 1.3.9
+
+### Patch Changes
+
+- [#10293](https://github.com/langchain-ai/langchainjs/pull/10293) [`14d7863`](https://github.com/langchain-ai/langchainjs/commit/14d786373958d403074fcec60d2e40a4b38b4807) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(xai): enable structured output defaults and replace deprecated test model
+
+- Updated dependencies [[`aacbe87`](https://github.com/langchain-ai/langchainjs/commit/aacbe872014a6e089c188336520d91dcac2f0287)]:
+  - @langchain/openai@1.2.13
+
 ## 1.3.8
 
 ### Patch Changes

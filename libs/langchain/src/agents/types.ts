@@ -28,7 +28,7 @@ import type {
   DynamicStructuredTool,
   StructuredToolInterface,
 } from "@langchain/core/tools";
-
+import type { SerializableSchema } from "@langchain/core/utils/standard_schema";
 import type {
   ResponseFormat,
   ToolStrategy,
@@ -496,6 +496,8 @@ export type CreateAgentParams<
   ResponseFormatType =
     | InteropZodType<StructuredResponseType>
     | InteropZodType<unknown>[]
+    | SerializableSchema<StructuredResponseType>
+    | SerializableSchema[]
     | JsonSchemaFormat
     | JsonSchemaFormat[]
     | ResponseFormat
@@ -803,10 +805,18 @@ export type CreateAgentParams<
    * Determines the version of the graph to create.
    *
    * Can be one of
-   * - `"v1"`: The tool node processes a single message. All tool calls in the message are
-   *           executed in parallel within the tool node.
-   * - `"v2"`: The tool node processes a single tool call. Tool calls are distributed across
-   *           multiple instances of the tool node using the Send API.
+   * - `"v1"`: The tool node processes the full `AIMessage` containing all tool calls. All tool
+   *           calls are executed concurrently via `Promise.all` inside a single graph node.
+   *           **Choose v1** when your tools invoke sub-graphs or other long-running async work
+   *           and you need true parallelism — the `Promise.all` approach is unaffected by
+   *           LangGraph's per-task checkpoint serialisation.
+   *
+   * - `"v2"`: Each tool call is dispatched as an independent graph task using the Send API.
+   *           Tasks are scheduled in parallel by LangGraph, but when tools invoke sub-graphs
+   *           the underlying checkpoint writes can cause effective serialisation, making
+   *           concurrent tool calls execute sequentially. v2 is the better choice when you
+   *           need per-tool-call checkpointing, independent fault isolation, or `interrupt()`
+   *           support inside individual tool calls.
    *
    * @default `"v2"`
    */

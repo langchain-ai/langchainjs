@@ -1,5 +1,33 @@
 # @langchain/anthropic
 
+## 1.3.25
+
+### Patch Changes
+
+- [#10467](https://github.com/langchain-ai/langchainjs/pull/10467) [`da85f31`](https://github.com/langchain-ai/langchainjs/commit/da85f31688e708340a711fd43cf293b5cb69c133) Thanks [@hntrl](https://github.com/hntrl)! - fix: add default max tokens for sonnet
+
+- Updated dependencies [[`bfb7944`](https://github.com/langchain-ai/langchainjs/commit/bfb7944a105470eee98fe4a0eef91e586600e1de)]:
+  - @langchain/core@1.1.34
+
+## 1.3.24
+
+### Patch Changes
+
+- [#10420](https://github.com/langchain-ai/langchainjs/pull/10420) [`08657f2`](https://github.com/langchain-ai/langchainjs/commit/08657f21b330ee05b86a8abd557aef3939f5581b) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - Fix temperature/topK/topP handling: guard all three so undefined values are not
+  set on the request object, and fix broken topK/topP validation when thinking is
+  enabled.
+- Updated dependencies [[`6db417b`](https://github.com/langchain-ai/langchainjs/commit/6db417b03ecb5e2ace413389d982294e0ac88433), [`d69dfcc`](https://github.com/langchain-ai/langchainjs/commit/d69dfcca97503cf1c0b7e70ccf5fb7d507c60982)]:
+  - @langchain/core@1.1.33
+
+## 1.3.23
+
+### Patch Changes
+
+- [#10250](https://github.com/langchain-ai/langchainjs/pull/10250) [`8252619`](https://github.com/langchain-ai/langchainjs/commit/8252619b727bfcc37a3f01921edf3550d50949f6) Thanks [@JadenKim-dev](https://github.com/JadenKim-dev)! - fix(anthropic): prevent cache token double-counting in streaming
+
+- Updated dependencies [[`26488b5`](https://github.com/langchain-ai/langchainjs/commit/26488b596f01b7b7fe2f1d97d07164e52365ade5), [`ca826f6`](https://github.com/langchain-ai/langchainjs/commit/ca826f6fecae6087bf0dee7781ee80b587396ec1), [`a602c42`](https://github.com/langchain-ai/langchainjs/commit/a602c42db75d7e7e01cab38b12e0b65b9c0cce95), [`db7d017`](https://github.com/langchain-ai/langchainjs/commit/db7d017f7ce13cb937147aabcbfa3847d80bde9d)]:
+  - @langchain/core@1.1.32
+
 ## 1.3.22
 
 ### Patch Changes
