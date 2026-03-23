@@ -1,5 +1,14 @@
 # @langchain/anthropic
 
+## 1.3.25
+
+### Patch Changes
+
+- [#10467](https://github.com/langchain-ai/langchainjs/pull/10467) [`da85f31`](https://github.com/langchain-ai/langchainjs/commit/da85f31688e708340a711fd43cf293b5cb69c133) Thanks [@hntrl](https://github.com/hntrl)! - fix: add default max tokens for sonnet
+
+- Updated dependencies [[`bfb7944`](https://github.com/langchain-ai/langchainjs/commit/bfb7944a105470eee98fe4a0eef91e586600e1de)]:
+  - @langchain/core@1.1.34
+
 ## 1.3.24
 
 ### Patch Changes

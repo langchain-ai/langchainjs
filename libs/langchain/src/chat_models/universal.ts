@@ -103,6 +103,10 @@ export const MODEL_PROVIDER_CONFIG = {
     package: "@langchain/aws",
     className: "ChatBedrockConverse",
   },
+  aws: {
+    package: "@langchain/aws",
+    className: "ChatBedrockConverse",
+  },
   deepseek: {
     package: "@langchain/deepseek",
     className: "ChatDeepSeek",
@@ -363,6 +367,11 @@ export class ConfigurableModel<
       fields.queuedMethodOperations ?? this._queuedMethodOperations;
 
     this._profile = fields.profile ?? undefined;
+
+    this.metadata = {
+      ...this.metadata,
+      ls_integration: "langchain_init_chat_model",
+    };
   }
 
   async _getModelInstance(

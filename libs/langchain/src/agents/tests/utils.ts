@@ -7,6 +7,7 @@ import {
   BindToolsInput,
   ToolChoice,
 } from "@langchain/core/language_models/chat_models";
+import type { ModelProfile } from "@langchain/core/language_models/profile";
 import { StructuredTool } from "@langchain/core/tools";
 import {
   BaseMessage,
@@ -189,6 +190,13 @@ export class FakeToolCallingChatModel extends BaseChatModel {
 
   _llmType() {
     return "fake";
+  }
+
+  get profile(): ModelProfile {
+    return {
+      toolCalling: true,
+      structuredOutput: true,
+    };
   }
 
   async _generate(

@@ -187,7 +187,9 @@ export class ReactAgent<
     >,
     defaultConfig?: RunnableConfig
   ) {
-    this.#defaultConfig = defaultConfig ?? {};
+    this.#defaultConfig = mergeConfigs(defaultConfig ?? {}, {
+      metadata: { ls_integration: "langchain_create_agent" },
+    });
     if (options.name) {
       this.#defaultConfig = mergeConfigs(this.#defaultConfig, {
         metadata: { lc_agent_name: options.name },
@@ -1412,7 +1414,7 @@ export class ReactAgent<
   /**
    * @internal
    */
-  getSubgraphAsync(namespace?: string, recurse?: boolean) {
+  getSubgraphsAsync(namespace?: string, recurse?: boolean) {
     return this.#graph.getSubgraphsAsync(namespace, recurse) as never;
   }
   /**
