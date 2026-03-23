@@ -750,7 +750,7 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
 
     usage_metadata = convertResponsesUsageToUsageMetadata(event.response.usage);
 
-    if (event.response.text?.format?.type === "json_schema") {
+    if (event.response.text?.format?.type === "json_schema" && msg.text) {
       additional_kwargs.parsed ??= JSON.parse(msg.text);
     }
     for (const [key, value] of Object.entries(event.response)) {
