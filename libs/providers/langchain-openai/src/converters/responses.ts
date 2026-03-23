@@ -387,13 +387,15 @@ export const convertResponsesMessageToAIMessage: Converter<
             if ("parsed" in part && part.parsed != null) {
               additional_kwargs.parsed = part.parsed;
             }
-            return {
+            const block: ContentBlock = {
               type: "text",
               text: part.text,
               annotations: part.annotations.map(
                 convertOpenAIAnnotationToLangChain
               ),
-            } satisfies ContentBlock.Text;
+              ...(item.phase !== null ? { phase: item.phase } : {}),
+            };
+            return block;
           }
 
           if (part.type === "refusal") {
@@ -677,6 +679,15 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
     event.item.type === "message"
   ) {
     id = event.item.id;
+    const phase = "phase" in event.item ? event.item.phase : undefined;
+    if (phase) {
+      content.push({
+        type: "text",
+        text: "",
+        phase,
+        index: 0,
+      } as ContentBlock.Text);
+    }
   } else if (
     event.type === "response.output_item.added" &&
     event.item.type === "function_call"
@@ -965,14 +976,16 @@ export const convertStandardContentMessageToResponsesInput: Converter<
       currentMessage = undefined;
     }
 
-    const pushMessageContent: (
-      content: OpenAIClient.Responses.ResponseInputMessageContentList
-    ) => void = (content) => {
+    const pushMessageContent = (
+      content: OpenAIClient.Responses.ResponseInputMessageContentList,
+      phase?: OpenAIClient.Responses.EasyInputMessage["phase"]
+    ) => {
       if (!currentMessage) {
         currentMessage = {
           type: "message",
           role: messageRole,
           content: [],
+          ...(phase ? { phase } : {}),
         };
       }
       if (typeof currentMessage.content === "string") {
@@ -1141,7 +1154,20 @@ export const convertStandardContentMessageToResponsesInput: Converter<
 
     for (const block of message.contentBlocks) {
       if (block.type === "text") {
-        pushMessageContent([{ type: "input_text", text: block.text }]);
+        const phase = iife(() => {
+          if (
+            !(
+              "extras" in block &&
+              typeof block.extras === "object" &&
+              block.extras !== null &&
+              "phase" in block.extras
+            )
+          )
+            return undefined;
+          return block.extras
+            .phase as OpenAIClient.Responses.EasyInputMessage["phase"];
+        });
+        pushMessageContent([{ type: "input_text", text: block.text }], phase);
       } else if (block.type === "invalid_tool_call") {
         // no-op
       } else if (block.type === "reasoning") {
@@ -1452,7 +1478,7 @@ export const convertMessagesToResponsesInput: Converter<
         }
 
         if (typeof content === "string" || content.length > 0) {
-          input.push({
+          const messageItem: ResponsesInputItem = {
             type: "message",
             role: "assistant",
             ...(lcMsg.id && !zdrEnabled && lcMsg.id.startsWith("msg_")
@@ -1481,7 +1507,18 @@ export const convertMessagesToResponsesInput: Converter<
                 return [];
               });
             }) as ResponseInputMessageContentList,
-          });
+            phase: iife(() => {
+              const index = content.findIndex(
+                (item) => "phase" in item && typeof item.phase === "string"
+              );
+              if (index >= 0) {
+                return content[index]
+                  .phase as OpenAIClient.Responses.EasyInputMessage["phase"];
+              }
+              return undefined;
+            }),
+          };
+          input.push(messageItem);
         }
 
         const functionCallIds = additional_kwargs?.[_FUNCTION_CALL_IDS_MAP_KEY];

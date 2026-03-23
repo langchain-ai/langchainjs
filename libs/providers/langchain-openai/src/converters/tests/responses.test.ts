@@ -2208,3 +2208,323 @@ describe("convertResponsesDeltaToChatGenerationChunk - json_schema with tool cal
     });
   });
 });
+
+describe("phase parameter support", () => {
+  describe("convertResponsesMessageToAIMessage", () => {
+    it("should include phase on text content blocks when present on message output", () => {
+      const response = {
+        id: "resp_123",
+        model: "gpt-5.4",
+        created_at: 1234567890,
+        object: "response",
+        status: "completed",
+        output: [
+          {
+            type: "message",
+            id: "msg_001",
+            role: "assistant",
+            phase: "commentary",
+            content: [
+              {
+                type: "output_text",
+                text: "Let me check that for you.",
+                annotations: [],
+              },
+            ],
+          },
+        ],
+        usage: {
+          input_tokens: 10,
+          output_tokens: 20,
+          total_tokens: 30,
+        },
+      };
+
+      const result = convertResponsesMessageToAIMessage(response as any);
+      expect(Array.isArray(result.content)).toBe(true);
+      const contentArray = result.content as Array<Record<string, unknown>>;
+      expect(contentArray).toHaveLength(1);
+      expect(contentArray[0].type).toBe("text");
+      expect(contentArray[0].phase).toBe("commentary");
+    });
+
+    it("should include phase 'final_answer' on text content blocks", () => {
+      const response = {
+        id: "resp_456",
+        model: "gpt-5.4",
+        created_at: 1234567890,
+        object: "response",
+        status: "completed",
+        output: [
+          {
+            type: "message",
+            id: "msg_002",
+            role: "assistant",
+            phase: "final_answer",
+            content: [
+              {
+                type: "output_text",
+                text: "The weather is sunny.",
+                annotations: [],
+              },
+            ],
+          },
+        ],
+        usage: {
+          input_tokens: 10,
+          output_tokens: 20,
+          total_tokens: 30,
+        },
+      };
+
+      const result = convertResponsesMessageToAIMessage(response as any);
+      const contentArray = result.content as Array<Record<string, unknown>>;
+      expect(contentArray[0].phase).toBe("final_answer");
+    });
+
+    it("should not include phase on text content blocks when not present on message output", () => {
+      const response = {
+        id: "resp_789",
+        model: "gpt-4o",
+        created_at: 1234567890,
+        object: "response",
+        status: "completed",
+        output: [
+          {
+            type: "message",
+            id: "msg_003",
+            role: "assistant",
+            content: [
+              {
+                type: "output_text",
+                text: "Hello!",
+                annotations: [],
+              },
+            ],
+          },
+        ],
+        usage: {
+          input_tokens: 10,
+          output_tokens: 20,
+          total_tokens: 30,
+        },
+      };
+
+      const result = convertResponsesMessageToAIMessage(response as any);
+      const contentArray = result.content as Array<Record<string, unknown>>;
+      expect(contentArray[0].phase).toBeUndefined();
+    });
+  });
+
+  describe("convertResponsesDeltaToChatGenerationChunk", () => {
+    it("should include phase on text content block when message item has phase", () => {
+      const event = {
+        type: "response.output_item.added",
+        output_index: 0,
+        item: {
+          type: "message",
+          id: "msg_001",
+          role: "assistant",
+          phase: "commentary",
+          content: [],
+          status: "in_progress",
+        },
+      } as any;
+
+      const chunk = convertResponsesDeltaToChatGenerationChunk(event);
+      expect(chunk).not.toBeNull();
+      const contentArray = chunk!.message.content as Array<
+        Record<string, unknown>
+      >;
+      expect(contentArray).toHaveLength(1);
+      expect(contentArray[0].type).toBe("text");
+      expect(contentArray[0].text).toBe("");
+      expect(contentArray[0].phase).toBe("commentary");
+    });
+
+    it("should not include phase content block when message item has no phase", () => {
+      const event = {
+        type: "response.output_item.added",
+        output_index: 0,
+        item: {
+          type: "message",
+          id: "msg_001",
+          role: "assistant",
+          content: [],
+          status: "in_progress",
+        },
+      } as any;
+
+      const chunk = convertResponsesDeltaToChatGenerationChunk(event);
+      expect(chunk).not.toBeNull();
+      const contentArray = chunk!.message.content as Array<
+        Record<string, unknown>
+      >;
+      // Should only have the id set, no content blocks with phase
+      expect(
+        contentArray.filter(
+          (block) => "phase" in block && block.phase !== undefined
+        )
+      ).toHaveLength(0);
+    });
+  });
+
+  describe("convertMessagesToResponsesInput round-trip", () => {
+    it("should preserve phase when converting AIMessage back to responses input (responses/v1)", () => {
+      const aiMessage = new AIMessage({
+        id: "msg_001",
+        content: [
+          {
+            type: "text",
+            text: "Let me check that for you.",
+            phase: "commentary",
+          } as any,
+        ],
+        response_metadata: {
+          model_provider: "openai",
+        },
+      });
+
+      const result = convertMessagesToResponsesInput({
+        messages: [aiMessage],
+        zdrEnabled: false,
+        model: "gpt-5.4",
+      });
+
+      const messageItem = result.find(
+        (item) => (item as any).type === "message"
+      ) as any;
+      expect(messageItem).toBeDefined();
+      expect(messageItem.phase).toBe("commentary");
+    });
+
+    it("should not include phase when content blocks have no phase", () => {
+      const aiMessage = new AIMessage({
+        id: "msg_001",
+        content: [
+          {
+            type: "text",
+            text: "Hello!",
+          },
+        ],
+        response_metadata: {
+          model_provider: "openai",
+        },
+      });
+
+      const result = convertMessagesToResponsesInput({
+        messages: [aiMessage],
+        zdrEnabled: false,
+        model: "gpt-4o",
+      });
+
+      const messageItem = result.find(
+        (item) => (item as any).type === "message"
+      ) as any;
+      expect(messageItem).toBeDefined();
+      expect(messageItem.phase).toBeUndefined();
+    });
+
+    it("should preserve phase from extras through standard content path", () => {
+      const aiMessage = new AIMessage({
+        id: "msg_001",
+        content: [
+          {
+            type: "text",
+            text: "The answer is 42.",
+            extras: { phase: "final_answer" },
+          } as any,
+        ],
+        response_metadata: {
+          model_provider: "openai",
+          output_version: "v1",
+        },
+      });
+
+      const result = convertStandardContentMessageToResponsesInput(aiMessage);
+
+      const messageItem = result.find(
+        (item) => (item as any).type === "message"
+      ) as any;
+      expect(messageItem).toBeDefined();
+      expect(messageItem.phase).toBe("final_answer");
+    });
+  });
+
+  describe("full round-trip", () => {
+    it("should round-trip phase through response -> AIMessage -> input (raw provider path)", () => {
+      // Step 1: Simulate a response with phase
+      const response = {
+        id: "resp_123",
+        model: "gpt-5.4",
+        created_at: 1234567890,
+        object: "response",
+        status: "completed",
+        output: [
+          {
+            type: "message",
+            id: "msg_001",
+            role: "assistant",
+            phase: "commentary",
+            content: [
+              {
+                type: "output_text",
+                text: "Let me check the weather.",
+                annotations: [],
+              },
+            ],
+          },
+        ],
+        usage: {
+          input_tokens: 10,
+          output_tokens: 20,
+          total_tokens: 30,
+        },
+      };
+
+      // Step 2: Convert response to AIMessage (phase on top-level content block)
+      const aiMessage = convertResponsesMessageToAIMessage(response as any);
+      const contentArray = aiMessage.content as Array<Record<string, unknown>>;
+      expect(contentArray[0].phase).toBe("commentary");
+
+      // Step 3: Convert AIMessage back to input via raw provider path
+      const input = convertMessagesToResponsesInput({
+        messages: [aiMessage],
+        zdrEnabled: false,
+        model: "gpt-5.4",
+      });
+
+      const messageItem = input.find(
+        (item) => (item as any).type === "message"
+      ) as any;
+      expect(messageItem).toBeDefined();
+      expect(messageItem.phase).toBe("commentary");
+    });
+
+    it("should round-trip phase through standard content path", () => {
+      // Standard content blocks have phase in extras
+      const aiMessage = new AIMessage({
+        id: "msg_001",
+        content: [
+          {
+            type: "text",
+            text: "The weather is sunny.",
+            extras: { phase: "final_answer" },
+          } as any,
+        ],
+        response_metadata: {
+          model_provider: "openai",
+          output_version: "v1",
+        },
+      });
+
+      const result = convertStandardContentMessageToResponsesInput(aiMessage);
+
+      const messageItem = result.find(
+        (item) => (item as any).type === "message"
+      ) as any;
+      expect(messageItem).toBeDefined();
+      expect(messageItem.phase).toBe("final_answer");
+    });
+  });
+});
