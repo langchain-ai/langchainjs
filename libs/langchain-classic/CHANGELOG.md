@@ -1,5 +1,14 @@
 # @langchain/classic
 
+## 1.0.25
+
+### Patch Changes
+
+- [#10475](https://github.com/langchain-ai/langchainjs/pull/10475) [`3d35eb1`](https://github.com/langchain-ai/langchainjs/commit/3d35eb112b46b36aea80cebe0147e315d03a1d8e) Thanks [@hntrl](https://github.com/hntrl)! - fix(langchain): add "aws" alias to MODEL_PROVIDER_CONFIG so hub/node auto-detects ChatBedrockConverse from Python-serialized prompts
+
+- Updated dependencies [[`478652c`](https://github.com/langchain-ai/langchainjs/commit/478652c01cdae0703415febd250b6c2656b36410), [`52e501b`](https://github.com/langchain-ai/langchainjs/commit/52e501b44ee54ace1889ec9149a3617c4409db51)]:
+  - @langchain/openai@1.3.1
+
 ## 1.0.24
 
 ### Patch Changes

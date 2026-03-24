@@ -1,5 +1,18 @@
 # @langchain/openai
 
+## 1.3.1
+
+### Patch Changes
+
+- [#10481](https://github.com/langchain-ai/langchainjs/pull/10481) [`478652c`](https://github.com/langchain-ai/langchainjs/commit/478652c01cdae0703415febd250b6c2656b36410) Thanks [@hnustwjj](https://github.com/hnustwjj)! - fix(openai): detect DeepSeek context overflow errors as `ContextOverflowError`
+
+  DeepSeek returns `maximum context length` in 400 error messages when the context limit is exceeded. These are now recognized by `wrapOpenAIClientError`, so downstream code (e.g. summarization middleware fallback) can handle them correctly.
+
+- [#10507](https://github.com/langchain-ai/langchainjs/pull/10507) [`52e501b`](https://github.com/langchain-ai/langchainjs/commit/52e501b44ee54ace1889ec9149a3617c4409db51) Thanks [@App-arently](https://github.com/App-arently)! - fix(openai): guard JSON.parse in streaming json_schema when text is empty
+
+- Updated dependencies [[`bbbfea1`](https://github.com/langchain-ai/langchainjs/commit/bbbfea185c0777ae06df2b24a1a84f941d499c2a)]:
+  - @langchain/core@1.1.36
+
 ## 1.3.0
 
 ### Minor Changes
