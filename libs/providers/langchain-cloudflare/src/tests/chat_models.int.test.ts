@@ -19,7 +19,7 @@ describe("ChatCloudflareWorkersAI", () => {
     const message = new HumanMessage("Hello!");
     // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
     // @ts-expect-error unused var
-    const res = await chat.call([message]);
+    const res = await chat._call([message]);
     // console.log({ res });
   });
 
@@ -81,7 +81,7 @@ describe("ChatCloudflareWorkersAI", () => {
     const chat = new ChatCloudflareWorkersAI();
     // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
     // @ts-expect-error unused var
-    const res = await chat.call([new ChatMessage("Hello!", "user")]);
+    const res = await chat._call([new ChatMessage("Hello!", "user")]);
     // console.log(JSON.stringify(res, null, 2));
   });
 
