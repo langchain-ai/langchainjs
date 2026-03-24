@@ -186,6 +186,88 @@ test("_mergeLists merges blocks by string index", () => {
   ]);
 });
 
+test("_mergeLists merges blocks by id when index is missing", () => {
+  // Providers like Anthropic via OpenAI-compat API don't include `index`
+  // on streaming tool call deltas. _mergeLists should fall back to id-based
+  // merging so chunks collapse instead of accumulating individually.
+  const chunk1 = new AIMessageChunk({
+    content: "",
+    tool_call_chunks: [
+      {
+        name: "create_item",
+        args: "",
+        id: "tooluse_abc123",
+        type: "tool_call_chunk",
+      },
+    ],
+  });
+
+  const chunk2 = new AIMessageChunk({
+    content: "",
+    tool_call_chunks: [
+      {
+        name: undefined,
+        args: '{"boa',
+        id: "tooluse_abc123",
+        type: "tool_call_chunk",
+      },
+    ],
+  });
+
+  const chunk3 = new AIMessageChunk({
+    content: "",
+    tool_call_chunks: [
+      {
+        name: undefined,
+        args: 'rdId":',
+        id: "tooluse_abc123",
+        type: "tool_call_chunk",
+      },
+    ],
+  });
+
+  const merged = chunk1.concat(chunk2).concat(chunk3);
+
+  // Should merge into a single tool_call_chunk, not accumulate 3 separate entries
+  expect(merged.tool_call_chunks).toHaveLength(1);
+  expect(merged.tool_call_chunks![0].id).toBe("tooluse_abc123");
+  expect(merged.tool_call_chunks![0].name).toBe("create_item");
+  expect(merged.tool_call_chunks![0].args).toBe('{"boardId":');
+});
+
+test("_mergeLists keeps separate entries for different ids when index is missing", () => {
+  const chunk1 = new AIMessageChunk({
+    content: "",
+    tool_call_chunks: [
+      {
+        name: "tool_a",
+        args: '{"x": 1}',
+        id: "call_aaa",
+        type: "tool_call_chunk",
+      },
+    ],
+  });
+
+  const chunk2 = new AIMessageChunk({
+    content: "",
+    tool_call_chunks: [
+      {
+        name: "tool_b",
+        args: '{"y": 2}',
+        id: "call_bbb",
+        type: "tool_call_chunk",
+      },
+    ],
+  });
+
+  const merged = chunk1.concat(chunk2);
+
+  // Different ids should NOT be merged together
+  expect(merged.tool_call_chunks).toHaveLength(2);
+  expect(merged.tool_call_chunks![0].id).toBe("call_aaa");
+  expect(merged.tool_call_chunks![1].id).toBe("call_bbb");
+});
+
 test("Deserialisation and serialisation of messages with ID", async () => {
   const config = {
     importMap: { messages: { AIMessage } },

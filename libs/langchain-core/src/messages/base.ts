@@ -541,6 +541,53 @@ function hasMergeableIndex(
   return isMergeableIndex(value.index);
 }
 
+function hasMergeableId(value: unknown): value is { id: string | number } {
+  if (typeof value !== "object" || value === null) return false;
+  if (!("id" in value)) return false;
+  const id = (value as Record<string, unknown>).id;
+  return id != null && id !== "";
+}
+
+/**
+ * Find the index of an existing item in `merged` that should be merged with
+ * `item`, based on index and/or id matching.
+ *
+ * Matching priority:
+ * 1. Both have index → match on index (+ id when both present)
+ * 2. Neither has index, both have id → match on id alone
+ * 3. Otherwise → no match (item should be appended)
+ */
+function _findMergeTarget<Content extends ContentBlock>(
+  merged: Content[],
+  item: Content
+): number {
+  const itemHasIndex = hasMergeableIndex(item);
+  const itemHasId = hasMergeableId(item);
+
+  if (!itemHasIndex && !itemHasId) return -1;
+
+  return merged.findIndex((leftItem) => {
+    const leftHasIndex = hasMergeableIndex(leftItem);
+    const leftHasId = hasMergeableId(leftItem);
+
+    if (itemHasIndex && leftHasIndex) {
+      // Both have index: match on index, with id as tiebreaker
+      const indicesMatch = leftItem.index === item.index;
+      if (!indicesMatch) return false;
+      if (leftHasId && itemHasId) return leftItem.id === item.id;
+      return true; // indices match, one or both missing id
+    }
+
+    if (!itemHasIndex && !leftHasIndex && itemHasId && leftHasId) {
+      // Neither has index: fall back to id-only matching. Handles providers
+      // that don't include `index` on streaming tool call deltas.
+      return leftItem.id === item.id;
+    }
+
+    return false;
+  });
+}
+
 export function _mergeLists<Content extends ContentBlock>(
   left?: Content[],
   right?: Content[],
@@ -553,31 +600,13 @@ export function _mergeLists<Content extends ContentBlock>(
   } else {
     const merged = [...left];
     for (const item of right) {
-      if (hasMergeableIndex(item)) {
-        const toMerge = merged.findIndex((leftItem) => {
-          if (!hasMergeableIndex(leftItem)) return false;
-
-          const indiciesMatch = leftItem.index === item.index;
-          const leftHasId = leftItem.id != null && leftItem.id !== "";
-          const rightHasId = item.id != null && item.id !== "";
-          const idsMatch = leftHasId && rightHasId && leftItem.id === item.id;
-          const eitherItemMissingID = !leftHasId || !rightHasId;
-          return indiciesMatch && (idsMatch || eitherItemMissingID);
-        });
-
-        if (
-          toMerge !== -1 &&
-          typeof merged[toMerge] === "object" &&
-          merged[toMerge] !== null
-        ) {
-          merged[toMerge] = _mergeDicts(
-            merged[toMerge] as Record<string, unknown>,
-            item as Record<string, unknown>,
-            options
-          ) as Content;
-        } else {
-          merged.push(item);
-        }
+      const toMerge = _findMergeTarget(merged, item);
+      if (toMerge !== -1) {
+        merged[toMerge] = _mergeDicts(
+          merged[toMerge],
+          item,
+          options
+        ) as Content;
       } else if (
         typeof item === "object" &&
         item !== null &&
