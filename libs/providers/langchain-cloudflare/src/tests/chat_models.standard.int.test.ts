@@ -42,7 +42,6 @@ class ChatCloudflareWorkersAIStandardIntegrationTests extends ChatModelIntegrati
     );
   }
 
-  
   async testCacheComplexMessageTypes() {
     this.skipTestMessage(
       "testCacheComplexMessageTypes",
