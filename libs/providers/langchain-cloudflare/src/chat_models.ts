@@ -224,7 +224,9 @@ export class ChatCloudflareWorkersAI
     }
 
     throw new Error(
-      "Unexpected Cloudflare response format: could not find text in result.response, result.output_text, or result.output[]."
+      `Unexpected Cloudflare response format: could not find text in any of the expected locations (response, result.response, result.output_text, result.output[], or result.choices[*].message.{content,reasoning_content}). Top-level keys received: ${Object.keys(responseData).join(
+        ", "
+      )}.`
     );
   }
 
