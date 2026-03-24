@@ -1,5 +1,16 @@
 # langchain
 
+## 1.2.37
+
+### Patch Changes
+
+- [#10475](https://github.com/langchain-ai/langchainjs/pull/10475) [`3d35eb1`](https://github.com/langchain-ai/langchainjs/commit/3d35eb112b46b36aea80cebe0147e315d03a1d8e) Thanks [@hntrl](https://github.com/hntrl)! - fix(langchain): add "aws" alias to MODEL_PROVIDER_CONFIG so hub/node auto-detects ChatBedrockConverse from Python-serialized prompts
+
+- [#10258](https://github.com/langchain-ai/langchainjs/pull/10258) [`ae4122f`](https://github.com/langchain-ai/langchainjs/commit/ae4122f9523904423504e5a92c134c625977261d) Thanks [@irfiacre](https://github.com/irfiacre)! - Align Zod Importation For 'libs/langchain/src/agents/nodes/utils.ts'
+
+- Updated dependencies [[`bbbfea1`](https://github.com/langchain-ai/langchainjs/commit/bbbfea185c0777ae06df2b24a1a84f941d499c2a)]:
+  - @langchain/core@1.1.36
+
 ## 1.2.36
 
 ### Patch Changes
