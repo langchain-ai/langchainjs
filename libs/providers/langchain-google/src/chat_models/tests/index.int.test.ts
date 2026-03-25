@@ -244,6 +244,86 @@ function expandAllModelInfo(): ModelInfo[] {
   return ret;
 }
 
+function wrapInWavHeader(buffer: Buffer, sampleRate = 24000): Buffer {
+  const numChannels = 1;
+  const bitsPerSample = 16;
+  const byteRate = (sampleRate * numChannels * bitsPerSample) / 8;
+  const blockAlign = (numChannels * bitsPerSample) / 8;
+  const dataSize = buffer.length;
+  const headerSize = 44;
+  const totalSize = headerSize + dataSize - 8;
+
+  const header = Buffer.alloc(headerSize);
+  let offset = 0;
+
+  // RIFF chunk
+  header.write("RIFF", offset);
+  offset += 4;
+  header.writeUInt32LE(totalSize, offset);
+  offset += 4;
+  header.write("WAVE", offset);
+  offset += 4;
+
+  // fmt sub-chunk
+  header.write("fmt ", offset);
+  offset += 4;
+  header.writeUInt32LE(16, offset); // Subchunk1Size (16 for PCM)
+  offset += 4;
+  header.writeUInt16LE(1, offset); // AudioFormat (1 for PCM)
+  offset += 2;
+  header.writeUInt16LE(numChannels, offset);
+  offset += 2;
+  header.writeUInt32LE(sampleRate, offset);
+  offset += 4;
+  header.writeUInt32LE(byteRate, offset);
+  offset += 4;
+  header.writeUInt16LE(blockAlign, offset);
+  offset += 2;
+  header.writeUInt16LE(bitsPerSample, offset);
+  offset += 2;
+
+  // data sub-chunk
+  header.write("data", offset);
+  offset += 4;
+  header.writeUInt32LE(dataSize, offset);
+  offset += 4;
+
+  return Buffer.concat([header, buffer]);
+}
+
+async function openFileCommon(
+  block: ContentBlock.Multimodal.File,
+  testSeq: number,
+  imageSeq: number
+) {
+  if (!block.data) {
+    return;
+  }
+  const buffer = Buffer.from(block.data as string, "base64");
+  const mimeType = block.mimeType ?? "";
+  const basename = `langchain-gemini-test-${Date.now()}-${testSeq}-${imageSeq}`;
+
+  if (mimeType === "audio/l16") {
+    const wavFile = path.join(os.tmpdir(), `${basename}.wav`);
+    const wavBuffer = wrapInWavHeader(buffer);
+    await fs.writeFile(wavFile, wavBuffer);
+    exec(`afplay "${wavFile}"`);
+  } else {
+    let ext = "bin";
+    const parts = mimeType.split("/");
+    if (parts.length === 2) {
+      ext = parts[1];
+    }
+    const filePath = path.join(os.tmpdir(), `${basename}.${ext}`);
+    await fs.writeFile(filePath, buffer);
+    if (mimeType.startsWith("audio/")) {
+      exec(`afplay "${filePath}"`);
+    } else {
+      exec(`open "${filePath}"`);
+    }
+  }
+}
+
 function propSum(o: Record<string, number>): number {
   if (typeof o !== "object") {
     return 0;
@@ -1417,24 +1497,7 @@ describe.each(imageModelInfo)(
     });
 
     async function openFile(block: ContentBlock.Multimodal.File) {
-      if (!block.data) {
-        return;
-      }
-      const buffer = Buffer.from(block.data as string, "base64");
-      let ext = "bin";
-      if (block.mimeType) {
-        const parts = block.mimeType.split("/");
-        if (parts.length === 2) {
-          ext = parts[1];
-        }
-      }
-
-      const filePath = path.join(
-        os.tmpdir(),
-        `langchain-gemini-test-${Date.now()}-${testSeq}-${imageSeq++}.${ext}`
-      );
-      await fs.writeFile(filePath, buffer);
-      exec(`open "${filePath}"`);
+      await openFileCommon(block, testSeq, imageSeq++);
     }
 
     async function handleResult(
@@ -1581,62 +1644,7 @@ describe.sequential.each(ttsModelInfo)(
     });
 
     async function openFile(block: ContentBlock.Multimodal.File) {
-      if (!block.data) {
-        return;
-      }
-      const buffer = Buffer.from(block.data as string, "base64");
-      const basename = `langchain-gemini-test-${Date.now()}-${testSeq}-${imageSeq++}`;
-      const wavFile = path.join(os.tmpdir(), `${basename}.wav`);
-
-      // WAV Header Construction
-      const numChannels = 1;
-      const sampleRate = 24000;
-      const bitsPerSample = 16;
-      const byteRate = (sampleRate * numChannels * bitsPerSample) / 8;
-      const blockAlign = (numChannels * bitsPerSample) / 8;
-      const dataSize = buffer.length;
-      const headerSize = 44;
-      const totalSize = headerSize + dataSize - 8;
-
-      const header = Buffer.alloc(headerSize);
-      let offset = 0;
-
-      // RIFF chunk
-      header.write("RIFF", offset);
-      offset += 4;
-      header.writeUInt32LE(totalSize, offset);
-      offset += 4;
-      header.write("WAVE", offset);
-      offset += 4;
-
-      // fmt sub-chunk
-      header.write("fmt ", offset);
-      offset += 4;
-      header.writeUInt32LE(16, offset); // Subchunk1Size (16 for PCM)
-      offset += 4;
-      header.writeUInt16LE(1, offset); // AudioFormat (1 for PCM)
-      offset += 2;
-      header.writeUInt16LE(numChannels, offset);
-      offset += 2;
-      header.writeUInt32LE(sampleRate, offset);
-      offset += 4;
-      header.writeUInt32LE(byteRate, offset);
-      offset += 4;
-      header.writeUInt16LE(blockAlign, offset);
-      offset += 2;
-      header.writeUInt16LE(bitsPerSample, offset);
-      offset += 2;
-
-      // data sub-chunk
-      header.write("data", offset);
-      offset += 4;
-      header.writeUInt32LE(dataSize, offset);
-      offset += 4;
-
-      const wavBuffer = Buffer.concat([header, buffer]);
-
-      await fs.writeFile(wavFile, wavBuffer);
-      exec(`afplay "${wavFile}"`);
+      await openFileCommon(block, testSeq, imageSeq++);
     }
 
     async function handleResult(blocks: ContentBlock.Standard[]) {
