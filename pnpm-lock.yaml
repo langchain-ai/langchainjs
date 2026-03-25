@@ -26,6 +26,7 @@ overrides:
   '@hono/node-server': '>=1.19.10'
   express-rate-limit: '>=8.2.2'
   basic-ftp: '>=5.2.0'
+  axios: '>=0.30.3'
 
 importers:
 
@@ -287,7 +288,7 @@ importers:
         specifier: ^2.3.5
         version: 2.6.9
       axios:
-        specifier: ^1.13.6
+        specifier: '>=0.30.3'
         version: 1.13.6(debug@4.4.3)
       cheerio:
         specifier: 1.2.0
@@ -474,31 +475,31 @@ importers:
         version: 0.27.3
       '@rolldown/binding-darwin-arm64':
         specifier: '*'
-        version: 1.0.0-rc.10
+        version: 1.0.0-rc.11
       '@rolldown/binding-darwin-x64':
         specifier: '*'
-        version: 1.0.0-rc.10
+        version: 1.0.0-rc.11
       '@rolldown/binding-linux-arm64-gnu':
         specifier: '*'
-        version: 1.0.0-rc.10
+        version: 1.0.0-rc.11
       '@rolldown/binding-linux-arm64-musl':
         specifier: '*'
-        version: 1.0.0-rc.10
+        version: 1.0.0-rc.11
       '@rolldown/binding-linux-x64-gnu':
         specifier: '*'
-        version: 1.0.0-rc.10
+        version: 1.0.0-rc.11
       '@rolldown/binding-linux-x64-musl':
         specifier: '*'
-        version: 1.0.0-rc.10
+        version: 1.0.0-rc.11
       '@rolldown/binding-win32-arm64-msvc':
         specifier: '*'
-        version: 1.0.0-rc.10
+        version: 1.0.0-rc.11
       '@rolldown/binding-win32-ia32-msvc':
         specifier: '*'
         version: 1.0.0-beta.52
       '@rolldown/binding-win32-x64-msvc':
         specifier: '*'
-        version: 1.0.0-rc.10
+        version: 1.0.0-rc.11
       '@swc/core-win32-x64-msvc':
         specifier: '*'
         version: 1.15.11
@@ -2129,7 +2130,7 @@ importers:
         specifier: ^2.3.5
         version: 2.6.9
       axios:
-        specifier: ^1.13.6
+        specifier: '>=0.30.3'
         version: 1.13.6(debug@4.4.3)
       cheerio:
         specifier: 1.2.0
@@ -7157,8 +7158,8 @@ packages:
     cpu: [arm64]
     os: [android]
 
-  '@rolldown/binding-darwin-arm64@1.0.0-rc.10':
-    resolution: {integrity: sha512-gED05Teg/vtTZbIJBc4VNMAxAFDUPkuO/rAIyyxZjTj1a1/s6z5TII/5yMGZ0uLRCifEtwUQn8OlYzuYc0m70w==}
+  '@rolldown/binding-darwin-arm64@1.0.0-rc.11':
+    resolution: {integrity: sha512-7WQgR8SfOPwmDZGFkThUvsmd/nwAWv91oCO4I5LS7RKrssPZmOt7jONN0cW17ydGC1n/+puol1IpoieKqQidmg==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [darwin]
@@ -7175,8 +7176,8 @@ packages:
     cpu: [arm64]
     os: [darwin]
 
-  '@rolldown/binding-darwin-x64@1.0.0-rc.10':
-    resolution: {integrity: sha512-rI15NcM1mA48lqrIxVkHfAqcyFLcQwyXWThy+BQ5+mkKKPvSO26ir+ZDp36AgYoYVkqvMcdS8zOE6SeBsR9e8A==}
+  '@rolldown/binding-darwin-x64@1.0.0-rc.11':
+    resolution: {integrity: sha512-39Ks6UvIHq4rEogIfQBoBRusj0Q0nPVWIvqmwBLaT6aqQGIakHdESBVOPRRLacy4WwUPIx4ZKzfZ9PMW+IeyUQ==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [darwin]
@@ -7217,8 +7218,8 @@ packages:
     cpu: [arm]
     os: [linux]
 
-  '@rolldown/binding-linux-arm64-gnu@1.0.0-rc.10':
-    resolution: {integrity: sha512-Y1reMrV/o+cwpduYhJuOE3OMKx32RMYCidf14y+HssARRmhDuWXJ4yVguDg2R/8SyyGNo+auzz64LnPK9Hq6jg==}
+  '@rolldown/binding-linux-arm64-gnu@1.0.0-rc.11':
+    resolution: {integrity: sha512-WMW1yE6IOnehTcFE9eipFkm3XN63zypWlrJQ2iF7NrQ9b2LDRjumFoOGJE8RJJTJCTBAdmLMnJ8uVitACUUo1Q==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [linux]
@@ -7235,8 +7236,8 @@ packages:
     cpu: [arm64]
     os: [linux]
 
-  '@rolldown/binding-linux-arm64-musl@1.0.0-rc.10':
-    resolution: {integrity: sha512-vELN+HNb2IzuzSBUOD4NHmP9yrGwl1DVM29wlQvx1OLSclL0NgVWnVDKl/8tEks79EFek/kebQKnNJkIAA4W2g==}
+  '@rolldown/binding-linux-arm64-musl@1.0.0-rc.11':
+    resolution: {integrity: sha512-jfndI9tsfm4APzjNt6QdBkYwre5lRPUgHeDHoI7ydKUuJvz3lZeCfMsI56BZj+7BYqiKsJm7cfd/6KYV7ubrBg==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [linux]
@@ -7265,8 +7266,8 @@ packages:
     cpu: [s390x]
     os: [linux]
 
-  '@rolldown/binding-linux-x64-gnu@1.0.0-rc.10':
-    resolution: {integrity: sha512-eOCKUpluKgfObT2pHjztnaWEIbUabWzk3qPZ5PuacuPmr4+JtQG4k2vGTY0H15edaTnicgU428XW/IH6AimcQw==}
+  '@rolldown/binding-linux-x64-gnu@1.0.0-rc.11':
+    resolution: {integrity: sha512-qXBQQO9OvkjjQPLdUVr7Nr2t3QTZI7s4KZtfw7HzBgjbmAPSFwSv4rmET9lLSgq3rH/ndA3ngv3Qb8l2njoPNA==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [linux]
@@ -7283,8 +7284,8 @@ packages:
     cpu: [x64]
     os: [linux]
 
-  '@rolldown/binding-linux-x64-musl@1.0.0-rc.10':
-    resolution: {integrity: sha512-Xdf2jQbfQowJnLcgYfD/m0Uu0Qj5OdxKallD78/IPPfzaiaI4KRAwZzHcKQ4ig1gtg1SuzC7jovNiM2TzQsBXA==}
+  '@rolldown/binding-linux-x64-musl@1.0.0-rc.11':
+    resolution: {integrity: sha512-/tpFfoSTzUkH9LPY+cYbqZBDyyX62w5fICq9qzsHLL8uTI6BHip3Q9Uzft0wylk/i8OOwKik8OxW+QAhDmzwmg==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [linux]
@@ -7323,8 +7324,8 @@ packages:
     engines: {node: '>=14.0.0'}
     cpu: [wasm32]
 
-  '@rolldown/binding-win32-arm64-msvc@1.0.0-rc.10':
-    resolution: {integrity: sha512-7UODQb4fQUNT/vmgDZBl3XOBAIOutP5R3O/rkxg0aLfEGQ4opbCgU5vOw/scPe4xOqBwL9fw7/RP1vAMZ6QlAQ==}
+  '@rolldown/binding-win32-arm64-msvc@1.0.0-rc.11':
+    resolution: {integrity: sha512-dDwf5otnx0XgRY1yqxOC4ITizcdzS/8cQ3goOWv3jFAo4F+xQYni+hnMuO6+LssHHdJW7+OCVL3CoU4ycnh35Q==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [arm64]
     os: [win32]
@@ -7347,8 +7348,8 @@ packages:
     cpu: [ia32]
     os: [win32]
 
-  '@rolldown/binding-win32-x64-msvc@1.0.0-rc.10':
-    resolution: {integrity: sha512-PYxKHMVHOb5NJuDL53vBUl1VwUjymDcYI6rzpIni0C9+9mTiJedvUxSk7/RPp7OOAm3v+EjgMu9bIy3N6b408w==}
+  '@rolldown/binding-win32-x64-msvc@1.0.0-rc.11':
+    resolution: {integrity: sha512-LN4/skhSggybX71ews7dAj6r2geaMJfm3kMbK2KhFMg9B10AZXnKoLCVVgzhMHL0S+aKtr4p8QbAW8k+w95bAA==}
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [win32]
@@ -9078,9 +9079,6 @@ packages:
 
   aws4@1.13.2:
     resolution: {integrity: sha512-lHe62zvbTB5eEABUVi/AwVh0ZKY9rMMDhmm+eeyuuUQbQ3+J+fONVQOZyj+DdrvD4BY33uYniyRJ4UJIaSKAfw==}
-
-  axios@0.21.4:
-    resolution: {integrity: sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==}
 
   axios@1.13.6:
     resolution: {integrity: sha512-ChTCHMouEe2kn713WHbQGcuYrr6fXTBiu460OTwWrWob16g1bXn4vtz07Ope7ewMozJAnEquLk5lWQWtBig9DQ==}
@@ -13918,7 +13916,7 @@ packages:
     resolution: {integrity: sha512-pOLi+Gdll3JekwuFjXO3fTq+L9lzMQGcSq7M5gIjExcl3Gu1hd4XXuf5o3+LuSBsaULQH7DiNbsqPd1chVpQGQ==}
     engines: {node: '>=10.7.0'}
     peerDependencies:
-      axios: '*'
+      axios: '>=0.30.3'
 
   retry-request@7.0.2:
     resolution: {integrity: sha512-dUOvLMJ0/JJYEn8NrpOaGNE7X3vpI5XlZS/u0ANjqtcZVKnIxP7IgCFwrKTxENw29emmwug53awKtaMm4i9g5w==}
@@ -19130,7 +19128,7 @@ snapshots:
 
   '@gradientai/nodejs-sdk@1.12.1':
     dependencies:
-      axios: 0.21.4
+      axios: 1.13.6(debug@4.4.3)
       form-data: 4.0.5
     transitivePeerDependencies:
       - debug
@@ -20684,7 +20682,7 @@ snapshots:
   '@rolldown/binding-android-arm64@1.0.0-rc.9':
     optional: true
 
-  '@rolldown/binding-darwin-arm64@1.0.0-rc.10':
+  '@rolldown/binding-darwin-arm64@1.0.0-rc.11':
     optional: true
 
   '@rolldown/binding-darwin-arm64@1.0.0-rc.4':
@@ -20693,7 +20691,7 @@ snapshots:
   '@rolldown/binding-darwin-arm64@1.0.0-rc.9':
     optional: true
 
-  '@rolldown/binding-darwin-x64@1.0.0-rc.10':
+  '@rolldown/binding-darwin-x64@1.0.0-rc.11':
     optional: true
 
   '@rolldown/binding-darwin-x64@1.0.0-rc.4':
@@ -20714,7 +20712,7 @@ snapshots:
   '@rolldown/binding-linux-arm-gnueabihf@1.0.0-rc.9':
     optional: true
 
-  '@rolldown/binding-linux-arm64-gnu@1.0.0-rc.10':
+  '@rolldown/binding-linux-arm64-gnu@1.0.0-rc.11':
     optional: true
 
   '@rolldown/binding-linux-arm64-gnu@1.0.0-rc.4':
@@ -20723,7 +20721,7 @@ snapshots:
   '@rolldown/binding-linux-arm64-gnu@1.0.0-rc.9':
     optional: true
 
-  '@rolldown/binding-linux-arm64-musl@1.0.0-rc.10':
+  '@rolldown/binding-linux-arm64-musl@1.0.0-rc.11':
     optional: true
 
   '@rolldown/binding-linux-arm64-musl@1.0.0-rc.4':
@@ -20738,7 +20736,7 @@ snapshots:
   '@rolldown/binding-linux-s390x-gnu@1.0.0-rc.9':
     optional: true
 
-  '@rolldown/binding-linux-x64-gnu@1.0.0-rc.10':
+  '@rolldown/binding-linux-x64-gnu@1.0.0-rc.11':
     optional: true
 
   '@rolldown/binding-linux-x64-gnu@1.0.0-rc.4':
@@ -20747,7 +20745,7 @@ snapshots:
   '@rolldown/binding-linux-x64-gnu@1.0.0-rc.9':
     optional: true
 
-  '@rolldown/binding-linux-x64-musl@1.0.0-rc.10':
+  '@rolldown/binding-linux-x64-musl@1.0.0-rc.11':
     optional: true
 
   '@rolldown/binding-linux-x64-musl@1.0.0-rc.4':
@@ -20772,7 +20770,7 @@ snapshots:
       '@napi-rs/wasm-runtime': 1.1.1
     optional: true
 
-  '@rolldown/binding-win32-arm64-msvc@1.0.0-rc.10':
+  '@rolldown/binding-win32-arm64-msvc@1.0.0-rc.11':
     optional: true
 
   '@rolldown/binding-win32-arm64-msvc@1.0.0-rc.4':
@@ -20784,7 +20782,7 @@ snapshots:
   '@rolldown/binding-win32-ia32-msvc@1.0.0-beta.52':
     optional: true
 
-  '@rolldown/binding-win32-x64-msvc@1.0.0-rc.10':
+  '@rolldown/binding-win32-x64-msvc@1.0.0-rc.11':
     optional: true
 
   '@rolldown/binding-win32-x64-msvc@1.0.0-rc.4':
@@ -22793,12 +22791,6 @@ snapshots:
   aws-ssl-profiles@1.1.2: {}
 
   aws4@1.13.2: {}
-
-  axios@0.21.4:
-    dependencies:
-      follow-redirects: 1.15.11(debug@4.4.3)
-    transitivePeerDependencies:
-      - debug
 
   axios@1.13.6(debug@4.4.3):
     dependencies:
