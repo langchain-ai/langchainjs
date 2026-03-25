@@ -244,7 +244,7 @@ function expandAllModelInfo(): ModelInfo[] {
   return ret;
 }
 
-function wrapInWavHeader(buffer: Buffer, sampleRate = 24000): Buffer {
+function wrapInWavHeader(buffer: Buffer, sampleRate = 24000): Buffer<ArrayBuffer> {
   const numChannels = 1;
   const bitsPerSample = 16;
   const byteRate = (sampleRate * numChannels * bitsPerSample) / 8;
@@ -304,25 +304,25 @@ async function openFileCommon(
   const mimeType = fullMimeType.split(";")[0].trim().toLowerCase();
   const basename = `langchain-gemini-test-${Date.now()}-${testSeq}-${imageSeq}`;
 
-  if (mimeType === "audio/l16") {
-    const wavFile = path.join(os.tmpdir(), `${basename}.wav`);
-    const wavBuffer = wrapInWavHeader(buffer);
-    await fs.writeFile(wavFile, wavBuffer);
-    exec(`afplay "${wavFile}"`);
-  } else {
-    let ext = "bin";
-    const parts = mimeType.split("/");
-    if (parts.length === 2) {
-      ext = parts[1];
-    }
-    const filePath = path.join(os.tmpdir(), `${basename}.${ext}`);
-    await fs.writeFile(filePath, buffer);
-    if (mimeType.startsWith("audio/")) {
-      exec(`afplay "${filePath}"`);
-    } else {
-      exec(`open "${filePath}"`);
-    }
+  let outBuffer = buffer;
+  let ext = "bin";
+  const parts = mimeType.split("/");
+  if (parts.length === 2) {
+    ext = parts[1];
   }
+  if (mimeType === "audio/l16") {
+    ext = "wav";
+    outBuffer = wrapInWavHeader(buffer);
+  }
+
+  const filePath = path.join(os.tmpdir(), `${basename}.${ext}`);
+  await fs.writeFile(filePath, outBuffer);
+  if (mimeType.startsWith("audio/")) {
+    exec(`afplay "${filePath}"`);
+  } else {
+    exec(`open "${filePath}"`);
+  }
+
 }
 
 function propSum(o: Record<string, number>): number {
