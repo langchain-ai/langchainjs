@@ -701,4 +701,71 @@ describe("openaiTranslator", () => {
       });
     });
   });
+
+  describe("phase parameter support", () => {
+    it("should move phase into extras on text content blocks in standard content", () => {
+      const message = new AIMessage({
+        content: [
+          {
+            type: "text",
+            text: "Let me check that for you.",
+            annotations: [],
+            phase: "commentary",
+          },
+        ],
+        response_metadata: { model_provider: "openai" },
+      });
+
+      const blocks = message.contentBlocks;
+      const textBlock = blocks.find(
+        (b) => b.type === "text"
+      ) as ContentBlock.Text;
+      expect(textBlock).toBeDefined();
+      expect(textBlock.text).toBe("Let me check that for you.");
+      expect(textBlock.extras).toEqual({ phase: "commentary" });
+      // phase should not remain at top level in standard content
+      expect(textBlock.phase).toBeUndefined();
+    });
+
+    it("should move phase 'final_answer' into extras on text content blocks", () => {
+      const message = new AIMessage({
+        content: [
+          {
+            type: "text",
+            text: "The weather is sunny.",
+            annotations: [],
+            phase: "final_answer",
+          },
+        ],
+        response_metadata: { model_provider: "openai" },
+      });
+
+      const blocks = message.contentBlocks;
+      const textBlock = blocks.find(
+        (b) => b.type === "text"
+      ) as ContentBlock.Text;
+      expect(textBlock).toBeDefined();
+      expect(textBlock.extras).toEqual({ phase: "final_answer" });
+    });
+
+    it("should not have extras when phase not present", () => {
+      const message = new AIMessage({
+        content: [
+          {
+            type: "text",
+            text: "Hello!",
+            annotations: [],
+          },
+        ],
+        response_metadata: { model_provider: "openai" },
+      });
+
+      const blocks = message.contentBlocks;
+      const textBlock = blocks.find(
+        (b) => b.type === "text"
+      ) as ContentBlock.Text;
+      expect(textBlock).toBeDefined();
+      expect(textBlock.extras).toBeUndefined();
+    });
+  });
 });

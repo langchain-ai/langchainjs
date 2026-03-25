@@ -2273,7 +2273,7 @@ importers:
         version: 1.0.21
       langsmith:
         specifier: '>=0.5.0 <1.0.0'
-        version: 0.5.9(@opentelemetry/api@1.9.0)(openai@6.27.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6))
+        version: 0.5.9(@opentelemetry/api@1.9.0)(openai@6.32.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6))
       mustache:
         specifier: ^4.2.0
         version: 4.2.0
@@ -3282,8 +3282,8 @@ importers:
         specifier: ^1.0.12
         version: 1.0.21
       openai:
-        specifier: ^6.27.0
-        version: 6.27.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6)
+        specifier: ^6.32.0
+        version: 6.32.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6)
       zod:
         specifier: ^3.25.76 || ^4
         version: 4.3.6
@@ -13063,6 +13063,18 @@ packages:
 
   openai@6.3.0:
     resolution: {integrity: sha512-E6vOGtZvdcb4yXQ5jXvDlUG599OhIkb/GjBLZXS+qk0HF+PJReIldEc9hM8Ft81vn+N6dRdFRb7BZNK8bbvXrw==}
+    hasBin: true
+    peerDependencies:
+      ws: ^8.18.0
+      zod: ^3.25 || ^4.0
+    peerDependenciesMeta:
+      ws:
+        optional: true
+      zod:
+        optional: true
+
+  openai@6.32.0:
+    resolution: {integrity: sha512-j3k+BjydAf8yQlcOI7WUQMQTbbF5GEIMAE2iZYCOzwwB3S2pCheaWYp+XZRNAch4jWVc52PMDGRRjutao3lLCg==}
     hasBin: true
     peerDependencies:
       ws: ^8.18.0
@@ -26703,6 +26715,18 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       openai: 6.27.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6)
 
+  langsmith@0.5.9(@opentelemetry/api@1.9.0)(openai@6.32.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6)):
+    dependencies:
+      '@types/uuid': 10.0.0
+      chalk: 5.6.2
+      console-table-printer: 2.15.0
+      p-queue: 6.6.2
+      semver: 7.7.4
+      uuid: 10.0.0
+    optionalDependencies:
+      '@opentelemetry/api': 1.9.0
+      openai: 6.32.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6)
+
   lazystream@1.0.1:
     dependencies:
       readable-stream: 2.3.8
@@ -27729,6 +27753,11 @@ snapshots:
       zod: 4.3.6
 
   openai@6.3.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6):
+    optionalDependencies:
+      ws: 8.19.0(bufferutil@4.1.0)
+      zod: 4.3.6
+
+  openai@6.32.0(ws@8.19.0(bufferutil@4.1.0))(zod@4.3.6):
     optionalDependencies:
       ws: 8.19.0(bufferutil@4.1.0)
       zod: 4.3.6
