@@ -300,7 +300,8 @@ async function openFileCommon(
     return;
   }
   const buffer = Buffer.from(block.data as string, "base64");
-  const mimeType = block.mimeType ?? "";
+  const fullMimeType = block.mimeType ?? "";
+  const mimeType = fullMimeType.split(";")[0].trim().toLowerCase();
   const basename = `langchain-gemini-test-${Date.now()}-${testSeq}-${imageSeq}`;
 
   if (mimeType === "audio/l16") {
