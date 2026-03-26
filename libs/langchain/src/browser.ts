@@ -44,6 +44,16 @@ export {
 export { context } from "@langchain/core/utils/context";
 
 /**
+ * LangChain Agents
+ */
+export * from "./agents/index.js";
+
+/**
+ * `createAgent` pre-built middleware
+ */
+export * from "./agents/middleware/index.js";
+
+/**
  * LangChain Stores
  */
 export { InMemoryStore } from "@langchain/core/stores";
