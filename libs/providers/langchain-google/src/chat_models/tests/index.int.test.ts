@@ -75,6 +75,7 @@ type ModelInfoConfig = {
   isImage?: boolean; // Is this an image generation model?
   hasImageThoughts?: boolean; // Is this an image model that has thinking output?
   isTts?: boolean; // Is this a TTS model?
+  isAudio?: boolean; // Is this an audio generation model?
 };
 
 type DefaultGoogleParams = Omit<
@@ -157,6 +158,20 @@ const allModelInfo: ModelInfo[] = [
       isTts: true,
       skip: true,
     },
+  },
+  {
+    model: "lyria-3-clip-preview",
+    testConfig: {
+      isAudio: true,
+      only: true,
+    }
+  },
+  {
+    model: "lyria-3-pro-preview",
+    testConfig: {
+      isAudio: true,
+      only: true,
+    }
   },
 ];
 
@@ -1750,5 +1765,98 @@ describe.sequential.each(ttsModelInfo)(
         await handleResult(content);
       }
     }, 60000);
+  }
+);
+
+const audioModelInfo: ModelInfo[] = filterTestableModels([
+  (modelInfo: ModelInfo) => modelInfo.testConfig?.isAudio === true,
+]);
+console.log(audioModelInfo);
+
+describe.sequential.each(audioModelInfo)(
+  "Google Audio ($model) $testConfig",
+  ({ model, defaultGoogleParams, testConfig }: ModelInfo) => {
+    let recorder: GoogleRequestRecorder;
+    let callbacks: BaseCallbackHandler[];
+
+    let warnSpy: MockInstance<any>;
+
+    let testSeq = 0;
+    let imageSeq = 0;
+
+    function newChatGoogle(
+      fields?: DefaultGoogleParams
+    ): ChatGoogle | ChatGoogleNode {
+      recorder = new GoogleRequestRecorder();
+      callbacks = buildTestCallbacks(recorder);
+
+      const configParams:
+        | ChatGoogleParams
+        | ChatGoogleNodeParams
+        | Record<string, any> = {
+        responseModalities: ["AUDIO"],
+      };
+      const useNode = testConfig?.node ?? false;
+      const useApiKey = testConfig?.useApiKey ?? !useNode;
+      if (useApiKey) {
+        configParams.apiKey = getEnvironmentVariable("TEST_API_KEY");
+      }
+
+      const params = {
+        model,
+        callbacks,
+        ...configParams,
+        ...(defaultGoogleParams ?? {}),
+        ...(fields ?? {}),
+      };
+      if (useNode) {
+        return new ChatGoogleNode(params);
+      } else {
+        return new ChatGoogle(params);
+      }
+    }
+
+    beforeEach(async () => {
+      imageSeq = 0;
+      warnSpy = vi.spyOn(global.console, "warn");
+      const delay = testConfig?.delay ?? 0;
+      if (delay) {
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    });
+
+    afterEach(() => {
+      testSeq++;
+      warnSpy.mockRestore();
+    });
+
+    async function openFile(block: ContentBlock.Multimodal.File) {
+      await openFileCommon(block, testSeq, imageSeq++);
+    }
+
+    async function handleResult(blocks: ContentBlock.Standard[]) {
+      for (const block of blocks) {
+        if (block.type === "file") {
+          await openFile(block as ContentBlock.Multimodal.File);
+        } else if (block.type === "text") {
+          console.log(block.text);
+        } else {
+          console.log(`Block type: ${block.type}`);
+        }
+      }
+    }
+
+    test("music", async () => {
+      const model = newChatGoogle();
+      const prompt = `
+        Create a song about LangChainJS and Gemini that includes
+        references to a parrot.
+        Style: salsa
+      `;
+      const res = await model.invoke(prompt);
+      const content = res?.contentBlocks;
+      await handleResult(content);
+    });
+
   }
 );
