@@ -248,5 +248,6 @@ export * as vectorstores__vectara from "../vectorstores/vectara.js";
 export * as vectorstores__vercel_postgres from "../vectorstores/vercel_postgres.js";
 export * as vectorstores__voy from "../vectorstores/voy.js";
 export * as vectorstores__xata from "../vectorstores/xata.js";
+export * as vectorstores__ydb from "../vectorstores/ydb.js";
 export * as vectorstores__zep from "../vectorstores/zep.js";
 export * as vectorstores__zep_cloud from "../vectorstores/zep_cloud.js";

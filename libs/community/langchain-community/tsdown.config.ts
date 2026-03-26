@@ -121,6 +121,7 @@ export default getBuildConfig({
     "./src/vectorstores/vercel_postgres.ts",
     "./src/vectorstores/voy.ts",
     "./src/vectorstores/xata.ts",
+    "./src/vectorstores/ydb.ts",
     "./src/vectorstores/zep.ts",
     "./src/vectorstores/zep_cloud.ts",
     "./src/chat_models/alibaba_tongyi.ts",
