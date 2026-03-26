@@ -138,9 +138,7 @@ export function mergeContent(
     // If both are arrays
   } else if (Array.isArray(secondContent)) {
     const left = contentBlocksFromNonStringFirst(firstContent);
-    return (
-      _mergeLists(left, secondContent) ?? [...left, ...secondContent]
-    );
+    return _mergeLists(left, secondContent) ?? [...left, ...secondContent];
   } else {
     if (secondContent === "") {
       return firstContent;

@@ -127,10 +127,7 @@ test("Deserialisation and serialisation of tool_call_id", async () => {
 test("mergeContent merges single block object with array second content", () => {
   const singleBlock = { type: "text", text: "Hello" };
   const second = [{ type: "text", text: " world" }];
-  const result = mergeContent(
-    singleBlock as unknown as MessageContent,
-    second
-  );
+  const result = mergeContent(singleBlock as unknown as MessageContent, second);
   expect(result).toEqual([
     { type: "text", text: "Hello" },
     { type: "text", text: " world" },
