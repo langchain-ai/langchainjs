@@ -116,21 +116,18 @@ const allModelInfo: ModelInfo[] = [
     model: "gemini-3-flash-preview",
     testConfig: {
       isThinking: true,
-      only: true,
     },
   },
   {
     model: "gemini-3.1-pro-preview",
     testConfig: {
       isThinking: true,
-      only: true,
     },
   },
   {
     model: "gemini-3.1-flash-lite-preview",
     testConfig: {
       isThinking: true,
-      only: true,
     },
   },
   {
@@ -163,14 +160,12 @@ const allModelInfo: ModelInfo[] = [
     model: "lyria-3-clip-preview",
     testConfig: {
       isAudio: true,
-      only: true,
     }
   },
   {
     model: "lyria-3-pro-preview",
     testConfig: {
       isAudio: true,
-      only: true,
     }
   },
 ];
@@ -1773,6 +1768,7 @@ const audioModelInfo: ModelInfo[] = filterTestableModels([
 ]);
 console.log(audioModelInfo);
 
+// Audio tests fail on Vertex
 describe.sequential.each(audioModelInfo)(
   "Google Audio ($model) $testConfig",
   ({ model, defaultGoogleParams, testConfig }: ModelInfo) => {
