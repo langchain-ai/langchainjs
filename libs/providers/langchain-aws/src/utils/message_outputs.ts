@@ -99,6 +99,35 @@ export function convertConverseMessageToLangChainMessage(
         });
       } else if ("video" in c) {
         content.push({ type: "video", video: c.video });
+      } else if ("$unknown" in c) {
+        // Handle content block types that are not yet in the AWS SDK's type
+        // union but may be returned by newer models (e.g. GPT-OSS on Bedrock).
+        // The SDK wraps them as { $unknown: ["type_name", value] }.
+        const [unknownType, unknownValue] = (c as { $unknown: [string, unknown] }).$unknown;
+        if (
+          unknownType === "reasoning_content" &&
+          unknownValue !== null &&
+          typeof unknownValue === "object"
+        ) {
+          const val = unknownValue as Record<string, unknown>;
+          const reasoningText = val.reasoningText as
+            | { text?: string; signature?: string }
+            | undefined;
+          const redactedContent = val.redactedContent;
+          if (reasoningText) {
+            content.push(
+              bedrockReasoningBlockToLangchainReasoningBlock({
+                reasoningText: reasoningText as Bedrock.ReasoningTextBlock,
+              })
+            );
+          } else if (redactedContent instanceof Uint8Array) {
+            content.push(
+              bedrockReasoningBlockToLangchainReasoningBlock({
+                redactedContent,
+              })
+            );
+          }
+        }
       }
     });
     return new AIMessage({
