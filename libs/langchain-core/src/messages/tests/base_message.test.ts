@@ -12,7 +12,9 @@ import {
   _mergeObj,
   _mergeDicts,
   DEFAULT_MERGE_IGNORE_KEYS,
+  mergeContent,
 } from "../index.js";
+import type { MessageContent } from "../base.js";
 import { load } from "../../load/index.js";
 import { concat } from "../../utils/stream.js";
 import { ToolCallChunk } from "../tool.js";
@@ -120,6 +122,28 @@ test("Deserialisation and serialisation of tool_call_id", async () => {
 
   const deserialized: ToolMessage = await load(JSON.stringify(message), config);
   expect(deserialized).toEqual(message);
+});
+
+test("mergeContent merges single block object with array second content", () => {
+  const singleBlock = { type: "text", text: "Hello" };
+  const second = [{ type: "text", text: " world" }];
+  const result = mergeContent(singleBlock as unknown as MessageContent, second);
+  expect(result).toEqual([
+    { type: "text", text: "Hello" },
+    { type: "text", text: " world" },
+  ]);
+});
+
+test("mergeContent merges single block object with string second content", () => {
+  const singleBlock = { type: "text", text: "Hello" };
+  const result = mergeContent(
+    singleBlock as unknown as MessageContent,
+    " world"
+  );
+  expect(result).toEqual([
+    { type: "text", text: "Hello" },
+    { type: "text", text: " world" },
+  ]);
 });
 
 test("_mergeLists merges blocks by numeric index", () => {

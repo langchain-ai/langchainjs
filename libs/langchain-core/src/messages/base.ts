@@ -87,6 +87,26 @@ export type BaseMessageFields<
   response_metadata?: Partial<$InferResponseMetadata<TStructure, TRole>>;
 };
 
+/**
+ * Normalize non-string `firstContent` to a block array for merge/spread.
+ * Some serializers (e.g. Anthropic-style) yield a single block object instead of a one-element array;
+ * spreading that object as an array throws ("is not iterable").
+ */
+function contentBlocksFromNonStringFirst(
+  firstContent: MessageContent
+): ContentBlock[] {
+  if (Array.isArray(firstContent)) {
+    return firstContent;
+  }
+  if (typeof firstContent === "string") {
+    return firstContent === "" ? [] : [{ type: "text", text: firstContent }];
+  }
+  if (firstContent == null) {
+    return [];
+  }
+  return [firstContent as ContentBlock];
+}
+
 export function mergeContent(
   firstContent: MessageContent,
   secondContent: MessageContent
@@ -117,12 +137,8 @@ export function mergeContent(
     }
     // If both are arrays
   } else if (Array.isArray(secondContent)) {
-    return (
-      _mergeLists(firstContent, secondContent) ?? [
-        ...firstContent,
-        ...secondContent,
-      ]
-    );
+    const left = contentBlocksFromNonStringFirst(firstContent);
+    return _mergeLists(left, secondContent) ?? [...left, ...secondContent];
   } else {
     if (secondContent === "") {
       return firstContent;
@@ -139,7 +155,8 @@ export function mergeContent(
         },
       ];
     } else {
-      return [...firstContent, { type: "text", text: secondContent }];
+      const left = contentBlocksFromNonStringFirst(firstContent);
+      return [...left, { type: "text", text: secondContent }];
     }
   }
 }
