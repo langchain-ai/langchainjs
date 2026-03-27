@@ -311,7 +311,12 @@ export class PGVectorStore extends VectorStore {
 
   pool: Pool;
 
-  client?: PoolClient;
+  /**
+   * Tracks whether the pool was created internally by PGVectorStore.
+   * Used to determine whether end() should destroy the pool.
+   * If the pool was provided externally via config.pool, we should not destroy it.
+   */
+  private _poolCreatedInternally: boolean;
 
   chunkSize = 500;
 
@@ -432,6 +437,8 @@ export class PGVectorStore extends VectorStore {
         "You must provide either a `postgresConnectionOptions` object or a `pool` instance."
       );
     }
+    // Track if pool was created internally so we know whether to destroy it in end()
+    this._poolCreatedInternally = !config.pool;
     const pool = config.pool ?? new pg.Pool(config.postgresConnectionOptions);
     this.pool = pool;
     this.chunkSize = config.chunkSize ?? 500;
@@ -499,17 +506,12 @@ export class PGVectorStore extends VectorStore {
     const { dimensions, ...rest } = config;
     const postgresqlVectorStore = new PGVectorStore(embeddings, rest);
 
-    await postgresqlVectorStore._initializeClient();
     await postgresqlVectorStore.ensureTableInDatabase(dimensions);
     if (postgresqlVectorStore.collectionTableName) {
       await postgresqlVectorStore.ensureCollectionTableInDatabase();
     }
 
     return postgresqlVectorStore;
-  }
-
-  protected async _initializeClient() {
-    this.client = await this.pool.connect();
   }
 
   /**
@@ -1122,8 +1124,11 @@ export class PGVectorStore extends VectorStore {
    * @returns Promise that resolves when all clients are closed and the pool is terminated.
    */
   async end(): Promise<void> {
-    this.client?.release();
-    return this.pool.end();
+    // Only destroy the pool if it was created internally.
+    // If the pool was provided externally via config.pool, the caller is responsible for managing its lifecycle.
+    if (this._poolCreatedInternally) {
+      return this.pool.end();
+    }
   }
 
   /**
