@@ -122,6 +122,25 @@ test("Test ChatModel uses callbacks with a cache", async () => {
   expect(response2.content).toEqual(acc);
 });
 
+test("Test ChatModel preserves v1 output in streaming aggregation", async () => {
+  const model = new FakeListChatModel({
+    responses: ["Hello there!"],
+  });
+  const preferStreamingCallback =
+    new (class extends RunCollectorCallbackHandler {
+      lc_prefer_streaming = true;
+    })();
+
+  const response = await model.invoke("Hello there!", {
+    callbacks: [preferStreamingCallback],
+    outputVersion: "v1",
+  });
+
+  expect(response.response_metadata.output_version).toBe("v1");
+  expect(Array.isArray(response.content)).toBe(true);
+  expect(response.content).toEqual(response.contentBlocks);
+});
+
 test("Test ChatModel legacy params withStructuredOutput", async () => {
   const model = new FakeListChatModel({
     responses: [`{ "test": true, "nested": { "somethingelse": "somevalue" } }`],
