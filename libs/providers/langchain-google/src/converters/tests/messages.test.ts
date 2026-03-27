@@ -185,6 +185,48 @@ describe("convertMessagesToGeminiContents", () => {
     ).toBe("get_weather");
   });
 
+  test("serializes object-valued ToolMessage content in the legacy path", () => {
+    const toolResult = {
+      status: "ok",
+      value: 42,
+      items: ["foo", "bar"],
+    };
+    const messages = [
+      new HumanMessage("hello"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "my_tool",
+            args: { input: "test" },
+            id: "call-123",
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: toolResult as never,
+        tool_call_id: "call-123",
+        name: "my_tool",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    expect(contents).toHaveLength(3);
+    expect(contents[1].role).toBe("model");
+    expect(contents[2].role).toBe("user");
+
+    const functionResponsePart = contents[2].parts.find(
+      (p) => "functionResponse" in p && p.functionResponse
+    ) as Gemini.Part.FunctionResponse;
+    expect(functionResponsePart).toBeDefined();
+    expect(functionResponsePart.functionResponse!.name).toBe("my_tool");
+    expect(functionResponsePart.functionResponse!.response).toEqual({
+      result: JSON.stringify(toolResult),
+    });
+  });
+
   test("resolves functionResponse.name for multiple tool calls (legacy path)", () => {
     const messages = [
       new HumanMessage("hello"),
@@ -420,6 +462,52 @@ describe("convertMessagesToGeminiContents", () => {
     ) as Gemini.Part.FunctionResponse;
     expect(functionResponsePart).toBeDefined();
     expect(functionResponsePart.functionResponse!.name).toBe("get_weather");
+  });
+
+  test("serializes object-valued ToolMessage content in the v1 path", () => {
+    const aiMsg = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          name: "my_tool",
+          args: { input: "test" },
+          id: "call-123",
+          type: "tool_call",
+        },
+      ],
+    });
+    aiMsg.response_metadata = { output_version: "v1" };
+
+    const toolResult = {
+      status: "ok",
+      value: 42,
+      items: ["foo", "bar"],
+    };
+    const messages = [
+      new HumanMessage("hello"),
+      aiMsg,
+      new ToolMessage({
+        content: toolResult as never,
+        tool_call_id: "call-123",
+        name: "my_tool",
+        response_metadata: { output_version: "v1" },
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    expect(contents).toHaveLength(3);
+    expect(contents[1].role).toBe("model");
+    expect(contents[2].role).toBe("user");
+
+    const functionResponsePart = contents[2].parts.find(
+      (p) => "functionResponse" in p && p.functionResponse
+    ) as Gemini.Part.FunctionResponse;
+    expect(functionResponsePart).toBeDefined();
+    expect(functionResponsePart.functionResponse!.name).toBe("my_tool");
+    expect(functionResponsePart.functionResponse!.response).toEqual({
+      result: JSON.stringify(toolResult),
+    });
   });
 
   test("Multiple tool calls name resolution (v1 path)", () => {
