@@ -56,13 +56,13 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
           typeof block.data === "string"
             ? block.data
             : typeof block.data === "object" && block.data !== null
-            ? // Convert Uint8Array to base64 string
-              btoa(
-                Array.from(block.data as Uint8Array)
-                  .map((byte) => String.fromCharCode(byte))
-                  .join("")
-              )
-            : String(block.data);
+              ? // Convert Uint8Array to base64 string
+                btoa(
+                  Array.from(block.data as Uint8Array)
+                    .map((byte) => String.fromCharCode(byte))
+                    .join("")
+                )
+              : String(block.data);
         return {
           inlineData: {
             mimeType: block.mime_type,
@@ -129,13 +129,13 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
           typeof block.data === "string"
             ? block.data
             : typeof block.data === "object" && block.data !== null
-            ? // Convert Uint8Array to base64 string
-              btoa(
-                Array.from(block.data as Uint8Array)
-                  .map((byte) => String.fromCharCode(byte))
-                  .join("")
-              )
-            : String(block.data);
+              ? // Convert Uint8Array to base64 string
+                btoa(
+                  Array.from(block.data as Uint8Array)
+                    .map((byte) => String.fromCharCode(byte))
+                    .join("")
+                )
+              : String(block.data);
         return {
           inlineData: {
             mimeType: block.mime_type,
@@ -202,13 +202,13 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
           typeof block.data === "string"
             ? block.data
             : typeof block.data === "object" && block.data !== null
-            ? // Convert Uint8Array to base64 string
-              btoa(
-                Array.from(block.data as Uint8Array)
-                  .map((byte) => String.fromCharCode(byte))
-                  .join("")
-              )
-            : String(block.data);
+              ? // Convert Uint8Array to base64 string
+                btoa(
+                  Array.from(block.data as Uint8Array)
+                    .map((byte) => String.fromCharCode(byte))
+                    .join("")
+                )
+              : String(block.data);
         return {
           inlineData: {
             mimeType: block.mime_type,
@@ -364,6 +364,15 @@ function convertStandardContentBlockToGeminiPart(
   switch (block.type) {
     case "text":
       return { text: block.text };
+    case "reasoning": {
+      const part: Record<string, unknown> = {
+        text: block.reasoning ?? "",
+        thought: true,
+      };
+      if ("thoughtSignature" in block)
+        part.thoughtSignature = block.thoughtSignature;
+      return part as Gemini.Part;
+    }
     case "image":
     case "audio":
     case "text-plain":
@@ -729,6 +738,15 @@ function convertLegacyContentMessageToGeminiContent(
           parts.push(messageContentImageUrl(item));
         } else if (isMessageContentMedia(item)) {
           parts.push(messageContentMedia(item));
+        } else if (item?.type === "reasoning") {
+          const rec = item as Record<string, unknown>;
+          const part: Record<string, unknown> = {
+            text: (rec.reasoning as string) ?? "",
+            thought: true,
+          };
+          if ("thoughtSignature" in rec)
+            part.thoughtSignature = rec.thoughtSignature;
+          parts.push(part as Gemini.Part);
         } else {
           parts.push(item as Gemini.Part);
         }
