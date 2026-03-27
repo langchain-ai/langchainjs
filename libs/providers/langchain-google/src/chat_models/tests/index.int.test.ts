@@ -160,13 +160,13 @@ const allModelInfo: ModelInfo[] = [
     model: "lyria-3-clip-preview",
     testConfig: {
       isAudio: true,
-    }
+    },
   },
   {
     model: "lyria-3-pro-preview",
     testConfig: {
       isAudio: true,
-    }
+    },
   },
 ];
 
@@ -254,7 +254,10 @@ function expandAllModelInfo(): ModelInfo[] {
   return ret;
 }
 
-function wrapInWavHeader(buffer: Buffer, sampleRate = 24000): Buffer<ArrayBuffer> {
+function wrapInWavHeader(
+  buffer: Buffer,
+  sampleRate = 24000
+): Buffer<ArrayBuffer> {
   const numChannels = 1;
   const bitsPerSample = 16;
   const byteRate = (sampleRate * numChannels * bitsPerSample) / 8;
@@ -332,7 +335,6 @@ async function openFileCommon(
   } else {
     exec(`open "${filePath}"`);
   }
-
 }
 
 function propSum(o: Record<string, number>): number {
@@ -1853,6 +1855,5 @@ describe.sequential.each(audioModelInfo)(
       const content = res?.contentBlocks;
       await handleResult(content);
     });
-
   }
 );
