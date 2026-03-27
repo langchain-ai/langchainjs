@@ -333,7 +333,7 @@ describe("Google Mock", () => {
       ],
     });
 
-    await llm.invoke("What is 1+1?");
+    const result = await llm.invoke("What is 1+1?");
 
     expect(callbackResult?.llmOutput?.tokenUsage).toEqual({
       promptTokens: 9,
@@ -345,6 +345,9 @@ describe("Google Mock", () => {
       output_tokens: 36,
       total_tokens: 45,
     });
+    expect(result.response_metadata.tokenUsage).toEqual(
+      callbackResult?.llmOutput?.tokenUsage
+    );
   });
 
   test("passes abort signal to fetch in non-streaming invoke", async () => {
