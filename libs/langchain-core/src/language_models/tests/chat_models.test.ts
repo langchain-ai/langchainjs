@@ -2,12 +2,23 @@ import { test, expect } from "vitest";
 import { z } from "zod/v3";
 import { z as z4 } from "zod/v4";
 import { zodToJsonSchema } from "../../utils/zod-to-json-schema/index.js";
-import { FakeChatModel, FakeListChatModel } from "../../utils/testing/index.js";
+import {
+  FakeChatModel,
+  FakeListChatModel,
+  FakeStreamingChatModel,
+} from "../../utils/testing/index.js";
 import { HumanMessage } from "../../messages/human.js";
 import { getBufferString } from "../../messages/utils.js";
-import { AIMessage } from "../../messages/ai.js";
+import { AIMessage, AIMessageChunk } from "../../messages/ai.js";
 import { RunCollectorCallbackHandler } from "../../tracers/run_collector.js";
 import { StandardJSONSchemaV1, StandardSchemaV1 } from "@standard-schema/spec";
+import { BaseCallbackHandler } from "../../callbacks/base.js";
+
+class PreferStreamingCallbackHandler extends BaseCallbackHandler {
+  name = "prefer_streaming";
+
+  lc_prefer_streaming = true;
+}
 
 test("Test ChatModel accepts array shorthand for messages", async () => {
   const model = new FakeChatModel({});
@@ -385,6 +396,28 @@ test("Test ChatModel can stream back a custom event", async () => {
     }
   }
   expect(customEvent).toBeDefined();
+});
+
+test("Test ChatModel invoke applies outputVersion v1 when callbacks prefer streaming", async () => {
+  const model = new FakeStreamingChatModel({
+    outputVersion: "v1",
+    chunks: [
+      new AIMessageChunk({ content: "Hello" }),
+      new AIMessageChunk({ content: " there" }),
+    ],
+  });
+
+  const response = await model.invoke("Hello there!", {
+    callbacks: [new PreferStreamingCallbackHandler()],
+  });
+
+  expect(response.response_metadata.output_version).toBe("v1");
+  expect(response.content).toEqual([
+    {
+      type: "text",
+      text: "Hello there",
+    },
+  ]);
 });
 
 test(`Test ChatModel should not serialize a passed "cache" parameter`, async () => {
