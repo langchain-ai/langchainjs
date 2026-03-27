@@ -25,6 +25,23 @@ import type { Gemini } from "../chat_models/types.js";
 import { iife } from "../utils/misc.js";
 import { InvalidInputError, ToolCallNotFoundError } from "../utils/errors.js";
 
+type ToolLikeMessage = BaseMessage & {
+  type: "tool";
+  tool_call_id: string;
+};
+
+function isToolLikeMessage(message: unknown): message is ToolLikeMessage {
+  return (
+    ToolMessage.isInstance(message) ||
+    (typeof message === "object" &&
+      message !== null &&
+      "type" in message &&
+      (message as { type?: unknown }).type === "tool" &&
+      "tool_call_id" in message &&
+      typeof (message as { tool_call_id?: unknown }).tool_call_id === "string")
+  );
+}
+
 /**
  * Standard content block converter for Google Gemini API.
  * Converts deprecated Data content blocks to Gemini Part format.
@@ -396,7 +413,7 @@ function convertStandardContentMessageToGeminiContent(
     role = "user";
   } else if (AIMessage.isInstance(message)) {
     role = "model";
-  } else if (ToolMessage.isInstance(message)) {
+  } else if (isToolLikeMessage(message)) {
     // Tool messages in Gemini were represented as function responses, but now are "user"
     role = "user";
   } else if (ChatMessage.isInstance(message)) {
@@ -424,9 +441,14 @@ function convertStandardContentMessageToGeminiContent(
   const parts: Gemini.Part[] = [];
 
   // Process standard content blocks
-  const contentBlocks = Array.isArray(message.contentBlocks)
-    ? message.contentBlocks
-    : [];
+  const contentBlocks =
+    isToolLikeMessage(message) &&
+    typeof message.content !== "string" &&
+    !Array.isArray(message.content)
+      ? []
+      : Array.isArray(message.contentBlocks)
+      ? message.contentBlocks
+      : [];
   contentBlocks.forEach((block: ContentBlock.Standard) => {
     const contentBlock =
       (message.additional_kwargs
@@ -451,7 +473,7 @@ function convertStandardContentMessageToGeminiContent(
   }
 
   // Handle tool messages as function responses
-  if (ToolMessage.isInstance(message) && message.tool_call_id) {
+  if (isToolLikeMessage(message) && message.tool_call_id) {
     const responseContent =
       typeof message.content === "string"
         ? message.content
@@ -673,7 +695,7 @@ function convertLegacyContentMessageToGeminiContent(
       return "user";
     } else if (AIMessage.isInstance(message)) {
       return "model";
-    } else if (ToolMessage.isInstance(message)) {
+    } else if (isToolLikeMessage(message)) {
       // Tool messages in Gemini were represented as function responses, but now are "user"
       return "user";
     } else if (ChatMessage.isInstance(message)) {
@@ -736,8 +758,19 @@ function convertLegacyContentMessageToGeminiContent(
     }
   }
 
+  if (AIMessage.isInstance(message) && message.tool_calls?.length) {
+    for (const toolCall of message.tool_calls) {
+      parts.push({
+        functionCall: {
+          name: toolCall.name,
+          args: toolCall.args ?? {},
+        },
+      } as Gemini.Part.FunctionCall);
+    }
+  }
+
   // Handle tool messages as function responses
-  if (ToolMessage.isInstance(message) && message.tool_call_id) {
+  if (isToolLikeMessage(message) && message.tool_call_id) {
     const responseContent =
       typeof message.content === "string"
         ? message.content
