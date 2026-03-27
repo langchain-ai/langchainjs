@@ -315,6 +315,39 @@ describe("Google Mock", () => {
     );
   });
 
+  test("handleLLMEnd exposes camelCase llmOutput tokenUsage", async () => {
+    let tokenUsage:
+      | {
+          promptTokens?: number;
+          completionTokens?: number;
+          totalTokens?: number;
+        }
+      | undefined;
+
+    const llm = new ChatGoogle({
+      model: "gemini-2.5-flash",
+      apiClient: new MockApiClient({
+        fileName: "gemini-chat-001.json",
+      }),
+      callbacks: [
+        {
+          handleLLMEnd(output) {
+            tokenUsage = output.llmOutput?.tokenUsage;
+          },
+        },
+      ],
+    });
+
+    const result = await llm.invoke("What is 1+1?");
+
+    expect(tokenUsage).toEqual({
+      promptTokens: 9,
+      completionTokens: 36,
+      totalTokens: 45,
+    });
+    expect(result.response_metadata.tokenUsage).toEqual(tokenUsage);
+  });
+
   test("passes abort signal to fetch in non-streaming invoke", async () => {
     const apiClient = new MockApiClient({
       fileName: "gemini-chat-001.json",

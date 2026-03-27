@@ -476,6 +476,14 @@ export abstract class BaseChatGoogle<
 
     const usageMetadata =
       convertGeminiGenerateContentResponseToUsageMetadata(data);
+    const tokenUsage =
+      usageMetadata !== undefined
+        ? {
+            promptTokens: usageMetadata.input_tokens,
+            completionTokens: usageMetadata.output_tokens,
+            totalTokens: usageMetadata.total_tokens,
+          }
+        : undefined;
     message.usage_metadata = usageMetadata;
 
     return {
@@ -493,7 +501,7 @@ export abstract class BaseChatGoogle<
         },
       ],
       llmOutput: {
-        tokenUsage: usageMetadata,
+        tokenUsage,
         model: data.modelVersion,
         responseId: data.responseId,
         usageMetadata,
