@@ -4,19 +4,19 @@ import * as importMap from "./import_map.js";
 import { OptionalImportMap } from "./import_type.js";
 
 /**
- * Load a LangChain module from a serialized text representation.
+ * Load a LangChain module from a serialized representation.
  * NOTE: This functionality is currently in beta.
  * Loaded classes may change independently of semver.
  *
  * **WARNING — insecure deserialization risk.** This function instantiates
- * classes and invokes constructors based on the contents of `text`. Never
+ * classes and invokes constructors based on the contents of `data`. Never
  * call this on untrusted or user-supplied input. Only deserialize data that
  * originates from a trusted source you control.
  *
  * See `@langchain/core/load` {@link LoadOptions} for detailed security
  * guidance on `secretsFromEnv`, `secretsMap`, and import maps.
  *
- * @param text Serialized text representation of the module.
+ * @param data Serialized JSON string, or a pre-parsed JavaScript object/array
  * @param secretsMap
  * @param optionalImportsMap
  * @param additionalImportsMap
@@ -24,7 +24,7 @@ import { OptionalImportMap } from "./import_type.js";
  * @returns A loaded instance of a LangChain module.
  */
 export async function load<T>(
-  text: string,
+  data: string | Record<string, unknown> | unknown[],
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   secretsMap: Record<string, any> = {},
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -33,7 +33,7 @@ export async function load<T>(
   additionalImportsMap: Record<string, any> = {},
   secretsFromEnv?: boolean
 ): Promise<T> {
-  return coreLoad(text, {
+  return coreLoad(data, {
     secretsMap,
     optionalImportsMap,
     optionalImportEntrypoints,

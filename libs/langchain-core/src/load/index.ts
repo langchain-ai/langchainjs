@@ -63,7 +63,11 @@ import * as coreImportMap from "./import_map.js";
 import type { OptionalImportMap, SecretMap } from "./import_type.js";
 import { type SerializedFields, keyFromJson, mapKeys } from "./map_keys.js";
 import { getEnvironmentVariable } from "../utils/env.js";
-import { isEscapedObject, unescapeValue } from "./validation.js";
+import {
+  isEscapedObject,
+  unescapeValue,
+  serializeValue,
+} from "./validation.js";
 
 /**
  * Options for loading serialized LangChain objects.
@@ -418,10 +422,10 @@ async function reviver(this: ReviverContext, value: unknown): Promise<unknown> {
 }
 
 /**
- * Load a LangChain object from a JSON string.
+ * Load a LangChain object from a JSON string or a pre-parsed JavaScript object/array.
  *
  * **WARNING — insecure deserialization risk.** This function instantiates
- * classes and invokes constructors based on the contents of `text`. If `text`
+ * classes and invokes constructors based on the contents of `data`. If `data`
  * originates from an untrusted source, an attacker can craft a payload that
  * instantiates arbitrary allowed classes with attacker-controlled arguments,
  * potentially causing secret exfiltration, SSRF, or other side effects.
@@ -430,7 +434,8 @@ async function reviver(this: ReviverContext, value: unknown): Promise<unknown> {
  * fully trusted origin (e.g., your own database). **Never deserialize
  * user-supplied or network-received JSON without independent validation.**
  *
- * @param text - The JSON string to parse and load.
+ * @param data - A JSON string to parse, a pre-parsed JavaScript object/array,
+ *   or the return value of `dump()`.
  * @param options - Options for loading. See {@link LoadOptions} for security guidance.
  * @returns The loaded LangChain object.
  *
@@ -441,6 +446,10 @@ async function reviver(this: ReviverContext, value: unknown): Promise<unknown> {
  *
  * // Basic usage - secrets must be provided explicitly
  * const msg = await load<AIMessage>(jsonString);
+ *
+ * // With a pre-parsed object
+ * const row = await db.query("SELECT message FROM history WHERE id = $1", [id]);
+ * const msg = await load<AIMessage>(row.message); // row.message is already an object
  *
  * // With secrets from a map (preferred over secretsFromEnv)
  * const msg = await load<AIMessage>(jsonString, {
@@ -453,8 +462,11 @@ async function reviver(this: ReviverContext, value: unknown): Promise<unknown> {
  * });
  * ```
  */
-export async function load<T>(text: string, options?: LoadOptions): Promise<T> {
-  const json = JSON.parse(text);
+export async function load<T>(
+  data: string | Record<string, unknown> | unknown[],
+  options?: LoadOptions
+): Promise<T> {
+  const json = typeof data === "string" ? JSON.parse(data) : data;
 
   const context: ReviverContext = {
     optionalImportsMap: options?.optionalImportsMap ?? {},
@@ -469,3 +481,19 @@ export async function load<T>(text: string, options?: LoadOptions): Promise<T> {
 
   return reviver.call(context, json) as Promise<T>;
 }
+
+/**
+ * Return a plain JavaScript object representation of a LangChain object.
+ *
+ * Plain objects containing an `'lc'` key are automatically escaped to prevent
+ * confusion with the LC serialization format. The escape marker is removed
+ * during deserialization via `load()`.
+ *
+ * @param value - The object to serialize.
+ * @returns A plain object that can be passed to `JSON.stringify` or stored
+ *   directly in a database JSON column.
+ */
+export function dump(value: unknown): unknown {
+  return serializeValue(value);
+}
+
