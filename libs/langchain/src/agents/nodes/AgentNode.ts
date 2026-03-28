@@ -522,39 +522,56 @@ export class AgentNode<
             currentSystemMessage = baselineSystemMessage;
 
             /**
-             * Verify that the user didn't add any new tools.
-             * We can't allow this as the ToolNode is already initiated with given tools.
+             * Validate tool modifications in wrapModelCall.
+             *
+             * Classify each client tool as either:
+             * - "added": a genuinely new tool name not in the static toolClasses
+             * - "replaced": same name as a registered tool but different instance
+             *
+             * Added tools are allowed when a wrapToolCall middleware exists to
+             * handle their execution. Replaced tools are always rejected to
+             * preserve ToolNode execution identity.
              */
             const modifiedTools = req.tools ?? [];
-            const newTools = modifiedTools.filter(
-              (tool) =>
-                isClientTool(tool) &&
-                !this.#options.toolClasses.some((t) => t.name === tool.name)
+            const registeredToolsByName = new Map(
+              this.#options.toolClasses
+                .filter(isClientTool)
+                .map((t) => [t.name, t] as const)
             );
-            if (newTools.length > 0) {
-              throw new Error(
-                `You have added a new tool in "wrapModelCall" hook of middleware "${
-                  currentMiddleware.name
-                }": ${newTools
-                  .map((tool) => tool.name)
-                  .join(", ")}. This is not supported.`
+
+            const addedClientTools = modifiedTools.filter(
+              (tool) =>
+                isClientTool(tool) && !registeredToolsByName.has(tool.name)
+            );
+
+            const replacedClientTools = modifiedTools.filter((tool) => {
+              if (!isClientTool(tool)) return false;
+              const original = registeredToolsByName.get(tool.name);
+              return original != null && original !== tool;
+            });
+
+            if (addedClientTools.length > 0) {
+              const hasWrapToolCallHandler = this.#options.middleware?.some(
+                (m) => m.wrapToolCall != null
               );
+              if (!hasWrapToolCallHandler) {
+                throw new Error(
+                  `You have added a new tool in "wrapModelCall" hook of middleware "${
+                    currentMiddleware.name
+                  }": ${addedClientTools
+                    .map((tool) => tool.name)
+                    .join(
+                      ", "
+                    )}. This is not supported unless a middleware provides a "wrapToolCall" handler to execute it.`
+                );
+              }
             }
 
-            /**
-             * Verify that user has not added or modified a tool with the same name.
-             * We can't allow this as the ToolNode is already initiated with given tools.
-             */
-            const invalidTools = modifiedTools.filter(
-              (tool) =>
-                isClientTool(tool) &&
-                this.#options.toolClasses.every((t) => t !== tool)
-            );
-            if (invalidTools.length > 0) {
+            if (replacedClientTools.length > 0) {
               throw new Error(
                 `You have modified a tool in "wrapModelCall" hook of middleware "${
                   currentMiddleware.name
-                }": ${invalidTools
+                }": ${replacedClientTools
                   .map((tool) => tool.name)
                   .join(", ")}. This is not supported.`
               );
