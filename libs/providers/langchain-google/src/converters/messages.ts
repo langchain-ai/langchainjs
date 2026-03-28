@@ -377,6 +377,62 @@ function convertStandardContentBlockToGeminiPart(
 }
 
 /**
+ * Check if a message is a ToolMessage.
+ * ToolMessage.isInstance() can return false when content is a non-standard type
+ * (e.g. a plain object instead of string | MessageContentComplex[]).
+ * Fall back to checking message.type as a safety net.
+ */
+function isToolMessageLike(
+  message: BaseMessage
+): message is BaseMessage & { tool_call_id: string } {
+  return (
+    (ToolMessage.isInstance(message) || message.type === "tool") &&
+    "tool_call_id" in message &&
+    typeof (message as ToolMessage).tool_call_id === "string"
+  );
+}
+
+/**
+ * Converts ToolMessage content to a value suitable for
+ * `functionResponse.response.result`.
+ *
+ * - string → try JSON.parse (returns parsed object if valid JSON, raw string otherwise)
+ * - array  → extract text blocks, join, then try JSON.parse
+ * - plain object → pass through as-is (Gemini API expects an object, not a string)
+ * - other  → String(content)
+ */
+function toolMessageContentToResponseResult(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  content: any
+): unknown {
+  if (typeof content === "string") {
+    try {
+      return JSON.parse(content);
+    } catch {
+      return content;
+    }
+  }
+  if (Array.isArray(content)) {
+    const text = content
+      .filter(
+        (block: Record<string, unknown>) =>
+          block?.type === "text" && typeof block?.text === "string"
+      )
+      .map((block: Record<string, unknown>) => block.text as string)
+      .join("");
+    try {
+      return JSON.parse(text);
+    } catch {
+      return text;
+    }
+  }
+  if (typeof content === "object" && content !== null) {
+    return content;
+  }
+  return String(content);
+}
+
+/**
  * Converts a single LangChain message with standard content blocks (v1 format) to Gemini Content.
  * This handles messages that have `response_metadata.output_version === "v1"`.
  *
@@ -396,7 +452,7 @@ function convertStandardContentMessageToGeminiContent(
     role = "user";
   } else if (AIMessage.isInstance(message)) {
     role = "model";
-  } else if (ToolMessage.isInstance(message)) {
+  } else if (isToolMessageLike(message)) {
     // Tool messages in Gemini were represented as function responses, but now are "user"
     role = "user";
   } else if (ChatMessage.isInstance(message)) {
@@ -451,11 +507,10 @@ function convertStandardContentMessageToGeminiContent(
   }
 
   // Handle tool messages as function responses
-  if (ToolMessage.isInstance(message) && message.tool_call_id) {
-    const responseContent =
-      typeof message.content === "string"
-        ? message.content
-        : JSON.stringify(message.content);
+  if (isToolMessageLike(message)) {
+    const responseContent = toolMessageContentToResponseResult(
+      message.content
+    );
     // Find the matching tool call in a preceding AIMessage to get the function name
     const aiMsg = messages
       .filter(AIMessage.isInstance)
@@ -673,7 +728,7 @@ function convertLegacyContentMessageToGeminiContent(
       return "user";
     } else if (AIMessage.isInstance(message)) {
       return "model";
-    } else if (ToolMessage.isInstance(message)) {
+    } else if (isToolMessageLike(message)) {
       // Tool messages in Gemini were represented as function responses, but now are "user"
       return "user";
     } else if (ChatMessage.isInstance(message)) {
@@ -736,12 +791,23 @@ function convertLegacyContentMessageToGeminiContent(
     }
   }
 
+  // Convert AIMessage tool_calls to functionCall parts (legacy path)
+  if (AIMessage.isInstance(message) && message.tool_calls?.length) {
+    for (const toolCall of message.tool_calls) {
+      parts.push({
+        functionCall: {
+          name: toolCall.name,
+          args: toolCall.args ?? {},
+        },
+      } as Gemini.Part.FunctionCall);
+    }
+  }
+
   // Handle tool messages as function responses
-  if (ToolMessage.isInstance(message) && message.tool_call_id) {
-    const responseContent =
-      typeof message.content === "string"
-        ? message.content
-        : JSON.stringify(message.content);
+  if (isToolMessageLike(message)) {
+    const responseContent = toolMessageContentToResponseResult(
+      message.content
+    );
     // Find the matching tool call in a preceding AIMessage to get the function name
     const aiMsg = messages
       .filter(AIMessage.isInstance)
