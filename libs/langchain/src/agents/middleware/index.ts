@@ -90,3 +90,9 @@ export {
  */
 export { type AgentMiddleware } from "./types.js";
 export { countTokensApproximately } from "./utils.js";
+export {
+  BuiltInAgentMiddleware,
+  type BuiltInAgentMiddlewareConfig,
+  createBuiltInAgentMiddleware,
+  AgentMiddlewareBuilder,
+} from "./factory.js";
