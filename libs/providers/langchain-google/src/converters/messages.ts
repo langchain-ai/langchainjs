@@ -508,9 +508,7 @@ function convertStandardContentMessageToGeminiContent(
 
   // Handle tool messages as function responses
   if (isToolMessageLike(message)) {
-    const responseContent = toolMessageContentToResponseResult(
-      message.content
-    );
+    const responseContent = toolMessageContentToResponseResult(message.content);
     // Find the matching tool call in a preceding AIMessage to get the function name
     const aiMsg = messages
       .filter(AIMessage.isInstance)
@@ -805,9 +803,7 @@ function convertLegacyContentMessageToGeminiContent(
 
   // Handle tool messages as function responses
   if (isToolMessageLike(message)) {
-    const responseContent = toolMessageContentToResponseResult(
-      message.content
-    );
+    const responseContent = toolMessageContentToResponseResult(message.content);
     // Find the matching tool call in a preceding AIMessage to get the function name
     const aiMsg = messages
       .filter(AIMessage.isInstance)

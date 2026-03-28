@@ -756,7 +756,11 @@ describe("convertMessagesToGeminiContents", () => {
         ],
       }),
       new ToolMessage({
-        content: { status: "ok", value: 42, items: ["foo", "bar"] } as unknown as string,
+        content: {
+          status: "ok",
+          value: 42,
+          items: ["foo", "bar"],
+        } as unknown as string,
         tool_call_id: "tool-call-obj",
         name: "my_tool",
       }),
