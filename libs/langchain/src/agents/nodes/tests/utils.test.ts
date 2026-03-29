@@ -3,22 +3,11 @@ import { z as z3 } from "zod/v3";
 import { z as z4 } from "zod/v4";
 import { StateSchema } from "@langchain/langgraph";
 import { getInteropZodObjectShape } from "@langchain/core/utils/types";
-import {
-  initializeMiddlewareStates,
-  derivePrivateState,
-} from "../utils.js";
+import { initializeMiddlewareStates, derivePrivateState } from "../utils.js";
 import type { AgentMiddleware } from "../../middleware/types.js";
 
 const baseState = { messages: [] };
 
-/**
- * Regression tests for https://github.com/langchain-ai/langchainjs/issues/10257
- *
- * `initializeMiddlewareStates` and `derivePrivateState` must work correctly
- * regardless of whether the user has zod v3 or v4 installed, since `langchain`
- * declares `"zod": "^3.25.76 || ^4"` as a dependency and node module resolution
- * may resolve `import { z } from "zod"` to the user's installed version.
- */
 describe("initializeMiddlewareStates", () => {
   it("should work with a zod v3 stateSchema", async () => {
     const middleware: AgentMiddleware = {
