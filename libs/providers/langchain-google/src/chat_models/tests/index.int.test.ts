@@ -75,6 +75,7 @@ type ModelInfoConfig = {
   isImage?: boolean; // Is this an image generation model?
   hasImageThoughts?: boolean; // Is this an image model that has thinking output?
   isTts?: boolean; // Is this a TTS model?
+  isAudio?: boolean; // Is this an audio generation model?
 };
 
 type DefaultGoogleParams = Omit<
@@ -115,21 +116,18 @@ const allModelInfo: ModelInfo[] = [
     model: "gemini-3-flash-preview",
     testConfig: {
       isThinking: true,
-      only: true,
     },
   },
   {
     model: "gemini-3.1-pro-preview",
     testConfig: {
       isThinking: true,
-      only: true,
     },
   },
   {
     model: "gemini-3.1-flash-lite-preview",
     testConfig: {
       isThinking: true,
-      only: true,
     },
   },
   {
@@ -156,6 +154,18 @@ const allModelInfo: ModelInfo[] = [
     testConfig: {
       isTts: true,
       skip: true,
+    },
+  },
+  {
+    model: "lyria-3-clip-preview",
+    testConfig: {
+      isAudio: true,
+    },
+  },
+  {
+    model: "lyria-3-pro-preview",
+    testConfig: {
+      isAudio: true,
     },
   },
 ];
@@ -242,6 +252,89 @@ function expandAllModelInfo(): ModelInfo[] {
   });
 
   return ret;
+}
+
+function wrapInWavHeader(
+  buffer: Buffer,
+  sampleRate = 24000
+): Buffer<ArrayBuffer> {
+  const numChannels = 1;
+  const bitsPerSample = 16;
+  const byteRate = (sampleRate * numChannels * bitsPerSample) / 8;
+  const blockAlign = (numChannels * bitsPerSample) / 8;
+  const dataSize = buffer.length;
+  const headerSize = 44;
+  const totalSize = headerSize + dataSize - 8;
+
+  const header = Buffer.alloc(headerSize);
+  let offset = 0;
+
+  // RIFF chunk
+  header.write("RIFF", offset);
+  offset += 4;
+  header.writeUInt32LE(totalSize, offset);
+  offset += 4;
+  header.write("WAVE", offset);
+  offset += 4;
+
+  // fmt sub-chunk
+  header.write("fmt ", offset);
+  offset += 4;
+  header.writeUInt32LE(16, offset); // Subchunk1Size (16 for PCM)
+  offset += 4;
+  header.writeUInt16LE(1, offset); // AudioFormat (1 for PCM)
+  offset += 2;
+  header.writeUInt16LE(numChannels, offset);
+  offset += 2;
+  header.writeUInt32LE(sampleRate, offset);
+  offset += 4;
+  header.writeUInt32LE(byteRate, offset);
+  offset += 4;
+  header.writeUInt16LE(blockAlign, offset);
+  offset += 2;
+  header.writeUInt16LE(bitsPerSample, offset);
+  offset += 2;
+
+  // data sub-chunk
+  header.write("data", offset);
+  offset += 4;
+  header.writeUInt32LE(dataSize, offset);
+  offset += 4;
+
+  return Buffer.concat([header, buffer]);
+}
+
+async function openFileCommon(
+  block: ContentBlock.Multimodal.File,
+  testSeq: number,
+  imageSeq: number
+) {
+  if (!block.data) {
+    return;
+  }
+  const buffer = Buffer.from(block.data as string, "base64");
+  const fullMimeType = block.mimeType ?? "";
+  const mimeType = fullMimeType.split(";")[0].trim().toLowerCase();
+  const basename = `langchain-gemini-test-${Date.now()}-${testSeq}-${imageSeq}`;
+
+  let outBuffer = buffer;
+  let ext = "bin";
+  const parts = mimeType.split("/");
+  if (parts.length === 2) {
+    ext = parts[1];
+  }
+  if (mimeType === "audio/l16") {
+    ext = "wav";
+    outBuffer = wrapInWavHeader(buffer);
+  }
+
+  const filePath = path.join(os.tmpdir(), `${basename}.${ext}`);
+  await fs.writeFile(filePath, outBuffer);
+  if (mimeType.startsWith("audio/")) {
+    exec(`afplay "${filePath}"`);
+  } else {
+    exec(`open "${filePath}"`);
+  }
 }
 
 function propSum(o: Record<string, number>): number {
@@ -1417,24 +1510,7 @@ describe.each(imageModelInfo)(
     });
 
     async function openFile(block: ContentBlock.Multimodal.File) {
-      if (!block.data) {
-        return;
-      }
-      const buffer = Buffer.from(block.data as string, "base64");
-      let ext = "bin";
-      if (block.mimeType) {
-        const parts = block.mimeType.split("/");
-        if (parts.length === 2) {
-          ext = parts[1];
-        }
-      }
-
-      const filePath = path.join(
-        os.tmpdir(),
-        `langchain-gemini-test-${Date.now()}-${testSeq}-${imageSeq++}.${ext}`
-      );
-      await fs.writeFile(filePath, buffer);
-      exec(`open "${filePath}"`);
+      await openFileCommon(block, testSeq, imageSeq++);
     }
 
     async function handleResult(
@@ -1581,62 +1657,7 @@ describe.sequential.each(ttsModelInfo)(
     });
 
     async function openFile(block: ContentBlock.Multimodal.File) {
-      if (!block.data) {
-        return;
-      }
-      const buffer = Buffer.from(block.data as string, "base64");
-      const basename = `langchain-gemini-test-${Date.now()}-${testSeq}-${imageSeq++}`;
-      const wavFile = path.join(os.tmpdir(), `${basename}.wav`);
-
-      // WAV Header Construction
-      const numChannels = 1;
-      const sampleRate = 24000;
-      const bitsPerSample = 16;
-      const byteRate = (sampleRate * numChannels * bitsPerSample) / 8;
-      const blockAlign = (numChannels * bitsPerSample) / 8;
-      const dataSize = buffer.length;
-      const headerSize = 44;
-      const totalSize = headerSize + dataSize - 8;
-
-      const header = Buffer.alloc(headerSize);
-      let offset = 0;
-
-      // RIFF chunk
-      header.write("RIFF", offset);
-      offset += 4;
-      header.writeUInt32LE(totalSize, offset);
-      offset += 4;
-      header.write("WAVE", offset);
-      offset += 4;
-
-      // fmt sub-chunk
-      header.write("fmt ", offset);
-      offset += 4;
-      header.writeUInt32LE(16, offset); // Subchunk1Size (16 for PCM)
-      offset += 4;
-      header.writeUInt16LE(1, offset); // AudioFormat (1 for PCM)
-      offset += 2;
-      header.writeUInt16LE(numChannels, offset);
-      offset += 2;
-      header.writeUInt32LE(sampleRate, offset);
-      offset += 4;
-      header.writeUInt32LE(byteRate, offset);
-      offset += 4;
-      header.writeUInt16LE(blockAlign, offset);
-      offset += 2;
-      header.writeUInt16LE(bitsPerSample, offset);
-      offset += 2;
-
-      // data sub-chunk
-      header.write("data", offset);
-      offset += 4;
-      header.writeUInt32LE(dataSize, offset);
-      offset += 4;
-
-      const wavBuffer = Buffer.concat([header, buffer]);
-
-      await fs.writeFile(wavFile, wavBuffer);
-      exec(`afplay "${wavFile}"`);
+      await openFileCommon(block, testSeq, imageSeq++);
     }
 
     async function handleResult(blocks: ContentBlock.Standard[]) {
@@ -1741,5 +1762,98 @@ describe.sequential.each(ttsModelInfo)(
         await handleResult(content);
       }
     }, 60000);
+  }
+);
+
+const audioModelInfo: ModelInfo[] = filterTestableModels([
+  (modelInfo: ModelInfo) => modelInfo.testConfig?.isAudio === true,
+]);
+console.log(audioModelInfo);
+
+// Audio tests fail on Vertex
+describe.sequential.each(audioModelInfo)(
+  "Google Audio ($model) $testConfig",
+  ({ model, defaultGoogleParams, testConfig }: ModelInfo) => {
+    let recorder: GoogleRequestRecorder;
+    let callbacks: BaseCallbackHandler[];
+
+    let warnSpy: MockInstance<any>;
+
+    let testSeq = 0;
+    let imageSeq = 0;
+
+    function newChatGoogle(
+      fields?: DefaultGoogleParams
+    ): ChatGoogle | ChatGoogleNode {
+      recorder = new GoogleRequestRecorder();
+      callbacks = buildTestCallbacks(recorder);
+
+      const configParams:
+        | ChatGoogleParams
+        | ChatGoogleNodeParams
+        | Record<string, any> = {
+        responseModalities: ["AUDIO"],
+      };
+      const useNode = testConfig?.node ?? false;
+      const useApiKey = testConfig?.useApiKey ?? !useNode;
+      if (useApiKey) {
+        configParams.apiKey = getEnvironmentVariable("TEST_API_KEY");
+      }
+
+      const params = {
+        model,
+        callbacks,
+        ...configParams,
+        ...(defaultGoogleParams ?? {}),
+        ...(fields ?? {}),
+      };
+      if (useNode) {
+        return new ChatGoogleNode(params);
+      } else {
+        return new ChatGoogle(params);
+      }
+    }
+
+    beforeEach(async () => {
+      imageSeq = 0;
+      warnSpy = vi.spyOn(global.console, "warn");
+      const delay = testConfig?.delay ?? 0;
+      if (delay) {
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    });
+
+    afterEach(() => {
+      testSeq++;
+      warnSpy.mockRestore();
+    });
+
+    async function openFile(block: ContentBlock.Multimodal.File) {
+      await openFileCommon(block, testSeq, imageSeq++);
+    }
+
+    async function handleResult(blocks: ContentBlock.Standard[]) {
+      for (const block of blocks) {
+        if (block.type === "file") {
+          await openFile(block as ContentBlock.Multimodal.File);
+        } else if (block.type === "text") {
+          console.log(block.text);
+        } else {
+          console.log(`Block type: ${block.type}`);
+        }
+      }
+    }
+
+    test("music", async () => {
+      const model = newChatGoogle();
+      const prompt = `
+        Create a song about LangChainJS and Gemini that includes
+        references to a parrot.
+        Style: salsa
+      `;
+      const res = await model.invoke(prompt);
+      const content = res?.contentBlocks;
+      await handleResult(content);
+    });
   }
 );
