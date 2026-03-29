@@ -584,6 +584,75 @@ describe.each(coreModelInfo)(
       }
     });
 
+    test("function reply with object tool content", async () => {
+      const tools: Gemini.Tool[] = [
+        {
+          functionDeclarations: [
+            {
+              name: "get_data",
+              description:
+                "Get some structured data for a given query",
+              parameters: {
+                type: "object",
+                properties: {
+                  query: {
+                    type: "string",
+                    description: "The query to look up.",
+                  },
+                },
+                required: ["query"],
+              },
+            },
+          ],
+        },
+      ];
+      const llm = newChatGoogle().bindTools(tools);
+      const messages: BaseMessage[] = [
+        new HumanMessage("Get data about the weather in London."),
+        new AIMessage({
+          content: "",
+          tool_calls: [
+            {
+              type: "tool_call",
+              id: "call-obj-test",
+              name: "get_data",
+              args: { query: "weather London" },
+            },
+          ],
+        }),
+        new ToolMessage({
+          // Plain object content — this is the scenario from #10500
+          content: {
+            status: "ok",
+            temperature: 21,
+            unit: "celsius",
+          } as unknown as string,
+          tool_call_id: "call-obj-test",
+          name: "get_data",
+        }),
+      ];
+      const res = await llm.invoke(messages);
+
+      // Verify the request body sent to the API contains functionResponse
+      const contents = recorder.request?.contents;
+      expect(contents).toBeDefined();
+      const functionResponsePart = contents
+        ?.flatMap((c: any) => c.parts ?? [])
+        ?.find((p: any) => p.functionResponse);
+      expect(functionResponsePart).toBeDefined();
+      // Object content should be preserved, not stringified or dropped
+      expect(
+        functionResponsePart.functionResponse.response.result
+      ).toEqual({
+        status: "ok",
+        temperature: 21,
+        unit: "celsius",
+      });
+
+      // Verify the model responded (didn't crash from the object content)
+      expect(res.content).toBeDefined();
+    });
+
     test("function - force tool", async () => {
       const llm = newChatGoogle();
       const llmWithTools: Runnable = llm.bindTools(
