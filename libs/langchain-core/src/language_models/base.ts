@@ -425,7 +425,7 @@ export interface BaseLanguageModelInterface<
 
 export type LanguageModelOutput = BaseMessage | string;
 
-export type LanguageModelLike = Runnable<
+export type LanguageModelLike = RunnableInterface<
   BaseLanguageModelInput,
   LanguageModelOutput
 >;

@@ -18,7 +18,6 @@ import {
   type BaseChatModelCallOptions,
 } from "@langchain/core/language_models/chat_models";
 import {
-  LanguageModelLike,
   BaseLanguageModelInput,
 } from "@langchain/core/language_models/base";
 import {
@@ -30,7 +29,11 @@ import {
 } from "@langchain/core/runnables";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
 
-import { isBaseChatModel, isConfigurableModel } from "./model.js";
+import {
+  isBaseChatModel,
+  isConfigurableModel,
+  type AgentLanguageModelLike as LanguageModelLike,
+} from "./model.js";
 import { MultipleToolsBoundError, MiddlewareError } from "./errors.js";
 import type { AgentBuiltInState } from "./runtime.js";
 import type {

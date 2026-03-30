@@ -1,4 +1,4 @@
-import type { LanguageModelLike } from "@langchain/core/language_models/base";
+import type { AgentLanguageModelLike as LanguageModelLike } from "../model.js";
 import type { BaseMessage, SystemMessage } from "@langchain/core/messages";
 import type { ServerTool, ClientTool } from "@langchain/core/tools";
 

@@ -1,8 +1,12 @@
 import { z } from "zod/v3";
 import { BaseMessage, HumanMessage } from "@langchain/core/messages";
-import { LanguageModelLike } from "@langchain/core/language_models/base";
+import {
+  BaseLanguageModelInput,
+  LanguageModelOutput,
+} from "@langchain/core/language_models/base";
 import { describe, it, expectTypeOf } from "vitest";
 import type { IterableReadableStream } from "@langchain/core/utils/stream";
+import type { RunnableInterface } from "@langchain/core/runnables";
 
 import { type BuiltInState, createAgent, createMiddleware } from "../index.js";
 import type { StreamOutputMap } from "@langchain/langgraph";
@@ -31,7 +35,40 @@ describe("reactAgent", () => {
     // Verify model property type
     expectTypeOf<Parameters<typeof createAgent>[0]>()
       .toHaveProperty("model")
-      .toEqualTypeOf<string | LanguageModelLike>();
+      .toEqualTypeOf<
+        string | RunnableInterface<BaseLanguageModelInput, LanguageModelOutput>
+      >();
+  });
+
+  it("should accept models that only implement RunnableInterface", async () => {
+    const compatibleModel: RunnableInterface<
+      BaseLanguageModelInput,
+      LanguageModelOutput
+    > = {
+      lc_serializable: true,
+      get lc_id() {
+        return ["tests", "compatible-model"];
+      },
+      async invoke() {
+        return new HumanMessage("Hello, world!");
+      },
+      async batch(inputs) {
+        return inputs.map(() => new HumanMessage("Hello, world!"));
+      },
+      async stream() {
+        return {} as IterableReadableStream<LanguageModelOutput>;
+      },
+      async *transform() {
+        yield new HumanMessage("Hello, world!");
+      },
+      getName() {
+        return "compatible-model";
+      },
+    };
+
+    createAgent({
+      model: compatibleModel,
+    });
   });
 
   it("should not require runnable config if context schema is not provided", async () => {

@@ -11,7 +11,6 @@ import {
   isCommand,
   type LangGraphRunnableConfig,
 } from "@langchain/langgraph";
-import { type LanguageModelLike } from "@langchain/core/language_models/base";
 import { type BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
 import {
   InteropZodObject,
@@ -25,6 +24,7 @@ import type { ClientTool, ServerTool } from "@langchain/core/tools";
 import { initChatModel } from "../../chat_models/universal.js";
 import { MultipleStructuredOutputsError, MiddlewareError } from "../errors.js";
 import { RunnableCallable } from "../RunnableCallable.js";
+import type { AgentLanguageModelLike as LanguageModelLike } from "../model.js";
 import {
   bindTools,
   validateLLMHasNoBoundTools,
@@ -895,7 +895,7 @@ export class AgentNode<
     model: LanguageModelLike,
     preparedOptions: ModelRequest | undefined,
     structuredResponseFormat: ResponseFormat | undefined
-  ): Promise<Runnable> {
+  ): Promise<LanguageModelLike | Runnable> {
     const options: Partial<BaseChatModelCallOptions> = {};
     const structuredTools = Object.values(
       structuredResponseFormat && "tools" in structuredResponseFormat
