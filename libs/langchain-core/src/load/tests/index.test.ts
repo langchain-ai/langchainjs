@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { load } from "../index.js";
+import { load, dump } from "../index.js";
 import { HumanMessage, AIMessage } from "../../messages/index.js";
 
 const SENTINEL_ENV_VAR = "TEST_SECRET_INJECTION_VAR";
@@ -682,5 +682,76 @@ describe("`load()`", () => {
         AIMessage
       );
     });
+  });
+
+  describe("Pre-parsed object input", () => {
+    it("accepts a pre-parsed object", async () => {
+      const msg = new HumanMessage("Hello from DB");
+      const parsedObj = JSON.parse(JSON.stringify(dump(msg))) as Record<
+        string,
+        unknown
+      >;
+      const restored = await load<HumanMessage>(parsedObj);
+      expect(restored).toBeInstanceOf(HumanMessage);
+      expect(restored.content).toBe("Hello from DB");
+    });
+
+    it("accepts a pre-parsed array of messages", async () => {
+      const messages = [new HumanMessage("Hi"), new AIMessage("Hello")];
+      const parsedArr = JSON.parse(JSON.stringify(dump(messages))) as unknown[];
+      const restored = await load<[HumanMessage, AIMessage]>(parsedArr);
+      expect(Array.isArray(restored)).toBe(true);
+      expect(restored[0]).toBeInstanceOf(HumanMessage);
+      expect(restored[1]).toBeInstanceOf(AIMessage);
+    });
+  });
+});
+
+describe("`dump()`", () => {
+  it("dump() returns a plain object from a Serializable", () => {
+    const msg = new HumanMessage("Hello");
+    const obj = dump(msg);
+    expect(typeof obj).toBe("object");
+    expect(obj).not.toBeInstanceOf(HumanMessage);
+    expect(() => JSON.stringify(obj)).not.toThrow();
+  });
+
+  it("dump()/load() round-trip preserves message content", async () => {
+    const msg = new HumanMessage("Round trip!");
+    const obj = dump(msg) as Record<string, unknown>;
+    const restored = await load<HumanMessage>(obj);
+    expect(restored).toBeInstanceOf(HumanMessage);
+    expect(restored.content).toBe("Round trip!");
+  });
+
+  it("stringify(dump())/load() round-trip preserves message content", async () => {
+    const msg = new AIMessage("AI response");
+    const str = JSON.stringify(dump(msg));
+    const restored = await load<AIMessage>(str);
+    expect(restored).toBeInstanceOf(AIMessage);
+    expect(restored.content).toBe("AI response");
+  });
+
+  it("dump() handles an array of messages", () => {
+    const messages = [new HumanMessage("Hi"), new AIMessage("Hello")];
+    const obj = dump(messages);
+    expect(Array.isArray(obj)).toBe(true);
+    expect(() => JSON.stringify(obj)).not.toThrow();
+  });
+
+  it("stringify(dump())/load() round-trip for array of messages", async () => {
+    const messages = [new HumanMessage("Hi"), new AIMessage("Hello")];
+    const str = JSON.stringify(dump(messages));
+    const restored = await load<[HumanMessage, AIMessage]>(str);
+    expect(Array.isArray(restored)).toBe(true);
+    expect(restored[0]).toBeInstanceOf(HumanMessage);
+    expect(restored[1]).toBeInstanceOf(AIMessage);
+  });
+
+  it("dump() on a primitive returns it as-is", () => {
+    expect(dump("hello")).toBe("hello");
+    expect(dump(42)).toBe(42);
+    expect(dump(null)).toBe(null);
+    expect(dump(true)).toBe(true);
   });
 });
