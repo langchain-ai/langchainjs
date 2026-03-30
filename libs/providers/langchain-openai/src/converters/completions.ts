@@ -283,6 +283,8 @@ export const convertCompletionsMessageToBaseMessage: Converter<
   const rawToolCalls: OpenAIToolCall[] | undefined = message.tool_calls as
     | OpenAIToolCall[]
     | undefined;
+  const providerReasoningContent = (message as { reasoning_content?: string })
+    .reasoning_content;
   switch (message.role) {
     case "assistant": {
       const toolCalls = [];
@@ -301,6 +303,9 @@ export const convertCompletionsMessageToBaseMessage: Converter<
       };
       if (includeRawResponse !== undefined) {
         additional_kwargs.__raw_response = rawResponse;
+      }
+      if (providerReasoningContent !== undefined) {
+        additional_kwargs.reasoning_content = providerReasoningContent;
       }
       const response_metadata: Record<string, unknown> | undefined = {
         model_provider: "openai",
@@ -420,6 +425,9 @@ export const convertCompletionsDeltaToBaseMessageChunk: Converter<
   }
   if (includeRawResponse) {
     additional_kwargs.__raw_response = rawResponse;
+  }
+  if (delta.reasoning_content !== undefined) {
+    additional_kwargs.reasoning_content = delta.reasoning_content;
   }
 
   if (delta.audio) {
