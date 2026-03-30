@@ -1,5 +1,11 @@
 # @langchain/google
 
+## 0.1.9
+
+### Patch Changes
+
+- [#10522](https://github.com/langchain-ai/langchainjs/pull/10522) [`6e2d29e`](https://github.com/langchain-ai/langchainjs/commit/6e2d29e28a8f2a84f6fbbe5755d6b4fe2d5d4fd1) Thanks [@afirstenberg](https://github.com/afirstenberg)! - tests(@langchain/google): Lyria 3
+
 ## 0.1.8
 
 ### Patch Changes

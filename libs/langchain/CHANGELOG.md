@@ -1,5 +1,16 @@
 # langchain
 
+## 1.2.38
+
+### Patch Changes
+
+- [#10527](https://github.com/langchain-ai/langchainjs/pull/10527) [`3408008`](https://github.com/langchain-ai/langchainjs/commit/3408008fe59eb8ee72f733349ae85afe5c23eaca) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(langchain): export createAgent and prebuilt middleware from browser entry point
+
+- [#10545](https://github.com/langchain-ai/langchainjs/pull/10545) [`68e0a19`](https://github.com/langchain-ai/langchainjs/commit/68e0a19238be592514b6c01243c41aefaa6a7668) Thanks [@JadenKim-dev](https://github.com/JadenKim-dev)! - fix(langchain): revert zod import in utils.ts to fix v3/v4 interop
+
+- Updated dependencies [[`6933769`](https://github.com/langchain-ai/langchainjs/commit/6933769836fe3cec835588e5f8db9883200865f6), [`50d5f32`](https://github.com/langchain-ai/langchainjs/commit/50d5f32fd30cabebf058b1c13255c1daadde6107), [`5552999`](https://github.com/langchain-ai/langchainjs/commit/555299917c90322e25d7671bad2e20c9b104bad6), [`8331833`](https://github.com/langchain-ai/langchainjs/commit/8331833c93ba907063c9fe28e9f935ed5dfec11c)]:
+  - @langchain/core@1.1.37
+
 ## 1.2.37
 
 ### Patch Changes

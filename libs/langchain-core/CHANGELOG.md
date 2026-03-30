@@ -1,5 +1,21 @@
 # @langchain/core
 
+## 1.1.37
+
+### Patch Changes
+
+- [#10511](https://github.com/langchain-ai/langchainjs/pull/10511) [`6933769`](https://github.com/langchain-ai/langchainjs/commit/6933769836fe3cec835588e5f8db9883200865f6) Thanks [@hntrl](https://github.com/hntrl)! - cache Zod-to-JSON-Schema conversions in toJsonSchema()
+
+- [#10541](https://github.com/langchain-ai/langchainjs/pull/10541) [`50d5f32`](https://github.com/langchain-ai/langchainjs/commit/50d5f32fd30cabebf058b1c13255c1daadde6107) Thanks [@jacoblee93](https://github.com/jacoblee93)! - revert: Revert "feat(core): Add all chat model/llm invocation params to metadata"
+
+- [#10509](https://github.com/langchain-ai/langchainjs/pull/10509) [`5552999`](https://github.com/langchain-ai/langchainjs/commit/555299917c90322e25d7671bad2e20c9b104bad6) Thanks [@hntrl](https://github.com/hntrl)! - feat(openai): add support for phase parameter on Responses API messages
+  - Extract `phase` from message output items and surface it on text content blocks
+  - Support phase in streaming via `response.output_item.added` events
+  - Round-trip phase through both raw provider and standard content paths
+  - Move phase into `extras` dict in the core standard content translator
+
+- [#10528](https://github.com/langchain-ai/langchainjs/pull/10528) [`8331833`](https://github.com/langchain-ai/langchainjs/commit/8331833c93ba907063c9fe28e9f935ed5dfec11c) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): normalize single-block content in mergeContent
+
 ## 1.1.36
 
 ### Patch Changes
