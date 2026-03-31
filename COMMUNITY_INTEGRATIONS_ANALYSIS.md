@@ -1,0 +1,604 @@
+# Community Integrations: Candidates for Separation into Own Packages
+
+This document identifies integrations currently in `@langchain/community` that are worth porting
+into their own standalone `@langchain/<provider>` packages, based on three criteria:
+
+1. **Well-written tests** — both unit tests (`.test.ts`) and integration tests (`.int.test.ts`), ideally standard tests too
+2. **Substance** — more than a single source file; spans multiple categories (chat_models, embeddings, vectorstores, etc.) or uses a multi-file directory structure
+3. **Known provider** — from a recognized, established vendor
+
+## Already extracted providers (for reference)
+
+These providers already have their own `@langchain/*` packages under `libs/providers/` and should
+**not** be ported again:
+
+- `@langchain/anthropic`, `@langchain/aws` (Bedrock chat + embeddings), `@langchain/cloudflare`,
+  `@langchain/deepseek`, `@langchain/google-*` (GenAI, Vertex, etc.), `@langchain/groq`,
+  `@langchain/mistralai`, `@langchain/mongodb`, `@langchain/ollama`, `@langchain/openai`,
+  `@langchain/openrouter`, `@langchain/redis`, `@langchain/turbopuffer`, `@langchain/xai`
+
+---
+
+## Tier 1: Strong Candidates (multi-category, excellent tests)
+
+### 1. IBM (watsonx)
+
+**Recommended package name:** `@langchain/ibm`
+
+| Category | Source Files | Lines |
+|---|---|---|
+| Chat Models | `chat_models/ibm.ts` | 1,311 |
+| LLMs | `llms/ibm.ts` | 797 |
+| Embeddings | `embeddings/ibm.ts` | 287 |
+| Document Compressors | `document_compressors/ibm.ts` | 178 |
+| Agent Toolkits | `agents/toolkits/ibm.ts` | 151 |
+| Utils | `utils/ibm.ts` | 370 |
+| Types | `types/ibm.ts` | 82 |
+
+**Tests:**
+
+| Test File | Lines | Type |
+|---|---|---|
+| `chat_models/tests/ibm.test.ts` | 990 | Unit |
+| `chat_models/tests/ibm.int.test.ts` | 1,034 | Integration |
+| `chat_models/tests/ibm.standard.test.ts` | 56 | Standard |
+| `chat_models/tests/ibm.standard.int.test.ts` | 51 | Standard Int |
+| `llms/tests/ibm.test.ts` | 563 | Unit |
+| `llms/tests/ibm.int.test.ts` | 524 | Integration |
+| `embeddings/tests/ibm.test.ts` | 276 | Unit |
+| `embeddings/tests/ibm.int.test.ts` | 85 | Integration |
+| `document_compressors/tests/ibm.test.ts` | 159 | Unit |
+| `document_compressors/tests/ibm.int.test.ts` | 116 | Integration |
+| `agents/toolkits/tests/ibm.test.ts` | 85 | Unit |
+| `agents/toolkits/tests/ibm.int.test.ts` | 206 | Integration |
+| `utils/tests/ibm.test.ts` | 33 | Unit |
+
+**Total:** ~3,176 lines source + ~4,178 lines tests = **~7,354 lines across 20 files**
+
+**Assessment:** The strongest candidate by far. Covers 5 integration surfaces (chat, LLM, embeddings,
+compressors, agent toolkit) with dedicated unit + integration tests for every single one, plus
+standard tests for chat models. Well-structured with shared utils and types.
+
+---
+
+### 2. Alibaba Tongyi (DashScope / Qwen)
+
+**Recommended package name:** `@langchain/alibaba`
+
+| Category | Source Files | Lines |
+|---|---|---|
+| Chat Models | `chat_models/alibaba_tongyi.ts` | 1,412 |
+| Embeddings | `embeddings/alibaba_tongyi.ts` | 204 |
+
+**Tests:**
+
+| Test File | Lines | Type |
+|---|---|---|
+| `chat_models/tests/chatalitongyi.test.ts` | 1,417 | Unit |
+| `chat_models/tests/chatalitongyi.int.test.ts` | 295 | Integration |
+| `chat_models/tests/chatalitongyi.standard.int.test.ts` | 58 | Standard Int |
+
+**Total:** ~1,616 lines source + ~1,770 lines tests = **~3,386 lines across 5 files**
+
+**Assessment:** Very strong chat model implementation (1,412 lines) with exceptionally thorough unit
+tests (1,417 lines). Has unit + integration + standard tests for chat. Embeddings lack dedicated tests
+but the chat model quality is outstanding.
+
+---
+
+### 3. Tencent Hunyuan
+
+**Recommended package name:** `@langchain/tencent-hunyuan`
+
+| Category | Source Files | Lines |
+|---|---|---|
+| Chat Models | `chat_models/tencent_hunyuan/{base,index,web}.ts` | 639 |
+| Embeddings | `embeddings/tencent_hunyuan/{base,index,web}.ts` | 225 |
+| Utils | `utils/tencent_hunyuan/{common,index,web}.ts` | 117 |
+
+**Tests:**
+
+| Test File | Lines | Type |
+|---|---|---|
+| `chat_models/tests/chattencenthunyuan.int.test.ts` | — | Integration |
+| `embeddings/tests/tencent_hunyuan.test.ts` | — | Unit |
+
+**Total:** ~981 lines source across 9 files, multi-environment builds (Node + Web)
+
+**Assessment:** Multi-file directory structure with Node/Web split pattern (similar to how Bedrock
+is structured). Covers chat + embeddings + utils. Tests are split (chat int-only, embeddings unit-only)
+which is a weakness, but the codebase structure is solid and follows good patterns.
+
+---
+
+## Tier 2: Good Candidates (multi-category or multi-file, good tests)
+
+### 4. Neo4j
+
+**Recommended package name:** `@langchain/neo4j`
+
+| Category | Source Files | Lines |
+|---|---|---|
+| Vector Store | `vectorstores/neo4j_vector.ts` | 1,147 |
+| Graph Database | `graphs/neo4j_graph.ts` | 746 |
+| Message Store | `stores/message/neo4j.ts` | 165 |
+| Graph QA Chain | `chains/graph_qa/cypher.ts` + `prompts.ts` | 263 |
+
+**Tests:**
+
+| Test File | Lines | Type |
+|---|---|---|
+| `vectorstores/tests/neo4j_vector.int.test.ts` | 720 | Integration |
+| `vectorstores/tests/neo4j_vector.fixtures.ts` | 115 | Fixtures |
+| `graphs/tests/neo4j_graph.int.test.ts` | 273 | Integration |
+| `stores/tests/neo4j.int.test.ts` | 138 | Integration |
+| `chains/graph_qa/tests/cypher.int.test.ts` | 124 | Integration |
+
+**Total:** ~2,321 lines source + ~1,370 lines tests = **~3,691 lines across 10 files**
+
+**Assessment:** Substantial multi-category integration spanning vector store, graph database, message
+store, and graph QA chains. Tests are integration-only (requires Neo4j) but thorough. One of the
+largest community integrations by total code volume. The Cypher chain + prompts component adds
+unique value.
+
+---
+
+### 5. Cassandra
+
+**Recommended package name:** `@langchain/cassandra`
+
+| Category | Source Files | Lines |
+|---|---|---|
+| Vector Store | `vectorstores/cassandra.ts` | 466 |
+| Utils | `utils/cassandra.ts` | 1,233 |
+| Storage | `storage/cassandra.ts` | 291 |
+| Message Store | `stores/message/cassandra.ts` | 151 |
+
+**Tests:**
+
+| Test File | Lines | Type |
+|---|---|---|
+| `vectorstores/tests/cassandra.int.test.ts` | 502 | Integration |
+| `storage/tests/cassandra.int.test.ts` | 105 | Integration |
+| `stores/tests/cassandra.int.test.ts` | 112 | Integration |
+
+**Total:** ~2,141 lines source + ~719 lines tests = **~2,860 lines across 7 files**
+
+**Assessment:** Large shared utility module (1,233 lines) indicates deep integration. Covers 4
+categories. Tests are integration-only but exist for vector store, storage, and message store.
+
+---
+
+### 6. Supabase
+
+**Recommended package name:** `@langchain/supabase`
+
+| Category | Source Files | Lines |
+|---|---|---|
+| Vector Store | `vectorstores/supabase.ts` | 442 |
+| Retriever | `retrievers/supabase.ts` | 241 |
+| Structured Query | `structured_query/supabase.ts` + `supabase_utils.ts` | 615 |
+
+**Tests:**
+
+| Test File | Lines | Type |
+|---|---|---|
+| `vectorstores/tests/supabase.test.ts` | 45 | Unit |
+| `vectorstores/tests/supabase.int.test.ts` | 415 | Integration |
+| `retrievers/tests/supabase.int.test.ts` | 25 | Integration |
+| `structured_query/tests/supabase_self_query.int.test.ts` | 705 | Integration |
+
+**Total:** ~1,298 lines source + ~1,190 lines tests = **~2,488 lines across 8 files**
+
+**Assessment:** Spans vector store, retriever, and structured query — a coherent data layer. Has both
+unit and integration tests for the vector store. The structured query / self-query integration is
+the most substantial at 705 lines.
+
+---
+
+### 7. Milvus
+
+**Recommended package name:** `@langchain/milvus`
+
+| Category | Source Files | Lines |
+|---|---|---|
+| Vector Store | `vectorstores/milvus.ts` | 880 |
+
+**Tests:**
+
+| Test File | Lines | Type |
+|---|---|---|
+| `vectorstores/tests/milvus.test.ts` | 492 | Unit |
+| `vectorstores/tests/milvus.int.test.ts` | 237 | Integration |
+| `indexes/tests/indexing.milvus.int.test.ts` | 440 | Integration |
+
+**Total:** ~880 lines source + ~1,169 lines tests = **~2,049 lines across 4 files**
+
+**Assessment:** While single-category (vectorstore), it has excellent test coverage with both unit
+and integration tests, plus separate indexing integration tests. Known, widely-used vector database.
+
+---
+
+### 8. Chroma
+
+**Recommended package name:** `@langchain/chroma`
+
+| Category | Source Files | Lines |
+|---|---|---|
+| Vector Store | `vectorstores/chroma.ts` | 511 |
+| Structured Query | `structured_query/chroma.ts` | 147 |
+
+**Tests:**
+
+| Test File | Lines | Type |
+|---|---|---|
+| `vectorstores/tests/chroma.test.ts` | 154 | Unit |
+| `vectorstores/tests/chroma.int.test.ts` | 161 | Integration |
+| `structured_query/tests/chroma_self_query.int.test.ts` | 110 | Integration |
+
+**Total:** ~658 lines source + ~425 lines tests = **~1,083 lines across 5 files**
+
+**Assessment:** Multi-file with vector store + structured query. Has both unit and integration tests
+for the core vector store. Well-established open-source vector database.
+
+---
+
+### 9. FAISS
+
+**Recommended package name:** `@langchain/faiss`
+
+| Category | Source Files | Lines |
+|---|---|---|
+| Vector Store | `vectorstores/faiss.ts` | 469 |
+
+**Tests:**
+
+| Test File | Lines | Type |
+|---|---|---|
+| `vectorstores/tests/faiss.test.ts` | 344 | Unit |
+| `vectorstores/tests/faiss.int.test.ts` | 196 | Integration |
+
+**Total:** ~469 lines source + ~540 lines tests = **~1,009 lines across 3+ files**
+
+**Assessment:** Has excellent test-to-code ratio with both unit and integration tests. FAISS is
+a widely-used Meta vector search library. Also has a Python test data directory for cross-language
+compatibility testing.
+
+---
+
+### 10. pgvector
+
+**Recommended package name:** `@langchain/pgvector`
+
+| Category | Source Files | Lines |
+|---|---|---|
+| Vector Store | `vectorstores/pgvector.ts` | 1,228 |
+
+**Tests:**
+
+| Test File | Lines | Type |
+|---|---|---|
+| `vectorstores/tests/pgvector/pgvector.int.test.ts` | 1,094 | Integration |
+| `vectorstores/tests/pgvector_score_normalization.test.ts` | 372 | Unit |
+| `vectorstores/tests/pgvector_similarity_score.test.ts` | 360 | Unit |
+| `vectorstores/tests/pgvector_similarity_score.unit.test.ts` | 186 | Unit |
+
+**Total:** ~1,228 lines source + ~2,012 lines tests = **~3,240 lines across 5+ files**
+
+**Assessment:** Largest single vector store implementation at 1,228 lines with excellent test coverage
+(unit + integration). Includes Docker compose file for integration testing. pgvector is the de facto
+standard for PostgreSQL vector search. Has dedicated score normalization and similarity tests.
+
+---
+
+### 11. Elasticsearch
+
+**Recommended package name:** `@langchain/elasticsearch`
+
+| Category | Source Files | Lines |
+|---|---|---|
+| Vector Store | `vectorstores/elasticsearch.ts` | 519 |
+
+**Tests:**
+
+| Test File | Lines | Type |
+|---|---|---|
+| `vectorstores/tests/elasticsearch.int.test.ts` | 418 | Integration |
+
+**Total:** ~937 lines across 2 files
+
+**Assessment:** Significant implementation for a very well-known provider. Tests are integration-only
+but substantial (418 lines). Elasticsearch is one of the most widely used search engines.
+
+---
+
+### 12. HNSWLib
+
+**Recommended package name:** `@langchain/hnswlib`
+
+| Category | Source Files | Lines |
+|---|---|---|
+| Vector Store | `vectorstores/hnswlib.ts` | 353 |
+
+**Tests:**
+
+| Test File | Lines | Type |
+|---|---|---|
+| `vectorstores/tests/hnswlib.test.ts` | 82 | Unit |
+| `vectorstores/tests/hnswlib.int.test.ts` | 97 | Integration |
+| `structured_query/tests/hnswlib_self_query.int.test.ts` | 192 | Integration |
+
+**Total:** ~353 lines source + ~371 lines tests = **~724 lines across 4 files**
+
+**Assessment:** Has both unit and integration tests, plus structured query / self-query integration
+testing. Commonly used local vector search library.
+
+---
+
+### 13. Upstash
+
+**Recommended package name:** `@langchain/upstash`
+
+| Category | Source Files | Lines |
+|---|---|---|
+| Vector Store | `vectorstores/upstash.ts` | 327 |
+| Cache | `caches/upstash_redis.ts` | 104 |
+| Storage | `storage/upstash_redis.ts` | 176 |
+| Message Store | `stores/message/upstash_redis.ts` | 93 |
+| Rate Limiter | `callbacks/handlers/upstash_ratelimit.ts` | 230 |
+
+**Tests:**
+
+| Test File | Lines | Type |
+|---|---|---|
+| `caches/tests/upstash_redis.test.ts` | 19 | Unit |
+| `caches/tests/upstash_redis.int.test.ts` | 38 | Integration |
+| `storage/tests/upstash_redis.int.test.ts` | 85 | Integration |
+| `stores/tests/redis_upstash.int.test.ts` | 82 | Integration |
+| `vectorstores/tests/upstash.int.test.ts` | 288 | Integration |
+| `callbacks/tests/upstash_ratelimit.test.ts` | 240 | Unit |
+
+**Total:** ~930 lines source + ~752 lines tests = **~1,682 lines across 11 files**
+
+**Assessment:** Broadest category coverage (5 categories: vectorstore, cache, storage, message store,
+rate limiter). Has unit tests for cache and rate limiter. Well-known serverless Redis provider.
+
+---
+
+### 14. Fireworks AI
+
+**Recommended package name:** `@langchain/fireworks`
+
+| Category | Source Files | Lines |
+|---|---|---|
+| Chat Models | `chat_models/fireworks.ts` | 572 |
+| LLMs | `llms/fireworks.ts` | 142 |
+| Embeddings | `embeddings/fireworks.ts` | 165 |
+
+**Tests:**
+
+| Test File | Lines | Type |
+|---|---|---|
+| `chat_models/tests/chatfireworks.int.test.ts` | 114 | Integration |
+| `chat_models/tests/chatfireworks.standard.test.ts` | 30 | Standard |
+| `chat_models/tests/chatfireworks.standard.int.test.ts` | 30 | Standard Int |
+| `chat_models/tests/chatfireworks-agent.int.test.ts` | 43 | Integration |
+| `llms/tests/fireworks.int.test.ts` | 24 | Integration |
+| `embeddings/tests/fireworks.int.test.ts` | 35 | Integration |
+
+**Total:** ~879 lines source + ~276 lines tests = **~1,155 lines across 9 files**
+
+**Assessment:** Covers the full LLM stack (chat + LLM + embeddings). Has standard tests for chat
+models, plus integration tests across all categories. Well-known AI inference provider.
+
+---
+
+### 15. Together AI
+
+**Recommended package name:** `@langchain/togetherai`
+
+| Category | Source Files | Lines |
+|---|---|---|
+| Chat Models | `chat_models/togetherai.ts` | 527 |
+| LLMs | `llms/togetherai.ts` | 328 |
+| Embeddings | `embeddings/togetherai.ts` | 197 |
+
+**Tests:**
+
+| Test File | Lines | Type |
+|---|---|---|
+| `chat_models/tests/chattogetherai.int.test.ts` | 145 | Integration |
+| `chat_models/tests/chattogetherai.standard.test.ts` | 30 | Standard |
+| `chat_models/tests/chattogetherai.standard.int.test.ts` | 20 | Standard Int |
+| `llms/tests/togetherai.test.ts` | 41 | Unit |
+| `llms/tests/togetherai.int.test.ts` | 39 | Integration |
+| `embeddings/tests/togetherai.int.test.ts` | 19 | Integration |
+
+**Total:** ~1,052 lines source + ~294 lines tests = **~1,346 lines across 9 files**
+
+**Assessment:** Full LLM stack coverage. LLM module has both unit and integration tests. Chat has
+standard tests. Well-known AI inference provider.
+
+---
+
+### 16. Azure AI Search
+
+**Recommended package name:** `@langchain/azure-aisearch`
+
+| Category | Source Files | Lines |
+|---|---|---|
+| Vector Store | `vectorstores/azure_aisearch.ts` | 778 |
+| Doc Loader (Blob Storage File) | `document_loaders/web/azure_blob_storage_file.ts` | 131 |
+| Doc Loader (Blob Container) | `document_loaders/web/azure_blob_storage_container.ts` | 95 |
+
+**Tests:**
+
+| Test File | Lines | Type |
+|---|---|---|
+| `vectorstores/tests/azure_aisearch.test.ts` | 199 | Unit |
+| `vectorstores/tests/azure_aisearch.int.test.ts` | 489 | Integration |
+
+**Total:** ~1,004 lines source + ~688 lines tests = **~1,692 lines across 5 files**
+
+**Assessment:** Significant vector store implementation with both unit and integration tests. Azure
+Blob Storage loaders add breadth. Azure is a major cloud provider.
+
+---
+
+### 17. Couchbase
+
+**Recommended package name:** `@langchain/couchbase`
+
+| Category | Source Files | Lines |
+|---|---|---|
+| Vector Store (Query) | `vectorstores/couchbase_query.ts` | 718 |
+| Vector Store (Search) | `vectorstores/couchbase_search.ts` | 647 |
+| Document Loader | `document_loaders/web/couchbase.ts` | 91 |
+
+**Tests:**
+
+| Test File | Lines | Type |
+|---|---|---|
+| `vectorstores/tests/couchbase_query.test.ts` | 608 | Unit |
+| `vectorstores/tests/couchbase_search.int.test.ts` | 402 | Integration |
+| `document_loaders/tests/couchbase.int.test.ts` | 36 | Integration |
+
+**Total:** ~1,456 lines source + ~1,046 lines tests = **~2,502 lines across 6 files**
+
+**Assessment:** Two distinct vector store implementations (Query API vs Search API) plus document
+loader. Has unit tests for query path and integration tests for search path. Well-known NoSQL database.
+
+---
+
+### 18. SAP HANA (HANAvector)
+
+**Recommended package name:** `@langchain/hana`
+
+| Category | Source Files | Lines |
+|---|---|---|
+| Vector Store | `vectorstores/hanavector.ts` | 923 |
+
+**Tests:**
+
+| Test File | Lines | Type |
+|---|---|---|
+| `vectorstores/tests/hanavector.test.ts` | 63 | Unit |
+| `vectorstores/tests/hanavector.int.test.ts` | 1,325 | Integration |
+| `vectorstores/tests/hanavector.fixtures.ts` | 142 | Fixtures |
+
+**Total:** ~923 lines source + ~1,530 lines tests = **~2,453 lines across 4 files**
+
+**Assessment:** Large implementation with very thorough integration tests (1,325 lines — the most
+for any single vectorstore). Has unit tests + fixtures too. SAP HANA is a major enterprise database.
+
+---
+
+### 19. Zep
+
+**Recommended package name:** `@langchain/zep`
+
+| Category | Source Files | Lines |
+|---|---|---|
+| Vector Store | `vectorstores/zep.ts` | 430 |
+| Vector Store (Cloud) | `vectorstores/zep_cloud.ts` | 332 |
+| Memory | `memory/zep.ts` | 370 |
+| Memory (Cloud) | `memory/zep_cloud.ts` | 286 |
+| Retriever | `retrievers/zep.ts` | 169 |
+| Retriever (Cloud) | `retrievers/zep_cloud.ts` | 161 |
+| Message Store | `stores/message/zep_cloud.ts` | 165 |
+
+**Tests:**
+
+| Test File | Lines | Type |
+|---|---|---|
+| `vectorstores/tests/zep.test.ts` | 316 | Unit |
+| `memory/tests/zep_memory.int.test.ts` | 44 | Integration |
+| `retrievers/tests/zep.int.test.ts` | 49 | Integration |
+
+**Total:** ~1,913 lines source + ~409 lines tests = **~2,322 lines across 10 files**
+
+**Assessment:** Largest breadth of categories (vector store, memory, retriever, message store) with
+both on-premise and cloud variants. Has unit tests for vector store. Tests could be more thorough
+for the cloud variants, but the code volume and category breadth is impressive.
+
+---
+
+## Tier 3: Borderline Candidates (meet 2 of 3 criteria well)
+
+These integrations are substantial code from known providers but have weaker test coverage, or
+have good tests but are smaller in scope.
+
+### 20. Google Workspace Tools
+
+**Potential package name:** `@langchain/google-tools`
+
+- **Gmail tools:** 7 files, ~741 lines (multi-file directory with base, search, send, draft, etc.)
+- **Google Calendar tools:** 11 files, ~739 lines (multi-file with commands, prompts, utils)
+- **Google Places/Routes/Scholar/Trends/CustomSearch:** 5 single-file tools, ~880 lines
+- **Tests:** Gmail unit (85 lines), Calendar unit (193 lines), individual int tests for Places/Routes/Scholar/Trends
+
+**Assessment:** Very substantial multi-file structure (23+ files). Gmail and Calendar have unit tests.
+Note: the Google Vertex AI vector store code that currently lives in community may belong with the
+existing `@langchain/google-vertexai` package instead of being a separate package.
+
+---
+
+### 21. DeepInfra
+
+Multi-category (chat + LLM + embeddings, ~588 lines source) but tests are integration-only.
+
+### 22. Llama.cpp
+
+Multi-category (chat + LLM + embeddings + utils, ~761 lines source) but tests are integration-only.
+
+### 23. iFlytek Xinghuo
+
+Multi-file directory structure (chat_models + utils, ~693 lines) but only has integration tests.
+
+### 24. Momento
+
+Multi-category (vector, cache, stores, utils, ~800 lines source) but tests are split: cache has
+unit test, vector index is int-only.
+
+### 25. Convex
+
+Multi-category (vector, storage, stores, utils, ~880 lines) but tests are integration-only.
+
+### 26. SingleStore
+
+Substantial single vector store (574 lines) with thorough integration tests (607 lines) but only
+single-file.
+
+### 27. MariaDB
+
+Substantial vector store (813 lines) with integration tests (301 lines) but only single-file.
+
+---
+
+## Summary Ranking
+
+| Rank | Provider | Source Lines | Test Lines | Files | Categories | Unit Tests | Int Tests | Std Tests |
+|------|----------|-------------|------------|-------|-----------|-----------|----------|----------|
+| 1 | **IBM** | 3,176 | 4,178 | 20 | 5 | Yes (all) | Yes (all) | Yes |
+| 2 | **pgvector** | 1,228 | 2,012 | 5+ | 1 | Yes | Yes | No |
+| 3 | **Alibaba Tongyi** | 1,616 | 1,770 | 5 | 2 | Yes | Yes | Yes |
+| 4 | **Neo4j** | 2,321 | 1,370 | 10 | 4 | No | Yes (all) | No |
+| 5 | **Cassandra** | 2,141 | 719 | 7 | 4 | No | Yes | No |
+| 6 | **Couchbase** | 1,456 | 1,046 | 6 | 3 | Yes (query) | Yes (search) | No |
+| 7 | **SAP HANA** | 923 | 1,530 | 4 | 1 | Yes | Yes | No |
+| 8 | **Supabase** | 1,298 | 1,190 | 8 | 3 | Yes (vec) | Yes | No |
+| 9 | **Zep** | 1,913 | 409 | 10 | 4 | Yes (vec) | Yes | No |
+| 10 | **Milvus** | 880 | 1,169 | 4 | 1 | Yes | Yes | No |
+| 11 | **Upstash** | 930 | 752 | 11 | 5 | Yes (some) | Yes | No |
+| 12 | **Azure AI Search** | 1,004 | 688 | 5 | 2 | Yes | Yes | No |
+| 13 | **Chroma** | 658 | 425 | 5 | 2 | Yes | Yes | No |
+| 14 | **Together AI** | 1,052 | 294 | 9 | 3 | Yes (LLM) | Yes | Yes |
+| 15 | **Fireworks** | 879 | 276 | 9 | 3 | No | Yes | Yes |
+| 16 | **FAISS** | 469 | 540 | 3+ | 1 | Yes | Yes | No |
+| 17 | **HNSWLib** | 353 | 371 | 4 | 1 | Yes | Yes | No |
+| 18 | **Elasticsearch** | 519 | 418 | 2 | 1 | No | Yes | No |
+| 19 | **Tencent Hunyuan** | 981 | — | 9 | 3 | Yes (emb) | Yes (chat) | No |
+
+**Note:** Bedrock (community version) is excluded because `@langchain/aws` already exists and covers
+the Bedrock chat model + embeddings surface. The community Bedrock code may be legacy or should be
+consolidated into `@langchain/aws`.
