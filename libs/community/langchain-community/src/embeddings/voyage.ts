@@ -10,6 +10,15 @@ export interface VoyageEmbeddingsParams extends EmbeddingsParams {
   modelName: string;
 
   /**
+   * Base URL for Voyage API requests.
+   * If your API key was created on the MongoDB Atlas UI, this should be 'https://ai.mongodb.com/v1'.
+   * If your API key was created on the Voyage AI Dashboard, this should be 'https://api.voyageai.com/v1'.
+   * @default "https://api.voyageai.com/v1"
+   * @see https://www.mongodb.com/docs/voyageai/management/api-keys/?client-curl-default=curl#create-an-api-key
+   */
+  basePath?: string;
+
+  /**
    * The maximum number of documents to embed in a single request. This is
    * limited by the Voyage AI API to a maximum of 8.
    */
@@ -97,6 +106,7 @@ export class VoyageEmbeddings
 
   private apiKey: string;
 
+  /** Do not modify directly. Pass in the basePath option to the constructor. */
   basePath?: string = "https://api.voyageai.com/v1";
 
   apiUrl: string;
@@ -122,6 +132,7 @@ export class VoyageEmbeddings
       verbose?: boolean;
       apiKey?: string;
       inputType?: string;
+      basePath?: string;
     }
   ) {
     const fieldsWithDefaults = { ...fields };
@@ -138,6 +149,7 @@ export class VoyageEmbeddings
     this.modelName = fieldsWithDefaults?.modelName ?? this.modelName;
     this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
     this.apiKey = apiKey;
+    this.basePath = fieldsWithDefaults?.basePath ?? this.basePath;
     this.apiUrl = `${this.basePath}/embeddings`;
     this.inputType = fieldsWithDefaults?.inputType;
     this.truncation = fieldsWithDefaults?.truncation;
