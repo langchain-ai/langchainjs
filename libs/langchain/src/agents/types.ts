@@ -10,7 +10,6 @@ import type {
   StateDefinitionInit,
 } from "@langchain/langgraph";
 
-import type { LanguageModelLike } from "@langchain/core/language_models/base";
 import type {
   BaseMessage,
   SystemMessage,
@@ -37,6 +36,7 @@ import type {
   JsonSchemaFormat,
   ResponseFormatUndefined,
 } from "./responses.js";
+import type { AgentLanguageModelLike } from "./model.js";
 import type {
   AgentMiddleware,
   AnyAnnotationRoot,
@@ -529,7 +529,7 @@ export type CreateAgentParams<
    * });
    * ```
    */
-  model: string | LanguageModelLike;
+  model: string | AgentLanguageModelLike;
 
   /**
    * A list of tools or a ToolNode.

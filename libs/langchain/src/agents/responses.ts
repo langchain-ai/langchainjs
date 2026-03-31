@@ -7,7 +7,6 @@ import {
   isInteropZodObject,
 } from "@langchain/core/utils/types";
 import { type AIMessage } from "@langchain/core/messages";
-import { type LanguageModelLike } from "@langchain/core/language_models/base";
 import { toJsonSchema, Validator } from "@langchain/core/utils/json_schema";
 import { type FunctionDefinition } from "@langchain/core/language_models/base";
 import {
@@ -20,6 +19,7 @@ import {
   MultipleStructuredOutputsError,
 } from "./errors.js";
 import { isBaseChatModel } from "./model.js";
+import type { AgentLanguageModelLike as LanguageModelLike } from "./model.js";
 
 /**
  * Special type to indicate that no response format is provided.
