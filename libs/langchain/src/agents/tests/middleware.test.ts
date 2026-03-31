@@ -1958,12 +1958,11 @@ describe("middleware", () => {
       });
       expect(result).toHaveProperty("structuredResponse");
       expect(
-        (
-          result as unknown as { structuredResponse: { answer: string } }
-        ).structuredResponse
+        (result as unknown as { structuredResponse: { answer: string } })
+          .structuredResponse
       ).toEqual({
-          answer: "The weather in Tokyo is 25°C",
-        });
+        answer: "The weather in Tokyo is 25°C",
+      });
       const [human, assistant] = result.messages;
       expect(human.content).toBe("Hello");
       expect(assistant.content).toBe(
@@ -1975,7 +1974,9 @@ describe("middleware", () => {
       const responseFormat = toolStrategy(z.object({ answer: z.string() }));
       const toolName = responseFormat[0].name;
       const model = new FakeToolCallingModel({
-        toolCalls: [[{ name: toolName, args: { answer: "Sunny" }, id: "call_1" }]],
+        toolCalls: [
+          [{ name: toolName, args: { answer: "Sunny" }, id: "call_1" }],
+        ],
       });
 
       const middleware = createMiddleware({
@@ -1999,12 +2000,11 @@ describe("middleware", () => {
 
       expect(result).toHaveProperty("structuredResponse");
       expect(
-        (
-          result as unknown as { structuredResponse: { answer: string } }
-        ).structuredResponse
+        (result as unknown as { structuredResponse: { answer: string } })
+          .structuredResponse
       ).toEqual({
-          answer: "Sunny",
-        });
+        answer: "Sunny",
+      });
       expect(
         result.messages.some(
           (message) =>
@@ -2050,12 +2050,11 @@ describe("middleware", () => {
 
       expect(result).toHaveProperty("structuredResponse");
       expect(
-        (
-          result as unknown as { structuredResponse: Record<string, unknown> }
-        ).structuredResponse
+        (result as unknown as { structuredResponse: Record<string, unknown> })
+          .structuredResponse
       ).toEqual({
-          answer: "Clear skies",
-        });
+        answer: "Clear skies",
+      });
     });
   });
 
