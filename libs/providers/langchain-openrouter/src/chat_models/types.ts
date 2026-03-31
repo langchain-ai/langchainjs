@@ -80,11 +80,24 @@ export interface ChatOpenRouterParams
   siteUrl?: string;
   /**
    * Application title for OpenRouter attribution. Maps to `X-Title` header.
-   * Defaults to `"langchain"`.
+   * Defaults to `"LangChain"`. Set this to your app's name to get attribution
+   * for API usage in the OpenRouter dashboard.
    *
    * See https://openrouter.ai/docs/app-attribution for details.
    */
   siteName?: string;
+  /**
+   * Marketplace categories for OpenRouter attribution.
+   * Maps to `X-OpenRouter-Categories` header. Pass a list of lowercase,
+   * hyphen-separated category strings (max 30 characters each),
+   * e.g. `['cli-agent', 'programming-app']`.
+   *
+   * Only recognized categories are accepted (unrecognized values are silently
+   * dropped by OpenRouter).
+   *
+   * See https://openrouter.ai/docs/app-attribution for recognized categories.
+   */
+  appCategories?: string[];
   /** Stable identifier for end-users, used for abuse detection. */
   user?: string;
   /** Extra params passed through to the API body. */
