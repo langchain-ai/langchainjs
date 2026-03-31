@@ -5,7 +5,12 @@ import { ChatAnthropic } from "@langchain/anthropic";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 
-import { createMiddleware, createAgent, providerStrategy } from "../index.js";
+import {
+  createMiddleware,
+  createAgent,
+  providerStrategy,
+  toolStrategy,
+} from "../index.js";
 
 describe("wrapModelCall", () => {
   it("should allow middleware to update model, messages and systemPrompt", async () => {
@@ -344,6 +349,202 @@ Please provide a clear, direct, and authoritative answer, as this information wi
       name: "getWeather",
       args: { location: "New York" },
       id: "call_test123",
+    });
+  });
+
+  it("can set providerStrategy responseFormat in wrapModelCall", async () => {
+    const openAIFetchMock = vi.fn().mockImplementationOnce(async () => ({
+      ok: true,
+      status: 200,
+      statusText: "OK",
+      headers: new Headers({
+        "content-type": "application/json",
+      }),
+      json: async () => ({
+        id: "chatcmpl-provider",
+        object: "chat.completion",
+        created: Date.now(),
+        model: "gpt-4o-mini",
+        choices: [
+          {
+            index: 0,
+            message: {
+              role: "assistant",
+              content: JSON.stringify({ answer: "sunny", city: "Tokyo" }),
+            },
+            finish_reason: "stop",
+          },
+        ],
+        usage: {
+          prompt_tokens: 20,
+          completion_tokens: 10,
+          total_tokens: 30,
+        },
+      }),
+      text: async () => "",
+      arrayBuffer: async () => new ArrayBuffer(0),
+      blob: async () => new Blob(),
+      clone: () => ({}),
+      body: null,
+      bodyUsed: false,
+    }));
+    const model = new ChatOpenAI({
+      model: "gpt-4o-mini",
+      temperature: 0,
+      apiKey: "test",
+      configuration: {
+        fetch: openAIFetchMock,
+      },
+    });
+    const responseSchema = z.object({
+      answer: z.string(),
+      city: z.string(),
+    });
+    const middleware = createMiddleware({
+      name: "DynamicProviderResponseFormat",
+      wrapModelCall: async (request, handler) => {
+        return handler({
+          ...request,
+          responseFormat: providerStrategy(responseSchema),
+        });
+      },
+    });
+
+    const agent = createAgent({
+      model,
+      middleware: [middleware],
+    });
+
+    const result = await agent.invoke({
+      messages: [new HumanMessage("What's the weather in Tokyo?")],
+    });
+
+    expect(openAIFetchMock).toHaveBeenCalledTimes(1);
+    const [, options] = openAIFetchMock.mock.calls[0];
+    const requestBody = JSON.parse(options.body);
+    expect(requestBody.response_format).toMatchObject({
+      type: "json_schema",
+      json_schema: {
+        name: expect.any(String),
+        schema: {
+          type: "object",
+          properties: {
+            answer: { type: "string" },
+            city: { type: "string" },
+          },
+          required: ["answer", "city"],
+          additionalProperties: false,
+        },
+        strict: true,
+      },
+    });
+    expect(
+      (
+        result as unknown as {
+          structuredResponse: { answer: string; city: string };
+        }
+      ).structuredResponse
+    ).toEqual({
+      answer: "sunny",
+      city: "Tokyo",
+    });
+  });
+
+  it("can set toolStrategy responseFormat in wrapModelCall", async () => {
+    const responseFormat = toolStrategy(
+      z.object({
+        answer: z.string(),
+      })
+    );
+    const openAIFetchMock = vi.fn().mockImplementationOnce(async () => ({
+      ok: true,
+      status: 200,
+      statusText: "OK",
+      headers: new Headers({
+        "content-type": "application/json",
+      }),
+      json: async () => ({
+        id: "chatcmpl-tool",
+        object: "chat.completion",
+        created: Date.now(),
+        model: "gpt-4o-mini",
+        choices: [
+          {
+            index: 0,
+            message: {
+              role: "assistant",
+              content: null,
+              tool_calls: [
+                {
+                  id: "call_extract",
+                  type: "function",
+                  function: {
+                    name: responseFormat[0].name,
+                    arguments: JSON.stringify({ answer: "sunny" }),
+                  },
+                },
+              ],
+            },
+            finish_reason: "tool_calls",
+          },
+        ],
+        usage: {
+          prompt_tokens: 20,
+          completion_tokens: 10,
+          total_tokens: 30,
+        },
+      }),
+      text: async () => "",
+      arrayBuffer: async () => new ArrayBuffer(0),
+      blob: async () => new Blob(),
+      clone: () => ({}),
+      body: null,
+      bodyUsed: false,
+    }));
+    const model = new ChatOpenAI({
+      model: "gpt-4o-mini",
+      temperature: 0,
+      apiKey: "test",
+      configuration: {
+        fetch: openAIFetchMock,
+      },
+    });
+    const middleware = createMiddleware({
+      name: "DynamicToolResponseFormat",
+      wrapModelCall: async (request, handler) => {
+        return handler({
+          ...request,
+          responseFormat,
+        });
+      },
+    });
+
+    const agent = createAgent({
+      model,
+      middleware: [middleware],
+    });
+
+    const result = await agent.invoke({
+      messages: [new HumanMessage("Summarize the weather.")],
+    });
+
+    expect(openAIFetchMock).toHaveBeenCalledTimes(1);
+    const [, options] = openAIFetchMock.mock.calls[0];
+    const requestBody = JSON.parse(options.body);
+    expect(requestBody.response_format).toBeUndefined();
+    expect(requestBody.tool_choice).toBe("required");
+    expect(requestBody.tools).toHaveLength(1);
+    expect(requestBody.tools[0]).toMatchObject({
+      type: "function",
+      function: {
+        name: responseFormat[0].name,
+      },
+    });
+    expect(
+      (result as unknown as { structuredResponse: { answer: string } })
+        .structuredResponse
+    ).toEqual({
+      answer: "sunny",
     });
   });
 });

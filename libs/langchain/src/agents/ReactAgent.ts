@@ -234,11 +234,14 @@ export class ReactAgent<
      * Create a schema that merges agent base schema with middleware state schemas
      * Using Zod with withLangGraph ensures LangGraph Studio gets proper metadata
      */
+    const hasDynamicStructuredResponse = Boolean(
+      this.options.middleware?.some((middleware) => middleware.wrapModelCall)
+    );
     const { state, input, output } = createAgentState<
       Types["State"],
       Types["Middleware"]
     >(
-      this.options.responseFormat !== undefined,
+      this.options.responseFormat !== undefined || hasDynamicStructuredResponse,
       this.options.stateSchema as Types["State"],
       this.options.middleware as Types["Middleware"]
     );

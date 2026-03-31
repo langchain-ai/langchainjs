@@ -47,6 +47,7 @@ import {
   ProviderStrategy,
   transformResponseFormat,
   ToolStrategyError,
+  type ResponseFormatInput,
 } from "../responses.js";
 
 type ResponseHandlerResult<StructuredResponseFormat> =
@@ -166,9 +167,11 @@ export class AgentNode<
    * @returns The response format.
    */
   async #getResponseFormat(
-    model: string | LanguageModelLike
+    model: string | LanguageModelLike,
+    responseFormat: ResponseFormatInput | undefined = this.#options
+      .responseFormat
   ): Promise<ResponseFormat | undefined> {
-    if (!this.#options.responseFormat) {
+    if (!responseFormat) {
       return undefined;
     }
 
@@ -184,10 +187,14 @@ export class AgentNode<
     }
 
     const strategies = transformResponseFormat(
-      this.#options.responseFormat,
+      responseFormat,
       undefined,
       resolvedModel
     );
+
+    if (strategies.length === 0) {
+      return undefined;
+    }
 
     /**
      * we either define a list of provider strategies or a list of tool strategies
@@ -363,7 +370,8 @@ export class AgentNode<
       validateLLMHasNoBoundTools(request.model);
 
       const structuredResponseFormat = await this.#getResponseFormat(
-        request.model
+        request.model,
+        request.responseFormat
       );
       const modelWithTools = await this.#bindTools(
         request.model,
@@ -667,6 +675,7 @@ export class AgentNode<
       unknown
     > = {
       model,
+      responseFormat: this.#options.responseFormat,
       systemPrompt: currentSystemMessage?.text,
       systemMessage: currentSystemMessage,
       messages: state.messages,
