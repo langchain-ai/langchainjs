@@ -286,6 +286,22 @@ export class ProviderStrategy<T = unknown> {
 
 export type ResponseFormat = ToolStrategy<any> | ProviderStrategy<any>;
 
+export type ResponseFormatInput<
+  StructuredResponseType extends Record<string, any> = Record<string, any>,
+> =
+  | InteropZodType<StructuredResponseType>
+  | InteropZodType<unknown>[]
+  | SerializableSchema<StructuredResponseType>
+  | SerializableSchema[]
+  | JsonSchemaFormat
+  | JsonSchemaFormat[]
+  | ResponseFormat
+  | ResponseFormat[]
+  | TypedToolStrategy<StructuredResponseType>
+  | ToolStrategy<StructuredResponseType>
+  | ProviderStrategy<StructuredResponseType>
+  | ResponseFormatUndefined;
+
 /**
  * Handle user input for `responseFormat` parameter of `CreateAgentParams`.
  * This function defines the default behavior for the `responseFormat` parameter, which is:
@@ -300,16 +316,7 @@ export type ResponseFormat = ToolStrategy<any> | ProviderStrategy<any>;
  * @returns
  */
 export function transformResponseFormat(
-  responseFormat?:
-    | InteropZodType<any>
-    | InteropZodType<any>[]
-    | SerializableSchema
-    | SerializableSchema[]
-    | JsonSchemaFormat
-    | JsonSchemaFormat[]
-    | ResponseFormat
-    | ToolStrategy<any>[]
-    | ResponseFormatUndefined,
+  responseFormat?: ResponseFormatInput,
   options?: ToolStrategyOptions,
   model?: LanguageModelLike
 ): ResponseFormat[] {

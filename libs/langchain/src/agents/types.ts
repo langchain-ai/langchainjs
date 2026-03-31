@@ -28,14 +28,9 @@ import type {
   DynamicStructuredTool,
   StructuredToolInterface,
 } from "@langchain/core/tools";
-import type { SerializableSchema } from "@langchain/core/utils/standard_schema";
 import type {
-  ResponseFormat,
-  ToolStrategy,
-  TypedToolStrategy,
-  ProviderStrategy,
-  JsonSchemaFormat,
   ResponseFormatUndefined,
+  ResponseFormatInput,
 } from "./responses.js";
 import type {
   AgentMiddleware,
@@ -493,18 +488,7 @@ export type CreateAgentParams<
   TStateSchema extends StateDefinitionInit | undefined = undefined,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject =
     AnyAnnotationRoot,
-  ResponseFormatType =
-    | InteropZodType<StructuredResponseType>
-    | InteropZodType<unknown>[]
-    | SerializableSchema<StructuredResponseType>
-    | SerializableSchema[]
-    | JsonSchemaFormat
-    | JsonSchemaFormat[]
-    | ResponseFormat
-    | TypedToolStrategy<StructuredResponseType>
-    | ToolStrategy<StructuredResponseType>
-    | ProviderStrategy<StructuredResponseType>
-    | ResponseFormatUndefined,
+  ResponseFormatType = ResponseFormatInput<StructuredResponseType>,
 > = {
   /**
    * Defines a model to use for the agent. You can either pass in an instance of a LangChain chat model
