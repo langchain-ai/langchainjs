@@ -124,7 +124,6 @@ describe("ChatOpenRouter constructor", () => {
   });
 });
 
-// ─── attribution headers ─────────────────────────────────────────────
 
 describe("attribution headers", () => {
   function extractHeaders(model: ChatOpenRouter): Record<string, string> {
