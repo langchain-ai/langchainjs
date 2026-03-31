@@ -473,6 +473,14 @@ describe.each(coreModelInfo)(
       expect(contentBlock.text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
     });
 
+    test("detail maps to generationConfig.mediaResolution", async () => {
+      const llm = newChatGoogle();
+      await llm.invoke("What is 1 + 1?", { detail: "high" });
+      expect(recorder.request?.body?.generationConfig?.mediaResolution).toEqual(
+        "MEDIA_RESOLUTION_HIGH"
+      );
+    });
+
     test("invoke token count usage_metadata", async () => {
       const model = newChatGoogle();
       const res: AIMessageChunk = await model.invoke(

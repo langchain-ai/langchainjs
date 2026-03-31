@@ -146,6 +146,18 @@ export interface ChatGoogleFields {
   mediaResolution?: GeminiBase.GenerationConfig["mediaResolution"];
 
   /**
+   * OpenAI-compatible alias for media input detail level.
+   *
+   * This is mapped to `generationConfig.mediaResolution`:
+   * - `"auto"` => `"MEDIA_RESOLUTION_UNSPECIFIED"`
+   * - `"low"` => `"MEDIA_RESOLUTION_LOW"`
+   * - `"high"` => `"MEDIA_RESOLUTION_HIGH"`
+   *
+   * If both `mediaResolution` and `detail` are provided, `mediaResolution` wins.
+   */
+  detail?: "auto" | "low" | "high";
+
+  /**
    * The number of reasoning tokens that the model should generate.
    * If explicitly set, then the reasoning blocks will be returned.
    */

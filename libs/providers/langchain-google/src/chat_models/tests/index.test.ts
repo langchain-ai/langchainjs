@@ -347,6 +347,53 @@ describe("Google Mock", () => {
     );
   });
 
+  test("detail maps to mediaResolution from constructor fields", async () => {
+    const llm = newChatGoogle({
+      model: "gemini-3-pro-preview",
+      responseFile: "gemini-chat-001.json",
+      detail: "high",
+    });
+
+    await llm.invoke("What is 1+1?");
+
+    expect(recorder?.request?.body?.generationConfig?.mediaResolution).toEqual(
+      "MEDIA_RESOLUTION_HIGH"
+    );
+  });
+
+  test("detail maps auto to unspecified mediaResolution from call options", async () => {
+    const llm = newChatGoogle({
+      model: "gemini-3-pro-preview",
+      responseFile: "gemini-chat-001.json",
+    });
+
+    await llm.invoke("What is 1+1?", {
+      detail: "auto",
+    });
+
+    expect(recorder?.request?.body?.generationConfig?.mediaResolution).toEqual(
+      "MEDIA_RESOLUTION_UNSPECIFIED"
+    );
+  });
+
+  test("mediaResolution takes precedence over detail", async () => {
+    const llm = newChatGoogle({
+      model: "gemini-3-pro-preview",
+      responseFile: "gemini-chat-001.json",
+      detail: "low",
+      mediaResolution: "MEDIA_RESOLUTION_HIGH",
+    });
+
+    await llm.invoke("What is 1+1?", {
+      detail: "auto",
+      mediaResolution: "MEDIA_RESOLUTION_MEDIUM",
+    });
+
+    expect(recorder?.request?.body?.generationConfig?.mediaResolution).toEqual(
+      "MEDIA_RESOLUTION_MEDIUM"
+    );
+  });
+
   test("passes abort signal to fetch in non-streaming invoke", async () => {
     const apiClient = new MockApiClient({
       fileName: "gemini-chat-001.json",

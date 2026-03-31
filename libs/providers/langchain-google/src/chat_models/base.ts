@@ -87,6 +87,21 @@ export function getPlatformType(
   }
 }
 
+function mapDetailToMediaResolution(
+  detail?: ChatGoogleFields["detail"]
+): Gemini.GenerationConfig["mediaResolution"] | undefined {
+  switch (detail) {
+    case "auto":
+      return "MEDIA_RESOLUTION_UNSPECIFIED";
+    case "low":
+      return "MEDIA_RESOLUTION_LOW";
+    case "high":
+      return "MEDIA_RESOLUTION_HIGH";
+    default:
+      return undefined;
+  }
+}
+
 export interface BaseChatGoogleParams
   extends BaseChatModelParams,
     ChatGoogleFields {
@@ -306,6 +321,8 @@ export abstract class BaseChatGoogle<
 
   override invocationParams(options: this["ParsedCallOptions"]) {
     const fields = combineGoogleChatModelFields(this.params, options);
+    const mediaResolution =
+      fields.mediaResolution ?? mapDetailToMediaResolution(fields.detail);
 
     // Convert tools to Gemini format
     const tools = fields.tools
@@ -365,9 +382,7 @@ export abstract class BaseChatGoogle<
         thinkingConfig: convertFieldsToThinkingConfig(this.model, fields),
         speechConfig: convertFieldsToSpeechConfig(fields),
         ...(fields.imageConfig ? { imageConfig: fields.imageConfig } : {}),
-        ...(fields.mediaResolution
-          ? { mediaResolution: fields.mediaResolution }
-          : {}),
+        ...(mediaResolution ? { mediaResolution } : {}),
       },
     };
   }
@@ -878,6 +893,7 @@ export function combineGoogleChatModelFields(
     speechConfig: b.speechConfig ?? a.speechConfig,
     imageConfig: b.imageConfig ?? a.imageConfig,
     mediaResolution: b.mediaResolution ?? a.mediaResolution,
+    detail: b.detail ?? a.detail,
     maxReasoningTokens: b.maxReasoningTokens ?? a.maxReasoningTokens,
     thinkingBudget: b.thinkingBudget ?? a.thinkingBudget,
     reasoningEffort: b.reasoningEffort ?? a.reasoningEffort,
