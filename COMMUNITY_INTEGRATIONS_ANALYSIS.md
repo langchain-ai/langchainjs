@@ -734,3 +734,127 @@ here is the final prioritized list for separation:
 | **P3** | **Tencent Hunyuan** | Multi-file but split tests | Low (9 commits) | Regional provider, low activity |
 | **P3** | **Google Workspace** | Multi-file, mixed tests | Moderate (34 commits) | May belong in existing @langchain/google-* |
 | **P3** | **Google Vertex AI** (community) | Multi-file, unit+int | Moderate (30 commits) | Should consolidate into @langchain/google-vertexai |
+
+---
+
+## Comparative Analysis: Existing Provider Packages vs Community Candidates
+
+To calibrate expectations, here is a side-by-side comparison of existing standalone `@langchain/*`
+provider packages with the community integrations we are considering for separation.
+
+Human commits exclude bot authors (github-actions[bot], dependabot[bot]). External commits exclude
+known LangChain team members (Jacob Lee, Brace Sproul, Hunter Lovell, Christian Bromann, Tat Dat
+Duong, Lauren Hirata Singh, Ben Burns, Nuno Campos, Harrison Chase, Colin Francis, David Duong,
+pawel-twardziak, and their alt accounts). "Recent" = 2025+2026 combined.
+
+### Existing Standalone Provider Packages
+
+| Package | Human Commits | Authors | External Commits | External Authors | Recent (25+26) | Source Lines |
+|---------|--------------|---------|-----------------|-----------------|----------------|-------------|
+| `@langchain/openai` | 575 | 57 | 72 | 44 | 360 | 12,234 |
+| `@langchain/anthropic` | 401 | 50 | 62 | 37 | 210 | 6,081 |
+| `@langchain/google-common` | 278 | 38 | — | — | 168 | 9,707 |
+| `@langchain/google-genai` | 257 | 47 | 40 | 34 | 125 | 3,289 |
+| `@langchain/mistralai` | 189 | 18 | 12 | 6 | 62 | 2,556 |
+| `@langchain/aws` | 161 | 31 | 149 | 22 | 112 | 3,530 |
+| `@langchain/google-vertexai` | 169 | 16 | — | — | 101 | 457 |
+| `@langchain/groq` | 147 | 20 | 74 | 10 | 75 | 2,197 |
+| `@langchain/ollama` | 112 | 23 | 95 | 13 | 82 | 1,759 |
+| `@langchain/cloudflare` | 96 | 18 | 53 | 8 | 46 | 1,455 |
+| `@langchain/xai` | 94 | 10 | 69 | 1 | 70 | 4,375 |
+| `@langchain/mongodb` | 87 | 18 | 59 | 9 | 54 | 888 |
+| `@langchain/redis` | 86 | 20 | 60 | 11 | 55 | 3,390 |
+| `@langchain/deepseek` | 61 | 9 | 59 | 3 | 61 | 949 |
+| `@langchain/google` | 41 | 10 | — | — | 41 | 7,826 |
+| `@langchain/google-cloud-sql-pg` | 45 | 10 | 44 | 3 | 45 | 1,786 |
+| `@langchain/openrouter` | 12 | 6 | 12 | 4 | 12 | 4,483 |
+| `@langchain/turbopuffer` | 7 | 4 | 7 | 2 | 7 | 326 |
+
+**Existing package statistics (excluding Google internal packages):**
+- **Median human commits:** ~93 (between Redis at 86 and Cloudflare at 96)
+- **Median external authors:** ~8
+- **Median source lines:** ~2,377
+
+### Community Integration Candidates (source files only, excluding tests)
+
+| Community Integration | Human Commits | Authors | External Commits | External Authors | Recent (25+26) | Source Lines |
+|----------------------|--------------|---------|-----------------|-----------------|----------------|-------------|
+| community:**IBM** | 37 | 9 | 37 | 6 | 30 | 3,176 |
+| community:**Neo4j** | 41 | 14 | 35 | 8 | 12 | 2,321 |
+| community:**pgvector** | 32 | 21 | 26 | 17 | 13 | 1,228 |
+| community:**Together AI** | 25 | 10 | 23 | 4 | 13 | 1,052 |
+| community:**Fireworks** | 21 | 8 | 16 | 2 | 10 | 879 |
+| community:**Google Tools** | 20 | 12 | 18 | 8 | 14 | 2,390 |
+| community:**Milvus** | 19 | 12 | 17 | 9 | 10 | 880 |
+| community:**Cassandra** | 18 | 6 | 16 | 2 | 10 | 2,141 |
+| community:**Chroma** | 18 | 10 | 13 | 5 | 8 | 658 |
+| community:**Alibaba Tongyi** | 17 | 10 | 17 | 6 | 12 | 1,616 |
+| community:**Upstash** | 16 | 6 | 14 | 3 | 7 | 930 |
+| community:**Perplexity** | 16 | 6 | 16 | 3 | 16 | 567 |
+| community:**Zep** | 15 | 7 | 12 | 2 | 10 | 1,913 |
+| community:**Llama.cpp** | 15 | 9 | 12 | 6 | 6 | 761 |
+| community:**Supabase** | 14 | 6 | 9 | 2 | 8 | 1,298 |
+| community:**Azure AI Search** | 13 | 7 | 12 | 4 | 8 | 1,004 |
+| community:**Elasticsearch** | 12 | 9 | 9 | 7 | 2 | 519 |
+| community:**FAISS** | 10 | 4 | 7 | 1 | 7 | 469 |
+| community:**SAP HANA** | 9 | 4 | 9 | 2 | 6 | 923 |
+| community:**Tencent Hunyuan** | 9 | 4 | 9 | 1 | 8 | 981 |
+| community:**Couchbase** | 8 | 4 | 6 | 1 | 6 | 1,456 |
+| community:**DeepInfra** | 6 | 5 | 6 | 3 | 3 | 588 |
+| community:**HNSWLib** | 5 | 3 | 3 | 0 | 3 | 353 |
+
+### Key Comparative Insights
+
+**1. Community integrations are roughly comparable to smaller existing packages.**
+
+The top community candidates (IBM at 37, Neo4j at 41, pgvector at 32 human commits) are in
+the same range as the smaller existing standalone packages like `@langchain/deepseek` (61),
+`@langchain/google-cloud-sql-pg` (45), `@langchain/openrouter` (12), and `@langchain/turbopuffer` (7).
+This suggests the community candidates have enough contribution activity to justify their own packages.
+
+**2. External contributor diversity is a strong signal.**
+
+| Top by External Authors | Count | Comparison |
+|------------------------|-------|------------|
+| community:**pgvector** | **17** | Exceeds `@langchain/ollama` (13), `@langchain/redis` (11) |
+| community:**Milvus** | **9** | Matches `@langchain/mongodb` (9) |
+| community:**Neo4j** | **8** | Matches `@langchain/cloudflare` (8) |
+| community:**Google Tools** | **8** | Matches `@langchain/cloudflare` (8) |
+| community:**Elasticsearch** | **7** | — |
+| community:**IBM** | **6** | Exceeds `@langchain/mistralai` (6) |
+| community:**Alibaba Tongyi** | **6** | — |
+| community:**Llama.cpp** | **6** | — |
+
+**3. Some community integrations have MORE source code than existing packages.**
+
+| Larger than existing packages | Source Lines | Exceeds |
+|-------------------------------|-------------|---------|
+| community:**IBM** | 3,176 | `@langchain/groq` (2,197), `@langchain/ollama` (1,759), `@langchain/mongodb` (888) |
+| community:**Neo4j** | 2,321 | Same set as above |
+| community:**Google Tools** | 2,390 | Same set as above |
+| community:**Cassandra** | 2,141 | Same set as above |
+| community:**Zep** | 1,913 | `@langchain/ollama` (1,759), `@langchain/mongodb` (888) |
+| community:**Alibaba Tongyi** | 1,616 | `@langchain/cloudflare` (1,455), `@langchain/mongodb` (888) |
+| community:**Couchbase** | 1,456 | `@langchain/cloudflare` (1,455) |
+| community:**Supabase** | 1,298 | `@langchain/deepseek` (949), `@langchain/mongodb` (888) |
+| community:**pgvector** | 1,228 | Same as Supabase |
+
+**4. IBM stands out as the clear leader among community candidates.**
+
+IBM has the most recent momentum (30 of 37 human commits in 2025-26), the most source code
+(3,176 lines), and the best test coverage (unit + int + standard across all 5 categories).
+Its contribution profile already exceeds several existing packages.
+
+**5. Some existing packages were minted with very low initial contribution counts.**
+
+`@langchain/turbopuffer` (7 commits, 4 authors) and `@langchain/openrouter` (12 commits, 6 authors)
+were minted as standalone packages with contribution counts lower than all community candidates
+except HNSWLib. This sets a low bar for what "deserves its own package" and strengthens the case
+for all P0 and P1 candidates.
+
+**6. External author count is a better signal than raw commit count.**
+
+Community integrations have proportionally more external contributions (since LangChain team
+maintenance commits are spread across the monorepo). pgvector with 17 external authors, Milvus
+with 9, and Neo4j with 8 indicate genuine community/vendor investment comparable to existing
+packages like `@langchain/ollama` (13), `@langchain/redis` (11), and `@langchain/groq` (10).
