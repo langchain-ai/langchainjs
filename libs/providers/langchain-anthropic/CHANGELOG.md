@@ -1,5 +1,14 @@
 # @langchain/anthropic
 
+## 1.3.26
+
+### Patch Changes
+
+- [#10519](https://github.com/langchain-ai/langchainjs/pull/10519) [`cd86fea`](https://github.com/langchain-ai/langchainjs/commit/cd86fea8de2130d0df60805baada81958d47c747) Thanks [@baptistejamin](https://github.com/baptistejamin)! - fix: implement tool choice required on anthropic
+
+- Updated dependencies [[`589ab9b`](https://github.com/langchain-ai/langchainjs/commit/589ab9be391a5d6c104f34877fc1b3e2a32fa449)]:
+  - @langchain/core@1.1.38
+
 ## 1.3.25
 
 ### Patch Changes

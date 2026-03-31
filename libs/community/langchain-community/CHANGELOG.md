@@ -1,5 +1,14 @@
 # @langchain/community
 
+## 1.1.27
+
+### Patch Changes
+
+- Updated dependencies [[`9270c48`](https://github.com/langchain-ai/langchainjs/commit/9270c48d7a95db6e7e2570a7e681c94479a673d0), [`589ab9b`](https://github.com/langchain-ai/langchainjs/commit/589ab9be391a5d6c104f34877fc1b3e2a32fa449)]:
+  - @langchain/openai@1.4.1
+  - @langchain/core@1.1.38
+  - @langchain/classic@1.0.27
+
 ## 1.1.26
 
 ### Patch Changes

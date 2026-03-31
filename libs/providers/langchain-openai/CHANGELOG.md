@@ -1,5 +1,14 @@
 # @langchain/openai
 
+## 1.4.1
+
+### Patch Changes
+
+- [#10551](https://github.com/langchain-ai/langchainjs/pull/10551) [`9270c48`](https://github.com/langchain-ai/langchainjs/commit/9270c48d7a95db6e7e2570a7e681c94479a673d0) Thanks [@muhammadosama984](https://github.com/muhammadosama984)! - fix(openai): preserve reasoning_content in ChatOpenAICompletions
+
+- Updated dependencies [[`589ab9b`](https://github.com/langchain-ai/langchainjs/commit/589ab9be391a5d6c104f34877fc1b3e2a32fa449)]:
+  - @langchain/core@1.1.38
+
 ## 1.4.0
 
 ### Minor Changes
