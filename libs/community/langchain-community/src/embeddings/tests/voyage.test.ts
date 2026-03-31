@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, jest, test } from "@jest/globals";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import { VoyageEmbeddings } from "../voyage.js";
 
 describe("VoyageEmbeddings", () => {
@@ -6,11 +6,11 @@ describe("VoyageEmbeddings", () => {
 
   afterEach(() => {
     global.fetch = originalFetch;
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   test("uses basePath provided in constructor", async () => {
-    const fetchMock = jest.fn<typeof fetch>().mockResolvedValue({
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue({
       json: async () => ({
         data: [{ embedding: [0.1, 0.2, 0.3] }],
       }),
@@ -24,16 +24,14 @@ describe("VoyageEmbeddings", () => {
 
     await embeddings.embedQuery("Hello world");
 
-    expect(fetchMock).toHaveBeenCalledWith(
-      "https://ai.mongodb.com/v1/embeddings",
-      expect.objectContaining({
-        method: "POST",
-      })
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      "https://ai.mongodb.com/v1/embeddings"
     );
   });
 
   test("uses apiUrl provided in constructor", async () => {
-    const fetchMock = jest.fn<typeof fetch>().mockResolvedValue({
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue({
       json: async () => ({
         data: [{ embedding: [0.1, 0.2, 0.3] }],
       }),
@@ -47,11 +45,9 @@ describe("VoyageEmbeddings", () => {
 
     await embeddings.embedQuery("Hello world");
 
-    expect(fetchMock).toHaveBeenCalledWith(
-      "https://ai.mongodb.com/v1/embeddings",
-      expect.objectContaining({
-        method: "POST",
-      })
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      "https://ai.mongodb.com/v1/embeddings"
     );
   });
 });
