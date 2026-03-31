@@ -602,3 +602,135 @@ Substantial vector store (813 lines) with integration tests (301 lines) but only
 **Note:** Bedrock (community version) is excluded because `@langchain/aws` already exists and covers
 the Bedrock chat model + embeddings surface. The community Bedrock code may be legacy or should be
 consolidated into `@langchain/aws`.
+
+---
+
+## Contribution History Analysis
+
+Git contribution history (using `--follow` to track renames through the monorepo reorganization)
+provides a strong signal of community engagement and usage.
+
+### Contribution Rankings (sorted by total deduplicated commits)
+
+| Rank | Provider | Commits | Authors | Date Range | Most Active Year | Top Contributor |
+|------|----------|---------|---------|------------|-----------------|----------------|
+| 1 | **Bedrock** (community) | 80 | 26 | 2023-08 → 2026-03 | 2024 (32) | Brace Sproul (19) |
+| 2 | **Neo4j** | 61 | 17 | 2023-09 → 2026-03 | 2024 (32) | Tomaz Bratanic (13) |
+| 3 | **Supabase** | 54 | 20 | 2023-03 → 2026-03 | 2023 (31) | Jacob Lee (13) |
+| 4 | **Chroma** | 54 | 23 | 2023-02 → 2026-03 | 2023 (30) | Jacob Lee (10) |
+| 5 | **Milvus** | 50 | 27 | 2023-04 → 2026-03 | 2023 (25) | Jacob Lee (8) |
+| 6 | **Upstash** | 50 | 14 | 2023-03 → 2026-03 | 2023 (29) | Jacob Lee (11) |
+| 7 | **pgvector** | 47 | 24 | 2023-09 → 2026-03 | 2024 (16) | Jacob Lee (8) |
+| 8 | **HNSWLib** | 43 | 13 | 2023-02 → 2026-03 | 2023 (32) | Nuno Campos (15) |
+| 9 | **Fireworks AI** | 43 | 13 | 2023-02 → 2026-03 | 2024 (17) | Brace Sproul (10) |
+| 10 | **IBM (watsonx)** | 42 | 10 | 2024-10 → 2026-03 | 2025 (26) | Filip Żmijewski (12+11) |
+| 11 | **Together AI** | 42 | 11 | 2023-09 → 2026-03 | 2025 (14) | Brace Sproul (13) |
+| 12 | **ioredis** | 40 | 11 | 2023-03 → 2026-03 | 2023 (28) | Jacob Lee (10) |
+| 13 | **Zep** | 39 | 14 | 2023-05 → 2026-03 | 2023 (24) | Jacob Lee (9) |
+| 14 | **Vectara** | 39 | 11 | 2023-06 → 2026-03 | 2023 (24) | Jacob Lee (12) |
+| 15 | **Google Workspace Tools** | 34 | 18 | 2023-05 → 2026-03 | 2025 (13) | Hunter Lovell (6) |
+| 16 | **Elasticsearch** | 31 | 17 | 2023-04 → 2026-03 | 2023 (18) | Jacob Lee (9) |
+| 17 | **Vercel** | 31 | 9 | 2023-06 → 2026-03 | 2023 (14) | Jacob Lee (9) |
+| 18 | **Google Vertex AI** (community) | 30 | 12 | 2023-05 → 2026-03 | 2023 (16) | Jacob Lee (7) |
+| 19 | **SerpAPI** | 30 | 11 | 2023-02 → 2026-03 | 2023 (25) | Nuno Campos (10) |
+| 20 | **Llama.cpp** | 30 | 14 | 2023-08 → 2026-03 | 2024 (12) | Jacob Lee (6) |
+| 21 | **FAISS** | 28 | 10 | 2023-05 → 2026-03 | 2023 (14) | Jacob Lee (7) |
+| 22 | **Cassandra** | 27 | 8 | 2023-10 → 2026-03 | 2023 (9) | Phil Miesle (6) |
+| 23 | **Prisma** | 26 | 16 | 2023-04 → 2026-03 | 2023 (12) | Jacob Lee (3) |
+| 24 | **Alibaba Tongyi** | 25 | 13 | 2023-07 → 2026-03 | 2024/2025 (8 each) | Hunter Lovell (5) |
+| 25 | **AstraDB** | 25 | 6 | 2023-12 → 2026-03 | 2024 (16) | Jacob Lee (8) |
+| 26 | **Momento** | 24 | 9 | 2023-05 → 2026-03 | 2023 (15) | Hunter Lovell (6) |
+| 27 | **Xata** | 23 | 10 | 2023-08 → 2026-03 | 2023 (11) | Jacob Lee (5) |
+| 28 | **Perplexity** | 22 | 7 | 2025-03 → 2026-03 | 2025 (19) | Hunter Lovell (6) |
+| 29 | **DeepInfra** | 21 | 11 | 2023-02 → 2026-03 | 2023/2025 (7 each) | Hunter Lovell (5) |
+| 30 | **OpenSearch** | 21 | 14 | 2023-04 → 2026-03 | 2023 (11) | Jacob Lee (4) |
+| 31 | **ClickHouse** | 20 | 10 | 2023-04 → 2026-03 | 2023 (11) | Jacob Lee (4) |
+| 32 | **Azure AI Search** | 19 | 9 | 2023-07 → 2026-03 | 2024/2025 (7 each) | Yohan Lasorsa (4) |
+| 33 | **DynamoDB** | 19 | 9 | 2023-05 → 2026-03 | 2023 (10) | Nuno Campos (4) |
+| 34 | **PlanetScale** | 18 | 9 | 2023-05 → 2026-03 | 2023 (10) | Nuno Campos (4) |
+| 35 | **Convex** | 17 | 7 | 2023-10 → 2026-03 | 2023 (7) | Christian Bromann (5) |
+| 36 | **Firestore** | 16 | 6 | 2023-07 → 2026-03 | 2025 (7) | Hunter Lovell (5) |
+| 37 | **SAP HANA** | 15 | 7 | 2024-04 → 2026-03 | 2025 (7) | Hunter Lovell (6) |
+| 38 | **SingleStore** | 15 | 7 | 2023-06 → 2026-03 | 2023 (7) | volodymyr-memsql (3) |
+| 39 | **iFlytek Xinghuo** | 15 | 8 | 2023-11 → 2026-03 | 2023 (5) | Jacob Lee (3) |
+| 40 | **Couchbase** | 14 | 6 | 2024-02 → 2026-03 | 2025 (6) | Hunter Lovell (6) |
+| 41 | **Typesense** | 14 | 8 | 2023-06 → 2026-03 | 2023 (6) | Christian Bromann (4) |
+| 42 | **Neon** | 14 | 8 | 2023-09 → 2026-03 | 2023 (5) | Jacob Lee (5) |
+| 43 | **LibSQL** | 12 | 6 | 2024-10 → 2026-03 | 2024 (5) | Hunter Lovell (3) |
+| 44 | **LanceDB** | 10 | 6 | 2023-06 → 2026-03 | 2023 (5) | Jacob Lee (4) |
+| 45 | **Tencent Hunyuan** | 9 | 4 | 2024-06 → 2026-03 | 2025/2026 (4 each) | Christian Bromann (5) |
+| 46 | **Datadog** | 9 | 5 | 2024-06 → 2026-03 | 2025 (4) | Hunter Lovell (3) |
+| 47 | **MariaDB** | 4 | 3 | 2025-03 → 2026-03 | 2025 (3) | Hunter Lovell (2) |
+
+### Key Insights
+
+**High community engagement (external contributors beyond LangChain team):**
+
+- **Neo4j** — Strong vendor investment: Tomaz Bratanic (13 commits), Anej Gorkič (8), Adam Cowley (3)
+  from the Neo4j team. 17 unique authors total.
+- **Milvus** — Most diverse contributor base: 27 unique authors. Community members include
+  GalO005 (4), zac_ma (2), ryjiang (2).
+- **pgvector** — 24 unique authors. Notable external: MJDeligan (3), Clemens Peters (2),
+  Devin Burnette (2).
+- **Chroma** — 23 unique authors. External: Jeff Huber (2), itaismith (2).
+- **IBM** — Strong vendor investment: Filip Żmijewski (23 combined), alysaleem (1). Very active
+  in 2025 (26 commits) and continuing into 2026 (9 commits).
+- **Supabase** — 20 unique authors. External: Jacob Rosenthal (2), Siddharth (1).
+- **Upstash** — Strong vendor participation: Fahreddin Özcan (4), Cahid Arda Öz (3).
+- **Prisma** — 16 unique authors. External: Nicolas Juelle (2), Alex Shan (2), santree (1).
+- **Zep** — Strong vendor investment: Daniel Chalef (8), Sharath Rajasekar (2), Pavlo Paliychuk (1).
+- **Perplexity** — Very recent but intense: 22 commits in just 1 year (since 2025-03).
+  External: Ranjeet Baraik (4), marvikomo (3), anadi45 (2).
+
+**Still actively maintained (significant 2025-2026 contributions):**
+
+| Provider | 2025 Commits | 2026 Commits | Combined |
+|----------|-------------|-------------|----------|
+| **IBM** | 26 | 9 | **35** |
+| **Bedrock** (already extracted) | 20 | 9 | **29** |
+| **Perplexity** | 19 | 3 | **22** |
+| **Together AI** | 14 | 5 | **19** |
+| **pgvector** | 14 | 4 | **18** |
+| **Fireworks AI** | 11 | 3 | **14** |
+| **Google Workspace** | 13 | 2 | **15** |
+| **Neo4j** | 11 | 4 | **15** |
+| **Vercel** | 11 | 2 | **13** |
+
+**Legacy / declining activity (mostly 2023 with little recent):**
+
+- **HNSWLib** — 32 of 43 commits in 2023, only 2 in 2026
+- **SerpAPI** — 25 of 30 commits in 2023, 0 in 2025
+- **Vectara** — 24 of 39 commits in 2023
+- **ioredis** — 28 of 40 commits in 2023
+- **PlanetScale** — 10 of 18 in 2023 (PlanetScale itself shut down free tier)
+
+### Combined Score: Code Quality × Contribution Activity
+
+Combining the earlier code quality / test coverage analysis with contribution history,
+here is the final prioritized list for separation:
+
+| Priority | Provider | Code Score | Contrib Score | Why Separate |
+|----------|----------|-----------|--------------|-------------|
+| **P0** | **IBM (watsonx)** | Excellent (all surfaces unit+int+std) | Very High (42 commits, 10 authors, very active 2025-26) | Best overall candidate: broadest integration, best tests, most active |
+| **P0** | **Neo4j** | Good (4 categories, int tests) | Very High (61 commits, 17 authors, vendor-invested) | Uniquely broad (vector + graph + chain), strong vendor engagement |
+| **P0** | **pgvector** | Excellent (unit+int, 2K test lines) | Very High (47 commits, 24 authors, active) | Most tested vectorstore, active community, de facto standard |
+| **P1** | **Supabase** | Good (unit+int for vector) | High (54 commits, 20 authors) | Multi-category, strong test base, well-known |
+| **P1** | **Chroma** | Good (unit+int + structured query) | High (54 commits, 23 authors) | Popular open-source vector DB |
+| **P1** | **Milvus** | Excellent (unit+int) | High (50 commits, 27 most-diverse authors) | Most diverse contributor community |
+| **P1** | **Upstash** | Good (5 categories) | High (50 commits, vendor contributors) | Broadest category coverage, vendor-invested |
+| **P1** | **Fireworks AI** | Good (3 categories, standard tests) | High (43 commits, active 2024-25) | Full LLM stack, standard tests |
+| **P1** | **Together AI** | Good (3 categories, standard tests) | High (42 commits, active 2025-26) | Full LLM stack, growing activity |
+| **P2** | **Alibaba Tongyi** | Excellent (chat tests) | Moderate (25 commits, 13 authors) | Outstanding chat model tests, steady growth |
+| **P2** | **Elasticsearch** | Decent (int tests) | Moderate (31 commits, 17 authors) | Major search engine provider |
+| **P2** | **Zep** | Good (4 categories) | Moderate (39 commits, vendor-invested) | Broad integration, vendor backing |
+| **P2** | **FAISS** | Excellent (unit+int) | Moderate (28 commits) | Great test quality, local-first |
+| **P2** | **Azure AI Search** | Good (unit+int) | Moderate (19 commits, Azure-invested) | Major cloud provider |
+| **P2** | **Couchbase** | Good (unit+int, 3 categories) | Moderate (14 commits, vendor-driven) | Two distinct vector APIs |
+| **P2** | **HNSWLib** | Good (unit+int) | Low-Moderate (43 total but declining) | Tests are good but activity waning |
+| **P2** | **SAP HANA** | Excellent (massive int tests) | Low-Moderate (15 commits) | Enterprise DB, thorough tests |
+| **P2** | **Perplexity** | Decent (int-only) | High-recent (22 commits in 1yr) | Very active, fast-growing |
+| **P3** | **Llama.cpp** | Multi-category but int-only | Moderate (30 commits) | Local inference, steadily used |
+| **P3** | **Cassandra** | 4 categories but int-only | Moderate (27 commits) | Enterprise DB |
+| **P3** | **Tencent Hunyuan** | Multi-file but split tests | Low (9 commits) | Regional provider, low activity |
+| **P3** | **Google Workspace** | Multi-file, mixed tests | Moderate (34 commits) | May belong in existing @langchain/google-* |
+| **P3** | **Google Vertex AI** (community) | Multi-file, unit+int | Moderate (30 commits) | Should consolidate into @langchain/google-vertexai |
