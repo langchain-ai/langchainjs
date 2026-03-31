@@ -1,15 +1,64 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect } from "vitest";
 import { ChatCompletionMessage } from "openai/resources";
-import { AIMessage } from "@langchain/core/messages";
+import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
 import {
   completionsApiContentBlockConverter,
+  convertCompletionsDeltaToBaseMessageChunk,
   convertCompletionsMessageToBaseMessage,
   convertMessagesToCompletionsMessageParams,
   convertStandardContentBlockToCompletionsContentPart,
 } from "../completions.js";
 
 describe("convertCompletionsMessageToBaseMessage", () => {
+  it("preserves assistant reasoning_content in additional_kwargs", () => {
+    const mockMessage = {
+      role: "assistant" as const,
+      content: "2",
+      reasoning_content: "The user asked 1+1.",
+    };
+
+    const mockRawResponse = {
+      id: "chatcmpl-reasoning",
+      model: "gpt-5.4",
+      choices: [{ index: 0, message: mockMessage }],
+      usage: {
+        prompt_tokens: 1,
+        completion_tokens: 1,
+        total_tokens: 2,
+      },
+    };
+
+    const result = convertCompletionsMessageToBaseMessage({
+      message: mockMessage as unknown as ChatCompletionMessage,
+      rawResponse: mockRawResponse as any,
+    }) as AIMessage;
+
+    expect(result.additional_kwargs.reasoning_content).toBe(
+      "The user asked 1+1."
+    );
+  });
+
+  it("preserves delta reasoning_content in streaming chunks", () => {
+    const delta = {
+      role: "assistant" as const,
+      content: "",
+      reasoning_content: "The user",
+    };
+    const rawResponse = {
+      id: "chatcmpl-reasoning-stream",
+      choices: [{ index: 0, delta, finish_reason: null }],
+      usage: { total_tokens: 0, total_characters: 0 },
+    };
+
+    const result = convertCompletionsDeltaToBaseMessageChunk({
+      delta,
+      rawResponse: rawResponse as any,
+    }) as AIMessageChunk;
+
+    expect(result.additional_kwargs.reasoning_content).toBe("The user");
+  });
+
   describe("OpenRouter image response handling", () => {
     it("Should correctly parse OpenRouter-style image responses", () => {
       // Mock message with images from OpenRouter
