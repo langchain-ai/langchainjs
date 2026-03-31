@@ -361,7 +361,7 @@ describe("Google Mock", () => {
     );
   });
 
-  test("detail maps auto to unspecified mediaResolution from call options", async () => {
+  test("detail auto leaves mediaResolution undefined from call options", async () => {
     const llm = newChatGoogle({
       model: "gemini-3-pro-preview",
       responseFile: "gemini-chat-001.json",
@@ -371,8 +371,8 @@ describe("Google Mock", () => {
       detail: "auto",
     });
 
-    expect(recorder?.request?.body?.generationConfig?.mediaResolution).toEqual(
-      "MEDIA_RESOLUTION_UNSPECIFIED"
+    expect(recorder?.request?.body?.generationConfig).not.toHaveProperty(
+      "mediaResolution"
     );
   });
 

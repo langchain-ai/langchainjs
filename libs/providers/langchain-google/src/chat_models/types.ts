@@ -149,7 +149,7 @@ export interface ChatGoogleFields {
    * OpenAI-compatible alias for media input detail level.
    *
    * This is mapped to `generationConfig.mediaResolution`:
-   * - `"auto"` => `"MEDIA_RESOLUTION_UNSPECIFIED"`
+   * - `"auto"` => default Gemini behavior (`mediaResolution` omitted)
    * - `"low"` => `"MEDIA_RESOLUTION_LOW"`
    * - `"high"` => `"MEDIA_RESOLUTION_HIGH"`
    *

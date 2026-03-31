@@ -473,14 +473,6 @@ describe.each(coreModelInfo)(
       expect(contentBlock.text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
     });
 
-    test("detail maps to generationConfig.mediaResolution", async () => {
-      const llm = newChatGoogle();
-      await llm.invoke("What is 1 + 1?", { detail: "high" });
-      expect(recorder.request?.body?.generationConfig?.mediaResolution).toEqual(
-        "MEDIA_RESOLUTION_HIGH"
-      );
-    });
-
     test("invoke token count usage_metadata", async () => {
       const model = newChatGoogle();
       const res: AIMessageChunk = await model.invoke(
@@ -1044,6 +1036,56 @@ describe.each(coreModelInfo)(
         aiMessage?.usage_metadata?.input_token_details?.image
       ).toBeGreaterThan(0);
     });
+
+    test(
+      "mediaResolution and detail map correctly for image prompts",
+      async () => {
+        const model = newChatGoogle({});
+
+        const dataPath = "src/chat_models/tests/data/blue-square.png";
+        const dataType = "image/png";
+        const data = await fs.readFile(dataPath);
+        const data64 = data.toString("base64");
+
+        const message = new HumanMessage({
+          contentBlocks: [
+            {
+              type: "text",
+              text: "What is in this image?",
+            },
+            {
+              type: "image",
+              data: data64,
+              mimeType: dataType,
+            },
+          ],
+        });
+
+        const lowDetailResult = await model.invoke([message], {
+          mediaResolution: "MEDIA_RESOLUTION_LOW",
+        });
+        expect(recorder.request?.body?.generationConfig?.mediaResolution).toEqual(
+          "MEDIA_RESOLUTION_LOW"
+        );
+        const lowImageTokens =
+          lowDetailResult.usage_metadata?.input_token_details?.image ?? 0;
+        expect(lowImageTokens).toBeGreaterThan(0);
+
+        const highDetailResult = await model.invoke([message], {
+          detail: "high",
+        });
+        expect(recorder.request?.body?.generationConfig?.mediaResolution).toEqual(
+          "MEDIA_RESOLUTION_HIGH"
+        );
+        const highImageTokens =
+          highDetailResult.usage_metadata?.input_token_details?.image ?? 0;
+        expect(highImageTokens).toBeGreaterThan(0);
+
+        // Higher detail should process at least as much image information.
+        expect(highImageTokens).toBeGreaterThanOrEqual(lowImageTokens);
+      },
+      90000
+    );
 
     test("video - legacy", async () => {
       const model = newChatGoogle({});

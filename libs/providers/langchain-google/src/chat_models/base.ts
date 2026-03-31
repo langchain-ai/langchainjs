@@ -91,8 +91,6 @@ function mapDetailToMediaResolution(
   detail?: ChatGoogleFields["detail"]
 ): Gemini.GenerationConfig["mediaResolution"] | undefined {
   switch (detail) {
-    case "auto":
-      return "MEDIA_RESOLUTION_UNSPECIFIED";
     case "low":
       return "MEDIA_RESOLUTION_LOW";
     case "high":
