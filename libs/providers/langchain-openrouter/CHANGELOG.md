@@ -1,5 +1,12 @@
 # @langchain/openrouter
 
+## 0.1.10
+
+### Patch Changes
+
+- Updated dependencies [[`9270c48`](https://github.com/langchain-ai/langchainjs/commit/9270c48d7a95db6e7e2570a7e681c94479a673d0)]:
+  - @langchain/openai@1.4.1
+
 ## 0.1.9
 
 ### Patch Changes

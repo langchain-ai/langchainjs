@@ -1,5 +1,20 @@
 # langchain
 
+## 1.2.39
+
+### Patch Changes
+
+- [#10543](https://github.com/langchain-ai/langchainjs/pull/10543) [`7ed93b8`](https://github.com/langchain-ai/langchainjs/commit/7ed93b8b8a6e9eb0da3e103d74087c692fee2773) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(langchain): allow dynamic tools in wrapModelCall with wrapToolCall
+
+- [#10554](https://github.com/langchain-ai/langchainjs/pull/10554) [`11a295f`](https://github.com/langchain-ai/langchainjs/commit/11a295fdadec3809f40c10492e3fd474e832c468) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): add support for dynamic structured output
+
+- [#10555](https://github.com/langchain-ai/langchainjs/pull/10555) [`f548053`](https://github.com/langchain-ai/langchainjs/commit/f54805305787fa383c3ce1e287daafdb5464a98b) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): bump langgraph dep
+
+- [#10552](https://github.com/langchain-ai/langchainjs/pull/10552) [`589ab9b`](https://github.com/langchain-ai/langchainjs/commit/589ab9be391a5d6c104f34877fc1b3e2a32fa449) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): accept cross-version runnable models in createAgent
+
+- Updated dependencies [[`589ab9b`](https://github.com/langchain-ai/langchainjs/commit/589ab9be391a5d6c104f34877fc1b3e2a32fa449)]:
+  - @langchain/core@1.1.38
+
 ## 1.2.38
 
 ### Patch Changes

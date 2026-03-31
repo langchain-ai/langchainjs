@@ -1,5 +1,11 @@
 # @langchain/core
 
+## 1.1.38
+
+### Patch Changes
+
+- [#10552](https://github.com/langchain-ai/langchainjs/pull/10552) [`589ab9b`](https://github.com/langchain-ai/langchainjs/commit/589ab9be391a5d6c104f34877fc1b3e2a32fa449) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): accept cross-version runnable models in createAgent
+
 ## 1.1.37
 
 ### Patch Changes
