@@ -17,9 +17,7 @@ import {
   BaseChatModel,
   type BaseChatModelCallOptions,
 } from "@langchain/core/language_models/chat_models";
-import {
-  BaseLanguageModelInput,
-} from "@langchain/core/language_models/base";
+import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import {
   Runnable,
   RunnableLike,
