@@ -417,7 +417,8 @@ describe("PGVectorStore", () => {
       });
 
       const queryCall = pool.query.mock.calls[0];
-      expect(queryCall[0]).toContain("metadata->>'category'");
+      expect(queryCall[0]).toContain("metadata ->> $");
+      expect(queryCall[1]).toContain("category");
       expect(queryCall[1]).toContain("test");
     });
 
@@ -480,7 +481,9 @@ describe("PGVectorStore", () => {
         tags: { arrayContains: ["tag1", "tag2"] },
       });
       const queryCall = pool.query.mock.calls[0];
-      expect(queryCall[0]).toContain("?| array[");
+      expect(queryCall[0]).toContain("?| $");
+      expect(queryCall[1]).toContain("tags");
+      expect(queryCall[1]).toContainEqual(["tag1", "tag2"]);
     });
 
     test("handles numeric comparison operators", async () => {
@@ -508,7 +511,8 @@ describe("PGVectorStore", () => {
         category: "test",
       });
       const queryCall = pool.query.mock.calls[0];
-      expect(queryCall[0]).toContain("metadata->>'category' = $");
+      expect(queryCall[0]).toContain("metadata ->> $");
+      expect(queryCall[1]).toContain("category");
     });
 
     test("handles mixed equality and operator filters", async () => {
@@ -517,8 +521,22 @@ describe("PGVectorStore", () => {
         score: { gte: 80 },
       });
       const queryCall = pool.query.mock.calls[0];
-      expect(queryCall[0]).toContain("metadata->>'category' = $");
+      expect(queryCall[0]).toContain("metadata ->> $");
       expect(queryCall[0]).toContain("::numeric >=");
+    });
+
+    test("parameterizes metadata keys to prevent SQL injection", async () => {
+      const maliciousKey = "x' OR '1'='1 --";
+
+      await store.similaritySearchVectorWithScore([0.1], 5, {
+        [maliciousKey]: "test",
+      });
+
+      const queryCall = pool.query.mock.calls[0];
+      expect(queryCall[0]).toContain("metadata ->> $");
+      expect(queryCall[0]).not.toContain(maliciousKey);
+      expect(queryCall[1]).toContain(maliciousKey);
+      expect(queryCall[1]).toContain("test");
     });
   });
 

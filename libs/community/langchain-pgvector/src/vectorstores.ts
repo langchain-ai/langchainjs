@@ -722,49 +722,42 @@ export class PGVectorStore extends VectorStore {
     const whereClauses: string[] = [];
     const parameters: unknown[] = [];
     let paramCount = paramOffset;
+    const addParameter = (parameter: unknown) => {
+      paramCount += 1;
+      parameters.push(parameter);
+      return `$${paramCount}`;
+    };
 
     for (const [key, value] of Object.entries(filter)) {
       if (typeof value === "object" && value !== null) {
         const _value = value as Record<string, unknown>;
-        const currentParamCount = paramCount;
 
         if (Array.isArray(_value.in)) {
           const placeholders = _value.in
-            .map(
-              (_: unknown, index: number) => `$${currentParamCount + index + 1}`
-            )
+            .map((item: unknown) => addParameter(item))
             .join(",");
+          const keyPlaceholder = addParameter(key);
           whereClauses.push(
-            `${this.metadataColumnName}->>'${key}' IN (${placeholders})`
+            `${this.metadataColumnName} ->> ${keyPlaceholder} IN (${placeholders})`
           );
-          parameters.push(..._value.in);
-          paramCount += _value.in.length;
         }
 
         if (Array.isArray(_value.notIn)) {
           const placeholders = _value.notIn
-            .map(
-              (_: unknown, index: number) => `$${currentParamCount + index + 1}`
-            )
+            .map((item: unknown) => addParameter(item))
             .join(",");
+          const keyPlaceholder = addParameter(key);
           whereClauses.push(
-            `${this.metadataColumnName}->>'${key}' NOT IN (${placeholders})`
+            `${this.metadataColumnName} ->> ${keyPlaceholder} NOT IN (${placeholders})`
           );
-          parameters.push(..._value.notIn);
-          paramCount += _value.notIn.length;
         }
 
         if (Array.isArray(_value.arrayContains)) {
-          const placeholders = _value.arrayContains
-            .map(
-              (_: unknown, index: number) => `$${currentParamCount + index + 1}`
-            )
-            .join(",");
+          const keyPlaceholder = addParameter(key);
+          const valuesPlaceholder = addParameter(_value.arrayContains);
           whereClauses.push(
-            `${this.metadataColumnName}->'${key}' ?| array[${placeholders}]`
+            `(${this.metadataColumnName} -> ${keyPlaceholder}) ?| ${valuesPlaceholder}::text[]`
           );
-          parameters.push(..._value.arrayContains);
-          paramCount += _value.arrayContains.length;
         }
 
         const operators = {
@@ -779,27 +772,27 @@ export class PGVectorStore extends VectorStore {
             Object.prototype.hasOwnProperty.call(_value, opKey) &&
             typeof _value[opKey] === "number"
           ) {
-            paramCount += 1;
+            const keyPlaceholder = addParameter(key);
+            const valuePlaceholder = addParameter(_value[opKey]);
             whereClauses.push(
-              `(${this.metadataColumnName}->>'${key}')::numeric ${sqlOp} $${paramCount}`
+              `(${this.metadataColumnName} ->> ${keyPlaceholder})::numeric ${sqlOp} ${valuePlaceholder}`
             );
-            parameters.push(_value[opKey]);
           }
         }
 
         if (Object.prototype.hasOwnProperty.call(_value, "neq")) {
-          paramCount += 1;
+          const keyPlaceholder = addParameter(key);
+          const valuePlaceholder = addParameter(String(_value.neq));
           whereClauses.push(
-            `(${this.metadataColumnName}->>'${key}' IS NULL OR (${this.metadataColumnName}->>'${key}')::text != $${paramCount})`
+            `(${this.metadataColumnName} ->> ${keyPlaceholder} IS NULL OR (${this.metadataColumnName} ->> ${keyPlaceholder})::text != ${valuePlaceholder})`
           );
-          parameters.push(String(_value.neq));
         }
       } else {
-        paramCount += 1;
+        const keyPlaceholder = addParameter(key);
+        const valuePlaceholder = addParameter(value);
         whereClauses.push(
-          `${this.metadataColumnName}->>'${key}' = $${paramCount}`
+          `${this.metadataColumnName} ->> ${keyPlaceholder} = ${valuePlaceholder}`
         );
-        parameters.push(value);
       }
     }
 
