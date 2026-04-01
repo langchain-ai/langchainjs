@@ -16,6 +16,12 @@ export interface VoyageEmbeddingsParams extends EmbeddingsParams {
   batchSize?: number;
 
   /**
+   * Base URL for the Voyage AI API.
+   * @default "https://api.voyageai.com/v1"
+   */
+  basePath?: string;
+
+  /**
    * Input type for the embeddings request.
    */
   inputType?: string;
@@ -138,6 +144,7 @@ export class VoyageEmbeddings
     this.modelName = fieldsWithDefaults?.modelName ?? this.modelName;
     this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
     this.apiKey = apiKey;
+    this.basePath = fieldsWithDefaults?.basePath ?? this.basePath;
     this.apiUrl = `${this.basePath}/embeddings`;
     this.inputType = fieldsWithDefaults?.inputType;
     this.truncation = fieldsWithDefaults?.truncation;
