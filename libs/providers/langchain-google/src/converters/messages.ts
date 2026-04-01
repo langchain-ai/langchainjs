@@ -371,6 +371,14 @@ function convertStandardContentBlockToGeminiPart(
       return convertStandardDataContentBlockToGeminiPart(block);
     case "video":
       return convertStandardVideoContentBlockToGeminiPart(block);
+    case "executableCode": {
+      const { type, ...rest } = block as unknown as Record<string, unknown>;
+      return rest as Gemini.Part;
+    }
+    case "codeExecutionResult": {
+      const { type, ...rest } = block as unknown as Record<string, unknown>;
+      return rest as Gemini.Part;
+    }
     default:
       return null;
   }
@@ -729,6 +737,12 @@ function convertLegacyContentMessageToGeminiContent(
           parts.push(messageContentImageUrl(item));
         } else if (isMessageContentMedia(item)) {
           parts.push(messageContentMedia(item));
+        } else if (
+          item?.type === "executableCode" ||
+          item?.type === "codeExecutionResult"
+        ) {
+          const { type, ...rest } = item;
+          parts.push(rest as Gemini.Part);
         } else {
           parts.push(item as Gemini.Part);
         }
