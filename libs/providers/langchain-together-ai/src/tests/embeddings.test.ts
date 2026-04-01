@@ -110,11 +110,14 @@ describe("TogetherAIEmbeddings", () => {
   });
 
   test("surfaces API errors", async () => {
-    global.fetch = vi.fn().mockResolvedValue(
-      jsonResponse({ error: "bad request" }, 400)
+    global.fetch = vi.fn().mockImplementation(
+      async () => jsonResponse({ error: "bad request" }, 400)
     ) as typeof fetch;
 
-    const embeddings = new TogetherAIEmbeddings({ apiKey: "test-api-key" });
+    const embeddings = new TogetherAIEmbeddings({
+      apiKey: "test-api-key",
+      maxRetries: 0,
+    });
 
     await expect(embeddings.embedQuery("hello")).rejects.toThrow(
       /Error getting prompt completion from Together AI/

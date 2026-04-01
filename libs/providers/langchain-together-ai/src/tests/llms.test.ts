@@ -129,13 +129,14 @@ describe("TogetherAI", () => {
   });
 
   test("surfaces API errors", async () => {
-    global.fetch = vi.fn().mockResolvedValue(
-      jsonResponse({ error: "bad request" }, 400)
+    global.fetch = vi.fn().mockImplementation(
+      async () => jsonResponse({ error: "bad request" }, 400)
     ) as typeof fetch;
 
     const model = new TogetherAI({
       model: "togethercomputer/StripedHyena-Nous-7B",
       apiKey: "test-api-key",
+      maxRetries: 0,
     });
 
     await expect(model.invoke("Hello")).rejects.toThrow(
