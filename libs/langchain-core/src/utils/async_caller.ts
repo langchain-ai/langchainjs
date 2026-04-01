@@ -15,6 +15,48 @@ const STATUS_NO_RETRY = [
   409, // Conflict
 ];
 
+const RETRY_AFTER_QUOTA_THRESHOLD_MS = 60_000;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function _getRetryAfterHeader(error: any): string | null | undefined {
+  if (error?.headers) {
+    if (typeof error.headers.get === "function") {
+      return error.headers.get("retry-after");
+    }
+    const h = error.headers;
+    return h["retry-after"] ?? h["Retry-After"] ?? undefined;
+  }
+  if (error?.response?.headers) {
+    if (typeof error.response.headers.get === "function") {
+      return error.response.headers.get("retry-after");
+    }
+    const h = error.response.headers;
+    return h["retry-after"] ?? h["Retry-After"] ?? undefined;
+  }
+  return undefined;
+}
+
+export function parseRetryAfterMs(
+  headerValue: string | null | undefined
+): number | undefined {
+  if (headerValue == null) return undefined;
+  const trimmed = headerValue.trim();
+  if (!trimmed) return undefined;
+
+  const seconds = Number(trimmed);
+  if (!Number.isNaN(seconds) && seconds >= 0) {
+    return seconds * 1000;
+  }
+
+  const date = Date.parse(trimmed);
+  if (!Number.isNaN(date)) {
+    const delayMs = date - Date.now();
+    return delayMs > 0 ? delayMs : 0;
+  }
+
+  return undefined;
+}
+
 /**
  * The default failed attempt handler for the AsyncCaller.
  * @param error - The error to handle.
@@ -79,6 +121,22 @@ const defaultFailedAttemptHandler = (error: unknown) => {
     );
     err.name = "InsufficientQuotaError";
     throw err;
+  }
+
+  if (status === 429) {
+    const retryAfterMs = parseRetryAfterMs(_getRetryAfterHeader(error));
+    if (retryAfterMs !== undefined) {
+      if (retryAfterMs > RETRY_AFTER_QUOTA_THRESHOLD_MS) {
+        const err = new Error(
+          "message" in error && typeof error.message === "string"
+            ? error.message
+            : "Rate limit quota exhausted"
+        );
+        err.name = "RateLimitQuotaExhaustedError";
+        throw err;
+      }
+      (error as Record<string, unknown>).retryAfterMs = retryAfterMs;
+    }
   }
 };
 

@@ -146,7 +146,17 @@ async function onAttemptFailure({
     return false;
   }
 
-  const delayTime = calculateDelay(retriesConsumed, options);
+  let delayTime = calculateDelay(retriesConsumed, options);
+
+  const retryAfterMs =
+    typeof normalizedError.retryAfterMs === "number" &&
+    normalizedError.retryAfterMs > 0
+      ? normalizedError.retryAfterMs
+      : undefined;
+  if (retryAfterMs !== undefined) {
+    delayTime = Math.max(delayTime, retryAfterMs);
+  }
+
   const finalDelay = Math.min(delayTime, remainingTime);
 
   if (finalDelay > 0) {

@@ -22,14 +22,19 @@ export class OpenRouterError extends ns.brand(LangChainError) {
   /** Additional error metadata returned by the API, if available. */
   metadata?: Record<string, unknown>;
 
+  /** HTTP response headers from the failed request, if available. */
+  headers?: Record<string, string>;
+
   constructor(
     message: string,
     code?: number,
-    metadata?: Record<string, unknown>
+    metadata?: Record<string, unknown>,
+    headers?: Record<string, string>
   ) {
     super(message);
     this.code = code;
     this.metadata = metadata;
+    this.headers = headers;
   }
 
   /**
@@ -64,16 +69,26 @@ export class OpenRouterError extends ns.brand(LangChainError) {
     const message = `${baseMessage}${metadataStr}`;
     const code = error?.code ?? response.status;
 
+    const headers: Record<string, string> = {};
+    response.headers.forEach((value, name) => {
+      headers[name] = value;
+    });
+
     if (response.status === 401 || response.status === 403) {
       // eslint-disable-next-line @typescript-eslint/no-use-before-define
-      return new OpenRouterAuthError(message, code, error?.metadata);
+      return new OpenRouterAuthError(message, code, error?.metadata, headers);
     }
     if (response.status === 429) {
       // eslint-disable-next-line @typescript-eslint/no-use-before-define
-      return new OpenRouterRateLimitError(message, code, error?.metadata);
+      return new OpenRouterRateLimitError(
+        message,
+        code,
+        error?.metadata,
+        headers
+      );
     }
 
-    return new OpenRouterError(message, code, error?.metadata);
+    return new OpenRouterError(message, code, error?.metadata, headers);
   }
 }
 
@@ -90,9 +105,10 @@ export class OpenRouterAuthError extends ns.brand(OpenRouterError, "auth") {
   constructor(
     message: string,
     code?: number,
-    metadata?: Record<string, unknown>
+    metadata?: Record<string, unknown>,
+    headers?: Record<string, string>
   ) {
-    super(message, code, metadata);
+    super(message, code, metadata, headers);
   }
 }
 
@@ -111,8 +127,9 @@ export class OpenRouterRateLimitError extends ns.brand(
   constructor(
     message: string,
     code?: number,
-    metadata?: Record<string, unknown>
+    metadata?: Record<string, unknown>,
+    headers?: Record<string, string>
   ) {
-    super(message, code, metadata);
+    super(message, code, metadata, headers);
   }
 }
