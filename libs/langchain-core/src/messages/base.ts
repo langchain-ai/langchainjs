@@ -308,6 +308,8 @@ export abstract class BaseMessage<
     }
     this.additional_kwargs = fields.additional_kwargs;
     this.id = fields.id;
+    // contentBlocks is a computed getter and must not be serialized via lc_kwargs
+    delete this.lc_kwargs.contentBlocks;
   }
 
   /** Get text content of the message. */

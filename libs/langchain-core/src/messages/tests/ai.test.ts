@@ -66,6 +66,55 @@ describe("AIMessage", () => {
     ]);
   });
 
+  describe("toJSON with outputVersion v1", () => {
+    it("should not inline content in both 'content' and 'content_blocks' in toJSON output", () => {
+      const message = new AIMessage({
+        content: [
+          {
+            type: "text" as const,
+            text: "Here is a response with some content.",
+          },
+        ],
+        response_metadata: {
+          output_version: "v1",
+          model_provider: "google",
+        },
+      });
+
+      const serialized = message.toJSON();
+      expect(serialized.type).toBe("constructor");
+      const kwargs = (serialized as { kwargs: Record<string, unknown> }).kwargs;
+
+      // Bug: toJSON() produces both "content" and "content_blocks" keys in kwargs,
+      // duplicating the message content. The contentBlocks getter in lc_kwargs
+      // gets serialized as "content_blocks" (via lc_aliases) alongside "content".
+      expect(kwargs).not.toHaveProperty("content_blocks");
+    });
+
+    it("should not duplicate content when constructed with contentBlocks", () => {
+      const message = new AIMessage({
+        contentBlocks: [
+          {
+            type: "text" as const,
+            text: "This should only appear once.",
+          },
+          {
+            type: "tool_call" as const,
+            id: "call_1",
+            name: "search",
+            args: { q: "test" },
+          },
+        ],
+      });
+
+      const serialized = message.toJSON();
+      const kwargs = (serialized as { kwargs: Record<string, unknown> }).kwargs;
+
+      // Same bug: contentBlocks gets serialized as content_blocks alongside content
+      expect(kwargs).not.toHaveProperty("content_blocks");
+    });
+  });
+
   describe(".contentBlocks", () => {
     it("should have tool call content blocks from .tool_calls", () => {
       const message = new AIMessage({
