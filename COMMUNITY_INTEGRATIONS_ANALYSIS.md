@@ -858,3 +858,153 @@ Community integrations have proportionally more external contributions (since La
 maintenance commits are spread across the monorepo). pgvector with 17 external authors, Milvus
 with 9, and Neo4j with 8 indicate genuine community/vendor investment comparable to existing
 packages like `@langchain/ollama` (13), `@langchain/redis` (11), and `@langchain/groq` (10).
+
+---
+
+## Detailed Contributor Profiles: Priority Mint Packages
+
+Below are the external (non-LangChain-team) contributors for the five packages being minted first,
+with GitHub usernames resolved for outreach purposes. Contributors are grouped by recency for
+prioritizing who to reach out to.
+
+### Neo4j — External Contributors
+
+**Recent contributors (2024-2025):**
+
+| Contributor | GitHub | Commits | Last Active | Notable Contributions |
+|------------|--------|---------|-------------|----------------------|
+| **Tomaz Bratanic** | [@tomasonjo](https://github.com/tomasonjo) | 13 | 2024-08 | Primary author of Neo4j vector store, graph DB, connectivity methods |
+| **Anej Gorkič** | [@easwee](https://github.com/easwee) | 8 | 2024-06 | Enhanced schema support, metadata filtering, bug fixes |
+| **Adam Cowley** | [@adam-cowley](https://github.com/adam-cowley) | 3 | 2024-05 | Default embedding properties, graph generics, error handling |
+| **Bernard Faucher** | [@BernardFaucher](https://github.com/BernardFaucher) | 1 | 2024-12 | Neo4j chat message history |
+| **Mohammed Bilal Shareef** | [@bilalshareef](https://github.com/bilalshareef) | 1 | 2024-04 | Fix graph document text content population |
+| **AumeshMisra** | [@AumeshMisra](https://github.com/AumeshMisra) | 1 | 2024-05 | Overriding similaritySearchWithScore for neo4j vector |
+| **Minh Ha** | [@hlminh2000](https://github.com/hlminh2000) | 1 | 2025-01 | Added graph_document to export list |
+
+**Earlier contributors (2023):**
+
+| Contributor | GitHub | Commits | Notable |
+|------------|--------|---------|---------|
+| **Oskar Hane** | [@oskarhane](https://github.com/oskarhane) | 1 | Neo4j integer to string conversion fix |
+| **Katarina Supe** | [@katarinasupe](https://github.com/katarinasupe) | 1 | Memgraph support |
+| **Michael Ozery** | [@michaelozery](https://github.com/michaelozery) | 1 | DynamoDB store enhancement (co-commit) |
+
+**Key outreach targets:** @tomasonjo (13 commits, likely Neo4j DevRel), @easwee (8 commits), @adam-cowley (3 commits, likely Neo4j staff), @BernardFaucher (recent, message history feature)
+
+---
+
+### IBM (watsonx) — External Contributors
+
+**Recent contributors (2025-2026):**
+
+| Contributor | GitHub | Commits | Last Active | Notable Contributions |
+|------------|--------|---------|-------------|----------------------|
+| **Filip Żmijewski** | [@FilipZmijewski](https://github.com/FilipZmijewski) | 23 | 2026-03 | Primary author — chat model, LLM, toolkit, gateway, reasoning_effort, all major features |
+| **MG** | [@noobgramming](https://github.com/noobgramming) | 1 | 2025-12 | AbortSignal cancellation fix |
+| **Matt Foxvog** | [@mattfoxvog](https://github.com/mattfoxvog) | 1 | 2025-12 | Parameter typo fix |
+| **alysaleem** | [@alysaleem](https://github.com/alysaleem) | 1 | 2025-06 | CP4D authentication fix |
+
+**Earlier contributors (2024):**
+
+| Contributor | GitHub | Commits | Notable |
+|------------|--------|---------|---------|
+| **Christopher Dierkens** | N/A (email: cjdierkens@gmail.com) | 1 | LibSQL feature (co-commit) |
+
+**Key outreach target:** @FilipZmijewski (23 commits, IBM engineer, primary author of the entire IBM integration — essential contact)
+
+---
+
+### pgvector — External Contributors
+
+**Recent contributors (2025-2026):**
+
+| Contributor | GitHub | Commits | Last Active | Notable Contributions |
+|------------|--------|---------|-------------|----------------------|
+| **Asad Ali** | [@Axadali](https://github.com/Axadali) | 1 | 2026-01 | Fix score vs distance return |
+| **Artem Kudryavtsev** | [@artemkdr](https://github.com/artemkdr) | 1 | 2025-09 | Advanced metadata filters |
+| **RanderHelena** | [@RanderGabriel](https://github.com/RanderGabriel) | 1 | 2025-06 | skipInitializationCheck option |
+| **Yilin Juang** | [@yilinjuang](https://github.com/yilinjuang) | 1 | 2025-06 | notIn filter support |
+| **Julien Riou** | [@jouir](https://github.com/jouir) | 1 | 2025-04 | Remove uuid-ossp extension dependency |
+| **Aliaksei Tayanouski** | [@alexTayanovsky](https://github.com/alexTayanovsky) | 1 | 2025-04 | Doc fix |
+| **Ranjeet Baraik** | [@anadi45](https://github.com/anadi45) | 1 | 2025-01 | MMR search support |
+
+**2024 contributors:**
+
+| Contributor | GitHub | Commits | Notable |
+|------------|--------|---------|---------|
+| **Clemens Peters** | [@clemenspeters](https://github.com/clemenspeters) | 2 | Namespace support, logic fix |
+| **☃ Elliot Shepherd** | [@elliots](https://github.com/elliots) | 1 | Return document IDs from queries |
+| **Jorge Lanzarotti** | [@jl4nz](https://github.com/jl4nz) | 1 | HNSW index support |
+| **George Herbert** | [@georgeherby](https://github.com/georgeherby) | 1 | Array contains filter |
+| **Andrew Nguonly** | [@andrewnguonly](https://github.com/andrewnguonly) | 1 | Inner product + Euclidean distance |
+| **IlyaSavich** | [@IlyaSavich](https://github.com/IlyaSavich) | 1 | Collection fix |
+| **ZuesYousif** | [@ZuesYousif](https://github.com/ZuesYousif) | 1 | Schema name support |
+
+**2023 contributors:**
+
+| Contributor | GitHub | Commits | Notable |
+|------------|--------|---------|---------|
+| **MJDeligan** | [@MJDeligan](https://github.com/MJDeligan) | 3 | IDs parameter, delete method, schema fix |
+| **Devin Burnette** | [@devinburnette](https://github.com/devinburnette) | 2 | Collection name support, metadata cast fix |
+| **Aman Shrivastava** | [@aman-shrivastava95](https://github.com/aman-shrivastava95) | 1 | IN-filter support |
+| **phof** | [@phof](https://github.com/phof) | 1 | Null char removal |
+
+**Key outreach targets:** pgvector has the broadest contributor base (17 external authors). Recent
+active contributors include @Axadali, @artemkdr, @RanderGabriel, @yilinjuang, @jouir, @anadi45.
+Historically, @MJDeligan (3 commits) and @clemenspeters (2 commits) were the most invested.
+
+---
+
+### Together AI — External Contributors
+
+**Recent contributors (2025):**
+
+| Contributor | GitHub | Commits | Last Active | Notable Contributions |
+|------------|--------|---------|-------------|----------------------|
+| **Jacky Chen** | [@Jacky3003](https://github.com/Jacky3003) | 1 | 2025-01 | Updated Embeddings URL |
+| **Axe** | [@axe-me](https://github.com/axe-me) | 1 | 2025-01 | Response format handling fix |
+
+**Earlier contributors (2023):**
+
+| Contributor | GitHub | Commits | Notable |
+|------------|--------|---------|---------|
+| **Sunghyun Hwang** | [@jacehwang](https://github.com/jacehwang) | 1 | Added stop parameter |
+| **Allan Zimmermann** | [@skadefro](https://github.com/skadefro) | 1 | Added max_tokens option |
+
+**Key outreach targets:** @Jacky3003 and @axe-me (most recent); smaller external contributor base
+compared to the other packages.
+
+---
+
+### Fireworks AI — External Contributors
+
+**Recent contributors (2024):**
+
+| Contributor | GitHub | Commits | Last Active | Notable Contributions |
+|------------|--------|---------|-------------|----------------------|
+| **Henry Weng** | [@henryweng03](https://github.com/henryweng03) | 1 | 2024-08 | Model name support + default model update |
+| **Yufei (Benny) Chen** | [@benjibc](https://github.com/benjibc) | 1 | 2024-02 | Function calling + embeddings code |
+
+**Earlier contributors (2023):**
+
+| Contributor | GitHub | Commits | Notable |
+|------------|--------|---------|---------|
+| **David Duong** | (LangChain team) | 1 | Original Fireworks AI support |
+| **Edvaldo** | [@valdo99](https://github.com/valdo99) | 1 | Voyage AI embeddings (co-commit) |
+| **Cory Cooper** | [@yroc92](https://github.com/yroc92) | 1 | Embedding parallelization |
+
+**Key outreach targets:** @benjibc (likely Fireworks AI staff, added function calling),
+@henryweng03 (model updates). Smaller external contributor base — may indicate primarily
+internal Fireworks usage or SDK-level integration.
+
+---
+
+### Outreach Summary
+
+| Package | Primary Contact | # External Contributors | Vendor-Invested? |
+|---------|----------------|------------------------|-----------------|
+| **IBM** | @FilipZmijewski (23 commits, IBM employee) | 4 | Yes — IBM |
+| **Neo4j** | @tomasonjo (13 commits, likely Neo4j DevRel) | 10 | Yes — Neo4j |
+| **pgvector** | @MJDeligan (3), @clemenspeters (2), many 1-commit | 17 | No — community-driven |
+| **Together AI** | @Jacky3003, @axe-me (recent) | 4 | Unclear |
+| **Fireworks** | @benjibc (likely Fireworks staff) | 4 | Likely — Fireworks |
