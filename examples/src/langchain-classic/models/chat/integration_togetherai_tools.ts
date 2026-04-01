@@ -1,4 +1,4 @@
-import { ChatTogetherAI } from "@langchain/community/chat_models/togetherai";
+import { ChatTogetherAI } from "@langchain/together-ai";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import { Calculator } from "@langchain/community/tools/calculator";

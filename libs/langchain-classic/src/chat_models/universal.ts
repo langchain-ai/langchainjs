@@ -115,14 +115,13 @@ export const MODEL_PROVIDER_CONFIG = {
     className: "ChatFireworks",
   },
   together: {
-    package: "@langchain/community/chat_models/togetherai",
+    package: "@langchain/together-ai",
     className: "ChatTogetherAI",
     hasCircularDependency: true,
   },
   perplexity: {
-    package: "@langchain/community/chat_models/perplexity",
+    package: "@langchain/perplexity",
     className: "ChatPerplexity",
-    hasCircularDependency: true,
   },
 } as const;
 
@@ -681,11 +680,11 @@ export async function initChatModel<
  *   - bedrock (@langchain/aws)
  *   - cohere (@langchain/cohere)
  *   - fireworks (@langchain/fireworks)
- *   - together (@langchain/community/chat_models/togetherai)
+ *   - together (@langchain/together-ai)
  *   - mistralai (@langchain/mistralai)
  *   - groq (@langchain/groq)
  *   - ollama (@langchain/ollama)
- *   - perplexity (@langchain/community/chat_models/perplexity)
+ *   - perplexity (@langchain/perplexity)
  *   - cerebras (@langchain/cerebras)
  *   - deepseek (@langchain/deepseek)
  *   - xai (@langchain/xai)

@@ -216,7 +216,8 @@
     "vitest": "^3.2.4",
     "voy-search": "0.6.3",
     "weaviate-client": "^3.8.0",
-    "zod-to-json-schema": "^3.24.6"
+    "zod-to-json-schema": "^3.24.6",
+    "@langchain/together-ai": "workspace:*"
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0",
