@@ -235,6 +235,12 @@ pkg:@langchain/weaviate:
           - libs/community/langchain-weaviate/**
           - libs/community/langchain-weaviate/**/*
 
+pkg:@langchain/together-ai:
+  - changed-files:
+      - any-glob-to-any-file:
+          - libs/providers/langchain-together-ai/**
+          - libs/providers/langchain-together-ai/**/*
+
 pkg:@langchain/xai:
   - changed-files:
       - any-glob-to-any-file:

@@ -116,7 +116,7 @@ export const MODEL_PROVIDER_CONFIG = {
     hasCircularDependency: true,
   },
   together: {
-    package: "@langchain/community/chat_models/togetherai",
+    package: "@langchain/together-ai",
     className: "ChatTogetherAI",
     hasCircularDependency: true,
   },
@@ -681,7 +681,7 @@ export async function initChatModel<
  *   - bedrock (@langchain/aws)
  *   - cohere (@langchain/cohere)
  *   - fireworks (@langchain/community/chat_models/fireworks)
- *   - together (@langchain/community/chat_models/togetherai)
+ *   - together (@langchain/together-ai)
  *   - mistralai (@langchain/mistralai)
  *   - groq (@langchain/groq)
  *   - ollama (@langchain/ollama)
