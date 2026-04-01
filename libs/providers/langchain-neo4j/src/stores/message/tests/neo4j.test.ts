@@ -267,6 +267,8 @@ describe("Neo4jChatMessageHistory", () => {
       password: "password",
     });
 
-    await expect(history.getMessages()).rejects.toThrow("Couldn't get messages");
+    await expect(history.getMessages()).rejects.toThrow(
+      "Couldn't get messages"
+    );
   });
 });

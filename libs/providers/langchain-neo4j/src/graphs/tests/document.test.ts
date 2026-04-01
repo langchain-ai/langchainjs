@@ -28,11 +28,7 @@ describe("Node", () => {
 
   test("should have correct lc_namespace", () => {
     const node = new Node({ id: "1", type: "Test" });
-    expect(node.lc_namespace).toEqual([
-      "langchain",
-      "graph",
-      "document_node",
-    ]);
+    expect(node.lc_namespace).toEqual(["langchain", "graph", "document_node"]);
   });
 });
 

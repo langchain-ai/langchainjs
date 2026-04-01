@@ -37,9 +37,7 @@ export class MemgraphGraph extends Neo4jGraph {
     super({ url, username, password, database });
   }
 
-  static async initialize(
-    config: MemgraphGraphConfig
-  ): Promise<MemgraphGraph> {
+  static async initialize(config: MemgraphGraphConfig): Promise<MemgraphGraph> {
     const graph = new MemgraphGraph(config);
 
     try {

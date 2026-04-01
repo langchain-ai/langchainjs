@@ -153,9 +153,9 @@ describe("GraphCypherQAChain", () => {
 
     const qaLLM = new FakeLLM({});
 
-    expect(() =>
-      GraphCypherQAChain.fromLLM({ graph, qaLLM })
-    ).toThrow("Either 'llm' or 'cypherLLM' parameters must be provided");
+    expect(() => GraphCypherQAChain.fromLLM({ graph, qaLLM })).toThrow(
+      "Either 'llm' or 'cypherLLM' parameters must be provided"
+    );
   });
 
   test("fromLLM should throw when only cypherLLM is provided", async () => {
@@ -171,8 +171,8 @@ describe("GraphCypherQAChain", () => {
 
     const cypherLLM = new FakeLLM({});
 
-    expect(() =>
-      GraphCypherQAChain.fromLLM({ graph, cypherLLM })
-    ).toThrow("Either 'llm' or 'qaLLM' parameters must be provided");
+    expect(() => GraphCypherQAChain.fromLLM({ graph, cypherLLM })).toThrow(
+      "Either 'llm' or 'qaLLM' parameters must be provided"
+    );
   });
 });

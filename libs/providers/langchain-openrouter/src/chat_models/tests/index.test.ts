@@ -124,7 +124,6 @@ describe("ChatOpenRouter constructor", () => {
   });
 });
 
-
 describe("attribution headers", () => {
   function extractHeaders(model: ChatOpenRouter): Record<string, string> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

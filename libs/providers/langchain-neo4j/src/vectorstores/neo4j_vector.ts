@@ -478,10 +478,7 @@ export class Neo4jVectorStore extends VectorStore {
     );
 
     if (indexInformation) {
-      indexInformation = this.sortByIndexName(
-        indexInformation,
-        this.indexName
-      );
+      indexInformation = this.sortByIndexName(indexInformation, this.indexName);
 
       try {
         const [index] = indexInformation;

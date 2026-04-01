@@ -23,9 +23,7 @@ describe("removeLuceneChars", () => {
   });
 
   test("should remove brackets and parentheses", () => {
-    expect(removeLuceneChars("test(foo)[bar]{baz}")).toBe(
-      "test foo  bar  baz"
-    );
+    expect(removeLuceneChars("test(foo)[bar]{baz}")).toBe("test foo  bar  baz");
   });
 
   test("should remove wildcards and question marks", () => {
@@ -55,7 +53,7 @@ describe("removeLuceneChars", () => {
   });
 
   test("should handle string with only special chars", () => {
-    const result = removeLuceneChars("+-&|!(){}[]^\"~*?:\\");
+    const result = removeLuceneChars('+-&|!(){}[]^"~*?:\\');
     expect(result).toBe("");
   });
 });
@@ -211,9 +209,9 @@ describe("constructMetadataFilter", () => {
   });
 
   test("should throw on invalid filter type", () => {
-    expect(() => constructMetadataFilter(null as unknown as Record<string, unknown>)).toThrow(
-      "Expected a dictionary"
-    );
+    expect(() =>
+      constructMetadataFilter(null as unknown as Record<string, unknown>)
+    ).toThrow("Expected a dictionary");
   });
 
   test("should throw on empty filter", () => {
@@ -256,7 +254,9 @@ describe("constructMetadataFilter", () => {
 
   test("should throw when logical operator value is not array", () => {
     expect(() =>
-      constructMetadataFilter({ $and: "not-an-array" as unknown as Record<string, unknown>[] })
+      constructMetadataFilter({
+        $and: "not-an-array" as unknown as Record<string, unknown>[],
+      })
     ).toThrow("Expected an array");
   });
 

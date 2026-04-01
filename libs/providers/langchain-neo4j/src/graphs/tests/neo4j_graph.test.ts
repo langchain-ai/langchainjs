@@ -255,9 +255,7 @@ describe("formatSchema", () => {
         Company: [{ property: "founded", type: "INTEGER" }],
       },
       relProps: {},
-      relationships: [
-        { start: "Person", type: "WORKS_AT", end: "Company" },
-      ],
+      relationships: [{ start: "Person", type: "WORKS_AT", end: "Company" }],
     };
 
     const result = formatSchema(schema, false);

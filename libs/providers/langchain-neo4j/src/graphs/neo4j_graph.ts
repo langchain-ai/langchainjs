@@ -202,9 +202,7 @@ export function formatSchema(
     formattedRelProps = Object.entries(schema.relProps).map(
       ([key, value]: [string, Any]) => {
         const propsStr = value
-          .map(
-            (prop: Record<string, Any>) => `${prop.property}: ${prop.type} `
-          )
+          .map((prop: Record<string, Any>) => `${prop.property}: ${prop.type} `)
           .join(", ");
         return `${key} {${propsStr} } `;
       }
