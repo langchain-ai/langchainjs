@@ -889,6 +889,9 @@ importers:
       '@langchain/classic':
         specifier: workspace:*
         version: link:../../langchain-classic
+      '@langchain/fireworks':
+        specifier: workspace:*
+        version: link:../../providers/langchain-fireworks
       '@langchain/openai':
         specifier: workspace:*
         version: link:../../providers/langchain-openai
@@ -1843,6 +1846,9 @@ importers:
       '@langchain/eslint':
         specifier: workspace:*
         version: link:../../internal/eslint
+      '@langchain/fireworks':
+        specifier: workspace:*
+        version: link:../providers/langchain-fireworks
       '@langchain/openai':
         specifier: workspace:*
         version: link:../providers/langchain-openai
@@ -2015,6 +2021,9 @@ importers:
       '@langchain/exa':
         specifier: workspace:*
         version: link:../community/langchain-exa
+      '@langchain/fireworks':
+        specifier: workspace:*
+        version: link:../providers/langchain-fireworks
       '@langchain/google-cloud-sql-pg':
         specifier: workspace:*
         version: link:../providers/langchain-google-cloud-sql-pg
@@ -2634,6 +2643,49 @@ importers:
         version: 3.2.4(@types/debug@4.1.12)(@types/node@25.5.0)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.8.3)
 
   libs/providers/langchain-deepseek:
+    dependencies:
+      '@langchain/openai':
+        specifier: workspace:*
+        version: link:../langchain-openai
+    devDependencies:
+      '@langchain/core':
+        specifier: workspace:^
+        version: link:../../langchain-core
+      '@langchain/eslint':
+        specifier: workspace:*
+        version: link:../../../internal/eslint
+      '@langchain/standard-tests':
+        specifier: workspace:*
+        version: link:../../../internal/standard-tests
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
+      '@tsconfig/recommended':
+        specifier: ^1.0.3
+        version: 1.0.13
+      '@vitest/coverage-v8':
+        specifier: ^3.2.4
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.5.0)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.8.3))
+      dotenv:
+        specifier: ^16.3.1
+        version: 16.6.1
+      dpdm:
+        specifier: ^3.14.0
+        version: 3.15.1
+      eslint:
+        specifier: ^9.34.0
+        version: 9.39.2(jiti@2.6.1)
+      prettier:
+        specifier: ^3.5.0
+        version: 3.8.1
+      typescript:
+        specifier: ~5.8.3
+        version: 5.8.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.5.0)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.8.3)
+
+  libs/providers/langchain-fireworks:
     dependencies:
       '@langchain/openai':
         specifier: workspace:*

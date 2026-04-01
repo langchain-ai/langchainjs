@@ -116,9 +116,8 @@ export const MODEL_PROVIDER_CONFIG = {
     className: "ChatXAI",
   },
   fireworks: {
-    package: "@langchain/community/chat_models/fireworks",
+    package: "@langchain/fireworks",
     className: "ChatFireworks",
-    hasCircularDependency: true,
   },
   together: {
     package: "@langchain/together-ai",
@@ -743,7 +742,7 @@ export async function initChatModel<
  *   - google-genai (@langchain/google-genai)
  *   - bedrock (@langchain/aws)
  *   - cohere (@langchain/cohere)
- *   - fireworks (@langchain/community/chat_models/fireworks)
+ *   - fireworks (@langchain/fireworks)
  *   - together (@langchain/together-ai)
  *   - mistralai (@langchain/mistralai)
  *   - groq (@langchain/groq)
