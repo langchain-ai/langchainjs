@@ -86,7 +86,8 @@ describe("Utils tests", () => {
     });
 
     test("invalid ID is converted to a 9-char string", () => {
-      const result = _convertToolCallIdToMistralCompatible("some-long-id-value");
+      const result =
+        _convertToolCallIdToMistralCompatible("some-long-id-value");
       expect(result).toHaveLength(9);
       expect(_isValidMistralToolCallId(result)).toBe(true);
     });
@@ -121,21 +122,19 @@ describe("Utils tests", () => {
 
   describe("expectOneOf", () => {
     test("passes when exactly one key is provided", () => {
-      expect(() =>
-        expectOneOf({ a: 1 }, ["a", "b", "c"], true)
-      ).not.toThrow();
+      expect(() => expectOneOf({ a: 1 }, ["a", "b", "c"], true)).not.toThrow();
     });
 
     test("throws when no keys are provided with exactlyOneOf", () => {
-      expect(() =>
-        expectOneOf({}, ["a", "b"], true)
-      ).toThrow(/Expected exactly one of/);
+      expect(() => expectOneOf({}, ["a", "b"], true)).toThrow(
+        /Expected exactly one of/
+      );
     });
 
     test("throws when multiple keys are provided with exactlyOneOf", () => {
-      expect(() =>
-        expectOneOf({ a: 1, b: 2 }, ["a", "b"], true)
-      ).toThrow(/Expected exactly one of/);
+      expect(() => expectOneOf({ a: 1, b: 2 }, ["a", "b"], true)).toThrow(
+        /Expected exactly one of/
+      );
     });
 
     test("passes when no keys are provided without exactlyOneOf", () => {
@@ -143,9 +142,9 @@ describe("Utils tests", () => {
     });
 
     test("throws when multiple keys are provided without exactlyOneOf", () => {
-      expect(() =>
-        expectOneOf({ a: 1, b: 2 }, ["a", "b"])
-      ).toThrow(/Expected one of/);
+      expect(() => expectOneOf({ a: 1, b: 2 }, ["a", "b"])).toThrow(
+        /Expected one of/
+      );
     });
   });
 
@@ -157,9 +156,9 @@ describe("Utils tests", () => {
     });
 
     test("throws when unexpected props are found", () => {
-      expect(() =>
-        checkValidProps({ a: 1, unknown: 2 }, ["a", "b"])
-      ).toThrow(/Unexpected properties: unknown/);
+      expect(() => checkValidProps({ a: 1, unknown: 2 }, ["a", "b"])).toThrow(
+        /Unexpected properties: unknown/
+      );
     });
   });
 });
