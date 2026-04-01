@@ -519,7 +519,7 @@ describe("Works with all model providers", () => {
     expect(bedrockResult.content.length).toBeGreaterThan(0);
   });
 
-  // If these two fail with an import error you should explicitly build `@langchain/community`
+  // If these two fail with an import error you should explicitly build `@langchain/fireworks`
   it("Can invoke fireworks", async () => {
     const fireworks = await initChatModel(undefined, {
       modelProvider: "fireworks",

@@ -1,6 +1,7 @@
-import { ChatModelUnitTests } from "@langchain/standard-tests/vitest";
 import { AIMessageChunk } from "@langchain/core/messages";
-import { ChatFireworks, ChatFireworksCallOptions } from "../fireworks.js";
+import { ChatModelUnitTests } from "@langchain/standard-tests/vitest";
+
+import { ChatFireworks, ChatFireworksCallOptions } from "../chat_models.js";
 
 class ChatFireworksStandardUnitTests extends ChatModelUnitTests<
   ChatFireworksCallOptions,
@@ -17,11 +18,8 @@ class ChatFireworksStandardUnitTests extends ChatModelUnitTests<
   }
 
   testChatModelInitApiKey() {
-    // Unset the API key env var here so this test can properly check
-    // the API key class arg.
     process.env.FIREWORKS_API_KEY = "";
     super.testChatModelInitApiKey();
-    // Re-set the API key env var here so other tests can run properly.
     process.env.FIREWORKS_API_KEY = "test";
   }
 }

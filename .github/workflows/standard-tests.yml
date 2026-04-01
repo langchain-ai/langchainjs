@@ -107,9 +107,9 @@ jobs:
           cache: "pnpm"
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Build `@langchain/community`
-        run: pnpm build --filter @langchain/community
-      - name: Run standard tests (integration) for `@langchain/community` ChatFireworks
-        run: pnpm --filter @langchain/community test:single src/chat_models/tests/chatfireworks.standard.int.test.ts
+      - name: Build `@langchain/fireworks`
+        run: pnpm build --filter @langchain/fireworks
+      - name: Run standard tests (integration) for `@langchain/fireworks` ChatFireworks
+        run: pnpm --filter @langchain/fireworks test:standard:int
         env:
           FIREWORKS_API_KEY: ${{ secrets.FIREWORKS_API_KEY }}

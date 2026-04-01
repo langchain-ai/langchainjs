@@ -33,6 +33,7 @@
   },
   "dependencies": {
     "@langchain/classic": "workspace:*",
+    "@langchain/fireworks": "workspace:*",
     "@langchain/openai": "workspace:*",
     "binary-extensions": "^2.2.0",
     "flat": "^5.0.2",

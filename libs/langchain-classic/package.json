@@ -135,6 +135,7 @@
     "@langchain/deepseek": "workspace:*",
     "@langchain/eslint": "workspace:*",
     "@langchain/exa": "workspace:*",
+    "@langchain/fireworks": "workspace:*",
     "@langchain/google-cloud-sql-pg": "workspace:*",
     "@langchain/google-common": "workspace:*",
     "@langchain/google-genai": "workspace:*",
