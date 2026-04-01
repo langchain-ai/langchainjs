@@ -165,7 +165,9 @@ describe("ChatPerplexity", () => {
           schema: { type: "object" },
         },
       };
-      const params = model.invocationParams({ response_format: responseFormat });
+      const params = model.invocationParams({
+        response_format: responseFormat,
+      });
       expect(params.response_format).toEqual(responseFormat);
     });
   });
@@ -324,15 +326,11 @@ describe("ChatPerplexity", () => {
           citations: ["https://example.com"],
         },
         {
-          choices: [
-            { delta: { content: " world" }, finish_reason: null },
-          ],
+          choices: [{ delta: { content: " world" }, finish_reason: null }],
           citations: [],
         },
         {
-          choices: [
-            { delta: { content: "!" }, finish_reason: "stop" },
-          ],
+          choices: [{ delta: { content: "!" }, finish_reason: "stop" }],
           citations: [],
         },
       ];
@@ -349,10 +347,7 @@ describe("ChatPerplexity", () => {
         "create"
       ).mockResolvedValue(mockStream());
 
-      const result = await model._generate(
-        [new HumanMessage("Hi")],
-        {}
-      );
+      const result = await model._generate([new HumanMessage("Hi")], {});
 
       expect(result.generations).toHaveLength(1);
       expect(result.generations[0].text).toBe("Hello world!");
@@ -377,15 +372,11 @@ describe("ChatPerplexity", () => {
           citations: ["https://example.com"],
         },
         {
-          choices: [
-            { delta: { content: "answer" }, finish_reason: null },
-          ],
+          choices: [{ delta: { content: "answer" }, finish_reason: null }],
           citations: [],
         },
         {
-          choices: [
-            { delta: { content: "." }, finish_reason: "stop" },
-          ],
+          choices: [{ delta: { content: "." }, finish_reason: "stop" }],
           citations: [],
         },
       ];
@@ -433,9 +424,7 @@ describe("ChatPerplexity", () => {
           citations: ["https://cite1.com", "https://cite2.com"],
         },
         {
-          choices: [
-            { delta: { content: " Second" }, finish_reason: "stop" },
-          ],
+          choices: [{ delta: { content: " Second" }, finish_reason: "stop" }],
           citations: ["https://cite1.com", "https://cite2.com"],
         },
       ];
@@ -464,9 +453,7 @@ describe("ChatPerplexity", () => {
         "https://cite1.com",
         "https://cite2.com",
       ]);
-      expect(
-        result[1].message.additional_kwargs.citations
-      ).toBeUndefined();
+      expect(result[1].message.additional_kwargs.citations).toBeUndefined();
     });
 
     test("skips chunks without content", async () => {
@@ -486,9 +473,7 @@ describe("ChatPerplexity", () => {
           citations: [],
         },
         {
-          choices: [
-            { delta: { content: "Data" }, finish_reason: "stop" },
-          ],
+          choices: [{ delta: { content: "Data" }, finish_reason: "stop" }],
           citations: [],
         },
       ];
@@ -596,9 +581,7 @@ describe("ChatPerplexity", () => {
           citations: [],
         },
         {
-          choices: [
-            { delta: { content: "chunk2" }, finish_reason: "stop" },
-          ],
+          choices: [{ delta: { content: "chunk2" }, finish_reason: "stop" }],
           citations: [],
         },
       ];
@@ -726,7 +709,7 @@ describe("ChatPerplexity", () => {
 
       vi.spyOn(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (model as any),
+        model as any,
         "invoke"
       ).mockResolvedValue(mockResponse);
 
@@ -754,7 +737,7 @@ describe("ChatPerplexity", () => {
 
       vi.spyOn(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (model as any),
+        model as any,
         "invoke"
       ).mockResolvedValue(mockResponse);
 
@@ -782,7 +765,7 @@ describe("ChatPerplexity", () => {
 
       vi.spyOn(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (model as any),
+        model as any,
         "invoke"
       ).mockResolvedValue(mockResponse);
 
@@ -834,10 +817,7 @@ describe("ChatPerplexity", () => {
     });
 
     test("converts AIMessage to assistant role", async () => {
-      await model._generate(
-        [new AIMessage("I am an AI")],
-        {}
-      );
+      await model._generate([new AIMessage("I am an AI")], {});
       expect(createSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           messages: [{ role: "assistant", content: "I am an AI" }],
@@ -846,10 +826,7 @@ describe("ChatPerplexity", () => {
     });
 
     test("converts SystemMessage to system role", async () => {
-      await model._generate(
-        [new SystemMessage("Be helpful")],
-        {}
-      );
+      await model._generate([new SystemMessage("Be helpful")], {});
       expect(createSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           messages: [{ role: "system", content: "Be helpful" }],

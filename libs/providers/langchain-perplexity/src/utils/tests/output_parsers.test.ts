@@ -164,6 +164,26 @@ describe("ReasoningStructuredOutputParser", () => {
       answer: "Answer after whitespace",
     });
   });
+
+  test("preserves unmatched opening think tags", async () => {
+    const schema = z.object({
+      answer: z.string().describe("The answer"),
+    });
+
+    const parser = new ReasoningStructuredOutputParser(schema);
+
+    const input = [
+      "<think>",
+      "This tag is never closed",
+      "```json",
+      "{",
+      '  "answer": "This should still fail to parse"',
+      "}",
+      "```",
+    ].join("\n");
+
+    await expect(parser.parse(input)).rejects.toThrow(OutputParserException);
+  });
 });
 
 describe("ReasoningJsonOutputParser", () => {
@@ -260,7 +280,7 @@ describe("ReasoningJsonOutputParser", () => {
 
     const input = [
       "<think>",
-      'I need to consider: "quotes", \'apostrophes\', and special chars like & < > ',
+      "I need to consider: \"quotes\", 'apostrophes', and special chars like & < > ",
       "</think>",
       "",
       "```json",
