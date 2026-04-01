@@ -139,8 +139,9 @@ export interface ChatGoogleFields {
 
   /**
    * Media resolution for input media processing.
+   * Accepts a string value such as `"MEDIA_RESOLUTION_HIGH"`.
    */
-  mediaResolution?: Prettify<GeminiBase.MediaResolution>;
+  mediaResolution?: GeminiBase.GenerationConfig["mediaResolution"];
 
   /**
    * The number of reasoning tokens that the model should generate.
