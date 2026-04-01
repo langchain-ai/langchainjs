@@ -92,7 +92,8 @@ export class FireworksEmbeddings
   constructor(fields?: Partial<FireworksEmbeddingsParams>) {
     super(fields ?? {});
 
-    const apiKey = fields?.apiKey ?? getEnvironmentVariable("FIREWORKS_API_KEY");
+    const apiKey =
+      fields?.apiKey ?? getEnvironmentVariable("FIREWORKS_API_KEY");
     if (!apiKey) {
       throw new Error(
         'Fireworks API key not found. Please set the FIREWORKS_API_KEY environment variable or pass the key into "apiKey".'

@@ -22,18 +22,21 @@ describe("FireworksEmbeddings", () => {
     const result = await embeddings.embedQuery("hello world");
 
     expect(result).toEqual([0.1, 0.2, 0.3]);
-    expect(fetchSpy).toHaveBeenCalledWith("https://example.test/v1/embeddings", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer test-api-key",
-        "X-Test": "yes",
-      },
-      body: JSON.stringify({
-        model: "nomic-ai/nomic-embed-text-v1.5",
-        input: "hello world",
-      }),
-    });
+    expect(fetchSpy).toHaveBeenCalledWith(
+      "https://example.test/v1/embeddings",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer test-api-key",
+          "X-Test": "yes",
+        },
+        body: JSON.stringify({
+          model: "nomic-ai/nomic-embed-text-v1.5",
+          input: "hello world",
+        }),
+      }
+    );
   });
 
   test("batches embedDocuments requests", async () => {

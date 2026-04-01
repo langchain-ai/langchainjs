@@ -19,7 +19,9 @@ describe("Fireworks LLM", () => {
       model: "accounts/fireworks/models/llama-v2-13b",
     });
 
-    expect(JSON.stringify(model)).toContain('"id":["langchain","llms","fireworks","Fireworks"]');
+    expect(JSON.stringify(model)).toContain(
+      '"id":["langchain","llms","fireworks","Fireworks"]'
+    );
     expect(JSON.stringify(model)).toContain('"FIREWORKS_API_KEY"');
     expect(JSON.stringify(model)).not.toContain("test-api-key");
   });

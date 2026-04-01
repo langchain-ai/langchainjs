@@ -4,10 +4,13 @@ import { ChatFireworks } from "../chat_models.js";
 
 describe("ChatFireworks", () => {
   test("supports string model shorthand", () => {
-    const model = new ChatFireworks("accounts/fireworks/models/firefunction-v2", {
-      apiKey: "test-api-key",
-      temperature: 0.2,
-    });
+    const model = new ChatFireworks(
+      "accounts/fireworks/models/firefunction-v2",
+      {
+        apiKey: "test-api-key",
+        temperature: 0.2,
+      }
+    );
 
     expect(model.model).toBe("accounts/fireworks/models/firefunction-v2");
     expect(model.temperature).toBe(0.2);
@@ -19,7 +22,9 @@ describe("ChatFireworks", () => {
       model: "accounts/fireworks/models/firefunction-v2",
     });
 
-    expect(JSON.stringify(model)).toContain('"id":["langchain","chat_models","fireworks","ChatFireworks"]');
+    expect(JSON.stringify(model)).toContain(
+      '"id":["langchain","chat_models","fireworks","ChatFireworks"]'
+    );
     expect(JSON.stringify(model)).toContain('"FIREWORKS_API_KEY"');
     expect(JSON.stringify(model)).not.toContain("test-api-key");
   });

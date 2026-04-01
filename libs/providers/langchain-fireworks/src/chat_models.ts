@@ -24,9 +24,8 @@ type FireworksUnsupportedArgs =
 type FireworksUnsupportedCallOptions = "functions" | "function_call";
 
 export interface ChatFireworksInput
-  extends Partial<
-      Omit<OpenAIChatInput, "openAIApiKey" | FireworksUnsupportedArgs>
-    >,
+  extends
+    Partial<Omit<OpenAIChatInput, "openAIApiKey" | FireworksUnsupportedArgs>>,
     BaseChatModelParams {
   /**
    * Prefer `apiKey`.

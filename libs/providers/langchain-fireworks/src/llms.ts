@@ -20,9 +20,8 @@ type FireworksUnsupportedArgs =
 type FireworksUnsupportedCallOptions = "functions" | "function_call" | "tools";
 
 export interface FireworksInput
-  extends Partial<
-      Omit<OpenAIInput, "openAIApiKey" | FireworksUnsupportedArgs>
-    >,
+  extends
+    Partial<Omit<OpenAIInput, "openAIApiKey" | FireworksUnsupportedArgs>>,
     BaseLLMParams {
   /**
    * Prefer `apiKey`.
@@ -73,7 +72,10 @@ export class Fireworks extends OpenAI<FireworksCallOptions> {
 
   apiKey?: string;
 
-  constructor(model: string, fields?: Omit<FireworksInput, "model" | "modelName">);
+  constructor(
+    model: string,
+    fields?: Omit<FireworksInput, "model" | "modelName">
+  );
   constructor(fields?: FireworksInput);
   constructor(
     modelOrFields?: string | FireworksInput,
