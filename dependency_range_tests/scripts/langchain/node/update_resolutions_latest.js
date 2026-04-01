@@ -6,7 +6,7 @@ const currentPackageJson = JSON.parse(
 );
 currentPackageJson.pnpm = { overrides: {} };
 
-const INTERNAL_PACKAGES = ["@langchain/eslint", "@langchain/tsconfig"];
+const INTERNAL_PACKAGES = ["@langchain/tsconfig"];
 
 /**
  * Link workspace dependencies via file path
