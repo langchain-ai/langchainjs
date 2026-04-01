@@ -71,11 +71,10 @@ describe("PGVectorStore", () => {
     });
 
     test("throws when collectionName is set without collectionTableName", () => {
-      expect(
-        () =>
-          createStore({
-            collectionName: "my_collection",
-          })
+      expect(() =>
+        createStore({
+          collectionName: "my_collection",
+        })
       ).toThrow(
         `If supplying a "collectionName", you must also supply a "collectionTableName".`
       );
@@ -437,10 +436,7 @@ describe("PGVectorStore", () => {
         pool,
       });
 
-      const results = await store.similaritySearchVectorWithScore(
-        [0.1],
-        10
-      );
+      const results = await store.similaritySearchVectorWithScore([0.1], 10);
 
       expect(results).toHaveLength(1);
       expect(results[0][0].pageContent).toBe("valid");
@@ -755,9 +751,9 @@ describe("PGVectorStore", () => {
         collectionName: "test",
       });
 
-      await expect(
-        store.ensureCollectionTableInDatabase()
-      ).rejects.toThrow("Error adding column or creating index");
+      await expect(store.ensureCollectionTableInDatabase()).rejects.toThrow(
+        "Error adding column or creating index"
+      );
     });
   });
 
@@ -812,9 +808,7 @@ describe("PGVectorStore", () => {
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining("vector_cosine_ops")
       );
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining("hnsw")
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining("hnsw"));
     });
 
     test("creates HNSW index with inner product distance", async () => {
@@ -860,9 +854,7 @@ describe("PGVectorStore", () => {
         efConstruction: 128,
       });
 
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining("m=32")
-      );
+      expect(pool.query).toHaveBeenCalledWith(expect.stringContaining("m=32"));
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining("ef_construction=128")
       );
@@ -987,9 +979,11 @@ describe("PGVectorStore", () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (c: any) => c[0]
       );
-      expect(calls.some((c: string) => c.includes("CREATE TABLE IF NOT EXISTS collections"))).toBe(
-        true
-      );
+      expect(
+        calls.some((c: string) =>
+          c.includes("CREATE TABLE IF NOT EXISTS collections")
+        )
+      ).toBe(true);
     });
   });
 });
