@@ -1527,6 +1527,49 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@25.5.0)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.8.3)
 
+  libs/community/langchain-pgvector:
+    dependencies:
+      pg:
+        specifier: ^8.11.0
+        version: 8.18.0
+    devDependencies:
+      '@langchain/core':
+        specifier: workspace:^
+        version: link:../../langchain-core
+      '@langchain/eslint':
+        specifier: workspace:*
+        version: link:../../../internal/eslint
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
+      '@tsconfig/recommended':
+        specifier: ^1.0.3
+        version: 1.0.13
+      '@types/pg':
+        specifier: ^8
+        version: 8.16.0
+      '@vitest/coverage-v8':
+        specifier: ^3.2.4
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.5.0)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.8.3))
+      dotenv:
+        specifier: ^16.3.1
+        version: 16.6.1
+      dpdm:
+        specifier: ^3.14.0
+        version: 3.15.1
+      eslint:
+        specifier: ^9.34.0
+        version: 9.39.2(jiti@2.6.1)
+      prettier:
+        specifier: ^3.5.0
+        version: 3.8.1
+      typescript:
+        specifier: ~5.8.3
+        version: 5.8.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.5.0)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.8.3)
+
   libs/community/langchain-pinecone:
     dependencies:
       flat:
@@ -11428,10 +11471,6 @@ packages:
 
   fs-constants@1.0.0:
     resolution: {integrity: sha512-y6OAwoSIf7FyjMIv94u+b5rdheZEjzR63GTyZJm5qh4Bi+2YgwLCcI/fPFZkL5PSixOt6ZNKm+w+Hfp/Bciwow==}
-
-  fs-extra@11.3.3:
-    resolution: {integrity: sha512-VWSRii4t0AFm6ixFFmLLx1t7wS1gh+ckoa84aOeapGum0h+EZd1EhEumSB+ZdDLnEPuucsVB9oB7cxJHap6Afg==}
-    engines: {node: '>=14.14'}
 
   fs-extra@11.3.4:
     resolution: {integrity: sha512-CTXd6rk/M3/ULNQj8FBqBWHYBVYybQ3VPBw0xGKFe3tuH7ytT6ACnvzpIQ3UZtB8yvUKC2cXn1a+x+5EVQLovA==}
@@ -22410,7 +22449,7 @@ snapshots:
 
   '@types/pg@8.16.0':
     dependencies:
-      '@types/node': 24.10.12
+      '@types/node': 25.5.0
       pg-protocol: 1.11.0
       pg-types: 2.2.0
 
@@ -24197,7 +24236,7 @@ snapshots:
   cmake-js@8.0.0:
     dependencies:
       debug: 4.4.3(supports-color@8.1.1)
-      fs-extra: 11.3.3
+      fs-extra: 11.3.4
       node-api-headers: 1.8.0
       rc: 1.2.8
       semver: 7.7.4
@@ -24844,7 +24883,7 @@ snapshots:
   dpdm@3.15.1:
     dependencies:
       chalk: 4.1.2
-      fs-extra: 11.3.3
+      fs-extra: 11.3.4
       glob: 10.5.0
       ora: 5.4.1
       tslib: 2.8.1
@@ -25712,12 +25751,6 @@ snapshots:
   fresh@2.0.0: {}
 
   fs-constants@1.0.0: {}
-
-  fs-extra@11.3.3:
-    dependencies:
-      graceful-fs: 4.2.11
-      jsonfile: 6.2.0
-      universalify: 2.0.1
 
   fs-extra@11.3.4:
     dependencies:
@@ -28359,7 +28392,7 @@ snapshots:
       log-symbols: 7.0.1
       stdin-discarder: 0.2.2
       string-width: 8.1.1
-      strip-ansi: 7.1.2
+      strip-ansi: 7.2.0
 
   ora@9.3.0:
     dependencies:
@@ -29919,7 +29952,7 @@ snapshots:
   string-width@8.1.1:
     dependencies:
       get-east-asian-width: 1.4.0
-      strip-ansi: 7.1.2
+      strip-ansi: 7.2.0
 
   string-width@8.2.0:
     dependencies:
