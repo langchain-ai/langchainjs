@@ -1,6 +1,6 @@
 import path from "node:path";
 import type { Plugin } from "rolldown";
-import { formatWithPrettier } from "../utils.ts";
+import { formatWithOxfmt } from "../utils.ts";
 
 /**
  * Configuration for an extra import map entry that should be included
@@ -88,7 +88,7 @@ export function importMapPlugin(param: ImportMapPluginOptions = {}): Plugin {
 
   const outputPath = path.resolve(
     process.env.INIT_CWD ?? "",
-    options.outputPath
+    options.outputPath,
   );
 
   return {
@@ -121,7 +121,7 @@ export function importMapPlugin(param: ImportMapPluginOptions = {}): Plugin {
           acc[path].modules.push(...modules);
           return acc;
         },
-        {} as Record<string, ExtraImportMapEntry>
+        {} as Record<string, ExtraImportMapEntry>,
       );
 
       const lines = [
@@ -132,7 +132,7 @@ export function importMapPlugin(param: ImportMapPluginOptions = {}): Plugin {
           // Get relative path of the entrypoint from the package root
           const relativePath = path.relative(
             path.join(process.env.INIT_CWD ?? "", "src"),
-            entrypointPath
+            entrypointPath,
           );
 
           // Transform slashes to double underscores for export names
@@ -140,7 +140,7 @@ export function importMapPlugin(param: ImportMapPluginOptions = {}): Plugin {
           if (normalizedKey.endsWith("/index")) {
             normalizedKey = normalizedKey.substring(
               0,
-              normalizedKey.length - "/index".length
+              normalizedKey.length - "/index".length,
             );
           }
           const exportName = normalizedKey.replace(/[/\\]/g, "__");
@@ -168,12 +168,12 @@ export function importMapPlugin(param: ImportMapPluginOptions = {}): Plugin {
           (acc, { modules, path }) => {
             if (!modules.includes("*")) {
               acc.push(
-                `import {\n  ${modules.join(",\n  ")}\n} from "${path}";`
+                `import {\n  ${modules.join(",\n  ")}\n} from "${path}";`,
               );
             }
             return acc;
           },
-          [] as string[]
+          [] as string[],
         ),
         // Generate alias declarations and exports for extra entries
         ...options.extraEntries.reduce((acc, { modules, alias }) => {
@@ -186,7 +186,7 @@ export function importMapPlugin(param: ImportMapPluginOptions = {}): Plugin {
 
       await this.fs.writeFile(
         outputPath,
-        await formatWithPrettier(lines.join("\n"))
+        await formatWithOxfmt(lines.join("\n"), outputPath),
       );
       this.info(`📝 Generated import map file: ${outputPath}`);
     },

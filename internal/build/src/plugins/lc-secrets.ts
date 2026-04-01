@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import ts from "typescript";
 import type { Plugin, PluginContext } from "rolldown";
-import { formatWithPrettier } from "../utils.ts";
+import { formatWithOxfmt } from "../utils.ts";
 
 /**
  * Configuration options for the lc-secrets plugin.
@@ -136,7 +136,7 @@ export function lcSecretsPlugin(options: SecretPluginOptions = {}): Plugin {
 
           await this.fs.writeFile(
             outputPath,
-            await formatWithPrettier(lines.join("\n"))
+            await formatWithOxfmt(lines.join("\n"), outputPath),
           );
           this.info(`📝 Generated secret map: ${opts.outputPath}`);
         }
@@ -162,10 +162,10 @@ function scanForSecrets(excludePatterns: string[]): SecretInfo[] {
 
   const tsConfig = ts.parseJsonConfigFileContent(
     ts.readJsonConfigFile(tsConfigPath, (p: string) =>
-      fs.readFileSync(p, "utf-8")
+      fs.readFileSync(p, "utf-8"),
     ),
     ts.sys,
-    path.resolve(packagePath, "src")
+    path.resolve(packagePath, "src"),
   );
 
   const tsConfigTarget = tsConfig.options.target || ts.ScriptTarget.ES2020;
@@ -173,7 +173,7 @@ function scanForSecrets(excludePatterns: string[]): SecretInfo[] {
   // Filter files to scan
   const filesToScan = tsConfig.fileNames.filter(
     (fileName: string) =>
-      !excludePatterns.some((pattern) => fileName.includes(pattern))
+      !excludePatterns.some((pattern) => fileName.includes(pattern)),
   );
 
   for (const fileName of filesToScan) {
@@ -186,7 +186,7 @@ function scanForSecrets(excludePatterns: string[]): SecretInfo[] {
         fileName,
         fs.readFileSync(fileName, "utf-8"),
         tsConfigTarget,
-        true
+        true,
       );
 
       scanSourceFile(sourceFile, fileName, secrets);
@@ -204,7 +204,7 @@ function scanForSecrets(excludePatterns: string[]): SecretInfo[] {
 function scanSourceFile(
   sourceFile: ts.SourceFile,
   fileName: string,
-  secrets: SecretInfo[]
+  secrets: SecretInfo[],
 ) {
   function visit(node: ts.Node) {
     if (ts.isClassDeclaration(node) || ts.isClassExpression(node)) {
@@ -228,7 +228,7 @@ function scanSourceFile(
                   ) {
                     const secretName = element.initializer.text;
                     const position = sourceFile.getLineAndCharacterOfPosition(
-                      element.initializer.getStart()
+                      element.initializer.getStart(),
                     );
 
                     secrets.push({
@@ -237,7 +237,7 @@ function scanSourceFile(
                       line: position.line + 1,
                     });
                   }
-                }
+                },
               );
             }
           });
@@ -261,14 +261,14 @@ function validateSecrets(secrets: SecretInfo[]): string[] {
     // Must be uppercase
     if (secret.name.toUpperCase() !== secret.name) {
       errors.push(
-        `Secret identifier must be uppercase: ${secret.name} at ${secret.fileName}:${secret.line}`
+        `Secret identifier must be uppercase: ${secret.name} at ${secret.fileName}:${secret.line}`,
       );
     }
 
     // No whitespace
     if (/\s/.test(secret.name)) {
       errors.push(
-        `Secret identifier must not contain whitespace: ${secret.name} at ${secret.fileName}:${secret.line}`
+        `Secret identifier must not contain whitespace: ${secret.name} at ${secret.fileName}:${secret.line}`,
       );
     }
   }
