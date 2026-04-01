@@ -4,10 +4,22 @@
     "rootDir": "src",
     "outDir": "dist"
   },
-  "include": ["src/**/*"],
-  "exclude": ["dist", "node_modules"],
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "dist",
+    "node_modules"
+  ],
   "references": [
-    { "path": "../../langchain-core" },
-    { "path": "../../providers/langchain-openai" }
+    {
+      "path": "../../langchain-core"
+    },
+    {
+      "path": "../../providers/langchain-openai"
+    },
+    {
+      "path": "../../providers/langchain-together-ai"
+    }
   ]
 }
