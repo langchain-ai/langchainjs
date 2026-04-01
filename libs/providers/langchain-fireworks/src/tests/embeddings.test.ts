@@ -74,6 +74,7 @@ describe("FireworksEmbeddings", () => {
 
     const embeddings = new FireworksEmbeddings({
       apiKey: "test-api-key",
+      maxRetries: 0,
     });
 
     await expect(embeddings.embedQuery("hello world")).rejects.toThrow(

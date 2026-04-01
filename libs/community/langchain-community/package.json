@@ -3475,5 +3475,13 @@
     "document_transformers",
     "chains"
   ],
-  "module": "./dist/index.js"
+  "module": "./dist/index.js",
+  "inlinedDependencies": {
+    "@aws-sdk/types": "3.973.5",
+    "@azure/abort-controller": "2.1.2",
+    "@azure/core-auth": "1.10.1",
+    "@azure/core-util": "1.13.1",
+    "@smithy/types": "4.13.0",
+    "@supabase/postgrest-js": "2.95.3"
+  }
 }
