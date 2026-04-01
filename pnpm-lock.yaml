@@ -3447,6 +3447,52 @@ importers:
         specifier: ^3.24.6
         version: 3.25.1(zod@4.3.6)
 
+  libs/providers/langchain-perplexity:
+    dependencies:
+      openai:
+        specifier: ^4.100.0
+        version: 4.104.0(encoding@0.1.13)(ws@8.20.0(bufferutil@4.1.0))(zod@4.3.6)
+    devDependencies:
+      '@langchain/core':
+        specifier: workspace:^
+        version: link:../../langchain-core
+      '@langchain/eslint':
+        specifier: workspace:*
+        version: link:../../../internal/eslint
+      '@langchain/standard-tests':
+        specifier: workspace:*
+        version: link:../../../internal/standard-tests
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
+      '@tsconfig/recommended':
+        specifier: ^1.0.3
+        version: 1.0.13
+      '@vitest/coverage-v8':
+        specifier: ^3.2.4
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@25.5.0)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.8.3))
+      dotenv:
+        specifier: ^16.3.1
+        version: 16.6.1
+      dpdm:
+        specifier: ^3.14.0
+        version: 3.15.1
+      eslint:
+        specifier: ^9.34.0
+        version: 9.39.2(jiti@2.6.1)
+      prettier:
+        specifier: ^3.5.0
+        version: 3.8.1
+      typescript:
+        specifier: ~5.8.3
+        version: 5.8.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@25.5.0)(jiti@2.6.1)(jsdom@28.1.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.8.3)
+      zod:
+        specifier: ^4.0.14
+        version: 4.3.6
+
   libs/providers/langchain-redis:
     dependencies:
       redis:
