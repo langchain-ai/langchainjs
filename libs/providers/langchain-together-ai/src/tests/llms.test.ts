@@ -129,9 +129,11 @@ describe("TogetherAI", () => {
   });
 
   test("surfaces API errors", async () => {
-    global.fetch = vi.fn().mockImplementation(
-      async () => jsonResponse({ error: "bad request" }, 400)
-    ) as typeof fetch;
+    global.fetch = vi
+      .fn()
+      .mockImplementation(async () =>
+        jsonResponse({ error: "bad request" }, 400)
+      ) as typeof fetch;
 
     const model = new TogetherAI({
       model: "togethercomputer/StripedHyena-Nous-7B",

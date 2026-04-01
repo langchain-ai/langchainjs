@@ -189,8 +189,7 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
     this.modelName = inputs.model ?? inputs.modelName ?? "";
     this.model = this.modelName;
     this.streaming = inputs.streaming ?? this.streaming;
-    this.repetitionPenalty =
-      inputs.repetitionPenalty ?? this.repetitionPenalty;
+    this.repetitionPenalty = inputs.repetitionPenalty ?? this.repetitionPenalty;
     this.logprobs = inputs.logprobs;
     this.safetyModel = inputs.safetyModel;
     this.maxTokens = inputs.maxTokens;
@@ -223,8 +222,7 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
       temperature: options?.temperature ?? this.temperature,
       top_k: options?.topK ?? this.topK,
       top_p: options?.topP ?? this.topP,
-      repetition_penalty:
-        options?.repetitionPenalty ?? this.repetitionPenalty,
+      repetition_penalty: options?.repetitionPenalty ?? this.repetitionPenalty,
       logprobs: options?.logprobs ?? this.logprobs,
       stream_tokens: this.streaming,
       safety_model: options?.safetyModel ?? this.safetyModel,
@@ -233,7 +231,10 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
     };
   }
 
-  async completionWithRetry(prompt: string, options?: this["ParsedCallOptions"]) {
+  async completionWithRetry(
+    prompt: string,
+    options?: this["ParsedCallOptions"]
+  ) {
     return this.caller.call(async () => {
       const fetchResponse = await fetch(this.inferenceAPIUrl, {
         method: "POST",

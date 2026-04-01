@@ -23,9 +23,7 @@ describe("TogetherAIEmbeddings", () => {
     const embeddings = new TogetherAIEmbeddings();
 
     expect(embeddings.apiKey).toBe("env-api-key");
-    expect(embeddings.model).toBe(
-      "togethercomputer/m2-bert-80M-8k-retrieval"
-    );
+    expect(embeddings.model).toBe("togethercomputer/m2-bert-80M-8k-retrieval");
   });
 
   test("throws when api key is missing", () => {
@@ -110,9 +108,11 @@ describe("TogetherAIEmbeddings", () => {
   });
 
   test("surfaces API errors", async () => {
-    global.fetch = vi.fn().mockImplementation(
-      async () => jsonResponse({ error: "bad request" }, 400)
-    ) as typeof fetch;
+    global.fetch = vi
+      .fn()
+      .mockImplementation(async () =>
+        jsonResponse({ error: "bad request" }, 400)
+      ) as typeof fetch;
 
     const embeddings = new TogetherAIEmbeddings({
       apiKey: "test-api-key",
