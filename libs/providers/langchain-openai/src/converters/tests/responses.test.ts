@@ -1127,6 +1127,27 @@ describe("convertMessagesToResponsesInput", () => {
     });
   });
 
+  describe("assistant message with string content", () => {
+    it("handles AIMessage with plain string content without throwing", () => {
+      const message = new AIMessage("plain text response");
+
+      const result = convertMessagesToResponsesInput({
+        messages: [message],
+        zdrEnabled: false,
+        model: "gpt-4o",
+      });
+
+      expect(result).toEqual([
+        {
+          type: "message",
+          role: "assistant",
+          content: "plain text response",
+          phase: undefined,
+        },
+      ]);
+    });
+  });
+
   describe("assistant reasoning conversion", () => {
     it("includes reasoning items in ZDR mode when encrypted content is present", () => {
       const message = new AIMessage({
