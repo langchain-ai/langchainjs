@@ -346,6 +346,20 @@ function propSum(o: Record<string, number>): number {
     .reduce((acc, val) => acc + val);
 }
 
+describe("Claude on Vertex AI support", () => {
+  test("throws actionable error before request for ChatGoogle", async () => {
+    const model = new ChatGoogle({
+      model: "claude-sonnet-4@20250514",
+      platformType: "gcp",
+      apiKey: "test-api-key",
+    });
+
+    await expect(model.invoke("Hello")).rejects.toThrow(
+      "Claude models on Vertex AI are not supported by ChatGoogle in @langchain/google."
+    );
+  });
+});
+
 const weatherTool = tool(
   (_) => ({
     temp: 21,
