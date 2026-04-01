@@ -37,12 +37,6 @@ pkg:@langchain/classic:
           - libs/langchain-classic/**
           - libs/langchain-classic/**/*
 
-pkg:@langchain/community:
-  - changed-files:
-      - any-glob-to-any-file:
-          - libs/community/langchain-community/**
-          - libs/community/langchain-community/**/*
-
 pkg:@langchain/core:
   - changed-flies:
       - any-glob-to-any-file:

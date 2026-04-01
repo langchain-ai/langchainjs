@@ -51,7 +51,7 @@ See our dedicated [integration contribution guide](https://github.com/langchain-
 
 #### Integration Packages
 
-> **Important**: We no longer accept new integrations to the `@langchain/community` package. The package is already very crowded with many dependencies, and we want to keep it maintainable.
+> **Important**: We no longer accept new integrations to this repository.
 
 New integrations **must** be published as standalone packages. Here's how to contribute a new integration:
 
@@ -67,7 +67,6 @@ This is a monorepo managed with [pnpm workspaces](https://pnpm.io/workspaces) an
 | -------------------------- | ------------------------------------ | ---------------------------------------------------------------- |
 | `langchain`                | `libs/langchain`                     | Main LangChain package with agents, prompts, and orchestration   |
 | `@langchain/core`          | `libs/langchain-core`                | Core abstractions and interfaces (base classes, runnables, etc.) |
-| `@langchain/community`     | `libs/community/langchain-community` | Community-maintained integrations                                |
 | `@langchain/textsplitters` | `libs/langchain-textsplitters`       | Text splitting utilities                                         |
 | `@langchain/openai`        | `libs/providers/langchain-openai`    | OpenAI integration                                               |
 | `@langchain/anthropic`     | `libs/providers/langchain-anthropic` | Anthropic integration                                            |
@@ -169,7 +168,6 @@ Common package filters:
 
 - `--filter langchain` - the main `langchain` package
 - `--filter @langchain/core` - the core package
-- `--filter @langchain/community` - community integrations
 - `--filter @langchain/openai` - OpenAI integration (and similarly for other providers)
 
 ### Setup
@@ -201,7 +199,6 @@ We use [eslint](https://eslint.org/) to enforce standard lint rules. To run the 
 
 ```bash
 pnpm --filter langchain lint
-pnpm --filter @langchain/community lint
 ```
 
 ### Formatting

@@ -26,7 +26,6 @@ This is a **monorepo** managed with [pnpm workspaces](https://pnpm.io/) (v10.14.
 | -------------------------- | ------------------------------------- | ---------------------------------------------------------------- |
 | `langchain`                | `libs/langchain/`                     | Main LangChain package with agents, prompts, and orchestration   |
 | `@langchain/core`          | `libs/langchain-core/`                | Core abstractions and interfaces (base classes, runnables, etc.) |
-| `@langchain/community`     | `libs/community/langchain-community/` | Community-maintained integrations                                |
 | `@langchain/textsplitters` | `libs/langchain-textsplitters/`       | Text splitting utilities                                         |
 | `@langchain/openai`        | `libs/providers/langchain-openai/`    | OpenAI integration                                               |
 | `@langchain/anthropic`     | `libs/providers/langchain-anthropic/` | Anthropic integration                                            |
@@ -66,7 +65,6 @@ All commands can be run from the project root using `pnpm --filter <package>` to
 
 - `--filter langchain` - the main `langchain` package
 - `--filter @langchain/core` - the core package
-- `--filter @langchain/community` - community integrations
 - `--filter @langchain/openai` - OpenAI integration (and similarly for other providers)
 
 ### Building
@@ -395,7 +393,6 @@ throw new Error("Model authentication failed", {
 
 ### 6. Third-Party Dependencies
 
-- Add external dependencies as `peerDependencies` in `@langchain/community`
 - Add them as regular `dependencies` in standalone provider packages
 - Always use caret (`^`) for version ranges
 - Ensure dependencies are MIT or permissively licensed
