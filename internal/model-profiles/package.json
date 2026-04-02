@@ -11,7 +11,7 @@
   "dependencies": {
     "@iarna/toml": "^2.2.5",
     "@langchain/core": "workspace:^",
-    "commander": "^11.1.0",
+    "commander": "^14.0.3",
     "typescript": "^5.9.3",
     "zod": "^4.1.12"
   },
