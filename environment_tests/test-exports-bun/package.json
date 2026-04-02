@@ -18,7 +18,6 @@
   "license": "MIT",
   "dependencies": {
     "@langchain/anthropic": "workspace:*",
-    "@langchain/community": "^1.1.27",
     "@langchain/core": "workspace:^",
     "@langchain/classic": "workspace:*",
     "@langchain/openai": "workspace:*",

@@ -13,10 +13,9 @@ services:
       - ../libs/langchain:/langchain
       - ../libs/langchain-core:/langchain-core
       - ../libs/langchain-classic:/langchain-classic
-      - ../libs/community/langchain-community:/langchain-community
       - ../libs/providers/langchain-anthropic:/langchain-anthropic
       - ../libs/providers/langchain-openai:/langchain-openai
-      - ../libs/community/langchain-cohere:/langchain-cohere
+      - ../libs/providers/langchain-cohere:/langchain-cohere
       - ../libs/providers/langchain-ollama:/langchain-ollama
       - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
       - ../internal/standard-tests:/langchain-standard-tests
@@ -40,10 +39,9 @@ services:
       - ../libs/langchain:/langchain
       - ../libs/langchain-core:/langchain-core
       - ../libs/langchain-classic:/langchain-classic
-      - ../libs/community/langchain-community:/langchain-community
       - ../libs/providers/langchain-anthropic:/langchain-anthropic
       - ../libs/providers/langchain-openai:/langchain-openai
-      - ../libs/community/langchain-cohere:/langchain-cohere
+      - ../libs/providers/langchain-cohere:/langchain-cohere
       - ../libs/providers/langchain-ollama:/langchain-ollama
       - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
       - ../internal/standard-tests:/langchain-standard-tests
@@ -67,10 +65,9 @@ services:
       - ../libs/langchain:/langchain
       - ../libs/langchain-core:/langchain-core
       - ../libs/langchain-classic:/langchain-classic
-      - ../libs/community/langchain-community:/langchain-community
       - ../libs/providers/langchain-anthropic:/langchain-anthropic
       - ../libs/providers/langchain-openai:/langchain-openai
-      - ../libs/community/langchain-cohere:/langchain-cohere
+      - ../libs/providers/langchain-cohere:/langchain-cohere
       - ../libs/providers/langchain-ollama:/langchain-ollama
       - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
       - ../internal/standard-tests:/langchain-standard-tests
@@ -94,10 +91,9 @@ services:
       - ../libs/langchain:/langchain
       - ../libs/langchain-core:/langchain-core
       - ../libs/langchain-classic:/langchain-classic
-      - ../libs/community/langchain-community:/langchain-community
       - ../libs/providers/langchain-anthropic:/langchain-anthropic
       - ../libs/providers/langchain-openai:/langchain-openai
-      - ../libs/community/langchain-cohere:/langchain-cohere
+      - ../libs/providers/langchain-cohere:/langchain-cohere
       - ../libs/providers/langchain-ollama:/langchain-ollama
       - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
       - ../internal/standard-tests:/langchain-standard-tests
@@ -121,10 +117,9 @@ services:
       - ../libs/langchain:/langchain
       - ../libs/langchain-core:/langchain-core
       - ../libs/langchain-classic:/langchain-classic
-      - ../libs/community/langchain-community:/langchain-community
       - ../libs/providers/langchain-anthropic:/langchain-anthropic
       - ../libs/providers/langchain-openai:/langchain-openai
-      - ../libs/community/langchain-cohere:/langchain-cohere
+      - ../libs/providers/langchain-cohere:/langchain-cohere
       - ../libs/providers/langchain-ollama:/langchain-ollama
       - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
       - ../internal/standard-tests:/langchain-standard-tests
@@ -148,10 +143,9 @@ services:
       - ../libs/langchain:/langchain
       - ../libs/langchain-core:/langchain-core
       - ../libs/langchain-classic:/langchain-classic
-      - ../libs/community/langchain-community:/langchain-community
       - ../libs/providers/langchain-anthropic:/langchain-anthropic
       - ../libs/providers/langchain-openai:/langchain-openai
-      - ../libs/community/langchain-cohere:/langchain-cohere
+      - ../libs/providers/langchain-cohere:/langchain-cohere
       - ../libs/providers/langchain-ollama:/langchain-ollama
       - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
       - ../internal/standard-tests:/langchain-standard-tests
@@ -175,10 +169,9 @@ services:
       - ../libs/langchain:/langchain
       - ../libs/langchain-core:/langchain-core
       - ../libs/langchain-classic:/langchain-classic
-      - ../libs/community/langchain-community:/langchain-community
       - ../libs/providers/langchain-anthropic:/langchain-anthropic
       - ../libs/providers/langchain-openai:/langchain-openai
-      - ../libs/community/langchain-cohere:/langchain-cohere
+      - ../libs/providers/langchain-cohere:/langchain-cohere
       - ../libs/providers/langchain-ollama:/langchain-ollama
       - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
       - ../internal/standard-tests:/langchain-standard-tests
@@ -199,10 +192,9 @@ services:
       - ../libs/langchain:/langchain
       - ../libs/langchain-core:/langchain-core
       - ../libs/langchain-classic:/langchain-classic
-      - ../libs/community/langchain-community:/langchain-community
       - ../libs/providers/langchain-anthropic:/langchain-anthropic
       - ../libs/providers/langchain-openai:/langchain-openai
-      - ../libs/community/langchain-cohere:/langchain-cohere
+      - ../libs/providers/langchain-cohere:/langchain-cohere
       - ../libs/providers/langchain-ollama:/langchain-ollama
       - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
       - ../internal/standard-tests:/langchain-standard-tests
@@ -226,10 +218,9 @@ services:
       - ../libs/langchain:/langchain
       - ../libs/langchain-core:/langchain-core
       - ../libs/langchain-classic:/langchain-classic
-      - ../libs/community/langchain-community:/langchain-community
       - ../libs/providers/langchain-anthropic:/langchain-anthropic
       - ../libs/providers/langchain-openai:/langchain-openai
-      - ../libs/community/langchain-cohere:/langchain-cohere
+      - ../libs/providers/langchain-cohere:/langchain-cohere
       - ../libs/providers/langchain-ollama:/langchain-ollama
       - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
       - ../internal/standard-tests:/langchain-standard-tests

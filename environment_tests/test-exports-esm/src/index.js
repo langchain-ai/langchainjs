@@ -3,21 +3,19 @@ import { OpenAI } from "@langchain/openai";
 import { LLMChain } from "@langchain/classic/chains";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { MemoryVectorStore } from "@langchain/classic/vectorstores/memory";
-import { HuggingFaceTransformersEmbeddings } from "@langchain/community/embeddings/huggingface_transformers";
 import { Document } from "@langchain/core/documents";
 import { CallbackManager } from "@langchain/core/callbacks/manager";
+import { FakeEmbeddings } from "@langchain/core/utils/testing";
 
 // Test exports
 assert(typeof OpenAI === "function");
 assert(typeof LLMChain === "function");
 assert(typeof ChatPromptTemplate === "function");
 assert(typeof MemoryVectorStore === "function");
-assert(typeof HuggingFaceTransformersEmbeddings === "function");
+assert(typeof FakeEmbeddings === "function");
 assert(typeof CallbackManager === "function");
 
-const vs = new MemoryVectorStore(
-  new HuggingFaceTransformersEmbeddings({ model: "Xenova/all-MiniLM-L6-v2" })
-);
+const vs = new MemoryVectorStore(new FakeEmbeddings());
 
 await vs.addVectors(
   [

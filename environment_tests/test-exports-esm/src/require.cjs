@@ -3,10 +3,8 @@ const { OpenAI } = require("@langchain/openai");
 const { LLMChain } = require("@langchain/classic/chains");
 const { ChatPromptTemplate } = require("@langchain/core/prompts");
 const { MemoryVectorStore } = require("@langchain/classic/vectorstores/memory");
-const {
-  HuggingFaceTransformersEmbeddings,
-} = require("@langchain/community/embeddings/huggingface_transformers");
 const { Document } = require("@langchain/core/documents");
+const { FakeEmbeddings } = require("@langchain/core/utils/testing");
 
 async function test() {
   // Test exports
@@ -15,9 +13,7 @@ async function test() {
   assert(typeof ChatPromptTemplate === "function");
   assert(typeof MemoryVectorStore === "function");
 
-  const vs = new MemoryVectorStore(
-    new HuggingFaceTransformersEmbeddings({ model: "Xenova/all-MiniLM-L6-v2" })
-  );
+  const vs = new MemoryVectorStore(new FakeEmbeddings());
 
   await vs.addVectors(
     [

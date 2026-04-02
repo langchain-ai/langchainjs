@@ -4,103 +4,37 @@
     "rootDir": "src",
     "outDir": "dist"
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "dist",
-    "node_modules"
-  ],
+  "include": ["src/**/*"],
+  "exclude": ["dist", "node_modules"],
   "references": [
-    {
-      "path": "../langchain-core"
-    },
-    {
-      "path": "../langchain-textsplitters"
-    },
-    {
-      "path": "../providers/langchain-anthropic"
-    },
-    {
-      "path": "../providers/langchain-aws"
-    },
-    {
-      "path": "../community/langchain-azure-cosmosdb"
-    },
-    {
-      "path": "../community/langchain-azure-dynamic-sessions"
-    },
-    {
-      "path": "../community/langchain-baidu-qianfan"
-    },
-    {
-      "path": "../providers/langchain-cloudflare"
-    },
-    {
-      "path": "../community/langchain-cohere"
-    },
-    {
-      "path": "../providers/langchain-deepseek"
-    },
-    {
-      "path": "../community/langchain-exa"
-    },
-    {
-      "path": "../providers/langchain-google-cloud-sql-pg"
-    },
-    {
-      "path": "../providers/langchain-google-common"
-    },
-    {
-      "path": "../providers/langchain-google-genai"
-    },
-    {
-      "path": "../providers/langchain-google-vertexai"
-    },
-    {
-      "path": "../providers/langchain-google-vertexai-web"
-    },
-    {
-      "path": "../providers/langchain-groq"
-    },
-    {
-      "path": "../providers/langchain-mistralai"
-    },
-    {
-      "path": "../providers/langchain-mongodb"
-    },
-    {
-      "path": "../community/langchain-nomic"
-    },
-    {
-      "path": "../providers/langchain-ollama"
-    },
-    {
-      "path": "../providers/langchain-openai"
-    },
-    {
-      "path": "../community/langchain-pinecone"
-    },
-    {
-      "path": "../community/langchain-qdrant"
-    },
-    {
-      "path": "../providers/langchain-redis"
-    },
-    {
-      "path": "../community/langchain-tavily"
-    },
-    {
-      "path": "../community/langchain-weaviate"
-    },
-    {
-      "path": "../providers/langchain-xai"
-    },
-    {
-      "path": "../community/langchain-yandex"
-    },
-    {
-      "path": "../providers/langchain-together-ai"
-    }
+    { "path": "../langchain-core" },
+    { "path": "../langchain-textsplitters" },
+    { "path": "../providers/langchain-anthropic" },
+    { "path": "../providers/langchain-aws" },
+    { "path": "../providers/langchain-cloudflare" },
+    { "path": "../providers/langchain-cohere" },
+    { "path": "../providers/langchain-deepseek" },
+    { "path": "../providers/langchain-exa" },
+    { "path": "../providers/langchain-fireworks" },
+    { "path": "../providers/langchain-google-cloud-sql-pg" },
+    { "path": "../providers/langchain-google-common" },
+    { "path": "../providers/langchain-google-genai" },
+    { "path": "../providers/langchain-google-vertexai" },
+    { "path": "../providers/langchain-google-vertexai-web" },
+    { "path": "../providers/langchain-groq" },
+    { "path": "../providers/langchain-ibm" },
+    { "path": "../providers/langchain-mistralai" },
+    { "path": "../providers/langchain-mongodb" },
+    { "path": "../providers/langchain-neo4j" },
+    { "path": "../providers/langchain-ollama" },
+    { "path": "../providers/langchain-openai" },
+    { "path": "../providers/langchain-perplexity" },
+    { "path": "../providers/langchain-pinecone" },
+    { "path": "../providers/langchain-qdrant" },
+    { "path": "../providers/langchain-redis" },
+    { "path": "../providers/langchain-tavily" },
+    { "path": "../providers/langchain-together-ai" },
+    { "path": "../providers/langchain-weaviate" },
+    { "path": "../providers/langchain-xai" }
   ]
 }

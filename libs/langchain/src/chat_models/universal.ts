@@ -95,10 +95,6 @@ export const MODEL_PROVIDER_CONFIG = {
     package: "@langchain/groq",
     className: "ChatGroq",
   },
-  cerebras: {
-    package: "@langchain/cerebras",
-    className: "ChatCerebras",
-  },
   bedrock: {
     package: "@langchain/aws",
     className: "ChatBedrockConverse",
@@ -114,6 +110,10 @@ export const MODEL_PROVIDER_CONFIG = {
   xai: {
     package: "@langchain/xai",
     className: "ChatXAI",
+  },
+  cerebras: {
+    package: "@langchain/cerebras",
+    className: "ChatCerebras",
   },
   fireworks: {
     package: "@langchain/fireworks",

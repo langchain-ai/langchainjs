@@ -5,8 +5,8 @@ import { ChatOllama } from "@langchain/ollama";
 import { ChatGoogle } from "@langchain/google-gauth";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { MemoryVectorStore } from "@langchain/classic/vectorstores/memory";
-import { HuggingFaceTransformersEmbeddings } from "@langchain/community/embeddings/huggingface_transformers";
 import { Document } from "@langchain/core/documents";
+import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { RunnableLambda } from "@langchain/core/runnables";
 
 async function test(useAzure: boolean = false) {
@@ -30,9 +30,7 @@ async function test(useAzure: boolean = false) {
         openAIApiKey: "sk-XXXX",
       };
 
-  const vs = new MemoryVectorStore(
-    new HuggingFaceTransformersEmbeddings({ model: "Xenova/all-MiniLM-L6-v2" })
-  );
+  const vs = new MemoryVectorStore(new FakeEmbeddings());
 
   await vs.addVectors(
     [

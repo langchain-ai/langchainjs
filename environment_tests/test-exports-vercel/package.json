@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@langchain/anthropic": "workspace:*",
-    "@langchain/community": "workspace:*",
     "@langchain/classic": "workspace:*",
     "@langchain/core": "workspace:^",
     "@langchain/openai": "workspace:*",

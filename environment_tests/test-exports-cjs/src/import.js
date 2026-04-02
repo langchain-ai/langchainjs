@@ -5,10 +5,8 @@ async function test() {
   const { ChatGoogle } = await import("@langchain/google-gauth");
   const { LLMChain } = await import("@langchain/classic/chains");
   const { ChatPromptTemplate } = await import("@langchain/core/prompts");
-  const { HuggingFaceTransformersEmbeddings } = await import(
-    "@langchain/community/embeddings/huggingface_transformers"
-  );
   const { Document } = await import("@langchain/core/documents");
+  const { FakeEmbeddings } = await import("@langchain/core/utils/testing");
   const { MemoryVectorStore } = await import(
     "@langchain/classic/vectorstores/memory"
   );
@@ -21,9 +19,7 @@ async function test() {
   assert(typeof ChatOllama === "function");
   assert(typeof ChatGoogle === "function");
 
-  const vs = new MemoryVectorStore(
-    new HuggingFaceTransformersEmbeddings({ model: "Xenova/all-MiniLM-L6-v2" })
-  );
+  const vs = new MemoryVectorStore(new FakeEmbeddings());
 
   await vs.addVectors(
     [

@@ -55,22 +55,6 @@ updates:
         update-types:
           - "major"
 
-  # Community integrations
-  - package-ecosystem: npm
-    directories:
-      - "libs/community/*"
-    schedule:
-      interval: monthly
-    open-pull-requests-limit: 15
-    groups:
-      providers-minor-and-patch:
-        update-types:
-          - "minor"
-          - "patch"
-      providers-major:
-        update-types:
-          - "major"
-
   # Provider integrations
   - package-ecosystem: npm
     directories:

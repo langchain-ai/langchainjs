@@ -7,7 +7,6 @@ on:
       - "libs/langchain/**"
       - "libs/langchain-core/**"
       - "libs/langchain-classic/**"
-      - "libs/community/langchain-community/**"
       - "libs/providers/langchain-anthropic/**"
       - "libs/providers/langchain-openai/**"
       - ".github/workflows/test-exports.yml"
