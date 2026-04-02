@@ -57,7 +57,7 @@
     "@layerup/layerup-security": "^1.5.12",
     "@opensearch-project/opensearch": "^2.2.0",
     "@pinecone-database/pinecone": "^5.0.2",
-    "@planetscale/database": "^1.8.0",
+    "@planetscale/database": "^1.20.1",
     "@prisma/client": "^4.11.0",
     "@qdrant/js-client-rest": "^1.15.0",
     "@rockset/client": "^0.9.1",
