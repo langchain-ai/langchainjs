@@ -24,7 +24,7 @@ describe("_makeMessageChunkFromAnthropicEvent", () => {
       },
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const result = _makeMessageChunkFromAnthropicEvent(event as any, fields);
     expect(result).not.toBeNull();
 
@@ -48,7 +48,7 @@ describe("_makeMessageChunkFromAnthropicEvent", () => {
       },
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const result = _makeMessageChunkFromAnthropicEvent(event as any, fields);
     expect(result).not.toBeNull();
 

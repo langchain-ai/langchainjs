@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { vi, test, expect, describe } from "vitest";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
 import { SchemaFieldTypes } from "redis";

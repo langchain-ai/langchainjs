@@ -54,7 +54,9 @@ import { ChatOpenRouter } from "@langchain/openrouter";
 const model = new ChatOpenRouter({
   model: "openai/gpt-4o",
 });
-const response = await model.invoke([{ role: "user", content: "Hello world!" }]);
+const response = await model.invoke([
+  { role: "user", content: "Hello world!" },
+]);
 ```
 
 ### Streaming

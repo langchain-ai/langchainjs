@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 
 import { vi, test, expect, describe } from "vitest";
 import { AsyncLocalStorage } from "node:async_hooks";

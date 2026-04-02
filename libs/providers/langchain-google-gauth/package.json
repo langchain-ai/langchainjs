@@ -16,10 +16,6 @@
   "scripts": {
     "build": "turbo build:compile --filter @langchain/google-gauth --output-logs new-only",
     "build:compile": "tsdown",
-    "lint:eslint": "eslint --cache src/",
-    "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
-    "lint": "pnpm lint:eslint && pnpm lint:dpdm",
-    "lint:fix": "pnpm lint:eslint --fix && pnpm lint:dpdm",
     "clean": "rm -rf .turbo dist/",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -27,22 +23,17 @@
     "test:int": "vitest run --mode int",
     "test:standard:unit": "vitest run --mode standard-unit",
     "test:standard:int": "vitest run --mode standard-int",
-    "test:standard": "pnpm test:standard:unit && pnpm test:standard:int",
-    "format": "prettier --write \"src\"",
-    "format:check": "prettier --check \"src\""
+    "test:standard": "pnpm test:standard:unit && pnpm test:standard:int"
   },
   "dependencies": {
     "@langchain/google-common": "workspace:*",
     "google-auth-library": "^10.1.0"
   },
   "devDependencies": {
-    "@langchain/eslint": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
     "dotenv": "^16.3.1",
     "dpdm": "^3.14.0",
-    "eslint": "^9.34.0",
-    "prettier": "^3.5.0",
     "typescript": "~5.8.3",
     "vitest": "^3.2.4",
     "zod": "^3.25.76"

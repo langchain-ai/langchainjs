@@ -18,7 +18,7 @@ describe("WithMaybeContext", () => {
       }),
     });
 
-    // eslint-disable-next-line no-void
+    // oxlint-disable-next-line no-void
     void createAgent({
       model: "openai:gpt-4",
       contextSchema,
@@ -35,7 +35,7 @@ describe("WithMaybeContext", () => {
       }),
     });
 
-    // eslint-disable-next-line no-void
+    // oxlint-disable-next-line no-void
     void createAgent({
       model: "openai:gpt-4",
       contextSchema,
@@ -58,7 +58,7 @@ describe("WithMaybeContext", () => {
       }),
     });
 
-    // eslint-disable-next-line no-void
+    // oxlint-disable-next-line no-void
     void createAgent({
       model: "openai:gpt-4",
       contextSchema,

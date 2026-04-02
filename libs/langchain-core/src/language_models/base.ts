@@ -224,7 +224,7 @@ const getVerbosity = () => false;
 export type SerializedLLM = {
   _model: string;
   _type: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
 } & Record<string, any>;
 
 export interface BaseLangChainParams {
@@ -387,7 +387,7 @@ export type StructuredOutputMethodParams<
   IncludeRaw extends boolean = false,
 > = {
   /** @deprecated Pass schema in as the first argument */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   schema: InteropZodType<RunOutput> | Record<string, any>;
   name?: string;
   method?: "functionCalling" | "jsonMode";
@@ -395,7 +395,7 @@ export type StructuredOutputMethodParams<
 };
 
 export interface BaseLanguageModelInterface<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunOutput = any,
   CallOptions extends BaseLanguageModelCallOptions =
     BaseLanguageModelCallOptions,
@@ -417,7 +417,7 @@ export interface BaseLanguageModelInterface<
   /**
    * Get the identifying parameters of the LLM.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   _identifyingParams(): Record<string, any>;
 
   serialize(): SerializedLLM;
@@ -434,7 +434,7 @@ export type LanguageModelLike = RunnableInterface<
  * Base class for language models.
  */
 export abstract class BaseLanguageModel<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunOutput = any,
   CallOptions extends BaseLanguageModelCallOptions =
     BaseLanguageModelCallOptions,
@@ -565,7 +565,7 @@ export abstract class BaseLanguageModel<
   /**
    * Get the identifying parameters of the LLM.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   _identifyingParams(): Record<string, any> {
     return {};
   }
@@ -577,9 +577,12 @@ export abstract class BaseLanguageModel<
    */
   _getSerializedCacheKeyParametersForCall(
     // TODO: Fix when we remove the RunnableLambda backwards compatibility shim.
-    { config, ...callOptions }: CallOptions & { config?: RunnableConfig }
+    {
+      config,
+      ...callOptions
+    }: CallOptions & { config?: RunnableConfig }
   ): string {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const params: Record<string, any> = {
       ...this._identifyingParams(),
       ...callOptions,
@@ -626,7 +629,7 @@ export abstract class BaseLanguageModel<
   }
 
   withStructuredOutput?<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     schema: SerializableSchema<RunOutput>,
@@ -634,7 +637,7 @@ export abstract class BaseLanguageModel<
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput?<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     schema: SerializableSchema<RunOutput>,
@@ -642,45 +645,45 @@ export abstract class BaseLanguageModel<
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput?<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     schema:
       | ZodV3Like<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput?<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     schema:
       | ZodV3Like<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput?<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     schema:
       | ZodV4Like<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput?<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     schema:
       | ZodV4Like<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
@@ -699,12 +702,12 @@ export abstract class BaseLanguageModel<
    * @returns {Runnable<RunInput, RunOutput> | Runnable<RunInput, { raw: BaseMessage; parsed: RunOutput }>} A new runnable that calls the LLM with structured output.
    */
   withStructuredOutput?<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     schema:
       | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
   ):

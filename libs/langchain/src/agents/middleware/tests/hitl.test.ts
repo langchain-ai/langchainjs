@@ -606,7 +606,7 @@ describe("humanInTheLoopMiddleware", () => {
 
     // Resume with manual response - this should fail because message must be a string
     // but we're passing an object
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const invalidMessage: any = {
       action: "write_file",
       args: "File operation not allowed in demo mode",
@@ -1069,7 +1069,7 @@ describe("humanInTheLoopMiddleware", () => {
     );
 
     // Resume with invalid edited action (name is not a string)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const invalidEditedAction: any = {
       name: 123, // Invalid: should be string
       args: { filename: "test.txt", content: "test" },
@@ -1138,7 +1138,7 @@ describe("humanInTheLoopMiddleware", () => {
     );
 
     // Resume with invalid edited action (args is not an object)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const invalidEditedAction: any = {
       name: "write_file",
       args: "not an object", // Invalid: should be object
@@ -1207,7 +1207,7 @@ describe("humanInTheLoopMiddleware", () => {
     );
 
     // Resume with missing editedAction
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const invalidDecision: any = {
       type: "edit",
       // editedAction is missing
@@ -1271,7 +1271,7 @@ describe("humanInTheLoopMiddleware", () => {
     );
 
     // Resume with invalid HITLResponse (no decisions array)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const invalidResponse: any = {
       // decisions is missing
     };
@@ -1332,7 +1332,7 @@ describe("humanInTheLoopMiddleware", () => {
     );
 
     // Resume with invalid HITLResponse (decisions is not an array)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const invalidResponse: any = {
       decisions: "not an array",
     };

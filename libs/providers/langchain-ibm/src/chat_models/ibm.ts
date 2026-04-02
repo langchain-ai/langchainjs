@@ -753,7 +753,7 @@ export class ChatWatsonx<
       TextChatParameterTools | string | undefined
     > = tool_choice ? _convertToolChoiceToWatsonxToolChoice(tool_choice) : {};
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const gatewayParams: Record<string, any> = this.modelGateway
       ? { ...this.modelGatewayKwargs }
       : {
@@ -1097,7 +1097,7 @@ export class ChatWatsonx<
       });
 
       yield generationChunk;
-      // eslint-disable-next-line no-void
+      // oxlint-disable-next-line no-void
       void _runManager?.handleLLMNewToken(
         generationChunk.text,
         newTokenIndices,
@@ -1136,34 +1136,34 @@ export class ChatWatsonx<
   }
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
   ):
@@ -1172,7 +1172,7 @@ export class ChatWatsonx<
         BaseLanguageModelInput,
         { raw: BaseMessage; parsed: RunOutput }
       > {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const schema: InteropZodType<RunOutput> | Record<string, any> =
       outputSchema;
     const name = config?.name;
@@ -1277,7 +1277,7 @@ export class ChatWatsonx<
     }
 
     const parserAssign = RunnablePassthrough.assign({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       parsed: (input: any, config) => outputParser.invoke(input.raw, config),
     });
     const parserNone = RunnablePassthrough.assign({

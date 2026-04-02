@@ -3,12 +3,12 @@ import { Readable } from "stream";
 import { setInterval } from "timers/promises";
 
 export function isUsingLocalAtlas() {
-  // eslint-disable-next-line no-process-env
+  // oxlint-disable-next-line no-process-env
   return !process.env.MONGODB_ATLAS_URI;
 }
 export function uri() {
   return (
-    // eslint-disable-next-line no-process-env
+    // oxlint-disable-next-line no-process-env
     process.env.MONGODB_ATLAS_URI ||
     "mongodb://localhost:27017?directConnection=true"
   );

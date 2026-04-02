@@ -938,7 +938,7 @@ describe("Google GenAI Reasoning with contentBlocks", () => {
 
     const reasoningBlocks = blocks.filter((b) => b.type === "reasoning");
     expect(reasoningBlocks.length).toBeGreaterThan(0);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect((reasoningBlocks[0] as any).reasoning.length).toBeGreaterThan(0);
 
     const textBlocks = blocks.filter((b) => b.type === "text");
@@ -966,7 +966,7 @@ describe("Google GenAI Reasoning with contentBlocks", () => {
 
     const reasoningBlocks = blocks.filter((b) => b.type === "reasoning");
     expect(reasoningBlocks.length).toBeGreaterThan(0);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect((reasoningBlocks[0] as any).reasoning.length).toBeGreaterThan(0);
   }, 60000);
 });

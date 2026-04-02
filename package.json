@@ -14,11 +14,10 @@
     "watch": "turbo watch build:compile",
     "clean": "turbo clean",
     "dev": "pnpm --filter @langchain/build watch",
-    "format": "turbo format --concurrency=50",
-    "format:check": "turbo format:check --concurrency=50",
-    "format:check:fix": "turbo format:check --concurrency=50 -- --write",
-    "lint": "turbo lint --concurrency=4",
-    "lint:fix": "turbo lint:fix --concurrency=4",
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check .",
+    "lint": "oxlint .",
+    "lint:fix": "oxlint . --fix",
     "precommit": "turbo precommit",
     "prerelease": "BUILD_MODE=prerelease pnpm build",
     "release": "changeset publish",
@@ -45,7 +44,8 @@
     "commander": "^11.1.0",
     "dotenv": "^16.0.3",
     "lint-staged": "^16.4.0",
-    "prettier": "^3.5.0",
+    "oxfmt": "^0.43.0",
+    "oxlint": "^1.58.0",
     "semver": "^7.7.4",
     "tsdown": "^0.21.2",
     "tsx": "^4.21.0",
@@ -80,8 +80,7 @@
   },
   "lint-staged": {
     "**/*.{ts,tsx}": [
-      "prettier --write --ignore-unknown"
-    ],
-    "*.md": "prettier --write"
+      "oxfmt --write"
+    ]
   }
 }

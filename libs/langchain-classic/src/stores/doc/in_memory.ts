@@ -63,7 +63,7 @@ export class InMemoryDocstore
     throw new Error("Not implemented.");
   }
 
-  // eslint-disable-next-line require-yield
+  // oxlint-disable-next-line require-yield
   async *yieldKeys(_prefix?: string): AsyncGenerator<string> {
     throw new Error("Not implemented");
   }

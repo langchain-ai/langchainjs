@@ -126,7 +126,7 @@ describe("ChatOpenRouter constructor", () => {
 
 describe("attribution headers", () => {
   function extractHeaders(model: ChatOpenRouter): Record<string, string> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     return (model as any).buildHeaders();
   }
 
@@ -392,7 +392,7 @@ function makeSerializableSchema() {
 describe("withStructuredOutput with SerializableSchema", () => {
   test("functionCalling with valid output parses correctly", async () => {
     const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     vi.spyOn(model as any, "invoke").mockResolvedValue(
       new AIMessage({
         content: "",
@@ -417,7 +417,7 @@ describe("withStructuredOutput with SerializableSchema", () => {
 
   test("functionCalling with invalid output throws OutputParserException", async () => {
     const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     vi.spyOn(model as any, "invoke").mockResolvedValue(
       new AIMessage({
         content: "",
@@ -443,7 +443,7 @@ describe("withStructuredOutput with SerializableSchema", () => {
 
   test("functionCalling with custom name", async () => {
     const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     vi.spyOn(model as any, "invoke").mockResolvedValue(
       new AIMessage({
         content: "",
@@ -479,7 +479,7 @@ describe("withStructuredOutput with SerializableSchema", () => {
       ],
     });
     const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     vi.spyOn(model as any, "invoke").mockResolvedValue(rawMessage);
 
     const schema = makeSerializableSchema();
@@ -496,7 +496,7 @@ describe("withStructuredOutput with SerializableSchema", () => {
 
   test("jsonMode with valid output parses correctly", async () => {
     const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     vi.spyOn(model as any, "invoke").mockResolvedValue(
       new AIMessage({
         content: '{"name": "Alice"}',
@@ -514,7 +514,7 @@ describe("withStructuredOutput with SerializableSchema", () => {
 
   test("jsonMode with invalid output throws OutputParserException", async () => {
     const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     vi.spyOn(model as any, "invoke").mockResolvedValue(
       new AIMessage({
         content: '{"wrong_field": 123}',
@@ -533,7 +533,7 @@ describe("withStructuredOutput with SerializableSchema", () => {
 
   test("jsonSchema with valid output parses correctly", async () => {
     const model = new ChatOpenRouter({ model: "openai/gpt-4o-mini" });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     vi.spyOn(model as any, "invoke").mockResolvedValue(
       new AIMessage({
         content: '{"name": "Eve"}',
@@ -551,7 +551,7 @@ describe("withStructuredOutput with SerializableSchema", () => {
 
   test("jsonSchema with invalid output throws OutputParserException", async () => {
     const model = new ChatOpenRouter({ model: "openai/gpt-4o-mini" });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     vi.spyOn(model as any, "invoke").mockResolvedValue(
       new AIMessage({
         content: '{"wrong_field": 123}',

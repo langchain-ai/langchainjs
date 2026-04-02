@@ -64,7 +64,7 @@ export abstract class FilterExpression {
    * ```
    */
   and(other: FilterExpression): FilterExpression {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    // oxlint-disable-next-line @typescript-eslint/no-use-before-define
     return new AndFilter([this, other]);
   }
 
@@ -84,7 +84,7 @@ export abstract class FilterExpression {
    * ```
    */
   or(other: FilterExpression): FilterExpression {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    // oxlint-disable-next-line @typescript-eslint/no-use-before-define
     return new OrFilter([this, other]);
   }
 }

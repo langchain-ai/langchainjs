@@ -88,8 +88,7 @@ export function getPlatformType(
 }
 
 export interface BaseChatGoogleParams
-  extends BaseChatModelParams,
-    ChatGoogleFields {
+  extends BaseChatModelParams, ChatGoogleFields {
   /**
    * The name of the Gemini model to use.
    *
@@ -145,11 +144,10 @@ export interface BaseChatGoogleParams
 }
 
 export interface BaseChatGoogleCallOptions
-  extends BaseChatModelCallOptions,
-    ChatGoogleFields {}
+  extends BaseChatModelCallOptions, ChatGoogleFields {}
 
 export abstract class BaseChatGoogle<
-  CallOptions extends BaseChatGoogleCallOptions = BaseChatGoogleCallOptions
+  CallOptions extends BaseChatGoogleCallOptions = BaseChatGoogleCallOptions,
 > extends BaseChatModel<CallOptions, AIMessageChunk> {
   model: string;
 
@@ -561,7 +559,7 @@ export abstract class BaseChatGoogle<
             ChatGenerationChunk
           >({
             transform(chunk, controller) {
-              // eslint-disable-next-line no-void
+              // oxlint-disable-next-line no-void
               void runManager?.handleCustomEvent(`google-chunk-${moduleName}`, {
                 chunk,
               });
@@ -682,37 +680,37 @@ export abstract class BaseChatGoogle<
   }
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
   ):
@@ -731,13 +729,13 @@ export abstract class BaseChatGoogle<
    * @returns A Runnable that returns the parsed structured output
    */
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
   ):

@@ -109,7 +109,7 @@ function resolveMediaSource(
     };
   }
 
-  // eslint-disable-next-line no-instanceof/no-instanceof
+  // oxlint-disable-next-line no-instanceof/no-instanceof
   if (block.data instanceof Uint8Array) {
     return { bytes: block.data };
   }

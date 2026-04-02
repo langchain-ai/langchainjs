@@ -1,7 +1,7 @@
 import { Serializable } from "@langchain/core/load/serializable";
 import { Document } from "@langchain/core/documents";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 type Any = any;
 
 export class Node extends Serializable {

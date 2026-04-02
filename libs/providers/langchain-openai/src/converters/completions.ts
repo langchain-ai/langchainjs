@@ -282,7 +282,7 @@ export const convertCompletionsMessageToBaseMessage: Converter<
       for (const rawToolCall of rawToolCalls ?? []) {
         try {
           toolCalls.push(parseToolCall(rawToolCall, { returnId: true }));
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (e: any) {
           invalidToolCalls.push(makeInvalidToolCall(rawToolCall, e.message));
         }
@@ -391,7 +391,7 @@ export const convertCompletionsMessageToBaseMessage: Converter<
  */
 export const convertCompletionsDeltaToBaseMessageChunk: Converter<
   {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     delta: Record<string, any>;
     rawResponse: OpenAIClient.Chat.Completions.ChatCompletionChunk;
     includeRawResponse?: boolean;
@@ -810,7 +810,7 @@ export const convertMessagesToCompletionsMessageParams: Converter<
             }
             return m;
           });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const completionParam: Record<string, any> = {
       role,
       content,

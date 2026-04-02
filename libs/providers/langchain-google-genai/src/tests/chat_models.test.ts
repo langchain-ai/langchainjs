@@ -20,7 +20,7 @@ import {
   getMessageAuthor,
 } from "../utils/common.js";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 function extractKeys(obj: Record<string, any>, keys: string[] = []) {
   for (const key in obj) {
     if (Object.prototype.hasOwnProperty.call(obj, key)) {
@@ -1158,7 +1158,7 @@ describe("withStructuredOutput - StandardSchema", () => {
     const result = await structured.invoke("What?");
     expect(result).toHaveProperty("raw");
     expect(result).toHaveProperty("parsed");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect((result as any).parsed).toEqual({ name: "cobalt" });
   });
 });

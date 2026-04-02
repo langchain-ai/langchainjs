@@ -162,7 +162,7 @@ describe("reactAgent", () => {
       const [mode, value] = chunk;
       expectTypeOf(mode).toEqualTypeOf<"updates" | "messages" | "values">();
       if (mode === "messages") {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         expectTypeOf(value).toEqualTypeOf<[BaseMessage, Record<string, any>]>();
       } else if (mode === "updates") {
         expectTypeOf(value).toExtend<

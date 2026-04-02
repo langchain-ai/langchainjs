@@ -318,7 +318,7 @@ describe("OpenAI Reasoning with contentBlocks", () => {
 
     const reasoningBlocks = blocks.filter((b) => b.type === "reasoning");
     expect(reasoningBlocks.length).toBeGreaterThan(0);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect((reasoningBlocks[0] as any).reasoning.length).toBeGreaterThan(0);
 
     const textBlocks = blocks.filter((b) => b.type === "text");
@@ -343,7 +343,7 @@ describe("OpenAI Reasoning with contentBlocks", () => {
 
     const reasoningBlocks = blocks.filter((b) => b.type === "reasoning");
     expect(reasoningBlocks.length).toBeGreaterThan(0);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect((reasoningBlocks[0] as any).reasoning.length).toBeGreaterThan(0);
   }, 60000);
 });
@@ -615,7 +615,7 @@ describe("Test image generation", () => {
     "type",
   ];
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   function assertImageGenerationToolOutput(tool_outputs: any) {
     expect(tool_outputs).toBeDefined();
     expect(Array.isArray(tool_outputs)).toBe(true);

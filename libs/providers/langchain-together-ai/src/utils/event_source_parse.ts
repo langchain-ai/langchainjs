@@ -1,5 +1,5 @@
-/* eslint-disable prefer-template */
-/* eslint-disable default-case */
+/* oxlint-disable prefer-template */
+/* oxlint-disable default-case */
 // Adapted from https://github.com/gfortaine/fetch-event-source/blob/main/src/parse.ts
 // due to a packaging issue in the original.
 // MIT License
@@ -122,11 +122,11 @@ export function getLines(
               fieldLength = position - lineStart;
             }
             break;
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // oxlint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore:7029 \r case below should fallthrough to \n:
           case ControlChars.CarriageReturn:
             discardTrailingNewline = true;
-          // eslint-disable-next-line no-fallthrough
+          // oxlint-disable-next-line no-fallthrough
           case ControlChars.NewLine:
             lineEnd = position;
             break;
