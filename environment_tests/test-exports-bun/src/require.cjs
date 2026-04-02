@@ -2,32 +2,12 @@ const assert = require("assert");
 const { OpenAI } = require("@langchain/openai");
 const { ChatPromptTemplate } = require("@langchain/core/prompts");
 const { OpenAIEmbeddings } = require("@langchain/openai");
-const { Document } = require("@langchain/core/documents");
 
 async function test() {
   // Test exports
   assert(typeof OpenAI === "function");
   assert(typeof ChatPromptTemplate === "function");
-
-    new OpenAIEmbeddings({ openAIApiKey: "sk-XXXX" })
-  );
-
-  await vs.addVectors(
-    [
-      [0, 1, 0],
-      [0, 0, 1],
-    ],
-    [
-      new Document({
-        pageContent: "a",
-      }),
-      new Document({
-        pageContent: "b",
-      }),
-    ]
-  );
-
-  assert((await vs.similaritySearchVectorWithScore([0, 0, 1], 1)).length === 1);
+  assert(typeof OpenAIEmbeddings === "function");
 }
 
 test()

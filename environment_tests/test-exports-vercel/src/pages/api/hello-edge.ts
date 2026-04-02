@@ -49,16 +49,15 @@ export default async function handler(req: NextRequest) {
     }),
   });
 
-  // Test a chain + prompt + model
-    llm,
-    prompt: ChatPromptTemplate.fromMessages([
-      HumanMessagePromptTemplate.fromTemplate("{input}"),
-    ]),
-  });
+  // Test a chain + prompt + model using LCEL
+  const prompt = ChatPromptTemplate.fromMessages([
+    HumanMessagePromptTemplate.fromTemplate("{input}"),
+  ]);
+  const chain = prompt.pipe(llm);
 
   // Run the chain but don't await it, otherwise the response will start
   // only after the chain is done
-  chain.run("hello").catch(console.error);
+  chain.invoke({ input: "hello" }).catch(console.error);
 
   return new NextResponse(stream.readable, {
     headers: {

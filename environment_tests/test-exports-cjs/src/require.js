@@ -3,8 +3,6 @@ const { OpenAI } = require("@langchain/openai");
 const { ChatOllama } = require("@langchain/ollama");
 const { ChatGoogle } = require("@langchain/google-gauth");
 const { ChatPromptTemplate } = require("@langchain/core/prompts");
-const { Document } = require("@langchain/core/documents");
-const { FakeEmbeddings } = require("@langchain/core/utils/testing");
 const { RunnableLambda } = require("@langchain/core/runnables");
 
 async function test() {
@@ -14,23 +12,6 @@ async function test() {
   assert(typeof ChatOllama === "function");
   assert(typeof ChatGoogle === "function");
 
-
-  await vs.addVectors(
-    [
-      [0, 1, 0],
-      [0, 0, 1],
-    ],
-    [
-      new Document({
-        pageContent: "a",
-      }),
-      new Document({
-        pageContent: "b",
-      }),
-    ]
-  );
-
-  assert((await vs.similaritySearchVectorWithScore([0, 0, 1], 1)).length === 1);
   assert(typeof RunnableLambda === "function");
   let attemptCount = 0;
   const flakyRunnable = new RunnableLambda({

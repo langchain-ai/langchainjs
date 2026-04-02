@@ -24,15 +24,14 @@ export default async function handler(
     openAIApiKey: process.env.OPENAI_API_KEY,
   });
 
-  // Test a document loader from a blob
-
-  // Test a chain + prompt + model
-    llm: new ChatOpenAI({ openAIApiKey: process.env.OPENAI_API_KEY }),
-    prompt: ChatPromptTemplate.fromMessages([
-      HumanMessagePromptTemplate.fromTemplate("{input}"),
-    ]),
-  });
-  const output = await chain.run("hello");
+  // Test a chain + prompt + model using LCEL
+  const prompt = ChatPromptTemplate.fromMessages([
+    HumanMessagePromptTemplate.fromTemplate("{input}"),
+  ]);
+  const chain = prompt.pipe(
+    new ChatOpenAI({ openAIApiKey: process.env.OPENAI_API_KEY })
+  );
+  const output = await chain.invoke({ input: "hello" });
 
   return res.status(200).json({
     name: `Hello, from ${req.url} I'm a Serverless Function! Assistant says: ${output}`,

@@ -29,13 +29,12 @@ export default function Home() {
     const n = await llm.getNumTokens("Hello");
     console.log("getNumTokens", n);
 
-    // Test a chain + prompt + model
-      llm,
-      prompt: ChatPromptTemplate.fromMessages([
-        HumanMessagePromptTemplate.fromTemplate("{input}"),
-      ]),
-    });
-    const res = await chain.run("hello");
+    // Test a chain + prompt + model using LCEL
+    const prompt = ChatPromptTemplate.fromMessages([
+      HumanMessagePromptTemplate.fromTemplate("{input}"),
+    ]);
+    const chain = prompt.pipe(llm);
+    const res = await chain.invoke({ input: "hello" });
 
     console.log("runChain", res);
   }, []);
