@@ -99,8 +99,8 @@ importers:
         specifier: ^0.2.5
         version: 0.2.10
       '@cloudflare/workers-types':
-        specifier: ^4.20250801.0
-        version: 4.20260207.0
+        specifier: ^4.20260402.1
+        version: 4.20260402.1
       '@elastic/elasticsearch':
         specifier: ^8.4.0
         version: 8.19.1
@@ -313,7 +313,7 @@ importers:
         version: 3.5.2
       mem0ai:
         specifier: ^2.4.5
-        version: 2.4.5(@anthropic-ai/sdk@0.82.0(zod@3.25.76))(@azure/identity@4.13.0)(@azure/search-documents@12.2.0)(@cloudflare/workers-types@4.20260207.0)(@google/genai@1.40.0(@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.1)(zod@3.25.76))(bufferutil@4.1.0))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.15.1(bufferutil@4.1.0))(@qdrant/js-client-rest@1.17.0(typescript@5.8.3))(@supabase/supabase-js@2.95.3(bufferutil@4.1.0))(@types/jest@30.0.0)(@types/pg@8.16.0)(better-sqlite3@12.6.2)(cloudflare@4.5.0(encoding@0.1.13))(encoding@0.1.13)(groq-sdk@1.1.2)(neo4j-driver@6.0.1)(ollama@0.6.3)(pg@8.18.0)(redis@4.7.1)(ws@8.20.0(bufferutil@4.1.0))
+        version: 2.4.5(@anthropic-ai/sdk@0.82.0(zod@3.25.76))(@azure/identity@4.13.0)(@azure/search-documents@12.2.0)(@cloudflare/workers-types@4.20260402.1)(@google/genai@1.40.0(@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.1)(zod@3.25.76))(bufferutil@4.1.0))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.15.1(bufferutil@4.1.0))(@qdrant/js-client-rest@1.17.0(typescript@5.8.3))(@supabase/supabase-js@2.95.3(bufferutil@4.1.0))(@types/jest@30.0.0)(@types/pg@8.16.0)(better-sqlite3@12.6.2)(cloudflare@4.5.0(encoding@0.1.13))(encoding@0.1.13)(groq-sdk@1.1.2)(neo4j-driver@6.0.1)(ollama@0.6.3)(pg@8.18.0)(redis@4.7.1)(ws@8.20.0(bufferutil@4.1.0))
       mongodb:
         specifier: ^6.20.0
         version: 6.21.0(@aws-sdk/credential-providers@3.985.0)(socks@2.8.7)
@@ -697,8 +697,8 @@ importers:
         specifier: ^0.2.5
         version: 0.2.10
       '@cloudflare/workers-types':
-        specifier: ^4.20250801.0
-        version: 4.20260207.0
+        specifier: ^4.20260402.1
+        version: 4.20260402.1
       '@elastic/elasticsearch':
         specifier: ^8.4.0
         version: 8.19.1
@@ -902,7 +902,7 @@ importers:
         version: 3.5.2
       mem0ai:
         specifier: ^2.4.5
-        version: 2.4.5(@anthropic-ai/sdk@0.82.0(zod@4.3.6))(@azure/identity@4.13.0)(@azure/search-documents@12.2.0)(@cloudflare/workers-types@4.20260207.0)(@google/genai@1.40.0(@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.1)(zod@4.3.6))(bufferutil@4.1.0))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.15.1(bufferutil@4.1.0))(@qdrant/js-client-rest@1.17.0(typescript@5.8.3))(@supabase/supabase-js@2.95.3(bufferutil@4.1.0))(@types/jest@30.0.0)(@types/pg@8.16.0)(better-sqlite3@12.6.2)(cloudflare@4.5.0(encoding@0.1.13))(encoding@0.1.13)(groq-sdk@1.1.2)(neo4j-driver@6.0.1)(ollama@0.6.3)(pg@8.18.0)(redis@4.7.1)(ws@8.20.0(bufferutil@4.1.0))
+        version: 2.4.5(@anthropic-ai/sdk@0.82.0(zod@4.3.6))(@azure/identity@4.13.0)(@azure/search-documents@12.2.0)(@cloudflare/workers-types@4.20260402.1)(@google/genai@1.40.0(@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.1)(zod@4.3.6))(bufferutil@4.1.0))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.15.1(bufferutil@4.1.0))(@qdrant/js-client-rest@1.17.0(typescript@5.8.3))(@supabase/supabase-js@2.95.3(bufferutil@4.1.0))(@types/jest@30.0.0)(@types/pg@8.16.0)(better-sqlite3@12.6.2)(cloudflare@4.5.0(encoding@0.1.13))(encoding@0.1.13)(groq-sdk@1.1.2)(neo4j-driver@6.0.1)(ollama@0.6.3)(pg@8.18.0)(redis@4.7.1)(ws@8.20.0(bufferutil@4.1.0))
       mongodb:
         specifier: ^6.17.0
         version: 6.21.0(@aws-sdk/credential-providers@3.985.0)(socks@2.8.7)
@@ -1242,8 +1242,8 @@ importers:
         version: 10.0.0
     devDependencies:
       '@cloudflare/workers-types':
-        specifier: ^4.20240909.0
-        version: 4.20260207.0
+        specifier: ^4.20260402.1
+        version: 4.20260402.1
       '@langchain/core':
         specifier: workspace:^
         version: link:../../langchain-core
@@ -2964,8 +2964,8 @@ packages:
     resolution: {integrity: sha512-ZwBgzjEAFN/ogS0ym5KHVbR7Hx/oYCX01qGp2baEyfN2HM73kf/7Vp3GvMHWRy+zUXISONEtFv7UTViOXnmFrg==}
     engines: {node: '>=16'}
 
-  '@cloudflare/workers-types@4.20260207.0':
-    resolution: {integrity: sha512-PSxgnAOK0EtTytlY7/+gJcsQJYg0Qo7KlOMSC/wiBE+pBqKjuKdd1ZgM+NvpPNqZAjWV5jqAMTTNYEmgk27gYw==}
+  '@cloudflare/workers-types@4.20260402.1':
+    resolution: {integrity: sha512-+oJ6FmNNYqct9yq2o1K98dIw8Pf1SF8qcs2mjyra40tK3PblB6Gqp890Ndmgj8stXwtJ9dAgSbO8i9tVHKwQyQ==}
 
   '@colors/colors@1.6.0':
     resolution: {integrity: sha512-Ir+AOibqzrIsL6ajt3Rz3LskB7OiMVHqltZmspbW/TJuTVuyOMirVqAkjfY6JISiLHgyNqicAC8AyHHGzNd/dA==}
@@ -12679,7 +12679,7 @@ snapshots:
     dependencies:
       '@clickhouse/client-common': 0.2.10
 
-  '@cloudflare/workers-types@4.20260207.0': {}
+  '@cloudflare/workers-types@4.20260402.1': {}
 
   '@colors/colors@1.6.0': {}
 
@@ -18822,12 +18822,12 @@ snapshots:
 
   media-typer@1.1.0: {}
 
-  mem0ai@2.4.5(@anthropic-ai/sdk@0.82.0(zod@3.25.76))(@azure/identity@4.13.0)(@azure/search-documents@12.2.0)(@cloudflare/workers-types@4.20260207.0)(@google/genai@1.40.0(@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.1)(zod@3.25.76))(bufferutil@4.1.0))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.15.1(bufferutil@4.1.0))(@qdrant/js-client-rest@1.17.0(typescript@5.8.3))(@supabase/supabase-js@2.95.3(bufferutil@4.1.0))(@types/jest@30.0.0)(@types/pg@8.16.0)(better-sqlite3@12.6.2)(cloudflare@4.5.0(encoding@0.1.13))(encoding@0.1.13)(groq-sdk@1.1.2)(neo4j-driver@6.0.1)(ollama@0.6.3)(pg@8.18.0)(redis@4.7.1)(ws@8.20.0(bufferutil@4.1.0)):
+  mem0ai@2.4.5(@anthropic-ai/sdk@0.82.0(zod@3.25.76))(@azure/identity@4.13.0)(@azure/search-documents@12.2.0)(@cloudflare/workers-types@4.20260402.1)(@google/genai@1.40.0(@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.1)(zod@3.25.76))(bufferutil@4.1.0))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.15.1(bufferutil@4.1.0))(@qdrant/js-client-rest@1.17.0(typescript@5.8.3))(@supabase/supabase-js@2.95.3(bufferutil@4.1.0))(@types/jest@30.0.0)(@types/pg@8.16.0)(better-sqlite3@12.6.2)(cloudflare@4.5.0(encoding@0.1.13))(encoding@0.1.13)(groq-sdk@1.1.2)(neo4j-driver@6.0.1)(ollama@0.6.3)(pg@8.18.0)(redis@4.7.1)(ws@8.20.0(bufferutil@4.1.0)):
     dependencies:
       '@anthropic-ai/sdk': 0.82.0(zod@3.25.76)
       '@azure/identity': 4.13.0
       '@azure/search-documents': 12.2.0
-      '@cloudflare/workers-types': 4.20260207.0
+      '@cloudflare/workers-types': 4.20260402.1
       '@google/genai': 1.40.0(@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.1)(zod@3.25.76))(bufferutil@4.1.0)
       '@langchain/core': link:libs/langchain-core
       '@mistralai/mistralai': 1.15.1(bufferutil@4.1.0)
@@ -18851,12 +18851,12 @@ snapshots:
       - encoding
       - ws
 
-  mem0ai@2.4.5(@anthropic-ai/sdk@0.82.0(zod@4.3.6))(@azure/identity@4.13.0)(@azure/search-documents@12.2.0)(@cloudflare/workers-types@4.20260207.0)(@google/genai@1.40.0(@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.1)(zod@4.3.6))(bufferutil@4.1.0))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.15.1(bufferutil@4.1.0))(@qdrant/js-client-rest@1.17.0(typescript@5.8.3))(@supabase/supabase-js@2.95.3(bufferutil@4.1.0))(@types/jest@30.0.0)(@types/pg@8.16.0)(better-sqlite3@12.6.2)(cloudflare@4.5.0(encoding@0.1.13))(encoding@0.1.13)(groq-sdk@1.1.2)(neo4j-driver@6.0.1)(ollama@0.6.3)(pg@8.18.0)(redis@4.7.1)(ws@8.20.0(bufferutil@4.1.0)):
+  mem0ai@2.4.5(@anthropic-ai/sdk@0.82.0(zod@4.3.6))(@azure/identity@4.13.0)(@azure/search-documents@12.2.0)(@cloudflare/workers-types@4.20260402.1)(@google/genai@1.40.0(@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.1)(zod@4.3.6))(bufferutil@4.1.0))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.15.1(bufferutil@4.1.0))(@qdrant/js-client-rest@1.17.0(typescript@5.8.3))(@supabase/supabase-js@2.95.3(bufferutil@4.1.0))(@types/jest@30.0.0)(@types/pg@8.16.0)(better-sqlite3@12.6.2)(cloudflare@4.5.0(encoding@0.1.13))(encoding@0.1.13)(groq-sdk@1.1.2)(neo4j-driver@6.0.1)(ollama@0.6.3)(pg@8.18.0)(redis@4.7.1)(ws@8.20.0(bufferutil@4.1.0)):
     dependencies:
       '@anthropic-ai/sdk': 0.82.0(zod@4.3.6)
       '@azure/identity': 4.13.0
       '@azure/search-documents': 12.2.0
-      '@cloudflare/workers-types': 4.20260207.0
+      '@cloudflare/workers-types': 4.20260402.1
       '@google/genai': 1.40.0(@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.1)(zod@4.3.6))(bufferutil@4.1.0)
       '@langchain/core': link:libs/langchain-core
       '@mistralai/mistralai': 1.15.1(bufferutil@4.1.0)

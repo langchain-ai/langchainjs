@@ -27,7 +27,7 @@
     "uuid": "^10.0.0"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20240909.0",
+    "@cloudflare/workers-types": "^4.20260402.1",
     "@langchain/core": "workspace:^",
     "@langchain/standard-tests": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
