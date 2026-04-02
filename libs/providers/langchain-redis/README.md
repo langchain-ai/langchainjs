@@ -122,7 +122,7 @@ const vectorStore = await RedisVectorStore.fromDocuments(
       category: { type: SchemaFieldTypes.TAG },
       price: { type: SchemaFieldTypes.NUMERIC, SORTABLE: true },
     },
-  },
+  }
 );
 ```
 
@@ -139,7 +139,7 @@ const vectorStore = await FluentRedisVectorStore.fromDocuments(
       { name: "category", type: "tag" },
       { name: "price", type: "numeric", options: { sortable: true } },
     ],
-  },
+  }
 );
 ```
 
@@ -154,14 +154,14 @@ The filtering API has changed significantly. Instead of passing metadata objects
 const results = await vectorStore.similaritySearchVectorWithScoreAndMetadata(
   queryVector,
   5,
-  { category: "electronics", price: { min: 100, max: 1000 } },
+  { category: "electronics", price: { min: 100, max: 1000 } }
 );
 
 // Or with string-based filters
 const results = await vectorStore.similaritySearchVectorWithScore(
   queryVector,
   5,
-  ["electronics", "gadgets"],
+  ["electronics", "gadgets"]
 );
 ```
 
@@ -172,14 +172,14 @@ const results = await vectorStore.similaritySearchVectorWithScore(
 const results = await vectorStore.similaritySearchVectorWithScore(
   queryVector,
   5,
-  Tag("category").eq("electronics").and(Num("price").between(100, 1000)),
+  Tag("category").eq("electronics").and(Num("price").between(100, 1000))
 );
 
 // Basic filter expression with the fluent API
 const results = await vectorStore.similaritySearchVectorWithScore(
   queryVector,
   5,
-  Tag("metadata").eq("electronics", "gadgets"),
+  Tag("metadata").eq("electronics", "gadgets")
 );
 ```
 
@@ -202,7 +202,7 @@ async function searchProducts(query: string, category?: string) {
   const results = await vectorStore.similaritySearchVectorWithScoreAndMetadata(
     await embeddings.embedQuery(query),
     5,
-    category ? { category } : undefined,
+    category ? { category } : undefined
   );
   return results;
 }
@@ -216,7 +216,7 @@ async function searchProducts(query: string, category?: string) {
   const results = await vectorStore.similaritySearchVectorWithScore(
     await embeddings.embedQuery(query),
     5,
-    filter,
+    filter
   );
   return results;
 }

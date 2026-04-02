@@ -77,8 +77,8 @@ describe("Files API with Code Execution", () => {
           (block) =>
             typeof block === "object" &&
             "type" in block &&
-            block.type === "server_tool_use",
-        ),
+            block.type === "server_tool_use"
+        )
       ).toBe(true);
 
       // Verify that we got a code execution result
@@ -87,8 +87,8 @@ describe("Files API with Code Execution", () => {
           (block) =>
             typeof block === "object" &&
             "type" in block &&
-            block.type === "bash_code_execution_tool_result",
-        ),
+            block.type === "bash_code_execution_tool_result"
+        )
       ).toBe(true);
 
       // The response should mention the average age (30)
@@ -105,7 +105,7 @@ describe("Files API with Code Execution", () => {
   it("should pass container and file outputs across multiple turns", async () => {
     // First invocation: Calculate mean and avg, store to file
     const firstMessage = new HumanMessage(
-      "Calculate the mean and average of these numbers: 10, 20, 30, 40, 50. Store the results in a file called 'results.txt'.",
+      "Calculate the mean and average of these numbers: 10, 20, 30, 40, 50. Store the results in a file called 'results.txt'."
     );
 
     const firstResult = await model.invoke([firstMessage]);
@@ -114,27 +114,28 @@ describe("Files API with Code Execution", () => {
     expect(firstResult).toBeInstanceOf(AIMessage);
 
     // Extract container ID from first response
-    const container = (firstResult as AIMessage).additional_kwargs
-      ?.container as { id: string; expires_at: string } | undefined;
+    const container = (firstResult as AIMessage).additional_kwargs?.container as
+      | { id: string; expires_at: string }
+      | undefined;
     expect(container?.id).toBeTruthy();
 
     // Verify file output was created using extractGeneratedFilesAnthropic
     const fileIds = extractGeneratedFiles(
-      firstResult as unknown as Anthropic.Beta.BetaMessage,
+      firstResult as unknown as Anthropic.Beta.BetaMessage
     );
     expect(fileIds.length).toBeGreaterThan(0);
 
     // Second invocation: Read the file with same container
     // This should succeed because we apply the workaround in message_inputs.ts
     const secondMessage = new HumanMessage(
-      "What are the contents of the results.txt file?",
+      "What are the contents of the results.txt file?"
     );
 
     const secondResult = await model.invoke(
       [firstMessage, firstResult, secondMessage],
       {
         container: container?.id, // Pass container to reuse files
-      },
+      }
     );
 
     // Verify second result succeeded

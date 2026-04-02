@@ -54,14 +54,14 @@ async function loadOxfmtConfig(): Promise<FormatConfig | undefined> {
 
 export async function formatWithOxfmt(
   source: string,
-  fileName = "file.ts",
+  fileName = "file.ts"
 ): Promise<string> {
   const config = await loadOxfmtConfig();
   const result = await format(fileName, source, config);
   if (result.errors.length > 0) {
     const firstError = result.errors[0];
     throw new Error(
-      `Oxfmt failed to format ${fileName}: ${firstError.message}`,
+      `Oxfmt failed to format ${fileName}: ${firstError.message}`
     );
   }
   return result.code;

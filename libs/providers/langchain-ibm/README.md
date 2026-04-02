@@ -68,7 +68,7 @@ const structuredModel = model.withStructuredOutput(
   z.object({
     answer: z.string(),
     confidence: z.number(),
-  }),
+  })
 );
 
 const result = await structuredModel.invoke("What is 2+2?");
@@ -167,7 +167,7 @@ const documents = [
 
 const results = await reranker.compressDocuments(
   documents,
-  "European capitals",
+  "European capitals"
 );
 ```
 

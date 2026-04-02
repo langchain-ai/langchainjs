@@ -85,7 +85,7 @@ console.log(results);
 ```typescript
 const resultsWithScore = await vectorStore.similaritySearchWithScore(
   "LangChain",
-  2,
+  2
 );
 for (const [doc, score] of resultsWithScore) {
   console.log(`Score: ${score}, Content: ${doc.pageContent}`);

@@ -98,7 +98,7 @@ await engine.initChatHistoryTable("chat_message_table");
 const historyInstance = await PostgresChatMessageHistory.initialize(
   engine,
   "test",
-  "chat_message_table",
+  "chat_message_table"
 );
 ```
 
@@ -134,7 +134,7 @@ const documentLoaderArgs: PostgresLoaderOptions = {
 
 const documentLoaderInstance = await PostgresLoader.initialize(
   PEInstance,
-  documentLoaderArgs,
+  documentLoaderArgs
 );
 
 const documents = await documentLoaderInstance.load();

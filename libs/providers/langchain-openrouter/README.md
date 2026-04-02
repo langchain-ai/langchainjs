@@ -107,7 +107,7 @@ const structured = model.withStructuredOutput(
   z.object({
     answer: z.string(),
     confidence: z.number(),
-  }),
+  })
 );
 
 const response = await structured.invoke("What is the capital of France?");

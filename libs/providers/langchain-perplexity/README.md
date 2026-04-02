@@ -70,7 +70,7 @@ const structured = model.withStructuredOutput(
     capital: z.string(),
     country: z.string(),
     population: z.number().optional(),
-  }),
+  })
 );
 
 const result = await structured.invoke("What is the capital of India?");

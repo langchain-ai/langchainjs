@@ -119,7 +119,7 @@ const results = await vectorStore.similaritySearch("What is Neo4j?", 4);
 // Similarity search with score
 const resultsWithScore = await vectorStore.similaritySearchWithScore(
   "What is Neo4j?",
-  4,
+  4
 );
 
 // Clean up

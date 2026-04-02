@@ -17,7 +17,7 @@ vi.mock("oxfmt", () => ({
  * Helper function to create a mock model for testing.
  */
 function createMockModel(
-  overrides: Partial<ProviderMap[string]["models"][string]> = {},
+  overrides: Partial<ProviderMap[string]["models"][string]> = {}
 ): ProviderMap[string]["models"][string] {
   return {
     id: "test-model",
@@ -46,7 +46,7 @@ function createMockModel(
  */
 function createMockProvider(
   providerId: string,
-  models: Record<string, ProviderMap[string]["models"][string]>,
+  models: Record<string, ProviderMap[string]["models"][string]>
 ): ProviderMap[string] {
   return {
     id: providerId,
@@ -150,7 +150,7 @@ describe("generator", () => {
         "openai",
         { toolCalling: true }, // Provider override
         {},
-        outputPath,
+        outputPath
       );
 
       const content = fs.readFileSync(outputPath, "utf-8");
@@ -180,7 +180,7 @@ describe("generator", () => {
         "openai",
         {},
         { "gpt-4": { maxOutputTokens: 8192 } }, // Model-specific override
-        outputPath,
+        outputPath
       );
 
       const content = fs.readFileSync(outputPath, "utf-8");
@@ -210,7 +210,7 @@ describe("generator", () => {
         "openai",
         { toolCalling: true }, // Provider override
         { "gpt-4": { maxOutputTokens: 8192 } }, // Model override
-        outputPath,
+        outputPath
       );
 
       const content = fs.readFileSync(outputPath, "utf-8");
@@ -286,7 +286,7 @@ describe("generator", () => {
       const outputPath = path.join(tempDir, "models.ts");
 
       await expect(
-        generateModelProfiles("nonexistent", {}, {}, outputPath),
+        generateModelProfiles("nonexistent", {}, {}, outputPath)
       ).rejects.toThrow('Provider "nonexistent" not found');
     });
 
@@ -299,7 +299,7 @@ describe("generator", () => {
       const outputPath = path.join(tempDir, "models.ts");
 
       await expect(
-        generateModelProfiles("openai", {}, {}, outputPath),
+        generateModelProfiles("openai", {}, {}, outputPath)
       ).rejects.toThrow("Failed to fetch models.dev API");
     });
 
@@ -327,7 +327,7 @@ describe("generator", () => {
       expect(oxfmt.format).toHaveBeenCalledWith(
         outputPath,
         expect.any(String),
-        expect.anything(),
+        expect.anything()
       );
     });
   });

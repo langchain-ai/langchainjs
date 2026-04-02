@@ -28,7 +28,7 @@ const searchTool = tool(
       query: z.string().describe("The search query"),
       maxResults: z.number().optional(),
     }),
-  },
+  }
 );
 
 const writeFileTool = tool(
@@ -46,7 +46,7 @@ const writeFileTool = tool(
       content: z.string(),
       overwrite: z.boolean().default(false),
     }),
-  },
+  }
 );
 
 const classifyTool = tool(
@@ -62,7 +62,7 @@ const classifyTool = tool(
       text: z.string(),
       categories: z.array(z.enum(["bug", "feature", "question"])),
     }),
-  },
+  }
 );
 
 const documentTool = tool(
@@ -94,13 +94,13 @@ const documentTool = tool(
               z.object({
                 title: z.string(),
                 content: z.string(),
-              }),
+              })
             )
             .optional(),
-        }),
+        })
       ),
     }),
-  },
+  }
 );
 
 // StructuredOutputParser
@@ -108,7 +108,7 @@ const parser = StructuredOutputParser.fromZodSchema(
   z.object({
     name: z.string(),
     age: z.number(),
-  }),
+  })
 );
 
 // Middleware
@@ -147,7 +147,7 @@ const AnalysisResult = z.object({
       category: z.enum(["positive", "negative", "neutral"]),
       text: z.string(),
       score: z.number(),
-    }),
+    })
   ),
 });
 
