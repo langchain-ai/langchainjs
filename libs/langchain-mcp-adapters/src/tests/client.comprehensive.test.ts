@@ -511,7 +511,7 @@ describe("MultiServerMCPClient", () => {
       // Force an error when creating transport
       (StdioClientTransport as Mock).mockImplementationOnce(
         function mockStdioTransport() {
-        throw new Error("Transport creation failed");
+          throw new Error("Transport creation failed");
         }
       );
 
@@ -539,7 +539,7 @@ describe("MultiServerMCPClient", () => {
       // Force an error when creating transport
       (StreamableHTTPClientTransport as Mock).mockImplementationOnce(
         function mockStreamableHTTPTransport() {
-        throw new Error("Streamable HTTP transport creation failed");
+          throw new Error("Streamable HTTP transport creation failed");
         }
       );
 

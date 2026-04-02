@@ -162,10 +162,10 @@ describe("MultiServerMCPClient", () => {
     test("should throw on connection failure", async () => {
       (Client as Mock).mockImplementationOnce(function mockClient() {
         return {
-        connect: vi
-          .fn()
-          .mockReturnValue(Promise.reject(new Error("Connection failed"))),
-        listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
+          connect: vi
+            .fn()
+            .mockReturnValue(Promise.reject(new Error("Connection failed"))),
+          listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
         };
       });
 
@@ -571,10 +571,10 @@ describe("MultiServerMCPClient", () => {
     test("should throw on streamable HTTP connection failure", async () => {
       (Client as Mock).mockImplementationOnce(function mockClient() {
         return {
-        connect: vi
-          .fn()
-          .mockReturnValue(Promise.reject(new Error("Connection failed"))),
-        listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
+          connect: vi
+            .fn()
+            .mockReturnValue(Promise.reject(new Error("Connection failed"))),
+          listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
         };
       });
 
@@ -663,10 +663,10 @@ describe("MultiServerMCPClient", () => {
     test("should throw on connection failure when onConnectionError is 'throw'", async () => {
       (Client as Mock).mockImplementationOnce(function mockClient() {
         return {
-        connect: vi
-          .fn()
-          .mockReturnValue(Promise.reject(new Error("Connection failed"))),
-        listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
+          connect: vi
+            .fn()
+            .mockReturnValue(Promise.reject(new Error("Connection failed"))),
+          listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
         };
       });
 
@@ -689,10 +689,10 @@ describe("MultiServerMCPClient", () => {
     test("should not throw when all servers fail and onConnectionError is 'ignore'", async () => {
       (Client as Mock).mockImplementation(function mockClient() {
         return {
-        connect: vi
-          .fn()
-          .mockReturnValue(Promise.reject(new Error("Connection failed"))),
-        listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
+          connect: vi
+            .fn()
+            .mockReturnValue(Promise.reject(new Error("Connection failed"))),
+          listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
         };
       });
 
@@ -789,10 +789,10 @@ describe("MultiServerMCPClient", () => {
 
       (Client as Mock).mockImplementation(function mockClient() {
         return {
-        connect: vi
-          .fn()
-          .mockReturnValue(Promise.reject(new Error("Connection failed"))),
-        listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
+          connect: vi
+            .fn()
+            .mockReturnValue(Promise.reject(new Error("Connection failed"))),
+          listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
         };
       });
 
