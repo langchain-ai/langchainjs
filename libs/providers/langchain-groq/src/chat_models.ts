@@ -1200,7 +1200,6 @@ export class ChatGroq extends BaseChatModel<
       }
     );
     let role: GroqRoleEnum | undefined;
-    let lastMessageId: string | undefined;
 
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     let responseMetadata: Record<string, any> | undefined;
@@ -1224,7 +1223,7 @@ export class ChatGroq extends BaseChatModel<
         choice.delta,
         role,
         data,
-        lastMessageId
+        undefined
       );
       const newTokenIndices = {
         prompt: options.promptIndex ?? 0,
