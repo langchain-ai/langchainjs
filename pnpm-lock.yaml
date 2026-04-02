@@ -282,8 +282,8 @@ importers:
         specifier: ^1.0.12
         version: 1.10.2(encoding@0.1.13)(ws@8.20.0)
       firebase-admin:
-        specifier: ^13.6.1
-        version: 13.6.1(encoding@0.1.13)
+        specifier: ^13.7.0
+        version: 13.7.0(encoding@0.1.13)
       graphql:
         specifier: ^16.6.0
         version: 16.12.0
@@ -576,7 +576,7 @@ importers:
         version: 1.0.1(@langchain/core@libs+langchain-core)
       langsmith:
         specifier: '>=0.5.0 <1.0.0'
-        version: 0.5.16(@opentelemetry/api@1.9.0)(openai@6.22.0(ws@8.20.0)(zod@4.3.6))(ws@8.20.0)
+        version: 0.5.16(@opentelemetry/api@1.9.1)(openai@6.22.0(ws@8.20.0)(zod@4.3.6))(ws@8.20.0)
       uuid:
         specifier: ^11.1.0
         version: 11.1.0
@@ -877,8 +877,8 @@ importers:
         specifier: ^1.0.12
         version: 1.10.2(encoding@0.1.13)(ws@8.20.0)
       firebase-admin:
-        specifier: ^13.6.1
-        version: 13.6.1(encoding@0.1.13)
+        specifier: ^13.7.0
+        version: 13.7.0(encoding@0.1.13)
       graphql:
         specifier: ^16.6.0
         version: 16.12.0
@@ -960,7 +960,7 @@ importers:
     optionalDependencies:
       langsmith:
         specifier: '>=0.4.0 <1.0.0'
-        version: 0.5.16(@opentelemetry/api@1.9.0)(openai@6.22.0(ws@8.20.0)(zod@4.3.6))(ws@8.20.0)
+        version: 0.5.16(@opentelemetry/api@1.9.1)(openai@6.22.0(ws@8.20.0)(zod@4.3.6))(ws@8.20.0)
 
   libs/langchain-core:
     dependencies:
@@ -984,7 +984,7 @@ importers:
         version: 1.0.21
       langsmith:
         specifier: '>=0.5.0 <1.0.0'
-        version: 0.5.16(@opentelemetry/api@1.9.0)(openai@6.32.0(ws@8.20.0)(zod@4.3.6))(ws@8.20.0)
+        version: 0.5.16(@opentelemetry/api@1.9.1)(openai@6.32.0(ws@8.20.0)(zod@4.3.6))(ws@8.20.0)
       mustache:
         specifier: ^4.2.0
         version: 4.2.0
@@ -3312,27 +3312,27 @@ packages:
   '@firebase/auth-interop-types@0.2.4':
     resolution: {integrity: sha512-JPgcXKCuO+CWqGDnigBtvo09HeBs5u/Ktc2GaFj2m01hLarbxthLNm7Fk8iOP1aqAtXV+fnnGj7U28xmk7IwVA==}
 
-  '@firebase/component@0.7.0':
-    resolution: {integrity: sha512-wR9En2A+WESUHexjmRHkqtaVH94WLNKt6rmeqZhSLBybg4Wyf0Umk04SZsS6sBq4102ZsDBFwoqMqJYj2IoDSg==}
+  '@firebase/component@0.7.2':
+    resolution: {integrity: sha512-iyVDGc6Vjx7Rm0cAdccLH/NG6fADsgJak/XW9IA2lPf8AjIlsemOpFGKczYyPHxm4rnKdR8z6sK4+KEC7NwmEg==}
     engines: {node: '>=20.0.0'}
 
-  '@firebase/database-compat@2.1.0':
-    resolution: {integrity: sha512-8nYc43RqxScsePVd1qe1xxvWNf0OBnbwHxmXJ7MHSuuTVYFO3eLyLW3PiCKJ9fHnmIz4p4LbieXwz+qtr9PZDg==}
+  '@firebase/database-compat@2.1.2':
+    resolution: {integrity: sha512-j4A6IhVZbgxAzT6gJJC2PfOxYCK9SrDrUO7nTM4EscTYtKkAkzsbKoCnDdjFapQfnsncvPWjqVTr/0PffUwg3g==}
     engines: {node: '>=20.0.0'}
 
-  '@firebase/database-types@1.0.16':
-    resolution: {integrity: sha512-xkQLQfU5De7+SPhEGAXFBnDryUWhhlFXelEg2YeZOQMCdoe7dL64DDAd77SQsR+6uoXIZY5MB4y/inCs4GTfcw==}
+  '@firebase/database-types@1.0.18':
+    resolution: {integrity: sha512-yOY8IC2go9lfbVDMiy2ATun4EB2AFwocPaQADwMN/RHRUAZSM4rlAV7PGbWPSG/YhkJ2A9xQAiAENgSua9G5Fg==}
 
-  '@firebase/database@1.1.0':
-    resolution: {integrity: sha512-gM6MJFae3pTyNLoc9VcJNuaUDej0ctdjn3cVtILo3D5lpp0dmUHHLFN/pUKe7ImyeB1KAvRlEYxvIHNF04Filg==}
+  '@firebase/database@1.1.2':
+    resolution: {integrity: sha512-lP96CMjMPy/+d1d9qaaHjHHdzdwvEOuyyLq9ehX89e2XMKwS1jHNzYBO+42bdSumuj5ukPbmnFtViZu8YOMT+w==}
     engines: {node: '>=20.0.0'}
 
   '@firebase/logger@0.5.0':
     resolution: {integrity: sha512-cGskaAvkrnh42b3BA3doDWeBmuHFO/Mx5A83rbRDYakPjO9bJtRL3dX7javzc2Rr/JHZf4HlterTW2lUkfeN4g==}
     engines: {node: '>=20.0.0'}
 
-  '@firebase/util@1.13.0':
-    resolution: {integrity: sha512-0AZUyYUfpMNcztR5l09izHwXkZpghLgCUaAGjtMwXnCg3bj4ml5VgiwqOMOxJ+Nw4qN/zJAaOQBcJ7KGkWStqQ==}
+  '@firebase/util@1.15.0':
+    resolution: {integrity: sha512-AmWf3cHAOMbrCPG4xdPKQaj5iHnyYfyLKZxwz+Xf55bqKbpAmcYifB4jQinT2W9XhDRHISOoPyBOariJpCG6FA==}
     engines: {node: '>=20.0.0'}
 
   '@gar/promisify@1.1.3':
@@ -4031,6 +4031,10 @@ packages:
 
   '@opentelemetry/api@1.9.0':
     resolution: {integrity: sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg==}
+    engines: {node: '>=8.0.0'}
+
+  '@opentelemetry/api@1.9.1':
+    resolution: {integrity: sha512-gLyJlPHPZYdAk1JENA9LeHejZe1Ti77/pTeFm/nMXmQH/HFZlcS/O2XJB+L8fkbrNSqhdtlvjBVjxwUYanNH5Q==}
     engines: {node: '>=8.0.0'}
 
   '@opentelemetry/core@2.5.0':
@@ -7111,8 +7115,8 @@ packages:
   fast-xml-builder@1.1.4:
     resolution: {integrity: sha512-f2jhpN4Eccy0/Uz9csxh3Nu6q4ErKxf0XIsasomfOihuSUa3/xw6w8dnOtCDgEItQFJG8KyXPzQXzcODDrrbOg==}
 
-  fast-xml-parser@5.5.8:
-    resolution: {integrity: sha512-Z7Fh2nVQSb2d+poDViM063ix2ZGt9jmY1nWhPfHBOK2Hgnb/OW3P4Et3P/81SEej0J7QbWtJqxO05h8QYfK7LQ==}
+  fast-xml-parser@5.5.9:
+    resolution: {integrity: sha512-jldvxr1MC6rtiZKgrFnDSvT8xuH+eJqxqOBThUVjYrxssYTo1avZLGql5l0a0BAERR01CadYzZ83kVEkbyDg+g==}
     hasBin: true
 
   fast-xml-parser@5.5.9:
@@ -7187,8 +7191,8 @@ packages:
     resolution: {integrity: sha512-PpOwAdQ/YlXQ2vj8a3h8IipDuYRi3wceVQQGYWxNINccq40Anw7BlsEXCMbt1Zt+OLA6Fq9suIpIWD0OsnISlw==}
     engines: {node: '>=8'}
 
-  firebase-admin@13.6.1:
-    resolution: {integrity: sha512-Zgc6yPtmPxAZo+FoK6LMG6zpSEsoSK8ifIR+IqF4oWuC3uWZU40OjxgfLTSFcsRlj/k/wD66zNv2UiTRreCNSw==}
+  firebase-admin@13.7.0:
+    resolution: {integrity: sha512-o3qS8zCJbApe7aKzkO2Pa380t9cHISqeSd3blqYTtOuUUUua3qZTLwNWgGUOss3td6wbzrZhiHIj3c8+fC046Q==}
     engines: {node: '>=18'}
 
   flatbuffers@25.9.23:
@@ -8651,8 +8655,8 @@ packages:
     resolution: {integrity: sha512-dRB78srN/l6gqWulah9SrxeYnxeddIG30+GOqK/9OlLVyLg3HPnr6SqOWTWOXKRwC2eGYCkZ59NNuSgvSrpgOA==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
-  node-forge@1.3.3:
-    resolution: {integrity: sha512-rLvcdSyRCyouf6jcOIPe/BgwG/d7hKjzMKOas33/pHEr6gbq18IK9zV7DiPvzsz0oBJPme6qr6H6kGZuI9/DZg==}
+  node-forge@1.4.0:
+    resolution: {integrity: sha512-LarFH0+6VfriEhqMMcLX2F7SwSXeWwnEAJEsYm5QKWchiVYVvJyV9v7UDvUv+w5HO23ZpQTXDv/GxdDdMyOuoQ==}
     engines: {node: '>= 6.13.0'}
 
   node-gyp@8.4.1:
@@ -9803,8 +9807,8 @@ packages:
   strip-literal@3.1.0:
     resolution: {integrity: sha512-8r3mkIM/2+PpjHoOtiAW8Rg3jJLHaV7xPwG+YRGrv6FP0wwk/toTpATxWYOW0BKdWwl82VT2tFYi5DlROa0Mxg==}
 
-  strnum@2.2.1:
-    resolution: {integrity: sha512-BwRvNd5/QoAtyW1na1y1LsJGQNvRlkde6Q/ipqqEaivoMdV+B1OMOTVdwR+N/cwVUcIt9PYyHmV8HyexCZSupg==}
+  strnum@2.2.2:
+    resolution: {integrity: sha512-DnR90I+jtXNSTXWdwrEy9FakW7UX+qUZg28gj5fk2vxxl7uS/3bpI4fjFYVmdK9etptYBPNkpahuQnEwhwECqA==}
 
   strnum@2.2.2:
     resolution: {integrity: sha512-DnR90I+jtXNSTXWdwrEy9FakW7UX+qUZg28gj5fk2vxxl7uS/3bpI4fjFYVmdK9etptYBPNkpahuQnEwhwECqA==}
@@ -11796,7 +11800,7 @@ snapshots:
   '@aws-sdk/xml-builder@3.972.10':
     dependencies:
       '@smithy/types': 4.13.1
-      fast-xml-parser: 5.5.8
+      fast-xml-parser: 5.5.9
       tslib: 2.8.1
 
   '@aws-sdk/xml-builder@3.972.16':
@@ -11808,7 +11812,7 @@ snapshots:
   '@aws-sdk/xml-builder@3.972.4':
     dependencies:
       '@smithy/types': 4.13.1
-      fast-xml-parser: 5.5.8
+      fast-xml-parser: 5.5.9
       tslib: 2.8.1
 
   '@aws/lambda-invoke-store@0.2.3': {}
@@ -12604,32 +12608,32 @@ snapshots:
 
   '@firebase/auth-interop-types@0.2.4': {}
 
-  '@firebase/component@0.7.0':
+  '@firebase/component@0.7.2':
     dependencies:
-      '@firebase/util': 1.13.0
+      '@firebase/util': 1.15.0
       tslib: 2.8.1
 
-  '@firebase/database-compat@2.1.0':
+  '@firebase/database-compat@2.1.2':
     dependencies:
-      '@firebase/component': 0.7.0
-      '@firebase/database': 1.1.0
-      '@firebase/database-types': 1.0.16
+      '@firebase/component': 0.7.2
+      '@firebase/database': 1.1.2
+      '@firebase/database-types': 1.0.18
       '@firebase/logger': 0.5.0
-      '@firebase/util': 1.13.0
+      '@firebase/util': 1.15.0
       tslib: 2.8.1
 
-  '@firebase/database-types@1.0.16':
+  '@firebase/database-types@1.0.18':
     dependencies:
       '@firebase/app-types': 0.9.3
-      '@firebase/util': 1.13.0
+      '@firebase/util': 1.15.0
 
-  '@firebase/database@1.1.0':
+  '@firebase/database@1.1.2':
     dependencies:
       '@firebase/app-check-interop-types': 0.3.3
       '@firebase/auth-interop-types': 0.2.4
-      '@firebase/component': 0.7.0
+      '@firebase/component': 0.7.2
       '@firebase/logger': 0.5.0
-      '@firebase/util': 1.13.0
+      '@firebase/util': 1.15.0
       faye-websocket: 0.11.4
       tslib: 2.8.1
 
@@ -12637,7 +12641,7 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@firebase/util@1.13.0':
+  '@firebase/util@1.15.0':
     dependencies:
       tslib: 2.8.1
 
@@ -12701,7 +12705,7 @@ snapshots:
 
   '@google-cloud/firestore@7.11.6(encoding@0.1.13)':
     dependencies:
-      '@opentelemetry/api': 1.9.0
+      '@opentelemetry/api': 1.9.1
       fast-deep-equal: 3.1.3
       functional-red-black-tree: 1.0.1
       google-gax: 4.6.1(encoding@0.1.13)
@@ -12731,7 +12735,7 @@ snapshots:
       abort-controller: 3.0.0
       async-retry: 1.3.3
       duplexify: 4.1.3
-      fast-xml-parser: 5.5.8
+      fast-xml-parser: 5.5.9
       gaxios: 6.7.1(encoding@0.1.13)
       google-auth-library: 9.15.1(encoding@0.1.13)
       html-entities: 2.6.0
@@ -13632,6 +13636,9 @@ snapshots:
       - supports-color
 
   '@opentelemetry/api@1.9.0': {}
+
+  '@opentelemetry/api@1.9.1':
+    optional: true
 
   '@opentelemetry/core@2.5.0(@opentelemetry/api@1.9.0)':
     dependencies:
@@ -16838,11 +16845,11 @@ snapshots:
     dependencies:
       path-expression-matcher: 1.2.0
 
-  fast-xml-parser@5.5.8:
+  fast-xml-parser@5.5.9:
     dependencies:
       fast-xml-builder: 1.1.4
       path-expression-matcher: 1.2.0
-      strnum: 2.2.1
+      strnum: 2.2.2
 
   fast-xml-parser@5.5.9:
     dependencies:
@@ -16924,18 +16931,17 @@ snapshots:
       locate-path: 5.0.0
       path-exists: 4.0.0
 
-  firebase-admin@13.6.1(encoding@0.1.13):
+  firebase-admin@13.7.0(encoding@0.1.13):
     dependencies:
       '@fastify/busboy': 3.2.0
-      '@firebase/database-compat': 2.1.0
-      '@firebase/database-types': 1.0.16
-      '@types/node': 22.19.15
+      '@firebase/database-compat': 2.1.2
+      '@firebase/database-types': 1.0.18
       farmhash-modern: 1.1.0
       fast-deep-equal: 3.1.3
-      google-auth-library: 9.15.1(encoding@0.1.13)
+      google-auth-library: 10.6.2
       jsonwebtoken: 9.0.3
       jwks-rsa: 3.2.2
-      node-forge: 1.3.3
+      node-forge: 1.4.0
       uuid: 11.1.0
     optionalDependencies:
       '@google-cloud/firestore': 7.11.6(encoding@0.1.13)
@@ -18210,7 +18216,7 @@ snapshots:
       openai: 6.22.0(ws@8.20.0)(zod@3.25.76)
       ws: 8.20.0
 
-  langsmith@0.5.16(@opentelemetry/api@1.9.0)(openai@6.22.0(ws@8.20.0)(zod@4.3.6))(ws@8.20.0):
+  langsmith@0.5.16(@opentelemetry/api@1.9.1)(openai@6.22.0(ws@8.20.0)(zod@4.3.6))(ws@8.20.0):
     dependencies:
       chalk: 5.6.2
       console-table-printer: 2.15.0
@@ -18218,11 +18224,11 @@ snapshots:
       semver: 7.7.4
       uuid: 10.0.0
     optionalDependencies:
-      '@opentelemetry/api': 1.9.0
+      '@opentelemetry/api': 1.9.1
       openai: 6.22.0(ws@8.20.0)(zod@4.3.6)
       ws: 8.20.0
 
-  langsmith@0.5.16(@opentelemetry/api@1.9.0)(openai@6.32.0(ws@8.20.0)(zod@4.3.6))(ws@8.20.0):
+  langsmith@0.5.16(@opentelemetry/api@1.9.1)(openai@6.32.0(ws@8.20.0)(zod@4.3.6))(ws@8.20.0):
     dependencies:
       chalk: 5.6.2
       console-table-printer: 2.15.0
@@ -18230,7 +18236,7 @@ snapshots:
       semver: 7.7.4
       uuid: 10.0.0
     optionalDependencies:
-      '@opentelemetry/api': 1.9.0
+      '@opentelemetry/api': 1.9.1
       openai: 6.32.0(ws@8.20.0)(zod@4.3.6)
       ws: 8.20.0
 
@@ -18745,7 +18751,7 @@ snapshots:
       fetch-blob: 3.2.0
       formdata-polyfill: 4.0.10
 
-  node-forge@1.3.3: {}
+  node-forge@1.4.0: {}
 
   node-gyp@8.4.1:
     dependencies:
@@ -20095,7 +20101,7 @@ snapshots:
     dependencies:
       js-tokens: 9.0.1
 
-  strnum@2.2.1: {}
+  strnum@2.2.2: {}
 
   strnum@2.2.2: {}
 

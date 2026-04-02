@@ -72,7 +72,7 @@
     "dotenv": "^16.0.3",
     "duck-duck-scrape": "^2.2.5",
     "exa-js": "^1.0.12",
-    "firebase-admin": "^13.6.1",
+    "firebase-admin": "^13.7.0",
     "graphql": "^16.6.0",
     "hdb": "^0.19.8",
     "ioredis": "^5.10.1",
