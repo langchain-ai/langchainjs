@@ -192,7 +192,7 @@
     "typeorm": "^0.3.28",
     "typescript": "~5.8.3",
     "typesense": "^3.0.5",
-    "vitest": "^3.2.4",
+    "vitest": "^4.1.2",
     "voy-search": "0.6.3",
     "weaviate-client": "^3.12.0",
     "zod-to-json-schema": "^3.25.2",

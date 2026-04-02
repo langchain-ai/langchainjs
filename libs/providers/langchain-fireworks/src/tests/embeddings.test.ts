@@ -1,6 +1,10 @@
-import { describe, expect, test, vi } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 
 import { FireworksEmbeddings } from "../embeddings.js";
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe("FireworksEmbeddings", () => {
   test("uses the provided basePath and custom headers", async () => {
