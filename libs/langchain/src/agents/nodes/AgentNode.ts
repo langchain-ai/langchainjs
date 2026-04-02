@@ -1,4 +1,4 @@
-/* eslint-disable no-instanceof/no-instanceof */
+/* oxlint-disable no-instanceof/no-instanceof */
 import { Runnable, RunnableConfig } from "@langchain/core/runnables";
 import {
   BaseMessage,

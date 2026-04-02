@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect } from "vitest";
 import { ChatCompletionMessage } from "openai/resources";
 import { AIMessage, AIMessageChunk } from "@langchain/core/messages";

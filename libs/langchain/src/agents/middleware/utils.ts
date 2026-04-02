@@ -26,7 +26,7 @@ import { JumpToTarget } from "../constants.js";
  */
 export function countTokensApproximately(
   messages: BaseMessage[],
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   tools?: Array<Record<string, any>> | null
 ): number {
   const charsPerToken = 4;

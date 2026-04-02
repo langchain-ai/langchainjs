@@ -7,7 +7,7 @@ import neo4j, {
 import { sha256 } from "@langchain/core/utils/hash";
 import { GraphDocument } from "./document.js";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 type Any = any;
 
 export interface Neo4jGraphConfig {
@@ -699,15 +699,15 @@ function objIntToString(obj: Any) {
 
 function extractFromNeoObjects(obj: Any) {
   if (
-    // eslint-disable-next-line
+    // oxlint-disable-next-line
     obj instanceof (neo4j.types.Node as any) ||
-    // eslint-disable-next-line
+    // oxlint-disable-next-line
     obj instanceof (neo4j.types.Relationship as any)
   ) {
     return obj.properties;
-    // eslint-disable-next-line
+    // oxlint-disable-next-line
   } else if (obj instanceof (neo4j.types.Path as any)) {
-    // eslint-disable-next-line
+    // oxlint-disable-next-line
     return [].concat.apply<any[], any[], any[]>([], extractPathForRows(obj));
   }
   return obj;

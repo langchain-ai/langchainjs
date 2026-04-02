@@ -38,7 +38,6 @@ const dockerPackages: WorkspacePackage[] = [
     path: "/langchain-textsplitters",
   },
   { pkg: { name: "@langchain/build" }, path: "/langchain-build" },
-  { pkg: { name: "@langchain/eslint" }, path: "/langchain-eslint" },
   { pkg: { name: "@langchain/tsconfig" }, path: "/langchain-tsconfig" },
 ];
 
@@ -177,11 +176,11 @@ class EnvironmentTestRunner {
 
     await this.copyDirectory("/package", this.testRoot, excludePatterns);
 
-    // Copy .eslintrc.json if it exists
+    // Copy .oxlintrc.json if it exists
     try {
       await fs.copyFile(
-        "/package/.eslintrc.json",
-        path.join(this.testRoot, ".eslintrc.json")
+        "/package/.oxlintrc.json",
+        path.join(this.testRoot, ".oxlintrc.json")
       );
     } catch {
       // File doesn't exist, that's okay

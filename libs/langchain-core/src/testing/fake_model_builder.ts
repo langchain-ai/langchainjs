@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { CallbackManagerForLLMRun } from "../callbacks/manager.js";
 import {
   BaseChatModel,

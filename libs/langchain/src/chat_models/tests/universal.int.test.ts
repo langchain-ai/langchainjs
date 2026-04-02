@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, test, expect } from "vitest";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod/v3";

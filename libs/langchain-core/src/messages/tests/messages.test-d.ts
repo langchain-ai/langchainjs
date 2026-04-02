@@ -986,7 +986,7 @@ describe("$InferToolCalls<TStructure>", () => {
       readonly type?: "tool_call";
       id?: string;
       name: string;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       args: Record<string, any>;
     }>();
   });
@@ -1053,7 +1053,7 @@ describe("$InferToolCalls<TStructure>", () => {
     type ToolCalls = $InferToolCalls<S>;
     type DynamicCall = Extract<ToolCalls, { name: "dynamicTool" }>;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expectTypeOf<DynamicCall["args"]>().toEqualTypeOf<Record<string, any>>();
   });
 

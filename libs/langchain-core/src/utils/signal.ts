@@ -43,7 +43,7 @@ export async function raceWithSignal<T>(
  * @returns The error from the abort signal.
  */
 export function getAbortSignalError(signal?: AbortSignal) {
-  // eslint-disable-next-line no-instanceof/no-instanceof
+  // oxlint-disable-next-line no-instanceof/no-instanceof
   if (signal?.reason instanceof Error) {
     return signal.reason;
   }

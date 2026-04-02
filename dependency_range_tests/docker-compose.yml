@@ -14,6 +14,7 @@ services:
       - ../libs/providers/langchain-openai:/libs/langchain-openai
       - ../libs/providers/langchain-anthropic:/libs/langchain-anthropic
       - ../libs/providers/langchain-cohere:/libs/langchain-cohere
+      - ../libs/providers/langchain-fireworks:/libs/langchain-fireworks
       - ../libs/providers/langchain-xai:/libs/langchain-xai
       - ../internal:/internal
       - ./scripts:/scripts
@@ -32,6 +33,7 @@ services:
       - ../libs/providers/langchain-openai:/libs/langchain-openai
       - ../libs/providers/langchain-anthropic:/libs/langchain-anthropic
       - ../libs/providers/langchain-cohere:/libs/langchain-cohere
+      - ../libs/providers/langchain-fireworks:/libs/langchain-fireworks
       - ../libs/providers/langchain-xai:/libs/langchain-xai
       - ../internal:/internal
       - ./scripts:/scripts

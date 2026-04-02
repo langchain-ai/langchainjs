@@ -21,7 +21,7 @@ describe("baseURL configuration", () => {
   test("should use default baseURL when not specified", () => {
     const model = new ChatXAI();
     // Access the internal clientConfig via any cast for testing
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const clientConfig = (model as any).clientConfig;
     expect(clientConfig.baseURL).toBe("https://api.x.ai/v1");
   });
@@ -30,7 +30,7 @@ describe("baseURL configuration", () => {
     const model = new ChatXAI({
       baseURL: "https://custom.api.example.com/v1",
     });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const clientConfig = (model as any).clientConfig;
     expect(clientConfig.baseURL).toBe("https://custom.api.example.com/v1");
   });
@@ -123,7 +123,7 @@ describe("Server Tool Calling", () => {
       });
 
       // Access protected method via any cast for testing
-      // eslint-disable-next-line dot-notation
+      // oxlint-disable-next-line dot-notation
       const effectiveParams = model["_getEffectiveSearchParameters"]({
         searchParameters: {
           max_search_results: 10,
@@ -290,7 +290,7 @@ describe("Server Tool Calling", () => {
   describe("_hasBuiltInTools", () => {
     test("should return true when live_search tool is present", () => {
       const model = new ChatXAI();
-      // eslint-disable-next-line dot-notation
+      // oxlint-disable-next-line dot-notation
       const result = model["_hasBuiltInTools"]([
         {
           type: XAI_LIVE_SEARCH_TOOL_TYPE,
@@ -306,7 +306,7 @@ describe("Server Tool Calling", () => {
 
     test("should return false when no built-in tools are present", () => {
       const model = new ChatXAI();
-      // eslint-disable-next-line dot-notation
+      // oxlint-disable-next-line dot-notation
       const result = model["_hasBuiltInTools"]([
         {
           type: "function",
@@ -318,9 +318,9 @@ describe("Server Tool Calling", () => {
 
     test("should return false for undefined or empty tools", () => {
       const model = new ChatXAI();
-      // eslint-disable-next-line dot-notation
+      // oxlint-disable-next-line dot-notation
       expect(model["_hasBuiltInTools"](undefined)).toBe(false);
-      // eslint-disable-next-line dot-notation
+      // oxlint-disable-next-line dot-notation
       expect(model["_hasBuiltInTools"]([])).toBe(false);
     });
   });

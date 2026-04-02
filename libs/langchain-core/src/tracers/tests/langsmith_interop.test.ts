@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 
 import { vi, test, beforeEach, afterEach, afterAll, expect } from "vitest";
 import { traceable } from "langsmith/traceable";

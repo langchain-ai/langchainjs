@@ -19,7 +19,7 @@ import { RunnableConfig } from "./config.js";
 import { RunnablePassthrough } from "./passthrough.js";
 
 type GetSessionHistoryCallable = (
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   ...args: Array<any>
 ) =>
   | Promise<BaseChatMessageHistory | BaseListChatMessageHistory>
@@ -149,7 +149,7 @@ export class RunnableWithMessageHistory<
   }
 
   _getInputMessages(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     inputValue: string | BaseMessage | Array<BaseMessage> | Record<string, any>
   ): Array<BaseMessage> {
     let parsedInputValue;
@@ -192,7 +192,7 @@ export class RunnableWithMessageHistory<
   }
 
   _getOutputMessages(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     outputValue: string | BaseMessage | Array<BaseMessage> | Record<string, any>
   ): Array<BaseMessage> {
     let parsedOutputValue;
@@ -238,7 +238,7 @@ export class RunnableWithMessageHistory<
   }
 
   async _enterHistory(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     input: any,
     kwargs?: RunnableConfig
   ): Promise<BaseMessage[]> {

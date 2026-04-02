@@ -60,6 +60,7 @@ const interactionTool = tool(
 const calculatorTool = tool(
   (input: { expression: string }) => {
     try {
+      // oxlint-disable-next-line no-eval
       const result = eval(input.expression);
       return `Result: ${result}`;
     } catch (error) {

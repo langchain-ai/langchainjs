@@ -1,4 +1,4 @@
-/* eslint-disable no-instanceof/no-instanceof */
+/* oxlint-disable no-instanceof/no-instanceof */
 import type { ToolCall } from "@langchain/core/messages/tool";
 import { isGraphBubbleUp } from "@langchain/langgraph";
 

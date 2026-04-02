@@ -1,5 +1,5 @@
-/* eslint-disable no-instanceof/no-instanceof */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable no-instanceof/no-instanceof */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { InteropZodObject } from "@langchain/core/utils/types";
 
 import {

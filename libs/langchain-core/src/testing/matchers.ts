@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { BaseMessage } from "../messages/index.js";
 import { HumanMessage } from "../messages/index.js";
 import { AIMessage } from "../messages/index.js";
@@ -470,6 +470,6 @@ export interface LangChainMatchers<R = unknown> {
 }
 
 declare module "vitest" {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   interface Matchers<T = any> extends LangChainMatchers<T> {}
 }

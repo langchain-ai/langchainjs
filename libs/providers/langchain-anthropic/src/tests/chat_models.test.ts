@@ -85,7 +85,7 @@ test("withStructuredOutput with proper output", async () => {
     anthropicApiKey: "testing",
   });
   vi
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     .spyOn(model as any, "invoke")
     .mockResolvedValue(
       new AIMessage({
@@ -669,7 +669,7 @@ describe("Tool extras", () => {
     );
     expect(weatherTool).toBeDefined();
     expect(weatherTool).toHaveProperty("input_examples");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const inputExamples = (weatherTool as any).input_examples;
     expect(inputExamples).toHaveLength(2);
     expect(inputExamples[0]).toEqual({
@@ -1758,7 +1758,7 @@ describe("Opus 4.6", () => {
               type: "compact_20260112",
             },
           ],
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         } as any,
       });
 
@@ -1779,7 +1779,7 @@ describe("Opus 4.6", () => {
               clear_at_least: { type: "input_tokens", value: 5 },
             },
           ],
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         } as any,
       });
 
@@ -1888,7 +1888,7 @@ describe("withStructuredOutput - StandardSchema", () => {
       anthropicApiKey: "testing",
     });
     vi
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       .spyOn(model as any, "invoke")
       .mockResolvedValue(
         new AIMessage({
@@ -1950,7 +1950,7 @@ describe("withStructuredOutput - StandardSchema", () => {
       anthropicApiKey: "testing",
     });
     vi
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       .spyOn(model as any, "invoke")
       .mockResolvedValue(
         new AIMessage({
@@ -1993,7 +1993,7 @@ describe("withStructuredOutput - StandardSchema", () => {
       anthropicApiKey: "testing",
     });
     vi
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       .spyOn(model as any, "invoke")
       .mockResolvedValue(mockResponse);
 
@@ -2006,7 +2006,7 @@ describe("withStructuredOutput - StandardSchema", () => {
     const result = await structured.invoke("test input");
     expect(result).toHaveProperty("raw");
     expect(result).toHaveProperty("parsed");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect((result as any).parsed).toEqual({
       alerts: [{ description: "test", severity: "MEDIUM" }],
     });

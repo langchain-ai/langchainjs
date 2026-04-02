@@ -312,7 +312,7 @@ export class TogetherAI extends LLM<TogetherAICallOptions> {
           text: parsedChunk.choices[0].text ?? "",
         });
         yield generationChunk;
-        // eslint-disable-next-line no-void
+        // oxlint-disable-next-line no-void
         void runManager?.handleLLMNewToken(generationChunk.text ?? "");
       }
     }

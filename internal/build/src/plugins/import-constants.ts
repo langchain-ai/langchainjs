@@ -1,7 +1,7 @@
 import path from "node:path";
 import type { Plugin } from "rolldown";
 import type { PackageJson } from "type-fest";
-import { formatWithPrettier } from "../utils.ts";
+import { formatWithOxfmt } from "../utils.ts";
 import { pathToFileURL } from "node:url";
 
 /**
@@ -178,7 +178,7 @@ export function importConstantsPlugin(
 
       await this.fs.writeFile(
         outputPath,
-        await formatWithPrettier(lines.join("\n"))
+        await formatWithOxfmt(lines.join("\n"), outputPath)
       );
       this.info(`📝 Generated import constants file: ${outputPath}`);
     },

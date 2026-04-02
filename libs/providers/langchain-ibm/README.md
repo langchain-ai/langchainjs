@@ -165,7 +165,10 @@ const documents = [
   new Document({ pageContent: "Tokyo is the capital of Japan." }),
 ];
 
-const results = await reranker.compressDocuments(documents, "European capitals");
+const results = await reranker.compressDocuments(
+  documents,
+  "European capitals"
+);
 ```
 
 ### Agent Toolkits

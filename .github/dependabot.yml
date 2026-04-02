@@ -16,7 +16,7 @@ updates:
         update-types:
           - "major"
 
-  # Root devDependencies (turbo, typescript, prettier, eslint, etc.)
+  # Root devDependencies (turbo, typescript, etc.)
   - package-ecosystem: npm
     directory: "/"
     schedule:

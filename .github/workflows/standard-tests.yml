@@ -17,7 +17,6 @@ jobs:
         package:
           [
             anthropic,
-            cohere,
             google-genai,
             groq,
             mistralai,
@@ -40,7 +39,6 @@ jobs:
         run: pnpm turbo test:integration --filter @langchain/${{ matrix.package }}
         env:
           ANTHROPIC_API_KEY: ${{ matrix.package == 'anthropic' && secrets.ANTHROPIC_API_KEY || '' }}
-          COHERE_API_KEY: ${{ matrix.package == 'cohere' && secrets.COHERE_API_KEY || '' }}
           GOOGLE_API_KEY: ${{ matrix.package == 'google-genai' && secrets.GOOGLE_API_KEY || '' }}
           GROQ_API_KEY: ${{ matrix.package == 'groq' && secrets.GROQ_API_KEY || '' }}
           MISTRAL_API_KEY: ${{ matrix.package == 'mistralai' && secrets.MISTRAL_API_KEY || '' }}

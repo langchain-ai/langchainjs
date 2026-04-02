@@ -655,7 +655,7 @@ describe("ChatMistralAI aborting", () => {
       fail(
         "Expected for-await loop to throw an error due to abort, but it did not."
       );
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       // Check if the error is due to the abort action
       expect(error.message).toBe("AbortError");
@@ -690,7 +690,7 @@ describe("ChatMistralAI aborting", () => {
       fail(
         "Expected for-await loop to throw an error due to abort, but it did not."
       );
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       didError = true;
       // Check if the error is due to the abort action
@@ -723,7 +723,7 @@ describe("ChatMistralAI aborting", () => {
       fail(
         "Expected for-await loop to throw an error due to abort, but it did not."
       );
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       didError = true;
       // Check if the error is due to the abort action
@@ -751,7 +751,7 @@ describe("ChatMistralAI aborting", () => {
       fail(
         "Expected for-await loop to throw an error due to abort, but it did not."
       );
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       didError = true;
       // Check if the error is due to the abort action

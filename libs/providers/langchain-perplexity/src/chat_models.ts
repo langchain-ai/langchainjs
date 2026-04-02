@@ -201,7 +201,7 @@ export class ChatPerplexity
 
   topP?: number;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   searchDomainFilter?: any[];
 
   returnImages?: boolean;
@@ -381,7 +381,7 @@ export class ChatPerplexity
       message: new AIMessage({
         content: message.content ?? "",
         additional_kwargs: {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // oxlint-disable-next-line @typescript-eslint/no-explicit-any
           citations: (response as any).citations,
         },
       }),
@@ -420,7 +420,7 @@ export class ChatPerplexity
     for await (const chunk of stream) {
       const choice = chunk.choices[0];
       const { delta } = choice;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       const citations = (chunk as any).citations ?? [];
 
       if (!delta.content) continue;
@@ -461,34 +461,34 @@ export class ChatPerplexity
   }
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
   ):
@@ -503,7 +503,7 @@ export class ChatPerplexity
     if (config?.strict) {
       throw new Error(`"strict" mode is not supported for this model.`);
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     let schema: InteropZodType<RunOutput> | Record<string, any> = outputSchema;
     if (isInteropZodSchema(schema)) {
       schema = toJsonSchema(schema);
@@ -554,7 +554,7 @@ export class ChatPerplexity
     }
 
     const parserAssign = RunnablePassthrough.assign({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       parsed: (input: any, config) => outputParser.invoke(input.raw, config),
     });
     const parserNone = RunnablePassthrough.assign({

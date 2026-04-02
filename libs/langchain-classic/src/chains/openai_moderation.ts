@@ -131,7 +131,7 @@ export class OpenAIModerationChain
         this.client.moderations.create(moderationRequest)
       );
     } catch (error) {
-      // eslint-disable-next-line no-instanceof/no-instanceof
+      // oxlint-disable-next-line no-instanceof/no-instanceof
       if (error instanceof Error) {
         throw error;
       } else {

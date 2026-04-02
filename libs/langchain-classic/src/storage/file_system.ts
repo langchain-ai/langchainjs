@@ -60,7 +60,7 @@ export class LocalFileStore extends BaseStore<string, Uint8Array> {
         return undefined;
       }
       return fileContent;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       // File does not exist yet.
       if ("code" in e && e.code === "ENOENT") {

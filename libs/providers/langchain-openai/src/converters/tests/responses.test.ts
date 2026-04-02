@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect } from "vitest";
 import { OpenAI as OpenAIClient } from "openai";
 import {
