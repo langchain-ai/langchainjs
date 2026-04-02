@@ -29,7 +29,7 @@
     "@turbopuffer/turbopuffer": "^1.21.0"
   },
   "devDependencies": {
-    "@faker-js/faker": "^8.4.1",
+    "@faker-js/faker": "^10.4.0",
     "@langchain/core": "workspace:^",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
