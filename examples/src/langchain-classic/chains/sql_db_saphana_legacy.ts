@@ -1,4 +1,3 @@
-import { DataSource } from "typeorm";
 import { OpenAI } from "@langchain/openai";
 import { SqlDatabase } from "@langchain/classic/sql_db";
 import { SqlDatabaseChain } from "@langchain/classic/chains/sql_db";
@@ -12,7 +11,7 @@ import { SqlDatabaseChain } from "@langchain/classic/chains/sql_db";
  *    "@sap/hana-client": "^2.17.22"    (or latest version)
  *
  */
-const datasource = new DataSource({
+const datasourceOptions = {
   type: "sap",
   host: "<ADD_YOURS_HERE>.hanacloud.ondemand.com",
   port: 443,
@@ -23,10 +22,10 @@ const datasource = new DataSource({
   extra: {
     sslValidateCertificate: false,
   },
-});
+} as const;
 
-const db = await SqlDatabase.fromDataSourceParams({
-  appDataSource: datasource,
+const db = await SqlDatabase.fromOptionsParams({
+  appDataSourceOptions: datasourceOptions,
 });
 
 const chain = new SqlDatabaseChain({
