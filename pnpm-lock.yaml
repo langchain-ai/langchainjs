@@ -143,6 +143,9 @@ importers:
       '@langchain/deepseek':
         specifier: workspace:*
         version: link:../libs/providers/langchain-deepseek
+      '@langchain/fireworks':
+        specifier: workspace:*
+        version: link:../libs/providers/langchain-fireworks
       '@langchain/google-cloud-sql-pg':
         specifier: workspace:^
         version: link:../libs/providers/langchain-google-cloud-sql-pg

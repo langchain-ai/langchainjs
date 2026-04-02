@@ -1,10 +1,20 @@
 import { ChatTogetherAI } from "@langchain/together-ai";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
-import { Calculator } from "@langchain/community/tools/calculator";
+import { tool } from "@langchain/core/tools";
+import { z } from "zod/v3";
 
-// Use a pre-built tool
-const calculatorTool = convertToOpenAITool(new Calculator());
+const calculatorTool = tool(
+  async ({ expression }) => {
+    return `${Function(`"use strict"; return (${expression});`)()}`;
+  },
+  {
+    name: "calculator",
+    description: "Evaluate a basic arithmetic expression.",
+    schema: z.object({
+      expression: z.string().describe("An arithmetic expression to evaluate."),
+    }),
+  }
+);
 
 const modelWithCalculator = new ChatTogetherAI({
   temperature: 0,
@@ -17,7 +27,7 @@ const modelWithCalculator = new ChatTogetherAI({
   .bindTools([calculatorTool])
   .withConfig({
     // Specify what tool the model should use
-    tool_choice: calculatorTool,
+    tool_choice: "calculator",
   });
 
 const prompt = ChatPromptTemplate.fromMessages([

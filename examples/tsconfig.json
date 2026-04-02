@@ -5,7 +5,9 @@
     "outDir": "dist",
     "composite": false,
     "declaration": false,
-    "declarationMap": false
+    "declarationMap": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
   },
   "include": ["src/**/*"],
   "exclude": ["dist", "node_modules"],
