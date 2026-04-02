@@ -40,6 +40,7 @@
     "@langchain/tsconfig": "workspace:*",
     "@types/decamelize": "^1.2.0",
     "@types/mustache": "^4",
+    "@types/node": "^25.5.0",
     "@types/uuid": "^10.0.0",
     "dotenv": "^17.4.0",
     "dpdm": "^3.14.0",

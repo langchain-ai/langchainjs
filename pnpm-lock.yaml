@@ -1007,6 +1007,9 @@ importers:
       '@types/mustache':
         specifier: ^4
         version: 4.2.6
+      '@types/node':
+        specifier: ^25.5.0
+        version: 25.5.0
       '@types/uuid':
         specifier: ^10.0.0
         version: 10.0.0
