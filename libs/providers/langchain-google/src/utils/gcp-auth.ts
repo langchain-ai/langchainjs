@@ -87,13 +87,13 @@ const CACHE_MAX_AGE = 60 * 60; // 1 hour
  * ```
  */
 export function normalizeGCPCredentials(
-  credentials: string | GCPCredentials
+  credentials: string | GCPCredentials,
 ): GCPCredentials {
   return typeof credentials === "string"
     ? Object.freeze(JSON.parse(credentials))
     : Object.isFrozen(credentials)
-    ? credentials
-    : Object.freeze(credentials);
+      ? credentials
+      : Object.freeze(credentials);
 }
 
 /**
@@ -203,7 +203,7 @@ export async function getGCPCustomToken(credentials: GCPCredentials) {
  * will trigger a refresh request.
  */
 export async function getGCPCredentialsAccessToken(
-  credentials: GCPCredentials
+  credentials: GCPCredentials,
 ): Promise<string> {
   const tokenUrl = credentials.token_uri;
 

@@ -76,7 +76,7 @@ export type GooglePlatformType = "gai" | "gcp";
 
 export function getPlatformType(
   platform: GooglePlatformType | undefined,
-  hasApiKey: boolean
+  hasApiKey: boolean,
 ): GooglePlatformType {
   if (typeof platform !== "undefined") {
     return platform;
@@ -149,7 +149,7 @@ export interface BaseChatGoogleCallOptions
     ChatGoogleFields {}
 
 export abstract class BaseChatGoogle<
-  CallOptions extends BaseChatGoogleCallOptions = BaseChatGoogleCallOptions
+  CallOptions extends BaseChatGoogleCallOptions = BaseChatGoogleCallOptions,
 > extends BaseChatModel<CallOptions, AIMessageChunk> {
   model: string;
 
@@ -175,7 +175,7 @@ export abstract class BaseChatGoogle<
 
     if (!params.apiClient) {
       throw new ConfigurationError(
-        "BaseChatGoogle requires an apiClient. This should be provided automatically by ChatGoogle constructors. If you're extending BaseChatGoogle directly, please provide an apiClient instance."
+        "BaseChatGoogle requires an apiClient. This should be provided automatically by ChatGoogle constructors. If you're extending BaseChatGoogle directly, please provide an apiClient instance.",
       );
     }
     this.apiClient = params.apiClient;
@@ -315,7 +315,7 @@ export abstract class BaseChatGoogle<
     // Convert tool choice to Gemini function calling config
     const toolConfig = convertToolChoiceToGeminiConfig(
       options.tool_choice,
-      !!(tools && tools.length > 0)
+      !!(tools && tools.length > 0),
     );
 
     let responseJsonSchema:
@@ -387,13 +387,13 @@ export abstract class BaseChatGoogle<
   async _generate(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun,
   ): Promise<ChatResult> {
     if (this.streaming) {
       const stream = await this._streamResponseChunks(
         messages,
         options,
-        runManager
+        runManager,
       );
       let finalChunk: ChatGenerationChunk | null = null;
       for await (const chunk of stream) {
@@ -437,7 +437,7 @@ export abstract class BaseChatGoogle<
         },
         body: JSON.stringify(body),
         signal: options.signal,
-      })
+      }),
     );
 
     if (!response.ok) {
@@ -504,7 +504,7 @@ export abstract class BaseChatGoogle<
   async *_streamResponseChunks(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun,
   ): AsyncGenerator<ChatGenerationChunk> {
     const streamUsage: boolean = this.streamUsage ?? true;
 
@@ -529,7 +529,7 @@ export abstract class BaseChatGoogle<
         },
         body: JSON.stringify(body),
         signal: options.signal,
-      })
+      }),
     );
 
     await runManager?.handleCustomEvent(`google-response-${moduleName}`, {
@@ -553,7 +553,7 @@ export abstract class BaseChatGoogle<
         .pipeThrough(new TextDecoderStream())
         .pipeThrough(new EventSourceParserStream())
         .pipeThrough(
-          new SafeJsonEventParserStream<Gemini.GenerateContentResponse>()
+          new SafeJsonEventParserStream<Gemini.GenerateContentResponse>(),
         )
         .pipeThrough(
           new TransformStream<
@@ -571,7 +571,7 @@ export abstract class BaseChatGoogle<
                     text: "",
                     message: new AIMessageChunk({ content: "" }),
                     generationInfo: { finishReason: "stop" },
-                  })
+                  }),
                 );
                 return;
               }
@@ -617,7 +617,7 @@ export abstract class BaseChatGoogle<
                     convertGeminiGenerateContentResponseToUsageMetadata(chunk);
                   messageChunkParams.usage_metadata = subtractUsageMetadata(
                     cumulative,
-                    previousUsage
+                    previousUsage,
                   );
                   previousUsage = cumulative;
                 }
@@ -636,11 +636,11 @@ export abstract class BaseChatGoogle<
                         safetyRatings: candidate.safetyRatings,
                       }),
                     },
-                  })
+                  }),
                 );
               }
             },
-          })
+          }),
         );
 
       const reader = stream.getReader();
@@ -655,7 +655,7 @@ export abstract class BaseChatGoogle<
             undefined,
             undefined,
             undefined,
-            { chunk: value }
+            { chunk: value },
           );
         }
       } finally {
@@ -673,7 +673,7 @@ export abstract class BaseChatGoogle<
    */
   bindTools(
     tools: BindToolsInput[],
-    kwargs?: Partial<CallOptions>
+    kwargs?: Partial<CallOptions>,
   ): Runnable<BaseMessage[], AIMessageChunk, CallOptions> {
     return this.withConfig({
       ...kwargs,
@@ -683,38 +683,38 @@ export abstract class BaseChatGoogle<
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: StructuredOutputMethodOptions<false>
+    config?: StructuredOutputMethodOptions<false>,
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: StructuredOutputMethodOptions<true>
+    config?: StructuredOutputMethodOptions<true>,
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: StructuredOutputMethodOptions<boolean>
+    config?: StructuredOutputMethodOptions<boolean>,
   ):
     | Runnable<BaseLanguageModelInput, RunOutput>
     | Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
@@ -732,14 +732,14 @@ export abstract class BaseChatGoogle<
    */
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: StructuredOutputMethodOptions<boolean>
+    config?: StructuredOutputMethodOptions<boolean>,
   ):
     | Runnable<BaseLanguageModelInput, RunOutput>
     | Runnable<
@@ -757,7 +757,7 @@ export abstract class BaseChatGoogle<
 
     if (method === "jsonMode") {
       console.warn(
-        `"jsonMode" is not supported for Google models. Falling back to "jsonSchema".`
+        `"jsonMode" is not supported for Google models. Falling back to "jsonSchema".`,
       );
       method = "jsonSchema";
     }
@@ -789,7 +789,7 @@ export abstract class BaseChatGoogle<
           // Parse JSON and validate with schema
           const parser = createContentParser(schema);
           return await parser.parse(input.text);
-        }
+        },
       );
     } else if (method === "functionCalling") {
       // Use function calling mode
@@ -836,7 +836,7 @@ export abstract class BaseChatGoogle<
       outputParser = createFunctionCallingParser(schema, functionName);
     } else {
       throw new ConfigurationError(
-        `Unrecognized structured output method '${method}'. Expected 'functionCalling' or 'jsonSchema'`
+        `Unrecognized structured output method '${method}'. Expected 'functionCalling' or 'jsonSchema'`,
       );
     }
 
@@ -846,7 +846,7 @@ export abstract class BaseChatGoogle<
       includeRaw,
       includeRaw
         ? "ChatGoogleStructuredOutputRunnable"
-        : "ChatGoogleStructuredOutput"
+        : "ChatGoogleStructuredOutput",
     );
   }
 }
@@ -891,7 +891,7 @@ export function combineGoogleChatModelFields(
 
 export function getGoogleChatModelParams<TParams extends BaseChatGoogleParams>(
   modelOrParams: string | TParams,
-  paramsArg?: Omit<TParams, "model">
+  paramsArg?: Omit<TParams, "model">,
 ): TParams {
   const model =
     typeof modelOrParams === "string" ? modelOrParams : modelOrParams.model;

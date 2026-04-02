@@ -60,8 +60,14 @@ const vectorStore = await PGVectorStore.initialize(embeddings, config);
 import { Document } from "@langchain/core/documents";
 
 const documents = [
-  new Document({ pageContent: "LangChain is great", metadata: { source: "docs" } }),
-  new Document({ pageContent: "pgvector is powerful", metadata: { source: "blog" } }),
+  new Document({
+    pageContent: "LangChain is great",
+    metadata: { source: "docs" },
+  }),
+  new Document({
+    pageContent: "pgvector is powerful",
+    metadata: { source: "blog" },
+  }),
 ];
 
 await vectorStore.addDocuments(documents, { ids: ["doc1", "doc2"] });
@@ -77,7 +83,10 @@ console.log(results);
 ### Similarity Search with Score
 
 ```typescript
-const resultsWithScore = await vectorStore.similaritySearchWithScore("LangChain", 2);
+const resultsWithScore = await vectorStore.similaritySearchWithScore(
+  "LangChain",
+  2,
+);
 for (const [doc, score] of resultsWithScore) {
   console.log(`Score: ${score}, Content: ${doc.pageContent}`);
 }

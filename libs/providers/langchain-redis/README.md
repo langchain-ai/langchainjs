@@ -59,7 +59,7 @@ The `FluentRedisVectorStore` is the recommended approach for new projects. It pr
 ### Key Differences
 
 | Feature                            | RedisVectorStore                           | FluentRedisVectorStore                       |
-|------------------------------------|--------------------------------------------|----------------------------------------------|
+| ---------------------------------- | ------------------------------------------ | -------------------------------------------- |
 | **Metadata Schema Definition**     | `Record<string, CustomSchemaField>`        | `MetadataFieldSchema[]`                      |
 | **Inferred Metadata Schema**       | No, only custom schema supported           | Yes, based on metadata when adding documents |
 | **Pre-filter - Definition**        | String arrays or raw query strings         | Type-safe `FilterExpression` objects         |
@@ -70,11 +70,13 @@ The `FluentRedisVectorStore` is the recommended approach for new projects. It pr
 ### Step 1: Update Imports
 
 **Before (RedisVectorStore):**
+
 ```typescript
 import { RedisVectorStore } from "@langchain/redis";
 ```
 
 **After (FluentRedisVectorStore):**
+
 ```typescript
 import { FluentRedisVectorStore, Tag, Num, Text, Geo } from "@langchain/redis";
 ```
@@ -84,28 +86,31 @@ import { FluentRedisVectorStore, Tag, Num, Text, Geo } from "@langchain/redis";
 The schema format has changed from an object-based to an array-based structure.
 
 **Before (RedisVectorStore):**
+
 ```typescript
 const customSchema = {
   userId: { type: SchemaFieldTypes.TAG, required: true },
   price: { type: SchemaFieldTypes.NUMERIC, SORTABLE: true },
   description: { type: SchemaFieldTypes.TEXT },
-  location: { type: SchemaFieldTypes.GEO }
+  location: { type: SchemaFieldTypes.GEO },
 };
 ```
 
 **After (FluentRedisVectorStore):**
+
 ```typescript
 const customSchema = [
   { name: "userId", type: "tag" },
   { name: "price", type: "numeric", options: { sortable: true } },
   { name: "description", type: "text" },
-  { name: "location", type: "geo" }
+  { name: "location", type: "geo" },
 ];
 ```
 
 ### Step 3: Update Configuration
 
 **Before:**
+
 ```typescript
 const vectorStore = await RedisVectorStore.fromDocuments(
   documents,
@@ -115,13 +120,14 @@ const vectorStore = await RedisVectorStore.fromDocuments(
     indexName: "products",
     customSchema: {
       category: { type: SchemaFieldTypes.TAG },
-      price: { type: SchemaFieldTypes.NUMERIC, SORTABLE: true }
-    }
-  }
+      price: { type: SchemaFieldTypes.NUMERIC, SORTABLE: true },
+    },
+  },
 );
 ```
 
 **After:**
+
 ```typescript
 const vectorStore = await FluentRedisVectorStore.fromDocuments(
   documents,
@@ -131,9 +137,9 @@ const vectorStore = await FluentRedisVectorStore.fromDocuments(
     indexName: "products",
     customSchema: [
       { name: "category", type: "tag" },
-      { name: "price", type: "numeric", options: { sortable: true } }
-    ]
-  }
+      { name: "price", type: "numeric", options: { sortable: true } },
+    ],
+  },
 );
 ```
 
@@ -142,43 +148,44 @@ const vectorStore = await FluentRedisVectorStore.fromDocuments(
 The filtering API has changed significantly. Instead of passing metadata objects or string arrays, you now use fluent filter expressions.
 
 **Before (RedisVectorStore):**
+
 ```typescript
 // Simple metadata filtering
 const results = await vectorStore.similaritySearchVectorWithScoreAndMetadata(
   queryVector,
   5,
-  { category: "electronics", price: { min: 100, max: 1000 } }
+  { category: "electronics", price: { min: 100, max: 1000 } },
 );
 
 // Or with string-based filters
 const results = await vectorStore.similaritySearchVectorWithScore(
   queryVector,
   5,
-  ["electronics", "gadgets"]
+  ["electronics", "gadgets"],
 );
 ```
 
 **After (FluentRedisVectorStore):**
+
 ```typescript
 // Custom filter expression with the fluent API
 const results = await vectorStore.similaritySearchVectorWithScore(
   queryVector,
   5,
-  Tag("category").eq("electronics").and(Num("price").between(100,1000)
-  )
+  Tag("category").eq("electronics").and(Num("price").between(100, 1000)),
 );
 
 // Basic filter expression with the fluent API
 const results = await vectorStore.similaritySearchVectorWithScore(
   queryVector,
   5,
-  Tag("metadata").eq("electronics", "gadgets")
+  Tag("metadata").eq("electronics", "gadgets"),
 );
 ```
 
 ### Step 5: Database Schema Migration
 
-The `FluentRedisVectorStore` only supports metadata stored in individual fields, alongside the vector data and content data. 
+The `FluentRedisVectorStore` only supports metadata stored in individual fields, alongside the vector data and content data.
 It is not compatible with the implementation of the RedisVectorStore which stores metadata as a JSON blob in a single field.
 The custom schema option of the `RedisVectorStore` could be migrated to the `FluentRedisVectorStore` following the instructions in step 2.
 
@@ -189,25 +196,27 @@ To avoid ambiguous results, it's recommended to create a new index with the upda
 Replace all instances of `RedisVectorStore` with `FluentRedisVectorStore` and update filter usage:
 
 **Before:**
+
 ```typescript
 async function searchProducts(query: string, category?: string) {
   const results = await vectorStore.similaritySearchVectorWithScoreAndMetadata(
     await embeddings.embedQuery(query),
     5,
-    category ? { category } : undefined
+    category ? { category } : undefined,
   );
   return results;
 }
 ```
 
 **After:**
+
 ```typescript
 async function searchProducts(query: string, category?: string) {
   const filter = category ? Tag("category").eq(category) : undefined;
   const results = await vectorStore.similaritySearchVectorWithScore(
     await embeddings.embedQuery(query),
     5,
-    filter
+    filter,
   );
   return results;
 }

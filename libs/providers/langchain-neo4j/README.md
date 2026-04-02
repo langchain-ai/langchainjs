@@ -54,7 +54,12 @@ const graph = await Neo4jGraph.initialize({
 You can add structured graph documents (nodes and relationships extracted from text) to the database:
 
 ```typescript
-import { Neo4jGraph, Node, Relationship, GraphDocument } from "@langchain/neo4j";
+import {
+  Neo4jGraph,
+  Node,
+  Relationship,
+  GraphDocument,
+} from "@langchain/neo4j";
 import { Document } from "@langchain/core/documents";
 
 const source = new Document({
@@ -62,8 +67,16 @@ const source = new Document({
   metadata: { id: "doc1" },
 });
 
-const alice = new Node({ id: "alice", type: "Person", properties: { name: "Alice" } });
-const acme = new Node({ id: "acme", type: "Company", properties: { name: "Acme Corp" } });
+const alice = new Node({
+  id: "alice",
+  type: "Person",
+  properties: { name: "Alice" },
+});
+const acme = new Node({
+  id: "acme",
+  type: "Company",
+  properties: { name: "Acme Corp" },
+});
 const worksAt = new Relationship({
   source: alice,
   target: acme,
@@ -106,7 +119,7 @@ const results = await vectorStore.similaritySearch("What is Neo4j?", 4);
 // Similarity search with score
 const resultsWithScore = await vectorStore.similaritySearchWithScore(
   "What is Neo4j?",
-  4
+  4,
 );
 
 // Clean up

@@ -46,9 +46,7 @@ const model = new ChatPerplexity({
   streaming: true,
 });
 
-const stream = await model.stream([
-  ["human", "Explain quantum computing"],
-]);
+const stream = await model.stream([["human", "Explain quantum computing"]]);
 
 for await (const chunk of stream) {
   process.stdout.write(chunk.content as string);
@@ -72,12 +70,10 @@ const structured = model.withStructuredOutput(
     capital: z.string(),
     country: z.string(),
     population: z.number().optional(),
-  })
+  }),
 );
 
-const result = await structured.invoke(
-  "What is the capital of India?"
-);
+const result = await structured.invoke("What is the capital of India?");
 
 console.log(result);
 // { capital: "New Delhi", country: "India", population: ... }
@@ -135,31 +131,31 @@ const model = new ChatPerplexity({
 
 ## Configuration Reference
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `model` | `string` | **Required.** Model name (e.g. `"sonar"`, `"sonar-pro"`, `"sonar-reasoning"`). |
-| `apiKey` | `string` | API key. Defaults to `PERPLEXITY_API_KEY` env var. |
-| `temperature` | `number` | Sampling temperature (0–2). |
-| `maxTokens` | `number` | Maximum tokens to generate. |
-| `topP` | `number` | Nucleus sampling parameter (0–1). |
-| `topK` | `number` | Top-k sampling parameter (1–2048). |
-| `presencePenalty` | `number` | Presence penalty (-2 to 2). |
-| `frequencyPenalty` | `number` | Frequency penalty (> 0). |
-| `streaming` | `boolean` | Enable streaming responses. |
-| `timeout` | `number` | Request timeout in milliseconds. |
-| `searchDomainFilter` | `unknown[]` | Limit citations to specific domains. |
-| `searchRecencyFilter` | `string` | Time filter: `"month"`, `"week"`, `"day"`, `"hour"`. |
-| `searchMode` | `string` | `"academic"` or `"web"`. |
-| `returnImages` | `boolean` | Include images in response. |
-| `returnRelatedQuestions` | `boolean` | Return related questions. |
-| `reasoningEffort` | `string` | `"low"`, `"medium"`, or `"high"` (for deep-research models). |
-| `disableSearch` | `boolean` | Disable web search entirely. |
-| `enableSearchClassifier` | `boolean` | Auto-detect if search is needed. |
-| `webSearchOptions` | `object` | Search context size and user location. |
-| `searchAfterDateFilter` | `string` | Only include content after this date. |
-| `searchBeforeDateFilter` | `string` | Only include content before this date. |
-| `lastUpdatedAfterFilter` | `string` | Only include content updated after this date. |
-| `lastUpdatedBeforeFilter` | `string` | Only include content updated before this date. |
+| Parameter                 | Type        | Description                                                                    |
+| ------------------------- | ----------- | ------------------------------------------------------------------------------ |
+| `model`                   | `string`    | **Required.** Model name (e.g. `"sonar"`, `"sonar-pro"`, `"sonar-reasoning"`). |
+| `apiKey`                  | `string`    | API key. Defaults to `PERPLEXITY_API_KEY` env var.                             |
+| `temperature`             | `number`    | Sampling temperature (0–2).                                                    |
+| `maxTokens`               | `number`    | Maximum tokens to generate.                                                    |
+| `topP`                    | `number`    | Nucleus sampling parameter (0–1).                                              |
+| `topK`                    | `number`    | Top-k sampling parameter (1–2048).                                             |
+| `presencePenalty`         | `number`    | Presence penalty (-2 to 2).                                                    |
+| `frequencyPenalty`        | `number`    | Frequency penalty (> 0).                                                       |
+| `streaming`               | `boolean`   | Enable streaming responses.                                                    |
+| `timeout`                 | `number`    | Request timeout in milliseconds.                                               |
+| `searchDomainFilter`      | `unknown[]` | Limit citations to specific domains.                                           |
+| `searchRecencyFilter`     | `string`    | Time filter: `"month"`, `"week"`, `"day"`, `"hour"`.                           |
+| `searchMode`              | `string`    | `"academic"` or `"web"`.                                                       |
+| `returnImages`            | `boolean`   | Include images in response.                                                    |
+| `returnRelatedQuestions`  | `boolean`   | Return related questions.                                                      |
+| `reasoningEffort`         | `string`    | `"low"`, `"medium"`, or `"high"` (for deep-research models).                   |
+| `disableSearch`           | `boolean`   | Disable web search entirely.                                                   |
+| `enableSearchClassifier`  | `boolean`   | Auto-detect if search is needed.                                               |
+| `webSearchOptions`        | `object`    | Search context size and user location.                                         |
+| `searchAfterDateFilter`   | `string`    | Only include content after this date.                                          |
+| `searchBeforeDateFilter`  | `string`    | Only include content before this date.                                         |
+| `lastUpdatedAfterFilter`  | `string`    | Only include content updated after this date.                                  |
+| `lastUpdatedBeforeFilter` | `string`    | Only include content updated before this date.                                 |
 
 ## License
 

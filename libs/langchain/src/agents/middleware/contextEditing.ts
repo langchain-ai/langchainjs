@@ -227,7 +227,7 @@ export class ClearToolUsesEdit implements ContextEdit {
     let trigger: ContextSize | ContextSize[] | undefined = config.trigger;
     if (config.triggerTokens !== undefined) {
       console.warn(
-        "triggerTokens is deprecated. Use `trigger: { tokens: value }` instead."
+        "triggerTokens is deprecated. Use `trigger: { tokens: value }` instead.",
       );
       if (trigger === undefined) {
         trigger = { tokens: config.triggerTokens };
@@ -237,7 +237,7 @@ export class ClearToolUsesEdit implements ContextEdit {
     let keep: KeepSize | undefined = config.keep;
     if (config.keepMessages !== undefined) {
       console.warn(
-        "keepMessages is deprecated. Use `keep: { messages: value }` instead."
+        "keepMessages is deprecated. Use `keep: { messages: value }` instead.",
       );
       if (keep === undefined) {
         keep = { messages: config.keepMessages };
@@ -271,7 +271,7 @@ export class ClearToolUsesEdit implements ContextEdit {
       console.warn(
         "clearAtLeast is deprecated and will be removed in a future version. " +
           "It conflicts with the `keep` property. Use `keep: { tokens: value }` or " +
-          "`keep: { messages: value }` instead to control retention."
+          "`keep: { messages: value }` instead to control retention.",
       );
     }
     this.clearAtLeast = config.clearAtLeast ?? 0;
@@ -300,7 +300,7 @@ export class ClearToolUsesEdit implements ContextEdit {
         // Check if this tool message has a corresponding AI message
         const aiMessage = this.#findAIMessageForToolCall(
           messages.slice(0, i),
-          msg.tool_call_id
+          msg.tool_call_id,
         );
 
         if (!aiMessage) {
@@ -309,7 +309,7 @@ export class ClearToolUsesEdit implements ContextEdit {
         } else {
           // Check if the AI message actually has this tool call
           const toolCall = aiMessage.tool_calls?.find(
-            (call) => call.id === msg.tool_call_id
+            (call) => call.id === msg.tool_call_id,
           );
           if (!toolCall) {
             // Orphaned tool message - mark for removal
@@ -362,7 +362,7 @@ export class ClearToolUsesEdit implements ContextEdit {
     const keepCount = await this.#determineKeepCount(
       candidates,
       countTokens,
-      model
+      model,
     );
 
     /**
@@ -398,7 +398,7 @@ export class ClearToolUsesEdit implements ContextEdit {
        */
       const aiMessage = this.#findAIMessageForToolCall(
         messages.slice(0, idx),
-        toolMessage.tool_call_id
+        toolMessage.tool_call_id,
       );
 
       if (!aiMessage) {
@@ -409,7 +409,7 @@ export class ClearToolUsesEdit implements ContextEdit {
        * Find the corresponding tool call
        */
       const toolCall = aiMessage.tool_calls?.find(
-        (call) => call.id === toolMessage.tool_call_id
+        (call) => call.id === toolMessage.tool_call_id,
       );
 
       if (!toolCall) {
@@ -449,7 +449,7 @@ export class ClearToolUsesEdit implements ContextEdit {
         if (aiMsgIdx >= 0) {
           messages[aiMsgIdx] = this.#buildClearedToolInputMessage(
             aiMessage,
-            toolMessage.tool_call_id
+            toolMessage.tool_call_id,
           );
         }
       }
@@ -500,7 +500,7 @@ export class ClearToolUsesEdit implements ContextEdit {
          */
         const aiMessage = this.#findAIMessageForToolCall(
           messages.slice(0, idx),
-          toolMessage.tool_call_id
+          toolMessage.tool_call_id,
         );
 
         if (!aiMessage) {
@@ -511,7 +511,7 @@ export class ClearToolUsesEdit implements ContextEdit {
          * Find the corresponding tool call
          */
         const toolCall = aiMessage.tool_calls?.find(
-          (call) => call.id === toolMessage.tool_call_id
+          (call) => call.id === toolMessage.tool_call_id,
         );
 
         if (!toolCall) {
@@ -551,7 +551,7 @@ export class ClearToolUsesEdit implements ContextEdit {
           if (aiMsgIdx >= 0) {
             messages[aiMsgIdx] = this.#buildClearedToolInputMessage(
               aiMessage,
-              toolMessage.tool_call_id
+              toolMessage.tool_call_id,
             );
           }
         }
@@ -571,7 +571,7 @@ export class ClearToolUsesEdit implements ContextEdit {
   #shouldEdit(
     messages: BaseMessage[],
     totalTokens: number,
-    model: BaseLanguageModel
+    model: BaseLanguageModel,
   ): boolean {
     /**
      * Check each condition (OR logic between conditions)
@@ -636,7 +636,7 @@ export class ClearToolUsesEdit implements ContextEdit {
   async #determineKeepCount(
     candidates: Array<{ idx: number; msg: ToolMessage }>,
     countTokens: TokenCounter,
-    model: BaseLanguageModel
+    model: BaseLanguageModel,
   ): Promise<number> {
     if ("messages" in this.keep && this.keep.messages !== undefined) {
       return this.keep.messages;
@@ -705,14 +705,14 @@ export class ClearToolUsesEdit implements ContextEdit {
 
   #findAIMessageForToolCall(
     previousMessages: BaseMessage[],
-    toolCallId: string
+    toolCallId: string,
   ): AIMessage | null {
     // Search backwards through previous messages
     for (let i = previousMessages.length - 1; i >= 0; i--) {
       const msg = previousMessages[i];
       if (AIMessage.isInstance(msg)) {
         const hasToolCall = msg.tool_calls?.some(
-          (call) => call.id === toolCallId
+          (call) => call.id === toolCallId,
         );
         if (hasToolCall) {
           return msg;
@@ -724,7 +724,7 @@ export class ClearToolUsesEdit implements ContextEdit {
 
   #buildClearedToolInputMessage(
     message: AIMessage,
-    toolCallId: string
+    toolCallId: string,
   ): AIMessage {
     const updatedToolCalls = message.tool_calls?.map((toolCall) => {
       if (toolCall.id === toolCallId) {
@@ -739,7 +739,7 @@ export class ClearToolUsesEdit implements ContextEdit {
     };
 
     const clearedIds = new Set<string>(
-      contextEntry.cleared_tool_inputs as string[] | undefined
+      contextEntry.cleared_tool_inputs as string[] | undefined,
     );
     clearedIds.add(toolCallId);
     contextEntry.cleared_tool_inputs = Array.from(clearedIds).sort();
@@ -899,7 +899,7 @@ export interface ContextEditingMiddlewareConfig {
  * @returns A middleware instance that can be used with `createAgent`
  */
 export function contextEditingMiddleware(
-  config: ContextEditingMiddlewareConfig = {}
+  config: ContextEditingMiddlewareConfig = {},
 ) {
   const edits = config.edits ?? [new ClearToolUsesEdit()];
   const tokenCountMethod = config.tokenCountMethod ?? "approx";
@@ -932,7 +932,7 @@ export function contextEditingMiddleware(
                 return (
                   request.model as BaseLanguageModel & {
                     getNumTokensFromMessages: (
-                      messages: BaseMessage[]
+                      messages: BaseMessage[],
                     ) => Promise<{
                       totalCount: number;
                       countPerMessage: number[];
@@ -944,7 +944,7 @@ export function contextEditingMiddleware(
               }
 
               throw new Error(
-                `Model "${request.model.getName()}" does not support token counting`
+                `Model "${request.model.getName()}" does not support token counting`,
               );
             };
 

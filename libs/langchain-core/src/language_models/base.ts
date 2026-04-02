@@ -207,7 +207,7 @@ export const calculateMaxTokens = async ({
     ).encode(prompt).length;
   } catch {
     console.warn(
-      "Failed to calculate number of tokens, falling back to approximate count"
+      "Failed to calculate number of tokens, falling back to approximate count",
     );
 
     // fallback to approximate calculation if tiktoken is not available
@@ -238,10 +238,10 @@ export interface BaseLangChainParams {
  * Base class for language models, chains, tools.
  */
 export abstract class BaseLangChain<
-  RunInput,
-  RunOutput,
-  CallOptions extends RunnableConfig = RunnableConfig,
->
+    RunInput,
+    RunOutput,
+    CallOptions extends RunnableConfig = RunnableConfig,
+  >
   extends Runnable<RunInput, RunOutput, CallOptions>
   implements BaseLangChainParams
 {
@@ -290,7 +290,8 @@ export abstract class BaseLangChain<
  * takes in a parameter that extends this interface.
  */
 export interface BaseLanguageModelParams
-  extends AsyncCallerParams, BaseLangChainParams {
+  extends AsyncCallerParams,
+    BaseLangChainParams {
   /**
    * @deprecated Use `callbacks` instead
    */
@@ -317,7 +318,8 @@ export interface BaseLanguageModelTracingCallOptions {
 }
 
 export interface BaseLanguageModelCallOptions
-  extends RunnableConfig, BaseLanguageModelTracingCallOptions {
+  extends RunnableConfig,
+    BaseLanguageModelTracingCallOptions {
   /**
    * Stop tokens to use for this call.
    * If not provided, the default stop tokens for the model will be used.
@@ -397,15 +399,15 @@ export type StructuredOutputMethodParams<
 export interface BaseLanguageModelInterface<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   RunOutput = any,
-  CallOptions extends BaseLanguageModelCallOptions =
-    BaseLanguageModelCallOptions,
+  CallOptions extends
+    BaseLanguageModelCallOptions = BaseLanguageModelCallOptions,
 > extends RunnableInterface<BaseLanguageModelInput, RunOutput, CallOptions> {
   get callKeys(): string[];
 
   generatePrompt(
     promptValues: BasePromptValueInterface[],
     options?: string[] | Partial<CallOptions>,
-    callbacks?: Callbacks
+    callbacks?: Callbacks,
   ): Promise<LLMResult>;
 
   _modelType(): string;
@@ -434,11 +436,11 @@ export type LanguageModelLike = RunnableInterface<
  * Base class for language models.
  */
 export abstract class BaseLanguageModel<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput = any,
-  CallOptions extends BaseLanguageModelCallOptions =
-    BaseLanguageModelCallOptions,
->
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput = any,
+    CallOptions extends
+      BaseLanguageModelCallOptions = BaseLanguageModelCallOptions,
+  >
   extends BaseLangChain<BaseLanguageModelInput, RunOutput, CallOptions>
   implements
     BaseLanguageModelParams,
@@ -482,7 +484,7 @@ export abstract class BaseLanguageModel<
   abstract generatePrompt(
     promptValues: BasePromptValueInterface[],
     options?: string[] | CallOptions,
-    callbacks?: Callbacks
+    callbacks?: Callbacks,
   ): Promise<LLMResult>;
 
   abstract _modelType(): string;
@@ -526,12 +528,12 @@ export abstract class BaseLanguageModel<
         this._encoding = await encodingForModel(
           "modelName" in this
             ? getModelNameForTiktoken(this.modelName as string)
-            : "gpt2"
+            : "gpt2",
         );
       } catch (error) {
         console.warn(
           "Failed to calculate number of tokens, falling back to approximate count",
-          error
+          error,
         );
       }
     }
@@ -542,7 +544,7 @@ export abstract class BaseLanguageModel<
       } catch (error) {
         console.warn(
           "Failed to calculate number of tokens, falling back to approximate count",
-          error
+          error,
         );
       }
     }
@@ -551,7 +553,7 @@ export abstract class BaseLanguageModel<
   }
 
   protected static _convertInputToPromptValue(
-    input: BaseLanguageModelInput
+    input: BaseLanguageModelInput,
   ): BasePromptValueInterface {
     if (typeof input === "string") {
       return new StringPromptValue(input);
@@ -577,7 +579,7 @@ export abstract class BaseLanguageModel<
    */
   _getSerializedCacheKeyParametersForCall(
     // TODO: Fix when we remove the RunnableLambda backwards compatibility shim.
-    { config, ...callOptions }: CallOptions & { config?: RunnableConfig }
+    { config, ...callOptions }: CallOptions & { config?: RunnableConfig },
   ): string {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const params: Record<string, any> = {
@@ -587,7 +589,7 @@ export abstract class BaseLanguageModel<
       _model: this._modelType(),
     };
     const filteredEntries = Object.entries(params).filter(
-      ([_, value]) => value !== undefined
+      ([_, value]) => value !== undefined,
     );
     const serializedEntries = filteredEntries
       .map(([key, value]) => `${key}:${JSON.stringify(value)}`)
@@ -630,7 +632,7 @@ export abstract class BaseLanguageModel<
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     schema: SerializableSchema<RunOutput>,
-    config?: StructuredOutputMethodOptions<false>
+    config?: StructuredOutputMethodOptions<false>,
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput?<
@@ -638,7 +640,7 @@ export abstract class BaseLanguageModel<
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     schema: SerializableSchema<RunOutput>,
-    config?: StructuredOutputMethodOptions<true>
+    config?: StructuredOutputMethodOptions<true>,
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput?<
@@ -649,7 +651,7 @@ export abstract class BaseLanguageModel<
       | ZodV3Like<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: StructuredOutputMethodOptions<false>
+    config?: StructuredOutputMethodOptions<false>,
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput?<
@@ -660,7 +662,7 @@ export abstract class BaseLanguageModel<
       | ZodV3Like<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: StructuredOutputMethodOptions<true>
+    config?: StructuredOutputMethodOptions<true>,
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput?<
@@ -671,7 +673,7 @@ export abstract class BaseLanguageModel<
       | ZodV4Like<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: StructuredOutputMethodOptions<false>
+    config?: StructuredOutputMethodOptions<false>,
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput?<
@@ -682,7 +684,7 @@ export abstract class BaseLanguageModel<
       | ZodV4Like<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: StructuredOutputMethodOptions<true>
+    config?: StructuredOutputMethodOptions<true>,
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   /**
@@ -706,7 +708,7 @@ export abstract class BaseLanguageModel<
       | InteropZodType<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: StructuredOutputMethodOptions<boolean>
+    config?: StructuredOutputMethodOptions<boolean>,
   ):
     | Runnable<BaseLanguageModelInput, RunOutput>
     | Runnable<

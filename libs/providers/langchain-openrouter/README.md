@@ -54,7 +54,9 @@ import { ChatOpenRouter } from "@langchain/openrouter";
 const model = new ChatOpenRouter({
   model: "openai/gpt-4o",
 });
-const response = await model.invoke([{ role: "user", content: "Hello world!" }]);
+const response = await model.invoke([
+  { role: "user", content: "Hello world!" },
+]);
 ```
 
 ### Streaming
@@ -105,7 +107,7 @@ const structured = model.withStructuredOutput(
   z.object({
     answer: z.string(),
     confidence: z.number(),
-  })
+  }),
 );
 
 const response = await structured.invoke("What is the capital of France?");

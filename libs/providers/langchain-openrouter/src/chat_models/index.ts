@@ -244,7 +244,7 @@ export class ChatOpenRouter extends BaseChatModel<
   constructor(fields: ChatOpenRouterParams);
   constructor(
     modelOrFields: string | ChatOpenRouterParams,
-    fieldsArg?: Omit<ChatOpenRouterParams, "model">
+    fieldsArg?: Omit<ChatOpenRouterParams, "model">,
   ) {
     const fields =
       typeof modelOrFields === "string"
@@ -256,13 +256,13 @@ export class ChatOpenRouter extends BaseChatModel<
       fields.apiKey ?? getEnvironmentVariable("OPENROUTER_API_KEY");
     if (!apiKey) {
       throw new OpenRouterAuthError(
-        "OpenRouter API key is required. Get one at https://openrouter.ai/keys and set it via the `apiKey` parameter or the OPENROUTER_API_KEY environment variable."
+        "OpenRouter API key is required. Get one at https://openrouter.ai/keys and set it via the `apiKey` parameter or the OPENROUTER_API_KEY environment variable.",
       );
     }
     this.apiKey = apiKey;
     if (!fields.model) {
       throw new Error(
-        'ChatOpenRouter requires a `model` parameter, e.g. "openai/gpt-4o-mini".'
+        'ChatOpenRouter requires a `model` parameter, e.g. "openai/gpt-4o-mini".',
       );
     }
     this.model = fields.model;
@@ -330,7 +330,7 @@ export class ChatOpenRouter extends BaseChatModel<
    * API request body (everything except `messages`, which is added later).
    */
   override invocationParams(
-    options: this["ParsedCallOptions"]
+    options: this["ParsedCallOptions"],
   ): Omit<OpenRouterRequestBody, "messages"> {
     const tools = options.tools
       ? convertToolsToOpenRouter(options.tools, { strict: options.strict })
@@ -386,7 +386,7 @@ export class ChatOpenRouter extends BaseChatModel<
   async _generate(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun,
   ): Promise<ChatResult> {
     const body: OpenRouterRequestBody = {
       ...this.invocationParams(options),
@@ -443,7 +443,7 @@ export class ChatOpenRouter extends BaseChatModel<
   async *_streamResponseChunks(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun,
   ): AsyncGenerator<ChatGenerationChunk> {
     const body: OpenRouterRequestBody = {
       ...this.invocationParams(options),
@@ -486,7 +486,7 @@ export class ChatOpenRouter extends BaseChatModel<
         const chunk = convertOpenRouterDeltaToBaseMessageChunk(
           choice.delta,
           data,
-          defaultRole
+          defaultRole,
         );
         defaultRole = choice.delta.role ?? defaultRole;
 
@@ -517,7 +517,7 @@ export class ChatOpenRouter extends BaseChatModel<
           undefined,
           undefined,
           undefined,
-          { chunk: generationChunk }
+          { chunk: generationChunk },
         );
       }
     } finally {
@@ -531,7 +531,7 @@ export class ChatOpenRouter extends BaseChatModel<
    */
   override bindTools(
     tools: BindToolsInput[],
-    kwargs?: Partial<ChatOpenRouterCallOptions>
+    kwargs?: Partial<ChatOpenRouterCallOptions>,
   ): Runnable<
     BaseLanguageModelInput,
     AIMessageChunk,
@@ -558,50 +558,50 @@ export class ChatOpenRouter extends BaseChatModel<
    */
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: StructuredOutputMethodOptions<false>
+    config?: StructuredOutputMethodOptions<false>,
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: StructuredOutputMethodOptions<true>
+    config?: StructuredOutputMethodOptions<true>,
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: StructuredOutputMethodOptions<boolean>
+    config?: StructuredOutputMethodOptions<boolean>,
   ):
     | Runnable<BaseLanguageModelInput, RunOutput>
     | Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
-    RunOutput extends Record<string, unknown> = Record<string, unknown>
+    RunOutput extends Record<string, unknown> = Record<string, unknown>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
       | Record<string, unknown>,
-    config?: StructuredOutputMethodOptions<boolean>
+    config?: StructuredOutputMethodOptions<boolean>,
   ) {
     let llm: Runnable<BaseLanguageModelInput>;
     let outputParser: Runnable<AIMessageChunk, RunOutput>;
@@ -692,7 +692,7 @@ export class ChatOpenRouter extends BaseChatModel<
       llm,
       outputParser,
       includeRaw,
-      "ChatOpenRouterStructuredOutput"
+      "ChatOpenRouterStructuredOutput",
     );
   }
 }

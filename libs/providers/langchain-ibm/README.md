@@ -68,7 +68,7 @@ const structuredModel = model.withStructuredOutput(
   z.object({
     answer: z.string(),
     confidence: z.number(),
-  })
+  }),
 );
 
 const result = await structuredModel.invoke("What is 2+2?");
@@ -165,7 +165,10 @@ const documents = [
   new Document({ pageContent: "Tokyo is the capital of Japan." }),
 ];
 
-const results = await reranker.compressDocuments(documents, "European capitals");
+const results = await reranker.compressDocuments(
+  documents,
+  "European capitals",
+);
 ```
 
 ### Agent Toolkits

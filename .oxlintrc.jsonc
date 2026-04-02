@@ -2,10 +2,10 @@
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["typescript", "unicorn", "node"],
   "categories": {
-    "correctness": "off"
+    "correctness": "off",
   },
   "env": {
-    "builtin": true
+    "builtin": true,
   },
   "ignorePatterns": [
     "**/node_modules/**",
@@ -25,7 +25,7 @@
     "**/src/utils/sax-js/**",
     "**/src/util/@cfworker/**",
     "**/src/util/fast-json-patch/**",
-    "**/src/util/js-sha1/**"
+    "**/src/util/js-sha1/**",
   ],
   "rules": {
     "constructor-super": "error",
@@ -101,7 +101,7 @@
     "typescript/no-wrapper-object-types": "error",
     "typescript/prefer-as-const": "error",
     "typescript/prefer-namespace-keyword": "error",
-    "typescript/triple-slash-reference": "error"
+    "typescript/triple-slash-reference": "error",
   },
   "overrides": [
     {
@@ -124,8 +124,8 @@
         "no-with": "off",
         "prefer-const": "error",
         "prefer-rest-params": "error",
-        "prefer-spread": "error"
-      }
+        "prefer-spread": "error",
+      },
     },
     {
       "files": ["**/*.ts", "**/*.tsx"],
@@ -141,8 +141,8 @@
         "no-use-before-define": [
           "error",
           {
-            "functions": false
-          }
+            "functions": false,
+          },
         ],
         "no-useless-constructor": "off",
         "no-else-return": "off",
@@ -153,8 +153,8 @@
           "error",
           {
             "properties": false,
-            "capIsNew": false
-          }
+            "capIsNew": false,
+          },
         ],
         "arrow-body-style": "off",
         "prefer-destructuring": "off",
@@ -162,8 +162,8 @@
         "no-empty": [
           "error",
           {
-            "allowEmptyCatch": true
-          }
+            "allowEmptyCatch": true,
+          },
         ],
         "no-restricted-globals": "off",
         "no-case-declarations": "off",
@@ -183,8 +183,8 @@
             "argsIgnorePattern": "^_",
             "caughtErrorsIgnorePattern": "^_",
             "destructuredArrayIgnorePattern": "^_",
-            "ignoreRestSiblings": true
-          }
+            "ignoreRestSiblings": true,
+          },
         ],
         "no-empty-function": "off",
         "import/extensions": ["error", "ignorePackages"],
@@ -198,22 +198,22 @@
         "typescript/no-non-null-assertion": "off",
         "typescript/no-wrapper-object-types": "off",
         "typescript/no-unsafe-function-type": "off",
-        "typescript/no-empty-object-type": "off"
+        "typescript/no-empty-object-type": "off",
       },
-      "plugins": ["import"]
+      "plugins": ["import"],
     },
     {
       "files": [
         "**/*.test.ts",
         "**/*.test-d.ts",
         "**/*.spec.ts",
-        "**/tests/**/*.ts"
+        "**/tests/**/*.ts",
       ],
       "rules": {
         "no-restricted-imports": "off",
         "no-unused-vars": "off",
-        "node/no-process-env": "off"
-      }
+        "node/no-process-env": "off",
+      },
     },
     {
       "files": ["**/*.ts", "**/*.tsx"],
@@ -221,8 +221,8 @@
         "process": "readonly",
         "console": "readonly",
         "setImmediate": "readonly",
-        "clearImmediate": "readonly"
-      }
-    }
-  ]
+        "clearImmediate": "readonly",
+      },
+    },
+  ],
 }
