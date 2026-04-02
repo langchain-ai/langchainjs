@@ -7,7 +7,6 @@ on:
       - "libs/langchain/**"
       - "libs/langchain-core/**"
       - "libs/langchain-classic/**"
-      - "libs/community/langchain-community/**"
       - "libs/providers/langchain-anthropic/**"
       - "libs/providers/langchain-openai/**"
       - ".github/workflows/test-exports.yml"
@@ -55,7 +54,6 @@ jobs:
           --filter langchain
           --filter @langchain/core
           --filter @langchain/anthropic
-          --filter @langchain/community
           --filter @langchain/openai
           --filter @langchain/ollama
           --filter @langchain/google-gauth
@@ -85,7 +83,6 @@ jobs:
           --filter langchain
           --filter @langchain/core
           --filter @langchain/anthropic
-          --filter @langchain/community
           --filter @langchain/openai
           --filter @langchain/ollama
           --filter @langchain/google-gauth
@@ -115,7 +112,6 @@ jobs:
           --filter langchain
           --filter @langchain/core
           --filter @langchain/anthropic
-          --filter @langchain/community
           --filter @langchain/openai
           --filter @langchain/ollama
           --filter @langchain/google-gauth
@@ -145,7 +141,6 @@ jobs:
           --filter langchain
           --filter @langchain/core
           --filter @langchain/anthropic
-          --filter @langchain/community
           --filter @langchain/openai
           --filter @langchain/ollama
           --filter @langchain/google-gauth
@@ -175,7 +170,6 @@ jobs:
           --filter langchain
           --filter @langchain/core
           --filter @langchain/anthropic
-          --filter @langchain/community
           --filter @langchain/openai
           --filter @langchain/ollama
           --filter @langchain/google-gauth
@@ -205,7 +199,6 @@ jobs:
           --filter langchain
           --filter @langchain/core
           --filter @langchain/anthropic
-          --filter @langchain/community
           --filter @langchain/openai
           --filter @langchain/ollama
           --filter @langchain/google-gauth
@@ -235,7 +228,6 @@ jobs:
           --filter langchain
           --filter @langchain/core
           --filter @langchain/anthropic
-          --filter @langchain/community
           --filter @langchain/openai
           --filter @langchain/ollama
           --filter @langchain/google-gauth
@@ -266,7 +258,6 @@ jobs:
           --filter @langchain/core
           --filter @langchain/classic
           --filter @langchain/anthropic
-          --filter @langchain/community
           --filter @langchain/openai
           --filter @langchain/ollama
           --filter @langchain/google-gauth
@@ -296,7 +287,6 @@ jobs:
           --filter langchain
           --filter @langchain/core
           --filter @langchain/anthropic
-          --filter @langchain/community
           --filter @langchain/openai
         shell: bash
 

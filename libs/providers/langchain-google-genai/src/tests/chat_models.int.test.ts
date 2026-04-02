@@ -753,8 +753,7 @@ test("pass pdf to request", async () => {
     temperature: 0,
     maxRetries: 0,
   });
-  const pdfPath =
-    "../langchain-community/src/document_loaders/tests/example_data/Jacob_Lee_Resume_2023.pdf";
+  const pdfPath = "./test_data/Jacob_Lee_Resume_2023.pdf";
   const pdfBase64 = await fs.readFile(pdfPath, "base64");
 
   const response = await model.invoke([
