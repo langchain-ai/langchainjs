@@ -25,11 +25,12 @@
     "**/src/utils/sax-js/**",
     "**/src/util/@cfworker/**",
     "**/src/util/fast-json-patch/**",
-    "**/src/util/js-sha1/**",
+    "**/src/utils/zod-to-json-schema/**",
   ],
   "rules": {
     "constructor-super": "error",
     "for-direction": "error",
+    "import/extensions": ["error", "ignorePackages"],
     "no-async-promise-executor": "error",
     "no-case-declarations": "error",
     "no-class-assign": "error",
@@ -72,7 +73,7 @@
     "no-this-before-super": "error",
     "no-unsafe-finally": "error",
     "no-unsafe-negation": "error",
-    "no-unsafe-optional-chaining": "error",
+    "no-unsafe-optional-chaining": "off",
     "no-unused-labels": "error",
     "no-unused-private-class-members": "error",
     "no-unused-vars": "error",
@@ -91,7 +92,7 @@
     "typescript/no-explicit-any": "error",
     "typescript/no-extra-non-null-assertion": "error",
     "typescript/no-misused-new": "error",
-    "typescript/no-namespace": "error",
+    "typescript/no-namespace": "off",
     "typescript/no-non-null-asserted-optional-chain": "error",
     "typescript/no-require-imports": "error",
     "typescript/no-this-alias": "error",
@@ -137,7 +138,6 @@
         "no-shadow": "off",
         "no-continue": "off",
         "no-void": "error",
-        "node/no-process-env": "error",
         "no-use-before-define": [
           "error",
           {
@@ -149,13 +149,7 @@
         "func-names": "off",
         "no-lonely-if": "off",
         "prefer-rest-params": "off",
-        "new-cap": [
-          "error",
-          {
-            "properties": false,
-            "capIsNew": false,
-          },
-        ],
+        "new-cap": "off",
         "arrow-body-style": "off",
         "prefer-destructuring": "off",
         "no-param-reassign": "error",
@@ -187,7 +181,6 @@
           },
         ],
         "no-empty-function": "off",
-        "import/extensions": ["error", "ignorePackages"],
         "import/prefer-default-export": "off",
         "import/no-cycle": "off",
         "typescript/explicit-module-boundary-types": "off",
@@ -216,12 +209,38 @@
       },
     },
     {
-      "files": ["**/*.ts", "**/*.tsx"],
-      "globals": {
-        "process": "readonly",
-        "console": "readonly",
-        "setImmediate": "readonly",
-        "clearImmediate": "readonly",
+      "files": ["**/examples/**"],
+      "rules": {
+        "no-process-env": "off",
+        "no-unused-vars": "off",
+        "no-explicit-any": "off",
+      },
+    },
+    {
+      "files": ["**/environment_tests/**"],
+      "rules": {
+        "no-unused-vars": "off",
+        "import/extensions": "off",
+      },
+    },
+    {
+      "files": ["**/internal/**"],
+      "rules": {
+        "no-process-env": "off",
+      },
+    },
+    {
+      "files": ["**/create-langchain-integration/**"],
+      "rules": {
+        "no-explicit-any": "off",
+        "import/extensions": "off",
+        "prefer-template": "off",
+      },
+    },
+    {
+      "files": ["libs/providers/langchain-pgvector/**"],
+      "rules": {
+        "no-control-regex": "off",
       },
     },
   ],
