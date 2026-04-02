@@ -12,9 +12,7 @@
     { "path": "../providers/langchain-anthropic" },
     { "path": "../providers/langchain-aws" },
     { "path": "../providers/langchain-cloudflare" },
-    { "path": "../providers/langchain-cohere" },
     { "path": "../providers/langchain-deepseek" },
-    { "path": "../providers/langchain-exa" },
     { "path": "../providers/langchain-fireworks" },
     { "path": "../providers/langchain-google-cloud-sql-pg" },
     { "path": "../providers/langchain-google-common" },
@@ -29,12 +27,8 @@
     { "path": "../providers/langchain-ollama" },
     { "path": "../providers/langchain-openai" },
     { "path": "../providers/langchain-perplexity" },
-    { "path": "../providers/langchain-pinecone" },
-    { "path": "../providers/langchain-qdrant" },
     { "path": "../providers/langchain-redis" },
-    { "path": "../providers/langchain-tavily" },
     { "path": "../providers/langchain-together-ai" },
-    { "path": "../providers/langchain-weaviate" },
     { "path": "../providers/langchain-xai" }
   ]
 }

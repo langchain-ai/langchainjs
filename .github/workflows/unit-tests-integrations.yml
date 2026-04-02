@@ -45,7 +45,7 @@ jobs:
     needs: get-changed-files
     runs-on: ubuntu-latest
     env:
-      PACKAGES: "anthropic,aws,cloudflare,cohere,core,deepseek,exa,google-cloud-sql-pg,google-common,google-gauth,google-genai,google-vertexai,google-vertexai-web,google-webauth,groq,mcp-adapters,mistralai,mongodb,ollama,openai,pinecone,qdrant,redis,standard-tests,tavily,textsplitters,weaviate,xai"
+      PACKAGES: "anthropic,aws,cloudflare,core,deepseek,fireworks,google-cloud-sql-pg,google-common,google-gauth,google-genai,google-vertexai,google-vertexai-web,google-webauth,groq,ibm,mcp-adapters,mistralai,mongodb,neo4j,ollama,openai,perplexity,redis,standard-tests,textsplitters,together-ai,xai"
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
       matrix_length: ${{ steps.set-matrix.outputs.matrix_length }}

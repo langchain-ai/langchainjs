@@ -73,23 +73,11 @@ pkg:@langchain/cloudflare:
           - libs/providers/langchain-cloudflare/**
           - libs/providers/langchain-cloudflare/**/*
 
-pkg:@langchain/cohere:
-  - changed-files:
-      - any-glob-to-any-file:
-          - libs/providers/langchain-cohere/**
-          - libs/providers/langchain-cohere/**/*
-
 pkg:@langchain/deepseek:
   - changed-files:
       - any-glob-to-any-file:
           - libs/providers/langchain-deepseek/**
           - libs/providers/langchain-deepseek/**/*
-
-pkg:@langchain/exa:
-  - changed-files:
-      - any-glob-to-any-file:
-          - libs/providers/langchain-exa/**
-          - libs/providers/langchain-exa/**/*
 
 pkg:@langchain/google-common:
   - changed-files:
@@ -157,41 +145,11 @@ pkg:@langchain/openai:
           - libs/providers/langchain-openai/**
           - libs/providers/langchain-openai/**/*
 
-pkg:@langchain/pinecone:
-  - changed-files:
-      - any-glob-to-any-file:
-          - libs/providers/langchain-pinecone/**
-          - libs/providers/langchain-pinecone/**/*
-
-pkg:@langchain/qdrant:
-  - changed-files:
-      - any-glob-to-any-file:
-          - libs/providers/langchain-qdrant/**
-          - libs/providers/langchain-qdrant/**/*
-
 pkg:@langchain/redis:
   - changed-files:
       - any-glob-to-any-file:
           - libs/providers/langchain-redis/**
           - libs/providers/langchain-redis/**/*
-
-pkg:@langchain/tavily:
-  - changed-files:
-      - any-glob-to-any-file:
-          - libs/providers/langchain-tavily/**
-          - libs/providers/langchain-tavily/**/*
-
-pkg:@langchain/weaviate:
-  - changed-files:
-      - any-glob-to-any-file:
-          - libs/providers/langchain-weaviate/**
-          - libs/providers/langchain-weaviate/**/*
-
-pkg:@langchain/together-ai:
-  - changed-files:
-      - any-glob-to-any-file:
-          - libs/providers/langchain-together-ai/**
-          - libs/providers/langchain-together-ai/**/*
 
 pkg:@langchain/xai:
   - changed-files:
