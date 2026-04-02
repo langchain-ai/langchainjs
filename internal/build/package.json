@@ -11,10 +11,10 @@
   "dependencies": {
     "@arethetypeswrong/core": "^0.18.2",
     "@typescript/native-preview": "^7.0.0-dev.20260302.1",
-    "publint": "^0.3.15",
+    "publint": "^0.3.18",
     "rolldown": "^1.0.0-rc.4",
     "tsdown": "^0.21.7",
-    "type-fest": "^5.3.0",
+    "type-fest": "^5.5.0",
     "typescript": "^5.9.3",
     "unplugin-unused": "^0.5.6"
   },
