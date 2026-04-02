@@ -160,12 +160,14 @@ describe("MultiServerMCPClient", () => {
     });
 
     test("should throw on connection failure", async () => {
-      (Client as Mock).mockImplementationOnce(() => ({
+      (Client as Mock).mockImplementationOnce(function mockClient() {
+        return {
         connect: vi
           .fn()
           .mockReturnValue(Promise.reject(new Error("Connection failed"))),
         listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
-      }));
+        };
+      });
 
       const client = new MultiServerMCPClient({
         "test-server": {
@@ -181,13 +183,15 @@ describe("MultiServerMCPClient", () => {
     });
 
     test("should throw on tool loading failures", async () => {
-      (Client as Mock).mockImplementationOnce(() => ({
-        connect: vi.fn().mockReturnValue(Promise.resolve()),
-        setNotificationHandler: vi.fn().mockReturnValue(Promise.resolve()),
-        listTools: vi
-          .fn()
-          .mockReturnValue(Promise.reject(new Error("Failed to list tools"))),
-      }));
+      (Client as Mock).mockImplementationOnce(function mockClient() {
+        return {
+          connect: vi.fn().mockReturnValue(Promise.resolve()),
+          setNotificationHandler: vi.fn().mockReturnValue(Promise.resolve()),
+          listTools: vi
+            .fn()
+            .mockReturnValue(Promise.reject(new Error("Failed to list tools"))),
+        };
+      });
 
       const client = new MultiServerMCPClient({
         "test-server": {
@@ -355,13 +359,15 @@ describe("MultiServerMCPClient", () => {
         { name: "tool2", description: "Tool 2", inputSchema: {} },
       ];
 
-      (Client as Mock).mockImplementationOnce(() => ({
-        connect: vi.fn().mockReturnValue(Promise.resolve()),
-        setNotificationHandler: vi.fn().mockReturnValue(Promise.resolve()),
-        listTools: vi
-          .fn()
-          .mockReturnValue(Promise.resolve({ tools: mockTools })),
-      }));
+      (Client as Mock).mockImplementationOnce(function mockClient() {
+        return {
+          connect: vi.fn().mockReturnValue(Promise.resolve()),
+          setNotificationHandler: vi.fn().mockReturnValue(Promise.resolve()),
+          listTools: vi
+            .fn()
+            .mockReturnValue(Promise.resolve({ tools: mockTools })),
+        };
+      });
 
       const client = new MultiServerMCPClient({
         server1: {
@@ -563,12 +569,14 @@ describe("MultiServerMCPClient", () => {
     });
 
     test("should throw on streamable HTTP connection failure", async () => {
-      (Client as Mock).mockImplementationOnce(() => ({
+      (Client as Mock).mockImplementationOnce(function mockClient() {
+        return {
         connect: vi
           .fn()
           .mockReturnValue(Promise.reject(new Error("Connection failed"))),
         listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
-      }));
+        };
+      });
 
       const client = new MultiServerMCPClient({
         "test-server": {
@@ -604,7 +612,7 @@ describe("MultiServerMCPClient", () => {
     test("should ignore connection errors when onConnectionError is 'ignore'", async () => {
       // Mock one successful and one failing connection
       let clientCallCount = 0;
-      (Client as Mock).mockImplementation(() => {
+      (Client as Mock).mockImplementation(function mockClient() {
         clientCallCount += 1;
         if (clientCallCount === 1) {
           // First server fails
@@ -653,12 +661,14 @@ describe("MultiServerMCPClient", () => {
     });
 
     test("should throw on connection failure when onConnectionError is 'throw'", async () => {
-      (Client as Mock).mockImplementationOnce(() => ({
+      (Client as Mock).mockImplementationOnce(function mockClient() {
+        return {
         connect: vi
           .fn()
           .mockReturnValue(Promise.reject(new Error("Connection failed"))),
         listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
-      }));
+        };
+      });
 
       const client = new MultiServerMCPClient({
         mcpServers: {
@@ -677,12 +687,14 @@ describe("MultiServerMCPClient", () => {
     });
 
     test("should not throw when all servers fail and onConnectionError is 'ignore'", async () => {
-      (Client as Mock).mockImplementation(() => ({
+      (Client as Mock).mockImplementation(function mockClient() {
+        return {
         connect: vi
           .fn()
           .mockReturnValue(Promise.reject(new Error("Connection failed"))),
         listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
-      }));
+        };
+      });
 
       const client = new MultiServerMCPClient({
         mcpServers: {
@@ -717,7 +729,7 @@ describe("MultiServerMCPClient", () => {
         expect(error).toBeInstanceOf(Error);
       });
 
-      (Client as Mock).mockImplementation(() => {
+      (Client as Mock).mockImplementation(function mockClient() {
         clientCallCount += 1;
         if (clientCallCount === 1) {
           // First server (failing-server) fails
@@ -775,12 +787,14 @@ describe("MultiServerMCPClient", () => {
         throw customError;
       });
 
-      (Client as Mock).mockImplementation(() => ({
+      (Client as Mock).mockImplementation(function mockClient() {
+        return {
         connect: vi
           .fn()
           .mockReturnValue(Promise.reject(new Error("Connection failed"))),
         listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
-      }));
+        };
+      });
 
       const client = new MultiServerMCPClient({
         mcpServers: {
@@ -807,7 +821,7 @@ describe("MultiServerMCPClient", () => {
       });
 
       let clientCallCount = 0;
-      (Client as Mock).mockImplementation(() => {
+      (Client as Mock).mockImplementation(function mockClient() {
         clientCallCount += 1;
         if (clientCallCount === 1) {
           // First server fails
@@ -855,7 +869,7 @@ describe("MultiServerMCPClient", () => {
 
     test("should be idempotent when initializeConnections is called multiple times with onConnectionError 'ignore'", async () => {
       let clientCallCount = 0;
-      (Client as Mock).mockImplementation(() => {
+      (Client as Mock).mockImplementation(function mockClient() {
         clientCallCount += 1;
         if (clientCallCount === 1) {
           // First server fails

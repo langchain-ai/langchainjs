@@ -8,10 +8,11 @@ const streamableHTTPClientTransportPrototype = {
 };
 export const StreamableHTTPClientTransport: any = vi
   .fn()
-  .mockImplementation((config) => {
+  .mockImplementation(function mockStreamableHTTPClientTransport(url, options) {
     return {
       ...streamableHTTPClientTransportPrototype,
-      config,
+      url,
+      options,
     };
   });
 StreamableHTTPClientTransport.prototype =
