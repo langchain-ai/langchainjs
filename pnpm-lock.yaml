@@ -357,8 +357,8 @@ importers:
         specifier: ~5.8.3
         version: 5.8.3
       typesense:
-        specifier: ^3.0.1
-        version: 3.0.1(@babel/runtime@7.28.6)
+        specifier: ^3.0.5
+        version: 3.0.5(@babel/runtime@7.28.6)
       uuid:
         specifier: ^10.0.0
         version: 10.0.0
@@ -943,8 +943,8 @@ importers:
         specifier: ~5.8.3
         version: 5.8.3
       typesense:
-        specifier: ^3.0.1
-        version: 3.0.1(@babel/runtime@7.28.6)
+        specifier: ^3.0.5
+        version: 3.0.5(@babel/runtime@7.28.6)
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.13)(@types/node@25.5.0)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3)
@@ -10010,8 +10010,8 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
-  typesense@3.0.1:
-    resolution: {integrity: sha512-aRzuDQlwR7s2sWw+JiR3CufrMWpzH5UAJ4XlybYczD02QPy5jCsEQiueqUu0Wiai4zW/RGYRruF3XrdEXPgPJA==}
+  typesense@3.0.5:
+    resolution: {integrity: sha512-Pw/yWosbqEOFMM/wQDsnS8FA6r3Qp5ilxuqZTMBoUc95SGCEBflMd39kvDEZZFoTORzNDxCLiiQ+LfYJTl1ulQ==}
     engines: {node: '>=18'}
     peerDependencies:
       '@babel/runtime': ^7.23.2
@@ -19941,7 +19941,7 @@ snapshots:
 
   typescript@5.9.3: {}
 
-  typesense@3.0.1(@babel/runtime@7.28.6):
+  typesense@3.0.5(@babel/runtime@7.28.6):
     dependencies:
       '@babel/runtime': 7.28.6
       axios: 1.13.6(debug@4.4.3)
