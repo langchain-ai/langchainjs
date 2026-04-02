@@ -33,13 +33,13 @@ const docs = [
 const vectorStore = await RedisVectorStore.fromDocuments(
   docs,
   new OpenAIEmbeddings(),
-  ({
+  {
     redisClient: client,
     indexName: "docs",
     createIndexOptions: {
       TEMPORARY: 1000,
     },
-  } as unknown) as RedisVectorStoreConfig
+  } as unknown as RedisVectorStoreConfig
 );
 
 await client.disconnect();

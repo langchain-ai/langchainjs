@@ -1,6 +1,9 @@
 import { createClient } from "redis";
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
-import { RedisVectorStore, type RedisVectorStoreConfig } from "@langchain/redis";
+import {
+  RedisVectorStore,
+  type RedisVectorStoreConfig,
+} from "@langchain/redis";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { createStuffDocumentsChain } from "@langchain/classic/chains/combine_documents";
 import { createRetrievalChain } from "@langchain/classic/chains/retrieval";

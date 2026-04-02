@@ -14,12 +14,12 @@ const vectorStore = new MongoDBAtlasVectorSearch(
   // Use OpenAI embeddings here because the Cohere integration is no longer
   // managed in this repository.
   new OpenAIEmbeddings(),
-  ({
+  {
     collection,
     indexName: "default", // The name of the Atlas search index. Defaults to "default"
     textKey: "text", // The name of the collection field containing the raw content. Defaults to "text"
     embeddingKey: "embedding", // The name of the collection field containing the embedded text. Defaults to "embedding"
-  } as unknown) as MongoDBAtlasVectorSearchLibArgs
+  } as unknown as MongoDBAtlasVectorSearchLibArgs
 );
 
 const resultOne = await vectorStore.maxMarginalRelevanceSearch("Hello world", {

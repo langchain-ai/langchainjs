@@ -34,8 +34,7 @@ const vectorStore = await RedisVectorStore.fromDocuments(
   docs,
   new OpenAIEmbeddings(),
   {
-    redisClient:
-      client as unknown as RedisVectorStoreConfig["redisClient"],
+    redisClient: client as unknown as RedisVectorStoreConfig["redisClient"],
     indexName: "docs",
   }
 );
