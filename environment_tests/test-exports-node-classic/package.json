@@ -15,12 +15,11 @@
   "dependencies": {
     "@langchain/core": "workspace:^",
     "@tsconfig/recommended": "^1.0.10",
-    "@types/node": "^24.3.0",
     "langchain": "workspace:*",
     "typescript": "^5.0.0"
   },
   "devDependencies": {
-    "@types/node": "^18.15.11",
+    "@types/node": "^24.10.13",
     "prettier": "^3.5.0"
   }
 }
