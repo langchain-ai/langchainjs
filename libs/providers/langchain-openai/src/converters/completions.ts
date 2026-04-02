@@ -174,11 +174,7 @@ export const completionsApiContentBlockConverter: StandardContentBlockConverter<
         type: "file",
         file: {
           file_data: block.url, // formatted as base64 data URL
-          ...(block.metadata?.filename || block.metadata?.name
-            ? {
-                filename,
-              }
-            : {}),
+          filename,
         },
       };
     }
@@ -190,13 +186,7 @@ export const completionsApiContentBlockConverter: StandardContentBlockConverter<
         type: "file",
         file: {
           file_data: `data:${block.mime_type ?? ""};base64,${block.data}`,
-          ...(block.metadata?.filename ||
-          block.metadata?.name ||
-          block.metadata?.title
-            ? {
-                filename,
-              }
-            : {}),
+          filename,
         },
       };
     }

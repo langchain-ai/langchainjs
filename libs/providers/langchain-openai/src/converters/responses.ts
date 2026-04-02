@@ -1077,7 +1077,7 @@ export const convertStandardContentMessageToResponsesInput: Converter<
         return {
           type: "input_file",
           file_data: `data:${mimeType};base64,${encoded}`,
-          ...(filename ? { filename } : {}),
+          filename,
         };
       }
       return undefined;
