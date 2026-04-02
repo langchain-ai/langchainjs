@@ -24,7 +24,6 @@ const dockerPackages: WorkspacePackage[] = [
   { pkg: { name: "@langchain/core" }, path: "/langchain-core" },
   { pkg: { name: "@langchain/openai" }, path: "/langchain-openai" },
   { pkg: { name: "@langchain/anthropic" }, path: "/langchain-anthropic" },
-  { pkg: { name: "@langchain/cohere" }, path: "/langchain-cohere" },
   { pkg: { name: "@langchain/ollama" }, path: "/langchain-ollama" },
   {
     pkg: { name: "@langchain/google-gauth" },
