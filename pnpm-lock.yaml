@@ -81,6 +81,28 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
+  environment_tests/test-exports-node-classic:
+    dependencies:
+      '@langchain/core':
+        specifier: workspace:^
+        version: link:../../libs/langchain-core
+      '@tsconfig/recommended':
+        specifier: ^1.0.10
+        version: 1.0.13
+      langchain:
+        specifier: workspace:^
+        version: link:../../libs/langchain
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.3
+    devDependencies:
+      '@types/node':
+        specifier: ^24.10.13
+        version: 24.10.13
+      prettier:
+        specifier: ^3.5.0
+        version: 3.8.1
+
   examples:
     dependencies:
       '@aws-sdk/dsql-signer':
