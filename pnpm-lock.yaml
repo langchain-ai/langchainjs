@@ -1718,8 +1718,8 @@ importers:
   libs/providers/langchain-ibm:
     dependencies:
       '@ibm-cloud/watsonx-ai':
-        specifier: ^1.7.9
-        version: 1.7.9
+        specifier: ^1.7.11
+        version: 1.7.11(@swc/core@1.15.21(@swc/helpers@0.5.18))(typescript@5.8.3)
       ibm-cloud-sdk-core:
         specifier: ^5.4.8
         version: 5.4.8
@@ -2843,6 +2843,9 @@ packages:
     resolution: {integrity: sha512-6zABk/ECA/QYSCQ1NGiVwwbQerUCZ+TQbp64Q3AgmfNvurHH0j8TtXa1qbShXA6qqkpAj4V5W8pP6mLe1mcMqA==}
     engines: {node: '>=18'}
 
+  '@borewit/text-codec@0.2.2':
+    resolution: {integrity: sha512-DDaRehssg1aNrH4+2hnj1B7vnUGEjU6OIlyRdkMd0aUdIUvKXrJfXsy8LVtXAy7DRvYVluWbMspsRhz2lcW0mQ==}
+
   '@braidai/lang@1.1.2':
     resolution: {integrity: sha512-qBcknbBufNHlui137Hft8xauQMTZDKdophmLFv05r2eNmdIv/MlPuP4TdUknHG68UdWLgVZwgxVe735HzJNIwA==}
 
@@ -3444,8 +3447,8 @@ packages:
   '@iarna/toml@2.2.5':
     resolution: {integrity: sha512-trnsAYxU3xnS1gPHPyU961coFyLkh4gAD/0zQ5mymY4yOZ+CYvsPqUbOFSw0aDM4y0tV7tiFxL/1XfXPNC6IPg==}
 
-  '@ibm-cloud/watsonx-ai@1.7.9':
-    resolution: {integrity: sha512-farwTW1ffFt3NVvqZQIcd0VBKByLK6ctnfn4XM7Rf9Mf5JJbNwVPV1Wll046E/MlKAaZEM6sFDGAh+JCnnmqyQ==}
+  '@ibm-cloud/watsonx-ai@1.7.11':
+    resolution: {integrity: sha512-sBMj/YhV5qvJdBpvgutmX6vLUUnSwvhFaJk7r3hiMh5aB7BQWQ+5zyzvSPLywOwTWZbgy4v8jxTUhR6jb+kguw==}
     engines: {node: '>=20.0.0'}
 
   '@inquirer/ansi@1.0.2':
@@ -5334,6 +5337,10 @@ packages:
   '@testcontainers/postgresql@11.13.0':
     resolution: {integrity: sha512-Y+HLf+IEu9+h3MgxRhnFunw9ldk3jxN2PO6zyejN5AiDd1aSeBQ7hfpc/4MlMm65St2DdLGf39oE/vdW1+hc/Q==}
 
+  '@tokenizer/inflate@0.4.1':
+    resolution: {integrity: sha512-2mAv+8pkG6GIZiF1kNg1jAjh27IDxEPKwdGul3snfztFerfPGI1LjDezZp3i7BElXompqEtPmoPx6c2wgtWsOA==}
+    engines: {node: '>=18'}
+
   '@tokenizer/token@0.3.0':
     resolution: {integrity: sha512-OvjF+z51L3ov0OyAU0duzsYuvO01PH7x4t6DJx+guahgTnBHkhJdG7soQeTSFLWN3efnHyibZ4Z8l2EuWwJN3A==}
 
@@ -6018,6 +6025,9 @@ packages:
 
   axios@1.13.6:
     resolution: {integrity: sha512-ChTCHMouEe2kn713WHbQGcuYrr6fXTBiu460OTwWrWob16g1bXn4vtz07Ope7ewMozJAnEquLk5lWQWtBig9DQ==}
+
+  axios@1.14.0:
+    resolution: {integrity: sha512-3Y8yrqLSwjuzpXuZ0oIYZ/XGgLwUIBU3uLvbcpb0pidD9ctpShJd43KSlEEkVQg6DS0G9NKyzOvBfUtDKEyHvQ==}
 
   b4a@1.7.3:
     resolution: {integrity: sha512-5Q2mfq2WfGuFp3uS//0s6baOJLMoVduPYVeNmDYxu5OUA1/cBfvr2RIS7vi62LdNj/urk1hfmj867I3qt6uZ7Q==}
@@ -7156,6 +7166,10 @@ packages:
     resolution: {integrity: sha512-/yFHK0aGjFEgDJjEKP0pWCplsPFPhwyfwevf/pVxiN0tmE4L9LmwWxWukdJSHdoCli4VgQLehjJtwQBnqmsKcw==}
     engines: {node: '>=10'}
 
+  file-type@21.3.4:
+    resolution: {integrity: sha512-Ievi/yy8DS3ygGvT47PjSfdFoX+2isQueoYP1cntFW1JLYAuS4GD7NUPGg4zv2iZfV52uDyk5w5Z0TdpRS6Q1g==}
+    engines: {node: '>=20'}
+
   file-uri-to-path@1.0.0:
     resolution: {integrity: sha512-0Zt+s3L7Vf1biwWZ29aARiVYLx7iMGnEUl9x33fbB/j3jR81u/O2LbqK+Bm1CDSNDKVtJ/YjwY7TUd5SkeLQLw==}
 
@@ -7559,6 +7573,10 @@ packages:
 
   ibm-cloud-sdk-core@5.4.8:
     resolution: {integrity: sha512-tLMlZv13cV6S1UPj/bhv8XfV9Z1BDDs/4DxHKWnCw7QlJMzmGdHLPX386x9nrFMQMPZ48eAH+Thsa06tzUZkaA==}
+    engines: {node: '>=20'}
+
+  ibm-cloud-sdk-core@5.4.9:
+    resolution: {integrity: sha512-340fGcZEwUBdxBOPmn8V8fIiFRWF92yFqSFRNLwPQz4h+PS4jcAyd3JGqU6CpFqzUTt+PatVX/jHFwzUTVdmxQ==}
     engines: {node: '>=20'}
 
   iceberg-js@0.8.1:
@@ -8144,6 +8162,10 @@ packages:
   listr2@9.0.5:
     resolution: {integrity: sha512-ME4Fb83LgEgwNw96RKNvKV4VTLuXfoKudAmm2lP8Kk87KaMK0/Xrx/aAkMWmT8mDb+3MlFDspfbCs7adjRxA2g==}
     engines: {node: '>=20.0.0'}
+
+  load-esm@1.0.3:
+    resolution: {integrity: sha512-v5xlu8eHD1+6r8EHTg6hfmO97LN8ugKtiXcy5e6oN72iD2r6u0RPfLl6fxM+7Wnh2ZRq15o0russMst44WauPA==}
+    engines: {node: '>=13.2.0'}
 
   local-pkg@0.5.1:
     resolution: {integrity: sha512-9rrA30MRRP3gBD3HTGnC6cDFpaE1kVDWxWgqWJUN0RvDNAo+Nz/9GxB+nHOH0ifbVFy0hSA1V6vFDvnx54lTEQ==}
@@ -9217,6 +9239,10 @@ packages:
   proxy-from-env@1.1.0:
     resolution: {integrity: sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg==}
 
+  proxy-from-env@2.1.0:
+    resolution: {integrity: sha512-cJ+oHTW1VAEa8cJslgmUZrc+sjRKgAKl3Zyse6+PV38hZe/V6Z14TbCuXcan9F9ghlz4QrFr2c92TNF82UkYHA==}
+    engines: {node: '>=10'}
+
   psl@1.15.0:
     resolution: {integrity: sha512-JZd3gMVBAVQkSs6HdNZo9Sdo0LNcQeMNP3CozBJb3JYC/QUYZTnKxP+f8oWRX4rHP5EurWxqAHTSwUCjlNKa1w==}
 
@@ -9790,6 +9816,10 @@ packages:
   strnum@2.2.2:
     resolution: {integrity: sha512-DnR90I+jtXNSTXWdwrEy9FakW7UX+qUZg28gj5fk2vxxl7uS/3bpI4fjFYVmdK9etptYBPNkpahuQnEwhwECqA==}
 
+  strtok3@10.3.5:
+    resolution: {integrity: sha512-ki4hZQfh5rX0QDLLkOCj+h+CVNkqmp/CMf8v8kZpkNVK6jGQooMytqzLZYUVYIZcFZ6yDB70EfD8POcFXiF5oA==}
+    engines: {node: '>=18'}
+
   strtok3@6.3.0:
     resolution: {integrity: sha512-fZtbhtvI9I48xDSywd/somNqgUHl2L2cstmXCCif0itOf96jeW18MBSyrLuNicYQVkvpOxkZtkzujiTJ9LW5Jw==}
     engines: {node: '>=10'}
@@ -9948,6 +9978,10 @@ packages:
   token-types@4.2.1:
     resolution: {integrity: sha512-6udB24Q737UD/SDsKAHI9FCRP7Bqc9D/MQUV02ORQg5iskjtLJlZJNdN4kKtcdtwCeWIwIHDGaUsTsCCAa8sFQ==}
     engines: {node: '>=10'}
+
+  token-types@6.1.2:
+    resolution: {integrity: sha512-dRXchy+C0IgK8WPC6xvCHFRIWYUbqqdEIKPaKo/AcTUNzwLTK6AH7RjdLWsEZcAN/TBdtfUw3PYEgPr5VPr6ww==}
+    engines: {node: '>=14.16'}
 
   tough-cookie@4.1.4:
     resolution: {integrity: sha512-Loo5UUvLD9ScZ6jh8beX1T6sO1w2/MpCRpEP7V280GKMVUQ0Jzar2U3UJPsrdbziLEMMhu3Ujnq//rhiFuIeag==}
@@ -12131,6 +12165,8 @@ snapshots:
 
   '@bcoe/v8-coverage@1.0.2': {}
 
+  '@borewit/text-codec@0.2.2': {}
+
   '@braidai/lang@1.1.2': {}
 
   '@browserbasehq/sdk@2.6.0(encoding@0.1.13)':
@@ -12786,14 +12822,18 @@ snapshots:
 
   '@iarna/toml@2.2.5': {}
 
-  '@ibm-cloud/watsonx-ai@1.7.9':
+  '@ibm-cloud/watsonx-ai@1.7.11(@swc/core@1.15.21(@swc/helpers@0.5.18))(typescript@5.8.3)':
     dependencies:
       '@types/node': 18.19.130
       extend: 3.0.2
       form-data: 4.0.5
-      ibm-cloud-sdk-core: 5.4.8
+      ibm-cloud-sdk-core: 5.4.9
+      ts-node: 10.9.2(@swc/core@1.15.21(@swc/helpers@0.5.18))(@types/node@18.19.130)(typescript@5.8.3)
     transitivePeerDependencies:
+      - '@swc/core'
+      - '@swc/wasm'
       - supports-color
+      - typescript
 
   '@inquirer/ansi@1.0.2': {}
 
@@ -14845,6 +14885,13 @@ snapshots:
       - react-native-b4a
       - supports-color
 
+  '@tokenizer/inflate@0.4.1':
+    dependencies:
+      debug: 4.4.3
+      token-types: 6.1.2
+    transitivePeerDependencies:
+      - supports-color
+
   '@tokenizer/token@0.3.0': {}
 
   '@tootallnate/once@1.1.2':
@@ -15557,6 +15604,14 @@ snapshots:
       follow-redirects: 1.15.11(debug@4.4.3)
       form-data: 4.0.5
       proxy-from-env: 1.1.0
+    transitivePeerDependencies:
+      - debug
+
+  axios@1.14.0(debug@4.4.3):
+    dependencies:
+      follow-redirects: 1.15.11(debug@4.4.3)
+      form-data: 4.0.5
+      proxy-from-env: 2.1.0
     transitivePeerDependencies:
       - debug
 
@@ -16847,6 +16902,15 @@ snapshots:
       strtok3: 6.3.0
       token-types: 4.2.1
 
+  file-type@21.3.4:
+    dependencies:
+      '@tokenizer/inflate': 0.4.1
+      strtok3: 10.3.5
+      token-types: 6.1.2
+      uint8array-extras: 1.5.0
+    transitivePeerDependencies:
+      - supports-color
+
   file-uri-to-path@1.0.0: {}
 
   fill-range@7.1.1:
@@ -17375,6 +17439,27 @@ snapshots:
       jsonwebtoken: 9.0.3
       mime-types: 2.1.35
       retry-axios: 2.6.0(axios@1.13.6)
+      tough-cookie: 4.1.4
+    transitivePeerDependencies:
+      - supports-color
+
+  ibm-cloud-sdk-core@5.4.9:
+    dependencies:
+      '@types/debug': 4.1.13
+      '@types/node': 18.19.130
+      '@types/tough-cookie': 4.0.5
+      axios: 1.14.0(debug@4.4.3)
+      camelcase: 6.3.0
+      debug: 4.4.3
+      dotenv: 16.6.1
+      extend: 3.0.2
+      file-type: 21.3.4
+      form-data: 4.0.5
+      isstream: 0.1.2
+      jsonwebtoken: 9.0.3
+      load-esm: 1.0.3
+      mime-types: 2.1.35
+      retry-axios: 2.6.0(axios@1.14.0(debug@4.4.3))
       tough-cookie: 4.1.4
     transitivePeerDependencies:
       - supports-color
@@ -18187,6 +18272,8 @@ snapshots:
       log-update: 6.1.0
       rfdc: 1.4.1
       wrap-ansi: 9.0.2
+
+  load-esm@1.0.3: {}
 
   local-pkg@0.5.1:
     dependencies:
@@ -19315,6 +19402,8 @@ snapshots:
 
   proxy-from-env@1.1.0: {}
 
+  proxy-from-env@2.1.0: {}
+
   psl@1.15.0:
     dependencies:
       punycode: 2.3.1
@@ -19533,6 +19622,10 @@ snapshots:
   retry-axios@2.6.0(axios@1.13.6):
     dependencies:
       axios: 1.13.6(debug@4.4.3)
+
+  retry-axios@2.6.0(axios@1.14.0(debug@4.4.3)):
+    dependencies:
+      axios: 1.14.0(debug@4.4.3)
 
   retry-request@7.0.2(encoding@0.1.13):
     dependencies:
@@ -20017,6 +20110,10 @@ snapshots:
 
   strnum@2.2.2: {}
 
+  strtok3@10.3.5:
+    dependencies:
+      '@tokenizer/token': 0.3.0
+
   strtok3@6.3.0:
     dependencies:
       '@tokenizer/token': 0.3.0
@@ -20213,6 +20310,12 @@ snapshots:
       '@tokenizer/token': 0.3.0
       ieee754: 1.2.1
 
+  token-types@6.1.2:
+    dependencies:
+      '@borewit/text-codec': 0.2.2
+      '@tokenizer/token': 0.3.0
+      ieee754: 1.2.1
+
   tough-cookie@4.1.4:
     dependencies:
       psl: 1.15.0
@@ -20253,6 +20356,26 @@ snapshots:
       '@jest/types': 30.3.0
       babel-jest: 30.3.0(@babel/core@7.29.0)
       jest-util: 30.3.0
+
+  ts-node@10.9.2(@swc/core@1.15.21(@swc/helpers@0.5.18))(@types/node@18.19.130)(typescript@5.8.3):
+    dependencies:
+      '@cspotcode/source-map-support': 0.8.1
+      '@tsconfig/node10': 1.0.12
+      '@tsconfig/node12': 1.0.11
+      '@tsconfig/node14': 1.0.3
+      '@tsconfig/node16': 1.0.4
+      '@types/node': 18.19.130
+      acorn: 8.15.0
+      acorn-walk: 8.3.4
+      arg: 4.1.3
+      create-require: 1.1.1
+      diff: 4.0.4
+      make-error: 1.3.6
+      typescript: 5.8.3
+      v8-compile-cache-lib: 3.0.1
+      yn: 3.1.1
+    optionalDependencies:
+      '@swc/core': 1.15.21(@swc/helpers@0.5.18)
 
   ts-node@10.9.2(@swc/core@1.15.21(@swc/helpers@0.5.18))(@types/node@25.5.0)(typescript@5.8.3):
     dependencies:
