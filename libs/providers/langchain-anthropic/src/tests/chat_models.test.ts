@@ -5,6 +5,7 @@ import {
   ToolMessage,
   AIMessageChunk,
 } from "@langchain/core/messages";
+import type { ChatModelStreamv2Event } from "@langchain/core/language_models/chat_models";
 import { z } from "zod";
 import { z as z4 } from "zod/v4";
 import { OutputParserException } from "@langchain/core/output_parsers";
@@ -21,6 +22,17 @@ import {
 import { AnthropicToolExtrasSchema } from "../utils/tools.js";
 import { AnthropicMessageCreateParams } from "../types.js";
 
+class TestChatAnthropic extends ChatAnthropic {
+  testStream?: AsyncIterable<unknown>;
+
+  protected override async createStreamWithRetry() {
+    if (!this.testStream) {
+      throw new Error("No test stream configured.");
+    }
+    return this.testStream as never;
+  }
+}
+
 test("constructor supports model shorthand for ChatAnthropicMessages", () => {
   const model = new ChatAnthropicMessages("claude-haiku-4-5-20251001", {
     anthropicApiKey: "testing",
@@ -28,6 +40,314 @@ test("constructor supports model shorthand for ChatAnthropicMessages", () => {
 
   expect(model.model).toBe("claude-haiku-4-5-20251001");
   expect(model.modelName).toBe("claude-haiku-4-5-20251001");
+});
+
+test("streamv2 emits anthropic-native text lifecycle events", async () => {
+  const model = new TestChatAnthropic({
+    modelName: "claude-haiku-4-5-20251001",
+    anthropicApiKey: "testing",
+  });
+
+  model.testStream = (async function* () {
+      yield {
+        type: "message_start",
+        message: {
+          id: "msg_01",
+          type: "message",
+          role: "assistant",
+          content: [],
+          model: "claude-haiku-4-5-20251001",
+          stop_reason: null,
+          stop_sequence: null,
+          usage: {
+            input_tokens: 10,
+            output_tokens: 0,
+          },
+        },
+      };
+      yield {
+        type: "content_block_start",
+        index: 0,
+        content_block: {
+          type: "text",
+          text: "",
+        },
+      };
+      yield {
+        type: "content_block_delta",
+        index: 0,
+        delta: {
+          type: "text_delta",
+          text: "Hello",
+        },
+      };
+      yield {
+        type: "content_block_delta",
+        index: 0,
+        delta: {
+          type: "text_delta",
+          text: " world",
+        },
+      };
+      yield {
+        type: "content_block_stop",
+        index: 0,
+      };
+      yield {
+        type: "message_delta",
+        delta: {
+          stop_reason: "end_turn",
+          stop_sequence: null,
+        },
+        usage: {
+          input_tokens: 10,
+          output_tokens: 2,
+        },
+      };
+    })();
+
+  const stream = await model.streamv2("Hello");
+  const events: ChatModelStreamv2Event[] = [];
+  for await (const event of stream) {
+    events.push(event);
+  }
+
+  expect(events).toEqual([
+    {
+      event: "message-start",
+      messageId: "msg_01",
+      metadata: {
+        id: "msg_01",
+        model_provider: "anthropic",
+        model: "claude-haiku-4-5-20251001",
+        role: "assistant",
+        stop_reason: null,
+        stop_sequence: null,
+        type: "message",
+      },
+    },
+    {
+      event: "content-block-start",
+      index: 0,
+      contentBlock: {
+        type: "text",
+        text: "",
+        index: 0,
+      },
+    },
+    {
+      event: "content-block-delta",
+      index: 0,
+      contentBlock: {
+        type: "text",
+        text: "",
+        index: 0,
+      },
+    },
+    {
+      event: "content-block-delta",
+      index: 0,
+      contentBlock: {
+        type: "text",
+        text: "Hello",
+        index: 0,
+      },
+    },
+    {
+      event: "content-block-delta",
+      index: 0,
+      contentBlock: {
+        type: "text",
+        text: " world",
+        index: 0,
+      },
+    },
+    {
+      event: "content-block-delta",
+      index: 0,
+      contentBlock: {
+        type: "text",
+        text: "",
+        index: 0,
+      },
+    },
+    {
+      event: "content-block-finish",
+      index: 0,
+      contentBlock: {
+        type: "text",
+        text: "Hello world",
+        index: 0,
+      },
+    },
+    {
+      event: "message-finish",
+      reason: "stop",
+      usage: {
+        inputTokens: 0,
+        outputTokens: 2,
+        totalTokens: 2,
+        cachedTokens: undefined,
+      },
+      metadata: {
+        model_provider: "anthropic",
+      },
+    },
+  ]);
+});
+
+test("streamv2 emits anthropic-native tool call lifecycle events", async () => {
+  const model = new TestChatAnthropic({
+    modelName: "claude-haiku-4-5-20251001",
+    anthropicApiKey: "testing",
+    tools: [
+      {
+        name: "get_weather",
+        description: "Get weather.",
+        input_schema: {
+          type: "object",
+          properties: {
+            location: { type: "string" },
+          },
+          required: ["location"],
+        },
+      },
+    ],
+  });
+
+  model.testStream = (async function* () {
+      yield {
+        type: "message_start",
+        message: {
+          id: "msg_tool",
+          type: "message",
+          role: "assistant",
+          content: [],
+          model: "claude-haiku-4-5-20251001",
+          stop_reason: null,
+          stop_sequence: null,
+          usage: {
+            input_tokens: 12,
+            output_tokens: 0,
+          },
+        },
+      };
+      yield {
+        type: "content_block_start",
+        index: 0,
+        content_block: {
+          type: "tool_use",
+          id: "toolu_123",
+          name: "get_weather",
+          input: {},
+        },
+      };
+      yield {
+        type: "content_block_delta",
+        index: 0,
+        delta: {
+          type: "input_json_delta",
+          partial_json: '{"location":"San',
+        },
+      };
+      yield {
+        type: "content_block_delta",
+        index: 0,
+        delta: {
+          type: "input_json_delta",
+          partial_json: ' Francisco"}',
+        },
+      };
+      yield {
+        type: "content_block_stop",
+        index: 0,
+      };
+      yield {
+        type: "message_delta",
+        delta: {
+          stop_reason: "tool_use",
+          stop_sequence: null,
+        },
+        usage: {
+          input_tokens: 12,
+          output_tokens: 4,
+        },
+      };
+    })();
+
+  const stream = await model.streamv2("weather in sf");
+  const events: ChatModelStreamv2Event[] = [];
+  for await (const event of stream) {
+    events.push(event);
+  }
+
+  expect(events).toEqual([
+    {
+      event: "message-start",
+      messageId: "msg_tool",
+      metadata: {
+        id: "msg_tool",
+        model_provider: "anthropic",
+        model: "claude-haiku-4-5-20251001",
+        role: "assistant",
+        stop_reason: null,
+        stop_sequence: null,
+        type: "message",
+      },
+    },
+    {
+      event: "content-block-start",
+      index: 0,
+      contentBlock: {
+        type: "tool_call_chunk",
+        id: "toolu_123",
+        name: "get_weather",
+        args: "",
+        index: 0,
+      },
+    },
+    {
+      event: "content-block-delta",
+      index: 0,
+      contentBlock: {
+        type: "tool_call_chunk",
+        args: '{"location":"San',
+        index: 0,
+      },
+    },
+    {
+      event: "content-block-delta",
+      index: 0,
+      contentBlock: {
+        type: "tool_call_chunk",
+        args: ' Francisco"}',
+        index: 0,
+      },
+    },
+    {
+      event: "content-block-finish",
+      index: 0,
+      contentBlock: {
+        type: "tool_call",
+        id: "toolu_123",
+        name: "get_weather",
+        args: { location: "San Francisco" },
+      },
+    },
+    {
+      event: "message-finish",
+      reason: "stop",
+      usage: {
+        inputTokens: 0,
+        outputTokens: 4,
+        totalTokens: 4,
+        cachedTokens: undefined,
+      },
+      metadata: {
+        model_provider: "anthropic",
+      },
+    },
+  ]);
 });
 
 test("withStructuredOutput with output validation", async () => {
