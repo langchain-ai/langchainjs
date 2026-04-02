@@ -35,6 +35,7 @@
     "@langchain/cloudflare": "workspace:*",
     "@langchain/core": "workspace:^",
     "@langchain/deepseek": "workspace:*",
+    "@langchain/fireworks": "workspace:*",
     "@langchain/google-cloud-sql-pg": "workspace:^",
     "@langchain/google-common": "workspace:*",
     "@langchain/google-genai": "workspace:*",
