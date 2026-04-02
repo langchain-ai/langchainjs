@@ -39,7 +39,7 @@
     "dotenv": "^17.4.0",
     "dpdm": "^3.14.0",
     "typescript": "~5.8.3",
-    "vitest": "^3.2.4"
+    "vitest": "^4.1.2"
   },
   "publishConfig": {
     "access": "public"
