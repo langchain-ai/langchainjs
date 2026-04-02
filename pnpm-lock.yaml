@@ -1349,8 +1349,8 @@ importers:
         specifier: ^3.0.6
         version: 3.0.6
       google-auth-library:
-        specifier: ^10.5.0
-        version: 10.5.0
+        specifier: ^10.6.2
+        version: 10.6.2
       jose:
         specifier: ^6.1.3
         version: 6.1.3
@@ -1395,8 +1395,8 @@ importers:
         specifier: workspace:^
         version: link:../../langchain-core
       google-auth-library:
-        specifier: ^9.15.0
-        version: 9.15.1(encoding@0.1.13)
+        specifier: ^10.6.2
+        version: 10.6.2
       knex:
         specifier: ^3.1.0
         version: 3.1.0(pg@8.18.0)
@@ -1490,8 +1490,8 @@ importers:
         specifier: workspace:*
         version: link:../langchain-google-common
       google-auth-library:
-        specifier: ^10.1.0
-        version: 10.5.0
+        specifier: ^10.6.2
+        version: 10.6.2
     devDependencies:
       '@langchain/tsconfig':
         specifier: workspace:*
@@ -7403,14 +7403,6 @@ packages:
     resolution: {integrity: sha512-jhIXaOzy1sb8IyocaruWSn1TjmnBVs8Ayhcy83rmxNJ8q2uWKCAj3CnJY+KpGSXCueAPc0i05kVvVKtP1t9S3g==}
     engines: {node: '>=10'}
 
-  google-auth-library@10.5.0:
-    resolution: {integrity: sha512-7ABviyMOlX5hIVD60YOfHw4/CxOfBhyduaYB+wbFWCWoni4N7SLcV46hrVRktuBbZjFC9ONyqamZITN7q3n32w==}
-    engines: {node: '>=18'}
-
-  google-auth-library@10.6.1:
-    resolution: {integrity: sha512-5awwuLrzNol+pFDmKJd0dKtZ0fPLAtoA5p7YO4ODsDu6ONJUVqbYwvv8y2ZBO5MBNp9TJXigB19710kYpBPdtA==}
-    engines: {node: '>=18'}
-
   google-auth-library@10.6.2:
     resolution: {integrity: sha512-e27Z6EThmVNNvtYASwQxose/G57rkRuaRbQyxM2bvYLLX/GqWZ5chWq2EBoUchJbCc57eC9ArzO5wMsEmWftCw==}
     engines: {node: '>=18'}
@@ -7461,10 +7453,6 @@ packages:
   gtoken@7.1.0:
     resolution: {integrity: sha512-pCcEwRi+TKpMlxAQObHDQ56KawURgyAf6jtIY046fJ5tIv3zDe/LEIubckAO8fj6JnAxLdmWkUfNyulQ2iKdEw==}
     engines: {node: '>=14.0.0'}
-
-  gtoken@8.0.0:
-    resolution: {integrity: sha512-+CqsMbHPiSTdtSO14O51eMNlrp9N79gmeqmXeouJOhfucAedHw9noVe/n5uJk3tbKE6a+6ZCQg3RPhVhHByAIw==}
-    engines: {node: '>=18'}
 
   handlebars@4.7.9:
     resolution: {integrity: sha512-4E71E0rpOaQuJR2A3xDZ+GM1HyWYv1clR58tC8emQNeQe3RH7MAzSbat+V0wG78LQBo6m6bzSG/L4pBuCsgnUQ==}
@@ -12677,7 +12665,7 @@ snapshots:
     dependencies:
       '@googleapis/sqladmin': 35.2.0
       gaxios: 7.1.3
-      google-auth-library: 10.6.1
+      google-auth-library: 10.6.2
       p-throttle: 7.0.0
     transitivePeerDependencies:
       - supports-color
@@ -17036,7 +17024,7 @@ snapshots:
 
   gcp-metadata@8.1.2:
     dependencies:
-      gaxios: 7.1.3
+      gaxios: 7.1.4
       google-logging-utils: 1.1.3
       json-bigint: 1.0.0
     transitivePeerDependencies:
@@ -17170,29 +17158,6 @@ snapshots:
       merge2: 1.4.1
       slash: 3.0.0
 
-  google-auth-library@10.5.0:
-    dependencies:
-      base64-js: 1.5.1
-      ecdsa-sig-formatter: 1.0.11
-      gaxios: 7.1.3
-      gcp-metadata: 8.1.2
-      google-logging-utils: 1.1.3
-      gtoken: 8.0.0
-      jws: 4.0.1
-    transitivePeerDependencies:
-      - supports-color
-
-  google-auth-library@10.6.1:
-    dependencies:
-      base64-js: 1.5.1
-      ecdsa-sig-formatter: 1.0.11
-      gaxios: 7.1.3
-      gcp-metadata: 8.1.2
-      google-logging-utils: 1.1.3
-      jws: 4.0.1
-    transitivePeerDependencies:
-      - supports-color
-
   google-auth-library@10.6.2:
     dependencies:
       base64-js: 1.5.1
@@ -17244,8 +17209,8 @@ snapshots:
   googleapis-common@8.0.1:
     dependencies:
       extend: 3.0.2
-      gaxios: 7.1.3
-      google-auth-library: 10.6.1
+      gaxios: 7.1.4
+      google-auth-library: 10.6.2
       qs: 6.15.0
       url-template: 2.0.8
     transitivePeerDependencies:
@@ -17273,13 +17238,6 @@ snapshots:
       jws: 4.0.1
     transitivePeerDependencies:
       - encoding
-      - supports-color
-
-  gtoken@8.0.0:
-    dependencies:
-      gaxios: 7.1.3
-      jws: 4.0.1
-    transitivePeerDependencies:
       - supports-color
 
   handlebars@4.7.9:
