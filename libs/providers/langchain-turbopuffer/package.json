@@ -22,7 +22,7 @@
     "test:int": "vitest run --mode int"
   },
   "dependencies": {
-    "uuid": "^10.0.0"
+    "uuid": "^12.0.0"
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0",
