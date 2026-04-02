@@ -37,7 +37,7 @@
     "@tsconfig/recommended": "^1.0.3",
     "dotenv": "^17.4.0",
     "dpdm": "^3.14.0",
-    "typescript": "~5.8.3",
+    "typescript": "~6.0.2",
     "vitest": "^3.2.4",
     "zod": "^3.25.76"
   },

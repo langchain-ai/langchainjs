@@ -38,7 +38,7 @@
     "dpdm": "^3.14.0",
     "testcontainers": "^11.13.0",
     "vitest": "^3.2.4",
-    "typescript": "~5.8.3",
+    "typescript": "~6.0.2",
     "uuid": "^10.0.0"
   },
   "publishConfig": {
