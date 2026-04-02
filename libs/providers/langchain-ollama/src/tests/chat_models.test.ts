@@ -53,7 +53,7 @@ describe("withStructuredOutput - StandardSchema", () => {
   test("functionCalling with valid output parses correctly", async () => {
     const model = new ChatOllama({ model: "llama3" });
     vi
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       .spyOn(model as any, "invoke")
       .mockResolvedValue(
         new AIMessage({
@@ -81,7 +81,7 @@ describe("withStructuredOutput - StandardSchema", () => {
   test("functionCalling with invalid output throws OutputParserException", async () => {
     const model = new ChatOllama({ model: "llama3" });
     vi
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       .spyOn(model as any, "invoke")
       .mockResolvedValue(
         new AIMessage({
@@ -110,7 +110,7 @@ describe("withStructuredOutput - StandardSchema", () => {
   test("functionCalling with custom name", async () => {
     const model = new ChatOllama({ model: "llama3" });
     vi
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       .spyOn(model as any, "invoke")
       .mockResolvedValue(
         new AIMessage({
@@ -150,7 +150,7 @@ describe("withStructuredOutput - StandardSchema", () => {
     });
     const model = new ChatOllama({ model: "llama3" });
     vi
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       .spyOn(model as any, "invoke")
       .mockResolvedValue(mockResponse);
 
@@ -163,14 +163,14 @@ describe("withStructuredOutput - StandardSchema", () => {
     const result = await structured.invoke("What?");
     expect(result).toHaveProperty("raw");
     expect(result).toHaveProperty("parsed");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect((result as any).parsed).toEqual({ name: "cobalt" });
   });
 
   test("jsonMode with valid output parses correctly", async () => {
     const model = new ChatOllama({ model: "llama3" });
     vi
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       .spyOn(model as any, "invoke")
       .mockResolvedValue(new AIMessage({ content: '{"name": "Alice"}' }));
 
@@ -186,7 +186,7 @@ describe("withStructuredOutput - StandardSchema", () => {
   test("jsonMode with invalid output throws OutputParserException", async () => {
     const model = new ChatOllama({ model: "llama3" });
     vi
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       .spyOn(model as any, "invoke")
       .mockResolvedValue(new AIMessage({ content: '{"wrong_field": 123}' }));
 
@@ -203,7 +203,7 @@ describe("withStructuredOutput - StandardSchema", () => {
   test("jsonSchema with valid output parses correctly", async () => {
     const model = new ChatOllama({ model: "llama3" });
     vi
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       .spyOn(model as any, "invoke")
       .mockResolvedValue(new AIMessage({ content: '{"name": "Eve"}' }));
 
@@ -219,7 +219,7 @@ describe("withStructuredOutput - StandardSchema", () => {
   test("jsonSchema with invalid output throws OutputParserException", async () => {
     const model = new ChatOllama({ model: "llama3" });
     vi
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       .spyOn(model as any, "invoke")
       .mockResolvedValue(new AIMessage({ content: '{"wrong_field": 123}' }));
 

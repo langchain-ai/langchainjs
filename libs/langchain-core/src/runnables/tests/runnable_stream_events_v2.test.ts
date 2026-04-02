@@ -2349,7 +2349,7 @@ test("streamEvents method handles errors", async () => {
   } catch (e) {
     caughtError = e;
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   expect((caughtError as any)?.message).toEqual("should catch this error");
 });
 

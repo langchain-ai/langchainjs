@@ -53,7 +53,7 @@ export interface WatsonxLLMParams {
   truncateInputTokens?: number;
   returnOptions?: ReturnOptionProperties;
   includeStopSequence?: boolean;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   headers?: Record<string, any>;
   signal?: AbortSignal;
 }
@@ -374,7 +374,7 @@ export class WatsonxLLM<
     if (this.idOrName) return undefined;
 
     if (this.modelGateway) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       const modelGatewayParams: Record<string, any> = {
         ...this?.modelGatewayKwargs,
         ...parameters?.modelGatewayKwargs,
@@ -643,7 +643,7 @@ export class WatsonxLLM<
               chunk?.generationInfo?.stop_reason;
             geneartionsArray[completion].text += chunk.text;
             if (chunk.text)
-              // eslint-disable-next-line no-void
+              // oxlint-disable-next-line no-void
               void runManager?.handleLLMNewToken(chunk.text, {
                 prompt: promptIdx,
                 completion: 0,
@@ -767,7 +767,7 @@ export class WatsonxLLM<
               };
         yield new GenerationChunk(params);
         if (!this.streaming)
-          // eslint-disable-next-line no-void
+          // oxlint-disable-next-line no-void
           void runManager?.handleLLMNewToken(
             "generated_text" in item ? item.generated_text : (item.text ?? "")
           );

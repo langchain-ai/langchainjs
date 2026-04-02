@@ -17,7 +17,7 @@ export interface LLMEvalChainInput<
 
 export type ExtractLLMCallOptions<LanguageModelInterface> =
   LanguageModelInterface extends BaseLanguageModelInterface<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     any,
     infer CallOptions
   >

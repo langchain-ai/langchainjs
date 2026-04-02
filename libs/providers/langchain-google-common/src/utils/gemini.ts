@@ -152,7 +152,7 @@ export class DefaultGeminiSafetyHandler implements GoogleAISafetyHandler {
       try {
         newdata = response.data.map((item) => this.handleData(response, item));
       } catch (xx) {
-        // eslint-disable-next-line no-instanceof/no-instanceof
+        // oxlint-disable-next-line no-instanceof/no-instanceof
         if (xx instanceof GoogleAISafetyError) {
           throw new GoogleAISafetyError(response, xx.message);
         } else {
@@ -418,7 +418,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
   }
 
   async function messageContentMediaData(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     content: Record<string, any>
   ): Promise<GeminiPartInlineData | GeminiPartFileData> {
     if ("mimeType" in content && "data" in content) {
@@ -449,7 +449,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
   }
 
   function supplementVideoMetadata(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     content: MessageContentImageUrl | Record<string, any>,
     ret: GeminiPartInlineData | GeminiPartFileData
   ): GeminiPartInlineData | GeminiPartFileData {
@@ -461,7 +461,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
   }
 
   async function messageContentMedia(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     content: Record<string, any>
   ): Promise<GeminiPartInlineData | GeminiPartFileData> {
     const ret = await messageContentMediaData(content);
@@ -620,7 +620,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     if ("data" in block && block.data !== undefined) {
       // DataRecordBase64: inline base64 data
       const data =
-        // eslint-disable-next-line no-instanceof/no-instanceof
+        // oxlint-disable-next-line no-instanceof/no-instanceof
         block.data instanceof Uint8Array
           ? btoa(String.fromCharCode(...block.data))
           : block.data;
@@ -985,7 +985,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
 
   function inlineDataPartToMessageContentMedia(
     part: GeminiPartInlineData
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   ): Record<string, any> {
     return {
       type: "media",
@@ -996,7 +996,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
 
   function inlineDataPartToMessageContent(
     part: GeminiPartInlineData
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   ): MessageContentImageUrl | Record<string, any> {
     const mimeType = part?.inlineData?.mimeType ?? "";
     if (mimeType.startsWith("image")) {
@@ -1143,7 +1143,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       const safeResponse = safetyHandler.handle(response);
       return responseTo(safeResponse);
     } catch (xx) {
-      // eslint-disable-next-line no-instanceof/no-instanceof
+      // oxlint-disable-next-line no-instanceof/no-instanceof
       if (xx instanceof GoogleAISafetyError) {
         const ret = responseTo(xx.response);
         xx.reply = ret;
@@ -1286,7 +1286,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
 
     const finish_reason = data.candidates[0]?.finishReason;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const ret: Record<string, any> = {
       safety_ratings: data.candidates[0]?.safetyRatings?.map((rating) => ({
         category: rating.category,
@@ -1366,7 +1366,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
   function partToChatGeneration(part: GeminiPart): ChatGeneration {
     const message = partToMessageChunk(part);
     const text = partToText(part);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const generationInfo: Record<string, any> = {};
 
     return new ChatGenerationChunk({
@@ -1657,7 +1657,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
             args: JSON.parse(tool.function.arguments),
             id: tool.id,
           });
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (e: any) {
           fields.invalid_tool_calls?.push({
             name: tool.function.name,

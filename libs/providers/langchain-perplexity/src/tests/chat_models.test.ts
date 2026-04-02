@@ -197,7 +197,7 @@ describe("ChatPerplexity", () => {
       };
 
       vi.spyOn(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         (model as any).client.chat.completions,
         "create"
       ).mockResolvedValue(mockResponse);
@@ -243,7 +243,7 @@ describe("ChatPerplexity", () => {
       };
 
       vi.spyOn(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         (model as any).client.chat.completions,
         "create"
       ).mockResolvedValue(mockResponse);
@@ -262,7 +262,7 @@ describe("ChatPerplexity", () => {
 
       const createSpy = vi
         .spyOn(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // oxlint-disable-next-line @typescript-eslint/no-explicit-any
           (model as any).client.chat.completions,
           "create"
         )
@@ -342,7 +342,7 @@ describe("ChatPerplexity", () => {
       }
 
       vi.spyOn(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         (model as any).client.chat.completions,
         "create"
       ).mockResolvedValue(mockStream());
@@ -388,7 +388,7 @@ describe("ChatPerplexity", () => {
       }
 
       vi.spyOn(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         (model as any).client.chat.completions,
         "create"
       ).mockResolvedValue(mockStream());
@@ -436,7 +436,7 @@ describe("ChatPerplexity", () => {
       }
 
       vi.spyOn(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         (model as any).client.chat.completions,
         "create"
       ).mockResolvedValue(mockStream());
@@ -485,7 +485,7 @@ describe("ChatPerplexity", () => {
       }
 
       vi.spyOn(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         (model as any).client.chat.completions,
         "create"
       ).mockResolvedValue(mockStream());
@@ -545,7 +545,7 @@ describe("ChatPerplexity", () => {
       }
 
       vi.spyOn(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         (model as any).client.chat.completions,
         "create"
       ).mockResolvedValue(mockStream());
@@ -593,7 +593,7 @@ describe("ChatPerplexity", () => {
       }
 
       vi.spyOn(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         (model as any).client.chat.completions,
         "create"
       ).mockResolvedValue(mockStream());
@@ -606,7 +606,7 @@ describe("ChatPerplexity", () => {
       for await (const chunk of model._streamResponseChunks(
         [new HumanMessage("Hi")],
         {},
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         mockRunManager as any
       )) {
         result.push(chunk);
@@ -642,7 +642,7 @@ describe("ChatPerplexity", () => {
       expect(() =>
         model.withStructuredOutput(
           { type: "object", properties: {} },
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // oxlint-disable-next-line @typescript-eslint/no-explicit-any
           { method: "functionCalling" as any }
         )
       ).toThrow(
@@ -708,7 +708,7 @@ describe("ChatPerplexity", () => {
       });
 
       vi.spyOn(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         model as any,
         "invoke"
       ).mockResolvedValue(mockResponse);
@@ -736,7 +736,7 @@ describe("ChatPerplexity", () => {
       });
 
       vi.spyOn(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         model as any,
         "invoke"
       ).mockResolvedValue(mockResponse);
@@ -764,7 +764,7 @@ describe("ChatPerplexity", () => {
       });
 
       vi.spyOn(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         model as any,
         "invoke"
       ).mockResolvedValue(mockResponse);
@@ -780,14 +780,14 @@ describe("ChatPerplexity", () => {
       const result = await structured.invoke("Question");
       expect(result).toHaveProperty("raw");
       expect(result).toHaveProperty("parsed");
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       expect((result as any).parsed).toEqual({ answer: "42" });
     });
   });
 
   describe("message conversion", () => {
     let model: ChatPerplexity;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     let createSpy: any;
 
     beforeEach(() => {
@@ -797,7 +797,7 @@ describe("ChatPerplexity", () => {
       });
       createSpy = vi
         .spyOn(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // oxlint-disable-next-line @typescript-eslint/no-explicit-any
           (model as any).client.chat.completions,
           "create"
         )

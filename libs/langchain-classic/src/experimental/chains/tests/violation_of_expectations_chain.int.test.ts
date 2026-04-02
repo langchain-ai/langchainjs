@@ -31,7 +31,7 @@ test.skip("should respond with the proper schema", async () => {
     retriever,
   });
 
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const res = await chain.call({
     chat_history: dummyMessages,

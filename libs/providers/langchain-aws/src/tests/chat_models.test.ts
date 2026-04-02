@@ -1399,7 +1399,7 @@ describe("withStructuredOutput - StandardSchema", () => {
       model: "anthropic.claude-haiku-4-5-20251001-v1:0",
     });
     vi
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       .spyOn(model as any, "invoke")
       .mockResolvedValue(
         new AIMessage({
@@ -1428,7 +1428,7 @@ describe("withStructuredOutput - StandardSchema", () => {
       model: "anthropic.claude-haiku-4-5-20251001-v1:0",
     });
     vi
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       .spyOn(model as any, "invoke")
       .mockResolvedValue(
         new AIMessage({
@@ -1470,7 +1470,7 @@ describe("withStructuredOutput - StandardSchema", () => {
       model: "anthropic.claude-haiku-4-5-20251001-v1:0",
     });
     vi
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       .spyOn(model as any, "invoke")
       .mockResolvedValue(mockResponse);
 
@@ -1482,7 +1482,7 @@ describe("withStructuredOutput - StandardSchema", () => {
     const result = await structured.invoke("What?");
     expect(result).toHaveProperty("raw");
     expect(result).toHaveProperty("parsed");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect((result as any).parsed).toEqual({ name: "cobalt" });
   });
 
@@ -1492,7 +1492,7 @@ describe("withStructuredOutput - StandardSchema", () => {
       model: "anthropic.claude-haiku-4-5-20251001-v1:0",
     });
     vi
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       .spyOn(model as any, "invoke")
       .mockResolvedValue(new AIMessage({ content: "No tools here" }));
 

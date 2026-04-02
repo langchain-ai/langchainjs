@@ -168,7 +168,7 @@ export type $InferToolCalls<TStructure extends MessageStructure> =
                   name: K;
                   // Fallback to Record<string, any> when input is unknown
                   args: [unknown] extends [TTools[K]["input"]]
-                    ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    ? // oxlint-disable-next-line @typescript-eslint/no-explicit-any
                       Record<string, any>
                     : TTools[K]["input"];
                 }
@@ -180,7 +180,7 @@ export type $InferToolCalls<TStructure extends MessageStructure> =
         readonly type?: "tool_call";
         id?: string;
         name: string;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         args: Record<string, any>;
       };
 
@@ -608,7 +608,7 @@ export type $InferMessageContent<
       ? string | Array<ContentBlock | ContentBlock.Text>
       : [unknown] extends [TOutput]
         ? // Fallback to default when TOutput is unknown (no specific tools defined)
-          string | Array<ContentBlock | ContentBlock.Text>
+            string | Array<ContentBlock | ContentBlock.Text>
         : TOutput | string | Array<ContentBlock | ContentBlock.Text>
     : string | Array<ContentBlock | ContentBlock.Text>
   : TStructure["outputVersion"] extends "v1"
@@ -659,7 +659,7 @@ export type $InferMessageProperties<
 > =
   $NormalizedMessageStructure<TStructure> extends infer S
     ? S extends MessageStructure
-      ? S["properties"] extends infer P | undefined
+      ? S["properties"] extends (infer P) | undefined
         ? P extends Record<PropertyKey, unknown>
           ? TRole extends keyof P
             ? Omit<P[TRole], "content" | "type">

@@ -25,10 +25,10 @@ export interface StoredMessageData {
   role: string | undefined;
   name: string | undefined;
   tool_call_id: string | undefined;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   additional_kwargs?: Record<string, any>;
   /** Response metadata. For example: response headers, logprobs, token counts, model name. */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   response_metadata?: Record<string, any>;
   id?: string;
 }
@@ -179,9 +179,9 @@ export function _mergeStatus(
   return "success";
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 function stringifyWithDepthLimit(obj: any, depthLimit: number): string {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   function helper(obj: any, currentDepth: number): any {
     if (typeof obj !== "object" || obj === null || obj === undefined) {
       return obj;
@@ -386,7 +386,7 @@ export abstract class BaseMessage<
   }
 
   get [Symbol.toStringTag]() {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     return (this.constructor as any).lc_name();
   }
 
@@ -399,7 +399,7 @@ export abstract class BaseMessage<
       this._printableFields,
       Math.max(4, depth)
     );
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     return `${(this.constructor as any).lc_name()} ${printable}`;
   }
 
@@ -471,19 +471,19 @@ export function _mergeDicts(
   /**
    * The left dictionary to merge.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   left: Record<string, any> | undefined,
   /**
    * The right dictionary to merge.
    * @type {Record<string, any>}
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   right: Record<string, any> | undefined,
   /**
    * The options for the merge.
    */
   options?: MergeDictsOptions
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
 ): Record<string, any> | undefined {
   /**
    * The keys to ignore during merging.
@@ -639,7 +639,7 @@ export function _mergeLists<Content extends ContentBlock>(
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export function _mergeObj<T = any>(
   left: T | undefined,
   right: T | undefined,

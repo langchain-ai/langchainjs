@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 
 import { expect, test, it, describe } from "vitest";
 import fs from "fs/promises";
@@ -120,7 +120,7 @@ test("Test ChatAnthropic Generate", async () => {
   expect(res.generations.length).toBe(2);
   for (const generation of res.generations) {
     expect(generation.length).toBe(1);
-    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
     // @ts-expect-error unused var
     for (const message of generation) {
       // console.log(message.text);
@@ -144,7 +144,7 @@ test.skip("Test ChatAnthropic Generate w/ ClientOptions", async () => {
   expect(res.generations.length).toBe(2);
   for (const generation of res.generations) {
     expect(generation.length).toBe(1);
-    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
     // @ts-expect-error unused var
     for (const message of generation) {
       // console.log(message.text);
@@ -179,7 +179,7 @@ test("Test ChatAnthropic tokenUsage with a batch", async () => {
     maxRetries: 0,
     modelName,
   });
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const res = await model.generate([
     [new HumanMessage(`Hello!`)],
@@ -252,7 +252,7 @@ test.skip("Test ChatAnthropic prompt value", async () => {
   const res = await chat.generatePrompt([new ChatPromptValue([message])]);
   expect(res.generations.length).toBe(1);
   for (const generation of res.generations) {
-    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
     // @ts-expect-error unused var
     for (const g of generation) {
       // console.log(g.text);
@@ -277,7 +277,7 @@ test.skip("ChatAnthropic, docs, prompt templates", async () => {
     HumanMessagePromptTemplate.fromTemplate("{text}"),
   ]);
 
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const responseA = await chat.generatePrompt([
     await chatPrompt.formatPromptValue({
@@ -303,7 +303,7 @@ test.skip("ChatAnthropic, longer chain of messages", async () => {
     HumanMessagePromptTemplate.fromTemplate("{text}"),
   ]);
 
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const responseA = await chat.generatePrompt([
     await chatPrompt.formatPromptValue({
@@ -323,7 +323,7 @@ test.skip("ChatAnthropic, Anthropic apiUrl set manually via constructor", async 
     anthropicApiUrl,
   });
   const message = new HumanMessage("Hello!");
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const res = await chat.call([message]);
   // console.log({ res });
@@ -356,7 +356,7 @@ test("Test ChatAnthropic stream method with abort", async () => {
         signal: AbortSignal.timeout(1000),
       }
     );
-    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
     // @ts-expect-error unused var
     for await (const chunk of stream) {
       // console.log(chunk);
@@ -374,7 +374,7 @@ test("Test ChatAnthropic stream method with early break", async () => {
     "How is your day going? Be extremely verbose."
   );
   let i = 0;
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   for await (const chunk of stream) {
     // console.log(chunk);
@@ -397,7 +397,7 @@ test("Test ChatAnthropic headers passed through", async () => {
     },
   });
   const message = new HumanMessage("Hello!");
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const res = await chat.invoke([message]);
   // console.log({ res });

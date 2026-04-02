@@ -3,7 +3,7 @@ import { BaseOutputParser, OutputParserException } from "./base.js";
 import { parseJsonMarkdown } from "./json.js";
 
 export class StandardSchemaOutputParser<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunOutput extends Record<string, any> = Record<string, any>,
 > extends BaseOutputParser<RunOutput> {
   static lc_name() {
@@ -20,7 +20,7 @@ export class StandardSchemaOutputParser<
   }
 
   static fromSerializableSchema<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(schema: StandardSchemaV1<RunOutput>) {
     return new this(schema);

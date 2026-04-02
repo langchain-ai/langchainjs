@@ -79,7 +79,7 @@ describe("filterMessage", () => {
     ]);
     expect("func" in filteredMessagesRunnable).toBeTruthy();
     // `func` is protected, so we need to cast it to any to access it
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect(typeof (filteredMessagesRunnable as any).func).toBe("function");
   });
 });
@@ -135,7 +135,7 @@ describe("mergeMessageRuns", () => {
     ]);
     expect("func" in mergedMessages).toBeTruthy();
     // `func` is protected, so we need to cast it to any to access it
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect(typeof (mergedMessages as any).func).toBe("function");
   });
 });
@@ -578,10 +578,10 @@ describe("trimMessages can trim", () => {
       "runnables",
     ]);
     expect("bound" in trimmedMessages).toBeTruthy();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect("func" in (trimmedMessages as any).bound).toBeTruthy();
     // `func` is protected, so we need to cast it to any to access it
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect(typeof (trimmedMessages as any).bound.func).toBe("function");
   });
 });

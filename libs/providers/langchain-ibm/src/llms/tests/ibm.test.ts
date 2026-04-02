@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable dot-notation */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable dot-notation */
 import { Gateway } from "@ibm-cloud/watsonx-ai/gateway";
 import { vi, expect, describe, test } from "vitest";
 import { AIMessageChunk } from "@langchain/core/messages";

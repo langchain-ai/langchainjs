@@ -39,7 +39,7 @@ export async function runExample(client?: MultiServerMCPClient) {
   try {
     console.log("Initializing MCP client...");
 
-    // eslint-disable-next-line no-void
+    // oxlint-disable-next-line no-void
     void calculatorServerMain();
 
     // Wait for the server to start
@@ -48,7 +48,7 @@ export async function runExample(client?: MultiServerMCPClient) {
     });
 
     // Create a client with configurations for the calculator server
-    // eslint-disable-next-line no-param-reassign
+    // oxlint-disable-next-line no-param-reassign
     client =
       client ??
       new MultiServerMCPClient({

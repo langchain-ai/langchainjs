@@ -17,9 +17,9 @@ import {
 } from "@langchain/core/utils/standard_schema";
 
 export function adjustObjectType(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   obj: Record<string, any>
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
 ): Record<string, any> {
   if (!Array.isArray(obj.type)) {
     return obj;
@@ -51,7 +51,7 @@ export function adjustObjectType(
 }
 
 export function removeAdditionalProperties(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   obj: Record<string, any>
 ): GeminiJsonSchema {
   if (typeof obj === "object" && obj !== null) {
@@ -128,7 +128,7 @@ export function removeAdditionalProperties(
 }
 
 export function schemaToGeminiParameters<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunOutput extends Record<string, any> = Record<string, any>,
 >(
   schema:
@@ -150,7 +150,7 @@ export function schemaToGeminiParameters<
 }
 
 export function jsonSchemaToGeminiParameters(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   schema: Record<string, any>
 ): GeminiFunctionSchema {
   // Gemini doesn't accept either the $schema or additionalProperties

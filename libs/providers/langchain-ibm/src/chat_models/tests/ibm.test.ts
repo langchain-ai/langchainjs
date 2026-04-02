@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable dot-notation */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable dot-notation */
 import { z } from "zod";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import { vi, describe, test, expect } from "vitest";

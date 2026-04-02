@@ -9,7 +9,7 @@ import {
   getAccessToken,
   getCredentials,
   Credentials,
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // oxlint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore CJS type resolution workaround
 } from "web-auth-library/google";
 

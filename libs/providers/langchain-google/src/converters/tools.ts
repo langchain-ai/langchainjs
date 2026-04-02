@@ -35,9 +35,9 @@ import {
  * @internal
  */
 function adjustObjectType(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  obj: Record<string, any>,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  obj: Record<string, any>
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
 ): Record<string, any> {
   if (!Array.isArray(obj.type)) {
     return obj;
@@ -54,7 +54,7 @@ function adjustObjectType(
   } else if (len === 1 && nullIndex === 0) {
     // This is nullable only without a type, which doesn't make sense for Gemini
     throw new InvalidInputError(
-      "Gemini does not support null-only types in function schemas. Provide a non-null type alongside nullable.",
+      "Gemini does not support null-only types in function schemas. Provide a non-null type alongside nullable."
     );
   } else if (len === 1) {
     // Although an array, it has only one value.
@@ -63,12 +63,12 @@ function adjustObjectType(
   } else if (len === 0) {
     // Empty type array is invalid
     throw new InvalidInputError(
-      "Gemini does not support empty type arrays in function schemas. Provide at least one type.",
+      "Gemini does not support empty type arrays in function schemas. Provide at least one type."
     );
   } else {
     // Anything else could be a union type, so reject it.
     throw new InvalidInputError(
-      "Gemini does not support union types in function schemas. Use a single type instead.",
+      "Gemini does not support union types in function schemas. Use a single type instead."
     );
   }
   return obj;
@@ -89,8 +89,8 @@ function adjustObjectType(
  * @internal
  */
 function removeAdditionalProperties(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  obj: Record<string, any>,
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  obj: Record<string, any>
 ): Gemini.Tools.Schema & { $schema?: string } {
   if (typeof obj === "object" && obj !== null) {
     const newObj = { ...obj };
@@ -130,13 +130,13 @@ function removeAdditionalProperties(
  * @internal
  */
 export function schemaToGeminiParameters<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunOutput extends Record<string, any> = Record<string, any>,
 >(
   schema:
     | SerializableSchema<RunOutput>
     | InteropZodType<RunOutput>
-    | JsonSchema7Type,
+    | JsonSchema7Type
 ): Gemini.Tools.Schema {
   // Gemini doesn't accept either the $schema or additionalProperties
   // attributes, so we need to explicitly remove them.
@@ -145,7 +145,7 @@ export function schemaToGeminiParameters<
   const jsonSchema = removeAdditionalProperties(
     isInteropZodSchema(schema) || isSerializableSchema(schema)
       ? toJsonSchema(schema)
-      : schema,
+      : schema
   );
   const { $schema, ...rest } = jsonSchema;
   return rest;
@@ -160,8 +160,8 @@ export function schemaToGeminiParameters<
  * @internal
  */
 function jsonSchemaToGeminiParameters(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  schema: Record<string, any>,
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  schema: Record<string, any>
 ): Gemini.Tools.Schema {
   const jsonSchema = removeAdditionalProperties(schema);
   const { $schema, ...rest } = jsonSchema;
@@ -465,7 +465,7 @@ export const convertToolsToGeminiTools: Converter<
  */
 export function convertToolChoiceToGeminiConfig(
   toolChoice: ToolChoice | undefined,
-  hasTools: boolean,
+  hasTools: boolean
 ): Gemini.Tools.ToolConfig | undefined {
   if (!hasTools || toolChoice === undefined) {
     return undefined;

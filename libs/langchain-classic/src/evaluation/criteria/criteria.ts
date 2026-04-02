@@ -160,7 +160,7 @@ export class CriteriaEvalChain extends LLMStringEvaluator {
       if (criteria in SUPPORTED_CRITERIA) {
         criteria_ = { [criteria]: SUPPORTED_CRITERIA[criteria] };
       }
-      // eslint-disable-next-line no-instanceof/no-instanceof
+      // oxlint-disable-next-line no-instanceof/no-instanceof
     } else if (criteria instanceof ConstitutionalPrinciple) {
       criteria_ = { [criteria.name]: criteria.critiqueRequest };
     } else {

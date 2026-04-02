@@ -1,4 +1,4 @@
-/* eslint-disable */
+/* oxlint-disable */
 import isNetworkError from "../is-network-error/index.js";
 
 function validateRetries(retries) {
@@ -9,7 +9,7 @@ function validateRetries(retries) {
 
     if (Number.isNaN(retries)) {
       throw new TypeError(
-        "Expected `retries` to be a valid number or Infinity, got NaN."
+        "Expected `retries` to be a valid number or Infinity, got NaN.",
       );
     }
   } else if (retries !== undefined) {
@@ -20,7 +20,7 @@ function validateRetries(retries) {
 function validateNumberOption(
   name,
   value,
-  { min = 0, allowInfinity = false } = {}
+  { min = 0, allowInfinity = false } = {},
 ) {
   if (value === undefined) {
     return;
@@ -30,7 +30,7 @@ function validateNumberOption(
     throw new TypeError(
       `Expected \`${name}\` to be a number${
         allowInfinity ? " or Infinity" : ""
-      }.`
+      }.`,
     );
   }
 
@@ -65,7 +65,7 @@ function calculateDelay(retriesConsumed, options) {
   const random = options.randomize ? Math.random() + 1 : 1;
 
   let timeout = Math.round(
-    random * options.minTimeout * options.factor ** (attempt - 1)
+    random * options.minTimeout * options.factor ** (attempt - 1),
   );
   timeout = Math.min(timeout, options.maxTimeout);
 
@@ -91,7 +91,7 @@ async function onAttemptFailure({
     error instanceof Error
       ? error
       : new TypeError(
-          `Non-error was thrown: "${error}". You should only throw errors.`
+          `Non-error was thrown: "${error}". You should only throw errors.`,
         );
 
   if (normalizedError instanceof AbortError) {
@@ -182,7 +182,7 @@ export default async function pRetry(input, options = {}) {
 
   if (Object.hasOwn(options, "forever")) {
     throw new Error(
-      "The `forever` option is no longer supported. For many use-cases, you can set `retries: Infinity` instead."
+      "The `forever` option is no longer supported. For many use-cases, you can set `retries: Infinity` instead.",
     );
   }
 

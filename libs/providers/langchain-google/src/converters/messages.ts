@@ -49,7 +49,7 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
       if (block.source_type === "base64") {
         if (!block.mime_type) {
           throw new InvalidInputError(
-            "mime_type is required for base64 image blocks",
+            "mime_type is required for base64 image blocks"
           );
         }
         const dataStr =
@@ -60,7 +60,7 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
                 btoa(
                   Array.from(block.data as Uint8Array)
                     .map((byte) => String.fromCharCode(byte))
-                    .join(""),
+                    .join("")
                 )
               : String(block.data);
         return {
@@ -82,7 +82,7 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
                 btoa(
                   Array.from(parsed.data as Uint8Array)
                     .map((byte) => String.fromCharCode(byte))
-                    .join(""),
+                    .join("")
                 );
           return {
             inlineData: {
@@ -113,7 +113,7 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
     throw new InvalidInputError(
       `Image content blocks with source_type "${
         (block as Data.DataContentBlock).source_type
-      }" are not supported for ChatGoogle. Supported source types are: "base64", "url", "id".`,
+      }" are not supported for ChatGoogle. Supported source types are: "base64", "url", "id".`
     );
   },
 
@@ -122,7 +122,7 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
       if (block.source_type === "base64") {
         if (!block.mime_type) {
           throw new InvalidInputError(
-            "mime_type is required for base64 audio blocks",
+            "mime_type is required for base64 audio blocks"
           );
         }
         const dataStr =
@@ -133,7 +133,7 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
                 btoa(
                   Array.from(block.data as Uint8Array)
                     .map((byte) => String.fromCharCode(byte))
-                    .join(""),
+                    .join("")
                 )
               : String(block.data);
         return {
@@ -155,7 +155,7 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
                 btoa(
                   Array.from(parsed.data as Uint8Array)
                     .map((byte) => String.fromCharCode(byte))
-                    .join(""),
+                    .join("")
                 );
           return {
             inlineData: {
@@ -186,7 +186,7 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
     throw new InvalidInputError(
       `Audio content blocks with source_type "${
         (block as Data.DataContentBlock).source_type
-      }" are not supported for ChatGoogle. Supported source types are: "base64", "url", "id".`,
+      }" are not supported for ChatGoogle. Supported source types are: "base64", "url", "id".`
     );
   },
 
@@ -195,7 +195,7 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
       if (block.source_type === "base64") {
         if (!block.mime_type) {
           throw new InvalidInputError(
-            "mime_type is required for base64 file blocks",
+            "mime_type is required for base64 file blocks"
           );
         }
         const dataStr =
@@ -206,7 +206,7 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
                 btoa(
                   Array.from(block.data as Uint8Array)
                     .map((byte) => String.fromCharCode(byte))
-                    .join(""),
+                    .join("")
                 )
               : String(block.data);
         return {
@@ -228,7 +228,7 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
                 btoa(
                   Array.from(parsed.data as Uint8Array)
                     .map((byte) => String.fromCharCode(byte))
-                    .join(""),
+                    .join("")
                 );
           return {
             inlineData: {
@@ -273,19 +273,19 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
     throw new InvalidInputError(
       `File content blocks with source_type "${
         (block as Data.DataContentBlock).source_type
-      }" are not supported for ChatGoogle. Supported source types are: "base64", "url", "id", "text".`,
+      }" are not supported for ChatGoogle. Supported source types are: "base64", "url", "id", "text".`
     );
   },
 };
 
 function convertStandardDataContentBlockToGeminiPart(
-  block: ContentBlock.Multimodal.Data,
+  block: ContentBlock.Multimodal.Data
 ): Gemini.Part | null {
   function uint8arrayToString(data: Uint8Array): string {
     return btoa(
       Array.from(data as Uint8Array)
         .map((byte) => String.fromCharCode(byte))
-        .join(""),
+        .join("")
     );
   }
 
@@ -342,7 +342,7 @@ function convertStandardDataContentBlockToGeminiPart(
 }
 
 function convertStandardVideoContentBlockToGeminiPart(
-  block: ContentBlock.Multimodal.Video,
+  block: ContentBlock.Multimodal.Video
 ): Gemini.Part | null {
   const ret: Gemini.Part | null =
     convertStandardDataContentBlockToGeminiPart(block);
@@ -359,7 +359,7 @@ function convertStandardVideoContentBlockToGeminiPart(
  * This is intended to be called from `convertStandardContentMessageToGeminiContent`
  */
 function convertStandardContentBlockToGeminiPart(
-  block: ContentBlock.Standard,
+  block: ContentBlock.Standard
 ): Gemini.Part | null {
   switch (block.type) {
     case "text":
@@ -384,7 +384,7 @@ function convertStandardContentBlockToGeminiPart(
  */
 function convertStandardContentMessageToGeminiContent(
   message: BaseMessage,
-  messages: BaseMessage[],
+  messages: BaseMessage[]
 ): Gemini.Content | null {
   // Skip system messages - they're handled separately
   if (SystemMessage.isInstance(message)) {
@@ -460,10 +460,10 @@ function convertStandardContentMessageToGeminiContent(
     const aiMsg = messages
       .filter(AIMessage.isInstance)
       .find((msg) =>
-        msg.tool_calls?.find((tc) => tc.id === message.tool_call_id),
+        msg.tool_calls?.find((tc) => tc.id === message.tool_call_id)
       );
     const matchedToolCall = aiMsg?.tool_calls?.find(
-      (tc) => tc.id === message.tool_call_id,
+      (tc) => tc.id === message.tool_call_id
     );
     const isGeneratedId = message.tool_call_id.startsWith("lc-tool-call-");
     parts.push({
@@ -491,7 +491,7 @@ function convertStandardContentMessageToGeminiContent(
  */
 function convertLegacyContentMessageToGeminiContent(
   message: BaseMessage,
-  messages: BaseMessage[],
+  messages: BaseMessage[]
 ): Gemini.Content | null {
   // Skip system messages - they're handled separately
   if (SystemMessage.isInstance(message)) {
@@ -502,7 +502,7 @@ function convertLegacyContentMessageToGeminiContent(
    * @deprecated - This is for use by `convertLegacyContentMessageToGeminiContent` only
    */
   function isMessageContentText(
-    content: object,
+    content: object
   ): content is MessageContentText {
     return typeof content === "object" && content !== null && "text" in content;
   }
@@ -511,7 +511,7 @@ function convertLegacyContentMessageToGeminiContent(
    * @deprecated - This is for use by `convertLegacyContentMessageToGeminiContent` only
    */
   function isMessageContentImageUrl(
-    content: object,
+    content: object
   ): content is MessageContentImageUrl {
     return (
       typeof content === "object" && content !== null && "image_url" in content
@@ -522,7 +522,7 @@ function convertLegacyContentMessageToGeminiContent(
    * @deprecated - This is for use by `convertLegacyContentMessageToGeminiContent` only
    */
   function isMessageContentMedia(
-    content: object,
+    content: object
   ): content is MessageContentComplex {
     return (
       typeof content === "object" &&
@@ -575,7 +575,7 @@ function convertLegacyContentMessageToGeminiContent(
   }
 
   function messageContentImageUrlData(
-    content: MessageContentImageUrl,
+    content: MessageContentImageUrl
   ): Gemini.Part.InlineData | Gemini.Part.FileData {
     const url: string =
       typeof content.image_url === "string"
@@ -583,7 +583,7 @@ function convertLegacyContentMessageToGeminiContent(
         : content.image_url.url;
     if (!url) {
       throw new InvalidInputError(
-        "Missing image URL in image_url content block.",
+        "Missing image URL in image_url content block."
       );
     }
 
@@ -608,7 +608,7 @@ function convertLegacyContentMessageToGeminiContent(
   }
 
   function messageContentImageUrl(
-    content: MessageContentImageUrl,
+    content: MessageContentImageUrl
   ): Gemini.Part.InlineData | Gemini.Part.FileData {
     const ret = messageContentImageUrlData(content);
     supplementVideoMetadata(content, ret);
@@ -616,8 +616,8 @@ function convertLegacyContentMessageToGeminiContent(
   }
 
   function messageContentMediaData(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    content: Record<string, any>,
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    content: Record<string, any>
   ): Gemini.Part.InlineData | Gemini.Part.FileData {
     if ("mimeType" in content && "data" in content) {
       return {
@@ -642,15 +642,15 @@ function convertLegacyContentMessageToGeminiContent(
       `Invalid media content: ${JSON.stringify(
         content,
         null,
-        1,
-      )}. Expected either { mimeType, data } for inline data or { mimeType, fileUri } for file references.`,
+        1
+      )}. Expected either { mimeType, data } for inline data or { mimeType, fileUri } for file references.`
     );
   }
 
   function supplementVideoMetadata(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     content: MessageContentImageUrl | Record<string, any>,
-    ret: Gemini.Part.InlineData | Gemini.Part.FileData,
+    ret: Gemini.Part.InlineData | Gemini.Part.FileData
   ): Gemini.Part.InlineData | Gemini.Part.FileData {
     // Add videoMetadata if defined
     if ("videoMetadata" in content && typeof ret === "object") {
@@ -660,8 +660,8 @@ function convertLegacyContentMessageToGeminiContent(
   }
 
   function messageContentMedia(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    content: Record<string, any>,
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    content: Record<string, any>
   ): Gemini.Part.InlineData | Gemini.Part.FileData {
     const ret = messageContentMediaData(content);
     supplementVideoMetadata(content, ret);
@@ -717,7 +717,7 @@ function convertLegacyContentMessageToGeminiContent(
           parts.push({ text: item.text });
         } else if (isDataContentBlock(item)) {
           parts.push(
-            convertToProviderContentBlock(item, geminiContentBlockConverter),
+            convertToProviderContentBlock(item, geminiContentBlockConverter)
           );
         } else if (item?.type === "functionCall") {
           const { type, functionCall, ...etc } = item;
@@ -746,14 +746,14 @@ function convertLegacyContentMessageToGeminiContent(
     const aiMsg = messages
       .filter(AIMessage.isInstance)
       .find((msg) =>
-        msg.tool_calls?.find((tc) => tc.id === message.tool_call_id),
+        msg.tool_calls?.find((tc) => tc.id === message.tool_call_id)
       );
     if (!aiMsg) {
       throw new ToolCallNotFoundError(message.tool_call_id);
     }
     const isGeneratedId = message.tool_call_id.startsWith("lc-tool-call-");
     const matchedToolCall = aiMsg.tool_calls?.find(
-      (tc) => tc.id === message.tool_call_id,
+      (tc) => tc.id === message.tool_call_id
     );
     parts.push({
       functionResponse: {
@@ -828,7 +828,7 @@ export const convertMessagesToGeminiContents: Converter<
         case "v1":
           return convertStandardContentMessageToGeminiContent(
             message,
-            messages,
+            messages
           );
         case "v0":
         default:
@@ -954,7 +954,7 @@ export const convertGeminiPartsToToolCalls: Converter<
   Gemini.Part[],
   ContentBlock.Tools.ToolCall<string, Record<string, unknown>>[]
 > = (
-  parts: Gemini.Part[],
+  parts: Gemini.Part[]
 ): ContentBlock.Tools.ToolCall<string, Record<string, unknown>>[] => {
   const toolCalls: ContentBlock.Tools.ToolCall<
     string,
@@ -1078,7 +1078,7 @@ export const convertGeminiCandidateToAIMessage: Converter<
   AIMessage
 > = (candidate) => {
   function groundingSupportByPart(
-    groundingSupports?: Gemini.GroundingSupport[],
+    groundingSupports?: Gemini.GroundingSupport[]
   ): Gemini.GroundingSupport[][] {
     const ret: Gemini.GroundingSupport[][] = [];
 
@@ -1112,7 +1112,7 @@ export const convertGeminiCandidateToAIMessage: Converter<
   const groundingMetadata = candidate?.groundingMetadata;
   const citationMetadata = candidate?.citationMetadata;
   const groundingParts = groundingSupportByPart(
-    groundingMetadata?.groundingSupports,
+    groundingMetadata?.groundingSupports
   );
 
   // Determine if a part carries actual content vs. just metadata.
@@ -1210,18 +1210,17 @@ export const convertGeminiCandidateToAIMessage: Converter<
 };
 
 export const convertAIMessageToText: Converter<AIMessage, string> = (
-  message: AIMessage,
+  message: AIMessage
 ): string => {
   if (typeof message.content === "string") {
     return message.content;
   } else if (Array.isArray(message.content)) {
     return message.content
       .filter(
-        (c) =>
-          typeof c === "string" || (c as { type?: string }).type === "text",
+        (c) => typeof c === "string" || (c as { type?: string }).type === "text"
       )
       .map((c) =>
-        typeof c === "string" ? c : (c as { text?: string }).text || "",
+        typeof c === "string" ? c : (c as { text?: string }).text || ""
       )
       .join("");
   } else {
@@ -1235,7 +1234,7 @@ export const convertGeminiGenerateContentResponseToUsageMetadata: Converter<
 > = (data: Gemini.GenerateContentResponse): UsageMetadata => {
   function addModalityCounts(
     modalityTokenCounts: Gemini.ModalityTokenCount[] | undefined,
-    details: InputTokenDetails | OutputTokenDetails,
+    details: InputTokenDetails | OutputTokenDetails
   ): void {
     modalityTokenCounts?.forEach((modalityTokenCount) => {
       const { modality, tokenCount } = modalityTokenCount;
@@ -1268,7 +1267,7 @@ export const convertGeminiGenerateContentResponseToUsageMetadata: Converter<
   const output_token_details: OutputTokenDetails = {};
   addModalityCounts(
     usageMetadata?.candidatesTokensDetails,
-    output_token_details,
+    output_token_details
   );
   output_token_details.reasoning = usageMetadata?.thoughtsTokenCount ?? 0;
 

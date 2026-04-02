@@ -389,7 +389,7 @@ async function reviver(this: ReviverContext, value: unknown): Promise<unknown> {
     );
 
     // Construct the object
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const instance = new (builder as any)(
       mapKeys(
         kwargs as SerializedFields,

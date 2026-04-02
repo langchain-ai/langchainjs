@@ -21,7 +21,7 @@ function createMockPool() {
       release: vi.fn(),
     }),
     end: vi.fn().mockResolvedValue(undefined),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   } as any;
 }
 
@@ -209,7 +209,7 @@ describe("PGVectorStore", () => {
 
     test("throws for unknown distance strategy", () => {
       const store = createStore();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       store.distanceStrategy = "unknown" as any;
       expect(() => store.computedOperatorString).toThrow(
         "Unknown distance strategy: unknown"
@@ -300,7 +300,7 @@ describe("PGVectorStore", () => {
       await store.addVectors(vectors, docs);
 
       const insertCalls = pool.query.mock.calls.filter(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         (call: any) => typeof call[0] === "string" && call[0].includes("INSERT")
       );
       expect(insertCalls.length).toBe(3);
@@ -994,7 +994,7 @@ describe("PGVectorStore", () => {
       });
 
       const calls = pool.query.mock.calls.map(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         (c: any) => c[0]
       );
       expect(

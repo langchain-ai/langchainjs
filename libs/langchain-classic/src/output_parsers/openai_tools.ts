@@ -9,14 +9,14 @@ export type ParsedToolCall = {
 
   type: string;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   args: Record<string, any>;
 
   /** @deprecated Use `type` instead. Will be removed in 0.2.0. */
   name: string;
 
   /** @deprecated Use `args` instead. Will be removed in 0.2.0. */
-  arguments: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+  arguments: Record<string, any>; // oxlint-disable-line @typescript-eslint/no-explicit-any
 };
 
 /**
@@ -106,7 +106,7 @@ export type JsonOutputKeyToolsParserParams = {
 /**
  * @deprecated Import from "@langchain/core/output_parsers/openai_tools"
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export class JsonOutputKeyToolsParser extends BaseLLMOutputParser<any> {
   static lc_name() {
     return "JsonOutputKeyToolsParser";
@@ -133,13 +133,13 @@ export class JsonOutputKeyToolsParser extends BaseLLMOutputParser<any> {
     this.initialParser = new JsonOutputToolsParser(params);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   async parseResult(generations: ChatGeneration[]): Promise<any> {
     const results = await this.initialParser.parseResult(generations);
     const matchingResults = results.filter(
       (result) => result.type === this.keyName
     );
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     let returnedValues: ParsedToolCall[] | Record<string, any>[] =
       matchingResults;
     if (!this.returnId) {

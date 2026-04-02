@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { Run } from "langsmith";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod/v3";

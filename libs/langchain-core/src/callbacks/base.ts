@@ -17,7 +17,7 @@ import type { SerializedFields } from "../load/map_keys.js";
 import type { DocumentInterface } from "../documents/document.js";
 import { getEnvironmentVariable } from "../utils/env.js";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 type Error = any;
 
 /**
@@ -68,7 +68,7 @@ abstract class BaseCallbackHandlerMethodsClass {
     tags?: string[],
     metadata?: Record<string, unknown>,
     runName?: string
-  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     Promise<any> | any;
 
   /**
@@ -87,7 +87,7 @@ abstract class BaseCallbackHandlerMethodsClass {
     parentRunId?: string,
     tags?: string[],
     fields?: HandleLLMNewTokenCallbackFields
-  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     Promise<any> | any;
 
   /**
@@ -99,7 +99,7 @@ abstract class BaseCallbackHandlerMethodsClass {
     parentRunId?: string,
     tags?: string[],
     extraParams?: Record<string, unknown>
-  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     Promise<any> | any;
 
   /**
@@ -111,7 +111,7 @@ abstract class BaseCallbackHandlerMethodsClass {
     parentRunId?: string,
     tags?: string[],
     extraParams?: Record<string, unknown>
-  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     Promise<any> | any;
 
   /**
@@ -127,7 +127,7 @@ abstract class BaseCallbackHandlerMethodsClass {
     tags?: string[],
     metadata?: Record<string, unknown>,
     runName?: string
-  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     Promise<any> | any;
 
   /**
@@ -144,7 +144,7 @@ abstract class BaseCallbackHandlerMethodsClass {
     runName?: string,
     parentRunId?: string,
     extra?: Record<string, unknown>
-  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     Promise<any> | any;
 
   /**
@@ -156,7 +156,7 @@ abstract class BaseCallbackHandlerMethodsClass {
     parentRunId?: string,
     tags?: string[],
     kwargs?: { inputs?: Record<string, unknown> }
-  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     Promise<any> | any;
 
   /**
@@ -168,7 +168,7 @@ abstract class BaseCallbackHandlerMethodsClass {
     parentRunId?: string,
     tags?: string[],
     kwargs?: { inputs?: Record<string, unknown> }
-  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     Promise<any> | any;
 
   /**
@@ -184,7 +184,7 @@ abstract class BaseCallbackHandlerMethodsClass {
     metadata?: Record<string, unknown>,
     runName?: string,
     toolCallId?: string
-  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     Promise<any> | any;
 
   /**
@@ -195,19 +195,19 @@ abstract class BaseCallbackHandlerMethodsClass {
     runId: string,
     parentRunId?: string,
     tags?: string[]
-  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     Promise<any> | any;
 
   /**
    * Called at the end of a Tool run, with the tool output and the run ID.
    */
   handleToolEnd?(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     output: any,
     runId: string,
     parentRunId?: string,
     tags?: string[]
-  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     Promise<any> | any;
 
   /**
@@ -219,7 +219,7 @@ abstract class BaseCallbackHandlerMethodsClass {
     runId: string,
     parentRunId?: string,
     tags?: string[]
-  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     Promise<any> | any;
 
   handleText?(
@@ -259,7 +259,7 @@ abstract class BaseCallbackHandlerMethodsClass {
     tags?: string[],
     metadata?: Record<string, unknown>,
     name?: string
-  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     Promise<any> | any;
 
   handleRetrieverEnd?(
@@ -267,7 +267,7 @@ abstract class BaseCallbackHandlerMethodsClass {
     runId: string,
     parentRunId?: string,
     tags?: string[]
-  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     Promise<any> | any;
 
   handleRetrieverError?(
@@ -275,18 +275,18 @@ abstract class BaseCallbackHandlerMethodsClass {
     runId: string,
     parentRunId?: string,
     tags?: string[]
-  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     Promise<any> | any;
 
   handleCustomEvent?(
     eventName: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     data: any,
     runId: string,
     tags?: string[],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     metadata?: Record<string, any>
-  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     Promise<any> | any;
 }
 

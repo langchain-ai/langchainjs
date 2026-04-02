@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 
 import type { expect as JestExpect } from "@jest/globals";
 import type { expect as VitestExpect } from "vitest";

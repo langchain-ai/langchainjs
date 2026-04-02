@@ -2,21 +2,21 @@
  * Type alias for a record where the keys are strings and the values can
  * be any type. This is used to represent the input values for a Chain.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export type InputValues = Record<string, any>;
 
 /**
  * Type alias for a record where the keys are strings and the values can
  * be any type. This is used to represent the output values from a Chain.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export type OutputValues = Record<string, any>;
 
 /**
  * Type alias for a record where the keys are strings and the values can
  * be any type. This is used to represent the memory variables in a Chain.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export type MemoryVariables = Record<string, any>;
 
 /**

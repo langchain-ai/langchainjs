@@ -1,4 +1,4 @@
-/* eslint-disable dot-notation */
+/* oxlint-disable dot-notation */
 import { Gateway } from "@ibm-cloud/watsonx-ai/gateway";
 import { vi, expect, describe, test } from "vitest";
 import { WatsonxEmbeddings, WatsonxInputEmbeddings } from "../ibm.js";
