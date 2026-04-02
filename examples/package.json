@@ -24,7 +24,7 @@
     "@clickhouse/client": "^0.2.5",
     "@cloudflare/workers-types": "^4.20250801.0",
     "@elastic/elasticsearch": "^8.4.0",
-    "@faker-js/faker": "^8.4.1",
+    "@faker-js/faker": "^10.4.0",
     "@getmetal/metal-sdk": "^7.7.1",
     "@gomomento/sdk": "1.117.2",
     "@google/generative-ai": "^0.7.0",
