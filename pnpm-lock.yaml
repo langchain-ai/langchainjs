@@ -369,8 +369,8 @@ importers:
         specifier: 0.6.3
         version: 0.6.3
       weaviate-client:
-        specifier: ^3.5.2
-        version: 3.11.0(encoding@0.1.13)
+        specifier: ^3.12.0
+        version: 3.12.0(encoding@0.1.13)
       zod-to-json-schema:
         specifier: ^3.25.2
         version: 3.25.2(zod@3.25.76)
@@ -952,8 +952,8 @@ importers:
         specifier: 0.6.3
         version: 0.6.3
       weaviate-client:
-        specifier: ^3.8.0
-        version: 3.11.0(encoding@0.1.13)
+        specifier: ^3.12.0
+        version: 3.12.0(encoding@0.1.13)
       zod-to-json-schema:
         specifier: ^3.25.2
         version: 3.25.2(zod@4.3.6)
@@ -10671,8 +10671,8 @@ packages:
   wcwidth@1.0.1:
     resolution: {integrity: sha512-XHPEwS0q6TaxcvG85+8EYkbiCux2XtWG2mkc47Ng2A77BQu9+DqIOJldST4HgPkuea7dvKSj5VgX3P1d4rW8Tg==}
 
-  weaviate-client@3.11.0:
-    resolution: {integrity: sha512-pEO+V8OZ84KUKz9ftQnSuooCT4Fdh3SjkDj6FPfxI3Iy6qc+PTTAMFFO0wL2prnf71DIs0tdNw/1RFX4kJkE/w==}
+  weaviate-client@3.12.0:
+    resolution: {integrity: sha512-z61T1WA44meNMbabzQ6GSXWkZyc/wGcC17X8DTB5tPs0ojatwFmdySLtXLzSvvgmIeLn+PI0+7eZgg42XYbAIw==}
     engines: {node: '>=20.0.0'}
 
   web-auth-library@1.0.3:
@@ -21217,7 +21217,7 @@ snapshots:
     dependencies:
       defaults: 1.0.4
 
-  weaviate-client@3.11.0(encoding@0.1.13):
+  weaviate-client@3.12.0(encoding@0.1.13):
     dependencies:
       '@datastructures-js/deque': 1.0.8
       abort-controller-x: 0.5.0

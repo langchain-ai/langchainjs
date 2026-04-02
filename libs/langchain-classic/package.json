@@ -194,7 +194,7 @@
     "typesense": "^3.0.5",
     "vitest": "^3.2.4",
     "voy-search": "0.6.3",
-    "weaviate-client": "^3.8.0",
+    "weaviate-client": "^3.12.0",
     "zod-to-json-schema": "^3.25.2",
     "@langchain/together-ai": "workspace:*"
   },
