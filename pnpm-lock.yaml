@@ -421,7 +421,7 @@ importers:
     optionalDependencies:
       '@esbuild/win32-x64':
         specifier: '*'
-        version: 0.27.3
+        version: 0.27.5
       '@rolldown/binding-darwin-arm64':
         specifier: '*'
         version: 1.0.0-rc.13
@@ -3227,6 +3227,12 @@ packages:
 
   '@esbuild/win32-x64@0.27.3':
     resolution: {integrity: sha512-4uJGhsxuptu3OcpVAzli+/gWusVGwZZHTlS63hh++ehExkVT8SgiEf7/uC/PclrPPkLhZqGgCTjd0VWLo6xMqA==}
+    engines: {node: '>=18'}
+    cpu: [x64]
+    os: [win32]
+
+  '@esbuild/win32-x64@0.27.5':
+    resolution: {integrity: sha512-PWypQR+d4FLfkhBIV+/kHsUELAnMpx1bRvvsn3p+/sAERbnCzFrtDRG2Xw5n+2zPxBK2+iaP+vetsRl4Ti7WgA==}
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
@@ -12279,6 +12285,9 @@ snapshots:
     optional: true
 
   '@esbuild/win32-x64@0.27.3':
+    optional: true
+
+  '@esbuild/win32-x64@0.27.5':
     optional: true
 
   '@faker-js/faker@10.3.0': {}
