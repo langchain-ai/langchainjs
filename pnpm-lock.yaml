@@ -201,8 +201,8 @@ importers:
         specifier: ^5.0.2
         version: 5.1.2
       '@planetscale/database':
-        specifier: ^1.8.0
-        version: 1.19.0
+        specifier: ^1.20.1
+        version: 1.20.1
       '@prisma/client':
         specifier: ^4.11.0
         version: 4.16.2(prisma@4.16.2)
@@ -899,8 +899,8 @@ importers:
         specifier: ^5.0.2
         version: 5.1.2
       '@planetscale/database':
-        specifier: ^1.8.0
-        version: 1.19.0
+        specifier: ^1.20.1
+        version: 1.20.1
       '@prisma/client':
         specifier: ^4.16.2
         version: 4.16.2(prisma@4.16.2)
@@ -4474,8 +4474,8 @@ packages:
     resolution: {integrity: sha512-QNqXyfVS2wm9hweSYD2O7F0G06uurj9kZ96TRQE5Y9hU7+tgdZwIkbAKc5Ocy1HxEY2kuDQa6cQ1WRs/O5LFKA==}
     engines: {node: ^12.20.0 || ^14.18.0 || >=16.0.0}
 
-  '@planetscale/database@1.19.0':
-    resolution: {integrity: sha512-Tv4jcFUFAFjOWrGSio49H6R2ijALv0ZzVBfJKIdm+kl9X046Fh4LLawrF9OMsglVbK6ukqMJsUCeucGAFTBcMA==}
+  '@planetscale/database@1.20.1':
+    resolution: {integrity: sha512-DeMEVtQXwyYQDEztj3iuwJ7IdIqYgd68m26gsXpkRJ7rJd0V9Q0cSzQQ32ziwK04nFXuOfu1/RKAXwq6arIZZA==}
     engines: {node: '>=16'}
 
   '@playwright/test@1.58.2':
@@ -13851,8 +13851,8 @@ snapshots:
   '@mistralai/mistralai@1.15.1(bufferutil@4.1.0)':
     dependencies:
       ws: 8.20.0(bufferutil@4.1.0)
-      zod: 3.25.76
-      zod-to-json-schema: 3.25.2(zod@3.25.76)
+      zod: 4.3.6
+      zod-to-json-schema: 3.25.2(zod@4.3.6)
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -14053,7 +14053,7 @@ snapshots:
 
   '@pkgr/core@0.2.9': {}
 
-  '@planetscale/database@1.19.0': {}
+  '@planetscale/database@1.20.1': {}
 
   '@playwright/test@1.58.2':
     dependencies:
@@ -21690,14 +21690,9 @@ snapshots:
     dependencies:
       zod: 4.3.6
 
-  zod-to-json-schema@3.25.2(zod@3.25.76):
-    dependencies:
-      zod: 3.25.76
-
   zod-to-json-schema@3.25.2(zod@4.3.6):
     dependencies:
       zod: 4.3.6
-    optional: true
 
   zod@3.25.76: {}
 
