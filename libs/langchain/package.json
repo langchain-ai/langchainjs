@@ -52,7 +52,7 @@
     "@types/jsdom": "^28.0.1",
     "@types/uuid": "^9",
     "@types/ws": "^8",
-    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/coverage-v8": "^4.1.2",
     "cheerio": "1.2.0",
     "dotenv": "^17.4.0",
     "dpdm": "^3.14.0",
