@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "uuid": "^10.0.0",
-    "redis": "^4.6.13"
+    "redis": "^5.11.0"
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0"

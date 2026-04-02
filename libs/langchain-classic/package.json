@@ -185,7 +185,7 @@
     "pickleparser": "^0.2.1",
     "prisma": "^4.16.2",
     "readline": "^1.3.0",
-    "redis": "^4.6.13",
+    "redis": "^5.11.0",
     "reflect-metadata": "^0.2.2",
     "rimraf": "^6.1.3",
     "sqlite3": "^5.1.4",
