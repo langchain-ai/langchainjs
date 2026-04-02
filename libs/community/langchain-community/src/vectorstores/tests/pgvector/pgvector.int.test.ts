@@ -746,6 +746,7 @@ describe("PGVectorStore with schema", () => {
   afterAll(async () => {
     await pool.query(`DROP SCHEMA ${schema} CASCADE`);
     await pgvectorVectorStore.end();
+    await pool.end();
   });
 
   test("Test table creation with schema", async () => {
