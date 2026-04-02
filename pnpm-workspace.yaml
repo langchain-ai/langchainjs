@@ -1,6 +1,5 @@
 packages:
   - "libs/*"
-  - "libs/community/*"
   - "libs/providers/*"
   - "examples"
   - "internal/*"

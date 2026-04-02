@@ -44,16 +44,14 @@ export interface RunnableWithMessageHistoryInputs<
  * the chain input.
  * @example
  * ```typescript
- * // pnpm install @langchain/anthropic @langchain/community @upstash/redis
+ * // pnpm install @langchain/anthropic @langchain/classic
  *
  * import {
  *   ChatPromptTemplate,
  *   MessagesPlaceholder,
  * } from "@langchain/core/prompts";
  * import { ChatAnthropic } from "@langchain/anthropic";
- * import { UpstashRedisChatMessageHistory } from "@langchain/community/stores/message/upstash_redis";
- * // For demos, you can also use an in-memory store:
- * // import { ChatMessageHistory } from "@langchain/classic/stores/message/in_memory";
+ * import { ChatMessageHistory } from "@langchain/classic/stores/message/in_memory";
  *
  * const prompt = ChatPromptTemplate.fromMessages([
  *   ["system", "You're an assistant who's good at {ability}"],
