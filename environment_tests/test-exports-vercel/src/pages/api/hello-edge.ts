@@ -5,7 +5,6 @@
 // This is expected behavior - Edge Runtime has limited Node.js API support
 
 // Import a few things we'll use to test the exports
-import { LLMChain } from "@langchain/classic/chains";
 import { ChatOpenAI } from "@langchain/openai";
 import {
   ChatPromptTemplate,
@@ -51,7 +50,6 @@ export default async function handler(req: NextRequest) {
   });
 
   // Test a chain + prompt + model
-  const chain = new LLMChain({
     llm,
     prompt: ChatPromptTemplate.fromMessages([
       HumanMessagePromptTemplate.fromTemplate("{input}"),

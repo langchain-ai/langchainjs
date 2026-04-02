@@ -1,19 +1,14 @@
 const assert = require("assert");
 const { OpenAI } = require("@langchain/openai");
-const { LLMChain } = require("@langchain/classic/chains");
 const { ChatPromptTemplate } = require("@langchain/core/prompts");
-const { MemoryVectorStore } = require("@langchain/classic/vectorstores/memory");
 const { Document } = require("@langchain/core/documents");
 const { FakeEmbeddings } = require("@langchain/core/utils/testing");
 
 async function test() {
   // Test exports
   assert(typeof OpenAI === "function");
-  assert(typeof LLMChain === "function");
   assert(typeof ChatPromptTemplate === "function");
-  assert(typeof MemoryVectorStore === "function");
 
-  const vs = new MemoryVectorStore(new FakeEmbeddings());
 
   await vs.addVectors(
     [

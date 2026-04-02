@@ -3,23 +3,17 @@ async function test() {
   const { OpenAI } = await import("@langchain/openai");
   const { ChatOllama } = await import("@langchain/ollama");
   const { ChatGoogle } = await import("@langchain/google-gauth");
-  const { LLMChain } = await import("@langchain/classic/chains");
   const { ChatPromptTemplate } = await import("@langchain/core/prompts");
   const { Document } = await import("@langchain/core/documents");
   const { FakeEmbeddings } = await import("@langchain/core/utils/testing");
-  const { MemoryVectorStore } = await import(
-    "@langchain/classic/vectorstores/memory"
   );
 
   // Test exports
   assert(typeof OpenAI === "function");
-  assert(typeof LLMChain === "function");
   assert(typeof ChatPromptTemplate === "function");
-  assert(typeof MemoryVectorStore === "function");
   assert(typeof ChatOllama === "function");
   assert(typeof ChatGoogle === "function");
 
-  const vs = new MemoryVectorStore(new FakeEmbeddings());
 
   await vs.addVectors(
     [

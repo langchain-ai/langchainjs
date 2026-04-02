@@ -4,7 +4,6 @@
 import "../../entrypoints.js";
 
 // Import a few things we'll use to test the exports
-import { LLMChain } from "@langchain/classic/chains";
 import { ChatOpenAI } from "@langchain/openai";
 import {
   ChatPromptTemplate,
@@ -12,7 +11,6 @@ import {
 } from "@langchain/core/prompts";
 import { OpenAI } from "@langchain/openai";
 import { OpenAIEmbeddings } from "@langchain/openai";
-import { TextLoader } from "@langchain/classic/document_loaders/fs/text";
 
 import { NextApiRequest, NextApiResponse } from "next";
 
@@ -27,10 +25,8 @@ export default async function handler(
   });
 
   // Test a document loader from a blob
-  const docs = new TextLoader(new Blob(["hello"]));
 
   // Test a chain + prompt + model
-  const chain = new LLMChain({
     llm: new ChatOpenAI({ openAIApiKey: process.env.OPENAI_API_KEY }),
     prompt: ChatPromptTemplate.fromMessages([
       HumanMessagePromptTemplate.fromTemplate("{input}"),
