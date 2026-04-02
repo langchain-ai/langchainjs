@@ -19,9 +19,7 @@
     "clean": "rm -rf .turbo dist/",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:int": "vitest run --mode int",
-    "format": "prettier --write \"src\"",
-    "format:check": "prettier --check \"src\""
+    "test:int": "vitest run --mode int"
   },
   "dependencies": {
     "neo4j-driver": "^6.0.1",
