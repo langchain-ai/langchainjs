@@ -87,6 +87,14 @@ export function getPlatformType(
   }
 }
 
+function usageMetadataToTokenUsage(usageMetadata: UsageMetadata) {
+  return {
+    promptTokens: usageMetadata.input_tokens,
+    completionTokens: usageMetadata.output_tokens,
+    totalTokens: usageMetadata.total_tokens,
+  };
+}
+
 export interface BaseChatGoogleParams
   extends BaseChatModelParams, ChatGoogleFields {
   /**
@@ -491,7 +499,7 @@ export abstract class BaseChatGoogle<
         },
       ],
       llmOutput: {
-        tokenUsage: usageMetadata,
+        tokenUsage: usageMetadataToTokenUsage(usageMetadata),
         model: data.modelVersion,
         responseId: data.responseId,
         usageMetadata,

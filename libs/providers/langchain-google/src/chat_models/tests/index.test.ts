@@ -17,6 +17,7 @@ import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import { ChatGoogle, ChatGoogleParams } from "../index.js";
 import { ChatGoogle as ChatGoogleNode } from "../node.js";
 import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
+import type { LLMResult } from "@langchain/core/outputs";
 import { OutputParserException } from "@langchain/core/output_parsers";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import type { Runnable } from "@langchain/core/runnables";
@@ -312,6 +313,40 @@ describe("Google Mock", () => {
     // console.log('request',recorder.request);
     expect(recorder?.request?.body?.generationConfig?.candidateCount).toEqual(
       1
+    );
+  });
+
+  test("handleLLMEnd exposes camelCase tokenUsage for invoke", async () => {
+    let callbackResult: LLMResult | undefined;
+
+    const llm = new ChatGoogle({
+      model: "gemini-3-pro-preview",
+      apiClient: new MockApiClient({
+        fileName: "gemini-chat-001.json",
+      }),
+      callbacks: [
+        {
+          async handleLLMEnd(output: LLMResult) {
+            callbackResult = output;
+          },
+        },
+      ],
+    });
+
+    const result = await llm.invoke("What is 1+1?");
+
+    expect(callbackResult?.llmOutput?.tokenUsage).toEqual({
+      promptTokens: 9,
+      completionTokens: 36,
+      totalTokens: 45,
+    });
+    expect(callbackResult?.llmOutput?.usageMetadata).toMatchObject({
+      input_tokens: 9,
+      output_tokens: 36,
+      total_tokens: 45,
+    });
+    expect(result.response_metadata.tokenUsage).toEqual(
+      callbackResult?.llmOutput?.tokenUsage
     );
   });
 
