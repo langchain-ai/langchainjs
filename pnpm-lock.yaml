@@ -1398,8 +1398,8 @@ importers:
         specifier: ^10.6.2
         version: 10.6.2
       knex:
-        specifier: ^3.1.0
-        version: 3.1.0(pg@8.18.0)
+        specifier: ^3.2.8
+        version: 3.2.8(pg@8.18.0)
       uuid:
         specifier: ^11.0.5
         version: 11.1.0
@@ -8175,8 +8175,8 @@ packages:
     resolution: {integrity: sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==}
     engines: {node: '>=6'}
 
-  knex@3.1.0:
-    resolution: {integrity: sha512-GLoII6hR0c4ti243gMs5/1Rb3B+AjwMOfjYm97pu0FOQa7JH56hgBxYf5WK2525ceSbBY1cjeZ9yk99GPMB6Kw==}
+  knex@3.2.8:
+    resolution: {integrity: sha512-ElXXxu9Nq+5hWYdBUddYIWIT5yKKs5KNCsmKGbJSHPyaMpAABp3xs4L55GgdQoAs6QQ7dv72ai3M4pxYQ8utEg==}
     engines: {node: '>=16'}
     hasBin: true
     peerDependencies:
@@ -8185,6 +8185,7 @@ packages:
       mysql2: '*'
       pg: '*'
       pg-native: '*'
+      pg-query-stream: ^4.14.0
       sqlite3: '*'
       tedious: '*'
     peerDependenciesMeta:
@@ -8197,6 +8198,8 @@ packages:
       pg:
         optional: true
       pg-native:
+        optional: true
+      pg-query-stream:
         optional: true
       sqlite3:
         optional: true
@@ -8314,6 +8317,9 @@ packages:
 
   lodash@4.17.23:
     resolution: {integrity: sha512-LgVTMpQtIopCi79SJeDiP0TfWi5CNEc/L/aRdTh3yIvmZXTnheWpKjSZhnvMl8iXbC1tFg9gdHHDMLoV7CnG+w==}
+
+  lodash@4.18.1:
+    resolution: {integrity: sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q==}
 
   log-symbols@4.1.0:
     resolution: {integrity: sha512-8XPvpAA8uyhfteu8pIvQxpJZ7SYYdpUivZpGy6sFsBuKRY/7rQGavedeB8aK+Zkyq6upMFVL/9AW6vOYzfRyLg==}
@@ -15780,7 +15786,7 @@ snapshots:
       graceful-fs: 4.2.11
       is-stream: 2.0.1
       lazystream: 1.0.1
-      lodash: 4.17.23
+      lodash: 4.18.1
       normalize-path: 3.0.0
       readable-stream: 4.7.0
 
@@ -18478,7 +18484,7 @@ snapshots:
 
   kleur@3.0.3: {}
 
-  knex@3.1.0(pg@8.18.0):
+  knex@3.2.8(pg@8.18.0):
     dependencies:
       colorette: 2.0.19
       commander: 10.0.1
@@ -18488,7 +18494,7 @@ snapshots:
       get-package-type: 0.1.0
       getopts: 2.3.0
       interpret: 2.2.0
-      lodash: 4.17.23
+      lodash: 4.18.1
       pg-connection-string: 2.6.2
       rechoir: 0.8.0
       resolve-from: 5.0.0
@@ -18613,6 +18619,8 @@ snapshots:
   lodash.uniqby@4.7.0: {}
 
   lodash@4.17.23: {}
+
+  lodash@4.18.1: {}
 
   log-symbols@4.1.0:
     dependencies:
