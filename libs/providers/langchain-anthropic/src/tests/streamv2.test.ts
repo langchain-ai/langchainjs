@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import {
+  getAnthropicContentBlockIndex,
   mergeAnthropicProtocolContentBlock,
   omitUndefinedContentBlockValues,
   shouldSkipAnthropicStreamv2ProtocolBlock,
@@ -82,6 +83,37 @@ describe("shouldSkipAnthropicStreamv2ProtocolBlock", () => {
         blockStates
       )
     ).toBe(false);
+  });
+});
+
+describe("getAnthropicContentBlockIndex", () => {
+  test("uses nested value.index for non_standard citation chunks", () => {
+    expect(
+      getAnthropicContentBlockIndex(
+        {
+          type: "non_standard",
+          value: {
+            index: 5,
+            type: "text",
+            citations: [{ type: "web_search_result_location" }],
+          },
+        },
+        0
+      )
+    ).toBe(5);
+  });
+
+  test("prefers top-level index when set", () => {
+    expect(
+      getAnthropicContentBlockIndex(
+        {
+          type: "non_standard",
+          index: 1,
+          value: { index: 5, type: "text" },
+        },
+        0
+      )
+    ).toBe(1);
   });
 });
 

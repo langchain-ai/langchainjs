@@ -137,6 +137,10 @@ export declare namespace Tools {
      */
     readonly type: "server_tool_call_result";
     /**
+     * Streamed content-block index when provided by the provider (e.g. Anthropic).
+     */
+    index?: number;
+    /**
      * The unique identifier of the tool call that this result corresponds to
      */
     toolCallId: string;

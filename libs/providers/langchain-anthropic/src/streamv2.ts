@@ -154,22 +154,50 @@ export function getAnthropicProtocolUsage(
   };
 }
 
+function parseFiniteBlockIndex(value: unknown): number | undefined {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+  return undefined;
+}
+
 /**
  * Resolve a stable protocol block index, preferring the provider-supplied value
  * when present and otherwise falling back to the current iteration index.
+ *
+ * Citation-only chunks are translated as `non_standard` with the logical block
+ * index on the wrapped payload (`value.index`) instead of the outer block.
  */
 export function getAnthropicContentBlockIndex(
-  block: { index?: string | number },
+  block: {
+    index?: string | number;
+    type?: string;
+    value?: unknown;
+  },
   fallbackIndex: number
 ) {
-  if (typeof block.index === "number" && Number.isFinite(block.index)) {
-    return block.index;
+  const direct = parseFiniteBlockIndex(block.index);
+  if (direct !== undefined) {
+    return direct;
   }
 
-  if (typeof block.index === "string") {
-    const parsedIndex = Number(block.index);
-    if (Number.isFinite(parsedIndex)) {
-      return parsedIndex;
+  if (
+    block.type === "non_standard" &&
+    typeof block.value === "object" &&
+    block.value !== null &&
+    "index" in block.value
+  ) {
+    const nested = parseFiniteBlockIndex(
+      (block.value as { index?: unknown }).index
+    );
+    if (nested !== undefined) {
+      return nested;
     }
   }
 
@@ -224,6 +252,12 @@ export function getAnthropicContentBlockStart(
       return {
         ...block,
         args: "",
+      };
+    case "server_tool_call_result":
+      return {
+        ...block,
+        index,
+        output: {},
       };
     default:
       return {
@@ -351,6 +385,19 @@ export function finalizeAnthropicProtocolContentBlock(
  * - `message_start` becomes protocol `message-start`
  * - content-block start/delta/stop events become explicit lifecycle events
  * - `message_delta` contributes finish metadata and usage
+ *
+ * **Multiple text blocks per assistant turn.** A single user-visible reply is still
+ * one assistant message, but Anthropic often streams it as **several** `text`
+ * content blocks (distinct `content_block_start` / `index` values), especially with
+ * hosted tools (e.g. web search) and citations. Each block gets its own
+ * `content-block-start` → deltas → `content-block-finish` sequence; concatenating
+ * finalized text blocks reproduces the full answer. Do not assume one block index
+ * per message.
+ *
+ * **Citations.** Citation-only deltas may translate to `non_standard` chunks with
+ * metadata on `value`; they are emitted as extra `content-block-delta` events at the
+ * same logical block index as the surrounding text and do not replace accumulated
+ * text state (see the `non_standard` branch in this generator).
  *
  * Keeping this logic outside the model class makes the provider integration
  * easier to scan and gives future contributors one place to reason about the
@@ -603,6 +650,24 @@ export async function* streamAnthropicResponseEvents<
         continue;
       }
 
+      /**
+       * Citation-only chunks translate to `non_standard` with the logical index on
+       * `value`. Emit the delta with that index but do not merge into `blockStates`:
+       * the same index already holds the streaming `text` block for `content-block-finish`.
+       * (Why many text blocks for one reply: see `streamAnthropicResponseEvents` docs above.)
+       */
+      if (protocolBlock.type === "non_standard") {
+        yield {
+          event: "content-block-delta",
+          index,
+          contentBlock: omitUndefinedContentBlockValues({
+            ...protocolBlock,
+            index,
+          } as Record<string, unknown>) as ProtocolContentBlock,
+        };
+        continue;
+      }
+
       const currentBlock =
         blockStates.get(index) ??
         getAnthropicContentBlockStart(protocolBlock, index);
@@ -622,6 +687,9 @@ export async function* streamAnthropicResponseEvents<
        * `server_tool_call` with object args. Merging that into `*_chunk` state
        * corrupts string `args` and emits an extra delta before `input_json_delta`.
        * Keep only the normalized chunk snapshot from `getAnthropicContentBlockStart`.
+       *
+       * `server_tool_call_result` arrives atomically (no deltas); merge the full
+       * payload into state for `content-block-finish` without emitting a delta.
        */
       if (
         data.type === "content_block_start" &&
@@ -629,6 +697,18 @@ export async function* streamAnthropicResponseEvents<
           protocolBlock.type === "server_tool_call")
       ) {
         blockStates.set(index, currentBlock);
+        continue;
+      }
+
+      if (
+        data.type === "content_block_start" &&
+        protocolBlock.type === "server_tool_call_result"
+      ) {
+        const mergedBlock = mergeAnthropicProtocolContentBlock(currentBlock, {
+          ...protocolBlock,
+          index,
+        });
+        blockStates.set(index, mergedBlock);
         continue;
       }
 

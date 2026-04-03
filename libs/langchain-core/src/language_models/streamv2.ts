@@ -321,6 +321,12 @@ function getContentBlockStart(
         index,
         args: "",
       };
+    case "server_tool_call_result":
+      return {
+        ...block,
+        index,
+        output: {},
+      };
     default:
       return {
         ...block,

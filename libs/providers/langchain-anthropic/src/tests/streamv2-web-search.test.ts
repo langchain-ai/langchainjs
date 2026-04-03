@@ -5,7 +5,7 @@
  * The mock stream replays the Anthropic Messages API shape that produced that
  * capture. We assert a strict prefix (server tool JSON streaming, tool result,
  * first text block) so fragment strings stay tied to the fixture. Replaying the
- * full 59-line golden would require encoding the entire raw stream (citations,
+ * full 60-line golden would require encoding the entire raw stream (citations,
  * `non_standard` blocks, etc.); extend `buildWebSearchGoldenPrefixRawStream` if
  * you add a recorded raw-event fixture.
  */
@@ -106,11 +106,11 @@ function* buildWebSearchGoldenPrefixRawStream(
     index: 0,
   };
 
-  const resultEv = expected[10];
-  if (resultEv.event !== "content-block-delta") {
-    throw new Error("Expected server_tool_call_result delta at index 10");
+  const resultFinish = expected[11];
+  if (resultFinish.event !== "content-block-finish") {
+    throw new Error("Expected server_tool_call_result content-block-finish at index 11");
   }
-  const resultCb = resultEv.contentBlock as {
+  const resultCb = resultFinish.contentBlock as {
     type: string;
     toolCallId: string;
     output: { urls: string[] };
@@ -135,9 +135,9 @@ function* buildWebSearchGoldenPrefixRawStream(
     index: 1,
   };
 
-  const textStart = expected[11];
+  const textStart = expected[12];
   if (textStart.event !== "content-block-start") {
-    throw new Error("Expected text content-block-start at index 11");
+    throw new Error("Expected text content-block-start at index 12");
   }
   const textStartCb = textStart.contentBlock as {
     type: string;
@@ -153,9 +153,9 @@ function* buildWebSearchGoldenPrefixRawStream(
     },
   };
 
-  const textBased = expected[13];
+  const textBased = expected[14];
   if (textBased.event !== "content-block-delta") {
-    throw new Error("Expected text delta at index 13");
+    throw new Error("Expected text delta at index 14");
   }
   const textBasedCb = textBased.contentBlock as {
     type: string;
@@ -197,7 +197,7 @@ class TestChatAnthropic extends ChatAnthropic {
 
 test("streamv2-web-search-expected.ndjson parses as one JSON object per line", () => {
   const events = loadExpectedNdjson();
-  expect(events.length).toBe(59);
+  expect(events.length).toBe(60);
   expect(events[0].event).toBe("message-start");
   const last = events[events.length - 1];
   expect(last.event).toBe("message-finish");
@@ -205,7 +205,7 @@ test("streamv2-web-search-expected.ndjson parses as one JSON object per line", (
 
 test("streamv2 with web search tool matches golden NDJSON prefix (server tool + first text)", async () => {
   const expected = loadExpectedNdjson();
-  const PREFIX_LEN = 14;
+  const PREFIX_LEN = 15;
 
   const model = new TestChatAnthropic({
     modelName: "claude-sonnet-4-5-20250929",
