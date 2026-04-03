@@ -1,5 +1,11 @@
 # @langchain/aws
 
+## 1.3.4
+
+### Patch Changes
+
+- [#10658](https://github.com/langchain-ai/langchainjs/pull/10658) [`793bc69`](https://github.com/langchain-ai/langchainjs/commit/793bc69a8af8198de9d157c21070871660e6bb13) Thanks [@colifran](https://github.com/colifran)! - feat(aws): impute file name for document content blocks
+
 ## 1.3.3
 
 ### Patch Changes

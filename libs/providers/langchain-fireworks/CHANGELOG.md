@@ -1,5 +1,16 @@
 # @langchain/fireworks
 
+## 0.1.0
+
+### Minor Changes
+
+- [#10594](https://github.com/langchain-ai/langchainjs/pull/10594) [`884c2d3`](https://github.com/langchain-ai/langchainjs/commit/884c2d3d1b2c49225d73ddec2235ad174db36f86) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(fireworks): extract standalone provider package
+
+### Patch Changes
+
+- Updated dependencies [[`d6bf4fc`](https://github.com/langchain-ai/langchainjs/commit/d6bf4fc91b2c2eb931bf3bc7606b1817632bc8c1)]:
+  - @langchain/openai@1.4.2
+
 ## 1.0.0
 
 Initial release of the standalone Fireworks provider package for LangChain.js.

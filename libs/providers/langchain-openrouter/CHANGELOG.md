@@ -1,5 +1,16 @@
 # @langchain/openrouter
 
+## 0.2.0
+
+### Minor Changes
+
+- [#10559](https://github.com/langchain-ai/langchainjs/pull/10559) [`17aedaa`](https://github.com/langchain-ai/langchainjs/commit/17aedaabfca680a9f8bb8f858395ee1ee4f152a1) Thanks [@mdrxy](https://github.com/mdrxy)! - Add `appCategories` field for OpenRouter marketplace attribution (`X-OpenRouter-Categories` header) and update default `siteUrl`/`siteName` values. Attribution headers are now only sent when set.
+
+### Patch Changes
+
+- Updated dependencies [[`d6bf4fc`](https://github.com/langchain-ai/langchainjs/commit/d6bf4fc91b2c2eb931bf3bc7606b1817632bc8c1)]:
+  - @langchain/openai@1.4.2
+
 ## 0.1.10
 
 ### Patch Changes
