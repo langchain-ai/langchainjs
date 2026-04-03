@@ -193,9 +193,9 @@ describe("ChatBaseten", () => {
     });
 
     it("throws a descriptive error when no API key is available", () => {
-      expect(
-        () => new ChatBaseten({ model: TEST_MODEL })
-      ).toThrowError(/Baseten API key not found/);
+      expect(() => new ChatBaseten({ model: TEST_MODEL })).toThrowError(
+        /Baseten API key not found/
+      );
     });
   });
 
@@ -241,9 +241,7 @@ describe("ChatBaseten", () => {
       msg.additional_kwargs = { reasoning_content: "Let me think..." };
 
       const fakeResult = {
-        generations: [
-          { text: "Answer", message: msg, generationInfo: {} },
-        ],
+        generations: [{ text: "Answer", message: msg, generationInfo: {} }],
         llmOutput: {},
       };
 
@@ -598,14 +596,14 @@ describe("normalizeModelUrl", () => {
   });
 
   it("appends /v1 to bare URL without trailing slash", () => {
-    expect(
-      normalizeModelUrl("https://model-abc123.api.baseten.co")
-    ).toBe("https://model-abc123.api.baseten.co/v1");
+    expect(normalizeModelUrl("https://model-abc123.api.baseten.co")).toBe(
+      "https://model-abc123.api.baseten.co/v1"
+    );
   });
 
   it("strips trailing slash before appending /v1", () => {
-    expect(
-      normalizeModelUrl("https://model-abc123.api.baseten.co/")
-    ).toBe("https://model-abc123.api.baseten.co/v1");
+    expect(normalizeModelUrl("https://model-abc123.api.baseten.co/")).toBe(
+      "https://model-abc123.api.baseten.co/v1"
+    );
   });
 });
