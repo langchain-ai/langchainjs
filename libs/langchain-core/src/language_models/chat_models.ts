@@ -68,7 +68,13 @@ import { assembleStructuredOutputPipeline } from "./structured_output.js";
 import type {
   MessagesData,
 } from "@langchain/protocol";
-import { createStreamv2, streamResponseEvents, streamv2Iterator } from "./streamv2.js";
+import {
+  createStreamv2,
+  streamResponseEvents,
+  type Streamv2ExecutionContext,
+  type Streamv2ResponseContext,
+  streamv2Iterator,
+} from "./streamv2.js";
 
 // oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export type ToolChoice = string | Record<string, any> | "auto" | "any";
@@ -312,14 +318,26 @@ export abstract class BaseChatModel<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatModelStreamv2Event> {
+    const context: Streamv2ResponseContext<this["ParsedCallOptions"]> = {
+      disableStreaming: this.disableStreaming,
+      hasStreamingImplementation:
+        this._streamResponseChunks !== BaseChatModel.prototype._streamResponseChunks,
+      streamResponseChunks: (
+        innerMessages: BaseMessage[],
+        innerOptions: this["ParsedCallOptions"],
+        innerRunManager?: CallbackManagerForLLMRun
+      ) => this._streamResponseChunks(innerMessages, innerOptions, innerRunManager),
+      generate: (
+        innerMessages: BaseMessage[],
+        innerOptions: this["ParsedCallOptions"],
+        innerRunManager?: CallbackManagerForLLMRun
+      ) => this._generate(innerMessages, innerOptions, innerRunManager),
+    };
     yield* streamResponseEvents(
-      this as unknown as Parameters<
-        typeof streamResponseEvents<this["ParsedCallOptions"]>
-      >[0],
+      context,
       messages,
       options,
-      runManager,
-      this._streamResponseChunks !== BaseChatModel.prototype._streamResponseChunks
+      runManager
     );
   }
 
@@ -328,13 +346,30 @@ export abstract class BaseChatModel<
     options?: Partial<CallOptions>
   ): AsyncGenerator<ChatModelStreamv2Event> {
     const prompt = BaseChatModel._convertInputToPromptValue(input);
+    const context: Streamv2ExecutionContext<this["ParsedCallOptions"]> = {
+      callbacks: this.callbacks,
+      tags: this.tags,
+      metadata: this.metadata,
+      verbose: this.verbose,
+      separateRunnableConfigFromCallOptions: (
+        innerOptions?: Partial<CallOptions>
+      ) =>
+        this._separateRunnableConfigFromCallOptionsCompat(
+          innerOptions
+        ) as [RunnableConfig, this["ParsedCallOptions"]],
+      getLsParamsWithDefaults: (innerOptions: this["ParsedCallOptions"]) =>
+        this.getLsParamsWithDefaults(innerOptions),
+      invocationParams: (innerOptions?: this["ParsedCallOptions"]) =>
+        this.invocationParams(innerOptions),
+      toJSON: () => this.toJSON(),
+    };
     yield* streamv2Iterator(
-      this as unknown as Parameters<
-        typeof streamv2Iterator<this["ParsedCallOptions"]>
-      >[0],
+      context,
       prompt.toChatMessages(),
-      options,
-      _formatForTracing
+      options as Partial<this["ParsedCallOptions"]> | undefined,
+      _formatForTracing,
+      (innerMessages, innerOptions, innerRunManager) =>
+        this._streamResponseEvents(innerMessages, innerOptions, innerRunManager)
     );
   }
 
@@ -343,13 +378,30 @@ export abstract class BaseChatModel<
     options?: Partial<CallOptions>
   ): Promise<ChatModelStreamv2> {
     const prompt = BaseChatModel._convertInputToPromptValue(input);
+    const context: Streamv2ExecutionContext<this["ParsedCallOptions"]> = {
+      callbacks: this.callbacks,
+      tags: this.tags,
+      metadata: this.metadata,
+      verbose: this.verbose,
+      separateRunnableConfigFromCallOptions: (
+        innerOptions?: Partial<CallOptions>
+      ) =>
+        this._separateRunnableConfigFromCallOptionsCompat(
+          innerOptions
+        ) as [RunnableConfig, this["ParsedCallOptions"]],
+      getLsParamsWithDefaults: (innerOptions: this["ParsedCallOptions"]) =>
+        this.getLsParamsWithDefaults(innerOptions),
+      invocationParams: (innerOptions?: this["ParsedCallOptions"]) =>
+        this.invocationParams(innerOptions),
+      toJSON: () => this.toJSON(),
+    };
     return createStreamv2(
-      this as unknown as Parameters<
-        typeof createStreamv2<this["ParsedCallOptions"]>
-      >[0],
+      context,
       prompt.toChatMessages(),
-      options,
-      _formatForTracing
+      options as Partial<this["ParsedCallOptions"]> | undefined,
+      _formatForTracing,
+      (innerMessages, innerOptions, innerRunManager) =>
+        this._streamResponseEvents(innerMessages, innerOptions, innerRunManager)
     );
   }
 

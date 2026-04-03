@@ -23,7 +23,6 @@ import {
   concat,
   IterableReadableStream,
 } from "../utils/stream.js";
-import type { BaseLanguageModelInput } from "./base.js";
 import type {
   BaseChatModelCallOptions,
   ChatModelStreamv2,
@@ -47,37 +46,41 @@ import type {
 export type Streamv2TraceFormatter = (messages: BaseMessage[]) => BaseMessage[];
 
 /**
- * Minimal shape needed from a chat model to run the shared streamv2 helpers.
+ * Shared configuration and callbacks needed to wire streamv2 around a chat model.
  */
-export type Streamv2ModelLike<
-  CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
+export type Streamv2ExecutionContext<
+  ParsedCallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
 > = {
-  disableStreaming: boolean;
   callbacks?: Callbacks;
   tags?: string[];
   metadata?: Record<string, unknown>;
   verbose: boolean;
-  _streamResponseChunks(
+  separateRunnableConfigFromCallOptions(
+    options?: Partial<ParsedCallOptions>
+  ): [RunnableConfig, ParsedCallOptions];
+  getLsParamsWithDefaults(options: ParsedCallOptions): LangSmithParams;
+  invocationParams(options?: ParsedCallOptions): unknown;
+  toJSON(): import("../load/serializable.js").Serialized;
+};
+
+/**
+ * Shared low-level operations needed to synthesize protocol chat events.
+ */
+export type Streamv2ResponseContext<
+  CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
+> = {
+  disableStreaming: boolean;
+  hasStreamingImplementation: boolean;
+  streamResponseChunks(
     messages: BaseMessage[],
     options: CallOptions,
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk>;
-  _streamResponseEvents(
-    messages: BaseMessage[],
-    options: CallOptions,
-    runManager?: CallbackManagerForLLMRun
-  ): AsyncGenerator<ChatModelStreamv2Event>;
-  _generate(
+  generate(
     messages: BaseMessage[],
     options: CallOptions,
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult>;
-  _separateRunnableConfigFromCallOptionsCompat(
-    options?: Partial<CallOptions>
-  ): [RunnableConfig, CallOptions];
-  getLsParamsWithDefaults(options: CallOptions): LangSmithParams;
-  invocationParams(options?: CallOptions): unknown;
-  toJSON(): import("../load/serializable.js").Serialized;
 };
 
 type Streamv2AggregationState = {
@@ -509,13 +512,12 @@ function getFinalMessage(state: Streamv2AggregationState): AIMessage {
 export async function* streamResponseEvents<
   CallOptions extends BaseChatModelCallOptions,
 >(
-  model: Streamv2ModelLike<CallOptions>,
+  context: Streamv2ResponseContext<CallOptions>,
   messages: BaseMessage[],
   options: CallOptions,
-  runManager: CallbackManagerForLLMRun | undefined,
-  hasStreamingImplementation: boolean
+  runManager: CallbackManagerForLLMRun | undefined
 ): AsyncGenerator<ChatModelStreamv2Event> {
-  if (!model.disableStreaming && hasStreamingImplementation) {
+  if (!context.disableStreaming && context.hasStreamingImplementation) {
     let finalChunk: ChatGenerationChunk | undefined;
     let messageStarted = false;
     const startedBlockIndices = new Set<number>();
@@ -525,7 +527,7 @@ export async function* streamResponseEvents<
      * The final aggregated chunk is saved so we can emit canonical finish events
      * with fully materialized content blocks at the end of the stream.
      */
-    for await (const chunk of model._streamResponseChunks(
+    for await (const chunk of context.streamResponseChunks(
       messages,
       options,
       runManager
@@ -620,7 +622,7 @@ export async function* streamResponseEvents<
    * Non-streaming models still get a well-formed lifecycle.
    * This keeps streamv2 additive even for models that only implement `_generate`.
    */
-  const result = await model._generate(messages, options, runManager);
+  const result = await context.generate(messages, options, runManager);
   const generation = result.generations[0];
   if (generation === undefined) {
     throw new Error("Received empty response from chat model call.");
@@ -673,43 +675,42 @@ export async function* streamResponseEvents<
  * closes the callback lifecycle with the aggregated output.
  */
 export async function* streamv2Iterator<
-  CallOptions extends BaseChatModelCallOptions,
+  ParsedCallOptions extends BaseChatModelCallOptions,
 >(
-  model: Streamv2ModelLike<CallOptions>,
-  input: BaseLanguageModelInput,
-  options: Partial<CallOptions> | undefined,
-  formatForTracing: Streamv2TraceFormatter
+  context: Streamv2ExecutionContext<ParsedCallOptions>,
+  input: BaseMessage[],
+  options: Partial<ParsedCallOptions> | undefined,
+  formatForTracing: Streamv2TraceFormatter,
+  streamResponseEventsFactory: (
+    messages: BaseMessage[],
+    options: ParsedCallOptions,
+    runManager?: CallbackManagerForLLMRun
+  ) => AsyncGenerator<ChatModelStreamv2Event>
 ): AsyncGenerator<ChatModelStreamv2Event> {
-  /**
-   * The public `streamv2()` method converts the incoming model input into chat
-   * messages before delegating here, so this helper can work directly on that
-   * normalized representation.
-   */
-  const messages = input as unknown as BaseMessage[];
   const [runnableConfig, callOptions] =
-    model._separateRunnableConfigFromCallOptionsCompat(options);
+    context.separateRunnableConfigFromCallOptions(options);
 
   const inheritableMetadata = {
     ...runnableConfig.metadata,
-    ...model.getLsParamsWithDefaults(callOptions),
+    ...context.getLsParamsWithDefaults(callOptions),
   };
   const callbackManager_ = await CallbackManager.configure(
     runnableConfig.callbacks,
-    model.callbacks,
+    context.callbacks,
     runnableConfig.tags,
-    model.tags,
+    context.tags,
     inheritableMetadata,
-    model.metadata,
-    { verbose: model.verbose }
+    context.metadata,
+    { verbose: context.verbose }
   );
   const extra = {
     options: callOptions,
-    invocation_params: model?.invocationParams(callOptions),
+    invocation_params: context.invocationParams(callOptions),
     batch_size: 1,
   };
   const runManagers = await callbackManager_?.handleChatModelStart(
-    model.toJSON(),
-    [formatForTracing(messages)],
+    context.toJSON(),
+    [formatForTracing(input)],
     runnableConfig.runId,
     undefined,
     extra,
@@ -728,8 +729,8 @@ export async function* streamv2Iterator<
   };
 
   try {
-    for await (const event of model._streamResponseEvents(
-      messages,
+    for await (const event of streamResponseEventsFactory(
+      input,
       callOptions,
       runManagers?.[0]
     )) {
@@ -784,16 +785,27 @@ export async function* streamv2Iterator<
  * Creates the public `streamv2()` readable stream for chat models.
  */
 export async function createStreamv2<
-  CallOptions extends BaseChatModelCallOptions,
+  ParsedCallOptions extends BaseChatModelCallOptions,
 >(
-  model: Streamv2ModelLike<CallOptions>,
-  input: BaseLanguageModelInput,
-  options: Partial<CallOptions> | undefined,
-  formatForTracing: Streamv2TraceFormatter
+  context: Streamv2ExecutionContext<ParsedCallOptions>,
+  input: BaseMessage[],
+  options: Partial<ParsedCallOptions> | undefined,
+  formatForTracing: Streamv2TraceFormatter,
+  streamResponseEventsFactory: (
+    messages: BaseMessage[],
+    options: ParsedCallOptions,
+    runManager?: CallbackManagerForLLMRun
+  ) => AsyncGenerator<ChatModelStreamv2Event>
 ): Promise<ChatModelStreamv2> {
   const config = ensureConfig(options);
   const wrappedGenerator = new AsyncGeneratorWithSetup({
-    generator: streamv2Iterator(model, input, config as Partial<CallOptions>, formatForTracing),
+    generator: streamv2Iterator(
+      context,
+      input,
+      config as Partial<ParsedCallOptions>,
+      formatForTracing,
+      streamResponseEventsFactory
+    ),
     config,
   });
   await wrappedGenerator.setup;
