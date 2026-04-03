@@ -26,13 +26,17 @@ export const DEFAULT_API_KEY_ENV_VAR = "BASETEN_API_KEY";
  */
 export function normalizeModelUrl(url: string): string {
   if (url.endsWith("/predict")) {
-    return url.replace(/\/predict$/, "/sync/v1");
+    return `${url.slice(0, -"/predict".length)}/sync/v1`;
   }
   if (url.endsWith("/sync")) {
     return `${url}/v1`;
   }
   if (!url.endsWith("/v1")) {
-    return `${url.replace(/\/+$/, "")}/v1`;
+    let trimmed = url;
+    while (trimmed.endsWith("/")) {
+      trimmed = trimmed.slice(0, -1);
+    }
+    return `${trimmed}/v1`;
   }
   return url;
 }
