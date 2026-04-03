@@ -1610,3 +1610,79 @@ describe("bedrockApiKey / bedrockApiSecret credentials", () => {
     );
   });
 });
+
+describe("document content block conversion", () => {
+  test("imputes placeholder filename when no name is provided", () => {
+    const pdfData = btoa("fake-pdf-bytes");
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          {
+            type: "file",
+            source_type: "base64",
+            mime_type: "application/pdf",
+            data: pdfData,
+          },
+        ],
+      }),
+    ]);
+
+    const content = result.converseMessages[0].content!;
+    expect(content).toHaveLength(1);
+    expect(content[0]).toHaveProperty("document");
+    expect(content[0].document?.format).toBe("pdf");
+    expect(content[0].document?.name).toBeDefined();
+    expect(typeof content[0].document?.name).toBe("string");
+    expect(content[0].document?.name!.length).toBe(12);
+  });
+
+  test("uses provided filename from metadata", () => {
+    const pdfData = btoa("fake-pdf-bytes");
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          {
+            type: "file",
+            source_type: "base64",
+            mime_type: "application/pdf",
+            data: pdfData,
+            metadata: { filename: "my-report.pdf" },
+          },
+        ],
+      }),
+    ]);
+
+    const content = result.converseMessages[0].content!;
+    expect(content[0].document?.name).toBe("my-report.pdf");
+  });
+
+  test("generates unique placeholder filenames for multiple files", () => {
+    const pdfData = btoa("fake-pdf-bytes");
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          {
+            type: "file",
+            source_type: "base64",
+            mime_type: "application/pdf",
+            data: pdfData,
+          },
+          {
+            type: "file",
+            source_type: "base64",
+            mime_type: "application/pdf",
+            data: pdfData,
+          },
+        ],
+      }),
+    ]);
+
+    const content = result.converseMessages[0].content!;
+    expect(content).toHaveLength(2);
+    const name1 = content[0].document?.name;
+    const name2 = content[1].document?.name;
+    expect(name1).toBeDefined();
+    expect(name2).toBeDefined();
+    expect(name1).not.toBe(name2);
+  });
+});
