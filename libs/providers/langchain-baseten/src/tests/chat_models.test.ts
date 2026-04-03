@@ -12,6 +12,15 @@ import type { ToolCallChunk } from "@langchain/core/messages/tool";
 const TEST_API_KEY = "test-baseten-api-key";
 const TEST_MODEL = "deepseek-ai/DeepSeek-V3.1";
 
+interface ClientConfig {
+  baseURL: string;
+  defaultHeaders?: Record<string, string>;
+}
+
+function getClientConfig(model: ChatBaseten): ClientConfig {
+  return (model as unknown as { clientConfig: ClientConfig }).clientConfig;
+}
+
 describe("ChatBaseten", () => {
   let originalEnv: string | undefined;
 
@@ -35,7 +44,7 @@ describe("ChatBaseten", () => {
         basetenApiKey: TEST_API_KEY,
       });
 
-      expect((model as any).clientConfig.baseURL).toBe(DEFAULT_BASE_URL);
+      expect(getClientConfig(model).baseURL).toBe(DEFAULT_BASE_URL);
     });
 
     it("allows overriding base URL for self-deployed models", () => {
@@ -46,7 +55,7 @@ describe("ChatBaseten", () => {
         baseURL: customURL,
       });
 
-      expect((model as any).clientConfig.baseURL).toBe(customURL);
+      expect(getClientConfig(model).baseURL).toBe(customURL);
     });
 
     it("sets the model name correctly", () => {
@@ -79,8 +88,8 @@ describe("ChatBaseten", () => {
         },
       });
 
-      expect((model as any).clientConfig.baseURL).toBe(DEFAULT_BASE_URL);
-      expect((model as any).clientConfig.defaultHeaders).toEqual({
+      expect(getClientConfig(model).baseURL).toBe(DEFAULT_BASE_URL);
+      expect(getClientConfig(model).defaultHeaders).toEqual({
         "X-Custom": "value",
       });
     });
@@ -112,7 +121,7 @@ describe("ChatBaseten", () => {
         basetenApiKey: TEST_API_KEY,
       });
 
-      expect((model as any).clientConfig.baseURL).toBe(
+      expect(getClientConfig(model).baseURL).toBe(
         "https://model-abc123.api.baseten.co/environments/production/sync/v1"
       );
     });
@@ -147,7 +156,7 @@ describe("ChatBaseten", () => {
         basetenApiKey: TEST_API_KEY,
       });
 
-      expect((model as any).clientConfig.baseURL).toBe(
+      expect(getClientConfig(model).baseURL).toBe(
         "https://model-abc123.api.baseten.co/environments/production/sync/v1"
       );
     });
@@ -223,7 +232,9 @@ describe("ChatBaseten", () => {
         basetenApiKey: TEST_API_KEY,
       });
 
-      const params = model.getLsParams({} as any);
+      const params = model.getLsParams(
+        {} as ChatBaseten["ParsedCallOptions"]
+      );
 
       expect(params.ls_provider).toBe("baseten");
       expect(params.ls_model_name).toBe(TEST_MODEL);
@@ -249,7 +260,10 @@ describe("ChatBaseten", () => {
         .spyOn(Object.getPrototypeOf(ChatBaseten.prototype), "_generate")
         .mockResolvedValueOnce(fakeResult);
 
-      const result = await model._generate([], {} as any);
+      const result = await model._generate(
+        [],
+        {} as ChatBaseten["ParsedCallOptions"]
+      );
 
       expect(
         result.generations[0].message.additional_kwargs.reasoning_content
@@ -283,7 +297,10 @@ describe("ChatBaseten", () => {
         );
 
       const chunks: ChatGenerationChunk[] = [];
-      for await (const c of model._streamResponseChunks([], {} as any)) {
+      for await (const c of model._streamResponseChunks(
+        [],
+        {} as ChatBaseten["ParsedCallOptions"]
+      )) {
         chunks.push(c);
       }
 
@@ -318,7 +335,10 @@ describe("ChatBaseten", () => {
         .spyOn(Object.getPrototypeOf(ChatBaseten.prototype), "_generate")
         .mockResolvedValueOnce(fakeResult);
 
-      const result = await model._generate([], {} as any);
+      const result = await model._generate(
+        [],
+        {} as ChatBaseten["ParsedCallOptions"]
+      );
 
       expect(result.generations[0].message.response_metadata).toEqual(
         expect.objectContaining({ model_provider: "baseten" })
@@ -345,7 +365,10 @@ describe("ChatBaseten", () => {
         .spyOn(Object.getPrototypeOf(ChatBaseten.prototype), "_generate")
         .mockResolvedValueOnce(fakeResult);
 
-      const result = await model._generate([], {} as any);
+      const result = await model._generate(
+        [],
+        {} as ChatBaseten["ParsedCallOptions"]
+      );
       const meta = result.generations[0].message.response_metadata;
 
       expect(meta).toEqual({
@@ -362,8 +385,8 @@ describe("ChatBaseten", () => {
       content: string,
       overrides?: {
         tool_call_chunks?: ToolCallChunk[];
-        usage_metadata?: any;
-        response_metadata?: Record<string, any>;
+        usage_metadata?: Record<string, number>;
+        response_metadata?: Record<string, unknown>;
       }
     ): ChatGenerationChunk {
       const msg = new AIMessageChunk({
@@ -397,7 +420,10 @@ describe("ChatBaseten", () => {
         .mockReturnValueOnce(fakeStream([makeChunk("hello")]));
 
       const chunks: ChatGenerationChunk[] = [];
-      for await (const c of model._streamResponseChunks([], {} as any)) {
+      for await (const c of model._streamResponseChunks(
+        [],
+        {} as ChatBaseten["ParsedCallOptions"]
+      )) {
         chunks.push(c);
       }
 
@@ -438,7 +464,10 @@ describe("ChatBaseten", () => {
         .mockReturnValueOnce(fakeStream([contentChunk, usageOnlyChunk]));
 
       const chunks: ChatGenerationChunk[] = [];
-      for await (const c of model._streamResponseChunks([], {} as any)) {
+      for await (const c of model._streamResponseChunks(
+        [],
+        {} as ChatBaseten["ParsedCallOptions"]
+      )) {
         chunks.push(c);
       }
 
@@ -474,7 +503,10 @@ describe("ChatBaseten", () => {
         .mockReturnValueOnce(fakeStream([chunk]));
 
       const chunks: ChatGenerationChunk[] = [];
-      for await (const c of model._streamResponseChunks([], {} as any)) {
+      for await (const c of model._streamResponseChunks(
+        [],
+        {} as ChatBaseten["ParsedCallOptions"]
+      )) {
         chunks.push(c);
       }
 
