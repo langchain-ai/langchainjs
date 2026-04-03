@@ -257,9 +257,17 @@ const standardContentBlockConverter: StandardContentBlockConverter<{
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
         "xlsx",
     };
-    const name: string | undefined = (block.metadata?.name ??
+    let name: string | undefined = (block.metadata?.name ??
       block.metadata?.filename ??
       block.metadata?.title) as string | undefined;
+    if (!name) {
+      console.warn(
+        "Bedrock Converse may require a filename for file inputs. Specify " +
+          "a filename in the content block metadata, e.g.: { type: 'file', " +
+          "mimeType: '...', data: '...', metadata: { filename: 'my-file.pdf' } }."
+      );
+      name = crypto.randomUUID().replace(/-/g, "").slice(0, 12);
+    }
 
     if (block.source_type === "text") {
       return {
