@@ -69,14 +69,7 @@ import {
   createContentParser,
   createFunctionCallingParser,
 } from "@langchain/core/language_models/structured_output";
-import type {
-  ContentBlock as ProtocolContentBlock,
-  ContentBlockFinishData,
-  ContentBlockStartData,
-  FinalizedContentBlock as ProtocolFinalizedContentBlock,
-  MessageFinishData,
-  MessageStartData,
-} from "@langchain/protocol";
+import { streamAnthropicResponseEvents } from "./streamv2.js";
 
 // Default max output tokens per model family (prefix-matched).
 // These are sensible defaults for the `max_tokens` API parameter when
@@ -429,165 +422,6 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
     return chunk.content[0].text;
   }
   return undefined;
-}
-
-function getProtocolFinishReason(reason: unknown): MessageFinishData["reason"] {
-  switch (reason) {
-    case "max_tokens":
-      return "length";
-    case "tool_use":
-      return "tool_use";
-    case "content_filter":
-      return "content_filter";
-    case "end_turn":
-    case "stop_sequence":
-    case "stop":
-    default:
-      return "stop";
-  }
-}
-
-function getProtocolUsage(
-  usage: AIMessageChunk["usage_metadata"]
-): MessageFinishData["usage"] {
-  if (usage === undefined) {
-    return undefined;
-  }
-
-  const cachedTokens =
-    (usage.input_token_details?.cache_creation ?? 0) +
-    (usage.input_token_details?.cache_read ?? 0);
-
-  return {
-    inputTokens: usage.input_tokens,
-    outputTokens: usage.output_tokens,
-    totalTokens: usage.total_tokens,
-    cachedTokens: cachedTokens > 0 ? cachedTokens : undefined,
-  };
-}
-
-function getContentBlockIndex(
-  block: { index?: string | number },
-  fallbackIndex: number
-) {
-  if (typeof block.index === "number" && Number.isFinite(block.index)) {
-    return block.index;
-  }
-  if (typeof block.index === "string") {
-    const parsedIndex = Number(block.index);
-    if (Number.isFinite(parsedIndex)) {
-      return parsedIndex;
-    }
-  }
-  return fallbackIndex;
-}
-
-function getContentBlockStart(
-  block: ProtocolContentBlock,
-  index: number
-): ProtocolContentBlock {
-  switch (block.type) {
-    case "text":
-      return {
-        ...block,
-        index,
-        text: "",
-      };
-    case "reasoning":
-      return {
-        ...block,
-        index,
-        reasoning: "",
-      };
-    case "tool_call":
-      return {
-        type: "tool_call_chunk",
-        id: block.id,
-        name: block.name,
-        args: "",
-        index,
-      };
-    case "tool_call_chunk":
-      return {
-        ...block,
-        index,
-        args: "",
-      };
-    case "server_tool_call":
-      return {
-        type: "server_tool_call_chunk",
-        id: block.id,
-        name: block.name,
-        args: "",
-      };
-    case "server_tool_call_chunk":
-      return {
-        ...block,
-        args: "",
-      };
-    default:
-      return {
-        ...block,
-        index,
-      };
-  }
-}
-
-function mergeProtocolContentBlock(
-  current: ProtocolContentBlock,
-  delta: ProtocolContentBlock
-): ProtocolContentBlock {
-  const nextBlock = { ...current } as Record<string, unknown>;
-
-  for (const [key, value] of Object.entries(delta as Record<string, unknown>)) {
-    if (value === undefined) {
-      continue;
-    }
-    const existingValue = nextBlock[key];
-    if (existingValue === undefined) {
-      nextBlock[key] = value;
-    } else if (typeof existingValue === "string" && typeof value === "string") {
-      nextBlock[key] = existingValue + value;
-    } else if (
-      typeof existingValue === "object" &&
-      existingValue !== null &&
-      typeof value === "object" &&
-      value !== null
-    ) {
-      nextBlock[key] = {
-        ...(existingValue as Record<string, unknown>),
-        ...(value as Record<string, unknown>),
-      };
-    } else {
-      nextBlock[key] = value;
-    }
-  }
-
-  return nextBlock as ProtocolContentBlock;
-}
-
-function finalizeProtocolContentBlock(
-  block: ProtocolContentBlock
-): ProtocolFinalizedContentBlock {
-  if (block.type === "tool_call_chunk") {
-    return {
-      type: "tool_call",
-      id: block.id ?? "",
-      name: block.name ?? "",
-      args: block.args && block.args.length > 0 ? JSON.parse(block.args) : {},
-    };
-  }
-
-  if (block.type === "server_tool_call_chunk") {
-    return {
-      type: "server_tool_call",
-      id: block.id ?? "",
-      name: block.name ?? "",
-      args: block.args && block.args.length > 0 ? JSON.parse(block.args) : {},
-    };
-  }
-
-  return block as ProtocolFinalizedContentBlock;
 }
 
 /**
@@ -1509,153 +1343,23 @@ export class ChatAnthropicMessages<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatModelStreamv2Event> {
-    const params = this.invocationParams(options);
-    let formattedMessages = _convertMessagesToAnthropicPayload(messages);
-
-    if (options.cache_control) {
-      formattedMessages = applyCacheControlToPayload(
-        formattedMessages,
-        options.cache_control
-      );
-    }
-
-    const payload = {
-      ...params,
-      ...formattedMessages,
-      stream: true,
-    } as const;
-    const coerceContentToString =
-      !_toolsInParams(payload) &&
-      !_documentsInParams(payload) &&
-      !_thinkingInParams(payload) &&
-      !_compactionInParams(payload);
-    const shouldStreamUsage = this.streamUsage ?? options.streamUsage;
-
-    const stream = await this.createStreamWithRetry(payload, {
-      headers: options.headers,
-      signal: options.signal,
+    yield* streamAnthropicResponseEvents({
+      messages,
+      options,
+      runManager,
+      invocationParams: this.invocationParams(options),
+      streamUsage: this.streamUsage,
+      convertMessagesToPayload: _convertMessagesToAnthropicPayload,
+      applyCacheControlToPayload,
+      toolsInParams: _toolsInParams,
+      documentsInParams: _documentsInParams,
+      thinkingInParams: _thinkingInParams,
+      compactionInParams: _compactionInParams,
+      createStreamWithRetry: (request, requestOptions) =>
+        this.createStreamWithRetry(request, requestOptions),
+      makeMessageChunkFromAnthropicEvent: _makeMessageChunkFromAnthropicEvent,
+      extractToken,
     });
-
-    let finalChunk: ChatGenerationChunk | undefined;
-    const startedBlockIndices = new Set<number>();
-
-    for await (const data of stream) {
-      if (options.signal?.aborted) {
-        stream.controller.abort();
-        return;
-      }
-
-      if (data.type === "message_start") {
-        yield {
-          event: "message-start",
-          messageId: data.message.id,
-          metadata: {
-            model_provider: "anthropic",
-            id: data.message.id,
-            type: data.message.type,
-            role: data.message.role,
-            model: data.message.model,
-            stop_reason: data.message.stop_reason,
-            stop_sequence: data.message.stop_sequence,
-          },
-        } satisfies MessageStartData;
-        continue;
-      }
-
-      const result = _makeMessageChunkFromAnthropicEvent(data, {
-        streamUsage: shouldStreamUsage,
-        coerceContentToString,
-      });
-      if (!result) continue;
-
-      const { chunk } = result;
-      const token = extractToken(chunk);
-      const generationChunk = new ChatGenerationChunk({
-        message: new AIMessageChunk({
-          content: chunk.content,
-          additional_kwargs: chunk.additional_kwargs,
-          tool_call_chunks: chunk.tool_call_chunks,
-          usage_metadata: shouldStreamUsage ? chunk.usage_metadata : undefined,
-          response_metadata: chunk.response_metadata,
-          id: chunk.id,
-        }),
-        text: token ?? "",
-      });
-
-      for (const [fallbackIndex, block] of generationChunk.message.contentBlocks.entries()) {
-        const protocolBlock = block as ProtocolContentBlock;
-        const index = getContentBlockIndex(protocolBlock, fallbackIndex);
-        if (!startedBlockIndices.has(index)) {
-          startedBlockIndices.add(index);
-          yield {
-            event: "content-block-start",
-            index,
-            contentBlock: getContentBlockStart(protocolBlock, index),
-          } satisfies ContentBlockStartData;
-        }
-        yield {
-          event: "content-block-delta",
-          index,
-          contentBlock: {
-            ...protocolBlock,
-            index,
-          },
-        };
-      }
-
-      finalChunk =
-        finalChunk === undefined ? generationChunk : finalChunk.concat(generationChunk);
-
-      await runManager?.handleLLMNewToken(
-        token ?? "",
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        { chunk: generationChunk }
-      );
-    }
-
-    if (finalChunk === undefined) {
-      throw new Error("No chunks returned from Anthropic API.");
-    }
-
-    for (const [fallbackIndex, block] of finalChunk.message.contentBlocks.entries()) {
-      const protocolBlock = block as ProtocolContentBlock;
-      const index = getContentBlockIndex(protocolBlock, fallbackIndex);
-      if (!startedBlockIndices.has(index)) {
-        yield {
-          event: "content-block-start",
-          index,
-          contentBlock: getContentBlockStart(protocolBlock, index),
-        } satisfies ContentBlockStartData;
-      }
-      yield {
-        event: "content-block-finish",
-        index,
-        contentBlock: {
-          ...protocolBlock,
-          index,
-        },
-      } satisfies ContentBlockFinishData;
-    }
-
-    yield {
-      event: "message-finish",
-      reason: getProtocolFinishReason(
-        finalChunk.message.response_metadata?.stop_reason ??
-          finalChunk.message.additional_kwargs?.stop_reason
-      ),
-      usage: getProtocolUsage(
-        shouldStreamUsage && AIMessageChunk.isInstance(finalChunk.message)
-          ? finalChunk.message.usage_metadata
-          : undefined
-      ),
-      metadata: {
-        ...finalChunk.generationInfo,
-        ...finalChunk.message.response_metadata,
-      },
-    } satisfies MessageFinishData;
   }
 
   /** @ignore */

@@ -49,11 +49,7 @@ import {
   RunnableLambda,
   RunnableToolLike,
 } from "../runnables/base.js";
-import {
-  AsyncGeneratorWithSetup,
-  concat,
-  IterableReadableStream,
-} from "../utils/stream.js";
+import { concat, IterableReadableStream } from "../utils/stream.js";
 import {
   getSchemaDescription,
   InteropZodType,
@@ -69,20 +65,10 @@ import {
   type SerializableSchema,
 } from "../utils/standard_schema.js";
 import { assembleStructuredOutputPipeline } from "./structured_output.js";
-import { ensureConfig } from "../runnables/config.js";
-import type { ContentBlock } from "../messages/content/index.js";
-import type { UsageMetadata } from "../messages/metadata.js";
 import type {
-  ContentBlock as ProtocolContentBlock,
-  ContentBlockFinishData,
-  ContentBlockStartData,
-  FinalizedContentBlock as ProtocolFinalizedContentBlock,
-  FinishReason as ProtocolFinishReason,
-  MessageFinishData,
-  MessageStartData,
   MessagesData,
-  UsageInfo as ProtocolUsageInfo,
 } from "@langchain/protocol";
+import { createStreamv2, streamResponseEvents, streamv2Iterator } from "./streamv2.js";
 
 // oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export type ToolChoice = string | Record<string, any> | "auto" | "any";
@@ -179,370 +165,6 @@ export type ChatModelStreamv2Event = MessagesData;
 export type ChatModelStreamV2Event = ChatModelStreamv2Event;
 export type ChatModelStreamv2 = IterableReadableStream<ChatModelStreamv2Event>;
 export type ChatModelStreamV2 = ChatModelStreamv2;
-
-type Streamv2AggregationState = {
-  messageId?: string;
-  blocks: Array<ProtocolContentBlock | undefined>;
-  finalizedBlocks: Array<ProtocolFinalizedContentBlock | undefined>;
-  usage?: ProtocolUsageInfo;
-  finishReason?: ProtocolFinishReason;
-  metadata?: Record<string, unknown>;
-};
-
-function getProtocolUsageInfo(
-  usageMetadata?: UsageMetadata
-): ProtocolUsageInfo | undefined {
-  if (usageMetadata === undefined) {
-    return undefined;
-  }
-
-  const cachedTokens =
-    (usageMetadata.input_token_details?.cache_creation ?? 0) +
-    (usageMetadata.input_token_details?.cache_read ?? 0);
-
-  return {
-    inputTokens: usageMetadata.input_tokens,
-    outputTokens: usageMetadata.output_tokens,
-    totalTokens: usageMetadata.total_tokens,
-    cachedTokens: cachedTokens > 0 ? cachedTokens : undefined,
-  };
-}
-
-function getUsageMetadata(
-  usageInfo?: ProtocolUsageInfo
-): UsageMetadata | undefined {
-  if (usageInfo === undefined) {
-    return undefined;
-  }
-
-  return {
-    input_tokens: usageInfo.inputTokens ?? 0,
-    output_tokens: usageInfo.outputTokens ?? 0,
-    total_tokens:
-      usageInfo.totalTokens ??
-      (usageInfo.inputTokens ?? 0) + (usageInfo.outputTokens ?? 0),
-    input_token_details:
-      usageInfo.cachedTokens !== undefined
-        ? {
-            cache_read: usageInfo.cachedTokens,
-          }
-        : undefined,
-  };
-}
-
-function getStreamv2Metadata(
-  metadata?: Record<string, unknown>
-): Record<string, unknown> | undefined {
-  if (metadata === undefined) {
-    return undefined;
-  }
-
-  return Object.keys(metadata).length > 0 ? metadata : undefined;
-}
-
-function getBlockIndex(
-  block: { index?: string | number } | ProtocolContentBlock,
-  fallbackIndex: number
-): number {
-  const blockIndex =
-    typeof block === "object" && block !== null && "index" in block
-      ? (block as { index?: string | number }).index
-      : undefined;
-
-  if (typeof blockIndex === "number" && Number.isFinite(blockIndex)) {
-    return block.index;
-  }
-
-  if (typeof blockIndex === "string") {
-    const parsedIndex = Number(blockIndex);
-    if (Number.isFinite(parsedIndex)) {
-      return parsedIndex;
-    }
-  }
-
-  return fallbackIndex;
-}
-
-function normalizeFinishReason(reason: unknown): ProtocolFinishReason {
-  switch (reason) {
-    case "tool_use":
-      return "tool_use";
-    case "length":
-    case "max_tokens":
-      return "length";
-    case "content_filter":
-      return "content_filter";
-    case "stop":
-    case "end_turn":
-    default:
-      return "stop";
-  }
-}
-
-function toProtocolContentBlock(
-  block: ContentBlock.Standard
-): ProtocolContentBlock {
-  return block as unknown as ProtocolContentBlock;
-}
-
-function getProtocolDeltaBlocks(
-  chunk: BaseMessageChunk
-): ProtocolContentBlock[] {
-  const blocks: ProtocolContentBlock[] = [];
-
-  if (typeof chunk.content === "string") {
-    if (chunk.content.length > 0) {
-      blocks.push({
-        type: "text",
-        text: chunk.content,
-      });
-    }
-  } else if (Array.isArray(chunk.content)) {
-    for (const block of chunk.content as Array<string | Record<string, unknown>>) {
-      if (typeof block === "string") {
-        if (block.length > 0) {
-          blocks.push({
-            type: "text",
-            text: block,
-          });
-        }
-      } else if (block !== undefined && block !== null) {
-        blocks.push(block as unknown as ProtocolContentBlock);
-      }
-    }
-  }
-
-  if (isAIMessageChunk(chunk) && chunk.tool_call_chunks) {
-    for (const toolCallChunk of chunk.tool_call_chunks) {
-      blocks.push({
-        type: "tool_call_chunk",
-        id: toolCallChunk.id,
-        name: toolCallChunk.name,
-        args: toolCallChunk.args,
-        index: toolCallChunk.index,
-      });
-    }
-  }
-
-  return blocks;
-}
-
-function getContentBlockStart(
-  block: ProtocolContentBlock,
-  index: number
-): ProtocolContentBlock {
-  switch (block.type) {
-    case "text":
-      return {
-        ...block,
-        index,
-        text: "",
-      };
-    case "reasoning":
-      return {
-        ...block,
-        index,
-        reasoning: "",
-      };
-    case "tool_call":
-      return {
-        type: "tool_call_chunk",
-        id: block.id,
-        name: block.name,
-        args: "",
-        index,
-      };
-    case "tool_call_chunk":
-      return {
-        ...block,
-        index,
-        args: "",
-      };
-    case "server_tool_call":
-      return {
-        type: "server_tool_call_chunk",
-        id: block.id,
-        name: block.name,
-        args: "",
-        index,
-      };
-    case "server_tool_call_chunk":
-      return {
-        ...block,
-        index,
-        args: "",
-      };
-    default:
-      return {
-        ...block,
-        index,
-      };
-  }
-}
-
-function finalizeContentBlock(
-  block: ProtocolContentBlock
-): ProtocolFinalizedContentBlock {
-  if (block.type === "tool_call_chunk") {
-    try {
-      return {
-        type: "tool_call",
-        id: block.id ?? "",
-        name: block.name ?? "",
-        args:
-          block.args && block.args.length > 0 ? JSON.parse(block.args) : {},
-      };
-    } catch (e) {
-      return {
-        type: "invalid_tool_call",
-        id: block.id,
-        name: block.name,
-        args: block.args,
-        error: e instanceof Error ? e.message : "Invalid tool call JSON.",
-      };
-    }
-  }
-
-  if (block.type === "server_tool_call_chunk") {
-    try {
-      return {
-        type: "server_tool_call",
-        id: block.id ?? "",
-        name: block.name ?? "",
-        args:
-          block.args && block.args.length > 0 ? JSON.parse(block.args) : {},
-      };
-    } catch (e) {
-      return {
-        type: "non_standard",
-        value: {
-          type: "server_tool_call_chunk",
-          id: block.id,
-          name: block.name,
-          args: block.args,
-          error: e instanceof Error ? e.message : "Invalid server tool JSON.",
-        },
-      };
-    }
-  }
-
-  return block as ProtocolFinalizedContentBlock;
-}
-
-function applyStreamv2Event(
-  state: Streamv2AggregationState,
-  event: ChatModelStreamv2Event
-) {
-  switch (event.event) {
-    case "message-start":
-      state.messageId = event.messageId ?? state.messageId;
-      state.metadata = event.metadata ?? state.metadata;
-      break;
-    case "content-block-start":
-    case "content-block-delta":
-      {
-        const currentBlock =
-          state.blocks[event.index] ??
-          getContentBlockStart(event.contentBlock, event.index);
-        const nextBlock = { ...currentBlock } as Record<string, unknown>;
-        for (const [key, value] of Object.entries(
-          event.contentBlock as Record<string, unknown>
-        )) {
-          if (value === undefined) {
-            continue;
-          }
-          const existingValue = nextBlock[key];
-          if (existingValue === undefined) {
-            nextBlock[key] = value;
-          } else if (typeof existingValue === "string" && typeof value === "string") {
-            nextBlock[key] = existingValue + value;
-          } else if (typeof existingValue === "number" && typeof value === "number") {
-            nextBlock[key] = value;
-          } else if (
-            typeof existingValue === "object" &&
-            existingValue !== null &&
-            typeof value === "object" &&
-            value !== null
-          ) {
-            nextBlock[key] = concat(existingValue, value);
-          } else {
-            nextBlock[key] = value;
-          }
-        }
-        state.blocks[event.index] = nextBlock as ProtocolContentBlock;
-      }
-      break;
-    case "content-block-finish":
-      state.finalizedBlocks[event.index] = event.contentBlock;
-      break;
-    case "message-finish":
-      state.finishReason = event.reason;
-      state.usage = event.usage ?? state.usage;
-      state.metadata = {
-        ...(state.metadata ?? {}),
-        ...(event.metadata ?? {}),
-      };
-      break;
-    default:
-      break;
-  }
-}
-
-function getFinalMessage(
-  state: Streamv2AggregationState
-): AIMessage {
-  const blocks = state.blocks
-    .map((block, index) => {
-      if (state.finalizedBlocks[index] !== undefined) {
-        return state.finalizedBlocks[index];
-      }
-      return block === undefined ? undefined : finalizeContentBlock(block);
-    })
-    .filter(
-      (block): block is ProtocolFinalizedContentBlock => block !== undefined
-    );
-
-  const toolCalls = blocks
-    .filter(
-      (block): block is Extract<ProtocolFinalizedContentBlock, { type: "tool_call" }> =>
-        block.type === "tool_call"
-    )
-    .map((block) => ({
-      type: "tool_call" as const,
-      id: block.id,
-      name: block.name,
-      args: block.args as Record<string, unknown>,
-    }));
-
-  const invalidToolCalls = blocks
-    .filter(
-      (
-        block
-      ): block is Extract<ProtocolFinalizedContentBlock, { type: "invalid_tool_call" }> =>
-        block.type === "invalid_tool_call"
-    )
-    .map((block) => ({
-      id: block.id,
-      name: block.name,
-      args: block.args,
-      error: block.error,
-      type: "invalid_tool_call" as const,
-    }));
-
-  return new AIMessage({
-    id: state.messageId,
-    contentBlocks: blocks as unknown as Array<ContentBlock.Standard>,
-    tool_calls: toolCalls.length > 0 ? toolCalls : undefined,
-    invalid_tool_calls:
-      invalidToolCalls.length > 0 ? invalidToolCalls : undefined,
-    usage_metadata: getUsageMetadata(state.usage),
-    response_metadata: {
-      ...(state.metadata ?? {}),
-      output_version: "v1",
-      stop_reason: state.finishReason ?? "stop",
-    },
-  });
-}
 
 function _formatForTracing(messages: BaseMessage[]): BaseMessage[] {
   const messagesToTrace: BaseMessage[] = [];
@@ -690,144 +312,15 @@ export abstract class BaseChatModel<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatModelStreamv2Event> {
-    if (
-      !this.disableStreaming &&
+    yield* streamResponseEvents(
+      this as unknown as Parameters<
+        typeof streamResponseEvents<this["ParsedCallOptions"]>
+      >[0],
+      messages,
+      options,
+      runManager,
       this._streamResponseChunks !== BaseChatModel.prototype._streamResponseChunks
-    ) {
-      let finalChunk: ChatGenerationChunk | undefined;
-      let messageStarted = false;
-      const startedBlockIndices = new Set<number>();
-
-      for await (const chunk of this._streamResponseChunks(
-        messages,
-        options,
-        runManager
-      )) {
-        const metadata = getStreamv2Metadata({
-          ...chunk.generationInfo,
-          ...chunk.message.response_metadata,
-        });
-
-        if (!messageStarted) {
-          messageStarted = true;
-          yield {
-            event: "message-start",
-            messageId: chunk.message.id,
-            metadata,
-          } satisfies MessageStartData;
-        }
-
-        for (const [fallbackIndex, block] of getProtocolDeltaBlocks(
-          chunk.message
-        ).entries()) {
-          const index = getBlockIndex(block, fallbackIndex);
-          if (!startedBlockIndices.has(index)) {
-            startedBlockIndices.add(index);
-            yield {
-              event: "content-block-start",
-              index,
-              contentBlock: getContentBlockStart(block, index),
-            } satisfies ContentBlockStartData;
-          }
-          yield {
-            event: "content-block-delta",
-            index,
-            contentBlock: {
-              ...block,
-              index,
-            },
-          };
-        }
-
-        finalChunk = finalChunk === undefined ? chunk : finalChunk.concat(chunk);
-      }
-
-      if (finalChunk === undefined) {
-        throw new Error("Received empty response from chat model call.");
-      }
-
-      const finalMetadata = getStreamv2Metadata({
-        ...finalChunk.generationInfo,
-        ...finalChunk.message.response_metadata,
-      });
-
-      for (const [fallbackIndex, block] of finalChunk.message.contentBlocks.entries()) {
-        const protocolBlock = toProtocolContentBlock(block);
-        const index = getBlockIndex(protocolBlock, fallbackIndex);
-        if (!startedBlockIndices.has(index)) {
-          yield {
-            event: "content-block-start",
-            index,
-            contentBlock: getContentBlockStart(protocolBlock, index),
-          } satisfies ContentBlockStartData;
-        }
-        yield {
-          event: "content-block-finish",
-          index,
-          contentBlock: finalizeContentBlock({
-            ...protocolBlock,
-            index,
-          }),
-        } satisfies ContentBlockFinishData;
-      }
-
-      yield {
-        event: "message-finish",
-        reason: normalizeFinishReason(finalMetadata?.stop_reason),
-        usage: getProtocolUsageInfo(
-          isAIMessageChunk(finalChunk.message)
-            ? finalChunk.message.usage_metadata
-            : undefined
-        ),
-        metadata: finalMetadata,
-      } satisfies MessageFinishData;
-
-      return;
-    }
-
-    const result = await this._generate(messages, options, runManager);
-    const generation = result.generations[0];
-    if (generation === undefined) {
-      throw new Error("Received empty response from chat model call.");
-    }
-
-    const metadata = getStreamv2Metadata({
-      ...generation.generationInfo,
-      ...generation.message.response_metadata,
-    });
-
-    yield {
-      event: "message-start",
-      messageId: generation.message.id,
-      metadata,
-    } satisfies MessageStartData;
-
-    for (const [fallbackIndex, block] of generation.message.contentBlocks.entries()) {
-      const protocolBlock = toProtocolContentBlock(block);
-      const index = getBlockIndex(protocolBlock, fallbackIndex);
-      yield {
-        event: "content-block-start",
-        index,
-        contentBlock: getContentBlockStart(protocolBlock, index),
-      } satisfies ContentBlockStartData;
-      yield {
-        event: "content-block-finish",
-        index,
-        contentBlock: finalizeContentBlock({
-          ...protocolBlock,
-          index,
-        }),
-      } satisfies ContentBlockFinishData;
-    }
-
-    yield {
-      event: "message-finish",
-      reason: normalizeFinishReason(metadata?.stop_reason),
-      usage: getProtocolUsageInfo(
-        isAIMessage(generation.message) ? generation.message.usage_metadata : undefined
-      ),
-      metadata,
-    } satisfies MessageFinishData;
+    );
   }
 
   async *_streamv2Iterator(
@@ -835,94 +328,13 @@ export abstract class BaseChatModel<
     options?: Partial<CallOptions>
   ): AsyncGenerator<ChatModelStreamv2Event> {
     const prompt = BaseChatModel._convertInputToPromptValue(input);
-    const messages = prompt.toChatMessages();
-    const [runnableConfig, callOptions] =
-      this._separateRunnableConfigFromCallOptionsCompat(options);
-
-    const inheritableMetadata = {
-      ...runnableConfig.metadata,
-      ...this.getLsParamsWithDefaults(callOptions),
-    };
-    const callbackManager_ = await CallbackManager.configure(
-      runnableConfig.callbacks,
-      this.callbacks,
-      runnableConfig.tags,
-      this.tags,
-      inheritableMetadata,
-      this.metadata,
-      { verbose: this.verbose }
-    );
-    const extra = {
-      options: callOptions,
-      invocation_params: this?.invocationParams(callOptions),
-      batch_size: 1,
-    };
-    const runManagers = await callbackManager_?.handleChatModelStart(
-      this.toJSON(),
-      [_formatForTracing(messages)],
-      runnableConfig.runId,
-      undefined,
-      extra,
-      undefined,
-      undefined,
-      runnableConfig.runName
-    );
-
-    const state: Streamv2AggregationState = {
-      blocks: [],
-      finalizedBlocks: [],
-      messageId:
-        runManagers?.[0]?.runId !== undefined
-          ? `run-${runManagers[0].runId}`
-          : undefined,
-    };
-
-    try {
-      for await (const event of this._streamResponseEvents(
-        messages,
-        callOptions,
-        runManagers?.[0]
-      )) {
-        callOptions.signal?.throwIfAborted();
-        const normalizedEvent =
-          event.event === "message-start" && event.messageId == null
-            ? {
-                ...event,
-                messageId: state.messageId,
-              }
-            : event;
-        applyStreamv2Event(state, normalizedEvent);
-        yield normalizedEvent;
-      }
-      callOptions.signal?.throwIfAborted();
-    } catch (err) {
-      await Promise.all(
-        (runManagers ?? []).map((runManager) =>
-          runManager?.handleLLMError(err)
-        )
-      );
-      throw err;
-    }
-
-    const finalMessage = getFinalMessage(state);
-    const llmOutput =
-      finalMessage.usage_metadata === undefined
-        ? undefined
-        : {
-            tokenUsage: {
-              promptTokens: finalMessage.usage_metadata.input_tokens,
-              completionTokens: finalMessage.usage_metadata.output_tokens,
-              totalTokens: finalMessage.usage_metadata.total_tokens,
-            },
-          };
-
-    await Promise.all(
-      (runManagers ?? []).map((runManager) =>
-        runManager?.handleLLMEnd({
-          generations: [[{ text: finalMessage.text, message: finalMessage } as ChatGeneration]],
-          llmOutput,
-        })
-      )
+    yield* streamv2Iterator(
+      this as unknown as Parameters<
+        typeof streamv2Iterator<this["ParsedCallOptions"]>
+      >[0],
+      prompt.toChatMessages(),
+      options,
+      _formatForTracing
     );
   }
 
@@ -930,13 +342,15 @@ export abstract class BaseChatModel<
     input: BaseLanguageModelInput,
     options?: Partial<CallOptions>
   ): Promise<ChatModelStreamv2> {
-    const config = ensureConfig(options);
-    const wrappedGenerator = new AsyncGeneratorWithSetup({
-      generator: this._streamv2Iterator(input, config as Partial<CallOptions>),
-      config,
-    });
-    await wrappedGenerator.setup;
-    return IterableReadableStream.fromAsyncGenerator(wrappedGenerator);
+    const prompt = BaseChatModel._convertInputToPromptValue(input);
+    return createStreamv2(
+      this as unknown as Parameters<
+        typeof createStreamv2<this["ParsedCallOptions"]>
+      >[0],
+      prompt.toChatMessages(),
+      options,
+      _formatForTracing
+    );
   }
 
   async streamV2(
