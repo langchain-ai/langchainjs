@@ -56,7 +56,7 @@ export type Streamv2ExecutionContext<
   metadata?: Record<string, unknown>;
   verbose: boolean;
   separateRunnableConfigFromCallOptions(
-    options?: Partial<ParsedCallOptions>
+    options?: Partial<ParsedCallOptions>,
   ): [RunnableConfig, ParsedCallOptions];
   getLsParamsWithDefaults(options: ParsedCallOptions): LangSmithParams;
   invocationParams(options?: ParsedCallOptions): unknown;
@@ -74,12 +74,12 @@ export type Streamv2ResponseContext<
   streamResponseChunks(
     messages: BaseMessage[],
     options: CallOptions,
-    runManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun,
   ): AsyncGenerator<ChatGenerationChunk>;
   generate(
     messages: BaseMessage[],
     options: CallOptions,
-    runManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun,
   ): Promise<ChatResult>;
 };
 
@@ -93,10 +93,25 @@ type Streamv2AggregationState = {
 };
 
 /**
+ * Content-block fields whose string values grow incrementally across deltas
+ * (`text`, streamed JSON `args`, etc.). All other string keys (`type`, `id`,
+ * `name`, …) are typically repeated unchanged on every delta and must use the
+ * latest value, not concatenation.
+ *
+ * Provider adapters that merge protocol blocks (e.g. Anthropic streamv2) should
+ * use the same set so aggregation matches `streamv2Iterator` / `applyStreamv2Event`.
+ */
+export const STREAMV2_INCREMENTAL_CONTENT_BLOCK_STRING_KEYS = new Set([
+  "text",
+  "reasoning",
+  "args",
+]);
+
+/**
  * Converts LangChain usage metadata into protocol usage info.
  */
 function getProtocolUsageInfo(
-  usageMetadata?: UsageMetadata
+  usageMetadata?: UsageMetadata,
 ): ProtocolUsageInfo | undefined {
   if (usageMetadata === undefined) {
     return undefined;
@@ -118,7 +133,7 @@ function getProtocolUsageInfo(
  * Converts protocol usage info back into LangChain usage metadata.
  */
 function getUsageMetadata(
-  usageInfo?: ProtocolUsageInfo
+  usageInfo?: ProtocolUsageInfo,
 ): UsageMetadata | undefined {
   if (usageInfo === undefined) {
     return undefined;
@@ -143,7 +158,7 @@ function getUsageMetadata(
  * Drops empty metadata objects so emitted events stay compact.
  */
 function getStreamv2Metadata(
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
 ): Record<string, unknown> | undefined {
   if (metadata === undefined) {
     return undefined;
@@ -158,7 +173,7 @@ function getStreamv2Metadata(
  */
 function getBlockIndex(
   block: { index?: string | number } | ProtocolContentBlock,
-  fallbackIndex: number
+  fallbackIndex: number,
 ): number {
   const blockIndex =
     typeof block === "object" && block !== null && "index" in block
@@ -202,7 +217,7 @@ function normalizeFinishReason(reason: unknown): ProtocolFinishReason {
  * Reinterprets a standardized content block as its protocol counterpart.
  */
 function toProtocolContentBlock(
-  block: ContentBlock.Standard
+  block: ContentBlock.Standard,
 ): ProtocolContentBlock {
   return block as unknown as ProtocolContentBlock;
 }
@@ -215,7 +230,7 @@ function toProtocolContentBlock(
  * instead of being upgraded too early into finalized tool calls.
  */
 function getProtocolDeltaBlocks(
-  chunk: BaseMessageChunk
+  chunk: BaseMessageChunk,
 ): ProtocolContentBlock[] {
   const blocks: ProtocolContentBlock[] = [];
 
@@ -227,7 +242,9 @@ function getProtocolDeltaBlocks(
       });
     }
   } else if (Array.isArray(chunk.content)) {
-    for (const block of chunk.content as Array<string | Record<string, unknown>>) {
+    for (const block of chunk.content as Array<
+      string | Record<string, unknown>
+    >) {
       if (typeof block === "string") {
         if (block.length > 0) {
           blocks.push({
@@ -261,7 +278,7 @@ function getProtocolDeltaBlocks(
  */
 function getContentBlockStart(
   block: ProtocolContentBlock,
-  index: number
+  index: number,
 ): ProtocolContentBlock {
   switch (block.type) {
     case "text":
@@ -316,7 +333,7 @@ function getContentBlockStart(
  * Finalizes an in-flight protocol content block for `content-block-finish`.
  */
 function finalizeContentBlock(
-  block: ProtocolContentBlock
+  block: ProtocolContentBlock,
 ): ProtocolFinalizedContentBlock {
   if (block.type === "tool_call_chunk") {
     try {
@@ -324,8 +341,7 @@ function finalizeContentBlock(
         type: "tool_call",
         id: block.id ?? "",
         name: block.name ?? "",
-        args:
-          block.args && block.args.length > 0 ? JSON.parse(block.args) : {},
+        args: block.args && block.args.length > 0 ? JSON.parse(block.args) : {},
       };
     } catch (e) {
       return {
@@ -344,8 +360,7 @@ function finalizeContentBlock(
         type: "server_tool_call",
         id: block.id ?? "",
         name: block.name ?? "",
-        args:
-          block.args && block.args.length > 0 ? JSON.parse(block.args) : {},
+        args: block.args && block.args.length > 0 ? JSON.parse(block.args) : {},
       };
     } catch (e) {
       return {
@@ -370,7 +385,7 @@ function finalizeContentBlock(
  */
 function applyStreamv2Event(
   state: Streamv2AggregationState,
-  event: ChatModelStreamv2Event
+  event: ChatModelStreamv2Event,
 ) {
   switch (event.event) {
     case "message-start":
@@ -390,7 +405,7 @@ function applyStreamv2Event(
         const nextBlock = { ...currentBlock } as Record<string, unknown>;
 
         for (const [key, value] of Object.entries(
-          event.contentBlock as Record<string, unknown>
+          event.contentBlock as Record<string, unknown>,
         )) {
           if (value === undefined) {
             continue;
@@ -403,7 +418,11 @@ function applyStreamv2Event(
             typeof existingValue === "string" &&
             typeof value === "string"
           ) {
-            nextBlock[key] = existingValue + value;
+            nextBlock[key] = STREAMV2_INCREMENTAL_CONTENT_BLOCK_STRING_KEYS.has(
+              key,
+            )
+              ? existingValue + value
+              : value;
           } else if (
             typeof existingValue === "number" &&
             typeof value === "number"
@@ -452,15 +471,17 @@ function getFinalMessage(state: Streamv2AggregationState): AIMessage {
       return block === undefined ? undefined : finalizeContentBlock(block);
     })
     .filter(
-      (block): block is ProtocolFinalizedContentBlock => block !== undefined
+      (block): block is ProtocolFinalizedContentBlock => block !== undefined,
     );
 
   const toolCalls = blocks
     .filter(
       (
-        block
-      ): block is Extract<ProtocolFinalizedContentBlock, { type: "tool_call" }> =>
-        block.type === "tool_call"
+        block,
+      ): block is Extract<
+        ProtocolFinalizedContentBlock,
+        { type: "tool_call" }
+      > => block.type === "tool_call",
     )
     .map((block) => ({
       type: "tool_call" as const,
@@ -472,11 +493,11 @@ function getFinalMessage(state: Streamv2AggregationState): AIMessage {
   const invalidToolCalls = blocks
     .filter(
       (
-        block
+        block,
       ): block is Extract<
         ProtocolFinalizedContentBlock,
         { type: "invalid_tool_call" }
-      > => block.type === "invalid_tool_call"
+      > => block.type === "invalid_tool_call",
     )
     .map((block) => ({
       id: block.id,
@@ -515,7 +536,7 @@ export async function* streamResponseEvents<
   context: Streamv2ResponseContext<CallOptions>,
   messages: BaseMessage[],
   options: CallOptions,
-  runManager: CallbackManagerForLLMRun | undefined
+  runManager: CallbackManagerForLLMRun | undefined,
 ): AsyncGenerator<ChatModelStreamv2Event> {
   if (!context.disableStreaming && context.hasStreamingImplementation) {
     let finalChunk: ChatGenerationChunk | undefined;
@@ -530,7 +551,7 @@ export async function* streamResponseEvents<
     for await (const chunk of context.streamResponseChunks(
       messages,
       options,
-      runManager
+      runManager,
     )) {
       const metadata = getStreamv2Metadata({
         ...chunk.generationInfo,
@@ -547,7 +568,7 @@ export async function* streamResponseEvents<
       }
 
       for (const [fallbackIndex, block] of getProtocolDeltaBlocks(
-        chunk.message
+        chunk.message,
       ).entries()) {
         const index = getBlockIndex(block, fallbackIndex);
         if (!startedBlockIndices.has(index)) {
@@ -584,7 +605,10 @@ export async function* streamResponseEvents<
      * Finish events are emitted from the aggregated final chunk so consumers see
      * the fully reconstructed block payloads, including parsed tool-call args.
      */
-    for (const [fallbackIndex, block] of finalChunk.message.contentBlocks.entries()) {
+    for (const [
+      fallbackIndex,
+      block,
+    ] of finalChunk.message.contentBlocks.entries()) {
       const protocolBlock = toProtocolContentBlock(block);
       const index = getBlockIndex(protocolBlock, fallbackIndex);
       if (!startedBlockIndices.has(index)) {
@@ -610,7 +634,7 @@ export async function* streamResponseEvents<
       usage: getProtocolUsageInfo(
         isAIMessageChunk(finalChunk.message)
           ? finalChunk.message.usage_metadata
-          : undefined
+          : undefined,
       ),
       metadata: finalMetadata,
     } satisfies MessageFinishData;
@@ -639,7 +663,10 @@ export async function* streamResponseEvents<
     metadata,
   } satisfies MessageStartData;
 
-  for (const [fallbackIndex, block] of generation.message.contentBlocks.entries()) {
+  for (const [
+    fallbackIndex,
+    block,
+  ] of generation.message.contentBlocks.entries()) {
     const protocolBlock = toProtocolContentBlock(block);
     const index = getBlockIndex(protocolBlock, fallbackIndex);
     yield {
@@ -661,7 +688,9 @@ export async function* streamResponseEvents<
     event: "message-finish",
     reason: normalizeFinishReason(metadata?.stop_reason),
     usage: getProtocolUsageInfo(
-      isAIMessage(generation.message) ? generation.message.usage_metadata : undefined
+      isAIMessage(generation.message)
+        ? generation.message.usage_metadata
+        : undefined,
     ),
     metadata,
   } satisfies MessageFinishData;
@@ -684,8 +713,8 @@ export async function* streamv2Iterator<
   streamResponseEventsFactory: (
     messages: BaseMessage[],
     options: ParsedCallOptions,
-    runManager?: CallbackManagerForLLMRun
-  ) => AsyncGenerator<ChatModelStreamv2Event>
+    runManager?: CallbackManagerForLLMRun,
+  ) => AsyncGenerator<ChatModelStreamv2Event>,
 ): AsyncGenerator<ChatModelStreamv2Event> {
   const [runnableConfig, callOptions] =
     context.separateRunnableConfigFromCallOptions(options);
@@ -701,7 +730,7 @@ export async function* streamv2Iterator<
     context.tags,
     inheritableMetadata,
     context.metadata,
-    { verbose: context.verbose }
+    { verbose: context.verbose },
   );
   const extra = {
     options: callOptions,
@@ -716,7 +745,7 @@ export async function* streamv2Iterator<
     extra,
     undefined,
     undefined,
-    runnableConfig.runName
+    runnableConfig.runName,
   );
 
   const state: Streamv2AggregationState = {
@@ -732,7 +761,7 @@ export async function* streamv2Iterator<
     for await (const event of streamResponseEventsFactory(
       input,
       callOptions,
-      runManagers?.[0]
+      runManagers?.[0],
     )) {
       callOptions.signal?.throwIfAborted();
       const normalizedEvent =
@@ -748,7 +777,7 @@ export async function* streamv2Iterator<
     callOptions.signal?.throwIfAborted();
   } catch (err) {
     await Promise.all(
-      (runManagers ?? []).map((runManager) => runManager?.handleLLMError(err))
+      (runManagers ?? []).map((runManager) => runManager?.handleLLMError(err)),
     );
     throw err;
   }
@@ -773,11 +802,16 @@ export async function* streamv2Iterator<
     (runManagers ?? []).map((runManager) =>
       runManager?.handleLLMEnd({
         generations: [
-          [{ text: finalMessage.text, message: finalMessage } as ChatGeneration],
+          [
+            {
+              text: finalMessage.text,
+              message: finalMessage,
+            } as ChatGeneration,
+          ],
         ],
         llmOutput,
-      })
-    )
+      }),
+    ),
   );
 }
 
@@ -794,8 +828,8 @@ export async function createStreamv2<
   streamResponseEventsFactory: (
     messages: BaseMessage[],
     options: ParsedCallOptions,
-    runManager?: CallbackManagerForLLMRun
-  ) => AsyncGenerator<ChatModelStreamv2Event>
+    runManager?: CallbackManagerForLLMRun,
+  ) => AsyncGenerator<ChatModelStreamv2Event>,
 ): Promise<ChatModelStreamv2> {
   const config = ensureConfig(options);
   const wrappedGenerator = new AsyncGeneratorWithSetup({
@@ -804,7 +838,7 @@ export async function createStreamv2<
       input,
       config as Partial<ParsedCallOptions>,
       formatForTracing,
-      streamResponseEventsFactory
+      streamResponseEventsFactory,
     ),
     config,
   });

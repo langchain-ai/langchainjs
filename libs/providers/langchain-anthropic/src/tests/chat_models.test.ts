@@ -49,62 +49,62 @@ test("streamv2 emits anthropic-native text lifecycle events", async () => {
   });
 
   model.testStream = (async function* () {
-      yield {
-        type: "message_start",
-        message: {
-          id: "msg_01",
-          type: "message",
-          role: "assistant",
-          content: [],
-          model: "claude-haiku-4-5-20251001",
-          stop_reason: null,
-          stop_sequence: null,
-          usage: {
-            input_tokens: 10,
-            output_tokens: 0,
-          },
-        },
-      };
-      yield {
-        type: "content_block_start",
-        index: 0,
-        content_block: {
-          type: "text",
-          text: "",
-        },
-      };
-      yield {
-        type: "content_block_delta",
-        index: 0,
-        delta: {
-          type: "text_delta",
-          text: "Hello",
-        },
-      };
-      yield {
-        type: "content_block_delta",
-        index: 0,
-        delta: {
-          type: "text_delta",
-          text: " world",
-        },
-      };
-      yield {
-        type: "content_block_stop",
-        index: 0,
-      };
-      yield {
-        type: "message_delta",
-        delta: {
-          stop_reason: "end_turn",
-          stop_sequence: null,
-        },
+    yield {
+      type: "message_start",
+      message: {
+        id: "msg_01",
+        type: "message",
+        role: "assistant",
+        content: [],
+        model: "claude-haiku-4-5-20251001",
+        stop_reason: null,
+        stop_sequence: null,
         usage: {
           input_tokens: 10,
-          output_tokens: 2,
+          output_tokens: 0,
         },
-      };
-    })();
+      },
+    };
+    yield {
+      type: "content_block_start",
+      index: 0,
+      content_block: {
+        type: "text",
+        text: "",
+      },
+    };
+    yield {
+      type: "content_block_delta",
+      index: 0,
+      delta: {
+        type: "text_delta",
+        text: "Hello",
+      },
+    };
+    yield {
+      type: "content_block_delta",
+      index: 0,
+      delta: {
+        type: "text_delta",
+        text: " world",
+      },
+    };
+    yield {
+      type: "content_block_stop",
+      index: 0,
+    };
+    yield {
+      type: "message_delta",
+      delta: {
+        stop_reason: "end_turn",
+        stop_sequence: null,
+      },
+      usage: {
+        input_tokens: 10,
+        output_tokens: 2,
+      },
+    };
+  })();
 
   const stream = await model.streamv2("Hello");
   const events: ChatModelStreamv2Event[] = [];
@@ -163,15 +163,6 @@ test("streamv2 emits anthropic-native text lifecycle events", async () => {
       },
     },
     {
-      event: "content-block-delta",
-      index: 0,
-      contentBlock: {
-        type: "text",
-        text: "",
-        index: 0,
-      },
-    },
-    {
       event: "content-block-finish",
       index: 0,
       contentBlock: {
@@ -216,64 +207,64 @@ test("streamv2 emits anthropic-native tool call lifecycle events", async () => {
   });
 
   model.testStream = (async function* () {
-      yield {
-        type: "message_start",
-        message: {
-          id: "msg_tool",
-          type: "message",
-          role: "assistant",
-          content: [],
-          model: "claude-haiku-4-5-20251001",
-          stop_reason: null,
-          stop_sequence: null,
-          usage: {
-            input_tokens: 12,
-            output_tokens: 0,
-          },
-        },
-      };
-      yield {
-        type: "content_block_start",
-        index: 0,
-        content_block: {
-          type: "tool_use",
-          id: "toolu_123",
-          name: "get_weather",
-          input: {},
-        },
-      };
-      yield {
-        type: "content_block_delta",
-        index: 0,
-        delta: {
-          type: "input_json_delta",
-          partial_json: '{"location":"San',
-        },
-      };
-      yield {
-        type: "content_block_delta",
-        index: 0,
-        delta: {
-          type: "input_json_delta",
-          partial_json: ' Francisco"}',
-        },
-      };
-      yield {
-        type: "content_block_stop",
-        index: 0,
-      };
-      yield {
-        type: "message_delta",
-        delta: {
-          stop_reason: "tool_use",
-          stop_sequence: null,
-        },
+    yield {
+      type: "message_start",
+      message: {
+        id: "msg_tool",
+        type: "message",
+        role: "assistant",
+        content: [],
+        model: "claude-haiku-4-5-20251001",
+        stop_reason: null,
+        stop_sequence: null,
         usage: {
           input_tokens: 12,
-          output_tokens: 4,
+          output_tokens: 0,
         },
-      };
-    })();
+      },
+    };
+    yield {
+      type: "content_block_start",
+      index: 0,
+      content_block: {
+        type: "tool_use",
+        id: "toolu_123",
+        name: "get_weather",
+        input: {},
+      },
+    };
+    yield {
+      type: "content_block_delta",
+      index: 0,
+      delta: {
+        type: "input_json_delta",
+        partial_json: '{"location":"San',
+      },
+    };
+    yield {
+      type: "content_block_delta",
+      index: 0,
+      delta: {
+        type: "input_json_delta",
+        partial_json: ' Francisco"}',
+      },
+    };
+    yield {
+      type: "content_block_stop",
+      index: 0,
+    };
+    yield {
+      type: "message_delta",
+      delta: {
+        stop_reason: "tool_use",
+        stop_sequence: null,
+      },
+      usage: {
+        input_tokens: 12,
+        output_tokens: 4,
+      },
+    };
+  })();
 
   const stream = await model.streamv2("weather in sf");
   const events: ChatModelStreamv2Event[] = [];
@@ -336,7 +327,7 @@ test("streamv2 emits anthropic-native tool call lifecycle events", async () => {
     },
     {
       event: "message-finish",
-      reason: "stop",
+      reason: "tool_use",
       usage: {
         inputTokens: 0,
         outputTokens: 4,

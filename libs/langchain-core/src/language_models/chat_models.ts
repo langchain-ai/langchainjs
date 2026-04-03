@@ -76,6 +76,8 @@ import {
   streamv2Iterator,
 } from "./streamv2.js";
 
+export { STREAMV2_INCREMENTAL_CONTENT_BLOCK_STRING_KEYS } from "./streamv2.js";
+
 // oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export type ToolChoice = string | Record<string, any> | "auto" | "any";
 
