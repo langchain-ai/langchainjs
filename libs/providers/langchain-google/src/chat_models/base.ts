@@ -87,6 +87,10 @@ export function getPlatformType(
   }
 }
 
+function isClaudeModelName(modelName: string): boolean {
+  return /(^|[/:_-])claude([/:_-]|$)/i.test(modelName);
+}
+
 export interface BaseChatGoogleParams
   extends BaseChatModelParams, ChatGoogleFields {
   /**
@@ -243,6 +247,18 @@ export abstract class BaseChatGoogle<
     return "google";
   }
 
+  protected assertModelSupportedForVertex(): void {
+    if (this.platform !== "gcp") {
+      return;
+    }
+
+    if (isClaudeModelName(this.model)) {
+      throw new ConfigurationError(
+        "Claude models on Vertex AI are not supported by ChatGoogle in @langchain/google. Use @langchain/anthropic with @anthropic-ai/vertex-sdk (via ChatAnthropic createClient) for Claude on Vertex AI."
+      );
+    }
+  }
+
   protected get urlMethod(): string {
     return this.streaming ? "streamGenerateContent?alt=sse" : "generateContent";
   }
@@ -286,6 +302,7 @@ export abstract class BaseChatGoogle<
   }
 
   protected async buildUrlVertex(urlMethod?: string): Promise<string> {
+    this.assertModelSupportedForVertex();
     if (this.isVertexExpress) {
       return this.buildUrlVertexExpress(urlMethod);
     } else {

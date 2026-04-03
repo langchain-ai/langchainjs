@@ -432,6 +432,39 @@ describe("Google Mock", () => {
     });
   });
 
+  test("throws actionable error for Claude models on Vertex AI", async () => {
+    const apiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const model = new ChatGoogle({
+      model: "claude-sonnet-4@20250514",
+      platformType: "gcp",
+      apiClient,
+    });
+
+    await expect(model.invoke("Hello")).rejects.toThrow(
+      "Claude models on Vertex AI are not supported by ChatGoogle in @langchain/google."
+    );
+    expect(apiClient.request).toBeUndefined();
+  });
+
+  test("continues to use google publisher urls for Gemini models on Vertex AI", async () => {
+    const apiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const model = new ChatGoogle({
+      model: "gemini-2.5-flash",
+      platformType: "gcp",
+      apiClient,
+    });
+
+    await model.invoke("Hello");
+
+    expect(apiClient.request.url).toContain(
+      "/publishers/google/models/gemini-2.5-flash:generateContent"
+    );
+  });
+
   type TestReasoning = {
     model: string;
     maxReasoningTokens?: number;
