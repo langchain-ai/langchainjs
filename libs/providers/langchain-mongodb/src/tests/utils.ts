@@ -1,17 +1,15 @@
-import { Collection, MongoClient } from "mongodb";
+import { Collection } from "mongodb";
 import { Readable } from "stream";
 import { setInterval } from "timers/promises";
-import semver from "semver";
 import type { MongoDBAtlasVectorSearch } from "../vectorstores.js";
 
 export function isUsingLocalAtlas() {
-
   // oxlint-disable-next-line no-process-env
   return !process.env.MONGODB_ATLAS_URI;
 }
 export function uri() {
   return (
-
+    // oxlint-disable-next-line no-process-env
     process.env.MONGODB_ATLAS_URI ||
     "mongodb://localhost:27017?directConnection=true"
   );
@@ -33,39 +31,9 @@ export async function waitForIndexToBeQueryable(
 }
 
 /**
- * Get MongoDB server version
- * @param client MongoDB client connection
- * @returns Version string (e.g., "8.2.0")
- */
-export async function getServerVersion(client: MongoClient): Promise<string> {
-  const admin = client.db().admin();
-  const serverStatus = await admin.serverStatus();
-  return serverStatus.version || "0.0.0";
-}
-
-/**
- * Check if MongoDB server version meets minimum requirement
- * @param client MongoDB client connection
- * @param minVersion Minimum required version (e.g., "8.2.0")
- * @returns true if server version >= minVersion
- */
-export async function isServerVersionGte(
-  client: MongoClient,
-  minVersion: string
-): Promise<boolean> {
-  const version = await getServerVersion(client);
-  return semver.gte(version, minVersion);
-}
-
-/**
  * Wait for documents to be indexed and searchable after insertion.
  * Polls the vector store with a test query until search succeeds,
  * indicating that auto-embeddings are complete.
- *
- * @param vectorStore The vector store to test
- * @param testQuery A query string to verify searchability
- * @param maxWaitTime Maximum time to wait in milliseconds (default 60s)
- * @throws Error if documents are not indexed within the timeout
  */
 export async function waitForDocumentsIndexed(
   vectorStore: MongoDBAtlasVectorSearch,
@@ -80,7 +48,7 @@ export async function waitForDocumentsIndexed(
       return; // Search succeeded, documents are indexed
     } else {
       // Documents not yet indexed, retry after a short delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 5000));
     }
   }
 

@@ -46,7 +46,6 @@ describe.skipIf(skipAutoEmbedTests)("Auto Embedding Tests with data", () => {
 
   const defaultEmbeddingModel = "voyage-4";
 
-  let skipTests = false;
   let client: MongoClient;
   let collection: Collection;
   beforeAll(async () => {
@@ -88,18 +87,12 @@ describe.skipIf(skipAutoEmbedTests)("Auto Embedding Tests with data", () => {
 
   const shouldClear = true;
   beforeEach(async () => {
-    if (skipTests) {
-      return;
-    }
     if (shouldClear) {
       await collection.deleteMany({});
     }
   });
 
   afterAll(async () => {
-    if (skipTests) {
-      return;
-    }
     await client.close();
   });
 
@@ -575,7 +568,6 @@ describe.skipIf(skipAutoEmbedTests)("Auto Embedding Tests with data", () => {
       });
 
       test("upserts documents if they already exist", async () => {
-        console.log(`pavel >>> skipTests: ${skipTests}`);
         await MongoDBAtlasVectorSearch.fromDocuments(
           [
             new Document({ pageContent: "doc1" }),
