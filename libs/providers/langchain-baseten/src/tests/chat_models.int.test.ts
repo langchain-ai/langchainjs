@@ -5,21 +5,17 @@ import { ChatBaseten } from "../chat_models.js";
 const BASETEN_MODEL = "deepseek-ai/DeepSeek-V3.1";
 
 describe("ChatBaseten Integration Tests", () => {
-  it(
-    "should invoke ChatBaseten directly",
-    { timeout: 60_000 },
-    async () => {
-      const model = new ChatBaseten({ model: BASETEN_MODEL });
+  it("should invoke ChatBaseten directly", { timeout: 60_000 }, async () => {
+    const model = new ChatBaseten({ model: BASETEN_MODEL });
 
-      const result = await model.invoke([
-        new HumanMessage("What is 2 + 2? Answer with just the number."),
-      ]);
+    const result = await model.invoke([
+      new HumanMessage("What is 2 + 2? Answer with just the number."),
+    ]);
 
-      expect(result.content).toBeTruthy();
-      expect(typeof result.content).toBe("string");
-      expect(result.content).toContain("4");
-    }
-  );
+    expect(result.content).toBeTruthy();
+    expect(typeof result.content).toBe("string");
+    expect(result.content).toContain("4");
+  });
 
   it(
     "should stream responses from ChatBaseten",

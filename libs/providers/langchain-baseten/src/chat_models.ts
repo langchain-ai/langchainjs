@@ -82,8 +82,7 @@ export function normalizeToolCallChunks(
 function chunkHasContent(message: AIMessageChunk): boolean {
   if (typeof message.content === "string" && message.content.length > 0)
     return true;
-  if (Array.isArray(message.content) && message.content.length > 0)
-    return true;
+  if (Array.isArray(message.content) && message.content.length > 0) return true;
   if (message.tool_call_chunks && message.tool_call_chunks.length > 0)
     return true;
   return false;
