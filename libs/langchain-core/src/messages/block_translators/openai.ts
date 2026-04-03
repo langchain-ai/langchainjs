@@ -268,10 +268,24 @@ export function convertToV1FromResponses(
         : message.content;
     for (const block of content) {
       if (_isContentBlock(block, "text")) {
-        const { text, annotations, ...rest } = block;
+        const {
+          text,
+          annotations,
+          phase,
+          extras: existingExtras,
+          ...rest
+        } = block;
+        const extras: Record<string, unknown> = _isObject(existingExtras)
+          ? { ...(existingExtras as Record<string, unknown>) }
+          : {};
+        if (_isString(phase)) {
+          extras.phase = phase;
+        }
+        const extrasSpread = Object.keys(extras).length > 0 ? { extras } : {};
         if (Array.isArray(annotations)) {
           yield {
             ...rest,
+            ...extrasSpread,
             type: "text",
             text: String(text),
             annotations: annotations.map(convertResponsesAnnotation),
@@ -279,6 +293,7 @@ export function convertToV1FromResponses(
         } else {
           yield {
             ...rest,
+            ...extrasSpread,
             type: "text",
             text: String(text),
           };

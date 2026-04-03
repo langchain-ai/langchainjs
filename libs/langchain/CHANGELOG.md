@@ -1,5 +1,93 @@
 # langchain
 
+## 1.2.39
+
+### Patch Changes
+
+- [#10543](https://github.com/langchain-ai/langchainjs/pull/10543) [`7ed93b8`](https://github.com/langchain-ai/langchainjs/commit/7ed93b8b8a6e9eb0da3e103d74087c692fee2773) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(langchain): allow dynamic tools in wrapModelCall with wrapToolCall
+
+- [#10554](https://github.com/langchain-ai/langchainjs/pull/10554) [`11a295f`](https://github.com/langchain-ai/langchainjs/commit/11a295fdadec3809f40c10492e3fd474e832c468) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): add support for dynamic structured output
+
+- [#10555](https://github.com/langchain-ai/langchainjs/pull/10555) [`f548053`](https://github.com/langchain-ai/langchainjs/commit/f54805305787fa383c3ce1e287daafdb5464a98b) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): bump langgraph dep
+
+- [#10552](https://github.com/langchain-ai/langchainjs/pull/10552) [`589ab9b`](https://github.com/langchain-ai/langchainjs/commit/589ab9be391a5d6c104f34877fc1b3e2a32fa449) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): accept cross-version runnable models in createAgent
+
+- Updated dependencies [[`589ab9b`](https://github.com/langchain-ai/langchainjs/commit/589ab9be391a5d6c104f34877fc1b3e2a32fa449)]:
+  - @langchain/core@1.1.38
+
+## 1.2.38
+
+### Patch Changes
+
+- [#10527](https://github.com/langchain-ai/langchainjs/pull/10527) [`3408008`](https://github.com/langchain-ai/langchainjs/commit/3408008fe59eb8ee72f733349ae85afe5c23eaca) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(langchain): export createAgent and prebuilt middleware from browser entry point
+
+- [#10545](https://github.com/langchain-ai/langchainjs/pull/10545) [`68e0a19`](https://github.com/langchain-ai/langchainjs/commit/68e0a19238be592514b6c01243c41aefaa6a7668) Thanks [@JadenKim-dev](https://github.com/JadenKim-dev)! - fix(langchain): revert zod import in utils.ts to fix v3/v4 interop
+
+- Updated dependencies [[`6933769`](https://github.com/langchain-ai/langchainjs/commit/6933769836fe3cec835588e5f8db9883200865f6), [`50d5f32`](https://github.com/langchain-ai/langchainjs/commit/50d5f32fd30cabebf058b1c13255c1daadde6107), [`5552999`](https://github.com/langchain-ai/langchainjs/commit/555299917c90322e25d7671bad2e20c9b104bad6), [`8331833`](https://github.com/langchain-ai/langchainjs/commit/8331833c93ba907063c9fe28e9f935ed5dfec11c)]:
+  - @langchain/core@1.1.37
+
+## 1.2.37
+
+### Patch Changes
+
+- [#10475](https://github.com/langchain-ai/langchainjs/pull/10475) [`3d35eb1`](https://github.com/langchain-ai/langchainjs/commit/3d35eb112b46b36aea80cebe0147e315d03a1d8e) Thanks [@hntrl](https://github.com/hntrl)! - fix(langchain): add "aws" alias to MODEL_PROVIDER_CONFIG so hub/node auto-detects ChatBedrockConverse from Python-serialized prompts
+
+- [#10258](https://github.com/langchain-ai/langchainjs/pull/10258) [`ae4122f`](https://github.com/langchain-ai/langchainjs/commit/ae4122f9523904423504e5a92c134c625977261d) Thanks [@irfiacre](https://github.com/irfiacre)! - Align Zod Importation For 'libs/langchain/src/agents/nodes/utils.ts'
+
+- Updated dependencies [[`bbbfea1`](https://github.com/langchain-ai/langchainjs/commit/bbbfea185c0777ae06df2b24a1a84f941d499c2a)]:
+  - @langchain/core@1.1.36
+
+## 1.2.36
+
+### Patch Changes
+
+- [#10489](https://github.com/langchain-ai/langchainjs/pull/10489) [`21094f3`](https://github.com/langchain-ai/langchainjs/commit/21094f31d99e30a9c8433072523cb08b8539c1ab) Thanks [@maahir30](https://github.com/maahir30)! - support structured output (providerStrategy) for Google Gemini models in createAgent
+
+- [#10433](https://github.com/langchain-ai/langchainjs/pull/10433) [`7af0b65`](https://github.com/langchain-ai/langchainjs/commit/7af0b65d5ab9a173b528d6a821d269a79fbabdc6) Thanks [@tanushree-sharma](https://github.com/tanushree-sharma)! - feat: Add LangSmith integration metadata to createAgent and initChatModel
+
+- Updated dependencies [[`5dc11b5`](https://github.com/langchain-ai/langchainjs/commit/5dc11b55cccfe35e4dad910a33e904cf49b3088a), [`7af0b65`](https://github.com/langchain-ai/langchainjs/commit/7af0b65d5ab9a173b528d6a821d269a79fbabdc6)]:
+  - @langchain/core@1.1.35
+
+## 1.2.35
+
+### Patch Changes
+
+- [#10466](https://github.com/langchain-ai/langchainjs/pull/10466) [`4b1a874`](https://github.com/langchain-ai/langchainjs/commit/4b1a874a93d8475a98421e157fe7a1e65ec94076) Thanks [@hntrl](https://github.com/hntrl)! - fix: renamed getSubgraphAsync -> getSubgraphsAsync
+
+- Updated dependencies [[`bfb7944`](https://github.com/langchain-ai/langchainjs/commit/bfb7944a105470eee98fe4a0eef91e586600e1de)]:
+  - @langchain/core@1.1.34
+
+## 1.2.34
+
+### Patch Changes
+
+- [#10443](https://github.com/langchain-ai/langchainjs/pull/10443) [`ff6822e`](https://github.com/langchain-ai/langchainjs/commit/ff6822e43c38c4328d3f2c0ef1cf67998741339a) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): respect version:"v1" in afterModel router's pending tool call path
+
+- [#10446](https://github.com/langchain-ai/langchainjs/pull/10446) [`888224c`](https://github.com/langchain-ai/langchainjs/commit/888224c64e4c95935836a5089f8b28a8c90da5e6) Thanks [@hntrl](https://github.com/hntrl)! - fix(agents): propagate store and configurable to ToolNode middleware runtime
+
+- [#10444](https://github.com/langchain-ai/langchainjs/pull/10444) [`82d56cb`](https://github.com/langchain-ai/langchainjs/commit/82d56cbdfb59b48b3f8d98a294e4d4720e12c733) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain/agents): dispatch tool calls via Send in afterModel router for version:"v2"
+
+  **Breaking change for `version: "v2"` + `afterModel` middleware users.**
+
+  Previously, when `afterModel` middleware was present, `createAgent` always routed all tool calls from an `AIMessage` to a single `ToolNode` invocation — regardless of the `version` option. This meant `version: "v2"` silently behaved like `version: "v1"` (parallel via `Promise.all` in one node) whenever `afterModel` middleware was used.
+
+  `#createAfterModelRouter` now correctly respects `#toolBehaviorVersion`:
+  - `version: "v1"` — routes the full `AIMessage` to a single `ToolNode` invocation; all tool calls run concurrently via `Promise.all` (unchanged behaviour).
+  - `version: "v2"` — dispatches each tool call as a separate `Send` task, matching the behaviour of `#createModelRouter` when no `afterModel` middleware is present, and matching Python LangGraph's `post_model_hook_router`.
+
+  **Migration:** If you use `version: "v2"` (the default) together with `afterModel` middleware and rely on the previous single-node parallel execution, switch to `version: "v1"` to preserve that behaviour. See the `version` JSDoc on `CreateAgentParams` for guidance on which option to choose.
+
+## 1.2.33
+
+### Patch Changes
+
+- [#9862](https://github.com/langchain-ai/langchainjs/pull/9862) [`5b250b1`](https://github.com/langchain-ai/langchainjs/commit/5b250b1a273df0ab4126b22d140dc2420130421f) Thanks [@stellarrover](https://github.com/stellarrover)! - fix(langchain/agents): Fix ReactAgent routing with returnDirect + beforeModel middleware
+
+  This fixes a routing error when an agent has both tools with returnDirect: true and middleware with beforeModel hooks (e.g., summarizationMiddleware). Before this fix, non-returnDirect tools would fail with "Branch condition returned unknown or null destination".
+
+- Updated dependencies [[`6db417b`](https://github.com/langchain-ai/langchainjs/commit/6db417b03ecb5e2ace413389d982294e0ac88433), [`d69dfcc`](https://github.com/langchain-ai/langchainjs/commit/d69dfcca97503cf1c0b7e70ccf5fb7d507c60982)]:
+  - @langchain/core@1.1.33
+
 ## 1.2.32
 
 ### Patch Changes

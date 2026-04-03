@@ -116,7 +116,7 @@ function getEmbeddings() {
 
 test("MongoDBStore sets client metadata", () => {
   const spy = vi.spyOn(client, "appendMetadata");
-  // eslint-disable-next-line no-new
+  // oxlint-disable-next-line no-new
   new PatchedVectorStore(getEmbeddings(), {
     collection,
   });

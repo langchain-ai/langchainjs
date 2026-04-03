@@ -1,9 +1,5 @@
-import type * as z3 from "zod/v3";
-import type * as z4 from "zod/v4/core";
-import type * as z4Classic from "zod/v4";
-// Import from main "zod" package to get the types users would get with `import { z } from "zod"`
-// This is important for zod v4.x where the main package uses the classic/compat API
-import type * as zodMain from "zod";
+/* oxlint-disable @typescript-eslint/no-explicit-any */
+
 import {
   parse,
   parseAsync,
@@ -16,92 +12,211 @@ import {
   $ZodNever,
   $ZodOptional,
 } from "zod/v4/core";
+
+// Internal-only type import – used for casts inside function bodies.
+// Never appears in exported type signatures, so it won't leak into
+// downstream .d.ts files or trigger cross-version structural comparisons.
+import type * as z4 from "zod/v4/core";
+
 import { SerializableSchema } from "../standard_schema.js";
 
-export type ZodStringV3 = z3.ZodString;
+// @langchain/core's public API exposes types like `InteropZodType` (a union
+// of Zod v3 and v4 schema types) in function signatures, class properties,
+// and generic constraints.  When those types were defined in terms of the
+// *real* Zod type imports (`z3.ZodType`, `z4.$ZodType`), they worked fine as
+// long as every package in the workspace resolved the exact same Zod version.
+//
+// In practice that assumption breaks.  Zod 4 re-exports Zod 3 under
+// `zod/v3`, but different packages can still resolve to different *copies*
+// of Zod (e.g. `zod@3.25.x` vs `zod@4.x`) depending on their own lockfile
+// or hoisting.  When that happens, TypeScript sees two structurally-similar
+// but *nominally-different* types and falls back to a full structural
+// comparison.
+//
+// The real Zod types are massive: ~3,400+ lines of deeply-nested,
+// mutually-recursive generics (`ZodType` → `ZodTypeDef` → `ZodEffects` →
+// `ZodType` → …).  A structural comparison walks every branch of this tree
+// for *every* callsite that touches an `InteropZodType`.  In a large
+// monorepo this quickly causes:
+//
+//   • The TypeScript language server becoming unresponsive
+//   • `tsc` exhausting the default heap and OOM-ing
+//   • "Type instantiation is excessively deep and possibly infinite" errors
+//
+// We replace every Zod type that appears in an *exported* signature with the
+// minimal structural interface defined below.  Each interface captures only
+// the properties that @langchain/core actually reads at runtime (e.g.
+// `_type`, `_output`, `_def`, `parse`, `_zod.def.type`, etc.).
+//
+// Because these interfaces are plain object shapes with no imports from the
+// `zod` package, TypeScript can check assignability in O(1) — there is
+// nothing recursive to walk.  A real `z3.ZodString` or `z4.$ZodString` is
+// still assignable to `ZodV3Like<string>` or `ZodV4Like<string>` (they have
+// the required properties), so call-site compatibility is preserved.
 
-export type ZodStringV4 = z4.$ZodType<string, unknown>;
+export interface ZodV3TypeDef {
+  typeName?: string;
+  description?: string;
+  [key: string]: any;
+}
 
-// ZodObject in zod v3 and zod v4's v3 compat layer has 5 type parameters:
-// T (shape), UnknownKeys, Catchall, Output, Input
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type ZodObjectV3 = z3.ZodObject<any, any, any, any, any>;
+export interface ZodV3Like<Output = any, Input = Output> {
+  readonly _type: Output;
+  readonly _output: Output;
+  readonly _input: Input;
+  readonly _def: ZodV3TypeDef;
+  readonly description?: string;
+  parse(data: unknown, params?: any): Output;
+  safeParse(
+    data: unknown,
+    params?: any
+  ): { success: boolean; data?: Output; error?: unknown };
+  parseAsync(data: unknown, params?: any): Promise<Output>;
+  safeParseAsync(
+    data: unknown,
+    params?: any
+  ): Promise<{ success: boolean; data?: Output; error?: unknown }>;
+  optional?(): ZodV3Like<Output | undefined, Input | undefined>;
+  "~standard"?: any;
+}
 
-// Core $ZodObject type from "zod/v4/core"
-export type ZodObjectV4 = z4.$ZodObject;
+export interface ZodV3ObjectLike extends ZodV3Like {
+  readonly shape: Record<string, any>;
+  extend(augmentation: Record<string, any>): ZodV3ObjectLike;
+  partial(): ZodV3ObjectLike;
+  strict(): ZodV3ObjectLike;
+  passthrough(): ZodV3ObjectLike;
+}
 
-// Classic ZodObject type from "zod/v4" (the classic/compat API)
-// This is what users get when using `import { z } from "zod"` with zod v4.x
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type ZodObjectV4Classic = z4Classic.ZodObject<any, any>;
+export interface ZodV4Internals<O = any, I = any> {
+  def: any;
+  output: O;
+  input: I;
+  [key: string]: any;
+}
 
-// Main "zod" package ZodObject - the type users get with `import { z } from "zod"`
-// In zod v4.x, this uses the v4 classic API with 2 type params (Shape, Config)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type ZodObjectMain = zodMain.ZodObject<any, any>;
+export interface ZodV4Like<Output = any, Input = Output> {
+  _zod: ZodV4Internals<Output, Input>;
+  "~standard"?: any;
+}
 
-export type ZodDefaultV3<T extends z3.ZodTypeAny> = z3.ZodDefault<T>;
-export type ZodDefaultV4<T extends z4.SomeType> = z4.$ZodDefault<T>;
-export type ZodOptionalV3<T extends z3.ZodTypeAny> = z3.ZodOptional<T>;
-export type ZodOptionalV4<T extends z4.SomeType> = z4.$ZodOptional<T>;
-export type ZodNullableV4<T extends z4.SomeType> = z4.$ZodNullable<T>;
+export interface ZodV4ObjectLike extends ZodV4Like {
+  _zod: ZodV4Internals & {
+    def: { type: "object"; shape: Record<string, any>; [key: string]: any };
+  };
+}
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export interface ZodV4ArrayLike extends ZodV4Like {
+  _zod: ZodV4Internals & {
+    def: { type: "array"; element: ZodV4Like; [key: string]: unknown };
+  };
+}
+
+export interface ZodV4OptionalLike extends ZodV4Like {
+  _zod: ZodV4Internals & {
+    def: { type: "optional"; innerType: ZodV4Like; [key: string]: unknown };
+  };
+}
+
+export interface ZodV4NullableLike extends ZodV4Like {
+  _zod: ZodV4Internals & {
+    def: { type: "nullable"; innerType: ZodV4Like; [key: string]: unknown };
+  };
+}
+
+export interface ZodV4PipeLike extends ZodV4Like {
+  _zod: ZodV4Internals & {
+    def: { type: "pipe"; in: InteropZodType; [key: string]: unknown };
+    [key: string]: unknown;
+  };
+}
+
+export interface ZodV3EffectsLike extends ZodV3Like {
+  _def: ZodV3TypeDef & {
+    typeName: "ZodEffects";
+    schema: InteropZodType;
+  };
+}
+
+// Aliases
+
+export type ZodStringV3 = ZodV3Like<string>;
+export type ZodStringV4 = ZodV4Like<string, unknown>;
+
+export type ZodObjectV3 = ZodV3ObjectLike;
+export type ZodObjectV4 = ZodV4ObjectLike;
+export type ZodObjectV4Classic = ZodV4ObjectLike;
+export type ZodObjectMain = ZodV4ObjectLike;
+
+export type ZodDefaultV3<T extends ZodV3Like> = ZodV3Like<
+  T extends ZodV3Like<infer O, any> ? O : any
+>;
+export type ZodDefaultV4<T extends ZodV4Like> = ZodV4Like<
+  T extends ZodV4Like<infer O, any> ? O : any
+>;
+export type ZodOptionalV3<T extends ZodV3Like> = ZodV3Like<
+  T extends ZodV3Like<infer O, any> ? O | undefined : any
+>;
+export type ZodOptionalV4<T extends ZodV4Like> = ZodV4Like<
+  T extends ZodV4Like<infer O, any> ? O | undefined : any
+>;
+export type ZodNullableV4<T extends ZodV4Like> = ZodV4Like<
+  T extends ZodV4Like<infer O, any> ? O | null : any
+>;
+
+// Interop types
+
 export type InteropZodType<Output = any, Input = Output> =
-  | z3.ZodType<Output, z3.ZodTypeDef, Input>
-  | z4.$ZodType<Output, Input>;
+  | ZodV3Like<Output, Input>
+  | ZodV4Like<Output, Input>;
 
-export type InteropZodObject =
-  | ZodObjectV3
-  | ZodObjectV4
-  | ZodObjectV4Classic
-  | ZodObjectMain;
-export type InteropZodDefault<T = InteropZodObjectShape> =
-  T extends z3.ZodTypeAny
-    ? ZodDefaultV3<T>
-    : T extends z4.SomeType
-      ? ZodDefaultV4<T>
-      : never;
-export type InteropZodOptional<T = InteropZodObjectShape> =
-  T extends z3.ZodTypeAny
-    ? ZodOptionalV3<T>
-    : T extends z4.SomeType
-      ? ZodOptionalV4<T>
-      : never;
+export type InteropZodObject = ZodV3ObjectLike | ZodV4ObjectLike;
+
+export type InteropZodDefault<T = InteropZodObject> = T extends ZodV3Like
+  ? ZodDefaultV3<T>
+  : T extends ZodV4Like
+    ? ZodDefaultV4<T>
+    : never;
+
+export type InteropZodOptional<T = InteropZodObject> = T extends ZodV3Like
+  ? ZodOptionalV3<T>
+  : T extends ZodV4Like
+    ? ZodOptionalV4<T>
+    : never;
 
 export type InteropZodObjectShape<
   T extends InteropZodObject = InteropZodObject,
-> =
-  T extends z3.ZodObject<infer Shape>
-    ? { [K in keyof Shape]: Shape[K] }
-    : T extends z4.$ZodObject<infer Shape>
-      ? { [K in keyof Shape]: Shape[K] }
-      : T extends z4Classic.ZodObject<infer Shape>
-        ? { [K in keyof Shape]: Shape[K] }
-        : T extends zodMain.ZodObject<infer Shape>
-          ? { [K in keyof Shape]: Shape[K] }
-          : never;
+> = T extends ZodV3ObjectLike
+  ? { [K in keyof T["shape"]]: T["shape"][K] }
+  : T extends ZodV4ObjectLike
+    ? { [K in keyof T["_zod"]["def"]["shape"]]: T["_zod"]["def"]["shape"][K] }
+    : never;
 
-export type InteropZodIssue = z3.ZodIssue | z4.$ZodIssue;
+export interface InteropZodIssue {
+  message: string;
+  path: (string | number)[];
+  [key: string]: unknown;
+}
 
-// Simplified type inference to avoid circular dependencies
 export type InferInteropZodInput<T> =
-  T extends z3.ZodType<unknown, z3.ZodTypeDef, infer Input>
+  T extends ZodV3Like<unknown, infer Input>
     ? Input
-    : T extends z4.$ZodType<unknown, infer Input>
+    : T extends ZodV4Like<unknown, infer Input>
       ? Input
       : T extends { _zod: { input: infer Input } }
         ? Input
         : never;
 
 export type InferInteropZodOutput<T> =
-  T extends z3.ZodType<infer Output, z3.ZodTypeDef, unknown>
+  T extends ZodV3Like<infer Output, unknown>
     ? Output
-    : T extends z4.$ZodType<infer Output, unknown>
+    : T extends ZodV4Like<infer Output, unknown>
       ? Output
       : T extends { _zod: { output: infer Output } }
         ? Output
         : never;
+
+export type InteropZodLiteral = ZodV3Like | ZodV4Like;
 
 export type Mutable<T> = {
   -readonly [P in keyof T]: T[P];
@@ -109,7 +224,7 @@ export type Mutable<T> = {
 
 export function isZodSchemaV4(
   schema: unknown
-): schema is z4.$ZodType<unknown, unknown> {
+): schema is ZodV4Like<unknown, unknown> {
   if (typeof schema !== "object" || schema === null) {
     return false;
   }
@@ -129,7 +244,7 @@ export function isZodSchemaV4(
 
 export function isZodSchemaV3(
   schema: unknown
-): schema is z3.ZodType<unknown, z3.ZodTypeDef, unknown> {
+): schema is ZodV3Like<unknown, unknown> {
   if (typeof schema !== "object" || schema === null) {
     return false;
   }
@@ -151,8 +266,8 @@ export function isZodSchemaV3(
 export function isZodSchema<
   RunOutput extends Record<string, unknown> = Record<string, unknown>,
 >(
-  schema: z3.ZodType<RunOutput> | Record<string, unknown>
-): schema is z3.ZodType<RunOutput> {
+  schema: ZodV3Like<RunOutput> | Record<string, unknown>
+): schema is ZodV3Like<RunOutput> {
   if (isZodSchemaV4(schema)) {
     console.warn(
       "[WARNING] Attempting to use Zod 4 schema in a context where Zod 3 schema is expected. This may cause unexpected behavior."
@@ -177,18 +292,13 @@ export function isInteropZodSchema(input: unknown): input is InteropZodType {
   if (Array.isArray(input)) {
     return false;
   }
-  if (
-    isZodSchemaV4(input) ||
-    isZodSchemaV3(input as z3.ZodType<Record<string, unknown>>)
-  ) {
+  if (isZodSchemaV4(input) || isZodSchemaV3(input)) {
     return true;
   }
   return false;
 }
 
-export type InteropZodLiteral = z3.ZodLiteral<unknown> | z4.$ZodLiteral;
-
-export function isZodLiteralV3(obj: unknown): obj is z3.ZodLiteral<unknown> {
+export function isZodLiteralV3(obj: unknown): obj is ZodV3Like {
   // Zod v3 literal schemas have _def.typeName === "ZodLiteral"
   if (
     typeof obj === "object" &&
@@ -204,7 +314,7 @@ export function isZodLiteralV3(obj: unknown): obj is z3.ZodLiteral<unknown> {
   return false;
 }
 
-export function isZodLiteralV4(obj: unknown): obj is z4.$ZodLiteral {
+export function isZodLiteralV4(obj: unknown): obj is ZodV4Like {
   if (!isZodSchemaV4(obj)) return false;
   // Zod v4 literal schemas have _zod.def.type === "literal"
   if (
@@ -236,7 +346,13 @@ export function isInteropZodLiteral(obj: unknown): obj is InteropZodLiteral {
   return false;
 }
 
-type InteropZodSafeParseResult<T> = z3.SafeParseReturnType<T, T>;
+export interface InteropZodError {
+  issues: InteropZodIssue[];
+}
+
+type InteropZodSafeParseResult<T> =
+  | { success: true; data: T; error?: never }
+  | { success: false; error: InteropZodError; data?: never };
 
 /**
  * Asynchronously parses the input using the provided Zod schema (v3 or v4) and returns a safe parse result.
@@ -254,7 +370,7 @@ export async function interopSafeParseAsync<T>(
 ): Promise<InteropZodSafeParseResult<T>> {
   if (isZodSchemaV4(schema)) {
     try {
-      const data = await parseAsync(schema, input);
+      const data = await parseAsync(schema as z4.$ZodType<T>, input);
       return {
         success: true,
         data,
@@ -262,12 +378,12 @@ export async function interopSafeParseAsync<T>(
     } catch (error) {
       return {
         success: false,
-        error: error as z3.ZodError<T>,
+        error: error as InteropZodError,
       };
     }
   }
-  if (isZodSchemaV3(schema as z3.ZodType<Record<string, unknown>>)) {
-    return await schema.safeParseAsync(input);
+  if (isZodSchemaV3(schema)) {
+    return (await schema.safeParseAsync(input)) as InteropZodSafeParseResult<T>;
   }
   throw new Error("Schema must be an instance of z3.ZodType or z4.$ZodType");
 }
@@ -287,9 +403,9 @@ export async function interopParseAsync<T>(
   input: unknown
 ): Promise<T> {
   if (isZodSchemaV4(schema)) {
-    return await parseAsync(schema, input);
+    return await parseAsync(schema as z4.$ZodType<T>, input);
   }
-  if (isZodSchemaV3(schema as z3.ZodType<Record<string, unknown>>)) {
+  if (isZodSchemaV3(schema)) {
     return await schema.parseAsync(input);
   }
   throw new Error("Schema must be an instance of z3.ZodType or z4.$ZodType");
@@ -312,7 +428,7 @@ export function interopSafeParse<T>(
 ): InteropZodSafeParseResult<T> {
   if (isZodSchemaV4(schema)) {
     try {
-      const data = parse(schema, input);
+      const data = parse(schema as z4.$ZodType<T>, input);
       return {
         success: true,
         data,
@@ -320,12 +436,12 @@ export function interopSafeParse<T>(
     } catch (error) {
       return {
         success: false,
-        error: error as z3.ZodError<T>,
+        error: error as InteropZodError,
       };
     }
   }
-  if (isZodSchemaV3(schema as z3.ZodType<Record<string, unknown>>)) {
-    return schema.safeParse(input);
+  if (isZodSchemaV3(schema)) {
+    return schema.safeParse(input) as InteropZodSafeParseResult<T>;
   }
   throw new Error("Schema must be an instance of z3.ZodType or z4.$ZodType");
 }
@@ -342,9 +458,9 @@ export function interopSafeParse<T>(
  */
 export function interopParse<T>(schema: InteropZodType<T>, input: unknown): T {
   if (isZodSchemaV4(schema)) {
-    return parse(schema, input);
+    return parse(schema as z4.$ZodType<T>, input);
   }
-  if (isZodSchemaV3(schema as z3.ZodType<Record<string, unknown>>)) {
+  if (isZodSchemaV3(schema)) {
     return schema.parse(input);
   }
   throw new Error("Schema must be an instance of z3.ZodType or z4.$ZodType");
@@ -360,10 +476,10 @@ export function getSchemaDescription(
   schema: SerializableSchema | InteropZodType<unknown> | Record<string, unknown>
 ): string | undefined {
   if (isZodSchemaV4(schema)) {
-    return globalRegistry.get(schema)?.description;
+    return globalRegistry.get(schema as z4.$ZodType)?.description;
   }
-  if (isZodSchemaV3(schema as z3.ZodType<Record<string, unknown>>)) {
-    return (schema as z3.ZodType<Record<string, unknown>>).description;
+  if (isZodSchemaV3(schema)) {
+    return schema.description;
   }
   if ("description" in schema && typeof schema.description === "string") {
     return schema.description;
@@ -388,9 +504,8 @@ export function isShapelessZodSchema(schema: unknown): boolean {
   }
 
   // Check for v3 schemas
-  if (isZodSchemaV3(schema as z3.ZodType<Record<string, unknown>>)) {
-    // @ts-expect-error - zod v3 types are not compatible with zod v4 types
-    const def = schema._def as { typeName?: string };
+  if (isZodSchemaV3(schema)) {
+    const def = schema._def;
 
     // ZodObject is only shaped if it has actual shape keys
     if (def.typeName === "ZodObject") {
@@ -460,9 +575,8 @@ export function isSimpleStringZodSchema(
   }
 
   // For v3 schemas
-  if (isZodSchemaV3(schema as z3.ZodType<Record<string, unknown>>)) {
-    // @ts-expect-error - zod v3 types are not compatible with zod v4 types
-    const def = schema._def as { typeName?: string };
+  if (isZodSchemaV3(schema)) {
+    const def = schema._def;
 
     // Only accept basic ZodString
     return def.typeName === "ZodString";
@@ -495,7 +609,7 @@ export function isZodObjectV3(obj: unknown): obj is ZodObjectV3 {
   return false;
 }
 
-export function isZodObjectV4(obj: unknown): obj is z4.$ZodObject {
+export function isZodObjectV4(obj: unknown): obj is ZodV4ObjectLike {
   if (!isZodSchemaV4(obj)) return false;
   // Zod v4 object schemas have _zod.def.type === "object"
   if (
@@ -515,7 +629,7 @@ export function isZodObjectV4(obj: unknown): obj is z4.$ZodObject {
   return false;
 }
 
-export function isZodArrayV4(obj: unknown): obj is z4.$ZodArray {
+export function isZodArrayV4(obj: unknown): obj is ZodV4ArrayLike {
   if (!isZodSchemaV4(obj)) return false;
   // Zod v4 array schemas have _zod.def.type === "array"
   if (
@@ -535,7 +649,7 @@ export function isZodArrayV4(obj: unknown): obj is z4.$ZodArray {
   return false;
 }
 
-export function isZodOptionalV4(obj: unknown): obj is z4.$ZodOptional {
+export function isZodOptionalV4(obj: unknown): obj is ZodV4OptionalLike {
   if (!isZodSchemaV4(obj)) return false;
   // Zod v4 optional schemas have _zod.def.type === "optional"
   if (
@@ -555,7 +669,7 @@ export function isZodOptionalV4(obj: unknown): obj is z4.$ZodOptional {
   return false;
 }
 
-export function isZodNullableV4(obj: unknown): obj is z4.$ZodNullable {
+export function isZodNullableV4(obj: unknown): obj is ZodV4NullableLike {
   if (!isZodSchemaV4(obj)) return false;
   // Zod v4 nullable schemas have _zod.def.type === "nullable"
   if (
@@ -599,7 +713,7 @@ export function getInteropZodObjectShape<T extends InteropZodObject>(
   schema: T
 ): InteropZodObjectShape<T> {
   if (isZodSchemaV3(schema)) {
-    return schema.shape;
+    return schema.shape as InteropZodObjectShape<T>;
   }
   if (isZodSchemaV4(schema)) {
     return schema._zod.def.shape as InteropZodObjectShape<T>;
@@ -623,10 +737,10 @@ export function extendInteropZodObject<T extends InteropZodObject>(
   extension: InteropZodObjectShape
 ): InteropZodObject {
   if (isZodSchemaV3(schema)) {
-    return schema.extend(extension as z3.ZodRawShape);
+    return schema.extend(extension);
   }
   if (isZodSchemaV4(schema)) {
-    return util.extend(schema, extension);
+    return util.extend(schema as z4.$ZodObject, extension);
   }
   throw new Error(
     "Schema must be an instance of z3.ZodObject or z4.$ZodObject"
@@ -651,7 +765,7 @@ export function interopZodObjectPartial<T extends InteropZodObject>(
   }
   if (isZodSchemaV4(schema)) {
     // z4: util.partial exists and works as expected
-    return util.partial($ZodOptional, schema, undefined);
+    return util.partial($ZodOptional, schema as z4.$ZodObject, undefined);
   }
   throw new Error(
     "Schema must be an instance of z3.ZodObject or z4.$ZodObject"
@@ -673,31 +787,29 @@ export function interopZodObjectStrict<T extends InteropZodObject>(
   schema: T,
   recursive = false
 ): InteropZodObject {
-  if (isZodSchemaV3(schema)) {
+  if (isZodObjectV3(schema)) {
     // TODO: v3 schemas aren't recursively handled here
     // (currently not necessary since zodToJsonSchema handles this)
     return schema.strict();
   }
   if (isZodObjectV4(schema)) {
-    const outputShape: Mutable<z4.$ZodShape> = schema._zod.def.shape;
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    const outputShape: Record<string, any> = schema._zod.def.shape;
     if (recursive) {
       for (const [key, keySchema] of Object.entries(schema._zod.def.shape)) {
         // If the shape key is a v4 object schema, we need to make it strict
         if (isZodObjectV4(keySchema)) {
           const outputSchema = interopZodObjectStrict(keySchema, recursive);
-          outputShape[key] = outputSchema as ZodObjectV4;
+          outputShape[key] = outputSchema;
         }
         // If the shape key is a v4 array schema, we need to make the element
         // schema strict if it's an object schema
         else if (isZodArrayV4(keySchema)) {
           let elementSchema = keySchema._zod.def.element;
           if (isZodObjectV4(elementSchema)) {
-            elementSchema = interopZodObjectStrict(
-              elementSchema,
-              recursive
-            ) as ZodObjectV4;
+            elementSchema = interopZodObjectStrict(elementSchema, recursive);
           }
-          outputShape[key] = clone(keySchema, {
+          outputShape[key] = clone(keySchema as unknown as z4.$ZodType, {
             ...keySchema._zod.def,
             element: elementSchema,
           });
@@ -707,16 +819,16 @@ export function interopZodObjectStrict<T extends InteropZodObject>(
           outputShape[key] = keySchema;
         }
         // Assign meta fields to the keySchema
-        const meta = globalRegistry.get(keySchema);
-        if (meta) globalRegistry.add(outputShape[key], meta);
+        const meta = globalRegistry.get(keySchema as z4.$ZodType);
+        if (meta) globalRegistry.add(outputShape[key] as z4.$ZodType, meta);
       }
     }
-    const modifiedSchema = clone<ZodObjectV4>(schema, {
+    const modifiedSchema = clone<z4.$ZodObject>(schema as z4.$ZodObject, {
       ...schema._zod.def,
       shape: outputShape,
       catchall: _never($ZodNever),
     });
-    const meta = globalRegistry.get(schema);
+    const meta = globalRegistry.get(schema as unknown as z4.$ZodType);
     if (meta) globalRegistry.add(modifiedSchema, meta);
     return modifiedSchema;
   }
@@ -738,7 +850,7 @@ export function interopZodObjectStrict<T extends InteropZodObject>(
  */
 export function interopZodObjectPassthrough<T extends InteropZodObject>(
   schema: T,
-  recursive = false
+  recursive: boolean = false
 ): InteropZodObject {
   if (isZodObjectV3(schema)) {
     // TODO: v3 schemas aren't recursively handled here
@@ -746,7 +858,8 @@ export function interopZodObjectPassthrough<T extends InteropZodObject>(
     return schema.passthrough();
   }
   if (isZodObjectV4(schema)) {
-    const outputShape: Mutable<z4.$ZodShape> = schema._zod.def.shape;
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    const outputShape: Record<string, any> = schema._zod.def.shape;
     if (recursive) {
       for (const [key, keySchema] of Object.entries(schema._zod.def.shape)) {
         // If the shape key is a v4 object schema, we need to make it passthrough
@@ -755,7 +868,7 @@ export function interopZodObjectPassthrough<T extends InteropZodObject>(
             keySchema,
             recursive
           );
-          outputShape[key] = outputSchema as ZodObjectV4;
+          outputShape[key] = outputSchema;
         }
         // If the shape key is a v4 array schema, we need to make the element
         // schema passthrough if it's an object schema
@@ -765,9 +878,9 @@ export function interopZodObjectPassthrough<T extends InteropZodObject>(
             elementSchema = interopZodObjectPassthrough(
               elementSchema,
               recursive
-            ) as ZodObjectV4;
+            ) as ZodV4ObjectLike;
           }
-          outputShape[key] = clone(keySchema, {
+          outputShape[key] = clone(keySchema as unknown as z4.$ZodType, {
             ...keySchema._zod.def,
             element: elementSchema,
           });
@@ -777,18 +890,18 @@ export function interopZodObjectPassthrough<T extends InteropZodObject>(
           outputShape[key] = keySchema;
         }
         // Assign meta fields to the keySchema
-        const meta = globalRegistry.get(keySchema);
-        if (meta) globalRegistry.add(outputShape[key], meta);
+        const meta = globalRegistry.get(keySchema as z4.$ZodType);
+        if (meta) globalRegistry.add(outputShape[key] as z4.$ZodType, meta);
       }
     }
-    const modifiedSchema = clone<ZodObjectV4>(schema, {
+    const modifiedSchema = clone<z4.$ZodObject>(schema as z4.$ZodObject, {
       ...schema._zod.def,
       shape: outputShape,
       catchall: _unknown($ZodUnknown),
     });
-    const meta = globalRegistry.get(schema);
+    const meta = globalRegistry.get(schema as unknown as z4.$ZodType);
     if (meta) globalRegistry.add(modifiedSchema, meta);
-    return modifiedSchema;
+    return modifiedSchema as InteropZodObject;
   }
   throw new Error(
     "Schema must be an instance of z3.ZodObject or z4.$ZodObject"
@@ -818,7 +931,7 @@ export function getInteropZodDefaultGetter<T extends InteropZodType>(
   }
   if (isZodSchemaV4(schema)) {
     try {
-      const defaultValue = parse(schema, undefined);
+      const defaultValue = parse(schema as z4.$ZodType, undefined);
       return () => defaultValue as InferInteropZodOutput<T>;
     } catch {
       return undefined;
@@ -827,9 +940,7 @@ export function getInteropZodDefaultGetter<T extends InteropZodType>(
   return undefined;
 }
 
-function isZodTransformV3(
-  schema: InteropZodType
-): schema is z3.ZodEffects<z3.ZodTypeAny> {
+function isZodTransformV3(schema: InteropZodType): schema is ZodV3EffectsLike {
   return (
     isZodSchemaV3(schema) &&
     "typeName" in schema._def &&
@@ -837,7 +948,7 @@ function isZodTransformV3(
   );
 }
 
-function isZodTransformV4(schema: InteropZodType): schema is z4.$ZodPipe {
+function isZodTransformV4(schema: InteropZodType): schema is ZodV4PipeLike {
   return isZodSchemaV4(schema) && schema._zod.def.type === "pipe";
 }
 
@@ -878,32 +989,36 @@ function interopZodTransformInputSchemaImpl(
     if (recursive) {
       // Handle nested object schemas
       if (isZodObjectV4(outputSchema)) {
-        const outputShape: Mutable<z4.$ZodShape> = {};
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+        const outputShape: Record<string, any> = {};
         for (const [key, keySchema] of Object.entries(
           outputSchema._zod.def.shape
         )) {
           outputShape[key] = interopZodTransformInputSchemaImpl(
-            keySchema,
+            keySchema as InteropZodType,
             recursive,
             cache
-          ) as z4.$ZodType;
+          );
         }
-        outputSchema = clone<ZodObjectV4>(outputSchema, {
+        outputSchema = clone<z4.$ZodObject>(outputSchema as z4.$ZodObject, {
           ...outputSchema._zod.def,
           shape: outputShape,
-        });
+        }) as InteropZodType;
       }
       // Handle nested array schemas
       else if (isZodArrayV4(outputSchema)) {
         const elementSchema = interopZodTransformInputSchemaImpl(
-          outputSchema._zod.def.element,
+          outputSchema._zod.def.element as InteropZodType,
           recursive,
           cache
         );
-        outputSchema = clone<z4.$ZodArray>(outputSchema, {
-          ...outputSchema._zod.def,
-          element: elementSchema as z4.$ZodType,
-        });
+        outputSchema = clone<z4.$ZodArray>(
+          outputSchema as unknown as z4.$ZodArray,
+          {
+            ...outputSchema._zod.def,
+            element: elementSchema as z4.$ZodType,
+          }
+        ) as InteropZodType;
       }
       // Handle optional schemas
       else if (isZodOptionalV4(outputSchema)) {
@@ -912,10 +1027,13 @@ function interopZodTransformInputSchemaImpl(
           recursive,
           cache
         );
-        outputSchema = clone<z4.$ZodOptional>(outputSchema, {
-          ...outputSchema._zod.def,
-          innerType: innerSchema as z4.$ZodType,
-        });
+        outputSchema = clone<z4.$ZodOptional>(
+          outputSchema as unknown as z4.$ZodOptional,
+          {
+            ...outputSchema._zod.def,
+            innerType: innerSchema as z4.$ZodType,
+          }
+        ) as InteropZodType;
       }
       // Handle nullable schemas
       else if (isZodNullableV4(outputSchema)) {
@@ -924,13 +1042,16 @@ function interopZodTransformInputSchemaImpl(
           recursive,
           cache
         );
-        outputSchema = clone<z4.$ZodNullable>(outputSchema, {
-          ...outputSchema._zod.def,
-          innerType: innerSchema as z4.$ZodType,
-        });
+        outputSchema = clone<z4.$ZodNullable>(
+          outputSchema as unknown as z4.$ZodNullable,
+          {
+            ...outputSchema._zod.def,
+            innerType: innerSchema as z4.$ZodType,
+          }
+        ) as InteropZodType;
       }
     }
-    const meta = globalRegistry.get(schema);
+    const meta = globalRegistry.get(schema as z4.$ZodType);
     if (meta) globalRegistry.add(outputSchema as z4.$ZodType, meta);
     cache.set(schema, outputSchema);
     return outputSchema;
@@ -971,13 +1092,14 @@ export function interopZodObjectMakeFieldsOptional<T extends InteropZodObject>(
   predicate: (key: string, value: InteropZodType) => boolean
 ): InteropZodObject {
   if (isZodSchemaV3(schema)) {
-    const shape = getInteropZodObjectShape(schema);
-    const modifiedShape: Record<string, z3.ZodTypeAny> = {};
+    const shape = getInteropZodObjectShape(schema as InteropZodObject);
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    const modifiedShape: Record<string, any> = {};
 
     for (const [key, value] of Object.entries(shape)) {
-      if (predicate(key, value)) {
+      if (predicate(key, value as InteropZodType)) {
         // Make this field optional using v3 methods
-        modifiedShape[key] = (value as z3.ZodTypeAny).optional();
+        modifiedShape[key] = value.optional();
       } else {
         // Keep field as-is
         modifiedShape[key] = value;
@@ -985,15 +1107,18 @@ export function interopZodObjectMakeFieldsOptional<T extends InteropZodObject>(
     }
 
     // Use v3's extend method to create a new schema with the modified shape
-    return schema.extend(modifiedShape as z3.ZodRawShape);
+    return schema.extend(modifiedShape) as InteropZodObject;
   }
 
   if (isZodSchemaV4(schema)) {
-    const shape = getInteropZodObjectShape(schema);
-    const outputShape: Mutable<z4.$ZodShape> = { ...schema._zod.def.shape };
+    const shape = getInteropZodObjectShape(schema as InteropZodObject);
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    const outputShape: Record<string, any> = {
+      ...schema._zod.def.shape,
+    };
 
     for (const [key, value] of Object.entries(shape)) {
-      if (predicate(key, value)) {
+      if (predicate(key, value as InteropZodType)) {
         // Make this field optional using v4 methods
         outputShape[key] = new $ZodOptional({
           type: "optional" as const,
@@ -1003,16 +1128,16 @@ export function interopZodObjectMakeFieldsOptional<T extends InteropZodObject>(
       // Otherwise keep the field as-is (already in outputShape)
     }
 
-    const modifiedSchema = clone<ZodObjectV4>(schema, {
+    const modifiedSchema = clone<z4.$ZodObject>(schema as z4.$ZodObject, {
       ...schema._zod.def,
       shape: outputShape,
     });
 
     // Preserve metadata
-    const meta = globalRegistry.get(schema);
+    const meta = globalRegistry.get(schema as unknown as z4.$ZodType);
     if (meta) globalRegistry.add(modifiedSchema, meta);
 
-    return modifiedSchema;
+    return modifiedSchema as InteropZodObject;
   }
 
   throw new Error(
@@ -1022,7 +1147,7 @@ export function interopZodObjectMakeFieldsOptional<T extends InteropZodObject>(
 
 export function isInteropZodError(e: unknown) {
   return (
-    // eslint-disable-next-line no-instanceof/no-instanceof
+    // oxlint-disable-next-line no-instanceof/no-instanceof
     e instanceof Error &&
     (e.constructor.name === "ZodError" || e.constructor.name === "$ZodError")
   );

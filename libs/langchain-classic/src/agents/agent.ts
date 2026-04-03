@@ -29,7 +29,7 @@ import type {
 /**
  * Record type for arguments passed to output parsers.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export type OutputParserArgs = Record<string, any>;
 
 /**
@@ -173,21 +173,21 @@ export function isRunnableAgent(x: BaseAgent) {
 // Allows for the creation of runnables with properties that will
 // be passed to the agent executor constructor.
 export class AgentRunnableSequence<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput = any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunOutput = any,
 > extends RunnableSequence<RunInput, RunOutput> {
   streamRunnable?: boolean;
 
   singleAction: boolean;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   static fromRunnables<RunInput = any, RunOutput = any>(
     [first, ...runnables]: [
       RunnableLike<RunInput>,
       ...RunnableLike[],
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       RunnableLike<any, RunOutput>,
     ],
     config: { singleAction: boolean; streamRunnable?: boolean; name?: string }
@@ -535,7 +535,7 @@ export abstract class Agent extends BaseSingleActionAgent {
    * */
   static createPrompt(
     _tools: StructuredToolInterface[],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     _fields?: Record<string, any>
   ): BasePromptTemplate {
     throw new Error("Not implemented");
@@ -656,7 +656,7 @@ export abstract class Agent extends BaseSingleActionAgent {
         return { returnValues: { output: action.log }, log: action.log };
       } catch (err) {
         // fine to use instanceof because we're in the same module
-        // eslint-disable-next-line no-instanceof/no-instanceof
+        // oxlint-disable-next-line no-instanceof/no-instanceof
         if (!(err instanceof ParseError)) {
           throw err;
         }

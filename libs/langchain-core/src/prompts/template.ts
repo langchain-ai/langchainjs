@@ -233,7 +233,7 @@ export const checkValidTemplate = (
     } else {
       renderTemplate(template, templateFormat, dummyInputs);
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
     throw new Error(`Invalid prompt schema: ${e.message}`);
   }

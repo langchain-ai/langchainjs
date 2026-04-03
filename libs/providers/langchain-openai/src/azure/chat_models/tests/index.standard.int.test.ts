@@ -1,18 +1,8 @@
-import { afterAll } from "vitest";
-
 import { ChatModelIntegrationTests } from "@langchain/standard-tests/vitest";
 import { AIMessageChunk } from "@langchain/core/messages";
 
 import { AzureChatOpenAI } from "../index.js";
 import { ChatOpenAICallOptions } from "../../../chat_models/index.js";
-
-let openAIAPIKey: string | undefined;
-
-afterAll(() => {
-  if (openAIAPIKey) {
-    process.env.OPENAI_API_KEY = openAIAPIKey;
-  }
-});
 
 class AzureChatOpenAIStandardIntegrationTests extends ChatModelIntegrationTests<
   ChatOpenAICallOptions,

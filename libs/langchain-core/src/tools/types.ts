@@ -1,4 +1,4 @@
-import type { z as z3 } from "zod/v3";
+import type { ZodV3Like } from "../utils/types/zod.js";
 import { CallbackManagerForToolRun } from "../callbacks/manager.js";
 import type {
   BaseLangChainParams,
@@ -29,12 +29,12 @@ import type { BaseStore } from "../stores.js";
 
 export type ResponseFormat = "content" | "content_and_artifact" | string;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export type ToolOutputType = any;
 
 export type ToolEventType = unknown;
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 export type InferToolEventFromFunc<F> = F extends (
   ...args: any[]
 ) => AsyncGenerator<infer Y, any, any>
@@ -52,7 +52,7 @@ export type InferToolOutputFromFunc<F> = F extends (
       : ToolOutputType;
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export type ContentAndArtifact = [MessageContent, any];
 
 /**
@@ -118,9 +118,9 @@ export interface ToolParams extends BaseLangChainParams {
 }
 
 export type ToolRunnableConfig<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   ConfigurableFieldType extends Record<string, any> = Record<string, any>,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   ContextSchema = any,
 > = RunnableConfig<ConfigurableFieldType> & {
   toolCall?: ToolCall;
@@ -199,12 +199,8 @@ export type StructuredToolCallInput<
  * This is primarily used for creating simple string-based tools where the LLM
  * only needs to provide a single text value as input to the tool.
  */
-export type StringInputToolSchema = z3.ZodType<
-  string | undefined,
-  z3.ZodTypeDef,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  any
->;
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
+export type StringInputToolSchema = ZodV3Like<string | undefined, any>;
 
 /**
  * Defines the type for input to a tool's call method.
@@ -445,7 +441,7 @@ export function isStructuredToolParams(
     typeof tool === "object" &&
     "name" in tool &&
     "schema" in tool &&
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     (isInteropZodSchema(tool.schema as Record<string, any>) ||
       (tool.schema != null &&
         typeof tool.schema === "object" &&
@@ -469,7 +465,7 @@ export function isLangChainTool(tool?: unknown): tool is StructuredToolParams {
   return (
     isStructuredToolParams(tool) ||
     isRunnableToolLike(tool) ||
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     isStructuredTool(tool as any)
   );
 }

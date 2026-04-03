@@ -56,7 +56,7 @@ class MockResponse implements Response {
   async formData(): Promise<FormData> {
     throw new Error("Not implemented");
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   async json(): Promise<any> {
     return JSON.parse(this.bodyText);
   }
@@ -108,7 +108,7 @@ class MockStreamingResponse implements Response {
   async formData(): Promise<FormData> {
     throw new Error("Not implemented");
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   async json(): Promise<any> {
     return JSON.parse(this.bodyText);
   }
@@ -135,7 +135,7 @@ class MockChunkStreamingResponse implements Response {
   readonly type: ResponseType = "basic";
   readonly url: string = "http://localhost";
   readonly bodyUsed: boolean = false;
-  readonly body: ReadableStream<Uint8Array>;
+  readonly body: ReadableStream<Uint8Array<ArrayBuffer>>;
 
   constructor(chunks: object[]) {
     const encoder = new TextEncoder();
@@ -165,7 +165,7 @@ class MockChunkStreamingResponse implements Response {
   async text(): Promise<string> {
     throw new Error("Not implemented");
   }
-  async bytes(): Promise<Uint8Array> {
+  async bytes(): Promise<Uint8Array<ArrayBuffer>> {
     throw new Error("Not implemented");
   }
   clone(): Response {
@@ -270,7 +270,7 @@ describe("Google Mock", () => {
   let recorder: GoogleRequestRecorder;
   let callbacks: BaseCallbackHandler[];
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   let warnSpy: MockInstance<any>;
 
   function newChatGoogle(mockFields: MockChatGoogleParams): ChatGoogle {
@@ -313,6 +313,21 @@ describe("Google Mock", () => {
     expect(recorder?.request?.body?.generationConfig?.candidateCount).toEqual(
       1
     );
+  });
+
+  test("passes abort signal to fetch in non-streaming invoke", async () => {
+    const apiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const llm = new ChatGoogle({
+      model: "gemini-2.5-flash",
+      apiClient,
+    });
+    const controller = new AbortController();
+    await llm.invoke("Hello", { signal: controller.signal });
+    expect(apiClient.request.signal.aborted).toBe(false);
+    controller.abort();
+    expect(apiClient.request.signal.aborted).toBe(true);
   });
 
   test("surfaces JSON error bodies from GCP streaming responses labeled as text/event-stream", async () => {
@@ -983,11 +998,11 @@ describe("Google Mock", () => {
         {
           handleLLMNewToken(
             token: string,
-            _idx: unknown,
-            _runId: unknown,
-            _parentRunId: unknown,
-            _tags: unknown,
-            fields: { chunk?: unknown }
+            _idx,
+            _runId,
+            _parentRunId,
+            _tags,
+            fields
           ) {
             newTokenCalls.push({ text: token, chunk: fields?.chunk });
           },
@@ -1100,11 +1115,11 @@ describe("Google Mock", () => {
         {
           handleLLMNewToken(
             token: string,
-            _idx: unknown,
-            _runId: unknown,
-            _parentRunId: unknown,
-            _tags: unknown,
-            fields: { chunk?: unknown }
+            _idx,
+            _runId,
+            _parentRunId,
+            _tags,
+            fields
           ) {
             newTokenCalls.push({ text: token, chunk: fields?.chunk });
           },
@@ -1169,7 +1184,7 @@ describe("withStructuredOutput with SerializableSchema", () => {
       model: "gemini-3-pro-preview",
       apiClient,
     });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     vi.spyOn(model as any, "invoke").mockResolvedValue(
       new AIMessage({
         content: "",
@@ -1200,7 +1215,7 @@ describe("withStructuredOutput with SerializableSchema", () => {
       model: "gemini-3-pro-preview",
       apiClient,
     });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     vi.spyOn(model as any, "invoke").mockResolvedValue(
       new AIMessage({
         content: "",
@@ -1232,7 +1247,7 @@ describe("withStructuredOutput with SerializableSchema", () => {
       model: "gemini-3-pro-preview",
       apiClient,
     });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     vi.spyOn(model as any, "invoke").mockResolvedValue(
       new AIMessage({
         content: "",
@@ -1274,7 +1289,7 @@ describe("withStructuredOutput with SerializableSchema", () => {
       model: "gemini-3-pro-preview",
       apiClient,
     });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     vi.spyOn(model as any, "invoke").mockResolvedValue(rawMessage);
 
     const schema = makeSerializableSchema();
@@ -1297,7 +1312,7 @@ describe("withStructuredOutput with SerializableSchema", () => {
       model: "gemini-3-pro-preview",
       apiClient,
     });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     vi.spyOn(model as any, "invoke").mockResolvedValue(
       new AIMessage({
         content: '{"name": "Eve"}',
@@ -1321,7 +1336,7 @@ describe("withStructuredOutput with SerializableSchema", () => {
       model: "gemini-3-pro-preview",
       apiClient,
     });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     vi.spyOn(model as any, "invoke").mockResolvedValue(
       new AIMessage({
         content: '{"wrong_field": 123}',

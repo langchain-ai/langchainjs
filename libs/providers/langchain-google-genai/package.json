@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-genai",
-  "version": "2.1.25",
+  "version": "2.1.26",
   "description": "Google Generative AI integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -16,10 +16,6 @@
   "scripts": {
     "build": "turbo build:compile --filter @langchain/google-genai --output-logs new-only",
     "build:compile": "tsdown",
-    "lint:eslint": "eslint --cache src/",
-    "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
-    "lint": "pnpm lint:eslint && pnpm lint:dpdm",
-    "lint:fix": "pnpm lint:eslint --fix && pnpm lint:dpdm",
     "clean": "rm -rf .turbo dist/",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -28,8 +24,6 @@
     "test:standard:unit": "vitest run --mode standard-unit",
     "test:standard:int": "vitest run --mode standard-int",
     "test:standard": "pnpm test:standard:unit && pnpm test:standard:int",
-    "format": "prettier --write \"src\"",
-    "format:check": "prettier --check \"src\"",
     "typegen": "pnpm run typegen:profiles",
     "typegen:profiles": "pnpm --filter @langchain/model-profiles make --config profiles.toml"
   },
@@ -42,17 +36,14 @@
   },
   "devDependencies": {
     "@langchain/core": "workspace:^",
-    "@langchain/eslint": "workspace:*",
     "@langchain/standard-tests": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
-    "dotenv": "^16.3.1",
+    "dotenv": "^17.4.0",
     "dpdm": "^3.14.0",
-    "eslint": "^9.34.0",
     "hnswlib-node": "^3.0.0",
-    "prettier": "^3.5.0",
     "typescript": "~5.8.3",
-    "vitest": "^3.2.4",
+    "vitest": "^4.1.2",
     "zod": "^3.25.76"
   },
   "publishConfig": {

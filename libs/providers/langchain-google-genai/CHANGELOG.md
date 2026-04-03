@@ -1,5 +1,16 @@
 # @langchain/google-genai
 
+## 2.1.26
+
+### Patch Changes
+
+- [#10415](https://github.com/langchain-ai/langchainjs/pull/10415) [`d7d0bc7`](https://github.com/langchain-ai/langchainjs/commit/d7d0bc70cdb2ea92b365807600fa85ec107ffd0e) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(genai): round-trip thinking content blocks in multi-turn convos
+
+- [#9979](https://github.com/langchain-ai/langchainjs/pull/9979) [`6a2da5b`](https://github.com/langchain-ai/langchainjs/commit/6a2da5b63b39bec4b87b6a1d1769810677ad3458) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(google): add support for ContentBlock.Multimodal types in Google providers
+
+- Updated dependencies [[`6db417b`](https://github.com/langchain-ai/langchainjs/commit/6db417b03ecb5e2ace413389d982294e0ac88433), [`d69dfcc`](https://github.com/langchain-ai/langchainjs/commit/d69dfcca97503cf1c0b7e70ccf5fb7d507c60982)]:
+  - @langchain/core@1.1.33
+
 ## 2.1.25
 
 ### Patch Changes

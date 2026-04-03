@@ -65,11 +65,11 @@ export class OpenRouterError extends ns.brand(LangChainError) {
     const code = error?.code ?? response.status;
 
     if (response.status === 401 || response.status === 403) {
-      // eslint-disable-next-line @typescript-eslint/no-use-before-define
+      // oxlint-disable-next-line @typescript-eslint/no-use-before-define
       return new OpenRouterAuthError(message, code, error?.metadata);
     }
     if (response.status === 429) {
-      // eslint-disable-next-line @typescript-eslint/no-use-before-define
+      // oxlint-disable-next-line @typescript-eslint/no-use-before-define
       return new OpenRouterRateLimitError(message, code, error?.metadata);
     }
 

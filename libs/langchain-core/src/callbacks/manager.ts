@@ -145,11 +145,11 @@ export class BaseRunManager {
 
   async handleCustomEvent(
     eventName: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     data: any,
     _runId?: string,
     _tags?: string[],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     _metadata?: Record<string, any>
   ): Promise<void> {
     await Promise.all(
@@ -188,7 +188,7 @@ export class CallbackManagerForRetrieverRun
   implements BaseCallbackManagerMethods
 {
   getChild(tag?: string): CallbackManager {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    // oxlint-disable-next-line @typescript-eslint/no-use-before-define
     const manager = new CallbackManager(this.runId);
     manager.setHandlers(this.inheritableHandlers);
     manager.addTags(this.inheritableTags);
@@ -378,7 +378,7 @@ export class CallbackManagerForChainRun
   implements BaseCallbackManagerMethods
 {
   getChild(tag?: string): CallbackManager {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    // oxlint-disable-next-line @typescript-eslint/no-use-before-define
     const manager = new CallbackManager(this.runId);
     manager.setHandlers(this.inheritableHandlers);
     manager.addTags(this.inheritableTags);
@@ -525,7 +525,7 @@ export class CallbackManagerForToolRun
   implements BaseCallbackManagerMethods
 {
   getChild(tag?: string): CallbackManager {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    // oxlint-disable-next-line @typescript-eslint/no-use-before-define
     const manager = new CallbackManager(this.runId);
     manager.setHandlers(this.inheritableHandlers);
     manager.addTags(this.inheritableTags);
@@ -586,7 +586,7 @@ export class CallbackManagerForToolRun
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   async handleToolEnd(output: any): Promise<void> {
     await Promise.all(
       this.handlers.map((handler) =>
@@ -1058,13 +1058,13 @@ export class CallbackManager
 
   async handleCustomEvent?(
     eventName: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     data: any,
     runId: string,
     _tags?: string[],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     _metadata?: Record<string, any>
-  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   Promise<any> {
     await Promise.all(
       this.handlers.map((handler) =>
@@ -1316,7 +1316,7 @@ export class CallbackManager
       if (contextVarValue && isBaseCallbackHandler(contextVarValue)) {
         handler = contextVarValue;
       } else if (createIfNotInContext) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         handler = new (handlerClass as any)({});
       }
       if (handler !== undefined) {

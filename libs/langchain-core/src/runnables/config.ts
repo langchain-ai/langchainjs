@@ -42,7 +42,7 @@ export function mergeConfigs<CallOptions extends RunnableConfig>(
           copy.signal = options.signal;
         } else if (options.signal !== undefined) {
           if ("any" in AbortSignal) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // oxlint-disable-next-line @typescript-eslint/no-explicit-any
             copy.signal = (AbortSignal as any).any([
               copy.signal,
               options.signal,
@@ -137,7 +137,7 @@ export function ensureConfig<CallOptions extends RunnableConfig>(
     // child runs to improperly inherit their parents' run ids.
     const { runId, runName, ...rest } = implicitConfig;
     empty = Object.entries(rest).reduce(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       (currentConfig: Record<string, any>, [key, value]) => {
         if (value !== undefined) {
           currentConfig[key] = value;
@@ -149,7 +149,7 @@ export function ensureConfig<CallOptions extends RunnableConfig>(
   }
   if (config) {
     empty = Object.entries(config).reduce(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       (currentConfig: Record<string, any>, [key, value]) => {
         if (value !== undefined) {
           currentConfig[key] = value;
@@ -190,7 +190,7 @@ export function ensureConfig<CallOptions extends RunnableConfig>(
     }
     if (empty.signal !== undefined) {
       if ("any" in AbortSignal) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         empty.signal = (AbortSignal as any).any([empty.signal, timeoutSignal]);
       }
     } else {
@@ -254,7 +254,7 @@ export function patchConfig<CallOptions extends RunnableConfig>(
   return newConfig;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export function pickRunnableConfigKeys<CallOptions extends Record<string, any>>(
   config?: CallOptions
 ): Partial<RunnableConfig> | undefined {

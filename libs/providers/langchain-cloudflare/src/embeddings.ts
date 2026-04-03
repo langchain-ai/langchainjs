@@ -92,7 +92,7 @@ export class CloudflareWorkersAIEmbeddings extends Embeddings {
   private async runEmbedding(texts: string[]) {
     return this.caller.call(async () => {
       const response: AiTextEmbeddingsOutput = await this.ai.run(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         this.model as any,
         {
           text: texts,

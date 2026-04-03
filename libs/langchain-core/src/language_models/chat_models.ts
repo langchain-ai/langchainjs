@@ -1,5 +1,4 @@
-import type { ZodType as ZodTypeV3 } from "zod/v3";
-import type { $ZodType as ZodTypeV4 } from "zod/v4/core";
+import type { ZodV3Like, ZodV4Like } from "../utils/types/zod.js";
 import {
   AIMessage,
   type BaseMessage,
@@ -67,7 +66,7 @@ import {
 } from "../utils/standard_schema.js";
 import { assembleStructuredOutputPipeline } from "./structured_output.js";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export type ToolChoice = string | Record<string, any> | "auto" | "any";
 
 /**
@@ -76,7 +75,7 @@ export type ToolChoice = string | Record<string, any> | "auto" | "any";
 export type SerializedChatModel = {
   _model: string;
   _type: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
 } & Record<string, any>;
 
 // todo?
@@ -86,7 +85,7 @@ export type SerializedChatModel = {
 export type SerializedLLM = {
   _model: string;
   _type: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
 } & Record<string, any>;
 
 /**
@@ -168,7 +167,7 @@ function _formatForTracing(messages: BaseMessage[]): BaseMessage[] {
         if (isURLContentBlock(block) || isBase64ContentBlock(block)) {
           if (messageToTrace === message) {
             // Also shallow-copy content
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // oxlint-disable-next-line @typescript-eslint/no-explicit-any
             messageToTrace = new (message.constructor as any)({
               ...messageToTrace,
               content: [
@@ -193,11 +192,12 @@ export type LangSmithParams = {
   ls_temperature?: number;
   ls_max_tokens?: number;
   ls_stop?: Array<string>;
+  ls_integration?: string;
 };
 
 export type BindToolsInput =
   | StructuredToolInterface
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   | Record<string, any>
   | ToolDefinition
   | RunnableToolLike
@@ -289,7 +289,7 @@ export abstract class BaseChatModel<
     return chatGeneration.message as OutputMessageType;
   }
 
-  // eslint-disable-next-line require-yield
+  // oxlint-disable-next-line require-yield
   async *_streamResponseChunks(
     _messages: BaseMessage[],
     _options: this["ParsedCallOptions"],
@@ -317,7 +317,7 @@ export abstract class BaseChatModel<
 
       const inheritableMetadata = {
         ...runnableConfig.metadata,
-        ...this.getLsParams(callOptions),
+        ...this.getLsParamsWithDefaults(callOptions),
       };
       const callbackManager_ = await CallbackManager.configure(
         runnableConfig.callbacks,
@@ -345,7 +345,7 @@ export abstract class BaseChatModel<
         runnableConfig.runName
       );
       let generationChunk: ChatGenerationChunk | undefined;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       let llmOutput: Record<string, any> | undefined;
       try {
         for await (const chunk of this._streamResponseChunks(
@@ -421,6 +421,18 @@ export abstract class BaseChatModel<
     };
   }
 
+  /**
+   * Wraps getLsParams() and always appends ls_integration.
+   * This ensures the integration tag is present even when
+   * partner packages fully override getLsParams().
+   */
+  getLsParamsWithDefaults(options: this["ParsedCallOptions"]): LangSmithParams {
+    return {
+      ...this.getLsParams(options),
+      ls_integration: "langchain_chat_model",
+    };
+  }
+
   /** @ignore */
   async _generateUncached(
     messages: BaseMessageLike[][],
@@ -441,7 +453,7 @@ export abstract class BaseChatModel<
     } else {
       const inheritableMetadata = {
         ...handledOptions.metadata,
-        ...this.getLsParams(parsedOptions),
+        ...this.getLsParamsWithDefaults(parsedOptions),
       };
       // create callback manager and start run
       const callbackManager_ = await CallbackManager.configure(
@@ -492,7 +504,7 @@ export abstract class BaseChatModel<
           runManagers?.[0]
         );
         let aggregated: ChatGenerationChunk | undefined;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         let llmOutput: Record<string, any> | undefined;
         for await (const chunk of stream) {
           // Check for abort signal - throw ModelAbortError with partial output
@@ -629,7 +641,7 @@ export abstract class BaseChatModel<
     messages: BaseMessageLike[][];
     cache: BaseCache<Generation[]>;
     llmStringKey: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     parsedOptions: any;
     handledOptions: RunnableConfig;
   }): Promise<
@@ -644,7 +656,7 @@ export abstract class BaseChatModel<
 
     const inheritableMetadata = {
       ...handledOptions.metadata,
-      ...this.getLsParams(parsedOptions),
+      ...this.getLsParamsWithDefaults(parsedOptions),
     };
     // create callback manager and start run
     const callbackManager_ = await CallbackManager.configure(
@@ -852,7 +864,7 @@ export abstract class BaseChatModel<
   /**
    * Get the parameters used to invoke the model
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   invocationParams(_options?: this["ParsedCallOptions"]): any {
     return {};
   }
@@ -888,7 +900,7 @@ export abstract class BaseChatModel<
   ): Promise<ChatResult>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema: SerializableSchema<RunOutput>,
@@ -896,7 +908,7 @@ export abstract class BaseChatModel<
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema: SerializableSchema<RunOutput>,
@@ -904,57 +916,57 @@ export abstract class BaseChatModel<
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
-      | ZodTypeV4<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | ZodV4Like<RunOutput>
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
-      | ZodTypeV4<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | ZodV4Like<RunOutput>
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
-      | ZodTypeV3<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | ZodV3Like<RunOutput>
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
-      | ZodTypeV3<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | ZodV3Like<RunOutput>
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
   ):

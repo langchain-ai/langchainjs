@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-namespace */
+/* oxlint-disable @typescript-eslint/no-namespace */
 
 import type { InteropZodType } from "@langchain/core/utils/types";
 import type { BindToolsInput } from "@langchain/core/language_models/chat_models";

@@ -148,7 +148,7 @@ function _multimodalContentBlockToPart(
   if ("data" in block && block.data !== undefined) {
     // DataRecordBase64: inline base64 data
     const data =
-      // eslint-disable-next-line no-instanceof/no-instanceof
+      // oxlint-disable-next-line no-instanceof/no-instanceof
       block.data instanceof Uint8Array
         ? btoa(String.fromCharCode(...block.data))
         : block.data;
@@ -429,6 +429,19 @@ function _convertLangChainContentToPart(
         data: content.data,
       },
     };
+  } else if (content.type === "thinking") {
+    const thinkingContent = content as {
+      type: "thinking";
+      thinking: string;
+      signature?: string;
+    };
+    return {
+      text: thinkingContent.thinking,
+      thought: true,
+      ...(thinkingContent.signature
+        ? { thoughtSignature: thinkingContent.signature }
+        : {}),
+    } as Part;
   } else if ("functionCall" in content) {
     // No action needed here — function calls will be added later from message.tool_calls
     return undefined;

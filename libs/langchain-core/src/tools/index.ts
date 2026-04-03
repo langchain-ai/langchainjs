@@ -927,12 +927,12 @@ export function tool<
           const childConfig = patchConfig(config, {
             callbacks: runManager?.getChild(),
           });
-          // eslint-disable-next-line no-void
+          // oxlint-disable-next-line no-void
           void AsyncLocalStorageProviderSingleton.runWithConfig(
             pickRunnableConfigKeys(childConfig),
             async () => {
               try {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                // oxlint-disable-next-line @typescript-eslint/no-explicit-any
                 resolve(func(input as any, childConfig as any));
               } catch (e) {
                 reject(e);
@@ -982,15 +982,15 @@ export function tool<
         const childConfig = patchConfig(config, {
           callbacks: runManager?.getChild(),
         });
-        // eslint-disable-next-line no-void
+        // oxlint-disable-next-line no-void
         void AsyncLocalStorageProviderSingleton.runWithConfig(
           pickRunnableConfigKeys(childConfig),
           async () => {
             try {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              // oxlint-disable-next-line @typescript-eslint/no-explicit-any
               const result = await func(input as any, childConfig as any);
               if (isAsyncGenerator(result)) {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                // oxlint-disable-next-line @typescript-eslint/no-explicit-any
                 resolve(result as any);
                 return;
               }

@@ -56,13 +56,13 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
           typeof block.data === "string"
             ? block.data
             : typeof block.data === "object" && block.data !== null
-            ? // Convert Uint8Array to base64 string
-              btoa(
-                Array.from(block.data as Uint8Array)
-                  .map((byte) => String.fromCharCode(byte))
-                  .join("")
-              )
-            : String(block.data);
+              ? // Convert Uint8Array to base64 string
+                btoa(
+                  Array.from(block.data as Uint8Array)
+                    .map((byte) => String.fromCharCode(byte))
+                    .join("")
+                )
+              : String(block.data);
         return {
           inlineData: {
             mimeType: block.mime_type,
@@ -129,13 +129,13 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
           typeof block.data === "string"
             ? block.data
             : typeof block.data === "object" && block.data !== null
-            ? // Convert Uint8Array to base64 string
-              btoa(
-                Array.from(block.data as Uint8Array)
-                  .map((byte) => String.fromCharCode(byte))
-                  .join("")
-              )
-            : String(block.data);
+              ? // Convert Uint8Array to base64 string
+                btoa(
+                  Array.from(block.data as Uint8Array)
+                    .map((byte) => String.fromCharCode(byte))
+                    .join("")
+                )
+              : String(block.data);
         return {
           inlineData: {
             mimeType: block.mime_type,
@@ -202,13 +202,13 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
           typeof block.data === "string"
             ? block.data
             : typeof block.data === "object" && block.data !== null
-            ? // Convert Uint8Array to base64 string
-              btoa(
-                Array.from(block.data as Uint8Array)
-                  .map((byte) => String.fromCharCode(byte))
-                  .join("")
-              )
-            : String(block.data);
+              ? // Convert Uint8Array to base64 string
+                btoa(
+                  Array.from(block.data as Uint8Array)
+                    .map((byte) => String.fromCharCode(byte))
+                    .join("")
+                )
+              : String(block.data);
         return {
           inlineData: {
             mimeType: block.mime_type,
@@ -397,8 +397,8 @@ function convertStandardContentMessageToGeminiContent(
   } else if (AIMessage.isInstance(message)) {
     role = "model";
   } else if (ToolMessage.isInstance(message)) {
-    // Tool messages in Gemini are represented as function responses
-    role = "function";
+    // Tool messages in Gemini were represented as function responses, but now are "user"
+    role = "user";
   } else if (ChatMessage.isInstance(message)) {
     // Map ChatMessage roles to Gemini roles
     const msgRole = message.role.toLowerCase();
@@ -411,7 +411,7 @@ function convertStandardContentMessageToGeminiContent(
     ) {
       role = "model";
     } else if (msgRole === "function" || msgRole === "tool") {
-      role = "function";
+      role = "user";
     } else {
       // Default to user for unknown roles
       role = "user";
@@ -465,9 +465,10 @@ function convertStandardContentMessageToGeminiContent(
     const matchedToolCall = aiMsg?.tool_calls?.find(
       (tc) => tc.id === message.tool_call_id
     );
+    const isGeneratedId = message.tool_call_id.startsWith("lc-tool-call-");
     parts.push({
       functionResponse: {
-        id: message.tool_call_id,
+        ...(isGeneratedId ? {} : { id: message.tool_call_id }),
         name: matchedToolCall?.name ?? message.name ?? "unknown",
         response: { result: responseContent },
       },
@@ -615,7 +616,7 @@ function convertLegacyContentMessageToGeminiContent(
   }
 
   function messageContentMediaData(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     content: Record<string, any>
   ): Gemini.Part.InlineData | Gemini.Part.FileData {
     if ("mimeType" in content && "data" in content) {
@@ -647,7 +648,7 @@ function convertLegacyContentMessageToGeminiContent(
   }
 
   function supplementVideoMetadata(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     content: MessageContentImageUrl | Record<string, any>,
     ret: Gemini.Part.InlineData | Gemini.Part.FileData
   ): Gemini.Part.InlineData | Gemini.Part.FileData {
@@ -659,7 +660,7 @@ function convertLegacyContentMessageToGeminiContent(
   }
 
   function messageContentMedia(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     content: Record<string, any>
   ): Gemini.Part.InlineData | Gemini.Part.FileData {
     const ret = messageContentMediaData(content);
@@ -673,8 +674,8 @@ function convertLegacyContentMessageToGeminiContent(
     } else if (AIMessage.isInstance(message)) {
       return "model";
     } else if (ToolMessage.isInstance(message)) {
-      // Tool messages in Gemini are represented as function responses
-      return "function";
+      // Tool messages in Gemini were represented as function responses, but now are "user"
+      return "user";
     } else if (ChatMessage.isInstance(message)) {
       // Map ChatMessage roles to Gemini roles
       const msgRole = message.role.toLowerCase();
@@ -687,7 +688,7 @@ function convertLegacyContentMessageToGeminiContent(
       ) {
         return "model";
       } else if (msgRole === "function" || msgRole === "tool") {
-        return "function";
+        return "user";
       } else {
         // Default to user for unknown roles
         return "user";
@@ -735,18 +736,6 @@ function convertLegacyContentMessageToGeminiContent(
     }
   }
 
-  // Convert AIMessage tool_calls to functionCall parts
-  if (AIMessage.isInstance(message) && message.tool_calls?.length) {
-    for (const toolCall of message.tool_calls) {
-      parts.push({
-        functionCall: {
-          name: toolCall.name,
-          args: toolCall.args ?? {},
-        },
-      } as Gemini.Part.FunctionCall);
-    }
-  }
-
   // Handle tool messages as function responses
   if (ToolMessage.isInstance(message) && message.tool_call_id) {
     const responseContent =
@@ -762,20 +751,20 @@ function convertLegacyContentMessageToGeminiContent(
     if (!aiMsg) {
       throw new ToolCallNotFoundError(message.tool_call_id);
     }
+    const isGeneratedId = message.tool_call_id.startsWith("lc-tool-call-");
     const matchedToolCall = aiMsg.tool_calls?.find(
       (tc) => tc.id === message.tool_call_id
     );
     parts.push({
       functionResponse: {
-        id: message.tool_call_id,
+        ...(isGeneratedId ? {} : { id: message.tool_call_id }),
         name: matchedToolCall?.name ?? message.name ?? "unknown",
         response: { result: responseContent },
       },
     });
-  }
 
-  // Remove non-functionResponse parts if this is a tool response
-  if (role === "function") {
+    // For tool messages, only keep functionResponse parts since the text content
+    // is already included in the functionResponse.response.result
     parts = parts.filter((part) => "functionResponse" in part);
   }
 
@@ -978,7 +967,9 @@ export const convertGeminiPartsToToolCalls: Converter<
       const functionCallPart = part as Gemini.Part.FunctionCall;
       toolCalls.push({
         type: "tool_call",
-        id: functionCallPart.functionCall.id ?? uuidv4().replace(/-/g, ""),
+        id:
+          functionCallPart.functionCall.id ??
+          `lc-tool-call-${uuidv4().replace(/-/g, "")}`,
         name: functionCallPart.functionCall.name,
         args: functionCallPart.functionCall.args ?? {},
         thoughtSignature: functionCallPart.thoughtSignature,

@@ -1,5 +1,61 @@
 # @langchain/core
 
+## 1.1.38
+
+### Patch Changes
+
+- [#10552](https://github.com/langchain-ai/langchainjs/pull/10552) [`589ab9b`](https://github.com/langchain-ai/langchainjs/commit/589ab9be391a5d6c104f34877fc1b3e2a32fa449) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): accept cross-version runnable models in createAgent
+
+## 1.1.37
+
+### Patch Changes
+
+- [#10511](https://github.com/langchain-ai/langchainjs/pull/10511) [`6933769`](https://github.com/langchain-ai/langchainjs/commit/6933769836fe3cec835588e5f8db9883200865f6) Thanks [@hntrl](https://github.com/hntrl)! - cache Zod-to-JSON-Schema conversions in toJsonSchema()
+
+- [#10541](https://github.com/langchain-ai/langchainjs/pull/10541) [`50d5f32`](https://github.com/langchain-ai/langchainjs/commit/50d5f32fd30cabebf058b1c13255c1daadde6107) Thanks [@jacoblee93](https://github.com/jacoblee93)! - revert: Revert "feat(core): Add all chat model/llm invocation params to metadata"
+
+- [#10509](https://github.com/langchain-ai/langchainjs/pull/10509) [`5552999`](https://github.com/langchain-ai/langchainjs/commit/555299917c90322e25d7671bad2e20c9b104bad6) Thanks [@hntrl](https://github.com/hntrl)! - feat(openai): add support for phase parameter on Responses API messages
+  - Extract `phase` from message output items and surface it on text content blocks
+  - Support phase in streaming via `response.output_item.added` events
+  - Round-trip phase through both raw provider and standard content paths
+  - Move phase into `extras` dict in the core standard content translator
+
+- [#10528](https://github.com/langchain-ai/langchainjs/pull/10528) [`8331833`](https://github.com/langchain-ai/langchainjs/commit/8331833c93ba907063c9fe28e9f935ed5dfec11c) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): normalize single-block content in mergeContent
+
+## 1.1.36
+
+### Patch Changes
+
+- [#10512](https://github.com/langchain-ai/langchainjs/pull/10512) [`bbbfea1`](https://github.com/langchain-ai/langchainjs/commit/bbbfea185c0777ae06df2b24a1a84f941d499c2a) Thanks [@hntrl](https://github.com/hntrl)! - fix(core): fix streaming chunk merge for providers without `index` on tool call deltas
+
+  `_mergeLists` now falls back to `id`-based matching when items don't have an `index` field. Previously, providers routing through the OpenAI-compatible API without `index` on streaming tool call deltas (e.g. Anthropic models via `ChatOpenAI`) would accumulate hundreds of individual raw deltas in `tool_call_chunks` and `additional_kwargs.tool_calls` instead of merging them into a single entry per tool call. In a real trace with 3 concurrent subagents, this caused a single AI message to balloon from ~4KB to 146KB -- with 826 uncollapsed streaming fragments carrying a few bytes each.
+
+  Also fixes `SystemMessage.concat()` which used `...this` to spread all instance properties (including `lc_kwargs`) into the new constructor, causing each chained `concat()` call to nest one level deeper. After 7 middleware `concat()` calls (typical in deepagents), a 7KB system prompt would serialize to 81KB due to content being duplicated at every nesting level.
+
+## 1.1.35
+
+### Patch Changes
+
+- [#10327](https://github.com/langchain-ai/langchainjs/pull/10327) [`5dc11b5`](https://github.com/langchain-ai/langchainjs/commit/5dc11b55cccfe35e4dad910a33e904cf49b3088a) Thanks [@hntrl](https://github.com/hntrl)! - fix(core): replace exported zod type references with structural duck-type interfaces to fix TypeScript OOM
+
+  Replaces all exported Zod type references (`z3.ZodType`, `z4.$ZodType`, etc.) in `@langchain/core`'s public API with minimal structural ("duck-type") interfaces. This prevents TypeScript from performing expensive deep structural comparisons (~3,400+ lines of mutually recursive generics) when downstream packages resolve a different Zod version than `@langchain/core`, which was causing OOM crashes and unresponsive language servers in monorepo setups.
+
+- [#10433](https://github.com/langchain-ai/langchainjs/pull/10433) [`7af0b65`](https://github.com/langchain-ai/langchainjs/commit/7af0b65d5ab9a173b528d6a821d269a79fbabdc6) Thanks [@tanushree-sharma](https://github.com/tanushree-sharma)! - feat: Add LangSmith integration metadata to createAgent and initChatModel
+
+## 1.1.34
+
+### Patch Changes
+
+- [#10312](https://github.com/langchain-ai/langchainjs/pull/10312) [`bfb7944`](https://github.com/langchain-ai/langchainjs/commit/bfb7944a105470eee98fe4a0eef91e586600e1de) Thanks [@jacoblee93](https://github.com/jacoblee93)! - feat(core): Add all invocation params as part of metadata
+
+## 1.1.33
+
+### Patch Changes
+
+- [#10412](https://github.com/langchain-ai/langchainjs/pull/10412) [`6db417b`](https://github.com/langchain-ai/langchainjs/commit/6db417b03ecb5e2ace413389d982294e0ac88433) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(core): respect timeout option in streamEvents v2
+
+- [#10424](https://github.com/langchain-ai/langchainjs/pull/10424) [`d69dfcc`](https://github.com/langchain-ai/langchainjs/commit/d69dfcca97503cf1c0b7e70ccf5fb7d507c60982) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(core): preserve multimodal content in getBufferString as placeholders
+
 ## 1.1.32
 
 ### Patch Changes

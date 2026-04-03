@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "1.1.32",
+  "version": "1.1.38",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -17,15 +17,9 @@
     "build": "turbo build:compile --filter @langchain/core --output-logs new-only",
     "build:compile": "tsdown",
     "clean": "rm -rf .turbo dist/",
-    "lint:eslint": "eslint --cache src/",
-    "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts --exclude \"(node_modules|src/utils/zod-to-json-schema)\" --transform",
-    "lint": "pnpm lint:eslint && pnpm lint:dpdm",
-    "lint:fix": "pnpm lint:eslint --fix && pnpm lint:dpdm",
     "test": "vitest run",
     "test:watch": "vitest watch",
-    "test:int": "vitest run --mode int",
-    "format": "prettier --write \"src\"",
-    "format:check": "prettier --check \"src\""
+    "test:int": "vitest run --mode int"
   },
   "author": "LangChain",
   "license": "MIT",
@@ -43,19 +37,17 @@
     "zod": "^3.25.76 || ^4"
   },
   "devDependencies": {
-    "@langchain/eslint": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@types/decamelize": "^1.2.0",
     "@types/mustache": "^4",
+    "@types/node": "^25.5.0",
     "@types/uuid": "^10.0.0",
-    "dotenv": "^17.2.1",
+    "dotenv": "^17.4.0",
     "dpdm": "^3.14.0",
-    "eslint": "^9.34.0",
     "ml-matrix": "^6.10.4",
-    "prettier": "^3.5.0",
     "rimraf": "^6.1.3",
     "typescript": "~5.8.3",
-    "vitest": "^3.2.4",
+    "vitest": "^4.1.2",
     "web-streams-polyfill": "^4.2.0"
   },
   "publishConfig": {

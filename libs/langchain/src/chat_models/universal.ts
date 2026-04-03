@@ -95,11 +95,11 @@ export const MODEL_PROVIDER_CONFIG = {
     package: "@langchain/groq",
     className: "ChatGroq",
   },
-  cerebras: {
-    package: "@langchain/cerebras",
-    className: "ChatCerebras",
-  },
   bedrock: {
+    package: "@langchain/aws",
+    className: "ChatBedrockConverse",
+  },
+  aws: {
     package: "@langchain/aws",
     className: "ChatBedrockConverse",
   },
@@ -111,20 +111,22 @@ export const MODEL_PROVIDER_CONFIG = {
     package: "@langchain/xai",
     className: "ChatXAI",
   },
+  cerebras: {
+    package: "@langchain/cerebras",
+    className: "ChatCerebras",
+  },
   fireworks: {
-    package: "@langchain/community/chat_models/fireworks",
+    package: "@langchain/fireworks",
     className: "ChatFireworks",
-    hasCircularDependency: true,
   },
   together: {
-    package: "@langchain/community/chat_models/togetherai",
+    package: "@langchain/together-ai",
     className: "ChatTogetherAI",
     hasCircularDependency: true,
   },
   perplexity: {
-    package: "@langchain/community/chat_models/perplexity",
+    package: "@langchain/perplexity",
     className: "ChatPerplexity",
-    hasCircularDependency: true,
   },
 } as const;
 
@@ -200,7 +202,7 @@ export async function getChatModelByClassName(
 async function _initChatModelHelper(
   model: string,
   modelProvider?: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   params: Record<string, any> = {}
 ): Promise<BaseChatModel> {
   const modelProviderCopy = modelProvider || _inferModelProvider(model);
@@ -270,7 +272,7 @@ export function _inferModelProvider(modelName: string): string | undefined {
 }
 
 interface ConfigurableModelFields extends BaseChatModelParams {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   defaultConfig?: Record<string, any>;
   /**
    * @default "any"
@@ -284,7 +286,7 @@ interface ConfigurableModelFields extends BaseChatModelParams {
    * Methods which should be called after the model is initialized.
    * The key will be the method name, and the value will be the arguments.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   queuedMethodOperations?: Record<string, any>;
   /**
    * Overrides the profiling information for the model. If not provided,
@@ -309,7 +311,7 @@ export class ConfigurableModel<
 
   lc_namespace = ["langchain", "chat_models"];
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   _defaultConfig?: Record<string, any> = {};
 
   /**
@@ -326,7 +328,7 @@ export class ConfigurableModel<
    * Methods which should be called after the model is initialized.
    * The key will be the method name, and the value will be the arguments.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   _queuedMethodOperations: Record<string, any> = {};
 
   /** @internal */
@@ -363,6 +365,11 @@ export class ConfigurableModel<
       fields.queuedMethodOperations ?? this._queuedMethodOperations;
 
     this._profile = fields.profile ?? undefined;
+
+    this.metadata = {
+      ...this.metadata,
+      ls_integration: "langchain_init_chat_model",
+    };
   }
 
   async _getModelInstance(
@@ -389,10 +396,10 @@ export class ConfigurableModel<
     for (const [method, args] of Object.entries(this._queuedMethodOperations)) {
       if (
         method in initializedModel &&
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         typeof (initializedModel as any)[method] === "function"
       ) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         initializedModel = await (initializedModel as any)[method](...args);
       }
     }
@@ -413,7 +420,7 @@ export class ConfigurableModel<
 
   override bindTools(
     tools: BindToolsInput[],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     params?: Record<string, any>
   ): ConfigurableModel<RunInput, CallOptions> {
     const newQueuedOperations = { ...this._queuedMethodOperations };
@@ -441,10 +448,10 @@ export class ConfigurableModel<
     }) as unknown as ReturnType<BaseChatModel["withStructuredOutput"]>;
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   _modelParams(config?: RunnableConfig): Record<string, any> {
     const configurable = config?.configurable ?? {};
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     let modelParams: Record<string, any> = {};
 
     for (const [key, value] of Object.entries(configurable)) {
@@ -656,7 +663,7 @@ export class ConfigurableModel<
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export interface InitChatModelFields extends Partial<Record<string, any>> {
   modelProvider?: string;
   configurableFields?: string[] | "any";
@@ -671,7 +678,7 @@ export async function initChatModel<
     ConfigurableChatModelCallOptions,
 >(
   model: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   fields?: Partial<Record<string, any>> & {
     modelProvider?: string;
     configurableFields?: never;
@@ -685,7 +692,7 @@ export async function initChatModel<
     ConfigurableChatModelCallOptions,
 >(
   model: never,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   options?: Partial<Record<string, any>> & {
     modelProvider?: string;
     configurableFields?: never;
@@ -700,7 +707,7 @@ export async function initChatModel<
     ConfigurableChatModelCallOptions,
 >(
   model?: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   options?: Partial<Record<string, any>> & {
     modelProvider?: string;
     configurableFields?: ConfigurableFields;
@@ -735,12 +742,12 @@ export async function initChatModel<
  *   - google-genai (@langchain/google-genai)
  *   - bedrock (@langchain/aws)
  *   - cohere (@langchain/cohere)
- *   - fireworks (@langchain/community/chat_models/fireworks)
- *   - together (@langchain/community/chat_models/togetherai)
+ *   - fireworks (@langchain/fireworks)
+ *   - together (@langchain/together-ai)
  *   - mistralai (@langchain/mistralai)
  *   - groq (@langchain/groq)
  *   - ollama (@langchain/ollama)
- *   - perplexity (@langchain/community/chat_models/perplexity)
+ *   - perplexity (@langchain/perplexity)
  *   - cerebras (@langchain/cerebras)
  *   - deepseek (@langchain/deepseek)
  *   - xai (@langchain/xai)
@@ -941,7 +948,7 @@ export async function initChatModel<
     ConfigurableChatModelCallOptions,
 >(
   model?: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   fields?: Partial<Record<string, any>> & {
     modelProvider?: string;
     configurableFields?: string[] | "any";
@@ -949,7 +956,7 @@ export async function initChatModel<
     profile?: ModelProfile;
   }
 ): Promise<ConfigurableModel<RunInput, CallOptions>> {
-  // eslint-disable-next-line prefer-const
+  // oxlint-disable-next-line prefer-const
   let { configurableFields, configPrefix, modelProvider, profile, ...params } =
     {
       configPrefix: "",
@@ -962,7 +969,7 @@ export async function initChatModel<
         ? [provider]
         : [provider, remainingParts.join(":")];
     if (SUPPORTED_PROVIDERS.includes(modelComponents[0] as ChatModelProvider)) {
-      // eslint-disable-next-line no-param-reassign
+      // oxlint-disable-next-line no-param-reassign
       [modelProvider, model] = modelComponents;
     }
   }
@@ -981,7 +988,7 @@ export async function initChatModel<
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   const paramsCopy: Record<string, any> = { ...params };
 
   let configurableModel: ConfigurableModel<RunInput, CallOptions>;

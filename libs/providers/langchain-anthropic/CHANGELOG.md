@@ -1,5 +1,33 @@
 # @langchain/anthropic
 
+## 1.3.26
+
+### Patch Changes
+
+- [#10519](https://github.com/langchain-ai/langchainjs/pull/10519) [`cd86fea`](https://github.com/langchain-ai/langchainjs/commit/cd86fea8de2130d0df60805baada81958d47c747) Thanks [@baptistejamin](https://github.com/baptistejamin)! - fix: implement tool choice required on anthropic
+
+- Updated dependencies [[`589ab9b`](https://github.com/langchain-ai/langchainjs/commit/589ab9be391a5d6c104f34877fc1b3e2a32fa449)]:
+  - @langchain/core@1.1.38
+
+## 1.3.25
+
+### Patch Changes
+
+- [#10467](https://github.com/langchain-ai/langchainjs/pull/10467) [`da85f31`](https://github.com/langchain-ai/langchainjs/commit/da85f31688e708340a711fd43cf293b5cb69c133) Thanks [@hntrl](https://github.com/hntrl)! - fix: add default max tokens for sonnet
+
+- Updated dependencies [[`bfb7944`](https://github.com/langchain-ai/langchainjs/commit/bfb7944a105470eee98fe4a0eef91e586600e1de)]:
+  - @langchain/core@1.1.34
+
+## 1.3.24
+
+### Patch Changes
+
+- [#10420](https://github.com/langchain-ai/langchainjs/pull/10420) [`08657f2`](https://github.com/langchain-ai/langchainjs/commit/08657f21b330ee05b86a8abd557aef3939f5581b) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - Fix temperature/topK/topP handling: guard all three so undefined values are not
+  set on the request object, and fix broken topK/topP validation when thinking is
+  enabled.
+- Updated dependencies [[`6db417b`](https://github.com/langchain-ai/langchainjs/commit/6db417b03ecb5e2ace413389d982294e0ac88433), [`d69dfcc`](https://github.com/langchain-ai/langchainjs/commit/d69dfcca97503cf1c0b7e70ccf5fb7d507c60982)]:
+  - @langchain/core@1.1.33
+
 ## 1.3.23
 
 ### Patch Changes

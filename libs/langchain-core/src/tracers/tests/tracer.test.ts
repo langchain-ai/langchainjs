@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { test, expect, vi, afterEach } from "vitest";
 import * as uuid from "uuid";
 import { Client } from "langsmith";

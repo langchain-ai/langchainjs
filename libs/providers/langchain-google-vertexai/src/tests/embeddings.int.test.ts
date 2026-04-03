@@ -1,7 +1,7 @@
 import { test, expect } from "vitest";
 import { VertexAIEmbeddings } from "../embeddings.js";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 function onFailedAttempt(err: any): any {
   throw err;
 }

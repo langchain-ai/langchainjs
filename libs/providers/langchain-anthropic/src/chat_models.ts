@@ -82,6 +82,7 @@ const MODEL_DEFAULT_MAX_OUTPUT_TOKENS: Partial<
 > = {
   // Claude 4.6 — 128K max output
   "claude-opus-4-6": 16384,
+  "claude-sonnet-4-6": 16384,
   // Claude 4.5 — 64K max output
   "claude-opus-4-5": 16384,
   "claude-sonnet-4-5": 16384,
@@ -101,7 +102,7 @@ const MODEL_DEFAULT_MAX_OUTPUT_TOKENS: Partial<
   "claude-3-sonnet": 4096,
   "claude-3-haiku": 4096,
 };
-const FALLBACK_MAX_OUTPUT_TOKENS = 2048;
+const FALLBACK_MAX_OUTPUT_TOKENS = 4096;
 
 function defaultMaxOutputTokensForModel(model?: Anthropic.Model): number {
   if (!model) {
@@ -224,7 +225,7 @@ function _compactionInParams(
   return !!cm?.edits?.some((e) => e.type === "compact_20260112");
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 function isAnthropicTool(tool: any): tool is Anthropic.Messages.Tool {
   return "input_schema" in tool;
 }
@@ -347,7 +348,7 @@ export interface AnthropicInput {
    * Useful for accessing Anthropic models hosted on other cloud services
    * such as Google Vertex.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   createClient?: (options: ClientOptions) => any;
 
   /**
@@ -1553,37 +1554,37 @@ export class ChatAnthropicMessages<
   }
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
   ):

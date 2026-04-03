@@ -68,7 +68,7 @@ describe("Mock Google LLM", () => {
   });
 
   test("user agent header", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -87,7 +87,7 @@ describe("Mock Google LLM", () => {
   });
 
   test("platform default", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -102,7 +102,7 @@ describe("Mock Google LLM", () => {
   });
 
   test("platform set", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -118,7 +118,7 @@ describe("Mock Google LLM", () => {
   });
 
   test("scope default", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -138,7 +138,7 @@ describe("Mock Google LLM", () => {
   });
 
   test("scope default set", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -159,7 +159,7 @@ describe("Mock Google LLM", () => {
   });
 
   test("scope set", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -178,7 +178,7 @@ describe("Mock Google LLM", () => {
   });
 
   test("1: generateContent", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -199,7 +199,7 @@ describe("Mock Google LLM", () => {
   });
 
   test("1: generateContent - retryable request", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -225,7 +225,7 @@ describe("Mock Google LLM", () => {
   });
 
   test("1: invoke", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -255,7 +255,7 @@ describe("Mock Google LLM", () => {
   });
 
   test("2: streamGenerateContent - non-streaming", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -277,7 +277,7 @@ describe("Mock Google LLM", () => {
   });
 
   test("3: streamGenerateContent - streaming", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -300,7 +300,7 @@ describe("Mock Google LLM", () => {
   });
 
   test("4: streamGenerateContent - non-streaming - safety exception", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -314,7 +314,7 @@ describe("Mock Google LLM", () => {
     let caught = false;
     try {
       await model.generate(["Hello world"]);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (xx: any) {
       caught = true;
       expect(xx).toBeInstanceOf(GoogleAISafetyError);
@@ -327,7 +327,7 @@ describe("Mock Google LLM", () => {
   });
 
   test("4: streamGenerateContent - non-streaming - safety message", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -347,7 +347,7 @@ describe("Mock Google LLM", () => {
   });
 
   test("5: streamGenerateContent - streaming - safety exception", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -378,7 +378,7 @@ describe("Mock Google LLM", () => {
   });
 
   test("5: streamGenerateContent - streaming - safety message", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -406,7 +406,7 @@ describe("Mock Google LLM", () => {
   });
 
   test("6: predictMessages image blue-square", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -458,7 +458,7 @@ describe("Mock Google LLM", () => {
    * only at the moment.
    */
   test("6: invoke image blue-square", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -511,7 +511,7 @@ describe("Mock Google LLM", () => {
    * only at the moment.
    */
   test("7: stream image blue-square", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -553,7 +553,7 @@ describe("Mock Google LLM", () => {
   });
 
   test("8: streamGenerateContent - streaming - json responseMimeType", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
@@ -579,7 +579,7 @@ describe("Mock Google LLM", () => {
   });
 
   test("9: streamGenerateContent - non-streaming - check json responseMimeType", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {

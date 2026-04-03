@@ -1,5 +1,5 @@
-/* eslint-disable no-instanceof/no-instanceof */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable no-instanceof/no-instanceof */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { InteropZodObject } from "@langchain/core/utils/types";
 
 import {
@@ -187,7 +187,9 @@ export class ReactAgent<
     >,
     defaultConfig?: RunnableConfig
   ) {
-    this.#defaultConfig = defaultConfig ?? {};
+    this.#defaultConfig = mergeConfigs(defaultConfig ?? {}, {
+      metadata: { ls_integration: "langchain_create_agent" },
+    });
     if (options.name) {
       this.#defaultConfig = mergeConfigs(this.#defaultConfig, {
         metadata: { lc_agent_name: options.name },
@@ -232,11 +234,14 @@ export class ReactAgent<
      * Create a schema that merges agent base schema with middleware state schemas
      * Using Zod with withLangGraph ensures LangGraph Studio gets proper metadata
      */
+    const hasDynamicStructuredResponse = Boolean(
+      this.options.middleware?.some((middleware) => middleware.wrapModelCall)
+    );
     const { state, input, output } = createAgentState<
       Types["State"],
       Types["Middleware"]
     >(
-      this.options.responseFormat !== undefined,
+      this.options.responseFormat !== undefined || hasDynamicStructuredResponse,
       this.options.stateSchema as Types["State"],
       this.options.middleware as Types["Middleware"]
     );
@@ -919,6 +924,14 @@ export class ReactAgent<
         (call) => !toolMessages.some((m) => m.tool_call_id === call.id)
       );
       if (pendingToolCalls && pendingToolCalls.length > 0) {
+        /**
+         * v1: route the full message to the ToolNode; it filters already-processed
+         * calls internally and runs the remaining ones via Promise.all.
+         * v2: dispatch each pending call as a separate Send task.
+         */
+        if (this.#toolBehaviorVersion === "v1") {
+          return TOOLS_NODE_NAME;
+        }
         return pendingToolCalls.map(
           (toolCall) =>
             new Send(TOOLS_NODE_NAME, { ...state, lg_tool_call: toolCall })
@@ -963,10 +976,29 @@ export class ReactAgent<
       }
 
       /**
-       * For routing from afterModel nodes, always use simple string paths
-       * The Send API is handled at the model_request node level
+       * v1: route the full AIMessage to a single ToolNode invocation so all
+       * tool calls run concurrently via Promise.all.
+       *
+       * v2: dispatch each regular tool call as a separate Send task, matching
+       * the behaviour of #createModelRouter when no afterModel middleware is
+       * present.
        */
-      return TOOLS_NODE_NAME;
+      if (this.#toolBehaviorVersion === "v1") {
+        return TOOLS_NODE_NAME;
+      }
+
+      const regularToolCalls = (lastMessage as AIMessage).tool_calls!.filter(
+        (toolCall) => !toolCall.name.startsWith("extract-")
+      );
+
+      if (regularToolCalls.length === 0) {
+        return exitNode;
+      }
+
+      return regularToolCalls.map(
+        (toolCall) =>
+          new Send(TOOLS_NODE_NAME, { ...state, lg_tool_call: toolCall })
+      );
     };
   }
 
@@ -1385,7 +1417,7 @@ export class ReactAgent<
   /**
    * @internal
    */
-  getSubgraphAsync(namespace?: string, recurse?: boolean) {
+  getSubgraphsAsync(namespace?: string, recurse?: boolean) {
     return this.#graph.getSubgraphsAsync(namespace, recurse) as never;
   }
   /**

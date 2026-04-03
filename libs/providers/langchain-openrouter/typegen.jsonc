@@ -2,15 +2,15 @@
   "$schema": "https://hntrl.github.io/sparktype/schema.json",
   "specs": {
     "openrouter": {
-      "url": "https://openrouter.ai/openapi.json"
-    }
+      "url": "https://openrouter.ai/openapi.json",
+    },
   },
   "outputs": [
     {
       "path": "./src/api-types.ts",
       "format": "typescript",
       "options": {
-        "widenEnums": true
+        "widenEnums": true,
       },
       "contents": [
         {
@@ -66,10 +66,10 @@
             "openrouter:ChatStreamingResponseChunk",
 
             // --- Error ---
-            "openrouter:ChatError"
-          ]
-        }
-      ]
-    }
-  ]
+            "openrouter:ChatError",
+          ],
+        },
+      ],
+    },
+  ],
 }
