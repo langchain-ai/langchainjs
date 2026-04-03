@@ -1,5 +1,11 @@
 # @langchain/google
 
+## 0.1.10
+
+### Patch Changes
+
+- [#10550](https://github.com/langchain-ai/langchainjs/pull/10550) [`9781bff`](https://github.com/langchain-ai/langchainjs/commit/9781bff525bffdd3b6a75adfa8a30fdb4bfc505e) Thanks [@muhammadosama984](https://github.com/muhammadosama984)! - fix(google): align `mediaResolution` with Gemini scalar values and support `detail` alias mapping (`low`/`high`/`auto`) for media prompts.
+
 ## 0.1.9
 
 ### Patch Changes

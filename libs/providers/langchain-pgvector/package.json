@@ -1,6 +1,6 @@
 {
   "name": "@langchain/pgvector",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "LangChain.js integration for PostgreSQL pgvector",
   "author": "LangChain",
   "license": "MIT",

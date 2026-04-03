@@ -1,5 +1,14 @@
 # @langchain/openai
 
+## 1.4.2
+
+### Patch Changes
+
+- [#10614](https://github.com/langchain-ai/langchainjs/pull/10614) [`d6bf4fc`](https://github.com/langchain-ai/langchainjs/commit/d6bf4fc91b2c2eb931bf3bc7606b1817632bc8c1) Thanks [@colifran](https://github.com/colifran)! - feat(openai): imput placeholder filenames for openai file inputs
+
+- Updated dependencies [[`d3d0922`](https://github.com/langchain-ai/langchainjs/commit/d3d0922c24afcd3006fb94dcadd3ebe08fbf2383)]:
+  - @langchain/core@1.1.39
+
 ## 1.4.1
 
 ### Patch Changes

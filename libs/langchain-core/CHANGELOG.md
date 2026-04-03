@@ -1,5 +1,11 @@
 # @langchain/core
 
+## 1.1.39
+
+### Patch Changes
+
+- [#10430](https://github.com/langchain-ai/langchainjs/pull/10430) [`d3d0922`](https://github.com/langchain-ai/langchainjs/commit/d3d0922c24afcd3006fb94dcadd3ebe08fbf2383) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(langchain): support for browser tools
+
 ## 1.1.38
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @langchain/groq
 
+## 1.2.0
+
+### Minor Changes
+
+- [#10603](https://github.com/langchain-ai/langchainjs/pull/10603) [`66effb0`](https://github.com/langchain-ai/langchainjs/commit/66effb028baf5c923501801c989c7377efb8b77a) Thanks [@dependabot](https://github.com/apps/dependabot)! - chore(deps): bump groq-sdk from 0.37.0 to 1.1.2
+
 ## 1.1.5
 
 ### Patch Changes
