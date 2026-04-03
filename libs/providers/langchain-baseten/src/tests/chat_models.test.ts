@@ -232,9 +232,7 @@ describe("ChatBaseten", () => {
         basetenApiKey: TEST_API_KEY,
       });
 
-      const params = model.getLsParams(
-        {} as ChatBaseten["ParsedCallOptions"]
-      );
+      const params = model.getLsParams({} as ChatBaseten["ParsedCallOptions"]);
 
       expect(params.ls_provider).toBe("baseten");
       expect(params.ls_model_name).toBe(TEST_MODEL);
