@@ -315,16 +315,13 @@ test("Test ChatBedrockConverse streams tool call identity via callbacks", async 
     });
 
     const tools = [
-      tool(
-        (_input) => "Hello",
-        {
-          name: "get_weather",
-          description: "Get the weather",
-          schema: z.object({
-            location: z.string().describe("Location to get the weather for"),
-          }),
-        }
-      ),
+      tool((_input) => "Hello", {
+        name: "get_weather",
+        description: "Get the weather",
+        schema: z.object({
+          location: z.string().describe("Location to get the weather for"),
+        }),
+      }),
     ];
     const modelWithTools = model.bindTools(tools);
     const result = await modelWithTools.invoke([
@@ -339,7 +336,8 @@ test("Test ChatBedrockConverse streams tool call identity via callbacks", async 
     expect(
       streamedToolCallChunks.some((chunk) =>
         chunk.tool_call_chunks?.some(
-          (toolChunk) => toolChunk.id !== undefined && toolChunk.name !== undefined
+          (toolChunk) =>
+            toolChunk.id !== undefined && toolChunk.name !== undefined
         )
       )
     ).toBe(true);
