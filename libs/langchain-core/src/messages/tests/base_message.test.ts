@@ -140,9 +140,71 @@ test("mergeContent merges single block object with string second content", () =>
     singleBlock as unknown as MessageContent,
     " world"
   );
-  expect(result).toEqual([
-    { type: "text", text: "Hello" },
-    { type: "text", text: " world" },
+  expect(result).toEqual([{ type: "text", text: "Hello world" }]);
+});
+
+test("AIMessageChunk.concat merges text chunks after non-text block", () => {
+  const chunks: AIMessageChunk[] = [
+    new AIMessageChunk({ content: "Sure, " }),
+    new AIMessageChunk({ content: "here you go." }),
+    new AIMessageChunk({
+      content: [
+        {
+          type: "executableCode",
+          executableCode: {
+            language: "PYTHON",
+            code: "print(42)",
+          },
+        },
+      ],
+    }),
+    new AIMessageChunk({ content: "The result " }),
+    new AIMessageChunk({ content: "is 42." }),
+  ];
+
+  const [first, ...rest] = chunks;
+  const collected = rest.reduce(
+    (acc, chunk) => acc.concat(chunk),
+    first!
+  );
+
+  expect(collected.content).toHaveLength(3);
+  expect(collected.content).toEqual([
+    { type: "text", text: "Sure, here you go." },
+    {
+      type: "executableCode",
+      executableCode: { language: "PYTHON", code: "print(42)" },
+    },
+    { type: "text", text: "The result is 42." },
+  ]);
+});
+
+test("AIMessageChunk.concat merges text after inlineData block", () => {
+  const chunks: AIMessageChunk[] = [
+    new AIMessageChunk({ content: "Before " }),
+    new AIMessageChunk({
+      content: [
+        {
+          type: "inlineData",
+          inlineData: { mimeType: "image/png", data: "abc" },
+        },
+      ],
+    }),
+    new AIMessageChunk({ content: "After " }),
+    new AIMessageChunk({ content: "image." }),
+  ];
+
+  const [first, ...rest] = chunks;
+  const collected = rest.reduce(
+    (acc, chunk) => acc.concat(chunk),
+    first!
+  );
+
+  expect(collected.content).toHaveLength(3);
+  expect(collected.content).toEqual([
+    { type: "text", text: "Before " },
+    { type: "inlineData", inlineData: { mimeType: "image/png", data: "abc" } },
+    { type: "text", text: "After image." },
   ]);
 });
 
