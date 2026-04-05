@@ -1,9 +1,26 @@
 import { z } from "zod/v3";
 import { sha256 } from "@langchain/core/utils/hash";
-import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
+import {
+  AIMessage,
+  HumanMessage,
+  ToolMessage,
+  type MessageContent,
+} from "@langchain/core/messages";
 import type { InferInteropZodInput } from "@langchain/core/utils/types";
 
 import { createMiddleware } from "../middleware.js";
+
+/**
+ * Type for the redaction map that stores original values by ID
+ */
+export type RedactionMap = Record<string, string>;
+
+/**
+ * Generate a unique ID for a redaction
+ */
+function generateRedactionId(): string {
+  return Math.random().toString(36).substring(2, 11);
+}
 
 /**
  * Represents a detected PII match in content
@@ -29,7 +46,7 @@ export interface PIIMatch {
 export class PIIDetectionError extends Error {
   constructor(
     public readonly piiType: string,
-    public readonly matches: PIIMatch[]
+    public readonly matches: PIIMatch[],
   ) {
     super(`PII detected: ${piiType} found ${matches.length} occurrence(s)`);
     this.name = "PIIDetectionError";
@@ -40,6 +57,28 @@ export class PIIDetectionError extends Error {
  * Strategy for handling detected PII
  */
 export type PIIStrategy = "block" | "redact" | "mask" | "hash";
+
+/**
+ * Options for PII middleware.
+ *
+ * When `reversible: true` (requires `strategy: "redact"`), input redaction,
+ * output restoration, and tool result redaction are always enabled. The
+ * `applyToInput`, `applyToOutput`, and `applyToToolResults` options are
+ * ignored in reversible mode.
+ */
+export type PIIOptions = {
+  /** Custom detector function, RegExp, or regex pattern string. */
+  detector?: Detector;
+  /** Whether to check user messages before model call. Defaults to `true`. */
+  applyToInput?: boolean;
+  /** Whether to check AI messages after model call. Defaults to `false`. */
+  applyToOutput?: boolean;
+  /** Whether to check tool result messages after tool execution. Defaults to `false`. Ignored when `reversible: true`. */
+  applyToToolResults?: boolean;
+} & (
+  | { strategy?: PIIStrategy; reversible?: never }
+  | { strategy: "redact"; reversible?: boolean }
+);
 
 /**
  * Built-in PII types
@@ -73,16 +112,21 @@ export interface RedactionRuleConfig {
    * Custom detector function or regex pattern string
    */
   detector?: Detector;
+  /**
+   * Whether redactions are reversible (only applies to "redact" strategy).
+   * When true, a redaction map is created to track original values.
+   */
+  reversible?: boolean;
 }
 
 /**
  * Resolved redaction rule with a concrete detector function
  */
-export interface ResolvedRedactionRule {
+export type ResolvedRedactionRule = {
   piiType: string;
   strategy: PIIStrategy;
   detector: PIIDetector;
-}
+} & ({ reversible: true; redactionMap: RedactionMap } | { reversible?: false });
 
 /**
  * Email detection regex pattern
@@ -255,7 +299,7 @@ const BUILT_IN_DETECTORS: Record<BuiltInPIIType, PIIDetector> = {
  * Resolve a redaction rule to a concrete detector function
  */
 export function resolveRedactionRule(
-  config: RedactionRuleConfig
+  config: RedactionRuleConfig,
 ): ResolvedRedactionRule {
   let detector: PIIDetector;
 
@@ -298,11 +342,21 @@ export function resolveRedactionRule(
     if (!BUILT_IN_DETECTORS[builtInType]) {
       throw new Error(
         `Unknown PII type: ${config.piiType}. Must be one of: ${Object.keys(
-          BUILT_IN_DETECTORS
-        ).join(", ")}, or provide a custom detector.`
+          BUILT_IN_DETECTORS,
+        ).join(", ")}, or provide a custom detector.`,
       );
     }
     detector = BUILT_IN_DETECTORS[builtInType];
+  }
+
+  if (config.reversible && config.strategy === "redact") {
+    return {
+      piiType: config.piiType,
+      strategy: config.strategy,
+      detector,
+      reversible: true,
+      redactionMap: {},
+    };
   }
 
   return {
@@ -318,7 +372,7 @@ export function resolveRedactionRule(
 function applyRedactStrategy(
   content: string,
   matches: PIIMatch[],
-  piiType: string
+  piiType: string,
 ): string {
   let result = content;
   // Process matches in reverse order to preserve indices
@@ -332,12 +386,35 @@ function applyRedactStrategy(
 }
 
 /**
+ * Apply reversible redact strategy: replace with [REDACTED_TYPE_ID] and track originals
+ */
+function applyReversibleRedactStrategy(
+  content: string,
+  matches: PIIMatch[],
+  piiType: string,
+  redactionMap: RedactionMap,
+): string {
+  let result = content;
+  const normalizedType = piiType.toUpperCase();
+  // Process matches in reverse order to preserve indices
+  for (let i = matches.length - 1; i >= 0; i--) {
+    const match = matches[i];
+    const id = generateRedactionId();
+    redactionMap[id] = match.text;
+    const replacement = `[REDACTED_${normalizedType}_${id}]`;
+    result =
+      result.slice(0, match.start) + replacement + result.slice(match.end);
+  }
+  return result;
+}
+
+/**
  * Apply mask strategy: partially mask PII (show last few characters)
  */
 function applyMaskStrategy(
   content: string,
   matches: PIIMatch[],
-  piiType: string
+  piiType: string,
 ): string {
   let result = content;
   // Process matches in reverse order to preserve indices
@@ -363,7 +440,7 @@ function applyMaskStrategy(
       // Default: show last 4 characters
       const visibleChars = Math.min(4, text.length);
       masked = `${"*".repeat(
-        Math.max(0, text.length - visibleChars)
+        Math.max(0, text.length - visibleChars),
       )}${text.slice(-visibleChars)}`;
     }
 
@@ -378,7 +455,7 @@ function applyMaskStrategy(
 function applyHashStrategy(
   content: string,
   matches: PIIMatch[],
-  piiType: string
+  piiType: string,
 ): string {
   let result = content;
   // Process matches in reverse order to preserve indices
@@ -393,29 +470,157 @@ function applyHashStrategy(
 }
 
 /**
+ * Restore reversible redactions by replacing placeholders with original values
+ */
+export function restoreRedactedText(
+  content: string,
+  redactionMap: RedactionMap,
+): string {
+  return content.replace(
+    /\[REDACTED_[A-Z_]+_([a-z0-9]+)\]/g,
+    (match, id: string) => {
+      return redactionMap[id] ?? match;
+    },
+  );
+}
+
+/**
+ * Recursively walk a value and restore redacted placeholders in every string
+ * leaf. Returns `{ value, changed }` where `changed` indicates whether any
+ * replacement occurred. Non-string primitives are returned as-is.
+ */
+function restoreRedactedValue(
+  value: unknown,
+  redactionMap: RedactionMap,
+): { value: unknown; changed: boolean } {
+  if (typeof value === "string") {
+    const restored = restoreRedactedText(value, redactionMap);
+    return restored !== value
+      ? { value: restored, changed: true }
+      : { value, changed: false };
+  }
+
+  if (Array.isArray(value)) {
+    let anyChanged = false;
+    const result = value.map((item) => {
+      const { value: restored, changed } = restoreRedactedValue(
+        item,
+        redactionMap,
+      );
+      if (changed) anyChanged = true;
+      return restored;
+    });
+    return anyChanged
+      ? { value: result, changed: true }
+      : { value, changed: false };
+  }
+
+  if (value !== null && typeof value === "object") {
+    let anyChanged = false;
+    const result: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value)) {
+      const { value: restored, changed } = restoreRedactedValue(
+        v,
+        redactionMap,
+      );
+      result[k] = restored;
+      if (changed) anyChanged = true;
+    }
+    return anyChanged
+      ? { value: result, changed: true }
+      : { value, changed: false };
+  }
+
+  // number, boolean, null, undefined — pass through
+  return { value, changed: false };
+}
+
+/**
+ * Restore reversible redactions in an AI message's content and tool call arguments.
+ * Returns a new AIMessage with restored values if any changes were made.
+ *
+ * Handles both string and array (multimodal) content by recursively walking
+ * all string leaves. Tool call arguments are walked recursively rather than
+ * via JSON serialisation, which avoids breakage when original PII values
+ * contain characters that are special in JSON (`"`, `\`, newlines, etc.).
+ */
+export function restoreRedactedMessage(
+  message: AIMessage,
+  redactionMap: RedactionMap | undefined,
+): { message: AIMessage; changed: boolean } {
+  if (!redactionMap || Object.keys(redactionMap).length === 0) {
+    return { message, changed: false };
+  }
+
+  // --- content ---
+  const { value: restoredContent, changed: contentChanged } =
+    restoreRedactedValue(message.content, redactionMap);
+
+  // --- tool calls ---
+  let toolCalls = message.tool_calls;
+  let toolCallsChanged = false;
+  if (toolCalls && toolCalls.length > 0) {
+    const newToolCalls = toolCalls.map((tc) => {
+      const { value: restoredArgs, changed } = restoreRedactedValue(
+        tc.args,
+        redactionMap,
+      );
+      if (!changed) return tc;
+      toolCallsChanged = true;
+      return { ...tc, args: restoredArgs as Record<string, unknown> };
+    });
+    if (toolCallsChanged) {
+      toolCalls = newToolCalls;
+    }
+  }
+
+  if (!contentChanged && !toolCallsChanged) {
+    return { message, changed: false };
+  }
+
+  return {
+    message: new AIMessage({
+      content: restoredContent as MessageContent,
+      id: message.id,
+      name: message.name,
+      tool_calls: toolCalls,
+    }),
+    changed: true,
+  };
+}
+
+/**
  * Apply strategy to content based on matches
  */
 export function applyStrategy(
   content: string,
   matches: PIIMatch[],
-  strategy: PIIStrategy,
-  piiType: string
+  rule: ResolvedRedactionRule,
 ): string {
   if (matches.length === 0) {
     return content;
   }
 
-  switch (strategy) {
+  switch (rule.strategy) {
     case "block":
-      throw new PIIDetectionError(piiType, matches);
-    case "redact":
-      return applyRedactStrategy(content, matches, piiType);
+      throw new PIIDetectionError(rule.piiType, matches);
+    case "redact": {
+      if (rule.reversible) {
+        return applyReversibleRedactStrategy(
+          content,
+          matches,
+          rule.piiType,
+          rule.redactionMap,
+        );
+      }
+      return applyRedactStrategy(content, matches, rule.piiType);
+    }
     case "mask":
-      return applyMaskStrategy(content, matches, piiType);
+      return applyMaskStrategy(content, matches, rule.piiType);
     case "hash":
-      return applyHashStrategy(content, matches, piiType);
+      return applyHashStrategy(content, matches, rule.piiType);
     default:
-      throw new Error(`Unknown strategy: ${strategy}`);
+      throw new Error(`Unknown strategy: ${rule.strategy}`);
   }
 }
 
@@ -444,19 +649,15 @@ export type PIIMiddlewareConfig = InferInteropZodInput<typeof contextSchema>;
  */
 function processContent(
   content: string,
-  rule: ResolvedRedactionRule
+  rule: ResolvedRedactionRule,
 ): { content: string; matches: PIIMatch[] } {
   const matches = rule.detector(content);
   if (matches.length === 0) {
     return { content, matches: [] };
   }
 
-  const sanitized = applyStrategy(
-    content,
-    matches,
-    rule.strategy,
-    rule.piiType
-  );
+  const sanitized = applyStrategy(content, matches, rule);
+
   return { content: sanitized, matches };
 }
 
@@ -477,7 +678,8 @@ function processContent(
  *
  * Strategies:
  * - `block`: Raise an exception when PII is detected
- * - `redact`: Replace PII with `[REDACTED_TYPE]` placeholders
+ * - `redact`: Replace PII with `[REDACTED_TYPE]` placeholders. With `reversible: true`,
+ *   uses unique IDs (`[REDACTED_TYPE_id]`) and restores original values in model output.
  * - `mask`: Partially mask PII (e.g., `****-****-****-1234` for credit card)
  * - `hash`: Replace PII with deterministic hash (e.g., `<email_hash:a1b2c3d4>`)
  *
@@ -493,9 +695,14 @@ function processContent(
  * @param options - Configuration options
  * @param options.strategy - How to handle detected PII. Defaults to `"redact"`.
  * @param options.detector - Custom detector function or regex pattern string. If not provided, uses built-in detector for the `piiType`.
+ * @param options.reversible - Only available with `strategy: "redact"`. When `true`, redactions use
+ *   unique IDs (e.g., `[REDACTED_EMAIL_abc123]`) and original values are restored in the model's
+ *   response (content and tool call arguments). Input redaction, output restoration, and tool result
+ *   redaction are always enabled; `applyToInput`, `applyToOutput`, and `applyToToolResults` are ignored.
  * @param options.applyToInput - Whether to check user messages before model call. Defaults to `true`.
  * @param options.applyToOutput - Whether to check AI messages after model call. Defaults to `false`.
- * @param options.applyToToolResults - Whether to check tool result messages after tool execution. Defaults to `false`.
+ * @param options.applyToToolResults - Whether to check tool result messages after tool execution.
+ *   Defaults to `false`. Ignored when `reversible: true`.
  *
  * @returns Middleware instance for use with `createAgent`
  *
@@ -514,6 +721,38 @@ function processContent(
  *     piiMiddleware("email", { strategy: "redact" }),
  *   ],
  * });
+ * ```
+ *
+ * @example Reversible redaction for tool-calling agents
+ * ```typescript
+ * // LLM never sees PII, but tools receive real data
+ * const agent = createAgent({
+ *   model: "openai:gpt-4",
+ *   tools: [lookupUserByEmail],
+ *   middleware: [
+ *     piiMiddleware("email", { strategy: "redact", reversible: true }),
+ *   ],
+ * });
+ * // User: "Look up alice@company.org"
+ * // LLM sees: "Look up [REDACTED_EMAIL_abc123]"
+ * // LLM calls: lookupUserByEmail({ email: "[REDACTED_EMAIL_abc123]" })
+ * // Tool receives: lookupUserByEmail({ email: "alice@company.org" })
+ * ```
+ *
+ * @example Reversible redaction with a plain LLM (no agent)
+ * ```typescript
+ * import { resolveRedactionRule, applyStrategy, restoreRedactedText } from "langchain";
+ *
+ * const rule = resolveRedactionRule({
+ *   piiType: "email",
+ *   strategy: "redact",
+ *   reversible: true,
+ * });
+ *
+ * const input = "Contact alice@company.org";
+ * const redacted = applyStrategy(input, rule.detector(input), rule);
+ * const response = await llm.invoke(redacted);
+ * const resolved = restoreRedactedText(response, rule.redactionMap);
  * ```
  *
  * @example Different strategies for different PII types
@@ -545,33 +784,41 @@ function processContent(
  */
 export function piiMiddleware(
   piiType: BuiltInPIIType | string,
-  options: {
-    strategy?: PIIStrategy;
-    detector?: Detector;
-    applyToInput?: boolean;
-    applyToOutput?: boolean;
-    applyToToolResults?: boolean;
-  } = {}
+  options: PIIOptions = {},
 ) {
   const { strategy = "redact", detector } = options;
-  const resolvedRule = resolveRedactionRule({
+  const reversible =
+    "reversible" in options ? (options.reversible ?? false) : false;
+  const rule = resolveRedactionRule({
     piiType,
     strategy,
     detector,
+    reversible,
   });
 
-  const middlewareName = `PIIMiddleware[${resolvedRule.piiType}]`;
+  const middlewareName = `PIIMiddleware[${rule.piiType}]`;
 
   return createMiddleware({
     name: middlewareName,
     contextSchema,
+    afterAgent: async () => {
+      // Clear the redaction map at the end of each invocation to minimize
+      // how long sensitive PII values remain in memory.
+      if (rule.reversible) {
+        for (const key of Object.keys(rule.redactionMap)) {
+          delete rule.redactionMap[key];
+        }
+      }
+    },
     beforeModel: async (state, runtime) => {
-      const applyToInput =
-        runtime.context.applyToInput ?? options.applyToInput ?? true;
-      const applyToToolResults =
-        runtime.context.applyToToolResults ??
-        options.applyToToolResults ??
-        false;
+      const applyToInput = reversible
+        ? true
+        : (runtime.context.applyToInput ?? options.applyToInput ?? true);
+      const applyToToolResults = reversible
+        ? true
+        : (runtime.context.applyToToolResults ??
+          options.applyToToolResults ??
+          false);
 
       if (!applyToInput && !applyToToolResults) {
         return;
@@ -602,7 +849,7 @@ export function piiMiddleware(
             const content = String(lastUserMsg.content);
             const { content: newContent, matches } = processContent(
               content,
-              resolvedRule
+              rule,
             );
 
             if (matches.length > 0) {
@@ -640,7 +887,7 @@ export function piiMiddleware(
               const content = String(msg.content);
               const { content: newContent, matches } = processContent(
                 content,
-                resolvedRule
+                rule,
               );
 
               if (matches.length > 0) {
@@ -664,10 +911,10 @@ export function piiMiddleware(
       return;
     },
     afterModel: async (state, runtime) => {
-      const applyToOutput =
-        runtime.context.applyToOutput ?? options.applyToOutput ?? false;
-
-      if (!applyToOutput) {
+      const applyToOutput = reversible
+        ? true
+        : (runtime.context.applyToOutput ?? options.applyToOutput ?? false);
+      if (!applyToOutput && !rule.reversible) {
         return;
       }
 
@@ -688,33 +935,48 @@ export function piiMiddleware(
         }
       }
 
-      if (lastAiIdx === null || !lastAiMsg || !lastAiMsg.content) {
+      if (lastAiIdx === null || !lastAiMsg) {
         return;
       }
 
-      // Detect PII in message content
-      const content = String(lastAiMsg.content);
-      const { content: newContent, matches } = processContent(
-        content,
-        resolvedRule
-      );
+      if (rule.reversible) {
+        // Restore reversible redactions in content and tool call args
+        const { message: resolved, changed } = restoreRedactedMessage(
+          lastAiMsg,
+          rule.redactionMap,
+        );
 
-      if (matches.length === 0) {
-        return;
+        if (!changed) {
+          return;
+        }
+
+        const newMessages = [...messages];
+        newMessages[lastAiIdx] = resolved;
+        return { messages: newMessages };
       }
 
-      // Create updated message
-      const updatedMessage = new AIMessage({
-        content: newContent,
-        id: lastAiMsg.id,
-        name: lastAiMsg.name,
-        tool_calls: lastAiMsg.tool_calls,
-      });
+      // Scan for new PII in output content
+      if (applyToOutput && lastAiMsg.content) {
+        const content = String(lastAiMsg.content);
+        const { content: newContent, matches } = processContent(content, rule);
 
-      // Return updated messages
-      const newMessages = [...messages];
-      newMessages[lastAiIdx] = updatedMessage;
-      return { messages: newMessages };
+        if (matches.length === 0) {
+          return;
+        }
+
+        const updatedMessage = new AIMessage({
+          content: newContent,
+          id: lastAiMsg.id,
+          name: lastAiMsg.name,
+          tool_calls: lastAiMsg.tool_calls,
+        });
+
+        const newMessages = [...messages];
+        newMessages[lastAiIdx] = updatedMessage;
+        return { messages: newMessages };
+      }
+
+      return;
     },
   });
 }
