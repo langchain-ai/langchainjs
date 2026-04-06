@@ -12,6 +12,7 @@
     { "path": "../providers/langchain-anthropic" },
     { "path": "../providers/langchain-aws" },
     { "path": "../providers/langchain-cloudflare" },
+
     { "path": "../providers/langchain-deepseek" },
     { "path": "../providers/langchain-fireworks" },
     { "path": "../providers/langchain-google-cloud-sql-pg" },

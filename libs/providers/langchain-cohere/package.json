@@ -1,7 +1,7 @@
 {
-  "name": "@langchain/pgvector",
-  "version": "0.0.1",
-  "description": "LangChain.js integration for PostgreSQL pgvector",
+  "name": "@langchain/cohere",
+  "version": "1.0.4",
+  "description": "Cohere integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
   "type": "module",
@@ -12,9 +12,9 @@
     "type": "git",
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
-  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/community/langchain-pgvector/",
+  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/community/langchain-cohere/",
   "scripts": {
-    "build": "turbo build:compile --filter @langchain/pgvector --output-logs new-only",
+    "build": "turbo build:compile --filter @langchain/cohere --output-logs new-only",
     "build:compile": "tsdown",
     "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
@@ -24,27 +24,33 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:int": "vitest run --mode int",
+    "test:standard:unit": "vitest run --mode standard-unit",
+    "test:standard:int": "vitest run --mode standard-int",
+    "test:standard": "pnpm test:standard:unit && pnpm test:standard:int",
     "format": "prettier --write \"src\"",
     "format:check": "prettier --check \"src\""
   },
   "dependencies": {
-    "pg": "^8.11.0"
+    "cohere-ai": "^7.14.0",
+    "uuid": "^10.0.0"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0"
+    "@langchain/core": "workspace:^"
   },
   "devDependencies": {
+    "@cfworker/json-schema": "^4.1.1",
     "@langchain/core": "workspace:^",
+    "@langchain/standard-tests": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
-    "@types/pg": "^8",
     "@vitest/coverage-v8": "^3.2.4",
-    "dotenv": "^16.3.1",
+    "dotenv": "^16.6.1",
     "dpdm": "^3.14.0",
     "eslint": "^9.34.0",
     "prettier": "^3.5.0",
     "typescript": "~5.8.3",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "zod": "^3.25.76"
   },
   "publishConfig": {
     "access": "public"

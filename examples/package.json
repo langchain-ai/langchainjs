@@ -33,6 +33,7 @@
     "@langchain/aws": "workspace:*",
     "@langchain/classic": "workspace:*",
     "@langchain/cloudflare": "workspace:*",
+    "@langchain/cohere": "workspace:*",
     "@langchain/core": "workspace:^",
     "@langchain/deepseek": "workspace:*",
     "@langchain/fireworks": "workspace:*",
