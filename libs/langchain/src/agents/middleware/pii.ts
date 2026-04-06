@@ -64,7 +64,7 @@ export type PIIStrategy = "block" | "redact" | "mask" | "hash";
  * When `reversible: true` (requires `strategy: "redact"`), input redaction,
  * output restoration, and tool result redaction are always enabled. The
  * `applyToInput`, `applyToOutput`, and `applyToToolResults` options are
- * ignored in reversible mode.
+ * ignored / not applicable in reversible mode.
  */
 export type PIIOptions = {
   /** Custom detector function, RegExp, or regex pattern string. */
@@ -73,11 +73,18 @@ export type PIIOptions = {
   applyToInput?: boolean;
   /** Whether to check AI messages after model call. Defaults to `false`. */
   applyToOutput?: boolean;
-  /** Whether to check tool result messages after tool execution. Defaults to `false`. Ignored when `reversible: true`. */
+  /** Whether to check tool result messages after tool execution. Defaults to `false`. */
   applyToToolResults?: boolean;
 } & (
-  | { strategy?: PIIStrategy; reversible?: never }
-  | { strategy: "redact"; reversible?: boolean }
+  | { strategy?: Exclude<PIIStrategy, "redact"> }
+  | { strategy?: "redact"; reversible?: false }
+  | {
+      strategy?: "redact";
+      reversible: true;
+      applyToInput?: never;
+      applyToOutput?: never;
+      applyToToolResults?: never;
+    }
 );
 
 /**
@@ -126,7 +133,7 @@ export type ResolvedRedactionRule = {
   piiType: string;
   strategy: PIIStrategy;
   detector: PIIDetector;
-} & ({ reversible: true; redactionMap: RedactionMap } | { reversible?: false });
+} & ({ reversible?: false } | { reversible: true; redactionMap: RedactionMap });
 
 /**
  * Email detection regex pattern
@@ -698,7 +705,7 @@ function processContent(
  * @param options.reversible - Only available with `strategy: "redact"`. When `true`, redactions use
  *   unique IDs (e.g., `[REDACTED_EMAIL_abc123]`) and original values are restored in the model's
  *   response (content and tool call arguments). Input redaction, output restoration, and tool result
- *   redaction are always enabled; `applyToInput`, `applyToOutput`, and `applyToToolResults` are ignored.
+ *   redaction are always enabled; `applyToInput`, `applyToOutput`, and `applyToToolResults` are ignored / not applicable.
  * @param options.applyToInput - Whether to check user messages before model call. Defaults to `true`.
  * @param options.applyToOutput - Whether to check AI messages after model call. Defaults to `false`.
  * @param options.applyToToolResults - Whether to check tool result messages after tool execution.
