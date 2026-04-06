@@ -46,7 +46,7 @@ export interface PIIMatch {
 export class PIIDetectionError extends Error {
   constructor(
     public readonly piiType: string,
-    public readonly matches: PIIMatch[],
+    public readonly matches: PIIMatch[]
   ) {
     super(`PII detected: ${piiType} found ${matches.length} occurrence(s)`);
     this.name = "PIIDetectionError";
@@ -306,7 +306,7 @@ const BUILT_IN_DETECTORS: Record<BuiltInPIIType, PIIDetector> = {
  * Resolve a redaction rule to a concrete detector function
  */
 export function resolveRedactionRule(
-  config: RedactionRuleConfig,
+  config: RedactionRuleConfig
 ): ResolvedRedactionRule {
   let detector: PIIDetector;
 
@@ -349,8 +349,8 @@ export function resolveRedactionRule(
     if (!BUILT_IN_DETECTORS[builtInType]) {
       throw new Error(
         `Unknown PII type: ${config.piiType}. Must be one of: ${Object.keys(
-          BUILT_IN_DETECTORS,
-        ).join(", ")}, or provide a custom detector.`,
+          BUILT_IN_DETECTORS
+        ).join(", ")}, or provide a custom detector.`
       );
     }
     detector = BUILT_IN_DETECTORS[builtInType];
@@ -379,7 +379,7 @@ export function resolveRedactionRule(
 function applyRedactStrategy(
   content: string,
   matches: PIIMatch[],
-  piiType: string,
+  piiType: string
 ): string {
   let result = content;
   // Process matches in reverse order to preserve indices
@@ -399,7 +399,7 @@ function applyReversibleRedactStrategy(
   content: string,
   matches: PIIMatch[],
   piiType: string,
-  redactionMap: RedactionMap,
+  redactionMap: RedactionMap
 ): string {
   let result = content;
   const normalizedType = piiType.toUpperCase();
@@ -421,7 +421,7 @@ function applyReversibleRedactStrategy(
 function applyMaskStrategy(
   content: string,
   matches: PIIMatch[],
-  piiType: string,
+  piiType: string
 ): string {
   let result = content;
   // Process matches in reverse order to preserve indices
@@ -447,7 +447,7 @@ function applyMaskStrategy(
       // Default: show last 4 characters
       const visibleChars = Math.min(4, text.length);
       masked = `${"*".repeat(
-        Math.max(0, text.length - visibleChars),
+        Math.max(0, text.length - visibleChars)
       )}${text.slice(-visibleChars)}`;
     }
 
@@ -462,7 +462,7 @@ function applyMaskStrategy(
 function applyHashStrategy(
   content: string,
   matches: PIIMatch[],
-  piiType: string,
+  piiType: string
 ): string {
   let result = content;
   // Process matches in reverse order to preserve indices
@@ -481,13 +481,13 @@ function applyHashStrategy(
  */
 export function restoreRedactedText(
   content: string,
-  redactionMap: RedactionMap,
+  redactionMap: RedactionMap
 ): string {
   return content.replace(
     /\[REDACTED_[A-Z_]+_([a-z0-9]+)\]/g,
     (match, id: string) => {
       return redactionMap[id] ?? match;
-    },
+    }
   );
 }
 
@@ -498,7 +498,7 @@ export function restoreRedactedText(
  */
 function restoreRedactedValue(
   value: unknown,
-  redactionMap: RedactionMap,
+  redactionMap: RedactionMap
 ): { value: unknown; changed: boolean } {
   if (typeof value === "string") {
     const restored = restoreRedactedText(value, redactionMap);
@@ -512,7 +512,7 @@ function restoreRedactedValue(
     const result = value.map((item) => {
       const { value: restored, changed } = restoreRedactedValue(
         item,
-        redactionMap,
+        redactionMap
       );
       if (changed) anyChanged = true;
       return restored;
@@ -528,7 +528,7 @@ function restoreRedactedValue(
     for (const [k, v] of Object.entries(value)) {
       const { value: restored, changed } = restoreRedactedValue(
         v,
-        redactionMap,
+        redactionMap
       );
       result[k] = restored;
       if (changed) anyChanged = true;
@@ -553,7 +553,7 @@ function restoreRedactedValue(
  */
 export function restoreRedactedMessage(
   message: AIMessage,
-  redactionMap: RedactionMap | undefined,
+  redactionMap: RedactionMap | undefined
 ): { message: AIMessage; changed: boolean } {
   if (!redactionMap || Object.keys(redactionMap).length === 0) {
     return { message, changed: false };
@@ -570,7 +570,7 @@ export function restoreRedactedMessage(
     const newToolCalls = toolCalls.map((tc) => {
       const { value: restoredArgs, changed } = restoreRedactedValue(
         tc.args,
-        redactionMap,
+        redactionMap
       );
       if (!changed) return tc;
       toolCallsChanged = true;
@@ -602,7 +602,7 @@ export function restoreRedactedMessage(
 export function applyStrategy(
   content: string,
   matches: PIIMatch[],
-  rule: ResolvedRedactionRule,
+  rule: ResolvedRedactionRule
 ): string {
   if (matches.length === 0) {
     return content;
@@ -617,7 +617,7 @@ export function applyStrategy(
           content,
           matches,
           rule.piiType,
-          rule.redactionMap,
+          rule.redactionMap
         );
       }
       return applyRedactStrategy(content, matches, rule.piiType);
@@ -656,7 +656,7 @@ export type PIIMiddlewareConfig = InferInteropZodInput<typeof contextSchema>;
  */
 function processContent(
   content: string,
-  rule: ResolvedRedactionRule,
+  rule: ResolvedRedactionRule
 ): { content: string; matches: PIIMatch[] } {
   const matches = rule.detector(content);
   if (matches.length === 0) {
@@ -791,7 +791,7 @@ function processContent(
  */
 export function piiMiddleware(
   piiType: BuiltInPIIType | string,
-  options: PIIOptions = {},
+  options: PIIOptions = {}
 ) {
   const { strategy = "redact", detector } = options;
   const reversible =
@@ -856,7 +856,7 @@ export function piiMiddleware(
             const content = String(lastUserMsg.content);
             const { content: newContent, matches } = processContent(
               content,
-              rule,
+              rule
             );
 
             if (matches.length > 0) {
@@ -894,7 +894,7 @@ export function piiMiddleware(
               const content = String(msg.content);
               const { content: newContent, matches } = processContent(
                 content,
-                rule,
+                rule
               );
 
               if (matches.length > 0) {
@@ -950,7 +950,7 @@ export function piiMiddleware(
         // Restore reversible redactions in content and tool call args
         const { message: resolved, changed } = restoreRedactedMessage(
           lastAiMsg,
-          rule.redactionMap,
+          rule.redactionMap
         );
 
         if (!changed) {

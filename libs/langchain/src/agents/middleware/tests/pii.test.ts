@@ -248,7 +248,7 @@ describe("Redact Strategy", () => {
 
     // Check that email was redacted in messages
     const humanMessage = result.messages.find((m) =>
-      HumanMessage.isInstance(m),
+      HumanMessage.isInstance(m)
     );
 
     expect(humanMessage).toBeDefined();
@@ -271,7 +271,7 @@ describe("Redact Strategy", () => {
     });
 
     const humanMessage = result.messages.find((m) =>
-      HumanMessage.isInstance(m),
+      HumanMessage.isInstance(m)
     );
     const content = String(humanMessage?.content);
     const redactedCount = (content.match(/\[REDACTED_EMAIL\]/g) || []).length;
@@ -297,7 +297,7 @@ describe("Mask Strategy", () => {
     });
 
     const humanMessage = result.messages.find((m) =>
-      HumanMessage.isInstance(m),
+      HumanMessage.isInstance(m)
     );
 
     const content = String(humanMessage?.content);
@@ -320,7 +320,7 @@ describe("Mask Strategy", () => {
     });
 
     const humanMessage = result.messages.find((m) =>
-      HumanMessage.isInstance(m),
+      HumanMessage.isInstance(m)
     );
     const content = String(humanMessage?.content);
     expect(content).toContain("0366"); // Last 4 digits visible
@@ -342,7 +342,7 @@ describe("Mask Strategy", () => {
     });
 
     const humanMessage = result.messages.find((m) =>
-      HumanMessage.isInstance(m),
+      HumanMessage.isInstance(m)
     );
     const content = String(humanMessage?.content);
     expect(content).toContain("*********.100"); // Last octet visible
@@ -366,7 +366,7 @@ describe("Hash Strategy", () => {
     });
 
     const humanMessage = result.messages.find((m) =>
-      HumanMessage.isInstance(m),
+      HumanMessage.isInstance(m)
     );
     const content = String(humanMessage?.content);
     expect(content).toContain("<email_hash:");
@@ -393,10 +393,10 @@ describe("Hash Strategy", () => {
     });
 
     const humanMessage1 = result1.messages.find((m) =>
-      HumanMessage.isInstance(m),
+      HumanMessage.isInstance(m)
     );
     const humanMessage2 = result2.messages.find((m) =>
-      HumanMessage.isInstance(m),
+      HumanMessage.isInstance(m)
     );
 
     expect(String(humanMessage1?.content)).toBe(String(humanMessage2?.content));
@@ -417,7 +417,7 @@ describe("Block Strategy", () => {
     await expect(
       agent.invoke({
         messages: [new HumanMessage("Email: test@example.com")],
-      }),
+      })
     ).rejects.toThrow(PIIDetectionError);
   });
 
@@ -466,7 +466,7 @@ describe("PII Middleware Integration", () => {
     });
 
     const humanMessage = result.messages.find((m) =>
-      HumanMessage.isInstance(m),
+      HumanMessage.isInstance(m)
     );
     expect(String(humanMessage?.content)).toContain("[REDACTED_EMAIL]");
 
@@ -495,7 +495,7 @@ describe("PII Middleware Integration", () => {
     });
 
     const humanMessage = result.messages.find((m) =>
-      HumanMessage.isInstance(m),
+      HumanMessage.isInstance(m)
     );
     expect(String(humanMessage?.content)).toContain("test@example.com");
 
@@ -524,7 +524,7 @@ describe("PII Middleware Integration", () => {
     });
 
     const humanMessage = result.messages.find((m) =>
-      HumanMessage.isInstance(m),
+      HumanMessage.isInstance(m)
     );
     expect(String(humanMessage?.content)).toContain("[REDACTED_EMAIL]");
 
@@ -695,7 +695,7 @@ describe("PII Middleware Integration", () => {
     await expect(
       agent.invoke({
         messages: [new HumanMessage("Search for user")],
-      }),
+      })
     ).rejects.toThrow(PIIDetectionError);
   });
 
@@ -716,7 +716,7 @@ describe("PII Middleware Integration", () => {
     // Check that email was redacted in the stored messages
     const messages = result.messages;
     const hasRedactedEmail = messages.some((msg) =>
-      String(msg.content).includes("[REDACTED_EMAIL]"),
+      String(msg.content).includes("[REDACTED_EMAIL]")
     );
     expect(hasRedactedEmail).toBe(true);
   });
@@ -741,7 +741,7 @@ describe("Custom Detector", () => {
     });
 
     const humanMessage = result.messages.find((m) =>
-      HumanMessage.isInstance(m),
+      HumanMessage.isInstance(m)
     );
     expect(String(humanMessage?.content)).toContain("[REDACTED_API_KEY]");
   });
@@ -777,7 +777,7 @@ describe("Custom Detector", () => {
     });
 
     const humanMessage = result.messages.find((m) =>
-      HumanMessage.isInstance(m),
+      HumanMessage.isInstance(m)
     );
     expect(String(humanMessage?.content)).toContain("[REDACTED_CONFIDENTIAL]");
   });
@@ -819,7 +819,7 @@ describe("Multiple Middleware", () => {
     });
 
     const humanMessage = result.messages.find((m) =>
-      HumanMessage.isInstance(m),
+      HumanMessage.isInstance(m)
     );
     const content = String(humanMessage?.content);
 
@@ -885,7 +885,7 @@ describe("Multiple Middleware", () => {
     });
 
     const humanMessage = result.messages.find((m) =>
-      HumanMessage.isInstance(m),
+      HumanMessage.isInstance(m)
     );
     const content = String(humanMessage?.content);
 
@@ -961,7 +961,7 @@ describe("Reversible Redaction", () => {
     // afterModel restores the args
     assert(rule.reversible);
     const resolvedArgs = JSON.parse(
-      restoreRedactedText(toolCallArgs, rule.redactionMap),
+      restoreRedactedText(toolCallArgs, rule.redactionMap)
     );
 
     expect(resolvedArgs.email).toBe("alice@company.org");
@@ -1005,7 +1005,7 @@ describe("Reversible Redaction", () => {
     assert(rule.reversible);
     const { message: resolved, changed } = restoreRedactedMessage(
       aiMsg,
-      rule.redactionMap,
+      rule.redactionMap
     );
 
     expect(changed).toBe(true);
@@ -1043,10 +1043,10 @@ describe("Reversible Redaction", () => {
     });
 
     const humanMessage = result.messages.find((m) =>
-      HumanMessage.isInstance(m),
+      HumanMessage.isInstance(m)
     );
     expect(String(humanMessage?.content)).toMatch(
-      /\[REDACTED_EMAIL_[a-z0-9]+\]/,
+      /\[REDACTED_EMAIL_[a-z0-9]+\]/
     );
     expect(String(humanMessage?.content)).not.toContain("test@example.com");
   });
@@ -1074,10 +1074,10 @@ describe("Reversible Redaction — Agent Integration", () => {
 
     // Input should be redacted with unique ID
     const humanMessage = result.messages.find((m) =>
-      HumanMessage.isInstance(m),
+      HumanMessage.isInstance(m)
     );
     expect(String(humanMessage?.content)).toMatch(
-      /\[REDACTED_EMAIL_[a-z0-9]+\]/,
+      /\[REDACTED_EMAIL_[a-z0-9]+\]/
     );
     expect(String(humanMessage?.content)).not.toContain("alice@company.org");
   });
@@ -1122,7 +1122,7 @@ describe("Reversible Redaction — Agent Integration", () => {
     expect(toolMessage).toBeDefined();
     // Tool result PII should be redacted (with unique ID since reversible)
     expect(String(toolMessage?.content)).toMatch(
-      /\[REDACTED_EMAIL_[a-z0-9]+\]/,
+      /\[REDACTED_EMAIL_[a-z0-9]+\]/
     );
     expect(String(toolMessage?.content)).not.toContain("tool-pii@example.com");
   });
