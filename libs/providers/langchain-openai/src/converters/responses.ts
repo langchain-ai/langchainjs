@@ -1508,6 +1508,7 @@ export const convertMessagesToResponsesInput: Converter<
               });
             }) as ResponseInputMessageContentList,
             phase: iife(() => {
+              if (typeof content === "string") return undefined;
               const index = content.findIndex(
                 (item) => "phase" in item && typeof item.phase === "string"
               );

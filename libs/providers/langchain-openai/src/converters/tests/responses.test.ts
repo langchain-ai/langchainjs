@@ -2438,6 +2438,25 @@ describe("phase parameter support", () => {
       expect(messageItem.phase).toBeUndefined();
     });
 
+    it("should handle AIMessage with string content without throwing", () => {
+      const aiMessage = new AIMessage({
+        content: "plain text response",
+      });
+
+      const result = convertMessagesToResponsesInput({
+        messages: [aiMessage],
+        zdrEnabled: false,
+        model: "gpt-4o",
+      });
+
+      const messageItem = result.find(
+        (item) => (item as any).type === "message"
+      ) as any;
+      expect(messageItem).toBeDefined();
+      expect(messageItem.content).toBe("plain text response");
+      expect(messageItem.phase).toBeUndefined();
+    });
+
     it("should preserve phase from extras through standard content path", () => {
       const aiMessage = new AIMessage({
         id: "msg_001",
