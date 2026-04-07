@@ -1274,6 +1274,9 @@ importers:
       vitest:
         specifier: ^4.1.2
         version: 4.1.2(@opentelemetry/api@1.9.0)(@types/node@25.5.0)(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))
+      zod:
+        specifier: ^3.25.76 || ^4
+        version: 4.3.6
 
   libs/providers/langchain-cloudflare:
     dependencies:
