@@ -12,14 +12,12 @@
     "type": "git",
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
-  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-valkey/",
+  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/providers/langchain-valkey/",
   "scripts": {
     "build": "turbo build:compile --filter @langchain/valkey --output-logs new-only",
     "build:compile": "tsdown",
-    "lint:eslint": "eslint --cache src/",
     "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
-    "lint": "pnpm lint:eslint && pnpm lint:dpdm",
-    "lint:fix": "pnpm lint:eslint --fix && pnpm lint:dpdm",
+    "lint": "pnpm lint:dpdm",
     "clean": "rm -rf .turbo dist/",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -34,19 +32,19 @@
     "@langchain/core": "^1.0.0"
   },
   "devDependencies": {
-    "@faker-js/faker": "^8.4.0",
-    "@langchain/core": "workspace:*",
+    "@faker-js/faker": "^10.4.0",
+    "@langchain/core": "workspace:^",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
+    "@types/node": "^22",
     "@types/uuid": "^9",
-    "@vitest/coverage-v8": "^3.2.4",
-    "dotenv": "^16.3.1",
+    "@vitest/coverage-v8": "^4.1.2",
+    "dotenv": "^17.4.0",
     "dpdm": "^3.14.0",
-    "eslint": "^9.34.0",
     "prettier": "^3.5.0",
     "typescript": "~5.8.3",
     "uuid": "^10.0.0",
-    "vitest": "^3.2.4"
+    "vitest": "^4.1.2"
   },
   "publishConfig": {
     "access": "public"

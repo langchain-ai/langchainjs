@@ -1,4 +1,4 @@
-import { test, expect, afterAll, beforeAll, describe } from "vitest";
+import { test, expect, afterAll, afterEach, beforeAll, describe } from "vitest";
 
 import { GlideClient } from "@valkey/valkey-glide";
 import { v4 as uuidv4 } from "uuid";
@@ -376,7 +376,7 @@ describe("ValkeyVectorStore with Custom Schema", () => {
         { pageContent, metadata: { vectorField: [1, 2, 3] } },
       ])
     ).rejects.toThrow(
-      "Unsupported field type 'VECTOR' for metadata field 'vectorField'. Only TAG and NUMERIC are supported."
+      "Unsupported field type 'VECTOR' for metadata field 'vectorField'. Only TAG, NUMERIC, and TEXT are supported."
     );
   });
 });
