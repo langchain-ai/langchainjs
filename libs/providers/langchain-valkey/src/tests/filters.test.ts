@@ -174,6 +174,28 @@ describe("Filter Building Logic", () => {
     expect(query).toContain("* =>");
   });
 
+  test("escapes special characters in TAG values", () => {
+    const store = new ValkeyVectorStore(new SyntheticEmbeddings(), {
+      valkeyClient: {} as GlideClient,
+      indexName: "test",
+      customSchema: {
+        category: { type: SchemaFieldTypes.TAG },
+      },
+    });
+
+    const [query] = (
+      store as unknown as ValkeyVectorStorePrivate
+    ).buildCustomQuery([0.1, 0.2], 5, {
+      category: "hello{world}|inject",
+    });
+
+    // Special chars {, }, | should be escaped
+    expect(query).toContain("\\{");
+    expect(query).toContain("\\}");
+    expect(query).toContain("\\|");
+    expect(query).not.toContain("{world}");
+  });
+
   test("validates metadata before adding documents", () => {
     const store = new ValkeyVectorStore(new SyntheticEmbeddings(), {
       valkeyClient: {} as GlideClient,

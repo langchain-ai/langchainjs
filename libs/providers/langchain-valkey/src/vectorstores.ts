@@ -746,12 +746,16 @@ export class ValkeyVectorStore extends VectorStore {
               );
             }
           } else if (fieldConfig.type === "TAG") {
-            // Handle tag filtering
+            // Handle tag filtering — escape values to prevent query injection
             if (Array.isArray(value)) {
-              const tagFilter = value.map((v) => `{${String(v)}}`).join("|");
+              const tagFilter = value
+                .map((v) => `{${this.escapeTagValue(String(v))}}`)
+                .join("|");
               filterClauses.push(`@${indexedFieldName}:(${tagFilter})`);
             } else if (typeof value === "string") {
-              filterClauses.push(`@${indexedFieldName}:{${value}}`);
+              filterClauses.push(
+                `@${indexedFieldName}:{${this.escapeTagValue(value)}}`
+              );
             } else {
               throw new Error(
                 `Invalid filter value for TAG field '${fieldName}': expected string or string array`
@@ -793,7 +797,18 @@ export class ValkeyVectorStore extends VectorStore {
   }
 
   /**
-   * Converts the vector to the buffer Redis needs to
+   * Escapes special characters in a value for use in Valkey FT.SEARCH TAG queries.
+   * These characters are tokenizer separators in the query parser and must be
+   * backslash-escaped to be treated as literals.
+   *
+   * @see https://redis.io/docs/latest/develop/interact/search-and-query/advanced-concepts/escaping/
+   */
+  private escapeTagValue(value: string): string {
+    return value.replace(/[,.<>{}[\]"':;!@#$%^&*()\-+=~|\\ ]/g, "\\$&");
+  }
+
+  /**
+   * Converts the vector to the buffer Valkey needs to
    * correctly store an embedding
    *
    * @param vector
