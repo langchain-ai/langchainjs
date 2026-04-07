@@ -148,9 +148,11 @@ describe("AsyncCaller", () => {
   test("defaultFailedAttemptHandler aborts headerless 429s with capacity error", async () => {
     const caller = new AsyncCaller({ maxRetries: 2 });
 
-    const callable = vi.fn<() => Promise<void>>().mockRejectedValueOnce(
-      Object.assign(new Error("Too Many Requests"), { status: 429 })
-    );
+    const callable = vi
+      .fn<() => Promise<void>>()
+      .mockRejectedValueOnce(
+        Object.assign(new Error("Too Many Requests"), { status: 429 })
+      );
 
     await expect(caller.call(callable)).rejects.toMatchObject({
       name: "RateLimitCapacityError",
@@ -182,9 +184,11 @@ describe("AsyncCaller", () => {
   test("defaultFailedAttemptHandler aborts headerless statusCode 429s", async () => {
     const caller = new AsyncCaller({ maxRetries: 2 });
 
-    const callable = vi.fn<() => Promise<void>>().mockRejectedValueOnce(
-      Object.assign(new Error("Rate limit exceeded"), { statusCode: 429 })
-    );
+    const callable = vi
+      .fn<() => Promise<void>>()
+      .mockRejectedValueOnce(
+        Object.assign(new Error("Rate limit exceeded"), { statusCode: 429 })
+      );
 
     await expect(caller.call(callable)).rejects.toMatchObject({
       name: "RateLimitCapacityError",

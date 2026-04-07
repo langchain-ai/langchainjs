@@ -283,7 +283,10 @@ const defaultFailedAttemptHandler = (error: unknown) => {
 
   const code = getErrorCode(error);
   if (code === "insufficient_quota") {
-    const err = coerceError(error, getErrorMessage(error) ?? "Insufficient quota");
+    const err = coerceError(
+      error,
+      getErrorMessage(error) ?? "Insufficient quota"
+    );
     err.name = "InsufficientQuotaError";
     setRateLimitMetadata(err, {
       action: "stop",
@@ -299,7 +302,10 @@ const defaultFailedAttemptHandler = (error: unknown) => {
       return;
     }
 
-    const err = coerceError(error, getErrorMessage(error) ?? "Rate limit exceeded");
+    const err = coerceError(
+      error,
+      getErrorMessage(error) ?? "Rate limit exceeded"
+    );
     if (err.name === "Error") {
       err.name =
         rateLimitClassification.action === "stop"
