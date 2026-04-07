@@ -1,5 +1,11 @@
 # langchain
 
+## 1.3.1
+
+### Patch Changes
+
+- [#10673](https://github.com/langchain-ai/langchainjs/pull/10673) [`f069365`](https://github.com/langchain-ai/langchainjs/commit/f0693657b7e5bdbf888a46d04e68431e446c7bc0) Thanks [@hntrl](https://github.com/hntrl)! - bump langgraph dependency to 1.2.8
+
 ## 1.3.0
 
 ### Minor Changes

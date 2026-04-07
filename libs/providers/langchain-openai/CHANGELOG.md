@@ -1,5 +1,11 @@
 # @langchain/openai
 
+## 1.4.3
+
+### Patch Changes
+
+- [#10670](https://github.com/langchain-ai/langchainjs/pull/10670) [`6b8ef6c`](https://github.com/langchain-ai/langchainjs/commit/6b8ef6c95e061af47af206926598c983d878f72a) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(openai): preserve plain string responses content
+
 ## 1.4.2
 
 ### Patch Changes
