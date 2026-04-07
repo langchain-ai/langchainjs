@@ -1,5 +1,9 @@
 import { describe, test, expect, vi } from "vitest";
-import { AsyncCaller } from "../async_caller.js";
+import {
+  AsyncCaller,
+  parseRetryAfterMs,
+  classifyRateLimitError,
+} from "../async_caller.js";
 
 describe("AsyncCaller", () => {
   test("defaultFailedAttemptHandler handles undefined error", () => {
@@ -141,18 +145,220 @@ describe("AsyncCaller", () => {
     expect(callable).toHaveBeenCalledTimes(1);
   });
 
-  test("defaultFailedAttemptHandler retries on 429 rate limit errors with direct status", async () => {
+  test("defaultFailedAttemptHandler aborts headerless 429s with capacity error", async () => {
     const caller = new AsyncCaller({ maxRetries: 2 });
 
-    // 429 rate limit errors should be retried (not in STATUS_NO_RETRY)
+    const callable = vi.fn<() => Promise<void>>().mockRejectedValueOnce(
+      Object.assign(new Error("Too Many Requests"), { status: 429 })
+    );
+
+    await expect(caller.call(callable)).rejects.toMatchObject({
+      name: "RateLimitCapacityError",
+      rateLimitType: "capacity",
+      rateLimitReason: "headerless_429",
+    });
+    expect(callable).toHaveBeenCalledTimes(1);
+  });
+
+  test("defaultFailedAttemptHandler aborts quota-style 429s without retry-after", async () => {
+    const caller = new AsyncCaller({ maxRetries: 3 });
+
+    const err = Object.assign(
+      new Error(
+        "You exceeded your current quota, please check your plan and billing details."
+      ),
+      { status: 429 }
+    );
+    const callable = vi.fn(async () => Promise.reject(err));
+
+    await expect(() => caller.call(callable)).rejects.toMatchObject({
+      name: "RateLimitQuotaExhaustedError",
+      rateLimitType: "stop",
+      rateLimitReason: "quota_message",
+    });
+    expect(callable).toHaveBeenCalledTimes(1);
+  });
+
+  test("defaultFailedAttemptHandler aborts headerless statusCode 429s", async () => {
+    const caller = new AsyncCaller({ maxRetries: 2 });
+
+    const callable = vi.fn<() => Promise<void>>().mockRejectedValueOnce(
+      Object.assign(new Error("Rate limit exceeded"), { statusCode: 429 })
+    );
+
+    await expect(caller.call(callable)).rejects.toMatchObject({
+      name: "RateLimitCapacityError",
+      rateLimitType: "capacity",
+      rateLimitReason: "headerless_429",
+    });
+    expect(callable).toHaveBeenCalledTimes(1);
+  });
+
+  test("defaultFailedAttemptHandler aborts retry when Retry-After suggests quota exhaustion", async () => {
+    const caller = new AsyncCaller({ maxRetries: 3 });
+
+    const err = Object.assign(new Error("Quota exhausted"), {
+      status: 429,
+      headers: { "retry-after": "120" },
+    });
+    const callable = vi.fn(async () => Promise.reject(err));
+
+    await expect(() => caller.call(callable)).rejects.toMatchObject({
+      name: "RateLimitQuotaExhaustedError",
+    });
+    expect(callable).toHaveBeenCalledTimes(1);
+  });
+
+  test("defaultFailedAttemptHandler sets retryAfterMs on error for short Retry-After", async () => {
+    const caller = new AsyncCaller({ maxRetries: 2 });
+
+    const err = Object.assign(new Error("Too Many Requests"), {
+      status: 429,
+      headers: { "retry-after": "2" },
+    });
     const callable = vi
       .fn<() => Promise<void>>()
-      .mockRejectedValueOnce(
-        Object.assign(new Error("Too Many Requests"), { status: 429 })
-      )
+      .mockRejectedValueOnce(err)
       .mockResolvedValueOnce();
 
     await expect(caller.call(callable)).resolves.toBeUndefined();
     expect(callable).toHaveBeenCalledTimes(2);
+    expect((err as unknown as Record<string, unknown>).retryAfterMs).toBe(2000);
+  });
+
+  test("defaultFailedAttemptHandler extracts Retry-After from Headers object", async () => {
+    const caller = new AsyncCaller({ maxRetries: 2 });
+
+    const headers = new Headers({ "retry-after": "3" });
+    const err = Object.assign(new Error("Too Many Requests"), {
+      status: 429,
+      headers,
+    });
+    const callable = vi
+      .fn<() => Promise<void>>()
+      .mockRejectedValueOnce(err)
+      .mockResolvedValueOnce();
+
+    await expect(caller.call(callable)).resolves.toBeUndefined();
+    expect(callable).toHaveBeenCalledTimes(2);
+    expect((err as unknown as Record<string, unknown>).retryAfterMs).toBe(3000);
+  });
+
+  test("defaultFailedAttemptHandler extracts Retry-After from response.headers", async () => {
+    const caller = new AsyncCaller({ maxRetries: 2 });
+
+    const err = Object.assign(new Error("Too Many Requests"), {
+      statusCode: 429,
+      response: {
+        status: 429,
+        headers: { "retry-after": "5" },
+      },
+    });
+    const callable = vi
+      .fn<() => Promise<void>>()
+      .mockRejectedValueOnce(err)
+      .mockResolvedValueOnce();
+
+    await expect(caller.call(callable)).resolves.toBeUndefined();
+    expect(callable).toHaveBeenCalledTimes(2);
+    expect((err as unknown as Record<string, unknown>).retryAfterMs).toBe(5000);
+  });
+});
+
+describe("parseRetryAfterMs", () => {
+  test("parses integer seconds", () => {
+    expect(parseRetryAfterMs("30")).toBe(30_000);
+  });
+
+  test("parses zero", () => {
+    expect(parseRetryAfterMs("0")).toBe(0);
+  });
+
+  test("returns undefined for null/undefined/empty", () => {
+    expect(parseRetryAfterMs(null)).toBeUndefined();
+    expect(parseRetryAfterMs(undefined)).toBeUndefined();
+    expect(parseRetryAfterMs("")).toBeUndefined();
+    expect(parseRetryAfterMs("  ")).toBeUndefined();
+  });
+
+  test("parses HTTP-date format", () => {
+    const futureDate = new Date(Date.now() + 10_000).toUTCString();
+    const result = parseRetryAfterMs(futureDate);
+    expect(result).toBeGreaterThan(8_000);
+    expect(result).toBeLessThanOrEqual(10_000);
+  });
+
+  test("returns 0 for past HTTP-date", () => {
+    const pastDate = new Date(Date.now() - 5_000).toUTCString();
+    expect(parseRetryAfterMs(pastDate)).toBe(0);
+  });
+
+  test("returns undefined for unparseable value", () => {
+    expect(parseRetryAfterMs("not-a-number-or-date")).toBeUndefined();
+  });
+});
+
+describe("classifyRateLimitError", () => {
+  test("classifies insufficient_quota codes as stop", () => {
+    const error = Object.assign(new Error("Insufficient quota"), {
+      status: 429,
+      error: { code: "insufficient_quota" },
+    });
+
+    expect(classifyRateLimitError(error)).toMatchObject({
+      action: "stop",
+      reason: "insufficient_quota",
+    });
+  });
+
+  test("classifies quota and billing messages as stop", () => {
+    const error = Object.assign(
+      new Error(
+        "You exceeded your current quota, please check your plan and billing details."
+      ),
+      { statusCode: 429 }
+    );
+
+    expect(classifyRateLimitError(error)).toMatchObject({
+      action: "stop",
+      reason: "quota_message",
+    });
+  });
+
+  test("classifies long retry-after as capacity pressure", () => {
+    const error = Object.assign(new Error("Too Many Requests"), {
+      status: 429,
+      headers: { "retry-after": "120" },
+    });
+
+    expect(classifyRateLimitError(error)).toMatchObject({
+      action: "capacity",
+      retryAfterMs: 120_000,
+      reason: "retry_after_too_large",
+    });
+  });
+
+  test("classifies short retry-after as wait", () => {
+    const error = Object.assign(new Error("Too Many Requests"), {
+      status: 429,
+      headers: { "retry-after": "4" },
+    });
+
+    expect(classifyRateLimitError(error)).toEqual({
+      action: "wait",
+      retryAfterMs: 4000,
+      reason: "retry_after_hint",
+    });
+  });
+
+  test("classifies headerless 429s as capacity pressure", () => {
+    expect(
+      classifyRateLimitError(
+        Object.assign(new Error("Rate limit exceeded"), { statusCode: 429 })
+      )
+    ).toEqual({
+      action: "capacity",
+      reason: "headerless_429",
+    });
   });
 });
