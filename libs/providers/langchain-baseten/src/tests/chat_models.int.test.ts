@@ -59,35 +59,27 @@ describe("ChatBaseten Integration Tests", () => {
     }
   );
 
-  it(
-    "invoke returns usage metadata",
-    { timeout: 60_000 },
-    async () => {
-      const model = makeModel();
-      const res = await model.invoke([new HumanMessage("Say hi")]);
+  it("invoke returns usage metadata", { timeout: 60_000 }, async () => {
+    const model = makeModel();
+    const res = await model.invoke([new HumanMessage("Say hi")]);
 
-      expect(res.usage_metadata).toBeDefined();
-      expect(res.usage_metadata!.input_tokens).toBeGreaterThan(0);
-      expect(res.usage_metadata!.output_tokens).toBeGreaterThan(0);
-    }
-  );
+    expect(res.usage_metadata).toBeDefined();
+    expect(res.usage_metadata!.input_tokens).toBeGreaterThan(0);
+    expect(res.usage_metadata!.output_tokens).toBeGreaterThan(0);
+  });
 
-  it(
-    "stream supports abort signal",
-    { timeout: 60_000 },
-    async () => {
-      const model = makeModel({ maxTokens: 500 });
-      await expect(async () => {
-        const stream = await model.stream(
-          "Write a very long story about a robot.",
-          { signal: AbortSignal.timeout(500) }
-        );
-        for await (const _chunk of stream) {
-          // consume
-        }
-      }).rejects.toThrow();
-    }
-  );
+  it("stream supports abort signal", { timeout: 60_000 }, async () => {
+    const model = makeModel({ maxTokens: 500 });
+    await expect(async () => {
+      const stream = await model.stream(
+        "Write a very long story about a robot.",
+        { signal: AbortSignal.timeout(500) }
+      );
+      for await (const _chunk of stream) {
+        // consume
+      }
+    }).rejects.toThrow();
+  });
 });
 
 // ─── Tool calling ────────────────────────────────────────────────────
@@ -105,47 +97,38 @@ describe("tool calling", () => {
     }
   );
 
-  test(
-    "model calls a bound tool",
-    { timeout: 60_000 },
-    async () => {
-      const model = makeModel().bindTools([weatherTool]);
-      const res = await model.invoke("What's the weather in San Francisco?");
+  test("model calls a bound tool", { timeout: 60_000 }, async () => {
+    const model = makeModel().bindTools([weatherTool]);
+    const res = await model.invoke("What's the weather in San Francisco?");
 
-      expect(res.tool_calls).toBeDefined();
-      expect(res.tool_calls!.length).toBeGreaterThanOrEqual(1);
-      expect(res.tool_calls![0].name).toBe("get_weather");
-      expect(res.tool_calls![0].args).toHaveProperty("location");
-    }
-  );
+    expect(res.tool_calls).toBeDefined();
+    expect(res.tool_calls!.length).toBeGreaterThanOrEqual(1);
+    expect(res.tool_calls![0].name).toBe("get_weather");
+    expect(res.tool_calls![0].args).toHaveProperty("location");
+  });
 
-  test(
-    "full tool calling round-trip",
-    { timeout: 60_000 },
-    async () => {
-      const model = makeModel().bindTools([weatherTool]);
-      const aiMsg = await model.invoke("What's the weather in Paris?");
+  test("full tool calling round-trip", { timeout: 60_000 }, async () => {
+    const model = makeModel().bindTools([weatherTool]);
+    const aiMsg = await model.invoke("What's the weather in Paris?");
 
-      expect(aiMsg.tool_calls!.length).toBeGreaterThanOrEqual(1);
-      const toolCall = aiMsg.tool_calls![0];
+    expect(aiMsg.tool_calls!.length).toBeGreaterThanOrEqual(1);
+    const toolCall = aiMsg.tool_calls![0];
 
-      const toolResult = await weatherTool.invoke(toolCall.args);
+    const toolResult = await weatherTool.invoke(toolCall.args);
 
-      const finalRes = await model.invoke([
-        new HumanMessage("What's the weather in Paris?"),
-        new AIMessage({
-          content: aiMsg.content,
-          tool_calls: aiMsg.tool_calls,
-        }),
-        new ToolMessage({
-          tool_call_id: toolCall.id!,
-          content: toolResult,
-        }),
-      ]);
+    const finalRes = await model.invoke([
+      new HumanMessage("What's the weather in Paris?"),
+      new AIMessage({
+        content: aiMsg.content,
+        tool_calls: aiMsg.tool_calls,
+      }),
+      new ToolMessage({
+        tool_call_id: toolCall.id!,
+        content: toolResult,
+      }),
+    ]);
 
-      expect(typeof finalRes.content).toBe("string");
-      expect((finalRes.content as string).length).toBeGreaterThan(0);
-    }
-  );
+    expect(typeof finalRes.content).toBe("string");
+    expect((finalRes.content as string).length).toBeGreaterThan(0);
+  });
 });
-
