@@ -1466,7 +1466,7 @@ export const convertMessagesToResponsesInput: Converter<
         }
 
         // ai content
-        let { content } = lcMsg as { content: ContentBlock[] };
+        let { content } = lcMsg;
         if (additional_kwargs?.refusal) {
           if (typeof content === "string") {
             content = [{ type: "output_text", text: content, annotations: [] }];
@@ -1508,14 +1508,17 @@ export const convertMessagesToResponsesInput: Converter<
               });
             }) as ResponseInputMessageContentList,
             phase: iife(() => {
-              const index = content.findIndex(
-                (item) => "phase" in item && typeof item.phase === "string"
-              );
-              if (index >= 0) {
-                return content[index]
-                  .phase as OpenAIClient.Responses.EasyInputMessage["phase"];
+              if (!Array.isArray(content)) {
+                return undefined;
               }
-              return undefined;
+
+              const phasedContent = content.find(
+                (item): item is ContentBlock & { phase: string } =>
+                  "phase" in item && typeof item.phase === "string"
+              );
+              return phasedContent?.phase as
+                | OpenAIClient.Responses.EasyInputMessage["phase"]
+                | undefined;
             }),
           };
           input.push(messageItem);

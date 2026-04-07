@@ -2383,6 +2383,29 @@ describe("phase parameter support", () => {
   });
 
   describe("convertMessagesToResponsesInput round-trip", () => {
+    it("should preserve plain string assistant content", () => {
+      const aiMessage = new AIMessage({
+        id: "msg_001",
+        content: "Let me check that for you.",
+        response_metadata: {
+          model_provider: "openai",
+        },
+      });
+
+      const result = convertMessagesToResponsesInput({
+        messages: [aiMessage],
+        zdrEnabled: false,
+        model: "gpt-4o",
+      });
+
+      const messageItem = result.find(
+        (item) => (item as any).type === "message"
+      ) as any;
+      expect(messageItem).toBeDefined();
+      expect(messageItem.content).toBe("Let me check that for you.");
+      expect(messageItem.phase).toBeUndefined();
+    });
+
     it("should preserve phase when converting AIMessage back to responses input (responses/v1)", () => {
       const aiMessage = new AIMessage({
         id: "msg_001",
