@@ -3,10 +3,10 @@ import { ValkeyVectorStore, SchemaFieldTypes } from "../vectorstores.js";
 import { SyntheticEmbeddings } from "@langchain/core/utils/testing";
 import type { GlideClient } from "@valkey/valkey-glide";
 
-type ValkeyVectorStoreWithPrivate = ValkeyVectorStore & {
+interface ValkeyVectorStorePrivate {
   buildCustomQuery: (...args: unknown[]) => [string, unknown];
   validateMetadata: (metadata: Record<string, unknown>) => void;
-};
+}
 
 describe("Filter Building Logic", () => {
   test("builds TAG filter with single value", () => {
@@ -18,13 +18,11 @@ describe("Filter Building Logic", () => {
       },
     });
 
-    const [query] = (store as ValkeyVectorStoreWithPrivate).buildCustomQuery(
-      [0.1, 0.2],
-      5,
-      {
-        category: "tech",
-      }
-    );
+    const [query] = (
+      store as unknown as ValkeyVectorStorePrivate
+    ).buildCustomQuery([0.1, 0.2], 5, {
+      category: "tech",
+    });
 
     expect(query).toContain("@metadata.category:{tech}");
   });
@@ -38,13 +36,11 @@ describe("Filter Building Logic", () => {
       },
     });
 
-    const [query] = (store as ValkeyVectorStoreWithPrivate).buildCustomQuery(
-      [0.1, 0.2],
-      5,
-      {
-        category: ["tech", "science"],
-      }
-    );
+    const [query] = (
+      store as unknown as ValkeyVectorStorePrivate
+    ).buildCustomQuery([0.1, 0.2], 5, {
+      category: ["tech", "science"],
+    });
 
     expect(query).toContain("@metadata.category:({tech}|{science})");
   });
@@ -58,13 +54,11 @@ describe("Filter Building Logic", () => {
       },
     });
 
-    const [query] = (store as ValkeyVectorStoreWithPrivate).buildCustomQuery(
-      [0.1, 0.2],
-      5,
-      {
-        price: 100,
-      }
-    );
+    const [query] = (
+      store as unknown as ValkeyVectorStorePrivate
+    ).buildCustomQuery([0.1, 0.2], 5, {
+      price: 100,
+    });
 
     expect(query).toContain("@metadata.price:[100 100]");
   });
@@ -78,13 +72,11 @@ describe("Filter Building Logic", () => {
       },
     });
 
-    const [query] = (store as ValkeyVectorStoreWithPrivate).buildCustomQuery(
-      [0.1, 0.2],
-      5,
-      {
-        price: { min: 100 },
-      }
-    );
+    const [query] = (
+      store as unknown as ValkeyVectorStorePrivate
+    ).buildCustomQuery([0.1, 0.2], 5, {
+      price: { min: 100 },
+    });
 
     expect(query).toContain("@metadata.price:[100 +inf]");
   });
@@ -98,13 +90,11 @@ describe("Filter Building Logic", () => {
       },
     });
 
-    const [query] = (store as ValkeyVectorStoreWithPrivate).buildCustomQuery(
-      [0.1, 0.2],
-      5,
-      {
-        price: { max: 500 },
-      }
-    );
+    const [query] = (
+      store as unknown as ValkeyVectorStorePrivate
+    ).buildCustomQuery([0.1, 0.2], 5, {
+      price: { max: 500 },
+    });
 
     expect(query).toContain("@metadata.price:[-inf 500]");
   });
@@ -118,13 +108,11 @@ describe("Filter Building Logic", () => {
       },
     });
 
-    const [query] = (store as ValkeyVectorStoreWithPrivate).buildCustomQuery(
-      [0.1, 0.2],
-      5,
-      {
-        price: { min: 100, max: 500 },
-      }
-    );
+    const [query] = (
+      store as unknown as ValkeyVectorStorePrivate
+    ).buildCustomQuery([0.1, 0.2], 5, {
+      price: { min: 100, max: 500 },
+    });
 
     expect(query).toContain("@metadata.price:[100 500]");
   });
@@ -139,14 +127,12 @@ describe("Filter Building Logic", () => {
       },
     });
 
-    const [query] = (store as ValkeyVectorStoreWithPrivate).buildCustomQuery(
-      [0.1, 0.2],
-      5,
-      {
-        category: "tech",
-        price: { min: 100 },
-      }
-    );
+    const [query] = (
+      store as unknown as ValkeyVectorStorePrivate
+    ).buildCustomQuery([0.1, 0.2], 5, {
+      category: "tech",
+      price: { min: 100 },
+    });
 
     expect(query).toContain("@metadata.category:{tech}");
     expect(query).toContain("@metadata.price:[100 +inf]");
@@ -161,14 +147,12 @@ describe("Filter Building Logic", () => {
       },
     });
 
-    const [query] = (store as ValkeyVectorStoreWithPrivate).buildCustomQuery(
-      [0.1, 0.2],
-      5,
-      {
-        category: "tech",
-        nonExistent: "value",
-      }
-    );
+    const [query] = (
+      store as unknown as ValkeyVectorStorePrivate
+    ).buildCustomQuery([0.1, 0.2], 5, {
+      category: "tech",
+      nonExistent: "value",
+    });
 
     expect(query).toContain("@metadata.category:{tech}");
     expect(query).not.toContain("nonExistent");
@@ -183,11 +167,9 @@ describe("Filter Building Logic", () => {
       },
     });
 
-    const [query] = (store as ValkeyVectorStoreWithPrivate).buildCustomQuery(
-      [0.1, 0.2],
-      5,
-      {}
-    );
+    const [query] = (
+      store as unknown as ValkeyVectorStorePrivate
+    ).buildCustomQuery([0.1, 0.2], 5, {});
 
     expect(query).toContain("* =>");
   });
@@ -202,7 +184,7 @@ describe("Filter Building Logic", () => {
     });
 
     expect(() =>
-      (store as ValkeyVectorStoreWithPrivate).validateMetadata({})
+      (store as unknown as ValkeyVectorStorePrivate).validateMetadata({})
     ).toThrow("Required metadata field 'price' is missing");
   });
 
@@ -216,7 +198,7 @@ describe("Filter Building Logic", () => {
     });
 
     expect(() =>
-      (store as ValkeyVectorStoreWithPrivate).validateMetadata({
+      (store as unknown as ValkeyVectorStorePrivate).validateMetadata({
         price: "not-a-number",
       })
     ).toThrow("Metadata field 'price' must be a number");
@@ -232,7 +214,7 @@ describe("Filter Building Logic", () => {
     });
 
     expect(() =>
-      (store as ValkeyVectorStoreWithPrivate).validateMetadata({
+      (store as unknown as ValkeyVectorStorePrivate).validateMetadata({
         category: 123,
       })
     ).toThrow("Metadata field 'category' must be a string or array");

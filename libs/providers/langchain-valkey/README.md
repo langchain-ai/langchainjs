@@ -53,13 +53,17 @@ const vectorStore = new ValkeyVectorStore(new OpenAIEmbeddings(), {
 });
 
 await vectorStore.addDocuments([
-  { 
-    pageContent: "Laptop", 
-    metadata: { category: "electronics", price: 999, tags: ["computer", "portable"] } 
+  {
+    pageContent: "Laptop",
+    metadata: {
+      category: "electronics",
+      price: 999,
+      tags: ["computer", "portable"],
+    },
   },
-  { 
-    pageContent: "Book", 
-    metadata: { category: "books", price: 19 } 
+  {
+    pageContent: "Book",
+    metadata: { category: "books", price: 19 },
   },
 ]);
 ```
@@ -90,9 +94,9 @@ const results = await vectorStore.similaritySearchVectorWithScoreAndMetadata(
 const results = await vectorStore.similaritySearchVectorWithScoreAndMetadata(
   query,
   10,
-  { 
-    category: "electronics", 
-    price: { min: 500 } 
+  {
+    category: "electronics",
+    price: { min: 500 },
   }
 );
 ```

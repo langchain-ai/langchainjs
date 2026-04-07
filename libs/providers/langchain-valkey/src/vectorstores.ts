@@ -2,6 +2,7 @@ import { Document } from "@langchain/core/documents";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import {
+  Batch,
   GlideClient,
   GlideClusterClient,
   GlideFt,
@@ -52,11 +53,15 @@ export type CreateSchemaHNSWVectorField = CreateSchemaVectorField<
 >;
 
 /**
- * Enum for schema field types
+ * Enum for schema field types supported in custom metadata schemas.
+ *
+ * Note: VECTOR is not supported in `customSchema` definitions — the
+ * embedding vector field is managed internally by ValkeyVectorStore.
  */
 export enum SchemaFieldTypes {
   NUMERIC = "NUMERIC",
   TAG = "TAG",
+  TEXT = "TEXT",
   VECTOR = "VECTOR",
 }
 
@@ -66,7 +71,6 @@ export enum SchemaFieldTypes {
 export interface CustomSchemaField {
   type: SchemaFieldTypes;
   required?: boolean;
-  SORTABLE?: boolean | "UNF"; // Accepted for compatibility, has no effect
   SEPARATOR?: string; // For TAG fields, default is ','
   CASESENSITIVE?: true; // For TAG fields, default is false
 }
@@ -218,7 +222,6 @@ export class ValkeyVectorStore extends VectorStore {
       )) {
         const indexedFieldName = `${this.metadataKey}.${fieldName}`;
 
-        // Only TAG and NUMERIC are supported for metadata fields
         if (fieldConfig.type === SchemaFieldTypes.TAG) {
           schema.push({
             type: "TAG",
@@ -229,9 +232,14 @@ export class ValkeyVectorStore extends VectorStore {
             type: "NUMERIC",
             name: indexedFieldName,
           });
+        } else if (fieldConfig.type === SchemaFieldTypes.TEXT) {
+          schema.push({
+            type: "TEXT",
+            name: indexedFieldName,
+          });
         } else {
           throw new Error(
-            `Unsupported field type '${fieldConfig.type}' for metadata field '${fieldName}'. Only TAG and NUMERIC are supported.`
+            `Unsupported field type '${fieldConfig.type}' for metadata field '${fieldName}'. Only TAG, NUMERIC, and TEXT are supported.`
           );
         }
       }
@@ -343,8 +351,15 @@ export class ValkeyVectorStore extends VectorStore {
             );
           }
           break;
+        case SchemaFieldTypes.TEXT:
+          if (typeof value !== "string") {
+            throw new Error(
+              `Metadata field '${fieldName}' must be a string, got ${typeof value}`
+            );
+          }
+          break;
         default:
-          // For other field types, skip validation
+          // For other field types (e.g. VECTOR), skip validation
           break;
       }
     }
@@ -457,14 +472,16 @@ export class ValkeyVectorStore extends VectorStore {
 
       commands.push({ key, fields: hashFields });
 
-      // Process batch
+      // Process batch using pipeline for efficiency
       if (commands.length >= batchSize || idx === vectors.length - 1) {
+        const batch = new Batch(false); // non-atomic pipeline
         for (const { key, fields } of commands) {
-          await this.valkeyClient.hset(key, fields);
+          batch.hset(key, fields);
           if (this.ttl) {
-            await this.valkeyClient.expire(key, this.ttl);
+            batch.expire(key, this.ttl);
           }
         }
+        await (this.valkeyClient as GlideClient).exec(batch, true);
         commands.length = 0;
       }
     }
@@ -506,36 +523,7 @@ export class ValkeyVectorStore extends VectorStore {
       queryStr,
       searchOptions
     );
-    const result: [Document, number][] = [];
-
-    if (Array.isArray(results) && results.length > 1) {
-      // Results format: [totalCount, [{ key: string, value: [{ key: string, value: string }, ...] }]]
-      const documents = results[1];
-      if (Array.isArray(documents)) {
-        for (const doc of documents) {
-          if (Array.isArray(doc?.value)) {
-            const fieldsObj: Record<string, unknown> = {};
-            for (const field of doc.value) {
-              if (field?.key !== undefined && field?.value !== undefined) {
-                fieldsObj[String(field.key)] = field.value;
-              }
-            }
-
-            if (fieldsObj.vector_score !== undefined) {
-              result.push([
-                new Document({
-                  pageContent: (fieldsObj[this.contentKey] ?? "") as string,
-                  metadata: JSON.parse((fieldsObj.metadata ?? "{}") as string),
-                }),
-                Number(fieldsObj.vector_score),
-              ]);
-            }
-          }
-        }
-      }
-    }
-
-    return result;
+    return this.parseSearchResults(results);
   }
 
   /**
@@ -564,53 +552,50 @@ export class ValkeyVectorStore extends VectorStore {
       queryStr,
       searchOptions
     );
+
+    return this.parseSearchResults(results);
+  }
+
+  /**
+   * Parses raw search results from GlideFt.search into Document/score pairs.
+   * Reconstructs metadata from JSON and applies type coercion for custom schema fields.
+   */
+  private parseSearchResults(results: unknown): [Document, number][] {
     const result: [Document, number][] = [];
 
     if (Array.isArray(results) && results.length > 1) {
-      // Results format: [totalCount, [{ key: string, value: [{ key: string, value: string }, ...] }]]
       const documents = results[1];
       if (Array.isArray(documents)) {
         for (const doc of documents) {
           if (Array.isArray(doc?.value)) {
             const fieldsObj: Record<string, unknown> = {};
             for (const field of doc.value) {
-              if (field && field.key && field.value !== undefined) {
+              if (field?.key !== undefined && field?.value !== undefined) {
                 fieldsObj[String(field.key)] = field.value;
               }
             }
 
             if (fieldsObj.vector_score !== undefined) {
-              // Reconstruct metadata from both the JSON field and individual fields
               let metadata: Record<string, unknown> = {};
               try {
                 metadata = JSON.parse((fieldsObj.metadata ?? "{}") as string);
               } catch {
-                // If JSON parsing fails, construct from individual fields
                 metadata = {};
               }
 
-              // Add individual schema fields to metadata if they exist
+              // Coerce typed schema fields so both search methods return consistent types
               if (this.customSchema) {
                 for (const fieldName of Object.keys(this.customSchema)) {
-                  const fieldKey = `${this.metadataKey}.${fieldName}`;
-                  if (fieldsObj[fieldKey] !== undefined) {
-                    const fieldConfig = this.customSchema[fieldName];
-                    let fieldValue = fieldsObj[fieldKey] as unknown;
-                    // Convert numeric fields back to numbers
-                    // Note: Valkey stores NUMERIC fields as strings internally for indexing
-                    // We convert back to numbers, but this may lose precision for very large integers
-                    if (
-                      fieldConfig.type === "NUMERIC" &&
-                      typeof fieldValue === "string"
-                    ) {
-                      const numValue = Number(fieldValue);
-                      // Only convert if it's a valid number and within safe integer range
-                      if (!isNaN(numValue) && Number.isSafeInteger(numValue)) {
-                        fieldValue = numValue;
-                      }
-                      // Otherwise keep as string to preserve precision
+                  const fieldConfig = this.customSchema[fieldName];
+                  const value = metadata[fieldName];
+                  if (
+                    fieldConfig.type === "NUMERIC" &&
+                    typeof value === "string"
+                  ) {
+                    const numValue = Number(value);
+                    if (!isNaN(numValue) && Number.isSafeInteger(numValue)) {
+                      metadata[fieldName] = numValue;
                     }
-                    metadata[fieldName] = fieldValue;
                   }
                 }
               }
