@@ -2,10 +2,12 @@ import {
   SystemMessage,
   HumanMessage,
   AIMessage,
+  AIMessageChunk,
   ToolMessage,
   BaseMessage,
   BaseMessageChunk,
 } from "@langchain/core/messages";
+import type { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { concat } from "@langchain/core/utils/stream";
 import {
   ConversationRole as BedrockConversationRole,
@@ -621,6 +623,88 @@ test("Streaming supports empty string chunks", async () => {
   expect(finalChunk).toBeDefined();
   if (!finalChunk) return;
   expect(finalChunk.content).toBe("Hello world!");
+});
+
+test("Streaming emits tool call start chunks via handleLLMNewToken", async () => {
+  const mockSend = vi.fn().mockResolvedValue({
+    stream: (async function* () {
+      yield {
+        contentBlockStart: {
+          contentBlockIndex: 0,
+          start: {
+            toolUse: {
+              name: "get_weather",
+              toolUseId: "tooluse_123",
+            },
+          },
+        },
+      };
+      yield {
+        contentBlockDelta: {
+          contentBlockIndex: 0,
+          delta: {
+            toolUse: {
+              input: '{"location":"London"}',
+            },
+          },
+        },
+      };
+    })(),
+  });
+
+  const mockClient = {
+    send: mockSend,
+  } as unknown as BedrockRuntimeClient;
+
+  const model = new ChatBedrockConverse({
+    region: "us-east-1",
+    credentials: {
+      secretAccessKey: "test-secret-key",
+      accessKeyId: "test-access-key",
+    },
+    model: "anthropic.claude-haiku-4-5-20251001-v1:0",
+    client: mockClient,
+  });
+
+  const handleLLMNewToken = vi.fn();
+  const runManager = {
+    handleLLMNewToken,
+  } as unknown as CallbackManagerForLLMRun;
+
+  const chunks = [];
+  for await (const chunk of model._streamResponseChunks(
+    [new HumanMessage("Get the weather for London")],
+    {},
+    runManager
+  )) {
+    chunks.push(chunk);
+  }
+
+  expect(chunks).toHaveLength(2);
+  expect(handleLLMNewToken).toHaveBeenCalledTimes(2);
+
+  const firstCallbackFields = handleLLMNewToken.mock.calls[0][5] as {
+    chunk: { message: AIMessageChunk };
+  };
+  expect(firstCallbackFields.chunk.message.tool_call_chunks).toEqual([
+    {
+      id: "tooluse_123",
+      index: 0,
+      name: "get_weather",
+      type: "tool_call_chunk",
+    },
+  ]);
+
+  const secondCallbackFields = handleLLMNewToken.mock.calls[1][5] as {
+    chunk: { message: AIMessageChunk };
+  };
+  expect(secondCallbackFields.chunk.message.tool_call_chunks).toEqual([
+    {
+      args: '{"location":"London"}',
+      index: 0,
+      type: "tool_call_chunk",
+    },
+  ]);
 });
 
 describe("video content block conversion", () => {

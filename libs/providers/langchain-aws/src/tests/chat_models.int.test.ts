@@ -1,5 +1,6 @@
 import { test, expect, describe } from "vitest";
 import { z } from "zod/v3";
+import type { HandleLLMNewTokenCallbackFields } from "@langchain/core/callbacks/base";
 import {
   AIMessage,
   AIMessageChunk,
@@ -281,6 +282,69 @@ test("Test ChatBedrockConverse can stream tools", async () => {
   expect(finalChunk?.tool_calls?.[0].name).toBe("get_weather");
   expect(finalChunk?.tool_calls?.[0].id).toBeDefined();
 });
+
+test("Test ChatBedrockConverse streams tool call identity via callbacks", async () => {
+  process.env.LANGCHAIN_CALLBACKS_BACKGROUND = "false";
+
+  try {
+    const streamedToolCallChunks: AIMessageChunk[] = [];
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      streaming: true,
+      callbacks: [
+        {
+          handleLLMNewToken(
+            _token: string,
+            _idx,
+            _runId,
+            _parentRunId,
+            _tags,
+            fields?: HandleLLMNewTokenCallbackFields
+          ) {
+            if (!fields?.chunk || !("message" in fields.chunk)) {
+              return;
+            }
+
+            const chunkMessage = fields.chunk.message as AIMessageChunk;
+            if (chunkMessage.tool_call_chunks?.length) {
+              streamedToolCallChunks.push(chunkMessage);
+            }
+          },
+        },
+      ],
+    });
+
+    const tools = [
+      tool((_input) => "Hello", {
+        name: "get_weather",
+        description: "Get the weather",
+        schema: z.object({
+          location: z.string().describe("Location to get the weather for"),
+        }),
+      }),
+    ];
+    const modelWithTools = model.bindTools(tools);
+    const result = await modelWithTools.invoke([
+      new HumanMessage("Get the weather for London"),
+    ]);
+
+    expect(result.tool_calls).toBeDefined();
+    expect(result.tool_calls).toHaveLength(1);
+    expect(result.tool_calls?.[0].name).toBe("get_weather");
+    expect(result.tool_calls?.[0].id).toBeDefined();
+
+    expect(
+      streamedToolCallChunks.some((chunk) =>
+        chunk.tool_call_chunks?.some(
+          (toolChunk) =>
+            toolChunk.id !== undefined && toolChunk.name !== undefined
+        )
+      )
+    ).toBe(true);
+  } finally {
+    process.env.LANGCHAIN_CALLBACKS_BACKGROUND = originalBackground;
+  }
+}, 10000);
 
 test("Test ChatBedrockConverse tool_choice works", async () => {
   const model = new ChatBedrockConverse({
