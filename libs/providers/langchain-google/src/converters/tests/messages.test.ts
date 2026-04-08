@@ -740,4 +740,127 @@ describe("convertMessagesToGeminiContents", () => {
       (userContent!.parts[3] as Gemini.Part.FileData).fileData!.fileUri
     ).toBe("gs://bucket/report.pdf");
   });
+
+  test("ToolMessage with plain object content produces functionResponse (legacy path)", () => {
+    const messages = [
+      new HumanMessage("What is the result?"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "my_tool",
+            args: { input: "test" },
+            id: "tool-call-obj",
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: {
+          status: "ok",
+          value: 42,
+          items: ["foo", "bar"],
+        } as unknown as string,
+        tool_call_id: "tool-call-obj",
+        name: "my_tool",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const toolResponseContent = contents.find(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
+    expect(toolResponseContent).toBeDefined();
+
+    const frPart = toolResponseContent!.parts.find(
+      (p) => "functionResponse" in p
+    ) as Gemini.Part.FunctionResponse;
+    expect(frPart).toBeDefined();
+    expect(frPart.functionResponse!.name).toBe("my_tool");
+    // Object content should be preserved as an object, not stringified
+    const result = frPart.functionResponse!.response!.result;
+    expect(typeof result).toBe("object");
+    expect(result).toEqual({ status: "ok", value: 42, items: ["foo", "bar"] });
+  });
+
+  test("ToolMessage with array content produces functionResponse with extracted text (legacy path)", () => {
+    const messages = [
+      new HumanMessage("What is the result?"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "my_tool",
+            args: { input: "test" },
+            id: "tool-call-arr",
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: [
+          { type: "text", text: "Result A" },
+          { type: "text", text: " and Result B" },
+        ],
+        tool_call_id: "tool-call-arr",
+        name: "my_tool",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const toolResponseContent = contents.find(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
+    expect(toolResponseContent).toBeDefined();
+
+    const frPart = toolResponseContent!.parts.find(
+      (p) => "functionResponse" in p
+    ) as Gemini.Part.FunctionResponse;
+    expect(frPart).toBeDefined();
+    // Array text blocks should be concatenated
+    expect(frPart.functionResponse!.response!.result).toBe(
+      "Result A and Result B"
+    );
+  });
+
+  test("ToolMessage with JSON string content is parsed into object (legacy path)", () => {
+    const messages = [
+      new HumanMessage("hello"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "my_tool",
+            args: {},
+            id: "tool-call-json",
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: '{"temperature": 22, "unit": "C"}',
+        tool_call_id: "tool-call-json",
+        name: "my_tool",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const toolResponseContent = contents.find(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
+    expect(toolResponseContent).toBeDefined();
+
+    const frPart = toolResponseContent!.parts.find(
+      (p) => "functionResponse" in p
+    ) as Gemini.Part.FunctionResponse;
+    expect(frPart).toBeDefined();
+    // JSON string should be parsed into object
+    expect(frPart.functionResponse!.response!.result).toEqual({
+      temperature: 22,
+      unit: "C",
+    });
+  });
 });
