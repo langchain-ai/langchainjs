@@ -336,7 +336,6 @@ export const convertResponsesMessageToAIMessage: Converter<
     throw error;
   }
 
-  let messageId: string | undefined;
   const content: MessageContent = [];
   const tool_calls: ToolCall[] = [];
   const invalid_tool_calls: InvalidToolCall[] = [];
@@ -380,7 +379,6 @@ export const convertResponsesMessageToAIMessage: Converter<
 
   for (const item of response.output) {
     if (item.type === "message") {
-      messageId = item.id;
       content.push(
         ...item.content.flatMap((part) => {
           if (part.type === "output_text") {
@@ -485,7 +483,7 @@ export const convertResponsesMessageToAIMessage: Converter<
   }
 
   return new AIMessage({
-    id: messageId,
+    id: response.id,
     content,
     tool_calls,
     invalid_tool_calls,

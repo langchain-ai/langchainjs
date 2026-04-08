@@ -82,6 +82,34 @@ describe("convertResponsesUsageToUsageMetadata", () => {
 });
 
 describe("convertResponsesMessageToAIMessage", () => {
+  it("should use the top-level response id for AIMessage.id", () => {
+    const response = {
+      id: "resp_123",
+      model: "gpt-4o",
+      created_at: 1234567890,
+      object: "response",
+      status: "completed",
+      output: [
+        {
+          type: "message",
+          id: "msg_123",
+          role: "assistant",
+          content: [{ type: "output_text", text: "Hello!", annotations: [] }],
+        },
+      ],
+      usage: {
+        input_tokens: 10,
+        output_tokens: 20,
+        total_tokens: 30,
+      },
+    };
+
+    const result = convertResponsesMessageToAIMessage(response as any);
+
+    expect(result.id).toBe("resp_123");
+    expect(result.response_metadata.id).toBe("resp_123");
+  });
+
   it("should elevate reasoning to content array", () => {
     const response = {
       id: "resp_123",
