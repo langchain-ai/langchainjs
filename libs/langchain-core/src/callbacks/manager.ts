@@ -950,7 +950,8 @@ export class CallbackManager
             this._parentRunId,
             this.tags,
             this.metadata,
-            runName
+            runName,
+            toolCallId
           );
         }
         return consumeCallback(async () => {
