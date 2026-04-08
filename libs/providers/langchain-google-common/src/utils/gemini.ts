@@ -1979,6 +1979,29 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     };
   }
 
+  /**
+   * Detects whether a request mixes server-side built-in tools (e.g.
+   * `googleSearch`, `codeExecution`) with function declarations. The Gemini
+   * API requires `toolConfig.includeServerSideToolInvocations` to be `true`
+   * in that case, otherwise it returns HTTP 400.
+   * See https://ai.google.dev/gemini-api/docs/tool-combination
+   */
+  function mixesBuiltinAndFunctionTools(tools: GeminiTool[]): boolean {
+    let hasBuiltin = false;
+    let hasFunctionDeclarations = false;
+    for (const tool of tools) {
+      if (tool.functionDeclarations && tool.functionDeclarations.length > 0) {
+        hasFunctionDeclarations = true;
+      } else {
+        hasBuiltin = true;
+      }
+      if (hasBuiltin && hasFunctionDeclarations) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   async function formatData(
     input: unknown,
     parameters: GoogleAIModelRequestParams
@@ -1998,8 +2021,13 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     if (tools && tools.length) {
       ret.tools = tools;
     }
-    if (toolConfig) {
-      ret.toolConfig = toolConfig;
+    const needsServerSideToolInvocations =
+      tools && tools.length > 1 && mixesBuiltinAndFunctionTools(tools);
+    if (toolConfig || needsServerSideToolInvocations) {
+      ret.toolConfig = toolConfig ?? {};
+      if (needsServerSideToolInvocations) {
+        ret.toolConfig.includeServerSideToolInvocations = true;
+      }
     }
     if (safetySettings && safetySettings.length) {
       ret.safetySettings = safetySettings;
