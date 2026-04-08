@@ -16,12 +16,9 @@ import type { ToolCallChunk } from "@langchain/core/messages/tool";
 import type { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
 import type { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import {
-  DEFAULT_BASE_URL,
-  DEFAULT_API_KEY_ENV_VAR,
-  normalizeModelUrl,
-  type BasetenChatInput,
-} from "./types.js";
+import { DEFAULT_BASE_URL, DEFAULT_API_KEY_ENV_VAR } from "./const.js";
+import { normalizeModelUrl } from "./converters/params.js";
+import type { BasetenChatInput } from "./types.js";
 
 function resolveApiKey(fields?: BasetenChatInput): string {
   if (fields?.basetenApiKey) return fields.basetenApiKey;

@@ -4,7 +4,7 @@ import {
   normalizeToolCallChunks,
   normalizeModelUrl,
 } from "../index.js";
-import { DEFAULT_BASE_URL, DEFAULT_API_KEY_ENV_VAR } from "../types.js";
+import { DEFAULT_BASE_URL, DEFAULT_API_KEY_ENV_VAR } from "../const.js";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { ChatGenerationChunk } from "@langchain/core/outputs";
 import type { ToolCallChunk } from "@langchain/core/messages/tool";
