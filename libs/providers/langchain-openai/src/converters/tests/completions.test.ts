@@ -439,6 +439,86 @@ describe("convertCompletionsMessageToBaseMessage", () => {
     });
   });
 
+  describe("contentBlocks with tool_call blocks", () => {
+    it("should convert AIMessage contentBlocks with tool_call type to OpenAI tool_calls", () => {
+      const message = new AIMessage({
+        contentBlocks: [
+          {
+            type: "tool_call",
+            name: "get_value",
+            args: { key: "a" },
+            id: "call_1",
+          },
+          {
+            type: "tool_call",
+            name: "get_value",
+            args: { key: "b" },
+            id: "call_2",
+          },
+        ],
+      });
+
+      const result = convertMessagesToCompletionsMessageParams({
+        messages: [message],
+      });
+
+      expect(result).toHaveLength(1);
+      expect((result[0] as any).role).toBe("assistant");
+      expect((result[0] as any).tool_calls).toEqual([
+        {
+          id: "call_1",
+          type: "function",
+          function: {
+            name: "get_value",
+            arguments: '{"key":"a"}',
+          },
+        },
+        {
+          id: "call_2",
+          type: "function",
+          function: {
+            name: "get_value",
+            arguments: '{"key":"b"}',
+          },
+        },
+      ]);
+    });
+
+    it("should handle AIMessage contentBlocks with mixed text and tool_call blocks", () => {
+      const message = new AIMessage({
+        contentBlocks: [
+          { type: "text", text: "Let me look that up." },
+          {
+            type: "tool_call",
+            name: "search",
+            args: { query: "langchain" },
+            id: "call_1",
+          },
+        ],
+      });
+
+      const result = convertMessagesToCompletionsMessageParams({
+        messages: [message],
+      });
+
+      expect(result).toHaveLength(1);
+      expect((result[0] as any).role).toBe("assistant");
+      expect((result[0] as any).content).toEqual([
+        { type: "text", text: "Let me look that up." },
+      ]);
+      expect((result[0] as any).tool_calls).toEqual([
+        {
+          id: "call_1",
+          type: "function",
+          function: {
+            name: "search",
+            arguments: '{"query":"langchain"}',
+          },
+        },
+      ]);
+    });
+  });
+
   describe("Anthropic cross-provider compatibility", () => {
     it("should drop tool_use blocks from content (already in tool_calls)", () => {
       const message = new AIMessage({
