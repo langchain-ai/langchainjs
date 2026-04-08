@@ -131,6 +131,158 @@ export class ChatCloudflareWorkersAI
     return {};
   }
 
+  private _isRecord(value: unknown): value is Record<string, unknown> {
+    return value !== null && typeof value === "object";
+  }
+
+  private _extractTextFromResult(
+    result: Record<string, unknown>
+  ): string | undefined {
+    if (typeof result.response === "string") {
+      return result.response;
+    }
+    if (typeof result.output_text === "string") {
+      return result.output_text;
+    }
+    if (!Array.isArray(result.output)) {
+      if (!Array.isArray(result.choices)) {
+        return undefined;
+      }
+      // Some Cloudflare models return OpenAI-compatible choices; content can be
+      // a string, content blocks, or null with reasoning_content only.
+      // https://developers.cloudflare.com/workers-ai/configuration/open-ai-compatibility/
+      const choiceText: string[] = [];
+      for (const choice of result.choices) {
+        if (!this._isRecord(choice) || !this._isRecord(choice.message)) {
+          continue;
+        }
+        if (typeof choice.message.content === "string") {
+          choiceText.push(choice.message.content);
+          continue;
+        }
+        if (Array.isArray(choice.message.content)) {
+          for (const block of choice.message.content) {
+            if (this._isRecord(block) && typeof block.text === "string") {
+              choiceText.push(block.text);
+            }
+          }
+          continue;
+        }
+        if (typeof choice.message.reasoning_content === "string") {
+          choiceText.push(choice.message.reasoning_content);
+        }
+      }
+      if (choiceText.length === 0) {
+        return undefined;
+      }
+      return choiceText.join("");
+    }
+
+    const textChunks: string[] = [];
+    for (const item of result.output) {
+      if (!this._isRecord(item)) {
+        continue;
+      }
+      if (typeof item.text === "string") {
+        textChunks.push(item.text);
+      }
+      if (!Array.isArray(item.content)) {
+        continue;
+      }
+      for (const block of item.content) {
+        if (!this._isRecord(block)) {
+          continue;
+        }
+        if (typeof block.text === "string") {
+          textChunks.push(block.text);
+        }
+      }
+    }
+
+    if (textChunks.length === 0) {
+      return undefined;
+    }
+    return textChunks.join("");
+  }
+
+  private _extractTextFromResponse(responseData: unknown): string {
+    if (!this._isRecord(responseData)) {
+      throw new Error(
+        "Unexpected Cloudflare response format: response is not an object."
+      );
+    }
+
+    if (typeof responseData.response === "string") {
+      return responseData.response;
+    }
+
+    if (this._isRecord(responseData.result)) {
+      const text = this._extractTextFromResult(responseData.result);
+      if (text !== undefined) {
+        return text;
+      }
+    }
+
+    throw new Error(
+      `Unexpected Cloudflare response format: could not find text in any of the expected locations (response, result.response, result.output_text, result.output[], or result.choices[*].message.{content,reasoning_content}). Top-level keys received: ${Object.keys(responseData).join(
+        ", "
+      )}.`
+    );
+  }
+
+  private _extractTextFromChunk(chunkData: unknown): string | undefined {
+    if (!this._isRecord(chunkData)) {
+      return undefined;
+    }
+    if (typeof chunkData.response === "string") {
+      return chunkData.response;
+    }
+    if (this._isRecord(chunkData.result)) {
+      return this._extractTextFromResult(chunkData.result);
+    }
+    if (Array.isArray(chunkData.choices)) {
+      // Streaming payloads may provide text in delta.content, final message.content,
+      // or reasoning_content when content is absent.
+      const chunkText: string[] = [];
+      for (const choice of chunkData.choices) {
+        if (!this._isRecord(choice)) {
+          continue;
+        }
+        if (
+          this._isRecord(choice.delta) &&
+          typeof choice.delta.content === "string"
+        ) {
+          chunkText.push(choice.delta.content);
+          continue;
+        }
+        if (
+          this._isRecord(choice.message) &&
+          typeof choice.message.content === "string"
+        ) {
+          chunkText.push(choice.message.content);
+          continue;
+        }
+        if (
+          this._isRecord(choice.delta) &&
+          typeof choice.delta.reasoning_content === "string"
+        ) {
+          chunkText.push(choice.delta.reasoning_content);
+          continue;
+        }
+        if (
+          this._isRecord(choice.message) &&
+          typeof choice.message.reasoning_content === "string"
+        ) {
+          chunkText.push(choice.message.reasoning_content);
+        }
+      }
+      if (chunkText.length > 0) {
+        return chunkText.join("");
+      }
+    }
+    return undefined;
+  }
+
   /**
    * Method to validate the environment.
    */
@@ -199,9 +351,13 @@ export class ChatCloudflareWorkersAI
       }
       if (chunk !== "[DONE]") {
         const parsedChunk = JSON.parse(chunk);
+        const chunkText = this._extractTextFromChunk(parsedChunk);
+        if (chunkText === undefined) {
+          continue;
+        }
         const generationChunk = new ChatGenerationChunk({
-          message: new AIMessageChunk({ content: parsedChunk.response }),
-          text: parsedChunk.response,
+          message: new AIMessageChunk({ content: chunkText }),
+          text: chunkText,
         });
         yield generationChunk;
         // oxlint-disable-next-line no-void
@@ -248,15 +404,22 @@ export class ChatCloudflareWorkersAI
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<string> {
-    options.signal?.throwIfAborted();
+    // Integration tests call _call directly without options, so guard against
+    // undefined before reading signal.
+    const parsedOptions = options ?? ({} as this["ParsedCallOptions"]);
+    parsedOptions.signal?.throwIfAborted();
     if (!this.streaming) {
-      const response = await this._request(messages, options);
+      const response = await this._request(messages, parsedOptions);
 
-      const responseData = await response.json();
+      const responseData: unknown = await response.json();
 
-      return responseData.result.response;
+      return this._extractTextFromResponse(responseData);
     } else {
-      const stream = this._streamResponseChunks(messages, options, runManager);
+      const stream = this._streamResponseChunks(
+        messages,
+        parsedOptions,
+        runManager
+      );
       let finalResult: ChatGenerationChunk | undefined;
       for await (const chunk of stream) {
         if (finalResult === undefined) {
