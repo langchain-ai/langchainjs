@@ -639,6 +639,13 @@ export class ChatOpenAI<
       options?.tools?.some(isOpenAICustomTool) ||
       options?.tools?.some(isCustomTool);
 
+    // If the user explicitly opted out of the Responses API, respect that
+    // choice. Only fall back to the Responses API when parameters are used
+    // that are exclusive to it and cannot be forwarded to chat completions.
+    if (this.fields?.useResponsesApi === false) {
+      return hasResponsesOnlyKwargs ?? false;
+    }
+
     return (
       this.useResponsesApi ||
       usesBuiltInTools ||
