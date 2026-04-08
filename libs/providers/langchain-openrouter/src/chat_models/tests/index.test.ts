@@ -1,4 +1,6 @@
-import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, vi, test } from "vitest";
+import { AIMessage } from "@langchain/core/messages";
+import { OutputParserException } from "@langchain/core/output_parsers";
 import { ChatOpenRouter } from "../index.js";
 import type { ChatOpenRouterCallOptions } from "../types.js";
 import { OpenRouterAuthError } from "../../utils/errors.js";
@@ -79,8 +81,8 @@ describe("ChatOpenRouter constructor", () => {
 
   it("defaults siteUrl and siteName for OpenRouter attribution", () => {
     const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
-    expect(model.siteUrl).toBe("https://docs.langchain.com/oss");
-    expect(model.siteName).toBe("langchain");
+    expect(model.siteUrl).toBe("https://docs.langchain.com");
+    expect(model.siteName).toBe("LangChain");
   });
 
   it("allows user to override siteUrl and siteName", () => {
@@ -91,6 +93,19 @@ describe("ChatOpenRouter constructor", () => {
     });
     expect(model.siteUrl).toBe("https://my-custom-app.com");
     expect(model.siteName).toBe("My Custom App");
+  });
+
+  it("stores appCategories when provided", () => {
+    const model = new ChatOpenRouter({
+      model: "openai/gpt-4o",
+      appCategories: ["cli-agent", "programming-app"],
+    });
+    expect(model.appCategories).toEqual(["cli-agent", "programming-app"]);
+  });
+
+  it("defaults appCategories to undefined", () => {
+    const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
+    expect(model.appCategories).toBeUndefined();
   });
 
   it("throws OpenRouterAuthError when no API key is available", () => {
@@ -106,6 +121,77 @@ describe("ChatOpenRouter constructor", () => {
     } finally {
       process.env.OPENROUTER_API_KEY = original;
     }
+  });
+});
+
+describe("attribution headers", () => {
+  function extractHeaders(model: ChatOpenRouter): Record<string, string> {
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    return (model as any).buildHeaders();
+  }
+
+  it("sends default HTTP-Referer and X-Title headers", () => {
+    const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
+    const headers = extractHeaders(model);
+    expect(headers["HTTP-Referer"]).toBe("https://docs.langchain.com");
+    expect(headers["X-Title"]).toBe("LangChain");
+  });
+
+  it("sends user-supplied siteUrl as HTTP-Referer", () => {
+    const model = new ChatOpenRouter({
+      model: "openai/gpt-4o",
+      siteUrl: "https://myapp.com",
+    });
+    const headers = extractHeaders(model);
+    expect(headers["HTTP-Referer"]).toBe("https://myapp.com");
+  });
+
+  it("sends user-supplied siteName as X-Title", () => {
+    const model = new ChatOpenRouter({
+      model: "openai/gpt-4o",
+      siteName: "My App",
+    });
+    const headers = extractHeaders(model);
+    expect(headers["X-Title"]).toBe("My App");
+  });
+
+  it("sends X-OpenRouter-Categories when appCategories is set", () => {
+    const model = new ChatOpenRouter({
+      model: "openai/gpt-4o",
+      appCategories: ["cli-agent", "programming-app"],
+    });
+    const headers = extractHeaders(model);
+    expect(headers["X-OpenRouter-Categories"]).toBe(
+      "cli-agent,programming-app"
+    );
+  });
+
+  it("omits X-OpenRouter-Categories when appCategories is undefined", () => {
+    const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
+    const headers = extractHeaders(model);
+    expect(headers["X-OpenRouter-Categories"]).toBeUndefined();
+  });
+
+  it("omits X-OpenRouter-Categories when appCategories is empty", () => {
+    const model = new ChatOpenRouter({
+      model: "openai/gpt-4o",
+      appCategories: [],
+    });
+    const headers = extractHeaders(model);
+    expect(headers["X-OpenRouter-Categories"]).toBeUndefined();
+  });
+
+  it("includes all attribution headers together", () => {
+    const model = new ChatOpenRouter({
+      model: "openai/gpt-4o",
+      siteUrl: "https://myapp.com",
+      siteName: "My App",
+      appCategories: ["cli-agent"],
+    });
+    const headers = extractHeaders(model);
+    expect(headers["HTTP-Referer"]).toBe("https://myapp.com");
+    expect(headers["X-Title"]).toBe("My App");
+    expect(headers["X-OpenRouter-Categories"]).toBe("cli-agent");
   });
 });
 
@@ -243,6 +329,7 @@ describe("stream callbacks", () => {
               _idx?: number,
               _runId?: string,
               _parentRunId?: string,
+              _tags?: string[],
               fields?: Record<string, unknown>
             ) => {
               tokens.push(token);
@@ -265,5 +352,219 @@ describe("stream callbacks", () => {
         chunk: expect.objectContaining({ text }),
       })
     );
+  });
+});
+
+function makeSerializableSchema() {
+  return {
+    "~standard": {
+      version: 1 as const,
+      vendor: "test",
+      validate: (value: unknown) => {
+        const obj = value as Record<string, unknown>;
+        if (
+          typeof obj === "object" &&
+          obj !== null &&
+          typeof obj.name === "string"
+        ) {
+          return { value: obj };
+        }
+        return {
+          issues: [{ message: "Expected object with string 'name' field" }],
+        };
+      },
+      jsonSchema: {
+        input: () => ({
+          type: "object",
+          properties: { name: { type: "string" } },
+          required: ["name"],
+        }),
+        output: () => ({
+          type: "object",
+          properties: { name: { type: "string" } },
+          required: ["name"],
+        }),
+      },
+    },
+  };
+}
+
+describe("withStructuredOutput with SerializableSchema", () => {
+  test("functionCalling with valid output parses correctly", async () => {
+    const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.spyOn(model as any, "invoke").mockResolvedValue(
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            id: "call_123",
+            name: "extract",
+            args: { name: "Claude" },
+          },
+        ],
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      method: "functionCalling",
+    });
+
+    const result = await structured.invoke("What is your name?");
+    expect(result).toEqual({ name: "Claude" });
+  });
+
+  test("functionCalling with invalid output throws OutputParserException", async () => {
+    const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.spyOn(model as any, "invoke").mockResolvedValue(
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            id: "call_123",
+            name: "extract",
+            args: { wrong_field: 123 },
+          },
+        ],
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      method: "functionCalling",
+    });
+
+    await expect(async () => {
+      await structured.invoke("What is your name?");
+    }).rejects.toThrow(OutputParserException);
+  });
+
+  test("functionCalling with custom name", async () => {
+    const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.spyOn(model as any, "invoke").mockResolvedValue(
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            id: "call_123",
+            name: "PersonInfo",
+            args: { name: "Alice" },
+          },
+        ],
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      method: "functionCalling",
+      name: "PersonInfo",
+    });
+
+    const result = await structured.invoke("Who is this?");
+    expect(result).toEqual({ name: "Alice" });
+  });
+
+  test("functionCalling with includeRaw returns raw and parsed", async () => {
+    const rawMessage = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          id: "call_123",
+          name: "extract",
+          args: { name: "Bob" },
+        },
+      ],
+    });
+    const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.spyOn(model as any, "invoke").mockResolvedValue(rawMessage);
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      method: "functionCalling",
+      includeRaw: true,
+    });
+
+    const result = await structured.invoke("Tell me a name");
+    expect(result).toHaveProperty("raw");
+    expect(result).toHaveProperty("parsed");
+    expect(result.parsed).toEqual({ name: "Bob" });
+  });
+
+  test("jsonMode with valid output parses correctly", async () => {
+    const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.spyOn(model as any, "invoke").mockResolvedValue(
+      new AIMessage({
+        content: '{"name": "Alice"}',
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      method: "jsonMode",
+    });
+
+    const result = await structured.invoke("What is your name?");
+    expect(result).toEqual({ name: "Alice" });
+  });
+
+  test("jsonMode with invalid output throws OutputParserException", async () => {
+    const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.spyOn(model as any, "invoke").mockResolvedValue(
+      new AIMessage({
+        content: '{"wrong_field": 123}',
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      method: "jsonMode",
+    });
+
+    await expect(async () => {
+      await structured.invoke("What is your name?");
+    }).rejects.toThrow(OutputParserException);
+  });
+
+  test("jsonSchema with valid output parses correctly", async () => {
+    const model = new ChatOpenRouter({ model: "openai/gpt-4o-mini" });
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.spyOn(model as any, "invoke").mockResolvedValue(
+      new AIMessage({
+        content: '{"name": "Eve"}',
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      method: "jsonSchema",
+    });
+
+    const result = await structured.invoke("What is your name?");
+    expect(result).toEqual({ name: "Eve" });
+  });
+
+  test("jsonSchema with invalid output throws OutputParserException", async () => {
+    const model = new ChatOpenRouter({ model: "openai/gpt-4o-mini" });
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.spyOn(model as any, "invoke").mockResolvedValue(
+      new AIMessage({
+        content: '{"wrong_field": 123}',
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      method: "jsonSchema",
+    });
+
+    await expect(async () => {
+      await structured.invoke("What is your name?");
+    }).rejects.toThrow(OutputParserException);
   });
 });

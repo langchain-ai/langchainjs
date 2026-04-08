@@ -1,6 +1,9 @@
 import { createClient } from "redis";
+import {
+  RedisVectorStore,
+  type RedisVectorStoreConfig,
+} from "@langchain/redis";
 import { OpenAIEmbeddings } from "@langchain/openai";
-import { RedisVectorStore } from "@langchain/redis";
 import { Document } from "@langchain/core/documents";
 
 const client = createClient({
@@ -36,7 +39,7 @@ const vectorStore = await RedisVectorStore.fromDocuments(
     createIndexOptions: {
       TEMPORARY: 1000,
     },
-  }
+  } as unknown as RedisVectorStoreConfig
 );
 
 await client.disconnect();

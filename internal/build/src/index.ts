@@ -71,7 +71,17 @@ export function getBuildConfig(options?: Partial<BuildOptions>): BuildOptions {
     // can override this with a specific allowlist if needed.
     inlineOnly: false,
     exports: {
-      customExports: async (exports) => {
+      customExports: async (exports, context) => {
+        // context.pkg holds the original package.json (including any hand-authored
+        // export conditions such as "browser"). We use it as the source of truth
+        // for extra conditions that tsdown doesn't know about.
+        const pkgExports =
+          (
+            context as {
+              pkg?: { exports?: Record<string, Record<string, unknown>> };
+            }
+          ).pkg?.exports ?? {};
+
         return Object.entries(exports).reduce(
           (acc, [key, value]) => {
             if (
@@ -93,7 +103,30 @@ export function getBuildConfig(options?: Partial<BuildOptions>): BuildOptions {
                 dir.replace("./dist", "./src"),
                 `${base}.ts`
               );
+
+              // Carry forward any extra conditions (e.g. "browser") that were
+              // hand-authored in the original package.json export entry.
+              // These are absent from the tsdown-generated `exports` argument,
+              // so we have to read them from `context.pkg`.
+              const pkgEntry = pkgExports[key];
+              const extraConditions: Record<string, unknown> = {};
+              if (typeof pkgEntry === "object" && pkgEntry !== null) {
+                for (const [cond, val] of Object.entries(pkgEntry)) {
+                  if (!["input", "require", "import"].includes(cond)) {
+                    extraConditions[cond] = val;
+                  }
+                }
+              }
+
               acc[key] = {
+                /**
+                 * We may have custom exports set (e.g. "browser") that are not part of
+                 * the standard require/import/input triple.
+                 */
+                ...extraConditions,
+                /**
+                 * These should always be set and not overridden.
+                 */
                 input: `./${inputPath}`,
                 require: {
                   types: `./${outputPath}.d.cts`,

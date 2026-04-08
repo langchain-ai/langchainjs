@@ -11,11 +11,15 @@ import {
   GeminiJsonSchema,
   GeminiJsonSchemaDirty,
 } from "../types.js";
+import {
+  isSerializableSchema,
+  SerializableSchema,
+} from "@langchain/core/utils/standard_schema";
 
 export function adjustObjectType(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   obj: Record<string, any>
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
 ): Record<string, any> {
   if (!Array.isArray(obj.type)) {
     return obj;
@@ -47,7 +51,7 @@ export function adjustObjectType(
 }
 
 export function removeAdditionalProperties(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   obj: Record<string, any>
 ): GeminiJsonSchema {
   if (typeof obj === "object" && obj !== null) {
@@ -124,23 +128,29 @@ export function removeAdditionalProperties(
 }
 
 export function schemaToGeminiParameters<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunOutput extends Record<string, any> = Record<string, any>,
->(schema: InteropZodType<RunOutput> | JsonSchema7Type): GeminiFunctionSchema {
+>(
+  schema:
+    | SerializableSchema<RunOutput>
+    | InteropZodType<RunOutput>
+    | JsonSchema7Type
+): GeminiFunctionSchema {
   // Gemini doesn't accept either the $schema or additionalProperties
   // attributes, so we need to explicitly remove them.
   // Zod sometimes also makes an array of type (because of .nullish()),
   // which needs cleaning up.
   const jsonSchema = removeAdditionalProperties(
-    isInteropZodSchema(schema) ? toJsonSchema(schema) : schema
+    isInteropZodSchema(schema) || isSerializableSchema(schema)
+      ? toJsonSchema(schema)
+      : schema
   );
   const { $schema, ...rest } = jsonSchema;
-
   return rest;
 }
 
 export function jsonSchemaToGeminiParameters(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   schema: Record<string, any>
 ): GeminiFunctionSchema {
   // Gemini doesn't accept either the $schema or additionalProperties

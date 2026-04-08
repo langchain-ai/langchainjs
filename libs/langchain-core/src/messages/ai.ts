@@ -416,7 +416,7 @@ export class AIMessageChunk<
         chunk.tool_call_chunks as ContentBlock.Tools.ToolCallChunk[]
       );
       if (rawToolCalls !== undefined && rawToolCalls.length > 0) {
-        combinedFields.tool_call_chunks = rawToolCalls;
+        combinedFields.tool_call_chunks = rawToolCalls as ToolCallChunk[];
       }
     }
     if (this.tool_calls !== undefined || chunk.tool_calls !== undefined) {

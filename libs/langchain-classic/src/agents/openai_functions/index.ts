@@ -39,7 +39,7 @@ import {
 } from "../openai/output_parser.js";
 import { formatToOpenAIFunctionMessages } from "../format_scratchpad/openai_functions.js";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 type CallOptionsIfAvailable<T> = T extends { CallOptions: infer CO } ? CO : any;
 
 /**

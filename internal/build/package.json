@@ -6,28 +6,21 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "scripts": {
-    "build": "exit 0",
-    "lint": "eslint --cache src/",
-    "lint:fix": "eslint --cache src/ --fix",
-    "format": "prettier --write \"src\"",
-    "format:check": "prettier --check \"src\""
+    "build": "exit 0"
   },
   "dependencies": {
     "@arethetypeswrong/core": "^0.18.2",
-    "@typescript/native-preview": "^7.0.0-dev.20260223.1",
-    "prettier": "^3.6.2",
+    "@typescript/native-preview": "^7.0.0-dev.20260401.1",
     "publint": "^0.3.15",
     "rolldown": "^1.0.0-rc.4",
-    "tsdown": "^0.20.3",
+    "tsdown": "^0.21.7",
     "type-fest": "^5.3.0",
     "typescript": "^5.9.3",
     "unplugin-unused": "^0.5.6"
   },
   "devDependencies": {
-    "@langchain/eslint": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
-    "@tsconfig/recommended": "^1.0.10",
-    "eslint": "^9.39.1"
+    "@tsconfig/recommended": "^1.0.10"
   },
   "optionalDependencies": {
     "@esbuild/win32-x64": "*",

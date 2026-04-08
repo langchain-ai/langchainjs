@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { it, test, expect, describe, beforeAll, afterAll, vi } from "vitest";
 import { z } from "zod/v3";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
@@ -408,6 +408,227 @@ describe("ChatOpenAI", () => {
     });
   });
 
+  describe("withStructuredOutput with Standard Schema", () => {
+    function makeMockStandardSchema() {
+      return {
+        "~standard": {
+          version: 1 as const,
+          vendor: "test",
+          validate: (value: unknown) => ({
+            value: value as Record<string, unknown>,
+          }),
+          jsonSchema: {
+            input: () => ({
+              type: "object",
+              properties: {
+                location: { type: "string", description: "The city name" },
+              },
+              required: ["location"],
+            }),
+            output: () => ({
+              type: "object",
+              properties: {
+                location: { type: "string", description: "The city name" },
+              },
+              required: ["location"],
+            }),
+          },
+        },
+      };
+    }
+
+    it("sends correct tool definition with functionCalling method", async () => {
+      const mockFetch = vi.fn<(url: any, options?: any) => Promise<any>>();
+      mockFetch.mockImplementation((url, options) => {
+        mockFetch.mock.calls.push([url, options]);
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({}),
+        });
+      });
+
+      const model = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        apiKey: "test-key",
+        configuration: { fetch: mockFetch },
+        maxRetries: 0,
+      });
+
+      const modelWithTools = model.withStructuredOutput(
+        makeMockStandardSchema(),
+        { method: "functionCalling" }
+      );
+
+      await expect(
+        modelWithTools.invoke("What's the weather?")
+      ).rejects.toThrow();
+
+      expect(mockFetch).toHaveBeenCalled();
+      const [, options] = mockFetch.mock.calls[0];
+      const body = JSON.parse(options.body);
+
+      expect(body.tools).toHaveLength(1);
+      expect(body.tools[0].function.name).toBe("extract");
+      expect(body.tools[0].function.parameters).toEqual({
+        type: "object",
+        properties: {
+          location: { type: "string", description: "The city name" },
+        },
+        required: ["location"],
+      });
+    });
+
+    it("sends correct json_schema with jsonSchema method", async () => {
+      const mockFetch = vi.fn<(url: any, options?: any) => Promise<any>>();
+      mockFetch.mockImplementation((url, options) => {
+        mockFetch.mock.calls.push([url, options]);
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({}),
+        });
+      });
+
+      const model = new ChatOpenAI({
+        model: "gpt-4o-2024-08-06",
+        apiKey: "test-key",
+        configuration: { fetch: mockFetch },
+        maxRetries: 0,
+      });
+
+      const modelWithTools = model.withStructuredOutput(
+        makeMockStandardSchema(),
+        { name: "get_weather", method: "jsonSchema" }
+      );
+
+      await expect(
+        modelWithTools.invoke("What's the weather?")
+      ).rejects.toThrow();
+
+      expect(mockFetch).toHaveBeenCalled();
+      const [, options] = mockFetch.mock.calls[0];
+      const body = JSON.parse(options.body);
+
+      expect(body.response_format).toBeDefined();
+      expect(body.response_format.type).toBe("json_schema");
+      expect(body.response_format.json_schema.name).toBe("get_weather");
+      expect(body.response_format.json_schema.schema).toEqual({
+        type: "object",
+        properties: {
+          location: { type: "string", description: "The city name" },
+        },
+        required: ["location"],
+      });
+    });
+
+    it("populates ls_structured_output_format metadata", async () => {
+      const mockFetch = vi.fn<(url: any, options?: any) => Promise<any>>();
+      mockFetch.mockImplementation((url, options) => {
+        mockFetch.mock.calls.push([url, options]);
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({}),
+        });
+      });
+
+      const schema = makeMockStandardSchema();
+      const model = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        apiKey: "test-key",
+        configuration: { fetch: mockFetch },
+        maxRetries: 0,
+      }).withStructuredOutput(schema, {
+        method: "functionCalling",
+      });
+
+      let extra: any;
+      await expect(
+        model.invoke("What's the weather?", {
+          callbacks: [
+            {
+              handleLLMStart: (
+                _1: any,
+                _2: any,
+                _3: any,
+                _4: any,
+                extraParams: any
+              ) => {
+                extra = extraParams;
+              },
+            },
+          ],
+        })
+      ).rejects.toThrow();
+
+      const expectedJsonSchema = {
+        type: "object",
+        properties: {
+          location: { type: "string", description: "The city name" },
+        },
+        required: ["location"],
+      };
+      expect(extra).toMatchObject({
+        options: {
+          ls_structured_output_format: {
+            kwargs: { method: "function_calling" },
+            schema: {
+              title: "extract",
+              ...expectedJsonSchema,
+            },
+          },
+        },
+      });
+    });
+  });
+
+  test("bindTools propagates defer_loading from tool extras", async () => {
+    const model = new ChatOpenAI({
+      model: "gpt-5.3",
+    });
+
+    const deferredTool = tool(async () => "result", {
+      name: "deferred_tool",
+      description: "A deferred tool",
+      schema: z.object({ input: z.string() }),
+      extras: { defer_loading: true },
+    });
+
+    const normalTool = tool(async () => "result", {
+      name: "normal_tool",
+      description: "A normal tool",
+      schema: z.object({ input: z.string() }),
+    });
+
+    const modelWithTools = model.bindTools([
+      deferredTool,
+      normalTool,
+    ]) as ChatOpenAI;
+
+    // @ts-expect-error - defaultOptions is protected
+    const tools = modelWithTools.defaultOptions.tools;
+    expect(tools).toHaveLength(2);
+    expect(tools[0]).toHaveProperty("defer_loading", true);
+    expect(tools[0]).toHaveProperty("type", "function");
+    expect(tools[0].function.name).toBe("deferred_tool");
+    expect(tools[1]).not.toHaveProperty("defer_loading");
+    expect(tools[1]).toHaveProperty("type", "function");
+    expect(tools[1].function.name).toBe("normal_tool");
+  });
+
+  test("bindTools passes through tool_search as built-in tool", async () => {
+    const model = new ChatOpenAI({
+      model: "gpt-5.3",
+    });
+
+    const modelWithTools = model.bindTools([
+      { type: "tool_search" },
+    ]) as ChatOpenAI;
+
+    // @ts-expect-error - defaultOptions is protected
+    const tools = modelWithTools.defaultOptions.tools;
+    expect(tools).toHaveLength(1);
+    expect(tools[0]).toEqual({ type: "tool_search" });
+  });
+
   // https://github.com/langchain-ai/langchainjs/issues/8586
   test("multiple bindTools calls will not override each other", async () => {
     const model = new ChatOpenAI({
@@ -610,6 +831,8 @@ describe("ChatOpenAI", () => {
       expect(isReasoningModel("gpt-5.1-mini")).toBe(true);
       expect(isReasoningModel("gpt-5.2")).toBe(true);
       expect(isReasoningModel("gpt-5.2-pro")).toBe(true);
+      expect(isReasoningModel("gpt-5.4")).toBe(true);
+      expect(isReasoningModel("gpt-5.4-pro")).toBe(true);
     });
 
     it("should return true for codex models based on gpt-5", () => {
@@ -650,6 +873,10 @@ describe("ChatOpenAI", () => {
       expect(_modelPrefersResponsesAPI("gpt-5.2-pro-2025-12-11")).toBe(true);
     });
 
+    it("should return true for gpt-5.4-pro", () => {
+      expect(_modelPrefersResponsesAPI("gpt-5.4-pro")).toBe(true);
+    });
+
     it("should return true for codex models", () => {
       expect(_modelPrefersResponsesAPI("codex-mini-latest")).toBe(true);
       expect(_modelPrefersResponsesAPI("gpt-5-codex")).toBe(true);
@@ -667,6 +894,7 @@ describe("ChatOpenAI", () => {
       expect(_modelPrefersResponsesAPI("gpt-5")).toBe(false);
       expect(_modelPrefersResponsesAPI("gpt-5.1")).toBe(false);
       expect(_modelPrefersResponsesAPI("gpt-5.2")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-5.4")).toBe(false);
       expect(_modelPrefersResponsesAPI("o3")).toBe(false);
       expect(_modelPrefersResponsesAPI("o4-mini")).toBe(false);
     });

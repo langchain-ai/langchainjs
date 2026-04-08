@@ -12,7 +12,7 @@
     "type": "git",
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
-  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-pinecone/",
+  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/community/langchain-pinecone/",
   "scripts": {
     "build": "turbo build:compile --filter @langchain/pinecone --output-logs new-only",
     "build:compile": "tsdown",
@@ -38,7 +38,6 @@
   "devDependencies": {
     "@faker-js/faker": "^8.3.1",
     "@langchain/core": "workspace:^",
-    "@langchain/eslint": "workspace:*",
     "@langchain/openai": "workspace:*",
     "@pinecone-database/pinecone": "^5.0.2",
     "@langchain/tsconfig": "workspace:*",

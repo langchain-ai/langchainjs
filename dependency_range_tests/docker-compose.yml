@@ -14,6 +14,7 @@ services:
       - ../libs/providers/langchain-openai:/libs/langchain-openai
       - ../libs/providers/langchain-anthropic:/libs/langchain-anthropic
       - ../libs/providers/langchain-cohere:/libs/langchain-cohere
+      - ../libs/providers/langchain-fireworks:/libs/langchain-fireworks
       - ../libs/providers/langchain-xai:/libs/langchain-xai
       - ../internal:/internal
       - ./scripts:/scripts
@@ -32,59 +33,11 @@ services:
       - ../libs/providers/langchain-openai:/libs/langchain-openai
       - ../libs/providers/langchain-anthropic:/libs/langchain-anthropic
       - ../libs/providers/langchain-cohere:/libs/langchain-cohere
+      - ../libs/providers/langchain-fireworks:/libs/langchain-fireworks
       - ../libs/providers/langchain-xai:/libs/langchain-xai
       - ../internal:/internal
       - ./scripts:/scripts
     command: bash /scripts/langchain/test-with-lowest-deps.sh
-
-  # Community
-  community-latest-deps:
-    image: node:20
-    environment:
-      PUPPETEER_SKIP_DOWNLOAD: "true"
-      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
-      COHERE_API_KEY: ${COHERE_API_KEY}
-    working_dir: /app
-    volumes:
-      - ../pnpm-workspace.yaml:/pnpm-workspace.yaml
-      - ../turbo.json:/turbo.json
-      - ./scripts/with_standard_tests/community/node/package.json:/package.json
-      - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
-      - ../libs/langchain-community:/libs/langchain-community
-      - ../internal:/internal
-      - ./scripts:/scripts
-    command: bash /scripts/with_standard_tests/community/test-with-latest-deps.sh
-  community-lowest-deps:
-    image: node:20
-    environment:
-      PUPPETEER_SKIP_DOWNLOAD: "true"
-      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
-      COHERE_API_KEY: ${COHERE_API_KEY}
-    working_dir: /app
-    volumes:
-      - ../pnpm-workspace.yaml:/pnpm-workspace.yaml
-      - ../turbo.json:/turbo.json
-      - ./scripts/with_standard_tests/community/node/package.json:/package.json
-      - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
-      - ../libs/langchain-community:/libs/langchain-community
-      - ../internal:/internal
-      - ./scripts:/scripts
-    command: bash /scripts/with_standard_tests/community/test-with-lowest-deps.sh
-  community-npm-install:
-    image: node:20
-    environment:
-      PUPPETEER_SKIP_DOWNLOAD: "true"
-      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
-    working_dir: /app
-    volumes:
-      - ../pnpm-workspace.yaml:/pnpm-workspace.yaml
-      - ../turbo.json:/turbo.json
-      - ./scripts/with_standard_tests/community/node/package.json:/package.json
-      - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
-      - ../libs/langchain-community:/libs/langchain-community
-      - ../internal:/internal
-      - ./scripts:/scripts
-    command: bash /scripts/with_standard_tests/community/npm-install.sh
 
   # OpenAI
   # openai-latest-deps:

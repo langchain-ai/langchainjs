@@ -1,5 +1,59 @@
 # @langchain/google-common
 
+## 2.1.26
+
+### Patch Changes
+
+- [#9987](https://github.com/langchain-ai/langchainjs/pull/9987) [`561224b`](https://github.com/langchain-ai/langchainjs/commit/561224b8495dad61946ad7c0f84340d64729c3fb) Thanks [@mbarinov](https://github.com/mbarinov)! - fix(google-common): prevent 400 error when AIMessage has empty text content
+
+- [#9979](https://github.com/langchain-ai/langchainjs/pull/9979) [`6a2da5b`](https://github.com/langchain-ai/langchainjs/commit/6a2da5b63b39bec4b87b6a1d1769810677ad3458) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(google): add support for ContentBlock.Multimodal types in Google providers
+
+- Updated dependencies [[`6db417b`](https://github.com/langchain-ai/langchainjs/commit/6db417b03ecb5e2ace413389d982294e0ac88433), [`d69dfcc`](https://github.com/langchain-ai/langchainjs/commit/d69dfcca97503cf1c0b7e70ccf5fb7d507c60982)]:
+  - @langchain/core@1.1.33
+
+## 2.1.25
+
+### Patch Changes
+
+- Updated dependencies [[`26488b5`](https://github.com/langchain-ai/langchainjs/commit/26488b596f01b7b7fe2f1d97d07164e52365ade5), [`ca826f6`](https://github.com/langchain-ai/langchainjs/commit/ca826f6fecae6087bf0dee7781ee80b587396ec1), [`a602c42`](https://github.com/langchain-ai/langchainjs/commit/a602c42db75d7e7e01cab38b12e0b65b9c0cce95), [`db7d017`](https://github.com/langchain-ai/langchainjs/commit/db7d017f7ce13cb937147aabcbfa3847d80bde9d)]:
+  - @langchain/core@1.1.32
+
+## 2.1.24
+
+### Patch Changes
+
+- [#10208](https://github.com/langchain-ai/langchainjs/pull/10208) [`745b09a`](https://github.com/langchain-ai/langchainjs/commit/745b09a1b0c92643cbc99e773012924948438629) Thanks [@colifran](https://github.com/colifran)! - feat(google-common): implement standard schema support for structured output
+
+- Updated dependencies [[`96c630d`](https://github.com/langchain-ai/langchainjs/commit/96c630dfd009f2546d5bc36f5067ff868bb4067f), [`a8b9ccc`](https://github.com/langchain-ai/langchainjs/commit/a8b9ccca5a85984a5a30008acd09f9991e591638), [`a1f22bb`](https://github.com/langchain-ai/langchainjs/commit/a1f22bba907731a18dca23c31cec5333444a3f55)]:
+  - @langchain/core@1.1.30
+
+## 2.1.23
+
+### Patch Changes
+
+- [#10194](https://github.com/langchain-ai/langchainjs/pull/10194) [`d43194b`](https://github.com/langchain-ai/langchainjs/commit/d43194b625f19acf79cbe958300dadb7b0a6a89d) Thanks [@colifran](https://github.com/colifran)! - fix(google): strip internal fields from text content blocks before sending to Anthropic API
+
+## 2.1.22
+
+### Patch Changes
+
+- [#10187](https://github.com/langchain-ai/langchainjs/pull/10187) [`3590ee3`](https://github.com/langchain-ai/langchainjs/commit/3590ee3229a9a55b0c818c1e396f6445b2368103) Thanks [@colifran](https://github.com/colifran)! - fix(google): streaming chunks missing index produces empty text blocks when using ChatVertexAI with Claude models
+
+## 2.1.21
+
+### Patch Changes
+
+- [#10106](https://github.com/langchain-ai/langchainjs/pull/10106) [`9f30267`](https://github.com/langchain-ai/langchainjs/commit/9f30267e95a2a42fac71f1d3674b84c5a190dbbc) Thanks [@hntrl](https://github.com/hntrl)! - Add package version metadata to runnable traces. Each package now stamps its version in `this.metadata.versions` at construction time, making version info available in LangSmith trace metadata.
+
+- [#10152](https://github.com/langchain-ai/langchainjs/pull/10152) [`e0e5a02`](https://github.com/langchain-ai/langchainjs/commit/e0e5a02ea1b855ad7b8d562d1c7770f984100a5d) Thanks [@hntrl](https://github.com/hntrl)! - fix(google-common): preserve anthropic tool_use blocks and avoid duplicates in Claude Vertex formatting
+
+  Improve Anthropic message conversion in the Vertex Claude path by preserving `tool_use` blocks from assistant content and deduplicating `tool_use` entries when they also appear in `tool_calls`.
+
+  Add regression tests for Anthropic formatting with multi-turn/tool message flows.
+
+- Updated dependencies [[`9f30267`](https://github.com/langchain-ai/langchainjs/commit/9f30267e95a2a42fac71f1d3674b84c5a190dbbc), [`403a99f`](https://github.com/langchain-ai/langchainjs/commit/403a99fd826383f30300809ae077e1c967023520), [`3b1fd54`](https://github.com/langchain-ai/langchainjs/commit/3b1fd5458a4aa29c398122829f383f21b5ac39da), [`77bd982`](https://github.com/langchain-ai/langchainjs/commit/77bd98274a885e947d76f7a9c6dd0b3763453218)]:
+  - @langchain/core@1.1.29
+
 ## 2.1.20
 
 ### Patch Changes

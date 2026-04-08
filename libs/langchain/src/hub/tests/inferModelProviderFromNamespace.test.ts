@@ -66,6 +66,16 @@ describe("inferModelProviderFromNamespace", () => {
         ])
       ).toBe("some-provider");
     });
+
+    it("extracts aws from langchain_aws", () => {
+      expect(
+        inferModelProviderFromNamespace([
+          "langchain_aws",
+          "chat_models",
+          "ChatBedrockConverse",
+        ])
+      ).toBe("aws");
+    });
   });
 
   describe("handles Google provider special cases", () => {

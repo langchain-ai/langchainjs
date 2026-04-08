@@ -212,7 +212,7 @@ function* _formatContentBlocks(
       } else if (
         "data" in contentPart &&
         (typeof contentPart.data === "string" ||
-          // eslint-disable-next-line no-instanceof/no-instanceof
+          // oxlint-disable-next-line no-instanceof/no-instanceof
           contentPart.data instanceof Uint8Array)
       ) {
         // Base64-based image
@@ -270,7 +270,7 @@ function* _formatContentBlocks(
       } else if (
         "data" in contentPart &&
         (typeof contentPart.data === "string" ||
-          // eslint-disable-next-line no-instanceof/no-instanceof
+          // oxlint-disable-next-line no-instanceof/no-instanceof
           contentPart.data instanceof Uint8Array)
       ) {
         // File with base64 data (string or Uint8Array)
@@ -424,7 +424,7 @@ function* _formatContentBlocks(
       yield {
         ...contentPartCopy,
         ...(cacheControl ? { cache_control: cacheControl } : {}),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       } as any;
     } else if (contentPart.type === "container_upload") {
       yield {
@@ -612,7 +612,7 @@ export function applyCacheControlToPayload(
     content[lastBlockIndex] = {
       ...lastBlock,
       cache_control: cacheControl,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
 
     messages[lastMessageIndex] = {

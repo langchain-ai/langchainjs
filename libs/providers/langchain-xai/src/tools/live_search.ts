@@ -197,7 +197,7 @@ function mapToolSourceToSearchSource(
  * import { ChatXAI, tools } from "@langchain/xai";
  *
  * const llm = new ChatXAI({
- *   model: "grok-beta",
+ *   model: "grok-3-fast",
  * });
  *
  * const searchTool = tools.xaiLiveSearch({

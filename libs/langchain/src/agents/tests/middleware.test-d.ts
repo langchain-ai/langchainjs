@@ -5,10 +5,16 @@ import { tool } from "@langchain/core/tools";
 import type { InferInteropZodInput } from "@langchain/core/utils/types";
 import type { ServerTool, ClientTool } from "@langchain/core/tools";
 
-import { createAgent, createMiddleware } from "../index.js";
+import {
+  createAgent,
+  createMiddleware,
+  providerStrategy,
+  toolStrategy,
+} from "../index.js";
 import type { AgentBuiltInState } from "../runtime.js";
 import type { InferAgentState } from "../types.js";
 import type { InferMiddlewareType } from "../middleware/types.js";
+import type { JsonSchemaFormat } from "../responses.js";
 
 describe("middleware types", () => {
   it("a middleware can define a state schema which is propagated to the result", async () => {
@@ -334,6 +340,51 @@ describe("middleware types", () => {
           },
         }
       );
+    });
+
+    it("allows wrapModelCall to override responseFormat dynamically", () => {
+      const jsonSchema: JsonSchemaFormat = {
+        type: "object",
+        properties: {
+          answer: {
+            type: "string",
+          },
+        },
+        required: ["answer"],
+        additionalProperties: false,
+      };
+
+      createMiddleware({
+        name: "ResponseFormatMiddleware",
+        wrapModelCall: async (request, handler) => {
+          expectTypeOf(request).toHaveProperty("responseFormat");
+
+          await handler({
+            ...request,
+            responseFormat: providerStrategy(
+              z.object({
+                providerAnswer: z.string(),
+              })
+            ),
+          });
+
+          await handler({
+            ...request,
+            responseFormat: toolStrategy(
+              z.object({
+                toolAnswer: z.string(),
+              })
+            ),
+          });
+
+          await handler({
+            ...request,
+            responseFormat: jsonSchema,
+          });
+
+          return new AIMessage("done");
+        },
+      });
     });
 
     it("doesn't require users to pass in a context if all middleware context properties are optional", async () => {

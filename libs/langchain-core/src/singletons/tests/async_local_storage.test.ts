@@ -157,7 +157,7 @@ test("Runnable streamEvents method with streaming nested in a RunnableLambda", a
       async (_: string, config) => {
         expect(
           config?.callbacks?.handlers.filter(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // oxlint-disable-next-line @typescript-eslint/no-explicit-any
             (handler: any) => handler.name !== "langchain_tracer"
           )
         ).toEqual([]);

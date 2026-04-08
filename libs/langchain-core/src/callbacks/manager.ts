@@ -145,11 +145,11 @@ export class BaseRunManager {
 
   async handleCustomEvent(
     eventName: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     data: any,
     _runId?: string,
     _tags?: string[],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     _metadata?: Record<string, any>
   ): Promise<void> {
     await Promise.all(
@@ -188,7 +188,7 @@ export class CallbackManagerForRetrieverRun
   implements BaseCallbackManagerMethods
 {
   getChild(tag?: string): CallbackManager {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    // oxlint-disable-next-line @typescript-eslint/no-use-before-define
     const manager = new CallbackManager(this.runId);
     manager.setHandlers(this.inheritableHandlers);
     manager.addTags(this.inheritableTags);
@@ -378,7 +378,7 @@ export class CallbackManagerForChainRun
   implements BaseCallbackManagerMethods
 {
   getChild(tag?: string): CallbackManager {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    // oxlint-disable-next-line @typescript-eslint/no-use-before-define
     const manager = new CallbackManager(this.runId);
     manager.setHandlers(this.inheritableHandlers);
     manager.addTags(this.inheritableTags);
@@ -525,7 +525,7 @@ export class CallbackManagerForToolRun
   implements BaseCallbackManagerMethods
 {
   getChild(tag?: string): CallbackManager {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    // oxlint-disable-next-line @typescript-eslint/no-use-before-define
     const manager = new CallbackManager(this.runId);
     manager.setHandlers(this.inheritableHandlers);
     manager.addTags(this.inheritableTags);
@@ -586,7 +586,7 @@ export class CallbackManagerForToolRun
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   async handleToolEnd(output: any): Promise<void> {
     await Promise.all(
       this.handlers.map((handler) =>
@@ -1058,13 +1058,13 @@ export class CallbackManager
 
   async handleCustomEvent?(
     eventName: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     data: any,
     runId: string,
     _tags?: string[],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     _metadata?: Record<string, any>
-  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   Promise<any> {
     await Promise.all(
       this.handlers.map((handler) =>
@@ -1246,9 +1246,21 @@ export class CallbackManager
       getEnvironmentVariable("LANGCHAIN_VERBOSE") === "true" ||
       options?.verbose;
 
+    const traceableRunTree = LangChainTracer.getTraceableRunTree();
     const tracingV2Enabled =
-      LangChainTracer.getTraceableRunTree()?.tracingEnabled ??
-      isTracingEnabled();
+      traceableRunTree?.tracingEnabled ?? isTracingEnabled();
+
+    // If tracing is explicitly disabled by the RunTree (e.g. via
+    // traceable({ tracingEnabled: false })), remove any inherited
+    // LangChainTracer handlers so that child runs don't trace either.
+    if (traceableRunTree?.tracingEnabled === false && callbackManager) {
+      const inheritedTracers = callbackManager.handlers.filter(
+        (handler) => handler.name === "langchain_tracer"
+      );
+      for (const tracer of inheritedTracers) {
+        callbackManager.removeHandler(tracer);
+      }
+    }
 
     const tracingEnabled =
       tracingV2Enabled ||
@@ -1280,13 +1292,12 @@ export class CallbackManager
       if (tracingV2Enabled) {
         // handoff between langchain and langsmith/traceable
         // override the parent run ID
-        const implicitRunTree = LangChainTracer.getTraceableRunTree();
-        if (implicitRunTree && callbackManager._parentRunId === undefined) {
-          callbackManager._parentRunId = implicitRunTree.id;
+        if (traceableRunTree && callbackManager._parentRunId === undefined) {
+          callbackManager._parentRunId = traceableRunTree.id;
           const tracerV2 = callbackManager.handlers.find(
             (handler) => handler.name === "langchain_tracer"
           ) as LangChainTracer | undefined;
-          tracerV2?.updateFromRunTree(implicitRunTree);
+          tracerV2?.updateFromRunTree(traceableRunTree);
         }
       }
     }
@@ -1305,7 +1316,7 @@ export class CallbackManager
       if (contextVarValue && isBaseCallbackHandler(contextVarValue)) {
         handler = contextVarValue;
       } else if (createIfNotInContext) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         handler = new (handlerClass as any)({});
       }
       if (handler !== undefined) {

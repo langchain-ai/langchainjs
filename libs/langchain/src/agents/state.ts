@@ -2,7 +2,7 @@ import type { InteropZodObject } from "@langchain/core/utils/types";
 import type { RunnableCallable } from "./RunnableCallable.js";
 import type { AgentMiddleware } from "./middleware/types.js";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 type AgentNode = RunnableCallable<any, any>;
 
 /**

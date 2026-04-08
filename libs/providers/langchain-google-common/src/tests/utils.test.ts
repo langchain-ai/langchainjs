@@ -1,16 +1,24 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { beforeEach, expect, test } from "@jest/globals";
+/* oxlint-disable @typescript-eslint/no-explicit-any */
+import { beforeEach, describe, expect, test } from "vitest";
 import { InMemoryStore } from "@langchain/core/stores";
 import { SerializedConstructor } from "@langchain/core/load/serializable";
 import { load } from "@langchain/core/load";
 import { z } from "zod/v3";
-import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
+import {
+  AIMessage,
+  AIMessageChunk,
+  HumanMessage,
+  ToolMessage,
+} from "@langchain/core/messages";
+import { concat } from "@langchain/core/utils/stream";
+import { ChatGenerationChunk } from "@langchain/core/outputs";
 import { schemaToGeminiParameters } from "../utils/zod_to_gemini_parameters.js";
 import { getGeminiAPI } from "../utils/gemini.js";
 import { getAnthropicAPI } from "../utils/anthropic.js";
 import {
   GeminiPartFileData,
   GeminiPartInlineData,
+  GeminiPartText,
   GeminiRequest,
 } from "../types.js";
 import {
@@ -111,6 +119,202 @@ describe("anthropic formatting", () => {
     expect(userToolResult.content[0].content[0]).toMatchObject({
       type: "text",
       text: "18C",
+    });
+  });
+
+  test("accumulated streaming chunks produce no empty text blocks on re-format", async () => {
+    const anthropic = getAnthropicAPI();
+
+    const streamingEvents = [
+      { data: { type: "message_start", message: { content: [] } } },
+      {
+        data: {
+          type: "content_block_start",
+          index: 0,
+          content_block: { type: "text", text: "" },
+        },
+      },
+      {
+        data: {
+          type: "content_block_delta",
+          index: 0,
+          delta: { type: "text_delta", text: "Hello" },
+        },
+      },
+      {
+        data: {
+          type: "content_block_delta",
+          index: 0,
+          delta: { type: "text_delta", text: " world" },
+        },
+      },
+      { data: { type: "content_block_stop", index: 0 } },
+      {
+        data: {
+          type: "message_delta",
+          delta: { stop_reason: "end_turn" },
+          usage: { output_tokens: 5 },
+        },
+      },
+      { data: { type: "message_stop" } },
+    ];
+
+    let accumulated: ChatGenerationChunk | null = null;
+    for (const event of streamingEvents) {
+      const chunk = anthropic.responseToChatGeneration(event as any);
+      if (chunk) {
+        accumulated = accumulated ? concat(accumulated, chunk) : chunk;
+      }
+    }
+
+    expect(accumulated).not.toBeNull();
+    const aiMessage = accumulated!.message as AIMessageChunk;
+    expect(
+      typeof aiMessage.content === "string" || Array.isArray(aiMessage.content)
+    ).toBe(true);
+
+    if (Array.isArray(aiMessage.content)) {
+      const emptyTextBlocks = aiMessage.content.filter(
+        (block: any) => block.type === "text" && block.text === ""
+      );
+      expect(emptyTextBlocks).toHaveLength(0);
+    }
+
+    const request = (await anthropic.formatData(
+      [
+        new HumanMessage("Hi"),
+        new AIMessage({ content: aiMessage.content }),
+        new HumanMessage("Follow up"),
+      ],
+      { model: "claude-sonnet-4", maxOutputTokens: 256 } as any
+    )) as any;
+
+    const assistant = request.messages.find((m: any) => m.role === "assistant");
+    expect(assistant).toBeDefined();
+
+    const textBlocks = assistant.content.filter(
+      (block: any) => block.type === "text"
+    );
+    for (const block of textBlocks) {
+      expect(block.text).toBeTruthy();
+    }
+
+    const allText = textBlocks.map((b: any) => b.text).join("");
+    expect(allText).toContain("Hello world");
+  });
+
+  test("strips internal fields like index from text content blocks on re-format", async () => {
+    const anthropic = getAnthropicAPI();
+    const input = [
+      new HumanMessage("Hi"),
+      new AIMessage({
+        content: [{ type: "text", text: "Hello world", index: 0 } as any],
+      }),
+      new HumanMessage("Follow up"),
+    ];
+
+    const request = (await anthropic.formatData(input, {
+      model: "claude-sonnet-4",
+      maxOutputTokens: 256,
+    } as any)) as any;
+
+    const assistant = request.messages.find((m: any) => m.role === "assistant");
+    expect(assistant.content).toHaveLength(1);
+    expect(assistant.content[0]).toEqual({
+      type: "text",
+      text: "Hello world",
+    });
+    expect(assistant.content[0]).not.toHaveProperty("index");
+  });
+
+  test("streaming round-trip strips index from accumulated content before sending to API", async () => {
+    const anthropic = getAnthropicAPI();
+
+    const streamingEvents = [
+      { data: { type: "message_start", message: { content: [] } } },
+      {
+        data: {
+          type: "content_block_start",
+          index: 0,
+          content_block: { type: "text", text: "" },
+        },
+      },
+      {
+        data: {
+          type: "content_block_delta",
+          index: 0,
+          delta: { type: "text_delta", text: "Hello" },
+        },
+      },
+      {
+        data: {
+          type: "content_block_delta",
+          index: 0,
+          delta: { type: "text_delta", text: " world" },
+        },
+      },
+      { data: { type: "content_block_stop", index: 0 } },
+      {
+        data: {
+          type: "message_delta",
+          delta: { stop_reason: "end_turn" },
+          usage: { output_tokens: 5 },
+        },
+      },
+      { data: { type: "message_stop" } },
+    ];
+
+    let accumulated: ChatGenerationChunk | null = null;
+    for (const event of streamingEvents) {
+      const chunk = anthropic.responseToChatGeneration(event as any);
+      if (chunk) {
+        accumulated = accumulated ? concat(accumulated, chunk) : chunk;
+      }
+    }
+
+    const aiMessage = accumulated!.message as AIMessageChunk;
+
+    const request = (await anthropic.formatData(
+      [
+        new HumanMessage("Hi"),
+        new AIMessage({ content: aiMessage.content }),
+        new HumanMessage("Follow up"),
+      ],
+      { model: "claude-sonnet-4", maxOutputTokens: 256 } as any
+    )) as any;
+
+    const assistant = request.messages.find((m: any) => m.role === "assistant");
+    for (const block of assistant.content) {
+      expect(block).not.toHaveProperty("index");
+      if (block.type === "text") {
+        expect(Object.keys(block).sort()).toEqual(["text", "type"]);
+      }
+    }
+  });
+
+  test("filters empty text blocks from AI messages during formatting", async () => {
+    const anthropic = getAnthropicAPI();
+    const input = [
+      new HumanMessage("Hi"),
+      new AIMessage({
+        content: [
+          { type: "text", text: "" },
+          { type: "text", text: "Hello world" },
+        ],
+      }),
+      new HumanMessage("Follow up"),
+    ];
+
+    const request = (await anthropic.formatData(input, {
+      model: "claude-sonnet-4",
+      maxOutputTokens: 256,
+    } as any)) as any;
+
+    const assistant = request.messages.find((m: any) => m.role === "assistant");
+    expect(assistant.content).toHaveLength(1);
+    expect(assistant.content[0]).toMatchObject({
+      type: "text",
+      text: "Hello world",
     });
   });
 });
@@ -805,5 +1009,86 @@ describe("gemini image URL handling", () => {
     expect(imagePart).toBeDefined();
     expect(imagePart?.fileData.mimeType).toBe("image/jpeg");
     expect(imagePart?.fileData.fileUri).toBe("not-a-valid-url.jpg");
+  });
+});
+
+describe("gemini empty text content handling", () => {
+  test("AIMessage with empty string content produces a valid text part", async () => {
+    const api = getGeminiAPI();
+    const messages = [
+      new HumanMessage("Hello"),
+      new AIMessage(""),
+      new HumanMessage("What is up?"),
+    ];
+
+    const formatted = (await api.formatData(messages, {})) as GeminiRequest;
+
+    // The AIMessage("") should produce a model content entry with a text part
+    const modelContent = formatted.contents?.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+    expect(modelContent?.parts.length).toBeGreaterThanOrEqual(1);
+
+    const textPart = modelContent?.parts[0] as GeminiPartText;
+    expect(textPart).toBeDefined();
+    expect(textPart).toHaveProperty("text");
+    expect(textPart.text).toBe("");
+  });
+
+  test("AIMessage with empty string in complex content produces a valid text part", async () => {
+    const api = getGeminiAPI();
+    const messages = [
+      new HumanMessage("Hello"),
+      new AIMessage({
+        content: [{ type: "text", text: "" }],
+      }),
+      new HumanMessage("Follow up"),
+    ];
+
+    const formatted = (await api.formatData(messages, {})) as GeminiRequest;
+
+    const modelContent = formatted.contents?.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+    expect(modelContent?.parts.length).toBeGreaterThanOrEqual(1);
+
+    const textPart = modelContent?.parts[0] as GeminiPartText;
+    expect(textPart).toHaveProperty("text");
+    expect(textPart.text).toBe("");
+  });
+
+  test("AIMessage with empty content and tool calls does not add empty text part", async () => {
+    const api = getGeminiAPI();
+    const messages = [
+      new HumanMessage("Search for LangChain"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          { id: "call_1", name: "search", args: { query: "LangChain" } },
+        ],
+      }),
+    ];
+
+    const formatted = (await api.formatData(messages, {})) as GeminiRequest;
+
+    const modelContent = formatted.contents?.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+    expect(modelContent?.parts.length).toBe(1);
+    expect(modelContent?.parts[0]).toHaveProperty("functionCall");
+  });
+
+  test("AIMessage with non-empty text content still works correctly", async () => {
+    const api = getGeminiAPI();
+    const messages = [
+      new HumanMessage("Hello"),
+      new AIMessage("I am doing well"),
+      new HumanMessage("Great"),
+    ];
+
+    const formatted = (await api.formatData(messages, {})) as GeminiRequest;
+
+    const modelContent = formatted.contents?.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+
+    const textPart = modelContent?.parts[0] as GeminiPartText;
+    expect(textPart.text).toBe("I am doing well");
   });
 });

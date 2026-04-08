@@ -1,6 +1,6 @@
 {
   "name": "@langchain/cohere",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Cohere integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -12,7 +12,7 @@
     "type": "git",
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
-  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-cohere/",
+  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/community/langchain-cohere/",
   "scripts": {
     "build": "turbo build:compile --filter @langchain/cohere --output-logs new-only",
     "build:compile": "tsdown",
@@ -40,7 +40,6 @@
   "devDependencies": {
     "@cfworker/json-schema": "^4.1.1",
     "@langchain/core": "workspace:^",
-    "@langchain/eslint": "workspace:*",
     "@langchain/standard-tests": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",

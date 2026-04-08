@@ -22,17 +22,17 @@ import { AnthropicToolExtrasSchema } from "../utils/tools.js";
 import { AnthropicMessageCreateParams } from "../types.js";
 
 test("constructor supports model shorthand for ChatAnthropicMessages", () => {
-  const model = new ChatAnthropicMessages("claude-3-haiku-20240307", {
+  const model = new ChatAnthropicMessages("claude-haiku-4-5-20251001", {
     anthropicApiKey: "testing",
   });
 
-  expect(model.model).toBe("claude-3-haiku-20240307");
-  expect(model.modelName).toBe("claude-3-haiku-20240307");
+  expect(model.model).toBe("claude-haiku-4-5-20251001");
+  expect(model.modelName).toBe("claude-haiku-4-5-20251001");
 });
 
 test("withStructuredOutput with output validation", async () => {
   const model = new ChatAnthropic({
-    modelName: "claude-3-haiku-20240307",
+    modelName: "claude-haiku-4-5-20251001",
     temperature: 0,
     anthropicApiKey: "testing",
   });
@@ -80,12 +80,12 @@ test("withStructuredOutput with output validation", async () => {
 
 test("withStructuredOutput with proper output", async () => {
   const model = new ChatAnthropic({
-    modelName: "claude-3-haiku-20240307",
+    modelName: "claude-haiku-4-5-20251001",
     temperature: 0,
     anthropicApiKey: "testing",
   });
   vi
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     .spyOn(model as any, "invoke")
     .mockResolvedValue(
       new AIMessage({
@@ -270,7 +270,7 @@ test("Can properly format anthropic messages when AIMessage content is an empty 
 
 test("invocationParams includes container when provided in call options", () => {
   const model = new ChatAnthropic({
-    modelName: "claude-3-haiku-20240307",
+    modelName: "claude-haiku-4-5-20251001",
     temperature: 0,
     anthropicApiKey: "testing",
   });
@@ -282,7 +282,7 @@ test("invocationParams includes container when provided in call options", () => 
 
 test("invocationParams does not include container when not provided", () => {
   const model = new ChatAnthropic({
-    modelName: "claude-3-haiku-20240307",
+    modelName: "claude-haiku-4-5-20251001",
     temperature: 0,
     anthropicApiKey: "testing",
   });
@@ -294,7 +294,7 @@ test("invocationParams does not include container when not provided", () => {
 
 test("invocationParams includes container with thinking enabled", () => {
   const model = new ChatAnthropic({
-    modelName: "claude-3-haiku-20240307",
+    modelName: "claude-haiku-4-5-20251001",
     temperature: 1,
     anthropicApiKey: "testing",
     thinking: { type: "enabled", budget_tokens: 1000 },
@@ -308,7 +308,7 @@ test("invocationParams includes container with thinking enabled", () => {
 
 test("invocationParams returns undefined tools when tools is undefined", () => {
   const model = new ChatAnthropic({
-    modelName: "claude-3-haiku",
+    modelName: "claude-haiku-4-5",
     temperature: 0,
     apiKey: "testing",
   });
@@ -320,7 +320,7 @@ test("invocationParams returns undefined tools when tools is undefined", () => {
 
 test("invocationParams returns empty array when tools is empty array", () => {
   const model = new ChatAnthropic({
-    modelName: "claude-3-haiku",
+    modelName: "claude-haiku-4-5",
     temperature: 0,
     apiKey: "testing",
   });
@@ -328,6 +328,87 @@ test("invocationParams returns empty array when tools is empty array", () => {
   const params = model.invocationParams({ tools: [] });
 
   expect(params.tools).toEqual([]);
+});
+
+test("invocationParams omits temperature/top_k/top_p keys when not set", () => {
+  const model = new ChatAnthropic({
+    model: "claude-haiku-4-5-20251001",
+    apiKey: "testing",
+  });
+
+  const params = model.invocationParams({});
+
+  expect("temperature" in params).toBe(false);
+  expect("top_k" in params).toBe(false);
+  expect("top_p" in params).toBe(false);
+});
+
+test("invocationParams includes temperature/top_k/top_p when explicitly set", () => {
+  const model = new ChatAnthropic({
+    model: "claude-haiku-4-5-20251001",
+    apiKey: "testing",
+    temperature: 0,
+    topK: 10,
+    topP: 0.9,
+  });
+
+  const params = model.invocationParams({});
+
+  expect(params.temperature).toBe(0);
+  expect(params.top_k).toBe(10);
+  expect(params.top_p).toBe(0.9);
+});
+
+test("thinking enabled throws on topK even without topP", () => {
+  const model = new ChatAnthropic({
+    model: "claude-sonnet-4-6-20250514",
+    apiKey: "testing",
+    topK: 5,
+    thinking: { type: "enabled", budget_tokens: 1000 },
+  });
+
+  expect(() => model.invocationParams({})).toThrow(
+    "topK is not supported when thinking is enabled"
+  );
+});
+
+test("thinking enabled throws on topP", () => {
+  const model = new ChatAnthropic({
+    model: "claude-sonnet-4-6-20250514",
+    apiKey: "testing",
+    topP: 0.9,
+    thinking: { type: "enabled", budget_tokens: 1000 },
+  });
+
+  expect(() => model.invocationParams({})).toThrow(
+    "topP is not supported when thinking is enabled"
+  );
+});
+
+test("adaptive thinking throws on topK", () => {
+  const model = new ChatAnthropic({
+    model: "claude-opus-4-6",
+    apiKey: "testing",
+    topK: 5,
+    thinking: { type: "adaptive" },
+  });
+
+  expect(() => model.invocationParams({})).toThrow(
+    "topK is not supported when thinking is enabled"
+  );
+});
+
+test("adaptive thinking throws on topP", () => {
+  const model = new ChatAnthropic({
+    model: "claude-opus-4-6",
+    apiKey: "testing",
+    topP: 0.9,
+    thinking: { type: "adaptive" },
+  });
+
+  expect(() => model.invocationParams({})).toThrow(
+    "topP is not supported when thinking is enabled"
+  );
 });
 
 test("Can properly format messages with container_upload blocks", async () => {
@@ -510,7 +591,7 @@ describe("Tool extras", () => {
     );
 
     const model = new ChatAnthropic({
-      modelName: "claude-3-haiku-20240307",
+      modelName: "claude-haiku-4-5-20251001",
       anthropicApiKey: "testing",
     });
 
@@ -540,7 +621,7 @@ describe("Tool extras", () => {
     );
 
     const model = new ChatAnthropic({
-      modelName: "claude-3-haiku-20240307",
+      modelName: "claude-haiku-4-5-20251001",
       anthropicApiKey: "testing",
     });
 
@@ -576,7 +657,7 @@ describe("Tool extras", () => {
     );
 
     const model = new ChatAnthropic({
-      modelName: "claude-3-haiku-20240307",
+      modelName: "claude-haiku-4-5-20251001",
       anthropicApiKey: "testing",
     });
 
@@ -588,7 +669,7 @@ describe("Tool extras", () => {
     );
     expect(weatherTool).toBeDefined();
     expect(weatherTool).toHaveProperty("input_examples");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const inputExamples = (weatherTool as any).input_examples;
     expect(inputExamples).toHaveLength(2);
     expect(inputExamples[0]).toEqual({
@@ -617,7 +698,7 @@ describe("Tool extras", () => {
     );
 
     const model = new ChatAnthropic({
-      modelName: "claude-3-haiku-20240307",
+      modelName: "claude-haiku-4-5-20251001",
       anthropicApiKey: "testing",
     });
 
@@ -651,7 +732,7 @@ describe("Tool extras validation", () => {
 describe("formatStructuredToolToAnthropic", () => {
   test("returns undefined when tools is undefined", () => {
     const model = new ChatAnthropic({
-      modelName: "claude-3-haiku-20240307",
+      modelName: "claude-haiku-4-5-20251001",
       anthropicApiKey: "testing",
     });
 
@@ -662,7 +743,7 @@ describe("formatStructuredToolToAnthropic", () => {
 
   test("returns empty array when tools is empty array", () => {
     const model = new ChatAnthropic({
-      modelName: "claude-3-haiku-20240307",
+      modelName: "claude-haiku-4-5-20251001",
       anthropicApiKey: "testing",
     });
 
@@ -689,7 +770,7 @@ describe("Tool search beta auto-append", () => {
     );
 
     const model = new ChatAnthropic({
-      modelName: "claude-3-haiku-20240307",
+      modelName: "claude-haiku-4-5-20251001",
       anthropicApiKey: "testing",
     });
 
@@ -725,7 +806,7 @@ describe("Tool search beta auto-append", () => {
     );
 
     const model = new ChatAnthropic({
-      modelName: "claude-3-haiku-20240307",
+      modelName: "claude-haiku-4-5-20251001",
       anthropicApiKey: "testing",
     });
 
@@ -758,7 +839,7 @@ describe("Tool search beta auto-append", () => {
     );
 
     const model = new ChatAnthropic({
-      modelName: "claude-3-haiku-20240307",
+      modelName: "claude-haiku-4-5-20251001",
       anthropicApiKey: "testing",
     });
 
@@ -1677,7 +1758,7 @@ describe("Opus 4.6", () => {
               type: "compact_20260112",
             },
           ],
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         } as any,
       });
 
@@ -1698,7 +1779,7 @@ describe("Opus 4.6", () => {
               clear_at_least: { type: "input_tokens", value: 5 },
             },
           ],
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         } as any,
       });
 
@@ -1744,6 +1825,190 @@ describe("Opus 4.6", () => {
         type: "text",
         text: "Based on our conversation so far, let me continue...",
       });
+    });
+  });
+});
+
+describe("withStructuredOutput - StandardSchema", () => {
+  function makeSerializableSchema() {
+    return {
+      "~standard": {
+        version: 1 as const,
+        vendor: "test",
+        validate: (value: unknown) => {
+          const v = value as Record<string, unknown>;
+          if (
+            v &&
+            typeof v === "object" &&
+            "alerts" in v &&
+            Array.isArray(v.alerts)
+          ) {
+            return {
+              value: v as {
+                alerts: Array<{ description: string; severity: string }>;
+              },
+            };
+          }
+          return {
+            issues: [{ message: "Expected object with alerts array" }],
+          };
+        },
+        jsonSchema: {
+          input: () => ({
+            type: "object" as const,
+            properties: {
+              alerts: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    description: { type: "string" },
+                    severity: {
+                      type: "string",
+                      enum: ["HIGH", "MEDIUM", "LOW"],
+                    },
+                  },
+                  required: ["description", "severity"],
+                },
+              },
+            },
+            required: ["alerts"],
+            description: "Important security alerts",
+          }),
+          output: () => ({ type: "object" as const, properties: {} }),
+        },
+      },
+    };
+  }
+
+  test("functionCalling with valid output parses correctly", async () => {
+    const model = new ChatAnthropic({
+      modelName: "claude-haiku-4-5-20251001",
+      temperature: 0,
+      anthropicApiKey: "testing",
+    });
+    vi
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      .spyOn(model as any, "invoke")
+      .mockResolvedValue(
+        new AIMessage({
+          content: [
+            {
+              type: "tool_use",
+              id: "notreal",
+              name: "extract",
+              input: { alerts: [{ description: "test", severity: "LOW" }] },
+            },
+          ],
+        })
+      );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      name: "extract",
+    });
+
+    const result = await structured.invoke("test input");
+    expect(result).toEqual({
+      alerts: [{ description: "test", severity: "LOW" }],
+    });
+  });
+
+  test("functionCalling with invalid output throws OutputParserException", async () => {
+    const model = new ChatAnthropic({
+      modelName: "claude-haiku-4-5-20251001",
+      temperature: 0,
+      anthropicApiKey: "testing",
+    });
+    vi.spyOn(model, "invoke").mockResolvedValue(
+      new AIMessageChunk({
+        content: [
+          {
+            type: "tool_use",
+            id: "notreal",
+            name: "extract",
+            input: "Incorrect string tool call input",
+          },
+        ],
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      name: "extract",
+    });
+
+    await expect(async () => {
+      await structured.invoke("test input");
+    }).rejects.toThrow(OutputParserException);
+  });
+
+  test("functionCalling with custom name", async () => {
+    const model = new ChatAnthropic({
+      modelName: "claude-haiku-4-5-20251001",
+      temperature: 0,
+      anthropicApiKey: "testing",
+    });
+    vi
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      .spyOn(model as any, "invoke")
+      .mockResolvedValue(
+        new AIMessage({
+          content: [
+            {
+              type: "tool_use",
+              id: "notreal",
+              name: "SecurityAlerts",
+              input: { alerts: [{ description: "breach", severity: "HIGH" }] },
+            },
+          ],
+        })
+      );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      name: "SecurityAlerts",
+    });
+
+    const result = await structured.invoke("test input");
+    expect(result).toEqual({
+      alerts: [{ description: "breach", severity: "HIGH" }],
+    });
+  });
+
+  test("functionCalling with includeRaw returns raw and parsed", async () => {
+    const mockResponse = new AIMessage({
+      content: [
+        {
+          type: "tool_use",
+          id: "notreal",
+          name: "extract",
+          input: { alerts: [{ description: "test", severity: "MEDIUM" }] },
+        },
+      ],
+    });
+    const model = new ChatAnthropic({
+      modelName: "claude-haiku-4-5-20251001",
+      temperature: 0,
+      anthropicApiKey: "testing",
+    });
+    vi
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      .spyOn(model as any, "invoke")
+      .mockResolvedValue(mockResponse);
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      name: "extract",
+      includeRaw: true,
+    });
+
+    const result = await structured.invoke("test input");
+    expect(result).toHaveProperty("raw");
+    expect(result).toHaveProperty("parsed");
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((result as any).parsed).toEqual({
+      alerts: [{ description: "test", severity: "MEDIUM" }],
     });
   });
 });

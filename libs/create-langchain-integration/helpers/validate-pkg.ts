@@ -1,4 +1,4 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
+// oxlint-disable-next-line import-x/no-extraneous-dependencies
 import validateProjectName from "validate-npm-package-name";
 
 export function validateNpmName(name: string): {

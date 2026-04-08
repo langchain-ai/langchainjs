@@ -185,7 +185,7 @@ export class BedrockEmbeddings
         console.error({
           error: e,
         });
-        // eslint-disable-next-line no-instanceof/no-instanceof
+        // oxlint-disable-next-line no-instanceof/no-instanceof
         if (e instanceof Error) {
           throw new Error(
             `An error occurred while embedding documents with Bedrock: ${e.message}`

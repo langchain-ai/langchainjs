@@ -12,18 +12,15 @@ services:
       - ../environment_tests/scripts:/scripts
       - ../libs/langchain:/langchain
       - ../libs/langchain-core:/langchain-core
-      - ../libs/langchain-classic:/langchain-classic
-      - ../libs/langchain-community:/langchain-community
       - ../libs/providers/langchain-anthropic:/langchain-anthropic
       - ../libs/providers/langchain-openai:/langchain-openai
-      - ../libs/providers/langchain-cohere:/langchain-cohere
+
       - ../libs/providers/langchain-ollama:/langchain-ollama
       - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
       - ../internal/standard-tests:/langchain-standard-tests
       - ../libs/langchain-scripts:/langchain-scripts
       - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
-      - ../internal/eslint:/langchain-eslint
       - ../internal/tsconfig:/langchain-tsconfig
     command: bash /scripts/docker-entrypoint.sh
   test-exports-esm:
@@ -39,18 +36,15 @@ services:
       - ../environment_tests/scripts:/scripts
       - ../libs/langchain:/langchain
       - ../libs/langchain-core:/langchain-core
-      - ../libs/langchain-classic:/langchain-classic
-      - ../libs/langchain-community:/langchain-community
       - ../libs/providers/langchain-anthropic:/langchain-anthropic
       - ../libs/providers/langchain-openai:/langchain-openai
-      - ../libs/providers/langchain-cohere:/langchain-cohere
+
       - ../libs/providers/langchain-ollama:/langchain-ollama
       - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
       - ../internal/standard-tests:/langchain-standard-tests
       - ../libs/langchain-scripts:/langchain-scripts
       - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
-      - ../internal/eslint:/langchain-eslint
       - ../internal/tsconfig:/langchain-tsconfig
     command: bash /scripts/docker-entrypoint.sh
   test-exports-tsc:
@@ -66,18 +60,15 @@ services:
       - ../environment_tests/scripts:/scripts
       - ../libs/langchain:/langchain
       - ../libs/langchain-core:/langchain-core
-      - ../libs/langchain-classic:/langchain-classic
-      - ../libs/langchain-community:/langchain-community
       - ../libs/providers/langchain-anthropic:/langchain-anthropic
       - ../libs/providers/langchain-openai:/langchain-openai
-      - ../libs/providers/langchain-cohere:/langchain-cohere
+
       - ../libs/providers/langchain-ollama:/langchain-ollama
       - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
       - ../internal/standard-tests:/langchain-standard-tests
       - ../libs/langchain-scripts:/langchain-scripts
       - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
-      - ../internal/eslint:/langchain-eslint
       - ../internal/tsconfig:/langchain-tsconfig
     command: bash /scripts/docker-entrypoint.sh
   test-exports-cjs:
@@ -93,18 +84,15 @@ services:
       - ../environment_tests/scripts:/scripts
       - ../libs/langchain:/langchain
       - ../libs/langchain-core:/langchain-core
-      - ../libs/langchain-classic:/langchain-classic
-      - ../libs/langchain-community:/langchain-community
       - ../libs/providers/langchain-anthropic:/langchain-anthropic
       - ../libs/providers/langchain-openai:/langchain-openai
-      - ../libs/providers/langchain-cohere:/langchain-cohere
+
       - ../libs/providers/langchain-ollama:/langchain-ollama
       - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
       - ../internal/standard-tests:/langchain-standard-tests
       - ../libs/langchain-scripts:/langchain-scripts
       - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
-      - ../internal/eslint:/langchain-eslint
       - ../internal/tsconfig:/langchain-tsconfig
     command: bash /scripts/docker-entrypoint.sh
   test-exports-cf:
@@ -120,18 +108,15 @@ services:
       - ../environment_tests/scripts:/scripts
       - ../libs/langchain:/langchain
       - ../libs/langchain-core:/langchain-core
-      - ../libs/langchain-classic:/langchain-classic
-      - ../libs/langchain-community:/langchain-community
       - ../libs/providers/langchain-anthropic:/langchain-anthropic
       - ../libs/providers/langchain-openai:/langchain-openai
-      - ../libs/providers/langchain-cohere:/langchain-cohere
+
       - ../libs/providers/langchain-ollama:/langchain-ollama
       - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
       - ../internal/standard-tests:/langchain-standard-tests
       - ../libs/langchain-scripts:/langchain-scripts
       - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
-      - ../internal/eslint:/langchain-eslint
       - ../internal/tsconfig:/langchain-tsconfig
     command: bash /scripts/docker-entrypoint.sh
   test-exports-vercel:
@@ -147,18 +132,15 @@ services:
       - ../environment_tests/scripts:/scripts
       - ../libs/langchain:/langchain
       - ../libs/langchain-core:/langchain-core
-      - ../libs/langchain-classic:/langchain-classic
-      - ../libs/langchain-community:/langchain-community
       - ../libs/providers/langchain-anthropic:/langchain-anthropic
       - ../libs/providers/langchain-openai:/langchain-openai
-      - ../libs/providers/langchain-cohere:/langchain-cohere
+
       - ../libs/providers/langchain-ollama:/langchain-ollama
       - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
       - ../internal/standard-tests:/langchain-standard-tests
       - ../libs/langchain-scripts:/langchain-scripts
       - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
-      - ../internal/eslint:/langchain-eslint
       - ../internal/tsconfig:/langchain-tsconfig
     command: bash /scripts/docker-entrypoint.sh
   test-exports-vite:
@@ -174,18 +156,15 @@ services:
       - ../environment_tests/scripts:/scripts
       - ../libs/langchain:/langchain
       - ../libs/langchain-core:/langchain-core
-      - ../libs/langchain-classic:/langchain-classic
-      - ../libs/langchain-community:/langchain-community
       - ../libs/providers/langchain-anthropic:/langchain-anthropic
       - ../libs/providers/langchain-openai:/langchain-openai
-      - ../libs/providers/langchain-cohere:/langchain-cohere
+
       - ../libs/providers/langchain-ollama:/langchain-ollama
       - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
       - ../internal/standard-tests:/langchain-standard-tests
       - ../libs/langchain-scripts:/langchain-scripts
       - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
-      - ../internal/eslint:/langchain-eslint
       - ../internal/tsconfig:/langchain-tsconfig
     command: bash /scripts/docker-entrypoint.sh
   test-exports-bun:
@@ -198,18 +177,15 @@ services:
       - ../environment_tests/scripts:/scripts
       - ../libs/langchain:/langchain
       - ../libs/langchain-core:/langchain-core
-      - ../libs/langchain-classic:/langchain-classic
-      - ../libs/langchain-community:/langchain-community
       - ../libs/providers/langchain-anthropic:/langchain-anthropic
       - ../libs/providers/langchain-openai:/langchain-openai
-      - ../libs/providers/langchain-cohere:/langchain-cohere
+
       - ../libs/providers/langchain-ollama:/langchain-ollama
       - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
       - ../internal/standard-tests:/langchain-standard-tests
       - ../libs/langchain-scripts:/langchain-scripts
       - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
-      - ../internal/eslint:/langchain-eslint
       - ../internal/tsconfig:/langchain-tsconfig
     command: bash /scripts/docker-bun-entrypoint.sh
   test-exports-node-classic:
@@ -225,18 +201,15 @@ services:
       - ../environment_tests/scripts:/scripts
       - ../libs/langchain:/langchain
       - ../libs/langchain-core:/langchain-core
-      - ../libs/langchain-classic:/langchain-classic
-      - ../libs/langchain-community:/langchain-community
       - ../libs/providers/langchain-anthropic:/langchain-anthropic
       - ../libs/providers/langchain-openai:/langchain-openai
-      - ../libs/providers/langchain-cohere:/langchain-cohere
+
       - ../libs/providers/langchain-ollama:/langchain-ollama
       - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
       - ../internal/standard-tests:/langchain-standard-tests
       - ../libs/langchain-scripts:/langchain-scripts
       - ../libs/langchain-textsplitters:/langchain-textsplitters
       - ../internal/build:/langchain-build
-      - ../internal/eslint:/langchain-eslint
       - ../internal/tsconfig:/langchain-tsconfig
     command: bash /scripts/docker-entrypoint.sh
   success:

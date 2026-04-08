@@ -13,16 +13,13 @@
   "license": "MIT",
   "dependencies": {
     "@langchain/anthropic": "workspace:*",
-    "@langchain/community": "workspace:*",
     "@langchain/core": "workspace:^",
-    "@langchain/classic": "workspace:*",
     "@langchain/openai": "workspace:*",
     "@types/node": "^24.3.0",
     "langchain": "workspace:*",
-    "typescript": "5.5.4"
+    "typescript": "^5.9.3"
   },
   "devDependencies": {
-    "@types/node": "^18.15.11",
-    "prettier": "^3.5.0"
+    "@types/node": "^18.15.11"
   }
 }

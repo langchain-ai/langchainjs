@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-instanceof/no-instanceof */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable no-instanceof/no-instanceof */
 import { BaseMessage, ToolMessage, AIMessage } from "@langchain/core/messages";
 import { RunnableConfig, RunnableToolLike } from "@langchain/core/runnables";
 import {
@@ -298,6 +298,8 @@ export class ToolNode<
     const lgConfig = config as LangGraphRunnableConfig;
     const runtime = {
       context: lgConfig?.context,
+      store: lgConfig?.store,
+      configurable: lgConfig?.configurable,
       writer: lgConfig?.writer,
       interrupt: lgConfig?.interrupt,
       signal: lgConfig?.signal,
