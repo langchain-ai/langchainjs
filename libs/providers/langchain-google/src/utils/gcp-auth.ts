@@ -149,7 +149,7 @@ export async function getGCPPrivateKey(credentials: GCPCredentials) {
 export async function getGCPCustomToken(credentials: GCPCredentials) {
   const { SignJWT } = await getJose();
   const privateKey = await getGCPPrivateKey(credentials);
-  const customToken = await new SignJWT()
+  const customToken = await new SignJWT({ scope: 'https://www.googleapis.com/auth/cloud-platform' })
     .setIssuer(credentials.client_email)
     .setAudience(credentials.token_uri)
     .setSubject(credentials.client_email)
