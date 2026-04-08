@@ -12,8 +12,8 @@
     "@iarna/toml": "^2.2.5",
     "@langchain/core": "workspace:^",
     "commander": "^14.0.3",
-    "typescript": "^5.9.3",
-    "zod": "^4.1.12"
+    "typescript": "^6.0.2",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/iarna__toml": "^2.0.5",
