@@ -8,8 +8,13 @@ import {
   type Multimodal,
 } from "./multimodal.js";
 import { type Data } from "./data.js";
+import { type DeepPartial } from "../../types/type-utils.js";
 
 export interface ContentBlock extends BaseContentBlock {}
+
+export type PartialContentBlock<T extends ContentBlock = ContentBlock> = {
+  readonly type: T["type"];
+} & DeepPartial<Exclude<T, "type">>;
 
 export const KNOWN_BLOCK_TYPES = [
   "text",

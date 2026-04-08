@@ -65,6 +65,9 @@ import {
   type SerializableSchema,
 } from "../utils/standard_schema.js";
 import { assembleStructuredOutputPipeline } from "./structured_output.js";
+import type { ChatModelStreamEvent } from "./event.js";
+import { ChatModelStream } from "./stream.js";
+import { convertChunksToEvents } from "./compat.js";
 
 // oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export type ToolChoice = string | Record<string, any> | "auto" | "any";
@@ -296,6 +299,80 @@ export abstract class BaseChatModel<
     _runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     throw new Error("Not implemented.");
+  }
+
+  /**
+   * Stream chat model events using the new content-block-centric protocol.
+   *
+   * Override this method to provide native event streaming from the provider SDK.
+   * The default implementation bridges from `_streamResponseChunks` by
+   * synthesizing lifecycle events from `ChatGenerationChunk` objects.
+   *
+   * ## Event lifecycle
+   *
+   * ```
+   * MessageStart
+   *   -> ContentBlockStart(index, contentBlock)
+   *     -> ContentBlockDelta(index, contentBlock, delta) ...
+   *   -> ContentBlockFinish(index, contentBlock)
+   * -> MessageFinish(reason, usage?)
+   * ```
+   *
+   * Content blocks may interleave (e.g., parallel tool calls). The only
+   * invariant: a block's start precedes its deltas, and its deltas precede
+   * its finish.
+   *
+   * @param messages - The input messages.
+   * @param options - Parsed call options.
+   * @param runManager - Optional callback manager for the run.
+   * @returns An async generator of {@link ChatModelStreamEvent}.
+   */
+  async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    // Default: bridge from legacy _streamResponseChunks
+    const chunks = this._streamResponseChunks(messages, options, runManager);
+    yield* convertChunksToEvents(chunks, { signal: options.signal });
+  }
+
+  /**
+   * Create a {@link ChatModelStream} for the given input.
+   *
+   * Returns a stream object that is both `AsyncIterable<ChatModelStreamEvent>`
+   * and `PromiseLike<AIMessage>`, with typed sub-stream accessors for
+   * `.text`, `.toolCalls`, `.reasoning`, and `.usage`.
+   *
+   * @param input - The input messages.
+   * @param options - Optional call options.
+   * @returns A {@link ChatModelStream}.
+   *
+   * @example
+   * ```ts
+   * const stream = model.streamV2([{ role: "user", content: "Hello" }]);
+   *
+   * // Stream text
+   * for await (const token of stream.text) {
+   *   process.stdout.write(token);
+   * }
+   *
+   * // Or await the full message
+   * const message = await stream;
+   * ```
+   */
+  streamV2(
+    input: BaseLanguageModelInput,
+    options?: Partial<CallOptions>
+  ): ChatModelStream {
+    const prompt = BaseChatModel._convertInputToPromptValue(input);
+    const messages = prompt.toChatMessages();
+    const [, callOptions] =
+      this._separateRunnableConfigFromCallOptionsCompat(options);
+
+    const generator = this._streamChatModelEvents(messages, callOptions);
+
+    return new ChatModelStream(generator);
   }
 
   async *_streamIterator(
