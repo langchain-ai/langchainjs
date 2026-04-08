@@ -284,7 +284,14 @@ export abstract class BaseChatModel<
       options,
       options?.callbacks
     );
-    const chatGeneration = result.generations[0][0] as ChatGeneration;
+    const chatGeneration = result.generations[0][0] as
+      | ChatGeneration
+      | undefined;
+    if (!chatGeneration) {
+      throw new Error(
+        "Chat model returned no generations. The underlying model may have filtered the response or returned an unexpected empty result."
+      );
+    }
     // TODO: Remove cast after figuring out inheritance
     return chatGeneration.message as OutputMessageType;
   }
