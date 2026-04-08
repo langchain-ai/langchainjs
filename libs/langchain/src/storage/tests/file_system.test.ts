@@ -89,6 +89,25 @@ describe("LocalFileStore", () => {
     await fs.promises.rm(secondaryRootPath, { recursive: true, force: true });
   });
 
+  test("LocalFileStore handles concurrent mset to the same key without corruption", async () => {
+    const encoder = new TextEncoder();
+    const decoder = new TextDecoder();
+    const store = await LocalFileStore.fromPath(tempDir);
+
+    const writes = Array.from({ length: 50 }, (_, i) =>
+      store.mset([
+        ["concurrent-key", encoder.encode(JSON.stringify({ id: i }))],
+      ])
+    );
+    await Promise.all(writes);
+
+    const [result] = await store.mget(["concurrent-key"]);
+    expect(result).toBeDefined();
+    const parsed = JSON.parse(decoder.decode(result!));
+    expect(parsed).toHaveProperty("id");
+    expect(typeof parsed.id).toBe("number");
+  });
+
   test("Should disallow attempts to traverse paths outside of a subfolder", async () => {
     const encoder = new TextEncoder();
     const store = await LocalFileStore.fromPath(secondaryRootPath);

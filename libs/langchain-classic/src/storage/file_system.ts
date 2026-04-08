@@ -79,13 +79,19 @@ export class LocalFileStore extends BaseStore<string, Uint8Array> {
    * @param fileContent An object with the key-value pairs to be written to the file.
    */
   private async setFileContent(content: Uint8Array, key: string) {
+    const fullPath = this.getFullPath(key);
+    const tmpPath = `${fullPath}.${Date.now()}.${Math.random().toString(36).slice(2)}.tmp`;
     try {
-      await fs.writeFile(this.getFullPath(key), content);
+      await fs.writeFile(tmpPath, content);
+      await fs.rename(tmpPath, fullPath);
     } catch (error) {
+      try {
+        await fs.unlink(tmpPath);
+      } catch {
+        // ignore cleanup errors
+      }
       throw new Error(
-        `Error writing file at path: ${this.getFullPath(
-          key
-        )}.\nError: ${JSON.stringify(error)}`
+        `Error writing file at path: ${fullPath}.\nError: ${JSON.stringify(error)}`
       );
     }
   }
