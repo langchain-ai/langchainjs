@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 
 import type { expect as JestExpect } from "@jest/globals";
 import type { expect as VitestExpect } from "vitest";
@@ -30,8 +30,8 @@ import {
   BaseChatModelsTestsFields,
   RecordStringAny,
 } from "../base.js";
-import { TestCallbackHandler } from "../utils.ts";
-import { isContentBlock } from "../utils/types.ts";
+import { TestCallbackHandler } from "../utils.js";
+import { isContentBlock } from "../utils/types.js";
 
 // Placeholder data for content block tests
 const TEST_IMAGE_URL =
@@ -92,10 +92,10 @@ export interface ChatModelIntegrationTestsFields<
   OutputMessageType extends AIMessageChunk = AIMessageChunk,
   ConstructorArgs extends RecordStringAny = RecordStringAny,
 > extends BaseChatModelsTestsFields<
-    CallOptions,
-    OutputMessageType,
-    ConstructorArgs
-  > {
+  CallOptions,
+  OutputMessageType,
+  ConstructorArgs
+> {
   /**
    * Override the default AIMessage response type
    * to check for.

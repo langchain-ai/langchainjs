@@ -28,12 +28,14 @@ import {
   AnthropicSearchResultBlockParam,
   AnthropicToolResponse,
   AnthropicContainerUploadBlockParam,
+  AnthropicCompactionBlockParam,
 } from "../types.js";
 import {
   _isAnthropicImageBlockParam,
   _isAnthropicRedactedThinkingBlock,
   _isAnthropicSearchResultBlock,
   _isAnthropicThinkingBlock,
+  _isAnthropicCompactionBlock,
   standardContentBlockConverter,
 } from "./content.js";
 import { _formatStandardContent } from "./standard.js";
@@ -175,7 +177,9 @@ function* _formatContentBlocks(
     }
 
     const cacheControl =
-      "cache_control" in contentPart ? contentPart.cache_control : undefined;
+      "cache_control" in contentPart
+        ? (contentPart.cache_control as Anthropic.Beta.BetaCacheControlEphemeral)
+        : undefined;
 
     if (contentPart.type === "image_url") {
       let source;
@@ -208,7 +212,7 @@ function* _formatContentBlocks(
       } else if (
         "data" in contentPart &&
         (typeof contentPart.data === "string" ||
-          // eslint-disable-next-line no-instanceof/no-instanceof
+          // oxlint-disable-next-line no-instanceof/no-instanceof
           contentPart.data instanceof Uint8Array)
       ) {
         // Base64-based image
@@ -249,6 +253,60 @@ function* _formatContentBlocks(
           ...(cacheControl ? { cache_control: cacheControl } : {}),
         } as Anthropic.Messages.ImageBlockParam;
       }
+    } else if (contentPart.type === "file") {
+      // Handle new ContentBlock.Multimodal.File format
+      let source:
+        | { type: "url"; url: string }
+        | { type: "base64"; media_type: string; data: string }
+        | { type: "file"; file_id: string }
+        | undefined;
+
+      if ("url" in contentPart && typeof contentPart.url === "string") {
+        // File with URL
+        source = {
+          type: "url" as const,
+          url: contentPart.url,
+        };
+      } else if (
+        "data" in contentPart &&
+        (typeof contentPart.data === "string" ||
+          // oxlint-disable-next-line no-instanceof/no-instanceof
+          contentPart.data instanceof Uint8Array)
+      ) {
+        // File with base64 data (string or Uint8Array)
+        const media_type =
+          "mimeType" in contentPart && typeof contentPart.mimeType === "string"
+            ? contentPart.mimeType
+            : "application/pdf";
+        const data =
+          typeof contentPart.data === "string"
+            ? contentPart.data
+            : Buffer.from(contentPart.data).toString("base64");
+
+        source = {
+          type: "base64" as const,
+          media_type,
+          data,
+        };
+      } else if (
+        "fileId" in contentPart &&
+        typeof contentPart.fileId === "string"
+      ) {
+        // File ID from Anthropic Files API
+        // https://platform.claude.com/docs/en/build-with-claude/pdf-support#option-3-files-api
+        source = {
+          type: "file" as const,
+          file_id: contentPart.fileId,
+        };
+      }
+
+      if (source) {
+        yield {
+          type: "document" as const,
+          source,
+          ...(cacheControl ? { cache_control: cacheControl } : {}),
+        } as Anthropic.Messages.DocumentBlockParam;
+      }
     } else if (contentPart.type === "document") {
       // PDF
       yield {
@@ -267,6 +325,13 @@ function* _formatContentBlocks(
       const block: AnthropicRedactedThinkingBlockParam = {
         type: "redacted_thinking" as const, // Explicitly setting the type as "redacted_thinking"
         data: contentPart.data,
+        ...(cacheControl ? { cache_control: cacheControl } : {}),
+      };
+      yield block;
+    } else if (_isAnthropicCompactionBlock(contentPart)) {
+      const block: AnthropicCompactionBlockParam = {
+        type: "compaction" as const,
+        content: contentPart.content,
         ...(cacheControl ? { cache_control: cacheControl } : {}),
       };
       yield block;
@@ -359,7 +424,7 @@ function* _formatContentBlocks(
       yield {
         ...contentPartCopy,
         ...(cacheControl ? { cache_control: cacheControl } : {}),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       } as any;
     } else if (contentPart.type === "container_upload") {
       yield {
@@ -446,23 +511,26 @@ export function _convertMessagesToAnthropicPayload(
         }
       } else {
         const { content } = message;
-        const hasMismatchedToolCalls = !message.tool_calls.every((toolCall) =>
-          content.find(
-            (contentPart) =>
-              (contentPart.type === "tool_use" ||
-                contentPart.type === "input_json_delta" ||
-                contentPart.type === "server_tool_use") &&
-              contentPart.id === toolCall.id
-          )
+        const formattedContent = _formatContent(message, message.tool_calls);
+        const formattedContentArr = Array.isArray(formattedContent)
+          ? formattedContent
+          : [{ type: "text" as const, text: formattedContent }];
+        const missingToolCalls = message.tool_calls.filter(
+          (toolCall) =>
+            !content.find(
+              (contentPart) =>
+                (contentPart.type === "tool_use" ||
+                  contentPart.type === "input_json_delta" ||
+                  contentPart.type === "server_tool_use") &&
+                contentPart.id === toolCall.id
+            )
         );
-        if (hasMismatchedToolCalls) {
-          console.warn(
-            `The "tool_calls" field on a message is only respected if content is a string.`
-          );
-        }
         return {
           role,
-          content: _formatContent(message, message.tool_calls),
+          content: [
+            ...formattedContentArr,
+            ...missingToolCalls.map(_convertLangChainToolCallToAnthropic),
+          ],
         };
       }
     } else {
@@ -544,7 +612,7 @@ export function applyCacheControlToPayload(
     content[lastBlockIndex] = {
       ...lastBlock,
       cache_control: cacheControl,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
 
     messages[lastMessageIndex] = {

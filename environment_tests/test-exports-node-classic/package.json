@@ -6,23 +6,18 @@
   "main": "./dist/index.js",
   "scripts": {
     "build": "tsc",
-    "test": "node dist/index.js",
-    "format": "prettier --write src",
-    "format:check": "prettier --check src"
+    "test": "node dist/index.js"
   },
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@langchain/core": "workspace:*",
-    "@langchain/classic": "workspace:*",
+    "@types/node": "^24.10.13",
+    "@langchain/core": "workspace:^",
     "@tsconfig/recommended": "^1.0.10",
-    "@types/node": "^24.3.0",
     "langchain": "workspace:*",
     "typescript": "^5.0.0"
   },
   "devDependencies": {
-    "@types/node": "^18.15.11",
     "prettier": "^3.5.0"
   }
 }
-

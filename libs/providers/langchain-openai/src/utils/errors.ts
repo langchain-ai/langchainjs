@@ -1,8 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 
 // Duplicate of core
 // TODO: Remove once we stop supporting 0.2.x core versions
 export type LangChainErrorCodes =
+  | "CONTEXT_OVERFLOW"
   | "INVALID_PROMPT_INPUT"
   | "INVALID_TOOL_RESULTS"
   | "MESSAGE_COERCION_FAILURE"

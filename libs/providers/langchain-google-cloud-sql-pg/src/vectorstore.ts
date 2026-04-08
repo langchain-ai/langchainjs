@@ -156,7 +156,7 @@ interface VSArgs {
  * <summary><strong>Similarity search with filter</strong></summary>
  *
  * ```typescript
- * const resultsWithFilter = await vectorStore.similaritySearch("thud", 1, "baz = 'bar'");
+ * const resultsWithFilter = await vectorStore.similaritySearch("thud", 1, { baz: "bar" });
  *
  * for (const doc of resultsWithFilter) {
  *   console.log(`* ${doc.pageContent} [${JSON.stringify(doc.metadata, null)}]`);
@@ -200,7 +200,7 @@ interface VSArgs {
  * <br />
  */
 export class PostgresVectorStore extends VectorStore {
-  declare FilterType: string;
+  declare FilterType: Record<string, string>;
 
   engine: PostgresEngine;
 
@@ -587,7 +587,17 @@ export class PostgresVectorStore extends VectorStore {
     const fetchK = k ?? this.k;
     const { operator } = this.distanceStrategy;
     const { searchFunction } = this.distanceStrategy;
-    const _filter = filter !== undefined ? `WHERE ${filter}` : "";
+    const filterColumns = filter !== undefined ? Object.keys(filter) : [];
+    const filterBindings: Record<string, string> = {};
+    let _filter = "";
+    if (filterColumns.length > 0) {
+      const conditions = filterColumns.map((col, i) => {
+        const bindingKey = `filter_${i}`;
+        filterBindings[bindingKey] = filter[col];
+        return `"${col.replace(/"/g, '""')}" = :${bindingKey}`;
+      });
+      _filter = `WHERE ${conditions.join(" AND ")}`;
+    }
     const metadataColNames =
       this.metadataColumns.length > 0
         ? `, "${this.metadataColumns.join('","')}"`
@@ -604,7 +614,7 @@ export class PostgresVectorStore extends VectorStore {
       );
     }
 
-    const { rows } = await this.engine.pool.raw(query);
+    const { rows } = await this.engine.pool.raw(query, filterBindings);
 
     return rows;
   }

@@ -1,7 +1,5 @@
 import { randomUUID } from "node:crypto";
 
-// it's in dev dependencies - not sure why eslint gets mad here.
-// eslint-disable-next-line import/no-extraneous-dependencies
 import express, { type Express } from "express";
 
 import {
@@ -22,288 +20,300 @@ export function createDummyHttpServer(
     disableStreamableHttp?: boolean;
   }
 ): Express {
-  const server = new McpServer(
-    { name, version: "1.0.0" },
-    { capabilities: { logging: {} } }
-  );
-
   // Store captured headers per session
   const sessionHeaders: Record<string, Record<string, string>> = {};
 
-  // Add tools that can inspect request details
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore - this may raise "Type instantiation is excessively deep and possibly infinite.ts(2589)"
-  server.tool(
-    "test_tool",
-    "A test tool that echoes input and request metadata",
-    { input: z.string() },
-    async ({ input }, extra) => {
-      // Logging message
-      await server.server.notification(
-        {
-          method: "notifications/message",
-          params: {
-            level: "info",
-            logger: "test_tool",
-            data: `test_tool invoked with ${input}`,
-          },
-        },
-        { relatedRequestId: extra.requestId }
-      );
+  /**
+   * Factory that creates a fresh McpServer instance.
+   *
+   * The MCP SDK enforces that a single McpServer / Protocol can only be
+   * connected to **one** transport at a time.  For our test HTTP server we
+   * need to accept many simultaneous sessions (streamable-HTTP) and SSE
+   * connections, so we spin up a dedicated McpServer per transport.
+   */
+  function createMcpServerInstance(): McpServer {
+    const server = new McpServer(
+      { name, version: "1.0.0" },
+      { capabilities: { logging: {} } }
+    );
 
-      // Progress with token if present
-      const progressToken = extra._meta?.progressToken;
-      if (progressToken !== undefined) {
-        const steps = 3;
-        for (let i = 1; i <= steps; i++) {
-          await server.server.notification(
-            {
-              method: "notifications/progress",
-              params: { progress: i, total: steps, progressToken },
-            },
-            { relatedRequestId: extra.requestId }
-          );
-        }
-      }
-
-      return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify({
-              input,
-              meta: extra._meta,
-              serverName: name,
-            }),
-          },
-        ],
-      };
-    }
-  );
-
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore - this may raise "Type instantiation is excessively deep and possibly infinite.ts(2589)"
-  server.tool(
-    "sleep_tool",
-    "A test tool that sleeps for the given number of milliseconds before returning",
-    { sleepMsec: z.number().int().positive() },
-    async ({ sleepMsec }) => {
-      await new Promise((resolve) => {
-        setTimeout(resolve, sleepMsec);
-      });
-      return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify({
-              message: "done",
-            }),
-          },
-        ],
-      };
-    }
-  );
-
-  if (options.testHeaders) {
+    // Add tools that can inspect request details
+    // oxlint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore - this may raise "Type instantiation is excessively deep and possibly infinite.ts(2589)"
     server.tool(
-      "check_headers",
-      "Check if specific headers were received",
-      { headerName: z.string() },
-      async ({ headerName }, extra) => {
-        // Get headers for this session
-        const sessionId = extra.sessionId || "default";
-        const headers = sessionHeaders[sessionId] || {};
+      "test_tool",
+      "A test tool that echoes input and request metadata",
+      { input: z.string() },
+      async ({ input }, extra) => {
+        // Logging message
+        await server.server.notification(
+          {
+            method: "notifications/message",
+            params: {
+              level: "info",
+              logger: "test_tool",
+              data: `test_tool invoked with ${input}`,
+            },
+          },
+          { relatedRequestId: extra.requestId }
+        );
+
+        // Progress with token if present
+        const progressToken = extra._meta?.progressToken;
+        if (progressToken !== undefined) {
+          const steps = 3;
+          for (let i = 1; i <= steps; i++) {
+            await server.server.notification(
+              {
+                method: "notifications/progress",
+                params: { progress: i, total: steps, progressToken },
+              },
+              { relatedRequestId: extra.requestId }
+            );
+          }
+        }
+
         return {
           content: [
             {
               type: "text",
-              text: headers[headerName.toLowerCase()] || "NOT_FOUND",
+              text: JSON.stringify({
+                input,
+                meta: extra._meta,
+                serverName: name,
+              }),
             },
           ],
         };
       }
     );
-  }
 
-  server.tool(
-    "audio_tool",
-    "A tool that returns a dummy audio content.",
-    // Input schema: a single string 'input'
-    {
-      input: z.string().describe("Some input string for the audio tool"),
-    },
-    async ({ input }) => {
-      // Static base64 encoded minimal WAV file (1-byte silent audio)
-      // This is a valid WAV file: RIFF header, WAVE format, fmt chunk (PCM, 44100Hz, 1 channel, 16-bit), data chunk (1 byte of 0x00)
-      const base64Audio =
-        "UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+    // oxlint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore - this may raise "Type instantiation is excessively deep and possibly infinite.ts(2589)"
+    server.tool(
+      "sleep_tool",
+      "A test tool that sleeps for the given number of milliseconds before returning",
+      { sleepMsec: z.number().int().positive() },
+      async ({ sleepMsec }) => {
+        await new Promise((resolve) => {
+          setTimeout(resolve, sleepMsec);
+        });
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                message: "done",
+              }),
+            },
+          ],
+        };
+      }
+    );
 
-      return {
-        content: [
-          {
-            type: "text",
-            text: `Audio input was: ${input}, server: ${name}`,
-          },
-          {
-            type: "audio",
-            mimeType: "audio/wav",
-            data: base64Audio,
-          },
-        ],
-      };
+    if (options.testHeaders) {
+      server.tool(
+        "check_headers",
+        "Check if specific headers were received",
+        { headerName: z.string() },
+        async ({ headerName }, extra) => {
+          // Get headers for this session
+          const sessionId = extra.sessionId || "default";
+          const headers = sessionHeaders[sessionId] || {};
+          return {
+            content: [
+              {
+                type: "text",
+                text: headers[headerName.toLowerCase()] || "NOT_FOUND",
+              },
+            ],
+          };
+        }
+      );
     }
-  );
 
-  server.tool(
-    "image_tool",
-    "A tool that returns a dummy image and text content.",
-    // Input schema: a single string 'input'
-    {
-      input: z.string().describe("Some input string for the image tool"),
-    },
-    async ({ input }) => {
-      // Static base64 encoded minimal PNG file (1x1 black pixel)
-      const base64Image =
-        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+    server.tool(
+      "audio_tool",
+      "A tool that returns a dummy audio content.",
+      // Input schema: a single string 'input'
+      {
+        input: z.string().describe("Some input string for the audio tool"),
+      },
+      async ({ input }) => {
+        // Static base64 encoded minimal WAV file (1-byte silent audio)
+        // This is a valid WAV file: RIFF header, WAVE format, fmt chunk (PCM, 44100Hz, 1 channel, 16-bit), data chunk (1 byte of 0x00)
+        const base64Audio =
+          "UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
 
-      return {
-        content: [
-          {
-            type: "text",
-            text: `Image input was: ${input}, server: ${name}`,
-          },
-          {
-            type: "image",
-            mimeType: "image/png",
-            data: base64Image,
-          },
-        ],
-      };
-    }
-  );
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Audio input was: ${input}, server: ${name}`,
+            },
+            {
+              type: "audio",
+              mimeType: "audio/wav",
+              data: base64Audio,
+            },
+          ],
+        };
+      }
+    );
 
-  server.tool(
-    "resource_tool",
-    "A tool that returns a dummy resource and text content.",
-    {
-      input: z.string().describe("Some input string for the resource tool"),
-    },
-    async ({ input }) => {
-      return {
-        content: [
-          {
-            type: "text",
-            text: `Resource input was: ${input}, server: ${name}`,
-          },
-          {
-            type: "resource",
-            resource: {
-              uri: "mem://test.txt",
-              mimeType: "text/plain",
-              text: "This is a test resource.",
-              // No blob, to test text-based resource handling
+    server.tool(
+      "image_tool",
+      "A tool that returns a dummy image and text content.",
+      // Input schema: a single string 'input'
+      {
+        input: z.string().describe("Some input string for the image tool"),
+      },
+      async ({ input }) => {
+        // Static base64 encoded minimal PNG file (1x1 black pixel)
+        const base64Image =
+          "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Image input was: ${input}, server: ${name}`,
+            },
+            {
+              type: "image",
+              mimeType: "image/png",
+              data: base64Image,
+            },
+          ],
+        };
+      }
+    );
+
+    server.tool(
+      "resource_tool",
+      "A tool that returns a dummy resource and text content.",
+      {
+        input: z.string().describe("Some input string for the resource tool"),
+      },
+      async ({ input }) => {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Resource input was: ${input}, server: ${name}`,
+            },
+            {
+              type: "resource",
+              resource: {
+                uri: "mem://test.txt",
+                mimeType: "text/plain",
+                text: "This is a test resource.",
+                // No blob, to test text-based resource handling
+              },
+            },
+          ],
+        };
+      }
+    );
+
+    // Add a tool that returns structuredContent and _meta
+    server.tool(
+      "structured_tool",
+      "A tool that returns structuredContent and _meta",
+      {
+        input: z.string().describe("Some input string"),
+      },
+      async ({ input }) => {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Structured input was: ${input}`,
+            },
+          ],
+          structuredContent: {
+            type: "object",
+            data: {
+              result: "success",
+              value: input,
+              timestamp: new Date().toISOString(),
             },
           },
-        ],
-      };
-    }
-  );
+          _meta: {
+            toolVersion: "1.0.0",
+            serverName: name,
+            executionTime: 100,
+          },
+        };
+      }
+    );
 
-  // Add a tool that returns structuredContent and _meta
-  server.tool(
-    "structured_tool",
-    "A tool that returns structuredContent and _meta",
-    {
-      input: z.string().describe("Some input string"),
-    },
-    async ({ input }) => {
-      return {
-        content: [
-          {
-            type: "text",
-            text: `Structured input was: ${input}`,
-          },
-        ],
-        structuredContent: {
-          type: "object",
-          data: {
-            result: "success",
-            value: input,
-            timestamp: new Date().toISOString(),
-          },
-        },
-        _meta: {
-          toolVersion: "1.0.0",
-          serverName: name,
-          executionTime: 100,
-        },
-      };
-    }
-  );
+    // Add resource handlers
+    server.registerResource(
+      "test-resource",
+      "mem://test.txt",
+      {
+        title: "Test Resource",
+        description: "A test resource for testing resource listing and reading",
+        mimeType: "text/plain",
+      },
+      async () => {
+        return {
+          contents: [
+            {
+              uri: "mem://test.txt",
+              mimeType: "text/plain",
+              text: "This is a test resource content.",
+            },
+          ],
+        };
+      }
+    );
 
-  // Add resource handlers
-  server.registerResource(
-    "test-resource",
-    "mem://test.txt",
-    {
-      title: "Test Resource",
-      description: "A test resource for testing resource listing and reading",
-      mimeType: "text/plain",
-    },
-    async () => {
-      return {
-        contents: [
-          {
-            uri: "mem://test.txt",
-            mimeType: "text/plain",
-            text: "This is a test resource content.",
-          },
-        ],
-      };
-    }
-  );
+    server.registerResource(
+      "data-resource",
+      "mem://data.json",
+      {
+        title: "Data Resource",
+        description: "A JSON data resource",
+        mimeType: "application/json",
+      },
+      async () => {
+        return {
+          contents: [
+            {
+              uri: "mem://data.json",
+              mimeType: "application/json",
+              text: JSON.stringify({ key: "value", number: 42 }),
+            },
+          ],
+        };
+      }
+    );
 
-  server.registerResource(
-    "data-resource",
-    "mem://data.json",
-    {
-      title: "Data Resource",
-      description: "A JSON data resource",
-      mimeType: "application/json",
-    },
-    async () => {
-      return {
-        contents: [
-          {
-            uri: "mem://data.json",
-            mimeType: "application/json",
-            text: JSON.stringify({ key: "value", number: 42 }),
-          },
-        ],
-      };
-    }
-  );
+    // Add resource template
+    server.registerResource(
+      "user-profile",
+      new ResourceTemplate("mem://user/{userId}/profile", { list: undefined }),
+      {
+        title: "User Profile Template",
+        description: "A template for user profile resources",
+      },
+      async (uri, { userId }) => {
+        return {
+          contents: [
+            {
+              uri: uri.href,
+              mimeType: "application/json",
+              text: JSON.stringify({ userId, profile: "test profile" }),
+            },
+          ],
+        };
+      }
+    );
 
-  // Add resource template
-  server.registerResource(
-    "user-profile",
-    new ResourceTemplate("mem://user/{userId}/profile", { list: undefined }),
-    {
-      title: "User Profile Template",
-      description: "A template for user profile resources",
-    },
-    async (uri, { userId }) => {
-      return {
-        contents: [
-          {
-            uri: uri.href,
-            mimeType: "application/json",
-            text: JSON.stringify({ userId, profile: "test profile" }),
-          },
-        ],
-      };
-    }
-  );
+    return server;
+  }
 
   const app = express();
   app.use(express.json());
@@ -367,6 +377,9 @@ export function createDummyHttpServer(
           }
         };
 
+        // Each transport gets its own McpServer instance because the SDK
+        // only allows one connected transport per Protocol instance.
+        const server = createMcpServerInstance();
         await server.connect(transport);
       } else {
         res.status(400).json({
@@ -423,6 +436,9 @@ export function createDummyHttpServer(
         delete sessionHeaders[transport.sessionId];
       });
 
+      // Each transport gets its own McpServer instance because the SDK
+      // only allows one connected transport per Protocol instance.
+      const server = createMcpServerInstance();
       await server.connect(transport);
     });
 

@@ -1,8 +1,8 @@
 import { expect } from "@jest/globals";
 import { BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
 import { AIMessageChunk } from "@langchain/core/messages";
-import { BaseChatModelsTestsFields, RecordStringAny } from "../base.ts";
-import { ChatModelUnitTests as BaseChatModelUnitTests } from "./chat_models.ts";
+import { BaseChatModelsTestsFields, RecordStringAny } from "../base.js";
+import { ChatModelUnitTests as BaseChatModelUnitTests } from "./chat_models.js";
 
 export abstract class ChatModelUnitTests<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
@@ -28,9 +28,9 @@ export abstract class ChatModelUnitTests<
    * Run all unit tests for the chat model.
    * Each test is wrapped in a try/catch block to prevent the entire test suite from failing.
    * If a test fails, the error is logged to the console, and the test suite continues.
-   * @returns {boolean}
+   * @returns {Promise<boolean>}
    */
-  runTests(): boolean {
+  async runTests(): Promise<boolean> {
     let allTestsPassed = true;
     try {
       this.testChatModelInit();
@@ -72,6 +72,20 @@ export abstract class ChatModelUnitTests<
     } catch (e) {
       allTestsPassed = false;
       console.error("testStandardParams failed", e);
+    }
+
+    try {
+      await this.testInvokeThrowsWithAbortedSignal();
+    } catch (e) {
+      allTestsPassed = false;
+      console.error("testInvokeThrowsWithAbortedSignal failed", e);
+    }
+
+    try {
+      await this.testStreamReturnsEarlyWithAbortedSignal();
+    } catch (e) {
+      allTestsPassed = false;
+      console.error("testStreamReturnsEarlyWithAbortedSignal failed", e);
     }
 
     return allTestsPassed;

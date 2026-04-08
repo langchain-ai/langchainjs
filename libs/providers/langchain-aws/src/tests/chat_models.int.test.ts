@@ -52,7 +52,7 @@ test("Test ChatBedrockConverse stream method", async () => {
   for await (const chunk of stream) {
     chunks.push(chunk);
   }
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const finalMessage = chunks.map((c) => c.content).join("");
   // console.log(finalMessage);
@@ -117,7 +117,7 @@ test("Test ChatBedrockConverse stream method with early break", async () => {
     "How is your day going? Be extremely verbose."
   );
   let i = 0;
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   for await (const chunk of stream) {
     // console.log(chunk);
@@ -376,7 +376,7 @@ test("Model can handle empty content messages", async () => {
 test("Test reasoning_content blocks multiturn invoke", async () => {
   const model = new ChatBedrockConverse({
     ...baseConstructorArgs,
-    model: "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+    model: "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     maxTokens: 5000,
     additionalModelRequestFields: {
       thinking: { type: "enabled", budget_tokens: 2000 },
@@ -421,7 +421,7 @@ test("Test reasoning_content blocks multiturn invoke", async () => {
 test("Test reasoning_content blocks multiturn streaming", async () => {
   const model = new ChatBedrockConverse({
     ...baseConstructorArgs,
-    model: "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+    model: "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     maxTokens: 5000,
     additionalModelRequestFields: {
       thinking: { type: "enabled", budget_tokens: 2000 },
@@ -474,7 +474,7 @@ test("Test reasoning_content blocks multiturn streaming", async () => {
 test("Test ChatBedrockConverse can respond to tool invocations with thinking enabled", async () => {
   const model = new ChatBedrockConverse({
     ...baseConstructorArgs,
-    model: "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+    model: "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
     maxTokens: 5000,
     additionalModelRequestFields: {
       thinking: { type: "enabled", budget_tokens: 2000 },
@@ -526,7 +526,7 @@ describe("AWS Bedrock Reasoning with contentBlocks", () => {
   test("invoke returns reasoning_content as reasoning in contentBlocks", async () => {
     const model = new ChatBedrockConverse({
       ...baseConstructorArgs,
-      model: "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+      model: "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
       maxTokens: 5000,
       additionalModelRequestFields: {
         thinking: { type: "enabled", budget_tokens: 2000 },
@@ -541,7 +541,7 @@ describe("AWS Bedrock Reasoning with contentBlocks", () => {
 
     const reasoningBlocks = blocks.filter((b) => b.type === "reasoning");
     expect(reasoningBlocks.length).toBeGreaterThan(0);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect((reasoningBlocks[0] as any).reasoning.length).toBeGreaterThan(10);
 
     const textBlocks = blocks.filter((b) => b.type === "text");
@@ -551,7 +551,7 @@ describe("AWS Bedrock Reasoning with contentBlocks", () => {
   test("stream returns reasoning_content as reasoning in contentBlocks", async () => {
     const model = new ChatBedrockConverse({
       ...baseConstructorArgs,
-      model: "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+      model: "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
       maxTokens: 5000,
       additionalModelRequestFields: {
         thinking: { type: "enabled", budget_tokens: 2000 },
@@ -569,7 +569,7 @@ describe("AWS Bedrock Reasoning with contentBlocks", () => {
 
     const reasoningBlocks = blocks.filter((b) => b.type === "reasoning");
     expect(reasoningBlocks.length).toBeGreaterThan(0);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect((reasoningBlocks[0] as any).reasoning.length).toBeGreaterThan(10);
   }, 60000);
 });

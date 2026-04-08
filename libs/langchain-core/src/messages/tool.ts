@@ -20,7 +20,7 @@ export interface ToolMessageFields<
    * a subset of the full tool output is being passed as message content but the full
    * output is needed in other parts of the code.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   artifact?: any;
   tool_call_id: string;
   status?: "success" | "error";
@@ -84,7 +84,7 @@ export class ToolMessage<TStructure extends MessageStructure = MessageStructure>
    * a subset of the full tool output is being passed as message content but the full
    * output is needed in other parts of the code.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   artifact?: any;
 
   constructor(
@@ -171,7 +171,7 @@ export class ToolMessageChunk<
    * a subset of the full tool output is being passed as message content but the full
    * output is needed in other parts of the code.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   artifact?: any;
 
   constructor(fields: ToolMessageFields<TStructure>) {
@@ -215,7 +215,7 @@ export class ToolMessageChunk<
 
 export interface ToolCall<
   TName extends string = string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   TArgs extends Record<string, any> = Record<string, any>,
 > {
   readonly type?: "tool_call";
@@ -324,7 +324,7 @@ export interface InvalidToolCall<TName extends string = string> {
 }
 
 export function defaultToolCallParser(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   rawToolCalls: Record<string, any>[]
 ): [ToolCall[], InvalidToolCall[]] {
   const toolCalls: ToolCall[] = [];

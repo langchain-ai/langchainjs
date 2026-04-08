@@ -1,5 +1,111 @@
 # @langchain/google-webauth
 
+## 2.1.26
+
+### Patch Changes
+
+- Updated dependencies [[`6db417b`](https://github.com/langchain-ai/langchainjs/commit/6db417b03ecb5e2ace413389d982294e0ac88433), [`561224b`](https://github.com/langchain-ai/langchainjs/commit/561224b8495dad61946ad7c0f84340d64729c3fb), [`6a2da5b`](https://github.com/langchain-ai/langchainjs/commit/6a2da5b63b39bec4b87b6a1d1769810677ad3458), [`d69dfcc`](https://github.com/langchain-ai/langchainjs/commit/d69dfcca97503cf1c0b7e70ccf5fb7d507c60982)]:
+  - @langchain/core@1.1.33
+  - @langchain/google-common@2.1.26
+
+## 2.1.25
+
+### Patch Changes
+
+- Updated dependencies [[`26488b5`](https://github.com/langchain-ai/langchainjs/commit/26488b596f01b7b7fe2f1d97d07164e52365ade5), [`ca826f6`](https://github.com/langchain-ai/langchainjs/commit/ca826f6fecae6087bf0dee7781ee80b587396ec1), [`a602c42`](https://github.com/langchain-ai/langchainjs/commit/a602c42db75d7e7e01cab38b12e0b65b9c0cce95), [`db7d017`](https://github.com/langchain-ai/langchainjs/commit/db7d017f7ce13cb937147aabcbfa3847d80bde9d)]:
+  - @langchain/core@1.1.32
+  - @langchain/google-common@2.1.25
+
+## 2.1.24
+
+### Patch Changes
+
+- Updated dependencies [[`96c630d`](https://github.com/langchain-ai/langchainjs/commit/96c630dfd009f2546d5bc36f5067ff868bb4067f), [`a8b9ccc`](https://github.com/langchain-ai/langchainjs/commit/a8b9ccca5a85984a5a30008acd09f9991e591638), [`a1f22bb`](https://github.com/langchain-ai/langchainjs/commit/a1f22bba907731a18dca23c31cec5333444a3f55), [`745b09a`](https://github.com/langchain-ai/langchainjs/commit/745b09a1b0c92643cbc99e773012924948438629)]:
+  - @langchain/core@1.1.30
+  - @langchain/google-common@2.1.24
+
+## 2.1.23
+
+### Patch Changes
+
+- Updated dependencies [[`d43194b`](https://github.com/langchain-ai/langchainjs/commit/d43194b625f19acf79cbe958300dadb7b0a6a89d)]:
+  - @langchain/google-common@2.1.23
+
+## 2.1.22
+
+### Patch Changes
+
+- Updated dependencies [[`3590ee3`](https://github.com/langchain-ai/langchainjs/commit/3590ee3229a9a55b0c818c1e396f6445b2368103)]:
+  - @langchain/google-common@2.1.22
+
+## 2.1.21
+
+### Patch Changes
+
+- [#10106](https://github.com/langchain-ai/langchainjs/pull/10106) [`9f30267`](https://github.com/langchain-ai/langchainjs/commit/9f30267e95a2a42fac71f1d3674b84c5a190dbbc) Thanks [@hntrl](https://github.com/hntrl)! - Add package version metadata to runnable traces. Each package now stamps its version in `this.metadata.versions` at construction time, making version info available in LangSmith trace metadata.
+
+- Updated dependencies [[`9f30267`](https://github.com/langchain-ai/langchainjs/commit/9f30267e95a2a42fac71f1d3674b84c5a190dbbc), [`403a99f`](https://github.com/langchain-ai/langchainjs/commit/403a99fd826383f30300809ae077e1c967023520), [`e0e5a02`](https://github.com/langchain-ai/langchainjs/commit/e0e5a02ea1b855ad7b8d562d1c7770f984100a5d), [`3b1fd54`](https://github.com/langchain-ai/langchainjs/commit/3b1fd5458a4aa29c398122829f383f21b5ac39da), [`77bd982`](https://github.com/langchain-ai/langchainjs/commit/77bd98274a885e947d76f7a9c6dd0b3763453218)]:
+  - @langchain/core@1.1.29
+  - @langchain/google-common@2.1.21
+
+## 2.1.20
+
+### Patch Changes
+
+- [#10080](https://github.com/langchain-ai/langchainjs/pull/10080) [`b583729`](https://github.com/langchain-ai/langchainjs/commit/b583729e99cf0c035630f6b311c4d069a1980cca) Thanks [@hntrl](https://github.com/hntrl)! - Add string-model constructor overloads for chat models (with supporting tests where applicable).
+
+- Updated dependencies [[`fb2226e`](https://github.com/langchain-ai/langchainjs/commit/fb2226e6decdaba21e78b3f01877b45fa1eed6d3)]:
+  - @langchain/core@1.1.27
+  - @langchain/google-common@2.1.20
+
+## 2.1.19
+
+### Patch Changes
+
+- Updated dependencies [[`27186c5`](https://github.com/langchain-ai/langchainjs/commit/27186c54884cfe7c2522fa50b42c3ca0ccaefdba), [`05396f7`](https://github.com/langchain-ai/langchainjs/commit/05396f7ce0a91c49a3bae4bbcd3dbdd6cbd18089), [`5a6f26b`](https://github.com/langchain-ai/langchainjs/commit/5a6f26bbaed80195dc538c538b96219a8b03f38f), [`7be50a7`](https://github.com/langchain-ai/langchainjs/commit/7be50a7014d7622e0ab8d303dfc9c633ebc96333)]:
+  - @langchain/core@1.1.25
+  - @langchain/google-common@2.1.19
+
+## 2.1.18
+
+### Patch Changes
+
+- Updated dependencies [[`58c00aa`](https://github.com/langchain-ai/langchainjs/commit/58c00aa51994e421741c88f51f6e9d2726433a03), [`71d08c0`](https://github.com/langchain-ai/langchainjs/commit/71d08c0a3a2597bd5a084eb35a7830e5ea1a2b29)]:
+  - @langchain/google-common@2.1.18
+  - @langchain/core@1.1.23
+
+## 2.1.17
+
+### Patch Changes
+
+- Updated dependencies [[`d5e3db0`](https://github.com/langchain-ai/langchainjs/commit/d5e3db0d01ab321ec70a875805b2f74aefdadf9d), [`e2ed407`](https://github.com/langchain-ai/langchainjs/commit/e2ed40729c54d132b91b7abecfb787fe5f09461e)]:
+  - @langchain/core@1.1.21
+  - @langchain/google-common@2.1.17
+
+## 2.1.16
+
+### Patch Changes
+
+- Updated dependencies [[`5681181`](https://github.com/langchain-ai/langchainjs/commit/568118119f44cc4509a2c04dff2891230e874f46), [`71c3cba`](https://github.com/langchain-ai/langchainjs/commit/71c3cba843ab16d877299d158a1de0c7d22f3fb9)]:
+  - @langchain/google-common@2.1.16
+  - @langchain/core@1.1.20
+
+## 2.1.15
+
+### Patch Changes
+
+- Updated dependencies [[`41bfea5`](https://github.com/langchain-ai/langchainjs/commit/41bfea51cf119573a3b956ee782d2731fe71c681)]:
+  - @langchain/core@1.1.19
+  - @langchain/google-common@2.1.15
+
+## 2.1.14
+
+### Patch Changes
+
+- Updated dependencies [[`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8), [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8), [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8), [`e10c6cb`](https://github.com/langchain-ai/langchainjs/commit/e10c6cb9cbbf420c95855225f4872c2e738bbd92)]:
+  - @langchain/core@1.1.18
+  - @langchain/google-common@2.1.14
+
 ## 2.1.13
 
 ### Patch Changes

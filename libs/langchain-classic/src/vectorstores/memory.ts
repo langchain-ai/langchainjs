@@ -15,7 +15,7 @@ import { cosine } from "../util/ml-distance/similarities.js";
 interface MemoryVector {
   content: string;
   embedding: number[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   metadata: Record<string, any>;
   id?: string;
 }

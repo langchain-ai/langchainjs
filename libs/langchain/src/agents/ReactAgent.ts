@@ -1,5 +1,5 @@
-/* eslint-disable no-instanceof/no-instanceof */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable no-instanceof/no-instanceof */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { InteropZodObject } from "@langchain/core/utils/types";
 
 import {
@@ -15,14 +15,22 @@ import {
   type StreamOutputMap,
   type PregelOptions,
 } from "@langchain/langgraph";
-import type { CheckpointListOptions } from "@langchain/langgraph-checkpoint";
+import type {
+  BaseCheckpointSaver,
+  BaseStore,
+  CheckpointListOptions,
+} from "@langchain/langgraph-checkpoint";
 import {
   ToolMessage,
   AIMessage,
   MessageStructure,
 } from "@langchain/core/messages";
 import { IterableReadableStream } from "@langchain/core/utils/stream";
-import type { Runnable, RunnableConfig } from "@langchain/core/runnables";
+import {
+  mergeConfigs,
+  type Runnable,
+  type RunnableConfig,
+} from "@langchain/core/runnables";
 import type { StreamEvent } from "@langchain/core/tracers/log_stream";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
 import { createAgentState } from "./annotation.js";
@@ -61,7 +69,7 @@ import type {
   InferMiddlewareInputStates,
   InferContextInput,
   AnyAnnotationRoot,
-  InferSchemaInput,
+  InferSchemaValue,
   ToAnnotationRoot,
 } from "./middleware/types.js";
 import { type ResponseFormatUndefined } from "./responses.js";
@@ -81,7 +89,7 @@ type BaseGraphDestination =
   | typeof END;
 
 // Helper type to get the state definition with middleware states
-type MergedAgentState<Types extends AgentTypeConfig> = InferSchemaInput<
+type MergedAgentState<Types extends AgentTypeConfig> = InferSchemaValue<
   Types["State"]
 > &
   (Types["Response"] extends ResponseFormatUndefined
@@ -169,13 +177,24 @@ export class ReactAgent<
 
   #stateManager = new StateManager();
 
+  #defaultConfig: RunnableConfig;
+
   constructor(
     public options: CreateAgentParams<
       Types["Response"],
       Types["State"],
       Types["Context"]
-    >
+    >,
+    defaultConfig?: RunnableConfig
   ) {
+    this.#defaultConfig = mergeConfigs(defaultConfig ?? {}, {
+      metadata: { ls_integration: "langchain_create_agent" },
+    });
+    if (options.name) {
+      this.#defaultConfig = mergeConfigs(this.#defaultConfig, {
+        metadata: { lc_agent_name: options.name },
+      });
+    }
     this.#toolBehaviorVersion = options.version ?? this.#toolBehaviorVersion;
 
     /**
@@ -215,11 +234,14 @@ export class ReactAgent<
      * Create a schema that merges agent base schema with middleware state schemas
      * Using Zod with withLangGraph ensures LangGraph Studio gets proper metadata
      */
+    const hasDynamicStructuredResponse = Boolean(
+      this.options.middleware?.some((middleware) => middleware.wrapModelCall)
+    );
     const { state, input, output } = createAgentState<
       Types["State"],
       Types["Middleware"]
     >(
-      this.options.responseFormat !== undefined,
+      this.options.responseFormat !== undefined || hasDynamicStructuredResponse,
       this.options.stateSchema as Types["State"],
       this.options.middleware as Types["Middleware"]
     );
@@ -650,7 +672,11 @@ export class ReactAgent<
       if (shouldReturnDirect.size > 0) {
         allNodeWorkflows.addConditionalEdges(
           TOOLS_NODE_NAME,
-          this.#createToolsRouter(shouldReturnDirect, exitNode),
+          this.#createToolsRouter(
+            shouldReturnDirect,
+            exitNode,
+            toolReturnTarget
+          ),
           [toolReturnTarget, exitNode as string]
         );
       } else {
@@ -674,6 +700,54 @@ export class ReactAgent<
    */
   get graph(): AgentGraph<Types> {
     return this.#graph;
+  }
+
+  get checkpointer(): BaseCheckpointSaver | boolean | undefined {
+    return this.#graph.checkpointer;
+  }
+
+  set checkpointer(value: BaseCheckpointSaver | boolean | undefined) {
+    this.#graph.checkpointer = value;
+  }
+
+  get store(): BaseStore | undefined {
+    return this.#graph.store;
+  }
+
+  set store(value: BaseStore | undefined) {
+    this.#graph.store = value;
+  }
+
+  /**
+   * Creates a new ReactAgent with the given config merged into the existing config.
+   * Follows the same pattern as LangGraph's Pregel.withConfig().
+   *
+   * The merged config is applied as a default that gets merged with any config
+   * passed at invocation time (invoke/stream). Invocation-time config takes precedence.
+   *
+   * @param config - Configuration to merge with existing config
+   * @returns A new ReactAgent instance with the merged configuration
+   *
+   * @example
+   * ```typescript
+   * const agent = createAgent({ model: "gpt-4o", tools: [...] });
+   *
+   * // Set a default recursion limit
+   * const configuredAgent = agent.withConfig({ recursionLimit: 1000 });
+   *
+   * // Chain multiple configs
+   * const debugAgent = agent
+   *   .withConfig({ recursionLimit: 1000 })
+   *   .withConfig({ tags: ["debug"] });
+   * ```
+   */
+  withConfig(
+    config: Omit<RunnableConfig, "store" | "writer" | "interrupt">
+  ): ReactAgent<Types> {
+    return new ReactAgent(
+      this.options,
+      mergeConfigs(this.#defaultConfig, config)
+    );
   }
 
   /**
@@ -707,7 +781,8 @@ export class ReactAgent<
    */
   #createToolsRouter(
     shouldReturnDirect: Set<string>,
-    exitNode: string | typeof END
+    exitNode: string | typeof END,
+    toolReturnTarget: string
   ) {
     return (state: Record<string, unknown>) => {
       const builtInState = state as unknown as BuiltInState;
@@ -722,11 +797,11 @@ export class ReactAgent<
       ) {
         // If we have a response format, route to agent to generate structured response
         // Otherwise, return directly to exit node (could be after_agent or END)
-        return this.options.responseFormat ? AGENT_NODE_NAME : exitNode;
+        return this.options.responseFormat ? toolReturnTarget : exitNode;
       }
 
-      // For non-returnDirect tools, always route back to agent
-      return AGENT_NODE_NAME;
+      // For non-returnDirect tools, route back to loop entry node (could be middleware or agent)
+      return toolReturnTarget;
     };
   }
 
@@ -849,6 +924,14 @@ export class ReactAgent<
         (call) => !toolMessages.some((m) => m.tool_call_id === call.id)
       );
       if (pendingToolCalls && pendingToolCalls.length > 0) {
+        /**
+         * v1: route the full message to the ToolNode; it filters already-processed
+         * calls internally and runs the remaining ones via Promise.all.
+         * v2: dispatch each pending call as a separate Send task.
+         */
+        if (this.#toolBehaviorVersion === "v1") {
+          return TOOLS_NODE_NAME;
+        }
         return pendingToolCalls.map(
           (toolCall) =>
             new Send(TOOLS_NODE_NAME, { ...state, lg_tool_call: toolCall })
@@ -893,10 +976,29 @@ export class ReactAgent<
       }
 
       /**
-       * For routing from afterModel nodes, always use simple string paths
-       * The Send API is handled at the model_request node level
+       * v1: route the full AIMessage to a single ToolNode invocation so all
+       * tool calls run concurrently via Promise.all.
+       *
+       * v2: dispatch each regular tool call as a separate Send task, matching
+       * the behaviour of #createModelRouter when no afterModel middleware is
+       * present.
        */
-      return TOOLS_NODE_NAME;
+      if (this.#toolBehaviorVersion === "v1") {
+        return TOOLS_NODE_NAME;
+      }
+
+      const regularToolCalls = (lastMessage as AIMessage).tool_calls!.filter(
+        (toolCall) => !toolCall.name.startsWith("extract-")
+      );
+
+      if (regularToolCalls.length === 0) {
+        return exitNode;
+      }
+
+      return regularToolCalls.map(
+        (toolCall) =>
+          new Send(TOOLS_NODE_NAME, { ...state, lg_tool_call: toolCall })
+      );
     };
   }
 
@@ -1098,14 +1200,15 @@ export class ReactAgent<
     >
   ) {
     type FullState = MergedAgentState<Types>;
+    const mergedConfig = mergeConfigs(this.#defaultConfig, config);
     const initializedState = await this.#initializeMiddlewareStates(
       state,
-      config as RunnableConfig
+      mergedConfig as RunnableConfig
     );
 
     return this.#graph.invoke(
       initializedState,
-      config as unknown as InferContextInput<
+      mergedConfig as unknown as InferContextInput<
         Types["Context"] extends AnyAnnotationRoot | InteropZodObject
           ? Types["Context"]
           : AnyAnnotationRoot
@@ -1158,6 +1261,7 @@ export class ReactAgent<
    */
   async stream<
     TStreamMode extends StreamMode | StreamMode[] | undefined,
+    TSubgraphs extends boolean,
     TEncoding extends "text/event-stream" | undefined,
   >(
     state: InvokeStateParameter<Types>,
@@ -1169,21 +1273,23 @@ export class ReactAgent<
       > &
         InferMiddlewareContextInputs<Types["Middleware"]>,
       TStreamMode,
+      TSubgraphs,
       TEncoding
     >
   ) {
+    const mergedConfig = mergeConfigs(this.#defaultConfig, config);
     const initializedState = await this.#initializeMiddlewareStates(
       state,
-      config as RunnableConfig
+      mergedConfig as RunnableConfig
     );
     return this.#graph.stream(
       initializedState,
-      config as Record<string, any>
+      mergedConfig as Record<string, any>
     ) as Promise<
       IterableReadableStream<
         StreamOutputMap<
           TStreamMode,
-          false,
+          TSubgraphs,
           MergedAgentState<Types>,
           MergedAgentState<Types>,
           string,
@@ -1260,14 +1366,16 @@ export class ReactAgent<
       > &
         InferMiddlewareContextInputs<Types["Middleware"]>,
       StreamMode | StreamMode[] | undefined,
+      boolean,
       "text/event-stream" | undefined
     > & { version?: "v1" | "v2" },
     streamOptions?: Parameters<Runnable["streamEvents"]>[2]
   ): IterableReadableStream<StreamEvent> {
+    const mergedConfig = mergeConfigs(this.#defaultConfig, config);
     return this.#graph.streamEvents(
       state,
       {
-        ...(config as Partial<
+        ...(mergedConfig as Partial<
           PregelOptions<
             any,
             any,
@@ -1309,7 +1417,7 @@ export class ReactAgent<
   /**
    * @internal
    */
-  getSubgraphAsync(namespace?: string, recurse?: boolean) {
+  getSubgraphsAsync(namespace?: string, recurse?: boolean) {
     return this.#graph.getSubgraphsAsync(namespace, recurse) as never;
   }
   /**

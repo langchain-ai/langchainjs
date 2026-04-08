@@ -46,7 +46,7 @@ export interface BaseRetrieverInput {
  *                      defaulting to `Record<string, any>`.
  */
 export interface BaseRetrieverInterface<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   Metadata extends Record<string, any> = Record<string, any>,
 > extends RunnableInterface<string, DocumentInterface<Metadata>[]> {}
 
@@ -63,9 +63,9 @@ export interface BaseRetrieverInterface<
  *                      defaulting to `Record<string, any>`.
  */
 export abstract class BaseRetriever<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    Metadata extends Record<string, any> = Record<string, any>,
-  >
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  Metadata extends Record<string, any> = Record<string, any>,
+>
   extends Runnable<string, DocumentInterface<Metadata>[]>
   implements BaseRetrieverInterface
 {

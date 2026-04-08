@@ -39,8 +39,9 @@ export interface GoogleClientParams<AuthOptions> {
  */
 export type GooglePlatformType = "gai" | "gcp";
 
-export interface GoogleConnectionParams<AuthOptions>
-  extends GoogleClientParams<AuthOptions> {
+export interface GoogleConnectionParams<
+  AuthOptions,
+> extends GoogleClientParams<AuthOptions> {
   /** Hostname for the API call (if this is running on GCP) */
   endpoint?: string;
 
@@ -418,7 +419,7 @@ export interface GoogleAIModelRequestParams extends GoogleAIModelParams {
    *
    * The tool configuration's "any" mode ("forced function calling") is supported for Gemini 1.5 Pro models only.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   tool_choice?: string | "auto" | "any" | "none" | Record<string, any>;
   /**
    * Allowed functions to call when the mode is "any".
@@ -445,14 +446,16 @@ export interface GoogleAIModelRequestParams extends GoogleAIModelParams {
 }
 
 export interface GoogleAIBaseLLMInput<AuthOptions>
-  extends BaseLLMParams,
+  extends
+    BaseLLMParams,
     GoogleConnectionParams<AuthOptions>,
     GoogleAIModelParams,
     GoogleAISafetyParams,
     GoogleAIAPIParams {}
 
 export interface GoogleAIBaseLanguageModelCallOptions
-  extends BaseChatModelCallOptions,
+  extends
+    BaseChatModelCallOptions,
     GoogleAIModelRequestParams,
     GoogleAISafetyParams {
   /**
@@ -466,11 +469,12 @@ export interface GoogleAIBaseLanguageModelCallOptions
 /**
  * Input to LLM class.
  */
-export interface GoogleBaseLLMInput<AuthOptions>
-  extends GoogleAIBaseLLMInput<AuthOptions> {}
+export interface GoogleBaseLLMInput<
+  AuthOptions,
+> extends GoogleAIBaseLLMInput<AuthOptions> {}
 
 export interface GoogleResponse {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   data: any;
 }
 
@@ -923,8 +927,7 @@ export interface GoogleAIAPIParams {
  * GoogleConnectionParams.
  */
 export interface BaseGoogleEmbeddingsParams<AuthOptions>
-  extends EmbeddingsParams,
-    GoogleConnectionParams<AuthOptions> {
+  extends EmbeddingsParams, GoogleConnectionParams<AuthOptions> {
   model: string;
 
   /**

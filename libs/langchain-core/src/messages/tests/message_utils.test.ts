@@ -79,7 +79,7 @@ describe("filterMessage", () => {
     ]);
     expect("func" in filteredMessagesRunnable).toBeTruthy();
     // `func` is protected, so we need to cast it to any to access it
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect(typeof (filteredMessagesRunnable as any).func).toBe("function");
   });
 });
@@ -135,7 +135,7 @@ describe("mergeMessageRuns", () => {
     ]);
     expect("func" in mergedMessages).toBeTruthy();
     // `func` is protected, so we need to cast it to any to access it
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect(typeof (mergedMessages as any).func).toBe("function");
   });
 });
@@ -578,10 +578,10 @@ describe("trimMessages can trim", () => {
       "runnables",
     ]);
     expect("bound" in trimmedMessages).toBeTruthy();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect("func" in (trimmedMessages as any).bound).toBeTruthy();
     // `func` is protected, so we need to cast it to any to access it
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect(typeof (trimmedMessages as any).bound.func).toBe("function");
   });
 });
@@ -624,8 +624,8 @@ test("getBufferString can handle complex messages", () => {
   expect(bufferString2).toBe("AI: Hello there!");
 
   const bufferString3 = getBufferString(messageArr3);
-  // Image content should return empty string for text property
-  expect(bufferString3).toBe("Human: ");
+  // Image-only content should produce placeholders, not empty string
+  expect(bufferString3).toBe("Human: [image][image]");
 });
 
 test("getBufferString includes tool_calls for AI messages", () => {
@@ -698,6 +698,75 @@ test("getBufferString uses text property to avoid metadata inflation", () => {
   expect(bufferString).not.toContain("usage_metadata");
   expect(bufferString).not.toContain("response_metadata");
   expect(bufferString).not.toContain("additional_kwargs");
+});
+
+test("getBufferString preserves non-text content block placeholders", () => {
+  // image and image_url -> [image]
+  const imgMsg = new HumanMessage({
+    content: [
+      { type: "image", source: { type: "base64", data: "abc" } },
+      {
+        type: "image_url",
+        image_url: { url: "https://example.com/img.png" },
+      },
+    ],
+  });
+  expect(getBufferString([imgMsg])).toBe("Human: [image][image]");
+
+  // audio and input_audio -> [audio]
+  const audioMsg = new HumanMessage({
+    content: [
+      { type: "audio", source: { type: "base64", data: "abc" } },
+      { type: "input_audio", data: "abc", format: "wav" },
+    ],
+  });
+  expect(getBufferString([audioMsg])).toBe("Human: [audio][audio]");
+
+  // video -> [video]
+  const videoMsg = new HumanMessage({
+    content: [{ type: "video", source: { type: "base64", data: "abc" } }],
+  });
+  expect(getBufferString([videoMsg])).toBe("Human: [video]");
+
+  // file -> [file]
+  const fileMsg = new HumanMessage({
+    content: [
+      {
+        type: "file",
+        source: { type: "base64", data: "abc" },
+        mimeType: "application/pdf",
+      },
+    ],
+  });
+  expect(getBufferString([fileMsg])).toBe("Human: [file]");
+
+  // text-plain -> extracts text
+  const textPlainMsg = new HumanMessage({
+    content: [{ type: "text-plain", text: "hello world" }],
+  });
+  expect(getBufferString([textPlainMsg])).toBe("Human: hello world");
+
+  // reasoning -> excluded (empty string, filtered out)
+  const reasoningMsg = new AIMessage({
+    content: [
+      { type: "reasoning", reasoning: "thinking..." },
+      { type: "text", text: "answer" },
+    ],
+  });
+  expect(getBufferString([reasoningMsg])).toBe("AI: answer");
+
+  // Mixed content: text + multimodal
+  const mixedMsg = new HumanMessage({
+    content: [
+      { type: "text", text: "Look at this: " },
+      { type: "image", source: { type: "base64", data: "abc" } },
+      { type: "text", text: " and listen to this: " },
+      { type: "audio", source: { type: "base64", data: "def" } },
+    ],
+  });
+  expect(getBufferString([mixedMsg])).toBe(
+    "Human: Look at this: [image] and listen to this: [audio]"
+  );
 });
 
 describe("chat message conversions", () => {

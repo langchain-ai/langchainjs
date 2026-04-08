@@ -47,7 +47,7 @@ export class JSONLoader extends TextLoader {
    * If no JSON pointer is specified then return all string in the object
    */
   private extractArrayStringsFromObject(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     json: any,
     pointers: jsonpointer[],
     extractAllStrings = false,

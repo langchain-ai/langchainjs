@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 
 import { vi, test, beforeEach, afterEach, afterAll, expect } from "vitest";
 import { traceable } from "langsmith/traceable";
@@ -164,9 +164,8 @@ test.each(["true", "false"])(
 test.each(["true", "false"])(
   "traceables nested within runnables with a context var set and with background callbacks %s",
   async (value) => {
-    const { setContextVariable, getContextVariable } = await import(
-      "../../context.js"
-    );
+    const { setContextVariable, getContextVariable } =
+      await import("../../context.js");
     process.env.LANGCHAIN_CALLBACKS_BACKGROUND = value;
 
     setContextVariable("foo", "bar");
@@ -509,9 +508,8 @@ test.each(["true", "false"])(
 test.each(["true", "false"])(
   "runnables nested within traceables and a context var set with background callbacks %s",
   async (value) => {
-    const { setContextVariable, getContextVariable } = await import(
-      "../../context.js"
-    );
+    const { setContextVariable, getContextVariable } =
+      await import("../../context.js");
     process.env.LANGCHAIN_CALLBACKS_BACKGROUND = value;
     setContextVariable("foo", "bar");
 

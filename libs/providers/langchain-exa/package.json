@@ -12,7 +12,7 @@
     "type": "git",
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
-  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-exa/",
+  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/community/langchain-exa/",
   "scripts": {
     "build": "turbo build:compile --filter @langchain/exa --output-logs new-only",
     "build:compile": "tsdown",
@@ -35,8 +35,7 @@
     "@langchain/core": "^1.0.0"
   },
   "devDependencies": {
-    "@langchain/core": "workspace:*",
-    "@langchain/eslint": "workspace:*",
+    "@langchain/core": "workspace:^",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
     "@types/uuid": "^9",

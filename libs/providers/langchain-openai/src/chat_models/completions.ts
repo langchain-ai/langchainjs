@@ -22,16 +22,19 @@ import {
   _convertToOpenAITool,
 } from "../utils/tools.js";
 import { isReasoningModel } from "../utils/misc.js";
-import { BaseChatOpenAICallOptions } from "./base.js";
-import { BaseChatOpenAI } from "./base.js";
+import {
+  BaseChatOpenAI,
+  BaseChatOpenAICallOptions,
+  BaseChatOpenAIFields,
+  getChatOpenAIModelParams,
+} from "./base.js";
 import {
   convertCompletionsDeltaToBaseMessageChunk,
   convertCompletionsMessageToBaseMessage,
   convertMessagesToCompletionsMessageParams,
 } from "../converters/completions.js";
 
-export interface ChatOpenAICompletionsCallOptions
-  extends BaseChatOpenAICallOptions {}
+export interface ChatOpenAICompletionsCallOptions extends BaseChatOpenAICallOptions {}
 
 type ChatCompletionsInvocationParams = Omit<
   OpenAIClient.Chat.Completions.ChatCompletionCreateParams,
@@ -43,9 +46,18 @@ type ChatCompletionsInvocationParams = Omit<
  * @internal
  */
 export class ChatOpenAICompletions<
-  CallOptions extends
-    ChatOpenAICompletionsCallOptions = ChatOpenAICompletionsCallOptions,
+  CallOptions extends ChatOpenAICompletionsCallOptions =
+    ChatOpenAICompletionsCallOptions,
 > extends BaseChatOpenAI<CallOptions> {
+  constructor(model: string, fields?: Omit<BaseChatOpenAIFields, "model">);
+  constructor(fields?: BaseChatOpenAIFields);
+  constructor(
+    modelOrFields?: string | BaseChatOpenAIFields,
+    fieldsArg?: Omit<BaseChatOpenAIFields, "model">
+  ) {
+    super(getChatOpenAIModelParams(modelOrFields, fieldsArg));
+  }
+
   /** @internal */
   override invocationParams(
     options?: this["ParsedCallOptions"],
@@ -133,6 +145,7 @@ export class ChatOpenAICompletions<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
+    options.signal?.throwIfAborted();
     const usageMetadata = {} as UsageMetadata;
     const params = this.invocationParams(options);
     const messagesMapped: OpenAIClient.Chat.Completions.ChatCompletionMessageParam[] =
@@ -315,6 +328,9 @@ export class ChatOpenAICompletions<
     const streamIterable = await this.completionWithRetry(params, options);
     let usage: OpenAIClient.Completions.CompletionUsage | undefined;
     for await (const data of streamIterable) {
+      if (options.signal?.aborted) {
+        return;
+      }
       const choice = data?.choices?.[0];
       if (data.usage) {
         usage = data.usage;
@@ -343,7 +359,7 @@ export class ChatOpenAICompletions<
         );
         continue;
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       const generationInfo: Record<string, any> = { ...newTokenIndices };
       if (choice.finish_reason != null) {
         generationInfo.finish_reason = choice.finish_reason;
@@ -409,6 +425,14 @@ export class ChatOpenAICompletions<
         text: "",
       });
       yield generationChunk;
+      await runManager?.handleLLMNewToken(
+        generationChunk.text ?? "",
+        { prompt: 0, completion: 0 },
+        undefined,
+        undefined,
+        undefined,
+        { chunk: generationChunk }
+      );
     }
     if (options.signal?.aborted) {
       throw new Error("AbortError");
@@ -463,7 +487,7 @@ export class ChatOpenAICompletions<
    * method. This will be removed in a future release
    */
   protected _convertCompletionsDeltaToBaseMessageChunk(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     delta: Record<string, any>,
     rawResponse: OpenAIClient.Chat.Completions.ChatCompletionChunk,
     defaultRole?: OpenAIClient.Chat.ChatCompletionRole

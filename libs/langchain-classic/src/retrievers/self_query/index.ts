@@ -25,8 +25,9 @@ export {
  * Interface for the arguments required to create a SelfQueryRetriever
  * instance. It extends the BaseRetrieverInput interface.
  */
-export interface SelfQueryRetrieverArgs<T extends VectorStore>
-  extends BaseRetrieverInput {
+export interface SelfQueryRetrieverArgs<
+  T extends VectorStore,
+> extends BaseRetrieverInput {
   vectorStore: T;
   structuredQueryTranslator: BaseTranslator<T>;
   queryConstructor: RunnableInterface<{ query: string }, StructuredQuery>;

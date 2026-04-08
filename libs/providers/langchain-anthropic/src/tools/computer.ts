@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import Anthropic from "@anthropic-ai/sdk";
 import { tool } from "@langchain/core/tools";
 import { ToolMessage } from "@langchain/core/messages";

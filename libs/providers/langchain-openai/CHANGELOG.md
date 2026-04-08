@@ -1,5 +1,203 @@
 # @langchain/openai
 
+## 1.4.3
+
+### Patch Changes
+
+- [#10670](https://github.com/langchain-ai/langchainjs/pull/10670) [`6b8ef6c`](https://github.com/langchain-ai/langchainjs/commit/6b8ef6c95e061af47af206926598c983d878f72a) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(openai): preserve plain string responses content
+
+## 1.4.2
+
+### Patch Changes
+
+- [#10614](https://github.com/langchain-ai/langchainjs/pull/10614) [`d6bf4fc`](https://github.com/langchain-ai/langchainjs/commit/d6bf4fc91b2c2eb931bf3bc7606b1817632bc8c1) Thanks [@colifran](https://github.com/colifran)! - feat(openai): imput placeholder filenames for openai file inputs
+
+- Updated dependencies [[`d3d0922`](https://github.com/langchain-ai/langchainjs/commit/d3d0922c24afcd3006fb94dcadd3ebe08fbf2383)]:
+  - @langchain/core@1.1.39
+
+## 1.4.1
+
+### Patch Changes
+
+- [#10551](https://github.com/langchain-ai/langchainjs/pull/10551) [`9270c48`](https://github.com/langchain-ai/langchainjs/commit/9270c48d7a95db6e7e2570a7e681c94479a673d0) Thanks [@muhammadosama984](https://github.com/muhammadosama984)! - fix(openai): preserve reasoning_content in ChatOpenAICompletions
+
+- Updated dependencies [[`589ab9b`](https://github.com/langchain-ai/langchainjs/commit/589ab9be391a5d6c104f34877fc1b3e2a32fa449)]:
+  - @langchain/core@1.1.38
+
+## 1.4.0
+
+### Minor Changes
+
+- [#10509](https://github.com/langchain-ai/langchainjs/pull/10509) [`5552999`](https://github.com/langchain-ai/langchainjs/commit/555299917c90322e25d7671bad2e20c9b104bad6) Thanks [@hntrl](https://github.com/hntrl)! - feat(openai): add support for phase parameter on Responses API messages
+  - Extract `phase` from message output items and surface it on text content blocks
+  - Support phase in streaming via `response.output_item.added` events
+  - Round-trip phase through both raw provider and standard content paths
+  - Move phase into `extras` dict in the core standard content translator
+
+### Patch Changes
+
+- Updated dependencies [[`6933769`](https://github.com/langchain-ai/langchainjs/commit/6933769836fe3cec835588e5f8db9883200865f6), [`50d5f32`](https://github.com/langchain-ai/langchainjs/commit/50d5f32fd30cabebf058b1c13255c1daadde6107), [`5552999`](https://github.com/langchain-ai/langchainjs/commit/555299917c90322e25d7671bad2e20c9b104bad6), [`8331833`](https://github.com/langchain-ai/langchainjs/commit/8331833c93ba907063c9fe28e9f935ed5dfec11c)]:
+  - @langchain/core@1.1.37
+
+## 1.3.1
+
+### Patch Changes
+
+- [#10481](https://github.com/langchain-ai/langchainjs/pull/10481) [`478652c`](https://github.com/langchain-ai/langchainjs/commit/478652c01cdae0703415febd250b6c2656b36410) Thanks [@hnustwjj](https://github.com/hnustwjj)! - fix(openai): detect DeepSeek context overflow errors as `ContextOverflowError`
+
+  DeepSeek returns `maximum context length` in 400 error messages when the context limit is exceeded. These are now recognized by `wrapOpenAIClientError`, so downstream code (e.g. summarization middleware fallback) can handle them correctly.
+
+- [#10507](https://github.com/langchain-ai/langchainjs/pull/10507) [`52e501b`](https://github.com/langchain-ai/langchainjs/commit/52e501b44ee54ace1889ec9149a3617c4409db51) Thanks [@App-arently](https://github.com/App-arently)! - fix(openai): guard JSON.parse in streaming json_schema when text is empty
+
+- Updated dependencies [[`bbbfea1`](https://github.com/langchain-ai/langchainjs/commit/bbbfea185c0777ae06df2b24a1a84f941d499c2a)]:
+  - @langchain/core@1.1.36
+
+## 1.3.0
+
+### Minor Changes
+
+- [#10317](https://github.com/langchain-ai/langchainjs/pull/10317) [`af9bbd3`](https://github.com/langchain-ai/langchainjs/commit/af9bbd3f48d96de8963f492ebbf75ca0762f7e57) Thanks [@hntrl](https://github.com/hntrl)! - feat(openai): support tool search and defer_loading
+  - Add `tools.toolSearch()` factory for the OpenAI Responses API `tool_search` built-in tool, supporting both server-executed and client-executed modes.
+  - Propagate `defer_loading` from LangChain tool `extras` through `bindTools()` and into the Responses API payload, enabling on-demand tool discovery.
+  - Handle `tool_search_call` and `tool_search_output` response items in both streaming and non-streaming converters.
+  - Add core block translator support to convert `tool_search_call` → `server_tool_call` and `tool_search_output` → `server_tool_call_result`.
+
+### Patch Changes
+
+- Updated dependencies [[`6db417b`](https://github.com/langchain-ai/langchainjs/commit/6db417b03ecb5e2ace413389d982294e0ac88433), [`d69dfcc`](https://github.com/langchain-ai/langchainjs/commit/d69dfcca97503cf1c0b7e70ccf5fb7d507c60982)]:
+  - @langchain/core@1.1.33
+
+## 1.2.13
+
+### Patch Changes
+
+- [#10311](https://github.com/langchain-ai/langchainjs/pull/10311) [`aacbe87`](https://github.com/langchain-ai/langchainjs/commit/aacbe872014a6e089c188336520d91dcac2f0287) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(openai): add gpt-5.4 to profiles
+
+- Updated dependencies [[`26488b5`](https://github.com/langchain-ai/langchainjs/commit/26488b596f01b7b7fe2f1d97d07164e52365ade5), [`ca826f6`](https://github.com/langchain-ai/langchainjs/commit/ca826f6fecae6087bf0dee7781ee80b587396ec1), [`a602c42`](https://github.com/langchain-ai/langchainjs/commit/a602c42db75d7e7e01cab38b12e0b65b9c0cce95), [`db7d017`](https://github.com/langchain-ai/langchainjs/commit/db7d017f7ce13cb937147aabcbfa3847d80bde9d)]:
+  - @langchain/core@1.1.32
+
+## 1.2.12
+
+### Patch Changes
+
+- [#10205](https://github.com/langchain-ai/langchainjs/pull/10205) [`3682a8d`](https://github.com/langchain-ai/langchainjs/commit/3682a8d4e0ed0855a5283f26bcfd1c0415dde075) Thanks [@colifran](https://github.com/colifran)! - feat(openai): add standard schema support for structured output
+
+- Updated dependencies [[`96c630d`](https://github.com/langchain-ai/langchainjs/commit/96c630dfd009f2546d5bc36f5067ff868bb4067f), [`a8b9ccc`](https://github.com/langchain-ai/langchainjs/commit/a8b9ccca5a85984a5a30008acd09f9991e591638), [`a1f22bb`](https://github.com/langchain-ai/langchainjs/commit/a1f22bba907731a18dca23c31cec5333444a3f55)]:
+  - @langchain/core@1.1.30
+
+## 1.2.11
+
+### Patch Changes
+
+- [#10106](https://github.com/langchain-ai/langchainjs/pull/10106) [`9f30267`](https://github.com/langchain-ai/langchainjs/commit/9f30267e95a2a42fac71f1d3674b84c5a190dbbc) Thanks [@hntrl](https://github.com/hntrl)! - Add package version metadata to runnable traces. Each package now stamps its version in `this.metadata.versions` at construction time, making version info available in LangSmith trace metadata.
+
+- [#10151](https://github.com/langchain-ai/langchainjs/pull/10151) [`f298a9b`](https://github.com/langchain-ai/langchainjs/commit/f298a9bdedff7bc2b0eb7f6b5e6b52fd3042a7b7) Thanks [@hntrl](https://github.com/hntrl)! - Bump openai SDK to ^6.24.0, fix ChatCompletionTool type narrowing for new union type, add file input converter tests for newly supported document types (docx, pptx, xlsx, csv)
+
+- Updated dependencies [[`9f30267`](https://github.com/langchain-ai/langchainjs/commit/9f30267e95a2a42fac71f1d3674b84c5a190dbbc), [`403a99f`](https://github.com/langchain-ai/langchainjs/commit/403a99fd826383f30300809ae077e1c967023520), [`3b1fd54`](https://github.com/langchain-ai/langchainjs/commit/3b1fd5458a4aa29c398122829f383f21b5ac39da), [`77bd982`](https://github.com/langchain-ai/langchainjs/commit/77bd98274a885e947d76f7a9c6dd0b3763453218)]:
+  - @langchain/core@1.1.29
+
+## 1.2.10
+
+### Patch Changes
+
+- [#10143](https://github.com/langchain-ai/langchainjs/pull/10143) [`62ba83e`](https://github.com/langchain-ai/langchainjs/commit/62ba83edd5206c86d8da8d1b608a2493ee4f3da8) Thanks [@topliceanurazvan](https://github.com/topliceanurazvan)! - fix(openai): emit handleLLMNewToken callback for usage chunk in Completions API streaming
+
+  The final usage chunk in `_streamResponseChunks` was only yielded via the async generator but did not call `runManager.handleLLMNewToken()`. This meant callback-based consumers (e.g. LangGraph's `StreamMessagesHandler`) never received the `usage_metadata` chunk. Added the missing `handleLLMNewToken` call to match the behavior of the main streaming loop.
+
+- Updated dependencies [[`10a876c`](https://github.com/langchain-ai/langchainjs/commit/10a876c7d5ff27d8f2889761ee20e95f76a50518), [`b46d96a`](https://github.com/langchain-ai/langchainjs/commit/b46d96a508a8bf212561dbb6f025e35c75f16257)]:
+  - @langchain/core@1.1.28
+
+## 1.2.9
+
+### Patch Changes
+
+- [#10080](https://github.com/langchain-ai/langchainjs/pull/10080) [`b583729`](https://github.com/langchain-ai/langchainjs/commit/b583729e99cf0c035630f6b311c4d069a1980cca) Thanks [@hntrl](https://github.com/hntrl)! - Add string-model constructor overloads for chat models (with supporting tests where applicable).
+
+- Updated dependencies [[`fb2226e`](https://github.com/langchain-ai/langchainjs/commit/fb2226e6decdaba21e78b3f01877b45fa1eed6d3)]:
+  - @langchain/core@1.1.27
+
+## 1.2.8
+
+### Patch Changes
+
+- [#10077](https://github.com/langchain-ai/langchainjs/pull/10077) [`05396f7`](https://github.com/langchain-ai/langchainjs/commit/05396f7ce0a91c49a3bae4bbcd3dbdd6cbd18089) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(core): add ContextOverflowError, raise in anthropic and openai
+
+- [#10081](https://github.com/langchain-ai/langchainjs/pull/10081) [`5a6f26b`](https://github.com/langchain-ai/langchainjs/commit/5a6f26bbaed80195dc538c538b96219a8b03f38f) Thanks [@hntrl](https://github.com/hntrl)! - feat(core): add namespace-based symbol branding for error class hierarchies
+
+  Introduces `createNamespace` utility for hierarchical symbol-based branding of class hierarchies.
+  All LangChain error classes now use this pattern, replacing hand-rolled duck-type `isInstance` checks
+  with reliable cross-realm `Symbol.for`-based identity.
+  - New `LangChainError` base class that all LangChain errors extend
+  - New `createNamespace` / `Namespace` API in `@langchain/core/utils/namespace`
+  - Refactored `ModelAbortError`, `ContextOverflowError` to use namespace branding
+  - Added `ContextOverflowError.fromError()` static factory method
+  - Deprecated `addLangChainErrorFields` in favor of `LangChainError` subclasses
+  - Migrated Google provider errors (`GoogleError`, `ConfigurationError`, etc.) to namespace branding
+  - Updated Anthropic and OpenAI providers to use `ContextOverflowError.fromError()`
+
+- [#10078](https://github.com/langchain-ai/langchainjs/pull/10078) [`7be50a7`](https://github.com/langchain-ai/langchainjs/commit/7be50a7014d7622e0ab8d303dfc9c633ebc96333) Thanks [@christian-bromann](https://github.com/christian-bromann)! - chore(\*): update model profiles
+
+## 1.2.7
+
+### Patch Changes
+
+- [#9954](https://github.com/langchain-ai/langchainjs/pull/9954) [`6939dab`](https://github.com/langchain-ai/langchainjs/commit/6939dabc8dc6481942e7e2c19e3dc61bc374d65a) Thanks [@akintunero](https://github.com/akintunero)! - fix(openai): store response.output in response_metadata for reasoning model round-trips
+
+- [#9898](https://github.com/langchain-ai/langchainjs/pull/9898) [`ad581c7`](https://github.com/langchain-ai/langchainjs/commit/ad581c76138ea12ebdaee444c0dcdc4f6a280624) Thanks [@Muhammad-Kamran-Khan](https://github.com/Muhammad-Kamran-Khan)! - fix(openai): pass service_tier to API when using Responses API
+
+## 1.2.6
+
+### Patch Changes
+
+- [#9972](https://github.com/langchain-ai/langchainjs/pull/9972) [`16d691c`](https://github.com/langchain-ai/langchainjs/commit/16d691c7f8196e1d6322f051c25b2219ff2953b6) Thanks [@hntrl](https://github.com/hntrl)! - fix(openai): drop Anthropic `tool_use` content blocks when converting messages for OpenAI
+
+  When messages originating from Anthropic (e.g. via `ChatAnthropic`) are passed to `ChatOpenAI`, Anthropic-native `tool_use` blocks in `message.content` are now filtered out during conversion. These blocks are already represented in `message.tool_calls` and would cause an OpenAI API error if passed through.
+
+- [#9940](https://github.com/langchain-ai/langchainjs/pull/9940) [`1058574`](https://github.com/langchain-ai/langchainjs/commit/1058574b723f0d060eb9b3ca25be5aeeabbe51aa) Thanks [@saakshigupta2002](https://github.com/saakshigupta2002)! - fix(openai): correctly convert annotations back to OpenAI format in Responses API multi-turn conversations
+
+## 1.2.5
+
+### Patch Changes
+
+- [#9743](https://github.com/langchain-ai/langchainjs/pull/9743) [`0870ca0`](https://github.com/langchain-ai/langchainjs/commit/0870ca0719dacd8a555b3341e581d6c15cd6faf3) Thanks [@d2201](https://github.com/d2201)! - fix(openai): include encrypted reasoning in ZDR responses input
+
+- [#9934](https://github.com/langchain-ai/langchainjs/pull/9934) [`cf46089`](https://github.com/langchain-ai/langchainjs/commit/cf46089d250b1ec87f99956f5cd87e2615ac25c5) Thanks [@hntrl](https://github.com/hntrl)! - feat(openai): update openai SDK to ^6.18.0
+  - Adds support for codex 5.3
+  - Added `action` option to image generation tool (`generate`, `edit`, `auto`)
+  - Removed `@ts-expect-error` for `gpt-image-1.5` model (now in SDK types)
+  - Auto-route codex models (`codex-mini-latest`, `gpt-5-codex`, `gpt-5.1-codex`, etc.) to Responses API
+  - Added `shell_call` and `local_shell_call` to streaming converter and input reconstruction
+  - Added unit tests for `isReasoningModel` and `_modelPrefersResponsesAPI`
+
+## 1.2.4
+
+### Patch Changes
+
+- [#9887](https://github.com/langchain-ai/langchainjs/pull/9887) [`1fa865b`](https://github.com/langchain-ai/langchainjs/commit/1fa865b1cb8a30c2269b83cdb5fc84d374c3fca9) Thanks [@Muhammad-Kamran-Khan](https://github.com/Muhammad-Kamran-Khan)! - Fix validation to allow file_url and file_id without filename metadata in Responses API, and prevent sending filename when not allowed.
+
+- [#9873](https://github.com/langchain-ai/langchainjs/pull/9873) [`28efb57`](https://github.com/langchain-ai/langchainjs/commit/28efb57448933368094ca41c63d9262ac0f348a6) Thanks [@hntrl](https://github.com/hntrl)! - Add `reasoningEffort` call option as a convenience shorthand for `reasoning.effort`
+  - Adds `reasoningEffort` to `BaseChatOpenAICallOptions` for easier configuration of reasoning models
+  - Automatically coalesces `reasoningEffort` into `reasoning.effort` when calling reasoning models (o1, o3, etc.)
+  - If both `reasoningEffort` and `reasoning.effort` are provided, `reasoning.effort` takes precedence
+  - Marked as `@deprecated` to encourage use of the full `reasoning.effort` option
+
+- [#9876](https://github.com/langchain-ai/langchainjs/pull/9876) [`4e42452`](https://github.com/langchain-ai/langchainjs/commit/4e42452e4c020408bd6687667e931497b05aaff5) Thanks [@sflanker](https://github.com/sflanker)! - fix(openai): pass runManager to responses.\_generate function in ChatOpenAI
+
+- [#9900](https://github.com/langchain-ai/langchainjs/pull/9900) [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8) Thanks [@hntrl](https://github.com/hntrl)! - Improved abort signal handling for chat models:
+  - Added `ModelAbortError` class in `@langchain/core/errors` that contains partial output when a model invocation is aborted mid-stream
+  - `invoke()` now throws `ModelAbortError` with accumulated `partialOutput` when aborted during streaming (when using streaming callback handlers)
+  - `stream()` throws a regular `AbortError` when aborted (since chunks are already yielded to the caller)
+  - All provider implementations now properly check and propagate abort signals in both `_generate()` and `_streamResponseChunks()` methods
+  - Added standard tests for abort signal behavior
+
+- [#9900](https://github.com/langchain-ai/langchainjs/pull/9900) [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8) Thanks [@hntrl](https://github.com/hntrl)! - fix(providers): add proper abort signal handling for invoke and stream operations
+  - Added early abort check (`signal.throwIfAborted()`) at the start of `_generate` methods to immediately throw when signal is already aborted
+  - Added abort signal checks inside streaming loops in `_streamResponseChunks` to return early when signal is aborted
+  - Propagated abort signals to underlying SDK calls where applicable (Google GenAI, Google Common/VertexAI, Cohere)
+  - Added standard tests for abort signal behavior in `@langchain/standard-tests`
+
+  This enables proper cancellation behavior for both invoke and streaming operations, and allows fallback chains to correctly proceed to the next runnable when the previous one is aborted.
+
 ## 1.2.3
 
 ### Patch Changes

@@ -16,7 +16,7 @@ export type { DistanceMetric as TurbopufferDistanceMetric } from "@turbopuffer/t
 
 const PAGE_CONTENT_KEY = "__lc_page_content";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 type ColumnData = Record<string, any[]>;
 
 /**

@@ -31,6 +31,7 @@ import {
   parseCustomToolCall,
 } from "../utils/tools.js";
 import {
+  getFilenameFromMetadata,
   getRequiredFilenameFromMetadata,
   iife,
   isReasoningModel,
@@ -107,6 +108,85 @@ function convertOpenAIAnnotationToLangChain(
     type: "non_standard",
     value: annotation as unknown as Record<string, unknown>,
   } satisfies ContentBlock.NonStandard;
+}
+
+/**
+ * Converts a LangChain Citation or BaseContentBlock back to an OpenAI annotation.
+ *
+ * This is the inverse of `convertOpenAIAnnotationToLangChain`. It handles all four
+ * annotation types (url_citation, file_citation, container_file_citation, file_path)
+ * and also passes through annotations that are already in OpenAI format.
+ */
+function convertLangChainAnnotationToOpenAI(
+  annotation:
+    | ContentBlock.Citation
+    | ContentBlock.NonStandard
+    | Record<string, unknown>
+): OpenAIAnnotation {
+  // If it's already in OpenAI format, pass through unchanged
+  if (
+    annotation.type === "url_citation" ||
+    annotation.type === "file_citation" ||
+    annotation.type === "container_file_citation" ||
+    annotation.type === "file_path"
+  ) {
+    return annotation as unknown as OpenAIAnnotation;
+  }
+
+  // Convert from LangChain citation format back to OpenAI format
+  if (annotation.type === "citation") {
+    const citation = annotation as ContentBlock.Citation & {
+      file_id?: string;
+      container_id?: string;
+    };
+
+    if (citation.source === "url_citation") {
+      return {
+        type: "url_citation",
+        url: citation.url ?? "",
+        title: citation.title ?? "",
+        start_index: citation.startIndex ?? 0,
+        end_index: citation.endIndex ?? 0,
+      } as OpenAIAnnotation;
+    }
+
+    if (citation.source === "file_citation") {
+      return {
+        type: "file_citation",
+        file_id: citation.file_id ?? "",
+        filename: citation.title ?? "",
+        index: citation.startIndex ?? 0,
+      } as OpenAIAnnotation;
+    }
+
+    if (citation.source === "container_file_citation") {
+      return {
+        type: "container_file_citation",
+        file_id: citation.file_id ?? "",
+        filename: citation.title ?? "",
+        container_id: citation.container_id ?? "",
+        start_index: citation.startIndex ?? 0,
+        end_index: citation.endIndex ?? 0,
+      } as OpenAIAnnotation;
+    }
+
+    if (citation.source === "file_path") {
+      return {
+        type: "file_path",
+        file_id: citation.file_id ?? "",
+        index: citation.startIndex ?? 0,
+      } as OpenAIAnnotation;
+    }
+  }
+
+  // For non_standard blocks, unwrap the value
+  if (annotation.type === "non_standard") {
+    return (annotation as ContentBlock.NonStandard)
+      .value as unknown as OpenAIAnnotation;
+  }
+
+  // Unknown format, pass through as-is
+  return annotation as unknown as OpenAIAnnotation;
 }
 
 type ExcludeController<T> = T extends { controller: unknown } ? never : T;
@@ -260,6 +340,19 @@ export const convertResponsesMessageToAIMessage: Converter<
   const content: MessageContent = [];
   const tool_calls: ToolCall[] = [];
   const invalid_tool_calls: InvalidToolCall[] = [];
+  // Preserve the raw output items so that convertMessagesToResponsesInput can
+  // return them verbatim on the fast path.  We strip `parsed_arguments` from
+  // function_call items because the OpenAI SDK injects it when using
+  // responses.parse(), but the API rejects it when sent back as input.
+  const cleanedOutput = response.output.map((item) => {
+    if (item.type === "function_call" && "parsed_arguments" in item) {
+      const cleaned = { ...item };
+      delete (cleaned as Record<string, unknown>).parsed_arguments;
+      return cleaned;
+    }
+    return item;
+  });
+
   const response_metadata: Record<string, unknown> = {
     model_provider: "openai",
     model: response.model,
@@ -268,6 +361,7 @@ export const convertResponsesMessageToAIMessage: Converter<
     incomplete_details: response.incomplete_details,
     metadata: response.metadata,
     object: response.object,
+    output: cleanedOutput,
     status: response.status,
     user: response.user,
     service_tier: response.service_tier,
@@ -293,13 +387,15 @@ export const convertResponsesMessageToAIMessage: Converter<
             if ("parsed" in part && part.parsed != null) {
               additional_kwargs.parsed = part.parsed;
             }
-            return {
+            const block: ContentBlock = {
               type: "text",
               text: part.text,
               annotations: part.annotations.map(
                 convertOpenAIAnnotationToLangChain
               ),
-            } satisfies ContentBlock.Text;
+              ...(item.phase !== null ? { phase: item.phase } : {}),
+            };
+            return block;
           }
 
           if (part.type === "refusal") {
@@ -583,6 +679,15 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
     event.item.type === "message"
   ) {
     id = event.item.id;
+    const phase = "phase" in event.item ? event.item.phase : undefined;
+    if (phase) {
+      content.push({
+        type: "text",
+        text: "",
+        phase,
+        index: 0,
+      } as ContentBlock.Text);
+    }
   } else if (
     event.type === "response.output_item.added" &&
     event.item.type === "function_call"
@@ -636,10 +741,14 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
       "web_search_call",
       "file_search_call",
       "code_interpreter_call",
+      "shell_call",
+      "local_shell_call",
       "mcp_call",
       "mcp_list_tools",
       "mcp_approval_request",
       "custom_tool_call",
+      "tool_search_call",
+      "tool_search_output",
     ].includes(event.item.type)
   ) {
     additional_kwargs.tool_outputs = [event.item];
@@ -652,11 +761,18 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
 
     usage_metadata = convertResponsesUsageToUsageMetadata(event.response.usage);
 
-    if (event.response.text?.format?.type === "json_schema") {
+    if (event.response.text?.format?.type === "json_schema" && msg.text) {
       additional_kwargs.parsed ??= JSON.parse(msg.text);
     }
     for (const [key, value] of Object.entries(event.response)) {
-      if (key !== "id") response_metadata[key] = value;
+      if (key === "id") continue;
+      // Use the cleaned output from the converted message so that
+      // SDK-only fields like parsed_arguments are not persisted.
+      if (key === "output") {
+        response_metadata[key] = msg.response_metadata.output;
+      } else {
+        response_metadata[key] = value;
+      }
     }
   } else if (
     event.type === "response.function_call_arguments.delta" ||
@@ -860,14 +976,16 @@ export const convertStandardContentMessageToResponsesInput: Converter<
       currentMessage = undefined;
     }
 
-    const pushMessageContent: (
-      content: OpenAIClient.Responses.ResponseInputMessageContentList
-    ) => void = (content) => {
+    const pushMessageContent = (
+      content: OpenAIClient.Responses.ResponseInputMessageContentList,
+      phase?: OpenAIClient.Responses.EasyInputMessage["phase"]
+    ) => {
       if (!currentMessage) {
         currentMessage = {
           type: "message",
           role: messageRole,
           content: [],
+          ...(phase ? { phase } : {}),
         };
       }
       if (typeof currentMessage.content === "string") {
@@ -933,23 +1051,24 @@ export const convertStandardContentMessageToResponsesInput: Converter<
     const resolveFileItem = (
       block: ContentBlock.Multimodal.File | ContentBlock.Multimodal.Video
     ): OpenAIClient.Responses.ResponseInputFile | undefined => {
-      const filename = getRequiredFilenameFromMetadata(block);
-
-      if (block.fileId && typeof filename === "string") {
+      if (block.fileId) {
+        const filename = getFilenameFromMetadata(block);
         return {
           type: "input_file",
           file_id: block.fileId,
           ...(filename ? { filename } : {}),
         };
       }
-      if (block.url && typeof filename === "string") {
+      if (block.url) {
+        const filename = getFilenameFromMetadata(block);
         return {
+          ...(filename ? { filename } : {}),
           type: "input_file",
           file_url: block.url,
-          ...(filename ? { filename } : {}),
         };
       }
-      if (block.data && typeof filename === "string") {
+      if (block.data) {
+        const filename = getRequiredFilenameFromMetadata(block);
         const encoded =
           typeof block.data === "string"
             ? block.data
@@ -958,7 +1077,7 @@ export const convertStandardContentMessageToResponsesInput: Converter<
         return {
           type: "input_file",
           file_data: `data:${mimeType};base64,${encoded}`,
-          ...(filename ? { filename } : {}),
+          filename,
         };
       }
       return undefined;
@@ -1035,7 +1154,20 @@ export const convertStandardContentMessageToResponsesInput: Converter<
 
     for (const block of message.contentBlocks) {
       if (block.type === "text") {
-        pushMessageContent([{ type: "input_text", text: block.text }]);
+        const phase = iife(() => {
+          if (
+            !(
+              "extras" in block &&
+              typeof block.extras === "object" &&
+              block.extras !== null &&
+              "phase" in block.extras
+            )
+          )
+            return undefined;
+          return block.extras
+            .phase as OpenAIClient.Responses.EasyInputMessage["phase"];
+        });
+        pushMessageContent([{ type: "input_text", text: block.text }], phase);
       } else if (block.type === "invalid_tool_call") {
         // no-op
       } else if (block.type === "reasoning") {
@@ -1320,15 +1452,21 @@ export const convertMessagesToResponsesInput: Converter<
         const input: ResponsesInputItem[] = [];
 
         // reasoning items
-        if (additional_kwargs?.reasoning && !zdrEnabled) {
-          const reasoningItem = convertReasoningSummaryToResponsesReasoningItem(
-            additional_kwargs.reasoning
-          );
+        const reasoning = additional_kwargs?.reasoning;
+        const hasEncryptedContent = !!reasoning?.encrypted_content;
+        /**
+         * With ZDR enabled, OpenAI does not retain reasoning items, so we only send
+         * them when encrypted content is available (via include: ["reasoning.encrypted_content"]).
+         * With ZDR disabled, we include reasoning item ids so OpenAI can reference them, as it's storing them.
+         */
+        if (reasoning && (!zdrEnabled || hasEncryptedContent)) {
+          const reasoningItem =
+            convertReasoningSummaryToResponsesReasoningItem(reasoning);
           input.push(reasoningItem);
         }
 
         // ai content
-        let { content } = lcMsg as { content: ContentBlock[] };
+        let { content } = lcMsg;
         if (additional_kwargs?.refusal) {
           if (typeof content === "string") {
             content = [{ type: "output_text", text: content, annotations: [] }];
@@ -1340,7 +1478,7 @@ export const convertMessagesToResponsesInput: Converter<
         }
 
         if (typeof content === "string" || content.length > 0) {
-          input.push({
+          const messageItem: ResponsesInputItem = {
             type: "message",
             role: "assistant",
             ...(lcMsg.id && !zdrEnabled && lcMsg.id.startsWith("msg_")
@@ -1352,10 +1490,13 @@ export const convertMessagesToResponsesInput: Converter<
               }
               return content.flatMap((item) => {
                 if (item.type === "text") {
+                  const textItem = item as ContentBlock.Text;
                   return {
                     type: "output_text",
-                    text: item.text,
-                    annotations: item.annotations ?? [],
+                    text: textItem.text,
+                    annotations: (textItem.annotations ?? []).map(
+                      convertLangChainAnnotationToOpenAI
+                    ),
                   };
                 }
 
@@ -1366,7 +1507,21 @@ export const convertMessagesToResponsesInput: Converter<
                 return [];
               });
             }) as ResponseInputMessageContentList,
-          });
+            phase: iife(() => {
+              if (!Array.isArray(content)) {
+                return undefined;
+              }
+
+              const phasedContent = content.find(
+                (item): item is ContentBlock & { phase: string } =>
+                  "phase" in item && typeof item.phase === "string"
+              );
+              return phasedContent?.phase as
+                | OpenAIClient.Responses.EasyInputMessage["phase"]
+                | undefined;
+            }),
+          };
+          input.push(messageItem);
         }
 
         const functionCallIds = additional_kwargs?.[_FUNCTION_CALL_IDS_MAP_KEY];
@@ -1425,6 +1580,8 @@ export const convertMessagesToResponsesInput: Converter<
           "mcp_call",
           "code_interpreter_call",
           "image_generation_call",
+          "shell_call",
+          "local_shell_call",
         ];
 
         if (toolOutputs != null) {

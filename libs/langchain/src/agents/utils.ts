@@ -7,19 +7,17 @@ import {
   MessageContent,
   ToolMessage,
 } from "@langchain/core/messages";
-import { isCommand } from "@langchain/langgraph";
+import { isCommand, StateSchema } from "@langchain/langgraph";
 import {
   type InteropZodObject,
   interopParse,
+  isInteropZodSchema,
 } from "@langchain/core/utils/types";
 import {
   BaseChatModel,
   type BaseChatModelCallOptions,
 } from "@langchain/core/language_models/chat_models";
-import {
-  LanguageModelLike,
-  BaseLanguageModelInput,
-} from "@langchain/core/language_models/base";
+import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import {
   Runnable,
   RunnableLike,
@@ -29,7 +27,11 @@ import {
 } from "@langchain/core/runnables";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
 
-import { isBaseChatModel, isConfigurableModel } from "./model.js";
+import {
+  isBaseChatModel,
+  isConfigurableModel,
+  type AgentLanguageModelLike as LanguageModelLike,
+} from "./model.js";
 import { MultipleToolsBoundError, MiddlewareError } from "./errors.js";
 import type { AgentBuiltInState } from "./runtime.js";
 import type {
@@ -41,6 +43,40 @@ import type {
 
 const NAME_PATTERN = /<name>(.*?)<\/name>/s;
 const CONTENT_PATTERN = /<content>(.*?)<\/content>/s;
+
+/**
+ * Parse middleware state from the full agent state based on the middleware's stateSchema.
+ *
+ * Handles two types of state schemas:
+ * 1. Zod schemas (v3 or v4) - parsed using interopParse
+ * 2. LangGraph StateSchema - extracts only the keys defined in `fields`
+ *
+ * @param stateSchema - The middleware's state schema (Zod or LangGraph StateSchema)
+ * @param state - The full agent state to parse from
+ * @returns Parsed state containing only the keys defined in the schema
+ */
+function parseMiddlewareState(
+  stateSchema: unknown,
+  state: Record<string, unknown>
+): Record<string, unknown> {
+  // Handle LangGraph StateSchema (has `fields` property)
+  if (StateSchema.isInstance(stateSchema)) {
+    const result: Record<string, unknown> = {};
+    for (const key of Object.keys(stateSchema.fields)) {
+      if (key in state) {
+        result[key] = state[key];
+      }
+    }
+    return result;
+  }
+
+  // Handle Zod schemas using interopParse
+  if (isInteropZodSchema(stateSchema)) {
+    return interopParse(stateSchema as InteropZodObject, state);
+  }
+
+  throw new Error(`Invalid state schema type: ${typeof stateSchema}`);
+}
 
 export type AgentNameMode = "inline";
 
@@ -338,8 +374,8 @@ export function validateLLMHasNoBoundTools(llm: LanguageModelLike): void {
 export function hasToolCalls(message?: BaseMessage): boolean {
   return Boolean(
     AIMessage.isInstance(message) &&
-      message.tool_calls &&
-      message.tool_calls.length > 0
+    message.tool_calls &&
+    message.tool_calls.length > 0
   );
 }
 
@@ -565,7 +601,7 @@ export function wrapToolCall(
               state: {
                 messages: originalState.messages,
                 ...(m.stateSchema
-                  ? interopParse(m.stateSchema, { ...originalState })
+                  ? parseMiddlewareState(m.stateSchema, { ...originalState })
                   : {}),
               },
             } as ToolCallRequest<AgentBuiltInState, unknown>,
