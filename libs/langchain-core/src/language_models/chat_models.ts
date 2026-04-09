@@ -59,7 +59,11 @@ import { ModelAbortError } from "../errors/index.js";
 import { callbackHandlerPrefersStreaming } from "../callbacks/base.js";
 import { toJsonSchema } from "../utils/json_schema.js";
 import { getEnvironmentVariable } from "../utils/env.js";
-import { castStandardMessageContent, iife } from "./utils.js";
+import {
+  castStandardMessageContent,
+  iife,
+  parseMetadataInvocationParams,
+} from "./utils.js";
 import {
   isSerializableSchema,
   type SerializableSchema,
@@ -319,18 +323,24 @@ export abstract class BaseChatModel<
         ...runnableConfig.metadata,
         ...this.getLsParamsWithDefaults(callOptions),
       };
-      const callbackManager_ = await CallbackManager.configure(
+      const invocationParams = this?.invocationParams(callOptions);
+      const metadataInvocationParams =
+        parseMetadataInvocationParams(invocationParams);
+      const callbackManager_ = CallbackManager.configure(
         runnableConfig.callbacks,
         this.callbacks,
         runnableConfig.tags,
         this.tags,
         inheritableMetadata,
-        this.metadata,
+        {
+          ...metadataInvocationParams,
+          ...this.metadata,
+        },
         { verbose: this.verbose }
       );
       const extra = {
         options: callOptions,
-        invocation_params: this?.invocationParams(callOptions),
+        invocation_params: invocationParams,
         batch_size: 1,
       };
       const outputVersion = callOptions.outputVersion ?? this.outputVersion;
@@ -455,19 +465,25 @@ export abstract class BaseChatModel<
         ...handledOptions.metadata,
         ...this.getLsParamsWithDefaults(parsedOptions),
       };
+      const invocationParams = this?.invocationParams(parsedOptions);
+      const metadataInvocationParams =
+        parseMetadataInvocationParams(invocationParams);
       // create callback manager and start run
-      const callbackManager_ = await CallbackManager.configure(
+      const callbackManager_ = CallbackManager.configure(
         handledOptions.callbacks,
         this.callbacks,
         handledOptions.tags,
         this.tags,
         inheritableMetadata,
-        this.metadata,
+        {
+          ...metadataInvocationParams,
+          ...this.metadata,
+        },
         { verbose: this.verbose }
       );
       const extra = {
         options: parsedOptions,
-        invocation_params: this?.invocationParams(parsedOptions),
+        invocation_params: invocationParams,
         batch_size: 1,
       };
       runManagers = await callbackManager_?.handleChatModelStart(
@@ -551,6 +567,9 @@ export abstract class BaseChatModel<
         }
         if (aggregated === undefined) {
           throw new Error("Received empty response from chat model call.");
+        }
+        if (outputVersion === "v1") {
+          aggregated.message = castStandardMessageContent(aggregated.message);
         }
         generations.push([aggregated]);
         await runManagers?.[0].handleLLMEnd({
@@ -658,19 +677,25 @@ export abstract class BaseChatModel<
       ...handledOptions.metadata,
       ...this.getLsParamsWithDefaults(parsedOptions),
     };
+    const invocationParams = this?.invocationParams(parsedOptions);
+    const metadataInvocationParams =
+      parseMetadataInvocationParams(invocationParams);
     // create callback manager and start run
-    const callbackManager_ = await CallbackManager.configure(
+    const callbackManager_ = CallbackManager.configure(
       handledOptions.callbacks,
       this.callbacks,
       handledOptions.tags,
       this.tags,
       inheritableMetadata,
-      this.metadata,
+      {
+        ...metadataInvocationParams,
+        ...this.metadata,
+      },
       { verbose: this.verbose }
     );
     const extra = {
       options: parsedOptions,
-      invocation_params: this?.invocationParams(parsedOptions),
+      invocation_params: invocationParams,
       batch_size: 1,
     };
     const runManagers = await callbackManager_?.handleChatModelStart(
