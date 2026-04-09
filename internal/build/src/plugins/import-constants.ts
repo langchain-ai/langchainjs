@@ -1,7 +1,7 @@
 import path from "node:path";
 import type { Plugin } from "rolldown";
 import type { PackageJson } from "type-fest";
-import { formatWithPrettier } from "../utils.ts";
+import { formatWithOxfmt } from "../utils.ts";
 import { pathToFileURL } from "node:url";
 
 /**
@@ -45,9 +45,9 @@ export interface ImportConstantsPluginOptions {
    * ```ts
    * entrypoints: ["tools/calculator", "embeddings/openai", "llms/anthropic"]
    * // Generates:
-   * // "langchain_community/tools/calculator"
-   * // "langchain_community/embeddings/openai"
-   * // "langchain_community/llms/anthropic"
+   * // "langchain_openai/tools/calculator"
+   * // "langchain_openai/embeddings/openai"
+   * // "langchain_openai/llms/anthropic"
    * ```
    */
   entrypoints?: string[];
@@ -74,8 +74,8 @@ export interface ImportConstantsPluginOptions {
  *
  * ```ts
  * export const optionalImportEntrypoints: string[] = [
- *   "langchain_community/tools/calculator",
- *   "langchain_community/embeddings/openai",
+ *   "langchain_openai/tools/calculator",
+ *   "langchain_openai/embeddings/openai",
  *   // ... more entrypoints
  * ];
  * ```
@@ -84,7 +84,6 @@ export interface ImportConstantsPluginOptions {
  *
  * The plugin automatically handles package naming:
  * - For `@langchain/core`: generates `langchain/...` imports
- * - For `@langchain/community`: generates `langchain_community/...` imports
  * - For `@langchain/openai`: generates `langchain_openai/...` imports
  *
  * @param param - Configuration options for the plugin
@@ -179,7 +178,7 @@ export function importConstantsPlugin(
 
       await this.fs.writeFile(
         outputPath,
-        await formatWithPrettier(lines.join("\n"))
+        await formatWithOxfmt(lines.join("\n"), outputPath)
       );
       this.info(`📝 Generated import constants file: ${outputPath}`);
     },

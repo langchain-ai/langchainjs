@@ -1,5 +1,25 @@
 # @langchain/classic
 
+## 1.0.29
+
+### Patch Changes
+
+- Updated dependencies [[`6b8ef6c`](https://github.com/langchain-ai/langchainjs/commit/6b8ef6c95e061af47af206926598c983d878f72a)]:
+  - @langchain/openai@1.4.3
+
+## 1.0.28
+
+### Patch Changes
+
+- [#10591](https://github.com/langchain-ai/langchainjs/pull/10591) [`d7a98cd`](https://github.com/langchain-ai/langchainjs/commit/d7a98cda1a5d9bf9b93b503fc54374f1aaf1a37e) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat: add @langchain/perplexity standalone provider package
+
+- [#10594](https://github.com/langchain-ai/langchainjs/pull/10594) [`884c2d3`](https://github.com/langchain-ai/langchainjs/commit/884c2d3d1b2c49225d73ddec2235ad174db36f86) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(fireworks): extract standalone provider package
+
+- [#10593](https://github.com/langchain-ai/langchainjs/pull/10593) [`0fb6fa4`](https://github.com/langchain-ai/langchainjs/commit/0fb6fa40dcd3a09a4fb91f36c9f2ca869552961e) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(together-ai): migrate Together AI into provider package
+
+- Updated dependencies [[`d6bf4fc`](https://github.com/langchain-ai/langchainjs/commit/d6bf4fc91b2c2eb931bf3bc7606b1817632bc8c1)]:
+  - @langchain/openai@1.4.2
+
 ## 1.0.27
 
 ### Patch Changes

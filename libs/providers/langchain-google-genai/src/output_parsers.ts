@@ -15,7 +15,7 @@ import {
 import { SerializableSchema } from "@langchain/core/utils/standard_schema";
 
 interface GoogleGenerativeAIToolsOutputParserParams<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   T extends Record<string, any>,
 >
   extends
@@ -23,7 +23,7 @@ interface GoogleGenerativeAIToolsOutputParserParams<
     JsonOutputKeyToolsParserParamsSerializable<T> {}
 
 export class GoogleGenerativeAIToolsOutputParser<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   T extends Record<string, any> = Record<string, any>,
 > extends BaseLLMOutputParser<T> {
   static lc_name() {

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 
 import {
   parse,
@@ -793,7 +793,7 @@ export function interopZodObjectStrict<T extends InteropZodObject>(
     return schema.strict();
   }
   if (isZodObjectV4(schema)) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const outputShape: Record<string, any> = schema._zod.def.shape;
     if (recursive) {
       for (const [key, keySchema] of Object.entries(schema._zod.def.shape)) {
@@ -858,7 +858,7 @@ export function interopZodObjectPassthrough<T extends InteropZodObject>(
     return schema.passthrough();
   }
   if (isZodObjectV4(schema)) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const outputShape: Record<string, any> = schema._zod.def.shape;
     if (recursive) {
       for (const [key, keySchema] of Object.entries(schema._zod.def.shape)) {
@@ -989,7 +989,7 @@ function interopZodTransformInputSchemaImpl(
     if (recursive) {
       // Handle nested object schemas
       if (isZodObjectV4(outputSchema)) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         const outputShape: Record<string, any> = {};
         for (const [key, keySchema] of Object.entries(
           outputSchema._zod.def.shape
@@ -1093,7 +1093,7 @@ export function interopZodObjectMakeFieldsOptional<T extends InteropZodObject>(
 ): InteropZodObject {
   if (isZodSchemaV3(schema)) {
     const shape = getInteropZodObjectShape(schema as InteropZodObject);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const modifiedShape: Record<string, any> = {};
 
     for (const [key, value] of Object.entries(shape)) {
@@ -1112,7 +1112,7 @@ export function interopZodObjectMakeFieldsOptional<T extends InteropZodObject>(
 
   if (isZodSchemaV4(schema)) {
     const shape = getInteropZodObjectShape(schema as InteropZodObject);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const outputShape: Record<string, any> = {
       ...schema._zod.def.shape,
     };
@@ -1147,7 +1147,7 @@ export function interopZodObjectMakeFieldsOptional<T extends InteropZodObject>(
 
 export function isInteropZodError(e: unknown) {
   return (
-    // eslint-disable-next-line no-instanceof/no-instanceof
+    // oxlint-disable-next-line no-instanceof/no-instanceof
     e instanceof Error &&
     (e.constructor.name === "ZodError" || e.constructor.name === "$ZodError")
   );

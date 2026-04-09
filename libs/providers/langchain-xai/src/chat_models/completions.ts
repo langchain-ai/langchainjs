@@ -825,7 +825,7 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
   }
 
   protected override _convertCompletionsDeltaToBaseMessageChunk(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     delta: Record<string, any>,
     rawResponse: OpenAIClient.ChatCompletionChunk,
     defaultRole?:

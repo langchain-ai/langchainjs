@@ -173,7 +173,7 @@ export class ChatCloudflareWorkersAI
         const error = new Error(
           `Cloudflare LLM call failed with status code ${response.status}`
         );
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         (error as any).response = response;
         throw error;
       }
@@ -204,7 +204,7 @@ export class ChatCloudflareWorkersAI
           text: parsedChunk.response,
         });
         yield generationChunk;
-        // eslint-disable-next-line no-void
+        // oxlint-disable-next-line no-void
         void runManager?.handleLLMNewToken(generationChunk.text ?? "");
       }
     }

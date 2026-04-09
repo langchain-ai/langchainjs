@@ -14,13 +14,13 @@ export interface Generation {
    * Raw generation info response from the provider.
    * May include things like reason for finishing (e.g. in {@link OpenAI})
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   generationInfo?: Record<string, any>;
 }
 
 export type GenerationChunkFields = {
   text: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   generationInfo?: Record<string, any>;
 };
 
@@ -30,7 +30,7 @@ export type GenerationChunkFields = {
 export class GenerationChunk implements Generation {
   public text: string;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   public generationInfo?: Record<string, any>;
 
   constructor(fields: GenerationChunkFields) {
@@ -60,12 +60,12 @@ export type LLMResult = {
   /**
    * Dictionary of arbitrary LLM-provider specific output.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   llmOutput?: Record<string, any>;
   /**
    * Dictionary of run metadata
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   [RUN_KEY]?: Record<string, any>;
 };
 
@@ -103,6 +103,6 @@ export class ChatGenerationChunk
 export interface ChatResult {
   generations: ChatGeneration[];
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   llmOutput?: Record<string, any>;
 }

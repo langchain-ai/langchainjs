@@ -11,17 +11,13 @@
     "test:cjs": "node src/require.js",
     "test:cjs:import": "node src/import.js",
     "test:entrypoints": "node src/entrypoints.js",
-    "test:ts": "node dist/index.js",
-    "format": "prettier --write src",
-    "format:check": "prettier --check src"
+    "test:ts": "node dist/index.js"
   },
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
     "@langchain/anthropic": "workspace:*",
-    "@langchain/community": "workspace:*",
     "@langchain/core": "workspace:^",
-    "@langchain/classic": "workspace:*",
     "@langchain/openai": "workspace:*",
     "@langchain/ollama": "workspace:*",
     "@langchain/google-gauth": "workspace:*",
@@ -34,7 +30,6 @@
     "typescript": "^5.0.0"
   },
   "devDependencies": {
-    "@types/node": "^18.15.11",
-    "prettier": "^3.5.0"
+    "@types/node": "^18.15.11"
   }
 }

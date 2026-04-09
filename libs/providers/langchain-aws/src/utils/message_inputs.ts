@@ -109,7 +109,7 @@ function resolveMediaSource(
     };
   }
 
-  // eslint-disable-next-line no-instanceof/no-instanceof
+  // oxlint-disable-next-line no-instanceof/no-instanceof
   if (block.data instanceof Uint8Array) {
     return { bytes: block.data };
   }
@@ -257,9 +257,10 @@ const standardContentBlockConverter: StandardContentBlockConverter<{
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
         "xlsx",
     };
-    const name: string | undefined = (block.metadata?.name ??
+    const name: string = (block.metadata?.name ??
       block.metadata?.filename ??
-      block.metadata?.title) as string | undefined;
+      block.metadata?.title ??
+      crypto.randomUUID().replace(/-/g, "").slice(0, 12)) as string;
 
     if (block.source_type === "text") {
       return {

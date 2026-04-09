@@ -101,7 +101,7 @@ describe("wrapOpenAIClientError", () => {
     const wrapped = wrapOpenAIClientError(originalError);
 
     expect(wrapped).not.toBeInstanceOf(ContextOverflowError);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect((wrapped as any).lc_error_code).toBe("INVALID_TOOL_RESULTS");
   });
 
@@ -114,7 +114,7 @@ describe("wrapOpenAIClientError", () => {
 
     const wrapped = wrapOpenAIClientError(originalError);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect((wrapped as any).lc_error_code).toBe("MODEL_AUTHENTICATION");
   });
 
@@ -127,7 +127,7 @@ describe("wrapOpenAIClientError", () => {
 
     const wrapped = wrapOpenAIClientError(originalError);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect((wrapped as any).lc_error_code).toBe("MODEL_NOT_FOUND");
   });
 
@@ -140,7 +140,7 @@ describe("wrapOpenAIClientError", () => {
 
     const wrapped = wrapOpenAIClientError(originalError);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect((wrapped as any).lc_error_code).toBe("MODEL_RATE_LIMIT");
   });
 

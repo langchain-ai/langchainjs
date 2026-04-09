@@ -14,7 +14,7 @@ import {
 /**
  * Type for options when adding a document to the VectorStore.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 type AddDocumentOptions = Record<string, any>;
 
 /**
@@ -435,7 +435,7 @@ export interface VectorStoreInterface extends Serializable {
    *                  the conditions for selecting documents to delete.
    * @returns A promise that resolves once the deletion operation is complete.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   delete(_params?: Record<string, any>): Promise<void>;
 
   /**
@@ -577,7 +577,7 @@ export abstract class VectorStore
    * @param embeddings - Instance of `EmbeddingsInterface` used to embed queries.
    * @param dbConfig - Configuration settings for the database or storage system.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(embeddings: EmbeddingsInterface, dbConfig: Record<string, any>) {
     super(dbConfig);
     this.embeddings = embeddings;
@@ -627,7 +627,7 @@ export abstract class VectorStore
    * @param _params - Flexible key-value pairs defining conditions for document deletion.
    * @returns A promise that resolves once the deletion is complete.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   async delete(_params?: Record<string, any>): Promise<void> {
     throw new Error("Not implemented.");
   }
@@ -737,7 +737,7 @@ export abstract class VectorStore
     _texts: string[],
     _metadatas: object[] | object,
     _embeddings: EmbeddingsInterface,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     _dbConfig: Record<string, any>
   ): Promise<VectorStore> {
     throw new Error(
@@ -761,7 +761,7 @@ export abstract class VectorStore
   static fromDocuments(
     _docs: DocumentInterface[],
     _embeddings: EmbeddingsInterface,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     _dbConfig: Record<string, any>
   ): Promise<VectorStore> {
     throw new Error(

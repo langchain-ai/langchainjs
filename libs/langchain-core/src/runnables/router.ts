@@ -4,7 +4,7 @@ import { ensureConfig, type RunnableConfig } from "./config.js";
 
 export type RouterInput = {
   key: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   input: any;
 };
 

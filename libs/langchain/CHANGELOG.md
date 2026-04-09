@@ -1,5 +1,30 @@
 # langchain
 
+## 1.3.1
+
+### Patch Changes
+
+- [#10673](https://github.com/langchain-ai/langchainjs/pull/10673) [`f069365`](https://github.com/langchain-ai/langchainjs/commit/f0693657b7e5bdbf888a46d04e68431e446c7bc0) Thanks [@hntrl](https://github.com/hntrl)! - bump langgraph dependency to 1.2.8
+
+## 1.3.0
+
+### Minor Changes
+
+- [#10430](https://github.com/langchain-ai/langchainjs/pull/10430) [`d3d0922`](https://github.com/langchain-ai/langchainjs/commit/d3d0922c24afcd3006fb94dcadd3ebe08fbf2383) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(langchain): support for browser tools
+
+### Patch Changes
+
+- [#10591](https://github.com/langchain-ai/langchainjs/pull/10591) [`d7a98cd`](https://github.com/langchain-ai/langchainjs/commit/d7a98cda1a5d9bf9b93b503fc54374f1aaf1a37e) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat: add @langchain/perplexity standalone provider package
+
+- [#10594](https://github.com/langchain-ai/langchainjs/pull/10594) [`884c2d3`](https://github.com/langchain-ai/langchainjs/commit/884c2d3d1b2c49225d73ddec2235ad174db36f86) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(fireworks): extract standalone provider package
+
+- [#10593](https://github.com/langchain-ai/langchainjs/pull/10593) [`0fb6fa4`](https://github.com/langchain-ai/langchainjs/commit/0fb6fa40dcd3a09a4fb91f36c9f2ca869552961e) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(together-ai): migrate Together AI into provider package
+
+- [#10654](https://github.com/langchain-ai/langchainjs/pull/10654) [`3bd85c1`](https://github.com/langchain-ai/langchainjs/commit/3bd85c17869e95d5d1a67c5fccc0c4cab2646616) Thanks [@jabiinfante](https://github.com/jabiinfante)! - feat(langchain): add ChatGoogle support to initChatModel
+
+- Updated dependencies [[`d3d0922`](https://github.com/langchain-ai/langchainjs/commit/d3d0922c24afcd3006fb94dcadd3ebe08fbf2383)]:
+  - @langchain/core@1.1.39
+
 ## 1.2.39
 
 ### Patch Changes

@@ -79,7 +79,7 @@ export async function basePull(
 
     const { messages } = promptObject.manifest.kwargs;
     if (Array.isArray(messages)) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       promptObject.manifest.kwargs.messages = messages.map((message: any) => {
         const nestedVars = message?.kwargs?.prompt?.kwargs?.input_variables;
         if (Array.isArray(nestedVars)) {
@@ -94,13 +94,13 @@ export async function basePull(
 }
 
 export function generateModelImportMap(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   modelClass?: new (...args: any[]) => BaseLanguageModel
 ) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   const modelImportMap: Record<string, any> = {};
   if (modelClass !== undefined) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const modelLcName = (modelClass as any)?.lc_name();
     let importMapKey;
     if (modelLcName === "ChatOpenAI") {
@@ -133,13 +133,13 @@ export function generateModelImportMap(
 }
 
 export function generateOptionalImportMap(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   modelClass?: new (...args: any[]) => BaseLanguageModel
 ) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   const optionalImportMap: Record<string, any> = {};
   if (modelClass !== undefined) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const modelLcName = (modelClass as any)?.lc_name();
     let optionalImportMapKey;
     if (modelLcName === "ChatGoogleGenerativeAI") {
@@ -200,7 +200,7 @@ async function loadLangSmith(): Promise<new (config?: ClientConfig) => Client> {
     const { Client } = await import("langsmith");
     return Client;
   } catch (error) {
-    // eslint-disable-next-line no-instanceof/no-instanceof
+    // oxlint-disable-next-line no-instanceof/no-instanceof
     const errorMessage = error instanceof Error ? error.message : String(error);
     throw new Error(
       `Error loading "langsmith" package, install it via \`npm install langsmith\` before you use this function.\nError: ${errorMessage}`

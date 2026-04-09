@@ -87,9 +87,21 @@ export function getPlatformType(
   }
 }
 
+function mapDetailToMediaResolution(
+  detail?: ChatGoogleFields["detail"]
+): Gemini.GenerationConfig["mediaResolution"] | undefined {
+  switch (detail) {
+    case "low":
+      return "MEDIA_RESOLUTION_LOW";
+    case "high":
+      return "MEDIA_RESOLUTION_HIGH";
+    default:
+      return undefined;
+  }
+}
+
 export interface BaseChatGoogleParams
-  extends BaseChatModelParams,
-    ChatGoogleFields {
+  extends BaseChatModelParams, ChatGoogleFields {
   /**
    * The name of the Gemini model to use.
    *
@@ -145,11 +157,10 @@ export interface BaseChatGoogleParams
 }
 
 export interface BaseChatGoogleCallOptions
-  extends BaseChatModelCallOptions,
-    ChatGoogleFields {}
+  extends BaseChatModelCallOptions, ChatGoogleFields {}
 
 export abstract class BaseChatGoogle<
-  CallOptions extends BaseChatGoogleCallOptions = BaseChatGoogleCallOptions
+  CallOptions extends BaseChatGoogleCallOptions = BaseChatGoogleCallOptions,
 > extends BaseChatModel<CallOptions, AIMessageChunk> {
   model: string;
 
@@ -306,6 +317,8 @@ export abstract class BaseChatGoogle<
 
   override invocationParams(options: this["ParsedCallOptions"]) {
     const fields = combineGoogleChatModelFields(this.params, options);
+    const mediaResolution =
+      fields.mediaResolution ?? mapDetailToMediaResolution(fields.detail);
 
     // Convert tools to Gemini format
     const tools = fields.tools
@@ -365,9 +378,7 @@ export abstract class BaseChatGoogle<
         thinkingConfig: convertFieldsToThinkingConfig(this.model, fields),
         speechConfig: convertFieldsToSpeechConfig(fields),
         ...(fields.imageConfig ? { imageConfig: fields.imageConfig } : {}),
-        ...(fields.mediaResolution
-          ? { mediaResolution: fields.mediaResolution }
-          : {}),
+        ...(mediaResolution ? { mediaResolution } : {}),
       },
     };
   }
@@ -561,7 +572,7 @@ export abstract class BaseChatGoogle<
             ChatGenerationChunk
           >({
             transform(chunk, controller) {
-              // eslint-disable-next-line no-void
+              // oxlint-disable-next-line no-void
               void runManager?.handleCustomEvent(`google-chunk-${moduleName}`, {
                 chunk,
               });
@@ -682,37 +693,37 @@ export abstract class BaseChatGoogle<
   }
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
   ):
@@ -731,13 +742,13 @@ export abstract class BaseChatGoogle<
    * @returns A Runnable that returns the parsed structured output
    */
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
   ):
@@ -878,6 +889,7 @@ export function combineGoogleChatModelFields(
     speechConfig: b.speechConfig ?? a.speechConfig,
     imageConfig: b.imageConfig ?? a.imageConfig,
     mediaResolution: b.mediaResolution ?? a.mediaResolution,
+    detail: b.detail ?? a.detail,
     maxReasoningTokens: b.maxReasoningTokens ?? a.maxReasoningTokens,
     thinkingBudget: b.thinkingBudget ?? a.thinkingBudget,
     reasoningEffort: b.reasoningEffort ?? a.reasoningEffort,

@@ -16,33 +16,24 @@
   "scripts": {
     "build": "turbo build:compile --filter @langchain/google-vertexai-web --output-logs new-only",
     "build:compile": "tsdown",
-    "lint:eslint": "eslint --cache src/",
-    "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
-    "lint": "pnpm lint:eslint && pnpm lint:dpdm",
-    "lint:fix": "pnpm lint:eslint --fix && pnpm lint:dpdm",
     "clean": "rm -rf .turbo dist/",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:single": "vitest run",
-    "test:int": "vitest run --mode int",
-    "format": "prettier --write \"src\"",
-    "format:check": "prettier --check \"src\""
+    "test:int": "vitest run --mode int"
   },
   "dependencies": {
     "@langchain/google-webauth": "workspace:*"
   },
   "devDependencies": {
-    "@langchain/eslint": "workspace:*",
     "@langchain/google-common": "workspace:*",
     "@langchain/standard-tests": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
-    "dotenv": "^16.3.1",
+    "dotenv": "^17.4.0",
     "dpdm": "^3.14.0",
-    "eslint": "^9.34.0",
-    "prettier": "^3.5.0",
     "typescript": "~5.8.3",
-    "vitest": "^3.2.4",
+    "vitest": "^4.1.2",
     "zod": "^3.25.76"
   },
   "publishConfig": {

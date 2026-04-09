@@ -21,21 +21,21 @@ export type EvaluatorInputFormatter = ({
   rawReferenceOutput,
   run,
 }: {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   rawInput: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   rawPrediction: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   rawReferenceOutput?: any;
   run: Run;
 }) => EvaluatorInputs;
 
 export type DynamicRunEvaluatorParams<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   Input extends Record<string, any> = Record<string, unknown>,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   Prediction extends Record<string, any> = Record<string, unknown>,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   Reference extends Record<string, any> = Record<string, unknown>,
 > = {
   input: Input;

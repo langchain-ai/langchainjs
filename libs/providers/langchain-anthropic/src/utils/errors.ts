@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-param-reassign */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable no-param-reassign */
 
 import { ContextOverflowError } from "@langchain/core/errors";
 
@@ -24,7 +24,7 @@ export function addLangChainErrorFields(
   return error;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export function wrapAnthropicClientError(e: any) {
   let error;
   if (

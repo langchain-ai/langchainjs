@@ -47,7 +47,7 @@ export class MediaBlob extends Serializable implements MediaBlobParameters {
     type: "text/plain",
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   metadata?: Record<string, any>;
 
   path?: string;

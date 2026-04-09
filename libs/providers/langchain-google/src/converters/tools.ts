@@ -35,9 +35,9 @@ import {
  * @internal
  */
 function adjustObjectType(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   obj: Record<string, any>
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
 ): Record<string, any> {
   if (!Array.isArray(obj.type)) {
     return obj;
@@ -89,7 +89,7 @@ function adjustObjectType(
  * @internal
  */
 function removeAdditionalProperties(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   obj: Record<string, any>
 ): Gemini.Tools.Schema & { $schema?: string } {
   if (typeof obj === "object" && obj !== null) {
@@ -130,8 +130,8 @@ function removeAdditionalProperties(
  * @internal
  */
 export function schemaToGeminiParameters<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput extends Record<string, any> = Record<string, any>
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput extends Record<string, any> = Record<string, any>,
 >(
   schema:
     | SerializableSchema<RunOutput>
@@ -160,7 +160,7 @@ export function schemaToGeminiParameters<
  * @internal
  */
 function jsonSchemaToGeminiParameters(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   schema: Record<string, any>
 ): Gemini.Tools.Schema {
   const jsonSchema = removeAdditionalProperties(schema);

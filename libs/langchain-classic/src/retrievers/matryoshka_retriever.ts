@@ -14,7 +14,7 @@ import {
 /**
  * Type for options when adding a document to the VectorStore.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 type AddDocumentOptions = Record<string, any>;
 
 export interface MatryoshkaRetrieverFields {
