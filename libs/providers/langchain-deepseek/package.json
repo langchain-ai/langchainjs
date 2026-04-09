@@ -1,6 +1,6 @@
 {
   "name": "@langchain/deepseek",
-  "version": "1.0.23",
+  "version": "1.0.24",
   "description": "Deepseek integration for LangChain.js",
   "type": "module",
   "author": "LangChain",
