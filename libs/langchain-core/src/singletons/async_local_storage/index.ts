@@ -7,7 +7,10 @@ import {
   _CONTEXT_VARIABLES_KEY,
 } from "./globals.js";
 import { CallbackManager } from "../../callbacks/manager.js";
-import { LangChainTracer } from "../../tracers/tracer_langchain.js";
+import {
+  LangChainTracer,
+  applyConfigurableMetadataToTracers,
+} from "../../tracers/tracer_langchain.js";
 
 export class MockAsyncLocalStorage implements AsyncLocalStorageInterface {
   getStore(): any {
@@ -52,6 +55,9 @@ class AsyncLocalStorageProvider {
       undefined,
       config?.metadata
     );
+    if (callbackManager) {
+      applyConfigurableMetadataToTracers(callbackManager, config?.configurable);
+    }
     const storage = this.getInstance();
     const previousValue = storage.getStore();
     const parentRunId = callbackManager?.getParentRunId();
