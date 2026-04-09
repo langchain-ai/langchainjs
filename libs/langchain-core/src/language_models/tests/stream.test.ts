@@ -1,10 +1,10 @@
 import { describe, test, expect } from "vitest";
 import type { ChatModelStreamEvent } from "../event.js";
-import { ChatModelStream, ChatModelStream } from "../stream.js";
+import { ChatModelStream } from "../stream.js";
 
 // Helper: create an async iterable from an array of events
 async function* iterEvents(
-  events: ChatModelStreamEvent[]
+  events: ChatModelStreamEvent[],
 ): AsyncGenerator<ChatModelStreamEvent> {
   for (const event of events) {
     yield event;
@@ -434,7 +434,7 @@ describe("ChatModelStream", () => {
       expect(providerEvents.length).toBe(1);
       expect(providerEvents[0]!.provider).toBe("openai");
       expect(providerEvents[0]!.name).toBe(
-        "response.web_search_call.searching"
+        "response.web_search_call.searching",
       );
     });
 
