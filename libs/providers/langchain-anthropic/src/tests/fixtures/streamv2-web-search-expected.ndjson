@@ -1,0 +1,60 @@
+{"event":"message-start","messageId":"msg_01ScaJ39GuigJr3HqVxEapN8","metadata":{"model_provider":"anthropic","id":"msg_01ScaJ39GuigJr3HqVxEapN8","type":"message","role":"assistant","model":"claude-sonnet-4-5-20250929","stop_reason":null,"stop_sequence":null}}
+{"event":"content-block-start","index":0,"contentBlock":{"type":"server_tool_call_chunk","id":"srvtoolu_014dVEY2T6knay5hRY4RqetJ","name":"web_search","args":""}}
+{"event":"content-block-delta","index":0,"contentBlock":{"type":"server_tool_call_chunk","id":"srvtoolu_014dVEY2T6knay5hRY4RqetJ","name":"web_search","args":"","index":0}}
+{"event":"content-block-delta","index":0,"contentBlock":{"type":"server_tool_call_chunk","id":"srvtoolu_014dVEY2T6knay5hRY4RqetJ","name":"web_search","args":"{\"q","index":0}}
+{"event":"content-block-delta","index":0,"contentBlock":{"type":"server_tool_call_chunk","id":"srvtoolu_014dVEY2T6knay5hRY4RqetJ","name":"web_search","args":"ue","index":0}}
+{"event":"content-block-delta","index":0,"contentBlock":{"type":"server_tool_call_chunk","id":"srvtoolu_014dVEY2T6knay5hRY4RqetJ","name":"web_search","args":"ry\": \"tech n","index":0}}
+{"event":"content-block-delta","index":0,"contentBlock":{"type":"server_tool_call_chunk","id":"srvtoolu_014dVEY2T6knay5hRY4RqetJ","name":"web_search","args":"ews today Ap","index":0}}
+{"event":"content-block-delta","index":0,"contentBlock":{"type":"server_tool_call_chunk","id":"srvtoolu_014dVEY2T6knay5hRY4RqetJ","name":"web_search","args":"ril 2026","index":0}}
+{"event":"content-block-delta","index":0,"contentBlock":{"type":"server_tool_call_chunk","id":"srvtoolu_014dVEY2T6knay5hRY4RqetJ","name":"web_search","args":"\"}","index":0}}
+{"event":"content-block-finish","index":0,"contentBlock":{"type":"server_tool_call","id":"srvtoolu_014dVEY2T6knay5hRY4RqetJ","name":"web_search","args":{"query":"tech news today April 2026"}}}
+{"event":"content-block-start","index":1,"contentBlock":{"type":"server_tool_call_result","name":"web_search","toolCallId":"srvtoolu_014dVEY2T6knay5hRY4RqetJ","status":"success","output":{},"index":1}}
+{"event":"content-block-finish","index":1,"contentBlock":{"type":"server_tool_call_result","name":"web_search","toolCallId":"srvtoolu_014dVEY2T6knay5hRY4RqetJ","status":"success","output":{"urls":["https://techstartups.com/2026/04/02/top-tech-news-today-april-2-2026/","https://techstartups.com/2026/04/01/top-tech-news-today-april-1-2026/","https://techstartups.com/2026/04/01/top-startup-and-tech-funding-news-april-1-2025/","https://techcrunch.com/","https://coaio.com/news/2026/04/breaking-tech-news-on-april-1-2026-ai-surge-cyber-threats-and-startup-2l4c/","https://blog.mean.ceo/tech-startup-funding-news-april-2026/","https://www.androidheadlines.com/2026/04/geforce-now-turns-the-other-cheek-with-this-months-games.html","https://www.cnbc.com/technology/","https://scitechdaily.com/","https://www.tomsguide.com/news/live/april-fools-day-2026-live-best-jokes-pranks"]},"index":1}}
+{"event":"content-block-start","index":2,"contentBlock":{"index":2,"type":"text","text":""}}
+{"event":"content-block-delta","index":2,"contentBlock":{"index":2,"type":"text","text":""}}
+{"event":"content-block-delta","index":2,"contentBlock":{"index":2,"type":"text","text":"Based"}}
+{"event":"content-block-delta","index":2,"contentBlock":{"index":2,"type":"text","text":" on recent tech news, here are three notable headlines from the last"}}
+{"event":"content-block-delta","index":2,"contentBlock":{"index":2,"type":"text","text":" few days:\n\n1. **NASA Successfully Launched Artemis II"}}
+{"event":"content-block-delta","index":2,"contentBlock":{"index":2,"type":"text","text":" Mission**: "}}
+{"event":"content-block-finish","index":2,"contentBlock":{"index":2,"type":"text","text":"Based on recent tech news, here are three notable headlines from the last few days:\n\n1. **NASA Successfully Launched Artemis II Mission**: "}}
+{"event":"content-block-start","index":3,"contentBlock":{"index":3,"type":"text","text":""}}
+{"event":"content-block-delta","index":3,"contentBlock":{"index":3,"type":"text","text":""}}
+{"event":"content-block-delta","index":3,"contentBlock":{"index":3,"type":"non_standard","value":{"index":3,"type":"text","citations":[{"type":"web_search_result_location","cited_text":"NASA successfully launched Artemis II on April 1 aboard the Space Launch System rocket, sending four astronauts—Commander Reid Wiseman, Pilot Victor G...","url":"https://techstartups.com/2026/04/02/top-tech-news-today-april-2-2026/","title":"Top Tech News Today, April 2, 2026 - Tech Startups","encrypted_index":"EpMBCioIDhgCIiQzOTYzNWQzYi1lYmZkLTQ5ODctOTkyMS1iMjI4ZDQ4MTc0ZDYSDCUcp/EhYubPPdK9YBoMzSuDwmMOy88F/FSkIjBiIlXdSJn+JpOVBENEJr7RYqY8sIkFm1J0m+Vja7GlE0JjjqkBl70FHojS1kQ6kWUqF5b7GXkcnauKUGf1XaRD6e+L5Hh5Ta9qGAQ="}]},"index":0}}
+{"event":"content-block-delta","index":3,"contentBlock":{"index":3,"type":"text","text":"NASA successfully launched Artemis II on April 1"}}
+{"event":"content-block-delta","index":3,"contentBlock":{"index":3,"type":"text","text":" aboard the Space Launch System rocket, sending four"}}
+{"event":"content-block-delta","index":3,"contentBlock":{"index":3,"type":"text","text":" astronauts on a 10-day journey that will take Orion spacecraft around"}}
+{"event":"content-block-delta","index":3,"contentBlock":{"index":3,"type":"text","text":" the Moon and back to Earth without landing. This marks the first cr"}}
+{"event":"content-block-delta","index":3,"contentBlock":{"index":3,"type":"text","text":"ewed lunar flyby in more than 50 years since Apollo 17."}}
+{"event":"content-block-finish","index":3,"contentBlock":{"index":3,"type":"text","text":"NASA successfully launched Artemis II on April 1 aboard the Space Launch System rocket, sending four astronauts on a 10-day journey that will take Orion spacecraft around the Moon and back to Earth without landing. This marks the first crewed lunar flyby in more than 50 years since Apollo 17."}}
+{"event":"content-block-start","index":4,"contentBlock":{"index":4,"type":"text","text":""}}
+{"event":"content-block-delta","index":4,"contentBlock":{"index":4,"type":"text","text":""}}
+{"event":"content-block-delta","index":4,"contentBlock":{"index":4,"type":"text","text":"\n\n2."}}
+{"event":"content-block-delta","index":4,"contentBlock":{"index":4,"type":"text","text":" **Intel Buys Back Irish Chip Facility for $14"}}
+{"event":"content-block-delta","index":4,"contentBlock":{"index":4,"type":"text","text":".2 Billion**: "}}
+{"event":"content-block-finish","index":4,"contentBlock":{"index":4,"type":"text","text":"\n\n2. **Intel Buys Back Irish Chip Facility for $14.2 Billion**: "}}
+{"event":"content-block-start","index":5,"contentBlock":{"index":5,"type":"text","text":""}}
+{"event":"content-block-delta","index":5,"contentBlock":{"index":5,"type":"text","text":""}}
+{"event":"content-block-delta","index":5,"contentBlock":{"index":5,"type":"non_standard","value":{"index":5,"type":"text","citations":[{"type":"web_search_result_location","cited_text":"Intel agreed to buy back a 49% stake in its Fab 34 facility in Ireland from Apollo Global Management for $14.2 billion, regaining full control of the ...","url":"https://techstartups.com/2026/04/02/top-tech-news-today-april-2-2026/","title":"Top Tech News Today, April 2, 2026 - Tech Startups","encrypted_index":"EpABCioIDhgCIiQzOTYzNWQzYi1lYmZkLTQ5ODctOTkyMS1iMjI4ZDQ4MTc0ZDYSDODIzgliOzWlHE9loBoMtOFAPgEh6cC7td0XIjCYVqgH6diVuv83v1WzUpqvc8GH9MBpxtgMyB7pPWyWQkO/DF8ghA/881bo5LyjjIsqFH+L/YtE0q9MpVpGMzTl3QBX1TyuGAQ="}]},"index":0}}
+{"event":"content-block-delta","index":5,"contentBlock":{"index":5,"type":"text","text":"Intel agreed to buy back a 49"}}
+{"event":"content-block-delta","index":5,"contentBlock":{"index":5,"type":"text","text":"% stake in its Fab 34 facility in Ireland from Apollo Global Management for"}}
+{"event":"content-block-delta","index":5,"contentBlock":{"index":5,"type":"text","text":" $14.2 billion, regaining full control of the advanced semiconductor plant."}}
+{"event":"content-block-finish","index":5,"contentBlock":{"index":5,"type":"text","text":"Intel agreed to buy back a 49% stake in its Fab 34 facility in Ireland from Apollo Global Management for $14.2 billion, regaining full control of the advanced semiconductor plant."}}
+{"event":"content-block-start","index":6,"contentBlock":{"index":6,"type":"text","text":""}}
+{"event":"content-block-delta","index":6,"contentBlock":{"index":6,"type":"text","text":""}}
+{"event":"content-block-delta","index":6,"contentBlock":{"index":6,"type":"text","text":" The news"}}
+{"event":"content-block-delta","index":6,"contentBlock":{"index":6,"type":"text","text":" caused Intel shares to jump more than 9%.\n\n3. **Oracle"}}
+{"event":"content-block-delta","index":6,"contentBlock":{"index":6,"type":"text","text":" Announces Major Layoffs Despite AI Investments**: "}}
+{"event":"content-block-finish","index":6,"contentBlock":{"index":6,"type":"text","text":" The news caused Intel shares to jump more than 9%.\n\n3. **Oracle Announces Major Layoffs Despite AI Investments**: "}}
+{"event":"content-block-start","index":7,"contentBlock":{"index":7,"type":"text","text":""}}
+{"event":"content-block-delta","index":7,"contentBlock":{"index":7,"type":"text","text":""}}
+{"event":"content-block-delta","index":7,"contentBlock":{"index":7,"type":"non_standard","value":{"index":7,"type":"text","citations":[{"type":"web_search_result_location","cited_text":"The Wall Street Journal reported that Oracle has begun laying off an estimated 20,000–30,000 workers in the U.S. and India, even as it continues to ag...","url":"https://techstartups.com/2026/04/01/top-tech-news-today-april-1-2026/","title":"Top Tech News Today, April 1, 2026 - Tech Startups","encrypted_index":"Eo8BCioIDhgCIiQzOTYzNWQzYi1lYmZkLTQ5ODctOTkyMS1iMjI4ZDQ4MTc0ZDYSDJ5Q5A7Rz82sU2IsRBoM5Mixghdhd3y69qoqIjAk3gOEGLAr4C6H0LSca7JB7wLOEl67cRpowlJqJdWzGTVxO9hqX4l2egV0fvSB+bkqE0AD4afC7uhVCzlT5mqIZKVIhr0YBA=="}]},"index":0}}
+{"event":"content-block-delta","index":7,"contentBlock":{"index":7,"type":"text","text":"Oracle has begun laying off an estimated 20,000–30"}}
+{"event":"content-block-delta","index":7,"contentBlock":{"index":7,"type":"text","text":",000 workers in the U.S. and India, even as it continues to ag"}}
+{"event":"content-block-delta","index":7,"contentBlock":{"index":7,"type":"text","text":"gressively invest in AI infrastructure."}}
+{"event":"content-block-finish","index":7,"contentBlock":{"index":7,"type":"text","text":"Oracle has begun laying off an estimated 20,000–30,000 workers in the U.S. and India, even as it continues to aggressively invest in AI infrastructure."}}
+{"event":"content-block-start","index":8,"contentBlock":{"index":8,"type":"text","text":""}}
+{"event":"content-block-delta","index":8,"contentBlock":{"index":8,"type":"text","text":""}}
+{"event":"content-block-delta","index":8,"contentBlock":{"index":8,"type":"text","text":" This reflects a broader trend of tech companies trimming labor"}}
+{"event":"content-block-delta","index":8,"contentBlock":{"index":8,"type":"text","text":" costs while redirecting resources toward AI and data center investments."}}
+{"event":"content-block-finish","index":8,"contentBlock":{"index":8,"type":"text","text":" This reflects a broader trend of tech companies trimming labor costs while redirecting resources toward AI and data center investments."}}
+{"event":"message-finish","reason":"stop","usage":{"inputTokens":0,"outputTokens":369,"totalTokens":369},"metadata":{"model_provider":"anthropic"}}

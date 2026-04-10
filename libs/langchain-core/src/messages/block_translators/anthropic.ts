@@ -445,6 +445,7 @@ export function convertToV1FromAnthropicMessage(
           output: {
             urls,
           },
+          ...(_isNumber(block.index) ? { index: block.index } : {}),
         };
         continue;
       }
@@ -460,6 +461,7 @@ export function convertToV1FromAnthropicMessage(
           toolCallId: block.tool_use_id,
           status: "success",
           output: block.content,
+          ...(_isNumber(block.index) ? { index: block.index } : {}),
         };
         continue;
       }
@@ -485,6 +487,7 @@ export function convertToV1FromAnthropicMessage(
           toolCallId: block.tool_use_id,
           status: "success",
           output: block.content,
+          ...(_isNumber(block.index) ? { index: block.index } : {}),
         };
         continue;
       }

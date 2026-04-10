@@ -2,10 +2,14 @@ import { test, expect } from "vitest";
 import { z } from "zod/v3";
 import { z as z4 } from "zod/v4";
 import { zodToJsonSchema } from "../../utils/zod-to-json-schema/index.js";
-import { FakeChatModel, FakeListChatModel } from "../../utils/testing/index.js";
+import {
+  FakeChatModel,
+  FakeListChatModel,
+  FakeStreamingChatModel,
+} from "../../utils/testing/index.js";
 import { HumanMessage } from "../../messages/human.js";
 import { getBufferString } from "../../messages/utils.js";
-import { AIMessage } from "../../messages/ai.js";
+import { AIMessage, AIMessageChunk } from "../../messages/ai.js";
 import { RunCollectorCallbackHandler } from "../../tracers/run_collector.js";
 import { StandardJSONSchemaV1, StandardSchemaV1 } from "@standard-schema/spec";
 
@@ -368,6 +372,177 @@ test("Test ChatModel can emit a custom event", async () => {
   await new Promise((resolve) => setTimeout(resolve, 100));
   expect(response.content).toEqual("hi");
   expect(customEvent).toBeDefined();
+});
+
+test("Test ChatModel streamv2 synthesizes text lifecycle events", async () => {
+  const model = new FakeListChatModel({
+    responses: ["hi"],
+    generationInfo: {
+      stop_reason: "end_turn",
+    },
+  });
+
+  const stream = await model.streamv2([["human", "Hello there!"]]);
+  const events = [];
+  for await (const event of stream) {
+    events.push(event);
+  }
+
+  expect(events).toEqual([
+    expect.objectContaining({
+      event: "message-start",
+    }),
+    expect.objectContaining({
+      event: "content-block-start",
+      index: 0,
+      contentBlock: { type: "text", text: "", index: 0 },
+    }),
+    expect.objectContaining({
+      event: "content-block-delta",
+      index: 0,
+      contentBlock: { type: "text", text: "h", index: 0 },
+    }),
+    expect.objectContaining({
+      event: "content-block-delta",
+      index: 0,
+      contentBlock: { type: "text", text: "i", index: 0 },
+    }),
+    expect.objectContaining({
+      event: "content-block-finish",
+      index: 0,
+      contentBlock: { type: "text", text: "hi", index: 0 },
+    }),
+    expect.objectContaining({
+      event: "message-finish",
+      reason: "stop",
+      metadata: {
+        stop_reason: "end_turn",
+      },
+    }),
+  ]);
+});
+
+test("Test ChatModel streamv2 synthesizes tool call finish events", async () => {
+  const model = new FakeStreamingChatModel({
+    chunks: [
+      new AIMessageChunk({
+        content: [
+          {
+            type: "tool_call_chunk",
+            index: 0,
+            id: "call_123",
+            name: "calculator",
+            args: '{"a":',
+          },
+        ],
+        tool_call_chunks: [
+          {
+            index: 0,
+            id: "call_123",
+            name: "calculator",
+            args: '{"a":',
+          },
+        ],
+      }),
+      new AIMessageChunk({
+        content: [
+          {
+            type: "tool_call_chunk",
+            index: 0,
+            args: '1}',
+          },
+        ],
+        tool_call_chunks: [
+          {
+            index: 0,
+            args: '1}',
+          },
+        ],
+        usage_metadata: {
+          input_tokens: 3,
+          output_tokens: 2,
+          total_tokens: 5,
+        },
+        response_metadata: {
+          stop_reason: "tool_use",
+        },
+      }),
+    ],
+  });
+
+  const stream = await model.streamv2("Call calculator");
+  const events = [];
+  for await (const event of stream) {
+    events.push(event);
+  }
+  expect(events[0]).toMatchObject({ event: "message-start" });
+  expect(events[1]).toMatchObject({
+    event: "content-block-start",
+    index: 0,
+    contentBlock: {
+      type: "tool_call_chunk",
+      id: "call_123",
+      name: "calculator",
+      args: "",
+      index: 0,
+    },
+  });
+  expect(events[2]).toMatchObject({
+    event: "content-block-delta",
+    index: 0,
+    contentBlock: {
+      type: "tool_call_chunk",
+      id: "call_123",
+      name: "calculator",
+      args: '{"a":',
+      index: 0,
+    },
+  });
+  expect(events[3]).toMatchObject({
+    event: "content-block-delta",
+    index: 0,
+    contentBlock: {
+      type: "tool_call_chunk",
+      args: '1}',
+      index: 0,
+    },
+  });
+  expect(events[4]).toMatchObject({
+    event: "content-block-finish",
+    index: 0,
+    contentBlock: {
+      type: "tool_call",
+      id: "call_123",
+      name: "calculator",
+      args: { a: 1 },
+    },
+  });
+  expect(events[5]).toMatchObject({
+    event: "content-block-start",
+    index: 1,
+    contentBlock: {
+      type: "tool_call_chunk",
+      id: "call_123",
+      name: "calculator",
+      args: "",
+      index: 1,
+    },
+  });
+  expect(events[6]).toMatchObject({
+    event: "content-block-finish",
+    index: 1,
+    contentBlock: {
+      type: "tool_call",
+      id: "call_123",
+      name: "calculator",
+      args: {},
+      index: 1,
+    },
+  });
+  expect(events[7]).toMatchObject({
+    event: "message-finish",
+    reason: "stop",
+  });
 });
 
 test("Test ChatModel can stream back a custom event", async () => {
