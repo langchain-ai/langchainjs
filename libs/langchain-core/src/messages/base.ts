@@ -156,6 +156,23 @@ export function mergeContent(
       ];
     } else {
       const left = contentBlocksFromNonStringFirst(firstContent);
+      const lastIdx = left.length - 1;
+      const lastBlock = left[lastIdx];
+      if (
+        lastBlock != null &&
+        typeof lastBlock === "object" &&
+        "type" in lastBlock &&
+        lastBlock.type === "text" &&
+        "text" in lastBlock
+      ) {
+        // Merge into the trailing text block to keep consecutive text joined
+        const merged = [...left];
+        merged[lastIdx] = {
+          ...lastBlock,
+          text: `${(lastBlock as unknown as { text: string }).text}${secondContent}`,
+        };
+        return merged;
+      }
       return [...left, { type: "text", text: secondContent }];
     }
   }
