@@ -1954,29 +1954,63 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     return result;
   }
 
+  /**
+   * Checks whether the tools array contains a mix of server-side built-in
+   * tools (e.g. googleSearch, codeExecution) and function declarations.
+   * The Gemini API requires `toolConfig.includeServerSideToolInvocations`
+   * in that case, otherwise it returns HTTP 400.
+   * See https://ai.google.dev/gemini-api/docs/tool-combination
+   */
+  function mixesBuiltinAndFunctionTools(tools: GeminiTool[]): boolean {
+    let hasBuiltin = false;
+    let hasFunctionDeclarations = false;
+    for (const tool of tools) {
+      if (tool.functionDeclarations && tool.functionDeclarations.length > 0) {
+        hasFunctionDeclarations = true;
+      } else {
+        hasBuiltin = true;
+      }
+      if (hasBuiltin && hasFunctionDeclarations) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   function formatToolConfig(
-    parameters: GoogleAIModelRequestParams
+    parameters: GoogleAIModelRequestParams,
+    tools?: GeminiTool[]
   ): GeminiRequest["toolConfig"] | undefined {
-    if (!parameters.tool_choice || typeof parameters.tool_choice !== "string") {
-      return undefined;
+    const needsServerSideToolInvocations =
+      tools && tools.length > 1 && mixesBuiltinAndFunctionTools(tools);
+
+    let config: GeminiRequest["toolConfig"] | undefined;
+
+    if (parameters.tool_choice && typeof parameters.tool_choice === "string") {
+      if (["auto", "any", "none"].includes(parameters.tool_choice)) {
+        config = {
+          functionCallingConfig: {
+            mode: parameters.tool_choice as "auto" | "any" | "none",
+            allowedFunctionNames: parameters.allowed_function_names,
+          },
+        };
+      } else {
+        // force tool choice to be a single function name in case of structured output
+        config = {
+          functionCallingConfig: {
+            mode: "any",
+            allowedFunctionNames: [parameters.tool_choice],
+          },
+        };
+      }
     }
 
-    if (["auto", "any", "none"].includes(parameters.tool_choice)) {
-      return {
-        functionCallingConfig: {
-          mode: parameters.tool_choice as "auto" | "any" | "none",
-          allowedFunctionNames: parameters.allowed_function_names,
-        },
-      };
+    if (needsServerSideToolInvocations) {
+      config = config ?? {};
+      config.includeServerSideToolInvocations = true;
     }
 
-    // force tool choice to be a single function name in case of structured output
-    return {
-      functionCallingConfig: {
-        mode: "any",
-        allowedFunctionNames: [parameters.tool_choice],
-      },
-    };
+    return config;
   }
 
   async function formatData(
@@ -1987,7 +2021,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     const contents = await formatContents(typedInput, parameters);
     const generationConfig = formatGenerationConfig(parameters);
     const tools = formatTools(parameters);
-    const toolConfig = formatToolConfig(parameters);
+    const toolConfig = formatToolConfig(parameters, tools);
     const safetySettings = formatSafetySettings(parameters);
     const systemInstruction = await formatSystemInstruction(typedInput);
 
