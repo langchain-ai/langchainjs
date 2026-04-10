@@ -106,7 +106,7 @@
     "@vitest/coverage-v8": "^4.1.2",
     "cheerio": "1.2.0",
     "dpdm": "^4.0.1",
-    "langsmith": "^0.5.16",
+    "langsmith": "^0.5.18",
     "openai": "^6.33.0",
     "peggy": "^5.1.0",
     "reflect-metadata": "^0.2.2",
