@@ -840,6 +840,7 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
       content.push({
         type: "reasoning",
         reasoning: event.part.text,
+        index: event.summary_index,
       });
     }
   } else if (event.type === "response.reasoning_summary_text.delta") {
@@ -859,6 +860,7 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
       content.push({
         type: "reasoning",
         reasoning: event.delta,
+        index: event.summary_index,
       });
     }
   } else if (event.type === "response.image_generation_call.partial_image") {
