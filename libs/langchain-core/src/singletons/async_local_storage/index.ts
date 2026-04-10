@@ -56,7 +56,11 @@ class AsyncLocalStorageProvider {
       config?.metadata
     );
     if (callbackManager) {
-      applyConfigurableMetadataToTracers(callbackManager, config?.configurable);
+      applyConfigurableMetadataToTracers(
+        callbackManager,
+        config?.configurable,
+        config?.metadata
+      );
     }
     const storage = this.getInstance();
     const previousValue = storage.getStore();

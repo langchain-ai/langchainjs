@@ -5,6 +5,13 @@ import { RunnableConfig } from "./types.js";
 
 export const DEFAULT_RECURSION_LIMIT = 25;
 
+/**
+ * Configurable keys that are copied into the shared `metadata` dict
+ * (and therefore appear in stream events). Keep this minimal —
+ * everything else is forwarded to LangSmith tracers only.
+ */
+const CONFIGURABLE_TO_SHARED_METADATA_KEYS: readonly string[] = ["model"];
+
 export { type RunnableConfig };
 
 export async function getCallbackManagerForConfig(config?: RunnableConfig) {
@@ -17,7 +24,11 @@ export async function getCallbackManagerForConfig(config?: RunnableConfig) {
   );
 
   if (callbackManager) {
-    applyConfigurableMetadataToTracers(callbackManager, config?.configurable);
+    applyConfigurableMetadataToTracers(
+      callbackManager,
+      config?.configurable,
+      config?.metadata
+    );
   }
 
   return callbackManager;
@@ -163,6 +174,21 @@ export function ensureConfig<CallOptions extends RunnableConfig>(
       },
       empty
     );
+  }
+
+  // Copy a small set of configurable keys into shared metadata (so they
+  // appear in stream events). All other keys are forwarded to tracers
+  // only via applyConfigurableMetadataToTracers.
+  if (empty.configurable) {
+    for (const key of CONFIGURABLE_TO_SHARED_METADATA_KEYS) {
+      const value = empty.configurable[key];
+      if (typeof value === "string" && !empty.metadata?.[key]) {
+        if (!empty.metadata) {
+          empty.metadata = {};
+        }
+        empty.metadata[key] = value;
+      }
+    }
   }
 
   if (empty.timeout !== undefined) {

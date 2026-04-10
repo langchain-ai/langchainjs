@@ -5,11 +5,7 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import * as uuid from "uuid";
 
 import { RunnableLambda } from "../../runnables/base.js";
-import {
-  LangChainTracer,
-  _patchMissingMetadata,
-  getInheritableMetadataFromConfigurable,
-} from "../tracer_langchain.js";
+import { LangChainTracer, _patchMissingMetadata } from "../tracer_langchain.js";
 import { getCallbackManagerForConfig } from "../../runnables/config.js";
 import { BaseCallbackHandler } from "../../callbacks/base.js";
 import { awaitAllCallbacks } from "../../singletons/callbacks.js";
@@ -344,38 +340,10 @@ describe("_patchMissingMetadata", () => {
   });
 });
 
-describe("getInheritableMetadataFromConfigurable", () => {
-  it("extracts known string keys from configurable", () => {
-    const result = getInheritableMetadataFromConfigurable({
-      thread_id: "th-123",
-      model: "gpt-4o",
-      user_id: "uid-1",
-      some_api_key: "opaque-token", // not in CONFIGURABLE_TO_METADATA_KEYS
-      custom_setting: 42, // not a string
-    });
-    expect(result).toEqual({
-      thread_id: "th-123",
-      model: "gpt-4o",
-      user_id: "uid-1",
-    });
-  });
-
-  it("returns undefined when no configurable keys match", () => {
-    expect(
-      getInheritableMetadataFromConfigurable({ custom_key: "value" })
-    ).toBeUndefined();
-  });
-
-  it("returns undefined when configurable is undefined", () => {
-    expect(getInheritableMetadataFromConfigurable(undefined)).toBeUndefined();
-  });
-});
-
 describe("copyWithMetadataDefaults", () => {
   test("copies configuration, does not mutate original", () => {
     const tracer = _makeTracer({ env: "staging" });
     tracer.projectName = "project";
-    tracer.tracingTags = ["tag"];
 
     const copied = tracer.copyWithMetadataDefaults({
       metadata: { service: "api" },
@@ -410,17 +378,6 @@ describe("copyWithMetadataDefaults", () => {
     expect(copied.tracingMetadata).toEqual({ env: "staging" });
   });
 
-  test("merges tags and deduplicates", () => {
-    const tracer = _makeTracer();
-    tracer.tracingTags = ["existing"];
-    const copied = tracer.copyWithMetadataDefaults({
-      tags: ["tenant:alpha", "existing"],
-    });
-    expect(copied).not.toBe(tracer);
-    expect(copied.tracingTags).toEqual(["existing", "tenant:alpha"]);
-    expect(tracer.tracingTags).toEqual(["existing"]);
-  });
-
   test("separate copies are isolated", () => {
     const tracer = _makeTracer();
     const alpha = tracer.copyWithMetadataDefaults({
@@ -444,7 +401,11 @@ describe("getCallbackManagerForConfig langsmith metadata", () => {
       configurable: {
         thread_id: "th-123",
         model: "gpt-4o",
-        custom_key: "ignored",
+        temperature: 0.5,
+        streaming: true,
+        custom_obj: { nested: true }, // not a primitive, excluded
+        __secret: "hidden", // __ prefix, excluded
+        api_key: "secret", // excluded
       },
     });
     const lcTracers = cm?.handlers.filter(
@@ -455,6 +416,8 @@ describe("getCallbackManagerForConfig langsmith metadata", () => {
     expect(lcTracers[0].tracingMetadata).toEqual({
       thread_id: "th-123",
       model: "gpt-4o",
+      temperature: 0.5,
+      streaming: true,
     });
     // Original unchanged
     expect(tracer.tracingMetadata).toBeUndefined();

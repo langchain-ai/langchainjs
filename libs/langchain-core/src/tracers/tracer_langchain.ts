@@ -42,6 +42,9 @@ export interface RunUpdate extends BaseRunUpdate {
   dotted_order?: string;
 }
 
+/** Primitive types that are forwarded as tracer-only metadata. */
+type TracingMetadataValue = string | number | boolean;
+
 export interface LangChainTracerFields extends BaseCallbackHandlerInput {
   exampleId?: string;
   projectName?: string;
@@ -51,7 +54,7 @@ export interface LangChainTracerFields extends BaseCallbackHandlerInput {
    * Additional metadata to include on runs if it isn't already present.
    * Applied only at persist-time so it does not flow through stream events.
    */
-  metadata?: Record<string, string>;
+  metadata?: Record<string, TracingMetadataValue>;
 }
 
 /** @internal Constructor-only fields (not part of the `implements` contract). */
@@ -103,12 +106,7 @@ export class LangChainTracer
    * Tracer-only metadata defaults. Added to runs at persist-time for keys
    * that are not already present, so it never inflates stream events.
    */
-  tracingMetadata: Record<string, string> | undefined;
-
-  /**
-   * Tracer-only tags. Merged onto runs at persist-time.
-   */
-  tracingTags: string[];
+  tracingMetadata: Record<string, TracingMetadataValue> | undefined;
 
   constructor(fields: LangChainTracerConstructorFields = {}) {
     super(fields);
@@ -119,7 +117,6 @@ export class LangChainTracer
     this.exampleId = exampleId;
     this.client = client ?? getDefaultLangChainClientSingleton();
     this.tracingMetadata = metadata !== undefined ? { ...metadata } : undefined;
-    this.tracingTags = [];
 
     const traceableTree = LangChainTracer.getTraceableRunTree();
     if (traceableTree) {
@@ -135,13 +132,12 @@ export class LangChainTracer
    * - The original tracer is never mutated.
    */
   copyWithMetadataDefaults(options: {
-    metadata?: Record<string, string>;
-    tags?: string[];
+    metadata?: Record<string, TracingMetadataValue>;
   }): LangChainTracer {
-    const { metadata, tags } = options;
+    const { metadata } = options;
     const baseMetadata = this.tracingMetadata;
 
-    let mergedMetadata: Record<string, string> | undefined;
+    let mergedMetadata: Record<string, TracingMetadataValue> | undefined;
     if (metadata == null) {
       mergedMetadata = baseMetadata != null ? { ...baseMetadata } : undefined;
     } else if (baseMetadata == null) {
@@ -155,11 +151,7 @@ export class LangChainTracer
       }
     }
 
-    const mergedTags = tags
-      ? [...new Set([...this.tracingTags, ...tags])].sort()
-      : [...this.tracingTags];
-
-    const copied = new LangChainTracer({
+    return new LangChainTracer({
       exampleId: this.exampleId,
       projectName: this.projectName,
       client: this.client,
@@ -167,8 +159,6 @@ export class LangChainTracer
       metadata: mergedMetadata,
       runTreeMap: this.runTreeMap,
     });
-    copied.tracingTags = mergedTags;
-    return copied;
   }
 
   protected async persistRun(_run: Run): Promise<void> {
@@ -311,53 +301,47 @@ export function _patchMissingMetadata(
   }
 }
 
+const PRIMITIVES = new Set(["string", "number", "boolean"]);
+
 /**
- * Known configurable keys whose string values should be forwarded as
- * LangSmith-only inheritable metadata (instead of being copied into the
- * shared `metadata` dict that flows through every stream event).
+ * Configurable keys that should never be forwarded as tracing metadata.
  */
-export const CONFIGURABLE_TO_METADATA_KEYS = new Set([
-  "thread_id",
-  "run_id",
-  "task_id",
-  "checkpoint_id",
-  "checkpoint_ns",
-  "assistant_id",
-  "graph_id",
-  "model",
-  "user_id",
-  "cron_id",
-  "langgraph_auth_user_id",
-]);
+const CONFIGURABLE_TO_TRACING_METADATA_EXCLUDED_KEYS = new Set(["api_key"]);
 
 /**
  * Extract LangSmith-only inheritable metadata defaults from a
  * `configurable` dict.
  *
- * Only string values for keys in {@link CONFIGURABLE_TO_METADATA_KEYS} are
- * included. Returns `undefined` when there is nothing to forward.
+ * Includes all primitive values except keys starting with `__`, keys
+ * already present in `existingMetadata`, and keys in the exclusion set.
+ * Returns `undefined` when there is nothing to forward.
  */
 export function getInheritableMetadataFromConfigurable(
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-  configurable?: Record<string, any>
-): Record<string, string> | undefined {
+  configurable?: Record<string, any>,
+  existingMetadata?: Record<string, unknown>
+): Record<string, TracingMetadataValue> | undefined {
   if (!configurable) return undefined;
 
-  let metadata: Record<string, string> | undefined;
-  for (const key of CONFIGURABLE_TO_METADATA_KEYS) {
-    const value = configurable[key];
-    if (typeof value === "string") {
+  let metadata: Record<string, TracingMetadataValue> | undefined;
+  for (const [key, value] of Object.entries(configurable)) {
+    if (
+      PRIMITIVES.has(typeof value) &&
+      !key.startsWith("__") &&
+      !CONFIGURABLE_TO_TRACING_METADATA_EXCLUDED_KEYS.has(key) &&
+      !(existingMetadata && existingMetadata[key] !== undefined)
+    ) {
       if (!metadata) metadata = {};
-      metadata[key] = value;
+      metadata[key] = value as TracingMetadataValue;
     }
   }
   return metadata;
 }
 
 /**
- * Extract known configurable keys and apply them as LangSmith-only
- * metadata defaults on any {@link LangChainTracer} handlers found in
- * `handlers` and `inheritableHandlers`.
+ * Extract configurable keys and apply them as LangSmith-only metadata
+ * defaults on any {@link LangChainTracer} handlers found in `handlers`
+ * and `inheritableHandlers`.
  *
  * Tracers are replaced with shallow copies so the metadata never leaks
  * into the shared callback-manager metadata dict (which flows through
@@ -374,9 +358,13 @@ export function applyConfigurableMetadataToTracers(
     inheritableHandlers: BaseCallbackHandler[];
   },
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-  configurable?: Record<string, any>
+  configurable?: Record<string, any>,
+  existingMetadata?: Record<string, unknown>
 ): void {
-  const metadata = getInheritableMetadataFromConfigurable(configurable);
+  const metadata = getInheritableMetadataFromConfigurable(
+    configurable,
+    existingMetadata
+  );
   if (!metadata) return;
 
   const replace = (list: BaseCallbackHandler[]) =>

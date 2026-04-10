@@ -41,84 +41,96 @@ describe("mergeConfigs metadata", () => {
 });
 
 describe("ensureConfig configurable-to-metadata", () => {
-  it("does not copy configurable primitives to metadata", () => {
+  it("copies only model to shared metadata", () => {
     const config = ensureConfig({
       configurable: {
         thread_id: "th-123",
         checkpoint_id: "ckpt-1",
-        checkpoint_ns: "ns-1",
-        task_id: "task-1",
-        run_id: "run-456",
-        assistant_id: "asst-789",
-        graph_id: "graph-0",
         model: "gpt-4o",
         user_id: "uid-1",
-        cron_id: "cron-1",
-        langgraph_auth_user_id: "user-1",
-        some_api_key: "opaque-token",
         custom_setting: 42,
       },
       metadata: { nooverride: 18 },
     });
 
-    // Metadata should only contain the explicitly provided key
-    expect(config.metadata).toEqual({ nooverride: 18 });
-    // Configurable should be untouched
-    expect(config.configurable).toEqual({
-      thread_id: "th-123",
-      checkpoint_id: "ckpt-1",
-      checkpoint_ns: "ns-1",
-      task_id: "task-1",
-      run_id: "run-456",
-      assistant_id: "asst-789",
-      graph_id: "graph-0",
-      model: "gpt-4o",
-      user_id: "uid-1",
-      cron_id: "cron-1",
-      langgraph_auth_user_id: "user-1",
-      some_api_key: "opaque-token",
-      custom_setting: 42,
-    });
+    // Only model is copied; everything else stays out of shared metadata
+    expect(config.metadata).toEqual({ nooverride: 18, model: "gpt-4o" });
   });
 
-  it("metadata is not overridden by configurable", () => {
+  it("does not override existing model in metadata", () => {
     const config = ensureConfig({
-      configurable: {
-        thread_id: "from-configurable",
-        run_id: "from-configurable",
-      },
-      metadata: {
-        thread_id: "from-metadata",
-        run_id: "from-metadata",
-      },
+      configurable: { model: "from-configurable" },
+      metadata: { model: "from-metadata" },
     });
 
-    expect(config.metadata).toEqual({
-      thread_id: "from-metadata",
-      run_id: "from-metadata",
+    expect(config.metadata).toEqual({ model: "from-metadata" });
+  });
+
+  it("skips non-string model values", () => {
+    const config = ensureConfig({
+      configurable: { model: 42 },
+      metadata: {},
     });
+
+    expect(config.metadata).toEqual({});
   });
 });
 
 describe("getInheritableMetadataFromConfigurable", () => {
-  it("extracts known string keys from configurable", () => {
+  it("extracts all primitive configurable keys", () => {
     const result = getInheritableMetadataFromConfigurable({
       thread_id: "th-123",
       model: "gpt-4o",
       user_id: "uid-1",
-      some_api_key: "opaque-token", // not in CONFIGURABLE_TO_METADATA_KEYS
-      custom_setting: 42, // not a string
+      temperature: 0.5,
+      streaming: true,
+      custom_setting: { nested: true }, // not a primitive
+      none_value: null, // not a primitive
     });
     expect(result).toEqual({
       thread_id: "th-123",
       model: "gpt-4o",
       user_id: "uid-1",
+      temperature: 0.5,
+      streaming: true,
     });
+  });
+
+  it("excludes keys starting with __", () => {
+    const result = getInheritableMetadataFromConfigurable({
+      __secret_key: "hidden",
+      visible: "shown",
+    });
+    expect(result).toEqual({ visible: "shown" });
+  });
+
+  it("excludes api_key", () => {
+    const result = getInheritableMetadataFromConfigurable({
+      api_key: "should-not-propagate",
+      thread_id: "th-123",
+    });
+    expect(result).toEqual({ thread_id: "th-123" });
+  });
+
+  it("excludes keys already in existingMetadata", () => {
+    const result = getInheritableMetadataFromConfigurable(
+      {
+        model: "from-configurable",
+        checkpoint_ns: "from-configurable",
+        thread_id: "th-123",
+      },
+      { model: "from-metadata", checkpoint_ns: "from-metadata" }
+    );
+    expect(result).toEqual({ thread_id: "th-123" });
   });
 
   it("returns undefined when no configurable keys match", () => {
     expect(
-      getInheritableMetadataFromConfigurable({ custom_key: "value" })
+      getInheritableMetadataFromConfigurable({
+        __hidden: "value",
+        api_key: "secret",
+        nested: { a: 1 },
+      })
     ).toBeUndefined();
   });
 
