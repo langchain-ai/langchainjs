@@ -5,12 +5,31 @@ import {
 } from "@langchain/core/vectorstores";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
-import { Document } from "@langchain/core/documents";
+import { Document, DocumentInterface } from "@langchain/core/documents";
 import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 import {
   AsyncCaller,
   AsyncCallerParams,
 } from "@langchain/core/utils/async_caller";
+import { Callbacks } from "@langchain/core/callbacks/manager";
+
+/**
+ * Stub embeddings for auto-embedding mode.
+ * Throws if any embedding method is called, since the server handles embeddings.
+ */
+class AutoEmbeddingStub implements EmbeddingsInterface {
+  async embedDocuments(_texts: string[]): Promise<number[][]> {
+    throw new Error(
+      "Embeddings not available when using auto-embedding mode. The MongoDB Atlas server handles all embedding generation."
+    );
+  }
+
+  async embedQuery(_text: string): Promise<number[]> {
+    throw new Error(
+      "Embeddings not available when using auto-embedding mode. The MongoDB Atlas server handles all embedding generation."
+    );
+  }
+}
 
 /**
  * Type that defines the arguments required to initialize the
@@ -64,21 +83,73 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
 
   private caller: AsyncCaller;
 
+  private readonly useAutoEmbedding: boolean;
+
+  private readonly embeddingModelName?: string;
+
   _vectorstoreType(): string {
     return "mongodb_atlas";
   }
 
+  /**
+   * Constructor with function overloads for backward compatibility.
+   * (embeddings, args) - traditional format where embeddings are provided by the user
+   * (args) - new format for auto-embedding mode, where the server handles embeddings and no model name is specified (defaults to 'voyage-4')
+   * (embeddingModelName, args) - new format for auto-embedding mode with a specified model name
+   */
+  constructor(
+    args: MongoDBAtlasVectorSearchLibArgs
+  );
   constructor(
     embeddings: EmbeddingsInterface,
     args: MongoDBAtlasVectorSearchLibArgs
+  );
+  constructor(
+    embeddingModelName: string,
+    args: MongoDBAtlasVectorSearchLibArgs
+  );
+  constructor(
+    embeddingsModelNameOrArgs: EmbeddingsInterface | string | MongoDBAtlasVectorSearchLibArgs,
+    args?: MongoDBAtlasVectorSearchLibArgs
   ) {
-    super(embeddings, args);
-    this.collection = args.collection;
-    this.indexName = args.indexName ?? "default";
-    this.textKey = args.textKey ?? "text";
-    this.embeddingKey = args.embeddingKey ?? "embedding";
-    this.primaryKey = args.primaryKey ?? "_id";
-    this.caller = new AsyncCaller(args);
+    let embeddings: EmbeddingsInterface;
+    let embeddingModelName: string | undefined;
+    let libArgs: MongoDBAtlasVectorSearchLibArgs;
+    let useAutoEmbedding = false;
+
+    // Detect which calling convention is being used by checking if first arg has a 'collection' property
+    if (typeof embeddingsModelNameOrArgs === "string") {
+      // (embeddingModelName, args) - new format for auto-embedding mode with a specified model name
+      if (args === undefined) {
+        throw new Error(
+          "When using the new constructor convention (embeddingModelName, args), both parameters must be provided."
+        );
+      }
+      embeddingModelName = embeddingsModelNameOrArgs;
+      embeddings = new AutoEmbeddingStub();
+      libArgs = args;
+      useAutoEmbedding = true;
+    } else if (args !== undefined) {
+      // (embeddings, args) - traditional format where embeddings are provided by the user
+      embeddings = embeddingsModelNameOrArgs as EmbeddingsInterface;
+      libArgs = args;
+    } else {
+      // (args) - new format for auto-embedding mode, where the server handles embeddings and no model name is specified (defaults to 'voyage-4')
+      libArgs = embeddingsModelNameOrArgs as MongoDBAtlasVectorSearchLibArgs;
+      embeddings = new AutoEmbeddingStub();
+      embeddingModelName = 'voyage-4'; // default embedding model for auto-embedding mode
+      useAutoEmbedding = true;
+    }
+
+    super(embeddings, libArgs);
+    this.collection = libArgs.collection;
+    this.indexName = libArgs.indexName ?? "default";
+    this.textKey = libArgs.textKey ?? "text";
+    this.embeddingKey = libArgs.embeddingKey ?? "embedding";
+    this.primaryKey = libArgs.primaryKey ?? "_id";
+    this.caller = new AsyncCaller(libArgs);
+    this.useAutoEmbedding = useAutoEmbedding;
+    this.embeddingModelName = embeddingModelName;
     this.collection.db.client.appendMetadata({
       name: "langchainjs_vector",
     });
@@ -96,6 +167,9 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     documents: Document[],
     options?: { ids?: string[] }
   ) {
+    if (this.useAutoEmbedding) {
+      throw new Error("Cannot add vectors directly when using auto-embedding mode.");
+    }
     const docs = vectors.map((embedding, idx) => ({
       [this.textKey]: documents[idx].pageContent,
       [this.embeddingKey]: embedding,
@@ -124,19 +198,52 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
   }
 
   /**
-   * Method to add documents to the MongoDB collection. It first converts
-   * the documents to vectors using the embeddings and then calls the
-   * addVectors method.
+   * Method to add documents to the MongoDB collection.
+   *
+   * In traditional mode: converts documents to vectors using embeddings, then inserts.
+   * In auto-embed mode: inserts documents with text only; MongoDB server handles embedding.
+   *
    * @param documents Documents to be added.
    * @returns Promise that resolves when the documents have been added.
    */
   async addDocuments(documents: Document[], options?: { ids?: string[] }) {
-    const texts = documents.map(({ pageContent }) => pageContent);
-    return this.addVectors(
-      await this.embeddings.embedDocuments(texts),
-      documents,
-      options
-    );
+    if (this.useAutoEmbedding) {
+      // Auto-embed mode: insert documents WITHOUT vectors
+      // MongoDB auto-embedding index will read textKey and generate embeddings
+      const docs = documents.map((document) => ({
+        [this.textKey]: document.pageContent,
+        ...document.metadata,
+      }));
+
+      if (options?.ids === undefined) {
+        await this.collection.insertMany(docs);
+      } else {
+        if (options.ids.length !== documents.length) {
+          throw new Error(
+            `If provided, "options.ids" must be an array with the same length as "documents".`
+          );
+        }
+        const { ids } = options;
+        for (let i = 0; i < docs.length; i += 1) {
+          await this.caller.call(async () => {
+            await this.collection.updateOne(
+              { [this.primaryKey]: ids[i] },
+              { $set: { [this.primaryKey]: ids[i], ...docs[i] } },
+              { upsert: true }
+            );
+          });
+        }
+      }
+      return options?.ids ?? docs.map((doc) => doc[this.primaryKey]);
+    } else {
+      // Traditional mode: embed documents client-side then insert with vectors
+      const texts = documents.map(({ pageContent }) => pageContent);
+      return this.addVectors(
+        await this.embeddings.embedDocuments(texts),
+        documents,
+        options
+      );
+    }
   }
 
   /**
@@ -153,21 +260,25 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     k: number,
     filter?: MongoDBAtlasFilter
   ): Promise<[Document, number][]> {
+    if (this.useAutoEmbedding) {
+      throw new Error("Cannot perform similarity search with vectors directly when using auto-embedding mode.");
+    }
+
     const postFilterPipeline = filter?.postFilterPipeline ?? [];
     const preFilter: MongoDBDocument | undefined =
       filter?.preFilter ||
-      filter?.postFilterPipeline ||
-      filter?.includeEmbeddings
+        filter?.postFilterPipeline ||
+        filter?.includeEmbeddings
         ? filter.preFilter
         : filter;
     const removeEmbeddingsPipeline = !filter?.includeEmbeddings
       ? [
-          {
-            $project: {
-              [this.embeddingKey]: 0,
-            },
+        {
+          $project: {
+            [this.embeddingKey]: 0,
           },
-        ]
+        },
+      ]
       : [];
 
     const pipeline: MongoDBDocument[] = [
@@ -201,17 +312,126 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
   }
 
   /**
+   * Performs similarity search using text-based queries (auto-embedding mode) or vector queries (traditional mode).
+   * In auto-embed mode, the text query is sent to MongoDB which handles embedding server-side.
+   * In traditional mode, the text is embedded client-side and passed as a vector.
+   *
+   * @param query - Text query for finding similar documents.
+   * @param k - Number of similar results to return. Defaults to 4.
+   * @param filter - Optional filter based on `FilterType`.
+   * @param _callbacks - Optional callbacks for monitoring search progress
+   * @returns A promise resolving to an array of tuples, each containing a
+   *          document and its similarity score.
+   */
+  async similaritySearchWithScore(
+    query: string,
+    k = 4,
+    filter: this["FilterType"] | undefined = undefined,
+    _callbacks: Callbacks | undefined = undefined // implement passing to embedQuery later
+  ): Promise<[Document, number][]> {
+    if (this.useAutoEmbedding) {
+      // Auto-embed mode: use text-based $vectorSearch query
+      return this.textBasedSearchWithScore(query, k, filter);
+    }
+
+    // Traditional mode: embed query client-side
+    const queryEmbedding = await this.embeddings.embedQuery(query);
+    return this.similaritySearchVectorWithScore(queryEmbedding, k, filter);
+  }
+
+  /**
+   * Searches for documents similar to a text query by embedding the query and
+   * performing a similarity search on the resulting vector.
+   *
+   * @param query - Text query for finding similar documents.
+   * @param k - Number of similar results to return. Defaults to 4.
+   * @param filter - Optional filter based on `FilterType`.
+   * @param _callbacks - Optional callbacks for monitoring search progress
+   * @returns A promise resolving to an array of `DocumentInterface` instances representing similar documents.
+   */
+  async similaritySearch(
+    query: string,
+    k = 4,
+    filter: this["FilterType"] | undefined = undefined,
+    _callbacks: Callbacks | undefined = undefined // implement passing to embedQuery later
+  ): Promise<DocumentInterface[]> {
+    const resultsWithScore = await this.similaritySearchWithScore(query, k ?? 4, filter);
+    return resultsWithScore.map(([doc]) => doc);
+  }
+
+  private async textBasedSearchWithScore(
+    query: string,
+    k: number,
+    filter?: MongoDBAtlasFilter
+  ): Promise<[Document, number][]> {
+    if (this.useAutoEmbedding && !this.embeddingModelName) {
+      throw new Error(
+        "embeddingModel is required for text-based search in auto-embedding mode. " +
+        "Provide it when creating the VectorStore: new MongoDBAtlasVectorSearch('voyage-4', { collection })"
+      );
+    }
+
+    const postFilterPipeline = filter?.postFilterPipeline ?? [];
+    const preFilter: MongoDBDocument | undefined =
+      filter?.preFilter ||
+        filter?.postFilterPipeline ||
+        filter?.includeEmbeddings
+        ? filter.preFilter
+        : filter;
+    const removeEmbeddingsPipeline = !filter?.includeEmbeddings
+      ? [
+        {
+          $project: {
+            [this.embeddingKey]: 0,
+          },
+        },
+      ]
+      : [];
+
+    const pipeline: MongoDBDocument[] = [
+      {
+        $vectorSearch: {
+          // Use text query with model for server-side embedding
+          query: { text: query },
+          index: this.indexName,
+          path: this.textKey, // Search on the text field, not the embedding field
+          model: this.embeddingModelName,
+          limit: k,
+          numCandidates: 10 * k,
+          ...(preFilter && { filter: preFilter }),
+        },
+      },
+      {
+        $set: {
+          score: { $meta: "vectorSearchScore" },
+        },
+      },
+      ...removeEmbeddingsPipeline,
+      ...postFilterPipeline,
+    ];
+
+    const results = this.collection
+      .aggregate(pipeline)
+      .map<[Document, number]>((result) => {
+        const { score, [this.textKey]: text, ...metadata } = result;
+        return [new Document({ pageContent: text, metadata }), score];
+      });
+
+    return results.toArray();
+  }
+
+  /**
    * Return documents selected using the maximal marginal relevance.
    * Maximal marginal relevance optimizes for similarity to the query AND diversity
    * among selected documents.
-   *
+   * Not supported in auto-embedding mode.
    * @param {string} query - Text to look up documents similar to.
    * @param {number} options.k - Number of documents to return.
-   * @param {number} options.fetchK=20- Number of documents to fetch before passing to the MMR algorithm.
+   * @param {number} options.fetchK=20 - Number of documents to fetch before passing to the MMR algorithm (traditional mode only).
    * @param {number} options.lambda=0.5 - Number between 0 and 1 that determines the degree of diversity among the results,
    *                 where 0 corresponds to maximum diversity and 1 to minimum diversity.
    * @param {MongoDBAtlasFilter} options.filter - Optional Atlas Search operator to pre-filter on document fields
-   *                                      or post-filter following the knnBeta search.
+   *                                      or post-filter following the search.
    *
    * @returns {Promise<Document[]>} - List of documents selected by maximal marginal relevance.
    */
@@ -219,6 +439,10 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     query: string,
     options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
   ): Promise<Document[]> {
+    if (this.useAutoEmbedding) {
+      throw new Error("Cannot perform MMR search with vectors directly when using auto-embedding mode.");
+    }
+
     const { k, fetchK = 20, lambda = 0.5, filter } = options;
 
     const queryEmbedding = await this.embeddings.embedQuery(query);
@@ -278,6 +502,12 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
    * Static method to create an instance of MongoDBAtlasVectorSearch from a
    * list of texts. It first converts the texts to vectors and then adds
    * them to the MongoDB collection.
+   *
+   * Supports three calling conventions for backward compatibility:
+   * - `fromTexts(texts, metadatas, embeddings, dbConfig)` (traditional)
+   * - `fromTexts(texts, metadatas, embeddingModelName, dbConfig)` (auto-embedding mode with specified model name)
+   * - `fromTexts(texts, metadatas, dbConfig)` (auto-embedding mode)
+   *
    * @param texts List of texts to be converted to vectors.
    * @param metadatas Metadata for the texts.
    * @param embeddings Embeddings to be used for conversion.
@@ -289,6 +519,17 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     metadatas: object[] | object,
     embeddings: EmbeddingsInterface,
     dbConfig: MongoDBAtlasVectorSearchLibArgs & { ids?: string[] }
+  ): Promise<MongoDBAtlasVectorSearch>;
+  static async fromTexts(
+    texts: string[],
+    metadatas: object[] | object,
+    dbConfig: MongoDBAtlasVectorSearchLibArgs & { ids?: string[] }
+  ): Promise<MongoDBAtlasVectorSearch>;
+  static async fromTexts(
+    texts: string[],
+    metadatas: object[] | object,
+    embeddingsModelNameOrDbConfig: EmbeddingsInterface | string | (MongoDBAtlasVectorSearchLibArgs & { ids?: string[] }),
+    dbConfig?: MongoDBAtlasVectorSearchLibArgs & { ids?: string[] }
   ): Promise<MongoDBAtlasVectorSearch> {
     const docs: Document[] = [];
     for (let i = 0; i < texts.length; i += 1) {
@@ -299,15 +540,37 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
       });
       docs.push(newDoc);
     }
-    return this.fromDocuments(docs, embeddings, dbConfig);
+
+    // Detect which calling convention is being used
+    if (dbConfig !== undefined) {
+      // `fromTexts(texts, metadatas, embeddings, dbConfig)` (traditional)
+      return this.fromDocuments(docs, embeddingsModelNameOrDbConfig as EmbeddingsInterface, dbConfig);
+    } else if (typeof embeddingsModelNameOrDbConfig === "string") {
+      // `fromTexts(texts, metadatas, embeddingModelName, dbConfig)` (auto-embedding mode with specified model name)
+      if (dbConfig === undefined) {
+        throw new Error(
+          "When using the new constructor convention (texts, metadatas, embeddingModelName, dbConfig), both parameters must be provided."
+        );
+      }
+      return this.fromDocuments(docs, embeddingsModelNameOrDbConfig as string, dbConfig as MongoDBAtlasVectorSearchLibArgs & { ids?: string[] });
+    } else {
+      // `fromTexts(texts, metadatas, dbConfig)` (auto-embedding mode)
+      return this.fromDocuments(docs, embeddingsModelNameOrDbConfig as MongoDBAtlasVectorSearchLibArgs & { ids?: string[] });
+    }
   }
 
   /**
    * Static method to create an instance of MongoDBAtlasVectorSearch from a
    * list of documents. It first converts the documents to vectors and then
    * adds them to the MongoDB collection.
+   *
+   * Supports three calling conventions for backward compatibility:
+   * - `fromDocuments(docs, embeddings, dbConfig)` (traditional)
+   * - `fromDocuments(docs, embeddingModelName, dbConfig)` (new convention for auto-embedding and specifying a model name)
+   * - `fromDocuments(docs, dbConfig)` (auto-embedding mode)
+   *
    * @param docs List of documents to be converted to vectors.
-   * @param embeddings Embeddings to be used for conversion.
+   * @param embeddingsOrModelName Embeddings to be used for conversion or the name of the embedding model.
    * @param dbConfig Database configuration for MongoDB Atlas.
    * @returns Promise that resolves to a new instance of MongoDBAtlasVectorSearch.
    */
@@ -315,9 +578,48 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     docs: Document[],
     embeddings: EmbeddingsInterface,
     dbConfig: MongoDBAtlasVectorSearchLibArgs & { ids?: string[] }
+  ): Promise<MongoDBAtlasVectorSearch>;
+  static async fromDocuments(
+    docs: Document[],
+    modelName: string,
+    dbConfig: MongoDBAtlasVectorSearchLibArgs & { ids?: string[] }
+  ): Promise<MongoDBAtlasVectorSearch>;
+  static async fromDocuments(
+    docs: Document[],
+    dbConfig: MongoDBAtlasVectorSearchLibArgs & { ids?: string[] }
+  ): Promise<MongoDBAtlasVectorSearch>;
+  static async fromDocuments(
+    docs: Document[],
+    embeddingsModelNameOrDbConfig: EmbeddingsInterface | string | (MongoDBAtlasVectorSearchLibArgs & { ids?: string[] }),
+    dbConfig?: MongoDBAtlasVectorSearchLibArgs & { ids?: string[] }
   ): Promise<MongoDBAtlasVectorSearch> {
-    const instance = new this(embeddings, dbConfig);
-    await instance.addDocuments(docs, { ids: dbConfig.ids });
+    let embeddings: EmbeddingsInterface;
+    let finalDbConfig: MongoDBAtlasVectorSearchLibArgs & { ids?: string[] };
+
+    let instance;
+    // Detect which calling convention is being used
+    if (dbConfig !== undefined) {
+      // `fromDocuments(docs, embeddings, dbConfig)` (traditional)
+      embeddings = embeddingsModelNameOrDbConfig as EmbeddingsInterface;
+      finalDbConfig = dbConfig;
+      instance = new this(embeddings, finalDbConfig);
+    } else if (typeof embeddingsModelNameOrDbConfig === "string") {
+      // `fromDocuments(docs, modelName, dbConfig)` (auto-embedding mode with modelName)
+      if (dbConfig === undefined) {
+        throw new Error(
+          "When using the new constructor convention (docs, modelName, dbConfig), both parameters must be provided."
+        );
+      }
+      const embeddingModelName = embeddingsModelNameOrDbConfig;
+      finalDbConfig = dbConfig as MongoDBAtlasVectorSearchLibArgs & { ids?: string[] };
+      instance = new this(embeddingModelName, finalDbConfig);
+    } else {
+      // `fromDocuments(docs, dbConfig)` (auto-embedding mode)
+      finalDbConfig = embeddingsModelNameOrDbConfig as MongoDBAtlasVectorSearchLibArgs & { ids?: string[] };
+      instance = new this(finalDbConfig);
+    }
+
+    await instance.addDocuments(docs, { ids: finalDbConfig.ids });
     return instance;
   }
 
