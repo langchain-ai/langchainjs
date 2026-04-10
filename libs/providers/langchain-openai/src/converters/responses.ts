@@ -827,6 +827,7 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
       content.push({
         type: "reasoning",
         reasoning: reasoningText,
+        index: event.output_index,
       });
     }
   } else if (event.type === "response.reasoning_summary_part.added") {

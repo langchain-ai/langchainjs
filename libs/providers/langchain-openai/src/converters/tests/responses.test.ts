@@ -382,6 +382,7 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
       expect(reasoningBlocks[0]).toEqual({
         type: "reasoning",
         reasoning: "Thinking about this...Let me reason through.",
+        index: 0,
       });
     });
 
@@ -461,6 +462,35 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
         type: "reasoning",
         reasoning: "more reasoning text",
         index: 0,
+      });
+    });
+
+    it("should include output index on output_item.added reasoning content", () => {
+      const event = {
+        type: "response.output_item.added",
+        output_index: 3,
+        item: {
+          type: "reasoning",
+          id: "rs_abc123",
+          summary: [{ type: "summary_text", text: "indexed reasoning" }],
+        },
+      };
+
+      const result = convertResponsesDeltaToChatGenerationChunk(event as any);
+      const aiMessageChunk = result?.message as AIMessageChunk;
+      const contentArray = aiMessageChunk.content as Array<{
+        type: string;
+        [key: string]: unknown;
+      }>;
+      const reasoningBlocks = contentArray.filter(
+        (block) => block.type === "reasoning"
+      );
+
+      expect(reasoningBlocks.length).toBe(1);
+      expect(reasoningBlocks[0]).toMatchObject({
+        type: "reasoning",
+        reasoning: "indexed reasoning",
+        index: 3,
       });
     });
 
