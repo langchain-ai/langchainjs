@@ -318,8 +318,8 @@ importers:
         specifier: workspace:^
         version: link:../libs/langchain
       langsmith:
-        specifier: ^0.5.16
-        version: 0.5.16(@opentelemetry/api@1.9.0)(openai@6.33.0(ws@5.2.4(bufferutil@4.1.0))(zod@4.3.6))(ws@5.2.4(bufferutil@4.1.0))
+        specifier: ^0.5.18
+        version: 0.5.18(@opentelemetry/api@1.9.0)(openai@6.33.0(ws@5.2.4(bufferutil@4.1.0))(zod@4.3.6))(ws@5.2.4(bufferutil@4.1.0))
       lorem-ipsum:
         specifier: ^2.0.8
         version: 2.0.8
@@ -594,7 +594,7 @@ importers:
         version: 1.0.1(@langchain/core@libs+langchain-core)
       langsmith:
         specifier: '>=0.5.0 <1.0.0'
-        version: 0.5.9(@opentelemetry/api@1.9.0)(openai@6.22.0(ws@8.20.0(bufferutil@4.1.0))(zod@4.3.6))
+        version: 0.5.18(@opentelemetry/api@1.9.0)(openai@6.22.0(ws@8.20.0(bufferutil@4.1.0))(zod@4.3.6))(ws@8.20.0(bufferutil@4.1.0))
       uuid:
         specifier: ^11.1.0
         version: 11.1.0
@@ -978,7 +978,7 @@ importers:
     optionalDependencies:
       langsmith:
         specifier: '>=0.4.0 <1.0.0'
-        version: 0.5.9(@opentelemetry/api@1.9.0)(openai@6.22.0(ws@8.20.0(bufferutil@4.1.0))(zod@4.3.6))
+        version: 0.5.18(@opentelemetry/api@1.9.0)(openai@6.22.0(ws@8.20.0(bufferutil@4.1.0))(zod@4.3.6))(ws@8.20.0(bufferutil@4.1.0))
 
   libs/langchain-core:
     dependencies:
@@ -1002,7 +1002,7 @@ importers:
         version: 1.0.21
       langsmith:
         specifier: '>=0.5.0 <1.0.0'
-        version: 0.5.9(@opentelemetry/api@1.9.0)(openai@6.33.0(ws@8.20.0(bufferutil@4.1.0))(zod@4.3.6))
+        version: 0.5.18(@opentelemetry/api@1.9.0)(openai@6.33.0(ws@8.20.0(bufferutil@4.1.0))(zod@4.3.6))(ws@8.20.0(bufferutil@4.1.0))
       mustache:
         specifier: ^4.2.0
         version: 4.2.0
@@ -7738,9 +7738,6 @@ packages:
   console-control-strings@1.1.0:
     resolution: {integrity: sha512-ty/fTekppD2fIwRvnZAVdeOiGd1c7YXEixbgJTNzqcxJWKQnjJ/V1bNEEE6hygpM3WjwHFUVK6HTjWSzV4a8sQ==}
 
-  console-table-printer@2.15.0:
-    resolution: {integrity: sha512-SrhBq4hYVjLCkBVOWaTzceJalvn5K1Zq5aQA6wXC/cYjI3frKWNPEMK3sZsJfNNQApvCQmgBcc13ZKmFj8qExw==}
-
   content-disposition@1.0.1:
     resolution: {integrity: sha512-oIXISMynqSqm241k6kcQ5UwttDILMK4BiurCfGEREw6+X9jkkpEe5T9FZaApyLGGOnFuyMWZpdolTXMtvEJ08Q==}
     engines: {node: '>=18'}
@@ -9543,8 +9540,8 @@ packages:
   kuler@2.0.0:
     resolution: {integrity: sha512-Xq9nH7KlWZmXAtodXDDRE7vs6DU1gTU8zYDHDiWLSip45Egwq3plLHzPn27NgvzL2r1LMPC1vdqh98sQxtqj4A==}
 
-  langsmith@0.5.16:
-    resolution: {integrity: sha512-nSsSnTo3gjg1dnb48vb8i582zyjvtPbn+EpR6P1pNELb+4Hb4R3nt7LDy+Tl1ltw73vPGfJQtUWOl28irI1b5w==}
+  langsmith@0.5.18:
+    resolution: {integrity: sha512-3zuZUWffTHQ+73EAwnodADtf534VNEZUpXr9jC12qyG8/IQuJET7PRsCpTb9wX2lmBspakwLUpqpj3tNm/0bVA==}
     peerDependencies:
       '@opentelemetry/api': '*'
       '@opentelemetry/exporter-trace-otlp-proto': '*'
@@ -9561,23 +9558,6 @@ packages:
       openai:
         optional: true
       ws:
-        optional: true
-
-  langsmith@0.5.9:
-    resolution: {integrity: sha512-mT88HlYTz7IZzVJP/OM7D6PAR3kzcbPGjYDJpx64ua9WiJXFqQx6YKewxIIxkVSZCb9I/9TiYvPYfZ4rawOdEg==}
-    peerDependencies:
-      '@opentelemetry/api': '*'
-      '@opentelemetry/exporter-trace-otlp-proto': '*'
-      '@opentelemetry/sdk-trace-base': '*'
-      openai: '*'
-    peerDependenciesMeta:
-      '@opentelemetry/api':
-        optional: true
-      '@opentelemetry/exporter-trace-otlp-proto':
-        optional: true
-      '@opentelemetry/sdk-trace-base':
-        optional: true
-      openai:
         optional: true
 
   lazystream@1.0.1:
@@ -10466,8 +10446,8 @@ packages:
     resolution: {integrity: sha512-RwFpb72c/BhQLEXIZ5K2e+AhgNVmIejGlTgiB9MzZ0e93GRvqZ7uSi0dvRF7/XIXDeNkra2fNHBxTyPDGySpjQ==}
     engines: {node: '>=8'}
 
-  p-queue@9.1.0:
-    resolution: {integrity: sha512-O/ZPaXuQV29uSLbxWBGGZO1mCQXV2BLIwUr59JUU9SoH76mnYvtms7aafH/isNSNGwuEfP6W/4xD0/TJXxrizw==}
+  p-queue@9.1.2:
+    resolution: {integrity: sha512-ktsDOALzTYTWWF1PbkNVg2rOt+HaOaMWJMUnt7T3qf5tvZ1L8dBW3tObzprBcXNMKkwj+yFSLqHso0x+UFcJXw==}
     engines: {node: '>=20'}
 
   p-retry@4.6.2:
@@ -11314,9 +11294,6 @@ packages:
 
   simple-get@4.0.1:
     resolution: {integrity: sha512-brv7p5WgH0jmQJr1ZDDfKDOSeWWg+OVypG99A/5vYGPqJ6pxiaHLy8nxtFjBA7oMa01ebA9gfh1uMCFqOuXxvA==}
-
-  simple-wcswidth@1.1.2:
-    resolution: {integrity: sha512-j7piyCjAeTDSjzTSQ7DokZtMNwNlEAyxqSZeCS+CXH7fJ4jx3FuJ/mTW3mE+6JLs4VJBbcll0Kjn+KXI5t21Iw==}
 
   sisteransi@1.0.5:
     resolution: {integrity: sha512-bLGGlR1QxBcynn2d5YmDX4MGjlZvy2MRBDRNHLJ8VI6l6+9FUiyTFNJ0IveOSP0bcXgVDPRcfGqA0pjaqUpfVg==}
@@ -15785,7 +15762,7 @@ snapshots:
   '@langchain/langgraph-sdk@1.6.0(@langchain/core@libs+langchain-core)(react-dom@19.2.4(react@19.0.0))(react@19.0.0)':
     dependencies:
       '@types/json-schema': 7.0.15
-      p-queue: 9.1.0
+      p-queue: 9.1.2
       p-retry: 7.1.1
       uuid: 13.0.0
     optionalDependencies:
@@ -15796,7 +15773,7 @@ snapshots:
   '@langchain/langgraph-sdk@1.8.2(@langchain/core@libs+langchain-core)(react-dom@19.2.4(react@19.0.0))(react@19.0.0)':
     dependencies:
       '@types/json-schema': 7.0.15
-      p-queue: 9.1.0
+      p-queue: 9.1.2
       p-retry: 7.1.1
       uuid: 13.0.0
     optionalDependencies:
@@ -15807,7 +15784,7 @@ snapshots:
   '@langchain/langgraph-sdk@1.8.8(@langchain/core@libs+langchain-core)(react-dom@19.2.4(react@19.0.0))(react@19.0.0)':
     dependencies:
       '@types/json-schema': 7.0.15
-      p-queue: 9.1.0
+      p-queue: 9.1.2
       p-retry: 7.1.1
       uuid: 13.0.0
     optionalDependencies:
@@ -19248,10 +19225,6 @@ snapshots:
   console-control-strings@1.1.0:
     optional: true
 
-  console-table-printer@2.15.0:
-    dependencies:
-      simple-wcswidth: 1.1.2
-
   content-disposition@1.0.1: {}
 
   content-type@1.0.5: {}
@@ -21447,41 +21420,32 @@ snapshots:
 
   kuler@2.0.0: {}
 
-  langsmith@0.5.16(@opentelemetry/api@1.9.0)(openai@6.33.0(ws@5.2.4(bufferutil@4.1.0))(zod@4.3.6))(ws@5.2.4(bufferutil@4.1.0)):
+  langsmith@0.5.18(@opentelemetry/api@1.9.0)(openai@6.22.0(ws@8.20.0(bufferutil@4.1.0))(zod@4.3.6))(ws@8.20.0(bufferutil@4.1.0)):
     dependencies:
-      chalk: 5.6.2
-      console-table-printer: 2.15.0
       p-queue: 6.6.2
-      semver: 7.7.4
+      uuid: 10.0.0
+    optionalDependencies:
+      '@opentelemetry/api': 1.9.0
+      openai: 6.22.0(ws@8.20.0(bufferutil@4.1.0))(zod@4.3.6)
+      ws: 8.20.0(bufferutil@4.1.0)
+
+  langsmith@0.5.18(@opentelemetry/api@1.9.0)(openai@6.33.0(ws@5.2.4(bufferutil@4.1.0))(zod@4.3.6))(ws@5.2.4(bufferutil@4.1.0)):
+    dependencies:
+      p-queue: 6.6.2
       uuid: 10.0.0
     optionalDependencies:
       '@opentelemetry/api': 1.9.0
       openai: 6.33.0(ws@5.2.4(bufferutil@4.1.0))(zod@4.3.6)
       ws: 5.2.4(bufferutil@4.1.0)
 
-  langsmith@0.5.9(@opentelemetry/api@1.9.0)(openai@6.22.0(ws@8.20.0(bufferutil@4.1.0))(zod@4.3.6)):
+  langsmith@0.5.18(@opentelemetry/api@1.9.0)(openai@6.33.0(ws@8.20.0(bufferutil@4.1.0))(zod@4.3.6))(ws@8.20.0(bufferutil@4.1.0)):
     dependencies:
-      '@types/uuid': 10.0.0
-      chalk: 5.6.2
-      console-table-printer: 2.15.0
       p-queue: 6.6.2
-      semver: 7.7.4
-      uuid: 10.0.0
-    optionalDependencies:
-      '@opentelemetry/api': 1.9.0
-      openai: 6.22.0(ws@8.20.0(bufferutil@4.1.0))(zod@4.3.6)
-
-  langsmith@0.5.9(@opentelemetry/api@1.9.0)(openai@6.33.0(ws@8.20.0(bufferutil@4.1.0))(zod@4.3.6)):
-    dependencies:
-      '@types/uuid': 10.0.0
-      chalk: 5.6.2
-      console-table-printer: 2.15.0
-      p-queue: 6.6.2
-      semver: 7.7.4
       uuid: 10.0.0
     optionalDependencies:
       '@opentelemetry/api': 1.9.0
       openai: 6.33.0(ws@8.20.0(bufferutil@4.1.0))(zod@4.3.6)
+      ws: 8.20.0(bufferutil@4.1.0)
 
   lazystream@1.0.1:
     dependencies:
@@ -22502,7 +22466,7 @@ snapshots:
       eventemitter3: 4.0.7
       p-timeout: 3.2.0
 
-  p-queue@9.1.0:
+  p-queue@9.1.2:
     dependencies:
       eventemitter3: 5.0.4
       p-timeout: 7.0.1
@@ -23480,8 +23444,6 @@ snapshots:
       decompress-response: 6.0.0
       once: 1.4.0
       simple-concat: 1.0.1
-
-  simple-wcswidth@1.1.2: {}
 
   sisteransi@1.0.5: {}
 
