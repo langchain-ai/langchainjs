@@ -1,5 +1,10 @@
 import { describe, expect, test } from "vitest";
-import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
+import {
+  AIMessage,
+  AIMessageChunk,
+  HumanMessage,
+  ToolMessage,
+} from "@langchain/core/messages";
 import type { Gemini } from "../../chat_models/types.js";
 import {
   convertGeminiPartsToToolCalls,
@@ -739,5 +744,214 @@ describe("convertMessagesToGeminiContents", () => {
     expect(
       (userContent!.parts[3] as Gemini.Part.FileData).fileData!.fileUri
     ).toBe("gs://bucket/report.pdf");
+  });
+
+  test("v0 legacy path: preserves thoughtSignature from originalTextContentBlock for string content", () => {
+    const aiMsg = new AIMessage({
+      content: "Hello thinking world",
+      additional_kwargs: {
+        originalTextContentBlock: {
+          type: "text",
+          text: "Hello thinking world",
+          thoughtSignature: "sig-abc123",
+        },
+      },
+      response_metadata: { model_provider: "google" },
+    });
+    const messages = [new HumanMessage("hello"), aiMsg];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+    expect(modelContent!.parts).toHaveLength(1);
+    expect(modelContent!.parts[0].text).toBe("Hello thinking world");
+    expect(modelContent!.parts[0].thoughtSignature).toBe("sig-abc123");
+  });
+
+  test("v0 legacy path: preserves partMetadata from originalTextContentBlock for string content", () => {
+    const aiMsg = new AIMessage({
+      content: "Hello with metadata",
+      additional_kwargs: {
+        originalTextContentBlock: {
+          type: "text",
+          text: "Hello with metadata",
+          partMetadata: { custom: "data" },
+        },
+      },
+      response_metadata: { model_provider: "google" },
+    });
+    const messages = [new HumanMessage("hello"), aiMsg];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+    expect(modelContent!.parts[0].text).toBe("Hello with metadata");
+    expect(modelContent!.parts[0].partMetadata).toEqual({ custom: "data" });
+  });
+
+  test("v1 standard path: converts non_standard executableCode blocks to Gemini parts", () => {
+    const messages = [
+      new HumanMessage("run code"),
+      new AIMessage({
+        content: [
+          { type: "text" as const, text: "Here is the code:" },
+          {
+            type: "non_standard" as const,
+            value: {
+              type: "executableCode",
+              executableCode: {
+                language: "PYTHON",
+                code: 'print("hello")',
+              },
+            },
+          },
+          {
+            type: "non_standard" as const,
+            value: {
+              type: "codeExecutionResult",
+              codeExecutionResult: {
+                outcome: "OUTCOME_OK",
+                output: "hello",
+              },
+            },
+          },
+          { type: "text" as const, text: "Done!" },
+        ],
+        response_metadata: { output_version: "v1" },
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+    expect(modelContent!.parts).toHaveLength(4);
+
+    expect(modelContent!.parts[0].text).toBe("Here is the code:");
+    expect(
+      (modelContent!.parts[1] as Gemini.Part).executableCode
+    ).toBeDefined();
+    expect((modelContent!.parts[1] as Gemini.Part).executableCode!.code).toBe(
+      'print("hello")'
+    );
+    expect(
+      (modelContent!.parts[2] as Gemini.Part).codeExecutionResult
+    ).toBeDefined();
+    expect(
+      (modelContent!.parts[2] as Gemini.Part).codeExecutionResult!.outcome
+    ).toBe("OUTCOME_OK");
+    expect(modelContent!.parts[3].text).toBe("Done!");
+  });
+
+  test("v1 standard path: converts reasoning blocks to thought parts", () => {
+    const messages = [
+      new HumanMessage("think about this"),
+      new AIMessage({
+        content: [
+          {
+            type: "reasoning" as const,
+            reasoning: "Let me think about this...",
+            thought: true,
+          },
+          { type: "text" as const, text: "Here is my answer." },
+        ],
+        response_metadata: { output_version: "v1" },
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+    expect(modelContent!.parts).toHaveLength(2);
+
+    expect(modelContent!.parts[0].text).toBe("Let me think about this...");
+    expect(modelContent!.parts[0].thought).toBe(true);
+    expect(modelContent!.parts[1].text).toBe("Here is my answer.");
+    expect(modelContent!.parts[1].thought).toBeUndefined();
+  });
+
+  test("v1 standard path: propagates thoughtSignature on text blocks", () => {
+    const messages = [
+      new HumanMessage("hello"),
+      new AIMessage({
+        content: [
+          {
+            type: "text" as const,
+            text: "Response with signature",
+            thoughtSignature: "sig-xyz789",
+          },
+        ],
+        response_metadata: { output_version: "v1" },
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+    expect(modelContent!.parts).toHaveLength(1);
+    expect(modelContent!.parts[0].text).toBe("Response with signature");
+    expect(modelContent!.parts[0].thoughtSignature).toBe("sig-xyz789");
+  });
+
+  test("v1 standard path: round-trips streamed AIMessageChunk with originalTextContentBlock through Google translator", () => {
+    // Simulates a streamed v0 message chunk with originalTextContentBlock being
+    // fed back to ChatGoogle — the contentBlocks getter goes through the
+    // ChatGoogleTranslator which uses originalTextContentBlock for single-text messages
+    const chunk = new AIMessageChunk({
+      content: "Streamed text",
+      additional_kwargs: {
+        originalTextContentBlock: {
+          type: "text",
+          text: "Streamed text",
+          thoughtSignature: "sig-stream-001",
+        },
+      },
+      response_metadata: { model_provider: "google" },
+    });
+    const messages = [new HumanMessage("hello"), chunk];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+    expect(modelContent!.parts).toHaveLength(1);
+    expect(modelContent!.parts[0].text).toBe("Streamed text");
+    expect(modelContent!.parts[0].thoughtSignature).toBe("sig-stream-001");
+  });
+
+  test("v1 standard path: non_standard blocks with thoughtSignature preserved", () => {
+    const messages = [
+      new HumanMessage("run code"),
+      new AIMessage({
+        content: [
+          {
+            type: "non_standard" as const,
+            value: {
+              type: "executableCode",
+              executableCode: {
+                language: "PYTHON",
+                code: 'print("hi")',
+              },
+            },
+            thoughtSignature: "sig-code-001",
+          },
+        ],
+        response_metadata: { output_version: "v1" },
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+    expect(modelContent!.parts).toHaveLength(1);
+    expect(
+      (modelContent!.parts[0] as Gemini.Part).executableCode
+    ).toBeDefined();
+    expect(modelContent!.parts[0].thoughtSignature).toBe("sig-code-001");
   });
 });
