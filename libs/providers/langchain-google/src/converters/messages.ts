@@ -714,7 +714,15 @@ function convertLegacyContentMessageToGeminiContent(
         parts.push({ text: item });
       } else if (typeof item === "object" && item !== null) {
         if (isMessageContentText(item)) {
-          parts.push({ text: item.text });
+          // Gemini thinking models include `thought` and `thoughtSignature`
+          // on text parts. These must be forwarded back to the API so it
+          // can distinguish thought parts from regular text.
+          const { thought, thoughtSignature } = item as unknown as Gemini.Part;
+          parts.push({
+            text: item.text,
+            ...(thought !== undefined ? { thought } : {}),
+            ...(thoughtSignature !== undefined ? { thoughtSignature } : {}),
+          });
         } else if (isDataContentBlock(item)) {
           parts.push(
             convertToProviderContentBlock(item, geminiContentBlockConverter)
