@@ -628,6 +628,36 @@ describe.each(coreModelInfo)(
       expect(result2.content).toMatch(/21/);
     });
 
+    test("code execution multi-turn", async () => {
+      const llm = newChatGoogle({
+        tools: [{ codeExecution: {} }],
+      });
+
+      // First turn: ask for code execution
+      const result1 = await llm.invoke(
+        "Calculate the sum of 1 to 10 using Python code."
+      );
+      expect(AIMessage.isInstance(result1)).toBe(true);
+
+      // Result should contain executableCode and/or codeExecutionResult blocks
+      const hasCodeBlocks = result1.contentBlocks.some(
+        (b: any) =>
+          b.type === "executableCode" || b.type === "codeExecutionResult"
+      );
+      expect(hasCodeBlocks).toBe(true);
+
+      // Second turn: use the AI response in a follow-up
+      const history: BaseMessage[] = [
+        new HumanMessage("Calculate the sum of 1 to 10 using Python code."),
+        result1,
+        new HumanMessage("Now calculate 1 to 100 using the same approach."),
+      ];
+      const result2 = await llm.invoke(history);
+      expect(AIMessage.isInstance(result2)).toBe(true);
+      expect(typeof result2.text).toBe("string");
+      expect(result2.text.length).toBeGreaterThan(0);
+    });
+
     test("function reply", async () => {
       const tools: Gemini.Tool[] = [
         {
