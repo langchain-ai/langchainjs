@@ -1,5 +1,9 @@
 import { test, expect } from "vitest";
-import { FakeStreamingLLM } from "../../utils/testing/index.js";
+import {
+  FakeStreamingChatModel,
+  FakeStreamingLLM,
+} from "../../utils/testing/index.js";
+import { AIMessage } from "../../messages/index.js";
 import { BytesOutputParser } from "../bytes.js";
 import {
   CommaSeparatedListOutputParser,
@@ -83,3 +87,46 @@ for (const [Parser, input, output] of listTestCases) {
     await expect(parser.parse(input)).resolves.toEqual(output);
   });
 }
+
+test("CommaSeparatedListOutputParser parses text from ContentBlock[] messages", async () => {
+  const parser = new CommaSeparatedListOutputParser();
+  const message = new AIMessage({
+    content: [
+      {
+        type: "reasoning",
+        reasoning: "internal reasoning",
+      },
+      {
+        type: "text",
+        text: "a,b,c",
+      },
+    ],
+  });
+
+  await expect(parser.invoke(message)).resolves.toEqual(["a", "b", "c"]);
+});
+
+test("CommaSeparatedListOutputParser works when piped from a chat model returning ContentBlock[]", async () => {
+  const model = new FakeStreamingChatModel({
+    responses: [
+      new AIMessage({
+        content: [
+          {
+            type: "reasoning",
+            reasoning: "internal reasoning",
+          },
+          {
+            type: "text",
+            text: "a,b,c",
+          },
+        ],
+      }),
+    ],
+  });
+
+  const result = await model
+    .pipe(new CommaSeparatedListOutputParser())
+    .invoke("ignored");
+
+  expect(result).toEqual(["a", "b", "c"]);
+});
