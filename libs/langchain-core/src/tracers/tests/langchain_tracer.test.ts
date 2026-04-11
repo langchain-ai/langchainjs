@@ -5,7 +5,9 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import * as uuid from "uuid";
 
 import { RunnableLambda } from "../../runnables/base.js";
-import { LangChainTracer } from "../tracer_langchain.js";
+import { LangChainTracer, _patchMissingMetadata } from "../tracer_langchain.js";
+import { getCallbackManagerForConfig } from "../../runnables/config.js";
+import { BaseCallbackHandler } from "../../callbacks/base.js";
 import { awaitAllCallbacks } from "../../singletons/callbacks.js";
 import { AsyncLocalStorageProviderSingleton } from "../../singletons/async_local_storage/index.js";
 import { AIMessage } from "../../messages/ai.js";
@@ -286,5 +288,358 @@ describe("LangChainTracer usage_metadata extraction", () => {
       input_token_details: {},
       output_token_details: {},
     });
+  });
+});
+
+function _makeTracer(metadata?: Record<string, string>): LangChainTracer {
+  const mockClient = {
+    createRun: vi.fn(),
+    updateRun: vi.fn(),
+  } as any;
+  return new LangChainTracer({ client: mockClient, metadata });
+}
+
+describe("_patchMissingMetadata", () => {
+  test("adds metadata when run has none", () => {
+    const tracer = _makeTracer({ env: "prod", service: "api" });
+    const run = { extra: { metadata: {} } };
+    _patchMissingMetadata(tracer, run);
+    expect(run.extra.metadata).toEqual({ env: "prod", service: "api" });
+  });
+
+  test("does not overwrite existing keys", () => {
+    const tracer = _makeTracer({ env: "prod", service: "api" });
+    const run = { extra: { metadata: { env: "staging" } } };
+    _patchMissingMetadata(tracer, run);
+    expect(run.extra.metadata).toEqual({ env: "staging", service: "api" });
+  });
+
+  test("noop when tracer has no metadata", () => {
+    const tracer = _makeTracer(undefined);
+    const original = { existing: "value" };
+    const run = { extra: { metadata: { ...original } } };
+    _patchMissingMetadata(tracer, run);
+    expect(run.extra.metadata).toEqual(original);
+  });
+
+  test("noop when all keys already present", () => {
+    const tracer = _makeTracer({ env: "prod" });
+    const run = { extra: { metadata: { env: "dev" } } };
+    _patchMissingMetadata(tracer, run);
+    expect(run.extra.metadata).toEqual({ env: "dev" });
+  });
+
+  test("merges disjoint keys", () => {
+    const tracer = _makeTracer({ tracer_key: "tracer_val" });
+    const run = { extra: { metadata: { config_key: "config_val" } } };
+    _patchMissingMetadata(tracer, run);
+    expect(run.extra.metadata).toEqual({
+      tracer_key: "tracer_val",
+      config_key: "config_val",
+    });
+  });
+});
+
+describe("copyWithMetadataDefaults", () => {
+  test("copies configuration, does not mutate original", () => {
+    const tracer = _makeTracer({ env: "staging" });
+    tracer.projectName = "project";
+
+    const copied = tracer.copyWithMetadataDefaults({
+      metadata: { service: "api" },
+    });
+
+    expect(copied).not.toBe(tracer);
+    expect(copied.client).toBe(tracer.client);
+    expect(copied.projectName).toBe("project");
+    expect(copied.tracingMetadata).toEqual({
+      env: "staging",
+      service: "api",
+    });
+    // Original is unchanged
+    expect(tracer.tracingMetadata).toEqual({ env: "staging" });
+  });
+
+  test("tracer metadata takes precedence over incoming metadata", () => {
+    const tracer = _makeTracer({ env: "staging" });
+    const copied = tracer.copyWithMetadataDefaults({
+      metadata: { env: "prod", service: "api" },
+    });
+    expect(copied.tracingMetadata).toEqual({
+      env: "staging",
+      service: "api",
+    });
+  });
+
+  test("null metadata preserves existing", () => {
+    const tracer = _makeTracer({ env: "staging" });
+    const copied = tracer.copyWithMetadataDefaults({ metadata: undefined });
+    expect(copied).not.toBe(tracer);
+    expect(copied.tracingMetadata).toEqual({ env: "staging" });
+  });
+
+  test("separate copies are isolated", () => {
+    const tracer = _makeTracer();
+    const alpha = tracer.copyWithMetadataDefaults({
+      metadata: { tenant: "alpha" },
+    });
+    const beta = tracer.copyWithMetadataDefaults({
+      metadata: { tenant: "beta" },
+    });
+    expect(tracer.tracingMetadata).toBeUndefined();
+    expect(alpha.tracingMetadata).toEqual({ tenant: "alpha" });
+    expect(beta.tracingMetadata).toEqual({ tenant: "beta" });
+    expect(alpha).not.toBe(beta);
+  });
+});
+
+describe("getCallbackManagerForConfig langsmith metadata", () => {
+  test("configurable keys flow as tracer metadata", async () => {
+    const tracer = _makeTracer();
+    const cm = await getCallbackManagerForConfig({
+      callbacks: [tracer],
+      configurable: {
+        thread_id: "th-123",
+        model: "gpt-4o",
+        temperature: 0.5,
+        streaming: true,
+        custom_obj: { nested: true }, // not a primitive, excluded
+        __secret: "hidden", // __ prefix, excluded
+        api_key: "secret", // excluded
+      },
+    });
+    const lcTracers = cm?.handlers.filter(
+      (h) => h instanceof LangChainTracer
+    ) as LangChainTracer[];
+    expect(lcTracers).toHaveLength(1);
+    expect(lcTracers[0]).not.toBe(tracer);
+    expect(lcTracers[0].tracingMetadata).toEqual({
+      thread_id: "th-123",
+      model: "gpt-4o",
+      temperature: 0.5,
+      streaming: true,
+    });
+    // Original unchanged
+    expect(tracer.tracingMetadata).toBeUndefined();
+  });
+
+  test("no configurable means no tracer copy", async () => {
+    const tracer = _makeTracer();
+    const cm = await getCallbackManagerForConfig({
+      callbacks: [tracer],
+    });
+    const lcTracer = cm?.handlers.find(
+      (h) => h instanceof LangChainTracer
+    ) as LangChainTracer;
+    // No configurable keys to forward, so same instance
+    expect(lcTracer).toBe(tracer);
+    expect(tracer.tracingMetadata).toBeUndefined();
+  });
+
+  test("tracer metadata takes precedence over configurable keys", async () => {
+    const tracer = _makeTracer({ thread_id: "from-tracer" });
+    const cm = await getCallbackManagerForConfig({
+      callbacks: [tracer],
+      configurable: { thread_id: "from-configurable", user_id: "uid-1" },
+    });
+    const lcTracer = cm?.handlers.find(
+      (h) => h instanceof LangChainTracer
+    ) as LangChainTracer;
+    expect(lcTracer.tracingMetadata).toEqual({
+      thread_id: "from-tracer",
+      user_id: "uid-1",
+    });
+  });
+
+  test("langsmith metadata does not affect non-tracer handlers", async () => {
+    AsyncLocalStorageProviderSingleton.initializeGlobalInstance(
+      new AsyncLocalStorage()
+    );
+
+    const tracer = _makeTracer();
+    const receivedMetadata: Record<string, unknown>[] = [];
+
+    class MetadataCapture extends BaseCallbackHandler {
+      name = "metadata_capture";
+      async handleChainStart(
+        _chain: any,
+        _inputs: any,
+        _runId?: string,
+        _parentRunId?: string,
+        _tags?: string[],
+        metadata?: Record<string, unknown>
+      ) {
+        receivedMetadata.push({ ...metadata });
+      }
+    }
+
+    const capture = new MetadataCapture();
+    const cm = await getCallbackManagerForConfig({
+      callbacks: [tracer, capture],
+      configurable: { thread_id: "th-123" },
+    });
+
+    const myFunc = RunnableLambda.from((x: number) => x);
+    await myFunc.invoke(1, { callbacks: cm });
+
+    await awaitAllCallbacks();
+
+    // Non-tracer handler should NOT see configurable metadata
+    expect(receivedMetadata.length).toBeGreaterThanOrEqual(1);
+    for (const md of receivedMetadata) {
+      expect(md).not.toHaveProperty("thread_id");
+    }
+  });
+});
+
+describe("tracer metadata through invoke", () => {
+  test("tracer metadata applied to all runs", async () => {
+    AsyncLocalStorageProviderSingleton.initializeGlobalInstance(
+      new AsyncLocalStorage()
+    );
+
+    const mockClient = {
+      createRun: vi.fn(),
+      updateRun: vi.fn(),
+    } as any;
+
+    const tracer = new LangChainTracer({
+      client: mockClient,
+      metadata: { env: "prod", service: "api" },
+    });
+
+    const child = RunnableLambda.from((x: number) => x + 1);
+    const parent = RunnableLambda.from(async (x: number) => child.invoke(x));
+
+    await parent.invoke(1, { callbacks: [tracer] });
+    await awaitAllCallbacks();
+
+    expect(mockClient.createRun).toHaveBeenCalledTimes(2);
+    for (const call of mockClient.createRun.mock.calls) {
+      const payload = call[0];
+      expect(payload.extra?.metadata?.env).toBe("prod");
+      expect(payload.extra?.metadata?.service).toBe("api");
+    }
+  });
+
+  test("config metadata takes precedence over tracer metadata", async () => {
+    AsyncLocalStorageProviderSingleton.initializeGlobalInstance(
+      new AsyncLocalStorage()
+    );
+
+    const mockClient = {
+      createRun: vi.fn(),
+      updateRun: vi.fn(),
+    } as any;
+
+    const tracer = new LangChainTracer({
+      client: mockClient,
+      metadata: { env: "prod", tracer_only: "yes" },
+    });
+
+    const myFunc = RunnableLambda.from((x: number) => x);
+
+    await myFunc.invoke(1, {
+      callbacks: [tracer],
+      metadata: { env: "staging", config_only: "yes" },
+    });
+    await awaitAllCallbacks();
+
+    expect(mockClient.createRun).toHaveBeenCalledTimes(1);
+    const payload = mockClient.createRun.mock.calls[0][0];
+    const md = payload.extra?.metadata;
+    // Config wins for overlapping key
+    expect(md.env).toBe("staging");
+    // Both non-overlapping keys present
+    expect(md.tracer_only).toBe("yes");
+    expect(md.config_only).toBe("yes");
+  });
+
+  test("nested calls inherit config and tracer metadata", async () => {
+    AsyncLocalStorageProviderSingleton.initializeGlobalInstance(
+      new AsyncLocalStorage()
+    );
+
+    const mockClient = {
+      createRun: vi.fn(),
+      updateRun: vi.fn(),
+    } as any;
+
+    const tracer = new LangChainTracer({
+      client: mockClient,
+      metadata: { tracer_key: "tracer_val" },
+    });
+
+    const child = RunnableLambda.from((x: number) => x + 1);
+    const parent = RunnableLambda.from(async (x: number) => child.invoke(x));
+
+    await parent.invoke(1, {
+      callbacks: [tracer],
+      metadata: { config_key: "config_val" },
+    });
+    await awaitAllCallbacks();
+
+    expect(mockClient.createRun).toHaveBeenCalledTimes(2);
+    for (const call of mockClient.createRun.mock.calls) {
+      const md = call[0].extra?.metadata;
+      expect(md.config_key).toBe("config_val");
+      expect(md.tracer_key).toBe("tracer_val");
+    }
+  });
+
+  test("tracer metadata not applied to sibling handlers", async () => {
+    AsyncLocalStorageProviderSingleton.initializeGlobalInstance(
+      new AsyncLocalStorage()
+    );
+
+    const mockClient = {
+      createRun: vi.fn(),
+      updateRun: vi.fn(),
+    } as any;
+
+    const tracer = new LangChainTracer({
+      client: mockClient,
+      metadata: { tracer_key: "tracer_val" },
+    });
+
+    const receivedMetadata: Record<string, unknown>[] = [];
+
+    class MetadataCapture extends BaseCallbackHandler {
+      name = "metadata_capture";
+      async handleChainStart(
+        _chain: any,
+        _inputs: any,
+        _runId?: string,
+        _parentRunId?: string,
+        _tags?: string[],
+        metadata?: Record<string, unknown>
+      ) {
+        receivedMetadata.push({ ...metadata });
+      }
+    }
+
+    const capture = new MetadataCapture();
+    const myFunc = RunnableLambda.from((x: number) => x);
+
+    await myFunc.invoke(1, {
+      callbacks: [tracer, capture],
+      metadata: { shared_key: "shared_val" },
+    });
+    await awaitAllCallbacks();
+
+    // Non-tracer handler should NOT see tracer metadata
+    expect(receivedMetadata.length).toBeGreaterThanOrEqual(1);
+    for (const md of receivedMetadata) {
+      expect(md.shared_key).toBe("shared_val");
+      expect(md).not.toHaveProperty("tracer_key");
+    }
+
+    // But the posted runs SHOULD have both
+    expect(mockClient.createRun).toHaveBeenCalled();
+    for (const call of mockClient.createRun.mock.calls) {
+      const md = call[0].extra?.metadata;
+      expect(md.shared_key).toBe("shared_val");
+      expect(md.tracer_key).toBe("tracer_val");
+    }
   });
 });

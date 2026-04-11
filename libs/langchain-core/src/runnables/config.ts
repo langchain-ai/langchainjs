@@ -1,19 +1,37 @@
 import { CallbackManager, ensureHandler } from "../callbacks/manager.js";
+import { applyConfigurableMetadataToTracers } from "../tracers/tracer_langchain.js";
 import { AsyncLocalStorageProviderSingleton } from "../singletons/index.js";
 import { RunnableConfig } from "./types.js";
 
 export const DEFAULT_RECURSION_LIMIT = 25;
 
+/**
+ * Configurable keys that are copied into the shared `metadata` dict
+ * (and therefore appear in stream events). Keep this minimal —
+ * everything else is forwarded to LangSmith tracers only.
+ */
+const CONFIGURABLE_TO_SHARED_METADATA_KEYS: readonly string[] = ["model"];
+
 export { type RunnableConfig };
 
 export async function getCallbackManagerForConfig(config?: RunnableConfig) {
-  return CallbackManager._configureSync(
+  const callbackManager = CallbackManager._configureSync(
     config?.callbacks,
     undefined,
     config?.tags,
     undefined,
     config?.metadata
   );
+
+  if (callbackManager) {
+    applyConfigurableMetadataToTracers(
+      callbackManager,
+      config?.configurable,
+      config?.metadata
+    );
+  }
+
+  return callbackManager;
 }
 
 export function mergeConfigs<CallOptions extends RunnableConfig>(
@@ -117,8 +135,6 @@ export function mergeConfigs<CallOptions extends RunnableConfig>(
   return copy as Partial<CallOptions>;
 }
 
-const PRIMITIVES = new Set(["string", "number", "boolean"]);
-
 /**
  * Ensure that a passed config is an object with all required keys present.
  */
@@ -159,19 +175,22 @@ export function ensureConfig<CallOptions extends RunnableConfig>(
       empty
     );
   }
-  if (empty?.configurable) {
-    for (const key of Object.keys(empty.configurable)) {
-      if (
-        PRIMITIVES.has(typeof empty.configurable[key]) &&
-        !empty.metadata?.[key]
-      ) {
+
+  // Copy a small set of configurable keys into shared metadata (so they
+  // appear in stream events). All other keys are forwarded to tracers
+  // only via applyConfigurableMetadataToTracers.
+  if (empty.configurable) {
+    for (const key of CONFIGURABLE_TO_SHARED_METADATA_KEYS) {
+      const value = empty.configurable[key];
+      if (typeof value === "string" && !empty.metadata?.[key]) {
         if (!empty.metadata) {
           empty.metadata = {};
         }
-        empty.metadata[key] = empty.configurable[key];
+        empty.metadata[key] = value;
       }
     }
   }
+
   if (empty.timeout !== undefined) {
     if (empty.timeout <= 0) {
       throw new Error("Timeout must be a positive number");

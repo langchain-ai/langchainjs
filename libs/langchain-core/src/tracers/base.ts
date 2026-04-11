@@ -87,16 +87,22 @@ export function isBaseTracer(x: BaseCallbackHandler): x is BaseTracer {
   return typeof (x as BaseTracer)._addRunToRunMap === "function";
 }
 
+export interface BaseTracerInput extends BaseCallbackHandlerInput {
+  /** Optional shared map so that copied tracers see the same run state. */
+  runTreeMap?: Map<string, RunTree>;
+}
+
 export abstract class BaseTracer extends BaseCallbackHandler {
   /** @deprecated Use `runTreeMap` instead. */
   protected runMap: Map<string, Run> = new Map();
 
-  protected runTreeMap: Map<string, RunTree> = new Map();
+  protected runTreeMap: Map<string, RunTree>;
 
   protected usesRunTreeMap = false;
 
-  constructor(_fields?: BaseCallbackHandlerInput) {
+  constructor(_fields?: BaseTracerInput) {
     super(...arguments);
+    this.runTreeMap = _fields?.runTreeMap ?? new Map();
   }
 
   copy(): this {

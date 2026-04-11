@@ -13,7 +13,10 @@ import {
   KVMap,
 } from "langsmith/schemas";
 import { BaseTracer, Run as BaseTracerRun } from "./base.js";
-import { BaseCallbackHandlerInput } from "../callbacks/base.js";
+import {
+  BaseCallbackHandler,
+  BaseCallbackHandlerInput,
+} from "../callbacks/base.js";
 import { getDefaultLangChainClientSingleton } from "../singletons/tracer.js";
 import { ChatGeneration } from "../outputs.js";
 import { AIMessage } from "../messages/ai.js";
@@ -39,11 +42,25 @@ export interface RunUpdate extends BaseRunUpdate {
   dotted_order?: string;
 }
 
+/** Primitive types that are forwarded as tracer-only metadata. */
+type TracingMetadataValue = string | number | boolean;
+
 export interface LangChainTracerFields extends BaseCallbackHandlerInput {
   exampleId?: string;
   projectName?: string;
   client?: LangSmithTracingClientInterface;
   replicas?: RunTreeConfig["replicas"];
+  /**
+   * Additional metadata to include on runs if it isn't already present.
+   * Applied only at persist-time so it does not flow through stream events.
+   */
+  metadata?: Record<string, TracingMetadataValue>;
+}
+
+/** @internal Constructor-only fields (not part of the `implements` contract). */
+interface LangChainTracerConstructorFields extends LangChainTracerFields {
+  /** Optional shared runTreeMap so that copied tracers see the same run state. */
+  runTreeMap?: Map<string, RunTree>;
 }
 
 /**
@@ -85,19 +102,63 @@ export class LangChainTracer
 
   usesRunTreeMap = true;
 
-  constructor(fields: LangChainTracerFields = {}) {
+  /**
+   * Tracer-only metadata defaults. Added to runs at persist-time for keys
+   * that are not already present, so it never inflates stream events.
+   */
+  tracingMetadata: Record<string, TracingMetadataValue> | undefined;
+
+  constructor(fields: LangChainTracerConstructorFields = {}) {
     super(fields);
-    const { exampleId, projectName, client, replicas } = fields;
+    const { exampleId, projectName, client, replicas, metadata } = fields;
 
     this.projectName = projectName ?? getDefaultProjectName();
     this.replicas = replicas;
     this.exampleId = exampleId;
     this.client = client ?? getDefaultLangChainClientSingleton();
+    this.tracingMetadata = metadata !== undefined ? { ...metadata } : undefined;
 
     const traceableTree = LangChainTracer.getTraceableRunTree();
     if (traceableTree) {
       this.updateFromRunTree(traceableTree);
     }
+  }
+
+  /**
+   * Return a new tracer that shares the same `runTreeMap` (so parent/child
+   * linkage is preserved) but carries merged tracer-only metadata defaults.
+   *
+   * - Keys already present on the current tracer take precedence.
+   * - The original tracer is never mutated.
+   */
+  copyWithMetadataDefaults(options: {
+    metadata?: Record<string, TracingMetadataValue>;
+  }): LangChainTracer {
+    const { metadata } = options;
+    const baseMetadata = this.tracingMetadata;
+
+    let mergedMetadata: Record<string, TracingMetadataValue> | undefined;
+    if (metadata == null) {
+      mergedMetadata = baseMetadata != null ? { ...baseMetadata } : undefined;
+    } else if (baseMetadata == null) {
+      mergedMetadata = { ...metadata };
+    } else {
+      mergedMetadata = { ...baseMetadata };
+      for (const [key, value] of Object.entries(metadata)) {
+        if (!(key in mergedMetadata)) {
+          mergedMetadata[key] = value;
+        }
+      }
+    }
+
+    return new LangChainTracer({
+      exampleId: this.exampleId,
+      projectName: this.projectName,
+      client: this.client,
+      replicas: this.replicas,
+      metadata: mergedMetadata,
+      runTreeMap: this.runTreeMap,
+    });
   }
 
   protected async persistRun(_run: Run): Promise<void> {
@@ -178,7 +239,7 @@ export class LangChainTracer
     const runTree = this.runTreeMap.get(id);
     if (!runTree) return undefined;
 
-    return new RunTree({
+    const tree = new RunTree({
       ...runTree,
       client: this.client as Client,
       project_name: this.projectName,
@@ -186,6 +247,9 @@ export class LangChainTracer
       reference_example_id: this.exampleId,
       tracingEnabled: true,
     });
+
+    _patchMissingMetadata(this, tree);
+    return tree;
   }
 
   static getTraceableRunTree(): RunTree | undefined {
@@ -203,4 +267,113 @@ export class LangChainTracer
       return undefined;
     }
   }
+}
+
+/**
+ * Patch tracer-level metadata into a run/RunTree for any keys that are not
+ * already present. This ensures the metadata flows to LangSmith without
+ * inflating the metadata dict that travels through every stream event.
+ *
+ * The run's existing metadata is copied on the first miss to avoid mutating
+ * the shared dict owned by the callback manager.
+ */
+export function _patchMissingMetadata(
+  tracer: LangChainTracer,
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  run: { extra?: Record<string, any> }
+): void {
+  const tracingMetadata = tracer.tracingMetadata;
+  if (!tracingMetadata) return;
+
+  const metadata =
+    (run.extra?.metadata as Record<string, unknown> | undefined) ?? {};
+  let patched: Record<string, unknown> | undefined;
+
+  for (const [k, v] of Object.entries(tracingMetadata)) {
+    if (!(k in metadata)) {
+      if (patched == null) {
+        // Copy on first miss to avoid mutating the shared dict.
+        patched = { ...metadata };
+        run.extra = { ...(run.extra ?? {}), metadata: patched };
+      }
+      patched[k] = v;
+    }
+  }
+}
+
+const PRIMITIVES = new Set(["string", "number", "boolean"]);
+
+/**
+ * Configurable keys that should never be forwarded as tracing metadata.
+ */
+const CONFIGURABLE_TO_TRACING_METADATA_EXCLUDED_KEYS = new Set(["api_key"]);
+
+/**
+ * Extract LangSmith-only inheritable metadata defaults from a
+ * `configurable` dict.
+ *
+ * Includes all primitive values except keys starting with `__`, keys
+ * already present in `existingMetadata`, and keys in the exclusion set.
+ * Returns `undefined` when there is nothing to forward.
+ */
+export function getInheritableMetadataFromConfigurable(
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  configurable?: Record<string, any>,
+  existingMetadata?: Record<string, unknown>
+): Record<string, TracingMetadataValue> | undefined {
+  if (!configurable) return undefined;
+
+  let metadata: Record<string, TracingMetadataValue> | undefined;
+  for (const [key, value] of Object.entries(configurable)) {
+    if (
+      PRIMITIVES.has(typeof value) &&
+      !key.startsWith("__") &&
+      !CONFIGURABLE_TO_TRACING_METADATA_EXCLUDED_KEYS.has(key) &&
+      !(existingMetadata && existingMetadata[key] !== undefined)
+    ) {
+      if (!metadata) metadata = {};
+      metadata[key] = value as TracingMetadataValue;
+    }
+  }
+  return metadata;
+}
+
+/**
+ * Extract configurable keys and apply them as LangSmith-only metadata
+ * defaults on any {@link LangChainTracer} handlers found in `handlers`
+ * and `inheritableHandlers`.
+ *
+ * Tracers are replaced with shallow copies so the metadata never leaks
+ * into the shared callback-manager metadata dict (which flows through
+ * every stream event). Non-tracer handlers are left untouched.
+ *
+ * This is a no-op when `configurable` is `undefined` or contains no
+ * relevant keys.
+ *
+ * @internal
+ */
+export function applyConfigurableMetadataToTracers(
+  handlers: {
+    handlers: BaseCallbackHandler[];
+    inheritableHandlers: BaseCallbackHandler[];
+  },
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  configurable?: Record<string, any>,
+  existingMetadata?: Record<string, unknown>
+): void {
+  const metadata = getInheritableMetadataFromConfigurable(
+    configurable,
+    existingMetadata
+  );
+  if (!metadata) return;
+
+  const replace = (list: BaseCallbackHandler[]) =>
+    list.map((h) =>
+      h instanceof LangChainTracer
+        ? h.copyWithMetadataDefaults({ metadata })
+        : h
+    );
+
+  handlers.handlers = replace(handlers.handlers);
+  handlers.inheritableHandlers = replace(handlers.inheritableHandlers);
 }
