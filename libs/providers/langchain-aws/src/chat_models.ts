@@ -57,6 +57,7 @@ import {
   handleConverseStreamContentBlockStart,
   handleConverseStreamMetadata,
 } from "./utils/message_outputs.js";
+import { normalizeBedrockError } from "./utils/errors.js";
 import {
   isSerializableSchema,
   SerializableSchema,
@@ -1008,39 +1009,43 @@ export class ChatBedrockConverse
     options: Partial<this["ParsedCallOptions"]>,
     _runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
-    const { converseMessages, converseSystem } =
-      convertToConverseMessages(messages);
-    const params = this.invocationParams(options);
+    try {
+      const { converseMessages, converseSystem } =
+        convertToConverseMessages(messages);
+      const params = this.invocationParams(options);
 
-    const command = new ConverseCommand({
-      modelId: this.applicationInferenceProfile ?? this.model,
-      messages: converseMessages,
-      ...(Array.isArray(converseSystem) && converseSystem.length > 0
-        ? { system: converseSystem }
-        : {}),
-      requestMetadata: options.requestMetadata,
-      ...params,
-    });
-    const response = await this.client.send(command, {
-      abortSignal: options.signal,
-    });
-    const { output, ...responseMetadata } = response;
-    if (!output?.message) {
-      throw new Error("No message found in Bedrock response.");
+      const command = new ConverseCommand({
+        modelId: this.applicationInferenceProfile ?? this.model,
+        messages: converseMessages,
+        ...(Array.isArray(converseSystem) && converseSystem.length > 0
+          ? { system: converseSystem }
+          : {}),
+        requestMetadata: options.requestMetadata,
+        ...params,
+      });
+      const response = await this.client.send(command, {
+        abortSignal: options.signal,
+      });
+      const { output, ...responseMetadata } = response;
+      if (!output?.message) {
+        throw new Error("No message found in Bedrock response.");
+      }
+
+      const message = convertConverseMessageToLangChainMessage(
+        output.message,
+        responseMetadata
+      );
+      return {
+        generations: [
+          {
+            text: typeof message.content === "string" ? message.content : "",
+            message,
+          },
+        ],
+      };
+    } catch (error) {
+      throw normalizeBedrockError(error);
     }
-
-    const message = convertConverseMessageToLangChainMessage(
-      output.message,
-      responseMetadata
-    );
-    return {
-      generations: [
-        {
-          text: typeof message.content === "string" ? message.content : "",
-          message,
-        },
-      ],
-    };
   }
 
   async *_streamResponseChunks(
@@ -1048,61 +1053,65 @@ export class ChatBedrockConverse
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
-    const { converseMessages, converseSystem } =
-      convertToConverseMessages(messages);
-    const params = this.invocationParams(options);
-    let { streamUsage } = this;
-    if (options.streamUsage !== undefined) {
-      streamUsage = options.streamUsage;
-    }
-    const command = new ConverseStreamCommand({
-      modelId: this.applicationInferenceProfile ?? this.model,
-      messages: converseMessages,
-      ...(Array.isArray(converseSystem) && converseSystem.length > 0
-        ? { system: converseSystem }
-        : {}),
-      requestMetadata: options.requestMetadata,
-      ...params,
-    });
-    const response = await this.client.send(command, {
-      abortSignal: options.signal,
-    });
-    if (response.stream) {
-      for await (const chunk of response.stream) {
-        if (options.signal?.aborted) {
-          return;
-        }
-        if (chunk.contentBlockStart) {
-          yield handleConverseStreamContentBlockStart(chunk.contentBlockStart);
-        } else if (chunk.contentBlockDelta) {
-          const textChatGeneration = handleConverseStreamContentBlockDelta(
-            chunk.contentBlockDelta
-          );
-          yield textChatGeneration;
-          await runManager?.handleLLMNewToken(
-            textChatGeneration.text,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            {
-              chunk: textChatGeneration,
-            }
-          );
-        } else if (chunk.metadata) {
-          yield handleConverseStreamMetadata(chunk.metadata, {
-            streamUsage,
-          });
-        } else {
-          yield new ChatGenerationChunk({
-            text: "",
-            message: new AIMessageChunk({
-              content: "",
-              response_metadata: { ...chunk },
-            }),
-          });
+    try {
+      const { converseMessages, converseSystem } =
+        convertToConverseMessages(messages);
+      const params = this.invocationParams(options);
+      let { streamUsage } = this;
+      if (options.streamUsage !== undefined) {
+        streamUsage = options.streamUsage;
+      }
+      const command = new ConverseStreamCommand({
+        modelId: this.applicationInferenceProfile ?? this.model,
+        messages: converseMessages,
+        ...(Array.isArray(converseSystem) && converseSystem.length > 0
+          ? { system: converseSystem }
+          : {}),
+        requestMetadata: options.requestMetadata,
+        ...params,
+      });
+      const response = await this.client.send(command, {
+        abortSignal: options.signal,
+      });
+      if (response.stream) {
+        for await (const chunk of response.stream) {
+          if (options.signal?.aborted) {
+            return;
+          }
+          if (chunk.contentBlockStart) {
+            yield handleConverseStreamContentBlockStart(chunk.contentBlockStart);
+          } else if (chunk.contentBlockDelta) {
+            const textChatGeneration = handleConverseStreamContentBlockDelta(
+              chunk.contentBlockDelta
+            );
+            yield textChatGeneration;
+            await runManager?.handleLLMNewToken(
+              textChatGeneration.text,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              {
+                chunk: textChatGeneration,
+              }
+            );
+          } else if (chunk.metadata) {
+            yield handleConverseStreamMetadata(chunk.metadata, {
+              streamUsage,
+            });
+          } else {
+            yield new ChatGenerationChunk({
+              text: "",
+              message: new AIMessageChunk({
+                content: "",
+                response_metadata: { ...chunk },
+              }),
+            });
+          }
         }
       }
+    } catch (error) {
+      throw normalizeBedrockError(error);
     }
   }
 
