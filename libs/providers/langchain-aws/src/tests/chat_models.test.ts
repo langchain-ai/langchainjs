@@ -1003,6 +1003,67 @@ describe("applicationInferenceProfile parameter", () => {
       "anthropic.claude-haiku-4-5-20251001-v1:0"
     );
   });
+
+  it("should surface plain object Bedrock errors in non-streaming mode", async () => {
+    const rawError = {
+      message:
+        "The model returned the following errors: Output blocked by content filtering policy",
+    };
+    const mockClient = {
+      send: vi.fn().mockRejectedValue(rawError),
+    } as unknown as BedrockRuntimeClient;
+
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
+      client: mockClient,
+    });
+
+    let thrown: unknown;
+    try {
+      await model.invoke([new HumanMessage("Hello")]);
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(Error);
+    // oxlint-disable-next-line no-instanceof/no-instanceof
+    if (thrown instanceof Error) {
+      expect(thrown.message).toBe(rawError.message);
+      expect(thrown.cause).toEqual(rawError);
+    }
+  });
+
+  it("should surface plain object Bedrock errors in streaming mode", async () => {
+    const rawError = {
+      message:
+        "The model returned the following errors: Output blocked by content filtering policy",
+    };
+    const mockClient = {
+      send: vi.fn().mockRejectedValue(rawError),
+    } as unknown as BedrockRuntimeClient;
+
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
+      streaming: true,
+      client: mockClient,
+    });
+
+    let thrown: unknown;
+    try {
+      await model.invoke([new HumanMessage("Hello")]);
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(Error);
+    // oxlint-disable-next-line no-instanceof/no-instanceof
+    if (thrown instanceof Error) {
+      expect(thrown.message).toBe(rawError.message);
+      expect(thrown.cause).toEqual(rawError);
+    }
+  });
 });
 
 describe("tool_choice works for supported models", () => {
