@@ -26,7 +26,8 @@
     "typegen": "pnpm run typegen:sparktype && pnpm run typegen:profiles",
     "typegen:sparktype": "sparktype generate",
     "typegen:profiles": "pnpm --filter @langchain/model-profiles make --config profiles.toml",
-    "typegen:check": "sparktype check"
+    "typegen:check": "sparktype check",
+    "typegen:fetch": "curl -o src/openapi/gemini-openapi.json 'https://generativelanguage.googleapis.com/$discovery/OPENAPI3_0?version=v1beta'"
   },
   "dependencies": {
     "eventsource-parser": "^3.0.6",

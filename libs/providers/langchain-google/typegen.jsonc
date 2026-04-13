@@ -2,15 +2,15 @@
   "$schema": "https://hntrl.github.io/sparktype/schema.json",
   "specs": {
     "gemini": {
-      "url": "https://generativelanguage.googleapis.com/$discovery/OPENAPI3_0?version=v1beta",
-    },
+      "path": "src/openapi/gemini-openapi.json"
+    }
   },
   "outputs": [
     {
       "path": "./src/chat_models/api-types.ts",
       "format": "typescript",
       "options": {
-        "widenEnums": true,
+        "widenEnums": true
       },
       "contents": [
         {
@@ -20,7 +20,6 @@
             "gemini:HarmCategory",
             "gemini:ThinkingConfig",
             "gemini:GenerativeLanguageModality",
-            "gemini:MediaResolution",
             "gemini:SpeechConfig",
             "gemini:VoiceConfig",
             "gemini:MultiSpeakerVoiceConfig",
@@ -46,8 +45,8 @@
                 "gemini:RetrievalConfig",
                 "gemini:ToolConfig",
                 // mapped as GeminiFunctionSchema
-                "gemini:Schema",
-              ],
+                "gemini:Schema"
+              ]
             },
             // in/out types
             "gemini:GenerateContentRequest",
@@ -73,10 +72,10 @@
             "gemini:ModalityTokenCount",
             "gemini:UsageMetadata",
             "gemini:PromptFeedback",
-            "gemini:GenerateContentResponse",
-          ],
-        },
-      ],
-    },
-  ],
+            "gemini:GenerateContentResponse"
+          ]
+        }
+      ]
+    }
+  ]
 }
