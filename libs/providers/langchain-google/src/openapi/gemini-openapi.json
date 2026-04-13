@@ -88,6 +88,42 @@
       }
     },
     "schemas": {
+      "MediaResolution": {
+        "enum": [
+          "MEDIA_RESOLUTION_UNSPECIFIED",
+          "MEDIA_RESOLUTION_LOW",
+          "MEDIA_RESOLUTION_MEDIUM",
+          "MEDIA_RESOLUTION_HIGH"
+        ],
+        "type": "string",
+        "description": "Optional. If specified, the media resolution specified will be used.",
+        "x-google-enum-descriptions": [
+          "Media resolution has not been set.",
+          "Media resolution set to low (64 tokens).",
+          "Media resolution set to medium (256 tokens).",
+          "Media resolution set to high (zoomed reframing with 256 tokens)."
+        ]
+      },
+      "ToolType": {
+        "type": "string",
+        "enumDescriptions": [
+          "Unspecified tool type.",
+          "Google search tool, maps to Tool.google_search.search_types.web_search.",
+          "Image search tool, maps to Tool.google_search.search_types.image_search.",
+          "URL context tool, maps to Tool.url_context.",
+          "Google maps tool, maps to Tool.google_maps.",
+          "File search tool, maps to Tool.file_search."
+        ],
+        "description": "Required. The type of tool that was called.",
+        "enum": [
+          "TOOL_TYPE_UNSPECIFIED",
+          "GOOGLE_SEARCH_WEB",
+          "GOOGLE_SEARCH_IMAGE",
+          "URL_CONTEXT",
+          "GOOGLE_MAPS",
+          "FILE_SEARCH"
+        ]
+      },
       "GenerateMessageRequest": {
         "description": "Request to generate a message response from the model.",
         "properties": {
