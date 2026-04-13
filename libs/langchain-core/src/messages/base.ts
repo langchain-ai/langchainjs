@@ -566,11 +566,45 @@ function hasMergeableId(value: unknown): value is { id: string | number } {
 }
 
 /**
+ * Whether two content blocks with the same merge key may be merged when their
+ * `type` fields differ. Most blocks must match on `type`; exceptions cover
+ * provider-specific streaming pairs (e.g. Anthropic text_block + text_block_delta).
+ */
+function contentBlockTypesAllowMerge(leftItem: unknown, item: unknown): boolean {
+  if (
+    typeof leftItem !== "object" ||
+    leftItem === null ||
+    typeof item !== "object" ||
+    item === null
+  ) {
+    return true;
+  }
+  if (!("type" in leftItem) || !("type" in item)) {
+    return true;
+  }
+  const leftType = (leftItem as { type: unknown }).type;
+  const rightType = (item as { type: unknown }).type;
+  if (leftType === rightType) {
+    return true;
+  }
+  if (
+    (leftType === "text_block" && rightType === "text_block_delta") ||
+    (leftType === "text_block_delta" && rightType === "text_block")
+  ) {
+    return true;
+  }
+  return false;
+}
+
+/**
  * Find the index of an existing item in `merged` that should be merged with
  * `item`, based on index and/or id matching.
  *
  * Matching priority:
- * 1. Both have index → match on index (+ id when both present)
+ * 1. Both have index → match on index and compatible content block type (+ id when both present).
+ *    Indices from different provider namespaces (e.g. summary_index vs content_index) can
+ *    collide; incompatible `type` values prevent merging (e.g. reasoning vs text). Streaming
+ *    pairs like text_block + text_block_delta still merge.
  * 2. Neither has index, both have id → match on id alone
  * 3. Otherwise → no match (item should be appended)
  */
@@ -591,6 +625,9 @@ function _findMergeTarget<Content extends ContentBlock>(
       // Both have index: match on index, with id as tiebreaker
       const indicesMatch = leftItem.index === item.index;
       if (!indicesMatch) return false;
+      if (!contentBlockTypesAllowMerge(leftItem, item)) {
+        return false;
+      }
       if (leftHasId && itemHasId) return leftItem.id === item.id;
       return true; // indices match, one or both missing id
     }

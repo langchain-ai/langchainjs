@@ -178,6 +178,42 @@ test("_mergeLists merges blocks by numeric index", () => {
   ]);
 });
 
+test("AIMessageChunk.concat does not merge reasoning and text blocks that share the same index (issue #10691)", () => {
+  const chunk1 = new AIMessageChunk({
+    content: [
+      {
+        type: "reasoning",
+        reasoning: "The user wants",
+        index: 0,
+      },
+    ],
+  });
+
+  const chunk2 = new AIMessageChunk({
+    content: [
+      {
+        type: "text",
+        text: "Here are the results",
+        index: 0,
+      },
+    ],
+  });
+
+  const merged = chunk1.concat(chunk2);
+  expect(merged.content).toEqual([
+    {
+      type: "reasoning",
+      reasoning: "The user wants",
+      index: 0,
+    },
+    {
+      type: "text",
+      text: "Here are the results",
+      index: 0,
+    },
+  ]);
+});
+
 test("_mergeLists merges blocks by string index", () => {
   const chunk1 = new AIMessageChunk({
     content: [
