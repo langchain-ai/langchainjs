@@ -44,6 +44,8 @@ export interface LangChainTracerFields extends BaseCallbackHandlerInput {
   projectName?: string;
   client?: LangSmithTracingClientInterface;
   replicas?: RunTreeConfig["replicas"];
+  metadata?: Record<string, unknown>;
+  tags?: string[];
 }
 
 /**
@@ -85,14 +87,20 @@ export class LangChainTracer
 
   usesRunTreeMap = true;
 
-  constructor(fields: LangChainTracerFields = {}) {
+  tracingMetadata?: Record<string, unknown>;
+
+  tracingTags: string[] = [];
+
+  constructor(protected fields: LangChainTracerFields = {}) {
     super(fields);
-    const { exampleId, projectName, client, replicas } = fields;
+    const { exampleId, projectName, client, replicas, metadata, tags } = fields;
 
     this.projectName = projectName ?? getDefaultProjectName();
     this.replicas = replicas;
     this.exampleId = exampleId;
     this.client = client ?? getDefaultLangChainClientSingleton();
+    this.tracingMetadata = metadata ? { ...metadata } : undefined;
+    this.tracingTags = tags ?? [];
 
     const traceableTree = LangChainTracer.getTraceableRunTree();
     if (traceableTree) {
@@ -105,6 +113,7 @@ export class LangChainTracer
   }
 
   async onRunCreate(run: Run): Promise<void> {
+    _patchMissingTracingDefaults(this, run);
     if (!run.extra?.lc_defers_inputs) {
       const runTree = this.getRunTreeWithTracingConfig(run.id);
       await runTree?.postRun();
@@ -112,6 +121,7 @@ export class LangChainTracer
   }
 
   async onRunUpdate(run: Run): Promise<void> {
+    _patchMissingTracingDefaults(this, run);
     const runTree = this.getRunTreeWithTracingConfig(run.id);
     if (run.extra?.lc_defers_inputs) {
       await runTree?.postRun();
@@ -137,6 +147,43 @@ export class LangChainTracer
         run.extra.metadata = metadata;
       }
     }
+  }
+
+  copyWithTracingConfig({
+    metadata,
+    tags,
+  }: {
+    metadata?: Record<string, unknown>;
+    tags?: string[];
+  }): LangChainTracer {
+    let mergedMetadata: Record<string, unknown> | undefined;
+    if (metadata === undefined) {
+      mergedMetadata = this.tracingMetadata
+        ? { ...this.tracingMetadata }
+        : undefined;
+    } else if (this.tracingMetadata === undefined) {
+      mergedMetadata = { ...metadata };
+    } else {
+      mergedMetadata = { ...this.tracingMetadata };
+      for (const [key, value] of Object.entries(metadata)) {
+        if (!Object.prototype.hasOwnProperty.call(mergedMetadata, key)) {
+          mergedMetadata[key] = value;
+        }
+      }
+    }
+
+    const mergedTags = tags
+      ? Array.from(new Set([...this.tracingTags, ...tags]))
+      : [...this.tracingTags];
+
+    const copied = new LangChainTracer({
+      ...this.fields,
+      metadata: mergedMetadata,
+      tags: mergedTags,
+    });
+    copied.runMap = this.runMap;
+    copied.runTreeMap = this.runTreeMap;
+    return copied;
   }
 
   getRun(id: string): Run | undefined {
@@ -172,6 +219,13 @@ export class LangChainTracer
     this.replicas = runTree.replicas ?? this.replicas;
     this.projectName = runTree.project_name ?? this.projectName;
     this.exampleId = runTree.reference_example_id ?? this.exampleId;
+    this.fields = {
+      ...this.fields,
+      client: this.client,
+      replicas: this.replicas,
+      projectName: this.projectName,
+      exampleId: this.exampleId,
+    };
   }
 
   getRunTreeWithTracingConfig(id: string): RunTree | undefined {
@@ -202,5 +256,29 @@ export class LangChainTracer
     } catch {
       return undefined;
     }
+  }
+}
+
+function _patchMissingTracingDefaults(tracer: LangChainTracer, run: Run): void {
+  if (tracer.tracingMetadata) {
+    run.extra ??= {};
+    const metadata: Record<string, unknown> =
+      (run.extra.metadata as Record<string, unknown> | undefined) ?? {};
+    let didPatchMetadata = false;
+    for (const [key, value] of Object.entries(tracer.tracingMetadata)) {
+      if (!Object.prototype.hasOwnProperty.call(metadata, key)) {
+        metadata[key] = value;
+        didPatchMetadata = true;
+      }
+    }
+    if (didPatchMetadata) {
+      run.extra.metadata = metadata;
+    }
+  }
+
+  if (tracer.tracingTags.length > 0) {
+    run.tags = Array.from(
+      new Set([...(run.tags ?? []), ...tracer.tracingTags])
+    );
   }
 }

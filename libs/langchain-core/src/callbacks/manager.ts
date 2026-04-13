@@ -33,6 +33,8 @@ type BaseCallbackManagerMethods = {
 export interface CallbackManagerOptions {
   verbose?: boolean;
   tracing?: boolean;
+  tracerInheritableMetadata?: Record<string, unknown>;
+  tracerInheritableTags?: string[];
 }
 
 export type Callbacks =
@@ -1341,6 +1343,31 @@ export class CallbackManager
         callbackManager.addMetadata(inheritableMetadata ?? {});
         callbackManager.addMetadata(localMetadata ?? {}, false);
       }
+    }
+    const tracerInheritableMetadata = options?.tracerInheritableMetadata;
+    const tracerInheritableTags = options?.tracerInheritableTags;
+
+    if (
+      callbackManager &&
+      (tracerInheritableMetadata || tracerInheritableTags)
+    ) {
+      callbackManager.handlers = callbackManager.handlers.map((handler) =>
+        handler instanceof LangChainTracer
+          ? handler.copyWithTracingConfig({
+              metadata: tracerInheritableMetadata,
+              tags: tracerInheritableTags,
+            })
+          : handler
+      );
+      callbackManager.inheritableHandlers =
+        callbackManager.inheritableHandlers.map((handler) =>
+          handler instanceof LangChainTracer
+            ? handler.copyWithTracingConfig({
+                metadata: tracerInheritableMetadata,
+                tags: tracerInheritableTags,
+              })
+            : handler
+        );
     }
 
     return callbackManager;

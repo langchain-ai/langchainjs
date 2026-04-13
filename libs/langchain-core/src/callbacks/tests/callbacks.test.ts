@@ -1,4 +1,4 @@
-import { test, expect } from "vitest";
+import { test, expect, vi } from "vitest";
 import * as uuid from "uuid";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { CallbackManager } from "../manager.js";
@@ -12,6 +12,7 @@ import type { LLMResult } from "../../outputs.js";
 import { RunnableLambda } from "../../runnables/base.js";
 import { AsyncLocalStorageProviderSingleton } from "../../singletons/index.js";
 import { awaitAllCallbacks } from "../promises.js";
+import { LangChainTracer } from "../../tracers/tracer_langchain.js";
 
 class FakeCallbackHandler extends BaseCallbackHandler {
   name = `fake-${uuid.v4()}`;
@@ -477,6 +478,64 @@ test("CallbackManager.copy()", () => {
     handler1.name,
     handler3.name,
   ]);
+});
+
+test("langsmith inheritable metadata/tags apply only to LangChainTracer", async () => {
+  const captured: { metadata?: Record<string, unknown>; tags?: string[] }[] =
+    [];
+  class CaptureHandler extends BaseCallbackHandler {
+    name = `capture-${uuid.v4()}`;
+
+    async handleChainStart(
+      _chain: Serialized,
+      _inputs: ChainValues,
+      _runId: string,
+      _runType?: string,
+      tags?: string[],
+      metadata?: Record<string, unknown>
+    ) {
+      captured.push({ tags, metadata });
+    }
+  }
+
+  const mockClient = {
+    createRun: vi.fn().mockResolvedValue(undefined),
+    updateRun: vi.fn().mockResolvedValue(undefined),
+  };
+  const tracer = new LangChainTracer({ client: mockClient as any });
+  const capture = new CaptureHandler();
+
+  const callbacks = CallbackManager.configure(
+    [tracer, capture],
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    {
+      tracerInheritableMetadata: { tracer_only: "yes" },
+      tracerInheritableTags: ["tenant:alpha"],
+    }
+  );
+
+  const configuredTracer = callbacks?.handlers.find(
+    (handler) => handler instanceof LangChainTracer
+  );
+  expect(configuredTracer).toBeDefined();
+  expect(configuredTracer).not.toBe(tracer);
+
+  const runnable = RunnableLambda.from((x: string) => x);
+  await runnable.invoke("hello", { callbacks: callbacks! });
+  await awaitAllCallbacks();
+
+  expect(captured.length).toBeGreaterThan(0);
+  expect(captured[0].metadata?.tracer_only).toBeUndefined();
+  expect(captured[0].tags).not.toContain("tenant:alpha");
+
+  expect(mockClient.createRun).toHaveBeenCalled();
+  const postedRun = mockClient.createRun.mock.calls[0]?.[0];
+  expect(postedRun.extra?.metadata?.tracer_only).toBe("yes");
+  expect(postedRun.tags).toContain("tenant:alpha");
 });
 
 class FakeCallbackHandlerWithErrors extends FakeCallbackHandler {
