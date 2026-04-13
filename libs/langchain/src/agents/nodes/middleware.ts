@@ -21,27 +21,19 @@ type NodeOutput<TStateSchema extends Record<string, any>> =
   | Command<any, TStateSchema, string>
   | { jumpTo?: JumpToTarget };
 
-export interface MiddlewareNodeOptions {
-  getState: () => Record<string, unknown>;
-}
-
 export abstract class MiddlewareNode<
   TStateSchema extends Record<string, any>,
   TContextSchema extends Record<string, any>,
 > extends RunnableCallable<TStateSchema, NodeOutput<TStateSchema>> {
-  #options: MiddlewareNodeOptions;
-
   abstract middleware: AgentMiddleware<
     z.ZodObject<z.ZodRawShape>,
     z.ZodObject<z.ZodRawShape>
   >;
 
   constructor(
-    fields: RunnableCallableArgs<TStateSchema, NodeOutput<TStateSchema>>,
-    options: MiddlewareNodeOptions
+    fields: RunnableCallableArgs<TStateSchema, NodeOutput<TStateSchema>>
   ) {
     super(fields);
-    this.#options = options;
   }
 
   abstract runHook(
@@ -85,7 +77,6 @@ export abstract class MiddlewareNode<
     }
 
     const state: TStateSchema = {
-      ...this.#options.getState(),
       ...invokeState,
       /**
        * don't overwrite possible outdated messages from other middleware nodes

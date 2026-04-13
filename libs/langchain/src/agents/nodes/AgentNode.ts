@@ -106,10 +106,10 @@ export interface AgentNodeOptions<
   shouldReturnDirect: Set<string>;
   signal?: AbortSignal;
   systemMessage: SystemMessage;
-  wrapModelCallHookMiddleware?: [
-    AgentMiddleware,
-    () => Record<string, unknown>,
-  ][];
+  wrapModelCallHookMiddleware?: (
+    | AgentMiddleware
+    | [AgentMiddleware, (...args: unknown[]) => Record<string, unknown>]
+  )[];
 }
 
 interface NativeResponseFormat {
@@ -461,11 +461,13 @@ export class AgentNode<
      * Build composed handler from last to first so first middleware becomes outermost
      */
     for (let i = wrapperMiddleware.length - 1; i >= 0; i--) {
-      const [middleware, getMiddlewareState] = wrapperMiddleware[i];
+      const middlewareEntry = wrapperMiddleware[i];
+      const middleware = Array.isArray(middlewareEntry)
+        ? middlewareEntry[0]
+        : middlewareEntry;
       if (middleware.wrapModelCall) {
         const innerHandler = wrappedHandler;
         const currentMiddleware = middleware;
-        const currentGetState = getMiddlewareState;
 
         wrappedHandler = async (
           request: ModelRequest<
@@ -512,7 +514,6 @@ export class AgentNode<
                     state
                   )
                 : {}),
-              ...currentGetState(),
               messages: state.messages,
             } as InternalAgentState<StructuredResponseFormat>,
             runtime,
