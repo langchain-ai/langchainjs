@@ -279,17 +279,19 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       );
       expect(deltas.length).toBe(2);
 
-      // First delta: accumulated = "Hello"
+      // First delta: incremental "Hello"
       const d1 = deltas[0] as {
-        content: { text: string };
+        delta: { type: string; text?: string };
       };
-      expect(d1.content.text).toBe("Hello");
+      expect(d1.delta.type).toBe("text-delta");
+      expect(d1.delta.text).toBe("Hello");
 
-      // Second delta: accumulated = "Hello world"
+      // Second delta: incremental " world"
       const d2 = deltas[1] as {
-        content: { text: string };
+        delta: { type: string; text?: string };
       };
-      expect(d2.content.text).toBe("Hello world");
+      expect(d2.delta.type).toBe("text-delta");
+      expect(d2.delta.text).toBe(" world");
     });
 
     test("content-block-finish carries finalized text", async () => {
@@ -344,24 +346,20 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
           e.type === "content-block-delta" &&
           "index" in e &&
           e.index === 0 &&
-          "content" in e &&
-          (e.content as { type: string }).type === "reasoning"
+          "delta" in e &&
+          (e.delta as { type: string }).type === "reasoning-delta"
       );
-      // 3 deltas: 2 thinking_delta + 1 signature_delta
-      // (all have accumulated block type "reasoning")
-      expect(reasoningDeltas.length).toBe(3);
+      expect(reasoningDeltas.length).toBe(2);
 
-      // After the 2nd delta, reasoning should be fully accumulated
-      const afterThinking = reasoningDeltas[1] as {
-        content: { reasoning: string };
+      const rd1 = reasoningDeltas[0] as {
+        delta: { type: string; reasoning: string };
       };
-      expect(afterThinking.content.reasoning).toBe("Let me reason...");
+      expect(rd1.delta.reasoning).toBe("Let me");
 
-      // After the signature delta, reasoning is unchanged
-      const afterSig = reasoningDeltas[2] as {
-        content: { reasoning: string };
+      const rd2 = reasoningDeltas[1] as {
+        delta: { type: string; reasoning: string };
       };
-      expect(afterSig.content.reasoning).toBe("Let me reason...");
+      expect(rd2.delta.reasoning).toBe(" reason...");
 
       // Reasoning finish
       const reasoningFinish = events.find(
@@ -400,16 +398,15 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
         events.push(event);
       }
 
-      // Signature delta adds a signature field to the accumulated reasoning block
-      const allIndex0Deltas = events.filter(
-        (e) => e.type === "content-block-delta" && "index" in e && e.index === 0
-      );
-      // The last delta at index 0 should have the signature field
-      const lastDelta = allIndex0Deltas[allIndex0Deltas.length - 1] as {
-        content: { type: string; signature?: string };
-      };
-      expect(lastDelta.content.type).toBe("reasoning");
-      expect(lastDelta.content.signature).toBe("sig_abc");
+      // Signature delta should be emitted as a block-delta
+      const sigDelta = events.find(
+        (e) =>
+          e.type === "content-block-delta" &&
+          "delta" in e &&
+          (e.delta as { type: string }).type === "block-delta"
+      ) as { delta: { type: string; content: { signature?: string } } };
+      expect(sigDelta).toBeDefined();
+      expect(sigDelta.delta.content.signature).toBe("sig_abc");
     });
   });
 
@@ -432,16 +429,18 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       expect(toolStart.content.name).toBe("web_search");
       expect(toolStart.content.id).toBe("toolu_01ABC");
 
-      // Deltas accumulate args
+      // Deltas carry incremental tool-call-delta
       const toolDeltas = events.filter(
         (e) => e.type === "content-block-delta" && "index" in e && e.index === 1
       );
       expect(toolDeltas.length).toBe(2);
 
-      const lastDelta = toolDeltas[1] as {
-        content: { args: string };
-      };
-      expect(lastDelta.content.args).toBe('{"query":"weather"}');
+      const td1 = toolDeltas[0] as { delta: { type: string; args?: string } };
+      expect(td1.delta.type).toBe("tool-call-delta");
+      expect(td1.delta.args).toBe('{"query"');
+
+      const td2 = toolDeltas[1] as { delta: { type: string; args?: string } };
+      expect(td2.delta.args).toBe(':"weather"}');
     });
 
     test("tool call finish has parsed args", async () => {

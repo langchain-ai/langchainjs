@@ -1,21 +1,13 @@
 /**
  * Typed stream classes for chat model streaming.
  *
- * Provides {@link ChatModelStream} and typed sub-stream accessors that
- * implement both `AsyncIterable` (for incremental consumption) and
- * `PromiseLike` (for simple `await`).
- *
  * @module
  */
 
 import { AIMessage } from "../messages/ai.js";
 import type { ContentBlock } from "../messages/content/index.js";
 import type { UsageMetadata } from "../messages/metadata.js";
-import type {
-  ChatModelStreamEvent,
-  ContentBlockDeltaEvent,
-  ContentBlockFinishEvent,
-} from "./event.js";
+import type { ChatModelStreamEvent, ContentBlockDelta } from "./event.js";
 
 // ─── Replay Buffer ──────────────────────────────────────────────
 
@@ -35,7 +27,6 @@ class ReplayBuffer {
 
   push(event: ChatModelStreamEvent): void {
     this.events.push(event);
-    // Wake ALL waiting consumers — each reads from their own cursor
     const toWake = this.waiters.splice(0);
     for (const waiter of toWake) {
       waiter();
@@ -59,19 +50,13 @@ class ReplayBuffer {
     }
   }
 
-  /**
-   * Create an async iterator that replays cached events from the
-   * beginning, then follows live events as they arrive.
-   */
   async *iterate(): AsyncGenerator<ChatModelStreamEvent> {
-    // Fast path: stream already done, replay everything
     if (this.finished) {
       if (this.error) throw this.error;
       yield* this.events;
       return;
     }
 
-    // Live path: follow events as they arrive
     let cursor = 0;
     while (true) {
       while (cursor < this.events.length) {
@@ -82,7 +67,6 @@ class ReplayBuffer {
         if (this.error) throw this.error;
         return;
       }
-      // Wait for new data
       await new Promise<void>((resolve) => {
         if (cursor < this.events.length || this.finished) {
           resolve();
@@ -94,47 +78,46 @@ class ReplayBuffer {
   }
 }
 
-// ─── Helpers ────────────────────────────────────────────────────
+// ─── Accumulator ────────────────────────────────────────────────
 
-/** Extract a string field from a loosely-typed content block. */
-function getStringField(
-  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-  obj: Record<string, any>,
-  field: string
-): string {
-  const val = obj[field];
-  return typeof val === "string" ? val : "";
-}
-
-/** Check if a delta event carries a text content block. */
-function isTextDelta(
-  event: ChatModelStreamEvent
-): event is ContentBlockDeltaEvent & {
-  content: { type: "text"; text?: string };
-} {
-  return event.type === "content-block-delta" && event.content.type === "text";
-}
-
-/** Check if a delta event carries a reasoning content block. */
-function isReasoningDelta(
-  event: ChatModelStreamEvent
-): event is ContentBlockDeltaEvent & {
-  content: { type: "reasoning"; reasoning?: string };
-} {
-  return (
-    event.type === "content-block-delta" && event.content.type === "reasoning"
-  );
-}
-
-/** Check if a finish event carries a tool_call content block. */
-function isToolCallFinish(
-  event: ChatModelStreamEvent
-): event is ContentBlockFinishEvent & {
-  content: ContentBlock.Tools.ToolCall;
-} {
-  return (
-    event.type === "content-block-finish" && event.content.type === "tool_call"
-  );
+/**
+ * Apply a typed delta to an accumulated content block.
+ *
+ * - `text-delta` → append text
+ * - `reasoning-delta` → append reasoning
+ * - `tool-call-delta` → append args, set id/name
+ * - `block-delta` → overwrite fields
+ *
+ * @internal
+ */
+function applyDelta(
+  block: ContentBlock,
+  delta: ContentBlockDelta
+): ContentBlock {
+  switch (delta.type) {
+    case "text-delta":
+      return {
+        ...block,
+        text: ((block as { text?: string }).text ?? "") + delta.text,
+      };
+    case "reasoning-delta":
+      return {
+        ...block,
+        reasoning:
+          ((block as { reasoning?: string }).reasoning ?? "") + delta.reasoning,
+      };
+    case "tool-call-delta":
+      return {
+        ...block,
+        ...(delta.id != null ? { id: delta.id } : {}),
+        ...(delta.name != null ? { name: delta.name } : {}),
+        args: ((block as { args?: string }).args ?? "") + (delta.args ?? ""),
+      };
+    case "block-delta":
+      return { ...block, ...delta.content };
+    default:
+      return block;
+  }
 }
 
 // ─── Sub-Stream: Text ───────────────────────────────────────────
@@ -142,7 +125,7 @@ function isToolCallFinish(
 /**
  * Typed stream for text content.
  *
- * - **Iterate**: yields incremental text deltas (new tokens only).
+ * - **Iterate**: yields incremental text deltas.
  * - **Await**: resolves to the complete concatenated text.
  * - **`.full`**: yields the running accumulated text after each delta.
  */
@@ -157,44 +140,35 @@ export class TextContentStream
     this._buffer = buffer;
   }
 
-  /**
-   * Yields the accumulated text so far after each delta.
-   */
+  /** Yields the accumulated text so far after each delta. */
   get full(): AsyncIterable<string> {
     const buffer = this._buffer;
     return {
       async *[Symbol.asyncIterator]() {
+        let accumulated = "";
         for await (const event of buffer.iterate()) {
-          if (isTextDelta(event)) {
-            yield getStringField(
-              event.content as Record<string, unknown>,
-              "text"
-            );
+          if (
+            event.type === "content-block-delta" &&
+            event.delta.type === "text-delta"
+          ) {
+            accumulated += event.delta.text;
+            yield accumulated;
           }
         }
       },
     };
   }
 
-  /**
-   * Yields incremental text deltas (new tokens only).
-   * Computed by diffing successive accumulated states.
-   */
+  /** Yields incremental text deltas. */
   [Symbol.asyncIterator](): AsyncIterator<string> {
     const buffer = this._buffer;
     async function* gen() {
-      const prevLen = new Map<number, number>();
       for await (const event of buffer.iterate()) {
-        if (isTextDelta(event)) {
-          const full = getStringField(
-            event.content as Record<string, unknown>,
-            "text"
-          );
-          const prev = prevLen.get(event.index) ?? 0;
-          if (full.length > prev) {
-            yield full.slice(prev);
-            prevLen.set(event.index, full.length);
-          }
+        if (
+          event.type === "content-block-delta" &&
+          event.delta.type === "text-delta"
+        ) {
+          yield event.delta.text;
         }
       }
     }
@@ -244,8 +218,11 @@ export class ToolCallsStream
       async *[Symbol.asyncIterator]() {
         const calls: Array<ContentBlock.Tools.ToolCall> = [];
         for await (const event of buffer.iterate()) {
-          if (isToolCallFinish(event)) {
-            calls.push(event.content);
+          if (
+            event.type === "content-block-finish" &&
+            event.content.type === "tool_call"
+          ) {
+            calls.push(event.content as ContentBlock.Tools.ToolCall);
             yield [...calls];
           }
         }
@@ -257,8 +234,11 @@ export class ToolCallsStream
     const buffer = this._buffer;
     async function* gen() {
       for await (const event of buffer.iterate()) {
-        if (isToolCallFinish(event)) {
-          yield event.content;
+        if (
+          event.type === "content-block-finish" &&
+          event.content.type === "tool_call"
+        ) {
+          yield event.content as ContentBlock.Tools.ToolCall;
         }
       }
     }
@@ -305,12 +285,14 @@ export class ReasoningContentStream
     const buffer = this._buffer;
     return {
       async *[Symbol.asyncIterator]() {
+        let accumulated = "";
         for await (const event of buffer.iterate()) {
-          if (isReasoningDelta(event)) {
-            yield getStringField(
-              event.content as Record<string, unknown>,
-              "reasoning"
-            );
+          if (
+            event.type === "content-block-delta" &&
+            event.delta.type === "reasoning-delta"
+          ) {
+            accumulated += event.delta.reasoning;
+            yield accumulated;
           }
         }
       },
@@ -320,18 +302,12 @@ export class ReasoningContentStream
   [Symbol.asyncIterator](): AsyncIterator<string> {
     const buffer = this._buffer;
     async function* gen() {
-      const prevLen = new Map<number, number>();
       for await (const event of buffer.iterate()) {
-        if (isReasoningDelta(event)) {
-          const full = getStringField(
-            event.content as Record<string, unknown>,
-            "reasoning"
-          );
-          const prev = prevLen.get(event.index) ?? 0;
-          if (full.length > prev) {
-            yield full.slice(prev);
-            prevLen.set(event.index, full.length);
-          }
+        if (
+          event.type === "content-block-delta" &&
+          event.delta.type === "reasoning-delta"
+        ) {
+          yield event.delta.reasoning;
         }
       }
     }
@@ -357,9 +333,6 @@ export class ReasoningContentStream
 
 /**
  * Typed stream for usage metadata.
- *
- * - **Iterate**: yields usage snapshots as they arrive.
- * - **Await**: resolves to the final usage snapshot.
  */
 export class UsageMetadataStream
   implements AsyncIterable<UsageMetadata>, PromiseLike<UsageMetadata>
@@ -412,10 +385,6 @@ export class UsageMetadataStream
  *
  * Implements `AsyncIterable<ChatModelStreamEvent>` for raw event access
  * and `PromiseLike<AIMessage>` for simple `await` usage.
- *
- * All sub-streams are replay-safe: multiple consumers reading from the
- * same stream work correctly because each gets its own cursor over the
- * shared buffer.
  */
 export class ChatModelStream
   implements AsyncIterable<ChatModelStreamEvent>, PromiseLike<AIMessage>
@@ -445,37 +414,30 @@ export class ChatModelStream
     }
   }
 
-  /** Iterate over raw {@link ChatModelStreamEvent}s. */
   [Symbol.asyncIterator](): AsyncIterator<ChatModelStreamEvent> {
     return this._buffer.iterate();
   }
 
-  /** Text content deltas / full text. */
   get text(): TextContentStream {
     return new TextContentStream(this._buffer);
   }
 
-  /** Completed tool calls. */
   get toolCalls(): ToolCallsStream {
     return new ToolCallsStream(this._buffer);
   }
 
-  /** Reasoning content (chain-of-thought). */
   get reasoning(): ReasoningContentStream {
     return new ReasoningContentStream(this._buffer);
   }
 
-  /** Usage metadata snapshots. */
   get usage(): UsageMetadataStream {
     return new UsageMetadataStream(this._buffer);
   }
 
-  /** The fully assembled `AIMessage`, available once the stream finishes. */
   get output(): PromiseLike<AIMessage> {
     return { then: (onf, onr) => this._assembleMessage().then(onf, onr) };
   }
 
-  /** Allows `await stream` to resolve to the fully assembled `AIMessage`. */
   then<TResult1 = AIMessage, TResult2 = never>(
     onfulfilled?:
       | ((value: AIMessage) => TResult1 | PromiseLike<TResult1>)
@@ -485,10 +447,7 @@ export class ChatModelStream
     return this._assembleMessage().then(onfulfilled, onrejected);
   }
 
-  /**
-   * Assemble all stream events into a finalized `AIMessage`.
-   * @internal
-   */
+  /** @internal */
   private async _assembleMessage(): Promise<AIMessage> {
     const contentBlocks: Array<ContentBlock | undefined> = [];
     let id: string | undefined;
@@ -504,10 +463,16 @@ export class ChatModelStream
           break;
 
         case "content-block-start":
-        case "content-block-delta":
-          // Overwrite with the latest accumulated snapshot
-          contentBlocks[event.index] = event.content as ContentBlock;
+          contentBlocks[event.index] = event.content;
           break;
+
+        case "content-block-delta": {
+          const current = contentBlocks[event.index];
+          if (current) {
+            contentBlocks[event.index] = applyDelta(current, event.delta);
+          }
+          break;
+        }
 
         case "content-block-finish":
           contentBlocks[event.index] = event.content;

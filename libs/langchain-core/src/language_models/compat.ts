@@ -3,38 +3,25 @@
  * (`ChatGenerationChunk` / `AIMessageChunk`) output to the new
  * `ChatModelStreamEvent` protocol.
  *
- * This module is used by `BaseChatModel._streamChatModelEvents` as
- * the default implementation when a provider has not yet implemented
- * native event streaming.
- *
  * @module
  */
 
-import { AIMessageChunk } from "../messages/ai.js";
+import { isAIMessageChunk } from "../messages/ai.js";
 import type { ContentBlock } from "../messages/content/index.js";
 import type { ChatGenerationChunk } from "../outputs.js";
-import type { ChatModelStreamEvent } from "./event.js";
+import type { ChatModelStreamEvent, ContentBlockDelta } from "./event.js";
 
 /**
  * Convert an async iterable of legacy `ChatGenerationChunk`s into
- * `ChatModelStreamEvent`s.
- *
- * Tracks content blocks by index, synthesizes start/delta/finish events,
- * and emits usage updates. Handles both string content and array content
- * blocks, as well as tool call chunks.
- *
- * @param chunks - The legacy chunk stream from `_streamResponseChunks`.
- * @param options - Optional signal for abort handling.
- * @returns An async generator of {@link ChatModelStreamEvent}.
+ * `ChatModelStreamEvent`s with typed deltas.
  */
 export async function* convertChunksToEvents(
   chunks: AsyncIterable<ChatGenerationChunk>,
   options?: { signal?: AbortSignal }
 ): AsyncGenerator<ChatModelStreamEvent> {
-  // Track active content blocks for the bridge
   const activeBlocks = new Map<
     number,
-    { started: boolean; accumulated: ContentBlock }
+    { type: string; accumulated: ContentBlock }
   >();
   let messageStarted = false;
   let lastUsage:
@@ -46,7 +33,7 @@ export async function* convertChunksToEvents(
 
     const msg = chunk.message;
 
-    // Emit message-start on the first chunk
+    // Message start
     let usageHandledInStart = false;
     if (!messageStarted) {
       messageStarted = true;
@@ -54,8 +41,7 @@ export async function* convertChunksToEvents(
         type: "message-start" as const,
         id: msg.id ?? undefined,
       };
-      // If first chunk has usage (e.g., Anthropic input tokens)
-      if (AIMessageChunk.isInstance(msg) && msg.usage_metadata) {
+      if (isAIMessageChunk(msg) && msg.usage_metadata) {
         (startEvent as { usage?: unknown }).usage = msg.usage_metadata;
         lastUsage = { ...msg.usage_metadata };
         usageHandledInStart = true;
@@ -63,17 +49,15 @@ export async function* convertChunksToEvents(
       yield startEvent;
     }
 
-    // Process content from the chunk
+    // Process content
     const content = msg.content;
     if (typeof content === "string") {
       if (content !== "") {
-        // Simple string content → single text block at index 0
         const blockIndex = 0;
-
         if (!activeBlocks.has(blockIndex)) {
           const initial: ContentBlock.Text = { type: "text", text: "" };
           activeBlocks.set(blockIndex, {
-            started: true,
+            type: "text",
             accumulated: initial,
           });
           yield {
@@ -82,19 +66,15 @@ export async function* convertChunksToEvents(
             content: initial,
           };
         }
-
         const block = activeBlocks.get(blockIndex)!;
-        const prevText = (block.accumulated as ContentBlock.Text).text;
-        const accumulated: ContentBlock.Text = {
-          type: "text",
-          text: prevText + content,
+        block.accumulated = {
+          ...block.accumulated,
+          text: ((block.accumulated as { text?: string }).text ?? "") + content,
         };
-        block.accumulated = accumulated;
-
         yield {
           type: "content-block-delta" as const,
           index: blockIndex,
-          content: accumulated,
+          delta: { type: "text-delta" as const, text: content },
         };
       }
     } else if (Array.isArray(content)) {
@@ -104,7 +84,7 @@ export async function* convertChunksToEvents(
 
         if (!activeBlocks.has(blockIndex)) {
           activeBlocks.set(blockIndex, {
-            started: true,
+            type: part.type,
             accumulated: { ...part },
           });
           yield {
@@ -113,23 +93,21 @@ export async function* convertChunksToEvents(
             content: { ...part },
           };
         } else {
-          // Accumulate into existing block
           const block = activeBlocks.get(blockIndex)!;
-          const accumulated = accumulateContentBlock(block.accumulated, part);
-          block.accumulated = accumulated;
-
+          const delta = contentBlockToDelta(part);
+          block.accumulated = applyDeltaToBlock(block.accumulated, delta);
           yield {
             type: "content-block-delta" as const,
             index: blockIndex,
-            content: accumulated,
+            delta,
           };
         }
       }
     }
 
-    // Handle tool call chunks from the legacy path
+    // Tool call chunks
     if (
-      AIMessageChunk.isInstance(msg) &&
+      isAIMessageChunk(msg) &&
       msg.tool_call_chunks &&
       msg.tool_call_chunks.length > 0
     ) {
@@ -139,44 +117,43 @@ export async function* convertChunksToEvents(
             ? toolChunk.index
             : activeBlocks.size;
 
-        const delta: ContentBlock = {
-          type: "tool_call_chunk" as const,
-          id: toolChunk.id,
-          name: toolChunk.name,
-          args: toolChunk.args,
-          index: blockIndex,
-        };
-
         if (!activeBlocks.has(blockIndex)) {
+          const initial: ContentBlock = {
+            type: "tool_call_chunk" as const,
+            id: toolChunk.id,
+            name: toolChunk.name,
+            args: "",
+            index: blockIndex,
+          };
           activeBlocks.set(blockIndex, {
-            started: true,
-            accumulated: { ...delta },
+            type: "tool_call_chunk",
+            accumulated: initial,
           });
           yield {
             type: "content-block-start" as const,
             index: blockIndex,
-            content: { ...delta },
-          };
-        } else {
-          const block = activeBlocks.get(blockIndex)!;
-          const accumulated = accumulateContentBlock(block.accumulated, delta);
-          block.accumulated = accumulated;
-
-          yield {
-            type: "content-block-delta" as const,
-            index: blockIndex,
-            content: accumulated,
+            content: initial,
           };
         }
+
+        const toolDelta = {
+          type: "tool-call-delta" as const,
+          id: toolChunk.id,
+          name: toolChunk.name,
+          args: toolChunk.args,
+        };
+        const block = activeBlocks.get(blockIndex)!;
+        block.accumulated = applyDeltaToBlock(block.accumulated, toolDelta);
+        yield {
+          type: "content-block-delta" as const,
+          index: blockIndex,
+          delta: toolDelta,
+        };
       }
     }
 
-    // Accumulate usage (legacy chunks use additive usage, not snapshots)
-    if (
-      !usageHandledInStart &&
-      AIMessageChunk.isInstance(msg) &&
-      msg.usage_metadata
-    ) {
+    // Usage
+    if (!usageHandledInStart && isAIMessageChunk(msg) && msg.usage_metadata) {
       const chunkUsage = msg.usage_metadata;
       if (!lastUsage) {
         lastUsage = { ...chunkUsage };
@@ -191,7 +168,7 @@ export async function* convertChunksToEvents(
     }
   }
 
-  // Emit content-block-finish for all active blocks
+  // Finish all blocks
   for (const [index, block] of activeBlocks) {
     const finalized = finalizeContentBlock(block.accumulated);
     yield {
@@ -201,7 +178,6 @@ export async function* convertChunksToEvents(
     };
   }
 
-  // Emit message-finish
   yield {
     type: "message-finish" as const,
     reason: "stop" as const,
@@ -210,58 +186,76 @@ export async function* convertChunksToEvents(
 }
 
 /**
- * Accumulate a content block delta into the running snapshot.
+ * Apply a typed delta to an accumulated content block.
+ * @internal
  */
-export function accumulateContentBlock(
-  accumulated: ContentBlock,
-  delta: ContentBlock
+function applyDeltaToBlock(
+  block: ContentBlock,
+  delta: ContentBlockDelta
 ): ContentBlock {
-  if (accumulated.type === "text" && delta.type === "text") {
-    return {
-      ...accumulated,
-      type: "text" as const,
-      text:
-        (accumulated as ContentBlock.Text).text +
-        ((delta as ContentBlock.Text).text ?? ""),
-    } as ContentBlock.Text;
+  switch (delta.type) {
+    case "text-delta":
+      return {
+        ...block,
+        text: ((block as { text?: string }).text ?? "") + delta.text,
+      };
+    case "reasoning-delta":
+      return {
+        ...block,
+        reasoning:
+          ((block as { reasoning?: string }).reasoning ?? "") + delta.reasoning,
+      };
+    case "tool-call-delta":
+      return {
+        ...block,
+        ...(delta.id != null ? { id: delta.id } : {}),
+        ...(delta.name != null ? { name: delta.name } : {}),
+        args: ((block as { args?: string }).args ?? "") + (delta.args ?? ""),
+      };
+    case "block-delta":
+      return { ...block, ...delta.content };
+    default:
+      return block;
   }
+}
 
-  if (accumulated.type === "reasoning" && delta.type === "reasoning") {
-    return {
-      ...accumulated,
-      type: "reasoning" as const,
-      reasoning:
-        (accumulated as ContentBlock.Reasoning).reasoning +
-        ((delta as ContentBlock.Reasoning).reasoning ?? ""),
-    } as ContentBlock.Reasoning;
+/**
+ * Convert a legacy content block part to a typed delta.
+ * @internal
+ */
+function contentBlockToDelta(part: ContentBlock): ContentBlockDelta {
+  switch (part.type) {
+    case "text":
+      return {
+        type: "text-delta" as const,
+        text: (part as ContentBlock.Text).text ?? "",
+      };
+    case "reasoning":
+      return {
+        type: "reasoning-delta" as const,
+        reasoning: (part as ContentBlock.Reasoning).reasoning ?? "",
+      };
+    case "tool_call_chunk":
+    case "tool_call": {
+      const tc = part as ContentBlock.Tools.ToolCallChunk;
+      return {
+        type: "tool-call-delta" as const,
+        id: tc.id,
+        name: tc.name,
+        args: tc.args,
+      };
+    }
+    default:
+      return {
+        type: "block-delta" as const,
+        content: part,
+      };
   }
-
-  if (
-    (accumulated.type === "tool_call_chunk" ||
-      accumulated.type === "tool_call") &&
-    (delta.type === "tool_call_chunk" || delta.type === "tool_call")
-  ) {
-    const accTC = accumulated as ContentBlock.Tools.ToolCallChunk;
-    const deltaTC = delta as ContentBlock.Tools.ToolCallChunk;
-    return {
-      ...accumulated,
-      type: "tool_call_chunk" as const,
-      id: accTC.id ?? deltaTC.id,
-      name: accTC.name ?? deltaTC.name,
-      args: (accTC.args ?? "") + (deltaTC.args ?? ""),
-      index: accTC.index ?? deltaTC.index,
-    } as ContentBlock.Tools.ToolCallChunk;
-  }
-
-  // For block types we don't know how to merge, just spread the delta over
-  return { ...accumulated, ...delta };
 }
 
 /**
  * Finalize a content block for the finish event.
- *
- * For tool calls, attempts to parse the accumulated args JSON string
- * into an object, upgrading from `tool_call_chunk` to `tool_call`.
+ * For tool calls, parse the accumulated JSON args string.
  */
 export function finalizeContentBlock(block: ContentBlock): ContentBlock {
   if (block.type === "tool_call_chunk") {
@@ -270,7 +264,6 @@ export function finalizeContentBlock(block: ContentBlock): ContentBlock {
     try {
       parsedArgs = JSON.parse(chunk.args ?? "{}");
     } catch {
-      // If JSON parsing fails, return as invalid tool call
       return {
         type: "invalid_tool_call" as const,
         id: chunk.id,
