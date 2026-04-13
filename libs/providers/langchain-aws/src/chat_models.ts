@@ -1079,7 +1079,9 @@ export class ChatBedrockConverse
             return;
           }
           if (chunk.contentBlockStart) {
-            yield handleConverseStreamContentBlockStart(chunk.contentBlockStart);
+            yield handleConverseStreamContentBlockStart(
+              chunk.contentBlockStart
+            );
           } else if (chunk.contentBlockDelta) {
             const textChatGeneration = handleConverseStreamContentBlockDelta(
               chunk.contentBlockDelta
