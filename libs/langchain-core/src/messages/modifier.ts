@@ -1,7 +1,9 @@
 import { BaseMessage, BaseMessageFields } from "./base.js";
 
-export interface RemoveMessageFields
-  extends Omit<BaseMessageFields, "content"> {
+export interface RemoveMessageFields extends Omit<
+  BaseMessageFields,
+  "content"
+> {
   /**
    * The ID of the message to remove.
    */
