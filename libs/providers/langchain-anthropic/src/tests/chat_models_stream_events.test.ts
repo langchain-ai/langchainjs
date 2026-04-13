@@ -404,9 +404,9 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
           e.type === "content-block-delta" &&
           "delta" in e &&
           (e.delta as { type: string }).type === "block-delta"
-      ) as { delta: { type: string; content: { signature?: string } } };
+      ) as { delta: { type: string; fields?: { signature?: string } } };
       expect(sigDelta).toBeDefined();
-      expect(sigDelta.delta.content.signature).toBe("sig_abc");
+      expect(sigDelta.delta.fields?.signature).toBe("sig_abc");
     });
   });
 
@@ -435,12 +435,17 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       );
       expect(toolDeltas.length).toBe(2);
 
-      const td1 = toolDeltas[0] as { delta: { type: string; args?: string } };
-      expect(td1.delta.type).toBe("tool-call-delta");
-      expect(td1.delta.args).toBe('{"query"');
+      const td1 = toolDeltas[0] as {
+        delta: { type: string; fields?: { args?: string } };
+      };
+      expect(td1.delta.type).toBe("block-delta");
+      expect(td1.delta.fields?.args).toBe('{"query"');
 
-      const td2 = toolDeltas[1] as { delta: { type: string; args?: string } };
-      expect(td2.delta.args).toBe(':"weather"}');
+      const td2 = toolDeltas[1] as {
+        delta: { type: string; fields?: { args?: string } };
+      };
+      expect(td2.delta.type).toBe("block-delta");
+      expect(td2.delta.fields?.args).toBe('{"query":"weather"}');
     });
 
     test("tool call finish has parsed args", async () => {

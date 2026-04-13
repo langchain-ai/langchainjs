@@ -136,18 +136,23 @@ export async function* convertChunksToEvents(
           };
         }
 
-        const toolDelta = {
-          type: "tool-call-delta" as const,
-          id: toolChunk.id,
-          name: toolChunk.name,
-          args: toolChunk.args,
-        };
+        // Accumulate tool call args internally, emit as block-delta with snapshot
         const block = activeBlocks.get(blockIndex)!;
-        block.accumulated = applyDeltaToBlock(block.accumulated, toolDelta);
+        const acc = block.accumulated as {
+          args?: string;
+          id?: string;
+          name?: string;
+        };
+        if (toolChunk.id != null) acc.id = toolChunk.id;
+        if (toolChunk.name != null) acc.name = toolChunk.name;
+        acc.args = (acc.args ?? "") + (toolChunk.args ?? "");
         yield {
           type: "content-block-delta" as const,
           index: blockIndex,
-          delta: toolDelta,
+          delta: {
+            type: "block-delta" as const,
+            fields: { ...block.accumulated },
+          },
         };
       }
     }
@@ -205,15 +210,8 @@ function applyDeltaToBlock(
         reasoning:
           ((block as { reasoning?: string }).reasoning ?? "") + delta.reasoning,
       };
-    case "tool-call-delta":
-      return {
-        ...block,
-        ...(delta.id != null ? { id: delta.id } : {}),
-        ...(delta.name != null ? { name: delta.name } : {}),
-        args: ((block as { args?: string }).args ?? "") + (delta.args ?? ""),
-      };
     case "block-delta":
-      return { ...block, ...delta.content };
+      return { ...block, ...delta.fields };
     default:
       return block;
   }
@@ -236,19 +234,15 @@ function contentBlockToDelta(part: ContentBlock): ContentBlockDelta {
         reasoning: (part as ContentBlock.Reasoning).reasoning ?? "",
       };
     case "tool_call_chunk":
-    case "tool_call": {
-      const tc = part as ContentBlock.Tools.ToolCallChunk;
+    case "tool_call":
       return {
-        type: "tool-call-delta" as const,
-        id: tc.id,
-        name: tc.name,
-        args: tc.args,
+        type: "block-delta" as const,
+        fields: part,
       };
-    }
     default:
       return {
         type: "block-delta" as const,
-        content: part,
+        fields: part,
       };
   }
 }

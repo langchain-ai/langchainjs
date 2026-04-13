@@ -68,23 +68,22 @@ describe("ChatModelStreamEvent types", () => {
     }
   });
 
-  test("ContentBlockDeltaEvent with tool-call-delta", () => {
+  test("ContentBlockDeltaEvent with tool call block-delta", () => {
     const event: ContentBlockDeltaEvent = {
       type: "content-block-delta",
       index: 1,
       delta: {
-        type: "tool-call-delta",
-        id: "call_1",
-        name: "search",
-        args: '{"q":"wea',
+        type: "block-delta",
+        fields: {
+          type: "tool_call_chunk",
+          id: "call_1",
+          name: "search",
+          args: '{"q":"wea',
+        },
       },
     };
     expect(event.type).toBe("content-block-delta");
-    expect(event.delta.type).toBe("tool-call-delta");
-    if (event.delta.type === "tool-call-delta") {
-      expect(event.delta.name).toBe("search");
-      expect(event.delta.args).toBe('{"q":"wea');
-    }
+    expect(event.delta.type).toBe("block-delta");
   });
 
   test("ContentBlockDeltaEvent with reasoning-delta", () => {
@@ -105,12 +104,12 @@ describe("ChatModelStreamEvent types", () => {
       index: 0,
       delta: {
         type: "block-delta",
-        content: { type: "reasoning", signature: "sig_abc" },
+        fields: { type: "reasoning", signature: "sig_abc" },
       },
     };
     expect(event.delta.type).toBe("block-delta");
     if (event.delta.type === "block-delta") {
-      expect(event.delta.content.type).toBe("reasoning");
+      expect(event.delta.fields.type).toBe("reasoning");
     }
   });
 
@@ -239,7 +238,10 @@ describe("interleaving semantics", () => {
       {
         type: "content-block-delta",
         index: 1,
-        delta: { type: "tool-call-delta", args: '{"q"' },
+        delta: {
+          type: "block-delta",
+          fields: { type: "tool_call_chunk", args: '{"q"' },
+        },
       },
       {
         type: "content-block-delta",
@@ -254,7 +256,10 @@ describe("interleaving semantics", () => {
       {
         type: "content-block-delta",
         index: 1,
-        delta: { type: "tool-call-delta", args: ':"test"}' },
+        delta: {
+          type: "block-delta",
+          fields: { type: "tool_call_chunk", args: '{"q":"test"}' },
+        },
       },
       {
         type: "content-block-finish",
