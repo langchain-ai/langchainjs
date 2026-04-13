@@ -1,6 +1,7 @@
 import { test, expect, vi } from "vitest";
 import * as uuid from "uuid";
 import { AsyncLocalStorage } from "node:async_hooks";
+import type { LangSmithTracingClientInterface } from "langsmith";
 import { CallbackManager } from "../manager.js";
 import { BaseCallbackHandler, type BaseCallbackHandlerInput } from "../base.js";
 import type { Serialized } from "../../load/serializable.js";
@@ -501,8 +502,8 @@ test("langsmith inheritable metadata/tags apply only to LangChainTracer", async 
   const mockClient = {
     createRun: vi.fn().mockResolvedValue(undefined),
     updateRun: vi.fn().mockResolvedValue(undefined),
-  };
-  const tracer = new LangChainTracer({ client: mockClient as any });
+  } as unknown as LangSmithTracingClientInterface;
+  const tracer = new LangChainTracer({ client: mockClient });
   const capture = new CaptureHandler();
 
   const callbacks = CallbackManager.configure(
