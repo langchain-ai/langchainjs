@@ -274,25 +274,24 @@ function applyAnthropicDelta(
         },
       };
 
-    case "input_json_delta":
+    case "input_json_delta": {
+      const newArgs = (accumulated.args ?? "") + delta.partial_json;
       return {
         typedDelta: {
-          type: "tool-call-delta" as const,
-          args: delta.partial_json,
+          type: "block-delta" as const,
+          fields: { type: accumulated.type, args: newArgs },
         },
-        accumulated: {
-          ...accumulated,
-          args: (accumulated.args ?? "") + delta.partial_json,
-        },
+        accumulated: { ...accumulated, args: newArgs },
       };
+    }
 
     case "citations_delta":
       return {
         typedDelta: {
           type: "block-delta" as const,
-          content: {
+          fields: {
             type: accumulated.type,
-            annotations: [delta.citation],
+            annotations: [...(accumulated.annotations ?? []), delta.citation],
           },
         },
         accumulated: {
@@ -305,7 +304,7 @@ function applyAnthropicDelta(
       return {
         typedDelta: {
           type: "block-delta" as const,
-          content: { type: accumulated.type, signature: delta.signature },
+          fields: { type: accumulated.type, signature: delta.signature },
         },
         accumulated: { ...accumulated, signature: delta.signature },
       };
@@ -314,7 +313,7 @@ function applyAnthropicDelta(
       return {
         typedDelta: {
           type: "block-delta" as const,
-          content: { type: "non_standard", value: { compaction: delta } },
+          fields: { type: "non_standard", value: { compaction: delta } },
         },
         accumulated: {
           ...accumulated,
@@ -326,7 +325,7 @@ function applyAnthropicDelta(
       return {
         typedDelta: {
           type: "block-delta" as const,
-          content: { type: accumulated.type, ...delta },
+          fields: { type: accumulated.type, ...delta },
         },
         accumulated,
       };

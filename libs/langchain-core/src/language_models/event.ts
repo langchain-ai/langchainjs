@@ -61,30 +61,20 @@ export interface ReasoningDelta {
 }
 
 /**
- * Incremental tool call data. **Append** `args` to the block's `args` field.
- * `id` and `name` are set (not appended) if present.
- */
-export interface ToolCallDelta {
-  type: "tool-call-delta";
-  /** Tool call identifier. Set on first delta, not appended. */
-  id?: string;
-  /** Tool name. Set on first delta, not appended. */
-  name?: string;
-  /** Partial JSON arguments string to append. */
-  args?: string;
-}
-
-/**
  * Catch-all delta for content block types without a dedicated delta type.
- * **Overwrite** fields from `content` onto the accumulated block.
+ * **Overwrite** fields from `fields` onto the accumulated block.
  *
- * Used for provider-specific block types like code interpreter output,
+ * The adapter is responsible for accumulating state internally.
+ * Each `block-delta` carries the accumulated snapshot of the fields
+ * it manages, so consumers simply overwrite.
+ *
+ * Used for tool call argument streaming, code interpreter output,
  * signatures, citations, compaction, etc.
  */
 export interface BlockDelta {
   type: "block-delta";
-  /** Partial content block whose fields overwrite the accumulated block. */
-  content: PartialContentBlock;
+  /** Fields to overwrite on the accumulated content block. */
+  fields: PartialContentBlock;
 }
 
 /**
@@ -93,14 +83,9 @@ export interface BlockDelta {
  * Accumulation rules:
  * - `text-delta` → **append** `text` to block's text field
  * - `reasoning-delta` → **append** `reasoning` to block's reasoning field
- * - `tool-call-delta` → **append** `args`, **set** id/name if present
- * - `block-delta` → **overwrite** fields from content onto block
+ * - `block-delta` → **overwrite** fields onto block (adapter accumulates internally)
  */
-export type ContentBlockDelta =
-  | TextDelta
-  | ReasoningDelta
-  | ToolCallDelta
-  | BlockDelta;
+export type ContentBlockDelta = TextDelta | ReasoningDelta | BlockDelta;
 
 // ─── Message Lifecycle ──────────────────────────────────────────
 
@@ -174,7 +159,7 @@ export interface ContentBlockStartEvent {
  *
  * // Tool call args chunk
  * { type: "content-block-delta", index: 1,
- *   delta: { type: "tool-call-delta", args: '{"q":"wea' } }
+ *   delta: { type: "block-delta", fields: { type: "tool_call_chunk", args: '{"q":"wea' } } }
  *
  * // Provider-specific field (e.g., signature)
  * { type: "content-block-delta", index: 0,

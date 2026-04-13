@@ -122,7 +122,15 @@ function complexStreamEvents(): ChatModelStreamEvent[] {
     {
       type: "content-block-delta",
       index: 2,
-      delta: { type: "tool-call-delta", args: ':"6*7"}' },
+      delta: {
+        type: "block-delta",
+        fields: {
+          type: "tool_call_chunk",
+          id: "call_1",
+          name: "calculator",
+          args: '{"expr":"6*7"}',
+        },
+      },
     },
     {
       type: "content-block-finish",

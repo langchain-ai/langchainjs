@@ -85,7 +85,6 @@ class ReplayBuffer {
  *
  * - `text-delta` → append text
  * - `reasoning-delta` → append reasoning
- * - `tool-call-delta` → append args, set id/name
  * - `block-delta` → overwrite fields
  *
  * @internal
@@ -106,15 +105,8 @@ function applyDelta(
         reasoning:
           ((block as { reasoning?: string }).reasoning ?? "") + delta.reasoning,
       };
-    case "tool-call-delta":
-      return {
-        ...block,
-        ...(delta.id != null ? { id: delta.id } : {}),
-        ...(delta.name != null ? { name: delta.name } : {}),
-        args: ((block as { args?: string }).args ?? "") + (delta.args ?? ""),
-      };
     case "block-delta":
-      return { ...block, ...delta.content };
+      return { ...block, ...delta.fields };
     default:
       return block;
   }
