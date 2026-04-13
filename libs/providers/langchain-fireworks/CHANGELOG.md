@@ -1,5 +1,12 @@
 # @langchain/fireworks
 
+## 0.1.2
+
+### Patch Changes
+
+- Updated dependencies [[`2301260`](https://github.com/langchain-ai/langchainjs/commit/2301260ae90ead5c5f725c8dae1487b6722607e2)]:
+  - @langchain/openai@1.4.4
+
 ## 0.1.1
 
 ### Patch Changes
