@@ -23,12 +23,12 @@ function textStreamEvents(): ChatModelStreamEvent[] {
     {
       type: "content-block-delta",
       index: 0,
-      content: { type: "text", text: "Hello" },
+      delta: { type: "text-delta", text: "Hello" },
     },
     {
       type: "content-block-delta",
       index: 0,
-      content: { type: "text", text: "Hello world" },
+      delta: { type: "text-delta", text: " world" },
     },
     {
       type: "content-block-finish",
@@ -65,12 +65,12 @@ function complexStreamEvents(): ChatModelStreamEvent[] {
     {
       type: "content-block-delta",
       index: 0,
-      content: { type: "reasoning", reasoning: "Let me" },
+      delta: { type: "reasoning-delta", reasoning: "Let me" },
     },
     {
       type: "content-block-delta",
       index: 0,
-      content: { type: "reasoning", reasoning: "Let me think..." },
+      delta: { type: "reasoning-delta", reasoning: " think..." },
     },
     {
       type: "content-block-finish",
@@ -86,12 +86,12 @@ function complexStreamEvents(): ChatModelStreamEvent[] {
     {
       type: "content-block-delta",
       index: 1,
-      content: { type: "text", text: "The answer" },
+      delta: { type: "text-delta", text: "The answer" },
     },
     {
       type: "content-block-delta",
       index: 1,
-      content: { type: "text", text: "The answer is 42." },
+      delta: { type: "text-delta", text: " is 42." },
     },
     {
       type: "content-block-finish",
@@ -112,8 +112,8 @@ function complexStreamEvents(): ChatModelStreamEvent[] {
     {
       type: "content-block-delta",
       index: 2,
-      content: {
-        type: "tool_call_chunk",
+      delta: {
+        type: "tool-call-delta",
         id: "call_1",
         name: "calculator",
         args: '{"expr',
@@ -122,12 +122,7 @@ function complexStreamEvents(): ChatModelStreamEvent[] {
     {
       type: "content-block-delta",
       index: 2,
-      content: {
-        type: "tool_call_chunk",
-        id: "call_1",
-        name: "calculator",
-        args: '{"expr":"6*7"}',
-      },
+      delta: { type: "tool-call-delta", args: ':"6*7"}' },
     },
     {
       type: "content-block-finish",
@@ -412,7 +407,7 @@ describe("ChatModelStream", () => {
         {
           type: "content-block-delta",
           index: 0,
-          content: { type: "text", text: "Result" },
+          delta: { type: "text-delta", text: "Result" },
         },
         {
           type: "content-block-finish",
@@ -455,7 +450,7 @@ describe("ChatModelStream", () => {
         {
           type: "content-block-delta",
           index: 0,
-          content: { type: "text", text: "Hello" },
+          delta: { type: "text-delta", text: "Hello" },
         },
         {
           type: "content-block-finish",
@@ -483,7 +478,7 @@ describe("ChatModelStream", () => {
         {
           type: "content-block-delta",
           index: 0,
-          content: { type: "text", text: "Partial" },
+          delta: { type: "text-delta", text: "Partial" },
         },
         { type: "error", message: "Connection lost", code: "CONN_ERR" },
         { type: "message-finish", reason: "stop" },

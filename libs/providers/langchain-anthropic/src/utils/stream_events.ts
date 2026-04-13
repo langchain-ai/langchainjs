@@ -1,46 +1,28 @@
 /**
  * Converts a raw Anthropic SSE event stream into LangChain ChatModelStreamEvents.
  *
- * This is a pure converter: it takes an async iterable of native Anthropic
- * `RawMessageStreamEvent`s and yields `ChatModelStreamEvent`s. It handles:
- *
- * - Message lifecycle (`message_start` → `message-start`, `message_stop` → `message-finish`)
- * - Content block lifecycle with fully-qualified accumulated snapshots
- * - Tool call arg accumulation and JSON parsing on finalization
- * - Usage snapshots (input tokens on start, output tokens on delta)
- * - Provider passthrough for unrecognized events
- *
  * @module
  */
 
 import type Anthropic from "@anthropic-ai/sdk";
 import type {
   ChatModelStreamEvent,
+  ContentBlockDelta,
   FinishReason,
 } from "@langchain/core/language_models/event";
 import type { ContentBlock } from "@langchain/core/messages/content";
 import type { UsageMetadata } from "@langchain/core/messages/metadata";
 import type { AnthropicMessageStreamEvent } from "../types.js";
 
+// ─── Public API ─────────────────────────────────────────────────
+
 export interface ConvertAnthropicStreamOptions {
-  /**
-   * Whether to emit usage events.
-   * @default true
-   */
   streamUsage?: boolean;
 }
 
 /**
  * Convert an async iterable of raw Anthropic stream events into
- * LangChain `ChatModelStreamEvent`s.
- *
- * @example
- * ```ts
- * const anthropicStream = await client.messages.create({ ..., stream: true });
- * for await (const event of convertAnthropicStream(anthropicStream)) {
- *   // event is a ChatModelStreamEvent
- * }
- * ```
+ * LangChain `ChatModelStreamEvent`s with typed deltas.
  */
 export async function* convertAnthropicStream(
   source: AsyncIterable<AnthropicMessageStreamEvent>,
@@ -48,20 +30,18 @@ export async function* convertAnthropicStream(
 ): AsyncGenerator<ChatModelStreamEvent> {
   const shouldStreamUsage = options.streamUsage ?? true;
 
-  // Track accumulated state per content block
+  // Track accumulated state per content block (for finalization)
   const blockAccumulators = new Map<
     number,
-    {
-      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-      accumulated: Record<string, any>;
-      type: string;
-    }
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    Record<string, any>
   >();
   let usageSnapshot: UsageMetadata | undefined;
   let stopReason: string | null = null;
 
   for await (const data of source) {
     switch (data.type) {
+      // ── Message lifecycle ──────────────────────────────────
       case "message_start": {
         const { usage, id, model } = data.message;
         if (usage && shouldStreamUsage) {
@@ -72,7 +52,6 @@ export async function* convertAnthropicStream(
           id,
           ...(usageSnapshot ? { usage: usageSnapshot } : {}),
         };
-        // Emit response metadata as provider event
         yield {
           type: "provider" as const,
           provider: "anthropic",
@@ -104,7 +83,6 @@ export async function* convertAnthropicStream(
           }
           yield { type: "usage" as const, usage: usageSnapshot };
         }
-        // Forward context_management as provider event
         if (
           "context_management" in data.delta &&
           data.delta.context_management
@@ -133,10 +111,7 @@ export async function* convertAnthropicStream(
       case "content_block_start": {
         const { index, content_block } = data;
         const mapped = mapBlockToContentBlock(content_block, index);
-        blockAccumulators.set(index, {
-          accumulated: { ...mapped },
-          type: mapped.type,
-        });
+        blockAccumulators.set(index, { ...mapped });
         yield {
           type: "content-block-start" as const,
           index,
@@ -150,13 +125,13 @@ export async function* convertAnthropicStream(
         const acc = blockAccumulators.get(index);
         if (!acc) break;
 
-        const { accumulated } = applyDelta(acc.accumulated, delta, index);
-        acc.accumulated = accumulated;
+        const { typedDelta, accumulated } = applyAnthropicDelta(acc, delta);
+        blockAccumulators.set(index, accumulated);
 
         yield {
           type: "content-block-delta" as const,
           index,
-          content: accumulated,
+          delta: typedDelta,
         };
         break;
       }
@@ -166,7 +141,7 @@ export async function* convertAnthropicStream(
         const acc = blockAccumulators.get(index);
         if (!acc) break;
 
-        const finalized = finalizeBlock(acc.accumulated);
+        const finalized = finalizeBlock(acc);
         yield {
           type: "content-block-finish" as const,
           index,
@@ -176,7 +151,7 @@ export async function* convertAnthropicStream(
         break;
       }
 
-      // ── Unhandled events → provider passthrough ───────────
+      // ── Unhandled → provider passthrough ───────────────────
       default: {
         yield {
           type: "provider" as const,
@@ -192,9 +167,6 @@ export async function* convertAnthropicStream(
 
 // ─── Internal helpers ───────────────────────────────────────────
 
-/**
- * Map Anthropic's stop_reason to the standard FinishReason.
- */
 function mapStopReason(stopReason: string | null | undefined): FinishReason {
   switch (stopReason) {
     case "end_turn":
@@ -209,10 +181,6 @@ function mapStopReason(stopReason: string | null | undefined): FinishReason {
   }
 }
 
-/**
- * Build a usage snapshot from Anthropic's usage object.
- * Handles cache token details.
- */
 function buildUsageSnapshot(
   usage: Anthropic.Messages.Usage | Record<string, number>
 ): UsageMetadata {
@@ -232,10 +200,6 @@ function buildUsageSnapshot(
   };
 }
 
-/**
- * Map an Anthropic content block (from content_block_start) to a
- * LangChain ContentBlock.
- */
 function mapBlockToContentBlock(
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   block: any,
@@ -244,11 +208,7 @@ function mapBlockToContentBlock(
 ): Record<string, any> {
   switch (block.type) {
     case "text":
-      return {
-        type: "text" as const,
-        text: block.text ?? "",
-        index,
-      };
+      return { type: "text" as const, text: block.text ?? "", index };
     case "thinking":
       return {
         type: "reasoning" as const,
@@ -256,11 +216,7 @@ function mapBlockToContentBlock(
         index,
       };
     case "redacted_thinking":
-      return {
-        type: "non_standard" as const,
-        value: { ...block },
-        index,
-      };
+      return { type: "non_standard" as const, value: { ...block }, index };
     case "tool_use":
       return {
         type: "tool_call_chunk" as const,
@@ -278,32 +234,28 @@ function mapBlockToContentBlock(
         index,
       };
     default:
-      // document, web_search_tool_result, compaction, etc.
-      return {
-        type: "non_standard" as const,
-        value: { ...block },
-        index,
-      };
+      return { type: "non_standard" as const, value: { ...block }, index };
   }
 }
 
 /**
- * Apply an Anthropic content_block_delta to the accumulated content block.
- * Returns both the incremental delta (as a ContentBlock) and the new
- * accumulated state.
+ * Map an Anthropic content_block_delta to a typed ContentBlockDelta
+ * and update the accumulated state.
  */
-function applyDelta(
+function applyAnthropicDelta(
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   accumulated: Record<string, any>,
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-  delta: any,
-  index: number
+  delta: any
+): {
+  typedDelta: ContentBlockDelta;
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-): { deltaBlock: Record<string, any>; accumulated: Record<string, any> } {
+  accumulated: Record<string, any>;
+} {
   switch (delta.type) {
     case "text_delta":
       return {
-        deltaBlock: { type: "text" as const, text: delta.text, index },
+        typedDelta: { type: "text-delta" as const, text: delta.text },
         accumulated: {
           ...accumulated,
           text: (accumulated.text ?? "") + delta.text,
@@ -312,10 +264,9 @@ function applyDelta(
 
     case "thinking_delta":
       return {
-        deltaBlock: {
-          type: "reasoning" as const,
+        typedDelta: {
+          type: "reasoning-delta" as const,
           reasoning: delta.thinking,
-          index,
         },
         accumulated: {
           ...accumulated,
@@ -325,10 +276,9 @@ function applyDelta(
 
     case "input_json_delta":
       return {
-        deltaBlock: {
-          type: accumulated.type,
+        typedDelta: {
+          type: "tool-call-delta" as const,
           args: delta.partial_json,
-          index,
         },
         accumulated: {
           ...accumulated,
@@ -336,72 +286,57 @@ function applyDelta(
         },
       };
 
-    case "citations_delta": {
-      const newCitation = delta.citation;
-      const existingAnnotations = accumulated.annotations ?? [];
+    case "citations_delta":
       return {
-        deltaBlock: {
-          type: "text" as const,
-          text: "",
-          annotations: [newCitation],
-          index,
+        typedDelta: {
+          type: "block-delta" as const,
+          content: {
+            type: accumulated.type,
+            annotations: [delta.citation],
+          },
         },
         accumulated: {
           ...accumulated,
-          annotations: [...existingAnnotations, newCitation],
+          annotations: [...(accumulated.annotations ?? []), delta.citation],
         },
       };
-    }
 
     case "signature_delta":
       return {
-        deltaBlock: {
-          type: "non_standard" as const,
-          value: { signature: delta.signature },
-          index,
+        typedDelta: {
+          type: "block-delta" as const,
+          content: { type: accumulated.type, signature: delta.signature },
         },
-        accumulated: {
-          ...accumulated,
-          signature: delta.signature,
-        },
+        accumulated: { ...accumulated, signature: delta.signature },
       };
 
     case "compaction_delta":
       return {
-        deltaBlock: {
-          type: "non_standard" as const,
-          value: { compaction: delta },
-          index,
+        typedDelta: {
+          type: "block-delta" as const,
+          content: { type: "non_standard", value: { compaction: delta } },
         },
         accumulated: {
           ...accumulated,
-          value: {
-            ...(accumulated.value ?? {}),
-            compaction: delta,
-          },
+          value: { ...(accumulated.value ?? {}), compaction: delta },
         },
       };
 
     default:
       return {
-        deltaBlock: {
-          type: "non_standard" as const,
-          value: delta,
-          index,
+        typedDelta: {
+          type: "block-delta" as const,
+          content: { type: accumulated.type, ...delta },
         },
         accumulated,
       };
   }
 }
 
-/**
- * Finalize an accumulated content block for the content-block-finish event.
- * For tool calls, parse the accumulated JSON args string.
- */
 function finalizeBlock(
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   accumulated: Record<string, any>
-): ContentBlock.Standard {
+): ContentBlock {
   if (
     accumulated.type === "tool_call_chunk" ||
     accumulated.type === "server_tool_call_chunk"
@@ -431,7 +366,6 @@ function finalizeBlock(
     } as any;
   }
 
-  // Text and reasoning blocks: strip the index for the finalized form
   const { index: _index, ...rest } = accumulated;
-  return rest as ContentBlock.Standard;
+  return rest as ContentBlock;
 }

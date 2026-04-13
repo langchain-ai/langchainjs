@@ -2,53 +2,107 @@
  * Chat model streaming event protocol.
  *
  * Defines a content-block-centric event model for streaming chat model responses.
- * Events carry LangChain {@link ContentBlock} types directly as accumulated
- * snapshots.
+ * Events carry LangChain {@link ContentBlock} types on lifecycle boundaries
+ * (start/finish) and typed incremental deltas during streaming.
  *
  * ## Design Principles
  *
- * 1. **Content blocks are the universal carrier.** Events carry {@link ContentBlock}
- *    instances directly — the block's `type` field is the discriminant. New content
- *    block types automatically work without protocol changes.
+ * 1. **Typed deltas for common cases.** Text, reasoning, and tool call argument
+ *    streaming get purpose-built delta types with explicit append semantics.
+ *    Everything else uses `block-delta` with overwrite semantics.
  *
  * 2. **Lifecycle completeness.** Every streamable entity has explicit start and finish
  *    events. Consumers never need to infer boundaries from absence of events.
  *
- * 3. **Accumulated snapshots.** Each {@link ContentBlockDeltaEvent} carries the
- *    accumulated state of the content block so far. Aggregation logic lives in the
- *    provider adapter, not the consumer. Consumers who need incremental deltas
- *    track previous state and diff.
- *
- * 4. **Interleaving allowed.** Content blocks may interleave (e.g., parallel tool calls).
+ * 3. **Interleaving allowed.** Content blocks may interleave (e.g., parallel tool calls).
  *    The only invariant: a block's start precedes its deltas, and its deltas precede
  *    its finish. No ordering constraint between different blocks.
  *
- * 5. **Provider passthrough.** Native provider events that don't map to standard types
+ * 4. **Provider passthrough.** Native provider events that don't map to standard types
  *    are forwarded as {@link ProviderEvent} rather than silently dropped.
  *
  * ## Lifecycle Contract
  *
  * ```
  * MessageStart
- *   -> ContentBlockStart(index=0, ...)
- *   -> ContentBlockStart(index=1, ...)        // can start before 0 finishes
- *   -> ContentBlockDelta(index=0, ...)
- *   -> ContentBlockDelta(index=1, ...)        // interleaved
- *   -> ContentBlockFinish(index=0, ...)       // blocks finish independently
- *   -> ContentBlockDelta(index=1, ...)
- *   -> ContentBlockFinish(index=1, ...)
- *   -> UsageUpdate(...)                       // may appear at any point
+ *   -> ContentBlockStart(index=0, content=...)
+ *   -> ContentBlockDelta(index=0, delta={ type: "text-delta", text: "Hello" })
+ *   -> ContentBlockDelta(index=0, delta={ type: "text-delta", text: " world" })
+ *   -> ContentBlockFinish(index=0, content=...)
+ *   -> UsageUpdate(...)
  * -> MessageFinish(reason, usage?)
  * ```
  *
  * @module
  */
 
-import type {
-  ContentBlock,
-  PartialContentBlock,
-} from "../messages/content/index.js";
+import type { ContentBlock } from "../messages/content/index.js";
+import type { PartialContentBlock } from "../messages/content/index.js";
 import type { UsageMetadata } from "../messages/metadata.js";
+
+// ─── Content Block Deltas ───────────────────────────────────────
+
+/**
+ * Incremental text content. **Append** `text` to the block's `text` field.
+ */
+export interface TextDelta {
+  type: "text-delta";
+  /** The new text to append. */
+  text: string;
+}
+
+/**
+ * Incremental reasoning content. **Append** `reasoning` to the block's `reasoning` field.
+ */
+export interface ReasoningDelta {
+  type: "reasoning-delta";
+  /** The new reasoning text to append. */
+  reasoning: string;
+}
+
+/**
+ * Incremental tool call data. **Append** `args` to the block's `args` field.
+ * `id` and `name` are set (not appended) if present.
+ */
+export interface ToolCallDelta {
+  type: "tool-call-delta";
+  /** Tool call identifier. Set on first delta, not appended. */
+  id?: string;
+  /** Tool name. Set on first delta, not appended. */
+  name?: string;
+  /** Partial JSON arguments string to append. */
+  args?: string;
+}
+
+/**
+ * Catch-all delta for content block types without a dedicated delta type.
+ * **Overwrite** fields from `content` onto the accumulated block.
+ *
+ * Used for provider-specific block types like code interpreter output,
+ * signatures, citations, compaction, etc.
+ */
+export interface BlockDelta {
+  type: "block-delta";
+  /** Partial content block whose fields overwrite the accumulated block. */
+  content: PartialContentBlock;
+}
+
+/**
+ * Union of all content block delta types.
+ *
+ * Accumulation rules:
+ * - `text-delta` → **append** `text` to block's text field
+ * - `reasoning-delta` → **append** `reasoning` to block's reasoning field
+ * - `tool-call-delta` → **append** `args`, **set** id/name if present
+ * - `block-delta` → **overwrite** fields from content onto block
+ */
+export type ContentBlockDelta =
+  | TextDelta
+  | ReasoningDelta
+  | ToolCallDelta
+  | BlockDelta;
+
+// ─── Message Lifecycle ──────────────────────────────────────────
 
 /**
  * Emitted once at the start of a model response.
@@ -87,22 +141,15 @@ export interface MessageFinishEvent {
   responseMetadata?: Record<string, unknown>;
 }
 
+// ─── Content Block Lifecycle ────────────────────────────────────
+
 /**
  * Emitted when a new content block begins streaming.
  *
  * @example
  * ```ts
- * // Text block starting
  * { type: "content-block-start", index: 0,
  *   content: { type: "text", text: "" } }
- *
- * // Tool call starting
- * { type: "content-block-start", index: 1,
- *   content: { type: "tool_call", id: "call_1", name: "search", args: "" } }
- *
- * // Reasoning starting
- * { type: "content-block-start", index: 2,
- *   content: { type: "reasoning", reasoning: "" } }
  * ```
  */
 export interface ContentBlockStartEvent {
@@ -116,56 +163,39 @@ export interface ContentBlockStartEvent {
 /**
  * Emitted for each incremental update within a content block.
  *
- * Carries the **accumulated state** of the content block so far.
- * The content is deeply partial — not all fields may be populated during
- * streaming (e.g., a tool call may have `name` but `args` is still being
- * streamed as a partial JSON string).
- *
- * Consumers who need incremental deltas (e.g., new tokens only) should
- * track the previous state and diff against the new accumulated state.
- *
- * Aggregation into `AIMessage` is trivial:
- * `message.content[event.index] = event.content`
+ * The `delta` field carries a typed incremental update. Consumers
+ * switch on `delta.type` to determine how to apply it.
  *
  * @example
  * ```ts
- * // First text delta — accumulated so far
+ * // Text token
  * { type: "content-block-delta", index: 0,
- *   content: { type: "text", text: "Hello" } }
+ *   delta: { type: "text-delta", text: " world" } }
  *
- * // Second text delta — accumulated so far
- * { type: "content-block-delta", index: 0,
- *   content: { type: "text", text: "Hello world" } }
- *
- * // Tool call args — accumulated so far
+ * // Tool call args chunk
  * { type: "content-block-delta", index: 1,
- *   content: { type: "tool_call", id: "call_1", name: "search", args: '{"q":"wea' } }
+ *   delta: { type: "tool-call-delta", args: '{"q":"wea' } }
+ *
+ * // Provider-specific field (e.g., signature)
+ * { type: "content-block-delta", index: 0,
+ *   delta: { type: "block-delta", content: { type: "reasoning", signature: "sig_abc" } } }
  * ```
  */
 export interface ContentBlockDeltaEvent {
   type: "content-block-delta";
   /** Positional index of the block being updated. */
   index: number;
-  /** Accumulated state of the content block after this update. Deeply partial. */
-  content: PartialContentBlock;
+  /** Typed incremental delta. */
+  delta: ContentBlockDelta;
 }
 
 /**
  * Emitted when a content block is complete.
  *
- * The `content` carries the **finalized** block. For tool calls, this means
- * args have been parsed from a JSON string into an object.
- *
  * @example
  * ```ts
- * // Finalized text block
  * { type: "content-block-finish", index: 0,
- *   content: { type: "text", text: "The weather is sunny." } }
- *
- * // Finalized tool call (args parsed)
- * { type: "content-block-finish", index: 1,
- *   content: { type: "tool_call", id: "call_1", name: "search",
- *              args: { q: "weather" } } }
+ *   content: { type: "text", text: "Hello world" } }
  * ```
  */
 export interface ContentBlockFinishEvent {
@@ -176,21 +206,11 @@ export interface ContentBlockFinishEvent {
   content: ContentBlock;
 }
 
+// ─── Usage ──────────────────────────────────────────────────────
+
 /**
  * Emitted whenever the provider reports updated usage information.
- *
- * May appear at any point during streaming. Each event carries a
- * **running snapshot** of usage (not an additive delta), so consumers
- * can simply take the latest value.
- *
- * @example
- * ```ts
- * // After message_start (Anthropic: input tokens known)
- * { type: "usage", usage: { input_tokens: 1234, output_tokens: 0, total_tokens: 1234 } }
- *
- * // After streaming completes
- * { type: "usage", usage: { input_tokens: 1234, output_tokens: 567, total_tokens: 1801 } }
- * ```
+ * Each event carries a **running snapshot** (not an additive delta).
  */
 export interface UsageUpdateEvent {
   type: "usage";
@@ -198,25 +218,10 @@ export interface UsageUpdateEvent {
   usage: UsageMetadata;
 }
 
+// ─── Provider Passthrough ───────────────────────────────────────
+
 /**
  * Passthrough for native provider events that don't map to standard types.
- *
- * Provider adapters map recognized events to standard {@link ChatModelStreamEvent}
- * types and forward everything else as `ProviderEvent`. This ensures no information
- * is silently dropped.
- *
- * @example
- * ```ts
- * // OpenAI server-side web search in progress
- * { type: "provider", provider: "openai",
- *   name: "response.web_search_call.searching",
- *   payload: { item_id: "ws_123", output_index: 0 } }
- *
- * // Anthropic context management signal
- * { type: "provider", provider: "anthropic",
- *   name: "context_management",
- *   payload: { ... } }
- * ```
  */
 export interface ProviderEvent {
   type: "provider";
@@ -227,6 +232,8 @@ export interface ProviderEvent {
   /** Raw event payload from the provider SDK. */
   payload: unknown;
 }
+
+// ─── Error ──────────────────────────────────────────────────────
 
 /**
  * Emitted on unrecoverable stream errors.
@@ -239,10 +246,10 @@ export interface StreamErrorEvent {
   code?: string;
 }
 
+// ─── Union ──────────────────────────────────────────────────────
+
 /**
  * Union of all chat model stream event types.
- *
- * This is the type yielded by `ChatModelStream[Symbol.asyncIterator]()`.
  */
 export type ChatModelStreamEvent =
   | MessageStartEvent
