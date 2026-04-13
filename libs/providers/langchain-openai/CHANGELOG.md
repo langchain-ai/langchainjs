@@ -1,5 +1,11 @@
 # @langchain/openai
 
+## 1.4.4
+
+### Patch Changes
+
+- [#10681](https://github.com/langchain-ai/langchainjs/pull/10681) [`2301260`](https://github.com/langchain-ai/langchainjs/commit/2301260ae90ead5c5f725c8dae1487b6722607e2) Thanks [@hntrl](https://github.com/hntrl)! - fix(openai): add index to streaming reasoning content blocks for proper chunk merging
+
 ## 1.4.3
 
 ### Patch Changes
