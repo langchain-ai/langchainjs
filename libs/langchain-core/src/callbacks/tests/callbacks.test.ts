@@ -499,10 +499,12 @@ test("langsmith inheritable metadata/tags apply only to LangChainTracer", async 
     }
   }
 
+  const createRunMock = vi.fn().mockResolvedValue(undefined);
+  const updateRunMock = vi.fn().mockResolvedValue(undefined);
   const mockClient = {
-    createRun: vi.fn().mockResolvedValue(undefined),
-    updateRun: vi.fn().mockResolvedValue(undefined),
-  } as unknown as LangSmithTracingClientInterface;
+    createRun: createRunMock,
+    updateRun: updateRunMock,
+  } as LangSmithTracingClientInterface;
   const tracer = new LangChainTracer({ client: mockClient });
   const capture = new CaptureHandler();
 
@@ -533,8 +535,8 @@ test("langsmith inheritable metadata/tags apply only to LangChainTracer", async 
   expect(captured[0].metadata?.tracer_only).toBeUndefined();
   expect(captured[0].tags).not.toContain("tenant:alpha");
 
-  expect(mockClient.createRun).toHaveBeenCalled();
-  const postedRun = mockClient.createRun.mock.calls[0]?.[0];
+  expect(createRunMock).toHaveBeenCalled();
+  const postedRun = createRunMock.mock.calls[0]?.[0];
   expect(postedRun.extra?.metadata?.tracer_only).toBe("yes");
   expect(postedRun.tags).toContain("tenant:alpha");
 });
