@@ -1,5 +1,11 @@
 # @langchain/aws
 
+## 1.3.5
+
+### Patch Changes
+
+- [#10688](https://github.com/langchain-ai/langchainjs/pull/10688) [`2ff51cf`](https://github.com/langchain-ai/langchainjs/commit/2ff51cf0688e45d5d237b2b435334b5fd987afa9) Thanks [@hntrl](https://github.com/hntrl)! - normalize Bedrock Converse object errors for tracing
+
 ## 1.3.4
 
 ### Patch Changes

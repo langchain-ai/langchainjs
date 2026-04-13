@@ -1,5 +1,13 @@
 # langchain
 
+## 1.3.2
+
+### Patch Changes
+
+- [#10693](https://github.com/langchain-ai/langchainjs/pull/10693) [`5a6e0ab`](https://github.com/langchain-ai/langchainjs/commit/5a6e0ab6617587f3aed19d07bf3ed91994dcdac8) Thanks [@hntrl](https://github.com/hntrl)! - fix(agents): derive middleware hook state from invocation state
+
+  Prevents middleware state from leaking across threads by deriving middleware hook input state from the current invocation state instead of cross-node cached state.
+
 ## 1.3.1
 
 ### Patch Changes
