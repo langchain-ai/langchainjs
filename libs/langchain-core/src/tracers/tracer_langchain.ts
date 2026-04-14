@@ -55,7 +55,7 @@ export interface LangChainTracerFields extends BaseCallbackHandlerInput {
  * found in chat messages. This is typically present in chat model outputs.
  */
 function _getUsageMetadataFromGenerations(
-  generations: ChatGeneration[][]
+  generations: ChatGeneration[][],
 ): UsageMetadata | undefined {
   let output: UsageMetadata | undefined = undefined;
   for (const generationBatch of generations) {
@@ -137,7 +137,7 @@ export class LangChainTracer
       | undefined;
     if (outputs?.generations) {
       const usageMetadata = _getUsageMetadataFromGenerations(
-        outputs.generations
+        outputs.generations,
       );
       if (usageMetadata !== undefined) {
         run.extra = run.extra ?? {};
@@ -249,7 +249,7 @@ export class LangChainTracer
         // ignore the permitAbsentRunTree arg.
         (
           getCurrentRunTree as (
-            permitAbsentRunTree: boolean
+            permitAbsentRunTree: boolean,
           ) => ReturnType<typeof getCurrentRunTree> | undefined
         )(true)
       );
@@ -259,9 +259,6 @@ export class LangChainTracer
   }
 
   static [Symbol.hasInstance](instance: unknown): boolean {
-    if (Function.prototype[Symbol.hasInstance].call(this, instance)) {
-      return true;
-    }
     if (typeof instance !== "object" || instance === null) {
       return false;
     }
@@ -296,7 +293,7 @@ function _patchMissingTracingDefaults(tracer: LangChainTracer, run: Run): void {
 
   if (tracer.tracingTags.length > 0) {
     run.tags = Array.from(
-      new Set([...(run.tags ?? []), ...tracer.tracingTags])
+      new Set([...(run.tags ?? []), ...tracer.tracingTags]),
     );
   }
 }
