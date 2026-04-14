@@ -10,7 +10,7 @@ const CONFIGURABLE_TO_TRACING_METADATA_EXCLUDED_KEYS = new Set(["api_key"]);
 const PRIMITIVES = new Set(["string", "number", "boolean"]);
 
 export function _getTracingInheritableMetadataFromConfig(
-  config: RunnableConfig,
+  config: RunnableConfig
 ): Record<string, unknown> | undefined {
   const configurable = config.configurable ?? {};
   const metadata = config.metadata ?? {};
@@ -42,7 +42,7 @@ export async function getCallbackManagerForConfig(config?: RunnableConfig) {
       tracerInheritableMetadata: config
         ? _getTracingInheritableMetadataFromConfig(config)
         : undefined,
-    },
+    }
   );
 }
 
@@ -115,26 +115,26 @@ export function mergeConfigs<CallOptions extends RunnableConfig>(
               providedCallbacks._parentRunId,
               {
                 handlers: baseCallbacks.handlers.concat(
-                  providedCallbacks.handlers,
+                  providedCallbacks.handlers
                 ),
                 inheritableHandlers: baseCallbacks.inheritableHandlers.concat(
-                  providedCallbacks.inheritableHandlers,
+                  providedCallbacks.inheritableHandlers
                 ),
                 tags: Array.from(
-                  new Set(baseCallbacks.tags.concat(providedCallbacks.tags)),
+                  new Set(baseCallbacks.tags.concat(providedCallbacks.tags))
                 ),
                 inheritableTags: Array.from(
                   new Set(
                     baseCallbacks.inheritableTags.concat(
-                      providedCallbacks.inheritableTags,
-                    ),
-                  ),
+                      providedCallbacks.inheritableTags
+                    )
+                  )
                 ),
                 metadata: {
                   ...baseCallbacks.metadata,
                   ...providedCallbacks.metadata,
                 },
-              },
+              }
             );
           }
         }
@@ -151,7 +151,7 @@ export function mergeConfigs<CallOptions extends RunnableConfig>(
  * Ensure that a passed config is an object with all required keys present.
  */
 export function ensureConfig<CallOptions extends RunnableConfig>(
-  config?: CallOptions,
+  config?: CallOptions
 ): CallOptions {
   const implicitConfig = AsyncLocalStorageProviderSingleton.getRunnableConfig();
   let empty: RunnableConfig = {
@@ -172,7 +172,7 @@ export function ensureConfig<CallOptions extends RunnableConfig>(
         }
         return currentConfig;
       },
-      empty,
+      empty
     );
   }
   if (config) {
@@ -184,7 +184,7 @@ export function ensureConfig<CallOptions extends RunnableConfig>(
         }
         return currentConfig;
       },
-      empty,
+      empty
     );
   }
   if (empty?.configurable) {
@@ -251,7 +251,7 @@ export function patchConfig<CallOptions extends RunnableConfig>(
     runName,
     configurable,
     runId,
-  }: RunnableConfig = {},
+  }: RunnableConfig = {}
 ): Partial<CallOptions> {
   const newConfig = ensureConfig(config);
   if (callbacks !== undefined) {
@@ -282,7 +282,7 @@ export function patchConfig<CallOptions extends RunnableConfig>(
 
 // oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export function pickRunnableConfigKeys<CallOptions extends Record<string, any>>(
-  config?: CallOptions,
+  config?: CallOptions
 ): Partial<RunnableConfig> | undefined {
   if (!config) return undefined;
 
