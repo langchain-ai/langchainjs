@@ -498,6 +498,43 @@ test("ChatModel invocation_params are merged into metadata, not extra", async ()
   expect(createCall[0].extra?.metadata?.model).toEqual("test-model");
   expect(createCall[0].extra?.metadata?.temperature).toEqual(0.5);
 
-  // invocation_params should NOT be in extra directly
-  expect(createCall[0].extra?.invocation_params).toBeUndefined();
+  // invocation_params should also still be in extra directly for backwards compat
+  expect(createCall[0].extra?.invocation_params).toEqual({
+    model: "test-model",
+    temperature: 0.5,
+  });
+});
+
+test("ChatModel lc_tracing_only_metadata does not leak to streamEvents", async () => {
+  const model = new FakeChatModelWithInvocationParams({});
+
+  // Collect all events from streamEvents
+  const events = [];
+  const eventStream = await model.streamEvents("Hello", { version: "v2" });
+  for await (const event of eventStream) {
+    events.push(event);
+  }
+
+  // Find the chat_model_start event
+  const chatModelStartEvent = events.find(
+    (e) => e.event === "on_chat_model_start"
+  );
+  const chatModelEndEvent = events.find(
+    (e) => e.event === "on_chat_model_end"
+  );
+
+  // Verify events exist
+  expect(chatModelStartEvent).toBeDefined();
+  expect(chatModelEndEvent).toBeDefined();
+
+  // The invocation_params (model, temperature) should NOT appear in stream events metadata
+  // They are tracing-only metadata and should only go to LangSmith, not to stream events
+  expect(chatModelStartEvent?.metadata?.model).toBeUndefined();
+  expect(chatModelStartEvent?.metadata?.temperature).toBeUndefined();
+  expect(chatModelEndEvent?.metadata?.model).toBeUndefined();
+  expect(chatModelEndEvent?.metadata?.temperature).toBeUndefined();
+
+  // Also verify that lc_tracing_only_metadata key itself is not in the metadata
+  expect(chatModelStartEvent?.metadata?.lc_tracing_only_metadata).toBeUndefined();
+  expect(chatModelEndEvent?.metadata?.lc_tracing_only_metadata).toBeUndefined();
 });
