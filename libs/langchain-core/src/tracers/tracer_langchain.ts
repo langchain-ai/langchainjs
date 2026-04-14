@@ -125,7 +125,10 @@ export class LangChainTracer
       ...runTree.metadata,
       ...merged,
     };
-    delete runTree.extra.lc_tracing_only_metadata;
+    // Remove from extra on the copy sent to LangSmith, but use a fresh object
+    // to avoid mutating the stored runTree's extra (which is shared by reference)
+    const { lc_tracing_only_metadata: _, ...restExtra } = runTree.extra ?? {};
+    runTree.extra = restExtra;
   }
 
   async onRunCreate(run: Run): Promise<void> {
