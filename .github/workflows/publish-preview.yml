@@ -47,8 +47,8 @@ jobs:
           API_URL: https://pkg.pr.new
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            pnpm dlx pkg-pr-new@latest publish './libs/*'
+            pnpm dlx pkg-pr-new@latest publish --pnpm --peerDeps './libs/*'
           else
-            pnpm dlx pkg-pr-new@latest publish ${{ steps.changed_packages.outputs.paths }}
+            pnpm dlx pkg-pr-new@latest publish --pnpm --peerDeps ${{ steps.changed_packages.outputs.paths }}
           fi
         continue-on-error: true
