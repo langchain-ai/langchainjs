@@ -79,11 +79,17 @@ describe("LocalFileStore", () => {
     const firstWriteGate = createDeferred<void>();
     const writeFileSpy = vi
       .spyOn(prototype, "writeFileAtomically")
-      .mockImplementationOnce(async function (this: LocalFileStore, ...args: WriteFileArgs) {
+      .mockImplementationOnce(async function (
+        this: LocalFileStore,
+        ...args: WriteFileArgs
+      ) {
         await firstWriteGate.promise;
         return originalWriteFileAtomically.apply(this, args);
       })
-      .mockImplementation(function (this: LocalFileStore, ...args: WriteFileArgs) {
+      .mockImplementation(function (
+        this: LocalFileStore,
+        ...args: WriteFileArgs
+      ) {
         return originalWriteFileAtomically.apply(this, args);
       });
 
