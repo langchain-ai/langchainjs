@@ -519,9 +519,7 @@ test("ChatModel lc_tracing_only_metadata does not leak to streamEvents", async (
   const chatModelStartEvent = events.find(
     (e) => e.event === "on_chat_model_start"
   );
-  const chatModelEndEvent = events.find(
-    (e) => e.event === "on_chat_model_end"
-  );
+  const chatModelEndEvent = events.find((e) => e.event === "on_chat_model_end");
 
   // Verify events exist
   expect(chatModelStartEvent).toBeDefined();
@@ -535,6 +533,8 @@ test("ChatModel lc_tracing_only_metadata does not leak to streamEvents", async (
   expect(chatModelEndEvent?.metadata?.temperature).toBeUndefined();
 
   // Also verify that lc_tracing_only_metadata key itself is not in the metadata
-  expect(chatModelStartEvent?.metadata?.lc_tracing_only_metadata).toBeUndefined();
+  expect(
+    chatModelStartEvent?.metadata?.lc_tracing_only_metadata
+  ).toBeUndefined();
   expect(chatModelEndEvent?.metadata?.lc_tracing_only_metadata).toBeUndefined();
 });
