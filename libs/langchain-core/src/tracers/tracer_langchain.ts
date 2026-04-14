@@ -257,6 +257,24 @@ export class LangChainTracer
       return undefined;
     }
   }
+
+  static [Symbol.hasInstance](instance: unknown): boolean {
+    if (Function.prototype[Symbol.hasInstance].call(this, instance)) {
+      return true;
+    }
+    if (typeof instance !== "object" || instance === null) {
+      return false;
+    }
+    const candidate = instance as Record<string, unknown>;
+    return (
+      "name" in candidate &&
+      candidate.name === "langchain_tracer" &&
+      "copyWithTracingConfig" in candidate &&
+      typeof candidate.copyWithTracingConfig === "function" &&
+      "getRunTreeWithTracingConfig" in candidate &&
+      typeof candidate.getRunTreeWithTracingConfig === "function"
+    );
+  }
 }
 
 function _patchMissingTracingDefaults(tracer: LangChainTracer, run: Run): void {

@@ -541,6 +541,39 @@ test("langsmith inheritable metadata/tags apply only to LangChainTracer", async 
   expect(postedRun.tags).toContain("tenant:alpha");
 });
 
+test("tracer inheritable options apply via Symbol.hasInstance structural match", () => {
+  class ForeignTracer extends BaseCallbackHandler {
+    name = "langchain_tracer";
+
+    copyWithTracingConfig = vi.fn().mockReturnThis();
+
+    getRunTreeWithTracingConfig() {
+      return undefined;
+    }
+  }
+
+  const foreignTracer = new ForeignTracer();
+  expect(foreignTracer instanceof LangChainTracer).toBe(true);
+
+  CallbackManager.configure(
+    [foreignTracer],
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    {
+      tracerInheritableMetadata: { tenant: "alpha" },
+      tracerInheritableTags: ["tenant:alpha"],
+    }
+  );
+
+  expect(foreignTracer.copyWithTracingConfig).toHaveBeenCalledWith({
+    metadata: { tenant: "alpha" },
+    tags: ["tenant:alpha"],
+  });
+});
+
 class FakeCallbackHandlerWithErrors extends FakeCallbackHandler {
   constructor(input: BaseCallbackHandlerInput) {
     super({ ...input, raiseError: true });
