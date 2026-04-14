@@ -11,7 +11,6 @@ import {
   AsyncCaller,
   AsyncCallerParams,
 } from "@langchain/core/utils/async_caller";
-import { Callbacks } from "@langchain/core/callbacks/manager";
 
 /**
  * Stub embeddings for auto-embedding mode.
@@ -298,15 +297,13 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
    * @param query - Text query for finding similar documents.
    * @param k - Number of similar results to return. Defaults to 4.
    * @param filter - Optional filter based on `FilterType`.
-   * @param _callbacks - Optional callbacks for monitoring search progress
    * @returns A promise resolving to an array of tuples, each containing a
    *          document and its similarity score.
    */
   async similaritySearchWithScore(
     query: string,
     k = 4,
-    filter: this["FilterType"] | undefined = undefined,
-    _callbacks: Callbacks | undefined = undefined // implement passing to embedQuery later
+    filter: this["FilterType"] | undefined = undefined
   ): Promise<[Document, number][]> {
     if (this.useAutoEmbedding) {
       // Auto-embed mode: use text-based $vectorSearch query
@@ -325,14 +322,12 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
    * @param query - Text query for finding similar documents.
    * @param k - Number of similar results to return. Defaults to 4.
    * @param filter - Optional filter based on `FilterType`.
-   * @param _callbacks - Optional callbacks for monitoring search progress
    * @returns A promise resolving to an array of `DocumentInterface` instances representing similar documents.
    */
   async similaritySearch(
     query: string,
     k = 4,
-    filter: this["FilterType"] | undefined = undefined,
-    _callbacks: Callbacks | undefined = undefined // implement passing to embedQuery later
+    filter: this["FilterType"] | undefined = undefined
   ): Promise<DocumentInterface[]> {
     const resultsWithScore = await this.similaritySearchWithScore(query, k ?? 4, filter);
     return resultsWithScore.map(([doc]) => doc);

@@ -141,28 +141,50 @@ describe.skipIf(skipAutoEmbedTests)("Auto Embedding Tests with data", () => {
     expect(results).toMatchObject([
       { pageContent: "What is a sandwich?", metadata: { c: 1 } },
     ]);
+  });
 
-    // // we can pre filter the search
-    // const preFilter = {
-    //   e: { $lte: 1 },
-    // };
+  test("MongoDBAtlasVectorSearch similaritySearchWithScore", async () => {
+    const vectorStore = new MongoDBAtlasVectorSearch({ collection });
 
-    // const filteredResults = await vectorStore.similaritySearch(
-    //   "That fence is purple",
-    //   1,
-    //   preFilter
-    // );
+    expect(vectorStore).toBeDefined();
 
-    // expect(filteredResults).toEqual([]);
+    // check if the database is empty
+    await collection.deleteMany({});
 
-    // const retriever = vectorStore.asRetriever({
-    //   filter: {
-    //     preFilter,
-    //   },
-    // });
+    await vectorStore.addDocuments([
+      {
+        pageContent: "Dogs are tough.",
+        metadata: { a: 1, created_at: new Date().toISOString() },
+      },
+      {
+        pageContent: "Cats have fluff.",
+        metadata: { b: 1, created_at: new Date().toISOString() },
+      },
+      {
+        pageContent: "What is a sandwich?",
+        metadata: { c: 1, created_at: new Date().toISOString() },
+      },
+      {
+        pageContent: "That fence is purple.",
+        metadata: { d: 1, e: 2, created_at: new Date().toISOString() },
+      },
+    ]);
 
-    // const docs = await retriever.getRelevantDocuments("That fence is purple");
-    // expect(docs).toEqual([]);
+    await waitForDocumentsIndexed(vectorStore, "Sandwich");
+
+    const results = await vectorStore.similaritySearchWithScore(
+      "Sandwich",
+      1
+    );
+
+    expect(results.length).toEqual(1);
+    expect(results[0]).toHaveLength(2);
+    expect(results[0][0]).toMatchObject({
+      pageContent: "What is a sandwich?",
+      metadata: { c: 1 },
+    });
+    expect(typeof results[0][1]).toBe("number");
+    expect(results[0][1]).toBeGreaterThan(0);
   });
 
   // Maximal Marginal Relevance is not yet supported with auto-embedding.
