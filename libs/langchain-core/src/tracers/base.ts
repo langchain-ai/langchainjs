@@ -76,7 +76,7 @@ export interface AgentRun extends Run {
   actions: AgentAction[];
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 function _coerceToDict(value: any, defaultKey: string) {
   return value && !Array.isArray(value) && typeof value === "object"
     ? value
@@ -113,7 +113,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
   }
 
   protected stringifyError(error: unknown) {
-    // eslint-disable-next-line no-instanceof/no-instanceof
+    // oxlint-disable-next-line no-instanceof/no-instanceof
     if (error instanceof Error) {
       return error.message + (error?.stack ? `\n\n${error.stack}` : "");
     }
@@ -163,6 +163,11 @@ export abstract class BaseTracer extends BaseCallbackHandler {
         // console.debug(
         //   `Parent run with UUID ${storedRun.parent_run_id} not found.`
         // );
+
+        // Child run with no trace_id and dotted_order causes 400 error on LangSmith.
+        // So we set the parent_run_id to undefined as a workaround.
+        // This run will be shown as isolated run on LangSmith.
+        storedRun.parent_run_id = undefined;
       }
     } else {
       storedRun.trace_id = storedRun.id;
@@ -408,7 +413,8 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     tags?: string[],
     metadata?: KVMap,
     runType?: string,
-    name?: string
+    name?: string,
+    extra?: Record<string, unknown>
   ) {
     const execution_order = this._getExecutionOrder(parentRunId);
     const start_time = Date.now();
@@ -429,7 +435,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
       child_execution_order: execution_order,
       run_type: runType ?? "chain",
       child_runs: [],
-      extra: metadata ? { metadata } : {},
+      extra: metadata ? { ...extra, metadata } : { ...extra },
       tags: tags || [],
     };
     return this._addRunToRunMap(run);
@@ -576,7 +582,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     return run;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   async handleToolEnd(output: any, runId: string): Promise<Run> {
     const run = this.getRunById(runId);
     if (!run || run?.run_type !== "tool") {
@@ -812,7 +818,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
   onLLMNewToken?(
     run: Run,
     token: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     kwargs?: { chunk: any }
   ): void | Promise<void>;
 }

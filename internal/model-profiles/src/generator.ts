@@ -1,11 +1,11 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as ts from "typescript";
-import prettier from "prettier";
+import { format, type FormatConfig } from "oxfmt";
 import type { ModelProfile } from "@langchain/core/language_models/profile";
 import type { Model, ProviderMap } from "./api-schema.js";
 import { type ModelProfileOverride, applyOverrides } from "./config.js";
-import { validatePathInMonorepo } from "./config.js";
+import { findMonorepoRoot, validatePathInMonorepo } from "./config.js";
 
 /**
  * Converts a Model from the API schema to a ModelProfile.
@@ -213,17 +213,22 @@ export async function generateModelProfiles(
     fs.mkdirSync(outputDir, { recursive: true });
   }
 
-  // Format with Prettier using project's configuration
+  // Format with Oxfmt using project's configuration
   let formattedCode: string;
   try {
-    const prettierConfig = await prettier.resolveConfig(resolvedOutputPath);
-    formattedCode = await prettier.format(typescriptCode, {
-      ...prettierConfig,
-      parser: "typescript",
-    });
+    const oxfmtConfig = await loadOxfmtConfig();
+    const result = await format(
+      resolvedOutputPath,
+      typescriptCode,
+      oxfmtConfig
+    );
+    if (result.errors.length > 0) {
+      throw new Error(result.errors[0]?.message ?? "Unknown oxfmt error");
+    }
+    formattedCode = result.code;
   } catch (error) {
     console.warn(
-      "⚠️ Failed to format code with prettier, using unformatted code:",
+      "⚠️ Failed to format code with oxfmt, using unformatted code:",
       error instanceof Error ? error.message : String(error)
     );
     formattedCode = typescriptCode;
@@ -231,4 +236,31 @@ export async function generateModelProfiles(
 
   fs.writeFileSync(resolvedOutputPath, formattedCode, "utf-8");
   console.log(`✅ Generated model profiles file: ${resolvedOutputPath}`);
+}
+
+const OXFMT_CONFIG_FILES = [".oxfmtrc.jsonc", ".oxfmtrc.json"];
+let cachedOxfmtConfig: FormatConfig | undefined;
+
+async function loadOxfmtConfig(): Promise<FormatConfig | undefined> {
+  if (cachedOxfmtConfig) return cachedOxfmtConfig;
+
+  const monorepoRoot = findMonorepoRoot();
+  for (const filename of OXFMT_CONFIG_FILES) {
+    const configPath = path.join(monorepoRoot, filename);
+    try {
+      const raw = await fs.promises.readFile(configPath, "utf-8");
+      const parsed = JSON.parse(raw) as Record<string, unknown>;
+      if ("$schema" in parsed) {
+        delete parsed.$schema;
+      }
+      cachedOxfmtConfig = parsed as FormatConfig;
+      return cachedOxfmtConfig;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+        throw error;
+      }
+    }
+  }
+
+  return undefined;
 }

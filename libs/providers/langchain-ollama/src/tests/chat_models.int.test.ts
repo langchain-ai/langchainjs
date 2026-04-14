@@ -214,6 +214,7 @@ test("test max tokens (numPredict)", async () => {
 
 test("sturctured output with tools", async () => {
   const ollama = new ChatOllama({
+    model: "mistral",
     maxRetries: 1,
   });
 
@@ -223,6 +224,7 @@ test("sturctured output with tools", async () => {
 
   const llmWithStructuredOutput = ollama.withStructuredOutput(schemaForWSO, {
     name: "get_current_weather",
+    method: "functionCalling",
   });
 
   const resultFromWSO = await llmWithStructuredOutput.invoke(

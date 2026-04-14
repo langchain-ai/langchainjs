@@ -1,6 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable import/no-extraneous-dependencies */
-import { expect } from "vitest";
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   BaseChatModel,
@@ -9,6 +7,7 @@ import {
   BindToolsInput,
   ToolChoice,
 } from "@langchain/core/language_models/chat_models";
+import type { ModelProfile } from "@langchain/core/language_models/profile";
 import { StructuredTool } from "@langchain/core/tools";
 import {
   BaseMessage,
@@ -35,6 +34,24 @@ import {
 import { LanguageModelLike } from "@langchain/core/language_models/base";
 import { z } from "zod/v3";
 
+/**
+ * Custom asymmetric matcher that matches any string value.
+ * Works with both Jest and Vitest's toEqual() assertions.
+ */
+class AnyString {
+  asymmetricMatch(other: unknown): boolean {
+    return typeof other === "string";
+  }
+
+  toString(): string {
+    return "Any<String>";
+  }
+
+  toAsymmetricMatcher(): string {
+    return "Any<String>";
+  }
+}
+
 export class _AnyIdAIMessage extends AIMessage {
   get lc_id() {
     return ["langchain_core", "messages", "AIMessage"];
@@ -42,7 +59,7 @@ export class _AnyIdAIMessage extends AIMessage {
 
   constructor(fields: AIMessageFields | string) {
     let fieldsWithJestMatcher: Partial<AIMessageFields> = {
-      id: expect.any(String) as unknown as string,
+      id: new AnyString() as unknown as string,
     };
     if (typeof fields === "string") {
       fieldsWithJestMatcher = {
@@ -66,7 +83,7 @@ export class _AnyIdHumanMessage extends HumanMessage {
 
   constructor(fields: BaseMessageFields | string) {
     let fieldsWithJestMatcher: Partial<BaseMessageFields> = {
-      id: expect.any(String) as unknown as string,
+      id: new AnyString() as unknown as string,
     };
     if (typeof fields === "string") {
       fieldsWithJestMatcher = {
@@ -90,7 +107,7 @@ export class _AnyIdToolMessage extends ToolMessage {
 
   constructor(fields: ToolMessageFields) {
     const fieldsWithJestMatcher: Partial<ToolMessageFields> = {
-      id: expect.any(String) as unknown as string,
+      id: new AnyString() as unknown as string,
       ...fields,
     };
     super(fieldsWithJestMatcher as ToolMessageFields);
@@ -175,6 +192,13 @@ export class FakeToolCallingChatModel extends BaseChatModel {
     return "fake";
   }
 
+  get profile(): ModelProfile {
+    return {
+      toolCalling: true,
+      structuredOutput: true,
+    };
+  }
+
   async _generate(
     messages: BaseMessage[],
     _options: this["ParsedCallOptions"],
@@ -243,7 +267,7 @@ export class FakeToolCallingChatModel extends BaseChatModel {
   }
 
   withStructuredOutput<
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(_: unknown): Runnable<any> {
     if (!this.structuredResponse) {
       throw new Error("No structured response provided");
@@ -284,15 +308,17 @@ export class MemorySaverAssertImmutable extends MemorySaver {
     if (saved) {
       const savedId = saved.id;
       if (this.storageForCopies[thread_id][savedId]) {
-        const loaded = await this.serde.loadsTyped(
-          "json",
-          this.storageForCopies[thread_id][savedId]
-        );
+        const [, serializedSaved] = await this.serde.dumpsTyped(saved);
+        const serializedCopy = this.storageForCopies[thread_id][savedId];
 
-        expect(
-          saved,
-          `Checkpoint [${savedId}] has been modified since last written`
-        ).toEqual(loaded);
+        // Compare Uint8Array contents by converting to string
+        const savedStr = new TextDecoder().decode(serializedSaved);
+        const copyStr = new TextDecoder().decode(serializedCopy);
+        if (savedStr !== copyStr) {
+          throw new Error(
+            `Checkpoint [${savedId}] has been modified since last written`
+          );
+        }
       }
     }
     const [, serializedCheckpoint] = await this.serde.dumpsTyped(checkpoint);

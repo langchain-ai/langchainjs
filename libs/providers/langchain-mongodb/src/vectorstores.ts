@@ -266,10 +266,10 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
    *
    * @returns - A promise that resolves when all documents deleted
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   async delete(params: { ids: any[] }): Promise<void> {
     const CHUNK_SIZE = 50;
-    const chunkIds: any[][] = chunkArray(params.ids, CHUNK_SIZE); // eslint-disable-line @typescript-eslint/no-explicit-any
+    const chunkIds: any[][] = chunkArray(params.ids, CHUNK_SIZE); // oxlint-disable-line @typescript-eslint/no-explicit-any
     for (const chunk of chunkIds)
       await this.collection.deleteMany({ _id: { $in: chunk } });
   }

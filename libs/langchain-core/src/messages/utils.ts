@@ -41,10 +41,10 @@ type $KnownKeys<T> = {
   [K in keyof T]: string extends K
     ? never
     : number extends K
-    ? never
-    : symbol extends K
-    ? never
-    : K;
+      ? never
+      : symbol extends K
+        ? never
+        : K;
 }[keyof T];
 
 /**
@@ -56,10 +56,10 @@ type $KnownKeys<T> = {
 type $HasIndexSignature<T> = string extends keyof T
   ? true
   : number extends keyof T
-  ? true
-  : symbol extends keyof T
-  ? true
-  : false;
+    ? true
+    : symbol extends keyof T
+      ? true
+      : false;
 
 /**
  * Detects if T has an index signature and no known keys.
@@ -67,11 +67,12 @@ type $HasIndexSignature<T> = string extends keyof T
  * @template T - The type to check for index signatures and no known keys
  * @returns True if T has an index signature and no known keys, false otherwise
  */
-type $OnlyIndexSignatures<T> = $HasIndexSignature<T> extends true
-  ? [$KnownKeys<T>] extends [never]
-    ? true
-    : false
-  : false;
+type $OnlyIndexSignatures<T> =
+  $HasIndexSignature<T> extends true
+    ? [$KnownKeys<T>] extends [never]
+      ? true
+      : false
+    : false;
 
 /**
  * Recursively merges two object types T and U, with U taking precedence over T.
@@ -111,21 +112,21 @@ export type $MergeObjects<T, U> =
   $OnlyIndexSignatures<U> extends true
     ? U
     : // If T is purely index-signature based, prefer U as a whole (prevents leaking broad index signatures)
-    $OnlyIndexSignatures<T> extends true
-    ? U
-    : {
-        [K in keyof T | keyof U]: K extends keyof T
-          ? K extends keyof U
-            ? T[K] extends Record<string, unknown>
-              ? U[K] extends Record<string, unknown>
-                ? $MergeObjects<T[K], U[K]>
+      $OnlyIndexSignatures<T> extends true
+      ? U
+      : {
+          [K in keyof T | keyof U]: K extends keyof T
+            ? K extends keyof U
+              ? T[K] extends Record<string, unknown>
+                ? U[K] extends Record<string, unknown>
+                  ? $MergeObjects<T[K], U[K]>
+                  : U[K]
                 : U[K]
-              : U[K]
-            : T[K]
-          : K extends keyof U
-          ? U[K]
-          : never;
-      };
+              : T[K]
+            : K extends keyof U
+              ? U[K]
+              : never;
+        };
 
 /**
  * Merges two discriminated unions A and B based on a discriminator key (defaults to "type").
@@ -141,16 +142,16 @@ export type $MergeObjects<T, U> =
 export type $MergeDiscriminatedUnion<
   A extends Record<Key, PropertyKey>,
   B extends Record<Key, PropertyKey>,
-  Key extends PropertyKey = "type"
+  Key extends PropertyKey = "type",
 > = {
   // Create a mapped type over all possible discriminator values from both A and B
   [T in A[Key] | B[Key]]: [Extract<B, Record<Key, T>>] extends [never] // Check if B has a member with this discriminator value
     ? // If B doesn't have this discriminator value, use A's member
       Extract<A, Record<Key, T>>
     : // If B does have this discriminator value, merge A's and B's members (B takes precedence)
-    [Extract<A, Record<Key, T>>] extends [never]
-    ? Extract<B, Record<Key, T>>
-    : $MergeObjects<Extract<A, Record<Key, T>>, Extract<B, Record<Key, T>>>;
+      [Extract<A, Record<Key, T>>] extends [never]
+      ? Extract<B, Record<Key, T>>
+      : $MergeObjects<Extract<A, Record<Key, T>>, Extract<B, Record<Key, T>>>;
   // Index into the mapped type with all possible discriminator values
   // This converts the mapped type back into a union
 }[A[Key] | B[Key]];
@@ -305,8 +306,56 @@ export function coerceMessageLikeToMessage(
 }
 
 /**
+ * Renders a single content block to a compact string representation.
+ * Text blocks are returned as-is; multimodal blocks (image, audio, video, file)
+ * become short placeholders like `[image]` so their existence is preserved
+ * without inflating token counts with base64 data or metadata.
+ */
+function _contentBlockToString(
+  block: string | { type?: string; [key: string]: unknown }
+): string {
+  if (typeof block === "string") return block;
+  switch (block.type) {
+    case "text":
+      return (block as { text: string }).text ?? "";
+    case "text-plain":
+      return (block as { text?: string }).text ?? "[text-plain file]";
+    case "image":
+    case "image_url":
+      return "[image]";
+    case "audio":
+    case "input_audio":
+      return "[audio]";
+    case "video":
+      return "[video]";
+    case "file":
+      return "[file]";
+    case "reasoning":
+    case "tool_call":
+    case "tool_call_chunk":
+    case "invalid_tool_call":
+    case "server_tool_call":
+    case "server_tool_call_chunk":
+    case "server_tool_call_result":
+    case "non_standard":
+      return "";
+    default:
+      return block.type ? `[${block.type}]` : "";
+  }
+}
+
+/**
  * This function is used by memory classes to get a string representation
  * of the chat message history, based on the message content and role.
+ *
+ * Produces compact output like:
+ * ```
+ * Human: What's the weather?
+ * AI: Let me check...[tool_calls]
+ * Tool: 72°F and sunny
+ * ```
+ *
+ * This avoids token inflation from metadata when stringifying message objects directly.
  */
 export function getBufferString(
   messages: BaseMessage[],
@@ -316,25 +365,46 @@ export function getBufferString(
   const string_messages: string[] = [];
   for (const m of messages) {
     let role: string;
-    if (m._getType() === "human") {
+    if (m.type === "human") {
       role = humanPrefix;
-    } else if (m._getType() === "ai") {
+    } else if (m.type === "ai") {
       role = aiPrefix;
-    } else if (m._getType() === "system") {
+    } else if (m.type === "system") {
       role = "System";
-    } else if (m._getType() === "tool") {
+    } else if (m.type === "tool") {
       role = "Tool";
-    } else if (m._getType() === "generic") {
+    } else if (m.type === "generic") {
       role = (m as ChatMessage).role;
     } else {
-      throw new Error(`Got unsupported message type: ${m._getType()}`);
+      throw new Error(`Got unsupported message type: ${m.type}`);
     }
     const nameStr = m.name ? `${m.name}, ` : "";
+
+    // Render content compactly: text as-is, multimodal blocks as placeholders
     const readableContent =
       typeof m.content === "string"
         ? m.content
-        : JSON.stringify(m.content, null, 2);
-    string_messages.push(`${role}: ${nameStr}${readableContent}`);
+        : Array.isArray(m.content)
+          ? m.content.map(_contentBlockToString).filter(Boolean).join("")
+          : "";
+
+    let message = `${role}: ${nameStr}${readableContent}`;
+
+    // Include tool calls for AI messages (matching Python's get_buffer_string behavior)
+    if (m.type === "ai") {
+      const aiMessage = m as AIMessage;
+      if (aiMessage.tool_calls && aiMessage.tool_calls.length > 0) {
+        message += JSON.stringify(aiMessage.tool_calls);
+      } else if (
+        aiMessage.additional_kwargs &&
+        "function_call" in aiMessage.additional_kwargs
+      ) {
+        // Legacy behavior assumes only one function call per message
+        message += JSON.stringify(aiMessage.additional_kwargs.function_call);
+      }
+    }
+
+    string_messages.push(message);
   }
   return string_messages.join("\n");
 }

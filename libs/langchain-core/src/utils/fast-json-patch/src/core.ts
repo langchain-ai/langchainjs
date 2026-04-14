@@ -95,15 +95,30 @@ export interface PatchResult<T> extends Array<OperationResult<T>> {
 /* The operations applicable to an object */
 const objOps = {
   add: function (obj, key, document) {
+    if (key === "__proto__" || key === "constructor") {
+      throw new TypeError(
+        "JSON-Patch: modifying `__proto__` or `constructor` prop is banned for security reasons"
+      );
+    }
     obj[key] = this.value;
     return { newDocument: document };
   },
   remove: function (obj, key, document) {
+    if (key === "__proto__" || key === "constructor") {
+      throw new TypeError(
+        "JSON-Patch: modifying `__proto__` or `constructor` prop is banned for security reasons"
+      );
+    }
     var removed = obj[key];
     delete obj[key];
     return { newDocument: document, removed };
   },
   replace: function (obj, key, document) {
+    if (key === "__proto__" || key === "constructor") {
+      throw new TypeError(
+        "JSON-Patch: modifying `__proto__` or `constructor` prop is banned for security reasons"
+      );
+    }
     var removed = obj[key];
     obj[key] = this.value;
     return { newDocument: document, removed };

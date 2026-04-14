@@ -194,7 +194,7 @@ export function convertFromV1ToChatBedrockConverseMessage(
           toolUse: {
             toolUseId: block.id,
             name: block.name,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // oxlint-disable-next-line @typescript-eslint/no-explicit-any
             input: block.args as any,
           },
         };
@@ -232,7 +232,7 @@ export function convertFromV1ToChatBedrockConverseMessage(
         block.type === "non_standard" &&
         modelProvider === "bedrock-converse"
       ) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         yield block as any;
       }
     }

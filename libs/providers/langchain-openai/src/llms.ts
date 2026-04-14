@@ -143,6 +143,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
       }
   ) {
     super(fields ?? {});
+    this._addVersion("@langchain/openai", __PKG_VERSION__);
 
     this.openAIApiKey =
       fields?.apiKey ??
@@ -321,7 +322,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
                   choice.finish_reason = part.finish_reason;
                   choice.logprobs = part.logprobs;
                 }
-                // eslint-disable-next-line no-void
+                // oxlint-disable-next-line no-void
                 void runManager?.handleLLMNewToken(part.text, {
                   prompt: Math.floor(part.index / this.n),
                   completion: part.index % this.n,
@@ -411,7 +412,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
         },
       });
       yield chunk;
-      // eslint-disable-next-line no-void
+      // oxlint-disable-next-line no-void
       void runManager?.handleLLMNewToken(chunk.text ?? "");
     }
     if (options.signal?.aborted) {

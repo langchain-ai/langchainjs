@@ -152,7 +152,7 @@ export class DefaultGeminiSafetyHandler implements GoogleAISafetyHandler {
       try {
         newdata = response.data.map((item) => this.handleData(response, item));
       } catch (xx) {
-        // eslint-disable-next-line no-instanceof/no-instanceof
+        // oxlint-disable-next-line no-instanceof/no-instanceof
         if (xx instanceof GoogleAISafetyError) {
           throw new GoogleAISafetyError(response, xx.message);
         } else {
@@ -171,8 +171,7 @@ export class DefaultGeminiSafetyHandler implements GoogleAISafetyHandler {
   }
 }
 
-export interface MessageGeminiSafetySettings
-  extends DefaultGeminiSafetySettings {
+export interface MessageGeminiSafetySettings extends DefaultGeminiSafetySettings {
   msg?: string;
   forceNewMessage?: boolean;
 }
@@ -419,7 +418,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
   }
 
   async function messageContentMediaData(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     content: Record<string, any>
   ): Promise<GeminiPartInlineData | GeminiPartFileData> {
     if ("mimeType" in content && "data" in content) {
@@ -450,7 +449,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
   }
 
   function supplementVideoMetadata(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     content: MessageContentImageUrl | Record<string, any>,
     ret: GeminiPartInlineData | GeminiPartFileData
   ): GeminiPartInlineData | GeminiPartFileData {
@@ -462,7 +461,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
   }
 
   async function messageContentMedia(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     content: Record<string, any>
   ): Promise<GeminiPartInlineData | GeminiPartFileData> {
     const ret = await messageContentMediaData(content);
@@ -605,6 +604,69 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     },
   };
 
+  /**
+   * Converts a ContentBlock.Multimodal block (image, video, audio, file)
+   * to the appropriate GeminiPart format.
+   *
+   * Handles three data record variants:
+   *  - DataRecordBase64: has `data` property → GeminiPartInlineData
+   *  - DataRecordUrl: has `url` property → GeminiPartFileData (or GeminiPartInlineData for data: URLs)
+   *  - DataRecordFileId: has `fileId` property → not directly supported, throws
+   */
+  function multimodalContentBlockToPart(
+    block: ContentBlock.Multimodal.Data,
+    defaultMimeType: string
+  ): GeminiPartInlineData | GeminiPartFileData {
+    if ("data" in block && block.data !== undefined) {
+      // DataRecordBase64: inline base64 data
+      const data =
+        // oxlint-disable-next-line no-instanceof/no-instanceof
+        block.data instanceof Uint8Array
+          ? btoa(String.fromCharCode(...block.data))
+          : block.data;
+      return {
+        inlineData: {
+          mimeType: block.mimeType || defaultMimeType,
+          data,
+        },
+      };
+    }
+
+    if ("url" in block && block.url !== undefined) {
+      // DataRecordUrl: check if it's a data: URL first
+      const parsed = extractMimeType(block.url);
+      if (parsed) {
+        return {
+          inlineData: {
+            mimeType: parsed.mimeType,
+            data: parsed.data,
+          },
+        };
+      }
+      // Regular URL → fileData
+      const mimeType =
+        block.mimeType || inferMimeTypeFromUrl(block.url) || defaultMimeType;
+      return {
+        fileData: {
+          mimeType,
+          fileUri: block.url,
+        },
+      };
+    }
+
+    if ("fileId" in block && block.fileId !== undefined) {
+      throw new Error(
+        `ContentBlock.Multimodal fileId is not supported by Google Gemini. ` +
+          `Use a URL (e.g. gs:// URI) or base64 data instead.`
+      );
+    }
+
+    throw new Error(
+      `Invalid multimodal content block: must have "data", "url", or "fileId" property. ` +
+        `Received: ${JSON.stringify(block)}`
+    );
+  }
+
   async function messageContentComplexToPart(
     content: MessageContentComplex
   ): Promise<GeminiPart | null> {
@@ -624,6 +686,49 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
         return await messageContentMedia(content);
       case "reasoning":
         return messageContentReasoning(content as MessageContentReasoning);
+      case "input_audio":
+        if ("input_audio" in content) {
+          return {
+            inlineData: {
+              mimeType: `audio/${content.input_audio.format}`,
+              data: content.input_audio.data,
+            },
+          };
+        }
+        break;
+      case "image":
+        return multimodalContentBlockToPart(
+          content as ContentBlock.Multimodal.Image,
+          "image/png"
+        );
+      case "video":
+        return multimodalContentBlockToPart(
+          content as ContentBlock.Multimodal.Video,
+          "video/mp4"
+        );
+      case "audio":
+        return multimodalContentBlockToPart(
+          content as ContentBlock.Multimodal.Audio,
+          "audio/mpeg"
+        );
+      case "file":
+        return multimodalContentBlockToPart(
+          content as ContentBlock.Multimodal.File,
+          "application/octet-stream"
+        );
+      case "text-plain":
+        // text-plain blocks can have an inline text property
+        if (
+          "text" in content &&
+          typeof (content as ContentBlock.Multimodal.PlainText).text ===
+            "string"
+        ) {
+          return { text: (content as ContentBlock.Multimodal.PlainText).text! };
+        }
+        return multimodalContentBlockToPart(
+          content as ContentBlock.Multimodal.PlainText,
+          "text/plain"
+        );
       default:
         throw new Error(
           `Unsupported type "${
@@ -732,6 +837,14 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       toolParts = messageKwargsToParts(message.additional_kwargs);
     }
     const parts: GeminiPart[] = [...contentParts, ...toolParts];
+
+    // Ensure at least one part exists to prevent Gemini API 400 errors
+    // when a message has empty text content and no tool calls.
+    // This commonly happens when an AI message with empty content
+    // (e.g. during a tool call) is passed back as conversation history.
+    if (parts.length === 0) {
+      parts.push({ text: "" });
+    }
 
     const signatures: string[] =
       (message?.additional_kwargs?.signatures as string[]) ?? [];
@@ -872,7 +985,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
 
   function inlineDataPartToMessageContentMedia(
     part: GeminiPartInlineData
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   ): Record<string, any> {
     return {
       type: "media",
@@ -883,7 +996,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
 
   function inlineDataPartToMessageContent(
     part: GeminiPartInlineData
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   ): MessageContentImageUrl | Record<string, any> {
     const mimeType = part?.inlineData?.mimeType ?? "";
     if (mimeType.startsWith("image")) {
@@ -1030,7 +1143,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       const safeResponse = safetyHandler.handle(response);
       return responseTo(safeResponse);
     } catch (xx) {
-      // eslint-disable-next-line no-instanceof/no-instanceof
+      // oxlint-disable-next-line no-instanceof/no-instanceof
       if (xx instanceof GoogleAISafetyError) {
         const ret = responseTo(xx.response);
         xx.reply = ret;
@@ -1164,16 +1277,16 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       Array.isArray(response.data) && response.data[0]
         ? response.data[0]
         : response.data &&
-          (response.data as GenerateContentResponseData).candidates
-        ? (response.data as GenerateContentResponseData)
-        : undefined;
+            (response.data as GenerateContentResponseData).candidates
+          ? (response.data as GenerateContentResponseData)
+          : undefined;
     if (!data) {
       return {};
     }
 
     const finish_reason = data.candidates[0]?.finishReason;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const ret: Record<string, any> = {
       safety_ratings: data.candidates[0]?.safetyRatings?.map((rating) => ({
         category: rating.category,
@@ -1253,7 +1366,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
   function partToChatGeneration(part: GeminiPart): ChatGeneration {
     const message = partToMessageChunk(part);
     const text = partToText(part);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const generationInfo: Record<string, any> = {};
 
     return new ChatGenerationChunk({
@@ -1544,7 +1657,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
             args: JSON.parse(tool.function.arguments),
             id: tool.id,
           });
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (e: any) {
           fields.invalid_tool_calls?.push({
             name: tool.function.name,
@@ -1673,7 +1786,10 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       frequencyPenalty: parameters.frequencyPenalty,
       maxOutputTokens: parameters.maxOutputTokens,
       stopSequences: parameters.stopSequences,
-      responseMimeType: parameters.responseMimeType,
+      responseMimeType: parameters.responseSchema
+        ? "application/json"
+        : parameters.responseMimeType,
+      responseSchema: parameters.responseSchema,
       responseModalities: parameters.responseModalities,
       speechConfig: normalizeSpeechConfig(parameters.speechConfig),
     };
@@ -1691,12 +1807,34 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
 
     // Add thinking configuration if explicitly set
     // Note that you cannot have thinkingBudget set to 0 and includeThoughts true
-    if (typeof parameters.maxReasoningTokens !== "undefined") {
-      const includeThoughts = parameters.maxReasoningTokens !== 0;
-      ret.thinkingConfig = {
-        thinkingBudget: parameters.maxReasoningTokens,
-        includeThoughts,
-      };
+    if (
+      typeof parameters.maxReasoningTokens !== "undefined" ||
+      typeof parameters.thinkingLevel !== "undefined" ||
+      typeof parameters.reasoningLevel !== "undefined"
+    ) {
+      ret.thinkingConfig = {};
+
+      if (typeof parameters.maxReasoningTokens !== "undefined") {
+        const includeThoughts = parameters.maxReasoningTokens !== 0;
+        ret.thinkingConfig.thinkingBudget = parameters.maxReasoningTokens;
+        ret.thinkingConfig.includeThoughts = includeThoughts;
+      }
+
+      // Map reasoningLevel to thinkingLevel if provided
+      if (typeof parameters.reasoningLevel !== "undefined") {
+        const levelMap: Record<string, string> = {
+          minimal: "MINIMAL",
+          low: "LOW",
+          medium: "MEDIUM",
+          high: "HIGH",
+        };
+        ret.thinkingConfig.thinkingLevel = levelMap[parameters.reasoningLevel];
+      }
+
+      // Direct thinkingLevel takes precedence over reasoningLevel
+      if (typeof parameters.thinkingLevel !== "undefined") {
+        ret.thinkingConfig.thinkingLevel = parameters.thinkingLevel;
+      }
     }
 
     // Remove any undefined properties, so we don't send them

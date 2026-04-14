@@ -9,14 +9,14 @@ import { $InferMessageContent, MessageStructure } from "./message.js";
 import { Constructor } from "./utils.js";
 
 export interface SystemMessageFields<
-  TStructure extends MessageStructure = MessageStructure
+  TStructure extends MessageStructure = MessageStructure,
 > extends BaseMessageFields<TStructure, "system"> {}
 
 /**
  * Represents a system message in a conversation.
  */
 export class SystemMessage<
-  TStructure extends MessageStructure = MessageStructure
+  TStructure extends MessageStructure = MessageStructure,
 > extends BaseMessage<TStructure, "system"> {
   static lc_name() {
     return "SystemMessage";
@@ -40,14 +40,17 @@ export class SystemMessage<
   concat(chunk: string | SystemMessage) {
     if (typeof chunk === "string") {
       return new SystemMessage({
-        ...this,
         content: mergeContent(this.content, chunk),
-      });
+        additional_kwargs: this.additional_kwargs,
+        response_metadata: this.response_metadata,
+        id: this.id,
+        name: this.name,
+      } as SystemMessageFields<TStructure>);
     }
 
     if (SystemMessage.isInstance(chunk)) {
       return new SystemMessage({
-        ...this,
+        content: mergeContent(this.content, chunk.content),
         additional_kwargs: {
           ...this.additional_kwargs,
           ...chunk.additional_kwargs,
@@ -56,8 +59,9 @@ export class SystemMessage<
           ...this.response_metadata,
           ...chunk.response_metadata,
         },
-        content: mergeContent(this.content, chunk.content),
-      });
+        id: this.id ?? chunk.id,
+        name: this.name ?? chunk.name,
+      } as SystemMessageFields<TStructure>);
     }
 
     throw new Error("Unexpected chunk type for system message");
@@ -73,7 +77,7 @@ export class SystemMessage<
  * other system message chunks.
  */
 export class SystemMessageChunk<
-  TStructure extends MessageStructure = MessageStructure
+  TStructure extends MessageStructure = MessageStructure,
 > extends BaseMessageChunk<TStructure, "system"> {
   static lc_name() {
     return "SystemMessageChunk";

@@ -1,9 +1,10 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { type ServerTool } from "@langchain/core/tools";
 
 /**
  * Options for the web search tool.
  */
-interface WebSearch20250305Options {
+export interface WebSearch20250305Options {
   /**
    * Maximum number of times the tool can be used in the API request.
    */
@@ -78,7 +79,7 @@ interface WebSearch20250305Options {
  */
 export function webSearch_20250305(
   options?: WebSearch20250305Options
-): Anthropic.Beta.BetaWebSearchTool20250305 {
+): ServerTool {
   return {
     type: "web_search_20250305",
     name: "web_search",
@@ -89,5 +90,5 @@ export function webSearch_20250305(
     defer_loading: options?.deferLoading,
     strict: options?.strict,
     user_location: options?.userLocation,
-  };
+  } satisfies Anthropic.Beta.BetaWebSearchTool20250305;
 }

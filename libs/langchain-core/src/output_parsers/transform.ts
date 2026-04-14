@@ -18,7 +18,7 @@ import {
  * Class to parse the output of an LLM call that also allows streaming inputs.
  */
 export abstract class BaseTransformOutputParser<
-  T = unknown
+  T = unknown,
 > extends BaseOutputParser<T> {
   async *_transform(
     inputGenerator: AsyncGenerator<string | BaseMessage>
@@ -67,7 +67,7 @@ export type BaseCumulativeTransformOutputParserInput = { diff?: boolean };
  * converting parsed outputs into a diff format.
  */
 export abstract class BaseCumulativeTransformOutputParser<
-  T = unknown
+  T = unknown,
 > extends BaseTransformOutputParser<T> {
   protected diff = false;
 
@@ -76,7 +76,7 @@ export abstract class BaseCumulativeTransformOutputParser<
     this.diff = fields?.diff ?? this.diff;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   protected abstract _diff(prev: any | undefined, next: any): any;
 
   abstract parsePartialResult(

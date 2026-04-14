@@ -8,8 +8,7 @@ import {
 import { GoogleAuthOptions } from "google-auth-library";
 import { GAuthClient } from "./auth.js";
 
-export interface BlobStoreGoogleCloudStorageParams
-  extends BlobStoreGoogleCloudStorageBaseParams<GoogleAuthOptions> {}
+export interface BlobStoreGoogleCloudStorageParams extends BlobStoreGoogleCloudStorageBaseParams<GoogleAuthOptions> {}
 
 export class BlobStoreGoogleCloudStorage extends BlobStoreGoogleCloudStorageBase<GoogleAuthOptions> {
   buildClient(
@@ -19,8 +18,7 @@ export class BlobStoreGoogleCloudStorage extends BlobStoreGoogleCloudStorageBase
   }
 }
 
-export interface BlobStoreAIStudioFileParams
-  extends BlobStoreAIStudioFileBaseParams<GoogleAuthOptions> {}
+export interface BlobStoreAIStudioFileParams extends BlobStoreAIStudioFileBaseParams<GoogleAuthOptions> {}
 
 export class BlobStoreAIStudioFile extends BlobStoreAIStudioFileBase<GoogleAuthOptions> {
   buildAbstractedClient(

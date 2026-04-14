@@ -221,7 +221,7 @@ export function _getSourceIdAssigner(
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export const _isBaseDocumentLoader = (arg: any): arg is BaseDocumentLoader => {
   if (
     "load" in arg &&

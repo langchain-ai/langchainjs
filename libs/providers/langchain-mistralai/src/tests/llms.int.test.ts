@@ -23,7 +23,7 @@ test("Test MistralAI with stop in object", async () => {
     maxTokens: 5,
     model: "codestral-latest",
   });
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const res = await model.invoke("console.log 'Hello world' in javascript:", {
     stop: ["world"],
@@ -71,7 +71,7 @@ test("Test MistralAI with signal in call options", async () => {
       }
     );
 
-    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
     // @ts-expect-error unused var
     for await (const chunk of ret) {
       // console.log({ chunk }, "Test MistralAI with signal in call options");
@@ -144,7 +144,7 @@ test("Test MistralAI stream method with abort", async () => {
         signal: AbortSignal.timeout(1000),
       }
     );
-    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
     // @ts-expect-error unused var
     for await (const chunk of stream) {
       // console.log({ chunk }, "Test MistralAI stream method with abort");
@@ -161,7 +161,7 @@ test("Test MistralAI stream method with early break", async () => {
     "How is your day going? Be extremely verbose."
   );
   let i = 0;
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   for await (const chunk of stream) {
     // console.log({ chunk }, "Test MistralAI stream method with early break");
@@ -363,4 +363,39 @@ test("Test MistralAI can remove all hooks", async () => {
   await model.invoke("Log 'Hello world' to the console in javascript: ");
   // console.log(count);
   expect(count).toEqual(2);
+});
+
+test("Test MistralAI with useFim=false for non-FIM model", async () => {
+  const model = new MistralAI({
+    maxTokens: 10,
+    model: "mistral-small-latest",
+    useFim: false,
+  });
+  const res = await model.invoke("Hello, how are you?");
+  expect(res.length).toBeGreaterThan(1);
+});
+
+test("Test MistralAI with useFim=false streaming", async () => {
+  const model = new MistralAI({
+    maxTokens: 20,
+    model: "mistral-small-latest",
+    useFim: false,
+  });
+  const stream = await model.stream("Hello, how are you?");
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+  }
+  expect(chunks.length).toBeGreaterThan(1);
+});
+
+test("Test MistralAI with mistral-large model automatically uses chat API", async () => {
+  // When using mistral-large-latest, useFim should default to false
+  const model = new MistralAI({
+    maxTokens: 10,
+    model: "mistral-large-latest",
+  });
+  expect(model.useFim).toBe(false);
+  const res = await model.invoke("Hello, how are you?");
+  expect(res.length).toBeGreaterThan(1);
 });

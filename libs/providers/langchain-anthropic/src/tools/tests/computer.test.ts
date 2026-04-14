@@ -55,45 +55,6 @@ describe("Anthropic Computer Use Tool Unit Tests", () => {
       expect(computer.name).toBe("computer");
       expect(computer.func).toBeDefined();
     });
-
-    it("has correct schema with zoom action for Opus 4.5", () => {
-      const computer = computer_20251124({
-        displayWidthPx: 1024,
-        displayHeightPx: 768,
-      });
-
-      expect(computer.schema).toMatchInlineSnapshot(`
-        {
-          "properties": {
-            "action": {
-              "enum": [
-                "screenshot",
-                "left_click",
-                "right_click",
-                "middle_click",
-                "double_click",
-                "triple_click",
-                "left_click_drag",
-                "left_mouse_down",
-                "left_mouse_up",
-                "scroll",
-                "type",
-                "key",
-                "mouse_move",
-                "hold_key",
-                "wait",
-                "zoom",
-              ],
-              "type": "string",
-            },
-          },
-          "required": [
-            "action",
-          ],
-          "type": "object",
-        }
-      `);
-    });
   });
 
   describe("computer_20250124 (Claude 4 / Claude 3.7)", () => {
@@ -146,44 +107,6 @@ describe("Anthropic Computer Use Tool Unit Tests", () => {
 
       expect(computer.name).toBe("computer");
       expect(computer.func).toBeDefined();
-    });
-
-    it("has correct schema without zoom action for Claude 4/3.7", () => {
-      const computer = computer_20250124({
-        displayWidthPx: 1024,
-        displayHeightPx: 768,
-      });
-
-      expect(computer.schema).toMatchInlineSnapshot(`
-        {
-          "properties": {
-            "action": {
-              "enum": [
-                "screenshot",
-                "left_click",
-                "right_click",
-                "middle_click",
-                "double_click",
-                "triple_click",
-                "left_click_drag",
-                "left_mouse_down",
-                "left_mouse_up",
-                "scroll",
-                "type",
-                "key",
-                "mouse_move",
-                "hold_key",
-                "wait",
-              ],
-              "type": "string",
-            },
-          },
-          "required": [
-            "action",
-          ],
-          "type": "object",
-        }
-      `);
     });
   });
 });

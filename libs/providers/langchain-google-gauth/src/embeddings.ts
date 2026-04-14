@@ -10,8 +10,7 @@ import { GAuthClient } from "./auth.js";
 /**
  * Input to LLM class.
  */
-export interface GoogleEmbeddingsInput
-  extends BaseGoogleEmbeddingsParams<GoogleAuthOptions> {}
+export interface GoogleEmbeddingsInput extends BaseGoogleEmbeddingsParams<GoogleAuthOptions> {}
 
 /**
  * Integration with an Google embeddings model.

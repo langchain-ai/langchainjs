@@ -7,6 +7,7 @@ import {
 import {
   BaseLanguageModelInput,
   StructuredOutputMethodOptions,
+  FunctionDefinition,
 } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
@@ -16,7 +17,7 @@ import {
   BaseChatModelCallOptions,
   BindToolsInput,
 } from "@langchain/core/language_models/chat_models";
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// oxlint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore CJS type resolution workaround
 import { Ollama } from "ollama/browser";
 import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
@@ -26,22 +27,13 @@ import type {
   Message as OllamaMessage,
   Tool as OllamaTool,
 } from "ollama";
-import {
-  Runnable,
-  RunnableLambda,
-  RunnablePassthrough,
-  RunnableSequence,
-} from "@langchain/core/runnables";
+import { Runnable } from "@langchain/core/runnables";
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import { concat } from "@langchain/core/utils/stream";
-import {
-  JsonOutputParser,
-  StructuredOutputParser,
-} from "@langchain/core/output_parsers";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   InteropZodType,
   isInteropZodSchema,
-  interopParseAsync,
 } from "@langchain/core/utils/types";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
@@ -49,6 +41,15 @@ import {
   convertToOllamaMessages,
 } from "./utils.js";
 import { OllamaCamelCaseOptions } from "./types.js";
+import {
+  isSerializableSchema,
+  SerializableSchema,
+} from "@langchain/core/utils/standard_schema";
+import {
+  assembleStructuredOutputPipeline,
+  createContentParser,
+  createFunctionCallingParser,
+} from "@langchain/core/language_models/structured_output";
 
 export interface ChatOllamaCallOptions extends BaseChatModelCallOptions {
   /**
@@ -56,7 +57,7 @@ export interface ChatOllamaCallOptions extends BaseChatModelCallOptions {
    */
   stop?: string[];
   tools?: BindToolsInput[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   format?: string | Record<string, any>;
   /** @deprecated Tool choice is not supported for ChatOllama */
   tool_choice?: never;
@@ -81,16 +82,16 @@ export interface PullModelOptions {
  * Input to chat model class.
  */
 export interface ChatOllamaInput
-  extends BaseChatModelParams,
-    OllamaCamelCaseOptions {
+  extends BaseChatModelParams, OllamaCamelCaseOptions {
   /**
    * The model to invoke. If the model does not exist, it
    * will be pulled.
    * @default "llama3"
    */
-  model?: string;
+  model?: OllamaChatRequest["model"];
   /**
    * The host URL of the Ollama server.
+   * Defaults to `OLLAMA_BASE_URL` if set.
    * @default "http://127.0.0.1:11434"
    */
   baseUrl?: string;
@@ -106,7 +107,7 @@ export interface ChatOllamaInput
    */
   checkOrPullModel?: boolean;
   streaming?: boolean;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   format?: string | Record<string, any>;
   /**
    * The fetch function to use.
@@ -124,6 +125,7 @@ export interface ChatOllamaInput
  *
  * ```bash
  * npm install @langchain/ollama
+ * export OLLAMA_BASE_URL="http://127.0.0.1:11434" # Optional; defaults to http://127.0.0.1:11434 if not set
  * ```
  *
  * ## [Constructor args](https://api.js.langchain.com/classes/_langchain_ollama.ChatOllama.html#constructor)
@@ -483,7 +485,7 @@ export class ChatOllama
 
   streaming?: boolean;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   format?: string | Record<string, any>;
 
   keepAlive?: string | number;
@@ -496,51 +498,68 @@ export class ChatOllama
 
   think?: boolean;
 
-  constructor(fields?: ChatOllamaInput) {
-    super(fields ?? {});
+  constructor(
+    model: OllamaChatRequest["model"],
+    fields?: Omit<ChatOllamaInput, "model">
+  );
+  constructor(fields?: ChatOllamaInput);
+  constructor(
+    modelOrFields?: string | ChatOllamaInput,
+    fieldsArg?: Omit<ChatOllamaInput, "model">
+  ) {
+    const fields =
+      typeof modelOrFields === "string"
+        ? { ...(fieldsArg ?? {}), model: modelOrFields }
+        : (modelOrFields ?? {});
+    super(fields);
+    this._addVersion("@langchain/ollama", __PKG_VERSION__);
+
+    this.baseUrl =
+      fields.baseUrl ??
+      getEnvironmentVariable("OLLAMA_BASE_URL") ??
+      this.baseUrl;
 
     this.client = new Ollama({
-      fetch: fields?.fetch,
-      host: fields?.baseUrl,
-      headers: fields?.headers,
+      fetch: fields.fetch,
+      host: this.baseUrl,
+      headers: fields.headers,
     });
-    this.baseUrl = fields?.baseUrl ?? this.baseUrl;
 
-    this.model = fields?.model ?? this.model;
-    this.numa = fields?.numa;
-    this.numCtx = fields?.numCtx;
-    this.numBatch = fields?.numBatch;
-    this.numGpu = fields?.numGpu;
-    this.mainGpu = fields?.mainGpu;
-    this.lowVram = fields?.lowVram;
-    this.f16Kv = fields?.f16Kv;
-    this.logitsAll = fields?.logitsAll;
-    this.vocabOnly = fields?.vocabOnly;
-    this.useMmap = fields?.useMmap;
-    this.useMlock = fields?.useMlock;
-    this.embeddingOnly = fields?.embeddingOnly;
-    this.numThread = fields?.numThread;
-    this.numKeep = fields?.numKeep;
-    this.seed = fields?.seed;
-    this.numPredict = fields?.numPredict;
-    this.topK = fields?.topK;
-    this.topP = fields?.topP;
-    this.tfsZ = fields?.tfsZ;
-    this.typicalP = fields?.typicalP;
-    this.repeatLastN = fields?.repeatLastN;
-    this.temperature = fields?.temperature;
-    this.repeatPenalty = fields?.repeatPenalty;
-    this.presencePenalty = fields?.presencePenalty;
-    this.frequencyPenalty = fields?.frequencyPenalty;
-    this.mirostat = fields?.mirostat;
-    this.mirostatTau = fields?.mirostatTau;
-    this.mirostatEta = fields?.mirostatEta;
-    this.penalizeNewline = fields?.penalizeNewline;
-    this.streaming = fields?.streaming;
-    this.format = fields?.format;
-    this.keepAlive = fields?.keepAlive;
-    this.think = fields?.think;
-    this.checkOrPullModel = fields?.checkOrPullModel ?? this.checkOrPullModel;
+    this.model = fields.model ?? this.model;
+    this.numa = fields.numa;
+    this.numCtx = fields.numCtx;
+    this.numBatch = fields.numBatch;
+    this.numGpu = fields.numGpu;
+    this.mainGpu = fields.mainGpu;
+    this.lowVram = fields.lowVram;
+    this.f16Kv = fields.f16Kv;
+    this.logitsAll = fields.logitsAll;
+    this.vocabOnly = fields.vocabOnly;
+    this.useMmap = fields.useMmap;
+    this.useMlock = fields.useMlock;
+    this.embeddingOnly = fields.embeddingOnly;
+    this.numThread = fields.numThread;
+    this.numKeep = fields.numKeep;
+    this.seed = fields.seed;
+    this.numPredict = fields.numPredict;
+    this.topK = fields.topK;
+    this.topP = fields.topP;
+    this.tfsZ = fields.tfsZ;
+    this.typicalP = fields.typicalP;
+    this.repeatLastN = fields.repeatLastN;
+    this.temperature = fields.temperature;
+    this.repeatPenalty = fields.repeatPenalty;
+    this.presencePenalty = fields.presencePenalty;
+    this.frequencyPenalty = fields.frequencyPenalty;
+    this.mirostat = fields.mirostat;
+    this.mirostatTau = fields.mirostatTau;
+    this.mirostatEta = fields.mirostatEta;
+    this.penalizeNewline = fields.penalizeNewline;
+    this.streaming = fields.streaming;
+    this.format = fields.format;
+    this.keepAlive = fields.keepAlive;
+    this.think = fields.think;
+    this.checkOrPullModel = fields.checkOrPullModel ?? this.checkOrPullModel;
   }
 
   // Replace
@@ -667,6 +686,7 @@ export class ChatOllama
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
+    options.signal?.throwIfAborted();
     if (this.checkOrPullModel) {
       if (!(await this.checkModelExistsOnMachine(this.model))) {
         await this.pull(this.model, {
@@ -741,11 +761,12 @@ export class ChatOllama
 
     let lastMetadata: Omit<OllamaChatResponse, "message"> | undefined;
 
-    for await (const chunk of stream) {
+    for await (const streamChunk of stream) {
       if (options.signal?.aborted) {
         this.client.abort();
+        return;
       }
-      const { message: responseMessage, ...rest } = chunk;
+      const { message: responseMessage, ...rest } = streamChunk;
       usageMetadata.input_tokens += rest.prompt_eval_count ?? 0;
       usageMetadata.output_tokens += rest.eval_count ?? 0;
       usageMetadata.total_tokens =
@@ -754,14 +775,22 @@ export class ChatOllama
 
       // when think is enabled, try thinking first
       const token = this.think
-        ? responseMessage.thinking ?? responseMessage.content ?? ""
-        : responseMessage.content ?? "";
+        ? (responseMessage.thinking ?? responseMessage.content ?? "")
+        : (responseMessage.content ?? "");
 
-      yield new ChatGenerationChunk({
+      const chunk = new ChatGenerationChunk({
         text: token,
         message: convertOllamaMessagesToLangChain(responseMessage),
       });
-      await runManager?.handleLLMNewToken(token);
+      yield chunk;
+      await runManager?.handleLLMNewToken(
+        token,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        { chunk }
+      );
     }
 
     // Yield the `response_metadata` as the final chunk.
@@ -769,41 +798,47 @@ export class ChatOllama
       text: "",
       message: new AIMessageChunk({
         content: "",
-        response_metadata: lastMetadata,
+        response_metadata: {
+          ...lastMetadata,
+          model_provider: "ollama",
+        },
         usage_metadata: usageMetadata,
       }),
     });
   }
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | SerializableSchema<RunOutput>
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | SerializableSchema<RunOutput>
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | SerializableSchema<RunOutput>
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
   ):
@@ -817,12 +852,13 @@ export class ChatOllama
       >;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | SerializableSchema<RunOutput>
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
   ):
@@ -834,121 +870,75 @@ export class ChatOllama
           parsed: RunOutput;
         }
       > {
-    if (config?.method === undefined || config?.method === "jsonSchema") {
-      const outputSchemaIsZod = isInteropZodSchema(outputSchema);
-      const jsonSchema = outputSchemaIsZod
-        ? toJsonSchema(outputSchema)
-        : outputSchema;
-      const functionName = config?.name ?? "extract";
-      const llm = this.bindTools([
-        {
-          type: "function" as const,
-          function: {
-            name: functionName,
-            description: jsonSchema.description,
-            parameters: jsonSchema,
-          },
-        },
-      ]).withConfig({
-        format: "json",
-        ls_structured_output_format: {
-          kwargs: { method: "jsonSchema" },
-          schema: toJsonSchema(outputSchema),
-        },
-      });
+    let llm: Runnable<BaseLanguageModelInput>;
+    let outputParser: Runnable<AIMessageChunk, RunOutput>;
 
-      /**
-       * Create a parser that handles both tool calls and JSON content
-       */
-      const outputParser = RunnableLambda.from<BaseMessage, RunOutput>(
-        async (input: BaseMessage): Promise<RunOutput> => {
-          /**
-           * Ensure input is an AI message (either AIMessage or AIMessageChunk)
-           */
-          if (
-            !AIMessage.isInstance(input) &&
-            !AIMessageChunk.isInstance(input)
-          ) {
-            throw new Error("Input is not an AIMessage or AIMessageChunk.");
-          }
+    const { schema, name, includeRaw } = {
+      ...config,
+      schema: outputSchema,
+    };
+    const method = config?.method ?? "jsonSchema";
 
-          /**
-           * First, check if there are tool calls - extract args from the tool call
-           */
-          if (input.tool_calls && input.tool_calls.length > 0) {
-            const toolCall = input.tool_calls.find(
-              (tc) => tc.name === functionName
-            );
-            if (toolCall && toolCall.args) {
-              /**
-               * Validate with schema if Zod schema is provided
-               */
-              if (outputSchemaIsZod) {
-                return await interopParseAsync(
-                  outputSchema as InteropZodType<RunOutput>,
-                  toolCall.args
-                );
-              }
-              return toolCall.args as RunOutput;
-            }
-          }
+    if (method === "functionCalling") {
+      let functionName = name ?? "extract";
+      let toolFunction: FunctionDefinition;
+      const jsonSchema = toJsonSchema(schema);
 
-          /**
-           * Fallback: parse content as JSON (when format: "json" is set)
-           */
-          const content =
-            typeof input.content === "string" ? input.content : "";
-          if (!content) {
-            throw new Error(
-              "No tool calls found and content is empty. Cannot parse structured output."
-            );
-          }
-
-          /**
-           * Use the appropriate parser based on schema type
-           */
-          if (outputSchemaIsZod) {
-            const zodParser = StructuredOutputParser.fromZodSchema(
-              outputSchema as InteropZodType<RunOutput>
-            );
-            return await zodParser.parse(content);
-          } else {
-            const jsonParser = new JsonOutputParser<RunOutput>();
-            return await jsonParser.parse(content);
-          }
-        }
-      );
-
-      if (!config?.includeRaw) {
-        return llm.pipe(outputParser) as Runnable<
-          BaseLanguageModelInput,
-          RunOutput
-        >;
+      if (isInteropZodSchema(schema) || isSerializableSchema(schema)) {
+        toolFunction = {
+          name: functionName,
+          description: jsonSchema.description,
+          parameters: jsonSchema,
+        };
+      } else if (
+        typeof schema.name === "string" &&
+        typeof schema.parameters === "object" &&
+        schema.parameters != null
+      ) {
+        toolFunction = schema as FunctionDefinition;
+        functionName = schema.name;
+      } else {
+        toolFunction = {
+          name: functionName,
+          description: schema.description ?? "",
+          parameters: schema,
+        };
       }
 
-      const parserAssign = RunnablePassthrough.assign({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        parsed: (input: any, config) => outputParser.invoke(input.raw, config),
-      });
-      const parserNone = RunnablePassthrough.assign({
-        parsed: () => null,
-      });
-      const parsedWithFallback = parserAssign.withFallbacks({
-        fallbacks: [parserNone],
-      });
-      return RunnableSequence.from<
-        BaseLanguageModelInput,
-        { raw: BaseMessage; parsed: RunOutput }
-      >([
-        {
-          raw: llm,
+      llm = this.bindTools([
+        { type: "function", function: toolFunction },
+      ]).withConfig({
+        ls_structured_output_format: {
+          kwargs: { method },
+          schema:
+            isInteropZodSchema(schema) || isSerializableSchema(schema)
+              ? jsonSchema
+              : schema,
         },
-        parsedWithFallback,
-      ]);
+      } as Partial<ChatOllamaCallOptions>);
+
+      outputParser = createFunctionCallingParser(schema, functionName);
+    } else if (method === "jsonMode" || method === "jsonSchema") {
+      outputParser = createContentParser(schema);
+      const jsonSchema = toJsonSchema(schema);
+      llm = this.withConfig({
+        format: method === "jsonMode" ? "json" : jsonSchema,
+        ls_structured_output_format: {
+          kwargs: { method },
+          schema: jsonSchema,
+        },
+      } as Partial<ChatOllamaCallOptions>);
     } else {
-      // TODO: Fix this type in core
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return super.withStructuredOutput<RunOutput>(outputSchema, config as any);
+      throw new TypeError(
+        `Unrecognized structured output method '${method}'. Expected one of 'functionCalling', 'jsonMode', or 'jsonSchema'`
+      );
     }
+
+    return assembleStructuredOutputPipeline(
+      llm,
+      outputParser,
+      includeRaw,
+      includeRaw ? "StructuredOutputRunnable" : "ChatOllamaStructuredOutput"
+    );
   }
 }

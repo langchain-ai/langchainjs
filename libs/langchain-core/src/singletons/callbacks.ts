@@ -1,10 +1,10 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 
 import PQueueMod from "p-queue";
 import { getGlobalAsyncLocalStorageInstance } from "./async_local_storage/globals.js";
 import { getDefaultLangChainClientSingleton } from "./tracer.js";
 
-let queue: typeof import("p-queue")["default"]["prototype"];
+let queue: (typeof import("p-queue"))["default"]["prototype"];
 
 /**
  * Creates a queue using the p-queue library. The queue is configured to
@@ -46,7 +46,7 @@ export async function consumeCallback<T>(
     }
   } else {
     queue = getQueue();
-    // eslint-disable-next-line no-void
+    // oxlint-disable-next-line no-void
     void queue.add(async () => {
       const asyncLocalStorageInstance = getGlobalAsyncLocalStorageInstance();
       if (asyncLocalStorageInstance !== undefined) {

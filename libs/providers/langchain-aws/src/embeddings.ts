@@ -7,6 +7,16 @@ import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
 import { CredentialType } from "./types.js";
 
 /**
+ * Checks if the given model is an Amazon Nova embedding model.
+ * Nova models require a different request format using `messages` instead of `inputText`.
+ * @param model - The model ID string
+ * @returns true if the model is a Nova embedding model
+ */
+function isNovaEmbeddingModel(model: string): boolean {
+  return model.toLowerCase().includes("nova-embed");
+}
+
+/**
  * Interface that extends EmbeddingsParams and defines additional
  * parameters specific to the BedrockEmbeddings class.
  */
@@ -33,6 +43,25 @@ export interface BedrockEmbeddingsParams extends EmbeddingsParams {
   region?: string;
 
   credentials?: CredentialType;
+
+  /**
+   * Additional parameters to pass to the model as part of the InvokeModel
+   * request body.
+   *
+   * These are merged into the request payload, allowing model-specific options
+   * like `normalize`, `embeddingTypes`, etc.
+   *
+   * If `dimensions` is also provided as a top-level parameter, it will take
+   * precedence over a `dimensions` key set in `modelParameters`.
+   */
+  modelParameters?: Record<string, unknown>;
+
+  /**
+   * The number of dimensions for the output embeddings.
+   * Only supported by certain models (e.g., Amazon Titan Embed Text v2,
+   * Cohere Embed). If not specified, uses the model's default.
+   */
+  dimensions?: number;
 }
 
 /**
@@ -46,7 +75,11 @@ export interface BedrockEmbeddingsParams extends EmbeddingsParams {
  *     accessKeyId: "your-access-key-id",
  *     secretAccessKey: "your-secret-access-key",
  *   },
- *   model: "amazon.titan-embed-text-v1",
+ *   model: "amazon.titan-embed-text-v2:0",
+ *   dimensions: 512,
+ *   modelParameters: {
+ *     normalize: true,
+ *   },
  *   // Configure client options (e.g., custom request handler)
  *   // clientOptions: {
  *   //   requestHandler: myCustomRequestHandler,
@@ -72,11 +105,17 @@ export class BedrockEmbeddings
 
   batchSize = 512;
 
+  modelParameters?: Record<string, unknown>;
+
+  dimensions?: number;
+
   constructor(fields?: BedrockEmbeddingsParams) {
     super(fields ?? {});
 
     this.model = fields?.model ?? "amazon.titan-embed-text-v1";
     this.clientOptions = fields?.clientOptions;
+    this.modelParameters = fields?.modelParameters;
+    this.dimensions = fields?.dimensions;
 
     this.client =
       fields?.client ??
@@ -100,12 +139,41 @@ export class BedrockEmbeddings
         // replace newlines, which can negatively affect performance.
         const cleanedText = text.replace(/\n/g, " ");
 
+        // Nova embedding models use a different request format with `messages`
+        // instead of `inputText` used by Titan models
+        const baseRequestBody: Record<string, unknown> = isNovaEmbeddingModel(
+          this.model
+        )
+          ? {
+              messages: [
+                {
+                  role: "user",
+                  content: [
+                    {
+                      text: cleanedText,
+                    },
+                  ],
+                },
+              ],
+            }
+          : {
+              inputText: cleanedText,
+            };
+
+        const requestBody: Record<string, unknown> = {
+          ...(this.modelParameters ?? {}),
+          ...baseRequestBody,
+        };
+
+        // Top-level `dimensions` takes precedence over modelParameters.dimensions
+        if (this.dimensions !== undefined) {
+          requestBody.dimensions = this.dimensions;
+        }
+
         const res = await this.client.send(
           new InvokeModelCommand({
             modelId: this.model,
-            body: JSON.stringify({
-              inputText: cleanedText,
-            }),
+            body: JSON.stringify(requestBody),
             contentType: "application/json",
             accept: "application/json",
           })
@@ -117,7 +185,7 @@ export class BedrockEmbeddings
         console.error({
           error: e,
         });
-        // eslint-disable-next-line no-instanceof/no-instanceof
+        // oxlint-disable-next-line no-instanceof/no-instanceof
         if (e instanceof Error) {
           throw new Error(
             `An error occurred while embedding documents with Bedrock: ${e.message}`

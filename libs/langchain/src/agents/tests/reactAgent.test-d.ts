@@ -1,13 +1,30 @@
 import { z } from "zod/v3";
 import { BaseMessage, HumanMessage } from "@langchain/core/messages";
-import { LanguageModelLike } from "@langchain/core/language_models/base";
+import {
+  BaseLanguageModelInput,
+  LanguageModelOutput,
+} from "@langchain/core/language_models/base";
 import { describe, it, expectTypeOf } from "vitest";
 import type { IterableReadableStream } from "@langchain/core/utils/stream";
+import type { RunnableInterface } from "@langchain/core/runnables";
 
-import { type BuiltInState, createAgent } from "../index.js";
+import { type BuiltInState, createAgent, createMiddleware } from "../index.js";
 import type { StreamOutputMap } from "@langchain/langgraph";
 
 describe("reactAgent", () => {
+  it("should throw an error if you try to pass in a function as a middleware", () => {
+    const fakeMiddleware = function createFakeMiddleware() {
+      return createMiddleware({
+        name: "fake",
+      });
+    };
+    createAgent({
+      model: "openai:gpt-4",
+      // @ts-expect-error fakeMiddleware is a function -> should be an instance of AgentMiddleware
+      middleware: [fakeMiddleware],
+    });
+  });
+
   it("should require model as only required property", async () => {
     // Verify that passing only model is valid
     createAgent({ model: "openai:gpt-4" });
@@ -18,7 +35,40 @@ describe("reactAgent", () => {
     // Verify model property type
     expectTypeOf<Parameters<typeof createAgent>[0]>()
       .toHaveProperty("model")
-      .toEqualTypeOf<string | LanguageModelLike>();
+      .toEqualTypeOf<
+        string | RunnableInterface<BaseLanguageModelInput, LanguageModelOutput>
+      >();
+  });
+
+  it("should accept models that only implement RunnableInterface", async () => {
+    const compatibleModel: RunnableInterface<
+      BaseLanguageModelInput,
+      LanguageModelOutput
+    > = {
+      lc_serializable: true,
+      get lc_id() {
+        return ["tests", "compatible-model"];
+      },
+      async invoke() {
+        return new HumanMessage("Hello, world!");
+      },
+      async batch(inputs) {
+        return inputs.map(() => new HumanMessage("Hello, world!"));
+      },
+      async stream() {
+        return {} as IterableReadableStream<LanguageModelOutput>;
+      },
+      async *transform() {
+        yield new HumanMessage("Hello, world!");
+      },
+      getName() {
+        return "compatible-model";
+      },
+    };
+
+    createAgent({
+      model: compatibleModel,
+    });
   });
 
   it("should not require runnable config if context schema is not provided", async () => {
@@ -112,14 +162,14 @@ describe("reactAgent", () => {
       const [mode, value] = chunk;
       expectTypeOf(mode).toEqualTypeOf<"updates" | "messages" | "values">();
       if (mode === "messages") {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         expectTypeOf(value).toEqualTypeOf<[BaseMessage, Record<string, any>]>();
       } else if (mode === "updates") {
-        expectTypeOf(value).toEqualTypeOf<
+        expectTypeOf(value).toExtend<
           Record<string, Omit<BuiltInState, "jumpTo">>
         >();
       } else {
-        expectTypeOf(value.messages).toEqualTypeOf<BaseMessage[]>();
+        expectTypeOf(value.messages).toExtend<BaseMessage[]>();
       }
     }
 
@@ -293,6 +343,45 @@ describe("reactAgent", () => {
         metadata: {
           test: "test",
         },
+        callbacks: [
+          {
+            handleLLMStart: (input) => {
+              expectTypeOf({ id: input.id }).toMatchObjectType<{
+                id: string[];
+              }>();
+            },
+          },
+        ],
+      }
+    );
+  });
+
+  it("should support passing `callbacks` as an array of callbacks", async () => {
+    const agent = createAgent({
+      model: "openai:gpt-4",
+    });
+    await agent.invoke(
+      {
+        messages: [new HumanMessage("Hello, world!")],
+      },
+      {
+        callbacks: [
+          {
+            handleLLMStart: (input) => {
+              expectTypeOf({ id: input.id }).toMatchObjectType<{
+                id: string[];
+              }>();
+            },
+          },
+        ],
+      }
+    );
+    await agent.stream(
+      {
+        messages: [new HumanMessage("Hello, world!")],
+      },
+      {
+        streamMode: ["values", "updates", "messages"],
         callbacks: [
           {
             handleLLMStart: (input) => {

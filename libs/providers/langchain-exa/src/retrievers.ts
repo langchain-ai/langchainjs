@@ -13,8 +13,9 @@ import { Document } from "@langchain/core/documents";
  * `ExaRetriever` instance. It extends the `BaseRetrieverInput`
  * interface and adds a `client` field of type `Exa`.
  */
-export interface ExaRetrieverFields<T extends ContentsOptions = { text: true }>
-  extends BaseRetrieverInput {
+export interface ExaRetrieverFields<
+  T extends ContentsOptions = { text: true },
+> extends BaseRetrieverInput {
   client: Exa;
   searchArgs?: RegularSearchOptions & T;
 }
@@ -40,7 +41,7 @@ export function _getMetadata<T extends ContentsOptions = { text: true }>(
  * ```
  */
 export class ExaRetriever<
-  T extends ContentsOptions = { text: true }
+  T extends ContentsOptions = { text: true },
 > extends BaseRetriever {
   static lc_name() {
     return "ExaRetriever";

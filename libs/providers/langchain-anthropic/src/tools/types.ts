@@ -1,30 +1,80 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { z } from "zod/v4";
 
 /**
  * Memory tool command types as defined by Anthropic's memory tool API.
  * @beta
  * @see https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/memory-tool
  */
-export type Memory20250818Command =
-  | Memory20250818ViewCommand
-  | Memory20250818CreateCommand
-  | Memory20250818StrReplaceCommand
-  | Memory20250818InsertCommand
-  | Memory20250818DeleteCommand
-  | Memory20250818RenameCommand;
 
-export type Memory20250818ViewCommand =
-  Anthropic.Beta.BetaMemoryTool20250818ViewCommand;
-export type Memory20250818CreateCommand =
-  Anthropic.Beta.BetaMemoryTool20250818CreateCommand;
-export type Memory20250818StrReplaceCommand =
-  Anthropic.Beta.BetaMemoryTool20250818StrReplaceCommand;
-export type Memory20250818InsertCommand =
-  Anthropic.Beta.BetaMemoryTool20250818InsertCommand;
-export type Memory20250818DeleteCommand =
-  Anthropic.Beta.BetaMemoryTool20250818DeleteCommand;
-export type Memory20250818RenameCommand =
-  Anthropic.Beta.BetaMemoryTool20250818RenameCommand;
+// Zod schemas for memory commands
+export const Memory20250818ViewCommandSchema = z.object({
+  command: z.literal("view"),
+  path: z.string(),
+});
+
+export const Memory20250818CreateCommandSchema = z.object({
+  command: z.literal("create"),
+  path: z.string(),
+  file_text: z.string(),
+});
+
+export const Memory20250818StrReplaceCommandSchema = z.object({
+  command: z.literal("str_replace"),
+  path: z.string(),
+  old_str: z.string(),
+  new_str: z.string(),
+});
+
+export const Memory20250818InsertCommandSchema = z.object({
+  command: z.literal("insert"),
+  path: z.string(),
+  insert_line: z.number(),
+  insert_text: z.string(),
+});
+
+export const Memory20250818DeleteCommandSchema = z.object({
+  command: z.literal("delete"),
+  path: z.string(),
+});
+
+export const Memory20250818RenameCommandSchema = z.object({
+  command: z.literal("rename"),
+  old_path: z.string(),
+  new_path: z.string(),
+});
+
+// Discriminated union schema for all memory commands
+export const Memory20250818CommandSchema = z.discriminatedUnion("command", [
+  Memory20250818ViewCommandSchema,
+  Memory20250818CreateCommandSchema,
+  Memory20250818StrReplaceCommandSchema,
+  Memory20250818InsertCommandSchema,
+  Memory20250818DeleteCommandSchema,
+  Memory20250818RenameCommandSchema,
+]);
+
+// TypeScript types derived from Zod schemas
+export type Memory20250818ViewCommand = z.infer<
+  typeof Memory20250818ViewCommandSchema
+>;
+export type Memory20250818CreateCommand = z.infer<
+  typeof Memory20250818CreateCommandSchema
+>;
+export type Memory20250818StrReplaceCommand = z.infer<
+  typeof Memory20250818StrReplaceCommandSchema
+>;
+export type Memory20250818InsertCommand = z.infer<
+  typeof Memory20250818InsertCommandSchema
+>;
+export type Memory20250818DeleteCommand = z.infer<
+  typeof Memory20250818DeleteCommandSchema
+>;
+export type Memory20250818RenameCommand = z.infer<
+  typeof Memory20250818RenameCommandSchema
+>;
+
+export type Memory20250818Command = z.infer<typeof Memory20250818CommandSchema>;
 
 /**
  * Options for creating a memory tool.
@@ -48,37 +98,58 @@ export type MemoryTool20250818 = Anthropic.Beta.BetaMemoryTool20250818;
  * Text editor tool command types for Claude 4.x models.
  * @see https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/text-editor-tool
  */
-export type TextEditor20250728Command =
-  | TextEditor20250728ViewCommand
-  | TextEditor20250728StrReplaceCommand
-  | TextEditor20250728CreateCommand
-  | TextEditor20250728InsertCommand;
 
-export interface TextEditor20250728ViewCommand {
-  command: "view";
-  path: string;
-  view_range?: [number, number];
-}
+// Zod schemas for text editor commands
+export const TextEditor20250728ViewCommandSchema = z.object({
+  command: z.literal("view"),
+  path: z.string(),
+  view_range: z.tuple([z.number(), z.number()]).optional(),
+});
 
-export interface TextEditor20250728StrReplaceCommand {
-  command: "str_replace";
-  path: string;
-  old_str: string;
-  new_str: string;
-}
+export const TextEditor20250728StrReplaceCommandSchema = z.object({
+  command: z.literal("str_replace"),
+  path: z.string(),
+  old_str: z.string(),
+  new_str: z.string(),
+});
 
-export interface TextEditor20250728CreateCommand {
-  command: "create";
-  path: string;
-  file_text: string;
-}
+export const TextEditor20250728CreateCommandSchema = z.object({
+  command: z.literal("create"),
+  path: z.string(),
+  file_text: z.string(),
+});
 
-export interface TextEditor20250728InsertCommand {
-  command: "insert";
-  path: string;
-  insert_line: number;
-  new_str: string;
-}
+export const TextEditor20250728InsertCommandSchema = z.object({
+  command: z.literal("insert"),
+  path: z.string(),
+  insert_line: z.number(),
+  new_str: z.string(),
+});
+
+// Discriminated union schema for all text editor commands
+export const TextEditor20250728CommandSchema = z.discriminatedUnion("command", [
+  TextEditor20250728ViewCommandSchema,
+  TextEditor20250728StrReplaceCommandSchema,
+  TextEditor20250728CreateCommandSchema,
+  TextEditor20250728InsertCommandSchema,
+]);
+
+// TypeScript types derived from Zod schemas
+export type TextEditor20250728ViewCommand = z.infer<
+  typeof TextEditor20250728ViewCommandSchema
+>;
+export type TextEditor20250728StrReplaceCommand = z.infer<
+  typeof TextEditor20250728StrReplaceCommandSchema
+>;
+export type TextEditor20250728CreateCommand = z.infer<
+  typeof TextEditor20250728CreateCommandSchema
+>;
+export type TextEditor20250728InsertCommand = z.infer<
+  typeof TextEditor20250728InsertCommandSchema
+>;
+export type TextEditor20250728Command = z.infer<
+  typeof TextEditor20250728CommandSchema
+>;
 
 /**
  * Computer use tool action types for Claude Opus 4.5.
@@ -110,115 +181,207 @@ export type Computer20250124Action =
   | ComputerHoldKeyAction
   | ComputerWaitAction;
 
-export interface ComputerScreenshotAction {
-  action: "screenshot";
-}
+// Zod schemas for computer actions
+const coordinateSchema = z.tuple([z.number(), z.number()]);
 
-export interface ComputerLeftClickAction {
-  action: "left_click";
-  coordinate: [number, number];
-}
+export const ComputerScreenshotActionSchema = z.object({
+  action: z.literal("screenshot"),
+});
 
-export interface ComputerRightClickAction {
-  action: "right_click";
-  coordinate: [number, number];
-}
+export const ComputerLeftClickActionSchema = z.object({
+  action: z.literal("left_click"),
+  coordinate: coordinateSchema,
+});
 
-export interface ComputerMiddleClickAction {
-  action: "middle_click";
-  coordinate: [number, number];
-}
+export const ComputerRightClickActionSchema = z.object({
+  action: z.literal("right_click"),
+  coordinate: coordinateSchema,
+});
 
-export interface ComputerDoubleClickAction {
-  action: "double_click";
-  coordinate: [number, number];
-}
+export const ComputerMiddleClickActionSchema = z.object({
+  action: z.literal("middle_click"),
+  coordinate: coordinateSchema,
+});
 
-export interface ComputerTripleClickAction {
-  action: "triple_click";
-  coordinate: [number, number];
-}
+export const ComputerDoubleClickActionSchema = z.object({
+  action: z.literal("double_click"),
+  coordinate: coordinateSchema,
+});
 
-export interface ComputerLeftClickDragAction {
-  action: "left_click_drag";
-  start_coordinate: [number, number];
-  end_coordinate: [number, number];
-}
+export const ComputerTripleClickActionSchema = z.object({
+  action: z.literal("triple_click"),
+  coordinate: coordinateSchema,
+});
 
-export interface ComputerLeftMouseDownAction {
-  action: "left_mouse_down";
-  coordinate: [number, number];
-}
+export const ComputerLeftClickDragActionSchema = z.object({
+  action: z.literal("left_click_drag"),
+  start_coordinate: coordinateSchema,
+  end_coordinate: coordinateSchema,
+});
 
-export interface ComputerLeftMouseUpAction {
-  action: "left_mouse_up";
-  coordinate: [number, number];
-}
+export const ComputerLeftMouseDownActionSchema = z.object({
+  action: z.literal("left_mouse_down"),
+  coordinate: coordinateSchema,
+});
 
-export interface ComputerScrollAction {
-  action: "scroll";
-  coordinate: [number, number];
-  scroll_direction: "up" | "down" | "left" | "right";
-  scroll_amount: number;
-}
+export const ComputerLeftMouseUpActionSchema = z.object({
+  action: z.literal("left_mouse_up"),
+  coordinate: coordinateSchema,
+});
 
-export interface ComputerTypeAction {
-  action: "type";
-  text: string;
-}
+export const ComputerScrollActionSchema = z.object({
+  action: z.literal("scroll"),
+  coordinate: coordinateSchema,
+  scroll_direction: z.enum(["up", "down", "left", "right"]),
+  scroll_amount: z.number(),
+});
 
-export interface ComputerKeyAction {
-  action: "key";
-  key: string;
-}
+export const ComputerTypeActionSchema = z.object({
+  action: z.literal("type"),
+  text: z.string(),
+});
 
-export interface ComputerMouseMoveAction {
-  action: "mouse_move";
-  coordinate: [number, number];
-}
+export const ComputerKeyActionSchema = z.object({
+  action: z.literal("key"),
+  key: z.string(),
+});
 
-export interface ComputerHoldKeyAction {
-  action: "hold_key";
-  key: string;
-}
+export const ComputerMouseMoveActionSchema = z.object({
+  action: z.literal("mouse_move"),
+  coordinate: coordinateSchema,
+});
 
-export interface ComputerWaitAction {
-  action: "wait";
-  duration?: number;
-}
+export const ComputerHoldKeyActionSchema = z.object({
+  action: z.literal("hold_key"),
+  key: z.string(),
+});
 
-/**
- * Zoom action for Claude Opus 4.5 only.
- * Allows viewing a specific region of the screen at full resolution.
- */
-export interface ComputerZoomAction {
-  action: "zoom";
-  /** Coordinates [x1, y1, x2, y2] defining top-left and bottom-right corners */
-  region: [number, number, number, number];
-}
+export const ComputerWaitActionSchema = z.object({
+  action: z.literal("wait"),
+  duration: z.number().optional(),
+});
+
+export const ComputerZoomActionSchema = z.object({
+  action: z.literal("zoom"),
+  region: z.tuple([z.number(), z.number(), z.number(), z.number()]),
+});
+
+// Discriminated union schemas
+export const Computer20250124ActionSchema = z.discriminatedUnion("action", [
+  ComputerScreenshotActionSchema,
+  ComputerLeftClickActionSchema,
+  ComputerRightClickActionSchema,
+  ComputerMiddleClickActionSchema,
+  ComputerDoubleClickActionSchema,
+  ComputerTripleClickActionSchema,
+  ComputerLeftClickDragActionSchema,
+  ComputerLeftMouseDownActionSchema,
+  ComputerLeftMouseUpActionSchema,
+  ComputerScrollActionSchema,
+  ComputerTypeActionSchema,
+  ComputerKeyActionSchema,
+  ComputerMouseMoveActionSchema,
+  ComputerHoldKeyActionSchema,
+  ComputerWaitActionSchema,
+]);
+
+export const Computer20251124ActionSchema = z.discriminatedUnion("action", [
+  ComputerScreenshotActionSchema,
+  ComputerLeftClickActionSchema,
+  ComputerRightClickActionSchema,
+  ComputerMiddleClickActionSchema,
+  ComputerDoubleClickActionSchema,
+  ComputerTripleClickActionSchema,
+  ComputerLeftClickDragActionSchema,
+  ComputerLeftMouseDownActionSchema,
+  ComputerLeftMouseUpActionSchema,
+  ComputerScrollActionSchema,
+  ComputerTypeActionSchema,
+  ComputerKeyActionSchema,
+  ComputerMouseMoveActionSchema,
+  ComputerHoldKeyActionSchema,
+  ComputerWaitActionSchema,
+  ComputerZoomActionSchema,
+]);
+
+// TypeScript types derived from Zod schemas
+export type ComputerScreenshotAction = z.infer<
+  typeof ComputerScreenshotActionSchema
+>;
+
+export type ComputerLeftClickAction = z.infer<
+  typeof ComputerLeftClickActionSchema
+>;
+
+export type ComputerRightClickAction = z.infer<
+  typeof ComputerRightClickActionSchema
+>;
+
+export type ComputerMiddleClickAction = z.infer<
+  typeof ComputerMiddleClickActionSchema
+>;
+
+export type ComputerDoubleClickAction = z.infer<
+  typeof ComputerDoubleClickActionSchema
+>;
+
+export type ComputerTripleClickAction = z.infer<
+  typeof ComputerTripleClickActionSchema
+>;
+
+export type ComputerLeftClickDragAction = z.infer<
+  typeof ComputerLeftClickDragActionSchema
+>;
+
+export type ComputerLeftMouseDownAction = z.infer<
+  typeof ComputerLeftMouseDownActionSchema
+>;
+
+export type ComputerLeftMouseUpAction = z.infer<
+  typeof ComputerLeftMouseUpActionSchema
+>;
+
+export type ComputerScrollAction = z.infer<typeof ComputerScrollActionSchema>;
+
+export type ComputerTypeAction = z.infer<typeof ComputerTypeActionSchema>;
+
+export type ComputerKeyAction = z.infer<typeof ComputerKeyActionSchema>;
+
+export type ComputerMouseMoveAction = z.infer<
+  typeof ComputerMouseMoveActionSchema
+>;
+
+export type ComputerHoldKeyAction = z.infer<typeof ComputerHoldKeyActionSchema>;
+
+export type ComputerWaitAction = z.infer<typeof ComputerWaitActionSchema>;
+
+export type ComputerZoomAction = z.infer<typeof ComputerZoomActionSchema>;
 
 /**
  * Bash tool command types for Claude 4 models and Claude 3.7.
  * @see https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/bash-tool
  */
-export type Bash20250124Command =
-  | Bash20250124ExecuteCommand
-  | Bash20250124RestartCommand;
 
-/**
- * Execute a bash command.
- */
-export interface Bash20250124ExecuteCommand {
-  /** The bash command to run */
-  command: string;
-  restart?: never;
-}
+// Zod schemas for bash commands
+export const Bash20250124ExecuteCommandSchema = z.object({
+  command: z.string().describe("The bash command to run"),
+});
 
-/**
- * Restart the bash session to reset state.
- */
-export interface Bash20250124RestartCommand {
-  command?: never;
-  /** Set to true to restart the bash session */
-  restart: true;
-}
+export const Bash20250124RestartCommandSchema = z.object({
+  restart: z.literal(true).describe("Set to true to restart the bash session"),
+});
+
+// Union schema for all bash commands
+export const Bash20250124CommandSchema = z.union([
+  Bash20250124ExecuteCommandSchema,
+  Bash20250124RestartCommandSchema,
+]);
+
+// TypeScript types derived from Zod schemas
+export type Bash20250124ExecuteCommand = z.infer<
+  typeof Bash20250124ExecuteCommandSchema
+>;
+export type Bash20250124RestartCommand = z.infer<
+  typeof Bash20250124RestartCommandSchema
+>;
+export type Bash20250124Command = z.infer<typeof Bash20250124CommandSchema>;

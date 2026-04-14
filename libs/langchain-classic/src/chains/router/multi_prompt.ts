@@ -132,25 +132,28 @@ export class MultiPromptChain extends MultiRouteChain {
     const destinationChains = zipEntries<[string, string | PromptTemplate]>(
       promptNames,
       promptTemplates
-    ).reduce((acc, [name, template]) => {
-      let myPrompt: string | PromptTemplate;
-      if (typeof template === "object") {
-        myPrompt = template;
-      } else if (typeof template === "string") {
-        myPrompt = new PromptTemplate({
-          template: template as string,
-          inputVariables: ["input"],
+    ).reduce(
+      (acc, [name, template]) => {
+        let myPrompt: string | PromptTemplate;
+        if (typeof template === "object") {
+          myPrompt = template;
+        } else if (typeof template === "string") {
+          myPrompt = new PromptTemplate({
+            template: template as string,
+            inputVariables: ["input"],
+          });
+        } else {
+          throw new Error("Invalid prompt template");
+        }
+        acc[name as string] = new LLMChain({
+          ...llmChainOpts,
+          llm,
+          prompt: myPrompt,
         });
-      } else {
-        throw new Error("Invalid prompt template");
-      }
-      acc[name as string] = new LLMChain({
-        ...llmChainOpts,
-        llm,
-        prompt: myPrompt,
-      });
-      return acc;
-    }, {} as { [name: string]: LLMChain });
+        return acc;
+      },
+      {} as { [name: string]: LLMChain }
+    );
 
     const convChain = new ConversationChain({
       ...conversationChainOpts,

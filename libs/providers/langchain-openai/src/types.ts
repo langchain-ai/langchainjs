@@ -23,6 +23,7 @@ export type OpenAIChatModelId =
   | (string & NonNullable<unknown>);
 
 export type OpenAIVerbosityParam = "low" | "medium" | "high" | null;
+export type OpenAICacheRetentionParam = "in-memory" | "24h" | null;
 
 export type OpenAIApiKey = ClientOptions["apiKey"];
 
@@ -84,7 +85,7 @@ export declare interface OpenAIBaseInput {
    * https://platform.openai.com/docs/api-reference/completions/create |
    * `openai.createCompletion`} that are not explicitly specified on this class.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   modelKwargs?: Record<string, any>;
 
   /**
@@ -215,6 +216,11 @@ export interface OpenAIChatInput extends OpenAIBaseInput {
    * [Learn more](https://platform.openai.com/docs/guides/prompt-caching).
    */
   promptCacheKey?: string;
+
+  /**
+   * Used by OpenAI to set cache retention time
+   */
+  promptCacheRetention?: OpenAICacheRetentionParam;
 }
 
 export interface AzureOpenAIInput {
@@ -285,8 +291,7 @@ export interface AzureOpenAIInput {
 }
 
 export interface AzureOpenAIChatInput
-  extends OpenAIChatInput,
-    AzureOpenAIInput {
+  extends OpenAIChatInput, AzureOpenAIInput {
   openAIApiVersion?: string;
   openAIBasePath?: string;
   deploymentName?: string;
@@ -301,7 +306,7 @@ type ChatOpenAIResponseFormatJSONSchema = Omit<
      * The schema for the response format, described as a JSON Schema object
      * or a Zod object.
      */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     schema: Record<string, any> | InteropZodObject;
   };
 };

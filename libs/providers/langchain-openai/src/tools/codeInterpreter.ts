@@ -1,4 +1,5 @@
 import { OpenAI as OpenAIClient } from "openai";
+import type { ServerTool } from "@langchain/core/tools";
 
 /**
  * Memory limit options for the Code Interpreter container.
@@ -141,11 +142,9 @@ function convertContainer(
  * - Files in model input are automatically uploaded to the container
  * - Generated files are returned as `container_file_citation` annotations
  */
-export function codeInterpreter(
-  options?: CodeInterpreterOptions
-): CodeInterpreterTool {
+export function codeInterpreter(options?: CodeInterpreterOptions): ServerTool {
   return {
     type: "code_interpreter",
     container: convertContainer(options?.container),
-  };
+  } satisfies CodeInterpreterTool;
 }

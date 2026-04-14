@@ -9,6 +9,7 @@ import {
   RemoveMessage,
   trimMessages,
   HumanMessage,
+  getBufferString,
 } from "@langchain/core/messages";
 import {
   BaseLanguageModel,
@@ -19,11 +20,17 @@ import {
   InferInteropZodInput,
   InferInteropZodOutput,
 } from "@langchain/core/utils/types";
+import {
+  mergeConfigs,
+  pickRunnableConfigKeys,
+  type RunnableConfig,
+} from "@langchain/core/runnables";
 import { REMOVE_ALL_MESSAGES } from "@langchain/langgraph";
 import { createMiddleware } from "../middleware.js";
 import { countTokensApproximately } from "./utils.js";
 import { hasToolCalls } from "../utils.js";
 import { initChatModel } from "../../chat_models/universal.js";
+import type { Runtime } from "../runtime.js";
 
 export const DEFAULT_SUMMARY_PROMPT = `<role>
 Context Extraction Assistant
@@ -53,6 +60,7 @@ Messages to summarize:
 {messages}
 </messages>`;
 
+const DEFAULT_SUMMARY_PREFIX = "Here is a summary of the conversation to date:";
 const DEFAULT_MESSAGES_TO_KEEP = 20;
 const DEFAULT_TRIM_TOKEN_LIMIT = 4000;
 const DEFAULT_FALLBACK_MESSAGE_COUNT = 15;
@@ -336,7 +344,7 @@ export function summarizationMiddleware(
       const resolvedKeep =
         runtime.context?.keep !== undefined
           ? runtime.context.keep
-          : keep ?? { messages: DEFAULT_MESSAGES_TO_KEEP };
+          : (keep ?? { messages: DEFAULT_MESSAGES_TO_KEEP });
 
       const validatedKeep = keepSchema.parse(resolvedKeep);
 
@@ -381,14 +389,18 @@ export function summarizationMiddleware(
 
       const summaryPrompt =
         runtime.context?.summaryPrompt === DEFAULT_SUMMARY_PROMPT
-          ? userOptions.summaryPrompt ?? DEFAULT_SUMMARY_PROMPT
-          : runtime.context?.summaryPrompt ??
+          ? (userOptions.summaryPrompt ?? DEFAULT_SUMMARY_PROMPT)
+          : (runtime.context?.summaryPrompt ??
             userOptions.summaryPrompt ??
-            DEFAULT_SUMMARY_PROMPT;
+            DEFAULT_SUMMARY_PROMPT);
+      const summaryPrefix =
+        runtime.context.summaryPrefix ??
+        userOptions.summaryPrefix ??
+        DEFAULT_SUMMARY_PREFIX;
       const trimTokensToSummarize =
         runtime.context?.trimTokensToSummarize !== undefined
           ? runtime.context.trimTokensToSummarize
-          : userOptions.trimTokensToSummarize ?? DEFAULT_TRIM_TOKEN_LIMIT;
+          : (userOptions.trimTokensToSummarize ?? DEFAULT_TRIM_TOKEN_LIMIT);
 
       /**
        * Ensure all messages have IDs
@@ -398,7 +410,7 @@ export function summarizationMiddleware(
       const tokenCounter =
         runtime.context?.tokenCounter !== undefined
           ? runtime.context.tokenCounter
-          : userOptions.tokenCounter ?? countTokensApproximately;
+          : (userOptions.tokenCounter ?? countTokensApproximately);
       const totalTokens = await tokenCounter(state.messages);
       const doSummarize = await shouldSummarize(
         state.messages,
@@ -436,12 +448,14 @@ export function summarizationMiddleware(
         model,
         summaryPrompt,
         tokenCounter,
-        trimTokensToSummarize
+        trimTokensToSummarize,
+        runtime
       );
 
       const summaryMessage = new HumanMessage({
-        content: `Here is a summary of the conversation to date:\n\n${summary}`,
+        content: `${summaryPrefix}\n\n${summary}`,
         id: uuid(),
+        additional_kwargs: { lc_source: "summarization" },
       });
 
       return {
@@ -676,7 +690,21 @@ async function findTokenBasedCutoff(
   }
 
   /**
-   * Find safe cutoff point that preserves tool pairs
+   * Find safe cutoff point that preserves AI/Tool pairs.
+   * If cutoff lands on ToolMessage, move backward to include the AIMessage.
+   */
+  const safeCutoff = findSafeCutoffPoint(messages, cutoffCandidate);
+
+  /**
+   * If findSafeCutoffPoint moved forward (fallback case), verify it's safe.
+   * If it moved backward, we already have a safe point.
+   */
+  if (safeCutoff <= cutoffCandidate) {
+    return safeCutoff;
+  }
+
+  /**
+   * Fallback: iterate backward to find a safe cutoff
    */
   for (let i = cutoffCandidate; i >= 0; i--) {
     if (isSafeCutoffPoint(messages, i)) {
@@ -700,6 +728,23 @@ function findSafeCutoff(
 
   const targetCutoff = messages.length - messagesToKeep;
 
+  /**
+   * First, try to find a safe cutoff point using findSafeCutoffPoint.
+   * This handles the case where cutoff lands on a ToolMessage by moving
+   * backward to include the corresponding AIMessage.
+   */
+  const safeCutoff = findSafeCutoffPoint(messages, targetCutoff);
+
+  /**
+   * If findSafeCutoffPoint moved backward (found matching AIMessage), use it.
+   */
+  if (safeCutoff <= targetCutoff) {
+    return safeCutoff;
+  }
+
+  /**
+   * Fallback: iterate backward to find a safe cutoff
+   */
   for (let i = targetCutoff; i >= 0; i--) {
     if (isSafeCutoffPoint(messages, i)) {
       return i;
@@ -769,6 +814,58 @@ function extractToolCallIds(aiMessage: AIMessage): Set<string> {
 }
 
 /**
+ * Find a safe cutoff point that doesn't split AI/Tool message pairs.
+ *
+ * If the message at `cutoffIndex` is a `ToolMessage`, search backward for the
+ * `AIMessage` containing the corresponding `tool_calls` and adjust the cutoff to
+ * include it. This ensures tool call requests and responses stay together.
+ *
+ * Falls back to advancing forward past `ToolMessage` objects only if no matching
+ * `AIMessage` is found (edge case).
+ */
+function findSafeCutoffPoint(
+  messages: BaseMessage[],
+  cutoffIndex: number
+): number {
+  if (
+    cutoffIndex >= messages.length ||
+    !ToolMessage.isInstance(messages[cutoffIndex])
+  ) {
+    return cutoffIndex;
+  }
+
+  // Collect tool_call_ids from consecutive ToolMessages at/after cutoff
+  const toolCallIds = new Set<string>();
+  let idx = cutoffIndex;
+  while (idx < messages.length && ToolMessage.isInstance(messages[idx])) {
+    const toolMsg = messages[idx] as ToolMessage;
+    if (toolMsg.tool_call_id) {
+      toolCallIds.add(toolMsg.tool_call_id);
+    }
+    idx++;
+  }
+
+  // Search backward for AIMessage with matching tool_calls
+  for (let i = cutoffIndex - 1; i >= 0; i--) {
+    const msg = messages[i];
+    if (AIMessage.isInstance(msg) && hasToolCalls(msg)) {
+      const aiToolCallIds = extractToolCallIds(msg as AIMessage);
+      // Check if there's any overlap between the tool_call_ids
+      for (const id of toolCallIds) {
+        if (aiToolCallIds.has(id)) {
+          // Found the AIMessage - move cutoff to include it
+          return i;
+        }
+      }
+    }
+  }
+
+  // Fallback: no matching AIMessage found, advance past ToolMessages to avoid
+  // orphaned tool responses
+  return idx;
+}
+
+/**
  * Check if cutoff separates an AI message from its corresponding tool messages
  */
 function cutoffSeparatesToolPair(
@@ -794,14 +891,23 @@ function cutoffSeparatesToolPair(
 }
 
 /**
- * Generate summary for the given messages
+ * Generate summary for the given messages.
+ *
+ * @param messagesToSummarize - Messages to summarize.
+ * @param model - The language model to use for summarization.
+ * @param summaryPrompt - The prompt template for summarization.
+ * @param tokenCounter - Function to count tokens.
+ * @param trimTokensToSummarize - Optional token limit for trimming messages.
+ * @param runtime - The runtime environment, used to inherit config so that
+ *   LangGraph's handlers can properly track and tag the summarization model call.
  */
 async function createSummary(
   messagesToSummarize: BaseMessage[],
   model: BaseLanguageModel,
   summaryPrompt: string,
   tokenCounter: TokenCounter,
-  trimTokensToSummarize: number | undefined
+  trimTokensToSummarize: number | undefined,
+  runtime: Runtime<unknown>
 ): Promise<string> {
   if (!messagesToSummarize.length) {
     return "No previous conversation history.";
@@ -817,12 +923,33 @@ async function createSummary(
     return "Previous conversation was too long to summarize.";
   }
 
+  /**
+   * Format messages using getBufferString to avoid token inflation from metadata
+   * when str() / JSON.stringify is called on message objects.
+   * This produces compact output like:
+   * ```
+   * Human: What's the weather?
+   * AI: Let me check...[tool_calls]
+   * Tool: 72°F and sunny
+   * ```
+   */
+  const formattedMessages = getBufferString(trimmedMessages);
+
   try {
     const formattedPrompt = summaryPrompt.replace(
       "{messages}",
-      JSON.stringify(trimmedMessages, null, 2)
+      formattedMessages
     );
-    const response = await model.invoke(formattedPrompt);
+    /**
+     * Merge parent runnable config with summarization metadata so LangGraph's
+     * stream handlers (and other callback-based consumers) can properly track
+     * and tag the summarization model call.
+     */
+    const baseConfig: RunnableConfig = pickRunnableConfigKeys(runtime) ?? {};
+    const config = mergeConfigs(baseConfig, {
+      metadata: { lc_source: "summarization" },
+    });
+    const response = await model.invoke(formattedPrompt, config);
     const content = response.content;
     /**
      * Handle both string content and MessageContent array

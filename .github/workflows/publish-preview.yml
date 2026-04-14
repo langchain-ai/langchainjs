@@ -1,0 +1,54 @@
+name: publish-preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, ready_for_review]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  publish-preview-packages:
+    name: Publish Preview Packages
+    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'publish-preview') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+      - name: Install pnpm
+        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Detect packages from changed changesets
+        if: ${{ github.event_name == 'pull_request' }}
+        id: changed_packages
+        run: .github/workflows/scripts/get-changed-changeset-package-paths.sh "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}"
+
+      - name: Publish to pkg.pr.new
+        if: ${{ github.event_name == 'workflow_dispatch' || steps.changed_packages.outputs.paths != '' }}
+        env:
+          API_URL: https://pkg.pr.new
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            pnpm dlx pkg-pr-new@latest publish './libs/*'
+          else
+            pnpm dlx pkg-pr-new@latest publish ${{ steps.changed_packages.outputs.paths }}
+          fi
+        continue-on-error: true

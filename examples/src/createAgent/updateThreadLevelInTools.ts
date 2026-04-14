@@ -301,8 +301,8 @@ ${projectState.tasks
     (task) => `
 • ${task.title} (${task.id})
   Assignee: ${task.assignee} | Priority: ${task.priority} | Status: ${
-      task.status
-    }${task.deadline ? ` | Deadline: ${task.deadline}` : ""}`
+    task.status
+  }${task.deadline ? ` | Deadline: ${task.deadline}` : ""}`
   )
   .join("")}`
     : ""

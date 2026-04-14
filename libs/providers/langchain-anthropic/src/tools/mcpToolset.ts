@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { type ServerTool } from "@langchain/core/tools";
 
 /**
  * Configuration for a single tool in the MCP toolset.
@@ -45,26 +46,6 @@ export interface MCPToolsetOptions {
    * Create a cache control breakpoint at this content block.
    */
   cacheControl?: Anthropic.Beta.BetaCacheControlEphemeral;
-}
-
-/**
- * MCP toolset definition type.
- */
-export interface MCPToolset {
-  type: "mcp_toolset";
-  mcp_server_name: string;
-  default_config?: {
-    enabled?: boolean;
-    defer_loading?: boolean;
-  };
-  configs?: Record<
-    string,
-    {
-      enabled?: boolean;
-      defer_loading?: boolean;
-    }
-  >;
-  cache_control?: Anthropic.Beta.BetaCacheControlEphemeral;
 }
 
 /**
@@ -155,7 +136,7 @@ export interface MCPToolset {
  * });
  * ```
  */
-export function mcpToolset_20251120(options: MCPToolsetOptions): MCPToolset {
+export function mcpToolset_20251120(options: MCPToolsetOptions): ServerTool {
   const defaultConfig =
     options.defaultConfig?.enabled !== undefined ||
     options.defaultConfig?.deferLoading !== undefined
@@ -183,5 +164,5 @@ export function mcpToolset_20251120(options: MCPToolsetOptions): MCPToolset {
     default_config: defaultConfig,
     configs,
     cache_control: options.cacheControl,
-  };
+  } satisfies Anthropic.Beta.BetaMCPToolset;
 }

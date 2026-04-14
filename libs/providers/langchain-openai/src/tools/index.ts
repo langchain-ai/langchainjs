@@ -47,6 +47,7 @@ export type {
 import { computerUse } from "./computerUse.js";
 export type {
   ComputerUseTool,
+  ComputerUseInput,
   ComputerUseOptions,
   ComputerUseEnvironment,
   ComputerUseAction,
@@ -88,6 +89,9 @@ export type {
   ApplyPatchDeleteFileOperation,
 } from "./applyPatch.js";
 
+import { toolSearch } from "./toolSearch.js";
+export type { ToolSearchTool, ToolSearchOptions } from "./toolSearch.js";
+
 export const tools = {
   webSearch,
   mcp,
@@ -98,4 +102,5 @@ export const tools = {
   localShell,
   shell,
   applyPatch,
+  toolSearch,
 };

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 
 import { describe, it, expect } from "vitest";
 import * as z3 from "zod/v3";
@@ -20,7 +20,6 @@ import {
   interopZodObjectPassthrough,
   getInteropZodDefaultGetter,
   interopZodObjectStrict,
-  ZodObjectV4,
   interopZodTransformInputSchema,
   isInteropZodError,
 } from "../zod.js";
@@ -1026,7 +1025,9 @@ describe("Zod utility functions", () => {
           name: z4.string(),
           age: z4.number(),
         });
-        const passthrough = interopZodObjectPassthrough(schema) as ZodObjectV4;
+        const passthrough = interopZodObjectPassthrough(
+          schema
+        ) as unknown as z4.ZodObject;
         const jsonSchema = z4.toJSONSchema(passthrough, { io: "input" });
         expect(jsonSchema.additionalProperties).toEqual({});
       });
@@ -1046,7 +1047,7 @@ describe("Zod utility functions", () => {
         const passthrough = interopZodObjectPassthrough(
           schema,
           true
-        ) as ZodObjectV4;
+        ) as unknown as z4.ZodObject;
         const jsonSchema = z4.toJSONSchema(passthrough, { io: "input" });
         expect(jsonSchema.additionalProperties).toEqual({});
         // @ts-expect-error - JSON schema types are not generic, but we still want to check the nested object
@@ -1087,7 +1088,7 @@ describe("Zod utility functions", () => {
         const passthrough = interopZodObjectPassthrough(
           schema,
           true
-        ) as ZodObjectV4;
+        ) as unknown as z4.ZodObject;
         expect(z4.globalRegistry.get(passthrough)).toBeDefined();
         expect(z4.globalRegistry.get(passthrough)?.description).toBe(
           "The object"
@@ -1293,7 +1294,9 @@ describe("Zod utility functions", () => {
           name: z4.string(),
           age: z4.number(),
         });
-        const strict = interopZodObjectStrict(schema) as ZodObjectV4;
+        const strict = interopZodObjectStrict(
+          schema
+        ) as unknown as z4.ZodObject;
         const jsonSchema = z4.toJSONSchema(strict, { io: "input" });
         expect(jsonSchema.additionalProperties).toBe(false);
       });
@@ -1310,7 +1313,10 @@ describe("Zod utility functions", () => {
             ),
           }),
         });
-        const strict = interopZodObjectStrict(schema, true) as ZodObjectV4;
+        const strict = interopZodObjectStrict(
+          schema,
+          true
+        ) as unknown as z4.ZodObject;
         const jsonSchema = z4.toJSONSchema(strict, { io: "input" });
         expect(jsonSchema.additionalProperties).toBe(false);
         // @ts-expect-error - JSON schema types are not generic, but we still want to check the nested object
@@ -1328,7 +1334,10 @@ describe("Zod utility functions", () => {
             name: z4.string().describe("The name of the author"),
           })
           .describe("The object");
-        const strict = interopZodObjectStrict(schema, true) as ZodObjectV4;
+        const strict = interopZodObjectStrict(
+          schema,
+          true
+        ) as unknown as z4.ZodObject;
         expect(z4.globalRegistry.get(strict)).toBeDefined();
         expect(z4.globalRegistry.get(strict)?.description).toBe("The object");
       });
@@ -1497,6 +1506,47 @@ describe("Zod utility functions", () => {
 
         // The metadata should remain unchanged
         expect(resultShape.metadata).toBeInstanceOf(z4.ZodString);
+      });
+
+      it("should not mutate the original schema when removing transforms", () => {
+        const inputSchema = z4.object({
+          name: z4.string().transform((s) => s.toUpperCase()),
+          email: z4
+            .string()
+            .email()
+            .transform((s) => s.toLowerCase()),
+          age: z4.number(),
+          metadata: z4.object({
+            key: z4.string(),
+            value: z4.string().transform((s) => s.trim()),
+          }),
+        });
+
+        // Capture the original schema structure before processing
+        const originalSchemaJson = JSON.stringify(inputSchema);
+
+        // Process the schema
+        const result = interopZodTransformInputSchema(inputSchema, true);
+
+        // Verify the original schema is unchanged
+        const schemaJsonAfter = JSON.stringify(inputSchema);
+        expect(schemaJsonAfter).toBe(originalSchemaJson);
+
+        // Verify that the result is different from the original
+        const resultJson = JSON.stringify(result);
+        expect(resultJson).not.toBe(originalSchemaJson);
+
+        // Verify the result actually has transforms removed
+        expect(result).toBeInstanceOf(z4.ZodObject);
+        const resultShape = getInteropZodObjectShape(result as any);
+        expect(resultShape.name).toBeInstanceOf(z4.ZodString);
+        expect(resultShape.email).toBeInstanceOf(z4.ZodString);
+        expect(resultShape.age).toBeInstanceOf(z4.ZodNumber);
+
+        const metadataShape = getInteropZodObjectShape(
+          resultShape.metadata as any
+        );
+        expect(metadataShape.value).toBeInstanceOf(z4.ZodString);
       });
 
       it("should handle transforms in array elements", () => {

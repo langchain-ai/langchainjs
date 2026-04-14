@@ -1,5 +1,5 @@
 import { z } from "zod/v3";
-import { v4 as uuidv4 } from "uuid";
+import { v7 as uuidv7 } from "uuid";
 
 import {
   type TraceableFunction,
@@ -72,14 +72,14 @@ export { type RunnableInterface, RunnableBatchOptions };
 export type RunnableFunc<
   RunInput,
   RunOutput,
-  CallOptions extends RunnableConfig = RunnableConfig
+  CallOptions extends RunnableConfig = RunnableConfig,
 > = (
   input: RunInput,
   options:
     | CallOptions
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     | Record<string, any>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     | (Record<string, any> & CallOptions)
 ) => RunOutput | Promise<RunOutput>;
 
@@ -88,29 +88,29 @@ export type RunnableMapLike<RunInput, RunOutput> = {
 };
 
 export type RunnableLike<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput = any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunOutput = any,
-  CallOptions extends RunnableConfig = RunnableConfig
+  CallOptions extends RunnableConfig = RunnableConfig,
 > =
   | RunnableInterface<RunInput, RunOutput, CallOptions>
   | RunnableFunc<RunInput, RunOutput, CallOptions>
   | RunnableMapLike<RunInput, RunOutput>;
 
 export type RunnableRetryFailedAttemptHandler = (
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   error: any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   input: any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
 ) => any;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export function _coerceToDict(value: any, defaultKey: string) {
   return value &&
     !Array.isArray(value) &&
-    // eslint-disable-next-line no-instanceof/no-instanceof
+    // oxlint-disable-next-line no-instanceof/no-instanceof
     !(value instanceof Date) &&
     typeof value === "object"
     ? value
@@ -122,12 +122,12 @@ export function _coerceToDict(value: any, defaultKey: string) {
  * transformed.
  */
 export abstract class Runnable<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunInput = any,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput = any,
-    CallOptions extends RunnableConfig = RunnableConfig
-  >
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput = any,
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput = any,
+  CallOptions extends RunnableConfig = RunnableConfig,
+>
   extends Serializable
   implements RunnableInterface<RunInput, RunOutput, CallOptions>
 {
@@ -137,7 +137,7 @@ export abstract class Runnable<
 
   getName(suffix?: string): string {
     const name =
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       this.name ?? (this.constructor as any).lc_name() ?? this.constructor.name;
     return suffix ? `${name}${suffix}` : name;
   }
@@ -157,7 +157,7 @@ export abstract class Runnable<
     stopAfterAttempt?: number;
     onFailedAttempt?: RunnableRetryFailedAttemptHandler;
   }): RunnableRetry<RunInput, RunOutput, CallOptions> {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    // oxlint-disable-next-line @typescript-eslint/no-use-before-define
     return new RunnableRetry({
       bound: this,
       kwargs: {},
@@ -175,7 +175,7 @@ export abstract class Runnable<
   withConfig(
     config: Partial<CallOptions>
   ): Runnable<RunInput, RunOutput, CallOptions> {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    // oxlint-disable-next-line @typescript-eslint/no-use-before-define
     return new RunnableBinding({
       bound: this,
       config,
@@ -197,7 +197,7 @@ export abstract class Runnable<
       | Runnable<RunInput, RunOutput>[]
   ): RunnableWithFallbacks<RunInput, RunOutput> {
     const fallbacks = Array.isArray(fields) ? fields : fields.fallbacks;
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    // oxlint-disable-next-line @typescript-eslint/no-use-before-define
     return new RunnableWithFallbacks<RunInput, RunOutput>({
       runnable: this,
       fallbacks,
@@ -382,7 +382,7 @@ export abstract class Runnable<
     let output;
     try {
       const promise = func.call(this, input, config, runManager);
-      output = await raceWithSignal(promise, options?.signal);
+      output = await raceWithSignal(promise, config.signal);
     } catch (e) {
       await runManager?.handleChainError(e);
       throw e;
@@ -468,7 +468,7 @@ export abstract class Runnable<
    */
   protected async *_transformStreamWithConfig<
     I extends RunInput,
-    O extends RunOutput
+    O extends RunOutput,
   >(
     inputGenerator: AsyncGenerator<I>,
     transformer: (
@@ -495,7 +495,7 @@ export abstract class Runnable<
             try {
               finalInput = outerThis._concatOutputChunks(
                 finalInput,
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                // oxlint-disable-next-line @typescript-eslint/no-explicit-any
                 chunk as any
               );
             } catch {
@@ -521,9 +521,11 @@ export abstract class Runnable<
             config.runType,
             undefined,
             undefined,
-            config.runName ?? this.getName()
+            config.runName ?? this.getName(),
+            undefined,
+            { lc_defers_inputs: true }
           ),
-        options?.signal,
+        config.signal,
         config
       );
       delete config.runId;
@@ -557,7 +559,7 @@ export abstract class Runnable<
             try {
               finalOutput = this._concatOutputChunks(
                 finalOutput,
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                // oxlint-disable-next-line @typescript-eslint/no-explicit-any
                 chunk as any
               );
             } catch {
@@ -613,7 +615,7 @@ export abstract class Runnable<
   pipe<NewRunOutput>(
     coerceable: RunnableLike<RunOutput, NewRunOutput>
   ): Runnable<RunInput, Exclude<NewRunOutput, Error>> {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    // oxlint-disable-next-line @typescript-eslint/no-use-before-define
     return new RunnableSequence({
       first: this,
       last: _coerceToRunnable(coerceable),
@@ -624,7 +626,7 @@ export abstract class Runnable<
    * Pick keys from the dict output of this runnable. Returns a new runnable.
    */
   pick(keys: string | string[]): Runnable {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    // oxlint-disable-next-line @typescript-eslint/no-use-before-define
     return this.pipe(new RunnablePick(keys) as Runnable);
   }
 
@@ -635,9 +637,9 @@ export abstract class Runnable<
     mapping: RunnableMapLike<Record<string, unknown>, Record<string, unknown>>
   ): Runnable {
     return this.pipe(
-      // eslint-disable-next-line @typescript-eslint/no-use-before-define
+      // oxlint-disable-next-line @typescript-eslint/no-use-before-define
       new RunnableAssign(
-        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+        // oxlint-disable-next-line @typescript-eslint/no-use-before-define
         new RunnableMap<Record<string, unknown>>({ steps: mapping })
       ) as Runnable
     );
@@ -661,7 +663,7 @@ export abstract class Runnable<
       } else {
         // Make a best effort to gather, for any type that supports concat.
         // This method should throw an error if gathering fails.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         finalChunk = this._concatOutputChunks(finalChunk, chunk as any);
       }
     }
@@ -896,7 +898,7 @@ export abstract class Runnable<
       autoClose: false,
     });
     const config = ensureConfig(options);
-    const runId = config.runId ?? uuidv4();
+    const runId = config.runId ?? uuidv7();
     config.runId = runId;
     const callbacks = config.callbacks;
     if (callbacks === undefined) {
@@ -914,27 +916,33 @@ export abstract class Runnable<
     const outerThis = this;
     async function consumeRunnableStream() {
       let signal;
-      let listener: (() => void) | null = null;
 
       try {
-        if (options?.signal) {
+        if (config.signal) {
           if ("any" in AbortSignal) {
             // Use native AbortSignal.any() if available (Node 19+)
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // oxlint-disable-next-line @typescript-eslint/no-explicit-any
             signal = (AbortSignal as any).any([
               abortController.signal,
-              options.signal,
+              config.signal,
             ]);
           } else {
-            // Fallback for Node 18 and below - just use the provided signal
-            signal = options.signal;
-            // Ensure we still abort our controller when the parent signal aborts
+            // Fallback for Node 18 and below - compose both signals
+            // through a bridging controller so that either source
+            // (timeout/user signal OR early consumer break) cancels
+            // the inner stream.
+            const composed = new AbortController();
 
-            listener = () => {
-              abortController.abort();
-            };
+            config.signal.addEventListener("abort", () => composed.abort(), {
+              once: true,
+            });
+            abortController.signal.addEventListener(
+              "abort",
+              () => composed.abort(),
+              { once: true }
+            );
 
-            options.signal.addEventListener("abort", listener, { once: true });
+            signal = composed.signal;
           }
         } else {
           signal = abortController.signal;
@@ -953,10 +961,6 @@ export abstract class Runnable<
         }
       } finally {
         await eventStreamer.finish();
-
-        if (signal && listener) {
-          signal.removeEventListener("abort", listener);
-        }
       }
     }
     const runnableStreamConsumePromise = consumeRunnableStream();
@@ -1135,7 +1139,7 @@ export abstract class Runnable<
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   static isRunnable(thing: any): thing is Runnable {
     return isRunnableInterface(thing);
   }
@@ -1160,7 +1164,7 @@ export abstract class Runnable<
     onEnd?: (run: Run, config?: RunnableConfig) => void | Promise<void>;
     onError?: (run: Run, config?: RunnableConfig) => void | Promise<void>;
   }): Runnable<RunInput, RunOutput, CallOptions> {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    // oxlint-disable-next-line @typescript-eslint/no-use-before-define
     return new RunnableBinding<RunInput, RunOutput, CallOptions>({
       bound: this,
       config: {},
@@ -1203,7 +1207,7 @@ export abstract class Runnable<
 export type RunnableBindingArgs<
   RunInput,
   RunOutput,
-  CallOptions extends RunnableConfig = RunnableConfig
+  CallOptions extends RunnableConfig = RunnableConfig,
 > = {
   bound: Runnable<RunInput, RunOutput, CallOptions>;
   /** @deprecated Use {@link config} instead. */
@@ -1258,7 +1262,7 @@ export type RunnableBindingArgs<
 export class RunnableBinding<
   RunInput,
   RunOutput,
-  CallOptions extends RunnableConfig = RunnableConfig
+  CallOptions extends RunnableConfig = RunnableConfig,
 > extends Runnable<RunInput, RunOutput, CallOptions> {
   static lc_name() {
     return "RunnableBinding";
@@ -1324,7 +1328,7 @@ export class RunnableBinding<
     stopAfterAttempt?: number;
     onFailedAttempt?: RunnableRetryFailedAttemptHandler;
   }): RunnableRetry<RunInput, RunOutput, CallOptions> {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    // oxlint-disable-next-line @typescript-eslint/no-use-before-define
     return new RunnableRetry({
       bound: this.bound,
       kwargs: this.kwargs,
@@ -1453,9 +1457,9 @@ export class RunnableBinding<
   }
 
   static isRunnableBinding(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     thing: any
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   ): thing is RunnableBinding<any, any, any> {
     return thing.bound && Runnable.isRunnable(thing.bound);
   }
@@ -1525,7 +1529,7 @@ export class RunnableBinding<
 export class RunnableEach<
   RunInputItem,
   RunOutputItem,
-  CallOptions extends RunnableConfig
+  CallOptions extends RunnableConfig,
 > extends Runnable<RunInputItem[], RunOutputItem[], CallOptions> {
   static lc_name() {
     return "RunnableEach";
@@ -1593,7 +1597,7 @@ export class RunnableEach<
     onStart?: (run: Run, config?: RunnableConfig) => void | Promise<void>;
     onEnd?: (run: Run, config?: RunnableConfig) => void | Promise<void>;
     onError?: (run: Run, config?: RunnableConfig) => void | Promise<void>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   }): Runnable<any, any, CallOptions> {
     return new RunnableEach<RunInputItem, RunOutputItem, CallOptions>({
       bound: this.bound.withListeners({ onStart, onEnd, onError }),
@@ -1645,11 +1649,11 @@ export class RunnableEach<
  * ```
  */
 export class RunnableRetry<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput = any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunOutput = any,
-  CallOptions extends RunnableConfig = RunnableConfig
+  CallOptions extends RunnableConfig = RunnableConfig,
 > extends RunnableBinding<RunInput, RunOutput, CallOptions> {
   static lc_name() {
     return "RunnableRetry";
@@ -1685,7 +1689,7 @@ export class RunnableRetry<
 
   protected async _invoke(
     input: RunInput,
-    config?: CallOptions,
+    config?: Partial<CallOptions>,
     runManager?: CallbackManagerForChainRun
   ): Promise<RunOutput> {
     return pRetry(
@@ -1695,7 +1699,7 @@ export class RunnableRetry<
           this._patchConfigForRetry(attemptNumber, config, runManager)
         ),
       {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         onFailedAttempt: ({ error }: { error: any }) =>
           this.onFailedAttempt(error, input),
         retries: Math.max(this.maxAttemptNumber - 1, 0),
@@ -1714,7 +1718,10 @@ export class RunnableRetry<
    * @param config The config for the runnable.
    * @returns A promise that resolves to the output of the runnable.
    */
-  async invoke(input: RunInput, config?: CallOptions): Promise<RunOutput> {
+  async invoke(
+    input: RunInput,
+    config?: Partial<CallOptions>
+  ): Promise<RunOutput> {
     return this._callWithConfig(this._invoke.bind(this), input, config);
   }
 
@@ -1733,7 +1740,7 @@ export class RunnableRetry<
             .filter(
               (i) =>
                 resultsMap[i.toString()] === undefined ||
-                // eslint-disable-next-line no-instanceof/no-instanceof
+                // oxlint-disable-next-line no-instanceof/no-instanceof
                 resultsMap[i.toString()] instanceof Error
             );
           const remainingInputs = remainingIndexes.map((i) => inputs[i]);
@@ -1752,11 +1759,11 @@ export class RunnableRetry<
           for (let i = 0; i < results.length; i += 1) {
             const result = results[i];
             const resultMapIndex = remainingIndexes[i];
-            // eslint-disable-next-line no-instanceof/no-instanceof
+            // oxlint-disable-next-line no-instanceof/no-instanceof
             if (result instanceof Error) {
               if (firstException === undefined) {
                 firstException = result;
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                // oxlint-disable-next-line @typescript-eslint/no-explicit-any
                 (firstException as any).input = remainingInputs[i];
               }
             }
@@ -1768,7 +1775,7 @@ export class RunnableRetry<
           return results;
         },
         {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // oxlint-disable-next-line @typescript-eslint/no-explicit-any
           onFailedAttempt: ({ error }: { error: any }) =>
             this.onFailedAttempt(error, error.input),
           retries: Math.max(this.maxAttemptNumber - 1, 0),
@@ -1822,7 +1829,7 @@ export class RunnableRetry<
 export type RunnableSequenceFields<RunInput, RunOutput> = {
   first: Runnable<RunInput>;
   middle?: Runnable[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   last: Runnable<any, RunOutput>;
   name?: string;
   omitSequenceTags?: boolean;
@@ -1840,10 +1847,10 @@ export type RunnableSequenceFields<RunInput, RunOutput> = {
  * ```
  */
 export class RunnableSequence<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput = any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput = any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput = any,
 > extends Runnable<RunInput, RunOutput> {
   static lc_name() {
     return "RunnableSequence";
@@ -1853,7 +1860,7 @@ export class RunnableSequence<
 
   protected middle: Runnable[] = [];
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   protected last: Runnable<any, RunOutput>;
 
   omitSequenceTags = false;
@@ -1902,11 +1909,11 @@ export class RunnableSequence<
             ),
           })
         );
-        nextStepInput = await raceWithSignal(promise, options?.signal);
+        nextStepInput = await raceWithSignal(promise, config.signal);
       }
       // TypeScript can't detect that the last output of the sequence returns RunOutput, so call it out of the loop here
-      if (options?.signal?.aborted) {
-        throw getAbortSignalError(options.signal);
+      if (config.signal?.aborted) {
+        throw getAbortSignalError(config.signal);
       }
       finalOutput = await this.last.invoke(
         nextStepInput,
@@ -1966,7 +1973,7 @@ export class RunnableSequence<
         return handleStartRes;
       })
     );
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     let nextStepInputs: any = inputs;
     try {
       for (let i = 0; i < this.steps.length; i += 1) {
@@ -2051,7 +2058,7 @@ export class RunnableSequence<
             finalOutput = chunk;
           } else {
             try {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              // oxlint-disable-next-line @typescript-eslint/no-explicit-any
               finalOutput = this._concatOutputChunks(finalOutput, chunk as any);
             } catch {
               finalOutput = undefined;
@@ -2069,7 +2076,7 @@ export class RunnableSequence<
 
   getGraph(config?: RunnableConfig): Graph {
     const graph = new Graph();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     let currentLastNode: any = null;
 
     this.steps.forEach((step, index) => {
@@ -2124,18 +2131,18 @@ export class RunnableSequence<
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   static isRunnableSequence(thing: any): thing is RunnableSequence {
     return Array.isArray(thing.middle) && Runnable.isRunnable(thing);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   static from<RunInput = any, RunOutput = any>(
     [first, ...runnables]: [
       RunnableLike<RunInput>,
       ...RunnableLike[],
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      RunnableLike<any, RunOutput>
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      RunnableLike<any, RunOutput>,
     ],
     nameOrFields?:
       | string
@@ -2176,10 +2183,10 @@ export class RunnableSequence<
  * ```
  */
 export class RunnableMap<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput = any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput extends Record<string, any> = Record<string, any>
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput extends Record<string, any> = Record<string, any>,
 > extends Runnable<RunInput, RunOutput> {
   static lc_name() {
     return "RunnableMap";
@@ -2205,8 +2212,8 @@ export class RunnableMap<
 
   static from<
     RunInput,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     steps: RunnableMapLike<RunInput, RunOutput>
   ): RunnableMap<RunInput, RunOutput> {
@@ -2231,7 +2238,7 @@ export class RunnableMap<
       config?.runName
     );
     delete config.runId;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const output: Record<string, any> = {};
     try {
       const promises = Object.entries(this.steps).map(
@@ -2244,7 +2251,7 @@ export class RunnableMap<
           );
         }
       );
-      await raceWithSignal(Promise.all(promises), options?.signal);
+      await raceWithSignal(Promise.all(promises), config.signal);
     } catch (e) {
       await runManager?.handleChainError(e);
       throw e;
@@ -2322,7 +2329,7 @@ export class RunnableMap<
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyTraceableFunction = TraceableFunction<(...any: any[]) => any>;
 
 /**
@@ -2397,7 +2404,7 @@ export class RunnableTraceable<RunInput, RunOutput> extends Runnable<
 function assertNonTraceableFunction<
   RunInput,
   RunOutput,
-  CallOptions extends RunnableConfig = RunnableConfig
+  CallOptions extends RunnableConfig = RunnableConfig,
 >(
   func:
     | RunnableFunc<
@@ -2453,7 +2460,7 @@ function assertNonTraceableFunction<
 export class RunnableLambda<
   RunInput,
   RunOutput,
-  CallOptions extends RunnableConfig = RunnableConfig
+  CallOptions extends RunnableConfig = RunnableConfig,
 > extends Runnable<RunInput, RunOutput, CallOptions> {
   static lc_name() {
     return "RunnableLambda";
@@ -2483,7 +2490,7 @@ export class RunnableLambda<
         >;
   }) {
     if (isTraceableFunction(fields.func)) {
-      // eslint-disable-next-line no-constructor-return
+      // oxlint-disable-next-line no-constructor-return
       return RunnableTraceable.from(fields.func) as unknown as RunnableLambda<
         RunInput,
         RunOutput,
@@ -2500,7 +2507,7 @@ export class RunnableLambda<
   static from<
     RunInput,
     RunOutput,
-    CallOptions extends RunnableConfig = RunnableConfig
+    CallOptions extends RunnableConfig = RunnableConfig,
   >(
     func: RunnableFunc<
       RunInput,
@@ -2512,7 +2519,7 @@ export class RunnableLambda<
   static from<
     RunInput,
     RunOutput,
-    CallOptions extends RunnableConfig = RunnableConfig
+    CallOptions extends RunnableConfig = RunnableConfig,
   >(
     func: TraceableFunction<
       RunnableFunc<
@@ -2526,7 +2533,7 @@ export class RunnableLambda<
   static from<
     RunInput,
     RunOutput,
-    CallOptions extends RunnableConfig = RunnableConfig
+    CallOptions extends RunnableConfig = RunnableConfig,
   >(
     func:
       | RunnableFunc<
@@ -2557,7 +2564,7 @@ export class RunnableLambda<
         callbacks: runManager?.getChild(),
         recursionLimit: (config?.recursionLimit ?? DEFAULT_RECURSION_LIMIT) - 1,
       });
-      // eslint-disable-next-line no-void
+      // oxlint-disable-next-line no-void
       void AsyncLocalStorageProviderSingleton.runWithConfig(
         pickRunnableConfigKeys(childConfig),
         async () => {
@@ -2588,7 +2595,7 @@ export class RunnableLambda<
                   try {
                     finalOutput = this._concatOutputChunks(
                       finalOutput,
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
                       chunk as any
                     );
                   } catch {
@@ -2611,7 +2618,7 @@ export class RunnableLambda<
                   try {
                     finalOutput = this._concatOutputChunks(
                       finalOutput,
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
                       chunk as any
                     );
                   } catch {
@@ -2649,7 +2656,7 @@ export class RunnableLambda<
       } else {
         // Make a best effort to gather, for any type that supports concat.
         try {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // oxlint-disable-next-line @typescript-eslint/no-explicit-any
           finalChunk = this._concatOutputChunks(finalChunk, chunk as any);
         } catch {
           finalChunk = chunk;
@@ -2662,7 +2669,7 @@ export class RunnableLambda<
     });
     const output = await new Promise<RunOutput | Runnable>(
       (resolve, reject) => {
-        // eslint-disable-next-line no-void
+        // oxlint-disable-next-line no-void
         void AsyncLocalStorageProviderSingleton.runWithConfig(
           pickRunnableConfigKeys(childConfig),
           async () => {
@@ -3018,7 +3025,7 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
       })
     );
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     let firstError: any;
     for (const runnable of this.runnables()) {
       configList[0].signal?.throwIfAborted();
@@ -3058,7 +3065,7 @@ export class RunnableWithFallbacks<RunInput, RunOutput> extends Runnable<
 export function _coerceToRunnable<
   RunInput,
   RunOutput,
-  CallOptions extends RunnableConfig = RunnableConfig
+  CallOptions extends RunnableConfig = RunnableConfig,
 >(
   coerceable: RunnableLike<RunInput, RunOutput, CallOptions>
 ): Runnable<RunInput, Exclude<RunOutput, Error>, CallOptions> {
@@ -3125,12 +3132,12 @@ export interface RunnableAssignFields<RunInput> {
  * ```
  */
 export class RunnableAssign<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunInput extends Record<string, any> = Record<string, any>,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>,
-    CallOptions extends RunnableConfig = RunnableConfig
-  >
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput extends Record<string, any> = Record<string, any>,
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput extends Record<string, any> = Record<string, any>,
+  CallOptions extends RunnableConfig = RunnableConfig,
+>
   extends Runnable<RunInput, RunOutput>
   implements RunnableAssignFields<RunInput>
 {
@@ -3145,9 +3152,9 @@ export class RunnableAssign<
   mapper: RunnableMap<RunInput>;
 
   constructor(fields: RunnableMap<RunInput> | RunnableAssignFields<RunInput>) {
-    // eslint-disable-next-line no-instanceof/no-instanceof
+    // oxlint-disable-next-line no-instanceof/no-instanceof
     if (fields instanceof RunnableMap) {
-      // eslint-disable-next-line no-param-reassign
+      // oxlint-disable-next-line no-param-reassign
       fields = { mapper: fields };
     }
     super(fields);
@@ -3260,12 +3267,12 @@ export interface RunnablePickFields {
  * ```
  */
 export class RunnablePick<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunInput extends Record<string, any> = Record<string, any>,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> | any = Record<string, any> | any,
-    CallOptions extends RunnableConfig = RunnableConfig
-  >
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput extends Record<string, any> = Record<string, any>,
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput extends Record<string, any> | any = Record<string, any> | any,
+  CallOptions extends RunnableConfig = RunnableConfig,
+>
   extends Runnable<RunInput, RunOutput>
   implements RunnablePickFields
 {
@@ -3281,7 +3288,7 @@ export class RunnablePick<
 
   constructor(fields: string | string[] | RunnablePickFields) {
     if (typeof fields === "string" || Array.isArray(fields)) {
-      // eslint-disable-next-line no-param-reassign
+      // oxlint-disable-next-line no-param-reassign
       fields = { keys: fields };
     }
     super(fields);
@@ -3349,11 +3356,11 @@ export class RunnablePick<
 
 export interface RunnableToolLikeArgs<
   RunInput extends InteropZodType = InteropZodType,
-  RunOutput = unknown
+  RunOutput = unknown,
 > extends Omit<
-    RunnableBindingArgs<InferInteropZodOutput<RunInput>, RunOutput>,
-    "config"
-  > {
+  RunnableBindingArgs<InferInteropZodOutput<RunInput>, RunOutput>,
+  "config"
+> {
   name: string;
 
   description?: string;
@@ -3365,7 +3372,7 @@ export interface RunnableToolLikeArgs<
 
 export class RunnableToolLike<
   RunInput extends InteropZodType = InteropZodType,
-  RunOutput = unknown
+  RunOutput = unknown,
 > extends RunnableBinding<InferInteropZodOutput<RunInput>, RunOutput> {
   name: string;
 

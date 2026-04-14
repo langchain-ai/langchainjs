@@ -1,6 +1,8 @@
 name: Dev Release
+
+# Called by publish.yml (the npm Trusted Publisher entry point)
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       npm_tag:
         description: "NPM tag for the release"
@@ -8,12 +10,11 @@ on:
         default: "dev"
         type: string
 
+permissions:
+  contents: read
+
 env:
   CI: true
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
   release:
@@ -26,15 +27,15 @@ jobs:
       pull-requests: write
     steps:
       - name: ⬇️ Checkout repo
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 0
 
       - name: 📦 Setup pnpm
-        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
+        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5.0.0
 
       - name: ⎔ Setup node
-        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version-file: ".nvmrc"
           cache: "pnpm"
@@ -58,7 +59,8 @@ jobs:
       - name: 🧹 Prepare for snapshot release
         run: |
           # Disable changelog generation for snapshot releases
-          pnpm dlx json -I -f .changeset/config.json -e "this.changelog = false"
+          # Enable useCalculatedVersion to preserve current version (e.g., 1.2.0-dev-xxx instead of 0.0.0-dev-xxx)
+          pnpm dlx json -I -f .changeset/config.json -e "this.changelog = false; this.snapshot = { useCalculatedVersion: true, prereleaseTemplate: '{tag}-{timestamp}' }"
 
       - name: 📦 Version packages (snapshot)
         id: version
@@ -72,6 +74,13 @@ jobs:
           else
             echo "success=1" >> $GITHUB_OUTPUT
           fi
+
+      - name: 📥 Reinstall deps after versioning
+        if: steps.version.outputs.success == '1'
+        run: |
+          # Re-run install to update workspace links after changeset version modified package.json files
+          # This ensures pnpm pack can resolve workspace:* protocols correctly during build validation
+          pnpm install --no-frozen-lockfile
 
       - name: 🔨 Build packages
         if: steps.version.outputs.success == '1'
@@ -87,33 +96,66 @@ jobs:
 
       - name: 🚀 Publish to npm
         if: steps.version.outputs.success == '1'
-        run: pnpm changeset publish --tag ${{ inputs.npm_tag }} --no-git-tag
+        run: |
+          # Only publish packages with snapshot versions (ignore pending regular releases)
+          echo "🔍 Searching for packages to publish..."
+          echo "📋 Looking for versions containing: -${{ inputs.npm_tag }}-"
+
+          PUBLISHED_COUNT=0
+          SKIPPED_COUNT=0
+
+          for pkg_json in $(find libs -name "package.json" -not -path "*/node_modules/*"); do
+            version=$(jq -r '.version' "$pkg_json")
+            name=$(jq -r '.name' "$pkg_json")
+            private=$(jq -r '.private // false' "$pkg_json")
+
+            if [[ "$private" == "true" ]]; then
+              echo "⏭️  Skipping $name (private package)"
+              continue
+            fi
+
+            if [[ "$version" == *"-${{ inputs.npm_tag }}-"* ]]; then
+              echo "📦 Publishing $name@$version"
+              dir=$(dirname "$pkg_json")
+              (cd "$dir" && pnpm publish --tag ${{ inputs.npm_tag }} --no-git-checks --access public)
+              PUBLISHED_COUNT=$((PUBLISHED_COUNT + 1))
+            else
+              echo "⏭️  Skipping $name@$version (no snapshot suffix)"
+              SKIPPED_COUNT=$((SKIPPED_COUNT + 1))
+            fi
+          done
+
+          echo ""
+          echo "✅ Published: $PUBLISHED_COUNT packages"
+          echo "⏭️  Skipped: $SKIPPED_COUNT packages"
+
+          if [[ "$PUBLISHED_COUNT" -eq 0 ]]; then
+            echo "::warning::No packages with snapshot versions were found to publish"
+          fi
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: true
 
       - name: 📋 Get published packages
-        if: steps.version.outputs.success == '1'
+        if: steps.version.outputs.success == '1' && github.ref != 'refs/heads/main'
         id: published
-        uses: actions/github-script@v8
+        uses: actions/github-script@v8.0.0
         with:
           script: |
             const fs = require('fs');
             const path = require('path');
-            const glob = require('@actions/glob');
 
-            // Find all package.json files in libs directory
-            const globber = await glob.create('libs/**/package.json', {
-              followSymbolicLinks: false
-            });
-            const files = await globber.glob();
+            // Find all package.json files in libs directory using built-in fs
+            const libsDir = path.join(process.cwd(), 'libs');
+            const allFiles = fs.readdirSync(libsDir, { recursive: true });
+            const files = allFiles
+              .filter(f => f.endsWith('package.json') && !f.includes('node_modules'))
+              .map(f => path.join(libsDir, f));
 
             const tag = '${{ inputs.npm_tag }}';
             const packages = [];
 
             for (const file of files) {
-              // Skip node_modules
-              if (file.includes('node_modules')) continue;
-
               try {
                 const content = fs.readFileSync(file, 'utf8');
                 const pkg = JSON.parse(content);
@@ -162,8 +204,8 @@ jobs:
             await summary.write();
 
       - name: 💬 Comment on PR
-        if: steps.version.outputs.success == '1' && steps.published.outputs.count != '0'
-        uses: actions/github-script@v8
+        if: steps.version.outputs.success == '1' && steps.published.outputs.count != '0' && github.ref != 'refs/heads/main'
+        uses: actions/github-script@v8.0.0
         with:
           script: |
             // Get the current branch name

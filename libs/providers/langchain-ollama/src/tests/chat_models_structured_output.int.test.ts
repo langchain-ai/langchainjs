@@ -1,128 +1,396 @@
 import { test, expect } from "vitest";
 import { z } from "zod/v3";
-
-import {
-  HumanMessage,
-  AIMessage,
-  ToolMessage,
-  AIMessageChunk,
-} from "@langchain/core/messages";
-import { tool } from "@langchain/core/tools";
-import { concat } from "@langchain/core/utils/stream";
-
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { AIMessage } from "@langchain/core/messages";
 import { ChatOllama } from "../chat_models.js";
 
-const messageHistory = [
-  new HumanMessage("What's the weather like today in Paris?"),
-  new AIMessage({
-    content: "",
-    tool_calls: [
-      {
-        id: "89a1e453-0bce-4de3-a456-c54bed09c520",
-        name: "get_current_weather",
-        args: {
-          location: "Paris, France",
-        },
-      },
+test("withStructuredOutput zod schema", async () => {
+  const model = new ChatOllama({
+    temperature: 0,
+    model: "mistral",
+  });
+
+  const calculatorSchema = z.object({
+    operation: z.enum(["add", "subtract", "multiply", "divide"]),
+    number1: z.number(),
+    number2: z.number(),
+  });
+  const modelWithStructuredOutput = model.withStructuredOutput(
+    calculatorSchema,
+    {
+      method: "jsonSchema",
+    }
+  );
+
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", "You are VERY bad at math and must always use a calculator."],
+    ["human", "Please help me!! What is 2 + 2?"],
+  ]);
+  const chain = prompt.pipe(modelWithStructuredOutput);
+  const result = await chain.invoke({});
+  // console.log(result);
+  expect("operation" in result).toBe(true);
+  expect("number1" in result).toBe(true);
+  expect("number2" in result).toBe(true);
+});
+
+test("withStructuredOutput zod schema function calling", async () => {
+  const model = new ChatOllama({
+    temperature: 0,
+    model: "mistral",
+  });
+
+  const calculatorSchema = z.object({
+    operation: z.enum(["add", "subtract", "multiply", "divide"]),
+    number1: z.number(),
+    number2: z.number(),
+  });
+  const modelWithStructuredOutput = model.withStructuredOutput(
+    calculatorSchema,
+    {
+      name: "calculator",
+      method: "functionCalling",
+    }
+  );
+
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", "You are VERY bad at math and must always use a calculator."],
+    ["human", "Please help me!! What is 2 + 2?"],
+  ]);
+  const chain = prompt.pipe(modelWithStructuredOutput);
+  const result = await chain.invoke({});
+  // console.log(result);
+  expect("operation" in result).toBe(true);
+  expect("number1" in result).toBe(true);
+  expect("number2" in result).toBe(true);
+});
+
+test("withStructuredOutput zod schema JSON mode", async () => {
+  const model = new ChatOllama({
+    temperature: 0,
+    model: "mistral",
+  });
+
+  const calculatorSchema = z.object({
+    operation: z.enum(["add", "subtract", "multiply", "divide"]),
+    number1: z.number(),
+    number2: z.number(),
+  });
+  const modelWithStructuredOutput = model.withStructuredOutput(
+    calculatorSchema,
+    {
+      name: "calculator",
+      method: "jsonMode",
+    }
+  );
+
+  const prompt = ChatPromptTemplate.fromMessages([
+    [
+      "system",
+      `You are VERY bad at math and must always use a calculator.
+Respond with a JSON object containing three keys:
+'operation': the type of operation to execute, either 'add', 'subtract', 'multiply' or 'divide',
+'number1': the first number to operate on,
+'number2': the second number to operate on.
+`,
     ],
-  }),
-  new ToolMessage({
-    tool_call_id: "89a1e453-0bce-4de3-a456-c54bed09c520",
-    content: "22",
-  }),
-  new AIMessage("The weather in Paris is 22 degrees."),
-  new HumanMessage(
-    "What's the weather like today in San Francisco? Ensure you use the 'get_current_weather' tool."
-  ),
-];
-
-const weatherTool = tool((_) => "Da weather is weatherin", {
-  name: "get_current_weather",
-  description: "Get the current weather in a given location",
-  schema: z.object({
-    location: z.string().describe("The city and state, e.g. San Francisco, CA"),
-  }),
+    ["human", "Please help me!! What is 2 + 2?"],
+  ]);
+  const chain = prompt.pipe(modelWithStructuredOutput);
+  const result = await chain.invoke({});
+  // console.log(result);
+  expect("operation" in result).toBe(true);
+  expect("number1" in result).toBe(true);
+  expect("number2" in result).toBe(true);
 });
 
-test("Ollama can call tools", async () => {
+test("withStructuredOutput JSON schema", async () => {
   const model = new ChatOllama({
-    model: "llama3-groq-tool-use",
-    maxRetries: 1,
-  }).bindTools([weatherTool]);
+    temperature: 0,
+    model: "mistral",
+  });
 
-  const result = await model.invoke(messageHistory);
-  expect(result).toBeDefined();
-  expect(result.tool_calls?.[0]).toBeDefined();
-  if (!result.tool_calls?.[0]) return;
-  expect(result.tool_calls[0].name).toBe("get_current_weather");
-  expect(result.tool_calls[0].id).toBeDefined();
-  expect(result.tool_calls[0].id).not.toBe("");
+  const calculatorSchema = z.object({
+    operation: z.enum(["add", "subtract", "multiply", "divide"]),
+    number1: z.number(),
+    number2: z.number(),
+  });
+  const modelWithStructuredOutput = model.withStructuredOutput(
+    toJsonSchema(calculatorSchema),
+    {
+      method: "jsonSchema",
+    }
+  );
+
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", `You are VERY bad at math and must always use a calculator.`],
+    ["human", "Please help me!! What is 2 + 2?"],
+  ]);
+  const chain = prompt.pipe(modelWithStructuredOutput);
+  const result = await chain.invoke({});
+  // console.log(result);
+  expect("operation" in result).toBe(true);
+  expect("number1" in result).toBe(true);
+  expect("number2" in result).toBe(true);
 });
 
-test("Ollama can stream tools", async () => {
+test("withStructuredOutput JSON schema function calling", async () => {
   const model = new ChatOllama({
-    model: "llama3-groq-tool-use",
-    maxRetries: 1,
-  }).bindTools([weatherTool]);
+    temperature: 0,
+    model: "mistral",
+  });
 
-  let finalChunk: AIMessageChunk | undefined;
-  for await (const chunk of await model.stream(messageHistory)) {
-    finalChunk = !finalChunk ? chunk : concat(finalChunk, chunk);
+  const calculatorSchema = z.object({
+    operation: z.enum(["add", "subtract", "multiply", "divide"]),
+    number1: z.number(),
+    number2: z.number(),
+  });
+  const modelWithStructuredOutput = model.withStructuredOutput(
+    toJsonSchema(calculatorSchema),
+    {
+      name: "calculator",
+      method: "functionCalling",
+    }
+  );
+
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", `You are VERY bad at math and must always use a calculator.`],
+    ["human", "Please help me!! What is 2 + 2?"],
+  ]);
+  const chain = prompt.pipe(modelWithStructuredOutput);
+  const result = await chain.invoke({});
+  // console.log(result);
+  expect("operation" in result).toBe(true);
+  expect("number1" in result).toBe(true);
+  expect("number2" in result).toBe(true);
+});
+
+test("withStructuredOutput JSON schema JSON mode", async () => {
+  const model = new ChatOllama({
+    temperature: 0,
+    model: "mistral",
+  });
+
+  const calculatorSchema = z.object({
+    operation: z.enum(["add", "subtract", "multiply", "divide"]),
+    number1: z.number(),
+    number2: z.number(),
+  });
+  const modelWithStructuredOutput = model.withStructuredOutput(
+    toJsonSchema(calculatorSchema),
+    {
+      name: "calculator",
+      method: "jsonMode",
+    }
+  );
+
+  const prompt = ChatPromptTemplate.fromMessages([
+    [
+      "system",
+      `You are VERY bad at math and must always use a calculator.
+Respond with a JSON object containing three keys:
+'operation': the type of operation to execute, either 'add', 'subtract', 'multiply' or 'divide',
+'number1': the first number to operate on,
+'number2': the second number to operate on.
+`,
+    ],
+    ["human", "Please help me!! What is 2 + 2?"],
+  ]);
+  const chain = prompt.pipe(modelWithStructuredOutput);
+  const result = await chain.invoke({});
+  // console.log(result);
+  expect("operation" in result).toBe(true);
+  expect("number1" in result).toBe(true);
+  expect("number2" in result).toBe(true);
+});
+
+test("withStructuredOutput OpenAI function definition function calling", async () => {
+  const model = new ChatOllama({
+    temperature: 0,
+    model: "mistral",
+  });
+
+  const calculatorSchema = z.object({
+    operation: z.enum(["add", "subtract", "multiply", "divide"]),
+    number1: z.number(),
+    number2: z.number(),
+  });
+  const modelWithStructuredOutput = model.withStructuredOutput(
+    {
+      name: "calculator",
+      parameters: toJsonSchema(calculatorSchema),
+    },
+    {
+      method: "functionCalling",
+    }
+  );
+
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", `You are VERY bad at math and must always use a calculator.`],
+    ["human", "Please help me!! What is 2 + 2?"],
+  ]);
+  const chain = prompt.pipe(modelWithStructuredOutput);
+  const result = await chain.invoke({});
+  // console.log(result);
+  expect("operation" in result).toBe(true);
+  expect("number1" in result).toBe(true);
+  expect("number2" in result).toBe(true);
+});
+
+test("withStructuredOutput includeRaw true", async () => {
+  const model = new ChatOllama({
+    temperature: 0,
+    model: "mistral",
+  });
+
+  const calculatorSchema = z.object({
+    operation: z.enum(["add", "subtract", "multiply", "divide"]),
+    number1: z.number(),
+    number2: z.number(),
+  });
+  const modelWithStructuredOutput = model.withStructuredOutput(
+    calculatorSchema,
+    {
+      method: "jsonSchema",
+      includeRaw: true,
+    }
+  );
+
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", "You are VERY bad at math and must always use a calculator."],
+    ["human", "Please help me!! What is 2 + 2?"],
+  ]);
+  const chain = prompt.pipe(modelWithStructuredOutput);
+  const result = await chain.invoke({});
+  // console.log(result);
+
+  expect("parsed" in result).toBe(true);
+  // Need to make TS happy :)
+  if (!("parsed" in result)) {
+    throw new Error("parsed not in result");
   }
-  expect(finalChunk).toBeDefined();
-  if (!finalChunk) return;
-  expect(finalChunk.tool_calls?.[0]).toBeDefined();
-  if (!finalChunk.tool_calls?.[0]) return;
-  expect(finalChunk.tool_calls[0].name).toBe("get_current_weather");
-  expect(finalChunk.tool_calls[0].id).toBeDefined();
-  expect(finalChunk.tool_calls[0].id).not.toBe("");
+  const { parsed } = result;
+  expect("operation" in parsed).toBe(true);
+  expect("number1" in parsed).toBe(true);
+  expect("number2" in parsed).toBe(true);
+
+  expect("raw" in result).toBe(true);
+  // Need to make TS happy :)
+  if (!("raw" in result)) {
+    throw new Error("raw not in result");
+  }
+  const { raw } = result as { raw: AIMessage };
+  expect(raw.tool_calls?.length).toBe(0);
 });
 
-test("Ollama can call withStructuredOutput", async () => {
+test("withStructuredOutput includeRaw true function calling", async () => {
   const model = new ChatOllama({
-    model: "llama3-groq-tool-use",
-    maxRetries: 1,
-  }).withStructuredOutput(weatherTool.schema, {
-    name: weatherTool.name,
+    temperature: 0,
+    model: "mistral",
   });
 
-  const result = await model.invoke(messageHistory);
-  expect(result).toBeDefined();
-  expect(result.location).toBeDefined();
-  expect(result.location).not.toBe("");
+  const calculatorSchema = z.object({
+    operation: z.enum(["add", "subtract", "multiply", "divide"]),
+    number1: z.number(),
+    number2: z.number(),
+  });
+  const modelWithStructuredOutput = model.withStructuredOutput(
+    calculatorSchema,
+    {
+      name: "calculator",
+      method: "functionCalling",
+      includeRaw: true,
+    }
+  );
+
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", "You are VERY bad at math and must always use a calculator."],
+    ["human", "Please help me!! What is 2 + 2?"],
+  ]);
+  const chain = prompt.pipe(modelWithStructuredOutput);
+  const result = await chain.invoke({});
+  // console.log(result);
+
+  expect("parsed" in result).toBe(true);
+  // Need to make TS happy :)
+  if (!("parsed" in result)) {
+    throw new Error("parsed not in result");
+  }
+  const { parsed } = result;
+  expect("operation" in parsed).toBe(true);
+  expect("number1" in parsed).toBe(true);
+  expect("number2" in parsed).toBe(true);
+
+  expect("raw" in result).toBe(true);
+  // Need to make TS happy :)
+  if (!("raw" in result)) {
+    throw new Error("raw not in result");
+  }
+  const { raw } = result as { raw: AIMessage };
+
+  expect(raw.tool_calls?.[0]).toBeDefined();
+  if (!raw.tool_calls?.[0]) {
+    throw new Error("tool_calls not in raw");
+  }
+  const toolCall = raw.tool_calls[0];
+  expect(toolCall.name).toBe("calculator");
+  expect("operation" in toolCall.args).toBe(true);
+  expect("number1" in toolCall.args).toBe(true);
+  expect("number2" in toolCall.args).toBe(true);
 });
 
-test("Ollama can call withStructuredOutput includeRaw JSON Schema", async () => {
+test("withStructuredOutput includeRaw true JSON mode", async () => {
   const model = new ChatOllama({
-    model: "llama3-groq-tool-use",
-    maxRetries: 1,
-  }).withStructuredOutput(weatherTool.schema, {
-    name: weatherTool.name,
-    includeRaw: true,
+    temperature: 0,
+    model: "mistral",
   });
 
-  const result = await model.invoke(messageHistory);
-  expect(result).toBeDefined();
-  expect(result.parsed.location).toBeDefined();
-  expect(result.parsed.location).not.toBe("");
-  expect((result.raw as AIMessage).tool_calls?.length).toBe(0);
-});
-
-test("Ollama can call withStructuredOutput includeRaw with tool calling", async () => {
-  const model = new ChatOllama({
-    model: "llama3-groq-tool-use",
-    maxRetries: 1,
-  }).withStructuredOutput(weatherTool.schema, {
-    name: weatherTool.name,
-    includeRaw: true,
-    method: "functionCalling",
+  const calculatorSchema = z.object({
+    operation: z.enum(["add", "subtract", "multiply", "divide"]),
+    number1: z.number(),
+    number2: z.number(),
   });
+  const modelWithStructuredOutput = model.withStructuredOutput(
+    calculatorSchema,
+    {
+      name: "calculator",
+      method: "jsonMode",
+      includeRaw: true,
+    }
+  );
 
-  const result = await model.invoke(messageHistory);
-  expect(result).toBeDefined();
-  expect(result.parsed.location).toBeDefined();
-  expect(result.parsed.location).not.toBe("");
-  expect((result.raw as AIMessage).tool_calls?.[0]).toBeDefined();
-  expect((result.raw as AIMessage).tool_calls?.[0].id).toBeDefined();
-  expect((result.raw as AIMessage).tool_calls?.[0].id).not.toBe("");
+  const prompt = ChatPromptTemplate.fromMessages([
+    [
+      "system",
+      `You are VERY bad at math and must always use a calculator.
+Respond with a JSON object containing three keys:
+'operation': the type of operation to execute, either 'add', 'subtract', 'multiply' or 'divide',
+'number1': the first number to operate on,
+'number2': the second number to operate on.
+`,
+    ],
+    ["human", "Please help me!! What is 2 + 2?"],
+  ]);
+  const chain = prompt.pipe(modelWithStructuredOutput);
+  const result = await chain.invoke({});
+  // console.log(result);
+
+  expect("parsed" in result).toBe(true);
+  // Need to make TS happy :)
+  if (!("parsed" in result)) {
+    throw new Error("parsed not in result");
+  }
+  const { parsed } = result;
+  expect("operation" in parsed).toBe(true);
+  expect("number1" in parsed).toBe(true);
+  expect("number2" in parsed).toBe(true);
+
+  expect("raw" in result).toBe(true);
+  // Need to make TS happy :)
+  if (!("raw" in result)) {
+    throw new Error("raw not in result");
+  }
+  const { raw } = result as { raw: AIMessage };
+  expect(raw.tool_calls?.length).toBe(0);
 });

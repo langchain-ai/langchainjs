@@ -1,4 +1,5 @@
 import { OpenAI as OpenAIClient } from "openai";
+import type { ServerTool } from "@langchain/core/tools";
 
 /**
  * User location configuration for geographic search refinement.
@@ -125,7 +126,7 @@ export type WebSearchTool = OpenAIClient.Responses.WebSearchTool;
  * });
  * ```
  */
-export function webSearch(options?: WebSearchOptions): WebSearchTool {
+export function webSearch(options?: WebSearchOptions): ServerTool {
   return {
     type: "web_search",
     filters: options?.filters?.allowedDomains
@@ -133,5 +134,5 @@ export function webSearch(options?: WebSearchOptions): WebSearchTool {
       : undefined,
     user_location: options?.userLocation,
     search_context_size: options?.search_context_size,
-  };
+  } satisfies WebSearchTool;
 }

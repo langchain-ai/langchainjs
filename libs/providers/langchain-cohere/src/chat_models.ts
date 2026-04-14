@@ -87,7 +87,8 @@ interface TokenUsage {
 }
 
 export interface ChatCohereCallOptions
-  extends BaseChatModelCallOptions,
+  extends
+    BaseChatModelCallOptions,
     Partial<Omit<Cohere.ChatRequest, "message" | "tools">>,
     Partial<Omit<Cohere.ChatStreamRequest, "message" | "tools">>,
     Pick<ChatCohereInput, "streamUsage"> {
@@ -709,8 +710,8 @@ function _formatToolsToCohere(
  * <br />
  */
 export class ChatCohere<
-    CallOptions extends ChatCohereCallOptions = ChatCohereCallOptions
-  >
+  CallOptions extends ChatCohereCallOptions = ChatCohereCallOptions,
+>
   extends BaseChatModel<CallOptions, AIMessageChunk>
   implements ChatCohereInput
 {
@@ -730,15 +731,25 @@ export class ChatCohere<
 
   streamUsage: boolean = true;
 
-  constructor(fields?: ChatCohereInput) {
-    super(fields ?? {});
+  constructor(model: string, fields?: Omit<ChatCohereInput, "model">);
+  constructor(fields?: ChatCohereInput);
+  constructor(
+    modelOrFields?: string | ChatCohereInput,
+    fields?: Omit<ChatCohereInput, "model">
+  ) {
+    const params =
+      typeof modelOrFields === "string"
+        ? { ...(fields ?? {}), model: modelOrFields }
+        : (modelOrFields ?? {});
+    super(params);
+    this._addVersion("@langchain/cohere", __PKG_VERSION__);
 
-    this.client = getCohereClient(fields);
+    this.client = getCohereClient(params);
 
-    this.model = fields?.model ?? this.model;
-    this.temperature = fields?.temperature ?? this.temperature;
-    this.streaming = fields?.streaming ?? this.streaming;
-    this.streamUsage = fields?.streamUsage ?? this.streamUsage;
+    this.model = params.model ?? this.model;
+    this.temperature = params.temperature ?? this.temperature;
+    this.streaming = params.streaming ?? this.streaming;
+    this.streamUsage = params.streamUsage ?? this.streamUsage;
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
@@ -1024,6 +1035,7 @@ export class ChatCohere<
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
+    options.signal?.throwIfAborted();
     const tokenUsage: TokenUsage = {};
     // The last message in the array is the most recent, all other messages
     // are apart of the chat history.
@@ -1129,17 +1141,23 @@ export class ChatCohere<
     const request = this._getChatRequest(messages, options);
 
     // All models have a built in `this.caller` property for retries
-    const stream = await this.caller.call(async () => {
-      let stream;
-      try {
-        stream = await this.client.chatStream(request);
-      } catch (e: any) {
-        e.status = e.status ?? e.statusCode;
-        throw e;
+    const stream = await this.caller.callWithOptions(
+      { signal: options.signal },
+      async () => {
+        let stream;
+        try {
+          stream = await this.client.chatStream(request);
+        } catch (e: any) {
+          e.status = e.status ?? e.statusCode;
+          throw e;
+        }
+        return stream;
       }
-      return stream;
-    });
+    );
     for await (const chunk of stream) {
+      if (options.signal?.aborted) {
+        return;
+      }
       if (chunk.eventType === "text-generation") {
         yield new ChatGenerationChunk({
           text: chunk.text,

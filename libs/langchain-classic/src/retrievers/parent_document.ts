@@ -15,7 +15,7 @@ import {
   type MultiVectorRetrieverInput,
 } from "./multi_vector.js";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export type SubDocs = Document<Record<string, any>>[];
 
 /**

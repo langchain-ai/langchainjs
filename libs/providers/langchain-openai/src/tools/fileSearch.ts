@@ -1,4 +1,5 @@
 import { OpenAI as OpenAIClient } from "openai";
+import type { ServerTool } from "@langchain/core/tools";
 
 /**
  * Comparison operators for file attribute filtering.
@@ -250,12 +251,12 @@ function convertRankingOptions(
  * - Use `include: ["file_search_call.results"]` in the API call to get search results
  * - Supported file types include PDF, DOCX, TXT, MD, and many code file formats
  */
-export function fileSearch(options: FileSearchOptions): FileSearchTool {
+export function fileSearch(options: FileSearchOptions): ServerTool {
   return {
     type: "file_search",
     vector_store_ids: options.vectorStoreIds,
     max_num_results: options.maxNumResults,
     filters: options.filters as FileSearchTool["filters"],
     ranking_options: convertRankingOptions(options.rankingOptions),
-  };
+  } satisfies FileSearchTool;
 }

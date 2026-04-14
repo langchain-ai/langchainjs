@@ -1,13 +1,41 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod/v3";
+import { z as z4 } from "zod/v4";
 
 import { ChatOpenAI } from "@langchain/openai";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { AIMessage } from "@langchain/core/messages";
+import type { SerializableSchema } from "@langchain/core/utils/standard_schema";
 
 import { createAgent, toolStrategy, providerStrategy } from "../index.js";
 import { FakeToolCallingModel, FakeToolCallingChatModel } from "./utils.js";
-import { hasSupportForJsonSchemaOutput } from "../responses.js";
+import {
+  hasSupportForJsonSchemaOutput,
+  ProviderStrategy,
+  ToolStrategy,
+} from "../responses.js";
+
+function makeSerializableSchema(
+  jsonSchema: Record<string, unknown> = {
+    type: "object",
+    properties: {
+      foo: { type: "string" },
+    },
+    required: ["foo"],
+  }
+): SerializableSchema {
+  return {
+    "~standard": {
+      version: 1 as const,
+      vendor: "test",
+      validate: (value: unknown) => ({ value }),
+      jsonSchema: {
+        input: () => jsonSchema,
+        output: () => jsonSchema,
+      },
+    },
+  } as unknown as SerializableSchema;
+}
 
 describe("structured output handling", () => {
   describe("toolStrategy", () => {
@@ -409,6 +437,70 @@ describe("structured output handling", () => {
         expect(res.structuredResponse).toEqual({ bar: "foo" });
       });
     });
+
+    describe("schema title extraction", () => {
+      it("should use title from Zod v4 schema with .meta({ title })", () => {
+        const zodSchema = z4
+          .object({
+            status: z4.string(),
+          })
+          .meta({ title: "my_custom_tool" });
+
+        const [strategy] = toolStrategy(zodSchema);
+
+        expect(strategy.name).toBe("my_custom_tool");
+      });
+
+      it("should use title from JSON schema", () => {
+        const jsonSchema = {
+          type: "object" as const,
+          title: "my_json_tool",
+          properties: {
+            status: { type: "string" },
+          },
+        };
+
+        const [strategy] = toolStrategy(jsonSchema);
+
+        expect(strategy.name).toBe("my_json_tool");
+      });
+
+      it("should fall back to extract-{n} when no title is provided", () => {
+        const zodSchema = z4.object({
+          status: z4.string(),
+        });
+
+        const [strategy] = toolStrategy(zodSchema);
+
+        expect(strategy.name).toMatch(/^extract-\d+$/);
+      });
+
+      it("should use title from ToolStrategy.fromSchema with Zod v4 schema", () => {
+        const zodSchema = z4
+          .object({
+            result: z4.number(),
+          })
+          .meta({ title: "calculate_result" });
+
+        const strategy = ToolStrategy.fromSchema(zodSchema);
+
+        expect(strategy.name).toBe("calculate_result");
+      });
+
+      it("should use title from ToolStrategy.fromSchema with JSON schema", () => {
+        const jsonSchema = {
+          type: "object" as const,
+          title: "get_data",
+          properties: {
+            value: { type: "number" },
+          },
+        };
+
+        const strategy = ToolStrategy.fromSchema(jsonSchema);
+
+        expect(strategy.name).toBe("get_data");
+      });
+    });
   });
 
   describe("providerStrategy", () => {
@@ -436,6 +528,157 @@ describe("structured output handling", () => {
         ).resolves.not.toThrowError();
       });
     });
+
+    describe("strict flag", () => {
+      it("should default to true when strict is not provided", () => {
+        const strategy = ProviderStrategy.fromSchema(
+          z.object({
+            foo: z.string(),
+          })
+        );
+        expect(strategy.strict).toBe(true);
+      });
+
+      it("should set strict to false when explicitly provided as false", () => {
+        const strategy = ProviderStrategy.fromSchema(
+          z.object({
+            foo: z.string(),
+          }),
+          false
+        );
+        expect(strategy.strict).toBe(false);
+      });
+
+      it("should work with providerStrategy helper function", () => {
+        const strategyDefault = providerStrategy(
+          z.object({
+            foo: z.string(),
+          })
+        );
+        expect(strategyDefault.strict).toBe(true);
+
+        const strategyStrict = providerStrategy({
+          schema: z.object({
+            foo: z.string(),
+          }),
+          strict: false,
+        });
+        expect(strategyStrict.strict).toBe(false);
+      });
+    });
+  });
+
+  describe("Standard Schema support", () => {
+    describe("toolStrategy with Standard Schema", () => {
+      it("should accept a single Standard Schema", () => {
+        const schema = makeSerializableSchema();
+        const [strategy] = toolStrategy(schema);
+
+        expect(strategy).toBeInstanceOf(ToolStrategy);
+        expect(strategy.schema).toEqual({
+          type: "object",
+          properties: { foo: { type: "string" } },
+          required: ["foo"],
+        });
+      });
+
+      it("should accept an array of Standard Schemas", () => {
+        const schema1 = makeSerializableSchema({
+          type: "object",
+          properties: { foo: { type: "string" } },
+          required: ["foo"],
+        });
+        const schema2 = makeSerializableSchema({
+          type: "object",
+          properties: { bar: { type: "number" } },
+          required: ["bar"],
+        });
+        const strategies = toolStrategy([schema1, schema2]);
+
+        expect(strategies).toHaveLength(2);
+        expect(strategies[0]).toBeInstanceOf(ToolStrategy);
+        expect(strategies[1]).toBeInstanceOf(ToolStrategy);
+      });
+
+      it("should return a structured response with Standard Schema via toolStrategy", async () => {
+        const schema = makeSerializableSchema();
+        const strategies = toolStrategy(schema);
+        const [strategy] = strategies;
+        const toolName = strategy.name;
+
+        const model = new FakeToolCallingModel({
+          toolCalls: [[{ name: toolName, args: { foo: "bar" }, id: "call_1" }]],
+        });
+        const agent = createAgent({
+          model,
+          tools: [],
+          responseFormat: strategies,
+        });
+
+        const res = await agent.invoke({
+          messages: [{ role: "user", content: "hi" }],
+        });
+
+        expect(res.structuredResponse).toEqual({ foo: "bar" });
+      });
+    });
+
+    describe("providerStrategy with Standard Schema", () => {
+      it("should accept a Standard Schema directly", () => {
+        const schema = makeSerializableSchema();
+        const strategy = providerStrategy(schema);
+
+        expect(strategy).toBeInstanceOf(ProviderStrategy);
+        expect(strategy.schema).toEqual({
+          type: "object",
+          properties: { foo: { type: "string" } },
+          required: ["foo"],
+        });
+      });
+
+      it("should accept a Standard Schema in options object", () => {
+        const schema = makeSerializableSchema();
+        const strategy = providerStrategy({ schema, strict: false });
+
+        expect(strategy).toBeInstanceOf(ProviderStrategy);
+        expect(strategy.strict).toBe(false);
+      });
+    });
+
+    describe("ToolStrategy.fromSchema with Standard Schema", () => {
+      it("should create a ToolStrategy from a Standard Schema", () => {
+        const schema = makeSerializableSchema({
+          type: "object",
+          title: "my_standard_tool",
+          properties: { foo: { type: "string" } },
+          required: ["foo"],
+        });
+        const strategy = ToolStrategy.fromSchema(schema);
+
+        expect(strategy.name).toBe("my_standard_tool");
+        expect(strategy.schema).toEqual({
+          type: "object",
+          title: "my_standard_tool",
+          properties: { foo: { type: "string" } },
+          required: ["foo"],
+        });
+      });
+    });
+
+    describe("ProviderStrategy.fromSchema with Standard Schema", () => {
+      it("should create a ProviderStrategy from a Standard Schema", () => {
+        const schema = makeSerializableSchema();
+        const strategy = ProviderStrategy.fromSchema(schema);
+
+        expect(strategy).toBeInstanceOf(ProviderStrategy);
+        expect(strategy.schema).toEqual({
+          type: "object",
+          properties: { foo: { type: "string" } },
+          required: ["foo"],
+        });
+        expect(strategy.strict).toBe(true);
+      });
+    });
   });
 });
 
@@ -444,42 +687,32 @@ describe("hasSupportForJsonSchemaOutput", () => {
     expect(hasSupportForJsonSchemaOutput(undefined)).toBe(false);
   });
 
-  it("should return true for models that support JSON schema output", () => {
+  it("should use model.profile.structuredOutput to determine support", () => {
     const model = new FakeToolCallingModel({});
     expect(hasSupportForJsonSchemaOutput(model)).toBe(false);
     const model2 = new FakeToolCallingChatModel({});
     expect(hasSupportForJsonSchemaOutput(model2)).toBe(true);
   });
 
-  it("should return true for OpenAI models that support JSON schema output", () => {
+  it("should return true for OpenAI models whose profile reports structuredOutput", () => {
     const model = new ChatOpenAI({
       model: "gpt-4o",
     });
     expect(hasSupportForJsonSchemaOutput(model)).toBe(true);
-    expect(hasSupportForJsonSchemaOutput("openai:gpt-4o")).toBe(true);
-    expect(hasSupportForJsonSchemaOutput("gpt-4o-mini")).toBe(true);
   });
 
-  it("should return false for OpenAI models that do not support JSON schema output", () => {
+  it("should return false for OpenAI models whose profile does not report structuredOutput", () => {
     const model = new ChatOpenAI({
       model: "gpt-3.5-turbo",
     });
     expect(hasSupportForJsonSchemaOutput(model)).toBe(false);
-    expect(hasSupportForJsonSchemaOutput("openai:gpt-3.5-turbo")).toBe(false);
-    expect(hasSupportForJsonSchemaOutput("gpt-3.5-turbo")).toBe(false);
   });
 
-  it("should return false for Anthropic models that don't support JSON schema output", () => {
+  it("should return false for Anthropic models whose profile does not report structuredOutput", () => {
     const model = new ChatAnthropic({
       model: "claude-sonnet-4-5-20250929",
       anthropicApiKey: "foobar",
     });
     expect(hasSupportForJsonSchemaOutput(model)).toBe(false);
-    expect(
-      hasSupportForJsonSchemaOutput("anthropic:claude-sonnet-4-5-20250929")
-    ).toBe(false);
-    expect(hasSupportForJsonSchemaOutput("claude-sonnet-4-5-20250929")).toBe(
-      false
-    );
   });
 });

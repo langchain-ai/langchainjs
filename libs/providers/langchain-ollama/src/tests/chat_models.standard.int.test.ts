@@ -30,7 +30,7 @@ class ChatOllamaStandardIntegrationTests extends ChatModelIntegrationTests<
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
       constructorArgs: {
-        model: "llama3-groq-tool-use",
+        model: "mistral",
       },
     });
   }
@@ -140,8 +140,4 @@ class ChatOllamaStandardIntegrationTests extends ChatModelIntegrationTests<
 }
 
 const testClass = new ChatOllamaStandardIntegrationTests();
-
-test("ChatOllamaStandardIntegrationTests", async () => {
-  const testResults = await testClass.runTests();
-  expect(testResults).toBe(true);
-});
+testClass.runTests("ChatOllamaStandardIntegrationTests");

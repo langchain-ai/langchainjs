@@ -1,0 +1,64 @@
+name: 🦋 Changesets Release
+
+# Called by publish.yml (the npm Trusted Publisher entry point)
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  CI: true
+
+jobs:
+  release:
+    name: 🦋 Changesets Release
+    if: github.repository == 'langchain-ai/langchainjs'
+    runs-on: ubuntu-latest
+    outputs:
+      published_packages: ${{ steps.changesets.outputs.publishedPackages }}
+      published: ${{ steps.changesets.outputs.published }}
+    permissions:
+      contents: write # enable pushing changes to the origin
+      id-token: write # enable generation of an ID token for publishing
+      pull-requests: write # enable opening a PR for the release
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5.0.0
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: 📥 Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: 🔐 Setup npm auth
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          echo "registry=https://registry.npmjs.org" >> ~/.npmrc
+          echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
+
+        # This action has two responsibilities. The first time the workflow runs
+        # it will create a new branch and then open a PR with the related changes
+        # for the new version. After the PR is merged, the workflow will run again
+        # and this action will build + publish to npm.
+      - name: 🚀 PR / Publish
+        id: changesets
+        uses: changesets/action@6a0a831ff30acef54f2c6aa1cbbc1096b066edaf
+        with:
+          version: pnpm run changeset:version
+          commit: "chore: version packages"
+          title: "chore: version packages"
+          publish: pnpm run release
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

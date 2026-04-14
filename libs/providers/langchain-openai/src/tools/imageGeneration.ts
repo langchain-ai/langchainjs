@@ -1,4 +1,5 @@
 import { OpenAI as OpenAIClient } from "openai";
+import type { ServerTool } from "@langchain/core/tools";
 
 /**
  * Optional mask for inpainting. Allows you to specify areas of the image
@@ -19,6 +20,15 @@ export interface ImageGenerationInputMask {
  * Options for the Image Generation tool.
  */
 export interface ImageGenerationOptions {
+  /**
+   * Whether to generate a new image or edit an existing image.
+   * - `generate`: Generate a new image from scratch
+   * - `edit`: Edit an existing image
+   * - `auto`: Let the model decide based on the input
+   * @default "auto"
+   */
+  action?: "generate" | "edit" | "auto";
+
   /**
    * Background type for the generated image.
    * - `transparent`: Generate image with transparent background
@@ -48,7 +58,7 @@ export interface ImageGenerationOptions {
    * The image generation model to use.
    * @default "gpt-image-1"
    */
-  model?: "gpt-image-1" | "gpt-image-1-mini";
+  model?: "gpt-image-1" | "gpt-image-1-mini" | "gpt-image-1.5";
 
   /**
    * Moderation level for the generated image.
@@ -215,11 +225,10 @@ function convertInputImageMask(
  * - Access the revised prompt via `revised_prompt` field in the output
  * - Multi-turn editing is supported by passing previous response messages
  */
-export function imageGeneration(
-  options?: ImageGenerationOptions
-): ImageGenerationTool {
+export function imageGeneration(options?: ImageGenerationOptions): ServerTool {
   return {
     type: "image_generation",
+    action: options?.action,
     background: options?.background,
     input_fidelity: options?.inputFidelity,
     input_image_mask: convertInputImageMask(options?.inputImageMask),
@@ -230,5 +239,5 @@ export function imageGeneration(
     partial_images: options?.partialImages,
     quality: options?.quality,
     size: options?.size,
-  };
+  } satisfies ImageGenerationTool;
 }

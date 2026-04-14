@@ -46,7 +46,7 @@ const _isMessageType = (msg: BaseMessage, types: MessageTypeOrClass[]) => {
         if (typeof t === "string") {
           return t;
         }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         const instantiatedMsgClass = new (t as any)({});
         if (
           !("getType" in instantiatedMsgClass) ||

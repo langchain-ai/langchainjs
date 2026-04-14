@@ -1,5 +1,213 @@
 # @langchain/classic
 
+## 1.0.30
+
+### Patch Changes
+
+- Updated dependencies [[`2301260`](https://github.com/langchain-ai/langchainjs/commit/2301260ae90ead5c5f725c8dae1487b6722607e2)]:
+  - @langchain/openai@1.4.4
+
+## 1.0.29
+
+### Patch Changes
+
+- Updated dependencies [[`6b8ef6c`](https://github.com/langchain-ai/langchainjs/commit/6b8ef6c95e061af47af206926598c983d878f72a)]:
+  - @langchain/openai@1.4.3
+
+## 1.0.28
+
+### Patch Changes
+
+- [#10591](https://github.com/langchain-ai/langchainjs/pull/10591) [`d7a98cd`](https://github.com/langchain-ai/langchainjs/commit/d7a98cda1a5d9bf9b93b503fc54374f1aaf1a37e) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat: add @langchain/perplexity standalone provider package
+
+- [#10594](https://github.com/langchain-ai/langchainjs/pull/10594) [`884c2d3`](https://github.com/langchain-ai/langchainjs/commit/884c2d3d1b2c49225d73ddec2235ad174db36f86) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(fireworks): extract standalone provider package
+
+- [#10593](https://github.com/langchain-ai/langchainjs/pull/10593) [`0fb6fa4`](https://github.com/langchain-ai/langchainjs/commit/0fb6fa40dcd3a09a4fb91f36c9f2ca869552961e) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(together-ai): migrate Together AI into provider package
+
+- Updated dependencies [[`d6bf4fc`](https://github.com/langchain-ai/langchainjs/commit/d6bf4fc91b2c2eb931bf3bc7606b1817632bc8c1)]:
+  - @langchain/openai@1.4.2
+
+## 1.0.27
+
+### Patch Changes
+
+- Updated dependencies [[`9270c48`](https://github.com/langchain-ai/langchainjs/commit/9270c48d7a95db6e7e2570a7e681c94479a673d0)]:
+  - @langchain/openai@1.4.1
+
+## 1.0.26
+
+### Patch Changes
+
+- Updated dependencies [[`5552999`](https://github.com/langchain-ai/langchainjs/commit/555299917c90322e25d7671bad2e20c9b104bad6)]:
+  - @langchain/openai@1.4.0
+
+## 1.0.25
+
+### Patch Changes
+
+- [#10475](https://github.com/langchain-ai/langchainjs/pull/10475) [`3d35eb1`](https://github.com/langchain-ai/langchainjs/commit/3d35eb112b46b36aea80cebe0147e315d03a1d8e) Thanks [@hntrl](https://github.com/hntrl)! - fix(langchain): add "aws" alias to MODEL_PROVIDER_CONFIG so hub/node auto-detects ChatBedrockConverse from Python-serialized prompts
+
+- Updated dependencies [[`478652c`](https://github.com/langchain-ai/langchainjs/commit/478652c01cdae0703415febd250b6c2656b36410), [`52e501b`](https://github.com/langchain-ai/langchainjs/commit/52e501b44ee54ace1889ec9149a3617c4409db51)]:
+  - @langchain/openai@1.3.1
+
+## 1.0.24
+
+### Patch Changes
+
+- Updated dependencies [[`af9bbd3`](https://github.com/langchain-ai/langchainjs/commit/af9bbd3f48d96de8963f492ebbf75ca0762f7e57)]:
+  - @langchain/openai@1.3.0
+
+## 1.0.23
+
+### Patch Changes
+
+- Updated dependencies [[`aacbe87`](https://github.com/langchain-ai/langchainjs/commit/aacbe872014a6e089c188336520d91dcac2f0287)]:
+  - @langchain/openai@1.2.13
+
+## 1.0.22
+
+### Patch Changes
+
+- Updated dependencies [[`3682a8d`](https://github.com/langchain-ai/langchainjs/commit/3682a8d4e0ed0855a5283f26bcfd1c0415dde075)]:
+  - @langchain/openai@1.2.12
+
+## 1.0.21
+
+### Patch Changes
+
+- Updated dependencies [[`9f30267`](https://github.com/langchain-ai/langchainjs/commit/9f30267e95a2a42fac71f1d3674b84c5a190dbbc), [`f298a9b`](https://github.com/langchain-ai/langchainjs/commit/f298a9bdedff7bc2b0eb7f6b5e6b52fd3042a7b7)]:
+  - @langchain/openai@1.2.11
+
+## 1.0.20
+
+### Patch Changes
+
+- Updated dependencies [[`62ba83e`](https://github.com/langchain-ai/langchainjs/commit/62ba83edd5206c86d8da8d1b608a2493ee4f3da8)]:
+  - @langchain/openai@1.2.10
+
+## 1.0.19
+
+### Patch Changes
+
+- Updated dependencies [[`b583729`](https://github.com/langchain-ai/langchainjs/commit/b583729e99cf0c035630f6b311c4d069a1980cca)]:
+  - @langchain/openai@1.2.9
+
+## 1.0.18
+
+### Patch Changes
+
+- Updated dependencies [[`05396f7`](https://github.com/langchain-ai/langchainjs/commit/05396f7ce0a91c49a3bae4bbcd3dbdd6cbd18089), [`5a6f26b`](https://github.com/langchain-ai/langchainjs/commit/5a6f26bbaed80195dc538c538b96219a8b03f38f), [`7be50a7`](https://github.com/langchain-ai/langchainjs/commit/7be50a7014d7622e0ab8d303dfc9c633ebc96333)]:
+  - @langchain/openai@1.2.8
+
+## 1.0.17
+
+### Patch Changes
+
+- Updated dependencies [[`6939dab`](https://github.com/langchain-ai/langchainjs/commit/6939dabc8dc6481942e7e2c19e3dc61bc374d65a), [`ad581c7`](https://github.com/langchain-ai/langchainjs/commit/ad581c76138ea12ebdaee444c0dcdc4f6a280624)]:
+  - @langchain/openai@1.2.7
+
+## 1.0.16
+
+### Patch Changes
+
+- [#9786](https://github.com/langchain-ai/langchainjs/pull/9786) [`8ee833c`](https://github.com/langchain-ai/langchainjs/commit/8ee833c1fb99891565832ead4990e246b30022a6) Thanks [@SkrOYC](https://github.com/SkrOYC)! - fix: resolve flaky tests and configuration issues
+  - @langchain/turbopuffer: Allow tests to pass when no test files are found (vitest --passWithNoTests)
+  - @langchain/model-profiles: Fix broken import path in generator test
+  - @langchain/classic: Fix AutoGPTPrompt test to be locale-independent by forcing en-US locale
+
+- Updated dependencies [[`16d691c`](https://github.com/langchain-ai/langchainjs/commit/16d691c7f8196e1d6322f051c25b2219ff2953b6), [`1058574`](https://github.com/langchain-ai/langchainjs/commit/1058574b723f0d060eb9b3ca25be5aeeabbe51aa)]:
+  - @langchain/openai@1.2.6
+  - @langchain/textsplitters@1.0.1
+
+## 1.0.15
+
+### Patch Changes
+
+- [#9763](https://github.com/langchain-ai/langchainjs/pull/9763) [`8f0757f`](https://github.com/langchain-ai/langchainjs/commit/8f0757f06b2ed9fe810f636333fc71ffcedb3feb) Thanks [@AdamParker19](https://github.com/AdamParker19)! - fix(langchain): resolve className collision in MODEL_PROVIDER_CONFIG
+
+  Refactored `getChatModelByClassName` to accept an optional `modelProvider` parameter for direct lookup, avoiding the className collision issue where multiple providers share the same className (e.g., `google-vertexai` and `google-vertexai-web` both use `"ChatVertexAI"`). When `modelProvider` is provided, the function uses direct config lookup instead of searching by className. Backward compatibility is maintained for existing callers that only pass `className`. This eliminates the duplicated import logic that was previously in `_initChatModelHelper`.
+
+- Updated dependencies [[`0870ca0`](https://github.com/langchain-ai/langchainjs/commit/0870ca0719dacd8a555b3341e581d6c15cd6faf3), [`cf46089`](https://github.com/langchain-ai/langchainjs/commit/cf46089d250b1ec87f99956f5cd87e2615ac25c5)]:
+  - @langchain/openai@1.2.5
+
+## 1.0.14
+
+### Patch Changes
+
+- [#9905](https://github.com/langchain-ai/langchainjs/pull/9905) [`41bfea5`](https://github.com/langchain-ai/langchainjs/commit/41bfea51cf119573a3b956ee782d2731fe71c681) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(classic/community/core): avoid long lived abort signals
+
+- Updated dependencies []:
+  - @langchain/textsplitters@1.0.1
+  - @langchain/openai@1.2.4
+
+## 1.0.13
+
+### Patch Changes
+
+- Updated dependencies [[`1fa865b`](https://github.com/langchain-ai/langchainjs/commit/1fa865b1cb8a30c2269b83cdb5fc84d374c3fca9), [`28efb57`](https://github.com/langchain-ai/langchainjs/commit/28efb57448933368094ca41c63d9262ac0f348a6), [`4e42452`](https://github.com/langchain-ai/langchainjs/commit/4e42452e4c020408bd6687667e931497b05aaff5), [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8), [`a9b5059`](https://github.com/langchain-ai/langchainjs/commit/a9b50597186002221aaa4585246e569fa44c27c8)]:
+  - @langchain/openai@1.2.4
+  - @langchain/textsplitters@1.0.1
+
+## 1.0.12
+
+### Patch Changes
+
+- [#9888](https://github.com/langchain-ai/langchainjs/pull/9888) [`1d58bf2`](https://github.com/langchain-ai/langchainjs/commit/1d58bf2bcb14055a64189af7e251bb93fa9d5aa0) Thanks [@jacoblee93](https://github.com/jacoblee93)! - fix(classic): Fix typo in package.json
+
+## 1.0.11
+
+### Patch Changes
+
+- [#9844](https://github.com/langchain-ai/langchainjs/pull/9844) [`a496cc0`](https://github.com/langchain-ai/langchainjs/commit/a496cc09d2b4d28a8eb0c4b96bd3555ab1cc47dc) Thanks [@VoVaVc](https://github.com/VoVaVc)! - Add support for Aurora Postgres DataSource
+
+## 1.0.10
+
+### Patch Changes
+
+- Updated dependencies [[`a7c6ec5`](https://github.com/langchain-ai/langchainjs/commit/a7c6ec51ab9baa186ab5ebf815599c08f5c7e8ab), [`04923f9`](https://github.com/langchain-ai/langchainjs/commit/04923f9835e5b3677c180b601ae8f3e7d8be0236), [`e16c218`](https://github.com/langchain-ai/langchainjs/commit/e16c218b81980a1c576af5192342019975bb95b9)]:
+  - @langchain/openai@1.2.3
+  - @langchain/textsplitters@1.0.1
+
+## 1.0.9
+
+### Patch Changes
+
+- Updated dependencies [[`3efe79c`](https://github.com/langchain-ai/langchainjs/commit/3efe79c62ff2ffe0ada562f7eecd85be074b649a)]:
+  - @langchain/openai@1.2.2
+  - @langchain/textsplitters@1.0.1
+
+## 1.0.8
+
+### Patch Changes
+
+- [#9715](https://github.com/langchain-ai/langchainjs/pull/9715) [`cc502e1`](https://github.com/langchain-ai/langchainjs/commit/cc502e1b67dbadcd123a7ea2964c791c2bbad581) Thanks [@jacoblee93](https://github.com/jacoblee93)! - fix(langchain): Add secretsFromEnv and secrets for prompt pulling
+  fix(@langchain/classic): Add secretsFromEnv and secrets for prompt pulling
+- Updated dependencies [[`13c9d5b`](https://github.com/langchain-ai/langchainjs/commit/13c9d5bfa3acac7ffb37642e9a50d84dc9004e88), [`75b3b90`](https://github.com/langchain-ai/langchainjs/commit/75b3b90c5fa62cbbfa678dfb01f031caed4488ef)]:
+  - @langchain/openai@1.2.1
+  - @langchain/textsplitters@1.0.1
+
+## 1.0.7
+
+### Patch Changes
+
+- [#9675](https://github.com/langchain-ai/langchainjs/pull/9675) [`af664be`](https://github.com/langchain-ai/langchainjs/commit/af664becc0245b2315ea2f784c9a6c1d7622dbb4) Thanks [@jacoblee93](https://github.com/jacoblee93)! - Bump LangSmith dep to 0.4.0
+
+- Updated dependencies []:
+  - @langchain/textsplitters@1.0.1
+  - @langchain/openai@1.2.0
+
+## 1.0.6
+
+### Patch Changes
+
+- [#9596](https://github.com/langchain-ai/langchainjs/pull/9596) [`316392e`](https://github.com/langchain-ai/langchainjs/commit/316392ea5666008873ab88971f599469ea7a2765) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(@langchain/classic): add langsmith as external dependency
+
+- [#9606](https://github.com/langchain-ai/langchainjs/pull/9606) [`41b26a4`](https://github.com/langchain-ai/langchainjs/commit/41b26a499625f5f6cd817433832a8d2c2639d2fb) Thanks [@patrykkopycinski](https://github.com/patrykkopycinski)! - bin p-retry
+
+- Updated dependencies [[`5a01b5b`](https://github.com/langchain-ai/langchainjs/commit/5a01b5b705f6933958f61318b22f00b5f4763be8), [`eab88a5`](https://github.com/langchain-ai/langchainjs/commit/eab88a5ab7610f5b63212f753ebcbeee2f393622), [`5f79bc5`](https://github.com/langchain-ai/langchainjs/commit/5f79bc50aebc093c90b6716c0aebf5c4813d0171), [`7b301c0`](https://github.com/langchain-ai/langchainjs/commit/7b301c00ac851c286a13c2a908757cb40180c768), [`bb2f422`](https://github.com/langchain-ai/langchainjs/commit/bb2f422cd8e0d709d82baca44565980abb57120f), [`2a5ba50`](https://github.com/langchain-ai/langchainjs/commit/2a5ba50d240e7d6181546facf088142fbb7b4977), [`47edf3f`](https://github.com/langchain-ai/langchainjs/commit/47edf3fc673eb0627ec585a3a5c2b9381e234527), [`2e563e3`](https://github.com/langchain-ai/langchainjs/commit/2e563e332772aa0468f610c334cbedd7f3513ce8), [`72795fe`](https://github.com/langchain-ai/langchainjs/commit/72795fe76b515d9edc7d78fb28db59df844ce0c3), [`f97b488`](https://github.com/langchain-ai/langchainjs/commit/f97b488200b34c485b15a743277984ecacc62160), [`29a8480`](https://github.com/langchain-ai/langchainjs/commit/29a8480799d4c3534892a29cef4a135c437deb9b), [`3ecc1e7`](https://github.com/langchain-ai/langchainjs/commit/3ecc1e716704a032e941e670d1d9fbf5370d57aa), [`6baa851`](https://github.com/langchain-ai/langchainjs/commit/6baa851176b5dde5da19891df114a4645dfe7481), [`a552cad`](https://github.com/langchain-ai/langchainjs/commit/a552cad1a463239a0d1d1b5da7798978722738cf), [`69a1045`](https://github.com/langchain-ai/langchainjs/commit/69a1045e1e14aed9273a1a4085ac35e601a1ecc7)]:
+  - @langchain/openai@1.2.0
+  - @langchain/textsplitters@1.0.1
+
 ## 1.0.5
 
 ### Patch Changes

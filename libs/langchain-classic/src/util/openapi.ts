@@ -201,7 +201,7 @@ export class OpenAPISpec {
       .replaceAll(/\//g, "_");
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   static alertUnsupportedSpec(document: Record<string, any>) {
     const warningMessage =
       "This may result in degraded performance. Convert your OpenAPI spec to 3.1.0 for better support.";
@@ -226,7 +226,7 @@ export class OpenAPISpec {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   static fromObject(document: Record<string, any>) {
     OpenAPISpec.alertUnsupportedSpec(document);
     return new OpenAPISpec(document as OpenAPIV3_1.Document);

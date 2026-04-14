@@ -161,7 +161,7 @@ export class AzureOpenAI extends OpenAI {
     return requestOptions;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   toJSON(): any {
     const json = super.toJSON() as unknown;
 

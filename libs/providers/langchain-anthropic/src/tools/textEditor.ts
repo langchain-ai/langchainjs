@@ -1,7 +1,11 @@
+import Anthropic from "@anthropic-ai/sdk";
 import { tool } from "@langchain/core/tools";
 import type { DynamicStructuredTool, ToolRuntime } from "@langchain/core/tools";
 
-import type { TextEditor20250728Command } from "./types.js";
+import {
+  TextEditor20250728CommandSchema,
+  type TextEditor20250728Command,
+} from "./types.js";
 
 /**
  * Options for the text editor tool (Claude 4.x version).
@@ -72,9 +76,7 @@ export interface TextEditor20250728Options {
  *
  * @see https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/text-editor-tool
  */
-export function textEditor_20250728(
-  options?: TextEditor20250728Options
-): DynamicStructuredTool {
+export function textEditor_20250728(options?: TextEditor20250728Options) {
   const name = "str_replace_based_edit_tool";
   const textEditorTool = tool(
     options?.execute as (
@@ -83,19 +85,8 @@ export function textEditor_20250728(
     ) => string | Promise<string>,
     {
       name,
-      schema: {
-        type: "object",
-        properties: {
-          command: {
-            type: "string",
-            enum: ["view", "str_replace", "create", "insert"],
-          },
-          path: {
-            type: "string",
-          },
-        },
-        required: ["command", "path"],
-      },
+      description: "A tool for editing text files",
+      schema: TextEditor20250728CommandSchema,
     }
   );
 
@@ -107,8 +98,13 @@ export function textEditor_20250728(
       ...(options?.maxCharacters !== undefined && {
         max_characters: options.maxCharacters,
       }),
-    },
+    } satisfies Anthropic.Beta.Messages.BetaToolTextEditor20250728,
   };
 
-  return textEditorTool;
+  return textEditorTool as DynamicStructuredTool<
+    typeof TextEditor20250728CommandSchema,
+    TextEditor20250728Command,
+    unknown,
+    string | Promise<string>
+  >;
 }

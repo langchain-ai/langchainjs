@@ -42,33 +42,5 @@ describe("Anthropic Text Editor Tool Unit Tests", () => {
       expect(editor.name).toBe("str_replace_based_edit_tool");
       expect(editor.func).toBeDefined();
     });
-
-    it("has correct schema for Claude 4.x commands", () => {
-      const editor = textEditor_20250728();
-
-      expect(editor.schema).toMatchInlineSnapshot(`
-        {
-          "properties": {
-            "command": {
-              "enum": [
-                "view",
-                "str_replace",
-                "create",
-                "insert",
-              ],
-              "type": "string",
-            },
-            "path": {
-              "type": "string",
-            },
-          },
-          "required": [
-            "command",
-            "path",
-          ],
-          "type": "object",
-        }
-      `);
-    });
   });
 });

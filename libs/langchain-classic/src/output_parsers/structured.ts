@@ -23,13 +23,12 @@ export type JsonMarkdownStructuredOutputParserInput = {
   interpolationDepth?: number;
 };
 
-export interface JsonMarkdownFormatInstructionsOptions
-  extends FormatInstructionsOptions {
+export interface JsonMarkdownFormatInstructionsOptions extends FormatInstructionsOptions {
   interpolationDepth?: number;
 }
 
 export class StructuredOutputParser<
-  T extends InteropZodType
+  T extends InteropZodType,
 > extends BaseOutputParser<InferInteropZodOutput<T>> {
   static lc_name() {
     return "StructuredOutputParser";
@@ -128,7 +127,7 @@ ${JSON.stringify(toJsonSchema(this.schema))}
  * formatted as a markdown code snippet.
  */
 export class JsonMarkdownStructuredOutputParser<
-  T extends InteropZodType
+  T extends InteropZodType,
 > extends StructuredOutputParser<T> {
   static lc_name() {
     return "JsonMarkdownStructuredOutputParser";
@@ -237,7 +236,7 @@ export class JsonMarkdownStructuredOutputParser<
 }
 
 export interface AsymmetricStructuredOutputParserFields<
-  T extends InteropZodType
+  T extends InteropZodType,
 > {
   inputSchema: T;
 }
@@ -248,7 +247,7 @@ export interface AsymmetricStructuredOutputParserFields<
  */
 export abstract class AsymmetricStructuredOutputParser<
   T extends InteropZodType,
-  Y = unknown
+  Y = unknown,
 > extends BaseOutputParser<Y> {
   private structuredInputParser: JsonMarkdownStructuredOutputParser<T>;
 

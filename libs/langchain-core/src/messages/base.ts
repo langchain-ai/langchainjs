@@ -18,17 +18,17 @@ import {
 } from "./format.js";
 
 /** @internal */
-const MESSAGE_SYMBOL = Symbol.for("langchain.message");
+const MESSAGE_SYMBOL: symbol = Symbol.for("langchain.message");
 
 export interface StoredMessageData {
   content: string;
   role: string | undefined;
   name: string | undefined;
   tool_call_id: string | undefined;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   additional_kwargs?: Record<string, any>;
   /** Response metadata. For example: response headers, logprobs, token counts, model name. */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   response_metadata?: Record<string, any>;
   id?: string;
 }
@@ -68,10 +68,8 @@ export interface FunctionCall {
 
 export type BaseMessageFields<
   TStructure extends MessageStructure = MessageStructure,
-  TRole extends MessageType = MessageType
-> = {
-  id?: string;
-  name?: string;
+  TRole extends MessageType = MessageType,
+> = Pick<Message, "id" | "name"> & {
   content?: $InferMessageContent<TStructure, TRole>;
   contentBlocks?: Array<ContentBlock.Standard>;
   /** @deprecated */
@@ -88,6 +86,26 @@ export type BaseMessageFields<
   };
   response_metadata?: Partial<$InferResponseMetadata<TStructure, TRole>>;
 };
+
+/**
+ * Normalize non-string `firstContent` to a block array for merge/spread.
+ * Some serializers (e.g. Anthropic-style) yield a single block object instead of a one-element array;
+ * spreading that object as an array throws ("is not iterable").
+ */
+function contentBlocksFromNonStringFirst(
+  firstContent: MessageContent
+): ContentBlock[] {
+  if (Array.isArray(firstContent)) {
+    return firstContent;
+  }
+  if (typeof firstContent === "string") {
+    return firstContent === "" ? [] : [{ type: "text", text: firstContent }];
+  }
+  if (firstContent == null) {
+    return [];
+  }
+  return [firstContent as ContentBlock];
+}
 
 export function mergeContent(
   firstContent: MessageContent,
@@ -119,12 +137,8 @@ export function mergeContent(
     }
     // If both are arrays
   } else if (Array.isArray(secondContent)) {
-    return (
-      _mergeLists(firstContent, secondContent) ?? [
-        ...firstContent,
-        ...secondContent,
-      ]
-    );
+    const left = contentBlocksFromNonStringFirst(firstContent);
+    return _mergeLists(left, secondContent) ?? [...left, ...secondContent];
   } else {
     if (secondContent === "") {
       return firstContent;
@@ -141,7 +155,8 @@ export function mergeContent(
         },
       ];
     } else {
-      return [...firstContent, { type: "text", text: secondContent }];
+      const left = contentBlocksFromNonStringFirst(firstContent);
+      return [...left, { type: "text", text: secondContent }];
     }
   }
 }
@@ -164,9 +179,9 @@ export function _mergeStatus(
   return "success";
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 function stringifyWithDepthLimit(obj: any, depthLimit: number): string {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   function helper(obj: any, currentDepth: number): any {
     if (typeof obj !== "object" || obj === null || obj === undefined) {
       return obj;
@@ -198,9 +213,9 @@ function stringifyWithDepthLimit(obj: any, depthLimit: number): string {
  * includes methods like `toDict()` and `_getType()`.
  */
 export abstract class BaseMessage<
-    TStructure extends MessageStructure = MessageStructure,
-    TRole extends MessageType = MessageType
-  >
+  TStructure extends MessageStructure = MessageStructure,
+  TRole extends MessageType = MessageType,
+>
   extends Serializable
   implements Message<TStructure, TRole>
 {
@@ -222,6 +237,7 @@ export abstract class BaseMessage<
 
   id?: string;
 
+  /** @inheritdoc */
   name?: string;
 
   content: $InferMessageContent<TStructure, TRole>;
@@ -263,7 +279,9 @@ export abstract class BaseMessage<
       | BaseMessageFields<TStructure, TRole>
   ) {
     const fields: BaseMessageFields<TStructure, TRole> =
-      typeof arg === "string" || Array.isArray(arg) ? { content: arg } : arg;
+      typeof arg === "string" || Array.isArray(arg)
+        ? ({ content: arg } as BaseMessageFields<TStructure, TRole>)
+        : arg;
     if (!fields.additional_kwargs) {
       fields.additional_kwargs = {};
     }
@@ -352,7 +370,7 @@ export abstract class BaseMessage<
       typeof obj === "object" &&
       obj !== null &&
       MESSAGE_SYMBOL in obj &&
-      obj[MESSAGE_SYMBOL] === true &&
+      (obj as Record<symbol, unknown>)[MESSAGE_SYMBOL] === true &&
       isMessage(obj)
     );
   }
@@ -368,7 +386,7 @@ export abstract class BaseMessage<
   }
 
   get [Symbol.toStringTag]() {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     return (this.constructor as any).lc_name();
   }
 
@@ -381,7 +399,7 @@ export abstract class BaseMessage<
       this._printableFields,
       Math.max(4, depth)
     );
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     return `${(this.constructor as any).lc_name()} ${printable}`;
   }
 
@@ -421,13 +439,62 @@ export function isOpenAIToolCallArray(
   );
 }
 
+/**
+ * Default keys that should be preserved (not merged) when concatenating message chunks.
+ * These are identification and timestamp fields that shouldn't be summed or concatenated.
+ */
+export const DEFAULT_MERGE_IGNORE_KEYS: readonly string[] = [
+  "index", // Used for identification in tool calls, not accumulation
+  "created", // Timestamp field
+  "timestamp", // Timestamp field
+] as const;
+
+/**
+ * Options for controlling merge behavior in `_mergeDicts`.
+ */
+export interface MergeDictsOptions {
+  /**
+   * Keys to ignore during merging. When a key is in this list:
+   * - For numeric values: the original value is preserved (not summed)
+   * - For string values: the original value is preserved (not concatenated)
+   *
+   * Defaults to `DEFAULT_MERGE_IGNORE_KEYS` which includes 'index', 'created', 'timestamp'.
+   *
+   * @example
+   * // Extend defaults with custom keys
+   * { ignoreKeys: [...DEFAULT_MERGE_IGNORE_KEYS, 'role', 'customField'] }
+   */
+  ignoreKeys?: readonly string[];
+}
+
 export function _mergeDicts(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  left: Record<string, any> = {},
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  right: Record<string, any> = {}
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-): Record<string, any> {
+  /**
+   * The left dictionary to merge.
+   */
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  left: Record<string, any> | undefined,
+  /**
+   * The right dictionary to merge.
+   * @type {Record<string, any>}
+   */
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  right: Record<string, any> | undefined,
+  /**
+   * The options for the merge.
+   */
+  options?: MergeDictsOptions
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+): Record<string, any> | undefined {
+  /**
+   * The keys to ignore during merging.
+   */
+  const ignoreKeys = options?.ignoreKeys ?? DEFAULT_MERGE_IGNORE_KEYS;
+  if (left == null && right == null) {
+    return undefined;
+  }
+  if (left == null || right == null) {
+    return left ?? right;
+  }
   const merged = { ...left };
   for (const [key, value] of Object.entries(right)) {
     if (merged[key] == null) {
@@ -452,13 +519,22 @@ export function _mergeDicts(
         if (value) {
           merged[key] = value;
         }
+      } else if (ignoreKeys.includes(key)) {
+        // Preserve the original value for ignored keys
+        continue;
       } else {
         merged[key] += value;
       }
+    } else if (typeof merged[key] === "number") {
+      if (ignoreKeys.includes(key)) {
+        // Preserve the original value for ignored keys
+        continue;
+      }
+      merged[key] = merged[key] + value;
     } else if (typeof merged[key] === "object" && !Array.isArray(merged[key])) {
-      merged[key] = _mergeDicts(merged[key], value);
+      merged[key] = _mergeDicts(merged[key], value, options);
     } else if (Array.isArray(merged[key])) {
-      merged[key] = _mergeLists(merged[key], value);
+      merged[key] = _mergeLists(merged[key], value, options);
     } else if (merged[key] === value) {
       continue;
     } else {
@@ -470,55 +546,90 @@ export function _mergeDicts(
   return merged;
 }
 
+function isMergeableIndex(index: unknown): index is number | string {
+  return typeof index === "number" || typeof index === "string";
+}
+
+function hasMergeableIndex(
+  value: unknown
+): value is { index: number | string } {
+  if (typeof value !== "object" || value === null) return false;
+  if (!("index" in value)) return false;
+  return isMergeableIndex(value.index);
+}
+
+function hasMergeableId(value: unknown): value is { id: string | number } {
+  if (typeof value !== "object" || value === null) return false;
+  if (!("id" in value)) return false;
+  const id = (value as Record<string, unknown>).id;
+  return id != null && id !== "";
+}
+
+/**
+ * Find the index of an existing item in `merged` that should be merged with
+ * `item`, based on index and/or id matching.
+ *
+ * Matching priority:
+ * 1. Both have index → match on index (+ id when both present)
+ * 2. Neither has index, both have id → match on id alone
+ * 3. Otherwise → no match (item should be appended)
+ */
+function _findMergeTarget<Content extends ContentBlock>(
+  merged: Content[],
+  item: Content
+): number {
+  const itemHasIndex = hasMergeableIndex(item);
+  const itemHasId = hasMergeableId(item);
+
+  if (!itemHasIndex && !itemHasId) return -1;
+
+  return merged.findIndex((leftItem) => {
+    const leftHasIndex = hasMergeableIndex(leftItem);
+    const leftHasId = hasMergeableId(leftItem);
+
+    if (itemHasIndex && leftHasIndex) {
+      // Both have index: match on index, with id as tiebreaker
+      const indicesMatch = leftItem.index === item.index;
+      if (!indicesMatch) return false;
+      if (leftHasId && itemHasId) return leftItem.id === item.id;
+      return true; // indices match, one or both missing id
+    }
+
+    if (!itemHasIndex && !leftHasIndex && itemHasId && leftHasId) {
+      // Neither has index: fall back to id-only matching. Handles providers
+      // that don't include `index` on streaming tool call deltas.
+      return leftItem.id === item.id;
+    }
+
+    return false;
+  });
+}
+
 export function _mergeLists<Content extends ContentBlock>(
   left?: Content[],
-  right?: Content[]
+  right?: Content[],
+  options?: MergeDictsOptions
 ): Content[] | undefined {
-  if (left === undefined && right === undefined) {
+  if (left == null && right == null) {
     return undefined;
-  } else if (left === undefined || right === undefined) {
+  } else if (left == null || right == null) {
     return left || right;
   } else {
     const merged = [...left];
     for (const item of right) {
-      if (
-        typeof item === "object" &&
-        item !== null &&
-        "index" in item &&
-        typeof item.index === "number"
-      ) {
-        const toMerge = merged.findIndex((leftItem) => {
-          const isObject = typeof leftItem === "object";
-          const indiciesMatch =
-            "index" in leftItem && leftItem.index === item.index;
-          const idsMatch =
-            "id" in leftItem && "id" in item && leftItem?.id === item?.id;
-          const eitherItemMissingID =
-            !("id" in leftItem) ||
-            !leftItem?.id ||
-            !("id" in item) ||
-            !item?.id;
-          return isObject && indiciesMatch && (idsMatch || eitherItemMissingID);
-        });
-        if (
-          toMerge !== -1 &&
-          typeof merged[toMerge] === "object" &&
-          merged[toMerge] !== null
-        ) {
-          merged[toMerge] = _mergeDicts(
-            merged[toMerge] as Record<string, unknown>,
-            item as Record<string, unknown>
-          ) as Content;
-        } else {
-          merged.push(item);
-        }
+      const toMerge = _findMergeTarget(merged, item);
+      if (toMerge !== -1) {
+        merged[toMerge] = _mergeDicts(
+          merged[toMerge],
+          item,
+          options
+        ) as Content;
       } else if (
         typeof item === "object" &&
         item !== null &&
         "text" in item &&
         item.text === ""
       ) {
-        // No-op - skip empty text blocks
         continue;
       } else {
         merged.push(item);
@@ -528,16 +639,17 @@ export function _mergeLists<Content extends ContentBlock>(
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export function _mergeObj<T = any>(
   left: T | undefined,
-  right: T | undefined
-): T {
-  if (!left && !right) {
-    throw new Error("Cannot merge two undefined objects.");
+  right: T | undefined,
+  options?: MergeDictsOptions
+): T | undefined {
+  if (left == null && right == null) {
+    return undefined;
   }
-  if (!left || !right) {
-    return left || (right as T);
+  if (left == null || right == null) {
+    return left ?? right;
   } else if (typeof left !== typeof right) {
     throw new Error(
       `Cannot merge objects of different types.\nLeft ${typeof left}\nRight ${typeof right}`
@@ -545,9 +657,13 @@ export function _mergeObj<T = any>(
   } else if (typeof left === "string" && typeof right === "string") {
     return (left + right) as T;
   } else if (Array.isArray(left) && Array.isArray(right)) {
-    return _mergeLists(left, right) as T;
+    return _mergeLists(left, right, options) as T;
   } else if (typeof left === "object" && typeof right === "object") {
-    return _mergeDicts(left, right) as T;
+    return _mergeDicts(
+      left as Record<string, unknown>,
+      right as Record<string, unknown>,
+      options
+    ) as T;
   } else if (left === right) {
     return left;
   } else {
@@ -566,7 +682,7 @@ export function _mergeObj<T = any>(
  */
 export abstract class BaseMessageChunk<
   TStructure extends MessageStructure = MessageStructure,
-  TRole extends MessageType = MessageType
+  TRole extends MessageType = MessageType,
 > extends BaseMessage<TStructure, TRole> {
   abstract concat(chunk: BaseMessageChunk): BaseMessageChunk<TStructure, TRole>;
 
