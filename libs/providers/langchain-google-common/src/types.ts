@@ -136,6 +136,7 @@ export type GoogleAIModelModality = "TEXT" | "IMAGE" | "AUDIO" | string;
 
 export type GoogleThinkingLevel =
   | "THINKING_LEVEL_UNSPECIFIED"
+  | "MINIMAL"
   | "LOW"
   | "MEDIUM"
   | "HIGH";
