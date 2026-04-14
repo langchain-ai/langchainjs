@@ -1,5 +1,14 @@
 # @langchain/google-common
 
+## 2.1.27
+
+### Patch Changes
+
+- [#10665](https://github.com/langchain-ai/langchainjs/pull/10665) [`c308903`](https://github.com/langchain-ai/langchainjs/commit/c308903ee5046c838af8fb274c45d7ba9baf9ed8) Thanks [@guypy](https://github.com/guypy)! - feat: add MINIMAL thinking level for Gemini 3 Flash models
+
+- Updated dependencies [[`d3e0809`](https://github.com/langchain-ai/langchainjs/commit/d3e080995bb267bf3797067ab53c96bc2a6c8e3f)]:
+  - @langchain/core@1.1.40
+
 ## 2.1.26
 
 ### Patch Changes

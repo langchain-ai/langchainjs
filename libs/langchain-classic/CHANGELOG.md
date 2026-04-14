@@ -1,5 +1,11 @@
 # @langchain/classic
 
+## 1.0.31
+
+### Patch Changes
+
+- [#9386](https://github.com/langchain-ai/langchainjs/pull/9386) [`71e53f1`](https://github.com/langchain-ai/langchainjs/commit/71e53f1c07bc60e2c2304b10f0edd3c85c62b192) Thanks [@Josh-Engle](https://github.com/Josh-Engle)! - Prevent local file corruption when using `LocalFileStore`
+
 ## 1.0.30
 
 ### Patch Changes
