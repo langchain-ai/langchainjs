@@ -403,7 +403,7 @@ export abstract class BaseCallbackHandler
 
   static fromMethods(methods: CallbackHandlerMethods) {
     class Handler extends BaseCallbackHandler {
-      name = uuid.v4();
+      name = uuid.v7();
 
       constructor() {
         super();
