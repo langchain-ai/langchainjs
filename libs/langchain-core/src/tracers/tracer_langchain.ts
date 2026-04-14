@@ -104,15 +104,35 @@ export class LangChainTracer
     // empty
   }
 
+  /**
+   * Resolve lc_tracing_only_metadata for a run by combining inherited parent
+   * metadata with the run's own, then merge into runTree.metadata.
+   * The run's own values take precedence over inherited ones.
+   */
+  private _applyTracingOnlyMetadata(run: Run, runTree: RunTree): void {
+    // Collect inherited lc_tracing_only_metadata from parent
+    const parentRun = run.parent_run_id
+      ? this.getRunById(run.parent_run_id)
+      : undefined;
+    const inherited = parentRun?.extra?.lc_tracing_only_metadata;
+    const own = run.extra?.lc_tracing_only_metadata;
+
+    if (!inherited && !own) return;
+
+    // Inherited first, then own values take precedence
+    const merged = { ...inherited, ...own };
+    runTree.metadata = {
+      ...runTree.metadata,
+      ...merged,
+    };
+    delete runTree.extra.lc_tracing_only_metadata;
+  }
+
   async onRunCreate(run: Run): Promise<void> {
     if (!run.extra?.lc_defers_inputs) {
       const runTree = this.getRunTreeWithTracingConfig(run.id);
-      if (run.extra?.lc_tracing_only_metadata && runTree) {
-        runTree.metadata = {
-          ...run.extra.lc_tracing_only_metadata,
-          ...runTree.metadata,
-        };
-        delete runTree.extra.lc_tracing_only_metadata;
+      if (runTree) {
+        this._applyTracingOnlyMetadata(run, runTree);
       }
       await runTree?.postRun();
     }
@@ -120,12 +140,8 @@ export class LangChainTracer
 
   async onRunUpdate(run: Run): Promise<void> {
     const runTree = this.getRunTreeWithTracingConfig(run.id);
-    if (run.extra?.lc_tracing_only_metadata && runTree) {
-      runTree.metadata = {
-        ...run.extra.lc_tracing_only_metadata,
-        ...runTree.metadata,
-      };
-      delete runTree.extra.lc_tracing_only_metadata;
+    if (runTree) {
+      this._applyTracingOnlyMetadata(run, runTree);
     }
     if (run.extra?.lc_defers_inputs) {
       await runTree?.postRun();

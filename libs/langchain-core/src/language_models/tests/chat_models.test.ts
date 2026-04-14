@@ -482,6 +482,7 @@ test("ChatModel invocation_params are merged into metadata, not extra", async ()
   const mockClient = {
     createRun: vi.fn(),
     updateRun: vi.fn(),
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   } as any;
 
   const tracer = new LangChainTracer({ client: mockClient });

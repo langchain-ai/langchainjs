@@ -378,4 +378,48 @@ describe("LangChainTracer onRunCreate and onRunUpdate", () => {
     expect(updateCall[1].extra?.metadata?.custom_key).toEqual("custom_value");
     expect(updateCall[1].extra?.lc_tracing_only_metadata).toBeUndefined();
   });
+
+  test("child run inherits parent lc_tracing_only_metadata without it becoming normal metadata", async () => {
+    const mockClient = {
+      createRun: vi.fn(),
+      updateRun: vi.fn(),
+    } as any;
+
+    const tracer = new LangChainTracer({ client: mockClient });
+
+    // Create parent run with lc_tracing_only_metadata
+    const parentRunId = uuid.v4();
+    const parentRun = tracer._createRunForChainStart(
+      serialized,
+      { input: "test" },
+      parentRunId,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      { lc_tracing_only_metadata: { model: "test-model", temperature: 0.5 } }
+    );
+    await tracer.onRunCreate?.(parentRun);
+
+    // Create child run under the parent with NO lc_tracing_only_metadata of its own
+    const childRunId = uuid.v4();
+    const childRun = tracer._createRunForChainStart(
+      serialized,
+      { input: "child" },
+      childRunId,
+      parentRunId
+    );
+    await tracer.onRunCreate?.(childRun);
+
+    // Child should inherit parent's lc_tracing_only_metadata into its metadata
+    const childCreateCall = mockClient.createRun.mock.calls[1];
+    expect(childCreateCall[0].extra?.metadata?.model).toEqual("test-model");
+    expect(childCreateCall[0].extra?.metadata?.temperature).toEqual(0.5);
+
+    // But it should NOT be in the child's normal metadata on the run object itself
+    // (i.e. the callback manager metadata path)
+    expect(childRun.extra?.metadata?.model).toBeUndefined();
+    expect(childRun.extra?.metadata?.temperature).toBeUndefined();
+  });
 });
