@@ -112,8 +112,7 @@ export abstract class BaseLLM<
       const invocationParams = this?.invocationParams(callOptions);
       const extra = {
         options: callOptions,
-        // invocation_params is passed via lc_tracing_only_metadata so it gets
-        // merged into metadata but not persisted in extra
+        invocation_params: invocationParams,
         lc_tracing_only_metadata: invocationParams ?? undefined,
         batch_size: 1,
       };
@@ -251,8 +250,7 @@ export abstract class BaseLLM<
       const invocationParams = this?.invocationParams(parsedOptions);
       const extra = {
         options: parsedOptions,
-        // invocation_params is passed via lc_tracing_only_metadata so it gets
-        // merged into metadata but not persisted in extra
+        invocation_params: invocationParams,
         lc_tracing_only_metadata: invocationParams ?? undefined,
         batch_size: prompts.length,
       };
@@ -365,8 +363,7 @@ export abstract class BaseLLM<
     const invocationParams = this?.invocationParams(parsedOptions);
     const extra = {
       options: parsedOptions,
-      // invocation_params is passed via lc_tracing_only_metadata so it gets
-      // merged into metadata but not persisted in extra
+      invocation_params: invocationParams,
       lc_tracing_only_metadata: invocationParams ?? undefined,
       batch_size: prompts.length,
     };
