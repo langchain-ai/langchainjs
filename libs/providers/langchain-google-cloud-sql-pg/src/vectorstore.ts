@@ -547,9 +547,12 @@ export class PostgresVectorStore extends VectorStore {
    */
   async delete(params: { ids?: string[] }): Promise<void> {
     if (params.ids === undefined) return;
-    const idList = params.ids.map((id) => `'${id}'`).join(", ");
-    const query = `DELETE FROM "${this.schemaName}"."${this.tableName}" WHERE "${this.idColumn}" in (${idList})`;
-    await this.engine.pool.raw(query);
+    const placeholders = params.ids.map((_, i) => `:id${i}`).join(", ");
+    const query = `DELETE FROM "${this.schemaName}"."${this.tableName}" WHERE "${this.idColumn}" in (${placeholders})`;
+    const bindings = Object.fromEntries(
+      params.ids.map((id, i) => [`id${i}`, id])
+    );
+    await this.engine.pool.raw(query, bindings);
   }
 
   async similaritySearchVectorWithScore(

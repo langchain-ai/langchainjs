@@ -397,6 +397,23 @@ describe("VectorStore methods", () => {
     expect(results.rows).toHaveLength(3);
   });
 
+  test("delete rejects SQL injection payload in ids", async () => {
+    await PEInstance.pool.raw(`TRUNCATE TABLE "${CUSTOM_TABLE}"`);
+    const ids = Array.from(texts).map(() => uuidv4());
+    await vectorStoreInstance.addDocuments(docs, { ids });
+
+    await expect(
+      vectorStoreInstance.delete({
+        ids: ["00000000-0000-0000-0000-000000000000') OR true --"],
+      })
+    ).rejects.toThrow();
+
+    const { rows } = await PEInstance.pool.raw(
+      `SELECT * FROM "${CUSTOM_TABLE}"`
+    );
+    expect(rows).toHaveLength(3);
+  });
+
   test("maxMarginalRelevanceSearch", async () => {
     const results = await vectorStoreInstance.maxMarginalRelevanceSearch(
       "bar",
