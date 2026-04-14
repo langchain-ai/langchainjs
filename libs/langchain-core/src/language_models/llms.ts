@@ -109,9 +109,12 @@ export abstract class BaseLLM<
         this.metadata,
         { verbose: this.verbose }
       );
+      const invocationParams = this?.invocationParams(callOptions);
       const extra = {
         options: callOptions,
-        invocation_params: this?.invocationParams(callOptions),
+        // invocation_params is passed via lc_tracing_only_metadata so it gets
+        // merged into metadata but not persisted in extra
+        lc_tracing_only_metadata: invocationParams ?? undefined,
         batch_size: 1,
       };
       const runManagers = await callbackManager_?.handleLLMStart(
@@ -245,9 +248,12 @@ export abstract class BaseLLM<
         this.metadata,
         { verbose: this.verbose }
       );
+      const invocationParams = this?.invocationParams(parsedOptions);
       const extra = {
         options: parsedOptions,
-        invocation_params: this?.invocationParams(parsedOptions),
+        // invocation_params is passed via lc_tracing_only_metadata so it gets
+        // merged into metadata but not persisted in extra
+        lc_tracing_only_metadata: invocationParams ?? undefined,
         batch_size: prompts.length,
       };
       runManagers = await callbackManager_?.handleLLMStart(
@@ -356,9 +362,12 @@ export abstract class BaseLLM<
       this.metadata,
       { verbose: this.verbose }
     );
+    const invocationParams = this?.invocationParams(parsedOptions);
     const extra = {
       options: parsedOptions,
-      invocation_params: this?.invocationParams(parsedOptions),
+      // invocation_params is passed via lc_tracing_only_metadata so it gets
+      // merged into metadata but not persisted in extra
+      lc_tracing_only_metadata: invocationParams ?? undefined,
       batch_size: prompts.length,
     };
     const runManagers = await callbackManager_?.handleLLMStart(

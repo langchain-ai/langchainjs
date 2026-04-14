@@ -288,3 +288,94 @@ describe("LangChainTracer usage_metadata extraction", () => {
     });
   });
 });
+
+describe("LangChainTracer onRunCreate and onRunUpdate", () => {
+  test("onRunCreate handles lc_defers_inputs and lc_tracing_only_metadata", async () => {
+    const mockClient = {
+      createRun: vi.fn(),
+      updateRun: vi.fn(),
+    } as any;
+
+    const tracer = new LangChainTracer({ client: mockClient });
+    const runId = uuid.v4();
+
+    // Test that lc_defers_inputs=true skips postRun
+    const deferredRun = tracer._createRunForChainStart(
+      serialized,
+      { input: "test" },
+      runId,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      { lc_defers_inputs: true }
+    );
+    await tracer.onRunCreate?.(deferredRun);
+    expect(mockClient.createRun).not.toHaveBeenCalled();
+
+    // Test that lc_tracing_only_metadata is merged into metadata and not in extra
+    const runId2 = uuid.v4();
+    const run = tracer._createRunForChainStart(
+      serialized,
+      { input: "test" },
+      runId2,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      { lc_tracing_only_metadata: { custom_key: "custom_value" } }
+    );
+    await tracer.onRunCreate?.(run);
+    expect(mockClient.createRun).toHaveBeenCalledTimes(1);
+    const createCall = mockClient.createRun.mock.calls[0];
+    expect(createCall[0].extra?.metadata?.custom_key).toEqual("custom_value");
+    expect(createCall[0].extra?.lc_tracing_only_metadata).toBeUndefined();
+  });
+
+  test("onRunUpdate handles lc_defers_inputs and lc_tracing_only_metadata", async () => {
+    const mockClient = {
+      createRun: vi.fn(),
+      updateRun: vi.fn(),
+    } as any;
+
+    const tracer = new LangChainTracer({ client: mockClient });
+
+    // Test that lc_defers_inputs=true calls postRun on update
+    const runId = uuid.v4();
+    const deferredRun = tracer._createRunForChainStart(
+      serialized,
+      { input: "test" },
+      runId,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      { lc_defers_inputs: true }
+    );
+    await tracer.onRunCreate?.(deferredRun);
+    deferredRun.extra = { ...deferredRun.extra, lc_defers_inputs: true };
+    await tracer.onRunUpdate?.(deferredRun);
+    expect(mockClient.createRun).toHaveBeenCalledTimes(1);
+
+    // Test that lc_tracing_only_metadata is merged into metadata and not in extra
+    const runId2 = uuid.v4();
+    const run = tracer._createRunForChainStart(
+      serialized,
+      { input: "test" },
+      runId2
+    );
+    await tracer.onRunCreate?.(run);
+    run.extra = {
+      ...run.extra,
+      lc_tracing_only_metadata: { custom_key: "custom_value" },
+    };
+    await tracer.onRunUpdate?.(run);
+    expect(mockClient.updateRun).toHaveBeenCalledTimes(1);
+    const updateCall = mockClient.updateRun.mock.calls[0];
+    expect(updateCall[1].extra?.metadata?.custom_key).toEqual("custom_value");
+    expect(updateCall[1].extra?.lc_tracing_only_metadata).toBeUndefined();
+  });
+});

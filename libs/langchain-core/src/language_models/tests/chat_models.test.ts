@@ -1,4 +1,4 @@
-import { test, expect } from "vitest";
+import { test, expect, vi } from "vitest";
 import { z } from "zod/v3";
 import { z as z4 } from "zod/v4";
 import { zodToJsonSchema } from "../../utils/zod-to-json-schema/index.js";
@@ -8,6 +8,11 @@ import { getBufferString } from "../../messages/utils.js";
 import { AIMessage } from "../../messages/ai.js";
 import { RunCollectorCallbackHandler } from "../../tracers/run_collector.js";
 import { StandardJSONSchemaV1, StandardSchemaV1 } from "@standard-schema/spec";
+import { BaseChatModel } from "../chat_models.js";
+import { BaseMessage } from "../../messages/index.js";
+import { CallbackManagerForLLMRun } from "../../callbacks/manager.js";
+import { ChatResult } from "../../outputs.js";
+import { LangChainTracer } from "../../tracers/tracer_langchain.js";
 
 test("Test ChatModel accepts array shorthand for messages", async () => {
   const model = new FakeChatModel({});
@@ -446,4 +451,52 @@ test("Test ChatModel withStructuredOutput with Standard Schema", async () => {
     test: true,
     nested: { somethingelse: "somevalue" },
   });
+});
+
+class FakeChatModelWithInvocationParams extends BaseChatModel {
+  _llmType(): string {
+    return "fake_with_invocation_params";
+  }
+
+  invocationParams() {
+    return { model: "test-model", temperature: 0.5 };
+  }
+
+  async _generate(
+    _messages: BaseMessage[],
+    _options?: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): Promise<ChatResult> {
+    return {
+      generations: [
+        {
+          message: new AIMessage("test response"),
+          text: "test response",
+        },
+      ],
+    };
+  }
+}
+
+test("ChatModel invocation_params are merged into metadata, not extra", async () => {
+  const mockClient = {
+    createRun: vi.fn(),
+    updateRun: vi.fn(),
+  } as any;
+
+  const tracer = new LangChainTracer({ client: mockClient });
+  const model = new FakeChatModelWithInvocationParams({});
+
+  await model.invoke("Hello", { callbacks: [tracer] });
+
+  // Check that createRun was called
+  expect(mockClient.createRun).toHaveBeenCalled();
+  const createCall = mockClient.createRun.mock.calls[0];
+
+  // invocation_params should be flattened into metadata
+  expect(createCall[0].extra?.metadata?.model).toEqual("test-model");
+  expect(createCall[0].extra?.metadata?.temperature).toEqual(0.5);
+
+  // invocation_params should NOT be in extra directly
+  expect(createCall[0].extra?.invocation_params).toBeUndefined();
 });
