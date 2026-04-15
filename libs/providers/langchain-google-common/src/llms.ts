@@ -205,7 +205,7 @@ export abstract class GoogleBaseLLM<AuthOptions>
     const prompt = BaseLLM._convertInputToPromptValue(input);
     const [runnableConfig, callOptions] =
       this._separateRunnableConfigFromCallOptions(options);
-    const invocationParams = this?.invocationParams(callOptions);
+    const invocationParams = this.invocationParams(callOptions);
     const callbackManager_ = await CallbackManager.configure(
       runnableConfig.callbacks,
       this.callbacks,
@@ -220,7 +220,7 @@ export abstract class GoogleBaseLLM<AuthOptions>
     );
     const extra = {
       options: callOptions,
-      invocation_params: this?.invocationParams(callOptions),
+      invocation_params: invocationParams,
       batch_size: 1,
     };
     const runManagers = await callbackManager_?.handleLLMStart(
