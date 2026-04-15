@@ -319,6 +319,7 @@ export abstract class BaseChatModel<
         ...runnableConfig.metadata,
         ...this.getLsParamsWithDefaults(callOptions),
       };
+      const invocationParams = this?.invocationParams(callOptions);
       const callbackManager_ = await CallbackManager.configure(
         runnableConfig.callbacks,
         this.callbacks,
@@ -326,7 +327,10 @@ export abstract class BaseChatModel<
         this.tags,
         inheritableMetadata,
         this.metadata,
-        { verbose: this.verbose }
+        {
+          verbose: this.verbose,
+          tracerInheritableMetadata: { ...invocationParams },
+        }
       );
       const extra = {
         options: callOptions,
@@ -455,6 +459,7 @@ export abstract class BaseChatModel<
         ...handledOptions.metadata,
         ...this.getLsParamsWithDefaults(parsedOptions),
       };
+      const invocationParams = this?.invocationParams(parsedOptions);
       // create callback manager and start run
       const callbackManager_ = await CallbackManager.configure(
         handledOptions.callbacks,
@@ -463,7 +468,10 @@ export abstract class BaseChatModel<
         this.tags,
         inheritableMetadata,
         this.metadata,
-        { verbose: this.verbose }
+        {
+          verbose: this.verbose,
+          tracerInheritableMetadata: { ...invocationParams },
+        }
       );
       const extra = {
         options: parsedOptions,
@@ -658,6 +666,7 @@ export abstract class BaseChatModel<
       ...handledOptions.metadata,
       ...this.getLsParamsWithDefaults(parsedOptions),
     };
+    const invocationParams = this?.invocationParams(parsedOptions);
     // create callback manager and start run
     const callbackManager_ = await CallbackManager.configure(
       handledOptions.callbacks,
@@ -666,7 +675,10 @@ export abstract class BaseChatModel<
       this.tags,
       inheritableMetadata,
       this.metadata,
-      { verbose: this.verbose }
+      {
+        verbose: this.verbose,
+        tracerInheritableMetadata: { ...invocationParams },
+      }
     );
     const extra = {
       options: parsedOptions,

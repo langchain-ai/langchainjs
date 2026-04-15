@@ -205,6 +205,7 @@ export abstract class GoogleBaseLLM<AuthOptions>
     const prompt = BaseLLM._convertInputToPromptValue(input);
     const [runnableConfig, callOptions] =
       this._separateRunnableConfigFromCallOptions(options);
+    const invocationParams = this?.invocationParams(callOptions);
     const callbackManager_ = await CallbackManager.configure(
       runnableConfig.callbacks,
       this.callbacks,
@@ -212,7 +213,10 @@ export abstract class GoogleBaseLLM<AuthOptions>
       this.tags,
       runnableConfig.metadata,
       this.metadata,
-      { verbose: this.verbose }
+      {
+        verbose: this.verbose,
+        tracerInheritableMetadata: { ...invocationParams },
+      }
     );
     const extra = {
       options: callOptions,
