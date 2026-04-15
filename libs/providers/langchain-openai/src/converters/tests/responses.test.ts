@@ -286,6 +286,60 @@ describe("convertResponsesMessageToAIMessage", () => {
     expect(storedOutput[0].name).toBe("get_weather");
     expect(storedOutput[0]).not.toHaveProperty("parsed_arguments");
   });
+
+  it("should set AIMessage.id to response.id, not a nested output item id", () => {
+    const response = {
+      id: "resp_top_level_id",
+      model: "gpt-4o",
+      created_at: 1234567890,
+      object: "response",
+      status: "completed",
+      output: [
+        {
+          type: "message",
+          id: "msg_nested_item_id",
+          role: "assistant",
+          content: [{ type: "output_text", text: "Hello!", annotations: [] }],
+        },
+      ],
+      usage: {
+        input_tokens: 10,
+        output_tokens: 20,
+        total_tokens: 30,
+      },
+    };
+
+    const result = convertResponsesMessageToAIMessage(response as any);
+
+    // AIMessage.id must be the top-level response id, not the nested message item id
+    expect(result.id).toBe("resp_top_level_id");
+    expect(result.id).not.toBe("msg_nested_item_id");
+  });
+
+  it("should set AIMessage.id to response.id even with only tool call output", () => {
+    const response = {
+      id: "resp_tool_only",
+      model: "gpt-4o",
+      created_at: 1234567890,
+      object: "response",
+      status: "completed",
+      output: [
+        {
+          type: "function_call",
+          id: "fc_nested_id",
+          call_id: "call_456",
+          name: "get_weather",
+          arguments: '{"city":"NYC"}',
+        },
+      ],
+      usage: { input_tokens: 10, output_tokens: 20, total_tokens: 30 },
+    };
+
+    const result = convertResponsesMessageToAIMessage(response as any);
+
+    // Even without a message output item, id should come from the response
+    expect(result.id).toBe("resp_tool_only");
+  });
 });
 
 describe("convertResponsesDeltaToChatGenerationChunk", () => {
