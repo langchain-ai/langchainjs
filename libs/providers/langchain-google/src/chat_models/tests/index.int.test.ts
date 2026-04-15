@@ -121,13 +121,13 @@ const allModelInfo: ModelInfo[] = [
   {
     model: "gemini-3.1-pro-preview",
     testConfig: {
-      only: true,
       isThinking: true,
     },
   },
   {
     model: "gemini-3.1-flash-lite-preview",
     testConfig: {
+      only: true,
       isThinking: true,
     },
   },
@@ -440,7 +440,7 @@ describe.each(coreModelInfo)(
       warnSpy.mockRestore();
     });
 
-    test("invoke", async () => {
+    test.only("invoke", async () => {
       const llm = newChatGoogle();
       const result = await llm.invoke("What is 1 + 1?");
 
@@ -454,6 +454,8 @@ describe.each(coreModelInfo)(
       const contentBlock = result.contentBlocks[0];
       expect(contentBlock.type).to.equal("text");
       expect(contentBlock.text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
+
+      expect(result.response_metadata.serviceTier).toEqual("standard");
     });
 
     test("invoke seed", async () => {
@@ -959,7 +961,18 @@ describe.each(coreModelInfo)(
       });
       const prompt = "Write a limerick about the color blue.";
       const result = await llm.invoke(prompt);
-      console.log(result);
+
+      expect(result.response_metadata.serviceTier).toEqual("flex");
+    });
+
+    test.only("service tier - priority", async () => {
+      const llm = newChatGoogle({
+        serviceTier: "priority",
+      });
+      const prompt = "Write a limerick about the color blue.";
+      const result = await llm.invoke(prompt);
+
+      expect(result.response_metadata.serviceTier).toEqual("priority");
     });
 
     test("image - legacy", async () => {

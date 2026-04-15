@@ -72,6 +72,8 @@ import {
   createContentParser,
   createFunctionCallingParser,
 } from "@langchain/core/language_models/structured_output";
+import { iife } from "../utils/misc";
+import ServiceTier = Gemini.ServiceTier;
 
 export type GooglePlatformType = "gai" | "gcp";
 
@@ -467,7 +469,7 @@ export abstract class BaseChatGoogle<
     await runManager?.handleCustomEvent(`google-response-${moduleName}`, {
       data,
       url: response.url,
-      headers: response.headers,
+      headers: Array.from(response.headers.entries()),
       status: response.status,
       statusText: response.statusText,
     });
@@ -493,6 +495,20 @@ export abstract class BaseChatGoogle<
       convertGeminiGenerateContentResponseToUsageMetadata(data);
     message.usage_metadata = usageMetadata;
 
+    const serviceTier: ServiceTier = iife((): ServiceTier => {
+      // trafficType is defined on Vertex, so isn't in the OpenAPI spec
+      // @ts-ignore
+      const trafficType: string | undefined = data.usageMetadata?.trafficType;
+
+      // AI Studio replies with actual service type in the header
+      const serviceTierHeader: string | null = response.headers.get("x-gemini-service-tier");
+
+      if (trafficType?.startsWith("ON_DEMAND_")) {
+        return trafficType?.substring("ON_DEMAND_".length).toLowerCase();
+      }
+      return serviceTierHeader || "standard";
+    });
+
     return {
       generations: [
         {
@@ -512,6 +528,7 @@ export abstract class BaseChatGoogle<
         model: data.modelVersion,
         responseId: data.responseId,
         usageMetadata,
+        serviceTier,
       },
     };
   }
@@ -549,7 +566,7 @@ export abstract class BaseChatGoogle<
 
     await runManager?.handleCustomEvent(`google-response-${moduleName}`, {
       url: response.url,
-      headers: response.headers,
+      headers: Array.from(response.headers.entries()),
       status: response.status,
       statusText: response.statusText,
     });
