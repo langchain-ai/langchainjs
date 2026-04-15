@@ -385,10 +385,12 @@ export abstract class BaseChatGoogle<
   }
 
   getHeaders(options: this["ParsedCallOptions"]): HeadersInit {
-    const params = this.invocationParams(options);
+    const fields = combineGoogleChatModelFields(this.params, options);
+
+    // The priority type is set via header only for Vertex
     const priorityHeaders: Record<string, string> =
-      this.platform === "gcp" && typeof params.serviceTier !== "undefined" && settableServiceTier.includes(params.serviceTier)
-        ? {"X-Vertex-AI-LLM-Shared-Request-Type": params.serviceTier}
+      this.platform === "gcp" && typeof fields.serviceTier !== "undefined" && settableServiceTier.includes(fields.serviceTier)
+        ? {"X-Vertex-AI-LLM-Shared-Request-Type": fields.serviceTier}
         : {};
 
     return {
@@ -430,6 +432,7 @@ export abstract class BaseChatGoogle<
     }
 
     const url = await this.buildUrl();
+    const headers = this.getHeaders(options);
     const body = {
       ...this.invocationParams(options),
       systemInstruction: convertMessagesToGeminiSystemInstruction(messages),
@@ -439,13 +442,14 @@ export abstract class BaseChatGoogle<
     const moduleName = this.constructor.name;
     await runManager?.handleCustomEvent(`google-request-${moduleName}`, {
       url,
+      headers,
       body,
     });
 
     const response = await this.apiClient.fetch(
       new Request(url, {
         method: "POST",
-        headers: this.getHeaders(options),
+        headers,
         body: JSON.stringify(body),
         signal: options.signal,
       })
@@ -526,16 +530,18 @@ export abstract class BaseChatGoogle<
     };
 
     const url = await this.buildUrl("streamGenerateContent?alt=sse");
+    const headers = this.getHeaders(options);
     const moduleName = this.constructor.name;
     await runManager?.handleCustomEvent(`google-request-${moduleName}`, {
       url,
+      headers,
       body,
     });
 
     const response = await this.apiClient.fetch(
       new Request(url, {
         method: "POST",
-        headers: this.getHeaders(options),
+        headers,
         body: JSON.stringify(body),
         signal: options.signal,
       })
