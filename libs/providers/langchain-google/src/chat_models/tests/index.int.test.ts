@@ -121,6 +121,7 @@ const allModelInfo: ModelInfo[] = [
   {
     model: "gemini-3.1-pro-preview",
     testConfig: {
+      only: true,
       isThinking: true,
     },
   },
@@ -950,6 +951,15 @@ describe.each(coreModelInfo)(
       expect(
         recorder.request?.body?.generationConfig?.responseMimeType
       ).toEqual("application/json");
+    });
+
+    test.only("service tier - flex", async () => {
+      const llm = newChatGoogle({
+        serviceTier: "flex",
+      });
+      const prompt = "Write a limerick about the color blue.";
+      const result = await llm.invoke(prompt);
+      console.log(result);
     });
 
     test("image - legacy", async () => {

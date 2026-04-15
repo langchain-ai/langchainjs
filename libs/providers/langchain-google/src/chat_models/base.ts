@@ -33,7 +33,7 @@ import {
 } from "@langchain/core/utils/types";
 
 import { ApiClient } from "../clients/index.js";
-import type { ChatGoogleFields } from "./types.js";
+import { ChatGoogleFields, settableServiceTier } from "./types.js";
 import { SafeJsonEventParserStream } from "../utils/stream.js";
 import {
   convertAIMessageToText,
@@ -59,6 +59,7 @@ import {
   convertParamsToPlatformType,
   convertFieldsToSpeechConfig,
   convertFieldsToThinkingConfig,
+  convertFieldsToServiceTier,
 } from "../converters/params.js";
 import { Gemini } from "./api-types.js";
 import { subtractUsageMetadata } from "../utils/metadata.js";
@@ -367,6 +368,7 @@ export abstract class BaseChatGoogle<
           ? { mediaResolution: fields.mediaResolution }
           : {}),
       },
+      ...convertFieldsToServiceTier(this.platform, fields),
     };
   }
 
@@ -380,6 +382,19 @@ export abstract class BaseChatGoogle<
       ls_max_tokens: params.generationConfig?.maxOutputTokens ?? undefined,
       ls_stop: options.stop,
     };
+  }
+
+  getHeaders(options: this["ParsedCallOptions"]): HeadersInit {
+    const params = this.invocationParams(options);
+    const priorityHeaders: Record<string, string> =
+      this.platform === "gcp" && typeof params.serviceTier !== "undefined" && settableServiceTier.includes(params.serviceTier)
+        ? {"X-Vertex-AI-LLM-Shared-Request-Type": params.serviceTier}
+        : {};
+
+    return {
+      "Content-Type": "application/json",
+      ...priorityHeaders,
+    }
   }
 
   async _generate(
@@ -430,9 +445,7 @@ export abstract class BaseChatGoogle<
     const response = await this.apiClient.fetch(
       new Request(url, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: this.getHeaders(options),
         body: JSON.stringify(body),
         signal: options.signal,
       })
@@ -522,9 +535,7 @@ export abstract class BaseChatGoogle<
     const response = await this.apiClient.fetch(
       new Request(url, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: this.getHeaders(options),
         body: JSON.stringify(body),
         signal: options.signal,
       })
@@ -880,6 +891,7 @@ export function combineGoogleChatModelFields(
     thinkingBudget: b.thinkingBudget ?? a.thinkingBudget,
     reasoningEffort: b.reasoningEffort ?? a.reasoningEffort,
     thinkingLevel: b.thinkingLevel ?? a.thinkingLevel,
+    serviceTier: b.serviceTier ?? a.serviceTier,
   };
   if (rest.length > 0) {
     return combineGoogleChatModelFields(combined, rest[0], ...rest.slice(1));
