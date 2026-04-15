@@ -159,6 +159,11 @@ export type TavilySearchAPIRetrieverFields = ToolParams & {
    * @default false
    */
   autoParameters?: boolean;
+
+  /**
+   * Only return results containing the exact phrase(s) in quotes in your query.
+   */
+  exactMatch?: boolean;
 };
 
 function generateSuggestions(params: Record<string, unknown>): string[] {
@@ -348,6 +353,8 @@ export class TavilySearch extends StructuredTool<typeof inputSchema> {
 
   includeFavicon?: boolean;
 
+  exactMatch?: boolean;
+
   handleToolError = true;
 
   apiWrapper: TavilySearchAPIWrapper;
@@ -398,6 +405,7 @@ export class TavilySearch extends StructuredTool<typeof inputSchema> {
     this.country = params.country;
     this.autoParameters = params.autoParameters;
     this.includeFavicon = params.includeFavicon;
+    this.exactMatch = params.exactMatch;
   }
 
   async _call(
@@ -439,6 +447,7 @@ export class TavilySearch extends StructuredTool<typeof inputSchema> {
         country: this.country,
         autoParameters: this.autoParameters,
         includeFavicon: this.includeFavicon,
+        exactMatch: this.exactMatch,
       });
 
       if (
