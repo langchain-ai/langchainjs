@@ -110,7 +110,8 @@ export abstract class BaseLLM<
         this.metadata,
         {
           verbose: this.verbose,
-          tracerInheritableMetadata: { ...invocationParams },
+          tracerInheritableMetadata:
+            this._filterInvocationParamsForTracing(invocationParams),
         }
       );
       const extra = {
@@ -250,7 +251,8 @@ export abstract class BaseLLM<
         this.metadata,
         {
           verbose: this.verbose,
-          tracerInheritableMetadata: { ...invocationParams },
+          tracerInheritableMetadata:
+            this._filterInvocationParamsForTracing(invocationParams),
         }
       );
       const extra = {
@@ -365,7 +367,8 @@ export abstract class BaseLLM<
       this.metadata,
       {
         verbose: this.verbose,
-        tracerInheritableMetadata: { ...invocationParams },
+        tracerInheritableMetadata:
+          this._filterInvocationParamsForTracing(invocationParams),
       }
     );
     const extra = {

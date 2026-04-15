@@ -215,7 +215,8 @@ export abstract class GoogleBaseLLM<AuthOptions>
       this.metadata,
       {
         verbose: this.verbose,
-        tracerInheritableMetadata: { ...invocationParams },
+        tracerInheritableMetadata:
+          this._filterInvocationParamsForTracing(invocationParams),
       }
     );
     const extra = {

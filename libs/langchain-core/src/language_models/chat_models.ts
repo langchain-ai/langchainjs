@@ -329,7 +329,8 @@ export abstract class BaseChatModel<
         this.metadata,
         {
           verbose: this.verbose,
-          tracerInheritableMetadata: { ...invocationParams },
+          tracerInheritableMetadata:
+            this._filterInvocationParamsForTracing(invocationParams),
         }
       );
       const extra = {
@@ -470,7 +471,8 @@ export abstract class BaseChatModel<
         this.metadata,
         {
           verbose: this.verbose,
-          tracerInheritableMetadata: { ...invocationParams },
+          tracerInheritableMetadata:
+            this._filterInvocationParamsForTracing(invocationParams),
         }
       );
       const extra = {
@@ -677,7 +679,8 @@ export abstract class BaseChatModel<
       this.metadata,
       {
         verbose: this.verbose,
-        tracerInheritableMetadata: { ...invocationParams },
+        tracerInheritableMetadata:
+          this._filterInvocationParamsForTracing(invocationParams),
       }
     );
     const extra = {
