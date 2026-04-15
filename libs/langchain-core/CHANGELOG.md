@@ -1,5 +1,14 @@
 # @langchain/core
 
+## 1.1.40
+
+### Patch Changes
+
+- [#10694](https://github.com/langchain-ai/langchainjs/pull/10694) [`d3e0809`](https://github.com/langchain-ai/langchainjs/commit/d3e080995bb267bf3797067ab53c96bc2a6c8e3f) Thanks [@hntrl](https://github.com/hntrl)! - refactor(core): decouple tracer-only metadata defaults from runnable metadata
+  - Add tracer-scoped inheritable metadata/tag options in callback manager while keeping backward-compatible aliases.
+  - Move configurable-to-tracing metadata derivation into a tracer-only path and keep `ensureConfig` metadata mirroring limited to `model`.
+  - Update `LangChainTracer` default metadata/tag handling and add regression tests for stream events metadata behavior.
+
 ## 1.1.39
 
 ### Patch Changes
