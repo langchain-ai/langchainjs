@@ -985,6 +985,9 @@ importers:
       '@cfworker/json-schema':
         specifier: ^4.0.2
         version: 4.1.1
+      '@langchain/protocol':
+        specifier: ^0.0.1
+        version: 0.0.1
       '@standard-schema/spec':
         specifier: ^1.1.0
         version: 1.1.0
@@ -4646,6 +4649,9 @@ packages:
     engines: {node: '>=18'}
     peerDependencies:
       '@langchain/core': workspace:^
+
+  '@langchain/protocol@0.0.1':
+    resolution: {integrity: sha512-c65KeRgXNYqAPKjHOIUKacSjpidq+t5n5IKXHxL2eLaqxda/gDCYSXd8vDfxMMdUgXp6omsc9RqyCzwE1W6oog==}
 
   '@layerup/layerup-security@1.6.0':
     resolution: {integrity: sha512-HSBZobDxgi0aHrEoN49RwLSbv60614upoE+noAR/nlysp8K1H1mu9EBw2cY5YTk6XbmEqEjddu9dMPb71NABMA==}
@@ -15861,6 +15867,8 @@ snapshots:
     transitivePeerDependencies:
       - encoding
       - ws
+
+  '@langchain/protocol@0.0.1': {}
 
   '@layerup/layerup-security@1.6.0(encoding@0.1.13)(ws@5.2.4(bufferutil@4.1.0))(zod@4.3.6)':
     dependencies:

@@ -9,6 +9,7 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
   BaseChatModel,
   BaseChatModelCallOptions,
+  ChatModelStreamv2Event,
   LangSmithParams,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
@@ -68,6 +69,7 @@ import {
   createContentParser,
   createFunctionCallingParser,
 } from "@langchain/core/language_models/structured_output";
+import { streamAnthropicResponseEvents } from "./streamv2.js";
 
 // Default max output tokens per model family (prefix-matched).
 // These are sensible defaults for the `max_tokens` API parameter when
@@ -221,7 +223,8 @@ function _thinkingInParams(
 function _compactionInParams(
   params: AnthropicMessageCreateParams | AnthropicStreamingMessageCreateParams
 ): boolean {
-  const cm = params.context_management;
+  const cm =
+    "context_management" in params ? params.context_management : undefined;
   return !!cm?.edits?.some((e) => e.type === "compact_20260112");
 }
 
@@ -398,7 +401,14 @@ export interface AnthropicInput {
 /**
  * Input to ChatAnthropic class.
  */
-export type ChatAnthropicInput = AnthropicInput & BaseChatModelParams;
+export type ChatAnthropicInput = AnthropicInput &
+  BaseChatModelParams & {
+    /**
+     * Tool definitions bound to this model instance (merged into each request
+     * unless overridden by call-time `tools`).
+     */
+    tools?: ChatAnthropicToolType[];
+  };
 
 function extractToken(chunk: AIMessageChunk): string | undefined {
   if (typeof chunk.content === "string") {
@@ -1008,6 +1018,12 @@ export class ChatAnthropicMessages<
   betas?: AnthropicBeta[];
 
   /**
+   * Tools from the constructor; included in {@link invocationParams} when
+   * call-time `options.tools` is not set.
+   */
+  tools?: ChatAnthropicToolType[];
+
+  /**
    * Optional method that returns an initialized underlying Anthropic client.
    * Useful for accessing Anthropic models hosted on other cloud services
    * such as Google Vertex.
@@ -1068,6 +1084,8 @@ export class ChatAnthropicMessages<
     this.outputConfig = fields?.outputConfig ?? this.outputConfig;
     this.inferenceGeo = fields?.inferenceGeo ?? this.inferenceGeo;
     this.betas = fields?.betas ?? this.betas;
+
+    this.tools = fields?.tools;
 
     this.createClient =
       fields?.createClient ??
@@ -1160,19 +1178,22 @@ export class ChatAnthropicMessages<
       | Anthropic.Messages.ToolChoiceNone
       | undefined = handleToolChoice(options?.tool_choice);
 
-    const toolBetas = options?.tools?.reduce<AnthropicBeta[]>((acc, tool) => {
-      if (
-        typeof tool === "object" &&
-        "type" in tool &&
-        tool.type in ANTHROPIC_TOOL_BETAS
-      ) {
-        const beta = ANTHROPIC_TOOL_BETAS[tool.type];
-        if (!acc.includes(beta)) {
-          return [...acc, beta];
+    const toolBetas = (options?.tools ?? this.tools)?.reduce<AnthropicBeta[]>(
+      (acc, tool) => {
+        if (
+          typeof tool === "object" &&
+          "type" in tool &&
+          tool.type in ANTHROPIC_TOOL_BETAS
+        ) {
+          const beta = ANTHROPIC_TOOL_BETAS[tool.type];
+          if (!acc.includes(beta)) {
+            return [...acc, beta];
+          }
         }
-      }
-      return acc;
-    }, []);
+        return acc;
+      },
+      []
+    );
 
     // Merge output_config from constructor and call options, with backwards
     // compat for the deprecated outputFormat call option.
@@ -1198,7 +1219,7 @@ export class ChatAnthropicMessages<
       stop_sequences: options?.stop ?? this.stopSequences,
       stream: this.streaming,
       max_tokens: this.maxTokens,
-      tools: this.formatStructuredToolToAnthropic(options?.tools),
+      tools: this.formatStructuredToolToAnthropic(options?.tools ?? this.tools),
       tool_choice,
       thinking: this.thinking,
       context_management: this.contextManagement,
@@ -1334,6 +1355,30 @@ export class ChatAnthropicMessages<
         { chunk: generationChunk }
       );
     }
+  }
+
+  async *_streamResponseEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamv2Event> {
+    yield* streamAnthropicResponseEvents({
+      messages,
+      options,
+      runManager,
+      invocationParams: this.invocationParams(options),
+      streamUsage: this.streamUsage,
+      convertMessagesToPayload: _convertMessagesToAnthropicPayload,
+      applyCacheControlToPayload,
+      toolsInParams: _toolsInParams,
+      documentsInParams: _documentsInParams,
+      thinkingInParams: _thinkingInParams,
+      compactionInParams: _compactionInParams,
+      createStreamWithRetry: (request, requestOptions) =>
+        this.createStreamWithRetry(request, requestOptions),
+      makeMessageChunkFromAnthropicEvent: _makeMessageChunkFromAnthropicEvent,
+      extractToken,
+    });
   }
 
   /** @ignore */
