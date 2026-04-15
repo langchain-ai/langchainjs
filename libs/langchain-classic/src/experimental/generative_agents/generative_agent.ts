@@ -127,7 +127,7 @@ export class GenerativeAgent extends BaseChain {
    * @returns An array of strings parsed from the input text.
    */
   parseList(text: string): string[] {
-    // parse a newline-seperated string into a list of strings
+    // parse a newline-separated string into a list of strings
     const lines: string[] = text.trim().split("\n");
     const result: string[] = lines.map((line: string) =>
       line.replace(/^\s*\d+\.\s*/, "").trim()
