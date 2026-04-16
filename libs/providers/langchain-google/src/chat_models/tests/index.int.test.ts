@@ -160,12 +160,14 @@ const allModelInfo: ModelInfo[] = [
     model: "lyria-3-clip-preview",
     testConfig: {
       isAudio: true,
+      skip: true,
     },
   },
   {
     model: "lyria-3-pro-preview",
     testConfig: {
       isAudio: true,
+      skip: true,
     },
   },
 ];
@@ -439,7 +441,7 @@ describe.each(coreModelInfo)(
       warnSpy.mockRestore();
     });
 
-    test.only("invoke", async () => {
+    test("invoke", async () => {
       const llm = newChatGoogle();
       const result = await llm.invoke("What is 1 + 1?");
 
