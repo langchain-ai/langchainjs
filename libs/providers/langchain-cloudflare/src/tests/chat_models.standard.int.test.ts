@@ -41,6 +41,22 @@ class ChatCloudflareWorkersAIStandardIntegrationTests extends ChatModelIntegrati
       "Usage metadata tokens is not currently supported."
     );
   }
+
+  async testCacheComplexMessageTypes() {
+    this.skipTestMessage(
+      "testCacheComplexMessageTypes",
+      "ChatCloudflareWorkersAI",
+      "Complex non-string message content is not currently supported."
+    );
+  }
+
+  async testStreamTokensWithToolCalls() {
+    this.skipTestMessage(
+      "testStreamTokensWithToolCalls",
+      "ChatCloudflareWorkersAI",
+      "Tool calling is not currently supported."
+    );
+  }
 }
 
 const testClass = new ChatCloudflareWorkersAIStandardIntegrationTests();
