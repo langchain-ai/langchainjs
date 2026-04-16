@@ -17,10 +17,10 @@ import {
  * @augments BasePromptTemplateInput
  */
 export interface ImagePromptTemplateInput<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  PartialVariableName extends string = any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  PartialVariableName extends string = any,
 > extends BasePromptTemplateInput<RunInput, PartialVariableName> {
   /**
    * The prompt template
@@ -53,10 +53,10 @@ export interface ImagePromptTemplateInput<
  * An image prompt template for a multimodal model.
  */
 export class ImagePromptTemplate<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  PartialVariableName extends string = any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  PartialVariableName extends string = any,
 > extends BasePromptTemplate<RunInput, ImagePromptValue, PartialVariableName> {
   static lc_name() {
     return "ImagePromptTemplate";
@@ -140,7 +140,7 @@ export class ImagePromptTemplate<
   async format<FormatOutput = ImageContent>(
     values: TypedPromptInputValues<RunInput>
   ): Promise<FormatOutput> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const formatted: Record<string, any> = {};
     for (const [key, value] of Object.entries(this.template)) {
       if (typeof value === "string") {

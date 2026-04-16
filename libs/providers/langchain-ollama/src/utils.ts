@@ -17,7 +17,7 @@ import { v4 as uuidv4 } from "uuid";
 export function convertOllamaMessagesToLangChain(
   messages: OllamaMessage,
   extra?: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     responseMetadata?: Record<string, any>;
     usageMetadata?: UsageMetadata;
   }
@@ -35,7 +35,10 @@ export function convertOllamaMessagesToLangChain(
       index: 0,
       id: uuidv4(),
     })),
-    response_metadata: extra?.responseMetadata,
+    response_metadata: {
+      ...extra?.responseMetadata,
+      model_provider: "ollama",
+    },
     usage_metadata: extra?.usageMetadata,
   });
 }
@@ -47,6 +50,23 @@ function extractBase64FromDataUrl(dataUrl: string): string {
 
 function convertAMessagesToOllama(messages: AIMessage): OllamaMessage[] {
   if (typeof messages.content === "string") {
+    if (messages.tool_calls?.length) {
+      const toolCalls: OllamaToolCall[] = messages.tool_calls.map((tc) => ({
+        id: tc.id,
+        type: "function",
+        function: {
+          name: tc.name,
+          arguments: tc.args,
+        },
+      }));
+      return [
+        {
+          role: "assistant",
+          content: messages.content,
+          tool_calls: toolCalls,
+        },
+      ];
+    }
     return [
       {
         role: "assistant",

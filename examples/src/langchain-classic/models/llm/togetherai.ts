@@ -1,4 +1,4 @@
-import { TogetherAI } from "@langchain/community/llms/togetherai";
+import { TogetherAI } from "@langchain/together-ai";
 import { PromptTemplate } from "@langchain/core/prompts";
 
 const model = new TogetherAI({

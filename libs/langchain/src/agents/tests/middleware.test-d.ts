@@ -2,10 +2,19 @@ import { describe, it, expectTypeOf } from "vitest";
 import { z } from "zod/v3";
 import { HumanMessage, BaseMessage, AIMessage } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
+import type { InferInteropZodInput } from "@langchain/core/utils/types";
 import type { ServerTool, ClientTool } from "@langchain/core/tools";
 
-import { createAgent, createMiddleware } from "../index.js";
+import {
+  createAgent,
+  createMiddleware,
+  providerStrategy,
+  toolStrategy,
+} from "../index.js";
 import type { AgentBuiltInState } from "../runtime.js";
+import type { InferAgentState } from "../types.js";
+import type { InferMiddlewareType } from "../middleware/types.js";
+import type { JsonSchemaFormat } from "../responses.js";
 
 describe("middleware types", () => {
   it("a middleware can define a state schema which is propagated to the result", async () => {
@@ -57,9 +66,48 @@ describe("middleware types", () => {
     // Verify the types of individual properties
     expectTypeOf(result.customStateProp).toBeString();
     expectTypeOf(result.customStateProp2).toBeString();
-    expectTypeOf(result.messages).toEqualTypeOf<BaseMessage[]>();
+    expectTypeOf(result.messages).toExtend<BaseMessage[]>();
     expectTypeOf(result.structuredResponse).toEqualTypeOf<{
       customResponseFormat: string;
+    }>();
+  });
+
+  it("can properly infer custom state from agent type", () => {
+    const middleware = createMiddleware({
+      name: "Middleware",
+      stateSchema: z.object({
+        customStateProp: z.string().default("default value"),
+        customRequiredStateProp: z.string(),
+        customRequiredStateProp2: z.number(),
+      }),
+    });
+
+    const middleware2 = createMiddleware({
+      name: "Middleware2",
+      stateSchema: z.object({
+        customStateProp2: z.string().default("default value 2"),
+      }),
+    });
+
+    const agent = createAgent({
+      middleware: [middleware, middleware2],
+      tools: [],
+      stateSchema: z.object({
+        customAgentStateProp: z.string(),
+      }),
+      model: "gpt-4",
+      responseFormat: z.object({
+        customResponseFormat: z.string(),
+      }),
+    });
+
+    type AgentState = InferAgentState<typeof agent>;
+    expectTypeOf<AgentState>().toMatchObjectType<{
+      customAgentStateProp: string;
+      customStateProp: string;
+      customStateProp2: string;
+      customRequiredStateProp: string;
+      customRequiredStateProp2: number;
     }>();
   });
 
@@ -294,6 +342,51 @@ describe("middleware types", () => {
       );
     });
 
+    it("allows wrapModelCall to override responseFormat dynamically", () => {
+      const jsonSchema: JsonSchemaFormat = {
+        type: "object",
+        properties: {
+          answer: {
+            type: "string",
+          },
+        },
+        required: ["answer"],
+        additionalProperties: false,
+      };
+
+      createMiddleware({
+        name: "ResponseFormatMiddleware",
+        wrapModelCall: async (request, handler) => {
+          expectTypeOf(request).toHaveProperty("responseFormat");
+
+          await handler({
+            ...request,
+            responseFormat: providerStrategy(
+              z.object({
+                providerAnswer: z.string(),
+              })
+            ),
+          });
+
+          await handler({
+            ...request,
+            responseFormat: toolStrategy(
+              z.object({
+                toolAnswer: z.string(),
+              })
+            ),
+          });
+
+          await handler({
+            ...request,
+            responseFormat: jsonSchema,
+          });
+
+          return new AIMessage("done");
+        },
+      });
+    });
+
     it("doesn't require users to pass in a context if all middleware context properties are optional", async () => {
       const middleware = createMiddleware({
         name: "Middleware",
@@ -342,5 +435,44 @@ describe("middleware types", () => {
         }
       );
     });
+  });
+
+  it("should infer middleware type", () => {
+    const middleware = createMiddleware({
+      name: "Middleware",
+      contextSchema: z.object({
+        customContextProp: z.string().default("default value"),
+      }),
+      stateSchema: z.object({
+        customStateProp: z.string().default("default value"),
+      }),
+      tools: [
+        tool(
+          () => ({
+            foo: "bar",
+          }),
+          { name: "toolA", schema: z.object({ bar: z.number() }) }
+        ),
+      ],
+    });
+    type ContextSchema = InferMiddlewareType<
+      typeof middleware,
+      "ContextSchema"
+    >;
+    type ContextSchemaInput = InferInteropZodInput<ContextSchema>;
+    expectTypeOf<ContextSchemaInput>().toEqualTypeOf<{
+      customContextProp?: string | undefined;
+    }>();
+    type FullContext = InferMiddlewareType<typeof middleware, "FullContext">;
+    expectTypeOf<FullContext>().toEqualTypeOf<{
+      customContextProp: string;
+    }>();
+    type StateSchema = InferMiddlewareType<typeof middleware, "Schema">;
+    type StateSchemaInput = InferInteropZodInput<StateSchema>;
+    expectTypeOf<StateSchemaInput>().toEqualTypeOf<{
+      customStateProp?: string | undefined;
+    }>();
+    type Tools = InferMiddlewareType<typeof middleware, "Tools">;
+    expectTypeOf<Tools[0]>().toExtend<ClientTool>();
   });
 });

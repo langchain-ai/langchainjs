@@ -9,7 +9,7 @@ import { $InferMessageContent, MessageStructure } from "./message.js";
 import { Constructor } from "./utils.js";
 
 export interface ChatMessageFields<
-  TStructure extends MessageStructure = MessageStructure
+  TStructure extends MessageStructure = MessageStructure,
 > extends BaseMessageFields<TStructure, "generic"> {
   role: string;
 }
@@ -47,7 +47,7 @@ export class ChatMessage<TStructure extends MessageStructure = MessageStructure>
     role?: string
   ) {
     if (typeof fields === "string" || Array.isArray(fields)) {
-      // eslint-disable-next-line no-param-reassign, @typescript-eslint/no-non-null-assertion
+      // oxlint-disable-next-line no-param-reassign, @typescript-eslint/no-non-null-assertion
       fields = { content: fields, role: role! };
     }
     super(fields);
@@ -71,7 +71,7 @@ export class ChatMessage<TStructure extends MessageStructure = MessageStructure>
  * other chat message chunks.
  */
 export class ChatMessageChunk<
-  TStructure extends MessageStructure = MessageStructure
+  TStructure extends MessageStructure = MessageStructure,
 > extends BaseMessageChunk<TStructure, "generic"> {
   static lc_name() {
     return "ChatMessageChunk";
@@ -95,7 +95,7 @@ export class ChatMessageChunk<
     role?: string
   ) {
     if (typeof fields === "string" || Array.isArray(fields)) {
-      // eslint-disable-next-line no-param-reassign, @typescript-eslint/no-non-null-assertion
+      // oxlint-disable-next-line no-param-reassign, @typescript-eslint/no-non-null-assertion
       fields = { content: fields, role: role! };
     }
     super(fields);

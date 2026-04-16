@@ -19,8 +19,7 @@ import {
   type BaseMessagePromptTemplate,
 } from "./chat.js";
 
-export interface FewShotPromptTemplateInput
-  extends BasePromptTemplateInput<InputValues> {
+export interface FewShotPromptTemplateInput extends BasePromptTemplateInput<InputValues> {
   /**
    * Examples to format into the prompt. Exactly one of this or
    * {@link exampleSelector} must be
@@ -270,8 +269,7 @@ export class FewShotPromptTemplate
   }
 }
 
-export interface FewShotChatMessagePromptTemplateInput
-  extends BasePromptTemplateInput<InputValues> {
+export interface FewShotChatMessagePromptTemplateInput extends BasePromptTemplateInput<InputValues> {
   /**
    * Examples to format into the prompt. Exactly one of this or
    * {@link exampleSelector} must be
@@ -333,11 +331,11 @@ export interface FewShotChatMessagePromptTemplateInput
  * @augments FewShotChatMessagePromptTemplateInput
  */
 export class FewShotChatMessagePromptTemplate<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunInput extends InputValues = any,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    PartialVariableName extends string = any
-  >
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput extends InputValues = any,
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  PartialVariableName extends string = any,
+>
   extends BaseChatPromptTemplate
   implements FewShotChatMessagePromptTemplateInput
 {
@@ -433,7 +431,7 @@ export class FewShotChatMessagePromptTemplate<
     let examples = await this.getExamples(allValues);
 
     examples = examples.map((example) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       const result: Record<string, any> = {};
       this.examplePrompt.inputVariables.forEach((inputVariable) => {
         result[inputVariable] = example[inputVariable];

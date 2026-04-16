@@ -122,7 +122,7 @@ export class MaskingParser {
       );
     }
 
-    // eslint-disable-next-line no-instanceof/no-instanceof
+    // oxlint-disable-next-line no-instanceof/no-instanceof
     if (state && !(state instanceof Map)) {
       throw new TypeError(
         "MaskingParser.rehydrate Error: The 'state' argument, if provided, must be an instance of Map."

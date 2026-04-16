@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { test, expect, vi } from "vitest";
 import {
   AIMessage,
@@ -21,7 +21,7 @@ test("Test ChatOpenAI JSON mode", async () => {
     },
   });
   const message = new HumanMessage("Hello!");
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const res = await chat.invoke([["system", "Only return JSON"], message]);
   // console.log(JSON.stringify(res));
@@ -195,7 +195,7 @@ test("Test ChatOpenAI tool calling with ToolMessages", async () => {
   }
   expect(toolError).toBeDefined();
   expect((toolError as any)?.lc_error_code).toEqual("INVALID_TOOL_RESULTS");
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const finalResponse = await chat.invoke([
     ["human", "What's the weather like in San Francisco, Tokyo, and Paris?"],
@@ -719,9 +719,8 @@ public class User
 test("Test ChatOpenAI tool calling with empty schema in streaming vs non-streaming", async () => {
   const { tool } = await import("@langchain/core/tools");
   const { z } = await import("zod");
-  const { HumanMessage, SystemMessage } = await import(
-    "@langchain/core/messages"
-  );
+  const { HumanMessage, SystemMessage } =
+    await import("@langchain/core/messages");
 
   const llm = new ChatOpenAI({
     model: "gpt-3.5-turbo-1106",

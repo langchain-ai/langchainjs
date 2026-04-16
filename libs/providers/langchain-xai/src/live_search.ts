@@ -215,8 +215,8 @@ export function buildSearchParametersPayload(
  * are controlled via `search_parameters` instead.
  */
 export function filterXAIBuiltInTools<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends { [key: string]: any }
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  T extends { [key: string]: any },
 >(payload?: { tools?: T[]; excludedTypes?: string[] }): T[] | undefined {
   if (!payload?.tools) {
     return undefined;

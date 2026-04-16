@@ -18,7 +18,7 @@ export const KNOWN_BLOCK_TYPES = [
   ...KNOWN_MULTIMODAL_BLOCK_TYPES,
 ];
 
-// eslint-disable-next-line @typescript-eslint/no-namespace
+// oxlint-disable-next-line @typescript-eslint/no-namespace
 export declare namespace ContentBlock {
   /**
    * Annotation for citing data from a document.
@@ -78,7 +78,7 @@ export declare namespace ContentBlock {
     /**
      * Index of block in aggregate response. Used during streaming.
      */
-    index?: number;
+    index?: string | number;
     /**
      * Citations and other annotations.
      */
@@ -103,7 +103,7 @@ export declare namespace ContentBlock {
     /**
      * Index of block in aggregate response. Used during streaming.
      */
-    index?: number;
+    index?: string | number;
   }
 
   /**
@@ -114,8 +114,8 @@ export declare namespace ContentBlock {
    * the adapter's job to parse that payload and emit the corresponding standard reasoning and tool call blocks.
    */
   export interface NonStandard<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    TValue extends Record<string, any> = Record<string, any>
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    TValue extends Record<string, any> = Record<string, any>,
   > extends ContentBlock {
     /**
      * Type of the content block

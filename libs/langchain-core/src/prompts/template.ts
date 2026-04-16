@@ -195,10 +195,11 @@ export const checkValidTemplate = (
                          should be one of ${validFormats}`);
   }
   try {
-    const dummyInputs: InputValues = inputVariables.reduce((acc, v) => {
-      acc[v] = "foo";
-      return acc;
-    }, {} as Record<string, string>);
+    // Build dummy inputs using Object.fromEntries to avoid prototype pollution
+    // from dynamic property assignment with user-provided keys
+    const dummyInputs: InputValues = Object.fromEntries(
+      inputVariables.map((v) => [v, "foo"])
+    );
     if (Array.isArray(template)) {
       template.forEach((message) => {
         if (
@@ -232,7 +233,7 @@ export const checkValidTemplate = (
     } else {
       renderTemplate(template, templateFormat, dummyInputs);
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
     throw new Error(`Invalid prompt schema: ${e.message}`);
   }

@@ -11,9 +11,10 @@ import {
   HumanMessage,
   SystemMessage,
   ToolMessage,
-  isAIMessage,
+  ContentBlock,
   isAIMessageChunk,
 } from "@langchain/core/messages";
+import { concat } from "@langchain/core/utils/stream";
 import { tool } from "@langchain/core/tools";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatOpenAI } from "../index.js";
@@ -34,7 +35,8 @@ async function concatStream(stream: Promise<AsyncIterable<AIMessageChunk>>) {
 
 function assertResponse(message: BaseMessage | BaseMessageChunk | undefined) {
   if (message == null) throw new Error("`message` is null");
-  if (!isAIMessage(message)) throw new Error("Message is not an AIMessage");
+  if (!AIMessage.isInstance(message))
+    throw new Error("Message is not an AIMessage");
   expect(Array.isArray(message.content)).toBe(true);
 
   for (const block of message.content) {
@@ -300,6 +302,160 @@ test("Test reasoning", async () => {
   expect(response3.additional_kwargs.reasoning).toBeDefined();
 });
 
+describe("OpenAI Reasoning with contentBlocks", () => {
+  test("invoke returns reasoning in contentBlocks", async () => {
+    const llm = new ChatOpenAI({
+      model: "o3-mini",
+      reasoning: { effort: "low", summary: "auto" },
+      useResponsesApi: true,
+    });
+
+    const result = await llm.invoke("What is 2 + 2?");
+
+    // Verify contentBlocks contains reasoning
+    const blocks = result.contentBlocks;
+    expect(blocks.length).toBeGreaterThan(0);
+
+    const reasoningBlocks = blocks.filter((b) => b.type === "reasoning");
+    expect(reasoningBlocks.length).toBeGreaterThan(0);
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((reasoningBlocks[0] as any).reasoning.length).toBeGreaterThan(0);
+
+    const textBlocks = blocks.filter((b) => b.type === "text");
+    expect(textBlocks.length).toBeGreaterThan(0);
+  });
+
+  test("stream returns reasoning in contentBlocks", async () => {
+    const llm = new ChatOpenAI({
+      model: "o3-mini",
+      reasoning: { effort: "low", summary: "auto" },
+      useResponsesApi: true,
+    });
+
+    let fullMessage: AIMessageChunk | null = null;
+    for await (const chunk of await llm.stream("What is 3 + 3?")) {
+      fullMessage = fullMessage ? concat(fullMessage, chunk) : chunk;
+    }
+
+    expect(fullMessage).toBeDefined();
+    const blocks = fullMessage!.contentBlocks;
+    expect(blocks.length).toBeGreaterThan(0);
+
+    const reasoningBlocks = blocks.filter((b) => b.type === "reasoning");
+    expect(reasoningBlocks.length).toBeGreaterThan(0);
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((reasoningBlocks[0] as any).reasoning.length).toBeGreaterThan(0);
+  }, 60000);
+});
+
+describe("OpenAI Reasoning elevation to message.content", () => {
+  test("invoke elevates reasoning to message.content array", async () => {
+    const llm = new ChatOpenAI({
+      model: "o3-mini",
+      reasoning: { effort: "low", summary: "auto" },
+      useResponsesApi: true,
+    });
+
+    const result = await llm.invoke("What is 5 + 5?");
+
+    // Verify reasoning is in additional_kwargs
+    expect(result.additional_kwargs.reasoning).toBeDefined();
+
+    // Verify reasoning is elevated to content array
+    expect(Array.isArray(result.content)).toBe(true);
+    const contentArray = result.content as ContentBlock[];
+
+    // Find reasoning blocks in content
+    const reasoningBlocks = contentArray.filter(
+      (block) => block.type === "reasoning"
+    );
+    expect(reasoningBlocks.length).toBeGreaterThan(0);
+
+    // Verify reasoning block has the expected structure
+    const reasoningBlock = reasoningBlocks[0] as {
+      type: string;
+      reasoning: string;
+    };
+    expect(reasoningBlock.type).toBe("reasoning");
+    expect(typeof reasoningBlock.reasoning).toBe("string");
+    expect(reasoningBlock.reasoning.length).toBeGreaterThan(0);
+
+    // Verify text content is also present
+    const textBlocks = contentArray.filter((block) => block.type === "text");
+    expect(textBlocks.length).toBeGreaterThan(0);
+  });
+
+  test("stream elevates reasoning to message.content array", async () => {
+    const llm = new ChatOpenAI({
+      model: "o3-mini",
+      reasoning: { effort: "low", summary: "auto" },
+      useResponsesApi: true,
+    });
+
+    let fullMessage: AIMessageChunk | null = null;
+    for await (const chunk of await llm.stream("What is 6 + 6?")) {
+      fullMessage = fullMessage ? concat(fullMessage, chunk) : chunk;
+    }
+
+    expect(fullMessage).toBeDefined();
+
+    // Verify reasoning is in additional_kwargs
+    expect(fullMessage!.additional_kwargs.reasoning).toBeDefined();
+
+    // Verify reasoning is elevated to content array
+    expect(Array.isArray(fullMessage!.content)).toBe(true);
+    const contentArray = fullMessage!.content as Array<{
+      type: string;
+      [key: string]: unknown;
+    }>;
+
+    // Find reasoning blocks in content
+    const reasoningBlocks = contentArray.filter(
+      (block) => block.type === "reasoning"
+    );
+    expect(reasoningBlocks.length).toBeGreaterThan(0);
+
+    // Verify reasoning block has the expected structure
+    const reasoningBlock = reasoningBlocks[0] as {
+      type: string;
+      reasoning: string;
+    };
+    expect(reasoningBlock.type).toBe("reasoning");
+    expect(typeof reasoningBlock.reasoning).toBe("string");
+    expect(reasoningBlock.reasoning.length).toBeGreaterThan(0);
+
+    // Verify text content is also present
+    const textBlocks = contentArray.filter((block) => block.type === "text");
+    expect(textBlocks.length).toBeGreaterThan(0);
+  }, 60000);
+
+  test("reasoning content can be found by looking for type 'reasoning' with 'reasoning' field", async () => {
+    // This test verifies the fix works for UI rendering use cases
+    // where code looks for { type: "reasoning", reasoning: "..." } in message.content
+    const llm = new ChatOpenAI({
+      model: "o3-mini",
+      reasoning: { effort: "low", summary: "auto" },
+      useResponsesApi: true,
+    });
+
+    const result = await llm.invoke("What is 7 + 7?");
+
+    expect(Array.isArray(result.content)).toBe(true);
+    const contentArray = result.content as Array<Record<string, unknown>>;
+
+    // Simulate what a UI component might do to find reasoning
+    const reasoningContent = contentArray.find(
+      (block) =>
+        block.type === "reasoning" && typeof block.reasoning === "string"
+    );
+
+    expect(reasoningContent).toBeDefined();
+    expect(reasoningContent?.type).toBe("reasoning");
+    expect(typeof reasoningContent?.reasoning).toBe("string");
+    expect((reasoningContent?.reasoning as string).length).toBeGreaterThan(0);
+  });
+});
+
 test("Test stateful API", async () => {
   const llm = new ChatOpenAI({
     model: "gpt-4o-mini",
@@ -459,7 +615,7 @@ describe("Test image generation", () => {
     "type",
   ];
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   function assertImageGenerationToolOutput(tool_outputs: any) {
     expect(tool_outputs).toBeDefined();
     expect(Array.isArray(tool_outputs)).toBe(true);
@@ -791,7 +947,7 @@ describe("reasoning summaries", () => {
       let response: BaseMessage = await model.invoke(messages, {});
 
       // Verify response is an AIMessage
-      expect(isAIMessage(response)).toBe(true);
+      expect(AIMessage.isInstance(response)).toBe(true);
       const aiResponse = response as AIMessage;
 
       // Verify tool calls were made
@@ -837,7 +993,7 @@ describe("reasoning summaries", () => {
       // Second invocation - should use tool results to provide final answer
       // This verifies that reasoning summaries are properly paired with function calls
       response = await model.invoke(messages, {});
-      expect(isAIMessage(response)).toBe(true);
+      expect(AIMessage.isInstance(response)).toBe(true);
       expect(response).toBeDefined();
 
       // Verify reasoning summaries are properly paired throughout the flow
@@ -933,6 +1089,38 @@ test("useResponsesApi=true should emit handleLLMNewToken events during streaming
   );
   expect(startEvents.length).toBeGreaterThan(0);
   expect(endEvents.length).toBeGreaterThan(0);
+});
+
+// https://github.com/langchain-ai/langchainjs/issues/9733
+test("useResponsesApi=true should emit handleLLMNewToken events when using invoke with callbacks", async () => {
+  let nrNewTokens = 0;
+  let streamedCompletion = "";
+
+  const model = new ChatOpenAI({
+    model: "gpt-4o-mini",
+    useResponsesApi: true,
+    streaming: true,
+    maxTokens: 50,
+    callbacks: [
+      {
+        async handleLLMNewToken(token: string) {
+          nrNewTokens += 1;
+          streamedCompletion += token;
+        },
+      },
+    ],
+  });
+
+  const message = new HumanMessage("Say 'Hello world' in 3 words.");
+  const result = await model.invoke([message]);
+
+  // Verify that handleLLMNewToken was called multiple times
+  expect(nrNewTokens).toBeGreaterThan(0);
+  // Verify that we accumulated tokens
+  expect(streamedCompletion.length).toBeGreaterThan(0);
+  // Verify the result is defined
+  expect(result).toBeDefined();
+  expect(result.content).toBeDefined();
 });
 
 describe("gpt-5", () => {
@@ -1052,4 +1240,131 @@ it("won't modify structured output content if outputVersion is set", async () =>
     .withStructuredOutput(schema)
     .invoke("respond with the name 'John'");
   expect(response.name).toBeDefined();
+});
+
+test("ChatOpenAI with service_tier and useResponsesApi", async () => {
+  const model = new ChatOpenAI({
+    model: "gpt-4o",
+    useResponsesApi: true,
+    service_tier: "default",
+    apiKey: process.env.OPENAI_API_KEY || "sk-fake-key",
+  });
+  const res = await model.invoke("Hello");
+  expect(res.content).toBeDefined();
+});
+
+describe("tool search", () => {
+  const getWeather = tool(
+    async (input: { location: string }) =>
+      `Weather in ${input.location}: sunny, 72°F`,
+    {
+      name: "get_weather",
+      description: "Get the current weather for a location",
+      schema: z.object({
+        location: z.string().describe("The city to get weather for"),
+      }),
+      extras: { defer_loading: true },
+    }
+  );
+
+  const getPopulation = tool(
+    async (input: { city: string }) => `Population of ${input.city}: 873,965`,
+    {
+      name: "get_population",
+      description: "Get the population of a city",
+      schema: z.object({
+        city: z.string().describe("The city to look up"),
+      }),
+      extras: { defer_loading: true },
+    }
+  );
+
+  it("server-executed tool search discovers deferred tools and completes agent loop", async () => {
+    const model = new ChatOpenAI({ model: "gpt-5.3" });
+
+    const modelWithTools = model.bindTools([
+      { type: "tool_search" },
+      getWeather,
+      getPopulation,
+    ]);
+
+    const messages: BaseMessage[] = [
+      new HumanMessage("What is the weather in San Francisco?"),
+    ];
+
+    let response = await modelWithTools.invoke(messages);
+    expect(AIMessage.isInstance(response)).toBe(true);
+
+    const aiResponse = response as AIMessage;
+    expect(aiResponse.tool_calls).toBeDefined();
+    expect(aiResponse.tool_calls!.length).toBeGreaterThan(0);
+
+    const toolCall = aiResponse.tool_calls![0];
+    expect(toolCall.name).toBe("get_weather");
+
+    const matchingTool = [getWeather, getPopulation].find(
+      (t) => t.name === toolCall.name
+    );
+    expect(matchingTool).toBeDefined();
+
+    const toolResult = await matchingTool!.invoke(toolCall);
+    messages.push(aiResponse, toolResult);
+
+    response = await modelWithTools.invoke(messages);
+    expect(AIMessage.isInstance(response)).toBe(true);
+    expect(typeof (response as AIMessage).content).not.toBe("");
+  });
+
+  it("server-executed tool search works with streaming", async () => {
+    const model = new ChatOpenAI({ model: "gpt-5.3" });
+
+    const modelWithTools = model.bindTools([
+      { type: "tool_search" },
+      getWeather,
+    ]);
+
+    const stream = await modelWithTools.stream(
+      "What is the weather in San Francisco?"
+    );
+    let full: AIMessageChunk | undefined;
+    for await (const chunk of stream) {
+      full = full ? (concat(full, chunk) as AIMessageChunk) : chunk;
+    }
+
+    expect(full).toBeDefined();
+    expect(full!.tool_calls!.length).toBeGreaterThan(0);
+    expect(full!.tool_calls![0].name).toBe("get_weather");
+  });
+
+  it("tool_search_call and tool_search_output appear in block translator output", async () => {
+    const model = new ChatOpenAI({ model: "gpt-5.3" });
+
+    const modelWithTools = model.bindTools([
+      { type: "tool_search" },
+      getWeather,
+    ]);
+
+    const response = (await modelWithTools.invoke(
+      "What is the weather in San Francisco?"
+    )) as AIMessage;
+
+    const blocks = response.contentBlocks;
+    const serverToolCalls = blocks.filter(
+      (b) => b.type === "server_tool_call"
+    ) as ContentBlock.Tools.ServerToolCall[];
+    const serverToolResults = blocks.filter(
+      (b) => b.type === "server_tool_call_result"
+    ) as ContentBlock.Tools.ServerToolCallResult[];
+
+    const toolSearchCall = serverToolCalls.find(
+      (b) => b.name === "tool_search"
+    );
+    const toolSearchResult = serverToolResults.find(
+      (b) => b.extras?.name === "tool_search"
+    );
+
+    expect(toolSearchCall).toBeDefined();
+    expect(toolSearchResult).toBeDefined();
+    expect(toolSearchResult!.output).toHaveProperty("tools");
+  });
 });

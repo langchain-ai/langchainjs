@@ -35,7 +35,7 @@ import {
  */
 export async function dispatchCustomEvent(
   name: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   payload: any,
   config?: RunnableConfig
 ) {

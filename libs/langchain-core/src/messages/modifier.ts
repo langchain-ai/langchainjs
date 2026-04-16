@@ -2,7 +2,7 @@ import { BaseMessage, BaseMessageFields } from "./base.js";
 import { MessageStructure } from "./message.js";
 
 export interface RemoveMessageFields<
-  TStructure extends MessageStructure = MessageStructure
+  TStructure extends MessageStructure = MessageStructure,
 > extends Omit<BaseMessageFields<TStructure, "remove">, "content"> {
   /**
    * The ID of the message to remove.
@@ -14,7 +14,7 @@ export interface RemoveMessageFields<
  * Message responsible for deleting other messages.
  */
 export class RemoveMessage<
-  TStructure extends MessageStructure = MessageStructure
+  TStructure extends MessageStructure = MessageStructure,
 > extends BaseMessage<TStructure, "remove"> {
   readonly type = "remove" as const;
 

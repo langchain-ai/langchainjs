@@ -17,7 +17,7 @@ test("Test StuffDocumentsChain", async () => {
     new Document({ pageContent: "bar" }),
     new Document({ pageContent: "baz" }),
   ];
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const res = await chain.invoke({ context: docs });
   // console.log({ res });
@@ -33,7 +33,7 @@ test("Test MapReduceDocumentsChain with QA chain", async () => {
     new Document({ pageContent: "harrison went to harvard" }),
     new Document({ pageContent: "ankush went to princeton" }),
   ];
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const res = await chain.call({
     input_documents: docs,
@@ -52,7 +52,7 @@ test("Test RefineDocumentsChain with QA chain", async () => {
     new Document({ pageContent: "harrison went to harvard" }),
     new Document({ pageContent: "ankush went to princeton" }),
   ];
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const res = await chain.invoke({
     input_documents: docs,

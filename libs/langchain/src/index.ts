@@ -23,16 +23,30 @@ export {
 export { initChatModel } from "./chat_models/universal.js";
 
 /**
- * LangChain Tools
+ * LangChain Tools with support for headless tools
  */
 export {
   tool,
+  type HeadlessTool,
+  type HeadlessToolFields,
+  type HeadlessToolImplementation,
+} from "./tools/headless.js";
+
+/**
+ * LangChain Core Tool Primitives
+ */
+export {
   Tool,
   type ToolRuntime,
   DynamicTool,
   StructuredTool,
   DynamicStructuredTool,
 } from "@langchain/core/tools";
+
+/**
+ * LangChain utilities
+ */
+export { context } from "@langchain/core/utils/context";
 
 /**
  * LangChain Agents
@@ -53,3 +67,12 @@ export { InMemoryStore } from "@langchain/core/stores";
  * LangChain Documents
  */
 export { type DocumentInput, Document } from "@langchain/core/documents";
+
+/**
+ * LangChain Testing Utilities
+ */
+export {
+  langchainMatchers,
+  type LangChainMatchers,
+  fakeModel,
+} from "@langchain/core/testing";

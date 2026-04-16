@@ -37,8 +37,8 @@ export const ApplyPatchDeleteFileOperationSchema = z.object({
   path: z.string(),
 });
 
-// Discriminated union schema for all apply patch operations
-export const ApplyPatchOperationSchema = z.discriminatedUnion("type", [
+// Union schema for all apply patch operations
+export const ApplyPatchOperationSchema = z.union([
   ApplyPatchCreateFileOperationSchema,
   ApplyPatchUpdateFileOperationSchema,
   ApplyPatchDeleteFileOperationSchema,

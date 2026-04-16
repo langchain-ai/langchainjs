@@ -20,12 +20,12 @@ import { concat } from "../utils/stream.js";
  */
 export type Branch<RunInput, RunOutput> = [
   Runnable<RunInput, boolean>,
-  Runnable<RunInput, RunOutput>
+  Runnable<RunInput, RunOutput>,
 ];
 
 export type BranchLike<RunInput, RunOutput> = [
   RunnableLike<RunInput, boolean>,
-  RunnableLike<RunInput, RunOutput>
+  RunnableLike<RunInput, RunOutput>,
 ];
 
 /**
@@ -63,7 +63,7 @@ export type BranchLike<RunInput, RunOutput> = [
  * });
  * ```
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export class RunnableBranch<RunInput = any, RunOutput = any> extends Runnable<
   RunInput,
   RunOutput
@@ -114,11 +114,11 @@ export class RunnableBranch<RunInput = any, RunOutput = any> extends Runnable<
    *   pairs. The last item is a default runnable which is invoked if no other condition matches.
    * @returns A new RunnableBranch.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   static from<RunInput = any, RunOutput = any>(
     branches: [
       ...BranchLike<RunInput, RunOutput>[],
-      RunnableLike<RunInput, RunOutput>
+      RunnableLike<RunInput, RunOutput>,
     ]
   ) {
     if (branches.length < 1) {

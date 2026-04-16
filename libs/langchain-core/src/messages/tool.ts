@@ -11,7 +11,7 @@ import { $InferMessageContent, MessageStructure } from "./message.js";
 import { Constructor } from "./utils.js";
 
 export interface ToolMessageFields<
-  TStructure extends MessageStructure = MessageStructure
+  TStructure extends MessageStructure = MessageStructure,
 > extends BaseMessageFields<TStructure, "tool"> {
   /**
    * Artifact of the Tool execution which is not meant to be sent to the model.
@@ -20,7 +20,7 @@ export interface ToolMessageFields<
    * a subset of the full tool output is being passed as message content but the full
    * output is needed in other parts of the code.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   artifact?: any;
   tool_call_id: string;
   status?: "success" | "error";
@@ -84,7 +84,7 @@ export class ToolMessage<TStructure extends MessageStructure = MessageStructure>
    * a subset of the full tool output is being passed as message content but the full
    * output is needed in other parts of the code.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   artifact?: any;
 
   constructor(
@@ -104,7 +104,11 @@ export class ToolMessage<TStructure extends MessageStructure = MessageStructure>
   ) {
     const toolMessageFields: ToolMessageFields<TStructure> =
       typeof fields === "string" || Array.isArray(fields)
-        ? { content: fields, name, tool_call_id: tool_call_id! }
+        ? ({
+            content: fields,
+            name,
+            tool_call_id: tool_call_id!,
+          } as ToolMessageFields<TStructure>)
         : fields;
     super(toolMessageFields);
     this.tool_call_id = toolMessageFields.tool_call_id;
@@ -113,8 +117,25 @@ export class ToolMessage<TStructure extends MessageStructure = MessageStructure>
     this.metadata = toolMessageFields.metadata;
   }
 
-  static isInstance(message: unknown): message is ToolMessage {
-    return super.isInstance(message) && message.type === "tool";
+  /**
+   * Type guard to check if an object is a ToolMessage.
+   * Preserves the MessageStructure type parameter when called with a typed BaseMessage.
+   * @overload When called with a typed BaseMessage, preserves the TStructure type
+   */
+  static isInstance<T extends MessageStructure>(
+    message: BaseMessage<T>
+  ): message is BaseMessage<T> & ToolMessage<T>;
+  /**
+   * Type guard to check if an object is a ToolMessage.
+   * @overload When called with unknown, returns base ToolMessage type
+   */
+  static isInstance(message: unknown): message is ToolMessage;
+  static isInstance<T extends MessageStructure = MessageStructure>(
+    message: BaseMessage<T> | unknown
+  ): message is ToolMessage<T> {
+    return (
+      super.isInstance(message) && (message as { type: string }).type === "tool"
+    );
   }
 
   override get _printableFields(): Record<string, unknown> {
@@ -131,7 +152,7 @@ export class ToolMessage<TStructure extends MessageStructure = MessageStructure>
  * with other tool message chunks.
  */
 export class ToolMessageChunk<
-  TStructure extends MessageStructure = MessageStructure
+  TStructure extends MessageStructure = MessageStructure,
 > extends BaseMessageChunk<TStructure, "tool"> {
   readonly type = "tool" as const;
 
@@ -150,7 +171,7 @@ export class ToolMessageChunk<
    * a subset of the full tool output is being passed as message content but the full
    * output is needed in other parts of the code.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   artifact?: any;
 
   constructor(fields: ToolMessageFields<TStructure>) {
@@ -194,8 +215,8 @@ export class ToolMessageChunk<
 
 export interface ToolCall<
   TName extends string = string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  TArgs extends Record<string, any> = Record<string, any>
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  TArgs extends Record<string, any> = Record<string, any>,
 > {
   readonly type?: "tool_call";
   /**
@@ -303,7 +324,7 @@ export interface InvalidToolCall<TName extends string = string> {
 }
 
 export function defaultToolCallParser(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   rawToolCalls: Record<string, any>[]
 ): [ToolCall[], InvalidToolCall[]] {
   const toolCalls: ToolCall[] = [];

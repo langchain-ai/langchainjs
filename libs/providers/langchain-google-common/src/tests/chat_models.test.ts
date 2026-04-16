@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { expect, test, jest } from "@jest/globals";
+/* oxlint-disable @typescript-eslint/no-explicit-any */
+import { describe, expect, test, vi } from "vitest";
 import {
   AIMessage,
   BaseMessage,
@@ -55,13 +55,19 @@ export class ChatGoogle extends ChatGoogleBase<MockClientAuthInfo> {
     const options = authOptions(fields);
     return new MockClient(options);
   }
+
+  buildApiKey(
+    _fields?: GoogleAIBaseLLMInput<MockClientAuthInfo>
+  ): string | undefined {
+    return undefined;
+  }
 }
 
 describe("Mock ChatGoogle - Gemini", () => {
   test("Setting invalid model parameters", async () => {
     expect(() => {
       const model = new ChatGoogle({
-        temperature: 1.2,
+        temperature: 2.5,
       });
       expect(model).toBeNull(); // For linting. Should never reach.
     }).toThrowError(/temperature/);
@@ -150,7 +156,7 @@ describe("Mock ChatGoogle - Gemini", () => {
       apiKey: "test",
     });
 
-    expect(model.platform).toEqual("gai");
+    expect(model.platform).toEqual("gcp");
   });
 
   test("platform set", async () => {
@@ -536,7 +542,7 @@ describe("Mock ChatGoogle - Gemini", () => {
     ];
 
     const retryableError = new MockClientError(429);
-    const requestSpy = jest
+    const requestSpy = vi
       .spyOn(MockClient.prototype, "request")
       .mockRejectedValueOnce(retryableError);
 
@@ -1010,6 +1016,90 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(thinkingConfig.thinkingBudget).toEqual(1024);
   });
 
+  test("1. Reasoning - thinkingLevel direct", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      thinkingLevel: "HIGH",
+    });
+    await model.invoke(
+      "You roll two dice. What's the probability they add up to 7?"
+    );
+
+    expect(record.opts).toBeDefined();
+    expect(record.opts.data).toBeDefined();
+    const { data } = record.opts;
+
+    expect(data).toHaveProperty("generationConfig");
+    expect(data.generationConfig).toHaveProperty("thinkingConfig");
+    const { thinkingConfig } = data.generationConfig;
+    expect(thinkingConfig).toHaveProperty("thinkingLevel");
+    expect(thinkingConfig.thinkingLevel).toEqual("HIGH");
+  });
+
+  test("1. Reasoning - reasoningLevel mapping", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      reasoningLevel: "medium",
+    });
+    await model.invoke(
+      "You roll two dice. What's the probability they add up to 7?"
+    );
+
+    expect(record.opts).toBeDefined();
+    expect(record.opts.data).toBeDefined();
+    const { data } = record.opts;
+
+    expect(data).toHaveProperty("generationConfig");
+    expect(data.generationConfig).toHaveProperty("thinkingConfig");
+    const { thinkingConfig } = data.generationConfig;
+    expect(thinkingConfig).toHaveProperty("thinkingLevel");
+    expect(thinkingConfig.thinkingLevel).toEqual("MEDIUM");
+  });
+
+  test("1. Reasoning - combined thinkingLevel and thinkingBudget", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      maxReasoningTokens: 100,
+      thinkingLevel: "LOW",
+    });
+    await model.invoke(
+      "You roll two dice. What's the probability they add up to 7?"
+    );
+
+    expect(record.opts).toBeDefined();
+    expect(record.opts.data).toBeDefined();
+    const { data } = record.opts;
+
+    expect(data).toHaveProperty("generationConfig");
+    expect(data.generationConfig).toHaveProperty("thinkingConfig");
+    const { thinkingConfig } = data.generationConfig;
+    expect(thinkingConfig).toHaveProperty("thinkingBudget");
+    expect(thinkingConfig.thinkingBudget).toEqual(100);
+    expect(thinkingConfig).toHaveProperty("thinkingLevel");
+    expect(thinkingConfig.thinkingLevel).toEqual("LOW");
+  });
+
   test("2. Safety - settings", async () => {
     const record: Record<string, any> = {};
     const projectId = mockId();
@@ -1346,6 +1436,457 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(parts[1].videoMetadata.fps).toEqual(12);
 
     expect(result.content).toBe("A blue square.");
+  });
+
+  test("3. invoke - input_audio", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-3-input-audio-mock.json",
+    };
+
+    const model = new ChatGoogle({
+      authOptions,
+      model: "gemini-1.5-flash",
+    });
+
+    const message: ContentBlock[] = [
+      {
+        type: "text",
+        text: "Transcribe this audio",
+      },
+      {
+        type: "input_audio",
+        input_audio: {
+          format: "wav",
+          data: "BASE64_AUDIO_DATA",
+        },
+      },
+    ];
+
+    const messages: BaseMessage[] = [
+      new HumanMessageChunk({ content: message }),
+    ];
+
+    await model.invoke(messages);
+
+    const parts = record?.opts?.data?.contents?.[0]?.parts;
+    expect(parts).toBeDefined();
+    expect(parts).toHaveLength(2);
+
+    expect(parts[0]).toHaveProperty("text");
+    expect(parts[1]).toHaveProperty("inlineData");
+    expect(parts[1].inlineData).toEqual({
+      mimeType: "audio/wav",
+      data: "BASE64_AUDIO_DATA",
+    });
+  });
+
+  test("3. invoke - ContentBlock.Multimodal.Image - base64", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-3-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      model: "gemini-2.5-flash",
+    });
+
+    const messages: BaseMessage[] = [
+      new HumanMessage({
+        content: [
+          {
+            type: "text",
+            text: "What is in this image?",
+          },
+          {
+            type: "image" as const,
+            data: "iVBORw0KGgoAAAANSUhEUg==",
+            mimeType: "image/png",
+          },
+        ],
+      }),
+    ];
+
+    const result = await model.invoke(messages);
+
+    const parts = record?.opts?.data?.contents[0]?.parts;
+    expect(parts).toHaveLength(2);
+    expect(parts[0]).toHaveProperty("text");
+    expect(parts[0].text).toBe("What is in this image?");
+    expect(parts[1]).toHaveProperty("inlineData");
+    expect(parts[1].inlineData.mimeType).toBe("image/png");
+    expect(parts[1].inlineData.data).toBe("iVBORw0KGgoAAAANSUhEUg==");
+
+    expect(result.content).toBe("A blue square.");
+  });
+
+  test("3. invoke - ContentBlock.Multimodal.Image - url", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-3-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      model: "gemini-2.5-flash",
+    });
+
+    const messages: BaseMessage[] = [
+      new HumanMessage({
+        content: [
+          {
+            type: "text",
+            text: "What is in this image?",
+          },
+          {
+            type: "image" as const,
+            url: "gs://my-bucket/my-image.png",
+            mimeType: "image/png",
+          },
+        ],
+      }),
+    ];
+
+    const result = await model.invoke(messages);
+
+    const parts = record?.opts?.data?.contents[0]?.parts;
+    expect(parts).toHaveLength(2);
+    expect(parts[0]).toHaveProperty("text");
+    expect(parts[1]).toHaveProperty("fileData");
+    expect(parts[1].fileData.mimeType).toBe("image/png");
+    expect(parts[1].fileData.fileUri).toBe("gs://my-bucket/my-image.png");
+
+    expect(result.content).toBe("A blue square.");
+  });
+
+  test("3. invoke - ContentBlock.Multimodal.Image - data url", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-3-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      model: "gemini-2.5-flash",
+    });
+
+    const messages: BaseMessage[] = [
+      new HumanMessage({
+        content: [
+          {
+            type: "text",
+            text: "What is in this image?",
+          },
+          {
+            type: "image" as const,
+            url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUg==",
+          },
+        ],
+      }),
+    ];
+
+    const result = await model.invoke(messages);
+
+    const parts = record?.opts?.data?.contents[0]?.parts;
+    expect(parts).toHaveLength(2);
+    expect(parts[0]).toHaveProperty("text");
+    expect(parts[1]).toHaveProperty("inlineData");
+    expect(parts[1].inlineData.mimeType).toBe("image/png");
+    expect(parts[1].inlineData.data).toBe("iVBORw0KGgoAAAANSUhEUg==");
+
+    expect(result.content).toBe("A blue square.");
+  });
+
+  test("3. invoke - ContentBlock.Multimodal.Video - url", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-3-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      model: "gemini-2.5-flash",
+    });
+
+    const messages: BaseMessage[] = [
+      new HumanMessage({
+        content: [
+          {
+            type: "text",
+            text: "What happens in this video?",
+          },
+          {
+            type: "video" as const,
+            url: "gs://my-bucket/my-video.mp4",
+            mimeType: "video/mp4",
+          },
+        ],
+      }),
+    ];
+
+    const result = await model.invoke(messages);
+
+    const parts = record?.opts?.data?.contents[0]?.parts;
+    expect(parts).toHaveLength(2);
+    expect(parts[0]).toHaveProperty("text");
+    expect(parts[1]).toHaveProperty("fileData");
+    expect(parts[1].fileData.mimeType).toBe("video/mp4");
+    expect(parts[1].fileData.fileUri).toBe("gs://my-bucket/my-video.mp4");
+
+    expect(result.content).toBe("A blue square.");
+  });
+
+  test("3. invoke - ContentBlock.Multimodal.Audio - base64", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-3-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      model: "gemini-2.5-flash",
+    });
+
+    const messages: BaseMessage[] = [
+      new HumanMessage({
+        content: [
+          {
+            type: "text",
+            text: "What is this audio?",
+          },
+          {
+            type: "audio" as const,
+            data: "SGVsbG8gV29ybGQ=",
+            mimeType: "audio/mpeg",
+          },
+        ],
+      }),
+    ];
+
+    const result = await model.invoke(messages);
+
+    const parts = record?.opts?.data?.contents[0]?.parts;
+    expect(parts).toHaveLength(2);
+    expect(parts[0]).toHaveProperty("text");
+    expect(parts[1]).toHaveProperty("inlineData");
+    expect(parts[1].inlineData.mimeType).toBe("audio/mpeg");
+    expect(parts[1].inlineData.data).toBe("SGVsbG8gV29ybGQ=");
+
+    expect(result.content).toBe("A blue square.");
+  });
+
+  test("3. invoke - ContentBlock.Multimodal.Audio - url", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-3-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      model: "gemini-2.5-flash",
+    });
+
+    const messages: BaseMessage[] = [
+      new HumanMessage({
+        content: [
+          {
+            type: "text",
+            text: "What is this audio?",
+          },
+          {
+            type: "audio" as const,
+            url: "gs://my-bucket/audio.mp3",
+            mimeType: "audio/mpeg",
+          },
+        ],
+      }),
+    ];
+
+    const result = await model.invoke(messages);
+
+    const parts = record?.opts?.data?.contents[0]?.parts;
+    expect(parts).toHaveLength(2);
+    expect(parts[0]).toHaveProperty("text");
+    expect(parts[1]).toHaveProperty("fileData");
+    expect(parts[1].fileData.mimeType).toBe("audio/mpeg");
+    expect(parts[1].fileData.fileUri).toBe("gs://my-bucket/audio.mp3");
+
+    expect(result.content).toBe("A blue square.");
+  });
+
+  test("3. invoke - ContentBlock.Multimodal.File - base64", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-3-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      model: "gemini-2.5-flash",
+    });
+
+    const messages: BaseMessage[] = [
+      new HumanMessage({
+        content: [
+          {
+            type: "text",
+            text: "What is in this file?",
+          },
+          {
+            type: "file" as const,
+            data: "JVBERi0xLjQK",
+            mimeType: "application/pdf",
+          },
+        ],
+      }),
+    ];
+
+    const result = await model.invoke(messages);
+
+    const parts = record?.opts?.data?.contents[0]?.parts;
+    expect(parts).toHaveLength(2);
+    expect(parts[0]).toHaveProperty("text");
+    expect(parts[1]).toHaveProperty("inlineData");
+    expect(parts[1].inlineData.mimeType).toBe("application/pdf");
+    expect(parts[1].inlineData.data).toBe("JVBERi0xLjQK");
+
+    expect(result.content).toBe("A blue square.");
+  });
+
+  test("3. invoke - ContentBlock.Multimodal.File - url", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-3-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      model: "gemini-2.5-flash",
+    });
+
+    const messages: BaseMessage[] = [
+      new HumanMessage({
+        content: [
+          {
+            type: "text",
+            text: "What is in this file?",
+          },
+          {
+            type: "file" as const,
+            url: "gs://my-bucket/document.pdf",
+            mimeType: "application/pdf",
+          },
+        ],
+      }),
+    ];
+
+    const result = await model.invoke(messages);
+
+    const parts = record?.opts?.data?.contents[0]?.parts;
+    expect(parts).toHaveLength(2);
+    expect(parts[0]).toHaveProperty("text");
+    expect(parts[1]).toHaveProperty("fileData");
+    expect(parts[1].fileData.mimeType).toBe("application/pdf");
+    expect(parts[1].fileData.fileUri).toBe("gs://my-bucket/document.pdf");
+
+    expect(result.content).toBe("A blue square.");
+  });
+
+  test("3. invoke - ContentBlock.Multimodal.Image via contentBlocks", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-3-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      model: "gemini-2.5-flash",
+    });
+
+    const messages: BaseMessage[] = [
+      new HumanMessage({
+        contentBlocks: [
+          {
+            type: "text",
+            text: "What is in this image?",
+          },
+          {
+            type: "image" as const,
+            data: "iVBORw0KGgoAAAANSUhEUg==",
+            mimeType: "image/jpeg",
+            metadata: { filename: "photo.jpg" },
+          },
+        ],
+      }),
+    ];
+
+    const result = await model.invoke(messages);
+
+    const parts = record?.opts?.data?.contents[0]?.parts;
+    expect(parts).toHaveLength(2);
+    expect(parts[0]).toHaveProperty("text");
+    expect(parts[0].text).toBe("What is in this image?");
+    expect(parts[1]).toHaveProperty("inlineData");
+    expect(parts[1].inlineData.mimeType).toBe("image/jpeg");
+    expect(parts[1].inlineData.data).toBe("iVBORw0KGgoAAAANSUhEUg==");
+
+    expect(result.content).toBe("A blue square.");
+  });
+
+  test("3. invoke - ContentBlock.Multimodal.Image - fileId throws", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-3-mock.json",
+    };
+    const model = new ChatGoogle({
+      authOptions,
+      model: "gemini-2.5-flash",
+    });
+
+    const messages: BaseMessage[] = [
+      new HumanMessage({
+        content: [
+          {
+            type: "text",
+            text: "What is in this image?",
+          },
+          {
+            type: "image",
+            fileId: "file-abc123",
+            mimeType: "image/png",
+          },
+        ],
+      }),
+    ];
+
+    await expect(model.invoke(messages)).rejects.toThrow(
+      /fileId is not supported by Google Gemini/
+    );
   });
 
   test("3. invoke - media - manager", async () => {
@@ -2441,7 +2982,7 @@ describe("Mock ChatGoogle - Anthropic", () => {
       resultFile: "claude-chat-1-mock.json",
     };
     const model = new ChatGoogle({
-      model: "claude-3-5-sonnet@20240620",
+      model: "claude-sonnet-4-5@20250929",
       platformType: "gcp",
       authOptions,
     });
@@ -2469,7 +3010,7 @@ describe("Mock ChatGoogle - Anthropic", () => {
       resultFile: "claude-chat-1-mock.json",
     };
     const model = new ChatGoogle({
-      model: "claude-3-5-sonnet@20240620",
+      model: "claude-sonnet-4-5@20250929",
       platformType: "gcp",
       authOptions,
     });
@@ -2804,4 +3345,144 @@ test("Can set streaming param", () => {
     streaming: true,
   });
   expect(modelWithStreamingTrue.streaming).toBe(true);
+});
+
+describe("withStructuredOutput - StandardSchema", () => {
+  function makeSerializableSchema() {
+    return {
+      "~standard": {
+        version: 1 as const,
+        vendor: "test",
+        validate: (value: unknown) => {
+          const v = value as Record<string, unknown>;
+          if (v && typeof v === "object" && "testName" in v) {
+            return { value: v as { testName: string } };
+          }
+          return {
+            issues: [{ message: "Expected object with testName" }],
+          };
+        },
+        jsonSchema: {
+          input: () => ({
+            type: "object" as const,
+            properties: {
+              testName: {
+                type: "string",
+                description: "The name of the test that should be run.",
+              },
+            },
+            required: ["testName"],
+          }),
+          output: () => ({ type: "object" as const, properties: {} }),
+        },
+      },
+    };
+  }
+
+  test("functionCalling sends correct Gemini tool format", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-4-mock.json",
+    };
+
+    const baseModel = new ChatGoogle({ authOptions });
+    const schema = makeSerializableSchema();
+    const model = baseModel.withStructuredOutput(schema, {
+      method: "functionCalling",
+    });
+
+    await model.invoke("What?");
+
+    const toolsResult = record?.opts?.data?.tools;
+    expect(toolsResult).toBeDefined();
+    expect(Array.isArray(toolsResult)).toBeTruthy();
+    expect(toolsResult).toHaveLength(1);
+
+    const func = toolsResult[0]?.functionDeclarations?.[0];
+    expect(func).toBeDefined();
+    expect(func.name).toBe("extract");
+    expect(func.parameters).toBeDefined();
+    expect(func.parameters.type).toBe("object");
+    expect(func.parameters.properties.testName).toBeDefined();
+    expect(func.parameters.properties.testName.type).toBe("string");
+  });
+
+  test("functionCalling with custom name", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-4-mock.json",
+    };
+
+    const baseModel = new ChatGoogle({ authOptions });
+    const schema = makeSerializableSchema();
+    const model = baseModel.withStructuredOutput(schema, {
+      method: "functionCalling",
+      name: "test",
+    });
+
+    await model.invoke("What?");
+
+    const func = record?.opts?.data?.tools?.[0]?.functionDeclarations?.[0];
+    expect(func).toBeDefined();
+    expect(func.name).toBe("test");
+  });
+
+  test("jsonSchema sends correct responseSchema", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-json-schema-mock.json",
+    };
+
+    const baseModel = new ChatGoogle({ authOptions });
+    const schema = makeSerializableSchema();
+    const model = baseModel.withStructuredOutput(schema, {
+      method: "jsonSchema",
+    });
+
+    await model.invoke("What?");
+
+    const { data } = record.opts;
+    expect(data.tools).not.toBeDefined();
+    expect(data.generationConfig).toBeDefined();
+    expect(data.generationConfig.responseSchema).toBeDefined();
+    expect(data.generationConfig.responseSchema.type).toBe("object");
+    expect(
+      data.generationConfig.responseSchema.properties.testName
+    ).toBeDefined();
+    expect(data.generationConfig.responseSchema.properties.testName.type).toBe(
+      "string"
+    );
+    expect(data.generationConfig.responseMimeType).toBe("application/json");
+  });
+
+  test("default method uses jsonSchema with StandardSchema", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-json-schema-mock.json",
+    };
+
+    const baseModel = new ChatGoogle({ authOptions });
+    const schema = makeSerializableSchema();
+    const model = baseModel.withStructuredOutput(schema);
+
+    await model.invoke("What?");
+
+    const { data } = record.opts;
+    expect(data.tools).not.toBeDefined();
+    expect(data.generationConfig).toBeDefined();
+    expect(data.generationConfig.responseSchema).toBeDefined();
+    expect(data.generationConfig.responseMimeType).toBe("application/json");
+  });
 });

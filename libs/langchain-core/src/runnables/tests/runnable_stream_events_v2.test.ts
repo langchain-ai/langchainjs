@@ -28,6 +28,7 @@ import { GenerationChunk } from "../../outputs.js";
 // Import from web to avoid top-level side-effects from AsyncLocalStorage
 import { dispatchCustomEvent } from "../../callbacks/dispatch/web.js";
 import { AsyncLocalStorageProviderSingleton } from "../../singletons/index.js";
+import type { StreamEvent } from "../../tracers/event_stream.js";
 
 function reverse(s: string) {
   // Reverse a string.
@@ -54,7 +55,7 @@ test("Runnable streamEvents method", async () => {
     {
       data: { input: "hello" },
       event: "on_chain_start",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "reverse",
       run_id: expect.any(String),
       tags: [],
@@ -62,7 +63,7 @@ test("Runnable streamEvents method", async () => {
     {
       data: { chunk: "olleh" },
       event: "on_chain_stream",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "reverse",
       run_id: expect.any(String),
       tags: [],
@@ -70,12 +71,56 @@ test("Runnable streamEvents method", async () => {
     {
       data: { output: "olleh" },
       event: "on_chain_end",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "reverse",
       run_id: expect.any(String),
       tags: [],
     },
   ]);
+});
+
+test("Runnable streamEvents does not include tracer-only configurable metadata", async () => {
+  const originalTracingValue = process.env.LANGCHAIN_TRACING_V2;
+  const originalLangChainTracingValue = process.env.LANGCHAIN_TRACING;
+  const originalLangSmithTracingValue = process.env.LANGSMITH_TRACING;
+  process.env.LANGCHAIN_TRACING_V2 = "false";
+  process.env.LANGCHAIN_TRACING = "false";
+  process.env.LANGSMITH_TRACING = "false";
+  try {
+    const chain = RunnableLambda.from((input: string) => input).withConfig({
+      runName: "echo",
+    });
+
+    const events: StreamEvent[] = [];
+    const eventStream = await chain.streamEvents("hello", {
+      version: "v2",
+      configurable: {
+        thread_id: "th-123",
+        checkpoint_id: "ckpt-1",
+        temperature: 0.5,
+        streaming: true,
+        api_key: "should-not-propagate",
+        __secret_key: "should-not-propagate",
+      },
+    });
+    for await (const event of eventStream) {
+      events.push(event);
+    }
+
+    expect(events.length).toBeGreaterThan(0);
+    for (const event of events) {
+      expect(event.metadata).not.toHaveProperty("thread_id");
+      expect(event.metadata).not.toHaveProperty("checkpoint_id");
+      expect(event.metadata).not.toHaveProperty("temperature");
+      expect(event.metadata).not.toHaveProperty("streaming");
+      expect(event.metadata).not.toHaveProperty("api_key");
+      expect(event.metadata).not.toHaveProperty("__secret_key");
+    }
+  } finally {
+    process.env.LANGCHAIN_TRACING_V2 = originalTracingValue;
+    process.env.LANGCHAIN_TRACING = originalLangChainTracingValue;
+    process.env.LANGSMITH_TRACING = originalLangSmithTracingValue;
+  }
 });
 
 test("Runnable streamEvents method on a chat model", async () => {
@@ -267,7 +312,7 @@ test("Runnable streamEvents method with three runnables", async () => {
     {
       data: { input: "hello" },
       event: "on_chain_start",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "RunnableSequence",
       run_id: expect.any(String),
       tags: [],
@@ -275,7 +320,7 @@ test("Runnable streamEvents method with three runnables", async () => {
     {
       data: {},
       event: "on_chain_start",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "1",
       run_id: expect.any(String),
       tags: ["seq:step:1"],
@@ -283,7 +328,7 @@ test("Runnable streamEvents method with three runnables", async () => {
     {
       data: { chunk: "olleh" },
       event: "on_chain_stream",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "1",
       run_id: expect.any(String),
       tags: ["seq:step:1"],
@@ -291,7 +336,7 @@ test("Runnable streamEvents method with three runnables", async () => {
     {
       data: {},
       event: "on_chain_start",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "2",
       run_id: expect.any(String),
       tags: ["seq:step:2"],
@@ -299,7 +344,7 @@ test("Runnable streamEvents method with three runnables", async () => {
     {
       data: { input: "hello", output: "olleh" },
       event: "on_chain_end",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "1",
       run_id: expect.any(String),
       tags: ["seq:step:1"],
@@ -307,7 +352,7 @@ test("Runnable streamEvents method with three runnables", async () => {
     {
       data: { chunk: "hello" },
       event: "on_chain_stream",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "2",
       run_id: expect.any(String),
       tags: ["seq:step:2"],
@@ -315,7 +360,7 @@ test("Runnable streamEvents method with three runnables", async () => {
     {
       data: {},
       event: "on_chain_start",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "3",
       run_id: expect.any(String),
       tags: ["seq:step:3"],
@@ -323,7 +368,7 @@ test("Runnable streamEvents method with three runnables", async () => {
     {
       data: { input: "olleh", output: "hello" },
       event: "on_chain_end",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "2",
       run_id: expect.any(String),
       tags: ["seq:step:2"],
@@ -331,7 +376,7 @@ test("Runnable streamEvents method with three runnables", async () => {
     {
       data: { chunk: "olleh" },
       event: "on_chain_stream",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "3",
       run_id: expect.any(String),
       tags: ["seq:step:3"],
@@ -339,7 +384,7 @@ test("Runnable streamEvents method with three runnables", async () => {
     {
       data: { chunk: "olleh" },
       event: "on_chain_stream",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "RunnableSequence",
       run_id: expect.any(String),
       tags: [],
@@ -347,7 +392,7 @@ test("Runnable streamEvents method with three runnables", async () => {
     {
       data: { input: "hello", output: "olleh" },
       event: "on_chain_end",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "3",
       run_id: expect.any(String),
       tags: ["seq:step:3"],
@@ -355,7 +400,7 @@ test("Runnable streamEvents method with three runnables", async () => {
     {
       data: { output: "olleh" },
       event: "on_chain_end",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "RunnableSequence",
       run_id: expect.any(String),
       tags: [],
@@ -381,7 +426,7 @@ test("Runnable streamEvents method with three runnables with backgrounded callba
     {
       data: { input: "hello" },
       event: "on_chain_start",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "RunnableSequence",
       run_id: expect.any(String),
       tags: [],
@@ -389,7 +434,7 @@ test("Runnable streamEvents method with three runnables with backgrounded callba
     {
       data: {},
       event: "on_chain_start",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "1",
       run_id: expect.any(String),
       tags: ["seq:step:1"],
@@ -397,7 +442,7 @@ test("Runnable streamEvents method with three runnables with backgrounded callba
     {
       data: { chunk: "olleh" },
       event: "on_chain_stream",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "1",
       run_id: expect.any(String),
       tags: ["seq:step:1"],
@@ -405,7 +450,7 @@ test("Runnable streamEvents method with three runnables with backgrounded callba
     {
       data: {},
       event: "on_chain_start",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "2",
       run_id: expect.any(String),
       tags: ["seq:step:2"],
@@ -413,7 +458,7 @@ test("Runnable streamEvents method with three runnables with backgrounded callba
     {
       data: { input: "hello", output: "olleh" },
       event: "on_chain_end",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "1",
       run_id: expect.any(String),
       tags: ["seq:step:1"],
@@ -421,7 +466,7 @@ test("Runnable streamEvents method with three runnables with backgrounded callba
     {
       data: { chunk: "hello" },
       event: "on_chain_stream",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "2",
       run_id: expect.any(String),
       tags: ["seq:step:2"],
@@ -429,7 +474,7 @@ test("Runnable streamEvents method with three runnables with backgrounded callba
     {
       data: {},
       event: "on_chain_start",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "3",
       run_id: expect.any(String),
       tags: ["seq:step:3"],
@@ -437,7 +482,7 @@ test("Runnable streamEvents method with three runnables with backgrounded callba
     {
       data: { input: "olleh", output: "hello" },
       event: "on_chain_end",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "2",
       run_id: expect.any(String),
       tags: ["seq:step:2"],
@@ -445,7 +490,7 @@ test("Runnable streamEvents method with three runnables with backgrounded callba
     {
       data: { chunk: "olleh" },
       event: "on_chain_stream",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "3",
       run_id: expect.any(String),
       tags: ["seq:step:3"],
@@ -453,7 +498,7 @@ test("Runnable streamEvents method with three runnables with backgrounded callba
     {
       data: { chunk: "olleh" },
       event: "on_chain_stream",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "RunnableSequence",
       run_id: expect.any(String),
       tags: [],
@@ -461,7 +506,7 @@ test("Runnable streamEvents method with three runnables with backgrounded callba
     {
       data: { input: "hello", output: "olleh" },
       event: "on_chain_end",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "3",
       run_id: expect.any(String),
       tags: ["seq:step:3"],
@@ -469,7 +514,7 @@ test("Runnable streamEvents method with three runnables with backgrounded callba
     {
       data: { output: "olleh" },
       event: "on_chain_end",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "RunnableSequence",
       run_id: expect.any(String),
       tags: [],
@@ -500,7 +545,7 @@ test("Runnable streamEvents method with three runnables with filtering", async (
     {
       data: { input: "hello" },
       event: "on_chain_start",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "1",
       run_id: expect.any(String),
       tags: ["seq:step:1"],
@@ -508,7 +553,7 @@ test("Runnable streamEvents method with three runnables with filtering", async (
     {
       data: { chunk: "olleh" },
       event: "on_chain_stream",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "1",
       run_id: expect.any(String),
       tags: ["seq:step:1"],
@@ -516,7 +561,7 @@ test("Runnable streamEvents method with three runnables with filtering", async (
     {
       data: { output: "olleh" },
       event: "on_chain_end",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "1",
       run_id: expect.any(String),
       tags: ["seq:step:1"],
@@ -540,7 +585,7 @@ test("Runnable streamEvents method with three runnables with filtering", async (
         input: "hello",
       },
       event: "on_chain_start",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "3",
       run_id: expect.any(String),
       tags: expect.arrayContaining(["seq:step:3", "my_tag"]),
@@ -548,7 +593,7 @@ test("Runnable streamEvents method with three runnables with filtering", async (
     {
       data: { chunk: "olleh" },
       event: "on_chain_stream",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "3",
       run_id: expect.any(String),
       tags: expect.arrayContaining(["seq:step:3", "my_tag"]),
@@ -556,7 +601,7 @@ test("Runnable streamEvents method with three runnables with filtering", async (
     {
       data: { output: "olleh" },
       event: "on_chain_end",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "3",
       run_id: expect.any(String),
       tags: expect.arrayContaining(["seq:step:3", "my_tag"]),
@@ -583,7 +628,7 @@ test("Runnable streamEvents method with a runnable map", async () => {
       event: "on_chain_start",
       name: "RunnableSequence",
       tags: [],
-      metadata: {},
+      metadata: expect.any(Object),
       data: { input: "hello" },
     },
     {
@@ -591,7 +636,7 @@ test("Runnable streamEvents method with a runnable map", async () => {
       name: "RunnableMap",
       run_id: expect.any(String),
       tags: ["seq:step:1"],
-      metadata: {},
+      metadata: expect.any(Object),
       data: {},
     },
     {
@@ -599,7 +644,7 @@ test("Runnable streamEvents method with a runnable map", async () => {
       name: "RunnableLambda",
       run_id: expect.any(String),
       tags: ["map:key:reversed"],
-      metadata: {},
+      metadata: expect.any(Object),
       data: {},
     },
     {
@@ -607,7 +652,7 @@ test("Runnable streamEvents method with a runnable map", async () => {
       name: "RunnablePassthrough",
       run_id: expect.any(String),
       tags: ["map:key:original"],
-      metadata: {},
+      metadata: expect.any(Object),
       data: {},
     },
     {
@@ -615,7 +660,7 @@ test("Runnable streamEvents method with a runnable map", async () => {
       name: "RunnablePassthrough",
       run_id: expect.any(String),
       tags: ["map:key:original"],
-      metadata: {},
+      metadata: expect.any(Object),
       data: { chunk: "hello" },
     },
     {
@@ -623,7 +668,7 @@ test("Runnable streamEvents method with a runnable map", async () => {
       name: "RunnableLambda",
       run_id: expect.any(String),
       tags: ["map:key:reversed"],
-      metadata: {},
+      metadata: expect.any(Object),
       data: { chunk: "olleh" },
     },
     {
@@ -631,7 +676,7 @@ test("Runnable streamEvents method with a runnable map", async () => {
       name: "RunnableMap",
       run_id: expect.any(String),
       tags: ["seq:step:1"],
-      metadata: {},
+      metadata: expect.any(Object),
       data: {
         chunk: {
           original: "hello",
@@ -643,7 +688,7 @@ test("Runnable streamEvents method with a runnable map", async () => {
       name: "RunnablePick",
       run_id: expect.any(String),
       tags: ["seq:step:2"],
-      metadata: {},
+      metadata: expect.any(Object),
       data: {},
     },
     {
@@ -651,7 +696,7 @@ test("Runnable streamEvents method with a runnable map", async () => {
       name: "RunnableMap",
       run_id: expect.any(String),
       tags: ["seq:step:1"],
-      metadata: {},
+      metadata: expect.any(Object),
       data: {
         chunk: {
           reversed: "olleh",
@@ -663,7 +708,7 @@ test("Runnable streamEvents method with a runnable map", async () => {
       name: "RunnablePassthrough",
       run_id: expect.any(String),
       tags: ["map:key:original"],
-      metadata: {},
+      metadata: expect.any(Object),
       data: { input: "hello", output: "hello" },
     },
     {
@@ -671,14 +716,14 @@ test("Runnable streamEvents method with a runnable map", async () => {
       name: "RunnablePick",
       run_id: expect.any(String),
       tags: ["seq:step:2"],
-      metadata: {},
+      metadata: expect.any(Object),
       data: { chunk: "olleh" },
     },
     {
       event: "on_chain_stream",
       run_id: expect.any(String),
       tags: [],
-      metadata: {},
+      metadata: expect.any(Object),
       name: "RunnableSequence",
       data: { chunk: "olleh" },
     },
@@ -687,7 +732,7 @@ test("Runnable streamEvents method with a runnable map", async () => {
       name: "RunnableLambda",
       run_id: expect.any(String),
       tags: ["map:key:reversed"],
-      metadata: {},
+      metadata: expect.any(Object),
       data: { input: "hello", output: "olleh" },
     },
     {
@@ -695,7 +740,7 @@ test("Runnable streamEvents method with a runnable map", async () => {
       name: "RunnableMap",
       run_id: expect.any(String),
       tags: ["seq:step:1"],
-      metadata: {},
+      metadata: expect.any(Object),
       data: {
         input: "hello",
         output: {
@@ -709,7 +754,7 @@ test("Runnable streamEvents method with a runnable map", async () => {
       name: "RunnablePick",
       run_id: expect.any(String),
       tags: ["seq:step:2"],
-      metadata: {},
+      metadata: expect.any(Object),
       data: {
         input: {
           original: "hello",
@@ -723,7 +768,7 @@ test("Runnable streamEvents method with a runnable map", async () => {
       name: "RunnableSequence",
       run_id: expect.any(String),
       tags: [],
-      metadata: {},
+      metadata: expect.any(Object),
       data: { output: "olleh" },
     },
   ]);
@@ -751,9 +796,9 @@ test("Runnable streamEvents method with llm", async () => {
       name: "my_model",
       tags: ["my_model"],
       run_id: expect.any(String),
-      metadata: {
+      metadata: expect.objectContaining({
         a: "b",
-      },
+      }),
     },
     {
       event: "on_llm_stream",
@@ -765,9 +810,9 @@ test("Runnable streamEvents method with llm", async () => {
       run_id: expect.any(String),
       name: "my_model",
       tags: ["my_model"],
-      metadata: {
+      metadata: expect.objectContaining({
         a: "b",
-      },
+      }),
     },
     {
       event: "on_llm_stream",
@@ -779,9 +824,9 @@ test("Runnable streamEvents method with llm", async () => {
       run_id: expect.any(String),
       name: "my_model",
       tags: ["my_model"],
-      metadata: {
+      metadata: expect.objectContaining({
         a: "b",
-      },
+      }),
     },
     {
       event: "on_llm_stream",
@@ -793,9 +838,9 @@ test("Runnable streamEvents method with llm", async () => {
       run_id: expect.any(String),
       name: "my_model",
       tags: ["my_model"],
-      metadata: {
+      metadata: expect.objectContaining({
         a: "b",
-      },
+      }),
     },
     {
       event: "on_llm_stream",
@@ -807,9 +852,9 @@ test("Runnable streamEvents method with llm", async () => {
       run_id: expect.any(String),
       name: "my_model",
       tags: ["my_model"],
-      metadata: {
+      metadata: expect.objectContaining({
         a: "b",
-      },
+      }),
     },
     {
       event: "on_llm_end",
@@ -829,9 +874,9 @@ test("Runnable streamEvents method with llm", async () => {
       run_id: expect.any(String),
       name: "my_model",
       tags: ["my_model"],
-      metadata: {
+      metadata: expect.objectContaining({
         a: "b",
-      },
+      }),
     },
   ]);
 });
@@ -885,7 +930,7 @@ test("Runnable streamEvents method with chat model chain", async () => {
     {
       data: { input: { question: "hello" } },
       event: "on_prompt_start",
-      metadata: { foo: "bar" },
+      metadata: expect.objectContaining({ foo: "bar" }),
       name: "my_template",
       run_id: expect.any(String),
       tags: expect.arrayContaining(["my_chain", "seq:step:1", "my_template"]),
@@ -895,9 +940,9 @@ test("Runnable streamEvents method with chat model chain", async () => {
       name: "my_template",
       run_id: expect.any(String),
       tags: expect.arrayContaining(["seq:step:1", "my_template", "my_chain"]),
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
-      },
+      }),
       data: {
         input: {
           question: "hello",
@@ -910,13 +955,13 @@ test("Runnable streamEvents method with chat model chain", async () => {
       name: "my_model",
       run_id: expect.any(String),
       tags: expect.arrayContaining(["seq:step:2", "my_model", "my_chain"]),
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
         a: "b",
         ls_model_type: "chat",
         ls_provider: model.getName(),
         ls_stop: undefined,
-      },
+      }),
       data: {
         input: {
           messages: [
@@ -929,9 +974,9 @@ test("Runnable streamEvents method with chat model chain", async () => {
       event: "on_chain_stream",
       run_id: expect.any(String),
       tags: ["my_chain"],
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
-      },
+      }),
       name: "my_chain",
       data: { chunk: new AIMessageChunk({ content: "R", id: anyString }) },
     },
@@ -939,13 +984,13 @@ test("Runnable streamEvents method with chat model chain", async () => {
       event: "on_chat_model_stream",
       run_id: expect.any(String),
       tags: expect.arrayContaining(["my_chain", "my_model", "seq:step:2"]),
-      metadata: {
+      metadata: expect.objectContaining({
         a: "b",
         foo: "bar",
         ls_model_type: "chat",
         ls_provider: model.getName(),
         ls_stop: undefined,
-      },
+      }),
       name: "my_model",
       data: { chunk: new AIMessageChunk({ content: "R", id: anyString }) },
     },
@@ -953,9 +998,9 @@ test("Runnable streamEvents method with chat model chain", async () => {
       event: "on_chain_stream",
       run_id: expect.any(String),
       tags: ["my_chain"],
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
-      },
+      }),
       name: "my_chain",
       data: { chunk: new AIMessageChunk({ content: "O", id: anyString }) },
     },
@@ -963,13 +1008,13 @@ test("Runnable streamEvents method with chat model chain", async () => {
       event: "on_chat_model_stream",
       run_id: expect.any(String),
       tags: expect.arrayContaining(["my_chain", "my_model", "seq:step:2"]),
-      metadata: {
+      metadata: expect.objectContaining({
         a: "b",
         foo: "bar",
         ls_model_type: "chat",
         ls_provider: model.getName(),
         ls_stop: undefined,
-      },
+      }),
       name: "my_model",
       data: { chunk: new AIMessageChunk({ content: "O", id: anyString }) },
     },
@@ -977,9 +1022,9 @@ test("Runnable streamEvents method with chat model chain", async () => {
       event: "on_chain_stream",
       run_id: expect.any(String),
       tags: ["my_chain"],
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
-      },
+      }),
       name: "my_chain",
       data: { chunk: new AIMessageChunk({ content: "A", id: anyString }) },
     },
@@ -987,13 +1032,13 @@ test("Runnable streamEvents method with chat model chain", async () => {
       event: "on_chat_model_stream",
       run_id: expect.any(String),
       tags: expect.arrayContaining(["my_chain", "my_model", "seq:step:2"]),
-      metadata: {
+      metadata: expect.objectContaining({
         a: "b",
         foo: "bar",
         ls_model_type: "chat",
         ls_provider: model.getName(),
         ls_stop: undefined,
-      },
+      }),
       name: "my_model",
       data: { chunk: new AIMessageChunk({ content: "A", id: anyString }) },
     },
@@ -1001,9 +1046,9 @@ test("Runnable streamEvents method with chat model chain", async () => {
       event: "on_chain_stream",
       run_id: expect.any(String),
       tags: ["my_chain"],
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
-      },
+      }),
       name: "my_chain",
       data: { chunk: new AIMessageChunk({ content: "R", id: anyString }) },
     },
@@ -1011,13 +1056,13 @@ test("Runnable streamEvents method with chat model chain", async () => {
       event: "on_chat_model_stream",
       run_id: expect.any(String),
       tags: expect.arrayContaining(["my_chain", "my_model", "seq:step:2"]),
-      metadata: {
+      metadata: expect.objectContaining({
         a: "b",
         foo: "bar",
         ls_model_type: "chat",
         ls_provider: model.getName(),
         ls_stop: undefined,
-      },
+      }),
       name: "my_model",
       data: { chunk: new AIMessageChunk({ content: "R", id: anyString }) },
     },
@@ -1026,13 +1071,13 @@ test("Runnable streamEvents method with chat model chain", async () => {
       name: "my_model",
       run_id: expect.any(String),
       tags: expect.arrayContaining(["seq:step:2", "my_model", "my_chain"]),
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
         a: "b",
         ls_model_type: "chat",
         ls_provider: model.getName(),
         ls_stop: undefined,
-      },
+      }),
       data: {
         input: {
           messages: [
@@ -1047,9 +1092,9 @@ test("Runnable streamEvents method with chat model chain", async () => {
       name: "my_chain",
       run_id: expect.any(String),
       tags: ["my_chain"],
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
-      },
+      }),
       data: { output: new AIMessageChunk({ content: "ROAR", id: anyString }) },
     },
   ]);
@@ -1098,9 +1143,9 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
       event: "on_chain_start",
       name: "my_chain",
       tags: ["my_chain"],
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
-      },
+      }),
       data: {
         input: {
           question: "hello",
@@ -1110,7 +1155,7 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
     {
       data: { input: { question: "hello" } },
       event: "on_prompt_start",
-      metadata: { foo: "bar" },
+      metadata: expect.objectContaining({ foo: "bar" }),
       name: "my_template",
       run_id: expect.any(String),
       tags: expect.arrayContaining(["my_chain", "seq:step:1", "my_template"]),
@@ -1120,9 +1165,9 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
       name: "my_template",
       run_id: expect.any(String),
       tags: expect.arrayContaining(["seq:step:1", "my_template", "my_chain"]),
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
-      },
+      }),
       data: {
         input: {
           question: "hello",
@@ -1136,22 +1181,22 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
       name: "RunnableLambda",
       tags: ["seq:step:2", "my_chain"],
       run_id: expect.any(String),
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
-      },
+      }),
     },
     {
       event: "on_chat_model_start",
       name: "my_model",
       run_id: expect.any(String),
       tags: expect.arrayContaining(["my_model", "my_chain"]),
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
         a: "b",
         ls_model_type: "chat",
         ls_stop: undefined,
         ls_provider: model.getName(),
-      },
+      }),
       data: {
         input: {
           messages: [
@@ -1164,13 +1209,13 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
       event: "on_chat_model_stream",
       run_id: expect.any(String),
       tags: expect.arrayContaining(["my_chain", "my_model"]),
-      metadata: {
+      metadata: expect.objectContaining({
         a: "b",
         foo: "bar",
         ls_model_type: "chat",
         ls_stop: undefined,
         ls_provider: model.getName(),
-      },
+      }),
       name: "my_model",
       data: { chunk: new AIMessageChunk({ id: anyString, content: "R" }) },
     },
@@ -1178,13 +1223,13 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
       event: "on_chat_model_stream",
       run_id: expect.any(String),
       tags: expect.arrayContaining(["my_chain", "my_model"]),
-      metadata: {
+      metadata: expect.objectContaining({
         a: "b",
         foo: "bar",
         ls_model_type: "chat",
         ls_stop: undefined,
         ls_provider: model.getName(),
-      },
+      }),
       name: "my_model",
       data: { chunk: new AIMessageChunk({ id: anyString, content: "O" }) },
     },
@@ -1192,13 +1237,13 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
       event: "on_chat_model_stream",
       run_id: expect.any(String),
       tags: expect.arrayContaining(["my_chain", "my_model"]),
-      metadata: {
+      metadata: expect.objectContaining({
         a: "b",
         foo: "bar",
         ls_model_type: "chat",
         ls_stop: undefined,
         ls_provider: model.getName(),
-      },
+      }),
       name: "my_model",
       data: { chunk: new AIMessageChunk({ id: anyString, content: "A" }) },
     },
@@ -1206,13 +1251,13 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
       event: "on_chat_model_stream",
       run_id: expect.any(String),
       tags: expect.arrayContaining(["my_chain", "my_model"]),
-      metadata: {
+      metadata: expect.objectContaining({
         a: "b",
         foo: "bar",
         ls_model_type: "chat",
         ls_stop: undefined,
         ls_provider: model.getName(),
-      },
+      }),
       name: "my_model",
       data: { chunk: new AIMessageChunk({ id: anyString, content: "R" }) },
     },
@@ -1221,13 +1266,13 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
       name: "my_model",
       run_id: expect.any(String),
       tags: expect.arrayContaining(["my_model", "my_chain"]),
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
         a: "b",
         ls_model_type: "chat",
         ls_stop: undefined,
         ls_provider: model.getName(),
-      },
+      }),
       data: {
         input: {
           messages: [
@@ -1241,9 +1286,9 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
       event: "on_chain_stream",
       run_id: expect.any(String),
       tags: expect.arrayContaining(["seq:step:2", "my_chain"]),
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
-      },
+      }),
       name: "RunnableLambda",
       data: { chunk: new AIMessageChunk({ id: anyString, content: "ROAR" }) },
     },
@@ -1251,9 +1296,9 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
       event: "on_chain_stream",
       run_id: expect.any(String),
       tags: ["my_chain"],
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
-      },
+      }),
       name: "my_chain",
       data: { chunk: new AIMessageChunk({ id: anyString, content: "ROAR" }) },
     },
@@ -1262,9 +1307,9 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
       name: "RunnableLambda",
       run_id: expect.any(String),
       tags: expect.arrayContaining(["seq:step:2", "my_chain"]),
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
-      },
+      }),
       data: {
         input: await template.invoke({ question: "hello" }),
         output: new AIMessageChunk({ id: anyString, content: "ROAR" }),
@@ -1275,9 +1320,9 @@ test("Chat model that supports streaming, but is invoked, should still emit on_s
       name: "my_chain",
       run_id: expect.any(String),
       tags: ["my_chain"],
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
-      },
+      }),
       data: {
         output: new AIMessageChunk({ id: anyString, content: "ROAR" }),
       },
@@ -1324,9 +1369,9 @@ test("Chat model that doesn't support streaming, but is invoked, should emit one
       event: "on_chain_start",
       name: "my_chain",
       tags: ["my_chain"],
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
-      },
+      }),
       data: {
         input: {
           question: "hello",
@@ -1336,7 +1381,7 @@ test("Chat model that doesn't support streaming, but is invoked, should emit one
     {
       data: { input: { question: "hello" } },
       event: "on_prompt_start",
-      metadata: { foo: "bar" },
+      metadata: expect.objectContaining({ foo: "bar" }),
       name: "my_template",
       run_id: expect.any(String),
       tags: expect.arrayContaining(["my_chain", "seq:step:1", "my_template"]),
@@ -1346,9 +1391,9 @@ test("Chat model that doesn't support streaming, but is invoked, should emit one
       name: "my_template",
       run_id: expect.any(String),
       tags: expect.arrayContaining(["seq:step:1", "my_template", "my_chain"]),
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
-      },
+      }),
       data: {
         input: {
           question: "hello",
@@ -1362,22 +1407,22 @@ test("Chat model that doesn't support streaming, but is invoked, should emit one
       name: "RunnableLambda",
       tags: ["seq:step:2", "my_chain"],
       run_id: expect.any(String),
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
-      },
+      }),
     },
     {
       event: "on_chat_model_start",
       name: "my_model",
       run_id: expect.any(String),
       tags: expect.arrayContaining(["my_model", "my_chain"]),
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
         a: "b",
         ls_model_type: "chat",
         ls_stop: undefined,
         ls_provider: model.getName(),
-      },
+      }),
       data: {
         input: {
           messages: [
@@ -1390,13 +1435,13 @@ test("Chat model that doesn't support streaming, but is invoked, should emit one
       event: "on_chat_model_stream",
       run_id: expect.any(String),
       tags: expect.arrayContaining(["my_chain", "my_model"]),
-      metadata: {
+      metadata: expect.objectContaining({
         a: "b",
         foo: "bar",
         ls_model_type: "chat",
         ls_stop: undefined,
         ls_provider: model.getName(),
-      },
+      }),
       name: "my_model",
       data: {
         chunk: new AIMessageChunk({
@@ -1410,13 +1455,13 @@ test("Chat model that doesn't support streaming, but is invoked, should emit one
       name: "my_model",
       run_id: expect.any(String),
       tags: expect.arrayContaining(["my_model", "my_chain"]),
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
         a: "b",
         ls_model_type: "chat",
         ls_stop: undefined,
         ls_provider: model.getName(),
-      },
+      }),
       data: {
         input: {
           messages: [
@@ -1433,9 +1478,9 @@ test("Chat model that doesn't support streaming, but is invoked, should emit one
       event: "on_chain_stream",
       run_id: expect.any(String),
       tags: expect.arrayContaining(["seq:step:2", "my_chain"]),
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
-      },
+      }),
       name: "RunnableLambda",
       data: {
         chunk: new AIMessage({
@@ -1448,9 +1493,9 @@ test("Chat model that doesn't support streaming, but is invoked, should emit one
       event: "on_chain_stream",
       run_id: expect.any(String),
       tags: ["my_chain"],
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
-      },
+      }),
       name: "my_chain",
       data: {
         chunk: new AIMessage({
@@ -1464,9 +1509,9 @@ test("Chat model that doesn't support streaming, but is invoked, should emit one
       name: "RunnableLambda",
       run_id: expect.any(String),
       tags: expect.arrayContaining(["seq:step:2", "my_chain"]),
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
-      },
+      }),
       data: {
         input: await template.invoke({ question: "hello" }),
         output: new AIMessage({
@@ -1480,9 +1525,9 @@ test("Chat model that doesn't support streaming, but is invoked, should emit one
       name: "my_chain",
       run_id: expect.any(String),
       tags: ["my_chain"],
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
-      },
+      }),
       data: {
         output: new AIMessage({
           id: anyString,
@@ -1536,9 +1581,9 @@ test("LLM that supports streaming, but is invoked, should still emit on_stream e
       name: "my_chain",
       tags: ["my_chain"],
       run_id: expect.any(String),
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
-      },
+      }),
     },
     {
       event: "on_prompt_start",
@@ -1550,9 +1595,9 @@ test("LLM that supports streaming, but is invoked, should still emit on_stream e
       name: "my_template",
       tags: ["seq:step:1", "my_template", "my_chain"],
       run_id: expect.any(String),
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
-      },
+      }),
     },
     {
       event: "on_prompt_end",
@@ -1565,9 +1610,9 @@ test("LLM that supports streaming, but is invoked, should still emit on_stream e
       run_id: expect.any(String),
       name: "my_template",
       tags: ["seq:step:1", "my_template", "my_chain"],
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
-      },
+      }),
     },
     {
       event: "on_chain_start",
@@ -1575,9 +1620,9 @@ test("LLM that supports streaming, but is invoked, should still emit on_stream e
       name: "RunnableLambda",
       tags: ["seq:step:2", "my_chain"],
       run_id: expect.any(String),
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
-      },
+      }),
     },
     {
       event: "on_llm_start",
@@ -1589,10 +1634,10 @@ test("LLM that supports streaming, but is invoked, should still emit on_stream e
       name: "my_model",
       tags: ["my_model", "my_chain"],
       run_id: expect.any(String),
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
         a: "b",
-      },
+      }),
     },
     {
       event: "on_llm_stream",
@@ -1604,10 +1649,10 @@ test("LLM that supports streaming, but is invoked, should still emit on_stream e
       run_id: expect.any(String),
       name: "my_model",
       tags: ["my_model", "my_chain"],
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
         a: "b",
-      },
+      }),
     },
     {
       event: "on_llm_stream",
@@ -1619,10 +1664,10 @@ test("LLM that supports streaming, but is invoked, should still emit on_stream e
       run_id: expect.any(String),
       name: "my_model",
       tags: ["my_model", "my_chain"],
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
         a: "b",
-      },
+      }),
     },
     {
       event: "on_llm_stream",
@@ -1634,10 +1679,10 @@ test("LLM that supports streaming, but is invoked, should still emit on_stream e
       run_id: expect.any(String),
       name: "my_model",
       tags: ["my_model", "my_chain"],
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
         a: "b",
-      },
+      }),
     },
     {
       event: "on_llm_stream",
@@ -1649,10 +1694,10 @@ test("LLM that supports streaming, but is invoked, should still emit on_stream e
       run_id: expect.any(String),
       name: "my_model",
       tags: ["my_model", "my_chain"],
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
         a: "b",
-      },
+      }),
     },
     {
       event: "on_llm_end",
@@ -1675,19 +1720,19 @@ test("LLM that supports streaming, but is invoked, should still emit on_stream e
       run_id: expect.any(String),
       name: "my_model",
       tags: ["my_model", "my_chain"],
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
         a: "b",
-      },
+      }),
     },
     {
       event: "on_chain_stream",
       run_id: expect.any(String),
       name: "RunnableLambda",
       tags: ["seq:step:2", "my_chain"],
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
-      },
+      }),
       data: {
         chunk: "ROAR",
       },
@@ -1697,9 +1742,9 @@ test("LLM that supports streaming, but is invoked, should still emit on_stream e
       run_id: expect.any(String),
       name: "my_chain",
       tags: ["my_chain"],
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
-      },
+      }),
       data: {
         chunk: "ROAR",
       },
@@ -1713,9 +1758,9 @@ test("LLM that supports streaming, but is invoked, should still emit on_stream e
       run_id: expect.any(String),
       name: "RunnableLambda",
       tags: ["seq:step:2", "my_chain"],
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
-      },
+      }),
     },
     {
       event: "on_chain_end",
@@ -1725,9 +1770,9 @@ test("LLM that supports streaming, but is invoked, should still emit on_stream e
       run_id: expect.any(String),
       name: "my_chain",
       tags: ["my_chain"],
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
-      },
+      }),
     },
   ]);
 });
@@ -1773,9 +1818,9 @@ test("LLM that doesn't support streaming, but is invoked, should emit one on_str
       name: "my_chain",
       tags: ["my_chain"],
       run_id: expect.any(String),
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
-      },
+      }),
     },
     {
       event: "on_prompt_start",
@@ -1787,9 +1832,9 @@ test("LLM that doesn't support streaming, but is invoked, should emit one on_str
       name: "my_template",
       tags: ["seq:step:1", "my_template", "my_chain"],
       run_id: expect.any(String),
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
-      },
+      }),
     },
     {
       event: "on_prompt_end",
@@ -1802,9 +1847,9 @@ test("LLM that doesn't support streaming, but is invoked, should emit one on_str
       run_id: expect.any(String),
       name: "my_template",
       tags: ["seq:step:1", "my_template", "my_chain"],
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
-      },
+      }),
     },
     {
       event: "on_chain_start",
@@ -1812,9 +1857,9 @@ test("LLM that doesn't support streaming, but is invoked, should emit one on_str
       name: "RunnableLambda",
       tags: ["seq:step:2", "my_chain"],
       run_id: expect.any(String),
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
-      },
+      }),
     },
     {
       event: "on_llm_start",
@@ -1826,10 +1871,10 @@ test("LLM that doesn't support streaming, but is invoked, should emit one on_str
       name: "my_model",
       tags: ["my_model", "my_chain"],
       run_id: expect.any(String),
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
         a: "b",
-      },
+      }),
     },
     {
       event: "on_llm_stream",
@@ -1841,10 +1886,10 @@ test("LLM that doesn't support streaming, but is invoked, should emit one on_str
       run_id: expect.any(String),
       name: "my_model",
       tags: ["my_model", "my_chain"],
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
         a: "b",
-      },
+      }),
     },
     {
       event: "on_llm_end",
@@ -1867,19 +1912,19 @@ test("LLM that doesn't support streaming, but is invoked, should emit one on_str
       run_id: expect.any(String),
       name: "my_model",
       tags: ["my_model", "my_chain"],
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
         a: "b",
-      },
+      }),
     },
     {
       event: "on_chain_stream",
       run_id: expect.any(String),
       name: "RunnableLambda",
       tags: ["seq:step:2", "my_chain"],
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
-      },
+      }),
       data: {
         chunk: "You are Godzilla\nhello",
       },
@@ -1889,9 +1934,9 @@ test("LLM that doesn't support streaming, but is invoked, should emit one on_str
       run_id: expect.any(String),
       name: "my_chain",
       tags: ["my_chain"],
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
-      },
+      }),
       data: {
         chunk: "You are Godzilla\nhello",
       },
@@ -1905,9 +1950,9 @@ test("LLM that doesn't support streaming, but is invoked, should emit one on_str
       run_id: expect.any(String),
       name: "RunnableLambda",
       tags: ["seq:step:2", "my_chain"],
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
-      },
+      }),
     },
     {
       event: "on_chain_end",
@@ -1917,9 +1962,9 @@ test("LLM that doesn't support streaming, but is invoked, should emit one on_str
       run_id: expect.any(String),
       name: "my_chain",
       tags: ["my_chain"],
-      metadata: {
+      metadata: expect.objectContaining({
         foo: "bar",
-      },
+      }),
     },
   ]);
 });
@@ -1940,7 +1985,7 @@ test("Runnable streamEvents method with simple tools", async () => {
     {
       data: { input: {} },
       event: "on_tool_start",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "parameterless",
       run_id: expect.any(String),
       tags: [],
@@ -1948,7 +1993,7 @@ test("Runnable streamEvents method with simple tools", async () => {
     {
       data: { output: "hello" },
       event: "on_tool_end",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "parameterless",
       run_id: expect.any(String),
       tags: [],
@@ -1977,7 +2022,7 @@ test("Runnable streamEvents method with simple tools", async () => {
     {
       data: { input: { x: 1, y: "2" } },
       event: "on_tool_start",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "with_parameters",
       run_id: expect.any(String),
       tags: [],
@@ -1985,7 +2030,7 @@ test("Runnable streamEvents method with simple tools", async () => {
     {
       data: { output: JSON.stringify({ x: 1, y: "2" }) },
       event: "on_tool_end",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "with_parameters",
       run_id: expect.any(String),
       tags: [],
@@ -2019,14 +2064,14 @@ test("Runnable methods with a custom event", async () => {
       name: "RunnableLambda",
       tags: [],
       run_id: expect.any(String),
-      metadata: {},
+      metadata: expect.any(Object),
     },
     {
       event: "on_custom_event",
       run_id: expect.any(String),
       name: "testEvent",
       tags: [],
-      metadata: {},
+      metadata: expect.any(Object),
       data: { someval: "test" },
     },
     {
@@ -2034,7 +2079,7 @@ test("Runnable methods with a custom event", async () => {
       run_id: expect.any(String),
       name: "testEvent",
       tags: [],
-      metadata: {},
+      metadata: expect.any(Object),
       data: { someval: "test2" },
     },
     {
@@ -2042,7 +2087,7 @@ test("Runnable methods with a custom event", async () => {
       run_id: expect.any(String),
       name: "RunnableLambda",
       tags: [],
-      metadata: {},
+      metadata: expect.any(Object),
       data: { chunk: '{"x":1,"y":"2"}' },
     },
     {
@@ -2051,7 +2096,7 @@ test("Runnable methods with a custom event", async () => {
       run_id: expect.any(String),
       name: "RunnableLambda",
       tags: [],
-      metadata: {},
+      metadata: expect.any(Object),
     },
   ]);
 });
@@ -2083,14 +2128,14 @@ test("Custom event inside a custom tool", async () => {
       name: "testtool",
       tags: [],
       run_id: expect.any(String),
-      metadata: {},
+      metadata: expect.any(Object),
     },
     {
       event: "on_custom_event",
       run_id: expect.any(String),
       name: "testEvent",
       tags: [],
-      metadata: {},
+      metadata: expect.any(Object),
       data: { someval: "test" },
     },
     {
@@ -2098,7 +2143,7 @@ test("Custom event inside a custom tool", async () => {
       run_id: expect.any(String),
       name: "testEvent",
       tags: [],
-      metadata: {},
+      metadata: expect.any(Object),
       data: { someval: "test2" },
     },
     {
@@ -2107,7 +2152,7 @@ test("Custom event inside a custom tool", async () => {
       run_id: expect.any(String),
       name: "testtool",
       tags: [],
-      metadata: {},
+      metadata: expect.any(Object),
     },
   ]);
 });
@@ -2129,7 +2174,7 @@ test("Runnable streamEvents method with tools that return objects", async () => 
     {
       data: { input: {} },
       event: "on_tool_start",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "parameterless",
       run_id: expect.any(String),
       tags: [],
@@ -2139,7 +2184,7 @@ test("Runnable streamEvents method with tools that return objects", async () => 
         output: JSON.stringify({ sum: 3 }),
       },
       event: "on_tool_end",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "parameterless",
       run_id: expect.any(String),
       tags: [],
@@ -2166,7 +2211,7 @@ test("Runnable streamEvents method with tools that return objects", async () => 
     {
       data: { input: { x: 1, y: 2 } },
       event: "on_tool_start",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "with_parameters",
       run_id: expect.any(String),
       tags: [],
@@ -2174,7 +2219,7 @@ test("Runnable streamEvents method with tools that return objects", async () => 
     {
       data: { output: JSON.stringify({ sum: 3 }) },
       event: "on_tool_end",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "with_parameters",
       run_id: expect.any(String),
       tags: [],
@@ -2205,7 +2250,7 @@ test("Runnable streamEvents method with a retriever", async () => {
         input: "hello",
       },
       event: "on_retriever_start",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "FakeRetriever",
       run_id: expect.any(String),
       tags: [],
@@ -2224,7 +2269,7 @@ test("Runnable streamEvents method with a retriever", async () => {
         ],
       },
       event: "on_retriever_end",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "FakeRetriever",
       run_id: expect.any(String),
       tags: [],
@@ -2254,7 +2299,7 @@ test("Runnable streamEvents method with text/event-stream encoding", async () =>
     {
       data: { input: "hello" },
       event: "on_chain_start",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "reverse",
       run_id: "1234",
       tags: [],
@@ -2262,7 +2307,7 @@ test("Runnable streamEvents method with text/event-stream encoding", async () =>
     {
       data: { chunk: "olleh" },
       event: "on_chain_stream",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "reverse",
       run_id: "1234",
       tags: [],
@@ -2270,7 +2315,7 @@ test("Runnable streamEvents method with text/event-stream encoding", async () =>
     {
       data: { output: "olleh" },
       event: "on_chain_end",
-      metadata: {},
+      metadata: expect.any(Object),
       name: "reverse",
       run_id: "1234",
       tags: [],
@@ -2307,6 +2352,32 @@ test("Runnable streamEvents method should respect passed signal", async () => {
   }).rejects.toThrowError();
 });
 
+test("Runnable streamEvents v2 should respect timeout option", async () => {
+  // Regression: ensureConfig() converts `timeout` into config.signal (v2 path).
+  // consumeRunnableStream must read config.signal, not options.signal.
+  const RUNNABLE_DELAY_MS = 1000;
+  const TIMEOUT_MS = 300;
+
+  const slowRunnable = RunnableLambda.from(async (input: string) => {
+    await new Promise((resolve) => setTimeout(resolve, RUNNABLE_DELAY_MS));
+    return input;
+  });
+
+  const start = Date.now();
+  await expect(async () => {
+    const stream = slowRunnable.streamEvents("hello", {
+      version: "v2",
+      timeout: TIMEOUT_MS,
+    });
+    for await (const _ of stream) {
+      // drain
+    }
+  }).rejects.toThrow(/timeout/i);
+
+  // Should abort near TIMEOUT_MS, well before RUNNABLE_DELAY_MS
+  expect(Date.now() - start).toBeLessThan(1500);
+});
+
 test("streamEvents method handles errors", async () => {
   let caughtError: unknown;
   const model = new FakeListChatModel({
@@ -2322,6 +2393,61 @@ test("streamEvents method handles errors", async () => {
   } catch (e) {
     caughtError = e;
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   expect((caughtError as any)?.message).toEqual("should catch this error");
+});
+
+test("Runnable streamEvents method emits on_tool_error for failing tools", async () => {
+  const errorMessage = "Tool execution failed!";
+  const failingTool = new DynamicTool({
+    func: async () => {
+      throw new Error(errorMessage);
+    },
+    name: "failing_tool",
+    description: "A tool that always fails",
+  });
+
+  const events: StreamEvent[] = [];
+  let caughtError: unknown;
+
+  try {
+    const eventStream = failingTool.streamEvents({}, { version: "v2" });
+    for await (const event of eventStream) {
+      events.push(event);
+    }
+  } catch (e) {
+    caughtError = e;
+  }
+
+  // Verify error was thrown
+  expect(caughtError).toBeDefined();
+  expect((caughtError as Error).message).toBe(errorMessage);
+
+  // Verify events include on_tool_start and on_tool_error
+  expect(events).toEqual([
+    {
+      data: { input: {} },
+      event: "on_tool_start",
+      metadata: expect.any(Object),
+      name: "failing_tool",
+      run_id: expect.any(String),
+      tags: [],
+    },
+    {
+      data: {
+        input: expect.any(Object),
+        error: expect.stringContaining(errorMessage),
+      },
+      event: "on_tool_error",
+      metadata: expect.any(Object),
+      name: "failing_tool",
+      run_id: expect.any(String),
+      tags: [],
+    },
+  ]);
+
+  // Verify the on_tool_error event structure more specifically
+  const errorEvent = events.find((e) => e.event === "on_tool_error");
+  expect(errorEvent).toBeDefined();
+  expect(errorEvent?.data.error).toContain(errorMessage);
 });

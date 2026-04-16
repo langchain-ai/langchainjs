@@ -11,7 +11,7 @@ gpt4Res:  I'm an AI language model created by OpenAI, and I don't have a persona
 */
 
 const claudeRes = await configurableModel.invoke("what's your name", {
-  configurable: { model: "claude-3-5-sonnet-20240620" },
+  configurable: { model: "claude-sonnet-4-5-20250929" },
 });
 console.log("claudeRes: ", claudeRes.content);
 /*

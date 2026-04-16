@@ -603,8 +603,8 @@ export class MultiServerMCPClient {
       return result.contents.map((content) => ({
         uri: content.uri,
         mimeType: content.mimeType,
-        text: content.text as string | undefined,
-        blob: content.blob as string | undefined,
+        text: "text" in content ? content.text : undefined,
+        blob: "blob" in content ? content.blob : undefined,
       }));
     } catch (error) {
       throw new MCPClientError(
@@ -736,7 +736,7 @@ export class MultiServerMCPClient {
     restart: NonNullable<ResolvedStdioConnection["restart"]>
   ): void {
     const originalOnClose = transport.onclose;
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    // oxlint-disable-next-line @typescript-eslint/no-misused-promises
     transport.onclose = async () => {
       if (originalOnClose) {
         await originalOnClose();
@@ -966,7 +966,7 @@ export class MultiServerMCPClient {
     reconnect: NonNullable<ResolvedStreamableHTTPConnection["reconnect"]>
   ): void {
     const originalOnClose = transport.onclose;
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    // oxlint-disable-next-line @typescript-eslint/no-misused-promises
     transport.onclose = async () => {
       if (originalOnClose) {
         await originalOnClose();

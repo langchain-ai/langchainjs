@@ -79,7 +79,7 @@ describe("filterMessage", () => {
     ]);
     expect("func" in filteredMessagesRunnable).toBeTruthy();
     // `func` is protected, so we need to cast it to any to access it
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect(typeof (filteredMessagesRunnable as any).func).toBe("function");
   });
 });
@@ -135,7 +135,7 @@ describe("mergeMessageRuns", () => {
     ]);
     expect("func" in mergedMessages).toBeTruthy();
     // `func` is protected, so we need to cast it to any to access it
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect(typeof (mergedMessages as any).func).toBe("function");
   });
 });
@@ -578,10 +578,10 @@ describe("trimMessages can trim", () => {
       "runnables",
     ]);
     expect("bound" in trimmedMessages).toBeTruthy();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect("func" in (trimmedMessages as any).bound).toBeTruthy();
     // `func` is protected, so we need to cast it to any to access it
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect(typeof (trimmedMessages as any).bound.func).toBe("function");
   });
 });
@@ -619,37 +619,153 @@ test("getBufferString can handle complex messages", () => {
   expect(bufferString1).toBe("Human: Hello there!");
 
   const bufferString2 = getBufferString(messageArr2);
-  expect(bufferString2).toBe(
-    `AI: ${JSON.stringify(
-      [
-        {
-          type: "text",
-          text: "Hello there!",
-        },
-      ],
-      null,
-      2
-    )}`
-  );
+  // getBufferString now uses the `text` property which extracts only text content
+  // from content blocks, producing compact output to avoid token inflation
+  expect(bufferString2).toBe("AI: Hello there!");
 
   const bufferString3 = getBufferString(messageArr3);
-  expect(bufferString3).toBe(
-    `Human: ${JSON.stringify(
-      [
-        {
-          type: "image_url",
-          image_url: {
-            url: "https://example.com/image.jpg",
-          },
-        },
-        {
-          type: "image_url",
-          image_url: "https://example.com/image.jpg",
-        },
+  // Image-only content should produce placeholders, not empty string
+  expect(bufferString3).toBe("Human: [image][image]");
+});
+
+test("getBufferString includes tool_calls for AI messages", () => {
+  const toolCalls = [
+    { name: "get_weather", args: { city: "NYC" }, id: "call_123" },
+  ];
+
+  const messageWithToolCalls = new AIMessage({
+    content: "Let me check the weather for you.",
+    tool_calls: toolCalls,
+  });
+
+  const messageWithFunctionCall = new AIMessage({
+    content: "Let me check the weather.",
+    additional_kwargs: {
+      function_call: { name: "get_weather", arguments: '{"city": "NYC"}' },
+    },
+  });
+
+  const messageWithoutTools = new AIMessage({
+    content: "The weather is sunny!",
+  });
+
+  // AI message with tool_calls should include them in output
+  const bufferWithToolCalls = getBufferString([messageWithToolCalls]);
+  expect(bufferWithToolCalls).toBe(
+    `AI: Let me check the weather for you.${JSON.stringify(toolCalls)}`
+  );
+
+  // AI message with legacy function_call should include it
+  const bufferWithFunctionCall = getBufferString([messageWithFunctionCall]);
+  expect(bufferWithFunctionCall).toContain("AI: Let me check the weather.");
+  expect(bufferWithFunctionCall).toContain("get_weather");
+
+  // AI message without tools should not have tool info
+  const bufferWithoutTools = getBufferString([messageWithoutTools]);
+  expect(bufferWithoutTools).toBe("AI: The weather is sunny!");
+});
+
+test("getBufferString uses text property to avoid metadata inflation", () => {
+  // Create messages with metadata that would inflate str() representation
+  const messages = [
+    new HumanMessage("What is the weather in NYC?"),
+    new AIMessage({
+      content: "Let me check the weather for you.",
+      tool_calls: [
+        { name: "get_weather", args: { city: "NYC" }, id: "call_123" },
       ],
-      null,
-      2
-    )}`
+    }),
+    new ToolMessage({
+      content: "72F and sunny",
+      tool_call_id: "call_123",
+      name: "get_weather",
+    }),
+    new AIMessage({
+      content: "It is 72F and sunny in NYC!",
+    }),
+  ];
+
+  const bufferString = getBufferString(messages);
+
+  // Should produce compact output
+  expect(bufferString).toContain("Human: What is the weather in NYC?");
+  expect(bufferString).toContain("AI: Let me check the weather for you.");
+  expect(bufferString).toContain("get_weather");
+  expect(bufferString).toContain("Tool: get_weather, 72F and sunny");
+  expect(bufferString).toContain("AI: It is 72F and sunny in NYC!");
+
+  // Should NOT contain metadata fields that would be in JSON.stringify
+  expect(bufferString).not.toContain("usage_metadata");
+  expect(bufferString).not.toContain("response_metadata");
+  expect(bufferString).not.toContain("additional_kwargs");
+});
+
+test("getBufferString preserves non-text content block placeholders", () => {
+  // image and image_url -> [image]
+  const imgMsg = new HumanMessage({
+    content: [
+      { type: "image", source: { type: "base64", data: "abc" } },
+      {
+        type: "image_url",
+        image_url: { url: "https://example.com/img.png" },
+      },
+    ],
+  });
+  expect(getBufferString([imgMsg])).toBe("Human: [image][image]");
+
+  // audio and input_audio -> [audio]
+  const audioMsg = new HumanMessage({
+    content: [
+      { type: "audio", source: { type: "base64", data: "abc" } },
+      { type: "input_audio", data: "abc", format: "wav" },
+    ],
+  });
+  expect(getBufferString([audioMsg])).toBe("Human: [audio][audio]");
+
+  // video -> [video]
+  const videoMsg = new HumanMessage({
+    content: [{ type: "video", source: { type: "base64", data: "abc" } }],
+  });
+  expect(getBufferString([videoMsg])).toBe("Human: [video]");
+
+  // file -> [file]
+  const fileMsg = new HumanMessage({
+    content: [
+      {
+        type: "file",
+        source: { type: "base64", data: "abc" },
+        mimeType: "application/pdf",
+      },
+    ],
+  });
+  expect(getBufferString([fileMsg])).toBe("Human: [file]");
+
+  // text-plain -> extracts text
+  const textPlainMsg = new HumanMessage({
+    content: [{ type: "text-plain", text: "hello world" }],
+  });
+  expect(getBufferString([textPlainMsg])).toBe("Human: hello world");
+
+  // reasoning -> excluded (empty string, filtered out)
+  const reasoningMsg = new AIMessage({
+    content: [
+      { type: "reasoning", reasoning: "thinking..." },
+      { type: "text", text: "answer" },
+    ],
+  });
+  expect(getBufferString([reasoningMsg])).toBe("AI: answer");
+
+  // Mixed content: text + multimodal
+  const mixedMsg = new HumanMessage({
+    content: [
+      { type: "text", text: "Look at this: " },
+      { type: "image", source: { type: "base64", data: "abc" } },
+      { type: "text", text: " and listen to this: " },
+      { type: "audio", source: { type: "base64", data: "def" } },
+    ],
+  });
+  expect(getBufferString([mixedMsg])).toBe(
+    "Human: Look at this: [image] and listen to this: [audio]"
   );
 });
 

@@ -1,5 +1,5 @@
 import { ContentChunk as MistralAIContentChunk } from "@mistralai/mistralai/models/components/contentchunk.js";
-import { MessageContentComplex } from "@langchain/core/messages";
+import { ContentBlock, MessageContent } from "@langchain/core/messages";
 
 // Mistral enforces a specific pattern for tool call IDs
 const TOOL_CALL_ID_PATTERN = /^[a-zA-Z0-9]{9}$/;
@@ -50,22 +50,22 @@ export function _convertToolCallIdToMistralCompatible(
 
 export function _mistralContentChunkToMessageContentComplex(
   content: string | MistralAIContentChunk[] | null | undefined
-): string | MessageContentComplex[] {
+): MessageContent {
   if (!content) {
     return "";
   }
   if (typeof content === "string") {
     return content;
   }
-  return content.map((contentChunk) => {
-    // Only Mistral ImageURLChunks need conversion to MessageContentComplex
+  return content.map((contentChunk): ContentBlock => {
+    // Only Mistral ImageURLChunks need conversion to ContentBlock
     if (contentChunk.type === "image_url") {
       if (
         typeof contentChunk.imageUrl !== "string" &&
         contentChunk.imageUrl?.detail
       ) {
         const { detail } = contentChunk.imageUrl;
-        // Mistral detail can be any string, but MessageContentComplex only supports
+        // Mistral detail can be any string, but ContentBlock only supports
         // detail to be "high", "auto", or "low"
         if (detail !== "high" && detail !== "auto" && detail !== "low") {
           return {
@@ -81,6 +81,13 @@ export function _mistralContentChunkToMessageContentComplex(
         image_url: contentChunk.imageUrl,
       };
     }
-    return contentChunk;
+    if (contentChunk.type === "text") {
+      return {
+        type: contentChunk.type,
+        text: contentChunk.text,
+      };
+    }
+    // For other chunk types (reference, file, audio, document, think), pass through as-is
+    return contentChunk as ContentBlock;
   });
 }

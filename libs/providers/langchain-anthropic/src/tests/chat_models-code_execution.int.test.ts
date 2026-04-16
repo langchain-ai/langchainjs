@@ -13,7 +13,7 @@ describe("Files API with Code Execution", () => {
   beforeEach(() => {
     // Create ChatAnthropic model with code execution beta header and bind tools
     const baseModel = new ChatAnthropic({
-      model: "claude-3-5-haiku-20241022",
+      model: "claude-haiku-4-5-20251001",
       temperature: 0,
       clientOptions: {
         defaultHeaders: {
@@ -114,8 +114,9 @@ describe("Files API with Code Execution", () => {
     expect(firstResult).toBeInstanceOf(AIMessage);
 
     // Extract container ID from first response
-    const container = (firstResult as AIMessage).additional_kwargs
-      ?.container as { id: string; expires_at: string } | undefined;
+    const container = (firstResult as AIMessage).additional_kwargs?.container as
+      | { id: string; expires_at: string }
+      | undefined;
     expect(container?.id).toBeTruthy();
 
     // Verify file output was created using extractGeneratedFilesAnthropic

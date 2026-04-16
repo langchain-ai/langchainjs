@@ -34,11 +34,12 @@ import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { ChatResult } from "@langchain/core/outputs";
 
 // TODO: remove once `EventStreamCallbackHandlerInput` is exposed in core
-interface EventStreamCallbackHandlerInput
-  extends Omit<LogStreamCallbackHandlerInput, "_schemaFormat"> {}
+interface EventStreamCallbackHandlerInput extends Omit<
+  LogStreamCallbackHandlerInput,
+  "_schemaFormat"
+> {}
 
-export interface ConfigurableChatModelCallOptions
-  extends BaseChatModelCallOptions {
+export interface ConfigurableChatModelCallOptions extends BaseChatModelCallOptions {
   tools?: (
     | StructuredToolInterface
     | Record<string, unknown>
@@ -97,6 +98,10 @@ export const MODEL_PROVIDER_CONFIG = {
     package: "@langchain/aws",
     className: "ChatBedrockConverse",
   },
+  aws: {
+    package: "@langchain/aws",
+    className: "ChatBedrockConverse",
+  },
   deepseek: {
     package: "@langchain/deepseek",
     className: "ChatDeepSeek",
@@ -106,19 +111,17 @@ export const MODEL_PROVIDER_CONFIG = {
     className: "ChatXAI",
   },
   fireworks: {
-    package: "@langchain/community/chat_models/fireworks",
+    package: "@langchain/fireworks",
     className: "ChatFireworks",
-    hasCircularDependency: true,
   },
   together: {
-    package: "@langchain/community/chat_models/togetherai",
+    package: "@langchain/together-ai",
     className: "ChatTogetherAI",
     hasCircularDependency: true,
   },
   perplexity: {
-    package: "@langchain/community/chat_models/perplexity",
+    package: "@langchain/perplexity",
     className: "ChatPerplexity",
-    hasCircularDependency: true,
   },
 } as const;
 
@@ -133,21 +136,38 @@ type ModelProviderConfig = {
 };
 
 /**
- * Helper function to get a chat model class by its class name
+ * Helper function to get a chat model class by its class name or model provider.
  * @param className The class name (e.g., "ChatOpenAI", "ChatAnthropic")
+ * @param modelProvider Optional model provider key for direct lookup (e.g., "google-vertexai-web").
+ *                      When provided, uses direct lookup to avoid className collision issues.
  * @returns The imported model class or undefined if not found
  */
-export async function getChatModelByClassName(className: string) {
-  // Find the provider config that matches the class name
-  const providerEntry = Object.entries(MODEL_PROVIDER_CONFIG).find(
-    ([, config]) => config.className === className
-  );
+export async function getChatModelByClassName(
+  className: string,
+  modelProvider?: string
+) {
+  let config: ModelProviderConfig | undefined;
 
-  if (!providerEntry) {
+  if (modelProvider) {
+    // Direct lookup by modelProvider key - avoids className collision
+    // (e.g., google-vertexai and google-vertexai-web both use "ChatVertexAI")
+    config = MODEL_PROVIDER_CONFIG[
+      modelProvider as keyof typeof MODEL_PROVIDER_CONFIG
+    ] as ModelProviderConfig | undefined;
+  } else {
+    // Fallback to className lookup for backward compatibility
+    const providerEntry = Object.entries(MODEL_PROVIDER_CONFIG).find(
+      ([, c]) => c.className === className
+    );
+    config = providerEntry
+      ? (providerEntry[1] as ModelProviderConfig)
+      : undefined;
+  }
+
+  if (!config) {
     return undefined;
   }
 
-  const [, config] = providerEntry;
   try {
     const module = await import(config.package);
     return module[config.className];
@@ -155,10 +175,15 @@ export async function getChatModelByClassName(className: string) {
     const err = e as Error;
     if (
       "code" in err &&
-      err.code?.toString().includes("ERR_MODULE_NOT_FOUND")
+      err.code?.toString().includes("ERR_MODULE_NOT_FOUND") &&
+      "message" in err &&
+      typeof err.message === "string"
     ) {
-      const attemptedPackage = err.message
-        .split("Error: Cannot find package '")[1]
+      const msg = err.message.startsWith("Error: ")
+        ? err.message.slice("Error: ".length)
+        : err.message;
+      const attemptedPackage = msg
+        .split("Cannot find package '")[1]
         .split("'")[0];
       throw new Error(
         `Unable to import ${attemptedPackage}. Please install with ` +
@@ -172,7 +197,7 @@ export async function getChatModelByClassName(className: string) {
 async function _initChatModelHelper(
   model: string,
   modelProvider?: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   params: Record<string, any> = {}
 ): Promise<BaseChatModel> {
   const modelProviderCopy = modelProvider || _inferModelProvider(model);
@@ -193,7 +218,11 @@ async function _initChatModelHelper(
   }
 
   const { modelProvider: _unused, ...passedParams } = params;
-  const ProviderClass = await getChatModelByClassName(config.className);
+  // Pass modelProviderCopy to use direct lookup and avoid className collision
+  const ProviderClass = await getChatModelByClassName(
+    config.className,
+    modelProviderCopy
+  );
   return new ProviderClass({ model, ...passedParams });
 }
 
@@ -238,7 +267,7 @@ export function _inferModelProvider(modelName: string): string | undefined {
 }
 
 interface ConfigurableModelFields extends BaseChatModelParams {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   defaultConfig?: Record<string, any>;
   /**
    * @default "any"
@@ -252,7 +281,7 @@ interface ConfigurableModelFields extends BaseChatModelParams {
    * Methods which should be called after the model is initialized.
    * The key will be the method name, and the value will be the arguments.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   queuedMethodOperations?: Record<string, any>;
 }
 
@@ -263,7 +292,8 @@ interface ConfigurableModelFields extends BaseChatModelParams {
  */
 export class ConfigurableModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
-  CallOptions extends ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions
+  CallOptions extends ConfigurableChatModelCallOptions =
+    ConfigurableChatModelCallOptions,
 > extends BaseChatModel<CallOptions, AIMessageChunk> {
   _llmType(): string {
     return "chat_model";
@@ -271,7 +301,7 @@ export class ConfigurableModel<
 
   lc_namespace = ["langchain", "chat_models"];
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   _defaultConfig?: Record<string, any> = {};
 
   /**
@@ -288,7 +318,7 @@ export class ConfigurableModel<
    * Methods which should be called after the model is initialized.
    * The key will be the method name, and the value will be the arguments.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   _queuedMethodOperations: Record<string, any> = {};
 
   constructor(fields: ConfigurableModelFields) {
@@ -336,10 +366,10 @@ export class ConfigurableModel<
       for (const [method, args] of queuedMethodOperationsEntries) {
         if (
           method in initializedModel &&
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // oxlint-disable-next-line @typescript-eslint/no-explicit-any
           typeof (initializedModel as any)[method] === "function"
         ) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // oxlint-disable-next-line @typescript-eslint/no-explicit-any
           initializedModel = await (initializedModel as any)[method](...args);
         }
       }
@@ -359,7 +389,7 @@ export class ConfigurableModel<
 
   override bindTools(
     tools: BindToolsInput[],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     params?: Record<string, any>
   ): ConfigurableModel<RunInput, CallOptions> {
     const newQueuedOperations = { ...this._queuedMethodOperations };
@@ -387,10 +417,10 @@ export class ConfigurableModel<
     }) as unknown as ReturnType<BaseChatModel["withStructuredOutput"]>;
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   _modelParams(config?: RunnableConfig): Record<string, any> {
     const configurable = config?.configurable ?? {};
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     let modelParams: Record<string, any> = {};
 
     for (const [key, value] of Object.entries(configurable)) {
@@ -572,7 +602,7 @@ export class ConfigurableModel<
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export interface InitChatModelFields extends Partial<Record<string, any>> {
   modelProvider?: string;
   configurableFields?: string[] | "any";
@@ -583,10 +613,11 @@ export type ConfigurableFields = "any" | string[];
 
 export async function initChatModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
-  CallOptions extends ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions
+  CallOptions extends ConfigurableChatModelCallOptions =
+    ConfigurableChatModelCallOptions,
 >(
   model: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   fields?: Partial<Record<string, any>> & {
     modelProvider?: string;
     configurableFields?: never;
@@ -596,10 +627,11 @@ export async function initChatModel<
 
 export async function initChatModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
-  CallOptions extends ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions
+  CallOptions extends ConfigurableChatModelCallOptions =
+    ConfigurableChatModelCallOptions,
 >(
   model: never,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   options?: Partial<Record<string, any>> & {
     modelProvider?: string;
     configurableFields?: never;
@@ -609,10 +641,11 @@ export async function initChatModel<
 
 export async function initChatModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
-  CallOptions extends ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions
+  CallOptions extends ConfigurableChatModelCallOptions =
+    ConfigurableChatModelCallOptions,
 >(
   model?: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   options?: Partial<Record<string, any>> & {
     modelProvider?: string;
     configurableFields?: ConfigurableFields;
@@ -646,12 +679,12 @@ export async function initChatModel<
  *   - google-genai (@langchain/google-genai)
  *   - bedrock (@langchain/aws)
  *   - cohere (@langchain/cohere)
- *   - fireworks (@langchain/community/chat_models/fireworks)
- *   - together (@langchain/community/chat_models/togetherai)
+ *   - fireworks (@langchain/fireworks)
+ *   - together (@langchain/together-ai)
  *   - mistralai (@langchain/mistralai)
  *   - groq (@langchain/groq)
  *   - ollama (@langchain/ollama)
- *   - perplexity (@langchain/community/chat_models/perplexity)
+ *   - perplexity (@langchain/perplexity)
  *   - cerebras (@langchain/cerebras)
  *   - deepseek (@langchain/deepseek)
  *   - xai (@langchain/xai)
@@ -703,7 +736,7 @@ export async function initChatModel<
  *
  * const claudeResult = await configurableModel.invoke("what's your name", {
  *   configurable: {
- *     model: "claude-3-5-sonnet-20240620",
+ *     model: "claude-sonnet-4-5-20250929",
  *   },
  * });
  * ```
@@ -732,7 +765,7 @@ export async function initChatModel<
  *   "what's your name",
  *   {
  *     configurable: {
- *       foo_model: "claude-3-5-sonnet-20240620",
+ *       foo_model: "claude-sonnet-4-5-20250929",
  *       foo_modelProvider: "anthropic",
  *       foo_temperature: 0.6,
  *       foo_apiKey: process.env.ANTHROPIC_API_KEY,
@@ -806,7 +839,7 @@ export async function initChatModel<
  *   "Which city is hotter today and which is bigger: LA or NY?",
  *   {
  *     configurable: {
- *       model: "claude-3-5-sonnet-20240620",
+ *       model: "claude-sonnet-4-5-20250929",
  *       apiKey: process.env.ANTHROPIC_API_KEY,
  *     },
  *   }
@@ -836,17 +869,18 @@ export async function initChatModel<
  */
 export async function initChatModel<
   RunInput extends BaseLanguageModelInput = BaseLanguageModelInput,
-  CallOptions extends ConfigurableChatModelCallOptions = ConfigurableChatModelCallOptions
+  CallOptions extends ConfigurableChatModelCallOptions =
+    ConfigurableChatModelCallOptions,
 >(
   model?: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   fields?: Partial<Record<string, any>> & {
     modelProvider?: string;
     configurableFields?: string[] | "any";
     configPrefix?: string;
   }
 ): Promise<ConfigurableModel<RunInput, CallOptions>> {
-  // eslint-disable-next-line prefer-const
+  // oxlint-disable-next-line prefer-const
   let { configurableFields, configPrefix, modelProvider, ...params } = {
     configPrefix: "",
     ...(fields ?? {}),
@@ -854,7 +888,7 @@ export async function initChatModel<
   if (modelProvider === undefined && model?.includes(":")) {
     const modelComponents = model.split(":", 2);
     if (SUPPORTED_PROVIDERS.includes(modelComponents[0] as ChatModelProvider)) {
-      // eslint-disable-next-line no-param-reassign
+      // oxlint-disable-next-line no-param-reassign
       [modelProvider, model] = modelComponents;
     }
   }
@@ -873,7 +907,7 @@ export async function initChatModel<
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   const paramsCopy: Record<string, any> = { ...params };
 
   if (configurableFieldsCopy === undefined) {

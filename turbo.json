@@ -1,62 +1,55 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalDependencies": ["**/.env"],
+  "globalDependencies": ["**/.env", "pnpm-lock.yaml"],
+  "globalPassThroughEnv": ["CI", "NODE_ENV", "GITHUB_ACTIONS"],
+  "ui": "stream",
   "tasks": {
     "build:compile": {
       "dependsOn": ["^build:compile"],
       "env": ["BUILD_MODE"],
+      "inputs": ["src/**", "tsconfig.json", "tsdown.config.ts", "package.json"],
       "outputs": ["dist/**"]
     },
     "build:examples": {
-      "dependsOn": ["^build:examples"]
-    },
-    "lint": {
-      "dependsOn": ["^lint"]
-    },
-    "lint:fix": {
-      "dependsOn": ["^lint:fix"]
-    },
-    "format": {
-      "dependsOn": ["^format"]
-    },
-    "format:check": {
-      "dependsOn": ["^format:check"]
+      "dependsOn": ["^build:compile"]
     },
     "test": {
-      "cache": false,
-      "dependsOn": ["^build:compile", "build:compile"]
-    },
-    "test:ci": {
-      "outputs": [],
-      "dependsOn": ["^test", "test"]
+      "dependsOn": ["build:compile"],
+      "inputs": ["src/**", "tests/**", "**/*.test.ts", "vitest.config.ts"],
+      "outputs": []
     },
     "test:single": {
-      "dependsOn": ["^build", "build"]
+      "dependsOn": ["build:compile"],
+      "cache": false
     },
     "test:int": {
-      "dependsOn": ["^build", "build"]
+      "dependsOn": ["build:compile"],
+      "cache": false,
+      "env": ["XAI_API_KEY"]
     },
     "test:integration": {
-      "dependsOn": ["^build", "build", "test:int"]
+      "dependsOn": ["build:compile"],
+      "cache": false
     },
     "test:standard:unit": {
-      "outputs": [],
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build:compile"],
+      "inputs": ["src/**", "tests/**"],
+      "outputs": []
     },
     "test:standard:int": {
-      "outputs": [],
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build:compile"],
+      "cache": false
     },
     "test:standard": {
-      "outputs": [],
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build:compile"],
+      "cache": false
     },
     "test:bench": {
-      "outputs": [],
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build:compile"],
+      "outputs": []
     },
     "clean": {
-      "dependsOn": ["^clean"]
+      "cache": false
     }
   }
 }

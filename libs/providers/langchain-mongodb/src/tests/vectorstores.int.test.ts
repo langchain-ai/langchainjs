@@ -116,7 +116,7 @@ function getEmbeddings() {
 
 test("MongoDBStore sets client metadata", () => {
   const spy = vi.spyOn(client, "appendMetadata");
-  // eslint-disable-next-line no-new
+  // oxlint-disable-next-line no-new
   new PatchedVectorStore(getEmbeddings(), {
     collection,
   });
@@ -206,9 +206,8 @@ test("MongoDBAtlasVectorSearch with Maximal Marginal Relevance", async () => {
 
   const standardRetriever = await vectorStore.asRetriever();
 
-  const standardRetrieverOutput = await standardRetriever._getRelevantDocuments(
-    "foo"
-  );
+  const standardRetrieverOutput =
+    await standardRetriever._getRelevantDocuments("foo");
   expect(output).toHaveLength(texts.length);
 
   const standardRetrieverActual = standardRetrieverOutput.map(

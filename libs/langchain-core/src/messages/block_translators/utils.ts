@@ -24,7 +24,7 @@ export function _isNumber(value: unknown): value is number {
 }
 
 export function _isBytesArray(value: unknown): value is Uint8Array {
-  // eslint-disable-next-line no-instanceof/no-instanceof
+  // oxlint-disable-next-line no-instanceof/no-instanceof
   return value instanceof Uint8Array;
 }
 

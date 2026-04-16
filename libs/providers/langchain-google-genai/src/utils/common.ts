@@ -16,6 +16,7 @@ import {
   AIMessageChunk,
   BaseMessage,
   ChatMessage,
+  ContentBlock,
   ToolMessage,
   ToolMessageChunk,
   MessageContent,
@@ -43,7 +44,11 @@ import {
   jsonSchemaToGeminiParameters,
   schemaToGenerativeAIParameters,
 } from "./zod_to_genai_parameters.js";
-import { GoogleGenerativeAIToolType } from "../types.js";
+import {
+  GoogleGenerativeAIPart,
+  GoogleGenerativeAIToolType,
+} from "../types.js";
+import { assertNoEmptyStringEnums } from "./validate_schema.js";
 
 export const _FUNCTION_CALL_THOUGHT_SIGNATURES_MAP_KEY =
   "__gemini_function_call_thought_signatures__";
@@ -125,6 +130,67 @@ function inferToolNameFromPreviousMessages(
     .find((toolCall) => {
       return toolCall.id === message.tool_call_id;
     })?.name;
+}
+
+/**
+ * Converts a ContentBlock.Multimodal block (image, video, audio, file)
+ * to the appropriate Google Generative AI Part format.
+ *
+ * Handles three data record variants:
+ *  - DataRecordBase64: has `data` property → InlineDataPart
+ *  - DataRecordUrl: has `url` property → FileDataPart (or InlineDataPart for data: URLs)
+ *  - DataRecordFileId: has `fileId` property → not directly supported, throws
+ */
+function _multimodalContentBlockToPart(
+  block: ContentBlock.Multimodal.Data,
+  defaultMimeType: string
+): InlineDataPart | FileDataPart {
+  if ("data" in block && block.data !== undefined) {
+    // DataRecordBase64: inline base64 data
+    const data =
+      // oxlint-disable-next-line no-instanceof/no-instanceof
+      block.data instanceof Uint8Array
+        ? btoa(String.fromCharCode(...block.data))
+        : block.data;
+    return {
+      inlineData: {
+        mimeType: block.mimeType || defaultMimeType,
+        data,
+      },
+    };
+  }
+
+  if ("url" in block && block.url !== undefined) {
+    // DataRecordUrl: check if it's a data: URL first
+    const parsed = parseBase64DataUrl({ dataUrl: block.url });
+    if (parsed) {
+      return {
+        inlineData: {
+          mimeType: parsed.mime_type,
+          data: parsed.data,
+        },
+      };
+    }
+    // Regular URL → fileData
+    return {
+      fileData: {
+        mimeType: block.mimeType || defaultMimeType,
+        fileUri: block.url,
+      },
+    };
+  }
+
+  if ("fileId" in block && block.fileId !== undefined) {
+    throw new Error(
+      `ContentBlock.Multimodal fileId is not supported by Google Generative AI. ` +
+        `Use a URL or base64 data instead.`
+    );
+  }
+
+  throw new Error(
+    `Invalid multimodal content block: must have "data", "url", or "fileId" property. ` +
+      `Received: ${JSON.stringify(block)}`
+  );
 }
 
 function _getStandardContentBlockConverter(isMultimodalModel: boolean) {
@@ -304,11 +370,50 @@ function _convertLangChainContentToPart(
     };
   } else if (content.type === "media") {
     return messageContentMedia(content);
+  } else if (content.type === "image") {
+    return _multimodalContentBlockToPart(
+      content as ContentBlock.Multimodal.Image,
+      "image/png"
+    );
+  } else if (content.type === "video") {
+    return _multimodalContentBlockToPart(
+      content as ContentBlock.Multimodal.Video,
+      "video/mp4"
+    );
+  } else if (content.type === "audio") {
+    return _multimodalContentBlockToPart(
+      content as ContentBlock.Multimodal.Audio,
+      "audio/mpeg"
+    );
+  } else if (content.type === "file") {
+    return _multimodalContentBlockToPart(
+      content as ContentBlock.Multimodal.File,
+      "application/octet-stream"
+    );
+  } else if (content.type === "text-plain") {
+    // text-plain blocks can have an inline text property
+    if (
+      "text" in content &&
+      typeof (content as ContentBlock.Multimodal.PlainText).text === "string"
+    ) {
+      return { text: (content as ContentBlock.Multimodal.PlainText).text! };
+    }
+    return _multimodalContentBlockToPart(
+      content as ContentBlock.Multimodal.PlainText,
+      "text/plain"
+    );
   } else if (content.type === "tool_use") {
     return {
       functionCall: {
         name: content.name,
         args: content.input,
+      },
+    };
+  } else if (content.type === "tool_call") {
+    return {
+      functionCall: {
+        name: content.name,
+        args: content.args,
       },
     };
   } else if (
@@ -324,6 +429,19 @@ function _convertLangChainContentToPart(
         data: content.data,
       },
     };
+  } else if (content.type === "thinking") {
+    const thinkingContent = content as {
+      type: "thinking";
+      thinking: string;
+      signature?: string;
+    };
+    return {
+      text: thinkingContent.thinking,
+      thought: true,
+      ...(thinkingContent.signature
+        ? { thoughtSignature: thinkingContent.signature }
+        : {}),
+    } as Part;
   } else if ("functionCall" in content) {
     // No action needed here — function calls will be added later from message.tool_calls
     return undefined;
@@ -523,32 +641,42 @@ export function mapGenerateContentResultToChatResult(
   }
   const [candidate] = response.candidates;
   const { content: candidateContent, ...generationInfo } = candidate;
-  const functionCalls = candidateContent.parts?.reduce((acc, p) => {
-    if ("functionCall" in p && p.functionCall) {
-      acc.push({
-        ...p,
-        id:
-          "id" in p.functionCall && typeof p.functionCall.id === "string"
-            ? p.functionCall.id
-            : uuidv4(),
-      });
-    }
-    return acc;
-  }, [] as (FunctionCallPart & { id: string })[]);
+  const functionCalls = candidateContent?.parts?.reduce(
+    (acc, p) => {
+      if ("functionCall" in p && p.functionCall) {
+        acc.push({
+          ...p,
+          id:
+            "id" in p.functionCall && typeof p.functionCall.id === "string"
+              ? p.functionCall.id
+              : uuidv4(),
+        });
+      }
+      return acc;
+    },
+    [] as (FunctionCallPart & { id: string })[]
+  );
   let content: MessageContent | undefined;
 
+  const parts = candidateContent?.parts as GoogleGenerativeAIPart[] | undefined;
+
   if (
-    Array.isArray(candidateContent?.parts) &&
-    candidateContent.parts.length === 1 &&
-    candidateContent.parts[0].text
+    Array.isArray(parts) &&
+    parts.length === 1 &&
+    "text" in parts[0] &&
+    parts[0].text &&
+    !parts[0].thought
   ) {
-    content = candidateContent.parts[0].text;
-  } else if (
-    Array.isArray(candidateContent?.parts) &&
-    candidateContent.parts.length > 0
-  ) {
-    content = candidateContent.parts.map((p) => {
-      if ("text" in p) {
+    content = parts[0].text;
+  } else if (Array.isArray(parts) && parts.length > 0) {
+    content = parts.map((p) => {
+      if (p.thought && "text" in p && p.text) {
+        return {
+          type: "thinking",
+          thinking: p.text,
+          ...(p.thoughtSignature ? { signature: p.thoughtSignature } : {}),
+        };
+      } else if ("text" in p) {
         return {
           type: "text",
           text: p.text,
@@ -591,12 +719,15 @@ export function mapGenerateContentResultToChatResult(
     content = [];
   }
 
-  const functionThoughtSignatures = functionCalls?.reduce((acc, fc) => {
-    if ("thoughtSignature" in fc && typeof fc.thoughtSignature === "string") {
-      acc[fc.id] = fc.thoughtSignature;
-    }
-    return acc;
-  }, {} as Record<string, string>);
+  const functionThoughtSignatures = functionCalls?.reduce(
+    (acc, fc) => {
+      if ("thoughtSignature" in fc && typeof fc.thoughtSignature === "string") {
+        acc[fc.id] = fc.thoughtSignature;
+      }
+      return acc;
+    },
+    {} as Record<string, string>
+  );
 
   let text = "";
   if (typeof content === "string") {
@@ -651,28 +782,41 @@ export function convertResponseContentToChatGenerationChunk(
   }
   const [candidate] = response.candidates;
   const { content: candidateContent, ...generationInfo } = candidate;
-  const functionCalls = candidateContent.parts?.reduce((acc, p) => {
-    if ("functionCall" in p && p.functionCall) {
-      acc.push({
-        ...p,
-        id:
-          "id" in p.functionCall && typeof p.functionCall.id === "string"
-            ? p.functionCall.id
-            : uuidv4(),
-      });
-    }
-    return acc;
-  }, [] as (FunctionCallPart & { id: string })[]);
+  const functionCalls = candidateContent.parts?.reduce(
+    (acc, p) => {
+      if ("functionCall" in p && p.functionCall) {
+        acc.push({
+          ...p,
+          id:
+            "id" in p.functionCall && typeof p.functionCall.id === "string"
+              ? p.functionCall.id
+              : uuidv4(),
+        });
+      }
+      return acc;
+    },
+    [] as (FunctionCallPart & { id: string })[]
+  );
   let content: MessageContent | undefined;
-  // Checks if some parts do not have text. If false, it means that the content is a string.
+  const streamParts = candidateContent?.parts as
+    | GoogleGenerativeAIPart[]
+    | undefined;
+
+  // Checks if all parts are plain text (no thought flags). If so, join as string.
   if (
-    Array.isArray(candidateContent?.parts) &&
-    candidateContent.parts.every((p) => "text" in p)
+    Array.isArray(streamParts) &&
+    streamParts.every((p) => "text" in p && !p.thought)
   ) {
-    content = candidateContent.parts.map((p) => p.text).join("");
-  } else if (Array.isArray(candidateContent?.parts)) {
-    content = candidateContent.parts.map((p) => {
-      if ("text" in p) {
+    content = streamParts.map((p) => p.text).join("");
+  } else if (Array.isArray(streamParts)) {
+    content = streamParts.map((p) => {
+      if (p.thought && "text" in p && p.text) {
+        return {
+          type: "thinking",
+          thinking: p.text,
+          ...(p.thoughtSignature ? { signature: p.thoughtSignature } : {}),
+        };
+      } else if ("text" in p) {
         return {
           type: "text",
           text: p.text,
@@ -737,12 +881,15 @@ export function convertResponseContentToChatGenerationChunk(
     );
   }
 
-  const functionThoughtSignatures = functionCalls?.reduce((acc, fc) => {
-    if ("thoughtSignature" in fc && typeof fc.thoughtSignature === "string") {
-      acc[fc.id] = fc.thoughtSignature;
-    }
-    return acc;
-  }, {} as Record<string, string>);
+  const functionThoughtSignatures = functionCalls?.reduce(
+    (acc, fc) => {
+      if ("thoughtSignature" in fc && typeof fc.thoughtSignature === "string") {
+        acc[fc.id] = fc.thoughtSignature;
+      }
+      return acc;
+    },
+    {} as Record<string, string>
+  );
 
   return new ChatGenerationChunk({
     text,
@@ -792,6 +939,7 @@ export function convertToGenerativeAITools(
                 description: tool.description,
               };
             }
+            assertNoEmptyStringEnums(jsonSchema, tool.name);
             return {
               name: tool.name,
               description: tool.description,
@@ -799,13 +947,15 @@ export function convertToGenerativeAITools(
             };
           }
           if (isOpenAITool(tool)) {
+            const params = jsonSchemaToGeminiParameters(
+              tool.function.parameters
+            );
+            assertNoEmptyStringEnums(params, tool.function.name);
             return {
               name: tool.function.name,
               description:
                 tool.function.description ?? `A function available to call.`,
-              parameters: jsonSchemaToGeminiParameters(
-                tool.function.parameters
-              ),
+              parameters: params,
             };
           }
           return tool as unknown as GenerativeAIFunctionDeclaration;

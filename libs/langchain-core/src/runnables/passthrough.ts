@@ -7,7 +7,7 @@ import {
 } from "./base.js";
 import { ensureConfig, type RunnableConfig } from "./config.js";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 type RunnablePassthroughFunc<RunInput = any> =
   | ((input: RunInput) => void)
   | ((input: RunInput, config?: RunnableConfig) => void)
@@ -40,7 +40,7 @@ type RunnablePassthroughFunc<RunInput = any> =
  * );
  * ```
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export class RunnablePassthrough<RunInput = any> extends Runnable<
   RunInput,
   RunInput
@@ -97,7 +97,7 @@ export class RunnablePassthrough<RunInput = any> extends Runnable<
           finalOutput = chunk;
         } else {
           try {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // oxlint-disable-next-line @typescript-eslint/no-explicit-any
             finalOutput = concat(finalOutput, chunk as any);
           } catch {
             finalOutput = undefined;
@@ -142,7 +142,7 @@ export class RunnablePassthrough<RunInput = any> extends Runnable<
    */
   static assign<
     RunInput extends Record<string, unknown> = Record<string, unknown>,
-    RunOutput extends Record<string, unknown> = Record<string, unknown>
+    RunOutput extends Record<string, unknown> = Record<string, unknown>,
   >(
     mapping: RunnableMapLike<RunInput, RunOutput>
   ): RunnableAssign<RunInput, RunInput & RunOutput> {

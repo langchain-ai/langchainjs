@@ -77,6 +77,12 @@ export type TavilySearchParamsBase = {
    * @default false
    */
   include_favicon?: boolean;
+  /**
+   * Whether to include usage information (credits) in the response.
+   *
+   * @default false
+   */
+  include_usage?: boolean;
 } & Record<string, unknown>;
 
 export type TavilySearchParamsWithSimpleImages = TavilySearchParamsBase & {
@@ -152,6 +158,18 @@ export type TavilyExtractParams = {
    * @default "markdown"
    */
   format?: "markdown" | "text";
+
+  /**
+   * Whether to include usage information (credits) in the response.
+   *
+   * @default false
+   */
+  includeUsage?: boolean;
+
+  /**
+   * User intent query for reranking extracted content chunks.
+   */
+  query?: string;
 } & Record<string, unknown>;
 
 /**
@@ -285,6 +303,20 @@ export type TavilyCrawlParams = {
    * @default false
    */
   include_favicon?: boolean;
+
+  /**
+   * Whether to include usage information (credits) in the response.
+   *
+   * @default false
+   */
+  includeUsage?: boolean;
+
+  /**
+   * The number of content chunks to retrieve from each source.
+   *
+   * @default 3
+   */
+  chunksPerSource?: number;
 } & Record<string, unknown>;
 
 /**
@@ -521,6 +553,13 @@ export type TavilyMapParams = {
    * @default undefined
    */
   allowExternal?: boolean;
+
+  /**
+   * Whether to include usage information (credits) in the response.
+   *
+   * @default false
+   */
+  includeUsage?: boolean;
 } & Record<string, unknown>;
 
 export type TavilyMapResponse = {
@@ -729,7 +768,7 @@ export class TavilySearchAPIWrapper extends BaseTavilyAPIWrapper {
     const response = await fetch(`${this.apiBaseUrl}/search`, {
       method: "POST",
       headers,
-      body: JSON.stringify(apiParams),
+      body: JSON.stringify({ ...apiParams, client_source: "langchain-js" }),
     });
 
     if (!response.ok) {
@@ -766,7 +805,7 @@ export class TavilyExtractAPIWrapper extends BaseTavilyAPIWrapper {
     const response = await fetch(`${this.apiBaseUrl}/extract`, {
       method: "POST",
       headers,
-      body: JSON.stringify(apiParams),
+      body: JSON.stringify({ ...apiParams, client_source: "langchain-js" }),
     });
 
     if (!response.ok) {
@@ -800,7 +839,7 @@ export class TavilyCrawlAPIWrapper extends BaseTavilyAPIWrapper {
     const response = await fetch(`${this.apiBaseUrl}/crawl`, {
       method: "POST",
       headers,
-      body: JSON.stringify(apiParams),
+      body: JSON.stringify({ ...apiParams, client_source: "langchain-js" }),
     });
 
     if (!response.ok) {
@@ -834,7 +873,7 @@ export class TavilyMapAPIWrapper extends BaseTavilyAPIWrapper {
     const response = await fetch(`${this.apiBaseUrl}/map`, {
       method: "POST",
       headers,
-      body: JSON.stringify(apiParams),
+      body: JSON.stringify({ ...apiParams, client_source: "langchain-js" }),
     });
 
     if (!response.ok) {
@@ -873,7 +912,7 @@ export class TavilyResearchAPIWrapper extends BaseTavilyAPIWrapper {
       const response = await fetch(`${this.apiBaseUrl}/research`, {
         method: "POST",
         headers,
-        body: JSON.stringify(apiParams),
+        body: JSON.stringify({ ...apiParams, client_source: "langchain-js" }),
       });
 
       if (!response.ok) {
@@ -909,7 +948,7 @@ export class TavilyResearchAPIWrapper extends BaseTavilyAPIWrapper {
       const response = await fetch(`${this.apiBaseUrl}/research`, {
         method: "POST",
         headers,
-        body: JSON.stringify(apiParams),
+        body: JSON.stringify({ ...apiParams, client_source: "langchain-js" }),
       });
       if (!response.ok) {
         const errorData = await response.json();

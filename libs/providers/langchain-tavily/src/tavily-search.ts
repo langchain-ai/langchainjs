@@ -106,6 +106,13 @@ export type TavilySearchAPIRetrieverFields = ToolParams & {
   includeFavicon?: boolean;
 
   /**
+   * Whether to include usage information (credits) in the response.
+   *
+   * @default false
+   */
+  includeUsage?: boolean;
+
+  /**
    * The name of the tool.
    *
    * @default "tavily_search"
@@ -348,6 +355,8 @@ export class TavilySearch extends StructuredTool<typeof inputSchema> {
 
   includeFavicon?: boolean;
 
+  includeUsage?: boolean;
+
   handleToolError = true;
 
   apiWrapper: TavilySearchAPIWrapper;
@@ -398,6 +407,7 @@ export class TavilySearch extends StructuredTool<typeof inputSchema> {
     this.country = params.country;
     this.autoParameters = params.autoParameters;
     this.includeFavicon = params.includeFavicon;
+    this.includeUsage = params.includeUsage;
   }
 
   async _call(
@@ -439,6 +449,7 @@ export class TavilySearch extends StructuredTool<typeof inputSchema> {
         country: this.country,
         autoParameters: this.autoParameters,
         includeFavicon: this.includeFavicon,
+        includeUsage: this.includeUsage,
       });
 
       if (

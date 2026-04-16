@@ -110,9 +110,8 @@ export class AmazonKnowledgeBaseRetriever extends BaseRetriever {
       },
     });
 
-    const retrieveResponse = await this.bedrockAgentRuntimeClient.send(
-      retrieveCommand
-    );
+    const retrieveResponse =
+      await this.bedrockAgentRuntimeClient.send(retrieveCommand);
 
     return (
       retrieveResponse.retrievalResults?.map((result) => {

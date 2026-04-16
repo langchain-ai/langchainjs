@@ -14,7 +14,7 @@ import {
 /**
  * Type for options when adding a document to the VectorStore.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 type AddDocumentOptions = Record<string, any>;
 
 export interface MatryoshkaRetrieverFields {
@@ -66,7 +66,7 @@ export interface MatryoshkaRetrieverFields {
  * lower-dimensional initial search with accurate, high-dimensional re-ranking.
  */
 export class MatryoshkaRetriever<
-  Store extends VectorStore = VectorStore
+  Store extends VectorStore = VectorStore,
 > extends VectorStoreRetriever<Store> {
   smallK = 50;
 
@@ -178,9 +178,8 @@ export class MatryoshkaRetriever<
     }
 
     const allDocPageContent = documents.map((doc) => doc.pageContent);
-    const allDocLargeEmbeddings = await this.largeEmbeddingModel.embedDocuments(
-      allDocPageContent
-    );
+    const allDocLargeEmbeddings =
+      await this.largeEmbeddingModel.embedDocuments(allDocPageContent);
 
     const newDocuments: Array<DocumentInterface> = documents.map(
       (doc, idx) => ({

@@ -4,7 +4,7 @@ import {
   isZodSchemaV3,
   isZodSchemaV4,
 } from "@langchain/core/utils/types";
-import { parse as parseV4 } from "zod/v4/core";
+import { parse as parseV4, type $ZodType } from "zod/v4/core";
 import { ResponseFormatJSONSchema } from "openai/resources";
 import { zodResponseFormat } from "openai/helpers/zod";
 import { ContentBlock, UsageMetadata } from "@langchain/core/messages";
@@ -95,7 +95,7 @@ export function interopZodResponseFormat(
   props: Omit<ResponseFormatJSONSchema.JSONSchema, "schema" | "strict" | "name">
 ) {
   if (isZodSchemaV3(zodSchema)) {
-    return zodResponseFormat(zodSchema, name, props);
+    return zodResponseFormat(zodSchema as never, name, props);
   }
   if (isZodSchemaV4(zodSchema)) {
     return makeParseableResponseFormat(
@@ -122,7 +122,8 @@ export function interopZodResponseFormat(
           }),
         },
       },
-      (content) => parseV4(zodSchema, JSON.parse(content))
+      (content) =>
+        parseV4(zodSchema as unknown as $ZodType, JSON.parse(content))
     );
   }
   throw new Error("Unsupported schema response format");
@@ -156,7 +157,7 @@ export function handleMultiModalOutput(
           ({
             type: "image",
             url: image.image_url.url as string,
-          } as const)
+          }) as const
       );
     return [{ type: "text", text: content }, ...images];
   }

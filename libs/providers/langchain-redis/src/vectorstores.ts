@@ -7,73 +7,32 @@ import type {
   RediSearchSchema,
   SearchOptions,
 } from "redis";
-import { SchemaFieldTypes, VectorAlgorithms } from "redis";
+import { VectorAlgorithms, SchemaFieldTypes } from "redis";
+import {
+  assertSafeRedisearchFieldName,
+  escapeRedisearchValue,
+} from "./query_safety.js";
 
-// Adapated from internal redis types which aren't exported
-/**
- * Type for creating a schema vector field. It includes the algorithm,
- * distance metric, and initial capacity.
- */
-export type CreateSchemaVectorField<
-  T extends VectorAlgorithms,
-  A extends Record<string, unknown>
-> = {
-  ALGORITHM: T;
-  DISTANCE_METRIC: "L2" | "IP" | "COSINE";
-  INITIAL_CAP?: number;
-} & A;
-/**
- * Type for creating a flat schema vector field. It extends
- * CreateSchemaVectorField with a block size property.
- */
-export type CreateSchemaFlatVectorField = CreateSchemaVectorField<
-  VectorAlgorithms.FLAT,
-  {
-    BLOCK_SIZE?: number;
-  }
->;
-/**
- * Type for creating a HNSW schema vector field. It extends
- * CreateSchemaVectorField with M, EF_CONSTRUCTION, and EF_RUNTIME
- * properties.
- */
-export type CreateSchemaHNSWVectorField = CreateSchemaVectorField<
-  VectorAlgorithms.HNSW,
-  {
-    M?: number;
-    EF_CONSTRUCTION?: number;
-    EF_RUNTIME?: number;
-  }
->;
-
-type CreateIndexOptions = NonNullable<
-  Parameters<ReturnType<typeof createClient>["ft"]["create"]>[3]
->;
-
-export type RedisSearchLanguages = `${NonNullable<
-  CreateIndexOptions["LANGUAGE"]
->}`;
-
-export type RedisVectorStoreIndexOptions = Omit<
+// Import schema types from schema.ts to avoid duplication
+import type {
+  CreateSchemaVectorField,
+  CreateSchemaFlatVectorField,
+  CreateSchemaHNSWVectorField,
   CreateIndexOptions,
-  "LANGUAGE"
-> & {
-  LANGUAGE?: RedisSearchLanguages;
-};
+  RedisSearchLanguages,
+  RedisVectorStoreIndexOptions,
+  CustomSchemaField,
+} from "./schema.js";
 
-/**
- * Interface for custom schema field definitions
- */
-export interface CustomSchemaField {
-  type: SchemaFieldTypes;
-  required?: boolean;
-  SORTABLE?: boolean | "UNF";
-  NOINDEX?: boolean;
-  SEPARATOR?: string; // For TAG fields
-  CASESENSITIVE?: true; // For TAG fields (Redis expects true, not boolean)
-  NOSTEM?: true; // For TEXT fields (Redis expects true, not boolean)
-  WEIGHT?: number; // For TEXT fields
-}
+// Re-export schema types for backward compatibility
+export type {
+  CreateSchemaVectorField,
+  CreateSchemaFlatVectorField,
+  CreateSchemaHNSWVectorField,
+  RedisSearchLanguages,
+  RedisVectorStoreIndexOptions,
+  CustomSchemaField,
+};
 
 /**
  * Interface for the configuration of the RedisVectorStore. It includes
@@ -110,6 +69,12 @@ export interface RedisAddOptions {
  * strings.
  * If a string is passed instead of an array the value is used directly, this
  * allows custom filters to be passed.
+ *
+ * @deprecated This filter type is limited to simple string-based filtering.
+ * For fluent filtering capabilities including tag filters, numeric ranges,
+ * text search, geographic queries, and complex filter combinations, please use
+ * {@link FluentRedisVectorStore} instead, which provides a more powerful and
+ * type-safe filtering API through FilterExpression and MetadataFieldSchema.
  */
 export type RedisVectorStoreFilterType = string[] | string;
 
@@ -117,6 +82,15 @@ export type RedisVectorStoreFilterType = string[] | string;
  * Class representing a RedisVectorStore. It extends the VectorStore class
  * and includes methods for adding documents and vectors, performing
  * similarity searches, managing the index, and more.
+ *
+ * @deprecated This class uses a basic filtering approach limited to string arrays
+ * or raw Redis query strings. For fluent filtering with structured metadata schemas,
+ * type-safe filter expressions, and support for tag, numeric, text, and geographic
+ * filters, please migrate to {@link FluentRedisVectorStore}.
+ *
+ * The RedisVectorStore will continue to be maintained for backward compatibility,
+ * but new projects should use FluentRedisVectorStore for better functionality
+ * and maintainability.
  */
 export class RedisVectorStore extends VectorStore {
   declare FilterType: RedisVectorStoreFilterType;
@@ -202,6 +176,10 @@ export class RedisVectorStore extends VectorStore {
     }
   }
 
+  /**
+   * @deprecated Use {@link FluentRedisVectorStore} instead for fluent filtering
+   * capabilities and better type safety with MetadataFieldSchema.
+   */
   constructor(
     embeddings: EmbeddingsInterface,
     _dbConfig: RedisVectorStoreConfig
@@ -518,7 +496,7 @@ export class RedisVectorStore extends VectorStore {
     try {
       await this.redisClient.ft.info(this.indexName);
     } catch (err) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       if ((err as any)?.message.includes("unknown command")) {
         throw new Error(
           "Failed to run FT.INFO command. Please ensure that you are running a RediSearch-capable Redis instance: https://js.langchain.com/docs/integrations/vectorstores/redis/#setup"
@@ -712,10 +690,31 @@ export class RedisVectorStore extends VectorStore {
         if (this.customSchema[fieldName]) {
           const fieldConfig = this.customSchema[fieldName];
           const indexedFieldName = `${this.metadataKey}.${fieldName}`;
+          assertSafeRedisearchFieldName(indexedFieldName);
 
           if (fieldConfig.type === SchemaFieldTypes.NUMERIC) {
             // Handle numeric range queries
             if (typeof value === "object" && value !== null) {
+              const min = "min" in value ? value.min : undefined;
+              const max = "max" in value ? value.max : undefined;
+
+              if (
+                min !== undefined &&
+                (typeof min !== "number" || !Number.isFinite(min))
+              ) {
+                throw new Error(
+                  `Invalid numeric minimum for metadata field '${fieldName}'`
+                );
+              }
+              if (
+                max !== undefined &&
+                (typeof max !== "number" || !Number.isFinite(max))
+              ) {
+                throw new Error(
+                  `Invalid numeric maximum for metadata field '${fieldName}'`
+                );
+              }
+
               if ("min" in value && "max" in value) {
                 filterClauses.push(
                   `@${indexedFieldName}:[${value.min} ${value.max}]`
@@ -726,20 +725,50 @@ export class RedisVectorStore extends VectorStore {
                 filterClauses.push(`@${indexedFieldName}:[-inf ${value.max}]`);
               }
             } else {
+              if (typeof value !== "number" || !Number.isFinite(value)) {
+                throw new Error(
+                  `Invalid numeric value for metadata field '${fieldName}'`
+                );
+              }
               // Exact numeric match
               filterClauses.push(`@${indexedFieldName}:[${value} ${value}]`);
             }
           } else if (fieldConfig.type === SchemaFieldTypes.TAG) {
             // Handle tag filtering
             if (Array.isArray(value)) {
-              const tagFilter = value.map((v) => `{${v}}`).join("|");
+              const tagFilter = value
+                .map((v) => {
+                  if (typeof v !== "string") {
+                    throw new Error(
+                      `Invalid tag value for metadata field '${fieldName}'`
+                    );
+                  }
+                  return `{${escapeRedisearchValue(v)}}`;
+                })
+                .join("|");
               filterClauses.push(`@${indexedFieldName}:(${tagFilter})`);
             } else {
-              filterClauses.push(`@${indexedFieldName}:{${value}}`);
+              if (typeof value !== "string") {
+                throw new Error(
+                  `Invalid tag value for metadata field '${fieldName}'`
+                );
+              }
+              filterClauses.push(
+                `@${indexedFieldName}:{${escapeRedisearchValue(value)}}`
+              );
             }
           } else if (fieldConfig.type === SchemaFieldTypes.TEXT) {
             // Handle text search
-            filterClauses.push(`@${indexedFieldName}:(${value})`);
+            if (typeof value !== "string") {
+              throw new Error(
+                `Invalid text value for metadata field '${fieldName}'`
+              );
+            }
+            filterClauses.push(
+              `@${indexedFieldName}:(${escapeRedisearchValue(value, {
+                preserveWhitespace: true,
+              })})`
+            );
           }
         }
       }
@@ -777,7 +806,11 @@ export class RedisVectorStore extends VectorStore {
 
   private prepareFilter(filter: RedisVectorStoreFilterType) {
     if (Array.isArray(filter)) {
-      return filter.map(this.escapeSpecialChars).join("|");
+      return filter
+        .map((value) =>
+          escapeRedisearchValue(value, { preserveWhitespace: true })
+        )
+        .join("|");
     }
     return filter;
   }
