@@ -164,6 +164,8 @@ export abstract class BaseChatGoogle<
 
   protected _endpoint?: string;
 
+  protected _customHeaders?: Record<string, string>;
+
   protected _location?: string;
 
   protected _apiVersion?: string;
@@ -184,6 +186,7 @@ export abstract class BaseChatGoogle<
     this.model = params.model;
     this._platform = convertParamsToPlatformType(params);
     this._endpoint = params.endpoint;
+    this._customHeaders = params.customHeaders;
     this._location = params.location;
     this._apiVersion = params.apiVersion;
 
@@ -398,6 +401,8 @@ export abstract class BaseChatGoogle<
     return {
       "Content-Type": "application/json",
       ...priorityHeaders,
+      ...this._customHeaders,
+      ...options.customHeaders,
     }
   }
 

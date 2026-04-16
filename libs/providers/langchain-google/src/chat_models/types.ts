@@ -172,6 +172,13 @@ export interface ChatGoogleFields {
    * Other values are treated as the standard service tier.
    */
   serviceTier?: GeminiBase.ServiceTier;
+
+  /**
+   * Custom / additional headers to include with every request to the API.
+   * When set on both constructor params and per-invocation call options,
+   * per-invocation headers take precidence for matching keys.
+   */
+  customHeaders?: Record<string, string>;
 }
 
 export type GooglePlatformType = "gai" | "gcp";

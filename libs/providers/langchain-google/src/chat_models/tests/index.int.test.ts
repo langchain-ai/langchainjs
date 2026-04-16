@@ -975,6 +975,22 @@ describe.each(coreModelInfo)(
       expect(result.response_metadata.serviceTier).toEqual("priority");
     });
 
+    test.only("service tier - priority header", async () => {
+      const llm = newChatGoogle({
+        serviceTier: "flex", // This will be overridden by the custom value
+        customHeaders: {
+          "X-Vertex-AI-LLM-Shared-Request-Type": "priority",
+        },
+      });
+      const prompt = "Write a limerick about the color blue.";
+      const result = await llm.invoke(prompt);
+
+      const expectedValue = testConfig?.useApiKey
+        ? "flex"
+        : "priority";
+      expect(result.response_metadata.serviceTier).toEqual(expectedValue);
+    });
+
     test("image - legacy", async () => {
       const model = newChatGoogle({});
 
