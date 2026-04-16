@@ -127,7 +127,6 @@ const allModelInfo: ModelInfo[] = [
   {
     model: "gemini-3.1-flash-lite-preview",
     testConfig: {
-      only: true,
       isThinking: true,
     },
   },
@@ -955,7 +954,7 @@ describe.each(coreModelInfo)(
       ).toEqual("application/json");
     });
 
-    test.only("service tier - flex", async () => {
+    test("service tier - flex", async () => {
       const llm = newChatGoogle({
         serviceTier: "flex",
       });
@@ -965,7 +964,7 @@ describe.each(coreModelInfo)(
       expect(result.response_metadata.serviceTier).toEqual("flex");
     });
 
-    test.only("service tier - priority", async () => {
+    test("service tier - priority", async () => {
       const llm = newChatGoogle({
         serviceTier: "priority",
       });
@@ -975,7 +974,7 @@ describe.each(coreModelInfo)(
       expect(result.response_metadata.serviceTier).toEqual("priority");
     });
 
-    test.only("service tier - priority header", async () => {
+    test("service tier - priority header", async () => {
       const llm = newChatGoogle({
         serviceTier: "flex", // This will be overridden by the custom value
         customHeaders: {
