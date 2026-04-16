@@ -120,7 +120,7 @@ test.skip(
       // Let's send Tommie on his way. We'll check in on his summary every few observations to watch him evolve
       for (let i = 0; i < observations.length; i += 1) {
         const observation = observations[i];
-        // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+        // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
         // @ts-expect-error unused var
         const [, reaction] = await tommie.generateReaction(observation);
         // console.log("\x1b[32m", observation, "\x1b[0m", reaction);
@@ -244,7 +244,7 @@ test.skip(
         await eve.addMemory(observation, new Date());
       }
 
-      // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+      // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
       // @ts-expect-error unused var
       const eveInitialSummary: string = await eve.getSummary({
         forceRefresh: true,
@@ -285,15 +285,14 @@ test.skip(
         initialObservation: string
       ): Promise<void> => {
         // Starts the conversation bewteen two agents
-        const [, observation] = await agents[1].generateReaction(
-          initialObservation
-        );
+        const [, observation] =
+          await agents[1].generateReaction(initialObservation);
         // console.log("Initial reply:", observation);
 
         while (true) {
           let breakDialogue = false;
           for (const agent of agents) {
-            // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+            // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
             // @ts-expect-error unused var
             const [stayInDialogue, agentObservation] =
               await agent.generateDialogueResponse(observation);

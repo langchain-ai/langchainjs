@@ -2,7 +2,7 @@ import type { InteropZodObject } from "@langchain/core/utils/types";
 import type { RunnableCallable } from "./RunnableCallable.js";
 import type { AgentMiddleware } from "./middleware/types.js";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 type AgentNode = RunnableCallable<any, any>;
 
 /**
@@ -38,12 +38,15 @@ export class StateManager {
    */
   getState(name: string) {
     const middlewareNodes = this.#nodes.get(name) ?? [];
-    const state = middlewareNodes.reduce((prev, node) => {
-      return {
-        ...prev,
-        ...((node.getState() as Record<string, unknown>) ?? {}),
-      };
-    }, {} as Record<string, unknown>);
+    const state = middlewareNodes.reduce(
+      (prev, node) => {
+        return {
+          ...prev,
+          ...((node.getState() as Record<string, unknown>) ?? {}),
+        };
+      },
+      {} as Record<string, unknown>
+    );
 
     /**
      * we internally reset the jumpTo property and shouldn't propagate this value

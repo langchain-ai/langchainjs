@@ -4,7 +4,7 @@ import { ensureConfig, type RunnableConfig } from "./config.js";
 
 export type RouterInput = {
   key: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   input: any;
 };
 
@@ -38,7 +38,7 @@ export type RouterInput = {
 export class RouterRunnable<
   RunInput extends RouterInput,
   RunnableInput,
-  RunOutput
+  RunOutput,
 > extends Runnable<RunInput, RunOutput> {
   static lc_name() {
     return "RouterRunnable";

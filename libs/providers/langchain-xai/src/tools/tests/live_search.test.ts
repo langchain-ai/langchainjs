@@ -5,7 +5,7 @@ import {
   xaiLiveSearch,
   XAILiveSearchTool,
 } from "../live_search.js";
-import { ChatXAI } from "../../chat_models.js";
+import { ChatXAI } from "../../chat_models/index.js";
 
 describe("xaiLiveSearch tool", () => {
   test("creates a tool with correct provider definition", async () => {

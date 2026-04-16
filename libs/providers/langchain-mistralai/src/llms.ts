@@ -180,6 +180,7 @@ export class MistralAI
 
   constructor(fields?: MistralAIInput) {
     super(fields ?? {});
+    this._addVersion("@langchain/mistralai", __PKG_VERSION__);
 
     this.model = fields?.model ?? this.model;
     this.temperature = fields?.temperature ?? this.temperature;
@@ -343,7 +344,7 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
                   choice.message.content += content;
                   choice.finishReason = part.finishReason ?? "length";
                 }
-                // eslint-disable-next-line no-void
+                // oxlint-disable-next-line no-void
                 void runManager?.handleLLMNewToken(content, {
                   prompt: part.index,
                   completion: part.index,
@@ -447,7 +448,9 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
           if (this.useFim) {
             // Use FIM API for code completion models like codestral
             if (stream) {
-              res = await client.fim.stream(request);
+              // The Mistral SDK requires `stream: true` to be explicitly set
+              // in the request body for streaming to work properly
+              res = await client.fim.stream({ ...request, stream: true });
             } else {
               res = await client.fim.complete(request);
             }
@@ -466,13 +469,15 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
               stop: request.stop,
             };
             if (stream) {
-              res = await client.chat.stream(chatRequest);
+              // The Mistral SDK requires `stream: true` to be explicitly set
+              // in the request body for streaming to work properly
+              res = await client.chat.stream({ ...chatRequest, stream: true });
             } else {
               res = await client.chat.complete(chatRequest);
             }
           }
           return res;
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (e: any) {
           if (
             e.message?.includes("status: 400") ||
@@ -515,7 +520,7 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
         },
       });
       yield chunk;
-      // eslint-disable-next-line no-void
+      // oxlint-disable-next-line no-void
       void runManager?.handleLLMNewToken(chunk.text ?? "");
     }
     if (options.signal?.aborted) {

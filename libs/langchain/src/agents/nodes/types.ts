@@ -1,8 +1,9 @@
-import type { LanguageModelLike } from "@langchain/core/language_models/base";
+import type { AgentLanguageModelLike as LanguageModelLike } from "../model.js";
 import type { BaseMessage, SystemMessage } from "@langchain/core/messages";
 import type { ServerTool, ClientTool } from "@langchain/core/tools";
 
 import type { Runtime, AgentBuiltInState } from "../runtime.js";
+import type { ResponseFormatInput } from "../responses.js";
 
 /**
  * Configuration for modifying a model call at runtime.
@@ -13,7 +14,8 @@ import type { Runtime, AgentBuiltInState } from "../runtime.js";
  */
 export interface ModelRequest<
   TState extends Record<string, unknown> = Record<string, unknown>,
-  TContext = unknown
+  TContext = unknown,
+  TResponseFormat extends ResponseFormatInput = ResponseFormatInput,
 > {
   /**
    * The model to use for this step.
@@ -86,6 +88,12 @@ export interface ModelRequest<
    * The current agent state (includes both middleware state and built-in state).
    */
   state: TState & AgentBuiltInState;
+
+  /**
+   * Structured output configuration for this step.
+   * Middleware can override this to enable or change structured output dynamically.
+   */
+  responseFormat?: TResponseFormat;
 
   /**
    * The runtime context containing metadata, signal, writer, interrupt, etc.

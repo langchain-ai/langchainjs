@@ -179,12 +179,25 @@ function mapToolSourceToSearchSource(
  *
  * This tool is executed server-side by the xAI API.
  *
+ * @deprecated The Live Search API was deprecated by xAI on December 15, 2025.
+ * Use the new agentic tool calling API instead with `xaiWebSearch()` and `xaiXSearch()`.
+ *
+ * @example Migration to new tools:
+ * ```typescript
+ * // Old (deprecated):
+ * const searchTool = tools.xaiLiveSearch({ maxSearchResults: 5 });
+ *
+ * // New (recommended):
+ * const webSearch = tools.xaiWebSearch({ allowedDomains: ["example.com"] });
+ * const xSearch = tools.xaiXSearch({ allowedXHandles: ["elonmusk"] });
+ * ```
+ *
  * @example
  * ```typescript
  * import { ChatXAI, tools } from "@langchain/xai";
  *
  * const llm = new ChatXAI({
- *   model: "grok-beta",
+ *   model: "grok-3-fast",
  * });
  *
  * const searchTool = tools.xaiLiveSearch({

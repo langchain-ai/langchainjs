@@ -15,6 +15,8 @@ export interface TavilyExtractInput {
   includeImages?: boolean;
   format?: "markdown" | "text";
   includeFavicon?: boolean;
+  includeUsage?: boolean;
+  query?: string;
 }
 
 export type TavilyExtractAPIRetrieverFields = ToolParams & {
@@ -57,6 +59,18 @@ export type TavilyExtractAPIRetrieverFields = ToolParams & {
    * @default false
    */
   includeFavicon?: boolean;
+
+  /**
+   * Whether to include usage information (credits) in the response.
+   *
+   * @default false
+   */
+  includeUsage?: boolean;
+
+  /**
+   * User intent query for reranking extracted content chunks.
+   */
+  query?: string;
 
   /**
    * The name of the tool.
@@ -131,6 +145,10 @@ Set to True when visualizations are needed for better context or understanding.
 
 Default is False (extracts text content only).`
     ),
+  query: z
+    .string()
+    .optional()
+    .describe("User intent query for reranking extracted content chunks."),
 });
 
 export class TavilyExtract extends StructuredTool<typeof inputSchema> {
@@ -160,6 +178,10 @@ export class TavilyExtract extends StructuredTool<typeof inputSchema> {
   format?: "markdown" | "text";
 
   includeFavicon?: boolean;
+
+  includeUsage?: boolean;
+
+  query?: string;
 
   private apiWrapper: TavilyExtractAPIWrapper;
 
@@ -192,6 +214,8 @@ export class TavilyExtract extends StructuredTool<typeof inputSchema> {
     this.includeImages = params.includeImages;
     this.format = params.format;
     this.includeFavicon = params.includeFavicon;
+    this.includeUsage = params.includeUsage;
+    this.query = params.query;
   }
 
   async _call(
@@ -199,10 +223,11 @@ export class TavilyExtract extends StructuredTool<typeof inputSchema> {
     _runManager?: CallbackManagerForToolRun
   ): Promise<TavilyExtractResponse | { error: string }> {
     try {
-      const { urls, extractDepth, includeImages } = input;
+      const { urls, extractDepth, includeImages, query } = input;
 
       const effectiveExtractDepth = this.extractDepth ?? extractDepth;
       const effectiveIncludeImages = this.includeImages ?? includeImages;
+      const effectiveQuery = this.query ?? query;
 
       const rawResults = await this.apiWrapper.rawResults({
         urls,
@@ -210,6 +235,8 @@ export class TavilyExtract extends StructuredTool<typeof inputSchema> {
         includeImages: effectiveIncludeImages,
         format: this.format,
         includeFavicon: this.includeFavicon,
+        includeUsage: this.includeUsage,
+        query: effectiveQuery,
       });
 
       if (
@@ -227,6 +254,7 @@ export class TavilyExtract extends StructuredTool<typeof inputSchema> {
           includeImages: effectiveIncludeImages,
           format: this.format,
           includeFavicon: this.includeFavicon,
+          includeUsage: this.includeUsage,
         };
         const suggestions = generateSuggestions(searchParams);
 

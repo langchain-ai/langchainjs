@@ -31,13 +31,15 @@ export function _convertToOpenAITool(
      */
     strict?: boolean;
   }
-): OpenAIClient.ChatCompletionTool {
-  let toolDef: OpenAIClient.ChatCompletionTool | undefined;
+): OpenAIClient.Chat.Completions.ChatCompletionFunctionTool {
+  let toolDef: OpenAIClient.Chat.Completions.ChatCompletionFunctionTool;
 
   if (isLangChainTool(tool)) {
-    toolDef = formatToOpenAITool(tool);
+    toolDef = formatToOpenAITool(
+      tool
+    ) as OpenAIClient.Chat.Completions.ChatCompletionFunctionTool;
   } else {
-    toolDef = tool as ToolDefinition;
+    toolDef = tool as OpenAIClient.Chat.Completions.ChatCompletionFunctionTool;
   }
 
   if (fields?.strict !== undefined) {
@@ -315,7 +317,7 @@ export function isOpenAICustomTool(
 }
 
 export function parseCustomToolCall(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   rawToolCall: Record<string, any>
 ): CustomToolCall | undefined {
   if (rawToolCall.type !== "custom_tool_call") {
@@ -350,7 +352,7 @@ export type ComputerToolCall = ToolCall & {
  * @returns A ComputerToolCall object if valid, undefined otherwise
  */
 export function parseComputerCall(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   rawToolCall: Record<string, any>
 ): ComputerToolCall | undefined {
   if (rawToolCall.type !== "computer_call") {

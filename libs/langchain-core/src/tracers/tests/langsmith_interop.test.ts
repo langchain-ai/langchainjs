@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 
 import { vi, test, beforeEach, afterEach, afterAll, expect } from "vitest";
 import { traceable } from "langsmith/traceable";
@@ -164,9 +164,8 @@ test.each(["true", "false"])(
 test.each(["true", "false"])(
   "traceables nested within runnables with a context var set and with background callbacks %s",
   async (value) => {
-    const { setContextVariable, getContextVariable } = await import(
-      "../../context.js"
-    );
+    const { setContextVariable, getContextVariable } =
+      await import("../../context.js");
     process.env.LANGCHAIN_CALLBACKS_BACKGROUND = value;
 
     setContextVariable("foo", "bar");
@@ -318,7 +317,7 @@ test.each(["true", "false"])(
       return call[0].startsWith("https://api.smith.langchain.com/runs");
     });
 
-    expect(relevantCalls.length).toEqual(4);
+    expect(relevantCalls.length).toEqual(3);
     const firstCallParams = JSON.parse(
       decoder.decode((relevantCalls[0][1] as any).body)
     );
@@ -328,29 +327,7 @@ test.each(["true", "false"])(
     const thirdCallParams = JSON.parse(
       decoder.decode((relevantCalls[2][1] as any).body)
     );
-    const fourthCallParams = JSON.parse(
-      decoder.decode((relevantCalls[3][1] as any).body)
-    );
     expect(firstCallParams).toMatchObject({
-      id: firstCallParams.id,
-      name: "RunnableLambda",
-      start_time: expect.any(String),
-      serialized: {
-        lc: 1,
-        type: "not_implemented",
-        id: ["langchain_core", "runnables", "RunnableLambda"],
-      },
-      events: [{ name: "start", time: expect.any(String) }],
-      inputs: {
-        input: "",
-      },
-      run_type: "chain",
-      extra: expect.any(Object),
-      tags: [],
-      trace_id: firstCallParams.id,
-      dotted_order: expect.any(String),
-    });
-    expect(secondCallParams).toMatchObject({
       id: expect.any(String),
       name: "aiGreet",
       start_time: expect.any(String),
@@ -373,31 +350,39 @@ test.each(["true", "false"])(
         ],
       },
       child_runs: [],
-      parent_run_id: firstCallParams.id,
-      trace_id: firstCallParams.id,
-      dotted_order: expect.stringContaining(`${firstCallParams.dotted_order}.`),
+      parent_run_id: thirdCallParams.id,
+      trace_id: thirdCallParams.id,
+      dotted_order: expect.stringContaining(`${thirdCallParams.dotted_order}.`),
       tags: [],
     });
-    expect(thirdCallParams).toMatchObject({
+    expect(secondCallParams).toMatchObject({
       end_time: expect.any(Number),
       outputs: {
         outputs: ["H", "e", "l", "l", "o", "!", "D", "a", "v", "i", "d"],
       },
-      parent_run_id: firstCallParams.id,
+      parent_run_id: thirdCallParams.id,
       extra: expect.any(Object),
       dotted_order: secondCallParams.dotted_order,
-      trace_id: firstCallParams.id,
+      trace_id: thirdCallParams.id,
       tags: [],
     });
-    expect(fourthCallParams).toMatchObject({
+    expect(thirdCallParams).toMatchObject({
+      name: "RunnableLambda",
+      start_time: expect.any(String),
       end_time: expect.any(Number),
+      serialized: {
+        lc: 1,
+        type: "not_implemented",
+        id: ["langchain_core", "runnables", "RunnableLambda"],
+      },
+      inputs: {},
       outputs: { output: "Hello!David" },
       events: [
         { name: "start", time: expect.any(String) },
         { name: "end", time: expect.any(String) },
       ],
-      trace_id: firstCallParams.id,
-      dotted_order: firstCallParams.dotted_order,
+      trace_id: expect.any(String),
+      dotted_order: expect.stringContaining(`${thirdCallParams.id}`),
     });
   }
 );
@@ -523,9 +508,8 @@ test.each(["true", "false"])(
 test.each(["true", "false"])(
   "runnables nested within traceables and a context var set with background callbacks %s",
   async (value) => {
-    const { setContextVariable, getContextVariable } = await import(
-      "../../context.js"
-    );
+    const { setContextVariable, getContextVariable } =
+      await import("../../context.js");
     process.env.LANGCHAIN_CALLBACKS_BACKGROUND = value;
     setContextVariable("foo", "bar");
 
@@ -678,11 +662,13 @@ test.each(["true", "false"])(
       // Just consume iterator
     }
 
+    await client.awaitPendingTraceBatches();
+
     const relevantCalls = fetchMock.mock.calls.filter((call: any) => {
       return call[0].startsWith("https://api.smith.langchain.com/runs");
     });
 
-    expect(relevantCalls.length).toEqual(4);
+    expect(relevantCalls.length).toEqual(3);
     const firstCallParams = JSON.parse(
       decoder.decode((relevantCalls[0][1] as any).body)
     );
@@ -691,9 +677,6 @@ test.each(["true", "false"])(
     );
     const thirdCallParams = JSON.parse(
       decoder.decode((relevantCalls[2][1] as any).body)
-    );
-    const fourthCallParams = JSON.parse(
-      decoder.decode((relevantCalls[3][1] as any).body)
     );
     expect(firstCallParams).toMatchObject({
       id: firstCallParams.id,
@@ -727,15 +710,22 @@ test.each(["true", "false"])(
       name: "RunnableLambda",
       parent_run_id: firstCallParams.id,
       start_time: expect.any(String),
+      end_time: expect.any(Number),
       serialized: {
         lc: 1,
         type: "not_implemented",
         id: ["langchain_core", "runnables", "RunnableLambda"],
       },
-      events: [{ name: "start", time: expect.any(String) }],
       inputs: {
-        input: "",
+        input: [
+          JSON.parse(JSON.stringify(new HumanMessage({ content: "Hello!" }))),
+        ],
       },
+      outputs: { output: "Hello!" },
+      events: [
+        { name: "start", time: expect.any(String) },
+        { name: "end", time: expect.any(String) },
+      ],
       run_type: "chain",
       extra: expect.any(Object),
       tags: [],
@@ -743,17 +733,6 @@ test.each(["true", "false"])(
       dotted_order: expect.stringContaining(`${firstCallParams.dotted_order}.`),
     });
     expect(thirdCallParams).toMatchObject({
-      end_time: expect.any(Number),
-      outputs: { output: "Hello!" },
-      events: [
-        { name: "start", time: expect.any(String) },
-        { name: "end", time: expect.any(String) },
-      ],
-      trace_id: firstCallParams.id,
-      dotted_order: expect.stringContaining(`${firstCallParams.dotted_order}.`),
-      parent_run_id: firstCallParams.id,
-    });
-    expect(fourthCallParams).toMatchObject({
       end_time: expect.any(Number),
       outputs: {
         outputs: [
@@ -1284,15 +1263,15 @@ test("LangChain V2 tracer creates and updates runs with replicas", async () => {
   });
   expect(relevantCalls[5][1].method).toEqual("PATCH");
   expect(sixthCallParams).toMatchObject({
-    session_name: "replica2",
-    parent_run_id: secondCallParams.id,
-  });
-  expect(sixthCallParams.reference_example_id).toEqual(undefined);
-  expect(relevantCalls[6][1].method).toEqual("PATCH");
-  expect(seventhCallParams).toMatchObject({
     session_name: "replica1",
     reference_example_id: referenceExampleId,
   });
+  expect(relevantCalls[6][1].method).toEqual("PATCH");
+  expect(seventhCallParams).toMatchObject({
+    session_name: "replica2",
+    parent_run_id: secondCallParams.id,
+  });
+  expect(seventhCallParams.reference_example_id).toEqual(undefined);
   expect(relevantCalls[7][1].method).toEqual("PATCH");
   expect(eighthCallParams).toMatchObject({
     session_name: "replica2",

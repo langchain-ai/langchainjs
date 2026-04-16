@@ -79,8 +79,8 @@ export class OutputFunctionsParser extends BaseLLMOutputParser<string> {
  * instance of `OutputFunctionsParser` to parse the output.
  */
 export class JsonOutputFunctionsParser<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Output extends Record<string, any> = Record<string, any>
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  Output extends Record<string, any> = Record<string, any>,
 > extends BaseCumulativeTransformOutputParser<Output> {
   static lc_name() {
     return "JsonOutputFunctionsParser";
@@ -132,7 +132,7 @@ export class JsonOutputFunctionsParser<
     return {
       ...functionCall,
       arguments: parsePartialJson(functionCall.arguments),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     } as Record<string, any> as Output;
   }
 
@@ -174,8 +174,8 @@ export class JsonOutputFunctionsParser<
  * to parse the output.
  */
 export class JsonKeyOutputFunctionsParser<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends Record<string, any> = Record<string, any>
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  T extends Record<string, any> = Record<string, any>,
 > extends BaseLLMOutputParser<T> {
   static lc_name() {
     return "JsonKeyOutputFunctionsParser";

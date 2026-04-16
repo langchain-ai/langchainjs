@@ -16,7 +16,7 @@
     "type": "git",
     "url": "git+ssh://git@github.com/langchain-ai/langchainjs.git"
   },
-  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-weaviate/",
+  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/community/langchain-weaviate/",
   "scripts": {
     "build": "turbo build:compile --filter @langchain/weaviate --output-logs new-only",
     "build:compile": "tsdown",
@@ -39,8 +39,7 @@
     "@langchain/core": "^1.0.0"
   },
   "devDependencies": {
-    "@langchain/core": "workspace:*",
-    "@langchain/eslint": "workspace:*",
+    "@langchain/core": "workspace:^",
     "@langchain/openai": "workspace:^",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
@@ -50,8 +49,7 @@
     "dpdm": "^3.14.0",
     "eslint": "^9.34.0",
     "langchain": "workspace:*",
-    "prettier": "^2.8.3",
-    "rollup": "^4.5.2",
+    "prettier": "^3.5.0",
     "typescript": "~5.8.3",
     "vitest": "^3.2.4"
   },

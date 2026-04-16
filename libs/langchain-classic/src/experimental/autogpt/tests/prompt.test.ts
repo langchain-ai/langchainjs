@@ -6,7 +6,7 @@ const mockTokenCounter = async (text: string): Promise<number> => text.length;
 
 // Mock vector store retriever interface
 // Todo: replace any with actual interface
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 const mockMemory: any = {
   invoke: async () => [{ pageContent: "relevant content", metadata: {} }],
 };
@@ -65,11 +65,11 @@ describe("AutoGPTPrompt", () => {
 
     //  Check the content of the previous messages
     const humanMessage = formattedMessages.find(
-      // eslint-disable-next-line no-instanceof/no-instanceof
+      // oxlint-disable-next-line no-instanceof/no-instanceof
       (msg) => msg instanceof HumanMessage
     );
     const systemMessage = formattedMessages.find(
-      // eslint-disable-next-line no-instanceof/no-instanceof
+      // oxlint-disable-next-line no-instanceof/no-instanceof
       (msg) => msg instanceof SystemMessage
     );
 

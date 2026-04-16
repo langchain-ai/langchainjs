@@ -1,5 +1,23 @@
 # @langchain/mcp-adapters
 
+## 1.1.3
+
+### Patch Changes
+
+- [#10005](https://github.com/langchain-ai/langchainjs/pull/10005) [`d1365a1`](https://github.com/langchain-ai/langchainjs/commit/d1365a125fc9d0d17120d923957841a33ba160cf) Thanks [@Oscar-Umana](https://github.com/Oscar-Umana)! - map mcp resource link content blocks to langchain url content block
+
+## 1.1.2
+
+### Patch Changes
+
+- [#9805](https://github.com/langchain-ai/langchainjs/pull/9805) [`6c8a335`](https://github.com/langchain-ai/langchainjs/commit/6c8a335ec6e14d27c99a0a49de6be3ac332e33b3) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(mcp-adapters): simplify complex JSON schemas for LLM compatibility (#9804)
+
+## 1.1.1
+
+### Patch Changes
+
+- [#9674](https://github.com/langchain-ai/langchainjs/pull/9674) [`2b36431`](https://github.com/langchain-ai/langchainjs/commit/2b36431babf0a4e4bc659c50659777c5228d3ac0) Thanks [@Nitinref](https://github.com/Nitinref)! - bump @modelcontextprotocol/sdk to address CVE-2025-66414
+
 ## 1.1.0
 
 ### Minor Changes

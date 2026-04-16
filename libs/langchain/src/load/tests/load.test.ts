@@ -72,11 +72,11 @@ test("serialize + deserialize custom classes", async () => {
     str,
     {
       PERSON_API_KEY: "a-key",
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     } as any,
     {
       "langchain/tests": { Person },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     } as any
   );
   expect(person2).toBeInstanceOf(Person);
@@ -103,11 +103,11 @@ test("serialize + deserialize custom classes", async () => {
       SPECIAL_PERSON_API_KEY: "b-key",
       SPECIAL_PERSON_NESTED_API_KEY: "n-key",
       SPECIAL_PERSON_INHERITED_API_KEY: "i-key",
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     } as any,
     {
       "langchain/tests": { SpecialPerson },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     } as any
   );
   expect(sperson2).toBeInstanceOf(SpecialPerson);
@@ -141,18 +141,6 @@ test("serialize + deserialize llm", async () => {
   );
   expect(llm2).toBeInstanceOf(OpenAI);
   expect(JSON.stringify(llm2, null, 2)).toBe(str);
-  // Accept secret as env var
-  const llm3 = await load<OpenAI>(
-    str,
-    {},
-    {},
-    {
-      llms__openai: { OpenAI },
-    }
-  );
-  expect(llm3).toBeInstanceOf(OpenAI);
-  expect(llm.openAIApiKey).toBe(llm3.openAIApiKey);
-  expect(JSON.stringify(llm3, null, 2)).toBe(str);
 });
 
 test("serialize + deserialize with new and old ids", async () => {
@@ -193,7 +181,7 @@ test("serialize + deserialize runnable sequence with new and old ids", async () 
   });
   const runnable2 = await load<RunnableSequence>(
     strWithOldId,
-    {},
+    { OPENAI_API_KEY: "openai-key" },
     {},
     {
       chat_models__openai: { ChatOpenAI },
@@ -202,7 +190,7 @@ test("serialize + deserialize runnable sequence with new and old ids", async () 
   expect(runnable2).toBeInstanceOf(RunnableSequence);
   const runnable3 = await load<RunnableSequence>(
     strWithNewId,
-    {},
+    { OPENAI_API_KEY: "openai-key" },
     {},
     {
       chat_models__openai: { ChatOpenAI },
@@ -234,7 +222,7 @@ test("Should load traces even if the constructor name changes (minified environm
 
   const llm2 = await load<OpenAI>(
     str,
-    { COHERE_API_KEY: "cohere-key" },
+    { OPENAI_API_KEY: "openai-key" },
     { "langchain/llms/openai": { OpenAI } }
   );
   // console.log(JSON.stringify(llm2, null, 2));

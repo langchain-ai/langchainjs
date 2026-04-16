@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 import {
   AsyncCaller,
@@ -36,7 +36,7 @@ import { getAnthropicAPI } from "./utils/anthropic.js";
 
 export abstract class GoogleConnection<
   CallOptions extends AsyncCallerCallOptions,
-  ResponseType extends GoogleResponse
+  ResponseType extends GoogleResponse,
 > {
   caller: AsyncCaller;
 
@@ -95,7 +95,7 @@ export abstract class GoogleConnection<
 
   async _buildOpts(
     data: unknown | undefined,
-    _options: CallOptions,
+    options: CallOptions,
     requestHeaders: Record<string, string> = {}
   ): Promise<GoogleAbstractedClientOps> {
     const url = await this.buildUrl();
@@ -112,6 +112,7 @@ export abstract class GoogleConnection<
       url,
       method,
       headers,
+      signal: options?.signal,
     };
     if (data && method === "POST") {
       opts.data = data;
@@ -140,10 +141,10 @@ export abstract class GoogleConnection<
 }
 
 export abstract class GoogleHostConnection<
-    CallOptions extends AsyncCallerCallOptions,
-    ResponseType extends GoogleResponse,
-    AuthOptions
-  >
+  CallOptions extends AsyncCallerCallOptions,
+  ResponseType extends GoogleResponse,
+  AuthOptions,
+>
   extends GoogleConnection<CallOptions, ResponseType>
   implements GoogleConnectionParams<AuthOptions>
 {
@@ -231,7 +232,7 @@ export abstract class GoogleHostConnection<
 
 export abstract class GoogleRawConnection<
   CallOptions extends AsyncCallerCallOptions,
-  AuthOptions
+  AuthOptions,
 > extends GoogleHostConnection<CallOptions, GoogleRawResponse, AuthOptions> {
   async _buildOpts(
     data: unknown | undefined,
@@ -245,11 +246,11 @@ export abstract class GoogleRawConnection<
 }
 
 export abstract class GoogleAIConnection<
-    CallOptions extends AsyncCallerCallOptions,
-    InputType,
-    AuthOptions,
-    ResponseType extends GoogleResponse
-  >
+  CallOptions extends AsyncCallerCallOptions,
+  InputType,
+  AuthOptions,
+  ResponseType extends GoogleResponse,
+>
   extends GoogleHostConnection<CallOptions, ResponseType, AuthOptions>
   implements GoogleAIBaseLLMInput<AuthOptions>
 {
@@ -445,7 +446,7 @@ export abstract class GoogleAIConnection<
 
 export abstract class AbstractGoogleLLMConnection<
   MessageType,
-  AuthOptions
+  AuthOptions,
 > extends GoogleAIConnection<
   BaseLanguageModelCallOptions,
   MessageType,

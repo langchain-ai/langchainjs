@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   BaseChatModel,
@@ -7,6 +7,7 @@ import {
   BindToolsInput,
   ToolChoice,
 } from "@langchain/core/language_models/chat_models";
+import type { ModelProfile } from "@langchain/core/language_models/profile";
 import { StructuredTool } from "@langchain/core/tools";
 import {
   BaseMessage,
@@ -191,6 +192,13 @@ export class FakeToolCallingChatModel extends BaseChatModel {
     return "fake";
   }
 
+  get profile(): ModelProfile {
+    return {
+      toolCalling: true,
+      structuredOutput: true,
+    };
+  }
+
   async _generate(
     messages: BaseMessage[],
     _options: this["ParsedCallOptions"],
@@ -259,7 +267,7 @@ export class FakeToolCallingChatModel extends BaseChatModel {
   }
 
   withStructuredOutput<
-    RunOutput extends Record<string, any> = Record<string, any>
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(_: unknown): Runnable<any> {
     if (!this.structuredResponse) {
       throw new Error("No structured response provided");

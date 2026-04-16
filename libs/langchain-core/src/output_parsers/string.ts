@@ -73,6 +73,10 @@ export class StringOutputParser extends BaseTransformOutputParser<string> {
           );
         }
         break;
+      case "reasoning":
+      case "thinking":
+      case "redacted_thinking":
+        return "";
       default:
         throw new Error(
           `Cannot coerce "${content.type}" message part into a string.`

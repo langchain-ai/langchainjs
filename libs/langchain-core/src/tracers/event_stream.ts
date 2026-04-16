@@ -21,7 +21,7 @@ export type StreamEventData = {
    * won't be known until the *END* of the runnable when it has finished streaming
    * its inputs.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   input?: any;
 
   /**
@@ -31,7 +31,7 @@ export type StreamEventData = {
    * though there might be some exceptions for special cased runnables (e.g., like
    * chat models), which may return more information.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   output?: any;
 
   /**
@@ -39,8 +39,14 @@ export type StreamEventData = {
    * chunks support addition in general, and adding them up should result
    * in the output of the runnable that generated the event.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   chunk?: any;
+
+  /**
+   * Error message if the runnable that generated the event failed.
+   * This field will only be present if the runnable failed.
+   */
+  error?: string;
 };
 
 /**
@@ -84,7 +90,7 @@ export type StreamEvent = {
    */
   tags?: string[];
   /** Metadata associated with the runnable that generated this event. */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   metadata: Record<string, any>;
   /**
    * Event data.
@@ -97,15 +103,14 @@ export type StreamEvent = {
 type RunInfo = {
   name: string;
   tags: string[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   metadata: Record<string, any>;
   runType: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   inputs?: Record<string, any>;
 };
 
-export interface EventStreamCallbackHandlerInput
-  extends BaseCallbackHandlerInput {
+export interface EventStreamCallbackHandlerInput extends BaseCallbackHandlerInput {
   autoClose?: boolean;
   includeNames?: string[];
   includeTypes?: string[];
@@ -120,7 +125,7 @@ function assignName({
   serialized,
 }: {
   name?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   serialized?: Record<string, any>;
 }): string {
   if (name !== undefined) {
@@ -327,9 +332,9 @@ export class EventStreamCallbackHandler
   async sendEndEvent(payload: StreamEvent, run: RunInfo) {
     const tappedPromise = this.tappedPromises.get(payload.run_id);
     if (tappedPromise !== undefined) {
-      // eslint-disable-next-line no-void
+      // oxlint-disable-next-line no-void
       void tappedPromise.then(() => {
-        // eslint-disable-next-line no-void
+        // oxlint-disable-next-line no-void
         void this.send(payload, run);
       });
     } else {
@@ -367,7 +372,7 @@ export class EventStreamCallbackHandler
   async onLLMNewToken(
     run: Run,
     token: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     kwargs?: { chunk: any }
   ): Promise<void> {
     const runInfo = this.runInfoMap.get(run.id);
@@ -421,7 +426,7 @@ export class EventStreamCallbackHandler
     }
     const generations: ChatGeneration[][] | Generation[][] | undefined =
       run.outputs?.generations;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     let output: BaseMessage | Record<string, any> | undefined;
     if (runInfo.runType === "chat_model") {
       for (const generation of generations ?? []) {
@@ -582,6 +587,34 @@ export class EventStreamCallbackHandler
     );
   }
 
+  async onToolError(run: Run): Promise<void> {
+    const runInfo = this.runInfoMap.get(run.id);
+    this.runInfoMap.delete(run.id);
+    if (runInfo === undefined) {
+      throw new Error(`onToolEnd: Run ID ${run.id} not found in run map.`);
+    }
+    if (runInfo.inputs === undefined) {
+      throw new Error(
+        `onToolEnd: Run ID ${run.id} is a tool call, and is expected to have traced inputs.`
+      );
+    }
+
+    await this.sendEndEvent(
+      {
+        event: "on_tool_error",
+        data: {
+          input: runInfo.inputs,
+          error: run.error,
+        },
+        run_id: run.id,
+        name: runInfo.name,
+        tags: runInfo.tags,
+        metadata: runInfo.metadata,
+      },
+      runInfo
+    );
+  }
+
   async onRetrieverStart(run: Run): Promise<void> {
     const runName = assignName(run);
     const runType = "retriever";
@@ -634,7 +667,7 @@ export class EventStreamCallbackHandler
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   async handleCustomEvent(eventName: string, data: any, runId: string) {
     const runInfo = this.runInfoMap.get(runId);
     if (runInfo === undefined) {
@@ -657,9 +690,9 @@ export class EventStreamCallbackHandler
 
   async finish() {
     const pendingPromises = [...this.tappedPromises.values()];
-    // eslint-disable-next-line no-void
+    // oxlint-disable-next-line no-void
     void Promise.all(pendingPromises).finally(() => {
-      // eslint-disable-next-line no-void
+      // oxlint-disable-next-line no-void
       void this.writer.close();
     });
   }

@@ -100,7 +100,7 @@ export class JsonListKeysTool extends Tool {
 
   constructor(fields: JsonSpec | JsonToolFields) {
     if (!("jsonSpec" in fields)) {
-      // eslint-disable-next-line no-param-reassign
+      // oxlint-disable-next-line no-param-reassign
       fields = { jsonSpec: fields };
     }
     super(fields);

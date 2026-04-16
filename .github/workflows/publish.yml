@@ -4,6 +4,9 @@ name: 🦋 Changesets Release
 on:
   workflow_call:
 
+permissions:
+  contents: read
+
 env:
   CI: true
 
@@ -21,15 +24,15 @@ jobs:
       pull-requests: write # enable opening a PR for the release
     steps:
       - name: ⬇️ Checkout repo
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 0
 
       - name: 📦 Setup pnpm
-        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
+        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5.0.0
 
       - name: ⎔ Setup node
-        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version-file: ".nvmrc"
           cache: "pnpm"
@@ -50,7 +53,7 @@ jobs:
         # and this action will build + publish to npm.
       - name: 🚀 PR / Publish
         id: changesets
-        uses: changesets/action@e0145edc7d9d8679003495b11f87bd8ef63c0cba
+        uses: changesets/action@6a0a831ff30acef54f2c6aa1cbbc1096b066edaf
         with:
           version: pnpm run changeset:version
           commit: "chore: version packages"

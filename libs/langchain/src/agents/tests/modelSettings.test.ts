@@ -26,7 +26,7 @@ describe("modelSettings middleware support", () => {
     const model = new ChatAnthropic({
       model: "claude-sonnet-4-20250514",
       temperature: 0,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       createClient: () => mockClient as any,
     });
 

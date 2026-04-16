@@ -8,6 +8,7 @@ import {
 
 export default getBuildConfig({
   external: ["langsmith", "eventemitter3"],
+  inlineOnly: false,
   entry: [
     "./src/index.ts",
     "./src/load/index.ts",

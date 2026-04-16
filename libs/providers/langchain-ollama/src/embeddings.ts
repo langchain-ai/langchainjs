@@ -1,6 +1,6 @@
 import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// oxlint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore CJS type resolution workaround
 import { Ollama } from "ollama/browser";
 import type { Options as OllamaOptions } from "ollama";

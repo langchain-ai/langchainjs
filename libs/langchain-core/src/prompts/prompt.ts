@@ -21,11 +21,11 @@ import { MessageContent, ContentBlock } from "../messages/index.js";
  * @augments BasePromptTemplateInput
  */
 export interface PromptTemplateInput<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   PartialVariableName extends string = any,
-  Format extends TemplateFormat = TemplateFormat
+  Format extends TemplateFormat = TemplateFormat,
 > extends BasePromptTemplateInput<RunInput, PartialVariableName> {
   /**
    * The prompt template
@@ -73,7 +73,7 @@ type NonAlphanumeric =
  */
 type ExtractTemplateParamsRecursive<
   T extends string,
-  Result extends string[] = []
+  Result extends string[] = [],
 > = T extends `${string}{${infer Param}}${infer Rest}`
   ? Param extends `${NonAlphanumeric}${string}`
     ? ExtractTemplateParamsRecursive<Rest, Result> // for non-template variables that look like template variables e.g. see https://github.com/langchain-ai/langchainjs/blob/main/langchain/src/chains/query_constructor/prompt.ts
@@ -83,13 +83,13 @@ type ExtractTemplateParamsRecursive<
 export type ParamsFromFString<T extends string> = {
   [Key in
     | ExtractTemplateParamsRecursive<T>[number]
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     | (string & Record<never, never>)]: any;
 };
 
 export type ExtractedFStringParams<
   T extends string,
-  RunInput extends InputValues = Symbol
+  RunInput extends InputValues = Symbol,
 > = RunInput extends Symbol ? ParamsFromFString<T> : RunInput;
 
 /**
@@ -108,11 +108,11 @@ export type ExtractedFStringParams<
  * ```
  */
 export class PromptTemplate<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunInput extends InputValues = any,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    PartialVariableName extends string = any
-  >
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput extends InputValues = any,
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  PartialVariableName extends string = any,
+>
   extends BaseStringPromptTemplate<RunInput, PartialVariableName>
   implements PromptTemplateInput<RunInput, PartialVariableName>
 {
@@ -212,7 +212,7 @@ export class PromptTemplate<
    */
   static fromTemplate<
     RunInput extends InputValues = Symbol,
-    T extends string = string
+    T extends string = string,
   >(
     template: T,
     options?: Omit<
@@ -223,7 +223,7 @@ export class PromptTemplate<
 
   static fromTemplate<
     RunInput extends InputValues = Symbol,
-    T extends string = string
+    T extends string = string,
   >(
     template: T,
     options?: Omit<
@@ -234,7 +234,7 @@ export class PromptTemplate<
 
   static fromTemplate<
     RunInput extends InputValues = Symbol,
-    T extends string = string
+    T extends string = string,
   >(
     template: T,
     options?: Omit<
@@ -245,7 +245,7 @@ export class PromptTemplate<
 
   static fromTemplate<
     RunInput extends InputValues = Symbol,
-    T extends string = string
+    T extends string = string,
   >(
     template: T,
     options?: Omit<
@@ -263,7 +263,7 @@ export class PromptTemplate<
 
     return new PromptTemplate({
       // Rely on extracted types
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       inputVariables: [...names] as any[],
       templateFormat,
       template,

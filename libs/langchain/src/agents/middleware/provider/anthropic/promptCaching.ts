@@ -1,5 +1,4 @@
 import { z } from "zod/v3";
-import { ContentBlock } from "@langchain/core/messages";
 import { InferInteropZodInput } from "@langchain/core/utils/types";
 
 import { ConfigurableModel } from "../../../../chat_models/universal.js";
@@ -83,7 +82,7 @@ class PromptCachingMiddlewareError extends Error {
  * import { anthropicPromptCachingMiddleware } from "langchain";
  *
  * const agent = createAgent({
- *   model: "anthropic:claude-3-5-sonnet",
+ *   model: "anthropic:claude-sonnet-4-5",
  *   middleware: [
  *     anthropicPromptCachingMiddleware()
  *   ]
@@ -99,7 +98,7 @@ class PromptCachingMiddlewareError extends Error {
  * });
  *
  * const agent = createAgent({
- *   model: "anthropic:claude-3-5-sonnet",
+ *   model: "anthropic:claude-sonnet-4-5",
  *   systemPrompt: "You are a helpful assistant with deep knowledge of...", // Long system prompt
  *   middleware: [cachingMiddleware]
  * });
@@ -109,7 +108,7 @@ class PromptCachingMiddlewareError extends Error {
  * Conditional caching based on runtime context
  * ```typescript
  * const agent = createAgent({
- *   model: "anthropic:claude-3-5-sonnet",
+ *   model: "anthropic:claude-sonnet-4-5",
  *   middleware: [
  *     anthropicPromptCachingMiddleware({
  *       enableCaching: true,
@@ -133,7 +132,7 @@ class PromptCachingMiddlewareError extends Error {
  * Optimal setup for customer support chatbot
  * ```typescript
  * const supportAgent = createAgent({
- *   model: "anthropic:claude-3-5-sonnet",
+ *   model: "anthropic:claude-sonnet-4-5",
  *   systemPrompt: `You are a customer support agent for ACME Corp.
  *
  *     Company policies:
@@ -232,56 +231,22 @@ export function anthropicPromptCachingMiddleware(
       }
 
       /**
-       * Add cache_control to the last message
+       * The cache_control is applied at the final message formatting layer in ChatAnthropic,
+       * which avoids issues with message content block manipulation during earlier
+       * processing stages (e.g., streaming response reassembly).
+       *
+       * @see https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
        */
-      const lastMessage = request.messages.at(-1);
-      if (!lastMessage) {
-        return handler(request);
-      }
-
-      const NewMessageConstructor =
-        Object.getPrototypeOf(lastMessage).constructor;
-      if (Array.isArray(lastMessage.content)) {
-        const newMessage = new NewMessageConstructor({
-          ...lastMessage,
-          content: [
-            ...lastMessage.content.slice(0, -1),
-            {
-              ...lastMessage.content.at(-1),
-              cache_control: {
-                type: "ephemeral",
-                ttl,
-              },
-            } as ContentBlock,
-          ],
-        });
-        return handler({
-          ...request,
-          messages: [...request.messages.slice(0, -1), newMessage],
-        });
-      } else if (typeof lastMessage.content === "string") {
-        const newMessage = new NewMessageConstructor({
-          ...lastMessage,
-          content: [
-            {
-              type: "text",
-              text: lastMessage.content,
-              cache_control: {
-                type: "ephemeral",
-                ttl,
-              },
-            },
-          ],
-        });
-        return handler({
-          ...request,
-          messages: [...request.messages.slice(0, -1), newMessage],
-        });
-      }
-
-      throw new PromptCachingMiddlewareError(
-        "Last message content is not a string or array"
-      );
+      return handler({
+        ...request,
+        modelSettings: {
+          ...request.modelSettings,
+          cache_control: {
+            type: "ephemeral" as const,
+            ttl,
+          },
+        },
+      });
     },
   });
 }

@@ -15,34 +15,74 @@ const STATUS_NO_RETRY = [
   409, // Conflict
 ];
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const defaultFailedAttemptHandler = (error: any) => {
+/**
+ * The default failed attempt handler for the AsyncCaller.
+ * @param error - The error to handle.
+ * @returns void
+ */
+const defaultFailedAttemptHandler = (error: unknown) => {
+  if (typeof error !== "object" || error === null) {
+    return;
+  }
+
   if (
-    error.message.startsWith("Cancel") ||
-    error.message.startsWith("AbortError") ||
-    error.name === "AbortError"
+    ("message" in error &&
+      typeof error.message === "string" &&
+      (error.message.startsWith("Cancel") ||
+        error.message.startsWith("AbortError"))) ||
+    ("name" in error &&
+      typeof error.name === "string" &&
+      error.name === "AbortError")
   ) {
     throw error;
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if ((error as any)?.code === "ECONNABORTED") {
+  if (
+    "code" in error &&
+    typeof error.code === "string" &&
+    error.code === "ECONNABORTED"
+  ) {
     throw error;
   }
-  const status =
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (error as any)?.response?.status ?? (error as any)?.status;
+  const responseStatus =
+    "response" in error &&
+    typeof error.response === "object" &&
+    error.response !== null &&
+    "status" in error.response &&
+    typeof error.response.status === "number"
+      ? error.response.status
+      : undefined;
+
+  // OpenAI SDK errors expose status directly on the error object
+  const directStatus =
+    "status" in error && typeof error.status === "number"
+      ? error.status
+      : undefined;
+
+  const status = responseStatus ?? directStatus;
   if (status && STATUS_NO_RETRY.includes(+status)) {
     throw error;
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if ((error as any)?.error?.code === "insufficient_quota") {
-    const err = new Error(error?.message);
+
+  const code =
+    "error" in error &&
+    typeof error.error === "object" &&
+    error.error !== null &&
+    "code" in error.error &&
+    typeof error.error.code === "string"
+      ? error.error.code
+      : undefined;
+  if (code === "insufficient_quota") {
+    const err = new Error(
+      "message" in error && typeof error.message === "string"
+        ? error.message
+        : "Insufficient quota"
+    );
     err.name = "InsufficientQuotaError";
     throw err;
   }
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export type FailedAttemptHandler = (error: any) => any;
 
 export interface AsyncCallerParams {
@@ -88,7 +128,7 @@ export class AsyncCaller {
 
   protected onFailedAttempt: AsyncCallerParams["onFailedAttempt"];
 
-  private queue: typeof import("p-queue")["default"]["prototype"];
+  private queue: (typeof import("p-queue"))["default"]["prototype"];
 
   constructor(params: AsyncCallerParams) {
     this.maxConcurrency = params.maxConcurrency ?? Infinity;
@@ -102,7 +142,7 @@ export class AsyncCaller {
     this.queue = new PQueue({ concurrency: this.maxConcurrency });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   async call<A extends any[], T extends (...args: A) => Promise<any>>(
     callable: T,
     ...args: Parameters<T>
@@ -112,7 +152,7 @@ export class AsyncCaller {
         pRetry(
           () =>
             callable(...args).catch((error) => {
-              // eslint-disable-next-line no-instanceof/no-instanceof
+              // oxlint-disable-next-line no-instanceof/no-instanceof
               if (error instanceof Error) {
                 throw error;
               } else {
@@ -131,7 +171,7 @@ export class AsyncCaller {
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   callWithOptions<A extends any[], T extends (...args: A) => Promise<any>>(
     options: AsyncCallerCallOptions,
     callable: T,
@@ -147,7 +187,7 @@ export class AsyncCaller {
           listener = () => {
             reject(getAbortSignalError(options.signal));
           };
-          options.signal?.addEventListener("abort", listener);
+          options.signal?.addEventListener("abort", listener, { once: true });
         }),
       ]).finally(() => {
         if (options.signal && listener) {

@@ -1,7 +1,7 @@
 /**
  * Checks if the provided argument is an object and not an array.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export function isObject(obj: any): obj is object {
   return obj && typeof obj === "object" && !Array.isArray(obj);
 }
@@ -11,7 +11,7 @@ export function isObject(obj: any): obj is object {
  * object, a string, or undefined.
  */
 export function isFilterEmpty(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   filter: ((q: any) => any) | object | string | undefined
 ): filter is undefined {
   if (!filter) return true;

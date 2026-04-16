@@ -37,6 +37,17 @@ function convertToV1FromChatVertexMessage(
           };
         }
         continue;
+      } else if (
+        _isContentBlock(block, "thinking") &&
+        _isString(block.thinking)
+      ) {
+        // Handle thinking blocks (Anthropic-style format used in some Google models)
+        yield {
+          type: "reasoning",
+          reasoning: block.thinking,
+          ...(block.signature ? { signature: block.signature } : {}),
+        };
+        continue;
       } else if (_isContentBlock(block, "text") && _isString(block.text)) {
         yield { type: "text", text: block.text };
         continue;

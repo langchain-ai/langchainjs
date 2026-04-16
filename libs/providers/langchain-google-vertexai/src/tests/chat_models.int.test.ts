@@ -1,4 +1,4 @@
-import { expect, test } from "@jest/globals";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import fs from "fs/promises";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
@@ -63,12 +63,10 @@ const calculatorTool = tool((_) => "no-op", {
  * Which models do we want to run the test suite against?
  */
 const testGeminiModelNames = [
-  ["gemini-1.5-pro-002"],
-  ["gemini-1.5-flash-002"],
-  ["gemini-2.0-flash-001"],
-  ["gemini-2.0-flash-lite-001"],
-  ["gemini-2.5-flash-preview-04-17"],
-  ["gemini-2.5-pro-preview-05-06"],
+  ["gemini-2.5-flash"],
+  ["gemini-2.5-pro"],
+  ["gemini-3-pro-preview"],
+  ["gemini-3-flash-preview"],
 ];
 
 /*
@@ -309,6 +307,84 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
     expect(result).toHaveProperty("location");
   });
 
+  test("withStructuredOutput includeRaw with reasoning enabled", async () => {
+    // This test covers the bug where structured output with includeRaw: true
+    // would fail to parse when the message content was a ContentBlock[] array.
+    // This happens when reasoning/thinking is included in the response, which
+    // prevents the content from being collapsed to a string.
+    const schema = z.object({
+      conclusion: z.boolean().describe("Whether the statement is true"),
+      reason: z.string().describe("Explanation for the conclusion"),
+    });
+
+    const model = new ChatVertexAI({
+      modelName,
+      temperature: 0,
+      location: "global",
+      maxReasoningTokens: 1024,
+    });
+
+    // Test default method (jsonSchema) with reasoning enabled
+    const structuredLLM = model.withStructuredOutput(schema, {
+      name: "analysis",
+      includeRaw: true,
+    });
+
+    const response = await structuredLLM.invoke(
+      "Is the sky blue? Answer with a boolean conclusion."
+    );
+
+    // Verify the response structure
+    expect(response).toHaveProperty("raw");
+    expect(response).toHaveProperty("parsed");
+    expect(response.raw).toBeDefined();
+    expect(response.parsed).toBeDefined();
+
+    // Verify parsed output has expected fields
+    expect(response.parsed).toHaveProperty("conclusion");
+    expect(response.parsed).toHaveProperty("reason");
+    expect(typeof response.parsed.conclusion).toBe("boolean");
+    expect(typeof response.parsed.reason).toBe("string");
+  });
+
+  test("withStructuredOutput includeRaw with functionCalling method", async () => {
+    const schema = z.object({
+      conclusion: z.boolean().describe("Whether the statement is true"),
+      reason: z.string().describe("Explanation for the conclusion"),
+    });
+
+    const model = new ChatVertexAI({
+      modelName,
+      temperature: 0,
+      location: "global",
+    });
+
+    // Test explicit functionCalling method
+    const structuredLLM = model.withStructuredOutput(schema, {
+      name: "analysis",
+      includeRaw: true,
+      method: "functionCalling",
+    });
+
+    const response = await structuredLLM.invoke(
+      "Is the sky blue? Answer with a boolean conclusion."
+    );
+
+    // Verify the response structure
+    expect(response).toHaveProperty("raw");
+    expect(response).toHaveProperty("parsed");
+    expect(response.raw).toBeDefined();
+    expect(response.parsed).toBeDefined();
+
+    // Verify parsed output has expected fields - this is the key assertion
+    // Before the fix, this would fail because the parser would JSON.stringify
+    // the ContentBlock[] array instead of extracting the text content
+    expect(response.parsed).toHaveProperty("conclusion");
+    expect(response.parsed).toHaveProperty("reason");
+    expect(typeof response.parsed.conclusion).toBe("boolean");
+    expect(typeof response.parsed.reason).toBe("string");
+  });
+
   test("media - fileData", async () => {
     class MemStore extends InMemoryStore<MediaBlob> {
       get length() {
@@ -330,7 +406,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
     });
     const blobStore = new ReadThroughBlobStore({
       baseStore: aliasStore,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       backingStore: backingStore as any,
     });
     const resolver = new SimpleWebBlobStore();
@@ -341,7 +417,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
     const model = new ChatGoogle({
       modelName,
       apiConfig: {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         mediaManager: mediaManager as any,
       },
     });
@@ -682,8 +758,8 @@ describe("Express Gemini Chat", () => {
 const testAnthropicModelNames = [
   // ["claude-3-sonnet@20240229"],
   // ["claude-3-5-sonnet@20240620"],
-  ["claude-3-5-sonnet-v2@20241022"],
-  ["claude-3-7-sonnet@20250219"],
+  // ["claude-3-5-sonnet-v2@20241022"],
+  ["claude-sonnet-4-5@20250929"],
 ];
 
 describe.each(testAnthropicModelNames)(
@@ -699,7 +775,7 @@ describe.each(testAnthropicModelNames)(
 
     afterEach(() => {
       // restore any spy created with spyOn
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     test("invoke", async () => {
@@ -725,7 +801,7 @@ describe.each(testAnthropicModelNames)(
     });
 
     test("system", async () => {
-      const consoleWarn = jest.spyOn(console, "warn");
+      const consoleWarn = vi.spyOn(console, "warn");
       const model = new ChatVertexAI({
         modelName,
         callbacks,

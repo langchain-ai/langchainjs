@@ -274,10 +274,10 @@ export function resolveRedactionRule(
 
         return matches;
       };
-      // eslint-disable-next-line no-instanceof/no-instanceof
+      // oxlint-disable-next-line no-instanceof/no-instanceof
     } else if (config.detector instanceof RegExp) {
       detector = (content: string) => {
-        // eslint-disable-next-line no-instanceof/no-instanceof
+        // oxlint-disable-next-line no-instanceof/no-instanceof
         if (!(config.detector instanceof RegExp)) {
           throw new Error("Detector is required");
         }
@@ -552,7 +552,7 @@ export function piiMiddleware(
     applyToOutput?: boolean;
     applyToToolResults?: boolean;
   } = {}
-): ReturnType<typeof createMiddleware> {
+) {
   const { strategy = "redact", detector } = options;
   const resolvedRule = resolveRedactionRule({
     piiType,
@@ -680,8 +680,9 @@ export function piiMiddleware(
       let lastAiIdx: number | null = null;
       let lastAiMsg: AIMessage | null = null;
       for (let i = messages.length - 1; i >= 0; i--) {
-        if (AIMessage.isInstance(messages[i])) {
-          lastAiMsg = messages[i];
+        const msg = messages[i];
+        if (AIMessage.isInstance(msg)) {
+          lastAiMsg = msg;
           lastAiIdx = i;
           break;
         }
