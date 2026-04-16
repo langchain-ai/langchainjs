@@ -1,0 +1,49 @@
+[
+  {
+    "candidates": [
+      {
+        "content": {
+          "parts": [
+            {
+              "text": "Hello"
+            }
+          ],
+          "role": "model"
+        },
+        "index": 0
+      }
+    ]
+  },
+  {
+    "candidates": [
+      {
+        "content": {
+          "parts": [
+            {
+              "text": " world"
+            }
+          ],
+          "role": "model"
+        },
+        "finishReason": "STOP",
+        "index": 0
+      }
+    ],
+    "usageMetadata": {
+      "promptTokenCount": 10,
+      "candidatesTokenCount": 5,
+      "totalTokenCount": 20,
+      "cachedContentTokenCount": 7,
+      "thoughtsTokenCount": 3,
+      "toolUsePromptTokenCount": 0,
+      "promptTokensDetails": [
+        { "modality": "TEXT", "tokenCount": 10 }
+      ],
+      "toolUsePromptTokensDetails": [],
+      "cacheTokensDetails": [],
+      "candidatesTokensDetails": [
+        { "modality": "TEXT", "tokenCount": 5 }
+      ]
+    }
+  }
+]
