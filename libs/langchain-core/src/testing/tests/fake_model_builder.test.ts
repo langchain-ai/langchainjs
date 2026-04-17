@@ -277,6 +277,33 @@ describe("fakeModel", () => {
 
       expect(model.calls).toHaveLength(1);
     });
+
+    test("advances response queue across separate bindTools calls", async () => {
+      const model = fakeModel()
+        .respond(new AIMessage("first"))
+        .respond(new AIMessage("second"));
+
+      const firstBound = model.bindTools([]);
+      const firstResult = await firstBound.invoke([new HumanMessage("a")]);
+      expect(firstResult.content).toBe("first");
+
+      const secondBound = model.bindTools([]);
+      const secondResult = await secondBound.invoke([new HumanMessage("b")]);
+      expect(secondResult.content).toBe("second");
+    });
+
+    test("advances response queue when mixing parent and bound invocations", async () => {
+      const model = fakeModel()
+        .respond(new AIMessage("first"))
+        .respond(new AIMessage("second"));
+
+      const bound = model.bindTools([]);
+      const firstResult = await model.invoke([new HumanMessage("a")]);
+      expect(firstResult.content).toBe("first");
+
+      const secondResult = await bound.invoke([new HumanMessage("b")]);
+      expect(secondResult.content).toBe("second");
+    });
   });
 
   describe(".structuredResponse()", () => {

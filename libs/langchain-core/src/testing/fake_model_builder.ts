@@ -60,8 +60,6 @@ export class FakeBuiltModel extends BaseChatModel {
 
   private _tools: (StructuredTool | ToolSpec)[] = [];
 
-  private _callIndex = 0;
-
   private _calls: FakeModelCall[] = [];
 
   /**
@@ -166,7 +164,6 @@ export class FakeBuiltModel extends BaseChatModel {
     next._structuredResponseValue = this._structuredResponseValue;
     next._tools = merged;
     next._calls = this._calls;
-    next._callIndex = this._callIndex;
 
     return next.withConfig({} as BaseChatModelCallOptions);
   }
@@ -203,10 +200,8 @@ export class FakeBuiltModel extends BaseChatModel {
     options?: this["ParsedCallOptions"],
     _runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
+    const currentCallIndex = this._calls.length;
     this._calls.push({ messages: [...messages], options });
-
-    const currentCallIndex = this._callIndex;
-    this._callIndex += 1;
 
     if (this._alwaysThrowError) {
       throw this._alwaysThrowError;
