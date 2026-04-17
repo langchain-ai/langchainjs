@@ -596,6 +596,50 @@ describe("Chat unit tests", () => {
           })
       ).toThrow(/Unexpected properties: notExisting, notExObj./);
     });
+
+    test("Stream error", async () => {
+      const testProps = {
+        model: "ibm/granite-4-h-small",
+        version: "2024-05-31",
+        serviceUrl,
+        projectId,
+      };
+      const instance = new ChatWatsonx({ ...testProps, ...fakeAuthProp });
+
+      async function* mockErrorStream() {
+        yield {
+          data: {
+            errors: [
+              {
+                code: "invalid_input_argument",
+                message:
+                  "Invalid input argument for Model 'ibm/granite-4-h-small': This model's maximum context length is 131072 tokens. However, your request has 600039 input tokens.",
+                more_info:
+                  "https://cloud.ibm.com/apidocs/watsonx-ai#text-chat-stream",
+              },
+            ],
+            trace: "903ff69ef8dc748c20d94f77c5810bf1",
+            status_code: 400,
+            choices: [],
+          },
+        };
+      }
+
+      const spy = vi
+        .spyOn(instance["service"] as WatsonXAI, "textChatStream")
+        .mockResolvedValue(mockErrorStream() as any);
+
+      await expect(async () => {
+        const stream = await instance.stream("test");
+        for await (const _chunk of stream) {
+          /* consume stream */
+        }
+      }).rejects.toThrow(
+        /IBM WatsonX API error \(status 400\): \[invalid_input_argument\] Invalid input argument for Model 'ibm\/granite-4-h-small': This model's maximum context length is 131072 tokens\. However, your request has 600039 input tokens\. \(trace: 903ff69ef8dc748c20d94f77c5810bf1\)/,
+      );
+
+      spy.mockRestore();
+    });
   });
 
   describe("AbortSignal parameter passing", () => {
