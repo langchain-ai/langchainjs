@@ -741,3 +741,47 @@ describe("convertMessagesToGeminiContents", () => {
     ).toBe("gs://bucket/report.pdf");
   });
 });
+
+describe("executableCode and codeExecutionResult round-trip", () => {
+  test("strips type field from executableCode content blocks", () => {
+    const message = new AIMessage({
+      content: [
+        { type: "text", text: "Let me calculate that." },
+        {
+          type: "executableCode",
+          executableCode: { language: "PYTHON", code: "print(1+1)" },
+        },
+        {
+          type: "codeExecutionResult",
+          codeExecutionResult: { outcome: "OUTCOME_OK", output: "2\n" },
+        },
+      ],
+      tool_calls: [],
+    });
+
+    const result = convertMessagesToGeminiContents(
+      "gemini-2.0-flash",
+      [new HumanMessage("Calculate 1+1"), message],
+      false
+    );
+
+    const modelContent = result.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+    const parts = modelContent!.parts;
+
+    // text part
+    expect(parts[0]).toEqual({ text: "Let me calculate that." });
+
+    // executableCode part should NOT have a "type" field
+    expect(parts[1]).toEqual({
+      executableCode: { language: "PYTHON", code: "print(1+1)" },
+    });
+    expect(parts[1]).not.toHaveProperty("type");
+
+    // codeExecutionResult part should NOT have a "type" field
+    expect(parts[2]).toEqual({
+      codeExecutionResult: { outcome: "OUTCOME_OK", output: "2\n" },
+    });
+    expect(parts[2]).not.toHaveProperty("type");
+  });
+});
