@@ -1,5 +1,5 @@
 import * as jschardet from "jschardet";
-import * as fs from "fs";
+import { readFile } from "fs/promises";
 
 /**
  * Represents file encoding information
@@ -18,41 +18,38 @@ const EXECUTION_TIMEOUT = 5000;
  * @returns Promise containing list of detected encodings ordered by confidence
  */
 export async function detectFileEncodings(
-  filePath: fs.PathLike,
+  filePath: string,
   timeout: number = EXECUTION_TIMEOUT
 ): Promise<FileEncoding[]> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+
   try {
-    // Create a promise that rejects after the timeout
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => {
-        reject(
-          new Error(`Timeout reached while detecting encoding for ${filePath}`)
-        );
-      }, timeout);
-    });
+    const buffer = await readFile(filePath, { signal: controller.signal });
+    clearTimeout(timeoutId);
 
-    // Create the detection promise
-    const detectionPromise = async (): Promise<FileEncoding[]> => {
-      const buffer = fs.readFileSync(filePath);
-      const results = jschardet.detectAll(buffer);
+    const results = jschardet.detectAll(buffer);
 
-      if (!results || results.every((result) => result.encoding === null)) {
-        throw new Error(`Could not detect encoding for ${filePath}`);
-      }
+    if (!results || results.every((result) => result.encoding === null)) {
+      throw new Error(`Could not detect encoding for ${filePath}`);
+    }
 
-      return results
-        .filter((result) => result.encoding !== null)
-        .map((result) => ({
-          encoding: result.encoding.toLowerCase() as BufferEncoding,
-          confidence: result.confidence,
-        }));
-    };
-
-    // Race between timeout and detection
-    return await Promise.race([detectionPromise(), timeoutPromise]);
+    return results
+      .filter((result) => result.encoding !== null)
+      .map((result) => ({
+        encoding: result.encoding.toLowerCase() as BufferEncoding,
+        confidence: result.confidence,
+      }));
   } catch (error) {
+    clearTimeout(timeoutId);
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new Error(`Timeout reached while detecting encoding for ${filePath}`);
+    } else if (error instanceof Error) {
+      throw new Error("Encoding detection failed", { cause: error });
+    }
+
     throw new Error(
-      `An unknown error occurred during encoding detection ${error}`
+      `An unknown error occurred during encoding detection ${JSON.stringify(error)}`
     );
   }
 }
