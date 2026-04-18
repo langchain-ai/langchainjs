@@ -37,6 +37,11 @@ import {
   applyCacheControlToPayload,
 } from "./utils/message_inputs.js";
 import {
+  getSamplingParams,
+  getTaskBudgetBetas,
+  validateInvocationParamCompatibility,
+} from "./utils/params.js";
+import {
   _makeMessageChunkFromAnthropicEvent,
   anthropicResponseToChatMessages,
 } from "./utils/message_outputs.js";
@@ -80,6 +85,8 @@ import {
 const MODEL_DEFAULT_MAX_OUTPUT_TOKENS: Partial<
   Record<Anthropic.Model, number>
 > = {
+  // Claude 4.7 — 128K max output
+  "claude-opus-4-7": 16384,
   // Claude 4.6 — 128K max output
   "claude-opus-4-6": 16384,
   "claude-sonnet-4-6": 16384,
@@ -367,7 +374,7 @@ export interface AnthropicInput {
    * uses when responding, trading off between response thoroughness and
    * token efficiency.
    *
-   * Effort levels: "low", "medium", "high" (default), "max" (Opus 4.6 only).
+   * Effort levels: "low", "medium", "high", "xhigh", "max".
    *
    * @example
    * ```typescript
@@ -1192,6 +1199,7 @@ export class ChatAnthropicMessages<
     const compactionBetas: AnthropicBeta[] = hasCompaction
       ? ["compact-2026-01-12"]
       : [];
+    const taskBudgetBetas = getTaskBudgetBetas(this.model, mergedOutputConfig);
 
     const output: AnthropicInvocationParams = {
       model: this.model,
@@ -1208,37 +1216,32 @@ export class ChatAnthropicMessages<
         this.betas,
         options?.betas,
         toolBetas ?? [],
-        compactionBetas
+        compactionBetas,
+        taskBudgetBetas
       ),
       output_config: mergedOutputConfig,
       inference_geo: options?.inferenceGeo ?? this.inferenceGeo,
       mcp_servers: options?.mcp_servers,
     };
 
-    if (this.thinking.type === "enabled" || this.thinking.type === "adaptive") {
-      if (this.topK !== undefined) {
-        throw new Error("topK is not supported when thinking is enabled");
-      }
-      if (this.topP !== undefined) {
-        throw new Error("topP is not supported when thinking is enabled");
-      }
-      if (this.temperature !== undefined && this.temperature !== 1) {
-        throw new Error(
-          "temperature is not supported when thinking is enabled"
-        );
-      }
-    } else {
-      // Only set temperature, top_k, and top_p if thinking is disabled
-      if (this.temperature !== undefined) {
-        output.temperature = this.temperature;
-      }
-      if (this.topK !== undefined) {
-        output.top_k = this.topK;
-      }
-      if (this.topP !== undefined) {
-        output.top_p = this.topP;
-      }
-    }
+    validateInvocationParamCompatibility({
+      model: this.model,
+      thinking: this.thinking,
+      topK: this.topK,
+      topP: this.topP,
+      temperature: this.temperature,
+    });
+
+    Object.assign(
+      output,
+      getSamplingParams({
+        model: this.model,
+        thinking: this.thinking,
+        topK: this.topK,
+        topP: this.topP,
+        temperature: this.temperature,
+      })
+    );
 
     return output;
   }
