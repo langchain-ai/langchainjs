@@ -289,13 +289,23 @@ export class PostgresEngine {
     tableName: string,
     schemaName: string = "public"
   ): Promise<void> {
+    const sanitizedSchema = this._quoteIdentifier(schemaName);
+    const sanitizedTable = this._quoteIdentifier(tableName);
     await this.pool.raw(
-      `CREATE TABLE IF NOT EXISTS ${schemaName}.${tableName}(
+      `CREATE TABLE IF NOT EXISTS ${sanitizedSchema}.${sanitizedTable}(
       id SERIAL PRIMARY KEY,
       session_id TEXT NOT NULL,
       data JSONB NOT NULL,
       type TEXT NOT NULL);`
     );
+  }
+
+  private _quoteIdentifier(identifier: string): string {
+    if (identifier.includes("\0")) {
+      throw Error("Invalid identifier: contains null byte");
+    }
+    const escaped = identifier.replace(/"/g, '""');
+    return `"${escaped}"`;
   }
 
   /**
