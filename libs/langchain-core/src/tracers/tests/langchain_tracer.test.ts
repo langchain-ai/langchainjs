@@ -3,6 +3,8 @@
 import { vi, test, expect, describe } from "vitest";
 import { AsyncLocalStorage } from "node:async_hooks";
 import * as uuid from "uuid";
+import { RunTree } from "langsmith/run_trees";
+import { withRunTree } from "langsmith/singletons/traceable";
 
 import { RunnableLambda } from "../../runnables/base.js";
 import { LangChainTracer } from "../tracer_langchain.js";
@@ -339,5 +341,188 @@ describe("LangChainTracer usage_metadata extraction", () => {
     expect(copied.tracingTags).toEqual(["existing", "tenant:alpha"]);
     expect(tracer.tracingMetadata).toEqual({ env: "staging" });
     expect(tracer.tracingTags).toEqual(["existing"]);
+  });
+});
+
+describe("LangChainTracer allowlisted inheritable metadata overrides", () => {
+  /**
+   * Build a fresh `RunTree` suitable for use as the target of
+   * `withRunTree(...)` with the given metadata. We attach a no-op mock
+   * client so that any accidental `postRun`/`patchRun` called against
+   * the passed-in RunTree itself (as opposed to clones made by the
+   * tracer) doesn't blow up.
+   */
+  function makeScopedRunTree(
+    metadata: Record<string, unknown>,
+    name = "scoped_root"
+  ): RunTree {
+    return new RunTree({
+      name,
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      client: {
+        createRun: vi.fn().mockResolvedValue(undefined),
+        updateRun: vi.fn().mockResolvedValue(undefined),
+      } as any,
+      tracingEnabled: false,
+      metadata,
+    });
+  }
+
+  test("withRunTree rescopes allowlisted `ls_agent_type` mid-run for tracer only", async () => {
+    // Mirrors the Python
+    // `test_live_tracing_context_overrides_allowlisted_keys_tracer_only`:
+    // the outer tracer is configured with a default `ls_agent_type`;
+    // mid-run the caller enters `withRunTree(...)` with a RunTree whose
+    // metadata overrides `ls_agent_type`; the inner run's LangSmith
+    // payload must show the rescoped value while non-tracer callback
+    // handlers must never observe `ls_agent_type` at all.
+    AsyncLocalStorageProviderSingleton.initializeGlobalInstance(
+      new AsyncLocalStorage()
+    );
+
+    const mockClient = {
+      createRun: vi.fn().mockResolvedValue(undefined),
+      updateRun: vi.fn().mockResolvedValue(undefined),
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any;
+
+    const tracer = new LangChainTracer({
+      client: mockClient,
+      metadata: { ls_agent_type: "root" },
+    });
+
+    // Directly drive the tracer's lifecycle instead of going through
+    // Runnable so we have precise control over which run is inside
+    // the `withRunTree` scope and which is outside.
+    const outerRunId = uuid.v4();
+    const innerRunId = uuid.v4();
+
+    // Outer run: starts before `withRunTree`, so it inherits the
+    // tracer's default `ls_agent_type: "root"` from its configure-time
+    // `tracingMetadata`.
+    await tracer.handleChainStart(
+      serialized,
+      { input: 1 },
+      outerRunId,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      "outer"
+    );
+
+    // Inner run: starts while `withRunTree(scoped, ...)` is active.
+    // The scoped RunTree overrides `ls_agent_type` to "subagent".
+    const scoped = makeScopedRunTree({ ls_agent_type: "subagent" });
+    await withRunTree(scoped, async () => {
+      await tracer.handleChainStart(
+        serialized,
+        { input: 1 },
+        innerRunId,
+        outerRunId,
+        undefined,
+        undefined,
+        undefined,
+        "inner"
+      );
+      await tracer.handleChainEnd({ output: 1 }, innerRunId);
+    });
+    await tracer.handleChainEnd({ output: 1 }, outerRunId);
+    await awaitAllCallbacks();
+
+    // Inspect the update payloads (patches to LangSmith) rather than
+    // the initial create payloads: `_patchMissingTracingDefaults` runs
+    // on update for non-allowlisted keys, and the allowlisted
+    // override is re-applied at read time in
+    // `getRunTreeWithTracingConfig`, so the final-state metadata is
+    // what LangSmith ends up with.
+    const updates = mockClient.updateRun.mock.calls.map(
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      (call: any) => ({ id: call[0], update: call[1] })
+    );
+    const outerUpdate = updates.find(
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      (u: any) => u.id === outerRunId
+    );
+    const innerUpdate = updates.find(
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      (u: any) => u.id === innerRunId
+    );
+    expect(outerUpdate).toBeDefined();
+    expect(innerUpdate).toBeDefined();
+
+    // Outer run keeps the tracer's default `ls_agent_type: "root"` —
+    // the mid-run `withRunTree` scope opened AFTER it started and
+    // closed BEFORE it ended, so the override never applied.
+    expect(outerUpdate.update.extra?.metadata?.ls_agent_type).toBe("root");
+
+    // Inner run is posted while the `withRunTree` scope is active, so
+    // the allowlisted override wins over the outer tracer default.
+    expect(innerUpdate.update.extra?.metadata?.ls_agent_type).toBe("subagent");
+  });
+
+  test("withRunTree does NOT rescope non-allowlisted keys (first-wins preserved)", async () => {
+    // Mirrors the Python
+    // `test_live_tracing_context_non_allowlisted_keys_do_not_override`:
+    // a non-allowlisted key like `env` must keep the outer tracer's
+    // default value for every posted run, even if a mid-run `withRunTree`
+    // scope carries a different value.
+    AsyncLocalStorageProviderSingleton.initializeGlobalInstance(
+      new AsyncLocalStorage()
+    );
+
+    const mockClient = {
+      createRun: vi.fn().mockResolvedValue(undefined),
+      updateRun: vi.fn().mockResolvedValue(undefined),
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any;
+
+    const tracer = new LangChainTracer({
+      client: mockClient,
+      metadata: { env: "prod" },
+    });
+
+    const outerRunId = uuid.v4();
+    const innerRunId = uuid.v4();
+
+    await tracer.handleChainStart(
+      serialized,
+      { input: 1 },
+      outerRunId,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      "outer"
+    );
+
+    const scoped = makeScopedRunTree({ env: "staging" });
+    await withRunTree(scoped, async () => {
+      await tracer.handleChainStart(
+        serialized,
+        { input: 1 },
+        innerRunId,
+        outerRunId,
+        undefined,
+        undefined,
+        undefined,
+        "inner"
+      );
+      await tracer.handleChainEnd({ output: 1 }, innerRunId);
+    });
+    await tracer.handleChainEnd({ output: 1 }, outerRunId);
+    await awaitAllCallbacks();
+
+    const updates = mockClient.updateRun.mock.calls.map(
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      (call: any) => ({ id: call[0], update: call[1] })
+    );
+    expect(updates.length).toBe(2);
+    // `env` is not allowlisted, so the tracer's default ("prod") must
+    // survive on every posted run regardless of any mid-run
+    // `withRunTree` scope setting a different value.
+    for (const { update } of updates) {
+      expect(update.extra?.metadata?.env).toBe("prod");
+    }
   });
 });

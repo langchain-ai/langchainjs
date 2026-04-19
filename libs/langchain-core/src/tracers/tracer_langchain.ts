@@ -27,6 +27,27 @@ export interface Run extends BaseRun {
   trace_id?: string;
 }
 
+/**
+ * Metadata keys that should be re-read live from the currently-active
+ * LangSmith `RunTree` each time a run is posted or patched, and applied
+ * with "last-wins" semantics (overriding any value already baked in by
+ * an ancestor's configure-time tracing metadata).
+ *
+ * This exists so that callers can rescope these keys mid-run via
+ * `withRunTree(...)` (e.g. to label nested subagent runs with a
+ * different `ls_agent_type`) without having to thread new callback
+ * managers through every intermediate layer.
+ *
+ * Non-allowlisted keys keep the default "first-wins" behavior applied
+ * at callback configure time.
+ *
+ * TODO: expand as additional allowlisted LangSmith-only metadata keys
+ * are introduced.
+ */
+export const LANGSMITH_INHERITABLE_METADATA_KEYS: ReadonlySet<string> = new Set(
+  ["ls_agent_type"]
+);
+
 export interface RunCreate2 extends RunCreate {
   trace_id?: string;
   dotted_order?: string;
@@ -110,6 +131,31 @@ export class LangChainTracer
 
   protected async persistRun(_run: Run): Promise<void> {
     // empty
+  }
+
+  _addRunToRunMap(run: Run) {
+    // Apply last-wins overrides for allowlisted LangSmith-only metadata
+    // keys (e.g. `ls_agent_type`) from the currently-active RunTree.
+    //
+    // This must happen *synchronously*, while we're still inside the
+    // caller's async-local-storage context: `consumeCallback` wraps
+    // later async handler invocations (including `onRunCreate`) in
+    // `asyncLocalStorage.run(undefined, ...)`, which wipes out any
+    // `withRunTree(...)` scope set by the caller. So we can't read it
+    // from an async handler.
+    //
+    // This is the JS analog of the Python implementation, which reads
+    // `get_tracing_context()` inside `_patch_missing_metadata` — Python
+    // `contextvars` propagate across awaits by default, so the read
+    // can happen later there. JS ALS does not, so we read earlier.
+    const overrides = _computeAllowlistedRunTreeMetadataOverrides(
+      run.extra?.metadata as Record<string, unknown> | undefined
+    );
+    if (overrides !== undefined) {
+      run.extra ??= {};
+      run.extra.metadata = overrides;
+    }
+    return super._addRunToRunMap(run);
   }
 
   async onRunCreate(run: Run): Promise<void> {
@@ -232,8 +278,28 @@ export class LangChainTracer
     const runTree = this.runTreeMap.get(id);
     if (!runTree) return undefined;
 
+    // Re-apply last-wins overrides for allowlisted LangSmith-only metadata
+    // keys from the currently-active RunTree. This complements the
+    // synchronous write-time override in `_addRunToRunMap`: some callers
+    // (notably langgraph's Pregel executor via
+    // `AsyncLocalStorageProviderSingleton.runWithConfig`) use this method
+    // to derive a fresh ALS RunTree for nested execution, ignoring the
+    // RunTree currently held in ALS. Without re-applying the override
+    // here, those nested executions would re-seed ALS with the parent
+    // run's original metadata, silently overwriting a `withRunTree(...)`
+    // scope that the caller set at the boundary (e.g. to label a
+    // subagent's runs with a different `ls_agent_type`).
+    const overrides = _computeAllowlistedRunTreeMetadataOverrides(
+      runTree.extra?.metadata as Record<string, unknown> | undefined
+    );
+    const extra =
+      overrides !== undefined
+        ? { ...runTree.extra, metadata: overrides }
+        : runTree.extra;
+
     return new RunTree({
       ...runTree,
+      extra,
       client: this.client as Client,
       project_name: this.projectName,
       replicas: this.replicas,
@@ -296,4 +362,47 @@ function _patchMissingTracingDefaults(tracer: LangChainTracer, run: Run): void {
       new Set([...(run.tags ?? []), ...tracer.tracingTags])
     );
   }
+}
+
+/**
+ * Compute a new metadata object containing last-wins overrides for
+ * allowlisted LangSmith-only metadata keys (e.g. `ls_agent_type`) read
+ * from the currently-active `RunTree`.
+ *
+ * Returns `undefined` if no overrides apply — the caller should leave
+ * the existing metadata unchanged in that case. Otherwise returns a
+ * fresh object: `{ ...existingMetadata, ...overrides }`. The input
+ * `existingMetadata` is never mutated.
+ *
+ * Used by:
+ *   - `LangChainTracer._addRunToRunMap` (write-time), which writes the
+ *     returned object back onto `run.extra.metadata` synchronously so
+ *     that it's visible to the async callback handlers that post the
+ *     run to LangSmith. This must happen before `consumeCallback`
+ *     wipes the ALS scope.
+ *   - `LangChainTracer.getRunTreeWithTracingConfig` (read-time), which
+ *     wraps the returned object into a fresh `extra` for the cloned
+ *     RunTree it produces. Callers like langgraph's Pregel executor
+ *     re-seed ALS from that clone, so without this re-application the
+ *     caller's `withRunTree(...)` override would be silently lost when
+ *     traversing into nested execution.
+ */
+function _computeAllowlistedRunTreeMetadataOverrides(
+  existingMetadata?: Record<string, unknown>
+): Record<string, unknown> | undefined {
+  const currentRunTreeMetadata = LangChainTracer.getTraceableRunTree()
+    ?.metadata as Record<string, unknown> | undefined;
+  if (!currentRunTreeMetadata) return undefined;
+
+  let overrideMetadata: Record<string, unknown> | undefined;
+  for (const key of LANGSMITH_INHERITABLE_METADATA_KEYS) {
+    if (!(key in currentRunTreeMetadata)) {
+      continue;
+    }
+    if (overrideMetadata === undefined) {
+      overrideMetadata = { ...(existingMetadata ?? {}) };
+    }
+    overrideMetadata[key] = currentRunTreeMetadata[key];
+  }
+  return overrideMetadata;
 }
