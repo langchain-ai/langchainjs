@@ -730,6 +730,52 @@ describe("RedisVectorStore with Custom Schema", () => {
     );
   });
 
+  test("buildCustomQuery escapes tag and text filter values", async () => {
+    const client = createRedisClientWithCustomSchema();
+    const embeddings = new FakeEmbeddings();
+
+    const customSchema = {
+      category: { type: SchemaFieldTypes.TAG },
+      title: { type: SchemaFieldTypes.TEXT },
+    };
+
+    const store = new RedisVectorStore(embeddings, {
+      redisClient: client as any,
+      indexName: "test-escaped-filters",
+      customSchema,
+    });
+
+    const [query] = store.buildCustomQuery([0.1, 0.2, 0.3, 0.4], 5, {
+      category: "tenant_a} @tenant_id:{*",
+      title: 'foo") @secret_field:("bar',
+    });
+
+    expect(query).toBe(
+      '@metadata.category:{tenant_a\\}\\ \\@tenant_id\\:\\{\\*} @metadata.title:(foo\\\"\\) \\@secret_field\\:\\(\\\"bar) => [KNN 5 @content_vector $vector AS vector_score]'
+    );
+  });
+
+  test("buildCustomQuery rejects non-numeric values for numeric schema fields", async () => {
+    const client = createRedisClientWithCustomSchema();
+    const embeddings = new FakeEmbeddings();
+
+    const customSchema = {
+      score: { type: SchemaFieldTypes.NUMERIC },
+    };
+
+    const store = new RedisVectorStore(embeddings, {
+      redisClient: client as any,
+      indexName: "test-invalid-numeric-filter",
+      customSchema,
+    });
+
+    expect(() =>
+      store.buildCustomQuery([0.1, 0.2, 0.3, 0.4], 5, {
+        score: "not-a-number",
+      })
+    ).toThrow("Invalid numeric value");
+  });
+
   test("includes custom schema fields in search return fields", async () => {
     const client = createRedisClientWithCustomSchema();
     const embeddings = new FakeEmbeddings();

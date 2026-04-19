@@ -51,7 +51,6 @@ import {
   initializeMiddlewareStates,
   parseJumpToTarget,
 } from "./nodes/utils.js";
-import { StateManager } from "./state.js";
 
 import type {
   WithStateGraphNodes,
@@ -175,8 +174,6 @@ export class ReactAgent<
 
   #agentNode: AgentNode<any, AnyAnnotationRoot>;
 
-  #stateManager = new StateManager();
-
   #defaultConfig: RunnableConfig;
 
   constructor(
@@ -189,6 +186,7 @@ export class ReactAgent<
   ) {
     this.#defaultConfig = mergeConfigs(defaultConfig ?? {}, {
       metadata: { ls_integration: "langchain_create_agent" },
+      configurable: { ls_agent_type: "root" },
     });
     if (options.name) {
       this.#defaultConfig = mergeConfigs(this.#defaultConfig, {
@@ -278,13 +276,7 @@ export class ReactAgent<
       name: string;
       allowed?: string[];
     }[] = [];
-    const wrapModelCallHookMiddleware: [
-      AgentMiddleware,
-      /**
-       * ToDo: better type to get the state of middleware
-       */
-      () => any,
-    ][] = [];
+    const wrapModelCallHookMiddleware: AgentMiddleware[] = [];
 
     this.#agentNode = new AgentNode({
       model: this.options.model,
@@ -313,10 +305,7 @@ export class ReactAgent<
 
       middlewareNames.add(m.name);
       if (m.beforeAgent) {
-        beforeAgentNode = new BeforeAgentNode(m, {
-          getState: () => this.#stateManager.getState(m.name),
-        });
-        this.#stateManager.addNode(m, beforeAgentNode);
+        beforeAgentNode = new BeforeAgentNode(m);
         const name = `${m.name}.before_agent`;
         beforeAgentNodes.push({
           index: i,
@@ -330,10 +319,7 @@ export class ReactAgent<
         );
       }
       if (m.beforeModel) {
-        beforeModelNode = new BeforeModelNode(m, {
-          getState: () => this.#stateManager.getState(m.name),
-        });
-        this.#stateManager.addNode(m, beforeModelNode);
+        beforeModelNode = new BeforeModelNode(m);
         const name = `${m.name}.before_model`;
         beforeModelNodes.push({
           index: i,
@@ -347,10 +333,7 @@ export class ReactAgent<
         );
       }
       if (m.afterModel) {
-        afterModelNode = new AfterModelNode(m, {
-          getState: () => this.#stateManager.getState(m.name),
-        });
-        this.#stateManager.addNode(m, afterModelNode);
+        afterModelNode = new AfterModelNode(m);
         const name = `${m.name}.after_model`;
         afterModelNodes.push({
           index: i,
@@ -364,10 +347,7 @@ export class ReactAgent<
         );
       }
       if (m.afterAgent) {
-        afterAgentNode = new AfterAgentNode(m, {
-          getState: () => this.#stateManager.getState(m.name),
-        });
-        this.#stateManager.addNode(m, afterAgentNode);
+        afterAgentNode = new AfterAgentNode(m);
         const name = `${m.name}.after_agent`;
         afterAgentNodes.push({
           index: i,
@@ -382,10 +362,7 @@ export class ReactAgent<
       }
 
       if (m.wrapModelCall) {
-        wrapModelCallHookMiddleware.push([
-          m,
-          () => this.#stateManager.getState(m.name),
-        ]);
+        wrapModelCallHookMiddleware.push(m);
       }
     }
 

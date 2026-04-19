@@ -1,5 +1,22 @@
 # langchain
 
+## 1.3.3
+
+### Patch Changes
+
+- [#9386](https://github.com/langchain-ai/langchainjs/pull/9386) [`71e53f1`](https://github.com/langchain-ai/langchainjs/commit/71e53f1c07bc60e2c2304b10f0edd3c85c62b192) Thanks [@Josh-Engle](https://github.com/Josh-Engle)! - Prevent local file corruption when using `LocalFileStore`
+
+- Updated dependencies [[`d3e0809`](https://github.com/langchain-ai/langchainjs/commit/d3e080995bb267bf3797067ab53c96bc2a6c8e3f)]:
+  - @langchain/core@1.1.40
+
+## 1.3.2
+
+### Patch Changes
+
+- [#10693](https://github.com/langchain-ai/langchainjs/pull/10693) [`5a6e0ab`](https://github.com/langchain-ai/langchainjs/commit/5a6e0ab6617587f3aed19d07bf3ed91994dcdac8) Thanks [@hntrl](https://github.com/hntrl)! - fix(agents): derive middleware hook state from invocation state
+
+  Prevents middleware state from leaking across threads by deriving middleware hook input state from the current invocation state instead of cross-node cached state.
+
 ## 1.3.1
 
 ### Patch Changes

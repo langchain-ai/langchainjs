@@ -287,4 +287,57 @@ describe("LangChainTracer usage_metadata extraction", () => {
       output_token_details: {},
     });
   });
+
+  test("tracing defaults patch missing run metadata without overriding explicit values", async () => {
+    const mockClient = {
+      createRun: vi.fn(),
+      updateRun: vi.fn(),
+    } as any;
+
+    const tracer = new LangChainTracer({
+      client: mockClient,
+      metadata: { env: "prod", tenant: "default" },
+      tags: ["tracer-tag"],
+    });
+    const runId = uuid.v4();
+
+    await tracer.handleLLMStart(
+      serialized,
+      ["test prompt"],
+      runId,
+      undefined,
+      undefined,
+      ["run-tag"],
+      { tenant: "explicit" }
+    );
+    await tracer.handleLLMEnd({ generations: [[{ text: "ok" }]] }, runId);
+
+    const updateCall = mockClient.updateRun.mock.calls[0][1];
+    expect(updateCall.extra?.metadata?.env).toBe("prod");
+    expect(updateCall.extra?.metadata?.tenant).toBe("explicit");
+    expect(updateCall.tags).toEqual(
+      expect.arrayContaining(["run-tag", "tracer-tag"])
+    );
+  });
+
+  test("copyWithTracingConfig keeps original tracer unchanged", () => {
+    const tracer = new LangChainTracer({
+      client: { createRun: vi.fn(), updateRun: vi.fn() } as any,
+      metadata: { env: "staging" },
+      tags: ["existing"],
+    });
+    const copied = tracer.copyWithTracingConfig({
+      metadata: { tenant: "alpha", env: "prod" },
+      tags: ["tenant:alpha", "existing"],
+    });
+
+    expect(copied).not.toBe(tracer);
+    expect(copied.tracingMetadata).toEqual({
+      env: "staging",
+      tenant: "alpha",
+    });
+    expect(copied.tracingTags).toEqual(["existing", "tenant:alpha"]);
+    expect(tracer.tracingMetadata).toEqual({ env: "staging" });
+    expect(tracer.tracingTags).toEqual(["existing"]);
+  });
 });
