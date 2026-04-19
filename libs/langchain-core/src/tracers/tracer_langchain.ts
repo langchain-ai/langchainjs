@@ -133,7 +133,7 @@ export class LangChainTracer
     // empty
   }
 
-  _addRunToRunMap(run: Run) {
+  _addRunToRunMap(run: BaseTracerRun) {
     // Apply last-wins overrides for allowlisted LangSmith-only metadata
     // keys (e.g. `ls_agent_type`) from the currently-active RunTree.
     //
