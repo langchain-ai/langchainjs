@@ -394,16 +394,23 @@ export class ChatOpenRouter extends BaseChatModel<
       stream: false,
     };
 
-    const response = await fetch(this.buildUrl(), {
-      method: "POST",
-      headers: this.buildHeaders(),
-      body: JSON.stringify(body),
-      signal: options.signal,
-    });
+    const response = await this.caller.callWithOptions(
+      { signal: options.signal },
+      async () => {
+        const nextResponse = await fetch(this.buildUrl(), {
+          method: "POST",
+          headers: this.buildHeaders(),
+          body: JSON.stringify(body),
+          signal: options.signal,
+        });
 
-    if (!response.ok) {
-      throw await OpenRouterError.fromResponse(response);
-    }
+        if (!nextResponse.ok) {
+          throw await OpenRouterError.fromResponse(nextResponse);
+        }
+
+        return nextResponse;
+      }
+    );
 
     const data: OpenRouter.ChatResponse = await response.json();
     const choice = data.choices[0];
@@ -451,16 +458,23 @@ export class ChatOpenRouter extends BaseChatModel<
       stream: true,
     };
 
-    const response = await fetch(this.buildUrl(), {
-      method: "POST",
-      headers: this.buildHeaders(),
-      body: JSON.stringify(body),
-      signal: options.signal,
-    });
+    const response = await this.caller.callWithOptions(
+      { signal: options.signal },
+      async () => {
+        const nextResponse = await fetch(this.buildUrl(), {
+          method: "POST",
+          headers: this.buildHeaders(),
+          body: JSON.stringify(body),
+          signal: options.signal,
+        });
 
-    if (!response.ok) {
-      throw await OpenRouterError.fromResponse(response);
-    }
+        if (!nextResponse.ok) {
+          throw await OpenRouterError.fromResponse(nextResponse);
+        }
+
+        return nextResponse;
+      }
+    );
 
     if (!response.body) {
       return;
