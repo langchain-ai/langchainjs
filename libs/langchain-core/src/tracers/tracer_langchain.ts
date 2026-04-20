@@ -59,7 +59,7 @@ export interface LangChainTracerFields extends BaseCallbackHandlerInput {
  * enclosing tracer config. Only keys that are strictly for LangSmith
  * tracing bookkeeping should be added.
  */
-export const LANGSMITH_INHERITABLE_METADATA_KEYS = new Set<string>([
+export const OVERRIDABLE_LANGSMITH_INHERITABLE_METADATA_KEYS = new Set<string>([
   "ls_agent_type",
 ]);
 
