@@ -180,8 +180,8 @@ importers:
         specifier: workspace:*
         version: link:../libs/providers/langchain-groq
       '@langchain/langgraph':
-        specifier: ^1.2.6
-        version: 1.2.6(@langchain/core@libs+langchain-core)(react-dom@19.2.4(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.25.2(zod@4.3.6))(zod@4.3.6)
+        specifier: ^1.2.9
+        version: 1.2.9(@langchain/core@libs+langchain-core)(react-dom@19.2.4(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.25.2(zod@4.3.6))(zod@4.3.6)
       '@langchain/mistralai':
         specifier: workspace:*
         version: link:../libs/providers/langchain-mistralai
@@ -587,8 +587,8 @@ importers:
   libs/langchain:
     dependencies:
       '@langchain/langgraph':
-        specifier: ^1.2.8
-        version: 1.2.8(@langchain/core@libs+langchain-core)(react-dom@19.2.4(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.25.2(zod@4.3.6))(zod@4.3.6)
+        specifier: ^1.2.9
+        version: 1.2.9(@langchain/core@libs+langchain-core)(react-dom@19.2.4(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.25.2(zod@4.3.6))(zod@4.3.6)
       '@langchain/langgraph-checkpoint':
         specifier: ^1.0.1
         version: 1.0.1(@langchain/core@libs+langchain-core)
@@ -4561,28 +4561,8 @@ packages:
       react-dom:
         optional: true
 
-  '@langchain/langgraph-sdk@1.8.2':
-    resolution: {integrity: sha512-TQSw5O0NiE0W6D+UKcv6AdvCqQD2Xbv96oaUFUSSL3nnQ0WfZLcF5nPNTQm6KLUo4EuhKZeeoAgnDb2hRDW2Hw==}
-    peerDependencies:
-      '@langchain/core': workspace:^
-      react: ^18 || ^19
-      react-dom: ^18 || ^19
-      svelte: ^4.0.0 || ^5.0.0
-      vue: ^3.0.0
-    peerDependenciesMeta:
-      '@langchain/core':
-        optional: true
-      react:
-        optional: true
-      react-dom:
-        optional: true
-      svelte:
-        optional: true
-      vue:
-        optional: true
-
-  '@langchain/langgraph-sdk@1.8.8':
-    resolution: {integrity: sha512-4OoqFAvPloOTZ6oPxXbJngz4FLJO8QSXb+BQV3qvNTvmfu1LQA7cCEqSNLYX9MoC340PbnDkHNgUtjajwkDHRg==}
+  '@langchain/langgraph-sdk@1.8.9':
+    resolution: {integrity: sha512-vpz90auS4iFTNy2X/CFexOEoeFSvaK+MyI7iSmzYs9gGcfzwRjWUJ4MWsuc5ZNRecLStwho0PExVXRgGOXtcRw==}
     peerDependencies:
       '@langchain/core': workspace:^
       react: ^18 || ^19
@@ -4623,19 +4603,8 @@ packages:
       zod-to-json-schema:
         optional: true
 
-  '@langchain/langgraph@1.2.6':
-    resolution: {integrity: sha512-5cX402dNGN6w9+0mlMU2dgUiKx6Y1tlENp7x05e9ByDbQCHSDc0kyqRWNFLGc7vatQ92S4ylxQrcCJvi8Fr4SQ==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      '@langchain/core': workspace:^
-      zod: ^3.25.32 || ^4.2.0
-      zod-to-json-schema: ^3.x
-    peerDependenciesMeta:
-      zod-to-json-schema:
-        optional: true
-
-  '@langchain/langgraph@1.2.8':
-    resolution: {integrity: sha512-kKkRpC5xFz1e6vPivE7lwRJa5oahLAMaVQvVGZdTa6uJIchIYJDIuM1n93FqGvg8aYVcgYU4FENtKKC5Eh1JYw==}
+  '@langchain/langgraph@1.2.9':
+    resolution: {integrity: sha512-3c7BtGycHC2v9p6w/Hv8L7kEl1YnZYOQTDJtmAp3knk6JOedO7d2bYP3y0SRyhv5orUEGf/KGvx8ZsB/ideP7g==}
     engines: {node: '>=18'}
     peerDependencies:
       '@langchain/core': workspace:^
@@ -15778,18 +15747,7 @@ snapshots:
       react: 19.0.0
       react-dom: 19.2.4(react@19.0.0)
 
-  '@langchain/langgraph-sdk@1.8.2(@langchain/core@libs+langchain-core)(react-dom@19.2.4(react@19.0.0))(react@19.0.0)':
-    dependencies:
-      '@types/json-schema': 7.0.15
-      p-queue: 9.1.2
-      p-retry: 7.1.1
-      uuid: 13.0.0
-    optionalDependencies:
-      '@langchain/core': link:libs/langchain-core
-      react: 19.0.0
-      react-dom: 19.2.4(react@19.0.0)
-
-  '@langchain/langgraph-sdk@1.8.8(@langchain/core@libs+langchain-core)(react-dom@19.2.4(react@19.0.0))(react@19.0.0)':
+  '@langchain/langgraph-sdk@1.8.9(@langchain/core@libs+langchain-core)(react-dom@19.2.4(react@19.0.0))(react@19.0.0)':
     dependencies:
       '@types/json-schema': 7.0.15
       p-queue: 9.1.2
@@ -15827,27 +15785,11 @@ snapshots:
       - react
       - react-dom
 
-  '@langchain/langgraph@1.2.6(@langchain/core@libs+langchain-core)(react-dom@19.2.4(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.25.2(zod@4.3.6))(zod@4.3.6)':
+  '@langchain/langgraph@1.2.9(@langchain/core@libs+langchain-core)(react-dom@19.2.4(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.25.2(zod@4.3.6))(zod@4.3.6)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
       '@langchain/langgraph-checkpoint': 1.0.1(@langchain/core@libs+langchain-core)
-      '@langchain/langgraph-sdk': 1.8.2(@langchain/core@libs+langchain-core)(react-dom@19.2.4(react@19.0.0))(react@19.0.0)
-      '@standard-schema/spec': 1.1.0
-      uuid: 10.0.0
-      zod: 4.3.6
-    optionalDependencies:
-      zod-to-json-schema: 3.25.2(zod@4.3.6)
-    transitivePeerDependencies:
-      - react
-      - react-dom
-      - svelte
-      - vue
-
-  '@langchain/langgraph@1.2.8(@langchain/core@libs+langchain-core)(react-dom@19.2.4(react@19.0.0))(react@19.0.0)(zod-to-json-schema@3.25.2(zod@4.3.6))(zod@4.3.6)':
-    dependencies:
-      '@langchain/core': link:libs/langchain-core
-      '@langchain/langgraph-checkpoint': 1.0.1(@langchain/core@libs+langchain-core)
-      '@langchain/langgraph-sdk': 1.8.8(@langchain/core@libs+langchain-core)(react-dom@19.2.4(react@19.0.0))(react@19.0.0)
+      '@langchain/langgraph-sdk': 1.8.9(@langchain/core@libs+langchain-core)(react-dom@19.2.4(react@19.0.0))(react@19.0.0)
       '@standard-schema/spec': 1.1.0
       uuid: 10.0.0
       zod: 4.3.6
