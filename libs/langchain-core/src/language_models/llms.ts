@@ -100,6 +100,7 @@ export abstract class BaseLLM<
       const prompt = BaseLLM._convertInputToPromptValue(input);
       const [runnableConfig, callOptions] =
         this._separateRunnableConfigFromCallOptionsCompat(options);
+      const invocationParams = this.invocationParams(callOptions);
       const callbackManager_ = await CallbackManager.configure(
         runnableConfig.callbacks,
         this.callbacks,
@@ -107,11 +108,15 @@ export abstract class BaseLLM<
         this.tags,
         runnableConfig.metadata,
         this.metadata,
-        { verbose: this.verbose }
+        {
+          verbose: this.verbose,
+          tracerInheritableMetadata:
+            this._filterInvocationParamsForTracing(invocationParams),
+        }
       );
       const extra = {
         options: callOptions,
-        invocation_params: this?.invocationParams(callOptions),
+        invocation_params: invocationParams,
         batch_size: 1,
       };
       const runManagers = await callbackManager_?.handleLLMStart(
@@ -236,6 +241,7 @@ export abstract class BaseLLM<
     ) {
       runManagers = startedRunManagers;
     } else {
+      const invocationParams = this.invocationParams(parsedOptions);
       const callbackManager_ = await CallbackManager.configure(
         handledOptions.callbacks,
         this.callbacks,
@@ -243,11 +249,15 @@ export abstract class BaseLLM<
         this.tags,
         handledOptions.metadata,
         this.metadata,
-        { verbose: this.verbose }
+        {
+          verbose: this.verbose,
+          tracerInheritableMetadata:
+            this._filterInvocationParamsForTracing(invocationParams),
+        }
       );
       const extra = {
         options: parsedOptions,
-        invocation_params: this?.invocationParams(parsedOptions),
+        invocation_params: invocationParams,
         batch_size: prompts.length,
       };
       runManagers = await callbackManager_?.handleLLMStart(
@@ -347,6 +357,7 @@ export abstract class BaseLLM<
       startedRunManagers?: CallbackManagerForLLMRun[];
     }
   > {
+    const invocationParams = this.invocationParams(parsedOptions);
     const callbackManager_ = await CallbackManager.configure(
       handledOptions.callbacks,
       this.callbacks,
@@ -354,11 +365,15 @@ export abstract class BaseLLM<
       this.tags,
       handledOptions.metadata,
       this.metadata,
-      { verbose: this.verbose }
+      {
+        verbose: this.verbose,
+        tracerInheritableMetadata:
+          this._filterInvocationParamsForTracing(invocationParams),
+      }
     );
     const extra = {
       options: parsedOptions,
-      invocation_params: this?.invocationParams(parsedOptions),
+      invocation_params: invocationParams,
       batch_size: prompts.length,
     };
     const runManagers = await callbackManager_?.handleLLMStart(
