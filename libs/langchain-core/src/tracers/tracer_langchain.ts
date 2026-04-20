@@ -188,7 +188,7 @@ export class LangChainTracer
         // tracing metadata is not accidentally clobbered by child runs.
         if (
           !Object.prototype.hasOwnProperty.call(mergedMetadata, key) ||
-          LANGSMITH_INHERITABLE_METADATA_KEYS.has(key)
+          OVERRIDABLE_LANGSMITH_INHERITABLE_METADATA_KEYS.has(key)
         ) {
           mergedMetadata[key] = value;
         }
@@ -304,12 +304,12 @@ function _patchMissingTracingDefaults(tracer: LangChainTracer, run: Run): void {
       (run.extra.metadata as Record<string, unknown> | undefined) ?? {};
     let didPatchMetadata = false;
     for (const [key, value] of Object.entries(tracer.tracingMetadata)) {
-      // `LANGSMITH_INHERITABLE_METADATA_KEYS` are a small, LangSmith-only
+      // `OVERRIDABLE_LANGSMITH_INHERITABLE_METADATA_KEYS` are a small, LangSmith-only
       // allowlist that bypasses the "first wins" merge so a nested caller
       // (e.g. a subagent) can override a parent-set value.
       if (
         !Object.prototype.hasOwnProperty.call(metadata, key) ||
-        LANGSMITH_INHERITABLE_METADATA_KEYS.has(key)
+        OVERRIDABLE_LANGSMITH_INHERITABLE_METADATA_KEYS.has(key)
       ) {
         if (metadata[key] !== value) {
           metadata[key] = value;
