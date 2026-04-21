@@ -41,14 +41,14 @@ test("Google AI - `temperature` must be in range [0.0,2.0]", async () => {
       new ChatGoogleGenerativeAI({
         temperature: -1.0,
         model: "gemini-2.0-flash",
-      })
+      }),
   ).toThrow();
   expect(
     () =>
       new ChatGoogleGenerativeAI({
         temperature: 2.1,
         model: "gemini-2.0-flash",
-      })
+      }),
   ).toThrow();
 });
 
@@ -65,7 +65,7 @@ test("Google AI - `maxOutputTokens` must be positive", async () => {
       new ChatGoogleGenerativeAI({
         maxOutputTokens: -1,
         model: "gemini-2.0-flash",
-      })
+      }),
   ).toThrow();
 });
 
@@ -75,7 +75,7 @@ test("Google AI - `topP` must be positive", async () => {
       new ChatGoogleGenerativeAI({
         topP: -1,
         model: "gemini-2.0-flash",
-      })
+      }),
   ).toThrow();
 });
 
@@ -85,7 +85,7 @@ test("Google AI - `topP` must be in the range [0,1]", async () => {
       new ChatGoogleGenerativeAI({
         topP: 3,
         model: "gemini-2.0-flash",
-      })
+      }),
   ).toThrow();
 });
 
@@ -95,7 +95,7 @@ test("Google AI - `topK` must be positive", async () => {
       new ChatGoogleGenerativeAI({
         topK: -1,
         model: "gemini-2.0-flash",
-      })
+      }),
   ).toThrow();
 });
 
@@ -118,7 +118,7 @@ test("Google AI - `safetySettings` category array must be unique", async () => {
             threshold: "BLOCK_ONLY_HIGH" as HarmBlockThreshold,
           },
         ],
-      })
+      }),
   ).toThrow();
 });
 
@@ -149,14 +149,14 @@ test("removeAdditionalProperties can remove all instances of additionalPropertie
   const parsedSchemaArr = removeAdditionalProperties(toJsonSchema(schema));
   const arrSchemaKeys = extractKeys(parsedSchemaArr);
   expect(
-    arrSchemaKeys.find((key) => key === "additionalProperties")
+    arrSchemaKeys.find((key) => key === "additionalProperties"),
   ).toBeUndefined();
   const parsedSchemaObj = removeAdditionalProperties(
-    toJsonSchema(questionSchema)
+    toJsonSchema(questionSchema),
   );
   const arrSchemaObj = extractKeys(parsedSchemaObj);
   expect(
-    arrSchemaObj.find((key) => key === "additionalProperties")
+    arrSchemaObj.find((key) => key === "additionalProperties"),
   ).toBeUndefined();
 
   const analysisSchema = z.object({
@@ -172,11 +172,11 @@ test("removeAdditionalProperties can remove all instances of additionalPropertie
       .optional(),
   });
   const parsedAnalysisSchema = removeAdditionalProperties(
-    toJsonSchema(analysisSchema)
+    toJsonSchema(analysisSchema),
   );
   const analysisSchemaObj = extractKeys(parsedAnalysisSchema);
   expect(
-    analysisSchemaObj.find((key) => key === "additionalProperties")
+    analysisSchemaObj.find((key) => key === "additionalProperties"),
   ).toBeUndefined();
 });
 
@@ -204,7 +204,7 @@ test("convertMessageContentToParts correctly handles message types", () => {
   ];
   const messagesAsGoogleParts = messages
     .map((msg, i) =>
-      convertMessageContentToParts(msg, false, messages.slice(0, i))
+      convertMessageContentToParts(msg, false, messages.slice(0, i)),
     )
     .flat();
   // console.log(messagesAsGoogleParts);
@@ -263,7 +263,7 @@ test("convertMessageContentToParts: correctly handles http url standard image bl
     },
   ]);
   expect(() =>
-    convertMessageContentToParts(message, false /* not multimodal */, [])
+    convertMessageContentToParts(message, false /* not multimodal */, []),
   ).toThrowError("This model does not support images");
 });
 
@@ -288,7 +288,7 @@ test("convertMessageContentToParts: correctly handles base64 standard image bloc
     },
   ]);
   expect(() =>
-    convertMessageContentToParts(message, false /* not multimodal */, [])
+    convertMessageContentToParts(message, false /* not multimodal */, []),
   ).toThrowError("This model does not support images");
 });
 
@@ -312,7 +312,7 @@ test("convertMessageContentToParts: correctly handles base64 data url standard i
     },
   ]);
   expect(() =>
-    convertMessageContentToParts(message, false /* not multimodal */, [])
+    convertMessageContentToParts(message, false /* not multimodal */, []),
   ).toThrowError("This model does not support images");
 });
 
@@ -358,7 +358,7 @@ test("convertMessageContentToParts: correctly handles base64 data url standard a
     },
   ]);
   expect(() =>
-    convertMessageContentToParts(message, false /* not multimodal */, [])
+    convertMessageContentToParts(message, false /* not multimodal */, []),
   ).toThrowError("This model does not support audio");
 });
 
@@ -383,7 +383,7 @@ test("convertMessageContentToParts: correctly handles http url standard audio bl
     },
   ]);
   expect(() =>
-    convertMessageContentToParts(message, false /* not multimodal */, [])
+    convertMessageContentToParts(message, false /* not multimodal */, []),
   ).toThrowError("This model does not support audio");
 });
 
@@ -408,7 +408,7 @@ test("convertMessageContentToParts: correctly handles base64 standard file block
     },
   ]);
   expect(() =>
-    convertMessageContentToParts(message, false /* not multimodal */, [])
+    convertMessageContentToParts(message, false /* not multimodal */, []),
   ).toThrowError("This model does not support files");
 });
 
@@ -433,7 +433,7 @@ test("convertMessageContentToParts: correctly handles http url standard file blo
     },
   ]);
   expect(() =>
-    convertMessageContentToParts(message, false /* not multimodal */, [])
+    convertMessageContentToParts(message, false /* not multimodal */, []),
   ).toThrowError("This model does not support files");
 });
 
@@ -457,7 +457,7 @@ test("convertMessageContentToParts: correctly handles base64 data url standard f
     },
   ]);
   expect(() =>
-    convertMessageContentToParts(message, false /* not multimodal */, [])
+    convertMessageContentToParts(message, false /* not multimodal */, []),
   ).toThrowError("This model does not support files");
 });
 
@@ -511,7 +511,7 @@ test("convertBaseMessagesToContent correctly creates properly formatted content"
     messages,
     false,
     false,
-    "model"
+    "model",
   );
   // console.log(messagesAsGoogleContent);
   // Google Generative AI API only allows for 'model' and 'user' roles
@@ -559,7 +559,7 @@ test("Input has single system message followed by one user message, convert syst
     messages,
     false,
     false,
-    "model"
+    "model",
   );
 
   expect(messagesAsGoogleContent).toEqual([
@@ -599,7 +599,7 @@ test("Input has no system message and one user message, convert system message i
     messages,
     false,
     false,
-    "model"
+    "model",
   );
 
   expect(messagesAsGoogleContent).toEqual([
@@ -620,7 +620,7 @@ test("Input has no system message and multiple user message, convert system mess
     messages,
     false,
     false,
-    "model"
+    "model",
   );
 
   expect(messagesAsGoogleContent).toEqual([
@@ -649,7 +649,7 @@ test("Input has single system message followed by one user message, convert syst
     messages,
     false,
     true,
-    "model"
+    "model",
   );
 
   expect(messagesAsGoogleContent).toEqual([
@@ -670,9 +670,9 @@ test("Input has single system message that is not the first message, convert sys
     new SystemMessage("You are a helpful assistant"),
   ];
 
-  expect(() => convertBaseMessagesToContent(messages, false, true, "model")).toThrow(
-    "System message should be the first one"
-  );
+  expect(() =>
+    convertBaseMessagesToContent(messages, false, true, "model"),
+  ).toThrow("System message should be the first one");
 });
 
 test("Input has multiple system message, convert system message is true", async () => {
@@ -681,9 +681,9 @@ test("Input has multiple system message, convert system message is true", async 
     new SystemMessage("You are a helpful assistant"),
   ];
 
-  expect(() => convertBaseMessagesToContent(messages, false, true, "model")).toThrow(
-    "System message should be the first one"
-  );
+  expect(() =>
+    convertBaseMessagesToContent(messages, false, true, "model"),
+  ).toThrow("System message should be the first one");
 });
 
 test("Input has no system message and one user message, convert system message is true", async () => {
@@ -693,7 +693,7 @@ test("Input has no system message and one user message, convert system message i
     messages,
     false,
     true,
-    "model"
+    "model",
   );
 
   expect(messagesAsGoogleContent).toEqual([
@@ -715,7 +715,7 @@ test("Input has no system message and multiple user messages, convert system mes
     messages,
     false,
     true,
-    "model"
+    "model",
   );
 
   expect(messagesAsGoogleContent).toEqual([
@@ -752,7 +752,7 @@ test("convertMessageContentToParts: should handle AIMessage with mixed content a
     }),
   ];
   expect(
-    convertMessageContentToParts(aiMessageWithString, isMultimodalModel, [])
+    convertMessageContentToParts(aiMessageWithString, isMultimodalModel, []),
   ).toEqual(expectedPartsAiString);
 
   const aiMessageWithArray = new AIMessage({
@@ -773,7 +773,7 @@ test("convertMessageContentToParts: should handle AIMessage with mixed content a
     }),
   ];
   expect(
-    convertMessageContentToParts(aiMessageWithArray, isMultimodalModel, [])
+    convertMessageContentToParts(aiMessageWithArray, isMultimodalModel, []),
   ).toEqual(expectedPartsAiArray);
 
   const humanMessageWithArray = new HumanMessage({
@@ -790,7 +790,7 @@ test("convertMessageContentToParts: should handle AIMessage with mixed content a
     { inlineData: { mimeType: "image/png", data: base64ImageData } },
   ];
   expect(
-    convertMessageContentToParts(humanMessageWithArray, isMultimodalModel, [])
+    convertMessageContentToParts(humanMessageWithArray, isMultimodalModel, []),
   ).toEqual(expectedPartsHumanArray);
 });
 
@@ -802,7 +802,7 @@ test("convertMessageContentToParts: should handle messages with content only (no
   });
   const expectedPartsAiString = [{ text: "Just an AI text response." }];
   expect(
-    convertMessageContentToParts(aiMessageWithString, isMultimodalModel, [])
+    convertMessageContentToParts(aiMessageWithString, isMultimodalModel, []),
   ).toEqual(expectedPartsAiString);
 
   const humanMessageWithString = new HumanMessage({
@@ -810,7 +810,7 @@ test("convertMessageContentToParts: should handle messages with content only (no
   });
   const expectedPartsHumanString = [{ text: "Just a human text input." }];
   expect(
-    convertMessageContentToParts(humanMessageWithString, isMultimodalModel, [])
+    convertMessageContentToParts(humanMessageWithString, isMultimodalModel, []),
   ).toEqual(expectedPartsHumanString);
 
   const aiMessageWithArray = new AIMessage({
@@ -824,7 +824,7 @@ test("convertMessageContentToParts: should handle messages with content only (no
     { text: "AI array part 2." },
   ];
   expect(
-    convertMessageContentToParts(aiMessageWithArray, isMultimodalModel, [])
+    convertMessageContentToParts(aiMessageWithArray, isMultimodalModel, []),
   ).toEqual(expectedPartsAiArray);
 
   const humanMessageWithArray = new HumanMessage({
@@ -838,7 +838,7 @@ test("convertMessageContentToParts: should handle messages with content only (no
     { text: "Human array part 2." },
   ];
   expect(
-    convertMessageContentToParts(humanMessageWithArray, isMultimodalModel, [])
+    convertMessageContentToParts(humanMessageWithArray, isMultimodalModel, []),
   ).toEqual(expectedPartsHumanArray);
 });
 
@@ -853,7 +853,7 @@ test("convertMessageContentToParts: should handle AIMessage with tool_calls only
     expect.objectContaining({ functionCall: { name: "get_time", args: {} } }),
   ];
   expect(
-    convertMessageContentToParts(messageWithEmptyString, isMultimodalModel, [])
+    convertMessageContentToParts(messageWithEmptyString, isMultimodalModel, []),
   ).toEqual(expectedParts);
 });
 
@@ -881,7 +881,7 @@ test("convertMessageContentToParts: should handle ToolMessage correctly (includi
   expect(
     convertMessageContentToParts(toolMessageSuccess, isMultimodalModel, [
       previousAiMessage,
-    ])
+    ]),
   ).toEqual(expectedPartsSuccess);
 
   const toolMessageError = new ToolMessage({
@@ -889,9 +889,9 @@ test("convertMessageContentToParts: should handle ToolMessage correctly (includi
     tool_call_id: "unknown_tool_id",
   });
   expect(() =>
-    convertMessageContentToParts(toolMessageError, isMultimodalModel, [])
+    convertMessageContentToParts(toolMessageError, isMultimodalModel, []),
   ).toThrow(
-    'Google requires a tool name for each tool call response, and we could not infer a called tool name for ToolMessage "undefined" from your passed messages. Please populate a "name" field on that ToolMessage explicitly.'
+    'Google requires a tool name for each tool call response, and we could not infer a called tool name for ToolMessage "undefined" from your passed messages. Please populate a "name" field on that ToolMessage explicitly.',
   );
 });
 
@@ -1017,7 +1017,7 @@ test("convertBaseMessagesToContent should handle AIMessages with custom names", 
   ];
 
   expect(() =>
-    convertBaseMessagesToContent(messages, true, false, "model")
+    convertBaseMessagesToContent(messages, true, false, "model"),
   ).not.toThrow();
 
   const result = convertBaseMessagesToContent(messages, true, false, "model");
@@ -1034,7 +1034,7 @@ test("invoke throws a descriptive error for system-only input before network cal
   const completionWithRetrySpy = vi.spyOn(model, "completionWithRetry");
 
   await expect(
-    model.invoke([new SystemMessage("You are a helpful assistant")])
+    model.invoke([new SystemMessage("You are a helpful assistant")]),
   ).rejects.toThrow(NO_HUMAN_MESSAGE_ERROR);
 
   expect(completionWithRetrySpy).not.toHaveBeenCalled();
@@ -1160,7 +1160,7 @@ describe("withStructuredOutput - StandardSchema", () => {
             type: "tool_call",
           },
         ],
-      })
+      }),
     );
 
     const schema = makeSerializableSchema();
@@ -1189,7 +1189,7 @@ describe("withStructuredOutput - StandardSchema", () => {
             type: "tool_call",
           },
         ],
-      })
+      }),
     );
 
     const schema = makeSerializableSchema();
@@ -1219,7 +1219,7 @@ describe("withStructuredOutput - StandardSchema", () => {
             type: "tool_call",
           },
         ],
-      })
+      }),
     );
 
     const schema = makeSerializableSchema();
