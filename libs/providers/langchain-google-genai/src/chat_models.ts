@@ -45,6 +45,7 @@ import {
   convertBaseMessagesToContent,
   convertResponseContentToChatGenerationChunk,
   convertUsageMetadata,
+  getMessageAuthor,
   mapGenerateContentResultToChatResult,
 } from "./utils/common.js";
 import { GoogleGenerativeAIToolsOutputParser } from "./output_parsers.js";
@@ -74,6 +75,9 @@ export type BaseMessageExamplePair = {
   input: BaseMessage;
   output: BaseMessage;
 };
+
+const NO_HUMAN_MESSAGE_ERROR =
+  "ChatGoogleGenerativeAI requires at least one HumanMessage in the input messages.";
 
 export interface GoogleGenerativeAIChatCallOptions extends BaseChatModelCallOptions {
   tools?: GoogleGenerativeAIToolType[];
@@ -850,12 +854,24 @@ export class ChatGoogleGenerativeAI
     };
   }
 
+  private assertHasHumanMessage(messages: BaseMessage[]): void {
+    const hasHumanMessage = messages.some((message) => {
+      const author = getMessageAuthor(message);
+      return author === "human" || author === "user";
+    });
+
+    if (!hasHumanMessage) {
+      throw new Error(NO_HUMAN_MESSAGE_ERROR);
+    }
+  }
+
   async _generate(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     options.signal?.throwIfAborted();
+    this.assertHasHumanMessage(messages);
     const prompt = convertBaseMessagesToContent(
       messages,
       this._isMultimodalModel,
@@ -925,6 +941,7 @@ export class ChatGoogleGenerativeAI
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
+    this.assertHasHumanMessage(messages);
     const prompt = convertBaseMessagesToContent(
       messages,
       this._isMultimodalModel,
