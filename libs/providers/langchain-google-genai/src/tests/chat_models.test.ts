@@ -9,7 +9,6 @@ import {
   HumanMessage,
   SystemMessage,
   ToolMessage,
-  type MessageContentComplex,
 } from "@langchain/core/messages";
 import { OutputParserException } from "@langchain/core/output_parsers";
 import { ChatGoogleGenerativeAI } from "../chat_models.js";
@@ -32,6 +31,9 @@ function extractKeys(obj: Record<string, any>, keys: string[] = []) {
   }
   return keys;
 }
+
+const NO_HUMAN_MESSAGE_ERROR =
+  "ChatGoogleGenerativeAI requires at least one HumanMessage in the input messages.";
 
 test("Google AI - `temperature` must be in range [0.0,2.0]", async () => {
   expect(
@@ -505,7 +507,12 @@ test("convertBaseMessagesToContent correctly creates properly formatted content"
     }),
   ];
 
-  const messagesAsGoogleContent = convertBaseMessagesToContent(messages, false);
+  const messagesAsGoogleContent = convertBaseMessagesToContent(
+    messages,
+    false,
+    false,
+    "model"
+  );
   // console.log(messagesAsGoogleContent);
   // Google Generative AI API only allows for 'model' and 'user' roles
   // This means that 'system', 'human' and 'tool' messages are converted
@@ -551,7 +558,8 @@ test("Input has single system message followed by one user message, convert syst
   const messagesAsGoogleContent = convertBaseMessagesToContent(
     messages,
     false,
-    false
+    false,
+    "model"
   );
 
   expect(messagesAsGoogleContent).toEqual([
@@ -571,7 +579,7 @@ test("Input has a system message that is not the first message, convert system m
     new SystemMessage("You are a helpful assistant"),
   ];
   expect(() => {
-    convertBaseMessagesToContent(messages, false, false);
+    convertBaseMessagesToContent(messages, false, false, "model");
   }).toThrow("System message should be the first one");
 });
 
@@ -581,7 +589,7 @@ test("Input has multiple system messages, convert system message is false", asyn
     new SystemMessage("You are not a helpful assistant"),
   ];
   expect(() => {
-    convertBaseMessagesToContent(messages, false, false);
+    convertBaseMessagesToContent(messages, false, false, "model");
   }).toThrow("System message should be the first one");
 });
 
@@ -590,7 +598,8 @@ test("Input has no system message and one user message, convert system message i
   const messagesAsGoogleContent = convertBaseMessagesToContent(
     messages,
     false,
-    false
+    false,
+    "model"
   );
 
   expect(messagesAsGoogleContent).toEqual([
@@ -610,7 +619,8 @@ test("Input has no system message and multiple user message, convert system mess
   const messagesAsGoogleContent = convertBaseMessagesToContent(
     messages,
     false,
-    false
+    false,
+    "model"
   );
 
   expect(messagesAsGoogleContent).toEqual([
@@ -638,7 +648,8 @@ test("Input has single system message followed by one user message, convert syst
   const messagesAsGoogleContent = convertBaseMessagesToContent(
     messages,
     false,
-    true
+    true,
+    "model"
   );
 
   expect(messagesAsGoogleContent).toEqual([
@@ -659,7 +670,7 @@ test("Input has single system message that is not the first message, convert sys
     new SystemMessage("You are a helpful assistant"),
   ];
 
-  expect(() => convertBaseMessagesToContent(messages, false, true)).toThrow(
+  expect(() => convertBaseMessagesToContent(messages, false, true, "model")).toThrow(
     "System message should be the first one"
   );
 });
@@ -670,7 +681,7 @@ test("Input has multiple system message, convert system message is true", async 
     new SystemMessage("You are a helpful assistant"),
   ];
 
-  expect(() => convertBaseMessagesToContent(messages, false, true)).toThrow(
+  expect(() => convertBaseMessagesToContent(messages, false, true, "model")).toThrow(
     "System message should be the first one"
   );
 });
@@ -681,7 +692,8 @@ test("Input has no system message and one user message, convert system message i
   const messagesAsGoogleContent = convertBaseMessagesToContent(
     messages,
     false,
-    true
+    true,
+    "model"
   );
 
   expect(messagesAsGoogleContent).toEqual([
@@ -702,7 +714,8 @@ test("Input has no system message and multiple user messages, convert system mes
   const messagesAsGoogleContent = convertBaseMessagesToContent(
     messages,
     false,
-    true
+    true,
+    "model"
   );
 
   expect(messagesAsGoogleContent).toEqual([
@@ -894,7 +907,7 @@ test("convertMessageContentToParts: correctly handles ToolMessage with array con
     tool_calls: [{ name: toolName, args: { input: "test" }, id: toolCallId }],
   });
 
-  const toolMessageContentArray: MessageContentComplex[] = [
+  const toolMessageContentArray: ContentBlock[] = [
     { type: "text", text: "Tool response text." },
     {
       type: "image_url",
@@ -938,7 +951,7 @@ test("convertMessageContentToParts: correctly handles ToolMessage with array con
     tool_calls: [{ name: toolName, args: { input: "test" }, id: toolCallId }],
   });
 
-  const toolMessageContentArray: MessageContentComplex[] = [
+  const toolMessageContentArray: ContentBlock[] = [
     { type: "text", text: "Tool error details text." },
     {
       type: "image_url",
@@ -1013,6 +1026,95 @@ test("convertBaseMessagesToContent should handle AIMessages with custom names", 
   expect(result[1].role).toBe("model");
 });
 
+test("invoke throws a descriptive error for system-only input before network call", async () => {
+  const model = new ChatGoogleGenerativeAI({
+    model: "gemini-2.0-flash",
+    apiKey: "testing",
+  });
+  const completionWithRetrySpy = vi.spyOn(model, "completionWithRetry");
+
+  await expect(
+    model.invoke([new SystemMessage("You are a helpful assistant")])
+  ).rejects.toThrow(NO_HUMAN_MESSAGE_ERROR);
+
+  expect(completionWithRetrySpy).not.toHaveBeenCalled();
+});
+
+test("invoke throws the same descriptive error for empty message arrays", async () => {
+  const model = new ChatGoogleGenerativeAI({
+    model: "gemini-2.0-flash",
+    apiKey: "testing",
+  });
+  const completionWithRetrySpy = vi.spyOn(model, "completionWithRetry");
+
+  await expect(model.invoke([])).rejects.toThrow(NO_HUMAN_MESSAGE_ERROR);
+
+  expect(completionWithRetrySpy).not.toHaveBeenCalled();
+});
+
+test("invoke with system and human messages succeeds", async () => {
+  const model = new ChatGoogleGenerativeAI({
+    model: "gemini-2.0-flash",
+    apiKey: "testing",
+  });
+  const completionWithRetrySpy = vi
+    .spyOn(model, "completionWithRetry")
+    .mockResolvedValue({
+      response: {
+        candidates: [
+          {
+            content: {
+              parts: [{ text: "It is sunny." }],
+            },
+          },
+        ],
+      },
+    } as Awaited<ReturnType<ChatGoogleGenerativeAI["completionWithRetry"]>>);
+
+  const result = await model.invoke([
+    new SystemMessage("You are a helpful assistant"),
+    new HumanMessage("How is the weather?"),
+  ]);
+
+  expect(result.content).toBe("It is sunny.");
+  expect(completionWithRetrySpy).toHaveBeenCalledOnce();
+  expect(completionWithRetrySpy.mock.calls[0]?.[0]).toMatchObject({
+    contents: [
+      {
+        role: "user",
+        parts: [{ text: "How is the weather?" }],
+      },
+    ],
+  });
+});
+
+test("invoke with a human-only message succeeds", async () => {
+  const model = new ChatGoogleGenerativeAI({
+    model: "gemini-2.0-flash",
+    apiKey: "testing",
+  });
+  const completionWithRetrySpy = vi
+    .spyOn(model, "completionWithRetry")
+    .mockResolvedValue({
+      response: {
+        candidates: [
+          {
+            content: {
+              parts: [{ text: "Hello there." }],
+            },
+          },
+        ],
+      },
+    } as Awaited<ReturnType<ChatGoogleGenerativeAI["completionWithRetry"]>>);
+
+  const result = await model.invoke([
+    new HumanMessage("Say hello in two words."),
+  ]);
+
+  expect(result.content).toBe("Hello there.");
+  expect(completionWithRetrySpy).toHaveBeenCalledOnce();
+});
+
 describe("withStructuredOutput - StandardSchema", () => {
   function makeSerializableSchema() {
     return {
@@ -1048,7 +1150,7 @@ describe("withStructuredOutput - StandardSchema", () => {
       apiKey: "testing",
     });
     vi.spyOn(model, "invoke").mockResolvedValue(
-      new AIMessage({
+      new AIMessageChunk({
         content: "",
         tool_calls: [
           {
@@ -1107,7 +1209,7 @@ describe("withStructuredOutput - StandardSchema", () => {
       apiKey: "testing",
     });
     vi.spyOn(model, "invoke").mockResolvedValue(
-      new AIMessage({
+      new AIMessageChunk({
         content: "",
         tool_calls: [
           {
@@ -1131,7 +1233,7 @@ describe("withStructuredOutput - StandardSchema", () => {
   });
 
   test("functionCalling with includeRaw returns raw and parsed", async () => {
-    const mockResponse = new AIMessage({
+    const mockResponse = new AIMessageChunk({
       content: "",
       tool_calls: [
         {
