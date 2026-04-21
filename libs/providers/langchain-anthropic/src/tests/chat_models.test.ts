@@ -9,17 +9,10 @@ import { z } from "zod";
 import { z as z4 } from "zod/v4";
 import { OutputParserException } from "@langchain/core/output_parsers";
 import { tool } from "@langchain/core/tools";
-import {
-  ContentBlockParam as AnthropicContentBlockParam,
-  MessageCreateParamsNonStreaming,
-} from "@anthropic-ai/sdk/resources";
+import { ContentBlockParam as AnthropicContentBlockParam } from "@anthropic-ai/sdk/resources";
 import { ChatAnthropic, ChatAnthropicMessages } from "../chat_models.js";
-import {
-  _convertMessagesToAnthropicPayload,
-  applyCacheControlToPayload,
-} from "../utils/message_inputs.js";
+import { _convertMessagesToAnthropicPayload } from "../utils/message_inputs.js";
 import { AnthropicToolExtrasSchema } from "../utils/tools.js";
-import { AnthropicMessageCreateParams } from "../types.js";
 
 test("constructor supports model shorthand for ChatAnthropicMessages", () => {
   const model = new ChatAnthropicMessages("claude-haiku-4-5-20251001", {
@@ -1227,134 +1220,44 @@ describe("ContentBlock.Multimodal.Image format support", () => {
   });
 });
 
-describe("applyCacheControlToPayload", () => {
-  const cacheControl = { type: "ephemeral" as const, ttl: "5m" as const };
-
-  test("applies cache_control to the last content block of string content", () => {
-    const payload: AnthropicMessageCreateParams = {
-      max_tokens: 1000,
-      model: "claude-sonnet-4-5-20250929",
-      messages: [
-        { role: "user" as const, content: "Hello" },
-        { role: "assistant" as const, content: "Hi there!" },
-        { role: "user" as const, content: "How are you?" },
-      ],
-    };
-
-    const result = applyCacheControlToPayload(payload, cacheControl);
-
-    expect(result.messages[2].content).toEqual([
-      {
-        type: "text",
-        text: "How are you?",
-        cache_control: cacheControl,
-      },
-    ]);
-    // Other messages should be unchanged
-    expect(result.messages[0].content).toBe("Hello");
-    expect(result.messages[1].content).toBe("Hi there!");
+test("invocationParams includes cache_control when provided in call options", () => {
+  const model = new ChatAnthropic({
+    modelName: "claude-haiku-4-5-20251001",
+    temperature: 0,
+    anthropicApiKey: "testing",
   });
 
-  test("applies cache_control to the last content block of array content", () => {
-    const payload: AnthropicMessageCreateParams = {
-      max_tokens: 1000,
-      model: "claude-sonnet-4-5-20250929",
-      messages: [
-        { role: "user" as const, content: "Hello" },
-        {
-          role: "assistant" as const,
-          content: [
-            { type: "text" as const, text: "First block" },
-            { type: "text" as const, text: "Second block" },
-          ],
-        },
-      ],
-    };
-
-    const result = applyCacheControlToPayload(payload, cacheControl);
-
-    const lastMessage = result.messages[1];
-    expect(Array.isArray(lastMessage.content)).toBe(true);
-    if (Array.isArray(lastMessage.content)) {
-      expect(lastMessage.content[0]).toEqual({
-        type: "text",
-        text: "First block",
-      });
-      expect(lastMessage.content[1]).toEqual({
-        type: "text",
-        text: "Second block",
-        cache_control: cacheControl,
-      });
-    }
+  const params = model.invocationParams({
+    cache_control: { type: "ephemeral" },
   });
 
-  test("applies cache_control to tool_use blocks without corruption", () => {
-    const payload: AnthropicMessageCreateParams = {
-      max_tokens: 1000,
-      model: "claude-sonnet-4-5-20250929",
-      messages: [
-        { role: "user" as const, content: "Hello" },
-        {
-          role: "assistant" as const,
-          content: [
-            { type: "text" as const, text: "I'll help with that" },
-            {
-              type: "tool_use" as const,
-              id: "tool_123",
-              name: "get_weather",
-              input: { location: "San Francisco" },
-            },
-          ],
-        },
-      ],
-    };
+  expect(params.cache_control).toEqual({ type: "ephemeral" });
+});
 
-    const result = applyCacheControlToPayload(payload, cacheControl);
-
-    const lastMessage = result.messages[1];
-    if (Array.isArray(lastMessage.content)) {
-      const toolUseBlock = lastMessage.content[1];
-      // Verify all original fields are preserved
-      expect(toolUseBlock).toHaveProperty("type", "tool_use");
-      expect(toolUseBlock).toHaveProperty("id", "tool_123");
-      expect(toolUseBlock).toHaveProperty("name", "get_weather");
-      expect(toolUseBlock).toHaveProperty("input", {
-        location: "San Francisco",
-      });
-      // And cache_control is added
-      expect(toolUseBlock).toHaveProperty("cache_control", cacheControl);
-    }
+test("invocationParams includes cache_control with 1h ttl", () => {
+  const model = new ChatAnthropic({
+    modelName: "claude-haiku-4-5-20251001",
+    temperature: 0,
+    anthropicApiKey: "testing",
   });
 
-  test("returns unchanged payload when messages array is empty", () => {
-    const payload: AnthropicMessageCreateParams = {
-      messages: [],
-      max_tokens: 1000,
-      model: "claude-sonnet-4-5-20250929",
-    };
-
-    const result = applyCacheControlToPayload(payload, cacheControl);
-
-    expect(result).toEqual(payload);
+  const params = model.invocationParams({
+    cache_control: { type: "ephemeral", ttl: "1h" },
   });
 
-  test("handles 1h TTL", () => {
-    const payload: AnthropicMessageCreateParams = {
-      messages: [{ role: "user" as const, content: "Hello" }],
-      max_tokens: 1000,
-      model: "claude-sonnet-4-5-20250929",
-    };
-    const hourCacheControl = { type: "ephemeral" as const, ttl: "1h" as const };
+  expect(params.cache_control).toEqual({ type: "ephemeral", ttl: "1h" });
+});
 
-    const result = applyCacheControlToPayload(payload, hourCacheControl);
-
-    if (Array.isArray(result.messages[0].content)) {
-      expect(result.messages[0].content[0]).toHaveProperty(
-        "cache_control",
-        hourCacheControl
-      );
-    }
+test("invocationParams does not include cache_control when not provided", () => {
+  const model = new ChatAnthropic({
+    modelName: "claude-haiku-4-5-20251001",
+    temperature: 0,
+    anthropicApiKey: "testing",
   });
+
+  const params = model.invocationParams({});
+
+  expect(params.cache_control).toBeUndefined();
 });
 
 describe("File ContentBlock handling", () => {
