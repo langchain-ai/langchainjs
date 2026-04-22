@@ -1,6 +1,11 @@
 import { WatsonXAI } from "@ibm-cloud/watsonx-ai";
 import { Gateway } from "@ibm-cloud/watsonx-ai/gateway";
-import { describe, test, expect } from "vitest";
+import {
+  IamAuthenticator,
+  BearerTokenAuthenticator,
+  CloudPakForDataAuthenticator,
+} from "ibm-cloud-sdk-core";
+import { describe, test, expect, beforeEach, afterEach } from "vitest";
 import {
   authenticateAndSetInstance,
   authenticateAndSetGatewayInstance,
@@ -58,13 +63,492 @@ describe("Utils tests", () => {
       expect(instance).toBeInstanceOf(WatsonXAI);
     });
 
-    test("authenticateAndSetInstance with cp4d auth returns undefined without credentials", () => {
+    test("authenticateAndSetGatewayInstance with bearer token", () => {
+      const instance = authenticateAndSetGatewayInstance({
+        version: "2024-05-31",
+        serviceUrl,
+        watsonxAIAuthType: "bearertoken",
+        watsonxAIBearerToken: "fake_token",
+      });
+      expect(instance).toBeInstanceOf(Gateway);
+    });
+
+    test("authenticateAndSetGatewayInstance with cp4d auth", () => {
+      const instance = authenticateAndSetGatewayInstance({
+        version: "2024-05-31",
+        serviceUrl,
+        watsonxAIAuthType: "cp4d",
+        watsonxAIUsername: "user",
+        watsonxAIPassword: "pass",
+      });
+      expect(instance).toBeInstanceOf(Gateway);
+    });
+  });
+
+  describe("Authentication with alternative prop names", () => {
+    test("authenticateAndSetInstance with apiKey instead of watsonxAIApikey", () => {
+      const instance = authenticateAndSetInstance({
+        version: "2024-05-31",
+        serviceUrl,
+        authType: "iam",
+        apiKey: "fake_key",
+      });
+      expect(instance).toBeInstanceOf(WatsonXAI);
+    });
+
+    test("authenticateAndSetInstance with apiKey instead of watsonxAIApikey and 'iam' as default authType", () => {
+      const instance = authenticateAndSetInstance({
+        version: "2024-05-31",
+        serviceUrl,
+        apiKey: "fake_key",
+      });
+      expect(instance).toBeInstanceOf(WatsonXAI);
+    });
+
+    test("authenticateAndSetInstance with bearerToken instead of watsonxAIBearerToken", () => {
+      const instance = authenticateAndSetInstance({
+        version: "2024-05-31",
+        serviceUrl,
+        authType: "bearertoken",
+        bearerToken: "fake_token",
+      });
+      expect(instance).toBeInstanceOf(WatsonXAI);
+    });
+
+    test("authenticateAndSetInstance with username/password instead of watsonxAI prefixed", () => {
+      const instance = authenticateAndSetInstance({
+        version: "2024-05-31",
+        serviceUrl,
+        authType: "cp4d",
+        username: "user",
+        password: "pass",
+      });
+      expect(instance).toBeInstanceOf(WatsonXAI);
+    });
+
+    test("authenticateAndSetGatewayInstance with alternative prop names", () => {
+      const instance = authenticateAndSetGatewayInstance({
+        version: "2024-05-31",
+        serviceUrl,
+        authType: "iam",
+        apiKey: "fake_key",
+      });
+      expect(instance).toBeInstanceOf(Gateway);
+    });
+  });
+
+  describe("Authentication fallback to environment variables", () => {
+    test("authenticateAndSetInstance without explicit auth creates instance (env fallback)", () => {
+      const instance = authenticateAndSetInstance({
+        version: "2024-05-31",
+        serviceUrl,
+      });
+
+      expect(instance).toBeInstanceOf(WatsonXAI);
+    });
+
+    test("authenticateAndSetGatewayInstance without explicit auth creates instance (env fallback)", () => {
+      const instance = authenticateAndSetGatewayInstance({
+        version: "2024-05-31",
+        serviceUrl,
+      });
+
+      expect(instance).toBeInstanceOf(Gateway);
+    });
+  });
+
+  describe("Authenticator type verification", () => {
+    test("creates IamAuthenticator when authType is 'iam' with apiKey", () => {
+      const instance = authenticateAndSetInstance({
+        version: "2024-05-31",
+        serviceUrl,
+        watsonxAIAuthType: "iam",
+        watsonxAIApikey: "fake_key",
+      });
+
+      expect(instance).toBeInstanceOf(WatsonXAI);
+      const authenticator = instance["authenticator"];
+      expect(authenticator).toBeInstanceOf(IamAuthenticator);
+    });
+
+    test("creates BearerTokenAuthenticator when authType is 'bearertoken'", () => {
+      const instance = authenticateAndSetInstance({
+        version: "2024-05-31",
+        serviceUrl,
+        watsonxAIAuthType: "bearertoken",
+        watsonxAIBearerToken: "fake_token",
+      });
+
+      expect(instance).toBeInstanceOf(WatsonXAI);
+      const authenticator = instance["authenticator"];
+      expect(authenticator).toBeInstanceOf(BearerTokenAuthenticator);
+    });
+
+    test("creates CloudPakForDataAuthenticator when authType is 'cp4d' with username and password", () => {
       const instance = authenticateAndSetInstance({
         version: "2024-05-31",
         serviceUrl,
         watsonxAIAuthType: "cp4d",
+        watsonxAIUsername: "user",
+        watsonxAIPassword: "pass",
       });
-      expect(instance).toBeUndefined();
+
+      expect(instance).toBeInstanceOf(WatsonXAI);
+      const authenticator = instance["authenticator"];
+      expect(authenticator).toBeInstanceOf(CloudPakForDataAuthenticator);
+    });
+
+    test("creates CloudPakForDataAuthenticator when authType is 'cp4d' with username and apikey", () => {
+      const instance = authenticateAndSetInstance({
+        version: "2024-05-31",
+        serviceUrl,
+        watsonxAIAuthType: "cp4d",
+        watsonxAIUsername: "user",
+        watsonxAIApikey: "fake_key",
+      });
+      expect(instance).toBeInstanceOf(WatsonXAI);
+      const authenticator = instance["authenticator"];
+      expect(authenticator).toBeInstanceOf(CloudPakForDataAuthenticator);
+    });
+
+    test("creates IamAuthenticator with alternative prop names (apiKey)", () => {
+      const instance = authenticateAndSetInstance({
+        version: "2024-05-31",
+        serviceUrl,
+        authType: "iam",
+        apiKey: "fake_key",
+      });
+      expect(instance).toBeInstanceOf(WatsonXAI);
+      const authenticator = instance["authenticator"];
+      expect(authenticator).toBeInstanceOf(IamAuthenticator);
+    });
+
+    test("creates BearerTokenAuthenticator with alternative prop names (bearerToken)", () => {
+      const instance = authenticateAndSetInstance({
+        version: "2024-05-31",
+        serviceUrl,
+        watsonxAIAuthType: "bearertoken",
+        bearerToken: "fake_token",
+      });
+      expect(instance).toBeInstanceOf(WatsonXAI);
+      const authenticator = instance["authenticator"];
+      expect(authenticator).toBeInstanceOf(BearerTokenAuthenticator);
+    });
+
+    test("creates CloudPakForDataAuthenticator with alternative prop names (username/password)", () => {
+      const instance = authenticateAndSetInstance({
+        version: "2024-05-31",
+        serviceUrl,
+        watsonxAIAuthType: "cp4d",
+        username: "user",
+        password: "pass",
+      });
+      expect(instance).toBeInstanceOf(WatsonXAI);
+      const authenticator = instance["authenticator"];
+      expect(authenticator).toBeInstanceOf(CloudPakForDataAuthenticator);
+    });
+
+    test("defaults to 'iam' authType when only apiKey is provided", () => {
+      const instance = authenticateAndSetInstance({
+        version: "2024-05-31",
+        serviceUrl,
+        apiKey: "fake_key",
+      });
+      expect(instance).toBeInstanceOf(WatsonXAI);
+      const authenticator = instance["authenticator"];
+      expect(authenticator).toBeInstanceOf(IamAuthenticator);
+    });
+
+    test("Gateway instance creates IamAuthenticator", () => {
+      const instance = authenticateAndSetGatewayInstance({
+        version: "2024-05-31",
+        serviceUrl,
+        watsonxAIAuthType: "iam",
+        watsonxAIApikey: "fake_key",
+      });
+      expect(instance).toBeInstanceOf(Gateway);
+      const authenticator = instance["authenticator"];
+      expect(authenticator).toBeInstanceOf(IamAuthenticator);
+    });
+
+    test("Gateway instance creates BearerTokenAuthenticator", () => {
+      const instance = authenticateAndSetGatewayInstance({
+        version: "2024-05-31",
+        serviceUrl,
+        watsonxAIAuthType: "bearertoken",
+        watsonxAIBearerToken: "fake_token",
+      });
+      expect(instance).toBeInstanceOf(Gateway);
+      const authenticator = instance["authenticator"];
+      expect(authenticator).toBeInstanceOf(BearerTokenAuthenticator);
+    });
+
+    test("Gateway instance creates CloudPakForDataAuthenticator", () => {
+      const instance = authenticateAndSetGatewayInstance({
+        version: "2024-05-31",
+        serviceUrl,
+        watsonxAIAuthType: "cp4d",
+        watsonxAIUsername: "user",
+        watsonxAIPassword: "pass",
+      });
+      expect(instance).toBeInstanceOf(Gateway);
+      const authenticator = instance["authenticator"];
+      expect(authenticator).toBeInstanceOf(CloudPakForDataAuthenticator);
+    });
+  });
+
+  describe("Environment variable fallback behavior", () => {
+    const originalEnv = process.env;
+
+    beforeEach(() => {
+      // Reset environment before each test
+      process.env = { ...originalEnv };
+    });
+
+    afterEach(() => {
+      // Restore original environment
+      process.env = originalEnv;
+    });
+
+    test("falls back to environment variables when no auth params provided", () => {
+      // Set environment variables that the IBM SDK would use
+      process.env.WATSONX_AI_APIKEY = "env_api_key";
+
+      const instance = authenticateAndSetInstance({
+        version: "2024-05-31",
+        serviceUrl,
+      });
+
+      expect(instance).toBeInstanceOf(WatsonXAI);
+      // When no authenticator is explicitly provided, SDK uses env vars
+      // The instance should still be created successfully
+    });
+
+    test("explicit params override environment variables", () => {
+      // Set environment variables
+      process.env.WATSONX_AI_APIKEY = "env_api_key";
+
+      const instance = authenticateAndSetInstance({
+        version: "2024-05-31",
+        serviceUrl,
+        watsonxAIAuthType: "iam",
+        watsonxAIApikey: "explicit_key",
+      });
+
+      expect(instance).toBeInstanceOf(WatsonXAI);
+      const authenticator = instance["authenticator"];
+      expect(authenticator).toBeInstanceOf(IamAuthenticator);
+      expect(authenticator.apikey).toBe("explicit_key");
+    });
+
+    test("creates instance when no explicit credentials provided (relies on SDK env fallback)", () => {
+      const instance = authenticateAndSetInstance({
+        version: "2024-05-31",
+        serviceUrl,
+      });
+
+      expect(instance).toBeInstanceOf(WatsonXAI);
+    });
+  });
+
+  describe("CP4D authentication with custom URL", () => {
+    test("uses watsonxAIUrl for CP4D authentication URL", () => {
+      const customUrl = "https://custom.cp4d.url";
+      const instance = authenticateAndSetInstance({
+        version: "2024-05-31",
+        serviceUrl,
+        watsonxAIAuthType: "cp4d",
+        watsonxAIUsername: "user",
+        watsonxAIPassword: "pass",
+        watsonxAIUrl: customUrl,
+      });
+
+      expect(instance).toBeInstanceOf(WatsonXAI);
+      const authenticator = instance["authenticator"];
+      expect(authenticator).toBeInstanceOf(CloudPakForDataAuthenticator);
+      expect(authenticator.url).toBe(`${customUrl}/icp4d-api/v1/authorize`);
+    });
+
+    test("falls back to serviceUrl for CP4D authentication URL when watsonxAIUrl not provided", () => {
+      const instance = authenticateAndSetInstance({
+        version: "2024-05-31",
+        serviceUrl,
+        watsonxAIAuthType: "cp4d",
+        watsonxAIUsername: "user",
+        watsonxAIPassword: "pass",
+      });
+
+      expect(instance).toBeInstanceOf(WatsonXAI);
+      const authenticator = instance["authenticator"];
+      expect(authenticator).toBeInstanceOf(CloudPakForDataAuthenticator);
+      expect(authenticator.url).toBe(`${serviceUrl}/icp4d-api/v1/authorize`);
+    });
+
+    test("uses authUrl as alternative to watsonxAIUrl", () => {
+      const customUrl = "https://custom.auth.url";
+      const instance = authenticateAndSetInstance({
+        version: "2024-05-31",
+        serviceUrl,
+        watsonxAIAuthType: "cp4d",
+        username: "user",
+        password: "pass",
+        authUrl: customUrl,
+      });
+
+      expect(instance).toBeInstanceOf(WatsonXAI);
+      const authenticator = instance["authenticator"];
+      expect(authenticator).toBeInstanceOf(CloudPakForDataAuthenticator);
+      expect(authenticator.url).toBe(`${customUrl}/icp4d-api/v1/authorize`);
+    });
+
+    test("watsonxAIUrl takes precedence over authUrl", () => {
+      const primaryUrl = "https://primary.url";
+      const fallbackUrl = "https://fallback.url";
+      const instance = authenticateAndSetInstance({
+        version: "2024-05-31",
+        serviceUrl,
+        watsonxAIAuthType: "cp4d",
+        watsonxAIUsername: "user",
+        watsonxAIPassword: "pass",
+        watsonxAIUrl: primaryUrl,
+        authUrl: fallbackUrl,
+      });
+
+      expect(instance).toBeInstanceOf(WatsonXAI);
+      const authenticator = instance["authenticator"];
+      expect(authenticator).toBeInstanceOf(CloudPakForDataAuthenticator);
+      expect(authenticator.url).toBe(`${primaryUrl}/icp4d-api/v1/authorize`);
+    });
+
+    test("CP4D with disableSSL option", () => {
+      const instance = authenticateAndSetInstance({
+        version: "2024-05-31",
+        serviceUrl,
+        watsonxAIAuthType: "cp4d",
+        watsonxAIUsername: "user",
+        watsonxAIPassword: "pass",
+        disableSSL: true,
+      });
+
+      expect(instance).toBeInstanceOf(WatsonXAI);
+      const authenticator = instance["authenticator"];
+      expect(authenticator).toBeInstanceOf(CloudPakForDataAuthenticator);
+      expect(authenticator.disableSslVerification).toBe(true);
+    });
+  });
+
+  describe("Invalid authentication configurations", () => {
+    test("IAM without apikey throws error", () => {
+      expect(() => {
+        authenticateAndSetInstance({
+          version: "2024-05-31",
+          serviceUrl,
+          watsonxAIAuthType: "iam",
+        });
+      }).toThrow(/ApiKey is required for IAM auth/);
+    });
+
+    test("bearertoken without token throws error", () => {
+      expect(() => {
+        authenticateAndSetInstance({
+          version: "2024-05-31",
+          serviceUrl,
+          watsonxAIAuthType: "bearertoken",
+        });
+      }).toThrow(/BearerToken is required for BearerToken auth/);
+    });
+
+    test("CP4D without username throws error", () => {
+      expect(() => {
+        authenticateAndSetInstance({
+          version: "2024-05-31",
+          serviceUrl,
+          watsonxAIAuthType: "cp4d",
+          watsonxAIPassword: "pass",
+        });
+      }).toThrow(/Username and Password or ApiKey is required/);
+    });
+
+    test("CP4D without password or apikey throws error", () => {
+      expect(() => {
+        authenticateAndSetInstance({
+          version: "2024-05-31",
+          serviceUrl,
+          watsonxAIAuthType: "cp4d",
+          watsonxAIUsername: "user",
+        });
+      }).toThrow(/Username and Password or ApiKey is required/);
+    });
+
+    test("CP4D with username but no password or apikey throws error", () => {
+      expect(() => {
+        authenticateAndSetInstance({
+          version: "2024-05-31",
+          serviceUrl,
+          watsonxAIAuthType: "cp4d",
+          watsonxAIUsername: "user",
+        });
+      }).toThrow(/Username and Password or ApiKey is required/);
+    });
+  });
+
+  describe("AWS authentication", () => {
+    test("creates AWS authenticator with apikey and url", () => {
+      const instance = authenticateAndSetInstance({
+        version: "2024-05-31",
+        serviceUrl,
+        watsonxAIAuthType: "aws",
+        watsonxAIApikey: "fake_key",
+        watsonxAIUrl: "https://aws.url",
+      });
+      expect(instance).toBeInstanceOf(WatsonXAI);
+      const authenticator = instance["authenticator"];
+      expect(authenticator).toBeDefined();
+      // AWS authenticator is a custom type from the SDK
+      expect(authenticator.constructor.name).toBe("AWSAuthenticator");
+    });
+
+    test("creates AWS authenticator with alternative prop names", () => {
+      const instance = authenticateAndSetInstance({
+        version: "2024-05-31",
+        serviceUrl,
+        authType: "aws",
+        apiKey: "fake_key",
+        authUrl: "https://aws.url",
+      });
+      expect(instance).toBeInstanceOf(WatsonXAI);
+      const authenticator = instance["authenticator"];
+      expect(authenticator).toBeDefined();
+      expect(authenticator.constructor.name).toBe("AWSAuthenticator");
+    });
+
+    test("AWS authenticator with disableSSL option", () => {
+      const instance = authenticateAndSetInstance({
+        version: "2024-05-31",
+        serviceUrl,
+        watsonxAIAuthType: "aws",
+        watsonxAIApikey: "fake_key",
+        watsonxAIUrl: "https://aws.url",
+        disableSSL: true,
+      });
+      expect(instance).toBeInstanceOf(WatsonXAI);
+      const authenticator = instance["authenticator"];
+      expect(authenticator).toBeDefined();
+      expect(authenticator.disableSslVerification).toBe(true);
+    });
+
+    test("Gateway instance creates AWS authenticator", () => {
+      const instance = authenticateAndSetGatewayInstance({
+        version: "2024-05-31",
+        serviceUrl,
+        watsonxAIAuthType: "aws",
+        watsonxAIApikey: "fake_key",
+        watsonxAIUrl: "https://aws.url",
+      });
+      expect(instance).toBeInstanceOf(Gateway);
+      const authenticator = instance["authenticator"];
+      expect(authenticator).toBeDefined();
+      expect(authenticator.constructor.name).toBe("AWSAuthenticator");
     });
   });
 

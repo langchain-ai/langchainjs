@@ -26,6 +26,13 @@ export interface WatsonxAuth {
   watsonxAIAuthType?: string;
   disableSSL?: boolean;
   serviceUrl: string;
+  // new fields
+  apiKey?: string;
+  bearerToken?: string;
+  username?: string;
+  password?: string;
+  authType?: string;
+  authUrl?: string;
 }
 
 export interface WatsonxInit {

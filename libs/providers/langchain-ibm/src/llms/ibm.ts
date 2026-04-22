@@ -192,6 +192,12 @@ export class WatsonxLLM<
       "watsonxAIUrl",
       "watsonxAIAuthType",
       "disableSSL",
+      "apiKey",
+      "bearerToken",
+      "username",
+      "password",
+      "authType",
+      "authUrl",
     ];
 
     const sharedProps = [
@@ -319,6 +325,12 @@ export class WatsonxLLM<
       disableSSL,
       version,
       serviceUrl,
+      apiKey,
+      bearerToken,
+      username,
+      password,
+      authType,
+      authUrl,
     } = fields;
 
     const authData = {
@@ -331,6 +343,12 @@ export class WatsonxLLM<
       disableSSL,
       version,
       serviceUrl,
+      apiKey,
+      bearerToken,
+      username,
+      password,
+      authType,
+      authUrl,
     };
 
     if (this.modelGateway) {
@@ -357,6 +375,11 @@ export class WatsonxLLM<
       watsonxAIUsername: "WATSONX_AI_USERNAME",
       watsonxAIPassword: "WATSONX_AI_PASSWORD",
       watsonxAIUrl: "WATSONX_AI_URL",
+      authUrl: "WATSONX_AI_URL",
+      bearerToken: "WATSONX_AI_BEARER_TOKEN",
+      username: "WATSONX_AI_USERNAME",
+      password: "WATSONX_AI_PASSWORD",
+      authType: "WATSONX_AI_AUTH_TYPE",
     };
   }
 
@@ -371,6 +394,11 @@ export class WatsonxLLM<
       watsonxAIUsername: "watsonx_ai_username",
       watsonxAIPassword: "watsonx_ai_password",
       watsonxAIUrl: "watsonx_ai_url",
+      authUrl: "watsonx_ai_url",
+      bearerToken: "watsonx_ai_bearer_token",
+      username: "watsonx_ai_username",
+      password: "watsonx_ai_password",
+      authType: "watsonx_ai_auth_type",
     };
   }
 

@@ -465,6 +465,10 @@ export class ChatWatsonx<
       watsonxAIUsername: "WATSONX_AI_USERNAME",
       watsonxAIPassword: "WATSONX_AI_PASSWORD",
       watsonxAIUrl: "WATSONX_AI_URL",
+      authUrl: "WATSONX_AI_URL",
+      bearerToken: "WATSONX_AI_BEARER_TOKEN",
+      username: "WATSONX_AI_USERNAME",
+      password: "WATSONX_AI_PASSWORD",
     };
   }
 
@@ -479,6 +483,10 @@ export class ChatWatsonx<
       watsonxAIUsername: "watsonx_ai_username",
       watsonxAIPassword: "watsonx_ai_password",
       watsonxAIUrl: "watsonx_ai_url",
+      authUrl: "watsonx_ai_url",
+      bearerToken: "watsonx_ai_bearer_token",
+      username: "watsonx_ai_username",
+      password: "watsonx_ai_password",
     };
   }
 
@@ -517,6 +525,12 @@ export class ChatWatsonx<
         "watsonxAIUrl",
         "watsonxAIAuthType",
         "disableSSL",
+        "apiKey",
+        "bearerToken",
+        "username",
+        "password",
+        "authType",
+        "authUrl",
       ],
 
       SHARED: [
@@ -713,6 +727,12 @@ export class ChatWatsonx<
       disableSSL,
       version,
       serviceUrl,
+      apiKey,
+      bearerToken,
+      username,
+      password,
+      authType,
+      authUrl,
     } = fields;
 
     const authData = {
@@ -725,6 +745,12 @@ export class ChatWatsonx<
       disableSSL,
       version,
       serviceUrl,
+      apiKey,
+      bearerToken,
+      username,
+      password,
+      authType,
+      authUrl,
     };
 
     if (this.modelGateway) {
