@@ -593,8 +593,10 @@ export class ChatOpenAI<
   CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions,
 > extends BaseChatOpenAI<CallOptions> {
   /**
-   * Whether to use the responses API for all requests. If `false` the responses API will be used
-   * only when required in order to fulfill the request.
+   * Whether to use the responses API. When `true`, always use the Responses
+   * API. When explicitly set to `false`, never use the Responses API (even
+   * if auto-detection would otherwise enable it). When not set, the Responses
+   * API is used automatically when required to fulfill the request.
    */
   useResponsesApi = false;
 
@@ -610,6 +612,8 @@ export class ChatOpenAI<
     return [...super.callKeys, "useResponsesApi"];
   }
 
+  private _useResponsesApiExplicitlyDisabled = false;
+
   protected fields?: ChatOpenAIFields;
 
   constructor(model: string, fields?: Omit<ChatOpenAIFields, "model">);
@@ -622,11 +626,17 @@ export class ChatOpenAI<
     super(fields);
     this.fields = fields;
     this.useResponsesApi = fields?.useResponsesApi ?? false;
+    this._useResponsesApiExplicitlyDisabled =
+      fields?.useResponsesApi === false;
     this.responses = fields?.responses ?? new ChatOpenAIResponses(fields);
     this.completions = fields?.completions ?? new ChatOpenAICompletions(fields);
   }
 
   protected _useResponsesApi(options: this["ParsedCallOptions"] | undefined) {
+    if (this._useResponsesApiExplicitlyDisabled) {
+      return false;
+    }
+
     const usesBuiltInTools = options?.tools?.some(isBuiltInTool);
     const hasResponsesOnlyKwargs =
       options?.previous_response_id != null ||
