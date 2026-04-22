@@ -1,5 +1,14 @@
 # langchain
 
+## 1.3.4
+
+### Patch Changes
+
+- [#10713](https://github.com/langchain-ai/langchainjs/pull/10713) [`49ac9e7`](https://github.com/langchain-ai/langchainjs/commit/49ac9e7404e5a9269b9ac047711ee96dd928b231) Thanks [@jacoblee93](https://github.com/jacoblee93)! - feat(langchain): Adds ls_agent_type to create agent runs as tracing metadata
+
+- Updated dependencies [[`589f29c`](https://github.com/langchain-ai/langchainjs/commit/589f29ce844eb252c2d5e6b0f8d26de37763a0d7), [`2e9e696`](https://github.com/langchain-ai/langchainjs/commit/2e9e6969e248a53ede0659a41d0ac8dbaf291ab4)]:
+  - @langchain/core@1.1.41
+
 ## 1.3.3
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # @langchain/google-common
 
+## 2.1.28
+
+### Patch Changes
+
+- [#10711](https://github.com/langchain-ai/langchainjs/pull/10711) [`2e9e696`](https://github.com/langchain-ai/langchainjs/commit/2e9e6969e248a53ede0659a41d0ac8dbaf291ab4) Thanks [@jacoblee93](https://github.com/jacoblee93)! - feat(core): Add chat model and llm invocation params to traced metadata
+
+- Updated dependencies [[`589f29c`](https://github.com/langchain-ai/langchainjs/commit/589f29ce844eb252c2d5e6b0f8d26de37763a0d7), [`2e9e696`](https://github.com/langchain-ai/langchainjs/commit/2e9e6969e248a53ede0659a41d0ac8dbaf291ab4)]:
+  - @langchain/core@1.1.41
+
 ## 2.1.27
 
 ### Patch Changes

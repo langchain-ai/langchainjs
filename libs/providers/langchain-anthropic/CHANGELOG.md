@@ -1,5 +1,14 @@
 # @langchain/anthropic
 
+## 1.3.27
+
+### Patch Changes
+
+- [#10726](https://github.com/langchain-ai/langchainjs/pull/10726) [`ad153c1`](https://github.com/langchain-ai/langchainjs/commit/ad153c185b6cf813d4b7695740d9a4453d2cb63f) Thanks [@hntrl](https://github.com/hntrl)! - feat(anthropic): add Claude Opus 4.7 compatibility updates
+
+- Updated dependencies [[`589f29c`](https://github.com/langchain-ai/langchainjs/commit/589f29ce844eb252c2d5e6b0f8d26de37763a0d7), [`2e9e696`](https://github.com/langchain-ai/langchainjs/commit/2e9e6969e248a53ede0659a41d0ac8dbaf291ab4)]:
+  - @langchain/core@1.1.41
+
 ## 1.3.26
 
 ### Patch Changes
