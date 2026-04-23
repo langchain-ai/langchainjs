@@ -105,7 +105,28 @@ ${JSON.stringify(toJsonSchema(this.schema))}
    */
   async parse(text: string): Promise<InferInteropZodOutput<T>> {
     try {
-      const trimmedText = text.trim();
+      let trimmedText = text.trim();
+
+      // Handle Gemini reasoning blocks: when the model returns thinking/reasoning
+      // alongside structured output, the content is a JSON array of mixed types.
+      // Extract only the text parts to get the actual structured output.
+      // See: https://github.com/langchain-ai/langchainjs/issues/10437
+      try {
+        const maybeArray = JSON.parse(trimmedText);
+        if (Array.isArray(maybeArray)) {
+          const textParts = maybeArray
+            .filter(
+              (item: { type?: string; text?: string }) =>
+                item.type === "text" && typeof item.text === "string"
+            )
+            .map((item: { text: string }) => item.text);
+          if (textParts.length > 0) {
+            trimmedText = textParts.join("\n");
+          }
+        }
+      } catch {
+        // Not a JSON array, proceed with original text
+      }
 
       const json =
         // first case: if back ticks appear at the start of the text
