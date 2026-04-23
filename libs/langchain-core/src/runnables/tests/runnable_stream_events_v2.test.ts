@@ -2038,6 +2038,51 @@ test("Runnable streamEvents method with simple tools", async () => {
   ]);
 });
 
+test("Runnable streamEvents method with tool calls includes tool_call_id on tool events", async () => {
+  const expectedToolCallId = "call_abc123";
+  const testTool = tool((params: { x: number; y: string }) => params.y, {
+    schema: z.object({
+      x: z.number(),
+      y: z.string(),
+    }),
+    name: "with_parameters",
+    description: "A tool that echoes a value",
+  });
+  const toolCall = {
+    id: expectedToolCallId,
+    name: "with_parameters",
+    args: { x: 1, y: "2" },
+    type: "tool_call" as const,
+  };
+  const chain = RunnableLambda.from(async (_input: string, config) =>
+    testTool.invoke(toolCall, config)
+  );
+  const events: StreamEvent[] = [];
+  const eventStream = await chain.streamEvents("run", { version: "v2" });
+  for await (const event of eventStream) {
+    events.push(event);
+  }
+
+  const toolStartEvent = events.find(
+    (event) =>
+      event.event === "on_tool_start" && event.name === "with_parameters"
+  );
+  const toolEndEvent = events.find(
+    (event) => event.event === "on_tool_end" && event.name === "with_parameters"
+  );
+
+  expect(toolStartEvent).toBeDefined();
+  expect(toolEndEvent).toBeDefined();
+  expect(toolStartEvent?.data.input).toEqual({
+    input: JSON.stringify(toolCall.args),
+    tool_call_id: expectedToolCallId,
+  });
+  expect(toolEndEvent?.data.input).toEqual({
+    input: JSON.stringify(toolCall.args),
+    tool_call_id: expectedToolCallId,
+  });
+});
+
 test("Runnable methods with a custom event", async () => {
   const lambda = RunnableLambda.from(
     async (params: { x: number; y: string }, config) => {
