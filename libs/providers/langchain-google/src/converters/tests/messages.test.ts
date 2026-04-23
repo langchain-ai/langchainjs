@@ -740,4 +740,37 @@ describe("convertMessagesToGeminiContents", () => {
       (userContent!.parts[3] as Gemini.Part.FileData).fileData!.fileUri
     ).toBe("gs://bucket/report.pdf");
   });
+
+  test("standard converter only sends functionResponse for ToolMessage (no duplicate text)", () => {
+    // When ToolMessage goes through the v1 standard converter, contentBlocks
+    // produces a text part AND the explicit handler adds a functionResponse
+    // part. Without filtering, both are sent to Gemini, duplicating content.
+    const messages = [
+      new HumanMessage({
+        content: "search",
+        response_metadata: { output_version: "v1" },
+      }),
+      new AIMessage({
+        content: [{ type: "text", text: "calling tool" }],
+        tool_calls: [{ id: "call_1", name: "search", args: { q: "test" } }],
+        response_metadata: { output_version: "v1" },
+      }),
+      new ToolMessage({
+        tool_call_id: "call_1",
+        content: "result data",
+        response_metadata: { output_version: "v1" },
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+    const functionContent = contents.find((c) =>
+      c.parts.some((p) => "functionResponse" in p)
+    )!;
+
+    expect(functionContent.parts).toHaveLength(1);
+    expect(
+      (functionContent.parts[0] as Record<string, unknown>).functionResponse
+    ).toBeDefined();
+    expect(functionContent.parts.filter((p) => "text" in p)).toHaveLength(0);
+  });
 });
