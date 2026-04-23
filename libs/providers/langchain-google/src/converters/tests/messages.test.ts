@@ -740,4 +740,38 @@ describe("convertMessagesToGeminiContents", () => {
       (userContent!.parts[3] as Gemini.Part.FileData).fileData!.fileUri
     ).toBe("gs://bucket/report.pdf");
   });
+
+  test("strips type field from executableCode and codeExecutionResult blocks in multi-turn", () => {
+    const messages = [
+      new HumanMessage("render a chart"),
+      new AIMessage({
+        content: [
+          { type: "text", text: "Here is the code:" },
+          {
+            type: "executableCode",
+            executableCode: { language: "PYTHON", code: "print('hi')" },
+          },
+          {
+            type: "codeExecutionResult",
+            codeExecutionResult: { outcome: "OUTCOME_OK", output: "hi\n" },
+          },
+        ],
+        response_metadata: { model_provider: "google" },
+      }),
+      new HumanMessage("looks good"),
+    ];
+
+    const result = convertMessagesToGeminiContents(messages);
+    const modelContent = result.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+    expect(modelContent!.parts.length).toBe(3);
+
+    const codePart = modelContent!.parts[1] as Record<string, unknown>;
+    expect(codePart.executableCode).toBeDefined();
+    expect(codePart.type).toBeUndefined();
+
+    const resultPart = modelContent!.parts[2] as Record<string, unknown>;
+    expect(resultPart.codeExecutionResult).toBeDefined();
+    expect(resultPart.type).toBeUndefined();
+  });
 });
