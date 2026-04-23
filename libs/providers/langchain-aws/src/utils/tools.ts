@@ -130,15 +130,20 @@ export function convertToBedrockToolChoice(
 export function supportedToolChoiceValuesForModel(
   model: string
 ): Array<"auto" | "any" | "tool"> | undefined {
+  // Strip regional inference profile prefixes (e.g. "us.anthropic.", "eu.anthropic.", "ap.anthropic.")
+  // so model IDs like "eu.anthropic.claude-haiku-4-5-20251001-v1:0" match the same
+  // patterns as their non-prefixed equivalents.
+  const normalized = model.replace(/^(?:us|eu|ap)\.anthropic\./, "");
   if (
-    model.includes("claude-3") ||
-    model.includes("claude-4") ||
-    model.includes("claude-opus-4") ||
-    model.includes("claude-sonnet-4")
+    normalized.includes("claude-3") ||
+    normalized.includes("claude-4") ||
+    normalized.includes("claude-haiku-4") ||
+    normalized.includes("claude-opus-4") ||
+    normalized.includes("claude-sonnet-4")
   ) {
     return ["auto", "any", "tool"];
   }
-  if (model.includes("mistral-large")) {
+  if (normalized.includes("mistral-large")) {
     return ["auto", "any"];
   }
   return undefined;
