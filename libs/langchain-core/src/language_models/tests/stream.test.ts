@@ -1,6 +1,6 @@
 import { describe, test, expect } from "vitest";
 import type { ChatModelStreamEvent } from "../event.js";
-import { ChatModelStream, ChatModelStream } from "../stream.js";
+import { ChatModelStream } from "../stream.js";
 
 // Helper: create an async iterable from an array of events
 async function* iterEvents(
@@ -23,12 +23,12 @@ function textStreamEvents(): ChatModelStreamEvent[] {
     {
       type: "content-block-delta",
       index: 0,
-      delta: { type: "text-delta", text: "Hello" },
+      content: { type: "text", text: "Hello" },
     },
     {
       type: "content-block-delta",
       index: 0,
-      delta: { type: "text-delta", text: " world" },
+      content: { type: "text", text: " world" },
     },
     {
       type: "content-block-finish",
@@ -65,12 +65,12 @@ function complexStreamEvents(): ChatModelStreamEvent[] {
     {
       type: "content-block-delta",
       index: 0,
-      delta: { type: "reasoning-delta", reasoning: "Let me" },
+      content: { type: "reasoning", reasoning: "Let me" },
     },
     {
       type: "content-block-delta",
       index: 0,
-      delta: { type: "reasoning-delta", reasoning: " think..." },
+      content: { type: "reasoning", reasoning: " think..." },
     },
     {
       type: "content-block-finish",
@@ -86,12 +86,12 @@ function complexStreamEvents(): ChatModelStreamEvent[] {
     {
       type: "content-block-delta",
       index: 1,
-      delta: { type: "text-delta", text: "The answer" },
+      content: { type: "text", text: "The answer" },
     },
     {
       type: "content-block-delta",
       index: 1,
-      delta: { type: "text-delta", text: " is 42." },
+      content: { type: "text", text: " is 42." },
     },
     {
       type: "content-block-finish",
@@ -112,8 +112,8 @@ function complexStreamEvents(): ChatModelStreamEvent[] {
     {
       type: "content-block-delta",
       index: 2,
-      delta: {
-        type: "tool-call-delta",
+      content: {
+        type: "tool_call_chunk",
         id: "call_1",
         name: "calculator",
         args: '{"expr',
@@ -122,14 +122,11 @@ function complexStreamEvents(): ChatModelStreamEvent[] {
     {
       type: "content-block-delta",
       index: 2,
-      delta: {
-        type: "block-delta",
-        fields: {
-          type: "tool_call_chunk",
-          id: "call_1",
-          name: "calculator",
-          args: '{"expr":"6*7"}',
-        },
+      content: {
+        type: "tool_call_chunk",
+        id: "call_1",
+        name: "calculator",
+        args: '":"6*7"}',
       },
     },
     {
@@ -277,20 +274,19 @@ describe("ChatModelStream", () => {
     test("await resolves to final usage", async () => {
       const stream = new ChatModelStream(iterEvents(complexStreamEvents()));
       const usage = await stream.usage;
-      expect(usage.input_tokens).toBe(50);
-      expect(usage.output_tokens).toBe(30);
-      expect(usage.total_tokens).toBe(80);
+      expect(usage?.input_tokens).toBe(50);
+      expect(usage?.output_tokens).toBe(30);
+      expect(usage?.total_tokens).toBe(80);
     });
 
-    test("resolves to zero usage when none provided", async () => {
+    test("resolves to undefined usage when none provided", async () => {
       const events: ChatModelStreamEvent[] = [
         { type: "message-start" },
-        { type: "message-finish", reason: "stop" },
+        { type: "message-finish" },
       ];
       const stream = new ChatModelStream(iterEvents(events));
       const usage = await stream.usage;
-      expect(usage.input_tokens).toBe(0);
-      expect(usage.output_tokens).toBe(0);
+      expect(usage).toBeUndefined();
     });
   });
 
@@ -378,7 +374,7 @@ describe("ChatModelStream", () => {
       expect(text).toBe("The answer is 42.");
       expect(tools.length).toBe(1);
       expect(tools[0]!.name).toBe("calculator");
-      expect(usage.total_tokens).toBe(80);
+      expect(usage?.total_tokens).toBe(80);
     });
 
     test("iterating raw events then awaiting sub-stream via replay", async () => {
@@ -415,7 +411,7 @@ describe("ChatModelStream", () => {
         {
           type: "content-block-delta",
           index: 0,
-          delta: { type: "text-delta", text: "Result" },
+          content: { type: "text", text: "Result" },
         },
         {
           type: "content-block-finish",
@@ -458,7 +454,7 @@ describe("ChatModelStream", () => {
         {
           type: "content-block-delta",
           index: 0,
-          delta: { type: "text-delta", text: "Hello" },
+          content: { type: "text", text: "Hello" },
         },
         {
           type: "content-block-finish",
@@ -486,7 +482,7 @@ describe("ChatModelStream", () => {
         {
           type: "content-block-delta",
           index: 0,
-          delta: { type: "text-delta", text: "Partial" },
+          content: { type: "text", text: "Partial" },
         },
         { type: "error", message: "Connection lost", code: "CONN_ERR" },
         { type: "message-finish", reason: "stop" },

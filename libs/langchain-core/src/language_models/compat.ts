@@ -9,7 +9,7 @@
 import { isAIMessageChunk } from "../messages/ai.js";
 import type { ContentBlock } from "../messages/content/index.js";
 import type { ChatGenerationChunk } from "../outputs.js";
-import type { ChatModelStreamEvent, ContentBlockDelta } from "./event.js";
+import type { ChatModelStreamEvent } from "./event.js";
 
 /**
  * Convert an async iterable of legacy `ChatGenerationChunk`s into
@@ -74,7 +74,7 @@ export async function* convertChunksToEvents(
         yield {
           type: "content-block-delta" as const,
           index: blockIndex,
-          delta: { type: "text-delta" as const, text: content },
+          content: { type: "text" as const, text: content },
         };
       }
     } else if (Array.isArray(content)) {
@@ -94,12 +94,11 @@ export async function* convertChunksToEvents(
           };
         } else {
           const block = activeBlocks.get(blockIndex)!;
-          const delta = contentBlockToDelta(part);
-          block.accumulated = applyDeltaToBlock(block.accumulated, delta);
+          block.accumulated = applyDeltaToBlock(block.accumulated, part);
           yield {
             type: "content-block-delta" as const,
             index: blockIndex,
-            delta,
+            content: part,
           };
         }
       }
@@ -136,7 +135,7 @@ export async function* convertChunksToEvents(
           };
         }
 
-        // Accumulate tool call args internally, emit as block-delta with snapshot
+        // Accumulate tool call args internally, emit incremental content chunks.
         const block = activeBlocks.get(blockIndex)!;
         const acc = block.accumulated as {
           args?: string;
@@ -149,10 +148,7 @@ export async function* convertChunksToEvents(
         yield {
           type: "content-block-delta" as const,
           index: blockIndex,
-          delta: {
-            type: "block-delta" as const,
-            fields: { ...block.accumulated },
-          },
+          content: { ...(block.accumulated as ContentBlock) },
         };
       }
     }
@@ -196,54 +192,40 @@ export async function* convertChunksToEvents(
  */
 function applyDeltaToBlock(
   block: ContentBlock,
-  delta: ContentBlockDelta
+  delta: ContentBlock
 ): ContentBlock {
-  switch (delta.type) {
-    case "text-delta":
-      return {
-        ...block,
-        text: ((block as { text?: string }).text ?? "") + delta.text,
-      };
-    case "reasoning-delta":
-      return {
-        ...block,
-        reasoning:
-          ((block as { reasoning?: string }).reasoning ?? "") + delta.reasoning,
-      };
-    case "block-delta":
-      return { ...block, ...delta.fields };
-    default:
-      return block;
+  if (block.type !== delta.type) {
+    return { ...delta };
   }
-}
 
-/**
- * Convert a legacy content block part to a typed delta.
- * @internal
- */
-function contentBlockToDelta(part: ContentBlock): ContentBlockDelta {
-  switch (part.type) {
+  switch (delta.type) {
     case "text":
       return {
-        type: "text-delta" as const,
-        text: (part as ContentBlock.Text).text ?? "",
+        ...block,
+        ...delta,
+        text: ((block as { text?: string }).text ?? "") + delta.text,
       };
     case "reasoning":
       return {
-        type: "reasoning-delta" as const,
-        reasoning: (part as ContentBlock.Reasoning).reasoning ?? "",
+        ...block,
+        ...delta,
+        reasoning:
+          ((block as { reasoning?: string }).reasoning ?? "") + delta.reasoning,
       };
     case "tool_call_chunk":
-    case "tool_call":
-      return {
-        type: "block-delta" as const,
-        fields: part,
-      };
+    case "server_tool_call_chunk": {
+      const merged = { ...block, ...delta } as Record<string, unknown>;
+      if (delta.id == null && "id" in block && block.id != null) {
+        merged.id = block.id;
+      }
+      if (delta.name == null && "name" in block && block.name != null) {
+        merged.name = block.name;
+      }
+      merged.args = `${("args" in block ? block.args : "") ?? ""}${delta.args ?? ""}`;
+      return merged as unknown as ContentBlock;
+    }
     default:
-      return {
-        type: "block-delta" as const,
-        fields: part,
-      };
+      return { ...block, ...delta };
   }
 }
 

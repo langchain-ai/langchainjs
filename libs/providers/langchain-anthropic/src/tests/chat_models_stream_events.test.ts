@@ -1,6 +1,6 @@
 import { describe, test, expect } from "vitest";
 import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
-import { ChatModelStream } from "@langchain/core/language_models/stream";
+import { ChatModelStream } from "../../../../langchain-core/src/language_models/stream.js";
 import { ChatAnthropic } from "../chat_models.js";
 import type { BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
 
@@ -23,7 +23,7 @@ class MockStreamChatAnthropic extends ChatAnthropic {
   protected async createStreamWithRetry(): Promise<any> {
     const events = this.mockEvents;
     return {
-      controller: { abort: () => {} },
+      controller: { abort: () => { } },
       async *[Symbol.asyncIterator]() {
         for (const event of events) {
           yield event;
@@ -281,17 +281,17 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
 
       // First delta: incremental "Hello"
       const d1 = deltas[0] as {
-        delta: { type: string; text?: string };
+        content: { type: string; text?: string };
       };
-      expect(d1.delta.type).toBe("text-delta");
-      expect(d1.delta.text).toBe("Hello");
+      expect(d1.content.type).toBe("text");
+      expect(d1.content.text).toBe("Hello");
 
       // Second delta: incremental " world"
       const d2 = deltas[1] as {
-        delta: { type: string; text?: string };
+        content: { type: string; text?: string };
       };
-      expect(d2.delta.type).toBe("text-delta");
-      expect(d2.delta.text).toBe(" world");
+      expect(d2.content.type).toBe("text");
+      expect(d2.content.text).toBe(" world");
     });
 
     test("content-block-finish carries finalized text", async () => {
@@ -346,20 +346,21 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
           e.type === "content-block-delta" &&
           "index" in e &&
           e.index === 0 &&
-          "delta" in e &&
-          (e.delta as { type: string }).type === "reasoning-delta"
+          "content" in e &&
+          (e.content as { type: string }).type === "reasoning" &&
+          "reasoning" in e.content
       );
       expect(reasoningDeltas.length).toBe(2);
 
       const rd1 = reasoningDeltas[0] as {
-        delta: { type: string; reasoning: string };
+        content: { type: string; reasoning: string };
       };
-      expect(rd1.delta.reasoning).toBe("Let me");
+      expect(rd1.content.reasoning).toBe("Let me");
 
       const rd2 = reasoningDeltas[1] as {
-        delta: { type: string; reasoning: string };
+        content: { type: string; reasoning: string };
       };
-      expect(rd2.delta.reasoning).toBe(" reason...");
+      expect(rd2.content.reasoning).toBe(" reason...");
 
       // Reasoning finish
       const reasoningFinish = events.find(
@@ -398,15 +399,15 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
         events.push(event);
       }
 
-      // Signature delta should be emitted as a block-delta
+      // Signature delta should be emitted as a content block update
       const sigDelta = events.find(
         (e) =>
           e.type === "content-block-delta" &&
-          "delta" in e &&
-          (e.delta as { type: string }).type === "block-delta"
-      ) as { delta: { type: string; fields?: { signature?: string } } };
+          "content" in e &&
+          (e.content as { signature?: string }).signature === "sig_abc"
+      ) as { content: { type: string; signature?: string } };
       expect(sigDelta).toBeDefined();
-      expect(sigDelta.delta.fields?.signature).toBe("sig_abc");
+      expect(sigDelta.content.signature).toBe("sig_abc");
     });
   });
 
@@ -429,23 +430,23 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       expect(toolStart.content.name).toBe("web_search");
       expect(toolStart.content.id).toBe("toolu_01ABC");
 
-      // Deltas carry incremental tool-call-delta
+      // Deltas carry incremental tool_call_chunk content
       const toolDeltas = events.filter(
         (e) => e.type === "content-block-delta" && "index" in e && e.index === 1
       );
       expect(toolDeltas.length).toBe(2);
 
       const td1 = toolDeltas[0] as {
-        delta: { type: string; fields?: { args?: string } };
+        content: { type: string; args?: string };
       };
-      expect(td1.delta.type).toBe("block-delta");
-      expect(td1.delta.fields?.args).toBe('{"query"');
+      expect(td1.content.type).toBe("tool_call_chunk");
+      expect(td1.content.args).toBe('{"query"');
 
       const td2 = toolDeltas[1] as {
-        delta: { type: string; fields?: { args?: string } };
+        content: { type: string; args?: string };
       };
-      expect(td2.delta.type).toBe("block-delta");
-      expect(td2.delta.fields?.args).toBe('{"query":"weather"}');
+      expect(td2.content.type).toBe("tool_call_chunk");
+      expect(td2.content.args).toBe(':"weather"}');
     });
 
     test("tool call finish has parsed args", async () => {
@@ -621,14 +622,18 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
   describe("integration with ChatModelStream", () => {
     test("text sub-stream works end-to-end", async () => {
       const model = new MockStreamChatAnthropic(textOnlyEvents());
-      const stream = model.streamV2([]);
+      const stream = new ChatModelStream(
+        model._streamChatModelEvents([], {} as BaseChatModelCallOptions)
+      );
       const text = await stream.text;
       expect(text).toBe("Hello world");
     });
 
     test("toolCalls sub-stream works end-to-end", async () => {
       const model = new MockStreamChatAnthropic(toolCallEvents());
-      const stream = model.streamV2([]);
+      const stream = new ChatModelStream(
+        model._streamChatModelEvents([], {} as BaseChatModelCallOptions)
+      );
       const calls = await stream.toolCalls;
       expect(calls.length).toBe(1);
       expect(calls[0]!.name).toBe("web_search");
@@ -637,14 +642,18 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
 
     test("reasoning sub-stream works end-to-end", async () => {
       const model = new MockStreamChatAnthropic(thinkingPlusTextEvents());
-      const stream = model.streamV2([]);
+      const stream = new ChatModelStream(
+        model._streamChatModelEvents([], {} as BaseChatModelCallOptions)
+      );
       const reasoning = await stream.reasoning;
       expect(reasoning).toBe("Let me reason...");
     });
 
     test("output assembles correct AIMessage", async () => {
       const model = new MockStreamChatAnthropic(toolCallEvents());
-      const stream = model.streamV2([]);
+      const stream = new ChatModelStream(
+        model._streamChatModelEvents([], {} as BaseChatModelCallOptions)
+      );
       const message = await stream.output;
 
       expect(message.id).toBe("msg_03GHI");
@@ -672,22 +681,30 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
 
     test("usage sub-stream works end-to-end", async () => {
       const model = new MockStreamChatAnthropic(cacheUsageEvents());
-      const stream = model.streamV2([]);
+      const stream = new ChatModelStream(
+        model._streamChatModelEvents([], {
+          streamUsage: true,
+        } as BaseChatModelCallOptions)
+      );
       const usage = await stream.usage;
-      expect(usage.input_tokens).toBe(800);
-      expect(usage.output_tokens).toBe(3);
+      expect(usage?.input_tokens).toBe(800);
+      expect(usage?.output_tokens).toBe(3);
     });
 
     test("await stream returns AIMessage directly", async () => {
       const model = new MockStreamChatAnthropic(textOnlyEvents());
-      const message = await model.streamV2([]);
+      const message = await new ChatModelStream(
+        model._streamChatModelEvents([], {} as BaseChatModelCallOptions)
+      );
       expect(message._getType()).toBe("ai");
       expect(message.id).toBe("msg_01ABC");
     });
 
     test("sequential sub-stream consumption", async () => {
       const model = new MockStreamChatAnthropic(toolCallEvents());
-      const stream = model.streamV2([]);
+      const stream = new ChatModelStream(
+        model._streamChatModelEvents([], {} as BaseChatModelCallOptions)
+      );
 
       // Sequential consumption works reliably.
       // Parallel consumption with Promise.all has a known microtask

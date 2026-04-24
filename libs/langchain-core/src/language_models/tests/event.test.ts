@@ -58,13 +58,13 @@ describe("ChatModelStreamEvent types", () => {
     const event: ContentBlockDeltaEvent = {
       type: "content-block-delta",
       index: 0,
-      delta: { type: "text-delta", text: " world" },
+      content: { type: "text", text: " world" },
     };
     expect(event.type).toBe("content-block-delta");
     expect(event.index).toBe(0);
-    expect(event.delta.type).toBe("text-delta");
-    if (event.delta.type === "text-delta") {
-      expect(event.delta.text).toBe(" world");
+    expect(event.content.type).toBe("text");
+    if (event.content.type === "text") {
+      expect(event.content.text).toBe(" world");
     }
   });
 
@@ -72,45 +72,36 @@ describe("ChatModelStreamEvent types", () => {
     const event: ContentBlockDeltaEvent = {
       type: "content-block-delta",
       index: 1,
-      delta: {
-        type: "block-delta",
-        fields: {
-          type: "tool_call_chunk",
-          id: "call_1",
-          name: "search",
-          args: '{"q":"wea',
-        },
+      content: {
+        type: "tool_call_chunk",
+        id: "call_1",
+        name: "search",
+        args: '{"q":"wea',
       },
     };
     expect(event.type).toBe("content-block-delta");
-    expect(event.delta.type).toBe("block-delta");
+    expect(event.content.type).toBe("tool_call_chunk");
   });
 
   test("ContentBlockDeltaEvent with reasoning-delta", () => {
     const event: ContentBlockDeltaEvent = {
       type: "content-block-delta",
       index: 0,
-      delta: { type: "reasoning-delta", reasoning: "Let me think" },
+      content: { type: "reasoning", reasoning: "Let me think" },
     };
-    expect(event.delta.type).toBe("reasoning-delta");
-    if (event.delta.type === "reasoning-delta") {
-      expect(event.delta.reasoning).toBe("Let me think");
+    expect(event.content.type).toBe("reasoning");
+    if (event.content.type === "reasoning") {
+      expect(event.content.reasoning).toBe("Let me think");
     }
   });
 
-  test("ContentBlockDeltaEvent with block-delta", () => {
+  test("ContentBlockDeltaEvent with content block delta", () => {
     const event: ContentBlockDeltaEvent = {
       type: "content-block-delta",
       index: 0,
-      delta: {
-        type: "block-delta",
-        fields: { type: "reasoning", signature: "sig_abc" },
-      },
+      content: { type: "reasoning", signature: "sig_abc" },
     };
-    expect(event.delta.type).toBe("block-delta");
-    if (event.delta.type === "block-delta") {
-      expect(event.delta.fields.type).toBe("reasoning");
-    }
+    expect(event.content.type).toBe("reasoning");
   });
 
   test("ContentBlockFinishEvent with text", () => {
@@ -179,7 +170,7 @@ describe("ChatModelStreamEvent types", () => {
       {
         type: "content-block-delta",
         index: 0,
-        delta: { type: "text-delta", text: "hi" },
+        content: { type: "text", text: "hi" },
       },
       {
         type: "content-block-finish",
@@ -233,20 +224,17 @@ describe("interleaving semantics", () => {
       {
         type: "content-block-delta",
         index: 0,
-        delta: { type: "text-delta", text: "Hello" },
+        content: { type: "text", text: "Hello" },
       },
       {
         type: "content-block-delta",
         index: 1,
-        delta: {
-          type: "block-delta",
-          fields: { type: "tool_call_chunk", args: '{"q"' },
-        },
+        content: { type: "tool_call_chunk", args: '{"q"' },
       },
       {
         type: "content-block-delta",
         index: 0,
-        delta: { type: "text-delta", text: " world" },
+        content: { type: "text", text: " world" },
       },
       {
         type: "content-block-finish",
@@ -256,10 +244,7 @@ describe("interleaving semantics", () => {
       {
         type: "content-block-delta",
         index: 1,
-        delta: {
-          type: "block-delta",
-          fields: { type: "tool_call_chunk", args: '{"q":"test"}' },
-        },
+        content: { type: "tool_call_chunk", args: '{"q":"test"}' },
       },
       {
         type: "content-block-finish",
