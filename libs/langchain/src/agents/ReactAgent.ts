@@ -101,20 +101,20 @@ type MergedAgentState<Types extends AgentTypeConfig> = InferSchemaValue<
 > &
   (Types["Response"] extends ResponseFormatUndefined
     ? Omit<
-      BuiltInState<MessageStructure<ToolsToMessageToolSet<Types["Tools"]>>>,
-      "jumpTo"
-    >
+        BuiltInState<MessageStructure<ToolsToMessageToolSet<Types["Tools"]>>>,
+        "jumpTo"
+      >
     : Omit<
-      BuiltInState<MessageStructure<ToolsToMessageToolSet<Types["Tools"]>>>,
-      "jumpTo"
-    > & {
-      structuredResponse: Types["Response"];
-    }) &
+        BuiltInState<MessageStructure<ToolsToMessageToolSet<Types["Tools"]>>>,
+        "jumpTo"
+      > & {
+        structuredResponse: Types["Response"];
+      }) &
   InferMiddlewareStates<Types["Middleware"]>;
 
 type InvokeStateParameter<Types extends AgentTypeConfig> =
   | (UserInput<Types["State"]> &
-    InferMiddlewareInputStates<Types["Middleware"]>)
+      InferMiddlewareInputStates<Types["Middleware"]>)
   | Command<any, any, any>
   | null;
 
@@ -126,8 +126,8 @@ type AgentGraph<Types extends AgentTypeConfig> = CompiledStateGraph<
   MergedAgentState<Types>,
   ToAnnotationRoot<
     Types["Context"] extends AnyAnnotationRoot | InteropZodObject
-    ? Types["Context"]
-    : AnyAnnotationRoot
+      ? Types["Context"]
+      : AnyAnnotationRoot
   >["spec"],
   unknown
 >;
@@ -1209,10 +1209,10 @@ export class ReactAgent<
     config?: InvokeConfiguration<
       InferContextInput<
         Types["Context"] extends AnyAnnotationRoot | InteropZodObject
-        ? Types["Context"]
-        : AnyAnnotationRoot
+          ? Types["Context"]
+          : AnyAnnotationRoot
       > &
-      InferMiddlewareContextInputs<Types["Middleware"]>
+        InferMiddlewareContextInputs<Types["Middleware"]>
     >
   ) {
     type FullState = MergedAgentState<Types>;
@@ -1226,10 +1226,10 @@ export class ReactAgent<
       initializedState,
       mergedConfig as unknown as InferContextInput<
         Types["Context"] extends AnyAnnotationRoot | InteropZodObject
-        ? Types["Context"]
-        : AnyAnnotationRoot
+          ? Types["Context"]
+          : AnyAnnotationRoot
       > &
-      InferMiddlewareContextInputs<Types["Middleware"]>
+        InferMiddlewareContextInputs<Types["Middleware"]>
     ) as Promise<FullState>;
   }
 
@@ -1284,10 +1284,10 @@ export class ReactAgent<
     config?: StreamConfiguration<
       InferContextInput<
         Types["Context"] extends AnyAnnotationRoot | InteropZodObject
-        ? Types["Context"]
-        : AnyAnnotationRoot
+          ? Types["Context"]
+          : AnyAnnotationRoot
       > &
-      InferMiddlewareContextInputs<Types["Middleware"]>,
+        InferMiddlewareContextInputs<Types["Middleware"]>,
       TStreamMode,
       TSubgraphs,
       TEncoding
@@ -1376,10 +1376,10 @@ export class ReactAgent<
     config?: InvokeConfiguration<
       InferContextInput<
         Types["Context"] extends AnyAnnotationRoot | InteropZodObject
-        ? Types["Context"]
-        : AnyAnnotationRoot
+          ? Types["Context"]
+          : AnyAnnotationRoot
       > &
-      InferMiddlewareContextInputs<Types["Middleware"]>
+        InferMiddlewareContextInputs<Types["Middleware"]>
     > & {
       transformers?: ReadonlyArray<() => StreamTransformer<any>>;
     }
@@ -1471,10 +1471,10 @@ export class ReactAgent<
     config?: StreamConfiguration<
       InferContextInput<
         Types["Context"] extends AnyAnnotationRoot | InteropZodObject
-        ? Types["Context"]
-        : AnyAnnotationRoot
+          ? Types["Context"]
+          : AnyAnnotationRoot
       > &
-      InferMiddlewareContextInputs<Types["Middleware"]>,
+        InferMiddlewareContextInputs<Types["Middleware"]>,
       StreamMode | StreamMode[] | undefined,
       boolean,
       "text/event-stream" | undefined

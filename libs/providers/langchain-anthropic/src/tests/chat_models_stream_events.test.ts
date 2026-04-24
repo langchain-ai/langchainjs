@@ -23,7 +23,7 @@ class MockStreamChatAnthropic extends ChatAnthropic {
   protected async createStreamWithRetry(): Promise<any> {
     const events = this.mockEvents;
     return {
-      controller: { abort: () => { } },
+      controller: { abort: () => {} },
       async *[Symbol.asyncIterator]() {
         for (const event of events) {
           yield event;

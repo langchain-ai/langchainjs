@@ -174,10 +174,10 @@ export class TextContentStream
       for await (const event of buffer.iterate()) {
         if (
           event.type === "content-block-delta" &&
-            event.content.type === "text" &&
-            typeof event.content.text === "string"
+          event.content.type === "text" &&
+          typeof event.content.text === "string"
         ) {
-            yield event.content.text;
+          yield event.content.text;
         }
       }
     }
@@ -315,10 +315,10 @@ export class ReasoningContentStream
       for await (const event of buffer.iterate()) {
         if (
           event.type === "content-block-delta" &&
-            event.content.type === "reasoning" &&
-            typeof event.content.reasoning === "string"
+          event.content.type === "reasoning" &&
+          typeof event.content.reasoning === "string"
         ) {
-            yield event.content.reasoning;
+          yield event.content.reasoning;
         }
       }
     }
@@ -346,7 +346,9 @@ export class ReasoningContentStream
  * Typed stream for usage metadata.
  */
 export class UsageMetadataStream
-  implements AsyncIterable<UsageMetadata>, PromiseLike<UsageMetadata | undefined>
+  implements
+    AsyncIterable<UsageMetadata>,
+    PromiseLike<UsageMetadata | undefined>
 {
   /** @internal */
   private _buffer: ReplayBuffer;
