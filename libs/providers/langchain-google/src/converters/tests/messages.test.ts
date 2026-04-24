@@ -740,4 +740,54 @@ describe("convertMessagesToGeminiContents", () => {
       (userContent!.parts[3] as Gemini.Part.FileData).fileData!.fileUri
     ).toBe("gs://bucket/report.pdf");
   });
+
+  test("preserves reasoning blocks in standard converter (v1)", () => {
+    const messages = [
+      new HumanMessage("What is 2+2?"),
+      new AIMessage({
+        content: [
+          { type: "reasoning", reasoning: "Let me think about this..." },
+          { type: "text", text: "4" },
+        ],
+        response_metadata: { output_version: "v1" },
+      }),
+      new HumanMessage("And 3+3?"),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+    const modelContent = contents.find((c) => c.role === "model")!;
+
+    const thinkingPart = modelContent.parts[0] as Record<string, unknown>;
+    expect(thinkingPart.text).toBe("Let me think about this...");
+    expect(thinkingPart.thought).toBe(true);
+
+    const textPart = modelContent.parts[1] as Record<string, unknown>;
+    expect(textPart.text).toBe("4");
+    expect(textPart.thought).toBeUndefined();
+  });
+
+  test("preserves reasoning blocks with thoughtSignature in legacy converter", () => {
+    const messages = [
+      new HumanMessage("What is 2+2?"),
+      new AIMessage({
+        content: [
+          {
+            type: "reasoning",
+            reasoning: "calculating...",
+            thoughtSignature: "sig-abc",
+          },
+          { type: "text", text: "4" },
+        ],
+      }),
+      new HumanMessage("Thanks"),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+    const modelContent = contents.find((c) => c.role === "model")!;
+
+    const thinkingPart = modelContent.parts[0] as Record<string, unknown>;
+    expect(thinkingPart.text).toBe("calculating...");
+    expect(thinkingPart.thought).toBe(true);
+    expect(thinkingPart.thoughtSignature).toBe("sig-abc");
+  });
 });
