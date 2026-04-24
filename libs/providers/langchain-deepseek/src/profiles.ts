@@ -43,7 +43,7 @@ const PROFILES: Record<string, ModelProfile> = {
     audioOutputs: false,
     videoOutputs: false,
     toolCalling: true,
-    structuredOutput: false,
+    structuredOutput: true,
   },
   "deepseek-v4-pro": {
     maxInputTokens: 1000000,
@@ -57,7 +57,7 @@ const PROFILES: Record<string, ModelProfile> = {
     audioOutputs: false,
     videoOutputs: false,
     toolCalling: true,
-    structuredOutput: false,
+    structuredOutput: true,
   },
 };
 export default PROFILES;
