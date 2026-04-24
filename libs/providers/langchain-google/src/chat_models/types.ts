@@ -179,9 +179,32 @@ export interface ChatGoogleFields {
    * An alias for `reasoningEffort` for compatibility.
    */
   thinkingLevel?: GeminiBase.ThinkingLevel;
+
+  /**
+   * Inference service tiers.
+   * "priority" offers highest reliability for higher rates.
+   * "flex" offers a discount for preemptable processing.
+   * Other values are treated as the standard service tier.
+   */
+  serviceTier?: GeminiBase.ServiceTier;
+
+  /**
+   * Custom / additional headers to include with every request to the API.
+   * When set on both constructor params and per-invocation call options,
+   * per-invocation headers take precidence for matching keys.
+   */
+  customHeaders?: Record<string, string>;
 }
 
 export type GooglePlatformType = "gai" | "gcp";
+
+// These are service tiers that we specifically need to send.
+// Other values will be ignored, resulting in the default
+// or "standard" setting.
+export const settableServiceTier: GeminiBase.ServiceTier[] = [
+  "flex",
+  "priority",
+]
 
 export { type Gemini } from "./api-types.js";
 
