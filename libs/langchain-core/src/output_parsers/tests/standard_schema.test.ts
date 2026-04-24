@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { StandardSchemaV1 } from "@standard-schema/spec";
 import { StandardSchemaOutputParser } from "../standard_schema.js";
 import { OutputParserException } from "../base.js";
+import { AIMessage } from "../../messages/index.js";
 
 function makeValidatingSchema<T extends Record<string, unknown>>(
   validator: (
@@ -104,6 +105,30 @@ describe("StandardSchemaOutputParser", () => {
       }));
       const parser = new StandardSchemaOutputParser(schema);
       expect(parser.getFormatInstructions()).toBe("");
+    });
+  });
+
+  describe("invoke with ContentBlock messages", () => {
+    it("ignores reasoning blocks and validates text blocks", async () => {
+      const schema = makeValidatingSchema((v) => ({
+        value: v as Record<string, unknown>,
+      }));
+      const parser = new StandardSchemaOutputParser(schema);
+
+      const message = new AIMessage({
+        content: [
+          {
+            type: "reasoning" as const,
+            reasoning: "internal reasoning",
+          },
+          {
+            type: "text" as const,
+            text: '{"answer":"4"}',
+          },
+        ],
+      });
+
+      await expect(parser.invoke(message)).resolves.toEqual({ answer: "4" });
     });
   });
 });

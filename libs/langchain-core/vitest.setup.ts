@@ -1,3 +1,4 @@
+import { afterAll, expect } from "vitest";
 import { awaitAllCallbacks } from "./src/callbacks/promises.js";
 import { langchainMatchers } from "./src/testing/matchers.js";
 
