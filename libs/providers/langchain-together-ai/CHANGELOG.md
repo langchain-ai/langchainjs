@@ -1,5 +1,12 @@
 # @langchain/together-ai
 
+## 0.1.3
+
+### Patch Changes
+
+- Updated dependencies [[`dc20c0e`](https://github.com/langchain-ai/langchainjs/commit/dc20c0ecaad125d7e916813419548c068996d3c2)]:
+  - @langchain/openai@1.4.5
+
 ## 0.1.2
 
 ### Patch Changes
