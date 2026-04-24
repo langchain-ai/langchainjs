@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "neo4j-driver": "^6.0.1",
-    "uuid": "^11.1.0"
+    "uuid": "^14.0.0"
   },
   "peerDependencies": {
     "@langchain/core": "workspace:^",
