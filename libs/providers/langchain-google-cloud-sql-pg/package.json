@@ -27,7 +27,7 @@
     "@langchain/core": "workspace:^",
     "google-auth-library": "^10.6.2",
     "knex": "^3.2.8",
-    "uuid": "^11.0.5"
+    "uuid": "^14.0.0"
   },
   "devDependencies": {
     "@jest/globals": "^30.3.0",
