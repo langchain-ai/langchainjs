@@ -3,13 +3,13 @@
  *
  * Defines a content-block-centric event model for streaming chat model responses.
  * Events carry LangChain {@link ContentBlock} types on lifecycle boundaries
- * (start/finish) and typed incremental deltas during streaming.
+ * and as incremental content updates during streaming.
  *
  * ## Design Principles
  *
- * 1. **Typed deltas for common cases.** Text, reasoning, and tool call argument
- *    streaming get purpose-built delta types with explicit append semantics.
- *    Everything else uses `block-delta` with overwrite semantics.
+ * 1. **Content-block deltas use the content block shape.** Text, reasoning,
+ *    and tool-call chunks are emitted as partial {@link ContentBlock} values
+ *    with explicit append semantics.
  *
  * 2. **Lifecycle completeness.** Every streamable entity has explicit start and finish
  *    events. Consumers never need to infer boundaries from absence of events.
@@ -26,8 +26,8 @@
  * ```
  * MessageStart
  *   -> ContentBlockStart(index=0, content=...)
- *   -> ContentBlockDelta(index=0, delta={ type: "text-delta", text: "Hello" })
- *   -> ContentBlockDelta(index=0, delta={ type: "text-delta", text: " world" })
+ *   -> ContentBlockDelta(index=0, content={ type: "text", text: "Hello" })
+ *   -> ContentBlockDelta(index=0, content={ type: "text", text: " world" })
  *   -> ContentBlockFinish(index=0, content=...)
  *   -> UsageUpdate(...)
  * -> MessageFinish(reason, usage?)
@@ -37,55 +37,7 @@
  */
 
 import type { ContentBlock } from "../messages/content/index.js";
-import type { PartialContentBlock } from "../messages/content/index.js";
 import type { UsageMetadata } from "../messages/metadata.js";
-
-// ─── Content Block Deltas ───────────────────────────────────────
-
-/**
- * Incremental text content. **Append** `text` to the block's `text` field.
- */
-export interface TextDelta {
-  type: "text-delta";
-  /** The new text to append. */
-  text: string;
-}
-
-/**
- * Incremental reasoning content. **Append** `reasoning` to the block's `reasoning` field.
- */
-export interface ReasoningDelta {
-  type: "reasoning-delta";
-  /** The new reasoning text to append. */
-  reasoning: string;
-}
-
-/**
- * Catch-all delta for content block types without a dedicated delta type.
- * **Overwrite** fields from `fields` onto the accumulated block.
- *
- * The adapter is responsible for accumulating state internally.
- * Each `block-delta` carries the accumulated snapshot of the fields
- * it manages, so consumers simply overwrite.
- *
- * Used for tool call argument streaming, code interpreter output,
- * signatures, citations, compaction, etc.
- */
-export interface BlockDelta {
-  type: "block-delta";
-  /** Fields to overwrite on the accumulated content block. */
-  fields: PartialContentBlock;
-}
-
-/**
- * Union of all content block delta types.
- *
- * Accumulation rules:
- * - `text-delta` → **append** `text` to block's text field
- * - `reasoning-delta` → **append** `reasoning` to block's reasoning field
- * - `block-delta` → **overwrite** fields onto block (adapter accumulates internally)
- */
-export type ContentBlockDelta = TextDelta | ReasoningDelta | BlockDelta;
 
 // ─── Message Lifecycle ──────────────────────────────────────────
 
@@ -119,7 +71,7 @@ export type FinishReason = "stop" | "length" | "tool_use" | "content_filter";
 export interface MessageFinishEvent {
   type: "message-finish";
   /** Why the model stopped generating. */
-  reason: FinishReason;
+  reason?: FinishReason;
   /** Final usage snapshot. */
   usage?: UsageMetadata;
   /** Provider-specific response metadata (model name, response ID, headers, etc.). */
@@ -148,30 +100,35 @@ export interface ContentBlockStartEvent {
 /**
  * Emitted for each incremental update within a content block.
  *
- * The `delta` field carries a typed incremental update. Consumers
- * switch on `delta.type` to determine how to apply it.
+ * The `content` field carries the incremental content block update.
+ * Accumulation rules:
+ * - `text` → append `text` to the block's text field
+ * - `reasoning` → append `reasoning` to the block's reasoning field
+ * - `tool_call_chunk` / `server_tool_call_chunk` → append `args`,
+ *   preserving stable `id`/`name` when later chunks omit them
+ * - all other fields are shallow-merged
  *
  * @example
  * ```ts
  * // Text token
  * { type: "content-block-delta", index: 0,
- *   delta: { type: "text-delta", text: " world" } }
+ *   content: { type: "text", text: " world" } }
  *
  * // Tool call args chunk
  * { type: "content-block-delta", index: 1,
- *   delta: { type: "block-delta", fields: { type: "tool_call_chunk", args: '{"q":"wea' } } }
+ *   content: { type: "tool_call_chunk", args: '{"q":"wea' } }
  *
  * // Provider-specific field (e.g., signature)
  * { type: "content-block-delta", index: 0,
- *   delta: { type: "block-delta", content: { type: "reasoning", signature: "sig_abc" } } }
+ *   content: { type: "reasoning", signature: "sig_abc" } }
  * ```
  */
 export interface ContentBlockDeltaEvent {
   type: "content-block-delta";
   /** Positional index of the block being updated. */
   index: number;
-  /** Typed incremental delta. */
-  delta: ContentBlockDelta;
+  /** Incremental content block update. */
+  content: ContentBlock;
 }
 
 /**

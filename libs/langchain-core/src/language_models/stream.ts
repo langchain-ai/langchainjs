@@ -7,7 +7,7 @@
 import { AIMessage } from "../messages/ai.js";
 import type { ContentBlock } from "../messages/content/index.js";
 import type { UsageMetadata } from "../messages/metadata.js";
-import type { ChatModelStreamEvent, ContentBlockDelta } from "./event.js";
+import type { ChatModelStreamEvent } from "./event.js";
 
 // ─── Replay Buffer ──────────────────────────────────────────────
 
@@ -83,32 +83,47 @@ class ReplayBuffer {
 /**
  * Apply a typed delta to an accumulated content block.
  *
- * - `text-delta` → append text
- * - `reasoning-delta` → append reasoning
- * - `block-delta` → overwrite fields
+ * - `text` → append text
+ * - `reasoning` → append reasoning
+ * - `tool_call_chunk` / `server_tool_call_chunk` → append args while
+ *   preserving id/name from previous chunks when a later delta omits them
+ * - other block types → shallow merge
  *
  * @internal
  */
-function applyDelta(
-  block: ContentBlock,
-  delta: ContentBlockDelta
-): ContentBlock {
+function applyDelta(block: ContentBlock, delta: ContentBlock): ContentBlock {
+  if (block.type !== delta.type) {
+    return { ...delta };
+  }
+
   switch (delta.type) {
-    case "text-delta":
+    case "text":
       return {
         ...block,
+        ...delta,
         text: ((block as { text?: string }).text ?? "") + delta.text,
       };
-    case "reasoning-delta":
+    case "reasoning":
       return {
         ...block,
+        ...delta,
         reasoning:
           ((block as { reasoning?: string }).reasoning ?? "") + delta.reasoning,
       };
-    case "block-delta":
-      return { ...block, ...delta.fields };
+    case "tool_call_chunk":
+    case "server_tool_call_chunk": {
+      const merged = { ...block, ...delta } as Record<string, unknown>;
+      if (delta.id == null && "id" in block && block.id != null) {
+        merged.id = block.id;
+      }
+      if (delta.name == null && "name" in block && block.name != null) {
+        merged.name = block.name;
+      }
+      merged.args = `${("args" in block ? block.args : "") ?? ""}${delta.args ?? ""}`;
+      return merged as unknown as ContentBlock;
+    }
     default:
-      return block;
+      return { ...block, ...delta };
   }
 }
 
@@ -141,9 +156,10 @@ export class TextContentStream
         for await (const event of buffer.iterate()) {
           if (
             event.type === "content-block-delta" &&
-            event.delta.type === "text-delta"
+            event.content.type === "text" &&
+            typeof event.content.text === "string"
           ) {
-            accumulated += event.delta.text;
+            accumulated += event.content.text;
             yield accumulated;
           }
         }
@@ -158,9 +174,10 @@ export class TextContentStream
       for await (const event of buffer.iterate()) {
         if (
           event.type === "content-block-delta" &&
-          event.delta.type === "text-delta"
+            event.content.type === "text" &&
+            typeof event.content.text === "string"
         ) {
-          yield event.delta.text;
+            yield event.content.text;
         }
       }
     }
@@ -281,9 +298,10 @@ export class ReasoningContentStream
         for await (const event of buffer.iterate()) {
           if (
             event.type === "content-block-delta" &&
-            event.delta.type === "reasoning-delta"
+            event.content.type === "reasoning" &&
+            typeof event.content.reasoning === "string"
           ) {
-            accumulated += event.delta.reasoning;
+            accumulated += event.content.reasoning;
             yield accumulated;
           }
         }
@@ -297,9 +315,10 @@ export class ReasoningContentStream
       for await (const event of buffer.iterate()) {
         if (
           event.type === "content-block-delta" &&
-          event.delta.type === "reasoning-delta"
+            event.content.type === "reasoning" &&
+            typeof event.content.reasoning === "string"
         ) {
-          yield event.delta.reasoning;
+            yield event.content.reasoning;
         }
       }
     }
@@ -327,7 +346,7 @@ export class ReasoningContentStream
  * Typed stream for usage metadata.
  */
 export class UsageMetadataStream
-  implements AsyncIterable<UsageMetadata>, PromiseLike<UsageMetadata>
+  implements AsyncIterable<UsageMetadata>, PromiseLike<UsageMetadata | undefined>
 {
   /** @internal */
   private _buffer: ReplayBuffer;
@@ -353,9 +372,9 @@ export class UsageMetadataStream
     return gen();
   }
 
-  then<TResult1 = UsageMetadata, TResult2 = never>(
+  then<TResult1 = UsageMetadata | undefined, TResult2 = never>(
     onfulfilled?:
-      | ((value: UsageMetadata) => TResult1 | PromiseLike<TResult1>)
+      | ((value: UsageMetadata | undefined) => TResult1 | PromiseLike<TResult1>)
       | null,
     onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null
   ): PromiseLike<TResult1 | TResult2> {
@@ -364,7 +383,7 @@ export class UsageMetadataStream
       for await (const usage of this) {
         latest = usage;
       }
-      return latest ?? { input_tokens: 0, output_tokens: 0, total_tokens: 0 };
+      return latest;
     })();
     return promise.then(onfulfilled, onrejected);
   }
@@ -461,7 +480,7 @@ export class ChatModelStream
         case "content-block-delta": {
           const current = contentBlocks[event.index];
           if (current) {
-            contentBlocks[event.index] = applyDelta(current, event.delta);
+            contentBlocks[event.index] = applyDelta(current, event.content);
           }
           break;
         }
