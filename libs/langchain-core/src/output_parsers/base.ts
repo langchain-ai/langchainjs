@@ -56,7 +56,14 @@ export abstract class BaseLLMOutputParser<T = unknown> extends Runnable<
   }
 
   protected _baseMessageContentToString(content: ContentBlock[]): string {
-    return JSON.stringify(content);
+    return content
+      .map((part) => {
+        if (part.type === "text") {
+          return part.text;
+        }
+        return "";
+      })
+      .join("");
   }
 
   /**
