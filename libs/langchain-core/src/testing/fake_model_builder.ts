@@ -60,8 +60,6 @@ export class FakeBuiltModel extends BaseChatModel {
 
   private _tools: (StructuredTool | ToolSpec)[] = [];
 
-  private _callIndex = 0;
-
   private _calls: FakeModelCall[] = [];
 
   /**
@@ -166,7 +164,6 @@ export class FakeBuiltModel extends BaseChatModel {
     next._structuredResponseValue = this._structuredResponseValue;
     next._tools = merged;
     next._calls = this._calls;
-    next._callIndex = this._callIndex;
 
     return next.withConfig({} as BaseChatModelCallOptions);
   }
@@ -205,8 +202,9 @@ export class FakeBuiltModel extends BaseChatModel {
   ): Promise<ChatResult> {
     this._calls.push({ messages: [...messages], options });
 
-    const currentCallIndex = this._callIndex;
-    this._callIndex += 1;
+    // Derive the call index from the shared `_calls` array so that
+    // clones produced by `bindTools()` stay in sync with the base model.
+    const currentCallIndex = this._calls.length - 1;
 
     if (this._alwaysThrowError) {
       throw this._alwaysThrowError;

@@ -277,6 +277,26 @@ describe("fakeModel", () => {
 
       expect(model.calls).toHaveLength(1);
     });
+
+    test("advances the response queue across repeated bindTools calls", async () => {
+      // Regression for #10723: `createAgent` re-binds tools on every model
+      // step, so each step gets a fresh RunnableBinding. The response queue
+      // must advance across those bindings, not reset back to the first
+      // queued response.
+      const model = fakeModel()
+        .respond(new AIMessage("First."))
+        .respond(new AIMessage("Second."));
+
+      const firstBound = model.bindTools([]);
+      const r1 = await firstBound.invoke([new HumanMessage("first")]);
+      expect(r1.content).toBe("First.");
+
+      const secondBound = model.bindTools([]);
+      const r2 = await secondBound.invoke([new HumanMessage("second")]);
+      expect(r2.content).toBe("Second.");
+
+      expect(model.callCount).toBe(2);
+    });
   });
 
   describe(".structuredResponse()", () => {
