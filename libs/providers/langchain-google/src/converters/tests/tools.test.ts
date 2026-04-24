@@ -7,9 +7,16 @@ describe("convertToolChoiceToGeminiConfig", () => {
     expect(result).toBeUndefined();
   });
 
-  test("returns undefined when hasTools is false", () => {
+  test("returns undefined when hasTools is false and toolChoice is not none", () => {
     const result = convertToolChoiceToGeminiConfig("auto", false);
     expect(result).toBeUndefined();
+  });
+
+  test('maps "none" to NONE mode even when hasTools is false', () => {
+    const result = convertToolChoiceToGeminiConfig("none", false);
+    expect(result).toEqual({
+      functionCallingConfig: { mode: "NONE" },
+    });
   });
 
   test('maps "auto" to AUTO mode', () => {
