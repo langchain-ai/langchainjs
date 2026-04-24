@@ -32,10 +32,7 @@ import {
   AnthropicToolExtrasSchema,
   handleToolChoice,
 } from "./utils/tools.js";
-import {
-  _convertMessagesToAnthropicPayload,
-  applyCacheControlToPayload,
-} from "./utils/message_inputs.js";
+import { _convertMessagesToAnthropicPayload } from "./utils/message_inputs.js";
 import {
   getSamplingParams,
   getTaskBudgetBetas,
@@ -175,13 +172,12 @@ export interface ChatAnthropicCallOptions
    */
   inferenceGeo?: string;
   /**
-   * Cache control configuration for prompt caching.
-   * When provided, applies cache_control to the last content block of the
-   * last message, enabling Anthropic's prompt caching feature.
-   *
-   * This is the recommended way to enable prompt caching as it applies
-   * cache_control at the final message formatting layer, avoiding issues
-   * with message content block manipulation during earlier processing stages.
+   * Cache control configuration for prompt caching. When provided, the value
+   * is forwarded to the Anthropic API as a top-level `cache_control` parameter,
+   * which automatically applies a cache breakpoint to the last cacheable block
+   * in the request and advances it as the conversation grows. This is ideal
+   * for multi-turn conversations and removes the need to place `cache_control`
+   * on individual content blocks manually.
    *
    * @see https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
    */
@@ -1222,6 +1218,7 @@ export class ChatAnthropicMessages<
       output_config: mergedOutputConfig,
       inference_geo: options?.inferenceGeo ?? this.inferenceGeo,
       mcp_servers: options?.mcp_servers,
+      cache_control: options?.cache_control,
     };
 
     validateInvocationParamCompatibility({
@@ -1270,17 +1267,7 @@ export class ChatAnthropicMessages<
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     const params = this.invocationParams(options);
-    let formattedMessages = _convertMessagesToAnthropicPayload(messages);
-
-    // Apply cache_control to the last message's last content block if specified
-    // This is the recommended approach for prompt caching - applying at the final
-    // formatting layer rather than modifying message content blocks earlier
-    if (options.cache_control) {
-      formattedMessages = applyCacheControlToPayload(
-        formattedMessages,
-        options.cache_control
-      );
-    }
+    const formattedMessages = _convertMessagesToAnthropicPayload(messages);
 
     const payload = {
       ...params,
@@ -1348,20 +1335,9 @@ export class ChatAnthropicMessages<
       "messages"
     > &
       Kwargs,
-    requestOptions: AnthropicRequestOptions,
-    cacheControl?: { type: "ephemeral"; ttl?: "5m" | "1h" }
+    requestOptions: AnthropicRequestOptions
   ) {
-    let formattedMessages = _convertMessagesToAnthropicPayload(messages);
-
-    // Apply cache_control to the last message's last content block if specified
-    // This is the recommended approach for prompt caching - applying at the final
-    // formatting layer rather than modifying message content blocks earlier
-    if (cacheControl) {
-      formattedMessages = applyCacheControlToPayload(
-        formattedMessages,
-        cacheControl
-      );
-    }
+    const formattedMessages = _convertMessagesToAnthropicPayload(messages);
 
     const response = await this.completionWithRetry(
       {
@@ -1418,15 +1394,10 @@ export class ChatAnthropicMessages<
         ],
       };
     } else {
-      return this._generateNonStreaming(
-        messages,
-        params,
-        {
-          signal: options.signal,
-          headers: options.headers,
-        },
-        options.cache_control
-      );
+      return this._generateNonStreaming(messages, params, {
+        signal: options.signal,
+        headers: options.headers,
+      });
     }
   }
 
