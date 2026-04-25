@@ -9,6 +9,8 @@ import type { ContentBlock } from "../messages/content/index.js";
 import type { UsageMetadata } from "../messages/metadata.js";
 import type { ChatModelStreamEvent } from "./event.js";
 
+type UsageMetadataLike = Partial<UsageMetadata>;
+
 // ─── Replay Buffer ──────────────────────────────────────────────
 
 /**
@@ -157,6 +159,25 @@ function isReasoningContent(content: unknown): boolean {
   if (content == null || typeof content !== "object") return false;
   const type = (content as { type?: unknown }).type;
   return type === "reasoning" || type === "thinking";
+}
+
+/**
+ * Normalize protocol-compatible partial usage into Core's concrete usage shape.
+ *
+ * Some stream sources emit usage snapshots without every aggregate token field.
+ * Keep the stream event input permissive, then normalize at read time so
+ * high-level Core consumers always receive a complete {@link UsageMetadata}.
+ */
+function normalizeUsage(
+  usage: UsageMetadataLike | undefined
+): UsageMetadata | undefined {
+  if (!usage) return undefined;
+  return {
+    ...usage,
+    input_tokens: usage.input_tokens ?? 0,
+    output_tokens: usage.output_tokens ?? 0,
+    total_tokens: usage.total_tokens ?? 0,
+  };
 }
 
 // ─── Sub-Stream: Text ───────────────────────────────────────────
@@ -428,11 +449,14 @@ export class UsageMetadataStream
     async function* gen() {
       for await (const event of buffer.iterate()) {
         if (event.event === "usage") {
-          yield event.usage;
+          const usage = normalizeUsage(event.usage);
+          if (usage) yield usage;
         } else if (event.event === "message-start" && event.usage) {
-          yield event.usage;
+          const usage = normalizeUsage(event.usage);
+          if (usage) yield usage;
         } else if (event.event === "message-finish" && event.usage) {
-          yield event.usage;
+          const usage = normalizeUsage(event.usage);
+          if (usage) yield usage;
         }
       }
     }
@@ -537,7 +561,7 @@ export class ChatModelStream
       switch (event.event) {
         case "message-start":
           id = event.id ?? id;
-          if (event.usage) usage = event.usage;
+          if (event.usage) usage = normalizeUsage(event.usage);
           break;
 
         case "content-block-start":
@@ -557,12 +581,12 @@ export class ChatModelStream
           break;
 
         case "usage":
-          usage = event.usage;
+          usage = normalizeUsage(event.usage);
           break;
 
         case "message-finish":
           finishReason = event.reason;
-          if (event.usage) usage = event.usage;
+          if (event.usage) usage = normalizeUsage(event.usage);
           if (event.metadata) {
             metadata = {
               ...metadata,
