@@ -198,6 +198,16 @@ function applyDeltaToBlock(
     return { ...delta };
   }
 
+  if (
+    (delta as { type?: string }).type === "thinking" &&
+    (block as { type?: string }).type === "thinking"
+  ) {
+    const thinking =
+      ((block as { thinking?: string }).thinking ?? "") +
+      ((delta as { thinking?: string }).thinking ?? "");
+    return { ...block, ...delta, thinking } as unknown as ContentBlock;
+  }
+
   switch (delta.type) {
     case "text":
       return {

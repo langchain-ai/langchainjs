@@ -89,6 +89,44 @@ class FakeBlockStreamModel extends BaseChatModel {
   }
 }
 
+class FakeThinkingStreamModel extends BaseChatModel {
+  _llmType() {
+    return "fake-thinking-stream";
+  }
+
+  async _generate(
+    _messages: BaseMessage[],
+    _options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): Promise<ChatResult> {
+    return { generations: [] };
+  }
+
+  async *_streamResponseChunks(
+    _messages: BaseMessage[],
+    _options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    yield new ChatGenerationChunk({
+      message: new AIMessageChunk({
+        content: [
+          { type: "thinking", thinking: "Thinking", index: 0 },
+        ] as unknown as ContentBlock[],
+        id: "msg_thinking",
+      }),
+      text: "",
+    });
+    yield new ChatGenerationChunk({
+      message: new AIMessageChunk({
+        content: [
+          { type: "thinking", thinking: " hard...", index: 0 },
+        ] as unknown as ContentBlock[],
+      }),
+      text: "",
+    });
+  }
+}
+
 /**
  * A model that yields tool call chunks via _streamResponseChunks.
  */
@@ -290,6 +328,26 @@ describe("_streamChatModelEvents bridge", () => {
       // Finish events for both blocks
       const finishes = events.filter((e) => e.type === "content-block-finish");
       expect(finishes.length).toBe(2);
+    });
+
+    test("accumulates provider thinking blocks", async () => {
+      const model = new FakeThinkingStreamModel({});
+      const events: ChatModelStreamEvent[] = [];
+      for await (const event of model._streamChatModelEvents(
+        [],
+        {} as BaseChatModelCallOptions
+      )) {
+        events.push(event);
+      }
+
+      const finish = events.find(
+        (e) =>
+          e.type === "content-block-finish" &&
+          (e as { index: number }).index === 0
+      ) as { content: { type: string; thinking?: string } };
+
+      expect(finish.content.type).toBe("thinking");
+      expect(finish.content.thinking).toBe("Thinking hard...");
     });
   });
 

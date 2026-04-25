@@ -84,7 +84,7 @@ class ReplayBuffer {
  * Apply a typed delta to an accumulated content block.
  *
  * - `text` → append text
- * - `reasoning` → append reasoning
+ * - `reasoning` / provider `thinking` → append reasoning text
  * - `tool_call_chunk` / `server_tool_call_chunk` → append args while
  *   preserving id/name from previous chunks when a later delta omits them
  * - other block types → shallow merge
@@ -94,6 +94,16 @@ class ReplayBuffer {
 function applyDelta(block: ContentBlock, delta: ContentBlock): ContentBlock {
   if (block.type !== delta.type) {
     return { ...delta };
+  }
+
+  if (
+    (delta as { type?: string }).type === "thinking" &&
+    (block as { type?: string }).type === "thinking"
+  ) {
+    const thinking =
+      ((block as { thinking?: string }).thinking ?? "") +
+      ((delta as { thinking?: string }).thinking ?? "");
+    return { ...block, ...delta, thinking } as unknown as ContentBlock;
   }
 
   switch (delta.type) {
@@ -125,6 +135,28 @@ function applyDelta(block: ContentBlock, delta: ContentBlock): ContentBlock {
     default:
       return { ...block, ...delta };
   }
+}
+
+function getReasoningDelta(content: unknown): string | undefined {
+  if (content == null || typeof content !== "object") return undefined;
+  const block = content as {
+    type?: string;
+    reasoning?: unknown;
+    thinking?: unknown;
+  };
+  if (block.type === "reasoning" && typeof block.reasoning === "string") {
+    return block.reasoning;
+  }
+  if (block.type === "thinking" && typeof block.thinking === "string") {
+    return block.thinking;
+  }
+  return undefined;
+}
+
+function isReasoningContent(content: unknown): boolean {
+  if (content == null || typeof content !== "object") return false;
+  const type = (content as { type?: unknown }).type;
+  return type === "reasoning" || type === "thinking";
 }
 
 // ─── Sub-Stream: Text ───────────────────────────────────────────
@@ -295,14 +327,32 @@ export class ReasoningContentStream
     return {
       async *[Symbol.asyncIterator]() {
         let accumulated = "";
+        let seenReasoning = false;
         for await (const event of buffer.iterate()) {
-          if (
-            event.type === "content-block-delta" &&
-            event.content.type === "reasoning" &&
-            typeof event.content.reasoning === "string"
-          ) {
-            accumulated += event.content.reasoning;
+          if (event.type === "content-block-start") {
+            if (!isReasoningContent(event.content)) {
+              if (seenReasoning) return;
+              continue;
+            }
+            seenReasoning = true;
+            const delta = getReasoningDelta(event.content);
+            if (delta == null || delta.length === 0) continue;
+            accumulated += delta;
             yield accumulated;
+          } else if (event.type === "content-block-delta") {
+            if (!isReasoningContent(event.content)) continue;
+            seenReasoning = true;
+            const delta = getReasoningDelta(event.content);
+            if (delta == null || delta.length === 0) continue;
+            accumulated += delta;
+            yield accumulated;
+          } else if (
+            event.type === "content-block-finish" &&
+            isReasoningContent(event.content)
+          ) {
+            return;
+          } else if (event.type === "message-finish") {
+            return;
           }
         }
       },
@@ -312,13 +362,28 @@ export class ReasoningContentStream
   [Symbol.asyncIterator](): AsyncIterator<string> {
     const buffer = this._buffer;
     async function* gen() {
+      let seenReasoning = false;
       for await (const event of buffer.iterate()) {
-        if (
-          event.type === "content-block-delta" &&
-          event.content.type === "reasoning" &&
-          typeof event.content.reasoning === "string"
+        if (event.type === "content-block-start") {
+          if (!isReasoningContent(event.content)) {
+            if (seenReasoning) return;
+            continue;
+          }
+          seenReasoning = true;
+          const delta = getReasoningDelta(event.content);
+          if (delta != null && delta.length > 0) yield delta;
+        } else if (event.type === "content-block-delta") {
+          if (!isReasoningContent(event.content)) continue;
+          seenReasoning = true;
+          const delta = getReasoningDelta(event.content);
+          if (delta != null && delta.length > 0) yield delta;
+        } else if (
+          event.type === "content-block-finish" &&
+          isReasoningContent(event.content)
         ) {
-          yield event.content.reasoning;
+          return;
+        } else if (event.type === "message-finish") {
+          return;
         }
       }
     }
