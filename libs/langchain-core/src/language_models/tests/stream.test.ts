@@ -151,6 +151,64 @@ function complexStreamEvents(): ChatModelStreamEvent[] {
   ];
 }
 
+function providerThinkingStreamEvents(): ChatModelStreamEvent[] {
+  return [
+    { type: "message-start", id: "msg_thinking" },
+    {
+      type: "content-block-start",
+      index: 0,
+      content: { type: "thinking", thinking: "" },
+    },
+    {
+      type: "content-block-delta",
+      index: 0,
+      content: { type: "thinking", thinking: "Let me" },
+    },
+    {
+      type: "content-block-delta",
+      index: 0,
+      content: { type: "thinking", thinking: " think..." },
+    },
+    {
+      type: "content-block-finish",
+      index: 0,
+      content: { type: "thinking", thinking: "Let me think..." },
+    },
+    { type: "message-finish", reason: "stop" },
+  ] as unknown as ChatModelStreamEvent[];
+}
+
+async function* delayedTextAfterReasoningEvents(
+  onMessageFinish: () => void
+): AsyncGenerator<ChatModelStreamEvent> {
+  yield { type: "message-start", id: "msg_seq" };
+  yield {
+    type: "content-block-start",
+    index: 0,
+    content: { type: "reasoning", reasoning: "" },
+  };
+  yield {
+    type: "content-block-delta",
+    index: 0,
+    content: { type: "reasoning", reasoning: "Let me think" },
+  };
+  yield {
+    type: "content-block-start",
+    index: 1,
+    content: { type: "text", text: "" },
+  };
+  yield {
+    type: "content-block-delta",
+    index: 1,
+    content: { type: "text", text: "Hello" },
+  };
+  await new Promise((resolve) => {
+    setTimeout(resolve, 50);
+  });
+  onMessageFinish();
+  yield { type: "message-finish", reason: "stop" };
+}
+
 describe("ChatModelStream", () => {
   describe("raw event iteration", () => {
     test("iterates all events", async () => {
@@ -250,6 +308,27 @@ describe("ChatModelStream", () => {
       const stream = new ChatModelStream(iterEvents(complexStreamEvents()));
       const fullReasoning: string = await stream.reasoning;
       expect(fullReasoning).toBe("Let me think...");
+    });
+
+    test("accepts provider thinking deltas as reasoning", async () => {
+      const stream = new ChatModelStream(
+        iterEvents(providerThinkingStreamEvents())
+      );
+
+      expect(await stream.reasoning).toBe("Let me think...");
+    });
+
+    test("finishes before message end when text starts after reasoning", async () => {
+      let messageFinished = false;
+      const stream = new ChatModelStream(
+        delayedTextAfterReasoningEvents(() => {
+          messageFinished = true;
+        })
+      );
+
+      expect(await stream.reasoning).toBe("Let me think");
+      expect(messageFinished).toBe(false);
+      expect(await stream.text).toBe("Hello");
     });
   });
 

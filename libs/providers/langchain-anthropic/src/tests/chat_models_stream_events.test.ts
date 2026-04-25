@@ -1,6 +1,6 @@
 import { describe, test, expect } from "vitest";
 import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
-import { ChatModelStream } from "../../../../langchain-core/src/language_models/stream.js";
+import { ChatModelStream } from "@langchain/core/language_models/stream";
 import { ChatAnthropic } from "../chat_models.js";
 import type { BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
 
