@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
 import { formatToolChoice } from "../tools.js";
 import {
   convertUsageMetadata,
@@ -143,5 +144,187 @@ describe("convertOpenRouterDeltaToBaseMessageChunk metadata", () => {
 
     const meta = chunk.response_metadata as Record<string, unknown>;
     expect(meta.model_provider).toBe("openrouter");
+  });
+});
+
+// ─── reasoning extraction ────────────────────────────────────────────
+
+describe("convertOpenRouterResponseToBaseMessage reasoning", () => {
+  it("copies message.reasoning into additional_kwargs.reasoning_content", () => {
+    const choice: OpenRouter.ChatResponseChoice = {
+      index: 0,
+      finish_reason: "stop",
+      message: {
+        role: "assistant",
+        content: "The answer is 42.",
+        reasoning: "Let me think... 6 * 7 = 42.",
+      },
+    };
+    const rawResponse: OpenRouter.ChatResponse = {
+      id: "gen-r1",
+      choices: [choice],
+      created: 0,
+      model: "deepseek/deepseek-reasoner",
+      object: "chat.completion",
+    };
+
+    const msg = convertOpenRouterResponseToBaseMessage(choice, rawResponse);
+
+    expect(msg.additional_kwargs.reasoning_content).toBe(
+      "Let me think... 6 * 7 = 42."
+    );
+    // And through contentBlocks, it becomes a v1 reasoning block.
+    const blocks = (msg as AIMessage).contentBlocks;
+    expect(blocks).toContainEqual({
+      type: "reasoning",
+      reasoning: "Let me think... 6 * 7 = 42.",
+    });
+    expect(blocks).toContainEqual({
+      type: "text",
+      text: "The answer is 42.",
+    });
+  });
+
+  it("copies message.reasoning_details into additional_kwargs.reasoning_details", () => {
+    const choice: OpenRouter.ChatResponseChoice = {
+      index: 0,
+      finish_reason: "stop",
+      message: {
+        role: "assistant",
+        content: "Done.",
+        reasoning_details: [
+          {
+            type: "reasoning.text",
+            text: "Step 1, step 2, step 3.",
+            signature: "sig_abc",
+          },
+        ],
+      },
+    };
+    const rawResponse: OpenRouter.ChatResponse = {
+      id: "gen-r2",
+      choices: [choice],
+      created: 0,
+      model: "anthropic/claude-3.7-sonnet",
+      object: "chat.completion",
+    };
+
+    const msg = convertOpenRouterResponseToBaseMessage(choice, rawResponse);
+
+    expect(msg.additional_kwargs.reasoning_details).toEqual([
+      {
+        type: "reasoning.text",
+        text: "Step 1, step 2, step 3.",
+        signature: "sig_abc",
+      },
+    ]);
+    const blocks = (msg as AIMessage).contentBlocks;
+    expect(blocks).toContainEqual({
+      type: "reasoning",
+      reasoning: "Step 1, step 2, step 3.",
+    });
+  });
+
+  it("omits reasoning fields when the response has none", () => {
+    const choice: OpenRouter.ChatResponseChoice = {
+      index: 0,
+      finish_reason: "stop",
+      message: { role: "assistant", content: "plain reply" },
+    };
+    const rawResponse: OpenRouter.ChatResponse = {
+      id: "gen-plain",
+      choices: [choice],
+      created: 0,
+      model: "openai/gpt-4o-mini",
+      object: "chat.completion",
+    };
+
+    const msg = convertOpenRouterResponseToBaseMessage(choice, rawResponse);
+
+    expect(msg.additional_kwargs.reasoning_content).toBeUndefined();
+    expect(msg.additional_kwargs.reasoning_details).toBeUndefined();
+  });
+});
+
+describe("convertOpenRouterDeltaToBaseMessageChunk reasoning", () => {
+  const rawChunk = (delta: OpenRouter.ChatStreamingMessageChunk) => ({
+    id: "gen-r-stream",
+    choices: [{ delta, finish_reason: null, index: 0 }],
+    created: 0,
+    model: "deepseek/deepseek-reasoner",
+    object: "chat.completion.chunk" as const,
+  });
+
+  it("copies delta.reasoning into additional_kwargs.reasoning_content", () => {
+    const delta: OpenRouter.ChatStreamingMessageChunk = {
+      role: "assistant",
+      reasoning: "first thought ",
+    };
+
+    const chunk = convertOpenRouterDeltaToBaseMessageChunk(
+      delta,
+      rawChunk(delta),
+      "assistant"
+    );
+
+    expect(chunk.additional_kwargs.reasoning_content).toBe("first thought ");
+  });
+
+  it("concatenates reasoning across streaming chunks via chunk merge", () => {
+    const d1: OpenRouter.ChatStreamingMessageChunk = {
+      role: "assistant",
+      reasoning: "Let me ",
+    };
+    const d2: OpenRouter.ChatStreamingMessageChunk = { reasoning: "think " };
+    const d3: OpenRouter.ChatStreamingMessageChunk = {
+      content: "42.",
+      reasoning: "carefully.",
+    };
+
+    const c1 = convertOpenRouterDeltaToBaseMessageChunk(
+      d1,
+      rawChunk(d1),
+      "assistant"
+    ) as AIMessageChunk;
+    const c2 = convertOpenRouterDeltaToBaseMessageChunk(
+      d2,
+      rawChunk(d2),
+      "assistant"
+    ) as AIMessageChunk;
+    const c3 = convertOpenRouterDeltaToBaseMessageChunk(
+      d3,
+      rawChunk(d3),
+      "assistant"
+    ) as AIMessageChunk;
+
+    const merged = c1.concat(c2).concat(c3);
+
+    expect(merged.additional_kwargs.reasoning_content).toBe(
+      "Let me think carefully."
+    );
+    expect(merged.contentBlocks).toContainEqual({
+      type: "reasoning",
+      reasoning: "Let me think carefully.",
+    });
+    expect(merged.contentBlocks).toContainEqual({
+      type: "text",
+      text: "42.",
+    });
+  });
+
+  it("omits reasoning fields when the delta has none", () => {
+    const delta: OpenRouter.ChatStreamingMessageChunk = {
+      role: "assistant",
+      content: "hi",
+    };
+
+    const chunk = convertOpenRouterDeltaToBaseMessageChunk(
+      delta,
+      rawChunk(delta),
+      "assistant"
+    );
+
+    expect(chunk.additional_kwargs.reasoning_content).toBeUndefined();
+    expect(chunk.additional_kwargs.reasoning_details).toBeUndefined();
   });
 });
