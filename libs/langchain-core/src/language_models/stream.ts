@@ -187,7 +187,7 @@ export class TextContentStream
         let accumulated = "";
         for await (const event of buffer.iterate()) {
           if (
-            event.type === "content-block-delta" &&
+            event.event === "content-block-delta" &&
             event.content.type === "text" &&
             typeof event.content.text === "string"
           ) {
@@ -205,7 +205,7 @@ export class TextContentStream
     async function* gen() {
       for await (const event of buffer.iterate()) {
         if (
-          event.type === "content-block-delta" &&
+          event.event === "content-block-delta" &&
           event.content.type === "text" &&
           typeof event.content.text === "string"
         ) {
@@ -260,7 +260,7 @@ export class ToolCallsStream
         const calls: Array<ContentBlock.Tools.ToolCall> = [];
         for await (const event of buffer.iterate()) {
           if (
-            event.type === "content-block-finish" &&
+            event.event === "content-block-finish" &&
             event.content.type === "tool_call"
           ) {
             calls.push(event.content as ContentBlock.Tools.ToolCall);
@@ -276,7 +276,7 @@ export class ToolCallsStream
     async function* gen() {
       for await (const event of buffer.iterate()) {
         if (
-          event.type === "content-block-finish" &&
+          event.event === "content-block-finish" &&
           event.content.type === "tool_call"
         ) {
           yield event.content as ContentBlock.Tools.ToolCall;
@@ -329,7 +329,7 @@ export class ReasoningContentStream
         let accumulated = "";
         let seenReasoning = false;
         for await (const event of buffer.iterate()) {
-          if (event.type === "content-block-start") {
+          if (event.event === "content-block-start") {
             if (!isReasoningContent(event.content)) {
               if (seenReasoning) return;
               continue;
@@ -339,7 +339,7 @@ export class ReasoningContentStream
             if (delta == null || delta.length === 0) continue;
             accumulated += delta;
             yield accumulated;
-          } else if (event.type === "content-block-delta") {
+          } else if (event.event === "content-block-delta") {
             if (!isReasoningContent(event.content)) continue;
             seenReasoning = true;
             const delta = getReasoningDelta(event.content);
@@ -347,11 +347,11 @@ export class ReasoningContentStream
             accumulated += delta;
             yield accumulated;
           } else if (
-            event.type === "content-block-finish" &&
+            event.event === "content-block-finish" &&
             isReasoningContent(event.content)
           ) {
             return;
-          } else if (event.type === "message-finish") {
+          } else if (event.event === "message-finish") {
             return;
           }
         }
@@ -364,7 +364,7 @@ export class ReasoningContentStream
     async function* gen() {
       let seenReasoning = false;
       for await (const event of buffer.iterate()) {
-        if (event.type === "content-block-start") {
+        if (event.event === "content-block-start") {
           if (!isReasoningContent(event.content)) {
             if (seenReasoning) return;
             continue;
@@ -372,17 +372,17 @@ export class ReasoningContentStream
           seenReasoning = true;
           const delta = getReasoningDelta(event.content);
           if (delta != null && delta.length > 0) yield delta;
-        } else if (event.type === "content-block-delta") {
+        } else if (event.event === "content-block-delta") {
           if (!isReasoningContent(event.content)) continue;
           seenReasoning = true;
           const delta = getReasoningDelta(event.content);
           if (delta != null && delta.length > 0) yield delta;
         } else if (
-          event.type === "content-block-finish" &&
+          event.event === "content-block-finish" &&
           isReasoningContent(event.content)
         ) {
           return;
-        } else if (event.type === "message-finish") {
+        } else if (event.event === "message-finish") {
           return;
         }
       }
@@ -427,11 +427,11 @@ export class UsageMetadataStream
     const buffer = this._buffer;
     async function* gen() {
       for await (const event of buffer.iterate()) {
-        if (event.type === "usage") {
+        if (event.event === "usage") {
           yield event.usage;
-        } else if (event.type === "message-start" && event.usage) {
+        } else if (event.event === "message-start" && event.usage) {
           yield event.usage;
-        } else if (event.type === "message-finish" && event.usage) {
+        } else if (event.event === "message-finish" && event.usage) {
           yield event.usage;
         }
       }
@@ -530,11 +530,11 @@ export class ChatModelStream
     const contentBlocks: Array<ContentBlock | undefined> = [];
     let id: string | undefined;
     let usage: UsageMetadata | undefined;
-    let responseMetadata: Record<string, unknown> = {};
+    let metadata: Record<string, unknown> = {};
     let finishReason: string | undefined;
 
     for await (const event of this._buffer.iterate()) {
-      switch (event.type) {
+      switch (event.event) {
         case "message-start":
           id = event.id ?? id;
           if (event.usage) usage = event.usage;
@@ -563,10 +563,10 @@ export class ChatModelStream
         case "message-finish":
           finishReason = event.reason;
           if (event.usage) usage = event.usage;
-          if (event.responseMetadata) {
-            responseMetadata = {
-              ...responseMetadata,
-              ...event.responseMetadata,
+          if (event.metadata) {
+            metadata = {
+              ...metadata,
+              ...event.metadata,
             };
           }
           break;
@@ -585,7 +585,7 @@ export class ChatModelStream
       content: filteredBlocks,
       usage_metadata: usage,
       response_metadata: {
-        ...responseMetadata,
+        ...metadata,
         ...(finishReason ? { finish_reason: finishReason } : {}),
         output_version: "v1" as const,
       },
