@@ -45,7 +45,7 @@ import type { UsageMetadata } from "../messages/metadata.js";
  * Emitted once at the start of a model response.
  */
 export interface MessageStartEvent {
-  type: "message-start";
+  event: "message-start";
   /** Optional message ID assigned by the provider. */
   id?: string;
   /**
@@ -69,13 +69,13 @@ export type FinishReason = "stop" | "length" | "tool_use" | "content_filter";
  * Emitted once when the model response is complete.
  */
 export interface MessageFinishEvent {
-  type: "message-finish";
+  event: "message-finish";
   /** Why the model stopped generating. */
   reason?: FinishReason;
   /** Final usage snapshot. */
   usage?: UsageMetadata;
   /** Provider-specific response metadata (model name, response ID, headers, etc.). */
-  responseMetadata?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
 }
 
 // ─── Content Block Lifecycle ────────────────────────────────────
@@ -85,12 +85,12 @@ export interface MessageFinishEvent {
  *
  * @example
  * ```ts
- * { type: "content-block-start", index: 0,
+ * { event: "content-block-start", index: 0,
  *   content: { type: "text", text: "" } }
  * ```
  */
 export interface ContentBlockStartEvent {
-  type: "content-block-start";
+  event: "content-block-start";
   /** Positional index of this block within the message. */
   index: number;
   /** Initial state of the content block. */
@@ -111,20 +111,20 @@ export interface ContentBlockStartEvent {
  * @example
  * ```ts
  * // Text token
- * { type: "content-block-delta", index: 0,
+ * { event: "content-block-delta", index: 0,
  *   content: { type: "text", text: " world" } }
  *
  * // Tool call args chunk
- * { type: "content-block-delta", index: 1,
+ * { event: "content-block-delta", index: 1,
  *   content: { type: "tool_call_chunk", args: '{"q":"wea' } }
  *
  * // Provider-specific field (e.g., signature)
- * { type: "content-block-delta", index: 0,
+ * { event: "content-block-delta", index: 0,
  *   content: { type: "reasoning", signature: "sig_abc" } }
  * ```
  */
 export interface ContentBlockDeltaEvent {
-  type: "content-block-delta";
+  event: "content-block-delta";
   /** Positional index of the block being updated. */
   index: number;
   /** Incremental content block update. */
@@ -136,12 +136,12 @@ export interface ContentBlockDeltaEvent {
  *
  * @example
  * ```ts
- * { type: "content-block-finish", index: 0,
+ * { event: "content-block-finish", index: 0,
  *   content: { type: "text", text: "Hello world" } }
  * ```
  */
 export interface ContentBlockFinishEvent {
-  type: "content-block-finish";
+  event: "content-block-finish";
   /** Positional index of the completed block. */
   index: number;
   /** Finalized content block. */
@@ -155,7 +155,7 @@ export interface ContentBlockFinishEvent {
  * Each event carries a **running snapshot** (not an additive delta).
  */
 export interface UsageUpdateEvent {
-  type: "usage";
+  event: "usage";
   /** Current usage snapshot. */
   usage: UsageMetadata;
 }
@@ -166,7 +166,7 @@ export interface UsageUpdateEvent {
  * Passthrough for native provider events that don't map to standard types.
  */
 export interface ProviderEvent {
-  type: "provider";
+  event: "provider";
   /** Provider identifier (e.g., `"openai"`, `"anthropic"`, `"google"`). */
   provider: string;
   /** Raw event type name from the provider SDK. */
@@ -181,7 +181,7 @@ export interface ProviderEvent {
  * Emitted on unrecoverable stream errors.
  */
 export interface StreamErrorEvent {
-  type: "error";
+  event: "error";
   /** Human-readable error message. */
   message: string;
   /** Optional error code for programmatic handling. */

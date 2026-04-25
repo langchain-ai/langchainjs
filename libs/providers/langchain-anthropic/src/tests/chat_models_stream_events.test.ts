@@ -240,12 +240,12 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
         events.push(event);
       }
 
-      const types = events.map((e) => e.type);
-      expect(types).toContain("message-start");
-      expect(types).toContain("content-block-start");
-      expect(types).toContain("content-block-delta");
-      expect(types).toContain("content-block-finish");
-      expect(types).toContain("message-finish");
+      const eventNames = events.map((e) => e.event);
+      expect(eventNames).toContain("message-start");
+      expect(eventNames).toContain("content-block-start");
+      expect(eventNames).toContain("content-block-delta");
+      expect(eventNames).toContain("content-block-finish");
+      expect(eventNames).toContain("message-finish");
     });
 
     test("message-start carries id and usage", async () => {
@@ -257,7 +257,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
         events.push(event);
       }
 
-      const start = events.find((e) => e.type === "message-start");
+      const start = events.find((e) => e.event === "message-start");
       expect(start).toBeDefined();
       expect((start as { id?: string }).id).toBe("msg_01ABC");
       expect(
@@ -275,7 +275,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       }
 
       const deltas = events.filter(
-        (e) => e.type === "content-block-delta" && "index" in e && e.index === 0
+        (e) => e.event === "content-block-delta" && "index" in e && e.index === 0
       );
       expect(deltas.length).toBe(2);
 
@@ -306,7 +306,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
 
       const finish = events.find(
         (e) =>
-          e.type === "content-block-finish" && "index" in e && e.index === 0
+          e.event === "content-block-finish" && "index" in e && e.index === 0
       ) as { content: { type: string; text: string } };
       expect(finish).toBeDefined();
       expect(finish.content.type).toBe("text");
@@ -323,7 +323,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
         events.push(event);
       }
 
-      const finish = events.find((e) => e.type === "message-finish") as {
+      const finish = events.find((e) => e.event === "message-finish") as {
         reason: string;
       };
       expect(finish.reason).toBe("stop");
@@ -343,7 +343,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       // Reasoning deltas
       const reasoningDeltas = events.filter(
         (e) =>
-          e.type === "content-block-delta" &&
+          e.event === "content-block-delta" &&
           "index" in e &&
           e.index === 0 &&
           "content" in e &&
@@ -365,7 +365,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       // Reasoning finish
       const reasoningFinish = events.find(
         (e) =>
-          e.type === "content-block-finish" && "index" in e && e.index === 0
+          e.event === "content-block-finish" && "index" in e && e.index === 0
       ) as { content: { type: string; reasoning: string } };
       expect(reasoningFinish.content.type).toBe("reasoning");
       expect(reasoningFinish.content.reasoning).toBe("Let me reason...");
@@ -383,7 +383,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
 
       const textFinish = events.find(
         (e) =>
-          e.type === "content-block-finish" && "index" in e && e.index === 1
+          e.event === "content-block-finish" && "index" in e && e.index === 1
       ) as { content: { type: string; text: string } };
       expect(textFinish.content.type).toBe("text");
       expect(textFinish.content.text).toBe("The answer is 42.");
@@ -402,7 +402,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       // Signature delta should be emitted as a content block update
       const sigDelta = events.find(
         (e) =>
-          e.type === "content-block-delta" &&
+          e.event === "content-block-delta" &&
           "content" in e &&
           (e.content as { signature?: string }).signature === "sig_abc"
       ) as { content: { type: string; signature?: string } };
@@ -424,7 +424,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
 
       // Start event for tool call
       const toolStart = events.find(
-        (e) => e.type === "content-block-start" && "index" in e && e.index === 1
+        (e) => e.event === "content-block-start" && "index" in e && e.index === 1
       ) as { content: { type: string; name: string; id: string } };
       expect(toolStart.content.type).toBe("tool_call_chunk");
       expect(toolStart.content.name).toBe("web_search");
@@ -432,7 +432,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
 
       // Deltas carry incremental tool_call_chunk content
       const toolDeltas = events.filter(
-        (e) => e.type === "content-block-delta" && "index" in e && e.index === 1
+        (e) => e.event === "content-block-delta" && "index" in e && e.index === 1
       );
       expect(toolDeltas.length).toBe(2);
 
@@ -461,7 +461,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
 
       const toolFinish = events.find(
         (e) =>
-          e.type === "content-block-finish" && "index" in e && e.index === 1
+          e.event === "content-block-finish" && "index" in e && e.index === 1
       ) as {
         content: {
           type: string;
@@ -486,7 +486,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
         events.push(event);
       }
 
-      const finish = events.find((e) => e.type === "message-finish") as {
+      const finish = events.find((e) => e.event === "message-finish") as {
         reason: string;
       };
       expect(finish.reason).toBe("tool_use");
@@ -504,7 +504,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       }
 
       // message-start should have input usage with cache details
-      const start = events.find((e) => e.type === "message-start") as {
+      const start = events.find((e) => e.event === "message-start") as {
         usage: {
           input_tokens: number;
           input_token_details: {
@@ -528,7 +528,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
         events.push(event);
       }
 
-      const usageEvents = events.filter((e) => e.type === "usage");
+      const usageEvents = events.filter((e) => e.event === "usage");
       expect(usageEvents.length).toBeGreaterThanOrEqual(1);
 
       // Last usage should include output tokens
@@ -547,7 +547,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
         events.push(event);
       }
 
-      const finish = events.find((e) => e.type === "message-finish") as {
+      const finish = events.find((e) => e.event === "message-finish") as {
         usage: { input_tokens: number; output_tokens: number };
       };
       expect(finish.usage.input_tokens).toBe(800);
@@ -565,11 +565,11 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
         events.push(event);
       }
 
-      const usageEvents = events.filter((e) => e.type === "usage");
+      const usageEvents = events.filter((e) => e.event === "usage");
       expect(usageEvents.length).toBe(0);
 
       // message-start and message-finish should not have usage
-      const start = events.find((e) => e.type === "message-start") as {
+      const start = events.find((e) => e.event === "message-start") as {
         usage?: unknown;
       };
       expect(start.usage).toBeUndefined();
@@ -587,7 +587,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
         events.push(event);
       }
 
-      const providerEvents = events.filter((e) => e.type === "provider");
+      const providerEvents = events.filter((e) => e.event === "provider");
       const metaEvent = providerEvents.find(
         (e) => (e as { name: string }).name === "message_start"
       ) as { provider: string; payload: { model: string; id: string } };
@@ -613,7 +613,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       }
 
       const pingEvent = events.find(
-        (e) => e.type === "provider" && (e as { name: string }).name === "ping"
+        (e) => e.event === "provider" && (e as { name: string }).name === "ping"
       );
       expect(pingEvent).toBeDefined();
     });

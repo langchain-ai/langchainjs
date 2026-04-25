@@ -38,7 +38,7 @@ export async function* convertChunksToEvents(
     if (!messageStarted) {
       messageStarted = true;
       const startEvent: ChatModelStreamEvent = {
-        type: "message-start" as const,
+        event: "message-start" as const,
         id: msg.id ?? undefined,
       };
       if (isAIMessageChunk(msg) && msg.usage_metadata) {
@@ -61,7 +61,7 @@ export async function* convertChunksToEvents(
             accumulated: initial,
           });
           yield {
-            type: "content-block-start" as const,
+            event: "content-block-start" as const,
             index: blockIndex,
             content: initial,
           };
@@ -72,7 +72,7 @@ export async function* convertChunksToEvents(
           text: ((block.accumulated as { text?: string }).text ?? "") + content,
         };
         yield {
-          type: "content-block-delta" as const,
+          event: "content-block-delta" as const,
           index: blockIndex,
           content: { type: "text" as const, text: content },
         };
@@ -88,7 +88,7 @@ export async function* convertChunksToEvents(
             accumulated: { ...part },
           });
           yield {
-            type: "content-block-start" as const,
+            event: "content-block-start" as const,
             index: blockIndex,
             content: { ...part },
           };
@@ -96,7 +96,7 @@ export async function* convertChunksToEvents(
           const block = activeBlocks.get(blockIndex)!;
           block.accumulated = applyDeltaToBlock(block.accumulated, part);
           yield {
-            type: "content-block-delta" as const,
+            event: "content-block-delta" as const,
             index: blockIndex,
             content: part,
           };
@@ -129,7 +129,7 @@ export async function* convertChunksToEvents(
             accumulated: initial,
           });
           yield {
-            type: "content-block-start" as const,
+            event: "content-block-start" as const,
             index: blockIndex,
             content: initial,
           };
@@ -146,7 +146,7 @@ export async function* convertChunksToEvents(
         if (toolChunk.name != null) acc.name = toolChunk.name;
         acc.args = (acc.args ?? "") + (toolChunk.args ?? "");
         yield {
-          type: "content-block-delta" as const,
+          event: "content-block-delta" as const,
           index: blockIndex,
           content: { ...(block.accumulated as ContentBlock) },
         };
@@ -165,7 +165,7 @@ export async function* convertChunksToEvents(
           total_tokens: lastUsage.total_tokens + chunkUsage.total_tokens,
         };
       }
-      yield { type: "usage" as const, usage: { ...lastUsage } };
+      yield { event: "usage" as const, usage: { ...lastUsage } };
     }
   }
 
@@ -173,14 +173,14 @@ export async function* convertChunksToEvents(
   for (const [index, block] of activeBlocks) {
     const finalized = finalizeContentBlock(block.accumulated);
     yield {
-      type: "content-block-finish" as const,
+      event: "content-block-finish" as const,
       index,
       content: finalized,
     };
   }
 
   yield {
-    type: "message-finish" as const,
+    event: "message-finish" as const,
     reason: "stop" as const,
     ...(lastUsage ? { usage: lastUsage } : {}),
   };

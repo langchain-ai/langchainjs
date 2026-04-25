@@ -14,36 +14,36 @@ async function* iterEvents(
 // Helper: a realistic text-only stream
 function textStreamEvents(): ChatModelStreamEvent[] {
   return [
-    { type: "message-start", id: "msg_1" },
+    { event: "message-start", id: "msg_1" },
     {
-      type: "content-block-start",
+      event: "content-block-start",
       index: 0,
       content: { type: "text", text: "" },
     },
     {
-      type: "content-block-delta",
+      event: "content-block-delta",
       index: 0,
       content: { type: "text", text: "Hello" },
     },
     {
-      type: "content-block-delta",
+      event: "content-block-delta",
       index: 0,
       content: { type: "text", text: " world" },
     },
     {
-      type: "content-block-finish",
+      event: "content-block-finish",
       index: 0,
       content: { type: "text", text: "Hello world" },
     },
     {
-      type: "usage",
+      event: "usage",
       usage: { input_tokens: 10, output_tokens: 2, total_tokens: 12 },
     },
     {
-      type: "message-finish",
+      event: "message-finish",
       reason: "stop",
       usage: { input_tokens: 10, output_tokens: 2, total_tokens: 12 },
-      responseMetadata: { model_name: "test-model" },
+      metadata: { model_name: "test-model" },
     },
   ];
 }
@@ -52,55 +52,55 @@ function textStreamEvents(): ChatModelStreamEvent[] {
 function complexStreamEvents(): ChatModelStreamEvent[] {
   return [
     {
-      type: "message-start",
+      event: "message-start",
       id: "msg_2",
       usage: { input_tokens: 50, output_tokens: 0, total_tokens: 50 },
     },
     // Reasoning block
     {
-      type: "content-block-start",
+      event: "content-block-start",
       index: 0,
       content: { type: "reasoning", reasoning: "" },
     },
     {
-      type: "content-block-delta",
+      event: "content-block-delta",
       index: 0,
       content: { type: "reasoning", reasoning: "Let me" },
     },
     {
-      type: "content-block-delta",
+      event: "content-block-delta",
       index: 0,
       content: { type: "reasoning", reasoning: " think..." },
     },
     {
-      type: "content-block-finish",
+      event: "content-block-finish",
       index: 0,
       content: { type: "reasoning", reasoning: "Let me think..." },
     },
     // Text block
     {
-      type: "content-block-start",
+      event: "content-block-start",
       index: 1,
       content: { type: "text", text: "" },
     },
     {
-      type: "content-block-delta",
+      event: "content-block-delta",
       index: 1,
       content: { type: "text", text: "The answer" },
     },
     {
-      type: "content-block-delta",
+      event: "content-block-delta",
       index: 1,
       content: { type: "text", text: " is 42." },
     },
     {
-      type: "content-block-finish",
+      event: "content-block-finish",
       index: 1,
       content: { type: "text", text: "The answer is 42." },
     },
     // Tool call block
     {
-      type: "content-block-start",
+      event: "content-block-start",
       index: 2,
       content: {
         type: "tool_call_chunk",
@@ -110,7 +110,7 @@ function complexStreamEvents(): ChatModelStreamEvent[] {
       },
     },
     {
-      type: "content-block-delta",
+      event: "content-block-delta",
       index: 2,
       content: {
         type: "tool_call_chunk",
@@ -120,7 +120,7 @@ function complexStreamEvents(): ChatModelStreamEvent[] {
       },
     },
     {
-      type: "content-block-delta",
+      event: "content-block-delta",
       index: 2,
       content: {
         type: "tool_call_chunk",
@@ -130,7 +130,7 @@ function complexStreamEvents(): ChatModelStreamEvent[] {
       },
     },
     {
-      type: "content-block-finish",
+      event: "content-block-finish",
       index: 2,
       content: {
         type: "tool_call",
@@ -140,11 +140,11 @@ function complexStreamEvents(): ChatModelStreamEvent[] {
       },
     },
     {
-      type: "usage",
+      event: "usage",
       usage: { input_tokens: 50, output_tokens: 30, total_tokens: 80 },
     },
     {
-      type: "message-finish",
+      event: "message-finish",
       reason: "tool_use",
       usage: { input_tokens: 50, output_tokens: 30, total_tokens: 80 },
     },
@@ -153,52 +153,52 @@ function complexStreamEvents(): ChatModelStreamEvent[] {
 
 function providerThinkingStreamEvents(): ChatModelStreamEvent[] {
   return [
-    { type: "message-start", id: "msg_thinking" },
+    { event: "message-start", id: "msg_thinking" },
     {
-      type: "content-block-start",
+      event: "content-block-start",
       index: 0,
       content: { type: "thinking", thinking: "" },
     },
     {
-      type: "content-block-delta",
+      event: "content-block-delta",
       index: 0,
       content: { type: "thinking", thinking: "Let me" },
     },
     {
-      type: "content-block-delta",
+      event: "content-block-delta",
       index: 0,
       content: { type: "thinking", thinking: " think..." },
     },
     {
-      type: "content-block-finish",
+      event: "content-block-finish",
       index: 0,
       content: { type: "thinking", thinking: "Let me think..." },
     },
-    { type: "message-finish", reason: "stop" },
+    { event: "message-finish", reason: "stop" },
   ] as unknown as ChatModelStreamEvent[];
 }
 
 async function* delayedTextAfterReasoningEvents(
   onMessageFinish: () => void
 ): AsyncGenerator<ChatModelStreamEvent> {
-  yield { type: "message-start", id: "msg_seq" };
+  yield { event: "message-start", id: "msg_seq" };
   yield {
-    type: "content-block-start",
+    event: "content-block-start",
     index: 0,
     content: { type: "reasoning", reasoning: "" },
   };
   yield {
-    type: "content-block-delta",
+    event: "content-block-delta",
     index: 0,
     content: { type: "reasoning", reasoning: "Let me think" },
   };
   yield {
-    type: "content-block-start",
+    event: "content-block-start",
     index: 1,
     content: { type: "text", text: "" },
   };
   yield {
-    type: "content-block-delta",
+    event: "content-block-delta",
     index: 1,
     content: { type: "text", text: "Hello" },
   };
@@ -206,7 +206,7 @@ async function* delayedTextAfterReasoningEvents(
     setTimeout(resolve, 50);
   });
   onMessageFinish();
-  yield { type: "message-finish", reason: "stop" };
+  yield { event: "message-finish", reason: "stop" };
 }
 
 describe("ChatModelStream", () => {
@@ -221,8 +221,8 @@ describe("ChatModelStream", () => {
       }
 
       expect(collected.length).toBe(events.length);
-      expect(collected[0]!.type).toBe("message-start");
-      expect(collected[collected.length - 1]!.type).toBe("message-finish");
+      expect(collected[0]!.event).toBe("message-start");
+      expect(collected[collected.length - 1]!.event).toBe("message-finish");
     });
   });
 
@@ -360,8 +360,8 @@ describe("ChatModelStream", () => {
 
     test("resolves to undefined usage when none provided", async () => {
       const events: ChatModelStreamEvent[] = [
-        { type: "message-start" },
-        { type: "message-finish" },
+        { event: "message-start" },
+        { event: "message-finish" },
       ];
       const stream = new ChatModelStream(iterEvents(events));
       const usage = await stream.usage;
@@ -475,36 +475,36 @@ describe("ChatModelStream", () => {
   describe("provider events passthrough", () => {
     test("provider events are visible in raw iteration", async () => {
       const events: ChatModelStreamEvent[] = [
-        { type: "message-start" },
+        { event: "message-start" },
         {
-          type: "provider",
+          event: "provider",
           provider: "openai",
           name: "response.web_search_call.searching",
           payload: { item_id: "ws_1" },
         },
         {
-          type: "content-block-start",
+          event: "content-block-start",
           index: 0,
           content: { type: "text", text: "" },
         },
         {
-          type: "content-block-delta",
+          event: "content-block-delta",
           index: 0,
           content: { type: "text", text: "Result" },
         },
         {
-          type: "content-block-finish",
+          event: "content-block-finish",
           index: 0,
           content: { type: "text", text: "Result" },
         },
-        { type: "message-finish", reason: "stop" },
+        { event: "message-finish", reason: "stop" },
       ];
 
       const stream = new ChatModelStream(iterEvents(events));
 
       const providerEvents = [];
       for await (const event of stream) {
-        if (event.type === "provider") {
+        if (event.event === "provider") {
           providerEvents.push(event);
         }
       }
@@ -518,29 +518,29 @@ describe("ChatModelStream", () => {
 
     test("provider events are ignored by sub-streams", async () => {
       const events: ChatModelStreamEvent[] = [
-        { type: "message-start" },
+        { event: "message-start" },
         {
-          type: "provider",
+          event: "provider",
           provider: "openai",
           name: "response.web_search_call.searching",
           payload: {},
         },
         {
-          type: "content-block-start",
+          event: "content-block-start",
           index: 0,
           content: { type: "text", text: "" },
         },
         {
-          type: "content-block-delta",
+          event: "content-block-delta",
           index: 0,
           content: { type: "text", text: "Hello" },
         },
         {
-          type: "content-block-finish",
+          event: "content-block-finish",
           index: 0,
           content: { type: "text", text: "Hello" },
         },
-        { type: "message-finish", reason: "stop" },
+        { event: "message-finish", reason: "stop" },
       ];
 
       const stream = new ChatModelStream(iterEvents(events));
@@ -552,19 +552,19 @@ describe("ChatModelStream", () => {
   describe("error handling", () => {
     test("error event in stream", async () => {
       const events: ChatModelStreamEvent[] = [
-        { type: "message-start" },
+        { event: "message-start" },
         {
-          type: "content-block-start",
+          event: "content-block-start",
           index: 0,
           content: { type: "text", text: "" },
         },
         {
-          type: "content-block-delta",
+          event: "content-block-delta",
           index: 0,
           content: { type: "text", text: "Partial" },
         },
-        { type: "error", message: "Connection lost", code: "CONN_ERR" },
-        { type: "message-finish", reason: "stop" },
+        { event: "error", message: "Connection lost", code: "CONN_ERR" },
+        { event: "message-finish", reason: "stop" },
       ];
 
       const stream = new ChatModelStream(iterEvents(events));
@@ -573,13 +573,13 @@ describe("ChatModelStream", () => {
       for await (const event of stream) {
         collected.push(event);
       }
-      const errorEvents = collected.filter((e) => e.type === "error");
+      const errorEvents = collected.filter((e) => e.event === "error");
       expect(errorEvents.length).toBe(1);
     });
 
     test("source async iterable throwing propagates", async () => {
       async function* throwingSource(): AsyncGenerator<ChatModelStreamEvent> {
-        yield { type: "message-start" };
+        yield { event: "message-start" };
         throw new Error("Provider connection failed");
       }
 
