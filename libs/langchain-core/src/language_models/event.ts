@@ -39,6 +39,15 @@
 import type { ContentBlock } from "../messages/content/index.js";
 import type { UsageMetadata } from "../messages/metadata.js";
 
+/**
+ * Usage shape accepted by chat model stream events.
+ *
+ * This is intentionally wider than {@link UsageMetadata}: protocol sources
+ * may report partial token snapshots, while {@link ChatModelStream} normalizes
+ * them before exposing `.usage` or the final `AIMessage.usage_metadata`.
+ */
+export type UsageMetadataLike = Partial<UsageMetadata>;
+
 // ─── Message Lifecycle ──────────────────────────────────────────
 
 /**
@@ -52,7 +61,7 @@ export interface MessageStartEvent {
    * Initial usage snapshot, if the provider reports input token counts
    * before content begins streaming (e.g., Anthropic's `message_start`).
    */
-  usage?: UsageMetadata;
+  usage?: UsageMetadataLike;
 }
 
 /**
@@ -73,7 +82,7 @@ export interface MessageFinishEvent {
   /** Why the model stopped generating. */
   reason?: FinishReason;
   /** Final usage snapshot. */
-  usage?: UsageMetadata;
+  usage?: UsageMetadataLike;
   /** Provider-specific response metadata (model name, response ID, headers, etc.). */
   metadata?: Record<string, unknown>;
 }
@@ -157,7 +166,7 @@ export interface ContentBlockFinishEvent {
 export interface UsageUpdateEvent {
   event: "usage";
   /** Current usage snapshot. */
-  usage: UsageMetadata;
+  usage: UsageMetadataLike;
 }
 
 // ─── Provider Passthrough ───────────────────────────────────────

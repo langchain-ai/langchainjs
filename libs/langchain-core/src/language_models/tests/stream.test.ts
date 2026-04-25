@@ -367,6 +367,27 @@ describe("ChatModelStream", () => {
       const usage = await stream.usage;
       expect(usage).toBeUndefined();
     });
+
+    test("normalizes partial usage snapshots", async () => {
+      const events: ChatModelStreamEvent[] = [
+        { event: "message-start", usage: { input_tokens: 3 } },
+        { event: "message-finish", usage: { output_tokens: 5 } },
+      ];
+      const stream = new ChatModelStream(iterEvents(events));
+
+      await expect(stream.usage).resolves.toEqual({
+        input_tokens: 0,
+        output_tokens: 5,
+        total_tokens: 0,
+      });
+      await expect(stream.output).resolves.toMatchObject({
+        usage_metadata: {
+          input_tokens: 0,
+          output_tokens: 5,
+          total_tokens: 0,
+        },
+      });
+    });
   });
 
   describe(".output (AIMessage assembly)", () => {
