@@ -9,7 +9,7 @@
 import { isAIMessageChunk } from "../messages/ai.js";
 import type { ContentBlock } from "../messages/content/index.js";
 import type { ChatGenerationChunk } from "../outputs.js";
-import type { ChatModelStreamEvent, ContentBlockDelta } from "./event.js";
+import type { ChatModelStreamEvent } from "./event.js";
 
 /**
  * Convert an async iterable of legacy `ChatGenerationChunk`s into
@@ -38,7 +38,7 @@ export async function* convertChunksToEvents(
     if (!messageStarted) {
       messageStarted = true;
       const startEvent: ChatModelStreamEvent = {
-        type: "message-start" as const,
+        event: "message-start" as const,
         id: msg.id ?? undefined,
       };
       if (isAIMessageChunk(msg) && msg.usage_metadata) {
@@ -61,7 +61,7 @@ export async function* convertChunksToEvents(
             accumulated: initial,
           });
           yield {
-            type: "content-block-start" as const,
+            event: "content-block-start" as const,
             index: blockIndex,
             content: initial,
           };
@@ -72,9 +72,9 @@ export async function* convertChunksToEvents(
           text: ((block.accumulated as { text?: string }).text ?? "") + content,
         };
         yield {
-          type: "content-block-delta" as const,
+          event: "content-block-delta" as const,
           index: blockIndex,
-          delta: { type: "text-delta" as const, text: content },
+          content: { type: "text" as const, text: content },
         };
       }
     } else if (Array.isArray(content)) {
@@ -88,18 +88,17 @@ export async function* convertChunksToEvents(
             accumulated: { ...part },
           });
           yield {
-            type: "content-block-start" as const,
+            event: "content-block-start" as const,
             index: blockIndex,
             content: { ...part },
           };
         } else {
           const block = activeBlocks.get(blockIndex)!;
-          const delta = contentBlockToDelta(part);
-          block.accumulated = applyDeltaToBlock(block.accumulated, delta);
+          block.accumulated = applyDeltaToBlock(block.accumulated, part);
           yield {
-            type: "content-block-delta" as const,
+            event: "content-block-delta" as const,
             index: blockIndex,
-            delta,
+            content: part,
           };
         }
       }
@@ -130,13 +129,13 @@ export async function* convertChunksToEvents(
             accumulated: initial,
           });
           yield {
-            type: "content-block-start" as const,
+            event: "content-block-start" as const,
             index: blockIndex,
             content: initial,
           };
         }
 
-        // Accumulate tool call args internally, emit as block-delta with snapshot
+        // Accumulate tool call args internally, emit incremental content chunks.
         const block = activeBlocks.get(blockIndex)!;
         const acc = block.accumulated as {
           args?: string;
@@ -147,12 +146,9 @@ export async function* convertChunksToEvents(
         if (toolChunk.name != null) acc.name = toolChunk.name;
         acc.args = (acc.args ?? "") + (toolChunk.args ?? "");
         yield {
-          type: "content-block-delta" as const,
+          event: "content-block-delta" as const,
           index: blockIndex,
-          delta: {
-            type: "block-delta" as const,
-            fields: { ...block.accumulated },
-          },
+          content: { ...(block.accumulated as ContentBlock) },
         };
       }
     }
@@ -169,7 +165,7 @@ export async function* convertChunksToEvents(
           total_tokens: lastUsage.total_tokens + chunkUsage.total_tokens,
         };
       }
-      yield { type: "usage" as const, usage: { ...lastUsage } };
+      yield { event: "usage" as const, usage: { ...lastUsage } };
     }
   }
 
@@ -177,14 +173,14 @@ export async function* convertChunksToEvents(
   for (const [index, block] of activeBlocks) {
     const finalized = finalizeContentBlock(block.accumulated);
     yield {
-      type: "content-block-finish" as const,
+      event: "content-block-finish" as const,
       index,
       content: finalized,
     };
   }
 
   yield {
-    type: "message-finish" as const,
+    event: "message-finish" as const,
     reason: "stop" as const,
     ...(lastUsage ? { usage: lastUsage } : {}),
   };
@@ -196,54 +192,50 @@ export async function* convertChunksToEvents(
  */
 function applyDeltaToBlock(
   block: ContentBlock,
-  delta: ContentBlockDelta
+  delta: ContentBlock
 ): ContentBlock {
-  switch (delta.type) {
-    case "text-delta":
-      return {
-        ...block,
-        text: ((block as { text?: string }).text ?? "") + delta.text,
-      };
-    case "reasoning-delta":
-      return {
-        ...block,
-        reasoning:
-          ((block as { reasoning?: string }).reasoning ?? "") + delta.reasoning,
-      };
-    case "block-delta":
-      return { ...block, ...delta.fields };
-    default:
-      return block;
+  if (block.type !== delta.type) {
+    return { ...delta };
   }
-}
 
-/**
- * Convert a legacy content block part to a typed delta.
- * @internal
- */
-function contentBlockToDelta(part: ContentBlock): ContentBlockDelta {
-  switch (part.type) {
+  if (
+    (delta as { type?: string }).type === "thinking" &&
+    (block as { type?: string }).type === "thinking"
+  ) {
+    const thinking =
+      ((block as { thinking?: string }).thinking ?? "") +
+      ((delta as { thinking?: string }).thinking ?? "");
+    return { ...block, ...delta, thinking } as unknown as ContentBlock;
+  }
+
+  switch (delta.type) {
     case "text":
       return {
-        type: "text-delta" as const,
-        text: (part as ContentBlock.Text).text ?? "",
+        ...block,
+        ...delta,
+        text: ((block as { text?: string }).text ?? "") + delta.text,
       };
     case "reasoning":
       return {
-        type: "reasoning-delta" as const,
-        reasoning: (part as ContentBlock.Reasoning).reasoning ?? "",
+        ...block,
+        ...delta,
+        reasoning:
+          ((block as { reasoning?: string }).reasoning ?? "") + delta.reasoning,
       };
     case "tool_call_chunk":
-    case "tool_call":
-      return {
-        type: "block-delta" as const,
-        fields: part,
-      };
+    case "server_tool_call_chunk": {
+      const merged = { ...block, ...delta } as Record<string, unknown>;
+      if (delta.id == null && "id" in block && block.id != null) {
+        merged.id = block.id;
+      }
+      if (delta.name == null && "name" in block && block.name != null) {
+        merged.name = block.name;
+      }
+      merged.args = `${("args" in block ? block.args : "") ?? ""}${delta.args ?? ""}`;
+      return merged as unknown as ContentBlock;
+    }
     default:
-      return {
-        type: "block-delta" as const,
-        fields: part,
-      };
+      return { ...block, ...delta };
   }
 }
 

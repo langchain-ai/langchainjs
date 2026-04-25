@@ -7,7 +7,9 @@
 import { AIMessage } from "../messages/ai.js";
 import type { ContentBlock } from "../messages/content/index.js";
 import type { UsageMetadata } from "../messages/metadata.js";
-import type { ChatModelStreamEvent, ContentBlockDelta } from "./event.js";
+import type { ChatModelStreamEvent } from "./event.js";
+
+type UsageMetadataLike = Partial<UsageMetadata>;
 
 // ─── Replay Buffer ──────────────────────────────────────────────
 
@@ -83,33 +85,99 @@ class ReplayBuffer {
 /**
  * Apply a typed delta to an accumulated content block.
  *
- * - `text-delta` → append text
- * - `reasoning-delta` → append reasoning
- * - `block-delta` → overwrite fields
+ * - `text` → append text
+ * - `reasoning` / provider `thinking` → append reasoning text
+ * - `tool_call_chunk` / `server_tool_call_chunk` → append args while
+ *   preserving id/name from previous chunks when a later delta omits them
+ * - other block types → shallow merge
  *
  * @internal
  */
-function applyDelta(
-  block: ContentBlock,
-  delta: ContentBlockDelta
-): ContentBlock {
+function applyDelta(block: ContentBlock, delta: ContentBlock): ContentBlock {
+  if (block.type !== delta.type) {
+    return { ...delta };
+  }
+
+  if (
+    (delta as { type?: string }).type === "thinking" &&
+    (block as { type?: string }).type === "thinking"
+  ) {
+    const thinking =
+      ((block as { thinking?: string }).thinking ?? "") +
+      ((delta as { thinking?: string }).thinking ?? "");
+    return { ...block, ...delta, thinking } as unknown as ContentBlock;
+  }
+
   switch (delta.type) {
-    case "text-delta":
+    case "text":
       return {
         ...block,
+        ...delta,
         text: ((block as { text?: string }).text ?? "") + delta.text,
       };
-    case "reasoning-delta":
+    case "reasoning":
       return {
         ...block,
+        ...delta,
         reasoning:
           ((block as { reasoning?: string }).reasoning ?? "") + delta.reasoning,
       };
-    case "block-delta":
-      return { ...block, ...delta.fields };
+    case "tool_call_chunk":
+    case "server_tool_call_chunk": {
+      const merged = { ...block, ...delta } as Record<string, unknown>;
+      if (delta.id == null && "id" in block && block.id != null) {
+        merged.id = block.id;
+      }
+      if (delta.name == null && "name" in block && block.name != null) {
+        merged.name = block.name;
+      }
+      merged.args = `${("args" in block ? block.args : "") ?? ""}${delta.args ?? ""}`;
+      return merged as unknown as ContentBlock;
+    }
     default:
-      return block;
+      return { ...block, ...delta };
   }
+}
+
+function getReasoningDelta(content: unknown): string | undefined {
+  if (content == null || typeof content !== "object") return undefined;
+  const block = content as {
+    type?: string;
+    reasoning?: unknown;
+    thinking?: unknown;
+  };
+  if (block.type === "reasoning" && typeof block.reasoning === "string") {
+    return block.reasoning;
+  }
+  if (block.type === "thinking" && typeof block.thinking === "string") {
+    return block.thinking;
+  }
+  return undefined;
+}
+
+function isReasoningContent(content: unknown): boolean {
+  if (content == null || typeof content !== "object") return false;
+  const type = (content as { type?: unknown }).type;
+  return type === "reasoning" || type === "thinking";
+}
+
+/**
+ * Normalize protocol-compatible partial usage into Core's concrete usage shape.
+ *
+ * Some stream sources emit usage snapshots without every aggregate token field.
+ * Keep the stream event input permissive, then normalize at read time so
+ * high-level Core consumers always receive a complete {@link UsageMetadata}.
+ */
+function normalizeUsage(
+  usage: UsageMetadataLike | undefined
+): UsageMetadata | undefined {
+  if (!usage) return undefined;
+  return {
+    ...usage,
+    input_tokens: usage.input_tokens ?? 0,
+    output_tokens: usage.output_tokens ?? 0,
+    total_tokens: usage.total_tokens ?? 0,
+  };
 }
 
 // ─── Sub-Stream: Text ───────────────────────────────────────────
@@ -140,10 +208,11 @@ export class TextContentStream
         let accumulated = "";
         for await (const event of buffer.iterate()) {
           if (
-            event.type === "content-block-delta" &&
-            event.delta.type === "text-delta"
+            event.event === "content-block-delta" &&
+            event.content.type === "text" &&
+            typeof event.content.text === "string"
           ) {
-            accumulated += event.delta.text;
+            accumulated += event.content.text;
             yield accumulated;
           }
         }
@@ -157,10 +226,11 @@ export class TextContentStream
     async function* gen() {
       for await (const event of buffer.iterate()) {
         if (
-          event.type === "content-block-delta" &&
-          event.delta.type === "text-delta"
+          event.event === "content-block-delta" &&
+          event.content.type === "text" &&
+          typeof event.content.text === "string"
         ) {
-          yield event.delta.text;
+          yield event.content.text;
         }
       }
     }
@@ -211,7 +281,7 @@ export class ToolCallsStream
         const calls: Array<ContentBlock.Tools.ToolCall> = [];
         for await (const event of buffer.iterate()) {
           if (
-            event.type === "content-block-finish" &&
+            event.event === "content-block-finish" &&
             event.content.type === "tool_call"
           ) {
             calls.push(event.content as ContentBlock.Tools.ToolCall);
@@ -227,7 +297,7 @@ export class ToolCallsStream
     async function* gen() {
       for await (const event of buffer.iterate()) {
         if (
-          event.type === "content-block-finish" &&
+          event.event === "content-block-finish" &&
           event.content.type === "tool_call"
         ) {
           yield event.content as ContentBlock.Tools.ToolCall;
@@ -278,13 +348,32 @@ export class ReasoningContentStream
     return {
       async *[Symbol.asyncIterator]() {
         let accumulated = "";
+        let seenReasoning = false;
         for await (const event of buffer.iterate()) {
-          if (
-            event.type === "content-block-delta" &&
-            event.delta.type === "reasoning-delta"
-          ) {
-            accumulated += event.delta.reasoning;
+          if (event.event === "content-block-start") {
+            if (!isReasoningContent(event.content)) {
+              if (seenReasoning) return;
+              continue;
+            }
+            seenReasoning = true;
+            const delta = getReasoningDelta(event.content);
+            if (delta == null || delta.length === 0) continue;
+            accumulated += delta;
             yield accumulated;
+          } else if (event.event === "content-block-delta") {
+            if (!isReasoningContent(event.content)) continue;
+            seenReasoning = true;
+            const delta = getReasoningDelta(event.content);
+            if (delta == null || delta.length === 0) continue;
+            accumulated += delta;
+            yield accumulated;
+          } else if (
+            event.event === "content-block-finish" &&
+            isReasoningContent(event.content)
+          ) {
+            return;
+          } else if (event.event === "message-finish") {
+            return;
           }
         }
       },
@@ -294,12 +383,28 @@ export class ReasoningContentStream
   [Symbol.asyncIterator](): AsyncIterator<string> {
     const buffer = this._buffer;
     async function* gen() {
+      let seenReasoning = false;
       for await (const event of buffer.iterate()) {
-        if (
-          event.type === "content-block-delta" &&
-          event.delta.type === "reasoning-delta"
+        if (event.event === "content-block-start") {
+          if (!isReasoningContent(event.content)) {
+            if (seenReasoning) return;
+            continue;
+          }
+          seenReasoning = true;
+          const delta = getReasoningDelta(event.content);
+          if (delta != null && delta.length > 0) yield delta;
+        } else if (event.event === "content-block-delta") {
+          if (!isReasoningContent(event.content)) continue;
+          seenReasoning = true;
+          const delta = getReasoningDelta(event.content);
+          if (delta != null && delta.length > 0) yield delta;
+        } else if (
+          event.event === "content-block-finish" &&
+          isReasoningContent(event.content)
         ) {
-          yield event.delta.reasoning;
+          return;
+        } else if (event.event === "message-finish") {
+          return;
         }
       }
     }
@@ -327,7 +432,9 @@ export class ReasoningContentStream
  * Typed stream for usage metadata.
  */
 export class UsageMetadataStream
-  implements AsyncIterable<UsageMetadata>, PromiseLike<UsageMetadata>
+  implements
+    AsyncIterable<UsageMetadata>,
+    PromiseLike<UsageMetadata | undefined>
 {
   /** @internal */
   private _buffer: ReplayBuffer;
@@ -341,21 +448,24 @@ export class UsageMetadataStream
     const buffer = this._buffer;
     async function* gen() {
       for await (const event of buffer.iterate()) {
-        if (event.type === "usage") {
-          yield event.usage;
-        } else if (event.type === "message-start" && event.usage) {
-          yield event.usage;
-        } else if (event.type === "message-finish" && event.usage) {
-          yield event.usage;
+        if (event.event === "usage") {
+          const usage = normalizeUsage(event.usage);
+          if (usage) yield usage;
+        } else if (event.event === "message-start" && event.usage) {
+          const usage = normalizeUsage(event.usage);
+          if (usage) yield usage;
+        } else if (event.event === "message-finish" && event.usage) {
+          const usage = normalizeUsage(event.usage);
+          if (usage) yield usage;
         }
       }
     }
     return gen();
   }
 
-  then<TResult1 = UsageMetadata, TResult2 = never>(
+  then<TResult1 = UsageMetadata | undefined, TResult2 = never>(
     onfulfilled?:
-      | ((value: UsageMetadata) => TResult1 | PromiseLike<TResult1>)
+      | ((value: UsageMetadata | undefined) => TResult1 | PromiseLike<TResult1>)
       | null,
     onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null
   ): PromiseLike<TResult1 | TResult2> {
@@ -364,7 +474,7 @@ export class UsageMetadataStream
       for await (const usage of this) {
         latest = usage;
       }
-      return latest ?? { input_tokens: 0, output_tokens: 0, total_tokens: 0 };
+      return latest;
     })();
     return promise.then(onfulfilled, onrejected);
   }
@@ -444,14 +554,14 @@ export class ChatModelStream
     const contentBlocks: Array<ContentBlock | undefined> = [];
     let id: string | undefined;
     let usage: UsageMetadata | undefined;
-    let responseMetadata: Record<string, unknown> = {};
+    let metadata: Record<string, unknown> = {};
     let finishReason: string | undefined;
 
     for await (const event of this._buffer.iterate()) {
-      switch (event.type) {
+      switch (event.event) {
         case "message-start":
           id = event.id ?? id;
-          if (event.usage) usage = event.usage;
+          if (event.usage) usage = normalizeUsage(event.usage);
           break;
 
         case "content-block-start":
@@ -461,7 +571,7 @@ export class ChatModelStream
         case "content-block-delta": {
           const current = contentBlocks[event.index];
           if (current) {
-            contentBlocks[event.index] = applyDelta(current, event.delta);
+            contentBlocks[event.index] = applyDelta(current, event.content);
           }
           break;
         }
@@ -471,16 +581,16 @@ export class ChatModelStream
           break;
 
         case "usage":
-          usage = event.usage;
+          usage = normalizeUsage(event.usage);
           break;
 
         case "message-finish":
           finishReason = event.reason;
-          if (event.usage) usage = event.usage;
-          if (event.responseMetadata) {
-            responseMetadata = {
-              ...responseMetadata,
-              ...event.responseMetadata,
+          if (event.usage) usage = normalizeUsage(event.usage);
+          if (event.metadata) {
+            metadata = {
+              ...metadata,
+              ...event.metadata,
             };
           }
           break;
@@ -499,7 +609,7 @@ export class ChatModelStream
       content: filteredBlocks,
       usage_metadata: usage,
       response_metadata: {
-        ...responseMetadata,
+        ...metadata,
         ...(finishReason ? { finish_reason: finishReason } : {}),
         output_version: "v1" as const,
       },

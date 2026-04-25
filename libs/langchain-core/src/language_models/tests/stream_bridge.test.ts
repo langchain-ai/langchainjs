@@ -89,6 +89,44 @@ class FakeBlockStreamModel extends BaseChatModel {
   }
 }
 
+class FakeThinkingStreamModel extends BaseChatModel {
+  _llmType() {
+    return "fake-thinking-stream";
+  }
+
+  async _generate(
+    _messages: BaseMessage[],
+    _options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): Promise<ChatResult> {
+    return { generations: [] };
+  }
+
+  async *_streamResponseChunks(
+    _messages: BaseMessage[],
+    _options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    yield new ChatGenerationChunk({
+      message: new AIMessageChunk({
+        content: [
+          { type: "thinking", thinking: "Thinking", index: 0 },
+        ] as unknown as ContentBlock[],
+        id: "msg_thinking",
+      }),
+      text: "",
+    });
+    yield new ChatGenerationChunk({
+      message: new AIMessageChunk({
+        content: [
+          { type: "thinking", thinking: " hard...", index: 0 },
+        ] as unknown as ContentBlock[],
+      }),
+      text: "",
+    });
+  }
+}
+
 /**
  * A model that yields tool call chunks via _streamResponseChunks.
  */
@@ -196,11 +234,11 @@ describe("_streamChatModelEvents bridge", () => {
       }
 
       // message-start
-      expect(events[0]!.type).toBe("message-start");
+      expect(events[0]!.event).toBe("message-start");
       expect((events[0] as { id?: string }).id).toBe("msg_test");
 
       // content-block-start for text
-      expect(events[1]!.type).toBe("content-block-start");
+      expect(events[1]!.event).toBe("content-block-start");
       const startBlock = events[1] as {
         index: number;
         content: ContentBlock;
@@ -209,26 +247,26 @@ describe("_streamChatModelEvents bridge", () => {
       expect(startBlock.content.type).toBe("text");
 
       // content-block-delta for "Hello"
-      expect(events[2]!.type).toBe("content-block-delta");
+      expect(events[2]!.event).toBe("content-block-delta");
       const delta1 = events[2] as {
         index: number;
-        delta: { type: string; text?: string };
+        content: { type: string; text?: string };
       };
-      expect(delta1.delta.type).toBe("text-delta");
-      expect(delta1.delta.text).toBe("Hello");
+      expect(delta1.content.type).toBe("text");
+      expect(delta1.content.text).toBe("Hello");
 
       // content-block-delta for " world"
-      expect(events[3]!.type).toBe("content-block-delta");
+      expect(events[3]!.event).toBe("content-block-delta");
       const delta2 = events[3] as {
         index: number;
-        delta: { type: string; text?: string };
+        content: { type: string; text?: string };
       };
-      expect(delta2.delta.type).toBe("text-delta");
-      expect(delta2.delta.text).toBe(" world");
+      expect(delta2.content.type).toBe("text");
+      expect(delta2.content.text).toBe(" world");
 
       // content-block-finish
       const finishIdx = events.findIndex(
-        (e) => e.type === "content-block-finish"
+        (e) => e.event === "content-block-finish"
       );
       expect(finishIdx).toBeGreaterThan(-1);
       const finish = events[finishIdx] as {
@@ -238,7 +276,7 @@ describe("_streamChatModelEvents bridge", () => {
 
       // message-finish
       const msgFinish = events[events.length - 1]!;
-      expect(msgFinish.type).toBe("message-finish");
+      expect(msgFinish.event).toBe("message-finish");
       expect((msgFinish as { reason: string }).reason).toBe("stop");
     });
   });
@@ -255,7 +293,7 @@ describe("_streamChatModelEvents bridge", () => {
       }
 
       // Should have start events for both blocks
-      const starts = events.filter((e) => e.type === "content-block-start");
+      const starts = events.filter((e) => e.event === "content-block-start");
       expect(starts.length).toBe(2);
 
       // Block 0: reasoning
@@ -273,7 +311,7 @@ describe("_streamChatModelEvents bridge", () => {
       // Reasoning deltas should accumulate
       const reasoningDeltas = events.filter(
         (e) =>
-          e.type === "content-block-delta" &&
+          e.event === "content-block-delta" &&
           (e as { index: number }).index === 0
       );
       expect(reasoningDeltas.length).toBe(1); // second reasoning chunk is a delta
@@ -282,14 +320,34 @@ describe("_streamChatModelEvents bridge", () => {
       const lastReasoningDelta = reasoningDeltas[
         reasoningDeltas.length - 1
       ] as {
-        delta: { type: string; reasoning?: string };
+        content: { type: string; reasoning?: string };
       };
-      expect(lastReasoningDelta.delta.type).toBe("reasoning-delta");
-      expect(lastReasoningDelta.delta.reasoning).toBe(" hard...");
+      expect(lastReasoningDelta.content.type).toBe("reasoning");
+      expect(lastReasoningDelta.content.reasoning).toBe(" hard...");
 
       // Finish events for both blocks
-      const finishes = events.filter((e) => e.type === "content-block-finish");
+      const finishes = events.filter((e) => e.event === "content-block-finish");
       expect(finishes.length).toBe(2);
+    });
+
+    test("accumulates provider thinking blocks", async () => {
+      const model = new FakeThinkingStreamModel({});
+      const events: ChatModelStreamEvent[] = [];
+      for await (const event of model._streamChatModelEvents(
+        [],
+        {} as BaseChatModelCallOptions
+      )) {
+        events.push(event);
+      }
+
+      const finish = events.find(
+        (e) =>
+          e.event === "content-block-finish" &&
+          (e as { index: number }).index === 0
+      ) as { content: { type: string; thinking?: string } };
+
+      expect(finish.content.type).toBe("thinking");
+      expect(finish.content.thinking).toBe("Thinking hard...");
     });
   });
 
@@ -305,7 +363,7 @@ describe("_streamChatModelEvents bridge", () => {
       }
 
       // Should have a start event for the tool call
-      const starts = events.filter((e) => e.type === "content-block-start");
+      const starts = events.filter((e) => e.event === "content-block-start");
       expect(starts.length).toBeGreaterThanOrEqual(1);
 
       const toolStart = starts.find(
@@ -316,7 +374,7 @@ describe("_streamChatModelEvents bridge", () => {
       expect(toolStart!.content.name).toBe("search");
 
       // Should have a finish event with finalized tool call
-      const finishes = events.filter((e) => e.type === "content-block-finish");
+      const finishes = events.filter((e) => e.event === "content-block-finish");
       const toolFinish = finishes.find(
         (e) =>
           (e as { content: ContentBlock.Standard }).content.type === "tool_call"
@@ -338,7 +396,7 @@ describe("_streamChatModelEvents bridge", () => {
         events.push(event);
       }
 
-      const usageEvents = events.filter((e) => e.type === "usage");
+      const usageEvents = events.filter((e) => e.event === "usage");
       expect(usageEvents.length).toBeGreaterThanOrEqual(1);
 
       // First usage: input tokens
@@ -347,10 +405,10 @@ describe("_streamChatModelEvents bridge", () => {
 
       // message-start should also have usage
       const msgStart = events[0] as {
-        type: string;
+        event: string;
         usage?: { input_tokens: number };
       };
-      expect(msgStart.type).toBe("message-start");
+      expect(msgStart.event).toBe("message-start");
       expect(msgStart.usage?.input_tokens).toBe(100);
     });
   });
