@@ -3,11 +3,16 @@ import { z } from "zod/v3";
 import { AIMessage, HumanMessage } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 import { fakeModel } from "@langchain/core/testing";
-import { StreamChannel, type StreamTransformer } from "@langchain/langgraph";
+import {
+  StreamChannel,
+  type ProtocolEvent,
+  type StreamTransformer,
+} from "@langchain/langgraph";
 import { MemorySaver } from "@langchain/langgraph-checkpoint";
 
 import { createAgent, createMiddleware } from "../index.js";
 import { humanInTheLoopMiddleware } from "../middleware/hitl.js";
+import { createToolCallTransformer } from "../stream.js";
 
 describe("stream_v2", () => {
   it("should emit tool call streams for each tool invocation", async () => {
@@ -413,5 +418,75 @@ describe("stream_v2", () => {
         },
       }),
     ]);
+  });
+
+  it("should keep tool call streams pending across headless tool interrupts", async () => {
+    const transformer = createToolCallTransformer([])();
+    const projection = transformer.init();
+    const toolEvent = (data: Record<string, unknown>): ProtocolEvent =>
+      ({
+        method: "tools",
+        params: {
+          namespace: ["tools:abc"],
+          data,
+        },
+      }) as ProtocolEvent;
+
+    transformer.process(
+      toolEvent({
+        event: "tool-started",
+        tool_call_id: "call_1",
+        tool_name: "memory_list",
+        input: '{"limit":100}',
+      })
+    );
+
+    const iterator = projection.toolCalls[Symbol.asyncIterator]();
+    const pendingCall = await iterator.next();
+
+    transformer.process(
+      toolEvent({
+        event: "tool-error",
+        tool_call_id: "call_1",
+        message: JSON.stringify([
+          {
+            id: "interrupt_1",
+            value: {
+              type: "tool",
+              toolCall: {
+                id: "call_1",
+                name: "memory_list",
+                args: { limit: 100 },
+              },
+            },
+          },
+        ]),
+      })
+    );
+
+    transformer.process(
+      toolEvent({
+        event: "tool-started",
+        tool_call_id: "call_1",
+        tool_name: "memory_list",
+        input: '{"limit":100}',
+      })
+    );
+
+    transformer.process(
+      toolEvent({
+        event: "tool-finished",
+        tool_call_id: "call_1",
+        output: { count: 1 },
+      })
+    );
+
+    transformer.finalize?.();
+
+    expect(pendingCall.done).toBe(false);
+    expect(pendingCall.value.callId).toBe("call_1");
+    expect(await pendingCall.value.status).toBe("finished");
+    expect(await pendingCall.value.output).toEqual({ count: 1 });
+    expect(await iterator.next()).toEqual({ done: true, value: undefined });
   });
 });

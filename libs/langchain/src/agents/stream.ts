@@ -186,6 +186,33 @@ function isOwnEvent(ns: Namespace, path: Namespace): boolean {
   return true;
 }
 
+function isHeadlessToolInterruptError(
+  message: string,
+  toolCallId: string | undefined
+): boolean {
+  try {
+    const parsed = JSON.parse(message) as unknown;
+    if (!Array.isArray(parsed)) return false;
+    return parsed.some((entry) => {
+      if (entry == null || typeof entry !== "object") return false;
+      const value = (entry as { value?: unknown }).value;
+      if (value == null || typeof value !== "object") return false;
+      const payload = value as {
+        type?: unknown;
+        toolCall?: { id?: unknown };
+      };
+      return (
+        payload.type === "tool" &&
+        (toolCallId == null ||
+          payload.toolCall?.id == null ||
+          payload.toolCall.id === toolCallId)
+      );
+    });
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Creates a native transformer that correlates `tools` channel events
  * into per-call {@link ToolCallStream} objects.
@@ -306,6 +333,9 @@ export function createToolCallTransformer(
               const message =
                 ((data as Record<string, unknown>).message as string) ??
                 "unknown error";
+              if (isHeadlessToolInterruptError(message, toolCallId)) {
+                return true;
+              }
               pending.rejectOutput(new Error(message));
               pending.resolveStatus("error");
               pending.resolveError(message);
