@@ -390,7 +390,7 @@ export const convertResponsesMessageToAIMessage: Converter<
             const block: ContentBlock = {
               type: "text",
               text: part.text,
-              annotations: part.annotations.map(
+              annotations: (part.annotations || []).map(
                 convertOpenAIAnnotationToLangChain
               ),
               ...(item.phase !== null ? { phase: item.phase } : {}),
