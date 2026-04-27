@@ -1,6 +1,7 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { z } from "zod/v3";
 import { z as z4 } from "zod/v4";
+import { v4 as uuidv4 } from "uuid";
 
 import {
   BaseMessage,
@@ -18,6 +19,12 @@ import {
   type BaseCheckpointSaver,
   type BaseStore,
 } from "@langchain/langgraph";
+import { CallbackManager } from "@langchain/core/callbacks/manager";
+import { LangChainTracer } from "@langchain/core/tracers/tracer_langchain";
+import type { LangSmithTracingClientInterface } from "langsmith";
+import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
+import type { Serialized } from "@langchain/core/load/serializable";
+import type { ChainValues } from "@langchain/core/utils/types";
 
 import {
   providerStrategy,
@@ -1406,6 +1413,108 @@ describe("createAgent", () => {
 
       expect(capturedMetadata).toBeDefined();
       expect(capturedMetadata?.lc_agent_name).toBeUndefined();
+    });
+  });
+
+  describe("tracing metadata", () => {
+    it("should add ls_agent_type to tracing metadata only, not to streamed metadata", async () => {
+      // Capture metadata from regular callback handler (simulates streamed metadata)
+      const capturedCallbackMetadata: {
+        metadata?: Record<string, unknown>;
+        tags?: string[];
+      }[] = [];
+
+      class CaptureHandler extends BaseCallbackHandler {
+        name = `capture-${uuidv4()}`;
+
+        async handleChainStart(
+          _chain: Serialized,
+          _inputs: ChainValues,
+          _runId: string,
+          _runType?: string,
+          tags?: string[],
+          metadata?: Record<string, unknown>
+        ) {
+          capturedCallbackMetadata.push({ tags, metadata });
+        }
+      }
+
+      // Mock the LangSmith client to capture what gets sent to the tracer
+      const createRunMock = vi.fn().mockResolvedValue(undefined);
+      const updateRunMock = vi.fn().mockResolvedValue(undefined);
+      const mockClient = {
+        createRun: createRunMock,
+        updateRun: updateRunMock,
+      } as LangSmithTracingClientInterface;
+
+      const tracer = new LangChainTracer({ client: mockClient });
+      const capture = new CaptureHandler();
+
+      const callbacks = CallbackManager.configure([tracer, capture]);
+
+      const model = new FakeToolCallingModel();
+      const agent = createAgent({
+        model,
+        tools: [],
+      });
+
+      await agent.invoke(
+        { messages: [new HumanMessage("hi?")] },
+        { callbacks: callbacks! }
+      );
+
+      // Wait for any async callbacks to complete
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Verify that ls_agent_type is NOT in the regular callback metadata
+      // (it should only go to the tracer)
+      expect(capturedCallbackMetadata.length).toBeGreaterThan(0);
+      for (const { metadata } of capturedCallbackMetadata) {
+        expect(metadata?.ls_agent_type).toBeUndefined();
+      }
+
+      // Verify that ls_agent_type IS in the tracer metadata (sent to LangSmith)
+      expect(createRunMock).toHaveBeenCalled();
+      const postedRun = createRunMock.mock.calls[0]?.[0];
+      expect(postedRun).toBeDefined();
+      expect(postedRun.extra?.metadata?.ls_agent_type).toBe("root");
+    });
+
+    it("should allow ls_agent_type to be overridden via configurable", async () => {
+      // Mock the LangSmith client to capture what gets sent to the tracer
+      const createRunMock = vi.fn().mockResolvedValue(undefined);
+      const updateRunMock = vi.fn().mockResolvedValue(undefined);
+      const mockClient = {
+        createRun: createRunMock,
+        updateRun: updateRunMock,
+      } as LangSmithTracingClientInterface;
+
+      const tracer = new LangChainTracer({ client: mockClient });
+
+      const callbacks = CallbackManager.configure([tracer]);
+
+      const model = new FakeToolCallingModel();
+      const agent = createAgent({
+        model,
+        tools: [],
+      });
+
+      await agent.invoke(
+        { messages: [new HumanMessage("hi?")] },
+        {
+          callbacks: callbacks!,
+          configurable: { ls_agent_type: "subagent" },
+        }
+      );
+
+      // Wait for any async callbacks to complete
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Verify that ls_agent_type is overridden in the tracer metadata
+      expect(createRunMock).toHaveBeenCalled();
+      const postedRun = createRunMock.mock.calls[0]?.[0];
+      expect(postedRun).toBeDefined();
+      expect(postedRun.extra?.metadata?.ls_agent_type).toBe("subagent");
     });
   });
 });
