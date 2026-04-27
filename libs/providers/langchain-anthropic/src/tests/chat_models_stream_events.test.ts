@@ -275,7 +275,8 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       }
 
       const deltas = events.filter(
-        (e) => e.event === "content-block-delta" && "index" in e && e.index === 0
+        (e) =>
+          e.event === "content-block-delta" && "index" in e && e.index === 0
       );
       expect(deltas.length).toBe(2);
 
@@ -424,7 +425,8 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
 
       // Start event for tool call
       const toolStart = events.find(
-        (e) => e.event === "content-block-start" && "index" in e && e.index === 1
+        (e) =>
+          e.event === "content-block-start" && "index" in e && e.index === 1
       ) as { content: { type: string; name: string; id: string } };
       expect(toolStart.content.type).toBe("tool_call_chunk");
       expect(toolStart.content.name).toBe("web_search");
@@ -432,7 +434,8 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
 
       // Deltas carry incremental tool_call_chunk content
       const toolDeltas = events.filter(
-        (e) => e.event === "content-block-delta" && "index" in e && e.index === 1
+        (e) =>
+          e.event === "content-block-delta" && "index" in e && e.index === 1
       );
       expect(toolDeltas.length).toBe(2);
 
