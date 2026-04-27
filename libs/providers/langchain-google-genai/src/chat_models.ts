@@ -90,9 +90,16 @@ export interface GoogleGenerativeAIChatCallOptions extends BaseChatModelCallOpti
   streamUsage?: boolean;
 
   /**
-   * JSON schema to be returned by the model.
+   * Schema to be returned by the model. Accepts either a Gemini `Schema`,
+   * a Zod/Standard Schema, or a JSON Schema object. Non-Gemini shapes are
+   * normalized via `schemaToGenerativeAIParameters` before being sent to the
+   * API (Zod → JSON Schema, `additionalProperties`/`$schema`/`strict` stripped).
    */
-  responseSchema?: Schema;
+  responseSchema?:
+    | Schema
+    | InteropZodType<unknown>
+    | SerializableSchema
+    | Record<string, unknown>;
 }
 
 /**
@@ -833,7 +840,13 @@ export class ChatGoogleGenerativeAI
       : undefined;
 
     if (options?.responseSchema) {
-      this.client.generationConfig.responseSchema = options.responseSchema;
+      this.client.generationConfig.responseSchema =
+        schemaToGenerativeAIParameters(
+          options.responseSchema as
+            | InteropZodType
+            | SerializableSchema
+            | Record<string, unknown>
+        ) as Schema;
       this.client.generationConfig.responseMimeType = "application/json";
     } else {
       this.client.generationConfig.responseSchema = undefined;
