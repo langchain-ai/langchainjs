@@ -729,6 +729,394 @@ describe("Tool extras validation", () => {
   });
 });
 
+describe("strict tool calling", () => {
+  const weatherTool = tool(
+    async (input: { location: string }) => {
+      return `Weather in ${input.location}`;
+    },
+    {
+      name: "get_current_weather",
+      description: "Get the current weather in a location",
+      schema: z.object({
+        location: z.string().describe("The location to get the weather for"),
+      }),
+    }
+  );
+
+  type MockFetch = ReturnType<
+    typeof vi.fn<
+      (url: string | URL | Request, options?: RequestInit) => Promise<Response>
+    >
+  >;
+
+  const makeMockFetch = (): MockFetch => {
+    const mockFetch =
+      vi.fn<
+        (
+          url: string | URL | Request,
+          options?: RequestInit
+        ) => Promise<Response>
+      >();
+    mockFetch.mockImplementation((_url, _options) => {
+      return Promise.resolve(
+        new Response("{}", {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        })
+      );
+    });
+    return mockFetch;
+  };
+
+  const getRequestBodyTools = (
+    mockFetch: MockFetch
+  ): Array<Record<string, unknown>> => {
+    expect(mockFetch).toHaveBeenCalled();
+    const [, init] = mockFetch.mock.calls[0];
+    if (!init || !init.body) {
+      throw new Error("Body not found in request.");
+    }
+    const body = JSON.parse(init.body as string) as {
+      tools: Array<Record<string, unknown>>;
+    };
+    return body.tools;
+  };
+
+  test("applies strict from .bindTools call args", async () => {
+    const mockFetch = makeMockFetch();
+    const model = new ChatAnthropic({
+      model: "claude-haiku-4-5-20251001",
+      anthropicApiKey: "testing",
+      clientOptions: { fetch: mockFetch },
+      maxRetries: 0,
+    });
+
+    const modelWithTools = model.bindTools([weatherTool], { strict: true });
+
+    await expect(
+      modelWithTools.invoke("What's the weather like?")
+    ).rejects.toThrow();
+
+    const tools = getRequestBodyTools(mockFetch);
+    expect(tools[0]).toHaveProperty("strict", true);
+  });
+
+  test("applies strict from .withConfig call options", async () => {
+    const mockFetch = makeMockFetch();
+    const model = new ChatAnthropic({
+      model: "claude-haiku-4-5-20251001",
+      anthropicApiKey: "testing",
+      clientOptions: { fetch: mockFetch },
+      maxRetries: 0,
+    });
+
+    const modelWithTools = model.withConfig({
+      tools: [weatherTool],
+      strict: true,
+    });
+
+    await expect(
+      modelWithTools.invoke("What's the weather like?")
+    ).rejects.toThrow();
+
+    const tools = getRequestBodyTools(mockFetch);
+    expect(tools[0]).toHaveProperty("strict", true);
+  });
+
+  test("applies strict=true when supportsStrictToolCalling is true", async () => {
+    const mockFetch = makeMockFetch();
+    const model = new ChatAnthropic({
+      model: "claude-haiku-4-5-20251001",
+      anthropicApiKey: "testing",
+      clientOptions: { fetch: mockFetch },
+      maxRetries: 0,
+      supportsStrictToolCalling: true,
+    });
+
+    const modelWithTools = model.bindTools([weatherTool]);
+
+    await expect(
+      modelWithTools.invoke("What's the weather like?")
+    ).rejects.toThrow();
+
+    const tools = getRequestBodyTools(mockFetch);
+    expect(tools[0]).toHaveProperty("strict", true);
+  });
+
+  test("applies strict=false when supportsStrictToolCalling is false", async () => {
+    const mockFetch = makeMockFetch();
+    const model = new ChatAnthropic({
+      model: "claude-haiku-4-5-20251001",
+      anthropicApiKey: "testing",
+      clientOptions: { fetch: mockFetch },
+      maxRetries: 0,
+      supportsStrictToolCalling: false,
+    });
+
+    const modelWithTools = model.bindTools([weatherTool]);
+
+    await expect(
+      modelWithTools.invoke("What's the weather like?")
+    ).rejects.toThrow();
+
+    const tools = getRequestBodyTools(mockFetch);
+    expect(tools[0]).toHaveProperty("strict", false);
+  });
+
+  test("per-call strict overrides supportsStrictToolCalling instance default", async () => {
+    const mockFetch = makeMockFetch();
+    const model = new ChatAnthropic({
+      model: "claude-haiku-4-5-20251001",
+      anthropicApiKey: "testing",
+      clientOptions: { fetch: mockFetch },
+      maxRetries: 0,
+      supportsStrictToolCalling: true,
+    });
+
+    const modelWithTools = model.bindTools([weatherTool], { strict: false });
+
+    await expect(
+      modelWithTools.invoke("What's the weather like?")
+    ).rejects.toThrow();
+
+    const tools = getRequestBodyTools(mockFetch);
+    expect(tools[0]).toHaveProperty("strict", false);
+  });
+
+  test("applies strict from .withStructuredOutput config", async () => {
+    const mockFetch = makeMockFetch();
+    const model = new ChatAnthropic({
+      model: "claude-haiku-4-5-20251001",
+      anthropicApiKey: "testing",
+      clientOptions: { fetch: mockFetch },
+      maxRetries: 0,
+      supportsStrictToolCalling: true,
+    });
+
+    const modelWithTools = model.withStructuredOutput(
+      z.object({
+        location: z.string().describe("The location to get the weather for"),
+      }),
+      {
+        strict: true,
+        method: "functionCalling",
+      }
+    );
+
+    await expect(
+      modelWithTools.invoke("What's the weather like?")
+    ).rejects.toThrow();
+
+    const tools = getRequestBodyTools(mockFetch);
+    expect(tools[0]).toHaveProperty("strict", true);
+  });
+
+  test("omits strict when not passed in .withStructuredOutput", async () => {
+    const mockFetch = makeMockFetch();
+    const model = new ChatAnthropic({
+      model: "claude-haiku-4-5-20251001",
+      anthropicApiKey: "testing",
+      clientOptions: { fetch: mockFetch },
+      maxRetries: 0,
+    });
+
+    const modelWithTools = model.withStructuredOutput(
+      z.object({
+        location: z.string().describe("The location to get the weather for"),
+      }),
+      { method: "functionCalling" }
+    );
+
+    await expect(
+      modelWithTools.invoke("What's the weather like?")
+    ).rejects.toThrow();
+
+    const tools = getRequestBodyTools(mockFetch);
+    expect(tools[0]).not.toHaveProperty("strict");
+  });
+
+  test("per-tool extras.strict applies to that tool only", async () => {
+    const mockFetch = makeMockFetch();
+    const strictWeatherTool = tool(
+      async (input: { location: string }) => `Weather in ${input.location}`,
+      {
+        name: "get_current_weather",
+        description: "Get the current weather in a location",
+        schema: z.object({ location: z.string() }),
+        extras: { strict: true },
+      }
+    );
+    const looseSearchTool = tool(
+      async (input: { query: string }) => `Results for ${input.query}`,
+      {
+        name: "search",
+        description: "Search the web",
+        schema: z.object({ query: z.string() }),
+      }
+    );
+
+    const model = new ChatAnthropic({
+      model: "claude-haiku-4-5-20251001",
+      anthropicApiKey: "testing",
+      clientOptions: { fetch: mockFetch },
+      maxRetries: 0,
+    });
+
+    const modelWithTools = model.bindTools([
+      strictWeatherTool,
+      looseSearchTool,
+    ]);
+
+    await expect(
+      modelWithTools.invoke("What's the weather like?")
+    ).rejects.toThrow();
+
+    const tools = getRequestBodyTools(mockFetch);
+    const strictTool = tools.find((t) => t.name === "get_current_weather");
+    const looseTool = tools.find((t) => t.name === "search");
+    expect(strictTool).toHaveProperty("strict", true);
+    expect(looseTool).not.toHaveProperty("strict");
+  });
+
+  test("per-tool function.strict applies on OpenAI-shaped tools", async () => {
+    const mockFetch = makeMockFetch();
+    const model = new ChatAnthropic({
+      model: "claude-haiku-4-5-20251001",
+      anthropicApiKey: "testing",
+      clientOptions: { fetch: mockFetch },
+      maxRetries: 0,
+    });
+
+    const modelWithTools = model.bindTools([
+      {
+        type: "function",
+        function: {
+          name: "get_current_weather",
+          description: "Get the current weather in a location",
+          parameters: {
+            type: "object",
+            properties: { location: { type: "string" } },
+            required: ["location"],
+          },
+          strict: true,
+        },
+      },
+    ]);
+
+    await expect(
+      modelWithTools.invoke("What's the weather like?")
+    ).rejects.toThrow();
+
+    const tools = getRequestBodyTools(mockFetch);
+    expect(tools[0]).toHaveProperty("strict", true);
+  });
+
+  test("per-tool native strict applies on Anthropic-shaped tools", async () => {
+    const mockFetch = makeMockFetch();
+    const model = new ChatAnthropic({
+      model: "claude-haiku-4-5-20251001",
+      anthropicApiKey: "testing",
+      clientOptions: { fetch: mockFetch },
+      maxRetries: 0,
+    });
+
+    const anthropicShapedTool = {
+      name: "get_current_weather",
+      description: "Get the current weather in a location",
+      input_schema: {
+        type: "object" as const,
+        properties: { location: { type: "string" } },
+        required: ["location"],
+      },
+      strict: true,
+    };
+    const modelWithTools = model.bindTools([anthropicShapedTool]);
+
+    await expect(
+      modelWithTools.invoke("What's the weather like?")
+    ).rejects.toThrow();
+
+    const tools = getRequestBodyTools(mockFetch);
+    expect(tools[0]).toHaveProperty("strict", true);
+  });
+
+  test("per-call strict overrides Anthropic-shaped tool's own strict", async () => {
+    const mockFetch = makeMockFetch();
+    const model = new ChatAnthropic({
+      model: "claude-haiku-4-5-20251001",
+      anthropicApiKey: "testing",
+      clientOptions: { fetch: mockFetch },
+      maxRetries: 0,
+    });
+
+    const anthropicShapedTool = {
+      name: "get_current_weather",
+      description: "Get the current weather in a location",
+      input_schema: {
+        type: "object" as const,
+        properties: { location: { type: "string" } },
+        required: ["location"],
+      },
+      strict: true,
+    };
+    const modelWithTools = model.bindTools([anthropicShapedTool], {
+      strict: false,
+    });
+
+    await expect(
+      modelWithTools.invoke("What's the weather like?")
+    ).rejects.toThrow();
+
+    const tools = getRequestBodyTools(mockFetch);
+    expect(tools[0]).toHaveProperty("strict", false);
+  });
+
+  test("supportsStrictToolCalling overrides per-tool extras.strict", async () => {
+    const mockFetch = makeMockFetch();
+    const model = new ChatAnthropic({
+      model: "claude-haiku-4-5-20251001",
+      anthropicApiKey: "testing",
+      clientOptions: { fetch: mockFetch },
+      maxRetries: 0,
+      supportsStrictToolCalling: false,
+    });
+    const strictWeatherTool = tool(
+      async (input: { location: string }) => `Weather in ${input.location}`,
+      {
+        name: "get_current_weather",
+        description: "Get the current weather in a location",
+        schema: z.object({ location: z.string() }),
+        extras: { strict: true },
+      }
+    );
+
+    const modelWithTools = model.bindTools([strictWeatherTool]);
+
+    await expect(
+      modelWithTools.invoke("What's the weather like?")
+    ).rejects.toThrow();
+
+    const tools = getRequestBodyTools(mockFetch);
+    expect(tools[0]).toHaveProperty("strict", false);
+  });
+
+  test.each([["jsonSchema"], ["jsonMode"]])(
+    "withStructuredOutput throws when strict is set with method = %s",
+    (method) => {
+      const model = new ChatAnthropic({
+        model: "claude-haiku-4-5-20251001",
+        anthropicApiKey: "testing",
+      });
+      expect(() =>
+        model.withStructuredOutput(z.object({ location: z.string() }), {
+          strict: true,
+          method: method as "jsonSchema" | "jsonMode",
+        })
+      ).toThrow(/strict.*functionCalling/);
+    }
+  );
+});
+
 describe("formatStructuredToolToAnthropic", () => {
   test("returns undefined when tools is undefined", () => {
     const model = new ChatAnthropic({

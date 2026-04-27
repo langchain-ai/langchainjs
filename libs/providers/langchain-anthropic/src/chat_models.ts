@@ -186,6 +186,21 @@ export interface ChatAnthropicCallOptions
    * @see https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
    */
   cache_control?: AnthropicCacheControl;
+
+  /**
+   * Whether to use strict mode. If `true`, the model will follow the exact
+   * schema defined in the `input_schema` field of the tool definition. Only
+   * supported for Anthropic models with grammar-constrained sampling.
+   *
+   * If `true`, input schema will be validated according to
+   * https://platform.claude.com/docs/en/agents-and-tools/tool-use/strict-tool-use.
+   *
+   * If `false`, input schema will not be validated and model output will not
+   * be validated.
+   *
+   * If `undefined`, `strict` argument will not be passed to the model.
+   */
+  strict?: boolean;
 }
 
 function _toolsInParams(
@@ -400,6 +415,12 @@ export interface AnthropicInput {
    * See https://docs.claude.com/en/api/beta-headers for available beta features.
    */
   betas?: AnthropicBeta[];
+
+  /**
+   * Whether the model supports the `strict` argument when passing in tools.
+   * If `undefined` the `strict` argument will not be passed to Anthropic.
+   */
+  supportsStrictToolCalling?: boolean;
 }
 
 /**
@@ -1014,6 +1035,8 @@ export class ChatAnthropicMessages<
 
   betas?: AnthropicBeta[];
 
+  supportsStrictToolCalling?: boolean;
+
   /**
    * Optional method that returns an initialized underlying Anthropic client.
    * Useful for accessing Anthropic models hosted on other cloud services
@@ -1076,9 +1099,22 @@ export class ChatAnthropicMessages<
     this.inferenceGeo = fields?.inferenceGeo ?? this.inferenceGeo;
     this.betas = fields?.betas ?? this.betas;
 
+    this.supportsStrictToolCalling =
+      fields?.supportsStrictToolCalling ?? this.supportsStrictToolCalling;
+
     this.createClient =
       fields?.createClient ??
       ((options: ClientOptions) => new Anthropic(options));
+  }
+
+  /**
+   * Resolves the effective `strict` flag for tool calling.
+   *
+   * Precedence: per-call `strict` > instance `supportsStrictToolCalling` >
+   * `undefined` (do not pass `strict` to Anthropic).
+   */
+  private _resolveStrict(callerStrict?: boolean): boolean | undefined {
+    return callerStrict ?? this.supportsStrictToolCalling;
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
@@ -1097,10 +1133,12 @@ export class ChatAnthropicMessages<
    * Formats LangChain StructuredTools to AnthropicTools.
    *
    * @param {ChatAnthropicCallOptions["tools"]} tools The tools to format
+   * @param fields Optional `strict` flag applied to every formatted custom tool.
    * @returns {AnthropicTool[] | undefined} The formatted tools, or undefined if none are passed.
    */
   formatStructuredToolToAnthropic(
-    tools: ChatAnthropicCallOptions["tools"]
+    tools: ChatAnthropicCallOptions["tools"],
+    fields?: { strict?: boolean }
   ): Anthropic.Messages.ToolUnion[] | undefined {
     if (!tools) {
       return undefined;
@@ -1114,24 +1152,43 @@ export class ChatAnthropicMessages<
         return tool;
       }
       if (isAnthropicTool(tool)) {
+        if (fields?.strict !== undefined) {
+          // TODO: drop the cast once @anthropic-ai/sdk adds `strict` to the
+          // `Tool` type.
+          return {
+            ...tool,
+            strict: fields.strict,
+          } as Anthropic.Messages.ToolUnion;
+        }
         return tool;
       }
       if (isOpenAITool(tool)) {
+        const functionStrict = (
+          tool.function as typeof tool.function & { strict?: boolean }
+        ).strict;
+        const strict =
+          fields?.strict !== undefined ? fields.strict : functionStrict;
         return {
           name: tool.function.name,
           description: tool.function.description,
           input_schema: tool.function
             .parameters as Anthropic.Messages.Tool.InputSchema,
+          ...(strict !== undefined ? { strict } : {}),
         };
       }
       if (isLangChainTool(tool)) {
+        const { strict: extrasStrict, ...restExtras } = tool.extras
+          ? AnthropicToolExtrasSchema.parse(tool.extras)
+          : {};
+        const strict = fields?.strict ?? extrasStrict;
         return {
           name: tool.name,
           description: tool.description,
           input_schema: (isInteropZodSchema(tool.schema)
             ? toJsonSchema(tool.schema)
             : tool.schema) as Anthropic.Messages.Tool.InputSchema,
-          ...(tool.extras ? AnthropicToolExtrasSchema.parse(tool.extras) : {}),
+          ...restExtras,
+          ...(strict !== undefined ? { strict } : {}),
         };
       }
       throw new Error(
@@ -1148,8 +1205,9 @@ export class ChatAnthropicMessages<
     tools: ChatAnthropicToolType[],
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
+    const strict = this._resolveStrict(kwargs?.strict);
     return this.withConfig({
-      tools: this.formatStructuredToolToAnthropic(tools),
+      tools: this.formatStructuredToolToAnthropic(tools, { strict }),
       ...kwargs,
     } as Partial<CallOptions>);
   }
@@ -1201,12 +1259,16 @@ export class ChatAnthropicMessages<
       : [];
     const taskBudgetBetas = getTaskBudgetBetas(this.model, mergedOutputConfig);
 
+    const strictForOptionsTools = this._resolveStrict(options?.strict);
+
     const output: AnthropicInvocationParams = {
       model: this.model,
       stop_sequences: options?.stop ?? this.stopSequences,
       stream: this.streaming,
       max_tokens: this.maxTokens,
-      tools: this.formatStructuredToolToAnthropic(options?.tools),
+      tools: this.formatStructuredToolToAnthropic(options?.tools, {
+        strict: strictForOptionsTools,
+      }),
       tool_choice,
       thinking: this.thinking,
       context_management: this.contextManagement,
@@ -1605,6 +1667,17 @@ export class ChatAnthropicMessages<
     };
     let method = config?.method ?? "functionCalling";
 
+    // Anthropic's `strict` is grammar-constrained sampling on tool definitions
+    // only (see https://platform.claude.com/docs/en/agents-and-tools/tool-use/strict-tool-use),
+    // so it has no effect when `method` produces a structured output via the
+    // `json_schema` response format. Reject early instead of silently dropping
+    // it, mirroring how `@langchain/openai` rejects strict + jsonMode.
+    if (config?.strict !== undefined && method !== "functionCalling") {
+      throw new Error(
+        `Argument \`strict\` is only supported for \`method\` = "functionCalling" on Anthropic models. Got method = "${method}".`
+      );
+    }
+
     if (method === "jsonMode") {
       console.warn(
         `"jsonMode" is not supported for Anthropic models. Falling back to "jsonSchema".`
@@ -1630,7 +1703,13 @@ export class ChatAnthropicMessages<
       } as Partial<CallOptions>);
     } else if (method === "functionCalling") {
       let functionName = name ?? "extract";
-      let tools: Anthropic.Messages.Tool[];
+      const strict = this._resolveStrict(config?.strict);
+      // TODO: drop the `strict?: boolean` extension once @anthropic-ai/sdk
+      // adds `strict` to the `Tool` type.
+      type AnthropicToolWithMaybeStrict = Anthropic.Messages.Tool & {
+        strict?: boolean;
+      };
+      let tools: AnthropicToolWithMaybeStrict[];
       if (isInteropZodSchema(schema) || isSerializableSchema(schema)) {
         const jsonSchema = toJsonSchema(schema);
         tools = [
@@ -1639,6 +1718,7 @@ export class ChatAnthropicMessages<
             description:
               jsonSchema.description ?? "A function available to call.",
             input_schema: jsonSchema as Anthropic.Messages.Tool.InputSchema,
+            ...(strict !== undefined ? { strict } : {}),
           },
         ];
       } else if (
@@ -1647,14 +1727,16 @@ export class ChatAnthropicMessages<
         typeof schema.input_schema === "object" &&
         schema.input_schema != null
       ) {
-        tools = [schema as Anthropic.Messages.Tool];
-        functionName = schema.name;
+        const rawTool = schema as AnthropicToolWithMaybeStrict;
+        tools = [strict === undefined ? rawTool : { ...rawTool, strict }];
+        functionName = rawTool.name;
       } else {
         tools = [
           {
             name: functionName,
             description: schema.description ?? "",
             input_schema: schema as Anthropic.Messages.Tool.InputSchema,
+            ...(strict !== undefined ? { strict } : {}),
           },
         ];
       }
