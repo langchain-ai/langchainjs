@@ -34,7 +34,6 @@ import {
   WatsonxAuth,
   WatsonxInit,
   WatsonxLLMBasicOptions,
-  XOR,
 } from "../types.js";
 
 export interface WatsonxLLMParams {
@@ -58,7 +57,7 @@ export interface WatsonxLLMParams {
   signal?: AbortSignal;
 }
 
-export interface WatsonxDeploymentLLMParams {
+export interface WatsonxDeploymentLLMParams extends WatsonxLLMParams {
   idOrName: string;
 }
 
@@ -81,7 +80,7 @@ export interface WatsonxLLMGatewayParams
 export interface WatsonxCallOptionsLLM
   extends BaseLanguageModelCallOptions, Partial<WatsonxInit> {
   maxRetries?: number;
-  parameters?: XOR<Partial<WatsonxLLMParams>, Partial<WatsonxLLMGatewayParams>>;
+  parameters?: Partial<WatsonxLLMParams> & Partial<WatsonxLLMGatewayParams>;
   watsonxCallbacks?: RequestCallbacks;
 }
 
@@ -98,10 +97,11 @@ export interface WatsonxDeployedInputLLM
 export interface WatsonxGatewayInputLLM
   extends WatsonxLLMBasicOptions, WatsonxLLMGatewayParams {}
 
-export type WatsonxLLMConstructor = XOR<
-  XOR<WatsonxInputLLM, WatsonxDeployedInputLLM>,
-  WatsonxGatewayInputLLM
-> &
+export type WatsonxLLMConstructor = (
+  | WatsonxInputLLM
+  | WatsonxDeployedInputLLM
+  | WatsonxGatewayInputLLM
+) &
   WatsonxAuth;
 
 export class WatsonxLLM<
@@ -179,7 +179,8 @@ export class WatsonxLLM<
   private checkValidProperties(
     fields:
       | WatsonxLLMConstructor
-      | XOR<Partial<WatsonxLLMParams>, Partial<WatsonxLLMGatewayParams>>,
+      | Partial<WatsonxLLMParams>
+      | Partial<WatsonxLLMGatewayParams>,
     includeCommonProps = true
   ) {
     const authProps = [
@@ -264,6 +265,9 @@ export class WatsonxLLM<
     checkValidProps(fields, validProps);
   }
 
+  constructor(fields: WatsonxInputLLM & WatsonxAuth);
+  constructor(fields: WatsonxDeployedInputLLM & WatsonxAuth);
+  constructor(fields: WatsonxGatewayInputLLM & WatsonxAuth);
   constructor(fields: WatsonxLLMConstructor) {
     super(fields);
     expectOneOf(
@@ -271,36 +275,40 @@ export class WatsonxLLM<
       ["spaceId", "projectId", "idOrName", "modelGateway"],
       true
     );
-    this.idOrName = fields?.idOrName;
-    this.projectId = fields?.projectId;
-    this.modelGateway = fields.modelGateway || this.modelGateway;
-    this.spaceId = fields?.spaceId;
+    if ("modelGateway" in fields) {
+      this.modelGateway = fields.modelGateway || this.modelGateway;
+    } else if ("idOrName" in fields) {
+      this.idOrName = fields?.idOrName;
+    } else {
+      this.projectId = fields?.projectId;
+      this.spaceId = fields?.spaceId;
+    }
 
     this.checkValidProperties(fields);
+    if ("modelGateway" in fields) {
+      this.modelGatewayKwargs =
+        fields.modelGatewayKwargs || this.modelGatewayKwargs;
+    } else {
+      this.maxNewTokens = fields.maxNewTokens ?? fields.maxTokens;
+      this.decodingMethod = fields.decodingMethod;
+      this.lengthPenalty = fields.lengthPenalty;
+      this.minNewTokens = fields.minNewTokens;
+      this.randomSeed = fields.randomSeed;
+      this.stopSequence = fields.stopSequence;
+      this.timeLimit = fields.timeLimit;
+      this.topK = fields.topK;
+      this.repetitionPenalty = fields.repetitionPenalty;
+      this.truncateInputTokens = fields.truncateInputTokens;
+      this.returnOptions = fields.returnOptions;
+      this.includeStopSequence = fields.includeStopSequence;
+    }
 
-    this.model = fields.model ?? this.model;
-    this.serviceUrl = fields.serviceUrl;
-    this.version = fields.version;
-
+    this.model = !("idOrName" in fields) ? fields.model : this.model;
     this.topP = fields.topP;
     this.temperature = fields.temperature;
-    this.maxNewTokens = fields.maxNewTokens ?? fields.maxTokens;
-    this.decodingMethod = fields.decodingMethod;
-    this.lengthPenalty = fields.lengthPenalty;
-    this.minNewTokens = fields.minNewTokens;
     this.maxTokens = fields.maxTokens;
-    this.randomSeed = fields.randomSeed;
-    this.stopSequence = fields.stopSequence;
-    this.timeLimit = fields.timeLimit;
-    this.topK = fields.topK;
-    this.repetitionPenalty = fields.repetitionPenalty;
-    this.truncateInputTokens = fields.truncateInputTokens;
-    this.returnOptions = fields.returnOptions;
-    this.includeStopSequence = fields.includeStopSequence;
-
-    this.modelGatewayKwargs =
-      fields.modelGatewayKwargs || this.modelGatewayKwargs;
-
+    this.serviceUrl = fields.serviceUrl;
+    this.version = fields.version;
     this.maxRetries = fields.maxRetries || this.maxRetries;
     this.maxConcurrency = fields.maxConcurrency;
     this.streaming = fields.streaming || this.streaming;

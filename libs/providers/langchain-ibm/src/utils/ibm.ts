@@ -23,47 +23,54 @@ import { Gateway } from "@ibm-cloud/watsonx-ai/gateway";
 import { WatsonxAuth, WatsonxInit } from "../types.js";
 import { AWSAuthenticator } from "@ibm-cloud/watsonx-ai/authentication";
 
+/**
+ * Creates an authenticator instance based on the provided authentication configuration.
+ * Supports IAM, Bearer Token, and Cloud Pak for Data authentication methods.
+ *
+ * @param config - Authentication configuration
+ * @returns Authenticator instance or undefined if configuration is invalid
+ */
 const createAuthenticator = ({
-  watsonxAIApikey,
-  watsonxAIAuthType,
-  watsonxAIBearerToken,
-  watsonxAIUsername,
-  watsonxAIPassword,
-  watsonxAIUrl,
+  apiKey,
+  authType,
+  bearerToken,
+  username,
+  password,
+  authUrl,
   disableSSL,
   serviceUrl,
 }: WatsonxAuth): Authenticator | undefined => {
-  switch (watsonxAIAuthType) {
+  switch (authType) {
     case "iam":
-      if (watsonxAIApikey)
+      if (apiKey)
         return new IamAuthenticator({
-          apikey: watsonxAIApikey,
+          apikey: apiKey,
         });
       throw new Error("ApiKey is required for IAM auth");
     case "bearertoken":
-      if (watsonxAIBearerToken)
+      if (bearerToken)
         return new BearerTokenAuthenticator({
-          bearerToken: watsonxAIBearerToken,
+          bearerToken,
         });
       throw new Error("BearerToken is required for BearerToken auth");
     case "cp4d":
-      if (watsonxAIUsername && (watsonxAIPassword || watsonxAIApikey)) {
-        const watsonxCPDAuthUrl = watsonxAIUrl ?? serviceUrl;
+      if (username && (password || apiKey)) {
+        const watsonxCPDAuthUrl = authUrl ?? serviceUrl;
         return new CloudPakForDataAuthenticator({
-          username: watsonxAIUsername,
-          password: watsonxAIPassword,
+          username,
+          password,
           url: watsonxCPDAuthUrl.concat("/icp4d-api/v1/authorize"),
-          apikey: watsonxAIApikey,
+          apikey: apiKey,
           disableSslVerification: disableSSL,
         });
       }
       throw new Error(
-        "Username and Password or ApiKey is required for IBM watsonx.ai software auth",
+        "Username and Password or ApiKey is required for IBM watsonx.ai software auth"
       );
     case "aws":
       return new AWSAuthenticator({
-        apikey: watsonxAIApikey,
-        url: watsonxAIUrl,
+        apikey: apiKey,
+        url: authUrl,
         disableSslVerification: disableSSL,
       });
     default:
@@ -71,6 +78,13 @@ const createAuthenticator = ({
   }
 };
 
+/**
+ * Prepares the Watsonx client configuration and attaches an authenticator
+ * derived from the provided auth-related parameters when available.
+ *
+ * @param params - Initialization and authentication parameters for Watsonx clients
+ * @returns Configuration object for Watsonx SDK client construction
+ */
 const prepareInstanceConfig = ({
   watsonxAIApikey,
   watsonxAIAuthType,
@@ -91,12 +105,12 @@ const prepareInstanceConfig = ({
   const isIam =
     (watsonxAIApikey || apiKey) && !watsonxAIUsername ? "iam" : undefined;
   const authenticator = createAuthenticator({
-    watsonxAIApikey: watsonxAIApikey ?? apiKey,
-    watsonxAIAuthType: watsonxAIAuthType ?? authType ?? isIam,
-    watsonxAIBearerToken: watsonxAIBearerToken ?? bearerToken,
-    watsonxAIUsername: watsonxAIUsername ?? username,
-    watsonxAIPassword: watsonxAIPassword ?? password,
-    watsonxAIUrl: watsonxAIUrl ?? authUrl,
+    apiKey: watsonxAIApikey ?? apiKey,
+    authType: watsonxAIAuthType ?? authType ?? isIam,
+    bearerToken: watsonxAIBearerToken ?? bearerToken,
+    username: watsonxAIUsername ?? username,
+    password: watsonxAIPassword ?? password,
+    authUrl: watsonxAIUrl ?? authUrl,
     disableSSL,
     serviceUrl,
   });
@@ -107,24 +121,50 @@ const prepareInstanceConfig = ({
   };
 };
 
+/**
+ * Creates a [`WatsonXAI`](libs/providers/langchain-ibm/src/utils/ibm.ts:120) instance using the provided
+ * initialization parameters and derived authenticator configuration.
+ *
+ * @param params - Initialization and authentication parameters for the Watsonx AI client
+ * @returns Configured Watsonx AI SDK instance
+ */
 export const authenticateAndSetInstance = (
-  params: WatsonxAuth & Omit<WatsonxInit, "authenticator">,
+  params: WatsonxAuth & Omit<WatsonxInit, "authenticator">
 ) => {
   return new WatsonXAI(prepareInstanceConfig(params));
 };
 
+/**
+ * Creates a [`Gateway`](libs/providers/langchain-ibm/src/utils/ibm.ts:126) instance using the provided
+ * initialization parameters and derived authenticator configuration.
+ *
+ * @param params - Initialization and authentication parameters for the Watsonx gateway client
+ * @returns Configured Watsonx gateway SDK instance
+ */
 export function authenticateAndSetGatewayInstance(
-  params: WatsonxAuth & Omit<WatsonxInit, "authenticator">,
+  params: WatsonxAuth & Omit<WatsonxInit, "authenticator">
 ) {
   return new Gateway(prepareInstanceConfig(params));
 }
 
 const TOOL_CALL_ID_PATTERN = /^[a-zA-Z0-9]{9}$/;
 
+/**
+ * Validates if a tool call ID is compatible with Mistral format.
+ *
+ * @param toolCallId - The tool call ID to validate
+ * @returns True if the ID matches Mistral format requirements
+ */
 export function _isValidMistralToolCallId(toolCallId: string): boolean {
   return TOOL_CALL_ID_PATTERN.test(toolCallId);
 }
 
+/**
+ * Encodes a number to base62 string representation.
+ *
+ * @param num - Number to encode
+ * @returns Base62 encoded string
+ */
 function _base62Encode(num: number): string {
   let numCopy = num;
   const base62 =
@@ -139,6 +179,12 @@ function _base62Encode(num: number): string {
   return arr.reverse().join("");
 }
 
+/**
+ * Generates a simple hash from a string.
+ *
+ * @param str - String to hash
+ * @returns Positive integer hash value
+ */
 function _simpleHash(str: string): number {
   let hash = 0;
   for (let i = 0; i < str.length; i += 1) {
@@ -149,6 +195,13 @@ function _simpleHash(str: string): number {
   return Math.abs(hash);
 }
 
+/**
+ * Converts a tool call ID to Mistral-compatible format.
+ * If already valid, returns as-is. Otherwise, generates a 9-character ID from hash.
+ *
+ * @param toolCallId - Original tool call ID
+ * @returns Mistral-compatible 9-character tool call ID
+ */
 export function _convertToolCallIdToMistralCompatible(
   toolCallId: string
 ): string {
@@ -165,29 +218,62 @@ export function _convertToolCallIdToMistralCompatible(
   }
 }
 
+/**
+ * Parameters for WatsonxToolsOutputParser.
+ */
 interface WatsonxToolsOutputParserParams<
   T extends Record<string, any>,
 > extends JsonOutputKeyToolsParserParamsInterop<T> {}
 
+/**
+ * Output parser for Watsonx tool calls.
+ * Extends JsonOutputToolsParser with Watsonx-specific handling.
+ */
 export class WatsonxToolsOutputParser<
   T extends Record<string, any> = Record<string, any>,
 > extends JsonOutputToolsParser<T> {
+  /**
+   * Returns the serialized LangChain name for this parser class.
+   */
   static lc_name() {
     return "WatsonxToolsOutputParser";
   }
 
+  /**
+   * LangChain namespace used for serialization metadata.
+   */
   lc_namespace = ["langchain", "watsonx", "output_parsers"];
 
+  /**
+   * Whether parsed tool call IDs should be returned.
+   */
   returnId = false;
 
+  /**
+   * Tool name key to extract from parsed output.
+   */
   keyName: string;
 
+  /**
+   * Whether only a single parsed tool result should be returned.
+   */
   returnSingle = false;
 
+  /**
+   * Optional Zod schema used to validate parsed tool arguments.
+   */
   zodSchema?: InteropZodType<T>;
 
+  /**
+   * Most recent valid tool call used as a fallback during partial parsing.
+   */
   latestCorrect?: ToolCall;
 
+  /**
+   * Creates a Watsonx tools output parser.
+   *
+   * @param params - Parser configuration including key name and optional schema validation
+   */
   constructor(params: WatsonxToolsOutputParserParams<T>) {
     super(params);
     this.keyName = params.keyName;
@@ -195,6 +281,13 @@ export class WatsonxToolsOutputParser<
     this.zodSchema = params.zodSchema;
   }
 
+  /**
+   * Parses and optionally validates a tool result payload.
+   *
+   * @param result - Raw result content to validate
+   * @returns Parsed and validated tool arguments
+   * @throws [`OutputParserException`](libs/providers/langchain-ibm/src/utils/ibm.ts:243) if JSON parsing or schema validation fails
+   */
   protected async _validateResult(result: unknown): Promise<T> {
     let parsedResult = result;
     if (typeof result === "string") {
@@ -205,9 +298,9 @@ export class WatsonxToolsOutputParser<
           `Failed to parse. Text: "${JSON.stringify(
             result,
             null,
-            2
+            2,
           )}". Error: ${JSON.stringify(e.message)}`,
-          result
+          result,
         );
       }
     } else {
@@ -218,7 +311,7 @@ export class WatsonxToolsOutputParser<
     }
     const zodParsedResult = await interopSafeParseAsync(
       this.zodSchema,
-      parsedResult
+      parsedResult,
     );
     if (zodParsedResult.success) {
       return zodParsedResult.data;
@@ -227,13 +320,20 @@ export class WatsonxToolsOutputParser<
         `Failed to parse. Text: "${JSON.stringify(
           result,
           null,
-          2
+          2,
         )}". Error: ${JSON.stringify(zodParsedResult.error.issues)}`,
-        JSON.stringify(result, null, 2)
+        JSON.stringify(result, null, 2),
       );
     }
   }
 
+  /**
+   * Extracts tool arguments from partial chat generations, falling back to the
+   * latest valid tool call when current partial output is incomplete.
+   *
+   * @param generations - Partial chat generations to inspect
+   * @returns Parsed tool arguments from the most relevant partial tool call
+   */
   async parsePartialResult(generations: ChatGeneration[]): Promise<T> {
     const tools = generations.flatMap((generation) => {
       const message = generation.message as AIMessageChunk;
@@ -260,6 +360,14 @@ export class WatsonxToolsOutputParser<
   }
 }
 
+/**
+ * Converts a JSON schema object to a Zod schema.
+ * Supports string, number, integer, float, boolean, array, and object types.
+ *
+ * @param obj - JSON schema object to convert
+ * @returns Zod schema object
+ * @throws Error if schema type is unsupported
+ */
 export function jsonSchemaToZod(obj: WatsonXAI.JsonObject | undefined) {
   if (obj?.properties && obj.type === "object") {
     const shape: Record<string, any> = {};
@@ -314,6 +422,14 @@ export function jsonSchemaToZod(obj: WatsonXAI.JsonObject | undefined) {
   throw new Error("Unsupported root schema type");
 }
 
+/**
+ * Validates that exactly one or at most one of the specified keys is present in params.
+ *
+ * @param params - Object to validate
+ * @param keys - Array of key names to check
+ * @param exactlyOneOf - If true, requires exactly one key; if false, allows zero or one
+ * @throws Error if validation fails
+ */
 export const expectOneOf = (
   params: Record<string, any>,
   keys: string[],
@@ -333,6 +449,13 @@ export const expectOneOf = (
   }
 };
 
+/**
+ * Validates that an object only contains allowed properties.
+ *
+ * @param params - Object to validate
+ * @param allowedKeys - Array of allowed property names
+ * @throws Error if unexpected properties are found
+ */
 export const checkValidProps = (
   params: Record<string, any>,
   allowedKeys: string[]
@@ -348,3 +471,4 @@ export const checkValidProps = (
     );
   }
 };
+
