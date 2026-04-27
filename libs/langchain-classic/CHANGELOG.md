@@ -1,5 +1,14 @@
 # @langchain/classic
 
+## 1.0.32
+
+### Patch Changes
+
+- [#10776](https://github.com/langchain-ai/langchainjs/pull/10776) [`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6) Thanks [@hntrl](https://github.com/hntrl)! - fix(deps): remediate uuid vulnerability by removing direct uuid usage
+
+- Updated dependencies [[`dc20c0e`](https://github.com/langchain-ai/langchainjs/commit/dc20c0ecaad125d7e916813419548c068996d3c2), [`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6)]:
+  - @langchain/openai@1.4.5
+
 ## 1.0.31
 
 ### Patch Changes
