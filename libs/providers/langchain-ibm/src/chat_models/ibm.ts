@@ -80,7 +80,7 @@ import {
   CreateChatCompletionsParams,
   Gateway,
 } from "@ibm-cloud/watsonx-ai/gateway";
-import { WatsonxAuth, XOR, WatsonxBaseChatParams } from "../types.js";
+import { WatsonxAuth, WatsonxBaseChatParams } from "../types.js";
 import {
   _convertToolCallIdToMistralCompatible,
   authenticateAndSetGatewayInstance,
@@ -91,9 +91,21 @@ import {
   WatsonxToolsOutputParser,
 } from "../utils/ibm.js";
 
-export interface WatsonxCallParams extends WatsonxCallOptionsChat {}
-export interface WatsonxCallDeployedParams extends DeploymentsTextChatParams {}
+/**
+ * Call parameters for standard Watsonx chat operations.
+ * @deprecated Use WatsonxCallOptionsChat directly instead.
+ */
+export type WatsonxCallParams = WatsonxCallOptionsChat;
 
+/**
+ * Call parameters for deployed Watsonx chat models.
+ * @deprecated Use DeploymentsTextChatParams directly instead.
+ */
+export type WatsonxCallDeployedParams = DeploymentsTextChatParams;
+
+/**
+ * Streaming delta response structure from Watsonx.
+ */
 export interface WatsonxDeltaStream {
   role?: string;
   content?: string;
@@ -101,6 +113,10 @@ export interface WatsonxDeltaStream {
   refusal?: string;
 }
 
+/**
+ * Call options for Watsonx chat operations.
+ * Extends base chat parameters with model-specific options.
+ */
 export interface WatsonxCallOptionsChat
   extends
     Partial<Omit<TextChatParams, "modelId" | "toolChoice" | "messages">>,
@@ -108,26 +124,42 @@ export interface WatsonxCallOptionsChat
   model?: string;
 }
 
+/**
+ * Parameters for Watsonx project/space-based chat operations.
+ */
 export interface WatsonxProjectSpaceParams extends WatsonxCallOptionsChat {
   model: string;
   serviceUrl: string;
   version: string;
+  projectId?: string;
+  spaceId?: string;
 }
 
+/**
+ * Call options for deployed Watsonx chat models.
+ */
 export interface WatsonxCallOptionsDeployedChat
-  extends
-    Partial<Omit<DeploymentsTextChatParams, "messages">>,
-    WatsonxBaseChatParams {}
+  extends Omit<DeploymentsTextChatParams, "messages">, WatsonxBaseChatParams {}
 
+/**
+ * Parameters for deployed Watsonx chat models.
+ */
 export interface WatsonxDeployedParams extends WatsonxCallOptionsDeployedChat {
   serviceUrl: string;
   version: string;
 }
 
+/**
+ * Additional keyword arguments for Watsonx Gateway chat operations.
+ */
 export interface WatsonxGatewayChatKwargs extends Omit<
   CreateChatCompletionsParams,
   keyof TextChatParams | "model" | "stream" | "messages"
 > {}
+
+/**
+ * Call options for Watsonx Gateway chat operations.
+ */
 export interface WatsonxCallOptionsGatewayChat
   extends
     Omit<
@@ -142,27 +174,42 @@ export interface WatsonxCallOptionsGatewayChat
   modelGatewayKwargs?: WatsonxGatewayChatKwargs;
 }
 
+/**
+ * Parameters for Watsonx Gateway chat operations.
+ */
 export interface WatsonxGatewayChatParams extends WatsonxCallOptionsGatewayChat {
   serviceUrl: string;
   version: string;
 }
 
+/**
+ * Input configuration for standard ChatWatsonx instances.
+ */
 export interface ChatWatsonxInput
   extends BaseChatModelParams, WatsonxProjectSpaceParams {}
 
+/**
+ * Input configuration for deployed ChatWatsonx instances.
+ */
 export interface ChatWatsonxDeployedInput
   extends BaseChatModelParams, WatsonxDeployedParams {}
 
+/**
+ * Input configuration for ChatWatsonx Gateway instances.
+ */
 export interface ChatWatsonxGatewayInput
   extends BaseChatModelParams, WatsonxGatewayChatParams {
   modelGateway: boolean;
 }
 
+/**
+ * Constructor parameters type for ChatWatsonx class.
+ * Combines base chat model params with Watsonx-specific parameters.
+ */
 export type ChatWatsonxConstructor = BaseChatModelParams &
   Partial<WatsonxBaseChatParams> &
-  WatsonxDeployedParams &
-  WatsonxCallParams &
-  WatsonxDeployedParams;
+  Partial<WatsonxDeployedParams> &
+  WatsonxCallOptionsChat;
 
 function _convertToValidToolId(model: string, tool_call_id: string): string {
   if (model.startsWith("mistralai") && tool_call_id)
@@ -170,6 +217,9 @@ function _convertToValidToolId(model: string, tool_call_id: string): string {
   return tool_call_id;
 }
 
+/**
+ * Union type for supported tool types in ChatWatsonx.
+ */
 type ChatWatsonxToolType =
   | BindToolsInput
   | TextChatParameterTools
@@ -431,16 +481,24 @@ function _convertToolChoiceToWatsonxToolChoice(
     );
 }
 
-export type ChatWatsonxConstructorInput = XOR<
-  XOR<ChatWatsonxInput, ChatWatsonxDeployedInput>,
-  ChatWatsonxGatewayInput
-> &
+/**
+ * Union type for all possible ChatWatsonx constructor inputs.
+ * Includes standard, deployed, and gateway configurations with authentication.
+ */
+export type ChatWatsonxConstructorInput = (
+  | ChatWatsonxInput
+  | ChatWatsonxDeployedInput
+  | ChatWatsonxGatewayInput
+) &
   WatsonxAuth;
 
-export type ChatWatsonxCallOptions = XOR<
-  XOR<WatsonxCallOptionsChat, WatsonxCallOptionsDeployedChat>,
-  WatsonxCallOptionsGatewayChat
->;
+/**
+ * Combined call options for ChatWatsonx operations.
+ * Supports all three operation modes: standard, deployed, and gateway.
+ */
+export type ChatWatsonxCallOptions = Partial<WatsonxCallOptionsChat> &
+  Partial<WatsonxCallOptionsDeployedChat> &
+  Partial<WatsonxCallOptionsGatewayChat>;
 
 export class ChatWatsonx<
   CallOptions extends ChatWatsonxCallOptions = ChatWatsonxCallOptions,
@@ -658,15 +716,21 @@ export class ChatWatsonx<
 
   watsonxCallbacks?: RequestCallbacks;
 
+  constructor(fields: ChatWatsonxInput & WatsonxAuth);
+  constructor(fields: ChatWatsonxDeployedInput & WatsonxAuth);
+  constructor(fields: ChatWatsonxGatewayInput & WatsonxAuth);
   constructor(fields: ChatWatsonxConstructorInput) {
     super(fields);
     const uniqueProps = ["spaceId", "projectId", "idOrName", "modelGateway"];
     expectOneOf(fields, uniqueProps, true);
-
-    this.idOrName = fields?.idOrName;
-    this.projectId = fields?.projectId;
-    this.modelGateway = fields.modelGateway || this.modelGateway;
-    this.spaceId = fields?.spaceId;
+    if ("modelGateway" in fields) {
+      this.modelGateway = fields.modelGateway || this.modelGateway;
+    } else if ("idOrName" in fields) {
+      this.idOrName = fields?.idOrName;
+    } else {
+      this.projectId = fields?.projectId;
+      this.spaceId = fields?.spaceId;
+    }
 
     if (this.modelGateway) {
       checkRequiredProps(fields, ["model", "serviceUrl", "version"]);
@@ -678,13 +742,9 @@ export class ChatWatsonx<
 
     this.checkValidProperties(fields);
 
-    this.model = fields?.model ?? this.model;
-    this.projectId = fields?.projectId;
-    this.spaceId = fields?.spaceId;
     this.watsonxCallbacks = fields?.watsonxCallbacks;
     this.serviceUrl = fields?.serviceUrl;
     this.version = fields?.version ?? this.version;
-
     this.temperature = fields?.temperature;
     this.maxRetries = fields?.maxRetries || this.maxRetries;
     this.maxConcurrency = fields?.maxConcurrency;
@@ -696,12 +756,15 @@ export class ChatWatsonx<
     this.responseFormat = fields?.responseFormat ?? this.responseFormat;
     this.streaming = fields?.streaming ?? this.streaming;
     this.n = fields?.n ?? this.n;
-    this.timeLimit = fields?.timeLimit;
     this.reasoningEffort = fields?.reasoningEffort;
-    this.includeReasoning = fields?.includeReasoning;
+    this.model = !("idOrName" in fields) ? fields?.model : undefined;
 
-    this.modelGateway = fields?.modelGateway ?? this.modelGateway;
-    this.modelGatewayKwargs = fields?.modelGatewayKwargs;
+    if ("modelGateway" in fields) {
+      this.modelGatewayKwargs = fields?.modelGatewayKwargs;
+    } else {
+      this.timeLimit = fields?.timeLimit;
+      this.includeReasoning = fields?.includeReasoning;
+    }
 
     const {
       watsonxAIApikey,
