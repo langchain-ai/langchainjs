@@ -43,6 +43,7 @@ export const AnthropicToolExtrasSchema = z.object({
   defer_loading: z.boolean().optional(),
   input_examples: z.array(z.unknown()).optional(),
   allowed_callers: z.array(z.unknown()).optional(),
+  strict: z.boolean().optional(),
 });
 
 /**
