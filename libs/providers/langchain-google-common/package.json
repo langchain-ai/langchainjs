@@ -24,9 +24,6 @@
   },
   "author": "LangChain",
   "license": "MIT",
-  "dependencies": {
-    "uuid": "^10.0.0"
-  },
   "peerDependencies": {
     "@langchain/core": "workspace:^"
   },

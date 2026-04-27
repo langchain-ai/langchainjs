@@ -1,4 +1,4 @@
-import { v4 as uuid } from "uuid";
+import { v4 as uuid } from "@langchain/core/utils/uuid";
 import { Document, type DocumentInterface } from "@langchain/core/documents";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";

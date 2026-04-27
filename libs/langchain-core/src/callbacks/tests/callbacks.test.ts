@@ -1,5 +1,5 @@
 import { test, expect, vi } from "vitest";
-import * as uuid from "uuid";
+import * as uuid from "../../utils/uuid/index.js";
 import { AsyncLocalStorage } from "node:async_hooks";
 import type { LangSmithTracingClientInterface } from "langsmith";
 import { CallbackManager } from "../manager.js";
