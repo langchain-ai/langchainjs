@@ -351,8 +351,25 @@ export abstract class ChatGoogleBase<AuthOptions>
       if (!finalChunk) {
         throw new Error("No chunks were returned from the stream.");
       }
+
+      // Surface token counts from the final streaming chunk so that
+      // handleLLMEnd callbacks receive tokenUsage (like ChatOpenAI).
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let llmOutput: Record<string, any> | undefined;
+      const msg = finalChunk.message;
+      if ("usage_metadata" in msg && msg.usage_metadata) {
+        llmOutput = {
+          tokenUsage: {
+            promptTokens: msg.usage_metadata.input_tokens,
+            completionTokens: msg.usage_metadata.output_tokens,
+            totalTokens: msg.usage_metadata.total_tokens,
+          },
+        };
+      }
+
       return {
         generations: [finalChunk],
+        llmOutput,
       };
     }
 
@@ -439,8 +456,28 @@ export abstract class ChatGoogleBase<AuthOptions>
   }
 
   /** @ignore */
-  _combineLLMOutput() {
-    return [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  _combineLLMOutput(...llmOutputs: Record<string, any>[]) {
+    return llmOutputs.reduce(
+      (acc, output) => {
+        if (output?.tokenUsage) {
+          acc.tokenUsage.promptTokens +=
+            output.tokenUsage.promptTokens ?? 0;
+          acc.tokenUsage.completionTokens +=
+            output.tokenUsage.completionTokens ?? 0;
+          acc.tokenUsage.totalTokens +=
+            output.tokenUsage.totalTokens ?? 0;
+        }
+        return acc;
+      },
+      {
+        tokenUsage: {
+          promptTokens: 0,
+          completionTokens: 0,
+          totalTokens: 0,
+        },
+      }
+    );
   }
 
   /**

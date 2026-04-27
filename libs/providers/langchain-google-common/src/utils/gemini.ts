@@ -1307,7 +1307,18 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     // Only add the usage_metadata on the last chunk
     // sent while streaming (see issue 8102).
     if (typeof finish_reason === "string") {
-      ret.usage_metadata = responseToUsageMetadata(response);
+      const usageMeta = responseToUsageMetadata(response);
+      ret.usage_metadata = usageMeta;
+
+      // Populate tokenUsage with the keys that callbacks (handleLLMEnd)
+      // expect so that token counts surface in the same way as ChatOpenAI.
+      if (usageMeta) {
+        ret.tokenUsage = {
+          promptTokens: usageMeta.input_tokens,
+          completionTokens: usageMeta.output_tokens,
+          totalTokens: usageMeta.total_tokens,
+        };
+      }
     }
 
     return ret;
