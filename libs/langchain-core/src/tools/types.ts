@@ -1,3 +1,4 @@
+import type { ToolPolicy } from "./policy.js";
 import type { ZodV3Like } from "../utils/types/zod.js";
 import { CallbackManagerForToolRun } from "../callbacks/manager.js";
 import type {
@@ -115,6 +116,11 @@ export interface ToolParams extends BaseLangChainParams {
    * standard tool fields.
    */
   extras?: Record<string, unknown>;
+  /**
+   * Optional policies that run around every invocation of this tool.
+   * See {@link ToolPolicy}.
+   */
+  policies?: ToolPolicy[];
 }
 
 export type ToolRunnableConfig<

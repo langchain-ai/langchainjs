@@ -477,6 +477,159 @@ describe("DynamicTool", () => {
   });
 });
 
+describe("tool policies integration", () => {
+  test("beforeInvoke denial still produces handleToolError callback", async () => {
+    let errorHandled = false;
+
+    const myTool = tool((_) => "should not run", {
+      name: "guarded",
+      description: "A guarded tool",
+      schema: z.object({ path: z.string() }),
+      policies: [
+        {
+          beforeInvoke: () => {
+            throw new Error("permission denied");
+          },
+        },
+      ],
+    });
+
+    await expect(
+      myTool.invoke(
+        { path: "/secrets/key.txt" },
+        {
+          callbacks: [
+            {
+              handleToolError(err: unknown) {
+                errorHandled = true;
+                expect((err as Error).message).toBe("permission denied");
+              },
+            },
+          ],
+        }
+      )
+    ).rejects.toThrow("permission denied");
+
+    expect(errorHandled).toBe(true);
+  });
+
+  test("afterInvoke transforms output before ToolMessage wrapping", async () => {
+    const toolCall = {
+      id: "testid",
+      args: { location: "San Francisco" },
+      name: "weather",
+      type: "tool_call",
+    } as const;
+
+    const weatherTool = tool((_) => "72F", {
+      name: "weather",
+      description: "Get weather",
+      schema: z.object({ location: z.string() }),
+      policies: [
+        {
+          afterInvoke: (output) => `FILTERED: ${output}`,
+        },
+      ],
+    });
+
+    const result = await weatherTool.invoke(toolCall);
+
+    expect(result).toBeInstanceOf(ToolMessage);
+    expect(result.content).toBe("FILTERED: 72F");
+  });
+
+  test("policies work with content_and_artifact responseFormat", async () => {
+    const toolCall = {
+      id: "testid",
+      args: { location: "San Francisco" },
+      name: "weather",
+      type: "tool_call",
+    } as const;
+
+    const weatherTool = tool((input) => ["sunny", { city: input.location }], {
+      name: "weather",
+      description: "Get weather",
+      schema: z.object({ location: z.string() }),
+      responseFormat: "content_and_artifact",
+      policies: [
+        {
+          beforeInvoke: (ctx) => {
+            if ((ctx.args as { location: string }).location === "blocked") {
+              throw new Error("blocked location");
+            }
+          },
+        },
+      ],
+    });
+
+    const result = await weatherTool.invoke(toolCall);
+    expect(result).toBeInstanceOf(ToolMessage);
+    expect(result.content).toBe("sunny");
+
+    await expect(
+      weatherTool.invoke({
+        id: "testid2",
+        args: { location: "blocked" },
+        name: "weather",
+        type: "tool_call",
+      })
+    ).rejects.toThrow("blocked location");
+  });
+
+  test("policies work with DynamicStructuredTool class", async () => {
+    const seen: unknown[] = [];
+
+    const myTool = new DynamicStructuredTool({
+      name: "echo",
+      description: "Echo input",
+      schema: z.object({ msg: z.string() }),
+      policies: [
+        {
+          beforeInvoke: (ctx) => {
+            seen.push(ctx.args);
+          },
+        },
+      ],
+      func: async (input) => input.msg,
+    });
+
+    const result = await myTool.invoke({ msg: "hello" });
+    expect(result).toBe("hello");
+    expect(seen).toEqual([{ msg: "hello" }]);
+  });
+
+  test("policies work with generator tools", async () => {
+    const order: string[] = [];
+
+    const genTool = tool(
+      async function* (input) {
+        yield { status: "working" };
+        return `done: ${input.x}`;
+      },
+      {
+        name: "gen",
+        description: "Generator tool",
+        schema: z.object({ x: z.number() }),
+        policies: [
+          {
+            beforeInvoke: () => {
+              order.push("before");
+            },
+            afterInvoke: (output) => {
+              order.push("after");
+              return output;
+            },
+          },
+        ],
+      }
+    );
+
+    const result = await genTool.invoke({ x: 42 });
+    expect(result).toBe("done: 42");
+    expect(order).toEqual(["before", "after"]);
+  });
+});
+
 describe("tool()", () => {
   it("should propagate extras to the tool instance", () => {
     const testTool = tool(

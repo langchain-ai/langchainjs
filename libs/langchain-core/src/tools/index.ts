@@ -63,6 +63,8 @@ import type {
 } from "./types.js";
 import { type JSONSchema, validatesOnlyStrings } from "../utils/json_schema.js";
 import { consumeAsyncGenerator, isAsyncGenerator } from "../runnables/iter.js";
+import { composePolicies } from "./policy.js";
+import type { ToolPolicy, ToolPolicyContext } from "./policy.js";
 
 export type {
   BaseDynamicToolInput,
@@ -89,6 +91,10 @@ export {
 } from "./types.js";
 
 export { ToolInputParsingException };
+
+export type { ToolPolicy, ToolPolicyContext } from "./policy.js";
+
+export { composePolicies } from "./policy.js";
 /**
  * Base class for Tools that accept input of any shape defined by a Zod schema.
  */
@@ -149,6 +155,8 @@ export abstract class StructuredTool<
    */
   defaultConfig?: ToolRunnableConfig;
 
+  policies?: ToolPolicy[];
+
   constructor(fields?: ToolParams) {
     super(fields ?? {});
 
@@ -158,6 +166,7 @@ export abstract class StructuredTool<
     this.defaultConfig = fields?.defaultConfig ?? this.defaultConfig;
     this.metadata = fields?.metadata ?? this.metadata;
     this.extras = fields?.extras ?? this.extras;
+    this.policies = fields?.policies;
   }
 
   protected abstract _call(
@@ -305,8 +314,23 @@ export abstract class StructuredTool<
     );
     delete config.runId;
 
+    const policyCtx: ToolPolicyContext<unknown> = {
+      toolName: this.name,
+      args: parsed,
+      config,
+    };
+
+    const policy =
+      this.policies !== undefined
+        ? composePolicies(...this.policies)
+        : undefined;
+
     let result;
     try {
+      if (policy?.beforeInvoke !== undefined) {
+        await policy.beforeInvoke(policyCtx);
+      }
+
       const raw = await this._call(parsed, runManager, config);
       result = isAsyncGenerator(raw)
         ? await consumeAsyncGenerator(raw, async (chunk) => {
@@ -317,6 +341,10 @@ export abstract class StructuredTool<
             }
           })
         : raw;
+
+      if (policy?.afterInvoke !== undefined) {
+        result = await policy.afterInvoke(result, policyCtx);
+      }
     } catch (e) {
       await runManager?.handleToolError(e);
       throw e;
@@ -620,6 +648,12 @@ export interface ToolWrapperParams<
    * an agent should stop looping.
    */
   returnDirect?: boolean;
+  /**
+   * Policies that run around every invocation of this tool.
+   *
+   * See {@link ToolPolicy}
+   */
+  policies?: ToolPolicy[];
 }
 
 /**
