@@ -4,7 +4,7 @@ import {
   VectorStore,
 } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";
-import { v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4 } from "@langchain/core/utils/uuid";
 import { maximalMarginalRelevance } from "@langchain/core/utils/math";
 import {
   BaseIndex,

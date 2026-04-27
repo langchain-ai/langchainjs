@@ -3,7 +3,7 @@ import { QdrantClient } from "@qdrant/js-client-rest";
 import { faker } from "@faker-js/faker";
 import { Document } from "@langchain/core/documents";
 import { SyntheticEmbeddings } from "@langchain/core/utils/testing";
-import { v4 } from "uuid";
+import { v4 } from "@langchain/core/utils/uuid";
 import { QdrantVectorStore } from "../vectorstores.js";
 
 describe("QdrantVectorStore testcase", () => {

@@ -24,7 +24,6 @@
     "pdf-parse": "npm:/pdf-parse",
     "peggy": "npm:/peggy",
     "readline": "https://deno.land/x/readline@v1.1.0/mod.ts",
-    "uuid": "npm:/uuid",
     "youtubei.js": "npm:/youtubei.js",
     "neo4j-driver": "npm:/neo4j-driver",
     "axios": "npm:/axios",

@@ -28,8 +28,7 @@
     "format:check": "prettier --check \"src\""
   },
   "dependencies": {
-    "flat": "^5.0.2",
-    "uuid": "^10.0.0"
+    "flat": "^5.0.2"
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0",

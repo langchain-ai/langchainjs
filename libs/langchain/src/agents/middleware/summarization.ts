@@ -1,6 +1,6 @@
 import { z } from "zod/v3";
 import { z as z4 } from "zod/v4";
-import { v4 as uuid } from "uuid";
+import { v4 as uuid } from "@langchain/core/utils/uuid";
 import {
   BaseMessage,
   AIMessage,

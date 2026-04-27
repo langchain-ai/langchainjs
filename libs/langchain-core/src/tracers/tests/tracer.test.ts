@@ -1,6 +1,6 @@
 /* oxlint-disable @typescript-eslint/no-explicit-any */
 import { test, expect, vi, afterEach } from "vitest";
-import * as uuid from "uuid";
+import * as uuid from "../../utils/uuid/index.js";
 import { Client } from "langsmith";
 import { Serialized } from "../../load/serializable.js";
 import { Document } from "../../documents/document.js";

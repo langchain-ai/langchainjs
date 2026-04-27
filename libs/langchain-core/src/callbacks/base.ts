@@ -1,4 +1,4 @@
-import * as uuid from "uuid";
+import * as uuid from "../utils/uuid/index.js";
 import type { ChainValues } from "../utils/types/index.js";
 import type { BaseMessage } from "../messages/base.js";
 import type { AgentAction, AgentFinish } from "../agents.js";

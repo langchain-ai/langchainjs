@@ -1,7 +1,7 @@
 import { test } from "@jest/globals";
 import { Document, DocumentInterface } from "@langchain/core/documents";
 import { SyntheticEmbeddings } from "@langchain/core/utils/testing";
-import { v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4 } from "@langchain/core/utils/uuid";
 
 import { MaxMarginalRelevanceSearchOptions } from "@langchain/core/vectorstores";
 import {

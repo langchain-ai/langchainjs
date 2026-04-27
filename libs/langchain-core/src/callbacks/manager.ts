@@ -1,4 +1,4 @@
-import { v7 as uuidv7 } from "uuid";
+import { v7 as uuidv7 } from "../utils/uuid/index.js";
 import { AgentAction, AgentFinish } from "../agents.js";
 import type { ChainValues } from "../utils/types/index.js";
 import { LLMResult } from "../outputs.js";
