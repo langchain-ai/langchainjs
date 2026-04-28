@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4 } from "@langchain/core/utils/uuid";
 import { Mistral as MistralClient } from "@mistralai/mistralai";
 import {
   ChatCompletionRequest as MistralAIChatCompletionRequest,

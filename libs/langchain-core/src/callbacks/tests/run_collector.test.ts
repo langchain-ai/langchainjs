@@ -1,4 +1,4 @@
-import { v4 as uuidv4, validate } from "uuid";
+import { v4 as uuidv4, validate } from "../../utils/uuid/index.js";
 import { Run } from "langsmith/schemas";
 import { describe, it, expect } from "vitest";
 import {

@@ -3,7 +3,7 @@ import { Turbopuffer } from "@turbopuffer/turbopuffer";
 import { faker } from "@faker-js/faker";
 import { Document } from "@langchain/core/documents";
 import { SyntheticEmbeddings } from "@langchain/core/utils/testing";
-import { v4 as uuid } from "uuid";
+import { v4 as uuid } from "@langchain/core/utils/uuid";
 import { TurbopufferVectorStore } from "../vectorstores.js";
 
 const embeddings = new SyntheticEmbeddings({ vectorSize: 1536 });

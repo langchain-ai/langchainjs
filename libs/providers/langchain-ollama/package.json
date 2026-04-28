@@ -1,6 +1,6 @@
 {
   "name": "@langchain/ollama",
-  "version": "1.2.6",
+  "version": "1.2.7",
   "description": "Ollama integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -25,8 +25,7 @@
     "test:standard": "pnpm test:standard:unit && pnpm test:standard:int"
   },
   "dependencies": {
-    "ollama": "^0.6.3",
-    "uuid": "^10.0.0"
+    "ollama": "^0.6.3"
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0"
