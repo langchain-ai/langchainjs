@@ -172,10 +172,7 @@ describe.skipIf(skipAutoEmbedTests)("Auto Embedding Tests with data", () => {
 
     await waitForDocumentsIndexed(vectorStore, "Sandwich");
 
-    const results = await vectorStore.similaritySearchWithScore(
-      "Sandwich",
-      1
-    );
+    const results = await vectorStore.similaritySearchWithScore("Sandwich", 1);
 
     expect(results.length).toEqual(1);
     expect(results[0]).toHaveLength(2);

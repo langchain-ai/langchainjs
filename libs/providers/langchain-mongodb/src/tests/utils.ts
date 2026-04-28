@@ -24,8 +24,10 @@ export async function waitForIndexToBeQueryable(
 ): Promise<void> {
   return Readable.from(setInterval(5000, undefined, { ref: false }))
     .map(() => collection.listSearchIndexes().toArray())
-    .find((indexes: { name: string; status: string; }[]) => {
-      const found = indexes.some((index) => index.name === indexName && index.status === "READY");
+    .find((indexes: { name: string; status: string }[]) => {
+      const found = indexes.some(
+        (index) => index.name === indexName && index.status === "READY"
+      );
       return found;
     });
 }
@@ -48,12 +50,12 @@ export async function waitForDocumentsIndexed(
       return; // Search succeeded, documents are indexed
     } else {
       // Documents not yet indexed, retry after a short delay
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      await new Promise((resolve) => setTimeout(resolve, 5000));
     }
   }
 
   throw new Error(
     `Documents not indexed after ${maxWaitTime}ms for query: "${testQuery}". ` +
-    `Auto-embedding may have failed or the timeout is too short.`
+      `Auto-embedding may have failed or the timeout is too short.`
   );
 }

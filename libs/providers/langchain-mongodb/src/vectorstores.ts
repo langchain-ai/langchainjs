@@ -93,9 +93,7 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
    * (embeddings, args) - embeddings are provided by the user
    * (args) - the server handles embeddings
    */
-  constructor(
-    args: MongoDBAtlasVectorSearchLibArgs
-  );
+  constructor(args: MongoDBAtlasVectorSearchLibArgs);
   constructor(
     embeddings: EmbeddingsInterface,
     args: MongoDBAtlasVectorSearchLibArgs
@@ -146,7 +144,9 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     options?: { ids?: string[] }
   ) {
     if (this.useAutoEmbedding) {
-      throw new Error("Cannot add vectors directly when using auto-embedding mode.");
+      throw new Error(
+        "Cannot add vectors directly when using auto-embedding mode."
+      );
     }
     const docs = vectors.map((embedding, idx) => ({
       [this.textKey]: documents[idx].pageContent,
@@ -239,24 +239,26 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     filter?: MongoDBAtlasFilter
   ): Promise<[Document, number][]> {
     if (this.useAutoEmbedding) {
-      throw new Error("Cannot perform similarity search with vectors directly when using auto-embedding mode.");
+      throw new Error(
+        "Cannot perform similarity search with vectors directly when using auto-embedding mode."
+      );
     }
 
     const postFilterPipeline = filter?.postFilterPipeline ?? [];
     const preFilter: MongoDBDocument | undefined =
       filter?.preFilter ||
-        filter?.postFilterPipeline ||
-        filter?.includeEmbeddings
+      filter?.postFilterPipeline ||
+      filter?.includeEmbeddings
         ? filter.preFilter
         : filter;
     const removeEmbeddingsPipeline = !filter?.includeEmbeddings
       ? [
-        {
-          $project: {
-            [this.embeddingKey]: 0,
+          {
+            $project: {
+              [this.embeddingKey]: 0,
+            },
           },
-        },
-      ]
+        ]
       : [];
 
     const pipeline: MongoDBDocument[] = [
@@ -329,7 +331,11 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     k = 4,
     filter: this["FilterType"] | undefined = undefined
   ): Promise<DocumentInterface[]> {
-    const resultsWithScore = await this.similaritySearchWithScore(query, k ?? 4, filter);
+    const resultsWithScore = await this.similaritySearchWithScore(
+      query,
+      k ?? 4,
+      filter
+    );
     return resultsWithScore.map(([doc]) => doc);
   }
 
@@ -341,18 +347,18 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     const postFilterPipeline = filter?.postFilterPipeline ?? [];
     const preFilter: MongoDBDocument | undefined =
       filter?.preFilter ||
-        filter?.postFilterPipeline ||
-        filter?.includeEmbeddings
+      filter?.postFilterPipeline ||
+      filter?.includeEmbeddings
         ? filter.preFilter
         : filter;
     const removeEmbeddingsPipeline = !filter?.includeEmbeddings
       ? [
-        {
-          $project: {
-            [this.embeddingKey]: 0,
+          {
+            $project: {
+              [this.embeddingKey]: 0,
+            },
           },
-        },
-      ]
+        ]
       : [];
 
     const pipeline: MongoDBDocument[] = [
@@ -406,7 +412,9 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     options: MaxMarginalRelevanceSearchOptions<this["FilterType"]>
   ): Promise<Document[]> {
     if (this.useAutoEmbedding) {
-      throw new Error("Cannot perform MMR search with vectors directly when using auto-embedding mode.");
+      throw new Error(
+        "Cannot perform MMR search with vectors directly when using auto-embedding mode."
+      );
     }
 
     const { k, fetchK = 20, lambda = 0.5, filter } = options;
@@ -493,7 +501,9 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
   static async fromTexts(
     texts: string[],
     metadatas: object[] | object,
-    embeddingsOrDbConfig: EmbeddingsInterface | (MongoDBAtlasVectorSearchLibArgs & { ids?: string[] }),
+    embeddingsOrDbConfig:
+      | EmbeddingsInterface
+      | (MongoDBAtlasVectorSearchLibArgs & { ids?: string[] }),
     dbConfig?: MongoDBAtlasVectorSearchLibArgs & { ids?: string[] }
   ): Promise<MongoDBAtlasVectorSearch> {
     const docs: Document[] = [];
@@ -509,10 +519,19 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     // Detect which calling convention is being used
     if (dbConfig !== undefined) {
       // `fromTexts(texts, metadatas, embeddings, dbConfig)` embeddings provided by the user
-      return this.fromDocuments(docs, embeddingsOrDbConfig as EmbeddingsInterface, dbConfig);
+      return this.fromDocuments(
+        docs,
+        embeddingsOrDbConfig as EmbeddingsInterface,
+        dbConfig
+      );
     } else {
       // `fromTexts(texts, metadatas, dbConfig)` the server handles embeddings
-      return this.fromDocuments(docs, embeddingsOrDbConfig as MongoDBAtlasVectorSearchLibArgs & { ids?: string[] });
+      return this.fromDocuments(
+        docs,
+        embeddingsOrDbConfig as MongoDBAtlasVectorSearchLibArgs & {
+          ids?: string[];
+        }
+      );
     }
   }
 
@@ -541,7 +560,9 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
   ): Promise<MongoDBAtlasVectorSearch>;
   static async fromDocuments(
     docs: Document[],
-    embeddingsOrDbConfig: EmbeddingsInterface | (MongoDBAtlasVectorSearchLibArgs & { ids?: string[] }),
+    embeddingsOrDbConfig:
+      | EmbeddingsInterface
+      | (MongoDBAtlasVectorSearchLibArgs & { ids?: string[] }),
     dbConfig?: MongoDBAtlasVectorSearchLibArgs & { ids?: string[] }
   ): Promise<MongoDBAtlasVectorSearch> {
     let embeddings: EmbeddingsInterface;
@@ -556,7 +577,10 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
       instance = new this(embeddings, finalDbConfig);
     } else {
       // `fromDocuments(docs, dbConfig)` the server handles embeddings
-      finalDbConfig = embeddingsOrDbConfig as MongoDBAtlasVectorSearchLibArgs & { ids?: string[] };
+      finalDbConfig =
+        embeddingsOrDbConfig as MongoDBAtlasVectorSearchLibArgs & {
+          ids?: string[];
+        };
       instance = new this(finalDbConfig);
     }
 
