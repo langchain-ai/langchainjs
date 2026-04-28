@@ -930,6 +930,13 @@ export class ReactAgent<
         return AGENT_NODE_NAME;
       }
 
+      // afterModel middleware can inject ToolMessages (for example, when it blocks
+      // tool calls). Once every pending tool call has a corresponding ToolMessage,
+      // route back to the model so it can respond instead of exiting early.
+      if (ToolMessage.isInstance(lastMessage)) {
+        return AGENT_NODE_NAME;
+      }
+
       if (
         !AIMessage.isInstance(lastMessage) ||
         !lastMessage.tool_calls ||
