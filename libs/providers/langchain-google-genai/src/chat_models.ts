@@ -45,6 +45,7 @@ import {
   convertBaseMessagesToContent,
   convertResponseContentToChatGenerationChunk,
   convertUsageMetadata,
+  getMessageAuthor,
   mapGenerateContentResultToChatResult,
 } from "./utils/common.js";
 import { GoogleGenerativeAIToolsOutputParser } from "./output_parsers.js";
@@ -74,6 +75,9 @@ export type BaseMessageExamplePair = {
   input: BaseMessage;
   output: BaseMessage;
 };
+
+const NO_HUMAN_MESSAGE_ERROR =
+  "ChatGoogleGenerativeAI requires at least one HumanMessage in the input messages.";
 
 export interface GoogleGenerativeAIChatCallOptions extends BaseChatModelCallOptions {
   tools?: GoogleGenerativeAIToolType[];
@@ -656,12 +660,12 @@ export class ChatGoogleGenerativeAI
 
   constructor(
     model: ModelParams["model"],
-    fields?: Omit<GoogleGenerativeAIChatInput, "model">
+    fields?: Omit<GoogleGenerativeAIChatInput, "model">,
   );
   constructor(fields: GoogleGenerativeAIChatInput);
   constructor(
     modelOrFields: ModelParams["model"] | GoogleGenerativeAIChatInput,
-    fieldsArg?: Omit<GoogleGenerativeAIChatInput, "model">
+    fieldsArg?: Omit<GoogleGenerativeAIChatInput, "model">,
   ) {
     const fields =
       typeof modelOrFields === "string"
@@ -705,18 +709,18 @@ export class ChatGoogleGenerativeAI
         "Please set an API key for Google GenerativeAI " +
           "in the environment variable GOOGLE_API_KEY " +
           "or in the `apiKey` field of the " +
-          "ChatGoogleGenerativeAI constructor"
+          "ChatGoogleGenerativeAI constructor",
       );
     }
 
     this.safetySettings = fields.safetySettings ?? this.safetySettings;
     if (this.safetySettings && this.safetySettings.length > 0) {
       const safetySettingsSet = new Set(
-        this.safetySettings.map((s) => s.category)
+        this.safetySettings.map((s) => s.category),
       );
       if (safetySettingsSet.size !== this.safetySettings.length) {
         throw new Error(
-          "The categories in `safetySettings` array must be unique"
+          "The categories in `safetySettings` array must be unique",
         );
       }
     }
@@ -746,7 +750,7 @@ export class ChatGoogleGenerativeAI
         apiVersion: fields.apiVersion,
         baseUrl: fields.baseUrl,
         customHeaders: fields.customHeaders,
-      }
+      },
     );
     this.streamUsage = fields.streamUsage ?? this.streamUsage;
   }
@@ -754,15 +758,15 @@ export class ChatGoogleGenerativeAI
   useCachedContent(
     cachedContent: CachedContent,
     modelParams?: ModelParams,
-    requestOptions?: RequestOptions
+    requestOptions?: RequestOptions,
   ): void {
     if (!this.apiKey) return;
     this.client = new GenerativeAI(
-      this.apiKey
+      this.apiKey,
     ).getGenerativeModelFromCachedContent(
       cachedContent,
       modelParams,
-      requestOptions
+      requestOptions,
     );
   }
 
@@ -810,7 +814,7 @@ export class ChatGoogleGenerativeAI
 
   override bindTools(
     tools: GoogleGenerativeAIToolType[],
-    kwargs?: Partial<GoogleGenerativeAIChatCallOptions>
+    kwargs?: Partial<GoogleGenerativeAIChatCallOptions>,
   ): Runnable<
     BaseLanguageModelInput,
     AIMessageChunk,
@@ -823,7 +827,7 @@ export class ChatGoogleGenerativeAI
   }
 
   invocationParams(
-    options?: this["ParsedCallOptions"]
+    options?: this["ParsedCallOptions"],
   ): Omit<GenerateContentRequest, "contents"> {
     const toolsAndConfig = options?.tools?.length
       ? convertToolsToGenAI(options.tools, {
@@ -850,17 +854,29 @@ export class ChatGoogleGenerativeAI
     };
   }
 
+  private assertHasHumanMessage(messages: BaseMessage[]): void {
+    const hasHumanMessage = messages.some((message) => {
+      const author = getMessageAuthor(message);
+      return author === "human" || author === "user";
+    });
+
+    if (!hasHumanMessage) {
+      throw new Error(NO_HUMAN_MESSAGE_ERROR);
+    }
+  }
+
   async _generate(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun,
   ): Promise<ChatResult> {
     options.signal?.throwIfAborted();
+    this.assertHasHumanMessage(messages);
     const prompt = convertBaseMessagesToContent(
       messages,
       this._isMultimodalModel,
       this.useSystemInstruction,
-      this.model
+      this.model,
     );
     let actualPrompt = prompt;
     if (prompt[0].role === "system") {
@@ -886,7 +902,7 @@ export class ChatGoogleGenerativeAI
         }
       }
       const generations = finalChunks.filter(
-        (c): c is ChatGenerationChunk => c !== undefined
+        (c): c is ChatGenerationChunk => c !== undefined,
       );
 
       return { generations, llmOutput: { estimatedTokenUsage: tokenUsage } };
@@ -901,7 +917,7 @@ export class ChatGoogleGenerativeAI
     if ("usageMetadata" in res.response) {
       usageMetadata = convertUsageMetadata(
         res.response.usageMetadata,
-        this.model
+        this.model,
       );
     }
 
@@ -909,12 +925,12 @@ export class ChatGoogleGenerativeAI
       res.response,
       {
         usageMetadata,
-      }
+      },
     );
     // may not have generations in output if there was a refusal for safety reasons, malformed function call, etc.
     if (generationResult.generations?.length > 0) {
       await runManager?.handleLLMNewToken(
-        generationResult.generations[0]?.text ?? ""
+        generationResult.generations[0]?.text ?? "",
       );
     }
     return generationResult;
@@ -923,13 +939,14 @@ export class ChatGoogleGenerativeAI
   async *_streamResponseChunks(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
+    runManager?: CallbackManagerForLLMRun,
   ): AsyncGenerator<ChatGenerationChunk> {
+    this.assertHasHumanMessage(messages);
     const prompt = convertBaseMessagesToContent(
       messages,
       this._isMultimodalModel,
       this.useSystemInstruction,
-      this.model
+      this.model,
     );
     let actualPrompt = prompt;
     if (prompt[0].role === "system") {
@@ -949,7 +966,7 @@ export class ChatGoogleGenerativeAI
           signal: options?.signal,
         });
         return stream;
-      }
+      },
     );
 
     let usageMetadata: UsageMetadata | undefined;
@@ -970,7 +987,7 @@ export class ChatGoogleGenerativeAI
       ) {
         usageMetadata = convertUsageMetadata(
           response.usageMetadata,
-          this.model
+          this.model,
         );
 
         // Under the hood, LangChain combines the prompt tokens. Google returns the updated
@@ -979,7 +996,7 @@ export class ChatGoogleGenerativeAI
           response.usageMetadata.promptTokenCount ?? 0;
         usageMetadata.input_tokens = Math.max(
           0,
-          newPromptTokenCount - prevPromptTokenCount
+          newPromptTokenCount - prevPromptTokenCount,
         );
         prevPromptTokenCount = newPromptTokenCount;
 
@@ -987,14 +1004,14 @@ export class ChatGoogleGenerativeAI
           response.usageMetadata.candidatesTokenCount ?? 0;
         usageMetadata.output_tokens = Math.max(
           0,
-          newCandidatesTokenCount - prevCandidatesTokenCount
+          newCandidatesTokenCount - prevCandidatesTokenCount,
         );
         prevCandidatesTokenCount = newCandidatesTokenCount;
 
         const newTotalTokenCount = response.usageMetadata.totalTokenCount ?? 0;
         usageMetadata.total_tokens = Math.max(
           0,
-          newTotalTokenCount - prevTotalTokenCount
+          newTotalTokenCount - prevTotalTokenCount,
         );
         prevTotalTokenCount = newTotalTokenCount;
       }
@@ -1015,7 +1032,7 @@ export class ChatGoogleGenerativeAI
 
   async completionWithRetry(
     request: string | GenerateContentRequest | (string | GenerativeAIPart)[],
-    options?: this["ParsedCallOptions"]
+    options?: this["ParsedCallOptions"],
   ) {
     return this.caller.callWithOptions(
       { signal: options?.signal },
@@ -1032,7 +1049,7 @@ export class ChatGoogleGenerativeAI
           }
           throw e;
         }
-      }
+      },
     );
   }
 
@@ -1066,7 +1083,7 @@ export class ChatGoogleGenerativeAI
       | SerializableSchema<RunOutput>
       // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: StructuredOutputMethodOptions<false>
+    config?: StructuredOutputMethodOptions<false>,
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput<
@@ -1078,7 +1095,7 @@ export class ChatGoogleGenerativeAI
       | SerializableSchema<RunOutput>
       // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: StructuredOutputMethodOptions<true>
+    config?: StructuredOutputMethodOptions<true>,
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
@@ -1090,7 +1107,7 @@ export class ChatGoogleGenerativeAI
       | SerializableSchema<RunOutput>
       // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
-    config?: StructuredOutputMethodOptions<boolean>
+    config?: StructuredOutputMethodOptions<boolean>,
   ):
     | Runnable<BaseLanguageModelInput, RunOutput>
     | Runnable<
@@ -1104,7 +1121,7 @@ export class ChatGoogleGenerativeAI
 
     if (method === "jsonMode") {
       throw new Error(
-        `ChatGoogleGenerativeAI only supports "jsonSchema" or "functionCalling" as a method.`
+        `ChatGoogleGenerativeAI only supports "jsonSchema" or "functionCalling" as a method.`,
       );
     }
 
@@ -1129,7 +1146,7 @@ export class ChatGoogleGenerativeAI
       ) {
         geminiFunctionDeclaration = schema as GenerativeAIFunctionDeclaration;
         geminiFunctionDeclaration.parameters = removeAdditionalProperties(
-          schema.parameters
+          schema.parameters,
         ) as GenerativeAIFunctionDeclarationSchema;
         functionName = schema.name;
       } else {
@@ -1137,7 +1154,7 @@ export class ChatGoogleGenerativeAI
           name: functionName,
           description: schema.description ?? "",
           parameters: removeAdditionalProperties(
-            schema
+            schema,
           ) as GenerativeAIFunctionDeclarationSchema,
         };
       }
@@ -1154,7 +1171,7 @@ export class ChatGoogleGenerativeAI
       outputParser = createFunctionCallingParser(
         schema,
         functionName,
-        GoogleGenerativeAIToolsOutputParser
+        GoogleGenerativeAIToolsOutputParser,
       );
     } else {
       const jsonSchema = schemaToGenerativeAIParameters(schema);
@@ -1170,7 +1187,7 @@ export class ChatGoogleGenerativeAI
       includeRaw,
       includeRaw
         ? "StructuredOutputRunnable"
-        : "ChatGoogleGenerativeAIStructuredOutput"
+        : "ChatGoogleGenerativeAIStructuredOutput",
     );
   }
 }
