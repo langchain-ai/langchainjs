@@ -1,6 +1,6 @@
 # @langchain/perplexity
 
-This package provides a [LangChain.js](https://github.com/langchain-ai/langchainjs) integration for [Perplexity AI](https://www.perplexity.ai/) chat models.
+This package provides a [LangChain.js](https://github.com/langchain-ai/langchainjs) integration for [Perplexity AI](https://www.perplexity.ai/), including chat models, the Perplexity Search retriever, and the Perplexity Search tool.
 
 ## Installation
 
@@ -156,6 +156,58 @@ const model = new ChatPerplexity({
 | `searchBeforeDateFilter`  | `string`    | Only include content before this date.                                         |
 | `lastUpdatedAfterFilter`  | `string`    | Only include content updated after this date.                                  |
 | `lastUpdatedBeforeFilter` | `string`    | Only include content updated before this date.                                 |
+
+## Perplexity Search retriever
+
+`PerplexitySearchRetriever` calls the [Perplexity Search API](https://docs.perplexity.ai/api-reference/search-post) and returns each result as a LangChain `Document` whose `metadata` contains `title`, `url`, `date`, and `last_updated`.
+
+```typescript
+import { PerplexitySearchRetriever } from "@langchain/perplexity";
+
+const retriever = new PerplexitySearchRetriever({
+  k: 5,
+  searchRecencyFilter: "week",
+  searchDomainFilter: ["wikipedia.org"],
+});
+
+const docs = await retriever.invoke("Latest LLM benchmarks");
+for (const doc of docs) {
+  console.log(doc.metadata.title, doc.metadata.url);
+  console.log(doc.pageContent);
+}
+```
+
+## Perplexity Search tool
+
+`PerplexitySearchResults` is a LangChain `Tool` wrapper around the same `/search` endpoint. The tool name is `perplexity_search_results_json` and `_call` returns a JSON-encoded array of `{ title, url, snippet, date, last_updated }`.
+
+```typescript
+import { PerplexitySearchResults } from "@langchain/perplexity";
+
+const tool = new PerplexitySearchResults({
+  maxResults: 5,
+  searchRecencyFilter: "week",
+});
+
+const json = await tool.invoke("Latest LLM benchmarks");
+console.log(JSON.parse(json));
+```
+
+### Search constructor parameters
+
+Both classes accept the same Perplexity Search filters:
+
+| Parameter             | Type                                    | Description                                                                              |
+| --------------------- | --------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `apiKey`              | `string`                                | API key. Defaults to `PERPLEXITY_API_KEY` or `PPLX_API_KEY` env var.                     |
+| `k` / `maxResults`    | `number`                                | Maximum results (1-20). Defaults to `10`.                                                |
+| `maxTokens`           | `number`                                | Retriever only. Maximum tokens across all results. Defaults to `25000`.                  |
+| `maxTokensPerPage`    | `number`                                | Retriever only. Maximum tokens per page. Defaults to `1024`.                             |
+| `country`             | `string`                                | ISO country code (e.g. `"US"`).                                                          |
+| `searchDomainFilter`  | `string[]`                              | Restrict results to up to 20 domains.                                                    |
+| `searchRecencyFilter` | `"day" \| "week" \| "month" \| "year"`  | Time-based filter.                                                                       |
+| `searchAfterDate`     | `string`                                | Only include content after this date (`%m/%d/%Y`).                                       |
+| `searchBeforeDate`    | `string`                                | Only include content before this date (`%m/%d/%Y`).                                      |
 
 ## License
 
