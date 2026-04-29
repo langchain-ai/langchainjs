@@ -1377,8 +1377,9 @@ export class ReactAgent<
       mergedConfig as RunnableConfig
     );
 
-    return (await this.#graph.stream_v2(initializedState, {
+    return (await this.#graph.streamEvents(initializedState, {
       ...(mergedConfig as Record<string, any>),
+      version: "v3",
       transformers: callSiteTransformers,
     })) as unknown as AgentRunStream<
       FullState,

@@ -855,7 +855,7 @@ export type CreateAgentParams<
    * import { StreamChannel } from "@langchain/langgraph";
    *
    * const costTracker = () => ({
-   *   init: () => ({ cost: new StreamChannel<number>("cost") }),
+   *   init: () => ({ cost: StreamChannel.remote<number>("cost") }),
    *   process(event) {
    *     // track token costs...
    *     return true;

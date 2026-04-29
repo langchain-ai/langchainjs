@@ -15,7 +15,7 @@
 
 import {
   GraphRunStream,
-  EventLog,
+  StreamChannel,
   type NativeStreamTransformer,
   type ProtocolEvent,
   type StreamTransformer,
@@ -224,7 +224,7 @@ export function createToolCallTransformer(
   path: Namespace
 ): () => NativeStreamTransformer<ToolCallProjection> {
   return () => {
-    const toolCallsLog = new EventLog<ToolCallStream>();
+    const toolCallsLog = StreamChannel.local<ToolCallStream>();
 
     const pendingCalls = new Map<
       string,
@@ -282,7 +282,7 @@ export function createToolCallTransformer(
       __native: true as const,
 
       init: () => ({
-        toolCalls: toolCallsLog.toAsyncIterable(),
+        toolCalls: toolCallsLog,
       }),
 
       process(event: ProtocolEvent): boolean {
@@ -391,13 +391,13 @@ export function createMiddlewareTransformer(
   path: Namespace
 ): () => NativeStreamTransformer<MiddlewareProjection> {
   return () => {
-    const middlewareLog = new EventLog<MiddlewareEvent>();
+    const middlewareLog = StreamChannel.local<MiddlewareEvent>();
 
     return {
       __native: true as const,
 
       init: () => ({
-        middleware: middlewareLog.toAsyncIterable(),
+        middleware: middlewareLog,
       }),
 
       process(event: ProtocolEvent): boolean {

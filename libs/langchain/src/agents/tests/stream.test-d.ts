@@ -94,7 +94,7 @@ describe("stream_v2 types", () => {
     const eventCounter = (): StreamTransformer<{
       eventCount: StreamChannel<number>;
     }> => {
-      const eventCount = new StreamChannel<number>("eventCount");
+      const eventCount = StreamChannel.remote<number>("eventCount");
       return {
         init: () => ({ eventCount }),
         process() {
@@ -106,7 +106,7 @@ describe("stream_v2 types", () => {
     const methodTracker = (): StreamTransformer<{
       methods: StreamChannel<string>;
     }> => {
-      const methods = new StreamChannel<string>("methods");
+      const methods = StreamChannel.remote<string>("methods");
       return {
         init: () => ({ methods }),
         process() {
