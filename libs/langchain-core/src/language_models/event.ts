@@ -75,7 +75,7 @@ export interface MessageFinishEvent {
   /** Final usage snapshot. */
   usage?: Partial<UsageMetadata>;
   /** Provider-specific response metadata (model name, response ID, headers, etc.). */
-  metadata?: Record<string, unknown>;
+  responseMetadata?: Record<string, unknown>;
 }
 
 // ─── Content Block Lifecycle ────────────────────────────────────

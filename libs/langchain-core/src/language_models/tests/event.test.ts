@@ -35,12 +35,12 @@ describe("ChatModelStreamEvent types", () => {
       event: "message-finish",
       reason: "stop",
       usage: { input_tokens: 100, output_tokens: 50, total_tokens: 150 },
-      metadata: { model_name: "gpt-4" },
+      responseMetadata: { model_name: "gpt-4" },
     };
     expect(event.event).toBe("message-finish");
     expect(event.reason).toBe("stop");
     expect(event.usage?.output_tokens).toBe(50);
-    expect(event.metadata?.model_name).toBe("gpt-4");
+    expect(event.responseMetadata?.model_name).toBe("gpt-4");
   });
 
   test("ContentBlockStartEvent", () => {
