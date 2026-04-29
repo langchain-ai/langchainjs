@@ -7,7 +7,7 @@ import { StreamChannel, type StreamTransformer } from "@langchain/langgraph";
 
 import { createAgent, createMiddleware } from "../index.js";
 
-describe("stream_v2 types", () => {
+describe("streamEvents types", () => {
   it("should type tool calls as a discriminated union", async () => {
     const addTool = tool(
       (input: { a: number; b: number }) => `The sum is ${input.a + input.b}`,
@@ -36,9 +36,12 @@ describe("stream_v2 types", () => {
       .respond(new AIMessage("The answer is 7."));
 
     const agent = createAgent({ model, tools: [addTool, minusTool] });
-    const run = await agent.stream_v2({
-      messages: [new HumanMessage("What is 3 + 4?")],
-    });
+    const run = await agent.streamEvents(
+      {
+        messages: [new HumanMessage("What is 3 + 4?")],
+      },
+      { version: "v3" }
+    );
 
     for await (const call of run.toolCalls) {
       expectTypeOf(call.name).toEqualTypeOf<"add" | "minus">();
@@ -72,9 +75,12 @@ describe("stream_v2 types", () => {
       middleware: [tracker],
     });
 
-    const run = await agent.stream_v2({
-      messages: [new HumanMessage("hi")],
-    });
+    const run = await agent.streamEvents(
+      {
+        messages: [new HumanMessage("hi")],
+      },
+      { version: "v3" }
+    );
 
     for await (const event of run.middleware) {
       expectTypeOf(event.phase).toEqualTypeOf<
@@ -121,9 +127,12 @@ describe("stream_v2 types", () => {
       streamTransformers: [eventCounter, methodTracker],
     });
 
-    const run = await agent.stream_v2({
-      messages: [new HumanMessage("hi")],
-    });
+    const run = await agent.streamEvents(
+      {
+        messages: [new HumanMessage("hi")],
+      },
+      { version: "v3" }
+    );
 
     expectTypeOf(run.extensions.eventCount).toEqualTypeOf<
       StreamChannel<number>

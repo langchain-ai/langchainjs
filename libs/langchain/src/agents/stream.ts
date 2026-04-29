@@ -139,7 +139,7 @@ export type MiddlewareEventUnion<
  *
  * This is a pure type overlay — no runtime subclass exists.  Use the
  * `AgentRunStream` type when you need to describe the return type of
- * `stream_v2()`.
+ * `streamEvents(..., { version: "v3" })`.
  *
  * @typeParam TValues - Shape of the graph's state values.
  * @typeParam TTools - Tuple of tools registered on the agent, used to type

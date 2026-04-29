@@ -150,7 +150,7 @@ async function collectAllEvents(
 
 beforeAll(setup);
 
-describe("stream_v2", () => {
+describe("streamEvents", () => {
   it("should emit stream evebts for each tool and middleware invocation", async () => {
     console.log("url", url);
     const client = new Client({ apiUrl: url! });

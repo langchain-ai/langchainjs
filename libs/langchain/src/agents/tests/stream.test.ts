@@ -14,7 +14,7 @@ import { createAgent, createMiddleware } from "../index.js";
 import { humanInTheLoopMiddleware } from "../middleware/hitl.js";
 import { createToolCallTransformer } from "../stream.js";
 
-describe("stream_v2", () => {
+describe("streamEvents", () => {
   it("should emit tool call streams for each tool invocation", async () => {
     const addTool = tool(
       (input: { a: number; b: number }) => `The sum is ${input.a + input.b}`,
@@ -43,9 +43,12 @@ describe("stream_v2", () => {
       .respond(new AIMessage("The answer is 7."));
 
     const agent = createAgent({ model, tools: [addTool, minusTool] });
-    const run = await agent.stream_v2({
-      messages: [new HumanMessage("What is 3 + 4?")],
-    });
+    const run = await agent.streamEvents(
+      {
+        messages: [new HumanMessage("What is 3 + 4?")],
+      },
+      { version: "v3" }
+    );
 
     const toolCalls: Array<{
       name: string;
@@ -95,9 +98,12 @@ describe("stream_v2", () => {
       middleware: [testMiddleware],
     });
 
-    const run = await agent.stream_v2({
-      messages: [new HumanMessage("hello")],
-    });
+    const run = await agent.streamEvents(
+      {
+        messages: [new HumanMessage("hello")],
+      },
+      { version: "v3" }
+    );
 
     const middlewareEvents: Array<{
       phase: string;
@@ -139,9 +145,12 @@ describe("stream_v2", () => {
       .respond(new AIMessage("The weather is sunny."));
 
     const agent = createAgent({ model, tools: [searchTool] });
-    const run = await agent.stream_v2({
-      messages: [new HumanMessage("Search for weather")],
-    });
+    const run = await agent.streamEvents(
+      {
+        messages: [new HumanMessage("Search for weather")],
+      },
+      { version: "v3" }
+    );
 
     const [toolCallResults, finalState] = await Promise.all([
       (async () => {
@@ -192,9 +201,12 @@ describe("stream_v2", () => {
       middleware: [middleware],
     });
 
-    const run = await agent.stream_v2({
-      messages: [new HumanMessage("What is 6 * 7?")],
-    });
+    const run = await agent.streamEvents(
+      {
+        messages: [new HumanMessage("What is 6 * 7?")],
+      },
+      { version: "v3" }
+    );
 
     const [toolNames, middlewarePhases, output] = await Promise.all([
       (async () => {
@@ -232,9 +244,12 @@ describe("stream_v2", () => {
   it("should resolve output with the final agent state", async () => {
     const model = fakeModel().respond(new AIMessage("hi there"));
     const agent = createAgent({ model, tools: [] });
-    const run = await agent.stream_v2({
-      messages: [new HumanMessage("hi")],
-    });
+    const run = await agent.streamEvents(
+      {
+        messages: [new HumanMessage("hi")],
+      },
+      { version: "v3" }
+    );
 
     const state = await run.output;
 
@@ -268,9 +283,12 @@ describe("stream_v2", () => {
       streamTransformers: [eventCounter],
     });
 
-    const run = await agent.stream_v2({
-      messages: [new HumanMessage("hi")],
-    });
+    const run = await agent.streamEvents(
+      {
+        messages: [new HumanMessage("hi")],
+      },
+      { version: "v3" }
+    );
 
     const counts: number[] = [];
     for await (const c of run.extensions.eventCount as AsyncIterable<number>) {
@@ -281,7 +299,7 @@ describe("stream_v2", () => {
     expect(counts[counts.length - 1]).toBe(counts.length);
   });
 
-  it("should pass call-site transformers via stream_v2 config", async () => {
+  it("should pass call-site transformers via streamEvents config", async () => {
     const model = fakeModel().respond(new AIMessage("ok"));
     const agent = createAgent({ model, tools: [] });
 
@@ -298,9 +316,9 @@ describe("stream_v2", () => {
       };
     };
 
-    const run = await agent.stream_v2(
+    const run = await agent.streamEvents(
       { messages: [new HumanMessage("hi")] },
-      { transformers: [methodTracker] }
+      { version: "v3", transformers: [methodTracker] }
     );
 
     const seenMethods: string[] = [];
@@ -330,9 +348,12 @@ describe("stream_v2", () => {
       .respond(new AIMessage("Done: 3 and 7"));
 
     const agent = createAgent({ model, tools: [addTool] });
-    const run = await agent.stream_v2({
-      messages: [new HumanMessage("Add 1+2 and 3+4")],
-    });
+    const run = await agent.streamEvents(
+      {
+        messages: [new HumanMessage("Add 1+2 and 3+4")],
+      },
+      { version: "v3" }
+    );
 
     const toolCalls: Array<{ name: string; callId: string; output: unknown }> =
       [];
@@ -390,9 +411,9 @@ describe("stream_v2", () => {
 
     const config = { configurable: { thread_id: "hitl-stream-test" } };
 
-    const run = await agent.stream_v2(
+    const run = await agent.streamEvents(
       { messages: [new HumanMessage("Write hello to test.txt")] },
-      config
+      { ...config, version: "v3" }
     );
 
     const state = await run.output;

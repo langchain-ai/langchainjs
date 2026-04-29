@@ -69,7 +69,8 @@ import type { JumpToTarget } from "./constants.js";
  *
  * @typeParam TStreamTransformers - The tuple of user-supplied stream transformer
  *   factories registered at `createAgent({ streamTransformers })`. Used to type
- *   `run.extensions` on the stream returned from `stream_v2()`.
+ *   `run.extensions` on the stream returned from
+ *   `streamEvents(..., { version: "v3" })`.
  *
  * @example
  * ```typescript
@@ -118,7 +119,8 @@ export interface AgentTypeConfig<
   /**
    * The tuple of stream transformer factories registered at
    * `createAgent({ streamTransformers })`. Used to infer the shape of
-   * `run.extensions` on the stream returned by `stream_v2()`.
+   * `run.extensions` on the stream returned by
+   * `streamEvents(..., { version: "v3" })`.
    */
   StreamTransformers: TStreamTransformers;
 }
@@ -842,9 +844,10 @@ export type CreateAgentParams<
 
   /**
    * Stream transformer factories baked into the compiled graph. These run
-   * automatically for every `stream_v2()` call, after the built-in
+   * automatically for every `streamEvents(..., { version: "v3" })` call, after the built-in
    * agent transformers (tool calls, middleware) and before any call-site
-   * transformers passed via `stream_v2(input, { transformers })`.
+   * transformers passed via
+   * `streamEvents(input, { version: "v3", transformers })`.
    *
    * Use this to add domain-specific streaming projections that should always
    * be available on the agent's run stream. The projection values are
@@ -868,7 +871,7 @@ export type CreateAgentParams<
    *   streamTransformers: [costTracker],
    * });
    *
-   * const run = await agent.stream_v2({ messages });
+   * const run = await agent.streamEvents({ messages }, { version: "v3" });
    * for await (const c of run.extensions.cost) {
    *   console.log("cost delta:", c);
    * }
