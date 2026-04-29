@@ -9,7 +9,7 @@
 import { isAIMessageChunk } from "../messages/ai.js";
 import type { ContentBlock } from "../messages/content/index.js";
 import type { ChatGenerationChunk } from "../outputs.js";
-import type { ChatModelStreamEvent } from "./event.js";
+import type { ChatModelStreamEvent, ContentBlockDelta } from "./event.js";
 
 /**
  * Convert an async iterable of legacy `ChatGenerationChunk`s into
@@ -74,7 +74,7 @@ export async function* convertChunksToEvents(
         yield {
           event: "content-block-delta" as const,
           index: blockIndex,
-          content: { type: "text" as const, text: content },
+          delta: { type: "text-delta" as const, text: content },
         };
       }
     } else if (Array.isArray(content)) {
@@ -94,11 +94,12 @@ export async function* convertChunksToEvents(
           };
         } else {
           const block = activeBlocks.get(blockIndex)!;
-          block.accumulated = applyDeltaToBlock(block.accumulated, part);
+          const delta = contentBlockToDelta(part);
+          block.accumulated = applyDeltaToBlock(block.accumulated, delta);
           yield {
             event: "content-block-delta" as const,
             index: blockIndex,
-            content: part,
+            delta,
           };
         }
       }
@@ -148,7 +149,15 @@ export async function* convertChunksToEvents(
         yield {
           event: "content-block-delta" as const,
           index: blockIndex,
-          content: { ...(block.accumulated as ContentBlock) },
+          delta: {
+            type: "block-delta" as const,
+            fields: {
+              type: "tool_call_chunk",
+              ...("id" in acc && acc.id != null ? { id: acc.id } : {}),
+              ...("name" in acc && acc.name != null ? { name: acc.name } : {}),
+              args: acc.args,
+            },
+          },
         };
       }
     }
@@ -192,51 +201,75 @@ export async function* convertChunksToEvents(
  */
 function applyDeltaToBlock(
   block: ContentBlock,
-  delta: ContentBlock
+  delta: ContentBlockDelta
 ): ContentBlock {
-  if (block.type !== delta.type) {
-    return { ...delta };
-  }
-
-  if (
-    (delta as { type?: string }).type === "thinking" &&
-    (block as { type?: string }).type === "thinking"
-  ) {
-    const thinking =
-      ((block as { thinking?: string }).thinking ?? "") +
-      ((delta as { thinking?: string }).thinking ?? "");
-    return { ...block, ...delta, thinking } as unknown as ContentBlock;
-  }
-
   switch (delta.type) {
-    case "text":
+    case "text-delta":
       return {
         ...block,
-        ...delta,
         text: ((block as { text?: string }).text ?? "") + delta.text,
-      };
-    case "reasoning":
+      } as ContentBlock;
+    case "reasoning-delta":
+      if ((block as { type?: string }).type === "thinking") {
+        return {
+          ...block,
+          thinking:
+            ((block as { thinking?: string }).thinking ?? "") + delta.reasoning,
+        } as unknown as ContentBlock;
+      }
       return {
         ...block,
-        ...delta,
         reasoning:
           ((block as { reasoning?: string }).reasoning ?? "") + delta.reasoning,
-      };
-    case "tool_call_chunk":
-    case "server_tool_call_chunk": {
-      const merged = { ...block, ...delta } as Record<string, unknown>;
-      if (delta.id == null && "id" in block && block.id != null) {
-        merged.id = block.id;
-      }
-      if (delta.name == null && "name" in block && block.name != null) {
-        merged.name = block.name;
-      }
-      merged.args = `${("args" in block ? block.args : "") ?? ""}${delta.args ?? ""}`;
-      return merged as unknown as ContentBlock;
-    }
+      } as ContentBlock;
+    case "data-delta":
+      return {
+        ...block,
+        data: ((block as { data?: string }).data ?? "") + delta.data,
+      } as ContentBlock;
+    case "block-delta":
+      return { ...block, ...delta.fields } as ContentBlock;
     default:
-      return { ...block, ...delta };
+      throw new Error(`Unknown delta type: ${JSON.stringify(delta)}`);
   }
+}
+
+function contentBlockToDelta(block: ContentBlock): ContentBlockDelta {
+  if (block.type === "text") {
+    return { type: "text-delta", text: (block as ContentBlock.Text).text };
+  }
+  if (block.type === "reasoning") {
+    return {
+      type: "reasoning-delta",
+      reasoning: (block as ContentBlock.Reasoning).reasoning,
+    };
+  }
+  if (
+    (block as { type?: string }).type === "thinking" &&
+    typeof (block as { thinking?: unknown }).thinking === "string"
+  ) {
+    return {
+      type: "reasoning-delta",
+      reasoning: (block as unknown as { thinking: string }).thinking,
+    };
+  }
+  if (typeof (block as { data?: unknown }).data === "string") {
+    return {
+      type: "data-delta",
+      data: (block as unknown as { data: string }).data,
+      encoding: "base64",
+    };
+  }
+  if (typeof (block as { type?: unknown }).type === "string") {
+    return {
+      type: "block-delta",
+      fields: {
+        ...(block as unknown as { type: string } & Record<string, unknown>),
+      },
+    };
+  }
+
+  throw new Error(`Unsupported content block delta: ${JSON.stringify(block)}`);
 }
 
 /**

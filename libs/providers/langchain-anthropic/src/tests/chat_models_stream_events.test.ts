@@ -282,17 +282,17 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
 
       // First delta: incremental "Hello"
       const d1 = deltas[0] as {
-        content: { type: string; text?: string };
+        delta: { type: string; text?: string };
       };
-      expect(d1.content.type).toBe("text");
-      expect(d1.content.text).toBe("Hello");
+      expect(d1.delta.type).toBe("text-delta");
+      expect(d1.delta.text).toBe("Hello");
 
       // Second delta: incremental " world"
       const d2 = deltas[1] as {
-        content: { type: string; text?: string };
+        delta: { type: string; text?: string };
       };
-      expect(d2.content.type).toBe("text");
-      expect(d2.content.text).toBe(" world");
+      expect(d2.delta.type).toBe("text-delta");
+      expect(d2.delta.text).toBe(" world");
     });
 
     test("content-block-finish carries finalized text", async () => {
@@ -347,21 +347,20 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
           e.event === "content-block-delta" &&
           "index" in e &&
           e.index === 0 &&
-          "content" in e &&
-          (e.content as { type: string }).type === "reasoning" &&
-          "reasoning" in e.content
+          "delta" in e &&
+          (e.delta as { type: string }).type === "reasoning-delta"
       );
       expect(reasoningDeltas.length).toBe(2);
 
       const rd1 = reasoningDeltas[0] as {
-        content: { type: string; reasoning: string };
+        delta: { type: string; reasoning: string };
       };
-      expect(rd1.content.reasoning).toBe("Let me");
+      expect(rd1.delta.reasoning).toBe("Let me");
 
       const rd2 = reasoningDeltas[1] as {
-        content: { type: string; reasoning: string };
+        delta: { type: string; reasoning: string };
       };
-      expect(rd2.content.reasoning).toBe(" reason...");
+      expect(rd2.delta.reasoning).toBe(" reason...");
 
       // Reasoning finish
       const reasoningFinish = events.find(
@@ -404,11 +403,13 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       const sigDelta = events.find(
         (e) =>
           e.event === "content-block-delta" &&
-          "content" in e &&
-          (e.content as { signature?: string }).signature === "sig_abc"
-      ) as { content: { type: string; signature?: string } };
+          "delta" in e &&
+          (e.delta as { fields?: { signature?: string } }).fields?.signature ===
+            "sig_abc"
+      ) as { delta: { type: string; fields?: { signature?: string } } };
       expect(sigDelta).toBeDefined();
-      expect(sigDelta.content.signature).toBe("sig_abc");
+      expect(sigDelta.delta.type).toBe("block-delta");
+      expect(sigDelta.delta.fields?.signature).toBe("sig_abc");
     });
   });
 
@@ -432,7 +433,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       expect(toolStart.content.name).toBe("web_search");
       expect(toolStart.content.id).toBe("toolu_01ABC");
 
-      // Deltas carry incremental tool_call_chunk content
+      // Deltas carry accumulated tool_call_chunk field snapshots
       const toolDeltas = events.filter(
         (e) =>
           e.event === "content-block-delta" && "index" in e && e.index === 1
@@ -440,16 +441,18 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       expect(toolDeltas.length).toBe(2);
 
       const td1 = toolDeltas[0] as {
-        content: { type: string; args?: string };
+        delta: { type: string; fields: { type: string; args?: string } };
       };
-      expect(td1.content.type).toBe("tool_call_chunk");
-      expect(td1.content.args).toBe('{"query"');
+      expect(td1.delta.type).toBe("block-delta");
+      expect(td1.delta.fields.type).toBe("tool_call_chunk");
+      expect(td1.delta.fields.args).toBe('{"query"');
 
       const td2 = toolDeltas[1] as {
-        content: { type: string; args?: string };
+        delta: { type: string; fields: { type: string; args?: string } };
       };
-      expect(td2.content.type).toBe("tool_call_chunk");
-      expect(td2.content.args).toBe(':"weather"}');
+      expect(td2.delta.type).toBe("block-delta");
+      expect(td2.delta.fields.type).toBe("tool_call_chunk");
+      expect(td2.delta.fields.args).toBe('{"query":"weather"}');
     });
 
     test("tool call finish has parsed args", async () => {

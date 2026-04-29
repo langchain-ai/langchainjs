@@ -313,7 +313,7 @@ export abstract class BaseChatModel<
    * ```
    * MessageStart
    *   -> ContentBlockStart(index, contentBlock)
-   *     -> ContentBlockDelta(index, content) ...
+   *     -> ContentBlockDelta(index, delta) ...
    *   -> ContentBlockFinish(index, contentBlock)
    * -> MessageFinish(reason, usage?)
    * ```

@@ -23,12 +23,12 @@ function textStreamEvents(): ChatModelStreamEvent[] {
     {
       event: "content-block-delta",
       index: 0,
-      content: { type: "text", text: "Hello" },
+      delta: { type: "text-delta", text: "Hello" },
     },
     {
       event: "content-block-delta",
       index: 0,
-      content: { type: "text", text: " world" },
+      delta: { type: "text-delta", text: " world" },
     },
     {
       event: "content-block-finish",
@@ -65,12 +65,12 @@ function complexStreamEvents(): ChatModelStreamEvent[] {
     {
       event: "content-block-delta",
       index: 0,
-      content: { type: "reasoning", reasoning: "Let me" },
+      delta: { type: "reasoning-delta", reasoning: "Let me" },
     },
     {
       event: "content-block-delta",
       index: 0,
-      content: { type: "reasoning", reasoning: " think..." },
+      delta: { type: "reasoning-delta", reasoning: " think..." },
     },
     {
       event: "content-block-finish",
@@ -86,12 +86,12 @@ function complexStreamEvents(): ChatModelStreamEvent[] {
     {
       event: "content-block-delta",
       index: 1,
-      content: { type: "text", text: "The answer" },
+      delta: { type: "text-delta", text: "The answer" },
     },
     {
       event: "content-block-delta",
       index: 1,
-      content: { type: "text", text: " is 42." },
+      delta: { type: "text-delta", text: " is 42." },
     },
     {
       event: "content-block-finish",
@@ -112,21 +112,27 @@ function complexStreamEvents(): ChatModelStreamEvent[] {
     {
       event: "content-block-delta",
       index: 2,
-      content: {
-        type: "tool_call_chunk",
-        id: "call_1",
-        name: "calculator",
-        args: '{"expr',
+      delta: {
+        type: "block-delta",
+        fields: {
+          type: "tool_call_chunk",
+          id: "call_1",
+          name: "calculator",
+          args: '{"expr',
+        },
       },
     },
     {
       event: "content-block-delta",
       index: 2,
-      content: {
-        type: "tool_call_chunk",
-        id: "call_1",
-        name: "calculator",
-        args: '":"6*7"}',
+      delta: {
+        type: "block-delta",
+        fields: {
+          type: "tool_call_chunk",
+          id: "call_1",
+          name: "calculator",
+          args: '{"expr":"6*7"}',
+        },
       },
     },
     {
@@ -162,12 +168,12 @@ function providerThinkingStreamEvents(): ChatModelStreamEvent[] {
     {
       event: "content-block-delta",
       index: 0,
-      content: { type: "thinking", thinking: "Let me" },
+      delta: { type: "reasoning-delta", reasoning: "Let me" },
     },
     {
       event: "content-block-delta",
       index: 0,
-      content: { type: "thinking", thinking: " think..." },
+      delta: { type: "reasoning-delta", reasoning: " think..." },
     },
     {
       event: "content-block-finish",
@@ -190,7 +196,7 @@ async function* delayedTextAfterReasoningEvents(
   yield {
     event: "content-block-delta",
     index: 0,
-    content: { type: "reasoning", reasoning: "Let me think" },
+    delta: { type: "reasoning-delta", reasoning: "Let me think" },
   };
   yield {
     event: "content-block-start",
@@ -200,7 +206,7 @@ async function* delayedTextAfterReasoningEvents(
   yield {
     event: "content-block-delta",
     index: 1,
-    content: { type: "text", text: "Hello" },
+    delta: { type: "text-delta", text: "Hello" },
   };
   await new Promise((resolve) => {
     setTimeout(resolve, 50);
@@ -449,6 +455,39 @@ describe("ChatModelStream", () => {
       // Finish reason
       expect(message.response_metadata?.finish_reason).toBe("tool_use");
     });
+
+    test("assembles multimodal data chunks", async () => {
+      const stream = new ChatModelStream(
+        iterEvents([
+          { event: "message-start", id: "msg_audio" },
+          {
+            event: "content-block-start",
+            index: 0,
+            content: {
+              type: "audio",
+              mimeType: "audio/wav",
+              data: "",
+            },
+          },
+          {
+            event: "content-block-delta",
+            index: 0,
+            delta: { type: "data-delta", data: "UklG", encoding: "base64" },
+          },
+          {
+            event: "content-block-delta",
+            index: 0,
+            delta: { type: "data-delta", data: "Rg==" },
+          },
+          { event: "message-finish", reason: "stop" },
+        ])
+      );
+
+      const message = await stream.output;
+      expect(message.content).toEqual([
+        { type: "audio", mimeType: "audio/wav", data: "UklGRg==" },
+      ]);
+    });
   });
 
   describe("PromiseLike (await stream)", () => {
@@ -511,7 +550,7 @@ describe("ChatModelStream", () => {
         {
           event: "content-block-delta",
           index: 0,
-          content: { type: "text", text: "Result" },
+          delta: { type: "text-delta", text: "Result" },
         },
         {
           event: "content-block-finish",
@@ -554,7 +593,7 @@ describe("ChatModelStream", () => {
         {
           event: "content-block-delta",
           index: 0,
-          content: { type: "text", text: "Hello" },
+          delta: { type: "text-delta", text: "Hello" },
         },
         {
           event: "content-block-finish",
@@ -582,7 +621,7 @@ describe("ChatModelStream", () => {
         {
           event: "content-block-delta",
           index: 0,
-          content: { type: "text", text: "Partial" },
+          delta: { type: "text-delta", text: "Partial" },
         },
         { event: "error", message: "Connection lost", code: "CONN_ERR" },
         { event: "message-finish", reason: "stop" },

@@ -7,7 +7,7 @@
 import { AIMessage } from "../messages/ai.js";
 import type { ContentBlock } from "../messages/content/index.js";
 import type { UsageMetadata } from "../messages/metadata.js";
-import type { ChatModelStreamEvent } from "./event.js";
+import type { ChatModelStreamEvent, ContentBlockDelta } from "./event.js";
 
 type UsageMetadataLike = Partial<UsageMetadata>;
 
@@ -85,58 +85,75 @@ class ReplayBuffer {
 /**
  * Apply a typed delta to an accumulated content block.
  *
- * - `text` → append text
- * - `reasoning` / provider `thinking` → append reasoning text
- * - `tool_call_chunk` / `server_tool_call_chunk` → append args while
- *   preserving id/name from previous chunks when a later delta omits them
- * - other block types → shallow merge
+ * - `text-delta` → append text
+ * - `reasoning-delta` → append reasoning text
+ * - `data-delta` → append encoded data to `data`
+ * - `block-delta` → shallow merge fields
  *
  * @internal
  */
-function applyDelta(block: ContentBlock, delta: ContentBlock): ContentBlock {
-  if (block.type !== delta.type) {
-    return { ...delta };
-  }
-
-  if (
-    (delta as { type?: string }).type === "thinking" &&
-    (block as { type?: string }).type === "thinking"
-  ) {
-    const thinking =
-      ((block as { thinking?: string }).thinking ?? "") +
-      ((delta as { thinking?: string }).thinking ?? "");
-    return { ...block, ...delta, thinking } as unknown as ContentBlock;
-  }
-
+function applyDelta(
+  block: ContentBlock,
+  delta: ContentBlockDelta
+): ContentBlock {
   switch (delta.type) {
-    case "text":
+    case "text-delta":
       return {
         ...block,
-        ...delta,
         text: ((block as { text?: string }).text ?? "") + delta.text,
-      };
-    case "reasoning":
+      } as ContentBlock;
+    case "reasoning-delta":
+      if ((block as { type?: string }).type === "thinking") {
+        return {
+          ...block,
+          thinking:
+            ((block as { thinking?: string }).thinking ?? "") + delta.reasoning,
+        } as unknown as ContentBlock;
+      }
       return {
         ...block,
-        ...delta,
         reasoning:
           ((block as { reasoning?: string }).reasoning ?? "") + delta.reasoning,
-      };
-    case "tool_call_chunk":
-    case "server_tool_call_chunk": {
-      const merged = { ...block, ...delta } as Record<string, unknown>;
-      if (delta.id == null && "id" in block && block.id != null) {
-        merged.id = block.id;
-      }
-      if (delta.name == null && "name" in block && block.name != null) {
-        merged.name = block.name;
-      }
-      merged.args = `${("args" in block ? block.args : "") ?? ""}${delta.args ?? ""}`;
-      return merged as unknown as ContentBlock;
-    }
+      } as ContentBlock;
+    case "data-delta":
+      return {
+        ...block,
+        data: ((block as { data?: string }).data ?? "") + delta.data,
+      } as ContentBlock;
+    case "block-delta":
+      return { ...block, ...delta.fields } as ContentBlock;
     default:
-      return { ...block, ...delta };
+      throw new Error(`Unknown delta type: ${JSON.stringify(delta)}`);
   }
+}
+
+function getEventDelta(
+  event: ChatModelStreamEvent
+): ContentBlockDelta | undefined {
+  if (event.event !== "content-block-delta") return undefined;
+  if ("delta" in event && event.delta) return event.delta;
+
+  // Transitional tolerance for any stream sources still emitting the previous
+  // content-shaped delta object.
+  const content = (event as { content?: unknown }).content;
+  if (content == null || typeof content !== "object") return undefined;
+  const block = content as { type?: string } & Record<string, unknown>;
+  if (block.type === "text" && typeof block.text === "string") {
+    return { type: "text-delta", text: block.text };
+  }
+  if (block.type === "reasoning" && typeof block.reasoning === "string") {
+    return { type: "reasoning-delta", reasoning: block.reasoning };
+  }
+  if (block.type === "thinking" && typeof block.thinking === "string") {
+    return { type: "reasoning-delta", reasoning: block.thinking };
+  }
+  if (typeof block.data === "string") {
+    return { type: "data-delta", data: block.data, encoding: "base64" };
+  }
+  if (typeof block.type === "string") {
+    return { type: "block-delta", fields: { ...block, type: block.type } };
+  }
+  return undefined;
 }
 
 function getReasoningDelta(content: unknown): string | undefined {
@@ -207,12 +224,9 @@ export class TextContentStream
       async *[Symbol.asyncIterator]() {
         let accumulated = "";
         for await (const event of buffer.iterate()) {
-          if (
-            event.event === "content-block-delta" &&
-            event.content.type === "text" &&
-            typeof event.content.text === "string"
-          ) {
-            accumulated += event.content.text;
+          const delta = getEventDelta(event);
+          if (delta?.type === "text-delta") {
+            accumulated += delta.text;
             yield accumulated;
           }
         }
@@ -225,12 +239,9 @@ export class TextContentStream
     const buffer = this._buffer;
     async function* gen() {
       for await (const event of buffer.iterate()) {
-        if (
-          event.event === "content-block-delta" &&
-          event.content.type === "text" &&
-          typeof event.content.text === "string"
-        ) {
-          yield event.content.text;
+        const delta = getEventDelta(event);
+        if (delta?.type === "text-delta") {
+          yield delta.text;
         }
       }
     }
@@ -361,9 +372,10 @@ export class ReasoningContentStream
             accumulated += delta;
             yield accumulated;
           } else if (event.event === "content-block-delta") {
-            if (!isReasoningContent(event.content)) continue;
+            const eventDelta = getEventDelta(event);
+            if (eventDelta?.type !== "reasoning-delta") continue;
             seenReasoning = true;
-            const delta = getReasoningDelta(event.content);
+            const delta = eventDelta.reasoning;
             if (delta == null || delta.length === 0) continue;
             accumulated += delta;
             yield accumulated;
@@ -394,9 +406,10 @@ export class ReasoningContentStream
           const delta = getReasoningDelta(event.content);
           if (delta != null && delta.length > 0) yield delta;
         } else if (event.event === "content-block-delta") {
-          if (!isReasoningContent(event.content)) continue;
+          const eventDelta = getEventDelta(event);
+          if (eventDelta?.type !== "reasoning-delta") continue;
           seenReasoning = true;
-          const delta = getReasoningDelta(event.content);
+          const delta = eventDelta.reasoning;
           if (delta != null && delta.length > 0) yield delta;
         } else if (
           event.event === "content-block-finish" &&
@@ -570,8 +583,9 @@ export class ChatModelStream
 
         case "content-block-delta": {
           const current = contentBlocks[event.index];
+          const delta = getEventDelta(event);
           if (current) {
-            contentBlocks[event.index] = applyDelta(current, event.content);
+            if (delta) contentBlocks[event.index] = applyDelta(current, delta);
           }
           break;
         }

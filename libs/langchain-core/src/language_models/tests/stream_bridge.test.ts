@@ -250,19 +250,19 @@ describe("_streamChatModelEvents bridge", () => {
       expect(events[2]!.event).toBe("content-block-delta");
       const delta1 = events[2] as {
         index: number;
-        content: { type: string; text?: string };
+        delta: { type: string; text?: string };
       };
-      expect(delta1.content.type).toBe("text");
-      expect(delta1.content.text).toBe("Hello");
+      expect(delta1.delta.type).toBe("text-delta");
+      expect(delta1.delta.text).toBe("Hello");
 
       // content-block-delta for " world"
       expect(events[3]!.event).toBe("content-block-delta");
       const delta2 = events[3] as {
         index: number;
-        content: { type: string; text?: string };
+        delta: { type: string; text?: string };
       };
-      expect(delta2.content.type).toBe("text");
-      expect(delta2.content.text).toBe(" world");
+      expect(delta2.delta.type).toBe("text-delta");
+      expect(delta2.delta.text).toBe(" world");
 
       // content-block-finish
       const finishIdx = events.findIndex(
@@ -320,10 +320,10 @@ describe("_streamChatModelEvents bridge", () => {
       const lastReasoningDelta = reasoningDeltas[
         reasoningDeltas.length - 1
       ] as {
-        content: { type: string; reasoning?: string };
+        delta: { type: string; reasoning?: string };
       };
-      expect(lastReasoningDelta.content.type).toBe("reasoning");
-      expect(lastReasoningDelta.content.reasoning).toBe(" hard...");
+      expect(lastReasoningDelta.delta.type).toBe("reasoning-delta");
+      expect(lastReasoningDelta.delta.reasoning).toBe(" hard...");
 
       // Finish events for both blocks
       const finishes = events.filter((e) => e.event === "content-block-finish");
