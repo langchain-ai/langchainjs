@@ -9,7 +9,7 @@ LangChain is a framework for building LLM-powered applications. It helps you cha
 If you're looking for more advanced customization or agent orchestration, check out [LangGraph.js](https://langchain-ai.github.io/langgraphjs/). our framework for building agents and controllable workflows.
 
 > [!NOTE]
-> Looking for the Python version? Check out [LangChain](https://github.com/langchain-ai/langchain).
+> Looking for the Python version? Check out [LangChain](https://github.com/langchain-ai/langchain/tree/master/libs/langchain_v1).
 
 To help you ship LangChain apps to production faster, check out [LangSmith](https://smith.langchain.com).
 [LangSmith](https://smith.langchain.com) is a unified developer platform for building, testing, and monitoring LLM applications.
