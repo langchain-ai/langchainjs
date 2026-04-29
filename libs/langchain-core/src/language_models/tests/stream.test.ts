@@ -43,7 +43,7 @@ function textStreamEvents(): ChatModelStreamEvent[] {
       event: "message-finish",
       reason: "stop",
       usage: { input_tokens: 10, output_tokens: 2, total_tokens: 12 },
-      metadata: { model_name: "test-model" },
+      responseMetadata: { model_name: "test-model" },
     },
   ];
 }

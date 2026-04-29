@@ -601,10 +601,10 @@ export class ChatModelStream
         case "message-finish":
           finishReason = event.reason;
           if (event.usage) usage = normalizeUsage(event.usage);
-          if (event.metadata) {
+          if (event.responseMetadata) {
             metadata = {
               ...metadata,
-              ...event.metadata,
+              ...event.responseMetadata,
             };
           }
           break;
