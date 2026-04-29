@@ -63,6 +63,9 @@ describe("ChatModelStreamEvent types", () => {
     expect(event.event).toBe("content-block-delta");
     expect(event.index).toBe(0);
     expect(event.delta.type).toBe("text-delta");
+    if (event.delta.type !== "text-delta") {
+      throw new Error("Expected text-delta");
+    }
     expect(event.delta.text).toBe(" world");
   });
 
@@ -82,6 +85,9 @@ describe("ChatModelStreamEvent types", () => {
     };
     expect(event.event).toBe("content-block-delta");
     expect(event.delta.type).toBe("block-delta");
+    if (event.delta.type !== "block-delta") {
+      throw new Error("Expected block-delta");
+    }
     expect(event.delta.fields.type).toBe("tool_call_chunk");
   });
 
@@ -92,6 +98,9 @@ describe("ChatModelStreamEvent types", () => {
       delta: { type: "reasoning-delta", reasoning: "Let me think" },
     };
     expect(event.delta.type).toBe("reasoning-delta");
+    if (event.delta.type !== "reasoning-delta") {
+      throw new Error("Expected reasoning-delta");
+    }
     expect(event.delta.reasoning).toBe("Let me think");
   });
 
@@ -102,6 +111,9 @@ describe("ChatModelStreamEvent types", () => {
       delta: { type: "data-delta", data: "UklGR", encoding: "base64" },
     };
     expect(event.delta.type).toBe("data-delta");
+    if (event.delta.type !== "data-delta") {
+      throw new Error("Expected data-delta");
+    }
     expect(event.delta.data).toBe("UklGR");
   });
 
@@ -115,6 +127,9 @@ describe("ChatModelStreamEvent types", () => {
       },
     };
     expect(event.delta.type).toBe("block-delta");
+    if (event.delta.type !== "block-delta") {
+      throw new Error("Expected block-delta");
+    }
     expect(event.delta.fields.type).toBe("reasoning");
   });
 
