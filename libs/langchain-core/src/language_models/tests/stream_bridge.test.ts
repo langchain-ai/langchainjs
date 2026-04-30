@@ -8,6 +8,7 @@ import {
 import type { ChatModelStreamEvent } from "../event.js";
 import type { BaseMessage } from "../../messages/base.js";
 import type { CallbackManagerForLLMRun } from "../../callbacks/manager.js";
+import { BaseCallbackHandler } from "../../callbacks/base.js";
 import type { ChatResult } from "../../outputs.js";
 import type { ContentBlock } from "../../messages/content/index.js";
 
@@ -218,6 +219,24 @@ class FakeUsageStreamModel extends BaseChatModel {
       }),
       text: "",
     });
+  }
+}
+
+class FakeV2StreamEventHandler extends BaseCallbackHandler {
+  name = "fake-v2-stream-event-handler";
+
+  lc_prefer_chat_model_stream_events = true;
+
+  events: ChatModelStreamEvent[] = [];
+
+  tokens: string[] = [];
+
+  handleChatModelStreamEvent(event: ChatModelStreamEvent): void {
+    this.events.push(event);
+  }
+
+  handleLLMNewToken(token: string): void {
+    this.tokens.push(token);
   }
 }
 
@@ -452,6 +471,30 @@ describe("_streamChatModelEvents bridge", () => {
 
       expect(message._getType()).toBe("ai");
       expect(message.id).toBe("msg_test");
+    });
+  });
+
+  describe("invoke with v2 stream event callbacks", () => {
+    test("routes invoke through ChatModelStreamEvent callbacks", async () => {
+      const model = new FakeTextStreamModel({});
+      const handler = new FakeV2StreamEventHandler();
+
+      const message = await model.invoke("Hello", { callbacks: [handler] });
+
+      expect(message.id).toBe("msg_test");
+      expect(
+        handler.events.map((event) =>
+          event.event === "content-block-delta" ? event.delta : event.event
+        )
+      ).toEqual([
+        "message-start",
+        "content-block-start",
+        { type: "text-delta", text: "Hello" },
+        { type: "text-delta", text: " world" },
+        "content-block-finish",
+        "message-finish",
+      ]);
+      expect(handler.tokens).toEqual([]);
     });
   });
 });

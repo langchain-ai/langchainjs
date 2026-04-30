@@ -56,7 +56,10 @@ import {
   isInteropZodSchema,
 } from "../utils/types/zod.js";
 import { ModelAbortError } from "../errors/index.js";
-import { callbackHandlerPrefersStreaming } from "../callbacks/base.js";
+import {
+  callbackHandlerPrefersChatModelStreamEvents,
+  callbackHandlerPrefersStreaming,
+} from "../callbacks/base.js";
 import { toJsonSchema } from "../utils/json_schema.js";
 import { getEnvironmentVariable } from "../utils/env.js";
 import { castStandardMessageContent, iife } from "./utils.js";
@@ -574,10 +577,77 @@ export abstract class BaseChatModel<
     // Even if stream is not explicitly called, check if model is implicitly
     // called from streamEvents() or streamLog() to get all streamed events.
     // Bail out if _streamResponseChunks not overridden
+    const hasChatModelStreamEventHandler = !!runManagers?.[0].handlers.find(
+      callbackHandlerPrefersChatModelStreamEvents
+    );
     const hasStreamingHandler = !!runManagers?.[0].handlers.find(
       callbackHandlerPrefersStreaming
     );
     if (
+      hasChatModelStreamEventHandler &&
+      !this.disableStreaming &&
+      baseMessages.length === 1 &&
+      (this._streamChatModelEvents !==
+        BaseChatModel.prototype._streamChatModelEvents ||
+        this._streamResponseChunks !==
+          BaseChatModel.prototype._streamResponseChunks)
+    ) {
+      try {
+        let sawEvent = false;
+        const runManager = runManagers?.[0];
+        const events = this._streamChatModelEvents(
+          baseMessages[0],
+          parsedOptions
+        );
+        const forwardedEvents = {
+          async *[Symbol.asyncIterator]() {
+            for await (const event of events) {
+              parsedOptions.signal?.throwIfAborted();
+              sawEvent = true;
+              const streamEvent =
+                event.event === "message-start" &&
+                event.id == null &&
+                runManager?.runId != null
+                  ? { ...event, id: `run-${runManager.runId}` }
+                  : event;
+              await runManager?.handleChatModelStreamEvent(streamEvent);
+              yield streamEvent;
+            }
+          },
+        };
+        const message = await new ChatModelStream(forwardedEvents);
+        parsedOptions.signal?.throwIfAborted();
+        if (!sawEvent) {
+          throw new Error("Received empty response from chat model call.");
+        }
+        if (message.id == null) {
+          const runId = runManagers?.at(0)?.runId;
+          if (runId != null) message._updateId(`run-${runId}`);
+        }
+        const generation: ChatGeneration = {
+          text: message.text,
+          message,
+        };
+        generations.push([generation]);
+        const llmOutput =
+          message.usage_metadata !== undefined
+            ? {
+                tokenUsage: {
+                  promptTokens: message.usage_metadata.input_tokens,
+                  completionTokens: message.usage_metadata.output_tokens,
+                  totalTokens: message.usage_metadata.total_tokens,
+                },
+              }
+            : undefined;
+        await runManagers?.[0].handleLLMEnd({
+          generations,
+          llmOutput,
+        });
+      } catch (e) {
+        await runManagers?.[0].handleLLMError(e);
+        throw e;
+      }
+    } else if (
       hasStreamingHandler &&
       !this.disableStreaming &&
       baseMessages.length === 1 &&
