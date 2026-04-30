@@ -61,4 +61,5 @@ export * as utils__stream from "../utils/stream.js";
 export * as utils__testing from "../utils/testing/index.js";
 export * as utils__tiktoken from "../utils/tiktoken.js";
 export * as utils__types from "../utils/types/index.js";
+export * as utils__uuid from "../utils/uuid/index.js";
 export * as vectorstores from "../vectorstores.js";

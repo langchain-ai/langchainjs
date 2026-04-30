@@ -782,6 +782,17 @@
         "default": "./dist/utils/types/index.js"
       }
     },
+    "./utils/uuid": {
+      "input": "./src/utils/uuid/index.ts",
+      "require": {
+        "types": "./dist/utils/uuid/index.d.cts",
+        "default": "./dist/utils/uuid/index.cjs"
+      },
+      "import": {
+        "types": "./dist/utils/uuid/index.d.ts",
+        "default": "./dist/utils/uuid/index.js"
+      }
+    },
     "./vectorstores": {
       "input": "./src/vectorstores.ts",
       "require": {
