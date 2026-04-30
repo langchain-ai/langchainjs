@@ -514,6 +514,14 @@ describe("ChatModelStream", () => {
       expect((message.content as Array<{ type: string }>)[0]?.type).toBe(
         "tool_call"
       );
+      expect(message.contentBlocks).toEqual([
+        {
+          type: "tool_call",
+          id: "toolu_1",
+          name: "calculator",
+          args: { expression: "12345 + 67890" },
+        },
+      ]);
     });
 
     test("assembles multimodal data chunks", async () => {

@@ -110,10 +110,20 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
       }
 
       if (initParams.contentBlocks !== undefined) {
-        // Add constructor tool calls as content blocks
+        // Add constructor tool calls as content blocks only when they are not
+        // already represented in the v1 content payload.
         if (initParams.tool_calls) {
+          const missingContentBlockToolCalls = initParams.tool_calls.filter(
+            (toolCall) =>
+              !initParams.contentBlocks?.some(
+                (block) =>
+                  block.type === "tool_call" &&
+                  block.id === toolCall.id &&
+                  block.name === toolCall.name
+              )
+          );
           initParams.contentBlocks.push(
-            ...initParams.tool_calls.map((toolCall) => ({
+            ...missingContentBlockToolCalls.map((toolCall) => ({
               type: "tool_call" as const,
               id: toolCall.id,
               name: toolCall.name,
@@ -135,12 +145,15 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
               )
           );
         if (missingToolCalls.length > 0) {
-          initParams.tool_calls = missingToolCalls.map((block) => ({
-            type: "tool_call" as const,
-            id: block.id!,
-            name: block.name,
-            args: block.args as Record<string, unknown>,
-          })) as $InferToolCalls<TStructure>[];
+          initParams.tool_calls = [
+            ...(initParams.tool_calls ?? []),
+            ...missingToolCalls.map((block) => ({
+              type: "tool_call" as const,
+              id: block.id!,
+              name: block.name,
+              args: block.args as Record<string, unknown>,
+            })),
+          ] as $InferToolCalls<TStructure>[];
         }
       }
     }
