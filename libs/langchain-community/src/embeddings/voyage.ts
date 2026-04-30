@@ -2,6 +2,15 @@ import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { Embeddings, type EmbeddingsParams } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 
+const VOYAGE_API_BASE_PATH = "https://api.voyageai.com/v1";
+const MONGODB_ATLAS_VOYAGE_API_BASE_PATH = "https://ai.mongodb.com/v1";
+
+function getDefaultVoyageBasePath(apiKey: string): string {
+  return apiKey.startsWith("al-")
+    ? MONGODB_ATLAS_VOYAGE_API_BASE_PATH
+    : VOYAGE_API_BASE_PATH;
+}
+
 /**
  * Interface that extends EmbeddingsParams and defines additional
  * parameters specific to the VoyageEmbeddings class.
@@ -39,6 +48,11 @@ export interface VoyageEmbeddingsParams extends EmbeddingsParams {
    * The format of the output embeddings. Can be "float", "base64", or "ubinary".
    */
   encodingFormat?: string;
+
+  /**
+   * Base URL for the embeddings API.
+   */
+  basePath?: string;
 }
 
 /**
@@ -97,7 +111,7 @@ export class VoyageEmbeddings
 
   private apiKey: string;
 
-  basePath?: string = "https://api.voyageai.com/v1";
+  basePath?: string = VOYAGE_API_BASE_PATH;
 
   apiUrl: string;
 
@@ -138,6 +152,8 @@ export class VoyageEmbeddings
     this.modelName = fieldsWithDefaults?.modelName ?? this.modelName;
     this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
     this.apiKey = apiKey;
+    this.basePath =
+      fieldsWithDefaults?.basePath ?? getDefaultVoyageBasePath(apiKey);
     this.apiUrl = `${this.basePath}/embeddings`;
     this.inputType = fieldsWithDefaults?.inputType;
     this.truncation = fieldsWithDefaults?.truncation;
