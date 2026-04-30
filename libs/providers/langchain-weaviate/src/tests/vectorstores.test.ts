@@ -1,6 +1,71 @@
-import { test, expect } from "vitest";
+import { test, expect, vi } from "vitest";
+import { FakeEmbeddings } from "@langchain/core/utils/testing";
 
-import { flattenObjectForWeaviate } from "../vectorstores.js";
+import { flattenObjectForWeaviate, WeaviateStore } from "../vectorstores.js";
+
+function makeMockClient({
+  collectionExists = false,
+}: { collectionExists?: boolean } = {}) {
+  const createFromJson = vi.fn().mockResolvedValue(undefined);
+  const create = vi.fn().mockResolvedValue(undefined);
+  const exists = vi.fn().mockResolvedValue(collectionExists);
+  const get = vi.fn().mockReturnValue({});
+
+  return {
+    client: {
+      collections: { createFromJson, create, exists, get },
+    } as any,
+    spies: { createFromJson, create, exists },
+  };
+}
+
+test("initialize with jsonSchema calls createFromJson", async () => {
+  const { client, spies } = makeMockClient();
+  const jsonSchema = { class: "MyCollection", properties: [] };
+
+  await WeaviateStore.initialize(new FakeEmbeddings(), { client, jsonSchema });
+
+  expect(spies.createFromJson).toHaveBeenCalledOnce();
+  expect(spies.createFromJson).toHaveBeenCalledWith(jsonSchema);
+  expect(spies.create).not.toHaveBeenCalled();
+});
+
+test("initialize with schema calls create", async () => {
+  const { client, spies } = makeMockClient();
+  const schema = { name: "MyCollection", properties: [] };
+
+  await WeaviateStore.initialize(new FakeEmbeddings(), { client, schema });
+
+  expect(spies.create).toHaveBeenCalledOnce();
+  expect(spies.create).toHaveBeenCalledWith(schema);
+  expect(spies.createFromJson).not.toHaveBeenCalled();
+});
+
+test("initialize with both jsonSchema and schema prefers jsonSchema", async () => {
+  const { client, spies } = makeMockClient();
+  const jsonSchema = { class: "MyCollection", properties: [] };
+  const schema = { name: "MyCollection", properties: [] };
+
+  await WeaviateStore.initialize(new FakeEmbeddings(), {
+    client,
+    jsonSchema,
+    schema,
+  });
+
+  expect(spies.createFromJson).toHaveBeenCalledOnce();
+  expect(spies.createFromJson).toHaveBeenCalledWith(jsonSchema);
+  expect(spies.create).not.toHaveBeenCalled();
+});
+
+test("initialize skips creation when collection already exists", async () => {
+  const { client, spies } = makeMockClient({ collectionExists: true });
+  const jsonSchema = { class: "MyCollection", properties: [] };
+
+  await WeaviateStore.initialize(new FakeEmbeddings(), { client, jsonSchema });
+
+  expect(spies.createFromJson).not.toHaveBeenCalled();
+  expect(spies.create).not.toHaveBeenCalled();
+});
 
 test("flattenObjectForWeaviate", () => {
   expect(
