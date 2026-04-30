@@ -222,6 +222,93 @@ class FakeUsageStreamModel extends BaseChatModel {
   }
 }
 
+class FakeAudioAdditionalKwargsStreamModel extends BaseChatModel {
+  _llmType() {
+    return "fake-audio-additional-kwargs-stream";
+  }
+
+  async _generate(
+    _messages: BaseMessage[],
+    _options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): Promise<ChatResult> {
+    return { generations: [] };
+  }
+
+  async *_streamResponseChunks(
+    _messages: BaseMessage[],
+    _options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    yield new ChatGenerationChunk({
+      message: new AIMessageChunk({
+        content: "",
+        id: "msg_audio",
+        additional_kwargs: {
+          audio: {
+            id: "audio_1",
+            data: "AAAA",
+            transcript: "Once",
+            format: "pcm16",
+          },
+        },
+      }),
+      text: "",
+    });
+    yield new ChatGenerationChunk({
+      message: new AIMessageChunk({
+        content: "",
+        additional_kwargs: {
+          audio: {
+            data: "BBBB",
+            transcript: " upon",
+            format: "pcm16",
+          },
+        },
+      }),
+      text: "",
+    });
+  }
+}
+
+class FakeImageToolOutputsStreamModel extends BaseChatModel {
+  _llmType() {
+    return "fake-image-tool-outputs-stream";
+  }
+
+  async _generate(
+    _messages: BaseMessage[],
+    _options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): Promise<ChatResult> {
+    return { generations: [] };
+  }
+
+  async *_streamResponseChunks(
+    _messages: BaseMessage[],
+    _options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    yield new ChatGenerationChunk({
+      message: new AIMessageChunk({
+        content: "",
+        id: "msg_image",
+        additional_kwargs: {
+          tool_outputs: [
+            {
+              type: "image_generation_call",
+              id: "img_1",
+              result: "iVBORw0KGgo=",
+              output_format: "png",
+            },
+          ],
+        },
+      }),
+      text: "",
+    });
+  }
+}
+
 class FakeV2StreamEventHandler extends BaseCallbackHandler {
   name = "fake-v2-stream-event-handler";
 
@@ -429,6 +516,78 @@ describe("_streamChatModelEvents bridge", () => {
       };
       expect(msgStart.event).toBe("message-start");
       expect(msgStart.usage?.input_tokens).toBe(100);
+    });
+  });
+
+  describe("provider multimodal payloads", () => {
+    test("lifts OpenAI audio chunks from additional_kwargs into audio events", async () => {
+      const model = new FakeAudioAdditionalKwargsStreamModel({});
+      const events: ChatModelStreamEvent[] = [];
+      for await (const event of model._streamChatModelEvents(
+        [],
+        {} as BaseChatModelCallOptions
+      )) {
+        events.push(event);
+      }
+
+      const start = events.find(
+        (event) =>
+          event.event === "content-block-start" &&
+          event.content.type === "audio"
+      ) as { content: { type: "audio"; id?: string; mimeType?: string } };
+      expect(start.content.id).toBe("audio_1");
+      expect(start.content.mimeType).toBe("audio/pcm");
+
+      const dataDeltas = events.filter(
+        (event) =>
+          event.event === "content-block-delta" &&
+          event.delta.type === "data-delta"
+      ) as Array<{ delta: { data: string } }>;
+      expect(dataDeltas.map((event) => event.delta.data)).toEqual([
+        "AAAA",
+        "BBBB",
+      ]);
+
+      const finish = events.find(
+        (event) =>
+          event.event === "content-block-finish" &&
+          event.content.type === "audio"
+      ) as {
+        content: { type: "audio"; data?: string; transcript?: string };
+      };
+      expect(finish.content.data).toBe("AAAABBBB");
+      expect(finish.content.transcript).toBe("Once upon");
+    });
+
+    test("lifts OpenAI Responses image tool outputs into image events", async () => {
+      const model = new FakeImageToolOutputsStreamModel({});
+      const events: ChatModelStreamEvent[] = [];
+      for await (const event of model._streamChatModelEvents(
+        [],
+        {} as BaseChatModelCallOptions
+      )) {
+        events.push(event);
+      }
+
+      const start = events.find(
+        (event) =>
+          event.event === "content-block-start" &&
+          event.content.type === "image"
+      ) as {
+        content: { type: "image"; id?: string; mimeType?: string; data?: string };
+      };
+      expect(start.content).toMatchObject({
+        id: "img_1",
+        mimeType: "image/png",
+        data: "iVBORw0KGgo=",
+      });
+
+      const finish = events.find(
+        (event) =>
+          event.event === "content-block-finish" &&
+          event.content.type === "image"
+      ) as { content: { type: "image"; id?: string } };
+      expect(finish.content.id).toBe("img_1");
     });
   });
 

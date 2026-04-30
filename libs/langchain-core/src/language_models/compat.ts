@@ -11,6 +11,121 @@ import type { ContentBlock } from "../messages/content/index.js";
 import type { ChatGenerationChunk } from "../outputs.js";
 import type { ChatModelStreamEvent, ContentBlockDelta } from "./event.js";
 
+const MIME_TYPE_BY_AUDIO_FORMAT: Record<string, string> = {
+  wav: "audio/wav",
+  mp3: "audio/mpeg",
+  flac: "audio/flac",
+  opus: "audio/opus",
+  aac: "audio/aac",
+  pcm16: "audio/pcm",
+};
+
+const MIME_TYPE_BY_IMAGE_FORMAT: Record<string, string> = {
+  png: "image/png",
+  jpeg: "image/jpeg",
+  jpg: "image/jpeg",
+  webp: "image/webp",
+  gif: "image/gif",
+};
+
+type AudioStreamState = {
+  index: number;
+  id?: string;
+  mimeType: string;
+  transcript: string;
+};
+
+function nextBlockIndex(activeBlocks: Map<number, unknown>): number {
+  let next = 0;
+  for (const index of activeBlocks.keys()) {
+    if (index >= next) next = index + 1;
+  }
+  return next;
+}
+
+function getAdditionalKwargs(message: unknown): Record<string, unknown> {
+  const additional = (message as { additional_kwargs?: unknown })
+    .additional_kwargs;
+  return additional != null && typeof additional === "object"
+    ? (additional as Record<string, unknown>)
+    : {};
+}
+
+function extractImageBlocksFromToolOutputs(message: unknown): ContentBlock[] {
+  const toolOutputs = getAdditionalKwargs(message).tool_outputs;
+  if (!Array.isArray(toolOutputs)) return [];
+
+  const blocks: ContentBlock[] = [];
+  for (const entry of toolOutputs) {
+    if (entry == null || typeof entry !== "object") continue;
+    const record = entry as Record<string, unknown>;
+    if (record.type !== "image_generation_call") continue;
+
+    const data = typeof record.result === "string" ? record.result : undefined;
+    const url = typeof record.url === "string" ? record.url : undefined;
+    if (data == null && url == null) continue;
+
+    const outputFormat =
+      typeof record.output_format === "string"
+        ? record.output_format.toLowerCase()
+        : undefined;
+    const mimeType =
+      (outputFormat != null
+        ? MIME_TYPE_BY_IMAGE_FORMAT[outputFormat]
+        : undefined) ?? "image/png";
+
+    blocks.push({
+      type: "image",
+      ...(typeof record.id === "string" ? { id: record.id } : {}),
+      ...(url != null ? { url } : {}),
+      ...(data != null ? { data } : {}),
+      mimeType,
+    } as ContentBlock);
+  }
+  return blocks;
+}
+
+function getAudioPayload(message: unknown):
+  | {
+      id?: string;
+      data?: string;
+      url?: string;
+      transcript?: string;
+      mimeType: string;
+    }
+  | undefined {
+  const audio = getAdditionalKwargs(message).audio;
+  if (audio == null || typeof audio !== "object") return undefined;
+  const record = audio as Record<string, unknown>;
+
+  const data = typeof record.data === "string" ? record.data : undefined;
+  const url = typeof record.url === "string" ? record.url : undefined;
+  const transcript =
+    typeof record.transcript === "string" ? record.transcript : undefined;
+  if (data == null && url == null && transcript == null) return undefined;
+
+  const explicitMimeType =
+    typeof record.mime_type === "string"
+      ? record.mime_type
+      : typeof record.mimeType === "string"
+        ? record.mimeType
+        : undefined;
+  const format =
+    typeof record.format === "string" ? record.format.toLowerCase() : undefined;
+  const mimeType =
+    explicitMimeType ??
+    (format != null ? MIME_TYPE_BY_AUDIO_FORMAT[format] : undefined) ??
+    (data != null ? "audio/wav" : "audio/pcm");
+
+  return {
+    ...(typeof record.id === "string" ? { id: record.id } : {}),
+    ...(data != null ? { data } : {}),
+    ...(url != null ? { url } : {}),
+    ...(transcript != null ? { transcript } : {}),
+    mimeType,
+  };
+}
+
 /**
  * Convert an async iterable of legacy `ChatGenerationChunk`s into
  * `ChatModelStreamEvent`s with typed deltas.
@@ -27,6 +142,8 @@ export async function* convertChunksToEvents(
   let lastUsage:
     | { input_tokens: number; output_tokens: number; total_tokens: number }
     | undefined;
+  let audioStream: AudioStreamState | undefined;
+  const emittedImageKeys = new Set<string>();
 
   for await (const chunk of chunks) {
     options?.signal?.throwIfAborted();
@@ -160,6 +277,101 @@ export async function* convertChunksToEvents(
           },
         };
       }
+    }
+
+    const audioPayload = getAudioPayload(msg);
+    if (audioPayload != null) {
+      if (audioStream == null) {
+        const index = nextBlockIndex(activeBlocks);
+        audioStream = {
+          index,
+          id: audioPayload.id,
+          mimeType: audioPayload.mimeType,
+          transcript: "",
+        };
+        const initial = {
+          type: "audio",
+          ...(audioPayload.id != null ? { id: audioPayload.id } : {}),
+          ...(audioPayload.url != null ? { url: audioPayload.url } : {}),
+          data: "",
+          mimeType: audioPayload.mimeType,
+        } as ContentBlock;
+        activeBlocks.set(index, {
+          type: "audio",
+          accumulated: initial,
+        });
+        yield {
+          event: "content-block-start" as const,
+          index,
+          content: initial,
+        };
+      }
+
+      const activeAudio = activeBlocks.get(audioStream.index);
+      if (activeAudio != null) {
+        const accumulated = activeAudio.accumulated as ContentBlock & {
+          data?: string;
+          transcript?: string;
+        };
+        if (audioPayload.id != null && audioStream.id == null) {
+          audioStream.id = audioPayload.id;
+          (accumulated as { id?: string }).id = audioPayload.id;
+        }
+        if (audioPayload.transcript != null) {
+          audioStream.transcript += audioPayload.transcript;
+          accumulated.transcript = audioStream.transcript;
+          yield {
+            event: "content-block-delta" as const,
+            index: audioStream.index,
+            delta: {
+              type: "block-delta" as const,
+              fields: {
+                type: "audio",
+                transcript: audioStream.transcript,
+              },
+            },
+          };
+        }
+        if (audioPayload.data != null && audioPayload.data.length > 0) {
+          accumulated.data = (accumulated.data ?? "") + audioPayload.data;
+          yield {
+            event: "content-block-delta" as const,
+            index: audioStream.index,
+            delta: {
+              type: "data-delta" as const,
+              data: audioPayload.data,
+              encoding: "base64" as const,
+            },
+          };
+        }
+      }
+    }
+
+    for (const imageBlock of extractImageBlocksFromToolOutputs(msg)) {
+      const imageRecord = imageBlock as ContentBlock & {
+        id?: string;
+        url?: string;
+        data?: string;
+      };
+      const imageKey =
+        imageRecord.id ??
+        imageRecord.url ??
+        (imageRecord.data != null
+          ? `${imageRecord.data.length}:${imageRecord.data.slice(0, 32)}`
+          : undefined);
+      if (imageKey != null && emittedImageKeys.has(imageKey)) continue;
+      if (imageKey != null) emittedImageKeys.add(imageKey);
+
+      const index = nextBlockIndex(activeBlocks);
+      activeBlocks.set(index, {
+        type: "image",
+        accumulated: imageBlock,
+      });
+      yield {
+        event: "content-block-start" as const,
+        index,
+        content: imageBlock,
+      };
     }
 
     // Usage
