@@ -1,6 +1,7 @@
 import { describe, test, expect } from "vitest";
 import type { ChatModelStreamEvent } from "../event.js";
 import { ChatModelStream } from "../stream.js";
+import type { ContentBlock } from "../../messages/content/index.js";
 
 // Helper: create an async iterable from an array of events
 async function* iterEvents(
@@ -454,6 +455,65 @@ describe("ChatModelStream", () => {
 
       // Finish reason
       expect(message.response_metadata?.finish_reason).toBe("tool_use");
+    });
+
+    test("normalizes provider tool-use blocks into tool calls", async () => {
+      const stream = new ChatModelStream(
+        iterEvents([
+          { event: "message-start", id: "msg_provider_tool" },
+          {
+            event: "content-block-start",
+            index: 0,
+            content: {
+              type: "tool_use",
+              id: "toolu_1",
+              name: "calculator",
+              input: "",
+              caller: { type: "direct" },
+            } as unknown as ContentBlock,
+          },
+          {
+            event: "content-block-delta",
+            index: 0,
+            delta: {
+              type: "block-delta",
+              fields: {
+                type: "tool_call_chunk",
+                id: "toolu_1",
+                name: "calculator",
+                args: '{"expression": "12345 + 67890"}',
+              },
+            },
+          },
+          {
+            event: "content-block-finish",
+            index: 0,
+            content: {
+              type: "input_json_delta",
+              id: "toolu_1",
+              name: "calculator",
+              input: '7890"}',
+              args: '{"expression": "12345 + 67890"}',
+              caller: { type: "direct" },
+            } as unknown as ContentBlock,
+          },
+          { event: "message-finish", reason: "tool_use" },
+        ])
+      );
+
+      const message = await stream.output;
+
+      expect(message.tool_calls).toEqual([
+        {
+          type: "tool_call",
+          id: "toolu_1",
+          name: "calculator",
+          args: { expression: "12345 + 67890" },
+        },
+      ]);
+      expect((message.content as Array<{ type: string }>)[0]?.type).toBe(
+        "tool_call"
+      );
     });
 
     test("assembles multimodal data chunks", async () => {

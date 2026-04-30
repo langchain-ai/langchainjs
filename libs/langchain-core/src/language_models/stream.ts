@@ -7,6 +7,7 @@
 import { AIMessage } from "../messages/ai.js";
 import type { ContentBlock } from "../messages/content/index.js";
 import type { UsageMetadata } from "../messages/metadata.js";
+import type { ToolCall } from "../messages/tool.js";
 import type { ChatModelStreamEvent, ContentBlockDelta } from "./event.js";
 
 type UsageMetadataLike = Partial<UsageMetadata>;
@@ -195,6 +196,60 @@ function normalizeUsage(
     output_tokens: usage.output_tokens ?? 0,
     total_tokens: usage.total_tokens ?? 0,
   };
+}
+
+function parseToolArgs(value: unknown): Record<string, unknown> {
+  if (value != null && typeof value === "object" && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+  if (typeof value !== "string" || value.length === 0) return {};
+  try {
+    const parsed = JSON.parse(value);
+    return parsed != null && typeof parsed === "object" && !Array.isArray(parsed)
+      ? (parsed as Record<string, unknown>)
+      : {};
+  } catch {
+    return {};
+  }
+}
+
+function standardizeToolBlock(block: ContentBlock): ContentBlock {
+  const record = block as Record<string, unknown>;
+  if (block.type === "tool_call") return block;
+  if (
+    block.type !== "tool_call_chunk" &&
+    block.type !== "tool_use" &&
+    block.type !== "input_json_delta"
+  ) {
+    return block;
+  }
+
+  const name = typeof record.name === "string" ? record.name : undefined;
+  if (name == null) return block;
+
+  const args = record.args ?? record.input;
+  return {
+    ...record,
+    type: "tool_call",
+    name,
+    args: parseToolArgs(args),
+  } as unknown as ContentBlock;
+}
+
+function extractToolCalls(blocks: ContentBlock[]): ToolCall[] {
+  const calls: ToolCall[] = [];
+  for (const block of blocks) {
+    if (block.type !== "tool_call") continue;
+    const record = block as Record<string, unknown>;
+    if (typeof record.name !== "string") continue;
+    calls.push({
+      type: "tool_call",
+      ...(typeof record.id === "string" ? { id: record.id } : {}),
+      name: record.name,
+      args: parseToolArgs(record.args),
+    });
+  }
+  return calls;
 }
 
 // ─── Sub-Stream: Text ───────────────────────────────────────────
@@ -616,11 +671,13 @@ export class ChatModelStream
 
     const filteredBlocks = contentBlocks.filter(
       (b): b is ContentBlock => b != null
-    );
+    ).map(standardizeToolBlock);
+    const toolCalls = extractToolCalls(filteredBlocks);
 
     return new AIMessage({
       id,
       content: filteredBlocks,
+      ...(toolCalls.length > 0 ? { tool_calls: toolCalls } : {}),
       usage_metadata: usage,
       response_metadata: {
         ...metadata,
