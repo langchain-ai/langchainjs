@@ -205,7 +205,9 @@ function parseToolArgs(value: unknown): Record<string, unknown> {
   if (typeof value !== "string" || value.length === 0) return {};
   try {
     const parsed = JSON.parse(value);
-    return parsed != null && typeof parsed === "object" && !Array.isArray(parsed)
+    return parsed != null &&
+      typeof parsed === "object" &&
+      !Array.isArray(parsed)
       ? (parsed as Record<string, unknown>)
       : {};
   } catch {
@@ -669,9 +671,9 @@ export class ChatModelStream
       }
     }
 
-    const filteredBlocks = contentBlocks.filter(
-      (b): b is ContentBlock => b != null
-    ).map(standardizeToolBlock);
+    const filteredBlocks = contentBlocks
+      .filter((b): b is ContentBlock => b != null)
+      .map(standardizeToolBlock);
     const toolCalls = extractToolCalls(filteredBlocks);
 
     return new AIMessage({

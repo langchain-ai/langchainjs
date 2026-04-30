@@ -574,7 +574,12 @@ describe("_streamChatModelEvents bridge", () => {
           event.event === "content-block-start" &&
           event.content.type === "image"
       ) as {
-        content: { type: "image"; id?: string; mimeType?: string; data?: string };
+        content: {
+          type: "image";
+          id?: string;
+          mimeType?: string;
+          data?: string;
+        };
       };
       expect(start.content).toMatchObject({
         id: "img_1",
