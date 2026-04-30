@@ -72,9 +72,15 @@ export class WatsonxRerank
       disableSSL,
       version,
       serviceUrl,
+      apiKey,
+      bearerToken,
+      username,
+      password,
+      authType,
+      authUrl,
     } = fields;
 
-    const auth = authenticateAndSetInstance({
+    const authData = {
       watsonxAIApikey,
       watsonxAIAuthType,
       watsonxAIBearerToken,
@@ -84,7 +90,15 @@ export class WatsonxRerank
       disableSSL,
       version,
       serviceUrl,
-    });
+      apiKey,
+      bearerToken,
+      username,
+      password,
+      authType,
+      authUrl,
+    };
+
+    const auth = authenticateAndSetInstance(authData);
     if (auth) this.service = auth;
     else throw new Error("You have not provided one type of authentication");
   }

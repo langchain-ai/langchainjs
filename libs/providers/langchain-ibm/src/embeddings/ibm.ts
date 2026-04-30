@@ -100,6 +100,12 @@ export class WatsonxEmbeddings
       "watsonxAIUrl",
       "watsonxAIAuthType",
       "disableSSL",
+      "apiKey",
+      "bearerToken",
+      "username",
+      "password",
+      "authType",
+      "authUrl",
     ];
 
     const sharedProps = [
@@ -173,6 +179,12 @@ export class WatsonxEmbeddings
       disableSSL,
       version,
       serviceUrl,
+      apiKey,
+      bearerToken,
+      username,
+      password,
+      authType,
+      authUrl,
     } = fields;
 
     const authData = {
@@ -185,7 +197,14 @@ export class WatsonxEmbeddings
       disableSSL,
       version,
       serviceUrl,
+      apiKey,
+      bearerToken,
+      username,
+      password,
+      authType,
+      authUrl,
     };
+
     if (this.modelGateway) {
       const auth = authenticateAndSetGatewayInstance(authData);
       if (auth) this.gateway = auth;
