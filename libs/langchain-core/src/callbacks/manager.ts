@@ -303,9 +303,7 @@ export class CallbackManagerForLLMRun
     );
   }
 
-  async handleChatModelStreamEvent(
-    event: ChatModelStreamEvent
-  ): Promise<void> {
+  async handleChatModelStreamEvent(event: ChatModelStreamEvent): Promise<void> {
     await Promise.all(
       this.handlers.map((handler) =>
         consumeCallback(async () => {
