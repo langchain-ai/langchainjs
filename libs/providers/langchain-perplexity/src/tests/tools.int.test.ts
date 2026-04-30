@@ -1,8 +1,7 @@
 import { describe, test, expect } from "vitest";
 import { PerplexitySearchResults } from "../tools.js";
 
-const hasKey =
-  !!process.env.PERPLEXITY_API_KEY || !!process.env.PPLX_API_KEY;
+const hasKey = !!process.env.PERPLEXITY_API_KEY || !!process.env.PPLX_API_KEY;
 
 describe.skipIf(!hasKey)("PerplexitySearchResults Integration", () => {
   test("returns JSON-encoded results from a real /search call", async () => {

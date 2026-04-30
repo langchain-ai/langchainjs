@@ -1,8 +1,7 @@
 import { describe, test, expect } from "vitest";
 import { PerplexitySearchRetriever } from "../retrievers.js";
 
-const hasKey =
-  !!process.env.PERPLEXITY_API_KEY || !!process.env.PPLX_API_KEY;
+const hasKey = !!process.env.PERPLEXITY_API_KEY || !!process.env.PPLX_API_KEY;
 
 describe.skipIf(!hasKey)("PerplexitySearchRetriever Integration", () => {
   test("returns documents from a real /search call", async () => {

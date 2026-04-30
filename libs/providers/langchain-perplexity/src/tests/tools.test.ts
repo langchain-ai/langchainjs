@@ -24,8 +24,7 @@ function mockFetchOnce(response: unknown, ok = true, status = 200) {
     ok,
     status,
     json: () => Promise.resolve(response),
-    text: () =>
-      Promise.resolve(typeof response === "string" ? response : ""),
+    text: () => Promise.resolve(typeof response === "string" ? response : ""),
   });
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   (globalThis as any).fetch = fetchMock;
@@ -204,9 +203,9 @@ describe("PerplexitySearchResults", () => {
 
     test("returns error message string on fetch throw", async () => {
       // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-      (globalThis as any).fetch = vi.fn().mockRejectedValue(
-        new TypeError("network down")
-      );
+      (globalThis as any).fetch = vi
+        .fn()
+        .mockRejectedValue(new TypeError("network down"));
       const tool = new PerplexitySearchResults({ apiKey: "test-key" });
       const result = await tool.invoke("q");
       expect(result).toBe("Perplexity search failed: TypeError");

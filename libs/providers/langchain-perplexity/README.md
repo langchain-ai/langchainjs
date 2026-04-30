@@ -197,17 +197,17 @@ console.log(JSON.parse(json));
 
 Both classes accept the same Perplexity Search filters:
 
-| Parameter             | Type                                    | Description                                                                              |
-| --------------------- | --------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `apiKey`              | `string`                                | API key. Defaults to `PERPLEXITY_API_KEY` or `PPLX_API_KEY` env var.                     |
-| `k` / `maxResults`    | `number`                                | Maximum results (1-20). Defaults to `10`.                                                |
-| `maxTokens`           | `number`                                | Retriever only. Maximum tokens across all results. Defaults to `25000`.                  |
-| `maxTokensPerPage`    | `number`                                | Retriever only. Maximum tokens per page. Defaults to `1024`.                             |
-| `country`             | `string`                                | ISO country code (e.g. `"US"`).                                                          |
-| `searchDomainFilter`  | `string[]`                              | Restrict results to up to 20 domains.                                                    |
-| `searchRecencyFilter` | `"day" \| "week" \| "month" \| "year"`  | Time-based filter.                                                                       |
-| `searchAfterDate`     | `string`                                | Only include content after this date (`%m/%d/%Y`).                                       |
-| `searchBeforeDate`    | `string`                                | Only include content before this date (`%m/%d/%Y`).                                      |
+| Parameter             | Type                                   | Description                                                             |
+| --------------------- | -------------------------------------- | ----------------------------------------------------------------------- |
+| `apiKey`              | `string`                               | API key. Defaults to `PERPLEXITY_API_KEY` or `PPLX_API_KEY` env var.    |
+| `k` / `maxResults`    | `number`                               | Maximum results (1-20). Defaults to `10`.                               |
+| `maxTokens`           | `number`                               | Retriever only. Maximum tokens across all results. Defaults to `25000`. |
+| `maxTokensPerPage`    | `number`                               | Retriever only. Maximum tokens per page. Defaults to `1024`.            |
+| `country`             | `string`                               | ISO country code (e.g. `"US"`).                                         |
+| `searchDomainFilter`  | `string[]`                             | Restrict results to up to 20 domains.                                   |
+| `searchRecencyFilter` | `"day" \| "week" \| "month" \| "year"` | Time-based filter.                                                      |
+| `searchAfterDate`     | `string`                               | Only include content after this date (`%m/%d/%Y`).                      |
+| `searchBeforeDate`    | `string`                               | Only include content before this date (`%m/%d/%Y`).                     |
 
 ## License
 
