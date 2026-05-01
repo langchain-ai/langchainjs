@@ -7,6 +7,7 @@ import { HumanMessage } from "../../messages/human.js";
 import { getBufferString } from "../../messages/utils.js";
 import { AIMessage } from "../../messages/ai.js";
 import { RunCollectorCallbackHandler } from "../../tracers/run_collector.js";
+import { BaseCallbackHandler } from "../../callbacks/base.js";
 import { StandardJSONSchemaV1, StandardSchemaV1 } from "@standard-schema/spec";
 import { LangChainTracer } from "../../tracers/tracer_langchain.js";
 import { awaitAllCallbacks } from "../../callbacks/promises.js";
@@ -551,4 +552,31 @@ test("Test ChatModel streaming does not include invocationParams in token events
     expect(chunkStr).not.toContain('"max_tokens":50');
     expect(chunkStr).not.toContain('"model":"streaming-test-model"');
   }
+});
+
+test("Test ChatModel applies v1 outputVersion after implicit streaming aggregation", async () => {
+  class PreferStreamingCallbackHandler extends BaseCallbackHandler {
+    name = "prefer-streaming";
+
+    lc_prefer_streaming = true;
+
+    handleLLMNewToken() {}
+  }
+
+  const model = new FakeListChatModel({
+    responses: ["Hello world!"],
+  });
+
+  const response = await model.invoke("Hello there!", {
+    outputVersion: "v1",
+    callbacks: [new PreferStreamingCallbackHandler()],
+  });
+
+  expect(response.response_metadata.output_version).toBe("v1");
+  expect(response.content).toEqual([
+    {
+      type: "text",
+      text: "Hello world!",
+    },
+  ]);
 });
