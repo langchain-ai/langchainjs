@@ -79,7 +79,11 @@
     "dist/",
     "CHANGELOG.md",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "node.d.cts",
+    "node.cjs",
+    "node.d.ts",
+    "node.js"
   ],
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
