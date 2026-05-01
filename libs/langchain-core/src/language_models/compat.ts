@@ -142,7 +142,7 @@ function getAudioPayload(message: unknown):
  */
 export async function* convertChunksToEvents(
   chunks: AsyncIterable<ChatGenerationChunk>,
-  options?: { signal?: AbortSignal },
+  options?: { signal?: AbortSignal }
 ): AsyncGenerator<ChatModelStreamEvent> {
   const activeBlocks = new Map<
     number,
@@ -427,14 +427,14 @@ export async function* convertChunksToEvents(
  */
 function applyDeltaToBlock(
   block: ContentBlock,
-  delta: ContentBlockDelta,
+  delta: ContentBlockDelta
 ): ContentBlock {
   switch (delta.type) {
     case "text-delta":
       if (block.type === "text") {
         return {
           ...block,
-          text: block.text ?? "" + delta.text,
+          text: (block.text ?? "") + delta.text,
         };
       }
       return block;
@@ -442,20 +442,20 @@ function applyDeltaToBlock(
       if (block.type === "thinking") {
         return {
           ...block,
-          thinking: block.thinking ?? "" + delta.reasoning,
+          thinking: (block.thinking ?? "") + delta.reasoning,
         };
       }
       if (block.type === "reasoning") {
         return {
           ...block,
-          reasoning: block.reasoning ?? "" + delta.reasoning,
+          reasoning: (block.reasoning ?? "") + delta.reasoning,
         };
       }
       return block;
     case "data-delta":
       return {
         ...block,
-        data: block.data ?? "" + delta.data,
+        data: (block.data ?? "") + delta.data,
       };
     case "block-delta":
       return { ...block, ...delta.fields } as ContentBlock;
