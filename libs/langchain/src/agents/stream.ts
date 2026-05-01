@@ -22,7 +22,6 @@ import {
   type ToolCallStream,
   type ToolCallStatus,
   type ToolsEventData,
-  type UpdatesEventData,
   type Namespace,
 } from "@langchain/langgraph";
 import type {
@@ -31,10 +30,6 @@ import type {
   DynamicStructuredTool,
   StructuredToolInterface,
 } from "@langchain/core/tools";
-import type {
-  AgentMiddleware,
-  InferMiddlewareState,
-} from "./middleware/types.js";
 
 /**
  * Infers the merged extensions shape from a tuple of stream transformer
@@ -93,46 +88,6 @@ export type ToolCallStreamUnion<
 }[number];
 
 /**
- * Lifecycle phase that a middleware hook occupies within an agent turn.
- */
-export type MiddlewarePhase =
-  | "before_agent"
-  | "before_model"
-  | "after_model"
-  | "after_agent";
-
-/**
- * Represents a single middleware lifecycle event observed during an
- * agent run. Emitted by the middleware transformer.
- *
- * @typeParam TStateDelta - Shape of the state delta produced by this
- *   middleware. Defaults to `Record<string, unknown>` when the
- *   middleware tuple is not typed.
- */
-export interface MiddlewareEvent<TStateDelta = Record<string, unknown>> {
-  phase: MiddlewarePhase;
-  name: string;
-  stateDelta: TStateDelta;
-  timestamp: number;
-}
-
-/**
- * Discriminated union of {@link MiddlewareEvent} variants, one per
- * middleware in `TMiddleware`.  When the middleware array is typed,
- * `event.stateDelta` narrows to the middleware's inferred state type.
- *
- * Falls back to `MiddlewareEvent` (untyped) when the middleware array
- * is a plain `AgentMiddleware[]`.
- */
-export type MiddlewareEventUnion<
-  TMiddleware extends readonly AgentMiddleware[],
-> = {
-  [K in keyof TMiddleware]: TMiddleware[K] extends AgentMiddleware
-    ? MiddlewareEvent<InferMiddlewareState<TMiddleware[K]>>
-    : MiddlewareEvent;
-}[number];
-
-/**
  * A {@link GraphRunStream} with native agent-level projections assigned
  * directly on the instance by `createGraphRunStream` (via `__native`
  * transformers).
@@ -156,13 +111,10 @@ export type AgentRunStream<
     | ClientTool
     | ServerTool
   )[],
-  TMiddleware extends readonly AgentMiddleware[] = readonly AgentMiddleware[],
   TExtensions extends Record<string, unknown> = Record<string, unknown>,
 > = GraphRunStream<TValues, TExtensions> & {
   /** Tool call streams from the native ToolCallTransformer. */
   toolCalls: AsyncIterable<ToolCallStreamUnion<TTools>>;
-  /** Middleware lifecycle events from the native MiddlewareTransformer. */
-  middleware: AsyncIterable<MiddlewareEventUnion<TMiddleware>>;
 };
 
 interface ToolCallProjection {
@@ -367,69 +319,6 @@ export function createToolCallTransformer(
         }
         pendingCalls.clear();
         toolCallsLog.fail(err);
-      },
-    };
-  };
-}
-
-interface MiddlewareProjection {
-  middleware: AsyncIterable<MiddlewareEvent>;
-}
-
-const MIDDLEWARE_NODE_PATTERN =
-  /^(.+)\.(before_agent|before_model|after_model|after_agent)$/;
-
-/**
- * Creates a native transformer that watches `updates` events from
- * middleware nodes and surfaces them as typed {@link MiddlewareEvent}
- * objects.
- *
- * Marked `__native: true` — projection key lands directly on the
- * `GraphRunStream` instance as `run.middleware`.
- */
-export function createMiddlewareTransformer(
-  path: Namespace
-): () => NativeStreamTransformer<MiddlewareProjection> {
-  return () => {
-    const middlewareLog = StreamChannel.local<MiddlewareEvent>();
-
-    return {
-      __native: true as const,
-
-      init: () => ({
-        middleware: middlewareLog,
-      }),
-
-      process(event: ProtocolEvent): boolean {
-        if (event.method !== "updates") return true;
-        if (!isOwnEvent(event.params.namespace, path)) return true;
-
-        const data = event.params.data as UpdatesEventData;
-        const nodeName = data.node ?? event.params.node;
-        if (!nodeName) return true;
-
-        const match = MIDDLEWARE_NODE_PATTERN.exec(nodeName);
-        if (!match) return true;
-
-        const name = match[1];
-        const phase = match[2] as MiddlewarePhase;
-
-        middlewareLog.push({
-          phase,
-          name,
-          stateDelta: data.values ?? {},
-          timestamp: event.params.timestamp,
-        });
-
-        return true;
-      },
-
-      finalize(): void {
-        middlewareLog.close();
-      },
-
-      fail(err: unknown): void {
-        middlewareLog.fail(err);
       },
     };
   };

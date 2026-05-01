@@ -10,7 +10,7 @@ import {
 } from "@langchain/langgraph";
 import { MemorySaver } from "@langchain/langgraph-checkpoint";
 
-import { createAgent, createMiddleware } from "../index.js";
+import { createAgent } from "../index.js";
 import { humanInTheLoopMiddleware } from "../middleware/hitl.js";
 import { createToolCallTransformer } from "../stream.js";
 
@@ -76,58 +76,6 @@ describe("streamEvents", () => {
     expect(toolCalls[0].output).toHaveProperty("content", "The sum is 7");
   });
 
-  it("should emit middleware events for before/after model hooks", async () => {
-    const model = fakeModel().respond(new AIMessage("hello back"));
-
-    const testMiddleware = createMiddleware({
-      name: "tracker",
-      stateSchema: z.object({
-        trackerState: z.string().default("init"),
-      }),
-      beforeModel: () => ({
-        trackerState: "before_model_ran",
-      }),
-      afterModel: () => ({
-        trackerState: "after_model_ran",
-      }),
-    });
-
-    const agent = createAgent({
-      model,
-      tools: [],
-      middleware: [testMiddleware],
-    });
-
-    const run = await agent.streamEvents(
-      {
-        messages: [new HumanMessage("hello")],
-      },
-      { version: "v3" }
-    );
-
-    const middlewareEvents: Array<{
-      phase: string;
-      middlewareName: string;
-    }> = [];
-
-    for await (const event of run.middleware) {
-      middlewareEvents.push({
-        phase: event.phase,
-        middlewareName: event.name,
-      });
-    }
-
-    expect(middlewareEvents.length).toBeGreaterThanOrEqual(2);
-
-    const phases = middlewareEvents.map((e) => e.phase);
-    expect(phases).toContain("before_model");
-    expect(phases).toContain("after_model");
-
-    for (const event of middlewareEvents) {
-      expect(event.middlewareName).toBe("tracker");
-    }
-  });
-
   it("should stream messages alongside tool calls", async () => {
     const searchTool = tool(
       (input: { query: string }) => `Results for: ${input.query}`,
@@ -167,78 +115,6 @@ describe("streamEvents", () => {
     expect(toolCallResults).toContain("search");
     expect(finalState).toBeDefined();
     expect(finalState.messages.length).toBeGreaterThanOrEqual(3);
-  });
-
-  it("should support parallel consumption of projections", async () => {
-    const multiplyTool = tool(
-      (input: { a: number; b: number }) => `${input.a * input.b}`,
-      {
-        name: "multiply",
-        description: "Multiplies two numbers",
-        schema: z.object({ a: z.number(), b: z.number() }),
-      }
-    );
-
-    const model = fakeModel()
-      .respondWithTools([
-        { name: "multiply", args: { a: 6, b: 7 }, id: "call_m1" },
-      ])
-      .respond(new AIMessage("42"));
-
-    const middleware = createMiddleware({
-      name: "logger",
-      stateSchema: z.object({
-        logState: z.string().default(""),
-      }),
-      beforeModel: () => ({
-        logState: "before",
-      }),
-    });
-
-    const agent = createAgent({
-      model,
-      tools: [multiplyTool],
-      middleware: [middleware],
-    });
-
-    const run = await agent.streamEvents(
-      {
-        messages: [new HumanMessage("What is 6 * 7?")],
-      },
-      { version: "v3" }
-    );
-
-    const [toolNames, middlewarePhases, output] = await Promise.all([
-      (async () => {
-        const names: string[] = [];
-        for await (const call of run.toolCalls) {
-          names.push(call.name);
-          await call.output;
-        }
-        return names;
-      })(),
-      (async () => {
-        const phases: string[] = [];
-        for await (const event of run.middleware) {
-          phases.push(event.phase);
-        }
-        return phases;
-      })(),
-      run.output,
-    ]);
-
-    expect(toolNames).toMatchInlineSnapshot(`
-      [
-        "multiply",
-      ]
-    `);
-    expect(middlewarePhases).toMatchInlineSnapshot(`
-      [
-        "before_model",
-        "before_model",
-      ]
-    `);
-    expect(output.messages).toHaveLength(3);
   });
 
   it("should resolve output with the final agent state", async () => {

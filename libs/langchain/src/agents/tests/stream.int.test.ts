@@ -14,7 +14,7 @@ import { tool } from "@langchain/core/tools";
 import { AIMessage } from "@langchain/core/messages";
 import { Client } from "@langchain/langgraph-sdk";
 
-import { createMiddleware, createAgent } from "../index.js";
+import { createAgent } from "../index.js";
 
 const threads: ThreadSaver = (() => {
   const THREADS: Record<
@@ -55,24 +55,6 @@ const minusTool = tool(
     schema: z.object({ a: z.number(), b: z.number() }),
   }
 );
-const middlewareA = createMiddleware({
-  name: "trackerA",
-  stateSchema: z.object({
-    trackerState: z.string().default("init"),
-  }),
-  beforeModel: () => ({ trackerState: "before", before: true }),
-  afterModel: () => ({ trackerState: "after", after: true }),
-});
-
-const middlewareB = createMiddleware({
-  name: "trackerB",
-  stateSchema: z.object({
-    trackerState: z.string().default("init"),
-  }),
-  wrapModelCall: async (request, handler) => {
-    return await handler(request);
-  },
-});
 
 const model = fakeModel()
   .respondWithTools([
@@ -84,7 +66,6 @@ const model = fakeModel()
 const agent = createAgent({
   model,
   tools: [addTool, minusTool],
-  middleware: [middlewareA, middlewareB],
   // oxlint-disable-next-line typescript/no-explicit-any
 }) as unknown as Pregel<any, any, any, any, any>;
 
@@ -151,7 +132,7 @@ async function collectAllEvents(
 beforeAll(setup);
 
 describe("streamEvents", () => {
-  it("should emit stream evebts for each tool and middleware invocation", async () => {
+  it("should emit stream events for each tool invocation", async () => {
     console.log("url", url);
     const client = new Client({ apiUrl: url! });
 
@@ -234,14 +215,10 @@ describe("streamEvents", () => {
     expect(updates.length).toBe(8);
     const updateNodes = updates.map(nodeOf);
     expect(updateNodes).toEqual([
-      "trackerA.before_model",
       "model_request",
-      "trackerA.after_model",
       "tools",
       "tools",
-      "trackerA.before_model",
       "model_request",
-      "trackerA.after_model",
     ]);
 
     // first model_request produced tool calls
@@ -268,10 +245,6 @@ describe("streamEvents", () => {
       name: "minus",
       tool_call_id: "call_2",
     });
-
-    // middleware state transitions are reflected
-    expect(dataOf(updates[0]).trackerState).toBe("before");
-    expect(dataOf(updates[2]).trackerState).toBe("after");
 
     // --- values: 8 state snapshots ---
     const values = eventsByChannel.get("values") ?? [];

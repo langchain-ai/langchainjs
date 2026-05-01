@@ -54,7 +54,6 @@ import {
 } from "./nodes/utils.js";
 import {
   createToolCallTransformer,
-  createMiddlewareTransformer,
   type AgentRunStream,
   type InferStreamExtensions,
 } from "./stream.js";
@@ -674,7 +673,6 @@ export class ReactAgent<
      */
     const compileTransformers = [
       createToolCallTransformer([]),
-      createMiddlewareTransformer([]),
       /* user-defined stream transformers */
       ...(this.options.streamTransformers ?? []),
     ];
@@ -1376,7 +1374,6 @@ export class ReactAgent<
     AgentRunStream<
       MergedAgentState<Types>,
       Types["Tools"],
-      Types["Middleware"],
       InferStreamExtensions<Types["StreamTransformers"]>
     >
   >;
@@ -1446,7 +1443,6 @@ export class ReactAgent<
         AgentRunStream<
           MergedAgentState<Types>,
           Types["Tools"],
-          Types["Middleware"],
           InferStreamExtensions<Types["StreamTransformers"]>
         >
       >
@@ -1508,7 +1504,6 @@ export class ReactAgent<
       })) as unknown as AgentRunStream<
         FullState,
         Types["Tools"],
-        Types["Middleware"],
         InferStreamExtensions<Types["StreamTransformers"]>
       >;
     })();

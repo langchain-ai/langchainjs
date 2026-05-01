@@ -5,7 +5,7 @@ import { tool } from "@langchain/core/tools";
 import { fakeModel } from "@langchain/core/testing";
 import { StreamChannel, type StreamTransformer } from "@langchain/langgraph";
 
-import { createAgent, createMiddleware } from "../index.js";
+import { createAgent } from "../index.js";
 
 describe("streamEvents types", () => {
   it("should type tool calls as a discriminated union", async () => {
@@ -55,42 +55,6 @@ describe("streamEvents types", () => {
         expectTypeOf(call.input).toEqualTypeOf<{ a: number; b: number }>();
         expectTypeOf(call.output).toEqualTypeOf<Promise<string>>();
       }
-    }
-  });
-
-  it("should type middleware events with inferred state delta", async () => {
-    const model = fakeModel().respond(new AIMessage("ok"));
-
-    const tracker = createMiddleware({
-      name: "tracker",
-      stateSchema: z.object({
-        trackerState: z.string().default("init"),
-      }),
-      beforeModel: () => ({ trackerState: "before" }),
-    });
-
-    const agent = createAgent({
-      model,
-      tools: [],
-      middleware: [tracker],
-    });
-
-    const run = await agent.streamEvents(
-      {
-        messages: [new HumanMessage("hi")],
-      },
-      { version: "v3" }
-    );
-
-    for await (const event of run.middleware) {
-      expectTypeOf(event.phase).toEqualTypeOf<
-        "before_model" | "after_model" | "before_agent" | "after_agent"
-      >();
-      expectTypeOf(event.name).toEqualTypeOf<string>();
-      expectTypeOf(event.stateDelta).toEqualTypeOf<{
-        trackerState: string;
-      }>();
-      expectTypeOf(event.timestamp).toEqualTypeOf<number>();
     }
   });
 
