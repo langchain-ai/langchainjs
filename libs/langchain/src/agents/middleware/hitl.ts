@@ -42,7 +42,7 @@ export type DescriptionFactory = z.infer<typeof DescriptionFunctionSchema>;
 /**
  * The type of decision a human can make.
  */
-const ALLOWED_DECISIONS = ["approve", "edit", "reject"] as const;
+const ALLOWED_DECISIONS = ["approve", "edit", "reject", "respond"] as const;
 const DecisionType = z.enum(ALLOWED_DECISIONS);
 export type DecisionType = z.infer<typeof DecisionType>;
 
@@ -214,9 +214,24 @@ export interface RejectDecision {
 }
 
 /**
+ * Response when a human answers on behalf of the tool, skipping execution.
+ */
+export interface RespondDecision {
+  type: "respond";
+  /**
+   * Content of the synthetic ToolMessage returned to the model.
+   */
+  message: string;
+}
+
+/**
  * Union of all possible decision types.
  */
-export type Decision = ApproveDecision | EditDecision | RejectDecision;
+export type Decision =
+  | ApproveDecision
+  | EditDecision
+  | RejectDecision
+  | RespondDecision;
 
 /**
  * Response payload for a HITLRequest.
@@ -233,7 +248,7 @@ const contextSchema = z.object({
    * Mapping of tool name to allowed reviewer responses.
    * If a tool doesn't have an entry, it's auto-approved by default.
    *
-   * - `true` -> pause for approval and allow approve/edit/reject decisions
+   * - `true` -> pause for approval and allow approve/edit/reject/respond decisions
    * - `false` -> auto-approve (no human review)
    * - `InterruptOnConfig` -> explicitly specify which decisions are allowed for this tool
    */
@@ -297,7 +312,7 @@ export type HumanInTheLoopMiddlewareConfig = InferInteropZodInput<
  * ## Features
  *
  * - **Selective Tool Approval**: Configure which tools require human approval
- * - **Multiple Decision Types**: Approve, edit, or reject tool calls
+ * - **Multiple Decision Types**: Approve, edit, reject, or respond to tool calls
  * - **Asynchronous Workflow**: Uses LangGraph's interrupt mechanism for non-blocking approval
  * - **Custom Approval Messages**: Provide context-specific descriptions for approval requests
  *
@@ -306,11 +321,12 @@ export type HumanInTheLoopMiddlewareConfig = InferInteropZodInput<
  * When a tool requires approval, the human operator can respond with:
  * - `approve`: Execute the tool with original arguments
  * - `edit`: Modify the tool name and/or arguments before execution
- * - `reject`: Provide a manual response instead of executing the tool
+ * - `reject`: Provide an error response instead of executing the tool
+ * - `respond`: Provide a success response instead of executing the tool
  *
  * @param options - Configuration options for the middleware
  * @param options.interruptOn - Per-tool configuration mapping tool names to their settings
- * @param options.interruptOn[toolName].allowedDecisions - Array of decision types allowed for this tool (e.g., ["approve", "edit", "reject"])
+ * @param options.interruptOn[toolName].allowedDecisions - Array of decision types allowed for this tool (e.g., ["approve", "edit", "reject", "respond"])
  * @param options.interruptOn[toolName].description - Custom approval message for the tool. Can be either a static string or a callable that dynamically generates the description based on agent state, runtime, and tool call information
  * @param options.interruptOn[toolName].argsSchema - JSON schema for the arguments associated with the action, if edits are allowed
  * @param options.descriptionPrefix - Default prefix for approval messages (default: "Tool execution requires approval"). Only used for tools that do not define a custom `description` in their InterruptOnConfig.
@@ -568,7 +584,6 @@ export function humanInTheLoopMiddleware(
         );
       }
 
-      // Create a tool message with the human's text response
       const content =
         decision.message ??
         `User rejected the tool call for \`${toolCall.name}\` with id ${toolCall.id}`;
@@ -578,6 +593,25 @@ export function humanInTheLoopMiddleware(
         name: toolCall.name,
         tool_call_id: toolCall.id!,
         status: "error",
+      });
+
+      return { revisedToolCall: toolCall, toolMessage };
+    }
+
+    if (decision.type === "respond" && allowedDecisions.includes("respond")) {
+      if (typeof decision.message !== "string") {
+        throw new Error(
+          `Tool call response for "${
+            toolCall.name
+          }" must be a string, got ${typeof decision.message}`
+        );
+      }
+
+      const toolMessage = new ToolMessage({
+        content: decision.message,
+        name: toolCall.name,
+        tool_call_id: toolCall.id!,
+        status: "success",
       });
 
       return { revisedToolCall: toolCall, toolMessage };
@@ -746,7 +780,9 @@ export function humanInTheLoopMiddleware(
              * with only the tool calls that were rejected as we don't know
              * the results of the approved/updated tool calls at this point.
              */
-            (!hasRejectedToolCalls || decision.type === "reject")
+            (!hasRejectedToolCalls ||
+              decision.type === "reject" ||
+              decision.type === "respond")
           ) {
             revisedToolCalls.push(revisedToolCall);
           }
@@ -762,9 +798,17 @@ export function humanInTheLoopMiddleware(
           lastMessage.tool_calls = revisedToolCalls;
         }
 
-        const jumpTo: JumpToTarget | undefined = hasRejectedToolCalls
-          ? "model"
-          : undefined;
+        const artificialToolMessageIds = new Set(
+          artificialToolMessages.map((message) => message.tool_call_id)
+        );
+        const hasPendingToolCalls = revisedToolCalls.some(
+          (toolCall) => !artificialToolMessageIds.has(toolCall.id)
+        );
+        const jumpTo: JumpToTarget | undefined =
+          hasRejectedToolCalls ||
+          (artificialToolMessages.length > 0 && !hasPendingToolCalls)
+            ? "model"
+            : undefined;
         return {
           messages: [lastMessage, ...artificialToolMessages],
           jumpTo,
