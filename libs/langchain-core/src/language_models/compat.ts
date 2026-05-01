@@ -474,13 +474,13 @@ function contentBlockToDelta(block: ContentBlock): ContentBlockDelta {
       reasoning: (block as ContentBlock.Reasoning).reasoning,
     };
   }
-  if (block.type === "thinking" && block.thinking === "string") {
+  if (block.type === "thinking" && typeof block.thinking === "string") {
     return {
       type: "reasoning-delta",
       reasoning: block.thinking,
     };
   }
-  if (block.data === "string") {
+  if (typeof block.data === "string") {
     return {
       type: "data-delta",
       data: block.data,
