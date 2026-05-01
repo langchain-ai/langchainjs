@@ -75,6 +75,87 @@ const response = await model.stream({
 });
 ```
 
+### Strict Tool Use
+
+Anthropic supports [strict tool use](https://platform.claude.com/docs/en/agents-and-tools/tool-use/strict-tool-use), which uses grammar-constrained sampling to guarantee that Claude's tool inputs match your schema (no missing required fields, no wrong types). Enable it on a per-call, per-tool, or per-instance basis.
+
+**Per-call** with `bindTools`:
+
+```typescript
+import { ChatAnthropic } from "@langchain/anthropic";
+import { tool } from "langchain";
+import { z } from "zod";
+
+const getWeather = tool(async ({ location }) => `Weather in ${location}`, {
+  name: "get_weather",
+  description: "Get the current weather in a given location",
+  schema: z.object({ location: z.string() }),
+});
+
+const model = new ChatAnthropic({ model: "claude-opus-4-7" });
+
+const response = await model
+  .bindTools([getWeather], { strict: true })
+  .invoke("What's the weather in San Francisco?");
+```
+
+**Per-tool** with `extras.strict` for mixed strict/non-strict tool sets:
+
+```typescript
+const lookupCustomer = tool(async ({ id }) => `...`, {
+  name: "lookup_customer",
+  description: "Look up a customer by id",
+  schema: z.object({ id: z.string() }),
+  // Strict on this critical tool only.
+  extras: { strict: true },
+});
+
+const searchDocs = tool(async ({ query }) => `...`, {
+  name: "search_docs",
+  description: "Free-form documentation search",
+  schema: z.object({ query: z.string() }),
+});
+
+const response = await model
+  .bindTools([lookupCustomer, searchDocs])
+  .invoke("Find customer 12345 and any onboarding docs");
+```
+
+**Per-instance default** with `supportsStrictToolCalling`:
+
+```typescript
+const model = new ChatAnthropic({
+  model: "claude-opus-4-7",
+  supportsStrictToolCalling: true,
+});
+
+const response = await model
+  .bindTools([getWeather])
+  .invoke("What's the weather in San Francisco?");
+```
+
+**With `withStructuredOutput`** to guarantee schema-conforming output:
+
+```typescript
+const Weather = z.object({
+  location: z.string(),
+  temperature_celsius: z.number(),
+});
+
+// Inherits strict from supportsStrictToolCalling on the model above.
+const structured = model.withStructuredOutput(Weather, {
+  method: "functionCalling",
+});
+
+const result = await structured.invoke("What's the weather in San Francisco?");
+```
+
+To force strict for this call only (or override an instance default), pass `strict: true` (or `false`) in the second argument.
+
+Precedence when multiple sources are set: per-call `strict` > `supportsStrictToolCalling` > per-tool `strict`. In other words, per-tool acts as a fallback default for tools that opt in; if the instance or call already specifies `strict`, that value wins for every tool in the request.
+
+> **Note on `withStructuredOutput` methods:** Anthropic's `strict` is a property of a tool definition, so it only applies when `method: "functionCalling"` (the default), where the structured output is produced by a strict tool call. The other method, `"jsonSchema"`, uses Anthropic's [native structured outputs](https://docs.claude.com/en/docs/build-with-claude/structured-outputs) and does not accept `strict`. Passing `strict` together with `"jsonSchema"` or `"jsonMode"` throws, to avoid silently dropping the option. If you want strict-validated output, stick with the default `functionCalling` method.
+
 ## Tools
 
 This package provides LangChain-compatible wrappers for Anthropic's built-in tools. These tools can be bound to `ChatAnthropic` using `bindTools()` or any [`ReactAgent`](https://docs.langchain.com/oss/javascript/langchain/agents).
