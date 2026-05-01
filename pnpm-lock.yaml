@@ -389,8 +389,8 @@ importers:
         specifier: 0.6.3
         version: 0.6.3
       weaviate-client:
-        specifier: ^3.12.0
-        version: 3.12.1(encoding@0.1.13)
+        specifier: ^3.13.0
+        version: 3.13.0(encoding@0.1.13)
       zod-to-json-schema:
         specifier: ^3.25.2
         version: 3.25.2(zod@4.3.6)
@@ -966,8 +966,8 @@ importers:
         specifier: 0.6.3
         version: 0.6.3
       weaviate-client:
-        specifier: ^3.12.0
-        version: 3.12.1(encoding@0.1.13)
+        specifier: ^3.13.0
+        version: 3.13.0(encoding@0.1.13)
       zod-to-json-schema:
         specifier: ^3.25.2
         version: 3.25.2(zod@4.3.6)
@@ -2427,8 +2427,8 @@ importers:
   libs/providers/langchain-weaviate:
     dependencies:
       weaviate-client:
-        specifier: ^3.5.2
-        version: 3.12.1(encoding@0.1.13)
+        specifier: ^3.13.0
+        version: 3.13.0(encoding@0.1.13)
     devDependencies:
       '@langchain/core':
         specifier: workspace:^
@@ -9160,14 +9160,14 @@ packages:
     resolution: {integrity: sha512-NHDDGYudnvRutt/VhKFlX26IotXe1w0cmkDm6JGquh5bz/bDTw0LufSmH/GxTjEdpHEO+bVKFTwdrcGa/9XlKQ==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
-  nice-grpc-client-middleware-retry@3.1.14:
-    resolution: {integrity: sha512-n/E3n73R6N59Ef7YJ34NvCOQs45ZK4JhlKQn1uV5HuM2PktUoG2KKhoAaxn+7zdtV9dwstPLSv5IT/XxMle0og==}
+  nice-grpc-client-middleware-retry@3.1.15:
+    resolution: {integrity: sha512-fXfNNdtjCQzc3O/w3WsK1AOU+xdE1V7FCm4FEQWS/UUVsV1616S2oryvWqsZAF8aOvuMir8lFtNmgH3DeP+PBg==}
 
   nice-grpc-common@2.0.3:
     resolution: {integrity: sha512-MEhnD3JMah0mgyivpb9hpRDbOBuXBxI/TVO+OK1h6rC97WM42HsPMR+zzRNQ0C5BqYJTw1nyWiQRD0DucO+pjQ==}
 
-  nice-grpc@2.1.15:
-    resolution: {integrity: sha512-agPIt7dtQASnN5p1X3c2S5amDhWRWRT0Jp62trmpMBKSbkm87l8bG2slqxSthlrGa4AnRPG8+lFf4y8nn+Pogw==}
+  nice-grpc@2.1.16:
+    resolution: {integrity: sha512-Cl3Pn00212Hl8/U6bpgMxmhZj5lyv3nWoJov4cd3FjWarktrMHP4DNvSjCnDwkMWYx4W1tyscEia4JX6Y4GVCQ==}
 
   node-abi@3.89.0:
     resolution: {integrity: sha512-6u9UwL0HlAl21+agMN3YAMXcKByMqwGx+pq+P76vii5f7hTPtKDp08/H9py6DY+cfDw7kQNTGEj/rly3IgbNQA==}
@@ -11039,8 +11039,8 @@ packages:
     resolution: {integrity: sha512-0/A9rDy9P7cJ+8w1c9WD9V//9Wj15Ce2MPz8Ri6032usz+NfePxx5AcN3bN+r6ZL6jEo066/yNYB3tn4pQEx+A==}
     hasBin: true
 
-  uuid@13.0.0:
-    resolution: {integrity: sha512-XQegIaBTVUjSHliKqcnFqYypAd4S+WCYt5NIeRs6w/UAry7z8Y9j5ZwRRL4kzq9U3sD6v+85er9FvkEaBpji2w==}
+  uuid@13.0.1:
+    resolution: {integrity: sha512-9ezox2roIft6ExBVTVqibSd5dc5/47Sw/uY6b4SjQUT2TzQ0tltNquWA46y4xPQmdZYqvnio22SgWd41M86+jw==}
     hasBin: true
 
   uuid@14.0.0:
@@ -11210,9 +11210,9 @@ packages:
   wcwidth@1.0.1:
     resolution: {integrity: sha512-XHPEwS0q6TaxcvG85+8EYkbiCux2XtWG2mkc47Ng2A77BQu9+DqIOJldST4HgPkuea7dvKSj5VgX3P1d4rW8Tg==}
 
-  weaviate-client@3.12.1:
-    resolution: {integrity: sha512-rpkWkJlrhmMqJrfva7uKmGgr3oIbw717yQ440Sxo/5CXdSDMFFJ5KAo02ij1a1RgtqrT9D4sbGK966yxhro96g==}
-    engines: {node: '>=20.0.0'}
+  weaviate-client@3.13.0:
+    resolution: {integrity: sha512-0tB8UbsKoAs6Ax/w0kkGIUtozu5STLlR1FOeLRENQwb4/B8mXqA9UENJfxDA+G98Mz4Otn3gEdHelru9O+MwnQ==}
+    engines: {node: '>=22.0.0'}
 
   web-auth-library@1.0.3:
     resolution: {integrity: sha512-fBmEjJSrbmbD9EREwVlewyfSVkb3IzgTXEF0fzXo3miDywsxES1vwG4aJGNpuSSUorZAGBJNyyz5VFq2VFgudw==}
@@ -13958,7 +13958,7 @@ snapshots:
       '@types/json-schema': 7.0.15
       p-queue: 9.1.2
       p-retry: 7.1.1
-      uuid: 13.0.0
+      uuid: 13.0.1
     optionalDependencies:
       '@langchain/core': link:libs/langchain-core
       react: 19.2.5
@@ -19451,7 +19451,7 @@ snapshots:
     dependencies:
       type-fest: 2.19.0
 
-  nice-grpc-client-middleware-retry@3.1.14:
+  nice-grpc-client-middleware-retry@3.1.15:
     dependencies:
       abort-controller-x: 0.5.0
       nice-grpc-common: 2.0.3
@@ -19460,7 +19460,7 @@ snapshots:
     dependencies:
       ts-error: 1.0.6
 
-  nice-grpc@2.1.15:
+  nice-grpc@2.1.16:
     dependencies:
       '@grpc/grpc-js': 1.14.3
       abort-controller-x: 0.5.0
@@ -21757,7 +21757,7 @@ snapshots:
 
   uuid@11.1.0: {}
 
-  uuid@13.0.0: {}
+  uuid@13.0.1: {}
 
   uuid@14.0.0: {}
 
@@ -21932,17 +21932,17 @@ snapshots:
     dependencies:
       defaults: 1.0.4
 
-  weaviate-client@3.12.1(encoding@0.1.13):
+  weaviate-client@3.13.0(encoding@0.1.13):
     dependencies:
       '@datastructures-js/deque': 1.0.8
       abort-controller-x: 0.5.0
       graphql: 16.13.2
       graphql-request: 6.1.0(encoding@0.1.13)(graphql@16.13.2)
       long: 5.3.2
-      nice-grpc: 2.1.15
-      nice-grpc-client-middleware-retry: 3.1.14
+      nice-grpc: 2.1.16
+      nice-grpc-client-middleware-retry: 3.1.15
       nice-grpc-common: 2.0.3
-      uuid: 9.0.1
+      uuid: 14.0.0
     transitivePeerDependencies:
       - encoding
 

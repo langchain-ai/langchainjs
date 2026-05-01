@@ -94,7 +94,7 @@
     "typesense": "^3.0.5",
     "uuid": "^14.0.0",
     "voy-search": "0.6.3",
-    "weaviate-client": "^3.12.0",
+    "weaviate-client": "^3.13.0",
     "zod-to-json-schema": "^3.25.2",
     "@getzep/zep-cloud": "^3.18.0",
     "@getzep/zep-js": "^2.0.2",
