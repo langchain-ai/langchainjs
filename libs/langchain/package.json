@@ -42,12 +42,9 @@
     "test:integration": "vitest --mode int"
   },
   "devDependencies": {
-    "@hono/node-server": "^1.19.14",
     "@langchain/anthropic": "workspace:*",
     "@langchain/core": "workspace:^",
     "@langchain/fireworks": "workspace:*",
-    "@langchain/langgraph-api": "https://pkg.pr.new/langchain-ai/langgraphjs/@langchain/langgraph-api@9c3a004",
-    "@langchain/langgraph-sdk": "https://pkg.pr.new/langchain-ai/langgraphjs/@langchain/langgraph-sdk@9c3a004",
     "@langchain/openai": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.2",
@@ -59,7 +56,6 @@
     "cheerio": "1.2.0",
     "dotenv": "^17.4.0",
     "dpdm": "^3.14.0",
-    "hono": "^4.12.12",
     "openai": "^6.22.0",
     "peggy": "^5.1.0",
     "reflect-metadata": "^0.2.2",
@@ -74,7 +70,7 @@
     "@langchain/core": "workspace:^"
   },
   "dependencies": {
-    "@langchain/langgraph": "https://pkg.pr.new/langchain-ai/langgraphjs/@langchain/langgraph@9c3a004",
+    "@langchain/langgraph": "^1.2.9",
     "@langchain/langgraph-checkpoint": "^1.0.1",
     "langsmith": ">=0.5.0 <1.0.0",
     "zod": "^3.25.76 || ^4"
@@ -208,17 +204,6 @@
       "import": {
         "types": "./dist/storage/in_memory.d.ts",
         "default": "./dist/storage/in_memory.js"
-      }
-    },
-    "./tools": {
-      "input": "./src/tools/index.ts",
-      "require": {
-        "types": "./dist/tools/index.d.cts",
-        "default": "./dist/tools/index.cjs"
-      },
-      "import": {
-        "types": "./dist/tools/index.d.ts",
-        "default": "./dist/tools/index.js"
       }
     },
     "./package.json": "./package.json"

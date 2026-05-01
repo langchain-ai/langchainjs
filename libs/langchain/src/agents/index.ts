@@ -4,10 +4,7 @@ import type {
   InteropZodType,
 } from "@langchain/core/utils/types";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
-import type {
-  StateDefinitionInit,
-  StreamTransformer,
-} from "@langchain/langgraph";
+import type { StateDefinitionInit } from "@langchain/langgraph";
 
 import type { ResponseFormatUndefined } from "./responses.js";
 import type {
@@ -180,9 +177,6 @@ export function createAgent<
     | ClientTool
     | ServerTool
   )[],
-  const TStreamTransformers extends ReadonlyArray<
-    () => StreamTransformer<any>
-  > = readonly [],
 >(
   params: CreateAgentParams<
     StructuredResponseFormat,
@@ -193,7 +187,6 @@ export function createAgent<
     responseFormat: InteropZodType<StructuredResponseFormat>;
     middleware?: TMiddleware;
     tools?: TTools;
-    streamTransformers?: TStreamTransformers;
   }
 ): ReactAgent<
   AgentTypeConfig<
@@ -201,8 +194,7 @@ export function createAgent<
     TStateSchema,
     ContextSchema,
     TMiddleware,
-    CombineTools<TTools, TMiddleware>,
-    TStreamTransformers
+    CombineTools<TTools, TMiddleware>
   >
 >;
 
@@ -218,9 +210,6 @@ export function createAgent<
     | ClientTool
     | ServerTool
   )[],
-  const TStreamTransformers extends ReadonlyArray<
-    () => StreamTransformer<any>
-  > = readonly [],
 >(
   params: CreateAgentParams<
     ExtractZodArrayTypes<StructuredResponseFormat> extends Record<string, any>
@@ -233,7 +222,6 @@ export function createAgent<
     responseFormat: StructuredResponseFormat;
     middleware?: TMiddleware;
     tools?: TTools;
-    streamTransformers?: TStreamTransformers;
   }
 ): ReactAgent<
   AgentTypeConfig<
@@ -243,8 +231,7 @@ export function createAgent<
     TStateSchema,
     ContextSchema,
     TMiddleware,
-    CombineTools<TTools, TMiddleware>,
-    TStreamTransformers
+    CombineTools<TTools, TMiddleware>
   >
 >;
 
@@ -259,9 +246,6 @@ export function createAgent<
     | ClientTool
     | ServerTool
   )[],
-  const TStreamTransformers extends ReadonlyArray<
-    () => StreamTransformer<any>
-  > = readonly [],
 >(
   params: CreateAgentParams<
     Record<string, unknown>,
@@ -272,7 +256,6 @@ export function createAgent<
     responseFormat: JsonSchemaFormat;
     middleware?: TMiddleware;
     tools?: TTools;
-    streamTransformers?: TStreamTransformers;
   }
 ): ReactAgent<
   AgentTypeConfig<
@@ -280,8 +263,7 @@ export function createAgent<
     TStateSchema,
     ContextSchema,
     TMiddleware,
-    CombineTools<TTools, TMiddleware>,
-    TStreamTransformers
+    CombineTools<TTools, TMiddleware>
   >
 >;
 
@@ -296,9 +278,6 @@ export function createAgent<
     | ClientTool
     | ServerTool
   )[],
-  const TStreamTransformers extends ReadonlyArray<
-    () => StreamTransformer<any>
-  > = readonly [],
 >(
   params: CreateAgentParams<
     Record<string, unknown>,
@@ -309,7 +288,6 @@ export function createAgent<
     responseFormat: JsonSchemaFormat[];
     middleware?: TMiddleware;
     tools?: TTools;
-    streamTransformers?: TStreamTransformers;
   }
 ): ReactAgent<
   AgentTypeConfig<
@@ -317,8 +295,7 @@ export function createAgent<
     TStateSchema,
     ContextSchema,
     TMiddleware,
-    CombineTools<TTools, TMiddleware>,
-    TStreamTransformers
+    CombineTools<TTools, TMiddleware>
   >
 >;
 
@@ -333,9 +310,6 @@ export function createAgent<
     | ClientTool
     | ServerTool
   )[],
-  const TStreamTransformers extends ReadonlyArray<
-    () => StreamTransformer<any>
-  > = readonly [],
 >(
   params: CreateAgentParams<
     Record<string, unknown>,
@@ -346,7 +320,6 @@ export function createAgent<
     responseFormat: JsonSchemaFormat | JsonSchemaFormat[];
     middleware?: TMiddleware;
     tools?: TTools;
-    streamTransformers?: TStreamTransformers;
   }
 ): ReactAgent<
   AgentTypeConfig<
@@ -354,8 +327,7 @@ export function createAgent<
     TStateSchema,
     ContextSchema,
     TMiddleware,
-    CombineTools<TTools, TMiddleware>,
-    TStreamTransformers
+    CombineTools<TTools, TMiddleware>
   >
 >;
 
@@ -370,9 +342,6 @@ export function createAgent<
     | ClientTool
     | ServerTool
   )[],
-  const TStreamTransformers extends ReadonlyArray<
-    () => StreamTransformer<any>
-  > = readonly [],
 >(
   params: CreateAgentParams<
     Record<string, unknown>,
@@ -383,7 +352,6 @@ export function createAgent<
     responseFormat: SerializableSchema;
     middleware?: TMiddleware;
     tools?: TTools;
-    streamTransformers?: TStreamTransformers;
   }
 ): ReactAgent<
   AgentTypeConfig<
@@ -391,8 +359,7 @@ export function createAgent<
     TStateSchema,
     ContextSchema,
     TMiddleware,
-    CombineTools<TTools, TMiddleware>,
-    TStreamTransformers
+    CombineTools<TTools, TMiddleware>
   >
 >;
 
@@ -407,9 +374,6 @@ export function createAgent<
     | ClientTool
     | ServerTool
   )[],
-  const TStreamTransformers extends ReadonlyArray<
-    () => StreamTransformer<any>
-  > = readonly [],
 >(
   params: CreateAgentParams<
     Record<string, unknown>,
@@ -420,7 +384,6 @@ export function createAgent<
     responseFormat: SerializableSchema[];
     middleware?: TMiddleware;
     tools?: TTools;
-    streamTransformers?: TStreamTransformers;
   }
 ): ReactAgent<
   AgentTypeConfig<
@@ -428,8 +391,7 @@ export function createAgent<
     TStateSchema,
     ContextSchema,
     TMiddleware,
-    CombineTools<TTools, TMiddleware>,
-    TStreamTransformers
+    CombineTools<TTools, TMiddleware>
   >
 >;
 
@@ -445,9 +407,6 @@ export function createAgent<
     | ClientTool
     | ServerTool
   )[],
-  const TStreamTransformers extends ReadonlyArray<
-    () => StreamTransformer<any>
-  > = readonly [],
 >(
   params: CreateAgentParams<
     StructuredResponseFormat,
@@ -458,7 +417,6 @@ export function createAgent<
     responseFormat: TypedToolStrategy<StructuredResponseFormat>;
     middleware?: TMiddleware;
     tools?: TTools;
-    streamTransformers?: TStreamTransformers;
   }
 ): ReactAgent<
   AgentTypeConfig<
@@ -466,8 +424,7 @@ export function createAgent<
     TStateSchema,
     ContextSchema,
     TMiddleware,
-    CombineTools<TTools, TMiddleware>,
-    TStreamTransformers
+    CombineTools<TTools, TMiddleware>
   >
 >;
 
@@ -483,9 +440,6 @@ export function createAgent<
     | ClientTool
     | ServerTool
   )[],
-  const TStreamTransformers extends ReadonlyArray<
-    () => StreamTransformer<any>
-  > = readonly [],
 >(
   params: CreateAgentParams<
     StructuredResponseFormat,
@@ -496,7 +450,6 @@ export function createAgent<
     responseFormat: ToolStrategy<StructuredResponseFormat>;
     middleware?: TMiddleware;
     tools?: TTools;
-    streamTransformers?: TStreamTransformers;
   }
 ): ReactAgent<
   AgentTypeConfig<
@@ -504,8 +457,7 @@ export function createAgent<
     TStateSchema,
     ContextSchema,
     TMiddleware,
-    CombineTools<TTools, TMiddleware>,
-    TStreamTransformers
+    CombineTools<TTools, TMiddleware>
   >
 >;
 
@@ -521,9 +473,6 @@ export function createAgent<
     | ClientTool
     | ServerTool
   )[],
-  const TStreamTransformers extends ReadonlyArray<
-    () => StreamTransformer<any>
-  > = readonly [],
 >(
   params: CreateAgentParams<
     StructuredResponseFormat,
@@ -534,7 +483,6 @@ export function createAgent<
     responseFormat: ProviderStrategy<StructuredResponseFormat>;
     middleware?: TMiddleware;
     tools?: TTools;
-    streamTransformers?: TStreamTransformers;
   }
 ): ReactAgent<
   AgentTypeConfig<
@@ -542,8 +490,7 @@ export function createAgent<
     TStateSchema,
     ContextSchema,
     TMiddleware,
-    CombineTools<TTools, TMiddleware>,
-    TStreamTransformers
+    CombineTools<TTools, TMiddleware>
   >
 >;
 
@@ -558,9 +505,6 @@ export function createAgent<
     | ClientTool
     | ServerTool
   )[],
-  const TStreamTransformers extends ReadonlyArray<
-    () => StreamTransformer<any>
-  > = readonly [],
 >(
   params: Omit<
     CreateAgentParams<
@@ -570,19 +514,14 @@ export function createAgent<
       never
     >,
     "responseFormat"
-  > & {
-    middleware?: TMiddleware;
-    tools?: TTools;
-    streamTransformers?: TStreamTransformers;
-  }
+  > & { middleware?: TMiddleware; tools?: TTools }
 ): ReactAgent<
   AgentTypeConfig<
     ResponseFormatUndefined,
     TStateSchema,
     ContextSchema,
     TMiddleware,
-    CombineTools<TTools, TMiddleware>,
-    TStreamTransformers
+    CombineTools<TTools, TMiddleware>
   >
 >;
 
@@ -597,9 +536,6 @@ export function createAgent<
     | ClientTool
     | ServerTool
   )[],
-  const TStreamTransformers extends ReadonlyArray<
-    () => StreamTransformer<any>
-  > = readonly [],
 >(
   params: Omit<
     CreateAgentParams<
@@ -613,7 +549,6 @@ export function createAgent<
     responseFormat?: undefined;
     middleware?: TMiddleware;
     tools?: TTools;
-    streamTransformers?: TStreamTransformers;
   }
 ): ReactAgent<
   AgentTypeConfig<
@@ -621,8 +556,7 @@ export function createAgent<
     TStateSchema,
     ContextSchema,
     TMiddleware,
-    CombineTools<TTools, TMiddleware>,
-    TStreamTransformers
+    CombineTools<TTools, TMiddleware>
   >
 >;
 
@@ -638,9 +572,6 @@ export function createAgent<
     | ClientTool
     | ServerTool
   )[],
-  const TStreamTransformers extends ReadonlyArray<
-    () => StreamTransformer<any>
-  > = readonly [],
 >(
   params: CreateAgentParams<
     StructuredResponseFormat,
@@ -651,7 +582,6 @@ export function createAgent<
     responseFormat: ResponseFormat;
     middleware?: TMiddleware;
     tools?: TTools;
-    streamTransformers?: TStreamTransformers;
   }
 ): ReactAgent<
   AgentTypeConfig<
@@ -659,8 +589,7 @@ export function createAgent<
     TStateSchema,
     ContextSchema,
     TMiddleware,
-    CombineTools<TTools, TMiddleware>,
-    TStreamTransformers
+    CombineTools<TTools, TMiddleware>
   >
 >;
 
@@ -674,8 +603,6 @@ export function createAgent<
     | ClientTool
     | ServerTool
   )[],
-  TStreamTransformers extends ReadonlyArray<() => StreamTransformer<any>> =
-    readonly [],
 >(
   params: CreateAgentParams<
     StructuredResponseFormat,
@@ -689,8 +616,7 @@ export function createAgent<
     TStateSchema,
     ContextSchema,
     TMiddleware,
-    CombineTools<TTools, TMiddleware>,
-    TStreamTransformers
+    CombineTools<TTools, TMiddleware>
   >
 > {
   return new ReactAgent(params);
@@ -716,5 +642,3 @@ export { MIDDLEWARE_BRAND } from "./middleware/types.js";
 export type * from "./middleware/types.js";
 export { FakeToolCallingModel } from "./tests/utils.js";
 export type { ReactAgent } from "./ReactAgent.js";
-export { createToolCallTransformer } from "./stream.js";
-export type { AgentRunStream, ToolCallStreamUnion } from "./stream.js";
