@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { StandardSchemaV1 } from "@standard-schema/spec";
+import { AIMessage } from "../../messages/index.js";
 import { StandardSchemaOutputParser } from "../standard_schema.js";
 import { OutputParserException } from "../base.js";
 
@@ -94,6 +95,36 @@ describe("StandardSchemaOutputParser", () => {
         expect(e).toBeInstanceOf(OutputParserException);
         expect((e as OutputParserException).llmOutput).toBe('{"test": true}');
       }
+    });
+
+    it("invoke parses BaseMessage with reasoning blocks", async () => {
+      const schema = makeValidatingSchema<{ answer: string }>((v) => {
+        if (
+          typeof v === "object" &&
+          v !== null &&
+          "answer" in v &&
+          typeof v.answer === "string"
+        ) {
+          return { value: { answer: v.answer } };
+        }
+        return {
+          issues: [
+            { message: "answer is required", path: [{ key: "answer" }] },
+          ],
+        };
+      });
+      const parser = new StandardSchemaOutputParser(schema);
+
+      const result = await parser.invoke(
+        new AIMessage({
+          content: [
+            { type: "reasoning", reasoning: "Let me think..." },
+            { type: "text", text: '{"answer":"value"}' },
+          ],
+        })
+      );
+
+      expect(result).toEqual({ answer: "value" });
     });
   });
 
