@@ -131,29 +131,7 @@ function getEventDelta(
   event: ChatModelStreamEvent
 ): ContentBlockDelta | undefined {
   if (event.event !== "content-block-delta") return undefined;
-  if ("delta" in event && event.delta) return event.delta;
-
-  // Transitional tolerance for any stream sources still emitting the previous
-  // content-shaped delta object.
-  const content = (event as { content?: unknown }).content;
-  if (content == null || typeof content !== "object") return undefined;
-  const block = content as { type?: string } & Record<string, unknown>;
-  if (block.type === "text" && typeof block.text === "string") {
-    return { type: "text-delta", text: block.text };
-  }
-  if (block.type === "reasoning" && typeof block.reasoning === "string") {
-    return { type: "reasoning-delta", reasoning: block.reasoning };
-  }
-  if (block.type === "thinking" && typeof block.thinking === "string") {
-    return { type: "reasoning-delta", reasoning: block.thinking };
-  }
-  if (typeof block.data === "string") {
-    return { type: "data-delta", data: block.data, encoding: "base64" };
-  }
-  if (typeof block.type === "string") {
-    return { type: "block-delta", fields: { ...block, type: block.type } };
-  }
-  return undefined;
+  return event.delta;
 }
 
 function getReasoningDelta(content: unknown): string | undefined {
