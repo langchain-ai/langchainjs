@@ -229,6 +229,34 @@ describe("convertResponsesMessageToAIMessage", () => {
     expect(reasoningBlocks.length).toBe(0);
   });
 
+  it("uses the top-level response id for the AIMessage id", () => {
+    const response = {
+      id: "resp_top_level",
+      model: "gpt-4o",
+      created_at: 1234567890,
+      object: "response",
+      status: "completed",
+      output: [
+        {
+          type: "message",
+          id: "msg_nested",
+          role: "assistant",
+          content: [{ type: "output_text", text: "Hello!", annotations: [] }],
+        },
+      ],
+      usage: {
+        input_tokens: 10,
+        output_tokens: 20,
+        total_tokens: 30,
+      },
+    };
+
+    const result = convertResponsesMessageToAIMessage(response as any);
+
+    expect(result.id).toBe("resp_top_level");
+    expect(result.response_metadata.id).toBe("resp_top_level");
+  });
+
   it("should store output in response_metadata", () => {
     const output = [
       {
