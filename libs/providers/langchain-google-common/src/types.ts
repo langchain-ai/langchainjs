@@ -7,6 +7,7 @@ import {
   BaseMessage,
   BaseMessageChunk,
   MessageContent,
+  type UsageMetadata,
 } from "@langchain/core/messages";
 import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
 import { EmbeddingsParams } from "@langchain/core/embeddings";
@@ -888,6 +889,10 @@ export type GoogleAIAPI = {
   responseToBaseMessage: (response: GoogleLLMResponse) => BaseMessage;
 
   responseToChatResult: (response: GoogleLLMResponse) => ChatResult;
+
+  responseToUsageMetadata?: (
+    response: GoogleLLMResponse
+  ) => UsageMetadata | undefined;
 
   formatData: (
     input: unknown,

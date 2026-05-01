@@ -1316,10 +1316,17 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
   function responseToChatGeneration(
     response: GoogleLLMResponse
   ): ChatGenerationChunk {
+    const generationInfo = responseToGenerationInfo(response);
+    const message = partToMessageChunk(
+      responseToParts(response)[0]
+    ) as AIMessageChunk;
+    if (generationInfo.usage_metadata) {
+      message.usage_metadata = generationInfo.usage_metadata;
+    }
     return new ChatGenerationChunk({
       text: responseToString(response),
-      message: partToMessageChunk(responseToParts(response)[0]),
-      generationInfo: responseToGenerationInfo(response),
+      message,
+      generationInfo,
     });
   }
 
@@ -2029,6 +2036,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     chunkToString,
     responseToBaseMessage: safeResponseToBaseMessage,
     responseToChatResult: safeResponseToChatResult,
+    responseToUsageMetadata,
     formatData,
   };
 }
