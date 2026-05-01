@@ -212,7 +212,7 @@ function standardizeToolBlock(block: ContentBlock): ContentBlock {
     type: "tool_call",
     name,
     args: parseToolArgs(args),
-  } as unknown as ContentBlock;
+  } as ContentBlock;
 }
 
 // ─── Sub-Stream: Text ───────────────────────────────────────────

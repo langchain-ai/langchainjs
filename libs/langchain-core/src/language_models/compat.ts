@@ -6,7 +6,7 @@
  * @module
  */
 
-import { isAIMessageChunk } from "../messages/ai.js";
+import { AIMessageChunk } from "../messages/ai.js";
 import type { ContentBlock } from "../messages/content/index.js";
 import type { ChatGenerationChunk } from "../outputs.js";
 import type { ChatModelStreamEvent, ContentBlockDelta } from "./event.js";
@@ -85,6 +85,16 @@ function extractImageBlocksFromToolOutputs(message: unknown): ContentBlock[] {
   return blocks;
 }
 
+/**
+ * Get the audio payload from the message.
+ *
+ * This handles the OpenAI-shaped `additional_kwargs.audio` payload used by
+ * legacy chunk streams; other providers must normalize into this shape first.
+ *
+ * @param message - The message to get the audio payload from.
+ * @returns The audio payload.
+ * @internal
+ */
 function getAudioPayload(message: unknown):
   | {
       id?: string;
@@ -158,7 +168,7 @@ export async function* convertChunksToEvents(
         event: "message-start" as const,
         id: msg.id ?? undefined,
       };
-      if (isAIMessageChunk(msg) && msg.usage_metadata) {
+      if (AIMessageChunk.isInstance(msg) && msg.usage_metadata) {
         (startEvent as { usage?: unknown }).usage = msg.usage_metadata;
         lastUsage = { ...msg.usage_metadata };
         usageHandledInStart = true;
@@ -224,7 +234,7 @@ export async function* convertChunksToEvents(
 
     // Tool call chunks
     if (
-      isAIMessageChunk(msg) &&
+      AIMessageChunk.isInstance(msg) &&
       msg.tool_call_chunks &&
       msg.tool_call_chunks.length > 0
     ) {
@@ -375,7 +385,11 @@ export async function* convertChunksToEvents(
     }
 
     // Usage
-    if (!usageHandledInStart && isAIMessageChunk(msg) && msg.usage_metadata) {
+    if (
+      !usageHandledInStart &&
+      AIMessageChunk.isInstance(msg) &&
+      msg.usage_metadata
+    ) {
       const chunkUsage = msg.usage_metadata;
       if (!lastUsage) {
         lastUsage = { ...chunkUsage };
