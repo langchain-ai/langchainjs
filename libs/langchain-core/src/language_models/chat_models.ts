@@ -353,7 +353,7 @@ export abstract class BaseChatModel<
    *
    * @example
    * ```ts
-   * const stream = model.streamEvents([{ role: "user", content: "Hello" }]);
+   * const stream = model.streamV2([{ role: "user", content: "Hello" }]);
    *
    * // Stream text
    * for await (const token of stream.text) {
@@ -364,7 +364,7 @@ export abstract class BaseChatModel<
    * const message = await stream;
    * ```
    */
-  streamEvents(
+  streamV2(
     input: BaseLanguageModelInput,
     options?: Partial<CallOptions>
   ): ChatModelStream {
