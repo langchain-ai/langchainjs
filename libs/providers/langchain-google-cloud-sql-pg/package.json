@@ -31,9 +31,9 @@
   "devDependencies": {
     "@jest/globals": "^30.3.0",
     "@langchain/core": "workspace:^",
-    "@swc/core": "^1.15.21",
+    "@swc/core": "^1.15.32",
     "@swc/jest": "^0.2.29",
-    "@testcontainers/postgresql": "^11.13.0",
+    "@testcontainers/postgresql": "^11.14.0",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
     "@types/pg": "^8",
@@ -42,7 +42,7 @@
     "jest": "^30.3.0",
     "jest-environment-node": "^30.3.0",
     "pg": "^8.14.1",
-    "testcontainers": "^11.13.0",
+    "testcontainers": "^11.14.0",
     "ts-jest": "^29.4.9",
     "typescript": "~5.8.3"
   },
