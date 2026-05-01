@@ -115,7 +115,7 @@
     "@getzep/zep-cloud": "^1.0.12",
     "@getzep/zep-js": "^2.0.2",
     "@gomomento/sdk": "1.117.2",
-    "@google/generative-ai": "^0.7.0",
+    "@google/generative-ai": "^0.24.1",
     "@lancedb/lancedb": "^0.19.1",
     "@langchain/anthropic": "workspace:*",
     "@langchain/aws": "workspace:*",
