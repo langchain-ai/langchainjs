@@ -110,6 +110,51 @@ describe("convertToConverseMessages", () => {
       },
     },
     {
+      name: "AI message with empty text content block and tool call",
+      input: [
+        new HumanMessage("Use the retriever."),
+        new AIMessage({
+          content: [{ type: "text", text: "" }],
+          tool_calls: [
+            {
+              name: "retrieverTool",
+              args: {
+                query: "weather",
+              },
+              id: "123_retriever_tool",
+            },
+          ],
+        }),
+      ],
+      output: {
+        converseMessages: [
+          {
+            role: BedrockConversationRole.USER,
+            content: [
+              {
+                text: "Use the retriever.",
+              },
+            ],
+          },
+          {
+            role: BedrockConversationRole.ASSISTANT,
+            content: [
+              {
+                toolUse: {
+                  name: "retrieverTool",
+                  toolUseId: "123_retriever_tool",
+                  input: {
+                    query: "weather",
+                  },
+                },
+              },
+            ],
+          },
+        ],
+        converseSystem: [],
+      },
+    },
+    {
       name: "prompt caching",
       input: [
         new SystemMessage({
