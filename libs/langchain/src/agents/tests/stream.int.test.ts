@@ -161,7 +161,7 @@ describe("streamEvents", () => {
     });
     const subscription = await run.subscribe({ channels: [...ALL_CHANNELS] });
 
-    await run.run.input({
+    await run.run.start({
       input: {
         messages: [{ role: "human", content: "What is 3+4 and 3-4?" }],
       },
