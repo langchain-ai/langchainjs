@@ -142,7 +142,7 @@ function getAudioPayload(message: unknown):
  */
 export async function* convertChunksToEvents(
   chunks: AsyncIterable<ChatGenerationChunk>,
-  options?: { signal?: AbortSignal }
+  options?: { signal?: AbortSignal },
 ): AsyncGenerator<ChatModelStreamEvent> {
   const activeBlocks = new Map<
     number,
@@ -427,32 +427,36 @@ export async function* convertChunksToEvents(
  */
 function applyDeltaToBlock(
   block: ContentBlock,
-  delta: ContentBlockDelta
+  delta: ContentBlockDelta,
 ): ContentBlock {
   switch (delta.type) {
     case "text-delta":
-      return {
-        ...block,
-        text: ((block as { text?: string }).text ?? "") + delta.text,
-      } as ContentBlock;
-    case "reasoning-delta":
-      if ((block as { type?: string }).type === "thinking") {
+      if (block.type === "text") {
         return {
           ...block,
-          thinking:
-            ((block as { thinking?: string }).thinking ?? "") + delta.reasoning,
-        } as unknown as ContentBlock;
+          text: block.text ?? "" + delta.text,
+        };
       }
-      return {
-        ...block,
-        reasoning:
-          ((block as { reasoning?: string }).reasoning ?? "") + delta.reasoning,
-      } as ContentBlock;
+      return block;
+    case "reasoning-delta":
+      if (block.type === "thinking") {
+        return {
+          ...block,
+          thinking: block.thinking ?? "" + delta.reasoning,
+        };
+      }
+      if (block.type === "reasoning") {
+        return {
+          ...block,
+          reasoning: block.reasoning ?? "" + delta.reasoning,
+        };
+      }
+      return block;
     case "data-delta":
       return {
         ...block,
-        data: ((block as { data?: string }).data ?? "") + delta.data,
-      } as ContentBlock;
+        data: block.data ?? "" + delta.data,
+      };
     case "block-delta":
       return { ...block, ...delta.fields } as ContentBlock;
     default:
@@ -470,23 +474,20 @@ function contentBlockToDelta(block: ContentBlock): ContentBlockDelta {
       reasoning: (block as ContentBlock.Reasoning).reasoning,
     };
   }
-  if (
-    (block as { type?: string }).type === "thinking" &&
-    typeof (block as { thinking?: unknown }).thinking === "string"
-  ) {
+  if (block.type === "thinking" && block.thinking === "string") {
     return {
       type: "reasoning-delta",
-      reasoning: (block as unknown as { thinking: string }).thinking,
+      reasoning: block.thinking,
     };
   }
-  if (typeof (block as { data?: unknown }).data === "string") {
+  if (block.data === "string") {
     return {
       type: "data-delta",
-      data: (block as unknown as { data: string }).data,
+      data: block.data,
       encoding: "base64",
     };
   }
-  if (typeof (block as { type?: unknown }).type === "string") {
+  if (typeof block.type === "string") {
     return {
       type: "block-delta",
       fields: {

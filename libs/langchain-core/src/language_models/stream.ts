@@ -11,8 +11,6 @@ import type { ChatModelStreamEvent, ContentBlockDelta } from "./event.js";
 
 type UsageMetadataLike = Partial<UsageMetadata>;
 
-// ─── Replay Buffer ──────────────────────────────────────────────
-
 /**
  * A buffer that caches emitted events for replay.
  *
@@ -80,8 +78,6 @@ class ReplayBuffer {
   }
 }
 
-// ─── Accumulator ────────────────────────────────────────────────
-
 /**
  * Apply a typed delta to an accumulated content block.
  *
@@ -94,32 +90,36 @@ class ReplayBuffer {
  */
 function applyDelta(
   block: ContentBlock,
-  delta: ContentBlockDelta
+  delta: ContentBlockDelta,
 ): ContentBlock {
   switch (delta.type) {
     case "text-delta":
-      return {
-        ...block,
-        text: ((block as { text?: string }).text ?? "") + delta.text,
-      } as ContentBlock;
-    case "reasoning-delta":
-      if ((block as { type?: string }).type === "thinking") {
+      if (block.type === "text") {
         return {
           ...block,
-          thinking:
-            ((block as { thinking?: string }).thinking ?? "") + delta.reasoning,
-        } as unknown as ContentBlock;
+          text: block.text ?? "" + delta.text,
+        };
       }
-      return {
-        ...block,
-        reasoning:
-          ((block as { reasoning?: string }).reasoning ?? "") + delta.reasoning,
-      } as ContentBlock;
+      return block;
+    case "reasoning-delta":
+      if (block.type === "thinking") {
+        return {
+          ...block,
+          thinking: block.thinking ?? "" + delta.reasoning,
+        };
+      }
+      if (block.type === "reasoning") {
+        return {
+          ...block,
+          reasoning: block.reasoning ?? "" + delta.reasoning,
+        };
+      }
+      return block;
     case "data-delta":
       return {
         ...block,
-        data: ((block as { data?: string }).data ?? "") + delta.data,
-      } as ContentBlock;
+        data: block.data ?? "" + delta.data,
+      };
     case "block-delta":
       return { ...block, ...delta.fields } as ContentBlock;
     default:
@@ -128,7 +128,7 @@ function applyDelta(
 }
 
 function getEventDelta(
-  event: ChatModelStreamEvent
+  event: ChatModelStreamEvent,
 ): ContentBlockDelta | undefined {
   if (event.event !== "content-block-delta") return undefined;
   return event.delta;
@@ -164,7 +164,7 @@ function isReasoningContent(content: unknown): boolean {
  * high-level Core consumers always receive a complete {@link UsageMetadata}.
  */
 function normalizeUsage(
-  usage: UsageMetadataLike | undefined
+  usage: UsageMetadataLike | undefined,
 ): UsageMetadata | undefined {
   if (!usage) return undefined;
   return {
@@ -268,7 +268,7 @@ export class TextContentStream
 
   then<TResult1 = string, TResult2 = never>(
     onfulfilled?: ((value: string) => TResult1 | PromiseLike<TResult1>) | null,
-    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null
+    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
   ): PromiseLike<TResult1 | TResult2> {
     const promise = (async () => {
       let text = "";
@@ -339,10 +339,10 @@ export class ToolCallsStream
   then<TResult1 = Array<ContentBlock.Tools.ToolCall>, TResult2 = never>(
     onfulfilled?:
       | ((
-          value: Array<ContentBlock.Tools.ToolCall>
+          value: Array<ContentBlock.Tools.ToolCall>,
         ) => TResult1 | PromiseLike<TResult1>)
       | null,
-    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null
+    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
   ): PromiseLike<TResult1 | TResult2> {
     const promise = (async () => {
       const calls: Array<ContentBlock.Tools.ToolCall> = [];
@@ -444,7 +444,7 @@ export class ReasoningContentStream
 
   then<TResult1 = string, TResult2 = never>(
     onfulfilled?: ((value: string) => TResult1 | PromiseLike<TResult1>) | null,
-    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null
+    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
   ): PromiseLike<TResult1 | TResult2> {
     const promise = (async () => {
       let text = "";
@@ -498,7 +498,7 @@ export class UsageMetadataStream
     onfulfilled?:
       | ((value: UsageMetadata | undefined) => TResult1 | PromiseLike<TResult1>)
       | null,
-    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null
+    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
   ): PromiseLike<TResult1 | TResult2> {
     const promise = (async () => {
       let latest: UsageMetadata | undefined;
@@ -533,7 +533,7 @@ export class ChatModelStream
 
   /** @internal */
   private async _consume(
-    source: AsyncIterable<ChatModelStreamEvent>
+    source: AsyncIterable<ChatModelStreamEvent>,
   ): Promise<void> {
     try {
       for await (const event of source) {
@@ -542,7 +542,7 @@ export class ChatModelStream
       this._buffer.finish();
     } catch (err) {
       this._buffer.setError(
-        err instanceof Error ? err : new Error(String(err))
+        err instanceof Error ? err : new Error(String(err)),
       );
     }
   }
@@ -568,14 +568,14 @@ export class ChatModelStream
   }
 
   get output(): PromiseLike<AIMessage> {
-    return { then: (onf, onr) => this._assembleMessage().then(onf, onr) };
+    return this._assembleMessage();
   }
 
   then<TResult1 = AIMessage, TResult2 = never>(
     onfulfilled?:
       | ((value: AIMessage) => TResult1 | PromiseLike<TResult1>)
       | null,
-    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null
+    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
   ): PromiseLike<TResult1 | TResult2> {
     return this._assembleMessage().then(onfulfilled, onrejected);
   }
