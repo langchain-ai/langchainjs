@@ -518,8 +518,12 @@ describe("ChatModelStream", () => {
         {
           type: "tool_call",
           id: "toolu_1",
+          input: '7890"}',
           name: "calculator",
           args: { expression: "12345 + 67890" },
+          caller: {
+            type: "direct",
+          },
         },
       ]);
     });
