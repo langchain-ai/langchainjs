@@ -42,14 +42,10 @@ When using tools or functions with Gemini models, the following Zod schema featu
 
 For detailed examples and workarounds, see the Tool Schema Limitations section in the @langchain/google-vertexai or @langchain/google-genai package documentation.
 
-## TODO
+## Planned Features
 
-Tasks and services still to be implemented:
+Tasks and services that may be implemented in the future:
 
-- PaLM Vertex AI support and backwards compatibility
-- PaLM MakerSuite support and backwards compatibility
-- Semantic Retrieval / AQA model
-- PaLM embeddings
 - Gemini embeddings
 - Multimodal embeddings
 - Vertex AI Search
@@ -59,5 +55,4 @@ Tasks and services still to be implemented:
   - Google managed models
     - Claude
 - AI Studio Tuned Models
-- MakerSuite / Google Drive Hub
 - Google Cloud Vector Store
