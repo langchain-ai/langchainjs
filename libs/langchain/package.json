@@ -56,7 +56,7 @@
     "cheerio": "1.2.0",
     "dotenv": "^17.4.0",
     "dpdm": "^3.14.0",
-    "openai": "^6.22.0",
+    "openai": "^6.35.0",
     "peggy": "^5.1.0",
     "reflect-metadata": "^0.2.2",
     "rimraf": "^6.1.3",
