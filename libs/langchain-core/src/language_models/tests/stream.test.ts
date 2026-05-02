@@ -251,6 +251,32 @@ describe("ChatModelStream", () => {
       expect(fullText).toBe("Hello world");
     });
 
+    test("accepts legacy content-shaped text deltas", async () => {
+      const stream = new ChatModelStream(
+        iterEvents([
+          { event: "message-start", id: "msg_legacy_content_delta" },
+          {
+            event: "content-block-start",
+            index: 0,
+            content: { type: "text", text: "" },
+          },
+          {
+            event: "content-block-delta",
+            index: 0,
+            content: { type: "text", text: "Hello" },
+          },
+          {
+            event: "content-block-delta",
+            index: 0,
+            content: { type: "text", text: " world" },
+          },
+          { event: "message-finish", reason: "stop" },
+        ] as unknown as ChatModelStreamEvent[])
+      );
+
+      await expect(stream.text).resolves.toBe("Hello world");
+    });
+
     test(".full yields running concatenation", async () => {
       const stream = new ChatModelStream(iterEvents(textStreamEvents()));
 

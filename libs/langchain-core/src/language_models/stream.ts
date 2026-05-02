@@ -127,11 +127,46 @@ function applyDelta(
   }
 }
 
+/**
+ * Returns the typed delta carried by a content-block delta event.
+ *
+ * Stream protocol compliant language models store incremental updates in
+ * `event.delta`, e.g. `{ type: "text-delta", text: "hello" }`. Some models and
+ * adapters still emit the older content-shaped form on `event.content`, e.g.
+ * `{ type: "text", text: "hello" }`, which predates explicit delta event
+ * variants.
+ *
+ * Keep accepting that content-shaped form here so {@link ChatModelStream}
+ * remains a tolerant consumer while producers migrate to protocol compliant
+ * typed deltas.
+ *
+ * @internal
+ */
 function getEventDelta(
   event: ChatModelStreamEvent
 ): ContentBlockDelta | undefined {
   if (event.event !== "content-block-delta") return undefined;
-  return event.delta;
+  if ("delta" in event && event.delta) return event.delta;
+
+  const content = (event as { content?: unknown }).content;
+  if (content == null || typeof content !== "object") return undefined;
+  const block = content as { type?: string } & Record<string, unknown>;
+  if (block.type === "text" && typeof block.text === "string") {
+    return { type: "text-delta", text: block.text };
+  }
+  if (block.type === "reasoning" && typeof block.reasoning === "string") {
+    return { type: "reasoning-delta", reasoning: block.reasoning };
+  }
+  if (block.type === "thinking" && typeof block.thinking === "string") {
+    return { type: "reasoning-delta", reasoning: block.thinking };
+  }
+  if (typeof block.data === "string") {
+    return { type: "data-delta", data: block.data, encoding: "base64" };
+  }
+  if (typeof block.type === "string") {
+    return { type: "block-delta", fields: { ...block, type: block.type } };
+  }
+  return undefined;
 }
 
 function getReasoningDelta(content: unknown): string | undefined {
