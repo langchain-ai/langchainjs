@@ -57,6 +57,7 @@ jobs:
           --filter @langchain/openai
           --filter @langchain/ollama
           --filter @langchain/google-gauth
+          --filter @langchain/google-common
           --filter @langchain/textsplitters
         shell: bash
 
@@ -86,6 +87,7 @@ jobs:
           --filter @langchain/openai
           --filter @langchain/ollama
           --filter @langchain/google-gauth
+          --filter @langchain/google-common
 
         shell: bash
 
@@ -115,6 +117,7 @@ jobs:
           --filter @langchain/openai
           --filter @langchain/ollama
           --filter @langchain/google-gauth
+          --filter @langchain/google-common
 
         shell: bash
 
@@ -144,6 +147,7 @@ jobs:
           --filter @langchain/openai
           --filter @langchain/ollama
           --filter @langchain/google-gauth
+          --filter @langchain/google-common
 
         shell: bash
 
@@ -173,6 +177,7 @@ jobs:
           --filter @langchain/openai
           --filter @langchain/ollama
           --filter @langchain/google-gauth
+          --filter @langchain/google-common
 
         shell: bash
 
@@ -202,6 +207,7 @@ jobs:
           --filter @langchain/openai
           --filter @langchain/ollama
           --filter @langchain/google-gauth
+          --filter @langchain/google-common
 
         shell: bash
 
@@ -231,6 +237,7 @@ jobs:
           --filter @langchain/openai
           --filter @langchain/ollama
           --filter @langchain/google-gauth
+          --filter @langchain/google-common
 
         shell: bash
 
@@ -261,6 +268,7 @@ jobs:
           --filter @langchain/openai
           --filter @langchain/ollama
           --filter @langchain/google-gauth
+          --filter @langchain/google-common
 
         shell: bash
 

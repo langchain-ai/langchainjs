@@ -1,6 +1,7 @@
 import * as uuid from "../utils/uuid/index.js";
 import type { ChainValues } from "../utils/types/index.js";
 import type { BaseMessage } from "../messages/base.js";
+import type { ChatModelStreamEvent } from "../language_models/event.js";
 import type { AgentAction, AgentFinish } from "../agents.js";
 import type {
   ChatGenerationChunk,
@@ -87,6 +88,17 @@ abstract class BaseCallbackHandlerMethodsClass {
     parentRunId?: string,
     tags?: string[],
     fields?: HandleLLMNewTokenCallbackFields
+  ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    Promise<any> | any;
+
+  /**
+   * Called when a Chat Model emits a content-block-centric stream event.
+   */
+  handleChatModelStreamEvent?(
+    event: ChatModelStreamEvent,
+    runId: string,
+    parentRunId?: string,
+    tags?: string[]
   ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     Promise<any> | any;
 
@@ -312,6 +324,23 @@ export interface CallbackHandlerPrefersStreaming {
 
 export function callbackHandlerPrefersStreaming(x: BaseCallbackHandler) {
   return "lc_prefer_streaming" in x && x.lc_prefer_streaming;
+}
+
+/**
+ * Interface for handlers that prefer chat model stream events instead of
+ * legacy token/chunk callbacks.
+ */
+export interface CallbackHandlerPrefersChatModelStreamEvents {
+  readonly lc_prefer_chat_model_stream_events: boolean;
+}
+
+export function callbackHandlerPrefersChatModelStreamEvents(
+  x: BaseCallbackHandler
+) {
+  return (
+    "lc_prefer_chat_model_stream_events" in x &&
+    x.lc_prefer_chat_model_stream_events
+  );
 }
 
 /**

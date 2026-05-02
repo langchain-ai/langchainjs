@@ -1,6 +1,6 @@
 {
   "name": "@langchain/perplexity",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Perplexity integration for LangChain.js (chat models, Search retriever, and Search tool).",
   "author": "LangChain",
   "license": "MIT",
