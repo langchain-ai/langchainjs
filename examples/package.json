@@ -22,7 +22,7 @@
     "@azure/identity": "^4.13.1",
     "@browserbasehq/stagehand": "^3.2.0",
     "@clickhouse/client": "^1.18.2",
-    "@cloudflare/workers-types": "^4.20260402.1",
+    "@cloudflare/workers-types": "^4.20260501.1",
     "@elastic/elasticsearch": "^9.3.4",
     "@faker-js/faker": "^10.4.0",
     "@getmetal/metal-sdk": "^7.7.1",
