@@ -1,5 +1,11 @@
 # @langchain/core
 
+## 1.1.44
+
+### Patch Changes
+
+- [#10822](https://github.com/langchain-ai/langchainjs/pull/10822) [`922a040`](https://github.com/langchain-ai/langchainjs/commit/922a040421391700fd92e04e6f44a37e3f24710b) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): translate content block delta for other models
+
 ## 1.1.43
 
 ### Patch Changes
