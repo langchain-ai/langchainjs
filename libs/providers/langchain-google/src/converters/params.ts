@@ -1,6 +1,6 @@
-import type {
+import {
   ChatGoogleFields,
-  GooglePlatformType,
+  GooglePlatformType, settableServiceTier,
   SimplifiedSpeechConfig,
   SimplifiedSpeechLanguageConfig,
   SpeechSpeakerName,
@@ -400,4 +400,29 @@ export function convertFieldsToSpeechConfig(
   }
 
   return ret;
+}
+
+type ServiceTierResponse = {} | {serviceTier: Gemini.ServiceTier};
+
+/**
+ * Builds an object that can be included as part of the request
+ * which will add a `speechConfig` attribute if appropriate.
+ */
+export function convertFieldsToServiceTier(
+  platform: GooglePlatformType,
+  fields: ChatGoogleFields,
+): ServiceTierResponse {
+  // Service tier is handled in a different way on GCP
+  if (platform === "gcp") {
+    return {};
+  }
+
+  const serviceTier = fields.serviceTier;
+  if (!serviceTier || !settableServiceTier.includes(serviceTier)) {
+    return {};
+  }
+
+  return {
+    serviceTier: serviceTier,
+  }
 }

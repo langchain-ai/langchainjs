@@ -43,11 +43,6 @@ export namespace Gemini {
 
   export type GenerativeLanguageModality = "MODALITY_UNSPECIFIED" | "TEXT" | "IMAGE" | "VIDEO" | "AUDIO" | "DOCUMENT" | (string & {});
 
-  /** Media resolution for the input media. */
-  export interface MediaResolution {
-    level?: "MEDIA_RESOLUTION_UNSPECIFIED" | "MEDIA_RESOLUTION_LOW" | "MEDIA_RESOLUTION_MEDIUM" | "MEDIA_RESOLUTION_HIGH" | "MEDIA_RESOLUTION_ULTRA_HIGH" | (string & {});
-  }
-
   /** Config for speech generation and transcription. */
   export interface SpeechConfig {
     /**
@@ -102,7 +97,8 @@ export namespace Gemini {
   export interface ImageConfig {
     /**
      * Optional. The aspect ratio of the image to generate. Supported aspect ratios: `1:1`,
-     * `2:3`, `3:2`, `3:4`, `4:3`, `4:5`, `5:4`, `9:16`, `16:9`, or `21:9`.
+     * `1:4`, `4:1`, `1:8`, `8:1`, `2:3`, `3:2`, `3:4`, `4:3`, `4:5`, `5:4`,
+     * `9:16`, `16:9`, or `21:9`.
      * 
      * If not specified, the model will choose a default aspect ratio based on any
      * reference images provided.
@@ -110,8 +106,8 @@ export namespace Gemini {
     aspectRatio?: string;
 
     /**
-     * Optional. Specifies the size of generated images. Supported values are `1K`, `2K`,
-     * `4K`. If not specified, the model will use default value `1K`.
+     * Optional. Specifies the size of generated images. Supported values are `512`, `1K`,
+     * `2K`, `4K`. If not specified, the model will use default value `1K`.
      */
     imageSize?: string;
   }
@@ -177,13 +173,30 @@ export namespace Gemini {
     thoughtSignature?: string;
 
     /**
+     * Server-side tool call. This field is populated when the model
+     * predicts a tool invocation that should be executed on the server.
+     * The client is expected to echo this message back to the API.
+     */
+    toolCall?: ToolCall;
+
+    /**
+     * The output from a server-side `ToolCall` execution. This field is
+     * populated by the client with the results of executing the
+     * corresponding `ToolCall`.
+     */
+    toolResponse?: ToolResponse;
+
+    /**
      * Optional. Video metadata. The metadata should only be specified while the video
      * data is presented in inline_data or file_data.
      */
     videoMetadata?: VideoMetadata;
   }
 
-  /** Metadata describes the input video content. */
+  /**
+   * Deprecated: Use `GenerateContentRequest.processing_options` instead. Metadata
+   * describes the input video content.
+   */
   export interface VideoMetadata {
     /** Optional. The end offset of the video. */
     endOffset?: string;
@@ -202,10 +215,15 @@ export namespace Gemini {
   /**
    * Result of executing the `ExecutableCode`.
    * 
-   * Only generated when using the `CodeExecution`, and always follows a `part`
-   * containing the `ExecutableCode`.
+   * Generated only when the `CodeExecution` tool is used.
    */
   export interface CodeExecutionResult {
+    /**
+     * Optional. The identifier of the `ExecutableCode` part this result is for.
+     * Only populated if the corresponding `ExecutableCode` has an id.
+     */
+    id?: string;
+
     /** Required. Outcome of the code execution. */
     outcome: "OUTCOME_UNSPECIFIED" | "OUTCOME_OK" | "OUTCOME_FAILED" | "OUTCOME_DEADLINE_EXCEEDED" | (string & {});
 
@@ -227,6 +245,12 @@ export namespace Gemini {
   export interface ExecutableCode {
     /** Required. The code to be executed. */
     code: string;
+
+    /**
+     * Optional. Unique identifier of the `ExecutableCode` part.
+     * The server returns the `CodeExecutionResult` with the matching `id`.
+     */
+    id?: string;
 
     /** Required. Programming language of the `code`. */
     language: "LANGUAGE_UNSPECIFIED" | "PYTHON" | (string & {});
@@ -339,8 +363,9 @@ export namespace Gemini {
 
     /**
      * Optional. Only valid if response_logprobs=True.
-     * This sets the number of top logprobs to return at each decoding step in the
-     * Candidate.logprobs_result. The number must be in the range of [0, 20].
+     * This sets the number of top logprobs, including the chosen candidate, to
+     * return at each decoding step in the Candidate.logprobs_result. The
+     * number must be in the range of [0, 20].
      */
     logprobs?: number;
 
@@ -508,7 +533,7 @@ export namespace Gemini {
       /**
        * Required. The name of the function.
        * Must be a-z, A-Z, 0-9, or contain underscores, colons, dots, and dashes,
-       * with a maximum length of 64.
+       * with a maximum length of 128.
        */
       name: string;
 
@@ -563,6 +588,12 @@ export namespace Gemini {
      * Tool to support Google Search in Model. Powered by Google.
      */
     export interface GoogleSearch {
+      /**
+       * Optional. The set of search types to enable. If not set, web search is
+       * enabled by default.
+       */
+      searchTypes?: SearchTypes;
+
       /**
        * Optional. Filter search results to a specific time range.
        * If customers set a start time, they must set an end time (and vice
@@ -676,6 +707,13 @@ export namespace Gemini {
       /** Optional. Function calling config. */
       functionCallingConfig?: FunctionCallingConfig;
 
+      /**
+       * Optional. If true, the API response will include the server-side tool calls and
+       * responses within the `Content` message. This allows clients to
+       * observe the server's tool interactions.
+       */
+      includeServerSideToolInvocations?: boolean;
+
       /** Optional. Retrieval config. */
       retrievalConfig?: RetrievalConfig;
     }
@@ -786,7 +824,18 @@ export namespace Gemini {
       type: Type;
     }
 
-    export type Type = "TYPE_UNSPECIFIED" | "STRING" | "NUMBER" | "INTEGER" | "BOOLEAN" | "ARRAY" | "OBJECT" | "NULL" | (string & {});
+    /**
+     * Different types of search that can be enabled on the GoogleSearch tool.
+     */
+    export interface SearchTypes {
+      /** Optional. Enables image search. Image bytes are returned. */
+      imageSearch?: ImageSearch;
+
+      /**
+       * Optional. Enables web search. Only text results are returned.
+       */
+      webSearch?: WebSearch;
+    }
 
     /**
      * Represents a time interval, encoded as a Timestamp start (inclusive) and a
@@ -830,6 +879,18 @@ export namespace Gemini {
        * The longitude in degrees. It must be in the range [-180.0, +180.0].
        */
       longitude?: number;
+    }
+
+    export type Type = "TYPE_UNSPECIFIED" | "STRING" | "NUMBER" | "INTEGER" | "BOOLEAN" | "ARRAY" | "OBJECT" | "NULL" | (string & {});
+
+    /** Image search for grounding and related configurations. */
+    export interface ImageSearch {
+    }
+
+    /**
+     * Standard web search for grounding and related configurations.
+     */
+    export interface WebSearch {
     }
   }
 
@@ -883,6 +944,15 @@ export namespace Gemini {
      * learn how to incorporate safety considerations in your AI applications.
      */
     safetySettings?: Array<SafetySetting>;
+
+    /** Optional. The service tier of the request. */
+    serviceTier?: ServiceTier;
+
+    /**
+     * Optional. Configures the logging behavior for a given request. If set, it takes
+     * precedence over the project-level logging config.
+     */
+    store?: boolean;
 
     /**
      * Optional. Developer set [system
@@ -958,6 +1028,9 @@ export namespace Gemini {
     /** List of grounding support. */
     groundingSupports?: Array<GoogleAiGenerativelanguageV1betaGroundingSupport>;
 
+    /** Image search queries used for grounding. */
+    imageSearchQueries?: Array<string>;
+
     /** Metadata related to retrieval in the grounding flow. */
     retrievalMetadata?: RetrievalMetadata;
 
@@ -970,8 +1043,15 @@ export namespace Gemini {
     webSearchQueries?: Array<string>;
   }
 
-  /** Grounding chunk. */
+  /**
+   * A `GroundingChunk` represents a segment of supporting evidence that grounds
+   * the model's response. It can be a chunk from the web, a retrieved context
+   * from a file, or information from Google Maps.
+   */
   export interface GroundingChunk {
+    /** Optional. Grounding chunk from image search. */
+    image?: Image;
+
     /** Optional. Grounding chunk from Google Maps. */
     maps?: Maps;
 
@@ -986,6 +1066,11 @@ export namespace Gemini {
 
   /** Chunk from context retrieved by the file search tool. */
   export interface RetrievedContext {
+    /**
+     * Optional. User-provided metadata about the retrieved context.
+     */
+    customMetadata?: Array<GroundingChunkCustomMetadata>;
+
     /**
      * Optional. Name of the `FileSearchStore` containing the document.
      * Example: `fileSearchStores/123`
@@ -1022,6 +1107,12 @@ export namespace Gemini {
      * all responses (while maintaining the same order).
      */
     groundingChunkIndices?: Array<number>;
+
+    /**
+     * Output only. Indices into the `parts` field of the candidate's content. These indices
+     * specify which rendered parts are associated with this support source.
+     */
+    readonly renderedParts?: Array<number>;
 
     /** Segment of the content this support belongs to. */
     segment?: GoogleAiGenerativelanguageV1betaSegment;
@@ -1361,7 +1452,7 @@ export namespace Gemini {
     placeAnswerSources?: PlaceAnswerSources;
 
     /**
-     * This ID of the place, in `places/{place_id}` format. A user can use this
+     * The ID of the place, in `places/{place_id}` format. A user can use this
      * ID to look up that place.
      */
     placeId?: string;
@@ -1376,35 +1467,94 @@ export namespace Gemini {
     uri?: string;
   }
 
+  /** User provided metadata about the GroundingFact. */
+  export interface GroundingChunkCustomMetadata {
+    /** The key of the metadata. */
+    key?: string;
+
+    /**
+     * Optional. The numeric value of the metadata.
+     * The expected range for this value depends on the specific `key` used.
+     */
+    numericValue?: number;
+
+    /** Optional. A list of string values for the metadata. */
+    stringListValue?: GroundingChunkStringList;
+
+    /** Optional. The string value of the metadata. */
+    stringValue?: string;
+  }
+
+  export type ServiceTier = "unspecified" | "standard" | "flex" | "priority" | (string & {});
+
+  /**
+   * Optional. If specified, the media resolution specified will be used.
+   */
+  export type MediaResolution = "MEDIA_RESOLUTION_UNSPECIFIED" | "MEDIA_RESOLUTION_LOW" | "MEDIA_RESOLUTION_MEDIUM" | "MEDIA_RESOLUTION_HIGH" | (string & {});
+
+  /**
+   * The output from a server-side `ToolCall` execution. This message contains
+   * the results of a tool invocation that was initiated by a `ToolCall`
+   * from the model. The client should pass this `ToolResponse` back to the API
+   * in a subsequent turn within a `Content` message, along with the corresponding
+   * `ToolCall`.
+   */
+  export interface ToolResponse {
+    /**
+     * Optional. The identifier of the tool call this response is for.
+     */
+    id?: string;
+
+    /** Optional. The tool response. */
+    response?: Record<string, unknown>;
+
+    /**
+     * Required. The type of tool that was called, matching the `tool_type` in the
+     * corresponding `ToolCall`.
+     */
+    toolType: ToolType;
+  }
+
+  /** Chunk from image search. */
+  export interface Image {
+    /**
+     * The root domain of the web page that the image is from, e.g.
+     * "example.com".
+     */
+    domain?: string;
+
+    /** The image asset URL. */
+    imageUri?: string;
+
+    /** The web page URI for attribution. */
+    sourceUri?: string;
+
+    /** The title of the web page that the image is from. */
+    title?: string;
+  }
+
+  /** Chunk from the web. */
+  export interface Web {
+    /** Output only. Title of the chunk. */
+    readonly title?: string;
+
+    /** Output only. URI reference of the chunk. */
+    readonly uri?: string;
+  }
+
   /** The configuration for the prebuilt speaker to use. */
   export interface PrebuiltVoiceConfig {
     /** The name of the preset voice to use. */
     voiceName?: string;
   }
 
-  /**
-   * A predicted `FunctionCall` returned from the model that contains
-   * a string representing the `FunctionDeclaration.name` with the
-   * arguments and their values.
-   */
-  export interface FunctionCall {
-    /**
-     * Optional. The function parameters and values in JSON object format.
-     */
-    args?: Record<string, unknown>;
+  /** URI based data. */
+  export interface FileData {
+    /** Required. URI. */
+    fileUri: string;
 
-    /**
-     * Optional. The unique identifier of the function call. If populated, the client to
-     * execute the `function_call` and return the response with the matching `id`.
-     */
-    id?: string;
-
-    /**
-     * Required. The name of the function to call.
-     * Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum
-     * length of 64.
-     */
-    name: string;
+    /** Optional. The IANA standard MIME type of the source data. */
+    mimeType?: string;
   }
 
   /**
@@ -1424,7 +1574,7 @@ export namespace Gemini {
     /**
      * Required. The name of the function to call.
      * Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum
-     * length of 64.
+     * length of 128.
      */
     name: string;
 
@@ -1463,6 +1613,32 @@ export namespace Gemini {
     willContinue?: boolean;
   }
 
+  /** Google search entry point. */
+  export interface SearchEntryPoint {
+    /**
+     * Optional. Web content snippet that can be embedded in a web page or an app webview.
+     */
+    renderedContent?: string;
+
+    /** Optional. Base64 encoded JSON representing array of  tuple. */
+    sdkBlob?: string;
+  }
+
+  /**
+   * The status of the underlying model. This is used to indicate the stage of the
+   * underlying model and the retirement time if applicable.
+   */
+  export interface ModelStatus {
+    /** A message explaining the model status. */
+    message?: string;
+
+    /** The stage of the underlying model. */
+    modelStage?: ModelStage;
+
+    /** The time at which the model will be retired. */
+    retirementTime?: string;
+  }
+
   /**
    * Tool details that the model may use to generate response.
    * 
@@ -1470,7 +1646,7 @@ export namespace Gemini {
    * external systems to perform an action, or set of actions, outside of
    * knowledge and scope of the model.
    * 
-   * Next ID: 15
+   * Next ID: 16
    */
   export interface Tool {
     /**
@@ -1529,15 +1705,6 @@ export namespace Gemini {
     urlContext?: Gemini.Tools.UrlContext;
   }
 
-  /** Chunk from the web. */
-  export interface Web {
-    /** Title of the chunk. */
-    title?: string;
-
-    /** URI reference of the chunk. */
-    uri?: string;
-  }
-
   /** A citation to a source for a portion of a specific response. */
   export interface CitationSource {
     /** Optional. End of the attributed segment, exclusive. */
@@ -1564,27 +1731,28 @@ export namespace Gemini {
   }
 
   /**
-   * The status of the underlying model. This is used to indicate the stage of the
-   * underlying model and the retirement time if applicable.
+   * A predicted `FunctionCall` returned from the model that contains
+   * a string representing the `FunctionDeclaration.name` with the
+   * arguments and their values.
    */
-  export interface ModelStatus {
-    /** A message explaining the model status. */
-    message?: string;
+  export interface FunctionCall {
+    /**
+     * Optional. The function parameters and values in JSON object format.
+     */
+    args?: Record<string, unknown>;
 
-    /** The stage of the underlying model. */
-    modelStage?: ModelStage;
+    /**
+     * Optional. Unique identifier of the function call. If populated, the client to
+     * execute the `function_call` and return the response with the matching `id`.
+     */
+    id?: string;
 
-    /** The time at which the model will be retired. */
-    retirementTime?: string;
-  }
-
-  /** URI based data. */
-  export interface FileData {
-    /** Required. URI. */
-    fileUri: string;
-
-    /** Optional. The IANA standard MIME type of the source data. */
-    mimeType?: string;
+    /**
+     * Required. The name of the function to call.
+     * Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum
+     * length of 128.
+     */
+    name: string;
   }
 
   /**
@@ -1608,47 +1776,38 @@ export namespace Gemini {
     mimeType?: string;
   }
 
-  /** Google search entry point. */
-  export interface SearchEntryPoint {
-    /**
-     * Optional. Web content snippet that can be embedded in a web page or an app webview.
-     */
-    renderedContent?: string;
-
-    /** Optional. Base64 encoded JSON representing array of  tuple. */
-    sdkBlob?: string;
-  }
-
   /**
-   * A MCPServer is a server that can be called by the model to perform actions.
-   * It is a server that implements the MCP protocol.
-   * Next ID: 5
+   * A predicted server-side `ToolCall` returned from the model. This message
+   * contains information about a tool that the model wants to invoke.
+   * The client is NOT expected to execute this `ToolCall`. Instead, the
+   * client should pass this `ToolCall` back to the API in a subsequent turn
+   * within a `Content` message, along with the corresponding `ToolResponse`.
    */
-  export interface McpServer {
-    /** The name of the MCPServer. */
-    name?: string;
-
-    /** A transport that can stream HTTP requests and responses. */
-    streamableHttpTransport?: StreamableHttpTransport;
-  }
-
-  export type ModelStage = "MODEL_STAGE_UNSPECIFIED" | "UNSTABLE_EXPERIMENTAL" | "EXPERIMENTAL" | "PREVIEW" | "STABLE" | "LEGACY" | "DEPRECATED" | "RETIRED" | (string & {});
-
-  /**
-   * Collection of sources that provide answers about the features of a given
-   * place in Google Maps. Each PlaceAnswerSources message corresponds to a
-   * specific place in Google Maps. The Google Maps tool used these sources in
-   * order to answer questions about features of the place (e.g: "does Bar Foo
-   * have Wifi" or "is Foo Bar wheelchair accessible?"). Currently we only
-   * support review snippets as sources.
-   */
-  export interface PlaceAnswerSources {
+  export interface ToolCall {
     /**
-     * Snippets of reviews that are used to generate answers about the
-     * features of a given place in Google Maps.
+     * Optional. The tool call arguments.
+     * Example: {"arg1" : "value1", "arg2" : "value2" , ...}
      */
-    reviewSnippets?: Array<ReviewSnippet>;
+    args?: Record<string, unknown>;
+
+    /**
+     * Optional. Unique identifier of the tool call.
+     * The server returns the tool response with the matching `id`.
+     */
+    id?: string;
+
+    /** Required. The type of tool that was called. */
+    toolType: ToolType;
   }
+
+  /** A list of string values. */
+  export interface GroundingChunkStringList {
+    /** The string values of the list. */
+    values?: Array<string>;
+  }
+
+  /** Required. The type of tool that was called. */
+  export type ToolType = "TOOL_TYPE_UNSPECIFIED" | "GOOGLE_SEARCH_WEB" | "GOOGLE_SEARCH_IMAGE" | "URL_CONTEXT" | "GOOGLE_MAPS" | "FILE_SEARCH" | (string & {});
 
   /**
    * A datatype containing media that is part of a `FunctionResponse` message.
@@ -1667,6 +1826,37 @@ export namespace Gemini {
   }
 
   /**
+   * A MCPServer is a server that can be called by the model to perform actions.
+   * It is a server that implements the MCP protocol.
+   * Next ID: 5
+   */
+  export interface McpServer {
+    /** The name of the MCPServer. */
+    name?: string;
+
+    /** A transport that can stream HTTP requests and responses. */
+    streamableHttpTransport?: StreamableHttpTransport;
+  }
+
+  /**
+   * Collection of sources that provide answers about the features of a given
+   * place in Google Maps. Each PlaceAnswerSources message corresponds to a
+   * specific place in Google Maps. The Google Maps tool used these sources in
+   * order to answer questions about features of the place (e.g: "does Bar Foo
+   * have Wifi" or "is Foo Bar wheelchair accessible?"). Currently we only
+   * support review snippets as sources.
+   */
+  export interface PlaceAnswerSources {
+    /**
+     * Snippets of reviews that are used to generate answers about the
+     * features of a given place in Google Maps.
+     */
+    reviewSnippets?: Array<ReviewSnippet>;
+  }
+
+  export type ModelStage = "MODEL_STAGE_UNSPECIFIED" | "UNSTABLE_EXPERIMENTAL" | "EXPERIMENTAL" | "PREVIEW" | "STABLE" | "LEGACY" | "DEPRECATED" | "RETIRED" | (string & {});
+
+  /**
    * Tool to retrieve public web data for grounding, powered by Google.
    */
   export interface GoogleSearchRetrieval {
@@ -1674,6 +1864,28 @@ export namespace Gemini {
      * Specifies the dynamic retrieval configuration for the given source.
      */
     dynamicRetrievalConfig?: DynamicRetrievalConfig;
+  }
+
+  /**
+   * Raw media bytes for function response.
+   * 
+   * Text should not be sent as raw bytes, use the 'FunctionResponse.response'
+   * field.
+   */
+  export interface FunctionResponseBlob {
+    /** Raw bytes for media formats. */
+    data?: string;
+
+    /**
+     * The IANA standard MIME type of the source data.
+     * Examples:
+     *   - image/png
+     *   - image/jpeg
+     * If an unsupported MIME type is provided, an error will be returned. For a
+     * complete list of supported types, see [Supported file
+     * formats](https://ai.google.dev/gemini-api/docs/prompting_with_media#supported_file_formats).
+     */
+    mimeType?: string;
   }
 
   /**
@@ -1717,28 +1929,6 @@ export namespace Gemini {
 
     /** Title of the review. */
     title?: string;
-  }
-
-  /**
-   * Raw media bytes for function response.
-   * 
-   * Text should not be sent as raw bytes, use the 'FunctionResponse.response'
-   * field.
-   */
-  export interface FunctionResponseBlob {
-    /** Raw bytes for media formats. */
-    data?: string;
-
-    /**
-     * The IANA standard MIME type of the source data.
-     * Examples:
-     *   - image/png
-     *   - image/jpeg
-     * If an unsupported MIME type is provided, an error will be returned. For a
-     * complete list of supported types, see [Supported file
-     * formats](https://ai.google.dev/gemini-api/docs/prompting_with_media#supported_file_formats).
-     */
-    mimeType?: string;
   }
 
   /** Describes the options to customize dynamic retrieval. */
