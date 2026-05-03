@@ -15,6 +15,10 @@ import type {
 } from "@langchain/core/language_models/chat_models";
 import type { Gemini } from "../chat_models/types.js";
 import { InvalidInputError, InvalidToolError } from "../utils/errors.js";
+import {
+  isSerializableSchema,
+  SerializableSchema,
+} from "@langchain/core/utils/standard_schema";
 
 /**
  * Adjusts a JSON Schema object type to be compatible with Gemini's function schema format.
@@ -31,9 +35,9 @@ import { InvalidInputError, InvalidToolError } from "../utils/errors.js";
  * @internal
  */
 function adjustObjectType(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   obj: Record<string, any>
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
 ): Record<string, any> {
   if (!Array.isArray(obj.type)) {
     return obj;
@@ -85,7 +89,7 @@ function adjustObjectType(
  * @internal
  */
 function removeAdditionalProperties(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   obj: Record<string, any>
 ): Gemini.Tools.Schema & { $schema?: string } {
   if (typeof obj === "object" && obj !== null) {
@@ -126,18 +130,24 @@ function removeAdditionalProperties(
  * @internal
  */
 export function schemaToGeminiParameters<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  RunOutput extends Record<string, any> = Record<string, any>
->(schema: InteropZodType<RunOutput> | JsonSchema7Type): Gemini.Tools.Schema {
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  RunOutput extends Record<string, any> = Record<string, any>,
+>(
+  schema:
+    | SerializableSchema<RunOutput>
+    | InteropZodType<RunOutput>
+    | JsonSchema7Type
+): Gemini.Tools.Schema {
   // Gemini doesn't accept either the $schema or additionalProperties
   // attributes, so we need to explicitly remove them.
   // Zod sometimes also makes an array of type (because of .nullish()),
   // which needs cleaning up.
   const jsonSchema = removeAdditionalProperties(
-    isInteropZodSchema(schema) ? toJsonSchema(schema) : schema
+    isInteropZodSchema(schema) || isSerializableSchema(schema)
+      ? toJsonSchema(schema)
+      : schema
   );
   const { $schema, ...rest } = jsonSchema;
-
   return rest;
 }
 
@@ -150,7 +160,7 @@ export function schemaToGeminiParameters<
  * @internal
  */
 function jsonSchemaToGeminiParameters(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   schema: Record<string, any>
 ): Gemini.Tools.Schema {
   const jsonSchema = removeAdditionalProperties(schema);
@@ -457,12 +467,10 @@ export function convertToolChoiceToGeminiConfig(
   toolChoice: ToolChoice | undefined,
   hasTools: boolean
 ): Gemini.Tools.ToolConfig | undefined {
-  // Only create config if tools are present
-  if (!hasTools) {
+  if (!hasTools || toolChoice === undefined) {
     return undefined;
   }
 
-  // Convert tool_choice to Gemini function calling config mode
   let mode: Gemini.Tools.FunctionCallingConfigMode | undefined;
   let allowedFunctionNames: string[] | undefined;
 
@@ -482,7 +490,6 @@ export function convertToolChoiceToGeminiConfig(
   } else if (toolChoiceMode === "none") {
     mode = "NONE";
   } else if (typeof toolChoiceMode === "string") {
-    // A function name, which is deprecated, but supported
     mode = "ANY";
     toolChoiceFunction = toolChoiceMode;
   }
@@ -495,7 +502,6 @@ export function convertToolChoiceToGeminiConfig(
     }
   }
 
-  // Build toolConfig: use explicit mode if provided, otherwise default to AUTO
   const functionCallingConfig: Gemini.Tools.FunctionCallingConfig = {};
   if (allowedFunctionNames?.length) {
     functionCallingConfig.allowedFunctionNames = allowedFunctionNames;

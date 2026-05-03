@@ -3,6 +3,7 @@ import { z as z4 } from "zod/v4";
 
 import { describe, expect, test } from "vitest";
 
+import { AIMessage } from "../../messages/index.js";
 import { OutputParserException } from "../base.js";
 import { StructuredOutputParser } from "../structured.js";
 import { InteropZodObject, InteropZodType } from "../../utils/types/zod.js";
@@ -33,6 +34,25 @@ test("StructuredOutputParser.fromNamesAndDescriptions", async () => {
   \`\`\`
   "
   `);
+});
+
+test("StructuredOutputParser.invoke parses BaseMessage with reasoning blocks", async () => {
+  const parser = StructuredOutputParser.fromZodSchema(
+    z.object({
+      answer: z.string(),
+    })
+  );
+
+  const result = await parser.invoke(
+    new AIMessage({
+      content: [
+        { type: "reasoning", reasoning: "Let me think..." },
+        { type: "text", text: '{"answer":"value"}' },
+      ],
+    })
+  );
+
+  expect(result).toEqual({ answer: "value" });
 });
 
 enum StateProvinceEnum {
@@ -82,21 +102,21 @@ describe("StructuredOutputParser.fromZodSchema", () => {
     await assertValid(parser);
 
     expect(parser.getFormatInstructions()).toMatchInlineSnapshot(`
-    "You must format your output as a JSON value that adheres to a given "JSON Schema" instance.
+      "You must format your output as a JSON value that adheres to a given "JSON Schema" instance.
 
-    "JSON Schema" is a declarative language that allows you to annotate and validate JSON documents.
+      "JSON Schema" is a declarative language that allows you to annotate and validate JSON documents.
 
-    For example, the example "JSON Schema" instance {{"properties": {{"foo": {{"description": "a list of test words", "type": "array", "items": {{"type": "string"}}}}}}, "required": ["foo"]}}
-    would match an object with one required property, "foo". The "type" property specifies "foo" must be an "array", and the "description" property semantically describes it as "a list of test words". The items within "foo" must be strings.
-    Thus, the object {{"foo": ["bar", "baz"]}} is a well-formatted instance of this example "JSON Schema". The object {{"properties": {{"foo": ["bar", "baz"]}}}} is not well-formatted.
+      For example, the example "JSON Schema" instance {{"properties": {{"foo": {{"description": "a list of test words", "type": "array", "items": {{"type": "string"}}}}}}, "required": ["foo"]}}
+      would match an object with one required property, "foo". The "type" property specifies "foo" must be an "array", and the "description" property semantically describes it as "a list of test words". The items within "foo" must be strings.
+      Thus, the object {{"foo": ["bar", "baz"]}} is a well-formatted instance of this example "JSON Schema". The object {{"properties": {{"foo": ["bar", "baz"]}}}} is not well-formatted.
 
-    Your output will be parsed and type-checked according to the provided schema instance, so make sure all fields in your output match the schema exactly and there are no trailing commas!
+      Your output will be parsed and type-checked according to the provided schema instance, so make sure all fields in your output match the schema exactly and there are no trailing commas!
 
-    Here is the JSON Schema instance your output must adhere to. Include the enclosing markdown codeblock:
-    \`\`\`json
-    {"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","properties":{"url":{"description":"A link to the resource","type":"string"}},"required":["url"],"additionalProperties":false}
-    \`\`\`
-    "
+      Here is the JSON Schema instance your output must adhere to. Include the enclosing markdown codeblock:
+      \`\`\`json
+      {"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","properties":{"url":{"type":"string","description":"A link to the resource"}},"required":["url"],"additionalProperties":false}
+      \`\`\`
+      "
     `);
   });
 });
@@ -198,21 +218,21 @@ describe("StructuredOutputParser.fromZodSchema", () => {
     await assertValid(parser);
 
     expect(parser.getFormatInstructions()).toMatchInlineSnapshot(`
-    "You must format your output as a JSON value that adheres to a given "JSON Schema" instance.
+      "You must format your output as a JSON value that adheres to a given "JSON Schema" instance.
 
-    "JSON Schema" is a declarative language that allows you to annotate and validate JSON documents.
+      "JSON Schema" is a declarative language that allows you to annotate and validate JSON documents.
 
-    For example, the example "JSON Schema" instance {{"properties": {{"foo": {{"description": "a list of test words", "type": "array", "items": {{"type": "string"}}}}}}, "required": ["foo"]}}
-    would match an object with one required property, "foo". The "type" property specifies "foo" must be an "array", and the "description" property semantically describes it as "a list of test words". The items within "foo" must be strings.
-    Thus, the object {{"foo": ["bar", "baz"]}} is a well-formatted instance of this example "JSON Schema". The object {{"properties": {{"foo": ["bar", "baz"]}}}} is not well-formatted.
+      For example, the example "JSON Schema" instance {{"properties": {{"foo": {{"description": "a list of test words", "type": "array", "items": {{"type": "string"}}}}}}, "required": ["foo"]}}
+      would match an object with one required property, "foo". The "type" property specifies "foo" must be an "array", and the "description" property semantically describes it as "a list of test words". The items within "foo" must be strings.
+      Thus, the object {{"foo": ["bar", "baz"]}} is a well-formatted instance of this example "JSON Schema". The object {{"properties": {{"foo": ["bar", "baz"]}}}} is not well-formatted.
 
-    Your output will be parsed and type-checked according to the provided schema instance, so make sure all fields in your output match the schema exactly and there are no trailing commas!
+      Your output will be parsed and type-checked according to the provided schema instance, so make sure all fields in your output match the schema exactly and there are no trailing commas!
 
-    Here is the JSON Schema instance your output must adhere to. Include the enclosing markdown codeblock:
-    \`\`\`json
-    {"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","properties":{"answer":{"description":"answer to the user's question","type":"string"},"sources":{"type":"array","items":{"type":"string"},"description":"sources used to answer the question, should be websites."}},"required":["answer","sources"],"additionalProperties":false}
-    \`\`\`
-    "
+      Here is the JSON Schema instance your output must adhere to. Include the enclosing markdown codeblock:
+      \`\`\`json
+      {"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","properties":{"answer":{"type":"string","description":"answer to the user's question"},"sources":{"type":"array","items":{"type":"string"},"description":"sources used to answer the question, should be websites."}},"required":["answer","sources"],"additionalProperties":false}
+      \`\`\`
+      "
     `);
   });
 });
@@ -331,21 +351,21 @@ describe("StructuredOutputParser.fromZodSchema", () => {
     });
 
     expect(parser.getFormatInstructions()).toMatchInlineSnapshot(`
-    "You must format your output as a JSON value that adheres to a given "JSON Schema" instance.
+      "You must format your output as a JSON value that adheres to a given "JSON Schema" instance.
 
-    "JSON Schema" is a declarative language that allows you to annotate and validate JSON documents.
+      "JSON Schema" is a declarative language that allows you to annotate and validate JSON documents.
 
-    For example, the example "JSON Schema" instance {{"properties": {{"foo": {{"description": "a list of test words", "type": "array", "items": {{"type": "string"}}}}}}, "required": ["foo"]}}
-    would match an object with one required property, "foo". The "type" property specifies "foo" must be an "array", and the "description" property semantically describes it as "a list of test words". The items within "foo" must be strings.
-    Thus, the object {{"foo": ["bar", "baz"]}} is a well-formatted instance of this example "JSON Schema". The object {{"properties": {{"foo": ["bar", "baz"]}}}} is not well-formatted.
+      For example, the example "JSON Schema" instance {{"properties": {{"foo": {{"description": "a list of test words", "type": "array", "items": {{"type": "string"}}}}}}, "required": ["foo"]}}
+      would match an object with one required property, "foo". The "type" property specifies "foo" must be an "array", and the "description" property semantically describes it as "a list of test words". The items within "foo" must be strings.
+      Thus, the object {{"foo": ["bar", "baz"]}} is a well-formatted instance of this example "JSON Schema". The object {{"properties": {{"foo": ["bar", "baz"]}}}} is not well-formatted.
 
-    Your output will be parsed and type-checked according to the provided schema instance, so make sure all fields in your output match the schema exactly and there are no trailing commas!
+      Your output will be parsed and type-checked according to the provided schema instance, so make sure all fields in your output match the schema exactly and there are no trailing commas!
 
-    Here is the JSON Schema instance your output must adhere to. Include the enclosing markdown codeblock:
-    \`\`\`json
-    {"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","properties":{"url":{"description":"A link to the resource","type":"string"},"title":{"description":"A title for the resource","type":"string"},"year":{"description":"The year the resource was created","type":"number"},"createdAt":{"description":"The date and time the resource was created","type":"string"},"createdAtDate":{"description":"The date the resource was created","type":"string"},"authors":{"type":"array","items":{"type":"object","properties":{"name":{"description":"The name of the author","type":"string"},"email":{"description":"The email of the author","type":"string"},"type":{"type":"string","enum":["author","editor"]},"address":{"description":"The address of the author","type":"string"},"stateProvince":{"description":"The state or province of the author","type":"string","enum":["AL","AK","AZ"]}},"required":["name","email"],"additionalProperties":false}}},"required":["url","title","year","createdAt","authors"],"additionalProperties":false,"description":"Only One object"}
-    \`\`\`
-    "
+      Here is the JSON Schema instance your output must adhere to. Include the enclosing markdown codeblock:
+      \`\`\`json
+      {"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","properties":{"url":{"type":"string","description":"A link to the resource"},"title":{"type":"string","description":"A title for the resource"},"year":{"type":"number","description":"The year the resource was created"},"createdAt":{"type":"string","description":"The date and time the resource was created"},"createdAtDate":{"type":"string","description":"The date the resource was created"},"authors":{"type":"array","items":{"type":"object","properties":{"name":{"type":"string","description":"The name of the author"},"email":{"type":"string","description":"The email of the author"},"type":{"type":"string","enum":["author","editor"]},"address":{"description":"The address of the author","type":"string"},"stateProvince":{"description":"The state or province of the author","type":"string","enum":["AL","AK","AZ"]}},"required":["name","email"],"additionalProperties":false}}},"required":["url","title","year","createdAt","authors"],"additionalProperties":false,"description":"Only One object"}
+      \`\`\`
+      "
     `);
   });
 });

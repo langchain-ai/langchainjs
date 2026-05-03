@@ -1,6 +1,6 @@
 {
   "name": "@langchain/pinecone",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "LangChain integration for Pinecone's vector database",
   "author": "Pinecone, Inc",
   "license": "MIT",
@@ -12,7 +12,7 @@
     "type": "git",
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
-  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-pinecone/",
+  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/community/langchain-pinecone/",
   "scripts": {
     "build": "turbo build:compile --filter @langchain/pinecone --output-logs new-only",
     "build:compile": "tsdown",
@@ -28,8 +28,7 @@
     "format:check": "prettier --check \"src\""
   },
   "dependencies": {
-    "flat": "^5.0.2",
-    "uuid": "^10.0.0"
+    "flat": "^5.0.2"
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0",
@@ -38,7 +37,6 @@
   "devDependencies": {
     "@faker-js/faker": "^8.3.1",
     "@langchain/core": "workspace:^",
-    "@langchain/eslint": "workspace:*",
     "@langchain/openai": "workspace:*",
     "@pinecone-database/pinecone": "^5.0.2",
     "@langchain/tsconfig": "workspace:*",

@@ -1,5 +1,5 @@
-/* eslint-disable no-instanceof/no-instanceof */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable no-instanceof/no-instanceof */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { InteropZodObject } from "@langchain/core/utils/types";
 
 import {
@@ -15,7 +15,11 @@ import {
   type StreamOutputMap,
   type PregelOptions,
 } from "@langchain/langgraph";
-import type { CheckpointListOptions } from "@langchain/langgraph-checkpoint";
+import type {
+  BaseCheckpointSaver,
+  BaseStore,
+  CheckpointListOptions,
+} from "@langchain/langgraph-checkpoint";
 import {
   ToolMessage,
   AIMessage,
@@ -47,7 +51,6 @@ import {
   initializeMiddlewareStates,
   parseJumpToTarget,
 } from "./nodes/utils.js";
-import { StateManager } from "./state.js";
 
 import type {
   WithStateGraphNodes,
@@ -171,8 +174,6 @@ export class ReactAgent<
 
   #agentNode: AgentNode<any, AnyAnnotationRoot>;
 
-  #stateManager = new StateManager();
-
   #defaultConfig: RunnableConfig;
 
   constructor(
@@ -183,7 +184,10 @@ export class ReactAgent<
     >,
     defaultConfig?: RunnableConfig
   ) {
-    this.#defaultConfig = defaultConfig ?? {};
+    this.#defaultConfig = mergeConfigs(defaultConfig ?? {}, {
+      metadata: { ls_integration: "langchain_create_agent" },
+      configurable: { ls_agent_type: "root" },
+    });
     if (options.name) {
       this.#defaultConfig = mergeConfigs(this.#defaultConfig, {
         metadata: { lc_agent_name: options.name },
@@ -228,11 +232,14 @@ export class ReactAgent<
      * Create a schema that merges agent base schema with middleware state schemas
      * Using Zod with withLangGraph ensures LangGraph Studio gets proper metadata
      */
+    const hasDynamicStructuredResponse = Boolean(
+      this.options.middleware?.some((middleware) => middleware.wrapModelCall)
+    );
     const { state, input, output } = createAgentState<
       Types["State"],
       Types["Middleware"]
     >(
-      this.options.responseFormat !== undefined,
+      this.options.responseFormat !== undefined || hasDynamicStructuredResponse,
       this.options.stateSchema as Types["State"],
       this.options.middleware as Types["Middleware"]
     );
@@ -269,13 +276,7 @@ export class ReactAgent<
       name: string;
       allowed?: string[];
     }[] = [];
-    const wrapModelCallHookMiddleware: [
-      AgentMiddleware,
-      /**
-       * ToDo: better type to get the state of middleware
-       */
-      () => any,
-    ][] = [];
+    const wrapModelCallHookMiddleware: AgentMiddleware[] = [];
 
     this.#agentNode = new AgentNode({
       model: this.options.model,
@@ -304,10 +305,7 @@ export class ReactAgent<
 
       middlewareNames.add(m.name);
       if (m.beforeAgent) {
-        beforeAgentNode = new BeforeAgentNode(m, {
-          getState: () => this.#stateManager.getState(m.name),
-        });
-        this.#stateManager.addNode(m, beforeAgentNode);
+        beforeAgentNode = new BeforeAgentNode(m);
         const name = `${m.name}.before_agent`;
         beforeAgentNodes.push({
           index: i,
@@ -321,10 +319,7 @@ export class ReactAgent<
         );
       }
       if (m.beforeModel) {
-        beforeModelNode = new BeforeModelNode(m, {
-          getState: () => this.#stateManager.getState(m.name),
-        });
-        this.#stateManager.addNode(m, beforeModelNode);
+        beforeModelNode = new BeforeModelNode(m);
         const name = `${m.name}.before_model`;
         beforeModelNodes.push({
           index: i,
@@ -338,10 +333,7 @@ export class ReactAgent<
         );
       }
       if (m.afterModel) {
-        afterModelNode = new AfterModelNode(m, {
-          getState: () => this.#stateManager.getState(m.name),
-        });
-        this.#stateManager.addNode(m, afterModelNode);
+        afterModelNode = new AfterModelNode(m);
         const name = `${m.name}.after_model`;
         afterModelNodes.push({
           index: i,
@@ -355,10 +347,7 @@ export class ReactAgent<
         );
       }
       if (m.afterAgent) {
-        afterAgentNode = new AfterAgentNode(m, {
-          getState: () => this.#stateManager.getState(m.name),
-        });
-        this.#stateManager.addNode(m, afterAgentNode);
+        afterAgentNode = new AfterAgentNode(m);
         const name = `${m.name}.after_agent`;
         afterAgentNodes.push({
           index: i,
@@ -373,10 +362,7 @@ export class ReactAgent<
       }
 
       if (m.wrapModelCall) {
-        wrapModelCallHookMiddleware.push([
-          m,
-          () => this.#stateManager.getState(m.name),
-        ]);
+        wrapModelCallHookMiddleware.push(m);
       }
     }
 
@@ -663,7 +649,11 @@ export class ReactAgent<
       if (shouldReturnDirect.size > 0) {
         allNodeWorkflows.addConditionalEdges(
           TOOLS_NODE_NAME,
-          this.#createToolsRouter(shouldReturnDirect, exitNode),
+          this.#createToolsRouter(
+            shouldReturnDirect,
+            exitNode,
+            toolReturnTarget
+          ),
           [toolReturnTarget, exitNode as string]
         );
       } else {
@@ -687,6 +677,22 @@ export class ReactAgent<
    */
   get graph(): AgentGraph<Types> {
     return this.#graph;
+  }
+
+  get checkpointer(): BaseCheckpointSaver | boolean | undefined {
+    return this.#graph.checkpointer;
+  }
+
+  set checkpointer(value: BaseCheckpointSaver | boolean | undefined) {
+    this.#graph.checkpointer = value;
+  }
+
+  get store(): BaseStore | undefined {
+    return this.#graph.store;
+  }
+
+  set store(value: BaseStore | undefined) {
+    this.#graph.store = value;
   }
 
   /**
@@ -752,7 +758,8 @@ export class ReactAgent<
    */
   #createToolsRouter(
     shouldReturnDirect: Set<string>,
-    exitNode: string | typeof END
+    exitNode: string | typeof END,
+    toolReturnTarget: string
   ) {
     return (state: Record<string, unknown>) => {
       const builtInState = state as unknown as BuiltInState;
@@ -767,11 +774,11 @@ export class ReactAgent<
       ) {
         // If we have a response format, route to agent to generate structured response
         // Otherwise, return directly to exit node (could be after_agent or END)
-        return this.options.responseFormat ? AGENT_NODE_NAME : exitNode;
+        return this.options.responseFormat ? toolReturnTarget : exitNode;
       }
 
-      // For non-returnDirect tools, always route back to agent
-      return AGENT_NODE_NAME;
+      // For non-returnDirect tools, route back to loop entry node (could be middleware or agent)
+      return toolReturnTarget;
     };
   }
 
@@ -894,6 +901,14 @@ export class ReactAgent<
         (call) => !toolMessages.some((m) => m.tool_call_id === call.id)
       );
       if (pendingToolCalls && pendingToolCalls.length > 0) {
+        /**
+         * v1: route the full message to the ToolNode; it filters already-processed
+         * calls internally and runs the remaining ones via Promise.all.
+         * v2: dispatch each pending call as a separate Send task.
+         */
+        if (this.#toolBehaviorVersion === "v1") {
+          return TOOLS_NODE_NAME;
+        }
         return pendingToolCalls.map(
           (toolCall) =>
             new Send(TOOLS_NODE_NAME, { ...state, lg_tool_call: toolCall })
@@ -938,10 +953,29 @@ export class ReactAgent<
       }
 
       /**
-       * For routing from afterModel nodes, always use simple string paths
-       * The Send API is handled at the model_request node level
+       * v1: route the full AIMessage to a single ToolNode invocation so all
+       * tool calls run concurrently via Promise.all.
+       *
+       * v2: dispatch each regular tool call as a separate Send task, matching
+       * the behaviour of #createModelRouter when no afterModel middleware is
+       * present.
        */
-      return TOOLS_NODE_NAME;
+      if (this.#toolBehaviorVersion === "v1") {
+        return TOOLS_NODE_NAME;
+      }
+
+      const regularToolCalls = (lastMessage as AIMessage).tool_calls!.filter(
+        (toolCall) => !toolCall.name.startsWith("extract-")
+      );
+
+      if (regularToolCalls.length === 0) {
+        return exitNode;
+      }
+
+      return regularToolCalls.map(
+        (toolCall) =>
+          new Send(TOOLS_NODE_NAME, { ...state, lg_tool_call: toolCall })
+      );
     };
   }
 
@@ -1360,7 +1394,7 @@ export class ReactAgent<
   /**
    * @internal
    */
-  getSubgraphAsync(namespace?: string, recurse?: boolean) {
+  getSubgraphsAsync(namespace?: string, recurse?: boolean) {
     return this.#graph.getSubgraphsAsync(namespace, recurse) as never;
   }
   /**

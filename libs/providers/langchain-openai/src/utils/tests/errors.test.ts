@@ -61,6 +61,24 @@ describe("wrapOpenAIClientError", () => {
     expect((wrapped as ContextOverflowError).cause).toBe(originalError);
   });
 
+  test("should wrap context overflow error (maximum context length)", () => {
+    const originalError = {
+      status: 400,
+      message:
+        "This model's maximum context length is 131072 tokens. However, you requested 131079 tokens (131079 in the messages, 0 in the completion). Please reduce the length of the messages or completion.",
+      constructor: { name: "BadRequestError" },
+    };
+
+    const wrapped = wrapOpenAIClientError(originalError);
+
+    expect(wrapped).toBeInstanceOf(ContextOverflowError);
+    expect(ContextOverflowError.isInstance(wrapped)).toBe(true);
+    expect((wrapped as ContextOverflowError).message).toContain(
+      "maximum context length"
+    );
+    expect((wrapped as ContextOverflowError).cause).toBe(originalError);
+  });
+
   test("should not wrap non-context-overflow 400 errors", () => {
     const originalError = {
       status: 400,
@@ -83,7 +101,7 @@ describe("wrapOpenAIClientError", () => {
     const wrapped = wrapOpenAIClientError(originalError);
 
     expect(wrapped).not.toBeInstanceOf(ContextOverflowError);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect((wrapped as any).lc_error_code).toBe("INVALID_TOOL_RESULTS");
   });
 
@@ -96,7 +114,7 @@ describe("wrapOpenAIClientError", () => {
 
     const wrapped = wrapOpenAIClientError(originalError);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect((wrapped as any).lc_error_code).toBe("MODEL_AUTHENTICATION");
   });
 
@@ -109,7 +127,7 @@ describe("wrapOpenAIClientError", () => {
 
     const wrapped = wrapOpenAIClientError(originalError);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect((wrapped as any).lc_error_code).toBe("MODEL_NOT_FOUND");
   });
 
@@ -122,7 +140,7 @@ describe("wrapOpenAIClientError", () => {
 
     const wrapped = wrapOpenAIClientError(originalError);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect((wrapped as any).lc_error_code).toBe("MODEL_RATE_LIMIT");
   });
 

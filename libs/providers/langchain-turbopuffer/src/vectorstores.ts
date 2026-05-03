@@ -1,4 +1,4 @@
-import { v4 as uuid } from "uuid";
+import { v4 as uuid } from "@langchain/core/utils/uuid";
 import { Document, type DocumentInterface } from "@langchain/core/documents";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
@@ -16,7 +16,7 @@ export type { DistanceMetric as TurbopufferDistanceMetric } from "@turbopuffer/t
 
 const PAGE_CONTENT_KEY = "__lc_page_content";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 type ColumnData = Record<string, any[]>;
 
 /**

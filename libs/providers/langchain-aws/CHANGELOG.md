@@ -1,5 +1,51 @@
 # @langchain/aws
 
+## 1.3.5
+
+### Patch Changes
+
+- [#10688](https://github.com/langchain-ai/langchainjs/pull/10688) [`2ff51cf`](https://github.com/langchain-ai/langchainjs/commit/2ff51cf0688e45d5d237b2b435334b5fd987afa9) Thanks [@hntrl](https://github.com/hntrl)! - normalize Bedrock Converse object errors for tracing
+
+## 1.3.4
+
+### Patch Changes
+
+- [#10658](https://github.com/langchain-ai/langchainjs/pull/10658) [`793bc69`](https://github.com/langchain-ai/langchainjs/commit/793bc69a8af8198de9d157c21070871660e6bb13) Thanks [@colifran](https://github.com/colifran)! - feat(aws): impute file name for document content blocks
+
+## 1.3.3
+
+### Patch Changes
+
+- [#10409](https://github.com/langchain-ai/langchainjs/pull/10409) [`e3fb76b`](https://github.com/langchain-ai/langchainjs/commit/e3fb76b2b019c6aa033c960014d248c322c7d645) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - feat(aws): add defaultHeaders to ChatBedrockConverse
+
+## 1.3.2
+
+### Patch Changes
+
+- [#10288](https://github.com/langchain-ai/langchainjs/pull/10288) [`93e6180`](https://github.com/langchain-ai/langchainjs/commit/93e6180be4a252b575ea0ec9d5f9cab2c3dcb637) Thanks [@hntrl](https://github.com/hntrl)! - feat(aws): Add bedrockApiKey, bedrockApiSecret, and bedrockApiSessionToken to ChatBedrockConverse
+  - New constructor fields allow passing AWS credentials directly instead of relying solely on the default credential provider chain
+  - Falls back to BEDROCK_AWS_ACCESS_KEY_ID, BEDROCK_AWS_SECRET_ACCESS_KEY, and BEDROCK_AWS_SESSION_TOKEN environment variables
+  - Explicit `credentials` field still takes highest priority
+
+## 1.3.1
+
+### Patch Changes
+
+- [#10213](https://github.com/langchain-ai/langchainjs/pull/10213) [`e0b661e`](https://github.com/langchain-ai/langchainjs/commit/e0b661e07f3357ca4dff5a7cf061df76c57965c5) Thanks [@colifran](https://github.com/colifran)! - feat(aws): implement standard schema support for structured output
+
+## 1.3.0
+
+### Minor Changes
+
+- [#10150](https://github.com/langchain-ai/langchainjs/pull/10150) [`4fe6aa3`](https://github.com/langchain-ai/langchainjs/commit/4fe6aa31b50556e183a61737f60c8bef31d0e72b) Thanks [@hntrl](https://github.com/hntrl)! - feat(aws): Add video and audio content block support for ChatBedrockConverse input messages
+  - Convert standard multimodal video/audio blocks (base64, Uint8Array, data URL, S3 URI) to Bedrock's native format
+  - Pass through native Bedrock video/audio blocks unchanged
+  - Adds support for all Bedrock video formats (flv, mkv, mov, mp4, mpeg, mpg, three_gp, webm, wmv) and audio formats (aac, flac, m4a, mka, mkv, mp3, mp4, mpeg, mpga, ogg, opus, pcm, wav, webm, x-aac)
+
+### Patch Changes
+
+- [#10106](https://github.com/langchain-ai/langchainjs/pull/10106) [`9f30267`](https://github.com/langchain-ai/langchainjs/commit/9f30267e95a2a42fac71f1d3674b84c5a190dbbc) Thanks [@hntrl](https://github.com/hntrl)! - Add package version metadata to runnable traces. Each package now stamps its version in `this.metadata.versions` at construction time, making version info available in LangSmith trace metadata.
+
 ## 1.2.5
 
 ### Patch Changes

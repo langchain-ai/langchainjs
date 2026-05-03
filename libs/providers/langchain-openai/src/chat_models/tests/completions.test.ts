@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { HumanMessage } from "@langchain/core/messages";
+import { HumanMessage, AIMessageChunk } from "@langchain/core/messages";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { ChatOpenAICompletions } from "../completions.js";
 
@@ -71,9 +71,9 @@ describe("ChatOpenAICompletions streaming usage_metadata callback", () => {
       };
     })();
 
-    vi.spyOn(model, "completionWithRetry").mockResolvedValue(
-      fakeStream as ReturnType<typeof model.completionWithRetry>
-    );
+    model.completionWithRetry = vi
+      .fn()
+      .mockResolvedValue(fakeStream) as typeof model.completionWithRetry;
 
     // Create a mock runManager
     const handleLLMNewToken = vi.fn();
@@ -95,10 +95,11 @@ describe("ChatOpenAICompletions streaming usage_metadata callback", () => {
 
     // The last chunk should have usage_metadata
     const usageChunk = chunks[chunks.length - 1];
-    expect(usageChunk.message.usage_metadata).toBeDefined();
-    expect(usageChunk.message.usage_metadata?.input_tokens).toBe(10);
-    expect(usageChunk.message.usage_metadata?.output_tokens).toBe(5);
-    expect(usageChunk.message.usage_metadata?.total_tokens).toBe(15);
+    const usageMessage = usageChunk.message as AIMessageChunk;
+    expect(usageMessage.usage_metadata).toBeDefined();
+    expect(usageMessage.usage_metadata?.input_tokens).toBe(10);
+    expect(usageMessage.usage_metadata?.output_tokens).toBe(5);
+    expect(usageMessage.usage_metadata?.total_tokens).toBe(15);
 
     // handleLLMNewToken should have been called for EVERY chunk,
     // including the usage chunk (this is the bug fix)
@@ -106,8 +107,70 @@ describe("ChatOpenAICompletions streaming usage_metadata callback", () => {
 
     // Verify the last call includes the usage chunk
     const lastCall = handleLLMNewToken.mock.calls[2];
-    const lastCallFields = lastCall[5]; // 6th argument is the fields object
+    const lastCallFields = lastCall[5] as {
+      chunk: { message: AIMessageChunk };
+    };
     expect(lastCallFields.chunk.message.usage_metadata).toBeDefined();
-    expect(lastCallFields.chunk.message.usage_metadata.input_tokens).toBe(10);
+    expect(lastCallFields.chunk.message.usage_metadata?.input_tokens).toBe(10);
+  });
+});
+
+describe("ChatOpenAICompletions reasoning_content compatibility", () => {
+  it("should preserve reasoning_content on streamed assistant chunks", async () => {
+    const model = new ChatOpenAICompletions({
+      model: "gpt-5.4",
+      apiKey: "test-key",
+      streaming: true,
+    });
+
+    const fakeStream = (async function* () {
+      yield {
+        choices: [
+          {
+            index: 0,
+            delta: {
+              role: "assistant" as const,
+              content: "",
+              reasoning_content: "The user",
+            },
+            finish_reason: null,
+            logprobs: null,
+          },
+        ],
+        usage: null,
+        system_fingerprint: null,
+        model: "gpt-5.4",
+        service_tier: null,
+      };
+      yield {
+        choices: [
+          {
+            index: 0,
+            delta: { content: "" },
+            finish_reason: "stop",
+            logprobs: null,
+          },
+        ],
+        usage: null,
+        system_fingerprint: null,
+        model: "gpt-5.4",
+        service_tier: null,
+      };
+    })();
+
+    model.completionWithRetry = vi
+      .fn()
+      .mockResolvedValue(fakeStream) as typeof model.completionWithRetry;
+
+    const chunks = [];
+    for await (const chunk of model._streamResponseChunks(
+      [new HumanMessage("1+1=?")],
+      {}
+    )) {
+      chunks.push(chunk);
+    }
+
+    const firstChunk = chunks[0].message as AIMessageChunk;
+    expect(firstChunk.additional_kwargs.reasoning_content).toBe("The user");
   });
 });

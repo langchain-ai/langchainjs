@@ -623,6 +623,188 @@ test("Streaming supports empty string chunks", async () => {
   expect(finalChunk.content).toBe("Hello world!");
 });
 
+describe("video content block conversion", () => {
+  test("converts multimodal video block with base64 data", () => {
+    const videoData = btoa("fake-video-bytes");
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          { type: "text", text: "Describe this video" },
+          {
+            type: "video",
+            mimeType: "video/mp4",
+            data: videoData,
+          },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages).toHaveLength(1);
+    const content = result.converseMessages[0].content!;
+    expect(content).toHaveLength(2);
+    expect(content[0]).toEqual({ text: "Describe this video" });
+    expect(content[1]).toHaveProperty("video");
+    expect(content[1].video?.format).toBe("mp4");
+    expect(content[1].video?.source?.bytes).toBeInstanceOf(Uint8Array);
+  });
+
+  test("converts multimodal video block with Uint8Array data", () => {
+    const videoBytes = new Uint8Array([1, 2, 3, 4]);
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          {
+            type: "video",
+            mimeType: "video/webm",
+            data: videoBytes,
+          },
+        ],
+      }),
+    ]);
+
+    const content = result.converseMessages[0].content!;
+    expect(content[0]).toHaveProperty("video");
+    expect(content[0].video?.format).toBe("webm");
+    expect(content[0].video?.source?.bytes).toBe(videoBytes);
+  });
+
+  test("passes through native Bedrock video block", () => {
+    const videoSource = {
+      bytes: new Uint8Array([1, 2, 3]),
+    };
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          {
+            type: "video",
+            video: {
+              format: "mp4",
+              source: videoSource,
+            },
+          },
+        ],
+      }),
+    ]);
+
+    const content = result.converseMessages[0].content!;
+    expect(content[0]).toHaveProperty("video");
+    expect(content[0].video?.format).toBe("mp4");
+    expect(content[0].video?.source).toBe(videoSource);
+  });
+
+  test("converts video block with S3 fileId", () => {
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          {
+            type: "video",
+            mimeType: "video/mp4",
+            fileId: "s3://my-bucket/my-video.mp4",
+          },
+        ],
+      }),
+    ]);
+
+    const content = result.converseMessages[0].content!;
+    expect(content[0]).toHaveProperty("video");
+    expect(content[0].video?.format).toBe("mp4");
+    expect(content[0].video?.source?.s3Location?.uri).toBe(
+      "s3://my-bucket/my-video.mp4"
+    );
+  });
+});
+
+describe("audio content block conversion", () => {
+  test("converts multimodal audio block with base64 data", () => {
+    const audioData = btoa("fake-audio-bytes");
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          { type: "text", text: "Transcribe this audio" },
+          {
+            type: "audio",
+            mimeType: "audio/mp3",
+            data: audioData,
+          },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages).toHaveLength(1);
+    const content = result.converseMessages[0].content!;
+    expect(content).toHaveLength(2);
+    expect(content[0]).toEqual({ text: "Transcribe this audio" });
+    expect(content[1]).toHaveProperty("audio");
+    expect(content[1].audio?.format).toBe("mp3");
+    expect(content[1].audio?.source?.bytes).toBeInstanceOf(Uint8Array);
+  });
+
+  test("converts multimodal audio block with Uint8Array data", () => {
+    const audioBytes = new Uint8Array([1, 2, 3, 4]);
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          {
+            type: "audio",
+            mimeType: "audio/wav",
+            data: audioBytes,
+          },
+        ],
+      }),
+    ]);
+
+    const content = result.converseMessages[0].content!;
+    expect(content[0]).toHaveProperty("audio");
+    expect(content[0].audio?.format).toBe("wav");
+    expect(content[0].audio?.source?.bytes).toBe(audioBytes);
+  });
+
+  test("passes through native Bedrock audio block", () => {
+    const audioSource = {
+      bytes: new Uint8Array([1, 2, 3]),
+    };
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          {
+            type: "audio",
+            audio: {
+              format: "flac",
+              source: audioSource,
+            },
+          },
+        ],
+      }),
+    ]);
+
+    const content = result.converseMessages[0].content!;
+    expect(content[0]).toHaveProperty("audio");
+    expect(content[0].audio?.format).toBe("flac");
+    expect(content[0].audio?.source).toBe(audioSource);
+  });
+
+  test("converts audio block with S3 fileId", () => {
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          {
+            type: "audio",
+            mimeType: "audio/mp3",
+            fileId: "s3://my-bucket/my-audio.mp3",
+          },
+        ],
+      }),
+    ]);
+
+    const content = result.converseMessages[0].content!;
+    expect(content[0]).toHaveProperty("audio");
+    expect(content[0].audio?.format).toBe("mp3");
+    expect(content[0].audio?.source?.s3Location?.uri).toBe(
+      "s3://my-bucket/my-audio.mp3"
+    );
+  });
+});
+
 describe("applicationInferenceProfile parameter", () => {
   const baseConstructorArgs = {
     region: "us-east-1",
@@ -637,20 +819,20 @@ describe("applicationInferenceProfile parameter", () => {
       "arn:aws:bedrock:eu-west-1:123456789012:application-inference-profile/test-profile";
     const model = new ChatBedrockConverse({
       ...baseConstructorArgs,
-      model: "anthropic.claude-3-haiku-20240307-v1:0",
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
       applicationInferenceProfile: testArn,
     });
-    expect(model.model).toBe("anthropic.claude-3-haiku-20240307-v1:0");
+    expect(model.model).toBe("anthropic.claude-haiku-4-5-20251001-v1:0");
     expect(model.applicationInferenceProfile).toBe(testArn);
   });
 
   it("should be undefined when not provided in constructor", () => {
     const model = new ChatBedrockConverse({
       ...baseConstructorArgs,
-      model: "anthropic.claude-3-haiku-20240307-v1:0",
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
     });
 
-    expect(model.model).toBe("anthropic.claude-3-haiku-20240307-v1:0");
+    expect(model.model).toBe("anthropic.claude-haiku-4-5-20251001-v1:0");
     expect(model.applicationInferenceProfile).toBeUndefined();
   });
 
@@ -678,7 +860,7 @@ describe("applicationInferenceProfile parameter", () => {
 
     const model = new ChatBedrockConverse({
       ...baseConstructorArgs,
-      model: "anthropic.claude-3-haiku-20240307-v1:0",
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
       applicationInferenceProfile: testArn,
       client: mockClient,
     });
@@ -692,7 +874,7 @@ describe("applicationInferenceProfile parameter", () => {
     const commandArg = mockSend.mock.calls[0][0];
     expect(commandArg.input.modelId).toBe(testArn);
     expect(commandArg.input.modelId).not.toBe(
-      "anthropic.claude-3-haiku-20240307-v1:0"
+      "anthropic.claude-haiku-4-5-20251001-v1:0"
     );
   });
 
@@ -718,7 +900,7 @@ describe("applicationInferenceProfile parameter", () => {
 
     const model = new ChatBedrockConverse({
       ...baseConstructorArgs,
-      model: "anthropic.claude-3-haiku-20240307-v1:0",
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
       client: mockClient,
     });
 
@@ -730,7 +912,7 @@ describe("applicationInferenceProfile parameter", () => {
     // Verify that the command was created with model as modelId
     const commandArg = mockSend.mock.calls[0][0];
     expect(commandArg.input.modelId).toBe(
-      "anthropic.claude-3-haiku-20240307-v1:0"
+      "anthropic.claude-haiku-4-5-20251001-v1:0"
     );
   });
 
@@ -763,7 +945,7 @@ describe("applicationInferenceProfile parameter", () => {
 
     const model = new ChatBedrockConverse({
       ...baseConstructorArgs,
-      model: "anthropic.claude-3-haiku-20240307-v1:0",
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
       applicationInferenceProfile: testArn,
       streaming: true,
       client: mockClient,
@@ -776,7 +958,7 @@ describe("applicationInferenceProfile parameter", () => {
     const commandArg = mockSend.mock.calls[0][0];
     expect(commandArg.input.modelId).toBe(testArn);
     expect(commandArg.input.modelId).not.toBe(
-      "anthropic.claude-3-haiku-20240307-v1:0"
+      "anthropic.claude-haiku-4-5-20251001-v1:0"
     );
   });
 
@@ -807,7 +989,7 @@ describe("applicationInferenceProfile parameter", () => {
 
     const model = new ChatBedrockConverse({
       ...baseConstructorArgs,
-      model: "anthropic.claude-3-haiku-20240307-v1:0",
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
       streaming: true,
       client: mockClient,
     });
@@ -818,8 +1000,69 @@ describe("applicationInferenceProfile parameter", () => {
 
     const commandArg = mockSend.mock.calls[0][0];
     expect(commandArg.input.modelId).toBe(
-      "anthropic.claude-3-haiku-20240307-v1:0"
+      "anthropic.claude-haiku-4-5-20251001-v1:0"
     );
+  });
+
+  it("should surface plain object Bedrock errors in non-streaming mode", async () => {
+    const rawError = {
+      message:
+        "The model returned the following errors: Output blocked by content filtering policy",
+    };
+    const mockClient = {
+      send: vi.fn().mockRejectedValue(rawError),
+    } as unknown as BedrockRuntimeClient;
+
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
+      client: mockClient,
+    });
+
+    let thrown: unknown;
+    try {
+      await model.invoke([new HumanMessage("Hello")]);
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(Error);
+    // oxlint-disable-next-line no-instanceof/no-instanceof
+    if (thrown instanceof Error) {
+      expect(thrown.message).toBe(rawError.message);
+      expect(thrown.cause).toEqual(rawError);
+    }
+  });
+
+  it("should surface plain object Bedrock errors in streaming mode", async () => {
+    const rawError = {
+      message:
+        "The model returned the following errors: Output blocked by content filtering policy",
+    };
+    const mockClient = {
+      send: vi.fn().mockRejectedValue(rawError),
+    } as unknown as BedrockRuntimeClient;
+
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
+      streaming: true,
+      client: mockClient,
+    });
+
+    let thrown: unknown;
+    try {
+      await model.invoke([new HumanMessage("Hello")]);
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(Error);
+    // oxlint-disable-next-line no-instanceof/no-instanceof
+    if (thrown instanceof Error) {
+      expect(thrown.message).toBe(rawError.message);
+      expect(thrown.cause).toEqual(rawError);
+    }
   });
 });
 
@@ -1080,7 +1323,7 @@ test("Test ChatBedrockConverse deserialization from model_id and region_name", a
 });
 
 test("ChatBedrockConverse supports string model shorthand", () => {
-  const modelId = "anthropic.claude-3-haiku-20240307-v1:0";
+  const modelId = "anthropic.claude-haiku-4-5-20251001-v1:0";
   const model = new ChatBedrockConverse(modelId, {
     region: "us-east-1",
     credentials: {
@@ -1171,5 +1414,336 @@ describe("serviceTier configuration", () => {
     expect(params.inferenceConfig?.temperature).toBe(0.5);
     expect(params.inferenceConfig?.maxTokens).toBe(100);
     expect(params.inferenceConfig?.stopSequences).toEqual(["stop_sequence"]);
+  });
+});
+
+describe("withStructuredOutput - StandardSchema", () => {
+  function makeSerializableSchema() {
+    return {
+      "~standard": {
+        version: 1 as const,
+        vendor: "test",
+        validate: (value: unknown) => {
+          const v = value as Record<string, unknown>;
+          if (v && typeof v === "object" && "name" in v) {
+            return { value: v as { name: string } };
+          }
+          return {
+            issues: [{ message: "Expected object with name" }],
+          };
+        },
+        jsonSchema: {
+          input: () => ({
+            type: "object" as const,
+            properties: {
+              name: { type: "string", description: "A name" },
+            },
+            required: ["name"],
+          }),
+          output: () => ({ type: "object" as const, properties: {} }),
+        },
+      },
+    };
+  }
+
+  const baseConstructorArgs = {
+    region: "us-east-1",
+    credentials: {
+      secretAccessKey: "test-secret-key",
+      accessKeyId: "test-access-key",
+    },
+  };
+
+  test("functionCalling with valid output parses correctly", async () => {
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
+    });
+    vi
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      .spyOn(model as any, "invoke")
+      .mockResolvedValue(
+        new AIMessage({
+          content: "",
+          tool_calls: [
+            {
+              name: "extract",
+              args: { name: "cobalt" },
+              id: "1",
+              type: "tool_call",
+            },
+          ],
+        })
+      );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema);
+
+    const result = await structured.invoke("What?");
+    expect(result).toEqual({ name: "cobalt" });
+  });
+
+  test("functionCalling with custom name", async () => {
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
+    });
+    vi
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      .spyOn(model as any, "invoke")
+      .mockResolvedValue(
+        new AIMessage({
+          content: "",
+          tool_calls: [
+            {
+              name: "GetName",
+              args: { name: "test" },
+              id: "1",
+              type: "tool_call",
+            },
+          ],
+        })
+      );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      name: "GetName",
+    });
+
+    const result = await structured.invoke("What?");
+    expect(result).toEqual({ name: "test" });
+  });
+
+  test("functionCalling with includeRaw returns raw and parsed", async () => {
+    const mockResponse = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          name: "extract",
+          args: { name: "cobalt" },
+          id: "1",
+          type: "tool_call",
+        },
+      ],
+    });
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
+    });
+    vi
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      .spyOn(model as any, "invoke")
+      .mockResolvedValue(mockResponse);
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      includeRaw: true,
+    });
+
+    const result = await structured.invoke("What?");
+    expect(result).toHaveProperty("raw");
+    expect(result).toHaveProperty("parsed");
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((result as any).parsed).toEqual({ name: "cobalt" });
+  });
+
+  test("no tool calls throws error", async () => {
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
+    });
+    vi
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      .spyOn(model as any, "invoke")
+      .mockResolvedValue(new AIMessage({ content: "No tools here" }));
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema);
+
+    await expect(async () => {
+      await structured.invoke("What?");
+    }).rejects.toThrow("No tool calls found in the response.");
+  });
+});
+
+describe("bedrockApiKey / bedrockApiSecret credentials", () => {
+  it("should accept bedrockApiKey and bedrockApiSecret in constructor", () => {
+    const model = new ChatBedrockConverse({
+      region: "us-east-1",
+      bedrockApiKey: "test-access-key-id",
+      bedrockApiSecret: "test-secret-access-key",
+    });
+    expect(model.bedrockApiKey).toBe("test-access-key-id");
+    expect(model.bedrockApiSecret).toBe("test-secret-access-key");
+    expect(model.bedrockApiSessionToken).toBeUndefined();
+    expect(model.region).toBe("us-east-1");
+  });
+
+  it("should accept bedrockApiSessionToken for temporary credentials", () => {
+    const model = new ChatBedrockConverse({
+      region: "us-east-1",
+      bedrockApiKey: "test-access-key-id",
+      bedrockApiSecret: "test-secret-access-key",
+      bedrockApiSessionToken: "test-session-token",
+    });
+    expect(model.bedrockApiKey).toBe("test-access-key-id");
+    expect(model.bedrockApiSecret).toBe("test-secret-access-key");
+    expect(model.bedrockApiSessionToken).toBe("test-session-token");
+  });
+
+  it("should read bedrockApiKey from BEDROCK_AWS_ACCESS_KEY_ID env var", () => {
+    process.env.BEDROCK_AWS_ACCESS_KEY_ID = "env-access-key";
+    process.env.BEDROCK_AWS_SECRET_ACCESS_KEY = "env-secret-key";
+    try {
+      const model = new ChatBedrockConverse({
+        region: "us-east-1",
+      });
+      expect(model.bedrockApiKey).toBe("env-access-key");
+      expect(model.bedrockApiSecret).toBe("env-secret-key");
+    } finally {
+      delete process.env.BEDROCK_AWS_ACCESS_KEY_ID;
+      delete process.env.BEDROCK_AWS_SECRET_ACCESS_KEY;
+    }
+  });
+
+  it("should read bedrockApiSessionToken from BEDROCK_AWS_SESSION_TOKEN env var", () => {
+    process.env.BEDROCK_AWS_ACCESS_KEY_ID = "env-access-key";
+    process.env.BEDROCK_AWS_SECRET_ACCESS_KEY = "env-secret-key";
+    process.env.BEDROCK_AWS_SESSION_TOKEN = "env-session-token";
+    try {
+      const model = new ChatBedrockConverse({
+        region: "us-east-1",
+      });
+      expect(model.bedrockApiSessionToken).toBe("env-session-token");
+    } finally {
+      delete process.env.BEDROCK_AWS_ACCESS_KEY_ID;
+      delete process.env.BEDROCK_AWS_SECRET_ACCESS_KEY;
+      delete process.env.BEDROCK_AWS_SESSION_TOKEN;
+    }
+  });
+
+  it("should prefer explicit credentials over bedrockApiKey/bedrockApiSecret", () => {
+    const model = new ChatBedrockConverse({
+      region: "us-east-1",
+      bedrockApiKey: "api-key-value",
+      bedrockApiSecret: "api-secret-value",
+      credentials: {
+        accessKeyId: "explicit-key",
+        secretAccessKey: "explicit-secret",
+      },
+    });
+    expect(model.bedrockApiKey).toBe("api-key-value");
+    expect(model.bedrockApiSecret).toBe("api-secret-value");
+    expect(model.region).toBe("us-east-1");
+  });
+
+  it("should use bedrockApiKey with string model shorthand", () => {
+    const model = new ChatBedrockConverse(
+      "anthropic.claude-3-haiku-20240307-v1:0",
+      {
+        region: "us-east-1",
+        bedrockApiKey: "test-key",
+        bedrockApiSecret: "test-secret",
+      }
+    );
+    expect(model.model).toBe("anthropic.claude-3-haiku-20240307-v1:0");
+    expect(model.bedrockApiKey).toBe("test-key");
+    expect(model.bedrockApiSecret).toBe("test-secret");
+  });
+
+  it("should include bedrockApiKey and bedrockApiSecret in lc_secrets", () => {
+    const model = new ChatBedrockConverse({
+      region: "us-east-1",
+      bedrockApiKey: "test-key",
+      bedrockApiSecret: "test-secret",
+    });
+    expect(model.lc_secrets).toHaveProperty(
+      "bedrockApiKey",
+      "BEDROCK_AWS_ACCESS_KEY_ID"
+    );
+    expect(model.lc_secrets).toHaveProperty(
+      "bedrockApiSecret",
+      "BEDROCK_AWS_SECRET_ACCESS_KEY"
+    );
+    expect(model.lc_secrets).toHaveProperty(
+      "bedrockApiSessionToken",
+      "BEDROCK_AWS_SESSION_TOKEN"
+    );
+  });
+});
+
+describe("document content block conversion", () => {
+  test("imputes placeholder filename when no name is provided", () => {
+    const pdfData = btoa("fake-pdf-bytes");
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          {
+            type: "file",
+            source_type: "base64",
+            mime_type: "application/pdf",
+            data: pdfData,
+          },
+        ],
+      }),
+    ]);
+
+    const content = result.converseMessages[0].content!;
+    expect(content).toHaveLength(1);
+    expect(content[0]).toHaveProperty("document");
+    expect(content[0].document?.format).toBe("pdf");
+    expect(content[0].document?.name).toBeDefined();
+    expect(typeof content[0].document?.name).toBe("string");
+    expect(content[0].document?.name!.length).toBe(12);
+  });
+
+  test("uses provided filename from metadata", () => {
+    const pdfData = btoa("fake-pdf-bytes");
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          {
+            type: "file",
+            source_type: "base64",
+            mime_type: "application/pdf",
+            data: pdfData,
+            metadata: { filename: "my-report.pdf" },
+          },
+        ],
+      }),
+    ]);
+
+    const content = result.converseMessages[0].content!;
+    expect(content[0].document?.name).toBe("my-report.pdf");
+  });
+
+  test("generates unique placeholder filenames for multiple files", () => {
+    const pdfData = btoa("fake-pdf-bytes");
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          {
+            type: "file",
+            source_type: "base64",
+            mime_type: "application/pdf",
+            data: pdfData,
+          },
+          {
+            type: "file",
+            source_type: "base64",
+            mime_type: "application/pdf",
+            data: pdfData,
+          },
+        ],
+      }),
+    ]);
+
+    const content = result.converseMessages[0].content!;
+    expect(content).toHaveLength(2);
+    const name1 = content[0].document?.name;
+    const name2 = content[1].document?.name;
+    expect(name1).toBeDefined();
+    expect(name2).toBeDefined();
+    expect(name1).not.toBe(name2);
   });
 });

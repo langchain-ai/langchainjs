@@ -8,14 +8,12 @@ import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { createSqlQueryChain } from "@langchain/classic/chains/sql_db";
 import { SqlDatabase } from "@langchain/classic/sql_db";
 import { MemoryVectorStore } from "@langchain/classic/vectorstores/memory";
-import { DataSource } from "typeorm";
 
-const datasource = new DataSource({
-  type: "sqlite",
-  database: "../../../../Chinook.db",
-});
-const db = await SqlDatabase.fromDataSourceParams({
-  appDataSource: datasource,
+const db = await SqlDatabase.fromOptionsParams({
+  appDataSourceOptions: {
+    type: "sqlite",
+    database: "../../../../Chinook.db",
+  },
 });
 
 async function queryAsList(

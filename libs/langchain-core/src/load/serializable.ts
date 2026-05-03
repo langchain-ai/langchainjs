@@ -6,7 +6,7 @@ export interface BaseSerialized<T extends string> {
   type: T;
   id: string[];
   name?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   graph?: Record<string, any>;
 }
 
@@ -34,7 +34,7 @@ function replaceSecrets(
   const result = shallowCopy(root);
   for (const [path, secretId] of Object.entries(secretsMap)) {
     const [last, ...partsReverse] = path.split(".").reverse();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     let current: any = result;
     for (const part of partsReverse.reverse()) {
       if (current[part] === undefined) {
@@ -179,7 +179,7 @@ export abstract class Serializable implements SerializableInterface {
       return this.toJSONNotImplemented();
     }
     if (
-      // eslint-disable-next-line no-instanceof/no-instanceof
+      // oxlint-disable-next-line no-instanceof/no-instanceof
       this.lc_kwargs instanceof Serializable ||
       typeof this.lc_kwargs !== "object" ||
       Array.isArray(this.lc_kwargs)
@@ -209,10 +209,10 @@ export abstract class Serializable implements SerializableInterface {
     // include all secrets used, even if not in kwargs,
     // will be replaced with sentinel value in replaceSecrets
     Object.keys(secrets).forEach((keyPath) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       let read: any = this;
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       let write: any = kwargs;
 
       const [last, ...partsReverse] = keyPath.split(".").reverse();

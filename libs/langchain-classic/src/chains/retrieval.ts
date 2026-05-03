@@ -24,7 +24,7 @@ export type CreateRetrievalChainParams<RunOutput> = {
    */
   retriever:
     | BaseRetrieverInterface
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     | RunnableInterface<Record<string, any>, DocumentInterface[]>;
   /**
    * Runnable that takes inputs and produces a string output.
@@ -33,7 +33,7 @@ export type CreateRetrievalChainParams<RunOutput> = {
    * in the inputs) with a value of `[]` (to easily enable conversational
    * retrieval).
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   combineDocsChain: RunnableInterface<Record<string, any>, RunOutput>;
 };
 

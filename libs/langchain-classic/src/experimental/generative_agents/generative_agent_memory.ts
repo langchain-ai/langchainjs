@@ -474,7 +474,7 @@ export class GenerativeAgentMemory extends BaseMemory {
         }
         break;
       }
-      // eslint-disable-next-line no-param-reassign
+      // oxlint-disable-next-line no-param-reassign
       consumedTokens += await this.llm.getNumTokens(doc.pageContent);
       if (consumedTokens < this.maxTokensLimit) {
         result.push(doc);

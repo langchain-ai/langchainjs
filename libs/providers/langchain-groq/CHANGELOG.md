@@ -1,5 +1,29 @@
 # @langchain/groq
 
+## 1.2.0
+
+### Minor Changes
+
+- [#10603](https://github.com/langchain-ai/langchainjs/pull/10603) [`66effb0`](https://github.com/langchain-ai/langchainjs/commit/66effb028baf5c923501801c989c7377efb8b77a) Thanks [@dependabot](https://github.com/apps/dependabot)! - chore(deps): bump groq-sdk from 0.37.0 to 1.1.2
+
+## 1.1.5
+
+### Patch Changes
+
+- [#10134](https://github.com/langchain-ai/langchainjs/pull/10134) [`a46d28c`](https://github.com/langchain-ai/langchainjs/commit/a46d28c769da3875916987618058765a572cd163) Thanks [@YJack0000](https://github.com/YJack0000)! - feat(groq): add reasoning_effort support to ChatGroq
+
+## 1.1.4
+
+### Patch Changes
+
+- [#10210](https://github.com/langchain-ai/langchainjs/pull/10210) [`6d5d1bf`](https://github.com/langchain-ai/langchainjs/commit/6d5d1bf96a9b76a595661a8a1ea7ea4f89c9a500) Thanks [@colifran](https://github.com/colifran)! - feat(groq): implement standard schema support for structured output
+
+## 1.1.3
+
+### Patch Changes
+
+- [#10106](https://github.com/langchain-ai/langchainjs/pull/10106) [`9f30267`](https://github.com/langchain-ai/langchainjs/commit/9f30267e95a2a42fac71f1d3674b84c5a190dbbc) Thanks [@hntrl](https://github.com/hntrl)! - Add package version metadata to runnable traces. Each package now stamps its version in `this.metadata.versions` at construction time, making version info available in LangSmith trace metadata.
+
 ## 1.1.2
 
 ### Patch Changes

@@ -1,5 +1,5 @@
 import { test, expect } from "vitest";
-import { v4 } from "uuid";
+import { v4 } from "../../utils/uuid/index.js";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { AsyncLocalStorageProviderSingleton } from "../index.js";
 import { RunnableLambda } from "../../runnables/base.js";
@@ -157,7 +157,7 @@ test("Runnable streamEvents method with streaming nested in a RunnableLambda", a
       async (_: string, config) => {
         expect(
           config?.callbacks?.handlers.filter(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // oxlint-disable-next-line @typescript-eslint/no-explicit-any
             (handler: any) => handler.name !== "langchain_tracer"
           )
         ).toEqual([]);

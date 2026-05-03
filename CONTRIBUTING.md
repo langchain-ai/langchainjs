@@ -51,7 +51,7 @@ See our dedicated [integration contribution guide](https://github.com/langchain-
 
 #### Integration Packages
 
-> **Important**: We no longer accept new integrations to the `@langchain/community` package. The package is already very crowded with many dependencies, and we want to keep it maintainable.
+> **Important**: We no longer accept new integrations to this repository.
 
 New integrations **must** be published as standalone packages. Here's how to contribute a new integration:
 
@@ -67,7 +67,6 @@ This is a monorepo managed with [pnpm workspaces](https://pnpm.io/workspaces) an
 | -------------------------- | ------------------------------------ | ---------------------------------------------------------------- |
 | `langchain`                | `libs/langchain`                     | Main LangChain package with agents, prompts, and orchestration   |
 | `@langchain/core`          | `libs/langchain-core`                | Core abstractions and interfaces (base classes, runnables, etc.) |
-| `@langchain/community`     | `libs/langchain-community`           | Community-maintained integrations                                |
 | `@langchain/textsplitters` | `libs/langchain-textsplitters`       | Text splitting utilities                                         |
 | `@langchain/openai`        | `libs/providers/langchain-openai`    | OpenAI integration                                               |
 | `@langchain/anthropic`     | `libs/providers/langchain-anthropic` | Anthropic integration                                            |
@@ -147,8 +146,8 @@ Dev releases are useful for:
 This project uses the following tools, which are worth getting familiar with if you plan to contribute:
 
 - **[pnpm](https://pnpm.io/) (v10.14.0)** - dependency management
-- **[eslint](https://eslint.org/)** - enforcing standard lint rules
-- **[prettier](https://prettier.io/)** - enforcing standard code formatting
+- **[oxlint](https://oxc.rs/docs/guide/usage/linter/)** - enforcing standard lint rules
+- **[oxfmt](https://oxc.rs/docs/guide/usage/formatter/)** - enforcing standard code formatting
 - **[vitest](https://vitest.dev/)** - testing code
 
 ## 🚀 Quick Start
@@ -169,7 +168,6 @@ Common package filters:
 
 - `--filter langchain` - the main `langchain` package
 - `--filter @langchain/core` - the core package
-- `--filter @langchain/community` - community integrations
 - `--filter @langchain/openai` - OpenAI integration (and similarly for other providers)
 
 ### Setup
@@ -197,25 +195,24 @@ pnpm --filter @langchain/core build
 
 ### Linting
 
-We use [eslint](https://eslint.org/) to enforce standard lint rules. To run the linter on a specific package:
+We use [oxlint](https://oxc.rs/docs/guide/usage/linter/) to enforce standard lint rules. To run the linter:
 
 ```bash
 pnpm --filter langchain lint
-pnpm --filter @langchain/community lint
 ```
 
 ### Formatting
 
-We use [prettier](https://prettier.io) to enforce code formatting style. To run the formatter:
+We use [oxfmt](https://oxc.rs/docs/guide/usage/formatter/) to enforce code formatting style. To run the formatter:
 
 ```bash
-pnpm --filter langchain format
+pnpm format
 ```
 
 To just check for formatting differences, without fixing them:
 
 ```bash
-pnpm --filter langchain format:check
+pnpm format:check
 ```
 
 ### Testing
@@ -237,7 +234,7 @@ pnpm --filter @langchain/core test
 
 If you add support for a new external API, please add a new integration test. Integration tests should be called `*.int.test.ts`.
 
-Note that most integration tests require credentials or other setup. You will likely need to set up a `libs/langchain/.env` or `libs/langchain-community/.env` file based on the [`.env.example` file](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain/.env.example).
+Note that most integration tests require credentials or other setup. You will likely need to set up a `libs/langchain/.env` or `libs/community/langchain-community/.env` file based on the [`.env.example` file](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain/.env.example).
 
 We generally recommend only running integration tests with `pnpm --filter <package> test:single`, but if you want to run all integration tests:
 

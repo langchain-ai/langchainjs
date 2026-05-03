@@ -1,7 +1,7 @@
 import { test, expect, describe } from "vitest";
 
 import { RedisClientType, createClient } from "redis";
-import { v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4 } from "@langchain/core/utils/uuid";
 import { faker } from "@faker-js/faker";
 import { Document } from "@langchain/core/documents";
 import { SyntheticEmbeddings } from "@langchain/core/utils/testing";

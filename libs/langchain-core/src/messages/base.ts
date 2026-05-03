@@ -18,17 +18,17 @@ import {
 } from "./format.js";
 
 /** @internal */
-const MESSAGE_SYMBOL = Symbol.for("langchain.message");
+const MESSAGE_SYMBOL: symbol = Symbol.for("langchain.message");
 
 export interface StoredMessageData {
   content: string;
   role: string | undefined;
   name: string | undefined;
   tool_call_id: string | undefined;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   additional_kwargs?: Record<string, any>;
   /** Response metadata. For example: response headers, logprobs, token counts, model name. */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   response_metadata?: Record<string, any>;
   id?: string;
 }
@@ -87,6 +87,26 @@ export type BaseMessageFields<
   response_metadata?: Partial<$InferResponseMetadata<TStructure, TRole>>;
 };
 
+/**
+ * Normalize non-string `firstContent` to a block array for merge/spread.
+ * Some serializers (e.g. Anthropic-style) yield a single block object instead of a one-element array;
+ * spreading that object as an array throws ("is not iterable").
+ */
+function contentBlocksFromNonStringFirst(
+  firstContent: MessageContent
+): ContentBlock[] {
+  if (Array.isArray(firstContent)) {
+    return firstContent;
+  }
+  if (typeof firstContent === "string") {
+    return firstContent === "" ? [] : [{ type: "text", text: firstContent }];
+  }
+  if (firstContent == null) {
+    return [];
+  }
+  return [firstContent as ContentBlock];
+}
+
 export function mergeContent(
   firstContent: MessageContent,
   secondContent: MessageContent
@@ -117,12 +137,8 @@ export function mergeContent(
     }
     // If both are arrays
   } else if (Array.isArray(secondContent)) {
-    return (
-      _mergeLists(firstContent, secondContent) ?? [
-        ...firstContent,
-        ...secondContent,
-      ]
-    );
+    const left = contentBlocksFromNonStringFirst(firstContent);
+    return _mergeLists(left, secondContent) ?? [...left, ...secondContent];
   } else {
     if (secondContent === "") {
       return firstContent;
@@ -139,7 +155,8 @@ export function mergeContent(
         },
       ];
     } else {
-      return [...firstContent, { type: "text", text: secondContent }];
+      const left = contentBlocksFromNonStringFirst(firstContent);
+      return [...left, { type: "text", text: secondContent }];
     }
   }
 }
@@ -162,9 +179,9 @@ export function _mergeStatus(
   return "success";
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 function stringifyWithDepthLimit(obj: any, depthLimit: number): string {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   function helper(obj: any, currentDepth: number): any {
     if (typeof obj !== "object" || obj === null || obj === undefined) {
       return obj;
@@ -353,7 +370,7 @@ export abstract class BaseMessage<
       typeof obj === "object" &&
       obj !== null &&
       MESSAGE_SYMBOL in obj &&
-      obj[MESSAGE_SYMBOL] === true &&
+      (obj as Record<symbol, unknown>)[MESSAGE_SYMBOL] === true &&
       isMessage(obj)
     );
   }
@@ -369,7 +386,7 @@ export abstract class BaseMessage<
   }
 
   get [Symbol.toStringTag]() {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     return (this.constructor as any).lc_name();
   }
 
@@ -382,7 +399,7 @@ export abstract class BaseMessage<
       this._printableFields,
       Math.max(4, depth)
     );
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     return `${(this.constructor as any).lc_name()} ${printable}`;
   }
 
@@ -454,19 +471,19 @@ export function _mergeDicts(
   /**
    * The left dictionary to merge.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   left: Record<string, any> | undefined,
   /**
    * The right dictionary to merge.
    * @type {Record<string, any>}
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   right: Record<string, any> | undefined,
   /**
    * The options for the merge.
    */
   options?: MergeDictsOptions
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
 ): Record<string, any> | undefined {
   /**
    * The keys to ignore during merging.
@@ -541,6 +558,53 @@ function hasMergeableIndex(
   return isMergeableIndex(value.index);
 }
 
+function hasMergeableId(value: unknown): value is { id: string | number } {
+  if (typeof value !== "object" || value === null) return false;
+  if (!("id" in value)) return false;
+  const id = (value as Record<string, unknown>).id;
+  return id != null && id !== "";
+}
+
+/**
+ * Find the index of an existing item in `merged` that should be merged with
+ * `item`, based on index and/or id matching.
+ *
+ * Matching priority:
+ * 1. Both have index → match on index (+ id when both present)
+ * 2. Neither has index, both have id → match on id alone
+ * 3. Otherwise → no match (item should be appended)
+ */
+function _findMergeTarget<Content extends ContentBlock>(
+  merged: Content[],
+  item: Content
+): number {
+  const itemHasIndex = hasMergeableIndex(item);
+  const itemHasId = hasMergeableId(item);
+
+  if (!itemHasIndex && !itemHasId) return -1;
+
+  return merged.findIndex((leftItem) => {
+    const leftHasIndex = hasMergeableIndex(leftItem);
+    const leftHasId = hasMergeableId(leftItem);
+
+    if (itemHasIndex && leftHasIndex) {
+      // Both have index: match on index, with id as tiebreaker
+      const indicesMatch = leftItem.index === item.index;
+      if (!indicesMatch) return false;
+      if (leftHasId && itemHasId) return leftItem.id === item.id;
+      return true; // indices match, one or both missing id
+    }
+
+    if (!itemHasIndex && !leftHasIndex && itemHasId && leftHasId) {
+      // Neither has index: fall back to id-only matching. Handles providers
+      // that don't include `index` on streaming tool call deltas.
+      return leftItem.id === item.id;
+    }
+
+    return false;
+  });
+}
+
 export function _mergeLists<Content extends ContentBlock>(
   left?: Content[],
   right?: Content[],
@@ -553,30 +617,13 @@ export function _mergeLists<Content extends ContentBlock>(
   } else {
     const merged = [...left];
     for (const item of right) {
-      if (hasMergeableIndex(item)) {
-        const toMerge = merged.findIndex((leftItem) => {
-          if (!hasMergeableIndex(leftItem)) return false;
-
-          const indiciesMatch = leftItem.index === item.index;
-          const idsMatch =
-            leftItem.id != null && item.id != null && leftItem.id === item.id;
-          const eitherItemMissingID = leftItem.id == null || item.id == null;
-          return indiciesMatch && (idsMatch || eitherItemMissingID);
-        });
-
-        if (
-          toMerge !== -1 &&
-          typeof merged[toMerge] === "object" &&
-          merged[toMerge] !== null
-        ) {
-          merged[toMerge] = _mergeDicts(
-            merged[toMerge] as Record<string, unknown>,
-            item as Record<string, unknown>,
-            options
-          ) as Content;
-        } else {
-          merged.push(item);
-        }
+      const toMerge = _findMergeTarget(merged, item);
+      if (toMerge !== -1) {
+        merged[toMerge] = _mergeDicts(
+          merged[toMerge],
+          item,
+          options
+        ) as Content;
       } else if (
         typeof item === "object" &&
         item !== null &&
@@ -592,7 +639,7 @@ export function _mergeLists<Content extends ContentBlock>(
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export function _mergeObj<T = any>(
   left: T | undefined,
   right: T | undefined,

@@ -33,7 +33,7 @@ import {
   ToolCallChunk,
   ToolMessage,
 } from "@langchain/core/messages/tool";
-import * as uuid from "uuid";
+import * as uuid from "@langchain/core/utils/uuid";
 import { Runnable } from "@langchain/core/runnables";
 import { isInteropZodSchema } from "@langchain/core/utils/types";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
@@ -742,6 +742,7 @@ export class ChatCohere<
         ? { ...(fields ?? {}), model: modelOrFields }
         : (modelOrFields ?? {});
     super(params);
+    this._addVersion("@langchain/cohere", __PKG_VERSION__);
 
     this.client = getCohereClient(params);
 

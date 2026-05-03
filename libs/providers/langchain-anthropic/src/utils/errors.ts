@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-param-reassign */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable no-param-reassign */
 
 import { ContextOverflowError } from "@langchain/core/errors";
 
@@ -24,7 +24,7 @@ export function addLangChainErrorFields(
   return error;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export function wrapAnthropicClientError(e: any) {
   let error;
   if (
@@ -32,7 +32,10 @@ export function wrapAnthropicClientError(e: any) {
     typeof e.message === "string" &&
     e.message.includes("prompt is too long")
   ) {
-    error = ContextOverflowError.fromError(e);
+    error = addLangChainErrorFields(
+      ContextOverflowError.fromError(e),
+      "CONTEXT_OVERFLOW"
+    );
   } else if (e.status === 400 && e.message.includes("tool")) {
     error = addLangChainErrorFields(e, "INVALID_TOOL_RESULTS");
   } else if (e.status === 401) {

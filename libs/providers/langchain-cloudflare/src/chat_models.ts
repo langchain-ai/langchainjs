@@ -76,6 +76,7 @@ export class ChatCloudflareWorkersAI
         ? { ...(paramsArg ?? {}), model: modelOrFields }
         : (modelOrFields ?? {});
     super(fields);
+    this._addVersion("@langchain/cloudflare", __PKG_VERSION__);
 
     this.model = fields.model ?? this.model;
     this.streaming = fields.streaming ?? this.streaming;
@@ -172,7 +173,7 @@ export class ChatCloudflareWorkersAI
         const error = new Error(
           `Cloudflare LLM call failed with status code ${response.status}`
         );
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         (error as any).response = response;
         throw error;
       }
@@ -203,7 +204,7 @@ export class ChatCloudflareWorkersAI
           text: parsedChunk.response,
         });
         yield generationChunk;
-        // eslint-disable-next-line no-void
+        // oxlint-disable-next-line no-void
         void runManager?.handleLLMNewToken(generationChunk.text ?? "");
       }
     }

@@ -45,9 +45,9 @@ export type ChainOrFactory =
   | Runnable
   | (() => Runnable)
   | AnyTraceableFunction
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   | ((obj: any) => any)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   | ((obj: any) => Promise<any>)
   | (() => (obj: unknown) => unknown)
   | (() => (obj: unknown) => Promise<unknown>);
@@ -139,12 +139,12 @@ class DynamicRunEvaluator implements RunEvaluator {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 function isLLMStringEvaluator(evaluator: any): evaluator is LLMStringEvaluator {
   return evaluator && typeof evaluator.evaluateStrings === "function";
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyTraceableFunction = TraceableFunction<(...any: any[]) => any>;
 
 /**
@@ -278,7 +278,7 @@ class RunnableTraceable<RunInput, RunOutput> extends Runnable<
           typeof input === "object" &&
           input != null &&
           !Array.isArray(input) &&
-          // eslint-disable-next-line no-instanceof/no-instanceof
+          // oxlint-disable-next-line no-instanceof/no-instanceof
           !(input instanceof Date)
         )
       ) {

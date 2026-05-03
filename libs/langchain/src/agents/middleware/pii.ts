@@ -274,10 +274,10 @@ export function resolveRedactionRule(
 
         return matches;
       };
-      // eslint-disable-next-line no-instanceof/no-instanceof
+      // oxlint-disable-next-line no-instanceof/no-instanceof
     } else if (config.detector instanceof RegExp) {
       detector = (content: string) => {
-        // eslint-disable-next-line no-instanceof/no-instanceof
+        // oxlint-disable-next-line no-instanceof/no-instanceof
         if (!(config.detector instanceof RegExp)) {
           throw new Error("Detector is required");
         }

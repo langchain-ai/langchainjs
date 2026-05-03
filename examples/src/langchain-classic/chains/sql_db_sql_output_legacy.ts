@@ -1,4 +1,3 @@
-import { DataSource } from "typeorm";
 import { OpenAI } from "@langchain/openai";
 import { SqlDatabase } from "@langchain/classic/sql_db";
 import { SqlDatabaseChain } from "@langchain/classic/chains/sql_db";
@@ -8,13 +7,11 @@ import { SqlDatabaseChain } from "@langchain/classic/chains/sql_db";
  * To set it up follow the instructions on https://database.guide/2-sample-databases-sqlite/, placing the .db file
  * in the examples folder.
  */
-const datasource = new DataSource({
-  type: "sqlite",
-  database: "Chinook.db",
-});
-
-const db = await SqlDatabase.fromDataSourceParams({
-  appDataSource: datasource,
+const db = await SqlDatabase.fromOptionsParams({
+  appDataSourceOptions: {
+    type: "sqlite",
+    database: "Chinook.db",
+  },
 });
 
 const chain = new SqlDatabaseChain({

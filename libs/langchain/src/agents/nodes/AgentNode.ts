@@ -1,4 +1,4 @@
-/* eslint-disable no-instanceof/no-instanceof */
+/* oxlint-disable no-instanceof/no-instanceof */
 import { Runnable, RunnableConfig } from "@langchain/core/runnables";
 import {
   BaseMessage,
@@ -11,7 +11,6 @@ import {
   isCommand,
   type LangGraphRunnableConfig,
 } from "@langchain/langgraph";
-import { type LanguageModelLike } from "@langchain/core/language_models/base";
 import { type BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
 import {
   InteropZodObject,
@@ -25,12 +24,14 @@ import type { ClientTool, ServerTool } from "@langchain/core/tools";
 import { initChatModel } from "../../chat_models/universal.js";
 import { MultipleStructuredOutputsError, MiddlewareError } from "../errors.js";
 import { RunnableCallable } from "../RunnableCallable.js";
+import type { AgentLanguageModelLike as LanguageModelLike } from "../model.js";
 import {
   bindTools,
   validateLLMHasNoBoundTools,
   hasToolCalls,
   isClientTool,
 } from "../utils.js";
+import { isConfigurableModel } from "../model.js";
 import { mergeAbortSignals, toPartialZodObject } from "../nodes/utils.js";
 import { CreateAgentParams } from "../types.js";
 import type { InternalAgentState, Runtime } from "../runtime.js";
@@ -46,6 +47,7 @@ import {
   ProviderStrategy,
   transformResponseFormat,
   ToolStrategyError,
+  type ResponseFormatInput,
 } from "../responses.js";
 
 type ResponseHandlerResult<StructuredResponseFormat> =
@@ -104,10 +106,10 @@ export interface AgentNodeOptions<
   shouldReturnDirect: Set<string>;
   signal?: AbortSignal;
   systemMessage: SystemMessage;
-  wrapModelCallHookMiddleware?: [
-    AgentMiddleware,
-    () => Record<string, unknown>,
-  ][];
+  wrapModelCallHookMiddleware?: (
+    | AgentMiddleware
+    | [AgentMiddleware, (...args: unknown[]) => Record<string, unknown>]
+  )[];
 }
 
 interface NativeResponseFormat {
@@ -164,18 +166,35 @@ export class AgentNode<
    * @param model - The model to get the response format for.
    * @returns The response format.
    */
-  #getResponseFormat(
-    model: string | LanguageModelLike
-  ): ResponseFormat | undefined {
-    if (!this.#options.responseFormat) {
+  async #getResponseFormat(
+    model: string | LanguageModelLike,
+    responseFormat: ResponseFormatInput | undefined = this.#options
+      .responseFormat
+  ): Promise<ResponseFormat | undefined> {
+    if (!responseFormat) {
       return undefined;
     }
 
+    let resolvedModel: LanguageModelLike | undefined;
+    if (isConfigurableModel(model)) {
+      resolvedModel = await (
+        model as unknown as {
+          _getModelInstance: () => Promise<LanguageModelLike>;
+        }
+      )._getModelInstance();
+    } else if (typeof model !== "string") {
+      resolvedModel = model;
+    }
+
     const strategies = transformResponseFormat(
-      this.#options.responseFormat,
+      responseFormat,
       undefined,
-      model
+      resolvedModel
     );
+
+    if (strategies.length === 0) {
+      return undefined;
+    }
 
     /**
      * we either define a list of provider strategies or a list of tool strategies
@@ -350,7 +369,10 @@ export class AgentNode<
        */
       validateLLMHasNoBoundTools(request.model);
 
-      const structuredResponseFormat = this.#getResponseFormat(request.model);
+      const structuredResponseFormat = await this.#getResponseFormat(
+        request.model,
+        request.responseFormat
+      );
       const modelWithTools = await this.#bindTools(
         request.model,
         request,
@@ -439,11 +461,13 @@ export class AgentNode<
      * Build composed handler from last to first so first middleware becomes outermost
      */
     for (let i = wrapperMiddleware.length - 1; i >= 0; i--) {
-      const [middleware, getMiddlewareState] = wrapperMiddleware[i];
+      const middlewareEntry = wrapperMiddleware[i];
+      const middleware = Array.isArray(middlewareEntry)
+        ? middlewareEntry[0]
+        : middlewareEntry;
       if (middleware.wrapModelCall) {
         const innerHandler = wrappedHandler;
         const currentMiddleware = middleware;
-        const currentGetState = getMiddlewareState;
 
         wrappedHandler = async (
           request: ModelRequest<
@@ -468,6 +492,8 @@ export class AgentNode<
            */
           const runtime: Runtime<unknown> = Object.freeze({
             context,
+            store: lgConfig.store,
+            configurable: lgConfig.configurable,
             writer: lgConfig.writer,
             interrupt: lgConfig.interrupt,
             signal: lgConfig.signal,
@@ -488,7 +514,6 @@ export class AgentNode<
                     state
                   )
                 : {}),
-              ...currentGetState(),
               messages: state.messages,
             } as InternalAgentState<StructuredResponseFormat>,
             runtime,
@@ -506,39 +531,56 @@ export class AgentNode<
             currentSystemMessage = baselineSystemMessage;
 
             /**
-             * Verify that the user didn't add any new tools.
-             * We can't allow this as the ToolNode is already initiated with given tools.
+             * Validate tool modifications in wrapModelCall.
+             *
+             * Classify each client tool as either:
+             * - "added": a genuinely new tool name not in the static toolClasses
+             * - "replaced": same name as a registered tool but different instance
+             *
+             * Added tools are allowed when a wrapToolCall middleware exists to
+             * handle their execution. Replaced tools are always rejected to
+             * preserve ToolNode execution identity.
              */
             const modifiedTools = req.tools ?? [];
-            const newTools = modifiedTools.filter(
-              (tool) =>
-                isClientTool(tool) &&
-                !this.#options.toolClasses.some((t) => t.name === tool.name)
+            const registeredToolsByName = new Map(
+              this.#options.toolClasses
+                .filter(isClientTool)
+                .map((t) => [t.name, t] as const)
             );
-            if (newTools.length > 0) {
-              throw new Error(
-                `You have added a new tool in "wrapModelCall" hook of middleware "${
-                  currentMiddleware.name
-                }": ${newTools
-                  .map((tool) => tool.name)
-                  .join(", ")}. This is not supported.`
+
+            const addedClientTools = modifiedTools.filter(
+              (tool) =>
+                isClientTool(tool) && !registeredToolsByName.has(tool.name)
+            );
+
+            const replacedClientTools = modifiedTools.filter((tool) => {
+              if (!isClientTool(tool)) return false;
+              const original = registeredToolsByName.get(tool.name);
+              return original != null && original !== tool;
+            });
+
+            if (addedClientTools.length > 0) {
+              const hasWrapToolCallHandler = this.#options.middleware?.some(
+                (m) => m.wrapToolCall != null
               );
+              if (!hasWrapToolCallHandler) {
+                throw new Error(
+                  `You have added a new tool in "wrapModelCall" hook of middleware "${
+                    currentMiddleware.name
+                  }": ${addedClientTools
+                    .map((tool) => tool.name)
+                    .join(
+                      ", "
+                    )}. This is not supported unless a middleware provides a "wrapToolCall" handler to execute it.`
+                );
+              }
             }
 
-            /**
-             * Verify that user has not added or modified a tool with the same name.
-             * We can't allow this as the ToolNode is already initiated with given tools.
-             */
-            const invalidTools = modifiedTools.filter(
-              (tool) =>
-                isClientTool(tool) &&
-                this.#options.toolClasses.every((t) => t !== tool)
-            );
-            if (invalidTools.length > 0) {
+            if (replacedClientTools.length > 0) {
               throw new Error(
                 `You have modified a tool in "wrapModelCall" hook of middleware "${
                   currentMiddleware.name
-                }": ${invalidTools
+                }": ${replacedClientTools
                   .map((tool) => tool.name)
                   .join(", ")}. This is not supported.`
               );
@@ -586,11 +628,18 @@ export class AgentNode<
 
             /**
              * Normalize Commands so middleware always sees AIMessage from handler().
-             * When an inner middleware returns a Command, substitute the tracked
-             * lastAiMessage. The raw Command is still captured in innerHandlerResult
-             * for the framework's Command collection.
+             * When an inner handler (base handler or nested middleware) returns a
+             * Command (e.g. structured-output retry), substitute the tracked
+             * lastAiMessage so the middleware sees an AIMessage, and collect the
+             * raw Command so the framework can still propagate it (e.g. for retries).
+             *
+             * Only collect if not already present: Commands from inner middleware
+             * are already tracked via the middleware validation layer (line ~627).
              */
             if (isCommand(innerHandlerResult) && lastAiMessage) {
+              if (!collectedCommands.includes(innerHandlerResult)) {
+                collectedCommands.push(innerHandlerResult);
+              }
               return lastAiMessage as InternalModelResponse<StructuredResponseFormat>;
             }
 
@@ -644,6 +693,7 @@ export class AgentNode<
       unknown
     > = {
       model,
+      responseFormat: this.#options.responseFormat,
       systemPrompt: currentSystemMessage?.text,
       systemMessage: currentSystemMessage,
       messages: state.messages,
@@ -651,6 +701,8 @@ export class AgentNode<
       state,
       runtime: Object.freeze({
         context: lgConfig?.context,
+        store: lgConfig.store,
+        configurable: lgConfig.configurable,
         writer: lgConfig.writer,
         interrupt: lgConfig.interrupt,
         signal: lgConfig.signal,
@@ -870,7 +922,7 @@ export class AgentNode<
     model: LanguageModelLike,
     preparedOptions: ModelRequest | undefined,
     structuredResponseFormat: ResponseFormat | undefined
-  ): Promise<Runnable> {
+  ): Promise<LanguageModelLike | Runnable> {
     const options: Partial<BaseChatModelCallOptions> = {};
     const structuredTools = Object.values(
       structuredResponseFormat && "tools" in structuredResponseFormat
@@ -931,6 +983,12 @@ export class AgentNode<
             schema: structuredResponseFormat.strategy.schema,
           },
         },
+
+        /**
+         * Google-style options
+         * Used by ChatGoogle and other Gemini-based providers.
+         */
+        responseSchema: structuredResponseFormat.strategy.schema,
 
         /**
          * for LangSmith structured output tracing

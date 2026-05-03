@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, expectTypeOf } from "vitest";
 import { z } from "zod/v3";
 import {
@@ -11,11 +11,23 @@ import {
 } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 import { z as z4 } from "zod";
-import { Command, StateSchema } from "@langchain/langgraph";
+import {
+  Command,
+  InMemoryStore,
+  ReducedValue,
+  StateSchema,
+} from "@langchain/langgraph";
+import { MemorySaver } from "@langchain/langgraph-checkpoint";
 
-import { createAgent, createMiddleware, toolStrategy } from "../index.js";
+import {
+  createAgent,
+  createMiddleware,
+  providerStrategy,
+  toolStrategy,
+} from "../index.js";
 import { FakeToolCallingChatModel, FakeToolCallingModel } from "./utils.js";
 import { MiddlewareError } from "../errors.js";
+import type { JsonSchemaFormat } from "../responses.js";
 
 describe("middleware", () => {
   it("should propagate state schema to middleware hooks and result", async () => {
@@ -46,7 +58,7 @@ describe("middleware", () => {
         middlewareAAfterModelState: z.string(),
       }),
       beforeModel: (state) => {
-        const { messages, ...rest } = state;
+        const { messages: _, ...rest } = state;
         expect(rest).toEqual({
           middlewareABeforeModelState: "ABefore",
           middlewareAAfterModelState: "AAfter",
@@ -56,7 +68,7 @@ describe("middleware", () => {
         };
       },
       afterModel: (state) => {
-        const { messages, ...rest } = state;
+        const { messages: _, ...rest } = state;
         expect(rest).toEqual({
           middlewareABeforeModelState: "middlewareABeforeModelState",
           middlewareAAfterModelState: "AAfter",
@@ -73,7 +85,7 @@ describe("middleware", () => {
         middlewareBAfterModelState: z.string(),
       }),
       beforeModel: (state) => {
-        const { messages, ...rest } = state;
+        const { messages: _, ...rest } = state;
         expect(rest).toEqual({
           middlewareBAfterModelState: "BAfter",
           middlewareBBeforeModelState: "BBefore",
@@ -90,7 +102,7 @@ describe("middleware", () => {
         middlewareCAfterModelState: z.string(),
       }),
       afterModel: (state) => {
-        const { messages, ...rest } = state;
+        const { messages: _, ...rest } = state;
         expect(rest).toEqual({
           middlewareCAfterModelState: "CAfter",
           middlewareCBeforeModelState: "CBefore",
@@ -576,7 +588,7 @@ describe("middleware", () => {
       expect(capturedState).toBeDefined();
       expect(capturedState?.messages).toBeDefined();
       expect(Array.isArray(capturedState?.messages)).toBe(true);
-      expect((capturedState?.messages as BaseMessage[])[0].content).toBe(
+      expect((capturedState?.messages as BaseMessage[])?.[0]?.content).toBe(
         "Test"
       );
 
@@ -1806,7 +1818,10 @@ describe("middleware", () => {
           const result = (await handler(request)) as ToolMessage;
 
           // Redact private tool results
-          if ((request.tool?.name as string).includes("private")) {
+          if (
+            request.tool?.name &&
+            (request.tool.name as string).includes("private")
+          ) {
             return new ToolMessage({
               content: "[REDACTED]",
               tool_call_id: result.tool_call_id,
@@ -1918,7 +1933,7 @@ describe("middleware", () => {
       ]);
     });
 
-    it("supports setting responseFormat with wrapModelCall", async () => {
+    it("supports setting responseFormat with wrapModelCall via providerStrategy", async () => {
       const model = new FakeToolCallingChatModel({
         responses: [
           new AIMessage(
@@ -1926,26 +1941,32 @@ describe("middleware", () => {
           ),
         ],
       });
+      const responseSchema = z.object({ answer: z.string() });
 
       const middleware = createMiddleware({
-        name: "DynamicPromptMiddleware",
+        name: "DynamicStructuredOutputMiddleware",
         wrapModelCall: async (request, handler) => {
-          const systemPrompt = "You are a helpful assistant.";
-          return handler({ ...request, systemPrompt });
+          return handler({
+            ...request,
+            responseFormat: providerStrategy(responseSchema),
+            systemPrompt: "You are a helpful assistant.",
+          });
         },
       });
 
       const agent = createAgent({
         model,
-        responseFormat: z.object({ answer: z.string() }),
         middleware: [middleware],
       });
 
-      // Throws: "expected AIMessage or Command, got object"
       const result = await agent.invoke({
         messages: [{ role: "user", content: "Hello" }],
       });
-      expect(result.structuredResponse).toEqual({
+      expect(result).toHaveProperty("structuredResponse");
+      expect(
+        (result as unknown as { structuredResponse: { answer: string } })
+          .structuredResponse
+      ).toEqual({
         answer: "The weather in Tokyo is 25°C",
       });
       const [human, assistant] = result.messages;
@@ -1953,6 +1974,93 @@ describe("middleware", () => {
       expect(assistant.content).toBe(
         JSON.stringify({ answer: "The weather in Tokyo is 25°C" })
       );
+    });
+
+    it("supports setting responseFormat with wrapModelCall via toolStrategy", async () => {
+      const responseFormat = toolStrategy(z.object({ answer: z.string() }));
+      const toolName = responseFormat[0].name;
+      const model = new FakeToolCallingModel({
+        toolCalls: [
+          [{ name: toolName, args: { answer: "Sunny" }, id: "call_1" }],
+        ],
+      });
+
+      const middleware = createMiddleware({
+        name: "DynamicStructuredToolMiddleware",
+        wrapModelCall: async (request, handler) => {
+          return handler({
+            ...request,
+            responseFormat,
+          });
+        },
+      });
+
+      const agent = createAgent({
+        model,
+        middleware: [middleware],
+      });
+
+      const result = await agent.invoke({
+        messages: [{ role: "user", content: "Hello" }],
+      });
+
+      expect(result).toHaveProperty("structuredResponse");
+      expect(
+        (result as unknown as { structuredResponse: { answer: string } })
+          .structuredResponse
+      ).toEqual({
+        answer: "Sunny",
+      });
+      expect(
+        result.messages.some(
+          (message) =>
+            AIMessage.isInstance(message) &&
+            message.tool_calls?.some((toolCall) => toolCall.name === toolName)
+        )
+      ).toBe(true);
+    });
+
+    it("supports setting responseFormat with wrapModelCall via raw JSON schema", async () => {
+      const responseFormat: JsonSchemaFormat = {
+        type: "object",
+        properties: {
+          answer: {
+            type: "string",
+          },
+        },
+        required: ["answer"],
+        additionalProperties: false,
+      };
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage(JSON.stringify({ answer: "Clear skies" }))],
+      });
+
+      const middleware = createMiddleware({
+        name: "DynamicJsonSchemaMiddleware",
+        wrapModelCall: async (request, handler) => {
+          return handler({
+            ...request,
+            responseFormat,
+          });
+        },
+      });
+
+      const agent = createAgent({
+        model,
+        middleware: [middleware],
+      });
+
+      const result = await agent.invoke({
+        messages: [{ role: "user", content: "Hello" }],
+      });
+
+      expect(result).toHaveProperty("structuredResponse");
+      expect(
+        (result as unknown as { structuredResponse: Record<string, unknown> })
+          .structuredResponse
+      ).toEqual({
+        answer: "Clear skies",
+      });
     });
   });
 
@@ -2111,6 +2219,7 @@ describe("middleware", () => {
         answer: z.string(),
         confidence: z.number(),
       });
+      const responseFormat = toolStrategy(responseSchema);
 
       const middleware = createMiddleware({
         name: "ResponseModifier",
@@ -2136,7 +2245,7 @@ describe("middleware", () => {
             content: "",
             tool_calls: [
               {
-                name: "extract-1",
+                name: responseFormat[0].name,
                 args: { answer: "42", confidence: 0.5 },
                 id: "call_1",
                 type: "tool_call",
@@ -2149,7 +2258,7 @@ describe("middleware", () => {
       const agent = createAgent({
         model,
         tools: [],
-        responseFormat: toolStrategy(responseSchema),
+        responseFormat,
         middleware: [middleware],
       });
 
@@ -2418,6 +2527,72 @@ describe("middleware", () => {
       expect(afterAgentCall).toHaveBeenCalledTimes(3);
     });
 
+    it("should not leak beforeAgent middleware state across thread_id", async () => {
+      const seenEntityStates: Record<string, string | undefined> = {};
+
+      const stateOnly = createMiddleware({
+        name: "StateOnly",
+        stateSchema: new StateSchema({
+          contentStrategy: new ReducedValue(z4.string().optional(), {
+            inputSchema: z4.string().optional(),
+            reducer: (_current, next) => next,
+          }),
+        }),
+      });
+
+      const documents = createMiddleware({
+        name: "Documents",
+        beforeAgent: async (state) => {
+          expect((state as { contentStrategy?: string }).contentStrategy).toBe(
+            undefined
+          );
+        },
+      });
+
+      const entityExtraction = createMiddleware({
+        name: "EntityExtraction",
+        stateSchema: z.object({
+          contentStrategy: z.string().optional(),
+        }),
+        beforeAgent: async (state, runtime) => {
+          const threadId = runtime.configurable?.thread_id as string;
+          seenEntityStates[threadId] = (
+            state as { contentStrategy?: string }
+          ).contentStrategy;
+
+          if (threadId === "thread-a") {
+            return {
+              contentStrategy: "thread-a-only-value",
+            };
+          }
+          return undefined;
+        },
+      });
+
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("Response A"), new AIMessage("Response B")],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [stateOnly, documents, entityExtraction],
+        checkpointer: new MemorySaver(),
+      });
+
+      await agent.invoke(
+        { messages: [new HumanMessage("first")] },
+        { configurable: { thread_id: "thread-a" } }
+      );
+      await agent.invoke(
+        { messages: [new HumanMessage("second")] },
+        { configurable: { thread_id: "thread-b" } }
+      );
+
+      expect(seenEntityStates["thread-a"]).toBeUndefined();
+      expect(seenEntityStates["thread-b"]).toBeUndefined();
+    });
+
     it("should jump to afterAgent when beforeAgent jumps to end", async () => {
       const executionLog: string[] = [];
 
@@ -2534,6 +2709,54 @@ describe("middleware", () => {
   });
 
   describe("wrapModelCall Command support", () => {
+    it("should not leak wrapModelCall middleware state across thread_id", async () => {
+      const seenByThread: Record<string, string | undefined> = {};
+
+      const middleware = createMiddleware({
+        name: "WrapLeakCheck",
+        stateSchema: z.object({
+          contentStrategy: z.string().optional(),
+        }),
+        beforeAgent: async (_state, runtime) => {
+          const threadId = runtime.configurable?.thread_id as string;
+          if (threadId === "thread-a") {
+            return { contentStrategy: "thread-a-only-value" };
+          }
+          return undefined;
+        },
+        wrapModelCall: async (request, handler) => {
+          const threadId = request.runtime.configurable?.thread_id as string;
+          seenByThread[threadId] = (
+            request.state as { contentStrategy?: string }
+          ).contentStrategy;
+          return handler(request);
+        },
+      });
+
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("one"), new AIMessage("two")],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [middleware],
+        checkpointer: new MemorySaver(),
+      });
+
+      await agent.invoke(
+        { messages: [new HumanMessage("first")] },
+        { configurable: { thread_id: "thread-a" } }
+      );
+      await agent.invoke(
+        { messages: [new HumanMessage("second")] },
+        { configurable: { thread_id: "thread-b" } }
+      );
+
+      expect(seenByThread["thread-a"]).toBe("thread-a-only-value");
+      expect(seenByThread["thread-b"]).toBeUndefined();
+    });
+
     it("should support returning Command from wrapModelCall (short-circuit)", async () => {
       /**
        * Test that wrapModelCall can return a Command without calling handler,
@@ -2874,5 +3097,176 @@ describe("middleware", () => {
       );
       expect(aiMessages.length).toBeGreaterThanOrEqual(1);
     });
+
+    it("should propagate structured output retry Command through wrapModelCall middleware", async () => {
+      const responseFormat = toolStrategy(z.object({ answer: z.string() }));
+      const toolName = responseFormat[0].name;
+
+      const model = new FakeToolCallingChatModel({
+        responses: [
+          // First response: tool call with invalid args (missing required 'answer')
+          new AIMessage({
+            content: "",
+            tool_calls: [
+              { name: toolName, args: { wrong: 123 }, id: "call_1" },
+            ],
+          }),
+          // Second response: tool call with valid args (retry succeeds)
+          new AIMessage({
+            content: "",
+            tool_calls: [
+              {
+                name: toolName,
+                args: { answer: "correct" },
+                id: "call_2",
+              },
+            ],
+          }),
+        ],
+      });
+
+      const middleware = createMiddleware({
+        name: "PassthroughMiddleware",
+        wrapModelCall: async (request, handler) => {
+          return handler(request);
+        },
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [],
+        responseFormat,
+        middleware: [middleware],
+      });
+
+      const result = await agent.invoke({
+        messages: [{ role: "user", content: "test" }],
+      });
+
+      expect(result.structuredResponse).toEqual({ answer: "correct" });
+      expect(
+        result.messages.some(
+          (msg: BaseMessage) =>
+            ToolMessage.isInstance(msg) &&
+            typeof msg.content === "string" &&
+            msg.content.includes("Failed to parse structured output")
+        )
+      ).toBe(true);
+    });
+  });
+
+  it("should propagate store to middleware runtime", async () => {
+    const store = new InMemoryStore();
+    const storeValues: unknown[] = [];
+
+    const middleware = createMiddleware({
+      name: "storeCheck",
+      beforeAgent: (_state, runtime) => {
+        storeValues.push(runtime.store);
+        return {};
+      },
+      beforeModel: (_state, runtime) => {
+        storeValues.push(runtime.store);
+        return {};
+      },
+      afterModel: (_state, runtime) => {
+        storeValues.push(runtime.store);
+        return {};
+      },
+    });
+
+    const model = new FakeToolCallingChatModel({
+      responses: [new AIMessage("hello")],
+    });
+
+    const agent = createAgent({
+      model,
+      tools: [],
+      store,
+      middleware: [middleware],
+    });
+
+    await agent.invoke({
+      messages: [new HumanMessage("hi")],
+    });
+
+    expect(storeValues.length).toBeGreaterThan(0);
+    for (const val of storeValues) {
+      expect(val).toBeDefined();
+    }
+  });
+
+  it("should propagate store to wrapToolCall middleware runtime", async () => {
+    const store = new InMemoryStore();
+    let capturedStore: unknown;
+    let capturedConfigurable: unknown;
+
+    const testTool = tool(async () => "tool result", {
+      name: "test_tool",
+      description: "A test tool",
+      schema: z.object({}),
+    });
+
+    const middleware = createMiddleware({
+      name: "storeCheck",
+      wrapToolCall: async (request, handler) => {
+        capturedStore = request.runtime.store;
+        capturedConfigurable = request.runtime.configurable;
+        return handler(request);
+      },
+    });
+
+    const model = new FakeToolCallingModel({
+      toolCalls: [[{ name: "test_tool", args: {}, id: "1" }]],
+    });
+
+    const agent = createAgent({
+      model,
+      tools: [testTool],
+      store,
+      middleware: [middleware],
+    });
+
+    await agent.invoke({
+      messages: [new HumanMessage("call the tool")],
+    });
+
+    // Verify store is propagated to wrapToolCall (wrapped in AsyncBatchedStore)
+    expect(capturedStore).toBeDefined();
+    expect(capturedStore).not.toBeNull();
+    // Verify configurable is also propagated
+    expect(capturedConfigurable).toBeDefined();
+  });
+
+  it("should propagate store to wrapModelCall middleware runtime", async () => {
+    const store = new InMemoryStore();
+    let capturedStore: unknown;
+
+    const middleware = createMiddleware({
+      name: "storeCheck",
+      wrapModelCall: async (request, handler) => {
+        capturedStore = request.runtime.store;
+        return handler(request);
+      },
+    });
+
+    const model = new FakeToolCallingChatModel({
+      responses: [new AIMessage("hello")],
+    });
+
+    const agent = createAgent({
+      model,
+      tools: [],
+      store,
+      middleware: [middleware],
+    });
+
+    await agent.invoke({
+      messages: [new HumanMessage("hi")],
+    });
+
+    // Verify store is propagated to wrapModelCall (wrapped in AsyncBatchedStore)
+    expect(capturedStore).toBeDefined();
+    expect(capturedStore).not.toBeNull();
   });
 });

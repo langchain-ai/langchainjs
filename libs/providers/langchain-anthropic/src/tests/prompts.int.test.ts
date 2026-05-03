@@ -18,7 +18,7 @@ test("Convert hub prompt to Anthropic payload and invoke", async () => {
   const anthropicClient = new Anthropic();
 
   const anthropicResponse = await anthropicClient.messages.create({
-    model: "claude-3-haiku-20240307",
+    model: "claude-haiku-4-5-20251001",
     system,
     messages,
     max_tokens: 1024,

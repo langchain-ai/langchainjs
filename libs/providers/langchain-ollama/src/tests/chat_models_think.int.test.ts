@@ -77,7 +77,7 @@ test("test deep seek model with think=true (default)", async () => {
     (b) => b.type === "reasoning"
   );
   expect(reasoningBlocks.length).toBeGreaterThan(0);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   expect((reasoningBlocks[0] as any).reasoning.length).toBeGreaterThan(10);
 }, 120_000);
 
@@ -99,7 +99,7 @@ describe("Ollama Reasoning with contentBlocks", () => {
 
     const reasoningBlocks = blocks.filter((b) => b.type === "reasoning");
     expect(reasoningBlocks.length).toBeGreaterThan(0);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect((reasoningBlocks[0] as any).reasoning.length).toBeGreaterThan(10);
   }, 120_000);
 });

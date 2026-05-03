@@ -1,5 +1,6 @@
 import {
   afterEach,
+  assertType,
   beforeEach,
   describe,
   expect,
@@ -8,10 +9,17 @@ import {
   vi,
 } from "vitest";
 import * as fs from "node:fs";
+import { z } from "zod/v3";
 import { ApiClient } from "../../clients/index.js";
 import { GoogleRequestRecorder } from "../../utils/handler.js";
+import { RequestError } from "../../utils/errors.js";
 import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import { ChatGoogle, ChatGoogleParams } from "../index.js";
+import { ChatGoogle as ChatGoogleNode } from "../node.js";
+import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
+import { OutputParserException } from "@langchain/core/output_parsers";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import type { Runnable } from "@langchain/core/runnables";
 import type { Gemini } from "../types.js";
 
 interface MockResponseParameters {
@@ -48,7 +56,7 @@ class MockResponse implements Response {
   async formData(): Promise<FormData> {
     throw new Error("Not implemented");
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   async json(): Promise<any> {
     return JSON.parse(this.bodyText);
   }
@@ -66,23 +74,150 @@ class MockResponse implements Response {
   }
 }
 
-class MockApiClient extends ApiClient {
+class MockStreamingResponse implements Response {
+  private readonly bodyText: string;
+
+  readonly headers: Headers = new Headers();
+  readonly ok: boolean = true;
+  readonly redirected: boolean = false;
+  readonly status: number = 200;
+  readonly statusText: string = "OK";
+  readonly type: ResponseType = "basic";
+  readonly url: string = "http://localhost";
+  readonly body: ReadableStream<Uint8Array<ArrayBuffer>>;
+  readonly bodyUsed: boolean = false;
+
+  constructor({ filePath, url }: MockResponseParameters) {
+    this.bodyText = fs.readFileSync(filePath, "utf-8");
+    this.url = url;
+    const text = this.bodyText;
+    this.body = new ReadableStream({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode(text));
+        controller.close();
+      },
+    });
+  }
+
+  async arrayBuffer(): Promise<ArrayBuffer> {
+    return new TextEncoder().encode(this.bodyText).buffer;
+  }
+  async blob(): Promise<Blob> {
+    return new Blob([this.bodyText]);
+  }
+  async formData(): Promise<FormData> {
+    throw new Error("Not implemented");
+  }
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  async json(): Promise<any> {
+    return JSON.parse(this.bodyText);
+  }
+  async text(): Promise<string> {
+    return this.bodyText;
+  }
+  async bytes(): Promise<Uint8Array<ArrayBuffer>> {
+    return new TextEncoder().encode(this.bodyText);
+  }
+  clone(): Response {
+    return new MockStreamingResponse({
+      filePath: "",
+      url: this.url,
+    });
+  }
+}
+
+class MockChunkStreamingResponse implements Response {
+  readonly headers: Headers = new Headers();
+  readonly ok: boolean = true;
+  readonly redirected: boolean = false;
+  readonly status: number = 200;
+  readonly statusText: string = "OK";
+  readonly type: ResponseType = "basic";
+  readonly url: string = "http://localhost";
+  readonly bodyUsed: boolean = false;
+  readonly body: ReadableStream<Uint8Array<ArrayBuffer>>;
+
+  constructor(chunks: object[]) {
+    const encoder = new TextEncoder();
+    this.body = new ReadableStream({
+      start(controller) {
+        for (const chunk of chunks) {
+          const sseEvent = `data: ${JSON.stringify(chunk)}\n\n`;
+          controller.enqueue(encoder.encode(sseEvent));
+        }
+        controller.close();
+      },
+    });
+  }
+
+  async arrayBuffer(): Promise<ArrayBuffer> {
+    throw new Error("Not implemented");
+  }
+  async blob(): Promise<Blob> {
+    throw new Error("Not implemented");
+  }
+  async formData(): Promise<FormData> {
+    throw new Error("Not implemented");
+  }
+  async json(): Promise<unknown> {
+    throw new Error("Not implemented - use streaming");
+  }
+  async text(): Promise<string> {
+    throw new Error("Not implemented");
+  }
+  async bytes(): Promise<Uint8Array<ArrayBuffer>> {
+    throw new Error("Not implemented");
+  }
+  clone(): Response {
+    throw new Error("Not implemented");
+  }
+}
+
+class MockStreamingApiClient extends ApiClient {
   request: Request;
 
   response: Response;
 
-  filePath: string;
+  private chunks: object[];
 
-  constructor(fileName: string) {
+  constructor(chunks: object[]) {
     super();
-    this.filePath = `src/chat_models/tests/data/mock/${fileName}`;
+    this.chunks = chunks;
   }
 
   async fetch(request: Request): Promise<Response> {
     this.request = request;
-    this.response = new MockResponse({
-      filePath: this.filePath,
-      url: request.url,
+    this.response = new MockChunkStreamingResponse(this.chunks);
+    return this.response;
+  }
+
+  hasApiKey(): boolean {
+    return false;
+  }
+}
+
+interface MockErrorApiClientOptions {
+  bodyText: string;
+  status: number;
+  statusText?: string;
+  headers?: HeadersInit;
+}
+
+class MockErrorApiClient extends ApiClient {
+  request: Request;
+
+  response: Response;
+
+  constructor(private options: MockErrorApiClientOptions) {
+    super();
+  }
+
+  async fetch(request: Request): Promise<Response> {
+    this.request = request;
+    this.response = new Response(this.options.bodyText, {
+      status: this.options.status,
+      statusText: this.options.statusText,
+      headers: this.options.headers,
     });
     return this.response;
   }
@@ -92,24 +227,64 @@ class MockApiClient extends ApiClient {
   }
 }
 
-type MockChatGoogleParams = ChatGoogleParams & { responseFile: string };
+interface MockApiClientOptions {
+  fileName: string;
+  streaming?: boolean;
+}
+
+class MockApiClient extends ApiClient {
+  request: Request;
+
+  response: Response;
+
+  filePath: string;
+
+  streaming: boolean;
+
+  constructor({ fileName, streaming }: MockApiClientOptions) {
+    super();
+    this.filePath = `src/chat_models/tests/data/mock/${fileName}`;
+    this.streaming = streaming ?? false;
+  }
+
+  async fetch(request: Request): Promise<Response> {
+    this.request = request;
+    const params = { filePath: this.filePath, url: request.url };
+    this.response = this.streaming
+      ? new MockStreamingResponse(params)
+      : new MockResponse(params);
+    return this.response;
+  }
+
+  hasApiKey(): boolean {
+    return false;
+  }
+}
+
+type MockChatGoogleParams = ChatGoogleParams & {
+  responseFile: string;
+  streaming?: boolean;
+};
 
 describe("Google Mock", () => {
   let recorder: GoogleRequestRecorder;
   let callbacks: BaseCallbackHandler[];
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   let warnSpy: MockInstance<any>;
 
   function newChatGoogle(mockFields: MockChatGoogleParams): ChatGoogle {
-    const { model, responseFile, ...fields } = mockFields;
+    const { model, responseFile, streaming, ...fields } = mockFields;
     recorder = new GoogleRequestRecorder();
     callbacks = [
       recorder,
       // new GoogleRequestLogger(),
     ];
 
-    const apiClient = new MockApiClient(responseFile);
+    const apiClient = new MockApiClient({
+      fileName: responseFile,
+      streaming,
+    });
 
     const params = {
       model,
@@ -138,6 +313,202 @@ describe("Google Mock", () => {
     expect(recorder?.request?.body?.generationConfig?.candidateCount).toEqual(
       1
     );
+  });
+
+  test("mediaResolution uses scalar generation config value from constructor fields", async () => {
+    const params: ChatGoogleParams = {
+      model: "gemini-3-pro-preview",
+      mediaResolution: "MEDIA_RESOLUTION_HIGH",
+    };
+    const llm = newChatGoogle({
+      ...params,
+      responseFile: "gemini-chat-001.json",
+    });
+
+    await llm.invoke("What is 1+1?");
+
+    expect(recorder?.request?.body?.generationConfig?.mediaResolution).toEqual(
+      "MEDIA_RESOLUTION_HIGH"
+    );
+  });
+
+  test("mediaResolution uses scalar generation config value from call options", async () => {
+    const llm = newChatGoogle({
+      model: "gemini-3-pro-preview",
+      responseFile: "gemini-chat-001.json",
+    });
+
+    await llm.invoke("What is 1+1?", {
+      mediaResolution: "MEDIA_RESOLUTION_MEDIUM",
+    });
+
+    expect(recorder?.request?.body?.generationConfig?.mediaResolution).toEqual(
+      "MEDIA_RESOLUTION_MEDIUM"
+    );
+  });
+
+  test("detail maps to mediaResolution from constructor fields", async () => {
+    const llm = newChatGoogle({
+      model: "gemini-3-pro-preview",
+      responseFile: "gemini-chat-001.json",
+      detail: "high",
+    });
+
+    await llm.invoke("What is 1+1?");
+
+    expect(recorder?.request?.body?.generationConfig?.mediaResolution).toEqual(
+      "MEDIA_RESOLUTION_HIGH"
+    );
+  });
+
+  test("detail auto leaves mediaResolution undefined from call options", async () => {
+    const llm = newChatGoogle({
+      model: "gemini-3-pro-preview",
+      responseFile: "gemini-chat-001.json",
+    });
+
+    await llm.invoke("What is 1+1?", {
+      detail: "auto",
+    });
+
+    expect(recorder?.request?.body?.generationConfig).not.toHaveProperty(
+      "mediaResolution"
+    );
+  });
+
+  test("mediaResolution takes precedence over detail", async () => {
+    const llm = newChatGoogle({
+      model: "gemini-3-pro-preview",
+      responseFile: "gemini-chat-001.json",
+      detail: "low",
+      mediaResolution: "MEDIA_RESOLUTION_HIGH",
+    });
+
+    await llm.invoke("What is 1+1?", {
+      detail: "auto",
+      mediaResolution: "MEDIA_RESOLUTION_MEDIUM",
+    });
+
+    expect(recorder?.request?.body?.generationConfig?.mediaResolution).toEqual(
+      "MEDIA_RESOLUTION_MEDIUM"
+    );
+  });
+
+  test("passes abort signal to fetch in non-streaming invoke", async () => {
+    const apiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const llm = new ChatGoogle({
+      model: "gemini-2.5-flash",
+      apiClient,
+    });
+    const controller = new AbortController();
+    await llm.invoke("Hello", { signal: controller.signal });
+    expect(apiClient.request.signal.aborted).toBe(false);
+    controller.abort();
+    expect(apiClient.request.signal.aborted).toBe(true);
+  });
+
+  test("surfaces JSON error bodies from GCP streaming responses labeled as text/event-stream", async () => {
+    const apiClient = new MockErrorApiClient({
+      status: 400,
+      statusText: "Bad Request",
+      headers: {
+        "content-type": "text/event-stream",
+      },
+      bodyText: JSON.stringify({
+        error: {
+          message:
+            "Invalid JSON payload received. Unknown name \"const\" at 'tools[0]'",
+        },
+      }),
+    });
+
+    const llm = new ChatGoogle({
+      model: "gemini-2.5-flash",
+      platformType: "gcp",
+      streaming: true,
+      apiClient,
+    });
+
+    let caughtError: unknown;
+    try {
+      await llm.invoke("What is 1+1?");
+    } catch (error) {
+      caughtError = error;
+    }
+
+    expect(apiClient.request.url).toContain("streamGenerateContent?alt=sse");
+    expect(apiClient.request.url).toContain("aiplatform.googleapis.com");
+    expect(caughtError).toBeInstanceOf(RequestError);
+    expect((caughtError as RequestError).message).toContain(
+      'Unknown name "const"'
+    );
+    expect((caughtError as RequestError).message).not.toContain(
+      "Request failed with status code 400"
+    );
+  });
+
+  test("getLsParams normalizes provider and includes model metadata for web and node", () => {
+    const webApiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const webModel = new ChatGoogle({
+      model: "gemini-2.5-flash",
+      apiClient: webApiClient,
+      temperature: 0.25,
+      maxOutputTokens: 256,
+      platformType: "gai",
+    });
+
+    expect(webModel.getLsParams({ stop: ["END"] })).toEqual({
+      ls_provider: "google_genai",
+      ls_model_name: "gemini-2.5-flash",
+      ls_model_type: "chat",
+      ls_temperature: 0.25,
+      ls_max_tokens: 256,
+      ls_stop: ["END"],
+    });
+
+    const nodeApiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const nodeModel = new ChatGoogleNode({
+      model: "gemini-2.5-pro",
+      apiClient: nodeApiClient,
+      temperature: 0.5,
+      maxOutputTokens: 512,
+      platformType: "gai",
+    });
+
+    expect(nodeModel.getLsParams({ stop: ["STOP"] })).toEqual({
+      ls_provider: "google_genai",
+      ls_model_name: "gemini-2.5-pro",
+      ls_model_type: "chat",
+      ls_temperature: 0.5,
+      ls_max_tokens: 512,
+      ls_stop: ["STOP"],
+    });
+
+    const vertexApiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const vertexModel = new ChatGoogleNode({
+      model: "gemini-2.5-flash",
+      apiClient: vertexApiClient,
+      temperature: 0.3,
+      maxOutputTokens: 1024,
+      vertexai: true,
+    });
+
+    expect(vertexModel.getLsParams({ stop: ["DONE"] })).toEqual({
+      ls_provider: "google_vertexai",
+      ls_model_name: "gemini-2.5-flash",
+      ls_model_type: "chat",
+      ls_temperature: 0.3,
+      ls_max_tokens: 1024,
+      ls_stop: ["DONE"],
+    });
   });
 
   type TestReasoning = {
@@ -189,7 +560,7 @@ describe("Google Mock", () => {
     {
       model: "gemini-2.5-flash-lite",
       maxReasoningTokens: -1,
-      expectIncludeThoughts: true,
+      expectIncludeThoughts: false,
       expectThinkingBudget: -1,
     },
     {
@@ -292,6 +663,36 @@ describe("Google Mock", () => {
     },
     {
       model: "gemini-3-flash",
+      maxReasoningTokens: 20000,
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "HIGH",
+    },
+    {
+      model: "gemini-3.1-flash-lite",
+      maxReasoningTokens: -1,
+      expectIncludeThoughts: false,
+      expectThinkingLevel: "MINIMAL",
+    },
+    {
+      model: "gemini-3.1-flash-lite",
+      maxReasoningTokens: 0,
+      expectIncludeThoughts: false,
+      expectThinkingLevel: "MINIMAL",
+    },
+    {
+      model: "gemini-3.1-flash-lite",
+      maxReasoningTokens: 1000,
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "LOW",
+    },
+    {
+      model: "gemini-3.1-flash-lite",
+      maxReasoningTokens: 8000,
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "MEDIUM",
+    },
+    {
+      model: "gemini-3.1-flash-lite",
       maxReasoningTokens: 20000,
       expectIncludeThoughts: true,
       expectThinkingLevel: "HIGH",
@@ -444,6 +845,30 @@ describe("Google Mock", () => {
       expectIncludeThoughts: true,
       expectThinkingLevel: "HIGH",
     },
+    {
+      model: "gemini-3.1-flash-lite",
+      reasoningEffort: "minimal",
+      expectIncludeThoughts: false,
+      expectThinkingLevel: "MINIMAL",
+    },
+    {
+      model: "gemini-3.1-flash-lite",
+      reasoningEffort: "low",
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "LOW",
+    },
+    {
+      model: "gemini-3.1-flash-lite",
+      reasoningEffort: "medium",
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "MEDIUM",
+    },
+    {
+      model: "gemini-3.1-flash-lite",
+      reasoningEffort: "high",
+      expectIncludeThoughts: true,
+      expectThinkingLevel: "HIGH",
+    },
   ];
 
   const testReasoning: TestReasoning[] = [
@@ -479,4 +904,577 @@ describe("Google Mock", () => {
       });
     }
   );
+
+  describe("streaming usage_metadata", () => {
+    test("each chunk carries delta usage_metadata that sums to correct totals", async () => {
+      const llm = newChatGoogle({
+        model: "gemini-2.5-flash",
+        responseFile: "gemini-stream-001.txt",
+        streaming: true,
+      });
+
+      const chunks: AIMessageChunk[] = [];
+      for await (const chunk of await llm.stream("Why is the sky blue?")) {
+        chunks.push(chunk);
+      }
+
+      const chunksWithUsage = chunks.filter(
+        (c) => c.usage_metadata !== undefined
+      );
+      expect(chunksWithUsage.length).toBeGreaterThan(1);
+
+      expect(chunksWithUsage[0].usage_metadata!.input_tokens).toBe(10);
+      expect(chunksWithUsage[0].usage_metadata!.output_tokens).toBe(1);
+      expect(chunksWithUsage[0].usage_metadata!.total_tokens).toBe(11);
+
+      expect(chunksWithUsage[1].usage_metadata!.input_tokens).toBe(0);
+      expect(chunksWithUsage[1].usage_metadata!.output_tokens).toBe(4);
+      expect(chunksWithUsage[1].usage_metadata!.total_tokens).toBe(4);
+
+      expect(chunksWithUsage[2].usage_metadata!.input_tokens).toBe(0);
+      expect(chunksWithUsage[2].usage_metadata!.output_tokens).toBe(7);
+      expect(chunksWithUsage[2].usage_metadata!.total_tokens).toBe(7);
+    });
+
+    test("concatenated stream chunks have correct (non-inflated) usage_metadata", async () => {
+      const llm = newChatGoogle({
+        model: "gemini-2.5-flash",
+        responseFile: "gemini-stream-001.txt",
+        streaming: true,
+      });
+
+      let res: AIMessageChunk | null = null;
+      for await (const chunk of await llm.stream("Why is the sky blue?")) {
+        if (!res) {
+          res = chunk;
+        } else {
+          res = res.concat(chunk);
+        }
+      }
+
+      expect(res).toBeDefined();
+      expect(res!.usage_metadata).toBeDefined();
+      expect(res!.usage_metadata!.input_tokens).toBe(10);
+      expect(res!.usage_metadata!.output_tokens).toBe(12);
+      expect(res!.usage_metadata!.total_tokens).toBe(22);
+    });
+
+    test("streamUsage false excludes usage_metadata from all chunks", async () => {
+      const llm = newChatGoogle({
+        model: "gemini-2.5-flash",
+        responseFile: "gemini-stream-001.txt",
+        streaming: true,
+        streamUsage: false,
+      });
+
+      let res: AIMessageChunk | null = null;
+      for await (const chunk of await llm.stream("Why is the sky blue?")) {
+        if (!res) {
+          res = chunk;
+        } else {
+          res = res.concat(chunk);
+        }
+      }
+
+      expect(res).toBeDefined();
+      expect(res!.usage_metadata).toBeUndefined();
+    });
+  });
+
+  test("handleLLMNewToken is called for non-text streaming chunks", async () => {
+    const execCodeChunk = {
+      candidates: [
+        {
+          content: {
+            parts: [
+              {
+                executableCode: {
+                  language: "PYTHON",
+                  code: "fib = []\na, b = 0, 1\nfor _ in range(10):\n    fib.append(a)\n    a, b = b, a + b\nprint(fib)\n",
+                },
+              },
+            ],
+            role: "model",
+          },
+          index: 0,
+        },
+      ],
+      usageMetadata: {
+        promptTokenCount: 19,
+        candidatesTokenCount: 55,
+        totalTokenCount: 155,
+        promptTokensDetails: [{ modality: "TEXT", tokenCount: 19 }],
+        thoughtsTokenCount: 81,
+      },
+      modelVersion: "gemini-2.5-flash",
+    };
+
+    const execResultChunk = {
+      candidates: [
+        {
+          content: {
+            parts: [
+              {
+                codeExecutionResult: {
+                  outcome: "OUTCOME_OK",
+                  output: "[0, 1, 1, 2, 3, 5, 8, 13, 21, 34]\n",
+                },
+              },
+            ],
+            role: "model",
+          },
+          index: 0,
+        },
+      ],
+      usageMetadata: {
+        promptTokenCount: 19,
+        candidatesTokenCount: 55,
+        totalTokenCount: 155,
+        promptTokensDetails: [{ modality: "TEXT", tokenCount: 19 }],
+        thoughtsTokenCount: 81,
+      },
+      modelVersion: "gemini-2.5-flash",
+    };
+
+    const textChunk = {
+      candidates: [
+        {
+          content: {
+            parts: [
+              {
+                text: "The first 10 Fibonacci numbers are: 0, 1, 1, 2, 3, 5, 8, 13, 21, 34.",
+              },
+            ],
+            role: "model",
+          },
+          finishReason: "STOP",
+          index: 0,
+        },
+      ],
+      usageMetadata: {
+        promptTokenCount: 19,
+        candidatesTokenCount: 97,
+        totalTokenCount: 390,
+        promptTokensDetails: [{ modality: "TEXT", tokenCount: 19 }],
+        thoughtsTokenCount: 81,
+      },
+      modelVersion: "gemini-2.5-flash",
+    };
+
+    const apiClient = new MockStreamingApiClient([
+      execCodeChunk,
+      execResultChunk,
+      textChunk,
+    ]);
+
+    const newTokenCalls: { text: string; chunk: unknown }[] = [];
+
+    const llm = new ChatGoogle({
+      model: "gemini-2.5-flash",
+      streaming: true,
+      apiClient,
+      callbacks: [
+        {
+          handleLLMNewToken(
+            token: string,
+            _idx,
+            _runId,
+            _parentRunId,
+            _tags,
+            fields
+          ) {
+            newTokenCalls.push({ text: token, chunk: fields?.chunk });
+          },
+        },
+      ],
+    });
+
+    await llm.invoke("Calculate fibonacci numbers");
+
+    expect(newTokenCalls.length).toBe(3);
+
+    const nonTextCalls = newTokenCalls.filter((c) => c.text === "");
+    expect(nonTextCalls).toHaveLength(2);
+    expect(nonTextCalls[0]?.chunk).toBeDefined();
+    expect(nonTextCalls[1]?.chunk).toBeDefined();
+
+    const textCall = newTokenCalls.find((c) => c.text.includes("Fibonacci"));
+    expect(textCall).toBeDefined();
+  });
+
+  test("handleLLMNewToken is called for inlineData streaming chunks", async () => {
+    const execCodeChunk = {
+      candidates: [
+        {
+          content: {
+            parts: [
+              {
+                executableCode: {
+                  language: "PYTHON",
+                  code: "import matplotlib.pyplot as plt\nx = range(-10, 11)\ny = [i**2 for i in x]\nplt.plot(x, y)\nplt.savefig('plot.png')\nprint('done')\n",
+                },
+              },
+            ],
+            role: "model",
+          },
+          index: 0,
+        },
+      ],
+      usageMetadata: {
+        promptTokenCount: 22,
+        candidatesTokenCount: 206,
+        totalTokenCount: 443,
+      },
+      modelVersion: "gemini-2.5-flash",
+    };
+
+    const resultWithImageChunk = {
+      candidates: [
+        {
+          content: {
+            parts: [
+              {
+                codeExecutionResult: {
+                  outcome: "OUTCOME_OK",
+                  output: "done\n",
+                },
+              },
+              {
+                inlineData: {
+                  mimeType: "image/png",
+                  data: "iVBORw0KGgoAAAANSUhEUg==", // truncated base64
+                },
+              },
+            ],
+            role: "model",
+          },
+          index: 0,
+        },
+      ],
+      usageMetadata: {
+        promptTokenCount: 22,
+        candidatesTokenCount: 206,
+        totalTokenCount: 443,
+      },
+      modelVersion: "gemini-2.5-flash",
+    };
+
+    const textChunk = {
+      candidates: [
+        {
+          content: {
+            parts: [{ text: "Here is the plot of y = x^2." }],
+            role: "model",
+          },
+          finishReason: "STOP",
+          index: 0,
+        },
+      ],
+      usageMetadata: {
+        promptTokenCount: 22,
+        candidatesTokenCount: 220,
+        totalTokenCount: 500,
+      },
+      modelVersion: "gemini-2.5-flash",
+    };
+
+    const apiClient = new MockStreamingApiClient([
+      execCodeChunk,
+      resultWithImageChunk,
+      textChunk,
+    ]);
+
+    const newTokenCalls: { text: string; chunk: unknown }[] = [];
+
+    const llm = new ChatGoogle({
+      model: "gemini-2.5-flash",
+      streaming: true,
+      apiClient,
+      callbacks: [
+        {
+          handleLLMNewToken(
+            token: string,
+            _idx,
+            _runId,
+            _parentRunId,
+            _tags,
+            fields
+          ) {
+            newTokenCalls.push({ text: token, chunk: fields?.chunk });
+          },
+        },
+      ],
+    });
+
+    await llm.invoke("Plot y=x^2");
+
+    expect(newTokenCalls.length).toBe(3);
+
+    const nonTextCalls = newTokenCalls.filter((c) => c.text === "");
+    expect(nonTextCalls).toHaveLength(2);
+    expect(nonTextCalls[0]?.chunk).toBeDefined();
+    expect(nonTextCalls[1]?.chunk).toBeDefined();
+
+    const textCall = newTokenCalls.find((c) => c.text.includes("plot"));
+    expect(textCall).toBeDefined();
+  });
+});
+
+function makeSerializableSchema() {
+  return {
+    "~standard": {
+      version: 1 as const,
+      vendor: "test",
+      validate: (value: unknown) => {
+        const obj = value as Record<string, unknown>;
+        if (
+          typeof obj === "object" &&
+          obj !== null &&
+          typeof obj.name === "string"
+        ) {
+          return { value: obj };
+        }
+        return {
+          issues: [{ message: "Expected object with string 'name' field" }],
+        };
+      },
+      jsonSchema: {
+        input: () => ({
+          type: "object",
+          properties: { name: { type: "string" } },
+          required: ["name"],
+        }),
+        output: () => ({
+          type: "object",
+          properties: { name: { type: "string" } },
+          required: ["name"],
+        }),
+      },
+    },
+  };
+}
+
+describe("withStructuredOutput with SerializableSchema", () => {
+  test("functionCalling with valid output parses correctly", async () => {
+    const apiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const model = new ChatGoogle({
+      model: "gemini-3-pro-preview",
+      apiClient,
+    });
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.spyOn(model as any, "invoke").mockResolvedValue(
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            id: "call_123",
+            name: "extract",
+            args: { name: "Claude" },
+          },
+        ],
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      method: "functionCalling",
+    });
+
+    const result = await structured.invoke("What is your name?");
+    expect(result).toEqual({ name: "Claude" });
+  });
+
+  test("functionCalling with invalid output throws OutputParserException", async () => {
+    const apiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const model = new ChatGoogle({
+      model: "gemini-3-pro-preview",
+      apiClient,
+    });
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.spyOn(model as any, "invoke").mockResolvedValue(
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            id: "call_123",
+            name: "extract",
+            args: { wrong_field: 123 },
+          },
+        ],
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      method: "functionCalling",
+    });
+
+    await expect(async () => {
+      await structured.invoke("What is your name?");
+    }).rejects.toThrow(OutputParserException);
+  });
+
+  test("functionCalling with custom name", async () => {
+    const apiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const model = new ChatGoogle({
+      model: "gemini-3-pro-preview",
+      apiClient,
+    });
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.spyOn(model as any, "invoke").mockResolvedValue(
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            id: "call_123",
+            name: "PersonInfo",
+            args: { name: "Alice" },
+          },
+        ],
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      method: "functionCalling",
+      name: "PersonInfo",
+    });
+
+    const result = await structured.invoke("Who is this?");
+    expect(result).toEqual({ name: "Alice" });
+  });
+
+  test("functionCalling with includeRaw returns raw and parsed", async () => {
+    const rawMessage = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          id: "call_123",
+          name: "extract",
+          args: { name: "Bob" },
+        },
+      ],
+    });
+    const apiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const model = new ChatGoogle({
+      model: "gemini-3-pro-preview",
+      apiClient,
+    });
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.spyOn(model as any, "invoke").mockResolvedValue(rawMessage);
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      method: "functionCalling",
+      includeRaw: true,
+    });
+
+    const result = await structured.invoke("Tell me a name");
+    expect(result).toHaveProperty("raw");
+    expect(result).toHaveProperty("parsed");
+    expect(result.parsed).toEqual({ name: "Bob" });
+  });
+
+  test("jsonSchema with valid output parses correctly", async () => {
+    const apiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const model = new ChatGoogle({
+      model: "gemini-3-pro-preview",
+      apiClient,
+    });
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.spyOn(model as any, "invoke").mockResolvedValue(
+      new AIMessage({
+        content: '{"name": "Eve"}',
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      method: "jsonSchema",
+    });
+
+    const result = await structured.invoke("What is your name?");
+    expect(result).toEqual({ name: "Eve" });
+  });
+
+  test("jsonSchema with invalid output throws OutputParserException", async () => {
+    const apiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const model = new ChatGoogle({
+      model: "gemini-3-pro-preview",
+      apiClient,
+    });
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.spyOn(model as any, "invoke").mockResolvedValue(
+      new AIMessage({
+        content: '{"wrong_field": 123}',
+      })
+    );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema, {
+      method: "jsonSchema",
+    });
+
+    await expect(async () => {
+      await structured.invoke("What is your name?");
+    }).rejects.toThrow(OutputParserException);
+  });
+});
+
+describe("withStructuredOutput type narrowing", () => {
+  const model = new ChatGoogle({
+    model: "gemini-2.5-flash",
+    apiKey: "test",
+  });
+
+  const schema = z.object({
+    name: z.string(),
+    age: z.number(),
+  });
+
+  test("is pipeable with ChatPromptTemplate when includeRaw is false", () => {
+    const prompt = ChatPromptTemplate.fromMessages([
+      ["system", "Extract info."],
+      ["human", "{input}"],
+    ]);
+    const structuredModel = model.withStructuredOutput(schema, {
+      includeRaw: false,
+    });
+    const chain = prompt.pipe(structuredModel);
+    assertType<Runnable>(chain);
+  });
+
+  test("is pipeable with ChatPromptTemplate when config is omitted", () => {
+    const prompt = ChatPromptTemplate.fromMessages([
+      ["system", "Extract info."],
+      ["human", "{input}"],
+    ]);
+    const structuredModel = model.withStructuredOutput(schema);
+    const chain = prompt.pipe(structuredModel);
+    assertType<Runnable>(chain);
+  });
+
+  test("returns non-union type when includeRaw is false", () => {
+    const result = model.withStructuredOutput(schema, { includeRaw: false });
+    const _check: typeof result extends Runnable ? true : never = true;
+    assertType<true>(_check);
+  });
+
+  test("returns non-union type when config is omitted", () => {
+    const result = model.withStructuredOutput(schema);
+    const _check: typeof result extends Runnable ? true : never = true;
+    assertType<true>(_check);
+  });
 });

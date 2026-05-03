@@ -12,7 +12,8 @@ export function handleToolChoice(
   | undefined {
   if (!toolChoice) {
     return undefined;
-  } else if (toolChoice === "any") {
+  } else if (toolChoice === "any" || toolChoice === "required") {
+    // "required" is OpenAI-style, map to Anthropic's "any" which forces tool use
     return {
       type: "any",
     };

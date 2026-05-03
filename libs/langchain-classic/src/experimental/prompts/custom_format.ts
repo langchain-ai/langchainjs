@@ -14,9 +14,9 @@ export type CustomFormatPromptTemplateInput<RunInput extends InputValues> =
   };
 
 export class CustomFormatPromptTemplate<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   PartialVariableName extends string = any,
 > extends PromptTemplate<RunInput, PartialVariableName> {
   static lc_name() {
@@ -54,7 +54,7 @@ export class CustomFormatPromptTemplate<
    * Load prompt template from a template
    */
   static fromTemplate<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunInput extends InputValues = Record<string, any>,
   >(
     template: string,
@@ -74,7 +74,7 @@ export class CustomFormatPromptTemplate<
       }
     }
     return new this<RunInput extends Symbol ? never : RunInput>({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       inputVariables: [...names] as any[],
       template,
       customParser,

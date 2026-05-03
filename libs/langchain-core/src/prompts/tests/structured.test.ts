@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { ZodType, ZodTypeDef } from "zod/v3";
 import { test, expect } from "vitest";
 import {

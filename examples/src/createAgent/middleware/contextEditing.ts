@@ -76,7 +76,7 @@ const agent = createAgent({
           /**
            * Keep only the 1 most recent tool result
            */
-          keep: 1,
+          keep: { messages: 1 },
           /**
            * Don't clear calculator tool results
            */

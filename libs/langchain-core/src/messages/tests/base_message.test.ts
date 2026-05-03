@@ -12,7 +12,9 @@ import {
   _mergeObj,
   _mergeDicts,
   DEFAULT_MERGE_IGNORE_KEYS,
+  mergeContent,
 } from "../index.js";
+import type { MessageContent } from "../base.js";
 import { load } from "../../load/index.js";
 import { concat } from "../../utils/stream.js";
 import { ToolCallChunk } from "../tool.js";
@@ -45,6 +47,38 @@ test("Test ChatPromptTemplate can format OpenAI content image messages", async (
   expect(formatted.messages[1].content).toEqual(
     "Will this format with multiple messages?: YES!"
   );
+});
+
+test("AIMessage v1 content does not duplicate existing tool call blocks", () => {
+  const message = new AIMessage({
+    content: [
+      {
+        type: "tool_call",
+        id: "toolu_1",
+        name: "calculator",
+        args: { expression: "12345 + 67890" },
+      },
+    ],
+    tool_calls: [
+      {
+        type: "tool_call",
+        id: "toolu_1",
+        name: "calculator",
+        args: { expression: "12345 + 67890" },
+      },
+    ],
+    response_metadata: { output_version: "v1" },
+  });
+
+  expect(message.contentBlocks).toEqual([
+    {
+      type: "tool_call",
+      id: "toolu_1",
+      name: "calculator",
+      args: { expression: "12345 + 67890" },
+    },
+  ]);
+  expect(message.tool_calls).toHaveLength(1);
 });
 
 test("Test ChatPromptTemplate can format OpenAI content image messages", async () => {
@@ -122,6 +156,28 @@ test("Deserialisation and serialisation of tool_call_id", async () => {
   expect(deserialized).toEqual(message);
 });
 
+test("mergeContent merges single block object with array second content", () => {
+  const singleBlock = { type: "text", text: "Hello" };
+  const second = [{ type: "text", text: " world" }];
+  const result = mergeContent(singleBlock as unknown as MessageContent, second);
+  expect(result).toEqual([
+    { type: "text", text: "Hello" },
+    { type: "text", text: " world" },
+  ]);
+});
+
+test("mergeContent merges single block object with string second content", () => {
+  const singleBlock = { type: "text", text: "Hello" };
+  const result = mergeContent(
+    singleBlock as unknown as MessageContent,
+    " world"
+  );
+  expect(result).toEqual([
+    { type: "text", text: "Hello" },
+    { type: "text", text: " world" },
+  ]);
+});
+
 test("_mergeLists merges blocks by numeric index", () => {
   const chunk1 = new AIMessageChunk({
     content: [
@@ -184,6 +240,88 @@ test("_mergeLists merges blocks by string index", () => {
       reasoning: "**Exploring",
     },
   ]);
+});
+
+test("_mergeLists merges blocks by id when index is missing", () => {
+  // Providers like Anthropic via OpenAI-compat API don't include `index`
+  // on streaming tool call deltas. _mergeLists should fall back to id-based
+  // merging so chunks collapse instead of accumulating individually.
+  const chunk1 = new AIMessageChunk({
+    content: "",
+    tool_call_chunks: [
+      {
+        name: "create_item",
+        args: "",
+        id: "tooluse_abc123",
+        type: "tool_call_chunk",
+      },
+    ],
+  });
+
+  const chunk2 = new AIMessageChunk({
+    content: "",
+    tool_call_chunks: [
+      {
+        name: undefined,
+        args: '{"boa',
+        id: "tooluse_abc123",
+        type: "tool_call_chunk",
+      },
+    ],
+  });
+
+  const chunk3 = new AIMessageChunk({
+    content: "",
+    tool_call_chunks: [
+      {
+        name: undefined,
+        args: 'rdId":',
+        id: "tooluse_abc123",
+        type: "tool_call_chunk",
+      },
+    ],
+  });
+
+  const merged = chunk1.concat(chunk2).concat(chunk3);
+
+  // Should merge into a single tool_call_chunk, not accumulate 3 separate entries
+  expect(merged.tool_call_chunks).toHaveLength(1);
+  expect(merged.tool_call_chunks![0].id).toBe("tooluse_abc123");
+  expect(merged.tool_call_chunks![0].name).toBe("create_item");
+  expect(merged.tool_call_chunks![0].args).toBe('{"boardId":');
+});
+
+test("_mergeLists keeps separate entries for different ids when index is missing", () => {
+  const chunk1 = new AIMessageChunk({
+    content: "",
+    tool_call_chunks: [
+      {
+        name: "tool_a",
+        args: '{"x": 1}',
+        id: "call_aaa",
+        type: "tool_call_chunk",
+      },
+    ],
+  });
+
+  const chunk2 = new AIMessageChunk({
+    content: "",
+    tool_call_chunks: [
+      {
+        name: "tool_b",
+        args: '{"y": 2}',
+        id: "call_bbb",
+        type: "tool_call_chunk",
+      },
+    ],
+  });
+
+  const merged = chunk1.concat(chunk2);
+
+  // Different ids should NOT be merged together
+  expect(merged.tool_call_chunks).toHaveLength(2);
+  expect(merged.tool_call_chunks![0].id).toBe("call_aaa");
+  expect(merged.tool_call_chunks![1].id).toBe("call_bbb");
 });
 
 test("Deserialisation and serialisation of messages with ID", async () => {
@@ -948,6 +1086,59 @@ describe("usage_metadata serialized", () => {
     expect(jsonConcatenatedAIMessageChunk).toContain("input_tokens");
     expect(jsonConcatenatedAIMessageChunk).toContain("output_tokens");
     expect(jsonConcatenatedAIMessageChunk).toContain("total_tokens");
+  });
+
+  test("AIMessage usage_metadata survives serialization round-trip", async () => {
+    const config = {
+      importMap: { messages: { AIMessage } },
+      optionalImportEntrypoints: [],
+      optionalImportsMap: {},
+      secretsMap: {},
+    };
+
+    const message = new AIMessage({
+      content: "Hello",
+      usage_metadata: {
+        input_tokens: 100,
+        output_tokens: 50,
+        total_tokens: 150,
+      },
+    });
+
+    const deserialized: AIMessage = await load(JSON.stringify(message), config);
+    expect(deserialized.usage_metadata).toEqual({
+      input_tokens: 100,
+      output_tokens: 50,
+      total_tokens: 150,
+    });
+  });
+
+  test("AIMessageChunk usage_metadata survives serialization round-trip", async () => {
+    const config = {
+      importMap: { messages: { AIMessageChunk } },
+      optionalImportEntrypoints: [],
+      optionalImportsMap: {},
+      secretsMap: {},
+    };
+
+    const message = new AIMessageChunk({
+      content: "Hello",
+      usage_metadata: {
+        input_tokens: 100,
+        output_tokens: 50,
+        total_tokens: 150,
+      },
+    });
+
+    const deserialized: AIMessageChunk = await load(
+      JSON.stringify(message),
+      config
+    );
+    expect(deserialized.usage_metadata).toEqual({
+      input_tokens: 100,
+      output_tokens: 50,
+      total_tokens: 150,
+    });
   });
 });
 
