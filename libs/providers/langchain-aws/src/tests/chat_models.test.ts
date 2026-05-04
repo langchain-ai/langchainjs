@@ -250,6 +250,96 @@ describe("convertToConverseMessages", () => {
       },
     },
     {
+      name: "prompt caching with TTL",
+      input: [
+        new SystemMessage({
+          content: [
+            { type: "text", text: "You're an advanced AI assistant." },
+            {
+              type: "cache_point",
+              cachePoint: {
+                type: "default",
+                ttl: "1h",
+              },
+            },
+          ],
+        }),
+        new HumanMessage({
+          content: [
+            {
+              type: "text",
+              text: "What is the capital of France?",
+            },
+            {
+              type: "cache_point",
+              cachePoint: {
+                type: "default",
+                ttl: "5m",
+              },
+            },
+          ],
+        }),
+        new AIMessage({
+          content: [
+            {
+              type: "text",
+              text: "The capital of France is Paris.",
+            },
+            {
+              type: "cache_point",
+              cachePoint: {
+                type: "default",
+                ttl: "1h",
+              },
+            },
+          ],
+        }),
+      ],
+      output: {
+        converseMessages: [
+          {
+            role: BedrockConversationRole.USER,
+            content: [
+              {
+                text: "What is the capital of France?",
+              },
+              {
+                cachePoint: {
+                  type: "default",
+                  ttl: "5m",
+                },
+              },
+            ],
+          },
+          {
+            role: BedrockConversationRole.ASSISTANT,
+            content: [
+              {
+                text: "The capital of France is Paris.",
+              },
+              {
+                cachePoint: {
+                  type: "default",
+                  ttl: "1h",
+                },
+              },
+            ],
+          },
+        ],
+        converseSystem: [
+          {
+            text: "You're an advanced AI assistant.",
+          },
+          {
+            cachePoint: {
+              type: "default",
+              ttl: "1h",
+            },
+          },
+        ],
+      },
+    },
+    {
       name: "consecutive user tool messages",
       input: [
         new SystemMessage("You're an advanced AI assistant."),

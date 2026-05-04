@@ -24,16 +24,23 @@ import {
 } from "../types.js";
 import { convertFromV1ToChatBedrockConverseMessage } from "./compat.js";
 
-function isDefaultCachePoint(block: unknown): boolean {
+interface BedrockCachePointInput {
+  cachePoint: {
+    type: string;
+    ttl?: Bedrock.CacheTTL;
+  };
+}
+
+function isDefaultCachePoint(block: unknown): block is BedrockCachePointInput {
   return Boolean(
     typeof block === "object" &&
     block !== null &&
     "cachePoint" in block &&
-    block.cachePoint &&
-    typeof block.cachePoint === "object" &&
-    block.cachePoint !== null &&
-    "type" in block.cachePoint &&
-    block.cachePoint.type === "default"
+    (block as { cachePoint: unknown }).cachePoint &&
+    typeof (block as { cachePoint: unknown }).cachePoint === "object" &&
+    (block as { cachePoint: { type?: unknown } }).cachePoint !== null &&
+    "type" in (block as { cachePoint: object }).cachePoint &&
+    (block as BedrockCachePointInput).cachePoint.type === "default"
   );
 }
 
@@ -442,6 +449,7 @@ function convertLangChainContentBlockToConverseContentBlock<
     return {
       cachePoint: {
         type: "default",
+        ...(block.cachePoint.ttl !== undefined && { ttl: block.cachePoint.ttl }),
       },
     };
   }
@@ -469,6 +477,7 @@ function convertSystemMessageToConverseMessage(
         contentBlocks.push({
           cachePoint: {
             type: "default",
+            ...(block.cachePoint.ttl !== undefined && { ttl: block.cachePoint.ttl }),
           },
         });
       } else break;
@@ -526,6 +535,7 @@ function convertAIMessageToConverseMessage(msg: AIMessage): Bedrock.Message {
         contentBlocks.push({
           cachePoint: {
             type: "default",
+            ...(block.cachePoint.ttl !== undefined && { ttl: block.cachePoint.ttl }),
           },
         });
       } else {
