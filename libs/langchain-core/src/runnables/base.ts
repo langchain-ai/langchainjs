@@ -677,6 +677,9 @@ export abstract class Runnable<
    * jsonpatch ops that describe how the state of the run has changed in each
    * step, and the final state of the run.
    * The jsonpatch ops can be applied in order to construct state.
+   *
+   * @deprecated Use `.stream()` instead.
+   *
    * @param input
    * @param options
    * @param streamOptions
