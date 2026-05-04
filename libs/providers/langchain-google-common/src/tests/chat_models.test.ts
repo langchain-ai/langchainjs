@@ -2362,6 +2362,60 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(result.parsed).toEqual({ testName: "cobalt" });
   });
 
+  test("4. Functions withStructuredOutput - includeRaw jsonSchema parsed matches raw text", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-json-schema-thinking-mock.json",
+    };
+
+    const schema = z.object({
+      testName: z.string().describe("The name of the test."),
+    });
+
+    const baseModel = new ChatGoogle({ authOptions });
+    const model = baseModel.withStructuredOutput(schema, {
+      includeRaw: true,
+      method: "jsonSchema",
+    });
+
+    const result = await model.invoke("What is the test name?");
+    const parsedFromRaw = JSON.parse(result.raw.text);
+
+    expect(result.parsed).not.toBeNull();
+    expect(result.parsed).toEqual(parsedFromRaw);
+  });
+
+  test("4. Functions withStructuredOutput - includeRaw functionCalling parsed matches raw tool args", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-4-mock.json",
+    };
+
+    const schema = z.object({
+      testName: z.string().describe("The name of the test that should be run."),
+    });
+
+    const baseModel = new ChatGoogle({ authOptions });
+    const model = baseModel.withStructuredOutput(schema, {
+      includeRaw: true,
+      method: "functionCalling",
+      name: "test",
+    });
+
+    const result = await model.invoke("What is the test name?");
+    const parsedFromRawTool = result.raw.tool_calls?.at(0)?.args;
+
+    expect(result.parsed).not.toBeNull();
+    expect(parsedFromRawTool).toBeDefined();
+    expect(result.parsed).toEqual(parsedFromRawTool);
+  });
+
   test("4. Functions withStructuredOutput - functionCalling method request", async () => {
     const record: Record<string, any> = {};
     const projectId = mockId();
@@ -3510,5 +3564,53 @@ describe("withStructuredOutput - StandardSchema", () => {
     expect(data.generationConfig).toBeDefined();
     expect(data.generationConfig.responseSchema).toBeDefined();
     expect(data.generationConfig.responseMimeType).toBe("application/json");
+  });
+
+  test("includeRaw jsonSchema parsed matches raw text with StandardSchema", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-json-schema-thinking-mock.json",
+    };
+
+    const baseModel = new ChatGoogle({ authOptions });
+    const schema = makeSerializableSchema();
+    const model = baseModel.withStructuredOutput(schema, {
+      includeRaw: true,
+      method: "jsonSchema",
+    });
+
+    const result = await model.invoke("What is the test name?");
+    const parsedFromRaw = JSON.parse(result.raw.text);
+
+    expect(result.parsed).not.toBeNull();
+    expect(result.parsed).toEqual(parsedFromRaw);
+  });
+
+  test("includeRaw functionCalling parsed matches raw tool args with StandardSchema", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-4-mock.json",
+    };
+
+    const baseModel = new ChatGoogle({ authOptions });
+    const schema = makeSerializableSchema();
+    const model = baseModel.withStructuredOutput(schema, {
+      includeRaw: true,
+      method: "functionCalling",
+      name: "test",
+    });
+
+    const result = await model.invoke("What is the test name?");
+    const parsedFromRawTool = result.raw.tool_calls?.at(0)?.args;
+
+    expect(result.parsed).not.toBeNull();
+    expect(parsedFromRawTool).toBeDefined();
+    expect(result.parsed).toEqual(parsedFromRawTool);
   });
 });
