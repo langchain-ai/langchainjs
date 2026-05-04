@@ -850,6 +850,42 @@ export abstract class Runnable<
    */
   streamEvents(
     input: RunInput,
+    options: Partial<CallOptions> & { version?: "v2" },
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<StreamEvent>;
+
+  streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & {
+      version?: "v2";
+      encoding: "text/event-stream";
+    },
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<Uint8Array>;
+
+  /**
+   * @deprecated Use version "v2" or `.stream()` instead.
+   */
+  streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & { version: "v1" },
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<StreamEvent>;
+
+  /**
+   * @deprecated Use version "v2" or `.stream()` instead.
+   */
+  streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & {
+      version: "v1";
+      encoding: "text/event-stream";
+    },
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<Uint8Array>;
+
+  streamEvents(
+    input: RunInput,
     options: Partial<CallOptions> & { version: "v1" | "v2" },
     streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
   ): IterableReadableStream<StreamEvent>;
@@ -866,21 +902,25 @@ export abstract class Runnable<
   streamEvents(
     input: RunInput,
     options: Partial<CallOptions> & {
-      version: "v1" | "v2";
+      version?: "v1" | "v2";
       encoding?: "text/event-stream" | undefined;
     },
     streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
   ): IterableReadableStream<StreamEvent | Uint8Array> {
+    const version = options.version ?? "v2";
+    const resolvedOptions = { ...options, version };
+
     let stream;
-    if (options.version === "v1") {
-      stream = this._streamEventsV1(input, options, streamOptions);
-    } else if (options.version === "v2") {
-      stream = this._streamEventsV2(input, options, streamOptions);
+    if (version === "v1") {
+      stream = this._streamEventsV1(input, resolvedOptions, streamOptions);
+    } else if (version === "v2") {
+      stream = this._streamEventsV2(input, resolvedOptions, streamOptions);
     } else {
       throw new Error(
         `Only versions "v1" and "v2" of the schema are currently supported.`
       );
     }
+
     if (options.encoding === "text/event-stream") {
       return convertToHttpEventStream(stream);
     } else {
@@ -1418,6 +1458,42 @@ export class RunnableBinding<
 
   streamEvents(
     input: RunInput,
+    options: Partial<CallOptions> & { version?: "v2" },
+    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<StreamEvent>;
+
+  streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & {
+      version?: "v2";
+      encoding: "text/event-stream";
+    },
+    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<Uint8Array>;
+
+  /**
+   * @deprecated Use version "v2" or `.stream()` instead.
+   */
+  streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & { version: "v1" },
+    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<StreamEvent>;
+
+  /**
+   * @deprecated Use version "v2" or `.stream()` instead.
+   */
+  streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & {
+      version: "v1";
+      encoding: "text/event-stream";
+    },
+    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<Uint8Array>;
+
+  streamEvents(
+    input: RunInput,
     options: Partial<CallOptions> & { version: "v1" | "v2" },
     streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
   ): IterableReadableStream<StreamEvent>;
@@ -1434,12 +1510,13 @@ export class RunnableBinding<
   streamEvents(
     input: RunInput,
     options: Partial<CallOptions> & {
-      version: "v1" | "v2";
+      version?: "v1" | "v2";
       encoding?: "text/event-stream" | undefined;
     },
     streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
   ): IterableReadableStream<StreamEvent | Uint8Array> {
     const outerThis = this;
+    const version = options.version ?? "v2";
     const generator = async function* () {
       yield* outerThis.bound.streamEvents(
         input,
@@ -1448,7 +1525,7 @@ export class RunnableBinding<
             ensureConfig(options),
             outerThis.kwargs
           )),
-          version: options.version,
+          version,
         },
         streamOptions
       );
