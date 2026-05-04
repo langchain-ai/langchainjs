@@ -17,13 +17,28 @@
  *
  * When deserializing, the class path is validated against supported namespaces.
  *
+ * ## Threat model
+ *
+ * A serialized LangChain payload crosses a trust boundary because the manifest
+ * may contain serialized objects and configuration that affect runtime behavior.
+ * For example, a payload can configure a chat model with a custom `base_url`,
+ * custom headers, a different model name, or other constructor arguments. These
+ * are supported features, but they also mean the payload contents should be
+ * treated as executable configuration rather than plain text.
+ *
+ * Concretely, deserialization instantiates classes, so any constructor on an
+ * allowed class will run during `load()`. A crafted payload that is allowed to
+ * reach an unintended class — or an intended class with attacker-controlled
+ * kwargs — could cause network calls, file operations, or environment-variable
+ * access while the object is being built.
+ *
  * ## Security model
  *
  * The `secretsFromEnv` parameter controls whether secrets can be loaded from environment
  * variables:
  *
  * - `false` (default): Secrets must be provided in `secretsMap`. If a secret is not
- *   found, `null` is returned instead of loading from environment variables.
+ *   found, an error is thrown.
  * - `true`: If a secret is not found in `secretsMap`, it will be loaded from
  *   environment variables. Use this only in trusted environments.
  *
@@ -425,6 +440,10 @@ async function reviver(this: ReviverContext, value: unknown): Promise<unknown> {
  * originates from an untrusted source, an attacker can craft a payload that
  * instantiates arbitrary allowed classes with attacker-controlled arguments,
  * potentially causing secret exfiltration, SSRF, or other side effects.
+ *
+ * A serialized payload should be treated as executable configuration — it can
+ * configure models with custom endpoints, headers, or other constructor kwargs
+ * that execute during instantiation.
  *
  * Only call `load()` on data you have produced yourself or received from a
  * fully trusted origin (e.g., your own database). **Never deserialize
