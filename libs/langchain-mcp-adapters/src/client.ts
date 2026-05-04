@@ -158,6 +158,11 @@ export class MultiServerMCPClient {
   #failedServers: Set<string> = new Set();
 
   /**
+   * Deduplication guard: if initializeConnections is already in-flight, reuse the same promise.
+   */
+  #initPromise: Promise<Record<string, DynamicStructuredTool[]>> | null = null;
+
+  /**
    * Returns clone of server config for inspection purposes.
    *
    * Client does not support config modifications.
@@ -227,12 +232,14 @@ export class MultiServerMCPClient {
   }
 
   /**
-   * Proactively initialize connections to all servers. This will be called automatically when
-   * methods requiring an active connection (like {@link getTools} or {@link getClient}) are called,
-   * but you can call it directly to ensure all connections are established before using the tools.
+   * Proactively initialize connections to all servers in parallel. This will be called
+   * automatically when methods requiring an active connection (like {@link getTools} or
+   * {@link getClient}) are called, but you can call it directly to ensure all connections
+   * are established before using the tools.
    *
-   * When a server fails to connect, the client will throw an error if `onConnectionError` is "throw",
-   * otherwise it will skip the server and continue with the remaining servers.
+   * All servers are connected concurrently for faster startup. When a server fails to connect,
+   * the client will throw an error if `onConnectionError` is "throw", otherwise it will skip
+   * the server and continue with the remaining servers.
    *
    * @returns A map of server names to arrays of tools
    * @throws {MCPClientError} If initialization fails and `onConnectionError` is "throw" (default)
@@ -240,52 +247,85 @@ export class MultiServerMCPClient {
   async initializeConnections(
     customTransportOptions?: CustomHTTPTransportOptions
   ): Promise<Record<string, DynamicStructuredTool[]>> {
+    if (this.#initPromise) {
+      return this.#initPromise;
+    }
+    this.#initPromise = this._initializeConnectionsImpl(customTransportOptions);
+    try {
+      return await this.#initPromise;
+    } finally {
+      this.#initPromise = null;
+    }
+  }
+
+  private async _initializeConnectionsImpl(
+    customTransportOptions?: CustomHTTPTransportOptions
+  ): Promise<Record<string, DynamicStructuredTool[]>> {
     if (!this.#mcpServers || Object.keys(this.#mcpServers).length === 0) {
       throw new MCPClientError("No connections to initialize");
     }
 
-    for (const [serverName, connection] of Object.entries(this.#mcpServers)) {
-      // Skip servers that have already failed (when onConnectionError is "ignore")
-      if (
-        (this.#onConnectionError === "ignore" ||
-          typeof this.#onConnectionError === "function") &&
-        this.#failedServers.has(serverName)
-      ) {
-        continue;
+    const entries = Object.entries(this.#mcpServers).filter(
+      ([serverName]) => {
+        if (
+          (this.#onConnectionError === "ignore" ||
+            typeof this.#onConnectionError === "function") &&
+          this.#failedServers.has(serverName)
+        ) {
+          return false;
+        }
+        return true;
       }
+    );
 
-      try {
+    const results = await Promise.allSettled(
+      entries.map(async ([serverName, connection]) => {
         await this._initializeConnection(
           serverName,
           connection,
           customTransportOptions
         );
-        // If we successfully initialized, remove from failed set (in case it was there before)
+        return serverName;
+      })
+    );
+
+    let firstError: unknown = null;
+
+    for (let i = 0; i < results.length; i += 1) {
+      const result = results[i];
+      const serverName = entries[i][0];
+
+      if (result.status === "fulfilled") {
         this.#failedServers.delete(serverName);
-      } catch (error) {
+      } else {
         if (this.#onConnectionError === "throw") {
-          throw error;
+          if (!firstError) firstError = result.reason;
+          continue;
         }
 
-        // Handle custom error handler function
         if (typeof this.#onConnectionError === "function") {
-          this.#onConnectionError({ serverName, error });
-          // If we get here, the handler didn't throw, so treat as ignored
+          this.#onConnectionError({ serverName, error: result.reason });
           this.#failedServers.add(serverName);
           debugLog(
-            `WARN: Failed to initialize connection to server "${serverName}": ${String(error)}`
+            `WARN: Failed to initialize connection to server "${serverName}": ${String(result.reason)}`
           );
           continue;
         }
 
-        // Default "ignore" behavior
-        // Mark this server as failed so we don't try again
+        // "ignore" mode
         this.#failedServers.add(serverName);
         debugLog(
-          `WARN: Failed to initialize connection to server "${serverName}": ${String(error)}`
+          `WARN: Failed to initialize connection to server "${serverName}": ${String(result.reason)}`
         );
-        continue;
       }
+    }
+
+    if (this.#onConnectionError === "throw" && firstError) {
+      throw firstError instanceof MCPClientError
+        ? firstError
+        : new MCPClientError(
+            `Failed to initialize connection: ${String(firstError)}`
+          );
     }
 
     // Warn if no servers successfully connected when using "ignore" mode
@@ -621,6 +661,7 @@ export class MultiServerMCPClient {
     debugLog(`INFO: Closing all MCP connections...`);
     this.#serverNameToTools = {};
     this.#failedServers.clear();
+    this.#initPromise = null;
     await this.#clientConnections.delete();
     debugLog(`INFO: All MCP connections closed`);
   }
