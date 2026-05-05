@@ -1,9 +1,17 @@
-type Deno = {
-  version?: { deno: string };
-  env?: { get: (name: string) => string | undefined };
-};
-
-const global = globalThis as typeof globalThis & { Deno?: Deno };
+// Inlined from https://github.com/flexdinesh/browser-or-node
+declare global {
+  // @ts-ignore Conflicts with langsmith's ambient Deno declaration
+  const Deno:
+    | {
+        version: {
+          deno: string;
+        };
+        env: {
+          get: (name: string) => string | undefined;
+        };
+      }
+    | undefined;
+}
 
 export const isBrowser = () =>
   typeof window !== "undefined" && typeof window.document !== "undefined";
@@ -19,7 +27,7 @@ export const isJsDom = () =>
 
 // Supabase Edge Function provides a `Deno` global object
 // without `version` property
-export const isDeno = () => typeof global.Deno !== "undefined";
+export const isDeno = () => typeof Deno !== "undefined";
 
 // Mark not-as-node if in Supabase Edge Function
 export const isNode = () =>
@@ -76,7 +84,8 @@ export function getEnvironmentVariable(name: string): string | undefined {
       // oxlint-disable-next-line no-process-env
       return process.env?.[name];
     } else if (isDeno()) {
-      return global.Deno?.env?.get(name);
+      // @ts-ignore Langsmith's Deno declaration is missing `env`
+      return Deno?.env.get(name);
     } else {
       return undefined;
     }
