@@ -38,7 +38,7 @@
  * variables:
  *
  * - `false` (default): Secrets must be provided in `secretsMap`. If a secret is not
- *   found, an error is thrown.
+ *   found, `null` is returned instead of loading from environment variables.
  * - `true`: If a secret is not found in `secretsMap`, it will be loaded from
  *   environment variables. Use this only in trusted environments.
  *
