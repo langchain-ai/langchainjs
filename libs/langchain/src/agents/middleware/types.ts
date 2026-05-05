@@ -670,9 +670,9 @@ export type InferMiddlewareInputState<T extends AgentMiddleware> =
  * Helper type to infer merged state from an array of middleware (just the middleware states)
  */
 export type InferMiddlewareStates<T extends readonly AgentMiddleware[]> =
-  T extends readonly []
+  [T] extends [readonly []]
     ? {}
-    : T extends readonly [infer First, ...infer Rest]
+    : [T] extends [readonly [infer First, ...infer Rest]]
       ? First extends AgentMiddleware
         ? Rest extends readonly AgentMiddleware[]
           ? InferMiddlewareState<First> & InferMiddlewareStates<Rest>
@@ -684,9 +684,9 @@ export type InferMiddlewareStates<T extends readonly AgentMiddleware[]> =
  * Helper type to infer merged input state from an array of middleware (with optional defaults)
  */
 export type InferMiddlewareInputStates<T extends readonly AgentMiddleware[]> =
-  T extends readonly []
+  [T] extends [readonly []]
     ? {}
-    : T extends readonly [infer First, ...infer Rest]
+    : [T] extends [readonly [infer First, ...infer Rest]]
       ? First extends AgentMiddleware
         ? Rest extends readonly AgentMiddleware[]
           ? InferMiddlewareInputState<First> & InferMiddlewareInputStates<Rest>
@@ -732,9 +732,9 @@ export type InferMiddlewareContextInput<T extends AgentMiddleware> =
  * Helper type to infer merged context from an array of middleware
  */
 export type InferMiddlewareContexts<T extends readonly AgentMiddleware[]> =
-  T extends readonly []
+  [T] extends [readonly []]
     ? {}
-    : T extends readonly [infer First, ...infer Rest]
+    : [T] extends [readonly [infer First, ...infer Rest]]
       ? First extends AgentMiddleware
         ? Rest extends readonly AgentMiddleware[]
           ? InferMiddlewareContext<First> & InferMiddlewareContexts<Rest>
@@ -761,9 +761,9 @@ type MergeContextTypes<A, B> = [A] extends [undefined]
  * Helper type to infer merged input context from an array of middleware (with optional defaults)
  */
 export type InferMiddlewareContextInputs<T extends readonly AgentMiddleware[]> =
-  T extends readonly []
+  [T] extends [readonly []]
     ? {}
-    : T extends readonly [infer First, ...infer Rest]
+    : [T] extends [readonly [infer First, ...infer Rest]]
       ? First extends AgentMiddleware
         ? Rest extends readonly AgentMiddleware[]
           ? MergeContextTypes<
@@ -802,10 +802,10 @@ export type InferSchemaValue<A extends StateDefinitionInit | undefined> =
         : {};
 
 export type InferSchemaInput<A extends StateDefinitionInit | undefined> =
-  A extends StateSchema<infer TFields>
+  [A] extends [StateSchema<infer TFields>]
     ? InferStateSchemaUpdate<TFields>
-    : A extends InteropZodObject
+    : [A] extends [InteropZodObject]
       ? InferInteropZodInput<A>
-      : A extends AnyAnnotationRoot
+      : [A] extends [AnyAnnotationRoot]
         ? A["Update"]
         : {};
