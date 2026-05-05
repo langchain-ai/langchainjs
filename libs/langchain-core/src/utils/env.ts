@@ -1,5 +1,3 @@
-// Inlined from https://github.com/flexdinesh/browser-or-node
-
 type Deno = {
   version?: { deno: string };
   env?: { get: (name: string) => string | undefined };
