@@ -12,6 +12,7 @@ import {
   LangSmithParams,
   type BaseChatModelParams,
 } from "@langchain/core/language_models/chat_models";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import {
   type StructuredOutputMethodOptions,
   type BaseLanguageModelInput,
@@ -428,6 +429,8 @@ function extractToken(chunk: AIMessageChunk): string | undefined {
   }
   return undefined;
 }
+
+import { convertAnthropicStream } from "./utils/stream_events.js";
 
 /**
  * Anthropic chat model integration.
@@ -1337,6 +1340,66 @@ export class ChatAnthropicMessages<
         { chunk: generationChunk }
       );
     }
+  }
+
+  /**
+   * Native implementation of the content-block-centric streaming protocol
+   * for Anthropic.
+   *
+   * Maps Anthropic's native SSE events directly to {@link ChatModelStreamEvent}
+   * without going through the legacy `_streamResponseChunks` bridge. This
+   * provides:
+   * - Explicit lifecycle events (start/delta/finish) for every content block
+   * - Fully-qualified accumulated content blocks on each delta
+   * - Usage snapshots as they become available
+   * - Provider passthrough for unrecognized Anthropic events
+   */
+  async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    const params = this.invocationParams(options);
+    let formattedMessages = _convertMessagesToAnthropicPayload(messages);
+
+    if (options.cache_control) {
+      formattedMessages = applyCacheControlToPayload(
+        formattedMessages,
+        options.cache_control
+      );
+    }
+
+    const payload = {
+      ...params,
+      ...formattedMessages,
+      stream: true,
+    } as const;
+
+    const stream = await this.createStreamWithRetry(payload, {
+      headers: options.headers,
+      signal: options.signal,
+    });
+
+    const shouldStreamUsage = this.streamUsage ?? options.streamUsage;
+
+    // Wrap the raw Anthropic stream with abort handling, then
+    // delegate all event conversion to the pure converter.
+    const abortableStream = async function* (
+      source: AsyncIterable<AnthropicMessageStreamEvent>,
+      signal?: AbortSignal
+    ) {
+      for await (const data of source) {
+        if (signal?.aborted) {
+          (source as { controller?: { abort(): void } }).controller?.abort();
+          return;
+        }
+        yield data;
+      }
+    };
+
+    yield* convertAnthropicStream(abortableStream(stream, options.signal), {
+      streamUsage: shouldStreamUsage ?? true,
+    });
   }
 
   /** @ignore */

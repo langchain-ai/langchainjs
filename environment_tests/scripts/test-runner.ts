@@ -30,6 +30,10 @@ const dockerPackages: WorkspacePackage[] = [
     path: "/langchain-google-gauth",
   },
   {
+    pkg: { name: "@langchain/google-common" },
+    path: "/langchain-google-common",
+  },
+  {
     pkg: { name: "@langchain/standard-tests" },
     path: "/langchain-standard-tests",
   },

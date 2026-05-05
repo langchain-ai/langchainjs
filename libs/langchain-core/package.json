@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "1.1.42",
+  "version": "1.1.44",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -276,6 +276,28 @@
         "default": "./dist/language_models/chat_models.js"
       }
     },
+    "./language_models/compat": {
+      "input": "./src/language_models/compat.ts",
+      "require": {
+        "types": "./dist/language_models/compat.d.cts",
+        "default": "./dist/language_models/compat.cjs"
+      },
+      "import": {
+        "types": "./dist/language_models/compat.d.ts",
+        "default": "./dist/language_models/compat.js"
+      }
+    },
+    "./language_models/event": {
+      "input": "./src/language_models/event.ts",
+      "require": {
+        "types": "./dist/language_models/event.d.cts",
+        "default": "./dist/language_models/event.cjs"
+      },
+      "import": {
+        "types": "./dist/language_models/event.d.ts",
+        "default": "./dist/language_models/event.js"
+      }
+    },
     "./language_models/llms": {
       "input": "./src/language_models/llms.ts",
       "require": {
@@ -296,6 +318,17 @@
       "import": {
         "types": "./dist/language_models/profile.d.ts",
         "default": "./dist/language_models/profile.js"
+      }
+    },
+    "./language_models/stream": {
+      "input": "./src/language_models/stream.ts",
+      "require": {
+        "types": "./dist/language_models/stream.d.cts",
+        "default": "./dist/language_models/stream.cjs"
+      },
+      "import": {
+        "types": "./dist/language_models/stream.d.ts",
+        "default": "./dist/language_models/stream.js"
       }
     },
     "./language_models/structured_output": {
@@ -780,6 +813,17 @@
       "import": {
         "types": "./dist/utils/types/index.d.ts",
         "default": "./dist/utils/types/index.js"
+      }
+    },
+    "./utils/uuid": {
+      "input": "./src/utils/uuid/index.ts",
+      "require": {
+        "types": "./dist/utils/uuid/index.d.cts",
+        "default": "./dist/utils/uuid/index.cjs"
+      },
+      "import": {
+        "types": "./dist/utils/uuid/index.d.ts",
+        "default": "./dist/utils/uuid/index.js"
       }
     },
     "./vectorstores": {

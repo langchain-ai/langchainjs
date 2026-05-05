@@ -2336,6 +2336,32 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(data.generationConfig.responseMimeType).toBe("application/json");
   });
 
+  test("4. Functions withStructuredOutput - includeRaw parses thought content blocks", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-json-schema-thinking-mock.json",
+    };
+
+    const schema = z.object({
+      testName: z.string().describe("The name of the test."),
+    });
+
+    const baseModel = new ChatGoogle({
+      authOptions,
+    });
+    const model = baseModel.withStructuredOutput(schema, {
+      includeRaw: true,
+    });
+
+    const result = await model.invoke("What is the test name?");
+
+    expect(result.raw).toBeDefined();
+    expect(result.parsed).toEqual({ testName: "cobalt" });
+  });
+
   test("4. Functions withStructuredOutput - functionCalling method request", async () => {
     const record: Record<string, any> = {};
     const projectId = mockId();
