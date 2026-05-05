@@ -602,42 +602,6 @@ export class ConfigurableModel<
 
   streamEvents(
     input: RunInput,
-    options: Partial<CallOptions> & { version?: "v2" },
-    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
-  ): IterableReadableStream<StreamEvent>;
-
-  streamEvents(
-    input: RunInput,
-    options: Partial<CallOptions> & {
-      version?: "v2";
-      encoding: "text/event-stream";
-    },
-    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
-  ): IterableReadableStream<Uint8Array>;
-
-  /**
-   * @deprecated Use version "v2" or `.stream()` instead.
-   */
-  streamEvents(
-    input: RunInput,
-    options: Partial<CallOptions> & { version: "v1" },
-    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
-  ): IterableReadableStream<StreamEvent>;
-
-  /**
-   * @deprecated Use version "v2" or `.stream()` instead.
-   */
-  streamEvents(
-    input: RunInput,
-    options: Partial<CallOptions> & {
-      version: "v1";
-      encoding: "text/event-stream";
-    },
-    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
-  ): IterableReadableStream<Uint8Array>;
-
-  streamEvents(
-    input: RunInput,
     options: Partial<CallOptions> & { version: "v1" | "v2" },
     streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
   ): IterableReadableStream<StreamEvent>;
@@ -654,7 +618,7 @@ export class ConfigurableModel<
   streamEvents(
     input: RunInput,
     options: Partial<CallOptions> & {
-      version?: "v1" | "v2";
+      version: "v1" | "v2";
       encoding?: "text/event-stream" | undefined;
     },
     streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
@@ -662,8 +626,7 @@ export class ConfigurableModel<
     const outerThis = this;
     async function* wrappedGenerator() {
       const model = await outerThis._getModelInstance(options);
-      const version = options.version ?? "v2";
-      const config = ensureConfig({ ...options, version });
+      const config = ensureConfig(options);
       const eventStream = model.streamEvents(input, config, streamOptions);
 
       for await (const chunk of eventStream) {

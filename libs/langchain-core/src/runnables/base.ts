@@ -853,14 +853,14 @@ export abstract class Runnable<
    */
   streamEvents(
     input: RunInput,
-    options: Partial<CallOptions> & { version?: "v2" },
+    options: Partial<CallOptions> & { version: "v2" },
     streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
   ): IterableReadableStream<StreamEvent>;
 
   streamEvents(
     input: RunInput,
     options: Partial<CallOptions> & {
-      version?: "v2";
+      version: "v2";
       encoding: "text/event-stream";
     },
     streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
@@ -905,19 +905,16 @@ export abstract class Runnable<
   streamEvents(
     input: RunInput,
     options: Partial<CallOptions> & {
-      version?: "v1" | "v2";
+      version: "v1" | "v2";
       encoding?: "text/event-stream" | undefined;
     },
     streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
   ): IterableReadableStream<StreamEvent | Uint8Array> {
-    const version = options.version ?? "v2";
-    const resolvedOptions = { ...options, version };
-
     let stream;
-    if (version === "v1") {
-      stream = this._streamEventsV1(input, resolvedOptions, streamOptions);
-    } else if (version === "v2") {
-      stream = this._streamEventsV2(input, resolvedOptions, streamOptions);
+    if (options.version === "v1") {
+      stream = this._streamEventsV1(input, options, streamOptions);
+    } else if (options.version === "v2") {
+      stream = this._streamEventsV2(input, options, streamOptions);
     } else {
       throw new Error(
         `Only versions "v1" and "v2" of the schema are currently supported.`
@@ -1461,14 +1458,14 @@ export class RunnableBinding<
 
   streamEvents(
     input: RunInput,
-    options: Partial<CallOptions> & { version?: "v2" },
+    options: Partial<CallOptions> & { version: "v2" },
     streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
   ): IterableReadableStream<StreamEvent>;
 
   streamEvents(
     input: RunInput,
     options: Partial<CallOptions> & {
-      version?: "v2";
+      version: "v2";
       encoding: "text/event-stream";
     },
     streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
@@ -1513,13 +1510,12 @@ export class RunnableBinding<
   streamEvents(
     input: RunInput,
     options: Partial<CallOptions> & {
-      version?: "v1" | "v2";
+      version: "v1" | "v2";
       encoding?: "text/event-stream" | undefined;
     },
     streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
   ): IterableReadableStream<StreamEvent | Uint8Array> {
     const outerThis = this;
-    const version = options.version ?? "v2";
     const generator = async function* () {
       yield* outerThis.bound.streamEvents(
         input,
@@ -1528,7 +1524,7 @@ export class RunnableBinding<
             ensureConfig(options),
             outerThis.kwargs
           )),
-          version,
+          version: options.version,
         },
         streamOptions
       );
