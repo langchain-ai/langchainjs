@@ -49,7 +49,7 @@ Use LangChain for:
 
 ## 📦 LangChain's ecosystem
 
-- [Deep Agents (JS)](https://github.com/langchain-ai/deepagentsjs) - Build agents that can plan, use subagents, and leverage file systems for complex tasks. A higher-level package built on top of LangChain.
+- [Deep Agents (JS)](https://docs.langchain.com/oss/javascript/deepagents/overview) - Build agents that can plan, use subagents, and leverage file systems for complex tasks. A higher-level package built on top of LangChain.
 - [LangSmith](https://www.langchain.com/langsmith) - Unified developer platform for building, testing, and monitoring LLM applications. With LangSmith, you can debug poor-performing LLM app runs, evaluate agent trajectories, gain visibility in production, and deploy agents with confidence.
 - [LangSmith Deployment](https://docs.langchain.com/langsmith/deployments) — Deploy and scale agents with a purpose-built platform for long-running, stateful workflows
 - [LangGraph](https://docs.langchain.com/oss/javascript/langgraph/overview) - Build agents that can reliably handle complex tasks with LangGraph, our low-level agent orchestration framework. LangGraph offers customizable architecture, long-term memory, and human-in-the-loop workflows — and is trusted in production by companies like LinkedIn, Uber, Klarna, and GitLab.
