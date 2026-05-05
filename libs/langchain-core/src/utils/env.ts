@@ -3,6 +3,8 @@ type Deno = {
   env?: { get: (name: string) => string | undefined };
 };
 
+const global = globalThis as typeof globalThis & { Deno?: Deno };
+
 export const isBrowser = () =>
   typeof window !== "undefined" && typeof window.document !== "undefined";
 
@@ -17,9 +19,7 @@ export const isJsDom = () =>
 
 // Supabase Edge Function provides a `Deno` global object
 // without `version` property
-export const isDeno = () =>
-  typeof (globalThis as typeof globalThis & { Deno?: Deno }).Deno !==
-  "undefined";
+export const isDeno = () => typeof global.Deno !== "undefined";
 
 // Mark not-as-node if in Supabase Edge Function
 export const isNode = () =>
@@ -76,9 +76,7 @@ export function getEnvironmentVariable(name: string): string | undefined {
       // oxlint-disable-next-line no-process-env
       return process.env?.[name];
     } else if (isDeno()) {
-      return (globalThis as typeof globalThis & { Deno?: Deno }).Deno?.env?.get(
-        name
-      );
+      return global.Deno?.env?.get(name);
     } else {
       return undefined;
     }
