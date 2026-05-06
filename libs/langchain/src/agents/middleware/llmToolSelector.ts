@@ -139,10 +139,18 @@ export function llmToolSelectorMiddleware(options: LLMToolSelectorConfig) {
           toolSelectionSchema
         );
 
-      const response = await structuredModel?.invoke([
-        { role: "system", content: selectionRequest.systemMessage },
-        selectionRequest.lastUserMessage,
-      ]);
+      // Suppress streaming callbacks for the internal tool selection call.
+      // The tool selector's output (e.g., {"tools":[]}) is an internal implementation
+      // detail and should not appear as user-visible assistant messages in the UI.
+      // Without this, the model's structured output would leak through the messages
+      // channel and be rendered alongside the actual assistant response.
+      const response = await structuredModel?.invoke(
+        [
+          { role: "system", content: selectionRequest.systemMessage },
+          selectionRequest.lastUserMessage,
+        ],
+        { callbacks: [] }
+      );
 
       // Response should be an object with a tools array
       if (!response || typeof response !== "object" || !("tools" in response)) {
