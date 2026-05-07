@@ -15,7 +15,7 @@ describe("message output usage metadata conversion", () => {
       usage: {
         inputTokens: 10,
         outputTokens: 5,
-        totalTokens: 15,
+        totalTokens: 25,
         cacheReadInputTokens: 7,
         cacheWriteInputTokens: 3,
       },
@@ -27,9 +27,9 @@ describe("message output usage metadata conversion", () => {
     );
 
     expect(result.usage_metadata).toEqual({
-      input_tokens: 10,
+      input_tokens: 20,
       output_tokens: 5,
-      total_tokens: 15,
+      total_tokens: 25,
       input_token_details: {
         cache_read: 7,
         cache_creation: 3,
@@ -64,7 +64,7 @@ describe("message output usage metadata conversion", () => {
         usage: {
           inputTokens: 20,
           outputTokens: 4,
-          totalTokens: 24,
+          totalTokens: 39,
           cacheReadInputTokens: 9,
           cacheWriteInputTokens: 6,
         },
@@ -73,9 +73,9 @@ describe("message output usage metadata conversion", () => {
     );
 
     expect(result.message.usage_metadata).toEqual({
-      input_tokens: 20,
+      input_tokens: 35,
       output_tokens: 4,
-      total_tokens: 24,
+      total_tokens: 39,
       input_token_details: {
         cache_read: 9,
         cache_creation: 6,
