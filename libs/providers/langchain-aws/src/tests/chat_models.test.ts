@@ -250,6 +250,43 @@ describe("convertToConverseMessages", () => {
       },
     },
     {
+      name: "ai message with strictly empty text block",
+      input: [
+        new HumanMessage("Use the tool and return nothing else."),
+        new AIMessage({
+          content: [{ type: "text", text: "" }],
+          tool_calls: [
+            {
+              name: "lookup",
+              args: { id: "123" },
+              id: "lookup_123",
+            },
+          ],
+        }),
+      ],
+      output: {
+        converseMessages: [
+          {
+            role: BedrockConversationRole.USER,
+            content: [{ text: "Use the tool and return nothing else." }],
+          },
+          {
+            role: BedrockConversationRole.ASSISTANT,
+            content: [
+              {
+                toolUse: {
+                  name: "lookup",
+                  toolUseId: "lookup_123",
+                  input: { id: "123" },
+                },
+              },
+            ],
+          },
+        ],
+        converseSystem: [],
+      },
+    },
+    {
       name: "consecutive user tool messages",
       input: [
         new SystemMessage("You're an advanced AI assistant."),

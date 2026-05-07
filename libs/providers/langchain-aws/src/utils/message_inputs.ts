@@ -501,7 +501,7 @@ function convertAIMessageToConverseMessage(msg: AIMessage): Bedrock.Message {
     const concatenatedBlocks = concatenateLangchainReasoningBlocks(msg.content);
     const contentBlocks: Bedrock.ContentBlock[] = [];
     concatenatedBlocks.forEach((block) => {
-      if (block.type === "text" && block.text !== "") {
+      if (block.type === "text") {
         // Merge whitespace/newlines with previous text blocks to avoid validation errors.
         const cleanedText = block.text?.replace(/\n/g, "").trim();
         if (cleanedText === "") {
