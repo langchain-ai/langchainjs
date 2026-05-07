@@ -1,5 +1,15 @@
 # @langchain/aws
 
+## 1.3.6
+
+### Patch Changes
+
+- [#10839](https://github.com/langchain-ai/langchainjs/pull/10839) [`c0e8113`](https://github.com/langchain-ai/langchainjs/commit/c0e81131855c875526d5799bb8fd6a86147fd8fc) Thanks [@hntrl](https://github.com/hntrl)! - fix(aws): map Bedrock prompt cache usage metadata to input token details
+
+  Include `cacheReadInputTokens` and `cacheWriteInputTokens` from Bedrock Converse
+  responses in `usage_metadata.input_token_details` for both invoke and stream
+  metadata handling.
+
 ## 1.3.5
 
 ### Patch Changes

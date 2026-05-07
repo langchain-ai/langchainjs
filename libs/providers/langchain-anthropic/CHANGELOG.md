@@ -1,5 +1,11 @@
 # @langchain/anthropic
 
+## 1.3.29
+
+### Patch Changes
+
+- [#10735](https://github.com/langchain-ai/langchainjs/pull/10735) [`1a2a08a`](https://github.com/langchain-ai/langchainjs/commit/1a2a08a33b7d99ec7348678116cc5d074db137bb) Thanks [@chenzimin](https://github.com/chenzimin)! - feat(anthropic): add automatic prompt caching via top-level cache_control
+
 ## 1.3.28
 
 ### Patch Changes

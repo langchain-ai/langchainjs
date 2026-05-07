@@ -1,5 +1,13 @@
 # @langchain/core
 
+## 1.1.45
+
+### Patch Changes
+
+- [#10833](https://github.com/langchain-ai/langchainjs/pull/10833) [`6cf39fe`](https://github.com/langchain-ai/langchainjs/commit/6cf39fe9636804f6280db0b98c4a4c72d5b103a0) Thanks [@colifran](https://github.com/colifran)! - chore(core): deprecate streamLog, streamEvents v1, RunnableWithMessageHistory and improve threat model verbiage for loads
+
+- [#10835](https://github.com/langchain-ai/langchainjs/pull/10835) [`0aebe50`](https://github.com/langchain-ai/langchainjs/commit/0aebe5054cfb982f09d9775b017317a731b6576f) Thanks [@colifran](https://github.com/colifran)! - fix(core): deno re-declaration in LangSmith is causing unit test failures
+
 ## 1.1.44
 
 ### Patch Changes
