@@ -1,5 +1,11 @@
 # langchain
 
+## 1.4.0
+
+### Minor Changes
+
+- [#10815](https://github.com/langchain-ai/langchainjs/pull/10815) [`499ce78`](https://github.com/langchain-ai/langchainjs/commit/499ce78a65cddd85b04a38d40f44ac8b65bd085d) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(langchain): adopt new streaming primitives
+
 ## 1.3.5
 
 ### Patch Changes
