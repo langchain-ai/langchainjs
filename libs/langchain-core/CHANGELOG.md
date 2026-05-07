@@ -1,5 +1,29 @@
 # @langchain/core
 
+## 1.1.45
+
+### Patch Changes
+
+- [#10833](https://github.com/langchain-ai/langchainjs/pull/10833) [`6cf39fe`](https://github.com/langchain-ai/langchainjs/commit/6cf39fe9636804f6280db0b98c4a4c72d5b103a0) Thanks [@colifran](https://github.com/colifran)! - chore(core): deprecate streamLog, streamEvents v1, RunnableWithMessageHistory and improve threat model verbiage for loads
+
+- [#10835](https://github.com/langchain-ai/langchainjs/pull/10835) [`0aebe50`](https://github.com/langchain-ai/langchainjs/commit/0aebe5054cfb982f09d9775b017317a731b6576f) Thanks [@colifran](https://github.com/colifran)! - fix(core): deno re-declaration in LangSmith is causing unit test failures
+
+## 1.1.44
+
+### Patch Changes
+
+- [#10822](https://github.com/langchain-ai/langchainjs/pull/10822) [`922a040`](https://github.com/langchain-ai/langchainjs/commit/922a040421391700fd92e04e6f44a37e3f24710b) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): translate content block delta for other models
+
+## 1.1.43
+
+### Patch Changes
+
+- [#10814](https://github.com/langchain-ai/langchainjs/pull/10814) [`dfec1b7`](https://github.com/langchain-ai/langchainjs/commit/dfec1b7f8b2c530a43f639dc79d4965a80ea4b79) Thanks [@hntrl](https://github.com/hntrl)! - fix(google): restore structured output parsing with includeRaw and reasoning blocks
+
+  Ensure structured output parsers read `BaseMessage` text content when `includeRaw: true`, so responses that include reasoning/thought blocks plus JSON text continue to parse correctly.
+
+- [#10772](https://github.com/langchain-ai/langchainjs/pull/10772) [`1ba7131`](https://github.com/langchain-ai/langchainjs/commit/1ba71319150847438fa517fe612f65cfed85ffab) Thanks [@christian-bromann](https://github.com/christian-bromann)! - chore(core): new stream primitives
+
 ## 1.1.42
 
 ### Patch Changes
