@@ -829,6 +829,29 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
         reasoning: reasoningText,
       });
     }
+  } else if (
+    event.type === "response.output_item.done" &&
+    "item" in event &&
+    event.item.type === "reasoning"
+  ) {
+    // The `output_item.added` event for reasoning fires before
+    // `encrypted_content` is populated. The final reasoning item —
+    // including `encrypted_content` — is only available on
+    // `output_item.done`. Without this branch, `convertMessagesToResponsesInput`
+    // cannot thread the reasoning back into subsequent rounds when ZDR
+    // is enabled, because it checks `reasoning?.encrypted_content`.
+    //
+    // Only emit fields that aren't already handled by `output_item.added`
+    // and the `reasoning_summary_*` events (id / type / summary), so that
+    // chunk-merging doesn't double-add summary parts.
+    additional_kwargs.reasoning = {
+      type: "reasoning",
+      ...(event.item.encrypted_content
+        ? { encrypted_content: event.item.encrypted_content }
+        : {}),
+      ...(event.item.status ? { status: event.item.status } : {}),
+      ...(event.item.content ? { content: event.item.content } : {}),
+    };
   } else if (event.type === "response.reasoning_summary_part.added") {
     additional_kwargs.reasoning = {
       type: "reasoning",
