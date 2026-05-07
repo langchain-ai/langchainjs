@@ -1347,14 +1347,7 @@ export class ChatAnthropicMessages<
     _runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatModelStreamEvent> {
     const params = this.invocationParams(options);
-    let formattedMessages = _convertMessagesToAnthropicPayload(messages);
-
-    if (options.cache_control) {
-      formattedMessages = applyCacheControlToPayload(
-        formattedMessages,
-        options.cache_control
-      );
-    }
+    const formattedMessages = _convertMessagesToAnthropicPayload(messages);
 
     const payload = {
       ...params,
