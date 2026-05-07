@@ -26,17 +26,38 @@ import {
 } from "../types.js";
 import { convertFromV1ToChatBedrockConverseMessage } from "./compat.js";
 
-function isDefaultCachePoint(block: unknown): boolean {
-  return Boolean(
-    typeof block === "object" &&
-    block !== null &&
-    "cachePoint" in block &&
-    block.cachePoint &&
-    typeof block.cachePoint === "object" &&
-    block.cachePoint !== null &&
-    "type" in block.cachePoint &&
-    block.cachePoint.type === "default"
-  );
+function isDefaultCachePoint(
+  block: unknown
+): block is { cachePoint: Bedrock.CachePointBlock } {
+  if (
+    !(
+      typeof block === "object" &&
+      block !== null &&
+      "cachePoint" in block &&
+      block.cachePoint &&
+      typeof block.cachePoint === "object" &&
+      block.cachePoint !== null &&
+      "type" in block.cachePoint &&
+      block.cachePoint.type === "default"
+    )
+  ) {
+    return false;
+  }
+
+  const { ttl } = block.cachePoint as { ttl?: unknown };
+  return ttl === undefined || ttl === "5m" || ttl === "1h";
+}
+
+function convertCachePointBlock(block: {
+  cachePoint: Bedrock.CachePointBlock;
+}): { cachePoint: Bedrock.CachePointBlock } {
+  const { ttl } = block.cachePoint;
+  return {
+    cachePoint: {
+      type: "default",
+      ...(ttl !== undefined ? { ttl } : {}),
+    },
+  };
 }
 
 function isConverseCachePoint(block: unknown): boolean {
@@ -520,11 +541,7 @@ function convertLangChainContentBlockToConverseContentBlock<
   }
 
   if (isDefaultCachePoint(block)) {
-    return {
-      cachePoint: {
-        type: "default",
-      },
-    };
+    return convertCachePointBlock(block);
   }
 
   if (onUnknown === "throw") {
@@ -547,11 +564,7 @@ function convertSystemMessageToConverseMessage(
           text: block.text,
         });
       } else if (isDefaultCachePoint(block)) {
-        contentBlocks.push({
-          cachePoint: {
-            type: "default",
-          },
-        });
+        contentBlocks.push(convertCachePointBlock(block));
       } else break;
     }
     if (msg.content.length === contentBlocks.length) return contentBlocks;
@@ -604,11 +617,7 @@ function convertAIMessageToConverseMessage(msg: AIMessage): Bedrock.Message {
           ),
         });
       } else if (isDefaultCachePoint(block)) {
-        contentBlocks.push({
-          cachePoint: {
-            type: "default",
-          },
-        });
+        contentBlocks.push(convertCachePointBlock(block));
       } else {
         const blockValues = Object.fromEntries(
           Object.entries(block).filter(([key]) => key !== "type")
