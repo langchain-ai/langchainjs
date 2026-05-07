@@ -33,6 +33,10 @@ export function convertConverseMessageToLangChainMessage(
   }
   let tokenUsage: UsageMetadata | undefined;
   if (responseMetadata.usage) {
+    const cacheReadInputTokens =
+      responseMetadata.usage.cacheReadInputTokens ?? 0;
+    const cacheWriteInputTokens =
+      responseMetadata.usage.cacheWriteInputTokens ?? 0;
     const inputTokenDetails = {
       ...(responseMetadata.usage.cacheReadInputTokens !== undefined && {
         cache_read: responseMetadata.usage.cacheReadInputTokens,
@@ -41,7 +45,10 @@ export function convertConverseMessageToLangChainMessage(
         cache_creation: responseMetadata.usage.cacheWriteInputTokens,
       }),
     };
-    const input_tokens = responseMetadata.usage.inputTokens ?? 0;
+    const input_tokens =
+      (responseMetadata.usage.inputTokens ?? 0) +
+      cacheReadInputTokens +
+      cacheWriteInputTokens;
     const output_tokens = responseMetadata.usage.outputTokens ?? 0;
     tokenUsage = {
       input_tokens,
@@ -204,6 +211,8 @@ export function handleConverseStreamMetadata(
     streamUsage: boolean;
   }
 ): ChatGenerationChunk {
+  const cacheReadInputTokens = metadata.usage?.cacheReadInputTokens ?? 0;
+  const cacheWriteInputTokens = metadata.usage?.cacheWriteInputTokens ?? 0;
   const inputTokenDetails = {
     ...(metadata.usage?.cacheReadInputTokens !== undefined && {
       cache_read: metadata.usage.cacheReadInputTokens,
@@ -212,7 +221,10 @@ export function handleConverseStreamMetadata(
       cache_creation: metadata.usage.cacheWriteInputTokens,
     }),
   };
-  const inputTokens = metadata.usage?.inputTokens ?? 0;
+  const inputTokens =
+    (metadata.usage?.inputTokens ?? 0) +
+    cacheReadInputTokens +
+    cacheWriteInputTokens;
   const outputTokens = metadata.usage?.outputTokens ?? 0;
   const usage_metadata: UsageMetadata = {
     input_tokens: inputTokens,
