@@ -1,6 +1,7 @@
 import { describe, test, expect } from "vitest";
 import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import { ChatModelStream } from "@langchain/core/language_models/stream";
+import { HumanMessage } from "@langchain/core/messages";
 import { ChatAnthropic } from "../chat_models.js";
 import type { BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
 
@@ -12,6 +13,8 @@ import type { BaseChatModelCallOptions } from "@langchain/core/language_models/c
 class MockStreamChatAnthropic extends ChatAnthropic {
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   private mockEvents: any[];
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  capturedRequest: any | undefined;
 
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(mockEvents: any[]) {
@@ -20,7 +23,8 @@ class MockStreamChatAnthropic extends ChatAnthropic {
   }
 
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-  protected async createStreamWithRetry(): Promise<any> {
+  protected async createStreamWithRetry(request: any): Promise<any> {
+    this.capturedRequest = request;
     const events = this.mockEvents;
     return {
       controller: { abort: () => {} },
@@ -230,6 +234,27 @@ function cacheUsageEvents() {
 
 describe("ChatAnthropic._streamChatModelEvents (native)", () => {
   describe("text-only streaming", () => {
+    test("passes invocation cache_control as a top-level request field", async () => {
+      const model = new MockStreamChatAnthropic(textOnlyEvents());
+      const callOptions = {
+        cache_control: { type: "ephemeral" as const, ttl: "1h" as const },
+      };
+      for await (const _event of model._streamChatModelEvents(
+        [new HumanMessage("hello")],
+        callOptions as BaseChatModelCallOptions
+      )) {
+        // Consume stream to trigger request construction.
+      }
+
+      expect(model.capturedRequest).toBeDefined();
+      expect(model.capturedRequest.cache_control).toEqual(
+        callOptions.cache_control
+      );
+      expect(JSON.stringify(model.capturedRequest.messages)).not.toContain(
+        '"cache_control"'
+      );
+    });
+
     test("emits correct lifecycle events", async () => {
       const model = new MockStreamChatAnthropic(textOnlyEvents());
       const events: ChatModelStreamEvent[] = [];
