@@ -30,6 +30,39 @@ function getWorkspaceDependencies(packageJson) {
     .map(([depName]) => depName);
 }
 
+function rewritePackageWorkspaceDependencies(packageJsonPath) {
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath));
+  const nestedWorkspaceDependencies = [];
+  let hasChanges = false;
+
+  for (const section of ["dependencies", "devDependencies", "optionalDependencies"]) {
+    const sectionDeps = packageJson[section];
+    if (!sectionDeps) {
+      continue;
+    }
+    for (const [depName, depVersion] of Object.entries(sectionDeps)) {
+      if (!depVersion.includes("workspace:")) {
+        continue;
+      }
+
+      const depPath = resolvePackagePath(depName);
+      if (!depPath) {
+        continue;
+      }
+
+      sectionDeps[depName] = `file:${depPath}`;
+      nestedWorkspaceDependencies.push(depName);
+      hasChanges = true;
+    }
+  }
+
+  if (hasChanges) {
+    fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
+  }
+
+  return nestedWorkspaceDependencies;
+}
+
 function resolvePackagePath(depName) {
   if (INTERNAL_PACKAGES.includes(depName)) {
     const libName = depName.split("/")[1];
@@ -84,8 +117,9 @@ while (queue.length) {
     continue;
   }
 
-  const nestedPackageJson = JSON.parse(fs.readFileSync(nestedPackageJsonPath));
-  const nestedWorkspaceDependencies = getWorkspaceDependencies(nestedPackageJson);
+  const nestedWorkspaceDependencies = rewritePackageWorkspaceDependencies(
+    nestedPackageJsonPath
+  );
   queue.push(...nestedWorkspaceDependencies);
 }
 
