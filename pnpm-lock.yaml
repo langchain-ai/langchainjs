@@ -2388,42 +2388,6 @@ importers:
         specifier: ^3.25.76 || ^4
         version: 4.3.6
 
-  libs/providers/langchain-turbopuffer:
-    devDependencies:
-      '@faker-js/faker':
-        specifier: ^10.4.0
-        version: 10.4.0
-      '@langchain/core':
-        specifier: workspace:^
-        version: link:../../langchain-core
-      '@langchain/tsconfig':
-        specifier: workspace:*
-        version: link:../../../internal/tsconfig
-      '@tsconfig/recommended':
-        specifier: ^1.0.3
-        version: 1.0.13
-      '@turbopuffer/turbopuffer':
-        specifier: ^1.21.0
-        version: 1.22.0
-      '@types/uuid':
-        specifier: ^10.0.0
-        version: 10.0.0
-      '@vitest/coverage-v8':
-        specifier: ^3.2.4
-        version: 3.2.4(vitest@4.1.5)
-      dotenv:
-        specifier: ^17.4.0
-        version: 17.4.2
-      dpdm:
-        specifier: ^3.14.0
-        version: 3.15.1
-      typescript:
-        specifier: ~5.8.3
-        version: 5.8.3
-      vitest:
-        specifier: ^4.1.2
-        version: 4.1.5(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/coverage-v8@3.2.4)(vite@7.3.2(@types/node@25.6.0)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3))
-
   libs/providers/langchain-weaviate:
     dependencies:
       weaviate-client:
@@ -5797,9 +5761,6 @@ packages:
     resolution: {integrity: sha512-1XUUyWW0W6FTSqGEhU8RHVqb2wP1SPkr7hIvBlMEwH9jr+sJQK5kqeosLJ/QaUv4ecSAd1ZhIrLoW7qslAzT4A==}
     cpu: [arm64]
     os: [win32]
-
-  '@turbopuffer/turbopuffer@1.22.0':
-    resolution: {integrity: sha512-NcFg4QBMjxKMo301QoTwz+la+mOjd1tB/qQvMaWM3dCJqkpWA+DCwdORK+y5une+Iatj5G5U0H+7MCI/hZLkvQ==}
 
   '@tybys/wasm-util@0.10.1':
     resolution: {integrity: sha512-9tTaPJLSiejZKx+Bmog4uSubteqTvFrVrURwkmHixBo0G4seD0zUxp98E1DzUBJxLQ3NPwXrGKDiVjwx/DpPsg==}
@@ -16253,11 +16214,6 @@ snapshots:
 
   '@turbo/windows-arm64@2.9.6':
     optional: true
-
-  '@turbopuffer/turbopuffer@1.22.0':
-    dependencies:
-      pako: 2.1.0
-      undici: 8.1.0
 
   '@tybys/wasm-util@0.10.1':
     dependencies:
