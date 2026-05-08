@@ -42,7 +42,7 @@
     "test:integration": "vitest --mode int"
   },
   "devDependencies": {
-    "@hono/node-server": "^1.19.14",
+    "@hono/node-server": "^2.0.1",
     "@langchain/anthropic": "workspace:*",
     "@langchain/core": "workspace:^",
     "@langchain/fireworks": "workspace:*",
