@@ -53,7 +53,7 @@
     "@tsconfig/recommended": "^1.0.2",
     "@types/js-yaml": "^4",
     "@types/jsdom": "^28.0.1",
-    "@types/uuid": "^9",
+    "@types/uuid": "^11",
     "@types/ws": "^8",
     "@vitest/coverage-v8": "^3.2.4",
     "cheerio": "1.2.0",

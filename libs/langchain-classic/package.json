@@ -150,7 +150,7 @@
     "@types/js-yaml": "^4",
     "@types/jsdom": "^28.0.1",
     "@types/pg": "^8.15.5",
-    "@types/uuid": "^9",
+    "@types/uuid": "^11",
     "@types/ws": "^8",
     "@upstash/redis": "^1.37.0",
     "@upstash/vector": "^1.2.2",
