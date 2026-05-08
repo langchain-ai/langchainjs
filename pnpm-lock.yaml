@@ -603,7 +603,7 @@ importers:
     devDependencies:
       '@hono/node-server':
         specifier: '>=1.19.10'
-        version: 2.0.0(hono@4.12.14)
+        version: 2.0.0(hono@4.12.16)
       '@langchain/anthropic':
         specifier: workspace:*
         version: link:../providers/langchain-anthropic
@@ -654,7 +654,7 @@ importers:
         version: 3.15.1
       hono:
         specifier: '>=4.12.7'
-        version: 4.12.14
+        version: 4.12.16
       openai:
         specifier: ^6.37.0
         version: 6.37.0(ws@8.20.0(bufferutil@4.1.0))(zod@4.3.6)
@@ -8279,8 +8279,12 @@ packages:
   hnswlib-node@3.0.0:
     resolution: {integrity: sha512-fypn21qvVORassppC8/qNfZ5KAOspZpm/IbUkAtlqvbtDNnF5VVk5RWF7O5V6qwr7z+T3s1ePej6wQt5wRQ4Cg==}
 
-  hono@4.12.14:
-    resolution: {integrity: sha512-am5zfg3yu6sqn5yjKBNqhnTX7Cv+m00ox+7jbaKkrLMRJ4rAdldd1xPd/JzbBWspqaQv6RSTrgFN95EsfhC+7w==}
+  hono@4.12.16:
+    resolution: {integrity: sha512-jN0ZewiNAWSe5khM3EyCmBb250+b40wWbwNILNfEvq84VREWwOIkuUsFONk/3i3nqkz7Oe1PcpM2mwQEK2L9Kg==}
+    engines: {node: '>=16.9.0'}
+
+  hono@4.12.18:
+    resolution: {integrity: sha512-RWzP96k/yv0PQfyXnWjs6zot20TqfpfsNXhOnev8d1InAxubW93L11/oNUc3tQqn2G0bSdAOBpX+2uDFHV7kdQ==}
     engines: {node: '>=16.9.0'}
 
   hookable@6.1.1:
@@ -14178,22 +14182,26 @@ snapshots:
       protobufjs: 7.5.6
       yargs: 17.7.2
 
-  '@hono/node-server@2.0.0(hono@4.12.14)':
+  '@hono/node-server@2.0.0(hono@4.12.16)':
     dependencies:
-      hono: 4.12.14
+      hono: 4.12.16
 
-  '@hono/node-ws@1.3.1(@hono/node-server@2.0.0(hono@4.12.14))(bufferutil@4.1.0)(hono@4.12.14)':
+  '@hono/node-server@2.0.0(hono@4.12.18)':
     dependencies:
-      '@hono/node-server': 2.0.0(hono@4.12.14)
-      hono: 4.12.14
+      hono: 4.12.18
+
+  '@hono/node-ws@1.3.1(@hono/node-server@2.0.0(hono@4.12.16))(bufferutil@4.1.0)(hono@4.12.16)':
+    dependencies:
+      '@hono/node-server': 2.0.0(hono@4.12.16)
+      hono: 4.12.16
       ws: 8.20.0(bufferutil@4.1.0)
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  '@hono/zod-validator@0.7.6(hono@4.12.14)(zod@4.3.6)':
+  '@hono/zod-validator@0.7.6(hono@4.12.16)(zod@4.3.6)':
     dependencies:
-      hono: 4.12.14
+      hono: 4.12.16
       zod: 4.3.6
 
   '@humanfs/core@0.19.2':
@@ -14786,9 +14794,9 @@ snapshots:
   '@langchain/langgraph-api@1.2.1(@langchain/core@libs+langchain-core)(@langchain/langgraph-checkpoint@1.0.1(@langchain/core@libs+langchain-core))(@langchain/langgraph-sdk@1.9.1(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(@langchain/langgraph@1.3.0(@langchain/core@libs+langchain-core)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(zod-to-json-schema@3.25.2(zod@4.3.6))(zod@4.3.6))(@opentelemetry/api@1.9.1)(bufferutil@4.1.0)(openai@6.37.0(ws@8.20.0(bufferutil@4.1.0))(zod@4.3.6))(typescript@5.8.3)(ws@8.20.0(bufferutil@4.1.0))':
     dependencies:
       '@babel/code-frame': 7.29.0
-      '@hono/node-server': 2.0.0(hono@4.12.14)
-      '@hono/node-ws': 1.3.1(@hono/node-server@2.0.0(hono@4.12.14))(bufferutil@4.1.0)(hono@4.12.14)
-      '@hono/zod-validator': 0.7.6(hono@4.12.14)(zod@4.3.6)
+      '@hono/node-server': 2.0.0(hono@4.12.16)
+      '@hono/node-ws': 1.3.1(@hono/node-server@2.0.0(hono@4.12.16))(bufferutil@4.1.0)(hono@4.12.16)
+      '@hono/zod-validator': 0.7.6(hono@4.12.16)(zod@4.3.6)
       '@langchain/core': link:libs/langchain-core
       '@langchain/langgraph': 1.3.0(@langchain/core@libs+langchain-core)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(zod-to-json-schema@3.25.2(zod@4.3.6))(zod@4.3.6)
       '@langchain/langgraph-checkpoint': 1.0.1(@langchain/core@libs+langchain-core)
@@ -14799,7 +14807,7 @@ snapshots:
       dedent: 1.7.2
       dotenv: 16.6.1
       exit-hook: 4.0.0
-      hono: 4.12.14
+      hono: 4.12.16
       langsmith: 0.6.0(@opentelemetry/api@1.9.1)(openai@6.37.0(ws@8.20.0(bufferutil@4.1.0))(zod@4.3.6))(ws@8.20.0(bufferutil@4.1.0))
       open: 10.2.0
       semver: 7.7.4
@@ -14991,7 +14999,7 @@ snapshots:
 
   '@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.1)(zod@4.3.6)':
     dependencies:
-      '@hono/node-server': 2.0.0(hono@4.12.14)
+      '@hono/node-server': 2.0.0(hono@4.12.18)
       ajv: 8.18.0
       ajv-formats: 3.0.1(ajv@8.18.0)
       content-type: 1.0.5
@@ -15001,7 +15009,7 @@ snapshots:
       eventsource-parser: 3.0.8
       express: 5.2.1
       express-rate-limit: 8.3.2(express@5.2.1)
-      hono: 4.12.14
+      hono: 4.12.18
       jose: 6.2.2
       json-schema-typed: 8.0.2
       pkce-challenge: 5.0.1
@@ -15327,13 +15335,13 @@ snapshots:
       '@electric-sql/pglite': 0.4.1
       '@electric-sql/pglite-socket': 0.1.1(@electric-sql/pglite@0.4.1)
       '@electric-sql/pglite-tools': 0.3.1(@electric-sql/pglite@0.4.1)
-      '@hono/node-server': 2.0.0(hono@4.12.14)
+      '@hono/node-server': 2.0.0(hono@4.12.18)
       '@prisma/get-platform': 7.2.0
       '@prisma/query-plan-executor': 7.2.0
       '@prisma/streams-local': 0.1.2
       foreground-child: 3.3.1
       get-port-please: 3.2.0
-      hono: 4.12.14
+      hono: 4.12.18
       http-status-codes: 2.3.0
       pathe: 2.0.3
       proper-lockfile: 4.1.2
@@ -19263,7 +19271,9 @@ snapshots:
       bindings: 1.5.0
       node-addon-api: 8.7.0
 
-  hono@4.12.14: {}
+  hono@4.12.16: {}
+
+  hono@4.12.18: {}
 
   hookable@6.1.1: {}
 
