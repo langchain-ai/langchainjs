@@ -23,7 +23,7 @@
   "dependencies": {
     "@jest/globals": "^30.3.0",
     "@langchain/core": "workspace:^",
-    "zod": "^4.3.6"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@langchain/tsconfig": "workspace:*",
