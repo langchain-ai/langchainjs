@@ -82,7 +82,6 @@ jobs:
             redis
             tavily
             together-ai
-            turbopuffer
             weaviate
             xai
             internal
