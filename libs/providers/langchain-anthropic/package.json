@@ -34,7 +34,7 @@
     "@langchain/core": "workspace:^"
   },
   "devDependencies": {
-    "@anthropic-ai/vertex-sdk": "^0.14.4",
+    "@anthropic-ai/vertex-sdk": "^0.16.0",
     "@cfworker/json-schema": "^4.1.1",
     "@langchain/core": "workspace:^",
     "@langchain/standard-tests": "workspace:*",
