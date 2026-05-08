@@ -7,7 +7,7 @@ interface CSPair {
 
 const styles: {
   bold: CSPair;
-  color: Record<"grey" | "green" | "cyan" | "red", CSPair>;
+  color: Record<"grey" | "green" | "cyan" | "red" | "blue", CSPair>;
 } = {
   bold: { open: "\u001b[1m", close: "\u001b[22m" },
   color: {
@@ -15,6 +15,7 @@ const styles: {
     green: { open: "\u001b[32m", close: "\u001b[39m" },
     cyan: { open: "\u001b[36m", close: "\u001b[39m" },
     red: { open: "\u001b[31m", close: "\u001b[39m" },
+    blue: { open: "\u001b[34m", close: "\u001b[39m" },
   },
 };
 
