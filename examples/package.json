@@ -28,7 +28,7 @@
     "@getmetal/metal-sdk": "^7.7.1",
     "@gomomento/sdk": "1.117.2",
     "@google/generative-ai": "^0.24.1",
-    "@lancedb/lancedb": "^0.27.2",
+    "@lancedb/lancedb": "^0.26.2",
     "@langchain/anthropic": "workspace:*",
     "@langchain/aws": "workspace:*",
     "@langchain/classic": "workspace:*",
