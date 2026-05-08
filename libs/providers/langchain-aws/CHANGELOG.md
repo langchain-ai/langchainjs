@@ -1,5 +1,17 @@
 # @langchain/aws
 
+## 1.3.7
+
+### Patch Changes
+
+- [#10811](https://github.com/langchain-ai/langchainjs/pull/10811) [`f307fe1`](https://github.com/langchain-ai/langchainjs/commit/f307fe1090af8f2c55f553c1df2ce5d956be6f63) Thanks [@Genmin](https://github.com/Genmin)! - fix(aws): pass Bedrock Converse cache point TTL through message conversion
+
+- [#10841](https://github.com/langchain-ai/langchainjs/pull/10841) [`27d71c3`](https://github.com/langchain-ai/langchainjs/commit/27d71c39d97ad22e601085c0818c71ddc0b202f2) Thanks [@hntrl](https://github.com/hntrl)! - fix(aws): align Bedrock prompt caching with Python behavior
+
+  Add `cache_control` request handling for `ChatBedrockConverse` so cache points
+  are applied at request time, and align Bedrock usage accounting by including
+  cache read/write input tokens in `usage_metadata.input_tokens`.
+
 ## 1.3.6
 
 ### Patch Changes
