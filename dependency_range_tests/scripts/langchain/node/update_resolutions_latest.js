@@ -82,6 +82,9 @@ const currentPackageJson = JSON.parse(fs.readFileSync(packageJsonPath));
 currentPackageJson.devDependencies ??= {};
 currentPackageJson.pnpm ??= {};
 currentPackageJson.pnpm.overrides ??= {};
+currentPackageJson.pnpm.onlyBuiltDependencies = Array.from(
+  new Set([...(currentPackageJson.pnpm.onlyBuiltDependencies ?? []), "esbuild"])
+);
 
 /**
  * Link workspace dependencies via file path.
