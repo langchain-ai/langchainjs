@@ -261,7 +261,7 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
       prompt,
     };
     const result = await this.completionWithRetry(params, options, false);
-    let content = result?.choices?.[0].message.content ?? "";
+    let content = result?.choices?.[0].message?.content ?? "";
     if (Array.isArray(content)) {
       content = content[0].type === "text" ? content[0].text : "";
     }
@@ -341,7 +341,10 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
                   };
                 } else {
                   const choice = choices[part.index];
-                  choice.message.content += content;
+                  if (choice.message) {
+                    choice.message.content =
+                      (choice.message.content ?? "") + content;
+                  }
                   choice.finishReason = part.finishReason ?? "length";
                 }
                 // oxlint-disable-next-line no-void

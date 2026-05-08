@@ -3,7 +3,7 @@ import { Mistral as MistralClient } from "@mistralai/mistralai";
 import {
   ChatCompletionRequest as MistralAIChatCompletionRequest,
   ChatCompletionRequestToolChoice as MistralAIToolChoice,
-  Messages as MistralAIMessage,
+  ChatCompletionRequestMessage as MistralAIMessage,
 } from "@mistralai/mistralai/models/components/chatcompletionrequest.js";
 import { ContentChunk as MistralAIContentChunk } from "@mistralai/mistralai/models/components/contentchunk.js";
 import { Tool as MistralAITool } from "@mistralai/mistralai/models/components/tool.js";
@@ -1219,8 +1219,15 @@ export class ChatMistralAI<
         text,
         message: mistralAIResponseToChatMessage(part, response?.usage),
       };
+      const generationInfo: Record<string, unknown> = {};
       if (part.finishReason) {
-        generation.generationInfo = { finishReason: part.finishReason };
+        generationInfo.finishReason = part.finishReason;
+      }
+      if (response?.model) {
+        generationInfo.model = response.model;
+      }
+      if (Object.keys(generationInfo).length > 0) {
+        generation.generationInfo = generationInfo;
       }
       generations.push(generation);
     }
@@ -1273,10 +1280,17 @@ export class ChatMistralAI<
       if (Array.isArray(text)) {
         text = text[0].type === "text" ? text[0].text : "";
       }
+      const generationInfo: Record<string, unknown> = { ...newTokenIndices };
+      if (data?.model) {
+        generationInfo.model = data.model;
+      }
+      if (choice.finishReason) {
+        generationInfo.finishReason = choice.finishReason;
+      }
       const generationChunk = new ChatGenerationChunk({
         message,
         text,
-        generationInfo: newTokenIndices,
+        generationInfo,
       });
       yield generationChunk;
       // oxlint-disable-next-line no-void
