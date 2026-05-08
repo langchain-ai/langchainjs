@@ -167,7 +167,7 @@
     "dotenv": "^17.4.0",
     "dpdm": "^3.14.0",
     "duck-duck-scrape": "^2.2.5",
-    "exa-js": "^1.0.12",
+    "exa-js": "^1.10.3",
     "firebase-admin": "^13.7.0",
     "graphql": "^16.6.0",
     "hdb": "^0.19.8",

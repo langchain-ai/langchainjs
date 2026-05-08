@@ -299,8 +299,8 @@ importers:
         specifier: ^2.2.7
         version: 2.2.7
       exa-js:
-        specifier: ^2.10.2
-        version: 2.11.0(encoding@0.1.13)(ws@5.2.4(bufferutil@4.1.0))
+        specifier: ^1.10.3
+        version: 1.10.3(encoding@0.1.13)(ws@5.2.4(bufferutil@4.1.0))
       firebase-admin:
         specifier: ^13.7.0
         version: 13.8.0(encoding@0.1.13)
@@ -900,8 +900,8 @@ importers:
         specifier: ^2.2.5
         version: 2.2.7
       exa-js:
-        specifier: ^1.0.12
-        version: 1.10.2(encoding@0.1.13)(ws@8.20.0(bufferutil@4.1.0))
+        specifier: ^1.10.3
+        version: 1.10.3(encoding@0.1.13)(ws@8.20.0(bufferutil@4.1.0))
       firebase-admin:
         specifier: ^13.7.0
         version: 13.8.0(encoding@0.1.13)
@@ -1365,8 +1365,8 @@ importers:
   libs/providers/langchain-exa:
     dependencies:
       exa-js:
-        specifier: ^1.0.12
-        version: 1.10.2(encoding@0.1.13)(ws@8.20.0(bufferutil@4.1.0))
+        specifier: ^1.10.3
+        version: 1.10.3(encoding@0.1.13)(ws@8.20.0(bufferutil@4.1.0))
     devDependencies:
       '@langchain/core':
         specifier: workspace:^
@@ -7731,11 +7731,8 @@ packages:
     resolution: {integrity: sha512-2GuF51iuHX6A9xdTccMTsNb7VO0lHZihApxhvQzJB5A03DvHDd2FQepodbMaztPBmBcE/ox7o2gqaxGhYB9LhQ==}
     engines: {node: '>=20.0.0'}
 
-  exa-js@1.10.2:
-    resolution: {integrity: sha512-nObBipoXKL5uL6Dc8Q3c9GA4xEfunQMdGGqtcCkQSNilzR6AExyVkBxTdpWqC20jKa3/dvXu6otXQLaRyZNqGw==}
-
-  exa-js@2.11.0:
-    resolution: {integrity: sha512-sPlcX96QgSYquUh3C8v/LQZdqGNN68B4h5rJKIb1J1DpoFpEsPm31Hg+/juby+QNQiauH22G/M2+yeMuNbWKQA==}
+  exa-js@1.10.3:
+    resolution: {integrity: sha512-jIcaMTTBrLg1uJ0IPmZvhZjhgTqJjD6ea4+iO2ugOecAxh4+YAqm9dztBfAt7mQqE0p5edaAqlV7pSQX/qOytw==}
 
   execa@5.1.1:
     resolution: {integrity: sha512-8uSpZZocAZRBAPIEINJj3Lo9HyGitllczc27Eh5YYojjMFMn8yHMDMaUHE2Jqfq05D/wucwI4JGURyXt1vchyg==}
@@ -18543,22 +18540,22 @@ snapshots:
     dependencies:
       eventsource-parser: 3.0.8
 
-  exa-js@1.10.2(encoding@0.1.13)(ws@8.20.0(bufferutil@4.1.0)):
+  exa-js@1.10.3(encoding@0.1.13)(ws@5.2.4(bufferutil@4.1.0)):
     dependencies:
       cross-fetch: 4.1.0(encoding@0.1.13)
       dotenv: 16.4.7
-      openai: 5.23.2(ws@8.20.0(bufferutil@4.1.0))(zod@3.25.76)
+      openai: 5.23.2(ws@5.2.4(bufferutil@4.1.0))(zod@3.25.76)
       zod: 3.25.76
       zod-to-json-schema: 3.25.2(zod@3.25.76)
     transitivePeerDependencies:
       - encoding
       - ws
 
-  exa-js@2.11.0(encoding@0.1.13)(ws@5.2.4(bufferutil@4.1.0)):
+  exa-js@1.10.3(encoding@0.1.13)(ws@8.20.0(bufferutil@4.1.0)):
     dependencies:
       cross-fetch: 4.1.0(encoding@0.1.13)
       dotenv: 16.4.7
-      openai: 5.23.2(ws@5.2.4(bufferutil@4.1.0))(zod@3.25.76)
+      openai: 5.23.2(ws@8.20.0(bufferutil@4.1.0))(zod@3.25.76)
       zod: 3.25.76
       zod-to-json-schema: 3.25.2(zod@3.25.76)
     transitivePeerDependencies:
