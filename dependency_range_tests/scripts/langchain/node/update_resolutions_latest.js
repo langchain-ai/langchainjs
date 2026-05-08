@@ -79,6 +79,7 @@ function resolvePackagePath(depName) {
 
 const packageJsonPath = "package.json";
 const currentPackageJson = JSON.parse(fs.readFileSync(packageJsonPath));
+currentPackageJson.packageManager = "pnpm@10.14.0";
 currentPackageJson.devDependencies ??= {};
 currentPackageJson.pnpm ??= {};
 currentPackageJson.pnpm.overrides ??= {};
