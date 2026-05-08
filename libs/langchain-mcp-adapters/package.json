@@ -33,7 +33,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
     "debug": "^4.4.3",
-    "zod": "^3.25.76 || ^4"
+    "zod": "^4.4.3"
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0",

@@ -42,7 +42,7 @@
     "jest-environment-node": "^30.3.0",
     "ts-jest": "^29.4.9",
     "typescript": "~5.8.3",
-    "zod": "^3.25.76"
+    "zod": "^4.4.3"
   },
   "publishConfig": {
     "access": "public"

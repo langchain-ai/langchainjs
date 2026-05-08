@@ -27,7 +27,7 @@
   "dependencies": {
     "@ibm-cloud/watsonx-ai": "^1.7.11",
     "ibm-cloud-sdk-core": "^5.4.10",
-    "zod": "^3.25.76 || ^4"
+    "zod": "^4.4.3"
   },
   "peerDependencies": {
     "@langchain/core": "workspace:^"

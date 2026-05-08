@@ -29,7 +29,7 @@
   "dependencies": {
     "js-tiktoken": "^1.0.12",
     "openai": "^6.37.0",
-    "zod": "^3.25.76 || ^4"
+    "zod": "^4.4.3"
   },
   "peerDependencies": {
     "@langchain/core": "workspace:^"

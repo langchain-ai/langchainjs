@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.95.1",
-    "zod": "^3.25.76 || ^4"
+    "zod": "^4.4.3"
   },
   "peerDependencies": {
     "@langchain/core": "workspace:^"
