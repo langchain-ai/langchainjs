@@ -55,7 +55,7 @@
     "@opensearch-project/opensearch": "^3.5.1",
     "@pinecone-database/pinecone": "^7.1.0",
     "@planetscale/database": "^1.20.1",
-    "@prisma/client": "^7.6.0",
+    "@prisma/client": "^6.19.3",
     "@qdrant/js-client-rest": "^1.17.0",
     "@rockset/client": "^0.9.2",
     "@supabase/supabase-js": "^2.101.1",
