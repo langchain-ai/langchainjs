@@ -996,15 +996,6 @@ importers:
       '@standard-schema/spec':
         specifier: ^1.1.0
         version: 1.1.0
-      ansi-styles:
-        specifier: ^5.0.0
-        version: 5.2.0
-      camelcase:
-        specifier: '6'
-        version: 6.3.0
-      decamelize:
-        specifier: 1.2.0
-        version: 1.2.0
       js-tiktoken:
         specifier: ^1.0.12
         version: 1.0.21
@@ -1024,9 +1015,6 @@ importers:
       '@langchain/tsconfig':
         specifier: workspace:*
         version: link:../../internal/tsconfig
-      '@types/decamelize':
-        specifier: ^1.2.0
-        version: 1.2.0
       '@types/mustache':
         specifier: ^4
         version: 4.2.6

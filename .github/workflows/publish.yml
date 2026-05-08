@@ -9,6 +9,7 @@ permissions:
 
 env:
   CI: true
+  NPM_CONFIG_PROVENANCE: true
 
 jobs:
   release:
