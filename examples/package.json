@@ -73,7 +73,7 @@
     "date-fns": "^4.1.0",
     "dotenv": "^17.4.0",
     "duck-duck-scrape": "^2.2.7",
-    "exa-js": "^2.10.2",
+    "exa-js": "^1.10.3",
     "firebase-admin": "^13.7.0",
     "graphql": "^16.13.2",
     "hdb": "^2.27.1",
