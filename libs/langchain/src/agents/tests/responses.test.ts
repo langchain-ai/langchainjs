@@ -14,6 +14,7 @@ import {
   ProviderStrategy,
   ToolStrategy,
 } from "../responses.js";
+import { StructuredOutputParsingError } from "../errors.js";
 
 function makeSerializableSchema(
   jsonSchema: Record<string, unknown> = {
@@ -526,6 +527,67 @@ describe("structured output handling", () => {
             messages: [{ role: "user", content: "hi" }],
           })
         ).resolves.not.toThrowError();
+      });
+    });
+
+    describe("error handling on parse failure", () => {
+      it("should throw when a terminal response cannot be parsed as JSON", async () => {
+        const model = new FakeToolCallingChatModel({
+          responses: [
+            new AIMessage({ content: "I cannot answer that question." }),
+          ],
+        });
+        const agent = createAgent({
+          model,
+          tools: [],
+          responseFormat: providerStrategy(
+            z.object({
+              temperature: z.number(),
+            })
+          ),
+        });
+
+        await expect(
+          agent.invoke({ messages: [{ role: "user", content: "hi" }] })
+        ).rejects.toThrow(StructuredOutputParsingError);
+      });
+
+      it("should throw when a terminal response is valid JSON but does not satisfy the schema", async () => {
+        const model = new FakeToolCallingChatModel({
+          responses: [new AIMessage({ content: '{"foo":"bar"}' })],
+        });
+        const agent = createAgent({
+          model,
+          tools: [],
+          responseFormat: providerStrategy(
+            z.object({
+              temperature: z.number(),
+            })
+          ),
+        });
+
+        await expect(
+          agent.invoke({ messages: [{ role: "user", content: "hi" }] })
+        ).rejects.toThrow(StructuredOutputParsingError);
+      });
+
+      it("should throw when a bare Zod responseFormat auto-promoted to providerStrategy fails to parse", async () => {
+        const model = new FakeToolCallingChatModel({
+          responses: [
+            new AIMessage({ content: "I cannot answer that question." }),
+          ],
+        });
+        const agent = createAgent({
+          model,
+          tools: [],
+          responseFormat: z.object({
+            temperature: z.number(),
+          }),
+        });
+
+        await expect(
+          agent.invoke({ messages: [{ role: "user", content: "hi" }] })
+        ).rejects.toThrow(/structured output/i);
       });
     });
 
