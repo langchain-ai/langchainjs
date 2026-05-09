@@ -511,6 +511,99 @@ describe("convertMessagesToGeminiContents", () => {
     ).toBe("tool-call-xyz");
   });
 
+  test("serializes object-valued ToolMessage content into functionResponse.result", () => {
+    const messages = [
+      new HumanMessage("What is the result of my_tool?"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "my_tool",
+            args: { input: "test" },
+            id: "tool-call-123",
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: {
+          status: "ok",
+          value: 42,
+          items: ["foo", "bar"],
+        } as never,
+        tool_call_id: "tool-call-123",
+        name: "my_tool",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const toolResponseContent = contents.find(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
+    expect(toolResponseContent).toBeDefined();
+
+    const functionResponsePart = toolResponseContent!.parts.find(
+      (p) => "functionResponse" in p && p.functionResponse
+    ) as Gemini.Part.FunctionResponse | undefined;
+    expect(functionResponsePart).toBeDefined();
+    expect(functionResponsePart!.functionResponse!.name).toBe("my_tool");
+    expect(functionResponsePart!.functionResponse!.response).toEqual({
+      result: JSON.stringify({
+        status: "ok",
+        value: 42,
+        items: ["foo", "bar"],
+      }),
+    });
+  });
+
+  test("serializes object-valued ToolMessage content on the v1 path", () => {
+    const messages = [
+      new HumanMessage("What is the result of my_tool?"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "my_tool",
+            args: { input: "test" },
+            id: "tool-call-123",
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: {
+          status: "ok",
+          value: 42,
+          items: ["foo", "bar"],
+        } as never,
+        tool_call_id: "tool-call-123",
+        name: "my_tool",
+        response_metadata: { output_version: "v1" },
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const toolResponseContent = contents.find(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
+    expect(toolResponseContent).toBeDefined();
+
+    const functionResponsePart = toolResponseContent!.parts.find(
+      (p) => "functionResponse" in p && p.functionResponse
+    ) as Gemini.Part.FunctionResponse | undefined;
+    expect(functionResponsePart).toBeDefined();
+    expect(functionResponsePart!.functionResponse!.name).toBe("my_tool");
+    expect(functionResponsePart!.functionResponse!.response).toEqual({
+      result: JSON.stringify({
+        status: "ok",
+        value: 42,
+        items: ["foo", "bar"],
+      }),
+    });
+  });
+
   test("omits generated tool_call_id from functionResponse.id (legacy path)", () => {
     const messages = [
       new HumanMessage("hello"),
