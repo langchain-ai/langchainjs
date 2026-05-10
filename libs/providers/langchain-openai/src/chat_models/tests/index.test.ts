@@ -1684,4 +1684,55 @@ describe("ChatOpenAI", () => {
       expect(result.text).toEqual("Foo bar");
     });
   });
+
+  describe("useResponsesApi: false overrides auto-detection", () => {
+    it("uses chat completions even with non-standard tool types", async () => {
+      let requestedUrl = "";
+      const mockFetch = vi.fn().mockImplementation(async (url: string) => {
+        requestedUrl = url;
+        return new Response(
+          JSON.stringify({
+            id: "chatcmpl-123",
+            object: "chat.completion",
+            choices: [
+              {
+                index: 0,
+                message: { role: "assistant", content: "ok" },
+                finish_reason: "stop",
+              },
+            ],
+            usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        );
+      });
+
+      const model = new ChatOpenAI({
+        model: "kimi-k2",
+        apiKey: "test-key",
+        useResponsesApi: false,
+        configuration: {
+          baseURL: "https://api.example.com/v1",
+          fetch: mockFetch,
+        },
+      });
+
+      await model.invoke([{ role: "user", content: "test" }], {
+        tools: [
+          { type: "builtin_function", function: { name: "$web_search" } },
+        ],
+      } as any);
+
+      expect(requestedUrl).toContain("/chat/completions");
+      expect(requestedUrl).not.toContain("/responses");
+    });
+
+    it("still auto-detects responses API when not explicitly set", () => {
+      const model = new ChatOpenAI({ model: "gpt-4o", apiKey: "test-key" });
+      const useResponses = (model as any)._useResponsesApi({
+        tools: [{ type: "web_search_preview" }],
+      });
+      expect(useResponses).toBe(true);
+    });
+  });
 });
