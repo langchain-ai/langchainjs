@@ -481,7 +481,7 @@ export function isLangChainTool(tool?: unknown): tool is StructuredToolParams {
  * - `toolCallId`: The ID of the current tool call
  * - `config`: `RunnableConfig` for the current execution
  * - `context`: Runtime context
- * - `store`: `BaseStore` instance for persistent storage
+ * - `store`: Store instance for persistent storage (type depends on runtime)
  * - `writer`: Stream writer for streaming output
  *
  * No `Annotated` wrapper is needed - just use `runtime: ToolRuntime`
@@ -511,8 +511,8 @@ export function isLangChainTool(tool?: unknown): tool is StructuredToolParams {
  *     // Access runtime context
  *     const userId = runtime.context?.userId;
  *
- *     // Access store
- *     await runtime.store?.mset([["key", "value"]]);
+ *     // Access store (LangGraph injects AsyncBatchedStore with get/put)
+ *     await (runtime.store as any)?.put(["ns"], "key", { value: "data" });
  *
  *     // Stream output
  *     runtime.writer?.("Processing...");
@@ -571,9 +571,18 @@ export type ToolRuntime<
       ? TContext
       : unknown;
   /**
-   * BaseStore instance for persistent storage (from langgraph `Runtime`).
+   * Store instance for persistent storage (from langgraph `Runtime`).
+   *
+   * When running inside LangGraph, this is an `AsyncBatchedStore` (from
+   * `@langchain/langgraph-checkpoint`) which exposes `get`/`put`/`search`/
+   * `delete`/`batch` — **not** the `mget`/`mset` API of the core
+   * `BaseStore`.
+   *
+   * Typed as a union so that both standalone (`BaseStore`) and LangGraph
+   * (`AsyncBatchedStore`) stores are accepted without unsafe casts.
    */
-  store: BaseStore<string, unknown> | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  store: BaseStore<string, unknown> | Record<string, any> | null;
   /**
    * Stream writer for streaming output (from langgraph `Runtime`).
    */
