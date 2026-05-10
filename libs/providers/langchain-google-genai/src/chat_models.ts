@@ -892,10 +892,13 @@ export class ChatGoogleGenerativeAI
       return { generations, llmOutput: { estimatedTokenUsage: tokenUsage } };
     }
 
-    const res = await this.completionWithRetry({
-      ...parameters,
-      contents: actualPrompt,
-    });
+    const res = await this.completionWithRetry(
+      {
+        ...parameters,
+        contents: actualPrompt,
+      },
+      options
+    );
 
     let usageMetadata: UsageMetadata | undefined;
     if ("usageMetadata" in res.response) {
