@@ -9,6 +9,7 @@ on:
       - "libs/langchain-classic/**"
       - "libs/providers/langchain-anthropic/**"
       - "libs/providers/langchain-openai/**"
+      - "environment_tests/**"
       - ".github/workflows/test-exports.yml"
   workflow_dispatch: # Allows triggering the workflow manually in GitHub UI
 

@@ -26,9 +26,6 @@
   "dependencies": {
     "@cfworker/json-schema": "^4.0.2",
     "@standard-schema/spec": "^1.1.0",
-    "ansi-styles": "^5.0.0",
-    "camelcase": "6",
-    "decamelize": "1.2.0",
     "js-tiktoken": "^1.0.12",
     "langsmith": ">=0.5.0 <1.0.0",
     "mustache": "^4.2.0",
@@ -37,7 +34,6 @@
   },
   "devDependencies": {
     "@langchain/tsconfig": "workspace:*",
-    "@types/decamelize": "^1.2.0",
     "@types/mustache": "^4",
     "@types/node": "^25.5.0",
     "@types/uuid": "^10.0.0",

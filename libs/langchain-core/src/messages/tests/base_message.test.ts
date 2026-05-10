@@ -210,6 +210,43 @@ test("_mergeLists merges blocks by numeric index", () => {
   ]);
 });
 
+test("_mergeLists keeps different content block types separate when indices collide", () => {
+  const chunk1 = new AIMessageChunk({
+    content: [
+      {
+        type: "reasoning",
+        index: 0,
+        reasoning: "Thinking",
+      },
+    ],
+  });
+
+  const chunk2 = new AIMessageChunk({
+    content: [
+      {
+        type: "text",
+        index: 0,
+        text: "Final answer",
+      },
+    ],
+  });
+
+  const merged = chunk1.concat(chunk2);
+  expect(Array.isArray(merged.content)).toBe(true);
+  expect(merged.content).toEqual([
+    {
+      type: "reasoning",
+      index: 0,
+      reasoning: "Thinking",
+    },
+    {
+      type: "text",
+      index: 0,
+      text: "Final answer",
+    },
+  ]);
+});
+
 test("_mergeLists merges blocks by string index", () => {
   const chunk1 = new AIMessageChunk({
     content: [

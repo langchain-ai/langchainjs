@@ -43,6 +43,7 @@ import {
   ChatBedrockConverseToolType,
   ConverseCommandParams,
   CredentialType,
+  BedrockPromptCacheControl,
 } from "./types.js";
 import {
   BedrockConverseToolChoice,
@@ -50,7 +51,10 @@ import {
   convertToConverseTools,
   supportedToolChoiceValuesForModel,
 } from "./utils/tools.js";
-import { convertToConverseMessages } from "./utils/message_inputs.js";
+import {
+  applyCachePointsToConversePayload,
+  convertToConverseMessages,
+} from "./utils/message_inputs.js";
 import {
   convertConverseMessageToLangChainMessage,
   handleConverseStreamContentBlockDelta,
@@ -262,6 +266,15 @@ export interface ChatBedrockConverseCallOptions
    * Key-value pairs that you can use to filter invocation logs.
    */
   requestMetadata?: ConverseRequest["requestMetadata"];
+
+  /**
+   * Prompt cache-control settings.
+   *
+   * When provided, cache points are applied at request-build time for
+   * Bedrock Converse payloads (system, last message, and tools where
+   * applicable), matching Python ChatBedrockConverse behavior.
+   */
+  cache_control?: BedrockPromptCacheControl;
 }
 
 /**
@@ -1013,6 +1026,13 @@ export class ChatBedrockConverse
       const { converseMessages, converseSystem } =
         convertToConverseMessages(messages);
       const params = this.invocationParams(options);
+      applyCachePointsToConversePayload({
+        cacheControl: options.cache_control,
+        system: converseSystem,
+        messages: converseMessages,
+        params,
+        modelId: this.applicationInferenceProfile ?? this.model,
+      });
 
       const command = new ConverseCommand({
         modelId: this.applicationInferenceProfile ?? this.model,
@@ -1057,6 +1077,13 @@ export class ChatBedrockConverse
       const { converseMessages, converseSystem } =
         convertToConverseMessages(messages);
       const params = this.invocationParams(options);
+      applyCachePointsToConversePayload({
+        cacheControl: options.cache_control,
+        system: converseSystem,
+        messages: converseMessages,
+        params,
+        modelId: this.applicationInferenceProfile ?? this.model,
+      });
       let { streamUsage } = this;
       if (options.streamUsage !== undefined) {
         streamUsage = options.streamUsage;
