@@ -2020,3 +2020,31 @@ describe("withStructuredOutput - StandardSchema", () => {
     });
   });
 });
+
+test("ChatAnthropic should remove top_p if set to -1 for Claude 3.5 Sonnet", () => {
+  const chat = new ChatAnthropic({
+    model: "claude-3-5-sonnet-20241022",
+    topP: -1,
+    anthropicApiKey: "test-api-key",
+  });
+
+  const params = chat.invocationParams();
+
+  // Verify that model is correct
+  expect(params.model).toContain("sonnet");
+  // Verify that top_p has been removed
+  expect(params.top_p).toBeUndefined();
+});
+
+test("ChatAnthropic should keep top_p if set to -1 for older models", () => {
+  const chat = new ChatAnthropic({
+    model: "claude-2.1",
+    topP: -1,
+    anthropicApiKey: "test-api-key",
+  });
+
+  const params = chat.invocationParams();
+
+  // Verify that top_p remains -1 for older models
+  expect(params.top_p).toBe(-1);
+});

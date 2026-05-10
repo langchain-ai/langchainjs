@@ -1156,6 +1156,98 @@ export class ChatAnthropicMessages<
   /**
    * Get the parameters used to invoke the model
    */
+  // override invocationParams(
+  //   options?: this["ParsedCallOptions"]
+  // ): AnthropicInvocationParams {
+  //   const tool_choice:
+  //     | Anthropic.Messages.ToolChoiceAuto
+  //     | Anthropic.Messages.ToolChoiceAny
+  //     | Anthropic.Messages.ToolChoiceTool
+  //     | Anthropic.Messages.ToolChoiceNone
+  //     | undefined = handleToolChoice(options?.tool_choice);
+
+  //   const toolBetas = options?.tools?.reduce<AnthropicBeta[]>((acc, tool) => {
+  //     if (
+  //       typeof tool === "object" &&
+  //       "type" in tool &&
+  //       tool.type in ANTHROPIC_TOOL_BETAS
+  //     ) {
+  //       const beta = ANTHROPIC_TOOL_BETAS[tool.type];
+  //       if (!acc.includes(beta)) {
+  //         return [...acc, beta];
+  //       }
+  //     }
+  //     return acc;
+  //   }, []);
+
+  //   // Merge output_config from constructor and call options, with backwards
+  //   // compat for the deprecated outputFormat call option.
+  //   const mergedOutputConfig: AnthropicOutputConfig | undefined = (() => {
+  //     const base = { ...this.outputConfig, ...options?.outputConfig };
+  //     // Backwards compat: if outputFormat is set on call options, use it
+  //     // as outputConfig.format (unless outputConfig.format is already set).
+  //     if (options?.outputFormat && !base.format) {
+  //       base.format = options.outputFormat;
+  //     }
+  //     return Object.keys(base).length > 0 ? base : undefined;
+  //   })();
+
+  //   const hasCompaction = this.contextManagement?.edits?.some(
+  //     (e) => e.type === "compact_20260112"
+  //   );
+  //   const compactionBetas: AnthropicBeta[] = hasCompaction
+  //     ? ["compact-2026-01-12"]
+  //     : [];
+  //   const taskBudgetBetas = getTaskBudgetBetas(this.model, mergedOutputConfig);
+
+  //   const output: AnthropicInvocationParams = {
+  //     model: this.model,
+  //     stop_sequences: options?.stop ?? this.stopSequences,
+  //     stream: this.streaming,
+  //     max_tokens: this.maxTokens,
+  //     tools: this.formatStructuredToolToAnthropic(options?.tools),
+  //     tool_choice,
+  //     thinking: this.thinking,
+  //     context_management: this.contextManagement,
+  //     ...this.invocationKwargs,
+  //     container: options?.container,
+  //     betas: _combineBetas(
+  //       this.betas,
+  //       options?.betas,
+  //       toolBetas ?? [],
+  //       compactionBetas,
+  //       taskBudgetBetas
+  //     ),
+  //     output_config: mergedOutputConfig,
+  //     inference_geo: options?.inferenceGeo ?? this.inferenceGeo,
+  //     mcp_servers: options?.mcp_servers,
+  //   };
+
+  //   validateInvocationParamCompatibility({
+  //     model: this.model,
+  //     thinking: this.thinking,
+  //     topK: this.topK,
+  //     topP: this.topP,
+  //     temperature: this.temperature,
+  //   });
+
+  //   Object.assign(
+  //     output,
+  //     getSamplingParams({
+  //       model: this.model,
+  //       thinking: this.thinking,
+  //       topK: this.topK,
+  //       topP: this.topP,
+  //       temperature: this.temperature,
+  //     })
+  //   );
+
+  //   return output;
+  // }
+
+  /**
+   * Get the parameters used to invoke the model
+   */
   override invocationParams(
     options?: this["ParsedCallOptions"]
   ): AnthropicInvocationParams {
@@ -1242,6 +1334,17 @@ export class ChatAnthropicMessages<
         temperature: this.temperature,
       })
     );
+
+    // Fix for Issue #10709: Newer Anthropic models (Claude 3.5 Sonnet)
+    // reject top_p if it is set to -1.
+    if (
+      this.model &&
+      (this.model.includes("claude-3-5-sonnet") ||
+        this.model.includes("claude-sonnet-4-6")) &&
+      output.top_p === -1
+    ) {
+      delete output.top_p;
+    }
 
     return output;
   }
