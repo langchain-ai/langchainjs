@@ -102,7 +102,7 @@ export class ChatOpenAICompletions<
         options?.tool_choice as OpenAIToolChoice
       ),
       response_format: this._getResponseFormat(options?.response_format),
-      seed: options?.seed,
+      seed: options?.seed ?? this.seed,
       ...streamOptionsConfig,
       parallel_tool_calls: options?.parallel_tool_calls,
       ...(this.audio || options?.audio
