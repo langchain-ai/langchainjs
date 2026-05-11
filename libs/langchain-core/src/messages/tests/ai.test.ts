@@ -340,6 +340,87 @@ describe("AIMessageChunk", () => {
         },
       ]);
     });
+
+    // Regression: when a streamed AI message contains both finalized
+    // tool_calls and still-streaming tool_call_chunks (common with
+    // parallel tool calls that land sequentially within one message),
+    // the constructor should preserve the caller-supplied tool_calls
+    // rather than rebuilding the field solely from chunks.
+    //
+    // Symptom in langgraph-sdk: only the in-flight tool call is visible
+    // on `message.tool_calls` during streaming; finished calls
+    // disappear until `message-finish` flips the message to a plain
+    // AIMessage. See langchain-ai/langgraphjs#2380.
+    it("preserves caller-supplied tool_calls when tool_call_chunks is non-empty", () => {
+      const chunk = new AIMessageChunk({
+        content: "",
+        // Tool A is finished: fully parsed args, no chunk to collapse.
+        tool_calls: [
+          {
+            id: "A",
+            name: "search",
+            args: { q: "weather" },
+            type: "tool_call",
+          },
+        ],
+        // Tool B is mid-stream: partial JSON in chunk form.
+        tool_call_chunks: [
+          {
+            id: "B",
+            name: "search",
+            args: '{"q":"',
+            index: 1,
+            type: "tool_call_chunk",
+          },
+        ],
+      });
+
+      const callA = chunk.tool_calls?.find((tc) => tc.id === "A");
+      expect(callA).toMatchObject({
+        id: "A",
+        name: "search",
+        args: { q: "weather" },
+      });
+      expect(chunk.tool_call_chunks).toHaveLength(1);
+      expect(chunk.tool_call_chunks?.[0]).toMatchObject({
+        id: "B",
+        args: '{"q":"',
+      });
+    });
+
+    // concat() already merges this.tool_calls with chunk.tool_calls
+    // and hands the result to the constructor. Today that merge is
+    // dead code: the constructor discards it whenever
+    // tool_call_chunks is also non-empty. This test pins the intended
+    // behavior so the merge in concat() stays load-bearing.
+    it("concat preserves merged tool_calls across both sides", () => {
+      const left = new AIMessageChunk({
+        content: "",
+        tool_calls: [
+          { id: "A", name: "search", args: { q: "x" }, type: "tool_call" },
+        ],
+      });
+      const right = new AIMessageChunk({
+        content: "",
+        tool_call_chunks: [
+          {
+            id: "B",
+            name: "search",
+            args: '{"q":"',
+            index: 1,
+            type: "tool_call_chunk",
+          },
+        ],
+      });
+
+      const merged = left.concat(right);
+      const callA = merged.tool_calls?.find((tc) => tc.id === "A");
+      expect(callA).toMatchObject({
+        id: "A",
+        name: "search",
+        args: { q: "x" },
+      });
+    });
   });
 
   it("should properly merge tool call chunks that have matching indices and ids", () => {

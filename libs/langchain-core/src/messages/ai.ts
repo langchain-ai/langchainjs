@@ -314,11 +314,42 @@ export class AIMessageChunk<
       };
     } else {
       const collapsed = collapseToolCallChunks(fields.tool_call_chunks ?? []);
+      // Preserve caller-supplied tool_calls / invalid_tool_calls that
+      // are NOT also represented in the collapsed chunks (deduped by
+      // id). Collapsed entries win on collision because they reflect
+      // the freshest assembled state — `concat()` forwards the prior
+      // chunk's stale `tool_calls` field alongside merged
+      // `tool_call_chunks`, and we must not let the stale snapshot
+      // override the freshly merged args. The caller-fill path keeps
+      // finalized tool_calls visible when callers supply both arrays
+      // for *different* ids (e.g. one tool call finalized while
+      // siblings are still streaming — common with parallel tool
+      // calls landing sequentially within a single message).
+      const collapsedIds = new Set<string>();
+      for (const tc of collapsed.tool_calls)
+        if (tc.id !== undefined) collapsedIds.add(tc.id);
+      for (const tc of collapsed.invalid_tool_calls)
+        if (tc.id !== undefined) collapsedIds.add(tc.id);
+      const callerToolCalls = (fields.tool_calls ??
+        []) as $InferToolCalls<TStructure>[];
+      const callerInvalidToolCalls = fields.invalid_tool_calls ?? [];
+      const mergedToolCalls = [
+        ...(collapsed.tool_calls as $InferToolCalls<TStructure>[]),
+        ...callerToolCalls.filter(
+          (tc) => tc.id === undefined || !collapsedIds.has(tc.id)
+        ),
+      ];
+      const mergedInvalidToolCalls = [
+        ...collapsed.invalid_tool_calls,
+        ...callerInvalidToolCalls.filter(
+          (tc) => tc.id === undefined || !collapsedIds.has(tc.id)
+        ),
+      ];
       initParams = {
         ...fields,
         tool_call_chunks: collapsed.tool_call_chunks,
-        tool_calls: collapsed.tool_calls as $InferToolCalls<TStructure>[],
-        invalid_tool_calls: collapsed.invalid_tool_calls,
+        tool_calls: mergedToolCalls,
+        invalid_tool_calls: mergedInvalidToolCalls,
         usage_metadata:
           fields.usage_metadata !== undefined
             ? fields.usage_metadata
