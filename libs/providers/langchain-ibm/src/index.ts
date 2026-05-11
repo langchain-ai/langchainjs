@@ -1,8 +1,35 @@
-export * from "./types.js";
+// Re-export all types
+export type {
+  WatsonxAuth,
+  WatsonxInit,
+  Neverify,
+  XOR,
+  TokenUsage,
+  WatsonxRequestBasicOptions,
+  WatsonxChatBasicOptions,
+  WatsonxLLMBasicOptions,
+  WatsonxRerankBasicOptions,
+  WatsonxEmbeddingsBasicOptions,
+  WatsonxToolChoice,
+  WatsonxBaseChatParams,
+  GenerationInfo,
+  ResponseChunk,
+} from "./types.js";
+
+// Re-export error classes
+export {
+  WatsonxError,
+  WatsonxAuthenticationError,
+  WatsonxValidationError,
+  WatsonxConfigurationError,
+  WatsonxUnsupportedOperationError,
+} from "./types.js";
+
+// Re-export auth utilities
+export { createAuthenticator, prepareInstanceConfig } from "./auth/index.js";
+export type { InstanceConfig } from "./auth/index.js";
 
 export {
-  authenticateAndSetInstance,
-  authenticateAndSetGatewayInstance,
   _isValidMistralToolCallId,
   _convertToolCallIdToMistralCompatible,
   WatsonxToolsOutputParser,

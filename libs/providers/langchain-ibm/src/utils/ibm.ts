@@ -1,12 +1,6 @@
 /* oxlint-disable @typescript-eslint/no-explicit-any */
 import { WatsonXAI } from "@ibm-cloud/watsonx-ai";
 import {
-  IamAuthenticator,
-  BearerTokenAuthenticator,
-  CloudPakForDataAuthenticator,
-  Authenticator,
-} from "ibm-cloud-sdk-core";
-import {
   JsonOutputKeyToolsParserParamsInterop,
   JsonOutputToolsParser,
 } from "@langchain/core/output_parsers/openai_tools";
@@ -27,93 +21,7 @@ import {
   WatsonxValidationError,
   WatsonxUnsupportedOperationError,
 } from "../types.js";
-import { AWSAuthenticator } from "@ibm-cloud/watsonx-ai/authentication";
-
-const createAuthenticator = ({
-  watsonxAIApikey,
-  watsonxAIAuthType,
-  watsonxAIBearerToken,
-  watsonxAIUsername,
-  watsonxAIPassword,
-  watsonxAIUrl,
-  disableSSL,
-  serviceUrl,
-}: WatsonxAuth): Authenticator | undefined => {
-  switch (watsonxAIAuthType) {
-    case "iam":
-      if (watsonxAIApikey)
-        return new IamAuthenticator({
-          apikey: watsonxAIApikey,
-        });
-      throw new WatsonxAuthenticationError("ApiKey is required for IAM auth");
-    case "bearertoken":
-      if (watsonxAIBearerToken)
-        return new BearerTokenAuthenticator({
-          bearerToken: watsonxAIBearerToken,
-        });
-      throw new WatsonxAuthenticationError(
-        "BearerToken is required for BearerToken auth",
-      );
-    case "cp4d":
-      if (watsonxAIUsername && (watsonxAIPassword || watsonxAIApikey)) {
-        const watsonxCPDAuthUrl = watsonxAIUrl ?? serviceUrl;
-        return new CloudPakForDataAuthenticator({
-          username: watsonxAIUsername,
-          password: watsonxAIPassword,
-          url: watsonxCPDAuthUrl.concat("/icp4d-api/v1/authorize"),
-          apikey: watsonxAIApikey,
-          disableSslVerification: disableSSL,
-        });
-      }
-      throw new WatsonxAuthenticationError(
-        "Username and Password or ApiKey is required for IBM watsonx.ai software auth",
-      );
-    case "aws":
-      return new AWSAuthenticator({
-        apikey: watsonxAIApikey,
-        url: watsonxAIUrl,
-        disableSslVerification: disableSSL,
-      });
-    default:
-      return undefined;
-  }
-};
-
-const prepareInstanceConfig = ({
-  watsonxAIApikey,
-  watsonxAIAuthType,
-  watsonxAIBearerToken,
-  watsonxAIUsername,
-  watsonxAIPassword,
-  watsonxAIUrl,
-  disableSSL,
-  version,
-  serviceUrl,
-  apiKey,
-  bearerToken,
-  username,
-  password,
-  authType,
-  authUrl,
-}: WatsonxAuth & Omit<WatsonxInit, "authenticator">) => {
-  const isIam =
-    (watsonxAIApikey || apiKey) && !watsonxAIUsername ? "iam" : undefined;
-  const authenticator = createAuthenticator({
-    watsonxAIApikey: watsonxAIApikey ?? apiKey,
-    watsonxAIAuthType: watsonxAIAuthType ?? authType ?? isIam,
-    watsonxAIBearerToken: watsonxAIBearerToken ?? bearerToken,
-    watsonxAIUsername: watsonxAIUsername ?? username,
-    watsonxAIPassword: watsonxAIPassword ?? password,
-    watsonxAIUrl: watsonxAIUrl ?? authUrl,
-    disableSSL,
-    serviceUrl,
-  });
-  return {
-    version,
-    serviceUrl,
-    ...(authenticator ? { authenticator } : {}),
-  };
-};
+import { prepareInstanceConfig } from "../auth/index.js";
 
 /**
  * Initializes and returns a WatsonX AI or Gateway instance with authentication.

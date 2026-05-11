@@ -404,7 +404,7 @@ describe("Utils tests", () => {
       expect(instance).toBeInstanceOf(WatsonXAI);
       const authenticator = instance["authenticator"];
       expect(authenticator).toBeInstanceOf(CloudPakForDataAuthenticator);
-      expect(authenticator.url).toBe(`${serviceUrl}/icp4d-api/v1/authorize`);
+      expect(authenticator.url).toBe(`${serviceUrl}icp4d-api/v1/authorize`);
     });
 
     test("uses authUrl as alternative to watsonxAIUrl", () => {

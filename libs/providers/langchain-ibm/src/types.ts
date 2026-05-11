@@ -2,6 +2,7 @@ import { RequestCallbacks } from "@ibm-cloud/watsonx-ai/dist/watsonx-ai-ml/vml_v
 import { ChatsToolChoice } from "@ibm-cloud/watsonx-ai/gateway";
 import { BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
 import { BaseLLMParams } from "@langchain/core/language_models/llms";
+
 // Export custom error classes
 export {
   WatsonxError,
@@ -10,7 +11,6 @@ export {
   WatsonxConfigurationError,
   WatsonxUnsupportedOperationError,
 } from "./types/errors.js";
-
 
 export type Neverify<T> = {
   [K in keyof T]?: never;
@@ -82,6 +82,7 @@ export interface WatsonxRequestBasicOptions {
   watsonxCallbacks?: RequestCallbacks;
   promptIndex?: number;
 }
+
 export interface WatsonxChatBasicOptions
   extends BaseChatModelCallOptions, WatsonxRequestBasicOptions {}
 
@@ -95,7 +96,7 @@ export interface WatsonxEmbeddingsBasicOptions
   extends WatsonxInit, WatsonxRequestBasicOptions {}
 
 export interface WatsonxBaseChatParams extends WatsonxChatBasicOptions {
-  tool_choice?: WatsonxTooChoice;
+  tool_choice?: WatsonxToolChoice;
 }
 
 export interface GenerationInfo {
@@ -116,4 +117,5 @@ export interface ResponseChunk {
   };
 }
 
-export type WatsonxTooChoice = ChatsToolChoice | string | "auto" | "any";
+export type WatsonxToolChoice = ChatsToolChoice | string | "auto" | "any";
+
