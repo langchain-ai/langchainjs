@@ -87,7 +87,8 @@ export function _mistralContentChunkToMessageContentComplex(
         text: contentChunk.text,
       };
     }
-    // For other chunk types (reference, file, audio, document, think), pass through as-is
+    // For other chunk types (reference, file, audio, document, thinking, or
+    // forward-compatible "Unknown" variants), pass through as-is.
     return contentChunk as ContentBlock;
   });
 }
