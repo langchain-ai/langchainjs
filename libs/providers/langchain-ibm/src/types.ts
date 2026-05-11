@@ -2,6 +2,7 @@ import { RequestCallbacks } from "@ibm-cloud/watsonx-ai/dist/watsonx-ai-ml/vml_v
 import { ChatsToolChoice } from "@ibm-cloud/watsonx-ai/gateway";
 import { BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
 import { BaseLLMParams } from "@langchain/core/language_models/llms";
+
 // Export custom error classes
 export {
   WatsonxError,
@@ -10,7 +11,6 @@ export {
   WatsonxConfigurationError,
   WatsonxUnsupportedOperationError,
 } from "./types/errors.js";
-
 
 /**
  * Utility type that makes all properties of T optional and never.

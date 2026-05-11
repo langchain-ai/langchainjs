@@ -256,6 +256,7 @@ For backward compatibility, these legacy names are still supported:
 ```
 
 **Important**:
+
 - These properties are marked with `@deprecated` JSDoc tags for IDE warnings
 - Do not mix legacy and new property names for the same property
 - Update your code to use the new property names before v1.0.0
@@ -269,6 +270,7 @@ For backward compatibility, these legacy names are still supported:
 **Problem**: `WatsonxAuthenticationError: You have not provided any type of authentication`
 
 **Solution**: Ensure you provide valid authentication credentials. At minimum, you need:
+
 ```typescript
 {
   serviceUrl: "https://us-south.ml.cloud.ibm.com",
@@ -279,6 +281,7 @@ For backward compatibility, these legacy names are still supported:
 **Problem**: `WatsonxAuthenticationError: ApiKey is required for IAM auth`
 
 **Solution**: When using IAM authentication (default), provide an API key:
+
 ```typescript
 {
   authType: "iam", // or omit for default
@@ -290,6 +293,7 @@ For backward compatibility, these legacy names are still supported:
 **Problem**: `WatsonxAuthenticationError: Username and Password or ApiKey is required for IBM watsonx.ai software auth`
 
 **Solution**: For CP4D authentication, provide username and password (or API key):
+
 ```typescript
 {
   authType: "cp4d",
@@ -305,6 +309,7 @@ For backward compatibility, these legacy names are still supported:
 **Problem**: `WatsonxConfigurationError: No model provided! Model gateway expects model to be provided`
 
 **Solution**: When using Gateway mode, always specify a model:
+
 ```typescript
 {
   model: "ibm/granite-3-8b-instruct",
@@ -316,6 +321,7 @@ For backward compatibility, these legacy names are still supported:
 **Problem**: `WatsonxConfigurationError: No id or model provided!`
 
 **Solution**: Provide either a model with project/space ID, a deployment ID, or enable gateway mode:
+
 ```typescript
 // Option 1: Project/Space mode
 {
@@ -343,6 +349,7 @@ For backward compatibility, these legacy names are still supported:
 **Problem**: `WatsonxValidationError: Maximum 1 id type can be specified per instance`
 
 **Solution**: Use only ONE of: `projectId`, `spaceId`, `idOrName`, or `modelGateway`:
+
 ```typescript
 // ❌ Wrong - multiple ID types
 {
@@ -369,6 +376,7 @@ For backward compatibility, these legacy names are still supported:
 **Problem**: SSL certificate errors
 
 **Solution**: For development/testing with self-signed certificates (CP4D):
+
 ```typescript
 {
   disableSSL: true, // Only for development!
@@ -383,9 +391,11 @@ For backward compatibility, these legacy names are still supported:
 **Problem**: Model not found or unavailable
 
 **Solution**:
+
 1. Verify the model name is correct and available in your region
 2. Check if the model is available in your project/space
 3. List available models:
+
 ```typescript
 const llm = new WatsonxLLM({
   projectId: "your-project-id",
@@ -400,6 +410,7 @@ console.log(models);
 **Problem**: Token limit exceeded
 
 **Solution**: Reduce `maxTokens` or `maxNewTokens`:
+
 ```typescript
 {
   maxTokens: 100, // For chat models
@@ -413,7 +424,9 @@ console.log(models);
 **Problem**: Streaming not working or incomplete responses
 
 **Solution**:
+
 1. Ensure streaming is enabled:
+
 ```typescript
 {
   streaming: true,
@@ -421,6 +434,7 @@ console.log(models);
 ```
 
 2. Properly consume the stream:
+
 ```typescript
 const stream = await model.stream("Your prompt");
 for await (const chunk of stream) {
@@ -429,6 +443,7 @@ for await (const chunk of stream) {
 ```
 
 3. Check for errors in the stream:
+
 ```typescript
 try {
   for await (const chunk of stream) {
@@ -446,6 +461,7 @@ If you continue to experience issues:
 1. **Check the error type**: The package uses specific error classes (`WatsonxAuthenticationError`, `WatsonxConfigurationError`, etc.) that indicate the problem category
 
 2. **Enable verbose logging**: Set the `verbose` option to see detailed information:
+
 ```typescript
 {
   verbose: true,

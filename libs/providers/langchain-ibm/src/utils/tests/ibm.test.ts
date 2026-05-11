@@ -39,7 +39,7 @@ describe("Utils tests", () => {
           serviceUrl,
           ...fakeAuthProp,
         },
-        true,
+        true
       );
       expect(instance).toBeInstanceOf(Gateway);
     });
@@ -73,7 +73,7 @@ describe("Utils tests", () => {
           watsonxAIAuthType: "bearertoken",
           watsonxAIBearerToken: "fake_token",
         },
-        true,
+        true
       );
       expect(instance).toBeInstanceOf(Gateway);
     });
@@ -87,7 +87,7 @@ describe("Utils tests", () => {
           watsonxAIUsername: "user",
           watsonxAIPassword: "pass",
         },
-        true,
+        true
       );
       expect(instance).toBeInstanceOf(Gateway);
     });
@@ -142,7 +142,7 @@ describe("Utils tests", () => {
           authType: "iam",
           apiKey: "fake_key",
         },
-        true,
+        true
       );
       expect(instance).toBeInstanceOf(Gateway);
     });
@@ -164,7 +164,7 @@ describe("Utils tests", () => {
           version: "2024-05-31",
           serviceUrl,
         },
-        true,
+        true
       );
 
       expect(instance).toBeInstanceOf(Gateway);
@@ -281,7 +281,7 @@ describe("Utils tests", () => {
           watsonxAIAuthType: "iam",
           watsonxAIApikey: "fake_key",
         },
-        true,
+        true
       );
       expect(instance).toBeInstanceOf(Gateway);
       const authenticator = instance["authenticator"];
@@ -296,7 +296,7 @@ describe("Utils tests", () => {
           watsonxAIAuthType: "bearertoken",
           watsonxAIBearerToken: "fake_token",
         },
-        true,
+        true
       );
       expect(instance).toBeInstanceOf(Gateway);
       const authenticator = instance["authenticator"];
@@ -312,7 +312,7 @@ describe("Utils tests", () => {
           watsonxAIUsername: "user",
           watsonxAIPassword: "pass",
         },
-        true,
+        true
       );
       expect(instance).toBeInstanceOf(Gateway);
       const authenticator = instance["authenticator"];
@@ -404,7 +404,7 @@ describe("Utils tests", () => {
       expect(instance).toBeInstanceOf(WatsonXAI);
       const authenticator = instance["authenticator"];
       expect(authenticator).toBeInstanceOf(CloudPakForDataAuthenticator);
-      expect(authenticator.url).toBe(`${serviceUrl}/icp4d-api/v1/authorize`);
+      expect(authenticator.url).toBe(`${serviceUrl}icp4d-api/v1/authorize`);
     });
 
     test("uses authUrl as alternative to watsonxAIUrl", () => {
@@ -569,7 +569,7 @@ describe("Utils tests", () => {
           watsonxAIApikey: "fake_key",
           watsonxAIUrl: "https://aws.url",
         },
-        true,
+        true
       );
       expect(instance).toBeInstanceOf(Gateway);
       const authenticator = instance["authenticator"];

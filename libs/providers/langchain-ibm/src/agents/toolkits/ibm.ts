@@ -125,7 +125,7 @@ export class WatsonxToolkit extends BaseToolkit {
     const selectedTool = this.tools.find((item) => item.name === toolName);
     if (!selectedTool)
       throw new WatsonxConfigurationError(
-        "Tool with provided name does not exist",
+        "Tool with provided name does not exist"
       );
     if (config) {
       selectedTool.config = config;

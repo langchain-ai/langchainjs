@@ -1,12 +1,6 @@
 /* oxlint-disable @typescript-eslint/no-explicit-any */
 import { WatsonXAI } from "@ibm-cloud/watsonx-ai";
 import {
-  IamAuthenticator,
-  BearerTokenAuthenticator,
-  CloudPakForDataAuthenticator,
-  Authenticator,
-} from "ibm-cloud-sdk-core";
-import {
   JsonOutputKeyToolsParserParamsInterop,
   JsonOutputToolsParser,
 } from "@langchain/core/output_parsers/openai_tools";
@@ -27,8 +21,13 @@ import {
   WatsonxValidationError,
   WatsonxUnsupportedOperationError,
 } from "../types.js";
-import { AWSAuthenticator } from "@ibm-cloud/watsonx-ai/authentication";
-
+import {
+  AWSAuthenticator,
+  BearerTokenAuthenticator,
+  CloudPakForDataAuthenticator,
+  IamAuthenticator,
+} from "@ibm-cloud/watsonx-ai/authentication";
+import { Authenticator } from "ibm-cloud-sdk-core";
 /**
  * Creates an authenticator instance based on the provided authentication configuration.
  * Supports IAM, Bearer Token, and Cloud Pak for Data authentication methods.
@@ -59,7 +58,7 @@ const createAuthenticator = ({
           bearerToken,
         });
       throw new WatsonxAuthenticationError(
-        "BearerToken is required for BearerToken auth",
+        "BearerToken is required for BearerToken auth"
       );
     case "cp4d":
       if (username && (password || apiKey)) {
@@ -73,7 +72,7 @@ const createAuthenticator = ({
         });
       }
       throw new WatsonxAuthenticationError(
-        "Username and Password or ApiKey is required for IBM watsonx.ai software auth",
+        "Username and Password or ApiKey is required for IBM watsonx.ai software auth"
       );
     case "aws":
       return new AWSAuthenticator({
@@ -131,29 +130,29 @@ const prepareInstanceConfig = ({
 
 /**
  * Initializes and returns a WatsonX AI or Gateway instance with authentication.
- * 
+ *
  * @param params - Initialization and authentication parameters
  * @param useGateway - If true, returns Gateway instance; otherwise returns WatsonXAI instance
  * @returns Configured WatsonXAI or Gateway instance
  */
 export function initWatsonxOrGatewayInstance(
   params: WatsonxAuth & Omit<WatsonxInit, "authenticator">,
-  useGateway: true,
+  useGateway: true
 ): Gateway;
 export function initWatsonxOrGatewayInstance(
   params: WatsonxAuth & Omit<WatsonxInit, "authenticator">,
-  useGateway?: false,
+  useGateway?: false
 ): WatsonXAI;
 export function initWatsonxOrGatewayInstance(
   params: WatsonxAuth & Omit<WatsonxInit, "authenticator">,
-  useGateway = false,
+  useGateway = false
 ): WatsonXAI | Gateway {
   const config = prepareInstanceConfig(params);
   try {
     return useGateway ? new Gateway(config) : new WatsonXAI(config);
   } catch (e) {
     throw new WatsonxAuthenticationError(
-      "You have not provided any type of authentication",
+      "You have not provided any type of authentication"
     );
   }
 }
@@ -309,9 +308,9 @@ export class WatsonxToolsOutputParser<
           `Failed to parse. Text: "${JSON.stringify(
             result,
             null,
-            2,
+            2
           )}". Error: ${JSON.stringify(e.message)}`,
-          result,
+          result
         );
       }
     } else {
@@ -322,7 +321,7 @@ export class WatsonxToolsOutputParser<
     }
     const zodParsedResult = await interopSafeParseAsync(
       this.zodSchema,
-      parsedResult,
+      parsedResult
     );
     if (zodParsedResult.success) {
       return zodParsedResult.data;
@@ -331,9 +330,9 @@ export class WatsonxToolsOutputParser<
         `Failed to parse. Text: "${JSON.stringify(
           result,
           null,
-          2,
+          2
         )}". Error: ${JSON.stringify(zodParsedResult.error.issues)}`,
-        JSON.stringify(result, null, 2),
+        JSON.stringify(result, null, 2)
       );
     }
   }
@@ -411,13 +410,13 @@ export function jsonSchemaToZod(obj: WatsonXAI.JsonObject | undefined) {
         } else if (prop.type === "boolean") zodType = z.boolean();
         else if (prop.type === "array")
           zodType = z.array(
-            prop.items ? jsonSchemaToZod(prop.items) : z.string(),
+            prop.items ? jsonSchemaToZod(prop.items) : z.string()
           );
         else if (prop.type === "object") {
           zodType = jsonSchemaToZod(prop);
         } else
           throw new WatsonxUnsupportedOperationError(
-            `Unsupported type: ${prop.type}`,
+            `Unsupported type: ${prop.type}`
           );
 
         if (prop.description) {
@@ -454,11 +453,11 @@ export const expectOneOf = (
   );
   if (exactlyOneOf && provided.length !== 1) {
     throw new WatsonxValidationError(
-      `Expected exactly one of: ${keys.join(", ")}. Got: ${provided.join(", ")}`,
+      `Expected exactly one of: ${keys.join(", ")}. Got: ${provided.join(", ")}`
     );
   } else if (!exactlyOneOf && provided.length > 1) {
     throw new WatsonxValidationError(
-      `Expected one of: ${keys.join(", ")} or none. Got: ${provided.join(", ")}`,
+      `Expected one of: ${keys.join(", ")} or none. Got: ${provided.join(", ")}`
     );
   }
 };
@@ -480,9 +479,8 @@ export const checkValidProps = (
   if (unexpected.length > 0) {
     throw new WatsonxValidationError(
       `Unexpected properties: ${unexpected.join(
-        ", ",
-      )}. Expected only: ${allowedKeys.join(", ")}.`,
+        ", "
+      )}. Expected only: ${allowedKeys.join(", ")}.`
     );
   }
 };
-

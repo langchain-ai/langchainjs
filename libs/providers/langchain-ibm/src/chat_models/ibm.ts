@@ -466,7 +466,7 @@ function _convertToolChoiceToWatsonxToolChoice(
   } else if ("type" in toolChoice) return { toolChoice };
   else
     throw new WatsonxValidationError(
-      `Unrecognized tool_choice type. Expected string or TextChatParameterTools. Recieved ${toolChoice}`,
+      `Unrecognized tool_choice type. Expected string or TextChatParameterTools. Recieved ${toolChoice}`
     );
 }
 
@@ -490,16 +490,16 @@ export type ChatWatsonxCallOptions = Partial<WatsonxCallOptionsChat> &
   Partial<WatsonxCallOptionsGatewayChat>;
 /**
  * IBM Watsonx.ai chat model integration for LangChain.
- * 
+ *
  * Supports three deployment modes:
  * 1. **Project/Space Mode**: Use with IBM Cloud project or space IDs
  * 2. **Deployment Mode**: Use with deployed model IDs
  * 3. **Gateway Mode**: Use with IBM Watsonx.ai Gateway
- * 
+ *
  * @example Basic usage with project ID
  * ```typescript
  * import { ChatWatsonx } from "@langchain/ibm";
- * 
+ *
  * const model = new ChatWatsonx({
  *   model: "ibm/granite-13b-chat-v2",
  *   projectId: "your-project-id",
@@ -508,14 +508,14 @@ export type ChatWatsonxCallOptions = Partial<WatsonxCallOptionsChat> &
  *   maxTokens: 100,
  *   temperature: 0.7,
  * });
- * 
+ *
  * const response = await model.invoke([
  *   ["system", "You are a helpful assistant."],
  *   ["human", "What is the capital of France?"],
  * ]);
  * console.log(response.content);
  * ```
- * 
+ *
  * @example Streaming responses
  * ```typescript
  * const model = new ChatWatsonx({
@@ -525,18 +525,18 @@ export type ChatWatsonxCallOptions = Partial<WatsonxCallOptionsChat> &
  *   apiKey: process.env.WATSONX_AI_APIKEY,
  *   streaming: true,
  * });
- * 
+ *
  * const stream = await model.stream("Tell me a joke");
  * for await (const chunk of stream) {
  *   console.log(chunk.content);
  * }
  * ```
- * 
+ *
  * @example Using with tools/function calling
  * ```typescript
  * import { tool } from "@langchain/core/tools";
  * import { z } from "zod";
- * 
+ *
  * const weatherTool = tool(
  *   async ({ location }) => {
  *     return `The weather in ${location} is sunny`;
@@ -549,18 +549,18 @@ export type ChatWatsonxCallOptions = Partial<WatsonxCallOptionsChat> &
  *     }),
  *   }
  * );
- * 
+ *
  * const model = new ChatWatsonx({
  *   model: "ibm/granite-13b-chat-v2",
  *   projectId: "your-project-id",
  *   serviceUrl: "https://us-south.ml.cloud.ibm.com",
  *   apiKey: process.env.WATSONX_AI_APIKEY,
  * });
- * 
+ *
  * const modelWithTools = model.bindTools([weatherTool]);
  * const response = await modelWithTools.invoke("What's the weather in Paris?");
  * ```
- * 
+ *
  * @example Using Gateway mode
  * ```typescript
  * const model = new ChatWatsonx({
@@ -570,7 +570,7 @@ export type ChatWatsonxCallOptions = Partial<WatsonxCallOptionsChat> &
  *   apiKey: process.env.WATSONX_AI_APIKEY,
  * });
  * ```
- * 
+ *
  * @example Using with deployed model
  * ```typescript
  * const model = new ChatWatsonx({
@@ -853,7 +853,6 @@ export class ChatWatsonx<
       this.includeReasoning = fields?.includeReasoning;
     }
 
-
     if (this.modelGateway) {
       this.gateway = initWatsonxOrGatewayInstance(fields, true);
     } else {
@@ -941,7 +940,7 @@ export class ChatWatsonx<
     if (this.modelGateway) {
       if (!model) {
         throw new WatsonxConfigurationError(
-          "No model provided! Model gateway expects model to be provided",
+          "No model provided! Model gateway expects model to be provided"
         );
       }
       return { model };
@@ -996,11 +995,11 @@ export class ChatWatsonx<
         });
       }
       throw new WatsonxConfigurationError(
-        "No 'model' specified. Model needs to be spcified for model gateway",
+        "No 'model' specified. Model needs to be spcified for model gateway"
       );
     }
     throw new WatsonxConfigurationError(
-      "'gateway' instance is not set. Please check your implementation",
+      "'gateway' instance is not set. Please check your implementation"
     );
   }
 
@@ -1097,7 +1096,7 @@ export class ChatWatsonx<
         }
 
         throw new WatsonxConfigurationError(
-          "No service or gateway set. Please check your intsance init",
+          "No service or gateway set. Please check your intsance init"
         );
       };
 
@@ -1176,11 +1175,11 @@ export class ChatWatsonx<
           );
 
         throw new WatsonxConfigurationError(
-          "No idOrName or modelId specified. At least one of these needs to be specified in basic mode",
+          "No idOrName or modelId specified. At least one of these needs to be specified in basic mode"
         );
       }
       throw new WatsonxConfigurationError(
-        "No service or gateway set. Please check your intsance init",
+        "No service or gateway set. Please check your intsance init"
       );
     };
     const stream = await this.completionWithRetry(callback, options);
