@@ -122,29 +122,30 @@ const prepareInstanceConfig = ({
 };
 
 /**
- * Creates a [`WatsonXAI`](libs/providers/langchain-ibm/src/utils/ibm.ts:120) instance using the provided
- * initialization parameters and derived authenticator configuration.
- *
- * @param params - Initialization and authentication parameters for the Watsonx AI client
- * @returns Configured Watsonx AI SDK instance
+ * Initializes and returns a WatsonX AI or Gateway instance with authentication.
+ * 
+ * @param params - Initialization and authentication parameters
+ * @param useGateway - If true, returns Gateway instance; otherwise returns WatsonXAI instance
+ * @returns Configured WatsonXAI or Gateway instance
  */
-export const authenticateAndSetInstance = (
-  params: WatsonxAuth & Omit<WatsonxInit, "authenticator">
-) => {
-  return new WatsonXAI(prepareInstanceConfig(params));
-};
-
-/**
- * Creates a [`Gateway`](libs/providers/langchain-ibm/src/utils/ibm.ts:126) instance using the provided
- * initialization parameters and derived authenticator configuration.
- *
- * @param params - Initialization and authentication parameters for the Watsonx gateway client
- * @returns Configured Watsonx gateway SDK instance
- */
-export function authenticateAndSetGatewayInstance(
-  params: WatsonxAuth & Omit<WatsonxInit, "authenticator">
-) {
-  return new Gateway(prepareInstanceConfig(params));
+export function initWatsonxOrGatewayInstance(
+  params: WatsonxAuth & Omit<WatsonxInit, "authenticator">,
+  useGateway: true,
+): Gateway;
+export function initWatsonxOrGatewayInstance(
+  params: WatsonxAuth & Omit<WatsonxInit, "authenticator">,
+  useGateway?: false,
+): WatsonXAI;
+export function initWatsonxOrGatewayInstance(
+  params: WatsonxAuth & Omit<WatsonxInit, "authenticator">,
+  useGateway = false,
+): WatsonXAI | Gateway {
+  const config = prepareInstanceConfig(params);
+  try {
+    return useGateway ? new Gateway(config) : new WatsonXAI(config);
+  } catch (e) {
+    throw new Error("You have not provided any type of authentication");
+  }
 }
 
 const TOOL_CALL_ID_PATTERN = /^[a-zA-Z0-9]{9}$/;
