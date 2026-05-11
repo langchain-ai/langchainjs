@@ -83,11 +83,9 @@ import {
 import { WatsonxAuth, XOR, WatsonxBaseChatParams } from "../types.js";
 import {
   _convertToolCallIdToMistralCompatible,
-  authenticateAndSetGatewayInstance,
-  authenticateAndSetInstance,
-  checkRequiredProps,
   checkValidProps,
   expectOneOf,
+  initWatsonxOrGatewayInstance,
   WatsonxToolsOutputParser,
 } from "../utils/ibm.js";
 
@@ -682,14 +680,6 @@ export class ChatWatsonx<
     this.modelGateway = fields.modelGateway || this.modelGateway;
     this.spaceId = fields?.spaceId;
 
-    if (this.modelGateway) {
-      checkRequiredProps(fields, ["model", "serviceUrl", "version"]);
-    } else if (this.idOrName) {
-      checkRequiredProps(fields, ["serviceUrl", "version"]);
-    } else {
-      checkRequiredProps(fields, ["model", "serviceUrl", "version"]);
-    }
-
     this.checkValidProperties(fields);
 
     this.model = fields?.model ?? this.model;
@@ -714,54 +704,17 @@ export class ChatWatsonx<
     this.reasoningEffort = fields?.reasoningEffort;
     this.includeReasoning = fields?.includeReasoning;
 
-    this.modelGateway = fields?.modelGateway ?? this.modelGateway;
-    this.modelGatewayKwargs = fields?.modelGatewayKwargs;
-
-    const {
-      watsonxAIApikey,
-      watsonxAIAuthType,
-      watsonxAIBearerToken,
-      watsonxAIUsername,
-      watsonxAIPassword,
-      watsonxAIUrl,
-      disableSSL,
-      version,
-      serviceUrl,
-      apiKey,
-      bearerToken,
-      username,
-      password,
-      authType,
-      authUrl,
-    } = fields;
-
-    const authData = {
-      watsonxAIApikey,
-      watsonxAIAuthType,
-      watsonxAIBearerToken,
-      watsonxAIUsername,
-      watsonxAIPassword,
-      watsonxAIUrl,
-      disableSSL,
-      version,
-      serviceUrl,
-      apiKey,
-      bearerToken,
-      username,
-      password,
-      authType,
-      authUrl,
-    };
+    if ("modelGateway" in fields) {
+      this.modelGatewayKwargs = fields?.modelGatewayKwargs;
+    } else {
+      this.timeLimit = fields?.timeLimit;
+      this.includeReasoning = fields?.includeReasoning;
+    }
 
     if (this.modelGateway) {
-      const chatGateway = authenticateAndSetGatewayInstance(authData);
-      if (chatGateway) this.gateway = chatGateway;
-      else throw new Error("You have not provided any type of authentication");
+      this.gateway = initWatsonxOrGatewayInstance(fields, true);
     } else {
-      const service = authenticateAndSetInstance(authData);
-
-      if (service) this.service = service;
-      else throw new Error("You have not provided any type of authentication");
+      this.service = initWatsonxOrGatewayInstance(fields);
     }
   }
 

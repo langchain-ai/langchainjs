@@ -206,7 +206,6 @@ describe("Negative tests", () => {
     };
     expect(
       () =>
-        // @ts-expect-error Passing wrong props with modelGateway
         new WatsonxEmbeddings({
           ...testProps,
           ...fakeAuthProp,
@@ -225,7 +224,6 @@ describe("Negative tests", () => {
     };
     expect(
       () =>
-        // @ts-expect-error Passing wrong props with projectid
         new WatsonxEmbeddings({
           ...testProps,
           ...fakeAuthProp,
@@ -242,7 +240,6 @@ describe("Negative tests", () => {
     };
     expect(
       () =>
-        // @ts-expect-error Passing wrong props with modelGateway
         new WatsonxEmbeddings({
           ...testProps,
           ...fakeAuthProp,

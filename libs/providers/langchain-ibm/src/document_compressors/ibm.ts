@@ -4,7 +4,7 @@ import { WatsonXAI } from "@ibm-cloud/watsonx-ai";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import { TextRerankParams } from "@ibm-cloud/watsonx-ai/dist/watsonx-ai-ml/vml_v1.js";
 import { WatsonxAuth, WatsonxRerankBasicOptions } from "../types.js";
-import { authenticateAndSetInstance } from "../utils/ibm.js";
+import { initWatsonxOrGatewayInstance } from "../utils/ibm.js";
 
 export interface WatsonxInputRerank
   extends
@@ -62,45 +62,7 @@ export class WatsonxRerank
     this.truncateInputTokens = fields.truncateInputTokens;
     this.returnOptions = fields.returnOptions;
 
-    const {
-      watsonxAIApikey,
-      watsonxAIAuthType,
-      watsonxAIBearerToken,
-      watsonxAIUsername,
-      watsonxAIPassword,
-      watsonxAIUrl,
-      disableSSL,
-      version,
-      serviceUrl,
-      apiKey,
-      bearerToken,
-      username,
-      password,
-      authType,
-      authUrl,
-    } = fields;
-
-    const authData = {
-      watsonxAIApikey,
-      watsonxAIAuthType,
-      watsonxAIBearerToken,
-      watsonxAIUsername,
-      watsonxAIPassword,
-      watsonxAIUrl,
-      disableSSL,
-      version,
-      serviceUrl,
-      apiKey,
-      bearerToken,
-      username,
-      password,
-      authType,
-      authUrl,
-    };
-
-    const auth = authenticateAndSetInstance(authData);
-    if (auth) this.service = auth;
-    else throw new Error("You have not provided one type of authentication");
+    this.service = initWatsonxOrGatewayInstance(fields);
   }
 
   scopeId() {
