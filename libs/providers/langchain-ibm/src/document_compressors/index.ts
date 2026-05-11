@@ -8,7 +8,7 @@ import {
   WatsonxRerankBasicOptions,
   WatsonxValidationError,
 } from "../types.js";
-import { initWatsonxOrGatewayInstance } from "../utils/ibm.js";
+import { initWatsonxOrGatewayInstance } from "../utils/instance.js";
 
 export interface WatsonxInputRerank
   extends

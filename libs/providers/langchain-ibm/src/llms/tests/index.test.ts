@@ -8,12 +8,16 @@ import {
   WatsonXAI,
 } from "@ibm-cloud/watsonx-ai";
 import { IterableReadableStream } from "@langchain/core/utils/stream";
-import { WatsonxLLM, WatsonxInputLLM, WatsonxLLMConstructor } from "../ibm.js";
-import { initWatsonxOrGatewayInstance } from "../../utils/ibm.js";
+import {
+  WatsonxLLM,
+  WatsonxInputLLM,
+  WatsonxLLMConstructor,
+} from "../index.js";
+import { initWatsonxOrGatewayInstance } from "../../utils/instance.js";
 import {
   WatsonxEmbeddings,
   WatsonxEmbeddingsConstructor,
-} from "../../embeddings/ibm.js";
+} from "../../embeddings/index.js";
 
 const fakeAuthProp = {
   watsonxAIAuthType: "iam",

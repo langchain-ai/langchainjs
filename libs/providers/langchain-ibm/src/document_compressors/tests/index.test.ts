@@ -1,6 +1,6 @@
 /* oxlint-disable @typescript-eslint/no-explicit-any */
 import { describe, test, expect } from "vitest";
-import { WatsonxRerank, WatsonxInputRerank } from "../ibm.js";
+import { WatsonxRerank, WatsonxInputRerank } from "../index.js";
 
 function getKey<K>(key: K): K {
   return key;

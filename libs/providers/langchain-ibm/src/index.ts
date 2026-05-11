@@ -32,11 +32,17 @@ export type { InstanceConfig } from "./auth/index.js";
 export {
   _isValidMistralToolCallId,
   _convertToolCallIdToMistralCompatible,
-  WatsonxToolsOutputParser,
-  jsonSchemaToZod,
+} from "./utils/tool-call-id.js";
+
+export {
   expectOneOf,
   checkValidProps,
-} from "./utils/ibm.js";
+  PropertyValidator,
+} from "./utils/validation.js";
+
+export { jsonSchemaToZod } from "./utils/schema.js";
+
+export { WatsonxToolsOutputParser } from "./utils/parsers.js";
 
 export {
   type ChatWatsonxInput,
@@ -56,7 +62,7 @@ export {
   type WatsonxCallOptionsGatewayChat,
   type WatsonxGatewayChatParams,
   ChatWatsonx,
-} from "./chat_models/ibm.js";
+} from "./chat_models/index.js";
 
 export {
   type WatsonxLLMParams,
@@ -68,7 +74,7 @@ export {
   type WatsonxGatewayInputLLM,
   type WatsonxLLMConstructor,
   WatsonxLLM,
-} from "./llms/ibm.js";
+} from "./llms/index.js";
 
 export {
   type WatsonxEmbeddingsParams,
@@ -78,15 +84,15 @@ export {
   type WatsonxInputGatewayEmbeddings,
   type WatsonxEmbeddingsConstructor,
   WatsonxEmbeddings,
-} from "./embeddings/ibm.js";
+} from "./embeddings/index.js";
 
 export {
   type WatsonxInputRerank,
   WatsonxRerank,
-} from "./document_compressors/ibm.js";
+} from "./document_compressors/index.js";
 
 export {
   type WatsonxToolParams,
   WatsonxTool,
   WatsonxToolkit,
-} from "./agents/toolkits/ibm.js";
+} from "./agents/toolkits/index.js";

@@ -3,7 +3,7 @@ import {
   WatsonXAI,
   convertUtilityToolToWatsonxTool,
 } from "@ibm-cloud/watsonx-ai";
-import { WatsonxTool } from "../ibm.js";
+import { WatsonxTool } from "../index.js";
 
 const service = {} as WatsonXAI;
 
