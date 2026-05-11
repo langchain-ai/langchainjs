@@ -541,6 +541,89 @@ test("langsmith inheritable metadata/tags apply only to LangChainTracer", async 
   expect(postedRun.tags).toContain("tenant:alpha");
 });
 
+test("tracer inheritable metadata follows first-wins for regular keys", async () => {
+  const createRunMock = vi.fn().mockResolvedValue(undefined);
+  const updateRunMock = vi.fn().mockResolvedValue(undefined);
+  const mockClient = {
+    createRun: createRunMock,
+    updateRun: updateRunMock,
+  } as LangSmithTracingClientInterface;
+  const tracer = new LangChainTracer({ client: mockClient });
+
+  // First configure: ancestor sets `tenant: "alpha"` as tracer-inheritable.
+  const outerCallbacks = CallbackManager.configure(
+    [tracer],
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    { tracerInheritableMetadata: { tenant: "alpha" } }
+  );
+
+  // Second configure: nested caller tries to override `tenant`. Since
+  // `tenant` is NOT in the LangSmith allowlist, the ancestor value wins.
+  const nestedCallbacks = CallbackManager.configure(
+    outerCallbacks,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    { tracerInheritableMetadata: { tenant: "beta" } }
+  );
+
+  const runnable = RunnableLambda.from((x: string) => x);
+  await runnable.invoke("hello", { callbacks: nestedCallbacks! });
+  await awaitAllCallbacks();
+
+  expect(createRunMock).toHaveBeenCalled();
+  const postedRun = createRunMock.mock.calls[0]?.[0];
+  // Non-allowlisted keys keep first-wins semantics.
+  expect(postedRun.extra?.metadata?.tenant).toBe("alpha");
+});
+
+test("tracer inheritable metadata allows nested override for allowlisted ls_* keys", async () => {
+  const createRunMock = vi.fn().mockResolvedValue(undefined);
+  const updateRunMock = vi.fn().mockResolvedValue(undefined);
+  const mockClient = {
+    createRun: createRunMock,
+    updateRun: updateRunMock,
+  } as LangSmithTracingClientInterface;
+  const tracer = new LangChainTracer({ client: mockClient });
+
+  // First configure: ancestor sets `ls_agent_type: "root"`.
+  const outerCallbacks = CallbackManager.configure(
+    [tracer],
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    { tracerInheritableMetadata: { ls_agent_type: "root" } }
+  );
+
+  // Second configure: nested caller overrides with `ls_agent_type: "subagent"`.
+  // Since `ls_agent_type` IS in the LangSmith allowlist, the nested value wins.
+  const nestedCallbacks = CallbackManager.configure(
+    outerCallbacks,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    { tracerInheritableMetadata: { ls_agent_type: "subagent" } }
+  );
+
+  const runnable = RunnableLambda.from((x: string) => x);
+  await runnable.invoke("hello", { callbacks: nestedCallbacks! });
+  await awaitAllCallbacks();
+
+  expect(createRunMock).toHaveBeenCalled();
+  const postedRun = createRunMock.mock.calls[0]?.[0];
+  expect(postedRun.extra?.metadata?.ls_agent_type).toBe("subagent");
+});
+
 test("tracer inheritable options apply via Symbol.hasInstance structural match", () => {
   class ForeignTracer extends BaseCallbackHandler {
     name = "langchain_tracer";

@@ -6,7 +6,6 @@ import { CreateEmbeddingsParams, Gateway } from "@ibm-cloud/watsonx-ai/gateway";
 import {
   WatsonxAuth,
   WatsonxEmbeddingsBasicOptions,
-  XOR,
   WatsonxConfigurationError,
   WatsonxUnsupportedOperationError,
 } from "../types.js";
@@ -53,10 +52,10 @@ export interface WatsonxInputGatewayEmbeddings
       keyof WatsonxEmbeddingsGatewayKwargs | "input"
     > {}
 
-export type WatsonxEmbeddingsConstructor = XOR<
-  WatsonxInputEmbeddings,
-  WatsonxInputGatewayEmbeddings
-> &
+export type WatsonxEmbeddingsConstructor = (
+  | WatsonxInputEmbeddings
+  | WatsonxInputGatewayEmbeddings
+) &
   WatsonxAuth;
 
 /**
@@ -188,28 +187,35 @@ export class WatsonxEmbeddings
       modeProps,
       {
         includeCommon: includeCommonProps,
-      }
+      },
     );
   }
-
+  constructor(fields: WatsonxInputEmbeddings & WatsonxAuth);
+  constructor(fields: WatsonxInputGatewayEmbeddings & WatsonxAuth);
   constructor(fields: WatsonxEmbeddingsConstructor) {
     super(fields);
     expectOneOf(fields, ["projectId", "spaceId", "modelGateway"], true);
-    this.projectId = fields?.projectId;
-    this.spaceId = fields?.spaceId;
-    this.modelGateway = fields.modelGateway ?? this.modelGateway;
+    if ("modelGateway" in fields)
+      this.modelGateway = fields.modelGateway ?? this.modelGateway;
+    else {
+      this.projectId = fields?.projectId;
+      this.spaceId = fields?.spaceId;
+    }
 
     this.checkValidProperties(fields);
+    if ("modelGateway" in fields)
+      this.modelGatewayKwargs = fields.modelGatewayKwargs;
+    else {
+      this.truncateInputTokens = fields.truncateInputTokens;
+      this.returnOptions = fields.returnOptions;
+    }
 
     this.model = fields.model;
     this.version = fields.version;
     this.serviceUrl = fields.serviceUrl;
-    this.truncateInputTokens = fields.truncateInputTokens;
-    this.returnOptions = fields.returnOptions;
     this.maxConcurrency = fields.maxConcurrency ?? this.maxConcurrency;
     this.maxRetries = fields.maxRetries ?? 0;
     this.serviceUrl = fields?.serviceUrl;
-    this.modelGatewayKwargs = fields.modelGatewayKwargs;
 
     if (this.modelGateway) {
       this.gateway = initWatsonxOrGatewayInstance(fields, true);
@@ -250,12 +256,12 @@ export class WatsonxEmbeddings
         maxRetries: this.maxRetries,
       });
       const listModels = await caller.call(() =>
-        service.listFoundationModelSpecs(listModelParams)
+        service.listFoundationModelSpecs(listModelParams),
       );
       return listModels.result.resources?.map((item) => item.model_id);
     } else
       throw new WatsonxUnsupportedOperationError(
-        "This method is not supported in model gateway"
+        "This method is not supported in model gateway",
       );
   }
 
@@ -272,7 +278,7 @@ export class WatsonxEmbeddings
           inputs,
           ...scopeId,
           parameters: this.invocationParams(),
-        })
+        }),
       );
       return embeddings.result.results.map((item) => item.embedding);
     } else if (this.gateway && "model" in scopeId) {
@@ -285,13 +291,13 @@ export class WatsonxEmbeddings
         gateway.embeddings.completion.create({
           input: inputs,
           ...scopeId,
-        })
+        }),
       );
       const res = embeddings.result.data.map((item) => item.embedding);
       return res;
     }
     throw new WatsonxConfigurationError(
-      "Invalid parameters provided. Please check passed properties to class instance"
+      "Invalid parameters provided. Please check passed properties to class instance",
     );
   }
 

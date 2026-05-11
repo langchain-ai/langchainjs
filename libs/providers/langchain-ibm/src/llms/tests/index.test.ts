@@ -393,7 +393,6 @@ describe("LLM unit tests", () => {
       };
       expect(
         () =>
-          // @ts-expect-error Passing wrong props with modelGateway
           new WatsonxLLM({
             ...testProps,
             ...fakeAuthProp,
@@ -412,7 +411,6 @@ describe("LLM unit tests", () => {
       };
       expect(
         () =>
-          // @ts-expect-error Passing wrong props with projectId
           new WatsonxLLM({
             ...testProps,
             ...fakeAuthProp,
@@ -429,7 +427,6 @@ describe("LLM unit tests", () => {
       };
       expect(
         () =>
-          // @ts-expect-error Passing wrong props with modelGateway
           new WatsonxLLM({
             ...testProps,
             ...fakeAuthProp,
