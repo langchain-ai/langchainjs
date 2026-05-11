@@ -93,7 +93,14 @@ import {
   WatsonxToolsOutputParser,
 } from "../utils/ibm.js";
 
+/**
+ * @deprecated Use `WatsonxCallOptionsChat` instead. Will be removed in v1.0.0.
+ */
 export interface WatsonxCallParams extends WatsonxCallOptionsChat {}
+
+/**
+ * @deprecated Use `DeploymentsTextChatParams` instead. Will be removed in v1.0.0.
+ */
 export interface WatsonxCallDeployedParams extends DeploymentsTextChatParams {}
 
 export interface WatsonxDeltaStream {
