@@ -84,13 +84,10 @@ import {
   WatsonxConfigurationError,
   WatsonxValidationError,
 } from "../types.js";
-import {
-  _convertToolCallIdToMistralCompatible,
-  checkValidProps,
-  expectOneOf,
-  initWatsonxOrGatewayInstance,
-  WatsonxToolsOutputParser,
-} from "../utils/ibm.js";
+import { _convertToolCallIdToMistralCompatible } from "../utils/tool-call-id.js";
+import { checkValidProps, expectOneOf } from "../utils/validation.js";
+import { initWatsonxOrGatewayInstance } from "../utils/instance.js";
+import { WatsonxToolsOutputParser } from "../utils/parsers.js";
 
 /**
  * @deprecated Use `WatsonxCallOptionsChat` instead. Will be removed in v1.0.0.

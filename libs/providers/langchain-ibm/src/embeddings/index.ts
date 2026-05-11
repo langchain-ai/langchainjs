@@ -9,11 +9,8 @@ import {
   WatsonxEmbeddingsBasicOptions,
   WatsonxUnsupportedOperationError,
 } from "../types.js";
-import {
-  checkValidProps,
-  expectOneOf,
-  initWatsonxOrGatewayInstance,
-} from "../utils/ibm.js";
+import { checkValidProps, expectOneOf } from "../utils/validation.js";
+import { initWatsonxOrGatewayInstance } from "../utils/instance.js";
 
 export interface WatsonxEmbeddingsParams
   extends

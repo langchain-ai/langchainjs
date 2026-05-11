@@ -9,11 +9,10 @@ import { describe, test, expect, beforeEach, afterEach } from "vitest";
 import {
   _isValidMistralToolCallId,
   _convertToolCallIdToMistralCompatible,
-  jsonSchemaToZod,
-  expectOneOf,
-  checkValidProps,
-  initWatsonxOrGatewayInstance,
-} from "../ibm.js";
+} from "../tool-call-id.js";
+import { jsonSchemaToZod } from "../schema.js";
+import { expectOneOf, checkValidProps } from "../validation.js";
+import { initWatsonxOrGatewayInstance } from "../instance.js";
 
 const fakeAuthProp = {
   watsonxAIAuthType: "iam",

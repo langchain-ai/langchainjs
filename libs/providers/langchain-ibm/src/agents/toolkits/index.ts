@@ -13,10 +13,8 @@ import {
   ZodObjectV3,
   interopSafeParse,
 } from "@langchain/core/utils/types";
-import {
-  initWatsonxOrGatewayInstance,
-  jsonSchemaToZod,
-} from "../../utils/ibm.js";
+import { initWatsonxOrGatewayInstance } from "../../utils/instance.js";
+import { jsonSchemaToZod } from "../../utils/schema.js";
 import {
   WatsonxAuth,
   WatsonxInit,

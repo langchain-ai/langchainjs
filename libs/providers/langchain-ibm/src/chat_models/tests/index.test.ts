@@ -15,7 +15,8 @@ import {
   ChatWatsonxCallOptions,
   ChatWatsonxInput,
   WatsonxCallParams,
-} from "../ibm.js";
+} from "../index.js";
+import { WatsonxAuth } from "../../types.js";
 
 const fakeAuthProp = {
   watsonxAIAuthType: "iam",
