@@ -5,10 +5,9 @@ import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import { CreateEmbeddingsParams, Gateway } from "@ibm-cloud/watsonx-ai/gateway";
 import { WatsonxAuth, WatsonxEmbeddingsBasicOptions, XOR } from "../types.js";
 import {
-  authenticateAndSetGatewayInstance,
-  authenticateAndSetInstance,
   checkValidProps,
   expectOneOf,
+  initWatsonxOrGatewayInstance,
 } from "../utils/ibm.js";
 
 export interface WatsonxEmbeddingsParams
@@ -169,50 +168,10 @@ export class WatsonxEmbeddings
     this.serviceUrl = fields?.serviceUrl;
     this.modelGatewayKwargs = fields.modelGatewayKwargs;
 
-    const {
-      watsonxAIApikey,
-      watsonxAIAuthType,
-      watsonxAIBearerToken,
-      watsonxAIUsername,
-      watsonxAIPassword,
-      watsonxAIUrl,
-      disableSSL,
-      version,
-      serviceUrl,
-      apiKey,
-      bearerToken,
-      username,
-      password,
-      authType,
-      authUrl,
-    } = fields;
-
-    const authData = {
-      watsonxAIApikey,
-      watsonxAIAuthType,
-      watsonxAIBearerToken,
-      watsonxAIUsername,
-      watsonxAIPassword,
-      watsonxAIUrl,
-      disableSSL,
-      version,
-      serviceUrl,
-      apiKey,
-      bearerToken,
-      username,
-      password,
-      authType,
-      authUrl,
-    };
-
     if (this.modelGateway) {
-      const auth = authenticateAndSetGatewayInstance(authData);
-      if (auth) this.gateway = auth;
-      else throw new Error("You have not provided one type of authentication");
+      this.gateway = initWatsonxOrGatewayInstance(fields, true);
     } else {
-      const auth = authenticateAndSetInstance(authData);
-      if (auth) this.service = auth;
-      else throw new Error("You have not provided one type of authentication");
+      this.service = initWatsonxOrGatewayInstance(fields);
     }
   }
 

@@ -107,16 +107,31 @@ const prepareInstanceConfig = ({
   };
 };
 
-export const authenticateAndSetInstance = (
+/**
+ * Initializes and returns a WatsonX AI or Gateway instance with authentication.
+ * 
+ * @param params - Initialization and authentication parameters
+ * @param useGateway - If true, returns Gateway instance; otherwise returns WatsonXAI instance
+ * @returns Configured WatsonXAI or Gateway instance
+ */
+export function initWatsonxOrGatewayInstance(
   params: WatsonxAuth & Omit<WatsonxInit, "authenticator">,
-) => {
-  return new WatsonXAI(prepareInstanceConfig(params));
-};
-
-export function authenticateAndSetGatewayInstance(
+  useGateway: true,
+): Gateway;
+export function initWatsonxOrGatewayInstance(
   params: WatsonxAuth & Omit<WatsonxInit, "authenticator">,
-) {
-  return new Gateway(prepareInstanceConfig(params));
+  useGateway?: false,
+): WatsonXAI;
+export function initWatsonxOrGatewayInstance(
+  params: WatsonxAuth & Omit<WatsonxInit, "authenticator">,
+  useGateway = false,
+): WatsonXAI | Gateway {
+  const config = prepareInstanceConfig(params);
+  try {
+    return useGateway ? new Gateway(config) : new WatsonXAI(config);
+  } catch (e) {
+    throw new Error("You have not provided any type of authentication");
+  }
 }
 
 const TOOL_CALL_ID_PATTERN = /^[a-zA-Z0-9]{9}$/;

@@ -81,10 +81,9 @@ import {
 import { WatsonxAuth, XOR, WatsonxBaseChatParams } from "../types.js";
 import {
   _convertToolCallIdToMistralCompatible,
-  authenticateAndSetGatewayInstance,
-  authenticateAndSetInstance,
   checkValidProps,
   expectOneOf,
+  initWatsonxOrGatewayInstance,
   WatsonxToolsOutputParser,
 } from "../utils/ibm.js";
 
@@ -699,51 +698,11 @@ export class ChatWatsonx<
     this.modelGateway = fields?.modelGateway ?? this.modelGateway;
     this.modelGatewayKwargs = fields?.modelGatewayKwargs;
 
-    const {
-      watsonxAIApikey,
-      watsonxAIAuthType,
-      watsonxAIBearerToken,
-      watsonxAIUsername,
-      watsonxAIPassword,
-      watsonxAIUrl,
-      disableSSL,
-      version,
-      serviceUrl,
-      apiKey,
-      bearerToken,
-      username,
-      password,
-      authType,
-      authUrl,
-    } = fields;
-
-    const authData = {
-      watsonxAIApikey,
-      watsonxAIAuthType,
-      watsonxAIBearerToken,
-      watsonxAIUsername,
-      watsonxAIPassword,
-      watsonxAIUrl,
-      disableSSL,
-      version,
-      serviceUrl,
-      apiKey,
-      bearerToken,
-      username,
-      password,
-      authType,
-      authUrl,
-    };
 
     if (this.modelGateway) {
-      const chatGateway = authenticateAndSetGatewayInstance(authData);
-      if (chatGateway) this.gateway = chatGateway;
-      else throw new Error("You have not provided any type of authentication");
+      this.gateway = initWatsonxOrGatewayInstance(fields, true);
     } else {
-      const service = authenticateAndSetInstance(authData);
-
-      if (service) this.service = service;
-      else throw new Error("You have not provided any type of authentication");
+      this.service = initWatsonxOrGatewayInstance(fields);
     }
   }
 

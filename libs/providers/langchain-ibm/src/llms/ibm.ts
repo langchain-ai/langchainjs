@@ -22,10 +22,9 @@ import {
   TextCompletionStream,
 } from "@ibm-cloud/watsonx-ai/gateway";
 import {
-  authenticateAndSetGatewayInstance,
-  authenticateAndSetInstance,
   checkValidProps,
   expectOneOf,
+  initWatsonxOrGatewayInstance,
 } from "../utils/ibm.js";
 import {
   GenerationInfo,
@@ -306,52 +305,10 @@ export class WatsonxLLM<
     this.streaming = fields.streaming || this.streaming;
     this.watsonxCallbacks = fields.watsonxCallbacks || this.watsonxCallbacks;
 
-    const {
-      watsonxAIApikey,
-      watsonxAIAuthType,
-      watsonxAIBearerToken,
-      watsonxAIUsername,
-      watsonxAIPassword,
-      watsonxAIUrl,
-      disableSSL,
-      version,
-      serviceUrl,
-      apiKey,
-      bearerToken,
-      username,
-      password,
-      authType,
-      authUrl,
-    } = fields;
-
-    const authData = {
-      watsonxAIApikey,
-      watsonxAIAuthType,
-      watsonxAIBearerToken,
-      watsonxAIUsername,
-      watsonxAIPassword,
-      watsonxAIUrl,
-      disableSSL,
-      version,
-      serviceUrl,
-      apiKey,
-      bearerToken,
-      username,
-      password,
-      authType,
-      authUrl,
-    };
-
     if (this.modelGateway) {
-      const gateway = authenticateAndSetGatewayInstance(authData);
-
-      if (gateway) this.gateway = gateway;
-      else throw new Error("You have not provided any type of authentication");
+      this.gateway = initWatsonxOrGatewayInstance(fields, true);
     } else {
-      const service = authenticateAndSetInstance(authData);
-
-      if (service) this.service = service;
-      else throw new Error("You have not provided any type of authentication");
+      this.service = initWatsonxOrGatewayInstance(fields);
     }
   }
 
