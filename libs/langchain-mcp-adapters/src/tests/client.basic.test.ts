@@ -18,19 +18,20 @@ import { MultiServerMCPClient, MCPClientError } from "../client.js";
 
 vi.mock(
   "@modelcontextprotocol/sdk/client/index.js",
-  () => import("./__mocks__/@modelcontextprotocol/sdk/client/index.js")
+  () => import("./__mocks__/@modelcontextprotocol/sdk/client/index.js"),
 );
 vi.mock(
   "@modelcontextprotocol/sdk/client/stdio.js",
-  () => import("./__mocks__/@modelcontextprotocol/sdk/client/stdio.js")
+  () => import("./__mocks__/@modelcontextprotocol/sdk/client/stdio.js"),
 );
 vi.mock(
   "@modelcontextprotocol/sdk/client/sse.js",
-  () => import("./__mocks__/@modelcontextprotocol/sdk/client/sse.js")
+  () => import("./__mocks__/@modelcontextprotocol/sdk/client/sse.js"),
 );
 vi.mock(
   "@modelcontextprotocol/sdk/client/streamableHttp.js",
-  () => import("./__mocks__/@modelcontextprotocol/sdk/client/streamableHttp.js")
+  () =>
+    import("./__mocks__/@modelcontextprotocol/sdk/client/streamableHttp.js"),
 );
 
 describe("MultiServerMCPClient", () => {
@@ -152,7 +153,7 @@ describe("MultiServerMCPClient", () => {
           requestInit: {
             headers: {},
           },
-        }
+        },
       );
       expect(Client).toHaveBeenCalled();
       expect(Client.prototype.connect).toHaveBeenCalled();
@@ -178,7 +179,7 @@ describe("MultiServerMCPClient", () => {
       });
 
       await expect(client.initializeConnections()).rejects.toThrow(
-        MCPClientError
+        MCPClientError,
       );
     });
 
@@ -202,7 +203,7 @@ describe("MultiServerMCPClient", () => {
       });
 
       await expect(client.initializeConnections()).rejects.toThrow(
-        MCPClientError
+        MCPClientError,
       );
     });
 
@@ -306,10 +307,10 @@ describe("MultiServerMCPClient", () => {
         // Clear counts so we only measure reconnection attempts
         (StdioClientTransport as Mock).mockClear();
         (Client.prototype.connect as Mock).mockImplementationOnce(() =>
-          Promise.reject(new Error("reconnect fail 1"))
+          Promise.reject(new Error("reconnect fail 1")),
         );
         (Client.prototype.connect as Mock).mockImplementationOnce(() =>
-          Promise.reject(new Error("reconnect fail 2"))
+          Promise.reject(new Error("reconnect fail 2")),
         );
 
         await stdioInstance.onclose?.();
@@ -496,7 +497,7 @@ describe("MultiServerMCPClient", () => {
     test("should handle errors during cleanup gracefully", async () => {
       // Mock client.close to throw an error instead of transport.close
       (Client.prototype.close as Mock).mockImplementationOnce(() =>
-        Promise.reject(new Error("Close failed"))
+        Promise.reject(new Error("Close failed")),
       );
 
       const client = new MultiServerMCPClient({
@@ -586,14 +587,14 @@ describe("MultiServerMCPClient", () => {
       });
 
       await expect(client.initializeConnections()).rejects.toThrow(
-        MCPClientError
+        MCPClientError,
       );
     });
 
     test("should handle errors during streamable HTTP cleanup gracefully", async () => {
       // Mock client.close to throw an error instead of transport.close
       (Client.prototype.close as Mock).mockImplementationOnce(() =>
-        Promise.reject(new Error("Close failed"))
+        Promise.reject(new Error("Close failed")),
       );
 
       const client = new MultiServerMCPClient({
@@ -682,7 +683,7 @@ describe("MultiServerMCPClient", () => {
 
       // Should throw when onConnectionError is 'throw' (default behavior)
       await expect(() => client.initializeConnections()).rejects.toThrow(
-        MCPClientError
+        MCPClientError,
       );
     });
 
@@ -808,7 +809,7 @@ describe("MultiServerMCPClient", () => {
 
       // Should throw the error from the handler
       await expect(() => client.initializeConnections()).rejects.toThrow(
-        customError
+        customError,
       );
 
       // Error handler should have been called
@@ -935,7 +936,7 @@ describe("MultiServerMCPClient", () => {
                   connectionOrder.push(`server-${currentIndex}`);
                   resolve();
                 }, 50);
-              })
+              }),
           ),
           listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
         };
@@ -975,11 +976,13 @@ describe("MultiServerMCPClient", () => {
         clientCallCount += 1;
         const shouldFail = clientCallCount === 1 || clientCallCount === 3;
         return {
-          connect: vi.fn().mockImplementation(() =>
-            shouldFail
-              ? Promise.reject(new Error("Connection failed"))
-              : Promise.resolve()
-          ),
+          connect: vi
+            .fn()
+            .mockImplementation(() =>
+              shouldFail
+                ? Promise.reject(new Error("Connection failed"))
+                : Promise.resolve(),
+            ),
           listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
         };
       });
@@ -1027,11 +1030,13 @@ describe("MultiServerMCPClient", () => {
         clientCallCount += 1;
         const shouldFail = clientCallCount !== 2;
         return {
-          connect: vi.fn().mockImplementation(() =>
-            shouldFail
-              ? Promise.reject(new Error("Connection failed"))
-              : Promise.resolve()
-          ),
+          connect: vi
+            .fn()
+            .mockImplementation(() =>
+              shouldFail
+                ? Promise.reject(new Error("Connection failed"))
+                : Promise.resolve(),
+            ),
           listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
         };
       });
@@ -1068,11 +1073,13 @@ describe("MultiServerMCPClient", () => {
         clientCallCount += 1;
         const shouldFail = clientCallCount === 2;
         return {
-          connect: vi.fn().mockImplementation(() =>
-            shouldFail
-              ? Promise.reject(new Error("Connection failed"))
-              : Promise.resolve()
-          ),
+          connect: vi
+            .fn()
+            .mockImplementation(() =>
+              shouldFail
+                ? Promise.reject(new Error("Connection failed"))
+                : Promise.resolve(),
+            ),
           listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
         };
       });
@@ -1096,7 +1103,7 @@ describe("MultiServerMCPClient", () => {
       });
 
       await expect(() => client.initializeConnections()).rejects.toThrow(
-        MCPClientError
+        MCPClientError,
       );
     });
 
@@ -1110,7 +1117,7 @@ describe("MultiServerMCPClient", () => {
               new Promise<void>((resolve) => {
                 connectCallCount += 1;
                 setTimeout(resolve, 30);
-              })
+              }),
           ),
           listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
         };
