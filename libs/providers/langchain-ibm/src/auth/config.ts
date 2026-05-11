@@ -61,9 +61,31 @@ export function prepareInstanceConfig({
   authType,
   authUrl,
 }: WatsonxAuth & Omit<WatsonxInit, "authenticator">): InstanceConfig {
+  // Validate that both legacy and new properties are not provided simultaneously
+  const conflicts: string[] = [];
+  if (watsonxAIApikey && apiKey) conflicts.push("apiKey/watsonxAIApikey");
+  if (watsonxAIAuthType && authType)
+    conflicts.push("authType/watsonxAIAuthType");
+  if (watsonxAIBearerToken && bearerToken)
+    conflicts.push("bearerToken/watsonxAIBearerToken");
+  if (watsonxAIUsername && username)
+    conflicts.push("username/watsonxAIUsername");
+  if (watsonxAIPassword && password)
+    conflicts.push("password/watsonxAIPassword");
+  if (watsonxAIUrl && authUrl) conflicts.push("authUrl/watsonxAIUrl");
+
+  if (conflicts.length > 0) {
+    console.warn(
+      `Warning: Both legacy and new property names provided for: ${conflicts.join(", ")}. ` +
+        `Using legacy values (watsonxAI*). Consider using only the new property names.`,
+    );
+  }
+
   // Auto-detect IAM auth when apiKey is provided without username
   const isIam =
-    (watsonxAIApikey || apiKey) && !watsonxAIUsername ? "iam" : undefined;
+    (watsonxAIApikey || apiKey) && !(watsonxAIUsername || username)
+      ? "iam"
+      : undefined;
 
   const authenticator = createAuthenticator({
     watsonxAIApikey: watsonxAIApikey ?? apiKey,
