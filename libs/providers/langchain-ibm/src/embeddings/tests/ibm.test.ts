@@ -206,6 +206,7 @@ describe("Negative tests", () => {
     };
     expect(
       () =>
+        // @ts-expect-error invalid props
         new WatsonxEmbeddings({
           ...testProps,
           ...fakeAuthProp,
@@ -224,6 +225,7 @@ describe("Negative tests", () => {
     };
     expect(
       () =>
+        // @ts-expect-error invalid props
         new WatsonxEmbeddings({
           ...testProps,
           ...fakeAuthProp,
@@ -240,6 +242,7 @@ describe("Negative tests", () => {
     };
     expect(
       () =>
+        // @ts-expect-error invalid props
         new WatsonxEmbeddings({
           ...testProps,
           ...fakeAuthProp,

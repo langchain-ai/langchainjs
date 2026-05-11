@@ -21,11 +21,7 @@ import {
   Gateway,
   TextCompletionStream,
 } from "@ibm-cloud/watsonx-ai/gateway";
-import {
-  checkValidProps,
-  expectOneOf,
-  initWatsonxOrGatewayInstance,
-} from "../utils/ibm.js";
+import { PropertyValidator, checkRequiredProps, expectOneOf } from "../utils/validation.js";
 import {
   GenerationInfo,
   ResponseChunk,
@@ -35,6 +31,7 @@ import {
   WatsonxLLMBasicOptions,
   XOR,
 } from "../types.js";
+import {  initWatsonxOrGatewayInstance } from "../utils/ibm.js";
 
 export interface WatsonxLLMParams {
   maxNewTokens?: number;
@@ -175,48 +172,14 @@ export class WatsonxLLM<
 
   protected gateway?: Gateway;
 
+  private validator = new PropertyValidator();
+
   private checkValidProperties(
     fields:
       | WatsonxLLMConstructor
       | XOR<Partial<WatsonxLLMParams>, Partial<WatsonxLLMGatewayParams>>,
     includeCommonProps = true
   ) {
-    const authProps = [
-      "serviceUrl",
-      "watsonxAIApikey",
-      "watsonxAIBearerToken",
-      "watsonxAIUsername",
-      "watsonxAIPassword",
-      "watsonxAIUrl",
-      "watsonxAIAuthType",
-      "disableSSL",
-      "apiKey",
-      "bearerToken",
-      "username",
-      "password",
-      "authType",
-      "authUrl",
-    ];
-
-    const sharedProps = [
-      "maxRetries",
-      "watsonxCallbacks",
-      "authenticator",
-      "serviceUrl",
-      "version",
-      "streaming",
-      "callbackManager",
-      "callbacks",
-      "maxConcurrency",
-      "cache",
-      "metadata",
-      "concurrency",
-      "onFailedAttempt",
-      "concurrency",
-      "verbose",
-      "tags",
-    ];
-
     const gatewayProps = [
       "temperature",
       "topP",
@@ -250,17 +213,22 @@ export class WatsonxLLM<
       "includeStopSequence",
     ];
 
-    const validProps: string[] = [];
-    if (includeCommonProps) validProps.push(...authProps, ...sharedProps);
-
+    let modeProps: string[] = [];
     if (this.modelGateway) {
-      validProps.push(...gatewayProps);
+      modeProps = gatewayProps;
     } else if (this.idOrName) {
-      validProps.push(...deploymentProps);
+      modeProps = deploymentProps;
     } else if (this.spaceId || this.projectId) {
-      validProps.push(...projectOrSpaceProps);
+      modeProps = projectOrSpaceProps;
     }
-    checkValidProps(fields, validProps);
+
+    this.validator.validateByMode(
+      fields as Record<string, unknown>,
+      modeProps,
+      {
+        includeCommon: includeCommonProps,
+      }
+    );  
   }
 
   constructor(fields: WatsonxLLMConstructor) {
@@ -274,6 +242,14 @@ export class WatsonxLLM<
     this.projectId = fields?.projectId;
     this.modelGateway = fields.modelGateway || this.modelGateway;
     this.spaceId = fields?.spaceId;
+
+    if (this.modelGateway) {
+      checkRequiredProps(fields, ["model", "serviceUrl", "version"]);
+    } else if (this.idOrName) {
+      checkRequiredProps(fields, ["serviceUrl", "version"]);
+    } else {
+      checkRequiredProps(fields, ["model", "serviceUrl", "version"]);
+    }
 
     this.checkValidProperties(fields);
 

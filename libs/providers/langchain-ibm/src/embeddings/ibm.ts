@@ -4,11 +4,8 @@ import { WatsonXAI } from "@ibm-cloud/watsonx-ai";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import { CreateEmbeddingsParams, Gateway } from "@ibm-cloud/watsonx-ai/gateway";
 import { WatsonxAuth, WatsonxEmbeddingsBasicOptions, XOR } from "../types.js";
-import {
-  checkValidProps,
-  expectOneOf,
-  initWatsonxOrGatewayInstance,
-} from "../utils/ibm.js";
+import { PropertyValidator, checkRequiredProps, expectOneOf } from "../utils/validation.js";
+import {  initWatsonxOrGatewayInstance } from "../utils/ibm.js";
 
 export interface WatsonxEmbeddingsParams
   extends
@@ -86,49 +83,10 @@ export class WatsonxEmbeddings
 
   protected gateway?: Gateway;
 
+  private validator = new PropertyValidator();
+
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   private checkValidProperties(fields: any, includeCommonProps = true) {
-    const alwaysAllowedProps = ["headers", "signal", "promptIndex"];
-
-    const authProps = [
-      "serviceUrl",
-      "watsonxAIApikey",
-      "watsonxAIBearerToken",
-      "watsonxAIUsername",
-      "watsonxAIPassword",
-      "watsonxAIUrl",
-      "watsonxAIAuthType",
-      "disableSSL",
-      "apiKey",
-      "bearerToken",
-      "username",
-      "password",
-      "authType",
-      "authUrl",
-    ];
-
-    const sharedProps = [
-      "maxRetries",
-      "watsonxCallbacks",
-      "authenticator",
-      "serviceUrl",
-      "version",
-      "streaming",
-      "callbackManager",
-      "callbacks",
-      "maxConcurrency",
-      "cache",
-      "metadata",
-      "concurrency",
-      "onFailedAttempt",
-      "concurrency",
-      "verbose",
-      "tags",
-      "headers",
-      "signal",
-      "disableStreaming",
-    ];
-
     const projectOrSpaceProps = [
       "truncateInputTokens",
       "returnOptions",
@@ -137,16 +95,21 @@ export class WatsonxEmbeddings
       "spaceId",
     ];
     const gatewayProps = ["model", "modelGatewayKwargs", "modelGateway"];
-    const validProps: string[] = [...alwaysAllowedProps];
-    if (includeCommonProps) validProps.push(...authProps, ...sharedProps);
 
+    let modeProps: string[] = [];
     if (this.modelGateway) {
-      validProps.push(...gatewayProps);
+      modeProps = gatewayProps;
     } else if (this.spaceId || this.projectId) {
-      validProps.push(...projectOrSpaceProps);
+      modeProps = projectOrSpaceProps;
     }
 
-    checkValidProps(fields, validProps);
+    this.validator.validateByMode(
+      fields as Record<string, unknown>,
+      modeProps,
+      {
+        includeCommon: includeCommonProps,
+      }
+    );
   }
 
   constructor(fields: WatsonxEmbeddingsConstructor) {
@@ -155,6 +118,8 @@ export class WatsonxEmbeddings
     this.projectId = fields?.projectId;
     this.spaceId = fields?.spaceId;
     this.modelGateway = fields.modelGateway ?? this.modelGateway;
+
+    checkRequiredProps(fields, ["model", "serviceUrl", "version"]);
 
     this.checkValidProperties(fields);
 
