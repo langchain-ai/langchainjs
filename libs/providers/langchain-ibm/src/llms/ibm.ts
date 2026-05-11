@@ -32,7 +32,7 @@ import {
   TokenUsage,
   WatsonxAuth,
   WatsonxInit,
-  WatsonxLLMBasicOptions,
+  WatsonxLLMBasicOptions
 } from "../types.js";
 
 export interface WatsonxLLMParams {
@@ -103,6 +103,84 @@ export type WatsonxLLMConstructor = (
 ) &
   WatsonxAuth;
 
+/**
+ * IBM Watsonx.ai LLM integration for text generation.
+ * 
+ * Supports three deployment modes:
+ * 1. **Project/Space Mode**: Use with IBM Cloud project or space IDs
+ * 2. **Deployment Mode**: Use with deployed model IDs
+ * 3. **Gateway Mode**: Use with IBM Watsonx.ai Gateway
+ * 
+ * @example Basic text generation with project ID
+ * ```typescript
+ * import { WatsonxLLM } from "@langchain/ibm";
+ * 
+ * const model = new WatsonxLLM({
+ *   model: "ibm/granite-13b-instruct-v2",
+ *   projectId: "your-project-id",
+ *   serviceUrl: "https://us-south.ml.cloud.ibm.com",
+ *   apiKey: process.env.WATSONX_AI_APIKEY,
+ *   maxNewTokens: 100,
+ *   temperature: 0.7,
+ * });
+ * 
+ * const response = await model.invoke("What is the capital of France?");
+ * console.log(response);
+ * ```
+ * 
+ * @example Streaming text generation
+ * ```typescript
+ * const model = new WatsonxLLM({
+ *   model: "ibm/granite-13b-instruct-v2",
+ *   projectId: "your-project-id",
+ *   serviceUrl: "https://us-south.ml.cloud.ibm.com",
+ *   apiKey: process.env.WATSONX_AI_APIKEY,
+ *   streaming: true,
+ * });
+ * 
+ * const stream = await model.stream("Tell me a story");
+ * for await (const chunk of stream) {
+ *   console.log(chunk);
+ * }
+ * ```
+ * 
+ * @example Using with space ID
+ * ```typescript
+ * const model = new WatsonxLLM({
+ *   model: "ibm/granite-13b-instruct-v2",
+ *   spaceId: "your-space-id",
+ *   serviceUrl: "https://us-south.ml.cloud.ibm.com",
+ *   apiKey: process.env.WATSONX_AI_APIKEY,
+ * });
+ * ```
+ * 
+ * @example Using Gateway mode
+ * ```typescript
+ * const model = new WatsonxLLM({
+ *   model: "meta-llama/llama-3-70b-instruct",
+ *   modelGateway: true,
+ *   serviceUrl: "https://us-south.ml.cloud.ibm.com",
+ *   apiKey: process.env.WATSONX_AI_APIKEY,
+ * });
+ * ```
+ * 
+ * @example Advanced parameters
+ * ```typescript
+ * const model = new WatsonxLLM({
+ *   model: "ibm/granite-13b-instruct-v2",
+ *   projectId: "your-project-id",
+ *   serviceUrl: "https://us-south.ml.cloud.ibm.com",
+ *   apiKey: process.env.WATSONX_AI_APIKEY,
+ *   maxNewTokens: 200,
+ *   minNewTokens: 50,
+ *   temperature: 0.8,
+ *   topP: 0.9,
+ *   topK: 50,
+ *   repetitionPenalty: 1.1,
+ *   decodingMethod: "greedy",
+ * });
+ * ```
+ */
 export class WatsonxLLM<
   CallOptions extends WatsonxCallOptionsLLM = WatsonxCallOptionsLLM,
 >
@@ -363,7 +441,9 @@ export class WatsonxLLM<
     const { signal, maxRetries, maxConcurrency, timeout, ...rest } = options;
     if (parameters) this.checkValidProperties(parameters, false);
     if (this.idOrName && Object.keys(rest).length > 0)
-      throw new Error("Options cannot be provided to a deployed model");
+      throw new WatsonxValidationError(
+        "Options cannot be provided to a deployed model",
+      );
     if (this.idOrName) return undefined;
 
     if (this.modelGateway) {
@@ -419,8 +499,8 @@ export class WatsonxLLM<
       return { idOrName: this.idOrName, modelId: this.model };
     else if (this.modelGateway) return { modelId: this.model };
     else
-      throw new Error(
-        "Invalid mode type. Please make sure you have provided correct parameters"
+      throw new WatsonxConfigurationError(
+        "Invalid mode type. Please make sure you have provided correct parameters",
       );
   }
 
@@ -435,7 +515,9 @@ export class WatsonxLLM<
       );
       return listModels.result.resources?.map((item) => item.model_id);
     } else {
-      throw new Error("This method is not supported in this model gateway");
+      throw new WatsonxUnsupportedOperationError(
+        "This method is not supported in this model gateway",
+      );
     }
   }
 
@@ -579,8 +661,8 @@ export class WatsonxLLM<
         return singleGeneration;
       }
     }
-    throw new Error(
-      "No service or gateway set. Please check your intsance init"
+    throw new WatsonxConfigurationError(
+      "No service or gateway set. Please check your intsance init",
     );
   }
 
@@ -707,7 +789,10 @@ export class WatsonxLLM<
 
       const response = await this.completionWithRetry<ReturnTokens>(callback);
       return response.result.result.token_count;
-    } else throw new Error("This method is not supported in model gateway");
+    } else
+      throw new WatsonxUnsupportedOperationError(
+        "This method is not supported in model gateway",
+      );
   }
 
   async *_streamResponseChunks(
