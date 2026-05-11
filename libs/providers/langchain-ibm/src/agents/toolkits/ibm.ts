@@ -17,7 +17,11 @@ import {
   initWatsonxOrGatewayInstance,
   jsonSchemaToZod,
 } from "../../utils/ibm.js";
-import { WatsonxAuth, WatsonxInit } from "../../types.js";
+import {
+  WatsonxAuth,
+  WatsonxInit,
+  WatsonxConfigurationError,
+} from "../../types.js";
 
 export interface WatsonxToolParams {
   name: string;
@@ -120,7 +124,9 @@ export class WatsonxToolkit extends BaseToolkit {
   getTool(toolName: string, config?: Record<string, any>) {
     const selectedTool = this.tools.find((item) => item.name === toolName);
     if (!selectedTool)
-      throw new Error("Tool with provided name does not exist");
+      throw new WatsonxConfigurationError(
+        "Tool with provided name does not exist",
+      );
     if (config) {
       selectedTool.config = config;
     }

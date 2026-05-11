@@ -2,6 +2,15 @@ import { RequestCallbacks } from "@ibm-cloud/watsonx-ai/dist/watsonx-ai-ml/vml_v
 import { ChatsToolChoice } from "@ibm-cloud/watsonx-ai/gateway";
 import { BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
 import { BaseLLMParams } from "@langchain/core/language_models/llms";
+// Export custom error classes
+export {
+  WatsonxError,
+  WatsonxAuthenticationError,
+  WatsonxValidationError,
+  WatsonxConfigurationError,
+  WatsonxUnsupportedOperationError,
+} from "./types/errors.js";
+
 
 export type Neverify<T> = {
   [K in keyof T]?: never;

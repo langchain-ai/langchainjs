@@ -20,7 +20,13 @@ import {
   interopSafeParseAsync,
 } from "@langchain/core/utils/types";
 import { Gateway } from "@ibm-cloud/watsonx-ai/gateway";
-import { WatsonxAuth, WatsonxInit } from "../types.js";
+import {
+  WatsonxAuth,
+  WatsonxInit,
+  WatsonxAuthenticationError,
+  WatsonxValidationError,
+  WatsonxUnsupportedOperationError,
+} from "../types.js";
 import { AWSAuthenticator } from "@ibm-cloud/watsonx-ai/authentication";
 
 const createAuthenticator = ({
@@ -39,13 +45,15 @@ const createAuthenticator = ({
         return new IamAuthenticator({
           apikey: watsonxAIApikey,
         });
-      throw new Error("ApiKey is required for IAM auth");
+      throw new WatsonxAuthenticationError("ApiKey is required for IAM auth");
     case "bearertoken":
       if (watsonxAIBearerToken)
         return new BearerTokenAuthenticator({
           bearerToken: watsonxAIBearerToken,
         });
-      throw new Error("BearerToken is required for BearerToken auth");
+      throw new WatsonxAuthenticationError(
+        "BearerToken is required for BearerToken auth",
+      );
     case "cp4d":
       if (watsonxAIUsername && (watsonxAIPassword || watsonxAIApikey)) {
         const watsonxCPDAuthUrl = watsonxAIUrl ?? serviceUrl;
@@ -57,7 +65,7 @@ const createAuthenticator = ({
           disableSslVerification: disableSSL,
         });
       }
-      throw new Error(
+      throw new WatsonxAuthenticationError(
         "Username and Password or ApiKey is required for IBM watsonx.ai software auth",
       );
     case "aws":
@@ -130,7 +138,9 @@ export function initWatsonxOrGatewayInstance(
   try {
     return useGateway ? new Gateway(config) : new WatsonXAI(config);
   } catch (e) {
-    throw new Error("You have not provided any type of authentication");
+    throw new WatsonxAuthenticationError(
+      "You have not provided any type of authentication",
+    );
   }
 }
 
@@ -307,11 +317,14 @@ export function jsonSchemaToZod(obj: WatsonXAI.JsonObject | undefined) {
         } else if (prop.type === "boolean") zodType = z.boolean();
         else if (prop.type === "array")
           zodType = z.array(
-            prop.items ? jsonSchemaToZod(prop.items) : z.string()
+            prop.items ? jsonSchemaToZod(prop.items) : z.string(),
           );
         else if (prop.type === "object") {
           zodType = jsonSchemaToZod(prop);
-        } else throw new Error(`Unsupported type: ${prop.type}`);
+        } else
+          throw new WatsonxUnsupportedOperationError(
+            `Unsupported type: ${prop.type}`,
+          );
 
         if (prop.description) {
           zodType = zodType.describe(prop.description);
@@ -326,7 +339,7 @@ export function jsonSchemaToZod(obj: WatsonXAI.JsonObject | undefined) {
     });
     return z.object(shape);
   }
-  throw new Error("Unsupported root schema type");
+  throw new WatsonxUnsupportedOperationError("Unsupported root schema type");
 }
 
 export const expectOneOf = (
@@ -338,12 +351,12 @@ export const expectOneOf = (
     (key) => key in params && params[key] !== undefined
   );
   if (exactlyOneOf && provided.length !== 1) {
-    throw new Error(
-      `Expected exactly one of: ${keys.join(", ")}. Got: ${provided.join(", ")}`
+    throw new WatsonxValidationError(
+      `Expected exactly one of: ${keys.join(", ")}. Got: ${provided.join(", ")}`,
     );
   } else if (!exactlyOneOf && provided.length > 1) {
-    throw new Error(
-      `Expected one of: ${keys.join(", ")} or none. Got: ${provided.join(", ")}`
+    throw new WatsonxValidationError(
+      `Expected one of: ${keys.join(", ")} or none. Got: ${provided.join(", ")}`,
     );
   }
 };
@@ -356,10 +369,10 @@ export const checkValidProps = (
     (key) => !allowedKeys.includes(key)
   );
   if (unexpected.length > 0) {
-    throw new Error(
+    throw new WatsonxValidationError(
       `Unexpected properties: ${unexpected.join(
-        ", "
-      )}. Expected only: ${allowedKeys.join(", ")}.`
+        ", ",
+      )}. Expected only: ${allowedKeys.join(", ")}.`,
     );
   }
 };
