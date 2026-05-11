@@ -77,7 +77,7 @@ export function prepareInstanceConfig({
   if (conflicts.length > 0) {
     console.warn(
       `Warning: Both legacy and new property names provided for: ${conflicts.join(", ")}. ` +
-        `Using legacy values (watsonxAI*). Consider using only the new property names.`,
+        `Using legacy values (watsonxAI*). Consider using only the new property names.`
     );
   }
 

@@ -15,7 +15,7 @@ import {
   ChatWatsonxCallOptions,
   ChatWatsonxInput,
   WatsonxCallParams,
-} from "../ibm.js";
+} from "../index.js";
 
 const fakeAuthProp = {
   watsonxAIAuthType: "iam",
@@ -33,12 +33,12 @@ export function getKey<K>(key: K): K {
 export const testProperties = (
   instance: ChatWatsonx,
   testProps: ChatWatsonxCallOptions,
-  notExTestProps?: { [key: string]: any },
+  notExTestProps?: { [key: string]: any }
 ) => {
   const checkProperty = <T extends { [key: string]: any }>(
     testProps: T,
     instance: T,
-    existing = true,
+    existing = true
   ) => {
     Object.keys(testProps).forEach((key) => {
       const keys = getKey<keyof T>(key);
@@ -47,12 +47,12 @@ export const testProperties = (
         checkProperty<Type>(
           testProps[key as keyof T],
           instance[key as keyof typeof instance],
-          existing,
+          existing
         );
       else {
         if (existing)
           expect(instance[key as keyof typeof instance]).toBe(
-            testProps[key as keyof T],
+            testProps[key as keyof T]
           );
         else if (instance)
           expect(instance[key as keyof typeof instance]).toBeUndefined();
@@ -223,7 +223,7 @@ describe("Chat unit tests", () => {
       if (instance["service"] as WatsonXAI) {
         const spy = vi.spyOn(
           instance["service"] as WatsonXAI,
-          "textChatStream",
+          "textChatStream"
         );
         const stream = [
           `id: 1\nevent: message\ndata: ${JSON.stringify(chunk)}\n\n`,
@@ -458,9 +458,9 @@ describe("Chat unit tests", () => {
           new ChatWatsonx({
             ...testProps,
             ...fakeAuthProp,
-          }),
+          })
       ).toThrow(
-        /Expected exactly one of: spaceId, projectId, idOrName, modelGateway./,
+        /Expected exactly one of: spaceId, projectId, idOrName, modelGateway./
       );
     });
 
@@ -475,7 +475,7 @@ describe("Chat unit tests", () => {
           new ChatWatsonx({
             ...testPropsProjectId,
             ...fakeAuthProp,
-          }),
+          })
       ).toThrow();
       // @ts-expect-error Intentionally passing not enough parameters
       const testPropsServiceUrl: ChatWatsonxInput = {
@@ -486,7 +486,7 @@ describe("Chat unit tests", () => {
           new ChatWatsonx({
             ...testPropsServiceUrl,
             ...fakeAuthProp,
-          }),
+          })
       ).toThrow();
       const testPropsVersion = {
         version: "2024-05-31",
@@ -496,7 +496,7 @@ describe("Chat unit tests", () => {
           new ChatWatsonx({
             // @ts-expect-error Intentionally passing wrong type of an object
             testPropsVersion,
-          }),
+          })
       ).toThrow();
     });
 
@@ -513,7 +513,7 @@ describe("Chat unit tests", () => {
           new ChatWatsonx({
             ...testProps,
             ...fakeAuthProp,
-          }),
+          })
       ).toThrow();
     });
     test("Id with modelGateway", async () => {
@@ -529,9 +529,9 @@ describe("Chat unit tests", () => {
           new ChatWatsonx({
             ...testProps,
             ...fakeAuthProp,
-          }),
+          })
       ).toThrow(
-        /Expected exactly one of: spaceId, projectId, idOrName, modelGateway. Got: projectId, modelGateway/,
+        /Expected exactly one of: spaceId, projectId, idOrName, modelGateway. Got: projectId, modelGateway/
       );
     });
     test("projectId with invalid props", async () => {
@@ -547,7 +547,7 @@ describe("Chat unit tests", () => {
           new ChatWatsonx({
             ...testProps,
             ...fakeAuthProp,
-          }),
+          })
       ).toThrow(/Unexpected properties: modelGatewayKwargs./);
     });
     test("modelGateway with invalid props", async () => {
@@ -563,7 +563,7 @@ describe("Chat unit tests", () => {
           new ChatWatsonx({
             ...testProps,
             ...fakeAuthProp,
-          }),
+          })
       ).toThrow(/Unexpected properties: timeLimit./);
     });
     test("Not existing property passed", async () => {
@@ -585,7 +585,7 @@ describe("Chat unit tests", () => {
             ...testProps,
             ...notExTestProps,
             ...fakeAuthProp,
-          }),
+          })
       ).toThrow(/Unexpected properties: notExisting, notExObj./);
     });
   });
@@ -612,7 +612,7 @@ describe("Chat unit tests", () => {
 
       expect(spy).toHaveBeenCalledWith(
         expect.objectContaining({ signal: controller.signal }),
-        undefined,
+        undefined
       );
 
       spy.mockRestore();
@@ -638,7 +638,7 @@ describe("Chat unit tests", () => {
 
       expect(spy).toHaveBeenCalledWith(
         expect.objectContaining({ signal: controller.signal }),
-        undefined,
+        undefined
       );
 
       spy.mockRestore();
@@ -672,7 +672,7 @@ describe("Chat unit tests", () => {
 
       expect(spy).toHaveBeenCalledWith(
         expect.objectContaining({ signal: controller.signal }),
-        undefined,
+        undefined
       );
 
       spy.mockRestore();
@@ -705,7 +705,7 @@ describe("Chat unit tests", () => {
 
       expect(spy).toHaveBeenCalledWith(
         expect.objectContaining({ signal: controller.signal }),
-        undefined,
+        undefined
       );
 
       spy.mockRestore();
@@ -737,7 +737,7 @@ describe("Chat unit tests", () => {
       };
       vi.spyOn(
         instance["service"] as WatsonXAI as WatsonXAI,
-        "textChat",
+        "textChat"
       ).mockResolvedValue({ result: mockResponse } as any);
       const res = await instance.invoke("test");
 
@@ -765,7 +765,7 @@ describe("Chat unit tests", () => {
       };
       vi.spyOn(
         instance["service"] as WatsonXAI as WatsonXAI,
-        "textChat",
+        "textChat"
       ).mockResolvedValue({ result: mockResponse } as any);
       const res = await instance.invoke("test", {
         includeReasoning: true,
@@ -800,7 +800,7 @@ describe("Chat unit tests", () => {
           includeReasoning: true,
           reasoningEffort: "low",
         }),
-        undefined,
+        undefined
       );
       let result: AIMessageChunk | undefined = undefined;
       for await (const chunk of res) {

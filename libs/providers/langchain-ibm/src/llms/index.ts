@@ -260,7 +260,7 @@ export class WatsonxLLM<
       | WatsonxLLMConstructor
       | Partial<WatsonxLLMParams>
       | Partial<WatsonxLLMGatewayParams>,
-    includeCommonProps = true,
+    includeCommonProps = true
   ) {
     const gatewayProps = [
       "temperature",
@@ -309,7 +309,7 @@ export class WatsonxLLM<
       modeProps,
       {
         includeCommon: includeCommonProps,
-      },
+      }
     );
   }
 
@@ -321,7 +321,7 @@ export class WatsonxLLM<
     expectOneOf(
       fields,
       ["spaceId", "projectId", "idOrName", "modelGateway"],
-      true,
+      true
     );
     if ("modelGateway" in fields) {
       this.modelGateway = fields.modelGateway || this.modelGateway;
@@ -413,7 +413,7 @@ export class WatsonxLLM<
     if (parameters) this.checkValidProperties(parameters, false);
     if (this.idOrName && Object.keys(rest).length > 0)
       throw new WatsonxValidationError(
-        "Options cannot be provided to a deployed model",
+        "Options cannot be provided to a deployed model"
       );
     if (this.idOrName) return undefined;
 
@@ -471,7 +471,7 @@ export class WatsonxLLM<
     else if (this.modelGateway) return { modelId: this.model };
     else
       throw new WatsonxConfigurationError(
-        "Invalid mode type. Please make sure you have provided correct parameters",
+        "Invalid mode type. Please make sure you have provided correct parameters"
       );
   }
 
@@ -482,12 +482,12 @@ export class WatsonxLLM<
         filters: "function_text_generation",
       };
       const listModels = await this.completionWithRetry(() =>
-        service.listFoundationModelSpecs(listModelParams),
+        service.listFoundationModelSpecs(listModelParams)
       );
       return listModels.result.resources?.map((item) => item.model_id);
     } else {
       throw new WatsonxUnsupportedOperationError(
-        "This method is not supported in this model gateway",
+        "This method is not supported in this model gateway"
       );
     }
   }
@@ -495,7 +495,7 @@ export class WatsonxLLM<
   private async generateSingleMessage(
     input: string,
     options: this["ParsedCallOptions"],
-    stream: true,
+    stream: true
   ): Promise<
     | Stream<WatsonXAI.ObjectStreamed<WatsonXAI.TextGenResponse>>
     | Stream<TextCompletionStream>
@@ -504,13 +504,13 @@ export class WatsonxLLM<
   private async generateSingleMessage(
     input: string,
     options: this["ParsedCallOptions"],
-    stream: false,
+    stream: false
   ): Promise<Generation[]>;
 
   private async generateSingleMessage(
     input: string,
     options: this["ParsedCallOptions"],
-    stream: boolean,
+    stream: boolean
   ) {
     const {
       signal,
@@ -548,7 +548,7 @@ export class WatsonxLLM<
               returnObject: true,
               signal,
             },
-            watsonxCallbacks,
+            watsonxCallbacks
           );
         }
       } else if (this.gateway) {
@@ -578,7 +578,7 @@ export class WatsonxLLM<
                 },
                 signal,
               },
-              watsonxCallbacks,
+              watsonxCallbacks
             )
           : this.service.generateText(
               {
@@ -588,7 +588,7 @@ export class WatsonxLLM<
                 ...requestOptions,
                 signal,
               },
-              watsonxCallbacks,
+              watsonxCallbacks
             );
 
         const textGeneration = await textGenerationPromise;
@@ -633,13 +633,13 @@ export class WatsonxLLM<
       }
     }
     throw new WatsonxConfigurationError(
-      "No service or gateway set. Please check your intsance init",
+      "No service or gateway set. Please check your intsance init"
     );
   }
 
   async completionWithRetry<T>(
     callback: () => T,
-    options?: this["ParsedCallOptions"],
+    options?: this["ParsedCallOptions"]
   ) {
     const caller = new AsyncCaller({
       maxConcurrency: options?.maxConcurrency || this.maxConcurrency,
@@ -650,7 +650,7 @@ export class WatsonxLLM<
           {
             signal: options.signal,
           },
-          async () => callback(),
+          async () => callback()
         )
       : caller.call(async () => callback());
 
@@ -660,7 +660,7 @@ export class WatsonxLLM<
   async _generate(
     prompts: string[],
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun,
+    runManager?: CallbackManagerForLLMRun
   ): Promise<LLMResult> {
     const tokenUsage: TokenUsage = {
       generated_token_count: 0,
@@ -706,7 +706,7 @@ export class WatsonxLLM<
               generationInfo: rest,
             };
           });
-        }),
+        })
       );
       const result: LLMResult = { generations, llmOutput: { tokenUsage } };
       return result;
@@ -719,7 +719,7 @@ export class WatsonxLLM<
 
           const response = await this.completionWithRetry<ReturnMessage>(
             callback,
-            options,
+            options
           );
           const [generated_token_count, input_token_count] = response.reduce(
             (acc, curr) => {
@@ -731,12 +731,12 @@ export class WatsonxLLM<
                 inputed = curr.generationInfo.input_token_count + acc[1];
               return [generated, inputed];
             },
-            [0, 0],
+            [0, 0]
           );
           tokenUsage.generated_token_count += generated_token_count;
           tokenUsage.input_token_count += input_token_count;
           return response;
-        }),
+        })
       );
 
       const result: LLMResult = { generations, llmOutput: { tokenUsage } };
@@ -746,7 +746,7 @@ export class WatsonxLLM<
 
   async getNumTokens(
     content: string,
-    options?: TextTokenizeParameters,
+    options?: TextTokenizeParameters
   ): Promise<number> {
     if (this.service) {
       const { service } = this;
@@ -762,14 +762,14 @@ export class WatsonxLLM<
       return response.result.result.token_count;
     } else
       throw new WatsonxUnsupportedOperationError(
-        "This method is not supported in model gateway",
+        "This method is not supported in model gateway"
       );
   }
 
   async *_streamResponseChunks(
     prompt: string,
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun,
+    runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<GenerationChunk> {
     const callback = () => this.generateSingleMessage(prompt, options, true);
     type ReturnStream = ReturnType<typeof callback>;
@@ -818,7 +818,7 @@ export class WatsonxLLM<
         if (!this.streaming)
           // oxlint-disable-next-line no-void
           void runManager?.handleLLMNewToken(
-            "generated_text" in item ? item.generated_text : (item.text ?? ""),
+            "generated_text" in item ? item.generated_text : (item.text ?? "")
           );
       }
       Object.assign(responseChunk, { id: 0, event: "", data: {} });

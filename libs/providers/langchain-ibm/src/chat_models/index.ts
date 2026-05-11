@@ -815,42 +815,6 @@ export class ChatWatsonx<
       this.includeReasoning = fields?.includeReasoning;
     }
 
-    const {
-      watsonxAIApikey,
-      watsonxAIAuthType,
-      watsonxAIBearerToken,
-      watsonxAIUsername,
-      watsonxAIPassword,
-      watsonxAIUrl,
-      disableSSL,
-      version,
-      serviceUrl,
-      apiKey,
-      bearerToken,
-      username,
-      password,
-      authType,
-      authUrl,
-    } = fields;
-
-    const authData = {
-      watsonxAIApikey,
-      watsonxAIAuthType,
-      watsonxAIBearerToken,
-      watsonxAIUsername,
-      watsonxAIPassword,
-      watsonxAIUrl,
-      disableSSL,
-      version,
-      serviceUrl,
-      apiKey,
-      bearerToken,
-      username,
-      password,
-      authType,
-      authUrl,
-    };
-
     if (this.modelGateway) {
       this.gateway = initWatsonxOrGatewayInstance(fields, true);
     } else {

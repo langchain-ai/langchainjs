@@ -187,7 +187,7 @@ export class WatsonxEmbeddings
       modeProps,
       {
         includeCommon: includeCommonProps,
-      },
+      }
     );
   }
   constructor(fields: WatsonxInputEmbeddings & WatsonxAuth);
@@ -256,12 +256,12 @@ export class WatsonxEmbeddings
         maxRetries: this.maxRetries,
       });
       const listModels = await caller.call(() =>
-        service.listFoundationModelSpecs(listModelParams),
+        service.listFoundationModelSpecs(listModelParams)
       );
       return listModels.result.resources?.map((item) => item.model_id);
     } else
       throw new WatsonxUnsupportedOperationError(
-        "This method is not supported in model gateway",
+        "This method is not supported in model gateway"
       );
   }
 
@@ -278,7 +278,7 @@ export class WatsonxEmbeddings
           inputs,
           ...scopeId,
           parameters: this.invocationParams(),
-        }),
+        })
       );
       return embeddings.result.results.map((item) => item.embedding);
     } else if (this.gateway && "model" in scopeId) {
@@ -291,13 +291,13 @@ export class WatsonxEmbeddings
         gateway.embeddings.completion.create({
           input: inputs,
           ...scopeId,
-        }),
+        })
       );
       const res = embeddings.result.data.map((item) => item.embedding);
       return res;
     }
     throw new WatsonxConfigurationError(
-      "Invalid parameters provided. Please check passed properties to class instance",
+      "Invalid parameters provided. Please check passed properties to class instance"
     );
   }
 
