@@ -3,9 +3,12 @@ import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
 import { WatsonXAI } from "@ibm-cloud/watsonx-ai";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import { CreateEmbeddingsParams, Gateway } from "@ibm-cloud/watsonx-ai/gateway";
-import { WatsonxAuth, WatsonxEmbeddingsBasicOptions, XOR } from "../types.js";
-import { PropertyValidator, checkRequiredProps, expectOneOf } from "../utils/validation.js";
-import {  initWatsonxOrGatewayInstance } from "../utils/ibm.js";
+import { WatsonxAuth, WatsonxEmbeddingsBasicOptions, XOR,  } from "../types.js";
+import {
+  expectOneOf,
+  initWatsonxOrGatewayInstance,
+} from "../utils/ibm.js";
+import { checkRequiredProps, PropertyValidator } from "../utils/validation.js";
 
 export interface WatsonxEmbeddingsParams
   extends
@@ -122,6 +125,13 @@ export class WatsonxEmbeddings
     checkRequiredProps(fields, ["model", "serviceUrl", "version"]);
 
     this.checkValidProperties(fields);
+
+    if ("modelGateway" in fields)
+      this.modelGatewayKwargs = fields.modelGatewayKwargs;
+    else {
+      this.truncateInputTokens = fields.truncateInputTokens;
+      this.returnOptions = fields.returnOptions;
+    }
 
     this.model = fields.model;
     this.version = fields.version;
