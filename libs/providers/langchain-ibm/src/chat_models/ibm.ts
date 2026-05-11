@@ -93,20 +93,15 @@ import {
 } from "../utils/ibm.js";
 
 /**
- * Call parameters for standard Watsonx chat operations.
- * @deprecated Use WatsonxCallOptionsChat directly instead.
+ * @deprecated Use `WatsonxCallOptionsChat` instead. Will be removed in v1.0.0.
  */
-export type WatsonxCallParams = WatsonxCallOptionsChat;
+export interface WatsonxCallParams extends WatsonxCallOptionsChat {}
 
 /**
- * Call parameters for deployed Watsonx chat models.
- * @deprecated Use DeploymentsTextChatParams directly instead.
+ * @deprecated Use `DeploymentsTextChatParams` instead. Will be removed in v1.0.0.
  */
-export type WatsonxCallDeployedParams = DeploymentsTextChatParams;
+export interface WatsonxCallDeployedParams extends DeploymentsTextChatParams {}
 
-/**
- * Streaming delta response structure from Watsonx.
- */
 export interface WatsonxDeltaStream {
   role?: string;
   content?: string;

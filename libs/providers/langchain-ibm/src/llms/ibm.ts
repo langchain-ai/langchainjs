@@ -31,8 +31,11 @@ import {
   ResponseChunk,
   TokenUsage,
   WatsonxAuth,
+  WatsonxConfigurationError,
   WatsonxInit,
-  WatsonxLLMBasicOptions
+  WatsonxLLMBasicOptions,
+  WatsonxUnsupportedOperationError,
+  WatsonxValidationError
 } from "../types.js";
 
 export interface WatsonxLLMParams {

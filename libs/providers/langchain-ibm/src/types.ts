@@ -33,20 +33,45 @@ export interface TokenUsage {
  * Supports multiple authentication methods: IAM, Bearer Token, and Cloud Pak for Data.
  */
 export interface WatsonxAuth {
+  /**
+   * @deprecated Use `apiKey` instead. Will be removed in v1.0.0.
+   */
   watsonxAIApikey?: string;
+  /**
+   * @deprecated Use `bearerToken` instead. Will be removed in v1.0.0.
+   */
   watsonxAIBearerToken?: string;
+  /**
+   * @deprecated Use `username` instead. Will be removed in v1.0.0.
+   */
   watsonxAIUsername?: string;
+  /**
+   * @deprecated Use `password` instead. Will be removed in v1.0.0.
+   */
   watsonxAIPassword?: string;
+  /**
+   * @deprecated Use `authUrl` instead. Will be removed in v1.0.0.
+   */
   watsonxAIUrl?: string;
+  /**
+   * @deprecated Use `authType` instead. Will be removed in v1.0.0.
+   */
   watsonxAIAuthType?: string;
+  /** Disable SSL verification (only for development/testing) */
   disableSSL?: boolean;
+  /** IBM watsonx.ai service URL */
   serviceUrl: string;
-  // new fields
+  /** IBM Cloud API key for IAM authentication */
   apiKey?: string;
+  /** Bearer token for authentication */
   bearerToken?: string;
+  /** Username for CP4D authentication */
   username?: string;
+  /** Password for CP4D authentication */
   password?: string;
+  /** Authentication type: "iam", "bearertoken", "cp4d", or "aws" */
   authType?: string;
+  /** Authentication URL for CP4D */
   authUrl?: string;
 }
 
