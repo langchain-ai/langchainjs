@@ -85,7 +85,7 @@ import {
   WatsonxValidationError,
 } from "../types.js";
 import { _convertToolCallIdToMistralCompatible } from "../utils/tool-call-id.js";
-import { checkValidProps, expectOneOf } from "../utils/validation.js";
+import { PropertyValidator, expectOneOf } from "../utils/validation.js";
 import { initWatsonxOrGatewayInstance } from "../utils/instance.js";
 import { WatsonxToolsOutputParser } from "../utils/parsers.js";
 
@@ -637,121 +637,81 @@ export class ChatWatsonx<
     };
   }
 
+  private validator = new PropertyValidator();
+
   private checkValidProperties(
     fields: this["ParsedCallOptions"] | ChatWatsonxConstructorInput
   ) {
-    const PROPERTY_GROUPS = {
-      ALWAYS_ALLOWED: [
-        "headers",
-        "signal",
-        "tool_choice",
-        "promptIndex",
-        "ls_structured_output_format",
-        "watsonxCallbacks",
-        "writer",
-        "interrupt",
-      ],
-
-      AUTH: [
-        "serviceUrl",
-        "watsonxAIApikey",
-        "watsonxAIBearerToken",
-        "watsonxAIUsername",
-        "watsonxAIPassword",
-        "watsonxAIUrl",
-        "watsonxAIAuthType",
-        "disableSSL",
-        "apiKey",
-        "bearerToken",
-        "username",
-        "password",
-        "authType",
-        "authUrl",
-      ],
-
-      SHARED: [
-        "maxRetries",
-        "authenticator",
-        "serviceUrl",
-        "version",
-        "streaming",
-        "callbackManager",
-        "callbacks",
-        "maxConcurrency",
-        "cache",
-        "metadata",
-        "concurrency",
-        "onFailedAttempt",
-        "verbose",
-        "tags",
-        "headers",
-        "disableStreaming",
-        "timeout",
-        "stopSequences",
-      ],
-
-      GATEWAY: [
-        "tools",
-        "frequencyPenalty",
-        "logitBias",
-        "logprobs",
-        "topLogprobs",
-        "maxTokens",
-        "n",
-        "presencePenalty",
-        "responseFormat",
-        "seed",
-        "stop",
-        "temperature",
-        "topP",
-        "model",
-        "modelGatewayKwargs",
-        "modelGateway",
-        "reasoningEffort",
-      ],
-
-      DEPLOYMENT: ["idOrName"],
-
-      PROJECT_OR_SPACE: [
-        "spaceId",
-        "projectId",
-        "tools",
-        "toolChoiceOption",
-        "frequencyPenalty",
-        "logitBias",
-        "logprobs",
-        "topLogprobs",
-        "maxTokens",
-        "maxCompletionTokens",
-        "n",
-        "presencePenalty",
-        "responseFormat",
-        "seed",
-        "stop",
-        "temperature",
-        "topP",
-        "timeLimit",
-        "model",
-        "reasoningEffort",
-        "includeReasoning",
-      ],
-    };
-
-    const validProps: string[] = [
-      ...PROPERTY_GROUPS.ALWAYS_ALLOWED,
-      ...PROPERTY_GROUPS.AUTH,
-      ...PROPERTY_GROUPS.SHARED,
+    const ALWAYS_ALLOWED_EXTRA = [
+      "tool_choice",
+      "ls_structured_output_format",
+      "watsonxCallbacks",
+      "writer",
+      "interrupt",
     ];
 
+    const GATEWAY = [
+      "tools",
+      "frequencyPenalty",
+      "logitBias",
+      "logprobs",
+      "topLogprobs",
+      "maxTokens",
+      "n",
+      "presencePenalty",
+      "responseFormat",
+      "seed",
+      "stop",
+      "temperature",
+      "topP",
+      "model",
+      "modelGatewayKwargs",
+      "modelGateway",
+      "reasoningEffort",
+    ];
+
+    const DEPLOYMENT = ["idOrName"];
+
+    const PROJECT_OR_SPACE = [
+      "spaceId",
+      "projectId",
+      "tools",
+      "toolChoiceOption",
+      "frequencyPenalty",
+      "logitBias",
+      "logprobs",
+      "topLogprobs",
+      "maxTokens",
+      "maxCompletionTokens",
+      "n",
+      "presencePenalty",
+      "responseFormat",
+      "seed",
+      "stop",
+      "temperature",
+      "topP",
+      "timeLimit",
+      "model",
+      "reasoningEffort",
+      "includeReasoning",
+    ];
+
+    const modeProps: string[] = [...ALWAYS_ALLOWED_EXTRA];
     if (this.modelGateway) {
-      validProps.push(...PROPERTY_GROUPS.GATEWAY);
+      modeProps.push(...GATEWAY);
     } else if (this.idOrName) {
-      validProps.push(...PROPERTY_GROUPS.DEPLOYMENT);
+      modeProps.push(...DEPLOYMENT);
     } else if (this.spaceId || this.projectId) {
-      validProps.push(...PROPERTY_GROUPS.PROJECT_OR_SPACE);
+      modeProps.push(...PROJECT_OR_SPACE);
     }
 
-    checkValidProps(fields, validProps);
+    this.validator.validateByMode(
+      fields as Record<string, unknown>,
+      modeProps,
+      {
+        includeCommon: true,
+      }
+    );
   }
 
   protected service?: WatsonXAI;

@@ -9,7 +9,7 @@ import {
   WatsonxEmbeddingsBasicOptions,
   WatsonxUnsupportedOperationError,
 } from "../types.js";
-import { checkValidProps, expectOneOf } from "../utils/validation.js";
+import { PropertyValidator, expectOneOf } from "../utils/validation.js";
 import { initWatsonxOrGatewayInstance } from "../utils/instance.js";
 
 export interface WatsonxEmbeddingsParams
@@ -162,49 +162,10 @@ export class WatsonxEmbeddings
 
   protected gateway?: Gateway;
 
+  private validator = new PropertyValidator();
+
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   private checkValidProperties(fields: any, includeCommonProps = true) {
-    const alwaysAllowedProps = ["headers", "signal", "promptIndex"];
-
-    const authProps = [
-      "serviceUrl",
-      "watsonxAIApikey",
-      "watsonxAIBearerToken",
-      "watsonxAIUsername",
-      "watsonxAIPassword",
-      "watsonxAIUrl",
-      "watsonxAIAuthType",
-      "disableSSL",
-      "apiKey",
-      "bearerToken",
-      "username",
-      "password",
-      "authType",
-      "authUrl",
-    ];
-
-    const sharedProps = [
-      "maxRetries",
-      "watsonxCallbacks",
-      "authenticator",
-      "serviceUrl",
-      "version",
-      "streaming",
-      "callbackManager",
-      "callbacks",
-      "maxConcurrency",
-      "cache",
-      "metadata",
-      "concurrency",
-      "onFailedAttempt",
-      "concurrency",
-      "verbose",
-      "tags",
-      "headers",
-      "signal",
-      "disableStreaming",
-    ];
-
     const projectOrSpaceProps = [
       "truncateInputTokens",
       "returnOptions",
@@ -213,16 +174,21 @@ export class WatsonxEmbeddings
       "spaceId",
     ];
     const gatewayProps = ["model", "modelGatewayKwargs", "modelGateway"];
-    const validProps: string[] = [...alwaysAllowedProps];
-    if (includeCommonProps) validProps.push(...authProps, ...sharedProps);
 
+    let modeProps: string[] = [];
     if (this.modelGateway) {
-      validProps.push(...gatewayProps);
+      modeProps = gatewayProps;
     } else if (this.spaceId || this.projectId) {
-      validProps.push(...projectOrSpaceProps);
+      modeProps = projectOrSpaceProps;
     }
 
-    checkValidProps(fields, validProps);
+    this.validator.validateByMode(
+      fields as Record<string, unknown>,
+      modeProps,
+      {
+        includeCommon: includeCommonProps,
+      }
+    );
   }
   constructor(fields: WatsonxInputEmbeddings & WatsonxAuth);
   constructor(fields: WatsonxInputGatewayEmbeddings & WatsonxAuth);

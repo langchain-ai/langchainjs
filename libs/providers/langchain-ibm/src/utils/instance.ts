@@ -39,22 +39,22 @@ import { prepareInstanceConfig } from "../auth/index.js";
  */
 export function initWatsonxOrGatewayInstance(
   params: WatsonxAuth & Omit<WatsonxInit, "authenticator">,
-  useGateway: true,
+  useGateway: true
 ): Gateway;
 export function initWatsonxOrGatewayInstance(
   params: WatsonxAuth & Omit<WatsonxInit, "authenticator">,
-  useGateway?: false,
+  useGateway?: false
 ): WatsonXAI;
 export function initWatsonxOrGatewayInstance(
   params: WatsonxAuth & Omit<WatsonxInit, "authenticator">,
-  useGateway = false,
+  useGateway = false
 ): WatsonXAI | Gateway {
   const config = prepareInstanceConfig(params);
   try {
     return useGateway ? new Gateway(config) : new WatsonXAI(config);
-  } catch (e) {
+  } catch (_e) {
     throw new WatsonxAuthenticationError(
-      "You have not provided any type of authentication",
+      "You have not provided any type of authentication"
     );
   }
 }

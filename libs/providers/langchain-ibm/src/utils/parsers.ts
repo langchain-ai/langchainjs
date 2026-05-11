@@ -77,9 +77,9 @@ export class WatsonxToolsOutputParser<
           `Failed to parse. Text: "${JSON.stringify(
             result,
             null,
-            2,
+            2
           )}". Error: ${JSON.stringify(e.message)}`,
-          result,
+          result
         );
       }
     } else {
@@ -92,7 +92,7 @@ export class WatsonxToolsOutputParser<
 
     const zodParsedResult = await interopSafeParseAsync(
       this.zodSchema,
-      parsedResult,
+      parsedResult
     );
 
     if (zodParsedResult.success) {
@@ -103,9 +103,9 @@ export class WatsonxToolsOutputParser<
       `Failed to parse. Text: "${JSON.stringify(
         result,
         null,
-        2,
+        2
       )}". Error: ${JSON.stringify(zodParsedResult.error.issues)}`,
-      JSON.stringify(result, null, 2),
+      JSON.stringify(result, null, 2)
     );
   }
 
