@@ -23,33 +23,33 @@ export interface WatsonxInputRerank
 }
 /**
  * IBM Watsonx.ai document reranker for improving search relevance.
- * 
+ *
  * Uses cross-encoder models to rerank documents based on their relevance to a query.
  * This is particularly useful for improving retrieval quality in RAG applications.
- * 
+ *
  * @example Basic reranking with project ID
  * ```typescript
  * import { WatsonxRerank } from "@langchain/ibm";
  * import { Document } from "@langchain/core/documents";
- * 
+ *
  * const reranker = new WatsonxRerank({
  *   model: "cross-encoder/ms-marco-minilm-l-12-v2",
  *   projectId: "your-project-id",
  *   serviceUrl: "https://us-south.ml.cloud.ibm.com",
  *   apiKey: process.env.WATSONX_AI_APIKEY,
  * });
- * 
+ *
  * const query = "What is machine learning?";
  * const documents = [
  *   new Document({ pageContent: "Machine learning is a subset of AI" }),
  *   new Document({ pageContent: "The weather is nice today" }),
  *   new Document({ pageContent: "Deep learning uses neural networks" }),
  * ];
- * 
+ *
  * const rerankedDocs = await reranker.compressDocuments(documents, query);
  * console.log(rerankedDocs); // Documents sorted by relevance
  * ```
- * 
+ *
  * @example Limiting results with topN
  * ```typescript
  * const reranker = new WatsonxRerank({
@@ -62,7 +62,7 @@ export interface WatsonxInputRerank
  *   },
  * });
  * ```
- * 
+ *
  * @example Using with space ID
  * ```typescript
  * const reranker = new WatsonxRerank({
@@ -72,12 +72,12 @@ export interface WatsonxInputRerank
  *   apiKey: process.env.WATSONX_AI_APIKEY,
  * });
  * ```
- * 
+ *
  * @example Integration with retrieval chain
  * ```typescript
  * import { createRetrievalChain } from "langchain/chains/retrieval";
  * import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
- * 
+ *
  * const retriever = vectorStore.asRetriever();
  * const reranker = new WatsonxRerank({
  *   model: "cross-encoder/ms-marco-minilm-l-12-v2",
@@ -85,7 +85,7 @@ export interface WatsonxInputRerank
  *   serviceUrl: "https://us-south.ml.cloud.ibm.com",
  *   apiKey: process.env.WATSONX_AI_APIKEY,
  * });
- * 
+ *
  * // Use reranker as a document compressor
  * const compressedRetriever = retriever.pipe(reranker);
  * ```
@@ -120,12 +120,12 @@ export class WatsonxRerank
     super();
     if (fields.projectId && fields.spaceId)
       throw new WatsonxValidationError(
-        "Maximum 1 id type can be specified per instance",
+        "Maximum 1 id type can be specified per instance"
       );
 
     if (!fields.projectId && !fields.spaceId)
       throw new WatsonxValidationError(
-        "No id specified! At least id of 1 type has to be specified",
+        "No id specified! At least id of 1 type has to be specified"
       );
     this.model = fields.model;
     this.serviceUrl = fields.serviceUrl;

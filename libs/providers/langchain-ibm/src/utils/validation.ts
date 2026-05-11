@@ -53,6 +53,29 @@ export class PropertyValidator {
     "watsonxAIAuthType",
   ];
 
+  private static readonly SHARED_PROPS = [
+    "maxRetries",
+    "watsonxCallbacks",
+    "authenticator",
+    "serviceUrl",
+    "version",
+    "streaming",
+    "callbackManager",
+    "callbacks",
+    "maxConcurrency",
+    "cache",
+    "metadata",
+    "concurrency",
+    "onFailedAttempt",
+    "verbose",
+    "tags",
+    "headers",
+    "signal",
+    "disableStreaming",
+    "timeout",
+    "stopSequences",
+  ];
+
   /**
    * Validates that only allowed properties are present.
    *
@@ -64,7 +87,7 @@ export class PropertyValidator {
   validate(
     fields: Record<string, unknown>,
     allowedProps: string[],
-    options: { includeCommon?: boolean; includeAuth?: boolean } = {},
+    options: { includeCommon?: boolean; includeAuth?: boolean } = {}
   ): void {
     const { includeCommon = true, includeAuth = true } = options;
 
@@ -75,15 +98,62 @@ export class PropertyValidator {
     ];
 
     const unexpected = Object.keys(fields).filter(
-      (key) => !allowed.includes(key),
+      (key) => !allowed.includes(key)
     );
 
     if (unexpected.length > 0) {
       throw new WatsonxValidationError(
         `Unexpected properties: ${unexpected.join(", ")}. ` +
-          `Expected only: ${allowed.join(", ")}.`,
+          `Expected only: ${allowed.join(", ")}.`
       );
     }
+  }
+
+  /**
+   * Validates properties based on deployment mode (gateway, deployment, or project/space).
+   * This method automatically determines which properties are allowed based on the mode.
+   *
+   * @param fields - The object to validate
+   * @param modeProps - Properties specific to the current deployment mode
+   * @param options - Validation options
+   * @throws {WatsonxValidationError} If unexpected properties are found
+   *
+   * @example
+   * ```typescript
+   * // For gateway mode
+   * validator.validateByMode(
+   *   fields,
+   *   ["model", "modelGateway", "modelGatewayKwargs"],
+   *   { includeCommon: true }
+   * );
+   *
+   * // For project/space mode
+   * validator.validateByMode(
+   *   fields,
+   *   ["projectId", "spaceId", "model", "temperature"],
+   *   { includeCommon: true }
+   * );
+   * ```
+   */
+  validateByMode(
+    fields: Record<string, unknown>,
+    modeProps: string[],
+    options: { includeCommon?: boolean } = {}
+  ): void {
+    const { includeCommon = true } = options;
+
+    const allowed = [
+      ...modeProps,
+      ...(includeCommon
+        ? [
+            ...PropertyValidator.ALWAYS_ALLOWED,
+            ...PropertyValidator.AUTH_PROPS,
+            ...PropertyValidator.SHARED_PROPS,
+          ]
+        : []),
+    ];
+
+    checkValidProps(fields, allowed);
   }
 
   /**
@@ -95,12 +165,12 @@ export class PropertyValidator {
    */
   expectExactlyOne(fields: Record<string, unknown>, props: string[]): void {
     const provided = props.filter(
-      (key) => key in fields && fields[key] !== undefined,
+      (key) => key in fields && fields[key] !== undefined
     );
 
     if (provided.length !== 1) {
       throw new WatsonxValidationError(
-        `Expected exactly one of: ${props.join(", ")}. Got: ${provided.join(", ") || "none"}`,
+        `Expected exactly one of: ${props.join(", ")}. Got: ${provided.join(", ") || "none"}`
       );
     }
   }
@@ -114,12 +184,12 @@ export class PropertyValidator {
    */
   expectAtMostOne(fields: Record<string, unknown>, props: string[]): void {
     const provided = props.filter(
-      (key) => key in fields && fields[key] !== undefined,
+      (key) => key in fields && fields[key] !== undefined
     );
 
     if (provided.length > 1) {
       throw new WatsonxValidationError(
-        `Expected at most one of: ${props.join(", ")}. Got: ${provided.join(", ")}`,
+        `Expected at most one of: ${props.join(", ")}. Got: ${provided.join(", ")}`
       );
     }
   }
@@ -129,12 +199,12 @@ export class PropertyValidator {
    */
   checkAllowed(fields: Record<string, unknown>, allowedProps: string[]): void {
     const unexpected = Object.keys(fields).filter(
-      (key) => !allowedProps.includes(key),
+      (key) => !allowedProps.includes(key)
     );
 
     if (unexpected.length > 0) {
       throw new WatsonxValidationError(
-        `Unexpected properties: ${unexpected.join(", ")}. Expected only: ${allowedProps.join(", ")}.`,
+        `Unexpected properties: ${unexpected.join(", ")}. Expected only: ${allowedProps.join(", ")}.`
       );
     }
   }
@@ -160,21 +230,21 @@ export class PropertyValidator {
 export function expectOneOf(
   params: Record<string, any>,
   keys: string[],
-  exactlyOneOf = false,
+  exactlyOneOf = false
 ): void {
   const provided = keys.filter(
-    (key) => key in params && params[key] !== undefined,
+    (key) => key in params && params[key] !== undefined
   );
 
   if (exactlyOneOf && provided.length !== 1) {
     throw new WatsonxValidationError(
-      `Expected exactly one of: ${keys.join(", ")}. Got: ${provided.join(", ")}`,
+      `Expected exactly one of: ${keys.join(", ")}. Got: ${provided.join(", ")}`
     );
   }
 
   if (!exactlyOneOf && provided.length > 1) {
     throw new WatsonxValidationError(
-      `Expected one of: ${keys.join(", ")} or none. Got: ${provided.join(", ")}`,
+      `Expected one of: ${keys.join(", ")} or none. Got: ${provided.join(", ")}`
     );
   }
 }
@@ -196,15 +266,15 @@ export function expectOneOf(
  */
 export function checkValidProps(
   params: Record<string, any>,
-  allowedKeys: string[],
+  allowedKeys: string[]
 ): void {
   const unexpected = Object.keys(params).filter(
-    (key) => !allowedKeys.includes(key),
+    (key) => !allowedKeys.includes(key)
   );
 
   if (unexpected.length > 0) {
     throw new WatsonxValidationError(
-      `Unexpected properties: ${unexpected.join(", ")}. Expected only: ${allowedKeys.join(", ")}.`,
+      `Unexpected properties: ${unexpected.join(", ")}. Expected only: ${allowedKeys.join(", ")}.`
     );
   }
 }

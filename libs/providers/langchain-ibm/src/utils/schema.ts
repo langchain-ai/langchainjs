@@ -66,13 +66,13 @@ export function jsonSchemaToZod(obj: WatsonXAI.JsonObject | undefined) {
           zodType = z.boolean();
         } else if (prop.type === "array") {
           zodType = z.array(
-            prop.items ? jsonSchemaToZod(prop.items) : z.string(),
+            prop.items ? jsonSchemaToZod(prop.items) : z.string()
           );
         } else if (prop.type === "object") {
           zodType = jsonSchemaToZod(prop);
         } else {
           throw new WatsonxUnsupportedOperationError(
-            `Unsupported type: ${prop.type}`,
+            `Unsupported type: ${prop.type}`
           );
         }
 

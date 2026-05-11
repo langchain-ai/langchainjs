@@ -206,13 +206,13 @@ describe("Negative tests", () => {
     };
     expect(
       () =>
-        // @ts-expect-error
+        // @ts-expect-error invalid props
         new WatsonxEmbeddings({
           ...testProps,
           ...fakeAuthProp,
-        }),
+        })
     ).toThrow(
-      /Expected exactly one of: projectId, spaceId, modelGateway. Got: projectId, modelGateway/,
+      /Expected exactly one of: projectId, spaceId, modelGateway. Got: projectId, modelGateway/
     );
   });
   test("projectId with invalid props", async () => {
@@ -225,11 +225,11 @@ describe("Negative tests", () => {
     };
     expect(
       () =>
-        // @ts-expect-error
+        // @ts-expect-error invalid props
         new WatsonxEmbeddings({
           ...testProps,
           ...fakeAuthProp,
-        }),
+        })
     ).toThrow(/Unexpected properties: modelGatewayKwargs./);
   });
   test("modelGateway with invalid props", async () => {
@@ -242,11 +242,11 @@ describe("Negative tests", () => {
     };
     expect(
       () =>
-        // @ts-expect-error
+        // @ts-expect-error invalid props
         new WatsonxEmbeddings({
           ...testProps,
           ...fakeAuthProp,
-        }),
+        })
     ).toThrow(/Unexpected properties: truncateInputTokens./);
   });
 

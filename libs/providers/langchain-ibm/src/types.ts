@@ -118,4 +118,3 @@ export interface ResponseChunk {
 }
 
 export type WatsonxToolChoice = ChatsToolChoice | string | "auto" | "any";
-

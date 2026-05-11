@@ -71,7 +71,7 @@ export function createAuthenticator({
         });
       }
       throw new WatsonxAuthenticationError(
-        "BearerToken is required for BearerToken auth",
+        "BearerToken is required for BearerToken auth"
       );
 
     case "cp4d":
@@ -86,7 +86,7 @@ export function createAuthenticator({
         });
       }
       throw new WatsonxAuthenticationError(
-        "Username and Password or ApiKey is required for IBM watsonx.ai software auth",
+        "Username and Password or ApiKey is required for IBM watsonx.ai software auth"
       );
 
     case "aws":

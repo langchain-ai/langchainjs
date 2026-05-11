@@ -38,7 +38,7 @@ describe("Utils tests", () => {
           serviceUrl,
           ...fakeAuthProp,
         },
-        true,
+        true
       );
       expect(instance).toBeInstanceOf(Gateway);
     });
@@ -72,7 +72,7 @@ describe("Utils tests", () => {
           watsonxAIAuthType: "bearertoken",
           watsonxAIBearerToken: "fake_token",
         },
-        true,
+        true
       );
       expect(instance).toBeInstanceOf(Gateway);
     });
@@ -86,7 +86,7 @@ describe("Utils tests", () => {
           watsonxAIUsername: "user",
           watsonxAIPassword: "pass",
         },
-        true,
+        true
       );
       expect(instance).toBeInstanceOf(Gateway);
     });
@@ -141,7 +141,7 @@ describe("Utils tests", () => {
           authType: "iam",
           apiKey: "fake_key",
         },
-        true,
+        true
       );
       expect(instance).toBeInstanceOf(Gateway);
     });
@@ -163,7 +163,7 @@ describe("Utils tests", () => {
           version: "2024-05-31",
           serviceUrl,
         },
-        true,
+        true
       );
 
       expect(instance).toBeInstanceOf(Gateway);
@@ -280,7 +280,7 @@ describe("Utils tests", () => {
           watsonxAIAuthType: "iam",
           watsonxAIApikey: "fake_key",
         },
-        true,
+        true
       );
       expect(instance).toBeInstanceOf(Gateway);
       const authenticator = instance["authenticator"];
@@ -295,7 +295,7 @@ describe("Utils tests", () => {
           watsonxAIAuthType: "bearertoken",
           watsonxAIBearerToken: "fake_token",
         },
-        true,
+        true
       );
       expect(instance).toBeInstanceOf(Gateway);
       const authenticator = instance["authenticator"];
@@ -311,7 +311,7 @@ describe("Utils tests", () => {
           watsonxAIUsername: "user",
           watsonxAIPassword: "pass",
         },
-        true,
+        true
       );
       expect(instance).toBeInstanceOf(Gateway);
       const authenticator = instance["authenticator"];
@@ -568,7 +568,7 @@ describe("Utils tests", () => {
           watsonxAIApikey: "fake_key",
           watsonxAIUrl: "https://aws.url",
         },
-        true,
+        true
       );
       expect(instance).toBeInstanceOf(Gateway);
       const authenticator = instance["authenticator"];

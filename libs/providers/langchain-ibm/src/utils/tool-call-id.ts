@@ -59,7 +59,7 @@ function _simpleHash(str: string): number {
  * ```
  */
 export function _convertToolCallIdToMistralCompatible(
-  toolCallId: string,
+  toolCallId: string
 ): string {
   if (_isValidMistralToolCallId(toolCallId)) {
     return toolCallId;
