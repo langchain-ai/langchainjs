@@ -306,7 +306,9 @@ export class WeaviateStore extends VectorStore {
    */
   async hybridSearch(
     query: string,
-    options?: HybridOptions<undefined, undefined, undefined>
+    options?: HybridOptions<undefined, undefined, undefined> & {
+      filter?: FilterValue;
+    }
   ): Promise<Document[]> {
     const collection = this.client.collections.get(this.indexName);
     let query_vector: number[] | undefined;
@@ -314,8 +316,10 @@ export class WeaviateStore extends VectorStore {
       query_vector = await this.embeddings.embedQuery(query);
     }
 
+    const { filter, ...restOptions } = options ?? {};
     const options_with_vector = {
-      ...options,
+      ...restOptions,
+      filters: restOptions.filters ?? filter,
       vector: options?.vector || query_vector,
       returnMetadata: [
         "score",
@@ -364,23 +368,26 @@ export class WeaviateStore extends VectorStore {
   async generate(
     query: string,
     generate: GenerateOptions<undefined, GenerativeConfigRuntime | undefined>,
-    options?: BaseHybridOptions<undefined, undefined, undefined>
+    options?: BaseHybridOptions<undefined, undefined, undefined> & {
+      filter?: FilterValue;
+    }
   ): Promise<WeaviateDocument[]> {
     const collection = this.client.collections.get(this.indexName);
+    const { filter, ...restOptions } = options ?? {};
+    const hybridOptions = {
+      ...restOptions,
+      filters: restOptions.filters ?? filter,
+    };
     let result;
     if (this.tenant) {
       result = await collection
         .withTenant(this.tenant)
-        .generate.hybrid(
-          query,
-          { ...(generate || {}) },
-          { ...(options || {}) }
-        );
+        .generate.hybrid(query, { ...(generate || {}) }, hybridOptions);
     } else {
       result = await collection.generate.hybrid(
         query,
         { ...(generate || {}) },
-        { ...(options || {}) }
+        hybridOptions
       );
     }
     const documents = [];
