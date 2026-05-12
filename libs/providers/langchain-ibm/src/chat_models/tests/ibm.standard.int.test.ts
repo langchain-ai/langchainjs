@@ -1,18 +1,17 @@
-import { expect, test } from "vitest";
 import { ChatModelIntegrationTests } from "@langchain/standard-tests/vitest";
 import { AIMessageChunk } from "@langchain/core/messages";
 import {
   ChatWatsonx,
   ChatWatsonxCallOptions,
-  ChatWatsonxConstructorInput,
+  ChatWatsonxInput,
 } from "../ibm.js";
 
 class ChatWatsonxStandardIntegrationTests extends ChatModelIntegrationTests<
   ChatWatsonxCallOptions,
   AIMessageChunk,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ChatWatsonxConstructorInput & Record<string, any>
-> {
+  ChatWatsonxInput & Record<string, any>
+> { 
   constructor() {
     if (!process.env.WATSONX_AI_APIKEY) {
       throw new Error("Cannot run tests. Api key not provided");
@@ -22,7 +21,7 @@ class ChatWatsonxStandardIntegrationTests extends ChatModelIntegrationTests<
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
       constructorArgs: {
-        model: "meta-llama/llama-3-3-70b-instruct",
+        model: "ibm/granite-4-h-small",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",

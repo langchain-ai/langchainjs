@@ -1,10 +1,9 @@
-import { expect, describe } from "vitest";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { LangSmithParams } from "@langchain/core/language_models/chat_models";
 import { ChatModelUnitTests } from "@langchain/standard-tests/vitest";
 import {
   ChatWatsonx,
-  ChatWatsonxConstructorInput,
+  ChatWatsonxInput,
   WatsonxCallOptionsChat,
 } from "../ibm.js";
 
@@ -12,7 +11,7 @@ class ChatWatsonxStandardTests extends ChatModelUnitTests<
   WatsonxCallOptionsChat,
   AIMessageChunk,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ChatWatsonxConstructorInput & Record<string, any>
+  ChatWatsonxInput & Record<string, any>
 > {
   constructor() {
     super({
