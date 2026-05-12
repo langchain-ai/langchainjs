@@ -2,7 +2,6 @@
 export type {
   WatsonxAuth,
   WatsonxInit,
-  Neverify,
   TokenUsage,
   WatsonxRequestBasicOptions,
   WatsonxChatBasicOptions,

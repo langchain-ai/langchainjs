@@ -1,9 +1,9 @@
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 /**
  * Validation utilities for IBM watsonx.ai parameters
  * @module utils/validation
  */
 
-/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { WatsonxValidationError } from "../types.js";
 
 /**
@@ -265,7 +265,7 @@ export function expectOneOf(
  * ```
  */
 export function checkValidProps(
-  params: Record<string, any>,
+  params: Record<string, unknown>,
   allowedKeys: string[]
 ): void {
   const unexpected = Object.keys(params).filter(

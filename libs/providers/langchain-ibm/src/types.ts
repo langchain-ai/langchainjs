@@ -13,14 +13,6 @@ export {
 } from "./types/errors.js";
 
 /**
- * Utility type that makes all properties of T optional and never.
- * Useful for creating mutually exclusive type unions.
- */
-export type Neverify<T> = {
-  [K in keyof T]?: never;
-};
-
-/**
  * Token usage information from Watsonx API responses.
  */
 export interface TokenUsage {

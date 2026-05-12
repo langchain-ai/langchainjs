@@ -52,9 +52,15 @@ export function initWatsonxOrGatewayInstance(
   const config = prepareInstanceConfig(params);
   try {
     return useGateway ? new Gateway(config) : new WatsonXAI(config);
-  } catch (_e) {
-    throw new WatsonxAuthenticationError(
-      "You have not provided any type of authentication"
+  } catch (error) {
+    if (error instanceof WatsonxAuthenticationError) {
+      throw error;
+    }
+
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `Failed to initialize ${useGateway ? "Gateway" : "WatsonXAI"} instance: ${errorMessage}`,
+      { cause: error }
     );
   }
 }
