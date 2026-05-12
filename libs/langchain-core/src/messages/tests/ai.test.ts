@@ -344,14 +344,14 @@ describe("AIMessageChunk", () => {
     // Regression: when a streamed AI message contains both finalized
     // tool_calls and still-streaming tool_call_chunks (common with
     // parallel tool calls that land sequentially within one message),
-    // the constructor should preserve the caller-supplied tool_calls
+    // the constructor should preserve the provided tool_calls
     // rather than rebuilding the field solely from chunks.
     //
     // Symptom in langgraph-sdk: only the in-flight tool call is visible
     // on `message.tool_calls` during streaming; finished calls
     // disappear until `message-finish` flips the message to a plain
     // AIMessage. See langchain-ai/langgraphjs#2380.
-    it("preserves caller-supplied tool_calls when tool_call_chunks is non-empty", () => {
+    it("preserves provided tool_calls when tool_call_chunks is non-empty", () => {
       const chunk = new AIMessageChunk({
         content: "",
         // Tool A is finished: fully parsed args, no chunk to collapse.
@@ -419,6 +419,36 @@ describe("AIMessageChunk", () => {
         id: "A",
         name: "search",
         args: { q: "x" },
+      });
+    });
+
+    it("prefers collapsed tool_calls over provided snapshot on id collision", () => {
+      const chunk = new AIMessageChunk({
+        content: "",
+        tool_calls: [
+          {
+            id: "A",
+            name: "search",
+            args: { q: "stale" },
+            type: "tool_call",
+          },
+        ],
+        tool_call_chunks: [
+          {
+            id: "A",
+            name: "search",
+            args: '{"q":"fresh"}',
+            index: 0,
+            type: "tool_call_chunk",
+          },
+        ],
+      });
+
+      const callA = chunk.tool_calls?.find((tc) => tc.id === "A");
+      expect(callA).toMatchObject({
+        id: "A",
+        name: "search",
+        args: { q: "fresh" },
       });
     });
   });

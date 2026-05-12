@@ -20,7 +20,12 @@ import {
   ToolCallChunk,
   defaultToolCallParser,
 } from "./tool.js";
-import { collapseToolCallChunks, Constructor } from "./utils.js";
+import {
+  collapseToolCallChunks,
+  collectCollapsedToolCallIds,
+  Constructor,
+  mergeProvidedByCollapsedIds,
+} from "./utils.js";
 
 export interface AIMessageFields<
   TStructure extends MessageStructure = MessageStructure,
@@ -53,7 +58,9 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
   }
 
   constructor(
-    fields: $InferMessageContent<TStructure, "ai"> | AIMessageFields<TStructure>
+    fields:
+      | $InferMessageContent<TStructure, "ai">
+      | AIMessageFields<TStructure>,
   ) {
     let initParams: AIMessageFields<TStructure>;
     if (typeof fields === "string" || Array.isArray(fields)) {
@@ -78,7 +85,7 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
             "tool calling.\n\nPlease upgrade your packages to versions that set",
             "message tool calls. e.g., `pnpm install @langchain/anthropic`,",
             "pnpm install @langchain/openai`, etc.",
-          ].join(" ")
+          ].join(" "),
         );
       }
       try {
@@ -119,8 +126,8 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
                 (block) =>
                   block.type === "tool_call" &&
                   block.id === toolCall.id &&
-                  block.name === toolCall.name
-              )
+                  block.name === toolCall.name,
+              ),
           );
           initParams.contentBlocks.push(
             ...missingContentBlockToolCalls.map((toolCall) => ({
@@ -128,21 +135,21 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
               id: toolCall.id,
               name: toolCall.name,
               args: toolCall.args,
-            }))
+            })),
           );
         }
         // Add content block tool calls that aren't in the constructor tool calls
         const missingToolCalls = initParams.contentBlocks
           .filter<ContentBlock.Tools.ToolCall>(
             (block): block is ContentBlock.Tools.ToolCall =>
-              block.type === "tool_call"
+              block.type === "tool_call",
           )
           .filter(
             (block) =>
               !initParams.tool_calls?.some(
                 (toolCall) =>
-                  toolCall.id === block.id && toolCall.name === block.name
-              )
+                  toolCall.id === block.id && toolCall.name === block.name,
+              ),
           );
         if (missingToolCalls.length > 0) {
           initParams.tool_calls = [
@@ -197,7 +204,7 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
     if (this.tool_calls) {
       const missingToolCalls = this.tool_calls.filter(
         (block) =>
-          !blocks.some((b) => b.id === block.id && b.name === block.name)
+          !blocks.some((b) => b.id === block.id && b.name === block.name),
       );
       blocks.push(
         ...(missingToolCalls.map((block) => ({
@@ -205,7 +212,7 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
           id: block.id,
           name: block.name,
           args: block.args,
-        })) as ContentBlock.Tools.ToolCall[])
+        })) as ContentBlock.Tools.ToolCall[]),
       );
     }
 
@@ -227,7 +234,7 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
    * @overload When called with a typed BaseMessage, preserves the TStructure type
    */
   static isInstance<T extends MessageStructure>(
-    obj: BaseMessage<T>
+    obj: BaseMessage<T>,
   ): obj is BaseMessage<T> & AIMessage<T>;
   /**
    * Type guard to check if an object is an AIMessage.
@@ -235,7 +242,7 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
    */
   static isInstance(obj: unknown): obj is AIMessage;
   static isInstance<T extends MessageStructure = MessageStructure>(
-    obj: BaseMessage<T> | unknown
+    obj: BaseMessage<T> | unknown,
   ): obj is AIMessage<T> {
     return super.isInstance(obj) && (obj as { type: string }).type === "ai";
   }
@@ -245,7 +252,7 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
  * @deprecated Use {@link AIMessage.isInstance} instead
  */
 export function isAIMessage<TStructure extends MessageStructure>(
-  x: BaseMessage
+  x: BaseMessage,
 ): x is AIMessage<TStructure> {
   return x._getType() === "ai";
 }
@@ -254,7 +261,7 @@ export function isAIMessage<TStructure extends MessageStructure>(
  * @deprecated Use {@link AIMessageChunk.isInstance} instead
  */
 export function isAIMessageChunk<TStructure extends MessageStructure>(
-  x: BaseMessageChunk
+  x: BaseMessageChunk,
 ): x is AIMessageChunk<TStructure> {
   return x._getType() === "ai";
 }
@@ -288,7 +295,7 @@ export class AIMessageChunk<
   constructor(
     fields:
       | $InferMessageContent<TStructure, "ai">
-      | AIMessageChunkFields<TStructure>
+      | AIMessageChunkFields<TStructure>,
   ) {
     let initParams: AIMessageChunkFields<TStructure>;
     if (typeof fields === "string" || Array.isArray(fields)) {
@@ -314,37 +321,22 @@ export class AIMessageChunk<
       };
     } else {
       const collapsed = collapseToolCallChunks(fields.tool_call_chunks ?? []);
-      // Preserve caller-supplied tool_calls / invalid_tool_calls that
-      // are NOT also represented in the collapsed chunks (deduped by
-      // id). Collapsed entries win on collision because they reflect
-      // the freshest assembled state — `concat()` forwards the prior
-      // chunk's stale `tool_calls` field alongside merged
-      // `tool_call_chunks`, and we must not let the stale snapshot
-      // override the freshly merged args. The caller-fill path keeps
-      // finalized tool_calls visible when callers supply both arrays
-      // for *different* ids (e.g. one tool call finalized while
-      // siblings are still streaming — common with parallel tool
-      // calls landing sequentially within a single message).
-      const collapsedIds = new Set<string>();
-      for (const tc of collapsed.tool_calls)
-        if (tc.id !== undefined) collapsedIds.add(tc.id);
-      for (const tc of collapsed.invalid_tool_calls)
-        if (tc.id !== undefined) collapsedIds.add(tc.id);
-      const callerToolCalls = (fields.tool_calls ??
-        []) as $InferToolCalls<TStructure>[];
-      const callerInvalidToolCalls = fields.invalid_tool_calls ?? [];
-      const mergedToolCalls = [
-        ...(collapsed.tool_calls as $InferToolCalls<TStructure>[]),
-        ...callerToolCalls.filter(
-          (tc) => tc.id === undefined || !collapsedIds.has(tc.id)
-        ),
-      ];
-      const mergedInvalidToolCalls = [
-        ...collapsed.invalid_tool_calls,
-        ...callerInvalidToolCalls.filter(
-          (tc) => tc.id === undefined || !collapsedIds.has(tc.id)
-        ),
-      ];
+      const collapsedIds = collectCollapsedToolCallIds({
+        collapsedToolCalls: collapsed.tool_calls,
+        collapsedInvalidToolCalls: collapsed.invalid_tool_calls,
+      });
+      const mergedToolCalls = mergeProvidedByCollapsedIds<
+        $InferToolCalls<TStructure>
+      >({
+        collapsed: collapsed.tool_calls as $InferToolCalls<TStructure>[],
+        provided: fields.tool_calls as $InferToolCalls<TStructure>[],
+        collapsedIds,
+      });
+      const mergedInvalidToolCalls = mergeProvidedByCollapsedIds({
+        collapsed: collapsed.invalid_tool_calls,
+        provided: fields.invalid_tool_calls,
+        collapsedIds,
+      });
       initParams = {
         ...fields,
         tool_call_chunks: collapsed.tool_call_chunks,
@@ -441,11 +433,11 @@ export class AIMessageChunk<
       content: mergeContent(this.content, chunk.content),
       additional_kwargs: _mergeDicts(
         this.additional_kwargs,
-        chunk.additional_kwargs
+        chunk.additional_kwargs,
       ),
       response_metadata: mergeResponseMetadata(
         this.response_metadata,
-        chunk.response_metadata
+        chunk.response_metadata,
       ),
       tool_call_chunks: [],
       tool_calls: [],
@@ -457,7 +449,7 @@ export class AIMessageChunk<
     ) {
       const rawToolCalls = _mergeLists(
         this.tool_call_chunks as ContentBlock.Tools.ToolCallChunk[],
-        chunk.tool_call_chunks as ContentBlock.Tools.ToolCallChunk[]
+        chunk.tool_call_chunks as ContentBlock.Tools.ToolCallChunk[],
       );
       if (rawToolCalls !== undefined && rawToolCalls.length > 0) {
         combinedFields.tool_call_chunks = rawToolCalls as ToolCallChunk[];
@@ -466,7 +458,7 @@ export class AIMessageChunk<
     if (this.tool_calls !== undefined || chunk.tool_calls !== undefined) {
       const rawToolCalls = _mergeLists(
         this.tool_calls as ContentBlock.Tools.ToolCall[],
-        chunk.tool_calls as ContentBlock.Tools.ToolCall[]
+        chunk.tool_calls as ContentBlock.Tools.ToolCall[],
       );
       if (rawToolCalls !== undefined && rawToolCalls.length > 0) {
         combinedFields.tool_calls =
@@ -479,7 +471,7 @@ export class AIMessageChunk<
     ) {
       combinedFields.usage_metadata = mergeUsageMetadata(
         this.usage_metadata,
-        chunk.usage_metadata
+        chunk.usage_metadata,
       );
     }
     const Cls = this.constructor as Constructor<this>;
@@ -492,7 +484,7 @@ export class AIMessageChunk<
    * @overload When called with a typed BaseMessage, preserves the TStructure type
    */
   static isInstance<T extends MessageStructure>(
-    obj: BaseMessage<T>
+    obj: BaseMessage<T>,
   ): obj is BaseMessage<T> & AIMessageChunk<T>;
   /**
    * Type guard to check if an object is an AIMessageChunk.
@@ -500,7 +492,7 @@ export class AIMessageChunk<
    */
   static isInstance(obj: unknown): obj is AIMessageChunk;
   static isInstance<T extends MessageStructure = MessageStructure>(
-    obj: BaseMessage<T> | unknown
+    obj: BaseMessage<T> | unknown,
   ): obj is AIMessageChunk<T> {
     return super.isInstance(obj) && (obj as { type: string }).type === "ai";
   }

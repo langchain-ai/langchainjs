@@ -626,3 +626,55 @@ export function collapseToolCallChunks(chunks: ToolCallChunk[]): {
     invalid_tool_calls: invalidToolCalls,
   };
 }
+
+export interface CollectCollapsedToolCallIdsParams {
+  collapsedToolCalls: ToolCall[];
+  collapsedInvalidToolCalls: InvalidToolCall[];
+}
+
+/**
+ * Collects ids from chunk-collapsed valid and invalid tool call arrays.
+ */
+export function collectCollapsedToolCallIds({
+  collapsedToolCalls,
+  collapsedInvalidToolCalls,
+}: CollectCollapsedToolCallIdsParams): Set<string> {
+  const collapsedIds = new Set<string>();
+  for (const tc of collapsedToolCalls) {
+    if (tc.id !== undefined) collapsedIds.add(tc.id);
+  }
+  for (const tc of collapsedInvalidToolCalls) {
+    if (tc.id !== undefined) collapsedIds.add(tc.id);
+  }
+  return collapsedIds;
+}
+
+export interface MergeProvidedByCollapsedIdsParams<
+  T extends {
+    id?: string;
+  },
+> {
+  collapsed: T[];
+  provided?: T[];
+  collapsedIds: Set<string>;
+}
+
+/**
+ * Merges provided entries with collapsed entries, deduping by collapsed ids.
+ *
+ * Collapsed entries are kept first and win on `id` collisions.
+ */
+export function mergeProvidedByCollapsedIds<
+  T extends {
+    id?: string;
+  },
+>({
+  collapsed,
+  provided = [],
+  collapsedIds,
+}: MergeProvidedByCollapsedIdsParams<T>): T[] {
+  return [
+    ...collapsed,
+    ...provided.filter((tc) => tc.id === undefined || !collapsedIds.has(tc.id)),
+  ];
+}
