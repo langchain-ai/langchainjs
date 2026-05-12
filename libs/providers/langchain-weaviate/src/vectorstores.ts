@@ -316,10 +316,9 @@ export class WeaviateStore extends VectorStore {
       query_vector = await this.embeddings.embedQuery(query);
     }
 
-    const { filter, ...restOptions } = options ?? {};
     const options_with_vector = {
-      ...restOptions,
-      filters: restOptions.filters ?? filter,
+      ...(options ?? {}),
+      filters: options?.filters ?? options?.filter,
       vector: options?.vector || query_vector,
       returnMetadata: [
         "score",
@@ -373,10 +372,9 @@ export class WeaviateStore extends VectorStore {
     }
   ): Promise<WeaviateDocument[]> {
     const collection = this.client.collections.get(this.indexName);
-    const { filter, ...restOptions } = options ?? {};
     const hybridOptions = {
-      ...restOptions,
-      filters: restOptions.filters ?? filter,
+      ...(options ?? {}),
+      filters: options?.filters ?? options?.filter,
     };
     let result;
     if (this.tenant) {
