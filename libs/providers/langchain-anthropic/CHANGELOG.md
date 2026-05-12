@@ -1,5 +1,29 @@
 # @langchain/anthropic
 
+## 1.3.29
+
+### Patch Changes
+
+- [#10735](https://github.com/langchain-ai/langchainjs/pull/10735) [`1a2a08a`](https://github.com/langchain-ai/langchainjs/commit/1a2a08a33b7d99ec7348678116cc5d074db137bb) Thanks [@chenzimin](https://github.com/chenzimin)! - feat(anthropic): add automatic prompt caching via top-level cache_control
+
+## 1.3.28
+
+### Patch Changes
+
+- [#10776](https://github.com/langchain-ai/langchainjs/pull/10776) [`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6) Thanks [@hntrl](https://github.com/hntrl)! - fix(deps): remediate uuid vulnerability by removing direct uuid usage
+
+- Updated dependencies [[`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6)]:
+  - @langchain/core@1.1.42
+
+## 1.3.27
+
+### Patch Changes
+
+- [#10726](https://github.com/langchain-ai/langchainjs/pull/10726) [`ad153c1`](https://github.com/langchain-ai/langchainjs/commit/ad153c185b6cf813d4b7695740d9a4453d2cb63f) Thanks [@hntrl](https://github.com/hntrl)! - feat(anthropic): add Claude Opus 4.7 compatibility updates
+
+- Updated dependencies [[`589f29c`](https://github.com/langchain-ai/langchainjs/commit/589f29ce844eb252c2d5e6b0f8d26de37763a0d7), [`2e9e696`](https://github.com/langchain-ai/langchainjs/commit/2e9e6969e248a53ede0659a41d0ac8dbaf291ab4)]:
+  - @langchain/core@1.1.41
+
 ## 1.3.26
 
 ### Patch Changes

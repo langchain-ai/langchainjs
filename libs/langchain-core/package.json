@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "1.1.40",
+  "version": "1.1.46",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -26,19 +26,14 @@
   "dependencies": {
     "@cfworker/json-schema": "^4.0.2",
     "@standard-schema/spec": "^1.1.0",
-    "ansi-styles": "^5.0.0",
-    "camelcase": "6",
-    "decamelize": "1.2.0",
     "js-tiktoken": "^1.0.12",
     "langsmith": ">=0.5.0 <1.0.0",
     "mustache": "^4.2.0",
     "p-queue": "^6.6.2",
-    "uuid": "^11.1.0",
     "zod": "^3.25.76 || ^4"
   },
   "devDependencies": {
     "@langchain/tsconfig": "workspace:*",
-    "@types/decamelize": "^1.2.0",
     "@types/mustache": "^4",
     "@types/node": "^25.5.0",
     "@types/uuid": "^10.0.0",
@@ -277,6 +272,28 @@
         "default": "./dist/language_models/chat_models.js"
       }
     },
+    "./language_models/compat": {
+      "input": "./src/language_models/compat.ts",
+      "require": {
+        "types": "./dist/language_models/compat.d.cts",
+        "default": "./dist/language_models/compat.cjs"
+      },
+      "import": {
+        "types": "./dist/language_models/compat.d.ts",
+        "default": "./dist/language_models/compat.js"
+      }
+    },
+    "./language_models/event": {
+      "input": "./src/language_models/event.ts",
+      "require": {
+        "types": "./dist/language_models/event.d.cts",
+        "default": "./dist/language_models/event.cjs"
+      },
+      "import": {
+        "types": "./dist/language_models/event.d.ts",
+        "default": "./dist/language_models/event.js"
+      }
+    },
     "./language_models/llms": {
       "input": "./src/language_models/llms.ts",
       "require": {
@@ -297,6 +314,17 @@
       "import": {
         "types": "./dist/language_models/profile.d.ts",
         "default": "./dist/language_models/profile.js"
+      }
+    },
+    "./language_models/stream": {
+      "input": "./src/language_models/stream.ts",
+      "require": {
+        "types": "./dist/language_models/stream.d.cts",
+        "default": "./dist/language_models/stream.cjs"
+      },
+      "import": {
+        "types": "./dist/language_models/stream.d.ts",
+        "default": "./dist/language_models/stream.js"
       }
     },
     "./language_models/structured_output": {
@@ -781,6 +809,17 @@
       "import": {
         "types": "./dist/utils/types/index.d.ts",
         "default": "./dist/utils/types/index.js"
+      }
+    },
+    "./utils/uuid": {
+      "input": "./src/utils/uuid/index.ts",
+      "require": {
+        "types": "./dist/utils/uuid/index.d.cts",
+        "default": "./dist/utils/uuid/index.cjs"
+      },
+      "import": {
+        "types": "./dist/utils/uuid/index.d.ts",
+        "default": "./dist/utils/uuid/index.js"
       }
     },
     "./vectorstores": {

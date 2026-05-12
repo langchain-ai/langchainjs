@@ -307,6 +307,82 @@ describe("ChatBedrockConverse invocationParams", () => {
     );
   });
 
+  describe("prompt caching request mapping", () => {
+    test("invoke maps cache_control to system, messages, and tools", async () => {
+      const model = new ChatBedrockConverse(baseConstructorArgs);
+      await model.invoke(
+        [new SystemMessage("System prompt"), new HumanMessage("Hello")],
+        {
+          cache_control: { type: "ephemeral", ttl: "1h" },
+          tools: [
+            {
+              toolSpec: {
+                name: "get_weather",
+                description: "Get weather",
+                inputSchema: {
+                  json: { type: "object", properties: {} },
+                },
+              },
+            },
+          ],
+        }
+      );
+
+      const input = Reflect.get(
+        ConverseCommand,
+        "lastInput"
+      ) as ConverseCommandInput;
+
+      expect(input.system).toEqual([
+        { text: "System prompt" },
+        { cachePoint: { type: "default", ttl: "1h" } },
+      ]);
+      expect(input.messages?.[0].content).toEqual([
+        { text: "Hello" },
+        { cachePoint: { type: "default", ttl: "1h" } },
+      ]);
+      expect(input.toolConfig?.tools).toEqual([
+        {
+          toolSpec: {
+            name: "get_weather",
+            description: "Get weather",
+            inputSchema: {
+              json: { type: "object", properties: {} },
+            },
+          },
+        },
+        { cachePoint: { type: "default", ttl: "1h" } },
+      ]);
+    });
+
+    test("stream maps cache_control to system and last message", async () => {
+      const model = new ChatBedrockConverse(baseConstructorArgs);
+      const stream = await model.stream(
+        [new SystemMessage("System prompt"), new HumanMessage("Hello")],
+        {
+          cache_control: { type: "ephemeral" },
+        }
+      );
+      for await (const _chunk of stream) {
+        // Fully consume stream so command is executed.
+      }
+
+      const input = Reflect.get(
+        ConverseStreamCommand,
+        "lastInput"
+      ) as ConverseStreamCommandInput;
+
+      expect(input.system).toEqual([
+        { text: "System prompt" },
+        { cachePoint: { type: "default" } },
+      ]);
+      expect(input.messages?.[0].content).toEqual([
+        { text: "Hello" },
+        { cachePoint: { type: "default" } },
+      ]);
+    });
+  });
+
   describe("defaultHeaders middleware", () => {
     test("registers middleware on client when defaultHeaders are provided", () => {
       const model = new ChatBedrockConverse({

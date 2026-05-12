@@ -1,4 +1,4 @@
-import { v1, v4 } from "uuid"; // FIXME - it is importing the wrong uuid, so v6 and v7 aren't implemented
+import { v1, v4 } from "@langchain/core/utils/uuid"; // FIXME - it is importing the wrong uuid, so v6 and v7 aren't implemented
 import { BaseStore } from "@langchain/core/stores";
 import { Serializable } from "@langchain/core/load/serializable";
 

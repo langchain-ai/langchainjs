@@ -1,5 +1,5 @@
 import { test, expect, vi } from "vitest";
-import * as uuid from "uuid";
+import * as uuid from "../../utils/uuid/index.js";
 import { AsyncLocalStorage } from "node:async_hooks";
 import type { LangSmithTracingClientInterface } from "langsmith";
 import { CallbackManager } from "../manager.js";
@@ -10,6 +10,7 @@ import type { ChainValues } from "../../utils/types/index.js";
 import type { AgentAction, AgentFinish } from "../../agents.js";
 import { BaseMessage, HumanMessage } from "../../messages/index.js";
 import type { LLMResult } from "../../outputs.js";
+import type { ChatModelStreamEvent } from "../../language_models/event.js";
 import { RunnableLambda } from "../../runnables/base.js";
 import { AsyncLocalStorageProviderSingleton } from "../../singletons/index.js";
 import { awaitAllCallbacks } from "../promises.js";
@@ -166,6 +167,20 @@ class FakeCallbackHandlerWithChatStart extends FakeCallbackHandler {
   }
 }
 
+class FakeChatModelStreamEventHandler extends BaseCallbackHandler {
+  name = `fake-stream-event-${uuid.v4()}`;
+
+  events: ChatModelStreamEvent[] = [];
+
+  constructor(inputs?: BaseCallbackHandlerInput) {
+    super(inputs);
+  }
+
+  handleChatModelStreamEvent(event: ChatModelStreamEvent): void {
+    this.events.push(event);
+  }
+}
+
 const serialized: Serialized = {
   lc: 1,
   type: "constructor",
@@ -278,6 +293,46 @@ test("CallbackHandler with ignoreLLM", async () => {
   expect(handler.llmStarts).toBe(0);
   expect(handler.llmEnds).toBe(0);
   expect(handler.llmStreams).toBe(0);
+});
+
+test("CallbackManager dispatches chat model stream events", async () => {
+  const manager = new CallbackManager();
+  const handler = new FakeChatModelStreamEventHandler();
+  manager.addHandler(handler);
+
+  const llmCbs = await manager.handleChatModelStart(serialized, [
+    [new HumanMessage("test")],
+  ]);
+  await Promise.all(
+    llmCbs.map(async (llmCb) => {
+      await llmCb.handleChatModelStreamEvent({
+        event: "message-start",
+        id: "msg-1",
+      });
+    })
+  );
+
+  expect(handler.events).toEqual([{ event: "message-start", id: "msg-1" }]);
+});
+
+test("CallbackManager respects ignoreLLM for chat model stream events", async () => {
+  const manager = new CallbackManager();
+  const handler = new FakeChatModelStreamEventHandler({ ignoreLLM: true });
+  manager.addHandler(handler);
+
+  const llmCbs = await manager.handleChatModelStart(serialized, [
+    [new HumanMessage("test")],
+  ]);
+  await Promise.all(
+    llmCbs.map(async (llmCb) => {
+      await llmCb.handleChatModelStreamEvent({
+        event: "message-start",
+        id: "msg-1",
+      });
+    })
+  );
+
+  expect(handler.events).toEqual([]);
 });
 
 test("CallbackHandler with ignoreRetriever", async () => {

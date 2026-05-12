@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-common",
-  "version": "2.1.27",
+  "version": "2.1.30",
   "description": "Core types and classes for Google services.",
   "type": "module",
   "engines": {
@@ -24,9 +24,6 @@
   },
   "author": "LangChain",
   "license": "MIT",
-  "dependencies": {
-    "uuid": "^10.0.0"
-  },
   "peerDependencies": {
     "@langchain/core": "workspace:^"
   },
@@ -109,15 +106,15 @@
     "CHANGELOG.md",
     "README.md",
     "LICENSE",
+    "utils.d.cts",
+    "utils.cjs",
+    "utils.d.ts",
+    "utils.js",
     "types.d.cts",
     "types.cjs",
     "types.d.ts",
     "types.js",
-    "experimental",
-    "utils.d.cts",
-    "utils.cjs",
-    "utils.d.ts",
-    "utils.js"
+    "experimental"
   ],
   "module": "./dist/index.js"
 }

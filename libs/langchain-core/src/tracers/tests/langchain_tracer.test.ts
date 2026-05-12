@@ -2,7 +2,7 @@
 
 import { vi, test, expect, describe } from "vitest";
 import { AsyncLocalStorage } from "node:async_hooks";
-import * as uuid from "uuid";
+import * as uuid from "../../utils/uuid/index.js";
 
 import { RunnableLambda } from "../../runnables/base.js";
 import { LangChainTracer } from "../tracer_langchain.js";
