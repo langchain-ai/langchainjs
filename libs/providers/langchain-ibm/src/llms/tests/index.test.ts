@@ -8,12 +8,16 @@ import {
   WatsonXAI,
 } from "@ibm-cloud/watsonx-ai";
 import { IterableReadableStream } from "@langchain/core/utils/stream";
-import { WatsonxLLM, WatsonxInputLLM, WatsonxLLMConstructor } from "../ibm.js";
-import { authenticateAndSetInstance } from "../../utils/ibm.js";
+import {
+  WatsonxLLM,
+  WatsonxInputLLM,
+  WatsonxLLMConstructor,
+} from "../index.js";
+import { initWatsonxOrGatewayInstance } from "../../utils/instance.js";
 import {
   WatsonxEmbeddings,
   WatsonxEmbeddingsConstructor,
-} from "../../embeddings/ibm.js";
+} from "../../embeddings/index.js";
 
 const fakeAuthProp = {
   watsonxAIAuthType: "iam",
@@ -71,7 +75,7 @@ export const testProperties = (
 describe("LLM unit tests", () => {
   describe("Positive tests with default mode", () => {
     test("Test authentication function", () => {
-      const instance = authenticateAndSetInstance({
+      const instance = initWatsonxOrGatewayInstance({
         version: "2024-05-31",
         serviceUrl,
         ...fakeAuthProp,
@@ -389,7 +393,6 @@ describe("LLM unit tests", () => {
       };
       expect(
         () =>
-          // @ts-expect-error Passing wrong props with modelGateway
           new WatsonxLLM({
             ...testProps,
             ...fakeAuthProp,
@@ -408,7 +411,6 @@ describe("LLM unit tests", () => {
       };
       expect(
         () =>
-          // @ts-expect-error Passing wrong props with projectId
           new WatsonxLLM({
             ...testProps,
             ...fakeAuthProp,
@@ -425,7 +427,6 @@ describe("LLM unit tests", () => {
       };
       expect(
         () =>
-          // @ts-expect-error Passing wrong props with modelGateway
           new WatsonxLLM({
             ...testProps,
             ...fakeAuthProp,

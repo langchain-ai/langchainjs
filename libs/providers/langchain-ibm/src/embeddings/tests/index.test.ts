@@ -1,8 +1,8 @@
 /* oxlint-disable dot-notation */
 import { Gateway } from "@ibm-cloud/watsonx-ai/gateway";
 import { vi, expect, describe, test } from "vitest";
-import { WatsonxEmbeddings, WatsonxInputEmbeddings } from "../ibm.js";
-import { testProperties } from "../../llms/tests/ibm.test.js";
+import { WatsonxEmbeddings, WatsonxInputEmbeddings } from "../index.js";
+import { testProperties } from "../../llms/tests/index.test.js";
 
 const fakeAuthProp = {
   watsonxAIAuthType: "iam",
@@ -206,7 +206,7 @@ describe("Negative tests", () => {
     };
     expect(
       () =>
-        // @ts-expect-error Passing wrong props with modelGateway
+        // @ts-expect-error invalid props
         new WatsonxEmbeddings({
           ...testProps,
           ...fakeAuthProp,
@@ -225,7 +225,7 @@ describe("Negative tests", () => {
     };
     expect(
       () =>
-        // @ts-expect-error Passing wrong props with projectid
+        // @ts-expect-error invalid props
         new WatsonxEmbeddings({
           ...testProps,
           ...fakeAuthProp,
@@ -242,7 +242,7 @@ describe("Negative tests", () => {
     };
     expect(
       () =>
-        // @ts-expect-error Passing wrong props with modelGateway
+        // @ts-expect-error invalid props
         new WatsonxEmbeddings({
           ...testProps,
           ...fakeAuthProp,

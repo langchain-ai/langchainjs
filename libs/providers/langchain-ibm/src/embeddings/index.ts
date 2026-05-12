@@ -3,13 +3,14 @@ import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
 import { WatsonXAI } from "@ibm-cloud/watsonx-ai";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import { CreateEmbeddingsParams, Gateway } from "@ibm-cloud/watsonx-ai/gateway";
-import { WatsonxAuth, WatsonxEmbeddingsBasicOptions, XOR } from "../types.js";
 import {
-  authenticateAndSetGatewayInstance,
-  authenticateAndSetInstance,
-  checkValidProps,
-  expectOneOf,
-} from "../utils/ibm.js";
+  WatsonxAuth,
+  WatsonxConfigurationError,
+  WatsonxEmbeddingsBasicOptions,
+  WatsonxUnsupportedOperationError,
+} from "../types.js";
+import { PropertyValidator, expectOneOf } from "../utils/validation.js";
+import { initWatsonxOrGatewayInstance } from "../utils/instance.js";
 
 export interface WatsonxEmbeddingsParams
   extends
@@ -51,12 +52,86 @@ export interface WatsonxInputGatewayEmbeddings
       keyof WatsonxEmbeddingsGatewayKwargs | "input"
     > {}
 
-export type WatsonxEmbeddingsConstructor = XOR<
-  WatsonxInputEmbeddings,
-  WatsonxInputGatewayEmbeddings
-> &
+export type WatsonxEmbeddingsConstructor = (
+  | WatsonxInputEmbeddings
+  | WatsonxInputGatewayEmbeddings
+) &
   WatsonxAuth;
 
+/**
+ * IBM Watsonx.ai embeddings integration for generating text embeddings.
+ *
+ * Supports two deployment modes:
+ * 1. **Project/Space Mode**: Use with IBM Cloud project or space IDs
+ * 2. **Gateway Mode**: Use with IBM Watsonx.ai Gateway
+ *
+ * @example Basic embeddings with project ID
+ * ```typescript
+ * import { WatsonxEmbeddings } from "@langchain/ibm";
+ *
+ * const embeddings = new WatsonxEmbeddings({
+ *   model: "ibm/slate-125m-english-rtrvr",
+ *   projectId: "your-project-id",
+ *   serviceUrl: "https://us-south.ml.cloud.ibm.com",
+ *   apiKey: process.env.WATSONX_AI_APIKEY,
+ * });
+ *
+ * // Embed a single document
+ * const embedding = await embeddings.embedQuery("Hello world");
+ * console.log(embedding); // Array of numbers
+ * ```
+ *
+ * @example Embedding multiple documents
+ * ```typescript
+ * const embeddings = new WatsonxEmbeddings({
+ *   model: "ibm/slate-125m-english-rtrvr",
+ *   projectId: "your-project-id",
+ *   serviceUrl: "https://us-south.ml.cloud.ibm.com",
+ *   apiKey: process.env.WATSONX_AI_APIKEY,
+ * });
+ *
+ * const docs = [
+ *   "The quick brown fox",
+ *   "jumps over the lazy dog",
+ *   "Hello world",
+ * ];
+ *
+ * const vectors = await embeddings.embedDocuments(docs);
+ * console.log(vectors.length); // 3
+ * console.log(vectors[0].length); // Embedding dimension
+ * ```
+ *
+ * @example Using with space ID
+ * ```typescript
+ * const embeddings = new WatsonxEmbeddings({
+ *   model: "ibm/slate-125m-english-rtrvr",
+ *   spaceId: "your-space-id",
+ *   serviceUrl: "https://us-south.ml.cloud.ibm.com",
+ *   apiKey: process.env.WATSONX_AI_APIKEY,
+ * });
+ * ```
+ *
+ * @example Using Gateway mode
+ * ```typescript
+ * const embeddings = new WatsonxEmbeddings({
+ *   model: "sentence-transformers/all-minilm-l6-v2",
+ *   modelGateway: true,
+ *   serviceUrl: "https://us-south.ml.cloud.ibm.com",
+ *   apiKey: process.env.WATSONX_AI_APIKEY,
+ * });
+ * ```
+ *
+ * @example With truncation
+ * ```typescript
+ * const embeddings = new WatsonxEmbeddings({
+ *   model: "ibm/slate-125m-english-rtrvr",
+ *   projectId: "your-project-id",
+ *   serviceUrl: "https://us-south.ml.cloud.ibm.com",
+ *   apiKey: process.env.WATSONX_AI_APIKEY,
+ *   truncateInputTokens: 512, // Truncate long inputs
+ * });
+ * ```
+ */
 export class WatsonxEmbeddings
   extends Embeddings
   implements WatsonxEmbeddingsParams, WatsonxInputGatewayEmbeddings
@@ -87,43 +162,10 @@ export class WatsonxEmbeddings
 
   protected gateway?: Gateway;
 
+  private validator = new PropertyValidator();
+
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   private checkValidProperties(fields: any, includeCommonProps = true) {
-    const alwaysAllowedProps = ["headers", "signal", "promptIndex"];
-
-    const authProps = [
-      "serviceUrl",
-      "watsonxAIApikey",
-      "watsonxAIBearerToken",
-      "watsonxAIUsername",
-      "watsonxAIPassword",
-      "watsonxAIUrl",
-      "watsonxAIAuthType",
-      "disableSSL",
-    ];
-
-    const sharedProps = [
-      "maxRetries",
-      "watsonxCallbacks",
-      "authenticator",
-      "serviceUrl",
-      "version",
-      "streaming",
-      "callbackManager",
-      "callbacks",
-      "maxConcurrency",
-      "cache",
-      "metadata",
-      "concurrency",
-      "onFailedAttempt",
-      "concurrency",
-      "verbose",
-      "tags",
-      "headers",
-      "signal",
-      "disableStreaming",
-    ];
-
     const projectOrSpaceProps = [
       "truncateInputTokens",
       "returnOptions",
@@ -132,68 +174,53 @@ export class WatsonxEmbeddings
       "spaceId",
     ];
     const gatewayProps = ["model", "modelGatewayKwargs", "modelGateway"];
-    const validProps: string[] = [...alwaysAllowedProps];
-    if (includeCommonProps) validProps.push(...authProps, ...sharedProps);
 
+    let modeProps: string[] = [];
     if (this.modelGateway) {
-      validProps.push(...gatewayProps);
+      modeProps = gatewayProps;
     } else if (this.spaceId || this.projectId) {
-      validProps.push(...projectOrSpaceProps);
+      modeProps = projectOrSpaceProps;
     }
 
-    checkValidProps(fields, validProps);
+    this.validator.validateByMode(
+      fields as Record<string, unknown>,
+      modeProps,
+      {
+        includeCommon: includeCommonProps,
+      }
+    );
   }
-
+  constructor(fields: WatsonxInputEmbeddings & WatsonxAuth);
+  constructor(fields: WatsonxInputGatewayEmbeddings & WatsonxAuth);
   constructor(fields: WatsonxEmbeddingsConstructor) {
     super(fields);
     expectOneOf(fields, ["projectId", "spaceId", "modelGateway"], true);
-    this.projectId = fields?.projectId;
-    this.spaceId = fields?.spaceId;
-    this.modelGateway = fields.modelGateway ?? this.modelGateway;
+    if ("modelGateway" in fields)
+      this.modelGateway = fields.modelGateway ?? this.modelGateway;
+    else {
+      this.projectId = fields?.projectId;
+      this.spaceId = fields?.spaceId;
+    }
 
     this.checkValidProperties(fields);
+    if ("modelGateway" in fields)
+      this.modelGatewayKwargs = fields.modelGatewayKwargs;
+    else {
+      this.truncateInputTokens = fields.truncateInputTokens;
+      this.returnOptions = fields.returnOptions;
+    }
 
     this.model = fields.model;
     this.version = fields.version;
     this.serviceUrl = fields.serviceUrl;
-    this.truncateInputTokens = fields.truncateInputTokens;
-    this.returnOptions = fields.returnOptions;
     this.maxConcurrency = fields.maxConcurrency ?? this.maxConcurrency;
     this.maxRetries = fields.maxRetries ?? 0;
     this.serviceUrl = fields?.serviceUrl;
-    this.modelGatewayKwargs = fields.modelGatewayKwargs;
 
-    const {
-      watsonxAIApikey,
-      watsonxAIAuthType,
-      watsonxAIBearerToken,
-      watsonxAIUsername,
-      watsonxAIPassword,
-      watsonxAIUrl,
-      disableSSL,
-      version,
-      serviceUrl,
-    } = fields;
-
-    const authData = {
-      watsonxAIApikey,
-      watsonxAIAuthType,
-      watsonxAIBearerToken,
-      watsonxAIUsername,
-      watsonxAIPassword,
-      watsonxAIUrl,
-      disableSSL,
-      version,
-      serviceUrl,
-    };
     if (this.modelGateway) {
-      const auth = authenticateAndSetGatewayInstance(authData);
-      if (auth) this.gateway = auth;
-      else throw new Error("You have not provided one type of authentication");
+      this.gateway = initWatsonxOrGatewayInstance(fields, true);
     } else {
-      const auth = authenticateAndSetInstance(authData);
-      if (auth) this.service = auth;
-      else throw new Error("You have not provided one type of authentication");
+      this.service = initWatsonxOrGatewayInstance(fields);
     }
   }
 
@@ -232,7 +259,10 @@ export class WatsonxEmbeddings
         service.listFoundationModelSpecs(listModelParams)
       );
       return listModels.result.resources?.map((item) => item.model_id);
-    } else throw new Error("This method is not supported in model gateway");
+    } else
+      throw new WatsonxUnsupportedOperationError(
+        "This method is not supported in model gateway"
+      );
   }
 
   private async embedSingleText(inputs: string[]) {
@@ -266,7 +296,7 @@ export class WatsonxEmbeddings
       const res = embeddings.result.data.map((item) => item.embedding);
       return res;
     }
-    throw new Error(
+    throw new WatsonxConfigurationError(
       "Invalid parameters provided. Please check passed properties to class instance"
     );
   }

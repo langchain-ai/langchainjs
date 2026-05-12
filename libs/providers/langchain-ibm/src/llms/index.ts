@@ -21,20 +21,18 @@ import {
   Gateway,
   TextCompletionStream,
 } from "@ibm-cloud/watsonx-ai/gateway";
-import {
-  authenticateAndSetGatewayInstance,
-  authenticateAndSetInstance,
-  checkValidProps,
-  expectOneOf,
-} from "../utils/ibm.js";
+import { PropertyValidator, expectOneOf } from "../utils/validation.js";
+import { initWatsonxOrGatewayInstance } from "../utils/instance.js";
 import {
   GenerationInfo,
   ResponseChunk,
   TokenUsage,
   WatsonxAuth,
+  WatsonxConfigurationError,
   WatsonxInit,
   WatsonxLLMBasicOptions,
-  XOR,
+  WatsonxUnsupportedOperationError,
+  WatsonxValidationError,
 } from "../types.js";
 
 export interface WatsonxLLMParams {
@@ -58,7 +56,7 @@ export interface WatsonxLLMParams {
   signal?: AbortSignal;
 }
 
-export interface WatsonxDeploymentLLMParams {
+export interface WatsonxDeploymentLLMParams extends WatsonxLLMParams {
   idOrName: string;
 }
 
@@ -81,7 +79,7 @@ export interface WatsonxLLMGatewayParams
 export interface WatsonxCallOptionsLLM
   extends BaseLanguageModelCallOptions, Partial<WatsonxInit> {
   maxRetries?: number;
-  parameters?: XOR<Partial<WatsonxLLMParams>, Partial<WatsonxLLMGatewayParams>>;
+  parameters?: Partial<WatsonxLLMParams> & Partial<WatsonxLLMGatewayParams>;
   watsonxCallbacks?: RequestCallbacks;
 }
 
@@ -98,12 +96,91 @@ export interface WatsonxDeployedInputLLM
 export interface WatsonxGatewayInputLLM
   extends WatsonxLLMBasicOptions, WatsonxLLMGatewayParams {}
 
-export type WatsonxLLMConstructor = XOR<
-  XOR<WatsonxInputLLM, WatsonxDeployedInputLLM>,
-  WatsonxGatewayInputLLM
-> &
+export type WatsonxLLMConstructor = (
+  | WatsonxInputLLM
+  | WatsonxDeployedInputLLM
+  | WatsonxGatewayInputLLM
+) &
   WatsonxAuth;
 
+/**
+ * IBM Watsonx.ai LLM integration for text generation.
+ *
+ * Supports three deployment modes:
+ * 1. **Project/Space Mode**: Use with IBM Cloud project or space IDs
+ * 2. **Deployment Mode**: Use with deployed model IDs
+ * 3. **Gateway Mode**: Use with IBM Watsonx.ai Gateway
+ *
+ * @example Basic text generation with project ID
+ * ```typescript
+ * import { WatsonxLLM } from "@langchain/ibm";
+ *
+ * const model = new WatsonxLLM({
+ *   model: "ibm/granite-13b-instruct-v2",
+ *   projectId: "your-project-id",
+ *   serviceUrl: "https://us-south.ml.cloud.ibm.com",
+ *   apiKey: process.env.WATSONX_AI_APIKEY,
+ *   maxNewTokens: 100,
+ *   temperature: 0.7,
+ * });
+ *
+ * const response = await model.invoke("What is the capital of France?");
+ * console.log(response);
+ * ```
+ *
+ * @example Streaming text generation
+ * ```typescript
+ * const model = new WatsonxLLM({
+ *   model: "ibm/granite-13b-instruct-v2",
+ *   projectId: "your-project-id",
+ *   serviceUrl: "https://us-south.ml.cloud.ibm.com",
+ *   apiKey: process.env.WATSONX_AI_APIKEY,
+ *   streaming: true,
+ * });
+ *
+ * const stream = await model.stream("Tell me a story");
+ * for await (const chunk of stream) {
+ *   console.log(chunk);
+ * }
+ * ```
+ *
+ * @example Using with space ID
+ * ```typescript
+ * const model = new WatsonxLLM({
+ *   model: "ibm/granite-13b-instruct-v2",
+ *   spaceId: "your-space-id",
+ *   serviceUrl: "https://us-south.ml.cloud.ibm.com",
+ *   apiKey: process.env.WATSONX_AI_APIKEY,
+ * });
+ * ```
+ *
+ * @example Using Gateway mode
+ * ```typescript
+ * const model = new WatsonxLLM({
+ *   model: "meta-llama/llama-3-70b-instruct",
+ *   modelGateway: true,
+ *   serviceUrl: "https://us-south.ml.cloud.ibm.com",
+ *   apiKey: process.env.WATSONX_AI_APIKEY,
+ * });
+ * ```
+ *
+ * @example Advanced parameters
+ * ```typescript
+ * const model = new WatsonxLLM({
+ *   model: "ibm/granite-13b-instruct-v2",
+ *   projectId: "your-project-id",
+ *   serviceUrl: "https://us-south.ml.cloud.ibm.com",
+ *   apiKey: process.env.WATSONX_AI_APIKEY,
+ *   maxNewTokens: 200,
+ *   minNewTokens: 50,
+ *   temperature: 0.8,
+ *   topP: 0.9,
+ *   topK: 50,
+ *   repetitionPenalty: 1.1,
+ *   decodingMethod: "greedy",
+ * });
+ * ```
+ */
 export class WatsonxLLM<
   CallOptions extends WatsonxCallOptionsLLM = WatsonxCallOptionsLLM,
 >
@@ -176,42 +253,15 @@ export class WatsonxLLM<
 
   protected gateway?: Gateway;
 
+  private validator = new PropertyValidator();
+
   private checkValidProperties(
     fields:
       | WatsonxLLMConstructor
-      | XOR<Partial<WatsonxLLMParams>, Partial<WatsonxLLMGatewayParams>>,
+      | Partial<WatsonxLLMParams>
+      | Partial<WatsonxLLMGatewayParams>,
     includeCommonProps = true
   ) {
-    const authProps = [
-      "serviceUrl",
-      "watsonxAIApikey",
-      "watsonxAIBearerToken",
-      "watsonxAIUsername",
-      "watsonxAIPassword",
-      "watsonxAIUrl",
-      "watsonxAIAuthType",
-      "disableSSL",
-    ];
-
-    const sharedProps = [
-      "maxRetries",
-      "watsonxCallbacks",
-      "authenticator",
-      "serviceUrl",
-      "version",
-      "streaming",
-      "callbackManager",
-      "callbacks",
-      "maxConcurrency",
-      "cache",
-      "metadata",
-      "concurrency",
-      "onFailedAttempt",
-      "concurrency",
-      "verbose",
-      "tags",
-    ];
-
     const gatewayProps = [
       "temperature",
       "topP",
@@ -245,19 +295,27 @@ export class WatsonxLLM<
       "includeStopSequence",
     ];
 
-    const validProps: string[] = [];
-    if (includeCommonProps) validProps.push(...authProps, ...sharedProps);
-
+    let modeProps: string[] = [];
     if (this.modelGateway) {
-      validProps.push(...gatewayProps);
+      modeProps = gatewayProps;
     } else if (this.idOrName) {
-      validProps.push(...deploymentProps);
+      modeProps = deploymentProps;
     } else if (this.spaceId || this.projectId) {
-      validProps.push(...projectOrSpaceProps);
+      modeProps = projectOrSpaceProps;
     }
-    checkValidProps(fields, validProps);
+
+    this.validator.validateByMode(
+      fields as Record<string, unknown>,
+      modeProps,
+      {
+        includeCommon: includeCommonProps,
+      }
+    );
   }
 
+  constructor(fields: WatsonxInputLLM & WatsonxAuth);
+  constructor(fields: WatsonxDeployedInputLLM & WatsonxAuth);
+  constructor(fields: WatsonxGatewayInputLLM & WatsonxAuth);
   constructor(fields: WatsonxLLMConstructor) {
     super(fields);
     expectOneOf(
@@ -265,75 +323,49 @@ export class WatsonxLLM<
       ["spaceId", "projectId", "idOrName", "modelGateway"],
       true
     );
-    this.idOrName = fields?.idOrName;
-    this.projectId = fields?.projectId;
-    this.modelGateway = fields.modelGateway || this.modelGateway;
-    this.spaceId = fields?.spaceId;
+    if ("modelGateway" in fields) {
+      this.modelGateway = fields.modelGateway || this.modelGateway;
+    } else if ("idOrName" in fields) {
+      this.idOrName = fields?.idOrName;
+    } else {
+      this.projectId = fields?.projectId;
+      this.spaceId = fields?.spaceId;
+    }
 
     this.checkValidProperties(fields);
+    if ("modelGateway" in fields) {
+      this.modelGatewayKwargs =
+        fields.modelGatewayKwargs || this.modelGatewayKwargs;
+    } else {
+      this.maxNewTokens = fields.maxNewTokens ?? fields.maxTokens;
+      this.decodingMethod = fields.decodingMethod;
+      this.lengthPenalty = fields.lengthPenalty;
+      this.minNewTokens = fields.minNewTokens;
+      this.randomSeed = fields.randomSeed;
+      this.stopSequence = fields.stopSequence;
+      this.timeLimit = fields.timeLimit;
+      this.topK = fields.topK;
+      this.repetitionPenalty = fields.repetitionPenalty;
+      this.truncateInputTokens = fields.truncateInputTokens;
+      this.returnOptions = fields.returnOptions;
+      this.includeStopSequence = fields.includeStopSequence;
+    }
 
-    this.model = fields.model ?? this.model;
-    this.serviceUrl = fields.serviceUrl;
-    this.version = fields.version;
-
+    this.model = !("idOrName" in fields) ? fields.model : this.model;
     this.topP = fields.topP;
     this.temperature = fields.temperature;
-    this.maxNewTokens = fields.maxNewTokens ?? fields.maxTokens;
-    this.decodingMethod = fields.decodingMethod;
-    this.lengthPenalty = fields.lengthPenalty;
-    this.minNewTokens = fields.minNewTokens;
     this.maxTokens = fields.maxTokens;
-    this.randomSeed = fields.randomSeed;
-    this.stopSequence = fields.stopSequence;
-    this.timeLimit = fields.timeLimit;
-    this.topK = fields.topK;
-    this.repetitionPenalty = fields.repetitionPenalty;
-    this.truncateInputTokens = fields.truncateInputTokens;
-    this.returnOptions = fields.returnOptions;
-    this.includeStopSequence = fields.includeStopSequence;
-
-    this.modelGatewayKwargs =
-      fields.modelGatewayKwargs || this.modelGatewayKwargs;
-
+    this.serviceUrl = fields.serviceUrl;
+    this.version = fields.version;
     this.maxRetries = fields.maxRetries || this.maxRetries;
     this.maxConcurrency = fields.maxConcurrency;
     this.streaming = fields.streaming || this.streaming;
     this.watsonxCallbacks = fields.watsonxCallbacks || this.watsonxCallbacks;
 
-    const {
-      watsonxAIApikey,
-      watsonxAIAuthType,
-      watsonxAIBearerToken,
-      watsonxAIUsername,
-      watsonxAIPassword,
-      watsonxAIUrl,
-      disableSSL,
-      version,
-      serviceUrl,
-    } = fields;
-
-    const authData = {
-      watsonxAIApikey,
-      watsonxAIAuthType,
-      watsonxAIBearerToken,
-      watsonxAIUsername,
-      watsonxAIPassword,
-      watsonxAIUrl,
-      disableSSL,
-      version,
-      serviceUrl,
-    };
-
     if (this.modelGateway) {
-      const gateway = authenticateAndSetGatewayInstance(authData);
-
-      if (gateway) this.gateway = gateway;
-      else throw new Error("You have not provided any type of authentication");
+      this.gateway = initWatsonxOrGatewayInstance(fields, true);
     } else {
-      const service = authenticateAndSetInstance(authData);
-
-      if (service) this.service = service;
-      else throw new Error("You have not provided any type of authentication");
+      this.service = initWatsonxOrGatewayInstance(fields);
     }
   }
 
@@ -348,6 +380,11 @@ export class WatsonxLLM<
       watsonxAIUsername: "WATSONX_AI_USERNAME",
       watsonxAIPassword: "WATSONX_AI_PASSWORD",
       watsonxAIUrl: "WATSONX_AI_URL",
+      authUrl: "WATSONX_AI_URL",
+      bearerToken: "WATSONX_AI_BEARER_TOKEN",
+      username: "WATSONX_AI_USERNAME",
+      password: "WATSONX_AI_PASSWORD",
+      authType: "WATSONX_AI_AUTH_TYPE",
     };
   }
 
@@ -362,6 +399,11 @@ export class WatsonxLLM<
       watsonxAIUsername: "watsonx_ai_username",
       watsonxAIPassword: "watsonx_ai_password",
       watsonxAIUrl: "watsonx_ai_url",
+      authUrl: "watsonx_ai_url",
+      bearerToken: "watsonx_ai_bearer_token",
+      username: "watsonx_ai_username",
+      password: "watsonx_ai_password",
+      authType: "watsonx_ai_auth_type",
     };
   }
 
@@ -370,7 +412,9 @@ export class WatsonxLLM<
     const { signal, maxRetries, maxConcurrency, timeout, ...rest } = options;
     if (parameters) this.checkValidProperties(parameters, false);
     if (this.idOrName && Object.keys(rest).length > 0)
-      throw new Error("Options cannot be provided to a deployed model");
+      throw new WatsonxValidationError(
+        "Options cannot be provided to a deployed model"
+      );
     if (this.idOrName) return undefined;
 
     if (this.modelGateway) {
@@ -426,7 +470,7 @@ export class WatsonxLLM<
       return { idOrName: this.idOrName, modelId: this.model };
     else if (this.modelGateway) return { modelId: this.model };
     else
-      throw new Error(
+      throw new WatsonxConfigurationError(
         "Invalid mode type. Please make sure you have provided correct parameters"
       );
   }
@@ -442,7 +486,9 @@ export class WatsonxLLM<
       );
       return listModels.result.resources?.map((item) => item.model_id);
     } else {
-      throw new Error("This method is not supported in this model gateway");
+      throw new WatsonxUnsupportedOperationError(
+        "This method is not supported in this model gateway"
+      );
     }
   }
 
@@ -586,7 +632,7 @@ export class WatsonxLLM<
         return singleGeneration;
       }
     }
-    throw new Error(
+    throw new WatsonxConfigurationError(
       "No service or gateway set. Please check your intsance init"
     );
   }
@@ -714,7 +760,10 @@ export class WatsonxLLM<
 
       const response = await this.completionWithRetry<ReturnTokens>(callback);
       return response.result.result.token_count;
-    } else throw new Error("This method is not supported in model gateway");
+    } else
+      throw new WatsonxUnsupportedOperationError(
+        "This method is not supported in model gateway"
+      );
   }
 
   async *_streamResponseChunks(
