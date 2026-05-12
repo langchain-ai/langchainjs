@@ -3,7 +3,6 @@
  * @module utils/validation
  */
 
-/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { WatsonxValidationError } from "../types.js";
 
 /**
