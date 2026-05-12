@@ -1016,6 +1016,92 @@ describe("Streaming tool call consolidation (input_json_delta handling)", () => 
       input: { prompt: "hello" },
     });
   });
+
+  test("thinking blocks with no thinking text are dropped from the outbound payload", async () => {
+    // Adaptive thinking on Opus 4.7 can stream a thinking block that has a signature
+    // but no thinking_delta, leaving thinking: undefined in the accumulator. Forwarding
+    // such a block causes a 400: "messages.N.content.M.thinking.thinking: Field required".
+    const messageHistory = [
+      new HumanMessage("Hello"),
+      new AIMessage({
+        content: [
+          { type: "thinking", signature: "EqMBCkYIBRgCKkB..." }, // no thinking field
+          { type: "text", text: "Hi there!" },
+        ],
+      }),
+      new HumanMessage("And again?"),
+    ];
+
+    const formattedMessages =
+      _convertMessagesToAnthropicPayload(messageHistory);
+
+    const assistantContent = formattedMessages.messages[1].content;
+    // The malformed thinking block must be dropped; only the text block remains.
+    expect(Array.isArray(assistantContent)).toBe(true);
+    expect(
+      (assistantContent as Array<{ type: string }>).find(
+        (b) => b.type === "thinking"
+      )
+    ).toBeUndefined();
+    expect(
+      (assistantContent as Array<{ type: string; text?: string }>).find(
+        (b) => b.type === "text"
+      )
+    ).toEqual({ type: "text", text: "Hi there!" });
+  });
+
+  test("thinking blocks with an empty thinking string are dropped from the outbound payload", async () => {
+    const messageHistory = [
+      new HumanMessage("Hello"),
+      new AIMessage({
+        content: [
+          { type: "thinking", thinking: "", signature: "EqMBCkYIBRgCKkB..." },
+          { type: "text", text: "Hi there!" },
+        ],
+      }),
+      new HumanMessage("And again?"),
+    ];
+
+    const formattedMessages =
+      _convertMessagesToAnthropicPayload(messageHistory);
+
+    const assistantContent = formattedMessages.messages[1].content;
+    expect(
+      (assistantContent as Array<{ type: string }>).find(
+        (b) => b.type === "thinking"
+      )
+    ).toBeUndefined();
+  });
+
+  test("thinking blocks with actual thinking text are preserved in the outbound payload", async () => {
+    const messageHistory = [
+      new HumanMessage("Hello"),
+      new AIMessage({
+        content: [
+          {
+            type: "thinking",
+            thinking: "I need to think about this...",
+            signature: "EqMBCkYIBRgCKkB...",
+          },
+          { type: "text", text: "Hi there!" },
+        ],
+      }),
+      new HumanMessage("And again?"),
+    ];
+
+    const formattedMessages =
+      _convertMessagesToAnthropicPayload(messageHistory);
+
+    const assistantContent = formattedMessages.messages[1].content;
+    const thinkingBlock = (
+      assistantContent as Array<{ type: string; thinking?: string }>
+    ).find((b) => b.type === "thinking");
+    expect(thinkingBlock).toEqual({
+      type: "thinking",
+      thinking: "I need to think about this...",
+      signature: "EqMBCkYIBRgCKkB...",
+    });
+  });
 });
 
 describe("ContentBlock.Multimodal.Image format support", () => {
