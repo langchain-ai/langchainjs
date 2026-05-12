@@ -39,7 +39,7 @@ import {
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { isOpenAITool } from "@langchain/core/language_models/base";
 import { ToolCallChunk } from "@langchain/core/messages/tool";
-import { v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4 } from "@langchain/core/utils/uuid";
 import {
   jsonSchemaToGeminiParameters,
   schemaToGenerativeAIParameters,

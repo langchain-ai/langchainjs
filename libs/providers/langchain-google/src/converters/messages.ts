@@ -19,7 +19,7 @@ import {
   MessageContentComplex,
   MessageContentText,
 } from "@langchain/core/messages";
-import { v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4 } from "@langchain/core/utils/uuid";
 import { Converter } from "@langchain/core/utils/format";
 import type { Gemini } from "../chat_models/types.js";
 import { iife } from "../utils/misc.js";

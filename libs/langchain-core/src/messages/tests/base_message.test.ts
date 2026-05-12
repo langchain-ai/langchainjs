@@ -49,6 +49,38 @@ test("Test ChatPromptTemplate can format OpenAI content image messages", async (
   );
 });
 
+test("AIMessage v1 content does not duplicate existing tool call blocks", () => {
+  const message = new AIMessage({
+    content: [
+      {
+        type: "tool_call",
+        id: "toolu_1",
+        name: "calculator",
+        args: { expression: "12345 + 67890" },
+      },
+    ],
+    tool_calls: [
+      {
+        type: "tool_call",
+        id: "toolu_1",
+        name: "calculator",
+        args: { expression: "12345 + 67890" },
+      },
+    ],
+    response_metadata: { output_version: "v1" },
+  });
+
+  expect(message.contentBlocks).toEqual([
+    {
+      type: "tool_call",
+      id: "toolu_1",
+      name: "calculator",
+      args: { expression: "12345 + 67890" },
+    },
+  ]);
+  expect(message.tool_calls).toHaveLength(1);
+});
+
 test("Test ChatPromptTemplate can format OpenAI content image messages", async () => {
   const message = new HumanMessage({
     content: [
@@ -174,6 +206,43 @@ test("_mergeLists merges blocks by numeric index", () => {
       type: "reasoning",
       index: 0,
       reasoning: "**Exploring",
+    },
+  ]);
+});
+
+test("_mergeLists keeps different content block types separate when indices collide", () => {
+  const chunk1 = new AIMessageChunk({
+    content: [
+      {
+        type: "reasoning",
+        index: 0,
+        reasoning: "Thinking",
+      },
+    ],
+  });
+
+  const chunk2 = new AIMessageChunk({
+    content: [
+      {
+        type: "text",
+        index: 0,
+        text: "Final answer",
+      },
+    ],
+  });
+
+  const merged = chunk1.concat(chunk2);
+  expect(Array.isArray(merged.content)).toBe(true);
+  expect(merged.content).toEqual([
+    {
+      type: "reasoning",
+      index: 0,
+      reasoning: "Thinking",
+    },
+    {
+      type: "text",
+      index: 0,
+      text: "Final answer",
     },
   ]);
 });

@@ -1,6 +1,6 @@
 {
   "name": "@langchain/neo4j",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Neo4j integrations for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -22,8 +22,7 @@
     "test:int": "vitest run --mode int"
   },
   "dependencies": {
-    "neo4j-driver": "^6.0.1",
-    "uuid": "^11.1.0"
+    "neo4j-driver": "^6.0.1"
   },
   "peerDependencies": {
     "@langchain/core": "workspace:^",
