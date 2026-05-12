@@ -1,5 +1,9 @@
 import { describe, expect, vi, test } from "vitest";
-import type { HarmBlockThreshold, HarmCategory } from "@google/generative-ai";
+import type {
+  HarmBlockThreshold,
+  HarmCategory,
+  Schema,
+} from "@google/generative-ai";
 import { z } from "zod/v3";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
@@ -1160,5 +1164,104 @@ describe("withStructuredOutput - StandardSchema", () => {
     expect(result).toHaveProperty("parsed");
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect((result as any).parsed).toEqual({ name: "cobalt" });
+  });
+});
+
+describe("invocationParams responseSchema normalization", () => {
+  // Regression for https://github.com/langchain-ai/langchainjs/issues/10712
+  // `createAgent({ responseFormat: providerStrategy(zodSchema) })` forwards the
+  // raw Zod schema via `options.responseSchema`. The Gemini API rejects
+  // `additionalProperties`, so invocationParams must normalize the schema
+  // through `schemaToGenerativeAIParameters` (matching the withStructuredOutput
+  // path) before writing it to `generationConfig`.
+  function getGenerationConfig(
+    model: ChatGoogleGenerativeAI
+  ): Record<string, unknown> {
+    return (
+      model as unknown as {
+        client: { generationConfig: Record<string, unknown> };
+      }
+    ).client.generationConfig;
+  }
+
+  test("Zod schema is converted to Gemini-compatible JSON schema", () => {
+    const model = new ChatGoogleGenerativeAI({ model: "gemini-2.0-flash" });
+    const zodSchema = z.object({
+      firstName: z.string(),
+      lastName: z.string(),
+    });
+
+    model.invocationParams({ responseSchema: zodSchema });
+
+    const config = getGenerationConfig(model);
+    const schema = config.responseSchema as Record<string, unknown>;
+    expect(schema).toBeDefined();
+    expect(schema.type).toBe("object");
+    expect(schema.properties).toMatchObject({
+      firstName: { type: "string" },
+      lastName: { type: "string" },
+    });
+    expect("additionalProperties" in schema).toBe(false);
+    expect("$schema" in schema).toBe(false);
+    expect(config.responseMimeType).toBe("application/json");
+  });
+
+  test("JSON schema with additionalProperties is stripped", () => {
+    const model = new ChatGoogleGenerativeAI({ model: "gemini-2.0-flash" });
+    const jsonSchema = {
+      type: "object",
+      properties: {
+        name: { type: "string" },
+        tags: {
+          type: "array",
+          items: { type: "string", additionalProperties: false },
+        },
+      },
+      additionalProperties: false,
+      $schema: "http://json-schema.org/draft-07/schema#",
+    };
+
+    model.invocationParams({ responseSchema: jsonSchema as Schema });
+
+    const schema = getGenerationConfig(model).responseSchema as Record<
+      string,
+      unknown
+    >;
+    expect("additionalProperties" in schema).toBe(false);
+    expect("$schema" in schema).toBe(false);
+    const items = (schema.properties as Record<string, Record<string, unknown>>)
+      .tags.items as Record<string, unknown>;
+    expect("additionalProperties" in items).toBe(false);
+  });
+
+  test("Plain Gemini Schema passes through unchanged", () => {
+    const model = new ChatGoogleGenerativeAI({ model: "gemini-2.0-flash" });
+    const geminiSchema = {
+      type: "object",
+      properties: { answer: { type: "string" } },
+      required: ["answer"],
+    };
+
+    model.invocationParams({ responseSchema: geminiSchema as Schema });
+
+    const schema = getGenerationConfig(model).responseSchema as Record<
+      string,
+      unknown
+    >;
+    expect(schema.type).toBe("object");
+    expect(schema.required).toEqual(["answer"]);
+    expect(schema.properties).toMatchObject({
+      answer: { type: "string" },
+    });
+  });
+
+  test("No responseSchema clears generationConfig.responseSchema", () => {
+    const model = new ChatGoogleGenerativeAI({ model: "gemini-2.0-flash" });
+    const config = getGenerationConfig(model);
+    config.responseSchema = { type: "object" };
+
+    model.invocationParams({});
+
+    expect(config.responseSchema).toBeUndefined();
   });
 });
