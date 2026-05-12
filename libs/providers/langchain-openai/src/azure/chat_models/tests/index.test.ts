@@ -78,3 +78,42 @@ test("Test Azure OpenAI serialization from instance name", async () => {
     `{"lc":1,"type":"constructor","id":["langchain","chat_models","azure_openai","AzureChatOpenAI"],"kwargs":{"azure_open_ai_api_instance_name":"foobar","deployment_name":"gpt-4o","openai_api_version":"2024-08-01-preview","azure_open_ai_api_key":{"lc":1,"type":"secret","id":["AZURE_OPENAI_API_KEY"]},"azure_endpoint":"https://foobar.openai.azure.com/"}}`
   );
 });
+
+test("getLsParams falls back to deployment name when model is not explicitly set", async () => {
+  const chat = new AzureChatOpenAI({
+    azureOpenAIEndpoint: "https://foobar.openai.azure.com/",
+    azureOpenAIApiDeploymentName: "gpt-4o-mini",
+    azureOpenAIApiVersion: "2024-08-01-preview",
+    azureOpenAIApiKey: "foo",
+  });
+
+  const params = chat.getLsParams({} as Parameters<typeof chat.getLsParams>[0]);
+  expect(params.ls_provider).toBe("azure");
+  expect(params.ls_model_name).toBe("gpt-4o-mini");
+});
+
+test("getLsParams preserves an explicitly set model", async () => {
+  const chat = new AzureChatOpenAI({
+    model: "gpt-4o",
+    azureOpenAIEndpoint: "https://foobar.openai.azure.com/",
+    azureOpenAIApiDeploymentName: "my-custom-deployment",
+    azureOpenAIApiVersion: "2024-08-01-preview",
+    azureOpenAIApiKey: "foo",
+  });
+
+  const params = chat.getLsParams({} as Parameters<typeof chat.getLsParams>[0]);
+  expect(params.ls_provider).toBe("azure");
+  expect(params.ls_model_name).toBe("gpt-4o");
+});
+
+test("invocationParams includes azureOpenAIApiDeploymentName", async () => {
+  const chat = new AzureChatOpenAI({
+    azureOpenAIEndpoint: "https://foobar.openai.azure.com/",
+    azureOpenAIApiDeploymentName: "gpt-4o-mini",
+    azureOpenAIApiVersion: "2024-08-01-preview",
+    azureOpenAIApiKey: "foo",
+  });
+
+  const params = chat.invocationParams() as Record<string, unknown>;
+  expect(params.azureOpenAIApiDeploymentName).toBe("gpt-4o-mini");
+});
