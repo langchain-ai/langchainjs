@@ -1,5 +1,17 @@
 # @langchain/core
 
+## 1.1.46
+
+### Patch Changes
+
+- [#10847](https://github.com/langchain-ai/langchainjs/pull/10847) [`1659e7d`](https://github.com/langchain-ai/langchainjs/commit/1659e7d36e31e315c890fa98f43db887f7a2d52b) Thanks [@hntrl](https://github.com/hntrl)! - chore(core): reduce transitive dependency exposure and tighten release hygiene
+
+  Remove direct runtime dependencies on `ansi-styles`, `camelcase`, and `decamelize`
+  by inlining equivalent logic in core internals, and enable npm provenance in the
+  release workflow.
+
+- [#10790](https://github.com/langchain-ai/langchainjs/pull/10790) [`ef78bc6`](https://github.com/langchain-ai/langchainjs/commit/ef78bc6a21f9a8808ba95c98db2023f0a6b51bcc) Thanks [@Genmin](https://github.com/Genmin)! - fix(core): keep different content block types separate when merging chunks
+
 ## 1.1.45
 
 ### Patch Changes
