@@ -19,6 +19,28 @@ function makeMockClient({
   };
 }
 
+function makeSearchMockClient() {
+  const hybrid = vi.fn().mockResolvedValue({ objects: [] });
+  const generateHybrid = vi.fn().mockResolvedValue({ objects: [] });
+  const collection = {
+    query: { hybrid },
+    generate: { hybrid: generateHybrid },
+  };
+  const get = vi.fn().mockReturnValue(collection);
+
+  return {
+    client: {
+      collections: {
+        get,
+        exists: vi.fn().mockResolvedValue(true),
+        create: vi.fn(),
+        createFromJson: vi.fn(),
+      },
+    } as any,
+    spies: { hybrid, generateHybrid },
+  };
+}
+
 test("initialize with jsonSchema calls createFromJson", async () => {
   const { client, spies } = makeMockClient();
   const jsonSchema = { class: "MyCollection", properties: [] };
@@ -65,6 +87,116 @@ test("initialize skips creation when collection already exists", async () => {
 
   expect(spies.createFromJson).not.toHaveBeenCalled();
   expect(spies.create).not.toHaveBeenCalled();
+});
+
+test("hybridSearch forwards filters when provided", async () => {
+  const { client, spies } = makeSearchMockClient();
+  const store = await WeaviateStore.initialize(new FakeEmbeddings(), {
+    client,
+    indexName: "MyCollection",
+  });
+
+  const filters = { operator: "Equal", path: ["foo"], valueText: "bar" } as any;
+  await store.hybridSearch("q", { filters, vector: [0.1, 0.2] });
+
+  expect(spies.hybrid).toHaveBeenCalledOnce();
+  const [, options] = spies.hybrid.mock.calls[0];
+  expect(options.filters).toBe(filters);
+});
+
+test("hybridSearch maps filter (singular) to filters and keeps both keys", async () => {
+  const { client, spies } = makeSearchMockClient();
+  const store = await WeaviateStore.initialize(new FakeEmbeddings(), {
+    client,
+    indexName: "MyCollection",
+  });
+
+  const filter = { operator: "Equal", path: ["foo"], valueText: "bar" } as any;
+  await store.hybridSearch("q", { filter, vector: [0.1, 0.2] } as any);
+
+  expect(spies.hybrid).toHaveBeenCalledOnce();
+  const [, options] = spies.hybrid.mock.calls[0];
+  expect(options.filters).toBe(filter);
+  expect(options.filter).toBe(filter);
+});
+
+test("hybridSearch prefers filters over filter when both are provided", async () => {
+  const { client, spies } = makeSearchMockClient();
+  const store = await WeaviateStore.initialize(new FakeEmbeddings(), {
+    client,
+    indexName: "MyCollection",
+  });
+
+  const filters = { operator: "Equal", path: ["a"], valueText: "1" } as any;
+  const filter = { operator: "Equal", path: ["b"], valueText: "2" } as any;
+  await store.hybridSearch("q", {
+    filters,
+    filter,
+    vector: [0.1, 0.2],
+  } as any);
+
+  expect(spies.hybrid).toHaveBeenCalledOnce();
+  const [, options] = spies.hybrid.mock.calls[0];
+  expect(options.filters).toBe(filters);
+});
+
+test("generate forwards filters when provided", async () => {
+  const { client, spies } = makeSearchMockClient();
+  const store = await WeaviateStore.initialize(new FakeEmbeddings(), {
+    client,
+    indexName: "MyCollection",
+  });
+
+  const filters = { operator: "Equal", path: ["foo"], valueText: "bar" } as any;
+  await store.generate(
+    "q",
+    { singlePrompt: "summarize" },
+    { filters, vector: [0.1, 0.2] }
+  );
+
+  expect(spies.generateHybrid).toHaveBeenCalledOnce();
+  const [, , options] = spies.generateHybrid.mock.calls[0];
+  expect(options.filters).toBe(filters);
+});
+
+test("generate maps filter (singular) to filters and keeps both keys", async () => {
+  const { client, spies } = makeSearchMockClient();
+  const store = await WeaviateStore.initialize(new FakeEmbeddings(), {
+    client,
+    indexName: "MyCollection",
+  });
+
+  const filter = { operator: "Equal", path: ["foo"], valueText: "bar" } as any;
+  await store.generate(
+    "q",
+    { singlePrompt: "summarize" },
+    { filter, vector: [0.1, 0.2] } as any
+  );
+
+  expect(spies.generateHybrid).toHaveBeenCalledOnce();
+  const [, , options] = spies.generateHybrid.mock.calls[0];
+  expect(options.filters).toBe(filter);
+  expect(options.filter).toBe(filter);
+});
+
+test("generate prefers filters over filter when both are provided", async () => {
+  const { client, spies } = makeSearchMockClient();
+  const store = await WeaviateStore.initialize(new FakeEmbeddings(), {
+    client,
+    indexName: "MyCollection",
+  });
+
+  const filters = { operator: "Equal", path: ["a"], valueText: "1" } as any;
+  const filter = { operator: "Equal", path: ["b"], valueText: "2" } as any;
+  await store.generate(
+    "q",
+    { singlePrompt: "summarize" },
+    { filters, filter, vector: [0.1, 0.2] } as any
+  );
+
+  expect(spies.generateHybrid).toHaveBeenCalledOnce();
+  const [, , options] = spies.generateHybrid.mock.calls[0];
+  expect(options.filters).toBe(filters);
 });
 
 test("flattenObjectForWeaviate", () => {
