@@ -154,9 +154,9 @@ export type InferMiddlewareTools<T extends AgentMiddleware> =
  * Recursively extracts tools from each middleware and combines them into a single tuple.
  */
 export type InferMiddlewareToolsArray<T extends readonly AgentMiddleware[]> =
-  T extends readonly []
+  [T] extends [readonly []]
     ? readonly []
-    : T extends readonly [infer First, ...infer Rest]
+    : [T] extends [readonly [infer First, ...infer Rest]]
       ? First extends AgentMiddleware
         ? Rest extends readonly AgentMiddleware[]
           ? readonly [
