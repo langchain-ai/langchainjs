@@ -345,6 +345,43 @@ describe("convertCompletionsMessageToBaseMessage", () => {
         },
       });
     });
+
+    it("should preserve DeepSeek reasoning_content when resending assistant tool calls", () => {
+      const message = new AIMessage({
+        content: "",
+        additional_kwargs: {
+          reasoning_content: "Need the current time, so call get_current_time.",
+        },
+        tool_calls: [
+          {
+            id: "call_deepseek_time",
+            name: "get_current_time",
+            args: {},
+          },
+        ],
+      });
+
+      const result = convertMessagesToCompletionsMessageParams({
+        messages: [message],
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({
+        role: "assistant",
+        content: "",
+        reasoning_content: "Need the current time, so call get_current_time.",
+        tool_calls: [
+          {
+            id: "call_deepseek_time",
+            type: "function",
+            function: {
+              name: "get_current_time",
+              arguments: "{}",
+            },
+          },
+        ],
+      });
+    });
   });
 
   describe("completionsApiContentBlockConverter.fromStandardFileBlock", () => {

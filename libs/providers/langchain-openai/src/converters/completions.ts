@@ -821,6 +821,13 @@ export const convertMessagesToCompletionsMessageParams: Converter<
     if (message.additional_kwargs.function_call != null) {
       completionParam.function_call = message.additional_kwargs.function_call;
     }
+    if (
+      role === "assistant" &&
+      typeof message.additional_kwargs.reasoning_content === "string"
+    ) {
+      completionParam.reasoning_content =
+        message.additional_kwargs.reasoning_content;
+    }
     if (AIMessage.isInstance(message) && !!message.tool_calls?.length) {
       completionParam.tool_calls = message.tool_calls.map(
         convertLangChainToolCallToOpenAI
