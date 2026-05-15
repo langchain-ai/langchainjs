@@ -3,6 +3,7 @@ import { z as z4 } from "zod/v4";
 
 import { describe, expect, test } from "vitest";
 
+import { AIMessage } from "../../messages/index.js";
 import { OutputParserException } from "../base.js";
 import { StructuredOutputParser } from "../structured.js";
 import { InteropZodObject, InteropZodType } from "../../utils/types/zod.js";
@@ -33,6 +34,25 @@ test("StructuredOutputParser.fromNamesAndDescriptions", async () => {
   \`\`\`
   "
   `);
+});
+
+test("StructuredOutputParser.invoke parses BaseMessage with reasoning blocks", async () => {
+  const parser = StructuredOutputParser.fromZodSchema(
+    z.object({
+      answer: z.string(),
+    })
+  );
+
+  const result = await parser.invoke(
+    new AIMessage({
+      content: [
+        { type: "reasoning", reasoning: "Let me think..." },
+        { type: "text", text: '{"answer":"value"}' },
+      ],
+    })
+  );
+
+  expect(result).toEqual({ answer: "value" });
 });
 
 enum StateProvinceEnum {
