@@ -314,6 +314,12 @@ function* _formatContentBlocks(
         ...(cacheControl ? { cache_control: cacheControl } : {}),
       } as Anthropic.Messages.DocumentBlockParam;
     } else if (_isAnthropicThinkingBlock(contentPart)) {
+      if (
+        typeof contentPart.thinking !== "string" ||
+        contentPart.thinking.length === 0
+      ) {
+        continue;
+      }
       const block: AnthropicThinkingBlockParam = {
         type: "thinking" as const, // Explicitly setting the type as "thinking"
         thinking: contentPart.thinking,
