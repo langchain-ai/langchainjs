@@ -56,7 +56,10 @@ import {
   isInteropZodSchema,
 } from "../utils/types/zod.js";
 import { ModelAbortError } from "../errors/index.js";
-import { callbackHandlerPrefersStreaming } from "../callbacks/base.js";
+import {
+  callbackHandlerPrefersChatModelStreamEvents,
+  callbackHandlerPrefersStreaming,
+} from "../callbacks/base.js";
 import { toJsonSchema } from "../utils/json_schema.js";
 import { getEnvironmentVariable } from "../utils/env.js";
 import { castStandardMessageContent, iife } from "./utils.js";
@@ -65,6 +68,9 @@ import {
   type SerializableSchema,
 } from "../utils/standard_schema.js";
 import { assembleStructuredOutputPipeline } from "./structured_output.js";
+import type { ChatModelStreamEvent } from "./event.js";
+import { ChatModelStream } from "./stream.js";
+import { convertChunksToEvents } from "./compat.js";
 
 // oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export type ToolChoice = string | Record<string, any> | "auto" | "any";
@@ -298,6 +304,80 @@ export abstract class BaseChatModel<
     throw new Error("Not implemented.");
   }
 
+  /**
+   * Stream chat model events using the new content-block-centric protocol.
+   *
+   * Override this method to provide native event streaming from the provider SDK.
+   * The default implementation bridges from `_streamResponseChunks` by
+   * synthesizing lifecycle events from `ChatGenerationChunk` objects.
+   *
+   * ## Event lifecycle
+   *
+   * ```
+   * MessageStart
+   *   -> ContentBlockStart(index, contentBlock)
+   *     -> ContentBlockDelta(index, delta) ...
+   *   -> ContentBlockFinish(index, contentBlock)
+   * -> MessageFinish(reason, usage?)
+   * ```
+   *
+   * Content blocks may interleave (e.g., parallel tool calls). The only
+   * invariant: a block's start precedes its deltas, and its deltas precede
+   * its finish.
+   *
+   * @param messages - The input messages.
+   * @param options - Parsed call options.
+   * @param runManager - Optional callback manager for the run.
+   * @returns An async generator of {@link ChatModelStreamEvent}.
+   */
+  async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    // Default: bridge from legacy _streamResponseChunks
+    const chunks = this._streamResponseChunks(messages, options, runManager);
+    yield* convertChunksToEvents(chunks, { signal: options.signal });
+  }
+
+  /**
+   * Create a {@link ChatModelStream} for the given input.
+   *
+   * Returns a stream object that is both `AsyncIterable<ChatModelStreamEvent>`
+   * and `PromiseLike<AIMessage>`, with typed sub-stream accessors for
+   * `.text`, `.toolCalls`, `.reasoning`, and `.usage`.
+   *
+   * @param input - The input messages.
+   * @param options - Optional call options.
+   * @returns A {@link ChatModelStream}.
+   *
+   * @example
+   * ```ts
+   * const stream = model.streamV2([{ role: "user", content: "Hello" }]);
+   *
+   * // Stream text
+   * for await (const token of stream.text) {
+   *   process.stdout.write(token);
+   * }
+   *
+   * // Or await the full message
+   * const message = await stream;
+   * ```
+   */
+  streamV2(
+    input: BaseLanguageModelInput,
+    options?: Partial<CallOptions>
+  ): ChatModelStream {
+    const prompt = BaseChatModel._convertInputToPromptValue(input);
+    const messages = prompt.toChatMessages();
+    const [, callOptions] =
+      this._separateRunnableConfigFromCallOptionsCompat(options);
+
+    const generator = this._streamChatModelEvents(messages, callOptions);
+
+    return new ChatModelStream(generator);
+  }
+
   async *_streamIterator(
     input: BaseLanguageModelInput,
     options?: Partial<CallOptions>
@@ -319,6 +399,7 @@ export abstract class BaseChatModel<
         ...runnableConfig.metadata,
         ...this.getLsParamsWithDefaults(callOptions),
       };
+      const invocationParams = this.invocationParams(callOptions);
       const callbackManager_ = await CallbackManager.configure(
         runnableConfig.callbacks,
         this.callbacks,
@@ -326,11 +407,15 @@ export abstract class BaseChatModel<
         this.tags,
         inheritableMetadata,
         this.metadata,
-        { verbose: this.verbose }
+        {
+          verbose: this.verbose,
+          tracerInheritableMetadata:
+            this._filterInvocationParamsForTracing(invocationParams),
+        }
       );
       const extra = {
         options: callOptions,
-        invocation_params: this?.invocationParams(callOptions),
+        invocation_params: invocationParams,
         batch_size: 1,
       };
       const outputVersion = callOptions.outputVersion ?? this.outputVersion;
@@ -455,6 +540,7 @@ export abstract class BaseChatModel<
         ...handledOptions.metadata,
         ...this.getLsParamsWithDefaults(parsedOptions),
       };
+      const invocationParams = this.invocationParams(parsedOptions);
       // create callback manager and start run
       const callbackManager_ = await CallbackManager.configure(
         handledOptions.callbacks,
@@ -463,11 +549,15 @@ export abstract class BaseChatModel<
         this.tags,
         inheritableMetadata,
         this.metadata,
-        { verbose: this.verbose }
+        {
+          verbose: this.verbose,
+          tracerInheritableMetadata:
+            this._filterInvocationParamsForTracing(invocationParams),
+        }
       );
       const extra = {
         options: parsedOptions,
-        invocation_params: this?.invocationParams(parsedOptions),
+        invocation_params: invocationParams,
         batch_size: 1,
       };
       runManagers = await callbackManager_?.handleChatModelStart(
@@ -487,10 +577,77 @@ export abstract class BaseChatModel<
     // Even if stream is not explicitly called, check if model is implicitly
     // called from streamEvents() or streamLog() to get all streamed events.
     // Bail out if _streamResponseChunks not overridden
+    const hasChatModelStreamEventHandler = !!runManagers?.[0].handlers.find(
+      callbackHandlerPrefersChatModelStreamEvents
+    );
     const hasStreamingHandler = !!runManagers?.[0].handlers.find(
       callbackHandlerPrefersStreaming
     );
     if (
+      hasChatModelStreamEventHandler &&
+      !this.disableStreaming &&
+      baseMessages.length === 1 &&
+      (this._streamChatModelEvents !==
+        BaseChatModel.prototype._streamChatModelEvents ||
+        this._streamResponseChunks !==
+          BaseChatModel.prototype._streamResponseChunks)
+    ) {
+      try {
+        let sawEvent = false;
+        const runManager = runManagers?.[0];
+        const events = this._streamChatModelEvents(
+          baseMessages[0],
+          parsedOptions
+        );
+        const forwardedEvents = {
+          async *[Symbol.asyncIterator]() {
+            for await (const event of events) {
+              parsedOptions.signal?.throwIfAborted();
+              sawEvent = true;
+              const streamEvent =
+                event.event === "message-start" &&
+                event.id == null &&
+                runManager?.runId != null
+                  ? { ...event, id: `run-${runManager.runId}` }
+                  : event;
+              await runManager?.handleChatModelStreamEvent(streamEvent);
+              yield streamEvent;
+            }
+          },
+        };
+        const message = await new ChatModelStream(forwardedEvents);
+        parsedOptions.signal?.throwIfAborted();
+        if (!sawEvent) {
+          throw new Error("Received empty response from chat model call.");
+        }
+        if (message.id == null) {
+          const runId = runManagers?.at(0)?.runId;
+          if (runId != null) message._updateId(`run-${runId}`);
+        }
+        const generation: ChatGeneration = {
+          text: message.text,
+          message,
+        };
+        generations.push([generation]);
+        const llmOutput =
+          message.usage_metadata !== undefined
+            ? {
+                tokenUsage: {
+                  promptTokens: message.usage_metadata.input_tokens,
+                  completionTokens: message.usage_metadata.output_tokens,
+                  totalTokens: message.usage_metadata.total_tokens,
+                },
+              }
+            : undefined;
+        await runManagers?.[0].handleLLMEnd({
+          generations,
+          llmOutput,
+        });
+      } catch (e) {
+        await runManagers?.[0].handleLLMError(e);
+        throw e;
+      }
+    } else if (
       hasStreamingHandler &&
       !this.disableStreaming &&
       baseMessages.length === 1 &&
@@ -658,6 +815,7 @@ export abstract class BaseChatModel<
       ...handledOptions.metadata,
       ...this.getLsParamsWithDefaults(parsedOptions),
     };
+    const invocationParams = this.invocationParams(parsedOptions);
     // create callback manager and start run
     const callbackManager_ = await CallbackManager.configure(
       handledOptions.callbacks,
@@ -666,11 +824,15 @@ export abstract class BaseChatModel<
       this.tags,
       inheritableMetadata,
       this.metadata,
-      { verbose: this.verbose }
+      {
+        verbose: this.verbose,
+        tracerInheritableMetadata:
+          this._filterInvocationParamsForTracing(invocationParams),
+      }
     );
     const extra = {
       options: parsedOptions,
-      invocation_params: this?.invocationParams(parsedOptions),
+      invocation_params: invocationParams,
       batch_size: 1,
     };
     const runManagers = await callbackManager_?.handleChatModelStart(

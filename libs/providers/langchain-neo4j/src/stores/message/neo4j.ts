@@ -1,5 +1,5 @@
 import neo4j, { Driver, Record, auth, type ServerInfo } from "neo4j-driver";
-import { v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4 } from "@langchain/core/utils/uuid";
 import { BaseListChatMessageHistory } from "@langchain/core/chat_history";
 import {
   BaseMessage,

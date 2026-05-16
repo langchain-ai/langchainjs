@@ -1,11 +1,4 @@
 {
-  "eslint.workingDirectories": [
-    "./langchain",
-    "./langchain-core",
-    "./examples",
-    "./docs",
-    "./test-exports-vercel"
-  ],
   "yaml.schemas": {
     "https://json.schemastore.org/github-workflow.json": "./.github/workflows/deploy.yml"
   },
@@ -30,12 +23,12 @@
     "**/pnpm-lock.yaml": true
   },
   "typescript.preferences.importModuleSpecifier": "relative",
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.defaultFormatter": "oxc.oxc-vscode",
   "[javascript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "oxc.oxc-vscode"
   },
   "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "oxc.oxc-vscode"
   },
   "deno.enable": false
 }

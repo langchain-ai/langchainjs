@@ -1,6 +1,7 @@
-import { test, expect } from "vitest";
-import * as uuid from "uuid";
+import { test, expect, vi } from "vitest";
+import * as uuid from "../../utils/uuid/index.js";
 import { AsyncLocalStorage } from "node:async_hooks";
+import type { LangSmithTracingClientInterface } from "langsmith";
 import { CallbackManager } from "../manager.js";
 import { BaseCallbackHandler, type BaseCallbackHandlerInput } from "../base.js";
 import type { Serialized } from "../../load/serializable.js";
@@ -9,9 +10,11 @@ import type { ChainValues } from "../../utils/types/index.js";
 import type { AgentAction, AgentFinish } from "../../agents.js";
 import { BaseMessage, HumanMessage } from "../../messages/index.js";
 import type { LLMResult } from "../../outputs.js";
+import type { ChatModelStreamEvent } from "../../language_models/event.js";
 import { RunnableLambda } from "../../runnables/base.js";
 import { AsyncLocalStorageProviderSingleton } from "../../singletons/index.js";
 import { awaitAllCallbacks } from "../promises.js";
+import { LangChainTracer } from "../../tracers/tracer_langchain.js";
 
 class FakeCallbackHandler extends BaseCallbackHandler {
   name = `fake-${uuid.v4()}`;
@@ -164,6 +167,20 @@ class FakeCallbackHandlerWithChatStart extends FakeCallbackHandler {
   }
 }
 
+class FakeChatModelStreamEventHandler extends BaseCallbackHandler {
+  name = `fake-stream-event-${uuid.v4()}`;
+
+  events: ChatModelStreamEvent[] = [];
+
+  constructor(inputs?: BaseCallbackHandlerInput) {
+    super(inputs);
+  }
+
+  handleChatModelStreamEvent(event: ChatModelStreamEvent): void {
+    this.events.push(event);
+  }
+}
+
 const serialized: Serialized = {
   lc: 1,
   type: "constructor",
@@ -276,6 +293,46 @@ test("CallbackHandler with ignoreLLM", async () => {
   expect(handler.llmStarts).toBe(0);
   expect(handler.llmEnds).toBe(0);
   expect(handler.llmStreams).toBe(0);
+});
+
+test("CallbackManager dispatches chat model stream events", async () => {
+  const manager = new CallbackManager();
+  const handler = new FakeChatModelStreamEventHandler();
+  manager.addHandler(handler);
+
+  const llmCbs = await manager.handleChatModelStart(serialized, [
+    [new HumanMessage("test")],
+  ]);
+  await Promise.all(
+    llmCbs.map(async (llmCb) => {
+      await llmCb.handleChatModelStreamEvent({
+        event: "message-start",
+        id: "msg-1",
+      });
+    })
+  );
+
+  expect(handler.events).toEqual([{ event: "message-start", id: "msg-1" }]);
+});
+
+test("CallbackManager respects ignoreLLM for chat model stream events", async () => {
+  const manager = new CallbackManager();
+  const handler = new FakeChatModelStreamEventHandler({ ignoreLLM: true });
+  manager.addHandler(handler);
+
+  const llmCbs = await manager.handleChatModelStart(serialized, [
+    [new HumanMessage("test")],
+  ]);
+  await Promise.all(
+    llmCbs.map(async (llmCb) => {
+      await llmCb.handleChatModelStreamEvent({
+        event: "message-start",
+        id: "msg-1",
+      });
+    })
+  );
+
+  expect(handler.events).toEqual([]);
 });
 
 test("CallbackHandler with ignoreRetriever", async () => {
@@ -477,6 +534,182 @@ test("CallbackManager.copy()", () => {
     handler1.name,
     handler3.name,
   ]);
+});
+
+test("langsmith inheritable metadata/tags apply only to LangChainTracer", async () => {
+  const captured: { metadata?: Record<string, unknown>; tags?: string[] }[] =
+    [];
+  class CaptureHandler extends BaseCallbackHandler {
+    name = `capture-${uuid.v4()}`;
+
+    async handleChainStart(
+      _chain: Serialized,
+      _inputs: ChainValues,
+      _runId: string,
+      _runType?: string,
+      tags?: string[],
+      metadata?: Record<string, unknown>
+    ) {
+      captured.push({ tags, metadata });
+    }
+  }
+
+  const createRunMock = vi.fn().mockResolvedValue(undefined);
+  const updateRunMock = vi.fn().mockResolvedValue(undefined);
+  const mockClient = {
+    createRun: createRunMock,
+    updateRun: updateRunMock,
+  } as LangSmithTracingClientInterface;
+  const tracer = new LangChainTracer({ client: mockClient });
+  const capture = new CaptureHandler();
+
+  const callbacks = CallbackManager.configure(
+    [tracer, capture],
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    {
+      tracerInheritableMetadata: { tracer_only: "yes" },
+      tracerInheritableTags: ["tenant:alpha"],
+    }
+  );
+
+  const configuredTracer = callbacks?.handlers.find(
+    (handler) => handler instanceof LangChainTracer
+  );
+  expect(configuredTracer).toBeDefined();
+  expect(configuredTracer).not.toBe(tracer);
+
+  const runnable = RunnableLambda.from((x: string) => x);
+  await runnable.invoke("hello", { callbacks: callbacks! });
+  await awaitAllCallbacks();
+
+  expect(captured.length).toBeGreaterThan(0);
+  expect(captured[0].metadata?.tracer_only).toBeUndefined();
+  expect(captured[0].tags).not.toContain("tenant:alpha");
+
+  expect(createRunMock).toHaveBeenCalled();
+  const postedRun = createRunMock.mock.calls[0]?.[0];
+  expect(postedRun.extra?.metadata?.tracer_only).toBe("yes");
+  expect(postedRun.tags).toContain("tenant:alpha");
+});
+
+test("tracer inheritable metadata follows first-wins for regular keys", async () => {
+  const createRunMock = vi.fn().mockResolvedValue(undefined);
+  const updateRunMock = vi.fn().mockResolvedValue(undefined);
+  const mockClient = {
+    createRun: createRunMock,
+    updateRun: updateRunMock,
+  } as LangSmithTracingClientInterface;
+  const tracer = new LangChainTracer({ client: mockClient });
+
+  // First configure: ancestor sets `tenant: "alpha"` as tracer-inheritable.
+  const outerCallbacks = CallbackManager.configure(
+    [tracer],
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    { tracerInheritableMetadata: { tenant: "alpha" } }
+  );
+
+  // Second configure: nested caller tries to override `tenant`. Since
+  // `tenant` is NOT in the LangSmith allowlist, the ancestor value wins.
+  const nestedCallbacks = CallbackManager.configure(
+    outerCallbacks,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    { tracerInheritableMetadata: { tenant: "beta" } }
+  );
+
+  const runnable = RunnableLambda.from((x: string) => x);
+  await runnable.invoke("hello", { callbacks: nestedCallbacks! });
+  await awaitAllCallbacks();
+
+  expect(createRunMock).toHaveBeenCalled();
+  const postedRun = createRunMock.mock.calls[0]?.[0];
+  // Non-allowlisted keys keep first-wins semantics.
+  expect(postedRun.extra?.metadata?.tenant).toBe("alpha");
+});
+
+test("tracer inheritable metadata allows nested override for allowlisted ls_* keys", async () => {
+  const createRunMock = vi.fn().mockResolvedValue(undefined);
+  const updateRunMock = vi.fn().mockResolvedValue(undefined);
+  const mockClient = {
+    createRun: createRunMock,
+    updateRun: updateRunMock,
+  } as LangSmithTracingClientInterface;
+  const tracer = new LangChainTracer({ client: mockClient });
+
+  // First configure: ancestor sets `ls_agent_type: "root"`.
+  const outerCallbacks = CallbackManager.configure(
+    [tracer],
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    { tracerInheritableMetadata: { ls_agent_type: "root" } }
+  );
+
+  // Second configure: nested caller overrides with `ls_agent_type: "subagent"`.
+  // Since `ls_agent_type` IS in the LangSmith allowlist, the nested value wins.
+  const nestedCallbacks = CallbackManager.configure(
+    outerCallbacks,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    { tracerInheritableMetadata: { ls_agent_type: "subagent" } }
+  );
+
+  const runnable = RunnableLambda.from((x: string) => x);
+  await runnable.invoke("hello", { callbacks: nestedCallbacks! });
+  await awaitAllCallbacks();
+
+  expect(createRunMock).toHaveBeenCalled();
+  const postedRun = createRunMock.mock.calls[0]?.[0];
+  expect(postedRun.extra?.metadata?.ls_agent_type).toBe("subagent");
+});
+
+test("tracer inheritable options apply via Symbol.hasInstance structural match", () => {
+  class ForeignTracer extends BaseCallbackHandler {
+    name = "langchain_tracer";
+
+    copyWithTracingConfig = vi.fn().mockReturnThis();
+
+    getRunTreeWithTracingConfig() {
+      return undefined;
+    }
+  }
+
+  const foreignTracer = new ForeignTracer();
+  expect(foreignTracer instanceof LangChainTracer).toBe(true);
+
+  CallbackManager.configure(
+    [foreignTracer],
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    {
+      tracerInheritableMetadata: { tenant: "alpha" },
+      tracerInheritableTags: ["tenant:alpha"],
+    }
+  );
+
+  expect(foreignTracer.copyWithTracingConfig).toHaveBeenCalledWith({
+    metadata: { tenant: "alpha" },
+    tags: ["tenant:alpha"],
+  });
 });
 
 class FakeCallbackHandlerWithErrors extends FakeCallbackHandler {

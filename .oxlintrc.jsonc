@@ -26,6 +26,7 @@
     "**/src/util/@cfworker/**",
     "**/src/util/fast-json-patch/**",
     "**/src/utils/zod-to-json-schema/**",
+    "**/src/utils/uuid/**",
   ],
   "rules": {
     "constructor-super": "error",
