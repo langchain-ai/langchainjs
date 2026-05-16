@@ -12,6 +12,7 @@ import {
   type WeaviateField,
   BaseHybridOptions,
   MetadataKeys,
+  type WeaviateClass,
 } from "weaviate-client";
 import {
   type MaxMarginalRelevanceSearchOptions,
@@ -78,8 +79,12 @@ export interface WeaviateLibArgs {
   metadataKeys?: string[];
   tenant?: string;
   schema?: CollectionConfigCreate;
-  /** Raw Weaviate JSON schema passed to `client.collections.createFromJson()`. Takes precedence over `schema`. */
-  jsonSchema?: Record<string, unknown>;
+  /**
+   * Raw Weaviate JSON schema passed straight to `client.collections.createFromJson()`.
+   * This is the same shape returned by Weaviate's REST API and by `client.collections.exportToJson()`.
+   * Takes precedence over `schema` when both are provided.
+   */
+  jsonSchema?: WeaviateClass;
 }
 
 export class WeaviateDocument extends Document {
@@ -110,7 +115,7 @@ export class WeaviateStore extends VectorStore {
 
   private schema?: CollectionConfigCreate;
 
-  private jsonSchema?: Record<string, unknown>;
+  private jsonSchema?: WeaviateClass;
 
   _vectorstoreType(): string {
     return "weaviate";
@@ -123,10 +128,13 @@ export class WeaviateStore extends VectorStore {
     super(embeddings, args);
 
     this.client = args.client;
+    // `class` is Weaviate's legacy field name for the collection identifier in the
+    // raw REST/JSON schema — it is not the standard JSON Schema `class` keyword.
+    // See WeaviateClass in weaviate-client/openapi/types.
     this.indexName =
       args.indexName ||
       args.schema?.name ||
-      (args.jsonSchema?.["class"] as string | undefined) ||
+      args.jsonSchema?.class ||
       "";
     this.textKey = args.textKey || "text";
     this.queryAttrs = [this.textKey];
@@ -164,8 +172,9 @@ export class WeaviateStore extends VectorStore {
     );
     if (!collection) {
       if (weaviateStore.jsonSchema) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await weaviateStore.client.collections.createFromJson(weaviateStore.jsonSchema as any);
+        await weaviateStore.client.collections.createFromJson(
+          weaviateStore.jsonSchema
+        );
       } else if (weaviateStore.schema) {
         await weaviateStore.client.collections.create(weaviateStore.schema);
       } else {
