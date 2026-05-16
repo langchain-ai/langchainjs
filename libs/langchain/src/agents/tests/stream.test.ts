@@ -107,8 +107,9 @@ describe("streamEvents", () => {
         for await (const msgStream of run.messages) {
           for await (const event of msgStream) {
             if (event.event !== "content-block-delta") continue;
-            const delta = (event as { delta?: { type?: string; text?: string } })
-              .delta;
+            const delta = (
+              event as { delta?: { type?: string; text?: string } }
+            ).delta;
             if (delta?.type === "text-delta" && delta.text != null) {
               texts.push(delta.text);
             }
