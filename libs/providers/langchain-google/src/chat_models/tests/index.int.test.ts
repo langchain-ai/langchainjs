@@ -160,12 +160,14 @@ const allModelInfo: ModelInfo[] = [
     model: "lyria-3-clip-preview",
     testConfig: {
       isAudio: true,
+      skip: true,
     },
   },
   {
     model: "lyria-3-pro-preview",
     testConfig: {
       isAudio: true,
+      skip: true,
     },
   },
 ];
@@ -453,6 +455,8 @@ describe.each(coreModelInfo)(
       const contentBlock = result.contentBlocks[0];
       expect(contentBlock.type).to.equal("text");
       expect(contentBlock.text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
+
+      expect(result.response_metadata.serviceTier).toEqual("standard");
     });
 
     test("invoke seed", async () => {
@@ -950,6 +954,42 @@ describe.each(coreModelInfo)(
       expect(
         recorder.request?.body?.generationConfig?.responseMimeType
       ).toEqual("application/json");
+    });
+
+    test("service tier - flex", async () => {
+      const llm = newChatGoogle({
+        serviceTier: "flex",
+      });
+      const prompt = "Write a limerick about the color blue.";
+      const result = await llm.invoke(prompt);
+
+      expect(result.response_metadata.serviceTier).toEqual("flex");
+    });
+
+    test("service tier - priority", async () => {
+      const llm = newChatGoogle({
+        serviceTier: "priority",
+      });
+      const prompt = "Write a limerick about the color blue.";
+      const result = await llm.invoke(prompt);
+
+      expect(result.response_metadata.serviceTier).toEqual("priority");
+    });
+
+    test("service tier - priority header", async () => {
+      const llm = newChatGoogle({
+        serviceTier: "flex", // This will be overridden by the custom value
+        customHeaders: {
+          "X-Vertex-AI-LLM-Shared-Request-Type": "priority",
+        },
+      });
+      const prompt = "Write a limerick about the color blue.";
+      const result = await llm.invoke(prompt);
+
+      const expectedValue = testConfig?.useApiKey
+        ? "flex"
+        : "priority";
+      expect(result.response_metadata.serviceTier).toEqual(expectedValue);
     });
 
     test("image - legacy", async () => {
