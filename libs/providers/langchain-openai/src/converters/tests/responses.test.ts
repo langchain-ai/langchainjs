@@ -422,6 +422,7 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
       expect(reasoningBlocks[0]).toEqual({
         type: "reasoning",
         reasoning: "Initial reasoning step",
+        index: 0,
       });
     });
 
@@ -459,6 +460,7 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
       expect(reasoningBlocks[0]).toEqual({
         type: "reasoning",
         reasoning: "more reasoning text",
+        index: 0,
       });
     });
 

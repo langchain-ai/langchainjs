@@ -9,17 +9,10 @@ import { z } from "zod";
 import { z as z4 } from "zod/v4";
 import { OutputParserException } from "@langchain/core/output_parsers";
 import { tool } from "@langchain/core/tools";
-import {
-  ContentBlockParam as AnthropicContentBlockParam,
-  MessageCreateParamsNonStreaming,
-} from "@anthropic-ai/sdk/resources";
+import { ContentBlockParam as AnthropicContentBlockParam } from "@anthropic-ai/sdk/resources";
 import { ChatAnthropic, ChatAnthropicMessages } from "../chat_models.js";
-import {
-  _convertMessagesToAnthropicPayload,
-  applyCacheControlToPayload,
-} from "../utils/message_inputs.js";
+import { _convertMessagesToAnthropicPayload } from "../utils/message_inputs.js";
 import { AnthropicToolExtrasSchema } from "../utils/tools.js";
-import { AnthropicMessageCreateParams } from "../types.js";
 
 test("constructor supports model shorthand for ChatAnthropicMessages", () => {
   const model = new ChatAnthropicMessages("claude-haiku-4-5-20251001", {
@@ -729,6 +722,275 @@ describe("Tool extras validation", () => {
   });
 });
 
+describe("strict tool calling", () => {
+  const weatherTool = tool(
+    async (input: { location: string }) => `Weather in ${input.location}`,
+    {
+      name: "get_current_weather",
+      description: "Get the current weather in a location",
+      schema: z.object({
+        location: z.string().describe("The location to get the weather for"),
+      }),
+    }
+  );
+
+  const strictWeatherTool = tool(
+    async (input: { location: string }) => `Weather in ${input.location}`,
+    {
+      name: "get_current_weather",
+      description: "Get the current weather in a location",
+      schema: z.object({ location: z.string() }),
+      extras: { strict: true },
+    }
+  );
+
+  const openAIShapedWeatherTool = {
+    type: "function" as const,
+    function: {
+      name: "get_current_weather",
+      description: "Get the current weather in a location",
+      parameters: {
+        type: "object",
+        properties: { location: { type: "string" } },
+        required: ["location"],
+      },
+      strict: true,
+    },
+  };
+
+  const anthropicShapedWeatherTool = {
+    name: "get_current_weather",
+    description: "Get the current weather in a location",
+    input_schema: {
+      type: "object" as const,
+      properties: { location: { type: "string" } },
+      required: ["location"],
+    },
+    strict: true,
+  };
+
+  type MockFetch = ReturnType<
+    typeof vi.fn<
+      (url: string | URL | Request, options?: RequestInit) => Promise<Response>
+    >
+  >;
+
+  function makeMockFetch(): MockFetch {
+    const mockFetch =
+      vi.fn<
+        (
+          url: string | URL | Request,
+          options?: RequestInit
+        ) => Promise<Response>
+      >();
+    mockFetch.mockImplementation((_url, _options) =>
+      Promise.resolve(
+        new Response(
+          JSON.stringify({
+            id: "msg_test",
+            type: "message",
+            role: "assistant",
+            model: "claude-haiku-4-5-20251001",
+            // `tool_use` shape (not text) is required so `withStructuredOutput`
+            // can parse a tool call out of the response.
+            content: [
+              {
+                type: "tool_use",
+                id: "toolu_test",
+                name: "get_current_weather",
+                input: { location: "test" },
+              },
+            ],
+            stop_reason: "tool_use",
+            stop_sequence: null,
+            usage: { input_tokens: 1, output_tokens: 1 },
+          }),
+          {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          }
+        )
+      )
+    );
+    return mockFetch;
+  }
+
+  function makeMockedModel(): { model: ChatAnthropic; mockFetch: MockFetch } {
+    const mockFetch = makeMockFetch();
+    const model = new ChatAnthropic({
+      model: "claude-haiku-4-5-20251001",
+      anthropicApiKey: "testing",
+      clientOptions: { fetch: mockFetch },
+      maxRetries: 0,
+    });
+    return { model, mockFetch };
+  }
+
+  function getRequestTools(
+    mockFetch: MockFetch
+  ): Array<Record<string, unknown>> {
+    expect(mockFetch).toHaveBeenCalled();
+    const [, init] = mockFetch.mock.calls[0];
+    if (!init || !init.body) {
+      throw new Error("Body not found in request.");
+    }
+    const body = JSON.parse(init.body as string) as {
+      tools: Array<Record<string, unknown>>;
+    };
+    return body.tools;
+  }
+
+  test("applies strict from .bindTools call args", async () => {
+    const { model, mockFetch } = makeMockedModel();
+    const modelWithTools = model.bindTools([weatherTool], { strict: true });
+    await modelWithTools.invoke("What's the weather like?");
+    expect(getRequestTools(mockFetch)[0]).toHaveProperty("strict", true);
+  });
+
+  test("applies strict from .withConfig call options", async () => {
+    const { model, mockFetch } = makeMockedModel();
+    const modelWithTools = model.withConfig({
+      tools: [weatherTool],
+      strict: true,
+    });
+    await modelWithTools.invoke("What's the weather like?");
+    expect(getRequestTools(mockFetch)[0]).toHaveProperty("strict", true);
+  });
+
+  test("applies strict from .bindTools(...).withConfig({ strict })", async () => {
+    const { model, mockFetch } = makeMockedModel();
+    const modelWithTools = model
+      .bindTools([weatherTool])
+      .withConfig({ strict: true });
+    await modelWithTools.invoke("What's the weather like?");
+    expect(getRequestTools(mockFetch)[0]).toHaveProperty("strict", true);
+  });
+
+  test("applies strict from per-call invoke options", async () => {
+    const { model, mockFetch } = makeMockedModel();
+    const modelWithTools = model.bindTools([weatherTool]);
+    await modelWithTools.invoke("What's the weather like?", { strict: true });
+    expect(getRequestTools(mockFetch)[0]).toHaveProperty("strict", true);
+  });
+
+  test("per-call invoke strict overrides .bindTools strict", async () => {
+    const { model, mockFetch } = makeMockedModel();
+    const modelWithTools = model.bindTools([weatherTool], { strict: true });
+    await modelWithTools.invoke("What's the weather like?", { strict: false });
+    expect(getRequestTools(mockFetch)[0]).toHaveProperty("strict", false);
+  });
+
+  test("applies strict from .withStructuredOutput config", async () => {
+    const { model, mockFetch } = makeMockedModel();
+    const modelWithTools = model.withStructuredOutput(
+      z.object({
+        location: z.string().describe("The location to get the weather for"),
+      }),
+      { strict: true, method: "functionCalling" }
+    );
+    await modelWithTools.invoke("What's the weather like?");
+    expect(getRequestTools(mockFetch)[0]).toHaveProperty("strict", true);
+  });
+
+  test("omits strict when not provided anywhere", async () => {
+    const { model, mockFetch } = makeMockedModel();
+    const modelWithTools = model.bindTools([weatherTool]);
+    await modelWithTools.invoke("What's the weather like?");
+    expect(getRequestTools(mockFetch)[0]).not.toHaveProperty("strict");
+  });
+
+  test("omits strict when not passed in .withStructuredOutput", async () => {
+    const { model, mockFetch } = makeMockedModel();
+    const modelWithTools = model.withStructuredOutput(
+      z.object({
+        location: z.string().describe("The location to get the weather for"),
+      }),
+      { method: "functionCalling" }
+    );
+    await modelWithTools.invoke("What's the weather like?");
+    expect(getRequestTools(mockFetch)[0]).not.toHaveProperty("strict");
+  });
+
+  test("per-tool extras.strict applies to that tool only", async () => {
+    const { model, mockFetch } = makeMockedModel();
+    const looseSearchTool = tool(
+      async (input: { query: string }) => `Results for ${input.query}`,
+      {
+        name: "search",
+        description: "Search the web",
+        schema: z.object({ query: z.string() }),
+      }
+    );
+    const modelWithTools = model.bindTools([
+      strictWeatherTool,
+      looseSearchTool,
+    ]);
+    await modelWithTools.invoke("What's the weather like?");
+    const tools = getRequestTools(mockFetch);
+    const strictTool = tools.find((t) => t.name === "get_current_weather");
+    const looseTool = tools.find((t) => t.name === "search");
+    expect(strictTool).toHaveProperty("strict", true);
+    expect(looseTool).not.toHaveProperty("strict");
+  });
+
+  test("per-tool function.strict applies on OpenAI-shaped tools", async () => {
+    const { model, mockFetch } = makeMockedModel();
+    const modelWithTools = model.bindTools([openAIShapedWeatherTool]);
+    await modelWithTools.invoke("What's the weather like?");
+    expect(getRequestTools(mockFetch)[0]).toHaveProperty("strict", true);
+  });
+
+  test("per-call strict overrides OpenAI-shaped tool's function.strict", async () => {
+    const { model, mockFetch } = makeMockedModel();
+    const modelWithTools = model.bindTools([openAIShapedWeatherTool], {
+      strict: false,
+    });
+    await modelWithTools.invoke("What's the weather like?");
+    expect(getRequestTools(mockFetch)[0]).toHaveProperty("strict", false);
+  });
+
+  test("per-tool native strict applies on Anthropic-shaped tools", async () => {
+    const { model, mockFetch } = makeMockedModel();
+    const modelWithTools = model.bindTools([anthropicShapedWeatherTool]);
+    await modelWithTools.invoke("What's the weather like?");
+    expect(getRequestTools(mockFetch)[0]).toHaveProperty("strict", true);
+  });
+
+  test("per-call strict overrides Anthropic-shaped tool's own strict", async () => {
+    const { model, mockFetch } = makeMockedModel();
+    const modelWithTools = model.bindTools([anthropicShapedWeatherTool], {
+      strict: false,
+    });
+    await modelWithTools.invoke("What's the weather like?");
+    expect(getRequestTools(mockFetch)[0]).toHaveProperty("strict", false);
+  });
+
+  test("per-call strict overrides per-tool extras.strict", async () => {
+    const { model, mockFetch } = makeMockedModel();
+    const modelWithTools = model.bindTools([strictWeatherTool], {
+      strict: false,
+    });
+    await modelWithTools.invoke("What's the weather like?");
+    expect(getRequestTools(mockFetch)[0]).toHaveProperty("strict", false);
+  });
+
+  test.each([["jsonSchema"], ["jsonMode"]])(
+    "withStructuredOutput throws when strict is set with method = %s",
+    (method) => {
+      const model = new ChatAnthropic({
+        model: "claude-haiku-4-5-20251001",
+        anthropicApiKey: "testing",
+      });
+      expect(() =>
+        model.withStructuredOutput(z.object({ location: z.string() }), {
+          strict: true,
+          method: method as "jsonSchema" | "jsonMode",
+        })
+      ).toThrow(/strict.*functionCalling/);
+    }
+  );
+});
+
 describe("formatStructuredToolToAnthropic", () => {
   test("returns undefined when tools is undefined", () => {
     const model = new ChatAnthropic({
@@ -1227,134 +1489,44 @@ describe("ContentBlock.Multimodal.Image format support", () => {
   });
 });
 
-describe("applyCacheControlToPayload", () => {
-  const cacheControl = { type: "ephemeral" as const, ttl: "5m" as const };
-
-  test("applies cache_control to the last content block of string content", () => {
-    const payload: AnthropicMessageCreateParams = {
-      max_tokens: 1000,
-      model: "claude-sonnet-4-5-20250929",
-      messages: [
-        { role: "user" as const, content: "Hello" },
-        { role: "assistant" as const, content: "Hi there!" },
-        { role: "user" as const, content: "How are you?" },
-      ],
-    };
-
-    const result = applyCacheControlToPayload(payload, cacheControl);
-
-    expect(result.messages[2].content).toEqual([
-      {
-        type: "text",
-        text: "How are you?",
-        cache_control: cacheControl,
-      },
-    ]);
-    // Other messages should be unchanged
-    expect(result.messages[0].content).toBe("Hello");
-    expect(result.messages[1].content).toBe("Hi there!");
+test("invocationParams includes cache_control when provided in call options", () => {
+  const model = new ChatAnthropic({
+    modelName: "claude-haiku-4-5-20251001",
+    temperature: 0,
+    anthropicApiKey: "testing",
   });
 
-  test("applies cache_control to the last content block of array content", () => {
-    const payload: AnthropicMessageCreateParams = {
-      max_tokens: 1000,
-      model: "claude-sonnet-4-5-20250929",
-      messages: [
-        { role: "user" as const, content: "Hello" },
-        {
-          role: "assistant" as const,
-          content: [
-            { type: "text" as const, text: "First block" },
-            { type: "text" as const, text: "Second block" },
-          ],
-        },
-      ],
-    };
-
-    const result = applyCacheControlToPayload(payload, cacheControl);
-
-    const lastMessage = result.messages[1];
-    expect(Array.isArray(lastMessage.content)).toBe(true);
-    if (Array.isArray(lastMessage.content)) {
-      expect(lastMessage.content[0]).toEqual({
-        type: "text",
-        text: "First block",
-      });
-      expect(lastMessage.content[1]).toEqual({
-        type: "text",
-        text: "Second block",
-        cache_control: cacheControl,
-      });
-    }
+  const params = model.invocationParams({
+    cache_control: { type: "ephemeral" },
   });
 
-  test("applies cache_control to tool_use blocks without corruption", () => {
-    const payload: AnthropicMessageCreateParams = {
-      max_tokens: 1000,
-      model: "claude-sonnet-4-5-20250929",
-      messages: [
-        { role: "user" as const, content: "Hello" },
-        {
-          role: "assistant" as const,
-          content: [
-            { type: "text" as const, text: "I'll help with that" },
-            {
-              type: "tool_use" as const,
-              id: "tool_123",
-              name: "get_weather",
-              input: { location: "San Francisco" },
-            },
-          ],
-        },
-      ],
-    };
+  expect(params.cache_control).toEqual({ type: "ephemeral" });
+});
 
-    const result = applyCacheControlToPayload(payload, cacheControl);
-
-    const lastMessage = result.messages[1];
-    if (Array.isArray(lastMessage.content)) {
-      const toolUseBlock = lastMessage.content[1];
-      // Verify all original fields are preserved
-      expect(toolUseBlock).toHaveProperty("type", "tool_use");
-      expect(toolUseBlock).toHaveProperty("id", "tool_123");
-      expect(toolUseBlock).toHaveProperty("name", "get_weather");
-      expect(toolUseBlock).toHaveProperty("input", {
-        location: "San Francisco",
-      });
-      // And cache_control is added
-      expect(toolUseBlock).toHaveProperty("cache_control", cacheControl);
-    }
+test("invocationParams includes cache_control with 1h ttl", () => {
+  const model = new ChatAnthropic({
+    modelName: "claude-haiku-4-5-20251001",
+    temperature: 0,
+    anthropicApiKey: "testing",
   });
 
-  test("returns unchanged payload when messages array is empty", () => {
-    const payload: AnthropicMessageCreateParams = {
-      messages: [],
-      max_tokens: 1000,
-      model: "claude-sonnet-4-5-20250929",
-    };
-
-    const result = applyCacheControlToPayload(payload, cacheControl);
-
-    expect(result).toEqual(payload);
+  const params = model.invocationParams({
+    cache_control: { type: "ephemeral", ttl: "1h" },
   });
 
-  test("handles 1h TTL", () => {
-    const payload: AnthropicMessageCreateParams = {
-      messages: [{ role: "user" as const, content: "Hello" }],
-      max_tokens: 1000,
-      model: "claude-sonnet-4-5-20250929",
-    };
-    const hourCacheControl = { type: "ephemeral" as const, ttl: "1h" as const };
+  expect(params.cache_control).toEqual({ type: "ephemeral", ttl: "1h" });
+});
 
-    const result = applyCacheControlToPayload(payload, hourCacheControl);
-
-    if (Array.isArray(result.messages[0].content)) {
-      expect(result.messages[0].content[0]).toHaveProperty(
-        "cache_control",
-        hourCacheControl
-      );
-    }
+test("invocationParams does not include cache_control when not provided", () => {
+  const model = new ChatAnthropic({
+    modelName: "claude-haiku-4-5-20251001",
+    temperature: 0,
+    anthropicApiKey: "testing",
   });
+
+  const params = model.invocationParams({});
+
+  expect(params.cache_control).toBeUndefined();
 });
 
 describe("File ContentBlock handling", () => {
@@ -1825,6 +1997,111 @@ describe("Opus 4.6", () => {
         type: "text",
         text: "Based on our conversation so far, let me continue...",
       });
+    });
+  });
+});
+
+describe("Opus 4.7", () => {
+  test("default max_tokens for claude-opus-4-7 is 16384", () => {
+    const model = new ChatAnthropic({
+      model: "claude-opus-4-7",
+      apiKey: "testing",
+    });
+
+    const params = model.invocationParams({});
+
+    expect(params.max_tokens).toBe(16384);
+  });
+
+  test("rejects thinking.type=enabled for claude-opus-4-7", () => {
+    const model = new ChatAnthropic({
+      model: "claude-opus-4-7",
+      apiKey: "testing",
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      thinking: { type: "enabled", budget_tokens: 2048 } as any,
+    });
+
+    expect(() => model.invocationParams({})).toThrow(
+      'thinking.type="enabled" is not supported for claude-opus-4-7; use thinking.type="adaptive" instead'
+    );
+  });
+
+  test("rejects thinking.budget_tokens for claude-opus-4-7", () => {
+    const model = new ChatAnthropic({
+      model: "claude-opus-4-7",
+      apiKey: "testing",
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      thinking: { type: "adaptive", budget_tokens: 2048 } as any,
+    });
+
+    expect(() => model.invocationParams({})).toThrow(
+      "thinking.budget_tokens is not supported for claude-opus-4-7; use outputConfig.effort instead"
+    );
+  });
+
+  test("rejects non-default sampling params for claude-opus-4-7", () => {
+    const model = new ChatAnthropic({
+      model: "claude-opus-4-7",
+      apiKey: "testing",
+      temperature: 0.1,
+    });
+
+    expect(() => model.invocationParams({})).toThrow(
+      "temperature is not supported for claude-opus-4-7 when set to non-default values"
+    );
+  });
+
+  test("does not include sampling params for claude-opus-4-7 even if set to defaults", () => {
+    const model = new ChatAnthropic({
+      model: "claude-opus-4-7",
+      apiKey: "testing",
+      temperature: 1,
+      topP: 1,
+    });
+
+    const params = model.invocationParams({});
+
+    expect(params.temperature).toBeUndefined();
+    expect(params.top_p).toBeUndefined();
+    expect(params.top_k).toBeUndefined();
+  });
+
+  test("passes thinking.display through for claude-opus-4-7", () => {
+    const model = new ChatAnthropic({
+      model: "claude-opus-4-7",
+      apiKey: "testing",
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      thinking: { type: "adaptive", display: "summarized" } as any,
+    });
+
+    const params = model.invocationParams({});
+
+    expect(params.thinking).toEqual({
+      type: "adaptive",
+      display: "summarized",
+    });
+  });
+
+  test("auto-adds task budget beta when outputConfig.task_budget is provided", () => {
+    const model = new ChatAnthropic({
+      model: "claude-opus-4-7",
+      apiKey: "testing",
+      outputConfig: {
+        effort: "high",
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+        task_budget: { type: "tokens", total: 128000 } as any,
+      },
+    });
+
+    const params = model.invocationParams({});
+
+    expect(params.betas).toContain("task-budgets-2026-03-13");
+    expect(params.output_config).toEqual({
+      effort: "high",
+      task_budget: {
+        type: "tokens",
+        total: 128000,
+      },
     });
   });
 });

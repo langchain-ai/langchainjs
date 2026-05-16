@@ -2,10 +2,12 @@ import {
   SystemMessage,
   HumanMessage,
   AIMessage,
+  AIMessageChunk,
   ToolMessage,
   BaseMessage,
   BaseMessageChunk,
 } from "@langchain/core/messages";
+import type { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { concat } from "@langchain/core/utils/stream";
 import {
   ConversationRole as BedrockConversationRole,
@@ -245,6 +247,133 @@ describe("convertToConverseMessages", () => {
           },
           {
             text: "Answer the user's questions using your own knowledge or provided tool.",
+          },
+        ],
+      },
+    },
+    {
+      name: "prompt caching with cache point ttl",
+      input: [
+        new SystemMessage({
+          content: [
+            { type: "text", text: "You're an advanced AI assistant." },
+            {
+              type: "cache_point",
+              cachePoint: {
+                type: "default",
+                ttl: "1h",
+              },
+            },
+          ],
+        }),
+        new HumanMessage({
+          content: [
+            {
+              type: "text",
+              text: "Summarize this long policy.",
+            },
+            {
+              type: "cache_point",
+              cachePoint: {
+                type: "default",
+                ttl: "1h",
+              },
+            },
+          ],
+        }),
+        new AIMessage({
+          content: [
+            {
+              type: "text",
+              text: "Here is a concise summary.",
+            },
+            {
+              type: "cache_point",
+              cachePoint: {
+                type: "default",
+                ttl: "5m",
+              },
+            },
+          ],
+        }),
+        new ToolMessage({
+          content: [
+            {
+              type: "text",
+              text: "long tool result...",
+            },
+            {
+              type: "cache_point",
+              cachePoint: {
+                type: "default",
+                ttl: "1h",
+              },
+            },
+          ],
+          tool_call_id: "long_policy_tool",
+        }),
+      ],
+      output: {
+        converseMessages: [
+          {
+            role: BedrockConversationRole.USER,
+            content: [
+              {
+                text: "Summarize this long policy.",
+              },
+              {
+                cachePoint: {
+                  type: "default",
+                  ttl: "1h",
+                },
+              },
+            ],
+          },
+          {
+            role: BedrockConversationRole.ASSISTANT,
+            content: [
+              {
+                text: "Here is a concise summary.",
+              },
+              {
+                cachePoint: {
+                  type: "default",
+                  ttl: "5m",
+                },
+              },
+            ],
+          },
+          {
+            role: BedrockConversationRole.USER,
+            content: [
+              {
+                toolResult: {
+                  toolUseId: "long_policy_tool",
+                  content: [
+                    {
+                      text: "long tool result...",
+                    },
+                  ],
+                },
+              },
+              {
+                cachePoint: {
+                  type: "default",
+                  ttl: "1h",
+                },
+              },
+            ],
+          },
+        ],
+        converseSystem: [
+          {
+            text: "You're an advanced AI assistant.",
+          },
+          {
+            cachePoint: {
+              type: "default",
+              ttl: "1h",
+            },
           },
         ],
       },
@@ -621,6 +750,88 @@ test("Streaming supports empty string chunks", async () => {
   expect(finalChunk).toBeDefined();
   if (!finalChunk) return;
   expect(finalChunk.content).toBe("Hello world!");
+});
+
+test("Streaming emits tool call start chunks via handleLLMNewToken", async () => {
+  const mockSend = vi.fn().mockResolvedValue({
+    stream: (async function* () {
+      yield {
+        contentBlockStart: {
+          contentBlockIndex: 0,
+          start: {
+            toolUse: {
+              name: "get_weather",
+              toolUseId: "tooluse_123",
+            },
+          },
+        },
+      };
+      yield {
+        contentBlockDelta: {
+          contentBlockIndex: 0,
+          delta: {
+            toolUse: {
+              input: '{"location":"London"}',
+            },
+          },
+        },
+      };
+    })(),
+  });
+
+  const mockClient = {
+    send: mockSend,
+  } as unknown as BedrockRuntimeClient;
+
+  const model = new ChatBedrockConverse({
+    region: "us-east-1",
+    credentials: {
+      secretAccessKey: "test-secret-key",
+      accessKeyId: "test-access-key",
+    },
+    model: "anthropic.claude-haiku-4-5-20251001-v1:0",
+    client: mockClient,
+  });
+
+  const handleLLMNewToken = vi.fn();
+  const runManager = {
+    handleLLMNewToken,
+  } as unknown as CallbackManagerForLLMRun;
+
+  const chunks = [];
+  for await (const chunk of model._streamResponseChunks(
+    [new HumanMessage("Get the weather for London")],
+    {},
+    runManager
+  )) {
+    chunks.push(chunk);
+  }
+
+  expect(chunks).toHaveLength(2);
+  expect(handleLLMNewToken).toHaveBeenCalledTimes(2);
+
+  const firstCallbackFields = handleLLMNewToken.mock.calls[0][5] as {
+    chunk: { message: AIMessageChunk };
+  };
+  expect(firstCallbackFields.chunk.message.tool_call_chunks).toEqual([
+    {
+      id: "tooluse_123",
+      index: 0,
+      name: "get_weather",
+      type: "tool_call_chunk",
+    },
+  ]);
+
+  const secondCallbackFields = handleLLMNewToken.mock.calls[1][5] as {
+    chunk: { message: AIMessageChunk };
+  };
+  expect(secondCallbackFields.chunk.message.tool_call_chunks).toEqual([
+    {
+      args: '{"location":"London"}',
+      index: 0,
+      type: "tool_call_chunk",
+    },
+  ]);
 });
 
 describe("video content block conversion", () => {
@@ -1002,6 +1213,67 @@ describe("applicationInferenceProfile parameter", () => {
     expect(commandArg.input.modelId).toBe(
       "anthropic.claude-haiku-4-5-20251001-v1:0"
     );
+  });
+
+  it("should surface plain object Bedrock errors in non-streaming mode", async () => {
+    const rawError = {
+      message:
+        "The model returned the following errors: Output blocked by content filtering policy",
+    };
+    const mockClient = {
+      send: vi.fn().mockRejectedValue(rawError),
+    } as unknown as BedrockRuntimeClient;
+
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
+      client: mockClient,
+    });
+
+    let thrown: unknown;
+    try {
+      await model.invoke([new HumanMessage("Hello")]);
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(Error);
+    // oxlint-disable-next-line no-instanceof/no-instanceof
+    if (thrown instanceof Error) {
+      expect(thrown.message).toBe(rawError.message);
+      expect(thrown.cause).toEqual(rawError);
+    }
+  });
+
+  it("should surface plain object Bedrock errors in streaming mode", async () => {
+    const rawError = {
+      message:
+        "The model returned the following errors: Output blocked by content filtering policy",
+    };
+    const mockClient = {
+      send: vi.fn().mockRejectedValue(rawError),
+    } as unknown as BedrockRuntimeClient;
+
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
+      streaming: true,
+      client: mockClient,
+    });
+
+    let thrown: unknown;
+    try {
+      await model.invoke([new HumanMessage("Hello")]);
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(Error);
+    // oxlint-disable-next-line no-instanceof/no-instanceof
+    if (thrown instanceof Error) {
+      expect(thrown.message).toBe(rawError.message);
+      expect(thrown.cause).toEqual(rawError);
+    }
   });
 });
 
