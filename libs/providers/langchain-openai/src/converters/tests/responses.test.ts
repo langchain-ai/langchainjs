@@ -2224,6 +2224,151 @@ describe("convertResponsesDeltaToChatGenerationChunk - json_schema with tool cal
   });
 });
 
+describe("convertResponsesDeltaToChatGenerationChunk - json_schema with trailing non-whitespace characters (#10894)", () => {
+  it("should not throw when response text contains valid JSON followed by a trailing non-whitespace character", () => {
+    // gpt-5-mini on service_tier: "auto" intermittently emits trailing
+    // characters after a valid JSON object on the Responses API. JSON.parse
+    // accepts trailing whitespace, so the failure mode is specifically
+    // trailing non-whitespace (extra tokens, control characters). Previously
+    // the bare JSON.parse threw SyntaxError and killed the stream. The
+    // conversion should now degrade gracefully: additional_kwargs.parsed is
+    // left undefined, the rest of the message converts normally, and the
+    // caller can fall back to msg.text or retry.
+    const event = {
+      type: "response.completed",
+      response: {
+        id: "resp_test_10894",
+        model: "gpt-5-mini",
+        object: "response",
+        created_at: 1700000000,
+        status: "completed",
+        incomplete_details: null,
+        metadata: {},
+        user: null,
+        service_tier: "auto",
+        output: [
+          {
+            type: "message",
+            id: "msg_001",
+            role: "assistant",
+            status: "completed",
+            content: [
+              {
+                type: "output_text",
+                text: '{"status":"ok","plan":{"steps":[]}}x',
+                annotations: [],
+              },
+            ],
+          },
+        ],
+        text: {
+          format: {
+            type: "json_schema",
+            name: "response",
+            strict: true,
+            schema: {
+              type: "object",
+              additionalProperties: false,
+              required: ["status", "plan"],
+              properties: {
+                status: { type: "string" },
+                plan: { type: "object" },
+              },
+            },
+          },
+        },
+        usage: {
+          input_tokens: 30,
+          output_tokens: 12,
+          total_tokens: 42,
+          input_tokens_details: { cached_tokens: 0 },
+          output_tokens_details: { reasoning_tokens: 0 },
+        },
+      },
+    };
+
+    expect(() =>
+      convertResponsesDeltaToChatGenerationChunk(event as any)
+    ).not.toThrow();
+
+    const result = convertResponsesDeltaToChatGenerationChunk(event as any);
+    expect(result).not.toBeNull();
+
+    const message = result!.message as AIMessageChunk;
+    // Parsing failed, so parsed should not be populated.
+    expect(message.additional_kwargs.parsed).toBeUndefined();
+    // Usage metadata should still flow through so the caller can account
+    // for the tokens that were spent on the bad payload.
+    expect(result!.message.usage_metadata).toBeDefined();
+    expect(result!.message.usage_metadata!.input_tokens).toBe(30);
+  });
+
+  it("should still parse cleanly when response text is well-formed JSON", () => {
+    // Regression guard: the try/catch must not change the well-formed path.
+    const event = {
+      type: "response.completed",
+      response: {
+        id: "resp_test_10894_b",
+        model: "gpt-5-mini",
+        object: "response",
+        created_at: 1700000000,
+        status: "completed",
+        incomplete_details: null,
+        metadata: {},
+        user: null,
+        service_tier: "auto",
+        output: [
+          {
+            type: "message",
+            id: "msg_002",
+            role: "assistant",
+            status: "completed",
+            content: [
+              {
+                type: "output_text",
+                text: '{"status":"ok","plan":{"steps":[]}}',
+                annotations: [],
+              },
+            ],
+          },
+        ],
+        text: {
+          format: {
+            type: "json_schema",
+            name: "response",
+            strict: true,
+            schema: {
+              type: "object",
+              additionalProperties: false,
+              required: ["status", "plan"],
+              properties: {
+                status: { type: "string" },
+                plan: { type: "object" },
+              },
+            },
+          },
+        },
+        usage: {
+          input_tokens: 30,
+          output_tokens: 12,
+          total_tokens: 42,
+          input_tokens_details: { cached_tokens: 0 },
+          output_tokens_details: { reasoning_tokens: 0 },
+        },
+      },
+    };
+
+    const result = convertResponsesDeltaToChatGenerationChunk(event as any);
+    expect(result).not.toBeNull();
+
+    const message = result!.message as AIMessageChunk;
+    expect(message.additional_kwargs.parsed).toEqual({
+      status: "ok",
+      plan: { steps: [] },
+    });
+  });
+});
+
 describe("phase parameter support", () => {
   describe("convertResponsesMessageToAIMessage", () => {
     it("should include phase on text content blocks when present on message output", () => {

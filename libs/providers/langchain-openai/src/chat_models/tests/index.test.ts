@@ -1684,4 +1684,204 @@ describe("ChatOpenAI", () => {
       expect(result.text).toEqual("Foo bar");
     });
   });
+
+  describe("withStructuredOutput streaming with malformed structured output (#10894)", () => {
+    // Helper: builds a Response that streams a single response.completed event
+    // whose output_text contains the given JSON text. The mock targets the
+    // Responses API surface, which is where #10894 was reported.
+    const buildMalformedStream = (outputText: string) => {
+      const mockResponseDefaults = {
+        object: "response",
+        background: false,
+        created_at: Math.floor(Date.now() / 1000),
+        completed_at: Math.floor(Date.now() / 1000),
+        error: null,
+        frequency_penalty: 0.0,
+        incomplete_details: null,
+        instructions: null,
+        max_output_tokens: null,
+        max_tool_calls: null,
+        output: [],
+        parallel_tool_calls: true,
+        presence_penalty: 0.0,
+        previous_response_id: null,
+        prompt_cache_key: null,
+        prompt_cache_retention: null,
+        reasoning: { effort: null, summary: null },
+        safety_identifier: null,
+        service_tier: "auto",
+        store: true,
+        temperature: 1.0,
+        text: {
+          format: {
+            type: "json_schema" as const,
+            name: "Plan",
+            strict: true,
+            schema: {
+              type: "object",
+              additionalProperties: false,
+              required: ["status", "plan"],
+              properties: {
+                status: { type: "string" },
+                plan: {
+                  type: "object",
+                  additionalProperties: false,
+                  required: ["steps"],
+                  properties: {
+                    steps: { type: "array", items: { type: "string" } },
+                  },
+                },
+              },
+            },
+          },
+          verbosity: "medium",
+        },
+        tool_choice: "auto",
+        tools: [],
+        top_logprobs: 0,
+        top_p: 1.0,
+        truncation: "disabled",
+        usage: {
+          input_tokens: 10,
+          input_tokens_details: { cached_tokens: 0 },
+          output_tokens: 12,
+          output_tokens_details: { reasoning_tokens: 0 },
+          total_tokens: 22,
+        },
+        user: null,
+        metadata: {},
+      };
+
+      const events = [
+        {
+          type: "response.created",
+          response: {
+            ...mockResponseDefaults,
+            id: "resp_10894",
+            status: "in_progress",
+          },
+          sequence_number: 0,
+        },
+        {
+          type: "response.completed",
+          response: {
+            ...mockResponseDefaults,
+            id: "resp_10894",
+            status: "completed",
+            output: [
+              {
+                id: "msg_10894",
+                type: "message",
+                status: "completed",
+                role: "assistant",
+                content: [
+                  {
+                    type: "output_text",
+                    annotations: [],
+                    logprobs: [],
+                    text: outputText,
+                  },
+                ],
+              },
+            ],
+          },
+          sequence_number: 1,
+        },
+      ]
+        .map((e) => `event: ${e.type}\ndata: ${JSON.stringify(e)}\n`)
+        .join("\n");
+
+      const mockFetch =
+        vi.fn<(url: string | URL | Request, options?: any) => Promise<any>>();
+      mockFetch.mockImplementation(() =>
+        Promise.resolve(
+          new Response(`${events}\n`, {
+            status: 200,
+            headers: { "Content-Type": "text/event-stream" },
+          })
+        )
+      );
+      return mockFetch;
+    };
+
+    // Trailing non-whitespace token after a valid JSON object: matches the
+    // production failure mode reported in the issue (extra tokens emitted by
+    // gpt-5-mini on service_tier: "auto"). JSON.parse rejects this with
+    // 'Unexpected non-whitespace character after JSON at position N'.
+    const malformed = '{"status":"ok","plan":{"steps":[]}}x';
+
+    const planSchema = z.object({
+      status: z.string(),
+      plan: z.object({
+        steps: z.array(z.string()),
+      }),
+    });
+
+    it("returns { parsed: null } when invoked with includeRaw: true on a malformed structured response", async () => {
+      const model = new ChatOpenAI({
+        model: "gpt-5-mini",
+        apiKey: "test-key",
+        useResponsesApi: true,
+        streaming: true,
+        configuration: { fetch: buildMalformedStream(malformed) },
+      });
+
+      const structured = model.withStructuredOutput(planSchema, {
+        method: "jsonSchema",
+        includeRaw: true,
+      });
+
+      const result = (await structured.invoke("plan something")) as {
+        raw: unknown;
+        parsed: unknown;
+      };
+
+      // includeRaw fallback path: raw message survives, parsed degrades to
+      // null instead of bubbling a SyntaxError up to the caller.
+      expect(result.parsed).toBeNull();
+      expect(result.raw).toBeDefined();
+    });
+
+    it("throws a typed OutputParserException when invoked with includeRaw: false on a malformed structured response", async () => {
+      const model = new ChatOpenAI({
+        model: "gpt-5-mini",
+        apiKey: "test-key",
+        useResponsesApi: true,
+        streaming: true,
+        configuration: { fetch: buildMalformedStream(malformed) },
+      });
+
+      const structured = model.withStructuredOutput(planSchema, {
+        method: "jsonSchema",
+      });
+
+      // Non-includeRaw path: the StructuredOutputParser fallback throws a
+      // typed OutputParserException (not a raw SyntaxError that would have
+      // killed the stream mid-flight before the converter-level fix). The
+      // caller can catch it normally and retry.
+      await expect(structured.invoke("plan something")).rejects.toThrow(
+        /Failed to parse/i
+      );
+    });
+
+    it("returns the parsed object when the structured response is well-formed", async () => {
+      // Regression guard: the lambda + altParser combo must still hand back
+      // the parsed result on the happy path.
+      const wellFormed = '{"status":"ok","plan":{"steps":["a","b"]}}';
+      const model = new ChatOpenAI({
+        model: "gpt-5-mini",
+        apiKey: "test-key",
+        useResponsesApi: true,
+        streaming: true,
+        configuration: { fetch: buildMalformedStream(wellFormed) },
+      });
+
+      const structured = model.withStructuredOutput(planSchema, {
+        method: "jsonSchema",
+      });
+
+      const result = await structured.invoke("plan something");
+      expect(result).toEqual({ status: "ok", plan: { steps: ["a", "b"] } });
+    });
+  });
 });
