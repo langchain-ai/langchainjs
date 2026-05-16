@@ -874,8 +874,6 @@ export class ReactAgent<
     exitNode: string | typeof END,
     hasToolsAvailable: boolean = toolClasses.length > 0
   ) {
-    const hasStructuredResponse = Boolean(this.options.responseFormat);
-
     return (state: Record<string, unknown>) => {
       const builtInState = state as unknown as Omit<BuiltInState, "jumpTo"> & {
         jumpTo?: JumpTo;
@@ -938,8 +936,7 @@ export class ReactAgent<
       if (
         pendingToolCalls &&
         pendingToolCalls.length === 0 &&
-        !hasStructuredResponseCalls &&
-        hasStructuredResponse
+        !hasStructuredResponseCalls
       ) {
         return AGENT_NODE_NAME;
       }
