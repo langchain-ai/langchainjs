@@ -269,6 +269,22 @@ describe("fakeModel", () => {
       expect(r2.content).toBe("done");
     });
 
+    test("preserves response sequence across multiple bound instances", async () => {
+      const model = fakeModel()
+        .respondWithTools([{ name: "search", args: {}, id: "1" }])
+        .respond(new AIMessage("done"));
+
+      const firstBound = model.bindTools([dummyTool]);
+      const secondBound = model.bindTools([dummyTool]);
+
+      const r1 = await firstBound.invoke([new HumanMessage("a")]);
+      expect(r1.tool_calls?.[0]?.name).toBe("search");
+
+      const r2 = await secondBound.invoke([new HumanMessage("b")]);
+      expect(r2.content).toBe("done");
+      expect(r2.tool_calls ?? []).toHaveLength(0);
+    });
+
     test("shares call recording across bindTools", async () => {
       const model = fakeModel().respond(new AIMessage("hi"));
       const bound = model.bindTools([dummyTool]);
