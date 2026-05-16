@@ -62,19 +62,32 @@ export class ChatCloudflareWorkersAI
 
   streaming = false;
 
-  constructor(fields?: CloudflareWorkersAIInput & BaseChatModelParams) {
-    super(fields ?? {});
+  constructor(
+    model: string,
+    params?: Omit<CloudflareWorkersAIInput & BaseChatModelParams, "model">
+  );
+  constructor(fields?: CloudflareWorkersAIInput & BaseChatModelParams);
+  constructor(
+    modelOrFields?: string | (CloudflareWorkersAIInput & BaseChatModelParams),
+    paramsArg?: Omit<CloudflareWorkersAIInput & BaseChatModelParams, "model">
+  ) {
+    const fields =
+      typeof modelOrFields === "string"
+        ? { ...(paramsArg ?? {}), model: modelOrFields }
+        : (modelOrFields ?? {});
+    super(fields);
+    this._addVersion("@langchain/cloudflare", __PKG_VERSION__);
 
-    this.model = fields?.model ?? this.model;
-    this.streaming = fields?.streaming ?? this.streaming;
+    this.model = fields.model ?? this.model;
+    this.streaming = fields.streaming ?? this.streaming;
     this.cloudflareAccountId =
-      fields?.cloudflareAccountId ??
+      fields.cloudflareAccountId ??
       getEnvironmentVariable("CLOUDFLARE_ACCOUNT_ID");
     this.cloudflareApiToken =
-      fields?.cloudflareApiToken ??
+      fields.cloudflareApiToken ??
       getEnvironmentVariable("CLOUDFLARE_API_TOKEN");
     this.baseUrl =
-      fields?.baseUrl ??
+      fields.baseUrl ??
       `https://api.cloudflare.com/client/v4/accounts/${this.cloudflareAccountId}/ai/run`;
     if (this.baseUrl.endsWith("/")) {
       this.baseUrl = this.baseUrl.slice(0, -1);
@@ -160,7 +173,7 @@ export class ChatCloudflareWorkersAI
         const error = new Error(
           `Cloudflare LLM call failed with status code ${response.status}`
         );
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         (error as any).response = response;
         throw error;
       }
@@ -191,7 +204,7 @@ export class ChatCloudflareWorkersAI
           text: parsedChunk.response,
         });
         yield generationChunk;
-        // eslint-disable-next-line no-void
+        // oxlint-disable-next-line no-void
         void runManager?.handleLLMNewToken(generationChunk.text ?? "");
       }
     }

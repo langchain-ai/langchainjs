@@ -39,7 +39,7 @@ test("CombiningOutputParser", async () => {
 
   // console.log(input);
 
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const response = await model.invoke(input);
 

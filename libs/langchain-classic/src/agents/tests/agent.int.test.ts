@@ -224,7 +224,7 @@ test("Run agent with incorrect api key should throw error", async () => {
 
   // Test that the agent throws the same error
   await expect(() => executor.call({ input })).rejects.toThrowError(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     (error as any).message
   );
 }, 10000);
@@ -286,7 +286,7 @@ test("Agent can stream", async () => {
 
   const result = await executor.stream({ input });
   let streamIters = 0;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   const finalResponse: any = [];
   for await (const item of result) {
     streamIters += 1;
@@ -300,7 +300,7 @@ test("Agent can stream", async () => {
   // The last item should contain "output"
   expect("output" in finalResponse[finalResponse.length - 1]).toBeTruthy();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   const intermediateSteps = finalResponse.flatMap((item: any) => {
     if ("intermediateSteps" in item) {
       return item.intermediateSteps;
@@ -346,7 +346,7 @@ test("Agent can stream with chat messages", async () => {
 
   const result = await executor.stream({ input, chat_history: [] });
   let streamIters = 0;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   let finalResponse: any;
   for await (const item of result) {
     streamIters += 1;

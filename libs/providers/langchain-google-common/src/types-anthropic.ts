@@ -314,6 +314,6 @@ export interface AnthropicStreamPingEvent extends AnthropicStreamBaseEvent {
 
 export interface AnthropicStreamErrorEvent extends AnthropicStreamBaseEvent {
   type: "error";
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   error: any;
 }

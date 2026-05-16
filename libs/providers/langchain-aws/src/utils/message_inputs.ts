@@ -18,13 +18,49 @@ import {
 import type * as Bedrock from "@aws-sdk/client-bedrock-runtime";
 import type { DocumentType as __DocumentType } from "@smithy/types";
 import {
+  BedrockPromptCacheControl,
+  ConverseCommandParams,
   MessageContentReasoningBlock,
   MessageContentReasoningBlockReasoningText,
   MessageContentReasoningBlockRedacted,
 } from "../types.js";
 import { convertFromV1ToChatBedrockConverseMessage } from "./compat.js";
 
-function isDefaultCachePoint(block: unknown): boolean {
+function isDefaultCachePoint(
+  block: unknown
+): block is { cachePoint: Bedrock.CachePointBlock } {
+  if (
+    !(
+      typeof block === "object" &&
+      block !== null &&
+      "cachePoint" in block &&
+      block.cachePoint &&
+      typeof block.cachePoint === "object" &&
+      block.cachePoint !== null &&
+      "type" in block.cachePoint &&
+      block.cachePoint.type === "default"
+    )
+  ) {
+    return false;
+  }
+
+  const { ttl } = block.cachePoint as { ttl?: unknown };
+  return ttl === undefined || ttl === "5m" || ttl === "1h";
+}
+
+function convertCachePointBlock(block: {
+  cachePoint: Bedrock.CachePointBlock;
+}): { cachePoint: Bedrock.CachePointBlock } {
+  const { ttl } = block.cachePoint;
+  return {
+    cachePoint: {
+      type: "default",
+      ...(ttl !== undefined ? { ttl } : {}),
+    },
+  };
+}
+
+function isConverseCachePoint(block: unknown): boolean {
   return Boolean(
     typeof block === "object" &&
     block !== null &&
@@ -32,9 +68,75 @@ function isDefaultCachePoint(block: unknown): boolean {
     block.cachePoint &&
     typeof block.cachePoint === "object" &&
     block.cachePoint !== null &&
-    "type" in block.cachePoint &&
-    block.cachePoint.type === "default"
+    "type" in block.cachePoint
   );
+}
+
+function createConverseCachePointBlock(
+  cacheControl: BedrockPromptCacheControl,
+  isNovaModel: boolean
+): { cachePoint: { type: "default"; ttl?: "1h" } } {
+  const ttl =
+    !isNovaModel && cacheControl.ttl && cacheControl.ttl !== "5m"
+      ? cacheControl.ttl
+      : undefined;
+  return {
+    cachePoint: {
+      type: "default",
+      ...(ttl ? { ttl } : {}),
+    },
+  };
+}
+
+export function applyCachePointsToConversePayload(fields: {
+  cacheControl?: BedrockPromptCacheControl;
+  system: Bedrock.SystemContentBlock[];
+  messages: Bedrock.Message[];
+  params?: Partial<ConverseCommandParams>;
+  modelId: string;
+}): void {
+  const { cacheControl, system, messages, params, modelId } = fields;
+  if (!cacheControl) {
+    return;
+  }
+
+  const isNovaModel = modelId.toLowerCase().includes("amazon.nova");
+  const cacheBlock = createConverseCachePointBlock(cacheControl, isNovaModel);
+
+  if (
+    system.length > 0 &&
+    !system.some((block) => isConverseCachePoint(block))
+  ) {
+    system.push(cacheBlock);
+  }
+
+  const lastMessage = messages[messages.length - 1];
+  const lastContent = lastMessage?.content;
+  if (Array.isArray(lastContent)) {
+    const hasNovaToolBlock =
+      isNovaModel &&
+      lastContent.some(
+        (block) =>
+          typeof block === "object" &&
+          block !== null &&
+          ("toolResult" in block || "toolUse" in block)
+      );
+    if (
+      !hasNovaToolBlock &&
+      !lastContent.some((block) => isConverseCachePoint(block))
+    ) {
+      lastContent.push(cacheBlock);
+    }
+  }
+
+  const tools = params?.toolConfig?.tools;
+  if (
+    !isNovaModel &&
+    Array.isArray(tools) &&
+    !tools.some((tool) => isConverseCachePoint(tool))
+  ) {
+    tools.push(cacheBlock as unknown as Bedrock.Tool);
+  }
 }
 
 export function extractImageInfo(
@@ -68,6 +170,104 @@ export function extractImageInfo(
       },
     },
   };
+}
+
+const mimeTypeToVideoFormat: Record<string, Bedrock.VideoFormat> = {
+  "video/flv": "flv",
+  "video/mkv": "mkv",
+  "video/mov": "mov",
+  "video/mp4": "mp4",
+  "video/mpeg": "mpeg",
+  "video/mpg": "mpg",
+  "video/three_gp": "three_gp",
+  "video/webm": "webm",
+  "video/wmv": "wmv",
+};
+
+const mimeTypeToAudioFormat: Record<string, Bedrock.AudioFormat> = {
+  "audio/aac": "aac",
+  "audio/flac": "flac",
+  "audio/m4a": "m4a",
+  "audio/mka": "mka",
+  "audio/mkv": "mkv",
+  "audio/mp3": "mp3",
+  "audio/mp4": "mp4",
+  "audio/mpeg": "mpeg",
+  "audio/mpga": "mpga",
+  "audio/ogg": "ogg",
+  "audio/opus": "opus",
+  "audio/pcm": "pcm",
+  "audio/wav": "wav",
+  "audio/webm": "webm",
+  "audio/x-aac": "x-aac",
+};
+
+function resolveMediaSource(
+  block: Record<string, unknown>
+): Bedrock.AudioSource.BytesMember | Bedrock.AudioSource.S3LocationMember {
+  if (typeof block.data === "string") {
+    return {
+      bytes: Uint8Array.from(atob(block.data), (c) => c.charCodeAt(0)),
+    };
+  }
+
+  // oxlint-disable-next-line no-instanceof/no-instanceof
+  if (block.data instanceof Uint8Array) {
+    return { bytes: block.data };
+  }
+
+  if (typeof block.url === "string") {
+    const parsedData = parseBase64DataUrl({
+      dataUrl: block.url,
+      asTypedArray: true,
+    });
+    if (parsedData) {
+      return { bytes: parsedData.data };
+    }
+    throw new Error(
+      `Only base64 data URLs are supported for ${block.type} blocks with 'url' field with ChatBedrockConverse.`
+    );
+  }
+
+  if (typeof block.fileId === "string") {
+    return { s3Location: { uri: block.fileId } };
+  }
+
+  throw new Error(
+    `${block.type} block must include one of: 'data' (base64 string or Uint8Array), 'url' (base64 data URL), or 'fileId' (S3 URI).`
+  );
+}
+
+function convertMultimodalVideoBlock(
+  block: Record<string, unknown>
+): Bedrock.ContentBlock {
+  const mimeType = block.mimeType as string | undefined;
+  let format: Bedrock.VideoFormat | undefined;
+  if (mimeType) {
+    format = mimeTypeToVideoFormat[mimeType];
+    if (!format) {
+      const parsed = parseMimeType(mimeType);
+      format = parsed.subtype as Bedrock.VideoFormat;
+    }
+  }
+  const source = resolveMediaSource(block);
+  return { video: { format, source } };
+}
+
+function convertMultimodalAudioBlock(
+  block: Record<string, unknown>
+): Bedrock.ContentBlock {
+  const mimeType = block.mimeType as string | undefined;
+  let format: Bedrock.AudioFormat | undefined;
+  if (mimeType) {
+    format = mimeTypeToAudioFormat[mimeType];
+    if (!format) {
+      const parsed = parseMimeType(mimeType);
+      format = parsed.subtype as Bedrock.AudioFormat;
+    }
+  }
+  const source = resolveMediaSource(block);
+  return { audio: { format, source } };
 }
 
 const standardContentBlockConverter: StandardContentBlockConverter<{
@@ -159,9 +359,10 @@ const standardContentBlockConverter: StandardContentBlockConverter<{
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
         "xlsx",
     };
-    const name: string | undefined = (block.metadata?.name ??
+    const name: string = (block.metadata?.name ??
       block.metadata?.filename ??
-      block.metadata?.title) as string | undefined;
+      block.metadata?.title ??
+      crypto.randomUUID().replace(/-/g, "").slice(0, 12)) as string;
 
     if (block.source_type === "text") {
       return {
@@ -319,12 +520,28 @@ function convertLangChainContentBlockToConverseContentBlock<
     };
   }
 
-  if (isDefaultCachePoint(block)) {
+  if (block.type === "video" && block.video !== undefined) {
     return {
-      cachePoint: {
-        type: "default",
-      },
+      video: block.video,
     };
+  }
+
+  if (block.type === "video") {
+    return convertMultimodalVideoBlock(block);
+  }
+
+  if (block.type === "audio" && block.audio !== undefined) {
+    return {
+      audio: block.audio,
+    };
+  }
+
+  if (block.type === "audio") {
+    return convertMultimodalAudioBlock(block);
+  }
+
+  if (isDefaultCachePoint(block)) {
+    return convertCachePointBlock(block);
   }
 
   if (onUnknown === "throw") {
@@ -347,11 +564,7 @@ function convertSystemMessageToConverseMessage(
           text: block.text,
         });
       } else if (isDefaultCachePoint(block)) {
-        contentBlocks.push({
-          cachePoint: {
-            type: "default",
-          },
-        });
+        contentBlocks.push(convertCachePointBlock(block));
       } else break;
     }
     if (msg.content.length === contentBlocks.length) return contentBlocks;
@@ -404,11 +617,7 @@ function convertAIMessageToConverseMessage(msg: AIMessage): Bedrock.Message {
           ),
         });
       } else if (isDefaultCachePoint(block)) {
-        contentBlocks.push({
-          cachePoint: {
-            type: "default",
-          },
-        });
+        contentBlocks.push(convertCachePointBlock(block));
       } else {
         const blockValues = Object.fromEntries(
           Object.entries(block).filter(([key]) => key !== "type")

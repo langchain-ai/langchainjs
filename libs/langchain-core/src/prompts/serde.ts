@@ -30,7 +30,7 @@ export type SerializedPromptTemplate = {
 export type SerializedFewShotTemplate = {
   _type: "few_shot";
   input_variables: string[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   examples: string | any[];
   example_prompt?: SerializedPromptTemplate;
   example_separator: string;

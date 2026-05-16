@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi } from "vitest";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph-checkpoint";
@@ -63,7 +63,7 @@ class TemporaryFailureModel extends FakeToolCallingModel {
   }
 
   bindTools(tools: StructuredTool[]) {
-    // eslint-disable-next-line dot-notation
+    // oxlint-disable-next-line dot-notation
     this["tools"] = [...this["tools"], ...tools];
     return this as unknown as RunnableBinding<any, any, any>;
   }
@@ -84,7 +84,7 @@ class AlwaysFailingModel extends FakeToolCallingModel {
   }
 
   bindTools(tools: StructuredTool[]) {
-    // eslint-disable-next-line dot-notation
+    // oxlint-disable-next-line dot-notation
     this["tools"] = [...this["tools"], ...tools];
     return this as unknown as RunnableBinding<any, any, any>;
   }
@@ -349,7 +349,7 @@ describe("modelRetryMiddleware", () => {
         );
 
         bindTools(tools: StructuredTool[]) {
-          // eslint-disable-next-line dot-notation
+          // oxlint-disable-next-line dot-notation
           this["tools"] = [...this["tools"], ...tools];
           return this as unknown as RunnableBinding<any, any, any>;
         }
@@ -431,7 +431,7 @@ describe("modelRetryMiddleware", () => {
         );
 
         bindTools(tools: StructuredTool[]) {
-          // eslint-disable-next-line dot-notation
+          // oxlint-disable-next-line dot-notation
           this["tools"] = [...this["tools"], ...tools];
           return this as unknown as RunnableBinding<any, any, any>;
         }
@@ -492,7 +492,7 @@ describe("modelRetryMiddleware", () => {
         );
 
         bindTools(tools: StructuredTool[]) {
-          // eslint-disable-next-line dot-notation
+          // oxlint-disable-next-line dot-notation
           this["tools"] = [...this["tools"], ...tools];
           return this as unknown as RunnableBinding<any, any, any>;
         }
@@ -557,7 +557,7 @@ describe("modelRetryMiddleware", () => {
         );
 
         bindTools(tools: StructuredTool[]) {
-          // eslint-disable-next-line dot-notation
+          // oxlint-disable-next-line dot-notation
           this["tools"] = [...this["tools"], ...tools];
           return this as unknown as RunnableBinding<any, any, any>;
         }

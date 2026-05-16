@@ -1,5 +1,90 @@
 # @langchain/google-genai
 
+## 2.1.30
+
+## 2.1.29
+
+### Patch Changes
+
+- [#10776](https://github.com/langchain-ai/langchainjs/pull/10776) [`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6) Thanks [@hntrl](https://github.com/hntrl)! - fix(deps): remediate uuid vulnerability by removing direct uuid usage
+
+- Updated dependencies [[`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6)]:
+  - @langchain/core@1.1.42
+
+## 2.1.28
+
+### Patch Changes
+
+- Updated dependencies [[`589f29c`](https://github.com/langchain-ai/langchainjs/commit/589f29ce844eb252c2d5e6b0f8d26de37763a0d7), [`2e9e696`](https://github.com/langchain-ai/langchainjs/commit/2e9e6969e248a53ede0659a41d0ac8dbaf291ab4)]:
+  - @langchain/core@1.1.41
+
+## 2.1.27
+
+### Patch Changes
+
+- Updated dependencies [[`d3e0809`](https://github.com/langchain-ai/langchainjs/commit/d3e080995bb267bf3797067ab53c96bc2a6c8e3f)]:
+  - @langchain/core@1.1.40
+
+## 2.1.26
+
+### Patch Changes
+
+- [#10415](https://github.com/langchain-ai/langchainjs/pull/10415) [`d7d0bc7`](https://github.com/langchain-ai/langchainjs/commit/d7d0bc70cdb2ea92b365807600fa85ec107ffd0e) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(genai): round-trip thinking content blocks in multi-turn convos
+
+- [#9979](https://github.com/langchain-ai/langchainjs/pull/9979) [`6a2da5b`](https://github.com/langchain-ai/langchainjs/commit/6a2da5b63b39bec4b87b6a1d1769810677ad3458) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(google): add support for ContentBlock.Multimodal types in Google providers
+
+- Updated dependencies [[`6db417b`](https://github.com/langchain-ai/langchainjs/commit/6db417b03ecb5e2ace413389d982294e0ac88433), [`d69dfcc`](https://github.com/langchain-ai/langchainjs/commit/d69dfcca97503cf1c0b7e70ccf5fb7d507c60982)]:
+  - @langchain/core@1.1.33
+
+## 2.1.25
+
+### Patch Changes
+
+- [#10319](https://github.com/langchain-ai/langchainjs/pull/10319) [`c8c5840`](https://github.com/langchain-ai/langchainjs/commit/c8c58406d71c994d29b25469a9f4db8cc0dfc3ee) Thanks [@budde377](https://github.com/budde377)! - Fix optional chaining for candidateContent in reduce
+
+- Updated dependencies [[`26488b5`](https://github.com/langchain-ai/langchainjs/commit/26488b596f01b7b7fe2f1d97d07164e52365ade5), [`ca826f6`](https://github.com/langchain-ai/langchainjs/commit/ca826f6fecae6087bf0dee7781ee80b587396ec1), [`a602c42`](https://github.com/langchain-ai/langchainjs/commit/a602c42db75d7e7e01cab38b12e0b65b9c0cce95), [`db7d017`](https://github.com/langchain-ai/langchainjs/commit/db7d017f7ce13cb937147aabcbfa3847d80bde9d)]:
+  - @langchain/core@1.1.32
+
+## 2.1.24
+
+### Patch Changes
+
+- [#10209](https://github.com/langchain-ai/langchainjs/pull/10209) [`4b0f205`](https://github.com/langchain-ai/langchainjs/commit/4b0f2053ddbdbbf0cf3375d84485ecd8cc873dd0) Thanks [@colifran](https://github.com/colifran)! - feat(google-genai): implement standard schema support for structured output
+
+- Updated dependencies [[`96c630d`](https://github.com/langchain-ai/langchainjs/commit/96c630dfd009f2546d5bc36f5067ff868bb4067f), [`a8b9ccc`](https://github.com/langchain-ai/langchainjs/commit/a8b9ccca5a85984a5a30008acd09f9991e591638), [`a1f22bb`](https://github.com/langchain-ai/langchainjs/commit/a1f22bba907731a18dca23c31cec5333444a3f55)]:
+  - @langchain/core@1.1.30
+
+## 2.1.23
+
+## 2.1.22
+
+## 2.1.21
+
+### Patch Changes
+
+- [#10106](https://github.com/langchain-ai/langchainjs/pull/10106) [`9f30267`](https://github.com/langchain-ai/langchainjs/commit/9f30267e95a2a42fac71f1d3674b84c5a190dbbc) Thanks [@hntrl](https://github.com/hntrl)! - Add package version metadata to runnable traces. Each package now stamps its version in `this.metadata.versions` at construction time, making version info available in LangSmith trace metadata.
+
+- Updated dependencies [[`9f30267`](https://github.com/langchain-ai/langchainjs/commit/9f30267e95a2a42fac71f1d3674b84c5a190dbbc), [`403a99f`](https://github.com/langchain-ai/langchainjs/commit/403a99fd826383f30300809ae077e1c967023520), [`3b1fd54`](https://github.com/langchain-ai/langchainjs/commit/3b1fd5458a4aa29c398122829f383f21b5ac39da), [`77bd982`](https://github.com/langchain-ai/langchainjs/commit/77bd98274a885e947d76f7a9c6dd0b3763453218)]:
+  - @langchain/core@1.1.29
+
+## 2.1.20
+
+### Patch Changes
+
+- [#10080](https://github.com/langchain-ai/langchainjs/pull/10080) [`b583729`](https://github.com/langchain-ai/langchainjs/commit/b583729e99cf0c035630f6b311c4d069a1980cca) Thanks [@hntrl](https://github.com/hntrl)! - Add string-model constructor overloads for chat models (with supporting tests where applicable).
+
+- Updated dependencies [[`fb2226e`](https://github.com/langchain-ai/langchainjs/commit/fb2226e6decdaba21e78b3f01877b45fa1eed6d3)]:
+  - @langchain/core@1.1.27
+
+## 2.1.19
+
+### Patch Changes
+
+- [#10078](https://github.com/langchain-ai/langchainjs/pull/10078) [`7be50a7`](https://github.com/langchain-ai/langchainjs/commit/7be50a7014d7622e0ab8d303dfc9c633ebc96333) Thanks [@christian-bromann](https://github.com/christian-bromann)! - chore(\*): update model profiles
+
+- Updated dependencies [[`27186c5`](https://github.com/langchain-ai/langchainjs/commit/27186c54884cfe7c2522fa50b42c3ca0ccaefdba), [`05396f7`](https://github.com/langchain-ai/langchainjs/commit/05396f7ce0a91c49a3bae4bbcd3dbdd6cbd18089), [`5a6f26b`](https://github.com/langchain-ai/langchainjs/commit/5a6f26bbaed80195dc538c538b96219a8b03f38f)]:
+  - @langchain/core@1.1.25
+
 ## 2.1.18
 
 ### Patch Changes

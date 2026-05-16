@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { z } from "zod/v4";
 import { LangGraphRunnableConfig, Command } from "@langchain/langgraph";
 import { interopParse } from "@langchain/core/utils/types";
@@ -21,27 +21,19 @@ type NodeOutput<TStateSchema extends Record<string, any>> =
   | Command<any, TStateSchema, string>
   | { jumpTo?: JumpToTarget };
 
-export interface MiddlewareNodeOptions {
-  getState: () => Record<string, unknown>;
-}
-
 export abstract class MiddlewareNode<
   TStateSchema extends Record<string, any>,
   TContextSchema extends Record<string, any>,
 > extends RunnableCallable<TStateSchema, NodeOutput<TStateSchema>> {
-  #options: MiddlewareNodeOptions;
-
   abstract middleware: AgentMiddleware<
     z.ZodObject<z.ZodRawShape>,
     z.ZodObject<z.ZodRawShape>
   >;
 
   constructor(
-    fields: RunnableCallableArgs<TStateSchema, NodeOutput<TStateSchema>>,
-    options: MiddlewareNodeOptions
+    fields: RunnableCallableArgs<TStateSchema, NodeOutput<TStateSchema>>
   ) {
     super(fields);
-    this.#options = options;
   }
 
   abstract runHook(
@@ -85,7 +77,6 @@ export abstract class MiddlewareNode<
     }
 
     const state: TStateSchema = {
-      ...this.#options.getState(),
       ...invokeState,
       /**
        * don't overwrite possible outdated messages from other middleware nodes
@@ -93,11 +84,10 @@ export abstract class MiddlewareNode<
       messages: invokeState.messages,
     };
 
-    /**
-     * ToDo: implement later
-     */
     const runtime: Runtime<TContextSchema> = {
       context: filteredContext,
+      store: config?.store,
+      configurable: config?.configurable,
       writer: config?.writer,
       interrupt: config?.interrupt,
       signal: config?.signal,

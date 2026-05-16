@@ -1,4 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
+import { RunTree } from "langsmith";
 import {
   AsyncLocalStorageInterface,
   getGlobalAsyncLocalStorageInstance,

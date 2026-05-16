@@ -1,5 +1,88 @@
 # @langchain/aws
 
+## 1.3.7
+
+### Patch Changes
+
+- [#10811](https://github.com/langchain-ai/langchainjs/pull/10811) [`f307fe1`](https://github.com/langchain-ai/langchainjs/commit/f307fe1090af8f2c55f553c1df2ce5d956be6f63) Thanks [@Genmin](https://github.com/Genmin)! - fix(aws): pass Bedrock Converse cache point TTL through message conversion
+
+- [#10841](https://github.com/langchain-ai/langchainjs/pull/10841) [`27d71c3`](https://github.com/langchain-ai/langchainjs/commit/27d71c39d97ad22e601085c0818c71ddc0b202f2) Thanks [@hntrl](https://github.com/hntrl)! - fix(aws): align Bedrock prompt caching with Python behavior
+
+  Add `cache_control` request handling for `ChatBedrockConverse` so cache points
+  are applied at request time, and align Bedrock usage accounting by including
+  cache read/write input tokens in `usage_metadata.input_tokens`.
+
+## 1.3.6
+
+### Patch Changes
+
+- [#10839](https://github.com/langchain-ai/langchainjs/pull/10839) [`c0e8113`](https://github.com/langchain-ai/langchainjs/commit/c0e81131855c875526d5799bb8fd6a86147fd8fc) Thanks [@hntrl](https://github.com/hntrl)! - fix(aws): map Bedrock prompt cache usage metadata to input token details
+
+  Include `cacheReadInputTokens` and `cacheWriteInputTokens` from Bedrock Converse
+  responses in `usage_metadata.input_token_details` for both invoke and stream
+  metadata handling.
+
+## 1.3.5
+
+### Patch Changes
+
+- [#10688](https://github.com/langchain-ai/langchainjs/pull/10688) [`2ff51cf`](https://github.com/langchain-ai/langchainjs/commit/2ff51cf0688e45d5d237b2b435334b5fd987afa9) Thanks [@hntrl](https://github.com/hntrl)! - normalize Bedrock Converse object errors for tracing
+
+## 1.3.4
+
+### Patch Changes
+
+- [#10658](https://github.com/langchain-ai/langchainjs/pull/10658) [`793bc69`](https://github.com/langchain-ai/langchainjs/commit/793bc69a8af8198de9d157c21070871660e6bb13) Thanks [@colifran](https://github.com/colifran)! - feat(aws): impute file name for document content blocks
+
+## 1.3.3
+
+### Patch Changes
+
+- [#10409](https://github.com/langchain-ai/langchainjs/pull/10409) [`e3fb76b`](https://github.com/langchain-ai/langchainjs/commit/e3fb76b2b019c6aa033c960014d248c322c7d645) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - feat(aws): add defaultHeaders to ChatBedrockConverse
+
+## 1.3.2
+
+### Patch Changes
+
+- [#10288](https://github.com/langchain-ai/langchainjs/pull/10288) [`93e6180`](https://github.com/langchain-ai/langchainjs/commit/93e6180be4a252b575ea0ec9d5f9cab2c3dcb637) Thanks [@hntrl](https://github.com/hntrl)! - feat(aws): Add bedrockApiKey, bedrockApiSecret, and bedrockApiSessionToken to ChatBedrockConverse
+  - New constructor fields allow passing AWS credentials directly instead of relying solely on the default credential provider chain
+  - Falls back to BEDROCK_AWS_ACCESS_KEY_ID, BEDROCK_AWS_SECRET_ACCESS_KEY, and BEDROCK_AWS_SESSION_TOKEN environment variables
+  - Explicit `credentials` field still takes highest priority
+
+## 1.3.1
+
+### Patch Changes
+
+- [#10213](https://github.com/langchain-ai/langchainjs/pull/10213) [`e0b661e`](https://github.com/langchain-ai/langchainjs/commit/e0b661e07f3357ca4dff5a7cf061df76c57965c5) Thanks [@colifran](https://github.com/colifran)! - feat(aws): implement standard schema support for structured output
+
+## 1.3.0
+
+### Minor Changes
+
+- [#10150](https://github.com/langchain-ai/langchainjs/pull/10150) [`4fe6aa3`](https://github.com/langchain-ai/langchainjs/commit/4fe6aa31b50556e183a61737f60c8bef31d0e72b) Thanks [@hntrl](https://github.com/hntrl)! - feat(aws): Add video and audio content block support for ChatBedrockConverse input messages
+  - Convert standard multimodal video/audio blocks (base64, Uint8Array, data URL, S3 URI) to Bedrock's native format
+  - Pass through native Bedrock video/audio blocks unchanged
+  - Adds support for all Bedrock video formats (flv, mkv, mov, mp4, mpeg, mpg, three_gp, webm, wmv) and audio formats (aac, flac, m4a, mka, mkv, mp3, mp4, mpeg, mpga, ogg, opus, pcm, wav, webm, x-aac)
+
+### Patch Changes
+
+- [#10106](https://github.com/langchain-ai/langchainjs/pull/10106) [`9f30267`](https://github.com/langchain-ai/langchainjs/commit/9f30267e95a2a42fac71f1d3674b84c5a190dbbc) Thanks [@hntrl](https://github.com/hntrl)! - Add package version metadata to runnable traces. Each package now stamps its version in `this.metadata.versions` at construction time, making version info available in LangSmith trace metadata.
+
+## 1.2.5
+
+### Patch Changes
+
+- [#10108](https://github.com/langchain-ai/langchainjs/pull/10108) [`e7576ee`](https://github.com/langchain-ai/langchainjs/commit/e7576ee9e6408c399c08d271db43f63e622da10f) Thanks [@hntrl](https://github.com/hntrl)! - fix: replace retired Anthropic model IDs with active replacements
+  - Update default model in ChatAnthropic from `claude-3-5-sonnet-latest` to `claude-sonnet-4-5-20250929`
+  - Regenerate model profiles with latest data from models.dev API
+  - Replace retired `claude-3-5-haiku-20241022`, `claude-3-7-sonnet-20250219`, `claude-3-5-sonnet-20240620`, and `claude-3-5-sonnet-20241022` in tests, docstrings, and examples
+
+## 1.2.4
+
+### Patch Changes
+
+- [#10080](https://github.com/langchain-ai/langchainjs/pull/10080) [`b583729`](https://github.com/langchain-ai/langchainjs/commit/b583729e99cf0c035630f6b311c4d069a1980cca) Thanks [@hntrl](https://github.com/hntrl)! - Add string-model constructor overloads for chat models (with supporting tests where applicable).
+
 ## 1.2.3
 
 ### Patch Changes

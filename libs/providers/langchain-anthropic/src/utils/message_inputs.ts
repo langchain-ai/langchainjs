@@ -212,7 +212,7 @@ function* _formatContentBlocks(
       } else if (
         "data" in contentPart &&
         (typeof contentPart.data === "string" ||
-          // eslint-disable-next-line no-instanceof/no-instanceof
+          // oxlint-disable-next-line no-instanceof/no-instanceof
           contentPart.data instanceof Uint8Array)
       ) {
         // Base64-based image
@@ -270,7 +270,7 @@ function* _formatContentBlocks(
       } else if (
         "data" in contentPart &&
         (typeof contentPart.data === "string" ||
-          // eslint-disable-next-line no-instanceof/no-instanceof
+          // oxlint-disable-next-line no-instanceof/no-instanceof
           contentPart.data instanceof Uint8Array)
       ) {
         // File with base64 data (string or Uint8Array)
@@ -424,7 +424,7 @@ function* _formatContentBlocks(
       yield {
         ...contentPartCopy,
         ...(cacheControl ? { cache_control: cacheControl } : {}),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       } as any;
     } else if (contentPart.type === "container_upload") {
       yield {
@@ -511,23 +511,26 @@ export function _convertMessagesToAnthropicPayload(
         }
       } else {
         const { content } = message;
-        const hasMismatchedToolCalls = !message.tool_calls.every((toolCall) =>
-          content.find(
-            (contentPart) =>
-              (contentPart.type === "tool_use" ||
-                contentPart.type === "input_json_delta" ||
-                contentPart.type === "server_tool_use") &&
-              contentPart.id === toolCall.id
-          )
+        const formattedContent = _formatContent(message, message.tool_calls);
+        const formattedContentArr = Array.isArray(formattedContent)
+          ? formattedContent
+          : [{ type: "text" as const, text: formattedContent }];
+        const missingToolCalls = message.tool_calls.filter(
+          (toolCall) =>
+            !content.find(
+              (contentPart) =>
+                (contentPart.type === "tool_use" ||
+                  contentPart.type === "input_json_delta" ||
+                  contentPart.type === "server_tool_use") &&
+                contentPart.id === toolCall.id
+            )
         );
-        if (hasMismatchedToolCalls) {
-          console.warn(
-            `The "tool_calls" field on a message is only respected if content is a string.`
-          );
-        }
         return {
           role,
-          content: _formatContent(message, message.tool_calls),
+          content: [
+            ...formattedContentArr,
+            ...missingToolCalls.map(_convertLangChainToolCallToAnthropic),
+          ],
         };
       }
     } else {
@@ -546,80 +549,6 @@ export function _convertMessagesToAnthropicPayload(
     ),
     system,
   } as AnthropicMessageCreateParams;
-}
-
-/**
- * Cache control configuration for Anthropic prompt caching.
- */
-interface CacheControl {
-  type: "ephemeral";
-  ttl?: "5m" | "1h";
-}
-
-/**
- * Applies cache_control to the last content block of the last message in the payload.
- * This is the recommended approach for prompt caching as it applies the cache_control
- * at the final formatting layer, after all message processing is complete.
- *
- * This matches the Python langchain-anthropic implementation where cache_control
- * is applied via model_settings rather than modifying message content blocks directly.
- *
- * @param payload - The formatted Anthropic message payload
- * @param cacheControl - The cache control configuration to apply
- * @returns The payload with cache_control applied to the last content block
- */
-export function applyCacheControlToPayload(
-  payload: AnthropicMessageCreateParams,
-  cacheControl: CacheControl
-): AnthropicMessageCreateParams {
-  if (!payload.messages || payload.messages.length === 0) {
-    return payload;
-  }
-
-  const messages = [...payload.messages];
-  const lastMessageIndex = messages.length - 1;
-  const lastMessage = messages[lastMessageIndex];
-
-  if (!lastMessage) {
-    return payload;
-  }
-
-  // Handle string content - convert to text block with cache_control
-  if (typeof lastMessage.content === "string") {
-    messages[lastMessageIndex] = {
-      ...lastMessage,
-      content: [
-        {
-          type: "text",
-          text: lastMessage.content,
-          cache_control: cacheControl,
-        },
-      ],
-    };
-    return { ...payload, messages };
-  }
-
-  // Handle array content - add cache_control to the last block
-  if (Array.isArray(lastMessage.content) && lastMessage.content.length > 0) {
-    const content = [...lastMessage.content];
-    const lastBlockIndex = content.length - 1;
-    const lastBlock = content[lastBlockIndex];
-
-    // Add cache_control to the last block
-    content[lastBlockIndex] = {
-      ...lastBlock,
-      cache_control: cacheControl,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any;
-
-    messages[lastMessageIndex] = {
-      ...lastMessage,
-      content,
-    };
-    return { ...payload, messages };
-  }
-
-  return payload;
 }
 
 function mergeMessages(messages: AnthropicMessageCreateParams["messages"]) {

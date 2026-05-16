@@ -1,4 +1,4 @@
-import { v5 as uuidv5 } from "uuid";
+import { v5 as uuidv5 } from "../utils/uuid/index.js";
 import { VectorStore } from "../vectorstores.js";
 import { RecordManagerInterface, UUIDV5_NAMESPACE } from "./record_manager.js";
 import { sha256, type HashKeyEncoder } from "../utils/hash.js";
@@ -221,7 +221,7 @@ export function _getSourceIdAssigner(
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export const _isBaseDocumentLoader = (arg: any): arg is BaseDocumentLoader => {
   if (
     "load" in arg &&

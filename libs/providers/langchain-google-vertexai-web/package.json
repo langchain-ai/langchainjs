@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-vertexai-web",
-  "version": "2.1.18",
+  "version": "2.1.30",
   "description": "LangChain.js support for Google Vertex AI Web",
   "author": "LangChain",
   "license": "MIT",
@@ -12,42 +12,28 @@
     "type": "git",
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
-  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-google-vertexai-web/",
+  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/providers/langchain-google-vertexai-web/",
   "scripts": {
     "build": "turbo build:compile --filter @langchain/google-vertexai-web --output-logs new-only",
     "build:compile": "tsdown",
-    "lint:eslint": "eslint --cache src/",
-    "lint:dpdm": "dpdm --skip-dynamic-imports circular --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
-    "lint": "pnpm lint:eslint && pnpm lint:dpdm",
-    "lint:fix": "pnpm lint:eslint --fix && pnpm lint:dpdm",
     "clean": "rm -rf .turbo dist/",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest --testPathIgnorePatterns=\\.int\\.test.ts --testTimeout 30000 --maxWorkers=50%",
-    "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch --testPathIgnorePatterns=\\.int\\.test.ts",
-    "test:single": "NODE_OPTIONS=--experimental-vm-modules pnpm run jest --config jest.config.cjs --testTimeout 100000",
-    "test:int": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPattern=\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%",
-    "format": "prettier --write \"src\"",
-    "format:check": "prettier --check \"src\""
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:single": "vitest run",
+    "test:int": "vitest run --mode int"
   },
   "dependencies": {
     "@langchain/google-webauth": "workspace:*"
   },
   "devDependencies": {
-    "@jest/globals": "^30.2.0",
-    "@langchain/eslint": "workspace:*",
     "@langchain/google-common": "workspace:*",
     "@langchain/standard-tests": "workspace:*",
-    "@swc/core": "^1.15.11",
-    "@swc/jest": "^0.2.29",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
-    "dotenv": "^16.3.1",
+    "dotenv": "^17.4.0",
     "dpdm": "^3.14.0",
-    "eslint": "^9.34.0",
-    "jest": "^30.2.0",
-    "jest-environment-node": "^30.2.0",
-    "prettier": "^3.5.0",
-    "ts-jest": "^29.4.6",
     "typescript": "~5.8.3",
+    "vitest": "^4.1.2",
     "zod": "^3.25.76"
   },
   "publishConfig": {

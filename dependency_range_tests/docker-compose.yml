@@ -1,7 +1,7 @@
 services:
   # LangChain
   langchain-latest-deps:
-    image: node:20
+    image: node:22
     environment:
       PUPPETEER_SKIP_DOWNLOAD: "true"
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
@@ -14,12 +14,13 @@ services:
       - ../libs/providers/langchain-openai:/libs/langchain-openai
       - ../libs/providers/langchain-anthropic:/libs/langchain-anthropic
       - ../libs/providers/langchain-cohere:/libs/langchain-cohere
+      - ../libs/providers/langchain-fireworks:/libs/langchain-fireworks
       - ../libs/providers/langchain-xai:/libs/langchain-xai
       - ../internal:/internal
       - ./scripts:/scripts
     command: bash /scripts/langchain/test-with-latest-deps.sh
   langchain-lowest-deps:
-    image: node:20
+    image: node:22
     environment:
       PUPPETEER_SKIP_DOWNLOAD: "true"
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
@@ -32,97 +33,49 @@ services:
       - ../libs/providers/langchain-openai:/libs/langchain-openai
       - ../libs/providers/langchain-anthropic:/libs/langchain-anthropic
       - ../libs/providers/langchain-cohere:/libs/langchain-cohere
+      - ../libs/providers/langchain-fireworks:/libs/langchain-fireworks
       - ../libs/providers/langchain-xai:/libs/langchain-xai
       - ../internal:/internal
       - ./scripts:/scripts
     command: bash /scripts/langchain/test-with-lowest-deps.sh
 
-  # Community
-  community-latest-deps:
-    image: node:20
-    environment:
-      PUPPETEER_SKIP_DOWNLOAD: "true"
-      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
-      COHERE_API_KEY: ${COHERE_API_KEY}
-    working_dir: /app
-    volumes:
-      - ../pnpm-workspace.yaml:/pnpm-workspace.yaml
-      - ../turbo.json:/turbo.json
-      - ./scripts/with_standard_tests/community/node/package.json:/package.json
-      - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
-      - ../libs/langchain-community:/libs/langchain-community
-      - ../internal:/internal
-      - ./scripts:/scripts
-    command: bash /scripts/with_standard_tests/community/test-with-latest-deps.sh
-  community-lowest-deps:
-    image: node:20
-    environment:
-      PUPPETEER_SKIP_DOWNLOAD: "true"
-      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
-      COHERE_API_KEY: ${COHERE_API_KEY}
-    working_dir: /app
-    volumes:
-      - ../pnpm-workspace.yaml:/pnpm-workspace.yaml
-      - ../turbo.json:/turbo.json
-      - ./scripts/with_standard_tests/community/node/package.json:/package.json
-      - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
-      - ../libs/langchain-community:/libs/langchain-community
-      - ../internal:/internal
-      - ./scripts:/scripts
-    command: bash /scripts/with_standard_tests/community/test-with-lowest-deps.sh
-  community-npm-install:
-    image: node:20
-    environment:
-      PUPPETEER_SKIP_DOWNLOAD: "true"
-      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
-    working_dir: /app
-    volumes:
-      - ../pnpm-workspace.yaml:/pnpm-workspace.yaml
-      - ../turbo.json:/turbo.json
-      - ./scripts/with_standard_tests/community/node/package.json:/package.json
-      - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
-      - ../libs/langchain-community:/libs/langchain-community
-      - ../internal:/internal
-      - ./scripts:/scripts
-    command: bash /scripts/with_standard_tests/community/npm-install.sh
-
   # OpenAI
-  openai-latest-deps:
-    image: node:20
-    environment:
-      PUPPETEER_SKIP_DOWNLOAD: "true"
-      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
-      COHERE_API_KEY: ${COHERE_API_KEY}
-    working_dir: /app
-    volumes:
-      - ../pnpm-workspace.yaml:/pnpm-workspace.yaml
-      - ../turbo.json:/turbo.json
-      - ./scripts/with_standard_tests/openai/node/package.json:/package.json
-      - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
-      - ../libs/providers/langchain-openai:/libs/providers/langchain-openai
-      - ../internal:/internal
-      - ./scripts:/scripts
-    command: bash /scripts/with_standard_tests/openai/test-with-latest-deps.sh
-  openai-lowest-deps:
-    image: node:20
-    environment:
-      PUPPETEER_SKIP_DOWNLOAD: "true"
-      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
-      COHERE_API_KEY: ${COHERE_API_KEY}
-    working_dir: /app
-    volumes:
-      - ../pnpm-workspace.yaml:/pnpm-workspace.yaml
-      - ../turbo.json:/turbo.json
-      - ./scripts/with_standard_tests/openai/node/package.json:/package.json
-      - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
-      - ../libs/providers/langchain-openai:/libs/providers/langchain-openai
-      - ../internal:/internal
-      - ./scripts:/scripts
-    command: bash /scripts/with_standard_tests/openai/test-with-lowest-deps.sh
+  # openai-latest-deps:
+  #   image: node:22
+  #   environment:
+  #     PUPPETEER_SKIP_DOWNLOAD: "true"
+  #     PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
+  #     COHERE_API_KEY: ${COHERE_API_KEY}
+  #   working_dir: /app
+  #   volumes:
+  #     - ../pnpm-workspace.yaml:/pnpm-workspace.yaml
+  #     - ../turbo.json:/turbo.json
+  #     - ./scripts/with_standard_tests/openai/node/package.json:/package.json
+  #     - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
+  #     - ../libs/providers/langchain-openai:/libs/providers/langchain-openai
+  #     - ../internal:/internal
+  #     - ./scripts:/scripts
+  #   command: bash /scripts/with_standard_tests/openai/test-with-latest-deps.sh
+  # openai-lowest-deps:
+  #   image: node:22
+  #   environment:
+  #     PUPPETEER_SKIP_DOWNLOAD: "true"
+  #     PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
+  #     COHERE_API_KEY: ${COHERE_API_KEY}
+  #   working_dir: /app
+  #   volumes:
+  #     - ../pnpm-workspace.yaml:/pnpm-workspace.yaml
+  #     - ../turbo.json:/turbo.json
+  #     - ./scripts/with_standard_tests/openai/node/package.json:/package.json
+  #     - ../libs/langchain-standard-tests:/libs/langchain-standard-tests
+  #     - ../libs/providers/langchain-openai:/libs/providers/langchain-openai
+  #     - ../internal:/internal
+  #     - ./scripts:/scripts
+  #   command: bash /scripts/with_standard_tests/openai/test-with-lowest-deps.sh
 
   # Anthropic
   # anthropic-latest-deps:
-  #   image: node:20
+  #   image: node:22
   #   environment:
   #     PUPPETEER_SKIP_DOWNLOAD: "true"
   #     PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
@@ -138,7 +91,7 @@ services:
   #     - ./scripts:/scripts
   #   command: bash /scripts/with_standard_tests/anthropic/test-with-latest-deps.sh
   # anthropic-lowest-deps:
-  #   image: node:20
+  #   image: node:22
   #   environment:
   #     PUPPETEER_SKIP_DOWNLOAD: "true"
   #     PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
@@ -156,7 +109,7 @@ services:
 
   # Google VertexAI
   google-vertexai-latest-deps:
-    image: node:20
+    image: node:22
     environment:
       PUPPETEER_SKIP_DOWNLOAD: "true"
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
@@ -172,7 +125,7 @@ services:
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/google-vertexai/test-with-latest-deps.sh
   google-vertexai-lowest-deps:
-    image: node:20
+    image: node:22
     environment:
       PUPPETEER_SKIP_DOWNLOAD: "true"
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
@@ -190,7 +143,7 @@ services:
 
   # Cohere
   cohere-latest-deps:
-    image: node:20
+    image: node:22
     environment:
       PUPPETEER_SKIP_DOWNLOAD: "true"
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
@@ -206,7 +159,7 @@ services:
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/cohere/test-with-latest-deps.sh
   # cohere-lowest-deps:
-  #   image: node:20
+  #   image: node:22
   #   environment:
   #     PUPPETEER_SKIP_DOWNLOAD: "true"
   #     PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"

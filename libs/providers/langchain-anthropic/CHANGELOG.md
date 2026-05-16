@@ -1,5 +1,132 @@
 # @langchain/anthropic
 
+## 1.3.29
+
+### Patch Changes
+
+- [#10735](https://github.com/langchain-ai/langchainjs/pull/10735) [`1a2a08a`](https://github.com/langchain-ai/langchainjs/commit/1a2a08a33b7d99ec7348678116cc5d074db137bb) Thanks [@chenzimin](https://github.com/chenzimin)! - feat(anthropic): add automatic prompt caching via top-level cache_control
+
+## 1.3.28
+
+### Patch Changes
+
+- [#10776](https://github.com/langchain-ai/langchainjs/pull/10776) [`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6) Thanks [@hntrl](https://github.com/hntrl)! - fix(deps): remediate uuid vulnerability by removing direct uuid usage
+
+- Updated dependencies [[`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6)]:
+  - @langchain/core@1.1.42
+
+## 1.3.27
+
+### Patch Changes
+
+- [#10726](https://github.com/langchain-ai/langchainjs/pull/10726) [`ad153c1`](https://github.com/langchain-ai/langchainjs/commit/ad153c185b6cf813d4b7695740d9a4453d2cb63f) Thanks [@hntrl](https://github.com/hntrl)! - feat(anthropic): add Claude Opus 4.7 compatibility updates
+
+- Updated dependencies [[`589f29c`](https://github.com/langchain-ai/langchainjs/commit/589f29ce844eb252c2d5e6b0f8d26de37763a0d7), [`2e9e696`](https://github.com/langchain-ai/langchainjs/commit/2e9e6969e248a53ede0659a41d0ac8dbaf291ab4)]:
+  - @langchain/core@1.1.41
+
+## 1.3.26
+
+### Patch Changes
+
+- [#10519](https://github.com/langchain-ai/langchainjs/pull/10519) [`cd86fea`](https://github.com/langchain-ai/langchainjs/commit/cd86fea8de2130d0df60805baada81958d47c747) Thanks [@baptistejamin](https://github.com/baptistejamin)! - fix: implement tool choice required on anthropic
+
+- Updated dependencies [[`589ab9b`](https://github.com/langchain-ai/langchainjs/commit/589ab9be391a5d6c104f34877fc1b3e2a32fa449)]:
+  - @langchain/core@1.1.38
+
+## 1.3.25
+
+### Patch Changes
+
+- [#10467](https://github.com/langchain-ai/langchainjs/pull/10467) [`da85f31`](https://github.com/langchain-ai/langchainjs/commit/da85f31688e708340a711fd43cf293b5cb69c133) Thanks [@hntrl](https://github.com/hntrl)! - fix: add default max tokens for sonnet
+
+- Updated dependencies [[`bfb7944`](https://github.com/langchain-ai/langchainjs/commit/bfb7944a105470eee98fe4a0eef91e586600e1de)]:
+  - @langchain/core@1.1.34
+
+## 1.3.24
+
+### Patch Changes
+
+- [#10420](https://github.com/langchain-ai/langchainjs/pull/10420) [`08657f2`](https://github.com/langchain-ai/langchainjs/commit/08657f21b330ee05b86a8abd557aef3939f5581b) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - Fix temperature/topK/topP handling: guard all three so undefined values are not
+  set on the request object, and fix broken topK/topP validation when thinking is
+  enabled.
+- Updated dependencies [[`6db417b`](https://github.com/langchain-ai/langchainjs/commit/6db417b03ecb5e2ace413389d982294e0ac88433), [`d69dfcc`](https://github.com/langchain-ai/langchainjs/commit/d69dfcca97503cf1c0b7e70ccf5fb7d507c60982)]:
+  - @langchain/core@1.1.33
+
+## 1.3.23
+
+### Patch Changes
+
+- [#10250](https://github.com/langchain-ai/langchainjs/pull/10250) [`8252619`](https://github.com/langchain-ai/langchainjs/commit/8252619b727bfcc37a3f01921edf3550d50949f6) Thanks [@JadenKim-dev](https://github.com/JadenKim-dev)! - fix(anthropic): prevent cache token double-counting in streaming
+
+- Updated dependencies [[`26488b5`](https://github.com/langchain-ai/langchainjs/commit/26488b596f01b7b7fe2f1d97d07164e52365ade5), [`ca826f6`](https://github.com/langchain-ai/langchainjs/commit/ca826f6fecae6087bf0dee7781ee80b587396ec1), [`a602c42`](https://github.com/langchain-ai/langchainjs/commit/a602c42db75d7e7e01cab38b12e0b65b9c0cce95), [`db7d017`](https://github.com/langchain-ai/langchainjs/commit/db7d017f7ce13cb937147aabcbfa3847d80bde9d)]:
+  - @langchain/core@1.1.32
+
+## 1.3.22
+
+### Patch Changes
+
+- [#10207](https://github.com/langchain-ai/langchainjs/pull/10207) [`acab2f7`](https://github.com/langchain-ai/langchainjs/commit/acab2f75d6661b17b5f5f5eceb113427f7d32036) Thanks [@colifran](https://github.com/colifran)! - feat(anthropic): implement standard schema support for structured output
+
+- Updated dependencies [[`96c630d`](https://github.com/langchain-ai/langchainjs/commit/96c630dfd009f2546d5bc36f5067ff868bb4067f), [`a8b9ccc`](https://github.com/langchain-ai/langchainjs/commit/a8b9ccca5a85984a5a30008acd09f9991e591638), [`a1f22bb`](https://github.com/langchain-ai/langchainjs/commit/a1f22bba907731a18dca23c31cec5333444a3f55)]:
+  - @langchain/core@1.1.30
+
+## 1.3.21
+
+### Patch Changes
+
+- [#10106](https://github.com/langchain-ai/langchainjs/pull/10106) [`9f30267`](https://github.com/langchain-ai/langchainjs/commit/9f30267e95a2a42fac71f1d3674b84c5a190dbbc) Thanks [@hntrl](https://github.com/hntrl)! - Add package version metadata to runnable traces. Each package now stamps its version in `this.metadata.versions` at construction time, making version info available in LangSmith trace metadata.
+
+- [#10166](https://github.com/langchain-ai/langchainjs/pull/10166) [`e9c41f0`](https://github.com/langchain-ai/langchainjs/commit/e9c41f0ab9ea6e7fdeceffa9063a422d4fb62777) Thanks [@kanweiwei](https://github.com/kanweiwei)! - fix(anthropic): only set topP when defined to avoid API error
+
+- Updated dependencies [[`9f30267`](https://github.com/langchain-ai/langchainjs/commit/9f30267e95a2a42fac71f1d3674b84c5a190dbbc), [`403a99f`](https://github.com/langchain-ai/langchainjs/commit/403a99fd826383f30300809ae077e1c967023520), [`3b1fd54`](https://github.com/langchain-ai/langchainjs/commit/3b1fd5458a4aa29c398122829f383f21b5ac39da), [`77bd982`](https://github.com/langchain-ai/langchainjs/commit/77bd98274a885e947d76f7a9c6dd0b3763453218)]:
+  - @langchain/core@1.1.29
+
+## 1.3.20
+
+### Patch Changes
+
+- [#10117](https://github.com/langchain-ai/langchainjs/pull/10117) [`66df7fa`](https://github.com/langchain-ai/langchainjs/commit/66df7fa31f43be9eb148bbe0768d26e6d67d6216) Thanks [@hntrl](https://github.com/hntrl)! - fix(anthropic): convert tool_calls to tool_use blocks when AIMessage content is an empty array
+
+  When `AIMessage.content` was an empty array `[]` with `tool_calls` present, the tool calls were silently dropped during message formatting. This caused Anthropic API requests to fail with a 400 error. The array content branch now appends any tool_calls not already represented in the content array as `tool_use` blocks, matching the behavior of the string content path.
+
+- [#10108](https://github.com/langchain-ai/langchainjs/pull/10108) [`e7576ee`](https://github.com/langchain-ai/langchainjs/commit/e7576ee9e6408c399c08d271db43f63e622da10f) Thanks [@hntrl](https://github.com/hntrl)! - fix: replace retired Anthropic model IDs with active replacements
+  - Update default model in ChatAnthropic from `claude-3-5-sonnet-latest` to `claude-sonnet-4-5-20250929`
+  - Regenerate model profiles with latest data from models.dev API
+  - Replace retired `claude-3-5-haiku-20241022`, `claude-3-7-sonnet-20250219`, `claude-3-5-sonnet-20240620`, and `claude-3-5-sonnet-20241022` in tests, docstrings, and examples
+
+## 1.3.19
+
+### Patch Changes
+
+- [#10080](https://github.com/langchain-ai/langchainjs/pull/10080) [`b583729`](https://github.com/langchain-ai/langchainjs/commit/b583729e99cf0c035630f6b311c4d069a1980cca) Thanks [@hntrl](https://github.com/hntrl)! - Add string-model constructor overloads for chat models (with supporting tests where applicable).
+
+- Updated dependencies [[`fb2226e`](https://github.com/langchain-ai/langchainjs/commit/fb2226e6decdaba21e78b3f01877b45fa1eed6d3)]:
+  - @langchain/core@1.1.27
+
+## 1.3.18
+
+### Patch Changes
+
+- [#10077](https://github.com/langchain-ai/langchainjs/pull/10077) [`05396f7`](https://github.com/langchain-ai/langchainjs/commit/05396f7ce0a91c49a3bae4bbcd3dbdd6cbd18089) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(core): add ContextOverflowError, raise in anthropic and openai
+
+- [#10081](https://github.com/langchain-ai/langchainjs/pull/10081) [`5a6f26b`](https://github.com/langchain-ai/langchainjs/commit/5a6f26bbaed80195dc538c538b96219a8b03f38f) Thanks [@hntrl](https://github.com/hntrl)! - feat(core): add namespace-based symbol branding for error class hierarchies
+
+  Introduces `createNamespace` utility for hierarchical symbol-based branding of class hierarchies.
+  All LangChain error classes now use this pattern, replacing hand-rolled duck-type `isInstance` checks
+  with reliable cross-realm `Symbol.for`-based identity.
+  - New `LangChainError` base class that all LangChain errors extend
+  - New `createNamespace` / `Namespace` API in `@langchain/core/utils/namespace`
+  - Refactored `ModelAbortError`, `ContextOverflowError` to use namespace branding
+  - Added `ContextOverflowError.fromError()` static factory method
+  - Deprecated `addLangChainErrorFields` in favor of `LangChainError` subclasses
+  - Migrated Google provider errors (`GoogleError`, `ConfigurationError`, etc.) to namespace branding
+  - Updated Anthropic and OpenAI providers to use `ContextOverflowError.fromError()`
+
+- [#10078](https://github.com/langchain-ai/langchainjs/pull/10078) [`7be50a7`](https://github.com/langchain-ai/langchainjs/commit/7be50a7014d7622e0ab8d303dfc9c633ebc96333) Thanks [@christian-bromann](https://github.com/christian-bromann)! - chore(\*): update model profiles
+
+- Updated dependencies [[`27186c5`](https://github.com/langchain-ai/langchainjs/commit/27186c54884cfe7c2522fa50b42c3ca0ccaefdba), [`05396f7`](https://github.com/langchain-ai/langchainjs/commit/05396f7ce0a91c49a3bae4bbcd3dbdd6cbd18089), [`5a6f26b`](https://github.com/langchain-ai/langchainjs/commit/5a6f26bbaed80195dc538c538b96219a8b03f38f)]:
+  - @langchain/core@1.1.25
+
 ## 1.3.17
 
 ### Patch Changes

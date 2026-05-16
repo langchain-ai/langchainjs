@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { z } from "zod/v4";
 import { OpenAI as OpenAIClient } from "openai";
 import { tool, type DynamicStructuredTool } from "@langchain/core/tools";
@@ -200,7 +200,7 @@ export interface ComputerUseOptions {
 /**
  * OpenAI Computer Use tool type for the Responses API.
  */
-export type ComputerUseTool = OpenAIClient.Responses.ComputerTool;
+export type ComputerUseTool = OpenAIClient.Responses.ComputerUsePreviewTool;
 
 const TOOL_NAME = "computer_use";
 

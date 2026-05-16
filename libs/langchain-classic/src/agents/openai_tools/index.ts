@@ -31,7 +31,7 @@ export type CreateOpenAIToolsAgentParams = {
       tools?:
         | StructuredToolInterface[]
         | OpenAIClient.ChatCompletionTool[]
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         | any[];
     }
   >;

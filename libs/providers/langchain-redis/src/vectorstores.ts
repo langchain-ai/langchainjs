@@ -8,6 +8,10 @@ import type {
   SearchOptions,
 } from "redis";
 import { VectorAlgorithms, SchemaFieldTypes } from "redis";
+import {
+  assertSafeRedisearchFieldName,
+  escapeRedisearchValue,
+} from "./query_safety.js";
 
 // Import schema types from schema.ts to avoid duplication
 import type {
@@ -492,7 +496,7 @@ export class RedisVectorStore extends VectorStore {
     try {
       await this.redisClient.ft.info(this.indexName);
     } catch (err) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       if ((err as any)?.message.includes("unknown command")) {
         throw new Error(
           "Failed to run FT.INFO command. Please ensure that you are running a RediSearch-capable Redis instance: https://js.langchain.com/docs/integrations/vectorstores/redis/#setup"
@@ -686,10 +690,31 @@ export class RedisVectorStore extends VectorStore {
         if (this.customSchema[fieldName]) {
           const fieldConfig = this.customSchema[fieldName];
           const indexedFieldName = `${this.metadataKey}.${fieldName}`;
+          assertSafeRedisearchFieldName(indexedFieldName);
 
           if (fieldConfig.type === SchemaFieldTypes.NUMERIC) {
             // Handle numeric range queries
             if (typeof value === "object" && value !== null) {
+              const min = "min" in value ? value.min : undefined;
+              const max = "max" in value ? value.max : undefined;
+
+              if (
+                min !== undefined &&
+                (typeof min !== "number" || !Number.isFinite(min))
+              ) {
+                throw new Error(
+                  `Invalid numeric minimum for metadata field '${fieldName}'`
+                );
+              }
+              if (
+                max !== undefined &&
+                (typeof max !== "number" || !Number.isFinite(max))
+              ) {
+                throw new Error(
+                  `Invalid numeric maximum for metadata field '${fieldName}'`
+                );
+              }
+
               if ("min" in value && "max" in value) {
                 filterClauses.push(
                   `@${indexedFieldName}:[${value.min} ${value.max}]`
@@ -700,20 +725,50 @@ export class RedisVectorStore extends VectorStore {
                 filterClauses.push(`@${indexedFieldName}:[-inf ${value.max}]`);
               }
             } else {
+              if (typeof value !== "number" || !Number.isFinite(value)) {
+                throw new Error(
+                  `Invalid numeric value for metadata field '${fieldName}'`
+                );
+              }
               // Exact numeric match
               filterClauses.push(`@${indexedFieldName}:[${value} ${value}]`);
             }
           } else if (fieldConfig.type === SchemaFieldTypes.TAG) {
             // Handle tag filtering
             if (Array.isArray(value)) {
-              const tagFilter = value.map((v) => `{${v}}`).join("|");
+              const tagFilter = value
+                .map((v) => {
+                  if (typeof v !== "string") {
+                    throw new Error(
+                      `Invalid tag value for metadata field '${fieldName}'`
+                    );
+                  }
+                  return `{${escapeRedisearchValue(v)}}`;
+                })
+                .join("|");
               filterClauses.push(`@${indexedFieldName}:(${tagFilter})`);
             } else {
-              filterClauses.push(`@${indexedFieldName}:{${value}}`);
+              if (typeof value !== "string") {
+                throw new Error(
+                  `Invalid tag value for metadata field '${fieldName}'`
+                );
+              }
+              filterClauses.push(
+                `@${indexedFieldName}:{${escapeRedisearchValue(value)}}`
+              );
             }
           } else if (fieldConfig.type === SchemaFieldTypes.TEXT) {
             // Handle text search
-            filterClauses.push(`@${indexedFieldName}:(${value})`);
+            if (typeof value !== "string") {
+              throw new Error(
+                `Invalid text value for metadata field '${fieldName}'`
+              );
+            }
+            filterClauses.push(
+              `@${indexedFieldName}:(${escapeRedisearchValue(value, {
+                preserveWhitespace: true,
+              })})`
+            );
           }
         }
       }
@@ -751,7 +806,11 @@ export class RedisVectorStore extends VectorStore {
 
   private prepareFilter(filter: RedisVectorStoreFilterType) {
     if (Array.isArray(filter)) {
-      return filter.map(this.escapeSpecialChars).join("|");
+      return filter
+        .map((value) =>
+          escapeRedisearchValue(value, { preserveWhitespace: true })
+        )
+        .join("|");
     }
     return filter;
   }

@@ -46,7 +46,7 @@ export class RegexMaskingTransformer extends MaskingTransformer {
       if (
         !pattern ||
         typeof pattern !== "object" ||
-        // eslint-disable-next-line no-instanceof/no-instanceof
+        // oxlint-disable-next-line no-instanceof/no-instanceof
         !(pattern.regex instanceof RegExp)
       ) {
         throw new Error("Invalid pattern configuration.");
@@ -70,7 +70,7 @@ export class RegexMaskingTransformer extends MaskingTransformer {
       );
     }
 
-    // eslint-disable-next-line no-instanceof/no-instanceof
+    // oxlint-disable-next-line no-instanceof/no-instanceof
     if (!(state instanceof Map)) {
       throw new TypeError(
         "RegexMaskingTransformer.transform Error: The 'state' argument must be an instance of Map."
@@ -125,7 +125,7 @@ export class RegexMaskingTransformer extends MaskingTransformer {
       );
     }
 
-    // eslint-disable-next-line no-instanceof/no-instanceof
+    // oxlint-disable-next-line no-instanceof/no-instanceof
     if (!(state instanceof Map)) {
       throw new TypeError(
         "RegexMaskingTransformer.rehydrate Error: The 'state' argument must be an instance of Map."

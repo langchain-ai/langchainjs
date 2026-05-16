@@ -366,5 +366,32 @@ describe("SystemMessage", () => {
         nested: { key: "val" },
       });
     });
+
+    it("should not nest lc_kwargs when chaining concat calls", () => {
+      // Regression: ...this in concat() spread lc_kwargs into the constructor,
+      // causing each concat to nest one level deeper. After 7 concat calls
+      // (typical for middleware chains), a 7KB system prompt would balloon to 81KB
+      // due to content being duplicated at every nesting level.
+      const message1 = new SystemMessage({ content: "base prompt" });
+      const message2 = new SystemMessage({ content: " + middleware1" });
+      const message3 = new SystemMessage({ content: " + middleware2" });
+      const message4 = new SystemMessage({ content: " + middleware3" });
+
+      const result = message1
+        .concat(message2)
+        .concat(message3)
+        .concat(message4);
+
+      expect(result.content).toBe(
+        "base prompt + middleware1 + middleware2 + middleware3"
+      );
+
+      // The serialized form should not contain nested lc_kwargs
+      const serialized = JSON.stringify(result.toJSON());
+      const lc_kwargsCount = (serialized.match(/lc_kwargs/g) || []).length;
+      // Should have at most 1 lc_kwargs (the top-level one from Serializable),
+      // not 4+ nested levels.
+      expect(lc_kwargsCount).toBeLessThanOrEqual(1);
+    });
   });
 });

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import type {
   InteropZodObject,
   InteropZodType,
@@ -8,9 +8,9 @@ import type {
   END,
   StateGraph,
   StateDefinitionInit,
+  StreamTransformer,
 } from "@langchain/langgraph";
 
-import type { LanguageModelLike } from "@langchain/core/language_models/base";
 import type {
   BaseMessage,
   SystemMessage,
@@ -28,19 +28,16 @@ import type {
   DynamicStructuredTool,
   StructuredToolInterface,
 } from "@langchain/core/tools";
-
 import type {
-  ResponseFormat,
-  ToolStrategy,
-  TypedToolStrategy,
-  ProviderStrategy,
-  JsonSchemaFormat,
   ResponseFormatUndefined,
+  ResponseFormatInput,
 } from "./responses.js";
+import type { AgentLanguageModelLike } from "./model.js";
 import type {
   AgentMiddleware,
   AnyAnnotationRoot,
   InferSchemaInput,
+  InferSchemaValue,
   InferMiddlewareStates,
   InferMiddlewareContexts,
 } from "./middleware/types.js";
@@ -70,6 +67,11 @@ import type { JumpToTarget } from "./constants.js";
  * @typeParam TTools - The combined tools type from both `createAgent` tools parameter
  *   and middleware tools. This is a readonly array of `ClientTool | ServerTool`.
  *
+ * @typeParam TStreamTransformers - The tuple of user-supplied stream transformer
+ *   factories registered at `createAgent({ streamTransformers })`. Used to type
+ *   `run.extensions` on the stream returned from
+ *   `streamEvents(..., { version: "v3" })`.
+ *
  * @example
  * ```typescript
  * // Define a type configuration
@@ -78,7 +80,8 @@ import type { JumpToTarget } from "./constants.js";
  *   typeof MyStateSchema,              // State schema
  *   typeof MyContextSchema,            // Context schema
  *   typeof myMiddleware,               // Middleware array
- *   typeof myTools                     // Tools array
+ *   typeof myTools,                    // Tools array
+ *   typeof myStreamTransformers        // Stream transformer factories
  * >;
  *
  * // Use with ReactAgent
@@ -100,6 +103,8 @@ export interface AgentTypeConfig<
     | ClientTool
     | ServerTool
   )[],
+  TStreamTransformers extends ReadonlyArray<() => StreamTransformer<any>> =
+    ReadonlyArray<() => StreamTransformer<any>>,
 > {
   /** The structured response type when using `responseFormat` */
   Response: TResponse;
@@ -111,6 +116,13 @@ export interface AgentTypeConfig<
   Middleware: TMiddleware;
   /** The combined tools type from agent and middleware */
   Tools: TTools;
+  /**
+   * The tuple of stream transformer factories registered at
+   * `createAgent({ streamTransformers })`. Used to infer the shape of
+   * `run.extensions` on the stream returned by
+   * `streamEvents(..., { version: "v3" })`.
+   */
+  StreamTransformers: TStreamTransformers;
 }
 
 /**
@@ -123,6 +135,7 @@ export interface DefaultAgentTypeConfig extends AgentTypeConfig {
   Context: AnyAnnotationRoot;
   Middleware: readonly AgentMiddleware[];
   Tools: readonly (ClientTool | ServerTool)[];
+  StreamTransformers: readonly [];
 }
 
 /**
@@ -172,6 +185,7 @@ type ExtractToolDefinition<T> =
     infer _SchemaOutputT,
     infer SchemaInputT,
     infer ToolOutputT,
+    infer _ToolEventT,
     infer _NameT
   >
     ? MessageToolDefinition<SchemaInputT, ToolOutputT>
@@ -305,7 +319,7 @@ export type InferAgentStateSchema<T> = InferAgentType<T, "State">;
  * // { userId: string; count: number }
  * ```
  */
-export type InferAgentState<T> = InferSchemaInput<InferAgentType<T, "State">> &
+export type InferAgentState<T> = InferSchemaValue<InferAgentType<T, "State">> &
   InferMiddlewareStates<InferAgentType<T, "Middleware">>;
 
 /**
@@ -347,7 +361,7 @@ export type InferAgentContextSchema<T> = InferAgentType<T, "Context">;
  * // { sessionId: string; userId: string }
  * ```
  */
-export type InferAgentContext<T> = InferSchemaInput<
+export type InferAgentContext<T> = InferSchemaValue<
   InferAgentType<T, "Context">
 > &
   InferMiddlewareContexts<InferAgentType<T, "Middleware">>;
@@ -373,6 +387,25 @@ export type InferAgentMiddleware<T> = InferAgentType<T, "Middleware">;
  * ```
  */
 export type InferAgentTools<T> = InferAgentType<T, "Tools">;
+
+/**
+ * Shorthand helper to extract the StreamTransformers type (the tuple of
+ * transformer factories) from an AgentTypeConfig or ReactAgent.
+ *
+ * @example
+ * ```typescript
+ * const agent = createAgent({
+ *   streamTransformers: [costTracker, methodTracker],
+ *   // ...
+ * });
+ * type STF = InferAgentStreamTransformers<typeof agent>;
+ * // readonly [typeof costTracker, typeof methodTracker]
+ * ```
+ */
+export type InferAgentStreamTransformers<T> = InferAgentType<
+  T,
+  "StreamTransformers"
+>;
 
 export type N = typeof START | "model_request" | "tools";
 
@@ -491,16 +524,7 @@ export type CreateAgentParams<
   TStateSchema extends StateDefinitionInit | undefined = undefined,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject =
     AnyAnnotationRoot,
-  ResponseFormatType =
-    | InteropZodType<StructuredResponseType>
-    | InteropZodType<unknown>[]
-    | JsonSchemaFormat
-    | JsonSchemaFormat[]
-    | ResponseFormat
-    | TypedToolStrategy<StructuredResponseType>
-    | ToolStrategy<StructuredResponseType>
-    | ProviderStrategy<StructuredResponseType>
-    | ResponseFormatUndefined,
+  ResponseFormatType = ResponseFormatInput<StructuredResponseType>,
 > = {
   /**
    * Defines a model to use for the agent. You can either pass in an instance of a LangChain chat model
@@ -525,7 +549,7 @@ export type CreateAgentParams<
    * });
    * ```
    */
-  model: string | LanguageModelLike;
+  model: string | AgentLanguageModelLike;
 
   /**
    * A list of tools or a ToolNode.
@@ -569,7 +593,7 @@ export type CreateAgentParams<
    * @example Using a string (recommended for most cases)
    * ```ts
    * const agent = createAgent({
-   *   model: "anthropic:claude-3-5-sonnet",
+   *   model: "anthropic:claude-sonnet-4-5",
    *   systemPrompt: "You are a helpful assistant.",
    *   // ...
    * });
@@ -579,7 +603,7 @@ export type CreateAgentParams<
    * ```ts
    * const userRole = "premium";
    * const agent = createAgent({
-   *   model: "anthropic:claude-3-5-sonnet",
+   *   model: "anthropic:claude-sonnet-4-5",
    *   systemPrompt: `You are a helpful assistant for ${userRole} users.`,
    *   // ...
    * });
@@ -590,7 +614,7 @@ export type CreateAgentParams<
    * import { SystemMessage } from "@langchain/core/messages";
    *
    * const agent = createAgent({
-   *   model: "anthropic:claude-3-5-sonnet",
+   *   model: "anthropic:claude-sonnet-4-5",
    *   systemPrompt: new SystemMessage({
    *     content: [
    *       {
@@ -613,7 +637,7 @@ export type CreateAgentParams<
    * import { SystemMessage } from "@langchain/core/messages";
    *
    * const agent = createAgent({
-   *   model: "anthropic:claude-3-5-sonnet",
+   *   model: "anthropic:claude-sonnet-4-5",
    *   systemPrompt: new SystemMessage("You are a helpful assistant."),
    *   // ...
    * });
@@ -801,14 +825,59 @@ export type CreateAgentParams<
    * Determines the version of the graph to create.
    *
    * Can be one of
-   * - `"v1"`: The tool node processes a single message. All tool calls in the message are
-   *           executed in parallel within the tool node.
-   * - `"v2"`: The tool node processes a single tool call. Tool calls are distributed across
-   *           multiple instances of the tool node using the Send API.
+   * - `"v1"`: The tool node processes the full `AIMessage` containing all tool calls. All tool
+   *           calls are executed concurrently via `Promise.all` inside a single graph node.
+   *           **Choose v1** when your tools invoke sub-graphs or other long-running async work
+   *           and you need true parallelism — the `Promise.all` approach is unaffected by
+   *           LangGraph's per-task checkpoint serialisation.
+   *
+   * - `"v2"`: Each tool call is dispatched as an independent graph task using the Send API.
+   *           Tasks are scheduled in parallel by LangGraph, but when tools invoke sub-graphs
+   *           the underlying checkpoint writes can cause effective serialisation, making
+   *           concurrent tool calls execute sequentially. v2 is the better choice when you
+   *           need per-tool-call checkpointing, independent fault isolation, or `interrupt()`
+   *           support inside individual tool calls.
    *
    * @default `"v2"`
    */
   version?: "v1" | "v2";
+
+  /**
+   * Stream transformer factories baked into the compiled graph. These run
+   * automatically for every `streamEvents(..., { version: "v3" })` call, after the built-in
+   * agent transformers (tool calls, middleware) and before any call-site
+   * transformers passed via
+   * `streamEvents(input, { version: "v3", transformers })`.
+   *
+   * Use this to add domain-specific streaming projections that should always
+   * be available on the agent's run stream. The projection values are
+   * accessible via `run.extensions`.
+   *
+   * @example
+   * ```typescript
+   * import { StreamChannel } from "@langchain/langgraph";
+   *
+   * const costTracker = () => ({
+   *   init: () => ({ cost: StreamChannel.remote<number>("cost") }),
+   *   process(event) {
+   *     // track token costs...
+   *     return true;
+   *   },
+   * });
+   *
+   * const agent = createAgent({
+   *   model: "openai:gpt-4o",
+   *   tools: [myTool],
+   *   streamTransformers: [costTracker],
+   * });
+   *
+   * const run = await agent.streamEvents({ messages }, { version: "v3" });
+   * for await (const c of run.extensions.cost) {
+   *   console.log("cost delta:", c);
+   * }
+   * ```
+   */
+  streamTransformers?: ReadonlyArray<() => StreamTransformer<any>>;
 };
 
 /**

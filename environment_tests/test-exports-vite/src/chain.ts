@@ -1,36 +1,25 @@
 // Import a few things we'll use to test the exports
-import { LLMChain } from "@langchain/classic/chains";
 import { ChatOpenAI } from "@langchain/openai";
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
 } from "@langchain/core/prompts";
-import { CallbackManager } from "@langchain/core/callbacks/manager";
+import { StringOutputParser } from "@langchain/core/output_parsers";
 
 export function setupChain(element: HTMLButtonElement) {
   const runChain = async () => {
     const llm = new ChatOpenAI({
       // Don't do this in your app, it would leak your API key
       openAIApiKey: import.meta.env.VITE_OPENAI_API_KEY,
-      streaming: true,
-      callbackManager: CallbackManager.fromHandlers({
-        handleLLMNewToken: async (token) =>
-          console.log("handleLLMNewToken", token),
-      }),
     });
-
-    // Test count tokens
-    const n = await llm.getNumTokens("Hello");
-    console.log("getNumTokens", n);
 
     // Test a chain + prompt + model
-    const chain = new LLMChain({
-      llm,
-      prompt: ChatPromptTemplate.fromMessages([
-        HumanMessagePromptTemplate.fromTemplate("{input}"),
-      ]),
-    });
-    const res = await chain.run("hello");
+    const chain = ChatPromptTemplate.fromMessages([
+      HumanMessagePromptTemplate.fromTemplate("{input}"),
+    ])
+      .pipe(llm)
+      .pipe(new StringOutputParser());
+    const res = await chain.invoke({ input: "hello" });
 
     console.log("runChain", res);
   };

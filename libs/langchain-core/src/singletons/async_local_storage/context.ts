@@ -76,7 +76,7 @@ export function setContextVariable<T>(name: PropertyKey, value: T): void {
   } else if (runTree && typeof runTree === "object") {
     newValue = { ...(runTree as Record<PropertyKey, unknown>) };
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   (newValue as any)[_CONTEXT_VARIABLES_KEY] = contextVars;
   asyncLocalStorageInstance.enterWith(newValue);
 }
@@ -130,7 +130,7 @@ export function setContextVariable<T>(name: PropertyKey, value: T): void {
  *
  * @param name The name of the context variable.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export function getContextVariable<T = any>(name: PropertyKey): T | undefined {
   // Avoid using global singleton due to circuluar dependency issues
   const asyncLocalStorageInstance = getGlobalAsyncLocalStorageInstance();
@@ -203,7 +203,7 @@ export const registerConfigureHook = (config: ConfigureHook) => {
 export type ConfigureHook = {
   contextVar?: string;
   inheritable?: boolean;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   handlerClass?: new (...args: any[]) => BaseCallbackHandler;
   envVar?: string;
 };

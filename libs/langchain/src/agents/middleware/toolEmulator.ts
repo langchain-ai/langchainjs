@@ -72,9 +72,7 @@ export interface ToolEmulatorOptions {
  * });
  * ```
  */
-export function toolEmulatorMiddleware(
-  options: ToolEmulatorOptions = {}
-): ReturnType<typeof createMiddleware> {
+export function toolEmulatorMiddleware(options: ToolEmulatorOptions = {}) {
   let agentModel: BaseChatModel | undefined;
   const { tools, model } = options;
 

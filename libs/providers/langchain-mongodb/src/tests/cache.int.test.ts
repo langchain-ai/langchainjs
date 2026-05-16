@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect, beforeAll, beforeEach, afterAll } from "vitest";
 import { MongoClient, Collection } from "mongodb";
 import { Generation } from "@langchain/core/outputs";
 import { MongoDBCache, MongoDBAtlasSemanticCache } from "../cache.js";

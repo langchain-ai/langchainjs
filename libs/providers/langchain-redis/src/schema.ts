@@ -235,7 +235,7 @@ export function buildMetadataSchema(
   for (const fieldSchema of metadataSchema) {
     switch (fieldSchema.type) {
       case "tag": {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         const tagOptions: any = {
           type: SchemaFieldTypes.TAG,
           SEPARATOR: fieldSchema.options?.separator || DEFAULT_TAG_SEPARATOR,
@@ -250,7 +250,7 @@ export function buildMetadataSchema(
         break;
       }
       case "text": {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         const textOptions: any = {
           type: SchemaFieldTypes.TEXT,
         };
@@ -270,7 +270,7 @@ export function buildMetadataSchema(
         break;
       }
       case "numeric": {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         const numericOptions: any = {
           type: SchemaFieldTypes.NUMERIC,
         };
@@ -284,7 +284,7 @@ export function buildMetadataSchema(
         break;
       }
       case "geo": {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         const geoOptions: any = {
           type: SchemaFieldTypes.GEO,
         };

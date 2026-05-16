@@ -1,6 +1,6 @@
 import { z } from "zod/v4";
 import { RunnableConfig } from "@langchain/core/runnables";
-import { MiddlewareNode, type MiddlewareNodeOptions } from "./middleware.js";
+import { MiddlewareNode } from "./middleware.js";
 import type { AgentMiddleware, MiddlewareResult } from "../middleware/types.js";
 import type { AgentBuiltInState, Runtime } from "../runtime.js";
 import { getHookFunction } from "../middleware/utils.js";
@@ -18,19 +18,15 @@ export class BeforeAgentNode<
     public middleware: AgentMiddleware<
       z.ZodObject<z.ZodRawShape>,
       z.ZodObject<z.ZodRawShape>
-    >,
-    options: MiddlewareNodeOptions
+    >
   ) {
-    super(
-      {
-        name: `BeforeAgentNode_${middleware.name}`,
-        func: async (
-          state: TStateSchema,
-          config?: RunnableConfig<TContextSchema>
-        ) => this.invokeMiddleware(state, config),
-      },
-      options
-    );
+    super({
+      name: `BeforeAgentNode_${middleware.name}`,
+      func: async (
+        state: TStateSchema,
+        config?: RunnableConfig<TContextSchema>
+      ) => this.invokeMiddleware(state, config),
+    });
   }
 
   runHook(state: TStateSchema, runtime: Runtime<TContextSchema>) {

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 
 import { expect, test, it, describe } from "vitest";
 import fs from "fs/promises";
@@ -56,16 +56,16 @@ async function invoke(
 }
 
 // use this for tests involving "extended thinking"
-const extendedThinkingModelName = "claude-3-7-sonnet-20250219";
+const extendedThinkingModelName = "claude-sonnet-4-5-20250929";
 
 // use this for tests involving citations
 const citationsModelName = "claude-sonnet-4-5-20250929";
 
 // use this for tests involving PDF documents
-const pdfModelName = "claude-3-5-haiku-20241022";
+const pdfModelName = "claude-haiku-4-5-20251001";
 
 // Use this model for all other tests
-const modelName = "claude-3-haiku-20240307";
+const modelName = "claude-haiku-4-5-20251001";
 
 test("Test ChatAnthropic", async () => {
   const chat = new ChatAnthropic({
@@ -120,7 +120,7 @@ test("Test ChatAnthropic Generate", async () => {
   expect(res.generations.length).toBe(2);
   for (const generation of res.generations) {
     expect(generation.length).toBe(1);
-    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
     // @ts-expect-error unused var
     for (const message of generation) {
       // console.log(message.text);
@@ -144,7 +144,7 @@ test.skip("Test ChatAnthropic Generate w/ ClientOptions", async () => {
   expect(res.generations.length).toBe(2);
   for (const generation of res.generations) {
     expect(generation.length).toBe(1);
-    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
     // @ts-expect-error unused var
     for (const message of generation) {
       // console.log(message.text);
@@ -179,7 +179,7 @@ test("Test ChatAnthropic tokenUsage with a batch", async () => {
     maxRetries: 0,
     modelName,
   });
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const res = await model.generate([
     [new HumanMessage(`Hello!`)],
@@ -252,7 +252,7 @@ test.skip("Test ChatAnthropic prompt value", async () => {
   const res = await chat.generatePrompt([new ChatPromptValue([message])]);
   expect(res.generations.length).toBe(1);
   for (const generation of res.generations) {
-    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
     // @ts-expect-error unused var
     for (const g of generation) {
       // console.log(g.text);
@@ -277,7 +277,7 @@ test.skip("ChatAnthropic, docs, prompt templates", async () => {
     HumanMessagePromptTemplate.fromTemplate("{text}"),
   ]);
 
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const responseA = await chat.generatePrompt([
     await chatPrompt.formatPromptValue({
@@ -303,7 +303,7 @@ test.skip("ChatAnthropic, longer chain of messages", async () => {
     HumanMessagePromptTemplate.fromTemplate("{text}"),
   ]);
 
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const responseA = await chat.generatePrompt([
     await chatPrompt.formatPromptValue({
@@ -323,7 +323,7 @@ test.skip("ChatAnthropic, Anthropic apiUrl set manually via constructor", async 
     anthropicApiUrl,
   });
   const message = new HumanMessage("Hello!");
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const res = await chat.call([message]);
   // console.log({ res });
@@ -356,7 +356,7 @@ test("Test ChatAnthropic stream method with abort", async () => {
         signal: AbortSignal.timeout(1000),
       }
     );
-    // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+    // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
     // @ts-expect-error unused var
     for await (const chunk of stream) {
       // console.log(chunk);
@@ -374,7 +374,7 @@ test("Test ChatAnthropic stream method with early break", async () => {
     "How is your day going? Be extremely verbose."
   );
   let i = 0;
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   for await (const chunk of stream) {
     // console.log(chunk);
@@ -397,7 +397,7 @@ test("Test ChatAnthropic headers passed through", async () => {
     },
   });
   const message = new HumanMessage("Hello!");
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const res = await chat.invoke([message]);
   // console.log({ res });
@@ -894,6 +894,9 @@ test("system prompt caching", async () => {
   expect(agg!.usage_metadata?.input_token_details?.cache_read).toBeGreaterThan(
     0
   );
+  expect(agg!.usage_metadata?.input_tokens).toBeGreaterThan(
+    agg!.usage_metadata?.input_token_details?.cache_read ?? 0
+  );
 });
 
 // TODO: Add proper test with long tool content
@@ -1002,6 +1005,20 @@ test("human message caching", async () => {
   expect(res2.usage_metadata?.input_tokens).toBeGreaterThan(
     res2.usage_metadata?.input_token_details?.cache_read ?? 0
   );
+
+  const stream = await model.stream(messages);
+  let agg;
+  for await (const chunk of stream) {
+    agg = agg === undefined ? chunk : concat(agg, chunk);
+  }
+  expect(agg).toBeDefined();
+  expect(agg!.usage_metadata?.input_token_details?.cache_creation).toBe(0);
+  expect(agg!.usage_metadata?.input_token_details?.cache_read).toBeGreaterThan(
+    0
+  );
+  expect(agg!.usage_metadata?.input_tokens).toBeGreaterThan(
+    agg!.usage_metadata?.input_token_details?.cache_read ?? 0
+  );
 });
 
 test("Can accept PDF documents", async () => {
@@ -1009,8 +1026,7 @@ test("Can accept PDF documents", async () => {
     modelName: pdfModelName,
   });
 
-  const pdfPath =
-    "../../langchain-community/src/document_loaders/tests/example_data/Jacob_Lee_Resume_2023.pdf";
+  const pdfPath = "./test_data/Jacob_Lee_Resume_2023.pdf";
   const pdfBase64 = await fs.readFile(pdfPath, "base64");
 
   const response = await model.invoke([

@@ -16,6 +16,7 @@ import {
 import { ChatGenerationChunk } from "@langchain/core/outputs";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import PROFILES from "./profiles.js";
+import { SerializableSchema } from "@langchain/core/utils/standard_schema";
 
 export interface ChatDeepSeekCallOptions extends ChatOpenAICallOptions {
   headers?: Record<string, string>;
@@ -426,8 +427,17 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
 
   lc_namespace = ["langchain", "chat_models", "deepseek"];
 
-  constructor(fields?: Partial<ChatDeepSeekInput>) {
-    const apiKey = fields?.apiKey || getEnvironmentVariable("DEEPSEEK_API_KEY");
+  constructor(model: string, fields?: Omit<ChatDeepSeekInput, "model">);
+  constructor(fields?: Partial<ChatDeepSeekInput>);
+  constructor(
+    modelOrFields?: string | Partial<ChatDeepSeekInput>,
+    fieldsArg?: Omit<ChatDeepSeekInput, "model">
+  ) {
+    const fields =
+      typeof modelOrFields === "string"
+        ? { ...(fieldsArg ?? {}), model: modelOrFields }
+        : (modelOrFields ?? {});
+    const apiKey = fields.apiKey || getEnvironmentVariable("DEEPSEEK_API_KEY");
     if (!apiKey) {
       throw new Error(
         `Deepseek API key not found. Please set the DEEPSEEK_API_KEY environment variable or pass the key into "apiKey" field.`
@@ -439,13 +449,14 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
       apiKey,
       configuration: {
         baseURL: "https://api.deepseek.com",
-        ...fields?.configuration,
+        ...fields.configuration,
       },
     });
+    this._addVersion("@langchain/deepseek", __PKG_VERSION__);
   }
 
   protected override _convertCompletionsDeltaToBaseMessageChunk(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     delta: Record<string, any>,
     rawResponse: OpenAIClient.ChatCompletionChunk,
     defaultRole?:
@@ -720,7 +731,7 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
       rawResponse
     );
     langChainMessage.additional_kwargs.reasoning_content =
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       (message as any).reasoning_content;
     // Override model_provider for DeepSeek-specific block translation
     langChainMessage.response_metadata = {
@@ -752,34 +763,37 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
   }
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | SerializableSchema<RunOutput>
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | SerializableSchema<RunOutput>
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | SerializableSchema<RunOutput>
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
   ):
@@ -787,12 +801,13 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
     | Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | SerializableSchema<RunOutput>
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
   ):

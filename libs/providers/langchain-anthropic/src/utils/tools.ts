@@ -12,7 +12,8 @@ export function handleToolChoice(
   | undefined {
   if (!toolChoice) {
     return undefined;
-  } else if (toolChoice === "any") {
+  } else if (toolChoice === "any" || toolChoice === "required") {
+    // "required" is OpenAI-style, map to Anthropic's "any" which forces tool use
     return {
       type: "any",
     };
@@ -42,6 +43,7 @@ export const AnthropicToolExtrasSchema = z.object({
   defer_loading: z.boolean().optional(),
   input_examples: z.array(z.unknown()).optional(),
   allowed_callers: z.array(z.unknown()).optional(),
+  strict: z.boolean().optional(),
 });
 
 /**

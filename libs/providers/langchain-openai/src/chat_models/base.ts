@@ -15,18 +15,10 @@ import {
   type FunctionDefinition,
   type StructuredOutputMethodOptions,
 } from "@langchain/core/language_models/base";
+import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { ModelProfile } from "@langchain/core/language_models/profile";
-import {
-  Runnable,
-  RunnableLambda,
-  RunnablePassthrough,
-  RunnableSequence,
-} from "@langchain/core/runnables";
-import {
-  JsonOutputParser,
-  StructuredOutputParser,
-} from "@langchain/core/output_parsers";
-import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
+import { Runnable, RunnableLambda } from "@langchain/core/runnables";
+import { JsonOutputParser } from "@langchain/core/output_parsers";
 import {
   getSchemaDescription,
   InteropZodType,
@@ -68,6 +60,15 @@ import {
 import { isReasoningModel, messageToOpenAIRole } from "../utils/misc.js";
 import { wrapOpenAIClientError } from "../utils/client.js";
 import PROFILES from "./profiles.js";
+import {
+  isSerializableSchema,
+  SerializableSchema,
+} from "@langchain/core/utils/standard_schema";
+import {
+  assembleStructuredOutputPipeline,
+  createContentParser,
+  createFunctionCallingParser,
+} from "@langchain/core/language_models/structured_output";
 
 interface OpenAILLMOutput {
   tokenUsage: {
@@ -224,6 +225,19 @@ export interface BaseChatOpenAIFields
    * Optional configuration options for the OpenAI client.
    */
   configuration?: ClientOptions;
+}
+
+export function getChatOpenAIModelParams<TParams extends BaseChatOpenAIFields>(
+  modelOrParams?: string | TParams,
+  paramsArg?: Omit<TParams, "model">
+): TParams | undefined {
+  if (typeof modelOrParams === "string") {
+    return { model: modelOrParams, ...(paramsArg ?? {}) } as TParams;
+  }
+  if (modelOrParams == null) {
+    return paramsArg as TParams | undefined;
+  }
+  return modelOrParams;
 }
 
 /** @internal */
@@ -513,6 +527,8 @@ export abstract class BaseChatOpenAI<
     }
 
     this.zdrEnabled = fields?.zdrEnabled ?? false;
+
+    this._addVersion("@langchain/openai", __PKG_VERSION__);
   }
 
   /**
@@ -665,7 +681,13 @@ export abstract class BaseChatOpenAI<
           return tool.extras.providerToolDefinition;
         }
         // Regular tools get converted to OpenAI function format
-        return this._convertChatOpenAIToolToCompletionsTool(tool, { strict });
+        const converted = this._convertChatOpenAIToolToCompletionsTool(tool, {
+          strict,
+        });
+        if (isLangChainTool(tool) && tool.extras?.defer_loading === true) {
+          return { ...converted, defer_loading: true };
+        }
+        return converted;
       }),
       ...kwargs,
     } as Partial<CallOptions>);
@@ -947,34 +969,37 @@ export abstract class BaseChatOpenAI<
   }
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | SerializableSchema<RunOutput>
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | SerializableSchema<RunOutput>
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | SerializableSchema<RunOutput>
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
   ):
@@ -1003,7 +1028,10 @@ export abstract class BaseChatOpenAI<
   withStructuredOutput<
     RunOutput extends Record<string, unknown> = Record<string, unknown>,
   >(
-    outputSchema: InteropZodType<RunOutput> | Record<string, unknown>,
+    outputSchema:
+      | SerializableSchema<RunOutput>
+      | InteropZodType<RunOutput>
+      | Record<string, unknown>,
     config?: StructuredOutputMethodOptions<boolean>
   ) {
     let llm: Runnable<BaseLanguageModelInput>;
@@ -1023,11 +1051,7 @@ export abstract class BaseChatOpenAI<
     const method = getStructuredOutputMethod(this.model, config?.method);
 
     if (method === "jsonMode") {
-      if (isInteropZodSchema(schema)) {
-        outputParser = StructuredOutputParser.fromZodSchema(schema);
-      } else {
-        outputParser = new JsonOutputParser<RunOutput>();
-      }
+      outputParser = createContentParser(schema);
       const asJsonSchema = toJsonSchema(schema);
       llm = this.withConfig({
         outputVersion: "v0",
@@ -1038,13 +1062,13 @@ export abstract class BaseChatOpenAI<
         },
       } as Partial<CallOptions>);
     } else if (method === "jsonSchema") {
+      const asJsonSchema = toJsonSchema(schema);
       const openaiJsonSchemaParams = {
         name: name ?? "extract",
-        description: getSchemaDescription(schema),
-        schema,
+        description: getSchemaDescription(asJsonSchema),
+        schema: isInteropZodSchema(schema) ? schema : asJsonSchema,
         strict: config?.strict,
       };
-      const asJsonSchema = toJsonSchema(openaiJsonSchemaParams.schema);
       llm = this.withConfig({
         outputVersion: "v0",
         response_format: {
@@ -1060,14 +1084,14 @@ export abstract class BaseChatOpenAI<
           },
         },
       } as Partial<CallOptions>);
-      if (isInteropZodSchema(schema)) {
-        const altParser = StructuredOutputParser.fromZodSchema(schema);
+      if (isInteropZodSchema(schema) || isSerializableSchema(schema)) {
+        const altParser = createContentParser(schema);
         outputParser = RunnableLambda.from<AIMessageChunk, RunOutput>(
-          (aiMessage: AIMessageChunk) => {
+          async (aiMessage: AIMessageChunk) => {
             if ("parsed" in aiMessage.additional_kwargs) {
               return aiMessage.additional_kwargs.parsed as RunOutput;
             }
-            return altParser;
+            return altParser.invoke(aiMessage.content as string);
           }
         );
       } else {
@@ -1075,105 +1099,50 @@ export abstract class BaseChatOpenAI<
       }
     } else {
       let functionName = name ?? "extract";
+      const asJsonSchema = toJsonSchema(schema);
+
       // Is function calling
-      if (isInteropZodSchema(schema)) {
-        const asJsonSchema = toJsonSchema(schema);
-        llm = this.withConfig({
-          outputVersion: "v0",
-          tools: [
-            {
-              type: "function" as const,
-              function: {
-                name: functionName,
-                description: asJsonSchema.description,
-                parameters: asJsonSchema,
-              },
-            },
-          ],
-          tool_choice: {
-            type: "function" as const,
-            function: {
-              name: functionName,
-            },
-          },
-          ls_structured_output_format: {
-            kwargs: { method: "function_calling" },
-            schema: { title: functionName, ...asJsonSchema },
-          },
-          // Do not pass `strict` argument to OpenAI if `config.strict` is undefined
-          ...(config?.strict !== undefined ? { strict: config.strict } : {}),
-        } as Partial<CallOptions>);
-        outputParser = new JsonOutputKeyToolsParser({
-          returnSingle: true,
-          keyName: functionName,
-          zodSchema: schema,
-        });
+      let toolFunction: FunctionDefinition;
+      if (isInteropZodSchema(schema) || isSerializableSchema(schema)) {
+        toolFunction = {
+          name: functionName,
+          description: asJsonSchema.description,
+          parameters: asJsonSchema,
+        };
+      } else if (
+        typeof schema.name === "string" &&
+        typeof schema.parameters === "object" &&
+        schema.parameters != null
+      ) {
+        toolFunction = schema as unknown as FunctionDefinition;
+        functionName = schema.name;
       } else {
-        let openAIFunctionDefinition: FunctionDefinition;
-        if (
-          typeof schema.name === "string" &&
-          typeof schema.parameters === "object" &&
-          schema.parameters != null
-        ) {
-          openAIFunctionDefinition = schema as unknown as FunctionDefinition;
-          functionName = schema.name;
-        } else {
-          functionName = (schema.title as string) ?? functionName;
-          openAIFunctionDefinition = {
-            name: functionName,
-            description: (schema.description as string) ?? "",
-            parameters: schema,
-          };
-        }
-        const asJsonSchema = toJsonSchema(schema);
-        llm = this.withConfig({
-          outputVersion: "v0",
-          tools: [
-            {
-              type: "function" as const,
-              function: openAIFunctionDefinition,
-            },
-          ],
-          tool_choice: {
-            type: "function" as const,
-            function: {
-              name: functionName,
-            },
-          },
-          ls_structured_output_format: {
-            kwargs: { method: "function_calling" },
-            schema: { title: functionName, ...asJsonSchema },
-          },
-          // Do not pass `strict` argument to OpenAI if `config.strict` is undefined
-          ...(config?.strict !== undefined ? { strict: config.strict } : {}),
-        } as Partial<CallOptions>);
-        outputParser = new JsonOutputKeyToolsParser<RunOutput>({
-          returnSingle: true,
-          keyName: functionName,
-        });
+        functionName = (schema.title as string) ?? functionName;
+        toolFunction = {
+          name: functionName,
+          description: (schema.description as string) ?? "",
+          parameters: schema,
+        };
       }
+
+      llm = this.withConfig({
+        outputVersion: "v0",
+        tools: [{ type: "function" as const, function: toolFunction }],
+        tool_choice: {
+          type: "function" as const,
+          function: { name: functionName },
+        },
+        ls_structured_output_format: {
+          kwargs: { method: "function_calling" },
+          schema: { title: functionName, ...asJsonSchema },
+        },
+        // Do not pass `strict` argument to OpenAI if `config.strict` is undefined
+        ...(config?.strict !== undefined ? { strict: config.strict } : {}),
+      } as Partial<CallOptions>);
+
+      outputParser = createFunctionCallingParser(schema, functionName);
     }
 
-    if (!includeRaw) {
-      return llm.pipe(outputParser) as Runnable<
-        BaseLanguageModelInput,
-        RunOutput
-      >;
-    }
-
-    const parserAssign = RunnablePassthrough.assign({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      parsed: (input: any, config) => outputParser.invoke(input.raw, config),
-    });
-    const parserNone = RunnablePassthrough.assign({
-      parsed: () => null,
-    });
-    const parsedWithFallback = parserAssign.withFallbacks({
-      fallbacks: [parserNone],
-    });
-    return RunnableSequence.from<
-      BaseLanguageModelInput,
-      { raw: BaseMessage; parsed: RunOutput }
-    >([{ raw: llm }, parsedWithFallback]);
+    return assembleStructuredOutputPipeline(llm, outputParser, includeRaw);
   }
 }

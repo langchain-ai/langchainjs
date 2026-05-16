@@ -136,6 +136,7 @@ export type GoogleAIModelModality = "TEXT" | "IMAGE" | "AUDIO" | string;
 
 export type GoogleThinkingLevel =
   | "THINKING_LEVEL_UNSPECIFIED"
+  | "MINIMAL"
   | "LOW"
   | "MEDIUM"
   | "HIGH";
@@ -419,7 +420,7 @@ export interface GoogleAIModelRequestParams extends GoogleAIModelParams {
    *
    * The tool configuration's "any" mode ("forced function calling") is supported for Gemini 1.5 Pro models only.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   tool_choice?: string | "auto" | "any" | "none" | Record<string, any>;
   /**
    * Allowed functions to call when the mode is "any".
@@ -474,7 +475,7 @@ export interface GoogleBaseLLMInput<
 > extends GoogleAIBaseLLMInput<AuthOptions> {}
 
 export interface GoogleResponse {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   data: any;
 }
 

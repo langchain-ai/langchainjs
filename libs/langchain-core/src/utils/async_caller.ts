@@ -82,7 +82,7 @@ const defaultFailedAttemptHandler = (error: unknown) => {
   }
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export type FailedAttemptHandler = (error: any) => any;
 
 export interface AsyncCallerParams {
@@ -142,7 +142,7 @@ export class AsyncCaller {
     this.queue = new PQueue({ concurrency: this.maxConcurrency });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   async call<A extends any[], T extends (...args: A) => Promise<any>>(
     callable: T,
     ...args: Parameters<T>
@@ -152,7 +152,7 @@ export class AsyncCaller {
         pRetry(
           () =>
             callable(...args).catch((error) => {
-              // eslint-disable-next-line no-instanceof/no-instanceof
+              // oxlint-disable-next-line no-instanceof/no-instanceof
               if (error instanceof Error) {
                 throw error;
               } else {
@@ -171,7 +171,7 @@ export class AsyncCaller {
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   callWithOptions<A extends any[], T extends (...args: A) => Promise<any>>(
     options: AsyncCallerCallOptions,
     callable: T,

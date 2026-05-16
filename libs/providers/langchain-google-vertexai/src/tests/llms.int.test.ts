@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test } from "vitest";
 import {
   AIMessage,
   BaseMessage,
@@ -160,7 +160,7 @@ describe("GAuth LLM gai", () => {
       for await (const chunk of stream) {
         chunks.push(chunk);
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (xx: any) {
       expect(xx?.message).toEqual("Finish reason: RECITATION");
     }

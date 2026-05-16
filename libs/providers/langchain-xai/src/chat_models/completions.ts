@@ -1,7 +1,4 @@
-import {
-  BaseLanguageModelInput,
-  StructuredOutputMethodOptions,
-} from "@langchain/core/language_models/base";
+import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import {
   BaseChatModelCallOptions,
   BindToolsInput,
@@ -14,14 +11,9 @@ import {
 } from "@langchain/core/utils/function_calling";
 import { ModelProfile } from "@langchain/core/language_models/profile";
 import { Serialized } from "@langchain/core/load/serializable";
-import {
-  AIMessageChunk,
-  BaseMessage,
-  type UsageMetadata,
-} from "@langchain/core/messages";
+import { AIMessageChunk, type UsageMetadata } from "@langchain/core/messages";
 import { Runnable } from "@langchain/core/runnables";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { InteropZodType } from "@langchain/core/utils/types";
 import {
   type OpenAICoreRequestOptions,
   type OpenAIClient,
@@ -179,7 +171,7 @@ export interface ChatXAIInput extends BaseChatModelParams {
   apiKey?: string;
   /**
    * The name of the model to use.
-   * @default "grok-beta"
+   * @default "grok-3-fast"
    */
   model?: string;
   /**
@@ -215,7 +207,7 @@ export interface ChatXAIInput extends BaseChatModelParams {
    * @example
    * ```typescript
    * const llm = new ChatXAI({
-   *   model: "grok-beta",
+   *   model: "grok-3-fast",
    *   searchParameters: {
    *     mode: "auto",
    *     max_search_results: 5,
@@ -276,7 +268,7 @@ export interface ChatXAIInput extends BaseChatModelParams {
  * import { ChatXAI } from '@langchain/xai';
  *
  * const llm = new ChatXAI({
- *   model: "grok-beta",
+ *   model: "grok-3-fast",
  *   temperature: 0,
  *   // other params...
  * });
@@ -470,7 +462,7 @@ export interface ChatXAIInput extends BaseChatModelParams {
  * import { z } from 'zod';
  *
  * const llmForToolCalling = new ChatXAI({
- *   model: "grok-beta",
+ *   model: "grok-3-fast",
  *   temperature: 0,
  *   // other params...
  * });
@@ -567,7 +559,7 @@ export interface ChatXAIInput extends BaseChatModelParams {
  * ```typescript
  * // Method 1: Using the built-in live_search tool
  * const llm = new ChatXAI({
- *   model: "grok-beta",
+ *   model: "grok-3-fast",
  *   temperature: 0,
  * });
  *
@@ -580,7 +572,7 @@ export interface ChatXAIInput extends BaseChatModelParams {
  * ```typescript
  * // Method 2: Using searchParameters for more control
  * const llm = new ChatXAI({
- *   model: "grok-beta",
+ *   model: "grok-3-fast",
  *   searchParameters: {
  *     mode: "auto", // "auto" | "on" | "off"
  *     max_search_results: 5,
@@ -632,7 +624,16 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
    */
   searchParameters?: XAISearchParameters;
 
-  constructor(fields?: Partial<ChatXAIInput>) {
+  constructor(model: string, fields?: Omit<ChatXAIInput, "model">);
+  constructor(fields?: Partial<ChatXAIInput>);
+  constructor(
+    modelOrFields?: string | Partial<ChatXAIInput>,
+    fieldsArg?: Omit<ChatXAIInput, "model">
+  ) {
+    const fields =
+      typeof modelOrFields === "string"
+        ? { ...(fieldsArg ?? {}), model: modelOrFields }
+        : (modelOrFields ?? {});
     const apiKey = fields?.apiKey || getEnvironmentVariable("XAI_API_KEY");
     if (!apiKey) {
       throw new Error(
@@ -642,12 +643,14 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
 
     super({
       ...fields,
-      model: fields?.model || "grok-beta",
+      model: fields?.model || "grok-3-fast",
       apiKey,
       configuration: {
         baseURL: fields?.baseURL ?? "https://api.x.ai/v1",
       },
     });
+
+    this._addVersion("@langchain/xai", __PKG_VERSION__);
 
     this.searchParameters = fields?.searchParameters;
   }
@@ -822,7 +825,7 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
   }
 
   protected override _convertCompletionsDeltaToBaseMessageChunk(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     delta: Record<string, any>,
     rawResponse: OpenAIClient.ChatCompletionChunk,
     defaultRole?:
@@ -883,7 +886,7 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
    *
    * @example
    * ```typescript
-   * const model = new ChatXAI({ model: "grok-beta" });
+   * const model = new ChatXAI({ model: "grok-3-fast" });
    * const profile = model.profile;
    * console.log(profile.maxInputTokens); // 128000
    * console.log(profile.imageInputs); // true
@@ -891,62 +894,5 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
    */
   get profile(): ModelProfile {
     return PROFILES[this.model] ?? {};
-  }
-
-  override withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>,
-  >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
-    config?: StructuredOutputMethodOptions<false>
-  ): Runnable<BaseLanguageModelInput, RunOutput>;
-
-  override withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>,
-  >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
-    config?: StructuredOutputMethodOptions<true>
-  ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
-
-  override withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>,
-  >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
-    config?: StructuredOutputMethodOptions<boolean>
-  ):
-    | Runnable<BaseLanguageModelInput, RunOutput>
-    | Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
-
-  override withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>,
-  >(
-    outputSchema:
-      | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      | Record<string, any>,
-    config?: StructuredOutputMethodOptions<boolean>
-  ):
-    | Runnable<BaseLanguageModelInput, RunOutput>
-    | Runnable<
-        BaseLanguageModelInput,
-        { raw: BaseMessage; parsed: RunOutput }
-      > {
-    const ensuredConfig = { ...config };
-    if (ensuredConfig?.method === undefined) {
-      ensuredConfig.method = "functionCalling";
-    }
-    return super.withStructuredOutput<RunOutput>(outputSchema, ensuredConfig);
   }
 }

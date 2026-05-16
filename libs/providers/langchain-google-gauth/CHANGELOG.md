@@ -1,5 +1,93 @@
 # @langchain/google-gauth
 
+## 2.1.30
+
+### Patch Changes
+
+- Updated dependencies [[`dfec1b7`](https://github.com/langchain-ai/langchainjs/commit/dfec1b7f8b2c530a43f639dc79d4965a80ea4b79)]:
+  - @langchain/google-common@2.1.30
+
+## 2.1.29
+
+### Patch Changes
+
+- Updated dependencies [[`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6)]:
+  - @langchain/google-common@2.1.29
+
+## 2.1.28
+
+### Patch Changes
+
+- Updated dependencies [[`2e9e696`](https://github.com/langchain-ai/langchainjs/commit/2e9e6969e248a53ede0659a41d0ac8dbaf291ab4)]:
+  - @langchain/google-common@2.1.28
+
+## 2.1.27
+
+### Patch Changes
+
+- Updated dependencies [[`c308903`](https://github.com/langchain-ai/langchainjs/commit/c308903ee5046c838af8fb274c45d7ba9baf9ed8)]:
+  - @langchain/google-common@2.1.27
+
+## 2.1.26
+
+### Patch Changes
+
+- Updated dependencies [[`561224b`](https://github.com/langchain-ai/langchainjs/commit/561224b8495dad61946ad7c0f84340d64729c3fb), [`6a2da5b`](https://github.com/langchain-ai/langchainjs/commit/6a2da5b63b39bec4b87b6a1d1769810677ad3458)]:
+  - @langchain/google-common@2.1.26
+
+## 2.1.25
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @langchain/google-common@2.1.25
+
+## 2.1.24
+
+### Patch Changes
+
+- Updated dependencies [[`745b09a`](https://github.com/langchain-ai/langchainjs/commit/745b09a1b0c92643cbc99e773012924948438629)]:
+  - @langchain/google-common@2.1.24
+
+## 2.1.23
+
+### Patch Changes
+
+- Updated dependencies [[`d43194b`](https://github.com/langchain-ai/langchainjs/commit/d43194b625f19acf79cbe958300dadb7b0a6a89d)]:
+  - @langchain/google-common@2.1.23
+
+## 2.1.22
+
+### Patch Changes
+
+- Updated dependencies [[`3590ee3`](https://github.com/langchain-ai/langchainjs/commit/3590ee3229a9a55b0c818c1e396f6445b2368103)]:
+  - @langchain/google-common@2.1.22
+
+## 2.1.21
+
+### Patch Changes
+
+- [#10106](https://github.com/langchain-ai/langchainjs/pull/10106) [`9f30267`](https://github.com/langchain-ai/langchainjs/commit/9f30267e95a2a42fac71f1d3674b84c5a190dbbc) Thanks [@hntrl](https://github.com/hntrl)! - Add package version metadata to runnable traces. Each package now stamps its version in `this.metadata.versions` at construction time, making version info available in LangSmith trace metadata.
+
+- Updated dependencies [[`9f30267`](https://github.com/langchain-ai/langchainjs/commit/9f30267e95a2a42fac71f1d3674b84c5a190dbbc), [`e0e5a02`](https://github.com/langchain-ai/langchainjs/commit/e0e5a02ea1b855ad7b8d562d1c7770f984100a5d)]:
+  - @langchain/google-common@2.1.21
+
+## 2.1.20
+
+### Patch Changes
+
+- [#10080](https://github.com/langchain-ai/langchainjs/pull/10080) [`b583729`](https://github.com/langchain-ai/langchainjs/commit/b583729e99cf0c035630f6b311c4d069a1980cca) Thanks [@hntrl](https://github.com/hntrl)! - Add string-model constructor overloads for chat models (with supporting tests where applicable).
+
+- Updated dependencies []:
+  - @langchain/google-common@2.1.20
+
+## 2.1.19
+
+### Patch Changes
+
+- Updated dependencies [[`7be50a7`](https://github.com/langchain-ai/langchainjs/commit/7be50a7014d7622e0ab8d303dfc9c633ebc96333)]:
+  - @langchain/google-common@2.1.19
+
 ## 2.1.18
 
 ### Patch Changes
