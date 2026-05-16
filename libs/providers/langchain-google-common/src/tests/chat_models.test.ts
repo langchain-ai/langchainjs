@@ -3373,6 +3373,38 @@ test("Can set streaming param", () => {
   expect(modelWithStreamingTrue.streaming).toBe(true);
 });
 
+test("Streaming includes cache_read and reasoning in usage_metadata", async () => {
+  const record: Record<string, any> = {};
+  const projectId = mockId();
+  const authOptions: MockClientAuthInfo = {
+    record,
+    projectId,
+    resultFile: "chat-stream-usage-mock.json",
+  };
+  const model = new ChatGoogle({
+    authOptions,
+    streaming: true,
+  });
+  const messages: BaseMessageLike[] = [
+    new HumanMessage("Hello"),
+  ];
+
+  const chunks: any[] = [];
+  const stream = await model.stream(messages);
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+  }
+
+  // Find the chunk that has usage_metadata
+  const chunkWithUsage = chunks.find((c) => c.usage_metadata);
+  expect(chunkWithUsage).toBeDefined();
+  expect(chunkWithUsage.usage_metadata.input_tokens).toBe(10);
+  expect(chunkWithUsage.usage_metadata.output_tokens).toBe(8); // 5 + 3 (thoughts)
+  expect(chunkWithUsage.usage_metadata.total_tokens).toBe(20);
+  expect(chunkWithUsage.usage_metadata.input_token_details?.cache_read).toBe(7);
+  expect(chunkWithUsage.usage_metadata.output_token_details?.reasoning).toBe(3);
+});
+
 describe("withStructuredOutput - StandardSchema", () => {
   function makeSerializableSchema() {
     return {

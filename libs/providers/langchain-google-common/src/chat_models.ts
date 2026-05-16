@@ -407,11 +407,14 @@ export abstract class ChatGoogleBase<AuthOptions>
         this.streamUsage !== false &&
         options.streamUsage !== false
       ) {
-        usageMetadata = {
-          input_tokens: output.usageMetadata.promptTokenCount,
-          output_tokens: output.usageMetadata.candidatesTokenCount,
-          total_tokens: output.usageMetadata.totalTokenCount,
-        };
+        usageMetadata =
+          this.connection.api.responseToUsageMetadata?.({
+            data: output,
+          }) ?? {
+            input_tokens: output.usageMetadata.promptTokenCount ?? 0,
+            output_tokens: output.usageMetadata.candidatesTokenCount ?? 0,
+            total_tokens: output.usageMetadata.totalTokenCount ?? 0,
+          };
       }
       const chunk =
         output !== null

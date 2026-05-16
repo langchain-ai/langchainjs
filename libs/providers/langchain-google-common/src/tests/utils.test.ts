@@ -848,6 +848,110 @@ describe("streaming", () => {
   });
 });
 
+describe("gemini responseToUsageMetadata", () => {
+  test("includes cache_read and reasoning in usage metadata", () => {
+    const api = getGeminiAPI();
+    const response = {
+      data: {
+        candidates: [],
+        usageMetadata: {
+          promptTokenCount: 100,
+          candidatesTokenCount: 50,
+          totalTokenCount: 160,
+          cachedContentTokenCount: 30,
+          thoughtsTokenCount: 10,
+          toolUsePromptTokenCount: 0,
+          promptTokensDetails: [{ modality: "TEXT", tokenCount: 100 }],
+          toolUsePromptTokensDetails: [],
+          cacheTokensDetails: [],
+          candidatesTokensDetails: [{ modality: "TEXT", tokenCount: 50 }],
+        },
+      },
+    };
+
+    const usage = api.responseToUsageMetadata!(response as any);
+    expect(usage).toBeDefined();
+    expect(usage!.input_tokens).toBe(100);
+    expect(usage!.output_tokens).toBe(60); // candidatesTokenCount + thoughtsTokenCount
+    expect(usage!.total_tokens).toBe(160);
+    expect(usage!.input_token_details?.cache_read).toBe(30);
+    expect(usage!.output_token_details?.reasoning).toBe(10);
+  });
+
+  test("omits cache_read when cachedContentTokenCount is absent", () => {
+    const api = getGeminiAPI();
+    const response = {
+      data: {
+        candidates: [],
+        usageMetadata: {
+          promptTokenCount: 50,
+          candidatesTokenCount: 20,
+          totalTokenCount: 70,
+          toolUsePromptTokenCount: 0,
+          promptTokensDetails: [],
+          toolUsePromptTokensDetails: [],
+          cacheTokensDetails: [],
+          candidatesTokensDetails: [],
+        },
+      },
+    };
+
+    const usage = api.responseToUsageMetadata!(response as any);
+    expect(usage).toBeDefined();
+    expect(usage!.input_token_details?.cache_read).toBeUndefined();
+  });
+
+  test("streaming responseToChatGeneration includes usage_metadata on last chunk", () => {
+    const api = getGeminiAPI();
+
+    // Middle chunk - no finishReason, no usageMetadata
+    const midResponse = {
+      data: {
+        candidates: [
+          {
+            content: { parts: [{ text: "Hello" }], role: "model" },
+            index: 0,
+          },
+        ],
+      },
+    };
+    const midChunk = api.responseToChatGeneration(midResponse as any);
+    const midMessage = midChunk?.message as AIMessageChunk;
+    expect(midMessage.usage_metadata).toBeUndefined();
+
+    // Last chunk - has finishReason and usageMetadata
+    const lastResponse = {
+      data: {
+        candidates: [
+          {
+            content: { parts: [{ text: " world" }], role: "model" },
+            finishReason: "STOP",
+            index: 0,
+          },
+        ],
+        usageMetadata: {
+          promptTokenCount: 10,
+          candidatesTokenCount: 5,
+          totalTokenCount: 20,
+          cachedContentTokenCount: 7,
+          thoughtsTokenCount: 3,
+          toolUsePromptTokenCount: 0,
+          promptTokensDetails: [],
+          toolUsePromptTokensDetails: [],
+          cacheTokensDetails: [],
+          candidatesTokensDetails: [],
+        },
+      },
+    };
+    const lastChunk = api.responseToChatGeneration(lastResponse as any);
+    const lastMessage = lastChunk?.message as AIMessageChunk;
+    expect(lastMessage.usage_metadata).toBeDefined();
+    expect(lastMessage.usage_metadata?.input_tokens).toBe(10);
+    expect(lastMessage.usage_metadata?.input_token_details?.cache_read).toBe(7);
+    expect(lastMessage.usage_metadata?.output_token_details?.reasoning).toBe(3);
+  });
+});
+
 describe("gemini image URL handling", () => {
   test("handles image_url with external URL and infers MIME type", async () => {
     const api = getGeminiAPI();
