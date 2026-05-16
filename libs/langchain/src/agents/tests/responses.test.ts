@@ -16,7 +16,6 @@ import {
   ProviderStrategy,
   ToolStrategy,
 } from "../responses.js";
-import { StructuredOutputParsingError } from "../errors.js";
 
 function makeSerializableSchema(
   jsonSchema: Record<string, unknown> = {
