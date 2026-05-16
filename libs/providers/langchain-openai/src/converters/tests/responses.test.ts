@@ -2224,10 +2224,12 @@ describe("convertResponsesDeltaToChatGenerationChunk - json_schema with tool cal
   });
 });
 
-describe("convertResponsesDeltaToChatGenerationChunk - json_schema with trailing characters (#10894)", () => {
-  it("should not throw when response text contains valid JSON followed by trailing characters", () => {
+describe("convertResponsesDeltaToChatGenerationChunk - json_schema with trailing non-whitespace characters (#10894)", () => {
+  it("should not throw when response text contains valid JSON followed by a trailing non-whitespace character", () => {
     // gpt-5-mini on service_tier: "auto" intermittently emits trailing
-    // characters after a valid JSON object on the Responses API. Previously
+    // characters after a valid JSON object on the Responses API. JSON.parse
+    // accepts trailing whitespace, so the failure mode is specifically
+    // trailing non-whitespace (extra tokens, control characters). Previously
     // the bare JSON.parse threw SyntaxError and killed the stream. The
     // conversion should now degrade gracefully: additional_kwargs.parsed is
     // left undefined, the rest of the message converts normally, and the
@@ -2253,7 +2255,7 @@ describe("convertResponsesDeltaToChatGenerationChunk - json_schema with trailing
             content: [
               {
                 type: "output_text",
-                text: '{"status":"ok","plan":{"steps":[]}} ',
+                text: '{"status":"ok","plan":{"steps":[]}}x',
                 annotations: [],
               },
             ],
