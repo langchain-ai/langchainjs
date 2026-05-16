@@ -320,6 +320,49 @@ describe("convertCompletionsMessageToBaseMessage", () => {
       });
     });
 
+    it("should preserve tool_calls for output_version v1 assistant messages", () => {
+      const message = new AIMessage({
+        content: [
+          {
+            type: "tool_call",
+            id: "call_123",
+            name: "someFunction",
+            args: { key: "value" },
+          },
+        ],
+        tool_calls: [
+          {
+            id: "call_123",
+            name: "someFunction",
+            args: { key: "value" },
+          },
+        ],
+        response_metadata: {
+          output_version: "v1",
+        },
+      });
+
+      const result = convertMessagesToCompletionsMessageParams({
+        messages: [message],
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({
+        role: "assistant",
+        content: [],
+        tool_calls: [
+          {
+            id: "call_123",
+            type: "function",
+            function: {
+              name: "someFunction",
+              arguments: '{"key":"value"}',
+            },
+          },
+        ],
+      });
+    });
+
     it("should preserve content with function_call in additional_kwargs", () => {
       const message = new AIMessage({
         content: "Let me call a function for you.",
