@@ -18,6 +18,7 @@ import {
   convertStandardContentMessageToResponsesInput,
   ResponsesCreateInvoke,
 } from "../responses.js";
+import type { ChatOpenAIReasoningSummary } from "../../types.js";
 
 describe("convertResponsesUsageToUsageMetadata", () => {
   it("should convert OpenAI Responses usage to LangChain format with cached tokens", () => {
@@ -491,6 +492,53 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
         (block) => block.type === "reasoning"
       );
       expect(reasoningBlocks.length).toBe(0);
+    });
+
+    it("captures encrypted_content from response.output_item.done for reasoning items", () => {
+      // Repro for the case where ZDR + include: ["reasoning.encrypted_content"]
+      // is used. The `output_item.added` event arrives with no encrypted_content
+      // (still streaming); the final reasoning item is delivered on
+      // `output_item.done`. Without this branch the encrypted blob would be
+      // dropped and `convertMessagesToResponsesInput` would refuse to thread
+      // the reasoning back into the next round.
+      const addedEvent = {
+        type: "response.output_item.added",
+        output_index: 0,
+        item: {
+          type: "reasoning",
+          id: "rs_abc123",
+          summary: [],
+        },
+      };
+      const doneEvent = {
+        type: "response.output_item.done",
+        output_index: 0,
+        item: {
+          type: "reasoning",
+          id: "rs_abc123",
+          encrypted_content: "ENCRYPTED_BLOB",
+          status: "completed",
+          summary: [],
+        },
+      };
+
+      const addedChunk = convertResponsesDeltaToChatGenerationChunk(
+        addedEvent as any
+      );
+      const doneChunk = convertResponsesDeltaToChatGenerationChunk(
+        doneEvent as any
+      );
+      expect(addedChunk).not.toBeNull();
+      expect(doneChunk).not.toBeNull();
+
+      const merged = addedChunk!.concat(doneChunk!);
+      const reasoning = (merged.message as AIMessageChunk).additional_kwargs
+        .reasoning as ChatOpenAIReasoningSummary | undefined;
+
+      expect(reasoning).toBeDefined();
+      expect(reasoning?.id).toBe("rs_abc123");
+      expect(reasoning?.encrypted_content).toBe("ENCRYPTED_BLOB");
+      expect(reasoning?.status).toBe("completed");
     });
 
     it("should not add reasoning to content when delta is empty on response.reasoning_summary_text.delta", () => {
