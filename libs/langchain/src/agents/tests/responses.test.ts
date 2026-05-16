@@ -533,6 +533,8 @@ describe("structured output handling", () => {
     });
 
     describe("error handling on parse failure", () => {
+      const errorMessage = /did not satisfy the provided response/;
+
       it("should throw when a terminal response cannot be parsed as JSON", async () => {
         const model = fakeModel().respond(
           new AIMessage({ content: "I cannot answer that question." })
@@ -549,7 +551,7 @@ describe("structured output handling", () => {
 
         await expect(
           agent.invoke({ messages: [{ role: "user", content: "hi" }] })
-        ).rejects.toThrow(StructuredOutputParsingError);
+        ).rejects.toThrow(errorMessage);
       });
 
       it("should throw when a terminal response is valid JSON but does not satisfy the schema", async () => {
@@ -568,7 +570,7 @@ describe("structured output handling", () => {
 
         await expect(
           agent.invoke({ messages: [{ role: "user", content: "hi" }] })
-        ).rejects.toThrow(StructuredOutputParsingError);
+        ).rejects.toThrow(errorMessage);
       });
 
       it("should throw when a bare Zod responseFormat auto-promoted to providerStrategy fails to parse", async () => {
@@ -587,7 +589,7 @@ describe("structured output handling", () => {
 
         await expect(
           agent.invoke({ messages: [{ role: "user", content: "hi" }] })
-        ).rejects.toThrow(/structured output/i);
+        ).rejects.toThrow(errorMessage);
       });
     });
 
