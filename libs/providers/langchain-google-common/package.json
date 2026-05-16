@@ -29,7 +29,6 @@
   },
   "devDependencies": {
     "@langchain/core": "workspace:^",
-    "@types/uuid": "^10.0.0",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
     "dotenv": "^17.4.0",
