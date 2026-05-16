@@ -1106,8 +1106,19 @@ export class ChatBedrockConverse
             return;
           }
           if (chunk.contentBlockStart) {
-            yield handleConverseStreamContentBlockStart(
+            const toolCallStartChunk = handleConverseStreamContentBlockStart(
               chunk.contentBlockStart
+            );
+            yield toolCallStartChunk;
+            await runManager?.handleLLMNewToken(
+              toolCallStartChunk.text,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              {
+                chunk: toolCallStartChunk,
+              }
             );
           } else if (chunk.contentBlockDelta) {
             const textChatGeneration = handleConverseStreamContentBlockDelta(
