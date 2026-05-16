@@ -1,0 +1,57 @@
+import { AIMessageChunk } from "@langchain/core/messages";
+import { LangSmithParams } from "@langchain/core/language_models/chat_models";
+import { ChatModelUnitTests } from "@langchain/standard-tests/vitest";
+import {
+  ChatWatsonx,
+  ChatWatsonxInput,
+  WatsonxCallOptionsChat,
+} from "../ibm.js";
+
+class ChatWatsonxStandardTests extends ChatModelUnitTests<
+  WatsonxCallOptionsChat,
+  AIMessageChunk,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ChatWatsonxInput & Record<string, any>
+> {
+  constructor() {
+    super({
+      Cls: ChatWatsonx,
+      chatModelHasToolCalling: true,
+      chatModelHasStructuredOutput: true,
+      constructorArgs: {
+        model: "ibm/granite-4-h-small",
+        watsonxAIApikey: "testString",
+        version: "2024-05-31",
+        serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
+        projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
+        watsonxAIAuthType: "iam",
+      },
+    });
+  }
+
+  expectedLsParams(): Partial<LangSmithParams> {
+    console.warn(
+      "ChatWatsonx does not support stop sequences. Overwrite params.",
+    );
+    return {
+      ls_provider: "watsonx",
+      ls_model_name: "string",
+      ls_model_type: "chat",
+      ls_temperature: 0,
+      ls_max_tokens: 0,
+    };
+  }
+
+  testChatModelInitApiKey() {
+    this.skipTestMessage(
+      "testChatModelInitApiKey",
+      "ChatWatsonx",
+      "Watsonx does not support init with apiKey parameter" +
+        "Watsonx only supports watsonxApiKey.",
+    );
+  }
+}
+
+const testClass = new ChatWatsonxStandardTests();
+
+testClass.runTests();
