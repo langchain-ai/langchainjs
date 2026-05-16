@@ -660,10 +660,20 @@ export const convertStandardContentMessageToCompletionsMessage: Converter<
       content: message.contentBlocks.filter((block) => block.type === "text"),
     };
   } else if (role === "assistant") {
-    return {
-      role: "assistant",
-      content: message.contentBlocks.filter((block) => block.type === "text"),
-    };
+    const completionParam: OpenAIClient.Chat.Completions.ChatCompletionAssistantMessageParam =
+      {
+        role: "assistant",
+        content: message.contentBlocks.filter((block) => block.type === "text"),
+      };
+    if (AIMessage.isInstance(message) && !!message.tool_calls?.length) {
+      completionParam.tool_calls = message.tool_calls.map(
+        convertLangChainToolCallToOpenAI
+      ) as OpenAIClient.Chat.Completions.ChatCompletionMessageToolCall[];
+    } else if (message.additional_kwargs.tool_calls != null) {
+      completionParam.tool_calls = message.additional_kwargs
+        .tool_calls as OpenAIClient.Chat.Completions.ChatCompletionMessageToolCall[];
+    }
+    return completionParam;
   } else if (role === "tool" && ToolMessage.isInstance(message)) {
     return {
       role: "tool",
