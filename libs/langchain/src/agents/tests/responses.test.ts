@@ -7,6 +7,8 @@ import { ChatAnthropic } from "@langchain/anthropic";
 import { AIMessage } from "@langchain/core/messages";
 import type { SerializableSchema } from "@langchain/core/utils/standard_schema";
 
+import { fakeModel } from "@langchain/core/testing";
+
 import { createAgent, toolStrategy, providerStrategy } from "../index.js";
 import { FakeToolCallingModel, FakeToolCallingChatModel } from "./utils.js";
 import {
@@ -532,11 +534,9 @@ describe("structured output handling", () => {
 
     describe("error handling on parse failure", () => {
       it("should throw when a terminal response cannot be parsed as JSON", async () => {
-        const model = new FakeToolCallingChatModel({
-          responses: [
-            new AIMessage({ content: "I cannot answer that question." }),
-          ],
-        });
+        const model = fakeModel().respond(
+          new AIMessage({ content: "I cannot answer that question." })
+        );
         const agent = createAgent({
           model,
           tools: [],
@@ -553,9 +553,9 @@ describe("structured output handling", () => {
       });
 
       it("should throw when a terminal response is valid JSON but does not satisfy the schema", async () => {
-        const model = new FakeToolCallingChatModel({
-          responses: [new AIMessage({ content: '{"foo":"bar"}' })],
-        });
+        const model = fakeModel().respond(
+          new AIMessage({ content: '{"foo":"bar"}' })
+        );
         const agent = createAgent({
           model,
           tools: [],
