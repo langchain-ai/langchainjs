@@ -1,5 +1,43 @@
 # @langchain/openrouter
 
+## 0.2.4
+
+### Patch Changes
+
+- [#10812](https://github.com/langchain-ai/langchainjs/pull/10812) [`67ba9f8`](https://github.com/langchain-ai/langchainjs/commit/67ba9f8217e31da6b4d513f91fc6d83109b8b706) Thanks [@open-swe](https://github.com/apps/open-swe)! - feat(openrouter): add `sessionId` and `trace` request fields
+
+## 0.2.3
+
+### Patch Changes
+
+- Updated dependencies [[`dc20c0e`](https://github.com/langchain-ai/langchainjs/commit/dc20c0ecaad125d7e916813419548c068996d3c2), [`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6)]:
+  - @langchain/openai@1.4.5
+
+## 0.2.2
+
+### Patch Changes
+
+- Updated dependencies [[`2301260`](https://github.com/langchain-ai/langchainjs/commit/2301260ae90ead5c5f725c8dae1487b6722607e2)]:
+  - @langchain/openai@1.4.4
+
+## 0.2.1
+
+### Patch Changes
+
+- Updated dependencies [[`6b8ef6c`](https://github.com/langchain-ai/langchainjs/commit/6b8ef6c95e061af47af206926598c983d878f72a)]:
+  - @langchain/openai@1.4.3
+
+## 0.2.0
+
+### Minor Changes
+
+- [#10559](https://github.com/langchain-ai/langchainjs/pull/10559) [`17aedaa`](https://github.com/langchain-ai/langchainjs/commit/17aedaabfca680a9f8bb8f858395ee1ee4f152a1) Thanks [@mdrxy](https://github.com/mdrxy)! - Add `appCategories` field for OpenRouter marketplace attribution (`X-OpenRouter-Categories` header) and update default `siteUrl`/`siteName` values. Attribution headers are now only sent when set.
+
+### Patch Changes
+
+- Updated dependencies [[`d6bf4fc`](https://github.com/langchain-ai/langchainjs/commit/d6bf4fc91b2c2eb931bf3bc7606b1817632bc8c1)]:
+  - @langchain/openai@1.4.2
+
 ## 0.1.10
 
 ### Patch Changes

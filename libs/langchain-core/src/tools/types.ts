@@ -78,8 +78,7 @@ export type ToolReturnType<TInput, TConfig, TOutput> =
  * Base type that establishes the types of input schemas that can be used for LangChain tool
  * definitions.
  */
-// oxlint-disable-next-line @typescript-eslint/no-explicit-any
-export type ToolInputSchemaBase = ZodV3Like<any, any> | JSONSchema;
+export type ToolInputSchemaBase = InteropZodType | JSONSchema;
 
 /**
  * Parameters for the Tool classes.

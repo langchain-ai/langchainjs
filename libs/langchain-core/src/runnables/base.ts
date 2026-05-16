@@ -1,5 +1,5 @@
 import { z } from "zod/v3";
-import { v7 as uuidv7 } from "uuid";
+import { v7 as uuidv7 } from "../utils/uuid/index.js";
 
 import {
   type TraceableFunction,
@@ -677,6 +677,9 @@ export abstract class Runnable<
    * jsonpatch ops that describe how the state of the run has changed in each
    * step, and the final state of the run.
    * The jsonpatch ops can be applied in order to construct state.
+   *
+   * @deprecated Use `.stream()` instead.
+   *
    * @param input
    * @param options
    * @param streamOptions
@@ -850,6 +853,42 @@ export abstract class Runnable<
    */
   streamEvents(
     input: RunInput,
+    options: Partial<CallOptions> & { version: "v2" },
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<StreamEvent>;
+
+  streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & {
+      version: "v2";
+      encoding: "text/event-stream";
+    },
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<Uint8Array>;
+
+  /**
+   * @deprecated Use version "v2" or `.stream()` instead.
+   */
+  streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & { version: "v1" },
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<StreamEvent>;
+
+  /**
+   * @deprecated Use version "v2" or `.stream()` instead.
+   */
+  streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & {
+      version: "v1";
+      encoding: "text/event-stream";
+    },
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<Uint8Array>;
+
+  streamEvents(
+    input: RunInput,
     options: Partial<CallOptions> & { version: "v1" | "v2" },
     streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
   ): IterableReadableStream<StreamEvent>;
@@ -881,6 +920,7 @@ export abstract class Runnable<
         `Only versions "v1" and "v2" of the schema are currently supported.`
       );
     }
+
     if (options.encoding === "text/event-stream") {
       return convertToHttpEventStream(stream);
     } else {
@@ -1415,6 +1455,42 @@ export class RunnableBinding<
       await this._mergeConfig(ensureConfig(options), this.kwargs)
     );
   }
+
+  streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & { version: "v2" },
+    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<StreamEvent>;
+
+  streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & {
+      version: "v2";
+      encoding: "text/event-stream";
+    },
+    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<Uint8Array>;
+
+  /**
+   * @deprecated Use version "v2" or `.stream()` instead.
+   */
+  streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & { version: "v1" },
+    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<StreamEvent>;
+
+  /**
+   * @deprecated Use version "v2" or `.stream()` instead.
+   */
+  streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & {
+      version: "v1";
+      encoding: "text/event-stream";
+    },
+    streamOptions?: Omit<LogStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<Uint8Array>;
 
   streamEvents(
     input: RunInput,

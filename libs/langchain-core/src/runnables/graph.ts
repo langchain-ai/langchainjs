@@ -1,4 +1,4 @@
-import { v4 as uuidv4, validate as isUuid } from "uuid";
+import { v4 as uuidv4, validate as isUuid } from "../utils/uuid/index.js";
 import type {
   RunnableInterface,
   RunnableIOSchema,

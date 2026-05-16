@@ -1,5 +1,70 @@
 # @langchain/core
 
+## 1.1.46
+
+### Patch Changes
+
+- [#10847](https://github.com/langchain-ai/langchainjs/pull/10847) [`1659e7d`](https://github.com/langchain-ai/langchainjs/commit/1659e7d36e31e315c890fa98f43db887f7a2d52b) Thanks [@hntrl](https://github.com/hntrl)! - chore(core): reduce transitive dependency exposure and tighten release hygiene
+
+  Remove direct runtime dependencies on `ansi-styles`, `camelcase`, and `decamelize`
+  by inlining equivalent logic in core internals, and enable npm provenance in the
+  release workflow.
+
+- [#10790](https://github.com/langchain-ai/langchainjs/pull/10790) [`ef78bc6`](https://github.com/langchain-ai/langchainjs/commit/ef78bc6a21f9a8808ba95c98db2023f0a6b51bcc) Thanks [@Genmin](https://github.com/Genmin)! - fix(core): keep different content block types separate when merging chunks
+
+## 1.1.45
+
+### Patch Changes
+
+- [#10833](https://github.com/langchain-ai/langchainjs/pull/10833) [`6cf39fe`](https://github.com/langchain-ai/langchainjs/commit/6cf39fe9636804f6280db0b98c4a4c72d5b103a0) Thanks [@colifran](https://github.com/colifran)! - chore(core): deprecate streamLog, streamEvents v1, RunnableWithMessageHistory and improve threat model verbiage for loads
+
+- [#10835](https://github.com/langchain-ai/langchainjs/pull/10835) [`0aebe50`](https://github.com/langchain-ai/langchainjs/commit/0aebe5054cfb982f09d9775b017317a731b6576f) Thanks [@colifran](https://github.com/colifran)! - fix(core): deno re-declaration in LangSmith is causing unit test failures
+
+## 1.1.44
+
+### Patch Changes
+
+- [#10822](https://github.com/langchain-ai/langchainjs/pull/10822) [`922a040`](https://github.com/langchain-ai/langchainjs/commit/922a040421391700fd92e04e6f44a37e3f24710b) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): translate content block delta for other models
+
+## 1.1.43
+
+### Patch Changes
+
+- [#10814](https://github.com/langchain-ai/langchainjs/pull/10814) [`dfec1b7`](https://github.com/langchain-ai/langchainjs/commit/dfec1b7f8b2c530a43f639dc79d4965a80ea4b79) Thanks [@hntrl](https://github.com/hntrl)! - fix(google): restore structured output parsing with includeRaw and reasoning blocks
+
+  Ensure structured output parsers read `BaseMessage` text content when `includeRaw: true`, so responses that include reasoning/thought blocks plus JSON text continue to parse correctly.
+
+- [#10772](https://github.com/langchain-ai/langchainjs/pull/10772) [`1ba7131`](https://github.com/langchain-ai/langchainjs/commit/1ba71319150847438fa517fe612f65cfed85ffab) Thanks [@christian-bromann](https://github.com/christian-bromann)! - chore(core): new stream primitives
+
+## 1.1.42
+
+### Patch Changes
+
+- [#10776](https://github.com/langchain-ai/langchainjs/pull/10776) [`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6) Thanks [@hntrl](https://github.com/hntrl)! - fix(deps): remediate uuid vulnerability by removing direct uuid usage
+
+## 1.1.41
+
+### Patch Changes
+
+- [#10733](https://github.com/langchain-ai/langchainjs/pull/10733) [`589f29c`](https://github.com/langchain-ai/langchainjs/commit/589f29ce844eb252c2d5e6b0f8d26de37763a0d7) Thanks [@jacoblee93](https://github.com/jacoblee93)! - fix(core): Update inheritance behavior for tracer metadata for special keys
+
+- [#10711](https://github.com/langchain-ai/langchainjs/pull/10711) [`2e9e696`](https://github.com/langchain-ai/langchainjs/commit/2e9e6969e248a53ede0659a41d0ac8dbaf291ab4) Thanks [@jacoblee93](https://github.com/jacoblee93)! - feat(core): Add chat model and llm invocation params to traced metadata
+
+## 1.1.40
+
+### Patch Changes
+
+- [#10694](https://github.com/langchain-ai/langchainjs/pull/10694) [`d3e0809`](https://github.com/langchain-ai/langchainjs/commit/d3e080995bb267bf3797067ab53c96bc2a6c8e3f) Thanks [@hntrl](https://github.com/hntrl)! - refactor(core): decouple tracer-only metadata defaults from runnable metadata
+  - Add tracer-scoped inheritable metadata/tag options in callback manager while keeping backward-compatible aliases.
+  - Move configurable-to-tracing metadata derivation into a tracer-only path and keep `ensureConfig` metadata mirroring limited to `model`.
+  - Update `LangChainTracer` default metadata/tag handling and add regression tests for stream events metadata behavior.
+
+## 1.1.39
+
+### Patch Changes
+
+- [#10430](https://github.com/langchain-ai/langchainjs/pull/10430) [`d3d0922`](https://github.com/langchain-ai/langchainjs/commit/d3d0922c24afcd3006fb94dcadd3ebe08fbf2383) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(langchain): support for browser tools
+
 ## 1.1.38
 
 ### Patch Changes
