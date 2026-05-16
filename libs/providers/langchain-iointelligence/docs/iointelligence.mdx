@@ -1,0 +1,122 @@
+---
+title: "ChatIOIntelligence integration"
+description: "Integrate with the ChatIOIntelligence chat model using LangChain JavaScript."
+---
+
+# ChatIOIntelligence
+
+[IO Intelligence](https://intelligence.io.solutions/) provides access to a wide range of open-source and proprietary models through an OpenAI-compatible API, powered by decentralized GPU infrastructure.
+
+This guide will help you getting started with `ChatIOIntelligence` [chat models](/oss/langchain/models). For detailed documentation of all `ChatIOIntelligence` features and configurations head to the [API reference](https://api.js.langchain.com/classes/_langchain_iointelligence.ChatIOIntelligence.html).
+
+## Overview
+
+### Integration details
+
+| Class | Package | Serializable | [PY support](https://python.langchain.com) | Package latest |
+| :--- | :--- | :---: | :---: | :---: |
+| `ChatIOIntelligence` | [`@langchain/iointelligence`](https://npmjs.com/@langchain/iointelligence) | ✅ | ❌ | ![NPM - Version](https://img.shields.io/npm/v/@langchain/iointelligence?style=flat-square&label=%20&) |
+
+### Model features
+
+| [Tool calling](/oss/javascript/docs/how_to/tool_calling) | [Structured output](/oss/javascript/docs/how_to/structured_output) | Image input | Audio input | Video input | [Token-level streaming](/oss/javascript/docs/how_to/chat_streaming) | [Token usage](/oss/javascript/docs/how_to/chat_token_usage_tracking) | [Logprobs](/oss/javascript/docs/how_to/logprobs) |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ |
+
+## Setup
+
+To access IO Intelligence models you'll need to create an IO Intelligence account, get an API key, and install the `@langchain/iointelligence` integration package.
+
+### Credentials
+
+Head to [IO Intelligence](https://intelligence.io.solutions/) to sign up and generate an API key.
+
+```bash
+export IO_INTELLIGENCE_API_KEY="your-api-key"
+```
+
+If you want to get automated tracing of your model calls you can also set your [LangSmith](https://docs.smith.langchain.com/) API key by uncommenting below:
+
+```bash
+# export LANGSMITH_TRACING="true"
+# export LANGSMITH_API_KEY="your-api-key"
+```
+
+### Installation
+
+The LangChain ChatIOIntelligence integration lives in the `@langchain/iointelligence` package:
+
+<CodeGroup>
+
+```bash npm
+npm install @langchain/iointelligence @langchain/core
+```
+
+```bash yarn
+yarn add @langchain/iointelligence @langchain/core
+```
+
+```bash pnpm
+pnpm add @langchain/iointelligence @langchain/core
+```
+
+</CodeGroup>
+
+## Instantiation
+
+Now we can instantiate our model object and generate chat completions:
+
+```typescript
+import { ChatIOIntelligence } from "@langchain/iointelligence";
+
+const llm = new ChatIOIntelligence({
+  model: "meta-llama/Llama-3.3-70B-Instruct",
+  temperature: 0,
+  // other params...
+});
+```
+
+## Invocation
+
+```typescript
+const aiMsg = await llm.invoke([
+  {
+    role: "system",
+    content:
+      "You are a helpful assistant that translates English to French. Translate the user sentence.",
+  },
+  {
+    role: "user",
+    content: "I love programming.",
+  },
+]);
+aiMsg;
+```
+
+```txt
+AIMessage {
+  "content": "J'adore la programmation.",
+  "response_metadata": {
+    "tokenUsage": {
+      "completionTokens": 8,
+      "promptTokens": 31,
+      "totalTokens": 39
+    },
+    "finish_reason": "stop"
+  },
+  "tool_calls": [],
+  "invalid_tool_calls": []
+}
+```
+
+```typescript
+console.log(aiMsg.content);
+```
+
+```txt
+J'adore la programmation.
+```
+
+## API reference
+
+For detailed documentation of all ChatIOIntelligence features and configurations head to the [API reference](https://api.js.langchain.com/classes/_langchain_iointelligence.ChatIOIntelligence.html).
