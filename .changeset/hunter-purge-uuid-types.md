@@ -11,7 +11,6 @@
 "@langchain/pinecone": patch
 "@langchain/qdrant": patch
 "@langchain/redis": patch
-"@langchain/turbopuffer": patch
 "@langchain/weaviate": patch
 "@langchain/xai": patch
 ---
