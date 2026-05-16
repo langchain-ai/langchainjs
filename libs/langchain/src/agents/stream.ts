@@ -166,9 +166,23 @@ function isHeadlessToolInterruptError(
   }
 }
 
-function isSerializedToolMessage(value: unknown): value is {
-  kwargs?: { content?: unknown };
-} {
+/**
+ * Detects serialized LangChain `ToolMessage` values that can appear on
+ * `tool-finished.output` after crossing a protocol or serialization boundary.
+ *
+ * @example
+ * ```ts
+ * {
+ *   lc: 1,
+ *   type: "constructor",
+ *   id: ["langchain_core", "messages", "ToolMessage"],
+ *   kwargs: { content: "raw tool result", tool_call_id: "call_1" }
+ * }
+ * ```
+ */
+function isSerializedToolMessage(
+  value: unknown
+): value is { kwargs?: { content?: unknown } } {
   if (value == null || typeof value !== "object") return false;
   const record = value as Record<string, unknown>;
   if (record.type !== "constructor" || !Array.isArray(record.id)) return false;
