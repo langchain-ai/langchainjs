@@ -32,14 +32,14 @@
   "devDependencies": {
     "@jest/globals": "^30.4.0",
     "@langchain/core": "workspace:^",
-    "@swc/core": "^1.15.21",
+    "@swc/core": "^1.15.33",
     "@swc/jest": "^0.2.29",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
     "dotenv": "^17.4.0",
     "dpdm": "^3.14.0",
-    "jest": "^30.3.0",
-    "jest-environment-node": "^30.3.0",
+    "jest": "^30.4.2",
+    "jest-environment-node": "^30.4.1",
     "ts-jest": "^29.4.9",
     "typescript": "~5.8.3",
     "zod": "^3.25.76"
