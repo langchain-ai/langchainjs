@@ -7,6 +7,8 @@ import { ChatAnthropic } from "@langchain/anthropic";
 import { AIMessage } from "@langchain/core/messages";
 import type { SerializableSchema } from "@langchain/core/utils/standard_schema";
 
+import { fakeModel } from "@langchain/core/testing";
+
 import { createAgent, toolStrategy, providerStrategy } from "../index.js";
 import { FakeToolCallingModel, FakeToolCallingChatModel } from "./utils.js";
 import {
@@ -526,6 +528,67 @@ describe("structured output handling", () => {
             messages: [{ role: "user", content: "hi" }],
           })
         ).resolves.not.toThrowError();
+      });
+    });
+
+    describe("error handling on parse failure", () => {
+      const errorMessage = /did not satisfy the provided response/;
+
+      it("should throw when a terminal response cannot be parsed as JSON", async () => {
+        const model = fakeModel().respond(
+          new AIMessage({ content: "I cannot answer that question." })
+        );
+        const agent = createAgent({
+          model,
+          tools: [],
+          responseFormat: providerStrategy(
+            z.object({
+              temperature: z.number(),
+            })
+          ),
+        });
+
+        await expect(
+          agent.invoke({ messages: [{ role: "user", content: "hi" }] })
+        ).rejects.toThrow(errorMessage);
+      });
+
+      it("should throw when a terminal response is valid JSON but does not satisfy the schema", async () => {
+        const model = fakeModel().respond(
+          new AIMessage({ content: '{"foo":"bar"}' })
+        );
+        const agent = createAgent({
+          model,
+          tools: [],
+          responseFormat: providerStrategy(
+            z.object({
+              temperature: z.number(),
+            })
+          ),
+        });
+
+        await expect(
+          agent.invoke({ messages: [{ role: "user", content: "hi" }] })
+        ).rejects.toThrow(errorMessage);
+      });
+
+      it("should throw when a bare Zod responseFormat auto-promoted to providerStrategy fails to parse", async () => {
+        const model = new FakeToolCallingChatModel({
+          responses: [
+            new AIMessage({ content: "I cannot answer that question." }),
+          ],
+        });
+        const agent = createAgent({
+          model,
+          tools: [],
+          responseFormat: z.object({
+            temperature: z.number(),
+          }),
+        });
+
+        await expect(
+          agent.invoke({ messages: [{ role: "user", content: "hi" }] })
+        ).rejects.toThrow(errorMessage);
       });
     });
 
