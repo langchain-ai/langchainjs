@@ -1,5 +1,15 @@
 # @langchain/pinecone
 
+## 1.1.0
+
+### Minor Changes
+
+- Support `@pinecone-database/pinecone` v7 by using the SDK's options-object APIs for `upsert` and `deleteMany`, and constructing `Index` with v7 `IndexOptions`.
+
+### BREAKING CHANGES
+
+- The `@pinecone-database/pinecone` peer dependency now requires v7 (`^7.0.0`). Upgrade from v5/v6 before updating `@langchain/pinecone`.
+
 ## 1.0.2
 
 ### Patch Changes
