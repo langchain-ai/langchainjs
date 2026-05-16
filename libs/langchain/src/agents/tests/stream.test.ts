@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { z } from "zod/v3";
-import { AIMessage, HumanMessage } from "@langchain/core/messages";
+import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 import { fakeModel } from "@langchain/core/testing";
 import {
@@ -73,7 +73,70 @@ describe("streamEvents", () => {
     expect(toolCalls[0].callId).toBe("call_1");
     expect(toolCalls[0].status).toBe("finished");
     expect(toolCalls[0].input).toEqual({ a: 3, b: 4 });
-    expect(toolCalls[0].output).toHaveProperty("content", "The sum is 7");
+    expect(toolCalls[0].output).toBe("The sum is 7");
+  });
+
+  it("does not leak tool results through run.messages while consuming tool calls", async () => {
+    const listTool = tool(() => "[]", {
+      name: "list_items",
+      description: "List available items",
+      schema: z.object({}),
+    });
+
+    const model = fakeModel()
+      .respondWithTools([{ name: "list_items", args: {}, id: "call_list" }])
+      .respond(new AIMessage("No items found."));
+
+    const agent = createAgent({
+      model,
+      tools: [listTool],
+      checkpointer: new MemorySaver(),
+    });
+    const run = await agent.streamEvents(
+      { messages: [new HumanMessage("List items")] },
+      {
+        version: "v3",
+        configurable: { thread_id: `tool-stream-${Date.now()}` },
+        recursionLimit: 50,
+      }
+    );
+
+    const [messageTexts, toolOutputs, finalState] = await Promise.all([
+      (async () => {
+        const texts: string[] = [];
+        for await (const msgStream of run.messages) {
+          for await (const event of msgStream) {
+            if (event.event !== "content-block-delta") continue;
+            const delta = (
+              event as { delta?: { type?: string; text?: string } }
+            ).delta;
+            if (delta?.type === "text-delta" && delta.text != null) {
+              texts.push(delta.text);
+            }
+          }
+        }
+        return texts;
+      })(),
+      (async () => {
+        const outputs: unknown[] = [];
+        for await (const call of run.toolCalls) {
+          outputs.push(await call.output);
+        }
+        return outputs;
+      })(),
+      run.output,
+    ]);
+
+    expect(messageTexts).not.toContain("[]");
+    expect(toolOutputs).toEqual(["[]"]);
+    expect(finalState.messages.length).toBeGreaterThanOrEqual(3);
+    expect(finalState.messages[1]).toMatchObject({
+      tool_calls: [expect.objectContaining({ id: "call_list" })],
+    });
+    expect(finalState.messages[2]).toBeInstanceOf(ToolMessage);
+    expect((finalState.messages[2] as ToolMessage).tool_call_id).toBe(
+      "call_list"
+    );
   });
 
   it("should stream messages alongside tool calls", async () => {
@@ -384,6 +447,95 @@ describe("streamEvents", () => {
     expect(pendingCall.value.callId).toBe("call_1");
     expect(await pendingCall.value.status).toBe("finished");
     expect(await pendingCall.value.output).toEqual({ count: 1 });
+    expect(await iterator.next()).toEqual({ done: true, value: undefined });
+  });
+
+  it("unwraps ToolMessage outputs in tool call streams", async () => {
+    const transformer = createToolCallTransformer([])();
+    const projection = transformer.init();
+    const toolEvent = (data: Record<string, unknown>): ProtocolEvent =>
+      ({
+        method: "tools",
+        params: {
+          namespace: ["tools"],
+          data,
+        },
+      }) as ProtocolEvent;
+
+    transformer.process(
+      toolEvent({
+        event: "tool-started",
+        tool_call_id: "call_1",
+        tool_name: "search",
+        input: {},
+      })
+    );
+
+    const iterator = projection.toolCalls[Symbol.asyncIterator]();
+    const pendingCall = await iterator.next();
+
+    transformer.process(
+      toolEvent({
+        event: "tool-finished",
+        tool_call_id: "call_1",
+        output: new ToolMessage({
+          content: "raw result",
+          tool_call_id: "call_1",
+          name: "search",
+        }),
+      })
+    );
+    transformer.finalize?.();
+
+    expect(pendingCall.done).toBe(false);
+    expect(await pendingCall.value.output).toBe("raw result");
+    expect(await iterator.next()).toEqual({ done: true, value: undefined });
+  });
+
+  it("unwraps serialized ToolMessage outputs in tool call streams", async () => {
+    const transformer = createToolCallTransformer([])();
+    const projection = transformer.init();
+    const toolEvent = (data: Record<string, unknown>): ProtocolEvent =>
+      ({
+        method: "tools",
+        params: {
+          namespace: ["tools"],
+          data,
+        },
+      }) as ProtocolEvent;
+
+    transformer.process(
+      toolEvent({
+        event: "tool-started",
+        tool_call_id: "call_1",
+        tool_name: "search",
+        input: {},
+      })
+    );
+
+    const iterator = projection.toolCalls[Symbol.asyncIterator]();
+    const pendingCall = await iterator.next();
+
+    transformer.process(
+      toolEvent({
+        event: "tool-finished",
+        tool_call_id: "call_1",
+        output: {
+          lc: 1,
+          type: "constructor",
+          id: ["langchain_core", "messages", "ToolMessage"],
+          kwargs: {
+            content: "serialized result",
+            tool_call_id: "call_1",
+            name: "search",
+          },
+        },
+      })
+    );
+    transformer.finalize?.();
+
+    expect(pendingCall.done).toBe(false);
+    expect(await pendingCall.value.output).toBe("serialized result");
     expect(await iterator.next()).toEqual({ done: true, value: undefined });
   });
 });

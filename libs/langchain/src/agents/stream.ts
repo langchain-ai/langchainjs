@@ -30,6 +30,7 @@ import type {
   DynamicStructuredTool,
   StructuredToolInterface,
 } from "@langchain/core/tools";
+import { ToolMessage } from "@langchain/core/messages";
 
 /**
  * Infers the merged extensions shape from a tuple of stream transformer
@@ -166,6 +167,39 @@ function isHeadlessToolInterruptError(
 }
 
 /**
+ * Detects serialized LangChain `ToolMessage` values that can appear on
+ * `tool-finished.output` after crossing a protocol or serialization boundary.
+ *
+ * @example
+ * ```ts
+ * {
+ *   lc: 1,
+ *   type: "constructor",
+ *   id: ["langchain_core", "messages", "ToolMessage"],
+ *   kwargs: { content: "raw tool result", tool_call_id: "call_1" }
+ * }
+ * ```
+ */
+function isSerializedToolMessage(
+  value: unknown
+): value is { kwargs?: { content?: unknown } } {
+  if (value == null || typeof value !== "object") return false;
+  const record = value as Record<string, unknown>;
+  if (record.type !== "constructor" || !Array.isArray(record.id)) return false;
+  return record.id[record.id.length - 1] === "ToolMessage";
+}
+
+function normalizeToolOutput(output: unknown): unknown {
+  if (ToolMessage.isInstance(output)) {
+    return output.content;
+  }
+  if (isSerializedToolMessage(output)) {
+    return output.kwargs?.content;
+  }
+  return output;
+}
+
+/**
  * Creates a native transformer that correlates `tools` channel events
  * into per-call {@link ToolCallStream} objects.
  *
@@ -277,7 +311,9 @@ export function createToolCallTransformer(
 
           if (pending) {
             if (data.event === "tool-finished") {
-              pending.resolveOutput((data as Record<string, unknown>).output);
+              pending.resolveOutput(
+                normalizeToolOutput((data as Record<string, unknown>).output)
+              );
               pending.resolveStatus("finished");
               pending.resolveError(undefined);
               pendingCalls.delete(toolCallId);
