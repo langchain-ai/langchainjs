@@ -315,6 +315,85 @@ describe("Google Mock", () => {
     );
   });
 
+  test("mediaResolution uses scalar generation config value from constructor fields", async () => {
+    const params: ChatGoogleParams = {
+      model: "gemini-3-pro-preview",
+      mediaResolution: "MEDIA_RESOLUTION_HIGH",
+    };
+    const llm = newChatGoogle({
+      ...params,
+      responseFile: "gemini-chat-001.json",
+    });
+
+    await llm.invoke("What is 1+1?");
+
+    expect(recorder?.request?.body?.generationConfig?.mediaResolution).toEqual(
+      "MEDIA_RESOLUTION_HIGH"
+    );
+  });
+
+  test("mediaResolution uses scalar generation config value from call options", async () => {
+    const llm = newChatGoogle({
+      model: "gemini-3-pro-preview",
+      responseFile: "gemini-chat-001.json",
+    });
+
+    await llm.invoke("What is 1+1?", {
+      mediaResolution: "MEDIA_RESOLUTION_MEDIUM",
+    });
+
+    expect(recorder?.request?.body?.generationConfig?.mediaResolution).toEqual(
+      "MEDIA_RESOLUTION_MEDIUM"
+    );
+  });
+
+  test("detail maps to mediaResolution from constructor fields", async () => {
+    const llm = newChatGoogle({
+      model: "gemini-3-pro-preview",
+      responseFile: "gemini-chat-001.json",
+      detail: "high",
+    });
+
+    await llm.invoke("What is 1+1?");
+
+    expect(recorder?.request?.body?.generationConfig?.mediaResolution).toEqual(
+      "MEDIA_RESOLUTION_HIGH"
+    );
+  });
+
+  test("detail auto leaves mediaResolution undefined from call options", async () => {
+    const llm = newChatGoogle({
+      model: "gemini-3-pro-preview",
+      responseFile: "gemini-chat-001.json",
+    });
+
+    await llm.invoke("What is 1+1?", {
+      detail: "auto",
+    });
+
+    expect(recorder?.request?.body?.generationConfig).not.toHaveProperty(
+      "mediaResolution"
+    );
+  });
+
+  test("mediaResolution takes precedence over detail", async () => {
+    const llm = newChatGoogle({
+      model: "gemini-3-pro-preview",
+      responseFile: "gemini-chat-001.json",
+      detail: "low",
+      mediaResolution: "MEDIA_RESOLUTION_HIGH",
+    });
+
+    await llm.invoke("What is 1+1?", {
+      detail: "auto",
+      mediaResolution: "MEDIA_RESOLUTION_MEDIUM",
+    });
+
+    expect(recorder?.request?.body?.generationConfig?.mediaResolution).toEqual(
+      "MEDIA_RESOLUTION_MEDIUM"
+    );
+  });
+
   test("passes abort signal to fetch in non-streaming invoke", async () => {
     const apiClient = new MockApiClient({
       fileName: "gemini-chat-001.json",

@@ -1,5 +1,37 @@
 # @langchain/openai
 
+## 1.4.5
+
+### Patch Changes
+
+- [#10749](https://github.com/langchain-ai/langchainjs/pull/10749) [`dc20c0e`](https://github.com/langchain-ai/langchainjs/commit/dc20c0ecaad125d7e916813419548c068996d3c2) Thanks [@open-swe](https://github.com/apps/open-swe)! - fix(openai): add gpt-5.5 and gpt-5.5-pro to profiles, default gpt-5.5-pro to Responses API, bump openai sdk
+
+- [#10776](https://github.com/langchain-ai/langchainjs/pull/10776) [`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6) Thanks [@hntrl](https://github.com/hntrl)! - fix(deps): remediate uuid vulnerability by removing direct uuid usage
+
+- Updated dependencies [[`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6)]:
+  - @langchain/core@1.1.42
+
+## 1.4.4
+
+### Patch Changes
+
+- [#10681](https://github.com/langchain-ai/langchainjs/pull/10681) [`2301260`](https://github.com/langchain-ai/langchainjs/commit/2301260ae90ead5c5f725c8dae1487b6722607e2) Thanks [@hntrl](https://github.com/hntrl)! - fix(openai): add index to streaming reasoning content blocks for proper chunk merging
+
+## 1.4.3
+
+### Patch Changes
+
+- [#10670](https://github.com/langchain-ai/langchainjs/pull/10670) [`6b8ef6c`](https://github.com/langchain-ai/langchainjs/commit/6b8ef6c95e061af47af206926598c983d878f72a) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(openai): preserve plain string responses content
+
+## 1.4.2
+
+### Patch Changes
+
+- [#10614](https://github.com/langchain-ai/langchainjs/pull/10614) [`d6bf4fc`](https://github.com/langchain-ai/langchainjs/commit/d6bf4fc91b2c2eb931bf3bc7606b1817632bc8c1) Thanks [@colifran](https://github.com/colifran)! - feat(openai): imput placeholder filenames for openai file inputs
+
+- Updated dependencies [[`d3d0922`](https://github.com/langchain-ai/langchainjs/commit/d3d0922c24afcd3006fb94dcadd3ebe08fbf2383)]:
+  - @langchain/core@1.1.39
+
 ## 1.4.1
 
 ### Patch Changes

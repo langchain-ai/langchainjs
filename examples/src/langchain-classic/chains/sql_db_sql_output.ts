@@ -1,4 +1,3 @@
-import { DataSource } from "typeorm";
 import { SqlDatabase } from "@langchain/classic/sql_db";
 import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
@@ -10,13 +9,11 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
  * To set it up follow the instructions on https://database.guide/2-sample-databases-sqlite/, placing the .db file
  * in the examples folder.
  */
-const datasource = new DataSource({
-  type: "sqlite",
-  database: "Chinook.db",
-});
-
-const db = await SqlDatabase.fromDataSourceParams({
-  appDataSource: datasource,
+const db = await SqlDatabase.fromOptionsParams({
+  appDataSourceOptions: {
+    type: "sqlite",
+    database: "Chinook.db",
+  },
 });
 
 const llm = new ChatOpenAI({

@@ -1,5 +1,30 @@
 # @langchain/google-genai
 
+## 2.1.30
+
+## 2.1.29
+
+### Patch Changes
+
+- [#10776](https://github.com/langchain-ai/langchainjs/pull/10776) [`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6) Thanks [@hntrl](https://github.com/hntrl)! - fix(deps): remediate uuid vulnerability by removing direct uuid usage
+
+- Updated dependencies [[`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6)]:
+  - @langchain/core@1.1.42
+
+## 2.1.28
+
+### Patch Changes
+
+- Updated dependencies [[`589f29c`](https://github.com/langchain-ai/langchainjs/commit/589f29ce844eb252c2d5e6b0f8d26de37763a0d7), [`2e9e696`](https://github.com/langchain-ai/langchainjs/commit/2e9e6969e248a53ede0659a41d0ac8dbaf291ab4)]:
+  - @langchain/core@1.1.41
+
+## 2.1.27
+
+### Patch Changes
+
+- Updated dependencies [[`d3e0809`](https://github.com/langchain-ai/langchainjs/commit/d3e080995bb267bf3797067ab53c96bc2a6c8e3f)]:
+  - @langchain/core@1.1.40
+
 ## 2.1.26
 
 ### Patch Changes

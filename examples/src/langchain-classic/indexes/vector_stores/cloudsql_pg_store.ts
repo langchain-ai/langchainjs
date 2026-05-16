@@ -77,8 +77,8 @@ await vectorStore.addDocuments(documents, { ids });
 const id1 = ids[0];
 await vectorStore.delete({ ids: [id1] });
 
-// Performing similaritySearch with a filter
-const filter = `"source" = "https://example.com"`;
+// Performing similaritySearch with a metadata filter
+const filter = { source: "https://example.com" };
 const results = await vectorStore.similaritySearch("foo", 2, filter);
 
 for (const doc of results) {

@@ -6,7 +6,9 @@ import {
   ChatMessageChunk,
   HumanMessageChunk,
   SystemMessageChunk,
+  UsageMetadata,
 } from "@langchain/core/messages";
+import { ToolCall } from "@langchain/core/messages/tool";
 import { concat } from "@langchain/core/utils/stream";
 import {
   BaseChatModel,
@@ -148,6 +150,18 @@ export interface PerplexityChatInput extends BaseChatModelParams {
 
   /** Configuration for web search behaviour. */
   webSearchOptions?: WebSearchOptions;
+
+  /**
+   * Whether to use the Perplexity Agent API (Responses-compatible) instead of Chat Completions.
+   *
+   * If `undefined` (default), inferred from the request payload: `true` when the request
+   * uses a built-in Perplexity tool (`web_search`, `fetch_url`, `finance_search`, `people_search`)
+   * or any Responses-only field (`previousResponseId`, `instructions`, `input`, `include`).
+   * `false` otherwise.
+   *
+   * Maps to `client.responses.create()` → `POST /v1/agent` (alias: `/v1/responses`).
+   */
+  useResponsesApi?: boolean;
 }
 
 export interface PerplexityChatCallOptions extends BaseChatModelCallOptions {
@@ -159,6 +173,215 @@ export interface PerplexityChatCallOptions extends BaseChatModelCallOptions {
       schema: Record<string, unknown>;
     };
   };
+
+  /**
+   * Tools to expose to the model. May include OpenAI-style function tools or
+   * Perplexity built-in tools (e.g. `{ type: "web_search" }`). Passing any
+   * built-in tool routes the request to the Agent API automatically.
+   */
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  tools?: Array<Record<string, any>>;
+
+  /**
+   * Continue a prior Agent API turn. Setting this routes to the Agent API
+   * automatically.
+   */
+  previousResponseId?: string;
+
+  /**
+   * System-style instructions for the Agent API. Setting this routes to the
+   * Agent API automatically.
+   */
+  instructions?: string;
+
+  /**
+   * Native Agent API input. When provided it replaces `messages`. Setting this
+   * routes to the Agent API automatically.
+   */
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  input?: unknown;
+
+  /**
+   * Additional Agent API response fields to include. Setting this routes to
+   * the Agent API automatically.
+   */
+  include?: string[];
+}
+
+function _isBuiltinTool(tool: Record<string, unknown>): boolean {
+  return typeof tool.type === "string" && tool.type !== "function";
+}
+
+function _useResponsesApi(payload: Record<string, unknown>): boolean {
+  const tools = payload.tools as Array<Record<string, unknown>> | undefined;
+  const usesBuiltin = Array.isArray(tools) && tools.some(_isBuiltinTool);
+  const responsesOnly = [
+    "previous_response_id",
+    "instructions",
+    "input",
+    "include",
+  ];
+  const hasResponsesOnly = responsesOnly.some((k) => k in payload);
+  return Boolean(usesBuiltin || hasResponsesOnly);
+}
+
+/**
+ * Map a Perplexity Agent API (Responses-compatible) response to a `ChatResult`.
+ */
+export function convertResponsesToChatResult(
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  response: Record<string, any>
+): ChatResult {
+  const outputItems: Array<Record<string, unknown>> = Array.isArray(
+    response.output
+  )
+    ? (response.output as Array<Record<string, unknown>>)
+    : [];
+
+  let text: string = "";
+  if (typeof response.output_text === "string") {
+    text = response.output_text;
+  } else {
+    const parts: string[] = [];
+    for (const item of outputItems) {
+      const content = item.content as
+        | Array<Record<string, unknown>>
+        | undefined;
+      if (Array.isArray(content)) {
+        for (const block of content) {
+          if (typeof block.text === "string") {
+            parts.push(block.text);
+          }
+        }
+      }
+    }
+    text = parts.join("");
+  }
+
+  const toolCalls: ToolCall[] = [];
+  for (const item of outputItems) {
+    if (item.type === "function_call") {
+      let parsedArgs: Record<string, unknown> = {};
+      const raw = item.arguments;
+      if (typeof raw === "string" && raw.length > 0) {
+        try {
+          parsedArgs = JSON.parse(raw);
+        } catch {
+          parsedArgs = { __raw: raw };
+        }
+      } else if (raw && typeof raw === "object") {
+        parsedArgs = raw as Record<string, unknown>;
+      }
+      toolCalls.push({
+        id: (item.call_id as string) ?? (item.id as string) ?? "",
+        name: (item.name as string) ?? "",
+        args: parsedArgs,
+        type: "tool_call",
+      });
+    }
+  }
+
+  const responseMetadata: Record<string, unknown> = {
+    id: response.id,
+    model: response.model,
+    status: response.status,
+    object: response.object,
+  };
+  for (const key of [
+    "citations",
+    "images",
+    "related_questions",
+    "search_results",
+  ] as const) {
+    if (response[key] !== undefined) {
+      responseMetadata[key] = response[key];
+    }
+  }
+
+  let usageMetadata: UsageMetadata | undefined;
+  if (response.usage) {
+    const usage = response.usage as Record<string, unknown>;
+    usageMetadata = {
+      input_tokens: (usage.input_tokens as number) ?? 0,
+      output_tokens: (usage.output_tokens as number) ?? 0,
+      total_tokens: (usage.total_tokens as number) ?? 0,
+    };
+  }
+
+  const additionalKwargs: Record<string, unknown> = {
+    responses_output: outputItems,
+  };
+
+  const message = new AIMessage({
+    content: text,
+    tool_calls: toolCalls,
+    additional_kwargs: additionalKwargs,
+    response_metadata: responseMetadata,
+    usage_metadata: usageMetadata,
+  });
+
+  return {
+    generations: [{ text, message }],
+    llmOutput: {
+      tokenUsage: usageMetadata
+        ? {
+            promptTokens: usageMetadata.input_tokens,
+            completionTokens: usageMetadata.output_tokens,
+            totalTokens: usageMetadata.total_tokens,
+          }
+        : {},
+    },
+  };
+}
+
+/**
+ * Map a single Perplexity Agent API streaming event to a `ChatGenerationChunk`.
+ * Returns `null` for events that do not produce a chunk.
+ */
+export function convertResponsesEventToChunk(
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  event: Record<string, any>
+): ChatGenerationChunk | null {
+  if (!event || typeof event !== "object") return null;
+  if (event.type === "response.output_text.delta") {
+    const delta: string = typeof event.delta === "string" ? event.delta : "";
+    return new ChatGenerationChunk({
+      text: delta,
+      message: new AIMessageChunk({ content: delta }),
+    });
+  }
+  if (event.type === "response.completed") {
+    const usage = event.response?.usage as Record<string, unknown> | undefined;
+    let usageMetadata: UsageMetadata | undefined;
+    if (usage) {
+      usageMetadata = {
+        input_tokens: (usage.input_tokens as number) ?? 0,
+        output_tokens: (usage.output_tokens as number) ?? 0,
+        total_tokens: (usage.total_tokens as number) ?? 0,
+      };
+    }
+    return new ChatGenerationChunk({
+      text: "",
+      message: new AIMessageChunk({
+        content: "",
+        usage_metadata: usageMetadata,
+        response_metadata: event.response
+          ? {
+              id: event.response.id,
+              model: event.response.model,
+              status: event.response.status,
+              object: event.response.object,
+            }
+          : {},
+      }),
+    });
+  }
+  if (event.type === "response.error") {
+    throw new Error(
+      typeof event.message === "string" ? event.message : "Responses API error"
+    );
+  }
+  return null;
 }
 
 /**
@@ -234,6 +457,8 @@ export class ChatPerplexity
 
   webSearchOptions?: WebSearchOptions;
 
+  useResponsesApi?: boolean;
+
   private client: OpenAI;
 
   constructor(fields: PerplexityChatInput) {
@@ -266,6 +491,7 @@ export class ChatPerplexity
     this.disableSearch = fields?.disableSearch;
     this.enableSearchClassifier = fields?.enableSearchClassifier;
     this.webSearchOptions = fields?.webSearchOptions;
+    this.useResponsesApi = fields?.useResponsesApi;
 
     if (!this.apiKey) {
       throw new Error("Perplexity API key not found");
@@ -337,6 +563,84 @@ export class ChatPerplexity
     throw new Error(`Unknown message type: ${message}`);
   }
 
+  /**
+   * Decide whether to route a payload through the Agent API (Responses) or
+   * Chat Completions. Honors the explicit `useResponsesApi` setting when one
+   * was provided; otherwise auto-detects from the payload shape.
+   */
+  protected _useResponsesApi(payload: Record<string, unknown>): boolean {
+    if (typeof this.useResponsesApi === "boolean") return this.useResponsesApi;
+    return _useResponsesApi(payload);
+  }
+
+  /**
+   * Translate a Chat-Completions-shaped payload into the Agent API
+   * (Responses) shape. Non-equivalent Perplexity knobs are stashed under
+   * `extra_body` so they still reach the server.
+   *
+   * Per the Perplexity OpenAI-compatible docs, the Agent API alias accepts
+   * `max_tokens`, so it is passed through unchanged.
+   * https://docs.perplexity.ai/docs/agent-api/openai-compatibility
+   */
+  protected _toResponsesPayload(
+    payload: Record<string, unknown>
+  ): Record<string, unknown> {
+    const out: Record<string, unknown> = {};
+    const passthrough = new Set([
+      "model",
+      "stream",
+      "temperature",
+      "max_tokens",
+      "top_p",
+      "tools",
+      "tool_choice",
+      "instructions",
+      "previous_response_id",
+      "include",
+      "response_format",
+    ]);
+    const extraBody: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(payload)) {
+      if (value === undefined) continue;
+      if (key === "messages") {
+        if (!("input" in payload)) {
+          out.input = value;
+        }
+        continue;
+      }
+      if (key === "input") {
+        out.input = value;
+        continue;
+      }
+      if (passthrough.has(key)) {
+        out[key] = value;
+        continue;
+      }
+      extraBody[key] = value;
+    }
+    if (Object.keys(extraBody).length > 0) {
+      out.extra_body = extraBody;
+    }
+    return out;
+  }
+
+  /**
+   * Collect Agent-API-specific knobs from call options.
+   */
+  private _responsesOptions(
+    options?: this["ParsedCallOptions"]
+  ): Record<string, unknown> {
+    const out: Record<string, unknown> = {};
+    if (options?.tools !== undefined) out.tools = options.tools;
+    if (options?.previousResponseId !== undefined)
+      out.previous_response_id = options.previousResponseId;
+    if (options?.instructions !== undefined)
+      out.instructions = options.instructions;
+    if (options?.input !== undefined) out.input = options.input;
+    if (options?.include !== undefined) out.include = options.include;
+    return out;
+  }
+
   async _generate(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
@@ -346,6 +650,13 @@ export class ChatPerplexity
     const messagesList = messages.map((message) =>
       this.messageToPerplexityRole(message)
     );
+
+    const basePayload: Record<string, unknown> = {
+      messages: messagesList,
+      ...this.invocationParams(options),
+      ...this._responsesOptions(options),
+    };
+    const route = this._useResponsesApi(basePayload);
 
     if (this.streaming) {
       const stream = this._streamResponseChunks(messages, options, runManager);
@@ -364,6 +675,18 @@ export class ChatPerplexity
         .sort(([aKey], [bKey]) => parseInt(aKey, 10) - parseInt(bKey, 10))
         .map(([_, value]) => value);
       return { generations };
+    }
+
+    if (route) {
+      const responsesPayload = this._toResponsesPayload({
+        ...basePayload,
+        stream: false,
+      });
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      const response = await (this.client as any).responses.create(
+        responsesPayload
+      );
+      return convertResponsesToChatResult(response);
     }
 
     const response = await this.client.chat.completions.create({
@@ -409,6 +732,35 @@ export class ChatPerplexity
     const messagesList = messages.map((message) =>
       this.messageToPerplexityRole(message)
     );
+
+    const basePayload: Record<string, unknown> = {
+      messages: messagesList,
+      ...this.invocationParams(options),
+      ...this._responsesOptions(options),
+    };
+
+    if (this._useResponsesApi(basePayload)) {
+      const responsesPayload = this._toResponsesPayload({
+        ...basePayload,
+        stream: true,
+      });
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      const responsesStream = await (this.client as any).responses.create(
+        responsesPayload
+      );
+      for await (const event of responsesStream as AsyncIterable<
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+        Record<string, any>
+      >) {
+        const chunk = convertResponsesEventToChunk(event);
+        if (chunk === null) continue;
+        yield chunk;
+        if (runManager && chunk.text) {
+          await runManager.handleLLMNewToken(chunk.text);
+        }
+      }
+      return;
+    }
 
     const stream = await this.client.chat.completions.create({
       messages: messagesList,

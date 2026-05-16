@@ -1,5 +1,71 @@
 # langchain
 
+## 1.4.0
+
+### Minor Changes
+
+- [#10815](https://github.com/langchain-ai/langchainjs/pull/10815) [`499ce78`](https://github.com/langchain-ai/langchainjs/commit/499ce78a65cddd85b04a38d40f44ac8b65bd085d) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(langchain): adopt new streaming primitives
+
+## 1.3.5
+
+### Patch Changes
+
+- [#10776](https://github.com/langchain-ai/langchainjs/pull/10776) [`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6) Thanks [@hntrl](https://github.com/hntrl)! - fix(deps): remediate uuid vulnerability by removing direct uuid usage
+
+- Updated dependencies [[`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6)]:
+  - @langchain/core@1.1.42
+
+## 1.3.4
+
+### Patch Changes
+
+- [#10713](https://github.com/langchain-ai/langchainjs/pull/10713) [`49ac9e7`](https://github.com/langchain-ai/langchainjs/commit/49ac9e7404e5a9269b9ac047711ee96dd928b231) Thanks [@jacoblee93](https://github.com/jacoblee93)! - feat(langchain): Adds ls_agent_type to create agent runs as tracing metadata
+
+- Updated dependencies [[`589f29c`](https://github.com/langchain-ai/langchainjs/commit/589f29ce844eb252c2d5e6b0f8d26de37763a0d7), [`2e9e696`](https://github.com/langchain-ai/langchainjs/commit/2e9e6969e248a53ede0659a41d0ac8dbaf291ab4)]:
+  - @langchain/core@1.1.41
+
+## 1.3.3
+
+### Patch Changes
+
+- [#9386](https://github.com/langchain-ai/langchainjs/pull/9386) [`71e53f1`](https://github.com/langchain-ai/langchainjs/commit/71e53f1c07bc60e2c2304b10f0edd3c85c62b192) Thanks [@Josh-Engle](https://github.com/Josh-Engle)! - Prevent local file corruption when using `LocalFileStore`
+
+- Updated dependencies [[`d3e0809`](https://github.com/langchain-ai/langchainjs/commit/d3e080995bb267bf3797067ab53c96bc2a6c8e3f)]:
+  - @langchain/core@1.1.40
+
+## 1.3.2
+
+### Patch Changes
+
+- [#10693](https://github.com/langchain-ai/langchainjs/pull/10693) [`5a6e0ab`](https://github.com/langchain-ai/langchainjs/commit/5a6e0ab6617587f3aed19d07bf3ed91994dcdac8) Thanks [@hntrl](https://github.com/hntrl)! - fix(agents): derive middleware hook state from invocation state
+
+  Prevents middleware state from leaking across threads by deriving middleware hook input state from the current invocation state instead of cross-node cached state.
+
+## 1.3.1
+
+### Patch Changes
+
+- [#10673](https://github.com/langchain-ai/langchainjs/pull/10673) [`f069365`](https://github.com/langchain-ai/langchainjs/commit/f0693657b7e5bdbf888a46d04e68431e446c7bc0) Thanks [@hntrl](https://github.com/hntrl)! - bump langgraph dependency to 1.2.8
+
+## 1.3.0
+
+### Minor Changes
+
+- [#10430](https://github.com/langchain-ai/langchainjs/pull/10430) [`d3d0922`](https://github.com/langchain-ai/langchainjs/commit/d3d0922c24afcd3006fb94dcadd3ebe08fbf2383) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(langchain): support for browser tools
+
+### Patch Changes
+
+- [#10591](https://github.com/langchain-ai/langchainjs/pull/10591) [`d7a98cd`](https://github.com/langchain-ai/langchainjs/commit/d7a98cda1a5d9bf9b93b503fc54374f1aaf1a37e) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat: add @langchain/perplexity standalone provider package
+
+- [#10594](https://github.com/langchain-ai/langchainjs/pull/10594) [`884c2d3`](https://github.com/langchain-ai/langchainjs/commit/884c2d3d1b2c49225d73ddec2235ad174db36f86) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(fireworks): extract standalone provider package
+
+- [#10593](https://github.com/langchain-ai/langchainjs/pull/10593) [`0fb6fa4`](https://github.com/langchain-ai/langchainjs/commit/0fb6fa40dcd3a09a4fb91f36c9f2ca869552961e) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(together-ai): migrate Together AI into provider package
+
+- [#10654](https://github.com/langchain-ai/langchainjs/pull/10654) [`3bd85c1`](https://github.com/langchain-ai/langchainjs/commit/3bd85c17869e95d5d1a67c5fccc0c4cab2646616) Thanks [@jabiinfante](https://github.com/jabiinfante)! - feat(langchain): add ChatGoogle support to initChatModel
+
+- Updated dependencies [[`d3d0922`](https://github.com/langchain-ai/langchainjs/commit/d3d0922c24afcd3006fb94dcadd3ebe08fbf2383)]:
+  - @langchain/core@1.1.39
+
 ## 1.2.39
 
 ### Patch Changes

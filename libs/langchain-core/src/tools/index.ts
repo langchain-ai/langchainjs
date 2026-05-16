@@ -583,7 +583,7 @@ export abstract class BaseToolkit {
  * @template {ToolInputSchemaBase} RunInput The input schema for the tool.
  * @template {string} NameT The literal name type for discriminated union support.
  */
-interface ToolWrapperParams<
+export interface ToolWrapperParams<
   RunInput = ToolInputSchemaBase | undefined,
   NameT extends string = string,
 > extends ToolParams {

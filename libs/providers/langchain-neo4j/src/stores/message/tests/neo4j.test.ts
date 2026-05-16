@@ -23,7 +23,7 @@ vi.mock("neo4j-driver", () => {
   };
 });
 
-vi.mock("uuid", () => ({
+vi.mock("@langchain/core/utils/uuid", () => ({
   v4: vi.fn().mockReturnValue("mock-uuid-v4"),
 }));
 

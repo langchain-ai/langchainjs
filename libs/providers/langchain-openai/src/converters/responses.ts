@@ -840,6 +840,7 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
       content.push({
         type: "reasoning",
         reasoning: event.part.text,
+        index: event.summary_index,
       });
     }
   } else if (event.type === "response.reasoning_summary_text.delta") {
@@ -859,6 +860,7 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
       content.push({
         type: "reasoning",
         reasoning: event.delta,
+        index: event.summary_index,
       });
     }
   } else if (event.type === "response.image_generation_call.partial_image") {
@@ -1077,7 +1079,7 @@ export const convertStandardContentMessageToResponsesInput: Converter<
         return {
           type: "input_file",
           file_data: `data:${mimeType};base64,${encoded}`,
-          ...(filename ? { filename } : {}),
+          filename,
         };
       }
       return undefined;
@@ -1466,7 +1468,7 @@ export const convertMessagesToResponsesInput: Converter<
         }
 
         // ai content
-        let { content } = lcMsg as { content: ContentBlock[] };
+        let { content } = lcMsg;
         if (additional_kwargs?.refusal) {
           if (typeof content === "string") {
             content = [{ type: "output_text", text: content, annotations: [] }];
@@ -1508,14 +1510,17 @@ export const convertMessagesToResponsesInput: Converter<
               });
             }) as ResponseInputMessageContentList,
             phase: iife(() => {
-              const index = content.findIndex(
-                (item) => "phase" in item && typeof item.phase === "string"
-              );
-              if (index >= 0) {
-                return content[index]
-                  .phase as OpenAIClient.Responses.EasyInputMessage["phase"];
+              if (!Array.isArray(content)) {
+                return undefined;
               }
-              return undefined;
+
+              const phasedContent = content.find(
+                (item): item is ContentBlock & { phase: string } =>
+                  "phase" in item && typeof item.phase === "string"
+              );
+              return phasedContent?.phase as
+                | OpenAIClient.Responses.EasyInputMessage["phase"]
+                | undefined;
             }),
           };
           input.push(messageItem);

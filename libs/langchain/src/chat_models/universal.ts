@@ -67,6 +67,10 @@ export const MODEL_PROVIDER_CONFIG = {
     package: "@langchain/cohere",
     className: "ChatCohere",
   },
+  google: {
+    package: "@langchain/google",
+    className: "ChatGoogle",
+  },
   "google-vertexai": {
     package: "@langchain/google-vertexai",
     className: "ChatVertexAI",

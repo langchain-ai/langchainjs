@@ -5,7 +5,9 @@
     "outDir": "dist",
     "composite": false,
     "declaration": false,
-    "declarationMap": false
+    "declarationMap": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
   },
   "include": ["src/**/*"],
   "exclude": ["dist", "node_modules"],
@@ -16,7 +18,9 @@
     { "path": "../libs/providers/langchain-anthropic" },
     { "path": "../libs/providers/langchain-aws" },
     { "path": "../libs/providers/langchain-cloudflare" },
+    { "path": "../libs/providers/langchain-cohere" },
     { "path": "../libs/providers/langchain-deepseek" },
+    { "path": "../libs/providers/langchain-exa" },
     { "path": "../libs/providers/langchain-fireworks" },
     { "path": "../libs/providers/langchain-google-cloud-sql-pg" },
     { "path": "../libs/providers/langchain-google-common" },
@@ -31,8 +35,12 @@
     { "path": "../libs/providers/langchain-ollama" },
     { "path": "../libs/providers/langchain-openai" },
     { "path": "../libs/providers/langchain-perplexity" },
+    { "path": "../libs/providers/langchain-pinecone" },
+    { "path": "../libs/providers/langchain-qdrant" },
     { "path": "../libs/providers/langchain-redis" },
+    { "path": "../libs/providers/langchain-tavily" },
     { "path": "../libs/providers/langchain-together-ai" },
+    { "path": "../libs/providers/langchain-weaviate" },
     { "path": "../libs/providers/langchain-xai" }
   ]
 }
