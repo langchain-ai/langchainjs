@@ -1,5 +1,15 @@
 # langchain
 
+## 1.4.1
+
+### Patch Changes
+
+- [#10872](https://github.com/langchain-ai/langchainjs/pull/10872) [`a640079`](https://github.com/langchain-ai/langchainjs/commit/a64007997a4940f51bba3c1c83dae89d1ccfb692) Thanks [@hntrl](https://github.com/hntrl)! - chore(deps): remove redundant @types/uuid declarations
+
+  Remove `@types/uuid` from package manifests that rely on `@langchain/core/utils/uuid` or do not require uuid type stubs directly, and refresh the lockfile entries accordingly.
+
+- [#10160](https://github.com/langchain-ai/langchainjs/pull/10160) [`bba900c`](https://github.com/langchain-ai/langchainjs/commit/bba900c7c8781c7efec856d5d3e539a93f14e797) Thanks [@JadenKim-dev](https://github.com/JadenKim-dev)! - fix(langchain): prevent llmToolSelectorMiddleware from leaking into message stream
+
 ## 1.4.0
 
 ### Minor Changes

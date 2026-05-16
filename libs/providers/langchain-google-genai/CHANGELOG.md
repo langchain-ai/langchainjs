@@ -1,5 +1,7 @@
 # @langchain/google-genai
 
+## 2.1.31
+
 ## 2.1.30
 
 ## 2.1.29

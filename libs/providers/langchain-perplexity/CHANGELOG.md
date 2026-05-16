@@ -1,5 +1,11 @@
 # @langchain/perplexity
 
+## 0.2.1
+
+### Patch Changes
+
+- [#10884](https://github.com/langchain-ai/langchainjs/pull/10884) [`06fa847`](https://github.com/langchain-ai/langchainjs/commit/06fa8478cfdf56e589722f65550a66be985af88a) Thanks [@jliounis](https://github.com/jliounis)! - Add useResponsesApi flag to ChatPerplexity
+
 ## 0.2.0
 
 ### Minor Changes
