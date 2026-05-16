@@ -737,6 +737,12 @@ export type BaseMessageLike =
   | [MessageType, MessageContent]
   | string
   /**
+   * Serialized form of {@link RemoveMessage}. At runtime,
+   * {@link coerceMessageLikeToMessage} converts this to a `RemoveMessage`
+   * instance which the `add_messages` reducer uses to delete messages by ID.
+   */
+  | { type: "remove"; id: string }
+  /**
    * @deprecated Specifying "type" is deprecated and will be removed in 0.4.0.
    */
   | ({
