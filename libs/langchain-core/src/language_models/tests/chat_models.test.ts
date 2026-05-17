@@ -2,7 +2,12 @@ import { test, expect, vi } from "vitest";
 import { z } from "zod/v3";
 import { z as z4 } from "zod/v4";
 import { zodToJsonSchema } from "../../utils/zod-to-json-schema/index.js";
-import { FakeChatModel, FakeListChatModel } from "../../utils/testing/index.js";
+import {
+  FakeChatModel,
+  FakeListChatModel,
+  FakeStreamingChatModel,
+} from "../../utils/testing/index.js";
+import { ChatModelRunnableBinding } from "../../language_models/chat_models.js";
 import { HumanMessage } from "../../messages/human.js";
 import { getBufferString } from "../../messages/utils.js";
 import { AIMessage } from "../../messages/ai.js";
@@ -551,4 +556,43 @@ test("Test ChatModel streaming does not include invocationParams in token events
     expect(chunkStr).not.toContain('"max_tokens":50');
     expect(chunkStr).not.toContain('"model":"streaming-test-model"');
   }
+});
+
+const dummyTool = {
+  name: "get_weather",
+  description: "Get the weather",
+  schema: z.object({ location: z.string() }),
+};
+
+test("bindTools returns ChatModelRunnableBinding", () => {
+  const model = new FakeStreamingChatModel({ toolStyle: "openai" });
+  const bound = model.bindTools([dummyTool]);
+  expect(bound).toBeInstanceOf(ChatModelRunnableBinding);
+});
+
+test("ChatModelRunnableBinding.getTools returns the bound tools", () => {
+  const model = new FakeStreamingChatModel({ toolStyle: "openai" });
+  const bound = model.bindTools([dummyTool]) as ChatModelRunnableBinding;
+  const tools = bound.getTools();
+  expect(Array.isArray(tools)).toBe(true);
+  expect(tools!.length).toBeGreaterThan(0);
+});
+
+test("ChatModelRunnableBinding.withStructuredOutput throws a descriptive error", () => {
+  const model = new FakeStreamingChatModel({ toolStyle: "openai" });
+  const bound = model.bindTools([dummyTool]) as ChatModelRunnableBinding;
+  expect(() => bound.withStructuredOutput(z.object({ answer: z.string() }))).toThrow(
+    /Cannot call "withStructuredOutput" on a model that already has tools bound via "bindTools"/
+  );
+});
+
+test("withStructuredOutput still works on the base model when tools are not bound", async () => {
+  const model = new FakeListChatModel({
+    responses: [`{ "answer": "Paris" }`],
+  });
+  const structured = model.withStructuredOutput(
+    z.object({ answer: z.string() })
+  );
+  const result = await structured.invoke("What is the capital of France?");
+  expect(result).toEqual({ answer: "Paris" });
 });

@@ -46,6 +46,7 @@ import {
 } from "../tools/index.js";
 import {
   Runnable,
+  RunnableBinding,
   RunnableLambda,
   RunnableToolLike,
 } from "../runnables/base.js";
@@ -210,6 +211,56 @@ export type BindToolsInput =
   | StructuredToolParams;
 
 /**
+ * A RunnableBinding returned when tools are bound to a chat model via
+ * bindTools(). Exposes getTools() for inspection and throws a descriptive
+ * error if withStructuredOutput() is called, since both methods rely on
+ * tool calling internally and cannot be composed together.
+ */
+export class ChatModelRunnableBinding extends RunnableBinding<
+  BaseLanguageModelInput,
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  any,
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  any
+> {
+  static lc_name() {
+    return "ChatModelRunnableBinding";
+  }
+
+  /**
+   * Returns the tools currently bound to this model via bindTools().
+   */
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  getTools(): any[] | undefined {
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    return (this.config as any)?.tools;
+  }
+
+  /**
+   * Throws because bindTools() and withStructuredOutput() both rely on tool
+   * calling internally. Using them together causes the bound tools to be
+   * silently overwritten. Call withStructuredOutput() on the base model
+   * instead.
+   */
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  withStructuredOutput(..._args: any[]): never {
+    const tools = this.getTools();
+    const toolInfo =
+      Array.isArray(tools) && tools.length > 0
+        ? ` (currently bound: ${tools
+            // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+            .map((t: any) => t?.function?.name ?? t?.name ?? "unknown")
+            .join(", ")})`
+        : "";
+    throw new Error(
+      `Cannot call "withStructuredOutput" on a model that already has tools bound via "bindTools"${toolInfo}. ` +
+        `Both methods use tool calling internally, which causes the bound tools to be silently overwritten. ` +
+        `Call "withStructuredOutput" on the base model instead.`
+    );
+  }
+}
+
+/**
  * Base class for chat models. It extends the BaseLanguageModel class and
  * provides methods for generating chat based on input messages.
  */
@@ -259,6 +310,21 @@ export abstract class BaseChatModel<
       super._separateRunnableConfigFromCallOptions(options);
     (callOptions as this["ParsedCallOptions"]).signal = runnableConfig.signal;
     return [runnableConfig, callOptions as this["ParsedCallOptions"]];
+  }
+
+  override withConfig(
+    config: Partial<CallOptions>
+  ): Runnable<BaseLanguageModelInput, OutputMessageType, CallOptions> {
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    const rawTools = (config as any).tools;
+    if (Array.isArray(rawTools) && rawTools.length > 0) {
+      return new ChatModelRunnableBinding({
+        bound: this,
+        config,
+        kwargs: {},
+      }) as Runnable<BaseLanguageModelInput, OutputMessageType, CallOptions>;
+    }
+    return super.withConfig(config);
   }
 
   /**
