@@ -36,7 +36,7 @@
     "@aws-sdk/types": "^3.973.6",
     "@langchain/core": "workspace:^",
     "@langchain/standard-tests": "workspace:*",
-    "@smithy/types": "^4.13.1",
+    "@smithy/types": "^4.14.2",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
     "@vitest/coverage-v8": "^3.2.4",

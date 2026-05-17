@@ -127,8 +127,8 @@
     "@types/js-yaml": "^4",
     "@types/uuid": "^11",
     "reflect-metadata": "^0.2.2",
-    "tsx": "^4.21.0",
-    "typeorm": "^0.3.28",
+    "tsx": "^4.22.0",
+    "typeorm": "^0.3.29",
     "typescript": "~6.0.2",
     "zod": "^4.3.6"
   }

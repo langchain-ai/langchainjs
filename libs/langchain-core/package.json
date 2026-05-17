@@ -35,14 +35,14 @@
   "devDependencies": {
     "@langchain/tsconfig": "workspace:*",
     "@types/mustache": "^4",
-    "@types/node": "^25.5.0",
+    "@types/node": "^25.8.0",
     "dotenv": "^17.4.0",
     "dpdm": "^3.14.0",
     "ml-matrix": "^6.10.4",
     "rimraf": "^6.1.3",
     "typescript": "~5.8.3",
     "vitest": "^4.1.2",
-    "web-streams-polyfill": "^4.2.0"
+    "web-streams-polyfill": "^4.3.0"
   },
   "publishConfig": {
     "access": "public"

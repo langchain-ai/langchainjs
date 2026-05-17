@@ -34,7 +34,7 @@
     "changeset:version": "changeset version"
   },
   "devDependencies": {
-    "@changesets/changelog-github": "^0.6.0",
+    "@changesets/changelog-github": "^0.7.0",
     "@changesets/cli": "^2.30.0",
     "@langchain/build": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
@@ -44,12 +44,12 @@
     "commander": "^14.0.3",
     "dotenv": "^17.4.0",
     "lint-staged": "^16.4.0",
-    "oxfmt": "^0.43.0",
-    "oxlint": "^1.58.0",
-    "semver": "^7.7.4",
+    "oxfmt": "^0.50.0",
+    "oxlint": "^1.65.0",
+    "semver": "^7.8.0",
     "tsdown": "^0.21.7",
-    "tsx": "^4.21.0",
-    "turbo": "^2.9.3",
+    "tsx": "^4.22.0",
+    "turbo": "^2.9.14",
     "typescript": "^5.9.3"
   },
   "pnpm": {
