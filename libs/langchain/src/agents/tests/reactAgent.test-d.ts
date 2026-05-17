@@ -8,7 +8,14 @@ import { describe, it, expectTypeOf } from "vitest";
 import type { IterableReadableStream } from "@langchain/core/utils/stream";
 import type { RunnableInterface } from "@langchain/core/runnables";
 
-import { type BuiltInState, createAgent, createMiddleware } from "../index.js";
+import {
+  type AgentTypeConfig,
+  type BuiltInState,
+  createAgent,
+  createMiddleware,
+  type ReactAgent,
+  type ResponseFormatUndefined,
+} from "../index.js";
 import type { StreamOutputMap } from "@langchain/langgraph";
 
 describe("reactAgent", () => {
@@ -77,6 +84,16 @@ describe("reactAgent", () => {
     });
     await agent.invoke({
       messages: [new HumanMessage("Hello, world!")],
+    });
+  });
+
+  it("should accept messages for explicitly unstructured agents", async () => {
+    const agent = createAgent({
+      model: "openai:gpt-4",
+    }) as ReactAgent<AgentTypeConfig<ResponseFormatUndefined, undefined>>;
+
+    await agent.invoke({
+      messages: [{ role: "user", content: "Hello, world!" }],
     });
   });
 

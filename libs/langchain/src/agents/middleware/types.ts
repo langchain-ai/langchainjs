@@ -793,19 +793,23 @@ export type ToAnnotationRoot<A extends StateDefinitionInit> =
       : never;
 
 export type InferSchemaValue<A extends StateDefinitionInit | undefined> =
-  A extends StateSchema<infer TFields>
-    ? InferStateSchemaValue<TFields>
-    : A extends InteropZodObject
-      ? InferInteropZodOutput<A>
-      : A extends AnyAnnotationRoot
-        ? A["State"]
-        : {};
+  A extends undefined
+    ? {}
+    : A extends StateSchema<infer TFields>
+      ? InferStateSchemaValue<TFields>
+      : A extends InteropZodObject
+        ? InferInteropZodOutput<A>
+        : A extends AnyAnnotationRoot
+          ? A["State"]
+          : {};
 
 export type InferSchemaInput<A extends StateDefinitionInit | undefined> =
-  A extends StateSchema<infer TFields>
-    ? InferStateSchemaUpdate<TFields>
-    : A extends InteropZodObject
-      ? InferInteropZodInput<A>
-      : A extends AnyAnnotationRoot
-        ? A["Update"]
-        : {};
+  A extends undefined
+    ? {}
+    : A extends StateSchema<infer TFields>
+      ? InferStateSchemaUpdate<TFields>
+      : A extends InteropZodObject
+        ? InferInteropZodInput<A>
+        : A extends AnyAnnotationRoot
+          ? A["Update"]
+          : {};
