@@ -18,19 +18,20 @@ import { MultiServerMCPClient, MCPClientError } from "../client.js";
 
 vi.mock(
   "@modelcontextprotocol/sdk/client/index.js",
-  () => import("./__mocks__/@modelcontextprotocol/sdk/client/index.js")
+  () => import("./__mocks__/@modelcontextprotocol/sdk/client/index.js"),
 );
 vi.mock(
   "@modelcontextprotocol/sdk/client/stdio.js",
-  () => import("./__mocks__/@modelcontextprotocol/sdk/client/stdio.js")
+  () => import("./__mocks__/@modelcontextprotocol/sdk/client/stdio.js"),
 );
 vi.mock(
   "@modelcontextprotocol/sdk/client/sse.js",
-  () => import("./__mocks__/@modelcontextprotocol/sdk/client/sse.js")
+  () => import("./__mocks__/@modelcontextprotocol/sdk/client/sse.js"),
 );
 vi.mock(
   "@modelcontextprotocol/sdk/client/streamableHttp.js",
-  () => import("./__mocks__/@modelcontextprotocol/sdk/client/streamableHttp.js")
+  () =>
+    import("./__mocks__/@modelcontextprotocol/sdk/client/streamableHttp.js"),
 );
 
 describe("MultiServerMCPClient", () => {
@@ -152,7 +153,7 @@ describe("MultiServerMCPClient", () => {
           requestInit: {
             headers: {},
           },
-        }
+        },
       );
       expect(Client).toHaveBeenCalled();
       expect(Client.prototype.connect).toHaveBeenCalled();
@@ -178,7 +179,7 @@ describe("MultiServerMCPClient", () => {
       });
 
       await expect(client.initializeConnections()).rejects.toThrow(
-        MCPClientError
+        MCPClientError,
       );
     });
 
@@ -202,7 +203,7 @@ describe("MultiServerMCPClient", () => {
       });
 
       await expect(client.initializeConnections()).rejects.toThrow(
-        MCPClientError
+        MCPClientError,
       );
     });
 
@@ -306,10 +307,10 @@ describe("MultiServerMCPClient", () => {
         // Clear counts so we only measure reconnection attempts
         (StdioClientTransport as Mock).mockClear();
         (Client.prototype.connect as Mock).mockImplementationOnce(() =>
-          Promise.reject(new Error("reconnect fail 1"))
+          Promise.reject(new Error("reconnect fail 1")),
         );
         (Client.prototype.connect as Mock).mockImplementationOnce(() =>
-          Promise.reject(new Error("reconnect fail 2"))
+          Promise.reject(new Error("reconnect fail 2")),
         );
 
         await stdioInstance.onclose?.();
@@ -496,7 +497,7 @@ describe("MultiServerMCPClient", () => {
     test("should handle errors during cleanup gracefully", async () => {
       // Mock client.close to throw an error instead of transport.close
       (Client.prototype.close as Mock).mockImplementationOnce(() =>
-        Promise.reject(new Error("Close failed"))
+        Promise.reject(new Error("Close failed")),
       );
 
       const client = new MultiServerMCPClient({
@@ -586,14 +587,14 @@ describe("MultiServerMCPClient", () => {
       });
 
       await expect(client.initializeConnections()).rejects.toThrow(
-        MCPClientError
+        MCPClientError,
       );
     });
 
     test("should handle errors during streamable HTTP cleanup gracefully", async () => {
       // Mock client.close to throw an error instead of transport.close
       (Client.prototype.close as Mock).mockImplementationOnce(() =>
-        Promise.reject(new Error("Close failed"))
+        Promise.reject(new Error("Close failed")),
       );
 
       const client = new MultiServerMCPClient({
@@ -682,7 +683,7 @@ describe("MultiServerMCPClient", () => {
 
       // Should throw when onConnectionError is 'throw' (default behavior)
       await expect(() => client.initializeConnections()).rejects.toThrow(
-        MCPClientError
+        MCPClientError,
       );
     });
 
@@ -808,7 +809,7 @@ describe("MultiServerMCPClient", () => {
 
       // Should throw the error from the handler
       await expect(() => client.initializeConnections()).rejects.toThrow(
-        customError
+        customError,
       );
 
       // Error handler should have been called
@@ -916,6 +917,231 @@ describe("MultiServerMCPClient", () => {
       const workingClient2 = await client.getClient("working-server");
       expect(workingClient1).toBeDefined();
       expect(workingClient2).toBeDefined();
+    });
+  });
+
+  describe("Parallel Initialization", () => {
+    test("should initialize multiple servers in parallel", async () => {
+      const connectionOrder: string[] = [];
+      let clientCallCount = 0;
+
+      (Client as Mock).mockImplementation(function mockClient() {
+        clientCallCount += 1;
+        const currentIndex = clientCallCount;
+        return {
+          connect: vi.fn().mockImplementation(
+            () =>
+              new Promise<void>((resolve) => {
+                setTimeout(() => {
+                  connectionOrder.push(`server-${currentIndex}`);
+                  resolve();
+                }, 50);
+              }),
+          ),
+          listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
+        };
+      });
+
+      const client = new MultiServerMCPClient({
+        mcpServers: {
+          "server-1": {
+            transport: "http",
+            url: "http://localhost:8001/mcp",
+          },
+          "server-2": {
+            transport: "http",
+            url: "http://localhost:8002/mcp",
+          },
+          "server-3": {
+            transport: "http",
+            url: "http://localhost:8003/mcp",
+          },
+        },
+      });
+
+      const start = Date.now();
+      await client.initializeConnections();
+      const elapsed = Date.now() - start;
+
+      // All 3 servers should have connected
+      expect(connectionOrder).toHaveLength(3);
+      // If sequential, this would take ~150ms. Parallel should be ~50ms.
+      expect(elapsed).toBeLessThan(120);
+    });
+
+    test("should handle mixed success/failure in parallel with ignore mode", async () => {
+      let clientCallCount = 0;
+
+      (Client as Mock).mockImplementation(function mockClient() {
+        clientCallCount += 1;
+        const shouldFail = clientCallCount === 1 || clientCallCount === 3;
+        return {
+          connect: vi
+            .fn()
+            .mockImplementation(() =>
+              shouldFail
+                ? Promise.reject(new Error("Connection failed"))
+                : Promise.resolve(),
+            ),
+          listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
+        };
+      });
+
+      const client = new MultiServerMCPClient({
+        mcpServers: {
+          "fail-server-1": {
+            transport: "http",
+            url: "http://localhost:8001/mcp",
+          },
+          "working-server": {
+            transport: "http",
+            url: "http://localhost:8002/mcp",
+          },
+          "fail-server-2": {
+            transport: "http",
+            url: "http://localhost:8003/mcp",
+          },
+        },
+        onConnectionError: "ignore",
+      });
+
+      const tools = await client.initializeConnections();
+      expect(tools).toBeDefined();
+
+      // Working server should be accessible
+      const workingClient = await client.getClient("working-server");
+      expect(workingClient).toBeDefined();
+
+      // Failed servers should not be accessible
+      const failClient1 = await client.getClient("fail-server-1");
+      const failClient2 = await client.getClient("fail-server-2");
+      expect(failClient1).toBeUndefined();
+      expect(failClient2).toBeUndefined();
+    });
+
+    test("should call error handler for each failure in parallel", async () => {
+      const handlerCalls: string[] = [];
+      const errorHandler = vi.fn(({ serverName }: { serverName: string }) => {
+        handlerCalls.push(serverName);
+      });
+
+      let clientCallCount = 0;
+      (Client as Mock).mockImplementation(function mockClient() {
+        clientCallCount += 1;
+        const shouldFail = clientCallCount !== 2;
+        return {
+          connect: vi
+            .fn()
+            .mockImplementation(() =>
+              shouldFail
+                ? Promise.reject(new Error("Connection failed"))
+                : Promise.resolve(),
+            ),
+          listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
+        };
+      });
+
+      const client = new MultiServerMCPClient({
+        mcpServers: {
+          "fail-server-1": {
+            transport: "http",
+            url: "http://localhost:8001/mcp",
+          },
+          "working-server": {
+            transport: "http",
+            url: "http://localhost:8002/mcp",
+          },
+          "fail-server-2": {
+            transport: "http",
+            url: "http://localhost:8003/mcp",
+          },
+        },
+        onConnectionError: errorHandler,
+      });
+
+      await client.initializeConnections();
+
+      // Handler should have been called for each failed server
+      expect(errorHandler).toHaveBeenCalledTimes(2);
+      expect(handlerCalls).toContain("fail-server-1");
+      expect(handlerCalls).toContain("fail-server-2");
+    });
+
+    test("should throw in throw mode when any server fails in parallel", async () => {
+      let clientCallCount = 0;
+      (Client as Mock).mockImplementation(function mockClient() {
+        clientCallCount += 1;
+        const shouldFail = clientCallCount === 2;
+        return {
+          connect: vi
+            .fn()
+            .mockImplementation(() =>
+              shouldFail
+                ? Promise.reject(new Error("Connection failed"))
+                : Promise.resolve(),
+            ),
+          listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
+        };
+      });
+
+      const client = new MultiServerMCPClient({
+        mcpServers: {
+          "server-1": {
+            transport: "http",
+            url: "http://localhost:8001/mcp",
+          },
+          "server-2": {
+            transport: "http",
+            url: "http://localhost:8002/mcp",
+          },
+          "server-3": {
+            transport: "http",
+            url: "http://localhost:8003/mcp",
+          },
+        },
+        onConnectionError: "throw",
+      });
+
+      await expect(() => client.initializeConnections()).rejects.toThrow(
+        MCPClientError,
+      );
+    });
+
+    test("concurrent initializeConnections calls should deduplicate", async () => {
+      let connectCallCount = 0;
+
+      (Client as Mock).mockImplementation(function mockClient() {
+        return {
+          connect: vi.fn().mockImplementation(
+            () =>
+              new Promise<void>((resolve) => {
+                connectCallCount += 1;
+                setTimeout(resolve, 30);
+              }),
+          ),
+          listTools: vi.fn().mockReturnValue(Promise.resolve({ tools: [] })),
+        };
+      });
+
+      const client = new MultiServerMCPClient({
+        mcpServers: {
+          "server-1": {
+            transport: "http",
+            url: "http://localhost:8001/mcp",
+          },
+        },
+      });
+
+      // Call initializeConnections concurrently
+      const [result1, result2] = await Promise.all([
+        client.initializeConnections(),
+        client.initializeConnections(),
+      ]);
+
+      // Both should return the same result
+      expect(result1).toEqual(result2);
+      // Connection should only be created once (deduplication)
+      expect(connectCallCount).toBe(1);
     });
   });
 });
