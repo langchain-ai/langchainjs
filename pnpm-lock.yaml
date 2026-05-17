@@ -326,14 +326,14 @@ importers:
         specifier: ^2.0.8
         version: 2.0.8
       lunary:
-        specifier: ^0.8.8
-        version: 0.8.8(@anthropic-ai/sdk@0.95.1(zod@4.3.6))(openai@6.37.0(ws@5.2.4(bufferutil@4.1.0))(zod@4.3.6))(react@19.2.5)
+        specifier: ^1.0.18
+        version: 1.0.18(openai@6.37.0(ws@5.2.4(bufferutil@4.1.0))(zod@4.3.6))(react@19.2.5)
       mariadb:
         specifier: ^3.5.2
         version: 3.5.2
       mem0ai:
         specifier: ^3.0.3
-        version: 3.0.3(@anthropic-ai/sdk@0.95.1(zod@4.3.6))(@azure/identity@4.13.1)(@azure/search-documents@12.2.0)(@cloudflare/workers-types@4.20260508.1)(@google/genai@1.50.1(@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.1)(zod@4.3.6))(bufferutil@4.1.0))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.15.1(bufferutil@4.1.0))(@qdrant/js-client-rest@1.17.0(typescript@6.0.3))(@supabase/supabase-js@2.104.0(bufferutil@4.1.0))(@types/jest@30.0.0)(@types/pg@8.20.0)(better-sqlite3@12.9.0)(cloudflare@4.5.0(encoding@0.1.13))(compromise@14.15.0)(encoding@0.1.13)(groq-sdk@1.1.2)(natural@8.1.1(@aws-sdk/credential-providers@3.1034.0)(@opentelemetry/api@1.9.1)(socks@2.8.8))(ollama@0.6.3)(pg@8.20.0)(redis@5.12.1(@opentelemetry/api@1.9.1))(ws@5.2.4(bufferutil@4.1.0))
+        version: 3.0.3(@azure/identity@4.13.1)(@azure/search-documents@12.2.0)(@cloudflare/workers-types@4.20260508.1)(@google/genai@1.50.1(@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.1)(zod@4.3.6))(bufferutil@4.1.0))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.15.1(bufferutil@4.1.0))(@qdrant/js-client-rest@1.17.0(typescript@6.0.3))(@supabase/supabase-js@2.104.0(bufferutil@4.1.0))(@types/jest@30.0.0)(@types/pg@8.20.0)(better-sqlite3@12.9.0)(cloudflare@4.5.0(encoding@0.1.13))(compromise@14.15.0)(encoding@0.1.13)(groq-sdk@1.1.2)(natural@8.1.1(@aws-sdk/credential-providers@3.1034.0)(@opentelemetry/api@1.9.1)(socks@2.8.8))(ollama@0.6.3)(pg@8.20.0)(redis@5.12.1(@opentelemetry/api@1.9.1))(ws@5.2.4(bufferutil@4.1.0))
       mongodb:
         specifier: ^7.1.1
         version: 7.2.0(@aws-sdk/credential-providers@3.1034.0)(socks@2.8.8)
@@ -915,14 +915,14 @@ importers:
         specifier: ^2.0.8
         version: 2.0.8
       lunary:
-        specifier: ^0.8.8
-        version: 0.8.8(@anthropic-ai/sdk@0.95.1(zod@4.3.6))(openai@6.37.0(ws@8.20.0(bufferutil@4.1.0))(zod@4.3.6))(react@19.2.5)
+        specifier: ^1.0.18
+        version: 1.0.18(openai@6.37.0(ws@8.20.0(bufferutil@4.1.0))(zod@4.3.6))(react@19.2.5)
       mariadb:
         specifier: ^3.5.1
         version: 3.5.2
       mem0ai:
         specifier: ^3.0.3
-        version: 3.0.3(@anthropic-ai/sdk@0.95.1(zod@4.3.6))(@azure/identity@4.13.1)(@azure/search-documents@12.2.0)(@cloudflare/workers-types@4.20260508.1)(@google/genai@1.50.1(@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.1)(zod@4.3.6))(bufferutil@4.1.0))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.15.1(bufferutil@4.1.0))(@qdrant/js-client-rest@1.17.0(typescript@5.8.3))(@supabase/supabase-js@2.104.0(bufferutil@4.1.0))(@types/jest@30.0.0)(@types/pg@8.20.0)(better-sqlite3@12.9.0)(cloudflare@4.5.0(encoding@0.1.13))(compromise@14.15.0)(encoding@0.1.13)(groq-sdk@1.1.2)(natural@8.1.1(@aws-sdk/credential-providers@3.1034.0)(@opentelemetry/api@1.9.1)(socks@2.8.8))(ollama@0.6.3)(pg@8.20.0)(redis@4.7.1)(ws@8.20.0(bufferutil@4.1.0))
+        version: 3.0.3(@azure/identity@4.13.1)(@azure/search-documents@12.2.0)(@cloudflare/workers-types@4.20260508.1)(@google/genai@1.50.1(@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.1)(zod@4.3.6))(bufferutil@4.1.0))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.15.1(bufferutil@4.1.0))(@qdrant/js-client-rest@1.17.0(typescript@5.8.3))(@supabase/supabase-js@2.104.0(bufferutil@4.1.0))(@types/jest@30.0.0)(@types/pg@8.20.0)(better-sqlite3@12.9.0)(cloudflare@4.5.0(encoding@0.1.13))(compromise@14.15.0)(encoding@0.1.13)(groq-sdk@1.1.2)(natural@8.1.1(@aws-sdk/credential-providers@3.1034.0)(@opentelemetry/api@1.9.1)(socks@2.8.8))(ollama@0.6.3)(pg@8.20.0)(redis@4.7.1)(ws@8.20.0(bufferutil@4.1.0))
       mongodb:
         specifier: ^6.17.0
         version: 6.21.0(@aws-sdk/credential-providers@3.1034.0)(socks@2.8.8)
@@ -5768,6 +5768,9 @@ packages:
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
 
+  '@types/estree@1.0.9':
+    resolution: {integrity: sha512-GhdPgy1el4/ImP05X05Uw4cw2/M93BCUmnEvWZNStlCzEKME4Fkk+YpoA5OiHNQmoS7Cafb8Xa3Pya8m1Qrzeg==}
+
   '@types/express-serve-static-core@5.1.1':
     resolution: {integrity: sha512-v4zIMr/cX7/d2BpAEX3KNKL/JrT1s43s96lLvvdTmza1oEvDudCqK9aF/djc/SWgy8Yh0h30TZx5VpzqFCxk5A==}
 
@@ -9148,10 +9151,10 @@ packages:
     resolution: {integrity: sha512-DqC6n3QQ77zdFpCMASA1a3Jlb64Hv2N2DciFGkO/4L9+q/IpIAuRlKOvCXabtRW6cQf8usbmM6BE/TOPysCdIA==}
     engines: {bun: '>=1.0.0', deno: '>=1.30.0', node: '>=8.0.0'}
 
-  lunary@0.8.8:
-    resolution: {integrity: sha512-/7jel44BCOURynPdGvxoOeZkUb8DKJv2dlay4A0f0addEnhqGyyOjglZHEJaiKU21lK6TyQxJS5SnfGp4owWyw==}
+  lunary@1.0.18:
+    resolution: {integrity: sha512-/FnI0J9dktx//nCrx0n0h53YOPjYQZ4CjQiW4uVfBL33jwJ8sREe+Nm0CFQXbwfPhK0S6vYuCuWxygHGT0Yp0w==}
     peerDependencies:
-      '@anthropic-ai/sdk': '>=0.31.0'
+      '@anthropic-ai/sdk': '>=0.86.0 <1.0.0'
       openai: ^4.0.0
       react: '>=17.0.0'
     peerDependenciesMeta:
@@ -16454,6 +16457,8 @@ snapshots:
 
   '@types/estree@1.0.8': {}
 
+  '@types/estree@1.0.9': {}
+
   '@types/express-serve-static-core@5.1.1':
     dependencies:
       '@types/node': 25.6.0
@@ -18460,7 +18465,7 @@ snapshots:
 
   estree-walker@3.0.3:
     dependencies:
-      '@types/estree': 1.0.8
+      '@types/estree': 1.0.9
 
   esutils@2.0.3: {}
 
@@ -20438,19 +20443,17 @@ snapshots:
 
   lru.min@1.1.4: {}
 
-  lunary@0.8.8(@anthropic-ai/sdk@0.95.1(zod@4.3.6))(openai@6.37.0(ws@5.2.4(bufferutil@4.1.0))(zod@4.3.6))(react@19.2.5):
+  lunary@1.0.18(openai@6.37.0(ws@5.2.4(bufferutil@4.1.0))(zod@4.3.6))(react@19.2.5):
     dependencies:
       unctx: 2.5.0
     optionalDependencies:
-      '@anthropic-ai/sdk': 0.95.1(zod@4.3.6)
       openai: 6.37.0(ws@5.2.4(bufferutil@4.1.0))(zod@4.3.6)
       react: 19.2.5
 
-  lunary@0.8.8(@anthropic-ai/sdk@0.95.1(zod@4.3.6))(openai@6.37.0(ws@8.20.0(bufferutil@4.1.0))(zod@4.3.6))(react@19.2.5):
+  lunary@1.0.18(openai@6.37.0(ws@8.20.0(bufferutil@4.1.0))(zod@4.3.6))(react@19.2.5):
     dependencies:
       unctx: 2.5.0
     optionalDependencies:
-      '@anthropic-ai/sdk': 0.95.1(zod@4.3.6)
       openai: 6.37.0(ws@8.20.0(bufferutil@4.1.0))(zod@4.3.6)
       react: 19.2.5
 
@@ -20523,9 +20526,8 @@ snapshots:
 
   media-typer@1.1.0: {}
 
-  mem0ai@3.0.3(@anthropic-ai/sdk@0.95.1(zod@4.3.6))(@azure/identity@4.13.1)(@azure/search-documents@12.2.0)(@cloudflare/workers-types@4.20260508.1)(@google/genai@1.50.1(@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.1)(zod@4.3.6))(bufferutil@4.1.0))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.15.1(bufferutil@4.1.0))(@qdrant/js-client-rest@1.17.0(typescript@5.8.3))(@supabase/supabase-js@2.104.0(bufferutil@4.1.0))(@types/jest@30.0.0)(@types/pg@8.20.0)(better-sqlite3@12.9.0)(cloudflare@4.5.0(encoding@0.1.13))(compromise@14.15.0)(encoding@0.1.13)(groq-sdk@1.1.2)(natural@8.1.1(@aws-sdk/credential-providers@3.1034.0)(@opentelemetry/api@1.9.1)(socks@2.8.8))(ollama@0.6.3)(pg@8.20.0)(redis@4.7.1)(ws@8.20.0(bufferutil@4.1.0)):
+  mem0ai@3.0.3(@azure/identity@4.13.1)(@azure/search-documents@12.2.0)(@cloudflare/workers-types@4.20260508.1)(@google/genai@1.50.1(@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.1)(zod@4.3.6))(bufferutil@4.1.0))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.15.1(bufferutil@4.1.0))(@qdrant/js-client-rest@1.17.0(typescript@5.8.3))(@supabase/supabase-js@2.104.0(bufferutil@4.1.0))(@types/jest@30.0.0)(@types/pg@8.20.0)(better-sqlite3@12.9.0)(cloudflare@4.5.0(encoding@0.1.13))(compromise@14.15.0)(encoding@0.1.13)(groq-sdk@1.1.2)(natural@8.1.1(@aws-sdk/credential-providers@3.1034.0)(@opentelemetry/api@1.9.1)(socks@2.8.8))(ollama@0.6.3)(pg@8.20.0)(redis@4.7.1)(ws@8.20.0(bufferutil@4.1.0)):
     dependencies:
-      '@anthropic-ai/sdk': 0.95.1(zod@4.3.6)
       '@azure/identity': 4.13.1
       '@azure/search-documents': 12.2.0
       '@cloudflare/workers-types': 4.20260508.1
@@ -20553,9 +20555,8 @@ snapshots:
       - encoding
       - ws
 
-  mem0ai@3.0.3(@anthropic-ai/sdk@0.95.1(zod@4.3.6))(@azure/identity@4.13.1)(@azure/search-documents@12.2.0)(@cloudflare/workers-types@4.20260508.1)(@google/genai@1.50.1(@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.1)(zod@4.3.6))(bufferutil@4.1.0))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.15.1(bufferutil@4.1.0))(@qdrant/js-client-rest@1.17.0(typescript@6.0.3))(@supabase/supabase-js@2.104.0(bufferutil@4.1.0))(@types/jest@30.0.0)(@types/pg@8.20.0)(better-sqlite3@12.9.0)(cloudflare@4.5.0(encoding@0.1.13))(compromise@14.15.0)(encoding@0.1.13)(groq-sdk@1.1.2)(natural@8.1.1(@aws-sdk/credential-providers@3.1034.0)(@opentelemetry/api@1.9.1)(socks@2.8.8))(ollama@0.6.3)(pg@8.20.0)(redis@5.12.1(@opentelemetry/api@1.9.1))(ws@5.2.4(bufferutil@4.1.0)):
+  mem0ai@3.0.3(@azure/identity@4.13.1)(@azure/search-documents@12.2.0)(@cloudflare/workers-types@4.20260508.1)(@google/genai@1.50.1(@modelcontextprotocol/sdk@1.29.0(@cfworker/json-schema@4.1.1)(zod@4.3.6))(bufferutil@4.1.0))(@langchain/core@libs+langchain-core)(@mistralai/mistralai@1.15.1(bufferutil@4.1.0))(@qdrant/js-client-rest@1.17.0(typescript@6.0.3))(@supabase/supabase-js@2.104.0(bufferutil@4.1.0))(@types/jest@30.0.0)(@types/pg@8.20.0)(better-sqlite3@12.9.0)(cloudflare@4.5.0(encoding@0.1.13))(compromise@14.15.0)(encoding@0.1.13)(groq-sdk@1.1.2)(natural@8.1.1(@aws-sdk/credential-providers@3.1034.0)(@opentelemetry/api@1.9.1)(socks@2.8.8))(ollama@0.6.3)(pg@8.20.0)(redis@5.12.1(@opentelemetry/api@1.9.1))(ws@5.2.4(bufferutil@4.1.0)):
     dependencies:
-      '@anthropic-ai/sdk': 0.95.1(zod@4.3.6)
       '@azure/identity': 4.13.1
       '@azure/search-documents': 12.2.0
       '@cloudflare/workers-types': 4.20260508.1

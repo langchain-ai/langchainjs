@@ -174,7 +174,7 @@
     "langchain": "workspace:*",
     "langsmith": ">=0.4.0 <1.0.0",
     "lorem-ipsum": "^2.0.8",
-    "lunary": "^0.8.8",
+    "lunary": "^1.0.18",
     "mariadb": "^3.5.1",
     "mem0ai": "^3.0.3",
     "mongodb": "^6.17.0",
