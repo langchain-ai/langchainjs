@@ -37,7 +37,7 @@
     "dpdm": "^3.14.0",
     "testcontainers": "^11.13.0",
     "vitest": "^4.1.2",
-    "typescript": "~5.8.3"
+    "typescript": "~6.0.3"
   },
   "publishConfig": {
     "access": "public"

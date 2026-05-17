@@ -22,7 +22,7 @@
     "fast-glob": "^3.3.2",
     "picocolors": "^1.0.0",
     "prompts": "^2.4.2",
-    "typescript": "~5.8.3",
+    "typescript": "~6.0.3",
     "update-check": "^1.5.4",
     "validate-npm-package-name": "^7.0.2"
   }
