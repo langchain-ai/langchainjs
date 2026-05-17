@@ -1,4 +1,3 @@
-import * as uuid from "@langchain/core/utils/uuid";
 import {
   HybridOptions,
   CollectionConfigCreate,
@@ -13,6 +12,7 @@ import {
   type WeaviateField,
   BaseHybridOptions,
   MetadataKeys,
+  type WeaviateClass,
 } from "weaviate-client";
 import {
   type MaxMarginalRelevanceSearchOptions,
@@ -79,6 +79,12 @@ export interface WeaviateLibArgs {
   metadataKeys?: string[];
   tenant?: string;
   schema?: CollectionConfigCreate;
+  /**
+   * Raw Weaviate JSON schema passed straight to `client.collections.createFromJson()`.
+   * This is the same shape returned by Weaviate's REST API and by `client.collections.exportToJson()`.
+   * Takes precedence over `schema` when both are provided.
+   */
+  jsonSchema?: WeaviateClass;
 }
 
 export class WeaviateDocument extends Document {
@@ -109,6 +115,8 @@ export class WeaviateStore extends VectorStore {
 
   private schema?: CollectionConfigCreate;
 
+  private jsonSchema?: WeaviateClass;
+
   _vectorstoreType(): string {
     return "weaviate";
   }
@@ -120,11 +128,19 @@ export class WeaviateStore extends VectorStore {
     super(embeddings, args);
 
     this.client = args.client;
-    this.indexName = args.indexName || args.schema?.name || "";
+    // `class` is Weaviate's legacy field name for the collection identifier in the
+    // raw REST/JSON schema — it is not the standard JSON Schema `class` keyword.
+    // See WeaviateClass in weaviate-client/openapi/types.
+    this.indexName =
+      args.indexName ||
+      args.schema?.name ||
+      args.jsonSchema?.class ||
+      "";
     this.textKey = args.textKey || "text";
     this.queryAttrs = [this.textKey];
     this.tenant = args.tenant;
     this.schema = args.schema;
+    this.jsonSchema = args.jsonSchema;
 
     if (args.metadataKeys) {
       this.queryAttrs = [
@@ -155,7 +171,11 @@ export class WeaviateStore extends VectorStore {
       weaviateStore.indexName
     );
     if (!collection) {
-      if (weaviateStore.schema) {
+      if (weaviateStore.jsonSchema) {
+        await weaviateStore.client.collections.createFromJson(
+          weaviateStore.jsonSchema
+        );
+      } else if (weaviateStore.schema) {
         await weaviateStore.client.collections.create(weaviateStore.schema);
       } else {
         if (config.tenant) {
@@ -189,7 +209,7 @@ export class WeaviateStore extends VectorStore {
     documents: Document[],
     options?: { ids?: string[] }
   ) {
-    const documentIds = options?.ids ?? documents.map((_) => uuid.v4());
+    const documentIds = options?.ids ?? documents.map((_) => crypto.randomUUID());
     const batch: DataObject<undefined>[] = documents.map((document, index) => {
       if (Object.hasOwn(document.metadata, "id"))
         throw new Error(
@@ -295,7 +315,9 @@ export class WeaviateStore extends VectorStore {
    */
   async hybridSearch(
     query: string,
-    options?: HybridOptions<undefined>
+    options?: HybridOptions<undefined, undefined, undefined> & {
+      filter?: FilterValue;
+    }
   ): Promise<Document[]> {
     const collection = this.client.collections.get(this.indexName);
     let query_vector: number[] | undefined;
@@ -304,7 +326,8 @@ export class WeaviateStore extends VectorStore {
     }
 
     const options_with_vector = {
-      ...options,
+      ...(options ?? {}),
+      filters: options?.filters ?? options?.filter,
       vector: options?.vector || query_vector,
       returnMetadata: [
         "score",
@@ -353,23 +376,25 @@ export class WeaviateStore extends VectorStore {
   async generate(
     query: string,
     generate: GenerateOptions<undefined, GenerativeConfigRuntime | undefined>,
-    options?: BaseHybridOptions<undefined>
+    options?: BaseHybridOptions<undefined, undefined, undefined> & {
+      filter?: FilterValue;
+    }
   ): Promise<WeaviateDocument[]> {
     const collection = this.client.collections.get(this.indexName);
+    const hybridOptions = {
+      ...(options ?? {}),
+      filters: options?.filters ?? options?.filter,
+    };
     let result;
     if (this.tenant) {
       result = await collection
         .withTenant(this.tenant)
-        .generate.hybrid(
-          query,
-          { ...(generate || {}) },
-          { ...(options || {}) }
-        );
+        .generate.hybrid(query, { ...(generate || {}) }, hybridOptions);
     } else {
       result = await collection.generate.hybrid(
         query,
         { ...(generate || {}) },
-        { ...(options || {}) }
+        hybridOptions
       );
     }
     const documents = [];
@@ -472,7 +497,7 @@ export class WeaviateStore extends VectorStore {
           }),
           metadata?.distance ?? 0,
           metadata?.score ?? 0,
-          Object.values(data.vectors)[0],
+          Object.values(data.vectors)[0] as number[],
         ]);
       }
       return documents;
