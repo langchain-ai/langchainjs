@@ -20,7 +20,12 @@ import {
   ToolCallChunk,
   defaultToolCallParser,
 } from "./tool.js";
-import { collapseToolCallChunks, Constructor } from "./utils.js";
+import {
+  collapseToolCallChunks,
+  collectCollapsedToolCallIds,
+  Constructor,
+  mergeProvidedByCollapsedIds,
+} from "./utils.js";
 
 export interface AIMessageFields<
   TStructure extends MessageStructure = MessageStructure,
@@ -314,11 +319,27 @@ export class AIMessageChunk<
       };
     } else {
       const collapsed = collapseToolCallChunks(fields.tool_call_chunks ?? []);
+      const collapsedIds = collectCollapsedToolCallIds({
+        collapsedToolCalls: collapsed.tool_calls,
+        collapsedInvalidToolCalls: collapsed.invalid_tool_calls,
+      });
+      const mergedToolCalls = mergeProvidedByCollapsedIds<
+        $InferToolCalls<TStructure>
+      >({
+        collapsed: collapsed.tool_calls as $InferToolCalls<TStructure>[],
+        provided: fields.tool_calls as $InferToolCalls<TStructure>[],
+        collapsedIds,
+      });
+      const mergedInvalidToolCalls = mergeProvidedByCollapsedIds({
+        collapsed: collapsed.invalid_tool_calls,
+        provided: fields.invalid_tool_calls,
+        collapsedIds,
+      });
       initParams = {
         ...fields,
         tool_call_chunks: collapsed.tool_call_chunks,
-        tool_calls: collapsed.tool_calls as $InferToolCalls<TStructure>[],
-        invalid_tool_calls: collapsed.invalid_tool_calls,
+        tool_calls: mergedToolCalls,
+        invalid_tool_calls: mergedInvalidToolCalls,
         usage_metadata:
           fields.usage_metadata !== undefined
             ? fields.usage_metadata
