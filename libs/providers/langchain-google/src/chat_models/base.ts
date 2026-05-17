@@ -325,9 +325,10 @@ export abstract class BaseChatGoogle<
       ? convertToolsToGeminiTools(fields.tools)
       : undefined;
 
-    // Convert tool choice to Gemini function calling config
+    // Convert tool choice to Gemini function calling config.
+    // Prefer per-call tool_choice; fall back to constructor-level value.
     const toolConfig = convertToolChoiceToGeminiConfig(
-      options.tool_choice,
+      options.tool_choice ?? this.params.tool_choice,
       !!(tools && tools.length > 0)
     );
 
@@ -894,6 +895,7 @@ export function combineGoogleChatModelFields(
     thinkingBudget: b.thinkingBudget ?? a.thinkingBudget,
     reasoningEffort: b.reasoningEffort ?? a.reasoningEffort,
     thinkingLevel: b.thinkingLevel ?? a.thinkingLevel,
+    tool_choice: b.tool_choice ?? a.tool_choice,
   };
   if (rest.length > 0) {
     return combineGoogleChatModelFields(combined, rest[0], ...rest.slice(1));
