@@ -82,7 +82,7 @@ export const completionsApiContentBlockConverter: StandardContentBlockConverter<
     }
 
     throw new Error(
-      `Image content blocks with source_type ${block.source_type} are not supported for ChatOpenAI`
+      `Image content blocks with source_type ${block.source_type} are not supported for ChatOpenAI`,
     );
   },
 
@@ -91,7 +91,7 @@ export const completionsApiContentBlockConverter: StandardContentBlockConverter<
       const data = parseBase64DataUrl({ dataUrl: block.url });
       if (!data) {
         throw new Error(
-          `URL audio blocks with source_type ${block.source_type} must be formatted as a data URL for ChatOpenAI`
+          `URL audio blocks with source_type ${block.source_type} must be formatted as a data URL for ChatOpenAI`,
         );
       }
 
@@ -102,7 +102,7 @@ export const completionsApiContentBlockConverter: StandardContentBlockConverter<
         mimeType = parseMimeType(rawMimeType);
       } catch {
         throw new Error(
-          `Audio blocks with source_type ${block.source_type} must have mime type of audio/wav or audio/mp3`
+          `Audio blocks with source_type ${block.source_type} must have mime type of audio/wav or audio/mp3`,
         );
       }
 
@@ -111,7 +111,7 @@ export const completionsApiContentBlockConverter: StandardContentBlockConverter<
         (mimeType.subtype !== "wav" && mimeType.subtype !== "mp3")
       ) {
         throw new Error(
-          `Audio blocks with source_type ${block.source_type} must have mime type of audio/wav or audio/mp3`
+          `Audio blocks with source_type ${block.source_type} must have mime type of audio/wav or audio/mp3`,
         );
       }
 
@@ -131,7 +131,7 @@ export const completionsApiContentBlockConverter: StandardContentBlockConverter<
         mimeType = parseMimeType(block.mime_type ?? "");
       } catch {
         throw new Error(
-          `Audio blocks with source_type ${block.source_type} must have mime type of audio/wav or audio/mp3`
+          `Audio blocks with source_type ${block.source_type} must have mime type of audio/wav or audio/mp3`,
         );
       }
 
@@ -140,7 +140,7 @@ export const completionsApiContentBlockConverter: StandardContentBlockConverter<
         (mimeType.subtype !== "wav" && mimeType.subtype !== "mp3")
       ) {
         throw new Error(
-          `Audio blocks with source_type ${block.source_type} must have mime type of audio/wav or audio/mp3`
+          `Audio blocks with source_type ${block.source_type} must have mime type of audio/wav or audio/mp3`,
         );
       }
 
@@ -154,7 +154,7 @@ export const completionsApiContentBlockConverter: StandardContentBlockConverter<
     }
 
     throw new Error(
-      `Audio content blocks with source_type ${block.source_type} are not supported for ChatOpenAI`
+      `Audio content blocks with source_type ${block.source_type} are not supported for ChatOpenAI`,
     );
   },
 
@@ -166,7 +166,7 @@ export const completionsApiContentBlockConverter: StandardContentBlockConverter<
 
       if (!data) {
         throw new Error(
-          `URL file blocks with source_type ${block.source_type} must be formatted as a data URL for ChatOpenAI`
+          `URL file blocks with source_type ${block.source_type} must be formatted as a data URL for ChatOpenAI`,
         );
       }
 
@@ -201,7 +201,7 @@ export const completionsApiContentBlockConverter: StandardContentBlockConverter<
     }
 
     throw new Error(
-      `File content blocks with source_type ${block.source_type} are not supported for ChatOpenAI`
+      `File content blocks with source_type ${block.source_type} are not supported for ChatOpenAI`,
     );
   },
 };
@@ -314,7 +314,7 @@ export const convertCompletionsMessageToBaseMessage: Converter<
 
       const content = handleMultiModalOutput(
         message.content || "",
-        rawResponse.choices?.[0]?.message
+        rawResponse.choices?.[0]?.message,
       );
       return new AIMessage({
         content,
@@ -660,10 +660,17 @@ export const convertStandardContentMessageToCompletionsMessage: Converter<
       content: message.contentBlocks.filter((block) => block.type === "text"),
     };
   } else if (role === "assistant") {
-    return {
-      role: "assistant",
-      content: message.contentBlocks.filter((block) => block.type === "text"),
-    };
+    const assistantParam: OpenAIClient.Chat.Completions.ChatCompletionMessageParam =
+      {
+        role: "assistant",
+        content: message.contentBlocks.filter((block) => block.type === "text"),
+      };
+    const reasoningContent = message.additional_kwargs?.reasoning_content;
+    if (reasoningContent != null) {
+      (assistantParam as { reasoning_content?: unknown }).reasoning_content =
+        reasoningContent;
+    }
+    return assistantParam;
   } else if (role === "tool" && ToolMessage.isInstance(message)) {
     return {
       role: "tool",
@@ -794,7 +801,7 @@ export const convertMessagesToCompletionsMessageParams: Converter<
             if (isDataContentBlock(m)) {
               return convertToProviderContentBlock(
                 m,
-                completionsApiContentBlockConverter
+                completionsApiContentBlockConverter,
               );
             }
             // Drop Anthropic tool_use blocks from content — these are
@@ -823,7 +830,7 @@ export const convertMessagesToCompletionsMessageParams: Converter<
     }
     if (AIMessage.isInstance(message) && !!message.tool_calls?.length) {
       completionParam.tool_calls = message.tool_calls.map(
-        convertLangChainToolCallToOpenAI
+        convertLangChainToolCallToOpenAI,
       );
     } else {
       if (message.additional_kwargs.tool_calls != null) {
@@ -832,6 +839,13 @@ export const convertMessagesToCompletionsMessageParams: Converter<
       if (ToolMessage.isInstance(message) && message.tool_call_id != null) {
         completionParam.tool_call_id = message.tool_call_id;
       }
+    }
+    if (
+      role === "assistant" &&
+      message.additional_kwargs.reasoning_content != null
+    ) {
+      completionParam.reasoning_content =
+        message.additional_kwargs.reasoning_content;
     }
 
     if (
