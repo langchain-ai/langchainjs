@@ -762,7 +762,15 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
     usage_metadata = convertResponsesUsageToUsageMetadata(event.response.usage);
 
     if (event.response.text?.format?.type === "json_schema" && msg.text) {
-      additional_kwargs.parsed ??= JSON.parse(msg.text);
+      try {
+        additional_kwargs.parsed ??= JSON.parse(msg.text);
+      } catch {
+        // Some models (observed with gpt-5-mini on service_tier: "auto")
+        // intermittently emit trailing characters after a valid JSON object
+        // in the Responses API path. Throw-on-parse kills the entire stream
+        // even though msg.text is otherwise usable. Leave parsed undefined
+        // and let the caller fall back to msg.text or retry. See #10894.
+      }
     }
     for (const [key, value] of Object.entries(event.response)) {
       if (key === "id") continue;
