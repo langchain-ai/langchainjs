@@ -1,5 +1,15 @@
 # @langchain/openai
 
+## 1.4.6
+
+### Patch Changes
+
+- [#10902](https://github.com/langchain-ai/langchainjs/pull/10902) [`229a7ad`](https://github.com/langchain-ai/langchainjs/commit/229a7ad67b9a7ebd8df3ca451e0b8195bea0190e) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(openai): preserve v1 assistant tool calls
+
+- [#10895](https://github.com/langchain-ai/langchainjs/pull/10895) [`36fb0ef`](https://github.com/langchain-ai/langchainjs/commit/36fb0ef1dc76c096dcfa0c777e10c9f9365a5240) Thanks [@BertBR](https://github.com/BertBR)! - fix(openai): guard bare `JSON.parse` in Responses API converter against trailing non-whitespace characters
+
+  `convertResponsesDeltaToChatGenerationChunk` previously called `JSON.parse(msg.text)` directly when `response.text.format.type === "json_schema"`. Some models (observed with `gpt-5-mini` on `service_tier: "auto"`) intermittently emit trailing non-whitespace characters (extra tokens, control characters) after a valid JSON object, causing a `SyntaxError` that propagates as an unhandled exception and kills the entire streaming response mid-flight. The parse is now wrapped in a `try`/`catch`: on failure, `additional_kwargs.parsed` is left undefined, the stream completes normally, and the existing `withStructuredOutput` pipeline handles the typed failure — `includeRaw: true` returns `{ raw, parsed: null }` via its `withFallbacks` wrapper, `includeRaw: false` throws a typed `OutputParserException` that the caller can catch and retry. Closes [#10894](https://github.com/langchain-ai/langchainjs/issues/10894).
+
 ## 1.4.5
 
 ### Patch Changes

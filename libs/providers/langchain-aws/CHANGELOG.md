@@ -1,5 +1,11 @@
 # @langchain/aws
 
+## 1.3.8
+
+### Patch Changes
+
+- [#10653](https://github.com/langchain-ai/langchainjs/pull/10653) [`e8d72d3`](https://github.com/langchain-ai/langchainjs/commit/e8d72d301d65f5e4e4dca1c237347736680d0ca8) Thanks [@muhammadosama984](https://github.com/muhammadosama984)! - fix(aws): preserve Bedrock tool call identity in callback-streamed chunks
+
 ## 1.3.7
 
 ### Patch Changes

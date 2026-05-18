@@ -1,6 +1,6 @@
 {
   "name": "@langchain/mongodb",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Sample integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
