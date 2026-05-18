@@ -29,7 +29,7 @@
     "knex": "^3.2.8"
   },
   "devDependencies": {
-    "@jest/globals": "^30.3.0",
+    "@jest/globals": "^30.4.0",
     "@langchain/core": "workspace:^",
     "@swc/core": "^1.15.21",
     "@swc/jest": "^0.2.29",

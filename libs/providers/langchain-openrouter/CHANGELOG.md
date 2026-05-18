@@ -1,5 +1,11 @@
 # @langchain/openrouter
 
+## 0.2.4
+
+### Patch Changes
+
+- [#10812](https://github.com/langchain-ai/langchainjs/pull/10812) [`67ba9f8`](https://github.com/langchain-ai/langchainjs/commit/67ba9f8217e31da6b4d513f91fc6d83109b8b706) Thanks [@open-swe](https://github.com/apps/open-swe)! - feat(openrouter): add `sessionId` and `trace` request fields
+
 ## 0.2.3
 
 ### Patch Changes
