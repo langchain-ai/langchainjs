@@ -407,8 +407,10 @@ export abstract class BaseChatGoogle<
 
     // The priority type is set via header only for Vertex
     const priorityHeaders: Record<string, string> =
-      this.platform === "gcp" && typeof fields.serviceTier !== "undefined" && settableServiceTier.includes(fields.serviceTier)
-        ? {"X-Vertex-AI-LLM-Shared-Request-Type": fields.serviceTier}
+      this.platform === "gcp" &&
+      typeof fields.serviceTier !== "undefined" &&
+      settableServiceTier.includes(fields.serviceTier)
+        ? { "X-Vertex-AI-LLM-Shared-Request-Type": fields.serviceTier }
         : {};
 
     return {
@@ -416,7 +418,7 @@ export abstract class BaseChatGoogle<
       ...priorityHeaders,
       ...this._customHeaders,
       ...options.customHeaders,
-    }
+    };
   }
 
   async _generate(
@@ -519,7 +521,9 @@ export abstract class BaseChatGoogle<
       const trafficType: string | undefined = data.usageMetadata?.trafficType;
 
       // AI Studio replies with actual service type in the header
-      const serviceTierHeader: string | null = response.headers.get("x-gemini-service-tier");
+      const serviceTierHeader: string | null = response.headers.get(
+        "x-gemini-service-tier"
+      );
 
       if (trafficType?.startsWith("ON_DEMAND_")) {
         return trafficType?.substring("ON_DEMAND_".length).toLowerCase();

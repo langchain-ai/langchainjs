@@ -1,6 +1,7 @@
 import {
   ChatGoogleFields,
-  GooglePlatformType, settableServiceTier,
+  GooglePlatformType,
+  settableServiceTier,
   SimplifiedSpeechConfig,
   SimplifiedSpeechLanguageConfig,
   SpeechSpeakerName,
@@ -402,7 +403,7 @@ export function convertFieldsToSpeechConfig(
   return ret;
 }
 
-type ServiceTierResponse = {} | {serviceTier: Gemini.ServiceTier};
+type ServiceTierResponse = {} | { serviceTier: Gemini.ServiceTier };
 
 /**
  * Builds an object that can be included as part of the request
@@ -410,7 +411,7 @@ type ServiceTierResponse = {} | {serviceTier: Gemini.ServiceTier};
  */
 export function convertFieldsToServiceTier(
   platform: GooglePlatformType,
-  fields: ChatGoogleFields,
+  fields: ChatGoogleFields
 ): ServiceTierResponse {
   // Service tier is handled in a different way on GCP
   if (platform === "gcp") {
@@ -424,5 +425,5 @@ export function convertFieldsToServiceTier(
 
   return {
     serviceTier: serviceTier,
-  }
+  };
 }

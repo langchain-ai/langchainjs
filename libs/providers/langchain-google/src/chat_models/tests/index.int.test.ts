@@ -986,9 +986,7 @@ describe.each(coreModelInfo)(
       const prompt = "Write a limerick about the color blue.";
       const result = await llm.invoke(prompt);
 
-      const expectedValue = testConfig?.useApiKey
-        ? "flex"
-        : "priority";
+      const expectedValue = testConfig?.useApiKey ? "flex" : "priority";
       expect(result.response_metadata.serviceTier).toEqual(expectedValue);
     });
 

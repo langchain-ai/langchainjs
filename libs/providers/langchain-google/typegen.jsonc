@@ -2,15 +2,15 @@
   "$schema": "https://hntrl.github.io/sparktype/schema.json",
   "specs": {
     "gemini": {
-      "path": "src/openapi/gemini-openapi.json"
-    }
+      "path": "src/openapi/gemini-openapi.json",
+    },
   },
   "outputs": [
     {
       "path": "./src/chat_models/api-types.ts",
       "format": "typescript",
       "options": {
-        "widenEnums": true
+        "widenEnums": true,
       },
       "contents": [
         {
@@ -45,8 +45,8 @@
                 "gemini:RetrievalConfig",
                 "gemini:ToolConfig",
                 // mapped as GeminiFunctionSchema
-                "gemini:Schema"
-              ]
+                "gemini:Schema",
+              ],
             },
             // in/out types
             "gemini:GenerateContentRequest",
@@ -72,10 +72,10 @@
             "gemini:ModalityTokenCount",
             "gemini:UsageMetadata",
             "gemini:PromptFeedback",
-            "gemini:GenerateContentResponse"
-          ]
-        }
-      ]
-    }
-  ]
+            "gemini:GenerateContentResponse",
+          ],
+        },
+      ],
+    },
+  ],
 }

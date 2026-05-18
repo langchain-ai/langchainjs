@@ -204,7 +204,7 @@ export type GooglePlatformType = "gai" | "gcp";
 export const settableServiceTier: GeminiBase.ServiceTier[] = [
   "flex",
   "priority",
-]
+];
 
 export { type Gemini } from "./api-types.js";
 

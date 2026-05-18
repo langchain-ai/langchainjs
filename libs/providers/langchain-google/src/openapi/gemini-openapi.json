@@ -37,15 +37,9 @@
       "_.xgafv": {
         "description": "V1 error format.",
         "schema": {
-          "x-google-enum-descriptions": [
-            "v1 error format",
-            "v2 error format"
-          ],
+          "x-google-enum-descriptions": ["v1 error format", "v2 error format"],
           "type": "string",
-          "enum": [
-            "1",
-            "2"
-          ]
+          "enum": ["1", "2"]
         },
         "name": "$.xgafv",
         "in": "query"
@@ -56,11 +50,7 @@
         "description": "Data format for response.",
         "schema": {
           "default": "json",
-          "enum": [
-            "json",
-            "media",
-            "proto"
-          ],
+          "enum": ["json", "media", "proto"],
           "type": "string",
           "x-google-enum-descriptions": [
             "Responses with Content-Type of application/json",
@@ -157,9 +147,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "prompt"
-        ]
+        "required": ["prompt"]
       },
       "File": {
         "type": "object",
@@ -205,12 +193,7 @@
             "description": "Output only. Processing state of the File.",
             "type": "string",
             "readOnly": true,
-            "enum": [
-              "STATE_UNSPECIFIED",
-              "PROCESSING",
-              "ACTIVE",
-              "FAILED"
-            ],
+            "enum": ["STATE_UNSPECIFIED", "PROCESSING", "ACTIVE", "FAILED"],
             "x-google-enum-descriptions": [
               "The default value. This value is used if the state is omitted.",
               "File is being processed and cannot be used for inference yet.",
@@ -286,9 +269,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "batch"
-        ]
+        "required": ["batch"]
       },
       "GroundingPassageId": {
         "type": "object",
@@ -383,9 +364,7 @@
       },
       "CustomMetadata": {
         "type": "object",
-        "required": [
-          "key"
-        ],
+        "required": ["key"],
         "description": "User provided metadata stored as key-value pairs.",
         "properties": {
           "stringValue": {
@@ -482,18 +461,11 @@
             ]
           }
         },
-        "required": [
-          "category",
-          "probability"
-        ],
+        "required": ["category", "probability"],
         "type": "object"
       },
       "GenerateContentBatch": {
-        "required": [
-          "model",
-          "displayName",
-          "inputConfig"
-        ],
+        "required": ["model", "displayName", "inputConfig"],
         "type": "object",
         "description": "A resource representing a batch of `GenerateContent` requests.",
         "properties": {
@@ -654,10 +626,7 @@
             "description": "Required. The `Condition`s for the given key that will trigger this filter. Multiple\n`Condition`s are joined by logical ORs."
           }
         },
-        "required": [
-          "key",
-          "conditions"
-        ],
+        "required": ["key", "conditions"],
         "type": "object"
       },
       "ModelStatus": {
@@ -763,10 +732,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "category",
-          "threshold"
-        ]
+        "required": ["category", "threshold"]
       },
       "ImportFileOperation": {
         "type": "object",
@@ -810,9 +776,7 @@
             "type": "array"
           }
         },
-        "required": [
-          "requests"
-        ],
+        "required": ["requests"],
         "type": "object"
       },
       "ListFilesResponse": {
@@ -844,9 +808,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "speakerVoiceConfigs"
-        ]
+        "required": ["speakerVoiceConfigs"]
       },
       "ToolConfig": {
         "type": "object",
@@ -875,9 +837,7 @@
         }
       },
       "GenerateTextRequest": {
-        "required": [
-          "prompt"
-        ],
+        "required": ["prompt"],
         "type": "object",
         "description": "Request to generate a text completion response from the model.",
         "properties": {
@@ -968,9 +928,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "toolType"
-        ]
+        "required": ["toolType"]
       },
       "Hyperparameters": {
         "description": "Hyperparameters controlling the tuning process. Read more at\nhttps://ai.google.dev/docs/model_tuning_guidance",
@@ -1026,9 +984,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "fileName"
-        ]
+        "required": ["fileName"]
       },
       "ListFileSearchStoresResponse": {
         "type": "object",
@@ -1068,13 +1024,7 @@
         "description": "Configuration for specifying function calling behavior.",
         "properties": {
           "mode": {
-            "enum": [
-              "MODE_UNSPECIFIED",
-              "AUTO",
-              "ANY",
-              "NONE",
-              "VALIDATED"
-            ],
+            "enum": ["MODE_UNSPECIFIED", "AUTO", "ANY", "NONE", "VALIDATED"],
             "type": "string",
             "description": "Optional. Specifies the mode in which function calling should execute. If\nunspecified, the default value will be set to AUTO.",
             "x-google-enum-descriptions": [
@@ -1329,12 +1279,7 @@
             ],
             "type": "string",
             "readOnly": true,
-            "enum": [
-              "STATE_UNSPECIFIED",
-              "GENERATING",
-              "GENERATED",
-              "FAILED"
-            ]
+            "enum": ["STATE_UNSPECIFIED", "GENERATING", "GENERATED", "FAILED"]
           },
           "name": {
             "type": "string",
@@ -1483,9 +1428,7 @@
         ]
       },
       "CodeExecutionResult": {
-        "required": [
-          "outcome"
-        ],
+        "required": ["outcome"],
         "type": "object",
         "description": "Result of executing the `ExecutableCode`.\n\nGenerated only when the `CodeExecution` tool is used.",
         "properties": {
@@ -1632,12 +1575,7 @@
             "description": "Optional. The requested modalities of the response. Represents the set of modalities\nthat the model can return, and should be expected in the response. This is\nan exact match to the modalities of the response.\n\nA model may have multiple combinations of supported modalities. If the\nrequested modalities do not match any of the supported combinations, an\nerror will be returned.\n\nAn empty list is equivalent to requesting only text.",
             "type": "array",
             "items": {
-              "enum": [
-                "MODALITY_UNSPECIFIED",
-                "TEXT",
-                "IMAGE",
-                "AUDIO"
-              ],
+              "enum": ["MODALITY_UNSPECIFIED", "TEXT", "IMAGE", "AUDIO"],
               "type": "string",
               "x-google-enum-descriptions": [
                 "Default value.",
@@ -1904,9 +1842,7 @@
         }
       },
       "InlinedRequest": {
-        "required": [
-          "request"
-        ],
+        "required": ["request"],
         "type": "object",
         "description": "The request to be processed in the batch.",
         "properties": {
@@ -1956,9 +1892,7 @@
       },
       "EmbedTextRequest": {
         "type": "object",
-        "required": [
-          "model"
-        ],
+        "required": ["model"],
         "description": "Request to get a text embedding from the model.",
         "properties": {
           "model": {
@@ -2038,10 +1972,7 @@
         ]
       },
       "SpeakerVoiceConfig": {
-        "required": [
-          "speaker",
-          "voiceConfig"
-        ],
+        "required": ["speaker", "voiceConfig"],
         "type": "object",
         "description": "The configuration for a single speaker in a multi speaker setup.",
         "properties": {
@@ -2121,9 +2052,7 @@
       },
       "TransferOwnershipRequest": {
         "type": "object",
-        "required": [
-          "emailAddress"
-        ],
+        "required": ["emailAddress"],
         "description": "Request to transfer the ownership of the tuned model.",
         "properties": {
           "emailAddress": {
@@ -2175,9 +2104,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "fileUri"
-        ],
+        "required": ["fileUri"],
         "type": "object"
       },
       "ServiceTier": {
@@ -2188,18 +2115,11 @@
           "Priority service tier."
         ],
         "type": "string",
-        "enum": [
-          "unspecified",
-          "standard",
-          "flex",
-          "priority"
-        ]
+        "enum": ["unspecified", "standard", "flex", "priority"]
       },
       "FileSearch": {
         "type": "object",
-        "required": [
-          "fileSearchStoreNames"
-        ],
+        "required": ["fileSearchStoreNames"],
         "description": "The FileSearch tool that retrieves knowledge from Semantic Retrieval corpora.\nFiles are imported to Semantic Retrieval corpora using the ImportFile API.",
         "properties": {
           "metadataFilter": {
@@ -2240,9 +2160,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "name"
-        ]
+        "required": ["name"]
       },
       "GenerateMessageResponse": {
         "type": "object",
@@ -2324,16 +2242,12 @@
             "type": "array"
           }
         },
-        "required": [
-          "requests"
-        ],
+        "required": ["requests"],
         "type": "object"
       },
       "CachedContent": {
         "type": "object",
-        "required": [
-          "model"
-        ],
+        "required": ["model"],
         "description": "Content that has been preprocessed and can be used in subsequent request\nto GenerativeService.\n\nCached content can be only used with model it was created for.",
         "properties": {
           "displayName": {
@@ -2491,11 +2405,7 @@
               "Content was blocked by safety settings.",
               "Content was blocked, but the reason is uncategorized."
             ],
-            "enum": [
-              "BLOCKED_REASON_UNSPECIFIED",
-              "SAFETY",
-              "OTHER"
-            ],
+            "enum": ["BLOCKED_REASON_UNSPECIFIED", "SAFETY", "OTHER"],
             "type": "string"
           },
           "message": {
@@ -2507,10 +2417,7 @@
       },
       "EmbedContentRequest": {
         "type": "object",
-        "required": [
-          "model",
-          "content"
-        ],
+        "required": ["model", "content"],
         "description": "Request containing the `Content` for the model to embed.",
         "properties": {
           "taskType": {
@@ -2556,9 +2463,7 @@
             ]
           }
         },
-        "required": [
-          "prompt"
-        ],
+        "required": ["prompt"],
         "type": "object"
       },
       "BatchGenerateContentOperation": {
@@ -2596,17 +2501,12 @@
             "description": "Required. The requests to be processed in the batch."
           }
         },
-        "required": [
-          "requests"
-        ],
+        "required": ["requests"],
         "type": "object"
       },
       "Example": {
         "type": "object",
-        "required": [
-          "input",
-          "output"
-        ],
+        "required": ["input", "output"],
         "description": "An input/output example used to instruct the Model.\n\nIt demonstrates how the model should respond or format its response.",
         "properties": {
           "input": {
@@ -2693,11 +2593,7 @@
             ],
             "description": "Optional. If set, the input was blocked and no candidates are returned.\nRephrase the input.",
             "type": "string",
-            "enum": [
-              "BLOCK_REASON_UNSPECIFIED",
-              "SAFETY",
-              "OTHER"
-            ]
+            "enum": ["BLOCK_REASON_UNSPECIFIED", "SAFETY", "OTHER"]
           },
           "safetyRatings": {
             "items": {
@@ -2750,11 +2646,7 @@
       },
       "Model": {
         "type": "object",
-        "required": [
-          "name",
-          "baseModelId",
-          "version"
-        ],
+        "required": ["name", "baseModelId", "version"],
         "description": "Information about a Generative Language Model.",
         "properties": {
           "maxTemperature": {
@@ -2991,9 +2883,7 @@
             ]
           }
         },
-        "required": [
-          "type"
-        ],
+        "required": ["type"],
         "type": "object"
       },
       "InlinedEmbedContentResponse": {
@@ -3201,10 +3091,7 @@
             ]
           }
         },
-        "required": [
-          "model",
-          "contents"
-        ],
+        "required": ["model", "contents"],
         "type": "object"
       },
       "TunedModelSource": {
@@ -3334,9 +3221,7 @@
         "type": "object"
       },
       "Condition": {
-        "required": [
-          "operation"
-        ],
+        "required": ["operation"],
         "type": "object",
         "description": "Filter condition applicable to a single key.",
         "properties": {
@@ -3632,15 +3517,11 @@
           }
         },
         "type": "object",
-        "required": [
-          "instances"
-        ]
+        "required": ["instances"]
       },
       "ComputerUse": {
         "type": "object",
-        "required": [
-          "environment"
-        ],
+        "required": ["environment"],
         "description": "Computer Use tool type.",
         "properties": {
           "environment": {
@@ -3650,10 +3531,7 @@
             ],
             "description": "Required. The environment being operated.",
             "type": "string",
-            "enum": [
-              "ENVIRONMENT_UNSPECIFIED",
-              "ENVIRONMENT_BROWSER"
-            ]
+            "enum": ["ENVIRONMENT_UNSPECIFIED", "ENVIRONMENT_BROWSER"]
           },
           "excludedPredefinedFunctions": {
             "type": "array",
@@ -3666,10 +3544,7 @@
       },
       "FunctionResponse": {
         "type": "object",
-        "required": [
-          "name",
-          "response"
-        ],
+        "required": ["name", "response"],
         "description": "The result output from a `FunctionCall` that contains a string\nrepresenting the `FunctionDeclaration.name` and a structured JSON\nobject containing any output from the function is used as context to\nthe model. This should contain the result of a`FunctionCall` made\nbased on model prediction.",
         "properties": {
           "scheduling": {
@@ -3776,9 +3651,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "prompt"
-        ]
+        "required": ["prompt"]
       },
       "EmbedContentBatchStats": {
         "description": "Stats about the batch.",
@@ -3898,9 +3771,7 @@
         "type": "object"
       },
       "InlinedEmbedContentRequest": {
-        "required": [
-          "request"
-        ],
+        "required": ["request"],
         "type": "object",
         "description": "The request to be processed in the batch.",
         "properties": {
@@ -3933,9 +3804,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "uris"
-        ]
+        "required": ["uris"]
       },
       "ListOperationsResponse": {
         "description": "The response message for Operations.ListOperations.",
@@ -4006,11 +3875,7 @@
             ],
             "description": "Optional. Specifies the function Behavior.\nCurrently only supported by the BidiGenerateContent method.",
             "type": "string",
-            "enum": [
-              "UNSPECIFIED",
-              "BLOCKING",
-              "NON_BLOCKING"
-            ]
+            "enum": ["UNSPECIFIED", "BLOCKING", "NON_BLOCKING"]
           },
           "description": {
             "type": "string",
@@ -4040,16 +3905,11 @@
             ]
           }
         },
-        "required": [
-          "name",
-          "description"
-        ],
+        "required": ["name", "description"],
         "type": "object"
       },
       "TuningTask": {
-        "required": [
-          "trainingData"
-        ],
+        "required": ["trainingData"],
         "type": "object",
         "description": "Tuning tasks that create tuned models.",
         "properties": {
@@ -4155,12 +4015,7 @@
               "Writer can use, update and share the resource.",
               "Reader can use the resource."
             ],
-            "enum": [
-              "ROLE_UNSPECIFIED",
-              "OWNER",
-              "WRITER",
-              "READER"
-            ],
+            "enum": ["ROLE_UNSPECIFIED", "OWNER", "WRITER", "READER"],
             "type": "string"
           },
           "name": {
@@ -4178,12 +4033,7 @@
               "Represents access to everyone. No extra information is required."
             ],
             "x-google-immutable": true,
-            "enum": [
-              "GRANTEE_TYPE_UNSPECIFIED",
-              "USER",
-              "GROUP",
-              "EVERYONE"
-            ],
+            "enum": ["GRANTEE_TYPE_UNSPECIFIED", "USER", "GROUP", "EVERYONE"],
             "type": "string"
           },
           "emailAddress": {
@@ -4193,9 +4043,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "role"
-        ]
+        "required": ["role"]
       },
       "GroundingAttribution": {
         "description": "Attribution for a source that contributed to an answer.",
@@ -4257,9 +4105,7 @@
             ]
           }
         },
-        "required": [
-          "batch"
-        ],
+        "required": ["batch"],
         "type": "object"
       },
       "LogprobsResult": {
@@ -4288,9 +4134,7 @@
         }
       },
       "MessagePrompt": {
-        "required": [
-          "messages"
-        ],
+        "required": ["messages"],
         "type": "object",
         "description": "All of the structured input text passed to the model as a prompt.\n\nA `MessagePrompt` contains a structured set of fields that provide context\nfor the conversation, examples of user input/model output message pairs that\nprime the model to respond in different ways, and the conversation history\nor list of messages representing the alternating turns of the conversation\nbetween the user and the model.",
         "properties": {
@@ -4386,10 +4230,7 @@
         "type": "object"
       },
       "GenerateAnswerRequest": {
-        "required": [
-          "contents",
-          "answerStyle"
-        ],
+        "required": ["contents", "answerStyle"],
         "type": "object",
         "description": "Request to generate a grounded answer from the `Model`.",
         "properties": {
@@ -4552,11 +4393,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "model",
-          "displayName",
-          "inputConfig"
-        ]
+        "required": ["model", "displayName", "inputConfig"]
       },
       "GroundingMetadata": {
         "description": "Metadata returned to client when grounding is enabled.",
@@ -4682,12 +4519,7 @@
             ],
             "type": "string",
             "readOnly": true,
-            "enum": [
-              "STATE_UNSPECIFIED",
-              "CREATING",
-              "ACTIVE",
-              "FAILED"
-            ],
+            "enum": ["STATE_UNSPECIFIED", "CREATING", "ACTIVE", "FAILED"],
             "description": "Output only. The state of the tuned model."
           },
           "createTime": {
@@ -4702,16 +4534,12 @@
             "type": "number"
           }
         },
-        "required": [
-          "tuningTask"
-        ],
+        "required": ["tuningTask"],
         "type": "object"
       },
       "PredictRequest": {
         "type": "object",
-        "required": [
-          "instances"
-        ],
+        "required": ["instances"],
         "description": "Request message for PredictionService.Predict.",
         "properties": {
           "parameters": {
@@ -4880,10 +4708,7 @@
         "properties": {
           "mode": {
             "type": "string",
-            "enum": [
-              "MODE_UNSPECIFIED",
-              "MODE_DYNAMIC"
-            ],
+            "enum": ["MODE_UNSPECIFIED", "MODE_DYNAMIC"],
             "x-google-enum-descriptions": [
               "Always trigger retrieval.",
               "Run retrieval only when system decides it is necessary."
@@ -4921,9 +4746,7 @@
             "description": "Optional. The identifier of the tool call this response is for."
           }
         },
-        "required": [
-          "toolType"
-        ],
+        "required": ["toolType"],
         "type": "object"
       },
       "TransferOwnershipResponse": {
@@ -4965,9 +4788,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "text"
-        ]
+        "required": ["text"]
       },
       "InlinedResponses": {
         "type": "object",
@@ -5049,9 +4870,7 @@
         "type": "object"
       },
       "TuningExample": {
-        "required": [
-          "output"
-        ],
+        "required": ["output"],
         "type": "object",
         "description": "A single example for tuning.",
         "properties": {
@@ -5303,10 +5122,7 @@
         }
       },
       "SemanticRetrieverConfig": {
-        "required": [
-          "source",
-          "query"
-        ],
+        "required": ["source", "query"],
         "type": "object",
         "description": "Configuration for retrieving grounding content from a `Corpus` or\n`Document` created using the Semantic Retriever API.",
         "properties": {
@@ -5495,15 +5311,10 @@
           }
         },
         "type": "object",
-        "required": [
-          "content"
-        ]
+        "required": ["content"]
       },
       "ExecutableCode": {
-        "required": [
-          "language",
-          "code"
-        ],
+        "required": ["language", "code"],
         "type": "object",
         "description": "Code generated by the model that is meant to be executed, and the result\nreturned to the model.\n\nOnly generated when using the `CodeExecution` tool, in which the code will\nbe automatically executed, and a corresponding `CodeExecutionResult` will\nalso be generated.",
         "properties": {
@@ -5514,10 +5325,7 @@
             ],
             "description": "Required. Programming language of the `code`.",
             "type": "string",
-            "enum": [
-              "LANGUAGE_UNSPECIFIED",
-              "PYTHON"
-            ]
+            "enum": ["LANGUAGE_UNSPECIFIED", "PYTHON"]
           },
           "code": {
             "description": "Required. The code to be executed.",
@@ -5710,9 +5518,7 @@
           }
         },
         "security": [],
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "x-google-operation-name": "GetOperation",
         "description": "Gets the latest state of a long-running operation.  Clients can use this\nmethod to poll the operation result at intervals as recommended by the API\nservice."
       },
@@ -5767,9 +5573,7 @@
           }
         },
         "security": [],
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "x-google-operation-name": "GetOperation",
         "description": "Gets the latest state of a long-running operation.  Clients can use this\nmethod to poll the operation result at intervals as recommended by the API\nservice."
       },
@@ -5791,9 +5595,7 @@
     "/v1beta/cachedContents": {
       "get": {
         "description": "Lists CachedContents.",
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "security": [
           {
             "google_oauth_implicit": [
@@ -5868,9 +5670,7 @@
             }
           }
         },
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "security": [
           {
             "google_oauth_implicit": [
@@ -5951,9 +5751,7 @@
           }
         },
         "security": [],
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "description": "Lists all `FileSearchStores` owned by the user."
       },
       "post": {
@@ -5983,9 +5781,7 @@
           },
           "description": "Required. The `FileSearchStore` to create."
         },
-        "tags": [
-          "generativelanguage"
-        ]
+        "tags": ["generativelanguage"]
       }
     },
     "/v1beta/models/{model}:streamGenerateContent": {
@@ -6015,9 +5811,7 @@
             }
           }
         },
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "operationId": "StreamGenerateContent",
         "parameters": [
           {
@@ -6061,9 +5855,7 @@
         }
       ],
       "post": {
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "description": "Performs a prediction request.",
         "requestBody": {
           "description": "The request body.",
@@ -6118,9 +5910,7 @@
         }
       ],
       "post": {
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "description": "Generates a text embedding vector from the input `Content` using the\nspecified [Gemini Embedding\nmodel](https://ai.google.dev/gemini-api/docs/models/gemini#text-embedding).",
         "requestBody": {
           "description": "The request body.",
@@ -6175,9 +5965,7 @@
         }
       ],
       "post": {
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "description": "Runs a model's tokenizer on a string and returns the token count.",
         "requestBody": {
           "content": {
@@ -6219,9 +6007,7 @@
     "/v1beta/batches/{generateContentBatch}": {
       "delete": {
         "description": "Deletes a long-running operation. This method indicates that the client is\nno longer interested in the operation result. It does not cancel the\noperation. If the server doesn't support this method, it returns\n`google.rpc.Code.UNIMPLEMENTED`.",
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "operationId": "DeleteOperation",
         "parameters": [
           {
@@ -6276,9 +6062,7 @@
         },
         "x-google-operation-name": "GetOperation",
         "description": "Gets the latest state of a long-running operation.  Clients can use this\nmethod to poll the operation result at intervals as recommended by the API\nservice.",
-        "tags": [
-          "generativelanguage"
-        ]
+        "tags": ["generativelanguage"]
       },
       "parameters": [
         {
@@ -6336,9 +6120,7 @@
           }
         },
         "security": [],
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "x-google-operation-name": "GenerateContent",
         "description": "Generates a model response given an input `GenerateContentRequest`.\nRefer to the [text generation\nguide](https://ai.google.dev/gemini-api/docs/text-generation) for detailed\nusage information. Input capabilities differ between models, including\ntuned models. Refer to the [model\nguide](https://ai.google.dev/gemini-api/docs/models/gemini) and [tuning\nguide](https://ai.google.dev/gemini-api/docs/model-tuning) for details.",
         "requestBody": {
@@ -6380,9 +6162,7 @@
           },
           "description": "The request body."
         },
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "security": [],
         "responses": {
           "default": {
@@ -6437,9 +6217,7 @@
           },
           "description": "Required. The tuned model to update."
         },
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "operationId": "UpdateTunedModel",
         "parameters": [
           {
@@ -6477,9 +6255,7 @@
         }
       },
       "get": {
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "description": "Gets information about a specific TunedModel.",
         "parameters": [
           {
@@ -6508,9 +6284,7 @@
         "security": []
       },
       "delete": {
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "description": "Deletes a tuned model.",
         "responses": {
           "default": {
@@ -6589,9 +6363,7 @@
           }
         },
         "description": "Lists the [`Model`s](https://ai.google.dev/gemini-api/docs/models/gemini)\navailable through the Gemini API.",
-        "tags": [
-          "generativelanguage"
-        ]
+        "tags": ["generativelanguage"]
       }
     },
     "/v1beta/models/{model}:countTokens": {
@@ -6635,9 +6407,7 @@
           }
         ],
         "operationId": "CountTokens",
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "description": "Runs a model's tokenizer on input `Content` and returns the token count.\nRefer to the [tokens guide](https://ai.google.dev/gemini-api/docs/tokens)\nto learn more about tokens.",
         "requestBody": {
           "content": {
@@ -6668,9 +6438,7 @@
       ],
       "get": {
         "description": "Lists the generated files owned by the requesting project.",
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "security": [
           {
             "google_oauth_implicit": [
@@ -6770,9 +6538,7 @@
           }
         },
         "description": "Lists all `Corpora` owned by the user.",
-        "tags": [
-          "generativelanguage"
-        ]
+        "tags": ["generativelanguage"]
       },
       "post": {
         "description": "Creates an empty `Corpus`.",
@@ -6786,9 +6552,7 @@
             }
           }
         },
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "security": [],
         "responses": {
           "default": {
@@ -6822,9 +6586,7 @@
         }
       ],
       "post": {
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "description": "Imports a `File` from File Service to a `FileSearchStore`.",
         "requestBody": {
           "description": "The request body.",
@@ -6881,9 +6643,7 @@
     "/v1beta/tunedModels": {
       "get": {
         "description": "Lists created tuned models.",
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "operationId": "ListTunedModels",
         "parameters": [
           {
@@ -6952,9 +6712,7 @@
             }
           }
         },
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "security": [],
         "responses": {
           "default": {
@@ -7038,9 +6796,7 @@
             }
           }
         },
-        "tags": [
-          "generativelanguage"
-        ]
+        "tags": ["generativelanguage"]
       }
     },
     "/v1beta/tunedModels/{tunedModel}:transferOwnership": {
@@ -7084,9 +6840,7 @@
           }
         },
         "security": [],
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "description": "Transfers ownership of the tuned model.\nThis is the only way to change ownership of the tuned model.\nThe current owner will be downgraded to writer role.",
         "requestBody": {
           "description": "The request body.",
@@ -7144,9 +6898,7 @@
           }
         },
         "security": [],
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "description": "Lists all `Document`s in a `Corpus`."
       },
       "parameters": [
@@ -7168,9 +6920,7 @@
       "get": {
         "x-google-operation-name": "ListOperations",
         "description": "Lists operations that match the specified filter in the request. If the\nserver doesn't support this method, it returns `UNIMPLEMENTED`.",
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "security": [],
         "responses": {
           "default": {
@@ -7277,9 +7027,7 @@
           }
         ],
         "operationId": "GetGeneratedFile",
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "description": "Gets a generated file. When calling this method via REST, only the metadata\nof the generated file is returned. To retrieve the file content via REST,\nadd alt=media as a query parameter."
       },
       "parameters": [
@@ -7314,9 +7062,7 @@
       ],
       "get": {
         "description": "Download the `File`.",
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "security": [
           {
             "google_oauth_implicit": [
@@ -7374,9 +7120,7 @@
         }
       ],
       "get": {
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "x-google-operation-name": "ListPermissions",
         "description": "Lists permissions for the specific resource.",
         "responses": {
@@ -7423,9 +7167,7 @@
         "operationId": "ListPermissionsByCorpus"
       },
       "post": {
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "x-google-operation-name": "CreatePermission",
         "description": "Create a permission to a specific resource.",
         "requestBody": {
@@ -7506,9 +7248,7 @@
           }
         ],
         "operationId": "GenerateContentByDynamicId",
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "x-google-operation-name": "GenerateContent",
         "description": "Generates a model response given an input `GenerateContentRequest`.\nRefer to the [text generation\nguide](https://ai.google.dev/gemini-api/docs/text-generation) for detailed\nusage information. Input capabilities differ between models, including\ntuned models. Refer to the [model\nguide](https://ai.google.dev/gemini-api/docs/models/gemini) and [tuning\nguide](https://ai.google.dev/gemini-api/docs/model-tuning) for details.",
         "requestBody": {
@@ -7585,9 +7325,7 @@
           },
           "description": "Required. The batch to update."
         },
-        "tags": [
-          "generativelanguage"
-        ]
+        "tags": ["generativelanguage"]
       }
     },
     "/v1beta/fileSearchStores/{fileSearchStore}/operations/{operation}": {
@@ -7640,9 +7378,7 @@
           }
         ],
         "operationId": "GetOperationByFileSearchStoreAndOperation",
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "x-google-operation-name": "GetOperation",
         "description": "Gets the latest state of a long-running operation.  Clients can use this\nmethod to poll the operation result at intervals as recommended by the API\nservice."
       }
@@ -7689,9 +7425,7 @@
           }
         ],
         "description": "Gets information about a specific `FileSearchStore`.",
-        "tags": [
-          "generativelanguage"
-        ]
+        "tags": ["generativelanguage"]
       },
       "delete": {
         "operationId": "DeleteFileSearchStore",
@@ -7728,9 +7462,7 @@
           }
         },
         "description": "Deletes a `FileSearchStore`.",
-        "tags": [
-          "generativelanguage"
-        ]
+        "tags": ["generativelanguage"]
       }
     },
     "/v1beta/models/{model}:batchGenerateContent": {
@@ -7760,9 +7492,7 @@
             }
           }
         },
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "operationId": "BatchGenerateContent",
         "parameters": [
           {
@@ -7863,15 +7593,11 @@
           },
           "description": "Required. The permission to update.\n\nThe permission's `name` field is used to identify the permission to update."
         },
-        "tags": [
-          "generativelanguage"
-        ]
+        "tags": ["generativelanguage"]
       },
       "get": {
         "description": "Gets information about a specific Permission.",
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "security": [],
         "responses": {
           "default": {
@@ -7942,9 +7668,7 @@
           }
         ],
         "operationId": "DeletePermission",
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "description": "Deletes the permission."
       }
     },
@@ -7986,9 +7710,7 @@
         ],
         "x-google-operation-name": "GetOperation",
         "description": "Gets the latest state of a long-running operation.  Clients can use this\nmethod to poll the operation result at intervals as recommended by the API\nservice.",
-        "tags": [
-          "generativelanguage"
-        ]
+        "tags": ["generativelanguage"]
       },
       "parameters": [
         {
@@ -8021,9 +7743,7 @@
         }
       ],
       "post": {
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "x-google-operation-name": "StreamGenerateContent",
         "description": "Generates a [streamed\nresponse](https://ai.google.dev/gemini-api/docs/text-generation?lang=python#generate-a-text-stream)\nfrom the model given an input `GenerateContentRequest`.",
         "requestBody": {
@@ -8079,9 +7799,7 @@
         }
       ],
       "post": {
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "description": "Runs a model's tokenizer on a text and returns the token count.",
         "requestBody": {
           "content": {
@@ -8148,9 +7866,7 @@
             }
           }
         },
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "operationId": "StreamGenerateContentByDynamicId",
         "parameters": [
           {
@@ -8231,9 +7947,7 @@
             }
           }
         },
-        "tags": [
-          "generativelanguage"
-        ]
+        "tags": ["generativelanguage"]
       }
     },
     "/v1beta/tunedModels/{tunedModel}/operations": {
@@ -8310,9 +8024,7 @@
           }
         },
         "security": [],
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "description": "Lists operations that match the specified filter in the request. If the\nserver doesn't support this method, it returns `UNIMPLEMENTED`."
       }
     },
@@ -8361,14 +8073,10 @@
           }
         ],
         "description": "Deletes a `Document`.",
-        "tags": [
-          "generativelanguage"
-        ]
+        "tags": ["generativelanguage"]
       },
       "get": {
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "description": "Gets information about a specific `Document`.",
         "parameters": [
           {
@@ -8458,9 +8166,7 @@
           },
           "description": "Required. The permission to create."
         },
-        "tags": [
-          "generativelanguage"
-        ]
+        "tags": ["generativelanguage"]
       },
       "parameters": [
         {
@@ -8477,9 +8183,7 @@
         }
       ],
       "get": {
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "description": "Lists permissions for the specific resource.",
         "parameters": [
           {
@@ -8553,9 +8257,7 @@
           }
         ],
         "description": "Gets information about a specific `Model` such as its version number, token\nlimits,\n[parameters](https://ai.google.dev/gemini-api/docs/models/generative-models#model-parameters)\nand other metadata. Refer to the [Gemini models\nguide](https://ai.google.dev/gemini-api/docs/models/gemini) for detailed\nmodel information.",
-        "tags": [
-          "generativelanguage"
-        ]
+        "tags": ["generativelanguage"]
       },
       "parameters": [
         {
@@ -8588,9 +8290,7 @@
         }
       ],
       "patch": {
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "x-google-operation-name": "UpdatePermission",
         "description": "Updates the permission.",
         "requestBody": {
@@ -8684,18 +8384,14 @@
           }
         ],
         "operationId": "GetPermissionByCorpusAndPermission",
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "x-google-operation-name": "GetPermission",
         "description": "Gets information about a specific Permission."
       },
       "delete": {
         "x-google-operation-name": "DeletePermission",
         "description": "Deletes the permission.",
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "security": [],
         "responses": {
           "default": {
@@ -8748,9 +8444,7 @@
         }
       ],
       "post": {
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "x-google-operation-name": "AsyncBatchEmbedContent",
         "description": "Enqueues a batch of `EmbedContent` requests for batch processing.\nWe have a `BatchEmbedContents` handler in `GenerativeService`, but it was\nsynchronized. So we name this one to be `Async` to avoid confusion.",
         "requestBody": {
@@ -8795,9 +8489,7 @@
       "get": {
         "x-google-operation-name": "ListOperations",
         "description": "Lists operations that match the specified filter in the request. If the\nserver doesn't support this method, it returns `UNIMPLEMENTED`.",
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "operationId": "ListOperationsByModel",
         "parameters": [
           {
@@ -8913,9 +8605,7 @@
           }
         },
         "security": [],
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "description": "Generates a grounded answer from the model given an input\n`GenerateAnswerRequest`.",
         "requestBody": {
           "content": {
@@ -8945,9 +8635,7 @@
         }
       ],
       "post": {
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "description": "Generates multiple embedding vectors from the input `Content` which\nconsists of a batch of strings represented as `EmbedContentRequest`\nobjects.",
         "requestBody": {
           "description": "The request body.",
@@ -8989,9 +8677,7 @@
     "/v1beta/cachedContents/{id}": {
       "get": {
         "description": "Reads CachedContent resource.",
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "security": [
           {
             "google_oauth_implicit": [
@@ -9107,9 +8793,7 @@
           },
           "description": "Required. The content cache entry to update"
         },
-        "tags": [
-          "generativelanguage"
-        ]
+        "tags": ["generativelanguage"]
       },
       "delete": {
         "security": [
@@ -9152,9 +8836,7 @@
           }
         ],
         "description": "Deletes CachedContent resource.",
-        "tags": [
-          "generativelanguage"
-        ]
+        "tags": ["generativelanguage"]
       }
     },
     "/v1beta/models/{model}:generateMessage": {
@@ -9198,9 +8880,7 @@
           }
         ],
         "operationId": "GenerateMessage",
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "description": "Generates a response from the model given an input `MessagePrompt`.",
         "requestBody": {
           "description": "The request body.",
@@ -9252,9 +8932,7 @@
         },
         "x-google-operation-name": "GetOperation",
         "description": "Gets the latest state of a long-running operation.  Clients can use this\nmethod to poll the operation result at intervals as recommended by the API\nservice.",
-        "tags": [
-          "generativelanguage"
-        ]
+        "tags": ["generativelanguage"]
       },
       "parameters": [
         {
@@ -9302,9 +8980,7 @@
             "bearer_auth": []
           }
         ],
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "description": "Creates a `File`.",
         "requestBody": {
           "description": "The request body.",
@@ -9379,9 +9055,7 @@
             "bearer_auth": []
           }
         ],
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "description": "Lists the metadata for `File`s owned by the requesting project."
       }
     },
@@ -9427,9 +9101,7 @@
           }
         },
         "security": [],
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "description": "Same as Predict but returns an LRO.",
         "requestBody": {
           "content": {
@@ -9484,9 +9156,7 @@
           }
         ],
         "operationId": "BatchEmbedText",
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "description": "Generates multiple embeddings from the model given input text in a\nsynchronous call.",
         "requestBody": {
           "content": {
@@ -9552,9 +9222,7 @@
             }
           }
         },
-        "tags": [
-          "generativelanguage"
-        ]
+        "tags": ["generativelanguage"]
       }
     },
     "/v1beta/fileSearchStores/{fileSearchStore}:uploadToFileSearchStore": {
@@ -9584,9 +9252,7 @@
           },
           "description": "The request body."
         },
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "security": [
           {
             "google_oauth_implicit": [
@@ -9671,9 +9337,7 @@
           }
         ],
         "description": "Starts asynchronous cancellation on a long-running operation.  The server\nmakes a best effort to cancel the operation, but success is not\nguaranteed.  If the server doesn't support this method, it returns\n`google.rpc.Code.UNIMPLEMENTED`.  Clients can use\nOperations.GetOperation or\nother methods to check whether the cancellation succeeded or whether the\noperation completed despite cancellation. On successful cancellation,\nthe operation is not deleted; instead, it becomes an operation with\nan Operation.error value with a google.rpc.Status.code of `1`,\ncorresponding to `Code.CANCELLED`.",
-        "tags": [
-          "generativelanguage"
-        ]
+        "tags": ["generativelanguage"]
       }
     },
     "/v1beta/tunedModels/{tunedModel}:generateText": {
@@ -9704,9 +9368,7 @@
           },
           "description": "The request body."
         },
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "security": [],
         "responses": {
           "default": {
@@ -9737,9 +9399,7 @@
     "/v1beta/files/{file}": {
       "get": {
         "description": "Gets the metadata for the given `File`.",
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "operationId": "GetFile",
         "parameters": [
           {
@@ -9796,9 +9456,7 @@
       ],
       "delete": {
         "description": "Deletes the `File`.",
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "operationId": "DeleteFile",
         "parameters": [
           {
@@ -9856,9 +9514,7 @@
         }
       ],
       "get": {
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "description": "Gets the latest state of a long-running operation.  Clients can use this\nmethod to poll the operation result at intervals as recommended by the API\nservice.",
         "responses": {
           "default": {
@@ -9923,9 +9579,7 @@
           },
           "description": "The request body."
         },
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "security": [],
         "responses": {
           "default": {
@@ -9983,9 +9637,7 @@
           },
           "description": "The request body."
         },
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "responses": {
           "default": {
             "content": {
@@ -10054,9 +9706,7 @@
           }
         },
         "description": "Gets information about a specific `Corpus`.",
-        "tags": [
-          "generativelanguage"
-        ]
+        "tags": ["generativelanguage"]
       },
       "delete": {
         "security": [],
@@ -10093,9 +9743,7 @@
           }
         ],
         "description": "Deletes a `Corpus`.",
-        "tags": [
-          "generativelanguage"
-        ]
+        "tags": ["generativelanguage"]
       }
     },
     "/v1beta/batches/{generateContentBatch}:updateEmbedContentBatch": {
@@ -10125,9 +9773,7 @@
           },
           "description": "Required. The batch to update."
         },
-        "tags": [
-          "generativelanguage"
-        ],
+        "tags": ["generativelanguage"],
         "security": [],
         "responses": {
           "default": {
