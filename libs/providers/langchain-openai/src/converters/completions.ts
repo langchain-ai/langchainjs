@@ -660,10 +660,27 @@ export const convertStandardContentMessageToCompletionsMessage: Converter<
       content: message.contentBlocks.filter((block) => block.type === "text"),
     };
   } else if (role === "assistant") {
-    return {
+    const textBlocks = message.contentBlocks.filter(
+      (block) => block.type === "text"
+    );
+    const toolCallBlocks = message.contentBlocks.filter(
+      (block) => block.type === "tool_call"
+    );
+    const result: Record<string, unknown> = {
       role: "assistant",
-      content: message.contentBlocks.filter((block) => block.type === "text"),
+      content: textBlocks,
     };
+    if (toolCallBlocks.length > 0) {
+      result.tool_calls = toolCallBlocks.map((block) =>
+        convertLangChainToolCallToOpenAI({
+          id: block.id ?? "",
+          name: block.name ?? "",
+          args: (block.args ?? {}) as Record<string, unknown>,
+          type: "tool_call",
+        })
+      );
+    }
+    return result as OpenAIClient.Chat.Completions.ChatCompletionMessageParam;
   } else if (role === "tool" && ToolMessage.isInstance(message)) {
     return {
       role: "tool",
