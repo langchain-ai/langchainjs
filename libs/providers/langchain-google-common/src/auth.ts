@@ -59,9 +59,9 @@ export abstract class GoogleAbstractedFetchClient implements GoogleAbstractedCli
       ? `Google request failed with status code ${status}: ${body}`
       : `Google request failed with status code ${status}`;
     const error = new Error(message);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     (error as any).response = response;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     (error as any).details = context;
     throw error;
   }
@@ -104,7 +104,7 @@ export abstract class GoogleAbstractedFetchClient implements GoogleAbstractedCli
       // may throw its own error (e.g. GaxiosError) for non-2xx responses
       // before we can handle them here. Extract what we can from the error
       // and re-throw with a useful, formatted message.
-      /* eslint-disable @typescript-eslint/no-explicit-any */
+      /* oxlint-disable @typescript-eslint/no-explicit-any */
       const err = fetchError as any;
       const status = err?.response?.status ?? err?.status;
 

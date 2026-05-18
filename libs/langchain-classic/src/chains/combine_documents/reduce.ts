@@ -13,7 +13,7 @@ import { Document } from "@langchain/core/documents";
  */
 export function splitListOfDocs(
   docs: Document[],
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   lengthFunc: (...args: any[]) => any,
   tokenMax: number
 ): Document[][] {

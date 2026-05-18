@@ -1,7 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { z } from "zod/v4";
 import { type BaseMessage } from "@langchain/core/messages";
 import {
+  getInteropZodObjectShape,
   interopSafeParseAsync,
   interopZodObjectMakeFieldsOptional,
   interopZodObjectPartial,
@@ -105,8 +106,8 @@ export async function initializeMiddlewareStates(
  * @returns A new schema containing only the private properties (underscore-prefixed), all made optional
  */
 export function derivePrivateState(
-  stateSchema?: z.ZodObject<z.ZodRawShape> | StateSchema<any>
-): z.ZodObject<z.ZodRawShape> {
+  stateSchema?: InteropZodObject | StateSchema<any>
+): InteropZodObject {
   const builtInStateSchema = {
     messages: z.custom<BaseMessage[]>(() => []),
     // Include optional structuredResponse so after_agent hooks can access/modify it
@@ -131,7 +132,7 @@ export function derivePrivateState(
       }
     }
   } else {
-    shape = stateSchema.shape;
+    shape = getInteropZodObjectShape(stateSchema);
   }
 
   const privateShape: Record<string, any> = { ...builtInStateSchema };

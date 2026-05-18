@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import type {
   InteropZodObject,
   InteropZodDefault,
@@ -356,7 +356,7 @@ export type AfterAgentHook<
  * This prevents functions from being accidentally assignable to AgentMiddleware
  * since functions have a 'name' property that would otherwise make them structurally compatible.
  */
-export const MIDDLEWARE_BRAND: unique symbol = Symbol("AgentMiddleware");
+export const MIDDLEWARE_BRAND: symbol = Symbol.for("AgentMiddleware");
 
 /**
  * Base middleware interface.

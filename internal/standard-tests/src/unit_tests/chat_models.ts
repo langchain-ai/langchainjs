@@ -13,7 +13,7 @@ import {
   BaseChatModelsTests,
   BaseChatModelsTestsFields,
   RecordStringAny,
-} from "../base.ts";
+} from "../base.js";
 
 const person = /* #__PURE__ */ z
   .object({

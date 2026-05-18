@@ -11,7 +11,8 @@ function _isOpenAIContextOverflowError(e: object): boolean {
     "message" in e &&
     typeof e.message === "string" &&
     (e.message.includes("Input tokens exceed the configured limit") ||
-      e.message.includes("exceeds the context window"))
+      e.message.includes("exceeds the context window") ||
+      e.message.includes("maximum context length"))
   ) {
     return true;
   }

@@ -114,8 +114,9 @@ describe("Files API with Code Execution", () => {
     expect(firstResult).toBeInstanceOf(AIMessage);
 
     // Extract container ID from first response
-    const container = (firstResult as AIMessage).additional_kwargs
-      ?.container as { id: string; expires_at: string } | undefined;
+    const container = (firstResult as AIMessage).additional_kwargs?.container as
+      | { id: string; expires_at: string }
+      | undefined;
     expect(container?.id).toBeTruthy();
 
     // Verify file output was created using extractGeneratedFilesAnthropic

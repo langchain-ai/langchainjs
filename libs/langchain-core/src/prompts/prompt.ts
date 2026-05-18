@@ -21,9 +21,9 @@ import { MessageContent, ContentBlock } from "../messages/index.js";
  * @augments BasePromptTemplateInput
  */
 export interface PromptTemplateInput<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   PartialVariableName extends string = any,
   Format extends TemplateFormat = TemplateFormat,
 > extends BasePromptTemplateInput<RunInput, PartialVariableName> {
@@ -83,7 +83,7 @@ type ExtractTemplateParamsRecursive<
 export type ParamsFromFString<T extends string> = {
   [Key in
     | ExtractTemplateParamsRecursive<T>[number]
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     | (string & Record<never, never>)]: any;
 };
 
@@ -108,9 +108,9 @@ export type ExtractedFStringParams<
  * ```
  */
 export class PromptTemplate<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   PartialVariableName extends string = any,
 >
   extends BaseStringPromptTemplate<RunInput, PartialVariableName>
@@ -263,7 +263,7 @@ export class PromptTemplate<
 
     return new PromptTemplate({
       // Rely on extracted types
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       inputVariables: [...names] as any[],
       templateFormat,
       template,

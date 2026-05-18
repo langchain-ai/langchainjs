@@ -92,7 +92,7 @@ export class ChatPromptValue
 
   constructor(fields: BaseMessage[] | ChatPromptValueFields) {
     if (Array.isArray(fields)) {
-      // eslint-disable-next-line no-param-reassign
+      // oxlint-disable-next-line no-param-reassign
       fields = { messages: fields };
     }
 
@@ -145,7 +145,7 @@ export class ImagePromptValue extends BasePromptValue {
 
   constructor(fields: ImageContent | ImagePromptValueFields) {
     if (!("imageUrl" in fields)) {
-      // eslint-disable-next-line no-param-reassign
+      // oxlint-disable-next-line no-param-reassign
       fields = { imageUrl: fields };
     }
 

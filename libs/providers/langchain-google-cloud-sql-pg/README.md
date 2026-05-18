@@ -2,14 +2,15 @@
 
 The LangChain package for CloudSQL for Postgres provides a way to connect to Cloud SQL instances from the LangChain ecosystem.
 
-
 Main features:
-* The package creates a shared connection pool to connect to Google Cloud Postgres databases utilizing different ways for authentication such as IAM, user and password authorization.
-* Store metadata in columns instead of JSON, resulting in significant performance improvements.
 
-##  Before you begin
+- The package creates a shared connection pool to connect to Google Cloud Postgres databases utilizing different ways for authentication such as IAM, user and password authorization.
+- Store metadata in columns instead of JSON, resulting in significant performance improvements.
+
+## Before you begin
 
 In order to use this package, you first need to go through the following steps:
+
 1.  [Select or create a Cloud Platform project.](https://console.cloud.google.com/project)
 2.  [Enable billing for your project.](https://cloud.google.com/billing/docs/how-to/modify-project#enable_billing_for_a_project)
 3.  [Enable the Cloud SQL Admin API.](https://cloud.google.com/sql/docs/postgres/admin-api)
@@ -53,9 +54,9 @@ const embeddingService = new SyntheticEmbeddings({ vectorSize: 768 });
 
 ```
 
--   You can pass the ipType, user, password and iamAccountEmail through the PostgresEngineArgs interface to the PostgresEngine creation.
--   You can pass the schemaName, contentColumn, embeddingColum, metadataColumns and others through the VectorStoreTableArgs interface to the init_vectorstore_table method.
--   Passing an empty object to these methods allows you to use the default values.
+- You can pass the ipType, user, password and iamAccountEmail through the PostgresEngineArgs interface to the PostgresEngine creation.
+- You can pass the schemaName, contentColumn, embeddingColum, metadataColumns and others through the VectorStoreTableArgs interface to the init_vectorstore_table method.
+- Passing an empty object to these methods allows you to use the default values.
 
 ### Vector Store usage
 
@@ -71,15 +72,16 @@ const pvectorArgs: PostgresVectorStoreArgs = {
 
 const vectorStoreInstance = await PostgresVectorStore.initialize(engine, embeddingService, "my-table", pvectorArgs)
 ```
--   You can pass the schemaName, contentColumn, embeddingColumn, distanceStrategy and others through the PostgresVectorStoreArgs interface to the PostgresVectorStore creation.
--   Passing an empty object to these methods allows you to use the default values.
+
+- You can pass the schemaName, contentColumn, embeddingColumn, distanceStrategy and others through the PostgresVectorStoreArgs interface to the PostgresVectorStore creation.
+- Passing an empty object to these methods allows you to use the default values.
 
 PostgresVectorStore interface methods available:
 
--   addDocuments
--   addVectors
--   similaritySearch
--   and others.
+- addDocuments
+- addVectors
+- similaritySearch
+- and others.
 
 See the full [Vector Store](https://js.langchain.com/docs/integrations/vectorstores/google_cloudsql_pg) tutorial.
 
@@ -93,17 +95,21 @@ First, initialize the Chat History Table and then create the ChatMessageHistory 
 // ChatHistory table initialization
 await engine.initChatHistoryTable("chat_message_table");
 
-const historyInstance = await PostgresChatMessageHistory.initialize(engine, "test", "chat_message_table");
+const historyInstance = await PostgresChatMessageHistory.initialize(
+  engine,
+  "test",
+  "chat_message_table"
+);
 ```
 
 The create method of the PostgresChatMessageHistory receives the engine, the session Id and the table name.
 
 PostgresChatMessageHistory interface methods available:
 
--   addMessage
--   addMessages
--   getMessages
--   clear
+- addMessage
+- addMessages
+- getMessages
+- clear
 
 See the full [Chat Message History](https://js.langchain.com/docs/integrations/memory/google_cloudsql_pg) tutorial.
 
@@ -116,12 +122,20 @@ import { PostgresEngine, PostgresLoader } from "@langchain/google-cloud-sql-pg";
 
 const documentLoaderArgs: PostgresLoaderOptions = {
   tableName: "test_table_custom",
-  contentColumns: [ "fruit_name", "variety"],
-  metadataColumns: ["fruit_id", "quantity_in_stock", "price_per_unit", "organic"],
-  format: "text"
+  contentColumns: ["fruit_name", "variety"],
+  metadataColumns: [
+    "fruit_id",
+    "quantity_in_stock",
+    "price_per_unit",
+    "organic",
+  ],
+  format: "text",
 };
 
-const documentLoaderInstance = await PostgresLoader.initialize(PEInstance, documentLoaderArgs);
+const documentLoaderInstance = await PostgresLoader.initialize(
+  PEInstance,
+  documentLoaderArgs
+);
 
 const documents = await documentLoaderInstance.load();
 ```

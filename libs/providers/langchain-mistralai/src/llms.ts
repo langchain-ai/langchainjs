@@ -344,7 +344,7 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
                   choice.message.content += content;
                   choice.finishReason = part.finishReason ?? "length";
                 }
-                // eslint-disable-next-line no-void
+                // oxlint-disable-next-line no-void
                 void runManager?.handleLLMNewToken(content, {
                   prompt: part.index,
                   completion: part.index,
@@ -477,7 +477,7 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
             }
           }
           return res;
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (e: any) {
           if (
             e.message?.includes("status: 400") ||
@@ -520,7 +520,7 @@ Either provide one via the "apiKey" field in the constructor, or set the "MISTRA
         },
       });
       yield chunk;
-      // eslint-disable-next-line no-void
+      // oxlint-disable-next-line no-void
       void runManager?.handleLLMNewToken(chunk.text ?? "");
     }
     if (options.signal?.aborted) {

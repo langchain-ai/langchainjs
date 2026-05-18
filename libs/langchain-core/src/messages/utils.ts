@@ -306,6 +306,45 @@ export function coerceMessageLikeToMessage(
 }
 
 /**
+ * Renders a single content block to a compact string representation.
+ * Text blocks are returned as-is; multimodal blocks (image, audio, video, file)
+ * become short placeholders like `[image]` so their existence is preserved
+ * without inflating token counts with base64 data or metadata.
+ */
+function _contentBlockToString(
+  block: string | { type?: string; [key: string]: unknown }
+): string {
+  if (typeof block === "string") return block;
+  switch (block.type) {
+    case "text":
+      return (block as { text: string }).text ?? "";
+    case "text-plain":
+      return (block as { text?: string }).text ?? "[text-plain file]";
+    case "image":
+    case "image_url":
+      return "[image]";
+    case "audio":
+    case "input_audio":
+      return "[audio]";
+    case "video":
+      return "[video]";
+    case "file":
+      return "[file]";
+    case "reasoning":
+    case "tool_call":
+    case "tool_call_chunk":
+    case "invalid_tool_call":
+    case "server_tool_call":
+    case "server_tool_call_chunk":
+    case "server_tool_call_result":
+    case "non_standard":
+      return "";
+    default:
+      return block.type ? `[${block.type}]` : "";
+  }
+}
+
+/**
  * This function is used by memory classes to get a string representation
  * of the chat message history, based on the message content and role.
  *
@@ -341,9 +380,13 @@ export function getBufferString(
     }
     const nameStr = m.name ? `${m.name}, ` : "";
 
-    // Use m.text property which extracts only text content, avoiding metadata
-    // For non-string content (e.g., content blocks), m.text extracts only text blocks
-    const readableContent = m.text;
+    // Render content compactly: text as-is, multimodal blocks as placeholders
+    const readableContent =
+      typeof m.content === "string"
+        ? m.content
+        : Array.isArray(m.content)
+          ? m.content.map(_contentBlockToString).filter(Boolean).join("")
+          : "";
 
     let message = `${role}: ${nameStr}${readableContent}`;
 

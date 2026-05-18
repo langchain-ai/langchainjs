@@ -15,7 +15,7 @@ export const RetrySchema = z.object({
   retryOn: z
     .union([
       z.function().args(z.instanceof(Error)).returns(z.boolean()),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       z.array(z.custom<new (...args: any[]) => Error>()),
     ])
     .default(() => () => true),

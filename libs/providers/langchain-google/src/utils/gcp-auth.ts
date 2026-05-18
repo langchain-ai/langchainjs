@@ -6,9 +6,17 @@
  * License: MIT (https://github.com/kriasoft/web-auth-library/blob/main/LICENSE)
  */
 
-import { decodeJwt, importPKCS8, SignJWT } from "jose";
 import { AuthError } from "../utils/errors.js";
 import { iife } from "../utils/misc.js";
+
+type JoseModule = typeof import("jose");
+
+let joseModulePromise: Promise<JoseModule> | undefined;
+
+async function getJose(): Promise<JoseModule> {
+  joseModulePromise ??= import("jose");
+  return joseModulePromise;
+}
 
 /**
  * Google Cloud Platform service account credentials interface.
@@ -84,8 +92,8 @@ export function normalizeGCPCredentials(
   return typeof credentials === "string"
     ? Object.freeze(JSON.parse(credentials))
     : Object.isFrozen(credentials)
-    ? credentials
-    : Object.freeze(credentials);
+      ? credentials
+      : Object.freeze(credentials);
 }
 
 /**
@@ -107,7 +115,8 @@ export function normalizeGCPCredentials(
  * // Use privateKey for signing operations
  * ```
  */
-export function getGCPPrivateKey(credentials: GCPCredentials) {
+export async function getGCPPrivateKey(credentials: GCPCredentials) {
+  const { importPKCS8 } = await getJose();
   return importPKCS8(credentials.private_key, "RS256");
 }
 
@@ -138,6 +147,7 @@ export function getGCPPrivateKey(credentials: GCPCredentials) {
  * ```
  */
 export async function getGCPCustomToken(credentials: GCPCredentials) {
+  const { SignJWT } = await getJose();
   const privateKey = await getGCPPrivateKey(credentials);
   const customToken = await new SignJWT()
     .setIssuer(credentials.client_email)
@@ -249,6 +259,7 @@ export async function getGCPCredentialsAccessToken(
     const data = await res.json();
 
     if ("id_token" in data) {
+      const { decodeJwt } = await getJose();
       const claims = decodeJwt(data.id_token);
       return { token: data.id_token, expires: claims.exp as number };
     }

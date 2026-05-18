@@ -1,15 +1,29 @@
-# 🦜️🔗 LangChain.js
+<div align="center">
+  <a href="https://www.langchain.com/">
+    <picture>
+      <source media="(prefers-color-scheme: light)" srcset=".github/images/logo-light.svg">
+      <source media="(prefers-color-scheme: dark)" srcset=".github/images/logo-dark.svg">
+      <img alt="LangChain Logo" src=".github/images/logo-dark.svg" width="50%">
+    </picture>
+  </a>
+</div>
 
-![npm](https://img.shields.io/npm/dm/langchain) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/langchain.svg?style=social&label=Follow%20%40LangChain)](https://x.com/langchain)
+<div align="center">
+  <h3>The agent engineering platform.</h3>
+</div>
+
+![npm](https://img.shields.io/npm/dm/langchain) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/langchain_js.svg?style=social&label=Follow%20%40LangChain)](https://x.com/langchain_js)
 
 LangChain is a framework for building LLM-powered applications. It helps you chain together interoperable components and third-party integrations to simplify AI application development — all while future-proofing decisions as the underlying technology evolves.
 
+> [!TIP]
+> Just getting started? Check out **[Deep Agents](http://docs.langchain.com/oss/javascript/deepagents/)** — a higher-level package built on LangChain for agents that have built-in capabilites for common usage patterns such as planning, subagents, file system usage, and more.
+
 **Documentation**: To learn more about LangChain, check out [the docs](https://docs.langchain.com/oss/javascript/langchain/overview).
 
-If you're looking for more advanced customization or agent orchestration, check out [LangGraph.js](https://docs.langchain.com/oss/javascript/langgraph/overview). our framework for building agents and controllable workflows.
+If you're looking for more advanced customization or agent orchestration, check out [LangGraph.js](https://docs.langchain.com/oss/javascript/langgraph/overview) - our framework for building agents and controllable workflows.
 
-> [!NOTE]
-> Looking for the Python version? Check out [LangChain](https://github.com/langchain-ai/langchain).
+For an equivalent Python library, check out [LangChain](https://github.com/langchain-ai/langchain).
 
 To help you ship LangChain apps to production faster, check out [LangSmith](https://smith.langchain.com).
 [LangSmith](https://smith.langchain.com) is a unified developer platform for building, testing, and monitoring LLM applications.
@@ -35,8 +49,11 @@ Use LangChain for:
 
 ## 📦 LangChain's ecosystem
 
+- [Deep Agents (JS)](https://docs.langchain.com/oss/javascript/deepagents/overview) - Build agents that can plan, use subagents, and leverage file systems for complex tasks. A higher-level package built on top of LangChain.
 - [LangSmith](https://www.langchain.com/langsmith) - Unified developer platform for building, testing, and monitoring LLM applications. With LangSmith, you can debug poor-performing LLM app runs, evaluate agent trajectories, gain visibility in production, and deploy agents with confidence.
+- [LangSmith Deployment](https://docs.langchain.com/langsmith/deployments) — Deploy and scale agents with a purpose-built platform for long-running, stateful workflows
 - [LangGraph](https://docs.langchain.com/oss/javascript/langgraph/overview) - Build agents that can reliably handle complex tasks with LangGraph, our low-level agent orchestration framework. LangGraph offers customizable architecture, long-term memory, and human-in-the-loop workflows — and is trusted in production by companies like LinkedIn, Uber, Klarna, and GitLab.
+- [Integrations](https://docs.langchain.com/oss/javascript/integrations/providers/overview) — Chat & embedding models, tools & toolkits, and more
 
 ## 🌐 Supported Environments
 

@@ -619,5 +619,153 @@ describe("openaiTranslator", () => {
 
       expect(message.contentBlocks).toEqual(expected);
     });
+
+    it("should translate tool_search_call to server_tool_call", () => {
+      const message = new AIMessage({
+        content: [],
+        additional_kwargs: {
+          tool_outputs: [
+            {
+              type: "tool_search_call",
+              id: "ts_001",
+              call_id: "call_abc",
+              execution: "server",
+              status: "completed",
+            },
+          ],
+        },
+        response_metadata: { model_provider: "openai" },
+      });
+
+      const blocks = message.contentBlocks;
+      const serverToolCall = blocks.find(
+        (b) => b.type === "server_tool_call"
+      ) as ContentBlock.Tools.ServerToolCall;
+      expect(serverToolCall).toBeDefined();
+      expect(serverToolCall.name).toBe("tool_search");
+      expect(serverToolCall.id).toBe("ts_001");
+      expect(serverToolCall.extras).toEqual({
+        execution: "server",
+        status: "completed",
+        call_id: "call_abc",
+      });
+    });
+
+    it("should translate tool_search_output to server_tool_call_result", () => {
+      const message = new AIMessage({
+        content: [],
+        additional_kwargs: {
+          tool_outputs: [
+            {
+              type: "tool_search_output",
+              id: "tso_001",
+              call_id: "call_abc",
+              execution: "server",
+              status: "completed",
+              tools: [
+                {
+                  type: "function",
+                  name: "get_weather",
+                  description: "Get weather",
+                  parameters: { type: "object", properties: {} },
+                  strict: null,
+                },
+              ],
+            },
+          ],
+        },
+        response_metadata: { model_provider: "openai" },
+      });
+
+      const blocks = message.contentBlocks;
+      const result = blocks.find(
+        (b) => b.type === "server_tool_call_result"
+      ) as ContentBlock.Tools.ServerToolCallResult;
+      expect(result).toBeDefined();
+      expect(result.status).toBe("success");
+      expect(result.toolCallId).toBe("tso_001");
+      expect(result.output).toEqual({
+        tools: [
+          {
+            type: "function",
+            name: "get_weather",
+            description: "Get weather",
+            parameters: { type: "object", properties: {} },
+            strict: null,
+          },
+        ],
+      });
+      expect(result.extras).toEqual({
+        name: "tool_search",
+        execution: "server",
+      });
+    });
+  });
+
+  describe("phase parameter support", () => {
+    it("should move phase into extras on text content blocks in standard content", () => {
+      const message = new AIMessage({
+        content: [
+          {
+            type: "text",
+            text: "Let me check that for you.",
+            annotations: [],
+            phase: "commentary",
+          },
+        ],
+        response_metadata: { model_provider: "openai" },
+      });
+
+      const blocks = message.contentBlocks;
+      const textBlock = blocks.find(
+        (b) => b.type === "text"
+      ) as ContentBlock.Text;
+      expect(textBlock).toBeDefined();
+      expect(textBlock.text).toBe("Let me check that for you.");
+      expect(textBlock.extras).toEqual({ phase: "commentary" });
+      // phase should not remain at top level in standard content
+      expect(textBlock.phase).toBeUndefined();
+    });
+
+    it("should move phase 'final_answer' into extras on text content blocks", () => {
+      const message = new AIMessage({
+        content: [
+          {
+            type: "text",
+            text: "The weather is sunny.",
+            annotations: [],
+            phase: "final_answer",
+          },
+        ],
+        response_metadata: { model_provider: "openai" },
+      });
+
+      const blocks = message.contentBlocks;
+      const textBlock = blocks.find(
+        (b) => b.type === "text"
+      ) as ContentBlock.Text;
+      expect(textBlock).toBeDefined();
+      expect(textBlock.extras).toEqual({ phase: "final_answer" });
+    });
+
+    it("should not have extras when phase not present", () => {
+      const message = new AIMessage({
+        content: [
+          {
+            type: "text",
+            text: "Hello!",
+            annotations: [],
+          },
+        ],
+        response_metadata: { model_provider: "openai" },
+      });
+
+      const blocks = message.contentBlocks;
+      const textBlock = blocks.find(
+        (b) => b.type === "text"
+      ) as ContentBlock.Text;
+      expect(textBlock).toBeDefined();
+      expect(textBlock.extras).toBeUndefined();
+    });
   });
 });

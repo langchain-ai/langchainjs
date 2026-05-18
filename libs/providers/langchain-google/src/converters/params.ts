@@ -87,7 +87,8 @@ export function convertReasoningEffortToReasoningTokens(
  * into user-facing friendly reasoning levels/labels. The mapping relies on Google's
  * documented reasoning levels for different models:
  *
- * - -1 means "high" effort (per API documentation: the default, dynamic setting).
+ * - -1 means default effort (per API documentation: this is "minimal" for flash-lite models
+ *   and "high" (dynamic) for others).
  * - 0 means "minimal" unless the model is "gemini-3-pro", for which it maps to "low".
  * - <= 1024 tokens: "low"
  * - <= 8192 tokens: "medium" (unless model is "gemini-3-pro", for which it reverts to "low")
@@ -118,7 +119,11 @@ export function convertReasoningTokensToReasoningEffort(
   if (typeof reasoningTokens === "undefined") {
     return undefined;
   } else if (reasoningTokens === -1) {
-    // -1 means "high"/dynamic ("default" per https://ai.google.dev/gemini-api/docs/thinking#thinking-levels)
+    // -1 means "minimal" for flash-lite models and "high"/dynamic for others
+    // ("default" per https://ai.google.dev/gemini-api/docs/thinking#thinking-levels)
+    if (model && getModelLevel(model) === "flash-lite") {
+      return "minimal";
+    }
     return "high";
   } else if (reasoningTokens === 0) {
     if (model?.startsWith("gemini-3-pro")) {

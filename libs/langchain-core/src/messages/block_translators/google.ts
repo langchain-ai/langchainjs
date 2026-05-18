@@ -20,6 +20,28 @@ function convertToV1FromChatGoogleMessage(
           return [{ type: "text", text: message.content }];
         }
       } else {
+        const originalBlock = message.additional_kwargs
+          ?.originalTextContentBlock as Record<string, unknown> | undefined;
+        if (originalBlock?.thoughtSignature) {
+          // During streaming with thinking models, thoughtSignature arrives in
+          // a metadata-only chunk and is stored in originalTextContentBlock.
+          // When content is an array (due to thinking parts), this signature
+          // isn't carried into the content array by mergeContent().
+          // Merge it into the last non-thinking text block.
+          const hasSignatureInContent = message.content.some(
+            (b: Record<string, unknown>) => "thoughtSignature" in b
+          );
+          if (!hasSignatureInContent) {
+            const result = [...message.content];
+            for (let i = result.length - 1; i >= 0; i--) {
+              const block = result[i] as Record<string, unknown>;
+              if (block.type === "text" && !block.thought) {
+                block.thoughtSignature = originalBlock.thoughtSignature;
+                return result;
+              }
+            }
+          }
+        }
         return message.content;
       }
     });

@@ -1,8 +1,10 @@
-import { describe, test, expect } from "@jest/globals";
+import { describe, test, expect } from "vitest";
 import {
   convertResponseContentToChatGenerationChunk,
+  convertMessageContentToParts,
   mapGenerateContentResultToChatResult,
 } from "../utils/common.js";
+import { AIMessage } from "@langchain/core/messages";
 import type {
   EnhancedGenerateContentResponse,
   FinishReason,
@@ -267,5 +269,110 @@ describe("Streaming thinking content handling", () => {
     // Should NOT be a concatenated string like "Thinking...Answer"
     expect(typeof content).not.toBe("string");
     expect(Array.isArray(content)).toBe(true);
+  });
+});
+
+// https://github.com/langchain-ai/langchainjs/issues/10103
+describe("Round-trip thinking content handling", () => {
+  test("thinking block with signature converts back to Gemini part", () => {
+    const message = new AIMessage({
+      content: [
+        {
+          type: "thinking",
+          thinking: "Let me reason about this...",
+          signature: "sig123",
+        },
+        { type: "text", text: "The answer is 42." },
+      ],
+    });
+
+    const parts = convertMessageContentToParts(message, true, []);
+
+    expect(parts).toHaveLength(2);
+    expect(parts[0]).toEqual({
+      text: "Let me reason about this...",
+      thought: true,
+      thoughtSignature: "sig123",
+    });
+    expect(parts[1]).toEqual({ text: "The answer is 42." });
+  });
+
+  test("thinking block without signature converts back without thoughtSignature", () => {
+    const message = new AIMessage({
+      content: [
+        { type: "thinking", thinking: "Some thinking" },
+        { type: "text", text: "Some answer" },
+      ],
+    });
+
+    const parts = convertMessageContentToParts(message, true, []);
+
+    expect(parts).toHaveLength(2);
+    expect(parts[0]).toEqual({
+      text: "Some thinking",
+      thought: true,
+    });
+    expect(parts[0]).not.toHaveProperty("thoughtSignature");
+    expect(parts[1]).toEqual({ text: "Some answer" });
+  });
+
+  test("thinking-only content (no text block) works", () => {
+    const message = new AIMessage({
+      content: [
+        {
+          type: "thinking",
+          thinking: "Only thinking, no answer",
+          signature: "sigABC",
+        },
+      ],
+    });
+
+    const parts = convertMessageContentToParts(message, true, []);
+
+    expect(parts).toHaveLength(1);
+    expect(parts[0]).toEqual({
+      text: "Only thinking, no answer",
+      thought: true,
+      thoughtSignature: "sigABC",
+    });
+  });
+
+  test("full round-trip: Gemini response -> LangChain -> Gemini parts", () => {
+    const originalParts = [
+      {
+        text: "Let me think step by step...",
+        thought: true,
+        thoughtSignature: "roundtrip-sig",
+      },
+      {
+        text: "The final answer is 7.",
+      },
+    ] as GoogleGenerativeAIPart[];
+
+    // Gemini response -> LangChain AIMessage
+    const mockResponse = createMockResponse([
+      {
+        content: { role: "model", parts: originalParts },
+        finishReason: "STOP" as FinishReason,
+        index: 0,
+        safetyRatings: [],
+      },
+    ]);
+
+    const chatResult = mapGenerateContentResultToChatResult(mockResponse);
+    const aiMessage = chatResult.generations[0].message;
+
+    // LangChain AIMessage -> Gemini parts (outgoing direction)
+    const roundTrippedParts = convertMessageContentToParts(aiMessage, true, []);
+
+    expect(roundTrippedParts).toHaveLength(2);
+    expect(roundTrippedParts[0]).toEqual({
+      text: "Let me think step by step...",
+      thought: true,
+      thoughtSignature: "roundtrip-sig",
+    });
+    expect(roundTrippedParts[1]).toEqual({
+      text: "The final answer is 7.",
+    });
   });
 });

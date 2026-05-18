@@ -5,6 +5,26 @@ import { iife } from "./misc.js";
 // Internal namespace for all Google provider errors
 const ns = baseNs.sub("google");
 
+async function readErrorResponseBody(response: Response): Promise<unknown> {
+  return iife(async () => {
+    try {
+      const contentType = response.headers.get("content-type") ?? "";
+      if (contentType.includes("application/json")) {
+        return await response.json();
+      }
+
+      const text = await response.text();
+      try {
+        return JSON.parse(text);
+      } catch {
+        return text;
+      }
+    } catch {
+      return null;
+    }
+  });
+}
+
 /**
  * Base error class for all Google provider errors.
  *
@@ -289,17 +309,7 @@ export class AuthError extends ns.brand(GoogleError, "auth") {
    * ```
    */
   static async fromResponse(response: Response): Promise<AuthError> {
-    const errorBody = await iife(async () => {
-      try {
-        const contentType = response.headers.get("content-type") ?? "";
-        if (contentType.includes("application/json")) {
-          return await response.json();
-        }
-        return await response.text();
-      } catch {
-        return null;
-      }
-    });
+    const errorBody = await readErrorResponseBody(response);
 
     const message =
       errorBody?.error_description ??
@@ -498,17 +508,7 @@ export class RequestError extends ns.brand(GoogleError, "request") {
    * ```
    */
   static async fromResponse(response: Response): Promise<RequestError> {
-    const errorBody = await iife(async () => {
-      try {
-        const contentType = response.headers.get("content-type") ?? "";
-        if (contentType.includes("application/json")) {
-          return await response.json();
-        }
-        return await response.text();
-      } catch {
-        return null;
-      }
-    });
+    const errorBody = await readErrorResponseBody(response);
 
     const message =
       errorBody?.error?.message ??

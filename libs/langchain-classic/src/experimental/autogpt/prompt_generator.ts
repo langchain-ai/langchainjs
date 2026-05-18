@@ -82,7 +82,7 @@ export class PromptGenerator {
     this.performance_evaluation.push(evaluation);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   _generate_numbered_list(items: any[], item_type = "list"): string {
     if (item_type === "command") {
       const command_strings = items.map(

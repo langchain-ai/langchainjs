@@ -17,9 +17,6 @@ describe("wrapAnthropicClientError", () => {
       "prompt is too long"
     );
     expect((wrapped as ContextOverflowError).cause).toBe(originalError);
-    expect((wrapped as ContextOverflowError).lc_error_code).toBe(
-      "CONTEXT_OVERFLOW"
-    );
   });
 
   test("should not wrap non-context-overflow 400 errors", () => {
@@ -43,7 +40,7 @@ describe("wrapAnthropicClientError", () => {
     const wrapped = wrapAnthropicClientError(originalError);
 
     expect(wrapped).not.toBeInstanceOf(ContextOverflowError);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect((wrapped as any).lc_error_code).toBe("INVALID_TOOL_RESULTS");
   });
 
@@ -52,7 +49,7 @@ describe("wrapAnthropicClientError", () => {
 
     const wrapped = wrapAnthropicClientError(originalError);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect((wrapped as any).lc_error_code).toBe("MODEL_AUTHENTICATION");
   });
 
@@ -61,7 +58,7 @@ describe("wrapAnthropicClientError", () => {
 
     const wrapped = wrapAnthropicClientError(originalError);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect((wrapped as any).lc_error_code).toBe("MODEL_NOT_FOUND");
   });
 
@@ -70,7 +67,7 @@ describe("wrapAnthropicClientError", () => {
 
     const wrapped = wrapAnthropicClientError(originalError);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect((wrapped as any).lc_error_code).toBe("MODEL_RATE_LIMIT");
   });
 

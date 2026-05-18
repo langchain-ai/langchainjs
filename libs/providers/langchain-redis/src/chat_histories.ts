@@ -21,7 +21,7 @@ export type RedisChatMessageHistoryInput = {
   sessionTTL?: number;
   config?: RedisClientOptions;
   // Typing issues with createClient output: https://github.com/redis/node-redis/issues/1865
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   client?: any;
 };
 

@@ -37,7 +37,7 @@ test("Test SqlDatabaseChain", async () => {
 
   expect(chain.prompt).toBe(SQL_SQLITE_PROMPT);
 
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const run = await chain.run("How many users are there?");
   // console.log(run);

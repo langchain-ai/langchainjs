@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { describe, test, expect } from "vitest";
 import {
   FilterExpression,
@@ -40,6 +40,13 @@ describe("TagFilter", () => {
     expect(filter.toString()).toBe("(-@category:{electronics})");
   });
 
+  test("escapes special characters in tag values", () => {
+    const filter = new TagFilter("tenant_id", "tenant_a} @tenant_id:{*");
+    expect(filter.toString()).toBe(
+      "@tenant_id:{tenant_a\\}\\ \\@tenant_id\\:\\{\\*}"
+    );
+  });
+
   test("returns wildcard for empty array", () => {
     const filter = new TagFilter("category", []);
     expect(filter.toString()).toBe("*");
@@ -59,6 +66,11 @@ describe("TagFilter", () => {
   test("Tag convenience function with ne works", () => {
     const filter = Tag("category").ne("archived");
     expect(filter.toString()).toBe("(-@category:{archived})");
+  });
+
+  test("rejects unsafe tag field names", () => {
+    const filter = new TagFilter("tenant_id:{*}", "tenant_a");
+    expect(() => filter.toString()).toThrow("Unsafe field name");
   });
 });
 
@@ -143,6 +155,22 @@ describe("TextFilter", () => {
     expect(filter.toString()).toBe('(-@title:("laptop"))');
   });
 
+  test("escapes syntax characters in text query", () => {
+    const filter = new TextFilter(
+      "title",
+      'foo") @secret_field:("bar',
+      "exact"
+    );
+    expect(filter.toString()).toBe(
+      '@title:("foo\\\"\\) \\@secret_field\\:\\(\\\"bar")'
+    );
+  });
+
+  test("preserves wildcard operators for wildcard search", () => {
+    const filter = new TextFilter("title", "*phone?", "wildcard");
+    expect(filter.toString()).toBe("@title:(*phone?)");
+  });
+
   test("returns wildcard for empty query", () => {
     const filter = new TextFilter("title", "", "exact");
     expect(filter.toString()).toBe("*");
@@ -166,6 +194,11 @@ describe("TextFilter", () => {
 
     const neFilter = Text("title").ne("archived");
     expect(neFilter.toString()).toBe('(-@title:("archived"))');
+  });
+
+  test("rejects unsafe text field names", () => {
+    const filter = new TextFilter("title) @secret", "query");
+    expect(() => filter.toString()).toThrow("Unsafe field name");
   });
 });
 

@@ -6,7 +6,7 @@ import { BaseChain, ChainInputs } from "./base.js";
 import { SerializedVectorDBQAChain } from "./serde.js";
 import { loadQAStuffChain } from "./question_answering/load.js";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
 
 /**

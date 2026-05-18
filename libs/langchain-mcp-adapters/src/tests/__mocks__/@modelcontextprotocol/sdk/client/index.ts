@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// eslint-disable-next-line import/no-extraneous-dependencies
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { vi } from "vitest";
 
 const clientPrototype = {
@@ -29,5 +28,12 @@ const clientPrototype = {
   close: vi.fn().mockImplementation(() => Promise.resolve()),
   tools: [], // Add the tools property
 };
-export const Client: any = vi.fn().mockImplementation(() => clientPrototype);
+export const Client: any = vi
+  .fn()
+  .mockImplementation(function mockClient(clientInfo) {
+    return {
+      ...clientPrototype,
+      clientInfo,
+    };
+  });
 Client.prototype = clientPrototype;

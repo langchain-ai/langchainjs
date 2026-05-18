@@ -1,4 +1,4 @@
-import { v7 as uuidv7 } from "uuid";
+import { v7 as uuidv7 } from "../utils/uuid/index.js";
 import { AgentAction, AgentFinish } from "../agents.js";
 import type { ChainValues } from "../utils/types/index.js";
 import { LLMResult } from "../outputs.js";
@@ -17,6 +17,7 @@ import { LangChainTracer } from "../tracers/tracer_langchain.js";
 import { consumeCallback } from "./promises.js";
 import { Serialized } from "../load/serializable.js";
 import type { DocumentInterface } from "../documents/document.js";
+import type { ChatModelStreamEvent } from "../language_models/event.js";
 import { isTracingEnabled } from "../utils/callbacks.js";
 import { isBaseTracer } from "../tracers/base.js";
 import {
@@ -33,6 +34,8 @@ type BaseCallbackManagerMethods = {
 export interface CallbackManagerOptions {
   verbose?: boolean;
   tracing?: boolean;
+  tracerInheritableMetadata?: Record<string, unknown>;
+  tracerInheritableTags?: string[];
 }
 
 export type Callbacks =
@@ -145,11 +148,11 @@ export class BaseRunManager {
 
   async handleCustomEvent(
     eventName: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     data: any,
     _runId?: string,
     _tags?: string[],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     _metadata?: Record<string, any>
   ): Promise<void> {
     await Promise.all(
@@ -188,7 +191,7 @@ export class CallbackManagerForRetrieverRun
   implements BaseCallbackManagerMethods
 {
   getChild(tag?: string): CallbackManager {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    // oxlint-disable-next-line @typescript-eslint/no-use-before-define
     const manager = new CallbackManager(this.runId);
     manager.setHandlers(this.inheritableHandlers);
     manager.addTags(this.inheritableTags);
@@ -300,6 +303,35 @@ export class CallbackManagerForLLMRun
     );
   }
 
+  async handleChatModelStreamEvent(event: ChatModelStreamEvent): Promise<void> {
+    await Promise.all(
+      this.handlers.map((handler) =>
+        consumeCallback(async () => {
+          if (!handler.ignoreLLM) {
+            try {
+              await handler.handleChatModelStreamEvent?.(
+                event,
+                this.runId,
+                this._parentRunId,
+                this.tags
+              );
+            } catch (err) {
+              const logFunction = handler.raiseError
+                ? console.error
+                : console.warn;
+              logFunction(
+                `Error in handler ${handler.constructor.name}, handleChatModelStreamEvent: ${err}`
+              );
+              if (handler.raiseError) {
+                throw err;
+              }
+            }
+          }
+        }, handler.awaitHandlers)
+      )
+    );
+  }
+
   async handleLLMError(
     err: Error | unknown,
     _runId?: string,
@@ -378,7 +410,7 @@ export class CallbackManagerForChainRun
   implements BaseCallbackManagerMethods
 {
   getChild(tag?: string): CallbackManager {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    // oxlint-disable-next-line @typescript-eslint/no-use-before-define
     const manager = new CallbackManager(this.runId);
     manager.setHandlers(this.inheritableHandlers);
     manager.addTags(this.inheritableTags);
@@ -525,7 +557,7 @@ export class CallbackManagerForToolRun
   implements BaseCallbackManagerMethods
 {
   getChild(tag?: string): CallbackManager {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    // oxlint-disable-next-line @typescript-eslint/no-use-before-define
     const manager = new CallbackManager(this.runId);
     manager.setHandlers(this.inheritableHandlers);
     manager.addTags(this.inheritableTags);
@@ -586,7 +618,7 @@ export class CallbackManagerForToolRun
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   async handleToolEnd(output: any): Promise<void> {
     await Promise.all(
       this.handlers.map((handler) =>
@@ -1058,13 +1090,13 @@ export class CallbackManager
 
   async handleCustomEvent?(
     eventName: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     data: any,
     runId: string,
     _tags?: string[],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     _metadata?: Record<string, any>
-  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   Promise<any> {
     await Promise.all(
       this.handlers.map((handler) =>
@@ -1316,7 +1348,7 @@ export class CallbackManager
       if (contextVarValue && isBaseCallbackHandler(contextVarValue)) {
         handler = contextVarValue;
       } else if (createIfNotInContext) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         handler = new (handlerClass as any)({});
       }
       if (handler !== undefined) {
@@ -1341,6 +1373,31 @@ export class CallbackManager
         callbackManager.addMetadata(inheritableMetadata ?? {});
         callbackManager.addMetadata(localMetadata ?? {}, false);
       }
+    }
+    const tracerInheritableMetadata = options?.tracerInheritableMetadata;
+    const tracerInheritableTags = options?.tracerInheritableTags;
+
+    if (
+      callbackManager &&
+      (tracerInheritableMetadata || tracerInheritableTags)
+    ) {
+      callbackManager.handlers = callbackManager.handlers.map((handler) =>
+        handler instanceof LangChainTracer
+          ? handler.copyWithTracingConfig({
+              metadata: tracerInheritableMetadata,
+              tags: tracerInheritableTags,
+            })
+          : handler
+      );
+      callbackManager.inheritableHandlers =
+        callbackManager.inheritableHandlers.map((handler) =>
+          handler instanceof LangChainTracer
+            ? handler.copyWithTracingConfig({
+                metadata: tracerInheritableMetadata,
+                tags: tracerInheritableTags,
+              })
+            : handler
+        );
     }
 
     return callbackManager;

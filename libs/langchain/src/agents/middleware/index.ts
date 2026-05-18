@@ -52,6 +52,7 @@ export {
 export {
   TODO_LIST_MIDDLEWARE_SYSTEM_PROMPT,
   todoListMiddleware,
+  type Todo,
   type TodoListMiddlewareOptions,
 } from "./todoListMiddleware.js";
 export {
