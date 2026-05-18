@@ -208,11 +208,14 @@ class MockErrorApiClient extends ApiClient {
 
   response: Response;
 
+  calls = 0;
+
   constructor(private options: MockErrorApiClientOptions) {
     super();
   }
 
   async fetch(request: Request): Promise<Response> {
+    this.calls += 1;
     this.request = request;
     this.response = new Response(this.options.bodyText, {
       status: this.options.status,
@@ -447,6 +450,57 @@ describe("Google Mock", () => {
     expect((caughtError as RequestError).message).not.toContain(
       "Request failed with status code 400"
     );
+  });
+
+  test("retries wait-style 429 responses through AsyncCaller in non-streaming invoke", async () => {
+    const apiClient = new MockErrorApiClient({
+      status: 429,
+      statusText: "Too Many Requests",
+      headers: {
+        "retry-after": "1",
+      },
+      bodyText: JSON.stringify({
+        error: {
+          message: "Rate limit exceeded, retry after 1 second",
+        },
+      }),
+    });
+
+    const llm = new ChatGoogle({
+      model: "gemini-2.5-flash",
+      apiClient,
+      maxRetries: 1,
+    });
+
+    await expect(llm.invoke("Hello")).rejects.toBeInstanceOf(RequestError);
+    expect(apiClient.calls).toBe(2);
+  });
+
+  test("does not retry quota-style 429 responses through AsyncCaller", async () => {
+    const apiClient = new MockErrorApiClient({
+      status: 429,
+      statusText: "Too Many Requests",
+      headers: {
+        "retry-after": "120",
+      },
+      bodyText: JSON.stringify({
+        error: {
+          message: "Usage quota exceeded",
+        },
+      }),
+    });
+
+    const llm = new ChatGoogle({
+      model: "gemini-2.5-flash",
+      apiClient,
+      maxRetries: 3,
+    });
+
+    await expect(llm.invoke("Hello")).rejects.toMatchObject({
+      name: "RequestError",
+      rateLimitType: "stop",
+    });
+    expect(apiClient.calls).toBe(1);
   });
 
   test("getLsParams normalizes provider and includes model metadata for web and node", () => {

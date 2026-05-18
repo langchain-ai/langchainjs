@@ -459,6 +459,96 @@ describe("stream callbacks", () => {
   });
 });
 
+describe("retry behavior", () => {
+  it("retries a 429 response with short Retry-After through AsyncCaller", async () => {
+    const model = new ChatOpenRouter({
+      model: "openai/gpt-4o-mini",
+      maxRetries: 1,
+    });
+
+    const okResponse = new Response(
+      JSON.stringify({
+        id: "chatcmpl-1",
+        choices: [
+          {
+            index: 0,
+            message: { role: "assistant", content: "Hello back" },
+            finish_reason: "stop",
+          },
+        ],
+        usage: {
+          prompt_tokens: 1,
+          completion_tokens: 1,
+          total_tokens: 2,
+        },
+      }),
+      {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }
+    );
+
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            error: { message: "Rate limit exceeded", code: 429 },
+          }),
+          {
+            status: 429,
+            headers: {
+              "content-type": "application/json",
+              "retry-after": "1",
+            },
+          }
+        )
+      )
+      .mockResolvedValueOnce(okResponse);
+
+    try {
+      const result = await model.invoke("Hello");
+      expect(result.content).toBe("Hello back");
+      expect(fetchSpy).toHaveBeenCalledTimes(2);
+    } finally {
+      fetchSpy.mockRestore();
+    }
+  });
+
+  it("does not retry quota-style 429 responses with long Retry-After", async () => {
+    const model = new ChatOpenRouter({
+      model: "openai/gpt-4o-mini",
+      maxRetries: 2,
+    });
+
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          error: { message: "Quota exhausted", code: 429 },
+        }),
+        {
+          status: 429,
+          headers: {
+            "content-type": "application/json",
+            "retry-after": "120",
+          },
+        }
+      )
+    );
+
+    try {
+      await expect(model.invoke("Hello")).rejects.toMatchObject({
+        name: "OpenRouterRateLimitError",
+        rateLimitType: "stop",
+        rateLimitReason: "quota_message",
+      });
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+    } finally {
+      fetchSpy.mockRestore();
+    }
+  });
+});
+
 function makeSerializableSchema() {
   return {
     "~standard": {
