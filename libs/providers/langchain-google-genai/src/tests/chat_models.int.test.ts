@@ -885,14 +885,14 @@ test("works with thinking config", async () => {
   const result = await model.invoke("What is 2+2?");
   expect(result.content).toBeDefined();
 
-  // Verify that content is an array with separate thinking and text blocks
+  // Verify that content is an array with separate reasoning and text blocks
   if (Array.isArray(result.content)) {
-    const thinkingBlocks = result.content.filter(
+    const reasoningBlocks = result.content.filter(
       (block): block is ContentBlock =>
         typeof block === "object" &&
         block !== null &&
         "type" in block &&
-        block.type === "thinking"
+        block.type === "reasoning"
     );
     const textBlocks = result.content.filter(
       (block): block is ContentBlock =>
@@ -902,13 +902,13 @@ test("works with thinking config", async () => {
         block.type === "text"
     );
 
-    // Should have at least one thinking block when includeThoughts is true
-    expect(thinkingBlocks.length).toBeGreaterThan(0);
+    // Should have at least one reasoning block when includeThoughts is true
+    expect(reasoningBlocks.length).toBeGreaterThan(0);
 
-    // Thinking blocks should have the 'thinking' field, not concatenated with text
-    thinkingBlocks.forEach((block) => {
-      expect(block).toHaveProperty("thinking");
-      expect(typeof block.thinking).toBe("string");
+    // Reasoning blocks should have the 'reasoning' field, not concatenated with text
+    reasoningBlocks.forEach((block) => {
+      expect(block).toHaveProperty("reasoning");
+      expect(typeof block.reasoning).toBe("string");
     });
 
     // Text blocks should be separate
