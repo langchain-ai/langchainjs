@@ -1,5 +1,5 @@
 ---
-"@langchain/core": minor
+"@langchain/core": patch
 ---
 
 feat(core): add uuid v6 utility support
