@@ -516,8 +516,7 @@ export abstract class BaseChatGoogle<
     message.usage_metadata = usageMetadata;
 
     const serviceTier: ServiceTier = iife((): ServiceTier => {
-      // trafficType is defined on Vertex, so isn't in the OpenAPI spec
-      // @ts-ignore
+      // @ts-expect-error - trafficType is defined on Vertex, so isn't in the OpenAPI spec
       const trafficType: string | undefined = data.usageMetadata?.trafficType;
 
       // AI Studio replies with actual service type in the header
