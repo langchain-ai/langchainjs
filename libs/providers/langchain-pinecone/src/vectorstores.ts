@@ -6,6 +6,7 @@ import {
   PineconeRecord,
   Index as PineconeIndex,
   ScoredPineconeRecord,
+  type PineconeConfiguration,
 } from "@pinecone-database/pinecone";
 
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
@@ -45,8 +46,8 @@ export interface PineconeStoreParams extends AsyncCallerParams {
    * Either this or pineconeIndex must be provided.
    */
   pineconeConfig?: {
-    indexName: ConstructorParameters<typeof PineconeIndex>[0];
-    config: ConstructorParameters<typeof PineconeIndex>[1];
+    indexName: string;
+    config: PineconeConfiguration;
     namespace?: string;
     indexHostUrl?: string;
     additionalHeaders?: HTTPHeaders;
@@ -240,14 +241,16 @@ export class PineconeStore extends VectorStore {
       this.pineconeIndex = pineconeIndex;
     } else if (pineconeConfig) {
       this.pineconeIndex = new PineconeIndex(
-        pineconeConfig.indexName,
+        {
+          name: pineconeConfig.indexName,
+          namespace: pineconeConfig.namespace,
+          host: pineconeConfig.indexHostUrl,
+          additionalHeaders: pineconeConfig.additionalHeaders,
+        },
         {
           ...pineconeConfig.config,
           sourceTag: "langchainjs",
-        },
-        pineconeConfig.namespace,
-        pineconeConfig.indexHostUrl,
-        pineconeConfig.additionalHeaders
+        }
       );
     }
 
@@ -341,7 +344,7 @@ export class PineconeStore extends VectorStore {
     const batchRequests = chunkedVectors.map((chunk) =>
       this.caller.call(async () => {
         try {
-          await namespace.upsert(chunk);
+          await namespace.upsert({ records: chunk });
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (e: any) {
           if (e.message.includes("404")) {
@@ -373,10 +376,10 @@ export class PineconeStore extends VectorStore {
       const batchSize = 1000;
       for (let i = 0; i < ids.length; i += batchSize) {
         const batchIds = ids.slice(i, i + batchSize);
-        await namespace.deleteMany(batchIds);
+        await namespace.deleteMany({ ids: batchIds });
       }
     } else if (filter) {
-      await namespace.deleteMany(filter);
+      await namespace.deleteMany({ filter });
     } else {
       throw new Error("Either ids or delete_all must be provided.");
     }

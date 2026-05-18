@@ -32,13 +32,13 @@
   },
   "peerDependencies": {
     "@langchain/core": "workspace:^",
-    "@pinecone-database/pinecone": "^5.0.2"
+    "@pinecone-database/pinecone": "^7.0.0"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.3.1",
     "@langchain/core": "workspace:^",
     "@langchain/openai": "workspace:*",
-    "@pinecone-database/pinecone": "^5.0.2",
+    "@pinecone-database/pinecone": "^7.0.0",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
     "@types/flat": "^5.0.5",

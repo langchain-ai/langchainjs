@@ -2171,8 +2171,8 @@ importers:
         specifier: workspace:*
         version: link:../../../internal/tsconfig
       '@pinecone-database/pinecone':
-        specifier: ^5.0.2
-        version: 5.1.2
+        specifier: ^7.0.0
+        version: 7.2.0
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13

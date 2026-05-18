@@ -30,13 +30,15 @@ test("PineconeStore with external ids", async () => {
     ["id1"]
   );
   expect(upsert).toHaveBeenCalledTimes(1);
-  expect(upsert).toHaveBeenCalledWith([
-    {
-      id: "id1",
-      metadata: { a: 1, "b.nested.0": 1, "b.nested.1.a": 4, text: "hello" },
-      values: [0.1, 0.2, 0.3, 0.4],
-    },
-  ]);
+  expect(upsert).toHaveBeenCalledWith({
+    records: [
+      {
+        id: "id1",
+        metadata: { a: 1, "b.nested.0": 1, "b.nested.1.a": 4, text: "hello" },
+        values: [0.1, 0.2, 0.3, 0.4],
+      },
+    ],
+  });
 
   const results = await store.similaritySearch("hello", 1);
   expect(results).toHaveLength(0);
@@ -92,22 +94,58 @@ test("PineconeStore with string arrays", async () => {
     ["id1"]
   );
 
-  expect(upsert).toHaveBeenCalledWith([
-    {
-      id: "id1",
-      metadata: {
-        a: 1,
-        "b.nested.0": 1,
-        "b.nested.1.a": 4,
-        c: ["some", "string", "array"],
-        "d.0": 1,
-        "d.1.nested": 2,
-        "d.2": "string",
-        text: "hello",
+  expect(upsert).toHaveBeenCalledWith({
+    records: [
+      {
+        id: "id1",
+        metadata: {
+          a: 1,
+          "b.nested.0": 1,
+          "b.nested.1.a": 4,
+          c: ["some", "string", "array"],
+          "d.0": 1,
+          "d.1.nested": 2,
+          "d.2": "string",
+          text: "hello",
+        },
+        values: [0.1, 0.2, 0.3, 0.4],
       },
-      values: [0.1, 0.2, 0.3, 0.4],
-    },
-  ]);
+    ],
+  });
+});
+
+test("PineconeStore delete by ids uses v7 deleteMany options", async () => {
+  const deleteMany = vi.fn();
+  const client = {
+    namespace: vi.fn().mockReturnValue({
+      upsert: vi.fn(),
+      deleteMany,
+      query: vi.fn().mockResolvedValue({ matches: [] }),
+    }),
+  };
+  const embeddings = new FakeEmbeddings();
+  const store = new PineconeStore(embeddings, { pineconeIndex: client as any });
+
+  await store.delete({ ids: ["id1", "id2"] });
+
+  expect(deleteMany).toHaveBeenCalledWith({ ids: ["id1", "id2"] });
+});
+
+test("PineconeStore delete by filter uses v7 deleteMany options", async () => {
+  const deleteMany = vi.fn();
+  const client = {
+    namespace: vi.fn().mockReturnValue({
+      upsert: vi.fn(),
+      deleteMany,
+      query: vi.fn().mockResolvedValue({ matches: [] }),
+    }),
+  };
+  const embeddings = new FakeEmbeddings();
+  const store = new PineconeStore(embeddings, { pineconeIndex: client as any });
+
+  await store.delete({ filter: { genre: "classical" } });
+
+  expect(deleteMany).toHaveBeenCalledWith({ filter: { genre: "classical" } });
 });
 
 describe("PineconeStore with null pageContent", () => {
