@@ -1,5 +1,14 @@
 # @langchain/deepseek
 
+## 1.0.26
+
+### Patch Changes
+
+- [#10556](https://github.com/langchain-ai/langchainjs/pull/10556) [`9076f06`](https://github.com/langchain-ai/langchainjs/commit/9076f06059e71a11e8920c95fabbc184e7fa6174) Thanks [@muhammadosama984](https://github.com/muhammadosama984)! - refactor(deepseek,xai): remove redundant reasoning_content overrides
+
+- Updated dependencies [[`229a7ad`](https://github.com/langchain-ai/langchainjs/commit/229a7ad67b9a7ebd8df3ca451e0b8195bea0190e), [`36fb0ef`](https://github.com/langchain-ai/langchainjs/commit/36fb0ef1dc76c096dcfa0c777e10c9f9365a5240)]:
+  - @langchain/openai@1.4.6
+
 ## 1.0.25
 
 ### Patch Changes
