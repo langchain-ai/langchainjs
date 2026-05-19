@@ -1574,9 +1574,10 @@ export const convertMessagesToResponsesInput: Converter<
                 return {
                   type: "custom_tool_call",
                   id:
-                    "call_id" in toolCall && typeof toolCall.call_id === "string"
+                    "call_id" in toolCall &&
+                    typeof toolCall.call_id === "string"
                       ? toolCall.call_id
-                      : customToolCallIds?.[toolCall.id ?? ""] ?? "",
+                      : (customToolCallIds?.[toolCall.id ?? ""] ?? ""),
                   call_id: toolCall.id ?? "",
                   input: toolCall.args.input,
                   name: toolCall.name,
