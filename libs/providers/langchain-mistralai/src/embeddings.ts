@@ -196,8 +196,8 @@ export class MistralAIEmbeddings
     const embeddingsRequest: MistralAIEmbeddingsRequest = {
       model: this.model,
       inputs,
-      encodingFormat:
-        this.encodingFormat as MistralAIEmbeddingsRequest["encodingFormat"],
+      encodingFormat: this
+        .encodingFormat as MistralAIEmbeddingsRequest["encodingFormat"],
     };
     return this.caller.call(async () => {
       const res = await client.embeddings.create(embeddingsRequest);
