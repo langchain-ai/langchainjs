@@ -229,6 +229,34 @@ describe("convertResponsesMessageToAIMessage", () => {
     expect(reasoningBlocks.length).toBe(0);
   });
 
+  it("uses the top-level response id for the AIMessage id", () => {
+    const response = {
+      id: "resp_top_level",
+      model: "gpt-4o",
+      created_at: 1234567890,
+      object: "response",
+      status: "completed",
+      output: [
+        {
+          type: "message",
+          id: "msg_nested",
+          role: "assistant",
+          content: [{ type: "output_text", text: "Hello!", annotations: [] }],
+        },
+      ],
+      usage: {
+        input_tokens: 10,
+        output_tokens: 20,
+        total_tokens: 30,
+      },
+    };
+
+    const result = convertResponsesMessageToAIMessage(response as any);
+
+    expect(result.id).toBe("resp_top_level");
+    expect(result.response_metadata.id).toBe("resp_top_level");
+  });
+
   it("should store output in response_metadata", () => {
     const output = [
       {
@@ -289,6 +317,71 @@ describe("convertResponsesMessageToAIMessage", () => {
 });
 
 describe("convertResponsesDeltaToChatGenerationChunk", () => {
+  it("uses the top-level response id when streaming", () => {
+    const created = convertResponsesDeltaToChatGenerationChunk({
+      type: "response.created",
+      response: {
+        id: "resp_top_level",
+        model: "gpt-4o",
+        object: "response",
+        status: "in_progress",
+        output: [],
+      },
+    } as any);
+    const messageAdded = convertResponsesDeltaToChatGenerationChunk({
+      type: "response.output_item.added",
+      output_index: 0,
+      item: {
+        type: "message",
+        id: "msg_nested",
+        role: "assistant",
+        content: [],
+        status: "in_progress",
+      },
+    } as any);
+    const textDelta = convertResponsesDeltaToChatGenerationChunk({
+      type: "response.output_text.delta",
+      output_index: 0,
+      content_index: 0,
+      delta: "Hello!",
+    } as any);
+    const completed = convertResponsesDeltaToChatGenerationChunk({
+      type: "response.completed",
+      response: {
+        id: "resp_top_level",
+        model: "gpt-4o",
+        created_at: 1234567890,
+        object: "response",
+        status: "completed",
+        output: [
+          {
+            type: "message",
+            id: "msg_nested",
+            role: "assistant",
+            content: [{ type: "output_text", text: "Hello!", annotations: [] }],
+          },
+        ],
+        usage: {
+          input_tokens: 10,
+          output_tokens: 20,
+          total_tokens: 30,
+        },
+      },
+    } as any);
+
+    expect(created?.message.id).toBe("resp_top_level");
+    expect(messageAdded?.message.id).toBeUndefined();
+    expect(textDelta?.message.id).toBeUndefined();
+
+    const aggregated = [created!, messageAdded!, textDelta!, completed!].reduce(
+      (acc, chunk) => acc.concat(chunk.message as AIMessageChunk),
+      created!.message as AIMessageChunk
+    );
+
+    expect(aggregated.id).toBe("resp_top_level");
+    expect(aggregated.response_metadata.id).toBe("resp_top_level");
+  });
+
   describe("custom tool streaming delta handling", () => {
     it("should preserve custom tool metadata from response.output_item.added events", () => {
       const customToolStart = {
