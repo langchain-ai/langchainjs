@@ -127,13 +127,23 @@ describe("streamEvents", () => {
       run.output,
     ]);
 
-    expect(messageTexts).not.toContain("[]");
-    expect(toolOutputs).toEqual(["[]"]);
+    expect(messageTexts).toMatchInlineSnapshot(`
+      [
+        "List items",
+        "No items found.",
+      ]
+    `);
+    expect(toolOutputs).toMatchInlineSnapshot(`
+      [
+        "[]",
+      ]
+    `);
     expect(finalState.messages.length).toBeGreaterThanOrEqual(3);
+    expect(finalState.messages.map((m) => m.type))
+      .toEqual(["human", "ai", "tool", "ai"]);
     expect(finalState.messages[1]).toMatchObject({
       tool_calls: [expect.objectContaining({ id: "call_list" })],
     });
-    expect(finalState.messages[2]).toBeInstanceOf(ToolMessage);
     expect((finalState.messages[2] as ToolMessage).tool_call_id).toBe(
       "call_list"
     );
