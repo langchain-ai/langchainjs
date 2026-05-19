@@ -22,7 +22,7 @@ jobs:
             mistralai,
             aws,
             google-vertexai-web,
-            agents,
+            ibm,
           ]
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -46,6 +46,10 @@ jobs:
           BEDROCK_AWS_SECRET_ACCESS_KEY: ${{ matrix.package == 'aws' && secrets.BEDROCK_AWS_SECRET_ACCESS_KEY || '' }}
           BEDROCK_AWS_REGION: ${{ matrix.package == 'aws' && 'us-east-1' || '' }}
           GOOGLE_VERTEX_AI_WEB_CREDENTIALS: ${{ matrix.package == 'google-vertexai-web' && secrets.GOOGLE_VERTEX_AI_WEB_CREDENTIALS || '' }}
+          WATSONX_AI_APIKEY: ${{ matrix.package == 'ibm' && secrets.WATSONX_AI_APIKEY || '' }}
+          WATSONX_AI_PROJECT_ID: ${{ matrix.package == 'ibm' && secrets.WATSONX_AI_PROJECT_ID || '' }}
+          WATSONX_AI_SERVICE_URL: ${{ matrix.package == 'ibm' && secrets.WATSONX_AI_SERVICE_URL || '' }}
+          WATSONX_AI_GATEWAY_URL: ${{ matrix.package == 'ibm' && secrets.WATSONX_AI_GATEWAY_URL || '' }}
 
   # The `@langchain/openai` package contains standard tests for ChatOpenAI and AzureChatOpenAI
   # We want to run these separately, so we need to pass the exact path for each test, which means
