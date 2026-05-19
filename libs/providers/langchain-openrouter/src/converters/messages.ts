@@ -44,6 +44,14 @@ export function convertMessagesToOpenRouterParams(
  * Delegates to the OpenAI completions converter for tool call parsing,
  * multi-modal output handling, and audio support, then patches
  * response_metadata to reflect the OpenRouter provider.
+ *
+ * Reasoning (chain-of-thought) output is preserved on
+ * `additional_kwargs.reasoning_content` (flat string, DeepSeek convention)
+ * and `additional_kwargs.reasoning_details` (structured array, OpenRouter
+ * native shape). Together with the `model_provider: "openrouter"` stamp,
+ * this causes `AIMessage.contentBlocks` to emit standard
+ * `{type: "reasoning"}` blocks via `ChatOpenRouterTranslator` from
+ * `@langchain/core`.
  */
 export function convertOpenRouterResponseToBaseMessage(
   choice: OpenRouter.ChatResponseChoice,
@@ -55,6 +63,24 @@ export function convertOpenRouterResponseToBaseMessage(
     rawResponse:
       rawResponse as unknown as OpenAIClient.Chat.Completions.ChatCompletion,
   });
+
+  // Surface reasoning fields that the OpenAI completions converter doesn't
+  // know about. Both are OpenRouter-specific extensions to the Chat
+  // Completions response (see `OpenRouter.AssistantMessage` in api-types.ts).
+  const assistantMessage = choice.message;
+  if (
+    typeof assistantMessage.reasoning === "string" &&
+    assistantMessage.reasoning.length > 0
+  ) {
+    message.additional_kwargs.reasoning_content = assistantMessage.reasoning;
+  }
+  if (
+    Array.isArray(assistantMessage.reasoning_details) &&
+    assistantMessage.reasoning_details.length > 0
+  ) {
+    message.additional_kwargs.reasoning_details =
+      assistantMessage.reasoning_details;
+  }
 
   message.response_metadata = {
     ...message.response_metadata,
@@ -74,6 +100,13 @@ export function convertOpenRouterResponseToBaseMessage(
  * Delegates to the OpenAI completions converter for tool call chunk
  * parsing, audio handling, and role-specific message types, then
  * patches response_metadata to reflect the OpenRouter provider.
+ *
+ * Reasoning delta text (`delta.reasoning`) and structured reasoning details
+ * (`delta.reasoning_details`) are copied onto `additional_kwargs` so they
+ * concatenate across chunks under the standard merge rules — string fields
+ * are concatenated by `_mergeDicts` and arrays are merged by index-aware
+ * `_mergeLists`. See `ChatOpenRouterTranslator` in `@langchain/core` for how
+ * the accumulated fields become v1 `{type:"reasoning"}` content blocks.
  */
 export function convertOpenRouterDeltaToBaseMessageChunk(
   delta: OpenRouter.ChatStreamingMessageChunk,
@@ -87,6 +120,16 @@ export function convertOpenRouterDeltaToBaseMessageChunk(
     defaultRole: (defaultRole ??
       "assistant") as OpenAIClient.Chat.ChatCompletionRole,
   });
+
+  if (typeof delta.reasoning === "string" && delta.reasoning.length > 0) {
+    chunk.additional_kwargs.reasoning_content = delta.reasoning;
+  }
+  if (
+    Array.isArray(delta.reasoning_details) &&
+    delta.reasoning_details.length > 0
+  ) {
+    chunk.additional_kwargs.reasoning_details = delta.reasoning_details;
+  }
 
   chunk.response_metadata = {
     ...chunk.response_metadata,
