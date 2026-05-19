@@ -18,6 +18,7 @@ import type { MessageContent } from "../base.js";
 import { load } from "../../load/index.js";
 import { concat } from "../../utils/stream.js";
 import { ToolCallChunk } from "../tool.js";
+import type { RawInputToolCallChunk } from "../utils.js";
 
 test("Test ChatPromptTemplate can format OpenAI content image messages", async () => {
   const message = new HumanMessage({
@@ -906,20 +907,19 @@ describe("Complex AIMessageChunk concat", () => {
   });
 
   it("preserves raw text input for custom tool call chunks", () => {
+    const rawInputStart: RawInputToolCallChunk = {
+      type: "tool_call_chunk",
+      name: "execute_code",
+      args: "",
+      id: "call_custom",
+      index: 0,
+      isCustomTool: true,
+    };
     const chunks = [
       new AIMessageChunk({
         id: "chatcmpl-x",
         content: "",
-        tool_call_chunks: [
-          {
-            type: "tool_call_chunk",
-            name: "execute_code",
-            args: "",
-            id: "call_custom",
-            index: 0,
-            isCustomTool: true,
-          },
-        ],
+        tool_call_chunks: [rawInputStart],
       }),
       new AIMessageChunk({
         id: "chatcmpl-x",
@@ -953,18 +953,17 @@ describe("Complex AIMessageChunk concat", () => {
   });
 
   it("preserves leading and trailing whitespace in custom tool call input", () => {
+    const rawInputChunk: RawInputToolCallChunk = {
+      type: "tool_call_chunk",
+      name: "execute_code",
+      args: "  console.log('x')  ",
+      id: "call_custom",
+      index: 0,
+      isCustomTool: true,
+    };
     const chunk = new AIMessageChunk({
       content: "",
-      tool_call_chunks: [
-        {
-          type: "tool_call_chunk",
-          name: "execute_code",
-          args: "  console.log('x')  ",
-          id: "call_custom",
-          index: 0,
-          isCustomTool: true,
-        },
-      ],
+      tool_call_chunks: [rawInputChunk],
     });
 
     expect(chunk.invalid_tool_calls).toEqual([]);

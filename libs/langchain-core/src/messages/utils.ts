@@ -31,8 +31,12 @@ import {
 
 export type $Expand<T> = T extends infer U ? { [K in keyof U]: U[K] } : never;
 
-/** @internal Provider streaming marker; not part of the public ToolCallChunk type. */
-type RawInputToolCallChunk = ToolCallChunk & { isCustomTool?: boolean };
+/**
+ * Provider streaming marker for raw (non-JSON) tool input.
+ * Not part of the public {@link ToolCallChunk} type; integrations may attach
+ * `isCustomTool` at runtime and pass chunks typed as this alias.
+ */
+export type RawInputToolCallChunk = ToolCallChunk & { isCustomTool?: boolean };
 
 function chunkUsesRawInputArgs(chunk: ToolCallChunk): boolean {
   return (chunk as RawInputToolCallChunk).isCustomTool === true;
