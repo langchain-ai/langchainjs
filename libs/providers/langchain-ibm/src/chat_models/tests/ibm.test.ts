@@ -635,7 +635,7 @@ describe("Chat unit tests", () => {
           /* consume stream */
         }
       }).rejects.toThrow(
-        /IBM WatsonX API error \(status 400\): \[invalid_input_argument\] Invalid input argument for Model 'ibm\/granite-4-h-small': This model's maximum context length is 131072 tokens\. However, your request has 600039 input tokens\. \(trace: 903ff69ef8dc748c20d94f77c5810bf1\)/,
+        /IBM WatsonX API error \(status 400\): \[invalid_input_argument\] Invalid input argument for Model 'ibm\/granite-4-h-small': This model's maximum context length is 131072 tokens\. However, your request has 600039 input tokens\. \(trace: 903ff69ef8dc748c20d94f77c5810bf1\)/
       );
 
       spy.mockRestore();
