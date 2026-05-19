@@ -340,7 +340,6 @@ export const convertResponsesMessageToAIMessage: Converter<
     throw error;
   }
 
-  let messageId: string | undefined;
   const content: MessageContent = [];
   const tool_calls: ToolCall[] = [];
   const invalid_tool_calls: InvalidToolCall[] = [];
@@ -385,7 +384,6 @@ export const convertResponsesMessageToAIMessage: Converter<
 
   for (const item of response.output) {
     if (item.type === "message") {
-      messageId = item.id;
       content.push(
         ...item.content.flatMap((part) => {
           if (part.type === "output_text") {
@@ -495,7 +493,7 @@ export const convertResponsesMessageToAIMessage: Converter<
   }
 
   return new AIMessage({
-    id: messageId,
+    id: response.id,
     content,
     tool_calls,
     invalid_tool_calls,
@@ -607,7 +605,7 @@ export const convertReasoningSummaryToResponsesReasoningItem: Converter<
  * @returns A ChatGenerationChunk containing:
  *   - `text`: Concatenated text content from all text parts in the event
  *   - `message`: An AIMessageChunk with:
- *     - `id`: Message ID (set when a message output item is added)
+ *     - `id`: Response ID (set on `response.created` / `response.completed`)
  *     - `content`: Array of content blocks (text with optional annotations)
  *     - `tool_call_chunks`: Incremental tool call data (name, args, id)
  *     - `usage_metadata`: Token usage information (only in completion events)
@@ -688,7 +686,6 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
     event.type === "response.output_item.added" &&
     event.item.type === "message"
   ) {
-    id = event.item.id;
     const phase = "phase" in event.item ? event.item.phase : undefined;
     if (phase) {
       content.push({
@@ -779,10 +776,15 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
   ) {
     additional_kwargs.tool_outputs = [event.item];
   } else if (event.type === "response.created") {
+    id = event.response.id;
     response_metadata.id = event.response.id;
     response_metadata.model_name = event.response.model;
     response_metadata.model = event.response.model;
-  } else if (event.type === "response.completed") {
+  } else if (
+    event.type === "response.completed" ||
+    event.type === "response.incomplete"
+  ) {
+    id = event.response.id;
     const msg = convertResponsesMessageToAIMessage(event.response);
 
     usage_metadata = convertResponsesUsageToUsageMetadata(event.response.usage);
