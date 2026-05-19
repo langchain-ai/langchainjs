@@ -17,7 +17,9 @@
     "langchain": "workspace:*",
     "typescript": "^5.0.0"
   },
-  "devDependencies": {
-    "prettier": "^3.5.0"
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   }
 }

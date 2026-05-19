@@ -565,6 +565,22 @@ function hasMergeableId(value: unknown): value is { id: string | number } {
   return id != null && id !== "";
 }
 
+function getMergeableTypeBase(type: string): string {
+  return type.endsWith("_delta") ? type.slice(0, -"_delta".length) : type;
+}
+
+function hasMismatchedMergeableType(left: unknown, right: unknown): boolean {
+  if (typeof left !== "object" || left === null) return false;
+  if (typeof right !== "object" || right === null) return false;
+  if (!("type" in left) || !("type" in right)) return false;
+
+  return (
+    typeof left.type === "string" &&
+    typeof right.type === "string" &&
+    getMergeableTypeBase(left.type) !== getMergeableTypeBase(right.type)
+  );
+}
+
 /**
  * Find the index of an existing item in `merged` that should be merged with
  * `item`, based on index and/or id matching.
@@ -591,6 +607,7 @@ function _findMergeTarget<Content extends ContentBlock>(
       // Both have index: match on index, with id as tiebreaker
       const indicesMatch = leftItem.index === item.index;
       if (!indicesMatch) return false;
+      if (hasMismatchedMergeableType(leftItem, item)) return false;
       if (leftHasId && itemHasId) return leftItem.id === item.id;
       return true; // indices match, one or both missing id
     }

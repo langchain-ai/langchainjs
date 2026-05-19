@@ -1,6 +1,6 @@
 import { QdrantClient } from "@qdrant/js-client-rest";
 import type { Schemas as QdrantSchemas } from "@qdrant/js-client-rest";
-import { v4 as uuid } from "uuid";
+import { v4 as uuid } from "@langchain/core/utils/uuid";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import {
   type MaxMarginalRelevanceSearchOptions,

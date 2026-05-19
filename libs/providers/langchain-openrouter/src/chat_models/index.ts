@@ -136,6 +136,8 @@ export class ChatOpenRouter extends BaseChatModel<
       "route",
       "provider",
       "plugins",
+      "sessionId",
+      "trace",
       "prediction",
     ];
   }
@@ -205,6 +207,12 @@ export class ChatOpenRouter extends BaseChatModel<
 
   /** OpenRouter plugins to enable (e.g. web search). */
   plugins?: ChatOpenRouterParams["plugins"];
+
+  /** Identifier used by OpenRouter to group related requests together. */
+  sessionId?: string;
+
+  /** Trace metadata for OpenRouter broadcast destinations. */
+  trace?: OpenRouter.TraceConfig;
 
   /**
    * Application URL for OpenRouter attribution. Maps to `HTTP-Referer` header.
@@ -286,6 +294,9 @@ export class ChatOpenRouter extends BaseChatModel<
     this.route = fields.route;
     this.provider = fields.provider;
     this.plugins = fields.plugins;
+    this.sessionId =
+      fields.sessionId ?? getEnvironmentVariable("OPENROUTER_SESSION_ID");
+    this.trace = fields.trace;
     this.siteUrl = fields.siteUrl ?? "https://docs.langchain.com";
     this.siteName = fields.siteName ?? "LangChain";
     this.appCategories = fields.appCategories;
@@ -336,6 +347,8 @@ export class ChatOpenRouter extends BaseChatModel<
       ? convertToolsToOpenRouter(options.tools, { strict: options.strict })
       : undefined;
     const toolChoice = formatToolChoice(options.tool_choice);
+    const sessionId = options.sessionId ?? this.sessionId;
+    const trace = options.trace ?? this.trace;
 
     return {
       model: this.model,
@@ -362,6 +375,8 @@ export class ChatOpenRouter extends BaseChatModel<
       route: options.route ?? this.route,
       provider: options.provider ?? this.provider,
       plugins: options.plugins ?? this.plugins,
+      ...(sessionId ? { session_id: sessionId } : {}),
+      ...(trace !== undefined ? { trace } : {}),
       ...this.modelKwargs,
     };
   }

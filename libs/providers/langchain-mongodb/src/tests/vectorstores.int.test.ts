@@ -44,6 +44,14 @@ beforeAll(async () => {
 
   const namespace = "langchain_test_db.langchain_test";
   const [dbName, collectionName] = namespace.split(".");
+
+  // Drop and recreate collection to ensure clean state and no lingering indexes
+  try {
+    await client.db(dbName).dropCollection(collectionName);
+  } catch {
+    // Collection may not exist, which is fine
+  }
+
   collection = await client.db(dbName).createCollection(collectionName);
 
   await collection.createSearchIndex({

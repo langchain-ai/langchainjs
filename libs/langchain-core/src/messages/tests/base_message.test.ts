@@ -18,6 +18,7 @@ import type { MessageContent } from "../base.js";
 import { load } from "../../load/index.js";
 import { concat } from "../../utils/stream.js";
 import { ToolCallChunk } from "../tool.js";
+import type { RawInputToolCallChunk } from "../utils.js";
 
 test("Test ChatPromptTemplate can format OpenAI content image messages", async () => {
   const message = new HumanMessage({
@@ -47,6 +48,38 @@ test("Test ChatPromptTemplate can format OpenAI content image messages", async (
   expect(formatted.messages[1].content).toEqual(
     "Will this format with multiple messages?: YES!"
   );
+});
+
+test("AIMessage v1 content does not duplicate existing tool call blocks", () => {
+  const message = new AIMessage({
+    content: [
+      {
+        type: "tool_call",
+        id: "toolu_1",
+        name: "calculator",
+        args: { expression: "12345 + 67890" },
+      },
+    ],
+    tool_calls: [
+      {
+        type: "tool_call",
+        id: "toolu_1",
+        name: "calculator",
+        args: { expression: "12345 + 67890" },
+      },
+    ],
+    response_metadata: { output_version: "v1" },
+  });
+
+  expect(message.contentBlocks).toEqual([
+    {
+      type: "tool_call",
+      id: "toolu_1",
+      name: "calculator",
+      args: { expression: "12345 + 67890" },
+    },
+  ]);
+  expect(message.tool_calls).toHaveLength(1);
 });
 
 test("Test ChatPromptTemplate can format OpenAI content image messages", async () => {
@@ -174,6 +207,43 @@ test("_mergeLists merges blocks by numeric index", () => {
       type: "reasoning",
       index: 0,
       reasoning: "**Exploring",
+    },
+  ]);
+});
+
+test("_mergeLists keeps different content block types separate when indices collide", () => {
+  const chunk1 = new AIMessageChunk({
+    content: [
+      {
+        type: "reasoning",
+        index: 0,
+        reasoning: "Thinking",
+      },
+    ],
+  });
+
+  const chunk2 = new AIMessageChunk({
+    content: [
+      {
+        type: "text",
+        index: 0,
+        text: "Final answer",
+      },
+    ],
+  });
+
+  const merged = chunk1.concat(chunk2);
+  expect(Array.isArray(merged.content)).toBe(true);
+  expect(merged.content).toEqual([
+    {
+      type: "reasoning",
+      index: 0,
+      reasoning: "Thinking",
+    },
+    {
+      type: "text",
+      index: 0,
+      text: "Final answer",
     },
   ]);
 });
@@ -832,6 +902,77 @@ describe("Complex AIMessageChunk concat", () => {
           location: "San Francisco",
         },
         id: "call_q6ZzjkLjKNYb4DizyMOaqpfW",
+      },
+    ]);
+  });
+
+  it("preserves raw text input for custom tool call chunks", () => {
+    const rawInputStart: RawInputToolCallChunk = {
+      type: "tool_call_chunk",
+      name: "execute_code",
+      args: "",
+      id: "call_custom",
+      index: 0,
+      isCustomTool: true,
+    };
+    const chunks = [
+      new AIMessageChunk({
+        id: "chatcmpl-x",
+        content: "",
+        tool_call_chunks: [rawInputStart],
+      }),
+      new AIMessageChunk({
+        id: "chatcmpl-x",
+        content: "",
+        tool_call_chunks: [
+          {
+            type: "tool_call_chunk",
+            args: "console.log('custom tool streaming repro')",
+            index: 0,
+          },
+        ],
+      }),
+    ];
+
+    let finalChunk = new AIMessageChunk("");
+    for (const chunk of chunks) {
+      finalChunk = finalChunk.concat(chunk);
+    }
+
+    expect(finalChunk.invalid_tool_calls).toEqual([]);
+    expect(finalChunk.tool_calls).toEqual([
+      {
+        type: "tool_call",
+        name: "execute_code",
+        args: {
+          input: "console.log('custom tool streaming repro')",
+        },
+        id: "call_custom",
+      },
+    ]);
+  });
+
+  it("preserves leading and trailing whitespace in custom tool call input", () => {
+    const rawInputChunk: RawInputToolCallChunk = {
+      type: "tool_call_chunk",
+      name: "execute_code",
+      args: "  console.log('x')  ",
+      id: "call_custom",
+      index: 0,
+      isCustomTool: true,
+    };
+    const chunk = new AIMessageChunk({
+      content: "",
+      tool_call_chunks: [rawInputChunk],
+    });
+
+    expect(chunk.invalid_tool_calls).toEqual([]);
+    expect(chunk.tool_calls).toEqual([
+      {
+        type: "tool_call",
+        name: "execute_code",
+        args: { input: "  console.log('x')  " },
+        id: "call_custom",
       },
     ]);
   });

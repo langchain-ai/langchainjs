@@ -49,6 +49,21 @@ export interface LangChainTracerFields extends BaseCallbackHandlerInput {
 }
 
 /**
+ * Keys that should be inherited from `tracerInheritableMetadata` even when
+ * the run already has a value for them. This lets nested contexts
+ * (e.g. a subagent invoked from inside a parent agent) override a
+ * LangSmith-only tracing metadata value that was set by an ancestor.
+ *
+ * Keep this list very small: every key here loses the default
+ * "first wins" protection and is always clobbered by the nearest
+ * enclosing tracer config. Only keys that are strictly for LangSmith
+ * tracing bookkeeping should be added.
+ */
+export const OVERRIDABLE_LANGSMITH_INHERITABLE_METADATA_KEYS = new Set<string>([
+  "ls_agent_type",
+]);
+
+/**
  * Extract usage_metadata from chat generations.
  *
  * Iterates through generations to find and aggregates all usage_metadata
@@ -166,7 +181,15 @@ export class LangChainTracer
     } else {
       mergedMetadata = { ...this.tracingMetadata };
       for (const [key, value] of Object.entries(metadata)) {
-        if (!Object.prototype.hasOwnProperty.call(mergedMetadata, key)) {
+        // For allowlisted LangSmith-only inheritable metadata keys (e.g.
+        // `ls_agent_type`), nested callers are allowed to OVERRIDE the
+        // value inherited from an ancestor. For all other keys we keep
+        // the existing "first wins" behavior so that ancestor-provided
+        // tracing metadata is not accidentally clobbered by child runs.
+        if (
+          !Object.prototype.hasOwnProperty.call(mergedMetadata, key) ||
+          OVERRIDABLE_LANGSMITH_INHERITABLE_METADATA_KEYS.has(key)
+        ) {
           mergedMetadata[key] = value;
         }
       }
@@ -281,9 +304,17 @@ function _patchMissingTracingDefaults(tracer: LangChainTracer, run: Run): void {
       (run.extra.metadata as Record<string, unknown> | undefined) ?? {};
     let didPatchMetadata = false;
     for (const [key, value] of Object.entries(tracer.tracingMetadata)) {
-      if (!Object.prototype.hasOwnProperty.call(metadata, key)) {
-        metadata[key] = value;
-        didPatchMetadata = true;
+      // `OVERRIDABLE_LANGSMITH_INHERITABLE_METADATA_KEYS` are a small, LangSmith-only
+      // allowlist that bypasses the "first wins" merge so a nested caller
+      // (e.g. a subagent) can override a parent-set value.
+      if (
+        !Object.prototype.hasOwnProperty.call(metadata, key) ||
+        OVERRIDABLE_LANGSMITH_INHERITABLE_METADATA_KEYS.has(key)
+      ) {
+        if (metadata[key] !== value) {
+          metadata[key] = value;
+          didPatchMetadata = true;
+        }
       }
     }
     if (didPatchMetadata) {
