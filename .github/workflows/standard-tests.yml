@@ -69,3 +69,37 @@ jobs:
         run: pnpm --filter @langchain/openai test:single src/tests/chat_models_structured_output.int.test.ts src/tests/chat_models_responses.int.test.ts src/tests/chat_models-extended.int.test.ts src/tests/chat_models-vision.int.test.ts src/tests/chat_models.int.test.ts src/tests/chat_models.standard.int.test.ts src/tests/chat_models_responses.standard.int.test.ts
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+  notify-failure:
+    name: Notify Slack on failure
+    runs-on: ubuntu-latest
+    needs: [standard-tests, standard-tests-openai]
+    if: ${{ always() && (needs.standard-tests.result == 'failure' || needs.standard-tests-openai.result == 'failure') }}
+    steps:
+      - name: Post failure to #langchain-js
+        uses: slackapi/slack-github-action@03ea5433c137af7c0495bc0cad1af10403fc800c # v3.0.2
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            channel: "#langchain-js"
+            text: ":rotating_light: Standard Tests (Integration) failed in ${{ github.repository }}"
+            blocks:
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: ":rotating_light: *Standard Tests (Integration) failed* in `${{ github.repository }}`"
+              - type: section
+                fields:
+                  - type: mrkdwn
+                    text: "*Workflow:*\n${{ github.workflow }}"
+                  - type: mrkdwn
+                    text: "*Branch:*\n${{ github.ref_name }}"
+                  - type: mrkdwn
+                    text: "*Trigger:*\n${{ github.event_name }}"
+                  - type: mrkdwn
+                    text: "*Jobs:*\nstandard-tests: `${{ needs.standard-tests.result }}`\nstandard-tests-openai: `${{ needs.standard-tests-openai.result }}`"
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: "<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View workflow run>"
