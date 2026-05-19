@@ -139,8 +139,12 @@ describe("streamEvents", () => {
       ]
     `);
     expect(finalState.messages.length).toBeGreaterThanOrEqual(3);
-    expect(finalState.messages.map((m) => m.type))
-      .toEqual(["human", "ai", "tool", "ai"]);
+    expect(finalState.messages.map((m) => m.type)).toEqual([
+      "human",
+      "ai",
+      "tool",
+      "ai",
+    ]);
     expect(finalState.messages[1]).toMatchObject({
       tool_calls: [expect.objectContaining({ id: "call_list" })],
     });
