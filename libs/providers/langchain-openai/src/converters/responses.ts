@@ -41,6 +41,10 @@ import { Converter } from "@langchain/core/utils/format";
 import { completionsApiContentBlockConverter } from "./completions.js";
 
 const _FUNCTION_CALL_IDS_MAP_KEY = "__openai_function_call_ids__";
+const _CUSTOM_TOOL_CALL_IDS_MAP_KEY = "__openai_custom_tool_call_ids__";
+
+/** Streaming-only marker; not part of @langchain/core ToolCallChunk. */
+type OpenAICustomToolCallChunk = ToolCallChunk & { isCustomTool?: true };
 
 type OpenAIAnnotation =
   OpenAIClient.Responses.ResponseOutputText["annotations"][number];
@@ -376,6 +380,7 @@ export const convertResponsesMessageToAIMessage: Converter<
     tool_outputs?: unknown[];
     parsed?: unknown;
     [_FUNCTION_CALL_IDS_MAP_KEY]?: Record<string, string>;
+    [_CUSTOM_TOOL_CALL_IDS_MAP_KEY]?: Record<string, string>;
   } = {};
 
   for (const item of response.output) {
@@ -448,6 +453,11 @@ export const convertResponsesMessageToAIMessage: Converter<
       const parsed = parseCustomToolCall(item);
       if (parsed) {
         tool_calls.push(parsed);
+        additional_kwargs[_CUSTOM_TOOL_CALL_IDS_MAP_KEY] ??= {};
+        if (item.id && item.call_id) {
+          additional_kwargs[_CUSTOM_TOOL_CALL_IDS_MAP_KEY][item.call_id] =
+            item.id;
+        }
       } else {
         invalid_tool_calls.push(
           makeInvalidToolCall(item, "Malformed custom tool call")
@@ -704,6 +714,22 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
       [event.item.call_id]: event.item.id,
     };
   } else if (
+    event.type === "response.output_item.added" &&
+    event.item.type === "custom_tool_call"
+  ) {
+    tool_call_chunks.push({
+      type: "tool_call_chunk",
+      isCustomTool: true,
+      name: event.item.name,
+      args: event.item.input,
+      id: event.item.call_id,
+      index: event.output_index,
+    } satisfies OpenAICustomToolCallChunk);
+
+    additional_kwargs[_CUSTOM_TOOL_CALL_IDS_MAP_KEY] = {
+      [event.item.call_id]: event.item.id,
+    };
+  } else if (
     event.type === "response.output_item.done" &&
     event.item.type === "computer_call"
   ) {
@@ -790,6 +816,9 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
       type: "tool_call_chunk",
       args: event.delta,
       index: event.output_index,
+      ...(event.type === "response.custom_tool_call_input.delta"
+        ? { isCustomTool: true }
+        : {}),
     });
   } else if (
     event.type === "response.web_search_call.completed" ||
@@ -1535,14 +1564,19 @@ export const convertMessagesToResponsesInput: Converter<
         }
 
         const functionCallIds = additional_kwargs?.[_FUNCTION_CALL_IDS_MAP_KEY];
+        const customToolCallIds =
+          additional_kwargs?.[_CUSTOM_TOOL_CALL_IDS_MAP_KEY];
 
         if (AIMessage.isInstance(lcMsg) && !!lcMsg.tool_calls?.length) {
           input.push(
             ...lcMsg.tool_calls.map((toolCall): ResponsesInputItem => {
-              if (isCustomToolCall(toolCall)) {
+              if (isCustomToolCall(toolCall, customToolCallIds)) {
                 return {
                   type: "custom_tool_call",
-                  id: toolCall.call_id,
+                  id:
+                    "call_id" in toolCall && typeof toolCall.call_id === "string"
+                      ? toolCall.call_id
+                      : customToolCallIds?.[toolCall.id ?? ""] ?? "",
                   call_id: toolCall.id ?? "",
                   input: toolCall.args.input,
                   name: toolCall.name,

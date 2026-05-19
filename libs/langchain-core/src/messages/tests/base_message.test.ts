@@ -905,6 +905,79 @@ describe("Complex AIMessageChunk concat", () => {
     ]);
   });
 
+  it("preserves raw text input for custom tool call chunks", () => {
+    const chunks = [
+      new AIMessageChunk({
+        id: "chatcmpl-x",
+        content: "",
+        tool_call_chunks: [
+          {
+            type: "tool_call_chunk",
+            name: "execute_code",
+            args: "",
+            id: "call_custom",
+            index: 0,
+            isCustomTool: true,
+          },
+        ],
+      }),
+      new AIMessageChunk({
+        id: "chatcmpl-x",
+        content: "",
+        tool_call_chunks: [
+          {
+            type: "tool_call_chunk",
+            args: "console.log('custom tool streaming repro')",
+            index: 0,
+          },
+        ],
+      }),
+    ];
+
+    let finalChunk = new AIMessageChunk("");
+    for (const chunk of chunks) {
+      finalChunk = finalChunk.concat(chunk);
+    }
+
+    expect(finalChunk.invalid_tool_calls).toEqual([]);
+    expect(finalChunk.tool_calls).toEqual([
+      {
+        type: "tool_call",
+        name: "execute_code",
+        args: {
+          input: "console.log('custom tool streaming repro')",
+        },
+        id: "call_custom",
+      },
+    ]);
+  });
+
+  it("preserves leading and trailing whitespace in custom tool call input", () => {
+    const chunk = new AIMessageChunk({
+      content: "",
+      tool_call_chunks: [
+        {
+          type: "tool_call_chunk",
+          name: "execute_code",
+          args: "  console.log('x')  ",
+          id: "call_custom",
+          index: 0,
+          isCustomTool: true,
+        },
+      ],
+    });
+
+    expect(chunk.invalid_tool_calls).toEqual([]);
+    expect(chunk.tool_calls).toEqual([
+      {
+        type: "tool_call",
+        name: "execute_code",
+        args: { input: "  console.log('x')  " },
+        id: "call_custom",
+      },
+    ]);
+  });
+
   it("Should correctly preserve index when concatenating multiple tool calls in additional_kwargs", () => {
     // Reproducer for issue #9774 - index was being summed instead of preserved
     type CustomToolCall = {

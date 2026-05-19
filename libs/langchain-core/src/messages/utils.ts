@@ -31,6 +31,13 @@ import {
 
 export type $Expand<T> = T extends infer U ? { [K in keyof U]: U[K] } : never;
 
+/** @internal Provider streaming marker; not part of the public ToolCallChunk type. */
+type RawInputToolCallChunk = ToolCallChunk & { isCustomTool?: boolean };
+
+function chunkUsesRawInputArgs(chunk: ToolCallChunk): boolean {
+  return (chunk as RawInputToolCallChunk).isCustomTool === true;
+}
+
 /**
  * Extracts the explicitly declared keys from a type T.
  *
@@ -587,13 +594,21 @@ export function collapseToolCallChunks(chunks: ToolCallChunk[]): {
   const invalidToolCalls: InvalidToolCall[] = [];
   for (const chunks of groupedToolCallChunks) {
     let parsedArgs: Record<string, unknown> | null = null;
+    const usesRawInputArgs = chunks.some(chunkUsesRawInputArgs);
     const name = chunks[0]?.name ?? "";
-    const joinedArgs = chunks
-      .map((c) => c.args || "")
-      .join("")
-      .trim();
+    const joinedArgsRaw = chunks.map((c) => c.args || "").join("");
+    const joinedArgs = usesRawInputArgs ? joinedArgsRaw : joinedArgsRaw.trim();
     const argsStr = joinedArgs.length ? joinedArgs : "{}";
-    const id = chunks[0]?.id;
+    const id = chunks.find((c) => c.id)?.id ?? chunks[0]?.id;
+    if (usesRawInputArgs && id) {
+      toolCalls.push({
+        name,
+        args: { input: joinedArgs },
+        id,
+        type: "tool_call",
+      });
+      continue;
+    }
     try {
       parsedArgs = parsePartialJson(argsStr);
       if (
