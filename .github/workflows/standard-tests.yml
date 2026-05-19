@@ -22,7 +22,6 @@ jobs:
             mistralai,
             aws,
             google-vertexai-web,
-            agents,
             ibm,
           ]
     steps:
