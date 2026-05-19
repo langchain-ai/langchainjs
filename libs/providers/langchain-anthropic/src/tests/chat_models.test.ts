@@ -1111,7 +1111,7 @@ describe("Tool search beta auto-append", () => {
 
     expect(
       paramsWithoutToolSearch.betas === undefined ||
-        !paramsWithoutToolSearch.betas.includes("advanced-tool-use-2025-11-20")
+      !paramsWithoutToolSearch.betas.includes("advanced-tool-use-2025-11-20")
     ).toBe(true);
   });
 });
@@ -1283,6 +1283,52 @@ describe("Streaming tool call consolidation (input_json_delta handling)", () => 
       id: "toolu_01",
       name: "my_tool",
       input: { prompt: "hello" },
+    });
+  });
+
+  test("should successfully aggregate tool_use and input_json_delta chunks via .concat()", async () => {
+    // 1. Replicate the exact asymmetric sequence Anthropic emits during an active stream
+    const chunk1 = new AIMessageChunk({
+      content: [
+        {
+          type: "tool_use",
+          index: 0,
+          id: "toolu_01Xyz",
+          name: "my_tool",
+        }
+      ]
+    });
+
+    const chunk2 = new AIMessageChunk({
+      content: [
+        {
+          type: "input_json_delta",
+          index: 0,
+          partial_json: '{"prompt":',
+        }
+      ]
+    });
+
+    const chunk3 = new AIMessageChunk({
+      content: [
+        {
+          type: "input_json_delta",
+          index: 0,
+          partial_json: '"hello"}',
+        }
+      ]
+    });
+
+    // 2. Execute the concatenation (this is what threw OUTPUT_PARSING_FAILURE before your fix)
+    const merged = chunk1.concat(chunk2).concat(chunk3);
+
+    // 3. Assert that types map correctly and accumulate into a single valid tool call structure
+    expect(merged.content[0]).toEqual({
+      type: "tool_use",
+      index: 0,
+      id: "toolu_01Xyz",
+      name: "my_tool",
+      partial_json: '{"prompt":"hello"}'
     });
   });
 });
@@ -1959,7 +2005,7 @@ describe("Opus 4.6", () => {
 
       expect(
         params.betas === undefined ||
-          !params.betas.includes("compact-2026-01-12")
+        !params.betas.includes("compact-2026-01-12")
       ).toBe(true);
     });
 

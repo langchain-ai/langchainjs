@@ -217,8 +217,7 @@ export abstract class BaseMessage<
   TRole extends MessageType = MessageType,
 >
   extends Serializable
-  implements Message<TStructure, TRole>
-{
+  implements Message<TStructure, TRole> {
   lc_namespace = ["langchain_core", "messages"];
 
   lc_serializable = true;
@@ -566,7 +565,14 @@ function hasMergeableId(value: unknown): value is { id: string | number } {
 }
 
 function getMergeableTypeBase(type: string): string {
-  return type.endsWith("_delta") ? type.slice(0, -"_delta".length) : type;
+  if (type === "input_json_delta" || type === "input_json") {
+    return "tool_use";
+  }
+
+  if (type.endsWith("_delta")) {
+    return type.replace("_delta", "");
+  }
+  return type;
 }
 
 function hasMismatchedMergeableType(left: unknown, right: unknown): boolean {
@@ -740,9 +746,9 @@ export type BaseMessageLike =
    * @deprecated Specifying "type" is deprecated and will be removed in 0.4.0.
    */
   | ({
-      type: MessageType | "user" | "assistant" | "placeholder";
-    } & BaseMessageFields &
-      Record<string, unknown>)
+    type: MessageType | "user" | "assistant" | "placeholder";
+  } & BaseMessageFields &
+    Record<string, unknown>)
   | SerializedConstructor;
 
 /**

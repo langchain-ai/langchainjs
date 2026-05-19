@@ -1,4 +1,5 @@
 import { isMessage } from "../message.js";
+import { AIMessageChunk } from "../index.js";
 
 describe("isMessage", () => {
   describe("valid cases", () => {
@@ -70,6 +71,32 @@ describe("isMessage", () => {
     it("ignores content block shapes; only requires array-ness when not a string", () => {
       const value = { type: "ai", content: [1, 2, 3] };
       expect(isMessage(value)).toBe(true);
+    });
+  });
+});
+
+describe("AIMessageChunk", () => {
+  describe(".concat()", () => {
+    test("should successfully aggregate tool_use and input_json_delta chunks", async () => {
+      const chunk1 = new AIMessageChunk({
+        content: [{ type: "tool_use", index: 0, id: "toolu_01Xyz", name: "my_tool" }]
+      });
+      const chunk2 = new AIMessageChunk({
+        content: [{ type: "input_json_delta", index: 0, partial_json: '{"prompt":' }]
+      });
+      const chunk3 = new AIMessageChunk({
+        content: [{ type: "input_json_delta", index: 0, partial_json: '"hello"}' }]
+      });
+
+      const merged = chunk1.concat(chunk2).concat(chunk3);
+
+      expect(merged.content[0]).toEqual({
+        type: "tool_use",
+        index: 0,
+        id: "toolu_01Xyz",
+        name: "my_tool",
+        partial_json: '{"prompt":"hello"}'
+      });
     });
   });
 });
