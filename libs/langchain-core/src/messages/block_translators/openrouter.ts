@@ -21,9 +21,10 @@ import { _isString } from "./utils.js";
  *    provider on subsequent turns (e.g. Anthropic extended thinking requires
  *    the original `signature` to be echoed back).
  *
- * This translator prefers the structured `reasoning_details` form when
- * present (so no information is lost), and falls back to the flat
- * `reasoning_content` string otherwise.
+ * When `reasoning_details` is present, visible blocks are emitted from
+ * `reasoning.summary` / `reasoning.text` entries. If the array contains only
+ * opaque artifacts (e.g. `reasoning.encrypted`), the flat `reasoning_content`
+ * string is used as a fallback when available.
  *
  * @param message - The AI message containing OpenRouter-formatted content
  * @returns Array of content blocks in v1 standard format
@@ -50,6 +51,7 @@ export function convertToV1FromOpenRouterMessage(
   // Prefer structured reasoning_details when present — they can carry
   // multiple distinct reasoning artifacts (summary, encrypted, text).
   const reasoningDetails = message.additional_kwargs?.reasoning_details;
+  let hasVisibleReasoningFromDetails = false;
   if (Array.isArray(reasoningDetails) && reasoningDetails.length > 0) {
     for (const detail of reasoningDetails) {
       if (detail == null || typeof detail !== "object") continue;
@@ -58,11 +60,13 @@ export function convertToV1FromOpenRouterMessage(
         const summary = (detail as { summary?: unknown }).summary;
         if (_isString(summary) && summary.length > 0) {
           blocks.push({ type: "reasoning", reasoning: summary });
+          hasVisibleReasoningFromDetails = true;
         }
       } else if (type === "reasoning.text") {
         const text = (detail as { text?: unknown }).text;
         if (_isString(text) && text.length > 0) {
           blocks.push({ type: "reasoning", reasoning: text });
+          hasVisibleReasoningFromDetails = true;
         }
       }
       // `reasoning.encrypted` details carry no human-readable text (only an
@@ -70,10 +74,9 @@ export function convertToV1FromOpenRouterMessage(
       // do not become visible reasoning blocks. They stay in
       // `additional_kwargs.reasoning_details` for round-tripping.
     }
-  } else {
-    // Fall back to the flat `reasoning_content` string (the DeepSeek-style
-    // convention that `@langchain/openrouter` normalizes to when no
-    // structured details are present).
+  }
+
+  if (!hasVisibleReasoningFromDetails) {
     const reasoningContent = message.additional_kwargs?.reasoning_content;
     if (_isString(reasoningContent) && reasoningContent.length > 0) {
       blocks.push({

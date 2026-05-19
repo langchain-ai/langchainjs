@@ -327,4 +327,55 @@ describe("convertOpenRouterDeltaToBaseMessageChunk reasoning", () => {
     expect(chunk.additional_kwargs.reasoning_content).toBeUndefined();
     expect(chunk.additional_kwargs.reasoning_details).toBeUndefined();
   });
+
+  it("merges streaming reasoning_details by index via chunk concat", () => {
+    const d1: OpenRouter.ChatStreamingMessageChunk = {
+      role: "assistant",
+      reasoning_details: [
+        {
+          type: "reasoning.text",
+          text: "Let me ",
+          index: 0,
+        },
+      ],
+    };
+    const d2: OpenRouter.ChatStreamingMessageChunk = {
+      reasoning_details: [
+        {
+          type: "reasoning.text",
+          text: "think.",
+          index: 0,
+        },
+      ],
+    };
+    const d3: OpenRouter.ChatStreamingMessageChunk = {
+      content: "42.",
+    };
+
+    const c1 = convertOpenRouterDeltaToBaseMessageChunk(
+      d1,
+      rawChunk(d1),
+      "assistant"
+    ) as AIMessageChunk;
+    const c2 = convertOpenRouterDeltaToBaseMessageChunk(
+      d2,
+      rawChunk(d2),
+      "assistant"
+    ) as AIMessageChunk;
+    const c3 = convertOpenRouterDeltaToBaseMessageChunk(
+      d3,
+      rawChunk(d3),
+      "assistant"
+    ) as AIMessageChunk;
+
+    const merged = c1.concat(c2).concat(c3);
+
+    expect(merged.additional_kwargs.reasoning_details).toEqual([
+      {
+        type: "reasoning.text",
+        text: "Let me think.",
+        index: 0,
+      },
+    ]);
+  });
 });

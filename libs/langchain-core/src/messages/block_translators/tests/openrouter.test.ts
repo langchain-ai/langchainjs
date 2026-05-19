@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { AIMessage, AIMessageChunk } from "../../ai.js";
 import { ContentBlock } from "../../content/index.js";
+import { convertToV1FromOpenRouterMessage } from "../openrouter.js";
 
 describe("openrouterTranslator", () => {
   it("should translate reasoning_content in additional_kwargs to reasoning block", () => {
@@ -199,6 +200,29 @@ describe("openrouterTranslator", () => {
     expect(message.contentBlocks).toEqual(expected);
   });
 
+  it("should fall back to reasoning_content when reasoning_details are encrypted-only", () => {
+    const message = new AIMessage({
+      content: "Done.",
+      additional_kwargs: {
+        reasoning_content: "visible chain of thought",
+        reasoning_details: [
+          {
+            type: "reasoning.encrypted",
+            data: "opaque-blob-from-anthropic",
+          },
+        ],
+      },
+      response_metadata: { model_provider: "openrouter" },
+    });
+
+    const expected: Array<ContentBlock.Standard> = [
+      { type: "reasoning", reasoning: "visible chain of thought" },
+      { type: "text", text: "Done." },
+    ];
+
+    expect(message.contentBlocks).toEqual(expected);
+  });
+
   it("should prefer reasoning_details when both are present", () => {
     const message = new AIMessage({
       content: "Done.",
@@ -222,6 +246,43 @@ describe("openrouterTranslator", () => {
     ];
 
     expect(message.contentBlocks).toEqual(expected);
+  });
+
+  it("should merge streaming reasoning_details by index on AIMessageChunk concat", () => {
+    const c1 = new AIMessageChunk({
+      additional_kwargs: {
+        reasoning_details: [
+          { type: "reasoning.text", text: "Let me ", index: 0 },
+        ],
+      },
+      response_metadata: { model_provider: "openrouter" },
+    });
+    const c2 = new AIMessageChunk({
+      additional_kwargs: {
+        reasoning_details: [
+          { type: "reasoning.text", text: "think.", index: 0 },
+        ],
+      },
+      response_metadata: { model_provider: "openrouter" },
+    });
+    const c3 = new AIMessageChunk({
+      content: "42.",
+      response_metadata: { model_provider: "openrouter" },
+    });
+
+    const merged = c1.concat(c2).concat(c3);
+
+    expect(merged.additional_kwargs.reasoning_details).toEqual([
+      { type: "reasoning.text", text: "Let me think.", index: 0 },
+    ]);
+    expect(convertToV1FromOpenRouterMessage(merged)).toEqual([
+      { type: "reasoning", reasoning: "Let me think." },
+      { type: "text", text: "42." },
+    ]);
+    expect(merged.contentBlocks).toEqual([
+      { type: "reasoning", reasoning: "Let me think." },
+      { type: "text", text: "42." },
+    ]);
   });
 
   it("should handle multiple reasoning.summary details as separate blocks", () => {
