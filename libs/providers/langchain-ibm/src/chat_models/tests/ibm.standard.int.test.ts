@@ -11,7 +11,7 @@ class ChatWatsonxStandardIntegrationTests extends ChatModelIntegrationTests<
   AIMessageChunk,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ChatWatsonxInput & Record<string, any>
-> { 
+> {
   constructor() {
     if (!process.env.WATSONX_AI_APIKEY) {
       throw new Error("Cannot run tests. Api key not provided");
@@ -34,7 +34,7 @@ class ChatWatsonxStandardIntegrationTests extends ChatModelIntegrationTests<
     this.skipTestMessage(
       "testWithStructuredOutput",
       "ChatWatsonx",
-      "Assertion ```expect(handler.extraParams)``` is not valid in ChatWatsonx",
+      "Assertion ```expect(handler.extraParams)``` is not valid in ChatWatsonx"
     );
   }
 
@@ -42,14 +42,14 @@ class ChatWatsonxStandardIntegrationTests extends ChatModelIntegrationTests<
     this.skipTestMessage(
       "testWithStructuredOutputIncludeRaw",
       "ChatWatsonx",
-      "Assertion ```expect(handler.extraParams)``` is not valid in ChatWatsonx",
+      "Assertion ```expect(handler.extraParams)``` is not valid in ChatWatsonx"
     );
   }
   async testBindToolsWithRunnableToolLike() {
     this.skipTestMessage(
       "testBindToolsWithRunnableToolLike",
       "ChatWatsonx",
-      "",
+      ""
     );
   }
 }

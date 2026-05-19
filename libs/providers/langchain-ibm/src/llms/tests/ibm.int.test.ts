@@ -100,7 +100,7 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
       });
 
       await expect(() =>
-        watsonXInstance.invoke("Print hello world", { timeout: 10 }),
+        watsonXInstance.invoke("Print hello world", { timeout: 10 })
       ).rejects.toThrow("The operation was aborted due to timeout");
     }, 10000);
 
@@ -115,7 +115,7 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
       await expect(
         watsonXInstance.invoke("Print hello world", {
           signal: controllerNoAbortion.signal,
-        }),
+        })
       ).resolves.toBeDefined();
 
       const controllerToAbort = new AbortController();
@@ -232,13 +232,13 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
         ],
         {
           stop: ["hello"],
-        },
+        }
       );
       expect(
         res.generations
           .map((generation) => generation.map((item) => item.text))
           .join("")
-          .indexOf("world"),
+          .indexOf("world")
       ).toBe(-1);
     });
 
@@ -265,7 +265,7 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
       res.generations.forEach((generation, index) => {
         generation.forEach((g) => {
           expect(g.generationInfo?.generated_token_count).toBe(
-            nrNewTokens[index],
+            nrNewTokens[index]
           );
         });
       });
@@ -340,7 +340,7 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
           "How is your day going? Be precise and tell me a lot about it/",
           {
             signal: AbortSignal.timeout(750),
-          },
+          }
         );
         const chunks = [];
         for await (const chunk of stream) {
@@ -356,7 +356,6 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
         ...params(1024),
       });
       const chunks: string[] = [];
-      let i = 0;
       await expect(async () => {
         const controller = new AbortController();
         const stream = await llm.stream("Can you explain what a LLM is?", {
@@ -364,6 +363,7 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
         });
         controller.abort();
         for await (const _chunk of stream) {
+          // do nothing
         }
       }).rejects.toThrow();
       console.log(chunks.join());
@@ -383,14 +383,14 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
 
       if ("modelGateway" in basicParams) {
         await expect(instance.getNumTokens("Hello")).rejects.toThrow(
-          /This method is not supported in model gateway/,
+          /This method is not supported in model gateway/
         );
       } else {
         await expect(
-          instance.getNumTokens("Hello"),
+          instance.getNumTokens("Hello")
         ).resolves.toBeGreaterThanOrEqual(0);
         await expect(
-          instance.getNumTokens("Hello", { return_tokens: true }),
+          instance.getNumTokens("Hello", { return_tokens: true })
         ).resolves.toBeGreaterThanOrEqual(0);
       }
     });
@@ -406,7 +406,7 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
       await expect(instance.getNumTokens(12)).rejects.toThrowError();
       await expect(
         // @ts-expect-error Intentionally passing wrong parameter
-        instance.getNumTokens(12, { wrong: "Wrong" }),
+        instance.getNumTokens(12, { wrong: "Wrong" })
       ).rejects.toThrowError();
     });
   });

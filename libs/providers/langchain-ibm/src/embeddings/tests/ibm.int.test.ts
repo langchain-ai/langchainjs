@@ -60,7 +60,7 @@ describe.each(parameters)("Test embeddings for $name", ({ params }) => {
     ]);
     expect(res).toHaveLength(8);
     expect(res.find((embedding) => typeof embedding[0] !== "number")).toBe(
-      undefined,
+      undefined
     );
   });
 
@@ -74,7 +74,7 @@ describe.each(parameters)("Test embeddings for $name", ({ params }) => {
 
     if ("modelGateway" in params) {
       await expect(unresolvedRes).rejects.toThrow(
-        /This method is not supported in model gateway/,
+        /This method is not supported in model gateway/
       );
     } else {
       const res = await unresolvedRes;

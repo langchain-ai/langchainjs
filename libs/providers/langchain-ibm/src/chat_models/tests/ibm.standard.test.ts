@@ -31,7 +31,7 @@ class ChatWatsonxStandardTests extends ChatModelUnitTests<
 
   expectedLsParams(): Partial<LangSmithParams> {
     console.warn(
-      "ChatWatsonx does not support stop sequences. Overwrite params.",
+      "ChatWatsonx does not support stop sequences. Overwrite params."
     );
     return {
       ls_provider: "watsonx",
@@ -47,7 +47,7 @@ class ChatWatsonxStandardTests extends ChatModelUnitTests<
       "testChatModelInitApiKey",
       "ChatWatsonx",
       "Watsonx does not support init with apiKey parameter" +
-        "Watsonx only supports watsonxApiKey.",
+        "Watsonx only supports watsonxApiKey."
     );
   }
 }
