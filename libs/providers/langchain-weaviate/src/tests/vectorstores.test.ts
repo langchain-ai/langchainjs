@@ -1,7 +1,24 @@
 import { test, expect, vi } from "vitest";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
+import type { FilterValue, WeaviateClient } from "weaviate-client";
 
 import { flattenObjectForWeaviate, WeaviateStore } from "../vectorstores.js";
+
+type MockCollections = Pick<
+  WeaviateClient["collections"],
+  "createFromJson" | "create" | "exists" | "get"
+>;
+
+function mockWeaviateClient(collections: MockCollections): WeaviateClient {
+  return { collections } as unknown as WeaviateClient;
+}
+
+function equalFilter(value: string): FilterValue {
+  return {
+    operator: "Equal",
+    value,
+  };
+}
 
 function makeMockClient({
   collectionExists = false,
@@ -12,9 +29,7 @@ function makeMockClient({
   const get = vi.fn().mockReturnValue({});
 
   return {
-    client: {
-      collections: { createFromJson, create, exists, get },
-    } as any,
+    client: mockWeaviateClient({ createFromJson, create, exists, get }),
     spies: { createFromJson, create, exists },
   };
 }
@@ -29,14 +44,12 @@ function makeSearchMockClient() {
   const get = vi.fn().mockReturnValue(collection);
 
   return {
-    client: {
-      collections: {
-        get,
-        exists: vi.fn().mockResolvedValue(true),
-        create: vi.fn(),
-        createFromJson: vi.fn(),
-      },
-    } as any,
+    client: mockWeaviateClient({
+      get,
+      exists: vi.fn().mockResolvedValue(true),
+      create: vi.fn(),
+      createFromJson: vi.fn(),
+    }),
     spies: { hybrid, generateHybrid },
   };
 }
@@ -96,7 +109,7 @@ test("hybridSearch forwards filters when provided", async () => {
     indexName: "MyCollection",
   });
 
-  const filters = { operator: "Equal", path: ["foo"], valueText: "bar" } as any;
+  const filters = equalFilter("bar");
   await store.hybridSearch("q", { filters, vector: [0.1, 0.2] });
 
   expect(spies.hybrid).toHaveBeenCalledOnce();
@@ -111,8 +124,8 @@ test("hybridSearch maps filter (singular) to filters and keeps both keys", async
     indexName: "MyCollection",
   });
 
-  const filter = { operator: "Equal", path: ["foo"], valueText: "bar" } as any;
-  await store.hybridSearch("q", { filter, vector: [0.1, 0.2] } as any);
+  const filter = equalFilter("bar");
+  await store.hybridSearch("q", { filter, vector: [0.1, 0.2] });
 
   expect(spies.hybrid).toHaveBeenCalledOnce();
   const [, options] = spies.hybrid.mock.calls[0];
@@ -127,13 +140,13 @@ test("hybridSearch prefers filters over filter when both are provided", async ()
     indexName: "MyCollection",
   });
 
-  const filters = { operator: "Equal", path: ["a"], valueText: "1" } as any;
-  const filter = { operator: "Equal", path: ["b"], valueText: "2" } as any;
+  const filters = equalFilter("1");
+  const filter = equalFilter("2");
   await store.hybridSearch("q", {
     filters,
     filter,
     vector: [0.1, 0.2],
-  } as any);
+  });
 
   expect(spies.hybrid).toHaveBeenCalledOnce();
   const [, options] = spies.hybrid.mock.calls[0];
@@ -147,7 +160,7 @@ test("generate forwards filters when provided", async () => {
     indexName: "MyCollection",
   });
 
-  const filters = { operator: "Equal", path: ["foo"], valueText: "bar" } as any;
+  const filters = equalFilter("bar");
   await store.generate(
     "q",
     { singlePrompt: "summarize" },
@@ -166,11 +179,11 @@ test("generate maps filter (singular) to filters and keeps both keys", async () 
     indexName: "MyCollection",
   });
 
-  const filter = { operator: "Equal", path: ["foo"], valueText: "bar" } as any;
+  const filter = equalFilter("bar");
   await store.generate("q", { singlePrompt: "summarize" }, {
     filter,
     vector: [0.1, 0.2],
-  } as any);
+  });
 
   expect(spies.generateHybrid).toHaveBeenCalledOnce();
   const [, , options] = spies.generateHybrid.mock.calls[0];
@@ -185,13 +198,13 @@ test("generate prefers filters over filter when both are provided", async () => 
     indexName: "MyCollection",
   });
 
-  const filters = { operator: "Equal", path: ["a"], valueText: "1" } as any;
-  const filter = { operator: "Equal", path: ["b"], valueText: "2" } as any;
+  const filters = equalFilter("1");
+  const filter = equalFilter("2");
   await store.generate("q", { singlePrompt: "summarize" }, {
     filters,
     filter,
     vector: [0.1, 0.2],
-  } as any);
+  });
 
   expect(spies.generateHybrid).toHaveBeenCalledOnce();
   const [, , options] = spies.generateHybrid.mock.calls[0];
