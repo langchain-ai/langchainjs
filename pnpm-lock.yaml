@@ -1823,7 +1823,7 @@ importers:
   libs/providers/langchain-mistralai:
     dependencies:
       '@mistralai/mistralai':
-        specifier: ^2.2.1
+        specifier: 2.2.1
         version: 2.2.1(bufferutil@4.1.0)
     devDependencies:
       '@langchain/core':
