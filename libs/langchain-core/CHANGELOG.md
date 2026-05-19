@@ -1,5 +1,71 @@
 # @langchain/core
 
+## 1.1.47
+
+### Patch Changes
+
+- [#10906](https://github.com/langchain-ai/langchainjs/pull/10906) [`f61b345`](https://github.com/langchain-ai/langchainjs/commit/f61b3450f275831e47e69c08899b4a2b67b4bdb3) Thanks [@hntrl](https://github.com/hntrl)! - feat(core): add uuid v6 utility support
+
+  Add `v6` UUID generation support to `@langchain/core/utils/uuid` by vendoring the upstream uuidjs `v6` implementation and its `v1ToV6` helper, exporting `v6` from the UUID utils index, and adding tests for deterministic generation, buffer/offset behavior, validation/versioning, and ordering.
+
+- [#10872](https://github.com/langchain-ai/langchainjs/pull/10872) [`a640079`](https://github.com/langchain-ai/langchainjs/commit/a64007997a4940f51bba3c1c83dae89d1ccfb692) Thanks [@hntrl](https://github.com/hntrl)! - chore(deps): remove redundant @types/uuid declarations
+
+  Remove `@types/uuid` from package manifests that rely on `@langchain/core/utils/uuid` or do not require uuid type stubs directly, and refresh the lockfile entries accordingly.
+
+- [#10792](https://github.com/langchain-ai/langchainjs/pull/10792) [`3682268`](https://github.com/langchain-ai/langchainjs/commit/3682268cd1844b2573b01f07bee367e21cb7bdc7) Thanks [@Genmin](https://github.com/Genmin)! - fix(core): apply v1 message casting after implicit streaming aggregation
+
+- [#10901](https://github.com/langchain-ai/langchainjs/pull/10901) [`f26fc4a`](https://github.com/langchain-ai/langchainjs/commit/f26fc4a6f461d6d0f86d59bd00197ad510432c4a) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(testing): share fakeModel invocation state across bindTools instances
+
+## 1.1.46
+
+### Patch Changes
+
+- [#10847](https://github.com/langchain-ai/langchainjs/pull/10847) [`1659e7d`](https://github.com/langchain-ai/langchainjs/commit/1659e7d36e31e315c890fa98f43db887f7a2d52b) Thanks [@hntrl](https://github.com/hntrl)! - chore(core): reduce transitive dependency exposure and tighten release hygiene
+
+  Remove direct runtime dependencies on `ansi-styles`, `camelcase`, and `decamelize`
+  by inlining equivalent logic in core internals, and enable npm provenance in the
+  release workflow.
+
+- [#10790](https://github.com/langchain-ai/langchainjs/pull/10790) [`ef78bc6`](https://github.com/langchain-ai/langchainjs/commit/ef78bc6a21f9a8808ba95c98db2023f0a6b51bcc) Thanks [@Genmin](https://github.com/Genmin)! - fix(core): keep different content block types separate when merging chunks
+
+## 1.1.45
+
+### Patch Changes
+
+- [#10833](https://github.com/langchain-ai/langchainjs/pull/10833) [`6cf39fe`](https://github.com/langchain-ai/langchainjs/commit/6cf39fe9636804f6280db0b98c4a4c72d5b103a0) Thanks [@colifran](https://github.com/colifran)! - chore(core): deprecate streamLog, streamEvents v1, RunnableWithMessageHistory and improve threat model verbiage for loads
+
+- [#10835](https://github.com/langchain-ai/langchainjs/pull/10835) [`0aebe50`](https://github.com/langchain-ai/langchainjs/commit/0aebe5054cfb982f09d9775b017317a731b6576f) Thanks [@colifran](https://github.com/colifran)! - fix(core): deno re-declaration in LangSmith is causing unit test failures
+
+## 1.1.44
+
+### Patch Changes
+
+- [#10822](https://github.com/langchain-ai/langchainjs/pull/10822) [`922a040`](https://github.com/langchain-ai/langchainjs/commit/922a040421391700fd92e04e6f44a37e3f24710b) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): translate content block delta for other models
+
+## 1.1.43
+
+### Patch Changes
+
+- [#10814](https://github.com/langchain-ai/langchainjs/pull/10814) [`dfec1b7`](https://github.com/langchain-ai/langchainjs/commit/dfec1b7f8b2c530a43f639dc79d4965a80ea4b79) Thanks [@hntrl](https://github.com/hntrl)! - fix(google): restore structured output parsing with includeRaw and reasoning blocks
+
+  Ensure structured output parsers read `BaseMessage` text content when `includeRaw: true`, so responses that include reasoning/thought blocks plus JSON text continue to parse correctly.
+
+- [#10772](https://github.com/langchain-ai/langchainjs/pull/10772) [`1ba7131`](https://github.com/langchain-ai/langchainjs/commit/1ba71319150847438fa517fe612f65cfed85ffab) Thanks [@christian-bromann](https://github.com/christian-bromann)! - chore(core): new stream primitives
+
+## 1.1.42
+
+### Patch Changes
+
+- [#10776](https://github.com/langchain-ai/langchainjs/pull/10776) [`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6) Thanks [@hntrl](https://github.com/hntrl)! - fix(deps): remediate uuid vulnerability by removing direct uuid usage
+
+## 1.1.41
+
+### Patch Changes
+
+- [#10733](https://github.com/langchain-ai/langchainjs/pull/10733) [`589f29c`](https://github.com/langchain-ai/langchainjs/commit/589f29ce844eb252c2d5e6b0f8d26de37763a0d7) Thanks [@jacoblee93](https://github.com/jacoblee93)! - fix(core): Update inheritance behavior for tracer metadata for special keys
+
+- [#10711](https://github.com/langchain-ai/langchainjs/pull/10711) [`2e9e696`](https://github.com/langchain-ai/langchainjs/commit/2e9e6969e248a53ede0659a41d0ac8dbaf291ab4) Thanks [@jacoblee93](https://github.com/jacoblee93)! - feat(core): Add chat model and llm invocation params to traced metadata
+
 ## 1.1.40
 
 ### Patch Changes

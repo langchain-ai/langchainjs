@@ -20,6 +20,18 @@ export type BedrockToolChoice =
   | ToolChoice.ToolMember;
 export type ChatBedrockConverseToolType = BindToolsInput | BedrockTool;
 
+/**
+ * Prompt cache control settings for Bedrock Converse.
+ *
+ * Mirrors Python `cache_control` model settings for ChatBedrockConverse.
+ * `type` is accepted for parity but Converse cache points always use
+ * `cachePoint.type = "default"`.
+ */
+export type BedrockPromptCacheControl = {
+  type?: "ephemeral";
+  ttl?: "5m" | "1h";
+};
+
 export type MessageContentReasoningBlockReasoningText = {
   type: "reasoning_content";
   reasoningText: {

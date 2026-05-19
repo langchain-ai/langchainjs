@@ -1,6 +1,6 @@
 {
   "name": "@langchain/cohere",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Cohere integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -31,8 +31,7 @@
     "format:check": "prettier --check \"src\""
   },
   "dependencies": {
-    "cohere-ai": "^7.14.0",
-    "uuid": "^10.0.0"
+    "cohere-ai": "^7.14.0"
   },
   "peerDependencies": {
     "@langchain/core": "workspace:^"

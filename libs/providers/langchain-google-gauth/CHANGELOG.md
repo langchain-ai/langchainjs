@@ -1,5 +1,33 @@
 # @langchain/google-gauth
 
+## 2.1.31
+
+### Patch Changes
+
+- Updated dependencies [[`a640079`](https://github.com/langchain-ai/langchainjs/commit/a64007997a4940f51bba3c1c83dae89d1ccfb692), [`7be1da4`](https://github.com/langchain-ai/langchainjs/commit/7be1da46ee1a2920b08212aeeed34dec57590d62)]:
+  - @langchain/google-common@2.1.31
+
+## 2.1.30
+
+### Patch Changes
+
+- Updated dependencies [[`dfec1b7`](https://github.com/langchain-ai/langchainjs/commit/dfec1b7f8b2c530a43f639dc79d4965a80ea4b79)]:
+  - @langchain/google-common@2.1.30
+
+## 2.1.29
+
+### Patch Changes
+
+- Updated dependencies [[`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6)]:
+  - @langchain/google-common@2.1.29
+
+## 2.1.28
+
+### Patch Changes
+
+- Updated dependencies [[`2e9e696`](https://github.com/langchain-ai/langchainjs/commit/2e9e6969e248a53ede0659a41d0ac8dbaf291ab4)]:
+  - @langchain/google-common@2.1.28
+
 ## 2.1.27
 
 ### Patch Changes

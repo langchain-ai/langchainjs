@@ -22,7 +22,11 @@ import type { ToolCall } from "@langchain/core/messages/tool";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
 
 import { initChatModel } from "../../chat_models/universal.js";
-import { MultipleStructuredOutputsError, MiddlewareError } from "../errors.js";
+import {
+  MultipleStructuredOutputsError,
+  MiddlewareError,
+  StructuredOutputParsingError,
+} from "../errors.js";
 import { RunnableCallable } from "../RunnableCallable.js";
 import type { AgentLanguageModelLike as LanguageModelLike } from "../model.js";
 import {
@@ -407,6 +411,24 @@ export class AgentNode<
           structuredResponseFormat.strategy.parse(response);
         if (structuredResponse) {
           return { structuredResponse, messages: [response] };
+        }
+
+        /**
+         * If the model produced a terminal response (no tool calls) but the
+         * output failed to satisfy the provider strategy's schema, throw an
+         * informative error instead of silently exiting with
+         * `structuredResponse: undefined`. If tool calls are present, the
+         * agent loop continues and a subsequent terminal step will get
+         * another chance to produce a valid structured response.
+         */
+        if (!response.tool_calls || response.tool_calls.length === 0) {
+          const schemaTitle =
+            typeof structuredResponseFormat.strategy.schema?.title === "string"
+              ? structuredResponseFormat.strategy.schema.title
+              : "providerStrategy";
+          throw new StructuredOutputParsingError(schemaTitle, [
+            "Model output did not satisfy the provided response schema.",
+          ]);
         }
 
         return response;

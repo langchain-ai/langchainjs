@@ -719,6 +719,19 @@ export abstract class BaseLanguageModel<
           parsed: RunOutput;
         }
       >;
+
+  /**
+   * Filter out large/inappropriate fields from invocation params for tracing metadata.
+   * Removes fields like tools, functions, messages, response_format that can be large.
+   */
+  protected _filterInvocationParamsForTracing(
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    params: Record<string, any>
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  ): Record<string, any> {
+    const { tools, functions, messages, response_format, ...rest } = params;
+    return rest;
+  }
 }
 
 /**

@@ -1,5 +1,43 @@
 # langchain
 
+## 1.4.1
+
+### Patch Changes
+
+- [#10879](https://github.com/langchain-ai/langchainjs/pull/10879) [`eb480cb`](https://github.com/langchain-ai/langchainjs/commit/eb480cb6df8e0fa792826155bfa00a6db4536444) Thanks [@vignesh-gep](https://github.com/vignesh-gep)! - fix(langchain/createAgent): throw on terminal `providerStrategy` parse failure instead of silently resolving with `structuredResponse: undefined`
+
+  When `createAgent` was configured with `responseFormat` resolving to a `providerStrategy` (either passed explicitly or auto-promoted from a bare Zod / JSON schema for models whose profile reports `structuredOutput: true`), and the model produced a terminal response (no `tool_calls`) whose text could not be JSON-parsed or did not satisfy the schema, the agent silently exited with no `structuredResponse`, surfacing later as `TypeError: Cannot read properties of undefined`. The agent now throws a `StructuredOutputParsingError` in that case while still allowing the agent loop to continue when tool calls are present. Closes [#10878](https://github.com/langchain-ai/langchainjs/issues/10878).
+
+- [#10872](https://github.com/langchain-ai/langchainjs/pull/10872) [`a640079`](https://github.com/langchain-ai/langchainjs/commit/a64007997a4940f51bba3c1c83dae89d1ccfb692) Thanks [@hntrl](https://github.com/hntrl)! - chore(deps): remove redundant @types/uuid declarations
+
+  Remove `@types/uuid` from package manifests that rely on `@langchain/core/utils/uuid` or do not require uuid type stubs directly, and refresh the lockfile entries accordingly.
+
+- [#10160](https://github.com/langchain-ai/langchainjs/pull/10160) [`bba900c`](https://github.com/langchain-ai/langchainjs/commit/bba900c7c8781c7efec856d5d3e539a93f14e797) Thanks [@JadenKim-dev](https://github.com/JadenKim-dev)! - fix(langchain): prevent llmToolSelectorMiddleware from leaking into message stream
+
+## 1.4.0
+
+### Minor Changes
+
+- [#10815](https://github.com/langchain-ai/langchainjs/pull/10815) [`499ce78`](https://github.com/langchain-ai/langchainjs/commit/499ce78a65cddd85b04a38d40f44ac8b65bd085d) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(langchain): adopt new streaming primitives
+
+## 1.3.5
+
+### Patch Changes
+
+- [#10776](https://github.com/langchain-ai/langchainjs/pull/10776) [`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6) Thanks [@hntrl](https://github.com/hntrl)! - fix(deps): remediate uuid vulnerability by removing direct uuid usage
+
+- Updated dependencies [[`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6)]:
+  - @langchain/core@1.1.42
+
+## 1.3.4
+
+### Patch Changes
+
+- [#10713](https://github.com/langchain-ai/langchainjs/pull/10713) [`49ac9e7`](https://github.com/langchain-ai/langchainjs/commit/49ac9e7404e5a9269b9ac047711ee96dd928b231) Thanks [@jacoblee93](https://github.com/jacoblee93)! - feat(langchain): Adds ls_agent_type to create agent runs as tracing metadata
+
+- Updated dependencies [[`589f29c`](https://github.com/langchain-ai/langchainjs/commit/589f29ce844eb252c2d5e6b0f8d26de37763a0d7), [`2e9e696`](https://github.com/langchain-ai/langchainjs/commit/2e9e6969e248a53ede0659a41d0ac8dbaf291ab4)]:
+  - @langchain/core@1.1.41
+
 ## 1.3.3
 
 ### Patch Changes

@@ -1,5 +1,25 @@
 # @langchain/openrouter
 
+## 0.2.5
+
+### Patch Changes
+
+- Updated dependencies [[`229a7ad`](https://github.com/langchain-ai/langchainjs/commit/229a7ad67b9a7ebd8df3ca451e0b8195bea0190e), [`36fb0ef`](https://github.com/langchain-ai/langchainjs/commit/36fb0ef1dc76c096dcfa0c777e10c9f9365a5240)]:
+  - @langchain/openai@1.4.6
+
+## 0.2.4
+
+### Patch Changes
+
+- [#10812](https://github.com/langchain-ai/langchainjs/pull/10812) [`67ba9f8`](https://github.com/langchain-ai/langchainjs/commit/67ba9f8217e31da6b4d513f91fc6d83109b8b706) Thanks [@open-swe](https://github.com/apps/open-swe)! - feat(openrouter): add `sessionId` and `trace` request fields
+
+## 0.2.3
+
+### Patch Changes
+
+- Updated dependencies [[`dc20c0e`](https://github.com/langchain-ai/langchainjs/commit/dc20c0ecaad125d7e916813419548c068996d3c2), [`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6)]:
+  - @langchain/openai@1.4.5
+
 ## 0.2.2
 
 ### Patch Changes
