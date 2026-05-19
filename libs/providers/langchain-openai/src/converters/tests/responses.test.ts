@@ -290,6 +290,80 @@ describe("convertResponsesMessageToAIMessage", () => {
 
 describe("convertResponsesDeltaToChatGenerationChunk", () => {
   describe("custom tool streaming delta handling", () => {
+    it("should preserve custom tool metadata from response.output_item.added events", () => {
+      const customToolStart = {
+        type: "response.output_item.added",
+        output_index: 0,
+        item: {
+          type: "custom_tool_call",
+          id: "ctc_123",
+          call_id: "call_123",
+          name: "execute_code",
+          input: "",
+        },
+      };
+
+      const result = convertResponsesDeltaToChatGenerationChunk(
+        customToolStart as any
+      );
+      const aiMessageChunk = result?.message as AIMessageChunk;
+
+      expect(aiMessageChunk.tool_call_chunks).toEqual([
+        {
+          type: "tool_call_chunk",
+          isCustomTool: true,
+          name: "execute_code",
+          args: "",
+          id: "call_123",
+          index: 0,
+        },
+      ]);
+      expect(aiMessageChunk.additional_kwargs).toMatchObject({
+        __openai_custom_tool_call_ids__: {
+          call_123: "ctc_123",
+        },
+      });
+    });
+
+    it("should collapse custom tool streaming chunks into a raw input tool call", () => {
+      const start = convertResponsesDeltaToChatGenerationChunk({
+        type: "response.output_item.added",
+        output_index: 0,
+        item: {
+          type: "custom_tool_call",
+          id: "ctc_123",
+          call_id: "call_123",
+          name: "execute_code",
+          input: "",
+        },
+      } as any)?.message as AIMessageChunk;
+
+      const delta = convertResponsesDeltaToChatGenerationChunk({
+        type: "response.custom_tool_call_input.delta",
+        delta: "console.log('custom tool streaming repro')",
+        output_index: 0,
+      } as any)?.message as AIMessageChunk;
+
+      const combined = start.concat(delta);
+
+      expect(combined.invalid_tool_calls).toEqual([]);
+      expect(combined.tool_calls).toEqual([
+        {
+          type: "tool_call",
+          name: "execute_code",
+          args: {
+            input: "console.log('custom tool streaming repro')",
+          },
+          id: "call_123",
+        },
+      ]);
+      expect(combined.additional_kwargs).toMatchObject({
+        __openai_custom_tool_call_ids__: {
+          call_123: "ctc_123",
+        },
+      });
+    });
+
     it("should handle response.custom_tool_call_input.delta events", () => {
       // Test custom tool delta event
       const customToolDelta = {
@@ -309,6 +383,7 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
         type: "tool_call_chunk",
         args: '{"query": "test query"}',
         index: 0,
+        isCustomTool: true,
       } as ToolCallChunk);
     });
 
@@ -337,10 +412,21 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
       const functionResultMessage = functionResult?.message as AIMessageChunk;
       const customResultMessage = customResult?.message as AIMessageChunk;
 
-      // Both should produce identical tool_call_chunks
-      expect(functionResultMessage.tool_call_chunks).toEqual(
-        customResultMessage.tool_call_chunks
-      );
+      expect(functionResultMessage.tool_call_chunks).toEqual([
+        {
+          type: "tool_call_chunk",
+          args: '{"location": "NYC"}',
+          index: 0,
+        },
+      ] as ToolCallChunk[]);
+      expect(customResultMessage.tool_call_chunks).toEqual([
+        {
+          type: "tool_call_chunk",
+          args: '{"location": "NYC"}',
+          index: 0,
+          isCustomTool: true,
+        },
+      ] as ToolCallChunk[]);
     });
   });
 
