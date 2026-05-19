@@ -1,5 +1,13 @@
 # @langchain/google
 
+## 0.1.12
+
+### Patch Changes
+
+- [#10704](https://github.com/langchain-ai/langchainjs/pull/10704) [`f7e50fb`](https://github.com/langchain-ai/langchainjs/commit/f7e50fb8b98bd9969c0f5cf0967a06df15453453) Thanks [@afirstenberg](https://github.com/afirstenberg)! - Adds support for flex and priority pricing.
+  Adds support for custom headers.
+  Thanks to @Nico385412 and @pawel-twardziak for their insight and contributions.
+
 ## 0.1.11
 
 ### Patch Changes

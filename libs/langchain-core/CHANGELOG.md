@@ -1,5 +1,21 @@
 # @langchain/core
 
+## 1.1.47
+
+### Patch Changes
+
+- [#10906](https://github.com/langchain-ai/langchainjs/pull/10906) [`f61b345`](https://github.com/langchain-ai/langchainjs/commit/f61b3450f275831e47e69c08899b4a2b67b4bdb3) Thanks [@hntrl](https://github.com/hntrl)! - feat(core): add uuid v6 utility support
+
+  Add `v6` UUID generation support to `@langchain/core/utils/uuid` by vendoring the upstream uuidjs `v6` implementation and its `v1ToV6` helper, exporting `v6` from the UUID utils index, and adding tests for deterministic generation, buffer/offset behavior, validation/versioning, and ordering.
+
+- [#10872](https://github.com/langchain-ai/langchainjs/pull/10872) [`a640079`](https://github.com/langchain-ai/langchainjs/commit/a64007997a4940f51bba3c1c83dae89d1ccfb692) Thanks [@hntrl](https://github.com/hntrl)! - chore(deps): remove redundant @types/uuid declarations
+
+  Remove `@types/uuid` from package manifests that rely on `@langchain/core/utils/uuid` or do not require uuid type stubs directly, and refresh the lockfile entries accordingly.
+
+- [#10792](https://github.com/langchain-ai/langchainjs/pull/10792) [`3682268`](https://github.com/langchain-ai/langchainjs/commit/3682268cd1844b2573b01f07bee367e21cb7bdc7) Thanks [@Genmin](https://github.com/Genmin)! - fix(core): apply v1 message casting after implicit streaming aggregation
+
+- [#10901](https://github.com/langchain-ai/langchainjs/pull/10901) [`f26fc4a`](https://github.com/langchain-ai/langchainjs/commit/f26fc4a6f461d6d0f86d59bd00197ad510432c4a) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(testing): share fakeModel invocation state across bindTools instances
+
 ## 1.1.46
 
 ### Patch Changes
