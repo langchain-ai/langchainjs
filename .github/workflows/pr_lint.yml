@@ -54,6 +54,7 @@ jobs:
             docs
             anthropic
             aws
+            baseten
             cloudflare
             cohere
             deepseek
