@@ -3,27 +3,13 @@
  */
 import type { ModelProfile } from "@langchain/core/language_models/profile";
 const PROFILES: Record<string, ModelProfile> = {
-  "deepseek-reasoner": {
-    maxInputTokens: 128000,
-    imageInputs: false,
-    audioInputs: false,
-    pdfInputs: false,
-    videoInputs: false,
-    maxOutputTokens: 128000,
-    reasoningOutput: true,
-    imageOutputs: false,
-    audioOutputs: false,
-    videoOutputs: false,
-    toolCalling: true,
-    structuredOutput: false,
-  },
   "deepseek-chat": {
-    maxInputTokens: 128000,
+    maxInputTokens: 1000000,
     imageInputs: false,
     audioInputs: false,
     pdfInputs: false,
     videoInputs: false,
-    maxOutputTokens: 8192,
+    maxOutputTokens: 384000,
     reasoningOutput: false,
     imageOutputs: false,
     audioOutputs: false,
@@ -31,7 +17,7 @@ const PROFILES: Record<string, ModelProfile> = {
     toolCalling: true,
     structuredOutput: false,
   },
-  "deepseek-v4-flash": {
+  "deepseek-v4-pro": {
     maxInputTokens: 1000000,
     imageInputs: false,
     audioInputs: false,
@@ -45,7 +31,21 @@ const PROFILES: Record<string, ModelProfile> = {
     toolCalling: true,
     structuredOutput: true,
   },
-  "deepseek-v4-pro": {
+  "deepseek-reasoner": {
+    maxInputTokens: 1000000,
+    imageInputs: false,
+    audioInputs: false,
+    pdfInputs: false,
+    videoInputs: false,
+    maxOutputTokens: 384000,
+    reasoningOutput: true,
+    imageOutputs: false,
+    audioOutputs: false,
+    videoOutputs: false,
+    toolCalling: true,
+    structuredOutput: false,
+  },
+  "deepseek-v4-flash": {
     maxInputTokens: 1000000,
     imageInputs: false,
     audioInputs: false,
