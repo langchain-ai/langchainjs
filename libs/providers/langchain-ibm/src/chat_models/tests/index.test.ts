@@ -12,12 +12,10 @@ import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
 import { IterableReadableStream } from "@langchain/core/utils/stream";
 import {
   ChatWatsonx,
-  ChatWatsonxDeployedInput,
-  ChatWatsonxGatewayInput,
+  ChatWatsonxCallOptions,
   ChatWatsonxInput,
   WatsonxCallParams,
-} from "../ibm.js";
-import { WatsonxAuth } from "../../types.js";
+} from "../index.js";
 
 const fakeAuthProp = {
   watsonxAIAuthType: "iam",
@@ -34,10 +32,7 @@ export function getKey<K>(key: K): K {
 
 export const testProperties = (
   instance: ChatWatsonx,
-  testProps:
-    | ChatWatsonxInput
-    | ChatWatsonxDeployedInput
-    | (ChatWatsonxGatewayInput & WatsonxAuth),
+  testProps: ChatWatsonxCallOptions,
   notExTestProps?: { [key: string]: any }
 ) => {
   const checkProperty = <T extends { [key: string]: any }>(
@@ -531,7 +526,6 @@ describe("Chat unit tests", () => {
       };
       expect(
         () =>
-          // @ts-expect-error Pass invalid props with modelGateway
           new ChatWatsonx({
             ...testProps,
             ...fakeAuthProp,
@@ -550,7 +544,6 @@ describe("Chat unit tests", () => {
       };
       expect(
         () =>
-          // @ts-expect-error Pass invalid props with projectId
           new ChatWatsonx({
             ...testProps,
             ...fakeAuthProp,
@@ -567,7 +560,6 @@ describe("Chat unit tests", () => {
       };
       expect(
         () =>
-          // @ts-expect-error Pass invalid props with modelGateway
           new ChatWatsonx({
             ...testProps,
             ...fakeAuthProp,
