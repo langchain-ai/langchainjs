@@ -1,5 +1,25 @@
 # @langchain/mongodb
 
+## 1.2.1
+
+### Patch Changes
+
+- [#10872](https://github.com/langchain-ai/langchainjs/pull/10872) [`a640079`](https://github.com/langchain-ai/langchainjs/commit/a64007997a4940f51bba3c1c83dae89d1ccfb692) Thanks [@hntrl](https://github.com/hntrl)! - chore(deps): remove redundant @types/uuid declarations
+
+  Remove `@types/uuid` from package manifests that rely on `@langchain/core/utils/uuid` or do not require uuid type stubs directly, and refresh the lockfile entries accordingly.
+
+## 1.2.0
+
+### Minor Changes
+
+- [#10657](https://github.com/langchain-ai/langchainjs/pull/10657) [`b99e9c4`](https://github.com/langchain-ai/langchainjs/commit/b99e9c460f19e35693a34fb76c6244f750b4e0fb) Thanks [@PavelSafronov](https://github.com/PavelSafronov)! - Add MongoDB auto-embed support
+
+## 1.1.1
+
+### Patch Changes
+
+- [#10776](https://github.com/langchain-ai/langchainjs/pull/10776) [`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6) Thanks [@hntrl](https://github.com/hntrl)! - fix(deps): remediate uuid vulnerability by removing direct uuid usage
+
 ## 1.1.0
 
 ### Minor Changes

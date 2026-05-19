@@ -1,5 +1,5 @@
 import { describe, expect, it, test } from "vitest";
-import { v4 } from "uuid";
+import { v4 } from "../../utils/uuid/index.js";
 import { AIMessage, AIMessageChunk } from "../ai.js";
 import { BaseMessage, MessageContent } from "../base.js";
 import { ChatMessage } from "../chat.js";

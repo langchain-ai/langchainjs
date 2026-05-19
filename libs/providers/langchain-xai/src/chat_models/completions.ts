@@ -856,25 +856,6 @@ export class ChatXAI extends ChatOpenAICompletions<ChatXAICallOptions> {
     return messageChunk;
   }
 
-  protected override _convertCompletionsMessageToBaseMessage(
-    message: OpenAIClient.ChatCompletionMessage & {
-      reasoning_content?: string;
-    },
-    rawResponse: OpenAIClient.ChatCompletion
-  ): AIMessageChunk {
-    const langChainMessage = super._convertCompletionsMessageToBaseMessage(
-      message,
-      rawResponse
-    ) as AIMessageChunk;
-
-    // Cast additional_kwargs to xAI-specific type and add reasoning_content
-    const additionalKwargs =
-      langChainMessage.additional_kwargs as XAIAdditionalKwargs;
-    additionalKwargs.reasoning_content = message.reasoning_content;
-
-    return langChainMessage;
-  }
-
   /**
    * Return profiling information for the model.
    *
