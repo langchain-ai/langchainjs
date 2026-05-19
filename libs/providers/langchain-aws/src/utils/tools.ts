@@ -133,6 +133,7 @@ export function supportedToolChoiceValuesForModel(
   if (
     model.includes("claude-3") ||
     model.includes("claude-4") ||
+    model.includes("claude-haiku-4") ||
     model.includes("claude-opus-4") ||
     model.includes("claude-sonnet-4")
   ) {
