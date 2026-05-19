@@ -167,11 +167,10 @@ test("generate maps filter (singular) to filters and keeps both keys", async () 
   });
 
   const filter = { operator: "Equal", path: ["foo"], valueText: "bar" } as any;
-  await store.generate(
-    "q",
-    { singlePrompt: "summarize" },
-    { filter, vector: [0.1, 0.2] } as any
-  );
+  await store.generate("q", { singlePrompt: "summarize" }, {
+    filter,
+    vector: [0.1, 0.2],
+  } as any);
 
   expect(spies.generateHybrid).toHaveBeenCalledOnce();
   const [, , options] = spies.generateHybrid.mock.calls[0];
@@ -188,11 +187,11 @@ test("generate prefers filters over filter when both are provided", async () => 
 
   const filters = { operator: "Equal", path: ["a"], valueText: "1" } as any;
   const filter = { operator: "Equal", path: ["b"], valueText: "2" } as any;
-  await store.generate(
-    "q",
-    { singlePrompt: "summarize" },
-    { filters, filter, vector: [0.1, 0.2] } as any
-  );
+  await store.generate("q", { singlePrompt: "summarize" }, {
+    filters,
+    filter,
+    vector: [0.1, 0.2],
+  } as any);
 
   expect(spies.generateHybrid).toHaveBeenCalledOnce();
   const [, , options] = spies.generateHybrid.mock.calls[0];

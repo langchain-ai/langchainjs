@@ -132,10 +132,7 @@ export class WeaviateStore extends VectorStore {
     // raw REST/JSON schema — it is not the standard JSON Schema `class` keyword.
     // See WeaviateClass in weaviate-client/openapi/types.
     this.indexName =
-      args.indexName ||
-      args.schema?.name ||
-      args.jsonSchema?.class ||
-      "";
+      args.indexName || args.schema?.name || args.jsonSchema?.class || "";
     this.textKey = args.textKey || "text";
     this.queryAttrs = [this.textKey];
     this.tenant = args.tenant;
@@ -209,7 +206,8 @@ export class WeaviateStore extends VectorStore {
     documents: Document[],
     options?: { ids?: string[] }
   ) {
-    const documentIds = options?.ids ?? documents.map((_) => crypto.randomUUID());
+    const documentIds =
+      options?.ids ?? documents.map((_) => crypto.randomUUID());
     const batch: DataObject<undefined>[] = documents.map((document, index) => {
       if (Object.hasOwn(document.metadata, "id"))
         throw new Error(
