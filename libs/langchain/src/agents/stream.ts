@@ -240,6 +240,16 @@ export function createToolCallTransformer(
         resolveOutput = res;
         rejectOutput = rej;
       });
+      // Attach a no-op catch so that a rejection occurring before any
+      // user-space consumer has had a chance to `await call.output`
+      // does not trigger Node's `unhandledRejection` and crash the
+      // process. This can happen, for example, when an HITL middleware
+      // interrupt rejects the output while the consumer is iterating
+      // `run.interrupts` instead of `run.toolCalls`. Each downstream
+      // `await` / `.then` still observes the rejection independently,
+      // so this only swallows the *unhandled* signal — not the error
+      // itself.
+      output.catch(() => {});
       const status = new Promise<ToolCallStatus>((res) => {
         resolveStatus = res;
       });
