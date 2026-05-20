@@ -20,10 +20,7 @@ export class StateManager {
    * @param name - The name of the middleware group.
    * @param node - The node to add.
    */
-  addNode(
-    middleware: AnyAgentMiddleware,
-    node: AgentNode
-  ) {
+  addNode(middleware: AnyAgentMiddleware, node: AgentNode) {
     this.#nodes.set(middleware.name, [
       ...(this.#nodes.get(middleware.name) ?? []),
       node,

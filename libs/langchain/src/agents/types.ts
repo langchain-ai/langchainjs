@@ -99,7 +99,8 @@ export interface AgentTypeConfig<
   TContext extends AnyAnnotationRoot | InteropZodObject =
     | AnyAnnotationRoot
     | InteropZodObject,
-  TMiddleware extends readonly AnyAgentMiddleware[] = readonly AnyAgentMiddleware[],
+  TMiddleware extends readonly AnyAgentMiddleware[] =
+    readonly AnyAgentMiddleware[],
   TTools extends readonly (ClientTool | ServerTool)[] = readonly (
     | ClientTool
     | ServerTool

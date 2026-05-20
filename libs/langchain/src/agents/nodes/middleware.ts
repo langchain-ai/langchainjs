@@ -62,7 +62,9 @@ export abstract class MiddlewareNode<
       /**
        * Extract only the fields relevant to this middleware's schema
        */
-      const schemaShape = getInteropZodObjectShape(this.middleware.contextSchema);
+      const schemaShape = getInteropZodObjectShape(
+        this.middleware.contextSchema
+      );
       if (schemaShape) {
         const relevantContext: Record<string, unknown> = {};
         const invokeContext = config?.context || {};

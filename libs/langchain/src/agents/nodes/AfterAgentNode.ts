@@ -1,6 +1,9 @@
 import { RunnableConfig } from "@langchain/core/runnables";
 import { MiddlewareNode } from "./middleware.js";
-import type { AnyAgentMiddleware, MiddlewareResult } from "../middleware/types.js";
+import type {
+  AnyAgentMiddleware,
+  MiddlewareResult,
+} from "../middleware/types.js";
 import type { AgentBuiltInState, Runtime } from "../runtime.js";
 import { getHookFunction } from "../middleware/utils.js";
 
@@ -13,9 +16,7 @@ export class AfterAgentNode<
 > extends MiddlewareNode<TStateSchema, TContextSchema> {
   lc_namespace = ["langchain", "agents", "afterAgentNodes"];
 
-  constructor(
-    public middleware: AnyAgentMiddleware
-  ) {
+  constructor(public middleware: AnyAgentMiddleware) {
     super({
       name: `AfterAgentNode_${middleware.name}`,
       func: async (

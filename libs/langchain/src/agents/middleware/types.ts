@@ -80,9 +80,8 @@ export interface MiddlewareTypeConfig<
     | ClientTool
     | ServerTool
   )[],
-  TStreamTransformers extends ReadonlyArray<
-    () => StreamTransformer<any>
-  > = ReadonlyArray<() => StreamTransformer<any>>,
+  TStreamTransformers extends ReadonlyArray<() => StreamTransformer<any>> =
+    ReadonlyArray<() => StreamTransformer<any>>,
 > {
   /** The middleware state schema type */
   Schema: TSchema;
@@ -413,9 +412,8 @@ export interface AgentMiddleware<
     | ClientTool
     | ServerTool
   )[],
-  TStreamTransformers extends ReadonlyArray<
-    () => StreamTransformer<any>
-  > = ReadonlyArray<() => StreamTransformer<any>>,
+  TStreamTransformers extends ReadonlyArray<() => StreamTransformer<any>> =
+    ReadonlyArray<() => StreamTransformer<any>>,
 > {
   /**
    * Brand property to distinguish middleware instances from plain objects or functions.
@@ -668,10 +666,8 @@ export type InferMiddlewareToolsFromConfig<T> = InferMiddlewareType<T, "Tools">;
 /**
  * Shorthand helper to extract the StreamTransformers type from a MiddlewareTypeConfig or AgentMiddleware.
  */
-export type InferMiddlewareStreamTransformersFromConfig<T> = InferMiddlewareType<
-  T,
-  "StreamTransformers"
->;
+export type InferMiddlewareStreamTransformersFromConfig<T> =
+  InferMiddlewareType<T, "StreamTransformers">;
 
 export type InferChannelType<T extends AnyAnnotationRoot | InteropZodObject> =
   T extends AnyAnnotationRoot
@@ -729,16 +725,17 @@ export type InferMiddlewareStates<T extends readonly AnyAgentMiddleware[]> =
 /**
  * Helper type to infer merged input state from an array of middleware (with optional defaults)
  */
-export type InferMiddlewareInputStates<T extends readonly AnyAgentMiddleware[]> =
-  T extends readonly []
-    ? {}
-    : T extends readonly [infer First, ...infer Rest]
-      ? First extends AgentMiddleware
-        ? Rest extends readonly AnyAgentMiddleware[]
-          ? InferMiddlewareInputState<First> & InferMiddlewareInputStates<Rest>
-          : InferMiddlewareInputState<First>
-        : {}
-      : {};
+export type InferMiddlewareInputStates<
+  T extends readonly AnyAgentMiddleware[],
+> = T extends readonly []
+  ? {}
+  : T extends readonly [infer First, ...infer Rest]
+    ? First extends AgentMiddleware
+      ? Rest extends readonly AnyAgentMiddleware[]
+        ? InferMiddlewareInputState<First> & InferMiddlewareInputStates<Rest>
+        : InferMiddlewareInputState<First>
+      : {}
+    : {};
 
 /**
  * Helper type to infer merged state from an array of middleware (includes built-in state)
@@ -808,19 +805,18 @@ type MergeContextTypes<A, B> = [A] extends [undefined]
  */
 export type InferMiddlewareContextInputs<
   T extends readonly AnyAgentMiddleware[],
-> =
-  T extends readonly []
-    ? {}
-    : T extends readonly [infer First, ...infer Rest]
-      ? First extends AgentMiddleware
-        ? Rest extends readonly AnyAgentMiddleware[]
-          ? MergeContextTypes<
-              InferMiddlewareContextInput<First>,
-              InferMiddlewareContextInputs<Rest>
-            >
-          : InferMiddlewareContextInput<First>
-        : {}
-      : {};
+> = T extends readonly []
+  ? {}
+  : T extends readonly [infer First, ...infer Rest]
+    ? First extends AgentMiddleware
+      ? Rest extends readonly AnyAgentMiddleware[]
+        ? MergeContextTypes<
+            InferMiddlewareContextInput<First>,
+            InferMiddlewareContextInputs<Rest>
+          >
+        : InferMiddlewareContextInput<First>
+      : {}
+    : {};
 
 /**
  * Helper type to extract input type from context schema (with optional defaults)

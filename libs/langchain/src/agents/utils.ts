@@ -547,9 +547,7 @@ function chainToolCallHandlers(
  * @param state state of the agent
  * @returns single wrap function
  */
-export function wrapToolCall(
-  middleware: readonly AnyAgentMiddleware[]
-) {
+export function wrapToolCall(middleware: readonly AnyAgentMiddleware[]) {
   const middlewareWithWrapToolCall = middleware.filter((m) => m.wrapToolCall);
 
   if (middlewareWithWrapToolCall.length === 0) {

@@ -673,7 +673,8 @@ export function createAgent<
   StructuredResponseFormat extends Record<string, any>,
   TStateSchema extends StateDefinitionInit,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject,
-  TMiddleware extends readonly AnyAgentMiddleware[] = readonly AnyAgentMiddleware[],
+  TMiddleware extends readonly AnyAgentMiddleware[] =
+    readonly AnyAgentMiddleware[],
   TTools extends readonly (ClientTool | ServerTool)[] = readonly (
     | ClientTool
     | ServerTool
