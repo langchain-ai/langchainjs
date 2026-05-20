@@ -1,5 +1,5 @@
 import { MemoryVectorStore } from "@langchain/classic/vectorstores/memory";
-import { OpenAIEmbeddings, OpenAI } from "@langchain/openai";
+import { OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
 import { SelfQueryRetriever } from "@langchain/classic/retrievers/self_query";
 import { FunctionalTranslator } from "@langchain/core/structured_query";
 import { Document } from "@langchain/core/documents";
@@ -84,7 +84,7 @@ const attributeInfo: AttributeInfo[] = [
  * We also need to provide an embeddings object. This is used to embed the documents.
  */
 const embeddings = new OpenAIEmbeddings();
-const llm = new OpenAI();
+const llm = new ChatOpenAI({ model: "gpt-4o-mini" });
 const documentContents = "Brief summary of a movie";
 const vectorStore = await MemoryVectorStore.fromDocuments(docs, embeddings);
 const selfQueryRetriever = SelfQueryRetriever.fromLLM({
