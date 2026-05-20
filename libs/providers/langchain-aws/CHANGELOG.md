@@ -1,5 +1,11 @@
 # @langchain/aws
 
+## 1.3.9
+
+### Patch Changes
+
+- [#10743](https://github.com/langchain-ai/langchainjs/pull/10743) [`6e4337f`](https://github.com/langchain-ai/langchainjs/commit/6e4337fec1a7707c1a1c709a7b6aa0c5efb7b11d) Thanks [@Zelys-DFKH](https://github.com/Zelys-DFKH)! - fix(aws): add claude-haiku-4 to supportedToolChoiceValuesForModel
+
 ## 1.3.8
 
 ### Patch Changes
