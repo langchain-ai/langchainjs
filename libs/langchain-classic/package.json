@@ -1,6 +1,6 @@
 {
   "name": "@langchain/classic",
-  "version": "1.0.32",
+  "version": "1.0.33",
   "description": "Old abstractions from LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -140,7 +140,7 @@
     "@opensearch-project/opensearch": "^2.2.0",
     "@pinecone-database/pinecone": "^5.0.2",
     "@planetscale/database": "^1.20.1",
-    "@prisma/client": "^4.16.2",
+    "@prisma/client": "^6.19.3",
     "@qdrant/js-client-rest": "^1.17.0",
     "@rockset/client": "^0.9.1",
     "@supabase/supabase-js": "^2.53.0",
@@ -150,7 +150,6 @@
     "@types/js-yaml": "^4",
     "@types/jsdom": "^28.0.1",
     "@types/pg": "^8.15.5",
-    "@types/uuid": "^9",
     "@types/ws": "^8",
     "@upstash/redis": "^1.37.0",
     "@upstash/vector": "^1.2.2",
@@ -177,7 +176,7 @@
     "lorem-ipsum": "^2.0.8",
     "lunary": "^0.8.8",
     "mariadb": "^3.5.1",
-    "mem0ai": "^2.4.5",
+    "mem0ai": "^3.0.3",
     "mongodb": "^6.17.0",
     "openai": "^6.37.0",
     "peggy": "^5.1.0",
@@ -199,7 +198,7 @@
     "@langchain/together-ai": "workspace:*"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0",
+    "@langchain/core": "workspace:^",
     "cheerio": "*",
     "peggy": "^5.1.0",
     "typeorm": "*"
