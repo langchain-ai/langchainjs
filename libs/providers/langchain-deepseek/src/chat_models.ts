@@ -56,6 +56,13 @@ export interface ChatDeepSeekInput extends ChatOpenAIFields {
    * This limits ensures computational efficiency and resource management.
    */
   maxTokens?: number;
+  /**
+   * Parse `<think>` tags in content into reasoning_content.
+   * Disabled by default — only needed for third-party proxies
+   * or older endpoints.
+   * @default false
+   */
+  enableThinkTagParsing?: boolean;
 }
 
 /**
@@ -452,8 +459,16 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
         ...fields.configuration,
       },
     });
+    this.enableThinkTagParsing = fields.enableThinkTagParsing ?? false;
     this._addVersion("@langchain/deepseek", __PKG_VERSION__);
   }
+
+  /**
+   * Whether to parse `<think>...</think>` tags from the content stream.
+   * Controlled by the constructor option of the same name.
+   * @internal
+   */
+  private enableThinkTagParsing: boolean = false;
 
   protected override _convertCompletionsDeltaToBaseMessageChunk(
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
@@ -485,6 +500,23 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
+    // When think tag parsing is disabled (default), pass through chunks
+    // directly from the parent stream. This avoids incorrectly stripping
+    // <think> tags from normal content produced by non-reasoning models.
+    if (!this.enableThinkTagParsing) {
+      for await (const chunk of super._streamResponseChunks(
+        messages,
+        options,
+        runManager
+      )) {
+        if (options.signal?.aborted) {
+          return;
+        }
+        yield chunk;
+      }
+      return;
+    }
+
     const stream = super._streamResponseChunks(messages, options, runManager);
 
     // State for parsing <think> tags
