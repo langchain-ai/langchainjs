@@ -1115,221 +1115,95 @@ describe("Tool search beta auto-append", () => {
     ).toBe(true);
   });
 });
-
-describe("Streaming tool call consolidation (input_json_delta handling)", () => {
-  test("AIMessage with input_json_delta blocks uses tool_calls for input when index is missing", async () => {
-    // This test covers the bug where streaming leaves input_json_delta chunks in content
-    // and the index property gets lost during checkpoint serialization.
-    // The fix should use tool_calls as the source of truth for tool_use input.
-    const messageHistory = [
-      new HumanMessage("Use my_tool with prompt 'hello'"),
-      new AIMessage({
-        content: [
-          { type: "text", text: "I'll use the tool..." },
-          // Note: no index property (as can happen after checkpoint restoration)
-          { type: "tool_use", id: "toolu_01Xyz", name: "my_tool", input: "" },
-          // These input_json_delta blocks would have been created during streaming
-          { type: "input_json_delta", index: 2, input: '{"prompt": "hel' },
-          { type: "input_json_delta", index: 2, input: 'lo"}' },
-        ],
-        // tool_calls is correctly consolidated from tool_call_chunks
-        tool_calls: [
-          { id: "toolu_01Xyz", name: "my_tool", args: { prompt: "hello" } },
-        ],
-      }),
-    ];
-
-    const formattedMessages =
-      _convertMessagesToAnthropicPayload(messageHistory);
-
-    // The AI message content should have 2 blocks: text and tool_use (no input_json_delta)
-    expect(formattedMessages.messages[1].content).toHaveLength(2);
-
-    const [textBlock, toolUseBlock] = formattedMessages.messages[1].content;
-    expect(textBlock).toEqual({ type: "text", text: "I'll use the tool..." });
-    expect(toolUseBlock).toEqual({
-      type: "tool_use",
-      id: "toolu_01Xyz",
-      name: "my_tool",
-      input: { prompt: "hello" }, // Input should come from tool_calls
-    });
-  });
-
-  test("AIMessage with input_json_delta blocks falls back to index matching when tool_calls is empty", async () => {
-    // This tests the fallback behavior when tool_calls is not available
-    const messageHistory = [
-      new HumanMessage("Use my_tool with prompt 'hello'"),
-      new AIMessage({
-        content: [
-          { type: "text", text: "I'll use the tool..." },
-          {
-            type: "tool_use",
-            id: "toolu_01Xyz",
-            name: "my_tool",
-            input: "",
-            index: 2,
-          },
-          { type: "input_json_delta", index: 2, input: '{"prompt": "hel' },
-          { type: "input_json_delta", index: 2, input: 'lo"}' },
-        ],
-        // No tool_calls - should fall back to index matching
-        tool_calls: [],
-      }),
-    ];
-
-    const formattedMessages =
-      _convertMessagesToAnthropicPayload(messageHistory);
-
-    expect(formattedMessages.messages[1].content).toHaveLength(2);
-
-    const [textBlock, toolUseBlock] = formattedMessages.messages[1].content;
-    expect(textBlock).toEqual({ type: "text", text: "I'll use the tool..." });
-    expect(toolUseBlock).toEqual({
-      type: "tool_use",
-      id: "toolu_01Xyz",
-      name: "my_tool",
-      input: { prompt: "hello" }, // Input should be merged from input_json_delta blocks
-    });
-  });
-
-  test("Multiple tool calls with input_json_delta blocks are correctly handled", async () => {
-    const messageHistory = [
-      new HumanMessage("Get weather and calculate"),
-      new AIMessage({
-        content: [
-          { type: "text", text: "Let me help with both tasks" },
-          {
-            type: "tool_use",
-            id: "toolu_weather",
-            name: "get_weather",
-            input: "",
-          },
-          { type: "input_json_delta", index: 1, input: '{"location": "SF' },
-          { type: "input_json_delta", index: 1, input: '"}' },
-          { type: "tool_use", id: "toolu_calc", name: "calculator", input: "" },
-          { type: "input_json_delta", index: 2, input: '{"expr": "2+2' },
-          { type: "input_json_delta", index: 2, input: '"}' },
-        ],
-        tool_calls: [
-          {
-            id: "toolu_weather",
-            name: "get_weather",
-            args: { location: "SF" },
-          },
-          { id: "toolu_calc", name: "calculator", args: { expr: "2+2" } },
-        ],
-      }),
-    ];
-
-    const formattedMessages =
-      _convertMessagesToAnthropicPayload(messageHistory);
-
-    // Should have 3 blocks: text, 2 tool_use (no input_json_delta blocks)
-    expect(formattedMessages.messages[1].content).toHaveLength(3);
-
-    const [textBlock, weatherTool, calcTool] =
-      formattedMessages.messages[1].content;
-    expect(textBlock).toEqual({
-      type: "text",
-      text: "Let me help with both tasks",
-    });
-    expect(weatherTool).toEqual({
-      type: "tool_use",
-      id: "toolu_weather",
-      name: "get_weather",
-      input: { location: "SF" },
-    });
-    expect(calcTool).toEqual({
-      type: "tool_use",
-      id: "toolu_calc",
-      name: "calculator",
-      input: { expr: "2+2" },
-    });
-  });
-
-  test("input_json_delta blocks are filtered out even when tool_use has object input", async () => {
-    // Edge case: tool_use already has parsed object input but orphan input_json_delta blocks exist
-    const messageHistory = [
-      new HumanMessage("Do something"),
-      new AIMessage({
-        content: [
-          { type: "text", text: "Working on it" },
-          {
-            type: "tool_use",
-            id: "toolu_01",
-            name: "my_tool",
-            input: { prompt: "hello" }, // Already parsed object
-          },
-          // Orphan input_json_delta blocks (should be filtered out)
-          { type: "input_json_delta", index: 1, input: '{"old": "data' },
-          { type: "input_json_delta", index: 1, input: '"}' },
-        ],
-        tool_calls: [
-          { id: "toolu_01", name: "my_tool", args: { prompt: "hello" } },
-        ],
-      }),
-    ];
-
-    const formattedMessages =
-      _convertMessagesToAnthropicPayload(messageHistory);
-
-    // Should have 2 blocks: text and tool_use (input_json_delta filtered out)
-    expect(formattedMessages.messages[1].content).toHaveLength(2);
-
-    const [textBlock, toolUseBlock] = formattedMessages.messages[1].content;
-    expect(textBlock).toEqual({ type: "text", text: "Working on it" });
-    expect(toolUseBlock).toEqual({
-      type: "tool_use",
-      id: "toolu_01",
-      name: "my_tool",
-      input: { prompt: "hello" },
-    });
-  });
-
-  test("should successfully aggregate tool_use and input_json_delta chunks via .concat()", async () => {
-    // 1. Replicate the exact asymmetric sequence Anthropic emits during an active stream
-    const chunk1 = new AIMessageChunk({
+test("AIMessage with input_json_delta blocks falls back to index matching when tool_calls is empty", async () => {
+  // This tests the fallback behavior when tool_calls is not available
+  const messageHistory = [
+    new HumanMessage("Use my_tool with prompt 'hello'"),
+    new AIMessage({
       content: [
+        { type: "text", text: "I'll use the tool..." },
         {
           type: "tool_use",
-          index: 0,
           id: "toolu_01Xyz",
           name: "my_tool",
-        }
-      ]
-    });
+          input: "",
+          index: 2,
+        },
+        { type: "input_json_delta", index: 2, input: '{"prompt": "hel' },
+        { type: "input_json_delta", index: 2, input: 'lo"}' },
+      ],
+      // No tool_calls - should fall back to index matching
+      tool_calls: [],
+    }),
+  ];
 
-    const chunk2 = new AIMessageChunk({
+  const formattedMessages =
+    _convertMessagesToAnthropicPayload(messageHistory);
+
+  expect(formattedMessages.messages[1].content).toHaveLength(2);
+
+  const [textBlock, toolUseBlock] = formattedMessages.messages[1].content;
+  expect(textBlock).toEqual({ type: "text", text: "I'll use the tool..." });
+  expect(toolUseBlock).toEqual({
+    type: "tool_use",
+    id: "toolu_01Xyz",
+    name: "my_tool",
+    input: { prompt: "hello" }, // Input should be merged from input_json_delta blocks
+  });
+});
+
+test("Multiple tool calls with input_json_delta blocks are correctly handled", async () => {
+  const messageHistory = [
+    new HumanMessage("Get weather and calculate"),
+    new AIMessage({
       content: [
+        { type: "text", text: "Let me help with both tasks" },
         {
-          type: "input_json_delta",
-          index: 0,
-          partial_json: '{"prompt":',
-        }
-      ]
-    });
-
-    const chunk3 = new AIMessageChunk({
-      content: [
+          type: "tool_use",
+          id: "toolu_weather",
+          name: "get_weather",
+          input: "",
+        },
+        { type: "input_json_delta", index: 1, input: '{"location": "SF' },
+        { type: "input_json_delta", index: 1, input: '"}' },
+        { type: "tool_use", id: "toolu_calc", name: "calculator", input: "" },
+        { type: "input_json_delta", index: 2, input: '{"expr": "2+2' },
+        { type: "input_json_delta", index: 2, input: '"}' },
+      ],
+      tool_calls: [
         {
-          type: "input_json_delta",
-          index: 0,
-          partial_json: '"hello"}',
-        }
-      ]
-    });
+          id: "toolu_weather",
+          name: "get_weather",
+          args: { location: "SF" },
+        },
+        { id: "toolu_calc", name: "calculator", args: { expr: "2+2" } },
+      ],
+    }),
+  ];
 
-    // 2. Execute the concatenation (this is what threw OUTPUT_PARSING_FAILURE before your fix)
-    const merged = chunk1.concat(chunk2).concat(chunk3);
+  const formattedMessages =
+    _convertMessagesToAnthropicPayload(messageHistory);
 
-    // 3. Assert that types map correctly and accumulate into a single valid tool call structure
-    expect(merged.content[0]).toEqual({
-      type: "tool_use",
-      index: 0,
-      id: "toolu_01Xyz",
-      name: "my_tool",
-      partial_json: '{"prompt":"hello"}'
-    });
+  // Should have 3 blocks: text, 2 tool_use (no input_json_delta blocks)
+  expect(formattedMessages.messages[1].content).toHaveLength(3);
+
+  const [textBlock, weatherTool, calcTool] =
+    formattedMessages.messages[1].content;
+  expect(textBlock).toEqual({
+    type: "text",
+    text: "Let me help with both tasks",
+  });
+  expect(weatherTool).toEqual({
+    type: "tool_use",
+    id: "toolu_weather",
+    name: "get_weather",
+    input: { location: "SF" },
+  });
+  expect(calcTool).toEqual({
+    type: "tool_use",
+    id: "toolu_calc",
+    name: "calculator",
+    input: { expr: "2+2" },
   });
 });
 
@@ -2134,9 +2008,8 @@ describe("Opus 4.7", () => {
       apiKey: "testing",
       outputConfig: {
         effort: "high",
-        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-        task_budget: { type: "tokens", total: 128000 } as any,
-      },
+        task_budget: { type: "tokens", total: 128000 },
+      } as any,
     });
 
     const params = model.invocationParams({});

@@ -79,13 +79,34 @@ describe("AIMessageChunk", () => {
   describe(".concat()", () => {
     test("should successfully aggregate tool_use and input_json_delta chunks", async () => {
       const chunk1 = new AIMessageChunk({
-        content: [{ type: "tool_use", index: 0, id: "toolu_01Xyz", name: "my_tool" }]
+        content: [
+          {
+            type: "tool_use",
+            index: 0,
+            id: "toolu_01Xyz",
+            name: "my_tool",
+          },
+        ],
       });
+
       const chunk2 = new AIMessageChunk({
-        content: [{ type: "input_json_delta", index: 0, partial_json: '{"prompt":' }]
+        content: [
+          {
+            type: "input_json_delta",
+            index: 0,
+            partial_json: '{"prompt":',
+          },
+        ],
       });
+
       const chunk3 = new AIMessageChunk({
-        content: [{ type: "input_json_delta", index: 0, partial_json: '"hello"}' }]
+        content: [
+          {
+            type: "input_json_delta",
+            index: 0,
+            partial_json: '"hello"}',
+          },
+        ],
       });
 
       const merged = chunk1.concat(chunk2).concat(chunk3);
@@ -95,7 +116,7 @@ describe("AIMessageChunk", () => {
         index: 0,
         id: "toolu_01Xyz",
         name: "my_tool",
-        partial_json: '{"prompt":"hello"}'
+        partial_json: '{"prompt":"hello"}',
       });
     });
   });
