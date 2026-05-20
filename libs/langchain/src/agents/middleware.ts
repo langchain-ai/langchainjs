@@ -81,6 +81,7 @@ export function createMiddleware<
     | ServerTool
   )[],
   const TStreamTransformers extends ReadonlyArray<
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     () => StreamTransformer<any>
   > = readonly [],
 >(config: {
