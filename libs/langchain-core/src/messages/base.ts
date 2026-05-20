@@ -217,7 +217,8 @@ export abstract class BaseMessage<
   TRole extends MessageType = MessageType,
 >
   extends Serializable
-  implements Message<TStructure, TRole> {
+  implements Message<TStructure, TRole>
+{
   lc_namespace = ["langchain_core", "messages"];
 
   lc_serializable = true;
@@ -746,9 +747,9 @@ export type BaseMessageLike =
    * @deprecated Specifying "type" is deprecated and will be removed in 0.4.0.
    */
   | ({
-    type: MessageType | "user" | "assistant" | "placeholder";
-  } & BaseMessageFields &
-    Record<string, unknown>)
+      type: MessageType | "user" | "assistant" | "placeholder";
+    } & BaseMessageFields &
+      Record<string, unknown>)
   | SerializedConstructor;
 
 /**
