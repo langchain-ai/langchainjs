@@ -14,8 +14,12 @@ import type {
   CreateAgentParams,
   AgentTypeConfig,
   CombineTools,
+  CombineStreamTransformers,
 } from "./types.js";
-import type { AgentMiddleware, AnyAnnotationRoot } from "./middleware/types.js";
+import type {
+  AnyAgentMiddleware,
+  AnyAnnotationRoot,
+} from "./middleware/types.js";
 import type { ExtractZodArrayTypes } from "./types.js";
 import type { SerializableSchema } from "@langchain/core/utils/standard_schema";
 import type {
@@ -174,8 +178,8 @@ export function createAgent<
   TStateSchema extends StateDefinitionInit | undefined = undefined,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject =
     AnyAnnotationRoot,
-  const TMiddleware extends readonly AgentMiddleware[] =
-    readonly AgentMiddleware[],
+  const TMiddleware extends readonly AnyAgentMiddleware[] =
+    readonly AnyAgentMiddleware[],
   const TTools extends readonly (ClientTool | ServerTool)[] = readonly (
     | ClientTool
     | ServerTool
@@ -202,7 +206,7 @@ export function createAgent<
     ContextSchema,
     TMiddleware,
     CombineTools<TTools, TMiddleware>,
-    TStreamTransformers
+    CombineStreamTransformers<TStreamTransformers, TMiddleware>
   >
 >;
 
@@ -212,8 +216,8 @@ export function createAgent<
   TStateSchema extends StateDefinitionInit | undefined = undefined,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject =
     AnyAnnotationRoot,
-  const TMiddleware extends readonly AgentMiddleware[] =
-    readonly AgentMiddleware[],
+  const TMiddleware extends readonly AnyAgentMiddleware[] =
+    readonly AnyAgentMiddleware[],
   const TTools extends readonly (ClientTool | ServerTool)[] = readonly (
     | ClientTool
     | ServerTool
@@ -244,7 +248,7 @@ export function createAgent<
     ContextSchema,
     TMiddleware,
     CombineTools<TTools, TMiddleware>,
-    TStreamTransformers
+    CombineStreamTransformers<TStreamTransformers, TMiddleware>
   >
 >;
 
@@ -253,8 +257,8 @@ export function createAgent<
   TStateSchema extends StateDefinitionInit | undefined = undefined,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject =
     AnyAnnotationRoot,
-  const TMiddleware extends readonly AgentMiddleware[] =
-    readonly AgentMiddleware[],
+  const TMiddleware extends readonly AnyAgentMiddleware[] =
+    readonly AnyAgentMiddleware[],
   const TTools extends readonly (ClientTool | ServerTool)[] = readonly (
     | ClientTool
     | ServerTool
@@ -281,7 +285,7 @@ export function createAgent<
     ContextSchema,
     TMiddleware,
     CombineTools<TTools, TMiddleware>,
-    TStreamTransformers
+    CombineStreamTransformers<TStreamTransformers, TMiddleware>
   >
 >;
 
@@ -290,8 +294,8 @@ export function createAgent<
   TStateSchema extends StateDefinitionInit | undefined = undefined,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject =
     AnyAnnotationRoot,
-  const TMiddleware extends readonly AgentMiddleware[] =
-    readonly AgentMiddleware[],
+  const TMiddleware extends readonly AnyAgentMiddleware[] =
+    readonly AnyAgentMiddleware[],
   const TTools extends readonly (ClientTool | ServerTool)[] = readonly (
     | ClientTool
     | ServerTool
@@ -318,7 +322,7 @@ export function createAgent<
     ContextSchema,
     TMiddleware,
     CombineTools<TTools, TMiddleware>,
-    TStreamTransformers
+    CombineStreamTransformers<TStreamTransformers, TMiddleware>
   >
 >;
 
@@ -327,8 +331,8 @@ export function createAgent<
   TStateSchema extends StateDefinitionInit | undefined = undefined,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject =
     AnyAnnotationRoot,
-  const TMiddleware extends readonly AgentMiddleware[] =
-    readonly AgentMiddleware[],
+  const TMiddleware extends readonly AnyAgentMiddleware[] =
+    readonly AnyAgentMiddleware[],
   const TTools extends readonly (ClientTool | ServerTool)[] = readonly (
     | ClientTool
     | ServerTool
@@ -355,7 +359,7 @@ export function createAgent<
     ContextSchema,
     TMiddleware,
     CombineTools<TTools, TMiddleware>,
-    TStreamTransformers
+    CombineStreamTransformers<TStreamTransformers, TMiddleware>
   >
 >;
 
@@ -364,8 +368,8 @@ export function createAgent<
   TStateSchema extends StateDefinitionInit | undefined = undefined,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject =
     AnyAnnotationRoot,
-  const TMiddleware extends readonly AgentMiddleware[] =
-    readonly AgentMiddleware[],
+  const TMiddleware extends readonly AnyAgentMiddleware[] =
+    readonly AnyAgentMiddleware[],
   const TTools extends readonly (ClientTool | ServerTool)[] = readonly (
     | ClientTool
     | ServerTool
@@ -392,7 +396,7 @@ export function createAgent<
     ContextSchema,
     TMiddleware,
     CombineTools<TTools, TMiddleware>,
-    TStreamTransformers
+    CombineStreamTransformers<TStreamTransformers, TMiddleware>
   >
 >;
 
@@ -401,8 +405,8 @@ export function createAgent<
   TStateSchema extends StateDefinitionInit | undefined = undefined,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject =
     AnyAnnotationRoot,
-  const TMiddleware extends readonly AgentMiddleware[] =
-    readonly AgentMiddleware[],
+  const TMiddleware extends readonly AnyAgentMiddleware[] =
+    readonly AnyAgentMiddleware[],
   const TTools extends readonly (ClientTool | ServerTool)[] = readonly (
     | ClientTool
     | ServerTool
@@ -429,7 +433,7 @@ export function createAgent<
     ContextSchema,
     TMiddleware,
     CombineTools<TTools, TMiddleware>,
-    TStreamTransformers
+    CombineStreamTransformers<TStreamTransformers, TMiddleware>
   >
 >;
 
@@ -439,8 +443,8 @@ export function createAgent<
   TStateSchema extends StateDefinitionInit | undefined = undefined,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject =
     AnyAnnotationRoot,
-  const TMiddleware extends readonly AgentMiddleware[] =
-    readonly AgentMiddleware[],
+  const TMiddleware extends readonly AnyAgentMiddleware[] =
+    readonly AnyAgentMiddleware[],
   const TTools extends readonly (ClientTool | ServerTool)[] = readonly (
     | ClientTool
     | ServerTool
@@ -467,7 +471,7 @@ export function createAgent<
     ContextSchema,
     TMiddleware,
     CombineTools<TTools, TMiddleware>,
-    TStreamTransformers
+    CombineStreamTransformers<TStreamTransformers, TMiddleware>
   >
 >;
 
@@ -477,8 +481,8 @@ export function createAgent<
   TStateSchema extends StateDefinitionInit | undefined = undefined,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject =
     AnyAnnotationRoot,
-  const TMiddleware extends readonly AgentMiddleware[] =
-    readonly AgentMiddleware[],
+  const TMiddleware extends readonly AnyAgentMiddleware[] =
+    readonly AnyAgentMiddleware[],
   const TTools extends readonly (ClientTool | ServerTool)[] = readonly (
     | ClientTool
     | ServerTool
@@ -505,7 +509,7 @@ export function createAgent<
     ContextSchema,
     TMiddleware,
     CombineTools<TTools, TMiddleware>,
-    TStreamTransformers
+    CombineStreamTransformers<TStreamTransformers, TMiddleware>
   >
 >;
 
@@ -515,8 +519,8 @@ export function createAgent<
   TStateSchema extends StateDefinitionInit | undefined = undefined,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject =
     AnyAnnotationRoot,
-  const TMiddleware extends readonly AgentMiddleware[] =
-    readonly AgentMiddleware[],
+  const TMiddleware extends readonly AnyAgentMiddleware[] =
+    readonly AnyAgentMiddleware[],
   const TTools extends readonly (ClientTool | ServerTool)[] = readonly (
     | ClientTool
     | ServerTool
@@ -543,7 +547,7 @@ export function createAgent<
     ContextSchema,
     TMiddleware,
     CombineTools<TTools, TMiddleware>,
-    TStreamTransformers
+    CombineStreamTransformers<TStreamTransformers, TMiddleware>
   >
 >;
 
@@ -552,8 +556,8 @@ export function createAgent<
   TStateSchema extends StateDefinitionInit | undefined = undefined,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject =
     AnyAnnotationRoot,
-  const TMiddleware extends readonly AgentMiddleware[] =
-    readonly AgentMiddleware[],
+  const TMiddleware extends readonly AnyAgentMiddleware[] =
+    readonly AnyAgentMiddleware[],
   const TTools extends readonly (ClientTool | ServerTool)[] = readonly (
     | ClientTool
     | ServerTool
@@ -582,7 +586,7 @@ export function createAgent<
     ContextSchema,
     TMiddleware,
     CombineTools<TTools, TMiddleware>,
-    TStreamTransformers
+    CombineStreamTransformers<TStreamTransformers, TMiddleware>
   >
 >;
 
@@ -591,8 +595,8 @@ export function createAgent<
   TStateSchema extends StateDefinitionInit | undefined = undefined,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject =
     AnyAnnotationRoot,
-  const TMiddleware extends readonly AgentMiddleware[] =
-    readonly AgentMiddleware[],
+  const TMiddleware extends readonly AnyAgentMiddleware[] =
+    readonly AnyAgentMiddleware[],
   const TTools extends readonly (ClientTool | ServerTool)[] = readonly (
     | ClientTool
     | ServerTool
@@ -622,7 +626,7 @@ export function createAgent<
     ContextSchema,
     TMiddleware,
     CombineTools<TTools, TMiddleware>,
-    TStreamTransformers
+    CombineStreamTransformers<TStreamTransformers, TMiddleware>
   >
 >;
 
@@ -632,8 +636,8 @@ export function createAgent<
   TStateSchema extends StateDefinitionInit | undefined = undefined,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject =
     AnyAnnotationRoot,
-  const TMiddleware extends readonly AgentMiddleware[] =
-    readonly AgentMiddleware[],
+  const TMiddleware extends readonly AnyAgentMiddleware[] =
+    readonly AnyAgentMiddleware[],
   const TTools extends readonly (ClientTool | ServerTool)[] = readonly (
     | ClientTool
     | ServerTool
@@ -660,7 +664,7 @@ export function createAgent<
     ContextSchema,
     TMiddleware,
     CombineTools<TTools, TMiddleware>,
-    TStreamTransformers
+    CombineStreamTransformers<TStreamTransformers, TMiddleware>
   >
 >;
 
@@ -669,7 +673,7 @@ export function createAgent<
   StructuredResponseFormat extends Record<string, any>,
   TStateSchema extends StateDefinitionInit,
   ContextSchema extends AnyAnnotationRoot | InteropZodObject,
-  TMiddleware extends readonly AgentMiddleware[] = readonly AgentMiddleware[],
+  TMiddleware extends readonly AnyAgentMiddleware[] = readonly AnyAgentMiddleware[],
   TTools extends readonly (ClientTool | ServerTool)[] = readonly (
     | ClientTool
     | ServerTool
@@ -690,7 +694,7 @@ export function createAgent<
     ContextSchema,
     TMiddleware,
     CombineTools<TTools, TMiddleware>,
-    TStreamTransformers
+    CombineStreamTransformers<TStreamTransformers, TMiddleware>
   >
 > {
   return new ReactAgent(params);

@@ -1,7 +1,6 @@
-import { z } from "zod/v4";
 import { RunnableConfig } from "@langchain/core/runnables";
 import { MiddlewareNode } from "./middleware.js";
-import type { AgentMiddleware, MiddlewareResult } from "../middleware/types.js";
+import type { AnyAgentMiddleware, MiddlewareResult } from "../middleware/types.js";
 import type { AgentBuiltInState, Runtime } from "../runtime.js";
 import { getHookFunction } from "../middleware/utils.js";
 
@@ -15,10 +14,7 @@ export class BeforeModelNode<
   lc_namespace = ["langchain", "agents", "beforeModelNodes"];
 
   constructor(
-    public middleware: AgentMiddleware<
-      z.ZodObject<z.ZodRawShape>,
-      z.ZodObject<z.ZodRawShape>
-    >
+    public middleware: AnyAgentMiddleware
   ) {
     super({
       name: `BeforeModelNode_${middleware.name}`,

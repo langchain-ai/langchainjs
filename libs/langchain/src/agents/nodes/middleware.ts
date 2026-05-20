@@ -1,12 +1,18 @@
 /* oxlint-disable @typescript-eslint/no-explicit-any */
-import { z } from "zod/v4";
 import { LangGraphRunnableConfig, Command } from "@langchain/langgraph";
-import { interopParse } from "@langchain/core/utils/types";
+import {
+  getInteropZodObjectShape,
+  interopParse,
+  isInteropZodObject,
+} from "@langchain/core/utils/types";
 
 import { RunnableCallable, RunnableCallableArgs } from "../RunnableCallable.js";
 import type { JumpToTarget } from "../constants.js";
 import type { Runtime } from "../runtime.js";
-import type { AgentMiddleware, MiddlewareResult } from "../middleware/types.js";
+import type {
+  AnyAgentMiddleware,
+  MiddlewareResult,
+} from "../middleware/types.js";
 import { derivePrivateState } from "./utils.js";
 import { getHookConstraint } from "../middleware/utils.js";
 
@@ -25,10 +31,7 @@ export abstract class MiddlewareNode<
   TStateSchema extends Record<string, any>,
   TContextSchema extends Record<string, any>,
 > extends RunnableCallable<TStateSchema, NodeOutput<TStateSchema>> {
-  abstract middleware: AgentMiddleware<
-    z.ZodObject<z.ZodRawShape>,
-    z.ZodObject<z.ZodRawShape>
-  >;
+  abstract middleware: AnyAgentMiddleware;
 
   constructor(
     fields: RunnableCallableArgs<TStateSchema, NodeOutput<TStateSchema>>
@@ -52,11 +55,14 @@ export abstract class MiddlewareNode<
     /**
      * Parse context using middleware's contextSchema to apply defaults and validation
      */
-    if (this.middleware.contextSchema) {
+    if (
+      this.middleware.contextSchema &&
+      isInteropZodObject(this.middleware.contextSchema)
+    ) {
       /**
        * Extract only the fields relevant to this middleware's schema
        */
-      const schemaShape = this.middleware.contextSchema?.shape;
+      const schemaShape = getInteropZodObjectShape(this.middleware.contextSchema);
       if (schemaShape) {
         const relevantContext: Record<string, unknown> = {};
         const invokeContext = config?.context || {};

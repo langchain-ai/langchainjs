@@ -69,6 +69,7 @@ import type { BuiltInState, JumpTo, UserInput } from "./types.js";
 import type { InvokeConfiguration, StreamConfiguration } from "./runtime.js";
 import type {
   AgentMiddleware,
+  AnyAgentMiddleware,
   InferMiddlewareContextInputs,
   InferMiddlewareStates,
   InferMiddlewareInputStates,
@@ -163,7 +164,7 @@ export class ReactAgent<
     Record<string, any>,
     undefined,
     AnyAnnotationRoot,
-    readonly AgentMiddleware[],
+    readonly AnyAgentMiddleware[],
     readonly (ClientTool | ServerTool)[],
     ReadonlyArray<() => StreamTransformer<any>>
   >,
@@ -671,8 +672,14 @@ export class ReactAgent<
     /**
      * compile the graph with native + user-defined stream transformers
      */
+    const middlewareStreamTransformers = (
+      this.options.middleware ?? []
+    ).flatMap((m) => m.streamTransformers ?? []);
     const compileTransformers = [
+      /* built-in stream transformers */
       createToolCallTransformer([]),
+      /* middleware stream transformers */
+      ...middlewareStreamTransformers,
       /* user-defined stream transformers */
       ...(this.options.streamTransformers ?? []),
     ];
