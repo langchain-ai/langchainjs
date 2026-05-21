@@ -71,10 +71,19 @@ export default async function setup() {
 
   let container: StartedTestContainer;
   try {
-    container = await new GenericContainer("mongodb/mongodb-atlas-local")
+    container = await new GenericContainer("mongodb/mongodb-atlas-local:preview")
       .withExposedPorts({ host: 27017, container: 27017 })
+      .withEnvironment({
+        // oxlint-disable-next-line no-process-env
+        VOYAGE_API_KEY: process.env.VOYAGE_API_KEY ?? "",
+        EMBEDDING_PROVIDER_ENDPOINT:
+          // oxlint-disable-next-line no-process-env
+          process.env.EMBEDDING_PROVIDER_ENDPOINT ??
+          "https://api.voyageai.com/v1/embeddings",
+        MONGODB_ATLAS_LOCAL_PREVIEW: "true",
+      })
       .withWaitStrategy(new ReadyWhenMongotEstablished())
-      .withStartupTimeout(30_000)
+      .withStartupTimeout(120_000)
       .start();
   } catch (error: Error | unknown) {
     const hasMessage = (err: unknown): err is { message: string } =>
