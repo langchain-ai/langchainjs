@@ -1,5 +1,13 @@
 # langchain
 
+## 1.4.2
+
+### Patch Changes
+
+- [#10900](https://github.com/langchain-ai/langchainjs/pull/10900) [`6bbddca`](https://github.com/langchain-ai/langchainjs/commit/6bbddca1f8f7f280583fd839bb40c00bf19a0d51) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): unwrap tool message outputs in agent streams
+
+- [#10706](https://github.com/langchain-ai/langchainjs/pull/10706) [`4ecb660`](https://github.com/langchain-ai/langchainjs/commit/4ecb6606feae3156a07de67e39e2027f857c476e) Thanks [@JadenKim-dev](https://github.com/JadenKim-dev)! - fix(langchain): set name on todoListMiddleware ToolMessages
+
 ## 1.4.1
 
 ### Patch Changes

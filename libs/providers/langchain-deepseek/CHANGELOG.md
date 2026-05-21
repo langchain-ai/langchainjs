@@ -1,5 +1,14 @@
 # @langchain/deepseek
 
+## 1.0.27
+
+### Patch Changes
+
+- [#10747](https://github.com/langchain-ai/langchainjs/pull/10747) [`78e642f`](https://github.com/langchain-ai/langchainjs/commit/78e642ff14b2be594e8980058670a66fa77b0c42) Thanks [@neo1027144-creator](https://github.com/neo1027144-creator)! - feat(deepseek): add DeepSeek V4 Flash and V4 Pro model profiles
+
+- Updated dependencies [[`3999fab`](https://github.com/langchain-ai/langchainjs/commit/3999fab55870c6eea22d6d90c08aa472f9b2fac3), [`fce9ab4`](https://github.com/langchain-ai/langchainjs/commit/fce9ab418901323618fdfaaa9fc350fa1c0d50e0)]:
+  - @langchain/openai@1.4.7
+
 ## 1.0.26
 
 ### Patch Changes
