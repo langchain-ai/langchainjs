@@ -81,14 +81,15 @@ function getNearAIParams(
       'NEAR AI API key not found. Please set the NEARAI_API_KEY environment variable or pass the key into "apiKey" field.'
     );
   }
+  const { baseURL: _discardedBaseURL, ...safeConfiguration } = configuration;
 
   return {
     ...params,
     apiKey,
     streamUsage: params.streamUsage ?? false,
     configuration: {
+      ...safeConfiguration,
       baseURL: NEARAI_BASE_URL,
-      ...configuration,
       apiKey,
     },
   };
