@@ -41,12 +41,25 @@ class AutoEmbeddingStub implements EmbeddingsInterface {
  * @param embeddingKey Key to store the embedding under.
  * @param primaryKey The Key to use for upserting documents.
  */
+export interface MongoDBRerankOptions {
+  /**
+   * Reranking model (e.g. "rerank-2.5", "rerank-2.5-lite", "rerank-2", "rerank-2-lite").
+   */
+  model: string;
+  /**
+   * Field path(s) in the collection to rerank on. Defaults to the textKey
+   * ("text" unless overridden).
+   */
+  path?: string | string[];
+}
+
 export interface MongoDBAtlasVectorSearchLibArgs extends AsyncCallerParams {
   readonly collection: Collection<MongoDBDocument>;
   readonly indexName?: string;
   readonly textKey?: string;
   readonly embeddingKey?: string;
   readonly primaryKey?: string;
+  readonly rerankOptions?: MongoDBRerankOptions;
 }
 
 /**
@@ -83,6 +96,8 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
   private caller: AsyncCaller;
 
   private readonly useAutoEmbedding: boolean;
+
+  private readonly rerankOptions?: MongoDBRerankOptions;
 
   _vectorstoreType(): string {
     return "mongodb_atlas";
@@ -126,6 +141,7 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     this.primaryKey = libArgs.primaryKey ?? "_id";
     this.caller = new AsyncCaller(libArgs);
     this.useAutoEmbedding = useAutoEmbedding;
+    this.rerankOptions = libArgs.rerankOptions;
     this.collection.db.client.appendMetadata({
       name: "langchainjs_vector",
     });
@@ -308,8 +324,15 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     filter: this["FilterType"] | undefined = undefined
   ): Promise<[Document, number][]> {
     if (this.useAutoEmbedding) {
+      if (this.rerankOptions) {
+        return this.textBasedRerankSearchWithScore(query, k, filter);
+      }
       // Auto-embed mode: use text-based $vectorSearch query
       return this.textBasedSearchWithScore(query, k, filter);
+    }
+
+    if (this.rerankOptions) {
+      return this.rerankSearchWithScore(query, k, filter);
     }
 
     // Manual embedding mode: embed query client-side
@@ -387,6 +410,118 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
       .map<[Document, number]>((result) => {
         const { score, [this.textKey]: text, ...metadata } = result;
         return [new Document({ pageContent: text, metadata }), score];
+      });
+
+    return results.toArray();
+  }
+
+  private async textBasedRerankSearchWithScore(
+    query: string,
+    k: number,
+    filter?: MongoDBAtlasFilter
+  ): Promise<[Document, number][]> {
+    const { model, path } = this.rerankOptions!;
+    const rerankPath = path ?? this.textKey;
+
+    const postFilterPipeline = filter?.postFilterPipeline ?? [];
+    const preFilter: MongoDBDocument | undefined =
+      filter?.preFilter ||
+      filter?.postFilterPipeline ||
+      filter?.includeEmbeddings
+        ? filter.preFilter
+        : filter;
+    const removeEmbeddingsPipeline = !filter?.includeEmbeddings
+      ? [{ $project: { [this.embeddingKey]: 0 } }]
+      : [];
+
+    const pipeline: MongoDBDocument[] = [
+      {
+        $vectorSearch: {
+          query: { text: query },
+          index: this.indexName,
+          path: this.textKey,
+          limit: k,
+          numCandidates: 10 * k,
+          ...(preFilter && { filter: preFilter }),
+        },
+      },
+      {
+        $rerank: {
+          query: { text: query },
+          path: rerankPath,
+          numDocsToRerank: k,
+          model,
+        },
+      },
+      { $addFields: { rerankScore: { $meta: "score" } } },
+      ...removeEmbeddingsPipeline,
+      ...postFilterPipeline,
+      { $limit: k },
+    ];
+
+    const results = this.collection
+      .aggregate(pipeline)
+      .map<[Document, number]>((result) => {
+        const { rerankScore, [this.textKey]: text, ...metadata } = result;
+        metadata.relevanceScore = rerankScore;
+        return [new Document({ pageContent: text, metadata }), rerankScore];
+      });
+
+    return results.toArray();
+  }
+
+  private async rerankSearchWithScore(
+    query: string,
+    k: number,
+    filter?: MongoDBAtlasFilter
+  ): Promise<[Document, number][]> {
+    const { model, path } = this.rerankOptions!;
+    const rerankPath = path ?? this.textKey;
+
+    const queryEmbedding = await this.embeddings.embedQuery(query);
+
+    const postFilterPipeline = filter?.postFilterPipeline ?? [];
+    const preFilter: MongoDBDocument | undefined =
+      filter?.preFilter ||
+      filter?.postFilterPipeline ||
+      filter?.includeEmbeddings
+        ? filter.preFilter
+        : filter;
+    const removeEmbeddingsPipeline = !filter?.includeEmbeddings
+      ? [{ $project: { [this.embeddingKey]: 0 } }]
+      : [];
+
+    const pipeline: MongoDBDocument[] = [
+      {
+        $vectorSearch: {
+          queryVector: MongoDBAtlasVectorSearch.fixArrayPrecision(queryEmbedding),
+          index: this.indexName,
+          path: this.embeddingKey,
+          limit: k,
+          numCandidates: 10 * k,
+          ...(preFilter && { filter: preFilter }),
+        },
+      },
+      {
+        $rerank: {
+          query: { text: query },
+          path: rerankPath,
+          numDocsToRerank: k,
+          model,
+        },
+      },
+      { $addFields: { rerankScore: { $meta: "score" } } },
+      ...removeEmbeddingsPipeline,
+      ...postFilterPipeline,
+      { $limit: k },
+    ];
+
+    const results = this.collection
+      .aggregate(pipeline)
+      .map<[Document, number]>((result) => {
+        const { rerankScore, [this.textKey]: text, ...metadata } = result;
+        metadata.relevanceScore = rerankScore;
+        return [new Document({ pageContent: text, metadata }), rerankScore];
       });
 
     return results.toArray();
