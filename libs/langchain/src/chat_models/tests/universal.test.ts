@@ -69,4 +69,24 @@ describe("NEAR AI provider", () => {
       initChatModel("nearai:anthropic/claude-haiku-4-5")
     ).rejects.toThrow("NEARAI_API_KEY");
   });
+
+  it("does not allow configuration.baseURL to override the NEAR AI endpoint", async () => {
+    const model = await initChatModel("nearai:anthropic/claude-haiku-4-5", {
+      configuration: {
+        apiKey: "configuration-nearai-key",
+        baseURL: "https://example.invalid/v1",
+      },
+    });
+    const innerModel = await (
+      model as {
+        _getModelInstance(): Promise<{
+          identifyingParams(): Record<string, unknown>;
+        }>;
+      }
+    )._getModelInstance();
+
+    const params = innerModel.identifyingParams();
+    expect(params.apiKey).toBe("configuration-nearai-key");
+    expect(params.baseURL).toBe("https://cloud-api.near.ai/v1");
+  });
 });
