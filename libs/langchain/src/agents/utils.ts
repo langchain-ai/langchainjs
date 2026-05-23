@@ -627,3 +627,31 @@ export function wrapToolCall(
     })
   );
 }
+
+
+/**
+ * Static LangGraph config keys propagated from ReactAgent defaults onto the
+ * compiled inner graph. This ensures values set via `withConfig()` survive
+ * LangGraph API loading, which unwraps ReactAgent to `.graph` before execution.
+ */
+const GRAPH_DEFAULT_CONFIG_KEYS = [
+  "tags",
+  "metadata",
+  "runName",
+  "maxConcurrency",
+  "recursionLimit",
+  "configurable",
+] as const satisfies readonly (keyof RunnableConfig)[];
+
+export function toGraphDefaultConfig(
+  config: RunnableConfig
+): Omit<RunnableConfig, "store" | "writer" | "interrupt"> {
+  const result: Record<string, unknown> = {};
+  for (const key of GRAPH_DEFAULT_CONFIG_KEYS) {
+    const value = config[key];
+    if (value !== undefined) {
+      result[key] = value;
+    }
+  }
+  return result as Omit<RunnableConfig, "store" | "writer" | "interrupt">;
+}
