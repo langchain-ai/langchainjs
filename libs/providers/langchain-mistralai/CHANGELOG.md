@@ -1,5 +1,13 @@
 # @langchain/mistralai
 
+## 1.1.0
+
+### Minor Changes
+
+- [#10873](https://github.com/langchain-ai/langchainjs/pull/10873) [`a74d574`](https://github.com/langchain-ai/langchainjs/commit/a74d574f7f086bea2f5c7a852e869f7d24be2f55) Thanks [@baptistejamin](https://github.com/baptistejamin)! - chore(mistralai): upgrade to @mistralai/mistralai v2
+
+  Also populates `response_metadata.model` on chat completions (was missing before).
+
 ## 1.0.8
 
 ### Patch Changes

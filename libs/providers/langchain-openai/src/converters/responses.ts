@@ -566,7 +566,7 @@ export const convertReasoningSummaryToResponsesReasoningItem: Converter<
   ChatOpenAIReasoningSummary,
   OpenAIClient.Responses.ResponseReasoningItem
 > = (reasoning) => {
-  // combine summary parts that have the the same index and then remove the indexes
+  // combine summary parts that have the same index and then remove the indexes
   const summary = (
     reasoning.summary.length > 1
       ? reasoning.summary.reduce(

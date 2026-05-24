@@ -1,5 +1,13 @@
 # @langchain/openai
 
+## 1.4.7
+
+### Patch Changes
+
+- [#10918](https://github.com/langchain-ai/langchainjs/pull/10918) [`3999fab`](https://github.com/langchain-ai/langchainjs/commit/3999fab55870c6eea22d6d90c08aa472f9b2fac3) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(openai): stream custom tool calls through Responses API chunks
+
+- [#10791](https://github.com/langchain-ai/langchainjs/pull/10791) [`fce9ab4`](https://github.com/langchain-ai/langchainjs/commit/fce9ab418901323618fdfaaa9fc350fa1c0d50e0) Thanks [@Genmin](https://github.com/Genmin)! - fix(openai): preserve top-level Responses API ids on AI messages
+
 ## 1.4.6
 
 ### Patch Changes
