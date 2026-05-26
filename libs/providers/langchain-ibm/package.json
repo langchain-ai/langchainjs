@@ -1,6 +1,6 @@
 {
   "name": "@langchain/ibm",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "IBM watsonx.ai integrations for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -20,6 +20,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:int": "vitest run --mode int",
+    "test:integration": "pnpm test:int && pnpm test:standard:int",
     "test:standard:unit": "vitest run --mode standard-unit",
     "test:standard:int": "vitest run --mode standard-int",
     "test:standard": "pnpm test:standard:unit && pnpm test:standard:int"

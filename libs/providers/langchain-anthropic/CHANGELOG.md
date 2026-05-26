@@ -1,5 +1,17 @@
 # @langchain/anthropic
 
+## 1.4.0
+
+### Minor Changes
+
+- [#10777](https://github.com/langchain-ai/langchainjs/pull/10777) [`0cfcfc6`](https://github.com/langchain-ai/langchainjs/commit/0cfcfc66897d8fafeb7e7ed90b7299eace9a7c37) Thanks [@jonaslalin](https://github.com/jonaslalin)! - feat(anthropic): support strict tool calling for custom tools
+
+## 1.3.29
+
+### Patch Changes
+
+- [#10735](https://github.com/langchain-ai/langchainjs/pull/10735) [`1a2a08a`](https://github.com/langchain-ai/langchainjs/commit/1a2a08a33b7d99ec7348678116cc5d074db137bb) Thanks [@chenzimin](https://github.com/chenzimin)! - feat(anthropic): add automatic prompt caching via top-level cache_control
+
 ## 1.3.28
 
 ### Patch Changes

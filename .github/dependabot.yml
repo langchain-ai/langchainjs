@@ -42,10 +42,8 @@ updates:
       - "/libs/langchain-textsplitters"
       - "/libs/langchain-mcp-adapters"
     schedule:
-      interval: monthly
+      interval: weekly
     open-pull-requests-limit: 10
-    ignore:
-      - dependency-name: "p-queue"
     groups:
       core-libs-minor-and-patch:
         update-types:

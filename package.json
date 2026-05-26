@@ -49,7 +49,7 @@
     "semver": "^7.7.4",
     "tsdown": "^0.21.7",
     "tsx": "^4.21.0",
-    "turbo": "^2.9.3",
+    "turbo": "^2.9.14",
     "typescript": "^5.9.3"
   },
   "pnpm": {
@@ -82,7 +82,7 @@
       "convict": ">=6.2.5",
       "lodash": ">=4.18.0",
       "path-to-regexp": ">=8.4.0",
-      "brace-expansion": ">=5.0.5",
+      "brace-expansion": ">=5.0.6",
       "micromatch>picomatch": "2.3.2",
       "anymatch>picomatch": "2.3.2",
       "readdirp>picomatch": "2.3.2",
