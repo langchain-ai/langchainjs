@@ -416,6 +416,24 @@ describe("convertToConverseMessages", () => {
       },
     },
     {
+      name: "ai message with only strictly empty text block",
+      input: [
+        new HumanMessage("Return nothing."),
+        new AIMessage({
+          content: [{ type: "text", text: "" }],
+        }),
+      ],
+      output: {
+        converseMessages: [
+          {
+            role: BedrockConversationRole.USER,
+            content: [{ text: "Return nothing." }],
+          },
+        ],
+        converseSystem: [],
+      },
+    },
+    {
       name: "consecutive user tool messages",
       input: [
         new SystemMessage("You're an advanced AI assistant."),

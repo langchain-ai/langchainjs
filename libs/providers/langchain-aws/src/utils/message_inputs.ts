@@ -767,7 +767,10 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
       } else {
         throw new Error(`Unsupported message type: ${msg.type}`);
       }
-    });
+    })
+    .filter(
+      (msg) => msg.role !== "assistant" || (msg.content?.length ?? 0) > 0
+    );
 
   // Combine consecutive user tool result messages into a single message
   const combinedConverseMessages = converseMessages.reduce<Bedrock.Message[]>(
