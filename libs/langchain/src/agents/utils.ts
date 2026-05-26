@@ -36,7 +36,7 @@ import { MultipleToolsBoundError, MiddlewareError } from "./errors.js";
 import type { AgentBuiltInState } from "./runtime.js";
 import type {
   ToolCallHandler,
-  AgentMiddleware,
+  AnyAgentMiddleware,
   ToolCallRequest,
   WrapToolCallHook,
 } from "./middleware/types.js";
@@ -547,9 +547,7 @@ function chainToolCallHandlers(
  * @param state state of the agent
  * @returns single wrap function
  */
-export function wrapToolCall(
-  middleware: readonly AgentMiddleware<InteropZodObject | undefined>[]
-) {
+export function wrapToolCall(middleware: readonly AnyAgentMiddleware[]) {
   const middlewareWithWrapToolCall = middleware.filter((m) => m.wrapToolCall);
 
   if (middlewareWithWrapToolCall.length === 0) {
