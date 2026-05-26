@@ -27,6 +27,6 @@
     "libs/langchain-classic/src/load/import_map.ts",
     "libs/langchain-classic/src/load/dynamic_import_map.ts",
     "libs/community/langchain-community/src/load/import_map.ts",
-    "libs/create-langchain-integration/dist",
-  ],
+    "libs/create-langchain-integration/dist"
+  ]
 }
