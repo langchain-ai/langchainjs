@@ -789,6 +789,23 @@ export function handleConverseStreamContentBlockDelta(
         ],
       }),
     });
+  } else if (
+    "citation" in contentBlockDelta.delta &&
+    contentBlockDelta.delta.citation
+  ) {
+    return new ChatGenerationChunk({
+      text: "",
+      message: new AIMessageChunk({
+        content: [
+          {
+            type: "citations_content",
+            citationsContent: {
+              citations: [contentBlockDelta.delta.citation],
+            },
+          },
+        ],
+      }),
+    });
   } else {
     throw new Error(
       `Unsupported content block type(s): ${JSON.stringify(

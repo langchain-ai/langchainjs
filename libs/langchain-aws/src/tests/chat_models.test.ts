@@ -11,6 +11,7 @@ import {
   ConversationRole as BedrockConversationRole,
   type Message as BedrockMessage,
   type SystemContentBlock as BedrockSystemContentBlock,
+  type ContentBlockDeltaEvent,
 } from "@aws-sdk/client-bedrock-runtime";
 import { z } from "zod";
 import { describe, expect, test } from "@jest/globals";
@@ -442,6 +443,31 @@ test("Streaming supports empty string chunks", async () => {
   expect(finalChunk).toBeDefined();
   if (!finalChunk) return;
   expect(finalChunk.content).toBe("Hello world!");
+});
+
+test("Streaming supports citation deltas", async () => {
+  const contentBlock = {
+    contentBlockIndex: 0,
+    delta: {
+      citation: {
+        id: "citation-1",
+      },
+    },
+  } as unknown as ContentBlockDeltaEvent;
+
+  const chunk = handleConverseStreamContentBlockDelta(contentBlock).message;
+  expect(chunk.content).toEqual([
+    {
+      type: "citations_content",
+      citationsContent: {
+        citations: [
+          {
+            id: "citation-1",
+          },
+        ],
+      },
+    },
+  ]);
 });
 
 describe("tool_choice works for supported models", () => {
