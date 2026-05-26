@@ -1,5 +1,15 @@
 # langchain
 
+## 1.4.3
+
+### Patch Changes
+
+- [#10936](https://github.com/langchain-ai/langchainjs/pull/10936) [`1a4ac84`](https://github.com/langchain-ai/langchainjs/commit/1a4ac8451748cfc0d014ff1bac8c641dad4d467b) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(langchain): register stream transformers on middleware
+
+  `createMiddleware` accepts `streamTransformers` factories that are merged with
+  `createAgent({ streamTransformers })` at compile time. Types flow through
+  `CombineStreamTransformers` so `run.extensions` is inferred from both sources.
+
 ## 1.4.2
 
 ### Patch Changes
