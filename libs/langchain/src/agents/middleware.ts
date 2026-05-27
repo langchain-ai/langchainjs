@@ -2,7 +2,10 @@ import type {
   InteropZodObject,
   InferInteropZodOutput,
 } from "@langchain/core/utils/types";
-import type { StateDefinitionInit } from "@langchain/langgraph";
+import type {
+  StateDefinitionInit,
+  StreamTransformer,
+} from "@langchain/langgraph";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
 
 import {
@@ -29,6 +32,8 @@ import {
  * @param config.afterModel - The function to run after the model call
  * @param config.beforeAgent - The function to run before the agent execution starts
  * @param config.afterAgent - The function to run after the agent execution completes
+ * @param config.tools - Additional tools registered by the middleware
+ * @param config.streamTransformers - Stream transformer factories registered by the middleware
  * @returns A middleware instance
  *
  * @example Using Zod schema
@@ -75,6 +80,10 @@ export function createMiddleware<
     | ClientTool
     | ServerTool
   )[],
+  const TStreamTransformers extends ReadonlyArray<
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    () => StreamTransformer<any>
+  > = readonly [],
 >(config: {
   /**
    * The name of the middleware
@@ -100,6 +109,11 @@ export function createMiddleware<
    * Additional tools registered by the middleware.
    */
   tools?: TTools;
+  /**
+   * Stream transformer factories registered by the middleware.
+   * Merged with `createAgent({ streamTransformers })` when the agent compiles.
+   */
+  streamTransformers?: TStreamTransformers;
   /**
    * Wraps tool execution with custom logic. This allows you to:
    * - Modify tool call parameters before execution
@@ -236,13 +250,15 @@ export function createMiddleware<
   TSchema,
   TContextSchema,
   NormalizeContextSchema<TContextSchema>,
-  TTools
+  TTools,
+  TStreamTransformers
 > {
   const middleware: AgentMiddleware<
     TSchema,
     TContextSchema,
     NormalizeContextSchema<TContextSchema>,
-    TTools
+    TTools,
+    TStreamTransformers
   > = {
     [MIDDLEWARE_BRAND]: true as const,
     name: config.name,
@@ -255,6 +271,7 @@ export function createMiddleware<
     afterModel: config.afterModel,
     afterAgent: config.afterAgent,
     tools: config.tools,
+    streamTransformers: config.streamTransformers,
   };
 
   return middleware;

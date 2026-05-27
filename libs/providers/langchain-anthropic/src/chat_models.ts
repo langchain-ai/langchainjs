@@ -183,6 +183,19 @@ export interface ChatAnthropicCallOptions
    * @see https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
    */
   cache_control?: AnthropicCacheControl;
+
+  /**
+   * If `true`, model output is guaranteed to exactly match the JSON Schema
+   * provided in the tool definition. If `true`, the input schema will also be
+   * validated according to
+   * https://platform.claude.com/docs/en/agents-and-tools/tool-use/strict-tool-use.
+   *
+   * If `false`, input schema will not be validated and model output will not
+   * be validated.
+   *
+   * If `undefined`, `strict` argument will not be passed to the model.
+   */
+  strict?: boolean;
 }
 
 function _toolsInParams(
@@ -1096,10 +1109,12 @@ export class ChatAnthropicMessages<
    * Formats LangChain StructuredTools to AnthropicTools.
    *
    * @param {ChatAnthropicCallOptions["tools"]} tools The tools to format
+   * @param fields Optional `strict` flag applied to every formatted custom tool.
    * @returns {AnthropicTool[] | undefined} The formatted tools, or undefined if none are passed.
    */
   formatStructuredToolToAnthropic(
-    tools: ChatAnthropicCallOptions["tools"]
+    tools: ChatAnthropicCallOptions["tools"],
+    fields?: { strict?: boolean }
   ): Anthropic.Messages.ToolUnion[] | undefined {
     if (!tools) {
       return undefined;
@@ -1113,24 +1128,44 @@ export class ChatAnthropicMessages<
         return tool;
       }
       if (isAnthropicTool(tool)) {
+        if (fields?.strict !== undefined) {
+          return {
+            ...tool,
+            strict: fields.strict,
+          };
+        }
         return tool;
       }
       if (isOpenAITool(tool)) {
+        // LangChain's OpenAI tool type doesn't surface the optional `strict`
+        // flag that the OpenAI API itself supports on function definitions,
+        // so we read it through a runtime check rather than a type assertion.
+        const functionStrict =
+          "strict" in tool.function && typeof tool.function.strict === "boolean"
+            ? tool.function.strict
+            : undefined;
+        const strict = fields?.strict ?? functionStrict;
         return {
           name: tool.function.name,
           description: tool.function.description,
           input_schema: tool.function
             .parameters as Anthropic.Messages.Tool.InputSchema,
+          ...(strict !== undefined ? { strict } : {}),
         };
       }
       if (isLangChainTool(tool)) {
+        const { strict: extrasStrict, ...restExtras } = tool.extras
+          ? AnthropicToolExtrasSchema.parse(tool.extras)
+          : {};
+        const strict = fields?.strict ?? extrasStrict;
         return {
           name: tool.name,
           description: tool.description,
           input_schema: (isInteropZodSchema(tool.schema)
             ? toJsonSchema(tool.schema)
             : tool.schema) as Anthropic.Messages.Tool.InputSchema,
-          ...(tool.extras ? AnthropicToolExtrasSchema.parse(tool.extras) : {}),
+          ...restExtras,
+          ...(strict !== undefined ? { strict } : {}),
         };
       }
       throw new Error(
@@ -1148,7 +1183,9 @@ export class ChatAnthropicMessages<
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
     return this.withConfig({
-      tools: this.formatStructuredToolToAnthropic(tools),
+      tools: this.formatStructuredToolToAnthropic(tools, {
+        strict: kwargs?.strict,
+      }),
       ...kwargs,
     } as Partial<CallOptions>);
   }
@@ -1205,7 +1242,9 @@ export class ChatAnthropicMessages<
       stop_sequences: options?.stop ?? this.stopSequences,
       stream: this.streaming,
       max_tokens: this.maxTokens,
-      tools: this.formatStructuredToolToAnthropic(options?.tools),
+      tools: this.formatStructuredToolToAnthropic(options?.tools, {
+        strict: options?.strict,
+      }),
       tool_choice,
       thinking: this.thinking,
       context_management: this.contextManagement,
@@ -1632,6 +1671,12 @@ export class ChatAnthropicMessages<
     };
     let method = config?.method ?? "functionCalling";
 
+    if (config?.strict !== undefined && method !== "functionCalling") {
+      throw new Error(
+        `Argument \`strict\` is only supported for \`method\` = "functionCalling" on Anthropic models. Got method = "${method}".`
+      );
+    }
+
     if (method === "jsonMode") {
       console.warn(
         `"jsonMode" is not supported for Anthropic models. Falling back to "jsonSchema".`
@@ -1712,6 +1757,7 @@ export class ChatAnthropicMessages<
             kwargs: { method: "functionCalling" },
             schema: toJsonSchema(schema),
           },
+          ...(config?.strict !== undefined ? { strict: config.strict } : {}),
         } as Partial<CallOptions>);
 
         const raiseIfNoToolCalls = (message: AIMessageChunk) => {
@@ -1734,6 +1780,7 @@ export class ChatAnthropicMessages<
             kwargs: { method: "functionCalling" },
             schema: toJsonSchema(schema),
           },
+          ...(config?.strict !== undefined ? { strict: config.strict } : {}),
         } as Partial<CallOptions>);
       }
     } else {
