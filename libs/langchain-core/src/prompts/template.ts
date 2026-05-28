@@ -1,7 +1,10 @@
 import mustache from "mustache";
 import { MessageContent } from "../messages/index.js";
 import type { InputValues } from "../utils/types/index.js";
-import { addLangChainErrorFields } from "../errors/index.js";
+import {
+  MAX_PROMPT_TEMPLATE_DEPTH,
+  createPromptTemplateDepthError,
+} from "./utils.js";
 
 function configureMustache() {
   // Use unescaped HTML
@@ -88,8 +91,13 @@ export const parseFString = (template: string): ParsedTemplateNode[] => {
  */
 const mustacheTemplateToNodes = (
   template: mustache.TemplateSpans,
-  context: string[] = []
+  context: string[] = [],
+  depth = 0
 ): ParsedTemplateNode[] => {
+  if (depth >= MAX_PROMPT_TEMPLATE_DEPTH) {
+    throw createPromptTemplateDepthError();
+  }
+
   const nodes: ParsedTemplateNode[] = [];
 
   for (const temp of template) {
@@ -104,7 +112,11 @@ const mustacheTemplateToNodes = (
       // If this is a section with nested content, recursively process it
       if (temp[0] === "#" && temp.length > 4 && Array.isArray(temp[4])) {
         const newContext = [...context, temp[1]];
-        const nestedNodes = mustacheTemplateToNodes(temp[4], newContext);
+        const nestedNodes = mustacheTemplateToNodes(
+          temp[4],
+          newContext,
+          depth + 1
+        );
         nodes.push(...nestedNodes);
       }
     } else {
