@@ -1,5 +1,8 @@
 # @langchain/google-cloud-sql-pg
 
+> [!WARNING]
+> `@langchain/google-cloud-sql-pg` is deprecated and will no longer receive updates.
+
 The LangChain package for CloudSQL for Postgres provides a way to connect to Cloud SQL instances from the LangChain ecosystem.
 
 Main features:
