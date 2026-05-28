@@ -880,24 +880,106 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     message: ToolMessage,
     prevMessage: BaseMessage
   ): GeminiContent[] {
-    const contentStr =
-      typeof message.content === "string"
-        ? message.content
-        : (message.content as ContentBlock[]).reduce(
-            (acc: string, content: ContentBlock) => {
-              if (content.type === "text") {
-                return acc + content.text;
-              } else {
-                return acc;
-              }
-            },
-            ""
-          );
     // Hacky :(
     const responseName =
       (isAIMessage(prevMessage) && !!prevMessage.tool_calls?.length
         ? prevMessage.tool_calls[0].name
         : prevMessage.name) ?? message.tool_call_id;
+
+    // Handle string content
+    if (typeof message.content === "string") {
+      try {
+        const content = JSON.parse(message.content);
+        return [
+          {
+            role: "function",
+            parts: [
+              {
+                functionResponse: {
+                  name: responseName,
+                  response: { content },
+                },
+              },
+            ],
+          },
+        ];
+      } catch (_) {
+        return [
+          {
+            role: "function",
+            parts: [
+              {
+                functionResponse: {
+                  name: responseName,
+                  response: { content: message.content },
+                },
+              },
+            ],
+          },
+        ];
+      }
+    }
+
+    // Handle array content - preserve structured objects
+    const contentArray = message.content as ContentBlock[];
+
+    // Check if we have structured content that should be passed as-is
+    // (non-text blocks or plain objects without a type field)
+    const hasNonTextContent = contentArray.some(
+      (block) => typeof block === "object" && block !== null && block.type !== "text"
+    );
+
+    if (hasNonTextContent) {
+      // Extract structured content
+      const structuredContent = contentArray.map((block) => {
+        if (typeof block === "object" && block !== null) {
+          if (block.type === "text") {
+            // For text blocks, try to parse as JSON, otherwise return text
+            try {
+              return JSON.parse(block.text);
+            } catch {
+              return block.text;
+            }
+          }
+          // For non-text blocks or plain objects, return the object itself
+          // (without the type field for non-standard blocks to avoid noise)
+          if (block.type === "non_standard" && "value" in block) {
+            return (block as { type: "non_standard"; value: unknown }).value;
+          }
+          // For other blocks with custom types, return the full object
+          return block;
+        }
+        return block;
+      });
+
+      // If single item, unwrap it; otherwise keep as array
+      const responseContent = structuredContent.length === 1
+        ? structuredContent[0]
+        : structuredContent;
+
+      return [
+        {
+          role: "function",
+          parts: [
+            {
+              functionResponse: {
+                name: responseName,
+                response: { content: responseContent },
+              },
+            },
+          ],
+        },
+      ];
+    }
+
+    // Fallback: extract text from text blocks only
+    const contentStr = contentArray.reduce((acc: string, content: ContentBlock) => {
+      if (content.type === "text") {
+        return acc + content.text;
+      }
+      return acc;
+    }, "");
+
     try {
       const content = JSON.parse(contentStr);
       return [
