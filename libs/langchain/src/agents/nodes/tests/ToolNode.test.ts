@@ -1129,3 +1129,227 @@ describe("ToolNode error handling", () => {
     expect(toolMessage.status).toBe("error");
   });
 });
+
+describe("ToolNode input routing", () => {
+  const weatherTool = tool(
+    ({ location }: { location: string }) => `Weather in ${location}: sunny`,
+    {
+      name: "get_weather",
+      description: "Get weather for a location",
+      schema: z.object({ location: z.string() }),
+    }
+  );
+
+  it("should run the tool from lg_tool_call when invoked via Send (state has lg_tool_call)", async () => {
+    const toolNode = new ToolNode([weatherTool]);
+
+    const result = await toolNode.invoke({
+      lg_tool_call: {
+        name: "get_weather",
+        args: { location: "Seoul" },
+        id: "call_send_1",
+        type: "tool_call",
+      },
+      messages: [],
+    });
+
+    expect(result).toMatchObject({
+      messages: [
+        expect.objectContaining({
+          content: "Weather in Seoul: sunny",
+          tool_call_id: "call_send_1",
+          name: "get_weather",
+        }),
+      ],
+    });
+  });
+
+  it("should strip jumpTo from the result when invoked via Send", async () => {
+    const toolNode = new ToolNode([weatherTool]);
+
+    const result = await toolNode.invoke({
+      lg_tool_call: {
+        name: "get_weather",
+        args: { location: "Tokyo" },
+        id: "call_send_2",
+        type: "tool_call",
+      },
+      jumpTo: "some_node",
+      messages: [],
+    });
+
+    expect(result).toMatchObject({
+      messages: [
+        expect.objectContaining({
+          content: "Weather in Tokyo: sunny",
+          tool_call_id: "call_send_2",
+        }),
+      ],
+    });
+    expect(result).not.toHaveProperty("jumpTo");
+  });
+
+  it("should ignore tool_calls in messages when invoked via Send", async () => {
+    const addTool = tool(({ a, b }: { a: number; b: number }) => `${a + b}`, {
+      name: "add",
+      description: "Add two numbers",
+      schema: z.object({ a: z.number(), b: z.number() }),
+    });
+
+    const toolNode = new ToolNode([weatherTool, addTool]);
+
+    const result = await toolNode.invoke({
+      lg_tool_call: {
+        name: "add",
+        args: { a: 3, b: 7 },
+        id: "call_send_3",
+        type: "tool_call",
+      },
+      messages: [
+        new AIMessage({
+          content: "",
+          tool_calls: [
+            {
+              name: "get_weather",
+              args: { location: "Paris" },
+              id: "should_not_run",
+              type: "tool_call",
+            },
+          ],
+        }),
+      ],
+    });
+
+    const toolMessages = (result as { messages: ToolMessage[] }).messages;
+    expect(toolMessages).toHaveLength(1);
+    expect(toolMessages[0]).toMatchObject({
+      name: "add",
+      content: "10",
+      tool_call_id: "call_send_3",
+    });
+  });
+
+  it("should throw when state is not BaseMessage[] or { messages: BaseMessage[] }", async () => {
+    const toolNode = new ToolNode([weatherTool]);
+
+    await expect(
+      toolNode.invoke({ some_random_key: "value" } as unknown as Parameters<
+        typeof toolNode.invoke
+      >[0])
+    ).rejects.toThrow(
+      "ToolNode only accepts BaseMessage[] or { messages: BaseMessage[] } as input."
+    );
+  });
+
+  it("should throw for primitive state (number)", async () => {
+    const toolNode = new ToolNode([weatherTool]);
+
+    await expect(
+      toolNode.invoke(42 as unknown as Parameters<typeof toolNode.invoke>[0])
+    ).rejects.toThrow(
+      "ToolNode only accepts BaseMessage[] or { messages: BaseMessage[] } as input."
+    );
+  });
+
+  it("should throw for null state", async () => {
+    const toolNode = new ToolNode([weatherTool]);
+
+    await expect(
+      toolNode.invoke(null as unknown as Parameters<typeof toolNode.invoke>[0])
+    ).rejects.toThrow(
+      "ToolNode only accepts BaseMessage[] or { messages: BaseMessage[] } as input."
+    );
+  });
+
+  it("should throw when messages array contains no AIMessage", async () => {
+    const toolNode = new ToolNode([weatherTool]);
+
+    await expect(toolNode.invoke([new HumanMessage("Hello")])).rejects.toThrow(
+      "ToolNode only accepts AIMessages as input."
+    );
+  });
+
+  it("should throw when messages object contains no AIMessage", async () => {
+    const toolNode = new ToolNode([weatherTool]);
+
+    await expect(
+      toolNode.invoke({
+        messages: [new HumanMessage("Hello"), new HumanMessage("How are you?")],
+      })
+    ).rejects.toThrow("ToolNode only accepts AIMessages as input.");
+  });
+
+  it("should throw when messages array is empty", async () => {
+    const toolNode = new ToolNode([weatherTool]);
+
+    await expect(toolNode.invoke([])).rejects.toThrow(
+      "ToolNode only accepts AIMessages as input."
+    );
+  });
+
+  it("should use the last AIMessage when multiple AIMessages are present", async () => {
+    const toolNode = new ToolNode([weatherTool]);
+
+    const firstAI = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          name: "get_weather",
+          args: { location: "London" },
+          id: "first_ai_call",
+          type: "tool_call",
+        },
+      ],
+    });
+    const secondAI = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          name: "get_weather",
+          args: { location: "Seoul" },
+          id: "second_ai_call",
+          type: "tool_call",
+        },
+      ],
+    });
+
+    const result = await toolNode.invoke({ messages: [firstAI, secondAI] });
+
+    const toolMessages = result.messages as ToolMessage[];
+    expect(toolMessages).toHaveLength(1);
+    expect(toolMessages[0].tool_call_id).toBe("second_ai_call");
+    expect(toolMessages[0].content).toContain("Seoul");
+  });
+
+  it("should return empty messages when AIMessage has no tool_calls (state object input)", async () => {
+    const toolNode = new ToolNode([weatherTool]);
+
+    const result = await toolNode.invoke({
+      messages: [new AIMessage({ content: "I don't need any tools." })],
+    });
+
+    expect(result).toEqual({ messages: [] });
+  });
+
+  it("should return empty array when AIMessage has no tool_calls (messages array input)", async () => {
+    const toolNode = new ToolNode([weatherTool]);
+
+    const result = await toolNode.invoke([
+      new AIMessage({ content: "No tools needed." }),
+    ]);
+
+    expect(result).toEqual([]);
+  });
+
+  it("should return empty messages when AIMessage has an empty tool_calls array", async () => {
+    const toolNode = new ToolNode([weatherTool]);
+
+    const result = await toolNode.invoke({
+      messages: [
+        new AIMessage({ content: "Empty tool calls.", tool_calls: [] }),
+      ],
+    });
+
+    expect(result).toEqual({ messages: [] });
+  });
+});
