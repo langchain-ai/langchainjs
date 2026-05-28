@@ -880,54 +880,63 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     message: ToolMessage,
     prevMessage: BaseMessage
   ): GeminiContent[] {
-    const contentStr =
-      typeof message.content === "string"
-        ? message.content
-        : (message.content as ContentBlock[]).reduce(
-            (acc: string, content: ContentBlock) => {
-              if (content.type === "text") {
-                return acc + content.text;
-              } else {
-                return acc;
-              }
-            },
-            ""
-          );
     // Hacky :(
     const responseName =
       (isAIMessage(prevMessage) && !!prevMessage.tool_calls?.length
         ? prevMessage.tool_calls[0].name
         : prevMessage.name) ?? message.tool_call_id;
-    try {
-      const content = JSON.parse(contentStr);
-      return [
-        {
-          role: "function",
-          parts: [
-            {
-              functionResponse: {
-                name: responseName,
-                response: { content },
-              },
+
+    // Helper to build the function response
+    const buildFunctionResponse = (responseContent: unknown): GeminiContent[] => [
+      {
+        role: "function",
+        parts: [
+          {
+            functionResponse: {
+              name: responseName,
+              response: responseContent,
             },
-          ],
-        },
-      ];
-    } catch (_) {
-      return [
-        {
-          role: "function",
-          parts: [
-            {
-              functionResponse: {
-                name: responseName,
-                response: { content: contentStr },
-              },
-            },
-          ],
-        },
-      ];
+          },
+        ],
+      },
+    ];
+
+    const content = message.content;
+
+    // Handle string content
+    if (typeof content === "string") {
+      try {
+        // Try to parse as JSON if it looks like JSON
+        const parsed = JSON.parse(content);
+        return buildFunctionResponse(parsed);
+      } catch (_) {
+        // Not valid JSON, use as-is
+        return buildFunctionResponse(content);
+      }
     }
+
+    // Handle ContentBlock[] content
+    if (Array.isArray(content) && content.length > 0 && "type" in content[0]) {
+      const textContent = (content as ContentBlock[]).reduce(
+        (acc: string, block: ContentBlock) => {
+          if (block.type === "text") {
+            return acc + block.text;
+          }
+          return acc;
+        },
+        ""
+      );
+      try {
+        const parsed = JSON.parse(textContent);
+        return buildFunctionResponse(parsed);
+      } catch (_) {
+        return buildFunctionResponse(textContent);
+      }
+    }
+
+    // Handle arbitrary object content (e.g., tool results as objects)
+    // Gemini accepts Struct format directly for function responses
+    return buildFunctionResponse(content);
   }
 
   async function baseMessageToContent(
