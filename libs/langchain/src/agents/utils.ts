@@ -628,7 +628,6 @@ export function wrapToolCall(
   );
 }
 
-
 /**
  * Static LangGraph config keys propagated from ReactAgent defaults onto the
  * compiled inner graph. This ensures values set via `withConfig()` survive
