@@ -58,6 +58,28 @@ const model = new ChatOpenAI({
 const response = await model.invoke(new HumanMessage("Hello world!"));
 ```
 
+### OpenAI-compatible endpoints
+
+`ChatOpenAI` can also call OpenAI-compatible endpoints by setting a custom
+`baseURL` in the underlying OpenAI client configuration. For example, you can
+point LangChain or LangGraph applications at Tuning Engines while keeping
+LangChain in control of prompts, chains, agents, tools, and orchestration:
+
+```typescript
+import { ChatOpenAI } from "@langchain/openai";
+
+const model = new ChatOpenAI({
+  apiKey: process.env.TUNING_ENGINES_API_KEY,
+  model: "gpt-4o-mini",
+  configuration: {
+    baseURL: "https://api.tuningengines.com/v1",
+  },
+});
+```
+
+Tuning Engines handles centralized model access, routing, policy checks, audit
+logs, traces, approvals, and cost visibility behind the OpenAI-compatible API.
+
 ### Streaming
 
 ```typescript
