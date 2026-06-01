@@ -80,6 +80,7 @@ import type {
 } from "./middleware/types.js";
 import { type ResponseFormatUndefined } from "./responses.js";
 import { getHookConstraint } from "./middleware/utils.js";
+import { toGraphDefaultConfig } from "./utils.js";
 
 /**
  * In the ReAct pattern we have three main nodes:
@@ -691,6 +692,18 @@ export class ReactAgent<
       description: this.options.description,
       transformers: compileTransformers,
     }) as unknown as AgentGraph<Types>;
+
+    /**
+     * LangGraph API resolves exported agents by unwrapping ReactAgent to the
+     * inner compiled graph (see langgraph-api load.utils `afterResolve`) and
+     * calls streamEvents on that pregel directly. That path only sees config
+     * baked into the graph via `.withConfig()`, not ReactAgent's #defaultConfig
+     * merged at invoke/stream time — so propagate static defaults here.
+     */
+    const graphDefaultConfig = toGraphDefaultConfig(this.#defaultConfig);
+    if (Object.keys(graphDefaultConfig).length > 0) {
+      this.#graph = this.#graph.withConfig(graphDefaultConfig);
+    }
   }
 
   /**
