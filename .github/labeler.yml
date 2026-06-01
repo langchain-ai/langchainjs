@@ -67,6 +67,12 @@ pkg:@langchain/aws:
           - libs/providers/langchain-aws/**
           - libs/providers/langchain-aws/**/*
 
+pkg:@langchain/baseten:
+  - changed-files:
+      - any-glob-to-any-file:
+          - libs/providers/langchain-baseten/**
+          - libs/providers/langchain-baseten/**/*
+
 pkg:@langchain/cloudflare:
   - changed-files:
       - any-glob-to-any-file:
