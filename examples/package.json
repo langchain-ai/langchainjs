@@ -52,7 +52,7 @@
     "@langchain/textsplitters": "workspace:*",
     "@langchain/xai": "workspace:*",
     "@layerup/layerup-security": "^1.6.0",
-    "@opensearch-project/opensearch": "^3.5.1",
+    "@opensearch-project/opensearch": "^3.6.0",
     "@pinecone-database/pinecone": "^7.1.0",
     "@planetscale/database": "^1.20.1",
     "@prisma/client": "^6.19.3",
