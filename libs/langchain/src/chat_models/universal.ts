@@ -81,7 +81,16 @@ function getNearAIParams(
       'NEAR AI API key not found. Please set the NEARAI_API_KEY environment variable or pass the key into "apiKey" field.'
     );
   }
-  const { baseURL: _discardedBaseURL, ...safeConfiguration } = configuration;
+  // Strip any caller-supplied endpoint/transport keys so the pinned NEAR AI
+  // endpoint cannot be overridden (e.g. via `configurableFields: "any"`).
+  const {
+    baseURL: _baseURL,
+    basePath: _basePath,
+    fetch: _fetch,
+    fetchOptions: _fetchOptions,
+    httpAgent: _httpAgent,
+    ...safeConfiguration
+  } = configuration;
 
   return {
     ...params,
