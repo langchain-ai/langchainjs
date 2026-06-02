@@ -323,8 +323,8 @@ importers:
         specifier: ^0.6.0
         version: 0.6.0(@opentelemetry/api@1.9.1)(openai@6.37.0(ws@5.2.4(bufferutil@4.1.0))(zod@4.3.6))(ws@5.2.4(bufferutil@4.1.0))
       lorem-ipsum:
-        specifier: ^2.0.8
-        version: 2.0.8
+        specifier: ^3.0.0
+        version: 3.0.0
       lunary:
         specifier: ^0.8.8
         version: 0.8.8(@anthropic-ai/sdk@0.95.1(zod@4.3.6))(openai@6.37.0(ws@5.2.4(bufferutil@4.1.0))(zod@4.3.6))(react@19.2.5)
@@ -912,8 +912,8 @@ importers:
         specifier: workspace:^
         version: link:../langchain
       lorem-ipsum:
-        specifier: ^2.0.8
-        version: 2.0.8
+        specifier: ^3.0.0
+        version: 3.0.0
       lunary:
         specifier: ^0.8.8
         version: 0.8.8(@anthropic-ai/sdk@0.95.1(zod@4.3.6))(openai@6.37.0(ws@8.20.0(bufferutil@4.1.0))(zod@4.3.6))(react@19.2.5)
@@ -7030,10 +7030,6 @@ packages:
     resolution: {integrity: sha512-H+y0Jo/T1RZ9qPP4Eh1pkcQcLRglraJaSLoyOtHxu6AapkjWVCy2Sit1QQ4x3Dng8qDlSsZEet7g5Pq06MvTgw==}
     engines: {node: '>=20'}
 
-  commander@9.5.0:
-    resolution: {integrity: sha512-KRs7WVDKg86PWiuAqhDrAQnTXZKraVcCc6vFdL14qrZ/DcWwuRo7VoiYXalXO7S5GKpqYiVEwCbgFDfxNHKJBQ==}
-    engines: {node: ^12.20.0 || >=14}
-
   compare-func@2.0.0:
     resolution: {integrity: sha512-zHig5N+tPWARooBnb0Zx1MFcdfpyJrfTJ3Y5L+IFvUm8rM74hHz66z0gw0x4tijh5CorKkKUCnW82R2vmpeCRA==}
 
@@ -9116,9 +9112,8 @@ packages:
   long@5.3.2:
     resolution: {integrity: sha512-mNAgZ1GmyNhD7AuqnTG3/VQ26o760+ZYBPKjPvugO8+nLbYfX6TVpJPseBvopbdY+qpZ/lKUnmEc1LeZYS3QAA==}
 
-  lorem-ipsum@2.0.8:
-    resolution: {integrity: sha512-5RIwHuCb979RASgCJH0VKERn9cQo/+NcAi2BMe9ddj+gp7hujl6BI+qdOG4nVsLDpwWEJwTVYXNKP6BGgbcoGA==}
-    engines: {node: '>= 8.x', npm: '>= 5.x'}
+  lorem-ipsum@3.0.0:
+    resolution: {integrity: sha512-FYUViKFk1p8OJWrDFtpyvCW1l92E7vWA3g/tmpvdrLmyoLti9aqD7/xeSEXu/e2oi/zG/TL8I9eZsrh+t1NWbw==}
     hasBin: true
 
   loupe@3.2.1:
@@ -17955,8 +17950,6 @@ snapshots:
 
   commander@14.0.3: {}
 
-  commander@9.5.0: {}
-
   compare-func@2.0.0:
     dependencies:
       array-ify: 1.0.0
@@ -20481,9 +20474,7 @@ snapshots:
 
   long@5.3.2: {}
 
-  lorem-ipsum@2.0.8:
-    dependencies:
-      commander: 9.5.0
+  lorem-ipsum@3.0.0: {}
 
   loupe@3.2.1: {}
 

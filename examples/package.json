@@ -80,7 +80,7 @@
     "ioredis": "^5.10.1",
     "js-yaml": "^4.1.1",
     "langchain": "workspace:*",
-    "lorem-ipsum": "^2.0.8",
+    "lorem-ipsum": "^3.0.0",
     "lunary": "^0.8.8",
     "mariadb": "^3.5.2",
     "mem0ai": "^3.0.3",
