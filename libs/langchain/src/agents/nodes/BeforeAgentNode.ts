@@ -13,6 +13,7 @@ export class BeforeAgentNode<
   TContextSchema extends Record<string, unknown> = Record<string, unknown>,
 > extends MiddlewareNode<TStateSchema, TContextSchema> {
   lc_namespace = ["langchain", "agents", "beforeAgentNodes"];
+  protected hookPhase = "beforeAgent" as const;
 
   constructor(
     public middleware: AgentMiddleware<

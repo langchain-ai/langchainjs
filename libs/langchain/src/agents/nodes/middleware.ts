@@ -21,10 +21,18 @@ type NodeOutput<TStateSchema extends Record<string, any>> =
   | Command<any, TStateSchema, string>
   | { jumpTo?: JumpToTarget };
 
+type MiddlewareHookPhase =
+  | "beforeAgent"
+  | "beforeModel"
+  | "afterModel"
+  | "afterAgent";
+
 export abstract class MiddlewareNode<
   TStateSchema extends Record<string, any>,
   TContextSchema extends Record<string, any>,
 > extends RunnableCallable<TStateSchema, NodeOutput<TStateSchema>> {
+  protected abstract hookPhase: MiddlewareHookPhase;
+
   abstract middleware: AgentMiddleware<
     z.ZodObject<z.ZodRawShape>,
     z.ZodObject<z.ZodRawShape>
@@ -45,7 +53,7 @@ export abstract class MiddlewareNode<
     invokeState: TStateSchema,
     config?: LangGraphRunnableConfig
   ): Promise<NodeOutput<TStateSchema>> {
-    const clearJumpToByDefault = this.name?.startsWith("AfterAgentNode_");
+    const clearJumpToByDefault = this.hookPhase === "afterAgent";
 
     /**
      * Filter context based on middleware's contextSchema
@@ -126,21 +134,26 @@ export abstract class MiddlewareNode<
     /**
      * Verify that the jump target is allowed for the middleware
      */
-    let jumpToConstraint: JumpToTarget[] | undefined;
-    let constraint: string | undefined;
+    let jumpToConstraint: JumpToTarget[] | undefined = undefined;
+    let constraint: string;
 
-    if (this.name?.startsWith("BeforeAgentNode_")) {
-      jumpToConstraint = getHookConstraint(this.middleware.beforeAgent);
-      constraint = "beforeAgent.canJumpTo";
-    } else if (this.name?.startsWith("BeforeModelNode_")) {
-      jumpToConstraint = getHookConstraint(this.middleware.beforeModel);
-      constraint = "beforeModel.canJumpTo";
-    } else if (this.name?.startsWith("AfterAgentNode_")) {
-      jumpToConstraint = getHookConstraint(this.middleware.afterAgent);
-      constraint = "afterAgent.canJumpTo";
-    } else if (this.name?.startsWith("AfterModelNode_")) {
-      jumpToConstraint = getHookConstraint(this.middleware.afterModel);
-      constraint = "afterModel.canJumpTo";
+    switch (this.hookPhase) {
+      case "beforeAgent":
+        jumpToConstraint = getHookConstraint(this.middleware.beforeAgent);
+        constraint = "beforeAgent.canJumpTo";
+        break;
+      case "beforeModel":
+        jumpToConstraint = getHookConstraint(this.middleware.beforeModel);
+        constraint = "beforeModel.canJumpTo";
+        break;
+      case "afterAgent":
+        jumpToConstraint = getHookConstraint(this.middleware.afterAgent);
+        constraint = "afterAgent.canJumpTo";
+        break;
+      case "afterModel":
+        jumpToConstraint = getHookConstraint(this.middleware.afterModel);
+        constraint = "afterModel.canJumpTo";
+        break;
     }
 
     if (jumpTarget && !jumpToConstraint?.includes(jumpTarget)) {

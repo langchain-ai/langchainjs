@@ -13,6 +13,7 @@ export class AfterModelNode<
   TContextSchema extends Record<string, unknown> = Record<string, unknown>,
 > extends MiddlewareNode<TStateSchema, TContextSchema> {
   lc_namespace = ["langchain", "agents", "afterModelNodes"];
+  protected hookPhase = "afterModel" as const;
 
   constructor(
     public middleware: AgentMiddleware<
