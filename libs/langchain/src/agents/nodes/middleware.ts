@@ -110,12 +110,10 @@ export abstract class MiddlewareNode<
     );
 
     /**
-     * If result is undefined, the hook made no state changes — return
-     * only the jumpTo sentinel so we don't re-emit every input key as
-     * a state update.
+     * If result is undefined, the hook made no state changes.
      */
     if (!result) {
-      return { jumpTo: undefined };
+      return {};
     }
 
     /**
@@ -138,10 +136,7 @@ export abstract class MiddlewareNode<
       constraint = "afterModel.canJumpTo";
     }
 
-    if (
-      typeof result.jumpTo === "string" &&
-      !jumpToConstraint?.includes(result.jumpTo as JumpToTarget)
-    ) {
+    if (result.jumpTo && !jumpToConstraint?.includes(result.jumpTo)) {
       const suggestion =
         jumpToConstraint && jumpToConstraint.length > 0
           ? `must be one of: ${jumpToConstraint?.join(", ")}.`
@@ -154,26 +149,27 @@ export abstract class MiddlewareNode<
     /**
      * If result is a control action, handle it
      */
-    if (typeof result === "object" && "type" in result) {
+    if (typeof result === "object" && result !== null && "type" in result) {
       // Handle control actions
       if (result.type === "terminate") {
         if (result.error) {
           throw result.error;
         }
-        return {
-          ...state,
-          ...(result.result || {}),
-          jumpTo: result.jumpTo,
-        };
+        const { jumpTo: _ignored, ...update } = (result.result ?? {}) as Record<
+          string,
+          unknown
+        >;
+        return result.jumpTo ? { ...update, jumpTo: result.jumpTo } : update;
       }
 
       throw new Error(`Invalid control action: ${JSON.stringify(result)}`);
     }
 
     /**
-     * If result is a state update, merge it with current state
+     * If result is a state update, return sparse updates only.
      */
-    return { ...state, ...result, jumpTo: result.jumpTo };
+    const { jumpTo: _ignored, ...update } = result as Record<string, unknown>;
+    return result.jumpTo ? { ...update, jumpTo: result.jumpTo } : update;
   }
 
   get nodeOptions() {
