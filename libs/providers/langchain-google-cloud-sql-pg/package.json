@@ -23,7 +23,7 @@
     "test:int": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPatterns=\\.int\\.test.ts --testTimeout 100000 --maxWorkers=50%"
   },
   "dependencies": {
-    "@google-cloud/cloud-sql-connector": "^1.6.0",
+    "@google-cloud/cloud-sql-connector": "^1.11.0",
     "@langchain/core": "workspace:^",
     "google-auth-library": "^10.6.2",
     "knex": "^3.2.8"
