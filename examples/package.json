@@ -75,7 +75,7 @@
     "duck-duck-scrape": "^2.2.7",
     "exa-js": "^1.10.3",
     "firebase-admin": "^13.7.0",
-    "graphql": "^16.13.2",
+    "graphql": "^16.14.1",
     "hdb": "^2.27.1",
     "ioredis": "^5.10.1",
     "js-yaml": "^4.1.1",

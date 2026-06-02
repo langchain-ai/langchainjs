@@ -305,8 +305,8 @@ importers:
         specifier: ^13.7.0
         version: 13.8.0(encoding@0.1.13)
       graphql:
-        specifier: ^16.13.2
-        version: 16.13.2
+        specifier: ^16.14.1
+        version: 16.14.1
       hdb:
         specifier: ^2.27.1
         version: 2.27.1
@@ -900,8 +900,8 @@ importers:
         specifier: ^13.7.0
         version: 13.8.0(encoding@0.1.13)
       graphql:
-        specifier: ^16.6.0
-        version: 16.13.2
+        specifier: ^16.14.1
+        version: 16.14.1
       hdb:
         specifier: ^0.19.8
         version: 0.19.12
@@ -8147,8 +8147,8 @@ packages:
     peerDependencies:
       graphql: 14 - 16
 
-  graphql@16.13.2:
-    resolution: {integrity: sha512-5bJ+nf/UCpAjHM8i06fl7eLyVC9iuNAjm9qzkiu2ZGhM0VscSvS6WDPfAwkdkBuoXGM9FJSbKl6wylMwP9Ktig==}
+  graphql@16.14.1:
+    resolution: {integrity: sha512-cQOsSMS/IrDz82PVyRDvf/Q1F/bRbBVjJlh+xYOkI1qw2bWRvWGiWc+m2O0d6l4Bt1fyY+8kzJ8JFWGJqNeDBg==}
     engines: {node: ^12.22.0 || ^14.16.0 || ^16.0.0 || >=17.0.0}
 
   groq-sdk@1.1.2:
@@ -10382,8 +10382,8 @@ packages:
   react-is@18.3.1:
     resolution: {integrity: sha512-/LLMVyas0ljjAtoYiPqYiL8VWXzUUdThrmU5+n20DZv+a+ClRoevUzw5JxU+Ieh5/c87ytoTBV9G1FiKfNJdmg==}
 
-  react-is@19.2.6:
-    resolution: {integrity: sha512-XjBR15BhXuylgWGuslhDKqlSayuqvqBX91BP8pauG8kd1zY8kotkNWbXksTCNRarse4kuGbe2kIY05ARtwNIvw==}
+  react-is@19.2.7:
+    resolution: {integrity: sha512-kZFnouyVv7eP/Phmrlo9FK+zcAdriZJvzxXHF1Sl1P377WSGe2G/JxVolhTrB/jeV47lKImhNUsijjHAAbcl/A==}
 
   react@19.2.5:
     resolution: {integrity: sha512-llUJLzz1zTUBrskt2pwZgLq59AemifIftw4aB7JxOqf1HY2FDaGDxgwpAPVzHU1kdWabH7FauP4i1oEeer2WCA==}
@@ -14157,9 +14157,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@graphql-typed-document-node/core@3.2.0(graphql@16.13.2)':
+  '@graphql-typed-document-node/core@3.2.0(graphql@16.14.1)':
     dependencies:
-      graphql: 16.13.2
+      graphql: 16.14.1
 
   '@grpc/grpc-js@1.14.3':
     dependencies:
@@ -19190,15 +19190,15 @@ snapshots:
 
   graphmatch@1.1.1: {}
 
-  graphql-request@6.1.0(encoding@0.1.13)(graphql@16.13.2):
+  graphql-request@6.1.0(encoding@0.1.13)(graphql@16.14.1):
     dependencies:
-      '@graphql-typed-document-node/core': 3.2.0(graphql@16.13.2)
+      '@graphql-typed-document-node/core': 3.2.0(graphql@16.14.1)
       cross-fetch: 3.2.0(encoding@0.1.13)
-      graphql: 16.13.2
+      graphql: 16.14.1
     transitivePeerDependencies:
       - encoding
 
-  graphql@16.13.2: {}
+  graphql@16.14.1: {}
 
   groq-sdk@1.1.2: {}
 
@@ -21701,7 +21701,7 @@ snapshots:
       '@jest/schemas': 30.4.0
       ansi-styles: 5.2.0
       react-is-18: react-is@18.3.1
-      react-is-19: react-is@19.2.6
+      react-is-19: react-is@19.2.7
 
   pretty-ms@9.3.0:
     dependencies:
@@ -21917,7 +21917,7 @@ snapshots:
 
   react-is@18.3.1: {}
 
-  react-is@19.2.6: {}
+  react-is@19.2.7: {}
 
   react@19.2.5: {}
 
@@ -23634,8 +23634,8 @@ snapshots:
     dependencies:
       '@datastructures-js/deque': 1.0.8
       abort-controller-x: 0.5.0
-      graphql: 16.13.2
-      graphql-request: 6.1.0(encoding@0.1.13)(graphql@16.13.2)
+      graphql: 16.14.1
+      graphql-request: 6.1.0(encoding@0.1.13)(graphql@16.14.1)
       long: 5.3.2
       nice-grpc: 2.1.16
       nice-grpc-client-middleware-retry: 3.1.15
