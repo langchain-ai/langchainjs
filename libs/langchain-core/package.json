@@ -40,7 +40,7 @@
     "dpdm": "^3.14.0",
     "ml-matrix": "^6.10.4",
     "rimraf": "^6.1.3",
-    "typescript": "~5.8.3",
+    "typescript": "~6.0.3",
     "vitest": "^4.1.2",
     "web-streams-polyfill": "^4.2.0"
   },
