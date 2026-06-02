@@ -30,7 +30,7 @@
     "typegen:fetch": "curl -o src/openapi/gemini-openapi.json 'https://generativelanguage.googleapis.com/$discovery/OPENAPI3_0?version=v1beta'"
   },
   "dependencies": {
-    "eventsource-parser": "^3.0.6",
+    "eventsource-parser": "^3.1.0",
     "google-auth-library": "^10.6.2",
     "jose": "^6.2.3"
   },
