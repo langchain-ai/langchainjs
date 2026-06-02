@@ -2012,9 +2012,7 @@ describe("humanInTheLoopMiddleware", () => {
           write_file: {
             allowedDecisions: ["approve"],
             when: (request) =>
-              String(request.toolCall.args.filename ?? "").startsWith(
-                "danger"
-              ),
+              String(request.toolCall.args.filename ?? "").startsWith("danger"),
           },
         },
       });
@@ -2068,9 +2066,7 @@ describe("humanInTheLoopMiddleware", () => {
           write_file: {
             allowedDecisions: ["approve"],
             when: (request) =>
-              String(request.toolCall.args.filename ?? "").startsWith(
-                "danger"
-              ),
+              String(request.toolCall.args.filename ?? "").startsWith("danger"),
           },
         },
       });
