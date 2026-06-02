@@ -65,7 +65,7 @@
     "eventsource": "^4.1.0",
     "express": "^5.2.1",
     "langchain": "workspace:*",
-    "npm-run-all2": "^8.0.4",
+    "npm-run-all2": "^9.0.1",
     "ts-node": "^10.9.2",
     "typescript": "~5.8.3",
     "vitest": "^4.1.2"
