@@ -915,12 +915,18 @@ export class ReactAgent<
       if (allowJump && builtInState.jumpTo) {
         const destination = parseJumpToTarget(builtInState.jumpTo);
         if (destination === END) {
-          return exitNode;
+          if (exitNode === END) {
+            return END;
+          }
+          return new Send(exitNode, { ...state, jumpTo: undefined });
         }
         if (destination === TOOLS_NODE_NAME) {
           // If trying to jump to tools but no tools are available, go to exitNode
           if (!hasToolsAvailable) {
-            return exitNode;
+            if (exitNode === END) {
+              return END;
+            }
+            return new Send(exitNode, { ...state, jumpTo: undefined });
           }
           return new Send(TOOLS_NODE_NAME, { ...state, jumpTo: undefined });
         }
@@ -1072,11 +1078,17 @@ export class ReactAgent<
         /**
          * When beforeAgent jumps to END, route to exitNode (first afterAgent node)
          */
-        return exitNode;
+        if (exitNode === END) {
+          return END;
+        }
+        return new Send(exitNode, { ...state, jumpTo: undefined });
       }
       if (destination === TOOLS_NODE_NAME) {
         if (!hasToolsAvailable) {
-          return exitNode;
+          if (exitNode === END) {
+            return END;
+          }
+          return new Send(exitNode, { ...state, jumpTo: undefined });
         }
         return new Send(TOOLS_NODE_NAME, { ...state, jumpTo: undefined });
       }

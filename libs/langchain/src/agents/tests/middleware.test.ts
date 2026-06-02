@@ -10,6 +10,7 @@ import {
   ToolCall,
 } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
+import { FakeListChatModel } from "@langchain/core/utils/testing";
 import { z as z4 } from "zod";
 import {
   Command,
@@ -25,9 +26,55 @@ import {
   providerStrategy,
   toolStrategy,
 } from "../index.js";
+import { AfterModelNode } from "../nodes/AfterModelNode.js";
 import { FakeToolCallingChatModel, FakeToolCallingModel } from "./utils.js";
 import { MiddlewareError } from "../errors.js";
 import type { JsonSchemaFormat } from "../responses.js";
+
+class FakeListToolCallingChatModel extends FakeListChatModel {
+  get profile() {
+    return {
+      toolCalling: true,
+      structuredOutput: true,
+    };
+  }
+
+  bindTools(_tools: unknown[]) {
+    // This model returns pre-seeded tool calls from queued responses.
+    return this;
+  }
+
+  _formatGeneration(response: string) {
+    try {
+      const payload = JSON.parse(response) as {
+        content?: string;
+        tool_calls?: Array<{
+          name: string;
+          args: Record<string, unknown>;
+          id?: string;
+        }>;
+      };
+
+      if (Array.isArray(payload.tool_calls)) {
+        return {
+          message: new AIMessage({
+            content: payload.content ?? "",
+            tool_calls: payload.tool_calls.map((toolCall, index) => ({
+              ...toolCall,
+              id: toolCall.id ?? `call_${index + 1}`,
+              type: "tool_call",
+            })),
+          }),
+          text: payload.content ?? "",
+        };
+      }
+    } catch {
+      // Fall back to plain text responses.
+    }
+
+    return super._formatGeneration(response);
+  }
+}
 
 describe("middleware", () => {
   it("should propagate state schema to middleware hooks and result", async () => {
@@ -2651,6 +2698,59 @@ describe("middleware", () => {
       expect(result.messages[0].content).toBe("Test");
     });
 
+    it("should clear jumpTo before entering afterAgent chain from beforeAgent", async () => {
+      const executionLog: string[] = [];
+
+      const middleware1 = createMiddleware({
+        name: "Middleware1",
+        beforeAgent: {
+          hook: async () => {
+            executionLog.push("before_agent_1");
+            return {
+              jumpTo: "end",
+            };
+          },
+          canJumpTo: ["end"],
+        },
+        afterAgent: async () => {
+          executionLog.push("after_agent_1");
+        },
+      });
+
+      const middleware2 = createMiddleware({
+        name: "Middleware2",
+        afterAgent: {
+          canJumpTo: ["end"],
+          hook: async () => {
+            executionLog.push("after_agent_2");
+            return undefined;
+          },
+        },
+      });
+
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("Response")],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [middleware1, middleware2],
+      });
+
+      await agent.invoke({
+        messages: [new HumanMessage("Test")],
+      });
+
+      // jumpTo should be consumed before entering afterAgent chain;
+      // otherwise middleware2's router would immediately route to END.
+      expect(executionLog).toEqual([
+        "before_agent_1",
+        "after_agent_2",
+        "after_agent_1",
+      ]);
+    });
+
     it("should terminate when afterModel jumps to end (skips tools)", async () => {
       const executionLog: string[] = [];
 
@@ -2702,6 +2802,76 @@ describe("middleware", () => {
       expect(result.messages[0].content).toBe("Test");
       expect(AIMessage.isInstance(result.messages[1])).toBe(true);
       expect((result.messages[1] as AIMessage).tool_calls?.length).toBe(1);
+      expect(result.messages.some((m) => ToolMessage.isInstance(m))).toBe(
+        false
+      );
+    });
+
+    it("should clear jumpTo before entering afterAgent chain from afterModel", async () => {
+      const executionLog: string[] = [];
+
+      const toolFn = vi.fn(async ({ query }: { query: string }) => {
+        executionLog.push("tool_execution");
+        return `${query}`;
+      });
+
+      const sampleTool = tool(toolFn, {
+        name: "sample_tool",
+        description: "Sample tool",
+        schema: z.object({
+          query: z.string(),
+        }),
+      });
+
+      const middleware1 = createMiddleware({
+        name: "Middleware1",
+        afterModel: {
+          hook: async () => {
+            executionLog.push("after_model_1");
+            return {
+              jumpTo: "end",
+            };
+          },
+          canJumpTo: ["end"],
+        },
+        afterAgent: async () => {
+          executionLog.push("after_agent_1");
+        },
+      });
+
+      const middleware2 = createMiddleware({
+        name: "Middleware2",
+        afterAgent: {
+          canJumpTo: ["end"],
+          hook: async () => {
+            executionLog.push("after_agent_2");
+            return undefined;
+          },
+        },
+      });
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [
+          [{ name: "sample_tool", args: { query: "Test" }, id: "test_id" }],
+        ],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [sampleTool],
+        middleware: [middleware1, middleware2],
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("Test")],
+      });
+
+      expect(executionLog).toEqual([
+        "after_model_1",
+        "after_agent_2",
+        "after_agent_1",
+      ]);
+      expect(toolFn).not.toHaveBeenCalled();
       expect(result.messages.some((m) => ToolMessage.isInstance(m))).toBe(
         false
       );
@@ -3152,6 +3322,112 @@ describe("middleware", () => {
             msg.content.includes("Failed to parse structured output")
         )
       ).toBe(true);
+    });
+
+    it("should not throw concurrent jumpTo updates when structured output retries with two no-op afterModel hooks", async () => {
+      const responseFormat = toolStrategy(z.object({ answer: z.string() }));
+      const toolName = responseFormat[0].name;
+      const model = new FakeListToolCallingChatModel({
+        responses: [
+          JSON.stringify({
+            content: "",
+            tool_calls: [
+              { name: toolName, args: { wrong: 123 }, id: "call_1" },
+            ],
+          }),
+          JSON.stringify({
+            content: "",
+            tool_calls: [
+              { name: toolName, args: { answer: "correct" }, id: "call_2" },
+            ],
+          }),
+        ],
+      });
+
+      const noopAfterModelA = createMiddleware({
+        name: "NoopAfterModelA",
+        afterModel: async () => undefined,
+      });
+      const noopAfterModelB = createMiddleware({
+        name: "NoopAfterModelB",
+        afterModel: async () => undefined,
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [],
+        responseFormat,
+        middleware: [noopAfterModelA, noopAfterModelB],
+      });
+
+      const result = await agent.invoke({
+        messages: [{ role: "user", content: "test" }],
+      });
+
+      expect(result.structuredResponse).toEqual({ answer: "correct" });
+      expect(
+        result.messages.some(
+          (msg: BaseMessage) =>
+            ToolMessage.isInstance(msg) &&
+            typeof msg.content === "string" &&
+            msg.content.includes("Failed to parse structured output")
+        )
+      ).toBe(true);
+    });
+
+    it("should keep explicit afterModel jumpTo routing with other no-op afterModel middleware", async () => {
+      const toolFn = vi.fn(async () => "tool result");
+      const testTool = tool(toolFn, {
+        name: "test_tool",
+        description: "test tool",
+        schema: z.object({}),
+      });
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [[{ name: "test_tool", args: {}, id: "call_1" }]],
+      });
+
+      const noopAfterModel = createMiddleware({
+        name: "NoopAfterModel",
+        afterModel: async () => undefined,
+      });
+      const jumpAfterModel = createMiddleware({
+        name: "JumpAfterModel",
+        afterModel: {
+          canJumpTo: ["end"],
+          hook: async () => ({ jumpTo: "end" }),
+        },
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [testTool],
+        middleware: [noopAfterModel, jumpAfterModel],
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("run tool")],
+      });
+
+      expect(toolFn).not.toHaveBeenCalled();
+      expect(result.messages.some((m) => ToolMessage.isInstance(m))).toBe(
+        false
+      );
+    });
+
+    it("should return an empty update when afterModel hook returns undefined", async () => {
+      const middleware = createMiddleware({
+        name: "UndefinedAfterModel",
+        afterModel: async () => undefined,
+      });
+      const node = new AfterModelNode(middleware);
+
+      const update = await node.invokeMiddleware({
+        messages: [new HumanMessage("hello")],
+      });
+
+      expect(update).toEqual({});
+      expect(update).not.toHaveProperty("jumpTo");
     });
   });
 
