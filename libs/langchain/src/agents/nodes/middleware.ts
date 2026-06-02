@@ -45,6 +45,8 @@ export abstract class MiddlewareNode<
     invokeState: TStateSchema,
     config?: LangGraphRunnableConfig
   ): Promise<NodeOutput<TStateSchema>> {
+    const clearJumpToByDefault = this.name?.startsWith("AfterAgentNode_");
+
     /**
      * Filter context based on middleware's contextSchema
      */
@@ -113,8 +115,13 @@ export abstract class MiddlewareNode<
      * If result is undefined, the hook made no state changes.
      */
     if (!result) {
-      return {};
+      return clearJumpToByDefault ? { jumpTo: undefined } : {};
     }
+
+    const jumpTarget =
+      typeof result.jumpTo === "string"
+        ? (result.jumpTo as JumpToTarget)
+        : undefined;
 
     /**
      * Verify that the jump target is allowed for the middleware
@@ -136,14 +143,14 @@ export abstract class MiddlewareNode<
       constraint = "afterModel.canJumpTo";
     }
 
-    if (result.jumpTo && !jumpToConstraint?.includes(result.jumpTo)) {
+    if (jumpTarget && !jumpToConstraint?.includes(jumpTarget)) {
       const suggestion =
         jumpToConstraint && jumpToConstraint.length > 0
           ? `must be one of: ${jumpToConstraint?.join(", ")}.`
           : constraint
             ? `no ${constraint} defined in middleware ${this.middleware.name}`
             : "";
-      throw new Error(`Invalid jump target: ${result.jumpTo}, ${suggestion}.`);
+      throw new Error(`Invalid jump target: ${jumpTarget}, ${suggestion}.`);
     }
 
     /**
@@ -159,7 +166,10 @@ export abstract class MiddlewareNode<
           string,
           unknown
         >;
-        return result.jumpTo ? { ...update, jumpTo: result.jumpTo } : update;
+        if (jumpTarget) {
+          return { ...update, jumpTo: jumpTarget };
+        }
+        return clearJumpToByDefault ? { ...update, jumpTo: undefined } : update;
       }
 
       throw new Error(`Invalid control action: ${JSON.stringify(result)}`);
@@ -169,7 +179,10 @@ export abstract class MiddlewareNode<
      * If result is a state update, return sparse updates only.
      */
     const { jumpTo: _ignored, ...update } = result as Record<string, unknown>;
-    return result.jumpTo ? { ...update, jumpTo: result.jumpTo } : update;
+    if (jumpTarget) {
+      return { ...update, jumpTo: jumpTarget };
+    }
+    return clearJumpToByDefault ? { ...update, jumpTo: undefined } : update;
   }
 
   get nodeOptions() {

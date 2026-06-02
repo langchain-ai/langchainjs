@@ -2698,6 +2698,59 @@ describe("middleware", () => {
       expect(result.messages[0].content).toBe("Test");
     });
 
+    it("should clear jumpTo before entering afterAgent chain from beforeAgent", async () => {
+      const executionLog: string[] = [];
+
+      const middleware1 = createMiddleware({
+        name: "Middleware1",
+        beforeAgent: {
+          hook: async () => {
+            executionLog.push("before_agent_1");
+            return {
+              jumpTo: "end",
+            };
+          },
+          canJumpTo: ["end"],
+        },
+        afterAgent: async () => {
+          executionLog.push("after_agent_1");
+        },
+      });
+
+      const middleware2 = createMiddleware({
+        name: "Middleware2",
+        afterAgent: {
+          canJumpTo: ["end"],
+          hook: async () => {
+            executionLog.push("after_agent_2");
+            return undefined;
+          },
+        },
+      });
+
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("Response")],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [middleware1, middleware2],
+      });
+
+      await agent.invoke({
+        messages: [new HumanMessage("Test")],
+      });
+
+      // jumpTo should be consumed before entering afterAgent chain;
+      // otherwise middleware2's router would immediately route to END.
+      expect(executionLog).toEqual([
+        "before_agent_1",
+        "after_agent_2",
+        "after_agent_1",
+      ]);
+    });
+
     it("should terminate when afterModel jumps to end (skips tools)", async () => {
       const executionLog: string[] = [];
 
@@ -2749,6 +2802,76 @@ describe("middleware", () => {
       expect(result.messages[0].content).toBe("Test");
       expect(AIMessage.isInstance(result.messages[1])).toBe(true);
       expect((result.messages[1] as AIMessage).tool_calls?.length).toBe(1);
+      expect(result.messages.some((m) => ToolMessage.isInstance(m))).toBe(
+        false
+      );
+    });
+
+    it("should clear jumpTo before entering afterAgent chain from afterModel", async () => {
+      const executionLog: string[] = [];
+
+      const toolFn = vi.fn(async ({ query }: { query: string }) => {
+        executionLog.push("tool_execution");
+        return `${query}`;
+      });
+
+      const sampleTool = tool(toolFn, {
+        name: "sample_tool",
+        description: "Sample tool",
+        schema: z.object({
+          query: z.string(),
+        }),
+      });
+
+      const middleware1 = createMiddleware({
+        name: "Middleware1",
+        afterModel: {
+          hook: async () => {
+            executionLog.push("after_model_1");
+            return {
+              jumpTo: "end",
+            };
+          },
+          canJumpTo: ["end"],
+        },
+        afterAgent: async () => {
+          executionLog.push("after_agent_1");
+        },
+      });
+
+      const middleware2 = createMiddleware({
+        name: "Middleware2",
+        afterAgent: {
+          canJumpTo: ["end"],
+          hook: async () => {
+            executionLog.push("after_agent_2");
+            return undefined;
+          },
+        },
+      });
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [
+          [{ name: "sample_tool", args: { query: "Test" }, id: "test_id" }],
+        ],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [sampleTool],
+        middleware: [middleware1, middleware2],
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("Test")],
+      });
+
+      expect(executionLog).toEqual([
+        "after_model_1",
+        "after_agent_2",
+        "after_agent_1",
+      ]);
+      expect(toolFn).not.toHaveBeenCalled();
       expect(result.messages.some((m) => ToolMessage.isInstance(m))).toBe(
         false
       );
