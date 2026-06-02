@@ -144,6 +144,16 @@ type ModelProviderConfig = {
   hasCircularDependency?: boolean;
 };
 
+declare global {
+  // oxlint-disable-next-line vars-on-top, no-var
+  var lc_chat_model_provider_registry: Map<
+    ChatModelProvider,
+    Record<string, unknown>
+  >;
+}
+
+globalThis.lc_chat_model_provider_registry ??= new Map();
+
 /**
  * Helper function to get a chat model class by its class name or model provider.
  * @param className The class name (e.g., "ChatOpenAI", "ChatAnthropic")
@@ -175,6 +185,23 @@ export async function getChatModelByClassName(
 
   if (!config) {
     return undefined;
+  }
+
+  const registeredModule =
+    modelProvider !== undefined
+      ? globalThis.lc_chat_model_provider_registry.get(
+          modelProvider as ChatModelProvider
+        )
+      : undefined;
+
+  if (registeredModule) {
+    const chatModelClass = registeredModule[config.className];
+    if (!chatModelClass) {
+      throw new Error(
+        `Module registered for "${modelProvider}" must export "${config.className}".`
+      );
+    }
+    return chatModelClass;
   }
 
   try {
@@ -273,6 +300,34 @@ export function _inferModelProvider(modelName: string): string | undefined {
   } else {
     return undefined;
   }
+}
+
+/**
+ * Register a provider package module so bundlers
+ * (esbuild, rollup, webpack)
+ * include it in production bundles.
+ *
+ * Without this call,
+ * `initChatModel` resolves provider packages via runtime `import(packageName)`,
+ * which bundlers cannot statically analyze.
+ * This causes `Cannot find module '@langchain/X'` errors
+ * in single-file bundles (lambdas, browser bundles).
+ *
+ * Pass the namespace import of the provider package.
+ * Call once per provider key at app entry,
+ * before any `initChatModel` invocation.
+ *
+ * @example
+ *   import * as aws from "@langchain/aws";
+ *   import { registerProviderForBundling } from "langchain/chat_models/universal";
+ *
+ *   registerProviderForBundling("bedrock", aws);
+ */
+export function registerProviderForBundling(
+  provider: ChatModelProvider,
+  packageModule: Record<string, unknown>
+): void {
+  globalThis.lc_chat_model_provider_registry.set(provider, packageModule);
 }
 
 interface ConfigurableModelFields extends BaseChatModelParams {
