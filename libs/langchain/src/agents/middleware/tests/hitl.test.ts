@@ -44,6 +44,10 @@ const calculatorFn = vi.fn(
   }
 );
 
+const askUserFn = vi.fn(async ({ question }: { question: string }) => {
+  return `Asked user: ${question}`;
+});
+
 // Define tools
 const calculateTool = tool(calculatorFn, {
   name: "calculator",
@@ -61,6 +65,14 @@ const writeFileTool = tool(writeFileFn, {
   schema: z.object({
     filename: z.string().describe("Name of the file"),
     content: z.string().describe("Content to write"),
+  }),
+});
+
+const askUserTool = tool(askUserFn, {
+  name: "ask_user",
+  description: "Ask the user a question",
+  schema: z.object({
+    question: z.string().describe("Question to ask the user"),
   }),
 });
 
@@ -628,6 +640,276 @@ describe("humanInTheLoopMiddleware", () => {
     ).rejects.toThrow(
       'Tool call response for "write_file" must be a string, got object'
     );
+  });
+
+  it("should handle respond decision type", async () => {
+    const hitlMiddleware = humanInTheLoopMiddleware({
+      interruptOn: {
+        ask_user: {
+          allowedDecisions: ["respond"],
+        },
+      },
+    });
+
+    const model = new FakeToolCallingModel({
+      toolCalls: [
+        [
+          {
+            id: "call_ask_user",
+            name: "ask_user",
+            args: { question: "What is your favorite color?" },
+          },
+        ],
+        [],
+      ],
+    });
+
+    const checkpointer = new MemorySaver();
+    const agent = createAgent({
+      model,
+      checkpointer,
+      tools: [askUserTool],
+      middleware: [hitlMiddleware],
+    });
+
+    const config = {
+      configurable: {
+        thread_id: "test-respond",
+      },
+    };
+
+    await agent.invoke(
+      {
+        messages: [new HumanMessage("Ask the user their favorite color")],
+      },
+      config
+    );
+
+    const result = await agent.invoke(
+      new Command({
+        resume: {
+          decisions: [{ type: "respond", message: "blue" }],
+        } as HITLResponse,
+      }),
+      config
+    );
+
+    expect(askUserFn).not.toHaveBeenCalled();
+
+    const toolMessage = result.messages.find((msg: BaseMessage) =>
+      ToolMessage.isInstance(msg)
+    ) as ToolMessage;
+    expect(toolMessage).toBeDefined();
+    expect(toolMessage.content).toBe("blue");
+    expect(toolMessage.name).toBe("ask_user");
+    expect(toolMessage.tool_call_id).toBe("call_ask_user");
+    expect(toolMessage.status).toBe("success");
+
+    const aiMessage = result.messages.find(
+      (msg: BaseMessage) =>
+        AIMessage.isInstance(msg) && msg.tool_calls?.[0]?.id === "call_ask_user"
+    ) as AIMessage;
+    expect(aiMessage.tool_calls).toHaveLength(1);
+  });
+
+  it("should throw if respond is not allowed", async () => {
+    const hitlMiddleware = humanInTheLoopMiddleware({
+      interruptOn: {
+        ask_user: {
+          allowedDecisions: ["approve", "edit", "reject"],
+        },
+      },
+    });
+
+    const model = new FakeToolCallingModel({
+      toolCalls: [
+        [
+          {
+            id: "call_ask_user_disallowed",
+            name: "ask_user",
+            args: { question: "What is your favorite color?" },
+          },
+        ],
+      ],
+    });
+
+    const checkpointer = new MemorySaver();
+    const agent = createAgent({
+      model,
+      checkpointer,
+      tools: [askUserTool],
+      middleware: [hitlMiddleware],
+    });
+
+    const config = {
+      configurable: {
+        thread_id: "test-respond-disallowed",
+      },
+    };
+
+    await agent.invoke(
+      {
+        messages: [new HumanMessage("Ask the user their favorite color")],
+      },
+      config
+    );
+
+    await expect(() =>
+      agent.invoke(
+        new Command({
+          resume: {
+            decisions: [{ type: "respond", message: "blue" }],
+          } as HITLResponse,
+        }),
+        config
+      )
+    ).rejects.toThrow(
+      "Decision type 'respond' is not allowed for tool 'ask_user'"
+    );
+  });
+
+  it("should execute approved tools alongside respond decisions", async () => {
+    const hitlMiddleware = humanInTheLoopMiddleware({
+      interruptOn: {
+        calculator: {
+          allowedDecisions: ["approve"],
+        },
+        ask_user: {
+          allowedDecisions: ["respond"],
+        },
+      },
+    });
+
+    const model = new FakeToolCallingModel({
+      toolCalls: [
+        [
+          {
+            id: "call_calculator",
+            name: "calculator",
+            args: { a: 2, b: 3, operation: "add" },
+          },
+          {
+            id: "call_ask_user_mixed",
+            name: "ask_user",
+            args: { question: "What is your favorite color?" },
+          },
+        ],
+        [],
+      ],
+    });
+
+    const checkpointer = new MemorySaver();
+    const agent = createAgent({
+      model,
+      checkpointer,
+      tools: [calculateTool, askUserTool],
+      middleware: [hitlMiddleware],
+    });
+
+    const config = {
+      configurable: {
+        thread_id: "test-respond-mixed",
+      },
+    };
+
+    await agent.invoke(
+      {
+        messages: [new HumanMessage("Calculate 2+3 and ask the user")],
+      },
+      config
+    );
+
+    const result = await agent.invoke(
+      new Command({
+        resume: {
+          decisions: [
+            { type: "approve" },
+            { type: "respond", message: "blue" },
+          ],
+        } as HITLResponse,
+      }),
+      config
+    );
+
+    expect(calculatorFn).toHaveBeenCalledTimes(1);
+    expect(askUserFn).not.toHaveBeenCalled();
+
+    const toolMessages = result.messages.filter((msg: BaseMessage) =>
+      ToolMessage.isInstance(msg)
+    ) as ToolMessage[];
+    expect(toolMessages.map((message) => message.tool_call_id)).toContain(
+      "call_calculator"
+    );
+    expect(toolMessages.map((message) => message.tool_call_id)).toContain(
+      "call_ask_user_mixed"
+    );
+    expect(
+      toolMessages.find(
+        (message) => message.tool_call_id === "call_ask_user_mixed"
+      )?.status
+    ).toBe("success");
+  });
+
+  it("should allow respond when interruptOn is true", async () => {
+    const hitlMiddleware = humanInTheLoopMiddleware({
+      interruptOn: {
+        ask_user: true,
+      },
+    });
+
+    const model = new FakeToolCallingModel({
+      toolCalls: [
+        [
+          {
+            id: "call_ask_user_true",
+            name: "ask_user",
+            args: { question: "What is your favorite color?" },
+          },
+        ],
+        [],
+      ],
+    });
+
+    const checkpointer = new MemorySaver();
+    const agent = createAgent({
+      model,
+      checkpointer,
+      tools: [askUserTool],
+      middleware: [hitlMiddleware],
+    });
+
+    const config = {
+      configurable: {
+        thread_id: "test-respond-true",
+      },
+    };
+
+    const initialResult = await agent.invoke(
+      {
+        messages: [new HumanMessage("Ask the user their favorite color")],
+      },
+      config
+    );
+    const interruptRequest = initialResult
+      .__interrupt__?.[0] as Interrupt<HITLRequest>;
+    expect(interruptRequest.value.reviewConfigs[0].allowedDecisions).toContain(
+      "respond"
+    );
+
+    const result = await agent.invoke(
+      new Command({
+        resume: {
+          decisions: [{ type: "respond", message: "blue" }],
+        } as HITLResponse,
+      }),
+      config
+    );
+
+    const toolMessage = result.messages.find((msg: BaseMessage) =>
+      ToolMessage.isInstance(msg)
+    ) as ToolMessage;
+    expect(toolMessage.content).toBe("blue");
+    expect(toolMessage.status).toBe("success");
   });
 
   it("should allow to interrupt multiple tools at the same time", async () => {
