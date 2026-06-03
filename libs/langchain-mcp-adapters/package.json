@@ -59,7 +59,7 @@
     "@types/debug": "^4.1.13",
     "@types/express": "^5.0.6",
     "@types/node": "^25.5.0",
-    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/coverage-v8": "^4.1.8",
     "dotenv": "^17.4.0",
     "dpdm": "^3.14.0",
     "eventsource": "^4.1.0",
@@ -68,7 +68,7 @@
     "npm-run-all2": "^9.0.1",
     "ts-node": "^10.9.2",
     "typescript": "~5.8.3",
-    "vitest": "^4.1.2"
+    "vitest": "^3.2.6"
   },
   "engines": {
     "node": ">=20.10.0"

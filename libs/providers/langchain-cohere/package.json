@@ -42,13 +42,13 @@
     "@langchain/standard-tests": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
-    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/coverage-v8": "^4.1.8",
     "dotenv": "^16.6.1",
     "dpdm": "^3.14.0",
     "eslint": "^9.34.0",
     "prettier": "^3.5.0",
     "typescript": "~5.8.3",
-    "vitest": "^3.2.4",
+    "vitest": "^3.2.6",
     "zod": "^3.25.76"
   },
   "publishConfig": {
