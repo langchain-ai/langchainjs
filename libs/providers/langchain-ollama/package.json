@@ -31,17 +31,17 @@
     "@langchain/core": "^1.0.0"
   },
   "devDependencies": {
-    "@jest/globals": "^30.4.0",
+    "@jest/globals": "^30.4.1",
     "@langchain/core": "workspace:^",
     "@langchain/standard-tests": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
-    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/coverage-v8": "^4.1.8",
     "dotenv": "^17.4.0",
     "dpdm": "^3.14.0",
-    "typescript": "~5.8.3",
+    "typescript": "~6.0.3",
     "zod": "^3.25.76",
-    "vitest": "^4.1.2"
+    "vitest": "^4.1.8"
   },
   "publishConfig": {
     "access": "public"
