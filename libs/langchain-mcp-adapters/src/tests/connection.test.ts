@@ -211,6 +211,137 @@ describe("ConnectionManager", () => {
       expect(mgr.getAllClients().length).toBe(2);
     });
 
+    test("forking HTTP client preserves existing headers", async () => {
+      const mgr = new ConnectionManager();
+      const base = await mgr.createClient("http", "svc", {
+        transport: "http",
+        url: "http://localhost:8000/mcp",
+        automaticSSEFallback: true,
+        headers: { Authorization: "Bearer token", A: "1" },
+      });
+
+      await (base as Client).fork({ "X-Check": "present" });
+
+      const [, options] = (StreamableHTTPClientTransport as Mock).mock.calls[1];
+      expect(options).toEqual(
+        expect.objectContaining({
+          requestInit: {
+            headers: {
+              Authorization: "Bearer token",
+              A: "1",
+              "X-Check": "present",
+            },
+          },
+        })
+      );
+    });
+
+    test("forking HTTP client overrides headers case-insensitively", async () => {
+      const mgr = new ConnectionManager();
+      const base = await mgr.createClient("http", "svc", {
+        transport: "http",
+        url: "http://localhost:8000/mcp",
+        automaticSSEFallback: true,
+        headers: {
+          Authorization: "Bearer token",
+          AUTHORIZATION: "Bearer stale",
+          "X-Base": "1",
+        },
+      });
+
+      await (base as Client).fork({ authorization: "Bearer override" });
+
+      const [, options] = (StreamableHTTPClientTransport as Mock).mock.calls[1];
+      expect(options).toEqual(
+        expect.objectContaining({
+          requestInit: {
+            headers: {
+              authorization: "Bearer override",
+              "X-Base": "1",
+            },
+          },
+        })
+      );
+    });
+
+    test("forking inferred HTTP client preserves streamable HTTP headers", async () => {
+      const mgr = new ConnectionManager();
+      const base = await mgr.createClient("http", "svc", {
+        url: "http://localhost:8000/mcp",
+        automaticSSEFallback: true,
+        headers: { Authorization: "Bearer token" },
+      });
+
+      await (base as Client).fork({ "X-Check": "present" });
+
+      expect(StreamableHTTPClientTransport).toHaveBeenCalledTimes(2);
+      const [, options] = (StreamableHTTPClientTransport as Mock).mock.calls[1];
+      expect(options).toEqual(
+        expect.objectContaining({
+          requestInit: {
+            headers: {
+              Authorization: "Bearer token",
+              "X-Check": "present",
+            },
+          },
+        })
+      );
+    });
+
+    test("forking inferred SSE client preserves transport headers", async () => {
+      const mgr = new ConnectionManager();
+      const base = await mgr.createClient("sse", "svc", {
+        url: "http://localhost:8000/sse",
+        automaticSSEFallback: true,
+        headers: { Authorization: "Bearer token" },
+      });
+
+      await (base as Client).fork({ "X-Check": "present" });
+
+      expect(SSEClientTransport).toHaveBeenCalledTimes(2);
+      const [, options] = (SSEClientTransport as Mock).mock.calls[1];
+      expect(options).toEqual(
+        expect.objectContaining({
+          requestInit: {
+            headers: {
+              Authorization: "Bearer token",
+              "X-Check": "present",
+            },
+          },
+        })
+      );
+    });
+
+    test("forking HTTP client preserves auth provider", async () => {
+      const mgr = new ConnectionManager();
+      const authProvider = {
+        tokens: vi.fn().mockResolvedValue({ access_token: "abc" }),
+      } as never;
+
+      const base = await mgr.createClient("http", "svc", {
+        transport: "http",
+        url: "http://localhost:8000/mcp",
+        automaticSSEFallback: true,
+        headers: { Authorization: "Bearer token" },
+        authProvider,
+      });
+
+      await (base as Client).fork({ "X-Check": "present" });
+
+      const [, options] = (StreamableHTTPClientTransport as Mock).mock.calls[1];
+      expect(options).toEqual(
+        expect.objectContaining({
+          authProvider,
+          requestInit: {
+            headers: {
+              Authorization: "Bearer token",
+              "X-Check": "present",
+            },
+          },
+        })
+      );
+    });
+
     test("forking stdio client is not supported", async () => {
       const mgr = new ConnectionManager();
       const stdio = await mgr.createClient("stdio", "svc", {
