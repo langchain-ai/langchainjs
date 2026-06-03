@@ -68,7 +68,7 @@
     "npm-run-all2": "^9.0.1",
     "ts-node": "^10.9.2",
     "typescript": "~5.8.3",
-    "vitest": "^3.2.6"
+    "vitest": "^4.1.8"
   },
   "engines": {
     "node": ">=20.10.0"
