@@ -75,7 +75,7 @@ export default async function setup() {
       .withExposedPorts(27017)
       .withEnvironment({
         // oxlint-disable-next-line no-process-env
-        VOYAGE_API_KEY: process.env.VOYAGE_API_KEY ?? "",
+        VOYAGEAI_API_KEY: process.env.VOYAGEAI_API_KEY ?? "",
         EMBEDDING_PROVIDER_ENDPOINT:
           // oxlint-disable-next-line no-process-env
           process.env.EMBEDDING_PROVIDER_ENDPOINT ??

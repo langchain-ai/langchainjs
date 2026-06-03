@@ -21,7 +21,7 @@ const skipRerankTests = isUsingLocalAtlas();
 
 // oxlint-disable-next-line no-process-env
 const skipAutoEmbedRerankTests =
-  isUsingLocalAtlas() || !process.env.VOYAGE_API_KEY;
+  isUsingLocalAtlas() || !process.env.VOYAGEAI_API_KEY;
 
 function getEmbeddings() {
   if (process.env.AZURE_OPENAI_API_KEY) {
