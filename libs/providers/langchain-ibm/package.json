@@ -26,7 +26,7 @@
     "test:standard": "pnpm test:standard:unit && pnpm test:standard:int"
   },
   "dependencies": {
-    "@ibm-cloud/watsonx-ai": "^1.7.11",
+    "@ibm-cloud/watsonx-ai": "^1.7.13",
     "ibm-cloud-sdk-core": "^5.4.20",
     "zod": "^3.25.76 || ^4"
   },
