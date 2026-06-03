@@ -114,7 +114,7 @@
     "release-it-pnpm": "^4.6.6",
     "rimraf": "^6.1.3",
     "typescript": "~6.0.2",
-    "vitest": "^3.2.6",
+    "vitest": "^4.1.0",
     "@langchain/together-ai": "workspace:*"
   },
   "peerDependencies": {
