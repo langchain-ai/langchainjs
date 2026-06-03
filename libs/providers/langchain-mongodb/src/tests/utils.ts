@@ -5,8 +5,7 @@ import type { MongoDBAtlasVectorSearch } from "../vectorstores.js";
 
 export function isUsingLocalAtlas() {
   // oxlint-disable-next-line no-process-env
-  const uri = process.env.MONGODB_ATLAS_URI || process.env.MONGODB_URI || "";
-  return !uri.startsWith("mongodb+srv://");
+  return !process.env.MONGODB_ATLAS_URI && !process.env.MONGODB_URI;
 }
 export function uri() {
   return (
