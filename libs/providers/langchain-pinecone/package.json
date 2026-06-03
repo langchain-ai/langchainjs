@@ -42,14 +42,14 @@
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
     "@types/flat": "^5.0.5",
-    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/coverage-v8": "^4.1.8",
     "dotenv": "^16.3.1",
     "dpdm": "^3.14.0",
     "eslint": "^9.34.0",
     "langchain": "workspace:*",
     "prettier": "^3.5.0",
     "typescript": "~5.8.3",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.6"
   },
   "publishConfig": {
     "access": "public"
