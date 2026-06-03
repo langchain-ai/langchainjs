@@ -72,7 +72,7 @@ export default async function setup() {
   let container: StartedTestContainer;
   try {
     container = await new GenericContainer("mongodb/mongodb-atlas-local:preview")
-      .withExposedPorts({ host: 27017, container: 27017 })
+      .withExposedPorts(27017)
       .withEnvironment({
         // oxlint-disable-next-line no-process-env
         VOYAGE_API_KEY: process.env.VOYAGE_API_KEY ?? "",
@@ -107,4 +107,5 @@ export default async function setup() {
   // context between setup and teardown modules.
   // See https://jestjs.io/docs/configuration#globalsetup-string.
   globalThis.__container = container;
+  globalThis.__mongoPort = container.getMappedPort(27017);
 }

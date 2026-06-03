@@ -8,11 +8,11 @@ export function isUsingLocalAtlas() {
   return !process.env.MONGODB_ATLAS_URI;
 }
 export function uri() {
-  return (
-    // oxlint-disable-next-line no-process-env
-    process.env.MONGODB_ATLAS_URI ||
-    "mongodb://localhost:27017?directConnection=true"
-  );
+  // oxlint-disable-next-line no-process-env
+  if (process.env.MONGODB_ATLAS_URI) return process.env.MONGODB_ATLAS_URI;
+  // @ts-expect-error __mongoPort is set by the global test setup
+  const port: number = globalThis.__mongoPort ?? 27017;
+  return `mongodb://localhost:${port}?directConnection=true`;
 }
 
 /**
