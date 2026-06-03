@@ -18,7 +18,7 @@
   "author": "LangChain",
   "license": "MIT",
   "dependencies": {
-    "@aws-sdk/dsql-signer": "^3.1022.0",
+    "@aws-sdk/dsql-signer": "^3.1059.0",
     "@azure/identity": "^4.13.1",
     "@browserbasehq/stagehand": "^3.2.0",
     "@clickhouse/client": "^1.18.2",
