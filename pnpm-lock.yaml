@@ -1464,8 +1464,8 @@ importers:
   libs/providers/langchain-google-cloud-sql-pg:
     dependencies:
       '@google-cloud/cloud-sql-connector':
-        specifier: ^1.6.0
-        version: 1.10.0
+        specifier: ^1.11.0
+        version: 1.11.0
       '@langchain/core':
         specifier: workspace:^
         version: link:../../langchain-core
@@ -3637,9 +3637,9 @@ packages:
     resolution: {integrity: sha512-tIdM4dmYyNKWPzfcCHcUsPcYxuQA8wL8pGy+7Szv7gnQ8sVQc8DlKNfeuIJG/B3dC3y8PC6esIxMzcewtUeWcQ==}
     engines: {node: '>= 16'}
 
-  '@google-cloud/cloud-sql-connector@1.10.0':
-    resolution: {integrity: sha512-PLix9OUaeAfVOKFAqw32/ETvFPef26mcTmDu/iVShGRs+MB1JkL98SwVLHsEjzjfnZrF+BtKqnseoFw0+3LmPw==}
-    engines: {node: '>=18'}
+  '@google-cloud/cloud-sql-connector@1.11.0':
+    resolution: {integrity: sha512-kTdoz+MIeQ/v285rxH4N0Ze74jSsD86hTlnWKXDBi5S6lyi7Sh3uzBcZdxFK/Q8ttc0v1Ua6DEJQZNUbnRKV/w==}
+    engines: {node: '>=22'}
 
   '@google-cloud/firestore@7.11.6':
     resolution: {integrity: sha512-EW/O8ktzwLfyWBOsNuhRoMi8lrC3clHM5LVFhGvO1HCsLozCOOXRAlHrYBoE6HL42Sc8yYMuCb2XqcnJ4OOEpw==}
@@ -10365,6 +10365,10 @@ packages:
     resolution: {integrity: sha512-6YHEFRL9mfgcAvql/XhwTvf5jKcOiiupt2FiJxHkiX1z4j7WL8J/jRHYLluORvc1XxB5rV20KoeK00gVJamspg==}
     engines: {node: '>=0.6'}
 
+  qs@6.15.2:
+    resolution: {integrity: sha512-Rzq0KEyX/w/tEybncDgdkZrJgVUsUMk3xjh3t5bv3S1HTAtg+uOYt72+ZfwiQwKdysThkTBdL/rTi6HDmX9Ddw==}
+    engines: {node: '>=0.6'}
+
   quansync@0.2.11:
     resolution: {integrity: sha512-AifT7QEbW9Nri4tAwR5M/uzpBuqfZf+zwaEM/QkzEjj7NBuFD2rBuy0K3dE+8wltbezDV7JMA0WfnCPYRSYbXA==}
 
@@ -14161,7 +14165,7 @@ snapshots:
       google-protobuf: 3.21.2
       jwt-decode: 3.1.2
 
-  '@google-cloud/cloud-sql-connector@1.10.0':
+  '@google-cloud/cloud-sql-connector@1.11.0':
     dependencies:
       '@googleapis/sqladmin': 35.2.0
       gaxios: 7.1.4
@@ -19275,7 +19279,7 @@ snapshots:
       extend: 3.0.2
       gaxios: 7.1.4
       google-auth-library: 10.6.2
-      qs: 6.15.1
+      qs: 6.15.2
       url-template: 2.0.8
     transitivePeerDependencies:
       - supports-color
@@ -21989,6 +21993,10 @@ snapshots:
   q@1.5.1: {}
 
   qs@6.15.1:
+    dependencies:
+      side-channel: 1.1.0
+
+  qs@6.15.2:
     dependencies:
       side-channel: 1.1.0
 
