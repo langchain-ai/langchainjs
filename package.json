@@ -50,7 +50,7 @@
     "tsdown": "^0.21.7",
     "tsx": "^4.22.4",
     "turbo": "^2.9.16",
-    "typescript": "^5.9.3"
+    "typescript": "^6.0.3"
   },
   "pnpm": {
     "overrides": {
