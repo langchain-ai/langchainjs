@@ -83,6 +83,7 @@ import {
   _convertToolCallIdToMistralCompatible,
   authenticateAndSetGatewayInstance,
   authenticateAndSetInstance,
+  checkRequiredProps,
   checkValidProps,
   expectOneOf,
   WatsonxToolsOutputParser,
@@ -664,6 +665,14 @@ export class ChatWatsonx<
     this.projectId = fields?.projectId;
     this.modelGateway = fields.modelGateway || this.modelGateway;
     this.spaceId = fields?.spaceId;
+
+    if (this.modelGateway) {
+      checkRequiredProps(fields, ["model", "serviceUrl", "version"]);
+    } else if (this.idOrName) {
+      checkRequiredProps(fields, ["serviceUrl", "version"]);
+    } else {
+      checkRequiredProps(fields, ["model", "serviceUrl", "version"]);
+    }
 
     this.checkValidProperties(fields);
 

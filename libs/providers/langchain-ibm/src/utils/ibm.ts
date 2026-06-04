@@ -364,3 +364,15 @@ export const checkValidProps = (
     );
   }
 };
+
+export const checkRequiredProps = (
+  params: Record<string, any>,
+  requiredKeys: string[]
+) => {
+  const missing = requiredKeys.filter(
+    (key) => !(key in params) || params[key] === undefined
+  );
+  if (missing.length > 0) {
+    throw new Error(`Missing required properties: ${missing.join(", ")}.`);
+  }
+};
