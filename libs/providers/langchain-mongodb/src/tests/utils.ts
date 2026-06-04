@@ -13,9 +13,7 @@ export function uri() {
   if (process.env.MONGODB_URI) return process.env.MONGODB_URI;
   // oxlint-disable-next-line no-process-env
   if (process.env.MONGODB_ATLAS_URI) return process.env.MONGODB_ATLAS_URI;
-  // @ts-expect-error __mongoPort is set by the global test setup
-  const port: number = globalThis.__mongoPort ?? 27017;
-  return `mongodb://localhost:${port}?directConnection=true`;
+  return "mongodb://localhost:27017?directConnection=true";
 }
 
 /**

@@ -119,9 +119,10 @@ export default async function setup() {
     }
     throw error;
   }
-  // @ts-expect-error Assigning properties on the globalThis object is Jest's recommended practice of sharing
-  // context between setup and teardown modules.
-  // See https://jestjs.io/docs/configuration#globalsetup-string.
+  // Store container for teardown. Set MONGODB_URI so test workers inherit
+  // the correct port — globalThis is not shared across Vitest worker threads.
+  // @ts-expect-error globalThis.__container shared between setup and teardown
   globalThis.__container = container;
-  globalThis.__mongoPort = container.getMappedPort(27017);
+  // oxlint-disable-next-line no-process-env
+  process.env.MONGODB_URI = `mongodb://localhost:${container.getMappedPort(27017)}?directConnection=true`;
 }
