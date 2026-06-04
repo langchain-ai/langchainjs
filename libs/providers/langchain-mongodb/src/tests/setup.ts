@@ -1,6 +1,5 @@
 import {
   GenericContainer,
-  StartedTestContainer,
   StartupCheckStrategy,
   StartupStatus,
 } from "testcontainers";
@@ -8,7 +7,7 @@ import { MongoClient } from "mongodb";
 
 // @ts-expect-error In order for jest to succesfully load this file, we need the TS extension
 // instead of the JS extension.  This errors because `allowImportingTsExtensions` is
-// not set but this is okay because this file isn't not technically a part of the project
+// not set but this is okay because this file isn't technically a part of the project
 // (not imported by any code in the project).
 import { isUsingLocalAtlas, uri } from "./utils.ts";
 
@@ -17,16 +16,6 @@ import { isUsingLocalAtlas, uri } from "./utils.ts";
  * a search index is successfully created, indicating that the mongot process is up and running.
  */
 class ReadyWhenMongotEstablished extends StartupCheckStrategy {
-  private port = 27017;
-
-  // boundPorts is the second argument testcontainers passes internally —
-  // it maps container ports to host ports before start() returns.
-  override async waitUntilReady(container: unknown, boundPorts?: { getBinding: (port: number) => number }): Promise<void> {
-    if (boundPorts) this.port = boundPorts.getBinding(27017);
-    // @ts-expect-error super.waitUntilReady signature varies by testcontainers version
-    return super.waitUntilReady(container, boundPorts);
-  }
-
   public async checkStartupState(): Promise<StartupStatus> {
     try {
       await this.tryCreateSearchIndex();
@@ -43,10 +32,7 @@ class ReadyWhenMongotEstablished extends StartupCheckStrategy {
   private async tryCreateSearchIndex() {
     let client;
     try {
-      client = new MongoClient(
-        `mongodb://localhost:${this.port}?directConnection=true`,
-        { serverSelectionTimeoutMS: 1_000 }
-      );
+      client = new MongoClient(uri(), { serverSelectionTimeoutMS: 1_000 });
       await client.connect();
 
       const namespace = "vectorstore.test";
@@ -83,10 +69,10 @@ export default async function setup() {
   // oxlint-disable-next-line no-process-env
   if (process.env.MONGODB_URI || process.env.MONGODB_ATLAS_URI) return;
 
-  let container: StartedTestContainer;
+  let container: Awaited<ReturnType<GenericContainer["start"]>>;
   try {
     container = await new GenericContainer("mongodb/mongodb-atlas-local:preview")
-      .withExposedPorts(27017)
+      .withExposedPorts({ host: 27017, container: 27017 })
       .withEnvironment({
         // oxlint-disable-next-line no-process-env
         VOYAGEAI_API_KEY: process.env.VOYAGEAI_API_KEY ?? process.env.VOYAGE_API_KEY ?? "",
@@ -119,10 +105,8 @@ export default async function setup() {
     }
     throw error;
   }
-  // Store container for teardown. Set MONGODB_URI so test workers inherit
-  // the correct port — globalThis is not shared across Vitest worker threads.
-  // @ts-expect-error globalThis.__container shared between setup and teardown
+  // @ts-expect-error Assigning properties on the globalThis object is Jest's recommended practice of sharing
+  // context between setup and teardown modules.
+  // See https://jestjs.io/docs/configuration#globalsetup-string.
   globalThis.__container = container;
-  // oxlint-disable-next-line no-process-env
-  process.env.MONGODB_URI = `mongodb://localhost:${container.getMappedPort(27017)}?directConnection=true`;
 }
