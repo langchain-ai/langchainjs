@@ -5,10 +5,12 @@ import type { MongoDBAtlasVectorSearch } from "../vectorstores.js";
 
 export function isUsingLocalAtlas() {
   // oxlint-disable-next-line no-process-env
-  const atlasUri = process.env.MONGODB_ATLAS_URI || process.env.MONGODB_URI || "";
-  return !atlasUri.startsWith("mongodb+srv://");
+  const mongoUri = process.env.MONGODB_URI || process.env.MONGODB_ATLAS_URI || "";
+  return !mongoUri.startsWith("mongodb+srv://");
 }
 export function uri() {
+  // oxlint-disable-next-line no-process-env
+  if (process.env.MONGODB_URI) return process.env.MONGODB_URI;
   // oxlint-disable-next-line no-process-env
   if (process.env.MONGODB_ATLAS_URI) return process.env.MONGODB_ATLAS_URI;
   // @ts-expect-error __mongoPort is set by the global test setup

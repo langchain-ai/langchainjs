@@ -67,7 +67,8 @@ class ReadyWhenMongotEstablished extends StartupCheckStrategy {
 }
 
 export default async function setup() {
-  if (!isUsingLocalAtlas()) return;
+  // oxlint-disable-next-line no-process-env
+  if (process.env.MONGODB_URI || process.env.MONGODB_ATLAS_URI) return;
 
   let container: StartedTestContainer;
   try {
@@ -75,7 +76,9 @@ export default async function setup() {
       .withExposedPorts(27017)
       .withEnvironment({
         // oxlint-disable-next-line no-process-env
-        VOYAGEAI_API_KEY: process.env.VOYAGEAI_API_KEY ?? "",
+        VOYAGEAI_API_KEY: process.env.VOYAGEAI_API_KEY ?? process.env.VOYAGE_API_KEY ?? "",
+        // oxlint-disable-next-line no-process-env
+        VOYAGE_API_KEY: process.env.VOYAGEAI_API_KEY ?? process.env.VOYAGE_API_KEY ?? "",
         EMBEDDING_PROVIDER_ENDPOINT:
           // oxlint-disable-next-line no-process-env
           process.env.EMBEDDING_PROVIDER_ENDPOINT ??

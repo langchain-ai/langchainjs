@@ -20,6 +20,9 @@ export default async function teardown() {
     }
     await client.close();
   }
+  // Only stop the container if testcontainers started it (no URI was pre-provided)
+  // oxlint-disable-next-line no-process-env
+  if (process.env.MONGODB_URI || process.env.MONGODB_ATLAS_URI) return;
   // @ts-expect-error No __container on globalThis
   // however, this is the recommended way to share context between setup and teardown modules
   // https://jestjs.io/docs/configuration#globalsetup-string
