@@ -19,9 +19,12 @@ import { isUsingLocalAtlas, uri } from "./utils.ts";
 class ReadyWhenMongotEstablished extends StartupCheckStrategy {
   private port = 27017;
 
-  override async waitUntilReady(container: StartedTestContainer): Promise<void> {
-    this.port = container.getMappedPort(27017);
-    return super.waitUntilReady(container);
+  // boundPorts is the second argument testcontainers passes internally —
+  // it maps container ports to host ports before start() returns.
+  override async waitUntilReady(container: unknown, boundPorts?: { getBinding: (port: number) => number }): Promise<void> {
+    if (boundPorts) this.port = boundPorts.getBinding(27017);
+    // @ts-expect-error super.waitUntilReady signature varies by testcontainers version
+    return super.waitUntilReady(container, boundPorts);
   }
 
   public async checkStartupState(): Promise<StartupStatus> {
