@@ -17,6 +17,13 @@ import { isUsingLocalAtlas, uri } from "./utils.ts";
  * a search index is successfully created, indicating that the mongot process is up and running.
  */
 class ReadyWhenMongotEstablished extends StartupCheckStrategy {
+  private port = 27017;
+
+  override async waitUntilReady(container: StartedTestContainer): Promise<void> {
+    this.port = container.getMappedPort(27017);
+    return super.waitUntilReady(container);
+  }
+
   public async checkStartupState(): Promise<StartupStatus> {
     try {
       await this.tryCreateSearchIndex();
@@ -33,7 +40,10 @@ class ReadyWhenMongotEstablished extends StartupCheckStrategy {
   private async tryCreateSearchIndex() {
     let client;
     try {
-      client = new MongoClient(uri(), { serverSelectionTimeoutMS: 1_000 });
+      client = new MongoClient(
+        `mongodb://localhost:${this.port}?directConnection=true`,
+        { serverSelectionTimeoutMS: 1_000 }
+      );
       await client.connect();
 
       const namespace = "vectorstore.test";
