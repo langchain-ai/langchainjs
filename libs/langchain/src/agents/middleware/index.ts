@@ -72,6 +72,10 @@ export {
   toolEmulatorMiddleware,
   type ToolEmulatorOptions,
 } from "./toolEmulator.js";
+export {
+  providerToolSearchMiddleware,
+  type ProviderToolSearchMiddlewareConfig
+} from "./providerToolSearch.js";
 
 /**
  * Provider specific middleware
