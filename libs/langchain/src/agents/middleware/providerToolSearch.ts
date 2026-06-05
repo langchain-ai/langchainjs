@@ -122,6 +122,13 @@ export function providerToolSearchMiddleware(
         }
       }
 
+      const provider = getModelProvider(request.model);
+      if (!supportsProviderToolSearch(provider)) {
+        throw new Error(
+          `providerToolSearchMiddleware requires a provider with server-side tool search, but got ${provider}`
+        );
+      }
+
       // Nothing to defer -> pass thru
       if (!hasDeferredTools(tools, deferNames)) return handler(request);
 
@@ -129,13 +136,6 @@ export function providerToolSearchMiddleware(
       const boundTools = tools.map((tool) =>
         deferToolIfNeeded(tool, deferNames)
       );
-
-      const provider = getModelProvider(request.model);
-      if (!supportsProviderToolSearch(provider)) {
-        throw new Error(
-          `providerToolSearchMiddleware requires a provider with server-side tool search, but got ${provider}`
-        );
-      }
 
       const nativeSearchTool = SERVER_TOOL_SEARCH_TOOLS[provider];
       return handler({ ...request, tools: [...boundTools, nativeSearchTool] });
