@@ -74,7 +74,7 @@ export {
 } from "./toolEmulator.js";
 export {
   providerToolSearchMiddleware,
-  type ProviderToolSearchMiddlewareConfig
+  type ProviderToolSearchMiddlewareConfig,
 } from "./providerToolSearch.js";
 
 /**

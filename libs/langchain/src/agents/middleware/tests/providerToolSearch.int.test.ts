@@ -22,7 +22,8 @@ const lookupOrderStatus = tool(
   async () => "OUT_FOR_DELIVERY, arriving Tuesday",
   {
     name: "lookup_order_status",
-    description: "Look up the current delivery status of a customer order by ID",
+    description:
+      "Look up the current delivery status of a customer order by ID",
     schema: z.object({ orderId: z.string() }),
   }
 );

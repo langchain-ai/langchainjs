@@ -160,9 +160,7 @@ describe("providerToolSearchMiddleware", () => {
     const boundTools = boundToolsOf(mockModel);
     const deferredTool = boundTools.find((t) => t.name === "deferred_tool");
 
-    expect(
-      deferredTool?.extras?.defer_loading
-    ).toBe(true);
+    expect(deferredTool?.extras?.defer_loading).toBe(true);
     expect(hasSearchTool(boundTools)).toBe(true);
   });
 
