@@ -510,6 +510,88 @@ describe("streamEvents", () => {
     expect(await iterator.next()).toEqual({ done: true, value: undefined });
   });
 
+  it("keeps tool call output pending (not rejected) on a HITL interrupt tool-error (issue #10933)", async () => {
+    // Regression test for: unhandled promise rejection when a HITL interrupt
+    // arrives via tool-error before any consumer attaches a .catch() handler.
+    //
+    // The output promise must remain pending after the interrupt event so that
+    // finalize() (or a subsequent tool-finished event) can resolve it cleanly.
+    const transformer = createToolCallTransformer([])();
+    const projection = transformer.init();
+    const toolEvent = (data: Record<string, unknown>): ProtocolEvent =>
+      ({
+        method: "tools",
+        params: {
+          namespace: ["tools:abc"],
+          data,
+        },
+      }) as ProtocolEvent;
+
+    transformer.process(
+      toolEvent({
+        event: "tool-started",
+        tool_call_id: "call_w1",
+        tool_name: "write_file",
+        input: '{"filename":"test.txt","content":"hello"}',
+      })
+    );
+
+    const iterator = projection.toolCalls[Symbol.asyncIterator]();
+    const pendingCall = await iterator.next();
+
+    // Simulate the HITL tool-error event that arrives before any consumer
+    // can attach a .catch() handler — this is the race that caused the
+    // unhandled rejection in issue #10933.
+    transformer.process(
+      toolEvent({
+        event: "tool-error",
+        tool_call_id: "call_w1",
+        message: JSON.stringify([
+          {
+            id: "interrupt_hitl_1",
+            value: {
+              actionRequests: [
+                {
+                  name: "write_file",
+                  args: { filename: "test.txt", content: "hello" },
+                  description:
+                    "Tool execution requires approval\n\nTool: write_file",
+                },
+              ],
+              reviewConfigs: [
+                {
+                  actionName: "write_file",
+                  allowedDecisions: ["approve"],
+                },
+              ],
+            },
+          },
+        ]),
+      })
+    );
+
+    // The tool call must still be present and pending — a HITL interrupt
+    // pauses execution rather than erroring it.
+    expect(pendingCall.done).toBe(false);
+    expect(pendingCall.value.callId).toBe("call_w1");
+
+    // Verify the output promise is still pending (not rejected) by racing it
+    // against an immediately-resolved sentinel.  Without the fix, the output
+    // promise would have been rejected synchronously, so `await Promise.race`
+    // would throw.  With the fix it remains pending and the sentinel wins.
+    const sentinel = Symbol("pending");
+    const result = await Promise.race([
+      pendingCall.value.output,
+      Promise.resolve(sentinel),
+    ]);
+    expect(result).toBe(sentinel);
+
+    // Finalize resolves all pending promises — output should now settle.
+    transformer.finalize?.();
+    await expect(pendingCall.value.output).resolves.toBeUndefined();
+    expect(await pendingCall.value.status).toBe("finished");
+  });
+
   it("unwraps ToolMessage outputs in tool call streams", async () => {
     const transformer = createToolCallTransformer([])();
     const projection = transformer.init();

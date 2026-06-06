@@ -167,6 +167,27 @@ function isHeadlessToolInterruptError(
 }
 
 /**
+ * Returns true when `message` is a serialised LangGraph interrupt array
+ * containing at least one HITL interrupt (i.e. an entry whose `value` has
+ * an `actionRequests` array).  These interrupts must NOT be surfaced as
+ * rejected output promises — the tool call is merely paused, not errored.
+ */
+function isHITLInterruptError(message: string): boolean {
+  try {
+    const parsed = JSON.parse(message) as unknown;
+    if (!Array.isArray(parsed)) return false;
+    return parsed.some((entry) => {
+      if (entry == null || typeof entry !== "object") return false;
+      const value = (entry as { value?: unknown }).value;
+      if (value == null || typeof value !== "object") return false;
+      return Array.isArray((value as { actionRequests?: unknown }).actionRequests);
+    });
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Detects serialized LangChain `ToolMessage` values that can appear on
  * `tool-finished.output` after crossing a protocol or serialization boundary.
  *
@@ -322,6 +343,9 @@ export function createToolCallTransformer(
                 ((data as Record<string, unknown>).message as string) ??
                 "unknown error";
               if (isHeadlessToolInterruptError(message, toolCallId)) {
+                return true;
+              }
+              if (isHITLInterruptError(message)) {
                 return true;
               }
               pending.rejectOutput(new Error(message));
