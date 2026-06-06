@@ -69,6 +69,7 @@ import type { BuiltInState, JumpTo, UserInput } from "./types.js";
 import type { InvokeConfiguration, StreamConfiguration } from "./runtime.js";
 import type {
   AgentMiddleware,
+  AnyAgentMiddleware,
   InferMiddlewareContextInputs,
   InferMiddlewareStates,
   InferMiddlewareInputStates,
@@ -79,6 +80,7 @@ import type {
 } from "./middleware/types.js";
 import { type ResponseFormatUndefined } from "./responses.js";
 import { getHookConstraint } from "./middleware/utils.js";
+import { toGraphDefaultConfig } from "./utils.js";
 
 /**
  * In the ReAct pattern we have three main nodes:
@@ -163,7 +165,7 @@ export class ReactAgent<
     Record<string, any>,
     undefined,
     AnyAnnotationRoot,
-    readonly AgentMiddleware[],
+    readonly AnyAgentMiddleware[],
     readonly (ClientTool | ServerTool)[],
     ReadonlyArray<() => StreamTransformer<any>>
   >,
@@ -671,8 +673,14 @@ export class ReactAgent<
     /**
      * compile the graph with native + user-defined stream transformers
      */
+    const middlewareStreamTransformers = (
+      this.options.middleware ?? []
+    ).flatMap((m) => m.streamTransformers ?? []);
     const compileTransformers = [
+      /* built-in stream transformers */
       createToolCallTransformer([]),
+      /* middleware stream transformers */
+      ...middlewareStreamTransformers,
       /* user-defined stream transformers */
       ...(this.options.streamTransformers ?? []),
     ];
@@ -684,6 +692,18 @@ export class ReactAgent<
       description: this.options.description,
       transformers: compileTransformers,
     }) as unknown as AgentGraph<Types>;
+
+    /**
+     * LangGraph API resolves exported agents by unwrapping ReactAgent to the
+     * inner compiled graph (see langgraph-api load.utils `afterResolve`) and
+     * calls streamEvents on that pregel directly. That path only sees config
+     * baked into the graph via `.withConfig()`, not ReactAgent's #defaultConfig
+     * merged at invoke/stream time — so propagate static defaults here.
+     */
+    const graphDefaultConfig = toGraphDefaultConfig(this.#defaultConfig);
+    if (Object.keys(graphDefaultConfig).length > 0) {
+      this.#graph = this.#graph.withConfig(graphDefaultConfig);
+    }
   }
 
   /**

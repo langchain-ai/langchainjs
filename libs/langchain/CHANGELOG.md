@@ -1,5 +1,27 @@
 # langchain
 
+## 1.4.4
+
+### Patch Changes
+
+- [#10945](https://github.com/langchain-ai/langchainjs/pull/10945) [`bb30838`](https://github.com/langchain-ai/langchainjs/commit/bb30838d884000d168dbbb26ddf7cfb9fa63b437) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): propagate ReactAgent withConfig defaults to inner graph
+
+  Apply static defaults from `#defaultConfig` onto the compiled pregel so
+  `recursionLimit`, metadata, and other LangGraph config survives LangGraph API
+  loading, which unwraps ReactAgent to `.graph` before execution.
+
+- [#10939](https://github.com/langchain-ai/langchainjs/pull/10939) [`58f4c1f`](https://github.com/langchain-ai/langchainjs/commit/58f4c1fee51424c538402a695b91e9720c718320) Thanks [@oritwoen](https://github.com/oritwoen)! - fix(langchain): support agent invoke messages when strictNullChecks is disabled
+
+## 1.4.3
+
+### Patch Changes
+
+- [#10936](https://github.com/langchain-ai/langchainjs/pull/10936) [`1a4ac84`](https://github.com/langchain-ai/langchainjs/commit/1a4ac8451748cfc0d014ff1bac8c641dad4d467b) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(langchain): register stream transformers on middleware
+
+  `createMiddleware` accepts `streamTransformers` factories that are merged with
+  `createAgent({ streamTransformers })` at compile time. Types flow through
+  `CombineStreamTransformers` so `run.extensions` is inferred from both sources.
+
 ## 1.4.2
 
 ### Patch Changes

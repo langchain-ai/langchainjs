@@ -32,7 +32,7 @@
     "format:check": "prettier --check \"src\""
   },
   "dependencies": {
-    "weaviate-client": "^3.13.0"
+    "weaviate-client": "^3.13.1"
   },
   "peerDependencies": {
     "@langchain/core": "workspace:^"
@@ -42,14 +42,14 @@
     "@langchain/openai": "workspace:^",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
-    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/coverage-v8": "^4.1.8",
     "dotenv": "^16.3.1",
     "dpdm": "^3.14.0",
     "eslint": "^9.34.0",
     "langchain": "workspace:*",
     "prettier": "^3.5.0",
-    "typescript": "~5.8.3",
-    "vitest": "^3.2.4"
+    "typescript": "~6.0.3",
+    "vitest": "^4.1.8"
   },
   "publishConfig": {
     "access": "public"
