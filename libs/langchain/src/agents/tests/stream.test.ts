@@ -10,7 +10,7 @@ import {
 } from "@langchain/langgraph";
 import { MemorySaver } from "@langchain/langgraph-checkpoint";
 
-import { createAgent } from "../index.js";
+import { createAgent, createMiddleware } from "../index.js";
 import { humanInTheLoopMiddleware } from "../middleware/hitl.js";
 import { createToolCallTransformer } from "../stream.js";
 
@@ -234,6 +234,52 @@ describe("streamEvents", () => {
       model,
       tools: [],
       streamTransformers: [eventCounter],
+    });
+
+    const run = await agent.streamEvents(
+      {
+        messages: [new HumanMessage("hi")],
+      },
+      { version: "v3" }
+    );
+
+    const counts: number[] = [];
+    for await (const c of run.extensions.eventCount as AsyncIterable<number>) {
+      counts.push(c);
+    }
+
+    expect(counts.length).toBeGreaterThan(0);
+    expect(counts[counts.length - 1]).toBe(counts.length);
+  });
+
+  it("should pass streamTransformers registered on middleware", async () => {
+    const model = fakeModel().respond(new AIMessage("ok"));
+
+    const eventCounter = (): StreamTransformer<{
+      eventCount: StreamChannel<number>;
+    }> => {
+      const eventCount = StreamChannel.remote<number>("eventCount");
+      let count = 0;
+
+      return {
+        init: () => ({ eventCount }),
+        process() {
+          count += 1;
+          eventCount.push(count);
+          return true;
+        },
+      };
+    };
+
+    const middleware = createMiddleware({
+      name: "StreamMiddleware",
+      streamTransformers: [eventCounter],
+    });
+
+    const agent = createAgent({
+      model,
+      tools: [],
+      middleware: [middleware],
     });
 
     const run = await agent.streamEvents(

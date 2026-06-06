@@ -1,5 +1,35 @@
 # langchain
 
+## 1.4.4
+
+### Patch Changes
+
+- [#10945](https://github.com/langchain-ai/langchainjs/pull/10945) [`bb30838`](https://github.com/langchain-ai/langchainjs/commit/bb30838d884000d168dbbb26ddf7cfb9fa63b437) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): propagate ReactAgent withConfig defaults to inner graph
+
+  Apply static defaults from `#defaultConfig` onto the compiled pregel so
+  `recursionLimit`, metadata, and other LangGraph config survives LangGraph API
+  loading, which unwraps ReactAgent to `.graph` before execution.
+
+- [#10939](https://github.com/langchain-ai/langchainjs/pull/10939) [`58f4c1f`](https://github.com/langchain-ai/langchainjs/commit/58f4c1fee51424c538402a695b91e9720c718320) Thanks [@oritwoen](https://github.com/oritwoen)! - fix(langchain): support agent invoke messages when strictNullChecks is disabled
+
+## 1.4.3
+
+### Patch Changes
+
+- [#10936](https://github.com/langchain-ai/langchainjs/pull/10936) [`1a4ac84`](https://github.com/langchain-ai/langchainjs/commit/1a4ac8451748cfc0d014ff1bac8c641dad4d467b) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(langchain): register stream transformers on middleware
+
+  `createMiddleware` accepts `streamTransformers` factories that are merged with
+  `createAgent({ streamTransformers })` at compile time. Types flow through
+  `CombineStreamTransformers` so `run.extensions` is inferred from both sources.
+
+## 1.4.2
+
+### Patch Changes
+
+- [#10900](https://github.com/langchain-ai/langchainjs/pull/10900) [`6bbddca`](https://github.com/langchain-ai/langchainjs/commit/6bbddca1f8f7f280583fd839bb40c00bf19a0d51) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): unwrap tool message outputs in agent streams
+
+- [#10706](https://github.com/langchain-ai/langchainjs/pull/10706) [`4ecb660`](https://github.com/langchain-ai/langchainjs/commit/4ecb6606feae3156a07de67e39e2027f857c476e) Thanks [@JadenKim-dev](https://github.com/JadenKim-dev)! - fix(langchain): set name on todoListMiddleware ToolMessages
+
 ## 1.4.1
 
 ### Patch Changes

@@ -24,6 +24,7 @@ import {
 import {
   authenticateAndSetGatewayInstance,
   authenticateAndSetInstance,
+  checkRequiredProps,
   checkValidProps,
   expectOneOf,
 } from "../utils/ibm.js";
@@ -269,6 +270,14 @@ export class WatsonxLLM<
     this.projectId = fields?.projectId;
     this.modelGateway = fields.modelGateway || this.modelGateway;
     this.spaceId = fields?.spaceId;
+
+    if (this.modelGateway) {
+      checkRequiredProps(fields, ["model", "serviceUrl", "version"]);
+    } else if (this.idOrName) {
+      checkRequiredProps(fields, ["serviceUrl", "version"]);
+    } else {
+      checkRequiredProps(fields, ["model", "serviceUrl", "version"]);
+    }
 
     this.checkValidProperties(fields);
 

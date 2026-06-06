@@ -164,7 +164,7 @@ export class AgentNode<
    * If the user selects a tool output:
    * - return a record of tools to extract structured output from the model's response
    *
-   * if the the user selects a native schema output or if the model supports JSON schema output:
+   * if the user selects a native schema output or if the model supports JSON schema output:
    * - return a provider strategy to extract structured output from the model's response
    *
    * @param model - The model to get the response format for.
