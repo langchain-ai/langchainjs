@@ -220,6 +220,8 @@ export abstract class GoogleHostConnection<
   get computedEndpoint(): string {
     if (this.location === "global") {
       return "aiplatform.googleapis.com";
+    } else if (this.location === "eu") {
+      return "aiplatform.eu.rep.googleapis.com";
     } else {
       return `${this.location}-aiplatform.googleapis.com`;
     }
