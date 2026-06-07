@@ -331,7 +331,7 @@ describe("Mock ChatGoogle - Gemini", () => {
       `https://${endpoint}/v1/projects/${projectId}/locations/eu/publishers/google/models/gemini-pro:generateContent`
     );
   });
-  
+
   test("platform endpoint - gai", async () => {
     const record: Record<string, any> = {};
     const projectId = mockId();
@@ -2635,8 +2635,11 @@ describe("Mock ChatGoogle - Gemini", () => {
         tool_calls: [
           {
             id: "test",
-            name: "test",
-            args: { testName: "cobalt" },
+            type: "function",
+            function: {
+              name: "test",
+              arguments: '{"testName":"cobalt"}',
+            },
           },
         ],
       }),
@@ -2948,7 +2951,7 @@ describe("Mock ChatGoogle - Gemini", () => {
     );
     expect(result.response_metadata).toHaveProperty("logprobs");
     expect(result.response_metadata.logprobs).toHaveProperty("content");
-    const logprobs = (result.response_metadata.logprobs as any).content;
+    const logprobs = result.response_metadata.logprobs.content;
     expect(Array.isArray(logprobs)).toBeTruthy();
     expect(logprobs).toHaveLength(303);
     const first = logprobs[0];
