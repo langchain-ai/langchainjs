@@ -66,7 +66,10 @@ import {
   isSerializableSchema,
   SerializableSchema,
 } from "@langchain/core/utils/standard_schema";
-import { assembleStructuredOutputPipeline } from "@langchain/core/language_models/structured_output";
+import {
+  assembleStructuredOutputPipeline,
+  createFunctionCallingParser,
+} from "@langchain/core/language_models/structured_output";
 
 /**
  * Inputs for ChatBedrockConverse.
@@ -1247,20 +1250,21 @@ export class ChatBedrockConverse
     }
 
     const llm = this.bindTools(tools, toolChoiceObj);
-    const outputParser = RunnableLambda.from<AIMessageChunk, RunOutput>(
-      (input: AIMessageChunk): RunOutput => {
-        if (!input.tool_calls || input.tool_calls.length === 0) {
+    const outputParser = RunnableLambda.from<BaseMessage, BaseMessage>(
+      (input: BaseMessage): BaseMessage => {
+        const message = input as AIMessageChunk;
+        if (!message.tool_calls || message.tool_calls.length === 0) {
           throw new Error("No tool calls found in the response.");
         }
-        const toolCall = input.tool_calls.find(
+        const toolCall = message.tool_calls.find(
           (tc) => tc.name === functionName
         );
         if (!toolCall) {
           throw new Error(`No tool call found with name ${functionName}.`);
         }
-        return toolCall.args as RunOutput;
+        return input;
       }
-    );
+    ).pipe(createFunctionCallingParser<RunOutput>(schema, functionName));
 
     return assembleStructuredOutputPipeline(
       llm,

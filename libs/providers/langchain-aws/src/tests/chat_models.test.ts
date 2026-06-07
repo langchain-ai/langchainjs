@@ -1547,6 +1547,92 @@ test("ChatBedrockConverse supports string model shorthand", () => {
   expect(model.region).toBe("us-east-1");
 });
 
+describe("withStructuredOutput - Zod validation", () => {
+  const baseConstructorArgs = {
+    region: "us-east-1",
+    credentials: {
+      secretAccessKey: "test-secret-key",
+      accessKeyId: "test-access-key",
+    },
+  };
+
+  const schema = z.object({
+    overview: z.string(),
+    keyFindings: z.array(
+      z.object({
+        finding: z.string(),
+      })
+    ),
+  });
+
+  test("functionCalling rejects invalid tool call args", async () => {
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
+    });
+    vi
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      .spyOn(model as any, "invoke")
+      .mockResolvedValue(
+        new AIMessage({
+          content: "",
+          tool_calls: [
+            {
+              name: "executive_summary",
+              args: {
+                overview: "summary",
+                keyFindings: "not an array",
+              },
+              id: "1",
+              type: "tool_call",
+            },
+          ],
+        })
+      );
+
+    const structured = model.withStructuredOutput(schema, {
+      name: "executive_summary",
+    });
+
+    await expect(async () => {
+      await structured.invoke("What?");
+    }).rejects.toThrow("Failed to parse");
+  });
+
+  test("functionCalling with includeRaw returns null parsed value for invalid tool call args", async () => {
+    const mockResponse = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          name: "executive_summary",
+          args: {
+            overview: "summary",
+            keyFindings: "not an array",
+          },
+          id: "1",
+          type: "tool_call",
+        },
+      ],
+    });
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
+    });
+    vi
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      .spyOn(model as any, "invoke")
+      .mockResolvedValue(mockResponse);
+
+    const structured = model.withStructuredOutput(schema, {
+      name: "executive_summary",
+      includeRaw: true,
+    });
+
+    const result = await structured.invoke("What?");
+    expect(result).toEqual({ raw: mockResponse, parsed: null });
+  });
+});
+
 describe("serviceTier configuration", () => {
   const baseConstructorArgs = {
     region: "us-east-1",
@@ -1692,6 +1778,36 @@ describe("withStructuredOutput - StandardSchema", () => {
 
     const result = await structured.invoke("What?");
     expect(result).toEqual({ name: "cobalt" });
+  });
+
+  test("functionCalling with invalid output throws", async () => {
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
+    });
+    vi
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      .spyOn(model as any, "invoke")
+      .mockResolvedValue(
+        new AIMessage({
+          content: "",
+          tool_calls: [
+            {
+              name: "extract",
+              args: { missingName: "cobalt" },
+              id: "1",
+              type: "tool_call",
+            },
+          ],
+        })
+      );
+
+    const schema = makeSerializableSchema();
+    const structured = model.withStructuredOutput(schema);
+
+    await expect(async () => {
+      await structured.invoke("What?");
+    }).rejects.toThrow("Failed to parse");
   });
 
   test("functionCalling with custom name", async () => {
