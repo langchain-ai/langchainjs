@@ -1,5 +1,5 @@
 ---
-"langchain": minor
+"langchain": patch
 ---
 
 feat(langchain): add `providerToolSearchMiddleware`
