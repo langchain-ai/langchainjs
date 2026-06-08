@@ -190,6 +190,8 @@ describe("providerToolSearchMiddleware", () => {
 
     await expect(
       agent.invoke({ messages: [new HumanMessage("hi")] })
-    ).rejects.toThrow(/searchableTools references tool\(s\) not bound.*does_not_exist/);
+    ).rejects.toThrow(
+      /searchableTools references tool\(s\) not bound.*does_not_exist/
+    );
   });
 });
