@@ -179,9 +179,7 @@ describe("providerToolSearchMiddleware", () => {
     ).rejects.toThrow(/requires a provider with server-side tool search/);
   });
 
-  it("warns when searchableTools references a tool that is not present", async () => {
-    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-
+  it("throws when searchableTools references a tool that is not present", async () => {
     const agent = createAgent({
       model: mockModel,
       tools: [getWeather],
@@ -190,11 +188,8 @@ describe("providerToolSearchMiddleware", () => {
       ],
     });
 
-    await agent.invoke({ messages: [new HumanMessage("hi")] });
-
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining("does_not_exist")
-    );
-    warnSpy.mockRestore();
+    await expect(
+      agent.invoke({ messages: [new HumanMessage("hi")] })
+    ).rejects.toThrow(/searchableTools references tool\(s\) not bound.*does_not_exist/);
   });
 });

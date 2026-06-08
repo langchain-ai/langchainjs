@@ -109,15 +109,15 @@ export function providerToolSearchMiddleware(
     wrapModelCall: (request, handler) => {
       const tools = request.tools ?? [];
 
-      // Warn if we try to defer a tool that is not bound to the model
+      // Fail fast if we try to defer a tool that is not bound to the model
       if (deferNames.size > 0) {
         const available = tools.filter(isLangChainTool).map((t) => t.name);
         const unknown = [...deferNames].filter(
           (name) => !available.includes(name)
         );
         if (unknown.length > 0) {
-          console.warn(
-            `ProviderToolSearchMiddleware: searchableTools references tool(s) not found: ${unknown.join(", ")}. They will not be deferred`
+          throw new Error(
+            `providerToolSearchMiddleware: searchableTools references tool(s) not bound to the model: ${unknown.join(", ")}`
           );
         }
       }
