@@ -37,7 +37,7 @@ export function convertToolsToGenAI(
 }
 
 function processTools(tools: GoogleGenerativeAIToolType[]): GenerativeAITool[] {
-  let functionDeclarationTools: FunctionDeclaration[] = [];
+  const functionDeclarationTools: FunctionDeclaration[] = [];
   const genAITools: GenerativeAITool[] = [];
 
   tools.forEach((tool) => {
@@ -62,39 +62,45 @@ function processTools(tools: GoogleGenerativeAIToolType[]): GenerativeAITool[] {
     }
   });
 
-  const genAIFunctionDeclaration = genAITools.find(
-    (t) => "functionDeclarations" in t
-  );
-  if (genAIFunctionDeclaration) {
+  if (functionDeclarationTools.length > 0) {
+    const genAIFunctionDeclaration = genAITools.find(
+      (t) => "functionDeclarations" in t
+    );
+    if (genAITools.length === 0) {
+      return [
+        {
+          functionDeclarations: functionDeclarationTools,
+        },
+      ];
+    }
+
+    if (!genAIFunctionDeclaration && genAITools.length > 0) {
+      return genAITools.map((tool, index) => {
+        if (index === 0) {
+          return {
+            ...tool,
+            functionDeclarations: functionDeclarationTools,
+          };
+        }
+        return tool;
+      });
+    }
+
     return genAITools.map((tool) => {
-      if (
-        functionDeclarationTools?.length > 0 &&
-        "functionDeclarations" in tool
-      ) {
-        const newTool = {
+      if ("functionDeclarations" in tool) {
+        return {
+          ...tool,
           functionDeclarations: [
             ...(tool.functionDeclarations || []),
             ...functionDeclarationTools,
           ],
         };
-        // Clear the functionDeclarationTools array so it is not passed again
-        functionDeclarationTools = [];
-        return newTool;
       }
       return tool;
     });
   }
 
-  return [
-    ...genAITools,
-    ...(functionDeclarationTools.length > 0
-      ? [
-          {
-            functionDeclarations: functionDeclarationTools,
-          },
-        ]
-      : []),
-  ];
+  return genAITools;
 }
 
 function convertOpenAIToolToGenAI(
