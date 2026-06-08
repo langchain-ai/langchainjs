@@ -37,6 +37,25 @@ function calledTool(messages: BaseMessage[], name: string): boolean {
   );
 }
 
+/**
+ * Whether any assistant turn invoked the named server-side tool. Search tool
+ * use is found in different places per-provider, so we search both `content`
+ * and `contentBlocks`
+ */
+function usedServerTool(messages: BaseMessage[], name: string): boolean {
+  return messages.some((m) => {
+    if (!(m instanceof AIMessage)) return false;
+    const blocks = [
+      ...(Array.isArray(m.content) ? m.content : []),
+      ...m.contentBlocks,
+    ];
+    return blocks.some(
+      (b) =>
+        typeof b === "object" && b != null && "name" in b && b.name === name
+    );
+  });
+}
+
 describe("providerToolSearchMiddleware", () => {
   it("Anthropic discovers and calls a deferred tool via server-side search", async () => {
     const agent = createAgent({
@@ -55,6 +74,7 @@ describe("providerToolSearchMiddleware", () => {
       ],
     });
 
+    expect(usedServerTool(result.messages, "tool_search_tool_bm25")).toBe(true);
     expect(calledTool(result.messages, "lookup_order_status")).toBe(true);
   }, 60_000);
 
@@ -75,6 +95,7 @@ describe("providerToolSearchMiddleware", () => {
       ],
     });
 
+    expect(usedServerTool(result.messages, "tool_search")).toBe(true);
     expect(calledTool(result.messages, "lookup_order_status")).toBe(true);
   }, 60_000);
 
