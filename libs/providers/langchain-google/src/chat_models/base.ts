@@ -243,6 +243,21 @@ export abstract class BaseChatGoogle<
     return this._location || "global";
   }
 
+  /**
+   * Returns the effective location for use in API paths.
+   * Maps special location values like "eu" to valid region identifiers.
+   */
+  protected get apiLocation(): string {
+    const loc = this._location || "global";
+    // Map "eu" to a valid EU region for API calls
+    // When users specify "eu", they want EU data residency,
+    // which requires using a valid EU region in the API path
+    if (loc === "eu") {
+      return "europe-west1";
+    }
+    return loc;
+  }
+
   protected get endpoint(): string {
     if (typeof this._endpoint !== "undefined") {
       return this._endpoint;
@@ -253,6 +268,9 @@ export abstract class BaseChatGoogle<
     } else if (this.location === "global") {
       // See https://docs.cloud.google.com/vertex-ai/generative-ai/docs/learn/locations#use_the_global_endpoint
       return "aiplatform.googleapis.com";
+    } else if (this._location === "eu") {
+      // Special case for EU data residency - use the EU representative endpoint
+      return "aiplatform.eu.rep.googleapis.com";
     } else {
       return `${this.location}-aiplatform.googleapis.com`;
     }
@@ -299,7 +317,7 @@ export abstract class BaseChatGoogle<
     const projectId = await this.apiClient.getProjectId();
     return `https://${this.endpoint}/${
       this.apiVersion
-    }/projects/${projectId}/locations/${this.location}/publishers/${
+    }/projects/${projectId}/locations/${this.apiLocation}/publishers/${
       this.publisher
     }/models/${this.model}:${urlMethod ?? this.urlMethod}`;
   }

@@ -1326,6 +1326,21 @@ describe("Google Mock", () => {
     const textCall = newTokenCalls.find((c) => c.text.includes("plot"));
     expect(textCall).toBeDefined();
   });
+
+  test("EU location generates correct endpoint and API location", async () => {
+    const llm = newChatGoogle({
+      model: "gemini-3.1-flash-lite",
+      responseFile: "gemini-chat-001.json",
+      location: "eu",
+    });
+
+    await llm.invoke("Hello");
+
+    // Verify the URL uses the EU representative endpoint
+    expect(recorder?.request?.url).toContain("aiplatform.eu.rep.googleapis.com");
+    // Verify the location in the path is a valid EU region
+    expect(recorder?.request?.url).toContain("/locations/europe-west1/");
+  });
 });
 
 function makeSerializableSchema() {
