@@ -13,6 +13,8 @@ import {
   Schema,
 } from "@google/generative-ai";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
+import { convertGoogleGenAIStream } from "./utils/stream_events.js";
 import {
   AIMessageChunk,
   BaseMessage,
@@ -918,6 +920,55 @@ export class ChatGoogleGenerativeAI
       );
     }
     return generationResult;
+  }
+
+  async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    const prompt = convertBaseMessagesToContent(
+      messages,
+      this._isMultimodalModel,
+      this.useSystemInstruction,
+      this.model
+    );
+    let actualPrompt = prompt;
+    if (prompt[0].role === "system") {
+      const [systemInstruction] = prompt;
+      this.client.systemInstruction = systemInstruction;
+      actualPrompt = prompt.slice(1);
+    }
+    const parameters = this.invocationParams(options);
+    const request = { ...parameters, contents: actualPrompt };
+    const stream = await this.caller.callWithOptions(
+      { signal: options?.signal },
+      async () => {
+        const { stream: s } = await this.client.generateContentStream(request, {
+          signal: options?.signal,
+        });
+        return s;
+      }
+    );
+    const shouldStreamUsage =
+      this.streamUsage !== false && options.streamUsage !== false;
+    const abortableStream = async function* (
+      source: AsyncIterable<
+        import("@google/generative-ai").EnhancedGenerateContentResponse
+      >,
+      signal?: AbortSignal
+    ) {
+      for await (const chunk of source) {
+        if (signal?.aborted) {
+          return;
+        }
+        yield chunk;
+      }
+    };
+    yield* convertGoogleGenAIStream(abortableStream(stream, options.signal), {
+      streamUsage: shouldStreamUsage,
+      model: this.model,
+    });
   }
 
   async *_streamResponseChunks(
