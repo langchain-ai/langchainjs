@@ -61,6 +61,7 @@ export interface ChatOllamaCallOptions extends BaseChatModelCallOptions {
   tools?: BindToolsInput[];
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   format?: string | Record<string, any>;
+  streamUsage?: boolean;
   /** @deprecated Tool choice is not supported for ChatOllama */
   tool_choice?: never;
 }
@@ -683,12 +684,7 @@ export class ChatOllama
     );
   }
 
-  async _generate(
-    messages: BaseMessage[],
-    options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
-  ): Promise<ChatResult> {
-    options.signal?.throwIfAborted();
+  private async ensureModelAvailable(): Promise<void> {
     if (this.checkOrPullModel) {
       if (!(await this.checkModelExistsOnMachine(this.model))) {
         await this.pull(this.model, {
@@ -696,6 +692,15 @@ export class ChatOllama
         });
       }
     }
+  }
+
+  async _generate(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): Promise<ChatResult> {
+    options.signal?.throwIfAborted();
+    await this.ensureModelAvailable();
 
     let finalChunk: AIMessageChunk | undefined;
     for await (const chunk of this._streamResponseChunks(
@@ -737,6 +742,8 @@ export class ChatOllama
     options: this["ParsedCallOptions"],
     _runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatModelStreamEvent> {
+    await this.ensureModelAvailable();
+
     const params = this.invocationParams(options);
     const ollamaMessages = convertToOllamaMessages(messages) as OllamaMessage[];
     const stream = await this.client.chat({
@@ -767,13 +774,7 @@ export class ChatOllama
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
-    if (this.checkOrPullModel) {
-      if (!(await this.checkModelExistsOnMachine(this.model))) {
-        await this.pull(this.model, {
-          logProgress: true,
-        });
-      }
-    }
+    await this.ensureModelAvailable();
 
     const params = this.invocationParams(options);
     // TODO: remove cast after SDK adds support for tool calls

@@ -32,10 +32,11 @@ describe("convertOllamaStream", () => {
     expect(events.map((e) => e.event)).toContain("message-start");
     expect(events.map((e) => e.event)).toContain("message-finish");
 
-    const finish = events.find((e) => e.event === "content-block-finish") as {
-      content: { text: string };
-    };
-    expect(finish.content.text).toBe("Hello world");
+    expect(events.find((e) => e.event === "content-block-finish")).toMatchObject(
+      {
+        content: { text: "Hello world" },
+      }
+    );
   });
 
   test("thinking when think option enabled", async () => {
@@ -44,12 +45,15 @@ describe("convertOllamaStream", () => {
       { think: true }
     );
 
-    const reasoningFinish = events.find(
-      (e) =>
-        e.event === "content-block-finish" &&
-        (e as { content: { type: string } }).content.type === "reasoning"
-    ) as { content: { reasoning: string } };
-    expect(reasoningFinish.content.reasoning).toBe("hmm");
+    expect(
+      events.find(
+        (e) =>
+          e.event === "content-block-finish" &&
+          e.content.type === "reasoning"
+      )
+    ).toMatchObject({
+      content: { reasoning: "hmm" },
+    });
   });
 
   test("usage from token counts", async () => {

@@ -51,10 +51,11 @@ describe("convertWatsonxStream", () => {
       },
     ]);
 
-    const finish = events.find((e) => e.event === "content-block-finish") as {
-      content: { text: string };
-    };
-    expect(finish.content.text).toBe("Hello world");
+    expect(events.find((e) => e.event === "content-block-finish")).toMatchObject(
+      {
+        content: { text: "Hello world" },
+      }
+    );
     expect(events.some((e) => e.event === "usage")).toBe(true);
   });
 
@@ -78,11 +79,14 @@ describe("convertWatsonxStream", () => {
       },
     ]);
 
-    const reasoningFinish = events.find(
-      (e) =>
-        e.event === "content-block-finish" &&
-        (e as { content: { type: string } }).content.type === "reasoning"
-    ) as { content: { reasoning: string } };
-    expect(reasoningFinish.content.reasoning).toBe("step 1");
+    expect(
+      events.find(
+        (e) =>
+          e.event === "content-block-finish" &&
+          e.content.type === "reasoning"
+      )
+    ).toMatchObject({
+      content: { reasoning: "step 1" },
+    });
   });
 });

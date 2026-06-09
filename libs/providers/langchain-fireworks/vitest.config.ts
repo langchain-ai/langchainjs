@@ -15,7 +15,7 @@ export default defineConfig((env) => {
       testTimeout: 30_000,
       maxWorkers: 0.5,
       exclude: ["**/*.int.test.ts", ...configDefaults.exclude],
-      setupFiles: ["dotenv/config", "./vitest.setup.ts"],
+      setupFiles: ["dotenv/config", "../../langchain-core/src/testing/setup.ts"],
     },
   };
 

@@ -470,11 +470,11 @@ describe("ChatOpenAICompletions._streamChatModelEvents (native)", () => {
         events.push(event);
       }
 
-      const finish = events.find((e) => e.event === "content-block-finish") as {
-        content: { type: string; text: string };
-      };
-      expect(finish.content.type).toBe("text");
-      expect(finish.content.text).toBe("Hello world");
+      expect(
+        events.find((e) => e.event === "content-block-finish")
+      ).toMatchObject({
+        content: { type: "text", text: "Hello world" },
+      });
     });
 
     test("message-finish carries stop reason", async () => {
@@ -521,13 +521,15 @@ describe("ChatOpenAICompletions._streamChatModelEvents (native)", () => {
         (reasoningDeltas[1] as { delta: { reasoning: string } }).delta.reasoning
       ).toBe(" reason...");
 
-      const reasoningFinish = events.find(
-        (e) =>
-          e.event === "content-block-finish" &&
-          "content" in e &&
-          (e.content as { type: string }).type === "reasoning"
-      ) as { content: { reasoning: string } };
-      expect(reasoningFinish.content.reasoning).toBe("Let me reason...");
+      expect(
+        events.find(
+          (e) =>
+            e.event === "content-block-finish" &&
+            e.content.type === "reasoning"
+        )
+      ).toMatchObject({
+        content: { reasoning: "Let me reason..." },
+      });
     });
 
     test("text block uses separate index from reasoning", async () => {
@@ -542,13 +544,13 @@ describe("ChatOpenAICompletions._streamChatModelEvents (native)", () => {
         events.push(event);
       }
 
-      const textFinish = events.find(
-        (e) =>
-          e.event === "content-block-finish" &&
-          "content" in e &&
-          (e.content as { type: string }).type === "text"
-      ) as { content: { text: string } };
-      expect(textFinish.content.text).toBe("The answer is 42.");
+      expect(
+        events.find(
+          (e) => e.event === "content-block-finish" && e.content.type === "text"
+        )
+      ).toMatchObject({
+        content: { text: "The answer is 42." },
+      });
     });
   });
 
@@ -595,17 +597,19 @@ describe("ChatOpenAICompletions._streamChatModelEvents (native)", () => {
         events.push(event);
       }
 
-      const toolFinish = events.find(
-        (e) =>
-          e.event === "content-block-finish" &&
-          "content" in e &&
-          (e.content as { type: string }).type === "tool_call"
-      ) as {
-        content: { name: string; id: string; args: unknown };
-      };
-      expect(toolFinish.content.name).toBe("web_search");
-      expect(toolFinish.content.id).toBe("call_abc");
-      expect(toolFinish.content.args).toEqual({ query: "weather" });
+      expect(
+        events.find(
+          (e) =>
+            e.event === "content-block-finish" &&
+            e.content.type === "tool_call"
+        )
+      ).toMatchObject({
+        content: {
+          name: "web_search",
+          id: "call_abc",
+          args: { query: "weather" },
+        },
+      });
     });
 
     test("invalid tool call JSON becomes invalid_tool_call", async () => {
@@ -620,14 +624,18 @@ describe("ChatOpenAICompletions._streamChatModelEvents (native)", () => {
         events.push(event);
       }
 
-      const toolFinish = events.find(
-        (e) =>
-          e.event === "content-block-finish" &&
-          "content" in e &&
-          (e.content as { type: string }).type === "invalid_tool_call"
-      ) as { content: { name: string; error?: string } };
-      expect(toolFinish.content.name).toBe("broken");
-      expect(toolFinish.content.error).toContain("JSON");
+      expect(
+        events.find(
+          (e) =>
+            e.event === "content-block-finish" &&
+            e.content.type === "invalid_tool_call"
+        )
+      ).toMatchObject({
+        content: {
+          name: "broken",
+          error: expect.stringContaining("JSON"),
+        },
+      });
     });
 
     test("message-finish has tool_use reason", async () => {
