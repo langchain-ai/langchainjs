@@ -772,4 +772,25 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       expect(tools[0]!.name).toBe("web_search");
     });
   });
+
+  describe("streaming events", () => {
+    test("streams text", async () => {
+      const model = new MockStreamChatAnthropic(textOnlyEvents());
+      await expect(model.streamV2("Hello")).toHaveStreamText("Hello world");
+    });
+
+    test("streams reasoning", async () => {
+      const model = new MockStreamChatAnthropic(thinkingPlusTextEvents());
+      await expect(model.streamV2("Hello")).toHaveStreamReasoning(
+        "Let me reason..."
+      );
+    });
+
+    test("streams tool calls", async () => {
+      const model = new MockStreamChatAnthropic(toolCallEvents());
+      await expect(model.streamV2("Hello")).toHaveStreamToolCalls([
+        { name: "web_search", args: { query: "weather" } },
+      ]);
+    });
+  });
 });
