@@ -1,0 +1,13 @@
+[
+  {
+    "candidates": [
+      {
+        "content": {
+          "role": "model",
+          "parts": [{ "text": "Let me reason...", "thought": true }]
+        }
+      }
+    ],
+    "promptFeedback": { "safetyRatings": [] }
+  }
+]
