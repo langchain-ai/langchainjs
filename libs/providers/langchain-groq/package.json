@@ -34,7 +34,6 @@
   },
   "devDependencies": {
     "@langchain/core": "workspace:^",
-    "@langchain/openai": "workspace:^",
     "@langchain/standard-tests": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
