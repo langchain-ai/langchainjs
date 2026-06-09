@@ -2002,6 +2002,11 @@ describe("Opus 4.6", () => {
 });
 
 describe("Opus 4.7", () => {
+  const adaptiveOnlyOpusModels = [
+    "claude-opus-4-7",
+    "claude-opus-4-8",
+  ] as const;
+
   test("default max_tokens for claude-opus-4-7 is 16384", () => {
     const model = new ChatAnthropic({
       model: "claude-opus-4-7",
@@ -2013,74 +2018,89 @@ describe("Opus 4.7", () => {
     expect(params.max_tokens).toBe(16384);
   });
 
-  test("rejects thinking.type=enabled for claude-opus-4-7", () => {
-    const model = new ChatAnthropic({
-      model: "claude-opus-4-7",
-      apiKey: "testing",
-      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-      thinking: { type: "enabled", budget_tokens: 2048 } as any,
-    });
+  test.each(adaptiveOnlyOpusModels)(
+    "rejects thinking.type=enabled for %s",
+    (modelName) => {
+      const model = new ChatAnthropic({
+        model: modelName,
+        apiKey: "testing",
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+        thinking: { type: "enabled", budget_tokens: 2048 } as any,
+      });
 
-    expect(() => model.invocationParams({})).toThrow(
-      'thinking.type="enabled" is not supported for claude-opus-4-7; use thinking.type="adaptive" instead'
-    );
-  });
+      expect(() => model.invocationParams({})).toThrow(
+        `thinking.type="enabled" is not supported for ${modelName}; use thinking.type="adaptive" instead`
+      );
+    }
+  );
 
-  test("rejects thinking.budget_tokens for claude-opus-4-7", () => {
-    const model = new ChatAnthropic({
-      model: "claude-opus-4-7",
-      apiKey: "testing",
-      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-      thinking: { type: "adaptive", budget_tokens: 2048 } as any,
-    });
+  test.each(adaptiveOnlyOpusModels)(
+    "rejects thinking.budget_tokens for %s",
+    (modelName) => {
+      const model = new ChatAnthropic({
+        model: modelName,
+        apiKey: "testing",
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+        thinking: { type: "adaptive", budget_tokens: 2048 } as any,
+      });
 
-    expect(() => model.invocationParams({})).toThrow(
-      "thinking.budget_tokens is not supported for claude-opus-4-7; use outputConfig.effort instead"
-    );
-  });
+      expect(() => model.invocationParams({})).toThrow(
+        `thinking.budget_tokens is not supported for ${modelName}; use outputConfig.effort instead`
+      );
+    }
+  );
 
-  test("rejects non-default sampling params for claude-opus-4-7", () => {
-    const model = new ChatAnthropic({
-      model: "claude-opus-4-7",
-      apiKey: "testing",
-      temperature: 0.1,
-    });
+  test.each(adaptiveOnlyOpusModels)(
+    "rejects non-default sampling params for %s",
+    (modelName) => {
+      const model = new ChatAnthropic({
+        model: modelName,
+        apiKey: "testing",
+        temperature: 0.1,
+      });
 
-    expect(() => model.invocationParams({})).toThrow(
-      "temperature is not supported for claude-opus-4-7 when set to non-default values"
-    );
-  });
+      expect(() => model.invocationParams({})).toThrow(
+        `temperature is not supported for ${modelName} when set to non-default values`
+      );
+    }
+  );
 
-  test("does not include sampling params for claude-opus-4-7 even if set to defaults", () => {
-    const model = new ChatAnthropic({
-      model: "claude-opus-4-7",
-      apiKey: "testing",
-      temperature: 1,
-      topP: 1,
-    });
+  test.each(adaptiveOnlyOpusModels)(
+    "does not include sampling params for %s even if set to defaults",
+    (modelName) => {
+      const model = new ChatAnthropic({
+        model: modelName,
+        apiKey: "testing",
+        temperature: 1,
+        topP: 1,
+      });
 
-    const params = model.invocationParams({});
+      const params = model.invocationParams({});
 
-    expect(params.temperature).toBeUndefined();
-    expect(params.top_p).toBeUndefined();
-    expect(params.top_k).toBeUndefined();
-  });
+      expect(params.temperature).toBeUndefined();
+      expect(params.top_p).toBeUndefined();
+      expect(params.top_k).toBeUndefined();
+    }
+  );
 
-  test("passes thinking.display through for claude-opus-4-7", () => {
-    const model = new ChatAnthropic({
-      model: "claude-opus-4-7",
-      apiKey: "testing",
-      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-      thinking: { type: "adaptive", display: "summarized" } as any,
-    });
+  test.each(adaptiveOnlyOpusModels)(
+    "passes thinking.display through for %s",
+    (modelName) => {
+      const model = new ChatAnthropic({
+        model: modelName,
+        apiKey: "testing",
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+        thinking: { type: "adaptive", display: "summarized" } as any,
+      });
 
-    const params = model.invocationParams({});
+      const params = model.invocationParams({});
 
-    expect(params.thinking).toEqual({
-      type: "adaptive",
-      display: "summarized",
-    });
-  });
+      expect(params.thinking).toEqual({
+        type: "adaptive",
+        display: "summarized",
+      });
+    }
+  );
 
   test("auto-adds task budget beta when outputConfig.task_budget is provided", () => {
     const model = new ChatAnthropic({
