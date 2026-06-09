@@ -14,12 +14,31 @@ type InvocationCompatibilityFields = {
   temperature?: number;
 };
 
+const ADAPTIVE_ONLY_MODEL_PREFIXES = [
+  "claude-opus-4-7",
+  "claude-opus-4-8",
+  "claude-fable-5",
+  "claude-mythos-5",
+  "claude-mythos-preview",
+] as const;
+
+function modelStartsWithAnyPrefix(
+  model: string | undefined,
+  prefixes: readonly string[]
+): boolean {
+  return model ? prefixes.some((prefix) => model.startsWith(prefix)) : false;
+}
+
 function isThinkingEnabled(thinking: AnthropicThinkingConfigParam): boolean {
   return thinking.type === "enabled" || thinking.type === "adaptive";
 }
 
 export function isOpus47Model(model?: string): boolean {
-  return model?.startsWith("claude-opus-4-7") ?? false;
+  return modelStartsWithAnyPrefix(model, ["claude-opus-4-7"]);
+}
+
+export function isAdaptiveOnlyModel(model?: string): boolean {
+  return modelStartsWithAnyPrefix(model, ADAPTIVE_ONLY_MODEL_PREFIXES);
 }
 
 export function getTaskBudgetBetas(
@@ -41,37 +60,38 @@ export function validateInvocationParamCompatibility(
   fields: InvocationCompatibilityFields
 ): void {
   const { model, thinking, topK, topP, temperature } = fields;
-  const opus47 = isOpus47Model(model);
+  const adaptiveOnlyModel = isAdaptiveOnlyModel(model);
+  const modelName = model ?? "this model";
 
-  if (opus47 && thinking.type === "enabled") {
+  if (adaptiveOnlyModel && thinking.type === "enabled") {
     throw new Error(
-      'thinking.type="enabled" is not supported for claude-opus-4-7; use thinking.type="adaptive" instead'
+      `thinking.type="enabled" is not supported for ${modelName}; use thinking.type="adaptive" instead`
     );
   }
   if (
-    opus47 &&
+    adaptiveOnlyModel &&
     typeof thinking === "object" &&
     thinking != null &&
     "budget_tokens" in thinking
   ) {
     throw new Error(
-      "thinking.budget_tokens is not supported for claude-opus-4-7; use outputConfig.effort instead"
+      `thinking.budget_tokens is not supported for ${modelName}; use outputConfig.effort instead`
     );
   }
-  if (opus47) {
+  if (adaptiveOnlyModel) {
     if (topK !== undefined) {
       throw new Error(
-        "topK is not supported for claude-opus-4-7; omit topK/topP/temperature or use model prompting instead"
+        `topK is not supported for ${modelName}; omit topK/topP/temperature or use model prompting instead`
       );
     }
     if (topP !== undefined && topP !== 1) {
       throw new Error(
-        "topP is not supported for claude-opus-4-7 when set to non-default values"
+        `topP is not supported for ${modelName} when set to non-default values`
       );
     }
     if (temperature !== undefined && temperature !== 1) {
       throw new Error(
-        "temperature is not supported for claude-opus-4-7 when set to non-default values"
+        `temperature is not supported for ${modelName} when set to non-default values`
       );
     }
   }
@@ -98,7 +118,7 @@ export function getSamplingParams(
     "temperature" | "top_k" | "top_p"
   > = {};
 
-  if (isThinkingEnabled(thinking) || isOpus47Model(model)) {
+  if (isThinkingEnabled(thinking) || isAdaptiveOnlyModel(model)) {
     return output;
   }
 
