@@ -176,6 +176,10 @@ export class ChatFireworks extends ChatOpenAICompletions<ChatFireworksCallOption
 
     return super.completionWithRetry(request, options);
   }
+
+  protected override get streamEventProvider(): string {
+    return "fireworks";
+  }
 }
 
 export { FIREWORKS_BASE_URL, DEFAULT_FIREWORKS_CHAT_MODEL };
