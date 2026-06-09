@@ -724,6 +724,33 @@ describe("convertStandardContentMessageToResponsesInput", () => {
     ]);
   });
 
+  it("emits assistant text blocks as output_text, not input_text", () => {
+    // Regression test for #9879: an assistant message whose content is a
+    // standard `text` content block was serialized with `input_text`, which the
+    // Responses API rejects for assistant-role messages (it requires
+    // `output_text`/`refusal`). User-role text still uses `input_text`.
+    const message = new AIMessage({
+      contentBlocks: [{ type: "text", text: "I'm doing great, thanks!" }],
+      response_metadata: { model_provider: "openai" },
+    });
+
+    const result = convertStandardContentMessageToResponsesInput(message);
+
+    expect(result).toEqual([
+      {
+        type: "message",
+        role: "assistant",
+        content: [
+          {
+            type: "output_text",
+            text: "I'm doing great, thanks!",
+            annotations: [],
+          },
+        ],
+      },
+    ]);
+  });
+
   it("emits reasoning blocks as dedicated reasoning items", () => {
     const message = new AIMessage({
       contentBlocks: [
