@@ -32,11 +32,11 @@ describe("convertOllamaStream", () => {
     expect(events.map((e) => e.event)).toContain("message-start");
     expect(events.map((e) => e.event)).toContain("message-finish");
 
-    expect(events.find((e) => e.event === "content-block-finish")).toMatchObject(
-      {
-        content: { text: "Hello world" },
-      }
-    );
+    expect(
+      events.find((e) => e.event === "content-block-finish")
+    ).toMatchObject({
+      content: { text: "Hello world" },
+    });
   });
 
   test("thinking when think option enabled", async () => {
@@ -48,8 +48,7 @@ describe("convertOllamaStream", () => {
     expect(
       events.find(
         (e) =>
-          e.event === "content-block-finish" &&
-          e.content.type === "reasoning"
+          e.event === "content-block-finish" && e.content.type === "reasoning"
       )
     ).toMatchObject({
       content: { reasoning: "hmm" },

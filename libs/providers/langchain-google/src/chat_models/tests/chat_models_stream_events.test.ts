@@ -102,6 +102,17 @@ const toolChunks: Gemini.GenerateContentResponse[] = [
   },
 ];
 
+const usageChunks: Gemini.GenerateContentResponse[] = [
+  {
+    usageMetadata: {
+      promptTokenCount: 10,
+      candidatesTokenCount: 4,
+      totalTokenCount: 14,
+    },
+    candidates: [{ content: { parts: [{ text: "Hi" }] } }],
+  },
+];
+
 function mockChatGoogle(chunks: Gemini.GenerateContentResponse[]) {
   return new ChatGoogle({
     model: "gemini-2.0-flash",
@@ -129,5 +140,15 @@ describe("ChatGoogle.streamV2", () => {
     ).toHaveStreamToolCalls([
       { name: "web_search", args: { query: "weather" } },
     ]);
+  });
+
+  test("streams usage", async () => {
+    await expect(
+      mockChatGoogle(usageChunks).streamV2("Hello")
+    ).toHaveStreamUsage({
+      input_tokens: 10,
+      output_tokens: 4,
+      total_tokens: 14,
+    });
   });
 });

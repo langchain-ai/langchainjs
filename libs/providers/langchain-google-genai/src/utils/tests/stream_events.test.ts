@@ -29,11 +29,11 @@ describe("convertGoogleGenAIStream", () => {
       },
     ]);
 
-    expect(events.find((e) => e.event === "content-block-finish")).toMatchObject(
-      {
-        content: { text: "Hello world" },
-      }
-    );
+    expect(
+      events.find((e) => e.event === "content-block-finish")
+    ).toMatchObject({
+      content: { text: "Hello world" },
+    });
   });
 
   test("maps Gemini finish reasons", async () => {
@@ -47,9 +47,7 @@ describe("convertGoogleGenAIStream", () => {
         ],
       },
     ]);
-    const lengthFinish = lengthEvents.find(
-      (e) => e.event === "message-finish"
-    );
+    const lengthFinish = lengthEvents.find((e) => e.event === "message-finish");
     expect(lengthFinish).toMatchObject({ reason: "length" });
 
     const filterEvents = await collectEvents([
@@ -62,9 +60,7 @@ describe("convertGoogleGenAIStream", () => {
         ],
       },
     ]);
-    const filterFinish = filterEvents.find(
-      (e) => e.event === "message-finish"
-    );
+    const filterFinish = filterEvents.find((e) => e.event === "message-finish");
     expect(filterFinish).toMatchObject({ reason: "content_filter" });
   });
 
@@ -84,8 +80,7 @@ describe("convertGoogleGenAIStream", () => {
     expect(
       events.find(
         (e) =>
-          e.event === "content-block-finish" &&
-          e.content.type === "reasoning"
+          e.event === "content-block-finish" && e.content.type === "reasoning"
       )
     ).toMatchObject({
       content: { reasoning: "Let me think" },

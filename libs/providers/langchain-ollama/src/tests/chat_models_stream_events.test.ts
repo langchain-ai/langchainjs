@@ -35,6 +35,17 @@ function ollamaToolChunks() {
   ];
 }
 
+function ollamaUsageChunks() {
+  return [
+    {
+      message: { content: "Hi" },
+      prompt_eval_count: 10,
+      eval_count: 3,
+    },
+    { message: {}, done_reason: "stop" },
+  ];
+}
+
 function mockOllama(chunks: Record<string, unknown>[]) {
   const model = new ChatOllama({
     model: "llama3",
@@ -74,5 +85,15 @@ describe("ChatOllama.streamV2", () => {
     ).toHaveStreamToolCalls([
       { name: "web_search", args: { query: "weather" } },
     ]);
+  });
+
+  test("streams usage", async () => {
+    await expect(
+      mockOllama(ollamaUsageChunks()).streamV2("Hello")
+    ).toHaveStreamUsage({
+      input_tokens: 10,
+      output_tokens: 3,
+      total_tokens: 13,
+    });
   });
 });

@@ -88,6 +88,28 @@ function watsonxToolChunks() {
   ];
 }
 
+function watsonxUsageChunks() {
+  return [
+    {
+      data: {
+        id: "wx-1",
+        choices: [
+          {
+            index: 0,
+            delta: { role: "assistant", content: "Hello" },
+            finish_reason: "stop",
+          },
+        ],
+        usage: {
+          prompt_tokens: 5,
+          completion_tokens: 2,
+          total_tokens: 7,
+        },
+      },
+    },
+  ];
+}
+
 function mockWatsonx(chunks: { data: Record<string, unknown> }[]) {
   const model = new ChatWatsonx({
     model: "ibm/granite-13b-chat-v2",
@@ -127,5 +149,15 @@ describe("ChatWatsonx.streamV2", () => {
     ).toHaveStreamToolCalls([
       { name: "web_search", args: { query: "weather" } },
     ]);
+  });
+
+  test("streams usage", async () => {
+    await expect(
+      mockWatsonx(watsonxUsageChunks()).streamV2("Hello")
+    ).toHaveStreamUsage({
+      input_tokens: 5,
+      output_tokens: 2,
+      total_tokens: 7,
+    });
   });
 });

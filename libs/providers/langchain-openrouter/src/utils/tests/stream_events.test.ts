@@ -49,8 +49,7 @@ describe("convertOpenRouterStream", () => {
     expect(
       events.find(
         (e) =>
-          e.event === "content-block-finish" &&
-          e.content.type === "reasoning"
+          e.event === "content-block-finish" && e.content.type === "reasoning"
       )
     ).toMatchObject({
       content: { reasoning: "thinking..." },

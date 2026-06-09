@@ -70,6 +70,19 @@ function geminiToolStream() {
   })();
 }
 
+function geminiUsageStream() {
+  return (async function* () {
+    yield {
+      usageMetadata: {
+        promptTokenCount: 10,
+        candidatesTokenCount: 4,
+        totalTokenCount: 14,
+      },
+      candidates: [{ content: { parts: [{ text: "Hi" }] } }],
+    };
+  })();
+}
+
 function mockGoogleGenAI(stream: AsyncIterable<Record<string, unknown>>) {
   const model = new ChatGoogleGenerativeAI({
     apiKey: "fake-key",
@@ -104,6 +117,16 @@ describe("ChatGoogleGenerativeAI.streamV2", () => {
     ).toHaveStreamToolCalls([
       { name: "web_search", args: { query: "weather" } },
     ]);
+  });
+
+  test("streams usage", async () => {
+    await expect(
+      mockGoogleGenAI(geminiUsageStream()).streamV2("Hello")
+    ).toHaveStreamUsage({
+      input_tokens: 10,
+      output_tokens: 4,
+      total_tokens: 14,
+    });
   });
 
   test("passes system instructions per streamV2 request", async () => {

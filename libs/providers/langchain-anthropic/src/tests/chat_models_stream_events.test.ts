@@ -2,8 +2,17 @@ import { describe, test, expect } from "vitest";
 import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import { ChatModelStream } from "@langchain/core/language_models/stream";
 import { HumanMessage } from "@langchain/core/messages";
-import { ChatAnthropic } from "../chat_models.js";
-import type { BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
+import {
+  ChatAnthropic,
+  type ChatAnthropicCallOptions,
+} from "../chat_models.js";
+import type { Stream } from "@anthropic-ai/sdk/streaming";
+import type {
+  AnthropicMessageStreamEvent,
+  AnthropicRequestOptions,
+  AnthropicStreamingMessageCreateParams,
+  Kwargs,
+} from "../types.js";
 
 /**
  * Builds a mock Anthropic that returns a canned SSE stream.
@@ -11,29 +20,29 @@ import type { BaseChatModelCallOptions } from "@langchain/core/language_models/c
  * to return a fake async iterable of Anthropic events.
  */
 class MockStreamChatAnthropic extends ChatAnthropic {
-  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-  private mockEvents: any[];
-  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-  capturedRequest: any | undefined;
+  private mockEvents: unknown[];
 
-  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-  constructor(mockEvents: any[]) {
+  capturedRequest: (AnthropicStreamingMessageCreateParams & Kwargs) | undefined;
+
+  constructor(mockEvents: unknown[]) {
     super({ apiKey: "fake-key", model: "claude-sonnet-4-20250514" });
     this.mockEvents = mockEvents;
   }
 
-  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-  protected async createStreamWithRetry(request: any): Promise<any> {
+  protected async createStreamWithRetry(
+    request: AnthropicStreamingMessageCreateParams & Kwargs,
+    _options?: AnthropicRequestOptions
+  ): Promise<Stream<AnthropicMessageStreamEvent>> {
     this.capturedRequest = request;
     const events = this.mockEvents;
     return {
       controller: { abort: () => {} },
       async *[Symbol.asyncIterator]() {
         for (const event of events) {
-          yield event;
+          yield event as AnthropicMessageStreamEvent;
         }
       },
-    };
+    } as unknown as Stream<AnthropicMessageStreamEvent>;
   }
 }
 
@@ -241,16 +250,16 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       };
       for await (const _event of model._streamChatModelEvents(
         [new HumanMessage("hello")],
-        callOptions as BaseChatModelCallOptions
+        callOptions as ChatAnthropicCallOptions
       )) {
         // Consume stream to trigger request construction.
       }
 
       expect(model.capturedRequest).toBeDefined();
-      expect(model.capturedRequest.cache_control).toEqual(
+      expect(model.capturedRequest?.cache_control).toEqual(
         callOptions.cache_control
       );
-      expect(JSON.stringify(model.capturedRequest.messages)).not.toContain(
+      expect(JSON.stringify(model.capturedRequest?.messages)).not.toContain(
         '"cache_control"'
       );
     });
@@ -261,7 +270,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
 
       for await (const event of model._streamChatModelEvents([], {
         streamUsage: true,
-      } as BaseChatModelCallOptions)) {
+      } as ChatAnthropicCallOptions)) {
         events.push(event);
       }
 
@@ -278,7 +287,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents([], {
         streamUsage: true,
-      } as BaseChatModelCallOptions)) {
+      } as ChatAnthropicCallOptions)) {
         events.push(event);
       }
 
@@ -295,7 +304,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents([], {
         streamUsage: true,
-      } as BaseChatModelCallOptions)) {
+      } as ChatAnthropicCallOptions)) {
         events.push(event);
       }
 
@@ -325,15 +334,13 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents(
         [],
-        {} as BaseChatModelCallOptions
+        {} as ChatAnthropicCallOptions
       )) {
         events.push(event);
       }
 
       expect(
-        events.find(
-          (e) => e.event === "content-block-finish" && e.index === 0
-        )
+        events.find((e) => e.event === "content-block-finish" && e.index === 0)
       ).toMatchObject({
         content: { type: "text", text: "Hello world" },
       });
@@ -344,7 +351,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents(
         [],
-        {} as BaseChatModelCallOptions
+        {} as ChatAnthropicCallOptions
       )) {
         events.push(event);
       }
@@ -362,7 +369,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents([], {
         streamUsage: true,
-      } as BaseChatModelCallOptions)) {
+      } as ChatAnthropicCallOptions)) {
         events.push(event);
       }
 
@@ -389,9 +396,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
 
       // Reasoning finish
       expect(
-        events.find(
-          (e) => e.event === "content-block-finish" && e.index === 0
-        )
+        events.find((e) => e.event === "content-block-finish" && e.index === 0)
       ).toMatchObject({
         content: { type: "reasoning", reasoning: "Let me reason..." },
       });
@@ -402,15 +407,13 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents(
         [],
-        {} as BaseChatModelCallOptions
+        {} as ChatAnthropicCallOptions
       )) {
         events.push(event);
       }
 
       expect(
-        events.find(
-          (e) => e.event === "content-block-finish" && e.index === 1
-        )
+        events.find((e) => e.event === "content-block-finish" && e.index === 1)
       ).toMatchObject({
         content: { type: "text", text: "The answer is 42." },
       });
@@ -421,7 +424,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents(
         [],
-        {} as BaseChatModelCallOptions
+        {} as ChatAnthropicCallOptions
       )) {
         events.push(event);
       }
@@ -446,16 +449,14 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents(
         [],
-        {} as BaseChatModelCallOptions
+        {} as ChatAnthropicCallOptions
       )) {
         events.push(event);
       }
 
       // Start event for tool call
       expect(
-        events.find(
-          (e) => e.event === "content-block-start" && e.index === 1
-        )
+        events.find((e) => e.event === "content-block-start" && e.index === 1)
       ).toMatchObject({
         content: {
           type: "tool_call_chunk",
@@ -491,15 +492,13 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents(
         [],
-        {} as BaseChatModelCallOptions
+        {} as ChatAnthropicCallOptions
       )) {
         events.push(event);
       }
 
       expect(
-        events.find(
-          (e) => e.event === "content-block-finish" && e.index === 1
-        )
+        events.find((e) => e.event === "content-block-finish" && e.index === 1)
       ).toMatchObject({
         content: {
           type: "tool_call",
@@ -515,7 +514,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents(
         [],
-        {} as BaseChatModelCallOptions
+        {} as ChatAnthropicCallOptions
       )) {
         events.push(event);
       }
@@ -533,7 +532,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents([], {
         streamUsage: true,
-      } as BaseChatModelCallOptions)) {
+      } as ChatAnthropicCallOptions)) {
         events.push(event);
       }
 
@@ -558,7 +557,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents([], {
         streamUsage: true,
-      } as BaseChatModelCallOptions)) {
+      } as ChatAnthropicCallOptions)) {
         events.push(event);
       }
 
@@ -577,7 +576,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents([], {
         streamUsage: true,
-      } as BaseChatModelCallOptions)) {
+      } as ChatAnthropicCallOptions)) {
         events.push(event);
       }
 
@@ -595,7 +594,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents([], {
         streamUsage: false,
-      } as BaseChatModelCallOptions)) {
+      } as ChatAnthropicCallOptions)) {
         events.push(event);
       }
 
@@ -616,7 +615,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents(
         [],
-        {} as BaseChatModelCallOptions
+        {} as ChatAnthropicCallOptions
       )) {
         events.push(event);
       }
@@ -641,7 +640,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents(
         [],
-        {} as BaseChatModelCallOptions
+        {} as ChatAnthropicCallOptions
       )) {
         events.push(event);
       }
@@ -657,7 +656,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
     test("text sub-stream works end-to-end", async () => {
       const model = new MockStreamChatAnthropic(textOnlyEvents());
       const stream = new ChatModelStream(
-        model._streamChatModelEvents([], {} as BaseChatModelCallOptions)
+        model._streamChatModelEvents([], {} as ChatAnthropicCallOptions)
       );
       const text = await stream.text;
       expect(text).toBe("Hello world");
@@ -666,7 +665,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
     test("toolCalls sub-stream works end-to-end", async () => {
       const model = new MockStreamChatAnthropic(toolCallEvents());
       const stream = new ChatModelStream(
-        model._streamChatModelEvents([], {} as BaseChatModelCallOptions)
+        model._streamChatModelEvents([], {} as ChatAnthropicCallOptions)
       );
       const calls = await stream.toolCalls;
       expect(calls.length).toBe(1);
@@ -677,7 +676,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
     test("reasoning sub-stream works end-to-end", async () => {
       const model = new MockStreamChatAnthropic(thinkingPlusTextEvents());
       const stream = new ChatModelStream(
-        model._streamChatModelEvents([], {} as BaseChatModelCallOptions)
+        model._streamChatModelEvents([], {} as ChatAnthropicCallOptions)
       );
       const reasoning = await stream.reasoning;
       expect(reasoning).toBe("Let me reason...");
@@ -686,7 +685,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
     test("output assembles correct AIMessage", async () => {
       const model = new MockStreamChatAnthropic(toolCallEvents());
       const stream = new ChatModelStream(
-        model._streamChatModelEvents([], {} as BaseChatModelCallOptions)
+        model._streamChatModelEvents([], {} as ChatAnthropicCallOptions)
       );
       const message = await stream.output;
 
@@ -718,7 +717,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       const stream = new ChatModelStream(
         model._streamChatModelEvents([], {
           streamUsage: true,
-        } as BaseChatModelCallOptions)
+        } as ChatAnthropicCallOptions)
       );
       const usage = await stream.usage;
       expect(usage?.input_tokens).toBe(800);
@@ -728,7 +727,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
     test("await stream returns AIMessage directly", async () => {
       const model = new MockStreamChatAnthropic(textOnlyEvents());
       const message = await new ChatModelStream(
-        model._streamChatModelEvents([], {} as BaseChatModelCallOptions)
+        model._streamChatModelEvents([], {} as ChatAnthropicCallOptions)
       );
       expect(message._getType()).toBe("ai");
       expect(message.id).toBe("msg_01ABC");
@@ -737,7 +736,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
     test("sequential sub-stream consumption", async () => {
       const model = new MockStreamChatAnthropic(toolCallEvents());
       const stream = new ChatModelStream(
-        model._streamChatModelEvents([], {} as BaseChatModelCallOptions)
+        model._streamChatModelEvents([], {} as ChatAnthropicCallOptions)
       );
 
       // Sequential consumption works reliably.
@@ -758,7 +757,7 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents(
         [],
-        {} as BaseChatModelCallOptions
+        {} as ChatAnthropicCallOptions
       )) {
         events.push(event);
       }

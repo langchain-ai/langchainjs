@@ -82,11 +82,11 @@ describe("convertOpenAIResponsesStream", () => {
       " world"
     );
 
-    expect(events.find((e) => e.event === "content-block-finish")).toMatchObject(
-      {
-        content: { text: "Hello world" },
-      }
-    );
+    expect(
+      events.find((e) => e.event === "content-block-finish")
+    ).toMatchObject({
+      content: { text: "Hello world" },
+    });
   });
 
   test("reasoning deltas", async () => {

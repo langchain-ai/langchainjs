@@ -63,6 +63,96 @@ function textEvents(): RawEvent[] {
   ];
 }
 
+function reasoningEvents(): RawEvent[] {
+  return [
+    {
+      type: "response.created",
+      response: { id: "resp_reasoning", model: "o3" },
+    } as RawEvent,
+    {
+      type: "response.reasoning_summary_text.delta",
+      delta: "Let me",
+      summary_index: 0,
+      output_index: 0,
+    } as RawEvent,
+    {
+      type: "response.reasoning_summary_text.delta",
+      delta: " think",
+      summary_index: 0,
+      output_index: 0,
+    } as RawEvent,
+    {
+      type: "response.completed",
+      response: {
+        id: "resp_reasoning",
+        object: "response",
+        created_at: 0,
+        status: "completed",
+        model: "o3",
+        output: [],
+        parallel_tool_calls: true,
+        tool_choice: "auto",
+        tools: [],
+      },
+    } as RawEvent,
+  ];
+}
+
+function toolEvents(): RawEvent[] {
+  return [
+    {
+      type: "response.created",
+      response: { id: "resp_tools", model: "gpt-4o-mini" },
+    } as RawEvent,
+    {
+      type: "response.output_item.added",
+      output_index: 0,
+      item: {
+        type: "function_call",
+        id: "fc_1",
+        call_id: "call_abc",
+        name: "web_search",
+        arguments: "",
+      },
+    } as RawEvent,
+    {
+      type: "response.function_call_arguments.delta",
+      output_index: 0,
+      delta: '{"query"',
+    } as RawEvent,
+    {
+      type: "response.function_call_arguments.delta",
+      output_index: 0,
+      delta: ':"weather"}',
+    } as RawEvent,
+    {
+      type: "response.output_item.done",
+      output_index: 0,
+      item: {
+        type: "function_call",
+        id: "fc_1",
+        call_id: "call_abc",
+        name: "web_search",
+        arguments: '{"query":"weather"}',
+      },
+    } as RawEvent,
+    {
+      type: "response.completed",
+      response: {
+        id: "resp_tools",
+        object: "response",
+        created_at: 0,
+        status: "completed",
+        model: "gpt-4o-mini",
+        output: [],
+        parallel_tool_calls: true,
+        tool_choice: "auto",
+        tools: [],
+      },
+    } as RawEvent,
+  ];
+}
+
 describe("ChatOpenAIResponses._streamChatModelEvents", () => {
   test("integration with ChatModelStream.text", async () => {
     const model = new MockStreamChatOpenAIResponses(textEvents());
@@ -91,6 +181,29 @@ describe("ChatOpenAIResponses._streamChatModelEvents", () => {
     test("streams text", async () => {
       const model = new MockStreamChatOpenAIResponses(textEvents());
       await expect(model.streamV2("Hello")).toHaveStreamText("Hi");
+    });
+
+    test("streams usage", async () => {
+      const model = new MockStreamChatOpenAIResponses(textEvents());
+      await expect(model.streamV2("Hello")).toHaveStreamUsage({
+        input_tokens: 1,
+        output_tokens: 1,
+        total_tokens: 2,
+      });
+    });
+
+    test("streams reasoning", async () => {
+      const model = new MockStreamChatOpenAIResponses(reasoningEvents());
+      await expect(model.streamV2("Hello")).toHaveStreamReasoning(
+        "Let me think"
+      );
+    });
+
+    test("streams tool calls", async () => {
+      const model = new MockStreamChatOpenAIResponses(toolEvents());
+      await expect(model.streamV2("Hello")).toHaveStreamToolCalls([
+        { name: "web_search", args: { query: "weather" } },
+      ]);
     });
   });
 });
