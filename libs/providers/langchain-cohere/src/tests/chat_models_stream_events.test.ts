@@ -29,6 +29,18 @@ function cohereToolStream() {
   ];
 }
 
+function cohereUsageStream() {
+  return [
+    { eventType: "text-generation", text: "Hello" },
+    {
+      eventType: "stream-end",
+      response: {
+        meta: { tokens: { inputTokens: 4, outputTokens: 2 } },
+      },
+    },
+  ];
+}
+
 function mockCohere(chunks: Record<string, unknown>[]) {
   const model = new ChatCohere({
     apiKey: "fake-key",
@@ -62,5 +74,15 @@ describe("ChatCohere.streamV2", () => {
     ).toHaveStreamToolCalls([
       { name: "web_search", args: { query: "weather" } },
     ]);
+  });
+
+  test("streams usage", async () => {
+    await expect(
+      mockCohere(cohereUsageStream()).streamV2("Hello")
+    ).toHaveStreamUsage({
+      input_tokens: 4,
+      output_tokens: 2,
+      total_tokens: 6,
+    });
   });
 });

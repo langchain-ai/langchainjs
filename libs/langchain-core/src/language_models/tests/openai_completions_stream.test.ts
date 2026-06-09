@@ -65,7 +65,10 @@ describe("convertOpenAICompletionsStream", () => {
     expect(events.map((e) => e.event)).toContain("message-finish");
 
     const finish = events.find((e) => e.event === "content-block-finish");
-    if (finish?.event !== "content-block-finish" || finish.content.type !== "text") {
+    if (
+      finish?.event !== "content-block-finish" ||
+      finish.content.type !== "text"
+    ) {
       throw new Error("Expected finalized text content block");
     }
     expect(finish.content.text).toBe("Hello world");
@@ -89,8 +92,7 @@ describe("convertOpenAICompletionsStream", () => {
 
     const reasoningFinish = events.find(
       (e) =>
-        e.event === "content-block-finish" &&
-        e.content.type === "reasoning"
+        e.event === "content-block-finish" && e.content.type === "reasoning"
     );
     if (
       reasoningFinish?.event !== "content-block-finish" ||

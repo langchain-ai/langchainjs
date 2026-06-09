@@ -80,6 +80,30 @@ function textEvents(): XAIResponsesStreamEvent[] {
   ];
 }
 
+function reasoningEvents(): XAIResponsesStreamEvent[] {
+  return [
+    {
+      type: "response.created",
+      response: { id: "resp_reasoning", model: "grok-3" },
+    } as XAIResponsesStreamEvent,
+    {
+      type: "response.reasoning_summary_text.delta",
+      delta: "thinking",
+      summary_index: 0,
+      output_index: 0,
+    } as XAIResponsesStreamEvent,
+    {
+      type: "response.completed",
+      response: {
+        id: "resp_reasoning",
+        status: "completed",
+        model: "grok-3",
+        output: [],
+      },
+    } as XAIResponsesStreamEvent,
+  ];
+}
+
 describe("ChatXAIResponses._streamChatModelEvents", () => {
   test("ChatModelStream.text end-to-end", async () => {
     const model = new MockStreamChatXAIResponses(textEvents());
@@ -106,6 +130,20 @@ describe("ChatXAIResponses._streamChatModelEvents", () => {
     test("streams text", async () => {
       const model = new MockStreamChatXAIResponses(textEvents());
       await expect(model.streamV2("Hello")).toHaveStreamText("Hello");
+    });
+
+    test("streams usage", async () => {
+      const model = new MockStreamChatXAIResponses(textEvents());
+      await expect(model.streamV2("Hello")).toHaveStreamUsage({
+        input_tokens: 3,
+        output_tokens: 2,
+        total_tokens: 5,
+      });
+    });
+
+    test("streams reasoning", async () => {
+      const model = new MockStreamChatXAIResponses(reasoningEvents());
+      await expect(model.streamV2("Hello")).toHaveStreamReasoning("thinking");
     });
   });
 });

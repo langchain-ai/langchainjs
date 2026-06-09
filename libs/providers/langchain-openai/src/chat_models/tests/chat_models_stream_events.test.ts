@@ -524,8 +524,7 @@ describe("ChatOpenAICompletions._streamChatModelEvents (native)", () => {
       expect(
         events.find(
           (e) =>
-            e.event === "content-block-finish" &&
-            e.content.type === "reasoning"
+            e.event === "content-block-finish" && e.content.type === "reasoning"
         )
       ).toMatchObject({
         content: { reasoning: "Let me reason..." },
@@ -600,8 +599,7 @@ describe("ChatOpenAICompletions._streamChatModelEvents (native)", () => {
       expect(
         events.find(
           (e) =>
-            e.event === "content-block-finish" &&
-            e.content.type === "tool_call"
+            e.event === "content-block-finish" && e.content.type === "tool_call"
         )
       ).toMatchObject({
         content: {

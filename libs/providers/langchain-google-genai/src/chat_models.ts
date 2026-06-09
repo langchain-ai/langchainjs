@@ -846,9 +846,7 @@ export class ChatGoogleGenerativeAI
         topP: this.topP,
         topK: this.topK,
         ...(this.json ? { responseMimeType: "application/json" } : {}),
-        ...(this.thinkingConfig
-          ? { thinkingConfig: this.thinkingConfig }
-          : {}),
+        ...(this.thinkingConfig ? { thinkingConfig: this.thinkingConfig } : {}),
         ...(options?.responseSchema
           ? {
               responseSchema: options.responseSchema,

@@ -54,6 +54,20 @@ function bedrockToolStream() {
   ];
 }
 
+function bedrockUsageStream() {
+  return [
+    {
+      metadata: {
+        usage: {
+          inputTokens: 5,
+          outputTokens: 2,
+          totalTokens: 7,
+        },
+      },
+    },
+  ];
+}
+
 function mockBedrock(events: Record<string, unknown>[]) {
   const model = new ChatBedrockConverse({
     model: "anthropic.claude-3-haiku-20240307-v1:0",
@@ -96,5 +110,15 @@ describe("ChatBedrockConverse.streamV2", () => {
     ).toHaveStreamToolCalls([
       { name: "web_search", args: { query: "weather" } },
     ]);
+  });
+
+  test("streams usage", async () => {
+    await expect(
+      mockBedrock(bedrockUsageStream()).streamV2("Hello")
+    ).toHaveStreamUsage({
+      input_tokens: 5,
+      output_tokens: 2,
+      total_tokens: 7,
+    });
   });
 });
