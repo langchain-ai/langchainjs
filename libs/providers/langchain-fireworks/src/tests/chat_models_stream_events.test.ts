@@ -53,7 +53,9 @@ class MockStreamChatFireworks extends ChatFireworks {
 
   override async completionWithRetry(
     _request: OpenAIClient.Chat.ChatCompletionCreateParams
-  ): Promise<AsyncIterable<RawChunk> | OpenAIClient.Chat.Completions.ChatCompletion> {
+  ): Promise<
+    AsyncIterable<RawChunk> | OpenAIClient.Chat.Completions.ChatCompletion
+  > {
     const chunks = this.chunks;
     return {
       async *[Symbol.asyncIterator]() {
