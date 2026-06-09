@@ -9,9 +9,9 @@ import {
 type InvocationCompatibilityFields = {
   model?: string;
   thinking: AnthropicThinkingConfigParam;
-  topK?: number;
-  topP?: number;
-  temperature?: number;
+  topK?: number | null;
+  topP?: number | null;
+  temperature?: number | null;
 };
 
 function isThinkingEnabled(thinking: AnthropicThinkingConfigParam): boolean {
@@ -59,17 +59,17 @@ export function validateInvocationParamCompatibility(
     );
   }
   if (opus47) {
-    if (topK !== undefined) {
+    if (topK != null) {
       throw new Error(
         "topK is not supported for claude-opus-4-7; omit topK/topP/temperature or use model prompting instead"
       );
     }
-    if (topP !== undefined && topP !== 1) {
+    if (topP != null && topP !== 1) {
       throw new Error(
         "topP is not supported for claude-opus-4-7 when set to non-default values"
       );
     }
-    if (temperature !== undefined && temperature !== 1) {
+    if (temperature != null && temperature !== 1) {
       throw new Error(
         "temperature is not supported for claude-opus-4-7 when set to non-default values"
       );
@@ -77,13 +77,13 @@ export function validateInvocationParamCompatibility(
   }
 
   if (isThinkingEnabled(thinking)) {
-    if (topK !== undefined) {
+    if (topK != null) {
       throw new Error("topK is not supported when thinking is enabled");
     }
-    if (topP !== undefined) {
+    if (topP != null) {
       throw new Error("topP is not supported when thinking is enabled");
     }
-    if (temperature !== undefined && temperature !== 1) {
+    if (temperature != null && temperature !== 1) {
       throw new Error("temperature is not supported when thinking is enabled");
     }
   }
@@ -102,13 +102,13 @@ export function getSamplingParams(
     return output;
   }
 
-  if (temperature !== undefined) {
+  if (temperature != null) {
     output.temperature = temperature;
   }
-  if (topK !== undefined) {
+  if (topK != null) {
     output.top_k = topK;
   }
-  if (topP !== undefined) {
+  if (topP != null) {
     output.top_p = topP;
   }
 
