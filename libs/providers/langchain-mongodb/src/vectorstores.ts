@@ -494,7 +494,8 @@ export class MongoDBAtlasVectorSearch extends VectorStore {
     const pipeline: MongoDBDocument[] = [
       {
         $vectorSearch: {
-          queryVector: MongoDBAtlasVectorSearch.fixArrayPrecision(queryEmbedding),
+          queryVector:
+            MongoDBAtlasVectorSearch.fixArrayPrecision(queryEmbedding),
           index: this.indexName,
           path: this.embeddingKey,
           limit: k,

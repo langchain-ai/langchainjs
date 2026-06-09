@@ -71,14 +71,17 @@ export default async function setup() {
 
   let container: Awaited<ReturnType<GenericContainer["start"]>>;
   try {
-    container = await new GenericContainer("mongodb/mongodb-atlas-local:preview")
+    container = await new GenericContainer(
+      "mongodb/mongodb-atlas-local:preview"
+    )
       .withExposedPorts({ host: 27017, container: 27017 })
       .withEnvironment({
         // The :preview image reads VOYAGE_API_KEY internally. Accept either
         // name from the host so both CI (VOYAGEAI_API_KEY) and local (.env
         // with VOYAGE_API_KEY) work without changes.
         // oxlint-disable-next-line no-process-env
-        VOYAGE_API_KEY: process.env.VOYAGEAI_API_KEY ?? process.env.VOYAGE_API_KEY ?? "",
+        VOYAGE_API_KEY:
+          process.env.VOYAGEAI_API_KEY ?? process.env.VOYAGE_API_KEY ?? "",
         EMBEDDING_PROVIDER_ENDPOINT:
           // oxlint-disable-next-line no-process-env
           process.env.EMBEDDING_PROVIDER_ENDPOINT ??

@@ -21,7 +21,8 @@ const skipRerankTests = isUsingLocalAtlas();
 
 // oxlint-disable-next-line no-process-env
 const skipAutoEmbedRerankTests =
-  isUsingLocalAtlas() || (!process.env.VOYAGEAI_API_KEY && !process.env.VOYAGE_API_KEY);
+  isUsingLocalAtlas() ||
+  (!process.env.VOYAGEAI_API_KEY && !process.env.VOYAGE_API_KEY);
 
 function getEmbeddings() {
   if (process.env.AZURE_OPENAI_API_KEY) {
@@ -45,7 +46,10 @@ class PatchedVectorStore extends MongoDBAtlasVectorSearch {
     const ids = await super.addDocuments(documents, options);
     const queryEmbedding = await this.embeddings.embedQuery("sandwich");
     for (;;) {
-      const results = await this.similaritySearchVectorWithScore(queryEmbedding, documents.length);
+      const results = await this.similaritySearchVectorWithScore(
+        queryEmbedding,
+        documents.length
+      );
       if (results.length === documents.length) return ids;
       await setTimeout(1000);
     }
@@ -188,8 +192,7 @@ describe.skipIf(skipAutoEmbedRerankTests)(
       client = new MongoClient(uri(), { monitorCommands: true });
       await client.connect();
 
-      const namespace =
-        "langchain_test_db.langchain_auto_embed_rerank_test";
+      const namespace = "langchain_test_db.langchain_auto_embed_rerank_test";
       const [dbName, collectionName] = namespace.split(".");
       const db = client.db(dbName);
 
