@@ -70,17 +70,21 @@ describe("convertMistralStream", () => {
     const toolStarts = events.filter(
       (e) =>
         e.event === "content-block-start" &&
-        (e as { content: { type: string } }).content.type === "tool_call_chunk"
+        e.content.type === "tool_call_chunk"
     );
     expect(toolStarts.length).toBeGreaterThanOrEqual(1);
 
-    const toolFinish = events.find(
-      (e) =>
-        e.event === "content-block-finish" &&
-        (e as { content: { type: string } }).content.type === "tool_call"
-    ) as { content: { name: string; args: unknown } } | undefined;
-    expect(toolFinish?.content.name).toBe("get_weather");
-    expect(toolFinish?.content.args).toEqual({ loc: "NYC" });
+    expect(
+      events.find(
+        (e) =>
+          e.event === "content-block-finish" && e.content.type === "tool_call"
+      )
+    ).toMatchObject({
+      content: {
+        name: "get_weather",
+        args: { loc: "NYC" },
+      },
+    });
   });
 
   test("text-only streaming", async () => {
@@ -93,9 +97,10 @@ describe("convertMistralStream", () => {
       },
     ]);
 
-    const finish = events.find((e) => e.event === "content-block-finish") as {
-      content: { text: string };
-    };
-    expect(finish.content.text).toBe("Hi");
+    expect(events.find((e) => e.event === "content-block-finish")).toMatchObject(
+      {
+        content: { text: "Hi" },
+      }
+    );
   });
 });

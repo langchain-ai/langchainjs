@@ -36,10 +36,11 @@ describe("convertBedrockConverseStream", () => {
 
     expect(events.map((e) => e.event)).toContain("message-start");
 
-    const finish = events.find((e) => e.event === "content-block-finish") as {
-      content: { text: string };
-    };
-    expect(finish.content.text).toBe("Hello world");
+    expect(events.find((e) => e.event === "content-block-finish")).toMatchObject(
+      {
+        content: { text: "Hello world" },
+      }
+    );
   });
 
   test("usage metadata", async () => {

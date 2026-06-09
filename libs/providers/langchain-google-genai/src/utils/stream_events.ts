@@ -6,7 +6,10 @@
 
 import type { EnhancedGenerateContentResponse } from "@google/generative-ai";
 import { finalizeContentBlock } from "@langchain/core/language_models/compat";
-import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
+import type {
+  ChatModelStreamEvent,
+  FinishReason,
+} from "@langchain/core/language_models/event";
 import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
 import { convertUsageMetadata } from "./common.js";
 
@@ -31,6 +34,7 @@ export async function* convertGoogleGenAIStream(
   let nextBlockIndex = 0;
   let messageStarted = false;
   let usageSnapshot: UsageMetadata | undefined;
+  let finishReason: FinishReason = "stop";
 
   const getOrCreateBlockIndex = (
     key: BlockKey,
@@ -59,18 +63,23 @@ export async function* convertGoogleGenAIStream(
     ) {
       usageSnapshot = convertUsageMetadata(
         response.usageMetadata,
-        options.model
+        options.model ?? ""
       );
       yield { event: "usage" as const, usage: usageSnapshot };
     }
 
-    const parts = response.candidates?.[0]?.content?.parts;
+    const candidate = response.candidates?.[0];
+    if (candidate?.finishReason) {
+      finishReason = mapGeminiFinishReason(candidate.finishReason);
+    }
+
+    const parts = candidate?.content?.parts;
     if (!parts) continue;
 
     let toolIdx = 0;
     for (const part of parts) {
       if ("text" in part && part.text) {
-        if (part.thought) {
+        if ("thought" in part && part.thought) {
           const key: BlockKey = "reasoning";
           const { index, isNew } = getOrCreateBlockIndex(key, {
             type: "reasoning",
@@ -161,8 +170,33 @@ export async function* convertGoogleGenAIStream(
 
   yield {
     event: "message-finish" as const,
-    reason: "stop",
+    reason: finishReason,
     ...(usageSnapshot ? { usage: usageSnapshot } : {}),
     responseMetadata: { model_provider: "google-genai" },
   };
+}
+
+function mapGeminiFinishReason(reason: string): FinishReason {
+  switch (reason.toLowerCase()) {
+    case "max_tokens":
+    case "max-token":
+    case "max_token":
+      return "length";
+    case "safety":
+    case "recitation":
+    case "language":
+    case "blocklist":
+    case "prohibited_content":
+    case "prohibited-content":
+    case "spii":
+    case "image_safety":
+    case "image-safety":
+    case "image_prohibited_content":
+    case "image-prohibited-content":
+    case "image_recitation":
+    case "image-recitation":
+      return "content_filter";
+    default:
+      return "stop";
+  }
 }

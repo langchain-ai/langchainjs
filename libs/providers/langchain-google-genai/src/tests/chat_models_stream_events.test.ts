@@ -1,5 +1,19 @@
 import { describe, expect, test, vi, afterEach } from "vitest";
+import type { GenerateContentRequest } from "@google/generative-ai";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { ChatGoogleGenerativeAI } from "../chat_models.js";
+
+type TestGoogleGenAIClient = {
+  systemInstruction?: unknown;
+  generateContentStream: (
+    request: GenerateContentRequest,
+    options?: unknown
+  ) => Promise<{ stream: AsyncIterable<Record<string, unknown>> }>;
+};
+
+function getTestClient(model: ChatGoogleGenerativeAI): TestGoogleGenAIClient {
+  return (model as unknown as { client: TestGoogleGenAIClient }).client;
+}
 
 function geminiTextStream() {
   return (async function* () {
@@ -61,9 +75,9 @@ function mockGoogleGenAI(stream: AsyncIterable<Record<string, unknown>>) {
     apiKey: "fake-key",
     model: "gemini-2.0-flash",
   });
-  vi.spyOn(model.client, "generateContentStream").mockResolvedValue({
+  vi.spyOn(getTestClient(model), "generateContentStream").mockResolvedValue({
     stream,
-  } as never);
+  });
   return model;
 }
 
@@ -90,5 +104,66 @@ describe("ChatGoogleGenerativeAI.streamV2", () => {
     ).toHaveStreamToolCalls([
       { name: "web_search", args: { query: "weather" } },
     ]);
+  });
+
+  test("passes system instructions per streamV2 request", async () => {
+    const model = new ChatGoogleGenerativeAI({
+      apiKey: "fake-key",
+      model: "gemini-2.0-flash",
+    });
+    const generateContentStream = vi
+      .spyOn(getTestClient(model), "generateContentStream")
+      .mockResolvedValue({
+        stream: geminiTextStream(),
+      });
+
+    await expect(
+      model.streamV2([
+        new SystemMessage("StreamV2 system instruction"),
+        new HumanMessage("Hello"),
+      ])
+    ).toHaveStreamText("Hello world");
+
+    const [[request]] = generateContentStream.mock.calls;
+    expect(request.systemInstruction).toEqual({
+      role: "system",
+      parts: [{ text: "StreamV2 system instruction" }],
+    });
+    expect(request.contents).toEqual([
+      { role: "user", parts: [{ text: "Hello" }] },
+    ]);
+    expect(getTestClient(model).systemInstruction).toBeUndefined();
+  });
+
+  test("passes system instructions per stream request", async () => {
+    const model = new ChatGoogleGenerativeAI({
+      apiKey: "fake-key",
+      model: "gemini-2.0-flash",
+    });
+    const generateContentStream = vi
+      .spyOn(getTestClient(model), "generateContentStream")
+      .mockResolvedValue({
+        stream: geminiTextStream(),
+      });
+
+    const stream = await model.stream([
+      new SystemMessage("Stream system instruction"),
+      new HumanMessage("Hello"),
+    ]);
+    const chunks = [];
+    for await (const chunk of stream) {
+      chunks.push(chunk.text);
+    }
+
+    const [[request]] = generateContentStream.mock.calls;
+    expect(chunks.join("")).toBe("Hello world");
+    expect(request.systemInstruction).toEqual({
+      role: "system",
+      parts: [{ text: "Stream system instruction" }],
+    });
+    expect(request.contents).toEqual([
+      { role: "user", parts: [{ text: "Hello" }] },
+    ]);
+    expect(getTestClient(model).systemInstruction).toBeUndefined();
   });
 });

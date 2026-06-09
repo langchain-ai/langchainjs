@@ -46,18 +46,22 @@ describe("convertOpenRouterStream", () => {
       },
     ]);
 
-    const reasoningFinish = events.find(
-      (e) =>
-        e.event === "content-block-finish" &&
-        (e as { content: { type: string } }).content.type === "reasoning"
-    ) as { content: { reasoning: string } };
-    expect(reasoningFinish.content.reasoning).toBe("thinking...");
+    expect(
+      events.find(
+        (e) =>
+          e.event === "content-block-finish" &&
+          e.content.type === "reasoning"
+      )
+    ).toMatchObject({
+      content: { reasoning: "thinking..." },
+    });
 
-    const textFinish = events.find(
-      (e) =>
-        e.event === "content-block-finish" &&
-        (e as { content: { type: string } }).content.type === "text"
-    ) as { content: { text: string } };
-    expect(textFinish.content.text).toBe("Answer");
+    expect(
+      events.find(
+        (e) => e.event === "content-block-finish" && e.content.type === "text"
+      )
+    ).toMatchObject({
+      content: { text: "Answer" },
+    });
   });
 });

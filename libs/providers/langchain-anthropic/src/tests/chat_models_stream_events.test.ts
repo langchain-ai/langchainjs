@@ -330,13 +330,13 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
         events.push(event);
       }
 
-      const finish = events.find(
-        (e) =>
-          e.event === "content-block-finish" && "index" in e && e.index === 0
-      ) as { content: { type: string; text: string } };
-      expect(finish).toBeDefined();
-      expect(finish.content.type).toBe("text");
-      expect(finish.content.text).toBe("Hello world");
+      expect(
+        events.find(
+          (e) => e.event === "content-block-finish" && e.index === 0
+        )
+      ).toMatchObject({
+        content: { type: "text", text: "Hello world" },
+      });
     });
 
     test("message-finish carries stop reason", async () => {
@@ -388,12 +388,13 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       expect(rd2.delta.reasoning).toBe(" reason...");
 
       // Reasoning finish
-      const reasoningFinish = events.find(
-        (e) =>
-          e.event === "content-block-finish" && "index" in e && e.index === 0
-      ) as { content: { type: string; reasoning: string } };
-      expect(reasoningFinish.content.type).toBe("reasoning");
-      expect(reasoningFinish.content.reasoning).toBe("Let me reason...");
+      expect(
+        events.find(
+          (e) => e.event === "content-block-finish" && e.index === 0
+        )
+      ).toMatchObject({
+        content: { type: "reasoning", reasoning: "Let me reason..." },
+      });
     });
 
     test("text block follows reasoning with correct index", async () => {
@@ -406,12 +407,13 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
         events.push(event);
       }
 
-      const textFinish = events.find(
-        (e) =>
-          e.event === "content-block-finish" && "index" in e && e.index === 1
-      ) as { content: { type: string; text: string } };
-      expect(textFinish.content.type).toBe("text");
-      expect(textFinish.content.text).toBe("The answer is 42.");
+      expect(
+        events.find(
+          (e) => e.event === "content-block-finish" && e.index === 1
+        )
+      ).toMatchObject({
+        content: { type: "text", text: "The answer is 42." },
+      });
     });
 
     test("signature delta is handled as non_standard", async () => {
@@ -450,13 +452,17 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       }
 
       // Start event for tool call
-      const toolStart = events.find(
-        (e) =>
-          e.event === "content-block-start" && "index" in e && e.index === 1
-      ) as { content: { type: string; name: string; id: string } };
-      expect(toolStart.content.type).toBe("tool_call_chunk");
-      expect(toolStart.content.name).toBe("web_search");
-      expect(toolStart.content.id).toBe("toolu_01ABC");
+      expect(
+        events.find(
+          (e) => e.event === "content-block-start" && e.index === 1
+        )
+      ).toMatchObject({
+        content: {
+          type: "tool_call_chunk",
+          name: "web_search",
+          id: "toolu_01ABC",
+        },
+      });
 
       // Deltas carry accumulated tool_call_chunk field snapshots
       const toolDeltas = events.filter(
@@ -490,21 +496,18 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
         events.push(event);
       }
 
-      const toolFinish = events.find(
-        (e) =>
-          e.event === "content-block-finish" && "index" in e && e.index === 1
-      ) as {
+      expect(
+        events.find(
+          (e) => e.event === "content-block-finish" && e.index === 1
+        )
+      ).toMatchObject({
         content: {
-          type: string;
-          name: string;
-          id: string;
-          args: unknown;
-        };
-      };
-      expect(toolFinish.content.type).toBe("tool_call");
-      expect(toolFinish.content.name).toBe("web_search");
-      expect(toolFinish.content.id).toBe("toolu_01ABC");
-      expect(toolFinish.content.args).toEqual({ query: "weather" });
+          type: "tool_call",
+          name: "web_search",
+          id: "toolu_01ABC",
+          args: { query: "weather" },
+        },
+      });
     });
 
     test("message-finish has tool_use reason", async () => {

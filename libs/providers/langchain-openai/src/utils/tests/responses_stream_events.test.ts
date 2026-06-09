@@ -82,10 +82,11 @@ describe("convertOpenAIResponsesStream", () => {
       " world"
     );
 
-    const finish = events.find(
-      (e) => e.event === "content-block-finish"
-    ) as unknown as { content: { text: string } };
-    expect(finish.content.text).toBe("Hello world");
+    expect(events.find((e) => e.event === "content-block-finish")).toMatchObject(
+      {
+        content: { text: "Hello world" },
+      }
+    );
   });
 
   test("reasoning deltas", async () => {
@@ -158,13 +159,17 @@ describe("convertOpenAIResponsesStream", () => {
       completedResponse({ id: "resp_tools" }),
     ]);
 
-    const toolFinish = events.find(
-      (e) =>
-        e.event === "content-block-finish" &&
-        (e as { content: { type: string } }).content.type === "tool_call"
-    ) as unknown as { content: { name: string; args: unknown } };
-    expect(toolFinish.content.name).toBe("web_search");
-    expect(toolFinish.content.args).toEqual({ query: "weather" });
+    expect(
+      events.find(
+        (e) =>
+          e.event === "content-block-finish" && e.content.type === "tool_call"
+      )
+    ).toMatchObject({
+      content: {
+        name: "web_search",
+        args: { query: "weather" },
+      },
+    });
   });
 
   test("usage snapshot on completed", async () => {

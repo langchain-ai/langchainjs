@@ -27,9 +27,10 @@ describe("convertCloudflareStream", () => {
     expect(events.map((e) => e.event)).toContain("message-start");
     expect(events.map((e) => e.event)).toContain("message-finish");
 
-    const finish = events.find((e) => e.event === "content-block-finish") as {
-      content: { text: string };
-    };
-    expect(finish.content.text).toBe("Hello world");
+    expect(events.find((e) => e.event === "content-block-finish")).toMatchObject(
+      {
+        content: { text: "Hello world" },
+      }
+    );
   });
 });

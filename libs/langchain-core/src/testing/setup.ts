@@ -1,4 +1,4 @@
 import { expect } from "vitest";
-import { langchainMatchers } from "@langchain/core/testing";
+import { langchainMatchers } from "./matchers.js";
 
 expect.extend(langchainMatchers);
