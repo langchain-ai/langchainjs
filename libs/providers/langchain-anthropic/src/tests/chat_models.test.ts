@@ -2106,6 +2106,51 @@ describe("Opus 4.7", () => {
   });
 });
 
+describe("Fable 5 and Mythos 5", () => {
+  const modelNames = ["claude-fable-5", "claude-mythos-5"] as const;
+
+  test.each(modelNames)("default max_tokens for %s is 16384", (modelName) => {
+    const model = new ChatAnthropic({
+      model: modelName,
+      apiKey: "testing",
+    });
+
+    const params = model.invocationParams({});
+    expect(params.max_tokens).toBe(16384);
+  });
+
+  test.each(modelNames)("rejects thinking.type=enabled for %s", (modelName) => {
+    const model = new ChatAnthropic({
+      model: modelName,
+      apiKey: "testing",
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      thinking: { type: "enabled", budget_tokens: 2048 } as any,
+    });
+
+    expect(() => model.invocationParams({})).toThrow(
+      `thinking.type="enabled" is not supported for ${modelName}; use thinking.type="adaptive" instead`
+    );
+  });
+
+  test.each(modelNames)(
+    "does not include sampling params for %s even if set to defaults",
+    (modelName) => {
+      const model = new ChatAnthropic({
+        model: modelName,
+        apiKey: "testing",
+        temperature: 1,
+        topP: 1,
+      });
+
+      const params = model.invocationParams({});
+
+      expect(params.temperature).toBeUndefined();
+      expect(params.top_p).toBeUndefined();
+      expect(params.top_k).toBeUndefined();
+    }
+  );
+});
+
 describe("withStructuredOutput - StandardSchema", () => {
   function makeSerializableSchema() {
     return {
