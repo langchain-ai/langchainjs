@@ -1,5 +1,6 @@
 import { OpenAI as OpenAIClient } from "openai";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import { AIMessage, type BaseMessage } from "@langchain/core/messages";
 import { ChatGenerationChunk, type ChatResult } from "@langchain/core/outputs";
 import { isOpenAITool as isOpenAIFunctionTool } from "@langchain/core/language_models/base";
@@ -26,6 +27,7 @@ import {
   convertResponsesMessageToAIMessage,
 } from "../converters/responses.js";
 import { OpenAIVerbosityParam } from "../types.js";
+import { convertOpenAIResponsesStream } from "../utils/responses_stream_events.js";
 
 export interface ChatOpenAIResponsesCallOptions extends BaseChatOpenAICallOptions {
   /**
@@ -228,6 +230,52 @@ export class ChatOpenAIResponses<
         },
       };
     }
+  }
+
+  async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    const streamIterable = await this.completionWithRetry(
+      {
+        ...this.invocationParams(options),
+        input: convertMessagesToResponsesInput({
+          messages,
+          zdrEnabled: this.zdrEnabled ?? false,
+          model: this.model,
+        }),
+        stream: true,
+      },
+      options
+    );
+
+    const shouldStreamUsage = this.streamUsage ?? options.streamUsage;
+
+    const abortableStream = async function* (
+      source: AsyncIterable<OpenAIClient.Responses.ResponseStreamEvent>,
+      signal?: AbortSignal
+    ) {
+      for await (const data of source) {
+        if (signal?.aborted) {
+          return;
+        }
+        yield data;
+      }
+    };
+
+    yield* convertOpenAIResponsesStream(
+      abortableStream(streamIterable, options.signal),
+      {
+        streamUsage: shouldStreamUsage ?? true,
+        provider: this.streamEventProvider,
+      }
+    );
+  }
+
+  /** Provider id used in native stream protocol passthrough events. */
+  protected get streamEventProvider(): string {
+    return "openai";
   }
 
   async *_streamResponseChunks(
