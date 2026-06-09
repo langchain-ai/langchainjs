@@ -1678,9 +1678,6 @@ importers:
       '@langchain/core':
         specifier: workspace:^
         version: link:../../langchain-core
-      '@langchain/openai':
-        specifier: workspace:^
-        version: link:../langchain-openai
       '@langchain/standard-tests':
         specifier: workspace:*
         version: link:../../../internal/standard-tests
