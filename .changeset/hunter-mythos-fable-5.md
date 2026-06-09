@@ -1,5 +1,5 @@
 ---
-"@langchain/anthropic": minor
+"@langchain/anthropic": patch
 ---
 
 feat(anthropic): add support for claude-fable-5 and claude-mythos-5 models
