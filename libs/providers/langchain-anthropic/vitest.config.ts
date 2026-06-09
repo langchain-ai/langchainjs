@@ -4,6 +4,7 @@ import {
   type UserConfigExport,
 } from "vitest/config";
 import pkg from "./package.json" with { type: "json" };
+
 const define = { __PKG_VERSION__: JSON.stringify(pkg.version) };
 
 export default defineConfig((env) => {
@@ -14,7 +15,7 @@ export default defineConfig((env) => {
       testTimeout: 30_000,
       maxWorkers: 0.5,
       exclude: ["**/*.int.test.ts", ...configDefaults.exclude],
-      setupFiles: ["dotenv/config"],
+      setupFiles: ["dotenv/config", "./vitest.setup.ts"],
     },
   };
 

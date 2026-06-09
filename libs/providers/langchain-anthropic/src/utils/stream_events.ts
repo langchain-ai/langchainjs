@@ -10,8 +10,7 @@ import type {
   ContentBlockDelta,
   FinishReason,
 } from "@langchain/core/language_models/event";
-import type { ContentBlock } from "@langchain/core/messages/content";
-import type { UsageMetadata } from "@langchain/core/messages/metadata";
+import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
 import type { AnthropicMessageStreamEvent } from "../types.js";
 
 // ─── Public API ─────────────────────────────────────────────────
