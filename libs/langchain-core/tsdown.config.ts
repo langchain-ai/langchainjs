@@ -29,6 +29,7 @@ export default getBuildConfig({
     "./src/language_models/base.ts",
     "./src/language_models/chat_models.ts",
     "./src/language_models/compat.ts",
+    "./src/language_models/openai_completions_stream.ts",
     "./src/language_models/event.ts",
     "./src/language_models/stream.ts",
     "./src/language_models/llms.ts",
