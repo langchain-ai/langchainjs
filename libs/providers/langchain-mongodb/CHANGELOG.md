@@ -1,13 +1,5 @@
 # @langchain/mongodb
 
-## 1.3.0
-
-### Minor Changes
-
-- feat(mongodb): add `$rerank` aggregation pipeline support to `MongoDBAtlasVectorSearch`
-
-  Pass `rerankOptions: { model: string, path?: string | string[] }` to the constructor to enable MongoDB Atlas reranking. When set, `similaritySearchWithScore` appends a `$rerank` stage after `$vectorSearch`, returning results ordered by semantic relevance score. The rerank score is exposed as the numeric score in the returned tuple and as `metadata.relevanceScore` on each document. Works with both manual embeddings and auto-embedding mode.
-
 
 ### Patch Changes
 
