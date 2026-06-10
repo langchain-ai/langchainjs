@@ -1149,11 +1149,17 @@ export const convertStandardContentMessageToResponsesInput: Converter<
             }))
           : [{ type: "summary_text" as const, text: "" }];
 
+      // Only include `id` when we actually have one. Reasoning blocks
+      // reassembled from streaming chunks (e.g. via `streamEvents`) never
+      // carry an id, since OpenAI's streaming protocol omits it. Emitting
+      // `id: ""` makes the Responses API reject the turn with
+      // `400 Invalid 'input[n].id': ''`, so we omit the field instead — the
+      // same way the legacy reconstruction path leaves a missing id off.
       const reasoningItem: OpenAIClient.Responses.ResponseReasoningItem = {
         type: "reasoning",
-        id: block.id ?? "",
+        ...(block.id ? { id: block.id } : {}),
         summary,
-      };
+      } as OpenAIClient.Responses.ResponseReasoningItem;
 
       if (block.reasoning) {
         reasoningItem.content = [

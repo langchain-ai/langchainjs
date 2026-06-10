@@ -748,6 +748,33 @@ describe("convertStandardContentMessageToResponsesInput", () => {
     ]);
   });
 
+  it("omits id on reasoning blocks reassembled from streaming (no id)", () => {
+    // Reasoning blocks rebuilt from streaming chunks (e.g. via streamEvents)
+    // never carry an id. Emitting `id: ""` makes the Responses API reject the
+    // follow-up turn with `400 Invalid 'input[n].id': ''`, so the id field
+    // must be omitted entirely rather than defaulted to an empty string.
+    const message = new AIMessage({
+      contentBlocks: [
+        {
+          type: "reasoning",
+          reasoning: "Thoughts...",
+        },
+      ],
+      response_metadata: { model_provider: "openai" },
+    });
+
+    const result = convertStandardContentMessageToResponsesInput(message);
+
+    expect(result).toEqual([
+      {
+        type: "reasoning",
+        summary: [{ type: "summary_text", text: "Thoughts..." }],
+        content: [{ type: "reasoning_text", text: "Thoughts..." }],
+      },
+    ]);
+    expect(result[0]).not.toHaveProperty("id");
+  });
+
   it("converts tool call blocks and aggregates chunk fallbacks", () => {
     const message = new AIMessage({
       contentBlocks: [
