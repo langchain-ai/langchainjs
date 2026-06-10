@@ -86,6 +86,7 @@ test("ChatDeepSeek should separate <think> tags into reasoning_content", async (
 
   const model = new ChatDeepSeek({
     apiKey: "test",
+    enableThinkTagParsing: true,
     configuration: {
       fetch: mockFetch as any,
     },
@@ -143,6 +144,7 @@ test("ChatDeepSeek should handle multiple think blocks and content before/after"
     new Response(stream, { headers: { "Content-Type": "text/event-stream" } });
   const model = new ChatDeepSeek({
     apiKey: "test",
+    enableThinkTagParsing: true,
     configuration: { fetch: mockFetch as any },
   });
 
@@ -188,6 +190,7 @@ test("ChatDeepSeek should handle unclosed think tags (flush at end)", async () =
     new Response(stream, { headers: { "Content-Type": "text/event-stream" } });
   const model = new ChatDeepSeek({
     apiKey: "test",
+    enableThinkTagParsing: true,
     configuration: { fetch: mockFetch as any },
   });
 
@@ -230,6 +233,7 @@ test("ChatDeepSeek should handle split tags across chunks", async () => {
     new Response(stream, { headers: { "Content-Type": "text/event-stream" } });
   const model = new ChatDeepSeek({
     apiKey: "test",
+    enableThinkTagParsing: true,
     configuration: { fetch: mockFetch as any },
   });
 
@@ -272,6 +276,7 @@ test("ChatDeepSeek should handle empty think blocks", async () => {
     new Response(stream, { headers: { "Content-Type": "text/event-stream" } });
   const model = new ChatDeepSeek({
     apiKey: "test",
+    enableThinkTagParsing: true,
     configuration: { fetch: mockFetch as any },
   });
 
@@ -320,6 +325,7 @@ test("ChatDeepSeek should handle nested think tags (treat inner as content)", as
     new Response(stream, { headers: { "Content-Type": "text/event-stream" } });
   const model = new ChatDeepSeek({
     apiKey: "test",
+    enableThinkTagParsing: true,
     configuration: { fetch: mockFetch as any },
   });
 
@@ -367,6 +373,7 @@ test("ChatDeepSeek should handle malformed tags gracefully", async () => {
     new Response(stream, { headers: { "Content-Type": "text/event-stream" } });
   const model = new ChatDeepSeek({
     apiKey: "test",
+    enableThinkTagParsing: true,
     configuration: { fetch: mockFetch as any },
   });
 
@@ -379,4 +386,98 @@ test("ChatDeepSeek should handle malformed tags gracefully", async () => {
 
   // Orphan </think> and incomplete <think should just be treated as content
   expect(fullContent).toContain("Text");
+});
+
+test("ChatDeepSeek should NOT parse <think> tags by default (enableThinkTagParsing=false)", async () => {
+  const stream = new ReadableStream({
+    start(controller) {
+      const encoder = new TextEncoder();
+      const chunks = [
+        { choices: [{ delta: { content: "<think>" } }] },
+        { choices: [{ delta: { content: "internal thought" } }] },
+        { choices: [{ delta: { content: "</think>" } }] },
+        { choices: [{ delta: { content: " visible content" } }] },
+        { choices: [{ finish_reason: "stop" }] },
+      ];
+
+      for (const chunk of chunks) {
+        const str = `data: ${JSON.stringify({
+          ...chunk,
+          model: "deepseek-chat",
+        })}\n\n`;
+        controller.enqueue(encoder.encode(str));
+      }
+      controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+      controller.close();
+    },
+  });
+
+  const mockFetch = async () =>
+    new Response(stream, { headers: { "Content-Type": "text/event-stream" } });
+  // enableThinkTagParsing is NOT set — default is false
+  const model = new ChatDeepSeek({
+    apiKey: "test",
+    configuration: { fetch: mockFetch as any },
+  });
+
+  const chunks: AIMessageChunk[] = [];
+  for await (const chunk of await model.stream("hi")) {
+    chunks.push(chunk);
+  }
+
+  const fullContent = chunks.map((c) => c.content).join("");
+  const fullReasoning = chunks
+    .map((c) => c.additional_kwargs.reasoning_content || "")
+    .join("");
+
+  // Tags should remain in content, NOT extracted to reasoning_content
+  expect(fullContent).toBe("<think>internal thought</think> visible content");
+  expect(fullReasoning).toBe("");
+});
+
+test("ChatDeepSeek should parse <think> tags when enableThinkTagParsing=true", async () => {
+  const stream = new ReadableStream({
+    start(controller) {
+      const encoder = new TextEncoder();
+      const chunks = [
+        { choices: [{ delta: { content: "<think>" } }] },
+        { choices: [{ delta: { content: "thinking..." } }] },
+        { choices: [{ delta: { content: "</think>" } }] },
+        { choices: [{ delta: { content: "result" } }] },
+        { choices: [{ finish_reason: "stop" }] },
+      ];
+
+      for (const chunk of chunks) {
+        const str = `data: ${JSON.stringify({
+          ...chunk,
+          model: "deepseek-chat",
+        })}\n\n`;
+        controller.enqueue(encoder.encode(str));
+      }
+      controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+      controller.close();
+    },
+  });
+
+  const mockFetch = async () =>
+    new Response(stream, { headers: { "Content-Type": "text/event-stream" } });
+  const model = new ChatDeepSeek({
+    apiKey: "test",
+    enableThinkTagParsing: true,
+    configuration: { fetch: mockFetch as any },
+  });
+
+  const chunks: AIMessageChunk[] = [];
+  for await (const chunk of await model.stream("hi")) {
+    chunks.push(chunk);
+  }
+
+  const fullContent = chunks.map((c) => c.content).join("");
+  const fullReasoning = chunks
+    .map((c) => c.additional_kwargs.reasoning_content || "")
+    .join("");
+
+  // Tags should be stripped from content and moved to reasoning_content
+  expect(fullContent).toBe("result");
+  expect(fullReasoning).toBe("thinking...");
 });
