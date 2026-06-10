@@ -84,6 +84,24 @@ describeIfKey("VoyageEmbeddings integration", () => {
     result.forEach((vec) => expect(vec.length).toBeGreaterThan(0));
   });
 
+  test("concurrency limit is respected with batchSize 1 and maxConcurrency 2", async () => {
+    const concurrentEmbeddings = new VoyageEmbeddings({
+      modelName: VOYAGE_MODEL,
+      apiKey: VOYAGE_API_KEY,
+      batchSize: 1,
+      maxConcurrency: 2,
+    });
+
+    const texts = ["one", "two", "three", "four", "five", "six"];
+    const result = await concurrentEmbeddings.embedDocuments(texts);
+
+    expect(result).toHaveLength(texts.length);
+    result.forEach((vec) => {
+      expect(vec.length).toBeGreaterThan(0);
+      expect(vec.every((v) => typeof v === "number")).toBe(true);
+    });
+  });
+
   test("inputType document vs query produces different embeddings", async () => {
     const docEmbeddings = new VoyageEmbeddings({
       modelName: VOYAGE_MODEL,

@@ -78,13 +78,23 @@ describe("VoyageEmbeddings constructor", () => {
     expect(embeddings.basePath).toBe("https://api.voyageai.com/v1");
   });
 
-  it("accepts a custom basePath for MongoDB Atlas keys", () => {
+  it("accepts a custom basePath for MongoDB Atlas keys", async () => {
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(mockFetchResponse([[0.1, 0.2, 0.3]]));
+
     const embeddings = new VoyageEmbeddings({
       modelName: "voyage-3",
       basePath: "https://ai.mongodb.com/v1",
     });
+
     expect(embeddings.basePath).toBe("https://ai.mongodb.com/v1");
     expect(embeddings.apiUrl).toBe("https://ai.mongodb.com/v1/embeddings");
+
+    await embeddings.embedQuery("test");
+    expect(fetchSpy.mock.calls[0]?.[0]).toBe(
+      "https://ai.mongodb.com/v1/embeddings"
+    );
   });
 });
 
