@@ -404,6 +404,32 @@ test("adaptive thinking throws on topP", () => {
   );
 });
 
+test("invocationParams drops default disabled thinking for adaptive-only models (claude-fable-5)", () => {
+  // claude-fable-5 / claude-mythos-5 reject `thinking.type: "disabled"` and
+  // default to adaptive mode when thinking is omitted. ChatAnthropic defaults
+  // `thinking` to `{ type: "disabled" }`, so without dropping it every
+  // default-configured request to these models 400s.
+  const model = new ChatAnthropic({
+    model: "claude-fable-5",
+    apiKey: "testing",
+  });
+
+  const params = model.invocationParams({});
+
+  expect(params.thinking).toBeUndefined();
+});
+
+test("invocationParams keeps disabled thinking for non-adaptive-only models", () => {
+  const model = new ChatAnthropic({
+    model: "claude-haiku-4-5-20251001",
+    apiKey: "testing",
+  });
+
+  const params = model.invocationParams({});
+
+  expect(params.thinking).toEqual({ type: "disabled" });
+});
+
 test("Can properly format messages with container_upload blocks", async () => {
   const messageHistory = [
     new HumanMessage({

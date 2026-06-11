@@ -109,6 +109,21 @@ export function validateInvocationParamCompatibility(
   }
 }
 
+export function resolveThinkingParam(
+  model: string | undefined,
+  thinking: AnthropicThinkingConfigParam
+): AnthropicThinkingConfigParam | undefined {
+  // Adaptive-only models (e.g. claude-fable-5, claude-mythos-5) reject
+  // `thinking.type: "disabled"` — they default to adaptive mode when thinking
+  // is omitted. ChatAnthropic defaults `thinking` to `{ type: "disabled" }`, so
+  // without this these models 400 on every default-configured request. Drop the
+  // disabled thinking param for them and let the API apply its adaptive default.
+  if (isAdaptiveOnlyModel(model) && thinking.type === "disabled") {
+    return undefined;
+  }
+  return thinking;
+}
+
 export function getSamplingParams(
   fields: InvocationCompatibilityFields
 ): Pick<AnthropicInvocationParams, "temperature" | "top_k" | "top_p"> {
