@@ -67,12 +67,12 @@ class MockStreamChatFireworks extends ChatFireworks {
   }
 }
 
-describe("ChatFireworks.streamV2", () => {
+describe("ChatFireworks.streamEvents", () => {
   test("streams text", async () => {
     await expect(
       new MockStreamChatFireworks(
         toFireworksChunks(openAITextOnlyChunks())
-      ).streamV2("Hello")
+      ).streamEvents("Hello")
     ).toHaveStreamText("Hello world");
   });
 
@@ -80,7 +80,7 @@ describe("ChatFireworks.streamV2", () => {
     await expect(
       new MockStreamChatFireworks(
         toFireworksChunks(openAIReasoningTextChunks())
-      ).streamV2("Hello")
+      ).streamEvents("Hello")
     ).toHaveStreamReasoning("Let me reason...");
   });
 
@@ -88,7 +88,7 @@ describe("ChatFireworks.streamV2", () => {
     await expect(
       new MockStreamChatFireworks(
         toFireworksChunks(openAIToolCallChunks())
-      ).streamV2("Hello")
+      ).streamEvents("Hello")
     ).toHaveStreamToolCalls([
       { name: "web_search", args: { query: "weather" } },
     ]);

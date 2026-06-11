@@ -91,22 +91,22 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("ChatBedrockConverse.streamV2", () => {
+describe("ChatBedrockConverse.streamEvents", () => {
   test("streams text", async () => {
     await expect(
-      mockBedrock(bedrockTextStream()).streamV2("Hello")
+      mockBedrock(bedrockTextStream()).streamEvents("Hello")
     ).toHaveStreamText("Hello world");
   });
 
   test("streams reasoning", async () => {
     await expect(
-      mockBedrock(bedrockReasoningStream()).streamV2("Hello")
+      mockBedrock(bedrockReasoningStream()).streamEvents("Hello")
     ).toHaveStreamReasoning("Let me reason...");
   });
 
   test("streams tool calls", async () => {
     await expect(
-      mockBedrock(bedrockToolStream()).streamV2("Hello")
+      mockBedrock(bedrockToolStream()).streamEvents("Hello")
     ).toHaveStreamToolCalls([
       { name: "web_search", args: { query: "weather" } },
     ]);
@@ -114,7 +114,7 @@ describe("ChatBedrockConverse.streamV2", () => {
 
   test("streams usage", async () => {
     await expect(
-      mockBedrock(bedrockUsageStream()).streamV2("Hello")
+      mockBedrock(bedrockUsageStream()).streamEvents("Hello")
     ).toHaveStreamUsage({
       input_tokens: 5,
       output_tokens: 2,

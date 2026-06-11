@@ -838,12 +838,12 @@ describe("ChatOpenAICompletions._streamChatModelEvents (native)", () => {
   describe("streaming events", () => {
     test("streams text", async () => {
       const model = new MockStreamChatOpenAICompletions(textOnlyChunks());
-      await expect(model.streamV2("Hello")).toHaveStreamText("Hello world");
+      await expect(model.streamEvents("Hello")).toHaveStreamText("Hello world");
     });
 
     test("streams tool calls", async () => {
       const model = new MockStreamChatOpenAICompletions(toolCallChunks());
-      await expect(model.streamV2("Hello")).toHaveStreamToolCalls([
+      await expect(model.streamEvents("Hello")).toHaveStreamToolCalls([
         { name: "web_search", args: { query: "weather" } },
       ]);
     });
@@ -852,7 +852,7 @@ describe("ChatOpenAICompletions._streamChatModelEvents (native)", () => {
       const model = new MockStreamChatOpenAICompletions(
         reasoningPlusTextChunks()
       );
-      await expect(model.streamV2("Hello")).toHaveStreamReasoning(
+      await expect(model.streamEvents("Hello")).toHaveStreamReasoning(
         "Let me reason..."
       );
     });

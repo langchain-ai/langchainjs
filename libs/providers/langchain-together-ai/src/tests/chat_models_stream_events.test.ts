@@ -29,16 +29,16 @@ class MockStreamChatTogetherAI extends ChatTogetherAI {
   }
 }
 
-describe("ChatTogetherAI.streamV2", () => {
+describe("ChatTogetherAI.streamEvents", () => {
   test("streams text", async () => {
     await expect(
-      new MockStreamChatTogetherAI(openAITextOnlyChunks()).streamV2("Hello")
+      new MockStreamChatTogetherAI(openAITextOnlyChunks()).streamEvents("Hello")
     ).toHaveStreamText("Hello world");
   });
 
   test("streams reasoning", async () => {
     await expect(
-      new MockStreamChatTogetherAI(openAIReasoningTextChunks()).streamV2(
+      new MockStreamChatTogetherAI(openAIReasoningTextChunks()).streamEvents(
         "Hello"
       )
     ).toHaveStreamReasoning("Let me reason...");
@@ -46,7 +46,7 @@ describe("ChatTogetherAI.streamV2", () => {
 
   test("streams tool calls", async () => {
     await expect(
-      new MockStreamChatTogetherAI(openAIToolCallChunks()).streamV2("Hello")
+      new MockStreamChatTogetherAI(openAIToolCallChunks()).streamEvents("Hello")
     ).toHaveStreamToolCalls([
       { name: "web_search", args: { query: "weather" } },
     ]);

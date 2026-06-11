@@ -42,12 +42,12 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("ChatCloudflareWorkersAI.streamV2", () => {
+describe("ChatCloudflareWorkersAI.streamEvents", () => {
   test("streams text", async () => {
     const model = new MockStreamCloudflare([
       JSON.stringify({ response: "Hello" }),
       JSON.stringify({ response: " world" }),
     ]);
-    await expect(model.streamV2("Hello")).toHaveStreamText("Hello world");
+    await expect(model.streamEvents("Hello")).toHaveStreamText("Hello world");
   });
 });

@@ -25,22 +25,22 @@ class MockStreamChatXAI extends ChatXAI {
   }
 }
 
-describe("ChatXAI.streamV2", () => {
+describe("ChatXAI.streamEvents", () => {
   test("streams text", async () => {
     await expect(
-      new MockStreamChatXAI(openAITextOnlyChunks()).streamV2("Hello")
+      new MockStreamChatXAI(openAITextOnlyChunks()).streamEvents("Hello")
     ).toHaveStreamText("Hello world");
   });
 
   test("streams reasoning", async () => {
     await expect(
-      new MockStreamChatXAI(openAIReasoningTextChunks()).streamV2("Hello")
+      new MockStreamChatXAI(openAIReasoningTextChunks()).streamEvents("Hello")
     ).toHaveStreamReasoning("Let me reason...");
   });
 
   test("streams tool calls", async () => {
     await expect(
-      new MockStreamChatXAI(openAIToolCallChunks()).streamV2("Hello")
+      new MockStreamChatXAI(openAIToolCallChunks()).streamEvents("Hello")
     ).toHaveStreamToolCalls([
       { name: "web_search", args: { query: "weather" } },
     ]);

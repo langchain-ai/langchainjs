@@ -23,22 +23,22 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("ChatPerplexity.streamV2", () => {
+describe("ChatPerplexity.streamEvents", () => {
   test("streams text", async () => {
     await expect(
-      mockPerplexity(openAITextOnlyChunks()).streamV2("Hello")
+      mockPerplexity(openAITextOnlyChunks()).streamEvents("Hello")
     ).toHaveStreamText("Hello world");
   });
 
   test("streams reasoning", async () => {
     await expect(
-      mockPerplexity(openAIReasoningTextChunks()).streamV2("Hello")
+      mockPerplexity(openAIReasoningTextChunks()).streamEvents("Hello")
     ).toHaveStreamReasoning("Let me reason...");
   });
 
   test("streams tool calls", async () => {
     await expect(
-      mockPerplexity(openAIToolCallChunks()).streamV2("Hello")
+      mockPerplexity(openAIToolCallChunks()).streamEvents("Hello")
     ).toHaveStreamToolCalls([
       { name: "web_search", args: { query: "weather" } },
     ]);

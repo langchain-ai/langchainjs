@@ -2,4 +2,4 @@
 "@langchain/google-genai": patch
 ---
 
-feat(google-genai): add native streamV2 event conversion
+feat(google-genai): add native streamEvents event conversion

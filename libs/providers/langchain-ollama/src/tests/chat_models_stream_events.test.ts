@@ -66,22 +66,22 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("ChatOllama.streamV2", () => {
+describe("ChatOllama.streamEvents", () => {
   test("streams text", async () => {
     await expect(
-      mockOllama(ollamaTextChunks()).streamV2("Hello")
+      mockOllama(ollamaTextChunks()).streamEvents("Hello")
     ).toHaveStreamText("Hello world");
   });
 
   test("streams reasoning", async () => {
     await expect(
-      mockOllama(ollamaReasoningChunks()).streamV2("Hello")
+      mockOllama(ollamaReasoningChunks()).streamEvents("Hello")
     ).toHaveStreamReasoning("Let me reason...");
   });
 
   test("streams tool calls", async () => {
     await expect(
-      mockOllama(ollamaToolChunks()).streamV2("Hello")
+      mockOllama(ollamaToolChunks()).streamEvents("Hello")
     ).toHaveStreamToolCalls([
       { name: "web_search", args: { query: "weather" } },
     ]);
@@ -89,7 +89,7 @@ describe("ChatOllama.streamV2", () => {
 
   test("streams usage", async () => {
     await expect(
-      mockOllama(ollamaUsageChunks()).streamV2("Hello")
+      mockOllama(ollamaUsageChunks()).streamEvents("Hello")
     ).toHaveStreamUsage({
       input_tokens: 10,
       output_tokens: 3,

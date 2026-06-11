@@ -2,4 +2,4 @@
 "@langchain/cohere": patch
 ---
 
-feat(cohere): add native streamV2 event conversion
+feat(cohere): add native streamEvents event conversion

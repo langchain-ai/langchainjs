@@ -128,7 +128,7 @@ function invalidStreamResult(
     pass: false,
     message: () =>
       `${utils.matcherHint(matcherName)}\n\n` +
-      `Expected: ChatModelStream (return value of model.streamV2("Hello"))\n` +
+      `Expected: ChatModelStream (return value of model.streamEvents("Hello"))\n` +
       `Received: ${utils.printReceived(received)}`,
     actual: received,
     expected: "ChatModelStream",
@@ -324,7 +324,7 @@ export const streamMatchers = {
 };
 
 /**
- * Custom assertion helpers for values returned by `BaseChatModel.streamV2()`.
+ * Custom assertion helpers for values returned by `BaseChatModel.streamEvents()`.
  *
  * These matchers consume the stream lazily through the corresponding
  * `ChatModelStream` promise-backed properties.

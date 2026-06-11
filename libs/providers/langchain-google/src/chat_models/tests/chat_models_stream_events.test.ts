@@ -121,22 +121,22 @@ function mockChatGoogle(chunks: Gemini.GenerateContentResponse[]) {
   });
 }
 
-describe("ChatGoogle.streamV2", () => {
+describe("ChatGoogle.streamEvents", () => {
   test("streams text", async () => {
-    await expect(mockChatGoogle(textChunks).streamV2("Hello")).toHaveStreamText(
-      "Hello world"
-    );
+    await expect(
+      mockChatGoogle(textChunks).streamEvents("Hello")
+    ).toHaveStreamText("Hello world");
   });
 
   test("streams reasoning", async () => {
     await expect(
-      mockChatGoogle(reasoningChunks).streamV2("Hello")
+      mockChatGoogle(reasoningChunks).streamEvents("Hello")
     ).toHaveStreamReasoning("Let me reason...");
   });
 
   test("streams tool calls", async () => {
     await expect(
-      mockChatGoogle(toolChunks).streamV2("Hello")
+      mockChatGoogle(toolChunks).streamEvents("Hello")
     ).toHaveStreamToolCalls([
       { name: "web_search", args: { query: "weather" } },
     ]);
@@ -144,7 +144,7 @@ describe("ChatGoogle.streamV2", () => {
 
   test("streams usage", async () => {
     await expect(
-      mockChatGoogle(usageChunks).streamV2("Hello")
+      mockChatGoogle(usageChunks).streamEvents("Hello")
     ).toHaveStreamUsage({
       input_tokens: 10,
       output_tokens: 4,

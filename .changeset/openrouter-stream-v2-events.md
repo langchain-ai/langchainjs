@@ -2,4 +2,4 @@
 "@langchain/openrouter": patch
 ---
 
-feat(openrouter): add native streamV2 event conversion
+feat(openrouter): add native streamEvents event conversion

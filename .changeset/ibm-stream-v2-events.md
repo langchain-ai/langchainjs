@@ -2,4 +2,4 @@
 "@langchain/ibm": patch
 ---
 
-feat(ibm): add native watsonx streamV2 event conversion
+feat(ibm): add native watsonx streamEvents event conversion

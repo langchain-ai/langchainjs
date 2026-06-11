@@ -180,12 +180,12 @@ describe("ChatOpenAIResponses._streamChatModelEvents", () => {
   describe("streaming events", () => {
     test("streams text", async () => {
       const model = new MockStreamChatOpenAIResponses(textEvents());
-      await expect(model.streamV2("Hello")).toHaveStreamText("Hi");
+      await expect(model.streamEvents("Hello")).toHaveStreamText("Hi");
     });
 
     test("streams usage", async () => {
       const model = new MockStreamChatOpenAIResponses(textEvents());
-      await expect(model.streamV2("Hello")).toHaveStreamUsage({
+      await expect(model.streamEvents("Hello")).toHaveStreamUsage({
         input_tokens: 1,
         output_tokens: 1,
         total_tokens: 2,
@@ -194,14 +194,14 @@ describe("ChatOpenAIResponses._streamChatModelEvents", () => {
 
     test("streams reasoning", async () => {
       const model = new MockStreamChatOpenAIResponses(reasoningEvents());
-      await expect(model.streamV2("Hello")).toHaveStreamReasoning(
+      await expect(model.streamEvents("Hello")).toHaveStreamReasoning(
         "Let me think"
       );
     });
 
     test("streams tool calls", async () => {
       const model = new MockStreamChatOpenAIResponses(toolEvents());
-      await expect(model.streamV2("Hello")).toHaveStreamToolCalls([
+      await expect(model.streamEvents("Hello")).toHaveStreamToolCalls([
         { name: "web_search", args: { query: "weather" } },
       ]);
     });

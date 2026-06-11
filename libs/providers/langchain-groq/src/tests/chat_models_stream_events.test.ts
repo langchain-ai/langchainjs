@@ -33,22 +33,22 @@ function mockGroq(chunks: ReturnType<typeof openAITextOnlyChunks>) {
   return model;
 }
 
-describe("ChatGroq.streamV2", () => {
+describe("ChatGroq.streamEvents", () => {
   test("streams text", async () => {
     await expect(
-      mockGroq(openAITextOnlyChunks()).streamV2("Hello")
+      mockGroq(openAITextOnlyChunks()).streamEvents("Hello")
     ).toHaveStreamText("Hello world");
   });
 
   test("streams reasoning", async () => {
     await expect(
-      mockGroq(openAIReasoningTextChunks()).streamV2("Hello")
+      mockGroq(openAIReasoningTextChunks()).streamEvents("Hello")
     ).toHaveStreamReasoning("Let me reason...");
   });
 
   test("streams tool calls", async () => {
     await expect(
-      mockGroq(openAIToolCallChunks()).streamV2("Hello")
+      mockGroq(openAIToolCallChunks()).streamEvents("Hello")
     ).toHaveStreamToolCalls([
       { name: "web_search", args: { query: "weather" } },
     ]);
@@ -56,7 +56,7 @@ describe("ChatGroq.streamV2", () => {
 
   test("streams usage", async () => {
     await expect(
-      mockGroq(openAITextWithUsage()).streamV2("Hello")
+      mockGroq(openAITextWithUsage()).streamEvents("Hello")
     ).toHaveStreamUsage({
       input_tokens: 10,
       output_tokens: 2,
@@ -66,7 +66,7 @@ describe("ChatGroq.streamV2", () => {
 
   test("assembles output", async () => {
     await expect(
-      mockGroq(openAITextWithUsage()).streamV2("Hello")
+      mockGroq(openAITextWithUsage()).streamEvents("Hello")
     ).toHaveStreamOutput({
       id: "chatcmpl-text",
       text: "Hello world",

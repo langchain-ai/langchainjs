@@ -17,7 +17,7 @@ function mockMistral(chunks: Record<string, unknown>[]) {
   return model;
 }
 
-describe("ChatMistralAI.streamV2", () => {
+describe("ChatMistralAI.streamEvents", () => {
   test("maps camelCase toolCalls to OpenAI shape", async () => {
     await expect(
       mockMistral([
@@ -65,7 +65,7 @@ describe("ChatMistralAI.streamV2", () => {
             },
           ],
         },
-      ]).streamV2("Hello")
+      ]).streamEvents("Hello")
     ).toHaveStreamToolCalls([{ name: "get_weather", args: { loc: "NYC" } }]);
   });
 
@@ -78,7 +78,7 @@ describe("ChatMistralAI.streamV2", () => {
         {
           choices: [{ index: 0, delta: {}, finishReason: "stop" }],
         },
-      ]).streamV2("Hello")
+      ]).streamEvents("Hello")
     ).toHaveStreamText("Hi");
   });
 });

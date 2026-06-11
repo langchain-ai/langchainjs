@@ -2,4 +2,4 @@
 "@langchain/cloudflare": patch
 ---
 
-feat(cloudflare): add native streamV2 event conversion
+feat(cloudflare): add native streamEvents event conversion

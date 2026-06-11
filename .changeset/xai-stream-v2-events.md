@@ -2,4 +2,4 @@
 "@langchain/xai": patch
 ---
 
-feat(xai): add native completions and responses streamV2 events
+feat(xai): add native completions and responses streamEvents events
