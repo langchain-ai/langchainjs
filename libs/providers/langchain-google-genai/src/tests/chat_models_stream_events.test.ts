@@ -98,22 +98,22 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("ChatGoogleGenerativeAI.streamV2", () => {
+describe("ChatGoogleGenerativeAI.streamEvents", () => {
   test("streams text", async () => {
     await expect(
-      mockGoogleGenAI(geminiTextStream()).streamV2("Hello")
+      mockGoogleGenAI(geminiTextStream()).streamEvents("Hello")
     ).toHaveStreamText("Hello world");
   });
 
   test("streams reasoning", async () => {
     await expect(
-      mockGoogleGenAI(geminiReasoningStream()).streamV2("Hello")
+      mockGoogleGenAI(geminiReasoningStream()).streamEvents("Hello")
     ).toHaveStreamReasoning("Let me reason...");
   });
 
   test("streams tool calls", async () => {
     await expect(
-      mockGoogleGenAI(geminiToolStream()).streamV2("Hello")
+      mockGoogleGenAI(geminiToolStream()).streamEvents("Hello")
     ).toHaveStreamToolCalls([
       { name: "web_search", args: { query: "weather" } },
     ]);
@@ -121,7 +121,7 @@ describe("ChatGoogleGenerativeAI.streamV2", () => {
 
   test("streams usage", async () => {
     await expect(
-      mockGoogleGenAI(geminiUsageStream()).streamV2("Hello")
+      mockGoogleGenAI(geminiUsageStream()).streamEvents("Hello")
     ).toHaveStreamUsage({
       input_tokens: 10,
       output_tokens: 4,
@@ -129,7 +129,7 @@ describe("ChatGoogleGenerativeAI.streamV2", () => {
     });
   });
 
-  test("passes system instructions per streamV2 request", async () => {
+  test("passes system instructions per streamEvents request", async () => {
     const model = new ChatGoogleGenerativeAI({
       apiKey: "fake-key",
       model: "gemini-2.0-flash",
@@ -141,7 +141,7 @@ describe("ChatGoogleGenerativeAI.streamV2", () => {
       });
 
     await expect(
-      model.streamV2([
+      model.streamEvents([
         new SystemMessage("StreamV2 system instruction"),
         new HumanMessage("Hello"),
       ])

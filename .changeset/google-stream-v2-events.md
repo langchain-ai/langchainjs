@@ -2,4 +2,4 @@
 "@langchain/google": patch
 ---
 
-feat(google): add native Gemini streamV2 event conversion
+feat(google): add native Gemini streamEvents event conversion

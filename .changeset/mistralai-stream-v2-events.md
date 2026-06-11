@@ -2,4 +2,4 @@
 "@langchain/mistralai": patch
 ---
 
-feat(mistralai): add native streamV2 event conversion
+feat(mistralai): add native streamEvents event conversion

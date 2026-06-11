@@ -2,4 +2,4 @@
 "@langchain/perplexity": patch
 ---
 
-feat(perplexity): add native completions streamV2 events
+feat(perplexity): add native completions streamEvents events

@@ -130,22 +130,22 @@ function mockWatsonx(chunks: { data: Record<string, unknown> }[]) {
   return model;
 }
 
-describe("ChatWatsonx.streamV2", () => {
+describe("ChatWatsonx.streamEvents", () => {
   test("streams text", async () => {
     await expect(
-      mockWatsonx(watsonxTextChunks()).streamV2("Hello")
+      mockWatsonx(watsonxTextChunks()).streamEvents("Hello")
     ).toHaveStreamText("Hello world");
   });
 
   test("streams reasoning", async () => {
     await expect(
-      mockWatsonx(watsonxReasoningChunks()).streamV2("Hello")
+      mockWatsonx(watsonxReasoningChunks()).streamEvents("Hello")
     ).toHaveStreamReasoning("Let me reason...");
   });
 
   test("streams tool calls", async () => {
     await expect(
-      mockWatsonx(watsonxToolChunks()).streamV2("Hello")
+      mockWatsonx(watsonxToolChunks()).streamEvents("Hello")
     ).toHaveStreamToolCalls([
       { name: "web_search", args: { query: "weather" } },
     ]);
@@ -153,7 +153,7 @@ describe("ChatWatsonx.streamV2", () => {
 
   test("streams usage", async () => {
     await expect(
-      mockWatsonx(watsonxUsageChunks()).streamV2("Hello")
+      mockWatsonx(watsonxUsageChunks()).streamEvents("Hello")
     ).toHaveStreamUsage({
       input_tokens: 5,
       output_tokens: 2,

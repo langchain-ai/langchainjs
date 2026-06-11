@@ -129,12 +129,12 @@ describe("ChatXAIResponses._streamChatModelEvents", () => {
   describe("streaming events", () => {
     test("streams text", async () => {
       const model = new MockStreamChatXAIResponses(textEvents());
-      await expect(model.streamV2("Hello")).toHaveStreamText("Hello");
+      await expect(model.streamEvents("Hello")).toHaveStreamText("Hello");
     });
 
     test("streams usage", async () => {
       const model = new MockStreamChatXAIResponses(textEvents());
-      await expect(model.streamV2("Hello")).toHaveStreamUsage({
+      await expect(model.streamEvents("Hello")).toHaveStreamUsage({
         input_tokens: 3,
         output_tokens: 2,
         total_tokens: 5,
@@ -143,7 +143,9 @@ describe("ChatXAIResponses._streamChatModelEvents", () => {
 
     test("streams reasoning", async () => {
       const model = new MockStreamChatXAIResponses(reasoningEvents());
-      await expect(model.streamV2("Hello")).toHaveStreamReasoning("thinking");
+      await expect(model.streamEvents("Hello")).toHaveStreamReasoning(
+        "thinking"
+      );
     });
   });
 });

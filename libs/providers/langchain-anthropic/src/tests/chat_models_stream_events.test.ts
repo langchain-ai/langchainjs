@@ -778,19 +778,19 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
   describe("streaming events", () => {
     test("streams text", async () => {
       const model = new MockStreamChatAnthropic(textOnlyEvents());
-      await expect(model.streamV2("Hello")).toHaveStreamText("Hello world");
+      await expect(model.streamEvents("Hello")).toHaveStreamText("Hello world");
     });
 
     test("streams reasoning", async () => {
       const model = new MockStreamChatAnthropic(thinkingPlusTextEvents());
-      await expect(model.streamV2("Hello")).toHaveStreamReasoning(
+      await expect(model.streamEvents("Hello")).toHaveStreamReasoning(
         "Let me reason..."
       );
     });
 
     test("streams tool calls", async () => {
       const model = new MockStreamChatAnthropic(toolCallEvents());
-      await expect(model.streamV2("Hello")).toHaveStreamToolCalls([
+      await expect(model.streamEvents("Hello")).toHaveStreamToolCalls([
         { name: "web_search", args: { query: "weather" } },
       ]);
     });

@@ -115,22 +115,22 @@ function mockMistral(chunks: Record<string, unknown>[]) {
   return model;
 }
 
-describe("ChatMistralAI.streamV2", () => {
+describe("ChatMistralAI.streamEvents", () => {
   test("streams text", async () => {
     await expect(
-      mockMistral(mistralTextChunks()).streamV2("Hello")
+      mockMistral(mistralTextChunks()).streamEvents("Hello")
     ).toHaveStreamText("Hello world");
   });
 
   test("streams reasoning", async () => {
     await expect(
-      mockMistral(mistralReasoningChunks()).streamV2("Hello")
+      mockMistral(mistralReasoningChunks()).streamEvents("Hello")
     ).toHaveStreamReasoning("Let me reason...");
   });
 
   test("streams tool calls", async () => {
     await expect(
-      mockMistral(mistralToolChunks()).streamV2("Hello")
+      mockMistral(mistralToolChunks()).streamEvents("Hello")
     ).toHaveStreamToolCalls([
       { name: "web_search", args: { query: "weather" } },
     ]);

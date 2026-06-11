@@ -63,12 +63,12 @@ class MockStreamChatDeepSeek extends ChatDeepSeek {
   }
 }
 
-describe("ChatDeepSeek.streamV2", () => {
+describe("ChatDeepSeek.streamEvents", () => {
   test("streams text", async () => {
     await expect(
       new MockStreamChatDeepSeek(
         toDeepSeekChunks(openAITextOnlyChunks())
-      ).streamV2("Hello")
+      ).streamEvents("Hello")
     ).toHaveStreamText("Hello world");
   });
 
@@ -76,7 +76,7 @@ describe("ChatDeepSeek.streamV2", () => {
     await expect(
       new MockStreamChatDeepSeek(
         toDeepSeekChunks(openAIReasoningTextChunks())
-      ).streamV2("Hello")
+      ).streamEvents("Hello")
     ).toHaveStreamReasoning("Let me reason...");
   });
 
@@ -84,7 +84,7 @@ describe("ChatDeepSeek.streamV2", () => {
     await expect(
       new MockStreamChatDeepSeek(
         toDeepSeekChunks(openAIToolCallChunks())
-      ).streamV2("Hello")
+      ).streamEvents("Hello")
     ).toHaveStreamToolCalls([
       { name: "web_search", args: { query: "weather" } },
     ]);

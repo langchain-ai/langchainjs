@@ -44,28 +44,28 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("ChatOpenRouter.streamV2", () => {
+describe("ChatOpenRouter.streamEvents", () => {
   test("streams text", async () => {
     await expect(
-      mockOpenRouter(openAITextOnlyChunks()).streamV2("Hello")
+      mockOpenRouter(openAITextOnlyChunks()).streamEvents("Hello")
     ).toHaveStreamText("Hello world");
   });
 
   test("streams reasoning", async () => {
     await expect(
-      mockOpenRouter(openAIReasoningTextChunks()).streamV2("Hello")
+      mockOpenRouter(openAIReasoningTextChunks()).streamEvents("Hello")
     ).toHaveStreamReasoning("Let me reason...");
   });
 
   test("streams OpenRouter reasoning field", async () => {
     await expect(
-      mockOpenRouter(openRouterReasoningChunks()).streamV2("Hello")
+      mockOpenRouter(openRouterReasoningChunks()).streamEvents("Hello")
     ).toHaveStreamReasoning("thinking...");
   });
 
   test("streams tool calls", async () => {
     await expect(
-      mockOpenRouter(openAIToolCallChunks()).streamV2("Hello")
+      mockOpenRouter(openAIToolCallChunks()).streamEvents("Hello")
     ).toHaveStreamToolCalls([
       { name: "web_search", args: { query: "weather" } },
     ]);
@@ -73,7 +73,7 @@ describe("ChatOpenRouter.streamV2", () => {
 
   test("streams usage", async () => {
     await expect(
-      mockOpenRouter(openAITextOnlyChunksWithUsage()).streamV2("Hello")
+      mockOpenRouter(openAITextOnlyChunksWithUsage()).streamEvents("Hello")
     ).toHaveStreamUsage({
       input_tokens: 10,
       output_tokens: 2,

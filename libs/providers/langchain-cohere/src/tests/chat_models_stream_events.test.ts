@@ -61,16 +61,16 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("ChatCohere.streamV2", () => {
+describe("ChatCohere.streamEvents", () => {
   test("streams text", async () => {
     await expect(
-      mockCohere(cohereTextStream()).streamV2("Hello")
+      mockCohere(cohereTextStream()).streamEvents("Hello")
     ).toHaveStreamText("Hello world");
   });
 
   test("streams tool calls", async () => {
     await expect(
-      mockCohere(cohereToolStream()).streamV2("Hello")
+      mockCohere(cohereToolStream()).streamEvents("Hello")
     ).toHaveStreamToolCalls([
       { name: "web_search", args: { query: "weather" } },
     ]);
@@ -78,7 +78,7 @@ describe("ChatCohere.streamV2", () => {
 
   test("streams usage", async () => {
     await expect(
-      mockCohere(cohereUsageStream()).streamV2("Hello")
+      mockCohere(cohereUsageStream()).streamEvents("Hello")
     ).toHaveStreamUsage({
       input_tokens: 4,
       output_tokens: 2,

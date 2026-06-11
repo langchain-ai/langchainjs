@@ -2,4 +2,4 @@
 "@langchain/groq": patch
 ---
 
-feat(groq): add native OpenAI-compatible streamV2 events
+feat(groq): add native OpenAI-compatible streamEvents events
