@@ -19,7 +19,10 @@ export interface ConvertOpenAIResponsesStreamOptions {
 }
 
 type RawEvent = OpenAIClient.Responses.ResponseStreamEvent;
-type BlockKey = `text:${number}` | `reasoning:${number}` | `tool:${number}`;
+type BlockKey =
+  | `text:${number}:${number}`
+  | `reasoning:${number}:${number}`
+  | `tool:${number}`;
 
 export async function* convertOpenAIResponsesStream(
   source: AsyncIterable<RawEvent>,
@@ -97,7 +100,7 @@ export async function* convertOpenAIResponsesStream(
 
     if (event.type === "response.output_text.delta") {
       yield* ensureMessageStart();
-      const key: BlockKey = `text:${event.content_index}`;
+      const key: BlockKey = `text:${event.output_index}:${event.content_index}`;
       const { index, isNew } = getOrCreateBlockIndex(key, {
         type: "text",
         text: "",
@@ -121,7 +124,7 @@ export async function* convertOpenAIResponsesStream(
 
     if (event.type === "response.reasoning_summary_text.delta") {
       yield* ensureMessageStart();
-      const key: BlockKey = `reasoning:${event.summary_index}`;
+      const key: BlockKey = `reasoning:${event.output_index}:${event.summary_index}`;
       const { index, isNew } = getOrCreateBlockIndex(key, {
         type: "reasoning",
         reasoning: "",
