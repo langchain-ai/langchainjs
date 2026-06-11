@@ -523,6 +523,50 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
     });
   });
 
+  describe("built-in search tool lifecycle", () => {
+    it("emits in_progress status for response.web_search_call.in_progress", () => {
+      const result = convertResponsesDeltaToChatGenerationChunk({
+        type: "response.web_search_call.in_progress",
+        item_id: "ws_123",
+        output_index: 0,
+        sequence_number: 0,
+      } as any);
+      expect(result?.generationInfo?.tool_outputs).toEqual({
+        id: "ws_123",
+        type: "web_search_call",
+        status: "in_progress",
+      });
+    });
+
+    it("emits searching status for response.web_search_call.searching", () => {
+      const result = convertResponsesDeltaToChatGenerationChunk({
+        type: "response.web_search_call.searching",
+        item_id: "ws_123",
+        output_index: 0,
+        sequence_number: 1,
+      } as any);
+      expect(result?.generationInfo?.tool_outputs).toEqual({
+        id: "ws_123",
+        type: "web_search_call",
+        status: "searching",
+      });
+    });
+
+    it("emits in_progress status for response.file_search_call.in_progress", () => {
+      const result = convertResponsesDeltaToChatGenerationChunk({
+        type: "response.file_search_call.in_progress",
+        item_id: "fs_123",
+        output_index: 0,
+        sequence_number: 0,
+      } as any);
+      expect(result?.generationInfo?.tool_outputs).toEqual({
+        id: "fs_123",
+        type: "file_search_call",
+        status: "in_progress",
+      });
+    });
+  });
+
   describe("reasoning streaming elevation", () => {
     it("should elevate reasoning to content on response.output_item.added with reasoning", () => {
       const event = {

@@ -833,6 +833,26 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
         status: "completed",
       },
     };
+  } else if (
+    event.type === "response.web_search_call.in_progress" ||
+    event.type === "response.web_search_call.searching" ||
+    event.type === "response.file_search_call.in_progress" ||
+    event.type === "response.file_search_call.searching"
+  ) {
+    // Surface in-progress/searching status for built-in search tools so that
+    // streaming consumers can render live "searching…" state. Previously only
+    // the `.completed` lifecycle event produced a chunk, so the start of a
+    // search was invisible to consumers of the streamed messages.
+    const status = event.type.endsWith(".searching")
+      ? "searching"
+      : "in_progress";
+    generationInfo = {
+      tool_outputs: {
+        id: event.item_id,
+        type: event.type.replace("response.", "").replace(`.${status}`, ""),
+        status,
+      },
+    };
   } else if (event.type === "response.refusal.done") {
     additional_kwargs.refusal = event.refusal;
   } else if (
