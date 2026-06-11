@@ -562,5 +562,29 @@ describe("convertCompletionsMessageToBaseMessage", () => {
       // tool_calls should still be present
       expect((result[0] as any).tool_calls).toHaveLength(1);
     });
+
+    it("should drop reasoning blocks from legacy content (not a valid Completions input part)", () => {
+      // An assistant turn replayed from history that carries a `reasoning`
+      // content block (e.g. persisted by a checkpoint, or produced when
+      // reasoning was enabled and later disabled). With no `output_version: v1`
+      // it goes through the legacy content path. Forwarding `type: "reasoning"`
+      // verbatim triggers `400 Invalid value: 'reasoning'` from OpenAI.
+      const message = new AIMessage({
+        content: [
+          { type: "reasoning", reasoning: "The user wants a simple sum." },
+          { type: "text", text: "4" },
+        ],
+      });
+
+      const result = convertMessagesToCompletionsMessageParams({
+        messages: [message],
+      });
+
+      expect(result).toHaveLength(1);
+      const contentArr = result[0].content as any[];
+      // reasoning is dropped; text passes through
+      expect(contentArr.some((c: any) => c.type === "reasoning")).toBe(false);
+      expect(contentArr).toEqual([{ type: "text", text: "4" }]);
+    });
   });
 });
