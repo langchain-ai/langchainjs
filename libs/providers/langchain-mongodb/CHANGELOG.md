@@ -1,5 +1,32 @@
 # @langchain/mongodb
 
+## 1.3.0
+
+### Minor Changes
+
+- [#10944](https://github.com/langchain-ai/langchainjs/pull/10944) [`32bbacf`](https://github.com/langchain-ai/langchainjs/commit/32bbacfd6df5c5f933fa56ed76265cc51bb8f70d) Thanks [@caseyclements](https://github.com/caseyclements)! - feat(mongodb): add `$rerank` aggregation pipeline support to `MongoDBAtlasVectorSearch`
+
+  Adds an optional `rerankOptions` constructor parameter that appends a `$rerank` stage after `$vectorSearch` to reorder results by semantic relevance using a MongoDB Atlas reranking model. The rerank score is returned as the numeric score in the `[Document, number]` tuple and copied to `document.metadata.relevanceScore`.
+
+- [#11046](https://github.com/langchain-ai/langchainjs/pull/11046) [`e6d2660`](https://github.com/langchain-ai/langchainjs/commit/e6d26605832f827bc3a0ee1cac109deb70b68aad) Thanks [@caseyclements](https://github.com/caseyclements)! - feat(mongodb): add VoyageEmbeddings, migrated from @langchain/community
+
+  `VoyageEmbeddings` is now exported directly from `@langchain/mongodb`. It was previously
+  available via `@langchain/community/embeddings/voyage`, which has been removed from this
+  monorepo.
+
+  **Migration:** update your import path:
+
+  ```ts
+  // before
+  import { VoyageEmbeddings } from "@langchain/community/embeddings/voyage";
+
+  // after
+  import { VoyageEmbeddings } from "@langchain/mongodb";
+  ```
+
+  Note: the default model has been updated from `voyage-01` (retired) to `voyage-3`. If you
+  rely on the default, re-embed any existing indexes after migrating.
+
 ### Patch Changes
 
 - [#10872](https://github.com/langchain-ai/langchainjs/pull/10872) [`a640079`](https://github.com/langchain-ai/langchainjs/commit/a64007997a4940f51bba3c1c83dae89d1ccfb692) Thanks [@hntrl](https://github.com/hntrl)! - chore(deps): remove redundant @types/uuid declarations
