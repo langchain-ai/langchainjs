@@ -756,10 +756,17 @@ export interface GeminiRequest {
   systemInstruction?: GeminiContent;
   tools?: GeminiTool[];
   toolConfig?: {
-    functionCallingConfig: {
+    functionCallingConfig?: {
       mode: "auto" | "any" | "none";
       allowedFunctionNames?: string[];
     };
+    /**
+     * Required by the Gemini API when both server-side built-in tools
+     * (e.g. `googleSearch`) and function declarations are provided in the
+     * same request. Without it the API rejects the request with HTTP 400.
+     * See https://ai.google.dev/gemini-api/docs/tool-combination
+     */
+    includeServerSideToolInvocations?: boolean;
   };
   safetySettings?: GeminiSafetySetting[];
   generationConfig?: GeminiGenerationConfig;
