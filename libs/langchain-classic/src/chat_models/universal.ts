@@ -32,6 +32,7 @@ import {
 import { type StructuredToolInterface } from "@langchain/core/tools";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { ChatResult } from "@langchain/core/outputs";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 
 // TODO: remove once `EventStreamCallbackHandlerInput` is exposed in core
 interface EventStreamCallbackHandlerInput extends Omit<
@@ -46,6 +47,60 @@ export interface ConfigurableChatModelCallOptions extends BaseChatModelCallOptio
     | ToolDefinition
     | RunnableToolLike
   )[];
+}
+
+type ModelProviderConfig = {
+  package: string;
+  className: string;
+  hasCircularDependency?: boolean;
+  transformParams?: (
+    params: Record<string, unknown>
+  ) => Record<string, unknown>;
+};
+
+const NEARAI_BASE_URL = "https://cloud-api.near.ai/v1";
+
+function getNearAIParams(
+  params: Record<string, unknown>
+): Record<string, unknown> {
+  const configuration =
+    typeof params.configuration === "object" && params.configuration !== null
+      ? (params.configuration as Record<string, unknown>)
+      : {};
+  const configApiKey = configuration.apiKey;
+  const apiKey =
+    params.apiKey ??
+    (typeof configApiKey === "string" || typeof configApiKey === "function"
+      ? configApiKey
+      : undefined) ??
+    getEnvironmentVariable("NEARAI_API_KEY");
+
+  if (!apiKey) {
+    throw new Error(
+      'NEAR AI API key not found. Please set the NEARAI_API_KEY environment variable or pass the key into "apiKey" field.'
+    );
+  }
+  // Strip any caller-supplied endpoint/transport keys so the pinned NEAR AI
+  // endpoint cannot be overridden (e.g. via `configurableFields: "any"`).
+  const {
+    baseURL: _baseURL,
+    basePath: _basePath,
+    fetch: _fetch,
+    fetchOptions: _fetchOptions,
+    httpAgent: _httpAgent,
+    ...safeConfiguration
+  } = configuration;
+
+  return {
+    ...params,
+    apiKey,
+    streamUsage: params.streamUsage ?? false,
+    configuration: {
+      ...safeConfiguration,
+      baseURL: NEARAI_BASE_URL,
+      apiKey,
+    },
+  };
 }
 
 // Configuration map for model providers
@@ -106,6 +161,11 @@ export const MODEL_PROVIDER_CONFIG = {
     package: "@langchain/deepseek",
     className: "ChatDeepSeek",
   },
+  nearai: {
+    package: "@langchain/openai",
+    className: "ChatOpenAICompletions",
+    transformParams: getNearAIParams,
+  },
   xai: {
     package: "@langchain/xai",
     className: "ChatXAI",
@@ -129,11 +189,6 @@ const SUPPORTED_PROVIDERS = Object.keys(
   MODEL_PROVIDER_CONFIG
 ) as (keyof typeof MODEL_PROVIDER_CONFIG)[];
 export type ChatModelProvider = keyof typeof MODEL_PROVIDER_CONFIG;
-type ModelProviderConfig = {
-  package: string;
-  className: string;
-  hasCircularDependency?: boolean;
-};
 
 /**
  * Helper function to get a chat model class by its class name or model provider.
@@ -218,12 +273,15 @@ async function _initChatModelHelper(
   }
 
   const { modelProvider: _unused, ...passedParams } = params;
+  const providerParams = config.transformParams
+    ? config.transformParams(passedParams)
+    : passedParams;
   // Pass modelProviderCopy to use direct lookup and avoid className collision
   const ProviderClass = await getChatModelByClassName(
     config.className,
     modelProviderCopy
   );
-  return new ProviderClass({ model, ...passedParams });
+  return new ProviderClass({ model, ...providerParams });
 }
 
 /**
@@ -687,6 +745,7 @@ export async function initChatModel<
  *   - perplexity (@langchain/perplexity)
  *   - cerebras (@langchain/cerebras)
  *   - deepseek (@langchain/deepseek)
+ *   - nearai (@langchain/openai)
  *   - xai (@langchain/xai)
  * @param {string[] | "any"} [fields.configurableFields] - Which model parameters are configurable:
  *   - undefined: No configurable fields.
