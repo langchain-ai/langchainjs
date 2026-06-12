@@ -1,9 +1,9 @@
-/* eslint-disable @typescript-eslint/no-namespace */
+/* oxlint-disable @typescript-eslint/no-namespace */
 
 import type { InteropZodType } from "@langchain/core/utils/types";
 import type { BindToolsInput } from "@langchain/core/language_models/chat_models";
 import type { Gemini as GeminiBase } from "./api-types.js";
-import type { Prettify } from "../utils/misc.js";
+import type { LowercaseLiteral, Prettify } from "../utils/misc.js";
 
 export interface ChatGoogleFields {
   /**
@@ -139,8 +139,23 @@ export interface ChatGoogleFields {
 
   /**
    * Media resolution for input media processing.
+   *
+   * This maps to `generationConfig.mediaResolution`, which is a scalar enum-like
+   * string value in the Gemini API.
    */
-  mediaResolution?: Prettify<GeminiBase.MediaResolution>;
+  mediaResolution?: GeminiBase.GenerationConfig["mediaResolution"];
+
+  /**
+   * OpenAI-compatible alias for media input detail level.
+   *
+   * This is mapped to `generationConfig.mediaResolution`:
+   * - `"auto"` => default Gemini behavior (`mediaResolution` omitted)
+   * - `"low"` => `"MEDIA_RESOLUTION_LOW"`
+   * - `"high"` => `"MEDIA_RESOLUTION_HIGH"`
+   *
+   * If both `mediaResolution` and `detail` are provided, `mediaResolution` wins.
+   */
+  detail?: "auto" | "low" | "high";
 
   /**
    * The number of reasoning tokens that the model should generate.
@@ -164,9 +179,32 @@ export interface ChatGoogleFields {
    * An alias for `reasoningEffort` for compatibility.
    */
   thinkingLevel?: GeminiBase.ThinkingLevel;
+
+  /**
+   * Inference service tiers.
+   * "priority" offers highest reliability for higher rates.
+   * "flex" offers a discount for preemptable processing.
+   * Other values are treated as the standard service tier.
+   */
+  serviceTier?: GeminiBase.ServiceTier;
+
+  /**
+   * Custom / additional headers to include with every request to the API.
+   * When set on both constructor params and per-invocation call options,
+   * per-invocation headers take precidence for matching keys.
+   */
+  customHeaders?: Record<string, string>;
 }
 
 export type GooglePlatformType = "gai" | "gcp";
+
+// These are service tiers that we specifically need to send.
+// Other values will be ignored, resulting in the default
+// or "standard" setting.
+export const settableServiceTier: GeminiBase.ServiceTier[] = [
+  "flex",
+  "priority",
+];
 
 export { type Gemini } from "./api-types.js";
 
@@ -239,9 +277,12 @@ declare module "./api-types.js" {
     /**
      * The level of "thinking" or reasoning configured for the model.
      *
-     * Corresponds to GeminiBase.ThinkingConfig["thinkingLevel"].
+     * Extends GeminiBase.ThinkingConfig["thinkingLevel"] to also accept
+     * lowercase variants (e.g. "high" in addition to "HIGH").
      */
-    export type ThinkingLevel = GeminiBase.ThinkingConfig["thinkingLevel"];
+    export type ThinkingLevel =
+      | GeminiBase.ThinkingConfig["thinkingLevel"]
+      | LowercaseLiteral<GeminiBase.ThinkingConfig["thinkingLevel"]>;
 
     /**
      * The role of a content message. The spec types this as `string`, but

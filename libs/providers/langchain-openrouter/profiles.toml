@@ -1,0 +1,2 @@
+provider = "openrouter"
+output = "src/profiles.ts"

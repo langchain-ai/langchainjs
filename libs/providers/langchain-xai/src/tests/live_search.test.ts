@@ -177,7 +177,7 @@ describe("filterXAIBuiltInTools", () => {
   });
 
   test("keeps tools without a type property", () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const tools: any[] = [
       { id: 1 }, // no type
       { type: XAI_LIVE_SEARCH_TOOL_TYPE },

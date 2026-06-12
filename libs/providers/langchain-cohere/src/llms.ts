@@ -78,6 +78,7 @@ export class Cohere extends LLM<CohereCallOptions> implements CohereInput {
 
   constructor(fields?: CohereInput) {
     super(fields ?? {});
+    this._addVersion("@langchain/cohere", __PKG_VERSION__);
 
     this.client = getCohereClient(fields);
     this.maxTokens = fields?.maxTokens ?? this.maxTokens;

@@ -11,7 +11,7 @@ export const KNOWN_BLOCK_TYPES = [
   "server_tool_call_result",
 ];
 
-// eslint-disable-next-line @typescript-eslint/no-namespace
+// oxlint-disable-next-line @typescript-eslint/no-namespace
 export declare namespace Tools {
   /**
    * Represents a request to call a tool.
@@ -65,7 +65,7 @@ export declare namespace Tools {
     /**
      * The index of the tool call chunk
      */
-    index?: number;
+    index?: string | number;
   }
 
   /** Content block to represent an invalid tool call */

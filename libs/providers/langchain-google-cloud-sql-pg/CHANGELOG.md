@@ -1,5 +1,20 @@
 # @langchain/google-cloud-sql-pg
 
+## 1.0.24
+
+### Patch Changes
+
+- [#10960](https://github.com/langchain-ai/langchainjs/pull/10960) [`1503c9b`](https://github.com/langchain-ai/langchainjs/commit/1503c9beaa6a578f6a30739b2cfc1af9d18dd805) Thanks [@hntrl](https://github.com/hntrl)! - chore(google-cloud-sql-pg): deprecate package
+
+## 1.0.23
+
+### Patch Changes
+
+- [#10776](https://github.com/langchain-ai/langchainjs/pull/10776) [`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6) Thanks [@hntrl](https://github.com/hntrl)! - fix(deps): remediate uuid vulnerability by removing direct uuid usage
+
+- Updated dependencies [[`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6)]:
+  - @langchain/core@1.1.42
+
 ## 1.0.22
 
 ### Patch Changes

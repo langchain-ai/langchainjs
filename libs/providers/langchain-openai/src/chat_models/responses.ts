@@ -14,7 +14,12 @@ import {
   isOpenAICustomTool,
   ResponsesTool,
 } from "../utils/tools.js";
-import { BaseChatOpenAI, BaseChatOpenAICallOptions } from "./base.js";
+import {
+  BaseChatOpenAI,
+  BaseChatOpenAICallOptions,
+  BaseChatOpenAIFields,
+  getChatOpenAIModelParams,
+} from "./base.js";
 import {
   convertMessagesToResponsesInput,
   convertResponsesDeltaToChatGenerationChunk,
@@ -67,6 +72,15 @@ export class ChatOpenAIResponses<
   CallOptions extends ChatOpenAIResponsesCallOptions =
     ChatOpenAIResponsesCallOptions,
 > extends BaseChatOpenAI<CallOptions> {
+  constructor(model: string, fields?: Omit<BaseChatOpenAIFields, "model">);
+  constructor(fields?: BaseChatOpenAIFields);
+  constructor(
+    modelOrFields?: string | BaseChatOpenAIFields,
+    fieldsArg?: Omit<BaseChatOpenAIFields, "model">
+  ) {
+    super(getChatOpenAIModelParams(modelOrFields, fieldsArg));
+  }
+
   override invocationParams(
     options?: this["ParsedCallOptions"]
   ): ChatResponsesInvocationParams {
@@ -316,12 +330,19 @@ export class ChatOpenAIResponses<
           format: customToolData.format,
         } as ResponsesTool);
       } else if (isOpenAIFunctionTool(tool)) {
+        const extra: Record<string, unknown> = {};
+        for (const [k, v] of Object.entries(tool)) {
+          if (k !== "type" && k !== "function") {
+            extra[k] = v;
+          }
+        }
         reducedTools.push({
           type: "function",
           name: tool.function.name,
           parameters: tool.function.parameters,
           description: tool.function.description,
           strict: fields?.strict ?? null,
+          ...extra,
         });
       } else if (isOpenAICustomTool(tool)) {
         reducedTools.push(convertCompletionsCustomTool(tool));

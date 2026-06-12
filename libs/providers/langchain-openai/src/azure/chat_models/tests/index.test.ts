@@ -28,6 +28,19 @@ test("Test Azure OpenAI serialization from azure endpoint", async () => {
   );
 });
 
+test("Test Azure OpenAI supports deployment name shorthand", async () => {
+  const chat = new AzureChatOpenAI("gpt-4o", {
+    azureOpenAIEndpoint: "https://foobar.openai.azure.com/",
+    azureOpenAIApiVersion: "2024-08-01-preview",
+    azureOpenAIApiKey: "foo",
+  });
+
+  expect(chat.model).toBe("gpt-4o");
+  expect(JSON.stringify(chat)).toEqual(
+    `{"lc":1,"type":"constructor","id":["langchain","chat_models","azure_openai","AzureChatOpenAI"],"kwargs":{"model":"gpt-4o","deployment_name":"gpt-4o","azure_endpoint":"https://foobar.openai.azure.com/","openai_api_version":"2024-08-01-preview","azure_open_ai_api_key":{"lc":1,"type":"secret","id":["AZURE_OPENAI_API_KEY"]}}}`
+  );
+});
+
 test("Test Azure OpenAI serialization does not pass along extra params", async () => {
   const chat = new AzureChatOpenAI({
     azureOpenAIEndpoint: "https://foobar.openai.azure.com/",
@@ -35,7 +48,7 @@ test("Test Azure OpenAI serialization does not pass along extra params", async (
     azureOpenAIApiVersion: "2024-08-01-preview",
     azureOpenAIApiKey: "foo",
     extraParam: "extra",
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   } as any);
   expect(JSON.stringify(chat)).toEqual(
     `{"lc":1,"type":"constructor","id":["langchain","chat_models","azure_openai","AzureChatOpenAI"],"kwargs":{"azure_endpoint":"https://foobar.openai.azure.com/","deployment_name":"gpt-4o","openai_api_version":"2024-08-01-preview","azure_open_ai_api_key":{"lc":1,"type":"secret","id":["AZURE_OPENAI_API_KEY"]}}}`

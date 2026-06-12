@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { z } from "zod";
 import { describe, it, expect } from "vitest";
 import { ChatOpenAI } from "@langchain/openai";

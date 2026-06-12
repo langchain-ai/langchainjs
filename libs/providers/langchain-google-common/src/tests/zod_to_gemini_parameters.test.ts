@@ -1,4 +1,4 @@
-import { expect, test, describe } from "@jest/globals";
+import { expect, test, describe } from "vitest";
 import { z } from "zod";
 import { schemaToGeminiParameters } from "../utils/zod_to_gemini_parameters.js";
 

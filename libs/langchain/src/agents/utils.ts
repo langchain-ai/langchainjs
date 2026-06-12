@@ -17,10 +17,7 @@ import {
   BaseChatModel,
   type BaseChatModelCallOptions,
 } from "@langchain/core/language_models/chat_models";
-import {
-  LanguageModelLike,
-  BaseLanguageModelInput,
-} from "@langchain/core/language_models/base";
+import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import {
   Runnable,
   RunnableLike,
@@ -30,12 +27,16 @@ import {
 } from "@langchain/core/runnables";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
 
-import { isBaseChatModel, isConfigurableModel } from "./model.js";
+import {
+  isBaseChatModel,
+  isConfigurableModel,
+  type AgentLanguageModelLike as LanguageModelLike,
+} from "./model.js";
 import { MultipleToolsBoundError, MiddlewareError } from "./errors.js";
 import type { AgentBuiltInState } from "./runtime.js";
 import type {
   ToolCallHandler,
-  AgentMiddleware,
+  AnyAgentMiddleware,
   ToolCallRequest,
   WrapToolCallHook,
 } from "./middleware/types.js";
@@ -546,9 +547,7 @@ function chainToolCallHandlers(
  * @param state state of the agent
  * @returns single wrap function
  */
-export function wrapToolCall(
-  middleware: readonly AgentMiddleware<InteropZodObject | undefined>[]
-) {
+export function wrapToolCall(middleware: readonly AnyAgentMiddleware[]) {
   const middlewareWithWrapToolCall = middleware.filter((m) => m.wrapToolCall);
 
   if (middlewareWithWrapToolCall.length === 0) {
@@ -625,4 +624,31 @@ export function wrapToolCall(
       return wrappedHandler;
     })
   );
+}
+
+/**
+ * Static LangGraph config keys propagated from ReactAgent defaults onto the
+ * compiled inner graph. This ensures values set via `withConfig()` survive
+ * LangGraph API loading, which unwraps ReactAgent to `.graph` before execution.
+ */
+const GRAPH_DEFAULT_CONFIG_KEYS = [
+  "tags",
+  "metadata",
+  "runName",
+  "maxConcurrency",
+  "recursionLimit",
+  "configurable",
+] as const satisfies readonly (keyof RunnableConfig)[];
+
+export function toGraphDefaultConfig(
+  config: RunnableConfig
+): Omit<RunnableConfig, "store" | "writer" | "interrupt"> {
+  const result: Record<string, unknown> = {};
+  for (const key of GRAPH_DEFAULT_CONFIG_KEYS) {
+    const value = config[key];
+    if (value !== undefined) {
+      result[key] = value;
+    }
+  }
+  return result as Omit<RunnableConfig, "store" | "writer" | "interrupt">;
 }

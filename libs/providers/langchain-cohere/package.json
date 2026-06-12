@@ -1,6 +1,6 @@
 {
   "name": "@langchain/cohere",
-  "version": "1.0.2",
+  "version": "1.0.5",
   "description": "Cohere integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -12,7 +12,7 @@
     "type": "git",
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
-  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-cohere/",
+  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/community/langchain-cohere/",
   "scripts": {
     "build": "turbo build:compile --filter @langchain/cohere --output-logs new-only",
     "build:compile": "tsdown",
@@ -31,26 +31,24 @@
     "format:check": "prettier --check \"src\""
   },
   "dependencies": {
-    "cohere-ai": "^7.14.0",
-    "uuid": "^10.0.0"
+    "cohere-ai": "^7.14.0"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0"
+    "@langchain/core": "workspace:^"
   },
   "devDependencies": {
     "@cfworker/json-schema": "^4.1.1",
     "@langchain/core": "workspace:^",
-    "@langchain/eslint": "workspace:*",
     "@langchain/standard-tests": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
-    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/coverage-v8": "^4.1.8",
     "dotenv": "^16.6.1",
     "dpdm": "^3.14.0",
     "eslint": "^9.34.0",
     "prettier": "^3.5.0",
-    "typescript": "~5.8.3",
-    "vitest": "^3.2.4",
+    "typescript": "~6.0.3",
+    "vitest": "^4.1.8",
     "zod": "^3.25.76"
   },
   "publishConfig": {

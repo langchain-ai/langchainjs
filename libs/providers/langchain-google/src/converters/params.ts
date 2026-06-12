@@ -1,6 +1,7 @@
-import type {
+import {
   ChatGoogleFields,
   GooglePlatformType,
+  settableServiceTier,
   SimplifiedSpeechConfig,
   SimplifiedSpeechLanguageConfig,
   SpeechSpeakerName,
@@ -32,8 +33,8 @@ import type { Gemini } from "../chat_models/api-types.js";
  * @param {string | undefined} modelName
  *   The Gemini model name (e.g., "gemini-2.5-flash"). Used to determine token range constraints.
  * @param {string | undefined} effort
- *   The reasoning effort level: one of "none", "minimal", "low", "medium", "high".
- *   If undefined, the function returns undefined.
+ *   The reasoning effort level: one of "none", "minimal", "low", "medium", "high"
+ *   (case-insensitive). If undefined, the function returns undefined.
  * @returns {number | undefined}
  *   The corresponding token count for the given effort and model. Returns undefined if
  *   the effort is not recognized or not provided.
@@ -59,7 +60,8 @@ export function convertReasoningEffortToReasoningTokens(
     ? 24 * 1024
     : 32 * 1024;
 
-  switch (effort) {
+  const normalizedEffort = effort.toLowerCase();
+  switch (normalizedEffort) {
     case "none":
     case "minimal":
       return minTokens;
@@ -86,7 +88,8 @@ export function convertReasoningEffortToReasoningTokens(
  * into user-facing friendly reasoning levels/labels. The mapping relies on Google's
  * documented reasoning levels for different models:
  *
- * - -1 means "high" effort (per API documentation: the default, dynamic setting).
+ * - -1 means default effort (per API documentation: this is "minimal" for flash-lite models
+ *   and "high" (dynamic) for others).
  * - 0 means "minimal" unless the model is "gemini-3-pro", for which it maps to "low".
  * - <= 1024 tokens: "low"
  * - <= 8192 tokens: "medium" (unless model is "gemini-3-pro", for which it reverts to "low")
@@ -117,7 +120,11 @@ export function convertReasoningTokensToReasoningEffort(
   if (typeof reasoningTokens === "undefined") {
     return undefined;
   } else if (reasoningTokens === -1) {
-    // -1 means "high"/dynamic ("default" per https://ai.google.dev/gemini-api/docs/thinking#thinking-levels)
+    // -1 means "minimal" for flash-lite models and "high"/dynamic for others
+    // ("default" per https://ai.google.dev/gemini-api/docs/thinking#thinking-levels)
+    if (model && getModelLevel(model) === "flash-lite") {
+      return "minimal";
+    }
     return "high";
   } else if (reasoningTokens === 0) {
     if (model?.startsWith("gemini-3-pro")) {
@@ -263,6 +270,11 @@ export function convertFieldsToThinkingConfig(
     } else if (thinkingLevel === "MEDIUM") {
       thinkingLevel = "HIGH";
     }
+  } else if (model.startsWith("gemini-3.1-pro")) {
+    // Gemini 3.1 Pro does not have "minimal"
+    if (thinkingLevel === "MINIMAL") {
+      thinkingLevel = "LOW";
+    }
   }
 
   // If we are using a model that doesn't support thinking at all (gemini 2.5 imaging)
@@ -389,4 +401,29 @@ export function convertFieldsToSpeechConfig(
   }
 
   return ret;
+}
+
+type ServiceTierResponse = {} | { serviceTier: Gemini.ServiceTier };
+
+/**
+ * Builds an object that can be included as part of the request
+ * which will add a `speechConfig` attribute if appropriate.
+ */
+export function convertFieldsToServiceTier(
+  platform: GooglePlatformType,
+  fields: ChatGoogleFields
+): ServiceTierResponse {
+  // Service tier is handled in a different way on GCP
+  if (platform === "gcp") {
+    return {};
+  }
+
+  const serviceTier = fields.serviceTier;
+  if (!serviceTier || !settableServiceTier.includes(serviceTier)) {
+    return {};
+  }
+
+  return {
+    serviceTier: serviceTier,
+  };
 }

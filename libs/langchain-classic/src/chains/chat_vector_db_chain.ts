@@ -8,7 +8,7 @@ import { BaseChain, ChainInputs } from "./base.js";
 import { LLMChain } from "./llm_chain.js";
 import { loadQAStuffChain } from "./question_answering/load.js";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
 
 const question_generator_template = `Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question.

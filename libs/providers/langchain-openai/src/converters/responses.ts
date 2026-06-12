@@ -41,6 +41,10 @@ import { Converter } from "@langchain/core/utils/format";
 import { completionsApiContentBlockConverter } from "./completions.js";
 
 const _FUNCTION_CALL_IDS_MAP_KEY = "__openai_function_call_ids__";
+const _CUSTOM_TOOL_CALL_IDS_MAP_KEY = "__openai_custom_tool_call_ids__";
+
+/** Streaming-only marker; not part of @langchain/core ToolCallChunk. */
+type OpenAICustomToolCallChunk = ToolCallChunk & { isCustomTool?: true };
 
 type OpenAIAnnotation =
   OpenAIClient.Responses.ResponseOutputText["annotations"][number];
@@ -336,7 +340,6 @@ export const convertResponsesMessageToAIMessage: Converter<
     throw error;
   }
 
-  let messageId: string | undefined;
   const content: MessageContent = [];
   const tool_calls: ToolCall[] = [];
   const invalid_tool_calls: InvalidToolCall[] = [];
@@ -376,24 +379,26 @@ export const convertResponsesMessageToAIMessage: Converter<
     tool_outputs?: unknown[];
     parsed?: unknown;
     [_FUNCTION_CALL_IDS_MAP_KEY]?: Record<string, string>;
+    [_CUSTOM_TOOL_CALL_IDS_MAP_KEY]?: Record<string, string>;
   } = {};
 
   for (const item of response.output) {
     if (item.type === "message") {
-      messageId = item.id;
       content.push(
         ...item.content.flatMap((part) => {
           if (part.type === "output_text") {
             if ("parsed" in part && part.parsed != null) {
               additional_kwargs.parsed = part.parsed;
             }
-            return {
+            const block: ContentBlock = {
               type: "text",
               text: part.text,
               annotations: part.annotations.map(
                 convertOpenAIAnnotationToLangChain
               ),
-            } satisfies ContentBlock.Text;
+              ...(item.phase !== null ? { phase: item.phase } : {}),
+            };
+            return block;
           }
 
           if (part.type === "refusal") {
@@ -446,6 +451,11 @@ export const convertResponsesMessageToAIMessage: Converter<
       const parsed = parseCustomToolCall(item);
       if (parsed) {
         tool_calls.push(parsed);
+        additional_kwargs[_CUSTOM_TOOL_CALL_IDS_MAP_KEY] ??= {};
+        if (item.id && item.call_id) {
+          additional_kwargs[_CUSTOM_TOOL_CALL_IDS_MAP_KEY][item.call_id] =
+            item.id;
+        }
       } else {
         invalid_tool_calls.push(
           makeInvalidToolCall(item, "Malformed custom tool call")
@@ -483,7 +493,7 @@ export const convertResponsesMessageToAIMessage: Converter<
   }
 
   return new AIMessage({
-    id: messageId,
+    id: response.id,
     content,
     tool_calls,
     invalid_tool_calls,
@@ -556,7 +566,7 @@ export const convertReasoningSummaryToResponsesReasoningItem: Converter<
   ChatOpenAIReasoningSummary,
   OpenAIClient.Responses.ResponseReasoningItem
 > = (reasoning) => {
-  // combine summary parts that have the the same index and then remove the indexes
+  // combine summary parts that have the same index and then remove the indexes
   const summary = (
     reasoning.summary.length > 1
       ? reasoning.summary.reduce(
@@ -595,7 +605,7 @@ export const convertReasoningSummaryToResponsesReasoningItem: Converter<
  * @returns A ChatGenerationChunk containing:
  *   - `text`: Concatenated text content from all text parts in the event
  *   - `message`: An AIMessageChunk with:
- *     - `id`: Message ID (set when a message output item is added)
+ *     - `id`: Response ID (set on `response.created` / `response.completed`)
  *     - `content`: Array of content blocks (text with optional annotations)
  *     - `tool_call_chunks`: Incremental tool call data (name, args, id)
  *     - `usage_metadata`: Token usage information (only in completion events)
@@ -676,7 +686,15 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
     event.type === "response.output_item.added" &&
     event.item.type === "message"
   ) {
-    id = event.item.id;
+    const phase = "phase" in event.item ? event.item.phase : undefined;
+    if (phase) {
+      content.push({
+        type: "text",
+        text: "",
+        phase,
+        index: 0,
+      } as ContentBlock.Text);
+    }
   } else if (
     event.type === "response.output_item.added" &&
     event.item.type === "function_call"
@@ -690,6 +708,22 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
     });
 
     additional_kwargs[_FUNCTION_CALL_IDS_MAP_KEY] = {
+      [event.item.call_id]: event.item.id,
+    };
+  } else if (
+    event.type === "response.output_item.added" &&
+    event.item.type === "custom_tool_call"
+  ) {
+    tool_call_chunks.push({
+      type: "tool_call_chunk",
+      isCustomTool: true,
+      name: event.item.name,
+      args: event.item.input,
+      id: event.item.call_id,
+      index: event.output_index,
+    } satisfies OpenAICustomToolCallChunk);
+
+    additional_kwargs[_CUSTOM_TOOL_CALL_IDS_MAP_KEY] = {
       [event.item.call_id]: event.item.id,
     };
   } else if (
@@ -736,20 +770,35 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
       "mcp_list_tools",
       "mcp_approval_request",
       "custom_tool_call",
+      "tool_search_call",
+      "tool_search_output",
     ].includes(event.item.type)
   ) {
     additional_kwargs.tool_outputs = [event.item];
   } else if (event.type === "response.created") {
+    id = event.response.id;
     response_metadata.id = event.response.id;
     response_metadata.model_name = event.response.model;
     response_metadata.model = event.response.model;
-  } else if (event.type === "response.completed") {
+  } else if (
+    event.type === "response.completed" ||
+    event.type === "response.incomplete"
+  ) {
+    id = event.response.id;
     const msg = convertResponsesMessageToAIMessage(event.response);
 
     usage_metadata = convertResponsesUsageToUsageMetadata(event.response.usage);
 
-    if (event.response.text?.format?.type === "json_schema") {
-      additional_kwargs.parsed ??= JSON.parse(msg.text);
+    if (event.response.text?.format?.type === "json_schema" && msg.text) {
+      try {
+        additional_kwargs.parsed ??= JSON.parse(msg.text);
+      } catch {
+        // Some models (observed with gpt-5-mini on service_tier: "auto")
+        // intermittently emit trailing characters after a valid JSON object
+        // in the Responses API path. Throw-on-parse kills the entire stream
+        // even though msg.text is otherwise usable. Leave parsed undefined
+        // and let the caller fall back to msg.text or retry. See #10894.
+      }
     }
     for (const [key, value] of Object.entries(event.response)) {
       if (key === "id") continue;
@@ -769,6 +818,9 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
       type: "tool_call_chunk",
       args: event.delta,
       index: event.output_index,
+      ...(event.type === "response.custom_tool_call_input.delta"
+        ? { isCustomTool: true }
+        : {}),
     });
   } else if (
     event.type === "response.web_search_call.completed" ||
@@ -827,6 +879,7 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
       content.push({
         type: "reasoning",
         reasoning: event.part.text,
+        index: event.summary_index,
       });
     }
   } else if (event.type === "response.reasoning_summary_text.delta") {
@@ -846,6 +899,7 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
       content.push({
         type: "reasoning",
         reasoning: event.delta,
+        index: event.summary_index,
       });
     }
   } else if (event.type === "response.image_generation_call.partial_image") {
@@ -963,14 +1017,16 @@ export const convertStandardContentMessageToResponsesInput: Converter<
       currentMessage = undefined;
     }
 
-    const pushMessageContent: (
-      content: OpenAIClient.Responses.ResponseInputMessageContentList
-    ) => void = (content) => {
+    const pushMessageContent = (
+      content: OpenAIClient.Responses.ResponseInputMessageContentList,
+      phase?: OpenAIClient.Responses.EasyInputMessage["phase"]
+    ) => {
       if (!currentMessage) {
         currentMessage = {
           type: "message",
           role: messageRole,
           content: [],
+          ...(phase ? { phase } : {}),
         };
       }
       if (typeof currentMessage.content === "string") {
@@ -1062,7 +1118,7 @@ export const convertStandardContentMessageToResponsesInput: Converter<
         return {
           type: "input_file",
           file_data: `data:${mimeType};base64,${encoded}`,
-          ...(filename ? { filename } : {}),
+          filename,
         };
       }
       return undefined;
@@ -1139,7 +1195,20 @@ export const convertStandardContentMessageToResponsesInput: Converter<
 
     for (const block of message.contentBlocks) {
       if (block.type === "text") {
-        pushMessageContent([{ type: "input_text", text: block.text }]);
+        const phase = iife(() => {
+          if (
+            !(
+              "extras" in block &&
+              typeof block.extras === "object" &&
+              block.extras !== null &&
+              "phase" in block.extras
+            )
+          )
+            return undefined;
+          return block.extras
+            .phase as OpenAIClient.Responses.EasyInputMessage["phase"];
+        });
+        pushMessageContent([{ type: "input_text", text: block.text }], phase);
       } else if (block.type === "invalid_tool_call") {
         // no-op
       } else if (block.type === "reasoning") {
@@ -1438,7 +1507,7 @@ export const convertMessagesToResponsesInput: Converter<
         }
 
         // ai content
-        let { content } = lcMsg as { content: ContentBlock[] };
+        let { content } = lcMsg;
         if (additional_kwargs?.refusal) {
           if (typeof content === "string") {
             content = [{ type: "output_text", text: content, annotations: [] }];
@@ -1450,7 +1519,7 @@ export const convertMessagesToResponsesInput: Converter<
         }
 
         if (typeof content === "string" || content.length > 0) {
-          input.push({
+          const messageItem: ResponsesInputItem = {
             type: "message",
             role: "assistant",
             ...(lcMsg.id && !zdrEnabled && lcMsg.id.startsWith("msg_")
@@ -1462,10 +1531,11 @@ export const convertMessagesToResponsesInput: Converter<
               }
               return content.flatMap((item) => {
                 if (item.type === "text") {
+                  const textItem = item as ContentBlock.Text;
                   return {
                     type: "output_text",
-                    text: item.text,
-                    annotations: (item.annotations ?? []).map(
+                    text: textItem.text,
+                    annotations: (textItem.annotations ?? []).map(
                       convertLangChainAnnotationToOpenAI
                     ),
                   };
@@ -1478,18 +1548,38 @@ export const convertMessagesToResponsesInput: Converter<
                 return [];
               });
             }) as ResponseInputMessageContentList,
-          });
+            phase: iife(() => {
+              if (!Array.isArray(content)) {
+                return undefined;
+              }
+
+              const phasedContent = content.find(
+                (item): item is ContentBlock & { phase: string } =>
+                  "phase" in item && typeof item.phase === "string"
+              );
+              return phasedContent?.phase as
+                | OpenAIClient.Responses.EasyInputMessage["phase"]
+                | undefined;
+            }),
+          };
+          input.push(messageItem);
         }
 
         const functionCallIds = additional_kwargs?.[_FUNCTION_CALL_IDS_MAP_KEY];
+        const customToolCallIds =
+          additional_kwargs?.[_CUSTOM_TOOL_CALL_IDS_MAP_KEY];
 
         if (AIMessage.isInstance(lcMsg) && !!lcMsg.tool_calls?.length) {
           input.push(
             ...lcMsg.tool_calls.map((toolCall): ResponsesInputItem => {
-              if (isCustomToolCall(toolCall)) {
+              if (isCustomToolCall(toolCall, customToolCallIds)) {
                 return {
                   type: "custom_tool_call",
-                  id: toolCall.call_id,
+                  id:
+                    "call_id" in toolCall &&
+                    typeof toolCall.call_id === "string"
+                      ? toolCall.call_id
+                      : (customToolCallIds?.[toolCall.id ?? ""] ?? ""),
                   call_id: toolCall.id ?? "",
                   input: toolCall.args.input,
                   name: toolCall.name,

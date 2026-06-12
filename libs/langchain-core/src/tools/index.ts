@@ -57,8 +57,12 @@ import type {
   ToolInterface,
   ToolOutputType,
   ToolRuntime,
+  ToolEventType,
+  InferToolEventFromFunc,
+  InferToolOutputFromFunc,
 } from "./types.js";
 import { type JSONSchema, validatesOnlyStrings } from "../utils/json_schema.js";
+import { consumeAsyncGenerator, isAsyncGenerator } from "../runnables/iter.js";
 
 export type {
   BaseDynamicToolInput,
@@ -93,6 +97,7 @@ export abstract class StructuredTool<
   SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
   SchemaInputT = ToolInputSchemaInputType<SchemaT>,
   ToolOutputT = ToolOutputType,
+  ToolEventT = ToolEventType,
 >
   extends BaseLangChain<
     StructuredToolCallInput<SchemaT, SchemaInputT>,
@@ -159,7 +164,7 @@ export abstract class StructuredTool<
     arg: SchemaOutputT,
     runManager?: CallbackManagerForToolRun,
     parentConfig?: ToolRunnableConfig
-  ): Promise<ToolOutputT>;
+  ): Promise<ToolOutputT> | AsyncGenerator<ToolEventT, ToolOutputT>;
 
   /**
    * Invokes the tool with the provided input and configuration.
@@ -276,6 +281,17 @@ export abstract class StructuredTool<
       this.metadata,
       { verbose: this.verbose }
     );
+
+    let toolCallId: string | undefined;
+    // Extract toolCallId ONLY if the original arg was a ToolCall
+    if (_isToolCall(arg)) {
+      toolCallId = arg.id;
+    }
+    // Or if it was provided in the config's toolCall property
+    if (!toolCallId && _configHasToolCallId(config)) {
+      toolCallId = config.toolCall.id;
+    }
+
     const runManager = await callbackManager_?.handleToolStart(
       this.toJSON(),
       // Log the original raw input arg
@@ -284,17 +300,28 @@ export abstract class StructuredTool<
       undefined,
       undefined,
       undefined,
-      config.runName
+      config.runName,
+      toolCallId
     );
     delete config.runId;
+
     let result;
     try {
-      // Pass the correctly typed parsed input to _call
-      result = await this._call(parsed, runManager, config);
+      const raw = await this._call(parsed, runManager, config);
+      result = isAsyncGenerator(raw)
+        ? await consumeAsyncGenerator(raw, async (chunk) => {
+            try {
+              await runManager?.handleToolEvent(chunk);
+            } catch (streamError) {
+              await runManager?.handleToolError(streamError);
+            }
+          })
+        : raw;
     } catch (e) {
       await runManager?.handleToolError(e);
       throw e;
     }
+
     let content;
     let artifact;
     if (this.responseFormat === "content_and_artifact") {
@@ -309,16 +336,6 @@ export abstract class StructuredTool<
       }
     } else {
       content = result;
-    }
-
-    let toolCallId: string | undefined;
-    // Extract toolCallId ONLY if the original arg was a ToolCall
-    if (_isToolCall(arg)) {
-      toolCallId = arg.id;
-    }
-    // Or if it was provided in the config's toolCall property
-    if (!toolCallId && _configHasToolCallId(config)) {
-      toolCallId = config.toolCall.id;
     }
 
     const formattedOutput = _formatToolOutput<ToolOutputT>({
@@ -336,12 +353,16 @@ export abstract class StructuredTool<
 /**
  * Base class for Tools that accept input as a string.
  */
-export abstract class Tool<ToolOutputT = ToolOutputType>
+export abstract class Tool<
+  ToolOutputT = ToolOutputType,
+  ToolEventT = ToolEventType,
+>
   extends StructuredTool<
     StringInputToolSchema,
     ToolInputSchemaOutputType<StringInputToolSchema>,
     ToolInputSchemaInputType<StringInputToolSchema>,
-    ToolOutputT
+    ToolOutputT,
+    ToolEventT
   >
   implements
     ToolInterface<
@@ -390,7 +411,8 @@ export abstract class Tool<ToolOutputT = ToolOutputType>
  */
 export class DynamicTool<
   ToolOutputT = ToolOutputType,
-> extends Tool<ToolOutputT> {
+  ToolEventT = ToolEventType,
+> extends Tool<ToolOutputT, ToolEventT> {
   static lc_name() {
     return "DynamicTool";
   }
@@ -399,9 +421,9 @@ export class DynamicTool<
 
   description: string;
 
-  func: DynamicToolInput<ToolOutputT>["func"];
+  func: DynamicToolInput<ToolOutputT, ToolEventT>["func"];
 
-  constructor(fields: DynamicToolInput<ToolOutputT>) {
+  constructor(fields: DynamicToolInput<ToolOutputT, ToolEventT>) {
     super(fields);
     this.name = fields.name;
     this.description = fields.description;
@@ -429,11 +451,11 @@ export class DynamicTool<
   }
 
   /** @ignore */
-  async _call(
+  _call(
     input: string, // DynamicTool's _call specifically expects a string after schema transformation
     runManager?: CallbackManagerForToolRun,
     parentConfig?: ToolRunnableConfig
-  ): Promise<ToolOutputT> {
+  ): Promise<ToolOutputT> | AsyncGenerator<ToolEventT, ToolOutputT> {
     return this.func(input, runManager, parentConfig);
   }
 }
@@ -458,8 +480,15 @@ export class DynamicStructuredTool<
   SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
   SchemaInputT = ToolInputSchemaInputType<SchemaT>,
   ToolOutputT = ToolOutputType,
+  ToolEventT = ToolEventType,
   NameT extends string = string,
-> extends StructuredTool<SchemaT, SchemaOutputT, SchemaInputT, ToolOutputT> {
+> extends StructuredTool<
+  SchemaT,
+  SchemaOutputT,
+  SchemaInputT,
+  ToolOutputT,
+  ToolEventT
+> {
   static lc_name() {
     return "DynamicStructuredTool";
   }
@@ -468,12 +497,22 @@ export class DynamicStructuredTool<
 
   description: string;
 
-  func: DynamicStructuredToolInput<SchemaT, SchemaOutputT, ToolOutputT>["func"];
+  func: DynamicStructuredToolInput<
+    SchemaT,
+    SchemaOutputT,
+    ToolOutputT,
+    ToolEventT
+  >["func"];
 
   schema: SchemaT;
 
   constructor(
-    fields: DynamicStructuredToolInput<SchemaT, SchemaOutputT, ToolOutputT> & {
+    fields: DynamicStructuredToolInput<
+      SchemaT,
+      SchemaOutputT,
+      ToolOutputT,
+      ToolEventT
+    > & {
       name: NameT;
     }
   ) {
@@ -510,11 +549,16 @@ export class DynamicStructuredTool<
 
   protected _call(
     arg: Parameters<
-      DynamicStructuredToolInput<SchemaT, SchemaOutputT>["func"]
+      DynamicStructuredToolInput<
+        SchemaT,
+        SchemaOutputT,
+        ToolOutputT,
+        ToolEventT
+      >["func"]
     >[0],
     runManager?: CallbackManagerForToolRun,
     parentConfig?: RunnableConfig
-  ): Promise<ToolOutputT> {
+  ): Promise<ToolOutputT> | AsyncGenerator<ToolEventT, ToolOutputT> {
     return this.func(arg, runManager, parentConfig);
   }
 }
@@ -539,7 +583,7 @@ export abstract class BaseToolkit {
  * @template {ToolInputSchemaBase} RunInput The input schema for the tool.
  * @template {string} NameT The literal name type for discriminated union support.
  */
-interface ToolWrapperParams<
+export interface ToolWrapperParams<
   RunInput = ToolInputSchemaBase | undefined,
   NameT extends string = string,
 > extends ToolParams {
@@ -595,23 +639,39 @@ interface ToolWrapperParams<
  *
  * @returns {DynamicStructuredTool<SchemaT>} A new StructuredTool instance.
  */
-export function tool<SchemaT extends ZodStringV3, ToolOutputT = ToolOutputType>(
-  func: RunnableFunc<
+export function tool<
+  SchemaT extends ZodStringV3,
+  ToolOutputT = ToolOutputType,
+  FuncT extends RunnableFunc<
+    InferInteropZodOutput<SchemaT>,
+    ToolOutputT,
+    ToolRunnableConfig
+  > = RunnableFunc<
     InferInteropZodOutput<SchemaT>,
     ToolOutputT,
     ToolRunnableConfig
   >,
+>(
+  func: FuncT,
   fields: ToolWrapperParams<SchemaT>
-): DynamicTool<ToolOutputT>;
+): DynamicTool<InferToolOutputFromFunc<FuncT>, InferToolEventFromFunc<FuncT>>;
 
-export function tool<SchemaT extends ZodStringV4, ToolOutputT = ToolOutputType>(
-  func: RunnableFunc<
+export function tool<
+  SchemaT extends ZodStringV4,
+  ToolOutputT = ToolOutputType,
+  FuncT extends RunnableFunc<
+    InferInteropZodOutput<SchemaT>,
+    ToolOutputT,
+    ToolRunnableConfig
+  > = RunnableFunc<
     InferInteropZodOutput<SchemaT>,
     ToolOutputT,
     ToolRunnableConfig
   >,
+>(
+  func: FuncT,
   fields: ToolWrapperParams<SchemaT>
-): DynamicTool<ToolOutputT>;
+): DynamicTool<InferToolOutputFromFunc<FuncT>, InferToolEventFromFunc<FuncT>>;
 
 export function tool<
   SchemaT extends ZodObjectV3,
@@ -619,14 +679,17 @@ export function tool<
   SchemaOutputT = InferInteropZodOutput<SchemaT>,
   SchemaInputT = InferInteropZodInput<SchemaT>,
   ToolOutputT = ToolOutputType,
+  FuncT extends RunnableFunc<SchemaOutputT, ToolOutputT, ToolRunnableConfig> =
+    RunnableFunc<SchemaOutputT, ToolOutputT, ToolRunnableConfig>,
 >(
-  func: RunnableFunc<SchemaOutputT, ToolOutputT, ToolRunnableConfig>,
+  func: FuncT,
   fields: ToolWrapperParams<SchemaT, NameT>
 ): DynamicStructuredTool<
   SchemaT,
   SchemaOutputT,
   SchemaInputT,
-  ToolOutputT,
+  InferToolOutputFromFunc<FuncT>,
+  InferToolEventFromFunc<FuncT>,
   NameT
 >;
 
@@ -636,14 +699,17 @@ export function tool<
   SchemaOutputT = InferInteropZodOutput<SchemaT>,
   SchemaInputT = InferInteropZodInput<SchemaT>,
   ToolOutputT = ToolOutputType,
+  FuncT extends RunnableFunc<SchemaOutputT, ToolOutputT, ToolRunnableConfig> =
+    RunnableFunc<SchemaOutputT, ToolOutputT, ToolRunnableConfig>,
 >(
-  func: RunnableFunc<SchemaOutputT, ToolOutputT, ToolRunnableConfig>,
+  func: FuncT,
   fields: ToolWrapperParams<SchemaT, NameT>
 ): DynamicStructuredTool<
   SchemaT,
   SchemaOutputT,
   SchemaInputT,
-  ToolOutputT,
+  InferToolOutputFromFunc<FuncT>,
+  InferToolEventFromFunc<FuncT>,
   NameT
 >;
 
@@ -653,18 +719,24 @@ export function tool<
   SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
   SchemaInputT = ToolInputSchemaInputType<SchemaT>,
   ToolOutputT = ToolOutputType,
->(
-  func: RunnableFunc<
+  FuncT extends RunnableFunc<
+    Parameters<DynamicStructuredToolInput<SchemaT>["func"]>[0],
+    ToolOutputT,
+    ToolRunnableConfig
+  > = RunnableFunc<
     Parameters<DynamicStructuredToolInput<SchemaT>["func"]>[0],
     ToolOutputT,
     ToolRunnableConfig
   >,
+>(
+  func: FuncT,
   fields: ToolWrapperParams<SchemaT, NameT>
 ): DynamicStructuredTool<
   SchemaT,
   SchemaOutputT,
   SchemaInputT,
-  ToolOutputT,
+  InferToolOutputFromFunc<FuncT>,
+  InferToolEventFromFunc<FuncT>,
   NameT
 >;
 
@@ -675,18 +747,21 @@ export function tool<
   SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
   SchemaInputT = ToolInputSchemaInputType<SchemaT>,
   ToolOutputT = ToolOutputType,
+  FuncT extends RunnableFunc<SchemaOutputT, ToolOutputT, ToolRunnableConfig> =
+    RunnableFunc<SchemaOutputT, ToolOutputT, ToolRunnableConfig>,
 >(
-  func: RunnableFunc<SchemaOutputT, ToolOutputT, ToolRunnableConfig>,
+  func: FuncT,
   fields: ToolWrapperParams<SchemaT, NameT>
 ):
   | DynamicStructuredTool<
       SchemaT,
       SchemaOutputT,
       SchemaInputT,
-      ToolOutputT,
+      InferToolOutputFromFunc<FuncT>,
+      InferToolEventFromFunc<FuncT>,
       NameT
     >
-  | DynamicTool<ToolOutputT>;
+  | DynamicTool<InferToolOutputFromFunc<FuncT>, InferToolEventFromFunc<FuncT>>;
 
 // Overloads with ToolRuntime as CallOptions
 export function tool<
@@ -734,6 +809,7 @@ export function tool<
   SchemaOutputT,
   SchemaInputT,
   ToolOutputT,
+  ToolEventType,
   NameT
 >;
 
@@ -756,6 +832,7 @@ export function tool<
   SchemaOutputT,
   SchemaInputT,
   ToolOutputT,
+  ToolEventType,
   NameT
 >;
 
@@ -778,6 +855,7 @@ export function tool<
   SchemaOutputT,
   SchemaInputT,
   ToolOutputT,
+  ToolEventType,
   NameT
 >;
 
@@ -802,15 +880,43 @@ export function tool<
       SchemaOutputT,
       SchemaInputT,
       ToolOutputT,
+      ToolEventType,
       NameT
     >
-  | DynamicTool<ToolOutputT> {
+  | DynamicTool<ToolOutputT>;
+
+export function tool<
+  SchemaT extends InteropZodObject | InteropZodType<string> | JSONSchema =
+    InteropZodObject,
+  NameT extends string = string,
+  SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
+  SchemaInputT = ToolInputSchemaInputType<SchemaT>,
+  ToolOutputT = ToolOutputType,
+  ToolEventT = ToolEventType,
+  TState = unknown,
+  TContext = unknown,
+>(
+  func: (
+    input: SchemaOutputT,
+    runtime: ToolRuntime<TState, TContext>
+  ) => ToolOutputT | Promise<ToolOutputT>,
+  fields: ToolWrapperParams<SchemaT, NameT>
+):
+  | DynamicStructuredTool<
+      SchemaT,
+      SchemaOutputT,
+      SchemaInputT,
+      ToolOutputT,
+      ToolEventT,
+      NameT
+    >
+  | DynamicTool<ToolOutputT, ToolEventT> {
   const isSimpleStringSchema = isSimpleStringZodSchema(fields.schema);
   const isStringJSONSchema = validatesOnlyStrings(fields.schema);
 
   // If the schema is not provided, or it's a simple string schema, create a DynamicTool
   if (!fields.schema || isSimpleStringSchema || isStringJSONSchema) {
-    return new DynamicTool<ToolOutputT>({
+    return new DynamicTool<ToolOutputT, ToolEventT>({
       ...fields,
       description:
         fields.description ??
@@ -821,12 +927,12 @@ export function tool<
           const childConfig = patchConfig(config, {
             callbacks: runManager?.getChild(),
           });
-          // eslint-disable-next-line no-void
+          // oxlint-disable-next-line no-void
           void AsyncLocalStorageProviderSingleton.runWithConfig(
             pickRunnableConfigKeys(childConfig),
             async () => {
               try {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                // oxlint-disable-next-line @typescript-eslint/no-explicit-any
                 resolve(func(input as any, childConfig as any));
               } catch (e) {
                 reject(e);
@@ -850,6 +956,7 @@ export function tool<
     SchemaOutputT,
     SchemaInputT,
     ToolOutputT,
+    ToolEventT,
     NameT
   >({
     ...fields,
@@ -875,13 +982,18 @@ export function tool<
         const childConfig = patchConfig(config, {
           callbacks: runManager?.getChild(),
         });
-        // eslint-disable-next-line no-void
+        // oxlint-disable-next-line no-void
         void AsyncLocalStorageProviderSingleton.runWithConfig(
           pickRunnableConfigKeys(childConfig),
           async () => {
             try {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              // oxlint-disable-next-line @typescript-eslint/no-explicit-any
               const result = await func(input as any, childConfig as any);
+              if (isAsyncGenerator(result)) {
+                // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+                resolve(result as any);
+                return;
+              }
 
               /**
                * If the signal is aborted, we don't want to resolve the promise
@@ -907,6 +1019,7 @@ export function tool<
     SchemaOutputT,
     SchemaInputT,
     ToolOutputT,
+    ToolEventT,
     NameT
   >;
 }

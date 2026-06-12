@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { describe, test, expect } from "vitest";
 import { SchemaFieldTypes } from "redis";
 import { Document } from "@langchain/core/documents";

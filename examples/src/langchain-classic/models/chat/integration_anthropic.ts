@@ -2,7 +2,7 @@ import { ChatAnthropic } from "@langchain/anthropic";
 
 const model = new ChatAnthropic({
   temperature: 0.9,
-  model: "claude-3-5-sonnet-20240620",
+  model: "claude-sonnet-4-5-20250929",
   // In Node.js defaults to process.env.ANTHROPIC_API_KEY,
   // apiKey: "YOUR-API-KEY",
   maxTokens: 1024,
@@ -31,7 +31,7 @@ console.log(res);
       'This effect is more pronounced during the day when the sun is high in the sky. At sunrise and sunset, when sunlight travels through more of the atmosphere, we see more red and orange colors because the blue light has been scattered away by the time it reaches our eyes.',
     response_metadata: {
       id: 'msg_013zKN9RXhpyCeHNsgwHjHsi',
-      model: 'claude-3-5-sonnet-20240620',
+      model: 'claude-sonnet-4-5-20250929',
       stop_reason: 'end_turn',
       stop_sequence: null,
       usage: { input_tokens: 13, output_tokens: 233 }

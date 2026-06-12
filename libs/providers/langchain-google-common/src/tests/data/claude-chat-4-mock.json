@@ -2,7 +2,7 @@
   "id": "msg_vrtx_011x9BBwsQV1Tw7EovUfniy1",
   "type": "message",
   "role": "assistant",
-  "model": "claude-3-7-sonnet-20250219",
+  "model": "claude-sonnet-4-5-20250929",
   "content": [
     {
       "type": "thinking",

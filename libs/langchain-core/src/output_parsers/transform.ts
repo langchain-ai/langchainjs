@@ -76,7 +76,7 @@ export abstract class BaseCumulativeTransformOutputParser<
     this.diff = fields?.diff ?? this.diff;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   protected abstract _diff(prev: any | undefined, next: any): any;
 
   abstract parsePartialResult(

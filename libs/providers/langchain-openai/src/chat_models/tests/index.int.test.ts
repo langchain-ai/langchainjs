@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import * as z4 from "zod/v4";
 import { describe, test, expect, vi } from "vitest";
 import {

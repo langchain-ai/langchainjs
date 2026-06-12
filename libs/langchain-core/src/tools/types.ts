@@ -1,4 +1,4 @@
-import type { z as z3 } from "zod/v3";
+import type { ZodV3Like } from "../utils/types/zod.js";
 import { CallbackManagerForToolRun } from "../callbacks/manager.js";
 import type {
   BaseLangChainParams,
@@ -29,10 +29,30 @@ import type { BaseStore } from "../stores.js";
 
 export type ResponseFormat = "content" | "content_and_artifact" | string;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export type ToolOutputType = any;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ToolEventType = unknown;
+
+/* oxlint-disable @typescript-eslint/no-explicit-any */
+export type InferToolEventFromFunc<F> = F extends (
+  ...args: any[]
+) => AsyncGenerator<infer Y, any, any>
+  ? Y
+  : ToolEventType;
+
+export type InferToolOutputFromFunc<F> = F extends (
+  ...args: any[]
+) => AsyncGenerator<any, infer R, any>
+  ? R
+  : F extends (...args: any[]) => Promise<infer R>
+    ? R
+    : F extends (...args: any[]) => infer R
+      ? R
+      : ToolOutputType;
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export type ContentAndArtifact = [MessageContent, any];
 
 /**
@@ -58,7 +78,7 @@ export type ToolReturnType<TInput, TConfig, TOutput> =
  * Base type that establishes the types of input schemas that can be used for LangChain tool
  * definitions.
  */
-export type ToolInputSchemaBase = z3.ZodTypeAny | JSONSchema;
+export type ToolInputSchemaBase = InteropZodType | JSONSchema;
 
 /**
  * Parameters for the Tool classes.
@@ -98,9 +118,9 @@ export interface ToolParams extends BaseLangChainParams {
 }
 
 export type ToolRunnableConfig<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   ConfigurableFieldType extends Record<string, any> = Record<string, any>,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   ContextSchema = any,
 > = RunnableConfig<ConfigurableFieldType> & {
   toolCall?: ToolCall;
@@ -179,12 +199,8 @@ export type StructuredToolCallInput<
  * This is primarily used for creating simple string-based tools where the LLM
  * only needs to provide a single text value as input to the tool.
  */
-export type StringInputToolSchema = z3.ZodType<
-  string | undefined,
-  z3.ZodTypeDef,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  any
->;
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
+export type StringInputToolSchema = ZodV3Like<string | undefined, any>;
 
 /**
  * Defines the type for input to a tool's call method.
@@ -335,15 +351,19 @@ export interface BaseDynamicToolInput extends ToolParams {
 
 /**
  * Interface for the input parameters of the DynamicTool class.
+ *
+ * @param ToolOutputT - The return type of the tool.
+ * @param ToolEventT - The type of values yielded by the tool when using an async generator.
  */
 export interface DynamicToolInput<
   ToolOutputT = ToolOutputType,
+  ToolEventT = ToolEventType,
 > extends BaseDynamicToolInput {
   func: (
     input: string,
     runManager?: CallbackManagerForToolRun,
     config?: ToolRunnableConfig
-  ) => Promise<ToolOutputT>;
+  ) => Promise<ToolOutputT> | AsyncGenerator<ToolEventT, ToolOutputT>;
 }
 
 /**
@@ -351,11 +371,14 @@ export interface DynamicToolInput<
  *
  * @param SchemaT - The type of the tool input schema. Usually you don't need to specify this.
  * @param SchemaOutputT - The TypeScript type representing the result of applying the schema to the tool arguments. Useful for type checking tool handler functions when using JSONSchema.
+ * @param ToolOutputT - The return type of the tool.
+ * @param ToolEventT - The type of values yielded by the tool when using an async generator.
  */
 export interface DynamicStructuredToolInput<
   SchemaT = ToolInputSchemaBase,
   SchemaOutputT = ToolInputSchemaOutputType<SchemaT>,
   ToolOutputT = ToolOutputType,
+  ToolEventT = ToolEventType,
 > extends BaseDynamicToolInput {
   /**
    * Tool handler function - the function that will be called when the tool is invoked.
@@ -369,7 +392,7 @@ export interface DynamicStructuredToolInput<
     input: SchemaOutputT,
     runManager?: CallbackManagerForToolRun,
     config?: RunnableConfig
-  ) => Promise<ToolOutputT>;
+  ) => Promise<ToolOutputT> | AsyncGenerator<ToolEventT, ToolOutputT>;
   schema: SchemaT;
 }
 
@@ -418,7 +441,7 @@ export function isStructuredToolParams(
     typeof tool === "object" &&
     "name" in tool &&
     "schema" in tool &&
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     (isInteropZodSchema(tool.schema as Record<string, any>) ||
       (tool.schema != null &&
         typeof tool.schema === "object" &&
@@ -442,7 +465,7 @@ export function isLangChainTool(tool?: unknown): tool is StructuredToolParams {
   return (
     isStructuredToolParams(tool) ||
     isRunnableToolLike(tool) ||
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     isStructuredTool(tool as any)
   );
 }

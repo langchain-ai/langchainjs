@@ -59,7 +59,7 @@ export function convertToOpenAIFunction(
  * @returns {ToolDefinition} The inputted tool in OpenAI tool format.
  */
 export function convertToOpenAITool(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   tool: StructuredToolInterface | Record<string, any> | RunnableToolLike,
   fields?:
     | {
@@ -85,7 +85,7 @@ export function convertToOpenAITool(
   }
 
   if (fieldsCopy?.strict !== undefined) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     (toolDef.function as any).strict = fieldsCopy.strict;
   }
 

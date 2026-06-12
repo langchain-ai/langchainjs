@@ -21,9 +21,9 @@ export type RunnableIOSchema = {
  * Should not change on patch releases.
  */
 export interface RunnableInterface<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput = any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunOutput = any,
   CallOptions extends RunnableConfig = RunnableConfig,
 > extends SerializableInterface {
@@ -73,12 +73,12 @@ export interface Node {
   id: string;
   name: string;
   data: RunnableIOSchema | RunnableInterface;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   metadata?: Record<string, any>;
 }
 
 export interface RunnableConfig<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   ConfigurableFieldType extends Record<string, any> = Record<string, any>,
 > extends BaseCallbackConfig {
   /**

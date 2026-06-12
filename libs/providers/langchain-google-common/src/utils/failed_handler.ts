@@ -13,7 +13,7 @@ const STATUS_NO_RETRY = [
   409, // Conflict
 ];
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export function failedAttemptHandler(error: any) {
   const status = error?.response?.status ?? 0;
 

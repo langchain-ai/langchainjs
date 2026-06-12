@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { z } from "zod/v3";
 import { AIMessage, ToolMessage, ToolCall } from "@langchain/core/messages";
 import {

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { it, test, expect, describe, beforeAll, afterAll, vi } from "vitest";
 import { z } from "zod/v3";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
@@ -14,6 +14,12 @@ import { NewTokenIndices } from "@langchain/core/callbacks/base";
 
 describe("ChatOpenAI", () => {
   describe("should initialize with correct values", () => {
+    it("supports string model shorthand", () => {
+      const chat = new ChatOpenAI("gpt-4o-mini", { temperature: 0.2 });
+      expect(chat.model).toBe("gpt-4o-mini");
+      expect(chat.temperature).toBe(0.2);
+    });
+
     it("should handle disableStreaming and streaming properties", () => {
       let chat = new ChatOpenAI({
         model: "gpt-4o-mini",
@@ -402,6 +408,227 @@ describe("ChatOpenAI", () => {
     });
   });
 
+  describe("withStructuredOutput with Standard Schema", () => {
+    function makeMockStandardSchema() {
+      return {
+        "~standard": {
+          version: 1 as const,
+          vendor: "test",
+          validate: (value: unknown) => ({
+            value: value as Record<string, unknown>,
+          }),
+          jsonSchema: {
+            input: () => ({
+              type: "object",
+              properties: {
+                location: { type: "string", description: "The city name" },
+              },
+              required: ["location"],
+            }),
+            output: () => ({
+              type: "object",
+              properties: {
+                location: { type: "string", description: "The city name" },
+              },
+              required: ["location"],
+            }),
+          },
+        },
+      };
+    }
+
+    it("sends correct tool definition with functionCalling method", async () => {
+      const mockFetch = vi.fn<(url: any, options?: any) => Promise<any>>();
+      mockFetch.mockImplementation((url, options) => {
+        mockFetch.mock.calls.push([url, options]);
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({}),
+        });
+      });
+
+      const model = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        apiKey: "test-key",
+        configuration: { fetch: mockFetch },
+        maxRetries: 0,
+      });
+
+      const modelWithTools = model.withStructuredOutput(
+        makeMockStandardSchema(),
+        { method: "functionCalling" }
+      );
+
+      await expect(
+        modelWithTools.invoke("What's the weather?")
+      ).rejects.toThrow();
+
+      expect(mockFetch).toHaveBeenCalled();
+      const [, options] = mockFetch.mock.calls[0];
+      const body = JSON.parse(options.body);
+
+      expect(body.tools).toHaveLength(1);
+      expect(body.tools[0].function.name).toBe("extract");
+      expect(body.tools[0].function.parameters).toEqual({
+        type: "object",
+        properties: {
+          location: { type: "string", description: "The city name" },
+        },
+        required: ["location"],
+      });
+    });
+
+    it("sends correct json_schema with jsonSchema method", async () => {
+      const mockFetch = vi.fn<(url: any, options?: any) => Promise<any>>();
+      mockFetch.mockImplementation((url, options) => {
+        mockFetch.mock.calls.push([url, options]);
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({}),
+        });
+      });
+
+      const model = new ChatOpenAI({
+        model: "gpt-4o-2024-08-06",
+        apiKey: "test-key",
+        configuration: { fetch: mockFetch },
+        maxRetries: 0,
+      });
+
+      const modelWithTools = model.withStructuredOutput(
+        makeMockStandardSchema(),
+        { name: "get_weather", method: "jsonSchema" }
+      );
+
+      await expect(
+        modelWithTools.invoke("What's the weather?")
+      ).rejects.toThrow();
+
+      expect(mockFetch).toHaveBeenCalled();
+      const [, options] = mockFetch.mock.calls[0];
+      const body = JSON.parse(options.body);
+
+      expect(body.response_format).toBeDefined();
+      expect(body.response_format.type).toBe("json_schema");
+      expect(body.response_format.json_schema.name).toBe("get_weather");
+      expect(body.response_format.json_schema.schema).toEqual({
+        type: "object",
+        properties: {
+          location: { type: "string", description: "The city name" },
+        },
+        required: ["location"],
+      });
+    });
+
+    it("populates ls_structured_output_format metadata", async () => {
+      const mockFetch = vi.fn<(url: any, options?: any) => Promise<any>>();
+      mockFetch.mockImplementation((url, options) => {
+        mockFetch.mock.calls.push([url, options]);
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({}),
+        });
+      });
+
+      const schema = makeMockStandardSchema();
+      const model = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        apiKey: "test-key",
+        configuration: { fetch: mockFetch },
+        maxRetries: 0,
+      }).withStructuredOutput(schema, {
+        method: "functionCalling",
+      });
+
+      let extra: any;
+      await expect(
+        model.invoke("What's the weather?", {
+          callbacks: [
+            {
+              handleLLMStart: (
+                _1: any,
+                _2: any,
+                _3: any,
+                _4: any,
+                extraParams: any
+              ) => {
+                extra = extraParams;
+              },
+            },
+          ],
+        })
+      ).rejects.toThrow();
+
+      const expectedJsonSchema = {
+        type: "object",
+        properties: {
+          location: { type: "string", description: "The city name" },
+        },
+        required: ["location"],
+      };
+      expect(extra).toMatchObject({
+        options: {
+          ls_structured_output_format: {
+            kwargs: { method: "function_calling" },
+            schema: {
+              title: "extract",
+              ...expectedJsonSchema,
+            },
+          },
+        },
+      });
+    });
+  });
+
+  test("bindTools propagates defer_loading from tool extras", async () => {
+    const model = new ChatOpenAI({
+      model: "gpt-5.3",
+    });
+
+    const deferredTool = tool(async () => "result", {
+      name: "deferred_tool",
+      description: "A deferred tool",
+      schema: z.object({ input: z.string() }),
+      extras: { defer_loading: true },
+    });
+
+    const normalTool = tool(async () => "result", {
+      name: "normal_tool",
+      description: "A normal tool",
+      schema: z.object({ input: z.string() }),
+    });
+
+    const modelWithTools = model.bindTools([
+      deferredTool,
+      normalTool,
+    ]) as ChatOpenAI;
+
+    // @ts-expect-error - defaultOptions is protected
+    const tools = modelWithTools.defaultOptions.tools;
+    expect(tools).toHaveLength(2);
+    expect(tools[0]).toHaveProperty("defer_loading", true);
+    expect(tools[0]).toHaveProperty("type", "function");
+    expect(tools[0].function.name).toBe("deferred_tool");
+    expect(tools[1]).not.toHaveProperty("defer_loading");
+    expect(tools[1]).toHaveProperty("type", "function");
+    expect(tools[1].function.name).toBe("normal_tool");
+  });
+
+  test("bindTools passes through tool_search as built-in tool", async () => {
+    const model = new ChatOpenAI({
+      model: "gpt-5.3",
+    });
+
+    const modelWithTools = model.bindTools([
+      { type: "tool_search" },
+    ]) as ChatOpenAI;
+
+    // @ts-expect-error - defaultOptions is protected
+    const tools = modelWithTools.defaultOptions.tools;
+    expect(tools).toHaveLength(1);
+    expect(tools[0]).toEqual({ type: "tool_search" });
+  });
+
   // https://github.com/langchain-ai/langchainjs/issues/8586
   test("multiple bindTools calls will not override each other", async () => {
     const model = new ChatOpenAI({
@@ -604,6 +831,8 @@ describe("ChatOpenAI", () => {
       expect(isReasoningModel("gpt-5.1-mini")).toBe(true);
       expect(isReasoningModel("gpt-5.2")).toBe(true);
       expect(isReasoningModel("gpt-5.2-pro")).toBe(true);
+      expect(isReasoningModel("gpt-5.4")).toBe(true);
+      expect(isReasoningModel("gpt-5.4-pro")).toBe(true);
     });
 
     it("should return true for codex models based on gpt-5", () => {
@@ -644,6 +873,14 @@ describe("ChatOpenAI", () => {
       expect(_modelPrefersResponsesAPI("gpt-5.2-pro-2025-12-11")).toBe(true);
     });
 
+    it("should return true for gpt-5.4-pro", () => {
+      expect(_modelPrefersResponsesAPI("gpt-5.4-pro")).toBe(true);
+    });
+
+    it("should return true for gpt-5.5-pro", () => {
+      expect(_modelPrefersResponsesAPI("gpt-5.5-pro")).toBe(true);
+    });
+
     it("should return true for codex models", () => {
       expect(_modelPrefersResponsesAPI("codex-mini-latest")).toBe(true);
       expect(_modelPrefersResponsesAPI("gpt-5-codex")).toBe(true);
@@ -661,6 +898,7 @@ describe("ChatOpenAI", () => {
       expect(_modelPrefersResponsesAPI("gpt-5")).toBe(false);
       expect(_modelPrefersResponsesAPI("gpt-5.1")).toBe(false);
       expect(_modelPrefersResponsesAPI("gpt-5.2")).toBe(false);
+      expect(_modelPrefersResponsesAPI("gpt-5.4")).toBe(false);
       expect(_modelPrefersResponsesAPI("o3")).toBe(false);
       expect(_modelPrefersResponsesAPI("o4-mini")).toBe(false);
     });
@@ -1444,6 +1682,206 @@ describe("ChatOpenAI", () => {
 
       expect(callbackHandler.handleLLMNewToken).toHaveBeenCalled();
       expect(result.text).toEqual("Foo bar");
+    });
+  });
+
+  describe("withStructuredOutput streaming with malformed structured output (#10894)", () => {
+    // Helper: builds a Response that streams a single response.completed event
+    // whose output_text contains the given JSON text. The mock targets the
+    // Responses API surface, which is where #10894 was reported.
+    const buildMalformedStream = (outputText: string) => {
+      const mockResponseDefaults = {
+        object: "response",
+        background: false,
+        created_at: Math.floor(Date.now() / 1000),
+        completed_at: Math.floor(Date.now() / 1000),
+        error: null,
+        frequency_penalty: 0.0,
+        incomplete_details: null,
+        instructions: null,
+        max_output_tokens: null,
+        max_tool_calls: null,
+        output: [],
+        parallel_tool_calls: true,
+        presence_penalty: 0.0,
+        previous_response_id: null,
+        prompt_cache_key: null,
+        prompt_cache_retention: null,
+        reasoning: { effort: null, summary: null },
+        safety_identifier: null,
+        service_tier: "auto",
+        store: true,
+        temperature: 1.0,
+        text: {
+          format: {
+            type: "json_schema" as const,
+            name: "Plan",
+            strict: true,
+            schema: {
+              type: "object",
+              additionalProperties: false,
+              required: ["status", "plan"],
+              properties: {
+                status: { type: "string" },
+                plan: {
+                  type: "object",
+                  additionalProperties: false,
+                  required: ["steps"],
+                  properties: {
+                    steps: { type: "array", items: { type: "string" } },
+                  },
+                },
+              },
+            },
+          },
+          verbosity: "medium",
+        },
+        tool_choice: "auto",
+        tools: [],
+        top_logprobs: 0,
+        top_p: 1.0,
+        truncation: "disabled",
+        usage: {
+          input_tokens: 10,
+          input_tokens_details: { cached_tokens: 0 },
+          output_tokens: 12,
+          output_tokens_details: { reasoning_tokens: 0 },
+          total_tokens: 22,
+        },
+        user: null,
+        metadata: {},
+      };
+
+      const events = [
+        {
+          type: "response.created",
+          response: {
+            ...mockResponseDefaults,
+            id: "resp_10894",
+            status: "in_progress",
+          },
+          sequence_number: 0,
+        },
+        {
+          type: "response.completed",
+          response: {
+            ...mockResponseDefaults,
+            id: "resp_10894",
+            status: "completed",
+            output: [
+              {
+                id: "msg_10894",
+                type: "message",
+                status: "completed",
+                role: "assistant",
+                content: [
+                  {
+                    type: "output_text",
+                    annotations: [],
+                    logprobs: [],
+                    text: outputText,
+                  },
+                ],
+              },
+            ],
+          },
+          sequence_number: 1,
+        },
+      ]
+        .map((e) => `event: ${e.type}\ndata: ${JSON.stringify(e)}\n`)
+        .join("\n");
+
+      const mockFetch =
+        vi.fn<(url: string | URL | Request, options?: any) => Promise<any>>();
+      mockFetch.mockImplementation(() =>
+        Promise.resolve(
+          new Response(`${events}\n`, {
+            status: 200,
+            headers: { "Content-Type": "text/event-stream" },
+          })
+        )
+      );
+      return mockFetch;
+    };
+
+    // Trailing non-whitespace token after a valid JSON object: matches the
+    // production failure mode reported in the issue (extra tokens emitted by
+    // gpt-5-mini on service_tier: "auto"). JSON.parse rejects this with
+    // 'Unexpected non-whitespace character after JSON at position N'.
+    const malformed = '{"status":"ok","plan":{"steps":[]}}x';
+
+    const planSchema = z.object({
+      status: z.string(),
+      plan: z.object({
+        steps: z.array(z.string()),
+      }),
+    });
+
+    it("returns { parsed: null } when invoked with includeRaw: true on a malformed structured response", async () => {
+      const model = new ChatOpenAI({
+        model: "gpt-5-mini",
+        apiKey: "test-key",
+        useResponsesApi: true,
+        streaming: true,
+        configuration: { fetch: buildMalformedStream(malformed) },
+      });
+
+      const structured = model.withStructuredOutput(planSchema, {
+        method: "jsonSchema",
+        includeRaw: true,
+      });
+
+      const result = (await structured.invoke("plan something")) as {
+        raw: unknown;
+        parsed: unknown;
+      };
+
+      // includeRaw fallback path: raw message survives, parsed degrades to
+      // null instead of bubbling a SyntaxError up to the caller.
+      expect(result.parsed).toBeNull();
+      expect(result.raw).toBeDefined();
+    });
+
+    it("throws a typed OutputParserException when invoked with includeRaw: false on a malformed structured response", async () => {
+      const model = new ChatOpenAI({
+        model: "gpt-5-mini",
+        apiKey: "test-key",
+        useResponsesApi: true,
+        streaming: true,
+        configuration: { fetch: buildMalformedStream(malformed) },
+      });
+
+      const structured = model.withStructuredOutput(planSchema, {
+        method: "jsonSchema",
+      });
+
+      // Non-includeRaw path: the StructuredOutputParser fallback throws a
+      // typed OutputParserException (not a raw SyntaxError that would have
+      // killed the stream mid-flight before the converter-level fix). The
+      // caller can catch it normally and retry.
+      await expect(structured.invoke("plan something")).rejects.toThrow(
+        /Failed to parse/i
+      );
+    });
+
+    it("returns the parsed object when the structured response is well-formed", async () => {
+      // Regression guard: the lambda + altParser combo must still hand back
+      // the parsed result on the happy path.
+      const wellFormed = '{"status":"ok","plan":{"steps":["a","b"]}}';
+      const model = new ChatOpenAI({
+        model: "gpt-5-mini",
+        apiKey: "test-key",
+        useResponsesApi: true,
+        streaming: true,
+        configuration: { fetch: buildMalformedStream(wellFormed) },
+      });
+
+      const structured = model.withStructuredOutput(planSchema, {
+        method: "jsonSchema",
+      });
+
+      const result = await structured.invoke("plan something");
+      expect(result).toEqual({ status: "ok", plan: { steps: ["a", "b"] } });
     });
   });
 });

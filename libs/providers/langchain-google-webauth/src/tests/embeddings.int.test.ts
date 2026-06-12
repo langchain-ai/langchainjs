@@ -3,7 +3,7 @@ import { GooglePlatformType } from "@langchain/google-common";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { GoogleEmbeddings, GoogleEmbeddingsInput } from "../embeddings.js";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 function onFailedAttempt(err: any): any {
   throw err;
 }

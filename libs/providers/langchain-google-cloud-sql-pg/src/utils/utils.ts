@@ -22,7 +22,7 @@ export const getIAMPrincipalEmail = async (
   const url = `https://oauth2.googleapis.com/tokeninfo?access_token=${accessToken}`;
   const clientResponse = await client
     .request({ url })
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     .then((res: { data: any }) => res.data);
 
   if (!("email" in clientResponse)) {
@@ -35,7 +35,7 @@ export const getIAMPrincipalEmail = async (
   return email.replace(".gserviceaccount.com", "");
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export const customZip = (...arrays: any[]) => {
   const minLength = Math.min(...arrays.map((arr) => arr.length));
   const result = [];

@@ -1,5 +1,28 @@
 # @langchain/redis
 
+## 1.1.3
+
+### Patch Changes
+
+- [#10872](https://github.com/langchain-ai/langchainjs/pull/10872) [`a640079`](https://github.com/langchain-ai/langchainjs/commit/a64007997a4940f51bba3c1c83dae89d1ccfb692) Thanks [@hntrl](https://github.com/hntrl)! - chore(deps): remove redundant @types/uuid declarations
+
+  Remove `@types/uuid` from package manifests that rely on `@langchain/core/utils/uuid` or do not require uuid type stubs directly, and refresh the lockfile entries accordingly.
+
+## 1.1.2
+
+### Patch Changes
+
+- [#10776](https://github.com/langchain-ai/langchainjs/pull/10776) [`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6) Thanks [@hntrl](https://github.com/hntrl)! - fix(deps): remediate uuid vulnerability by removing direct uuid usage
+
+## 1.1.1
+
+### Patch Changes
+
+- [#10701](https://github.com/langchain-ai/langchainjs/pull/10701) [`880e396`](https://github.com/langchain-ai/langchainjs/commit/880e3969ea643a2147777a4d5e8bd606a697edf7) Thanks [@hntrl](https://github.com/hntrl)! - fix(redis): improve RediSearch query escaping and filter validation
+  - add shared query escaping and field validation helpers for Redis filter builders
+  - apply escaping and type validation to `buildCustomQuery` tag/text/numeric paths
+  - add regression tests covering escaped values, wildcard handling, and invalid filter inputs
+
 ## 1.1.0
 
 ### Minor Changes

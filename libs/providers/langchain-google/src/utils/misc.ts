@@ -14,3 +14,13 @@ export const iife = <T>(fn: () => T): T => fn();
 export type Prettify<T> = T extends object
   ? { [K in keyof T]: Prettify<T[K]> }
   : T;
+
+/**
+ * Distributes over a string union and applies Lowercase only to
+ * string-literal members, filtering out wide `string` / `string & {}`.
+ */
+export type LowercaseLiteral<T> = T extends string
+  ? string extends T
+    ? never
+    : Lowercase<T>
+  : never;

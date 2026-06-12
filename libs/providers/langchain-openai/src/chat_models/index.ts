@@ -20,7 +20,11 @@ import {
   ChatOpenAIResponses,
   ChatOpenAIResponsesCallOptions,
 } from "./responses.js";
-import { BaseChatOpenAI, BaseChatOpenAIFields } from "./base.js";
+import {
+  BaseChatOpenAI,
+  BaseChatOpenAIFields,
+  getChatOpenAIModelParams,
+} from "./base.js";
 
 export type { OpenAICallOptions, OpenAIChatInput };
 
@@ -606,8 +610,17 @@ export class ChatOpenAI<
     return [...super.callKeys, "useResponsesApi"];
   }
 
-  constructor(protected fields?: ChatOpenAIFields) {
+  protected fields?: ChatOpenAIFields;
+
+  constructor(model: string, fields?: Omit<ChatOpenAIFields, "model">);
+  constructor(fields?: ChatOpenAIFields);
+  constructor(
+    modelOrFields?: string | ChatOpenAIFields,
+    fieldsArg?: Omit<ChatOpenAIFields, "model">
+  ) {
+    const fields = getChatOpenAIModelParams(modelOrFields, fieldsArg);
     super(fields);
+    this.fields = fields;
     this.useResponsesApi = fields?.useResponsesApi ?? false;
     this.responses = fields?.responses ?? new ChatOpenAIResponses(fields);
     this.completions = fields?.completions ?? new ChatOpenAICompletions(fields);

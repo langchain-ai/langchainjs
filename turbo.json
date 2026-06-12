@@ -13,31 +13,10 @@
     "build:examples": {
       "dependsOn": ["^build:compile"]
     },
-    "lint": {
-      "inputs": ["src/**/*.ts", "src/**/*.tsx", "eslint.config.ts"],
-      "outputs": []
-    },
-    "lint:fix": {
-      "inputs": ["src/**/*.ts", "src/**/*.tsx", "eslint.config.ts"],
-      "outputs": [],
-      "cache": false
-    },
-    "format": {
-      "cache": false
-    },
-    "format:check": {
-      "inputs": ["src/**"],
-      "outputs": []
-    },
     "test": {
       "dependsOn": ["build:compile"],
       "inputs": ["src/**", "tests/**", "**/*.test.ts", "vitest.config.ts"],
       "outputs": []
-    },
-    "test:ci": {
-      "dependsOn": ["build:compile"],
-      "inputs": ["src/**", "tests/**", "**/*.test.ts", "vitest.config.ts"],
-      "outputs": ["coverage/**"]
     },
     "test:single": {
       "dependsOn": ["build:compile"],
@@ -45,7 +24,8 @@
     },
     "test:int": {
       "dependsOn": ["build:compile"],
-      "cache": false
+      "cache": false,
+      "env": ["XAI_API_KEY"]
     },
     "test:integration": {
       "dependsOn": ["build:compile"],

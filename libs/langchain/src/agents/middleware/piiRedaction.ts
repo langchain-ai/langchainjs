@@ -357,7 +357,7 @@ function restoreMessage(
  */
 export function piiRedactionMiddleware(
   options: PIIRedactionMiddlewareConfig = {}
-): ReturnType<typeof createMiddleware> {
+) {
   const redactionMap: RedactionMap = {};
 
   console.warn(

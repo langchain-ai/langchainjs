@@ -1,4 +1,4 @@
-import { v4 as uuidv4, validate as isUuid } from "uuid";
+import { v4 as uuidv4, validate as isUuid } from "../utils/uuid/index.js";
 import type {
   RunnableInterface,
   RunnableIOSchema,
@@ -61,7 +61,7 @@ export class Graph {
   }
 
   // Convert the graph to a JSON-serializable format.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   toJSON(): Record<string, any> {
     const stableNodeIds: Record<string, string | number> = {};
     Object.values(this.nodes).forEach((node, i) => {
@@ -94,7 +94,7 @@ export class Graph {
   addNode(
     data: RunnableInterface | RunnableIOSchema,
     id?: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     metadata?: Record<string, any>
   ): Node {
     if (id !== undefined && this.nodes[id] !== undefined) {

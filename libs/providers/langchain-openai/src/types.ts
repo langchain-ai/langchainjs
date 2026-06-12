@@ -85,7 +85,7 @@ export declare interface OpenAIBaseInput {
    * https://platform.openai.com/docs/api-reference/completions/create |
    * `openai.createCompletion`} that are not explicitly specified on this class.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   modelKwargs?: Record<string, any>;
 
   /**
@@ -306,7 +306,7 @@ type ChatOpenAIResponseFormatJSONSchema = Omit<
      * The schema for the response format, described as a JSON Schema object
      * or a Zod object.
      */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     schema: Record<string, any> | InteropZodObject;
   };
 };

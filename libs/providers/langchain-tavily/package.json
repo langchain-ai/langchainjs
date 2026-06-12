@@ -12,7 +12,7 @@
     "type": "git",
     "url": "git@github.com:langchain-ai/langchainjs.git"
   },
-  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-tavily/",
+  "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/community/langchain-tavily/",
   "scripts": {
     "build": "turbo build:compile --filter @langchain/tavily --output-logs new-only",
     "build:compile": "tsdown",
@@ -35,16 +35,15 @@
   },
   "devDependencies": {
     "@langchain/core": "workspace:^",
-    "@langchain/eslint": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
-    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/coverage-v8": "^4.1.8",
     "dotenv": "^16.3.1",
     "dpdm": "^3.14.0",
     "eslint": "^9.34.0",
     "prettier": "^3.5.0",
-    "typescript": "~5.8.3",
-    "vitest": "^3.2.4"
+    "typescript": "~6.0.3",
+    "vitest": "^4.1.8"
   },
   "publishConfig": {
     "access": "public"

@@ -3,6 +3,9 @@ import {
   defineConfig,
   type UserConfigExport,
 } from "vitest/config";
+import pkg from "./package.json" with { type: "json" };
+
+const define = { __PKG_VERSION__: JSON.stringify(pkg.version) };
 
 export default defineConfig((env) => {
   const common: UserConfigExport = {
@@ -23,6 +26,7 @@ export default defineConfig((env) => {
 
   if (env.mode === "int") {
     return {
+      define,
       test: {
         ...common.test,
         globals: false,
@@ -36,6 +40,7 @@ export default defineConfig((env) => {
 
   if (env.mode === "bench") {
     return {
+      define,
       test: {
         ...common.test,
         globals: false,
@@ -49,6 +54,7 @@ export default defineConfig((env) => {
   }
 
   return {
+    define,
     test: {
       ...common.test,
       include: configDefaults.include,

@@ -52,6 +52,7 @@ export {
 export {
   TODO_LIST_MIDDLEWARE_SYSTEM_PROMPT,
   todoListMiddleware,
+  type Todo,
   type TodoListMiddlewareOptions,
 } from "./todoListMiddleware.js";
 export {
@@ -71,6 +72,10 @@ export {
   toolEmulatorMiddleware,
   type ToolEmulatorOptions,
 } from "./toolEmulator.js";
+export {
+  providerToolSearchMiddleware,
+  type ProviderToolSearchMiddlewareConfig,
+} from "./providerToolSearch.js";
 
 /**
  * Provider specific middleware

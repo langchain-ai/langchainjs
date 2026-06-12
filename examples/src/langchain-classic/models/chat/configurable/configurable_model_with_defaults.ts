@@ -14,7 +14,7 @@ openaiRes:  I'm an AI language model created by OpenAI, and I don't have a perso
 
 const claudeRes = await firstLlm.invoke("what's your name", {
   configurable: {
-    first_model: "claude-3-5-sonnet-20240620",
+    first_model: "claude-sonnet-4-5-20250929",
     first_temperature: 0.5,
     first_maxTokens: 100,
   },

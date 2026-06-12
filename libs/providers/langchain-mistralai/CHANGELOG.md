@@ -1,5 +1,37 @@
 # @langchain/mistralai
 
+## 1.1.0
+
+### Minor Changes
+
+- [#10873](https://github.com/langchain-ai/langchainjs/pull/10873) [`a74d574`](https://github.com/langchain-ai/langchainjs/commit/a74d574f7f086bea2f5c7a852e869f7d24be2f55) Thanks [@baptistejamin](https://github.com/baptistejamin)! - chore(mistralai): upgrade to @mistralai/mistralai v2
+
+  Also populates `response_metadata.model` on chat completions (was missing before).
+
+## 1.0.8
+
+### Patch Changes
+
+- [#10776](https://github.com/langchain-ai/langchainjs/pull/10776) [`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6) Thanks [@hntrl](https://github.com/hntrl)! - fix(deps): remediate uuid vulnerability by removing direct uuid usage
+
+## 1.0.7
+
+### Patch Changes
+
+- [#10211](https://github.com/langchain-ai/langchainjs/pull/10211) [`a4d257f`](https://github.com/langchain-ai/langchainjs/commit/a4d257fe4919e26662e9001fa8252a93625b17e0) Thanks [@colifran](https://github.com/colifran)! - feat(mistralai): implement standard schema support for structured output
+
+## 1.0.6
+
+### Patch Changes
+
+- [#10106](https://github.com/langchain-ai/langchainjs/pull/10106) [`9f30267`](https://github.com/langchain-ai/langchainjs/commit/9f30267e95a2a42fac71f1d3674b84c5a190dbbc) Thanks [@hntrl](https://github.com/hntrl)! - Add package version metadata to runnable traces. Each package now stamps its version in `this.metadata.versions` at construction time, making version info available in LangSmith trace metadata.
+
+## 1.0.5
+
+### Patch Changes
+
+- [#10080](https://github.com/langchain-ai/langchainjs/pull/10080) [`b583729`](https://github.com/langchain-ai/langchainjs/commit/b583729e99cf0c035630f6b311c4d069a1980cca) Thanks [@hntrl](https://github.com/hntrl)! - Add string-model constructor overloads for chat models (with supporting tests where applicable).
+
 ## 1.0.4
 
 ### Patch Changes

@@ -80,7 +80,7 @@ export async function loadEvaluator<T extends keyof EvaluatorType>(
       );
       break;
     case "trajectory":
-      // eslint-disable-next-line no-instanceof/no-instanceof
+      // oxlint-disable-next-line no-instanceof/no-instanceof
       if (!(llm instanceof BaseChatModel)) {
         throw new Error("LLM must be an instance of a base chat model.");
       }
