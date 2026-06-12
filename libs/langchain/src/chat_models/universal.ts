@@ -33,6 +33,7 @@ import { type StructuredToolInterface } from "@langchain/core/tools";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { ChatResult } from "@langchain/core/outputs";
 import { ModelProfile } from "@langchain/core/language_models/profile";
+import { ChatModelStream } from "@langchain/core/language_models/stream";
 
 // TODO: remove once `EventStreamCallbackHandlerInput` is exposed in core
 interface EventStreamCallbackHandlerInput extends Omit<
@@ -600,16 +601,47 @@ export class ConfigurableModel<
     });
   }
 
+  /**
+   * @deprecated Use {@link BaseChatModel.streamEvents} without a `version`
+   * option for content-block streaming instead.
+   */
   streamEvents(
     input: RunInput,
-    options: Partial<CallOptions> & { version: "v1" | "v2" },
+    options: Partial<CallOptions> & { version: "v2" },
     streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
   ): IterableReadableStream<StreamEvent>;
 
+  /**
+   * @deprecated Use {@link BaseChatModel.streamEvents} without a `version`
+   * option for content-block streaming instead.
+   */
   streamEvents(
     input: RunInput,
     options: Partial<CallOptions> & {
-      version: "v1" | "v2";
+      version: "v2";
+      encoding: "text/event-stream";
+    },
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<Uint8Array>;
+
+  /**
+   * @deprecated Use {@link BaseChatModel.streamEvents} without a `version`
+   * option for content-block streaming instead.
+   */
+  streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & { version: "v1" },
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<StreamEvent>;
+
+  /**
+   * @deprecated Use {@link BaseChatModel.streamEvents} without a `version`
+   * option for content-block streaming instead.
+   */
+  streamEvents(
+    input: RunInput,
+    options: Partial<CallOptions> & {
+      version: "v1";
       encoding: "text/event-stream";
     },
     streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
@@ -617,23 +649,83 @@ export class ConfigurableModel<
 
   streamEvents(
     input: RunInput,
-    options: Partial<CallOptions> & {
-      version: "v1" | "v2";
+    options?: Partial<CallOptions>
+  ): ChatModelStream;
+
+  streamEvents(
+    input: RunInput,
+    options?: Partial<CallOptions> & {
+      version?: "v1" | "v2";
       encoding?: "text/event-stream" | undefined;
     },
     streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
-  ): IterableReadableStream<StreamEvent | Uint8Array> {
+  ): ChatModelStream | IterableReadableStream<StreamEvent | Uint8Array> {
+    if (options?.version === "v1" || options?.version === "v2") {
+      const outerThis = this;
+      const tracingCallOptions = options;
+      async function* wrappedGenerator() {
+        const model = await outerThis._getModelInstance(tracingCallOptions);
+        const config = ensureConfig(tracingCallOptions);
+        const tracingOptions = {
+          ...config,
+          version: tracingCallOptions.version,
+          ...(tracingCallOptions.encoding !== undefined
+            ? { encoding: tracingCallOptions.encoding }
+            : {}),
+        };
+        let eventStream: IterableReadableStream<StreamEvent | Uint8Array>;
+        if (
+          tracingCallOptions.version === "v1" &&
+          tracingCallOptions.encoding === "text/event-stream"
+        ) {
+          eventStream = model.streamEvents(
+            input,
+            tracingOptions as Partial<CallOptions> & {
+              version: "v1";
+              encoding: "text/event-stream";
+            },
+            streamOptions
+          );
+        } else if (tracingCallOptions.version === "v1") {
+          eventStream = model.streamEvents(
+            input,
+            tracingOptions as Partial<CallOptions> & { version: "v1" },
+            streamOptions
+          );
+        } else if (
+          tracingCallOptions.version === "v2" &&
+          tracingCallOptions.encoding === "text/event-stream"
+        ) {
+          eventStream = model.streamEvents(
+            input,
+            tracingOptions as Partial<CallOptions> & {
+              version: "v2";
+              encoding: "text/event-stream";
+            },
+            streamOptions
+          );
+        } else {
+          eventStream = model.streamEvents(
+            input,
+            tracingOptions as Partial<CallOptions> & { version: "v2" },
+            streamOptions
+          );
+        }
+
+        for await (const chunk of eventStream) {
+          yield chunk;
+        }
+      }
+      return IterableReadableStream.fromAsyncGenerator(wrappedGenerator());
+    }
+
     const outerThis = this;
-    async function* wrappedGenerator() {
+    async function* deferredEvents() {
       const model = await outerThis._getModelInstance(options);
       const config = ensureConfig(options);
-      const eventStream = model.streamEvents(input, config, streamOptions);
-
-      for await (const chunk of eventStream) {
-        yield chunk;
-      }
+      yield* model.streamEvents(input, config);
     }
-    return IterableReadableStream.fromAsyncGenerator(wrappedGenerator());
+    return new ChatModelStream(deferredEvents());
   }
 
   /**

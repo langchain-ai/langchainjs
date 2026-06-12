@@ -71,6 +71,11 @@ import { assembleStructuredOutputPipeline } from "./structured_output.js";
 import type { ChatModelStreamEvent } from "./event.js";
 import { ChatModelStream } from "./stream.js";
 import { convertChunksToEvents } from "./compat.js";
+import {
+  EventStreamCallbackHandlerInput,
+  StreamEvent,
+} from "../tracers/event_stream.js";
+import { IterableReadableStream } from "../utils/stream.js";
 
 // oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export type ToolChoice = string | Record<string, any> | "auto" | "any";
@@ -341,6 +346,52 @@ export abstract class BaseChatModel<
   }
 
   /**
+   * @deprecated Use {@link BaseChatModel.streamEvents} without a `version`
+   * option for content-block streaming instead.
+   */
+  streamEvents(
+    input: BaseLanguageModelInput,
+    options: Partial<CallOptions> & { version: "v2" },
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<StreamEvent>;
+
+  /**
+   * @deprecated Use {@link BaseChatModel.streamEvents} without a `version`
+   * option for content-block streaming instead.
+   */
+  streamEvents(
+    input: BaseLanguageModelInput,
+    options: Partial<CallOptions> & {
+      version: "v2";
+      encoding: "text/event-stream";
+    },
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<Uint8Array>;
+
+  /**
+   * @deprecated Use {@link BaseChatModel.streamEvents} without a `version`
+   * option for content-block streaming instead.
+   */
+  streamEvents(
+    input: BaseLanguageModelInput,
+    options: Partial<CallOptions> & { version: "v1" },
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<StreamEvent>;
+
+  /**
+   * @deprecated Use {@link BaseChatModel.streamEvents} without a `version`
+   * option for content-block streaming instead.
+   */
+  streamEvents(
+    input: BaseLanguageModelInput,
+    options: Partial<CallOptions> & {
+      version: "v1";
+      encoding: "text/event-stream";
+    },
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<Uint8Array>;
+
+  /**
    * Create a {@link ChatModelStream} for the given input.
    *
    * Returns a stream object that is both `AsyncIterable<ChatModelStreamEvent>`
@@ -351,23 +402,63 @@ export abstract class BaseChatModel<
    * @param options - Optional call options.
    * @returns A {@link ChatModelStream}.
    *
+   * When `options.version` is `"v1"` or `"v2"`, this delegates to
+   * {@link Runnable.streamEvents} for callback-based tracing events instead.
+   * That path is deprecated on chat models; prefer calling `streamEvents()`
+   * without a `version` option.
+   *
    * @example
    * ```ts
-   * const stream = model.streamV2([{ role: "user", content: "Hello" }]);
+   * const stream = model.streamEvents([{ role: "user", content: "Hello" }]);
    *
    * // Stream text
    * for await (const token of stream.text) {
    *   process.stdout.write(token);
    * }
    *
+   * // Stream tool calls
+   * for await (const toolCall of stream.toolCalls) {
+   *   console.log(toolCall);
+   * }
+   *
+   * // Stream reasoning
+   * for await (const reasoning of stream.reasoning) {
+   *   console.log(reasoning);
+   * }
+   *
+   * // Stream usage
+   * for await (const usage of stream.usage) {
+   *   console.log(usage);
+   * }
+   *
    * // Or await the full message
    * const message = await stream;
    * ```
    */
-  streamV2(
+  streamEvents(
     input: BaseLanguageModelInput,
     options?: Partial<CallOptions>
-  ): ChatModelStream {
+  ): ChatModelStream;
+
+  streamEvents(
+    input: BaseLanguageModelInput,
+    options?: Partial<CallOptions> & {
+      version?: "v1" | "v2";
+      encoding?: "text/event-stream" | undefined;
+    },
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): ChatModelStream | IterableReadableStream<StreamEvent | Uint8Array> {
+    if (options?.version === "v1" || options?.version === "v2") {
+      return super.streamEvents(
+        input,
+        options as Partial<CallOptions> & {
+          version: "v1" | "v2";
+          encoding?: "text/event-stream" | undefined;
+        },
+        streamOptions
+      );
+    }
+
     const prompt = BaseChatModel._convertInputToPromptValue(input);
     const messages = prompt.toChatMessages();
     const [, callOptions] =
@@ -376,6 +467,16 @@ export abstract class BaseChatModel<
     const generator = this._streamChatModelEvents(messages, callOptions);
 
     return new ChatModelStream(generator);
+  }
+
+  /**
+   * @deprecated Use {@link BaseChatModel.streamEvents} instead. This method will be removed in the next major version.
+   */
+  streamV2(
+    input: BaseLanguageModelInput,
+    options?: Partial<CallOptions>
+  ): ChatModelStream {
+    return this.streamEvents(input, options);
   }
 
   async *_streamIterator(

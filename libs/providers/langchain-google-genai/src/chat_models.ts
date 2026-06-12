@@ -13,6 +13,8 @@ import {
   Schema,
 } from "@google/generative-ai";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
+import { convertGoogleGenAIStream } from "./utils/stream_events.js";
 import {
   AIMessageChunk,
   BaseMessage,
@@ -832,21 +834,50 @@ export class ChatGoogleGenerativeAI
         })
       : undefined;
 
-    if (options?.responseSchema) {
-      this.client.generationConfig.responseSchema = options.responseSchema;
-      this.client.generationConfig.responseMimeType = "application/json";
-    } else {
-      this.client.generationConfig.responseSchema = undefined;
-      this.client.generationConfig.responseMimeType = this.json
-        ? "application/json"
-        : undefined;
-    }
-
     return {
       ...(toolsAndConfig?.tools ? { tools: toolsAndConfig.tools } : {}),
       ...(toolsAndConfig?.toolConfig
         ? { toolConfig: toolsAndConfig.toolConfig }
         : {}),
+      generationConfig: {
+        stopSequences: this.stopSequences,
+        maxOutputTokens: this.maxOutputTokens,
+        temperature: this.temperature,
+        topP: this.topP,
+        topK: this.topK,
+        ...(this.json ? { responseMimeType: "application/json" } : {}),
+        ...(this.thinkingConfig ? { thinkingConfig: this.thinkingConfig } : {}),
+        ...(options?.responseSchema
+          ? {
+              responseSchema: options.responseSchema,
+              responseMimeType: "application/json",
+            }
+          : {}),
+      },
+    };
+  }
+
+  private _buildGenerateContentRequest(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"]
+  ): GenerateContentRequest {
+    const prompt = convertBaseMessagesToContent(
+      messages,
+      this._isMultimodalModel,
+      this.useSystemInstruction,
+      this.model
+    );
+    let actualPrompt = prompt;
+    let systemInstruction: (typeof prompt)[number] | undefined;
+    if (prompt[0]?.role === "system") {
+      [systemInstruction, ...actualPrompt] = prompt;
+    }
+    const parameters = this.invocationParams(options);
+
+    return {
+      ...parameters,
+      ...(systemInstruction ? { systemInstruction } : {}),
+      contents: actualPrompt,
     };
   }
 
@@ -856,19 +887,6 @@ export class ChatGoogleGenerativeAI
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     options.signal?.throwIfAborted();
-    const prompt = convertBaseMessagesToContent(
-      messages,
-      this._isMultimodalModel,
-      this.useSystemInstruction,
-      this.model
-    );
-    let actualPrompt = prompt;
-    if (prompt[0].role === "system") {
-      const [systemInstruction] = prompt;
-      this.client.systemInstruction = systemInstruction;
-      actualPrompt = prompt.slice(1);
-    }
-    const parameters = this.invocationParams(options);
 
     // Handle streaming
     if (this.streaming) {
@@ -892,10 +910,9 @@ export class ChatGoogleGenerativeAI
       return { generations, llmOutput: { estimatedTokenUsage: tokenUsage } };
     }
 
-    const res = await this.completionWithRetry({
-      ...parameters,
-      contents: actualPrompt,
-    });
+    const res = await this.completionWithRetry(
+      this._buildGenerateContentRequest(messages, options)
+    );
 
     let usageMetadata: UsageMetadata | undefined;
     if ("usageMetadata" in res.response) {
@@ -920,28 +937,48 @@ export class ChatGoogleGenerativeAI
     return generationResult;
   }
 
+  async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    const request = this._buildGenerateContentRequest(messages, options);
+    const stream = await this.caller.callWithOptions(
+      { signal: options?.signal },
+      async () => {
+        const { stream: s } = await this.client.generateContentStream(request, {
+          signal: options?.signal,
+        });
+        return s;
+      }
+    );
+    const shouldStreamUsage =
+      this.streamUsage !== false && options.streamUsage !== false;
+    const abortableStream = async function* (
+      source: AsyncIterable<
+        import("@google/generative-ai").EnhancedGenerateContentResponse
+      >,
+      signal?: AbortSignal
+    ) {
+      for await (const chunk of source) {
+        if (signal?.aborted) {
+          return;
+        }
+        yield chunk;
+      }
+    };
+    yield* convertGoogleGenAIStream(abortableStream(stream, options.signal), {
+      streamUsage: shouldStreamUsage,
+      model: this.model,
+    });
+  }
+
   async *_streamResponseChunks(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
-    const prompt = convertBaseMessagesToContent(
-      messages,
-      this._isMultimodalModel,
-      this.useSystemInstruction,
-      this.model
-    );
-    let actualPrompt = prompt;
-    if (prompt[0].role === "system") {
-      const [systemInstruction] = prompt;
-      this.client.systemInstruction = systemInstruction;
-      actualPrompt = prompt.slice(1);
-    }
-    const parameters = this.invocationParams(options);
-    const request = {
-      ...parameters,
-      contents: actualPrompt,
-    };
+    const request = this._buildGenerateContentRequest(messages, options);
     const stream = await this.caller.callWithOptions(
       { signal: options?.signal },
       async () => {
