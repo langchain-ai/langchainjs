@@ -1,9 +1,9 @@
 import { BaseMessage, BaseMessageFields } from "./base.js";
-import { MessageStructure } from "./message.js";
 
-export interface RemoveMessageFields<
-  TStructure extends MessageStructure = MessageStructure,
-> extends Omit<BaseMessageFields<TStructure, "remove">, "content"> {
+export interface RemoveMessageFields extends Omit<
+  BaseMessageFields,
+  "content"
+> {
   /**
    * The ID of the message to remove.
    */
@@ -12,10 +12,14 @@ export interface RemoveMessageFields<
 
 /**
  * Message responsible for deleting other messages.
+ *
+ * `RemoveMessage` is intentionally not generic over `MessageStructure`.
+ * Its content is always `[]` (empty), so carrying a structure type parameter
+ * would only cause unnecessary type incompatibilities when mixing messages
+ * from different structure configurations (e.g. passing a `RemoveMessage`
+ * into an API that expects `Message<CustomToolCall>`).
  */
-export class RemoveMessage<
-  TStructure extends MessageStructure = MessageStructure,
-> extends BaseMessage<TStructure, "remove"> {
+export class RemoveMessage extends BaseMessage {
   readonly type = "remove" as const;
 
   /**
@@ -23,7 +27,7 @@ export class RemoveMessage<
    */
   id: string;
 
-  constructor(fields: RemoveMessageFields<TStructure>) {
+  constructor(fields: RemoveMessageFields) {
     super({
       ...fields,
       content: [],

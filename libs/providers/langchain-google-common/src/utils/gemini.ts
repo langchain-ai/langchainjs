@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4 } from "@langchain/core/utils/uuid";
 import {
   ContentBlock,
   AIMessage,
@@ -1823,6 +1823,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       // Map reasoningLevel to thinkingLevel if provided
       if (typeof parameters.reasoningLevel !== "undefined") {
         const levelMap: Record<string, string> = {
+          minimal: "MINIMAL",
           low: "LOW",
           medium: "MEDIUM",
           high: "HIGH",

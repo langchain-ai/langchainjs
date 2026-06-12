@@ -83,6 +83,7 @@ import {
   _convertToolCallIdToMistralCompatible,
   authenticateAndSetGatewayInstance,
   authenticateAndSetInstance,
+  checkRequiredProps,
   checkValidProps,
   expectOneOf,
   WatsonxToolsOutputParser,
@@ -171,6 +172,13 @@ type ChatWatsonxToolType =
   | BindToolsInput
   | TextChatParameterTools
   | ChatsRequestTool;
+
+/** Error object returned in streaming responses (not in SDK type definitions). */
+type WatsonxStreamApiError = {
+  code: string;
+  message: string;
+  more_info?: string;
+};
 
 function _convertToolToWatsonxTool(
   tools: ChatWatsonxToolType[]
@@ -658,6 +666,14 @@ export class ChatWatsonx<
     this.modelGateway = fields.modelGateway || this.modelGateway;
     this.spaceId = fields?.spaceId;
 
+    if (this.modelGateway) {
+      checkRequiredProps(fields, ["model", "serviceUrl", "version"]);
+    } else if (this.idOrName) {
+      checkRequiredProps(fields, ["serviceUrl", "version"]);
+    } else {
+      checkRequiredProps(fields, ["model", "serviceUrl", "version"]);
+    }
+
     this.checkValidProperties(fields);
 
     this.model = fields?.model ?? this.model;
@@ -1051,6 +1067,22 @@ export class ChatWatsonx<
     for await (const chunk of stream) {
       if (chunk?.data?.usage) usage = chunk.data.usage;
       const { data } = chunk;
+      // Check for errors in the response (not in type definitions but can be returned by API)
+      if (
+        "errors" in data &&
+        Array.isArray(data.errors) &&
+        data.errors.length > 0
+      ) {
+        const errorDetails = (data.errors as WatsonxStreamApiError[])
+          .map((err) => `[${err.code}] ${err.message}`)
+          .join("; ");
+        const statusCode = "status_code" in data ? data.status_code : "unknown";
+        const trace =
+          "trace" in data && data.trace ? ` (trace: ${data.trace})` : "";
+        throw new Error(
+          `IBM WatsonX API error (status ${statusCode}): ${errorDetails}${trace}`
+        );
+      }
       const choice = data.choices[0] as TextChatResultChoice &
         Record<"delta", TextChatResultMessage>;
 

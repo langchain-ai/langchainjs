@@ -79,6 +79,50 @@ test("Runnable streamEvents method", async () => {
   ]);
 });
 
+test("Runnable streamEvents does not include tracer-only configurable metadata", async () => {
+  const originalTracingValue = process.env.LANGCHAIN_TRACING_V2;
+  const originalLangChainTracingValue = process.env.LANGCHAIN_TRACING;
+  const originalLangSmithTracingValue = process.env.LANGSMITH_TRACING;
+  process.env.LANGCHAIN_TRACING_V2 = "false";
+  process.env.LANGCHAIN_TRACING = "false";
+  process.env.LANGSMITH_TRACING = "false";
+  try {
+    const chain = RunnableLambda.from((input: string) => input).withConfig({
+      runName: "echo",
+    });
+
+    const events: StreamEvent[] = [];
+    const eventStream = await chain.streamEvents("hello", {
+      version: "v2",
+      configurable: {
+        thread_id: "th-123",
+        checkpoint_id: "ckpt-1",
+        temperature: 0.5,
+        streaming: true,
+        api_key: "should-not-propagate",
+        __secret_key: "should-not-propagate",
+      },
+    });
+    for await (const event of eventStream) {
+      events.push(event);
+    }
+
+    expect(events.length).toBeGreaterThan(0);
+    for (const event of events) {
+      expect(event.metadata).not.toHaveProperty("thread_id");
+      expect(event.metadata).not.toHaveProperty("checkpoint_id");
+      expect(event.metadata).not.toHaveProperty("temperature");
+      expect(event.metadata).not.toHaveProperty("streaming");
+      expect(event.metadata).not.toHaveProperty("api_key");
+      expect(event.metadata).not.toHaveProperty("__secret_key");
+    }
+  } finally {
+    process.env.LANGCHAIN_TRACING_V2 = originalTracingValue;
+    process.env.LANGCHAIN_TRACING = originalLangChainTracingValue;
+    process.env.LANGSMITH_TRACING = originalLangSmithTracingValue;
+  }
+});
+
 test("Runnable streamEvents method on a chat model", async () => {
   const model = new FakeListChatModel({
     responses: ["abc"],

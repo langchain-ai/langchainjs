@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeAll, afterAll, afterEach } from "vitest";
-import { v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4 } from "@langchain/core/utils/uuid";
 import { Collection, MongoClient, ServerApiVersion } from "mongodb";
 import { MongoDBStore } from "../storage.js";
 import { uri } from "./utils.js";

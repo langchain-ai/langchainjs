@@ -1,5 +1,113 @@
 # @langchain/core
 
+## 1.1.49
+
+### Patch Changes
+
+- [#10679](https://github.com/langchain-ai/langchainjs/pull/10679) [`1f7b495`](https://github.com/langchain-ai/langchainjs/commit/1f7b4952ea1d7cebd572453877b670a7740a397b) Thanks [@hnustwjj](https://github.com/hnustwjj)! - fix(core): make `RemoveMessage` type-compatible across `MessageStructure` variants
+
+  Remove unnecessary `TStructure` generic from `RemoveMessage` — its content is always `[]`, so the type parameter only caused incompatibilities when passing `RemoveMessage` into APIs expecting a different `MessageStructure` (e.g. `@langchain/langgraph-sdk`'s `Message<DefaultToolCall>`). Also add `{ type: "remove"; id: string }` to `BaseMessageLike` so the serialized format is accepted by TypeScript, matching the existing runtime behavior in `coerceMessageLikeToMessage`.
+
+## 1.1.48
+
+### Patch Changes
+
+- [#10832](https://github.com/langchain-ai/langchainjs/pull/10832) [`1b24369`](https://github.com/langchain-ai/langchainjs/commit/1b24369a970ad6f56f1f428027f48601f87e62eb) Thanks [@info-arnav](https://github.com/info-arnav)! - fix(core, openrouter): make CJS default re-exports callable
+
+- [#10666](https://github.com/langchain-ai/langchainjs/pull/10666) [`2bb55b0`](https://github.com/langchain-ai/langchainjs/commit/2bb55b053f49f89e81e3252a7af08e86d71ddd95) Thanks [@hnustwjj](https://github.com/hnustwjj)! - feat(openrouter): surface reasoning content as v1 standard content blocks
+
+  `convertOpenRouterResponseToBaseMessage` and
+  `convertOpenRouterDeltaToBaseMessageChunk` now copy OpenRouter's
+  `reasoning` (flat string) and `reasoning_details` (structured array) fields
+  onto `additional_kwargs.reasoning_content` / `additional_kwargs.reasoning_details`.
+  A new `ChatOpenRouterTranslator` is registered in `@langchain/core` under
+  the `"openrouter"` provider key so `AIMessage.contentBlocks` emits standard
+  `{type: "reasoning"}` blocks alongside text and tool calls.
+
+  Previously, reasoning text returned by reasoning-capable models routed
+  through OpenRouter (DeepSeek R1, Minimax M2, Claude extended thinking,
+  o-series, etc.) was silently dropped: only the `reasoning_tokens` count
+  was preserved via `usage_metadata`. Consumers using standard content blocks
+  (including the frontend agent UI patterns shown in the docs) could not
+  display the model's chain of thought.
+
+- [#10918](https://github.com/langchain-ai/langchainjs/pull/10918) [`3999fab`](https://github.com/langchain-ai/langchainjs/commit/3999fab55870c6eea22d6d90c08aa472f9b2fac3) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(openai): stream custom tool calls through Responses API chunks
+
+## 1.1.47
+
+### Patch Changes
+
+- [#10906](https://github.com/langchain-ai/langchainjs/pull/10906) [`f61b345`](https://github.com/langchain-ai/langchainjs/commit/f61b3450f275831e47e69c08899b4a2b67b4bdb3) Thanks [@hntrl](https://github.com/hntrl)! - feat(core): add uuid v6 utility support
+
+  Add `v6` UUID generation support to `@langchain/core/utils/uuid` by vendoring the upstream uuidjs `v6` implementation and its `v1ToV6` helper, exporting `v6` from the UUID utils index, and adding tests for deterministic generation, buffer/offset behavior, validation/versioning, and ordering.
+
+- [#10872](https://github.com/langchain-ai/langchainjs/pull/10872) [`a640079`](https://github.com/langchain-ai/langchainjs/commit/a64007997a4940f51bba3c1c83dae89d1ccfb692) Thanks [@hntrl](https://github.com/hntrl)! - chore(deps): remove redundant @types/uuid declarations
+
+  Remove `@types/uuid` from package manifests that rely on `@langchain/core/utils/uuid` or do not require uuid type stubs directly, and refresh the lockfile entries accordingly.
+
+- [#10792](https://github.com/langchain-ai/langchainjs/pull/10792) [`3682268`](https://github.com/langchain-ai/langchainjs/commit/3682268cd1844b2573b01f07bee367e21cb7bdc7) Thanks [@Genmin](https://github.com/Genmin)! - fix(core): apply v1 message casting after implicit streaming aggregation
+
+- [#10901](https://github.com/langchain-ai/langchainjs/pull/10901) [`f26fc4a`](https://github.com/langchain-ai/langchainjs/commit/f26fc4a6f461d6d0f86d59bd00197ad510432c4a) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(testing): share fakeModel invocation state across bindTools instances
+
+## 1.1.46
+
+### Patch Changes
+
+- [#10847](https://github.com/langchain-ai/langchainjs/pull/10847) [`1659e7d`](https://github.com/langchain-ai/langchainjs/commit/1659e7d36e31e315c890fa98f43db887f7a2d52b) Thanks [@hntrl](https://github.com/hntrl)! - chore(core): reduce transitive dependency exposure and tighten release hygiene
+
+  Remove direct runtime dependencies on `ansi-styles`, `camelcase`, and `decamelize`
+  by inlining equivalent logic in core internals, and enable npm provenance in the
+  release workflow.
+
+- [#10790](https://github.com/langchain-ai/langchainjs/pull/10790) [`ef78bc6`](https://github.com/langchain-ai/langchainjs/commit/ef78bc6a21f9a8808ba95c98db2023f0a6b51bcc) Thanks [@Genmin](https://github.com/Genmin)! - fix(core): keep different content block types separate when merging chunks
+
+## 1.1.45
+
+### Patch Changes
+
+- [#10833](https://github.com/langchain-ai/langchainjs/pull/10833) [`6cf39fe`](https://github.com/langchain-ai/langchainjs/commit/6cf39fe9636804f6280db0b98c4a4c72d5b103a0) Thanks [@colifran](https://github.com/colifran)! - chore(core): deprecate streamLog, streamEvents v1, RunnableWithMessageHistory and improve threat model verbiage for loads
+
+- [#10835](https://github.com/langchain-ai/langchainjs/pull/10835) [`0aebe50`](https://github.com/langchain-ai/langchainjs/commit/0aebe5054cfb982f09d9775b017317a731b6576f) Thanks [@colifran](https://github.com/colifran)! - fix(core): deno re-declaration in LangSmith is causing unit test failures
+
+## 1.1.44
+
+### Patch Changes
+
+- [#10822](https://github.com/langchain-ai/langchainjs/pull/10822) [`922a040`](https://github.com/langchain-ai/langchainjs/commit/922a040421391700fd92e04e6f44a37e3f24710b) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): translate content block delta for other models
+
+## 1.1.43
+
+### Patch Changes
+
+- [#10814](https://github.com/langchain-ai/langchainjs/pull/10814) [`dfec1b7`](https://github.com/langchain-ai/langchainjs/commit/dfec1b7f8b2c530a43f639dc79d4965a80ea4b79) Thanks [@hntrl](https://github.com/hntrl)! - fix(google): restore structured output parsing with includeRaw and reasoning blocks
+
+  Ensure structured output parsers read `BaseMessage` text content when `includeRaw: true`, so responses that include reasoning/thought blocks plus JSON text continue to parse correctly.
+
+- [#10772](https://github.com/langchain-ai/langchainjs/pull/10772) [`1ba7131`](https://github.com/langchain-ai/langchainjs/commit/1ba71319150847438fa517fe612f65cfed85ffab) Thanks [@christian-bromann](https://github.com/christian-bromann)! - chore(core): new stream primitives
+
+## 1.1.42
+
+### Patch Changes
+
+- [#10776](https://github.com/langchain-ai/langchainjs/pull/10776) [`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6) Thanks [@hntrl](https://github.com/hntrl)! - fix(deps): remediate uuid vulnerability by removing direct uuid usage
+
+## 1.1.41
+
+### Patch Changes
+
+- [#10733](https://github.com/langchain-ai/langchainjs/pull/10733) [`589f29c`](https://github.com/langchain-ai/langchainjs/commit/589f29ce844eb252c2d5e6b0f8d26de37763a0d7) Thanks [@jacoblee93](https://github.com/jacoblee93)! - fix(core): Update inheritance behavior for tracer metadata for special keys
+
+- [#10711](https://github.com/langchain-ai/langchainjs/pull/10711) [`2e9e696`](https://github.com/langchain-ai/langchainjs/commit/2e9e6969e248a53ede0659a41d0ac8dbaf291ab4) Thanks [@jacoblee93](https://github.com/jacoblee93)! - feat(core): Add chat model and llm invocation params to traced metadata
+
+## 1.1.40
+
+### Patch Changes
+
+- [#10694](https://github.com/langchain-ai/langchainjs/pull/10694) [`d3e0809`](https://github.com/langchain-ai/langchainjs/commit/d3e080995bb267bf3797067ab53c96bc2a6c8e3f) Thanks [@hntrl](https://github.com/hntrl)! - refactor(core): decouple tracer-only metadata defaults from runnable metadata
+  - Add tracer-scoped inheritable metadata/tag options in callback manager while keeping backward-compatible aliases.
+  - Move configurable-to-tracing metadata derivation into a tracer-only path and keep `ensureConfig` metadata mirroring limited to `model`.
+  - Update `LangChainTracer` default metadata/tag handling and add regression tests for stream events metadata behavior.
+
 ## 1.1.39
 
 ### Patch Changes

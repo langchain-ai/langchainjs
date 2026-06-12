@@ -136,6 +136,7 @@ export type GoogleAIModelModality = "TEXT" | "IMAGE" | "AUDIO" | string;
 
 export type GoogleThinkingLevel =
   | "THINKING_LEVEL_UNSPECIFIED"
+  | "MINIMAL"
   | "LOW"
   | "MEDIUM"
   | "HIGH";
@@ -297,7 +298,7 @@ export interface GoogleAIModelParams extends GoogleModelParams {
   /**
    * Presence penalty applied to the next token's logprobs
    * if the token has already been seen in the response.
-   * This penalty is binary on/off and not dependant on the
+   * This penalty is binary on/off and not dependent on the
    * number of times the token is used (after the first).
    * Use frequencyPenalty for a penalty that increases with each use.
    * A positive penalty will discourage the use of tokens that have

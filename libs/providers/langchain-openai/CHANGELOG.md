@@ -1,5 +1,40 @@
 # @langchain/openai
 
+## 1.4.7
+
+### Patch Changes
+
+- [#10918](https://github.com/langchain-ai/langchainjs/pull/10918) [`3999fab`](https://github.com/langchain-ai/langchainjs/commit/3999fab55870c6eea22d6d90c08aa472f9b2fac3) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(openai): stream custom tool calls through Responses API chunks
+
+- [#10791](https://github.com/langchain-ai/langchainjs/pull/10791) [`fce9ab4`](https://github.com/langchain-ai/langchainjs/commit/fce9ab418901323618fdfaaa9fc350fa1c0d50e0) Thanks [@Genmin](https://github.com/Genmin)! - fix(openai): preserve top-level Responses API ids on AI messages
+
+## 1.4.6
+
+### Patch Changes
+
+- [#10902](https://github.com/langchain-ai/langchainjs/pull/10902) [`229a7ad`](https://github.com/langchain-ai/langchainjs/commit/229a7ad67b9a7ebd8df3ca451e0b8195bea0190e) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(openai): preserve v1 assistant tool calls
+
+- [#10895](https://github.com/langchain-ai/langchainjs/pull/10895) [`36fb0ef`](https://github.com/langchain-ai/langchainjs/commit/36fb0ef1dc76c096dcfa0c777e10c9f9365a5240) Thanks [@BertBR](https://github.com/BertBR)! - fix(openai): guard bare `JSON.parse` in Responses API converter against trailing non-whitespace characters
+
+  `convertResponsesDeltaToChatGenerationChunk` previously called `JSON.parse(msg.text)` directly when `response.text.format.type === "json_schema"`. Some models (observed with `gpt-5-mini` on `service_tier: "auto"`) intermittently emit trailing non-whitespace characters (extra tokens, control characters) after a valid JSON object, causing a `SyntaxError` that propagates as an unhandled exception and kills the entire streaming response mid-flight. The parse is now wrapped in a `try`/`catch`: on failure, `additional_kwargs.parsed` is left undefined, the stream completes normally, and the existing `withStructuredOutput` pipeline handles the typed failure — `includeRaw: true` returns `{ raw, parsed: null }` via its `withFallbacks` wrapper, `includeRaw: false` throws a typed `OutputParserException` that the caller can catch and retry. Closes [#10894](https://github.com/langchain-ai/langchainjs/issues/10894).
+
+## 1.4.5
+
+### Patch Changes
+
+- [#10749](https://github.com/langchain-ai/langchainjs/pull/10749) [`dc20c0e`](https://github.com/langchain-ai/langchainjs/commit/dc20c0ecaad125d7e916813419548c068996d3c2) Thanks [@open-swe](https://github.com/apps/open-swe)! - fix(openai): add gpt-5.5 and gpt-5.5-pro to profiles, default gpt-5.5-pro to Responses API, bump openai sdk
+
+- [#10776](https://github.com/langchain-ai/langchainjs/pull/10776) [`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6) Thanks [@hntrl](https://github.com/hntrl)! - fix(deps): remediate uuid vulnerability by removing direct uuid usage
+
+- Updated dependencies [[`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6)]:
+  - @langchain/core@1.1.42
+
+## 1.4.4
+
+### Patch Changes
+
+- [#10681](https://github.com/langchain-ai/langchainjs/pull/10681) [`2301260`](https://github.com/langchain-ai/langchainjs/commit/2301260ae90ead5c5f725c8dae1487b6722607e2) Thanks [@hntrl](https://github.com/hntrl)! - fix(openai): add index to streaming reasoning content blocks for proper chunk merging
+
 ## 1.4.3
 
 ### Patch Changes
