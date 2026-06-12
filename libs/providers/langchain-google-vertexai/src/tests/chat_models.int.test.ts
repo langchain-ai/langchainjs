@@ -406,7 +406,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
     });
     const blobStore = new ReadThroughBlobStore({
       baseStore: aliasStore,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       backingStore: backingStore as any,
     });
     const resolver = new SimpleWebBlobStore();
@@ -417,7 +417,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
     const model = new ChatGoogle({
       modelName,
       apiConfig: {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         mediaManager: mediaManager as any,
       },
     });

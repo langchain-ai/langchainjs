@@ -16,7 +16,7 @@ export interface AbstractStream {
    * Get the next chunk that is coming from the stream.
    * This chunk may be null, usually indicating the last chunk in the stream.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   nextChunk(): Promise<any>;
 
   /**
@@ -74,7 +74,7 @@ export function complexValue(value: unknown): unknown {
       };
     } else {
       const ret: Record<string, unknown> = {};
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       const v: Record<string, any> = value;
       Object.keys(v).forEach((key) => {
         ret[key] = complexValue(v[key]);
@@ -96,20 +96,20 @@ export function complexValue(value: unknown): unknown {
 
 export function simpleValue(val: unknown): unknown {
   if (val && typeof val === "object" && !Array.isArray(val)) {
-    // eslint-disable-next-line no-prototype-builtins
+    // oxlint-disable-next-line no-prototype-builtins
     if (val.hasOwnProperty("stringVal")) {
       return (val as { stringVal: string[] }).stringVal[0];
 
-      // eslint-disable-next-line no-prototype-builtins
+      // oxlint-disable-next-line no-prototype-builtins
     } else if (val.hasOwnProperty("boolVal")) {
       return (val as { boolVal: boolean[] }).boolVal[0];
 
-      // eslint-disable-next-line no-prototype-builtins
+      // oxlint-disable-next-line no-prototype-builtins
     } else if (val.hasOwnProperty("listVal")) {
       const { listVal } = val as { listVal: unknown[] };
       return listVal.map((aval) => simpleValue(aval));
 
-      // eslint-disable-next-line no-prototype-builtins
+      // oxlint-disable-next-line no-prototype-builtins
     } else if (val.hasOwnProperty("structVal")) {
       const ret: Record<string, unknown> = {};
       const struct = (val as { structVal: Record<string, unknown> }).structVal;
@@ -241,15 +241,15 @@ export class JsonStream implements AbstractStream {
   }
 
   // Set up a potential Promise that the handler can resolve.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   _chunkResolution: (chunk: any) => void;
 
   // If there is no Promise (it is null), the handler must add it to the queue
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   _chunkPending: Promise<any> | null = null;
 
   // A queue that will collect chunks while there is no Promise
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   _chunkQueue: any[] = [];
 
   /**
@@ -258,7 +258,7 @@ export class JsonStream implements AbstractStream {
    * If not, then add it to the queue.
    * @param chunk
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   _handleChunk(chunk: any): void {
     if (this._chunkPending) {
       this._chunkResolution(chunk);
@@ -272,7 +272,7 @@ export class JsonStream implements AbstractStream {
    * Get the next chunk that is coming from the stream.
    * This chunk may be null, usually indicating the last chunk in the stream.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   async nextChunk(): Promise<any> {
     if (this._chunkQueue.length > 0) {
       // If there is data in the queue, return the next queue chunk
@@ -318,7 +318,7 @@ export class ReadableAbstractStream implements AbstractStream {
     this.baseStream = baseStream;
     this.decoder = new TextDecoder("utf-8");
     if (body) {
-      // eslint-disable-next-line no-void
+      // oxlint-disable-next-line no-void
       void this.run(body);
     } else {
       console.error("Unexpected empty body while streaming");
@@ -333,7 +333,7 @@ export class ReadableAbstractStream implements AbstractStream {
     return this.baseStream.closeBuffer();
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   nextChunk(): Promise<any> {
     return this.baseStream.nextChunk();
   }
@@ -344,7 +344,7 @@ export class ReadableAbstractStream implements AbstractStream {
 
   // Should be a ReadableStream, but the Gaxios Readable stream isn't.
   // But both should support async iterators, so make sure of that.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   async run(body: any) {
     if (typeof body[Symbol.asyncIterator] === "function") {
       for await (const value of body) {
@@ -423,15 +423,15 @@ export class SseStream implements AbstractStream {
   }
 
   // Set up a potential Promise that the handler can resolve.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   _chunkResolution: (chunk: any) => void;
 
   // If there is no Promise (it is null), the handler must add it to the queue
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   _chunkPending: Promise<any> | null = null;
 
   // A queue that will collect chunks while there is no Promise
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   _chunkQueue: any[] = [];
 
   _handleEvent(event: string | null): void {
@@ -444,7 +444,7 @@ export class SseStream implements AbstractStream {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   async nextChunk(): Promise<any> {
     if (this._chunkQueue.length > 0) {
       // If there is data in the queue, return the next queue chunk
@@ -482,7 +482,7 @@ export class SseJsonStream extends SseStream {
     this._jsonAttribute = jsonAttribute ?? this._jsonAttribute;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   async nextChunk(): Promise<any> {
     const eventRecord = (await super.nextChunk()) as Record<string, string>;
     const json = eventRecord?.[this._jsonAttribute];

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { beforeEach, describe, expect, test } from "vitest";
 import { InMemoryStore } from "@langchain/core/stores";
 import { SerializedConstructor } from "@langchain/core/load/serializable";

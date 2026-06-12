@@ -17,7 +17,7 @@ test.skip("Test entity memory in a chain", async () => {
     memory,
   });
 
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const res1 = await chain.call({ input: "Hi! I'm Jim." });
   // console.log({
@@ -25,7 +25,7 @@ test.skip("Test entity memory in a chain", async () => {
   //   memory: await memory.loadMemoryVariables({ input: "Who is Jim?" }),
   // });
 
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const res2 = await chain.call({
     input:
@@ -36,7 +36,7 @@ test.skip("Test entity memory in a chain", async () => {
   //   memory: await memory.loadMemoryVariables({ input: "Who is Jim?" }),
   // });
 
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const res3 = await chain.call({
     input: "I am Jim.",
@@ -46,7 +46,7 @@ test.skip("Test entity memory in a chain", async () => {
   //   memory: await memory.loadMemoryVariables({ input: "Who is Jim?" }),
   // });
 
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const res4 = await chain.call({
     input: "What have I told you about Jim so far?",
@@ -68,7 +68,7 @@ test.skip("Test entity memory with a chat model in a chain", async () => {
     memory,
   });
 
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const res1 = await chain.call({ input: "Hi! I'm Jim." });
   // console.log({
@@ -76,7 +76,7 @@ test.skip("Test entity memory with a chat model in a chain", async () => {
   //   memory: await memory.loadMemoryVariables({ input: "Who is Jim?" }),
   // });
 
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const res2 = await chain.call({
     input: "My office is the Utica branch of Dunder Mifflin. What about you?",
@@ -86,7 +86,7 @@ test.skip("Test entity memory with a chat model in a chain", async () => {
   //   memory: await memory.loadMemoryVariables({ input: "Who is Jim?" }),
   // });
 
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const res3 = await chain.call({
     input: "I am Jim.",
@@ -96,7 +96,7 @@ test.skip("Test entity memory with a chat model in a chain", async () => {
   //   memory: await memory.loadMemoryVariables({ input: "Who is Jim?" }),
   // });
 
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const res4 = await chain.call({
     input: "What have I told you about Jim so far?",

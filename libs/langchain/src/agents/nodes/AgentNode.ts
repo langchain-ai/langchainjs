@@ -1,4 +1,4 @@
-/* eslint-disable no-instanceof/no-instanceof */
+/* oxlint-disable no-instanceof/no-instanceof */
 import { Runnable, RunnableConfig } from "@langchain/core/runnables";
 import {
   BaseMessage,
@@ -11,7 +11,6 @@ import {
   isCommand,
   type LangGraphRunnableConfig,
 } from "@langchain/langgraph";
-import { type LanguageModelLike } from "@langchain/core/language_models/base";
 import { type BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
 import {
   InteropZodObject,
@@ -23,8 +22,13 @@ import type { ToolCall } from "@langchain/core/messages/tool";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
 
 import { initChatModel } from "../../chat_models/universal.js";
-import { MultipleStructuredOutputsError, MiddlewareError } from "../errors.js";
+import {
+  MultipleStructuredOutputsError,
+  MiddlewareError,
+  StructuredOutputParsingError,
+} from "../errors.js";
 import { RunnableCallable } from "../RunnableCallable.js";
+import type { AgentLanguageModelLike as LanguageModelLike } from "../model.js";
 import {
   bindTools,
   validateLLMHasNoBoundTools,
@@ -47,6 +51,7 @@ import {
   ProviderStrategy,
   transformResponseFormat,
   ToolStrategyError,
+  type ResponseFormatInput,
 } from "../responses.js";
 
 type ResponseHandlerResult<StructuredResponseFormat> =
@@ -105,10 +110,10 @@ export interface AgentNodeOptions<
   shouldReturnDirect: Set<string>;
   signal?: AbortSignal;
   systemMessage: SystemMessage;
-  wrapModelCallHookMiddleware?: [
-    AgentMiddleware,
-    () => Record<string, unknown>,
-  ][];
+  wrapModelCallHookMiddleware?: (
+    | AgentMiddleware
+    | [AgentMiddleware, (...args: unknown[]) => Record<string, unknown>]
+  )[];
 }
 
 interface NativeResponseFormat {
@@ -159,16 +164,18 @@ export class AgentNode<
    * If the user selects a tool output:
    * - return a record of tools to extract structured output from the model's response
    *
-   * if the the user selects a native schema output or if the model supports JSON schema output:
+   * if the user selects a native schema output or if the model supports JSON schema output:
    * - return a provider strategy to extract structured output from the model's response
    *
    * @param model - The model to get the response format for.
    * @returns The response format.
    */
   async #getResponseFormat(
-    model: string | LanguageModelLike
+    model: string | LanguageModelLike,
+    responseFormat: ResponseFormatInput | undefined = this.#options
+      .responseFormat
   ): Promise<ResponseFormat | undefined> {
-    if (!this.#options.responseFormat) {
+    if (!responseFormat) {
       return undefined;
     }
 
@@ -184,10 +191,14 @@ export class AgentNode<
     }
 
     const strategies = transformResponseFormat(
-      this.#options.responseFormat,
+      responseFormat,
       undefined,
       resolvedModel
     );
+
+    if (strategies.length === 0) {
+      return undefined;
+    }
 
     /**
      * we either define a list of provider strategies or a list of tool strategies
@@ -363,7 +374,8 @@ export class AgentNode<
       validateLLMHasNoBoundTools(request.model);
 
       const structuredResponseFormat = await this.#getResponseFormat(
-        request.model
+        request.model,
+        request.responseFormat
       );
       const modelWithTools = await this.#bindTools(
         request.model,
@@ -399,6 +411,24 @@ export class AgentNode<
           structuredResponseFormat.strategy.parse(response);
         if (structuredResponse) {
           return { structuredResponse, messages: [response] };
+        }
+
+        /**
+         * If the model produced a terminal response (no tool calls) but the
+         * output failed to satisfy the provider strategy's schema, throw an
+         * informative error instead of silently exiting with
+         * `structuredResponse: undefined`. If tool calls are present, the
+         * agent loop continues and a subsequent terminal step will get
+         * another chance to produce a valid structured response.
+         */
+        if (!response.tool_calls || response.tool_calls.length === 0) {
+          const schemaTitle =
+            typeof structuredResponseFormat.strategy.schema?.title === "string"
+              ? structuredResponseFormat.strategy.schema.title
+              : "providerStrategy";
+          throw new StructuredOutputParsingError(schemaTitle, [
+            "Model output did not satisfy the provided response schema.",
+          ]);
         }
 
         return response;
@@ -453,11 +483,13 @@ export class AgentNode<
      * Build composed handler from last to first so first middleware becomes outermost
      */
     for (let i = wrapperMiddleware.length - 1; i >= 0; i--) {
-      const [middleware, getMiddlewareState] = wrapperMiddleware[i];
+      const middlewareEntry = wrapperMiddleware[i];
+      const middleware = Array.isArray(middlewareEntry)
+        ? middlewareEntry[0]
+        : middlewareEntry;
       if (middleware.wrapModelCall) {
         const innerHandler = wrappedHandler;
         const currentMiddleware = middleware;
-        const currentGetState = getMiddlewareState;
 
         wrappedHandler = async (
           request: ModelRequest<
@@ -504,7 +536,6 @@ export class AgentNode<
                     state
                   )
                 : {}),
-              ...currentGetState(),
               messages: state.messages,
             } as InternalAgentState<StructuredResponseFormat>,
             runtime,
@@ -522,39 +553,56 @@ export class AgentNode<
             currentSystemMessage = baselineSystemMessage;
 
             /**
-             * Verify that the user didn't add any new tools.
-             * We can't allow this as the ToolNode is already initiated with given tools.
+             * Validate tool modifications in wrapModelCall.
+             *
+             * Classify each client tool as either:
+             * - "added": a genuinely new tool name not in the static toolClasses
+             * - "replaced": same name as a registered tool but different instance
+             *
+             * Added tools are allowed when a wrapToolCall middleware exists to
+             * handle their execution. Replaced tools are always rejected to
+             * preserve ToolNode execution identity.
              */
             const modifiedTools = req.tools ?? [];
-            const newTools = modifiedTools.filter(
-              (tool) =>
-                isClientTool(tool) &&
-                !this.#options.toolClasses.some((t) => t.name === tool.name)
+            const registeredToolsByName = new Map(
+              this.#options.toolClasses
+                .filter(isClientTool)
+                .map((t) => [t.name, t] as const)
             );
-            if (newTools.length > 0) {
-              throw new Error(
-                `You have added a new tool in "wrapModelCall" hook of middleware "${
-                  currentMiddleware.name
-                }": ${newTools
-                  .map((tool) => tool.name)
-                  .join(", ")}. This is not supported.`
+
+            const addedClientTools = modifiedTools.filter(
+              (tool) =>
+                isClientTool(tool) && !registeredToolsByName.has(tool.name)
+            );
+
+            const replacedClientTools = modifiedTools.filter((tool) => {
+              if (!isClientTool(tool)) return false;
+              const original = registeredToolsByName.get(tool.name);
+              return original != null && original !== tool;
+            });
+
+            if (addedClientTools.length > 0) {
+              const hasWrapToolCallHandler = this.#options.middleware?.some(
+                (m) => m.wrapToolCall != null
               );
+              if (!hasWrapToolCallHandler) {
+                throw new Error(
+                  `You have added a new tool in "wrapModelCall" hook of middleware "${
+                    currentMiddleware.name
+                  }": ${addedClientTools
+                    .map((tool) => tool.name)
+                    .join(
+                      ", "
+                    )}. This is not supported unless a middleware provides a "wrapToolCall" handler to execute it.`
+                );
+              }
             }
 
-            /**
-             * Verify that user has not added or modified a tool with the same name.
-             * We can't allow this as the ToolNode is already initiated with given tools.
-             */
-            const invalidTools = modifiedTools.filter(
-              (tool) =>
-                isClientTool(tool) &&
-                this.#options.toolClasses.every((t) => t !== tool)
-            );
-            if (invalidTools.length > 0) {
+            if (replacedClientTools.length > 0) {
               throw new Error(
                 `You have modified a tool in "wrapModelCall" hook of middleware "${
                   currentMiddleware.name
-                }": ${invalidTools
+                }": ${replacedClientTools
                   .map((tool) => tool.name)
                   .join(", ")}. This is not supported.`
               );
@@ -667,6 +715,7 @@ export class AgentNode<
       unknown
     > = {
       model,
+      responseFormat: this.#options.responseFormat,
       systemPrompt: currentSystemMessage?.text,
       systemMessage: currentSystemMessage,
       messages: state.messages,
@@ -895,7 +944,7 @@ export class AgentNode<
     model: LanguageModelLike,
     preparedOptions: ModelRequest | undefined,
     structuredResponseFormat: ResponseFormat | undefined
-  ): Promise<Runnable> {
+  ): Promise<LanguageModelLike | Runnable> {
     const options: Partial<BaseChatModelCallOptions> = {};
     const structuredTools = Object.values(
       structuredResponseFormat && "tools" in structuredResponseFormat

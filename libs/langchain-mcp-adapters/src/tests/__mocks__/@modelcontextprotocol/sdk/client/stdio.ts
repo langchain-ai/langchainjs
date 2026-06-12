@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { vi } from "vitest";
 
 const stdioClientTransportPrototype = {
@@ -8,7 +8,7 @@ const stdioClientTransportPrototype = {
 };
 export const StdioClientTransport: any = vi
   .fn()
-  .mockImplementation((config) => {
+  .mockImplementation(function mockStdioClientTransport(config) {
     return {
       ...stdioClientTransportPrototype,
       config,

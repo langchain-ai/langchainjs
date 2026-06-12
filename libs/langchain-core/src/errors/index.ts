@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 
 import type { AIMessageChunk } from "../messages/ai.js";
 import { ns as baseNs } from "../utils/namespace.js";

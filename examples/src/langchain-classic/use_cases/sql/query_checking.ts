@@ -4,14 +4,12 @@ import { RunnableSequence } from "@langchain/core/runnables";
 import { ChatOpenAI } from "@langchain/openai";
 import { createSqlQueryChain } from "@langchain/classic/chains/sql_db";
 import { SqlDatabase } from "@langchain/classic/sql_db";
-import { DataSource } from "typeorm";
 
-const datasource = new DataSource({
-  type: "sqlite",
-  database: "../../../../Chinook.db",
-});
-const db = await SqlDatabase.fromDataSourceParams({
-  appDataSource: datasource,
+const db = await SqlDatabase.fromOptionsParams({
+  appDataSourceOptions: {
+    type: "sqlite",
+    database: "../../../../Chinook.db",
+  },
 });
 
 const llm = new ChatOpenAI({ model: "gpt-4", temperature: 0 });

@@ -11,7 +11,7 @@ class ChatGoogleGenerativeAIStandardUnitTests extends ChatModelUnitTests<
 > {
   constructor() {
     super({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       Cls: ChatGoogleGenerativeAI as any,
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,

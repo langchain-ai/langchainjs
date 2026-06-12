@@ -27,7 +27,7 @@ test("Test VectorDBQAChain", async () => {
     combineDocumentsChain: combineDocsChain,
     vectorstore: vectorStore,
   });
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const res = await chain.call({ query: "What up" });
   // console.log({ res });
@@ -41,7 +41,7 @@ test("Test VectorDBQAChain from LLM", async () => {
     new OpenAIEmbeddings()
   );
   const chain = VectorDBQAChain.fromLLM(model, vectorStore);
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const res = await chain.call({ query: "What up" });
   // console.log({ res });
@@ -57,7 +57,7 @@ test("Test VectorDBQAChain from LLM with a filter function", async () => {
   const chain = VectorDBQAChain.fromLLM(model, vectorStore, {
     returnSourceDocuments: true,
   });
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const res = await chain.call({
     query: "What up",

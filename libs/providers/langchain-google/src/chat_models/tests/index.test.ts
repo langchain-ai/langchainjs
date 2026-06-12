@@ -57,7 +57,7 @@ class MockResponse implements Response {
   async formData(): Promise<FormData> {
     throw new Error("Not implemented");
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   async json(): Promise<any> {
     return JSON.parse(this.bodyText);
   }
@@ -109,7 +109,7 @@ class MockStreamingResponse implements Response {
   async formData(): Promise<FormData> {
     throw new Error("Not implemented");
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   async json(): Promise<any> {
     return JSON.parse(this.bodyText);
   }
@@ -271,7 +271,7 @@ describe("Google Mock", () => {
   let recorder: GoogleRequestRecorder;
   let callbacks: BaseCallbackHandler[];
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   let warnSpy: MockInstance<any>;
 
   function newChatGoogle(mockFields: MockChatGoogleParams): ChatGoogle {
@@ -350,6 +350,85 @@ describe("Google Mock", () => {
     );
   });
 
+  test("mediaResolution uses scalar generation config value from constructor fields", async () => {
+    const params: ChatGoogleParams = {
+      model: "gemini-3-pro-preview",
+      mediaResolution: "MEDIA_RESOLUTION_HIGH",
+    };
+    const llm = newChatGoogle({
+      ...params,
+      responseFile: "gemini-chat-001.json",
+    });
+
+    await llm.invoke("What is 1+1?");
+
+    expect(recorder?.request?.body?.generationConfig?.mediaResolution).toEqual(
+      "MEDIA_RESOLUTION_HIGH"
+    );
+  });
+
+  test("mediaResolution uses scalar generation config value from call options", async () => {
+    const llm = newChatGoogle({
+      model: "gemini-3-pro-preview",
+      responseFile: "gemini-chat-001.json",
+    });
+
+    await llm.invoke("What is 1+1?", {
+      mediaResolution: "MEDIA_RESOLUTION_MEDIUM",
+    });
+
+    expect(recorder?.request?.body?.generationConfig?.mediaResolution).toEqual(
+      "MEDIA_RESOLUTION_MEDIUM"
+    );
+  });
+
+  test("detail maps to mediaResolution from constructor fields", async () => {
+    const llm = newChatGoogle({
+      model: "gemini-3-pro-preview",
+      responseFile: "gemini-chat-001.json",
+      detail: "high",
+    });
+
+    await llm.invoke("What is 1+1?");
+
+    expect(recorder?.request?.body?.generationConfig?.mediaResolution).toEqual(
+      "MEDIA_RESOLUTION_HIGH"
+    );
+  });
+
+  test("detail auto leaves mediaResolution undefined from call options", async () => {
+    const llm = newChatGoogle({
+      model: "gemini-3-pro-preview",
+      responseFile: "gemini-chat-001.json",
+    });
+
+    await llm.invoke("What is 1+1?", {
+      detail: "auto",
+    });
+
+    expect(recorder?.request?.body?.generationConfig).not.toHaveProperty(
+      "mediaResolution"
+    );
+  });
+
+  test("mediaResolution takes precedence over detail", async () => {
+    const llm = newChatGoogle({
+      model: "gemini-3-pro-preview",
+      responseFile: "gemini-chat-001.json",
+      detail: "low",
+      mediaResolution: "MEDIA_RESOLUTION_HIGH",
+    });
+
+    await llm.invoke("What is 1+1?", {
+      detail: "auto",
+      mediaResolution: "MEDIA_RESOLUTION_MEDIUM",
+    });
+
+    expect(recorder?.request?.body?.generationConfig?.mediaResolution).toEqual(
+      "MEDIA_RESOLUTION_MEDIUM"
+    );
+  });
+
   test("passes abort signal to fetch in non-streaming invoke", async () => {
     const apiClient = new MockApiClient({
       fileName: "gemini-chat-001.json",
@@ -363,6 +442,114 @@ describe("Google Mock", () => {
     expect(apiClient.request.signal.aborted).toBe(false);
     controller.abort();
     expect(apiClient.request.signal.aborted).toBe(true);
+  });
+
+  test("includes customHeaders on invoke requests", async () => {
+    const apiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const llm = new ChatGoogle({
+      model: "gemini-3-pro-preview",
+      apiClient,
+      customHeaders: {
+        "X-LC-Test": "invoke-value",
+      },
+    });
+    await llm.invoke("What is 1+1?");
+    expect(apiClient.request.headers.get("X-LC-Test")).toBe("invoke-value");
+    expect(apiClient.request.headers.get("Content-Type")).toBe(
+      "application/json"
+    );
+  });
+
+  test("includes customHeaders on streaming requests", async () => {
+    const apiClient = new MockApiClient({
+      fileName: "gemini-stream-001.txt",
+      streaming: true,
+    });
+    const llm = new ChatGoogle({
+      model: "gemini-2.5-flash",
+      apiClient,
+      streaming: true,
+      customHeaders: {
+        "X-LC-Test": "stream-value",
+      },
+    });
+    for await (const _chunk of await llm.stream("Why is the sky blue?")) {
+      // consume stream so fetch completes
+    }
+    expect(apiClient.request.headers.get("X-LC-Test")).toBe("stream-value");
+    expect(apiClient.request.headers.get("Content-Type")).toBe(
+      "application/json"
+    );
+  });
+
+  test("includes per-invocation customHeaders on invoke requests", async () => {
+    const apiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const llm = new ChatGoogle({
+      model: "gemini-3-pro-preview",
+      apiClient,
+    });
+    await llm.invoke("What is 1+1?", {
+      customHeaders: {
+        "X-Per-Call": "per-call-value",
+      },
+    });
+    expect(apiClient.request.headers.get("X-Per-Call")).toBe("per-call-value");
+    expect(apiClient.request.headers.get("Content-Type")).toBe(
+      "application/json"
+    );
+  });
+
+  test("per-invocation customHeaders override constructor headers", async () => {
+    const apiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const llm = new ChatGoogle({
+      model: "gemini-3-pro-preview",
+      apiClient,
+      customHeaders: {
+        "X-Shared": "constructor-value",
+        "X-Constructor-Only": "stays",
+      },
+    });
+    await llm.invoke("What is 1+1?", {
+      customHeaders: {
+        "X-Shared": "per-call-value",
+        "X-Call-Only": "added",
+      },
+    });
+    expect(apiClient.request.headers.get("X-Shared")).toBe("per-call-value");
+    expect(apiClient.request.headers.get("X-Constructor-Only")).toBe("stays");
+    expect(apiClient.request.headers.get("X-Call-Only")).toBe("added");
+    expect(apiClient.request.headers.get("Content-Type")).toBe(
+      "application/json"
+    );
+  });
+
+  test("includes per-invocation customHeaders on streaming requests", async () => {
+    const apiClient = new MockApiClient({
+      fileName: "gemini-stream-001.txt",
+      streaming: true,
+    });
+    const llm = new ChatGoogle({
+      model: "gemini-2.5-flash",
+      apiClient,
+      streaming: true,
+    });
+    for await (const _chunk of await llm.stream("Why is the sky blue?", {
+      customHeaders: {
+        "X-Per-Call": "stream-per-call",
+      },
+    })) {
+      // consume stream so fetch completes
+    }
+    expect(apiClient.request.headers.get("X-Per-Call")).toBe("stream-per-call");
+    expect(apiClient.request.headers.get("Content-Type")).toBe(
+      "application/json"
+    );
   });
 
   test("surfaces JSON error bodies from GCP streaming responses labeled as text/event-stream", async () => {
@@ -1219,7 +1406,7 @@ describe("withStructuredOutput with SerializableSchema", () => {
       model: "gemini-3-pro-preview",
       apiClient,
     });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     vi.spyOn(model as any, "invoke").mockResolvedValue(
       new AIMessage({
         content: "",
@@ -1250,7 +1437,7 @@ describe("withStructuredOutput with SerializableSchema", () => {
       model: "gemini-3-pro-preview",
       apiClient,
     });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     vi.spyOn(model as any, "invoke").mockResolvedValue(
       new AIMessage({
         content: "",
@@ -1282,7 +1469,7 @@ describe("withStructuredOutput with SerializableSchema", () => {
       model: "gemini-3-pro-preview",
       apiClient,
     });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     vi.spyOn(model as any, "invoke").mockResolvedValue(
       new AIMessage({
         content: "",
@@ -1324,7 +1511,7 @@ describe("withStructuredOutput with SerializableSchema", () => {
       model: "gemini-3-pro-preview",
       apiClient,
     });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     vi.spyOn(model as any, "invoke").mockResolvedValue(rawMessage);
 
     const schema = makeSerializableSchema();
@@ -1347,7 +1534,7 @@ describe("withStructuredOutput with SerializableSchema", () => {
       model: "gemini-3-pro-preview",
       apiClient,
     });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     vi.spyOn(model as any, "invoke").mockResolvedValue(
       new AIMessage({
         content: '{"name": "Eve"}',
@@ -1371,7 +1558,7 @@ describe("withStructuredOutput with SerializableSchema", () => {
       model: "gemini-3-pro-preview",
       apiClient,
     });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     vi.spyOn(model as any, "invoke").mockResolvedValue(
       new AIMessage({
         content: '{"wrong_field": 123}',

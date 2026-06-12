@@ -22,15 +22,16 @@ interface PackageJson {
 const dockerPackages: WorkspacePackage[] = [
   { pkg: { name: "langchain" }, path: "/langchain" },
   { pkg: { name: "@langchain/core" }, path: "/langchain-core" },
-  { pkg: { name: "@langchain/classic" }, path: "/langchain-classic" },
   { pkg: { name: "@langchain/openai" }, path: "/langchain-openai" },
   { pkg: { name: "@langchain/anthropic" }, path: "/langchain-anthropic" },
-  { pkg: { name: "@langchain/community" }, path: "/langchain-community" },
-  { pkg: { name: "@langchain/cohere" }, path: "/langchain-cohere" },
   { pkg: { name: "@langchain/ollama" }, path: "/langchain-ollama" },
   {
     pkg: { name: "@langchain/google-gauth" },
     path: "/langchain-google-gauth",
+  },
+  {
+    pkg: { name: "@langchain/google-common" },
+    path: "/langchain-google-common",
   },
   {
     pkg: { name: "@langchain/standard-tests" },
@@ -41,7 +42,6 @@ const dockerPackages: WorkspacePackage[] = [
     path: "/langchain-textsplitters",
   },
   { pkg: { name: "@langchain/build" }, path: "/langchain-build" },
-  { pkg: { name: "@langchain/eslint" }, path: "/langchain-eslint" },
   { pkg: { name: "@langchain/tsconfig" }, path: "/langchain-tsconfig" },
 ];
 
@@ -180,11 +180,11 @@ class EnvironmentTestRunner {
 
     await this.copyDirectory("/package", this.testRoot, excludePatterns);
 
-    // Copy .eslintrc.json if it exists
+    // Copy .oxlintrc.json if it exists
     try {
       await fs.copyFile(
-        "/package/.eslintrc.json",
-        path.join(this.testRoot, ".eslintrc.json")
+        "/package/.oxlintrc.json",
+        path.join(this.testRoot, ".oxlintrc.json")
       );
     } catch {
       // File doesn't exist, that's okay
@@ -193,6 +193,13 @@ class EnvironmentTestRunner {
     // Enable corepack for pnpm
     if (!this.isBun) {
       await this.execCommand("corepack", ["enable"]);
+      // Keep environment tests on the repo's pinned pnpm major to avoid
+      // strict build-script policy changes from floating Corepack downloads.
+      await this.execCommand("corepack", [
+        "prepare",
+        "pnpm@10.14.0",
+        "--activate",
+      ]);
     }
   }
 

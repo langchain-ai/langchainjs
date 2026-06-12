@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { OpenAI as OpenAIClient } from "openai";
 import {
   AIMessage,
@@ -229,6 +229,34 @@ describe("convertResponsesMessageToAIMessage", () => {
     expect(reasoningBlocks.length).toBe(0);
   });
 
+  it("uses the top-level response id for the AIMessage id", () => {
+    const response = {
+      id: "resp_top_level",
+      model: "gpt-4o",
+      created_at: 1234567890,
+      object: "response",
+      status: "completed",
+      output: [
+        {
+          type: "message",
+          id: "msg_nested",
+          role: "assistant",
+          content: [{ type: "output_text", text: "Hello!", annotations: [] }],
+        },
+      ],
+      usage: {
+        input_tokens: 10,
+        output_tokens: 20,
+        total_tokens: 30,
+      },
+    };
+
+    const result = convertResponsesMessageToAIMessage(response as any);
+
+    expect(result.id).toBe("resp_top_level");
+    expect(result.response_metadata.id).toBe("resp_top_level");
+  });
+
   it("should store output in response_metadata", () => {
     const output = [
       {
@@ -289,7 +317,146 @@ describe("convertResponsesMessageToAIMessage", () => {
 });
 
 describe("convertResponsesDeltaToChatGenerationChunk", () => {
+  it("uses the top-level response id when streaming", () => {
+    const created = convertResponsesDeltaToChatGenerationChunk({
+      type: "response.created",
+      response: {
+        id: "resp_top_level",
+        model: "gpt-4o",
+        object: "response",
+        status: "in_progress",
+        output: [],
+      },
+    } as any);
+    const messageAdded = convertResponsesDeltaToChatGenerationChunk({
+      type: "response.output_item.added",
+      output_index: 0,
+      item: {
+        type: "message",
+        id: "msg_nested",
+        role: "assistant",
+        content: [],
+        status: "in_progress",
+      },
+    } as any);
+    const textDelta = convertResponsesDeltaToChatGenerationChunk({
+      type: "response.output_text.delta",
+      output_index: 0,
+      content_index: 0,
+      delta: "Hello!",
+    } as any);
+    const completed = convertResponsesDeltaToChatGenerationChunk({
+      type: "response.completed",
+      response: {
+        id: "resp_top_level",
+        model: "gpt-4o",
+        created_at: 1234567890,
+        object: "response",
+        status: "completed",
+        output: [
+          {
+            type: "message",
+            id: "msg_nested",
+            role: "assistant",
+            content: [{ type: "output_text", text: "Hello!", annotations: [] }],
+          },
+        ],
+        usage: {
+          input_tokens: 10,
+          output_tokens: 20,
+          total_tokens: 30,
+        },
+      },
+    } as any);
+
+    expect(created?.message.id).toBe("resp_top_level");
+    expect(messageAdded?.message.id).toBeUndefined();
+    expect(textDelta?.message.id).toBeUndefined();
+
+    const aggregated = [created!, messageAdded!, textDelta!, completed!].reduce(
+      (acc, chunk) => acc.concat(chunk.message as AIMessageChunk),
+      created!.message as AIMessageChunk
+    );
+
+    expect(aggregated.id).toBe("resp_top_level");
+    expect(aggregated.response_metadata.id).toBe("resp_top_level");
+  });
+
   describe("custom tool streaming delta handling", () => {
+    it("should preserve custom tool metadata from response.output_item.added events", () => {
+      const customToolStart = {
+        type: "response.output_item.added",
+        output_index: 0,
+        item: {
+          type: "custom_tool_call",
+          id: "ctc_123",
+          call_id: "call_123",
+          name: "execute_code",
+          input: "",
+        },
+      };
+
+      const result = convertResponsesDeltaToChatGenerationChunk(
+        customToolStart as any
+      );
+      const aiMessageChunk = result?.message as AIMessageChunk;
+
+      expect(aiMessageChunk.tool_call_chunks).toEqual([
+        {
+          type: "tool_call_chunk",
+          isCustomTool: true,
+          name: "execute_code",
+          args: "",
+          id: "call_123",
+          index: 0,
+        },
+      ]);
+      expect(aiMessageChunk.additional_kwargs).toMatchObject({
+        __openai_custom_tool_call_ids__: {
+          call_123: "ctc_123",
+        },
+      });
+    });
+
+    it("should collapse custom tool streaming chunks into a raw input tool call", () => {
+      const start = convertResponsesDeltaToChatGenerationChunk({
+        type: "response.output_item.added",
+        output_index: 0,
+        item: {
+          type: "custom_tool_call",
+          id: "ctc_123",
+          call_id: "call_123",
+          name: "execute_code",
+          input: "",
+        },
+      } as any)?.message as AIMessageChunk;
+
+      const delta = convertResponsesDeltaToChatGenerationChunk({
+        type: "response.custom_tool_call_input.delta",
+        delta: "console.log('custom tool streaming repro')",
+        output_index: 0,
+      } as any)?.message as AIMessageChunk;
+
+      const combined = start.concat(delta);
+
+      expect(combined.invalid_tool_calls).toEqual([]);
+      expect(combined.tool_calls).toEqual([
+        {
+          type: "tool_call",
+          name: "execute_code",
+          args: {
+            input: "console.log('custom tool streaming repro')",
+          },
+          id: "call_123",
+        },
+      ]);
+      expect(combined.additional_kwargs).toMatchObject({
+        __openai_custom_tool_call_ids__: {
+          call_123: "ctc_123",
+        },
+      });
+    });
+
     it("should handle response.custom_tool_call_input.delta events", () => {
       // Test custom tool delta event
       const customToolDelta = {
@@ -309,6 +476,7 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
         type: "tool_call_chunk",
         args: '{"query": "test query"}',
         index: 0,
+        isCustomTool: true,
       } as ToolCallChunk);
     });
 
@@ -337,10 +505,21 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
       const functionResultMessage = functionResult?.message as AIMessageChunk;
       const customResultMessage = customResult?.message as AIMessageChunk;
 
-      // Both should produce identical tool_call_chunks
-      expect(functionResultMessage.tool_call_chunks).toEqual(
-        customResultMessage.tool_call_chunks
-      );
+      expect(functionResultMessage.tool_call_chunks).toEqual([
+        {
+          type: "tool_call_chunk",
+          args: '{"location": "NYC"}',
+          index: 0,
+        },
+      ] as ToolCallChunk[]);
+      expect(customResultMessage.tool_call_chunks).toEqual([
+        {
+          type: "tool_call_chunk",
+          args: '{"location": "NYC"}',
+          index: 0,
+          isCustomTool: true,
+        },
+      ] as ToolCallChunk[]);
     });
   });
 
@@ -422,6 +601,7 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
       expect(reasoningBlocks[0]).toEqual({
         type: "reasoning",
         reasoning: "Initial reasoning step",
+        index: 0,
       });
     });
 
@@ -459,6 +639,7 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
       expect(reasoningBlocks[0]).toEqual({
         type: "reasoning",
         reasoning: "more reasoning text",
+        index: 0,
       });
     });
 
@@ -730,7 +911,8 @@ describe("convertStandardContentMessageToResponsesInput", () => {
     ]);
   });
 
-  it("throws error when file payload does not contain filename", () => {
+  it("uses placeholder filename when file payload does not contain filename", () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
     const message = new HumanMessage({
       contentBlocks: [
         {
@@ -741,11 +923,23 @@ describe("convertStandardContentMessageToResponsesInput", () => {
       ],
     });
 
-    expect(() =>
-      convertStandardContentMessageToResponsesInput(message)
-    ).toThrowError(
-      `a filename or name or title is needed via meta-data for OpenAI when working with multimodal blocks`
-    );
+    const result = convertStandardContentMessageToResponsesInput(message);
+    expect(result).toEqual([
+      {
+        role: "user",
+        type: "message",
+        content: [
+          {
+            type: "input_file",
+            file_data:
+              "data:application/pdf;base64,iVBORw0KGgoAAAANSUhEUgAAAAE",
+            filename: "LC_AUTOGENERATED",
+          },
+        ],
+      },
+    ]);
+    expect(warnSpy).toHaveBeenCalled();
+    warnSpy.mockRestore();
   });
 
   it.each([
@@ -2209,6 +2403,151 @@ describe("convertResponsesDeltaToChatGenerationChunk - json_schema with tool cal
   });
 });
 
+describe("convertResponsesDeltaToChatGenerationChunk - json_schema with trailing non-whitespace characters (#10894)", () => {
+  it("should not throw when response text contains valid JSON followed by a trailing non-whitespace character", () => {
+    // gpt-5-mini on service_tier: "auto" intermittently emits trailing
+    // characters after a valid JSON object on the Responses API. JSON.parse
+    // accepts trailing whitespace, so the failure mode is specifically
+    // trailing non-whitespace (extra tokens, control characters). Previously
+    // the bare JSON.parse threw SyntaxError and killed the stream. The
+    // conversion should now degrade gracefully: additional_kwargs.parsed is
+    // left undefined, the rest of the message converts normally, and the
+    // caller can fall back to msg.text or retry.
+    const event = {
+      type: "response.completed",
+      response: {
+        id: "resp_test_10894",
+        model: "gpt-5-mini",
+        object: "response",
+        created_at: 1700000000,
+        status: "completed",
+        incomplete_details: null,
+        metadata: {},
+        user: null,
+        service_tier: "auto",
+        output: [
+          {
+            type: "message",
+            id: "msg_001",
+            role: "assistant",
+            status: "completed",
+            content: [
+              {
+                type: "output_text",
+                text: '{"status":"ok","plan":{"steps":[]}}x',
+                annotations: [],
+              },
+            ],
+          },
+        ],
+        text: {
+          format: {
+            type: "json_schema",
+            name: "response",
+            strict: true,
+            schema: {
+              type: "object",
+              additionalProperties: false,
+              required: ["status", "plan"],
+              properties: {
+                status: { type: "string" },
+                plan: { type: "object" },
+              },
+            },
+          },
+        },
+        usage: {
+          input_tokens: 30,
+          output_tokens: 12,
+          total_tokens: 42,
+          input_tokens_details: { cached_tokens: 0 },
+          output_tokens_details: { reasoning_tokens: 0 },
+        },
+      },
+    };
+
+    expect(() =>
+      convertResponsesDeltaToChatGenerationChunk(event as any)
+    ).not.toThrow();
+
+    const result = convertResponsesDeltaToChatGenerationChunk(event as any);
+    expect(result).not.toBeNull();
+
+    const message = result!.message as AIMessageChunk;
+    // Parsing failed, so parsed should not be populated.
+    expect(message.additional_kwargs.parsed).toBeUndefined();
+    // Usage metadata should still flow through so the caller can account
+    // for the tokens that were spent on the bad payload.
+    expect(result!.message.usage_metadata).toBeDefined();
+    expect(result!.message.usage_metadata!.input_tokens).toBe(30);
+  });
+
+  it("should still parse cleanly when response text is well-formed JSON", () => {
+    // Regression guard: the try/catch must not change the well-formed path.
+    const event = {
+      type: "response.completed",
+      response: {
+        id: "resp_test_10894_b",
+        model: "gpt-5-mini",
+        object: "response",
+        created_at: 1700000000,
+        status: "completed",
+        incomplete_details: null,
+        metadata: {},
+        user: null,
+        service_tier: "auto",
+        output: [
+          {
+            type: "message",
+            id: "msg_002",
+            role: "assistant",
+            status: "completed",
+            content: [
+              {
+                type: "output_text",
+                text: '{"status":"ok","plan":{"steps":[]}}',
+                annotations: [],
+              },
+            ],
+          },
+        ],
+        text: {
+          format: {
+            type: "json_schema",
+            name: "response",
+            strict: true,
+            schema: {
+              type: "object",
+              additionalProperties: false,
+              required: ["status", "plan"],
+              properties: {
+                status: { type: "string" },
+                plan: { type: "object" },
+              },
+            },
+          },
+        },
+        usage: {
+          input_tokens: 30,
+          output_tokens: 12,
+          total_tokens: 42,
+          input_tokens_details: { cached_tokens: 0 },
+          output_tokens_details: { reasoning_tokens: 0 },
+        },
+      },
+    };
+
+    const result = convertResponsesDeltaToChatGenerationChunk(event as any);
+    expect(result).not.toBeNull();
+
+    const message = result!.message as AIMessageChunk;
+    expect(message.additional_kwargs.parsed).toEqual({
+      status: "ok",
+      plan: { steps: [] },
+    });
+  });
+});
+
 describe("phase parameter support", () => {
   describe("convertResponsesMessageToAIMessage", () => {
     it("should include phase on text content blocks when present on message output", () => {
@@ -2370,6 +2709,29 @@ describe("phase parameter support", () => {
   });
 
   describe("convertMessagesToResponsesInput round-trip", () => {
+    it("should preserve plain string assistant content", () => {
+      const aiMessage = new AIMessage({
+        id: "msg_001",
+        content: "Let me check that for you.",
+        response_metadata: {
+          model_provider: "openai",
+        },
+      });
+
+      const result = convertMessagesToResponsesInput({
+        messages: [aiMessage],
+        zdrEnabled: false,
+        model: "gpt-4o",
+      });
+
+      const messageItem = result.find(
+        (item) => (item as any).type === "message"
+      ) as any;
+      expect(messageItem).toBeDefined();
+      expect(messageItem.content).toBe("Let me check that for you.");
+      expect(messageItem.phase).toBeUndefined();
+    });
+
     it("should preserve phase when converting AIMessage back to responses input (responses/v1)", () => {
       const aiMessage = new AIMessage({
         id: "msg_001",

@@ -222,7 +222,7 @@ export function toolRetryMiddleware(config: ToolRetryMiddlewareConfig = {}) {
     }
     // retryOn is an array of error constructors
     return retryOn.some((ErrorConstructor) => {
-      // eslint-disable-next-line no-instanceof/no-instanceof
+      // oxlint-disable-next-line no-instanceof/no-instanceof
       return error instanceof ErrorConstructor;
     });
   };

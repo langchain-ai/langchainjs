@@ -136,6 +136,8 @@ export class ChatOpenRouter extends BaseChatModel<
       "route",
       "provider",
       "plugins",
+      "sessionId",
+      "trace",
       "prediction",
     ];
   }
@@ -206,8 +208,17 @@ export class ChatOpenRouter extends BaseChatModel<
   /** OpenRouter plugins to enable (e.g. web search). */
   plugins?: ChatOpenRouterParams["plugins"];
 
+  /** Identifier used by OpenRouter to group related requests together. */
+  sessionId?: string;
+
+  /** Trace metadata for OpenRouter broadcast destinations. */
+  trace?: OpenRouter.TraceConfig;
+
   /**
    * Application URL for OpenRouter attribution. Maps to `HTTP-Referer` header.
+   *
+   * Defaults to LangChain docs URL. Set this to your app's URL to get
+   * attribution for API usage in the OpenRouter dashboard.
    *
    * See https://openrouter.ai/docs/app-attribution for details.
    */
@@ -216,9 +227,20 @@ export class ChatOpenRouter extends BaseChatModel<
   /**
    * Application title for OpenRouter attribution. Maps to `X-Title` header.
    *
+   * Defaults to `'LangChain'`. Set this to your app's name to get attribution
+   * for API usage in the OpenRouter dashboard.
+   *
    * See https://openrouter.ai/docs/app-attribution for details.
    */
   siteName: string;
+
+  /**
+   * Marketplace categories for OpenRouter attribution.
+   * Maps to `X-OpenRouter-Categories` header.
+   *
+   * See https://openrouter.ai/docs/app-attribution for recognized categories.
+   */
+  appCategories?: string[];
 
   /** Extra params passed through to the API body. */
   modelKwargs?: Record<string, unknown>;
@@ -272,8 +294,12 @@ export class ChatOpenRouter extends BaseChatModel<
     this.route = fields.route;
     this.provider = fields.provider;
     this.plugins = fields.plugins;
-    this.siteUrl = fields.siteUrl ?? "https://docs.langchain.com/oss";
-    this.siteName = fields.siteName ?? "langchain";
+    this.sessionId =
+      fields.sessionId ?? getEnvironmentVariable("OPENROUTER_SESSION_ID");
+    this.trace = fields.trace;
+    this.siteUrl = fields.siteUrl ?? "https://docs.langchain.com";
+    this.siteName = fields.siteName ?? "LangChain";
+    this.appCategories = fields.appCategories;
     this.modelKwargs = fields.modelKwargs;
     this.streamUsage = fields.streamUsage ?? true;
   }
@@ -287,14 +313,22 @@ export class ChatOpenRouter extends BaseChatModel<
     return PROFILES[this.model] ?? {};
   }
 
-  /** Builds auth + content-type headers, plus optional site attribution headers. */
+  /** Builds auth + content-type headers, plus optional attribution headers. */
   private buildHeaders(): Record<string, string> {
-    return {
+    const headers: Record<string, string> = {
       Authorization: `Bearer ${this.apiKey}`,
       "Content-Type": "application/json",
-      "HTTP-Referer": this.siteUrl,
-      "X-Title": this.siteName,
     };
+    if (this.siteUrl) {
+      headers["HTTP-Referer"] = this.siteUrl;
+    }
+    if (this.siteName) {
+      headers["X-Title"] = this.siteName;
+    }
+    if (this.appCategories && this.appCategories.length > 0) {
+      headers["X-OpenRouter-Categories"] = this.appCategories.join(",");
+    }
+    return headers;
   }
 
   /** Returns the full chat-completions endpoint URL. */
@@ -313,6 +347,8 @@ export class ChatOpenRouter extends BaseChatModel<
       ? convertToolsToOpenRouter(options.tools, { strict: options.strict })
       : undefined;
     const toolChoice = formatToolChoice(options.tool_choice);
+    const sessionId = options.sessionId ?? this.sessionId;
+    const trace = options.trace ?? this.trace;
 
     return {
       model: this.model,
@@ -339,6 +375,8 @@ export class ChatOpenRouter extends BaseChatModel<
       route: options.route ?? this.route,
       provider: options.provider ?? this.provider,
       plugins: options.plugins ?? this.plugins,
+      ...(sessionId ? { session_id: sessionId } : {}),
+      ...(trace !== undefined ? { trace } : {}),
       ...this.modelKwargs,
     };
   }
@@ -534,37 +572,37 @@ export class ChatOpenRouter extends BaseChatModel<
    * sets `parsed: null` if the parser throws.
    */
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
   ):
@@ -572,7 +610,7 @@ export class ChatOpenRouter extends BaseChatModel<
     | Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
-    RunOutput extends Record<string, unknown> = Record<string, unknown>
+    RunOutput extends Record<string, unknown> = Record<string, unknown>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>

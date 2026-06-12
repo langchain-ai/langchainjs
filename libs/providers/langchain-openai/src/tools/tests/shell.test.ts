@@ -49,7 +49,7 @@ describe("OpenAI Shell Tool Tests", () => {
     };
 
     const executeFunc = shellTool.func;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const result = await executeFunc(testAction as any);
 
     expect(actions).toHaveLength(1);
@@ -85,7 +85,7 @@ describe("OpenAI Shell Tool Tests", () => {
     };
 
     const executeFunc = shellTool.func;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const result = await executeFunc(testAction as any);
 
     if (typeof result !== "string") throw new Error("Expected string result");
@@ -114,7 +114,7 @@ describe("OpenAI Shell Tool Tests", () => {
     };
 
     const executeFunc = shellTool.func;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const result = await executeFunc(testAction as any);
 
     if (typeof result !== "string") throw new Error("Expected string result");
@@ -143,7 +143,7 @@ describe("OpenAI Shell Tool Tests", () => {
     };
 
     const executeFunc = shellTool.func;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const result = await executeFunc(testAction as any);
 
     if (typeof result !== "string") throw new Error("Expected string result");

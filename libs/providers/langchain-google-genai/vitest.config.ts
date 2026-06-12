@@ -72,7 +72,8 @@ export default defineConfig((env) => {
       // may not have their transitive dependencies properly resolved
       typecheck: { enabled: !process.env.CI },
       env: {
-        GOOGLE_API_KEY: process.env.GOOGLE_API_KEY || "fake-api-key-for-unit-tests",
+        GOOGLE_API_KEY:
+          process.env.GOOGLE_API_KEY || "fake-api-key-for-unit-tests",
       },
     },
   };

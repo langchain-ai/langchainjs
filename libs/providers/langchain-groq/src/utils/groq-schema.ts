@@ -10,7 +10,7 @@
  * @see https://console.groq.com/docs/structured-outputs
  */
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 type JsonSchema = Record<string, any>;
 
 /**
@@ -32,7 +32,7 @@ function makeNullable(schema: JsonSchema): JsonSchema {
       ? schema.enum
       : [...schema.enum, null];
     const baseType = Array.isArray(schema.type)
-      ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ? // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         schema.type.filter((t: any) => t !== "null")
       : typeof schema.type === "string"
         ? [schema.type]
@@ -44,7 +44,7 @@ function makeNullable(schema: JsonSchema): JsonSchema {
   // anyOf: flatten to type array if possible, otherwise add null variant
   if (Array.isArray(schema.anyOf)) {
     const hasNull = schema.anyOf.some(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       (s: any) =>
         s?.type === "null" ||
         (Array.isArray(s?.type) && s.type.includes("null"))
@@ -53,9 +53,9 @@ function makeNullable(schema: JsonSchema): JsonSchema {
 
     // Try to extract types from anyOf and use type array instead
     const types = schema.anyOf
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       .map((s: any) => s?.type)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       .filter((t: any) => t && typeof t === "string");
 
     if (types.length === schema.anyOf.length) {
@@ -105,7 +105,7 @@ export function groqStrictifySchema(
 ): JsonSchema {
   if (!schema || typeof schema !== "object") return schema;
   if (Array.isArray(schema))
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     return schema.map((s) => groqStrictifySchema(s, false)) as any;
 
   // Deep clone to avoid mutating original
@@ -173,7 +173,7 @@ export function groqStrictifySchema(
     // If root has anyOf, extract the object variant
     if (Array.isArray(result.anyOf)) {
       const objectVariant = result.anyOf.find(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         (s: any) => s?.type === "object" || s?.properties
       );
       if (objectVariant) {

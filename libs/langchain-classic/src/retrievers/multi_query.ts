@@ -15,7 +15,7 @@ interface LineList {
   lines: string[];
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export type MultiDocs = Document<Record<string, any>>[];
 
 class LineListOutputParser extends BaseOutputParser<LineList> {

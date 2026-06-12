@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-instanceof/no-instanceof */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable no-instanceof/no-instanceof */
 import {
   InteropZodObject,
   isInteropZodSchema,
@@ -7,7 +7,6 @@ import {
   isInteropZodObject,
 } from "@langchain/core/utils/types";
 import { type AIMessage } from "@langchain/core/messages";
-import { type LanguageModelLike } from "@langchain/core/language_models/base";
 import { toJsonSchema, Validator } from "@langchain/core/utils/json_schema";
 import { type FunctionDefinition } from "@langchain/core/language_models/base";
 import {
@@ -20,6 +19,7 @@ import {
   MultipleStructuredOutputsError,
 } from "./errors.js";
 import { isBaseChatModel } from "./model.js";
+import type { AgentLanguageModelLike as LanguageModelLike } from "./model.js";
 
 /**
  * Special type to indicate that no response format is provided.
@@ -286,6 +286,22 @@ export class ProviderStrategy<T = unknown> {
 
 export type ResponseFormat = ToolStrategy<any> | ProviderStrategy<any>;
 
+export type ResponseFormatInput<
+  StructuredResponseType extends Record<string, any> = Record<string, any>,
+> =
+  | InteropZodType<StructuredResponseType>
+  | InteropZodType<unknown>[]
+  | SerializableSchema<StructuredResponseType>
+  | SerializableSchema[]
+  | JsonSchemaFormat
+  | JsonSchemaFormat[]
+  | ResponseFormat
+  | ResponseFormat[]
+  | TypedToolStrategy<StructuredResponseType>
+  | ToolStrategy<StructuredResponseType>
+  | ProviderStrategy<StructuredResponseType>
+  | ResponseFormatUndefined;
+
 /**
  * Handle user input for `responseFormat` parameter of `CreateAgentParams`.
  * This function defines the default behavior for the `responseFormat` parameter, which is:
@@ -300,16 +316,7 @@ export type ResponseFormat = ToolStrategy<any> | ProviderStrategy<any>;
  * @returns
  */
 export function transformResponseFormat(
-  responseFormat?:
-    | InteropZodType<any>
-    | InteropZodType<any>[]
-    | SerializableSchema
-    | SerializableSchema[]
-    | JsonSchemaFormat
-    | JsonSchemaFormat[]
-    | ResponseFormat
-    | ToolStrategy<any>[]
-    | ResponseFormatUndefined,
+  responseFormat?: ResponseFormatInput,
   options?: ToolStrategyOptions,
   model?: LanguageModelLike
 ): ResponseFormat[] {

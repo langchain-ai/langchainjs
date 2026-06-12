@@ -1,4 +1,4 @@
-import * as uuid from "uuid";
+import * as uuid from "../../utils/uuid/index.js";
 import { test, expect } from "vitest";
 
 import { LangChainTracer, Run } from "../tracer_langchain.js";

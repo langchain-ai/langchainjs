@@ -114,3 +114,63 @@ describe("ChatOpenAICompletions streaming usage_metadata callback", () => {
     expect(lastCallFields.chunk.message.usage_metadata?.input_tokens).toBe(10);
   });
 });
+
+describe("ChatOpenAICompletions reasoning_content compatibility", () => {
+  it("should preserve reasoning_content on streamed assistant chunks", async () => {
+    const model = new ChatOpenAICompletions({
+      model: "gpt-5.4",
+      apiKey: "test-key",
+      streaming: true,
+    });
+
+    const fakeStream = (async function* () {
+      yield {
+        choices: [
+          {
+            index: 0,
+            delta: {
+              role: "assistant" as const,
+              content: "",
+              reasoning_content: "The user",
+            },
+            finish_reason: null,
+            logprobs: null,
+          },
+        ],
+        usage: null,
+        system_fingerprint: null,
+        model: "gpt-5.4",
+        service_tier: null,
+      };
+      yield {
+        choices: [
+          {
+            index: 0,
+            delta: { content: "" },
+            finish_reason: "stop",
+            logprobs: null,
+          },
+        ],
+        usage: null,
+        system_fingerprint: null,
+        model: "gpt-5.4",
+        service_tier: null,
+      };
+    })();
+
+    model.completionWithRetry = vi
+      .fn()
+      .mockResolvedValue(fakeStream) as typeof model.completionWithRetry;
+
+    const chunks = [];
+    for await (const chunk of model._streamResponseChunks(
+      [new HumanMessage("1+1=?")],
+      {}
+    )) {
+      chunks.push(chunk);
+    }
+
+    const firstChunk = chunks[0].message as AIMessageChunk;
+    expect(firstChunk.additional_kwargs.reasoning_content).toBe("The user");
+  });
+});

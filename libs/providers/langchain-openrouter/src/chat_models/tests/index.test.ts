@@ -1,4 +1,13 @@
-import { describe, it, expect, beforeAll, afterAll, vi, test } from "vitest";
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  beforeEach,
+  afterAll,
+  vi,
+  test,
+} from "vitest";
 import { AIMessage } from "@langchain/core/messages";
 import { OutputParserException } from "@langchain/core/output_parsers";
 import { ChatOpenRouter } from "../index.js";
@@ -6,10 +15,16 @@ import type { ChatOpenRouterCallOptions } from "../types.js";
 import { OpenRouterAuthError } from "../../utils/errors.js";
 
 let savedKey: string | undefined;
+let savedSessionId: string | undefined;
 
 beforeAll(() => {
   savedKey = process.env.OPENROUTER_API_KEY;
+  savedSessionId = process.env.OPENROUTER_SESSION_ID;
   process.env.OPENROUTER_API_KEY = "test-key";
+});
+
+beforeEach(() => {
+  delete process.env.OPENROUTER_SESSION_ID;
 });
 
 afterAll(() => {
@@ -17,6 +32,11 @@ afterAll(() => {
     process.env.OPENROUTER_API_KEY = savedKey;
   } else {
     delete process.env.OPENROUTER_API_KEY;
+  }
+  if (savedSessionId !== undefined) {
+    process.env.OPENROUTER_SESSION_ID = savedSessionId;
+  } else {
+    delete process.env.OPENROUTER_SESSION_ID;
   }
 });
 
@@ -81,8 +101,8 @@ describe("ChatOpenRouter constructor", () => {
 
   it("defaults siteUrl and siteName for OpenRouter attribution", () => {
     const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
-    expect(model.siteUrl).toBe("https://docs.langchain.com/oss");
-    expect(model.siteName).toBe("langchain");
+    expect(model.siteUrl).toBe("https://docs.langchain.com");
+    expect(model.siteName).toBe("LangChain");
   });
 
   it("allows user to override siteUrl and siteName", () => {
@@ -93,6 +113,19 @@ describe("ChatOpenRouter constructor", () => {
     });
     expect(model.siteUrl).toBe("https://my-custom-app.com");
     expect(model.siteName).toBe("My Custom App");
+  });
+
+  it("stores appCategories when provided", () => {
+    const model = new ChatOpenRouter({
+      model: "openai/gpt-4o",
+      appCategories: ["cli-agent", "programming-app"],
+    });
+    expect(model.appCategories).toEqual(["cli-agent", "programming-app"]);
+  });
+
+  it("defaults appCategories to undefined", () => {
+    const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
+    expect(model.appCategories).toBeUndefined();
   });
 
   it("throws OpenRouterAuthError when no API key is available", () => {
@@ -108,6 +141,77 @@ describe("ChatOpenRouter constructor", () => {
     } finally {
       process.env.OPENROUTER_API_KEY = original;
     }
+  });
+});
+
+describe("attribution headers", () => {
+  function extractHeaders(model: ChatOpenRouter): Record<string, string> {
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    return (model as any).buildHeaders();
+  }
+
+  it("sends default HTTP-Referer and X-Title headers", () => {
+    const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
+    const headers = extractHeaders(model);
+    expect(headers["HTTP-Referer"]).toBe("https://docs.langchain.com");
+    expect(headers["X-Title"]).toBe("LangChain");
+  });
+
+  it("sends user-supplied siteUrl as HTTP-Referer", () => {
+    const model = new ChatOpenRouter({
+      model: "openai/gpt-4o",
+      siteUrl: "https://myapp.com",
+    });
+    const headers = extractHeaders(model);
+    expect(headers["HTTP-Referer"]).toBe("https://myapp.com");
+  });
+
+  it("sends user-supplied siteName as X-Title", () => {
+    const model = new ChatOpenRouter({
+      model: "openai/gpt-4o",
+      siteName: "My App",
+    });
+    const headers = extractHeaders(model);
+    expect(headers["X-Title"]).toBe("My App");
+  });
+
+  it("sends X-OpenRouter-Categories when appCategories is set", () => {
+    const model = new ChatOpenRouter({
+      model: "openai/gpt-4o",
+      appCategories: ["cli-agent", "programming-app"],
+    });
+    const headers = extractHeaders(model);
+    expect(headers["X-OpenRouter-Categories"]).toBe(
+      "cli-agent,programming-app"
+    );
+  });
+
+  it("omits X-OpenRouter-Categories when appCategories is undefined", () => {
+    const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
+    const headers = extractHeaders(model);
+    expect(headers["X-OpenRouter-Categories"]).toBeUndefined();
+  });
+
+  it("omits X-OpenRouter-Categories when appCategories is empty", () => {
+    const model = new ChatOpenRouter({
+      model: "openai/gpt-4o",
+      appCategories: [],
+    });
+    const headers = extractHeaders(model);
+    expect(headers["X-OpenRouter-Categories"]).toBeUndefined();
+  });
+
+  it("includes all attribution headers together", () => {
+    const model = new ChatOpenRouter({
+      model: "openai/gpt-4o",
+      siteUrl: "https://myapp.com",
+      siteName: "My App",
+      appCategories: ["cli-agent"],
+    });
+    const headers = extractHeaders(model);
+    expect(headers["HTTP-Referer"]).toBe("https://myapp.com");
+    expect(headers["X-Title"]).toBe("My App");
+    expect(headers["X-OpenRouter-Categories"]).toBe("cli-agent");
   });
 });
 
@@ -150,6 +254,8 @@ describe("invocationParams", () => {
       models: ["a", "b"],
       route: "fallback",
       provider: { order: ["OpenAI"] },
+      sessionId: "session-abc",
+      trace: { trace_id: "trace-1", span_name: "summarize" },
     });
 
     const params = model.invocationParams({} as ChatOpenRouterCallOptions);
@@ -158,6 +264,88 @@ describe("invocationParams", () => {
     expect(params.models).toEqual(["a", "b"]);
     expect(params.route).toBe("fallback");
     expect(params.provider).toEqual({ order: ["OpenAI"] });
+    expect(params.session_id).toBe("session-abc");
+    expect(params.trace).toEqual({
+      trace_id: "trace-1",
+      span_name: "summarize",
+    });
+  });
+
+  it("omits session ID and trace when unset", () => {
+    const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
+
+    const params = model.invocationParams({} as ChatOpenRouterCallOptions);
+
+    expect(params).not.toHaveProperty("session_id");
+    expect(params).not.toHaveProperty("trace");
+  });
+
+  it("loads session ID from OPENROUTER_SESSION_ID", () => {
+    process.env.OPENROUTER_SESSION_ID = "env-session-xyz";
+    const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
+
+    const params = model.invocationParams({} as ChatOpenRouterCallOptions);
+
+    expect(model.sessionId).toBe("env-session-xyz");
+    expect(params.session_id).toBe("env-session-xyz");
+    delete process.env.OPENROUTER_SESSION_ID;
+  });
+
+  it("prefers explicit session ID over OPENROUTER_SESSION_ID", () => {
+    process.env.OPENROUTER_SESSION_ID = "env-session";
+    const model = new ChatOpenRouter({
+      model: "openai/gpt-4o",
+      sessionId: "explicit-session",
+    });
+
+    const params = model.invocationParams({} as ChatOpenRouterCallOptions);
+
+    expect(model.sessionId).toBe("explicit-session");
+    expect(params.session_id).toBe("explicit-session");
+    delete process.env.OPENROUTER_SESSION_ID;
+  });
+
+  it("allows per-call session ID and trace overrides", () => {
+    const constructorTrace = { trace_id: "constructor-trace" };
+    const callTrace = { trace_id: "call-trace", span_name: "summarize" };
+    const model = new ChatOpenRouter({
+      model: "openai/gpt-4o",
+      sessionId: "constructor-session",
+      trace: constructorTrace,
+    });
+
+    const params = model.invocationParams({
+      sessionId: "call-session",
+      trace: callTrace,
+    } as ChatOpenRouterCallOptions);
+    const fallbackParams = model.invocationParams(
+      {} as ChatOpenRouterCallOptions
+    );
+
+    expect(params.session_id).toBe("call-session");
+    expect(params.trace).toEqual(callTrace);
+    expect(model.sessionId).toBe("constructor-session");
+    expect(model.trace).toEqual(constructorTrace);
+    expect(fallbackParams.session_id).toBe("constructor-session");
+    expect(fallbackParams.trace).toEqual(constructorTrace);
+  });
+
+  it("treats empty session ID as unset", () => {
+    const model = new ChatOpenRouter({
+      model: "openai/gpt-4o",
+      sessionId: "",
+    });
+    const params = model.invocationParams({} as ChatOpenRouterCallOptions);
+
+    process.env.OPENROUTER_SESSION_ID = "";
+    const envModel = new ChatOpenRouter({ model: "openai/gpt-4o" });
+    const envParams = envModel.invocationParams(
+      {} as ChatOpenRouterCallOptions
+    );
+
+    expect(params).not.toHaveProperty("session_id");
+    expect(envParams).not.toHaveProperty("session_id");
+    delete process.env.OPENROUTER_SESSION_ID;
   });
 
   it("includes prediction only when set", () => {
@@ -308,7 +496,7 @@ function makeSerializableSchema() {
 describe("withStructuredOutput with SerializableSchema", () => {
   test("functionCalling with valid output parses correctly", async () => {
     const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     vi.spyOn(model as any, "invoke").mockResolvedValue(
       new AIMessage({
         content: "",
@@ -333,7 +521,7 @@ describe("withStructuredOutput with SerializableSchema", () => {
 
   test("functionCalling with invalid output throws OutputParserException", async () => {
     const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     vi.spyOn(model as any, "invoke").mockResolvedValue(
       new AIMessage({
         content: "",
@@ -359,7 +547,7 @@ describe("withStructuredOutput with SerializableSchema", () => {
 
   test("functionCalling with custom name", async () => {
     const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     vi.spyOn(model as any, "invoke").mockResolvedValue(
       new AIMessage({
         content: "",
@@ -395,7 +583,7 @@ describe("withStructuredOutput with SerializableSchema", () => {
       ],
     });
     const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     vi.spyOn(model as any, "invoke").mockResolvedValue(rawMessage);
 
     const schema = makeSerializableSchema();
@@ -412,7 +600,7 @@ describe("withStructuredOutput with SerializableSchema", () => {
 
   test("jsonMode with valid output parses correctly", async () => {
     const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     vi.spyOn(model as any, "invoke").mockResolvedValue(
       new AIMessage({
         content: '{"name": "Alice"}',
@@ -430,7 +618,7 @@ describe("withStructuredOutput with SerializableSchema", () => {
 
   test("jsonMode with invalid output throws OutputParserException", async () => {
     const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     vi.spyOn(model as any, "invoke").mockResolvedValue(
       new AIMessage({
         content: '{"wrong_field": 123}',
@@ -449,7 +637,7 @@ describe("withStructuredOutput with SerializableSchema", () => {
 
   test("jsonSchema with valid output parses correctly", async () => {
     const model = new ChatOpenRouter({ model: "openai/gpt-4o-mini" });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     vi.spyOn(model as any, "invoke").mockResolvedValue(
       new AIMessage({
         content: '{"name": "Eve"}',
@@ -467,7 +655,7 @@ describe("withStructuredOutput with SerializableSchema", () => {
 
   test("jsonSchema with invalid output throws OutputParserException", async () => {
     const model = new ChatOpenRouter({ model: "openai/gpt-4o-mini" });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     vi.spyOn(model as any, "invoke").mockResolvedValue(
       new AIMessage({
         content: '{"wrong_field": 123}',

@@ -16,14 +16,4 @@ function castStandardMessageContent<T extends BaseMessage>(message: T) {
   });
 }
 
-export function parseMetadataInvocationParams(
-  invocationParams: Record<string, unknown>
-) {
-  return Object.fromEntries(
-    Object.entries(invocationParams).filter(
-      ([k, v]) => k !== "tools" && v !== null && v !== undefined
-    )
-  );
-}
-
 export { castStandardMessageContent };

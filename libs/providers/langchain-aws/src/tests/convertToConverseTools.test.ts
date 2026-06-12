@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { convertToConverseTools } from "../utils/tools.js";
+import {
+  convertToConverseTools,
+  supportedToolChoiceValuesForModel,
+} from "../utils/tools.js";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod/v3";
 
@@ -214,5 +217,97 @@ describe("convertToConverseTools", () => {
     expect(result[1].toolSpec.name).toBe("openai-1");
     expect(result[2].toolSpec.name).toBe("langchain-2");
     expect(result[3].toolSpec.name).toBe("openai-2");
+  });
+});
+
+describe("supportedToolChoiceValuesForModel", () => {
+  const CLAUDE_TOOL_CHOICES: Array<"auto" | "any" | "tool"> = [
+    "auto",
+    "any",
+    "tool",
+  ];
+
+  it("returns tool choice values for Claude 3 models", () => {
+    expect(
+      supportedToolChoiceValuesForModel(
+        "anthropic.claude-3-sonnet-20240229-v1:0"
+      )
+    ).toEqual(CLAUDE_TOOL_CHOICES);
+    expect(
+      supportedToolChoiceValuesForModel(
+        "anthropic.claude-3-5-haiku-20241022-v1:0"
+      )
+    ).toEqual(CLAUDE_TOOL_CHOICES);
+  });
+
+  it("returns tool choice values for Claude Sonnet 4 models", () => {
+    expect(
+      supportedToolChoiceValuesForModel(
+        "anthropic.claude-sonnet-4-5-20250929-v1:0"
+      )
+    ).toEqual(CLAUDE_TOOL_CHOICES);
+  });
+
+  it("returns tool choice values for Claude Opus 4 models", () => {
+    expect(
+      supportedToolChoiceValuesForModel("anthropic.claude-opus-4-20250514-v1:0")
+    ).toEqual(CLAUDE_TOOL_CHOICES);
+  });
+
+  it("returns tool choice values for Claude Haiku 4 models", () => {
+    expect(
+      supportedToolChoiceValuesForModel(
+        "anthropic.claude-haiku-4-5-20251001-v1:0"
+      )
+    ).toEqual(CLAUDE_TOOL_CHOICES);
+  });
+
+  it("returns tool choice values for Claude Haiku 4 regional inference profiles", () => {
+    expect(
+      supportedToolChoiceValuesForModel(
+        "eu.anthropic.claude-haiku-4-5-20251001-v1:0"
+      )
+    ).toEqual(CLAUDE_TOOL_CHOICES);
+    expect(
+      supportedToolChoiceValuesForModel(
+        "us.anthropic.claude-haiku-4-5-20251001-v1:0"
+      )
+    ).toEqual(CLAUDE_TOOL_CHOICES);
+    expect(
+      supportedToolChoiceValuesForModel(
+        "ap.anthropic.claude-haiku-4-5-20251001-v1:0"
+      )
+    ).toEqual(CLAUDE_TOOL_CHOICES);
+  });
+
+  it("returns tool choice values for other Claude 4 regional inference profiles", () => {
+    expect(
+      supportedToolChoiceValuesForModel(
+        "eu.anthropic.claude-sonnet-4-5-20250929-v1:0"
+      )
+    ).toEqual(CLAUDE_TOOL_CHOICES);
+    expect(
+      supportedToolChoiceValuesForModel(
+        "us.anthropic.claude-opus-4-20250514-v1:0"
+      )
+    ).toEqual(CLAUDE_TOOL_CHOICES);
+  });
+
+  it("returns tool choice values for Mistral Large models", () => {
+    expect(
+      supportedToolChoiceValuesForModel("mistral.mistral-large-2407-v1:0")
+    ).toEqual(["auto", "any"]);
+  });
+
+  it("returns undefined for Claude 2 and other unsupported models", () => {
+    expect(
+      supportedToolChoiceValuesForModel("anthropic.claude-v2")
+    ).toBeUndefined();
+    expect(
+      supportedToolChoiceValuesForModel("cohere.command-text-v14")
+    ).toBeUndefined();
+    expect(
+      supportedToolChoiceValuesForModel("mistral.mistral-7b-instruct-v0:2")
+    ).toBeUndefined();
   });
 });

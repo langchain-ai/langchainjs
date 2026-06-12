@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-instanceof/no-instanceof */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable no-instanceof/no-instanceof */
 import { BaseMessage, ToolMessage, AIMessage } from "@langchain/core/messages";
 import { RunnableConfig, RunnableToolLike } from "@langchain/core/runnables";
 import {

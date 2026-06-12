@@ -422,7 +422,7 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
       );
       if (options.signal?.aborted) break;
       yield chunk;
-      // eslint-disable-next-line no-void
+      // oxlint-disable-next-line no-void
       void runManager?.handleLLMNewToken(text);
     }
   }
@@ -441,7 +441,7 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
 
   _createResponseChunk(
     text: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     generationInfo?: Record<string, any>
   ): ChatGenerationChunk {
     return new ChatGenerationChunk({
@@ -521,37 +521,37 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
   }
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     _params:
       | StructuredOutputMethodParams<RunOutput, false>
       | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     _params:
       | StructuredOutputMethodParams<RunOutput, true>
       | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     _params:
       | StructuredOutputMethodParams<RunOutput, boolean>
       | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     _config?: StructuredOutputMethodOptions<boolean>
   ):

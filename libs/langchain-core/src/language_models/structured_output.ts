@@ -28,13 +28,13 @@ import { BaseLanguageModelInput } from "./base.js";
  * - Plain JSON schema -> JsonOutputParser (no validation)
  */
 export function createContentParser<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunOutput extends Record<string, any> = Record<string, any>,
 >(
   schema:
     | InteropZodType<RunOutput>
     | SerializableSchema<RunOutput>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     | Record<string, any>
 ): BaseOutputParser<RunOutput> {
   if (isInteropZodSchema(schema)) {
@@ -47,7 +47,7 @@ export function createContentParser<
 }
 
 type FunctionCallingParserConstructor<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   T extends Record<string, any> = Record<string, any>,
 > = new (params: {
   keyName: string;
@@ -65,13 +65,13 @@ type FunctionCallingParserConstructor<
  * - Plain JSON schema -> parser with no validation
  */
 export function createFunctionCallingParser<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunOutput extends Record<string, any> = Record<string, any>,
 >(
   schema:
     | InteropZodType<RunOutput>
     | SerializableSchema<RunOutput>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     | Record<string, any>,
   keyName: string,
   ParserClass?: FunctionCallingParserConstructor<RunOutput>
@@ -98,11 +98,11 @@ export function createFunctionCallingParser<
  * If parsing fails, `parsed` falls back to null.
  */
 export function assembleStructuredOutputPipeline<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunOutput extends Record<string, any> = Record<string, any>,
 >(
   llm: Runnable<BaseLanguageModelInput>,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   outputParser: Runnable<any, RunOutput>,
   includeRaw?: boolean,
   runName?: string
@@ -115,7 +115,7 @@ export function assembleStructuredOutputPipeline<
   }
 
   const parserAssign = RunnablePassthrough.assign({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     parsed: (input: any, config) => outputParser.invoke(input.raw, config),
   });
   const parserNone = RunnablePassthrough.assign({

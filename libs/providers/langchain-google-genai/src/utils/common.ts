@@ -39,7 +39,7 @@ import {
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { isOpenAITool } from "@langchain/core/language_models/base";
 import { ToolCallChunk } from "@langchain/core/messages/tool";
-import { v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4 } from "@langchain/core/utils/uuid";
 import {
   jsonSchemaToGeminiParameters,
   schemaToGenerativeAIParameters,
@@ -148,7 +148,7 @@ function _multimodalContentBlockToPart(
   if ("data" in block && block.data !== undefined) {
     // DataRecordBase64: inline base64 data
     const data =
-      // eslint-disable-next-line no-instanceof/no-instanceof
+      // oxlint-disable-next-line no-instanceof/no-instanceof
       block.data instanceof Uint8Array
         ? btoa(String.fromCharCode(...block.data))
         : block.data;

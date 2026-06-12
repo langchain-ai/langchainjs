@@ -607,7 +607,7 @@ describe("Generator tools (async function*)", () => {
 
   test("Generator tool with no yields works", async () => {
     const testTool = tool(
-      // eslint-disable-next-line require-yield -- intentional: testing generator with no yields
+      // oxlint-disable-next-line require-yield -- intentional: testing generator with no yields
       async function* (input) {
         return input.x * 2;
       },

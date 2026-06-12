@@ -26,7 +26,6 @@ This is a **monorepo** managed with [pnpm workspaces](https://pnpm.io/) (v10.14.
 | -------------------------- | ------------------------------------- | ---------------------------------------------------------------- |
 | `langchain`                | `libs/langchain/`                     | Main LangChain package with agents, prompts, and orchestration   |
 | `@langchain/core`          | `libs/langchain-core/`                | Core abstractions and interfaces (base classes, runnables, etc.) |
-| `@langchain/community`     | `libs/community/langchain-community/` | Community-maintained integrations                                |
 | `@langchain/textsplitters` | `libs/langchain-textsplitters/`       | Text splitting utilities                                         |
 | `@langchain/openai`        | `libs/providers/langchain-openai/`    | OpenAI integration                                               |
 | `@langchain/anthropic`     | `libs/providers/langchain-anthropic/` | Anthropic integration                                            |
@@ -37,7 +36,6 @@ This is a **monorepo** managed with [pnpm workspaces](https://pnpm.io/) (v10.14.
 | Package                     | Path                             | Description                          |
 | --------------------------- | -------------------------------- | ------------------------------------ |
 | `@langchain/build`          | `internal/build/`                | Build utilities                      |
-| `@langchain/eslint`         | `internal/eslint/`               | Shared ESLint configuration          |
 | `@langchain/tsconfig`       | `internal/tsconfig/`             | Shared TypeScript configuration      |
 | `@langchain/standard-tests` | `libs/langchain-standard-tests/` | Standard test suite for integrations |
 
@@ -66,7 +64,6 @@ All commands can be run from the project root using `pnpm --filter <package>` to
 
 - `--filter langchain` - the main `langchain` package
 - `--filter @langchain/core` - the core package
-- `--filter @langchain/community` - community integrations
 - `--filter @langchain/openai` - OpenAI integration (and similarly for other providers)
 
 ### Building
@@ -79,15 +76,14 @@ pnpm --filter @langchain/core build
 ### Linting
 
 ```bash
-pnpm --filter langchain lint
-pnpm --filter @langchain/core lint
+pnpm lint
 ```
 
 ### Formatting
 
 ```bash
-pnpm --filter langchain format        # Fix formatting
-pnpm --filter langchain format:check  # Check only
+pnpm format        # Fix formatting
+pnpm format:check  # Check only
 ```
 
 ### Testing
@@ -115,17 +111,14 @@ The project uses a shared TypeScript configuration from `internal/tsconfig/base.
 - Strict mode enabled
 - Source maps and declaration maps enabled
 
-### ESLint Rules
+### Lint Rules
 
-Key rules to follow (from `internal/eslint/src/configs/base.ts`):
+Lint rules are defined in `.oxlintrc.json`. Key rules to follow:
 
-1. **No `instanceof`** - Use type guards instead (`no-instanceof/no-instanceof: error`)
-   - For LangChain messages, use the static `isInstance` method, e.g. `AIMessage.isInstance(message)`
-2. **No `process.env`** - Except in test files (`no-process-env: error`)
-3. **No floating promises** - Always await or handle promises (`@typescript-eslint/no-floating-promises: error`)
-4. **No explicit `any`** - Use proper types (`@typescript-eslint/no-explicit-any: error`)
-5. **Prefer template literals** - Over string concatenation (`prefer-template: error`)
-6. **File extensions required** - In imports (`import/extensions: error`)
+1. **No `process.env`** - Except in test files (`node/no-process-env: error`)
+2. **No explicit `any`** - Use proper types (`typescript/no-explicit-any: error`)
+3. **Prefer template literals** - Over string concatenation (`prefer-template: error`)
+4. **File extensions required** - In imports (`import/extensions: error`)
 
 ### Import Conventions
 
@@ -295,7 +288,6 @@ libs/providers/langchain-{provider}/
 ├── tsconfig.json
 ├── tsdown.config.ts
 ├── vitest.config.ts
-├── eslint.config.ts
 ├── turbo.json
 ├── README.md
 ├── LICENSE
@@ -323,7 +315,6 @@ libs/providers/langchain-{provider}/
   },
   "devDependencies": {
     "@langchain/core": "workspace:^",
-    "@langchain/eslint": "workspace:*",
     "@langchain/standard-tests": "workspace:*",
     "@langchain/tsconfig": "workspace:*"
   }
@@ -395,7 +386,6 @@ throw new Error("Model authentication failed", {
 
 ### 6. Third-Party Dependencies
 
-- Add external dependencies as `peerDependencies` in `@langchain/community`
 - Add them as regular `dependencies` in standalone provider packages
 - Always use caret (`^`) for version ranges
 - Ensure dependencies are MIT or permissively licensed
