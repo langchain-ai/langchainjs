@@ -1155,21 +1155,15 @@ export const convertStandardContentMessageToResponsesInput: Converter<
       // `id: ""` makes the Responses API reject the turn with
       // `400 Invalid 'input[n].id': ''`, so we omit the field instead — the
       // same way the legacy reconstruction path leaves a missing id off.
-      const reasoningItem: OpenAIClient.Responses.ResponseReasoningItem = {
+      // Reasoning input items only carry `summary` — the Responses API rejects
+      // a populated `content` array on input (`400 Invalid 'input[n].content':
+      // array too long. Expected an array with maximum length 0`). The reasoning
+      // text is already represented in `summary`, so we do not forward `content`.
+      return {
         type: "reasoning",
         ...(block.id ? { id: block.id } : {}),
         summary,
       } as OpenAIClient.Responses.ResponseReasoningItem;
-
-      if (block.reasoning) {
-        reasoningItem.content = [
-          {
-            type: "reasoning_text" as const,
-            text: block.reasoning,
-          },
-        ];
-      }
-      return reasoningItem;
     };
 
     const convertFunctionCall = (

@@ -743,9 +743,10 @@ describe("convertStandardContentMessageToResponsesInput", () => {
         type: "reasoning",
         id: "reason-1",
         summary: [{ type: "summary_text", text: "Thoughts..." }],
-        content: [{ type: "reasoning_text", text: "Thoughts..." }],
       },
     ]);
+    // The Responses API rejects a populated `content` on reasoning input items.
+    expect(result[0]).not.toHaveProperty("content");
   });
 
   it("omits id on reasoning blocks reassembled from streaming (no id)", () => {
@@ -769,10 +770,10 @@ describe("convertStandardContentMessageToResponsesInput", () => {
       {
         type: "reasoning",
         summary: [{ type: "summary_text", text: "Thoughts..." }],
-        content: [{ type: "reasoning_text", text: "Thoughts..." }],
       },
     ]);
     expect(result[0]).not.toHaveProperty("id");
+    expect(result[0]).not.toHaveProperty("content");
   });
 
   it("converts tool call blocks and aggregates chunk fallbacks", () => {
