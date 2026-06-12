@@ -26,7 +26,7 @@ import { JsonOutputFunctionsParser } from "../../output_parsers/openai_functions
  */
 type OpenAPIExecutionMethod = (
   name: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   requestArgs: Record<string, any>,
   options?: {
     headers?: Record<string, string>;
@@ -345,7 +345,7 @@ export function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
     openAIFunctions,
     defaultExecutionMethod: async (
       name: string,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       requestArgs: Record<string, any>,
       options?: {
         headers?: Record<string, string>;
@@ -360,7 +360,7 @@ export function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
       const { method, url } = nameToCallMap[name];
       const requestParams = requestArgs.params ?? {};
       const nonEmptyParams = Object.keys(requestParams).reduce(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         (filteredArgs: Record<string, any>, argName) => {
           if (
             requestParams[argName] !== "" &&
@@ -424,7 +424,7 @@ export function convertOpenAPISpecToOpenAIFunctions(spec: OpenAPISpec): {
  */
 type SimpleRequestChainExecutionMethod = (
   name: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   requestArgs: Record<string, any>
 ) => Promise<string>;
 

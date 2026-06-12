@@ -38,7 +38,7 @@ export function createDummyHttpServer(
     );
 
     // Add tools that can inspect request details
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // oxlint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore - this may raise "Type instantiation is excessively deep and possibly infinite.ts(2589)"
     server.tool(
       "test_tool",
@@ -88,7 +88,7 @@ export function createDummyHttpServer(
       }
     );
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // oxlint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore - this may raise "Type instantiation is excessively deep and possibly infinite.ts(2589)"
     server.tool(
       "sleep_tool",

@@ -1,4 +1,4 @@
-/* eslint-disable no-instanceof/no-instanceof */
+/* oxlint-disable no-instanceof/no-instanceof */
 import { Runnable, RunnableConfig } from "@langchain/core/runnables";
 import {
   BaseMessage,
@@ -22,7 +22,11 @@ import type { ToolCall } from "@langchain/core/messages/tool";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
 
 import { initChatModel } from "../../chat_models/universal.js";
-import { MultipleStructuredOutputsError, MiddlewareError } from "../errors.js";
+import {
+  MultipleStructuredOutputsError,
+  MiddlewareError,
+  StructuredOutputParsingError,
+} from "../errors.js";
 import { RunnableCallable } from "../RunnableCallable.js";
 import type { AgentLanguageModelLike as LanguageModelLike } from "../model.js";
 import {
@@ -106,10 +110,10 @@ export interface AgentNodeOptions<
   shouldReturnDirect: Set<string>;
   signal?: AbortSignal;
   systemMessage: SystemMessage;
-  wrapModelCallHookMiddleware?: [
-    AgentMiddleware,
-    () => Record<string, unknown>,
-  ][];
+  wrapModelCallHookMiddleware?: (
+    | AgentMiddleware
+    | [AgentMiddleware, (...args: unknown[]) => Record<string, unknown>]
+  )[];
 }
 
 interface NativeResponseFormat {
@@ -160,7 +164,7 @@ export class AgentNode<
    * If the user selects a tool output:
    * - return a record of tools to extract structured output from the model's response
    *
-   * if the the user selects a native schema output or if the model supports JSON schema output:
+   * if the user selects a native schema output or if the model supports JSON schema output:
    * - return a provider strategy to extract structured output from the model's response
    *
    * @param model - The model to get the response format for.
@@ -409,6 +413,24 @@ export class AgentNode<
           return { structuredResponse, messages: [response] };
         }
 
+        /**
+         * If the model produced a terminal response (no tool calls) but the
+         * output failed to satisfy the provider strategy's schema, throw an
+         * informative error instead of silently exiting with
+         * `structuredResponse: undefined`. If tool calls are present, the
+         * agent loop continues and a subsequent terminal step will get
+         * another chance to produce a valid structured response.
+         */
+        if (!response.tool_calls || response.tool_calls.length === 0) {
+          const schemaTitle =
+            typeof structuredResponseFormat.strategy.schema?.title === "string"
+              ? structuredResponseFormat.strategy.schema.title
+              : "providerStrategy";
+          throw new StructuredOutputParsingError(schemaTitle, [
+            "Model output did not satisfy the provided response schema.",
+          ]);
+        }
+
         return response;
       }
 
@@ -461,11 +483,13 @@ export class AgentNode<
      * Build composed handler from last to first so first middleware becomes outermost
      */
     for (let i = wrapperMiddleware.length - 1; i >= 0; i--) {
-      const [middleware, getMiddlewareState] = wrapperMiddleware[i];
+      const middlewareEntry = wrapperMiddleware[i];
+      const middleware = Array.isArray(middlewareEntry)
+        ? middlewareEntry[0]
+        : middlewareEntry;
       if (middleware.wrapModelCall) {
         const innerHandler = wrappedHandler;
         const currentMiddleware = middleware;
-        const currentGetState = getMiddlewareState;
 
         wrappedHandler = async (
           request: ModelRequest<
@@ -512,7 +536,6 @@ export class AgentNode<
                     state
                   )
                 : {}),
-              ...currentGetState(),
               messages: state.messages,
             } as InternalAgentState<StructuredResponseFormat>,
             runtime,

@@ -14,9 +14,9 @@ import { BasePromptTemplate, type TypedPromptInputValues } from "./base.js";
  * return a StringPromptValue.
  */
 export abstract class BaseStringPromptTemplate<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   PartialVariableName extends string = any,
 > extends BasePromptTemplate<
   RunInput,

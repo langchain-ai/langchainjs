@@ -33,7 +33,7 @@ import {
 } from "@langchain/core/utils/types";
 
 import { ApiClient } from "../clients/index.js";
-import type { ChatGoogleFields } from "./types.js";
+import { ChatGoogleFields, settableServiceTier } from "./types.js";
 import { SafeJsonEventParserStream } from "../utils/stream.js";
 import {
   convertAIMessageToText,
@@ -59,6 +59,7 @@ import {
   convertParamsToPlatformType,
   convertFieldsToSpeechConfig,
   convertFieldsToThinkingConfig,
+  convertFieldsToServiceTier,
 } from "../converters/params.js";
 import { Gemini } from "./api-types.js";
 import { subtractUsageMetadata } from "../utils/metadata.js";
@@ -71,6 +72,8 @@ import {
   createContentParser,
   createFunctionCallingParser,
 } from "@langchain/core/language_models/structured_output";
+import { iife } from "../utils/misc";
+import ServiceTier = Gemini.ServiceTier;
 
 export type GooglePlatformType = "gai" | "gcp";
 
@@ -87,9 +90,21 @@ export function getPlatformType(
   }
 }
 
+function mapDetailToMediaResolution(
+  detail?: ChatGoogleFields["detail"]
+): Gemini.GenerationConfig["mediaResolution"] | undefined {
+  switch (detail) {
+    case "low":
+      return "MEDIA_RESOLUTION_LOW";
+    case "high":
+      return "MEDIA_RESOLUTION_HIGH";
+    default:
+      return undefined;
+  }
+}
+
 export interface BaseChatGoogleParams
-  extends BaseChatModelParams,
-    ChatGoogleFields {
+  extends BaseChatModelParams, ChatGoogleFields {
   /**
    * The name of the Gemini model to use.
    *
@@ -145,11 +160,10 @@ export interface BaseChatGoogleParams
 }
 
 export interface BaseChatGoogleCallOptions
-  extends BaseChatModelCallOptions,
-    ChatGoogleFields {}
+  extends BaseChatModelCallOptions, ChatGoogleFields {}
 
 export abstract class BaseChatGoogle<
-  CallOptions extends BaseChatGoogleCallOptions = BaseChatGoogleCallOptions
+  CallOptions extends BaseChatGoogleCallOptions = BaseChatGoogleCallOptions,
 > extends BaseChatModel<CallOptions, AIMessageChunk> {
   model: string;
 
@@ -162,6 +176,8 @@ export abstract class BaseChatGoogle<
   protected _platform?: GooglePlatformType;
 
   protected _endpoint?: string;
+
+  protected _customHeaders?: Record<string, string>;
 
   protected _location?: string;
 
@@ -183,6 +199,7 @@ export abstract class BaseChatGoogle<
     this.model = params.model;
     this._platform = convertParamsToPlatformType(params);
     this._endpoint = params.endpoint;
+    this._customHeaders = params.customHeaders;
     this._location = params.location;
     this._apiVersion = params.apiVersion;
 
@@ -306,6 +323,8 @@ export abstract class BaseChatGoogle<
 
   override invocationParams(options: this["ParsedCallOptions"]) {
     const fields = combineGoogleChatModelFields(this.params, options);
+    const mediaResolution =
+      fields.mediaResolution ?? mapDetailToMediaResolution(fields.detail);
 
     // Convert tools to Gemini format
     const tools = fields.tools
@@ -365,10 +384,9 @@ export abstract class BaseChatGoogle<
         thinkingConfig: convertFieldsToThinkingConfig(this.model, fields),
         speechConfig: convertFieldsToSpeechConfig(fields),
         ...(fields.imageConfig ? { imageConfig: fields.imageConfig } : {}),
-        ...(fields.mediaResolution
-          ? { mediaResolution: fields.mediaResolution }
-          : {}),
+        ...(mediaResolution ? { mediaResolution } : {}),
       },
+      ...convertFieldsToServiceTier(this.platform, fields),
     };
   }
 
@@ -381,6 +399,25 @@ export abstract class BaseChatGoogle<
       ls_temperature: params.generationConfig?.temperature ?? undefined,
       ls_max_tokens: params.generationConfig?.maxOutputTokens ?? undefined,
       ls_stop: options.stop,
+    };
+  }
+
+  getHeaders(options: this["ParsedCallOptions"]): HeadersInit {
+    const fields = combineGoogleChatModelFields(this.params, options);
+
+    // The priority type is set via header only for Vertex
+    const priorityHeaders: Record<string, string> =
+      this.platform === "gcp" &&
+      typeof fields.serviceTier !== "undefined" &&
+      settableServiceTier.includes(fields.serviceTier)
+        ? { "X-Vertex-AI-LLM-Shared-Request-Type": fields.serviceTier }
+        : {};
+
+    return {
+      "Content-Type": "application/json",
+      ...priorityHeaders,
+      ...this._customHeaders,
+      ...options.customHeaders,
     };
   }
 
@@ -417,6 +454,7 @@ export abstract class BaseChatGoogle<
     }
 
     const url = await this.buildUrl();
+    const headers = this.getHeaders(options);
     const body = {
       ...this.invocationParams(options),
       systemInstruction: convertMessagesToGeminiSystemInstruction(messages),
@@ -426,15 +464,14 @@ export abstract class BaseChatGoogle<
     const moduleName = this.constructor.name;
     await runManager?.handleCustomEvent(`google-request-${moduleName}`, {
       url,
+      headers,
       body,
     });
 
     const response = await this.apiClient.fetch(
       new Request(url, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify(body),
         signal: options.signal,
       })
@@ -452,7 +489,7 @@ export abstract class BaseChatGoogle<
     await runManager?.handleCustomEvent(`google-response-${moduleName}`, {
       data,
       url: response.url,
-      headers: response.headers,
+      headers: Array.from(response.headers.entries()),
       status: response.status,
       statusText: response.statusText,
     });
@@ -478,6 +515,21 @@ export abstract class BaseChatGoogle<
       convertGeminiGenerateContentResponseToUsageMetadata(data);
     message.usage_metadata = usageMetadata;
 
+    const serviceTier: ServiceTier = iife((): ServiceTier => {
+      // @ts-expect-error - trafficType is defined on Vertex, so isn't in the OpenAPI spec
+      const trafficType: string | undefined = data.usageMetadata?.trafficType;
+
+      // AI Studio replies with actual service type in the header
+      const serviceTierHeader: string | null = response.headers.get(
+        "x-gemini-service-tier"
+      );
+
+      if (trafficType?.startsWith("ON_DEMAND_")) {
+        return trafficType?.substring("ON_DEMAND_".length).toLowerCase();
+      }
+      return serviceTierHeader || "standard";
+    });
+
     return {
       generations: [
         {
@@ -497,6 +549,7 @@ export abstract class BaseChatGoogle<
         model: data.modelVersion,
         responseId: data.responseId,
         usageMetadata,
+        serviceTier,
       },
     };
   }
@@ -515,18 +568,18 @@ export abstract class BaseChatGoogle<
     };
 
     const url = await this.buildUrl("streamGenerateContent?alt=sse");
+    const headers = this.getHeaders(options);
     const moduleName = this.constructor.name;
     await runManager?.handleCustomEvent(`google-request-${moduleName}`, {
       url,
+      headers,
       body,
     });
 
     const response = await this.apiClient.fetch(
       new Request(url, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify(body),
         signal: options.signal,
       })
@@ -534,7 +587,7 @@ export abstract class BaseChatGoogle<
 
     await runManager?.handleCustomEvent(`google-response-${moduleName}`, {
       url: response.url,
-      headers: response.headers,
+      headers: Array.from(response.headers.entries()),
       status: response.status,
       statusText: response.statusText,
     });
@@ -561,7 +614,7 @@ export abstract class BaseChatGoogle<
             ChatGenerationChunk
           >({
             transform(chunk, controller) {
-              // eslint-disable-next-line no-void
+              // oxlint-disable-next-line no-void
               void runManager?.handleCustomEvent(`google-chunk-${moduleName}`, {
                 chunk,
               });
@@ -682,37 +735,37 @@ export abstract class BaseChatGoogle<
   }
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
   ):
@@ -731,13 +784,13 @@ export abstract class BaseChatGoogle<
    * @returns A Runnable that returns the parsed structured output
    */
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunOutput extends Record<string, any> = Record<string, any>
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
   ):
@@ -878,10 +931,12 @@ export function combineGoogleChatModelFields(
     speechConfig: b.speechConfig ?? a.speechConfig,
     imageConfig: b.imageConfig ?? a.imageConfig,
     mediaResolution: b.mediaResolution ?? a.mediaResolution,
+    detail: b.detail ?? a.detail,
     maxReasoningTokens: b.maxReasoningTokens ?? a.maxReasoningTokens,
     thinkingBudget: b.thinkingBudget ?? a.thinkingBudget,
     reasoningEffort: b.reasoningEffort ?? a.reasoningEffort,
     thinkingLevel: b.thinkingLevel ?? a.thinkingLevel,
+    serviceTier: b.serviceTier ?? a.serviceTier,
   };
   if (rest.length > 0) {
     return combineGoogleChatModelFields(combined, rest[0], ...rest.slice(1));

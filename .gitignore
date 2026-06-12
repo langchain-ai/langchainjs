@@ -4,7 +4,6 @@ dist-cjs/
 lib/
 .yarn
 .turbo
-.eslintcache
 .env
 .env.local
 npm-debug.log*

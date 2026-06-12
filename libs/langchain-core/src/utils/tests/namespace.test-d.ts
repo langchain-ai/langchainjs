@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expectTypeOf } from "vitest";
 import { createNamespace } from "../namespace.js";
 

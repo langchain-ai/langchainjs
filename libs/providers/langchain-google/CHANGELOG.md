@@ -1,5 +1,25 @@
 # @langchain/google
 
+## 0.1.12
+
+### Patch Changes
+
+- [#10704](https://github.com/langchain-ai/langchainjs/pull/10704) [`f7e50fb`](https://github.com/langchain-ai/langchainjs/commit/f7e50fb8b98bd9969c0f5cf0967a06df15453453) Thanks [@afirstenberg](https://github.com/afirstenberg)! - Adds support for flex and priority pricing.
+  Adds support for custom headers.
+  Thanks to @Nico385412 and @pawel-twardziak for their insight and contributions.
+
+## 0.1.11
+
+### Patch Changes
+
+- [#10776](https://github.com/langchain-ai/langchainjs/pull/10776) [`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6) Thanks [@hntrl](https://github.com/hntrl)! - fix(deps): remediate uuid vulnerability by removing direct uuid usage
+
+## 0.1.10
+
+### Patch Changes
+
+- [#10550](https://github.com/langchain-ai/langchainjs/pull/10550) [`9781bff`](https://github.com/langchain-ai/langchainjs/commit/9781bff525bffdd3b6a75adfa8a30fdb4bfc505e) Thanks [@muhammadosama984](https://github.com/muhammadosama984)! - fix(google): align `mediaResolution` with Gemini scalar values and support `detail` alias mapping (`low`/`high`/`auto`) for media prompts.
+
 ## 0.1.9
 
 ### Patch Changes

@@ -18,24 +18,6 @@ import { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { MongoDBAtlasVectorSearch } from "../vectorstores.js";
 import { isUsingLocalAtlas, uri, waitForIndexToBeQueryable } from "./utils.js";
 
-/**
- * The following json can be used to create an index in atlas for Cohere embeddings.
- * Use "langchain.test" for the namespace and "default" for the index name.
-
-{
-  "mappings": {
-    "fields": {
-      "e": { "type": "number" },
-      "embedding": {
-        "dimensions": 1536,
-        "similarity": "euclidean",
-        "type": "knnVector"
-      }
-    }
-  }
-}
-*/
-
 let client: MongoClient;
 let collection: Collection;
 beforeAll(async () => {
@@ -44,6 +26,14 @@ beforeAll(async () => {
 
   const namespace = "langchain_test_db.langchain_test";
   const [dbName, collectionName] = namespace.split(".");
+
+  // Drop and recreate collection to ensure clean state and no lingering indexes
+  try {
+    await client.db(dbName).dropCollection(collectionName);
+  } catch {
+    // Collection may not exist, which is fine
+  }
+
   collection = await client.db(dbName).createCollection(collectionName);
 
   await collection.createSearchIndex({
@@ -116,7 +106,7 @@ function getEmbeddings() {
 
 test("MongoDBStore sets client metadata", () => {
   const spy = vi.spyOn(client, "appendMetadata");
-  // eslint-disable-next-line no-new
+  // oxlint-disable-next-line no-new
   new PatchedVectorStore(getEmbeddings(), {
     collection,
   });

@@ -317,7 +317,7 @@ export function isOpenAICustomTool(
 }
 
 export function parseCustomToolCall(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   rawToolCall: Record<string, any>
 ): CustomToolCall | undefined {
   if (rawToolCall.type !== "custom_tool_call") {
@@ -352,7 +352,7 @@ export type ComputerToolCall = ToolCall & {
  * @returns A ComputerToolCall object if valid, undefined otherwise
  */
 export function parseComputerCall(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   rawToolCall: Record<string, any>
 ): ComputerToolCall | undefined {
   if (rawToolCall.type !== "computer_call") {
@@ -390,16 +390,29 @@ export function isComputerToolCall(
 }
 
 export function isCustomToolCall(
-  toolCall: unknown
+  toolCall: unknown,
+  customToolCallIds?: Record<string, string>
 ): toolCall is CustomToolCall {
-  return (
-    typeof toolCall === "object" &&
-    toolCall !== null &&
-    "type" in toolCall &&
-    toolCall.type === "tool_call" &&
-    "isCustomTool" in toolCall &&
-    toolCall.isCustomTool === true
-  );
+  if (
+    typeof toolCall !== "object" ||
+    toolCall === null ||
+    !("type" in toolCall) ||
+    toolCall.type !== "tool_call"
+  ) {
+    return false;
+  }
+  if ("isCustomTool" in toolCall && toolCall.isCustomTool === true) {
+    return true;
+  }
+  if (
+    customToolCallIds &&
+    "id" in toolCall &&
+    typeof toolCall.id === "string" &&
+    toolCall.id in customToolCallIds
+  ) {
+    return true;
+  }
+  return false;
 }
 
 export function convertCompletionsCustomTool(

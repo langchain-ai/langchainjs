@@ -28,7 +28,7 @@ type LLMType =
   | Runnable<BaseLanguageModelInput, string>
   | Runnable<BaseLanguageModelInput, BaseMessage>;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 type CallOptionsIfAvailable<T> = T extends { CallOptions: infer CO } ? CO : any;
 /**
  * Interface for the input parameters of the LLMChain class.

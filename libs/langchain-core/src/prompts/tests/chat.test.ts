@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 
 import { expect, test } from "vitest";
 import {
@@ -502,7 +502,7 @@ test("Throws if trying to pass non BaseMessage inputs to MessagesPlaceholder", a
       question: "What is the meaning of life?",
     });
   } catch (e) {
-    // eslint-disable-next-line no-instanceof/no-instanceof
+    // oxlint-disable-next-line no-instanceof/no-instanceof
     if (e instanceof Error) {
       expect(e.name).toBe("InputFormatError");
     } else {
@@ -528,7 +528,7 @@ test("Does not throws if null or undefined is passed as input to MessagesPlaceho
       question: "What is the meaning of life?",
     });
   } catch (e) {
-    // eslint-disable-next-line no-instanceof/no-instanceof
+    // oxlint-disable-next-line no-instanceof/no-instanceof
     if (e instanceof Error) {
       expect(e.name).toBe("InputFormatError");
     } else {

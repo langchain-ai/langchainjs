@@ -54,7 +54,9 @@ import { ChatOpenRouter } from "@langchain/openrouter";
 const model = new ChatOpenRouter({
   model: "openai/gpt-4o",
 });
-const response = await model.invoke([{ role: "user", content: "Hello world!" }]);
+const response = await model.invoke([
+  { role: "user", content: "Hello world!" },
+]);
 ```
 
 ### Streaming
@@ -113,7 +115,7 @@ const response = await structured.invoke("What is the capital of France?");
 
 ### OpenRouter-Specific Features
 
-OpenRouter supports model routing, provider preferences, and plugins:
+OpenRouter supports model routing, provider preferences, plugins, and broadcast observability metadata:
 
 ```typescript
 import { ChatOpenRouter } from "@langchain/openrouter";
@@ -126,6 +128,8 @@ const model = new ChatOpenRouter({
     allow_fallbacks: true,
   },
   transforms: ["middle-out"],
+  sessionId: "conversation-123",
+  trace: { trace_id: "trace-abc", span_name: "summarize" },
 });
 ```
 

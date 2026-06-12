@@ -130,7 +130,7 @@ describe("createFunctionCallingParser", () => {
         this.serializableSchema = params.serializableSchema;
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       async parseResult(): Promise<any> {
         return {};
       }
@@ -140,7 +140,7 @@ describe("createFunctionCallingParser", () => {
     const parser = createFunctionCallingParser(
       schema,
       "extract",
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       CustomParser as any
     );
     expect(parser).toBeInstanceOf(CustomParser);

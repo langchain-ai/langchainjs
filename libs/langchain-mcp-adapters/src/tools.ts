@@ -497,7 +497,7 @@ export class ToolException extends Error {
      */
     if (
       cause &&
-      // eslint-disable-next-line no-instanceof/no-instanceof
+      // oxlint-disable-next-line no-instanceof/no-instanceof
       (cause instanceof ZodErrorV4 || cause instanceof ZodErrorV3)
     ) {
       const minifiedZodError = new Error(z.prettifyError(cause));
@@ -1019,7 +1019,7 @@ async function _callTool({
       ...(onProgress
         ? {
             onprogress: (progress) => {
-              // eslint-disable-next-line @typescript-eslint/no-floating-promises
+              // oxlint-disable-next-line @typescript-eslint/no-floating-promises
               onProgress?.(progress, {
                 type: "tool",
                 name: toolName,
@@ -1153,7 +1153,7 @@ async function _callTool({
       return [interceptedResult.result.contentBlocks, []];
     }
 
-    // eslint-disable-next-line no-instanceof/no-instanceof
+    // oxlint-disable-next-line no-instanceof/no-instanceof
     if (interceptedResult?.result instanceof Command) {
       return interceptedResult.result;
     }
@@ -1162,7 +1162,7 @@ async function _callTool({
       `Unexpected result value type from afterToolCall: expected either a Command, a ToolMessage or a tuple of ContentBlock and Artifact, but got ${interceptedResult.result}`
     );
   } catch (error) {
-    // eslint-disable-next-line no-instanceof/no-instanceof
+    // oxlint-disable-next-line no-instanceof/no-instanceof
     if (error instanceof ZodErrorV4 || error instanceof ZodErrorV3) {
       throw new ToolException(z.prettifyError(error), error);
     }

@@ -1,4 +1,3 @@
-import { DataSource } from "typeorm";
 import { SqlDatabase } from "@langchain/classic/sql_db";
 import { ChatOpenAI } from "@langchain/openai";
 import {
@@ -8,13 +7,11 @@ import {
 import { PromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 
-const datasource = new DataSource({
-  type: "sqlite",
-  database: "Chinook.db",
-});
-
-const db = await SqlDatabase.fromDataSourceParams({
-  appDataSource: datasource,
+const db = await SqlDatabase.fromOptionsParams({
+  appDataSourceOptions: {
+    type: "sqlite",
+    database: "Chinook.db",
+  },
 });
 
 const prompt =

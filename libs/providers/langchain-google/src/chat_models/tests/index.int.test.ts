@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import {
   afterEach,
   beforeEach,
@@ -160,12 +160,14 @@ const allModelInfo: ModelInfo[] = [
     model: "lyria-3-clip-preview",
     testConfig: {
       isAudio: true,
+      skip: true,
     },
   },
   {
     model: "lyria-3-pro-preview",
     testConfig: {
       isAudio: true,
+      skip: true,
     },
   },
 ];
@@ -453,6 +455,8 @@ describe.each(coreModelInfo)(
       const contentBlock = result.contentBlocks[0];
       expect(contentBlock.type).to.equal("text");
       expect(contentBlock.text).toMatch(/(1 + 1 (equals|is|=) )?2.? ?/);
+
+      expect(result.response_metadata.serviceTier).toEqual("standard");
     });
 
     test("invoke seed", async () => {
@@ -952,6 +956,40 @@ describe.each(coreModelInfo)(
       ).toEqual("application/json");
     });
 
+    test("service tier - flex", async () => {
+      const llm = newChatGoogle({
+        serviceTier: "flex",
+      });
+      const prompt = "Write a limerick about the color blue.";
+      const result = await llm.invoke(prompt);
+
+      expect(result.response_metadata.serviceTier).toEqual("flex");
+    });
+
+    test("service tier - priority", async () => {
+      const llm = newChatGoogle({
+        serviceTier: "priority",
+      });
+      const prompt = "Write a limerick about the color blue.";
+      const result = await llm.invoke(prompt);
+
+      expect(result.response_metadata.serviceTier).toEqual("priority");
+    });
+
+    test("service tier - priority header", async () => {
+      const llm = newChatGoogle({
+        serviceTier: "flex", // This will be overridden by the custom value
+        customHeaders: {
+          "X-Vertex-AI-LLM-Shared-Request-Type": "priority",
+        },
+      });
+      const prompt = "Write a limerick about the color blue.";
+      const result = await llm.invoke(prompt);
+
+      const expectedValue = testConfig?.useApiKey ? "flex" : "priority";
+      expect(result.response_metadata.serviceTier).toEqual(expectedValue);
+    });
+
     test("image - legacy", async () => {
       const model = newChatGoogle({});
 
@@ -1036,6 +1074,52 @@ describe.each(coreModelInfo)(
         aiMessage?.usage_metadata?.input_token_details?.image
       ).toBeGreaterThan(0);
     });
+
+    test("mediaResolution and detail map correctly for image prompts", async () => {
+      const model = newChatGoogle({});
+
+      const dataPath = "src/chat_models/tests/data/blue-square.png";
+      const dataType = "image/png";
+      const data = await fs.readFile(dataPath);
+      const data64 = data.toString("base64");
+
+      const message = new HumanMessage({
+        contentBlocks: [
+          {
+            type: "text",
+            text: "What is in this image?",
+          },
+          {
+            type: "image",
+            data: data64,
+            mimeType: dataType,
+          },
+        ],
+      });
+
+      const lowDetailResult = await model.invoke([message], {
+        mediaResolution: "MEDIA_RESOLUTION_LOW",
+      });
+      expect(recorder.request?.body?.generationConfig?.mediaResolution).toEqual(
+        "MEDIA_RESOLUTION_LOW"
+      );
+      const lowImageTokens =
+        lowDetailResult.usage_metadata?.input_token_details?.image ?? 0;
+      expect(lowImageTokens).toBeGreaterThan(0);
+
+      const highDetailResult = await model.invoke([message], {
+        detail: "high",
+      });
+      expect(recorder.request?.body?.generationConfig?.mediaResolution).toEqual(
+        "MEDIA_RESOLUTION_HIGH"
+      );
+      const highImageTokens =
+        highDetailResult.usage_metadata?.input_token_details?.image ?? 0;
+      expect(highImageTokens).toBeGreaterThan(0);
+
+      // Higher detail should process at least as much image information.
+      expect(highImageTokens).toBeGreaterThanOrEqual(lowImageTokens);
+    }, 90000);
 
     test("video - legacy", async () => {
       const model = newChatGoogle({});

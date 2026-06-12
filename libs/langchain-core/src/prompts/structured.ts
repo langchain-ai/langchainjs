@@ -33,26 +33,26 @@ function isRunnableBinding(x: unknown): x is RunnableBinding<unknown, unknown> {
  * Interface for the input of a ChatPromptTemplate.
  */
 export interface StructuredPromptInput<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   PartialVariableName extends string = any,
 > extends ChatPromptTemplateInput<RunInput, PartialVariableName> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   schema: Record<string, any>;
   method?: "jsonMode" | "jsonSchema" | "functionMode";
 }
 
 export class StructuredPrompt<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   PartialVariableName extends string = any,
 >
   extends ChatPromptTemplate<RunInput, PartialVariableName>
   implements StructuredPromptInput<RunInput, PartialVariableName>
 {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   schema: Record<string, any>;
 
   method?: "jsonMode" | "jsonSchema" | "functionMode";
@@ -101,7 +101,7 @@ export class StructuredPrompt<
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   static fromMessagesAndSchema<RunInput extends InputValues = any>(
     promptMessages: (
       | ChatPromptTemplate<InputValues, string>
@@ -109,7 +109,7 @@ export class StructuredPrompt<
     )[],
     schema: StructuredPromptInput["schema"],
     method?: "jsonMode" | "jsonSchema" | "functionMode"
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   ): ChatPromptTemplate<RunInput, any> {
     return StructuredPrompt.fromMessages<
       RunInput,

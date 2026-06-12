@@ -146,7 +146,7 @@ describe("withStructuredOutput - StandardSchema", () => {
       apiKey: "testing",
     });
     vi
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       .spyOn(model as any, "invoke")
       .mockResolvedValue(
         new AIMessage({
@@ -177,7 +177,7 @@ describe("withStructuredOutput - StandardSchema", () => {
       apiKey: "testing",
     });
     vi
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       .spyOn(model as any, "invoke")
       .mockResolvedValue(
         new AIMessageChunk({
@@ -209,7 +209,7 @@ describe("withStructuredOutput - StandardSchema", () => {
       apiKey: "testing",
     });
     vi
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       .spyOn(model as any, "invoke")
       .mockResolvedValue(
         new AIMessage({
@@ -251,7 +251,7 @@ describe("withStructuredOutput - StandardSchema", () => {
       apiKey: "testing",
     });
     vi
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       .spyOn(model as any, "invoke")
       .mockResolvedValue(mockResponse);
 
@@ -264,7 +264,7 @@ describe("withStructuredOutput - StandardSchema", () => {
     const result = await structured.invoke("What?");
     expect(result).toHaveProperty("raw");
     expect(result).toHaveProperty("parsed");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect((result as any).parsed).toEqual({ name: "cobalt" });
   });
 });
@@ -328,7 +328,7 @@ describe("Streaming", () => {
         input as ChatCompletionRequest,
         streaming
       );
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
 
     // Consume the stream

@@ -11,6 +11,7 @@ export default getBuildConfig({
   entry: [
     "./src/index.ts",
     "./src/browser.ts",
+    "./src/tools/index.ts",
     "./src/chat_models/universal.ts",
     "./src/hub/index.ts",
     "./src/hub/node.ts",

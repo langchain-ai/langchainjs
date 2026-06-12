@@ -32,9 +32,9 @@ export function isDynamicStructuredTool(
 ): tool is DynamicStructuredTool {
   // We check for the existence of the static lc_name method in the object's constructor
   return (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     typeof (tool.constructor as any).lc_name === "function" &&
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     (tool.constructor as any).lc_name() === "DynamicStructuredTool"
   );
 }

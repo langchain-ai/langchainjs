@@ -76,7 +76,7 @@ export interface DallEAPIWrapperParams extends ToolParams {
   /**
    * @deprecated Use dallEResponseFormat instead for the Dall-E response type.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   responseFormat?: any;
   /**
    * A unique identifier representing your end-user, which will help
@@ -135,7 +135,7 @@ export class DallEAPIWrapper extends Tool {
       fields?.responseFormat !== undefined &&
       ["url", "b64_json"].includes(fields.responseFormat)
     ) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       fields.dallEResponseFormat = fields.responseFormat as any;
       fields.responseFormat = "content";
     }

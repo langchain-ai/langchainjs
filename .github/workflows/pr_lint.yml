@@ -1,0 +1,96 @@
+# PR title linting.
+#
+# Enforces Conventional Commits format for pull request titles.
+name: "PR Title Lint"
+
+permissions:
+  pull-requests: read
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+jobs:
+  lint-pr-title:
+    name: "validate format"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Reject empty scope"
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          if [[ "$PR_TITLE" =~ ^[a-z]+\(\)[!]?: ]]; then
+            echo "::error::PR title has empty scope parentheses: '$PR_TITLE'"
+            echo "Either remove the parentheses or provide a scope (e.g., 'fix(core): ...')."
+            exit 1
+          fi
+
+      - name: "Validate Conventional Commits format"
+        uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50 # v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            perf
+            test
+            build
+            ci
+            chore
+            revert
+            release
+            hotfix
+          scopes: |
+            core
+            langchain
+            langchain-classic
+            mcp-adapters
+            textsplitters
+            standard-tests
+            docs
+            anthropic
+            aws
+            cloudflare
+            cohere
+            deepseek
+            exa
+            fireworks
+            google
+            google-cloud-sql-pg
+            google-common
+            google-gauth
+            google-genai
+            google-vertexai
+            google-vertexai-web
+            google-webauth
+            groq
+            ibm
+            mistralai
+            mongodb
+            neo4j
+            ollama
+            openai
+            openrouter
+            perplexity
+            pgvector
+            pinecone
+            qdrant
+            redis
+            tavily
+            together-ai
+            weaviate
+            xai
+            internal
+            infra
+            examples
+            deps
+          requireScope: false
+          disallowScopes: |
+            release
+            [A-Z]+
+          ignoreLabels: |
+            ignore-lint-pr-title

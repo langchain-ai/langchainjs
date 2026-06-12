@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import type { InteropZodOptional } from "@langchain/core/utils/types";
 import type { InteropZodDefault } from "@langchain/core/utils/types";
 import type {

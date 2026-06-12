@@ -16,7 +16,7 @@ export class FakeRetriever extends BaseRetriever {
 
   async _getRelevantDocuments(
     _query: string
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<Document<Record<string, any>>[]> {
     return this.output;
   }

@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { mergeConfigs } from "../config.js";
+import {
+  _getTracingInheritableMetadataFromConfig,
+  ensureConfig,
+  mergeConfigs,
+} from "../config.js";
 
 describe("mergeConfigs metadata", () => {
   it("merges metadata with last-writer-wins", () => {
@@ -36,5 +40,72 @@ describe("mergeConfigs metadata", () => {
   it("handles empty metadata", () => {
     const result = mergeConfigs({ metadata: {} }, { metadata: { a: 1 } });
     expect(result.metadata).toEqual({ a: 1 });
+  });
+});
+
+describe("ensureConfig and tracer metadata behavior", () => {
+  it("copies only configurable model into general metadata", () => {
+    const config = ensureConfig({
+      configurable: {
+        model: "gpt-4o",
+        thread_id: "th-123",
+        temperature: 0.2,
+      },
+      metadata: { explicit: true },
+    });
+
+    expect(config.metadata).toEqual({
+      explicit: true,
+      model: "gpt-4o",
+    });
+  });
+
+  it("builds tracer inheritable metadata from primitive configurable values", () => {
+    const config = ensureConfig({
+      configurable: {
+        model: "from-configurable",
+        thread_id: "th-123",
+        checkpoint_id: "ckpt-1",
+        temperature: 0.5,
+        streaming: true,
+        api_key: "should-not-propagate",
+        __secret_key: "should-not-propagate",
+        custom_setting: { nested: true },
+        none_value: undefined,
+      },
+    });
+
+    expect(_getTracingInheritableMetadataFromConfig(config)).toEqual({
+      thread_id: "th-123",
+      checkpoint_id: "ckpt-1",
+      temperature: 0.5,
+      streaming: true,
+    });
+  });
+
+  it("does not override explicit metadata when building tracer inheritable metadata", () => {
+    const config = ensureConfig({
+      metadata: {
+        model: "from-metadata",
+        thread_id: "from-metadata",
+      },
+      configurable: {
+        model: "from-configurable",
+        thread_id: "from-configurable",
+        checkpoint_id: "ckpt-1",
+        temperature: 0.5,
+        streaming: true,
+        api_key: "should-not-propagate",
+        __secret_key: "should-not-propagate",
+        custom_setting: { nested: true },
+        none_value: undefined,
+      },
+    });
+
+    expect(_getTracingInheritableMetadataFromConfig(config)).toEqual({
+      checkpoint_id: "ckpt-1",
+      temperature: 0.5,
+      streaming: true,
+    });
   });
 });

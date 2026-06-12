@@ -1,8 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 
 import { vi, test, expect, describe } from "vitest";
 import { AsyncLocalStorage } from "node:async_hooks";
-import * as uuid from "uuid";
+import * as uuid from "../../utils/uuid/index.js";
 
 import { RunnableLambda } from "../../runnables/base.js";
 import { LangChainTracer } from "../tracer_langchain.js";
@@ -286,5 +286,113 @@ describe("LangChainTracer usage_metadata extraction", () => {
       input_token_details: {},
       output_token_details: {},
     });
+  });
+
+  test("tracing defaults patch missing run metadata without overriding explicit values", async () => {
+    const mockClient = {
+      createRun: vi.fn(),
+      updateRun: vi.fn(),
+    } as any;
+
+    const tracer = new LangChainTracer({
+      client: mockClient,
+      metadata: { env: "prod", tenant: "default" },
+      tags: ["tracer-tag"],
+    });
+    const runId = uuid.v4();
+
+    await tracer.handleLLMStart(
+      serialized,
+      ["test prompt"],
+      runId,
+      undefined,
+      undefined,
+      ["run-tag"],
+      { tenant: "explicit" }
+    );
+    await tracer.handleLLMEnd({ generations: [[{ text: "ok" }]] }, runId);
+
+    const updateCall = mockClient.updateRun.mock.calls[0][1];
+    expect(updateCall.extra?.metadata?.env).toBe("prod");
+    expect(updateCall.extra?.metadata?.tenant).toBe("explicit");
+    expect(updateCall.tags).toEqual(
+      expect.arrayContaining(["run-tag", "tracer-tag"])
+    );
+  });
+
+  test("copyWithTracingConfig keeps original tracer unchanged", () => {
+    const tracer = new LangChainTracer({
+      client: { createRun: vi.fn(), updateRun: vi.fn() } as any,
+      metadata: { env: "staging" },
+      tags: ["existing"],
+    });
+    const copied = tracer.copyWithTracingConfig({
+      metadata: { tenant: "alpha", env: "prod" },
+      tags: ["tenant:alpha", "existing"],
+    });
+
+    expect(copied).not.toBe(tracer);
+    expect(copied.tracingMetadata).toEqual({
+      env: "staging",
+      tenant: "alpha",
+    });
+    expect(copied.tracingTags).toEqual(["existing", "tenant:alpha"]);
+    expect(tracer.tracingMetadata).toEqual({ env: "staging" });
+    expect(tracer.tracingTags).toEqual(["existing"]);
+  });
+
+  test("copyWithTracingConfig allows nested override of allowlisted keys", () => {
+    const tracer = new LangChainTracer({
+      client: { createRun: vi.fn(), updateRun: vi.fn() } as any,
+      metadata: { ls_agent_type: "root", env: "prod" },
+    });
+    const copied = tracer.copyWithTracingConfig({
+      metadata: { ls_agent_type: "subagent", env: "dev" },
+    });
+
+    // `ls_agent_type` is on the LangSmith allowlist, so the nested
+    // value wins. `env` is not, so the ancestor value is preserved.
+    expect(copied.tracingMetadata).toEqual({
+      ls_agent_type: "subagent",
+      env: "prod",
+    });
+    // Original tracer is not mutated.
+    expect(tracer.tracingMetadata).toEqual({
+      ls_agent_type: "root",
+      env: "prod",
+    });
+  });
+
+  test("tracing defaults allow allowlisted keys to override explicit run values", async () => {
+    const mockClient = {
+      createRun: vi.fn(),
+      updateRun: vi.fn(),
+    } as any;
+
+    const tracer = new LangChainTracer({
+      client: mockClient,
+      metadata: { ls_agent_type: "subagent", env: "prod" },
+    });
+    const runId = uuid.v4();
+
+    // Start the run with an explicit `ls_agent_type` on the run's own
+    // metadata. The tracer's `ls_agent_type: "subagent"` is on the
+    // LangSmith allowlist, so it must override the run-level value,
+    // while non-allowlisted keys (like `env`) follow first-wins and
+    // preserve any explicit run-level value.
+    await tracer.handleLLMStart(
+      serialized,
+      ["test prompt"],
+      runId,
+      undefined,
+      undefined,
+      undefined,
+      { ls_agent_type: "root", env: "explicit" }
+    );
+    await tracer.handleLLMEnd({ generations: [[{ text: "ok" }]] }, runId);
+
+    const updateCall = mockClient.updateRun.mock.calls[0][1];
+    expect(updateCall.extra?.metadata?.ls_agent_type).toBe("subagent");
+    expect(updateCall.extra?.metadata?.env).toBe("explicit");
   });
 });

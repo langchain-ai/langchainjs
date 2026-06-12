@@ -567,7 +567,7 @@ export class ConnectionManager {
       args,
       stderr,
       cwd,
-      // eslint-disable-next-line no-process-env
+      // oxlint-disable-next-line no-process-env
       ...(env ? { env: { PATH: process.env.PATH!, ...env } } : {}),
     });
   }

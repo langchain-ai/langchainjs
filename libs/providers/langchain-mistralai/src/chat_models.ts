@@ -1,9 +1,9 @@
-import { v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4 } from "@langchain/core/utils/uuid";
 import { Mistral as MistralClient } from "@mistralai/mistralai";
 import {
   ChatCompletionRequest as MistralAIChatCompletionRequest,
   ChatCompletionRequestToolChoice as MistralAIToolChoice,
-  Messages as MistralAIMessage,
+  ChatCompletionRequestMessage as MistralAIMessage,
 } from "@mistralai/mistralai/models/components/chatcompletionrequest.js";
 import { ContentChunk as MistralAIContentChunk } from "@mistralai/mistralai/models/components/contentchunk.js";
 import { Tool as MistralAITool } from "@mistralai/mistralai/models/components/tool.js";
@@ -423,7 +423,7 @@ function mistralAIResponseToChatMessage(
             ...parsed,
             id: parsed.id ?? uuidv4().replace(/-/g, ""),
           });
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (e: any) {
           invalidToolCalls.push(makeInvalidToolCall(rawToolCall, e.message));
         }
@@ -1131,7 +1131,7 @@ export class ChatMistralAI<
           res = await client.chat.complete(input);
         }
         return res;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (e: any) {
         if (
           e.message?.includes("status: 400") ||
@@ -1219,8 +1219,15 @@ export class ChatMistralAI<
         text,
         message: mistralAIResponseToChatMessage(part, response?.usage),
       };
+      const generationInfo: Record<string, unknown> = {};
       if (part.finishReason) {
-        generation.generationInfo = { finishReason: part.finishReason };
+        generationInfo.finishReason = part.finishReason;
+      }
+      if (response?.model) {
+        generationInfo.model = response.model;
+      }
+      if (Object.keys(generationInfo).length > 0) {
+        generation.generationInfo = generationInfo;
       }
       generations.push(generation);
     }
@@ -1273,13 +1280,20 @@ export class ChatMistralAI<
       if (Array.isArray(text)) {
         text = text[0].type === "text" ? text[0].text : "";
       }
+      const generationInfo: Record<string, unknown> = { ...newTokenIndices };
+      if (data?.model) {
+        generationInfo.model = data.model;
+      }
+      if (choice.finishReason) {
+        generationInfo.finishReason = choice.finishReason;
+      }
       const generationChunk = new ChatGenerationChunk({
         message,
         text,
-        generationInfo: newTokenIndices,
+        generationInfo,
       });
       yield generationChunk;
-      // eslint-disable-next-line no-void
+      // oxlint-disable-next-line no-void
       void runManager?.handleLLMNewToken(
         generationChunk.text ?? "",
         newTokenIndices,
@@ -1370,37 +1384,37 @@ export class ChatMistralAI<
   }
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
   ):
