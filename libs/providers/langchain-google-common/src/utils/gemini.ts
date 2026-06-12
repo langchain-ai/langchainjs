@@ -883,16 +883,18 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     const contentStr =
       typeof message.content === "string"
         ? message.content
-        : (message.content as ContentBlock[]).reduce(
-            (acc: string, content: ContentBlock) => {
-              if (content.type === "text") {
-                return acc + content.text;
-              } else {
-                return acc;
-              }
-            },
-            ""
-          );
+        : Array.isArray(message.content)
+          ? (message.content as ContentBlock[]).reduce(
+              (acc: string, content: ContentBlock) => {
+                if (content.type === "text") {
+                  return acc + content.text;
+                } else {
+                  return acc;
+                }
+              },
+              ""
+            )
+          : JSON.stringify(message.content);
     // Hacky :(
     const responseName =
       (isAIMessage(prevMessage) && !!prevMessage.tool_calls?.length
