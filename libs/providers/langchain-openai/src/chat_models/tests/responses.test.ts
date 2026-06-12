@@ -1,4 +1,6 @@
-import { describe, it, expect } from "vitest";
+import { ContextOverflowError } from "@langchain/core/errors";
+import { HumanMessage } from "@langchain/core/messages";
+import { describe, it, expect, vi } from "vitest";
 import { ChatOpenAIResponses } from "../responses.js";
 
 describe("constructor shorthand", () => {
@@ -69,6 +71,43 @@ describe("service_tier configuration", () => {
 
     const params = model.invocationParams({});
     expect(params.service_tier).toBe("auto");
+  });
+});
+
+describe("streaming errors", () => {
+  it("wraps errors thrown while iterating the response stream", async () => {
+    const model = new ChatOpenAIResponses({ model: "gpt-4o" });
+    const originalError = {
+      code: "context_length_exceeded",
+      message: "The request exceeds the context window.",
+      constructor: { name: "APIError" },
+      toString() {
+        return `APIError: ${this.message} (code: ${this.code})`;
+      },
+    };
+
+    async function* streamWithError() {
+      throw originalError;
+    }
+
+    model.completionWithRetry = vi
+      .fn()
+      .mockResolvedValue(streamWithError()) as typeof model.completionWithRetry;
+
+    let caughtError: unknown;
+    try {
+      for await (const _ of model._streamResponseChunks(
+        [new HumanMessage("hello")],
+        {}
+      )) {
+        // The mocked stream throws before yielding chunks.
+      }
+    } catch (e) {
+      caughtError = e;
+    }
+
+    expect(caughtError).toBeInstanceOf(ContextOverflowError);
+    expect((caughtError as ContextOverflowError).cause).toBe(originalError);
   });
 });
 
