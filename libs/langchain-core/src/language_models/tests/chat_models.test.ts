@@ -13,6 +13,12 @@ import { LangChainTracer } from "../../tracers/tracer_langchain.js";
 import { awaitAllCallbacks } from "../../callbacks/promises.js";
 import type { LangSmithTracingClientInterface } from "langsmith";
 
+class StreamingPrefCallbackHandler extends BaseCallbackHandler {
+  name = "streaming_pref_callback_handler";
+
+  lc_prefer_streaming = true;
+}
+
 test("Test ChatModel accepts array shorthand for messages", async () => {
   const model = new FakeChatModel({});
   const response = await model.invoke([["human", "Hello there!"]]);
@@ -124,6 +130,31 @@ test("Test ChatModel uses callbacks with a cache", async () => {
   await new Promise((resolve) => setTimeout(resolve, 1000));
   expect(response.content).toEqual(response2.content);
   expect(response2.content).toEqual(acc);
+});
+
+test("Test ChatModel invoke preserves generationInfo in response_metadata when callback prefers streaming", async () => {
+  const model = new FakeListChatModel({
+    responses: ["abc"],
+    generationInfo: {
+      finish_reason: "stop",
+      usage_metadata: {
+        input_tokens: 1,
+        output_tokens: 3,
+        total_tokens: 4,
+      },
+    },
+  });
+
+  const response = await model.invoke("Hello there!", {
+    callbacks: [new StreamingPrefCallbackHandler()],
+  });
+
+  expect(response.response_metadata.finish_reason).toBe("stop");
+  expect(response.response_metadata.usage_metadata).toEqual({
+    input_tokens: 1,
+    output_tokens: 3,
+    total_tokens: 4,
+  });
 });
 
 test("Test ChatModel legacy params withStructuredOutput", async () => {
