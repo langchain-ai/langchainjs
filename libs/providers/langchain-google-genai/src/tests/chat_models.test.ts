@@ -9,7 +9,6 @@ import {
   HumanMessage,
   SystemMessage,
   ToolMessage,
-  type MessageContentComplex,
 } from "@langchain/core/messages";
 import { OutputParserException } from "@langchain/core/output_parsers";
 import { ChatGoogleGenerativeAI } from "../chat_models.js";
@@ -33,20 +32,23 @@ function extractKeys(obj: Record<string, any>, keys: string[] = []) {
   return keys;
 }
 
+const NO_HUMAN_MESSAGE_ERROR =
+  "ChatGoogleGenerativeAI requires at least one HumanMessage in the input messages.";
+
 test("Google AI - `temperature` must be in range [0.0,2.0]", async () => {
   expect(
     () =>
       new ChatGoogleGenerativeAI({
         temperature: -1.0,
         model: "gemini-2.0-flash",
-      })
+      }),
   ).toThrow();
   expect(
     () =>
       new ChatGoogleGenerativeAI({
         temperature: 2.1,
         model: "gemini-2.0-flash",
-      })
+      }),
   ).toThrow();
 });
 
@@ -63,7 +65,7 @@ test("Google AI - `maxOutputTokens` must be positive", async () => {
       new ChatGoogleGenerativeAI({
         maxOutputTokens: -1,
         model: "gemini-2.0-flash",
-      })
+      }),
   ).toThrow();
 });
 
@@ -73,7 +75,7 @@ test("Google AI - `topP` must be positive", async () => {
       new ChatGoogleGenerativeAI({
         topP: -1,
         model: "gemini-2.0-flash",
-      })
+      }),
   ).toThrow();
 });
 
@@ -83,7 +85,7 @@ test("Google AI - `topP` must be in the range [0,1]", async () => {
       new ChatGoogleGenerativeAI({
         topP: 3,
         model: "gemini-2.0-flash",
-      })
+      }),
   ).toThrow();
 });
 
@@ -93,7 +95,7 @@ test("Google AI - `topK` must be positive", async () => {
       new ChatGoogleGenerativeAI({
         topK: -1,
         model: "gemini-2.0-flash",
-      })
+      }),
   ).toThrow();
 });
 
@@ -116,7 +118,7 @@ test("Google AI - `safetySettings` category array must be unique", async () => {
             threshold: "BLOCK_ONLY_HIGH" as HarmBlockThreshold,
           },
         ],
-      })
+      }),
   ).toThrow();
 });
 
@@ -147,14 +149,14 @@ test("removeAdditionalProperties can remove all instances of additionalPropertie
   const parsedSchemaArr = removeAdditionalProperties(toJsonSchema(schema));
   const arrSchemaKeys = extractKeys(parsedSchemaArr);
   expect(
-    arrSchemaKeys.find((key) => key === "additionalProperties")
+    arrSchemaKeys.find((key) => key === "additionalProperties"),
   ).toBeUndefined();
   const parsedSchemaObj = removeAdditionalProperties(
-    toJsonSchema(questionSchema)
+    toJsonSchema(questionSchema),
   );
   const arrSchemaObj = extractKeys(parsedSchemaObj);
   expect(
-    arrSchemaObj.find((key) => key === "additionalProperties")
+    arrSchemaObj.find((key) => key === "additionalProperties"),
   ).toBeUndefined();
 
   const analysisSchema = z.object({
@@ -170,11 +172,11 @@ test("removeAdditionalProperties can remove all instances of additionalPropertie
       .optional(),
   });
   const parsedAnalysisSchema = removeAdditionalProperties(
-    toJsonSchema(analysisSchema)
+    toJsonSchema(analysisSchema),
   );
   const analysisSchemaObj = extractKeys(parsedAnalysisSchema);
   expect(
-    analysisSchemaObj.find((key) => key === "additionalProperties")
+    analysisSchemaObj.find((key) => key === "additionalProperties"),
   ).toBeUndefined();
 });
 
@@ -202,7 +204,7 @@ test("convertMessageContentToParts correctly handles message types", () => {
   ];
   const messagesAsGoogleParts = messages
     .map((msg, i) =>
-      convertMessageContentToParts(msg, false, messages.slice(0, i))
+      convertMessageContentToParts(msg, false, messages.slice(0, i)),
     )
     .flat();
   // console.log(messagesAsGoogleParts);
@@ -261,7 +263,7 @@ test("convertMessageContentToParts: correctly handles http url standard image bl
     },
   ]);
   expect(() =>
-    convertMessageContentToParts(message, false /* not multimodal */, [])
+    convertMessageContentToParts(message, false /* not multimodal */, []),
   ).toThrowError("This model does not support images");
 });
 
@@ -286,7 +288,7 @@ test("convertMessageContentToParts: correctly handles base64 standard image bloc
     },
   ]);
   expect(() =>
-    convertMessageContentToParts(message, false /* not multimodal */, [])
+    convertMessageContentToParts(message, false /* not multimodal */, []),
   ).toThrowError("This model does not support images");
 });
 
@@ -310,7 +312,7 @@ test("convertMessageContentToParts: correctly handles base64 data url standard i
     },
   ]);
   expect(() =>
-    convertMessageContentToParts(message, false /* not multimodal */, [])
+    convertMessageContentToParts(message, false /* not multimodal */, []),
   ).toThrowError("This model does not support images");
 });
 
@@ -356,7 +358,7 @@ test("convertMessageContentToParts: correctly handles base64 data url standard a
     },
   ]);
   expect(() =>
-    convertMessageContentToParts(message, false /* not multimodal */, [])
+    convertMessageContentToParts(message, false /* not multimodal */, []),
   ).toThrowError("This model does not support audio");
 });
 
@@ -381,7 +383,7 @@ test("convertMessageContentToParts: correctly handles http url standard audio bl
     },
   ]);
   expect(() =>
-    convertMessageContentToParts(message, false /* not multimodal */, [])
+    convertMessageContentToParts(message, false /* not multimodal */, []),
   ).toThrowError("This model does not support audio");
 });
 
@@ -406,7 +408,7 @@ test("convertMessageContentToParts: correctly handles base64 standard file block
     },
   ]);
   expect(() =>
-    convertMessageContentToParts(message, false /* not multimodal */, [])
+    convertMessageContentToParts(message, false /* not multimodal */, []),
   ).toThrowError("This model does not support files");
 });
 
@@ -431,7 +433,7 @@ test("convertMessageContentToParts: correctly handles http url standard file blo
     },
   ]);
   expect(() =>
-    convertMessageContentToParts(message, false /* not multimodal */, [])
+    convertMessageContentToParts(message, false /* not multimodal */, []),
   ).toThrowError("This model does not support files");
 });
 
@@ -455,7 +457,7 @@ test("convertMessageContentToParts: correctly handles base64 data url standard f
     },
   ]);
   expect(() =>
-    convertMessageContentToParts(message, false /* not multimodal */, [])
+    convertMessageContentToParts(message, false /* not multimodal */, []),
   ).toThrowError("This model does not support files");
 });
 
@@ -505,7 +507,12 @@ test("convertBaseMessagesToContent correctly creates properly formatted content"
     }),
   ];
 
-  const messagesAsGoogleContent = convertBaseMessagesToContent(messages, false);
+  const messagesAsGoogleContent = convertBaseMessagesToContent(
+    messages,
+    false,
+    false,
+    "model",
+  );
   // console.log(messagesAsGoogleContent);
   // Google Generative AI API only allows for 'model' and 'user' roles
   // This means that 'system', 'human' and 'tool' messages are converted
@@ -551,7 +558,8 @@ test("Input has single system message followed by one user message, convert syst
   const messagesAsGoogleContent = convertBaseMessagesToContent(
     messages,
     false,
-    false
+    false,
+    "model",
   );
 
   expect(messagesAsGoogleContent).toEqual([
@@ -571,7 +579,7 @@ test("Input has a system message that is not the first message, convert system m
     new SystemMessage("You are a helpful assistant"),
   ];
   expect(() => {
-    convertBaseMessagesToContent(messages, false, false);
+    convertBaseMessagesToContent(messages, false, false, "model");
   }).toThrow("System message should be the first one");
 });
 
@@ -581,7 +589,7 @@ test("Input has multiple system messages, convert system message is false", asyn
     new SystemMessage("You are not a helpful assistant"),
   ];
   expect(() => {
-    convertBaseMessagesToContent(messages, false, false);
+    convertBaseMessagesToContent(messages, false, false, "model");
   }).toThrow("System message should be the first one");
 });
 
@@ -590,7 +598,8 @@ test("Input has no system message and one user message, convert system message i
   const messagesAsGoogleContent = convertBaseMessagesToContent(
     messages,
     false,
-    false
+    false,
+    "model",
   );
 
   expect(messagesAsGoogleContent).toEqual([
@@ -610,7 +619,8 @@ test("Input has no system message and multiple user message, convert system mess
   const messagesAsGoogleContent = convertBaseMessagesToContent(
     messages,
     false,
-    false
+    false,
+    "model",
   );
 
   expect(messagesAsGoogleContent).toEqual([
@@ -638,7 +648,8 @@ test("Input has single system message followed by one user message, convert syst
   const messagesAsGoogleContent = convertBaseMessagesToContent(
     messages,
     false,
-    true
+    true,
+    "model",
   );
 
   expect(messagesAsGoogleContent).toEqual([
@@ -659,9 +670,9 @@ test("Input has single system message that is not the first message, convert sys
     new SystemMessage("You are a helpful assistant"),
   ];
 
-  expect(() => convertBaseMessagesToContent(messages, false, true)).toThrow(
-    "System message should be the first one"
-  );
+  expect(() =>
+    convertBaseMessagesToContent(messages, false, true, "model"),
+  ).toThrow("System message should be the first one");
 });
 
 test("Input has multiple system message, convert system message is true", async () => {
@@ -670,9 +681,9 @@ test("Input has multiple system message, convert system message is true", async 
     new SystemMessage("You are a helpful assistant"),
   ];
 
-  expect(() => convertBaseMessagesToContent(messages, false, true)).toThrow(
-    "System message should be the first one"
-  );
+  expect(() =>
+    convertBaseMessagesToContent(messages, false, true, "model"),
+  ).toThrow("System message should be the first one");
 });
 
 test("Input has no system message and one user message, convert system message is true", async () => {
@@ -681,7 +692,8 @@ test("Input has no system message and one user message, convert system message i
   const messagesAsGoogleContent = convertBaseMessagesToContent(
     messages,
     false,
-    true
+    true,
+    "model",
   );
 
   expect(messagesAsGoogleContent).toEqual([
@@ -702,7 +714,8 @@ test("Input has no system message and multiple user messages, convert system mes
   const messagesAsGoogleContent = convertBaseMessagesToContent(
     messages,
     false,
-    true
+    true,
+    "model",
   );
 
   expect(messagesAsGoogleContent).toEqual([
@@ -739,7 +752,7 @@ test("convertMessageContentToParts: should handle AIMessage with mixed content a
     }),
   ];
   expect(
-    convertMessageContentToParts(aiMessageWithString, isMultimodalModel, [])
+    convertMessageContentToParts(aiMessageWithString, isMultimodalModel, []),
   ).toEqual(expectedPartsAiString);
 
   const aiMessageWithArray = new AIMessage({
@@ -760,7 +773,7 @@ test("convertMessageContentToParts: should handle AIMessage with mixed content a
     }),
   ];
   expect(
-    convertMessageContentToParts(aiMessageWithArray, isMultimodalModel, [])
+    convertMessageContentToParts(aiMessageWithArray, isMultimodalModel, []),
   ).toEqual(expectedPartsAiArray);
 
   const humanMessageWithArray = new HumanMessage({
@@ -777,7 +790,7 @@ test("convertMessageContentToParts: should handle AIMessage with mixed content a
     { inlineData: { mimeType: "image/png", data: base64ImageData } },
   ];
   expect(
-    convertMessageContentToParts(humanMessageWithArray, isMultimodalModel, [])
+    convertMessageContentToParts(humanMessageWithArray, isMultimodalModel, []),
   ).toEqual(expectedPartsHumanArray);
 });
 
@@ -789,7 +802,7 @@ test("convertMessageContentToParts: should handle messages with content only (no
   });
   const expectedPartsAiString = [{ text: "Just an AI text response." }];
   expect(
-    convertMessageContentToParts(aiMessageWithString, isMultimodalModel, [])
+    convertMessageContentToParts(aiMessageWithString, isMultimodalModel, []),
   ).toEqual(expectedPartsAiString);
 
   const humanMessageWithString = new HumanMessage({
@@ -797,7 +810,7 @@ test("convertMessageContentToParts: should handle messages with content only (no
   });
   const expectedPartsHumanString = [{ text: "Just a human text input." }];
   expect(
-    convertMessageContentToParts(humanMessageWithString, isMultimodalModel, [])
+    convertMessageContentToParts(humanMessageWithString, isMultimodalModel, []),
   ).toEqual(expectedPartsHumanString);
 
   const aiMessageWithArray = new AIMessage({
@@ -811,7 +824,7 @@ test("convertMessageContentToParts: should handle messages with content only (no
     { text: "AI array part 2." },
   ];
   expect(
-    convertMessageContentToParts(aiMessageWithArray, isMultimodalModel, [])
+    convertMessageContentToParts(aiMessageWithArray, isMultimodalModel, []),
   ).toEqual(expectedPartsAiArray);
 
   const humanMessageWithArray = new HumanMessage({
@@ -825,7 +838,7 @@ test("convertMessageContentToParts: should handle messages with content only (no
     { text: "Human array part 2." },
   ];
   expect(
-    convertMessageContentToParts(humanMessageWithArray, isMultimodalModel, [])
+    convertMessageContentToParts(humanMessageWithArray, isMultimodalModel, []),
   ).toEqual(expectedPartsHumanArray);
 });
 
@@ -840,7 +853,7 @@ test("convertMessageContentToParts: should handle AIMessage with tool_calls only
     expect.objectContaining({ functionCall: { name: "get_time", args: {} } }),
   ];
   expect(
-    convertMessageContentToParts(messageWithEmptyString, isMultimodalModel, [])
+    convertMessageContentToParts(messageWithEmptyString, isMultimodalModel, []),
   ).toEqual(expectedParts);
 });
 
@@ -868,7 +881,7 @@ test("convertMessageContentToParts: should handle ToolMessage correctly (includi
   expect(
     convertMessageContentToParts(toolMessageSuccess, isMultimodalModel, [
       previousAiMessage,
-    ])
+    ]),
   ).toEqual(expectedPartsSuccess);
 
   const toolMessageError = new ToolMessage({
@@ -876,9 +889,9 @@ test("convertMessageContentToParts: should handle ToolMessage correctly (includi
     tool_call_id: "unknown_tool_id",
   });
   expect(() =>
-    convertMessageContentToParts(toolMessageError, isMultimodalModel, [])
+    convertMessageContentToParts(toolMessageError, isMultimodalModel, []),
   ).toThrow(
-    'Google requires a tool name for each tool call response, and we could not infer a called tool name for ToolMessage "undefined" from your passed messages. Please populate a "name" field on that ToolMessage explicitly.'
+    'Google requires a tool name for each tool call response, and we could not infer a called tool name for ToolMessage "undefined" from your passed messages. Please populate a "name" field on that ToolMessage explicitly.',
   );
 });
 
@@ -894,7 +907,7 @@ test("convertMessageContentToParts: correctly handles ToolMessage with array con
     tool_calls: [{ name: toolName, args: { input: "test" }, id: toolCallId }],
   });
 
-  const toolMessageContentArray: MessageContentComplex[] = [
+  const toolMessageContentArray: ContentBlock[] = [
     { type: "text", text: "Tool response text." },
     {
       type: "image_url",
@@ -938,7 +951,7 @@ test("convertMessageContentToParts: correctly handles ToolMessage with array con
     tool_calls: [{ name: toolName, args: { input: "test" }, id: toolCallId }],
   });
 
-  const toolMessageContentArray: MessageContentComplex[] = [
+  const toolMessageContentArray: ContentBlock[] = [
     { type: "text", text: "Tool error details text." },
     {
       type: "image_url",
@@ -1004,13 +1017,102 @@ test("convertBaseMessagesToContent should handle AIMessages with custom names", 
   ];
 
   expect(() =>
-    convertBaseMessagesToContent(messages, true, false, "model")
+    convertBaseMessagesToContent(messages, true, false, "model"),
   ).not.toThrow();
 
   const result = convertBaseMessagesToContent(messages, true, false, "model");
   expect(result).toHaveLength(2);
   expect(result[0].role).toBe("user");
   expect(result[1].role).toBe("model");
+});
+
+test("invoke throws a descriptive error for system-only input before network call", async () => {
+  const model = new ChatGoogleGenerativeAI({
+    model: "gemini-2.0-flash",
+    apiKey: "testing",
+  });
+  const completionWithRetrySpy = vi.spyOn(model, "completionWithRetry");
+
+  await expect(
+    model.invoke([new SystemMessage("You are a helpful assistant")]),
+  ).rejects.toThrow(NO_HUMAN_MESSAGE_ERROR);
+
+  expect(completionWithRetrySpy).not.toHaveBeenCalled();
+});
+
+test("invoke throws the same descriptive error for empty message arrays", async () => {
+  const model = new ChatGoogleGenerativeAI({
+    model: "gemini-2.0-flash",
+    apiKey: "testing",
+  });
+  const completionWithRetrySpy = vi.spyOn(model, "completionWithRetry");
+
+  await expect(model.invoke([])).rejects.toThrow(NO_HUMAN_MESSAGE_ERROR);
+
+  expect(completionWithRetrySpy).not.toHaveBeenCalled();
+});
+
+test("invoke with system and human messages succeeds", async () => {
+  const model = new ChatGoogleGenerativeAI({
+    model: "gemini-2.0-flash",
+    apiKey: "testing",
+  });
+  const completionWithRetrySpy = vi
+    .spyOn(model, "completionWithRetry")
+    .mockResolvedValue({
+      response: {
+        candidates: [
+          {
+            content: {
+              parts: [{ text: "It is sunny." }],
+            },
+          },
+        ],
+      },
+    } as Awaited<ReturnType<ChatGoogleGenerativeAI["completionWithRetry"]>>);
+
+  const result = await model.invoke([
+    new SystemMessage("You are a helpful assistant"),
+    new HumanMessage("How is the weather?"),
+  ]);
+
+  expect(result.content).toBe("It is sunny.");
+  expect(completionWithRetrySpy).toHaveBeenCalledOnce();
+  expect(completionWithRetrySpy.mock.calls[0]?.[0]).toMatchObject({
+    contents: [
+      {
+        role: "user",
+        parts: [{ text: "How is the weather?" }],
+      },
+    ],
+  });
+});
+
+test("invoke with a human-only message succeeds", async () => {
+  const model = new ChatGoogleGenerativeAI({
+    model: "gemini-2.0-flash",
+    apiKey: "testing",
+  });
+  const completionWithRetrySpy = vi
+    .spyOn(model, "completionWithRetry")
+    .mockResolvedValue({
+      response: {
+        candidates: [
+          {
+            content: {
+              parts: [{ text: "Hello there." }],
+            },
+          },
+        ],
+      },
+    } as Awaited<ReturnType<ChatGoogleGenerativeAI["completionWithRetry"]>>);
+
+  const result = await model.invoke([
+    new HumanMessage("Say hello in two words."),
+  ]);
+
+  expect(result.content).toBe("Hello there.");
+  expect(completionWithRetrySpy).toHaveBeenCalledOnce();
 });
 
 describe("withStructuredOutput - StandardSchema", () => {
@@ -1048,7 +1150,7 @@ describe("withStructuredOutput - StandardSchema", () => {
       apiKey: "testing",
     });
     vi.spyOn(model, "invoke").mockResolvedValue(
-      new AIMessage({
+      new AIMessageChunk({
         content: "",
         tool_calls: [
           {
@@ -1058,7 +1160,7 @@ describe("withStructuredOutput - StandardSchema", () => {
             type: "tool_call",
           },
         ],
-      })
+      }),
     );
 
     const schema = makeSerializableSchema();
@@ -1087,7 +1189,7 @@ describe("withStructuredOutput - StandardSchema", () => {
             type: "tool_call",
           },
         ],
-      })
+      }),
     );
 
     const schema = makeSerializableSchema();
@@ -1107,7 +1209,7 @@ describe("withStructuredOutput - StandardSchema", () => {
       apiKey: "testing",
     });
     vi.spyOn(model, "invoke").mockResolvedValue(
-      new AIMessage({
+      new AIMessageChunk({
         content: "",
         tool_calls: [
           {
@@ -1117,7 +1219,7 @@ describe("withStructuredOutput - StandardSchema", () => {
             type: "tool_call",
           },
         ],
-      })
+      }),
     );
 
     const schema = makeSerializableSchema();
@@ -1131,7 +1233,7 @@ describe("withStructuredOutput - StandardSchema", () => {
   });
 
   test("functionCalling with includeRaw returns raw and parsed", async () => {
-    const mockResponse = new AIMessage({
+    const mockResponse = new AIMessageChunk({
       content: "",
       tool_calls: [
         {
