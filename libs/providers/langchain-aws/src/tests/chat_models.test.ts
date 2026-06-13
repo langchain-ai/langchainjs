@@ -1777,6 +1777,79 @@ describe("withStructuredOutput - StandardSchema", () => {
   });
 });
 
+describe("withStructuredOutput - Zod validation", () => {
+  const baseConstructorArgs = {
+    region: "us-east-1",
+    credentials: {
+      secretAccessKey: "test-secret-key",
+      accessKeyId: "test-access-key",
+    },
+  };
+
+  const schema = z.object({
+    overview: z.string(),
+    keyFindings: z.array(z.object({ finding: z.string() })),
+  });
+
+  test("functionCalling rejects invalid Zod tool args", async () => {
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
+    });
+    vi
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      .spyOn(model as any, "invoke")
+      .mockResolvedValue(
+        new AIMessage({
+          content: "",
+          tool_calls: [
+            {
+              name: "extract",
+              args: { overview: "summary", keyFindings: "not an array" },
+              id: "1",
+              type: "tool_call",
+            },
+          ],
+        })
+      );
+
+    const structured = model.withStructuredOutput(schema);
+
+    await expect(async () => {
+      await structured.invoke("What?");
+    }).rejects.toThrow("Failed to parse");
+  });
+
+  test("functionCalling includeRaw returns null parsed value for invalid Zod tool args", async () => {
+    const mockResponse = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          name: "extract",
+          args: { overview: "summary", keyFindings: "not an array" },
+          id: "1",
+          type: "tool_call",
+        },
+      ],
+    });
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
+    });
+    vi
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      .spyOn(model as any, "invoke")
+      .mockResolvedValue(mockResponse);
+
+    const structured = model.withStructuredOutput(schema, {
+      includeRaw: true,
+    });
+
+    const result = await structured.invoke("What?");
+    expect(result).toEqual({ raw: mockResponse, parsed: null });
+  });
+});
+
 describe("bedrockApiKey / bedrockApiSecret credentials", () => {
   it("should accept bedrockApiKey and bedrockApiSecret in constructor", () => {
     const model = new ChatBedrockConverse({
