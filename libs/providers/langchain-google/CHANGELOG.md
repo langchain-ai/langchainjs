@@ -1,5 +1,13 @@
 # @langchain/google
 
+## 0.1.13
+
+### Patch Changes
+
+- [#10537](https://github.com/langchain-ai/langchainjs/pull/10537) [`cdb465b`](https://github.com/langchain-ai/langchainjs/commit/cdb465b57e1eb9b797dd6f741bb7357ed7ef8c96) Thanks [@raashish1601](https://github.com/raashish1601)! - fix(google): normalize ChatGoogle callback token usage metadata
+
+- [#10586](https://github.com/langchain-ai/langchainjs/pull/10586) [`43b10d2`](https://github.com/langchain-ai/langchainjs/commit/43b10d2af7cf2bdbbf1157a0cc2dae78770730be) Thanks [@tysoncung](https://github.com/tysoncung)! - strip type field from executableCode and codeExecutionResult parts
+
 ## 0.1.12
 
 ### Patch Changes

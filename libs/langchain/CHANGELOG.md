@@ -1,5 +1,16 @@
 # langchain
 
+## 1.4.6
+
+### Patch Changes
+
+- [#11012](https://github.com/langchain-ai/langchainjs/pull/11012) [`4aeaa76`](https://github.com/langchain-ai/langchainjs/commit/4aeaa767a48dcc5451371f14adf4a06f064d23b9) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(langchain): add `when` predicate to human-in-the-loop middleware
+
+  Add an optional `when` callback on `InterruptOnConfig` so callers can
+  dynamically skip interrupts for specific tool calls. The predicate receives
+  a `ToolCallRequest` (batch `afterModel` context) and returns whether to
+  interrupt or auto-approve, matching Python `HumanInTheLoopMiddleware`.
+
 ## 1.4.5
 
 ### Patch Changes
