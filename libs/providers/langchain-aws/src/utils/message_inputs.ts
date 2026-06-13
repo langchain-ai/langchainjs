@@ -595,7 +595,7 @@ function convertAIMessageToConverseMessage(msg: AIMessage): Bedrock.Message {
     const concatenatedBlocks = concatenateLangchainReasoningBlocks(msg.content);
     const contentBlocks: Bedrock.ContentBlock[] = [];
     concatenatedBlocks.forEach((block) => {
-      if (block.type === "text" && block.text !== "") {
+      if (block.type === "text") {
         // Merge whitespace/newlines with previous text blocks to avoid validation errors.
         const cleanedText = block.text?.replace(/\n/g, "").trim();
         if (cleanedText === "") {
@@ -767,7 +767,10 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
       } else {
         throw new Error(`Unsupported message type: ${msg.type}`);
       }
-    });
+    })
+    .filter(
+      (msg) => msg.role !== "assistant" || (msg.content?.length ?? 0) > 0
+    );
 
   // Combine consecutive user tool result messages into a single message
   const combinedConverseMessages = converseMessages.reduce<Bedrock.Message[]>(
