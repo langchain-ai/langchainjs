@@ -1128,6 +1128,44 @@ describe("convertMessagesToResponsesInput", () => {
       );
       expect(fileBlock.filename).toBeUndefined();
     });
+
+    it("routes standard url file blocks to native input_file instead of the completions converter", () => {
+      const messages = [
+        new HumanMessage({
+          content: [
+            { type: "text", text: "What is in this document?" },
+            {
+              type: "file",
+              source_type: "url",
+              url: "https://example.com/document.pdf",
+              mime_type: "application/pdf",
+              metadata: { filename: "document.pdf" },
+            },
+          ],
+        }),
+      ];
+
+      const result = convertMessagesToResponsesInput({
+        messages,
+        model: "gpt-4o",
+        zdrEnabled: false,
+      });
+
+      expect(result).toMatchObject([
+        {
+          type: "message",
+          role: "user",
+          content: [
+            { type: "input_text", text: "What is in this document?" },
+            {
+              type: "input_file",
+              file_url: "https://example.com/document.pdf",
+              filename: "document.pdf",
+            },
+          ],
+        },
+      ]);
+    });
   });
 
   describe("ToolMessage conversion", () => {
