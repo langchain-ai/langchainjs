@@ -83,6 +83,10 @@ import {
 const MODEL_DEFAULT_MAX_OUTPUT_TOKENS: Partial<
   Record<Anthropic.Model, number>
 > = {
+  // Claude 5 — 128K max output
+  "claude-fable-5": 16384,
+  "claude-mythos-5": 16384,
+  "claude-mythos-preview": 16384,
   // Claude 4.7 — 128K max output
   "claude-opus-4-7": 16384,
   // Claude 4.6 — 128K max output
