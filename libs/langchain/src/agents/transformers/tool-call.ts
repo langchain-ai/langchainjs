@@ -1,122 +1,13 @@
-/* oxlint-disable @typescript-eslint/no-explicit-any */
-
-/**
- * Agent-level streaming support (experimental).
- *
- * Provides native stream transformer factories for tool calls and
- * middleware events.  When marked `__native: true`, their projections
- * are assigned directly onto the `GraphRunStream` instance by
- * `createGraphRunStream` in langgraph-core — no subclass or wrapper
- * needed.
- *
- * See protocol proposal §15 (In-Process Streaming Interface) and §16
- * (Native Stream Transformers).
- */
-
 import {
-  GraphRunStream,
   StreamChannel,
   type NativeStreamTransformer,
   type ProtocolEvent,
-  type StreamTransformer,
   type ToolCallStream,
   type ToolCallStatus,
   type ToolsEventData,
   type Namespace,
 } from "@langchain/langgraph";
-import type {
-  ClientTool,
-  ServerTool,
-  DynamicStructuredTool,
-  StructuredToolInterface,
-} from "@langchain/core/tools";
 import { ToolMessage } from "@langchain/core/messages";
-
-/**
- * Infers the merged extensions shape from a tuple of stream transformer
- * factories. Mirrors `InferExtensions` from `@langchain/langgraph`, which
- * is not exported from the package's public surface.
- *
- * Given `[() => StreamTransformer<{ a: number }>, () => StreamTransformer<{ b: string }>]`,
- * produces `{ a: number } & { b: string }`.
- */
-export type InferStreamExtensions<
-  T extends ReadonlyArray<() => StreamTransformer<any>>,
-> = T extends readonly []
-  ? Record<string, never>
-  : T extends readonly [
-        () => StreamTransformer<infer P>,
-        ...infer Rest extends ReadonlyArray<() => StreamTransformer<any>>,
-      ]
-    ? P & InferStreamExtensions<Rest>
-    : Record<string, unknown>;
-
-/** Extract the literal `name` string from a tool type. */
-type ToolNameOf<T> = T extends { name: infer N extends string } ? N : string;
-
-/** Extract the parsed input type from a tool type. */
-type ToolInputOf<T> =
-  T extends DynamicStructuredTool<any, any, infer SchemaInputT, any, any, any>
-    ? SchemaInputT
-    : T extends StructuredToolInterface<any, infer SchemaInputT, any>
-      ? SchemaInputT
-      : unknown;
-
-/** Extract the return/output type from a tool type. */
-type ToolOutputOf<T> =
-  T extends DynamicStructuredTool<any, any, any, infer ToolOutputT, any, any>
-    ? ToolOutputT
-    : T extends StructuredToolInterface<any, any, infer ToolOutputT>
-      ? ToolOutputT
-      : unknown;
-
-/**
- * Discriminated union of {@link ToolCallStream} variants, one per tool
- * in `TTools`.  Enables TypeScript to narrow `.input` and `.output`
- * when the consumer checks `call.name === "someToolName"`.
- *
- * Falls back to `ToolCallStream` (untyped) when the tools tuple is a
- * plain `(ClientTool | ServerTool)[]` without literal name types.
- */
-export type ToolCallStreamUnion<
-  TTools extends readonly (ClientTool | ServerTool)[],
-> = {
-  [K in keyof TTools]: ToolCallStream<
-    ToolNameOf<TTools[K]>,
-    ToolInputOf<TTools[K]>,
-    ToolOutputOf<TTools[K]>
-  >;
-}[number];
-
-/**
- * A {@link GraphRunStream} with native agent-level projections assigned
- * directly on the instance by `createGraphRunStream` (via `__native`
- * transformers).
- *
- * This is a pure type overlay — no runtime subclass exists.  Use the
- * `AgentRunStream` type when you need to describe the return type of
- * `streamEvents(..., { version: "v3" })`.
- *
- * @typeParam TValues - Shape of the graph's state values.
- * @typeParam TTools - Tuple of tools registered on the agent, used to type
- *   the per-tool `toolCalls` discriminated union.
- * @typeParam TMiddleware - Tuple of middleware registered on the agent, used
- *   to type the per-middleware `middleware` event union.
- * @typeParam TExtensions - Shape of `run.extensions` produced by user-supplied
- *   stream transformer factories. Derived via
- *   `InferExtensions<TStreamTransformers>`.
- */
-export type AgentRunStream<
-  TValues = Record<string, unknown>,
-  TTools extends readonly (ClientTool | ServerTool)[] = readonly (
-    | ClientTool
-    | ServerTool
-  )[],
-  TExtensions extends Record<string, unknown> = Record<string, unknown>,
-> = GraphRunStream<TValues, TExtensions> & {
-  /** Tool call streams from the native ToolCallTransformer. */
-  toolCalls: AsyncIterable<ToolCallStreamUnion<TTools>>;
-};
 
 interface ToolCallProjection {
   toolCalls: AsyncIterable<ToolCallStream>;
