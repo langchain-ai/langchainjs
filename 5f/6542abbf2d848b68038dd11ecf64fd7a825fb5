@@ -1,0 +1,25 @@
+.gitignore
+  s_6888e9e93c4224::t_e1ef7b82c4968e 7
+.github/workflows/codeql.yml
+  s_6888e9e93c4224::t_cbef245e1e1753 47
+  s_6888e9e93c4224::t_5f341ffe8e238e 34
+  s_6888e9e93c4224::t_207c8cb3fb3a77 40
+.github/workflows/dev-release.yml
+  s_6888e9e93c4224::t_580cb288ee5d51 208
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "5f6542abbf2d848b68038dd11ecf64fd7a825fb5",
+  "prompts": {},
+  "sessions": {
+    "s_6888e9e93c4224": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3fa45597-629c-4f11-a826-cb6fc1f93580",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Mason Daugherty <github@mdrxy.com>"
+    }
+  }
+}
