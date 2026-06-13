@@ -280,32 +280,34 @@ describe("Mock ChatGoogle - Gemini", () => {
     );
   });
 
-  test("platform endpoint - gcp eu location", async () => {
-    const record: Record<string, any> = {};
+  test("platform endpoint - gcp multi-region location", async () => {
     const projectId = mockId();
-    const authOptions: MockClientAuthInfo = {
-      record,
-      projectId,
-      resultFile: "chat-1-mock.json",
-    };
-    const model = new ChatGoogle({
-      authOptions,
-      platformType: "gcp",
-      location: "eu",
-    });
-    const messages: BaseMessageLike[] = [
-      new HumanMessage("Flip a coin and tell me H for heads and T for tails"),
-      new AIMessage("H"),
-      new HumanMessage("Flip it again"),
-    ];
-    await model.invoke(messages);
+    for (const location of ["eu", "us"]) {
+      const record: Record<string, any> = {};
+      const authOptions: MockClientAuthInfo = {
+        record,
+        projectId,
+        resultFile: "chat-1-mock.json",
+      };
+      const model = new ChatGoogle({
+        authOptions,
+        platformType: "gcp",
+        location,
+      });
+      const messages: BaseMessageLike[] = [
+        new HumanMessage("Flip a coin and tell me H for heads and T for tails"),
+        new AIMessage("H"),
+        new HumanMessage("Flip it again"),
+      ];
+      await model.invoke(messages);
 
-    expect(record?.opts.url).toEqual(
-      `https://aiplatform.eu.rep.googleapis.com/v1/projects/${projectId}/locations/eu/publishers/google/models/gemini-pro:generateContent`
-    );
+      expect(record?.opts.url).toEqual(
+        `https://aiplatform.${location}.rep.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/gemini-pro:generateContent`
+      );
+    }
   });
 
-  test("platform endpoint - gcp eu location with custom endpoint", async () => {
+  test("platform endpoint - gcp multi-region location with custom endpoint", async () => {
     const record: Record<string, any> = {};
     const projectId = mockId();
     const authOptions: MockClientAuthInfo = {
