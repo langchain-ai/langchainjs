@@ -524,6 +524,33 @@ describe("convertCompletionsMessageToBaseMessage", () => {
       });
     });
 
+    it("should drop reasoning blocks from content (legacy path)", () => {
+      // Regression for langchain-ai/langchainjs#11049. A message replayed
+      // from history (e.g. a LangGraph checkpoint, or a turn produced when
+      // reasoning was enabled and then disabled for this follow-up) can
+      // carry a `reasoning` content block without
+      // `response_metadata.output_version === "v1"`, which routes through
+      // the legacy path. The Chat Completions API rejects `reasoning` as
+      // an input content-part type, so the block must be dropped here the
+      // same way the v1 path filters to text.
+      const message = new AIMessage({
+        content: [
+          { type: "reasoning", reasoning: "The user wants a simple sum." },
+          { type: "text", text: "4" },
+        ],
+      });
+
+      const result = convertMessagesToCompletionsMessageParams({
+        messages: [message],
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({
+        role: "assistant",
+        content: [{ type: "text", text: "4" }],
+      });
+    });
+
     it("should drop tool_use blocks alongside thinking blocks", () => {
       const message = new AIMessage({
         content: [
