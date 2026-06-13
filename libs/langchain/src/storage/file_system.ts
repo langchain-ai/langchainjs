@@ -110,8 +110,9 @@ export class LocalFileStore extends BaseStore<string, Uint8Array> {
 
       const fullPath = path.resolve(this.rootPath, keyAsTxtFile);
       const commonPath = path.resolve(this.rootPath);
+      const relativePath = path.relative(commonPath, fullPath);
 
-      if (!fullPath.startsWith(commonPath)) {
+      if (relativePath.startsWith("..") || path.isAbsolute(relativePath)) {
         throw new Error(
           `Invalid key: ${key}. Key should be relative to the root path. ` +
             `Root path: ${this.rootPath}, Full path: ${fullPath}`
