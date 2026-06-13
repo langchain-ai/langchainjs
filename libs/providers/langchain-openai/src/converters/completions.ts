@@ -818,6 +818,18 @@ export const convertMessagesToCompletionsMessageParams: Converter<
             ) {
               return [];
             }
+            // Drop reasoning blocks — the Chat Completions API has no input
+            // content part for reasoning (it only surfaces in the Responses
+            // API or via additional_kwargs.reasoning_content). Replaying one
+            // verbatim from history triggers `400 Invalid value: 'reasoning'`.
+            if (
+              typeof m === "object" &&
+              m !== null &&
+              "type" in m &&
+              m.type === "reasoning"
+            ) {
+              return [];
+            }
             return m;
           });
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
