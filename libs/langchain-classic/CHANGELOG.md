@@ -1,5 +1,12 @@
 # @langchain/classic
 
+## 1.0.34
+
+### Patch Changes
+
+- Updated dependencies [[`3999fab`](https://github.com/langchain-ai/langchainjs/commit/3999fab55870c6eea22d6d90c08aa472f9b2fac3), [`fce9ab4`](https://github.com/langchain-ai/langchainjs/commit/fce9ab418901323618fdfaaa9fc350fa1c0d50e0)]:
+  - @langchain/openai@1.4.7
+
 ## 1.0.33
 
 ### Patch Changes
