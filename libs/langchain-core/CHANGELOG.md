@@ -1,5 +1,13 @@
 # @langchain/core
 
+## 1.1.49
+
+### Patch Changes
+
+- [#10679](https://github.com/langchain-ai/langchainjs/pull/10679) [`1f7b495`](https://github.com/langchain-ai/langchainjs/commit/1f7b4952ea1d7cebd572453877b670a7740a397b) Thanks [@hnustwjj](https://github.com/hnustwjj)! - fix(core): make `RemoveMessage` type-compatible across `MessageStructure` variants
+
+  Remove unnecessary `TStructure` generic from `RemoveMessage` — its content is always `[]`, so the type parameter only caused incompatibilities when passing `RemoveMessage` into APIs expecting a different `MessageStructure` (e.g. `@langchain/langgraph-sdk`'s `Message<DefaultToolCall>`). Also add `{ type: "remove"; id: string }` to `BaseMessageLike` so the serialized format is accepted by TypeScript, matching the existing runtime behavior in `coerceMessageLikeToMessage`.
+
 ## 1.1.48
 
 ### Patch Changes
