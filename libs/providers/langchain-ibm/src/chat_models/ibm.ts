@@ -425,7 +425,7 @@ function _convertToolChoiceToWatsonxToolChoice(
   } else if ("type" in toolChoice) return { toolChoice };
   else
     throw new Error(
-      `Unrecognized tool_choice type. Expected string or TextChatParameterTools. Recieved ${toolChoice}`
+      `Unrecognized tool_choice type. Expected string or TextChatParameterTools. Received ${toolChoice}`
     );
 }
 
