@@ -1,5 +1,14 @@
 # @langchain/anthropic
 
+## 1.4.1
+
+### Patch Changes
+
+- [#11040](https://github.com/langchain-ai/langchainjs/pull/11040) [`7f57363`](https://github.com/langchain-ai/langchainjs/commit/7f573630ccccd9c1377f7e6084a59c0a2ce35531) Thanks [@hntrl](https://github.com/hntrl)! - feat(anthropic): add support for claude-fable-5 and claude-mythos-5 models
+  - upgrade `@anthropic-ai/sdk` to `^0.103.0`
+  - add default token handling and adaptive-thinking parameter compatibility for Anthropic 5-series models
+  - add unit and integration coverage for default-parameter behavior on new model IDs
+
 ## 1.4.0
 
 ### Minor Changes

@@ -1,5 +1,13 @@
 # langchain
 
+## 1.4.5
+
+### Patch Changes
+
+- [#11026](https://github.com/langchain-ai/langchainjs/pull/11026) [`cbf274c`](https://github.com/langchain-ai/langchainjs/commit/cbf274c21d25f3c131aaceaa37c35a390d3ea9c1) Thanks [@aolsenjazz](https://github.com/aolsenjazz)! - feat(langchain): add `providerToolSearchMiddleware`
+
+  Adds `providerToolSearchMiddleware` - provider-side tool search for agents. `providerToolSearchMiddleware` enables API consumers to opt tools into tool deferral + discovery by providing tool instances/names to the middleware's `searchableTools` arg. `searchableTools` are marked as `defer_loading` in subsequent model requests, consumed by OpenAI and Anthopic to power their tool search systems.
+
 ## 1.4.4
 
 ### Patch Changes
