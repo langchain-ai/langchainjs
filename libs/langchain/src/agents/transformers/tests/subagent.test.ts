@@ -21,8 +21,13 @@ const randomToolCall = tool(() => "A random result", {
  * dispatched from a tool body. The native subagent transformer surfaces each
  * one as a typed `SubagentRunStream` with a resolved `name` and the triggering
  * tool call as its `cause`.
+ *
+ * Skipped in dependency range tests: this feature relies on streaming
+ * primitives from `@langchain/langgraph`/`@langchain/core` that aren't
+ * released yet, so the subagent stream surfaces nothing against published
+ * deps. Remove the guard after the next release.
  */
-describe("run.subagents", () => {
+describe.skipIf(process.env.LC_DEPENDENCY_RANGE_TESTS)("run.subagents", () => {
   function makeSupervisor() {
     const weatherAgent = createAgent({
       model: fakeModel()
