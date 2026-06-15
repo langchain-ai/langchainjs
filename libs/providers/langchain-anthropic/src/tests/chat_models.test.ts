@@ -299,6 +299,42 @@ test("invocationParams includes container with thinking enabled", () => {
   expect(params.thinking).toEqual({ type: "enabled", budget_tokens: 1000 });
 });
 
+test("invocationParams omits thinking when not explicitly configured", () => {
+  const model = new ChatAnthropic({
+    modelName: "claude-haiku-4-5-20251001",
+    anthropicApiKey: "testing",
+  });
+
+  const params = model.invocationParams({});
+
+  expect(params.thinking).toBeUndefined();
+});
+
+test("invocationParams includes thinking when explicitly disabled", () => {
+  const model = new ChatAnthropic({
+    modelName: "claude-haiku-4-5-20251001",
+    anthropicApiKey: "testing",
+    thinking: { type: "disabled" },
+  });
+
+  const params = model.invocationParams({});
+
+  expect(params.thinking).toEqual({ type: "disabled" });
+});
+
+test("invocationParams includes thinking when explicitly enabled", () => {
+  const model = new ChatAnthropic({
+    modelName: "claude-haiku-4-5-20251001",
+    temperature: 1,
+    anthropicApiKey: "testing",
+    thinking: { type: "enabled", budget_tokens: 1000 },
+  });
+
+  const params = model.invocationParams({});
+
+  expect(params.thinking).toEqual({ type: "enabled", budget_tokens: 1000 });
+});
+
 test("invocationParams returns undefined tools when tools is undefined", () => {
   const model = new ChatAnthropic({
     modelName: "claude-haiku-4-5",
