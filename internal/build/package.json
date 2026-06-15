@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@arethetypeswrong/core": "^0.18.3",
-    "zod-compiler": "^1.10.0",
+    "zod-compiler": "^1.10.1",
     "@typescript/native-preview": "^7.0.0-dev.20260401.1",
     "publint": "^0.3.19",
     "rolldown": "^1.0.3",
