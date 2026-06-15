@@ -194,13 +194,8 @@ export function createSubagentTransformer(
         name: lc,
         cause: deriveCause(ns),
         output,
-        // `createMessagesTransformer` yields core `ChatModelStream` handles;
-        // bridge to the package's richer awaitable `ChatModelStream` type, the
-        // same surface `run.messages` exposes.
-        messages:
-          messagesProjection.messages as unknown as SubagentRunStream["messages"],
-        toolCalls:
-          toolCallProjection.toolCalls as SubagentRunStream["toolCalls"],
+        messages: messagesProjection.messages,
+        toolCalls: toolCallProjection.toolCalls,
         subagents: nestedProjection.subagents,
       });
     }

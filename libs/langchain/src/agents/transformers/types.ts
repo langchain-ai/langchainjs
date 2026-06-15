@@ -107,7 +107,7 @@ export interface SubagentRunStream<
   readonly output: Promise<TValues>;
 
   /** Per-message chat-model token streams scoped to this subagent. */
-  readonly messages: AsyncIterable<ChatModelStream>;
+  readonly messages: AsyncIterable<Omit<ChatModelStream, "then">>;
 
   /** The subagent's own tool-call streams. */
   readonly toolCalls: AsyncIterable<ToolCallStreamUnion<TTools>>;

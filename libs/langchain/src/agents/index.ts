@@ -721,8 +721,10 @@ export { MIDDLEWARE_BRAND } from "./middleware/types.js";
 export type * from "./middleware/types.js";
 export { FakeToolCallingModel } from "./tests/utils.js";
 export type { ReactAgent } from "./ReactAgent.js";
-export type {
-  AgentRunStream,
-  ToolCallStreamUnion,
-  SubagentRunStream,
+export {
+  createToolCallTransformer,
+  createSubagentTransformer,
+  type AgentRunStream,
+  type ToolCallStreamUnion,
+  type SubagentRunStream,
 } from "./transformers/index.js";
