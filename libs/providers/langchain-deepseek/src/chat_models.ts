@@ -468,7 +468,9 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
    * Controlled by the constructor option of the same name.
    * @internal
    */
-  private enableThinkTagParsing: boolean = false;
+  private enableThinkTagParsing: boolean;
+
+  private warnedAboutDisabledThinkTagParsing = false;
 
   protected override _convertCompletionsDeltaToBaseMessageChunk(
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
@@ -504,6 +506,7 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
     // directly from the parent stream. This avoids incorrectly stripping
     // <think> tags from normal content produced by non-reasoning models.
     if (!this.enableThinkTagParsing) {
+      let tagDetectionBuffer = "";
       for await (const chunk of super._streamResponseChunks(
         messages,
         options,
@@ -511,6 +514,22 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
       )) {
         if (options.signal?.aborted) {
           return;
+        }
+        if (
+          !this.warnedAboutDisabledThinkTagParsing &&
+          typeof chunk.text === "string"
+        ) {
+          const detectionText = tagDetectionBuffer + chunk.text;
+          if (
+            detectionText.includes("<think>") ||
+            detectionText.includes("</think>")
+          ) {
+            console.warn(
+              "DeepSeek: <think> tags detected in streamed content while enableThinkTagParsing is false. They will be returned as normal message content. Only set enableThinkTagParsing: true if your endpoint embeds reasoning in <think>...</think> tags instead of using reasoning_content."
+            );
+            this.warnedAboutDisabledThinkTagParsing = true;
+          }
+          tagDetectionBuffer = detectionText.slice(-"</think>".length + 1);
         }
         yield chunk;
       }

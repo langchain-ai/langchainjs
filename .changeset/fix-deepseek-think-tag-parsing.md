@@ -1,5 +1,5 @@
 ---
-"@langchain/deepseek": patch
+"@langchain/deepseek": minor
 ---
 
 fix(deepseek): disable <think> tag parsing by default, add enableThinkTagParsing option
