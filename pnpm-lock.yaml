@@ -430,6 +430,9 @@ importers:
       unplugin-unused:
         specifier: ^0.5.6
         version: 0.5.7
+      zod-compiler:
+        specifier: ^1.10.0
+        version: 1.10.0(zod@4.3.6)
     devDependencies:
       '@langchain/tsconfig':
         specifier: workspace:*
@@ -11804,6 +11807,12 @@ packages:
     resolution: {integrity: sha512-zK7YHHz4ZXpW89AHXUPbQVGKI7uvkd3hzusTdotCg1UxyaVtg0zFJSTfW/Dq5f7OBBVnq6cZIaC8Ti4hb6dtCA==}
     engines: {node: '>= 14'}
 
+  zod-compiler@1.10.0:
+    resolution: {integrity: sha512-pgsork296ncUoTG2+Qg8XV4fL/R3jcZUjaYHrwApwBybUm7y5o+kljXgivmceZ8WWbKAMGGbkoRp6ucXlNFkBQ==}
+    hasBin: true
+    peerDependencies:
+      zod: ^4.0.0
+
   zod-to-json-schema@3.25.2:
     resolution: {integrity: sha512-O/PgfnpT1xKSDeQYSCfRI5Gy3hPf91mKVDuYLUHZJMiDFptvP41MSnWofm8dnCm0256ZNfZIM7DSzuSMAFnjHA==}
     peerDependencies:
@@ -22868,6 +22877,17 @@ snapshots:
       archiver-utils: 5.0.2
       compress-commons: 6.0.2
       readable-stream: 4.7.0
+
+  zod-compiler@1.10.0(zod@4.3.6):
+    dependencies:
+      '@jridgewell/remapping': 2.3.5
+      acorn: 8.16.0
+      get-tsconfig: 4.14.0
+      jiti: 2.7.0
+      magic-string: 0.30.21
+      picomatch: 4.0.4
+      unplugin: 3.0.0
+      zod: 4.3.6
 
   zod-to-json-schema@3.25.2(zod@3.25.76):
     dependencies:

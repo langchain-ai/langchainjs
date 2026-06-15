@@ -1,6 +1,7 @@
 import type { UserConfig as BuildOptions } from "tsdown";
 import type { PackageJson } from "type-fest";
 import path from "node:path";
+import zodCompilerPlugin from "zod-compiler/rolldown";
 
 export {
   type CjsCompatPluginOptions,
@@ -49,6 +50,10 @@ export {
  *   plugins: [myCustomPlugin()],
  * });
  * ```
+ *
+ * Note: `zodCompilerPlugin` is always prepended before caller-supplied plugins.
+ * Caller plugins must be arrays — tsdown's single-plugin and `false` shorthand
+ * forms are not supported here.
  */
 export function getBuildConfig(options?: Partial<BuildOptions>): BuildOptions {
   return {
@@ -159,5 +164,9 @@ export function getBuildConfig(options?: Partial<BuildOptions>): BuildOptions {
     },
     ignoreWatch: [`.turbo`, `dist`, `node_modules`],
     ...options,
+    plugins: [
+      zodCompilerPlugin(),
+      ...(Array.isArray(options?.plugins) ? options.plugins : []),
+    ],
   };
 }
