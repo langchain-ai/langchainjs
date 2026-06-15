@@ -126,6 +126,97 @@ describe.skipIf(process.env.LC_DEPENDENCY_RANGE_TESTS)("run.subagents", () => {
     });
   }
 
+  /**
+   * Builds a supervisor whose single model turn emits three tool calls at
+   * once. Each tool dispatches a distinct named subagent, so all three run
+   * concurrently from one tools step — the scenario where per-subagent message
+   * streams previously came back empty.
+   */
+  function makeParallelSupervisor() {
+    const sfAgent = createAgent({
+      model: fakeModel()
+        .respondWithTools([
+          { name: "random_tool_call", args: {}, id: "call_r_sf" },
+        ])
+        .respond(new AIMessage("It is sunny in SF.")),
+      tools: [randomToolCall],
+      name: "sf_agent",
+    });
+    const nycAgent = createAgent({
+      model: fakeModel()
+        .respondWithTools([
+          { name: "random_tool_call", args: {}, id: "call_r_nyc" },
+        ])
+        .respond(new AIMessage("It is rainy in NYC.")),
+      tools: [randomToolCall],
+      name: "nyc_agent",
+    });
+    const laAgent = createAgent({
+      model: fakeModel()
+        .respondWithTools([
+          { name: "random_tool_call", args: {}, id: "call_r_la" },
+        ])
+        .respond(new AIMessage("It is warm in LA.")),
+      tools: [randomToolCall],
+      name: "la_agent",
+    });
+
+    const callSf = tool(
+      async () => {
+        const res = await sfAgent.invoke({
+          messages: [new HumanMessage("weather in SF?")],
+        });
+        const last = res.messages.at(-1);
+        return typeof last?.content === "string" ? last.content : "ok";
+      },
+      {
+        name: "call_sf",
+        description: "Ask the SF weather sub-agent",
+        schema: z.object({}),
+      }
+    );
+    const callNyc = tool(
+      async () => {
+        const res = await nycAgent.invoke({
+          messages: [new HumanMessage("weather in NYC?")],
+        });
+        const last = res.messages.at(-1);
+        return typeof last?.content === "string" ? last.content : "ok";
+      },
+      {
+        name: "call_nyc",
+        description: "Ask the NYC weather sub-agent",
+        schema: z.object({}),
+      }
+    );
+    const callLa = tool(
+      async () => {
+        const res = await laAgent.invoke({
+          messages: [new HumanMessage("weather in LA?")],
+        });
+        const last = res.messages.at(-1);
+        return typeof last?.content === "string" ? last.content : "ok";
+      },
+      {
+        name: "call_la",
+        description: "Ask the LA weather sub-agent",
+        schema: z.object({}),
+      }
+    );
+
+    return createAgent({
+      model: fakeModel()
+        .respondWithTools([
+          { name: "call_sf", args: {}, id: "call_sf" },
+          { name: "call_nyc", args: {}, id: "call_nyc" },
+          { name: "call_la", args: {}, id: "call_la" },
+        ])
+        .respond(new AIMessage("Done.")),
+      tools: [callSf, callNyc, callLa],
+      name: "supervisor",
+    });
+  }
+
   it("surfaces a named subagent dispatched from a tool with its cause", async () => {
     const supervisor = makeSupervisor();
     const run = await supervisor.streamEvents(
@@ -179,6 +270,52 @@ describe.skipIf(process.env.LC_DEPENDENCY_RANGE_TESTS)("run.subagents", () => {
     expect(lastMessage).toBeAIMessage("Done.");
 
     expect(subHandles).toHaveLength(0);
+  });
+
+  it("surfaces three subagents dispatched in parallel from one tools step", async () => {
+    const supervisor = makeParallelSupervisor();
+    const run = await supervisor.streamEvents(
+      { messages: [new HumanMessage("Weather in SF, NYC, and LA?")] },
+      { version: "v3" }
+    );
+
+    const expected: Record<string, { reply: string; toolCallId: string }> = {
+      sf_agent: { reply: "It is sunny in SF.", toolCallId: "call_sf" },
+      nyc_agent: { reply: "It is rainy in NYC.", toolCallId: "call_nyc" },
+      la_agent: { reply: "It is warm in LA.", toolCallId: "call_la" },
+    };
+
+    // Drain each subagent's per-message stream as it is surfaced. The three
+    // subagents run concurrently, so handles can arrive in any order — collect
+    // them keyed by name and assert against the expected set afterwards.
+    const seen = new Map<string, { messages: string[]; cause: unknown }>();
+    for await (const sub of run.subagents) {
+      const messages: string[] = [];
+      for await (const message of sub.messages) {
+        messages.push(await message.text);
+      }
+      seen.set(sub.name, { messages, cause: sub.cause });
+    }
+
+    expect([...seen.keys()].sort()).toEqual([
+      "la_agent",
+      "nyc_agent",
+      "sf_agent",
+    ]);
+    for (const [name, { messages, cause }] of seen) {
+      // Regression: parallel subagents' per-message streams used to come back
+      // empty because the root stream sealed before their `messages` callbacks
+      // (dispatched on the background queue) pushed their chunks.
+      expect(messages).toHaveLength(1);
+      expect(messages.join("")).toBe(expected[name].reply);
+      expect(cause).toEqual({
+        type: "toolCall",
+        tool_call_id: expected[name].toolCallId,
+      });
+    }
+
+    const lastMessage = (await run.output).messages.at(-1);
+    expect(lastMessage).toBeAIMessage("Done.");
   });
 
   it("iterates nested subagents via sub.subagents", async () => {
