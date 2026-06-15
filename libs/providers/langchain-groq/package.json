@@ -30,7 +30,7 @@
     "groq-sdk": "^1.2.1"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0"
+    "@langchain/core": "^1.1.30"
   },
   "devDependencies": {
     "@langchain/core": "workspace:^",
