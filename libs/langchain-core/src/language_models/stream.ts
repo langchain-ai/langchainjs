@@ -128,6 +128,111 @@ function applyDelta(
 }
 
 /**
+ * Map a content-block delta to the block `type` it targets — but only for the
+ * delta kinds that {@link applyDelta} silently drops when applied to a block of
+ * a different type (`text-delta` → `text`, `reasoning-delta` → `reasoning`).
+ *
+ * `data-delta` and `block-delta` are merged into whatever block currently
+ * occupies the slot, so they never need rerouting and return `undefined`.
+ *
+ * @internal
+ */
+function droppableDeltaType(
+  delta: ContentBlockDelta
+): "text" | "reasoning" | undefined {
+  if (delta.type === "text-delta") return "text";
+  if (delta.type === "reasoning-delta") return "reasoning";
+  return undefined;
+}
+
+/**
+ * Whether a delta of `deltaType` can be folded into a block of `blockType`
+ * without losing data. Mirrors the accepted combinations in {@link applyDelta}:
+ * reasoning deltas accumulate into both `reasoning` and `thinking` blocks.
+ *
+ * @internal
+ */
+function blockAcceptsDelta(
+  blockType: string,
+  deltaType: "text" | "reasoning"
+): boolean {
+  if (deltaType === "text") return blockType === "text";
+  return blockType === "reasoning" || blockType === "thinking";
+}
+
+/**
+ * Build a fresh content block from a droppable delta, used when a rerouted
+ * delta lands on a previously-unused slot.
+ *
+ * @internal
+ */
+function blockFromDroppableDelta(
+  delta: ContentBlockDelta
+): ContentBlock | undefined {
+  if (delta.type === "text-delta") {
+    return { type: "text", text: delta.text } as ContentBlock;
+  }
+  if (delta.type === "reasoning-delta") {
+    return { type: "reasoning", reasoning: delta.reasoning } as ContentBlock;
+  }
+  return undefined;
+}
+
+/**
+ * Resolve the assembly slot for a streamed `content-block-delta`, accounting
+ * for providers (notably OpenAI's Responses API) that reuse a single protocol
+ * `index` across blocks of different types — most commonly emitting assistant
+ * `text` deltas at the same `index` as a preceding `reasoning` block.
+ *
+ * When the delta is incompatible with the block already at `protocolIndex`, it
+ * is routed to a distinct slot (tracked in `aliases`) instead of being dropped.
+ *
+ * @internal
+ */
+function resolveDeltaBlockIndex(
+  contentBlocks: Array<ContentBlock | undefined>,
+  aliases: Map<string, number>,
+  protocolIndex: number,
+  deltaType: "text" | "reasoning"
+): number {
+  const current = contentBlocks[protocolIndex];
+  if (current == null || blockAcceptsDelta(current.type, deltaType)) {
+    return protocolIndex;
+  }
+  const key = `${protocolIndex}::${deltaType}`;
+  const existing = aliases.get(key);
+  if (existing != null) return existing;
+  const nextIndex = contentBlocks.length;
+  aliases.set(key, nextIndex);
+  return nextIndex;
+}
+
+/**
+ * Resolve the slot a `content-block-finish` should write to, honoring any slot
+ * a colliding delta was previously rerouted to so a finish does not clobber an
+ * unrelated block sharing its protocol `index`.
+ *
+ * @internal
+ */
+function resolveFinishBlockIndex(
+  aliases: Map<string, number>,
+  protocolIndex: number,
+  blockType: string
+): number {
+  const deltaType =
+    blockType === "text"
+      ? "text"
+      : blockType === "reasoning" || blockType === "thinking"
+        ? "reasoning"
+        : undefined;
+  if (deltaType != null) {
+    const existing = aliases.get(`${protocolIndex}::${deltaType}`);
+    if (existing != null) return existing;
+  }
+  return protocolIndex;
+}
+
+/**
  * Returns the typed delta carried by a content-block delta event.
  *
  * Stream protocol compliant language models store incremental updates in
@@ -618,6 +723,9 @@ export class ChatModelStream
   /** @internal */
   private async _assembleMessage(): Promise<AIMessage> {
     const contentBlocks: Array<ContentBlock | undefined> = [];
+    // Tracks slots that colliding (otherwise-dropped) deltas were rerouted to,
+    // keyed by `${protocolIndex}::${deltaType}`.
+    const blockIndexAliases = new Map<string, number>();
     let id: string | undefined;
     let usage: UsageMetadata | undefined;
     let metadata: Record<string, unknown> = {};
@@ -635,17 +743,40 @@ export class ChatModelStream
           break;
 
         case "content-block-delta": {
-          const current = contentBlocks[event.index];
           const delta = getEventDelta(event);
+          if (!delta) break;
+          const deltaType = droppableDeltaType(delta);
+          const index =
+            deltaType == null
+              ? event.index
+              : resolveDeltaBlockIndex(
+                  contentBlocks,
+                  blockIndexAliases,
+                  event.index,
+                  deltaType
+                );
+          const current = contentBlocks[index];
           if (current) {
-            if (delta) contentBlocks[event.index] = applyDelta(current, delta);
+            contentBlocks[index] = applyDelta(current, delta);
+          } else if (deltaType != null) {
+            // A reasoning/text delta arrived for a slot with no started block
+            // (e.g. a text delta colliding with a reasoning block's index).
+            // Materialize the block instead of dropping the content.
+            const created = blockFromDroppableDelta(delta);
+            if (created) contentBlocks[index] = created;
           }
           break;
         }
 
-        case "content-block-finish":
-          contentBlocks[event.index] = event.content;
+        case "content-block-finish": {
+          const index = resolveFinishBlockIndex(
+            blockIndexAliases,
+            event.index,
+            event.content.type
+          );
+          contentBlocks[index] = event.content;
           break;
+        }
 
         case "usage":
           usage = normalizeUsage(event.usage);

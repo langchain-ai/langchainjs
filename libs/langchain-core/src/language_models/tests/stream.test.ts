@@ -483,6 +483,63 @@ describe("ChatModelStream", () => {
       expect(message.response_metadata?.finish_reason).toBe("tool_use");
     });
 
+    test("keeps assistant text emitted at a reasoning block's protocol index", async () => {
+      // Reproduces OpenAI Responses streaming for reasoning models: text deltas
+      // are emitted at `index: 0`, which is already occupied by a reasoning
+      // block. Without type-aware routing the text is silently dropped from the
+      // assembled message (and therefore from anything that persists it).
+      const stream = new ChatModelStream(
+        iterEvents([
+          { event: "message-start", id: "msg_reasoning_text" },
+          {
+            event: "content-block-start",
+            index: 0,
+            content: { type: "reasoning", reasoning: "Think A" },
+          },
+          {
+            event: "content-block-delta",
+            index: 0,
+            delta: { type: "reasoning-delta", reasoning: " more" },
+          },
+          {
+            event: "content-block-start",
+            index: 1,
+            content: { type: "reasoning", reasoning: "Think B" },
+          },
+          {
+            event: "content-block-delta",
+            index: 0,
+            delta: { type: "text-delta", text: "Two quick" },
+          },
+          {
+            event: "content-block-delta",
+            index: 0,
+            delta: { type: "text-delta", text: " approaches:" },
+          },
+          {
+            event: "content-block-finish",
+            index: 0,
+            content: { type: "reasoning", reasoning: "Think A more" },
+          },
+          {
+            event: "content-block-finish",
+            index: 1,
+            content: { type: "reasoning", reasoning: "Think B" },
+          },
+          { event: "message-finish", reason: "stop" },
+        ])
+      );
+
+      const message = await stream.output;
+
+      expect(message.contentBlocks).toEqual([
+        { type: "reasoning", reasoning: "Think A more" },
+        { type: "reasoning", reasoning: "Think B" },
+        { type: "text", text: "Two quick approaches:" },
+      ]);
+      expect(message.text).toBe("Two quick approaches:");
+    });
+
     test("normalizes provider tool-use blocks into tool calls", async () => {
       const stream = new ChatModelStream(
         iterEvents([
