@@ -37,7 +37,7 @@ describe("Integration tests on WatsonxRerank", () => {
       const result = await instance.compressDocuments(docs, query);
       expect(result.length).toBe(docs.length);
       result.forEach((item) =>
-        expect(typeof item.metadata.relevanceScore).toBe("number"),
+        expect(typeof item.metadata.relevanceScore).toBe("number")
       );
     });
 
@@ -56,7 +56,7 @@ describe("Integration tests on WatsonxRerank", () => {
       const result = await instance.compressDocuments(longerDocs, query);
       expect(result.length).toBe(docs.length);
       result.forEach((item) =>
-        expect(typeof item.metadata.relevanceScore).toBe("number"),
+        expect(typeof item.metadata.relevanceScore).toBe("number")
       );
     });
   });

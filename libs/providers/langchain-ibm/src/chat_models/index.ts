@@ -85,7 +85,11 @@ import {
   WatsonxValidationError,
 } from "../types.js";
 import { _convertToolCallIdToMistralCompatible } from "../utils/tool-call-id.js";
-import { PropertyValidator, checkRequiredProps, expectOneOf } from "../utils/validation.js";
+import {
+  PropertyValidator,
+  checkRequiredProps,
+  expectOneOf,
+} from "../utils/validation.js";
 import { initWatsonxOrGatewayInstance } from "../utils/instance.js";
 import { WatsonxToolsOutputParser } from "../utils/parsers.js";
 

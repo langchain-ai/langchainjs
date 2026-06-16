@@ -21,7 +21,11 @@ import {
   Gateway,
   TextCompletionStream,
 } from "@ibm-cloud/watsonx-ai/gateway";
-import { PropertyValidator, checkRequiredProps, expectOneOf } from "../utils/validation.js";
+import {
+  PropertyValidator,
+  checkRequiredProps,
+  expectOneOf,
+} from "../utils/validation.js";
 import { initWatsonxOrGatewayInstance } from "../utils/instance.js";
 import {
   GenerationInfo,

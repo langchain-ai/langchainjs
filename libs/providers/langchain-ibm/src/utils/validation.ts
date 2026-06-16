@@ -279,7 +279,6 @@ export function checkValidProps(
   }
 }
 
-
 /**
  * Validates that all required properties are present and not undefined or null.
  *
@@ -302,7 +301,8 @@ export function checkRequiredProps(
   requiredKeys: string[]
 ): void {
   const missing = requiredKeys.filter(
-    (key) => !(key in params) || params[key] === undefined || params[key] === null
+    (key) =>
+      !(key in params) || params[key] === undefined || params[key] === null
   );
 
   if (missing.length > 0) {
