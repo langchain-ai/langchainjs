@@ -775,6 +775,8 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
     });
   });
 
+  // The mock only replaces Anthropic's network stream; these assertions exercise
+  // the real streamEvents() conversion into ChatModelStream sub-streams.
   describe("streaming events", () => {
     test("streams text", async () => {
       const model = new MockStreamChatAnthropic(textOnlyEvents());

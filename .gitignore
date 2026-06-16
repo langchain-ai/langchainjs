@@ -55,6 +55,7 @@ coverage/
 
 examples/src/createAgent/*.png
 libs/langchain/graph-matrix.mermaid.md
+libs/langchain-core/src/**/*.d.ts
 # LangGraph API
 .langgraph_api
 

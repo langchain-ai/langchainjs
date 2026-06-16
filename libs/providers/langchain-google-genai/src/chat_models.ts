@@ -11,6 +11,7 @@ import {
   RequestOptions,
   type CachedContent,
   Schema,
+  type EnhancedGenerateContentResponse,
 } from "@google/generative-ai";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
@@ -955,9 +956,7 @@ export class ChatGoogleGenerativeAI
     const shouldStreamUsage =
       this.streamUsage !== false && options.streamUsage !== false;
     const abortableStream = async function* (
-      source: AsyncIterable<
-        import("@google/generative-ai").EnhancedGenerateContentResponse
-      >,
+      source: AsyncIterable<EnhancedGenerateContentResponse>,
       signal?: AbortSignal
     ) {
       for await (const chunk of source) {
