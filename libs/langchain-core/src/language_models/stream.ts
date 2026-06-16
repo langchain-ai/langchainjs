@@ -179,57 +179,18 @@ function blockFromDroppableDelta(
 }
 
 /**
- * Resolve the assembly slot for a streamed `content-block-delta`, accounting
- * for providers (notably OpenAI's Responses API) that reuse a single protocol
- * `index` across blocks of different types — most commonly emitting assistant
- * `text` deltas at the same `index` as a preceding `reasoning` block.
- *
- * When the delta is incompatible with the block already at `protocolIndex`, it
- * is routed to a distinct slot (tracked in `aliases`) instead of being dropped.
+ * Map a finalized block `type` back to the droppable delta type that would
+ * accumulate into it, so a `content-block-finish` can be matched to a block
+ * that an earlier colliding delta was rerouted to.
  *
  * @internal
  */
-function resolveDeltaBlockIndex(
-  contentBlocks: Array<ContentBlock | undefined>,
-  aliases: Map<string, number>,
-  protocolIndex: number,
-  deltaType: "text" | "reasoning"
-): number {
-  const current = contentBlocks[protocolIndex];
-  if (current == null || blockAcceptsDelta(current.type, deltaType)) {
-    return protocolIndex;
-  }
-  const key = `${protocolIndex}::${deltaType}`;
-  const existing = aliases.get(key);
-  if (existing != null) return existing;
-  const nextIndex = contentBlocks.length;
-  aliases.set(key, nextIndex);
-  return nextIndex;
-}
-
-/**
- * Resolve the slot a `content-block-finish` should write to, honoring any slot
- * a colliding delta was previously rerouted to so a finish does not clobber an
- * unrelated block sharing its protocol `index`.
- *
- * @internal
- */
-function resolveFinishBlockIndex(
-  aliases: Map<string, number>,
-  protocolIndex: number,
+function blockTypeToDeltaType(
   blockType: string
-): number {
-  const deltaType =
-    blockType === "text"
-      ? "text"
-      : blockType === "reasoning" || blockType === "thinking"
-        ? "reasoning"
-        : undefined;
-  if (deltaType != null) {
-    const existing = aliases.get(`${protocolIndex}::${deltaType}`);
-    if (existing != null) return existing;
-  }
-  return protocolIndex;
+): "text" | "reasoning" | undefined {
+  if (blockType === "text") return "text";
+  if (blockType === "reasoning" || blockType === "thinking") return "reasoning";
+  return undefined;
 }
 
 /**
@@ -722,14 +683,25 @@ export class ChatModelStream
 
   /** @internal */
   private async _assembleMessage(): Promise<AIMessage> {
-    const contentBlocks: Array<ContentBlock | undefined> = [];
-    // Tracks slots that colliding (otherwise-dropped) deltas were rerouted to,
-    // keyed by `${protocolIndex}::${deltaType}`.
-    const blockIndexAliases = new Map<string, number>();
+    // Blocks are keyed by stable identity (not array position) and tracked in
+    // insertion order. Real protocol blocks use `index:<i>`; deltas that reuse
+    // an `index` for an incompatible type (e.g. a reasoning model emitting
+    // assistant `text` at a `reasoning` block's index) get an `alias:` key so a
+    // later `content-block-start` at that numeric index cannot clobber them.
+    const blocks = new Map<string, ContentBlock>();
+    const order: string[] = [];
     let id: string | undefined;
     let usage: UsageMetadata | undefined;
     let metadata: Record<string, unknown> = {};
     let finishReason: string | undefined;
+
+    const indexKey = (index: number) => `index:${index}`;
+    const aliasKey = (index: number, deltaType: "text" | "reasoning") =>
+      `alias:${index}:${deltaType}`;
+    const setBlock = (key: string, block: ContentBlock) => {
+      if (!blocks.has(key)) order.push(key);
+      blocks.set(key, block);
+    };
 
     for await (const event of this._buffer.iterate()) {
       switch (event.event) {
@@ -739,42 +711,48 @@ export class ChatModelStream
           break;
 
         case "content-block-start":
-          contentBlocks[event.index] = event.content;
+          setBlock(indexKey(event.index), event.content);
           break;
 
         case "content-block-delta": {
           const delta = getEventDelta(event);
           if (!delta) break;
           const deltaType = droppableDeltaType(delta);
-          const index =
-            deltaType == null
-              ? event.index
-              : resolveDeltaBlockIndex(
-                  contentBlocks,
-                  blockIndexAliases,
-                  event.index,
-                  deltaType
-                );
-          const current = contentBlocks[index];
+          // `data-delta` / `block-delta` always merge into the block at this
+          // protocol index. Droppable deltas (`text`/`reasoning`) reroute to an
+          // alias slot when the indexed block is an incompatible type.
+          let key = indexKey(event.index);
+          if (deltaType != null) {
+            const base = blocks.get(key);
+            if (base != null && !blockAcceptsDelta(base.type, deltaType)) {
+              key = aliasKey(event.index, deltaType);
+            }
+          }
+          const current = blocks.get(key);
           if (current) {
-            contentBlocks[index] = applyDelta(current, delta);
+            setBlock(key, applyDelta(current, delta));
           } else if (deltaType != null) {
-            // A reasoning/text delta arrived for a slot with no started block
-            // (e.g. a text delta colliding with a reasoning block's index).
-            // Materialize the block instead of dropping the content.
+            // The target slot has no started block (e.g. a text delta colliding
+            // with a reasoning block's index). Materialize the block instead of
+            // dropping the content.
             const created = blockFromDroppableDelta(delta);
-            if (created) contentBlocks[index] = created;
+            if (created) setBlock(key, created);
           }
           break;
         }
 
         case "content-block-finish": {
-          const index = resolveFinishBlockIndex(
-            blockIndexAliases,
-            event.index,
-            event.content.type
-          );
-          contentBlocks[index] = event.content;
+          // A finish references the same numeric index as its block's start; if
+          // that index was rerouted for this block type, honor the alias so the
+          // finish does not overwrite an unrelated block sharing the index.
+          const deltaType = blockTypeToDeltaType(event.content.type);
+          const aliased =
+            deltaType != null ? aliasKey(event.index, deltaType) : undefined;
+          const key =
+            aliased != null && blocks.has(aliased)
+              ? aliased
+              : indexKey(event.index);
+          setBlock(key, event.content);
           break;
         }
 
@@ -798,7 +776,8 @@ export class ChatModelStream
       }
     }
 
-    const filteredBlocks = contentBlocks
+    const filteredBlocks = order
+      .map((key) => blocks.get(key))
       .filter((b): b is ContentBlock => b != null)
       .map(standardizeToolBlock);
 

@@ -540,6 +540,81 @@ describe("ChatModelStream", () => {
       expect(message.text).toBe("Two quick approaches:");
     });
 
+    test("does not let a later content-block-start clobber rerouted text", async () => {
+      // Regression: a colliding text delta at index 0 must not be assigned a
+      // numeric slot that a subsequent real `content-block-start` (here index 1)
+      // can overwrite. The rerouted text lives in its own keyspace.
+      const stream = new ChatModelStream(
+        iterEvents([
+          { event: "message-start", id: "msg_reroute_clobber" },
+          {
+            event: "content-block-start",
+            index: 0,
+            content: { type: "reasoning", reasoning: "Reasoning" },
+          },
+          {
+            event: "content-block-delta",
+            index: 0,
+            delta: { type: "text-delta", text: "Answer" },
+          },
+          {
+            event: "content-block-start",
+            index: 1,
+            content: {
+              type: "tool_call_chunk",
+              id: "call_1",
+              name: "calc",
+              args: "",
+            } as unknown as ContentBlock,
+          },
+          {
+            event: "content-block-delta",
+            index: 1,
+            delta: {
+              type: "block-delta",
+              fields: {
+                type: "tool_call_chunk",
+                id: "call_1",
+                name: "calc",
+                args: '{"x":1}',
+              },
+            },
+          },
+          {
+            event: "content-block-finish",
+            index: 0,
+            content: { type: "reasoning", reasoning: "Reasoning" },
+          },
+          {
+            event: "content-block-finish",
+            index: 1,
+            content: {
+              type: "tool_call",
+              id: "call_1",
+              name: "calc",
+              args: { x: 1 },
+            } as unknown as ContentBlock,
+          },
+          { event: "message-finish", reason: "tool_use" },
+        ])
+      );
+
+      const message = await stream.output;
+
+      // Insertion order: reasoning (index 0), then the rerouted text (created
+      // when its colliding delta arrived, before the index 1 start), then the
+      // tool call (index 1). The text survives the index 1 start.
+      expect(message.contentBlocks).toEqual([
+        { type: "reasoning", reasoning: "Reasoning" },
+        { type: "text", text: "Answer" },
+        { type: "tool_call", id: "call_1", name: "calc", args: { x: 1 } },
+      ]);
+      expect(message.text).toBe("Answer");
+      expect(message.tool_calls).toEqual([
+        { type: "tool_call", id: "call_1", name: "calc", args: { x: 1 } },
+      ]);
+    });
+
     test("normalizes provider tool-use blocks into tool calls", async () => {
       const stream = new ChatModelStream(
         iterEvents([
