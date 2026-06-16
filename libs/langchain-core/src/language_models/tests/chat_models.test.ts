@@ -2,7 +2,11 @@ import { test, expect, vi } from "vitest";
 import { z } from "zod/v3";
 import { z as z4 } from "zod/v4";
 import { zodToJsonSchema } from "../../utils/zod-to-json-schema/index.js";
-import { FakeChatModel, FakeListChatModel } from "../../utils/testing/index.js";
+import {
+  FakeChatModel,
+  FakeListChatModel,
+  FakeStreamingChatModel,
+} from "../../utils/testing/index.js";
 import { HumanMessage } from "../../messages/human.js";
 import { getBufferString } from "../../messages/utils.js";
 import { AIMessage } from "../../messages/ai.js";
@@ -579,4 +583,67 @@ test("Test ChatModel applies v1 outputVersion after implicit streaming aggregati
       text: "Hello world!",
     },
   ]);
+});
+
+test("Test ChatModel tools getter and bindTools", async () => {
+  const model = new FakeStreamingChatModel({
+    responses: [new AIMessage("hi")],
+  });
+  expect(model.tools).toEqual([]);
+
+  const tool = {
+    name: "test_tool",
+    description: "a test tool",
+    schema: z.object({
+      param: z.string(),
+    }),
+  };
+
+  const modelWithTools = model.bindTools([tool]);
+  expect(modelWithTools.tools).toEqual([
+    {
+      type: "function",
+      function: {
+        name: "test_tool",
+        description: "a test tool",
+        parameters: {
+          $schema: "http://json-schema.org/draft-07/schema#",
+          additionalProperties: false,
+          type: "object",
+          properties: {
+            param: { type: "string" },
+          },
+          required: ["param"],
+        },
+      },
+    },
+  ]);
+});
+
+test("Test ChatModel withStructuredOutput throws validation error on extra tools in call options", async () => {
+  const model = new FakeStreamingChatModel({
+    responses: [new AIMessage(`{ "name": "John", "age": 30 }`)],
+  });
+
+  const structuredModel = model.withStructuredOutput(
+    z.object({
+      name: z.string(),
+      age: z.number(),
+    })
+  );
+
+  const extraTool = {
+    name: "extra_tool",
+    description: "some other tool",
+    schema: z.object({}),
+  };
+
+  // Calling invoke with extra tools should throw
+  await expect(async () => {
+    await structuredModel.invoke("hello", {
+      tools: [extraTool],
+    });
+  }).rejects.toThrow(
+    /Cannot pass 'tools' call option when using a model configured with structured output/
+  );
 });
