@@ -683,24 +683,27 @@ export class ChatModelStream
 
   /** @internal */
   private async _assembleMessage(): Promise<AIMessage> {
-    // Blocks are keyed by stable identity (not array position) and tracked in
-    // insertion order. Real protocol blocks use `index:<i>`; deltas that reuse
-    // an `index` for an incompatible type (e.g. a reasoning model emitting
-    // assistant `text` at a `reasoning` block's index) get an `alias:` key so a
-    // later `content-block-start` at that numeric index cannot clobber them.
-    const blocks = new Map<string, ContentBlock>();
-    const order: string[] = [];
+    // Real protocol blocks are keyed by their numeric `index` so final ordering
+    // follows the protocol's positional semantics even when block starts are
+    // interleaved (e.g. `index: 1` before `index: 0`).
+    const indexBlocks = new Map<number, ContentBlock>();
+    // Deltas that reuse an `index` for an incompatible type (e.g. a reasoning
+    // model emitting assistant `text` at a `reasoning` block's index) are kept
+    // in a separate keyspace (`${index}:${deltaType}`) so a later
+    // `content-block-start` at that numeric index cannot clobber them. Aliases
+    // are appended after all real blocks, in first-seen order.
+    const aliasBlocks = new Map<string, ContentBlock>();
+    const aliasOrder: string[] = [];
     let id: string | undefined;
     let usage: UsageMetadata | undefined;
     let metadata: Record<string, unknown> = {};
     let finishReason: string | undefined;
 
-    const indexKey = (index: number) => `index:${index}`;
     const aliasKey = (index: number, deltaType: "text" | "reasoning") =>
-      `alias:${index}:${deltaType}`;
-    const setBlock = (key: string, block: ContentBlock) => {
-      if (!blocks.has(key)) order.push(key);
-      blocks.set(key, block);
+      `${index}:${deltaType}`;
+    const setAlias = (key: string, block: ContentBlock) => {
+      if (!aliasBlocks.has(key)) aliasOrder.push(key);
+      aliasBlocks.set(key, block);
     };
 
     for await (const event of this._buffer.iterate()) {
@@ -711,48 +714,57 @@ export class ChatModelStream
           break;
 
         case "content-block-start":
-          setBlock(indexKey(event.index), event.content);
+          indexBlocks.set(event.index, event.content);
           break;
 
         case "content-block-delta": {
           const delta = getEventDelta(event);
           if (!delta) break;
           const deltaType = droppableDeltaType(delta);
-          // `data-delta` / `block-delta` always merge into the block at this
-          // protocol index. Droppable deltas (`text`/`reasoning`) reroute to an
-          // alias slot when the indexed block is an incompatible type.
-          let key = indexKey(event.index);
-          if (deltaType != null) {
-            const base = blocks.get(key);
-            if (base != null && !blockAcceptsDelta(base.type, deltaType)) {
-              key = aliasKey(event.index, deltaType);
+          const base = indexBlocks.get(event.index);
+
+          // Droppable deltas (`text`/`reasoning`) reroute to an alias when the
+          // block at their index is an incompatible type, so the content is not
+          // silently dropped by `applyDelta`.
+          if (
+            deltaType != null &&
+            base != null &&
+            !blockAcceptsDelta(base.type, deltaType)
+          ) {
+            const key = aliasKey(event.index, deltaType);
+            const current = aliasBlocks.get(key);
+            if (current) {
+              setAlias(key, applyDelta(current, delta));
+            } else {
+              const created = blockFromDroppableDelta(delta);
+              if (created) setAlias(key, created);
             }
-          }
-          const current = blocks.get(key);
-          if (current) {
-            setBlock(key, applyDelta(current, delta));
+          } else if (base != null) {
+            // `data-delta` / `block-delta`, or a compatible droppable delta,
+            // merges into the block at this protocol index.
+            indexBlocks.set(event.index, applyDelta(base, delta));
           } else if (deltaType != null) {
-            // The target slot has no started block (e.g. a text delta colliding
-            // with a reasoning block's index). Materialize the block instead of
-            // dropping the content.
+            // A reasoning/text delta arrived before any `content-block-start`
+            // for this index. Materialize the block at its protocol index
+            // instead of dropping the content.
             const created = blockFromDroppableDelta(delta);
-            if (created) setBlock(key, created);
+            if (created) indexBlocks.set(event.index, created);
           }
           break;
         }
 
         case "content-block-finish": {
           // A finish references the same numeric index as its block's start; if
-          // that index was rerouted for this block type, honor the alias so the
+          // that index was rerouted for this block type, update the alias so the
           // finish does not overwrite an unrelated block sharing the index.
           const deltaType = blockTypeToDeltaType(event.content.type);
-          const aliased =
+          const alias =
             deltaType != null ? aliasKey(event.index, deltaType) : undefined;
-          const key =
-            aliased != null && blocks.has(aliased)
-              ? aliased
-              : indexKey(event.index);
-          setBlock(key, event.content);
+          if (alias != null && aliasBlocks.has(alias)) {
+            setAlias(alias, event.content);
+          } else {
+            indexBlocks.set(event.index, event.content);
+          }
           break;
         }
 
@@ -776,8 +788,14 @@ export class ChatModelStream
       }
     }
 
-    const filteredBlocks = order
-      .map((key) => blocks.get(key))
+    const orderedBlocks: ContentBlock[] = [
+      ...[...indexBlocks.keys()]
+        .sort((a, b) => a - b)
+        .map((index) => indexBlocks.get(index)!),
+      ...aliasOrder.map((key) => aliasBlocks.get(key)!),
+    ];
+
+    const filteredBlocks = orderedBlocks
       .filter((b): b is ContentBlock => b != null)
       .map(standardizeToolBlock);
 
