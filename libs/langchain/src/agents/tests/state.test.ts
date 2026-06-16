@@ -276,7 +276,6 @@ describe("state schema reducer preservation", () => {
                 : [incoming];
               return [...existing, ...incomingArray];
             },
-            schema: z4.union([z4.string(), z4.array(z4.string())]),
           },
           default: () => [] as string[],
         }),
