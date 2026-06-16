@@ -9,7 +9,7 @@ import {
 } from "../../utils/testing/index.js";
 import { HumanMessage } from "../../messages/human.js";
 import { getBufferString } from "../../messages/utils.js";
-import { AIMessage } from "../../messages/ai.js";
+import { AIMessage, AIMessageChunk } from "../../messages/index.js";
 import { RunCollectorCallbackHandler } from "../../tracers/run_collector.js";
 import { BaseCallbackHandler } from "../../callbacks/base.js";
 import { StandardJSONSchemaV1, StandardSchemaV1 } from "@standard-schema/spec";
@@ -620,8 +620,50 @@ test("Test ChatModel tools getter and bindTools", async () => {
   ]);
 });
 
+class TestFakeStreamingChatModel extends FakeStreamingChatModel {
+  override bindTools(
+    tools: Parameters<FakeStreamingChatModel["bindTools"]>[0],
+    kwargs?: Parameters<FakeStreamingChatModel["bindTools"]>[1]
+  ): ReturnType<FakeStreamingChatModel["bindTools"]> {
+    const bound = super.bindTools(tools, kwargs);
+    if (bound && "bound" in bound) {
+      const originalNext = (bound as Record<string, unknown>)
+        .bound as FakeStreamingChatModel;
+      const testNext = new TestFakeStreamingChatModel({
+        sleep: originalNext.sleep,
+        responses: originalNext.responses,
+        chunks: originalNext.chunks,
+        toolStyle: originalNext.toolStyle,
+        thrownErrorString: originalNext.thrownErrorString,
+      });
+      testNext.tools = originalNext.tools;
+      (bound as Record<string, unknown>).bound = testNext;
+    }
+    return bound;
+  }
+
+  async _generate(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    runManager?: import("../../callbacks/manager.js").CallbackManagerForLLMRun
+  ): Promise<import("../../outputs.js").ChatResult> {
+    const res = await super._generate(messages, options, runManager);
+    res.generations[0].message = new AIMessageChunk({
+      content: res.generations[0].message.content,
+      tool_calls: [
+        {
+          name: "extract",
+          args: { name: "John", age: 30 },
+          id: "call_123",
+        },
+      ],
+    });
+    return res;
+  }
+}
+
 test("Test ChatModel withStructuredOutput throws validation error on extra tools in call options", async () => {
-  const model = new FakeStreamingChatModel({
+  const model = new TestFakeStreamingChatModel({
     responses: [new AIMessage(`{ "name": "John", "age": 30 }`)],
   });
 
@@ -638,7 +680,13 @@ test("Test ChatModel withStructuredOutput throws validation error on extra tools
     schema: z.object({}),
   };
 
-  // Calling invoke with extra tools should throw
+  const expectedTool = {
+    name: "extract",
+    description: "extract schema",
+    schema: z.object({}),
+  };
+
+  // Case 1: Calling invoke with only extra tools should throw
   await expect(async () => {
     await structuredModel.invoke("hello", {
       tools: [extraTool],
@@ -646,4 +694,19 @@ test("Test ChatModel withStructuredOutput throws validation error on extra tools
   }).rejects.toThrow(
     /Cannot pass 'tools' call option when using a model configured with structured output/
   );
+
+  // Case 2: Calling invoke with mixed tools (expected tool + extra tool) should also throw
+  await expect(async () => {
+    await structuredModel.invoke("hello", {
+      tools: [expectedTool, extraTool],
+    });
+  }).rejects.toThrow(
+    /Cannot pass 'tools' call option when using a model configured with structured output/
+  );
+
+  // Case 3: Calling invoke with only the expected tool should succeed
+  const result = await structuredModel.invoke("hello", {
+    tools: [expectedTool],
+  });
+  expect(result).toEqual({ name: "John", age: 30 });
 });

@@ -264,26 +264,30 @@ export abstract class BaseChatModel<
         runnableConfig.configurable.structured_output_tool_name;
       const parsedTools = (callOptions as Record<string, unknown>).tools;
       if (parsedTools !== undefined) {
-        const hasExpectedTool =
-          Array.isArray(parsedTools) &&
+        const hasExtraOrMissingTools =
+          !Array.isArray(parsedTools) ||
+          parsedTools.length === 0 ||
           parsedTools.some((tool: unknown) => {
-            if (!tool) return false;
+            if (!tool) return true;
             if (typeof tool === "object") {
               const toolObj = tool as Record<string, unknown>;
+              let isExpected = false;
               if (
                 toolObj.function &&
                 typeof toolObj.function === "object" &&
                 (toolObj.function as Record<string, unknown>).name ===
                   expectedToolName
               ) {
-                return true;
+                isExpected = true;
+              } else if (toolObj.name === expectedToolName) {
+                isExpected = true;
               }
-              if (toolObj.name === expectedToolName) return true;
+              return !isExpected;
             }
-            return false;
+            return true;
           });
 
-        if (!hasExpectedTool) {
+        if (hasExtraOrMissingTools) {
           throw new Error(
             `Cannot pass 'tools' call option when using a model configured with structured output. ` +
               `This overrides the structured output schema tool and causes the model call to fail.`
