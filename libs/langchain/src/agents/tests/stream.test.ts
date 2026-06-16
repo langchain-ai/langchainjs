@@ -598,4 +598,87 @@ describe("streamEvents", () => {
     expect(await pendingCall.value.output).toBe("serialized result");
     expect(await iterator.next()).toEqual({ done: true, value: undefined });
   });
+
+  it("does not emit an unhandledRejection when tool-error fires before the consumer awaits output", async () => {
+    const transformer = createToolCallTransformer([])();
+    const projection = transformer.init();
+    const toolEvent = (data: Record<string, unknown>): ProtocolEvent =>
+      ({
+        method: "tools",
+        params: {
+          namespace: ["tools"],
+          data,
+        },
+      }) as ProtocolEvent;
+
+    const unhandled: unknown[] = [];
+    const onUnhandled = (reason: unknown) => {
+      unhandled.push(reason);
+    };
+    process.on("unhandledRejection", onUnhandled);
+
+    try {
+      transformer.process(
+        toolEvent({
+          event: "tool-started",
+          tool_call_id: "call_1",
+          tool_name: "write_file",
+          input: '{"filename":"test.txt","content":"hello"}',
+        })
+      );
+
+      const iterator = projection.toolCalls[Symbol.asyncIterator]();
+      const pendingCall = await iterator.next();
+      expect(pendingCall.done).toBe(false);
+
+      // Simulate an HITL interrupt surfaced as a tool-error whose payload
+      // does NOT match the headless `type: "tool"` interrupt shape. This
+      // is what `humanInTheLoopMiddleware` emits — a JSON-encoded array
+      // of `{ id, value: { actionRequests, reviewConfigs } }`. The
+      // transformer falls through to `rejectOutput`, and the consumer
+      // (iterating `run.interrupts` rather than `call.output`) never
+      // attaches a handler. Prior to the fix this crashed the process.
+      transformer.process(
+        toolEvent({
+          event: "tool-error",
+          tool_call_id: "call_1",
+          message: JSON.stringify([
+            {
+              id: "interrupt_1",
+              value: {
+                actionRequests: [
+                  {
+                    args: { filename: "test.txt", content: "hello" },
+                    description: "Tool execution requires approval: write_file",
+                    name: "write_file",
+                  },
+                ],
+                reviewConfigs: [
+                  {
+                    actionName: "write_file",
+                    allowedDecisions: ["approve"],
+                  },
+                ],
+              },
+            },
+          ]),
+        })
+      );
+
+      // Give microtasks + the unhandledRejection task a chance to fire.
+      await new Promise((resolve) => setImmediate(resolve));
+      await new Promise((resolve) => setImmediate(resolve));
+
+      expect(unhandled).toEqual([]);
+
+      // The rejection is still observable when the consumer eventually
+      // awaits `call.output` — the no-op catch only suppresses the
+      // unhandled-rejection signal, it does not swallow the error.
+      await expect(pendingCall.value.output).rejects.toThrow();
+
+      transformer.finalize?.();
+    } finally {
+      process.off("unhandledRejection", onUnhandled);
+    }
+  });
 });
