@@ -565,17 +565,19 @@ export function convertBaseMessagesToContent(
         throw new Error("System message should be the first one");
       }
       const role = convertAuthorToRole(author);
-
-      const prevContent = acc.content[acc.content.length];
+      let actualRole: string = role;
       if (
-        !acc.mergeWithPreviousContent &&
-        prevContent &&
-        prevContent.role === role
+        actualRole === "function" ||
+        (role === "system" && !convertSystemMessageToHumanContent)
       ) {
-        throw new Error(
-          "Google Generative AI requires alternate messages between authors"
-        );
+        // GenerativeAI API will throw an error if the role is not "user" or "model."
+        actualRole = "user";
       }
+
+      const prevContent = acc.content[acc.content.length - 1];
+      const shouldMerge =
+        acc.mergeWithPreviousContent ||
+        (prevContent && prevContent.role === actualRole);
 
       const parts = convertMessageContentToParts(
         message,
@@ -584,30 +586,23 @@ export function convertBaseMessagesToContent(
         model
       );
 
-      if (acc.mergeWithPreviousContent) {
-        const prevContent = acc.content[acc.content.length - 1];
+      if (shouldMerge) {
         if (!prevContent) {
           throw new Error(
-            "There was a problem parsing your system message. Please try a prompt without one."
+            "There was a problem parsing your message. Please try a prompt without one."
           );
         }
         prevContent.parts.push(...parts);
 
         return {
-          mergeWithPreviousContent: false,
+          mergeWithPreviousContent:
+            author === "system" && !convertSystemMessageToHumanContent,
           content: acc.content,
         };
       }
-      let actualRole = role;
-      if (
-        actualRole === "function" ||
-        (actualRole === "system" && !convertSystemMessageToHumanContent)
-      ) {
-        // GenerativeAI API will throw an error if the role is not "user" or "model."
-        actualRole = "user";
-      }
+
       const content: Content = {
-        role: actualRole,
+        role: actualRole as any,
         parts,
       };
       return {
