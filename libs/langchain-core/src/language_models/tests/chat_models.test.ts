@@ -39,7 +39,9 @@ test("ChatModel streamEvents preserves chat and runnable overloads", () => {
   const model = new FakeChatModel({});
   const version: "v1" | "v2" = Math.random() > 0.5 ? "v1" : "v2";
 
-  expectTypeOf(model.streamEvents("Hello there!")).toEqualTypeOf<ChatModelStream>();
+  expectTypeOf(
+    model.streamEvents("Hello there!")
+  ).toEqualTypeOf<ChatModelStream>();
   expectTypeOf(
     model.streamEvents("Hello there!", {})
   ).toEqualTypeOf<ChatModelStream>();
@@ -55,9 +57,9 @@ test("ChatModel streamEvents preserves chat and runnable overloads", () => {
       encoding: "text/event-stream",
     })
   ).toMatchTypeOf<IterableReadableStream<Uint8Array>>();
-  expectTypeOf(
-    model.streamEvents("Hello there!", { version })
-  ).toMatchTypeOf<IterableReadableStream<StreamEvent>>();
+  expectTypeOf(model.streamEvents("Hello there!", { version })).toMatchTypeOf<
+    IterableReadableStream<StreamEvent>
+  >();
   expectTypeOf(
     model.streamEvents("Hello there!", {
       version,
