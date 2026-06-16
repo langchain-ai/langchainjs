@@ -278,3 +278,36 @@ export function checkValidProps(
     );
   }
 }
+
+
+/**
+ * Validates that all required properties are present and not undefined or null.
+ *
+ * @param params - The parameters object to validate
+ * @param requiredKeys - Array of required property names
+ * @throws {WatsonxValidationError} If any required properties are missing or null/undefined
+ *
+ * @example
+ * ```typescript
+ * checkRequiredProps(
+ *   { model: "granite", serviceUrl: "https://api.example.com" },
+ *   ["model", "serviceUrl", "version"]
+ * );
+ * // Throws: Missing required properties: version.
+ * ```
+ */
+export function checkRequiredProps(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  params: Record<string, any>,
+  requiredKeys: string[]
+): void {
+  const missing = requiredKeys.filter(
+    (key) => !(key in params) || params[key] === undefined || params[key] === null
+  );
+
+  if (missing.length > 0) {
+    throw new WatsonxValidationError(
+      `Missing required properties: ${missing.join(", ")}.`
+    );
+  }
+}
