@@ -1,6 +1,6 @@
 import { expect, describe, test } from "vitest";
 import { Document } from "@langchain/core/documents";
-import { WatsonxRerank } from "../ibm.js";
+import { WatsonxRerank } from "../index.js";
 
 const query = "What is the capital of the United States?";
 const docs = [

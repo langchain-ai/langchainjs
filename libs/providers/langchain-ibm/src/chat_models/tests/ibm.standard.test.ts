@@ -1,18 +1,17 @@
-import { expect, describe } from "vitest";
 import { AIMessageChunk } from "@langchain/core/messages";
 import { LangSmithParams } from "@langchain/core/language_models/chat_models";
 import { ChatModelUnitTests } from "@langchain/standard-tests/vitest";
 import {
   ChatWatsonx,
-  ChatWatsonxConstructorInput,
+  ChatWatsonxInput,
   WatsonxCallOptionsChat,
-} from "../ibm.js";
+} from "../index.js";
 
 class ChatWatsonxStandardTests extends ChatModelUnitTests<
   WatsonxCallOptionsChat,
   AIMessageChunk,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ChatWatsonxConstructorInput & Record<string, any>
+  ChatWatsonxInput & Record<string, any>
 > {
   constructor() {
     super({
@@ -32,7 +31,7 @@ class ChatWatsonxStandardTests extends ChatModelUnitTests<
 
   expectedLsParams(): Partial<LangSmithParams> {
     console.warn(
-      "ChatWatsonx does not support stop sequences. Overwrite params.",
+      "ChatWatsonx does not support stop sequences. Overwrite params."
     );
     return {
       ls_provider: "watsonx",
@@ -48,7 +47,7 @@ class ChatWatsonxStandardTests extends ChatModelUnitTests<
       "testChatModelInitApiKey",
       "ChatWatsonx",
       "Watsonx does not support init with apiKey parameter" +
-        "Watsonx only supports watsonxApiKey.",
+        "Watsonx only supports watsonxApiKey."
     );
   }
 }

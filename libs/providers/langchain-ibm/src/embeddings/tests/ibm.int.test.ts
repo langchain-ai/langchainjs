@@ -1,5 +1,5 @@
 import { expect, describe, test } from "vitest";
-import { WatsonxEmbeddings } from "../ibm.js";
+import { WatsonxEmbeddings } from "../index.js";
 
 const projectId = process.env.WATSONX_AI_PROJECT_ID;
 const version = "2024-05-31";

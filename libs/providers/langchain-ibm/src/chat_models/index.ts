@@ -85,7 +85,7 @@ import {
   WatsonxValidationError,
 } from "../types.js";
 import { _convertToolCallIdToMistralCompatible } from "../utils/tool-call-id.js";
-import { PropertyValidator, expectOneOf } from "../utils/validation.js";
+import { PropertyValidator, checkRequiredProps, expectOneOf } from "../utils/validation.js";
 import { initWatsonxOrGatewayInstance } from "../utils/instance.js";
 import { WatsonxToolsOutputParser } from "../utils/parsers.js";
 
@@ -217,6 +217,13 @@ type ChatWatsonxToolType =
   | BindToolsInput
   | TextChatParameterTools
   | ChatsRequestTool;
+
+/** Error object returned in streaming responses (not in SDK type definitions). */
+type WatsonxStreamApiError = {
+  code: string;
+  message: string;
+  more_info?: string;
+};
 
 function _convertToolToWatsonxTool(
   tools: ChatWatsonxToolType[]
@@ -784,6 +791,14 @@ export class ChatWatsonx<
       this.spaceId = fields?.spaceId;
     }
 
+    if (this.modelGateway) {
+      checkRequiredProps(fields, ["model", "serviceUrl", "version"]);
+    } else if (this.idOrName) {
+      checkRequiredProps(fields, ["serviceUrl", "version"]);
+    } else {
+      checkRequiredProps(fields, ["model", "serviceUrl", "version"]);
+    }
+
     this.checkValidProperties(fields);
 
     this.watsonxCallbacks = fields?.watsonxCallbacks;
@@ -1147,6 +1162,22 @@ export class ChatWatsonx<
     for await (const chunk of stream) {
       if (chunk?.data?.usage) usage = chunk.data.usage;
       const { data } = chunk;
+      // Check for errors in the response (not in type definitions but can be returned by API)
+      if (
+        "errors" in data &&
+        Array.isArray(data.errors) &&
+        data.errors.length > 0
+      ) {
+        const errorDetails = (data.errors as WatsonxStreamApiError[])
+          .map((err) => `[${err.code}] ${err.message}`)
+          .join("; ");
+        const statusCode = "status_code" in data ? data.status_code : "unknown";
+        const trace =
+          "trace" in data && data.trace ? ` (trace: ${data.trace})` : "";
+        throw new Error(
+          `IBM WatsonX API error (status ${statusCode}): ${errorDetails}${trace}`
+        );
+      }
       const choice = data.choices[0] as TextChatResultChoice &
         Record<"delta", TextChatResultMessage>;
 

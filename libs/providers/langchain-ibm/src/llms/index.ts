@@ -21,7 +21,7 @@ import {
   Gateway,
   TextCompletionStream,
 } from "@ibm-cloud/watsonx-ai/gateway";
-import { PropertyValidator, expectOneOf } from "../utils/validation.js";
+import { PropertyValidator, checkRequiredProps, expectOneOf } from "../utils/validation.js";
 import { initWatsonxOrGatewayInstance } from "../utils/instance.js";
 import {
   GenerationInfo,
@@ -330,6 +330,14 @@ export class WatsonxLLM<
     } else {
       this.projectId = fields?.projectId;
       this.spaceId = fields?.spaceId;
+    }
+
+    if (this.modelGateway) {
+      checkRequiredProps(fields, ["model", "serviceUrl", "version"]);
+    } else if (this.idOrName) {
+      checkRequiredProps(fields, ["serviceUrl", "version"]);
+    } else {
+      checkRequiredProps(fields, ["model", "serviceUrl", "version"]);
     }
 
     this.checkValidProperties(fields);

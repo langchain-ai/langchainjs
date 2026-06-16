@@ -2,7 +2,7 @@
   "$schema": "https://hntrl.github.io/sparktype/schema.json",
   "specs": {
     "gemini": {
-      "url": "https://generativelanguage.googleapis.com/$discovery/OPENAPI3_0?version=v1beta",
+      "path": "src/openapi/gemini-openapi.json",
     },
   },
   "outputs": [
@@ -20,7 +20,6 @@
             "gemini:HarmCategory",
             "gemini:ThinkingConfig",
             "gemini:GenerativeLanguageModality",
-            "gemini:MediaResolution",
             "gemini:SpeechConfig",
             "gemini:VoiceConfig",
             "gemini:MultiSpeakerVoiceConfig",

@@ -3,7 +3,7 @@ import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { LLMResult } from "@langchain/core/outputs";
 import { StringPromptValue } from "@langchain/core/prompt_values";
 import { TokenUsage } from "../../types.js";
-import { WatsonxLLM, WatsonxInputLLM } from "../ibm.js";
+import { WatsonxLLM, WatsonxInputLLM } from "../index.js";
 
 const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
 const model = "ibm/granite-4-h-small";

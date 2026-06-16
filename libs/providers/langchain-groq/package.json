@@ -1,6 +1,6 @@
 {
   "name": "@langchain/groq",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Groq integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -27,7 +27,7 @@
     "typegen:profiles": "pnpm --filter @langchain/model-profiles make --config profiles.toml"
   },
   "dependencies": {
-    "groq-sdk": "^1.1.2"
+    "groq-sdk": "^1.2.1"
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0"
@@ -38,12 +38,11 @@
     "@langchain/standard-tests": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
-    "@types/uuid": "^9",
-    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/coverage-v8": "^4.1.8",
     "dotenv": "^17.4.0",
     "dpdm": "^3.14.0",
-    "typescript": "~5.8.3",
-    "vitest": "^4.1.2",
+    "typescript": "~6.0.3",
+    "vitest": "^4.1.8",
     "zod": "^4.0.14"
   },
   "publishConfig": {

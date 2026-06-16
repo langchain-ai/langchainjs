@@ -9,6 +9,7 @@ import { ChatVertexTranslator } from "./google_vertexai.js";
 import { ChatGroqTranslator } from "./groq.js";
 import { ChatOllamaTranslator } from "./ollama.js";
 import { ChatOpenAITranslator } from "./openai.js";
+import { ChatOpenRouterTranslator } from "./openrouter.js";
 import { ChatXAITranslator } from "./xai.js";
 import { ChatGoogleTranslator } from "./google.js";
 
@@ -33,6 +34,7 @@ globalThis.lc_block_translators_registry ??= new Map([
   ["groq", ChatGroqTranslator],
   ["ollama", ChatOllamaTranslator],
   ["openai", ChatOpenAITranslator],
+  ["openrouter", ChatOpenRouterTranslator],
   ["xai", ChatXAITranslator],
 ]);
 

@@ -9,7 +9,7 @@ import {
   WatsonxEmbeddingsBasicOptions,
   WatsonxUnsupportedOperationError,
 } from "../types.js";
-import { PropertyValidator, expectOneOf } from "../utils/validation.js";
+import { PropertyValidator, checkRequiredProps, expectOneOf } from "../utils/validation.js";
 import { initWatsonxOrGatewayInstance } from "../utils/instance.js";
 
 export interface WatsonxEmbeddingsParams
@@ -201,6 +201,8 @@ export class WatsonxEmbeddings
       this.projectId = fields?.projectId;
       this.spaceId = fields?.spaceId;
     }
+
+    checkRequiredProps(fields, ["model", "serviceUrl", "version"]);
 
     this.checkValidProperties(fields);
     if ("modelGateway" in fields)

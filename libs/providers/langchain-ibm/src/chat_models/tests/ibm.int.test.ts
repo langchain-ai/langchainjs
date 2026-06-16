@@ -17,7 +17,7 @@ import {
   BaseChatModelCallOptions,
 } from "@langchain/core/language_models/chat_models";
 import { concat } from "@langchain/core/utils/stream";
-import { ChatWatsonx } from "../ibm.js";
+import { ChatWatsonx } from "../index.js";
 
 const models = ["meta-llama/llama-3-3-70b-instruct", "ibm/granite-4-h-small"];
 const modelAlias = models.map((model) => `langchain-nodejs/${model}`);
@@ -72,7 +72,7 @@ describe.each(parameters)(
         });
         const messages = [
           new SystemMessage(
-            "Translate the following from English into Italian",
+            "Translate the following from English into Italian"
           ),
           new HumanMessage("hi!"),
         ];
@@ -89,7 +89,7 @@ describe.each(parameters)(
         const parser = new StringOutputParser();
         const messages = [
           new SystemMessage(
-            "Translate the following from English into Italian",
+            "Translate the following from English into Italian"
           ),
           new HumanMessage("hi!"),
         ];
@@ -159,7 +159,7 @@ describe.each(parameters)(
         await expect(() =>
           service.invoke("Print hello world", {
             timeout: 10,
-          }),
+          })
         ).rejects.toThrow();
       }, 5000);
       test("Controller options", async () => {
@@ -261,7 +261,7 @@ describe.each(parameters)(
         }
         expect(tokenUsed).toBe(tokenUsage.output_tokens);
         expect(res.generations.map((g) => g.map((gg) => gg.text))).toEqual(
-          generationsStreamed,
+          generationsStreamed
         );
       });
       test("Invoke with system message", async () => {
@@ -272,7 +272,7 @@ describe.each(parameters)(
         });
         const messages = [
           new SystemMessage(
-            "Translate the following from English into Italian",
+            "Translate the following from English into Italian"
           ),
           new HumanMessage("hi!"),
         ];
@@ -288,7 +288,7 @@ describe.each(parameters)(
         const parser = new StringOutputParser();
         const messages = [
           new SystemMessage(
-            "Translate the following from English into Italian",
+            "Translate the following from English into Italian"
           ),
           new HumanMessage("hi!"),
         ];
@@ -357,7 +357,7 @@ describe.each(parameters)(
         await expect(() =>
           service.invoke("Print hello world", {
             timeout: 10,
-          }),
+          })
         ).rejects.toThrow();
       }, 5000);
       test("Controller options", async () => {
@@ -407,7 +407,7 @@ describe.each(parameters)(
         await expect(() =>
           service.stream("Print hello world", {
             timeout: 10,
-          }),
+          })
         ).rejects.toThrow();
       }, 5000);
       test("Controller options", async () => {
@@ -479,7 +479,7 @@ describe.each(parameters)(
         expect(res.usage_metadata.input_tokens).toBeGreaterThan(1);
         expect(res.usage_metadata.output_tokens).toBe(outputCount);
         expect(res.usage_metadata.total_tokens).toBe(
-          res.usage_metadata.input_tokens + res.usage_metadata.output_tokens,
+          res.usage_metadata.input_tokens + res.usage_metadata.output_tokens
         );
       });
       test("with n>1", async () => {
@@ -543,11 +543,11 @@ describe.each(parameters)(
             name: "calculator",
             description: "Can perform mathematical operations.",
             schema: calculatorSchema,
-          },
+          }
         );
         const llmWithTools = service.bindTools([calculatorTool]);
         const res = await llmWithTools.invoke(
-          "You are bad at calculations and need to use calculator at all times. What is 3 * 12",
+          "You are bad at calculations and need to use calculator at all times. What is 3 * 12"
         );
 
         expect(res).toBeInstanceOf(AIMessage);
@@ -598,11 +598,11 @@ describe.each(parameters)(
             name: "calculator",
             description: "Can perform mathematical operations.",
             schema: calculatorSchema,
-          },
+          }
         );
         const llmWithTools = service.bindTools([calculatorTool]);
         const res = await llmWithTools.invoke(
-          "You are really bad at calculations and should not calculate by yourself. Please perform math operations with calculator tool. What is 3 * 12? Also, what is 11 + 49?",
+          "You are really bad at calculations and should not calculate by yourself. Please perform math operations with calculator tool. What is 3 * 12? Also, what is 11 + 49?"
         );
 
         expect(res).toBeInstanceOf(AIMessage);
@@ -646,7 +646,7 @@ describe.each(parameters)(
           },
         ]);
         const res = await modelWithTools.invoke(
-          "You are bad at calculations and need to use calculator at all times. What is 32 * 122",
+          "You are bad at calculations and need to use calculator at all times. What is 32 * 122"
         );
 
         expect(res).toBeInstanceOf(AIMessage);
@@ -673,7 +673,7 @@ describe.each(parameters)(
               a: z.number(),
               b: z.number(),
             }),
-          },
+          }
         );
 
         const multiplyTool = tool(
@@ -687,13 +687,13 @@ describe.each(parameters)(
               a: z.number(),
               b: z.number(),
             }),
-          },
+          }
         );
         const tools = [addTool, multiplyTool];
 
         const modelWithTools = service.bindTools(tools);
         const res = await modelWithTools.invoke(
-          "You are bad at calculations and need to use calculator at all times. What is 3 * 12? Also, what is 11 + 49?",
+          "You are bad at calculations and need to use calculator at all times. What is 3 * 12? Also, what is 11 + 49?"
         );
 
         expect(res).toBeInstanceOf(AIMessage);
@@ -721,7 +721,7 @@ describe.each(parameters)(
               a: z.number(),
               b: z.number(),
             }),
-          },
+          }
         );
 
         const multiplyTool = tool(
@@ -735,13 +735,13 @@ describe.each(parameters)(
               a: z.number(),
               b: z.number(),
             }),
-          },
+          }
         );
         const tools = [addTool, multiplyTool];
         const modelWithTools = service.bindTools(tools);
         const messages = [
           new HumanMessage(
-            "You are bad at calculations and need to use calculator at all times. What is 3 * 12?",
+            "You are bad at calculations and need to use calculator at all times. What is 3 * 12?"
           ),
         ];
         const res = await modelWithTools.stream(messages);
@@ -754,7 +754,7 @@ describe.each(parameters)(
         expect(toolMessage).toBeInstanceOf(AIMessageChunk);
         expect(toolMessage?.tool_calls).toBeDefined();
         toolMessage?.tool_calls?.forEach((item) =>
-          expect(item.name.length).toBeGreaterThan(0),
+          expect(item.name.length).toBeGreaterThan(0)
         );
         expect(toolMessage?.tool_calls?.length).toBeGreaterThan(0);
       });
@@ -764,7 +764,7 @@ describe.each(parameters)(
           ...toolParams,
         });
         const testModel = (
-          model: BaseChatModel<BaseChatModelCallOptions, AIMessageChunk>,
+          model: BaseChatModel<BaseChatModelCallOptions, AIMessageChunk>
         ) => {
           // eslint-disable-next-line no-instanceof/no-instanceof
           if (model instanceof BaseChatModel) return true;
@@ -879,7 +879,7 @@ describe.each(parameters)(
               required: ["setup", "punchline"],
             },
           },
-          { includeRaw: true },
+          { includeRaw: true }
         );
 
         const res = await structuredLlm.invoke("Tell me a joke about cats");
@@ -903,7 +903,7 @@ describe.each(parameters)(
           {
             name: "calculator",
             method: "jsonMode",
-          },
+          }
         );
         const prompt = ChatPromptTemplate.fromMessages([
           {
@@ -917,7 +917,7 @@ describe.each(parameters)(
           { role: "human", content: "What is 21 * 12?" },
         ]);
         const modelWithStructuredOutoputJson = prompt.pipe(
-          modelWithStructuredOutput,
+          modelWithStructuredOutput
         );
         const result = await modelWithStructuredOutoputJson.invoke("");
         expect(typeof result.operation).toBe("string");
@@ -925,7 +925,7 @@ describe.each(parameters)(
         expect(typeof result.number2).toBe("number");
       });
     });
-  },
+  }
 );
 
 describe.each(models)("Test watsonx callbacks for %s", (model) => {

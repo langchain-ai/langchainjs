@@ -8,6 +8,11 @@ import { createMiddleware } from "../middleware.js";
 import { initChatModel } from "../../chat_models/universal.js";
 import type { Runtime } from "../runtime.js";
 import type { ModelRequest } from "../nodes/types.js";
+import {
+  mergeConfigs,
+  pickRunnableConfigKeys,
+  type RunnableConfig,
+} from "@langchain/core/runnables";
 
 const DEFAULT_SYSTEM_PROMPT =
   "Your goal is to select the most relevant tools for answering the user's query.";
@@ -139,10 +144,20 @@ export function llmToolSelectorMiddleware(options: LLMToolSelectorConfig) {
           toolSelectionSchema
         );
 
-      const response = await structuredModel?.invoke([
-        { role: "system", content: selectionRequest.systemMessage },
-        selectionRequest.lastUserMessage,
-      ]);
+      const baseConfig: RunnableConfig =
+        pickRunnableConfigKeys(request.runtime) ?? {};
+      const config = mergeConfigs(baseConfig, {
+        metadata: { lc_source: "llmToolSelector" },
+        callbacks: [],
+      });
+
+      const response = await structuredModel?.invoke(
+        [
+          { role: "system", content: selectionRequest.systemMessage },
+          selectionRequest.lastUserMessage,
+        ],
+        config
+      );
 
       // Response should be an object with a tools array
       if (!response || typeof response !== "object" || !("tools" in response)) {

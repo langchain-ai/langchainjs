@@ -1,5 +1,57 @@
 # langchain
 
+## 1.4.5
+
+### Patch Changes
+
+- [#11026](https://github.com/langchain-ai/langchainjs/pull/11026) [`cbf274c`](https://github.com/langchain-ai/langchainjs/commit/cbf274c21d25f3c131aaceaa37c35a390d3ea9c1) Thanks [@aolsenjazz](https://github.com/aolsenjazz)! - feat(langchain): add `providerToolSearchMiddleware`
+
+  Adds `providerToolSearchMiddleware` - provider-side tool search for agents. `providerToolSearchMiddleware` enables API consumers to opt tools into tool deferral + discovery by providing tool instances/names to the middleware's `searchableTools` arg. `searchableTools` are marked as `defer_loading` in subsequent model requests, consumed by OpenAI and Anthopic to power their tool search systems.
+
+## 1.4.4
+
+### Patch Changes
+
+- [#10945](https://github.com/langchain-ai/langchainjs/pull/10945) [`bb30838`](https://github.com/langchain-ai/langchainjs/commit/bb30838d884000d168dbbb26ddf7cfb9fa63b437) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): propagate ReactAgent withConfig defaults to inner graph
+
+  Apply static defaults from `#defaultConfig` onto the compiled pregel so
+  `recursionLimit`, metadata, and other LangGraph config survives LangGraph API
+  loading, which unwraps ReactAgent to `.graph` before execution.
+
+- [#10939](https://github.com/langchain-ai/langchainjs/pull/10939) [`58f4c1f`](https://github.com/langchain-ai/langchainjs/commit/58f4c1fee51424c538402a695b91e9720c718320) Thanks [@oritwoen](https://github.com/oritwoen)! - fix(langchain): support agent invoke messages when strictNullChecks is disabled
+
+## 1.4.3
+
+### Patch Changes
+
+- [#10936](https://github.com/langchain-ai/langchainjs/pull/10936) [`1a4ac84`](https://github.com/langchain-ai/langchainjs/commit/1a4ac8451748cfc0d014ff1bac8c641dad4d467b) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(langchain): register stream transformers on middleware
+
+  `createMiddleware` accepts `streamTransformers` factories that are merged with
+  `createAgent({ streamTransformers })` at compile time. Types flow through
+  `CombineStreamTransformers` so `run.extensions` is inferred from both sources.
+
+## 1.4.2
+
+### Patch Changes
+
+- [#10900](https://github.com/langchain-ai/langchainjs/pull/10900) [`6bbddca`](https://github.com/langchain-ai/langchainjs/commit/6bbddca1f8f7f280583fd839bb40c00bf19a0d51) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): unwrap tool message outputs in agent streams
+
+- [#10706](https://github.com/langchain-ai/langchainjs/pull/10706) [`4ecb660`](https://github.com/langchain-ai/langchainjs/commit/4ecb6606feae3156a07de67e39e2027f857c476e) Thanks [@JadenKim-dev](https://github.com/JadenKim-dev)! - fix(langchain): set name on todoListMiddleware ToolMessages
+
+## 1.4.1
+
+### Patch Changes
+
+- [#10879](https://github.com/langchain-ai/langchainjs/pull/10879) [`eb480cb`](https://github.com/langchain-ai/langchainjs/commit/eb480cb6df8e0fa792826155bfa00a6db4536444) Thanks [@vignesh-gep](https://github.com/vignesh-gep)! - fix(langchain/createAgent): throw on terminal `providerStrategy` parse failure instead of silently resolving with `structuredResponse: undefined`
+
+  When `createAgent` was configured with `responseFormat` resolving to a `providerStrategy` (either passed explicitly or auto-promoted from a bare Zod / JSON schema for models whose profile reports `structuredOutput: true`), and the model produced a terminal response (no `tool_calls`) whose text could not be JSON-parsed or did not satisfy the schema, the agent silently exited with no `structuredResponse`, surfacing later as `TypeError: Cannot read properties of undefined`. The agent now throws a `StructuredOutputParsingError` in that case while still allowing the agent loop to continue when tool calls are present. Closes [#10878](https://github.com/langchain-ai/langchainjs/issues/10878).
+
+- [#10872](https://github.com/langchain-ai/langchainjs/pull/10872) [`a640079`](https://github.com/langchain-ai/langchainjs/commit/a64007997a4940f51bba3c1c83dae89d1ccfb692) Thanks [@hntrl](https://github.com/hntrl)! - chore(deps): remove redundant @types/uuid declarations
+
+  Remove `@types/uuid` from package manifests that rely on `@langchain/core/utils/uuid` or do not require uuid type stubs directly, and refresh the lockfile entries accordingly.
+
+- [#10160](https://github.com/langchain-ai/langchainjs/pull/10160) [`bba900c`](https://github.com/langchain-ai/langchainjs/commit/bba900c7c8781c7efec856d5d3e539a93f14e797) Thanks [@JadenKim-dev](https://github.com/JadenKim-dev)! - fix(langchain): prevent llmToolSelectorMiddleware from leaking into message stream
+
 ## 1.4.0
 
 ### Minor Changes

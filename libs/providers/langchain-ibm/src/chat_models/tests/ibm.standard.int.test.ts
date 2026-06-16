@@ -1,17 +1,16 @@
-import { expect, test } from "vitest";
 import { ChatModelIntegrationTests } from "@langchain/standard-tests/vitest";
 import { AIMessageChunk } from "@langchain/core/messages";
 import {
   ChatWatsonx,
   ChatWatsonxCallOptions,
-  ChatWatsonxConstructorInput,
-} from "../ibm.js";
+  ChatWatsonxInput,
+} from "../index.js";
 
 class ChatWatsonxStandardIntegrationTests extends ChatModelIntegrationTests<
   ChatWatsonxCallOptions,
   AIMessageChunk,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ChatWatsonxConstructorInput & Record<string, any>
+  ChatWatsonxInput & Record<string, any>
 > {
   constructor() {
     if (!process.env.WATSONX_AI_APIKEY) {
@@ -22,7 +21,7 @@ class ChatWatsonxStandardIntegrationTests extends ChatModelIntegrationTests<
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
       constructorArgs: {
-        model: "meta-llama/llama-3-3-70b-instruct",
+        model: "ibm/granite-4-h-small",
         version: "2024-05-31",
         serviceUrl: process.env.WATSONX_AI_SERVICE_URL ?? "testString",
         projectId: process.env.WATSONX_AI_PROJECT_ID ?? "testString",
@@ -35,7 +34,7 @@ class ChatWatsonxStandardIntegrationTests extends ChatModelIntegrationTests<
     this.skipTestMessage(
       "testWithStructuredOutput",
       "ChatWatsonx",
-      "Assertion ```expect(handler.extraParams)``` is not valid in ChatWatsonx",
+      "Assertion ```expect(handler.extraParams)``` is not valid in ChatWatsonx"
     );
   }
 
@@ -43,14 +42,14 @@ class ChatWatsonxStandardIntegrationTests extends ChatModelIntegrationTests<
     this.skipTestMessage(
       "testWithStructuredOutputIncludeRaw",
       "ChatWatsonx",
-      "Assertion ```expect(handler.extraParams)``` is not valid in ChatWatsonx",
+      "Assertion ```expect(handler.extraParams)``` is not valid in ChatWatsonx"
     );
   }
   async testBindToolsWithRunnableToolLike() {
     this.skipTestMessage(
       "testBindToolsWithRunnableToolLike",
       "ChatWatsonx",
-      "",
+      ""
     );
   }
 }
