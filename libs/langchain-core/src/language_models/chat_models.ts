@@ -392,6 +392,29 @@ export abstract class BaseChatModel<
   ): IterableReadableStream<Uint8Array>;
 
   /**
+   * @deprecated Use {@link BaseChatModel.streamEvents} without a `version`
+   * option for content-block streaming instead.
+   */
+  streamEvents(
+    input: BaseLanguageModelInput,
+    options: Partial<CallOptions> & { version: "v1" | "v2" },
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<StreamEvent>;
+
+  /**
+   * @deprecated Use {@link BaseChatModel.streamEvents} without a `version`
+   * option for content-block streaming instead.
+   */
+  streamEvents(
+    input: BaseLanguageModelInput,
+    options: Partial<CallOptions> & {
+      version: "v1" | "v2";
+      encoding: "text/event-stream";
+    },
+    streamOptions?: Omit<EventStreamCallbackHandlerInput, "autoClose">
+  ): IterableReadableStream<Uint8Array>;
+
+  /**
    * Create a {@link ChatModelStream} for the given input.
    *
    * Returns a stream object that is both `AsyncIterable<ChatModelStreamEvent>`
