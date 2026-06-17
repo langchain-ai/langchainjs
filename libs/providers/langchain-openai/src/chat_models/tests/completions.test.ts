@@ -115,6 +115,78 @@ describe("ChatOpenAICompletions streaming usage_metadata callback", () => {
   });
 });
 
+describe("ChatOpenAICompletions streaming scalar response_metadata", () => {
+  it("keeps scalar metadata last-wins when a provider emits multiple finish_reason chunks", async () => {
+    const model = new ChatOpenAICompletions({
+      model: "anthropic/claude-haiku-4.5",
+      apiKey: "test-key",
+      streaming: true,
+    });
+
+    // Some OpenAI-compatible providers (e.g. OpenRouter) emit more than one
+    // chunk carrying a non-null finish_reason. Each one re-attaches the scalar
+    // identity fields, which must not be string-concatenated when chunks merge.
+    const fakeStream = (async function* () {
+      yield {
+        choices: [
+          {
+            index: 0,
+            delta: { role: "assistant" as const, content: "Hello" },
+            finish_reason: null,
+            logprobs: null,
+          },
+        ],
+        usage: null,
+        system_fingerprint: null,
+        model: "anthropic/claude-haiku-4.5",
+        service_tier: null,
+      };
+      yield {
+        choices: [
+          {
+            index: 0,
+            delta: { content: "" },
+            finish_reason: "stop",
+            logprobs: null,
+          },
+        ],
+        usage: null,
+        system_fingerprint: "fp_abc123",
+        model: "anthropic/claude-haiku-4.5",
+        service_tier: "default",
+      };
+      yield {
+        choices: [
+          {
+            index: 0,
+            delta: { content: "" },
+            finish_reason: "stop",
+            logprobs: null,
+          },
+        ],
+        usage: null,
+        system_fingerprint: "fp_abc123",
+        model: "anthropic/claude-haiku-4.5",
+        service_tier: "default",
+      };
+    })();
+
+    model.completionWithRetry = vi
+      .fn()
+      .mockResolvedValue(fakeStream) as typeof model.completionWithRetry;
+
+    const result = await model._generate([new HumanMessage("test")], {});
+    const message = result.generations[0].message as AIMessageChunk;
+
+    expect(message.response_metadata.finish_reason).toBe("stop");
+    expect(message.response_metadata.model_name).toBe(
+      "anthropic/claude-haiku-4.5"
+    );
+    expect(message.response_metadata.system_fingerprint).toBe("fp_abc123");
+    expect(message.response_metadata.service_tier).toBe("default");
+  });
+});
+
 describe("ChatOpenAICompletions reasoning_content compatibility", () => {
   it("should preserve reasoning_content on streamed assistant chunks", async () => {
     const model = new ChatOpenAICompletions({
