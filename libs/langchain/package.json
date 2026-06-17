@@ -44,6 +44,7 @@
   "devDependencies": {
     "@hono/node-server": "^1.19.14",
     "@langchain/anthropic": "workspace:*",
+    "@langchain/aws": "workspace:*",
     "@langchain/core": "workspace:^",
     "@langchain/fireworks": "workspace:*",
     "@langchain/langgraph-api": "^1.2.4",
