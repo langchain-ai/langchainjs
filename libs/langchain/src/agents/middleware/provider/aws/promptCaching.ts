@@ -174,9 +174,6 @@ export function bedrockPromptCachingMiddleware(
     name: "BedrockPromptCachingMiddleware",
     contextSchema,
     wrapModelCall: (request, handler) => {
-      /**
-       * Prefer runtime context values over middleware options values over defaults
-       */
       const enableCaching =
         request.runtime.context.enableCaching ??
         middlewareOptions?.enableCaching ??
