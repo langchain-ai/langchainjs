@@ -803,7 +803,7 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
  * const items = convertStandardContentMessageToResponsesInput(message);
  * // Returns:
  * // [
- * //   { type: "message", role: "assistant", content: [{ type: "input_text", text: "I'll check the weather for you." }] },
+ * //   { type: "message", role: "assistant", content: [{ type: "output_text", text: "I'll check the weather for you." }] },
  * //   { type: "function_call", call_id: "call_123", name: "get_weather", arguments: '{"location":"San Francisco"}' }
  * // ]
  * ```
