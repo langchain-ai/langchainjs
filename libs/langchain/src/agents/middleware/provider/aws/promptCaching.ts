@@ -76,7 +76,9 @@ class BedrockPromptCachingMiddlewareError extends Error {
  *
  * @returns A middleware instance that can be passed to `createAgent`
  *
- * @throws {Error} If used with a non-Bedrock-Converse model and `unsupportedModelBehavior` is `"raise"`
+ * @throws {Error} When `unsupportedModelBehavior` is `"raise"` and the model is not a
+ * cache-capable Bedrock Converse model — either a non-Bedrock provider, or a Bedrock
+ * Converse model outside the Anthropic Claude / Amazon Nova families.
  *
  * @example
  * Basic usage with default settings
@@ -155,11 +157,11 @@ class BedrockPromptCachingMiddlewareError extends Error {
  * ```
  *
  * @remarks
- * - **Bedrock Converse Only**: This middleware only works with AWS Bedrock Converse models and will throw an error (when `unsupportedModelBehavior` is `"raise"`) if used with other providers
+ * - **Bedrock Converse Only**: This middleware only applies caching to AWS Bedrock Converse models. Other providers are handled per `unsupportedModelBehavior`
+ * - **Supported Families**: Bedrock prompt caching is only available on the **Anthropic Claude** and **Amazon Nova** model families. Other Bedrock Converse models (e.g. Mistral, Cohere, Meta) reject cache points at request time, so they are treated as unsupported and routed through `unsupportedModelBehavior`
  * - **Automatic Application**: Caching is applied automatically when the message count reaches `minMessagesToCache`
  * - **TTL Options**: Only supports "5m" (5 minutes) and "1h" (1 hour) as TTL values; actual support varies by model
  * - **Best Use Cases**: Long system prompts, multi-turn conversations, repetitive queries, RAG applications
- * - **Model Support**: Prompt caching availability and pricing depend on the specific Bedrock model
  *
  * @see {@link createAgent} for agent creation
  * @see {@link https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html} AWS Bedrock prompt caching documentation
