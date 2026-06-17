@@ -87,7 +87,7 @@ describe("streaming errors", () => {
     };
 
     async function* streamWithError() {
-      throw originalError;
+      yield await Promise.reject(originalError);
     }
 
     model.completionWithRetry = vi
