@@ -853,6 +853,26 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
         status,
       },
     };
+  } else if (
+    event.type === "response.image_generation_call.in_progress" ||
+    event.type === "response.image_generation_call.generating" ||
+    event.type === "response.image_generation_call.completed"
+  ) {
+    // Surface in-progress/generating/completed status for the built-in image
+    // generation tool so streaming consumers can render live progress (e.g. a
+    // "generating image…" indicator), mirroring the built-in search tools
+    // above. The `.partial_image` lifecycle event is handled separately below.
+    const status = event.type.replace(
+      "response.image_generation_call.",
+      ""
+    ) as "in_progress" | "generating" | "completed";
+    generationInfo = {
+      tool_outputs: {
+        id: event.item_id,
+        type: "image_generation_call",
+        status,
+      },
+    };
   } else if (event.type === "response.refusal.done") {
     additional_kwargs.refusal = event.refusal;
   } else if (

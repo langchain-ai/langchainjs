@@ -567,6 +567,50 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
     });
   });
 
+  describe("built-in image generation tool lifecycle", () => {
+    it("emits in_progress status for response.image_generation_call.in_progress", () => {
+      const result = convertResponsesDeltaToChatGenerationChunk({
+        type: "response.image_generation_call.in_progress",
+        item_id: "ig_123",
+        output_index: 0,
+        sequence_number: 0,
+      } as any);
+      expect(result?.generationInfo?.tool_outputs).toEqual({
+        id: "ig_123",
+        type: "image_generation_call",
+        status: "in_progress",
+      });
+    });
+
+    it("emits generating status for response.image_generation_call.generating", () => {
+      const result = convertResponsesDeltaToChatGenerationChunk({
+        type: "response.image_generation_call.generating",
+        item_id: "ig_123",
+        output_index: 0,
+        sequence_number: 1,
+      } as any);
+      expect(result?.generationInfo?.tool_outputs).toEqual({
+        id: "ig_123",
+        type: "image_generation_call",
+        status: "generating",
+      });
+    });
+
+    it("emits completed status for response.image_generation_call.completed", () => {
+      const result = convertResponsesDeltaToChatGenerationChunk({
+        type: "response.image_generation_call.completed",
+        item_id: "ig_123",
+        output_index: 0,
+        sequence_number: 2,
+      } as any);
+      expect(result?.generationInfo?.tool_outputs).toEqual({
+        id: "ig_123",
+        type: "image_generation_call",
+        status: "completed",
+      });
+    });
+  });
+
   describe("reasoning streaming elevation", () => {
     it("should elevate reasoning to content on response.output_item.added with reasoning", () => {
       const event = {
