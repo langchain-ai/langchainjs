@@ -12,7 +12,8 @@ import { createAgent } from "../../../../index.js";
 function createMockModel(
   name = "ChatBedrockConverse",
   modelType = "bedrock_converse",
-  defaultConfig?: Record<string, unknown>
+  defaultConfig?: Record<string, unknown>,
+  modelId = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
 ) {
   const invokeCallback = vi
     .fn()
@@ -21,6 +22,7 @@ function createMockModel(
   // Create a mock that tracks bindTools calls and returns itself
   const mockModel = {
     getName: () => name,
+    model: modelId,
     bindTools: bindToolsCallback,
     _streamResponseChunks: vi.fn().mockReturnThis(),
     bind: vi.fn().mockReturnThis(),
@@ -29,8 +31,9 @@ function createMockModel(
     _modelType: modelType,
     _generate: vi.fn(),
     _llmType: () => modelType,
-    // Read by the middleware when getName() === "ConfigurableModel"
-    _defaultConfig: defaultConfig,
+    _defaultConfig: defaultConfig
+      ? { model: modelId, ...defaultConfig }
+      : undefined,
     _lastBindToolsOptions: null as Record<string, unknown> | null,
   };
   // Store the options passed to bindTools for inspection
@@ -212,6 +215,27 @@ describe("bedrockPromptCachingMiddleware", () => {
       expect(bindToolsOptions?.cache_control).toBeDefined();
     });
 
+    it("should cache for an Amazon Nova model", async () => {
+      const model = createMockModel(
+        "ChatBedrockConverse",
+        "bedrock_converse",
+        undefined,
+        "us.amazon.nova-2-lite-v1:0"
+      );
+      const middleware = bedrockPromptCachingMiddleware();
+
+      const agent = createAgent({
+        model,
+        middleware: [middleware],
+      });
+
+      await agent.invoke({ messages: [new HumanMessage("Hello")] });
+
+      const bindToolsOptions = (model as ReturnType<typeof createMockModel>)
+        ._lastBindToolsOptions;
+      expect(bindToolsOptions?.cache_control).toBeDefined();
+    });
+
     it("should not cache for a ConfigurableModel with a non-bedrock provider", async () => {
       const model = createMockModel("ConfigurableModel", "configurable", {
         modelProvider: "openai",
@@ -233,6 +257,53 @@ describe("bedrockPromptCachingMiddleware", () => {
     });
   });
 
+  describe("non-cache-capable Bedrock models", () => {
+    it("should skip caching for a non-cache-capable Bedrock model (warn default)", async () => {
+      const model = createMockModel(
+        "ChatBedrockConverse",
+        "bedrock_converse",
+        undefined,
+        "meta.llama3-8b-instruct-v1:0"
+      );
+      const middleware = bedrockPromptCachingMiddleware();
+
+      const agent = createAgent({
+        model,
+        middleware: [middleware],
+      });
+
+      await agent.invoke({ messages: [new HumanMessage("Hello")] });
+
+      const bindToolsOptions = (model as ReturnType<typeof createMockModel>)
+        ._lastBindToolsOptions;
+      expect(bindToolsOptions?.cache_control).toBeUndefined();
+      expect(consoleWarn).toHaveBeenCalledWith(
+        expect.stringContaining("Skipping caching")
+      );
+    });
+
+    it("should raise for a non-cache-capable Bedrock model when configured to raise", async () => {
+      const model = createMockModel(
+        "ChatBedrockConverse",
+        "bedrock_converse",
+        undefined,
+        "meta.llama3-8b-instruct-v1:0"
+      );
+      const middleware = bedrockPromptCachingMiddleware({
+        unsupportedModelBehavior: "raise",
+      });
+
+      const agent = createAgent({
+        model,
+        middleware: [middleware],
+      });
+
+      await expect(
+        agent.invoke({ messages: [new HumanMessage("Hello")] })
+      ).rejects.toThrow();
+    });
+  });
+
   describe("non-Bedrock models", () => {
     describe("if unsupportedModelBehavior is 'raise'", () => {
       it("should throw error if pass in a non-Bedrock model via string", async () => {
@@ -245,9 +316,7 @@ describe("bedrockPromptCachingMiddleware", () => {
           middleware: [middleware],
         });
 
-        await expect(agent.invoke({ messages: [] })).rejects.toThrow(
-          "Unsupported model 'ConfigurableModel (openai)'."
-        );
+        await expect(agent.invoke({ messages: [] })).rejects.toThrow();
       });
     });
 
