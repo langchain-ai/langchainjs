@@ -195,25 +195,45 @@ export function bedrockPromptCachingMiddleware(
         return handler(request);
       }
 
+      const modelName = request.model.getName();
       const isBedrockConverseModel =
-        request.model.getName() === "ChatBedrockConverse" ||
-        (request.model.getName() === "ConfigurableModel" &&
+        modelName === "ChatBedrockConverse" ||
+        (modelName === "ConfigurableModel" &&
           ((request.model as ConfigurableModel)._defaultConfig
             ?.modelProvider === "bedrock" ||
             (request.model as ConfigurableModel)._defaultConfig
               ?.modelProvider === "aws"));
-      if (!isBedrockConverseModel) {
-        // Get model name for better error context
-        const modelName = request.model.getName();
+
+      // Resolve the underlying Bedrock model id for cache-capability detection.
+      const modelId =
+        modelName === "ConfigurableModel"
+          ? ((request.model as ConfigurableModel)._defaultConfig?.model as
+              | string
+              | undefined)
+          : (request.model as { model?: string }).model;
+
+      // Bedrock prompt caching is only supported on the Anthropic Claude and
+      // Amazon Nova model families. Other Converse models (Mistral, Cohere,
+      // Meta, etc.) reject `cachePoint` blocks with an AccessDeniedException, so
+      // they are treated as unsupported.
+      const isCacheCapableModel =
+        isBedrockConverseModel &&
+        typeof modelId === "string" &&
+        (modelId.toLowerCase().includes("anthropic.claude") ||
+          modelId.toLowerCase().includes("amazon.nova"));
+
+      if (!isCacheCapableModel) {
         const modelInfo =
-          request.model.getName() === "ConfigurableModel"
+          modelName === "ConfigurableModel"
             ? `${modelName} (${
                 (request.model as ConfigurableModel)._defaultConfig
                   ?.modelProvider
               })`
             : modelName;
 
-        const baseMessage = `Unsupported model '${modelInfo}'. Prompt caching requires an AWS Bedrock Converse model`;
+        const baseMessage = isBedrockConverseModel
+          ? `Unsupported model '${modelInfo}'. Bedrock prompt caching is only supported on Anthropic Claude and Amazon Nova models`
+          : `Unsupported model '${modelInfo}'. Prompt caching requires an AWS Bedrock Converse model`;
 
         if (unsupportedModelBehavior === "raise") {
           throw new BedrockPromptCachingMiddlewareError(
@@ -221,7 +241,7 @@ export function bedrockPromptCachingMiddleware(
           );
         } else if (unsupportedModelBehavior === "warn") {
           console.warn(
-            `BedrockPromptCachingMiddleware: Skipping caching for ${modelName}. Consider switching to an AWS Bedrock Converse model for caching benefits.`
+            `BedrockPromptCachingMiddleware: Skipping caching for ${modelName}. Consider switching to an Anthropic Claude or Amazon Nova model for caching benefits.`
           );
         }
         return handler(request);
@@ -236,9 +256,7 @@ export function bedrockPromptCachingMiddleware(
 
       /**
        * The cache_control is applied at the final message formatting layer in
-       * ChatBedrockConverse (translated into Converse `cachePoint` blocks), which avoids
-       * issues with message content block manipulation during earlier processing stages
-       * (e.g., streaming response reassembly).
+       * ChatBedrockConverse (translated into Converse `cachePoint` blocks).
        *
        * @see https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html
        */
