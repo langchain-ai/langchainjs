@@ -114,7 +114,7 @@ export function toolEmulatorMiddleware(options: ToolEmulatorOptions = {}) {
           );
           return agentModel as BaseChatModel;
         }));
-      return emulatorModel;
+      return emulatorModel ?? (agentModel as BaseChatModel);
     }
     return agentModel as BaseChatModel;
   };
