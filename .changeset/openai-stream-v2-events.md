@@ -1,5 +1,5 @@
 ---
-"@langchain/openai": patch
+"@langchain/openai": minor
 ---
 
 feat(openai): add native streamEvents event converters
