@@ -51,9 +51,11 @@ coverage/
 !**/src/**/*.js
 !**/src/**/*.d.ts
 !**/src/**/*.d.cts
+!internal/tsconfig/vitest-matchers.d.ts
 
 examples/src/createAgent/*.png
 libs/langchain/graph-matrix.mermaid.md
+libs/langchain-core/src/**/*.d.ts
 # LangGraph API
 .langgraph_api
 
