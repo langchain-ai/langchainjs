@@ -1,12 +1,10 @@
 import { SqlDatabase } from "@langchain/classic/sql_db";
-import { DataSource } from "typeorm";
 
-const datasource = new DataSource({
-  type: "sqlite",
-  database: "../../../../Chinook.db",
-});
-const db = await SqlDatabase.fromDataSourceParams({
-  appDataSource: datasource,
+const db = await SqlDatabase.fromOptionsParams({
+  appDataSourceOptions: {
+    type: "sqlite",
+    database: "../../../../Chinook.db",
+  },
 });
 console.log(db.allTables.map((t) => t.tableName));
 /**

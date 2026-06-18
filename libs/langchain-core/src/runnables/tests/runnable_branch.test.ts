@@ -4,6 +4,7 @@ import { ChatPromptTemplate } from "../../prompts/chat.js";
 import { FakeStreamingLLM } from "../../utils/testing/index.js";
 import { RunnableSequence } from "../base.js";
 import { StringOutputParser } from "../../output_parsers/string.js";
+import { awaitAllCallbacks } from "../../callbacks/promises.js";
 
 test("RunnableBranch invoke", async () => {
   const condition = (x: number) => x > 0;
@@ -65,6 +66,8 @@ test("RunnableBranch handles error", async () => {
       ],
     });
   }).rejects.toThrow();
+  // If callbacks are backgrounded
+  await awaitAllCallbacks();
   expect(error).toBeDefined();
 });
 

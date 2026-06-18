@@ -8,15 +8,22 @@ import {
   InteropZodType,
   interopSafeParseAsync,
 } from "@langchain/core/utils/types";
-import { JsonOutputKeyToolsParserParamsInterop } from "@langchain/core/output_parsers/openai_tools";
+import {
+  JsonOutputKeyToolsParserParamsInterop,
+  JsonOutputKeyToolsParserParamsSerializable,
+} from "@langchain/core/output_parsers/openai_tools";
+import { SerializableSchema } from "@langchain/core/utils/standard_schema";
 
 interface GoogleGenerativeAIToolsOutputParserParams<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   T extends Record<string, any>,
-> extends JsonOutputKeyToolsParserParamsInterop<T> {}
+>
+  extends
+    JsonOutputKeyToolsParserParamsInterop<T>,
+    JsonOutputKeyToolsParserParamsSerializable<T> {}
 
 export class GoogleGenerativeAIToolsOutputParser<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   T extends Record<string, any> = Record<string, any>,
 > extends BaseLLMOutputParser<T> {
   static lc_name() {
@@ -35,14 +42,32 @@ export class GoogleGenerativeAIToolsOutputParser<
 
   zodSchema?: InteropZodType<T>;
 
+  serializableSchema?: SerializableSchema<T>;
+
   constructor(params: GoogleGenerativeAIToolsOutputParserParams<T>) {
     super(params);
     this.keyName = params.keyName;
     this.returnSingle = params.returnSingle ?? this.returnSingle;
     this.zodSchema = params.zodSchema;
+    this.serializableSchema = params.serializableSchema;
   }
 
   protected async _validateResult(result: unknown): Promise<T> {
+    if (this.serializableSchema !== undefined) {
+      const validated =
+        await this.serializableSchema["~standard"].validate(result);
+      if (validated.issues) {
+        throw new OutputParserException(
+          `Failed to parse. Text: "${JSON.stringify(
+            result,
+            null,
+            2
+          )}". Error: ${JSON.stringify(validated.issues)}`,
+          JSON.stringify(result, null, 2)
+        );
+      }
+      return validated.value as T;
+    }
     if (this.zodSchema === undefined) {
       return result as T;
     }

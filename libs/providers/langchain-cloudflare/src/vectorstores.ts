@@ -1,6 +1,6 @@
-import * as uuid from "uuid";
+import * as uuid from "@langchain/core/utils/uuid";
 
-import {
+import type {
   VectorizeIndex,
   VectorizeVectorMetadata,
   VectorizeVectorMetadataFilter,

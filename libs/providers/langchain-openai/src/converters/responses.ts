@@ -41,6 +41,10 @@ import { Converter } from "@langchain/core/utils/format";
 import { completionsApiContentBlockConverter } from "./completions.js";
 
 const _FUNCTION_CALL_IDS_MAP_KEY = "__openai_function_call_ids__";
+const _CUSTOM_TOOL_CALL_IDS_MAP_KEY = "__openai_custom_tool_call_ids__";
+
+/** Streaming-only marker; not part of @langchain/core ToolCallChunk. */
+type OpenAICustomToolCallChunk = ToolCallChunk & { isCustomTool?: true };
 
 type OpenAIAnnotation =
   OpenAIClient.Responses.ResponseOutputText["annotations"][number];
@@ -57,7 +61,7 @@ type OpenAIAnnotation =
  * This function maps them to LangChain's Citation format or preserves them as non-standard blocks.
  */
 function convertOpenAIAnnotationToLangChain(
-  annotation: OpenAIAnnotation
+  annotation: OpenAIAnnotation,
 ): ContentBlock.Citation | ContentBlock.NonStandard {
   if (annotation.type === "url_citation") {
     return {
@@ -108,6 +112,85 @@ function convertOpenAIAnnotationToLangChain(
     type: "non_standard",
     value: annotation as unknown as Record<string, unknown>,
   } satisfies ContentBlock.NonStandard;
+}
+
+/**
+ * Converts a LangChain Citation or BaseContentBlock back to an OpenAI annotation.
+ *
+ * This is the inverse of `convertOpenAIAnnotationToLangChain`. It handles all four
+ * annotation types (url_citation, file_citation, container_file_citation, file_path)
+ * and also passes through annotations that are already in OpenAI format.
+ */
+function convertLangChainAnnotationToOpenAI(
+  annotation:
+    | ContentBlock.Citation
+    | ContentBlock.NonStandard
+    | Record<string, unknown>,
+): OpenAIAnnotation {
+  // If it's already in OpenAI format, pass through unchanged
+  if (
+    annotation.type === "url_citation" ||
+    annotation.type === "file_citation" ||
+    annotation.type === "container_file_citation" ||
+    annotation.type === "file_path"
+  ) {
+    return annotation as unknown as OpenAIAnnotation;
+  }
+
+  // Convert from LangChain citation format back to OpenAI format
+  if (annotation.type === "citation") {
+    const citation = annotation as ContentBlock.Citation & {
+      file_id?: string;
+      container_id?: string;
+    };
+
+    if (citation.source === "url_citation") {
+      return {
+        type: "url_citation",
+        url: citation.url ?? "",
+        title: citation.title ?? "",
+        start_index: citation.startIndex ?? 0,
+        end_index: citation.endIndex ?? 0,
+      } as OpenAIAnnotation;
+    }
+
+    if (citation.source === "file_citation") {
+      return {
+        type: "file_citation",
+        file_id: citation.file_id ?? "",
+        filename: citation.title ?? "",
+        index: citation.startIndex ?? 0,
+      } as OpenAIAnnotation;
+    }
+
+    if (citation.source === "container_file_citation") {
+      return {
+        type: "container_file_citation",
+        file_id: citation.file_id ?? "",
+        filename: citation.title ?? "",
+        container_id: citation.container_id ?? "",
+        start_index: citation.startIndex ?? 0,
+        end_index: citation.endIndex ?? 0,
+      } as OpenAIAnnotation;
+    }
+
+    if (citation.source === "file_path") {
+      return {
+        type: "file_path",
+        file_id: citation.file_id ?? "",
+        index: citation.startIndex ?? 0,
+      } as OpenAIAnnotation;
+    }
+  }
+
+  // For non_standard blocks, unwrap the value
+  if (annotation.type === "non_standard") {
+    return (annotation as ContentBlock.NonStandard)
+      .value as unknown as OpenAIAnnotation;
+  }
+
+  // Unknown format, pass through as-is
+  return annotation as unknown as OpenAIAnnotation;
 }
 
 type ExcludeController<T> = T extends { controller: unknown } ? never : T;
@@ -257,10 +340,22 @@ export const convertResponsesMessageToAIMessage: Converter<
     throw error;
   }
 
-  let messageId: string | undefined;
   const content: MessageContent = [];
   const tool_calls: ToolCall[] = [];
   const invalid_tool_calls: InvalidToolCall[] = [];
+  // Preserve the raw output items so that convertMessagesToResponsesInput can
+  // return them verbatim on the fast path.  We strip `parsed_arguments` from
+  // function_call items because the OpenAI SDK injects it when using
+  // responses.parse(), but the API rejects it when sent back as input.
+  const cleanedOutput = response.output.map((item) => {
+    if (item.type === "function_call" && "parsed_arguments" in item) {
+      const cleaned = { ...item };
+      delete (cleaned as Record<string, unknown>).parsed_arguments;
+      return cleaned;
+    }
+    return item;
+  });
+
   const response_metadata: Record<string, unknown> = {
     model_provider: "openai",
     model: response.model,
@@ -269,6 +364,7 @@ export const convertResponsesMessageToAIMessage: Converter<
     incomplete_details: response.incomplete_details,
     metadata: response.metadata,
     object: response.object,
+    output: cleanedOutput,
     status: response.status,
     user: response.user,
     service_tier: response.service_tier,
@@ -283,24 +379,26 @@ export const convertResponsesMessageToAIMessage: Converter<
     tool_outputs?: unknown[];
     parsed?: unknown;
     [_FUNCTION_CALL_IDS_MAP_KEY]?: Record<string, string>;
+    [_CUSTOM_TOOL_CALL_IDS_MAP_KEY]?: Record<string, string>;
   } = {};
 
   for (const item of response.output) {
     if (item.type === "message") {
-      messageId = item.id;
       content.push(
         ...item.content.flatMap((part) => {
           if (part.type === "output_text") {
             if ("parsed" in part && part.parsed != null) {
               additional_kwargs.parsed = part.parsed;
             }
-            return {
+            const block: ContentBlock = {
               type: "text",
               text: part.text,
               annotations: part.annotations.map(
-                convertOpenAIAnnotationToLangChain
+                convertOpenAIAnnotationToLangChain,
               ),
-            } satisfies ContentBlock.Text;
+              ...(item.phase !== null ? { phase: item.phase } : {}),
+            };
+            return block;
           }
 
           if (part.type === "refusal") {
@@ -309,7 +407,7 @@ export const convertResponsesMessageToAIMessage: Converter<
           }
 
           return part;
-        })
+        }),
       );
     } else if (item.type === "function_call") {
       const fnAdapter = {
@@ -353,9 +451,14 @@ export const convertResponsesMessageToAIMessage: Converter<
       const parsed = parseCustomToolCall(item);
       if (parsed) {
         tool_calls.push(parsed);
+        additional_kwargs[_CUSTOM_TOOL_CALL_IDS_MAP_KEY] ??= {};
+        if (item.id && item.call_id) {
+          additional_kwargs[_CUSTOM_TOOL_CALL_IDS_MAP_KEY][item.call_id] =
+            item.id;
+        }
       } else {
         invalid_tool_calls.push(
-          makeInvalidToolCall(item, "Malformed custom tool call")
+          makeInvalidToolCall(item, "Malformed custom tool call"),
         );
       }
     } else if (item.type === "computer_call") {
@@ -364,7 +467,7 @@ export const convertResponsesMessageToAIMessage: Converter<
         tool_calls.push(parsed);
       } else {
         invalid_tool_calls.push(
-          makeInvalidToolCall(item, "Malformed computer call")
+          makeInvalidToolCall(item, "Malformed computer call"),
         );
       }
     } else if (item.type === "image_generation_call") {
@@ -390,7 +493,7 @@ export const convertResponsesMessageToAIMessage: Converter<
   }
 
   return new AIMessage({
-    id: messageId,
+    id: response.id,
     content,
     tool_calls,
     invalid_tool_calls,
@@ -463,7 +566,7 @@ export const convertReasoningSummaryToResponsesReasoningItem: Converter<
   ChatOpenAIReasoningSummary,
   OpenAIClient.Responses.ResponseReasoningItem
 > = (reasoning) => {
-  // combine summary parts that have the the same index and then remove the indexes
+  // combine summary parts that have the same index and then remove the indexes
   const summary = (
     reasoning.summary.length > 1
       ? reasoning.summary.reduce(
@@ -477,11 +580,11 @@ export const convertReasoningSummaryToResponsesReasoningItem: Converter<
             }
             return acc;
           },
-          [{ ...reasoning.summary[0] }]
+          [{ ...reasoning.summary[0] }],
         )
       : reasoning.summary
   ).map((s) =>
-    Object.fromEntries(Object.entries(s).filter(([k]) => k !== "index"))
+    Object.fromEntries(Object.entries(s).filter(([k]) => k !== "index")),
   ) as OpenAIClient.Responses.ResponseReasoningItem.Summary[];
 
   return {
@@ -502,7 +605,7 @@ export const convertReasoningSummaryToResponsesReasoningItem: Converter<
  * @returns A ChatGenerationChunk containing:
  *   - `text`: Concatenated text content from all text parts in the event
  *   - `message`: An AIMessageChunk with:
- *     - `id`: Message ID (set when a message output item is added)
+ *     - `id`: Response ID (set on `response.created` / `response.completed`)
  *     - `content`: Array of content blocks (text with optional annotations)
  *     - `tool_call_chunks`: Incremental tool call data (name, args, id)
  *     - `usage_metadata`: Token usage information (only in completion events)
@@ -574,7 +677,7 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
       text: "",
       annotations: [
         convertOpenAIAnnotationToLangChain(
-          event.annotation as OpenAIAnnotation
+          event.annotation as OpenAIAnnotation,
         ),
       ],
       index: event.content_index,
@@ -583,7 +686,15 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
     event.type === "response.output_item.added" &&
     event.item.type === "message"
   ) {
-    id = event.item.id;
+    const phase = "phase" in event.item ? event.item.phase : undefined;
+    if (phase) {
+      content.push({
+        type: "text",
+        text: "",
+        phase,
+        index: 0,
+      } as ContentBlock.Text);
+    }
   } else if (
     event.type === "response.output_item.added" &&
     event.item.type === "function_call"
@@ -597,6 +708,22 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
     });
 
     additional_kwargs[_FUNCTION_CALL_IDS_MAP_KEY] = {
+      [event.item.call_id]: event.item.id,
+    };
+  } else if (
+    event.type === "response.output_item.added" &&
+    event.item.type === "custom_tool_call"
+  ) {
+    tool_call_chunks.push({
+      type: "tool_call_chunk",
+      isCustomTool: true,
+      name: event.item.name,
+      args: event.item.input,
+      id: event.item.call_id,
+      index: event.output_index,
+    } satisfies OpenAICustomToolCallChunk);
+
+    additional_kwargs[_CUSTOM_TOOL_CALL_IDS_MAP_KEY] = {
       [event.item.call_id]: event.item.id,
     };
   } else if (
@@ -637,27 +764,51 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
       "web_search_call",
       "file_search_call",
       "code_interpreter_call",
+      "shell_call",
+      "local_shell_call",
       "mcp_call",
       "mcp_list_tools",
       "mcp_approval_request",
       "custom_tool_call",
+      "tool_search_call",
+      "tool_search_output",
     ].includes(event.item.type)
   ) {
     additional_kwargs.tool_outputs = [event.item];
   } else if (event.type === "response.created") {
+    id = event.response.id;
     response_metadata.id = event.response.id;
     response_metadata.model_name = event.response.model;
     response_metadata.model = event.response.model;
-  } else if (event.type === "response.completed") {
+  } else if (
+    event.type === "response.completed" ||
+    event.type === "response.incomplete"
+  ) {
+    id = event.response.id;
     const msg = convertResponsesMessageToAIMessage(event.response);
 
     usage_metadata = convertResponsesUsageToUsageMetadata(event.response.usage);
 
-    if (event.response.text?.format?.type === "json_schema") {
-      additional_kwargs.parsed ??= JSON.parse(msg.text);
+    if (event.response.text?.format?.type === "json_schema" && msg.text) {
+      try {
+        additional_kwargs.parsed ??= JSON.parse(msg.text);
+      } catch {
+        // Some models (observed with gpt-5-mini on service_tier: "auto")
+        // intermittently emit trailing characters after a valid JSON object
+        // in the Responses API path. Throw-on-parse kills the entire stream
+        // even though msg.text is otherwise usable. Leave parsed undefined
+        // and let the caller fall back to msg.text or retry. See #10894.
+      }
     }
     for (const [key, value] of Object.entries(event.response)) {
-      if (key !== "id") response_metadata[key] = value;
+      if (key === "id") continue;
+      // Use the cleaned output from the converted message so that
+      // SDK-only fields like parsed_arguments are not persisted.
+      if (key === "output") {
+        response_metadata[key] = msg.response_metadata.output;
+      } else {
+        response_metadata[key] = value;
+      }
     }
   } else if (
     event.type === "response.function_call_arguments.delta" ||
@@ -667,6 +818,9 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
       type: "tool_call_chunk",
       args: event.delta,
       index: event.output_index,
+      ...(event.type === "response.custom_tool_call_input.delta"
+        ? { isCustomTool: true }
+        : {}),
     });
   } else if (
     event.type === "response.web_search_call.completed" ||
@@ -725,6 +879,7 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
       content.push({
         type: "reasoning",
         reasoning: event.part.text,
+        index: event.summary_index,
       });
     }
   } else if (event.type === "response.reasoning_summary_text.delta") {
@@ -744,6 +899,7 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
       content.push({
         type: "reasoning",
         reasoning: event.delta,
+        index: event.summary_index,
       });
     }
   } else if (event.type === "response.image_generation_call.partial_image") {
@@ -861,14 +1017,16 @@ export const convertStandardContentMessageToResponsesInput: Converter<
       currentMessage = undefined;
     }
 
-    const pushMessageContent: (
-      content: OpenAIClient.Responses.ResponseInputMessageContentList
-    ) => void = (content) => {
+    const pushMessageContent = (
+      content: OpenAIClient.Responses.ResponseInputMessageContentList,
+      phase?: OpenAIClient.Responses.EasyInputMessage["phase"],
+    ) => {
       if (!currentMessage) {
         currentMessage = {
           type: "message",
           role: messageRole,
           content: [],
+          ...(phase ? { phase } : {}),
         };
       }
       if (typeof currentMessage.content === "string") {
@@ -893,7 +1051,7 @@ export const convertStandardContentMessageToResponsesInput: Converter<
     };
 
     const resolveImageItem = (
-      block: ContentBlock.Multimodal.Image
+      block: ContentBlock.Multimodal.Image,
     ): OpenAIClient.Responses.ResponseInputImage | undefined => {
       const detail = iife(() => {
         const raw = block.metadata?.detail;
@@ -932,7 +1090,7 @@ export const convertStandardContentMessageToResponsesInput: Converter<
     };
 
     const resolveFileItem = (
-      block: ContentBlock.Multimodal.File | ContentBlock.Multimodal.Video
+      block: ContentBlock.Multimodal.File | ContentBlock.Multimodal.Video,
     ): OpenAIClient.Responses.ResponseInputFile | undefined => {
       if (block.fileId) {
         const filename = getFilenameFromMetadata(block);
@@ -960,14 +1118,14 @@ export const convertStandardContentMessageToResponsesInput: Converter<
         return {
           type: "input_file",
           file_data: `data:${mimeType};base64,${encoded}`,
-          ...(filename ? { filename } : {}),
+          filename,
         };
       }
       return undefined;
     };
 
     const convertReasoningBlock = (
-      block: ContentBlock.Reasoning
+      block: ContentBlock.Reasoning,
     ): OpenAIClient.Responses.ResponseReasoningItem => {
       const summaryEntries = iife(() => {
         if (Array.isArray(block.summary)) {
@@ -1009,7 +1167,7 @@ export const convertStandardContentMessageToResponsesInput: Converter<
     };
 
     const convertFunctionCall = (
-      block: ContentBlock.Tools.ToolCall | ContentBlock.Tools.ServerToolCall
+      block: ContentBlock.Tools.ToolCall | ContentBlock.Tools.ServerToolCall,
     ): OpenAIClient.Responses.ResponseFunctionToolCall => ({
       type: "function_call",
       name: block.name ?? "",
@@ -1018,7 +1176,7 @@ export const convertStandardContentMessageToResponsesInput: Converter<
     });
 
     const convertFunctionCallOutput = (
-      block: ContentBlock.Tools.ServerToolCallResult
+      block: ContentBlock.Tools.ServerToolCallResult,
     ): OpenAIClient.Responses.ResponseInputItem.FunctionCallOutput => {
       const output = toJsonString(block.output);
       const status =
@@ -1037,18 +1195,34 @@ export const convertStandardContentMessageToResponsesInput: Converter<
 
     for (const block of message.contentBlocks) {
       if (block.type === "text") {
-        pushMessageContent([
-          {
-            type: messageRole === "assistant" ? "output_text" : "input_text",
-            text: block.text,
-          },
-        ]);
+        const phase = iife(() => {
+          if (
+            !(
+              "extras" in block &&
+              typeof block.extras === "object" &&
+              block.extras !== null &&
+              "phase" in block.extras
+            )
+          )
+            return undefined;
+          return block.extras
+            .phase as OpenAIClient.Responses.EasyInputMessage["phase"];
+        });
+        pushMessageContent(
+          [
+            {
+              type: messageRole === "assistant" ? "output_text" : "input_text",
+              text: block.text,
+            },
+          ],
+          phase,
+        );
       } else if (block.type === "invalid_tool_call") {
         // no-op
       } else if (block.type === "reasoning") {
         yield* flushMessage();
         yield convertReasoningBlock(
-          block as ContentBlock.Standard & { type: "reasoning" }
+          block as ContentBlock.Standard & { type: "reasoning" },
         );
       } else if (block.type === "tool_call") {
         yield* flushMessage();
@@ -1058,7 +1232,7 @@ export const convertStandardContentMessageToResponsesInput: Converter<
           pendingFunctionChunks.delete(id);
         }
         yield convertFunctionCall(
-          block as ContentBlock.Standard & { type: "tool_call" }
+          block as ContentBlock.Standard & { type: "tool_call" },
         );
       } else if (block.type === "tool_call_chunk") {
         if (block.id) {
@@ -1227,7 +1401,7 @@ export const convertMessagesToResponsesInput: Converter<
                * Check for input_image type first (computer-use-preview format)
                */
               const inputImage = toolMessage.content.find(
-                (i) => i.type === "input_image"
+                (i) => i.type === "input_image",
               ) as { type: "input_image"; image_url: string } | undefined;
 
               if (inputImage) return inputImage;
@@ -1236,7 +1410,7 @@ export const convertMessagesToResponsesInput: Converter<
                * Check for computer_screenshot type (legacy format)
                */
               const oaiScreenshot = toolMessage.content.find(
-                (i) => i.type === "computer_screenshot"
+                (i) => i.type === "computer_screenshot",
               ) as
                 | { type: "computer_screenshot"; image_url: string }
                 | undefined;
@@ -1247,7 +1421,7 @@ export const convertMessagesToResponsesInput: Converter<
                * Convert image_url content block to input_image format
                */
               const lcImage = toolMessage.content.find(
-                (i) => i.type === "image_url"
+                (i) => i.type === "image_url",
               ) as MessageContentImageUrl;
 
               if (lcImage) {
@@ -1295,7 +1469,7 @@ export const convertMessagesToResponsesInput: Converter<
               "type" in item &&
               (item.type === "input_file" ||
                 item.type === "input_image" ||
-                item.type === "input_text")
+                item.type === "input_text"),
           );
 
         return {
@@ -1327,15 +1501,21 @@ export const convertMessagesToResponsesInput: Converter<
         const input: ResponsesInputItem[] = [];
 
         // reasoning items
-        if (additional_kwargs?.reasoning && !zdrEnabled) {
-          const reasoningItem = convertReasoningSummaryToResponsesReasoningItem(
-            additional_kwargs.reasoning
-          );
+        const reasoning = additional_kwargs?.reasoning;
+        const hasEncryptedContent = !!reasoning?.encrypted_content;
+        /**
+         * With ZDR enabled, OpenAI does not retain reasoning items, so we only send
+         * them when encrypted content is available (via include: ["reasoning.encrypted_content"]).
+         * With ZDR disabled, we include reasoning item ids so OpenAI can reference them, as it's storing them.
+         */
+        if (reasoning && (!zdrEnabled || hasEncryptedContent)) {
+          const reasoningItem =
+            convertReasoningSummaryToResponsesReasoningItem(reasoning);
           input.push(reasoningItem);
         }
 
         // ai content
-        let { content } = lcMsg as { content: ContentBlock[] };
+        let { content } = lcMsg;
         if (additional_kwargs?.refusal) {
           if (typeof content === "string") {
             content = [{ type: "output_text", text: content, annotations: [] }];
@@ -1347,7 +1527,7 @@ export const convertMessagesToResponsesInput: Converter<
         }
 
         if (typeof content === "string" || content.length > 0) {
-          input.push({
+          const messageItem: ResponsesInputItem = {
             type: "message",
             role: "assistant",
             ...(lcMsg.id && !zdrEnabled && lcMsg.id.startsWith("msg_")
@@ -1359,10 +1539,13 @@ export const convertMessagesToResponsesInput: Converter<
               }
               return content.flatMap((item) => {
                 if (item.type === "text") {
+                  const textItem = item as ContentBlock.Text;
                   return {
                     type: "output_text",
-                    text: item.text,
-                    annotations: item.annotations ?? [],
+                    text: textItem.text,
+                    annotations: (textItem.annotations ?? []).map(
+                      convertLangChainAnnotationToOpenAI,
+                    ),
                   };
                 }
 
@@ -1373,18 +1556,38 @@ export const convertMessagesToResponsesInput: Converter<
                 return [];
               });
             }) as ResponseInputMessageContentList,
-          });
+            phase: iife(() => {
+              if (!Array.isArray(content)) {
+                return undefined;
+              }
+
+              const phasedContent = content.find(
+                (item): item is ContentBlock & { phase: string } =>
+                  "phase" in item && typeof item.phase === "string",
+              );
+              return phasedContent?.phase as
+                | OpenAIClient.Responses.EasyInputMessage["phase"]
+                | undefined;
+            }),
+          };
+          input.push(messageItem);
         }
 
         const functionCallIds = additional_kwargs?.[_FUNCTION_CALL_IDS_MAP_KEY];
+        const customToolCallIds =
+          additional_kwargs?.[_CUSTOM_TOOL_CALL_IDS_MAP_KEY];
 
         if (AIMessage.isInstance(lcMsg) && !!lcMsg.tool_calls?.length) {
           input.push(
             ...lcMsg.tool_calls.map((toolCall): ResponsesInputItem => {
-              if (isCustomToolCall(toolCall)) {
+              if (isCustomToolCall(toolCall, customToolCallIds)) {
                 return {
                   type: "custom_tool_call",
-                  id: toolCall.call_id,
+                  id:
+                    "call_id" in toolCall &&
+                    typeof toolCall.call_id === "string"
+                      ? toolCall.call_id
+                      : (customToolCallIds?.[toolCall.id ?? ""] ?? ""),
                   call_id: toolCall.id ?? "",
                   input: toolCall.args.input,
                   name: toolCall.name,
@@ -1405,7 +1608,7 @@ export const convertMessagesToResponsesInput: Converter<
                 call_id: toolCall.id!,
                 ...(!zdrEnabled ? { id: functionCallIds?.[toolCall.id!] } : {}),
               };
-            })
+            }),
           );
         } else if (additional_kwargs?.tool_calls) {
           input.push(
@@ -1416,8 +1619,8 @@ export const convertMessagesToResponsesInput: Converter<
                 call_id: toolCall.id,
                 arguments: toolCall.function.arguments,
                 ...(!zdrEnabled ? { id: functionCallIds?.[toolCall.id] } : {}),
-              })
-            )
+              }),
+            ),
           );
         }
 
@@ -1432,12 +1635,14 @@ export const convertMessagesToResponsesInput: Converter<
           "mcp_call",
           "code_interpreter_call",
           "image_generation_call",
+          "shell_call",
+          "local_shell_call",
         ];
 
         if (toolOutputs != null) {
           const castToolOutputs = toolOutputs as Array<ResponsesInputItem>;
           const fallthroughCalls = castToolOutputs?.filter((item) =>
-            fallthroughCallTypes.includes(item.type)
+            fallthroughCallTypes.includes(item.type),
           );
           if (fallthroughCalls.length > 0) input.push(...fallthroughCalls);
         }
@@ -1462,7 +1667,7 @@ export const convertMessagesToResponsesInput: Converter<
           if (isDataContentBlock(item)) {
             return convertToProviderContentBlock(
               item,
-              completionsApiContentBlockConverter
+              completionsApiContentBlockConverter,
             );
           }
           if (item.type === "text") {
@@ -1523,9 +1728,9 @@ export const convertMessagesToResponsesInput: Converter<
       }
 
       console.warn(
-        `Unsupported role found when converting to OpenAI Responses API: ${role}`
+        `Unsupported role found when converting to OpenAI Responses API: ${role}`,
       );
       return [];
-    }
+    },
   );
 };

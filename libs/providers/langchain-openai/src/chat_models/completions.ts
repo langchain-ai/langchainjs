@@ -1,5 +1,6 @@
 import { OpenAI as OpenAIClient } from "openai";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import {
   AIMessage,
   AIMessageChunk,
@@ -22,16 +23,20 @@ import {
   _convertToOpenAITool,
 } from "../utils/tools.js";
 import { isReasoningModel } from "../utils/misc.js";
-import { BaseChatOpenAICallOptions } from "./base.js";
-import { BaseChatOpenAI } from "./base.js";
+import {
+  BaseChatOpenAI,
+  BaseChatOpenAICallOptions,
+  BaseChatOpenAIFields,
+  getChatOpenAIModelParams,
+} from "./base.js";
 import {
   convertCompletionsDeltaToBaseMessageChunk,
   convertCompletionsMessageToBaseMessage,
   convertMessagesToCompletionsMessageParams,
 } from "../converters/completions.js";
+import { convertOpenAICompletionsStream } from "../utils/stream_events.js";
 
-export interface ChatOpenAICompletionsCallOptions
-  extends BaseChatOpenAICallOptions {}
+export interface ChatOpenAICompletionsCallOptions extends BaseChatOpenAICallOptions {}
 
 type ChatCompletionsInvocationParams = Omit<
   OpenAIClient.Chat.Completions.ChatCompletionCreateParams,
@@ -43,9 +48,18 @@ type ChatCompletionsInvocationParams = Omit<
  * @internal
  */
 export class ChatOpenAICompletions<
-  CallOptions extends
-    ChatOpenAICompletionsCallOptions = ChatOpenAICompletionsCallOptions,
+  CallOptions extends ChatOpenAICompletionsCallOptions =
+    ChatOpenAICompletionsCallOptions,
 > extends BaseChatOpenAI<CallOptions> {
+  constructor(model: string, fields?: Omit<BaseChatOpenAIFields, "model">);
+  constructor(fields?: BaseChatOpenAIFields);
+  constructor(
+    modelOrFields?: string | BaseChatOpenAIFields,
+    fieldsArg?: Omit<BaseChatOpenAIFields, "model">
+  ) {
+    super(getChatOpenAIModelParams(modelOrFields, fieldsArg));
+  }
+
   /** @internal */
   override invocationParams(
     options?: this["ParsedCallOptions"],
@@ -293,6 +307,58 @@ export class ChatOpenAICompletions<
     }
   }
 
+  /**
+   * Native implementation of the content-block-centric streaming protocol
+   * for OpenAI Chat Completions.
+   */
+  async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    const messagesMapped: OpenAIClient.Chat.Completions.ChatCompletionMessageParam[] =
+      convertMessagesToCompletionsMessageParams({
+        messages,
+        model: this.model,
+      });
+
+    const params = {
+      ...this.invocationParams(options, {
+        streaming: true,
+      }),
+      messages: messagesMapped,
+      stream: true as const,
+    };
+
+    const streamIterable = await this.completionWithRetry(params, options);
+    const shouldStreamUsage = this.streamUsage ?? options.streamUsage;
+
+    const abortableStream = async function* (
+      source: AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>,
+      signal?: AbortSignal
+    ) {
+      for await (const data of source) {
+        if (signal?.aborted) {
+          return;
+        }
+        yield data;
+      }
+    };
+
+    yield* convertOpenAICompletionsStream(
+      abortableStream(streamIterable, options.signal),
+      {
+        streamUsage: shouldStreamUsage ?? true,
+        provider: this.streamEventProvider,
+      }
+    );
+  }
+
+  /** Provider id used in native stream protocol passthrough events. */
+  protected get streamEventProvider(): string {
+    return "openai";
+  }
+
   async *_streamResponseChunks(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
@@ -347,7 +413,7 @@ export class ChatOpenAICompletions<
         );
         continue;
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       const generationInfo: Record<string, any> = { ...newTokenIndices };
       if (choice.finish_reason != null) {
         generationInfo.finish_reason = choice.finish_reason;
@@ -413,6 +479,14 @@ export class ChatOpenAICompletions<
         text: "",
       });
       yield generationChunk;
+      await runManager?.handleLLMNewToken(
+        generationChunk.text ?? "",
+        { prompt: 0, completion: 0 },
+        undefined,
+        undefined,
+        undefined,
+        { chunk: generationChunk }
+      );
     }
     if (options.signal?.aborted) {
       throw new Error("AbortError");
@@ -467,7 +541,7 @@ export class ChatOpenAICompletions<
    * method. This will be removed in a future release
    */
   protected _convertCompletionsDeltaToBaseMessageChunk(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     delta: Record<string, any>,
     rawResponse: OpenAIClient.Chat.Completions.ChatCompletionChunk,
     defaultRole?: OpenAIClient.Chat.ChatCompletionRole

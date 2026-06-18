@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { OpenAI as OpenAIClient } from "openai";
 import {
   AIMessage,
@@ -228,10 +228,235 @@ describe("convertResponsesMessageToAIMessage", () => {
     );
     expect(reasoningBlocks.length).toBe(0);
   });
+
+  it("uses the top-level response id for the AIMessage id", () => {
+    const response = {
+      id: "resp_top_level",
+      model: "gpt-4o",
+      created_at: 1234567890,
+      object: "response",
+      status: "completed",
+      output: [
+        {
+          type: "message",
+          id: "msg_nested",
+          role: "assistant",
+          content: [{ type: "output_text", text: "Hello!", annotations: [] }],
+        },
+      ],
+      usage: {
+        input_tokens: 10,
+        output_tokens: 20,
+        total_tokens: 30,
+      },
+    };
+
+    const result = convertResponsesMessageToAIMessage(response as any);
+
+    expect(result.id).toBe("resp_top_level");
+    expect(result.response_metadata.id).toBe("resp_top_level");
+  });
+
+  it("should store output in response_metadata", () => {
+    const output = [
+      {
+        type: "reasoning",
+        id: "rs_abc123",
+        summary: [{ type: "summary_text", text: "Thinking..." }],
+      },
+      {
+        type: "function_call",
+        id: "fc_xyz789",
+        call_id: "call_123",
+        name: "get_weather",
+        arguments: '{"city":"NYC"}',
+      },
+    ];
+    const response = {
+      id: "resp_123",
+      model: "o3-mini",
+      created_at: 1234567890,
+      object: "response",
+      status: "completed",
+      output,
+      usage: { input_tokens: 10, output_tokens: 20, total_tokens: 30 },
+    };
+
+    const result = convertResponsesMessageToAIMessage(response as any);
+
+    expect(result.response_metadata.output).toEqual(output);
+  });
+
+  it("should strip parsed_arguments from function_call items in stored output", () => {
+    const response = {
+      id: "resp_123",
+      model: "o3-mini",
+      created_at: 1234567890,
+      object: "response",
+      status: "completed",
+      output: [
+        {
+          type: "function_call",
+          id: "fc_xyz789",
+          call_id: "call_123",
+          name: "get_weather",
+          arguments: '{"city":"NYC"}',
+          parsed_arguments: { city: "NYC" },
+        },
+      ],
+      usage: { input_tokens: 10, output_tokens: 20, total_tokens: 30 },
+    };
+
+    const result = convertResponsesMessageToAIMessage(response as any);
+
+    const storedOutput = result.response_metadata.output as any[];
+    expect(storedOutput).toHaveLength(1);
+    expect(storedOutput[0].name).toBe("get_weather");
+    expect(storedOutput[0]).not.toHaveProperty("parsed_arguments");
+  });
 });
 
 describe("convertResponsesDeltaToChatGenerationChunk", () => {
+  it("uses the top-level response id when streaming", () => {
+    const created = convertResponsesDeltaToChatGenerationChunk({
+      type: "response.created",
+      response: {
+        id: "resp_top_level",
+        model: "gpt-4o",
+        object: "response",
+        status: "in_progress",
+        output: [],
+      },
+    } as any);
+    const messageAdded = convertResponsesDeltaToChatGenerationChunk({
+      type: "response.output_item.added",
+      output_index: 0,
+      item: {
+        type: "message",
+        id: "msg_nested",
+        role: "assistant",
+        content: [],
+        status: "in_progress",
+      },
+    } as any);
+    const textDelta = convertResponsesDeltaToChatGenerationChunk({
+      type: "response.output_text.delta",
+      output_index: 0,
+      content_index: 0,
+      delta: "Hello!",
+    } as any);
+    const completed = convertResponsesDeltaToChatGenerationChunk({
+      type: "response.completed",
+      response: {
+        id: "resp_top_level",
+        model: "gpt-4o",
+        created_at: 1234567890,
+        object: "response",
+        status: "completed",
+        output: [
+          {
+            type: "message",
+            id: "msg_nested",
+            role: "assistant",
+            content: [{ type: "output_text", text: "Hello!", annotations: [] }],
+          },
+        ],
+        usage: {
+          input_tokens: 10,
+          output_tokens: 20,
+          total_tokens: 30,
+        },
+      },
+    } as any);
+
+    expect(created?.message.id).toBe("resp_top_level");
+    expect(messageAdded?.message.id).toBeUndefined();
+    expect(textDelta?.message.id).toBeUndefined();
+
+    const aggregated = [created!, messageAdded!, textDelta!, completed!].reduce(
+      (acc, chunk) => acc.concat(chunk.message as AIMessageChunk),
+      created!.message as AIMessageChunk
+    );
+
+    expect(aggregated.id).toBe("resp_top_level");
+    expect(aggregated.response_metadata.id).toBe("resp_top_level");
+  });
+
   describe("custom tool streaming delta handling", () => {
+    it("should preserve custom tool metadata from response.output_item.added events", () => {
+      const customToolStart = {
+        type: "response.output_item.added",
+        output_index: 0,
+        item: {
+          type: "custom_tool_call",
+          id: "ctc_123",
+          call_id: "call_123",
+          name: "execute_code",
+          input: "",
+        },
+      };
+
+      const result = convertResponsesDeltaToChatGenerationChunk(
+        customToolStart as any
+      );
+      const aiMessageChunk = result?.message as AIMessageChunk;
+
+      expect(aiMessageChunk.tool_call_chunks).toEqual([
+        {
+          type: "tool_call_chunk",
+          isCustomTool: true,
+          name: "execute_code",
+          args: "",
+          id: "call_123",
+          index: 0,
+        },
+      ]);
+      expect(aiMessageChunk.additional_kwargs).toMatchObject({
+        __openai_custom_tool_call_ids__: {
+          call_123: "ctc_123",
+        },
+      });
+    });
+
+    it("should collapse custom tool streaming chunks into a raw input tool call", () => {
+      const start = convertResponsesDeltaToChatGenerationChunk({
+        type: "response.output_item.added",
+        output_index: 0,
+        item: {
+          type: "custom_tool_call",
+          id: "ctc_123",
+          call_id: "call_123",
+          name: "execute_code",
+          input: "",
+        },
+      } as any)?.message as AIMessageChunk;
+
+      const delta = convertResponsesDeltaToChatGenerationChunk({
+        type: "response.custom_tool_call_input.delta",
+        delta: "console.log('custom tool streaming repro')",
+        output_index: 0,
+      } as any)?.message as AIMessageChunk;
+
+      const combined = start.concat(delta);
+
+      expect(combined.invalid_tool_calls).toEqual([]);
+      expect(combined.tool_calls).toEqual([
+        {
+          type: "tool_call",
+          name: "execute_code",
+          args: {
+            input: "console.log('custom tool streaming repro')",
+          },
+          id: "call_123",
+        },
+      ]);
+      expect(combined.additional_kwargs).toMatchObject({
+        __openai_custom_tool_call_ids__: {
+          call_123: "ctc_123",
+        },
+      });
+    });
+
     it("should handle response.custom_tool_call_input.delta events", () => {
       // Test custom tool delta event
       const customToolDelta = {
@@ -251,6 +476,7 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
         type: "tool_call_chunk",
         args: '{"query": "test query"}',
         index: 0,
+        isCustomTool: true,
       } as ToolCallChunk);
     });
 
@@ -279,10 +505,21 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
       const functionResultMessage = functionResult?.message as AIMessageChunk;
       const customResultMessage = customResult?.message as AIMessageChunk;
 
-      // Both should produce identical tool_call_chunks
-      expect(functionResultMessage.tool_call_chunks).toEqual(
-        customResultMessage.tool_call_chunks
-      );
+      expect(functionResultMessage.tool_call_chunks).toEqual([
+        {
+          type: "tool_call_chunk",
+          args: '{"location": "NYC"}',
+          index: 0,
+        },
+      ] as ToolCallChunk[]);
+      expect(customResultMessage.tool_call_chunks).toEqual([
+        {
+          type: "tool_call_chunk",
+          args: '{"location": "NYC"}',
+          index: 0,
+          isCustomTool: true,
+        },
+      ] as ToolCallChunk[]);
     });
   });
 
@@ -364,6 +601,7 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
       expect(reasoningBlocks[0]).toEqual({
         type: "reasoning",
         reasoning: "Initial reasoning step",
+        index: 0,
       });
     });
 
@@ -401,6 +639,7 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
       expect(reasoningBlocks[0]).toEqual({
         type: "reasoning",
         reasoning: "more reasoning text",
+        index: 0,
       });
     });
 
@@ -672,7 +911,8 @@ describe("convertStandardContentMessageToResponsesInput", () => {
     ]);
   });
 
-  it("throws error when file payload does not contain filename", () => {
+  it("uses placeholder filename when file payload does not contain filename", () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
     const message = new HumanMessage({
       contentBlocks: [
         {
@@ -683,11 +923,144 @@ describe("convertStandardContentMessageToResponsesInput", () => {
       ],
     });
 
-    expect(() =>
-      convertStandardContentMessageToResponsesInput(message)
-    ).toThrowError(
-      `a filename or name or title is needed via meta-data for OpenAI when working with multimodal blocks`
-    );
+    const result = convertStandardContentMessageToResponsesInput(message);
+    expect(result).toEqual([
+      {
+        role: "user",
+        type: "message",
+        content: [
+          {
+            type: "input_file",
+            file_data:
+              "data:application/pdf;base64,iVBORw0KGgoAAAANSUhEUgAAAAE",
+            filename: "LC_AUTOGENERATED",
+          },
+        ],
+      },
+    ]);
+    expect(warnSpy).toHaveBeenCalled();
+    warnSpy.mockRestore();
+  });
+
+  it.each([
+    {
+      ext: "docx",
+      mimeType:
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      filename: "report.docx",
+    },
+    {
+      ext: "pptx",
+      mimeType:
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      filename: "slides.pptx",
+    },
+    {
+      ext: "xlsx",
+      mimeType:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      filename: "data.xlsx",
+    },
+    {
+      ext: "csv",
+      mimeType: "text/csv",
+      filename: "data.csv",
+    },
+  ])(
+    "converts $ext file block with base64 data to input_file",
+    ({ mimeType, filename }) => {
+      const message = new HumanMessage({
+        contentBlocks: [
+          {
+            type: "file",
+            mimeType,
+            data: "dGVzdGRhdGE=",
+            metadata: { filename },
+          },
+        ],
+      });
+
+      const result = convertStandardContentMessageToResponsesInput(message);
+
+      expect(result).toEqual([
+        {
+          role: "user",
+          type: "message",
+          content: [
+            {
+              type: "input_file",
+              file_data: `data:${mimeType};base64,dGVzdGRhdGE=`,
+              filename,
+            },
+          ],
+        },
+      ]);
+    }
+  );
+
+  it.each([
+    { ext: "docx", filename: "report.docx" },
+    { ext: "pptx", filename: "slides.pptx" },
+    { ext: "xlsx", filename: "data.xlsx" },
+    { ext: "csv", filename: "data.csv" },
+  ])("converts $ext file block with URL to input_file", ({ filename }) => {
+    const url = `https://example.com/${filename}`;
+    const message = new HumanMessage({
+      contentBlocks: [
+        {
+          type: "file",
+          url,
+          metadata: { filename },
+        },
+      ],
+    });
+
+    const result = convertStandardContentMessageToResponsesInput(message);
+
+    expect(result).toEqual([
+      {
+        role: "user",
+        type: "message",
+        content: [
+          {
+            type: "input_file",
+            file_url: url,
+            filename,
+          },
+        ],
+      },
+    ]);
+  });
+
+  it.each([
+    { ext: "docx", fileId: "file-docx-123" },
+    { ext: "pptx", fileId: "file-pptx-456" },
+    { ext: "xlsx", fileId: "file-xlsx-789" },
+    { ext: "csv", fileId: "file-csv-012" },
+  ])("converts $ext file block with fileId to input_file", ({ fileId }) => {
+    const message = new HumanMessage({
+      contentBlocks: [
+        {
+          type: "file",
+          fileId,
+        },
+      ],
+    });
+
+    const result = convertStandardContentMessageToResponsesInput(message);
+
+    expect(result).toEqual([
+      {
+        role: "user",
+        type: "message",
+        content: [
+          {
+            type: "input_file",
+            file_id: fileId,
+          },
+        ],
+      },
+    ]);
   });
 });
 
@@ -995,6 +1368,108 @@ describe("convertMessagesToResponsesInput", () => {
       ]);
     });
   });
+
+  describe("assistant reasoning conversion", () => {
+    it("includes reasoning items in ZDR mode when encrypted content is present", () => {
+      const message = new AIMessage({
+        content: [],
+        additional_kwargs: {
+          reasoning: {
+            id: "reasoning_123",
+            type: "reasoning",
+            summary: [{ type: "summary_text", text: "Encrypted summary" }],
+            encrypted_content: "encrypted_payload",
+          },
+        },
+      });
+
+      const result = convertMessagesToResponsesInput({
+        messages: [message],
+        zdrEnabled: true,
+        model: "gpt-4o",
+      });
+
+      expect(result).toEqual([
+        {
+          id: "reasoning_123",
+          type: "reasoning",
+          summary: [{ type: "summary_text", text: "Encrypted summary" }],
+          encrypted_content: "encrypted_payload",
+        },
+      ]);
+    });
+
+    it("uses fast path when response_metadata.output is available", () => {
+      const output = [
+        {
+          type: "reasoning",
+          id: "rs_abc123",
+          summary: [{ type: "summary_text", text: "Thinking..." }],
+        },
+        {
+          type: "function_call",
+          id: "fc_xyz789",
+          call_id: "call_123",
+          name: "get_weather",
+          arguments: '{"city":"NYC"}',
+        },
+      ];
+      const message = new AIMessage({
+        content: [],
+        tool_calls: [
+          { name: "get_weather", args: { city: "NYC" }, id: "call_123" },
+        ],
+        response_metadata: { output },
+      });
+
+      const result = convertMessagesToResponsesInput({
+        messages: [message],
+        zdrEnabled: false,
+        model: "o3-mini",
+      });
+
+      // Fast path returns the stored output verbatim
+      expect(result).toEqual(output);
+    });
+
+    it("round-trips reasoning + tool calls through AIMessage", () => {
+      const response = {
+        id: "resp_123",
+        model: "o3-mini",
+        created_at: 1234567890,
+        object: "response",
+        status: "completed",
+        output: [
+          {
+            type: "reasoning",
+            id: "rs_abc123",
+            summary: [{ type: "summary_text", text: "Thinking..." }],
+          },
+          {
+            type: "function_call",
+            id: "fc_xyz789",
+            call_id: "call_123",
+            name: "get_weather",
+            arguments: '{"city":"NYC"}',
+          },
+        ],
+        usage: { input_tokens: 10, output_tokens: 20, total_tokens: 30 },
+      };
+
+      // Convert API response to AIMessage
+      const aiMsg = convertResponsesMessageToAIMessage(response as any);
+
+      // Convert AIMessage back to Responses API input
+      const input = convertMessagesToResponsesInput({
+        messages: [aiMsg],
+        zdrEnabled: false,
+        model: "o3-mini",
+      });
+
+      // Should preserve the full output array including reasoning + function_call pairing
+      expect(input).toEqual(response.output);
+    });
+  });
 });
 
 describe("convertResponsesMessageToAIMessage", () => {
@@ -1179,6 +1654,378 @@ describe("convertResponsesMessageToAIMessage", () => {
   });
 });
 
+describe("annotation round-trip conversion", () => {
+  it("should correctly round-trip url_citation annotations through AIMessage conversion", () => {
+    // Simulate an OpenAI response with url_citation annotations
+    const response = {
+      id: "resp_123",
+      model: "gpt-4o",
+      created_at: 1234567890,
+      object: "response",
+      status: "completed",
+      output: [
+        {
+          type: "message",
+          id: "msg_123",
+          role: "assistant",
+          content: [
+            {
+              type: "output_text",
+              text: "Here is the information you requested.",
+              annotations: [
+                {
+                  type: "url_citation",
+                  url: "https://example.com/article",
+                  title: "Example Article",
+                  start_index: 0,
+                  end_index: 38,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      usage: {
+        input_tokens: 10,
+        output_tokens: 20,
+        total_tokens: 30,
+      },
+    };
+
+    // Step 1: Convert OpenAI response -> LangChain AIMessage
+    const aiMessage = convertResponsesMessageToAIMessage(response as any);
+
+    // Verify annotations were converted to LangChain format
+    const contentArray = aiMessage.content as ContentBlock.Text[];
+    expect(contentArray[0].annotations).toEqual([
+      {
+        type: "citation",
+        source: "url_citation",
+        url: "https://example.com/article",
+        title: "Example Article",
+        startIndex: 0,
+        endIndex: 38,
+      },
+    ]);
+
+    // Step 2: Convert LangChain AIMessage -> OpenAI Responses input (multi-turn)
+    const result = convertMessagesToResponsesInput({
+      messages: [aiMessage],
+      zdrEnabled: false,
+      model: "gpt-4o",
+    });
+
+    // Find the message item
+    const messageItem = result.find((item) => item.type === "message") as any;
+    expect(messageItem).toBeDefined();
+
+    // Verify annotations are correctly converted back to OpenAI format
+    const outputTextBlock = messageItem.content.find(
+      (c: any) => c.type === "output_text"
+    );
+    expect(outputTextBlock).toBeDefined();
+    expect(outputTextBlock.annotations).toEqual([
+      {
+        type: "url_citation",
+        url: "https://example.com/article",
+        title: "Example Article",
+        start_index: 0,
+        end_index: 38,
+      },
+    ]);
+  });
+
+  it("should correctly round-trip file_citation annotations", () => {
+    const response = {
+      id: "resp_456",
+      model: "gpt-4o",
+      created_at: 1234567890,
+      object: "response",
+      status: "completed",
+      output: [
+        {
+          type: "message",
+          id: "msg_456",
+          role: "assistant",
+          content: [
+            {
+              type: "output_text",
+              text: "From the uploaded document.",
+              annotations: [
+                {
+                  type: "file_citation",
+                  file_id: "file-abc123",
+                  filename: "report.pdf",
+                  index: 5,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      usage: { input_tokens: 10, output_tokens: 20, total_tokens: 30 },
+    };
+
+    const aiMessage = convertResponsesMessageToAIMessage(response as any);
+    const result = convertMessagesToResponsesInput({
+      messages: [aiMessage],
+      zdrEnabled: false,
+      model: "gpt-4o",
+    });
+
+    const messageItem = result.find((item) => item.type === "message") as any;
+    const outputTextBlock = messageItem.content.find(
+      (c: any) => c.type === "output_text"
+    );
+    expect(outputTextBlock.annotations).toEqual([
+      {
+        type: "file_citation",
+        file_id: "file-abc123",
+        filename: "report.pdf",
+        index: 5,
+      },
+    ]);
+  });
+
+  it("should correctly round-trip container_file_citation annotations", () => {
+    const response = {
+      id: "resp_789",
+      model: "gpt-4o",
+      created_at: 1234567890,
+      object: "response",
+      status: "completed",
+      output: [
+        {
+          type: "message",
+          id: "msg_789",
+          role: "assistant",
+          content: [
+            {
+              type: "output_text",
+              text: "From the container file.",
+              annotations: [
+                {
+                  type: "container_file_citation",
+                  file_id: "file-def456",
+                  filename: "data.csv",
+                  container_id: "container-xyz",
+                  start_index: 0,
+                  end_index: 24,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      usage: { input_tokens: 10, output_tokens: 20, total_tokens: 30 },
+    };
+
+    const aiMessage = convertResponsesMessageToAIMessage(response as any);
+    const result = convertMessagesToResponsesInput({
+      messages: [aiMessage],
+      zdrEnabled: false,
+      model: "gpt-4o",
+    });
+
+    const messageItem = result.find((item) => item.type === "message") as any;
+    const outputTextBlock = messageItem.content.find(
+      (c: any) => c.type === "output_text"
+    );
+    expect(outputTextBlock.annotations).toEqual([
+      {
+        type: "container_file_citation",
+        file_id: "file-def456",
+        filename: "data.csv",
+        container_id: "container-xyz",
+        start_index: 0,
+        end_index: 24,
+      },
+    ]);
+  });
+
+  it("should correctly round-trip file_path annotations", () => {
+    const response = {
+      id: "resp_101",
+      model: "gpt-4o",
+      created_at: 1234567890,
+      object: "response",
+      status: "completed",
+      output: [
+        {
+          type: "message",
+          id: "msg_101",
+          role: "assistant",
+          content: [
+            {
+              type: "output_text",
+              text: "Here is the file output.",
+              annotations: [
+                {
+                  type: "file_path",
+                  file_id: "file-ghi789",
+                  index: 10,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      usage: { input_tokens: 10, output_tokens: 20, total_tokens: 30 },
+    };
+
+    const aiMessage = convertResponsesMessageToAIMessage(response as any);
+    const result = convertMessagesToResponsesInput({
+      messages: [aiMessage],
+      zdrEnabled: false,
+      model: "gpt-4o",
+    });
+
+    const messageItem = result.find((item) => item.type === "message") as any;
+    const outputTextBlock = messageItem.content.find(
+      (c: any) => c.type === "output_text"
+    );
+    expect(outputTextBlock.annotations).toEqual([
+      {
+        type: "file_path",
+        file_id: "file-ghi789",
+        index: 10,
+      },
+    ]);
+  });
+
+  it("should pass through annotations already in OpenAI format", () => {
+    // AIMessage with annotations already in OpenAI format (e.g., from output_text block passthrough)
+    const aiMessage = new AIMessage({
+      content: [
+        {
+          type: "text",
+          text: "Citation text",
+          annotations: [
+            {
+              type: "url_citation",
+              url: "https://example.com",
+              title: "Example",
+              start_index: 0,
+              end_index: 13,
+            },
+          ],
+        },
+      ],
+    });
+
+    const result = convertMessagesToResponsesInput({
+      messages: [aiMessage],
+      zdrEnabled: false,
+      model: "gpt-4o",
+    });
+
+    const messageItem = result.find((item) => item.type === "message") as any;
+    const outputTextBlock = messageItem.content.find(
+      (c: any) => c.type === "output_text"
+    );
+    expect(outputTextBlock.annotations).toEqual([
+      {
+        type: "url_citation",
+        url: "https://example.com",
+        title: "Example",
+        start_index: 0,
+        end_index: 13,
+      },
+    ]);
+  });
+
+  it("should handle empty annotations array", () => {
+    const aiMessage = new AIMessage({
+      content: [
+        {
+          type: "text",
+          text: "No citations here.",
+          annotations: [],
+        },
+      ],
+    });
+
+    const result = convertMessagesToResponsesInput({
+      messages: [aiMessage],
+      zdrEnabled: false,
+      model: "gpt-4o",
+    });
+
+    const messageItem = result.find((item) => item.type === "message") as any;
+    const outputTextBlock = messageItem.content.find(
+      (c: any) => c.type === "output_text"
+    );
+    expect(outputTextBlock.annotations).toEqual([]);
+  });
+
+  it("should handle multiple annotations of different types in one text block", () => {
+    const response = {
+      id: "resp_multi",
+      model: "gpt-4o",
+      created_at: 1234567890,
+      object: "response",
+      status: "completed",
+      output: [
+        {
+          type: "message",
+          id: "msg_multi",
+          role: "assistant",
+          content: [
+            {
+              type: "output_text",
+              text: "Multiple sources cited here.",
+              annotations: [
+                {
+                  type: "url_citation",
+                  url: "https://example.com/page1",
+                  title: "Page 1",
+                  start_index: 0,
+                  end_index: 10,
+                },
+                {
+                  type: "url_citation",
+                  url: "https://example.com/page2",
+                  title: "Page 2",
+                  start_index: 11,
+                  end_index: 27,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      usage: { input_tokens: 10, output_tokens: 20, total_tokens: 30 },
+    };
+
+    const aiMessage = convertResponsesMessageToAIMessage(response as any);
+    const result = convertMessagesToResponsesInput({
+      messages: [aiMessage],
+      zdrEnabled: false,
+      model: "gpt-4o",
+    });
+
+    const messageItem = result.find((item) => item.type === "message") as any;
+    const outputTextBlock = messageItem.content.find(
+      (c: any) => c.type === "output_text"
+    );
+    expect(outputTextBlock.annotations).toHaveLength(2);
+    expect(outputTextBlock.annotations[0]).toEqual({
+      type: "url_citation",
+      url: "https://example.com/page1",
+      title: "Page 1",
+      start_index: 0,
+      end_index: 10,
+    });
+    expect(outputTextBlock.annotations[1]).toEqual({
+      type: "url_citation",
+      url: "https://example.com/page2",
+      title: "Page 2",
+      start_index: 11,
+      end_index: 27,
+    });
+  });
+});
+
 describe("convertResponsesDeltaToChatGenerationChunk - image generation", () => {
   it("should convert image_generation_call streaming event to image content block", () => {
     const streamEvent: OpenAIClient.Responses.ResponseStreamEvent = {
@@ -1263,5 +2110,831 @@ describe("convertResponsesDeltaToChatGenerationChunk - image generation", () => 
 
     // Partial images should be ignored
     expect(result).toBeNull();
+  });
+});
+
+describe("Anthropic cross-provider compatibility", () => {
+  it("should drop tool_use blocks from assistant content in convertMessagesToResponsesInput", () => {
+    const message = new AIMessage({
+      content: [
+        { type: "text", text: "I will search for that." },
+        {
+          type: "tool_use",
+          id: "toolu_abc123",
+          name: "get_weather",
+          input: { location: "SF" },
+        },
+      ],
+      tool_calls: [
+        {
+          id: "toolu_abc123",
+          name: "get_weather",
+          args: { location: "SF" },
+        },
+      ],
+    });
+
+    const result = convertMessagesToResponsesInput({
+      messages: [message],
+      zdrEnabled: false,
+      model: "gpt-4o",
+    });
+
+    // Should have a message item + a function_call item
+    const messageItem = result.find((r: any) => r.type === "message") as any;
+    const fnCallItem = result.find(
+      (r: any) => r.type === "function_call"
+    ) as any;
+
+    expect(messageItem).toBeDefined();
+    expect(fnCallItem).toBeDefined();
+
+    // The message content should only have the text, no tool_use
+    if (typeof messageItem.content !== "string") {
+      expect(messageItem.content.some((c: any) => c.type === "tool_use")).toBe(
+        false
+      );
+      expect(messageItem.content).toHaveLength(1);
+      expect(messageItem.content[0].type).toBe("output_text");
+      expect(messageItem.content[0].text).toBe("I will search for that.");
+    }
+
+    // function_call should be present
+    expect(fnCallItem.name).toBe("get_weather");
+    expect(fnCallItem.call_id).toBe("toolu_abc123");
+  });
+});
+
+describe("tool_search support", () => {
+  describe("convertResponsesMessageToAIMessage", () => {
+    it("includes tool_search_call in tool_outputs", () => {
+      const response: any = {
+        id: "resp_001",
+        model: "gpt-5.3",
+        created_at: 1234567890,
+        status: "completed",
+        object: "response",
+        output: [
+          {
+            type: "tool_search_call",
+            id: "ts_001",
+            call_id: "call_abc",
+            execution: "server",
+            status: "completed",
+          },
+          {
+            type: "tool_search_output",
+            id: "tso_001",
+            call_id: "call_abc",
+            execution: "server",
+            status: "completed",
+            tools: [
+              {
+                type: "function",
+                name: "get_weather",
+                description: "Get weather",
+                parameters: { type: "object", properties: {} },
+                strict: null,
+              },
+            ],
+          },
+          {
+            type: "function_call",
+            id: "fc_001",
+            call_id: "call_xyz",
+            name: "get_weather",
+            arguments: '{"location":"SF"}',
+          },
+        ],
+        usage: { input_tokens: 10, output_tokens: 5, total_tokens: 15 },
+      };
+
+      const message = convertResponsesMessageToAIMessage(response);
+      expect(message.tool_calls).toHaveLength(1);
+      expect(message.tool_calls[0].name).toBe("get_weather");
+      expect(message.additional_kwargs.tool_outputs).toHaveLength(2);
+      expect((message.additional_kwargs.tool_outputs as any[])[0].type).toBe(
+        "tool_search_call"
+      );
+      expect((message.additional_kwargs.tool_outputs as any[])[1].type).toBe(
+        "tool_search_output"
+      );
+    });
+  });
+
+  describe("convertResponsesDeltaToChatGenerationChunk", () => {
+    it("handles tool_search_call in streaming", () => {
+      const event: any = {
+        type: "response.output_item.done",
+        output_index: 0,
+        item: {
+          type: "tool_search_call",
+          id: "ts_001",
+          call_id: "call_abc",
+          execution: "server",
+          status: "completed",
+        },
+      };
+
+      const chunk = convertResponsesDeltaToChatGenerationChunk(event);
+      expect(chunk).not.toBeNull();
+      expect(chunk!.message.additional_kwargs.tool_outputs).toEqual([
+        event.item,
+      ]);
+    });
+
+    it("handles tool_search_output in streaming", () => {
+      const event: any = {
+        type: "response.output_item.done",
+        output_index: 1,
+        item: {
+          type: "tool_search_output",
+          id: "tso_001",
+          call_id: "call_abc",
+          execution: "server",
+          status: "completed",
+          tools: [
+            {
+              type: "function",
+              name: "get_weather",
+              description: "Get weather",
+              parameters: { type: "object", properties: {} },
+              strict: null,
+            },
+          ],
+        },
+      };
+
+      const chunk = convertResponsesDeltaToChatGenerationChunk(event);
+      expect(chunk).not.toBeNull();
+      expect(chunk!.message.additional_kwargs.tool_outputs).toEqual([
+        event.item,
+      ]);
+    });
+  });
+
+  describe("convertMessagesToResponsesInput", () => {
+    it("round-trips tool_search items via response_metadata.output", () => {
+      const toolSearchCall = {
+        type: "tool_search_call",
+        id: "ts_001",
+        call_id: "call_abc",
+        execution: "server",
+        status: "completed",
+      };
+      const toolSearchOutput = {
+        type: "tool_search_output",
+        id: "tso_001",
+        call_id: "call_abc",
+        execution: "server",
+        status: "completed",
+        tools: [
+          {
+            type: "function",
+            name: "get_weather",
+            description: "Get weather",
+            parameters: { type: "object", properties: {} },
+            strict: null,
+          },
+        ],
+      };
+      const functionCall = {
+        type: "function_call",
+        id: "fc_001",
+        call_id: "call_xyz",
+        name: "get_weather",
+        arguments: '{"location":"SF"}',
+      };
+
+      const aiMessage = new AIMessage({
+        content: "",
+        tool_calls: [
+          { id: "call_xyz", name: "get_weather", args: { location: "SF" } },
+        ],
+        response_metadata: {
+          model_provider: "openai",
+          output: [toolSearchCall, toolSearchOutput, functionCall],
+        },
+      });
+
+      const result = convertMessagesToResponsesInput({
+        messages: [aiMessage],
+        zdrEnabled: false,
+        model: "gpt-5.3",
+      });
+
+      expect(result).toEqual([toolSearchCall, toolSearchOutput, functionCall]);
+    });
+  });
+});
+
+describe("convertResponsesDeltaToChatGenerationChunk - json_schema with tool calls only (#10505)", () => {
+  it("should not throw when response.completed has json_schema format but empty text (function call only)", () => {
+    // When the model responds with only a function_call (e.g. tool_choice: required),
+    // msg.text is "" but event.response.text.format.type is still "json_schema".
+    // Previously JSON.parse("") threw SyntaxError.
+    const event = {
+      type: "response.completed",
+      response: {
+        id: "resp_test",
+        model: "gpt-4o",
+        object: "response",
+        created_at: 1700000000,
+        status: "completed",
+        incomplete_details: null,
+        metadata: {},
+        user: null,
+        service_tier: null,
+        output: [
+          {
+            type: "function_call",
+            id: "fc_001",
+            call_id: "call_abc",
+            name: "lookup",
+            arguments: '{"query":"What is LangChain?"}',
+          },
+        ],
+        text: {
+          format: {
+            type: "json_schema",
+            name: "response",
+            strict: true,
+            schema: {
+              type: "object",
+              additionalProperties: false,
+              required: ["answer"],
+              properties: { answer: { type: "string" } },
+            },
+          },
+        },
+        usage: {
+          input_tokens: 50,
+          output_tokens: 20,
+          total_tokens: 70,
+          input_tokens_details: { cached_tokens: 0 },
+          output_tokens_details: { reasoning_tokens: 0 },
+        },
+      },
+    };
+
+    const result = convertResponsesDeltaToChatGenerationChunk(event as any);
+    expect(result).not.toBeNull();
+
+    const message = result!.message as AIMessageChunk;
+    // No parsed content since the model only returned a tool call
+    expect(message.additional_kwargs.parsed).toBeUndefined();
+    // Usage metadata should still be populated
+    expect(result!.message.usage_metadata).toBeDefined();
+    expect(result!.message.usage_metadata!.input_tokens).toBe(50);
+  });
+
+  it("should parse text correctly when response.completed has json_schema format with actual text", () => {
+    // Normal case: json_schema format with actual text content
+    const event = {
+      type: "response.completed",
+      response: {
+        id: "resp_test2",
+        model: "gpt-4o",
+        object: "response",
+        created_at: 1700000000,
+        status: "completed",
+        incomplete_details: null,
+        metadata: {},
+        user: null,
+        service_tier: null,
+        output: [
+          {
+            type: "message",
+            id: "msg_001",
+            role: "assistant",
+            status: "completed",
+            content: [
+              {
+                type: "output_text",
+                text: '{"answer":"LangChain is a framework"}',
+                annotations: [],
+              },
+            ],
+          },
+        ],
+        text: {
+          format: {
+            type: "json_schema",
+            name: "response",
+            strict: true,
+            schema: {
+              type: "object",
+              additionalProperties: false,
+              required: ["answer"],
+              properties: { answer: { type: "string" } },
+            },
+          },
+        },
+        usage: {
+          input_tokens: 50,
+          output_tokens: 20,
+          total_tokens: 70,
+          input_tokens_details: { cached_tokens: 0 },
+          output_tokens_details: { reasoning_tokens: 0 },
+        },
+      },
+    };
+
+    const result = convertResponsesDeltaToChatGenerationChunk(event as any);
+    expect(result).not.toBeNull();
+
+    const message = result!.message as AIMessageChunk;
+    // Should parse the JSON text into additional_kwargs.parsed
+    expect(message.additional_kwargs.parsed).toEqual({
+      answer: "LangChain is a framework",
+    });
+  });
+});
+
+describe("convertResponsesDeltaToChatGenerationChunk - json_schema with trailing non-whitespace characters (#10894)", () => {
+  it("should not throw when response text contains valid JSON followed by a trailing non-whitespace character", () => {
+    // gpt-5-mini on service_tier: "auto" intermittently emits trailing
+    // characters after a valid JSON object on the Responses API. JSON.parse
+    // accepts trailing whitespace, so the failure mode is specifically
+    // trailing non-whitespace (extra tokens, control characters). Previously
+    // the bare JSON.parse threw SyntaxError and killed the stream. The
+    // conversion should now degrade gracefully: additional_kwargs.parsed is
+    // left undefined, the rest of the message converts normally, and the
+    // caller can fall back to msg.text or retry.
+    const event = {
+      type: "response.completed",
+      response: {
+        id: "resp_test_10894",
+        model: "gpt-5-mini",
+        object: "response",
+        created_at: 1700000000,
+        status: "completed",
+        incomplete_details: null,
+        metadata: {},
+        user: null,
+        service_tier: "auto",
+        output: [
+          {
+            type: "message",
+            id: "msg_001",
+            role: "assistant",
+            status: "completed",
+            content: [
+              {
+                type: "output_text",
+                text: '{"status":"ok","plan":{"steps":[]}}x',
+                annotations: [],
+              },
+            ],
+          },
+        ],
+        text: {
+          format: {
+            type: "json_schema",
+            name: "response",
+            strict: true,
+            schema: {
+              type: "object",
+              additionalProperties: false,
+              required: ["status", "plan"],
+              properties: {
+                status: { type: "string" },
+                plan: { type: "object" },
+              },
+            },
+          },
+        },
+        usage: {
+          input_tokens: 30,
+          output_tokens: 12,
+          total_tokens: 42,
+          input_tokens_details: { cached_tokens: 0 },
+          output_tokens_details: { reasoning_tokens: 0 },
+        },
+      },
+    };
+
+    expect(() =>
+      convertResponsesDeltaToChatGenerationChunk(event as any)
+    ).not.toThrow();
+
+    const result = convertResponsesDeltaToChatGenerationChunk(event as any);
+    expect(result).not.toBeNull();
+
+    const message = result!.message as AIMessageChunk;
+    // Parsing failed, so parsed should not be populated.
+    expect(message.additional_kwargs.parsed).toBeUndefined();
+    // Usage metadata should still flow through so the caller can account
+    // for the tokens that were spent on the bad payload.
+    expect(result!.message.usage_metadata).toBeDefined();
+    expect(result!.message.usage_metadata!.input_tokens).toBe(30);
+  });
+
+  it("should still parse cleanly when response text is well-formed JSON", () => {
+    // Regression guard: the try/catch must not change the well-formed path.
+    const event = {
+      type: "response.completed",
+      response: {
+        id: "resp_test_10894_b",
+        model: "gpt-5-mini",
+        object: "response",
+        created_at: 1700000000,
+        status: "completed",
+        incomplete_details: null,
+        metadata: {},
+        user: null,
+        service_tier: "auto",
+        output: [
+          {
+            type: "message",
+            id: "msg_002",
+            role: "assistant",
+            status: "completed",
+            content: [
+              {
+                type: "output_text",
+                text: '{"status":"ok","plan":{"steps":[]}}',
+                annotations: [],
+              },
+            ],
+          },
+        ],
+        text: {
+          format: {
+            type: "json_schema",
+            name: "response",
+            strict: true,
+            schema: {
+              type: "object",
+              additionalProperties: false,
+              required: ["status", "plan"],
+              properties: {
+                status: { type: "string" },
+                plan: { type: "object" },
+              },
+            },
+          },
+        },
+        usage: {
+          input_tokens: 30,
+          output_tokens: 12,
+          total_tokens: 42,
+          input_tokens_details: { cached_tokens: 0 },
+          output_tokens_details: { reasoning_tokens: 0 },
+        },
+      },
+    };
+
+    const result = convertResponsesDeltaToChatGenerationChunk(event as any);
+    expect(result).not.toBeNull();
+
+    const message = result!.message as AIMessageChunk;
+    expect(message.additional_kwargs.parsed).toEqual({
+      status: "ok",
+      plan: { steps: [] },
+    });
+  });
+});
+
+describe("phase parameter support", () => {
+  describe("convertResponsesMessageToAIMessage", () => {
+    it("should include phase on text content blocks when present on message output", () => {
+      const response = {
+        id: "resp_123",
+        model: "gpt-5.4",
+        created_at: 1234567890,
+        object: "response",
+        status: "completed",
+        output: [
+          {
+            type: "message",
+            id: "msg_001",
+            role: "assistant",
+            phase: "commentary",
+            content: [
+              {
+                type: "output_text",
+                text: "Let me check that for you.",
+                annotations: [],
+              },
+            ],
+          },
+        ],
+        usage: {
+          input_tokens: 10,
+          output_tokens: 20,
+          total_tokens: 30,
+        },
+      };
+
+      const result = convertResponsesMessageToAIMessage(response as any);
+      expect(Array.isArray(result.content)).toBe(true);
+      const contentArray = result.content as Array<Record<string, unknown>>;
+      expect(contentArray).toHaveLength(1);
+      expect(contentArray[0].type).toBe("text");
+      expect(contentArray[0].phase).toBe("commentary");
+    });
+
+    it("should include phase 'final_answer' on text content blocks", () => {
+      const response = {
+        id: "resp_456",
+        model: "gpt-5.4",
+        created_at: 1234567890,
+        object: "response",
+        status: "completed",
+        output: [
+          {
+            type: "message",
+            id: "msg_002",
+            role: "assistant",
+            phase: "final_answer",
+            content: [
+              {
+                type: "output_text",
+                text: "The weather is sunny.",
+                annotations: [],
+              },
+            ],
+          },
+        ],
+        usage: {
+          input_tokens: 10,
+          output_tokens: 20,
+          total_tokens: 30,
+        },
+      };
+
+      const result = convertResponsesMessageToAIMessage(response as any);
+      const contentArray = result.content as Array<Record<string, unknown>>;
+      expect(contentArray[0].phase).toBe("final_answer");
+    });
+
+    it("should not include phase on text content blocks when not present on message output", () => {
+      const response = {
+        id: "resp_789",
+        model: "gpt-4o",
+        created_at: 1234567890,
+        object: "response",
+        status: "completed",
+        output: [
+          {
+            type: "message",
+            id: "msg_003",
+            role: "assistant",
+            content: [
+              {
+                type: "output_text",
+                text: "Hello!",
+                annotations: [],
+              },
+            ],
+          },
+        ],
+        usage: {
+          input_tokens: 10,
+          output_tokens: 20,
+          total_tokens: 30,
+        },
+      };
+
+      const result = convertResponsesMessageToAIMessage(response as any);
+      const contentArray = result.content as Array<Record<string, unknown>>;
+      expect(contentArray[0].phase).toBeUndefined();
+    });
+  });
+
+  describe("convertResponsesDeltaToChatGenerationChunk", () => {
+    it("should include phase on text content block when message item has phase", () => {
+      const event = {
+        type: "response.output_item.added",
+        output_index: 0,
+        item: {
+          type: "message",
+          id: "msg_001",
+          role: "assistant",
+          phase: "commentary",
+          content: [],
+          status: "in_progress",
+        },
+      } as any;
+
+      const chunk = convertResponsesDeltaToChatGenerationChunk(event);
+      expect(chunk).not.toBeNull();
+      const contentArray = chunk!.message.content as Array<
+        Record<string, unknown>
+      >;
+      expect(contentArray).toHaveLength(1);
+      expect(contentArray[0].type).toBe("text");
+      expect(contentArray[0].text).toBe("");
+      expect(contentArray[0].phase).toBe("commentary");
+    });
+
+    it("should not include phase content block when message item has no phase", () => {
+      const event = {
+        type: "response.output_item.added",
+        output_index: 0,
+        item: {
+          type: "message",
+          id: "msg_001",
+          role: "assistant",
+          content: [],
+          status: "in_progress",
+        },
+      } as any;
+
+      const chunk = convertResponsesDeltaToChatGenerationChunk(event);
+      expect(chunk).not.toBeNull();
+      const contentArray = chunk!.message.content as Array<
+        Record<string, unknown>
+      >;
+      // Should only have the id set, no content blocks with phase
+      expect(
+        contentArray.filter(
+          (block) => "phase" in block && block.phase !== undefined
+        )
+      ).toHaveLength(0);
+    });
+  });
+
+  describe("convertMessagesToResponsesInput round-trip", () => {
+    it("should preserve plain string assistant content", () => {
+      const aiMessage = new AIMessage({
+        id: "msg_001",
+        content: "Let me check that for you.",
+        response_metadata: {
+          model_provider: "openai",
+        },
+      });
+
+      const result = convertMessagesToResponsesInput({
+        messages: [aiMessage],
+        zdrEnabled: false,
+        model: "gpt-4o",
+      });
+
+      const messageItem = result.find(
+        (item) => (item as any).type === "message"
+      ) as any;
+      expect(messageItem).toBeDefined();
+      expect(messageItem.content).toBe("Let me check that for you.");
+      expect(messageItem.phase).toBeUndefined();
+    });
+
+    it("should preserve phase when converting AIMessage back to responses input (responses/v1)", () => {
+      const aiMessage = new AIMessage({
+        id: "msg_001",
+        content: [
+          {
+            type: "text",
+            text: "Let me check that for you.",
+            phase: "commentary",
+          } as any,
+        ],
+        response_metadata: {
+          model_provider: "openai",
+        },
+      });
+
+      const result = convertMessagesToResponsesInput({
+        messages: [aiMessage],
+        zdrEnabled: false,
+        model: "gpt-5.4",
+      });
+
+      const messageItem = result.find(
+        (item) => (item as any).type === "message"
+      ) as any;
+      expect(messageItem).toBeDefined();
+      expect(messageItem.phase).toBe("commentary");
+    });
+
+    it("should not include phase when content blocks have no phase", () => {
+      const aiMessage = new AIMessage({
+        id: "msg_001",
+        content: [
+          {
+            type: "text",
+            text: "Hello!",
+          },
+        ],
+        response_metadata: {
+          model_provider: "openai",
+        },
+      });
+
+      const result = convertMessagesToResponsesInput({
+        messages: [aiMessage],
+        zdrEnabled: false,
+        model: "gpt-4o",
+      });
+
+      const messageItem = result.find(
+        (item) => (item as any).type === "message"
+      ) as any;
+      expect(messageItem).toBeDefined();
+      expect(messageItem.phase).toBeUndefined();
+    });
+
+    it("should preserve phase from extras through standard content path", () => {
+      const aiMessage = new AIMessage({
+        id: "msg_001",
+        content: [
+          {
+            type: "text",
+            text: "The answer is 42.",
+            extras: { phase: "final_answer" },
+          } as any,
+        ],
+        response_metadata: {
+          model_provider: "openai",
+          output_version: "v1",
+        },
+      });
+
+      const result = convertStandardContentMessageToResponsesInput(aiMessage);
+
+      const messageItem = result.find(
+        (item) => (item as any).type === "message"
+      ) as any;
+      expect(messageItem).toBeDefined();
+      expect(messageItem.phase).toBe("final_answer");
+    });
+  });
+
+  describe("full round-trip", () => {
+    it("should round-trip phase through response -> AIMessage -> input (raw provider path)", () => {
+      // Step 1: Simulate a response with phase
+      const response = {
+        id: "resp_123",
+        model: "gpt-5.4",
+        created_at: 1234567890,
+        object: "response",
+        status: "completed",
+        output: [
+          {
+            type: "message",
+            id: "msg_001",
+            role: "assistant",
+            phase: "commentary",
+            content: [
+              {
+                type: "output_text",
+                text: "Let me check the weather.",
+                annotations: [],
+              },
+            ],
+          },
+        ],
+        usage: {
+          input_tokens: 10,
+          output_tokens: 20,
+          total_tokens: 30,
+        },
+      };
+
+      // Step 2: Convert response to AIMessage (phase on top-level content block)
+      const aiMessage = convertResponsesMessageToAIMessage(response as any);
+      const contentArray = aiMessage.content as Array<Record<string, unknown>>;
+      expect(contentArray[0].phase).toBe("commentary");
+
+      // Step 3: Convert AIMessage back to input via raw provider path
+      const input = convertMessagesToResponsesInput({
+        messages: [aiMessage],
+        zdrEnabled: false,
+        model: "gpt-5.4",
+      });
+
+      const messageItem = input.find(
+        (item) => (item as any).type === "message"
+      ) as any;
+      expect(messageItem).toBeDefined();
+      expect(messageItem.phase).toBe("commentary");
+    });
+
+    it("should round-trip phase through standard content path", () => {
+      // Standard content blocks have phase in extras
+      const aiMessage = new AIMessage({
+        id: "msg_001",
+        content: [
+          {
+            type: "text",
+            text: "The weather is sunny.",
+            extras: { phase: "final_answer" },
+          } as any,
+        ],
+        response_metadata: {
+          model_provider: "openai",
+          output_version: "v1",
+        },
+      });
+
+      const result = convertStandardContentMessageToResponsesInput(aiMessage);
+
+      const messageItem = result.find(
+        (item) => (item as any).type === "message"
+      ) as any;
+      expect(messageItem).toBeDefined();
+      expect(messageItem.phase).toBe("final_answer");
+    });
   });
 });

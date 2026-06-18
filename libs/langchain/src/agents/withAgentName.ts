@@ -1,5 +1,4 @@
 import { BaseMessage, BaseMessageLike } from "@langchain/core/messages";
-import { LanguageModelLike } from "@langchain/core/language_models/base";
 import {
   Runnable,
   RunnableLambda,
@@ -12,6 +11,7 @@ import {
   _addInlineAgentName,
   _removeInlineAgentName,
 } from "./utils.js";
+import { type AgentLanguageModelLike as LanguageModelLike } from "./model.js";
 
 /**
  * Attach formatted agent names to the messages passed to and from a language model.

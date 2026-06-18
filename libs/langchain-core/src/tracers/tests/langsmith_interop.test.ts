@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 
 import { vi, test, beforeEach, afterEach, afterAll, expect } from "vitest";
 import { traceable } from "langsmith/traceable";
@@ -42,6 +42,13 @@ afterAll(() => {
   process.env.LANGCHAIN_TRACING_V2 = originalTracingEnvValue;
 });
 
+const getRelevantCalls = async () => {
+  await awaitAllCallbacks();
+  return fetchMock.mock.calls.filter((call: any) => {
+    return call[0].startsWith("https://api.smith.langchain.com/runs");
+  });
+};
+
 test.each(["true", "false"])(
   "traceables nested within runnables with background callbacks %s",
   async (value) => {
@@ -64,9 +71,7 @@ test.each(["true", "false"])(
 
     await root.invoke([new HumanMessage({ content: "Hello!" })]);
 
-    const relevantCalls = fetchMock.mock.calls.filter((call: any) => {
-      return call[0].startsWith("https://api.smith.langchain.com/runs");
-    });
+    const relevantCalls = await getRelevantCalls();
 
     expect(relevantCalls.length).toEqual(4);
     const firstCallParams = JSON.parse(
@@ -164,9 +169,8 @@ test.each(["true", "false"])(
 test.each(["true", "false"])(
   "traceables nested within runnables with a context var set and with background callbacks %s",
   async (value) => {
-    const { setContextVariable, getContextVariable } = await import(
-      "../../context.js"
-    );
+    const { setContextVariable, getContextVariable } =
+      await import("../../context.js");
     process.env.LANGCHAIN_CALLBACKS_BACKGROUND = value;
 
     setContextVariable("foo", "bar");
@@ -190,9 +194,7 @@ test.each(["true", "false"])(
 
     await root.invoke([new HumanMessage({ content: "Hello!" })]);
 
-    const relevantCalls = fetchMock.mock.calls.filter((call: any) => {
-      return call[0].startsWith("https://api.smith.langchain.com/runs");
-    });
+    const relevantCalls = await getRelevantCalls();
 
     expect(relevantCalls.length).toEqual(4);
     const firstCallParams = JSON.parse(
@@ -314,9 +316,7 @@ test.each(["true", "false"])(
       // Just consume iterator
     }
 
-    const relevantCalls = fetchMock.mock.calls.filter((call: any) => {
-      return call[0].startsWith("https://api.smith.langchain.com/runs");
-    });
+    const relevantCalls = await getRelevantCalls();
 
     expect(relevantCalls.length).toEqual(3);
     const firstCallParams = JSON.parse(
@@ -409,9 +409,7 @@ test.each(["true", "false"])(
 
     await aiGreet(new HumanMessage({ content: "Hello!" }), "mitochondria");
 
-    const relevantCalls = fetchMock.mock.calls.filter((call: any) => {
-      return call[0].startsWith("https://api.smith.langchain.com/runs");
-    });
+    const relevantCalls = await getRelevantCalls();
 
     expect(relevantCalls.length).toEqual(4);
     const firstCallParams = JSON.parse(
@@ -509,9 +507,8 @@ test.each(["true", "false"])(
 test.each(["true", "false"])(
   "runnables nested within traceables and a context var set with background callbacks %s",
   async (value) => {
-    const { setContextVariable, getContextVariable } = await import(
-      "../../context.js"
-    );
+    const { setContextVariable, getContextVariable } =
+      await import("../../context.js");
     process.env.LANGCHAIN_CALLBACKS_BACKGROUND = value;
     setContextVariable("foo", "bar");
 
@@ -533,9 +530,7 @@ test.each(["true", "false"])(
 
     await aiGreet(new HumanMessage({ content: "Hello!" }), "mitochondria");
 
-    const relevantCalls = fetchMock.mock.calls.filter((call: any) => {
-      return call[0].startsWith("https://api.smith.langchain.com/runs");
-    });
+    const relevantCalls = await getRelevantCalls();
 
     expect(relevantCalls.length).toEqual(4);
     const firstCallParams = JSON.parse(
@@ -666,9 +661,7 @@ test.each(["true", "false"])(
 
     await client.awaitPendingTraceBatches();
 
-    const relevantCalls = fetchMock.mock.calls.filter((call: any) => {
-      return call[0].startsWith("https://api.smith.langchain.com/runs");
-    });
+    const relevantCalls = await getRelevantCalls();
 
     expect(relevantCalls.length).toEqual(3);
     const firstCallParams = JSON.parse(
@@ -792,9 +785,7 @@ test.each(["true", "false"])(
     await awaitAllCallbacks();
     await client.awaitPendingTraceBatches();
 
-    const relevantCalls = fetchMock.mock.calls.filter((call: any) => {
-      return call[0].startsWith("https://api.smith.langchain.com/runs");
-    });
+    const relevantCalls = await getRelevantCalls();
 
     expect(relevantCalls.length).toEqual(4);
     const firstCallParams = JSON.parse(
@@ -954,9 +945,7 @@ test.each(["true", "false"])(
 
     await awaitAllCallbacks();
 
-    const relevantCalls = fetchMock.mock.calls.filter((call: any) => {
-      return call[0].startsWith("https://api.smith.langchain.com/runs");
-    });
+    const relevantCalls = await getRelevantCalls();
 
     expect(relevantCalls.length).toBeGreaterThan(8);
 
@@ -1089,9 +1078,7 @@ test.each(["true", "false"])(
 
     await awaitAllCallbacks();
 
-    const relevantCalls = fetchMock.mock.calls.filter((call: any) => {
-      return call[0].startsWith("https://api.smith.langchain.com/runs");
-    });
+    const relevantCalls = await getRelevantCalls();
 
     expect(relevantCalls.length).toBeGreaterThan(8);
 
@@ -1204,9 +1191,7 @@ test("LangChain V2 tracer creates and updates runs with replicas", async () => {
 
   await awaitAllCallbacks();
 
-  const relevantCalls = fetchMock.mock.calls.filter((call: any) => {
-    return call[0].startsWith("https://api.smith.langchain.com/runs");
-  });
+  const relevantCalls = await getRelevantCalls();
 
   expect(relevantCalls.length).toEqual(8);
   const firstCallParams = JSON.parse(

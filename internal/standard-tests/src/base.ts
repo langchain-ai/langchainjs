@@ -39,9 +39,11 @@ export class BaseChatModelsTests<
   CallOptions extends BaseChatModelCallOptions = BaseChatModelCallOptions,
   OutputMessageType extends AIMessageChunk = AIMessageChunk,
   ConstructorArgs extends RecordStringAny = RecordStringAny,
-> implements
-    BaseChatModelsTestsFields<CallOptions, OutputMessageType, ConstructorArgs>
-{
+> implements BaseChatModelsTestsFields<
+  CallOptions,
+  OutputMessageType,
+  ConstructorArgs
+> {
   Cls: BaseChatModelConstructor<
     CallOptions,
     OutputMessageType,

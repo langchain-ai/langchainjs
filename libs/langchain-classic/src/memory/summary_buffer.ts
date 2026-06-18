@@ -13,8 +13,7 @@ import {
  * Interface for the input parameters of the
  * ConversationSummaryBufferMemory class.
  */
-export interface ConversationSummaryBufferMemoryInput
-  extends BaseConversationSummaryMemoryInput {
+export interface ConversationSummaryBufferMemoryInput extends BaseConversationSummaryMemoryInput {
   maxTokenLimit?: number;
 }
 

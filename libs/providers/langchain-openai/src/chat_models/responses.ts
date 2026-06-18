@@ -1,5 +1,6 @@
 import { OpenAI as OpenAIClient } from "openai";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import { AIMessage, type BaseMessage } from "@langchain/core/messages";
 import { ChatGenerationChunk, type ChatResult } from "@langchain/core/outputs";
 import { isOpenAITool as isOpenAIFunctionTool } from "@langchain/core/language_models/base";
@@ -14,16 +15,21 @@ import {
   isOpenAICustomTool,
   ResponsesTool,
 } from "../utils/tools.js";
-import { BaseChatOpenAI, BaseChatOpenAICallOptions } from "./base.js";
+import {
+  BaseChatOpenAI,
+  BaseChatOpenAICallOptions,
+  BaseChatOpenAIFields,
+  getChatOpenAIModelParams,
+} from "./base.js";
 import {
   convertMessagesToResponsesInput,
   convertResponsesDeltaToChatGenerationChunk,
   convertResponsesMessageToAIMessage,
 } from "../converters/responses.js";
 import { OpenAIVerbosityParam } from "../types.js";
+import { convertOpenAIResponsesStream } from "../utils/responses_stream_events.js";
 
-export interface ChatOpenAIResponsesCallOptions
-  extends BaseChatOpenAICallOptions {
+export interface ChatOpenAIResponsesCallOptions extends BaseChatOpenAICallOptions {
   /**
    * Configuration options for a text response from the model. Can be plain text or
    * structured JSON data.
@@ -65,9 +71,18 @@ export type ChatResponsesInvocationParams = Omit<
  * @internal
  */
 export class ChatOpenAIResponses<
-  CallOptions extends
-    ChatOpenAIResponsesCallOptions = ChatOpenAIResponsesCallOptions,
+  CallOptions extends ChatOpenAIResponsesCallOptions =
+    ChatOpenAIResponsesCallOptions,
 > extends BaseChatOpenAI<CallOptions> {
+  constructor(model: string, fields?: Omit<BaseChatOpenAIFields, "model">);
+  constructor(fields?: BaseChatOpenAIFields);
+  constructor(
+    modelOrFields?: string | BaseChatOpenAIFields,
+    fieldsArg?: Omit<BaseChatOpenAIFields, "model">
+  ) {
+    super(getChatOpenAIModelParams(modelOrFields, fieldsArg));
+  }
+
   override invocationParams(
     options?: this["ParsedCallOptions"]
   ): ChatResponsesInvocationParams {
@@ -84,6 +99,7 @@ export class ChatOpenAIResponses<
       temperature: this.temperature,
       top_p: this.topP,
       user: this.user,
+      service_tier: this.service_tier,
 
       // if include_usage is set or streamUsage then stream must be set to true.
       stream: this.streaming,
@@ -216,6 +232,52 @@ export class ChatOpenAIResponses<
     }
   }
 
+  async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    const streamIterable = await this.completionWithRetry(
+      {
+        ...this.invocationParams(options),
+        input: convertMessagesToResponsesInput({
+          messages,
+          zdrEnabled: this.zdrEnabled ?? false,
+          model: this.model,
+        }),
+        stream: true,
+      },
+      options
+    );
+
+    const shouldStreamUsage = this.streamUsage ?? options.streamUsage;
+
+    const abortableStream = async function* (
+      source: AsyncIterable<OpenAIClient.Responses.ResponseStreamEvent>,
+      signal?: AbortSignal
+    ) {
+      for await (const data of source) {
+        if (signal?.aborted) {
+          return;
+        }
+        yield data;
+      }
+    };
+
+    yield* convertOpenAIResponsesStream(
+      abortableStream(streamIterable, options.signal),
+      {
+        streamUsage: shouldStreamUsage ?? true,
+        provider: this.streamEventProvider,
+      }
+    );
+  }
+
+  /** Provider id used in native stream protocol passthrough events. */
+  protected get streamEventProvider(): string {
+    return "openai";
+  }
+
   async *_streamResponseChunks(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
@@ -316,12 +378,19 @@ export class ChatOpenAIResponses<
           format: customToolData.format,
         } as ResponsesTool);
       } else if (isOpenAIFunctionTool(tool)) {
+        const extra: Record<string, unknown> = {};
+        for (const [k, v] of Object.entries(tool)) {
+          if (k !== "type" && k !== "function") {
+            extra[k] = v;
+          }
+        }
         reducedTools.push({
           type: "function",
           name: tool.function.name,
           parameters: tool.function.parameters,
           description: tool.function.description,
           strict: fields?.strict ?? null,
+          ...extra,
         });
       } else if (isOpenAICustomTool(tool)) {
         reducedTools.push(convertCompletionsCustomTool(tool));

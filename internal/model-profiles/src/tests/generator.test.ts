@@ -1,17 +1,21 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { generateModelProfiles } from "../generator.js";
 import type { ProviderMap } from "../api-schema.js";
-import { findMonorepoRoot } from "../path-utils.js";
+import { findMonorepoRoot } from "../config.js";
 
-// Mock prettier
-vi.mock("prettier", () => ({
-  default: {
-    resolveConfig: vi.fn().mockResolvedValue({}),
-    format: vi.fn((code: string) => Promise.resolve(code)),
-  },
+const formatMock = vi.hoisted(() =>
+  vi.fn(async (_fileName: string, code: string) => ({
+    code,
+    errors: [],
+  }))
+);
+
+vi.mock("oxfmt", () => ({
+  format: formatMock,
 }));
+
+const { generateModelProfiles } = await import("../generator.js");
 
 /**
  * Helper function to create a mock model for testing.
@@ -303,8 +307,8 @@ describe("generator", () => {
       ).rejects.toThrow("Failed to fetch models.dev API");
     });
 
-    it("should format output with Prettier", async () => {
-      const prettier = await import("prettier");
+    it("should format output with oxfmt", async () => {
+      const oxfmt = await import("oxfmt");
       const mockProviderData: ProviderMap = {
         openai: createMockProvider("openai", {
           "gpt-4": createMockModel({
@@ -323,8 +327,12 @@ describe("generator", () => {
 
       await generateModelProfiles("openai", {}, {}, outputPath);
 
-      expect(prettier.default.format).toHaveBeenCalled();
-      expect(prettier.default.resolveConfig).toHaveBeenCalledWith(outputPath);
+      expect(oxfmt.format).toHaveBeenCalled();
+      expect(oxfmt.format).toHaveBeenCalledWith(
+        outputPath,
+        expect.any(String),
+        expect.anything()
+      );
     });
   });
 });

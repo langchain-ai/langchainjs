@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 
 import { test, expect } from "vitest";
 import { StringOutputParser } from "../../output_parsers/string.js";
@@ -177,9 +177,10 @@ class StringPromptValueV0 {
   }
 }
 
-class RunnableV0
-  implements RunnableInterfaceV0<StringPromptValueV0, AIMessageV0>
-{
+class RunnableV0 implements RunnableInterfaceV0<
+  StringPromptValueV0,
+  AIMessageV0
+> {
   lc_serializable = true;
 
   protected lc_runnable = true;
@@ -234,7 +235,7 @@ class RunnableV0
     throw new Error("Not implemented");
   }
 
-  // eslint-disable-next-line require-yield
+  // oxlint-disable-next-line require-yield
   async *transform(
     _generator: AsyncGenerator<StringPromptValueV0>,
     _options: Partial<any>

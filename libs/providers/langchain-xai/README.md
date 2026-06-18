@@ -41,7 +41,7 @@ xAI supports server-side tools that are executed by the API rather than requirin
 import { ChatXAI, tools } from "@langchain/xai";
 
 const model = new ChatXAI({
-  model: "grok-2-1212",
+  model: "grok-3-fast",
 });
 
 // Create the built-in live_search tool with optional parameters
@@ -66,7 +66,7 @@ console.log(result.content);
 import { ChatXAI } from "@langchain/xai";
 
 const model = new ChatXAI({
-  model: "grok-2-1212",
+  model: "grok-3-fast",
   searchParameters: {
     mode: "auto", // "auto" | "on" | "off"
     max_search_results: 5,
@@ -159,7 +159,7 @@ const result = await model.invoke("Summarize the latest posts from this feed", {
 ```typescript
 import { ChatXAI, tools } from "@langchain/xai";
 
-const model = new ChatXAI({ model: "grok-2-1212" });
+const model = new ChatXAI({ model: "grok-3-fast" });
 
 const modelWithTools = model.bindTools([
   tools.xaiLiveSearch(), // Built-in server tool

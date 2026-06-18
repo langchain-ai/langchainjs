@@ -48,6 +48,7 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
       ...super.lc_aliases,
       tool_calls: "tool_calls",
       invalid_tool_calls: "invalid_tool_calls",
+      usage_metadata: "usage_metadata",
     };
   }
 
@@ -101,7 +102,8 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
       if (
         initParams.response_metadata !== undefined &&
         "output_version" in initParams.response_metadata &&
-        initParams.response_metadata.output_version === "v1"
+        initParams.response_metadata.output_version === "v1" &&
+        initParams.content !== undefined
       ) {
         initParams.contentBlocks =
           initParams.content as Array<ContentBlock.Standard>;
@@ -109,10 +111,20 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
       }
 
       if (initParams.contentBlocks !== undefined) {
-        // Add constructor tool calls as content blocks
+        // Add constructor tool calls as content blocks only when they are not
+        // already represented in the v1 content payload.
         if (initParams.tool_calls) {
+          const missingContentBlockToolCalls = initParams.tool_calls.filter(
+            (toolCall) =>
+              !initParams.contentBlocks?.some(
+                (block) =>
+                  block.type === "tool_call" &&
+                  block.id === toolCall.id &&
+                  block.name === toolCall.name
+              )
+          );
           initParams.contentBlocks.push(
-            ...initParams.tool_calls.map((toolCall) => ({
+            ...missingContentBlockToolCalls.map((toolCall) => ({
               type: "tool_call" as const,
               id: toolCall.id,
               name: toolCall.name,
@@ -134,12 +146,15 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
               )
           );
         if (missingToolCalls.length > 0) {
-          initParams.tool_calls = missingToolCalls.map((block) => ({
-            type: "tool_call" as const,
-            id: block.id!,
-            name: block.name,
-            args: block.args as Record<string, unknown>,
-          })) as $InferToolCalls<TStructure>[];
+          initParams.tool_calls = [
+            ...(initParams.tool_calls ?? []),
+            ...missingToolCalls.map((block) => ({
+              type: "tool_call" as const,
+              id: block.id!,
+              name: block.name,
+              args: block.args as Record<string, unknown>,
+            })),
+          ] as $InferToolCalls<TStructure>[];
         }
       }
     }
@@ -256,8 +271,8 @@ export type AIMessageChunkFields<
  * other AI message chunks.
  */
 export class AIMessageChunk<
-    TStructure extends MessageStructure = MessageStructure,
-  >
+  TStructure extends MessageStructure = MessageStructure,
+>
   extends BaseMessageChunk<TStructure, "ai">
   implements AIMessage<TStructure>, AIMessageChunkFields<TStructure>
 {
@@ -329,6 +344,7 @@ export class AIMessageChunk<
       tool_calls: "tool_calls",
       invalid_tool_calls: "invalid_tool_calls",
       tool_call_chunks: "tool_call_chunks",
+      usage_metadata: "usage_metadata",
     };
   }
 
@@ -402,6 +418,7 @@ export class AIMessageChunk<
         chunk.response_metadata
       ),
       tool_call_chunks: [],
+      tool_calls: [],
       id: this.id ?? chunk.id,
     };
     if (
@@ -413,7 +430,17 @@ export class AIMessageChunk<
         chunk.tool_call_chunks as ContentBlock.Tools.ToolCallChunk[]
       );
       if (rawToolCalls !== undefined && rawToolCalls.length > 0) {
-        combinedFields.tool_call_chunks = rawToolCalls;
+        combinedFields.tool_call_chunks = rawToolCalls as ToolCallChunk[];
+      }
+    }
+    if (this.tool_calls !== undefined || chunk.tool_calls !== undefined) {
+      const rawToolCalls = _mergeLists(
+        this.tool_calls as ContentBlock.Tools.ToolCall[],
+        chunk.tool_calls as ContentBlock.Tools.ToolCall[]
+      );
+      if (rawToolCalls !== undefined && rawToolCalls.length > 0) {
+        combinedFields.tool_calls =
+          rawToolCalls as $InferToolCalls<TStructure>[];
       }
     }
     if (

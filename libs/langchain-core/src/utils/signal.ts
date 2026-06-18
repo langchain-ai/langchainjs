@@ -26,7 +26,7 @@ export async function raceWithSignal<T>(
       listener = () => {
         reject(getAbortSignalError(signal));
       };
-      signal.addEventListener("abort", listener);
+      signal.addEventListener("abort", listener, { once: true });
       // Must be here inside the promise to avoid a race condition
       if (signal.aborted) {
         reject(getAbortSignalError(signal));
@@ -43,7 +43,7 @@ export async function raceWithSignal<T>(
  * @returns The error from the abort signal.
  */
 export function getAbortSignalError(signal?: AbortSignal) {
-  // eslint-disable-next-line no-instanceof/no-instanceof
+  // oxlint-disable-next-line no-instanceof/no-instanceof
   if (signal?.reason instanceof Error) {
     return signal.reason;
   }

@@ -48,6 +48,6 @@ const { output } = await agentExecutor.invoke({ input });
 
 console.log(output);
 
-/* 
+/*
 It's 28 degrees Celsius in Paris.
 */

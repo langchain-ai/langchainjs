@@ -1,5 +1,37 @@
 # @langchain/cloudflare
 
+## 1.1.0
+
+### Minor Changes
+
+- [#10924](https://github.com/langchain-ai/langchainjs/pull/10924) [`2e28115`](https://github.com/langchain-ai/langchainjs/commit/2e2811509d75af94f57cedcc3842f178f4c020d1) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(cloudflare): add native streamEvents event conversion
+
+## 1.0.6
+
+### Patch Changes
+
+- [#10872](https://github.com/langchain-ai/langchainjs/pull/10872) [`a640079`](https://github.com/langchain-ai/langchainjs/commit/a64007997a4940f51bba3c1c83dae89d1ccfb692) Thanks [@hntrl](https://github.com/hntrl)! - chore(deps): remove redundant @types/uuid declarations
+
+  Remove `@types/uuid` from package manifests that rely on `@langchain/core/utils/uuid` or do not require uuid type stubs directly, and refresh the lockfile entries accordingly.
+
+## 1.0.5
+
+### Patch Changes
+
+- [#10776](https://github.com/langchain-ai/langchainjs/pull/10776) [`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6) Thanks [@hntrl](https://github.com/hntrl)! - fix(deps): remediate uuid vulnerability by removing direct uuid usage
+
+## 1.0.4
+
+### Patch Changes
+
+- [#10106](https://github.com/langchain-ai/langchainjs/pull/10106) [`9f30267`](https://github.com/langchain-ai/langchainjs/commit/9f30267e95a2a42fac71f1d3674b84c5a190dbbc) Thanks [@hntrl](https://github.com/hntrl)! - Add package version metadata to runnable traces. Each package now stamps its version in `this.metadata.versions` at construction time, making version info available in LangSmith trace metadata.
+
+## 1.0.3
+
+### Patch Changes
+
+- [#10080](https://github.com/langchain-ai/langchainjs/pull/10080) [`b583729`](https://github.com/langchain-ai/langchainjs/commit/b583729e99cf0c035630f6b311c4d069a1980cca) Thanks [@hntrl](https://github.com/hntrl)! - Add string-model constructor overloads for chat models (with supporting tests where applicable).
+
 ## 1.0.2
 
 ### Patch Changes

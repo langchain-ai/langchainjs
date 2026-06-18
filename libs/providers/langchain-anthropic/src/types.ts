@@ -5,7 +5,7 @@ export type AnthropicToolResponse = {
   type: "tool_use";
   id: string;
   name: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   input: Record<string, any>;
 };
 export type AnthropicMessageParam = Anthropic.MessageParam;
@@ -31,7 +31,8 @@ export type AnthropicToolChoice =
   | "none"
   | string;
 export type ChatAnthropicToolType = Anthropic.Messages.Tool | BindToolsInput;
-export type ChatAnthropicOutputFormat = Anthropic.Beta.BetaJSONOutputFormat;
+export type ChatAnthropicOutputFormat = Anthropic.Messages.JSONOutputFormat;
+export type AnthropicOutputConfig = Anthropic.Messages.OutputConfig;
 
 export type AnthropicTextBlockParam = Anthropic.Messages.TextBlockParam;
 export type AnthropicImageBlockParam = Anthropic.Messages.ImageBlockParam;
@@ -51,6 +52,8 @@ export type AnthropicWebSearchResultBlockParam =
 export type AnthropicSearchResultBlockParam = Anthropic.SearchResultBlockParam;
 export type AnthropicContainerUploadBlockParam =
   Anthropic.Beta.BetaContainerUploadBlockParam;
+export type AnthropicCompactionBlockParam =
+  Anthropic.Beta.BetaCompactionBlockParam;
 export type AnthropicMCPServerURLDefinition =
   Anthropic.Beta.Messages.BetaRequestMCPServerURLDefinition;
 
@@ -67,7 +70,8 @@ export type ChatAnthropicContentBlock =
   | AnthropicWebSearchToolResultBlockParam
   | AnthropicWebSearchResultBlockParam
   | AnthropicSearchResultBlockParam
-  | AnthropicContainerUploadBlockParam;
+  | AnthropicContainerUploadBlockParam
+  | AnthropicCompactionBlockParam;
 
 export function isAnthropicImageBlockParam(
   block: unknown
@@ -139,7 +143,7 @@ export type AnthropicBuiltInToolUnion = Exclude<
  * A type representing additional parameters that can be passed to the
  * Anthropic API.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export type Kwargs = Record<string, any>;
 
 export type AnthropicInvocationParams = Omit<

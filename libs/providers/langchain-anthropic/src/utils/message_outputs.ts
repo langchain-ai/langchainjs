@@ -11,9 +11,10 @@ import type { ToolCallChunk } from "@langchain/core/messages/tool";
 import { ChatGeneration } from "@langchain/core/outputs";
 import { AnthropicMessageResponse } from "../types.js";
 import { extractToolCalls } from "../output_parsers.js";
+import { _isAnthropicCompactionBlock } from "./content.js";
 
 export function _makeMessageChunkFromAnthropicEvent(
-  data: Anthropic.Messages.RawMessageStreamEvent,
+  data: Anthropic.Beta.Messages.BetaRawMessageStreamEvent,
   fields: {
     streamUsage: boolean;
     coerceContentToString: boolean;
@@ -24,14 +25,14 @@ export function _makeMessageChunkFromAnthropicEvent(
   const response_metadata = { model_provider: "anthropic" };
   if (data.type === "message_start") {
     const { content, usage, ...additionalKwargs } = data.message;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const filteredAdditionalKwargs: Record<string, any> = {};
     for (const [key, value] of Object.entries(additionalKwargs)) {
       if (value !== undefined && value !== null) {
         filteredAdditionalKwargs[key] = value;
       }
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const { input_tokens, output_tokens, ...rest }: Record<string, any> =
       usage ?? {};
     const usageMetadata = buildUsageMetadata(usage);
@@ -54,12 +55,6 @@ export function _makeMessageChunkFromAnthropicEvent(
       input_tokens: 0,
       output_tokens: data.usage.output_tokens,
       total_tokens: data.usage.output_tokens,
-      input_token_details: {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        cache_creation: (data.usage as any).cache_creation_input_tokens,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        cache_read: (data.usage as any).cache_read_input_tokens,
-      },
     };
     const responseMetadata =
       "context_management" in data.delta
@@ -132,7 +127,7 @@ export function _makeMessageChunkFromAnthropicEvent(
         }),
       };
     } else {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       const contentBlock: Record<string, any> = data.delta;
       if ("citation" in contentBlock) {
         contentBlock.citations = [contentBlock.citation];
@@ -228,6 +223,36 @@ export function _makeMessageChunkFromAnthropicEvent(
         response_metadata,
       }),
     };
+  } else if (
+    data.type === "content_block_start" &&
+    _isAnthropicCompactionBlock(data.content_block)
+  ) {
+    return {
+      chunk: new AIMessageChunk({
+        content: fields.coerceContentToString
+          ? ""
+          : [{ index: data.index, ...data.content_block }],
+        response_metadata,
+      }),
+    };
+  } else if (
+    data.type === "content_block_delta" &&
+    data.delta.type === "compaction_delta"
+  ) {
+    return {
+      chunk: new AIMessageChunk({
+        content: fields.coerceContentToString
+          ? ""
+          : [
+              {
+                index: data.index,
+                ...data.delta,
+                type: "compaction",
+              },
+            ],
+        response_metadata,
+      }),
+    };
   }
   return null;
 }
@@ -262,7 +287,7 @@ export function anthropicResponseToChatMessages(
       {
         text: "",
         message: new AIMessage({
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // oxlint-disable-next-line @typescript-eslint/no-explicit-any
           content: messages as any,
           additional_kwargs: additionalKwargs,
           tool_calls: toolCalls,

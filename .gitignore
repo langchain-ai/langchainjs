@@ -11,6 +11,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log
 .pnpm-debug.log*
+.pnpm-store
 
 package-lock.json
 yarn.lock
@@ -50,8 +51,13 @@ coverage/
 !**/src/**/*.js
 !**/src/**/*.d.ts
 !**/src/**/*.d.cts
+!internal/tsconfig/vitest-matchers.d.ts
 
 examples/src/createAgent/*.png
 libs/langchain/graph-matrix.mermaid.md
+libs/langchain-core/src/**/*.d.ts
 # LangGraph API
 .langgraph_api
+
+# Build info files
+*.tsbuildinfo

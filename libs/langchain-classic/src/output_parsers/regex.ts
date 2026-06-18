@@ -56,12 +56,12 @@ export class RegexParser extends BaseOutputParser<Record<string, string>> {
     outputKeys?: string[],
     defaultOutputKey?: string
   ) {
-    // eslint-disable-next-line no-instanceof/no-instanceof
+    // oxlint-disable-next-line no-instanceof/no-instanceof
     if (typeof fields === "string" || fields instanceof RegExp) {
-      // eslint-disable-next-line no-param-reassign
+      // oxlint-disable-next-line no-param-reassign
       fields = { regex: fields, outputKeys: outputKeys!, defaultOutputKey };
     }
-    // eslint-disable-next-line no-instanceof/no-instanceof
+    // oxlint-disable-next-line no-instanceof/no-instanceof
     if (fields.regex instanceof RegExp) {
       fields.regex = {
         pattern: fields.regex.source,

@@ -1,5 +1,5 @@
-/* eslint-disable prefer-template */
-/* eslint-disable default-case */
+/* oxlint-disable prefer-template */
+/* oxlint-disable default-case */
 // Adapted from https://github.com/gfortaine/fetch-event-source/blob/main/src/parse.ts
 // due to a packaging issue in the original.
 // MIT License
@@ -29,12 +29,12 @@ export interface EventSourceMessage {
  * @returns {Promise<void>} A promise that will be resolved when the stream closes.
  */
 export async function getBytes(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   stream: ReadableStream<Uint8Array> | AsyncIterable<any>,
   onChunk: (arr: Uint8Array, flush?: boolean) => void
 ) {
   // TODO: Use Async iteration for both cases?
-  // eslint-disable-next-line no-instanceof/no-instanceof
+  // oxlint-disable-next-line no-instanceof/no-instanceof
   if (stream instanceof ReadableStream) {
     const reader = stream.getReader();
     // CHANGED: Introduced a "flush" mechanism to process potential pending messages when the stream ends.
@@ -57,7 +57,7 @@ export async function getBytes(
         onChunk(new Uint8Array(chunk));
       }
       onChunk(new Uint8Array(), true);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       throw new Error(
         [
@@ -131,7 +131,7 @@ export function getLines(
           // @ts-expect-error \r case below should fallthrough to \n:
           case ControlChars.CarriageReturn:
             discardTrailingNewline = true;
-          // eslint-disable-next-line no-fallthrough
+          // oxlint-disable-next-line no-fallthrough
           case ControlChars.NewLine:
             lineEnd = position;
             break;

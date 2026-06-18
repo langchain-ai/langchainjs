@@ -200,7 +200,7 @@ export type QueryConstructorChainOptions = QueryConstructorRunnableOptions;
 
 export function loadQueryConstructorRunnable(
   opts: QueryConstructorRunnableOptions
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
 ): Runnable<any, StructuredQuery, RunnableConfig<Record<string, any>>> {
   const prompt = _getPrompt(
     opts.documentContents,

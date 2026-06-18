@@ -26,6 +26,17 @@ export function _isAnthropicRedactedThinkingBlock(
   );
 }
 
+export function _isAnthropicCompactionBlock(
+  block: unknown
+): block is Anthropic.Beta.BetaCompactionBlockParam {
+  return (
+    typeof block === "object" &&
+    block !== null &&
+    "type" in block &&
+    block.type === "compaction"
+  );
+}
+
 export function _isAnthropicSearchResultBlock(
   block: unknown
 ): block is Anthropic.Beta.BetaSearchResultBlockParam {

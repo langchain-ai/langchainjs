@@ -1,5 +1,5 @@
-/* eslint-disable no-instanceof/no-instanceof */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable no-instanceof/no-instanceof */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { InteropZodObject } from "@langchain/core/utils/types";
 
 import {
@@ -14,15 +14,24 @@ import {
   type StreamMode,
   type StreamOutputMap,
   type PregelOptions,
+  type StreamTransformer,
 } from "@langchain/langgraph";
-import type { CheckpointListOptions } from "@langchain/langgraph-checkpoint";
+import type {
+  BaseCheckpointSaver,
+  BaseStore,
+  CheckpointListOptions,
+} from "@langchain/langgraph-checkpoint";
 import {
   ToolMessage,
   AIMessage,
   MessageStructure,
 } from "@langchain/core/messages";
 import { IterableReadableStream } from "@langchain/core/utils/stream";
-import type { Runnable, RunnableConfig } from "@langchain/core/runnables";
+import {
+  mergeConfigs,
+  type Runnable,
+  type RunnableConfig,
+} from "@langchain/core/runnables";
 import type { StreamEvent } from "@langchain/core/tracers/log_stream";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
 import { createAgentState } from "./annotation.js";
@@ -43,7 +52,11 @@ import {
   initializeMiddlewareStates,
   parseJumpToTarget,
 } from "./nodes/utils.js";
-import { StateManager } from "./state.js";
+import {
+  createToolCallTransformer,
+  type AgentRunStream,
+  type InferStreamExtensions,
+} from "./stream.js";
 
 import type {
   WithStateGraphNodes,
@@ -56,16 +69,18 @@ import type { BuiltInState, JumpTo, UserInput } from "./types.js";
 import type { InvokeConfiguration, StreamConfiguration } from "./runtime.js";
 import type {
   AgentMiddleware,
+  AnyAgentMiddleware,
   InferMiddlewareContextInputs,
   InferMiddlewareStates,
   InferMiddlewareInputStates,
   InferContextInput,
   AnyAnnotationRoot,
-  InferSchemaInput,
+  InferSchemaValue,
   ToAnnotationRoot,
 } from "./middleware/types.js";
 import { type ResponseFormatUndefined } from "./responses.js";
 import { getHookConstraint } from "./middleware/utils.js";
+import { toGraphDefaultConfig } from "./utils.js";
 
 /**
  * In the ReAct pattern we have three main nodes:
@@ -81,7 +96,7 @@ type BaseGraphDestination =
   | typeof END;
 
 // Helper type to get the state definition with middleware states
-type MergedAgentState<Types extends AgentTypeConfig> = InferSchemaInput<
+type MergedAgentState<Types extends AgentTypeConfig> = InferSchemaValue<
   Types["State"]
 > &
   (Types["Response"] extends ResponseFormatUndefined
@@ -150,8 +165,9 @@ export class ReactAgent<
     Record<string, any>,
     undefined,
     AnyAnnotationRoot,
-    readonly AgentMiddleware[],
-    readonly (ClientTool | ServerTool)[]
+    readonly AnyAgentMiddleware[],
+    readonly (ClientTool | ServerTool)[],
+    ReadonlyArray<() => StreamTransformer<any>>
   >,
 > {
   /**
@@ -161,21 +177,31 @@ export class ReactAgent<
    */
   declare readonly "~agentTypes": Types;
 
-  #graph: AgentGraph<Types>;
+  #graph: CompiledStateGraph<any, any, any, any, any, any, unknown>;
 
   #toolBehaviorVersion: "v1" | "v2" = "v2";
 
   #agentNode: AgentNode<any, AnyAnnotationRoot>;
 
-  #stateManager = new StateManager();
+  #defaultConfig: RunnableConfig;
 
   constructor(
     public options: CreateAgentParams<
       Types["Response"],
       Types["State"],
       Types["Context"]
-    >
+    >,
+    defaultConfig?: RunnableConfig
   ) {
+    this.#defaultConfig = mergeConfigs(defaultConfig ?? {}, {
+      metadata: { ls_integration: "langchain_create_agent" },
+      configurable: { ls_agent_type: "root" },
+    });
+    if (options.name) {
+      this.#defaultConfig = mergeConfigs(this.#defaultConfig, {
+        metadata: { lc_agent_name: options.name },
+      });
+    }
     this.#toolBehaviorVersion = options.version ?? this.#toolBehaviorVersion;
 
     /**
@@ -215,11 +241,14 @@ export class ReactAgent<
      * Create a schema that merges agent base schema with middleware state schemas
      * Using Zod with withLangGraph ensures LangGraph Studio gets proper metadata
      */
+    const hasDynamicStructuredResponse = Boolean(
+      this.options.middleware?.some((middleware) => middleware.wrapModelCall)
+    );
     const { state, input, output } = createAgentState<
       Types["State"],
       Types["Middleware"]
     >(
-      this.options.responseFormat !== undefined,
+      this.options.responseFormat !== undefined || hasDynamicStructuredResponse,
       this.options.stateSchema as Types["State"],
       this.options.middleware as Types["Middleware"]
     );
@@ -256,13 +285,7 @@ export class ReactAgent<
       name: string;
       allowed?: string[];
     }[] = [];
-    const wrapModelCallHookMiddleware: [
-      AgentMiddleware,
-      /**
-       * ToDo: better type to get the state of middleware
-       */
-      () => any,
-    ][] = [];
+    const wrapModelCallHookMiddleware: AgentMiddleware[] = [];
 
     this.#agentNode = new AgentNode({
       model: this.options.model,
@@ -291,10 +314,7 @@ export class ReactAgent<
 
       middlewareNames.add(m.name);
       if (m.beforeAgent) {
-        beforeAgentNode = new BeforeAgentNode(m, {
-          getState: () => this.#stateManager.getState(m.name),
-        });
-        this.#stateManager.addNode(m, beforeAgentNode);
+        beforeAgentNode = new BeforeAgentNode(m);
         const name = `${m.name}.before_agent`;
         beforeAgentNodes.push({
           index: i,
@@ -308,10 +328,7 @@ export class ReactAgent<
         );
       }
       if (m.beforeModel) {
-        beforeModelNode = new BeforeModelNode(m, {
-          getState: () => this.#stateManager.getState(m.name),
-        });
-        this.#stateManager.addNode(m, beforeModelNode);
+        beforeModelNode = new BeforeModelNode(m);
         const name = `${m.name}.before_model`;
         beforeModelNodes.push({
           index: i,
@@ -325,10 +342,7 @@ export class ReactAgent<
         );
       }
       if (m.afterModel) {
-        afterModelNode = new AfterModelNode(m, {
-          getState: () => this.#stateManager.getState(m.name),
-        });
-        this.#stateManager.addNode(m, afterModelNode);
+        afterModelNode = new AfterModelNode(m);
         const name = `${m.name}.after_model`;
         afterModelNodes.push({
           index: i,
@@ -342,10 +356,7 @@ export class ReactAgent<
         );
       }
       if (m.afterAgent) {
-        afterAgentNode = new AfterAgentNode(m, {
-          getState: () => this.#stateManager.getState(m.name),
-        });
-        this.#stateManager.addNode(m, afterAgentNode);
+        afterAgentNode = new AfterAgentNode(m);
         const name = `${m.name}.after_agent`;
         afterAgentNodes.push({
           index: i,
@@ -360,10 +371,7 @@ export class ReactAgent<
       }
 
       if (m.wrapModelCall) {
-        wrapModelCallHookMiddleware.push([
-          m,
-          () => this.#stateManager.getState(m.name),
-        ]);
+        wrapModelCallHookMiddleware.push(m);
       }
     }
 
@@ -650,7 +658,11 @@ export class ReactAgent<
       if (shouldReturnDirect.size > 0) {
         allNodeWorkflows.addConditionalEdges(
           TOOLS_NODE_NAME,
-          this.#createToolsRouter(shouldReturnDirect, exitNode),
+          this.#createToolsRouter(
+            shouldReturnDirect,
+            exitNode,
+            toolReturnTarget
+          ),
           [toolReturnTarget, exitNode as string]
         );
       } else {
@@ -659,14 +671,39 @@ export class ReactAgent<
     }
 
     /**
-     * compile the graph
+     * compile the graph with native + user-defined stream transformers
      */
+    const middlewareStreamTransformers = (
+      this.options.middleware ?? []
+    ).flatMap((m) => m.streamTransformers ?? []);
+    const compileTransformers = [
+      /* built-in stream transformers */
+      createToolCallTransformer([]),
+      /* middleware stream transformers */
+      ...middlewareStreamTransformers,
+      /* user-defined stream transformers */
+      ...(this.options.streamTransformers ?? []),
+    ];
+
     this.#graph = allNodeWorkflows.compile({
       checkpointer: this.options.checkpointer,
       store: this.options.store,
       name: this.options.name,
       description: this.options.description,
+      transformers: compileTransformers,
     }) as unknown as AgentGraph<Types>;
+
+    /**
+     * LangGraph API resolves exported agents by unwrapping ReactAgent to the
+     * inner compiled graph (see langgraph-api load.utils `afterResolve`) and
+     * calls streamEvents on that pregel directly. That path only sees config
+     * baked into the graph via `.withConfig()`, not ReactAgent's #defaultConfig
+     * merged at invoke/stream time — so propagate static defaults here.
+     */
+    const graphDefaultConfig = toGraphDefaultConfig(this.#defaultConfig);
+    if (Object.keys(graphDefaultConfig).length > 0) {
+      this.#graph = this.#graph.withConfig(graphDefaultConfig);
+    }
   }
 
   /**
@@ -674,6 +711,54 @@ export class ReactAgent<
    */
   get graph(): AgentGraph<Types> {
     return this.#graph;
+  }
+
+  get checkpointer(): BaseCheckpointSaver | boolean | undefined {
+    return this.#graph.checkpointer;
+  }
+
+  set checkpointer(value: BaseCheckpointSaver | boolean | undefined) {
+    this.#graph.checkpointer = value;
+  }
+
+  get store(): BaseStore | undefined {
+    return this.#graph.store;
+  }
+
+  set store(value: BaseStore | undefined) {
+    this.#graph.store = value;
+  }
+
+  /**
+   * Creates a new ReactAgent with the given config merged into the existing config.
+   * Follows the same pattern as LangGraph's Pregel.withConfig().
+   *
+   * The merged config is applied as a default that gets merged with any config
+   * passed at invocation time (invoke/stream). Invocation-time config takes precedence.
+   *
+   * @param config - Configuration to merge with existing config
+   * @returns A new ReactAgent instance with the merged configuration
+   *
+   * @example
+   * ```typescript
+   * const agent = createAgent({ model: "gpt-4o", tools: [...] });
+   *
+   * // Set a default recursion limit
+   * const configuredAgent = agent.withConfig({ recursionLimit: 1000 });
+   *
+   * // Chain multiple configs
+   * const debugAgent = agent
+   *   .withConfig({ recursionLimit: 1000 })
+   *   .withConfig({ tags: ["debug"] });
+   * ```
+   */
+  withConfig(
+    config: Omit<RunnableConfig, "store" | "writer" | "interrupt">
+  ): ReactAgent<Types> {
+    return new ReactAgent(
+      this.options,
+      mergeConfigs(this.#defaultConfig, config)
+    );
   }
 
   /**
@@ -707,7 +792,8 @@ export class ReactAgent<
    */
   #createToolsRouter(
     shouldReturnDirect: Set<string>,
-    exitNode: string | typeof END
+    exitNode: string | typeof END,
+    toolReturnTarget: string
   ) {
     return (state: Record<string, unknown>) => {
       const builtInState = state as unknown as BuiltInState;
@@ -722,11 +808,11 @@ export class ReactAgent<
       ) {
         // If we have a response format, route to agent to generate structured response
         // Otherwise, return directly to exit node (could be after_agent or END)
-        return this.options.responseFormat ? AGENT_NODE_NAME : exitNode;
+        return this.options.responseFormat ? toolReturnTarget : exitNode;
       }
 
-      // For non-returnDirect tools, always route back to agent
-      return AGENT_NODE_NAME;
+      // For non-returnDirect tools, route back to loop entry node (could be middleware or agent)
+      return toolReturnTarget;
     };
   }
 
@@ -849,6 +935,14 @@ export class ReactAgent<
         (call) => !toolMessages.some((m) => m.tool_call_id === call.id)
       );
       if (pendingToolCalls && pendingToolCalls.length > 0) {
+        /**
+         * v1: route the full message to the ToolNode; it filters already-processed
+         * calls internally and runs the remaining ones via Promise.all.
+         * v2: dispatch each pending call as a separate Send task.
+         */
+        if (this.#toolBehaviorVersion === "v1") {
+          return TOOLS_NODE_NAME;
+        }
         return pendingToolCalls.map(
           (toolCall) =>
             new Send(TOOLS_NODE_NAME, { ...state, lg_tool_call: toolCall })
@@ -893,10 +987,29 @@ export class ReactAgent<
       }
 
       /**
-       * For routing from afterModel nodes, always use simple string paths
-       * The Send API is handled at the model_request node level
+       * v1: route the full AIMessage to a single ToolNode invocation so all
+       * tool calls run concurrently via Promise.all.
+       *
+       * v2: dispatch each regular tool call as a separate Send task, matching
+       * the behaviour of #createModelRouter when no afterModel middleware is
+       * present.
        */
-      return TOOLS_NODE_NAME;
+      if (this.#toolBehaviorVersion === "v1") {
+        return TOOLS_NODE_NAME;
+      }
+
+      const regularToolCalls = (lastMessage as AIMessage).tool_calls!.filter(
+        (toolCall) => !toolCall.name.startsWith("extract-")
+      );
+
+      if (regularToolCalls.length === 0) {
+        return exitNode;
+      }
+
+      return regularToolCalls.map(
+        (toolCall) =>
+          new Send(TOOLS_NODE_NAME, { ...state, lg_tool_call: toolCall })
+      );
     };
   }
 
@@ -1098,14 +1211,15 @@ export class ReactAgent<
     >
   ) {
     type FullState = MergedAgentState<Types>;
+    const mergedConfig = mergeConfigs(this.#defaultConfig, config);
     const initializedState = await this.#initializeMiddlewareStates(
       state,
-      config as RunnableConfig
+      mergedConfig as RunnableConfig
     );
 
     return this.#graph.invoke(
       initializedState,
-      config as unknown as InferContextInput<
+      mergedConfig as unknown as InferContextInput<
         Types["Context"] extends AnyAnnotationRoot | InteropZodObject
           ? Types["Context"]
           : AnyAnnotationRoot
@@ -1158,6 +1272,7 @@ export class ReactAgent<
    */
   async stream<
     TStreamMode extends StreamMode | StreamMode[] | undefined,
+    TSubgraphs extends boolean,
     TEncoding extends "text/event-stream" | undefined,
   >(
     state: InvokeStateParameter<Types>,
@@ -1169,21 +1284,23 @@ export class ReactAgent<
       > &
         InferMiddlewareContextInputs<Types["Middleware"]>,
       TStreamMode,
+      TSubgraphs,
       TEncoding
     >
   ) {
+    const mergedConfig = mergeConfigs(this.#defaultConfig, config);
     const initializedState = await this.#initializeMiddlewareStates(
       state,
-      config as RunnableConfig
+      mergedConfig as RunnableConfig
     );
     return this.#graph.stream(
       initializedState,
-      config as Record<string, any>
+      mergedConfig as Record<string, any>
     ) as Promise<
       IterableReadableStream<
         StreamOutputMap<
           TStreamMode,
-          false,
+          TSubgraphs,
           MergedAgentState<Types>,
           MergedAgentState<Types>,
           string,
@@ -1193,6 +1310,223 @@ export class ReactAgent<
         >
       >
     >;
+  }
+
+  /**
+   * Executes the agent with the v3 streaming interface, returning an
+   * {@link AgentRunStream} that provides ergonomic, typed projections for
+   * messages, tool calls, and middleware events — without requiring knowledge
+   * of Pregel channels, stream modes, or namespace routing.
+   *
+   * Pass `version: "v3"` to opt into this projection-oriented stream. Omitting
+   * `version` preserves the legacy internal LangGraph event-stream behavior
+   * for compatibility with LangGraph Platform integrations.
+   *
+   * This v3 stream is experimental and its API may change in future releases.
+   * It will become the default in a future major release.
+   *
+   * @param state - The initial state for the agent execution. Can be:
+   *   - An object containing `messages` array and any middleware-specific state properties
+   *   - A Command object for more advanced control flow
+   *
+   * @param config - Runtime configuration including:
+   * @param config.version - Must be `"v3"` to use the {@link AgentRunStream}
+   *   interface. The default legacy event stream is maintained for internal
+   *   integrations and should not be used for new user-facing agent streaming.
+   * @param config.context - The context for the agent execution.
+   * @param config.configurable - LangGraph configuration options like `thread_id`, `run_id`, etc.
+   * @param config.store - The store for the agent execution for persisting state.
+   * @param config.signal - An optional AbortSignal for the agent execution.
+   * @param config.recursionLimit - The recursion limit for the agent execution.
+   * @param config.transformers - Additional call-site stream transformers. These
+   *   run after the built-in agent transformers and any transformers registered
+   *   at creation time via `createAgent({ streamTransformers })`.
+   *
+   * @returns A Promise that resolves to an {@link AgentRunStream} providing:
+   *   - `run.messages` — all AI message lifecycles with streaming `.text` and `.reasoning`
+   *   - `run.toolCalls` — individual tool call streams with `.input`, `.output`, `.status`
+   *   - `run.middleware` — middleware lifecycle events (before/after agent/model)
+   *   - `run.values` — state snapshots (async iterable + promise-like)
+   *   - `run.output` — final agent state when the run completes
+   *   - `run.subgraphs` — child subgraph run streams
+   *   - `run.extensions` — merged projections from user-supplied transformers
+   *
+   * @example
+   * ```typescript
+   * const run = await agent.streamEvents(
+   *   {
+   *     messages: [{ role: "user", content: "What's the weather in Paris?" }],
+   *   },
+   *   { version: "v3" }
+   * );
+   *
+   * // Stream all messages
+   * for await (const msg of run.messages) {
+   *   for await (const token of msg.text) {
+   *     process.stdout.write(token);
+   *   }
+   * }
+   *
+   * // Observe tool calls
+   * for await (const call of run.toolCalls) {
+   *   console.log(`Tool: ${call.name}`, call.input);
+   *   console.log(`Result:`, await call.output);
+   * }
+   *
+   * // Get final state
+   * const state = await run.output;
+   * ```
+   */
+  streamEvents(
+    state: InvokeStateParameter<Types>,
+    config: InvokeConfiguration<
+      InferContextInput<
+        Types["Context"] extends AnyAnnotationRoot | InteropZodObject
+          ? Types["Context"]
+          : AnyAnnotationRoot
+      > &
+        InferMiddlewareContextInputs<Types["Middleware"]>
+    > & {
+      version: "v3";
+      transformers?: ReadonlyArray<() => StreamTransformer<any>>;
+    }
+  ): Promise<
+    AgentRunStream<
+      MergedAgentState<Types>,
+      Types["Tools"],
+      InferStreamExtensions<Types["StreamTransformers"]>
+    >
+  >;
+
+  streamEvents(
+    state: InvokeStateParameter<Types>,
+    config?: StreamConfiguration<
+      InferContextInput<
+        Types["Context"] extends AnyAnnotationRoot | InteropZodObject
+          ? Types["Context"]
+          : AnyAnnotationRoot
+      > &
+        InferMiddlewareContextInputs<Types["Middleware"]>,
+      StreamMode | StreamMode[] | undefined,
+      boolean,
+      "text/event-stream" | undefined
+    > & { version?: "v1" | "v2" },
+    streamOptions?: Parameters<Runnable["streamEvents"]>[2]
+  ): IterableReadableStream<StreamEvent>;
+
+  streamEvents(
+    state: InvokeStateParameter<Types>,
+    config:
+      | (StreamConfiguration<
+          InferContextInput<
+            Types["Context"] extends AnyAnnotationRoot | InteropZodObject
+              ? Types["Context"]
+              : AnyAnnotationRoot
+          > &
+            InferMiddlewareContextInputs<Types["Middleware"]>,
+          StreamMode | StreamMode[] | undefined,
+          boolean,
+          "text/event-stream" | undefined
+        > & { version?: "v1" | "v2" })
+      | undefined,
+    streamOptions: Parameters<Runnable["streamEvents"]>[2]
+  ): IterableReadableStream<StreamEvent>;
+
+  streamEvents(
+    state: InvokeStateParameter<Types>,
+    config?:
+      | (InvokeConfiguration<
+          InferContextInput<
+            Types["Context"] extends AnyAnnotationRoot | InteropZodObject
+              ? Types["Context"]
+              : AnyAnnotationRoot
+          > &
+            InferMiddlewareContextInputs<Types["Middleware"]>
+        > & {
+          version: "v3";
+          transformers?: ReadonlyArray<() => StreamTransformer<any>>;
+        })
+      | (StreamConfiguration<
+          InferContextInput<
+            Types["Context"] extends AnyAnnotationRoot | InteropZodObject
+              ? Types["Context"]
+              : AnyAnnotationRoot
+          > &
+            InferMiddlewareContextInputs<Types["Middleware"]>,
+          StreamMode | StreamMode[] | undefined,
+          boolean,
+          "text/event-stream" | undefined
+        > & { version?: "v1" | "v2" }),
+    streamOptions?: Parameters<Runnable["streamEvents"]>[2]
+  ):
+    | Promise<
+        AgentRunStream<
+          MergedAgentState<Types>,
+          Types["Tools"],
+          InferStreamExtensions<Types["StreamTransformers"]>
+        >
+      >
+    | IterableReadableStream<StreamEvent> {
+    if (config?.version !== "v3" || streamOptions != null) {
+      const mergedConfig = mergeConfigs(this.#defaultConfig, config);
+      const version =
+        config?.version === "v1" || config?.version === "v2"
+          ? config.version
+          : "v2";
+      return this.#graph.streamEvents(
+        state,
+        {
+          ...(mergedConfig as Partial<
+            PregelOptions<
+              any,
+              any,
+              any,
+              StreamMode | StreamMode[] | undefined,
+              boolean,
+              "text/event-stream"
+            >
+          >),
+          version,
+        },
+        streamOptions
+      );
+    }
+
+    return (async () => {
+      type FullState = MergedAgentState<Types>;
+      const agentConfig = config as InvokeConfiguration<
+        InferContextInput<
+          Types["Context"] extends AnyAnnotationRoot | InteropZodObject
+            ? Types["Context"]
+            : AnyAnnotationRoot
+        > &
+          InferMiddlewareContextInputs<Types["Middleware"]>
+      > & {
+        version: "v3";
+        transformers?: ReadonlyArray<() => StreamTransformer<any>>;
+      };
+
+      const {
+        transformers: callSiteTransformers,
+        version: _version,
+        ...restConfig
+      } = agentConfig ?? {};
+      const mergedConfig = mergeConfigs(this.#defaultConfig, restConfig);
+      const initializedState = await this.#initializeMiddlewareStates(
+        state,
+        mergedConfig as RunnableConfig
+      );
+
+      return (await this.#graph.streamEvents(initializedState, {
+        ...(mergedConfig as Record<string, any>),
+        version: "v3",
+        transformers: callSiteTransformers,
+      })) as unknown as AgentRunStream<
+        FullState,
+        Types["Tools"],
+        InferStreamExtensions<Types["StreamTransformers"]>
+      >;
+    })();
   }
 
   /**
@@ -1246,42 +1580,6 @@ export class ReactAgent<
    *
    * Note: we intentionally return as `never` to avoid type errors due to type inference.
    */
-
-  /**
-   * @internal
-   */
-  streamEvents(
-    state: InvokeStateParameter<Types>,
-    config?: StreamConfiguration<
-      InferContextInput<
-        Types["Context"] extends AnyAnnotationRoot | InteropZodObject
-          ? Types["Context"]
-          : AnyAnnotationRoot
-      > &
-        InferMiddlewareContextInputs<Types["Middleware"]>,
-      StreamMode | StreamMode[] | undefined,
-      "text/event-stream" | undefined
-    > & { version?: "v1" | "v2" },
-    streamOptions?: Parameters<Runnable["streamEvents"]>[2]
-  ): IterableReadableStream<StreamEvent> {
-    return this.#graph.streamEvents(
-      state,
-      {
-        ...(config as Partial<
-          PregelOptions<
-            any,
-            any,
-            any,
-            StreamMode | StreamMode[] | undefined,
-            boolean,
-            "text/event-stream"
-          >
-        >),
-        version: config?.version ?? "v2",
-      },
-      streamOptions
-    );
-  }
   /**
    * @internal
    */
@@ -1309,7 +1607,7 @@ export class ReactAgent<
   /**
    * @internal
    */
-  getSubgraphAsync(namespace?: string, recurse?: boolean) {
+  getSubgraphsAsync(namespace?: string, recurse?: boolean) {
     return this.#graph.getSubgraphsAsync(namespace, recurse) as never;
   }
   /**

@@ -1,6 +1,9 @@
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { UsageMetadata, type BaseMessage } from "@langchain/core/messages";
+import { type BaseMessage } from "@langchain/core/messages";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
+import { convertGoogleGeminiStream } from "./utils/stream_events.js";
+import { JsonStream } from "./utils/stream.js";
 
 import {
   BaseChatModel,
@@ -14,16 +17,7 @@ import {
   StructuredOutputMethodOptions,
 } from "@langchain/core/language_models/base";
 import { type ModelProfile } from "@langchain/core/language_models/profile";
-import {
-  Runnable,
-  RunnablePassthrough,
-  RunnableSequence,
-} from "@langchain/core/runnables";
-import { JsonOutputKeyToolsParser } from "@langchain/core/output_parsers/openai_tools";
-import {
-  BaseLLMOutputParser,
-  JsonOutputParser,
-} from "@langchain/core/output_parsers";
+import { Runnable } from "@langchain/core/runnables";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import { concat } from "@langchain/core/utils/stream";
 import {
@@ -52,7 +46,6 @@ import {
 import { AbstractGoogleLLMConnection } from "./connection.js";
 import { DefaultGeminiSafetyHandler, getGeminiAPI } from "./utils/gemini.js";
 import { ApiKeyGoogleAuth, GoogleAbstractedClient } from "./auth.js";
-import { JsonStream } from "./utils/stream.js";
 import { ensureParams } from "./utils/failed_handler.js";
 import type {
   GoogleBaseLLMInput,
@@ -69,6 +62,15 @@ import {
   schemaToGeminiParameters,
 } from "./utils/zod_to_gemini_parameters.js";
 import PROFILES from "./profiles.js";
+import {
+  isSerializableSchema,
+  SerializableSchema,
+} from "@langchain/core/utils/standard_schema";
+import {
+  assembleStructuredOutputPipeline,
+  createContentParser,
+  createFunctionCallingParser,
+} from "@langchain/core/language_models/structured_output";
 
 export class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
   BaseMessage[],
@@ -167,7 +169,8 @@ export class ChatConnection<AuthOptions> extends AbstractGoogleLLMConnection<
  * Input to chat model class.
  */
 export interface ChatGoogleBaseInput<AuthOptions>
-  extends BaseChatModelParams,
+  extends
+    BaseChatModelParams,
     GoogleConnectionParams<AuthOptions>,
     GoogleAIModelParams,
     GoogleAISafetyParams,
@@ -244,6 +247,7 @@ export abstract class ChatGoogleBase<AuthOptions>
 
   constructor(fields?: ChatGoogleBaseInput<AuthOptions>) {
     super(ensureParams(fields));
+    this._addVersion("@langchain/google-common", __PKG_VERSION__);
 
     copyAndValidateModelParamsInto(fields, this);
     this.safetyHandler =
@@ -322,9 +326,8 @@ export abstract class ChatGoogleBase<AuthOptions>
     return this.withConfig({ tools: convertToGeminiTools(tools), ...kwargs });
   }
 
-  // Replace
   _llmType() {
-    return "chat_integration";
+    return "google";
   }
 
   /**
@@ -369,6 +372,37 @@ export abstract class ChatGoogleBase<AuthOptions>
     return ret;
   }
 
+  async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    const parameters = this.invocationParams(options);
+    const response = await this.streamedConnection.request(
+      messages,
+      parameters,
+      options,
+      _runManager
+    );
+    const stream = response.data as JsonStream;
+    const shouldStreamUsage =
+      this.streamUsage !== false && options.streamUsage !== false;
+    async function* geminiChunks(jsonStream: JsonStream, signal?: AbortSignal) {
+      while (!jsonStream.streamDone) {
+        if (signal?.aborted) {
+          return;
+        }
+        const output = await jsonStream.nextChunk();
+        if (output !== null) {
+          yield output;
+        }
+      }
+    }
+    yield* convertGoogleGeminiStream(geminiChunks(stream, options.signal), {
+      streamUsage: shouldStreamUsage,
+    });
+  }
+
   async *_streamResponseChunks(
     _messages: BaseMessage[],
     options: this["ParsedCallOptions"],
@@ -385,7 +419,8 @@ export abstract class ChatGoogleBase<AuthOptions>
 
     // Get the streaming parser of the response
     const stream = response.data as JsonStream;
-    let usageMetadata: UsageMetadata | undefined;
+    const shouldStreamUsage =
+      this.streamUsage !== false && options.streamUsage !== false;
     // Loop until the end of the stream
     // During the loop, yield each time we get a chunk from the streaming parser
     // that is either available or added to the queue
@@ -400,18 +435,7 @@ export abstract class ChatGoogleBase<AuthOptions>
           output,
         }
       );
-      if (
-        output &&
-        output.usageMetadata &&
-        this.streamUsage !== false &&
-        options.streamUsage !== false
-      ) {
-        usageMetadata = {
-          input_tokens: output.usageMetadata.promptTokenCount,
-          output_tokens: output.usageMetadata.candidatesTokenCount,
-          total_tokens: output.usageMetadata.totalTokenCount,
-        };
-      }
+
       const chunk =
         output !== null
           ? this.connection.api.responseToChatGeneration({ data: output })
@@ -420,9 +444,16 @@ export abstract class ChatGoogleBase<AuthOptions>
               generationInfo: { finishReason: "stop" },
               message: new AIMessageChunk({
                 content: "",
-                usage_metadata: usageMetadata,
               }),
             });
+
+      if (shouldStreamUsage && chunk) {
+        chunk.message = new AIMessageChunk({
+          ...chunk.message,
+          usage_metadata: chunk.generationInfo?.usage_metadata,
+        });
+      }
+
       if (chunk) {
         yield chunk;
         await runManager?.handleLLMNewToken(
@@ -456,34 +487,37 @@ export abstract class ChatGoogleBase<AuthOptions>
   }
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | SerializableSchema<RunOutput>
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | SerializableSchema<RunOutput>
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | SerializableSchema<RunOutput>
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
   ):
@@ -492,107 +526,68 @@ export abstract class ChatGoogleBase<AuthOptions>
         BaseLanguageModelInput,
         { raw: BaseMessage; parsed: RunOutput }
       > {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const schema: InteropZodType<RunOutput> | Record<string, any> =
-      outputSchema;
+    const schema = outputSchema;
     const name = config?.name;
     const method = config?.method;
     const includeRaw = config?.includeRaw;
+
     if (method === "jsonMode") {
       throw new Error(
         `Google only supports "jsonSchema" or "functionCalling" as a method.`
       );
     }
 
-    let llm;
-    let outputParser: BaseLLMOutputParser<RunOutput>;
+    let llm: Runnable<BaseLanguageModelInput>;
+    let outputParser: Runnable<AIMessageChunk, RunOutput>;
+
     if (method === "functionCalling") {
       let functionName = name ?? "extract";
-      let tools: GeminiTool[];
-      if (isInteropZodSchema(schema)) {
+      let geminiFunctionDeclaration: GeminiFunctionDeclaration;
+      if (isInteropZodSchema(schema) || isSerializableSchema(schema)) {
         const jsonSchema = schemaToGeminiParameters(schema);
-        tools = [
-          {
-            functionDeclarations: [
-              {
-                name: functionName,
-                description:
-                  jsonSchema.description ?? "A function available to call.",
-                parameters: jsonSchema as GeminiFunctionSchema,
-              },
-            ],
-          },
-        ];
-        outputParser = new JsonOutputKeyToolsParser({
-          returnSingle: true,
-          keyName: functionName,
-          zodSchema: schema,
-        });
+        geminiFunctionDeclaration = {
+          name: functionName,
+          description:
+            jsonSchema.description ?? "A function available to call.",
+          parameters: jsonSchema as GeminiFunctionSchema,
+        };
+      } else if (
+        typeof schema.name === "string" &&
+        typeof schema.parameters === "object" &&
+        schema.parameters != null
+      ) {
+        geminiFunctionDeclaration = schema as GeminiFunctionDeclaration;
+        functionName = schema.name;
       } else {
-        let geminiFunctionDefinition: GeminiFunctionDeclaration;
-        if (
-          typeof schema.name === "string" &&
-          typeof schema.parameters === "object" &&
-          schema.parameters != null
-        ) {
-          geminiFunctionDefinition = schema as GeminiFunctionDeclaration;
-          functionName = schema.name;
-        } else {
-          // We are providing the schema for *just* the parameters, probably
-          const parameters: GeminiJsonSchema =
-            removeAdditionalProperties(schema);
-          geminiFunctionDefinition = {
-            name: functionName,
-            description: schema.description ?? "",
-            parameters,
-          };
-        }
-        tools = [
-          {
-            functionDeclarations: [geminiFunctionDefinition],
-          },
-        ];
-        outputParser = new JsonOutputKeyToolsParser<RunOutput>({
-          returnSingle: true,
-          keyName: functionName,
-        });
+        // We are providing the schema for *just* the parameters, probably
+        const parameters: GeminiJsonSchema = removeAdditionalProperties(schema);
+        geminiFunctionDeclaration = {
+          name: functionName,
+          description: schema.description ?? "",
+          parameters,
+        };
       }
+
+      const tools: GeminiTool[] = [
+        { functionDeclarations: [geminiFunctionDeclaration] },
+      ];
       llm = this.bindTools(tools).withConfig({ tool_choice: functionName });
+
+      outputParser = createFunctionCallingParser(schema, functionName);
     } else {
       // Default to jsonSchema method
       const jsonSchema = schemaToGeminiParameters(schema);
       llm = this.withConfig({
         responseSchema: jsonSchema as GeminiJsonSchema,
       });
-      outputParser = new JsonOutputParser();
+      outputParser = createContentParser(schema);
     }
 
-    if (!includeRaw) {
-      return llm.pipe(outputParser).withConfig({
-        runName: "ChatGoogleStructuredOutput",
-      }) as Runnable<BaseLanguageModelInput, RunOutput>;
-    }
-
-    const parserAssign = RunnablePassthrough.assign({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      parsed: (input: any, config) => outputParser.invoke(input.raw, config),
-    });
-    const parserNone = RunnablePassthrough.assign({
-      parsed: () => null,
-    });
-    const parsedWithFallback = parserAssign.withFallbacks({
-      fallbacks: [parserNone],
-    });
-    return RunnableSequence.from<
-      BaseLanguageModelInput,
-      { raw: BaseMessage; parsed: RunOutput }
-    >([
-      {
-        raw: llm,
-      },
-      parsedWithFallback,
-    ]).withConfig({
-      runName: "StructuredOutputRunnable",
-    });
+    return assembleStructuredOutputPipeline(
+      llm,
+      outputParser,
+      includeRaw,
+      includeRaw ? "StructuredOutputRunnable" : "ChatGoogleStructuredOutput"
+    );
   }
 }

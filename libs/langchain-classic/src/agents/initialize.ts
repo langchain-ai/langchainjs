@@ -23,13 +23,13 @@ type AgentType =
   | "chat-zero-shot-react-description"
   | "chat-conversational-react-description";
 
-export const initializeAgentExecutor = async (
+export async function initializeAgentExecutor(
   tools: ToolInterface[],
   llm: BaseLanguageModelInterface,
   _agentType?: AgentType,
   _verbose?: boolean,
   _callbackManager?: CallbackManager
-): Promise<AgentExecutor> => {
+): Promise<AgentExecutor> {
   const agentType = _agentType ?? "zero-shot-react-description";
   const verbose = _verbose;
   const callbackManager = _callbackManager;
@@ -60,7 +60,7 @@ export const initializeAgentExecutor = async (
     default:
       throw new Error("Unknown agent type");
   }
-};
+}
 
 /**
  * @interface

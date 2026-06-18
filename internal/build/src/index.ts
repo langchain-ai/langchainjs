@@ -1,4 +1,4 @@
-import type { Options as BuildOptions } from "tsdown";
+import type { UserConfig as BuildOptions } from "tsdown";
 import type { PackageJson } from "type-fest";
 import path from "node:path";
 
@@ -55,6 +55,9 @@ export function getBuildConfig(options?: Partial<BuildOptions>): BuildOptions {
     format: ["cjs", "esm"],
     target: "es2022",
     platform: "node",
+    // rolldown/tsdown can emit `.mjs` for ESM when `fixedExtension` is enabled.
+    // We want stable `.js` ESM output for `"type": "module"` packages.
+    fixedExtension: false,
     dts: {
       parallel: true,
       tsgo: true,
@@ -62,8 +65,23 @@ export function getBuildConfig(options?: Partial<BuildOptions>): BuildOptions {
     },
     sourcemap: true,
     unbundle: true,
+    // In unbundle (transpile-only) mode, dependencies remain as external imports
+    // and should not trigger "bundled dependency" warnings. Setting inlineOnly
+    // to false suppresses these warnings for all packages. Individual packages
+    // can override this with a specific allowlist if needed.
+    inlineOnly: false,
     exports: {
-      customExports: async (exports) => {
+      customExports: async (exports, context) => {
+        // context.pkg holds the original package.json (including any hand-authored
+        // export conditions such as "browser"). We use it as the source of truth
+        // for extra conditions that tsdown doesn't know about.
+        const pkgExports =
+          (
+            context as {
+              pkg?: { exports?: Record<string, Record<string, unknown>> };
+            }
+          ).pkg?.exports ?? {};
+
         return Object.entries(exports).reduce(
           (acc, [key, value]) => {
             if (
@@ -71,15 +89,44 @@ export function getBuildConfig(options?: Partial<BuildOptions>): BuildOptions {
               value !== null &&
               "import" in value
             ) {
-              const outputPath = path.join(
-                path.dirname(value.import),
-                path.basename(value.import, path.extname(value.import))
+              // Use path.posix to ensure forward slashes on all platforms.
+              // On Windows, path.join/dirname produce backslash paths which
+              // break package.json exports and publint validation.
+              const importValue = value.import.replace(/\\/g, "/");
+              const dir = path.posix.dirname(importValue);
+              const base = path.posix.basename(
+                importValue,
+                path.posix.extname(importValue)
               );
-              const inputPath = path.join(
-                path.dirname(value.import).replace("./dist", "./src"),
-                `${path.basename(value.import, path.extname(value.import))}.ts`
+              const outputPath = path.posix.join(dir, base);
+              const inputPath = path.posix.join(
+                dir.replace("./dist", "./src"),
+                `${base}.ts`
               );
+
+              // Carry forward any extra conditions (e.g. "browser") that were
+              // hand-authored in the original package.json export entry.
+              // These are absent from the tsdown-generated `exports` argument,
+              // so we have to read them from `context.pkg`.
+              const pkgEntry = pkgExports[key];
+              const extraConditions: Record<string, unknown> = {};
+              if (typeof pkgEntry === "object" && pkgEntry !== null) {
+                for (const [cond, val] of Object.entries(pkgEntry)) {
+                  if (!["input", "require", "import"].includes(cond)) {
+                    extraConditions[cond] = val;
+                  }
+                }
+              }
+
               acc[key] = {
+                /**
+                 * We may have custom exports set (e.g. "browser") that are not part of
+                 * the standard require/import/input triple.
+                 */
+                ...extraConditions,
+                /**
+                 * These should always be set and not overridden.
+                 */
                 input: `./${inputPath}`,
                 require: {
                   types: `./${outputPath}.d.cts`,

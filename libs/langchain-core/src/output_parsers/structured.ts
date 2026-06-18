@@ -4,6 +4,7 @@ import {
   FormatInstructionsOptions,
   OutputParserException,
 } from "./base.js";
+import { BaseMessage } from "../messages/index.js";
 import {
   type InteropZodType,
   type InferInteropZodOutput,
@@ -23,8 +24,7 @@ export type JsonMarkdownStructuredOutputParserInput = {
   interpolationDepth?: number;
 };
 
-export interface JsonMarkdownFormatInstructionsOptions
-  extends FormatInstructionsOptions {
+export interface JsonMarkdownFormatInstructionsOptions extends FormatInstructionsOptions {
   interpolationDepth?: number;
 }
 
@@ -130,6 +130,10 @@ ${JSON.stringify(toJsonSchema(this.schema))}
         text
       );
     }
+  }
+
+  protected override _baseMessageToString(message: BaseMessage): string {
+    return message.text;
   }
 }
 

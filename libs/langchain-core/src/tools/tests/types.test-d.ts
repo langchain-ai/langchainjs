@@ -1,7 +1,7 @@
 import { z } from "zod/v3";
 import { describe, it, expectTypeOf } from "vitest";
 
-import { tool, DynamicStructuredTool } from "../index.js";
+import { tool, DynamicStructuredTool, DynamicTool } from "../index.js";
 import type { ToolRuntime } from "../types.js";
 import type { RunnableConfig } from "../../runnables/config.js";
 
@@ -25,6 +25,7 @@ describe("tool() literal name type inference", () => {
         { query: string },
         { query: string },
         string,
+        unknown,
         "mySpecificTool"
       >
     >();
@@ -87,6 +88,73 @@ describe("tool() literal name type inference", () => {
 
     // Name should still be inferred as literal even with ToolRuntime
     expectTypeOf(myTool.name).toEqualTypeOf<"greetUser">();
+  });
+});
+
+describe("tool() async generator type inference", () => {
+  it("should infer ToolEventT for DynamicStructuredTool with ZodObject schema", () => {
+    const streamingTool = tool(
+      async function* (_input) {
+        yield { progress: 50 };
+        return "done";
+      },
+      {
+        name: "streamingTool",
+        description: "A streaming tool",
+        schema: z.object({ query: z.string() }),
+      }
+    );
+
+    expectTypeOf(streamingTool).toBeObject();
+    expectTypeOf(streamingTool.name).toEqualTypeOf<"streamingTool">();
+
+    expectTypeOf(streamingTool).toExtend<
+      DynamicStructuredTool<
+        z.ZodObject<{ query: z.ZodString }>,
+        { query: string },
+        { query: string },
+        string,
+        { progress: number },
+        "streamingTool"
+      >
+    >();
+  });
+
+  it("should infer ToolEventT for DynamicTool with ZodString schema", () => {
+    const streamingTool = tool(
+      async function* (_input) {
+        yield { status: "working" };
+        return "result";
+      },
+      {
+        name: "stringStreamingTool",
+        description: "A streaming string tool",
+        schema: z.string(),
+      }
+    );
+
+    expectTypeOf(streamingTool).toExtend<
+      DynamicTool<string, { status: string }>
+    >();
+  });
+
+  it("should default ToolEventT to unknown for non-generator tools", () => {
+    const regularTool = tool(async (_input) => "result", {
+      name: "regularTool",
+      description: "A regular tool",
+      schema: z.object({ query: z.string() }),
+    });
+
+    expectTypeOf(regularTool).toExtend<
+      DynamicStructuredTool<
+        z.ZodObject<{ query: z.ZodString }>,
+        { query: string },
+        { query: string },
+        string,
+        unknown,
+        "regularTool"
+      >
+    >();
   });
 });
 

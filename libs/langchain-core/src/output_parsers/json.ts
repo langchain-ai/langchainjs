@@ -8,7 +8,7 @@ import type { BaseMessage } from "../messages/index.js";
  * Class for parsing the output of an LLM into a JSON object.
  */
 export class JsonOutputParser<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   T extends Record<string, any> = Record<string, any>,
 > extends BaseCumulativeTransformOutputParser<T> {
   static lc_name() {

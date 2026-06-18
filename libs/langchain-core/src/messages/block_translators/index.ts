@@ -9,7 +9,9 @@ import { ChatVertexTranslator } from "./google_vertexai.js";
 import { ChatGroqTranslator } from "./groq.js";
 import { ChatOllamaTranslator } from "./ollama.js";
 import { ChatOpenAITranslator } from "./openai.js";
+import { ChatOpenRouterTranslator } from "./openrouter.js";
 import { ChatXAITranslator } from "./xai.js";
+import { ChatGoogleTranslator } from "./google.js";
 
 export interface StandardContentBlockTranslator {
   translateContent(message: AIMessage): Array<ContentBlock.Standard>;
@@ -26,11 +28,13 @@ globalThis.lc_block_translators_registry ??= new Map([
   ["anthropic", ChatAnthropicTranslator],
   ["bedrock-converse", ChatBedrockConverseTranslator],
   ["deepseek", ChatDeepSeekTranslator],
+  ["google", ChatGoogleTranslator],
   ["google-genai", ChatGoogleGenAITranslator],
   ["google-vertexai", ChatVertexTranslator],
   ["groq", ChatGroqTranslator],
   ["ollama", ChatOllamaTranslator],
   ["openai", ChatOpenAITranslator],
+  ["openrouter", ChatOpenRouterTranslator],
   ["xai", ChatXAITranslator],
 ]);
 

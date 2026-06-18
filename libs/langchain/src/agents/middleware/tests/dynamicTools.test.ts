@@ -537,6 +537,168 @@ describe("Dynamic Tool Registration via Middleware", () => {
     });
   });
 
+  describe("wrapModelCall dynamic tool registration", () => {
+    it("should allow adding new tools in wrapModelCall when wrapToolCall is provided", async () => {
+      const dynamicToolMiddleware = createMiddleware({
+        name: "dynamicToolMiddleware",
+        wrapModelCall: (request, handler) => {
+          // Add dynamic tool to the request - this is the documented pattern
+          return handler({
+            ...request,
+            tools: [...request.tools, dynamicTool],
+          });
+        },
+        wrapToolCall: async (request, handler) => {
+          if (request.toolCall.name === "dynamic_tool") {
+            return handler({ ...request, tool: dynamicTool });
+          }
+          return handler(request);
+        },
+      });
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [
+          [{ name: "dynamic_tool", args: { value: "test" }, id: "call_1" }],
+          [],
+        ],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [staticTool],
+        middleware: [dynamicToolMiddleware],
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("Use the dynamic tool")],
+      });
+
+      const toolMessages = result.messages.filter(ToolMessage.isInstance);
+      expect(toolMessages.length).toBe(1);
+      expect(toolMessages[0].content).toBe("Dynamic result: test");
+    });
+
+    it("should reject adding new tools in wrapModelCall when no wrapToolCall exists", async () => {
+      const noToolCallMiddleware = createMiddleware({
+        name: "noToolCallMiddleware",
+        wrapModelCall: (request, handler) => {
+          return handler({
+            ...request,
+            tools: [...request.tools, dynamicTool],
+          });
+        },
+        // No wrapToolCall provided
+      });
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [[], []],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [staticTool],
+        middleware: [noToolCallMiddleware],
+      });
+
+      await expect(
+        agent.invoke({
+          messages: [new HumanMessage("Use the dynamic tool")],
+        })
+      ).rejects.toThrow(
+        /You have added a new tool in "wrapModelCall".*wrapToolCall/
+      );
+    });
+
+    it("should reject replacing an existing tool with a different instance", async () => {
+      // Create a different tool instance with the same name as staticTool
+      const replacementTool = tool(
+        async (input: { value: string }) => `Replaced result: ${input.value}`,
+        {
+          name: "static_tool", // Same name as staticTool
+          description: "A replacement tool",
+          schema: z.object({
+            value: z.string(),
+          }),
+        }
+      );
+
+      const replacingMiddleware = createMiddleware({
+        name: "replacingMiddleware",
+        wrapModelCall: (request, handler) => {
+          // Replace existing tool with different instance
+          return handler({
+            ...request,
+            tools: request.tools.map((t) =>
+              t.name === "static_tool" ? replacementTool : t
+            ),
+          });
+        },
+        wrapToolCall: async (request, handler) => handler(request),
+      });
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [[], []],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [staticTool],
+        middleware: [replacingMiddleware],
+      });
+
+      await expect(
+        agent.invoke({
+          messages: [new HumanMessage("Use the tool")],
+        })
+      ).rejects.toThrow(/You have modified a tool in "wrapModelCall"/);
+    });
+
+    it("should allow adding tools when wrapToolCall is on a separate middleware", async () => {
+      // Middleware A: adds tools (has wrapModelCall only)
+      const adderMiddleware = createMiddleware({
+        name: "adderMiddleware",
+        wrapModelCall: (request, handler) => {
+          return handler({
+            ...request,
+            tools: [...request.tools, dynamicTool],
+          });
+        },
+      });
+
+      // Middleware B: handles execution (has wrapToolCall only)
+      const executorMiddleware = createMiddleware({
+        name: "executorMiddleware",
+        wrapToolCall: async (request, handler) => {
+          if (request.toolCall.name === "dynamic_tool") {
+            return handler({ ...request, tool: dynamicTool });
+          }
+          return handler(request);
+        },
+      });
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [
+          [{ name: "dynamic_tool", args: { value: "split" }, id: "call_1" }],
+          [],
+        ],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [staticTool],
+        middleware: [adderMiddleware, executorMiddleware],
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("Use the dynamic tool")],
+      });
+
+      const toolMessages = result.messages.filter(ToolMessage.isInstance);
+      expect(toolMessages.length).toBe(1);
+      expect(toolMessages[0].content).toBe("Dynamic result: split");
+    });
+  });
+
   describe("With checkpointer", () => {
     it("should work with dynamic tools across multiple invocations", async () => {
       const dynamicToolMiddleware = createMiddleware({

@@ -1,4 +1,3 @@
-import { DataSource } from "typeorm";
 import { OpenAI } from "@langchain/openai";
 import { SqlDatabase } from "@langchain/classic/sql_db";
 import { SqlDatabaseChain } from "@langchain/classic/chains/sql_db";
@@ -27,13 +26,13 @@ const prompt = PromptTemplate.fromTemplate(template);
  * To set it up follow the instructions on https://database.guide/2-sample-databases-sqlite/, placing the .db file
  * in the examples folder.
  */
-const datasource = new DataSource({
+const datasource = {
   type: "sqlite",
   database: "data/Chinook.db",
-});
+} as const;
 
-const db = await SqlDatabase.fromDataSourceParams({
-  appDataSource: datasource,
+const db = await SqlDatabase.fromOptionsParams({
+  appDataSourceOptions: datasource,
 });
 
 const chain = new SqlDatabaseChain({

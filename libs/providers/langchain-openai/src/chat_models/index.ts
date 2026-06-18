@@ -2,6 +2,7 @@ import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { AIMessageChunk, type BaseMessage } from "@langchain/core/messages";
 import { ChatGenerationChunk, type ChatResult } from "@langchain/core/outputs";
 import { type BaseLanguageModelInput } from "@langchain/core/language_models/base";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import { Runnable } from "@langchain/core/runnables";
 import { type OpenAICallOptions, type OpenAIChatInput } from "../types.js";
 import {
@@ -20,7 +21,11 @@ import {
   ChatOpenAIResponses,
   ChatOpenAIResponsesCallOptions,
 } from "./responses.js";
-import { BaseChatOpenAI, BaseChatOpenAIFields } from "./base.js";
+import {
+  BaseChatOpenAI,
+  BaseChatOpenAIFields,
+  getChatOpenAIModelParams,
+} from "./base.js";
 
 export type { OpenAICallOptions, OpenAIChatInput };
 
@@ -606,8 +611,17 @@ export class ChatOpenAI<
     return [...super.callKeys, "useResponsesApi"];
   }
 
-  constructor(protected fields?: ChatOpenAIFields) {
+  protected fields?: ChatOpenAIFields;
+
+  constructor(model: string, fields?: Omit<ChatOpenAIFields, "model">);
+  constructor(fields?: ChatOpenAIFields);
+  constructor(
+    modelOrFields?: string | ChatOpenAIFields,
+    fieldsArg?: Omit<ChatOpenAIFields, "model">
+  ) {
+    const fields = getChatOpenAIModelParams(modelOrFields, fieldsArg);
     super(fields);
+    this.fields = fields;
     this.useResponsesApi = fields?.useResponsesApi ?? false;
     this.responses = fields?.responses ?? new ChatOpenAIResponses(fields);
     this.completions = fields?.completions ?? new ChatOpenAICompletions(fields);
@@ -661,6 +675,26 @@ export class ChatOpenAI<
       return this.responses._generate(messages, options, runManager);
     }
     return this.completions._generate(messages, options, runManager);
+  }
+
+  override async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    if (this._useResponsesApi(options)) {
+      yield* this.responses._streamChatModelEvents(
+        messages,
+        this._combineCallOptions(options),
+        runManager
+      );
+      return;
+    }
+    yield* this.completions._streamChatModelEvents(
+      messages,
+      this._combineCallOptions(options),
+      runManager
+    );
   }
 
   override async *_streamResponseChunks(

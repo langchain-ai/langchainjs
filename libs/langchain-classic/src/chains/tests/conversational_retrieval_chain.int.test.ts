@@ -16,7 +16,7 @@ test("Test ConversationalRetrievalQAChain from LLM", async () => {
     model,
     vectorStore.asRetriever()
   );
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const res = await chain.call({ question: "foo", chat_history: "bar" });
   // console.log({ res });
@@ -175,7 +175,7 @@ test("Test ConversationalRetrievalQAChain from LLM with a map reduce chain", asy
       },
     }
   );
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const res = await chain.call({
     question: "What is better programming Language Python or Javascript ",
@@ -213,7 +213,7 @@ test("Test ConversationalRetrievalQAChain from LLM without memory", async () => 
 
   // console.log({ res });
 
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const res2 = await chain.call({
     question: "What are they made out of?",
@@ -252,7 +252,7 @@ test("Test ConversationalRetrievalQAChain from LLM with a chat model without mem
 
   // console.log({ res });
 
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const res2 = await chain.call({
     question: "What are they made out of?",
@@ -287,7 +287,7 @@ test("Test ConversationalRetrievalQAChain from LLM with memory", async () => {
       }),
     }
   );
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const res = await chain.call({
     question: "What is the powerhouse of the cell?",
@@ -295,7 +295,7 @@ test("Test ConversationalRetrievalQAChain from LLM with memory", async () => {
 
   // console.log({ res });
 
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const res2 = await chain.call({
     question: "What are they made out of?",
@@ -331,7 +331,7 @@ test("Test ConversationalRetrievalQAChain from LLM with a chat model and memory"
       }),
     }
   );
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const res = await chain.call({
     question: "What is the powerhouse of the cell?",
@@ -339,7 +339,7 @@ test("Test ConversationalRetrievalQAChain from LLM with a chat model and memory"
 
   // console.log({ res });
 
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const res2 = await chain.call({
     question: "What are they made out of?",
@@ -376,7 +376,7 @@ test("Test ConversationalRetrievalQAChain from LLM with deprecated history synta
 
   // console.log({ res });
 
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const res2 = await chain.call({
     question: "What are they made out of?",

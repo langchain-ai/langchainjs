@@ -9,8 +9,7 @@ import { WebGoogleAuth, WebGoogleAuthOptions } from "./auth.js";
 /**
  * Input to chat model class.
  */
-export interface ChatGoogleInput
-  extends ChatGoogleBaseInput<WebGoogleAuthOptions> {}
+export interface ChatGoogleInput extends ChatGoogleBaseInput<WebGoogleAuthOptions> {}
 
 /**
  * Integration with a chat model.
@@ -24,8 +23,18 @@ export class ChatGoogle
     return "ChatGoogle";
   }
 
-  constructor(fields?: ChatGoogleInput) {
+  constructor(model: string, fields?: Omit<ChatGoogleInput, "model">);
+  constructor(fields?: ChatGoogleInput);
+  constructor(
+    modelOrFields?: string | ChatGoogleInput,
+    fieldsArg?: Omit<ChatGoogleInput, "model">
+  ) {
+    const fields =
+      typeof modelOrFields === "string"
+        ? { ...(fieldsArg ?? {}), model: modelOrFields }
+        : (modelOrFields ?? {});
     super(fields);
+    this._addVersion("@langchain/google-webauth", __PKG_VERSION__);
   }
 
   buildAbstractedClient(

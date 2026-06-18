@@ -31,6 +31,30 @@ export function isAsyncIterable(
   );
 }
 
+export function isAsyncGenerator(x: unknown): x is AsyncGenerator {
+  return (
+    x != null &&
+    typeof x === "object" &&
+    typeof (x as AsyncGenerator).next === "function"
+  );
+}
+
+export async function consumeAsyncGenerator<T, TReturn>(
+  generator: AsyncGenerator<T, TReturn>,
+  onYield?: (value: T) => Promise<void> | void
+): Promise<TReturn> {
+  try {
+    let iterResult = await generator.next();
+    while (!iterResult.done) {
+      await onYield?.(iterResult.value);
+      iterResult = await generator.next();
+    }
+    return iterResult.value;
+  } finally {
+    await generator.return?.(undefined as TReturn);
+  }
+}
+
 export function* consumeIteratorInContext<T>(
   context: Partial<RunnableConfig> | undefined,
   iter: IterableIterator<T>

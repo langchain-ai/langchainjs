@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-floating-promises */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-floating-promises */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 
 import OpenAI from "openai";
 import wiki from "wikipedia";
@@ -209,7 +209,7 @@ test(`Chat model dataset`, async () => {
     };
   };
 
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const evaluation: RunEvalConfig = {
     // The 'evaluators' are loaded from LangChain's evaluation
@@ -237,7 +237,7 @@ test(`Chat model dataset`, async () => {
     customEvaluators: [unsure],
   };
 
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const wrappedRagPipeline = async ({
     question,
@@ -298,7 +298,7 @@ test("Thrown errors should not interrupt dataset run", async () => {
     throw new Error("Expected error");
   };
 
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const evaluation: RunEvalConfig = {
     // Custom evaluators can be user-defined RunEvaluator's
@@ -306,7 +306,7 @@ test("Thrown errors should not interrupt dataset run", async () => {
     customEvaluators: [dummy],
   };
 
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const wrappedRagPipeline = async ({
     question,

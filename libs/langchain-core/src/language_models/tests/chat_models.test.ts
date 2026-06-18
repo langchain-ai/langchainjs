@@ -1,4 +1,4 @@
-import { test, expect } from "vitest";
+import { test, expect, expectTypeOf, vi } from "vitest";
 import { z } from "zod/v3";
 import { z as z4 } from "zod/v4";
 import { zodToJsonSchema } from "../../utils/zod-to-json-schema/index.js";
@@ -7,6 +7,14 @@ import { HumanMessage } from "../../messages/human.js";
 import { getBufferString } from "../../messages/utils.js";
 import { AIMessage } from "../../messages/ai.js";
 import { RunCollectorCallbackHandler } from "../../tracers/run_collector.js";
+import { BaseCallbackHandler } from "../../callbacks/base.js";
+import { StandardJSONSchemaV1, StandardSchemaV1 } from "@standard-schema/spec";
+import { LangChainTracer } from "../../tracers/tracer_langchain.js";
+import { awaitAllCallbacks } from "../../callbacks/promises.js";
+import type { ChatModelStream } from "../stream.js";
+import type { IterableReadableStream } from "../../utils/stream.js";
+import type { StreamEvent } from "../../tracers/event_stream.js";
+import type { LangSmithTracingClientInterface } from "langsmith";
 
 test("Test ChatModel accepts array shorthand for messages", async () => {
   const model = new FakeChatModel({});
@@ -25,6 +33,39 @@ test("Test ChatModel accepts object shorthand for messages", async () => {
     },
   ]);
   expect(response.content).toEqual("Hello there!");
+});
+
+test("ChatModel streamEvents preserves chat and runnable overloads", () => {
+  const model = new FakeChatModel({});
+  const version: "v1" | "v2" = Math.random() > 0.5 ? "v1" : "v2";
+
+  expectTypeOf(
+    model.streamEvents("Hello there!")
+  ).toEqualTypeOf<ChatModelStream>();
+  expectTypeOf(
+    model.streamEvents("Hello there!", {})
+  ).toEqualTypeOf<ChatModelStream>();
+  expectTypeOf(
+    model.streamEvents("Hello there!", { version: "v1" })
+  ).toMatchTypeOf<IterableReadableStream<StreamEvent>>();
+  expectTypeOf(
+    model.streamEvents("Hello there!", { version: "v2" })
+  ).toMatchTypeOf<IterableReadableStream<StreamEvent>>();
+  expectTypeOf(
+    model.streamEvents("Hello there!", {
+      version: "v2",
+      encoding: "text/event-stream",
+    })
+  ).toMatchTypeOf<IterableReadableStream<Uint8Array>>();
+  expectTypeOf(model.streamEvents("Hello there!", { version })).toMatchTypeOf<
+    IterableReadableStream<StreamEvent>
+  >();
+  expectTypeOf(
+    model.streamEvents("Hello there!", {
+      version,
+      encoding: "text/event-stream",
+    })
+  ).toMatchTypeOf<IterableReadableStream<Uint8Array>>();
 });
 
 test("Test ChatModel accepts object with role for messages", async () => {
@@ -395,4 +436,183 @@ test(`Test ChatModel should not serialize a passed "cache" parameter`, async () 
   expect(JSON.stringify(model)).toEqual(
     `{"lc":1,"type":"constructor","id":["langchain","chat_models","fake-list","FakeListChatModel"],"kwargs":{"responses":["hi"],"emit_custom_event":true}}`
   );
+});
+
+test("Test ChatModel withStructuredOutput with Standard Schema", async () => {
+  const mockStandardSchema: StandardSchemaV1 & StandardJSONSchemaV1 = {
+    "~standard": {
+      version: 1,
+      vendor: "test",
+      validate: (value: unknown) => ({
+        value: value as Record<string, unknown>,
+      }),
+      jsonSchema: {
+        input: () => ({
+          type: "object",
+          properties: {
+            test: { type: "boolean" },
+            nested: {
+              type: "object",
+              properties: {
+                somethingelse: { type: "string" },
+              },
+            },
+          },
+          required: ["test", "nested"],
+        }),
+        output: () => ({
+          type: "object",
+          properties: {
+            test: { type: "boolean" },
+            nested: {
+              type: "object",
+              properties: {
+                somethingelse: { type: "string" },
+              },
+            },
+          },
+          required: ["test", "nested"],
+        }),
+      },
+    },
+  };
+
+  const model = new FakeListChatModel({
+    responses: [`{ "test": true, "nested": { "somethingelse": "somevalue" } }`],
+  }).withStructuredOutput(mockStandardSchema);
+
+  const response = await model.invoke("Hello there!");
+  expect(response).toEqual({
+    test: true,
+    nested: { somethingelse: "somevalue" },
+  });
+});
+
+test("Test ChatModel passes invocationParams to tracer inheritable metadata", async () => {
+  // Create a custom chat model that returns specific invocation params
+  class ChatModelWithInvocationParams extends FakeChatModel {
+    invocationParams() {
+      return {
+        temperature: 0.7,
+        max_tokens: 100,
+        model: "test-model",
+      };
+    }
+  }
+
+  const createRunMock = vi.fn().mockResolvedValue(undefined);
+  const updateRunMock = vi.fn().mockResolvedValue(undefined);
+  const mockClient = {
+    createRun: createRunMock,
+    updateRun: updateRunMock,
+  } as LangSmithTracingClientInterface;
+  const tracer = new LangChainTracer({ client: mockClient });
+
+  const model = new ChatModelWithInvocationParams({});
+  await model.invoke("Hello there!", { callbacks: [tracer] });
+  await awaitAllCallbacks();
+
+  expect(createRunMock).toHaveBeenCalled();
+  const postedRun = createRunMock.mock.calls[0]?.[0];
+  // Verify invocation params are passed to tracer metadata
+  expect(postedRun.extra?.metadata?.temperature).toBe(0.7);
+  expect(postedRun.extra?.metadata?.max_tokens).toBe(100);
+  expect(postedRun.extra?.metadata?.model).toBe("test-model");
+});
+
+test("Test ChatModel streaming does not include invocationParams in token events", async () => {
+  // Create a custom streaming chat model that returns specific invocation params
+  class StreamingChatModelWithInvocationParams extends FakeListChatModel {
+    invocationParams() {
+      return {
+        temperature: 0.8,
+        max_tokens: 50,
+        model: "streaming-test-model",
+      };
+    }
+  }
+
+  const createRunMock = vi.fn().mockResolvedValue(undefined);
+  const updateRunMock = vi.fn().mockResolvedValue(undefined);
+  const mockClient = {
+    createRun: createRunMock,
+    updateRun: updateRunMock,
+  } as LangSmithTracingClientInterface;
+  const tracer = new LangChainTracer({ client: mockClient });
+
+  const model = new StreamingChatModelWithInvocationParams({
+    responses: ["Hello world!"],
+  });
+
+  // Use streamEvents to capture all events
+  const eventStream = model.streamEvents("Hello there!", {
+    version: "v2",
+    callbacks: [tracer],
+  });
+  const events = [];
+  for await (const event of eventStream) {
+    events.push(event);
+  }
+  await awaitAllCallbacks();
+
+  // Verify invocation params are passed to tracer metadata at run start
+  // This is the key assertion - tracerInheritableMetadata goes to the tracer
+  expect(createRunMock).toHaveBeenCalled();
+  const postedRun = createRunMock.mock.calls[0]?.[0];
+  expect(postedRun.extra?.metadata?.temperature).toBe(0.8);
+  expect(postedRun.extra?.metadata?.max_tokens).toBe(50);
+  expect(postedRun.extra?.metadata?.model).toBe("streaming-test-model");
+
+  // Verify that streamEvents metadata does NOT contain invocation params
+  // This is because tracerInheritableMetadata is only passed to tracers,
+  // not to the EventStreamCallbackHandler which generates streamEvents
+  const startEvent = events.find((e) => e.event === "on_chat_model_start");
+  expect(startEvent).toBeDefined();
+  expect(startEvent?.metadata?.temperature).toBeUndefined();
+  expect(startEvent?.metadata?.max_tokens).toBeUndefined();
+  expect(startEvent?.metadata?.model).toBeUndefined();
+
+  // Verify that stream events also don't have invocation params in metadata
+  const streamEventsList = events.filter(
+    (e) => e.event === "on_chat_model_stream"
+  );
+  expect(streamEventsList.length).toBeGreaterThan(0);
+  for (const streamEvent of streamEventsList) {
+    // Metadata should NOT contain invocation params (not passed to EventStreamCallbackHandler)
+    expect(streamEvent.metadata?.temperature).toBeUndefined();
+    expect(streamEvent.metadata?.max_tokens).toBeUndefined();
+    expect(streamEvent.metadata?.model).toBeUndefined();
+    // And the chunk data itself should also NOT contain invocation params
+    const chunkStr = JSON.stringify(streamEvent.data?.chunk ?? {});
+    expect(chunkStr).not.toContain('"temperature":0.8');
+    expect(chunkStr).not.toContain('"max_tokens":50');
+    expect(chunkStr).not.toContain('"model":"streaming-test-model"');
+  }
+});
+
+test("Test ChatModel applies v1 outputVersion after implicit streaming aggregation", async () => {
+  class PreferStreamingCallbackHandler extends BaseCallbackHandler {
+    name = "prefer-streaming";
+
+    lc_prefer_streaming = true;
+
+    handleLLMNewToken() {}
+  }
+
+  const model = new FakeListChatModel({
+    responses: ["Hello world!"],
+  });
+
+  const response = await model.invoke("Hello there!", {
+    outputVersion: "v1",
+    callbacks: [new PreferStreamingCallbackHandler()],
+  });
+
+  expect(response.response_metadata.output_version).toBe("v1");
+  expect(response.content).toEqual([
+    {
+      type: "text",
+      text: "Hello world!",
+    },
+  ]);
 });

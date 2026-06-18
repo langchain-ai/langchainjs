@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { ChatVertexAI } from "../chat_models.js";
 
 test("Serialization", () => {
@@ -19,4 +19,10 @@ test("Labels parameter support", () => {
     });
     expect(model.platform).toEqual("gcp");
   }).not.toThrow();
+});
+
+test("Constructor overload supports model string", () => {
+  const model = new ChatVertexAI("gemini-1.5-pro");
+  expect(model.model).toEqual("gemini-1.5-pro");
+  expect(model.platform).toEqual("gcp");
 });

@@ -10,8 +10,7 @@ import { GAuthClient } from "./auth.js";
 /**
  * Input to chat model class.
  */
-export interface ChatGoogleInput
-  extends ChatGoogleBaseInput<GoogleAuthOptions> {}
+export interface ChatGoogleInput extends ChatGoogleBaseInput<GoogleAuthOptions> {}
 
 /**
  * Integration with a Google chat model.
@@ -25,8 +24,18 @@ export class ChatGoogle
     return "ChatGoogle";
   }
 
-  constructor(fields?: ChatGoogleInput) {
+  constructor(model: string, params?: Omit<ChatGoogleInput, "model">);
+  constructor(fields?: ChatGoogleInput);
+  constructor(
+    modelOrFields?: string | ChatGoogleInput,
+    paramsArg?: Omit<ChatGoogleInput, "model">
+  ) {
+    const fields =
+      typeof modelOrFields === "string"
+        ? { ...(paramsArg ?? {}), model: modelOrFields }
+        : (modelOrFields ?? {});
     super(fields);
+    this._addVersion("@langchain/google-gauth", __PKG_VERSION__);
   }
 
   buildAbstractedClient(

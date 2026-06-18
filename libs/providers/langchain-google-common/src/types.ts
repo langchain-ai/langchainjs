@@ -39,8 +39,9 @@ export interface GoogleClientParams<AuthOptions> {
  */
 export type GooglePlatformType = "gai" | "gcp";
 
-export interface GoogleConnectionParams<AuthOptions>
-  extends GoogleClientParams<AuthOptions> {
+export interface GoogleConnectionParams<
+  AuthOptions,
+> extends GoogleClientParams<AuthOptions> {
   /** Hostname for the API call (if this is running on GCP) */
   endpoint?: string;
 
@@ -135,6 +136,7 @@ export type GoogleAIModelModality = "TEXT" | "IMAGE" | "AUDIO" | string;
 
 export type GoogleThinkingLevel =
   | "THINKING_LEVEL_UNSPECIFIED"
+  | "MINIMAL"
   | "LOW"
   | "MEDIUM"
   | "HIGH";
@@ -296,7 +298,7 @@ export interface GoogleAIModelParams extends GoogleModelParams {
   /**
    * Presence penalty applied to the next token's logprobs
    * if the token has already been seen in the response.
-   * This penalty is binary on/off and not dependant on the
+   * This penalty is binary on/off and not dependent on the
    * number of times the token is used (after the first).
    * Use frequencyPenalty for a penalty that increases with each use.
    * A positive penalty will discourage the use of tokens that have
@@ -418,7 +420,7 @@ export interface GoogleAIModelRequestParams extends GoogleAIModelParams {
    *
    * The tool configuration's "any" mode ("forced function calling") is supported for Gemini 1.5 Pro models only.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   tool_choice?: string | "auto" | "any" | "none" | Record<string, any>;
   /**
    * Allowed functions to call when the mode is "any".
@@ -445,14 +447,16 @@ export interface GoogleAIModelRequestParams extends GoogleAIModelParams {
 }
 
 export interface GoogleAIBaseLLMInput<AuthOptions>
-  extends BaseLLMParams,
+  extends
+    BaseLLMParams,
     GoogleConnectionParams<AuthOptions>,
     GoogleAIModelParams,
     GoogleAISafetyParams,
     GoogleAIAPIParams {}
 
 export interface GoogleAIBaseLanguageModelCallOptions
-  extends BaseChatModelCallOptions,
+  extends
+    BaseChatModelCallOptions,
     GoogleAIModelRequestParams,
     GoogleAISafetyParams {
   /**
@@ -466,11 +470,12 @@ export interface GoogleAIBaseLanguageModelCallOptions
 /**
  * Input to LLM class.
  */
-export interface GoogleBaseLLMInput<AuthOptions>
-  extends GoogleAIBaseLLMInput<AuthOptions> {}
+export interface GoogleBaseLLMInput<
+  AuthOptions,
+> extends GoogleAIBaseLLMInput<AuthOptions> {}
 
 export interface GoogleResponse {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   data: any;
 }
 
@@ -751,10 +756,17 @@ export interface GeminiRequest {
   systemInstruction?: GeminiContent;
   tools?: GeminiTool[];
   toolConfig?: {
-    functionCallingConfig: {
+    functionCallingConfig?: {
       mode: "auto" | "any" | "none";
       allowedFunctionNames?: string[];
     };
+    /**
+     * Required by the Gemini API when both server-side built-in tools
+     * (e.g. `googleSearch`) and function declarations are provided in the
+     * same request. Without it the API rejects the request with HTTP 400.
+     * See https://ai.google.dev/gemini-api/docs/tool-combination
+     */
+    includeServerSideToolInvocations?: boolean;
   };
   safetySettings?: GeminiSafetySetting[];
   generationConfig?: GeminiGenerationConfig;
@@ -923,8 +935,7 @@ export interface GoogleAIAPIParams {
  * GoogleConnectionParams.
  */
 export interface BaseGoogleEmbeddingsParams<AuthOptions>
-  extends EmbeddingsParams,
-    GoogleConnectionParams<AuthOptions> {
+  extends EmbeddingsParams, GoogleConnectionParams<AuthOptions> {
   model: string;
 
   /**

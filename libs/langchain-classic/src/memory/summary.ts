@@ -18,15 +18,13 @@ import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
  * Interface for the input parameters of the ConversationSummaryMemory
  * class.
  */
-export interface ConversationSummaryMemoryInput
-  extends BaseConversationSummaryMemoryInput {}
+export interface ConversationSummaryMemoryInput extends BaseConversationSummaryMemoryInput {}
 
 /**
  * Interface for the input parameters of the BaseConversationSummaryMemory
  * class.
  */
-export interface BaseConversationSummaryMemoryInput
-  extends BaseChatMemoryInput {
+export interface BaseConversationSummaryMemoryInput extends BaseChatMemoryInput {
   llm: BaseLanguageModelInterface;
   memoryKey?: string;
   humanPrefix?: string;

@@ -3,6 +3,9 @@ import {
   defineConfig,
   type UserConfigExport,
 } from "vitest/config";
+import pkg from "./package.json" with { type: "json" };
+
+const define = { __PKG_VERSION__: JSON.stringify(pkg.version) };
 
 export default defineConfig((env) => {
   const common: UserConfigExport = {
@@ -12,12 +15,16 @@ export default defineConfig((env) => {
       testTimeout: 30_000,
       maxWorkers: 0.5,
       exclude: ["**/*.int.test.ts", ...configDefaults.exclude],
-      setupFiles: ["dotenv/config"],
+      setupFiles: [
+        "dotenv/config",
+        "../../langchain-core/src/testing/setup.ts",
+      ],
     },
   };
 
   if (env.mode === "standard-unit") {
     return {
+      define,
       test: {
         ...common.test,
         testTimeout: 100_000,
@@ -31,6 +38,7 @@ export default defineConfig((env) => {
 
   if (env.mode === "standard-int") {
     return {
+      define,
       test: {
         ...common.test,
         testTimeout: 100_000,
@@ -44,6 +52,7 @@ export default defineConfig((env) => {
 
   if (env.mode === "int") {
     return {
+      define,
       test: {
         ...common.test,
         globals: false,
@@ -57,6 +66,7 @@ export default defineConfig((env) => {
   }
 
   return {
+    define,
     test: {
       ...common.test,
       environment: "node",

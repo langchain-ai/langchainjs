@@ -106,7 +106,7 @@ describe("todoListMiddleware", () => {
 
     const model = new ChatOpenAI({
       model: "gpt-4o",
-      apiKey: "test-key", // Add required API key for testing
+      apiKey: "test-key",
       configuration: {
         fetch: openAIFetchMock,
       },
@@ -163,6 +163,13 @@ describe("todoListMiddleware", () => {
     expect(result.todos).toEqual([
       { content: "Complete the requested task", status: "in_progress" },
     ]);
+
+    const writeTodosToolMessage = result.messages.find(
+      (msg): msg is ToolMessage =>
+        ToolMessage.isInstance(msg) && msg.tool_call_id === "call_test123"
+    );
+    expect(writeTodosToolMessage).toBeDefined();
+    expect(writeTodosToolMessage!.name).toBe("write_todos");
   });
 
   describe("parallel write_todos detection", () => {
@@ -199,9 +206,9 @@ describe("todoListMiddleware", () => {
       };
 
       // Call afterModel hook
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       const fn = getHookFunction(middleware.afterModel as any);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       const result = await fn(state as any, {} as any);
 
       // Should return error messages
@@ -224,6 +231,9 @@ describe("todoListMiddleware", () => {
       expect(msg2.content).toContain(
         "Error: The `write_todos` tool should never be called multiple times in parallel"
       );
+
+      expect(msg1.name).toBe("write_todos");
+      expect(msg2.name).toBe("write_todos");
     });
 
     it("should reject parallel write_todos calls even when mixed with other tools", async () => {
@@ -265,9 +275,9 @@ describe("todoListMiddleware", () => {
       };
 
       // Call afterModel hook
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       const fn = getHookFunction(middleware.afterModel as any);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       const result = await fn(state as any, {} as any);
 
       // Should return error messages for write_todos calls only
@@ -308,9 +318,9 @@ describe("todoListMiddleware", () => {
       };
 
       // Call afterModel hook
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       const fn = getHookFunction(middleware.afterModel as any);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       const result = await fn(state as any, {} as any);
 
       // Should return undefined (no intervention needed)
@@ -324,9 +334,9 @@ describe("todoListMiddleware", () => {
         messages: [],
       };
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       const fn = getHookFunction(middleware.afterModel as any);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       const result = await fn(state as any, {} as any);
 
       expect(result).toBeUndefined();
@@ -343,9 +353,9 @@ describe("todoListMiddleware", () => {
         messages: [new HumanMessage("Hello"), aiMessage],
       };
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       const fn = getHookFunction(middleware.afterModel as any);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       const result = await fn(state as any, {} as any);
 
       expect(result).toBeUndefined();

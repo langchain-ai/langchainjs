@@ -1,18 +1,96 @@
 version: 2
+
 updates:
+  # GitHub Actions
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
-      interval: weekly
-      time: "11:00"
+      interval: monthly
     open-pull-requests-limit: 10
     groups:
-      patch-deps-updates:
-        update-types:
-          - "patch"
-      minor-deps-updates:
+      gh-actions-minor-and-patch:
+        patterns:
+          - "*"
         update-types:
           - "minor"
-      major-deps-updates:
+          - "patch"
+      gh-actions-major:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
+
+  # npm — single workspace-aware entry.
+  # This is a pnpm workspace (see pnpm-workspace.yaml) with one root
+  # pnpm-lock.yaml. Dependabot must run from "/" so it discovers every
+  # workspace member, updates their package.json files, AND regenerates the
+  # root lockfile in the same PR. Per-member entries (directories: [/libs/*,
+  # /internal/*]) update member manifests without touching the root lockfile,
+  # which makes CI fail on `pnpm install --frozen-lockfile`
+  # (ERR_PNPM_OUTDATED_LOCKFILE). Named groups keep PRs focused despite the
+  # large workspace; the catch-all minor/patch vs major split separates safe
+  # updates from breaking ones.
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 15
+    groups:
+      # Internal LangChain packages
+      langchain:
+        patterns:
+          - "@langchain/*"
+          - "langchain"
+          - "langsmith"
+      # TypeScript, ESLint, and formatting
+      typescript-eslint:
+        patterns:
+          - "typescript"
+          - "@typescript-eslint/*"
+          - "@tsconfig/*"
+          - "eslint"
+          - "eslint-*"
+          - "prettier"
+      # Build, test, and bundling tools
+      build-and-test:
+        patterns:
+          - "turbo"
+          - "tsx"
+          - "tsup"
+          - "rollup"
+          - "vite"
+          - "vite-*"
+          - "vitest"
+          - "vitest-*"
+          - "@vitest/*"
+          - "jest"
+          - "jest-*"
+          - "@jest/*"
+          - "ts-jest"
+      # AWS SDK
+      aws:
+        patterns:
+          - "@aws-sdk/*"
+          - "@smithy/*"
+      # Google SDKs
+      google:
+        patterns:
+          - "@google-cloud/*"
+          - "@google/*"
+          - "google-*"
+      # Type definitions
+      types:
+        patterns:
+          - "@types/*"
+      # Everything else — minor and patch together, major separately
+      minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      major:
+        patterns:
+          - "*"
         update-types:
           - "major"

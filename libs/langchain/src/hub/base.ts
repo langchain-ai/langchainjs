@@ -23,9 +23,10 @@ export async function basePush(
     description?: string;
     readme?: string;
     tags?: string[];
+    client?: Client;
   }
 ): Promise<string> {
-  const client = new Client(options);
+  const client = options?.client ?? new Client(options);
   const payloadOptions = {
     object: runnable,
     parentCommitHash: options?.parentCommitHash,
@@ -39,12 +40,19 @@ export async function basePush(
 
 export async function basePull(
   ownerRepoCommit: string,
-  options?: { apiKey?: string; apiUrl?: string; includeModel?: boolean }
+  options?: {
+    apiKey?: string;
+    apiUrl?: string;
+    includeModel?: boolean;
+    skipCache?: boolean;
+    client?: Client;
+  }
 ): Promise<PromptCommit> {
-  const client = new Client(options);
+  const client = options?.client ?? new Client(options);
 
   const promptObject = await client.pullPromptCommit(ownerRepoCommit, {
     includeModel: options?.includeModel,
+    skipCache: options?.skipCache,
   });
 
   if (promptObject.manifest.kwargs?.metadata === undefined) {
@@ -73,7 +81,7 @@ export async function basePull(
 
     const { messages } = promptObject.manifest.kwargs;
     if (Array.isArray(messages)) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       promptObject.manifest.kwargs.messages = messages.map((message: any) => {
         const nestedVars = message?.kwargs?.prompt?.kwargs?.input_variables;
         if (Array.isArray(nestedVars)) {
@@ -88,13 +96,13 @@ export async function basePull(
 }
 
 export function generateModelImportMap(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   modelClass?: new (...args: any[]) => BaseLanguageModel
 ) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   const modelImportMap: Record<string, any> = {};
   if (modelClass !== undefined) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const modelLcName = (modelClass as any)?.lc_name();
     let importMapKey;
     if (modelLcName === "ChatOpenAI") {
@@ -129,13 +137,13 @@ export function generateModelImportMap(
 }
 
 export function generateOptionalImportMap(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   modelClass?: new (...args: any[]) => BaseLanguageModel
 ) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   const optionalImportMap: Record<string, any> = {};
   if (modelClass !== undefined) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const modelLcName = (modelClass as any)?.lc_name();
     let optionalImportMapKey;
     if (modelLcName === "ChatGoogleGenerativeAI") {

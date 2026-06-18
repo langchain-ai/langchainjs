@@ -11,8 +11,11 @@ import {
   RequestOptions,
   type CachedContent,
   Schema,
+  type EnhancedGenerateContentResponse,
 } from "@google/generative-ai";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
+import { convertGoogleGenAIStream } from "./utils/stream_events.js";
 import {
   AIMessageChunk,
   BaseMessage,
@@ -32,20 +35,11 @@ import {
   BaseLanguageModelInput,
   StructuredOutputMethodOptions,
 } from "@langchain/core/language_models/base";
+import { Runnable } from "@langchain/core/runnables";
 import {
-  Runnable,
-  RunnablePassthrough,
-  RunnableSequence,
-} from "@langchain/core/runnables";
-import {
-  InferInteropZodOutput,
   InteropZodType,
   isInteropZodSchema,
 } from "@langchain/core/utils/types";
-import {
-  BaseLLMOutputParser,
-  JsonOutputParser,
-} from "@langchain/core/output_parsers";
 import {
   schemaToGenerativeAIParameters,
   removeAdditionalProperties,
@@ -63,6 +57,15 @@ import {
 } from "./types.js";
 import { convertToolsToGenAI } from "./utils/tools.js";
 import PROFILES from "./profiles.js";
+import {
+  isSerializableSchema,
+  SerializableSchema,
+} from "@langchain/core/utils/standard_schema";
+import {
+  assembleStructuredOutputPipeline,
+  createContentParser,
+  createFunctionCallingParser,
+} from "@langchain/core/language_models/structured_output";
 
 interface TokenUsage {
   completionTokens?: number;
@@ -75,8 +78,7 @@ export type BaseMessageExamplePair = {
   output: BaseMessage;
 };
 
-export interface GoogleGenerativeAIChatCallOptions
-  extends BaseChatModelCallOptions {
+export interface GoogleGenerativeAIChatCallOptions extends BaseChatModelCallOptions {
   tools?: GoogleGenerativeAIToolType[];
   /**
    * Allowed functions to call when the mode is "any".
@@ -100,14 +102,15 @@ export interface GoogleGenerativeAIChatCallOptions
  * An interface defining the input to the ChatGoogleGenerativeAI class.
  */
 export interface GoogleGenerativeAIChatInput
-  extends BaseChatModelParams,
+  extends
+    BaseChatModelParams,
     Pick<GoogleGenerativeAIChatCallOptions, "streamUsage"> {
   /**
    * Model Name to use
    *
    * Note: The format must follow the pattern - `{model}`
    */
-  model: string;
+  model: ModelParams["model"];
 
   /**
    * Controls the randomness of the output.
@@ -654,8 +657,21 @@ export class ChatGoogleGenerativeAI
     );
   }
 
-  constructor(fields: GoogleGenerativeAIChatInput) {
+  constructor(
+    model: ModelParams["model"],
+    fields?: Omit<GoogleGenerativeAIChatInput, "model">
+  );
+  constructor(fields: GoogleGenerativeAIChatInput);
+  constructor(
+    modelOrFields: ModelParams["model"] | GoogleGenerativeAIChatInput,
+    fieldsArg?: Omit<GoogleGenerativeAIChatInput, "model">
+  ) {
+    const fields =
+      typeof modelOrFields === "string"
+        ? { ...(fieldsArg ?? {}), model: modelOrFields }
+        : modelOrFields;
     super(fields);
+    this._addVersion("@langchain/google-genai", __PKG_VERSION__);
 
     this.model = fields.model.replace(/^models\//, "");
 
@@ -819,21 +835,50 @@ export class ChatGoogleGenerativeAI
         })
       : undefined;
 
-    if (options?.responseSchema) {
-      this.client.generationConfig.responseSchema = options.responseSchema;
-      this.client.generationConfig.responseMimeType = "application/json";
-    } else {
-      this.client.generationConfig.responseSchema = undefined;
-      this.client.generationConfig.responseMimeType = this.json
-        ? "application/json"
-        : undefined;
-    }
-
     return {
       ...(toolsAndConfig?.tools ? { tools: toolsAndConfig.tools } : {}),
       ...(toolsAndConfig?.toolConfig
         ? { toolConfig: toolsAndConfig.toolConfig }
         : {}),
+      generationConfig: {
+        stopSequences: this.stopSequences,
+        maxOutputTokens: this.maxOutputTokens,
+        temperature: this.temperature,
+        topP: this.topP,
+        topK: this.topK,
+        ...(this.json ? { responseMimeType: "application/json" } : {}),
+        ...(this.thinkingConfig ? { thinkingConfig: this.thinkingConfig } : {}),
+        ...(options?.responseSchema
+          ? {
+              responseSchema: options.responseSchema,
+              responseMimeType: "application/json",
+            }
+          : {}),
+      },
+    };
+  }
+
+  private _buildGenerateContentRequest(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"]
+  ): GenerateContentRequest {
+    const prompt = convertBaseMessagesToContent(
+      messages,
+      this._isMultimodalModel,
+      this.useSystemInstruction,
+      this.model
+    );
+    let actualPrompt = prompt;
+    let systemInstruction: (typeof prompt)[number] | undefined;
+    if (prompt[0]?.role === "system") {
+      [systemInstruction, ...actualPrompt] = prompt;
+    }
+    const parameters = this.invocationParams(options);
+
+    return {
+      ...parameters,
+      ...(systemInstruction ? { systemInstruction } : {}),
+      contents: actualPrompt,
     };
   }
 
@@ -843,19 +888,6 @@ export class ChatGoogleGenerativeAI
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     options.signal?.throwIfAborted();
-    const prompt = convertBaseMessagesToContent(
-      messages,
-      this._isMultimodalModel,
-      this.useSystemInstruction,
-      this.model
-    );
-    let actualPrompt = prompt;
-    if (prompt[0].role === "system") {
-      const [systemInstruction] = prompt;
-      this.client.systemInstruction = systemInstruction;
-      actualPrompt = prompt.slice(1);
-    }
-    const parameters = this.invocationParams(options);
 
     // Handle streaming
     if (this.streaming) {
@@ -879,10 +911,9 @@ export class ChatGoogleGenerativeAI
       return { generations, llmOutput: { estimatedTokenUsage: tokenUsage } };
     }
 
-    const res = await this.completionWithRetry({
-      ...parameters,
-      contents: actualPrompt,
-    });
+    const res = await this.completionWithRetry(
+      this._buildGenerateContentRequest(messages, options)
+    );
 
     let usageMetadata: UsageMetadata | undefined;
     if ("usageMetadata" in res.response) {
@@ -907,28 +938,46 @@ export class ChatGoogleGenerativeAI
     return generationResult;
   }
 
+  async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    const request = this._buildGenerateContentRequest(messages, options);
+    const stream = await this.caller.callWithOptions(
+      { signal: options?.signal },
+      async () => {
+        const { stream: s } = await this.client.generateContentStream(request, {
+          signal: options?.signal,
+        });
+        return s;
+      }
+    );
+    const shouldStreamUsage =
+      this.streamUsage !== false && options.streamUsage !== false;
+    const abortableStream = async function* (
+      source: AsyncIterable<EnhancedGenerateContentResponse>,
+      signal?: AbortSignal
+    ) {
+      for await (const chunk of source) {
+        if (signal?.aborted) {
+          return;
+        }
+        yield chunk;
+      }
+    };
+    yield* convertGoogleGenAIStream(abortableStream(stream, options.signal), {
+      streamUsage: shouldStreamUsage,
+      model: this.model,
+    });
+  }
+
   async *_streamResponseChunks(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
-    const prompt = convertBaseMessagesToContent(
-      messages,
-      this._isMultimodalModel,
-      this.useSystemInstruction,
-      this.model
-    );
-    let actualPrompt = prompt;
-    if (prompt[0].role === "system") {
-      const [systemInstruction] = prompt;
-      this.client.systemInstruction = systemInstruction;
-      actualPrompt = prompt.slice(1);
-    }
-    const parameters = this.invocationParams(options);
-    const request = {
-      ...parameters,
-      contents: actualPrompt,
-    };
+    const request = this._buildGenerateContentRequest(messages, options);
     const stream = await this.caller.callWithOptions(
       { signal: options?.signal },
       async () => {
@@ -1011,7 +1060,7 @@ export class ChatGoogleGenerativeAI
           return await this.client.generateContent(request, {
             signal: options?.signal,
           });
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (e: any) {
           // TODO: Improve error handling
           if (e.message?.includes("400 Bad Request")) {
@@ -1045,34 +1094,37 @@ export class ChatGoogleGenerativeAI
   }
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | SerializableSchema<RunOutput>
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | SerializableSchema<RunOutput>
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      | SerializableSchema<RunOutput>
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
   ):
@@ -1081,112 +1133,80 @@ export class ChatGoogleGenerativeAI
         BaseLanguageModelInput,
         { raw: BaseMessage; parsed: RunOutput }
       > {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const schema: InteropZodType<RunOutput> | Record<string, any> =
-      outputSchema;
+    const schema = outputSchema;
     const name = config?.name;
     const method = config?.method;
     const includeRaw = config?.includeRaw;
+
     if (method === "jsonMode") {
       throw new Error(
         `ChatGoogleGenerativeAI only supports "jsonSchema" or "functionCalling" as a method.`
       );
     }
 
-    let llm;
-    let outputParser: BaseLLMOutputParser<RunOutput>;
+    let llm: Runnable<BaseLanguageModelInput>;
+    let outputParser: Runnable<AIMessageChunk, RunOutput>;
+
     if (method === "functionCalling") {
       let functionName = name ?? "extract";
-      let tools: GoogleGenerativeAIFunctionDeclarationsTool[];
-      if (isInteropZodSchema(schema)) {
+      let geminiFunctionDeclaration: GenerativeAIFunctionDeclaration;
+      if (isInteropZodSchema(schema) || isSerializableSchema(schema)) {
         const jsonSchema = schemaToGenerativeAIParameters(schema);
-        tools = [
-          {
-            functionDeclarations: [
-              {
-                name: functionName,
-                description:
-                  jsonSchema.description ?? "A function available to call.",
-                parameters: jsonSchema as GenerativeAIFunctionDeclarationSchema,
-              },
-            ],
-          },
-        ];
-        outputParser = new GoogleGenerativeAIToolsOutputParser<
-          InferInteropZodOutput<typeof schema>
-        >({
-          returnSingle: true,
-          keyName: functionName,
-          zodSchema: schema,
-        });
+        geminiFunctionDeclaration = {
+          name: functionName,
+          description:
+            jsonSchema.description ?? "A function available to call.",
+          parameters: jsonSchema as GenerativeAIFunctionDeclarationSchema,
+        };
+      } else if (
+        typeof schema.name === "string" &&
+        typeof schema.parameters === "object" &&
+        schema.parameters != null
+      ) {
+        geminiFunctionDeclaration = schema as GenerativeAIFunctionDeclaration;
+        geminiFunctionDeclaration.parameters = removeAdditionalProperties(
+          schema.parameters
+        ) as GenerativeAIFunctionDeclarationSchema;
+        functionName = schema.name;
       } else {
-        let geminiFunctionDefinition: GenerativeAIFunctionDeclaration;
-        if (
-          typeof schema.name === "string" &&
-          typeof schema.parameters === "object" &&
-          schema.parameters != null
-        ) {
-          geminiFunctionDefinition = schema as GenerativeAIFunctionDeclaration;
-          geminiFunctionDefinition.parameters = removeAdditionalProperties(
-            schema.parameters
-          ) as GenerativeAIFunctionDeclarationSchema;
-          functionName = schema.name;
-        } else {
-          geminiFunctionDefinition = {
-            name: functionName,
-            description: schema.description ?? "",
-            parameters: removeAdditionalProperties(
-              schema
-            ) as GenerativeAIFunctionDeclarationSchema,
-          };
-        }
-        tools = [
-          {
-            functionDeclarations: [geminiFunctionDefinition],
-          },
-        ];
-        outputParser = new GoogleGenerativeAIToolsOutputParser<RunOutput>({
-          returnSingle: true,
-          keyName: functionName,
-        });
+        geminiFunctionDeclaration = {
+          name: functionName,
+          description: schema.description ?? "",
+          parameters: removeAdditionalProperties(
+            schema
+          ) as GenerativeAIFunctionDeclarationSchema,
+        };
       }
+
+      const tools: GoogleGenerativeAIFunctionDeclarationsTool[] = [
+        {
+          functionDeclarations: [geminiFunctionDeclaration],
+        },
+      ];
       llm = this.bindTools(tools).withConfig({
         allowedFunctionNames: [functionName],
       });
+
+      outputParser = createFunctionCallingParser(
+        schema,
+        functionName,
+        GoogleGenerativeAIToolsOutputParser
+      );
     } else {
       const jsonSchema = schemaToGenerativeAIParameters(schema);
       llm = this.withConfig({
         responseSchema: jsonSchema as Schema,
       });
-      outputParser = new JsonOutputParser();
+      outputParser = createContentParser(schema);
     }
 
-    if (!includeRaw) {
-      return llm.pipe(outputParser).withConfig({
-        runName: "ChatGoogleGenerativeAIStructuredOutput",
-      }) as Runnable<BaseLanguageModelInput, RunOutput>;
-    }
-
-    const parserAssign = RunnablePassthrough.assign({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      parsed: (input: any, config) => outputParser.invoke(input.raw, config),
-    });
-    const parserNone = RunnablePassthrough.assign({
-      parsed: () => null,
-    });
-    const parsedWithFallback = parserAssign.withFallbacks({
-      fallbacks: [parserNone],
-    });
-    return RunnableSequence.from<
-      BaseLanguageModelInput,
-      { raw: BaseMessage; parsed: RunOutput }
-    >([
-      {
-        raw: llm,
-      },
-      parsedWithFallback,
-    ]).withConfig({
-      runName: "StructuredOutputRunnable",
-    });
+    return assembleStructuredOutputPipeline(
+      llm,
+      outputParser,
+      includeRaw,
+      includeRaw
+        ? "StructuredOutputRunnable"
+        : "ChatGoogleGenerativeAIStructuredOutput"
+    );
   }
 }

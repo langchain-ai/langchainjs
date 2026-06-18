@@ -14,10 +14,10 @@ const loadAgentFromFile: FileLoader<Agent> = async (
   return Agent.deserialize({ ...serialized, ...llmAndTools });
 };
 
-export const loadAgent = async (
+export async function loadAgent(
   uri: string,
   llmAndTools?: { llm?: BaseLanguageModelInterface; tools?: ToolInterface[] }
-): Promise<Agent> => {
+): Promise<Agent> {
   const hubResult = await loadFromHub(
     uri,
     loadAgentFromFile,
@@ -30,4 +30,4 @@ export const loadAgent = async (
   }
 
   return loadFromFile(uri, loadAgentFromFile, llmAndTools);
-};
+}

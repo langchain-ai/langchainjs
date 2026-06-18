@@ -1,6 +1,7 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { z } from "zod/v3";
 import { z as z4 } from "zod/v4";
+import { v4 as uuidv4 } from "@langchain/core/utils/uuid";
 
 import {
   BaseMessage,
@@ -16,7 +17,14 @@ import {
   Command,
   getCurrentTaskInput,
   type BaseCheckpointSaver,
+  type BaseStore,
 } from "@langchain/langgraph";
+import { CallbackManager } from "@langchain/core/callbacks/manager";
+import { LangChainTracer } from "@langchain/core/tracers/tracer_langchain";
+import type { LangSmithTracingClientInterface } from "langsmith";
+import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
+import type { Serialized } from "@langchain/core/load/serializable";
+import type { ChainValues } from "@langchain/core/utils/types";
 
 import {
   providerStrategy,
@@ -70,6 +78,47 @@ describe("createAgent", () => {
     });
     // Note: Checkpoint properties may vary by implementation
     expect(saved).toHaveProperty("channel_values");
+  });
+
+  it("should propagate checkpointer set after construction", async () => {
+    const model = new FakeToolCallingModel();
+
+    const agent = createAgent({
+      model,
+      tools: [],
+    });
+
+    const externalCheckpointer = createCheckpointer();
+    agent.checkpointer = externalCheckpointer;
+
+    const inputs = [new HumanMessage("hi?")];
+    const thread = { configurable: { thread_id: "propagation-test" } };
+    await agent.invoke({ messages: inputs }, thread);
+
+    const saved = await externalCheckpointer.get(thread);
+    expect(saved).toBeDefined();
+    expect(saved?.channel_values).toMatchObject({
+      messages: [
+        expect.objectContaining({ content: "hi?" }),
+        new AIMessage({ name: "model", content: "hi?", id: "0" }),
+      ],
+    });
+  });
+
+  it("should propagate store set after construction", async () => {
+    const model = new FakeToolCallingModel();
+
+    const agent = createAgent({
+      model,
+      tools: [],
+    });
+
+    expect(agent.store).toBeUndefined();
+
+    const newStore = {} as BaseStore;
+    agent.store = newStore;
+    expect(agent.store).toBe(newStore);
+    expect(agent.graph.store).toBe(newStore);
   });
 
   it("should reject LLM with bound tools", async () => {
@@ -1055,5 +1104,443 @@ describe("createAgent", () => {
 
     // Verify messages were processed correctly
     expect(result.messages.length).toBeGreaterThan(0);
+  });
+
+  describe("withConfig", () => {
+    it("should return a new ReactAgent instance", () => {
+      const model = new FakeToolCallingModel();
+      const agent = createAgent({
+        model,
+        tools: [],
+      });
+
+      const configuredAgent = agent.withConfig({ recursionLimit: 1000 });
+
+      // Should return a new instance, not the same one
+      expect(configuredAgent).not.toBe(agent);
+      // Both should be ReactAgent instances
+      expect(configuredAgent).toHaveProperty("invoke");
+      expect(configuredAgent).toHaveProperty("stream");
+      expect(configuredAgent).toHaveProperty("withConfig");
+    });
+
+    it("should allow chaining multiple withConfig calls", () => {
+      const model = new FakeToolCallingModel();
+      const agent = createAgent({
+        model,
+        tools: [],
+      });
+
+      const configuredAgent = agent
+        .withConfig({ recursionLimit: 500 })
+        .withConfig({ tags: ["test"] });
+
+      // Should return a new instance after chaining
+      expect(configuredAgent).not.toBe(agent);
+      expect(configuredAgent).toHaveProperty("invoke");
+    });
+
+    it("should preserve original agent options", () => {
+      const systemPrompt = "You are a helpful assistant";
+      const model = new FakeToolCallingModel();
+      const agent = createAgent({
+        model,
+        tools: [],
+        systemPrompt,
+      });
+
+      const configuredAgent = agent.withConfig({ recursionLimit: 1000 });
+
+      // Both agents should have the same options
+      expect(configuredAgent.options.systemPrompt).toBe(systemPrompt);
+    });
+
+    it("should propagate withConfig defaults to the compiled graph", () => {
+      const model = new FakeToolCallingModel();
+      const agent = createAgent({
+        model,
+        tools: [],
+      }).withConfig({ recursionLimit: 1000, tags: ["test"] });
+
+      expect(agent.graph.config?.recursionLimit).toBe(1000);
+      expect(agent.graph.config?.tags).toContain("test");
+    });
+
+    it("should apply built-in default metadata to the compiled graph", () => {
+      const model = new FakeToolCallingModel();
+      const agent = createAgent({
+        model,
+        tools: [],
+        name: "weather-agent",
+      });
+
+      expect(agent.graph.config?.metadata?.ls_integration).toBe(
+        "langchain_create_agent"
+      );
+      expect(agent.graph.config?.metadata?.lc_agent_name).toBe("weather-agent");
+      expect(agent.graph.config?.configurable?.ls_agent_type).toBe("root");
+    });
+
+    it("should propagate configurable values to tools", async () => {
+      // This test verifies that config values set via withConfig()
+      // are actually propagated to the graph and accessible in tools
+      let capturedConfig: Record<string, unknown> | undefined;
+
+      const configCaptureTool = tool(
+        async (_input, config) => {
+          // Capture the config that was passed to this tool
+          capturedConfig = config?.configurable;
+          return "done";
+        },
+        {
+          name: "config_capture_tool",
+          description: "Captures the config for testing",
+          schema: z.object({
+            input: z.string(),
+          }),
+        }
+      );
+
+      const model = new FakeToolCallingChatModel({
+        responses: [
+          new AIMessage({
+            content: "",
+            tool_calls: [
+              {
+                name: "config_capture_tool",
+                id: "test-1",
+                args: { input: "test" },
+              },
+            ],
+          }),
+          new AIMessage("Done"),
+        ],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [configCaptureTool],
+      });
+
+      // Set a custom configurable value via withConfig
+      const configuredAgent = agent.withConfig({
+        configurable: { custom_test_value: "hello-from-withConfig" },
+      });
+
+      await configuredAgent.invoke({
+        messages: [new HumanMessage("test")],
+      });
+
+      // Verify the configurable value was propagated to the tool
+      expect(capturedConfig).toBeDefined();
+      expect(capturedConfig?.custom_test_value).toBe("hello-from-withConfig");
+    });
+
+    it("should merge withConfig values with invocation config", async () => {
+      // Verify that withConfig values are merged with invocation-time config
+      let capturedConfig: Record<string, unknown> | undefined;
+
+      const configCaptureTool = tool(
+        async (_input, config) => {
+          capturedConfig = config?.configurable;
+          return "done";
+        },
+        {
+          name: "config_capture_tool",
+          description: "Captures the config for testing",
+          schema: z.object({
+            input: z.string(),
+          }),
+        }
+      );
+
+      const model = new FakeToolCallingChatModel({
+        responses: [
+          new AIMessage({
+            content: "",
+            tool_calls: [
+              {
+                name: "config_capture_tool",
+                id: "test-1",
+                args: { input: "test" },
+              },
+            ],
+          }),
+          new AIMessage("Done"),
+        ],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [configCaptureTool],
+      });
+
+      // Set a default value via withConfig
+      const configuredAgent = agent.withConfig({
+        configurable: { default_value: "from-withConfig" },
+      });
+
+      // Invoke with additional configurable values
+      await configuredAgent.invoke(
+        { messages: [new HumanMessage("test")] },
+        { configurable: { invocation_value: "from-invoke" } }
+      );
+
+      // Both values should be present (merged)
+      expect(capturedConfig).toBeDefined();
+      expect(capturedConfig?.default_value).toBe("from-withConfig");
+      expect(capturedConfig?.invocation_value).toBe("from-invoke");
+    });
+
+    it("should allow invocation config to override withConfig values", async () => {
+      // Verify that invocation-time values override withConfig defaults
+      let capturedConfig: Record<string, unknown> | undefined;
+
+      const configCaptureTool = tool(
+        async (_input, config) => {
+          capturedConfig = config?.configurable;
+          return "done";
+        },
+        {
+          name: "config_capture_tool",
+          description: "Captures the config for testing",
+          schema: z.object({
+            input: z.string(),
+          }),
+        }
+      );
+
+      const model = new FakeToolCallingChatModel({
+        responses: [
+          new AIMessage({
+            content: "",
+            tool_calls: [
+              {
+                name: "config_capture_tool",
+                id: "test-1",
+                args: { input: "test" },
+              },
+            ],
+          }),
+          new AIMessage("Done"),
+        ],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [configCaptureTool],
+      });
+
+      // Set a default value via withConfig
+      const configuredAgent = agent.withConfig({
+        configurable: { shared_key: "default-value" },
+      });
+
+      // Override with invocation config
+      await configuredAgent.invoke(
+        { messages: [new HumanMessage("test")] },
+        { configurable: { shared_key: "overridden-value" } }
+      );
+
+      // Invocation value should win
+      expect(capturedConfig?.shared_key).toBe("overridden-value");
+    });
+  });
+
+  describe("lc_agent_name metadata", () => {
+    it("should propagate lc_agent_name in config.metadata when name is provided", async () => {
+      let capturedMetadata: Record<string, unknown> | undefined;
+
+      const metadataCaptureTool = tool(
+        async (_input, config) => {
+          capturedMetadata = config?.metadata;
+          return "done";
+        },
+        {
+          name: "metadata_capture_tool",
+          description: "Captures the metadata for testing",
+          schema: z.object({
+            input: z.string(),
+          }),
+        }
+      );
+
+      const model = new FakeToolCallingChatModel({
+        responses: [
+          new AIMessage({
+            content: "",
+            tool_calls: [
+              {
+                name: "metadata_capture_tool",
+                id: "test-1",
+                args: { input: "test" },
+              },
+            ],
+          }),
+          new AIMessage("Done"),
+        ],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [metadataCaptureTool],
+        name: "my-test-agent",
+      });
+
+      await agent.invoke({
+        messages: [new HumanMessage("test")],
+      });
+
+      expect(capturedMetadata).toBeDefined();
+      expect(capturedMetadata?.lc_agent_name).toBe("my-test-agent");
+    });
+
+    it("should not set lc_agent_name when name is not provided", async () => {
+      let capturedMetadata: Record<string, unknown> | undefined;
+
+      const metadataCaptureTool = tool(
+        async (_input, config) => {
+          capturedMetadata = config?.metadata;
+          return "done";
+        },
+        {
+          name: "metadata_capture_tool",
+          description: "Captures the metadata for testing",
+          schema: z.object({
+            input: z.string(),
+          }),
+        }
+      );
+
+      const model = new FakeToolCallingChatModel({
+        responses: [
+          new AIMessage({
+            content: "",
+            tool_calls: [
+              {
+                name: "metadata_capture_tool",
+                id: "test-1",
+                args: { input: "test" },
+              },
+            ],
+          }),
+          new AIMessage("Done"),
+        ],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [metadataCaptureTool],
+      });
+
+      await agent.invoke({
+        messages: [new HumanMessage("test")],
+      });
+
+      expect(capturedMetadata).toBeDefined();
+      expect(capturedMetadata?.lc_agent_name).toBeUndefined();
+    });
+  });
+
+  describe("tracing metadata", () => {
+    it("should add ls_agent_type to tracing metadata only, not to streamed metadata", async () => {
+      // Capture metadata from regular callback handler (simulates streamed metadata)
+      const capturedCallbackMetadata: {
+        metadata?: Record<string, unknown>;
+        tags?: string[];
+      }[] = [];
+
+      class CaptureHandler extends BaseCallbackHandler {
+        name = `capture-${uuidv4()}`;
+
+        async handleChainStart(
+          _chain: Serialized,
+          _inputs: ChainValues,
+          _runId: string,
+          _runType?: string,
+          tags?: string[],
+          metadata?: Record<string, unknown>
+        ) {
+          capturedCallbackMetadata.push({ tags, metadata });
+        }
+      }
+
+      // Mock the LangSmith client to capture what gets sent to the tracer
+      const createRunMock = vi.fn().mockResolvedValue(undefined);
+      const updateRunMock = vi.fn().mockResolvedValue(undefined);
+      const mockClient = {
+        createRun: createRunMock,
+        updateRun: updateRunMock,
+      } as LangSmithTracingClientInterface;
+
+      const tracer = new LangChainTracer({ client: mockClient });
+      const capture = new CaptureHandler();
+
+      const callbacks = CallbackManager.configure([tracer, capture]);
+
+      const model = new FakeToolCallingModel();
+      const agent = createAgent({
+        model,
+        tools: [],
+      });
+
+      await agent.invoke(
+        { messages: [new HumanMessage("hi?")] },
+        { callbacks: callbacks! }
+      );
+
+      // Wait for any async callbacks to complete
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Verify that ls_agent_type is NOT in the regular callback metadata
+      // (it should only go to the tracer)
+      expect(capturedCallbackMetadata.length).toBeGreaterThan(0);
+      for (const { metadata } of capturedCallbackMetadata) {
+        expect(metadata?.ls_agent_type).toBeUndefined();
+      }
+
+      // Verify that ls_agent_type IS in the tracer metadata (sent to LangSmith)
+      expect(createRunMock).toHaveBeenCalled();
+      const postedRun = createRunMock.mock.calls[0]?.[0];
+      expect(postedRun).toBeDefined();
+      expect(postedRun.extra?.metadata?.ls_agent_type).toBe("root");
+    });
+
+    it("should allow ls_agent_type to be overridden via configurable", async () => {
+      // Mock the LangSmith client to capture what gets sent to the tracer
+      const createRunMock = vi.fn().mockResolvedValue(undefined);
+      const updateRunMock = vi.fn().mockResolvedValue(undefined);
+      const mockClient = {
+        createRun: createRunMock,
+        updateRun: updateRunMock,
+      } as LangSmithTracingClientInterface;
+
+      const tracer = new LangChainTracer({ client: mockClient });
+
+      const callbacks = CallbackManager.configure([tracer]);
+
+      const model = new FakeToolCallingModel();
+      const agent = createAgent({
+        model,
+        tools: [],
+      });
+
+      await agent.invoke(
+        { messages: [new HumanMessage("hi?")] },
+        {
+          callbacks: callbacks!,
+          configurable: { ls_agent_type: "subagent" },
+        }
+      );
+
+      // Wait for any async callbacks to complete
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Verify that ls_agent_type is overridden in the tracer metadata
+      expect(createRunMock).toHaveBeenCalled();
+      const postedRun = createRunMock.mock.calls[0]?.[0];
+      expect(postedRun).toBeDefined();
+      expect(postedRun.extra?.metadata?.ls_agent_type).toBe("subagent");
+    });
   });
 });

@@ -1,5 +1,4 @@
-import type * as z3 from "zod/v3";
-import type * as z4 from "zod/v4/core";
+import type { ZodV3Like, ZodV4Like } from "../../utils/types/zod.js";
 import { ChatGeneration, ChatGenerationChunk } from "../../outputs.js";
 import { OutputParserException } from "../base.js";
 import { parsePartialJson } from "../json.js";
@@ -13,13 +12,14 @@ import {
   type InteropZodType,
   interopSafeParseAsync,
 } from "../../utils/types/zod.js";
+import { SerializableSchema } from "../../utils/standard_schema.js";
 
 export type ParsedToolCall = {
   id?: string;
 
   type: string;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   args: Record<string, any>;
 };
 
@@ -29,22 +29,22 @@ export type JsonOutputToolsParserParams = {
 } & BaseCumulativeTransformOutputParserInput;
 
 export function parseToolCall(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   rawToolCall: Record<string, any>,
   options: { returnId?: boolean; partial: true }
 ): ToolCall | undefined;
 export function parseToolCall(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   rawToolCall: Record<string, any>,
   options?: { returnId?: boolean; partial?: false }
 ): ToolCall;
 export function parseToolCall(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   rawToolCall: Record<string, any>,
   options?: { returnId?: boolean; partial?: boolean }
 ): ToolCall | undefined;
 export function parseToolCall(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   rawToolCall: Record<string, any>,
   options?: { returnId?: boolean; partial?: boolean }
 ): ToolCall | undefined {
@@ -61,7 +61,7 @@ export function parseToolCall(
   } else {
     try {
       functionArgs = JSON.parse(rawToolCall.function.arguments);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       throw new OutputParserException(
         [
@@ -104,7 +104,7 @@ export function convertLangChainToolCallToOpenAI(toolCall: ToolCall) {
 }
 
 export function makeInvalidToolCall(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   rawToolCall: Record<string, any>,
   errorMsg?: string
 ): InvalidToolCall {
@@ -160,7 +160,7 @@ export class JsonOutputToolsParser<
   async parsePartialResult(
     generations: ChatGenerationChunk[] | ChatGeneration[],
     partial = true
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<any> {
     const message = generations[0].message;
     let toolCalls;
@@ -207,23 +207,30 @@ type JsonOutputKeyToolsParserParamsBase = {
 } & JsonOutputToolsParserParams;
 
 type JsonOutputKeyToolsParserParamsV3<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   T extends Record<string, any> = Record<string, any>,
-> = { zodSchema?: z3.ZodType<T> } & JsonOutputKeyToolsParserParamsBase;
+> = { zodSchema?: ZodV3Like<T> } & JsonOutputKeyToolsParserParamsBase;
 
 type JsonOutputKeyToolsParserParamsV4<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   T extends Record<string, any> = Record<string, any>,
-> = { zodSchema?: z4.$ZodType<T, T> } & JsonOutputKeyToolsParserParamsBase;
+> = { zodSchema?: ZodV4Like<T, T> } & JsonOutputKeyToolsParserParamsBase;
 
 export type JsonOutputKeyToolsParserParamsInterop<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   T extends Record<string, any> = Record<string, any>,
 > = { zodSchema?: InteropZodType<T> } & JsonOutputKeyToolsParserParamsBase;
 
+export type JsonOutputKeyToolsParserParamsSerializable<
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  T extends Record<string, any> = Record<string, any>,
+> = {
+  serializableSchema?: SerializableSchema<T>;
+} & JsonOutputKeyToolsParserParamsBase;
+
 // Use Zod 3 for backwards compatibility
 export type JsonOutputKeyToolsParserParams<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   T extends Record<string, any> = Record<string, any>,
 > = JsonOutputKeyToolsParserParamsV3<T>;
 
@@ -232,7 +239,7 @@ export type JsonOutputKeyToolsParserParams<
  * expecting only a single tool to be called.
  */
 export class JsonOutputKeyToolsParser<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   T extends Record<string, any> = Record<string, any>,
 > extends JsonOutputToolsParser<T> {
   static lc_name() {
@@ -253,6 +260,8 @@ export class JsonOutputKeyToolsParser<
 
   zodSchema?: InteropZodType<T>;
 
+  serializableSchema?: SerializableSchema<T>;
+
   constructor(params: JsonOutputKeyToolsParserParamsV3<T>);
 
   constructor(params: JsonOutputKeyToolsParserParamsV4<T>);
@@ -264,14 +273,35 @@ export class JsonOutputKeyToolsParser<
       | JsonOutputKeyToolsParserParamsV3<T>
       | JsonOutputKeyToolsParserParamsV4<T>
       | JsonOutputKeyToolsParserParamsInterop<T>
+      | JsonOutputKeyToolsParserParamsSerializable<T>
   ) {
     super(params);
     this.keyName = params.keyName;
     this.returnSingle = params.returnSingle ?? this.returnSingle;
-    this.zodSchema = params.zodSchema;
+    if ("zodSchema" in params) {
+      this.zodSchema = params.zodSchema;
+    }
+    if ("serializableSchema" in params) {
+      this.serializableSchema = params.serializableSchema;
+    }
   }
 
   protected async _validateResult(result: unknown): Promise<T> {
+    if (this.serializableSchema !== undefined) {
+      const validated =
+        await this.serializableSchema["~standard"].validate(result);
+      if (validated.issues) {
+        throw new OutputParserException(
+          `Failed to parse. Text: "${JSON.stringify(
+            result,
+            null,
+            2
+          )}". Error: ${JSON.stringify(validated.issues)}`,
+          JSON.stringify(result, null, 2)
+        );
+      }
+      return validated.value as T;
+    }
     if (this.zodSchema === undefined) {
       return result as T;
     }
@@ -284,19 +314,20 @@ export class JsonOutputKeyToolsParser<
           result,
           null,
           2
-        )}". Error: ${JSON.stringify(zodParsedResult.error?.issues)}`,
+          // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+        )}". Error: ${JSON.stringify((zodParsedResult.error as any)?.issues)}`,
         JSON.stringify(result, null, 2)
       );
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   async parsePartialResult(generations: ChatGeneration[]): Promise<any> {
     const results = await super.parsePartialResult(generations);
     const matchingResults = results.filter(
       (result: ParsedToolCall) => result.type === this.keyName
     );
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     let returnedValues: ParsedToolCall[] | Record<string, any>[] =
       matchingResults;
     if (!matchingResults.length) {
@@ -313,13 +344,13 @@ export class JsonOutputKeyToolsParser<
     return returnedValues;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   async parseResult(generations: ChatGeneration[]): Promise<any> {
     const results = await super.parsePartialResult(generations, false);
     const matchingResults = results.filter(
       (result: ParsedToolCall) => result.type === this.keyName
     );
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     let returnedValues: ParsedToolCall[] | Record<string, any>[] =
       matchingResults;
     if (!matchingResults.length) {

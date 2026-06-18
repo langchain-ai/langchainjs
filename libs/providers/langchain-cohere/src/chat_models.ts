@@ -14,6 +14,8 @@ import {
 } from "@langchain/core/language_models/base";
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
+import { convertCohereStream } from "./utils/stream_events.js";
 import {
   BaseChatModel,
   BaseChatModelCallOptions,
@@ -33,7 +35,7 @@ import {
   ToolCallChunk,
   ToolMessage,
 } from "@langchain/core/messages/tool";
-import * as uuid from "uuid";
+import * as uuid from "@langchain/core/utils/uuid";
 import { Runnable } from "@langchain/core/runnables";
 import { isInteropZodSchema } from "@langchain/core/utils/types";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
@@ -87,7 +89,8 @@ interface TokenUsage {
 }
 
 export interface ChatCohereCallOptions
-  extends BaseChatModelCallOptions,
+  extends
+    BaseChatModelCallOptions,
     Partial<Omit<Cohere.ChatRequest, "message" | "tools">>,
     Partial<Omit<Cohere.ChatStreamRequest, "message" | "tools">>,
     Pick<ChatCohereInput, "streamUsage"> {
@@ -709,8 +712,8 @@ function _formatToolsToCohere(
  * <br />
  */
 export class ChatCohere<
-    CallOptions extends ChatCohereCallOptions = ChatCohereCallOptions,
-  >
+  CallOptions extends ChatCohereCallOptions = ChatCohereCallOptions,
+>
   extends BaseChatModel<CallOptions, AIMessageChunk>
   implements ChatCohereInput
 {
@@ -730,15 +733,25 @@ export class ChatCohere<
 
   streamUsage: boolean = true;
 
-  constructor(fields?: ChatCohereInput) {
-    super(fields ?? {});
+  constructor(model: string, fields?: Omit<ChatCohereInput, "model">);
+  constructor(fields?: ChatCohereInput);
+  constructor(
+    modelOrFields?: string | ChatCohereInput,
+    fields?: Omit<ChatCohereInput, "model">
+  ) {
+    const params =
+      typeof modelOrFields === "string"
+        ? { ...(fields ?? {}), model: modelOrFields }
+        : (modelOrFields ?? {});
+    super(params);
+    this._addVersion("@langchain/cohere", __PKG_VERSION__);
 
-    this.client = getCohereClient(fields);
+    this.client = getCohereClient(params);
 
-    this.model = fields?.model ?? this.model;
-    this.temperature = fields?.temperature ?? this.temperature;
-    this.streaming = fields?.streaming ?? this.streaming;
-    this.streamUsage = fields?.streamUsage ?? this.streamUsage;
+    this.model = params.model ?? this.model;
+    this.temperature = params.temperature ?? this.temperature;
+    this.streaming = params.streaming ?? this.streaming;
+    this.streamUsage = params.streamUsage ?? this.streamUsage;
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
@@ -1120,6 +1133,33 @@ export class ChatCohere<
       generations,
       llmOutput: { estimatedTokenUsage: tokenUsage },
     };
+  }
+
+  async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    const request = this._getChatRequest(messages, options);
+    const stream = await this.caller.callWithOptions(
+      { signal: options.signal },
+      async () => this.client.chatStream(request)
+    );
+    const shouldStreamUsage = this.streamUsage ?? options.streamUsage ?? true;
+    const abortableStream = async function* (
+      source: AsyncIterable<Record<string, unknown>>,
+      signal?: AbortSignal
+    ) {
+      for await (const chunk of source) {
+        if (signal?.aborted) {
+          return;
+        }
+        yield chunk;
+      }
+    };
+    yield* convertCohereStream(abortableStream(stream, options.signal), {
+      streamUsage: shouldStreamUsage,
+    });
   }
 
   async *_streamResponseChunks(

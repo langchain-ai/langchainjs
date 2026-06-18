@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { test, expect } from "vitest";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { FakeLLM, FakeStreamingLLM } from "../../utils/testing/index.js";
@@ -68,7 +68,7 @@ test("RunnableWithFallbacks stream events with local storage and callbacks added
     const res = await llmWithFallbacks.invoke(input);
     const stream = await llmWithFallbacks.stream(input);
     for await (const _ of stream) {
-      // eslint-disable-next-line no-void
+      // oxlint-disable-next-line no-void
       void _;
     }
     return res;

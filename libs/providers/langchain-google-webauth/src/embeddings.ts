@@ -9,8 +9,7 @@ import { WebGoogleAuth, WebGoogleAuthOptions } from "./auth.js";
 /**
  * Input to LLM class.
  */
-export interface GoogleEmbeddingsInput
-  extends BaseGoogleEmbeddingsParams<WebGoogleAuthOptions> {}
+export interface GoogleEmbeddingsInput extends BaseGoogleEmbeddingsParams<WebGoogleAuthOptions> {}
 
 /**
  * Integration with an LLM.

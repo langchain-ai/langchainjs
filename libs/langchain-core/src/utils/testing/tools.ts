@@ -3,8 +3,9 @@ import { StructuredTool, ToolParams } from "../../tools/index.js";
 import { ToolInputSchemaOutputType } from "../../tools/types.js";
 import { InteropZodObject } from "../types/zod.js";
 
-export interface FakeToolParams<T extends InteropZodObject = InteropZodObject>
-  extends ToolParams {
+export interface FakeToolParams<
+  T extends InteropZodObject = InteropZodObject,
+> extends ToolParams {
   name: string;
   description: string;
   schema: T;

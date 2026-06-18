@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// eslint-disable-next-line import/no-extraneous-dependencies
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { vi } from "vitest";
 
 const sseClientTransportPrototype = {
@@ -7,10 +6,13 @@ const sseClientTransportPrototype = {
   send: vi.fn().mockReturnValue(Promise.resolve()),
   close: vi.fn().mockReturnValue(Promise.resolve()),
 };
-export const SSEClientTransport: any = vi.fn().mockImplementation((config) => {
-  return {
-    ...sseClientTransportPrototype,
-    config,
-  };
-});
+export const SSEClientTransport: any = vi
+  .fn()
+  .mockImplementation(function mockSSEClientTransport(url, options) {
+    return {
+      ...sseClientTransportPrototype,
+      url,
+      options,
+    };
+  });
 SSEClientTransport.prototype = sseClientTransportPrototype;

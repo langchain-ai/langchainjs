@@ -48,7 +48,7 @@ import { DictPromptTemplate } from "./dict.js";
  * conversation.
  */
 export abstract class BaseMessagePromptTemplate<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
   RunOutput extends BaseMessage[] = BaseMessage[],
 > extends Runnable<RunInput, RunOutput> {
@@ -99,9 +99,9 @@ export interface MessagesPlaceholderFields<T extends string> {
  * extends the BaseMessagePromptTemplate.
  */
 export class MessagesPlaceholder<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunInput extends InputValues = any,
-  >
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput extends InputValues = any,
+>
   extends BaseMessagePromptTemplate<RunInput>
   implements MessagesPlaceholderFields<Extract<keyof RunInput, string>>
 {
@@ -125,7 +125,7 @@ export class MessagesPlaceholder<
       | MessagesPlaceholderFields<Extract<keyof RunInput, string>>
   ) {
     if (typeof fields === "string") {
-      // eslint-disable-next-line no-param-reassign
+      // oxlint-disable-next-line no-param-reassign
       fields = { variableName: fields };
     }
     super(fields);
@@ -158,7 +158,7 @@ export class MessagesPlaceholder<
       } else {
         formattedMessages = [coerceMessageLikeToMessage(input)];
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       const readableInput =
         typeof input === "string" ? input : JSON.stringify(input, null, 2);
@@ -170,7 +170,7 @@ export class MessagesPlaceholder<
         ].join("\n\n")
       );
       error.name = "InputFormatError";
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       (error as any).lc_error_code = e.lc_error_code;
       throw error;
     }
@@ -183,7 +183,7 @@ export class MessagesPlaceholder<
  * Interface for the fields of a MessageStringPromptTemplate.
  */
 export interface MessageStringPromptTemplateFields<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   T extends InputValues = any,
 > {
   prompt: BaseStringPromptTemplate<T, string>;
@@ -194,7 +194,7 @@ export interface MessageStringPromptTemplateFields<
  * templates. It extends the BaseMessagePromptTemplate.
  */
 export abstract class BaseMessageStringPromptTemplate<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
 > extends BaseMessagePromptTemplate<RunInput> {
   prompt: BaseStringPromptTemplate<
@@ -225,7 +225,7 @@ export abstract class BaseMessageStringPromptTemplate<
         >
   ) {
     if (!("prompt" in fields)) {
-      // eslint-disable-next-line no-param-reassign
+      // oxlint-disable-next-line no-param-reassign
       fields = { prompt: fields };
     }
     super(fields);
@@ -252,9 +252,9 @@ export abstract class BaseMessageStringPromptTemplate<
  * templates. It extends the BasePromptTemplate.
  */
 export abstract class BaseChatPromptTemplate<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   PartialVariableName extends string = any,
 > extends BasePromptTemplate<
   RunInput,
@@ -284,9 +284,10 @@ export abstract class BaseChatPromptTemplate<
 /**
  * Interface for the fields of a ChatMessagePromptTemplate.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export interface ChatMessagePromptTemplateFields<T extends InputValues = any>
-  extends MessageStringPromptTemplateFields<T> {
+export interface ChatMessagePromptTemplateFields<
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  T extends InputValues = any,
+> extends MessageStringPromptTemplateFields<T> {
   role: string;
 }
 
@@ -295,7 +296,7 @@ export interface ChatMessagePromptTemplateFields<T extends InputValues = any>
  * BaseMessageStringPromptTemplate.
  */
 export class ChatMessagePromptTemplate<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
 > extends BaseMessageStringPromptTemplate<RunInput> {
   static lc_name() {
@@ -326,7 +327,7 @@ export class ChatMessagePromptTemplate<
     role?: string
   ) {
     if (!("prompt" in fields)) {
-      // eslint-disable-next-line no-param-reassign
+      // oxlint-disable-next-line no-param-reassign
       fields = { prompt: fields, role: role! };
     }
     super(fields);
@@ -351,7 +352,7 @@ export class ChatMessagePromptTemplate<
 }
 
 interface _TextTemplateParam {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   text?: string | Record<string, any>;
 }
 
@@ -367,7 +368,7 @@ function isTextTemplateParam(param: unknown): param is _TextTemplateParam {
 }
 
 interface _ImageTemplateParam {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   image_url?: string | Record<string, any>;
 }
 
@@ -399,7 +400,7 @@ interface _StringImageMessagePromptTemplateOptions<
 }
 
 class _StringImageMessagePromptTemplate<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
   RunOutput extends BaseMessage[] = BaseMessage[],
 > extends BaseMessagePromptTemplate<RunInput, RunOutput> {
@@ -445,12 +446,12 @@ class _StringImageMessagePromptTemplate<
 
   constructor(
     /** @TODO When we come up with a better way to type prompt templates, fix this */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     fields: any,
     additionalOptions?: _StringImageMessagePromptTemplateOptions
   ) {
     if (!("prompt" in fields)) {
-      // eslint-disable-next-line no-param-reassign
+      // oxlint-disable-next-line no-param-reassign
       fields = { prompt: fields };
     }
     super(fields);
@@ -470,7 +471,7 @@ class _StringImageMessagePromptTemplate<
   }
 
   createMessage(content: MessageContent) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const constructor = this.constructor as any;
     if (constructor._messageClass()) {
       const MsgClass = constructor._messageClass();
@@ -610,7 +611,7 @@ class _StringImageMessagePromptTemplate<
   }
 
   async format(input: TypedPromptInputValues<RunInput>): Promise<BaseMessage> {
-    // eslint-disable-next-line no-instanceof/no-instanceof
+    // oxlint-disable-next-line no-instanceof/no-instanceof
     if (this.prompt instanceof BaseStringPromptTemplate) {
       const text = await this.prompt.format(input);
 
@@ -618,7 +619,7 @@ class _StringImageMessagePromptTemplate<
     } else {
       const content: MessageContent = [];
       for (const prompt of this.prompt) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         let inputs: Record<string, any> = {};
         if (!("inputVariables" in prompt)) {
           throw new Error(
@@ -631,14 +632,14 @@ class _StringImageMessagePromptTemplate<
           }
           inputs = { ...inputs, [item]: input[item] };
         }
-        // eslint-disable-next-line no-instanceof/no-instanceof
+        // oxlint-disable-next-line no-instanceof/no-instanceof
         if (prompt instanceof BaseStringPromptTemplate) {
           const formatted = await prompt.format(
             inputs as TypedPromptInputValues<RunInput>
           );
           let additionalContentFields: ContentBlock | undefined;
           if ("additionalContentFields" in prompt) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // oxlint-disable-next-line @typescript-eslint/no-explicit-any
             additionalContentFields = prompt.additionalContentFields as any;
           }
           if (formatted !== "") {
@@ -649,14 +650,14 @@ class _StringImageMessagePromptTemplate<
             });
           }
           /** @TODO replace this */
-          // eslint-disable-next-line no-instanceof/no-instanceof
+          // oxlint-disable-next-line no-instanceof/no-instanceof
         } else if (prompt instanceof ImagePromptTemplate) {
           const formatted = await prompt.format(
             inputs as TypedPromptInputValues<RunInput>
           );
           let additionalContentFields: ContentBlock | undefined;
           if ("additionalContentFields" in prompt) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // oxlint-disable-next-line @typescript-eslint/no-explicit-any
             additionalContentFields = prompt.additionalContentFields as any;
           }
           content.push({
@@ -664,14 +665,14 @@ class _StringImageMessagePromptTemplate<
             type: "image_url",
             image_url: formatted,
           });
-          // eslint-disable-next-line no-instanceof/no-instanceof
+          // oxlint-disable-next-line no-instanceof/no-instanceof
         } else if (prompt instanceof DictPromptTemplate) {
           const formatted = await prompt.format(
             inputs as TypedPromptInputValues<RunInput>
           );
           let additionalContentFields: ContentBlock | undefined;
           if ("additionalContentFields" in prompt) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // oxlint-disable-next-line @typescript-eslint/no-explicit-any
             additionalContentFields = prompt.additionalContentFields as any;
           }
           content.push({
@@ -704,7 +705,7 @@ class _StringImageMessagePromptTemplate<
  * ```
  */
 export class HumanMessagePromptTemplate<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
 > extends _StringImageMessagePromptTemplate<RunInput> {
   static _messageClass(): typeof HumanMessage {
@@ -721,7 +722,7 @@ export class HumanMessagePromptTemplate<
  * BaseMessageStringPromptTemplate.
  */
 export class AIMessagePromptTemplate<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
 > extends _StringImageMessagePromptTemplate<RunInput> {
   static _messageClass(): typeof AIMessage {
@@ -748,7 +749,7 @@ export class AIMessagePromptTemplate<
  * ```
  */
 export class SystemMessagePromptTemplate<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
 > extends _StringImageMessagePromptTemplate<RunInput> {
   static _messageClass(): typeof SystemMessage {
@@ -764,9 +765,9 @@ export class SystemMessagePromptTemplate<
  * Interface for the input of a ChatPromptTemplate.
  */
 export interface ChatPromptTemplateInput<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   PartialVariableName extends string = any,
 > extends BasePromptTemplateInput<RunInput, PartialVariableName> {
   /**
@@ -802,7 +803,7 @@ function _isBaseMessagePromptTemplate(
 }
 
 function _coerceMessagePromptTemplateLike<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
   Extra extends Omit<
     ChatPromptTemplateInput<RunInput>,
@@ -859,7 +860,7 @@ function _coerceMessagePromptTemplateLike<
         | string
         | _TextTemplateParam
         | _ImageTemplateParam
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         | Record<string, any>
       )[];
 
@@ -900,7 +901,7 @@ function _coerceMessagePromptTemplateLike<
 function isMessagesPlaceholder(
   x: BaseMessagePromptTemplate | BaseMessage
 ): x is MessagesPlaceholder {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   return (x.constructor as any).lc_name() === "MessagesPlaceholder";
 }
 
@@ -921,11 +922,11 @@ function isMessagesPlaceholder(
  * ```
  */
 export class ChatPromptTemplate<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    RunInput extends InputValues = any,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    PartialVariableName extends string = any,
-  >
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  RunInput extends InputValues = any,
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  PartialVariableName extends string = any,
+>
   extends BaseChatPromptTemplate<RunInput, PartialVariableName>
   implements ChatPromptTemplateInput<RunInput, PartialVariableName>
 {
@@ -959,7 +960,7 @@ export class ChatPromptTemplate<
     if (this.validateTemplate) {
       const inputVariablesMessages = new Set<string>();
       for (const promptMessage of this.promptMessages) {
-        // eslint-disable-next-line no-instanceof/no-instanceof
+        // oxlint-disable-next-line no-instanceof/no-instanceof
         if (promptMessage instanceof BaseMessage) continue;
         for (const inputVariable of promptMessage.inputVariables) {
           inputVariablesMessages.add(inputVariable);
@@ -1044,7 +1045,7 @@ export class ChatPromptTemplate<
           item.image_url !== null &&
           "url" in item.image_url
         ) {
-          // eslint-disable-next-line no-param-reassign
+          // oxlint-disable-next-line no-param-reassign
           item.image_url.url = formattedUrl;
         } else {
           item.image_url = formattedUrl;
@@ -1063,7 +1064,7 @@ export class ChatPromptTemplate<
     let resultMessages: BaseMessage[] = [];
 
     for (const promptMessage of this.promptMessages) {
-      // eslint-disable-next-line no-instanceof/no-instanceof
+      // oxlint-disable-next-line no-instanceof/no-instanceof
       if (promptMessage instanceof BaseMessage) {
         resultMessages.push(
           await this._parseImagePrompts(promptMessage, allValues)
@@ -1187,10 +1188,10 @@ export class ChatPromptTemplate<
    * @returns A new ChatPromptTemplate
    */
   static fromMessages<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunInput extends InputValues = any,
-    Extra extends
-      ChatPromptTemplateInput<RunInput> = ChatPromptTemplateInput<RunInput>,
+    Extra extends ChatPromptTemplateInput<RunInput> =
+      ChatPromptTemplateInput<RunInput>,
   >(
     promptMessages: (
       | ChatPromptTemplate<InputValues, string>
@@ -1204,7 +1205,7 @@ export class ChatPromptTemplate<
     const flattenedMessages = promptMessages.reduce(
       (acc: Array<BaseMessagePromptTemplate | BaseMessage>, promptMessage) =>
         acc.concat(
-          // eslint-disable-next-line no-instanceof/no-instanceof
+          // oxlint-disable-next-line no-instanceof/no-instanceof
           promptMessage instanceof ChatPromptTemplate
             ? promptMessage.promptMessages
             : [
@@ -1221,7 +1222,7 @@ export class ChatPromptTemplate<
     );
     const flattenedPartialVariables = promptMessages.reduce(
       (acc, promptMessage) =>
-        // eslint-disable-next-line no-instanceof/no-instanceof
+        // oxlint-disable-next-line no-instanceof/no-instanceof
         promptMessage instanceof ChatPromptTemplate
           ? Object.assign(acc, promptMessage.partialVariables)
           : acc,
@@ -1229,7 +1230,7 @@ export class ChatPromptTemplate<
     );
     const inputVariables = new Set<string>();
     for (const promptMessage of flattenedMessages) {
-      // eslint-disable-next-line no-instanceof/no-instanceof
+      // oxlint-disable-next-line no-instanceof/no-instanceof
       if (promptMessage instanceof BaseMessage) continue;
       for (const inputVariable of promptMessage.inputVariables) {
         if (inputVariable in flattenedPartialVariables) {

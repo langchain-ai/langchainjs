@@ -1,6 +1,7 @@
-import * as uuid from "uuid";
+import * as uuid from "../utils/uuid/index.js";
 import type { ChainValues } from "../utils/types/index.js";
 import type { BaseMessage } from "../messages/base.js";
+import type { ChatModelStreamEvent } from "../language_models/event.js";
 import type { AgentAction, AgentFinish } from "../agents.js";
 import type {
   ChatGenerationChunk,
@@ -17,7 +18,7 @@ import type { SerializedFields } from "../load/map_keys.js";
 import type { DocumentInterface } from "../documents/document.js";
 import { getEnvironmentVariable } from "../utils/env.js";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 type Error = any;
 
 /**
@@ -68,8 +69,8 @@ abstract class BaseCallbackHandlerMethodsClass {
     tags?: string[],
     metadata?: Record<string, unknown>,
     runName?: string
-  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Promise<any> | any;
+  ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    Promise<any> | any;
 
   /**
    * Called when an LLM/ChatModel in `streaming` mode produces a new token
@@ -87,8 +88,19 @@ abstract class BaseCallbackHandlerMethodsClass {
     parentRunId?: string,
     tags?: string[],
     fields?: HandleLLMNewTokenCallbackFields
-  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Promise<any> | any;
+  ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    Promise<any> | any;
+
+  /**
+   * Called when a Chat Model emits a content-block-centric stream event.
+   */
+  handleChatModelStreamEvent?(
+    event: ChatModelStreamEvent,
+    runId: string,
+    parentRunId?: string,
+    tags?: string[]
+  ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    Promise<any> | any;
 
   /**
    * Called if an LLM/ChatModel run encounters an error
@@ -99,8 +111,8 @@ abstract class BaseCallbackHandlerMethodsClass {
     parentRunId?: string,
     tags?: string[],
     extraParams?: Record<string, unknown>
-  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Promise<any> | any;
+  ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    Promise<any> | any;
 
   /**
    * Called at the end of an LLM/ChatModel run, with the output and the run ID.
@@ -111,8 +123,8 @@ abstract class BaseCallbackHandlerMethodsClass {
     parentRunId?: string,
     tags?: string[],
     extraParams?: Record<string, unknown>
-  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Promise<any> | any;
+  ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    Promise<any> | any;
 
   /**
    * Called at the start of a Chat Model run, with the prompt(s)
@@ -127,8 +139,8 @@ abstract class BaseCallbackHandlerMethodsClass {
     tags?: string[],
     metadata?: Record<string, unknown>,
     runName?: string
-  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Promise<any> | any;
+  ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    Promise<any> | any;
 
   /**
    * Called at the start of a Chain run, with the chain name and inputs
@@ -144,8 +156,8 @@ abstract class BaseCallbackHandlerMethodsClass {
     runName?: string,
     parentRunId?: string,
     extra?: Record<string, unknown>
-  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Promise<any> | any;
+  ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    Promise<any> | any;
 
   /**
    * Called if a Chain run encounters an error
@@ -156,8 +168,8 @@ abstract class BaseCallbackHandlerMethodsClass {
     parentRunId?: string,
     tags?: string[],
     kwargs?: { inputs?: Record<string, unknown> }
-  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Promise<any> | any;
+  ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    Promise<any> | any;
 
   /**
    * Called at the end of a Chain run, with the outputs and the run ID.
@@ -168,8 +180,8 @@ abstract class BaseCallbackHandlerMethodsClass {
     parentRunId?: string,
     tags?: string[],
     kwargs?: { inputs?: Record<string, unknown> }
-  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Promise<any> | any;
+  ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    Promise<any> | any;
 
   /**
    * Called at the start of a Tool run, with the tool name and input
@@ -182,9 +194,10 @@ abstract class BaseCallbackHandlerMethodsClass {
     parentRunId?: string,
     tags?: string[],
     metadata?: Record<string, unknown>,
-    runName?: string
-  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Promise<any> | any;
+    runName?: string,
+    toolCallId?: string
+  ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    Promise<any> | any;
 
   /**
    * Called if a Tool run encounters an error
@@ -194,20 +207,32 @@ abstract class BaseCallbackHandlerMethodsClass {
     runId: string,
     parentRunId?: string,
     tags?: string[]
-  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Promise<any> | any;
+  ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    Promise<any> | any;
 
   /**
    * Called at the end of a Tool run, with the tool output and the run ID.
    */
   handleToolEnd?(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     output: any,
     runId: string,
     parentRunId?: string,
     tags?: string[]
-  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Promise<any> | any;
+  ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    Promise<any> | any;
+
+  /**
+   * Called when a streaming tool yields a partial value. Tools that are async generators
+   * invoke this once per yielded value.
+   */
+  handleToolEvent?(
+    chunk: unknown,
+    runId: string,
+    parentRunId?: string,
+    tags?: string[]
+  ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    Promise<any> | any;
 
   handleText?(
     text: string,
@@ -246,35 +271,35 @@ abstract class BaseCallbackHandlerMethodsClass {
     tags?: string[],
     metadata?: Record<string, unknown>,
     name?: string
-  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Promise<any> | any;
+  ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    Promise<any> | any;
 
   handleRetrieverEnd?(
     documents: DocumentInterface[],
     runId: string,
     parentRunId?: string,
     tags?: string[]
-  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Promise<any> | any;
+  ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    Promise<any> | any;
 
   handleRetrieverError?(
     err: Error,
     runId: string,
     parentRunId?: string,
     tags?: string[]
-  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Promise<any> | any;
+  ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    Promise<any> | any;
 
   handleCustomEvent?(
     eventName: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     data: any,
     runId: string,
     tags?: string[],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     metadata?: Record<string, any>
-  ): // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Promise<any> | any;
+  ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    Promise<any> | any;
 }
 
 /**
@@ -299,6 +324,23 @@ export interface CallbackHandlerPrefersStreaming {
 
 export function callbackHandlerPrefersStreaming(x: BaseCallbackHandler) {
   return "lc_prefer_streaming" in x && x.lc_prefer_streaming;
+}
+
+/**
+ * Interface for handlers that prefer chat model stream events instead of
+ * legacy token/chunk callbacks.
+ */
+export interface CallbackHandlerPrefersChatModelStreamEvents {
+  readonly lc_prefer_chat_model_stream_events: boolean;
+}
+
+export function callbackHandlerPrefersChatModelStreamEvents(
+  x: BaseCallbackHandler
+) {
+  return (
+    "lc_prefer_chat_model_stream_events" in x &&
+    x.lc_prefer_chat_model_stream_events
+  );
 }
 
 /**

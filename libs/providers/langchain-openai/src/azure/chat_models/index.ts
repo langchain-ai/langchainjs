@@ -10,6 +10,7 @@ import {
   AZURE_SECRETS,
   AZURE_SERIALIZABLE_KEYS,
   AzureChatOpenAIFields,
+  getAzureChatOpenAIParams,
 } from "./common.js";
 import { AzureChatOpenAICompletions } from "./completions.js";
 import { AzureChatOpenAIResponses } from "./responses.js";
@@ -427,8 +428,8 @@ import { AzureChatOpenAIResponses } from "./responses.js";
  * </details>
  */
 export class AzureChatOpenAI<
-    CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions,
-  >
+  CallOptions extends ChatOpenAICallOptions = ChatOpenAICallOptions,
+>
   extends ChatOpenAI<CallOptions>
   implements Partial<AzureOpenAIChatInput>
 {
@@ -474,7 +475,22 @@ export class AzureChatOpenAI<
     return params;
   }
 
-  constructor(fields?: AzureChatOpenAIFields) {
+  constructor(
+    deploymentName: string,
+    fields?: Omit<
+      AzureChatOpenAIFields,
+      "deploymentName" | "azureOpenAIApiDeploymentName" | "model"
+    >
+  );
+  constructor(fields?: AzureChatOpenAIFields);
+  constructor(
+    deploymentOrFields?: string | AzureChatOpenAIFields,
+    fieldsArg?: Omit<
+      AzureChatOpenAIFields,
+      "deploymentName" | "azureOpenAIApiDeploymentName" | "model"
+    >
+  ) {
+    const fields = getAzureChatOpenAIParams(deploymentOrFields, fieldsArg);
     super({
       ...fields,
       completions: new AzureChatOpenAICompletions(fields),

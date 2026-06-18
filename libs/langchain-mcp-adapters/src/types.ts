@@ -19,7 +19,7 @@ export type {
   CommandParams,
 };
 
-const callToolResultContentTypes = [
+export const callToolResultContentTypes = [
   "audio",
   "image",
   "resource",

@@ -58,7 +58,7 @@ test("Runnable variant", async () => {
 
   const query = "What is the weather in New York?";
   // console.log(`Calling agent executor with query: ${query}`);
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const result = await executor.invoke({
     input: query,

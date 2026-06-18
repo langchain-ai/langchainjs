@@ -14,7 +14,7 @@ import {
 } from "@langchain/core/language_models/base";
 import { SerializedBaseChain } from "./serde.js";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
 
 export interface ChainInputs extends BaseLangChainParams {
@@ -30,9 +30,9 @@ export interface ChainInputs extends BaseLangChainParams {
  * Base interface that all chains must implement.
  */
 export abstract class BaseChain<
-    RunInput extends ChainValues = ChainValues,
-    RunOutput extends ChainValues = ChainValues,
-  >
+  RunInput extends ChainValues = ChainValues,
+  RunOutput extends ChainValues = ChainValues,
+>
   extends BaseLangChain<RunInput, RunOutput>
   implements ChainInputs
 {
@@ -114,7 +114,9 @@ export abstract class BaseChain<
             listener = () => {
               reject(new Error("AbortError"));
             };
-            fullValues.signal?.addEventListener("abort", listener);
+            fullValues.signal?.addEventListener("abort", listener, {
+              once: true,
+            });
           }),
         ]).finally(() => {
           if (fullValues.signal && listener) {
@@ -200,7 +202,7 @@ export abstract class BaseChain<
 
   /** @deprecated Use .invoke() instead. Will be removed in 0.2.0. */
   async run(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     input: any,
     config?: Callbacks | RunnableConfig
   ): Promise<string> {
@@ -213,7 +215,7 @@ export abstract class BaseChain<
         `Chain ${this._chainType()} expects multiple inputs, cannot use 'run' `
       );
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const values = inputKeys.length ? { [inputKeys[0]]: input } : ({} as any);
     const returnValues = await this.call(values, config);
     const keys = Object.keys(returnValues);
@@ -301,15 +303,13 @@ export abstract class BaseChain<
         return StuffDocumentsChain.deserialize(data);
       }
       case "map_reduce_documents_chain": {
-        const { MapReduceDocumentsChain } = await import(
-          "./combine_docs_chain.js"
-        );
+        const { MapReduceDocumentsChain } =
+          await import("./combine_docs_chain.js");
         return MapReduceDocumentsChain.deserialize(data);
       }
       case "refine_documents_chain": {
-        const { RefineDocumentsChain } = await import(
-          "./combine_docs_chain.js"
-        );
+        const { RefineDocumentsChain } =
+          await import("./combine_docs_chain.js");
         return RefineDocumentsChain.deserialize(data);
       }
       case "vector_db_qa": {

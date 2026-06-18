@@ -45,7 +45,7 @@ export const getText = (
   // lets only get the body if its a summary, dont need to summarize header or footer etc
   const rootElement = summary ? "body " : "*";
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   $(`${rootElement}:not(style):not(script):not(svg)`).each((_i, elem: any) => {
     // we dont want duplicated content as we drill down so remove children
     let content = $(elem).clone().children().remove().end().text().trim();
@@ -150,7 +150,7 @@ const DEFAULT_HEADERS = {
     "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/111.0",
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 type Headers = Record<string, any>;
 
 /**

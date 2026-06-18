@@ -1,4 +1,4 @@
-import { test, expect } from "vitest";
+import { describe, test, expect } from "vitest";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { StructuredTool } from "@langchain/core/tools";
 import { z } from "zod/v3";
@@ -652,10 +652,10 @@ describe("ChatMistralAI aborting", () => {
         controller.abort();
       }
       // If the loop completes without error, fail the test
-      fail(
+      expect.fail(
         "Expected for-await loop to throw an error due to abort, but it did not."
       );
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       // Check if the error is due to the abort action
       expect(error.message).toBe("AbortError");
@@ -687,10 +687,10 @@ describe("ChatMistralAI aborting", () => {
         // console.log(finalRes);
       }
       // If the loop completes without error, fail the test
-      fail(
+      expect.fail(
         "Expected for-await loop to throw an error due to abort, but it did not."
       );
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       didError = true;
       // Check if the error is due to the abort action
@@ -720,10 +720,10 @@ describe("ChatMistralAI aborting", () => {
       await prompt.pipe(model).invoke({});
 
       // If the loop completes without error, fail the test
-      fail(
+      expect.fail(
         "Expected for-await loop to throw an error due to abort, but it did not."
       );
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       didError = true;
       // Check if the error is due to the abort action
@@ -748,10 +748,10 @@ describe("ChatMistralAI aborting", () => {
     try {
       await prompt.pipe(model).invoke({});
       // If the loop completes without error, fail the test
-      fail(
+      expect.fail(
         "Expected for-await loop to throw an error due to abort, but it did not."
       );
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       didError = true;
       // Check if the error is due to the abort action

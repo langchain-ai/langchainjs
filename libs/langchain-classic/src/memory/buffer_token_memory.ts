@@ -11,8 +11,7 @@ import { BaseChatMemory, BaseChatMemoryInput } from "./chat_memory.js";
  * Interface for the input parameters of the `BufferTokenMemory` class.
  */
 
-export interface ConversationTokenBufferMemoryInput
-  extends BaseChatMemoryInput {
+export interface ConversationTokenBufferMemoryInput extends BaseChatMemoryInput {
   /* Prefix for human messages in the buffer. */
   humanPrefix?: string;
 
