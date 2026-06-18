@@ -1032,7 +1032,14 @@ export const convertStandardContentMessageToResponsesInput: Converter<
       if (typeof currentMessage.content === "string") {
         currentMessage.content =
           currentMessage.content.length > 0
-            ? [{ type: "input_text", text: currentMessage.content }, ...content]
+            ? [
+                {
+                  type:
+                    messageRole === "assistant" ? "output_text" : "input_text",
+                  text: currentMessage.content,
+                },
+                ...content,
+              ]
             : [...content];
       } else {
         currentMessage.content.push(...content);
