@@ -65,6 +65,11 @@ import {
 } from "./utils/message_outputs.js";
 import { normalizeBedrockError } from "./utils/errors.js";
 import {
+  AWS_BEARER_TOKEN_BEDROCK,
+  createBedrockBearerTokenClientConfig,
+  resolveBedrockBearerToken,
+} from "./utils/bedrock_auth.js";
+import {
   isSerializableSchema,
   SerializableSchema,
 } from "@langchain/core/utils/standard_schema";
@@ -109,6 +114,12 @@ export interface ChatBedrockConverseInput
    * `BEDROCK_AWS_SESSION_TOKEN` environment variable.
    */
   bedrockApiSessionToken?: string;
+
+  /**
+   * Bedrock API key for bearer-token authentication. Falls back to the
+   * `AWS_BEARER_TOKEN_BEDROCK` environment variable.
+   */
+  bedrockBearerToken?: string;
 
   /**
    * Whether or not to stream responses
@@ -730,6 +741,7 @@ export class ChatBedrockConverse
       bedrockApiKey: "BEDROCK_AWS_ACCESS_KEY_ID",
       bedrockApiSecret: "BEDROCK_AWS_SECRET_ACCESS_KEY",
       bedrockApiSessionToken: "BEDROCK_AWS_SESSION_TOKEN",
+      bedrockBearerToken: AWS_BEARER_TOKEN_BEDROCK,
     };
   }
 
@@ -772,6 +784,8 @@ export class ChatBedrockConverse
   bedrockApiSecret?: string;
 
   bedrockApiSessionToken?: string;
+
+  bedrockBearerToken?: string;
 
   client: BedrockRuntimeClient;
 
@@ -821,9 +835,14 @@ export class ChatBedrockConverse
     const bedrockApiSessionToken =
       rest?.bedrockApiSessionToken ??
       getEnvironmentVariable("BEDROCK_AWS_SESSION_TOKEN");
+    const bedrockBearerToken = resolveBedrockBearerToken(
+      rest?.bedrockBearerToken
+    );
 
-    let credentials: CredentialType;
-    if (rest?.credentials) {
+    let credentials: CredentialType | undefined;
+    if (bedrockBearerToken) {
+      credentials = undefined;
+    } else if (rest?.credentials) {
       credentials = rest.credentials;
     } else if (bedrockApiKey && bedrockApiSecret) {
       credentials = {
@@ -858,6 +877,7 @@ export class ChatBedrockConverse
       fields.client ??
       new BedrockRuntimeClient({
         ...fields.clientOptions,
+        ...createBedrockBearerTokenClientConfig(bedrockBearerToken),
         region,
         credentials,
         endpoint: rest.endpointHost
@@ -889,6 +909,7 @@ export class ChatBedrockConverse
     this.bedrockApiKey = bedrockApiKey;
     this.bedrockApiSecret = bedrockApiSecret;
     this.bedrockApiSessionToken = bedrockApiSessionToken;
+    this.bedrockBearerToken = bedrockBearerToken;
     this.topP = rest?.topP;
     this.additionalModelRequestFields = rest?.additionalModelRequestFields;
     this.streamUsage = rest?.streamUsage ?? this.streamUsage;
