@@ -37,6 +37,7 @@ import { _convertMessagesToAnthropicPayload } from "./utils/message_inputs.js";
 import {
   getSamplingParams,
   getTaskBudgetBetas,
+  resolveThinkingParam,
   validateInvocationParamCompatibility,
 } from "./utils/params.js";
 import {
@@ -1250,7 +1251,7 @@ export class ChatAnthropicMessages<
         strict: options?.strict,
       }),
       tool_choice,
-      thinking: this.thinking,
+      thinking: resolveThinkingParam(this.model, this.thinking),
       context_management: this.contextManagement,
       ...this.invocationKwargs,
       container: options?.container,
