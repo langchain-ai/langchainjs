@@ -88,6 +88,10 @@ export {
   anthropicPromptCachingMiddleware,
   type PromptCachingMiddlewareConfig,
 } from "./provider/anthropic/promptCaching.js";
+export {
+  bedrockPromptCachingMiddleware,
+  type BedrockConversePromptCachingMiddlewareConfig,
+} from "./provider/aws/promptCaching.js";
 
 /**
  * Types and utilities

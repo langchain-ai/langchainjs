@@ -15,6 +15,8 @@ import {
 } from "@langchain/core/messages";
 import { ChatGenerationChunk, type ChatResult } from "@langchain/core/outputs";
 import type { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
+import { convertOpenRouterStream } from "../utils/stream_events.js";
 import { Runnable } from "@langchain/core/runnables";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
@@ -448,6 +450,56 @@ export class ChatOpenRouter extends BaseChatModel<
       ],
       llmOutput: { tokenUsage: data.usage },
     };
+  }
+
+  async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    const body: OpenRouterRequestBody = {
+      ...this.invocationParams(options),
+      messages: convertMessagesToOpenRouterParams(messages, this.model),
+      stream: true,
+    };
+
+    const response = await fetch(this.buildUrl(), {
+      method: "POST",
+      headers: this.buildHeaders(),
+      body: JSON.stringify(body),
+      signal: options.signal,
+    });
+
+    if (!response.ok) {
+      throw await OpenRouterError.fromResponse(response);
+    }
+
+    if (!response.body) {
+      return;
+    }
+
+    const stream = response.body
+      .pipeThrough(new TextDecoderStream())
+      .pipeThrough(new EventSourceParserStream())
+      .pipeThrough(new OpenRouterJsonParseStream());
+
+    const reader = stream.getReader();
+    async function* readChunks() {
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          if (value) yield value;
+        }
+      } finally {
+        reader.releaseLock();
+      }
+    }
+
+    const shouldStreamUsage = this.streamUsage ?? options.streamUsage ?? true;
+    yield* convertOpenRouterStream(readChunks(), {
+      streamUsage: shouldStreamUsage,
+    });
   }
 
   /**
