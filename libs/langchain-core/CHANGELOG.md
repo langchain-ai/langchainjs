@@ -1,5 +1,17 @@
 # @langchain/core
 
+## 1.2.0
+
+### Minor Changes
+
+- [#10924](https://github.com/langchain-ai/langchainjs/pull/10924) [`2e28115`](https://github.com/langchain-ai/langchainjs/commit/2e2811509d75af94f57cedcc3842f178f4c020d1) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(core): add OpenAI-compatible stream event conversion
+
+### Patch Changes
+
+- [#11047](https://github.com/langchain-ai/langchainjs/pull/11047) [`ac0f71d`](https://github.com/langchain-ai/langchainjs/commit/ac0f71d03994664cfee98e71a584d4aa3321746f) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): preserve AIMessage content blocks
+
+  Keep existing v1 contentBlocks when constructing AIMessage instances so serialized messages do not lose block content during deserialization.
+
 ## 1.1.49
 
 ### Patch Changes

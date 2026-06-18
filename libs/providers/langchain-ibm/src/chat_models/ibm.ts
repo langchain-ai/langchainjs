@@ -17,6 +17,8 @@ import {
   StructuredOutputMethodOptions,
 } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
+import { convertWatsonxStream } from "../utils/stream_events.js";
 import {
   BaseChatModel,
   BindToolsInput,
@@ -1003,6 +1005,77 @@ export class ChatWatsonx<
         },
       };
     }
+  }
+
+  async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    const params = this.invocationParams(options);
+    const scopeId = this.scopeId(options);
+    const watsonxMessages = _convertMessagesToWatsonxMessages(
+      messages,
+      this.model
+    );
+    const watsonxCallbacks = this.invocationCallbacks(options);
+    const { signal } = options;
+    const callback = () => {
+      if (this.modelGateway) {
+        return this._chatModelGateway(
+          scopeId,
+          params,
+          watsonxMessages,
+          signal,
+          true
+        );
+      }
+      if (this.service) {
+        if ("idOrName" in scopeId)
+          return this.service.deploymentsTextChatStream(
+            {
+              ...scopeId,
+              messages: watsonxMessages,
+              returnObject: true,
+              signal,
+            },
+            watsonxCallbacks
+          );
+        if ("modelId" in scopeId)
+          return this.service.textChatStream(
+            {
+              ...params,
+              ...scopeId,
+              messages: watsonxMessages,
+              returnObject: true,
+              signal,
+            },
+            watsonxCallbacks
+          );
+        throw new Error(
+          "No idOrName or modelId specified. At least one of these needs to be specified in basic mode"
+        );
+      }
+      throw new Error(
+        "No service or gateway set. Please check your intsance init"
+      );
+    };
+    const stream = await this.completionWithRetry(callback, options);
+    const abortableStream = async function* (
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      source: AsyncIterable<{ data: Record<string, any> }>,
+      sig?: AbortSignal
+    ) {
+      for await (const chunk of source) {
+        if (sig?.aborted) {
+          return;
+        }
+        yield chunk;
+      }
+    };
+    yield* convertWatsonxStream(abortableStream(stream, options.signal), {
+      streamUsage: true,
+    });
   }
 
   async *_streamResponseChunks(

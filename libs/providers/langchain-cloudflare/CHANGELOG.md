@@ -1,5 +1,11 @@
 # @langchain/cloudflare
 
+## 1.1.0
+
+### Minor Changes
+
+- [#10924](https://github.com/langchain-ai/langchainjs/pull/10924) [`2e28115`](https://github.com/langchain-ai/langchainjs/commit/2e2811509d75af94f57cedcc3842f178f4c020d1) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(cloudflare): add native streamEvents event conversion
+
 ## 1.0.6
 
 ### Patch Changes
