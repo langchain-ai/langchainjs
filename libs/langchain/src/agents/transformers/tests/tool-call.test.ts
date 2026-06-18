@@ -585,6 +585,55 @@ describe("streamEvents", () => {
     expect(await iterator.next()).toEqual({ done: true, value: undefined });
   });
 
+  it("treats a tool error shaped like an array of value records as a real failure", async () => {
+    // A genuine tool error whose message happens to be a JSON array of
+    // `{ value }` records (e.g. a validator) must NOT be mistaken for a graph
+    // interrupt: real `Interrupt` entries carry a string `id`, these do not.
+    // The call must fail (status "error", error set) rather than stay pending.
+    const transformer = createToolCallTransformer([])();
+    const projection = transformer.init();
+    const toolEvent = (data: Record<string, unknown>): ProtocolEvent =>
+      ({
+        method: "tools",
+        params: {
+          namespace: ["tools"],
+          data,
+        },
+      }) as ProtocolEvent;
+
+    transformer.process(
+      toolEvent({
+        event: "tool-started",
+        tool_call_id: "call_1",
+        tool_name: "validate",
+        input: {},
+      })
+    );
+
+    const iterator = projection.toolCalls[Symbol.asyncIterator]();
+    const pendingCall = await iterator.next();
+
+    const message = JSON.stringify([
+      { value: "bad input", message: "invalid" },
+    ]);
+
+    transformer.process(
+      toolEvent({
+        event: "tool-error",
+        tool_call_id: "call_1",
+        message,
+      })
+    );
+
+    transformer.finalize?.();
+
+    expect(pendingCall.done).toBe(false);
+    expect(await pendingCall.value.status).toBe("error");
+    expect(await pendingCall.value.error).toBe(message);
+    await expect(pendingCall.value.output).rejects.toThrow(message);
+    expect(await iterator.next()).toEqual({ done: true, value: undefined });
+  });
+
   it("unwraps ToolMessage outputs in tool call streams", async () => {
     const transformer = createToolCallTransformer([])();
     const projection = transformer.init();
