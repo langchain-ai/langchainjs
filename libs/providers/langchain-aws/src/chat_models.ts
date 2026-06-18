@@ -6,6 +6,8 @@ import type {
   ToolDefinition,
 } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
+import { convertBedrockConverseStream } from "./utils/stream_events.js";
 import {
   type BaseChatModelParams,
   BaseChatModel,
@@ -1063,6 +1065,61 @@ export class ChatBedrockConverse
           },
         ],
       };
+    } catch (error) {
+      throw normalizeBedrockError(error);
+    }
+  }
+
+  async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    try {
+      const { converseMessages, converseSystem } =
+        convertToConverseMessages(messages);
+      const params = this.invocationParams(options);
+      applyCachePointsToConversePayload({
+        cacheControl: options.cache_control,
+        system: converseSystem,
+        messages: converseMessages,
+        params,
+        modelId: this.applicationInferenceProfile ?? this.model,
+      });
+      let { streamUsage } = this;
+      if (options.streamUsage !== undefined) {
+        streamUsage = options.streamUsage;
+      }
+      const command = new ConverseStreamCommand({
+        modelId: this.applicationInferenceProfile ?? this.model,
+        messages: converseMessages,
+        ...(Array.isArray(converseSystem) && converseSystem.length > 0
+          ? { system: converseSystem }
+          : {}),
+        requestMetadata: options.requestMetadata,
+        ...params,
+      });
+      const response = await this.client.send(command, {
+        abortSignal: options.signal,
+      });
+      if (!response.stream) {
+        return;
+      }
+      const abortableStream = async function* (
+        source: NonNullable<typeof response.stream>,
+        signal?: AbortSignal
+      ) {
+        for await (const chunk of source) {
+          if (signal?.aborted) {
+            return;
+          }
+          yield chunk;
+        }
+      };
+      yield* convertBedrockConverseStream(
+        abortableStream(response.stream, options.signal),
+        { streamUsage: streamUsage ?? true }
+      );
     } catch (error) {
       throw normalizeBedrockError(error);
     }
