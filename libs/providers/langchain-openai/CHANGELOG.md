@@ -1,5 +1,11 @@
 # @langchain/openai
 
+## 1.5.1
+
+### Patch Changes
+
+- [#11001](https://github.com/langchain-ai/langchainjs/pull/11001) [`80b43ec`](https://github.com/langchain-ai/langchainjs/commit/80b43ecffe0701c3c375c407fb601cb452f708ef) Thanks [@Herrtian](https://github.com/Herrtian)! - Wrap Responses API stream iteration errors with existing OpenAI client error handling.
+
 ## 1.5.0
 
 ### Minor Changes
