@@ -510,6 +510,81 @@ describe("streamEvents", () => {
     expect(await iterator.next()).toEqual({ done: true, value: undefined });
   });
 
+  it("should keep tool call streams pending across raw (non-HITL) tool interrupts", async () => {
+    // A tool that calls `interrupt(message)` directly — without the HITL
+    // middleware — surfaces a `tool-error` whose message is the serialized
+    // interrupt with an arbitrary `value` (here an AIMessage card). It must
+    // be treated as control flow, not a failure: the call stays pending and
+    // its `output` promise is never rejected (which would otherwise crash the
+    // run with an unhandled rejection).
+    const transformer = createToolCallTransformer([])();
+    const projection = transformer.init();
+    const toolEvent = (data: Record<string, unknown>): ProtocolEvent =>
+      ({
+        method: "tools",
+        params: {
+          namespace: ["tools:abc"],
+          data,
+        },
+      }) as ProtocolEvent;
+
+    transformer.process(
+      toolEvent({
+        event: "tool-started",
+        tool_call_id: "call_1",
+        tool_name: "review_action",
+        input: '{"toolArg":"delete_db"}',
+      })
+    );
+
+    const iterator = projection.toolCalls[Symbol.asyncIterator]();
+    const pendingCall = await iterator.next();
+
+    // The raw interrupt: `value` is an arbitrary payload, not `type: "tool"`.
+    transformer.process(
+      toolEvent({
+        event: "tool-error",
+        tool_call_id: "call_1",
+        message: JSON.stringify([
+          {
+            id: "interrupt_1",
+            value: {
+              type: "ai",
+              content: 'Please review the "delete_db" action.',
+              response_metadata: { cards: { action: "delete_db" } },
+            },
+          },
+        ]),
+      })
+    );
+
+    // On resume the tool re-runs and finishes.
+    transformer.process(
+      toolEvent({
+        event: "tool-started",
+        tool_call_id: "call_1",
+        tool_name: "review_action",
+        input: '{"toolArg":"delete_db"}',
+      })
+    );
+
+    transformer.process(
+      toolEvent({
+        event: "tool-finished",
+        tool_call_id: "call_1",
+        output: 'Executed "delete_db".',
+      })
+    );
+
+    transformer.finalize?.();
+
+    expect(pendingCall.done).toBe(false);
+    expect(pendingCall.value.callId).toBe("call_1");
+    expect(await pendingCall.value.status).toBe("finished");
+    expect(await pendingCall.value.output).toBe('Executed "delete_db".');
+    expect(await iterator.next()).toEqual({ done: true, value: undefined });
+  });
+
   it("unwraps ToolMessage outputs in tool call streams", async () => {
     const transformer = createToolCallTransformer([])();
     const projection = transformer.init();

@@ -30,31 +30,36 @@ function isOwnEvent(ns: Namespace, path: Namespace): boolean {
   return true;
 }
 
-function isHeadlessToolInterruptError(
-  message: string,
-  toolCallId: string | undefined
-): boolean {
+/**
+ * Detects when a `tool-error` payload is actually a graph interrupt rather
+ * than a genuine tool failure.
+ *
+ * A tool that calls `interrupt()` throws a `GraphInterrupt`, whose message is
+ * the JSON-serialized `Interrupt[]` array — each entry carrying the `value`
+ * passed to `interrupt(...)`. An interrupt is control flow that *suspends* the
+ * run (the tool re-runs on resume); it is not an error, so the tool call must
+ * stay pending rather than have its `output` promise rejected.
+ *
+ * Any interrupt qualifies, regardless of payload shape: HITL middleware
+ * interrupts (`value.type === "tool"`) and raw `interrupt(...)` calls from
+ * inside a tool (arbitrary `value`) are treated identically — raising an
+ * interrupt in a tool must work whether or not `humanInTheLoopMiddleware`
+ * is involved.
+ */
+function isToolInterrupt(message: string): boolean {
+  let parsed: unknown;
   try {
-    const parsed = JSON.parse(message) as unknown;
-    if (!Array.isArray(parsed)) return false;
-    return parsed.some((entry) => {
-      if (entry == null || typeof entry !== "object") return false;
-      const value = (entry as { value?: unknown }).value;
-      if (value == null || typeof value !== "object") return false;
-      const payload = value as {
-        type?: unknown;
-        toolCall?: { id?: unknown };
-      };
-      return (
-        payload.type === "tool" &&
-        (toolCallId == null ||
-          payload.toolCall?.id == null ||
-          payload.toolCall.id === toolCallId)
-      );
-    });
+    parsed = JSON.parse(message);
   } catch {
     return false;
   }
+  if (!Array.isArray(parsed) || parsed.length === 0) return false;
+  return parsed.every(
+    (entry) =>
+      entry != null &&
+      typeof entry === "object" &&
+      "value" in (entry as Record<string, unknown>)
+  );
 }
 
 /**
@@ -212,7 +217,13 @@ export function createToolCallTransformer(
               const message =
                 ((data as Record<string, unknown>).message as string) ??
                 "unknown error";
-              if (isHeadlessToolInterruptError(message, toolCallId)) {
+              // An interrupt raised inside a tool (HITL middleware *or* a
+              // raw `interrupt()`) surfaces here as a `tool-error` whose
+              // message is the serialized interrupt. It is control flow,
+              // not a failure: keep the call pending (it re-runs on resume)
+              // and never reject `output`, which would otherwise become an
+              // unhandled rejection and crash the run.
+              if (isToolInterrupt(message)) {
                 return true;
               }
               pending.rejectOutput(new Error(message));
