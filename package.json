@@ -56,8 +56,6 @@
     "overrides": {
       "@langchain/core": "workspace:^",
       "langchain": "workspace:^",
-      "@langchain/langgraph": "https://pkg.pr.new/langchain-ai/langgraphjs/@langchain/langgraph@d2312cf",
-      "@langchain/langgraph-checkpoint": "https://pkg.pr.new/langchain-ai/langgraphjs/@langchain/langgraph-checkpoint@d2312cf",
       "protobufjs": "^7.5.5",
       "form-data": "^4.0.4",
       "tar": ">=7.5.11",
