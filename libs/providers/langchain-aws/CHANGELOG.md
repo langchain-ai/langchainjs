@@ -1,5 +1,11 @@
 # @langchain/aws
 
+## 1.4.1
+
+### Patch Changes
+
+- [#11082](https://github.com/langchain-ai/langchainjs/pull/11082) [`a186aba`](https://github.com/langchain-ai/langchainjs/commit/a186abacb7dc85f8c5f54895f817eb823eec9d84) Thanks [@hntrl](https://github.com/hntrl)! - fix: support Bedrock bearer token auth
+
 ## 1.4.0
 
 ### Minor Changes
