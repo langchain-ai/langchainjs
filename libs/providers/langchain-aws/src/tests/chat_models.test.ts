@@ -1880,6 +1880,10 @@ describe("bedrockApiKey / bedrockApiSecret credentials", () => {
       "bedrockApiSessionToken",
       "BEDROCK_AWS_SESSION_TOKEN"
     );
+    expect(model.lc_secrets).toHaveProperty(
+      "bedrockBearerToken",
+      "AWS_BEARER_TOKEN_BEDROCK"
+    );
   });
 });
 
