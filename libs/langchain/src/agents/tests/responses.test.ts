@@ -4,7 +4,7 @@ import { z as z4 } from "zod/v4";
 
 import { ChatOpenAI } from "@langchain/openai";
 import { ChatAnthropic } from "@langchain/anthropic";
-import { AIMessage } from "@langchain/core/messages";
+import { AIMessage, ToolMessage } from "@langchain/core/messages";
 import type { SerializableSchema } from "@langchain/core/utils/standard_schema";
 
 import { fakeModel } from "@langchain/core/testing";
@@ -92,6 +92,23 @@ describe("structured output handling", () => {
         expect(res.structuredResponse).toEqual({
           foo: "valid structured value",
         });
+
+        // No tool call may be left unanswered, or the retry 400s on a real provider.
+        const answeredToolCallIds = new Set(
+          res.messages
+            .filter(ToolMessage.isInstance)
+            .map((msg) => msg.tool_call_id)
+        );
+        const requestedToolCallIds = res.messages
+          .filter(AIMessage.isInstance)
+          .flatMap((msg) => msg.tool_calls ?? [])
+          .map((call) => call.id)
+          .filter((id): id is string => id != null);
+
+        expect(requestedToolCallIds.length).toBeGreaterThan(0);
+        for (const id of requestedToolCallIds) {
+          expect(answeredToolCallIds.has(id)).toBe(true);
+        }
       });
 
       it("should throw if error handler is set to false", async () => {
@@ -177,19 +194,22 @@ describe("structured output handling", () => {
           messages: [{ role: "user", content: "hi!" }],
         });
 
-        expect(res.messages).toHaveLength(6);
+        expect(res.messages).toHaveLength(7);
         expect(res.messages[0].content).toContain("hi!");
         expect((res.messages[1] as AIMessage).tool_calls).toEqual(toolCalls);
         expect(res.messages[2].content).toContain(
           "The model has called multiple tools"
         );
-        expect((res.messages[3] as AIMessage).tool_calls).toEqual(toolCall2);
-        expect(res.messages[4].content).toContain(
+        // call_1 carries the error message; the orphaned call_2 is also answered.
+        expect((res.messages[2] as ToolMessage).tool_call_id).toBe("call_1");
+        expect((res.messages[3] as ToolMessage).tool_call_id).toBe("call_2");
+        expect((res.messages[4] as AIMessage).tool_calls).toEqual(toolCall2);
+        expect(res.messages[5].content).toContain(
           JSON.stringify({
             foo: "valid structured value",
           })
         );
-        expect(res.messages[5].content).toContain(
+        expect(res.messages[6].content).toContain(
           "Returning structured response"
         );
         expect(res.structuredResponse).toEqual({
@@ -252,17 +272,20 @@ describe("structured output handling", () => {
           messages: [{ role: "user", content: "hi!" }],
         });
 
-        expect(res.messages).toHaveLength(6);
+        expect(res.messages).toHaveLength(7);
         expect(res.messages[0].content).toContain("hi!");
         expect((res.messages[1] as AIMessage).tool_calls).toEqual(toolCalls);
         expect(res.messages[2].content).toContain("foobar");
-        expect((res.messages[3] as AIMessage).tool_calls).toEqual(toolCall2);
-        expect(res.messages[4].content).toContain(
+        // call_1 carries the handler's message; the orphaned call_2 is also answered.
+        expect((res.messages[2] as ToolMessage).tool_call_id).toBe("call_1");
+        expect((res.messages[3] as ToolMessage).tool_call_id).toBe("call_2");
+        expect((res.messages[4] as AIMessage).tool_calls).toEqual(toolCall2);
+        expect(res.messages[5].content).toContain(
           JSON.stringify({
             foo: "fixed structured value",
           })
         );
-        expect(res.messages[5].content).toContain(
+        expect(res.messages[6].content).toContain(
           "Returning structured response"
         );
         expect(res.structuredResponse).toEqual({
