@@ -823,14 +823,24 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
         : {}),
     });
   } else if (
+    event.type === "response.web_search_call.in_progress" ||
+    event.type === "response.web_search_call.searching" ||
     event.type === "response.web_search_call.completed" ||
-    event.type === "response.file_search_call.completed"
+    event.type === "response.file_search_call.in_progress" ||
+    event.type === "response.file_search_call.searching" ||
+    event.type === "response.file_search_call.completed" ||
+    event.type === "response.image_generation_call.in_progress" ||
+    event.type === "response.image_generation_call.generating" ||
+    event.type === "response.image_generation_call.completed"
   ) {
+    const [, type, status] = event.type.match(
+      /^response\.(.*)\.([^.]+)$/
+    ) ?? ["", "", ""];
     generationInfo = {
       tool_outputs: {
         id: event.item_id,
-        type: event.type.replace("response.", "").replace(".completed", ""),
-        status: "completed",
+        type,
+        status,
       },
     };
   } else if (event.type === "response.refusal.done") {
