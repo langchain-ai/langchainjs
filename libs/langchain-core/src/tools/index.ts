@@ -1039,8 +1039,7 @@ function _formatToolOutput<TOutput extends ToolOutputType>(params: {
   if (toolCallId && !isDirectToolOutput(content)) {
     if (
       typeof content === "string" ||
-      (Array.isArray(content) &&
-        content.every(_isMessageContentBlockShaped))
+      (Array.isArray(content) && content.every(_isMessageContentBlockShaped))
     ) {
       return new ToolMessage({
         status: "success",
