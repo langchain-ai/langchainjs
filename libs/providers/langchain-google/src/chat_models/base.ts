@@ -12,6 +12,8 @@ import {
   type UsageMetadata,
 } from "@langchain/core/messages";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
+import { convertGoogleGeminiStream } from "../utils/stream_events.js";
 import { concat } from "@langchain/core/utils/stream";
 import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
 import { EventSourceParserStream } from "eventsource-parser/stream";
@@ -560,6 +562,78 @@ export abstract class BaseChatGoogle<
         serviceTier,
       },
     };
+  }
+
+  async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    const body = {
+      ...this.invocationParams(options),
+      systemInstruction: convertMessagesToGeminiSystemInstruction(messages),
+      contents: convertMessagesToGeminiContents(messages),
+    };
+
+    const url = await this.buildUrl("streamGenerateContent?alt=sse");
+    const headers = this.getHeaders(options);
+
+    const response = await this.apiClient.fetch(
+      new Request(url, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
+        signal: options.signal,
+      })
+    );
+
+    if (!response.ok) {
+      throw await RequestError.fromResponse(response);
+    }
+
+    if (!response.body) {
+      return;
+    }
+
+    const eventStream = response.body
+      .pipeThrough(new TextDecoderStream())
+      .pipeThrough(new EventSourceParserStream())
+      .pipeThrough(
+        new SafeJsonEventParserStream<Gemini.GenerateContentResponse>()
+      );
+
+    const shouldStreamUsage =
+      this.streamUsage !== false && options.streamUsage !== false;
+
+    async function* geminiChunks(
+      stream: ReadableStream<Gemini.GenerateContentResponse | null>,
+      signal?: AbortSignal
+    ) {
+      const reader = stream.getReader();
+      try {
+        while (true) {
+          if (signal?.aborted) {
+            return;
+          }
+          const { done, value } = await reader.read();
+          if (done) {
+            break;
+          }
+          if (value !== null) {
+            yield value;
+          }
+        }
+      } finally {
+        reader.releaseLock();
+      }
+    }
+
+    yield* convertGoogleGeminiStream(
+      geminiChunks(eventStream, options.signal),
+      {
+        streamUsage: shouldStreamUsage,
+      }
+    );
   }
 
   async *_streamResponseChunks(
