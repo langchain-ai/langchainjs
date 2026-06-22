@@ -862,10 +862,10 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
     // generation tool so streaming consumers can render live progress (e.g. a
     // "generating image…" indicator), mirroring the built-in search tools
     // above. The `.partial_image` lifecycle event is handled separately below.
-    const status = event.type.replace(
-      "response.image_generation_call.",
-      ""
-    ) as "in_progress" | "generating" | "completed";
+    const status = event.type.replace("response.image_generation_call.", "") as
+      | "in_progress"
+      | "generating"
+      | "completed";
     generationInfo = {
       tool_outputs: {
         id: event.item_id,
