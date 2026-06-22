@@ -383,8 +383,6 @@ describe("ChatOpenAI", () => {
     });
 
     it("does not set strict on tools for json_object response format (JSON mode)", () => {
-      // Only json_schema goes through the `.parse()` path that requires strict
-      // tools; JSON mode goes through create() and must stay non-strict.
       const tools = boundTools({ response_format: { type: "json_object" } });
       expect(tools[0].function).not.toHaveProperty("strict");
     });
