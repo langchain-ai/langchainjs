@@ -19,7 +19,10 @@ import {
 import { z } from "zod/v3";
 import { describe, expect, test, it, vi } from "vitest";
 import { convertToConverseMessages } from "../utils/message_inputs.js";
-import { handleConverseStreamContentBlockDelta } from "../utils/message_outputs.js";
+import {
+  handleConverseStreamContentBlockDelta,
+  handleConverseStreamContentBlockStart,
+} from "../utils/message_outputs.js";
 import { ChatBedrockConverse } from "../chat_models.js";
 import { load } from "@langchain/core/load";
 
@@ -752,6 +755,36 @@ test("Streaming supports empty string chunks", async () => {
   expect(finalChunk.content).toBe("Hello world!");
 });
 
+test("Streaming defaults missing tool call content block indexes", async () => {
+  const start = handleConverseStreamContentBlockStart({
+    start: {
+      toolUse: {
+        name: "get_weather",
+        toolUseId: "tooluse_123",
+      },
+    },
+  }).message;
+  const delta = handleConverseStreamContentBlockDelta({
+    delta: {
+      toolUse: {
+        input: '{"location":"London"}',
+      },
+    },
+  }).message;
+
+  const finalChunk = concat(start, delta) as AIMessageChunk;
+
+  expect(finalChunk.tool_call_chunks).toEqual([
+    {
+      id: "tooluse_123",
+      index: 0,
+      name: "get_weather",
+      args: '{"location":"London"}',
+      type: "tool_call_chunk",
+    },
+  ]);
+});
+
 test("Streaming emits tool call start chunks via handleLLMNewToken", async () => {
   const mockSend = vi.fn().mockResolvedValue({
     stream: (async function* () {
@@ -832,6 +865,47 @@ test("Streaming emits tool call start chunks via handleLLMNewToken", async () =>
       type: "tool_call_chunk",
     },
   ]);
+});
+
+test("Streaming throws when a tool call delta has no start chunk", async () => {
+  const mockSend = vi.fn().mockResolvedValue({
+    stream: (async function* () {
+      yield {
+        contentBlockDelta: {
+          delta: {
+            toolUse: {
+              input: '{"location":"London"}',
+            },
+          },
+        },
+      };
+    })(),
+  });
+
+  const mockClient = {
+    send: mockSend,
+  } as unknown as BedrockRuntimeClient;
+
+  const model = new ChatBedrockConverse({
+    region: "us-east-1",
+    credentials: {
+      secretAccessKey: "test-secret-key",
+      accessKeyId: "test-access-key",
+    },
+    model: "anthropic.claude-haiku-4-5-20251001-v1:0",
+    client: mockClient,
+  });
+
+  await expect(async () => {
+    for await (const chunk of model._streamResponseChunks(
+      [new HumanMessage("Get the weather for London")],
+      {}
+    )) {
+      expect(chunk).toBeDefined();
+    }
+  }).rejects.toThrow(
+    "Received tool use delta for content block index 0 before a matching content block start event."
+  );
 });
 
 describe("video content block conversion", () => {

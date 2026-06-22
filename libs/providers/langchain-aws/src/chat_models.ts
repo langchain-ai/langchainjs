@@ -1179,11 +1179,17 @@ export class ChatBedrockConverse
         abortSignal: options.signal,
       });
       if (response.stream) {
+        const toolUseContentBlockIndexes = new Set<number>();
         for await (const chunk of response.stream) {
           if (options.signal?.aborted) {
             return;
           }
           if (chunk.contentBlockStart) {
+            if (chunk.contentBlockStart.start?.toolUse) {
+              toolUseContentBlockIndexes.add(
+                chunk.contentBlockStart.contentBlockIndex ?? 0
+              );
+            }
             const toolCallStartChunk = handleConverseStreamContentBlockStart(
               chunk.contentBlockStart
             );
@@ -1199,6 +1205,14 @@ export class ChatBedrockConverse
               }
             );
           } else if (chunk.contentBlockDelta) {
+            if (chunk.contentBlockDelta.delta?.toolUse) {
+              const index = chunk.contentBlockDelta.contentBlockIndex ?? 0;
+              if (!toolUseContentBlockIndexes.has(index)) {
+                throw new Error(
+                  `Received tool use delta for content block index ${index} before a matching content block start event.`
+                );
+              }
+            }
             const textChatGeneration = handleConverseStreamContentBlockDelta(
               chunk.contentBlockDelta
             );

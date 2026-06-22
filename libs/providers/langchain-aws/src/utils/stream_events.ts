@@ -78,10 +78,14 @@ export async function* convertBedrockConverseStream(
           index,
           delta: { type: "text-delta" as const, text: delta.text },
         };
-      } else if (delta.toolUse?.input) {
+      } else if (delta.toolUse) {
         const acc = blockAccumulators.get(index);
-        if (!acc) continue;
-        acc.args = (acc.args ?? "") + delta.toolUse.input;
+        if (!acc) {
+          throw new Error(
+            `Received tool use delta for content block index ${index} before a matching content block start event.`
+          );
+        }
+        acc.args = (acc.args ?? "") + (delta.toolUse.input ?? "");
         yield {
           event: "content-block-delta" as const,
           index,
