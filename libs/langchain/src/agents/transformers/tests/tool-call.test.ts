@@ -10,9 +10,9 @@ import {
 } from "@langchain/langgraph";
 import { MemorySaver } from "@langchain/langgraph-checkpoint";
 
-import { createAgent, createMiddleware } from "../index.js";
-import { humanInTheLoopMiddleware } from "../middleware/hitl.js";
-import { createToolCallTransformer } from "../stream.js";
+import { createAgent, createMiddleware } from "../../index.js";
+import { humanInTheLoopMiddleware } from "../../middleware/hitl.js";
+import { createToolCallTransformer } from "../index.js";
 
 describe("streamEvents", () => {
   it("should emit tool call streams for each tool invocation", async () => {
