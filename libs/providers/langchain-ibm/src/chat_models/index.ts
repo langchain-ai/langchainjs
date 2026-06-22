@@ -1151,11 +1151,11 @@ export class ChatWatsonx<
             },
             watsonxCallbacks
           );
-        throw new Error(
+        throw new WatsonxConfigurationError(
           "No idOrName or modelId specified. At least one of these needs to be specified in basic mode"
         );
       }
-      throw new Error(
+      throw new WatsonxConfigurationError(
         "No service or gateway set. Please check your intsance init"
       );
     };
