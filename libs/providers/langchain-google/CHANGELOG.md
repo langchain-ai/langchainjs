@@ -1,5 +1,11 @@
 # @langchain/google
 
+## 0.2.1
+
+### Patch Changes
+
+- [#10674](https://github.com/langchain-ai/langchainjs/pull/10674) [`f017708`](https://github.com/langchain-ai/langchainjs/commit/f01770895c06621b469a6c6b5244747f6efdfbf7) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix: classify provider 429s before retrying
+
 ## 0.2.0
 
 ### Minor Changes

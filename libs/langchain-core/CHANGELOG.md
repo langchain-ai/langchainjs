@@ -1,5 +1,15 @@
 # @langchain/core
 
+## 1.2.1
+
+### Patch Changes
+
+- [#10674](https://github.com/langchain-ai/langchainjs/pull/10674) [`f017708`](https://github.com/langchain-ai/langchainjs/commit/f01770895c06621b469a6c6b5244747f6efdfbf7) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix: classify provider 429s before retrying
+
+- [#11092](https://github.com/langchain-ai/langchainjs/pull/11092) [`7918bbd`](https://github.com/langchain-ai/langchainjs/commit/7918bbdd2eaf8d9aff736b122f359a555267e1e7) Thanks [@aolsenjazz](https://github.com/aolsenjazz)! - fix(core): only treat arrays of content blocks as ToolMessage content
+
+  Fix tool outputs that are arrays of plain objects being forwarded as malformed message content. An array is now only treated as message content blocks when every element is an object with a `type`; otherwise it is JSON-stringified.
+
 ## 1.2.0
 
 ### Minor Changes
