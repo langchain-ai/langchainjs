@@ -19,6 +19,7 @@ export * as language_models__chat_models from "../language_models/chat_models.js
 export * as language_models__compat from "../language_models/compat.js";
 export * as language_models__event from "../language_models/event.js";
 export * as language_models__llms from "../language_models/llms.js";
+export * as language_models__openai_completions_stream from "../language_models/openai_completions_stream.js";
 export * as language_models__profile from "../language_models/profile.js";
 export * as language_models__stream from "../language_models/stream.js";
 export * as language_models__structured_output from "../language_models/structured_output.js";

@@ -183,7 +183,7 @@ export class PromptTemplate<
   /**
    * Take examples in list format with prefix and suffix to create a prompt.
    *
-   * Intended to be used a a way to dynamically create a prompt from examples.
+   * Intended to be used as a way to dynamically create a prompt from examples.
    *
    * @param examples - List of examples to use in the prompt.
    * @param suffix - String to go after the list of examples. Should generally set up the user's input.

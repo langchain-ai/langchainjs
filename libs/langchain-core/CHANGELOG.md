@@ -1,5 +1,60 @@
 # @langchain/core
 
+## 1.2.1
+
+### Patch Changes
+
+- [#10674](https://github.com/langchain-ai/langchainjs/pull/10674) [`f017708`](https://github.com/langchain-ai/langchainjs/commit/f01770895c06621b469a6c6b5244747f6efdfbf7) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix: classify provider 429s before retrying
+
+- [#11092](https://github.com/langchain-ai/langchainjs/pull/11092) [`7918bbd`](https://github.com/langchain-ai/langchainjs/commit/7918bbdd2eaf8d9aff736b122f359a555267e1e7) Thanks [@aolsenjazz](https://github.com/aolsenjazz)! - fix(core): only treat arrays of content blocks as ToolMessage content
+
+  Fix tool outputs that are arrays of plain objects being forwarded as malformed message content. An array is now only treated as message content blocks when every element is an object with a `type`; otherwise it is JSON-stringified.
+
+## 1.2.0
+
+### Minor Changes
+
+- [#10924](https://github.com/langchain-ai/langchainjs/pull/10924) [`2e28115`](https://github.com/langchain-ai/langchainjs/commit/2e2811509d75af94f57cedcc3842f178f4c020d1) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(core): add OpenAI-compatible stream event conversion
+
+### Patch Changes
+
+- [#11047](https://github.com/langchain-ai/langchainjs/pull/11047) [`ac0f71d`](https://github.com/langchain-ai/langchainjs/commit/ac0f71d03994664cfee98e71a584d4aa3321746f) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): preserve AIMessage content blocks
+
+  Keep existing v1 contentBlocks when constructing AIMessage instances so serialized messages do not lose block content during deserialization.
+
+## 1.1.49
+
+### Patch Changes
+
+- [#10679](https://github.com/langchain-ai/langchainjs/pull/10679) [`1f7b495`](https://github.com/langchain-ai/langchainjs/commit/1f7b4952ea1d7cebd572453877b670a7740a397b) Thanks [@hnustwjj](https://github.com/hnustwjj)! - fix(core): make `RemoveMessage` type-compatible across `MessageStructure` variants
+
+  Remove unnecessary `TStructure` generic from `RemoveMessage` — its content is always `[]`, so the type parameter only caused incompatibilities when passing `RemoveMessage` into APIs expecting a different `MessageStructure` (e.g. `@langchain/langgraph-sdk`'s `Message<DefaultToolCall>`). Also add `{ type: "remove"; id: string }` to `BaseMessageLike` so the serialized format is accepted by TypeScript, matching the existing runtime behavior in `coerceMessageLikeToMessage`.
+
+## 1.1.48
+
+### Patch Changes
+
+- [#10832](https://github.com/langchain-ai/langchainjs/pull/10832) [`1b24369`](https://github.com/langchain-ai/langchainjs/commit/1b24369a970ad6f56f1f428027f48601f87e62eb) Thanks [@info-arnav](https://github.com/info-arnav)! - fix(core, openrouter): make CJS default re-exports callable
+
+- [#10666](https://github.com/langchain-ai/langchainjs/pull/10666) [`2bb55b0`](https://github.com/langchain-ai/langchainjs/commit/2bb55b053f49f89e81e3252a7af08e86d71ddd95) Thanks [@hnustwjj](https://github.com/hnustwjj)! - feat(openrouter): surface reasoning content as v1 standard content blocks
+
+  `convertOpenRouterResponseToBaseMessage` and
+  `convertOpenRouterDeltaToBaseMessageChunk` now copy OpenRouter's
+  `reasoning` (flat string) and `reasoning_details` (structured array) fields
+  onto `additional_kwargs.reasoning_content` / `additional_kwargs.reasoning_details`.
+  A new `ChatOpenRouterTranslator` is registered in `@langchain/core` under
+  the `"openrouter"` provider key so `AIMessage.contentBlocks` emits standard
+  `{type: "reasoning"}` blocks alongside text and tool calls.
+
+  Previously, reasoning text returned by reasoning-capable models routed
+  through OpenRouter (DeepSeek R1, Minimax M2, Claude extended thinking,
+  o-series, etc.) was silently dropped: only the `reasoning_tokens` count
+  was preserved via `usage_metadata`. Consumers using standard content blocks
+  (including the frontend agent UI patterns shown in the docs) could not
+  display the model's chain of thought.
+
+- [#10918](https://github.com/langchain-ai/langchainjs/pull/10918) [`3999fab`](https://github.com/langchain-ai/langchainjs/commit/3999fab55870c6eea22d6d90c08aa472f9b2fac3) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(openai): stream custom tool calls through Responses API chunks
+
 ## 1.1.47
 
 ### Patch Changes

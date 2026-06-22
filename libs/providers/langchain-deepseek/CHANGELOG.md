@@ -1,5 +1,39 @@
 # @langchain/deepseek
 
+## 1.1.2
+
+### Patch Changes
+
+- Updated dependencies [[`05936ab`](https://github.com/langchain-ai/langchainjs/commit/05936ab45ce1bbb04b955c3ebdd03dc1451b655c), [`798cb70`](https://github.com/langchain-ai/langchainjs/commit/798cb705222f43759e94d02a790ebb706ef2f099), [`80c790b`](https://github.com/langchain-ai/langchainjs/commit/80c790b593ad19668f1101f84f06c175db114909)]:
+  - @langchain/openai@1.5.2
+
+## 1.1.1
+
+### Patch Changes
+
+- Updated dependencies [[`80b43ec`](https://github.com/langchain-ai/langchainjs/commit/80b43ecffe0701c3c375c407fb601cb452f708ef)]:
+  - @langchain/openai@1.5.1
+
+## 1.1.0
+
+### Minor Changes
+
+- [#10924](https://github.com/langchain-ai/langchainjs/pull/10924) [`2e28115`](https://github.com/langchain-ai/langchainjs/commit/2e2811509d75af94f57cedcc3842f178f4c020d1) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(deepseek): enable native OpenAI-compatible streamEvents events
+
+### Patch Changes
+
+- Updated dependencies [[`2e28115`](https://github.com/langchain-ai/langchainjs/commit/2e2811509d75af94f57cedcc3842f178f4c020d1)]:
+  - @langchain/openai@1.5.0
+
+## 1.0.27
+
+### Patch Changes
+
+- [#10747](https://github.com/langchain-ai/langchainjs/pull/10747) [`78e642f`](https://github.com/langchain-ai/langchainjs/commit/78e642ff14b2be594e8980058670a66fa77b0c42) Thanks [@neo1027144-creator](https://github.com/neo1027144-creator)! - feat(deepseek): add DeepSeek V4 Flash and V4 Pro model profiles
+
+- Updated dependencies [[`3999fab`](https://github.com/langchain-ai/langchainjs/commit/3999fab55870c6eea22d6d90c08aa472f9b2fac3), [`fce9ab4`](https://github.com/langchain-ai/langchainjs/commit/fce9ab418901323618fdfaaa9fc350fa1c0d50e0)]:
+  - @langchain/openai@1.4.7
+
 ## 1.0.26
 
 ### Patch Changes

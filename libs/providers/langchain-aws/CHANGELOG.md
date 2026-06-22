@@ -1,5 +1,23 @@
 # @langchain/aws
 
+## 1.4.1
+
+### Patch Changes
+
+- [#11082](https://github.com/langchain-ai/langchainjs/pull/11082) [`a186aba`](https://github.com/langchain-ai/langchainjs/commit/a186abacb7dc85f8c5f54895f817eb823eec9d84) Thanks [@hntrl](https://github.com/hntrl)! - fix: support Bedrock bearer token auth
+
+## 1.4.0
+
+### Minor Changes
+
+- [#10924](https://github.com/langchain-ai/langchainjs/pull/10924) [`2e28115`](https://github.com/langchain-ai/langchainjs/commit/2e2811509d75af94f57cedcc3842f178f4c020d1) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(aws): add native Bedrock Converse streamEvents events
+
+## 1.3.9
+
+### Patch Changes
+
+- [#10743](https://github.com/langchain-ai/langchainjs/pull/10743) [`6e4337f`](https://github.com/langchain-ai/langchainjs/commit/6e4337fec1a7707c1a1c709a7b6aa0c5efb7b11d) Thanks [@Zelys-DFKH](https://github.com/Zelys-DFKH)! - fix(aws): add claude-haiku-4 to supportedToolChoiceValuesForModel
+
 ## 1.3.8
 
 ### Patch Changes

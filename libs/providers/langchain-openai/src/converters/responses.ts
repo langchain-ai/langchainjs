@@ -566,7 +566,7 @@ export const convertReasoningSummaryToResponsesReasoningItem: Converter<
   ChatOpenAIReasoningSummary,
   OpenAIClient.Responses.ResponseReasoningItem
 > = (reasoning) => {
-  // combine summary parts that have the the same index and then remove the indexes
+  // combine summary parts that have the same index and then remove the indexes
   const summary = (
     reasoning.summary.length > 1
       ? reasoning.summary.reduce(
@@ -823,14 +823,26 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
         : {}),
     });
   } else if (
+    event.type === "response.web_search_call.in_progress" ||
+    event.type === "response.web_search_call.searching" ||
     event.type === "response.web_search_call.completed" ||
-    event.type === "response.file_search_call.completed"
+    event.type === "response.file_search_call.in_progress" ||
+    event.type === "response.file_search_call.searching" ||
+    event.type === "response.file_search_call.completed" ||
+    event.type === "response.image_generation_call.in_progress" ||
+    event.type === "response.image_generation_call.generating" ||
+    event.type === "response.image_generation_call.completed"
   ) {
+    const [, type, status] = event.type.match(/^response\.(.*)\.([^.]+)$/) ?? [
+      "",
+      "",
+      "",
+    ];
     generationInfo = {
       tool_outputs: {
         id: event.item_id,
-        type: event.type.replace("response.", "").replace(".completed", ""),
-        status: "completed",
+        type,
+        status,
       },
     };
   } else if (event.type === "response.refusal.done") {
@@ -1149,21 +1161,21 @@ export const convertStandardContentMessageToResponsesInput: Converter<
             }))
           : [{ type: "summary_text" as const, text: "" }];
 
-      const reasoningItem: OpenAIClient.Responses.ResponseReasoningItem = {
+      // Only include `id` when we actually have one. Reasoning blocks
+      // reassembled from streaming chunks (e.g. via `streamEvents`) never
+      // carry an id, since OpenAI's streaming protocol omits it. Emitting
+      // `id: ""` makes the Responses API reject the turn with
+      // `400 Invalid 'input[n].id': ''`, so we omit the field instead — the
+      // same way the legacy reconstruction path leaves a missing id off.
+      // Reasoning input items only carry `summary` — the Responses API rejects
+      // a populated `content` array on input (`400 Invalid 'input[n].content':
+      // array too long. Expected an array with maximum length 0`). The reasoning
+      // text is already represented in `summary`, so we do not forward `content`.
+      return {
         type: "reasoning",
-        id: block.id ?? "",
+        ...(block.id ? { id: block.id } : {}),
         summary,
-      };
-
-      if (block.reasoning) {
-        reasoningItem.content = [
-          {
-            type: "reasoning_text" as const,
-            text: block.reasoning,
-          },
-        ];
-      }
-      return reasoningItem;
+      } as OpenAIClient.Responses.ResponseReasoningItem;
     };
 
     const convertFunctionCall = (
@@ -1657,6 +1669,35 @@ export const convertMessagesToResponsesInput: Converter<
             });
           }
           if (isDataContentBlock(item)) {
+            // The Responses API supports file URLs natively, but the Chat
+            // Completions converter rejects URL file blocks. Convert standard
+            // file blocks to the native `input_file` shape instead of routing
+            // them through the completions converter.
+            if (item.type === "file") {
+              const filename = getFilenameFromMetadata(item);
+              if (item.source_type === "url") {
+                return {
+                  type: "input_file",
+                  file_url: item.url,
+                  ...(filename ? { filename } : {}),
+                };
+              }
+              if (item.source_type === "id") {
+                return {
+                  type: "input_file",
+                  file_id: item.id,
+                  ...(filename ? { filename } : {}),
+                };
+              }
+              if (item.source_type === "base64") {
+                const mimeType = item.mime_type ?? "";
+                return {
+                  type: "input_file",
+                  file_data: `data:${mimeType};base64,${item.data}`,
+                  filename: getRequiredFilenameFromMetadata(item),
+                };
+              }
+            }
             return convertToProviderContentBlock(
               item,
               completionsApiContentBlockConverter

@@ -1,5 +1,39 @@
 # @langchain/openai
 
+## 1.5.2
+
+### Patch Changes
+
+- [#11045](https://github.com/langchain-ai/langchainjs/pull/11045) [`05936ab`](https://github.com/langchain-ai/langchainjs/commit/05936ab45ce1bbb04b955c3ebdd03dc1451b655c) Thanks [@jackjin1997](https://github.com/jackjin1997)! - fix(openai): omit empty id and content on reasoning items in Responses API input
+
+  Reasoning blocks reassembled from streaming chunks (e.g. via `streamEvents`) never carry an id, since OpenAI's streaming protocol only includes it in non-streaming responses. When such a message was replayed as Responses API input on the next turn, the reasoning item was emitted with `id: ""`, which OpenAI rejects with `400 Invalid 'input[n].id': ''`. The `id` field is now omitted when absent.
+
+  A second error surfaced immediately after that fix: the same converter set a populated `content` array on the reasoning input item, which the Responses API also rejects (`400 Invalid 'input[n].content': array too long. Expected an array with maximum length 0`). Reasoning input items only carry `summary`, so `content` is no longer forwarded. Thanks to @csrujanreddy for catching the second issue and verifying both fixes against the live API.
+
+- [#11065](https://github.com/langchain-ai/langchainjs/pull/11065) [`798cb70`](https://github.com/langchain-ai/langchainjs/commit/798cb705222f43759e94d02a790ebb706ef2f099) Thanks [@rxits](https://github.com/rxits)! - fix(openai): route standard url file blocks to native input_file in Responses API
+
+- [#11090](https://github.com/langchain-ai/langchainjs/pull/11090) [`80c790b`](https://github.com/langchain-ai/langchainjs/commit/80c790b593ad19668f1101f84f06c175db114909) Thanks [@nikhilpakhloo](https://github.com/nikhilpakhloo)! - fix(openai): stream built-in tool progress events
+
+## 1.5.1
+
+### Patch Changes
+
+- [#11001](https://github.com/langchain-ai/langchainjs/pull/11001) [`80b43ec`](https://github.com/langchain-ai/langchainjs/commit/80b43ecffe0701c3c375c407fb601cb452f708ef) Thanks [@Herrtian](https://github.com/Herrtian)! - Wrap Responses API stream iteration errors with existing OpenAI client error handling.
+
+## 1.5.0
+
+### Minor Changes
+
+- [#10924](https://github.com/langchain-ai/langchainjs/pull/10924) [`2e28115`](https://github.com/langchain-ai/langchainjs/commit/2e2811509d75af94f57cedcc3842f178f4c020d1) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(openai): add native streamEvents event converters
+
+## 1.4.7
+
+### Patch Changes
+
+- [#10918](https://github.com/langchain-ai/langchainjs/pull/10918) [`3999fab`](https://github.com/langchain-ai/langchainjs/commit/3999fab55870c6eea22d6d90c08aa472f9b2fac3) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(openai): stream custom tool calls through Responses API chunks
+
+- [#10791](https://github.com/langchain-ai/langchainjs/pull/10791) [`fce9ab4`](https://github.com/langchain-ai/langchainjs/commit/fce9ab418901323618fdfaaa9fc350fa1c0d50e0) Thanks [@Genmin](https://github.com/Genmin)! - fix(openai): preserve top-level Responses API ids on AI messages
+
 ## 1.4.6
 
 ### Patch Changes

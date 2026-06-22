@@ -164,7 +164,7 @@ export class AgentNode<
    * If the user selects a tool output:
    * - return a record of tools to extract structured output from the model's response
    *
-   * if the the user selects a native schema output or if the model supports JSON schema output:
+   * if the user selects a native schema output or if the model supports JSON schema output:
    * - return a provider strategy to extract structured output from the model's response
    *
    * @param model - The model to get the response format for.
@@ -1019,7 +1019,13 @@ export class AgentNode<
           kwargs: { method: "json_schema" },
           schema: structuredResponseFormat.strategy.schema,
         },
-        strict: resolvedStrict,
+
+        /**
+         * Don't force strict on tools: it makes Anthropic's combined grammar
+         * "too complex for compilation", and only OpenAI Chat Completions needs
+         * it (re-applied there). Honor an explicit override; else leave unset.
+         */
+        strict: preparedOptions?.modelSettings?.strict,
       });
     }
 
