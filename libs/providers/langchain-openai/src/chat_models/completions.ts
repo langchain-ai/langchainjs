@@ -72,6 +72,10 @@ export class ChatOpenAICompletions<
       strict = this.supportsStrictToolCalling;
     }
 
+    if (options?.response_format?.type === "json_schema" && strict !== false) {
+      strict = true;
+    }
+
     let streamOptionsConfig = {};
     if (options?.stream_options !== undefined) {
       streamOptionsConfig = { stream_options: options.stream_options };

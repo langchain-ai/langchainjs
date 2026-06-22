@@ -669,15 +669,6 @@ export abstract class BaseChatOpenAI<
     } else if (this.supportsStrictToolCalling !== undefined) {
       strict = this.supportsStrictToolCalling;
     }
-
-    // OpenAI's Chat Completions `.parse()` path — used only for `json_schema`
-    // response formats — requires strict function tools. Default strict to true
-    // for that case unless the caller set strict:false. `json_object` (JSON mode)
-    // goes through `create()` and needs no strict.
-    if (kwargs?.response_format?.type === "json_schema" && strict !== false) {
-      strict = true;
-    }
-
     return this.withConfig({
       tools: tools.map((tool) => {
         // Built-in tools and custom tools pass through as-is

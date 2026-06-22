@@ -1,4 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
+import { z } from "zod/v3";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { HumanMessage, AIMessageChunk } from "@langchain/core/messages";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { ChatOpenAICompletions } from "../completions.js";
@@ -172,5 +174,61 @@ describe("ChatOpenAICompletions reasoning_content compatibility", () => {
 
     const firstChunk = chunks[0].message as AIMessageChunk;
     expect(firstChunk.additional_kwargs.reasoning_content).toBe("The user");
+  });
+});
+
+describe("ChatOpenAICompletions strict tools for structured output", () => {
+  const weatherTool = {
+    type: "function" as const,
+    function: {
+      name: "get_current_weather",
+      description: "Get the current weather in a location",
+      parameters: toJsonSchema(z.object({ location: z.string() })),
+    },
+  };
+  const jsonSchemaResponseFormat = {
+    type: "json_schema" as const,
+    json_schema: {
+      name: "answer",
+      schema: toJsonSchema(z.object({ answer: z.string() })),
+    },
+  };
+
+  /** Return the per-tool `strict` flag invocationParams produces for `options`. */
+  function toolStrict(options: Record<string, unknown>): boolean | undefined {
+    const model = new ChatOpenAICompletions({
+      model: "gpt-4",
+      apiKey: "test-key",
+    });
+    const params = (
+      model as unknown as {
+        invocationParams: (o: Record<string, unknown>) => {
+          tools?: { function: { strict?: boolean } }[];
+        };
+      }
+    ).invocationParams({ tools: [weatherTool], ...options });
+    return params.tools?.[0]?.function?.strict;
+  }
+
+  it("defaults strict to true when a json_schema response_format is requested", () => {
+    expect(toolStrict({ response_format: jsonSchemaResponseFormat })).toBe(
+      true
+    );
+  });
+
+  it("respects an explicit strict:false even with a json_schema response_format", () => {
+    expect(
+      toolStrict({ response_format: jsonSchemaResponseFormat, strict: false })
+    ).toBe(false);
+  });
+
+  it("does not set strict when no response_format is requested", () => {
+    expect(toolStrict({})).toBeUndefined();
+  });
+
+  it("does not set strict for a json_object response_format (JSON mode)", () => {
+    expect(
+      toolStrict({ response_format: { type: "json_object" } })
+    ).toBeUndefined();
   });
 });

@@ -335,57 +335,6 @@ describe("ChatOpenAI", () => {
         throw new Error("Body not found in request.");
       }
     });
-
-    // When a response_format is requested, OpenAI requires strict function
-    // tools (the structured-output `.parse()` path). bindTools defaults strict
-    // to true for that case unless the caller explicitly set strict:false.
-    const jsonSchemaResponseFormat = {
-      type: "json_schema" as const,
-      json_schema: {
-        name: "answer",
-        schema: toJsonSchema(z.object({ answer: z.string() })),
-      },
-    };
-
-    /**
-     * Bind `weatherTool` with `kwargs` and return the converted tool definitions.
-     * `bindTools` converts tools eagerly, so the per-tool `strict` flag is
-     * observable on `defaultOptions` without invoking (invoking a json_schema +
-     * non-strict request would throw before fetch).
-     */
-    function boundTools(kwargs: Parameters<ChatOpenAI["bindTools"]>[1]) {
-      const model = new ChatOpenAI({
-        model: "gpt-4",
-        apiKey: "test-key",
-        maxRetries: 0,
-      });
-      const bound = model.bindTools([weatherTool], kwargs) as ChatOpenAI;
-      // @ts-expect-error - defaultOptions is protected
-      return bound.defaultOptions.tools as { function: { strict?: boolean } }[];
-    }
-
-    it("defaults strict to true on tools when a response_format is provided", () => {
-      const tools = boundTools({ response_format: jsonSchemaResponseFormat });
-      expect(tools[0].function).toHaveProperty("strict", true);
-    });
-
-    it("respects an explicit strict:false even when a response_format is provided", () => {
-      const tools = boundTools({
-        response_format: jsonSchemaResponseFormat,
-        strict: false,
-      });
-      expect(tools[0].function).toHaveProperty("strict", false);
-    });
-
-    it("does not set strict on tools when no response_format is provided", () => {
-      const tools = boundTools({});
-      expect(tools[0].function).not.toHaveProperty("strict");
-    });
-
-    it("does not set strict on tools for json_object response format (JSON mode)", () => {
-      const tools = boundTools({ response_format: { type: "json_object" } });
-      expect(tools[0].function).not.toHaveProperty("strict");
-    });
   });
 
   test("Test OpenAI serialization doesn't pass along extra params", async () => {
