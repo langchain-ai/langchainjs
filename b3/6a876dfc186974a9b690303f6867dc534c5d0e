@@ -1,0 +1,21 @@
+libs/providers/langchain-openai/src/chat_models/tests/index.test.ts
+  s_b79acf02ef3c8e::t_1b3d02c8230f00 384-390
+libs/providers/langchain-openai/src/chat_models/base.ts
+  s_b79acf02ef3c8e::t_907fdcb8825a32 673-677
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "b36a876dfc186974a9b690303f6867dc534c5d0e",
+  "prompts": {},
+  "sessions": {
+    "s_b79acf02ef3c8e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4283e99c-88ff-48e8-96e6-a1a12436046d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Colin Francis <colin.francis@langchain.dev>"
+    }
+  }
+}
