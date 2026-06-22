@@ -19,7 +19,7 @@ import {
   MessageContentComplex,
   MessageContentText,
 } from "@langchain/core/messages";
-import { v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4 } from "@langchain/core/utils/uuid";
 import { Converter } from "@langchain/core/utils/format";
 import type { Gemini } from "../chat_models/types.js";
 import { iife } from "../utils/misc.js";
@@ -725,6 +725,18 @@ function convertLegacyContentMessageToGeminiContent(
             ...etc,
             functionCall,
           } as Gemini.Part.FunctionCall);
+        } else if (item?.type === "executableCode") {
+          const { type, executableCode, ...etc } = item;
+          parts.push({
+            ...etc,
+            executableCode,
+          } as Gemini.Part.ExecutableCode);
+        } else if (item?.type === "codeExecutionResult") {
+          const { type, codeExecutionResult, ...etc } = item;
+          parts.push({
+            ...etc,
+            codeExecutionResult,
+          } as Gemini.Part.CodeExecutionResult);
         } else if (isMessageContentImageUrl(item)) {
           parts.push(messageContentImageUrl(item));
         } else if (isMessageContentMedia(item)) {

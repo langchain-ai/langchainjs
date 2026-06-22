@@ -455,6 +455,10 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
     this._addVersion("@langchain/deepseek", __PKG_VERSION__);
   }
 
+  protected override get streamEventProvider(): string {
+    return "deepseek";
+  }
+
   protected override _convertCompletionsDeltaToBaseMessageChunk(
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     delta: Record<string, any>,
@@ -472,7 +476,6 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
       rawResponse,
       defaultRole
     );
-    messageChunk.additional_kwargs.reasoning_content = delta.reasoning_content;
     // Override model_provider for DeepSeek-specific block translation
     messageChunk.response_metadata = {
       ...messageChunk.response_metadata,
@@ -730,9 +733,6 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
       message,
       rawResponse
     );
-    langChainMessage.additional_kwargs.reasoning_content =
-      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-      (message as any).reasoning_content;
     // Override model_provider for DeepSeek-specific block translation
     langChainMessage.response_metadata = {
       ...langChainMessage.response_metadata,

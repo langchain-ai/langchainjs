@@ -229,6 +229,34 @@ describe("convertResponsesMessageToAIMessage", () => {
     expect(reasoningBlocks.length).toBe(0);
   });
 
+  it("uses the top-level response id for the AIMessage id", () => {
+    const response = {
+      id: "resp_top_level",
+      model: "gpt-4o",
+      created_at: 1234567890,
+      object: "response",
+      status: "completed",
+      output: [
+        {
+          type: "message",
+          id: "msg_nested",
+          role: "assistant",
+          content: [{ type: "output_text", text: "Hello!", annotations: [] }],
+        },
+      ],
+      usage: {
+        input_tokens: 10,
+        output_tokens: 20,
+        total_tokens: 30,
+      },
+    };
+
+    const result = convertResponsesMessageToAIMessage(response as any);
+
+    expect(result.id).toBe("resp_top_level");
+    expect(result.response_metadata.id).toBe("resp_top_level");
+  });
+
   it("should store output in response_metadata", () => {
     const output = [
       {
@@ -289,7 +317,146 @@ describe("convertResponsesMessageToAIMessage", () => {
 });
 
 describe("convertResponsesDeltaToChatGenerationChunk", () => {
+  it("uses the top-level response id when streaming", () => {
+    const created = convertResponsesDeltaToChatGenerationChunk({
+      type: "response.created",
+      response: {
+        id: "resp_top_level",
+        model: "gpt-4o",
+        object: "response",
+        status: "in_progress",
+        output: [],
+      },
+    } as any);
+    const messageAdded = convertResponsesDeltaToChatGenerationChunk({
+      type: "response.output_item.added",
+      output_index: 0,
+      item: {
+        type: "message",
+        id: "msg_nested",
+        role: "assistant",
+        content: [],
+        status: "in_progress",
+      },
+    } as any);
+    const textDelta = convertResponsesDeltaToChatGenerationChunk({
+      type: "response.output_text.delta",
+      output_index: 0,
+      content_index: 0,
+      delta: "Hello!",
+    } as any);
+    const completed = convertResponsesDeltaToChatGenerationChunk({
+      type: "response.completed",
+      response: {
+        id: "resp_top_level",
+        model: "gpt-4o",
+        created_at: 1234567890,
+        object: "response",
+        status: "completed",
+        output: [
+          {
+            type: "message",
+            id: "msg_nested",
+            role: "assistant",
+            content: [{ type: "output_text", text: "Hello!", annotations: [] }],
+          },
+        ],
+        usage: {
+          input_tokens: 10,
+          output_tokens: 20,
+          total_tokens: 30,
+        },
+      },
+    } as any);
+
+    expect(created?.message.id).toBe("resp_top_level");
+    expect(messageAdded?.message.id).toBeUndefined();
+    expect(textDelta?.message.id).toBeUndefined();
+
+    const aggregated = [created!, messageAdded!, textDelta!, completed!].reduce(
+      (acc, chunk) => acc.concat(chunk.message as AIMessageChunk),
+      created!.message as AIMessageChunk
+    );
+
+    expect(aggregated.id).toBe("resp_top_level");
+    expect(aggregated.response_metadata.id).toBe("resp_top_level");
+  });
+
   describe("custom tool streaming delta handling", () => {
+    it("should preserve custom tool metadata from response.output_item.added events", () => {
+      const customToolStart = {
+        type: "response.output_item.added",
+        output_index: 0,
+        item: {
+          type: "custom_tool_call",
+          id: "ctc_123",
+          call_id: "call_123",
+          name: "execute_code",
+          input: "",
+        },
+      };
+
+      const result = convertResponsesDeltaToChatGenerationChunk(
+        customToolStart as any
+      );
+      const aiMessageChunk = result?.message as AIMessageChunk;
+
+      expect(aiMessageChunk.tool_call_chunks).toEqual([
+        {
+          type: "tool_call_chunk",
+          isCustomTool: true,
+          name: "execute_code",
+          args: "",
+          id: "call_123",
+          index: 0,
+        },
+      ]);
+      expect(aiMessageChunk.additional_kwargs).toMatchObject({
+        __openai_custom_tool_call_ids__: {
+          call_123: "ctc_123",
+        },
+      });
+    });
+
+    it("should collapse custom tool streaming chunks into a raw input tool call", () => {
+      const start = convertResponsesDeltaToChatGenerationChunk({
+        type: "response.output_item.added",
+        output_index: 0,
+        item: {
+          type: "custom_tool_call",
+          id: "ctc_123",
+          call_id: "call_123",
+          name: "execute_code",
+          input: "",
+        },
+      } as any)?.message as AIMessageChunk;
+
+      const delta = convertResponsesDeltaToChatGenerationChunk({
+        type: "response.custom_tool_call_input.delta",
+        delta: "console.log('custom tool streaming repro')",
+        output_index: 0,
+      } as any)?.message as AIMessageChunk;
+
+      const combined = start.concat(delta);
+
+      expect(combined.invalid_tool_calls).toEqual([]);
+      expect(combined.tool_calls).toEqual([
+        {
+          type: "tool_call",
+          name: "execute_code",
+          args: {
+            input: "console.log('custom tool streaming repro')",
+          },
+          id: "call_123",
+        },
+      ]);
+      expect(combined.additional_kwargs).toMatchObject({
+        __openai_custom_tool_call_ids__: {
+          call_123: "ctc_123",
+        },
+      });
+    });
+
     it("should handle response.custom_tool_call_input.delta events", () => {
       // Test custom tool delta event
       const customToolDelta = {
@@ -309,6 +476,7 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
         type: "tool_call_chunk",
         args: '{"query": "test query"}',
         index: 0,
+        isCustomTool: true,
       } as ToolCallChunk);
     });
 
@@ -337,10 +505,104 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
       const functionResultMessage = functionResult?.message as AIMessageChunk;
       const customResultMessage = customResult?.message as AIMessageChunk;
 
-      // Both should produce identical tool_call_chunks
-      expect(functionResultMessage.tool_call_chunks).toEqual(
-        customResultMessage.tool_call_chunks
-      );
+      expect(functionResultMessage.tool_call_chunks).toEqual([
+        {
+          type: "tool_call_chunk",
+          args: '{"location": "NYC"}',
+          index: 0,
+        },
+      ] as ToolCallChunk[]);
+      expect(customResultMessage.tool_call_chunks).toEqual([
+        {
+          type: "tool_call_chunk",
+          args: '{"location": "NYC"}',
+          index: 0,
+          isCustomTool: true,
+        },
+      ] as ToolCallChunk[]);
+    });
+  });
+
+  describe("built-in tool progress streaming", () => {
+    it("should surface web and file search progress events in generationInfo", () => {
+      const events = [
+        {
+          type: "response.web_search_call.in_progress",
+          item_id: "ws_123",
+          status: "in_progress",
+        },
+        {
+          type: "response.web_search_call.searching",
+          item_id: "ws_123",
+          status: "searching",
+        },
+        {
+          type: "response.web_search_call.completed",
+          item_id: "ws_123",
+          status: "completed",
+        },
+        {
+          type: "response.file_search_call.in_progress",
+          item_id: "fs_123",
+          status: "in_progress",
+        },
+        {
+          type: "response.file_search_call.searching",
+          item_id: "fs_123",
+          status: "searching",
+        },
+        {
+          type: "response.file_search_call.completed",
+          item_id: "fs_123",
+          status: "completed",
+        },
+      ];
+
+      for (const event of events) {
+        const result = convertResponsesDeltaToChatGenerationChunk(event as any);
+
+        expect(result?.generationInfo).toEqual({
+          tool_outputs: {
+            id: event.item_id,
+            type: event.type
+              .replace("response.", "")
+              .replace(`.${event.status}`, ""),
+            status: event.status,
+          },
+        });
+      }
+    });
+
+    it("should surface image generation lifecycle events in generationInfo", () => {
+      const events = [
+        {
+          type: "response.image_generation_call.in_progress",
+          item_id: "ig_123",
+          status: "in_progress",
+        },
+        {
+          type: "response.image_generation_call.generating",
+          item_id: "ig_123",
+          status: "generating",
+        },
+        {
+          type: "response.image_generation_call.completed",
+          item_id: "ig_123",
+          status: "completed",
+        },
+      ];
+
+      for (const event of events) {
+        const result = convertResponsesDeltaToChatGenerationChunk(event as any);
+
+        expect(result?.generationInfo).toEqual({
+          tool_outputs: {
+            id: "ig_123",
+            type: "image_generation_call",
+            status: event.status,
+          },
+        });
+      }
     });
   });
 
@@ -422,6 +684,7 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
       expect(reasoningBlocks[0]).toEqual({
         type: "reasoning",
         reasoning: "Initial reasoning step",
+        index: 0,
       });
     });
 
@@ -459,6 +722,7 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
       expect(reasoningBlocks[0]).toEqual({
         type: "reasoning",
         reasoning: "more reasoning text",
+        index: 0,
       });
     });
 
@@ -946,6 +1210,44 @@ describe("convertMessagesToResponsesInput", () => {
         "https://www.appropedia.org/w/images/c/ca/Writing_Sample.pdf"
       );
       expect(fileBlock.filename).toBeUndefined();
+    });
+
+    it("routes standard url file blocks to native input_file instead of the completions converter", () => {
+      const messages = [
+        new HumanMessage({
+          content: [
+            { type: "text", text: "What is in this document?" },
+            {
+              type: "file",
+              source_type: "url",
+              url: "https://example.com/document.pdf",
+              mime_type: "application/pdf",
+              metadata: { filename: "document.pdf" },
+            },
+          ],
+        }),
+      ];
+
+      const result = convertMessagesToResponsesInput({
+        messages,
+        model: "gpt-4o",
+        zdrEnabled: false,
+      });
+
+      expect(result).toMatchObject([
+        {
+          type: "message",
+          role: "user",
+          content: [
+            { type: "input_text", text: "What is in this document?" },
+            {
+              type: "input_file",
+              file_url: "https://example.com/document.pdf",
+              filename: "document.pdf",
+            },
+          ],
+        },
+      ]);
     });
   });
 
@@ -2218,6 +2520,151 @@ describe("convertResponsesDeltaToChatGenerationChunk - json_schema with tool cal
     // Should parse the JSON text into additional_kwargs.parsed
     expect(message.additional_kwargs.parsed).toEqual({
       answer: "LangChain is a framework",
+    });
+  });
+});
+
+describe("convertResponsesDeltaToChatGenerationChunk - json_schema with trailing non-whitespace characters (#10894)", () => {
+  it("should not throw when response text contains valid JSON followed by a trailing non-whitespace character", () => {
+    // gpt-5-mini on service_tier: "auto" intermittently emits trailing
+    // characters after a valid JSON object on the Responses API. JSON.parse
+    // accepts trailing whitespace, so the failure mode is specifically
+    // trailing non-whitespace (extra tokens, control characters). Previously
+    // the bare JSON.parse threw SyntaxError and killed the stream. The
+    // conversion should now degrade gracefully: additional_kwargs.parsed is
+    // left undefined, the rest of the message converts normally, and the
+    // caller can fall back to msg.text or retry.
+    const event = {
+      type: "response.completed",
+      response: {
+        id: "resp_test_10894",
+        model: "gpt-5-mini",
+        object: "response",
+        created_at: 1700000000,
+        status: "completed",
+        incomplete_details: null,
+        metadata: {},
+        user: null,
+        service_tier: "auto",
+        output: [
+          {
+            type: "message",
+            id: "msg_001",
+            role: "assistant",
+            status: "completed",
+            content: [
+              {
+                type: "output_text",
+                text: '{"status":"ok","plan":{"steps":[]}}x',
+                annotations: [],
+              },
+            ],
+          },
+        ],
+        text: {
+          format: {
+            type: "json_schema",
+            name: "response",
+            strict: true,
+            schema: {
+              type: "object",
+              additionalProperties: false,
+              required: ["status", "plan"],
+              properties: {
+                status: { type: "string" },
+                plan: { type: "object" },
+              },
+            },
+          },
+        },
+        usage: {
+          input_tokens: 30,
+          output_tokens: 12,
+          total_tokens: 42,
+          input_tokens_details: { cached_tokens: 0 },
+          output_tokens_details: { reasoning_tokens: 0 },
+        },
+      },
+    };
+
+    expect(() =>
+      convertResponsesDeltaToChatGenerationChunk(event as any)
+    ).not.toThrow();
+
+    const result = convertResponsesDeltaToChatGenerationChunk(event as any);
+    expect(result).not.toBeNull();
+
+    const message = result!.message as AIMessageChunk;
+    // Parsing failed, so parsed should not be populated.
+    expect(message.additional_kwargs.parsed).toBeUndefined();
+    // Usage metadata should still flow through so the caller can account
+    // for the tokens that were spent on the bad payload.
+    expect(result!.message.usage_metadata).toBeDefined();
+    expect(result!.message.usage_metadata!.input_tokens).toBe(30);
+  });
+
+  it("should still parse cleanly when response text is well-formed JSON", () => {
+    // Regression guard: the try/catch must not change the well-formed path.
+    const event = {
+      type: "response.completed",
+      response: {
+        id: "resp_test_10894_b",
+        model: "gpt-5-mini",
+        object: "response",
+        created_at: 1700000000,
+        status: "completed",
+        incomplete_details: null,
+        metadata: {},
+        user: null,
+        service_tier: "auto",
+        output: [
+          {
+            type: "message",
+            id: "msg_002",
+            role: "assistant",
+            status: "completed",
+            content: [
+              {
+                type: "output_text",
+                text: '{"status":"ok","plan":{"steps":[]}}',
+                annotations: [],
+              },
+            ],
+          },
+        ],
+        text: {
+          format: {
+            type: "json_schema",
+            name: "response",
+            strict: true,
+            schema: {
+              type: "object",
+              additionalProperties: false,
+              required: ["status", "plan"],
+              properties: {
+                status: { type: "string" },
+                plan: { type: "object" },
+              },
+            },
+          },
+        },
+        usage: {
+          input_tokens: 30,
+          output_tokens: 12,
+          total_tokens: 42,
+          input_tokens_details: { cached_tokens: 0 },
+          output_tokens_details: { reasoning_tokens: 0 },
+        },
+      },
+    };
+
+    const result = convertResponsesDeltaToChatGenerationChunk(event as any);
+    expect(result).not.toBeNull();
+
+    const message = result!.message as AIMessageChunk;
+    expect(message.additional_kwargs.parsed).toEqual({
+      status: "ok",
+      plan: { steps: [] },
     });
   });
 });

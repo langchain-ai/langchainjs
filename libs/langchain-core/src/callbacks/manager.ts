@@ -1,4 +1,4 @@
-import { v7 as uuidv7 } from "uuid";
+import { v7 as uuidv7 } from "../utils/uuid/index.js";
 import { AgentAction, AgentFinish } from "../agents.js";
 import type { ChainValues } from "../utils/types/index.js";
 import { LLMResult } from "../outputs.js";
@@ -17,6 +17,7 @@ import { LangChainTracer } from "../tracers/tracer_langchain.js";
 import { consumeCallback } from "./promises.js";
 import { Serialized } from "../load/serializable.js";
 import type { DocumentInterface } from "../documents/document.js";
+import type { ChatModelStreamEvent } from "../language_models/event.js";
 import { isTracingEnabled } from "../utils/callbacks.js";
 import { isBaseTracer } from "../tracers/base.js";
 import {
@@ -33,6 +34,8 @@ type BaseCallbackManagerMethods = {
 export interface CallbackManagerOptions {
   verbose?: boolean;
   tracing?: boolean;
+  tracerInheritableMetadata?: Record<string, unknown>;
+  tracerInheritableTags?: string[];
 }
 
 export type Callbacks =
@@ -289,6 +292,35 @@ export class CallbackManagerForLLMRun
                 : console.warn;
               logFunction(
                 `Error in handler ${handler.constructor.name}, handleLLMNewToken: ${err}`
+              );
+              if (handler.raiseError) {
+                throw err;
+              }
+            }
+          }
+        }, handler.awaitHandlers)
+      )
+    );
+  }
+
+  async handleChatModelStreamEvent(event: ChatModelStreamEvent): Promise<void> {
+    await Promise.all(
+      this.handlers.map((handler) =>
+        consumeCallback(async () => {
+          if (!handler.ignoreLLM) {
+            try {
+              await handler.handleChatModelStreamEvent?.(
+                event,
+                this.runId,
+                this._parentRunId,
+                this.tags
+              );
+            } catch (err) {
+              const logFunction = handler.raiseError
+                ? console.error
+                : console.warn;
+              logFunction(
+                `Error in handler ${handler.constructor.name}, handleChatModelStreamEvent: ${err}`
               );
               if (handler.raiseError) {
                 throw err;
@@ -1341,6 +1373,31 @@ export class CallbackManager
         callbackManager.addMetadata(inheritableMetadata ?? {});
         callbackManager.addMetadata(localMetadata ?? {}, false);
       }
+    }
+    const tracerInheritableMetadata = options?.tracerInheritableMetadata;
+    const tracerInheritableTags = options?.tracerInheritableTags;
+
+    if (
+      callbackManager &&
+      (tracerInheritableMetadata || tracerInheritableTags)
+    ) {
+      callbackManager.handlers = callbackManager.handlers.map((handler) =>
+        handler instanceof LangChainTracer
+          ? handler.copyWithTracingConfig({
+              metadata: tracerInheritableMetadata,
+              tags: tracerInheritableTags,
+            })
+          : handler
+      );
+      callbackManager.inheritableHandlers =
+        callbackManager.inheritableHandlers.map((handler) =>
+          handler instanceof LangChainTracer
+            ? handler.copyWithTracingConfig({
+                metadata: tracerInheritableMetadata,
+                tags: tracerInheritableTags,
+              })
+            : handler
+        );
     }
 
     return callbackManager;

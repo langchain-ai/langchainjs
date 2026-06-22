@@ -44,7 +44,24 @@ export interface LangChainTracerFields extends BaseCallbackHandlerInput {
   projectName?: string;
   client?: LangSmithTracingClientInterface;
   replicas?: RunTreeConfig["replicas"];
+  metadata?: Record<string, unknown>;
+  tags?: string[];
 }
+
+/**
+ * Keys that should be inherited from `tracerInheritableMetadata` even when
+ * the run already has a value for them. This lets nested contexts
+ * (e.g. a subagent invoked from inside a parent agent) override a
+ * LangSmith-only tracing metadata value that was set by an ancestor.
+ *
+ * Keep this list very small: every key here loses the default
+ * "first wins" protection and is always clobbered by the nearest
+ * enclosing tracer config. Only keys that are strictly for LangSmith
+ * tracing bookkeeping should be added.
+ */
+export const OVERRIDABLE_LANGSMITH_INHERITABLE_METADATA_KEYS = new Set<string>([
+  "ls_agent_type",
+]);
 
 /**
  * Extract usage_metadata from chat generations.
@@ -85,14 +102,20 @@ export class LangChainTracer
 
   usesRunTreeMap = true;
 
-  constructor(fields: LangChainTracerFields = {}) {
+  tracingMetadata?: Record<string, unknown>;
+
+  tracingTags: string[] = [];
+
+  constructor(protected fields: LangChainTracerFields = {}) {
     super(fields);
-    const { exampleId, projectName, client, replicas } = fields;
+    const { exampleId, projectName, client, replicas, metadata, tags } = fields;
 
     this.projectName = projectName ?? getDefaultProjectName();
     this.replicas = replicas;
     this.exampleId = exampleId;
     this.client = client ?? getDefaultLangChainClientSingleton();
+    this.tracingMetadata = metadata ? { ...metadata } : undefined;
+    this.tracingTags = tags ?? [];
 
     const traceableTree = LangChainTracer.getTraceableRunTree();
     if (traceableTree) {
@@ -105,6 +128,7 @@ export class LangChainTracer
   }
 
   async onRunCreate(run: Run): Promise<void> {
+    _patchMissingTracingDefaults(this, run);
     if (!run.extra?.lc_defers_inputs) {
       const runTree = this.getRunTreeWithTracingConfig(run.id);
       await runTree?.postRun();
@@ -112,6 +136,7 @@ export class LangChainTracer
   }
 
   async onRunUpdate(run: Run): Promise<void> {
+    _patchMissingTracingDefaults(this, run);
     const runTree = this.getRunTreeWithTracingConfig(run.id);
     if (run.extra?.lc_defers_inputs) {
       await runTree?.postRun();
@@ -137,6 +162,51 @@ export class LangChainTracer
         run.extra.metadata = metadata;
       }
     }
+  }
+
+  copyWithTracingConfig({
+    metadata,
+    tags,
+  }: {
+    metadata?: Record<string, unknown>;
+    tags?: string[];
+  }): LangChainTracer {
+    let mergedMetadata: Record<string, unknown> | undefined;
+    if (metadata === undefined) {
+      mergedMetadata = this.tracingMetadata
+        ? { ...this.tracingMetadata }
+        : undefined;
+    } else if (this.tracingMetadata === undefined) {
+      mergedMetadata = { ...metadata };
+    } else {
+      mergedMetadata = { ...this.tracingMetadata };
+      for (const [key, value] of Object.entries(metadata)) {
+        // For allowlisted LangSmith-only inheritable metadata keys (e.g.
+        // `ls_agent_type`), nested callers are allowed to OVERRIDE the
+        // value inherited from an ancestor. For all other keys we keep
+        // the existing "first wins" behavior so that ancestor-provided
+        // tracing metadata is not accidentally clobbered by child runs.
+        if (
+          !Object.prototype.hasOwnProperty.call(mergedMetadata, key) ||
+          OVERRIDABLE_LANGSMITH_INHERITABLE_METADATA_KEYS.has(key)
+        ) {
+          mergedMetadata[key] = value;
+        }
+      }
+    }
+
+    const mergedTags = tags
+      ? Array.from(new Set([...this.tracingTags, ...tags]))
+      : [...this.tracingTags];
+
+    const copied = new LangChainTracer({
+      ...this.fields,
+      metadata: mergedMetadata,
+      tags: mergedTags,
+    });
+    copied.runMap = this.runMap;
+    copied.runTreeMap = this.runTreeMap;
+    return copied;
   }
 
   getRun(id: string): Run | undefined {
@@ -172,6 +242,13 @@ export class LangChainTracer
     this.replicas = runTree.replicas ?? this.replicas;
     this.projectName = runTree.project_name ?? this.projectName;
     this.exampleId = runTree.reference_example_id ?? this.exampleId;
+    this.fields = {
+      ...this.fields,
+      client: this.client,
+      replicas: this.replicas,
+      projectName: this.projectName,
+      exampleId: this.exampleId,
+    };
   }
 
   getRunTreeWithTracingConfig(id: string): RunTree | undefined {
@@ -202,5 +279,52 @@ export class LangChainTracer
     } catch {
       return undefined;
     }
+  }
+
+  static [Symbol.hasInstance](instance: unknown): boolean {
+    if (typeof instance !== "object" || instance === null) {
+      return false;
+    }
+    const candidate = instance as Record<string, unknown>;
+    return (
+      "name" in candidate &&
+      candidate.name === "langchain_tracer" &&
+      "copyWithTracingConfig" in candidate &&
+      typeof candidate.copyWithTracingConfig === "function" &&
+      "getRunTreeWithTracingConfig" in candidate &&
+      typeof candidate.getRunTreeWithTracingConfig === "function"
+    );
+  }
+}
+
+function _patchMissingTracingDefaults(tracer: LangChainTracer, run: Run): void {
+  if (tracer.tracingMetadata) {
+    run.extra ??= {};
+    const metadata: Record<string, unknown> =
+      (run.extra.metadata as Record<string, unknown> | undefined) ?? {};
+    let didPatchMetadata = false;
+    for (const [key, value] of Object.entries(tracer.tracingMetadata)) {
+      // `OVERRIDABLE_LANGSMITH_INHERITABLE_METADATA_KEYS` are a small, LangSmith-only
+      // allowlist that bypasses the "first wins" merge so a nested caller
+      // (e.g. a subagent) can override a parent-set value.
+      if (
+        !Object.prototype.hasOwnProperty.call(metadata, key) ||
+        OVERRIDABLE_LANGSMITH_INHERITABLE_METADATA_KEYS.has(key)
+      ) {
+        if (metadata[key] !== value) {
+          metadata[key] = value;
+          didPatchMetadata = true;
+        }
+      }
+    }
+    if (didPatchMetadata) {
+      run.extra.metadata = metadata;
+    }
+  }
+
+  if (tracer.tracingTags.length > 0) {
+    run.tags = Array.from(
+      new Set([...(run.tags ?? []), ...tracer.tracingTags])
+    );
   }
 }

@@ -6,13 +6,43 @@ export const DEFAULT_RECURSION_LIMIT = 25;
 
 export { type RunnableConfig };
 
+const CONFIGURABLE_TO_TRACING_METADATA_EXCLUDED_KEYS = new Set(["api_key"]);
+const PRIMITIVES = new Set(["string", "number", "boolean"]);
+
+export function _getTracingInheritableMetadataFromConfig(
+  config: RunnableConfig
+): Record<string, unknown> | undefined {
+  const configurable = config.configurable ?? {};
+  const metadata = config.metadata ?? {};
+  const langSmithMetadata: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(configurable)) {
+    if (
+      !key.startsWith("__") &&
+      !Object.prototype.hasOwnProperty.call(metadata, key) &&
+      !CONFIGURABLE_TO_TRACING_METADATA_EXCLUDED_KEYS.has(key) &&
+      PRIMITIVES.has(typeof value)
+    ) {
+      langSmithMetadata[key] = value;
+    }
+  }
+  return Object.keys(langSmithMetadata).length > 0
+    ? langSmithMetadata
+    : undefined;
+}
+
 export async function getCallbackManagerForConfig(config?: RunnableConfig) {
   return CallbackManager._configureSync(
     config?.callbacks,
     undefined,
     config?.tags,
     undefined,
-    config?.metadata
+    config?.metadata,
+    undefined,
+    {
+      tracerInheritableMetadata: config
+        ? _getTracingInheritableMetadataFromConfig(config)
+        : undefined,
+    }
   );
 }
 
@@ -117,8 +147,6 @@ export function mergeConfigs<CallOptions extends RunnableConfig>(
   return copy as Partial<CallOptions>;
 }
 
-const PRIMITIVES = new Set(["string", "number", "boolean"]);
-
 /**
  * Ensure that a passed config is an object with all required keys present.
  */
@@ -160,16 +188,14 @@ export function ensureConfig<CallOptions extends RunnableConfig>(
     );
   }
   if (empty?.configurable) {
-    for (const key of Object.keys(empty.configurable)) {
-      if (
-        PRIMITIVES.has(typeof empty.configurable[key]) &&
-        !empty.metadata?.[key]
-      ) {
-        if (!empty.metadata) {
-          empty.metadata = {};
-        }
-        empty.metadata[key] = empty.configurable[key];
+    if (
+      typeof empty.configurable.model === "string" &&
+      empty.metadata?.model === undefined
+    ) {
+      if (!empty.metadata) {
+        empty.metadata = {};
       }
+      empty.metadata.model = empty.configurable.model;
     }
   }
   if (empty.timeout !== undefined) {

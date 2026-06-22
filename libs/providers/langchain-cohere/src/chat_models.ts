@@ -14,6 +14,8 @@ import {
 } from "@langchain/core/language_models/base";
 import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
+import { convertCohereStream } from "./utils/stream_events.js";
 import {
   BaseChatModel,
   BaseChatModelCallOptions,
@@ -33,7 +35,7 @@ import {
   ToolCallChunk,
   ToolMessage,
 } from "@langchain/core/messages/tool";
-import * as uuid from "uuid";
+import * as uuid from "@langchain/core/utils/uuid";
 import { Runnable } from "@langchain/core/runnables";
 import { isInteropZodSchema } from "@langchain/core/utils/types";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
@@ -1131,6 +1133,33 @@ export class ChatCohere<
       generations,
       llmOutput: { estimatedTokenUsage: tokenUsage },
     };
+  }
+
+  async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    const request = this._getChatRequest(messages, options);
+    const stream = await this.caller.callWithOptions(
+      { signal: options.signal },
+      async () => this.client.chatStream(request)
+    );
+    const shouldStreamUsage = this.streamUsage ?? options.streamUsage ?? true;
+    const abortableStream = async function* (
+      source: AsyncIterable<Record<string, unknown>>,
+      signal?: AbortSignal
+    ) {
+      for await (const chunk of source) {
+        if (signal?.aborted) {
+          return;
+        }
+        yield chunk;
+      }
+    };
+    yield* convertCohereStream(abortableStream(stream, options.signal), {
+      streamUsage: shouldStreamUsage,
+    });
   }
 
   async *_streamResponseChunks(

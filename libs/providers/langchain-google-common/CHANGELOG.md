@@ -1,5 +1,62 @@
 # @langchain/google-common
 
+## 2.2.0
+
+### Minor Changes
+
+- [#10924](https://github.com/langchain-ai/langchainjs/pull/10924) [`2e28115`](https://github.com/langchain-ai/langchainjs/commit/2e2811509d75af94f57cedcc3842f178f4c020d1) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(google-common): add native Gemini streamEvents event conversion
+
+### Patch Changes
+
+- [#10676](https://github.com/langchain-ai/langchainjs/pull/10676) [`de0958c`](https://github.com/langchain-ai/langchainjs/commit/de0958cdb1b2e31868b038ce48e149ebe7151ba7) Thanks [@jackjin1997](https://github.com/jackjin1997)! - Auto-set `toolConfig.includeServerSideToolInvocations` when a Gemini request mixes server-side built-in tools (e.g. `googleSearch`, `codeExecution`) with function declarations. The Gemini API requires this flag in that case and returns HTTP 400 without it.
+
+- [#10547](https://github.com/langchain-ai/langchainjs/pull/10547) [`3aff161`](https://github.com/langchain-ai/langchainjs/commit/3aff161e1ca9cc7e92277ad071e372e5b55a0c6e) Thanks [@alex-levkivskiy](https://github.com/alex-levkivskiy)! - fix(google-common): add Array.isArray guard in toolMessageToContent to prevent crash on plain object ToolMessage content
+
+## 2.1.31
+
+### Patch Changes
+
+- [#10872](https://github.com/langchain-ai/langchainjs/pull/10872) [`a640079`](https://github.com/langchain-ai/langchainjs/commit/a64007997a4940f51bba3c1c83dae89d1ccfb692) Thanks [@hntrl](https://github.com/hntrl)! - chore(deps): remove redundant @types/uuid declarations
+
+  Remove `@types/uuid` from package manifests that rely on `@langchain/core/utils/uuid` or do not require uuid type stubs directly, and refresh the lockfile entries accordingly.
+
+- [#9912](https://github.com/langchain-ai/langchainjs/pull/9912) [`7be1da4`](https://github.com/langchain-ai/langchainjs/commit/7be1da46ee1a2920b08212aeeed34dec57590d62) Thanks [@yukukotani](https://github.com/yukukotani)! - fix missing stream usage metadata on Gemini
+
+## 2.1.30
+
+### Patch Changes
+
+- [#10814](https://github.com/langchain-ai/langchainjs/pull/10814) [`dfec1b7`](https://github.com/langchain-ai/langchainjs/commit/dfec1b7f8b2c530a43f639dc79d4965a80ea4b79) Thanks [@hntrl](https://github.com/hntrl)! - fix(google): restore structured output parsing with includeRaw and reasoning blocks
+
+  Ensure structured output parsers read `BaseMessage` text content when `includeRaw: true`, so responses that include reasoning/thought blocks plus JSON text continue to parse correctly.
+
+## 2.1.29
+
+### Patch Changes
+
+- [#10776](https://github.com/langchain-ai/langchainjs/pull/10776) [`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6) Thanks [@hntrl](https://github.com/hntrl)! - fix(deps): remediate uuid vulnerability by removing direct uuid usage
+
+- Updated dependencies [[`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6)]:
+  - @langchain/core@1.1.42
+
+## 2.1.28
+
+### Patch Changes
+
+- [#10711](https://github.com/langchain-ai/langchainjs/pull/10711) [`2e9e696`](https://github.com/langchain-ai/langchainjs/commit/2e9e6969e248a53ede0659a41d0ac8dbaf291ab4) Thanks [@jacoblee93](https://github.com/jacoblee93)! - feat(core): Add chat model and llm invocation params to traced metadata
+
+- Updated dependencies [[`589f29c`](https://github.com/langchain-ai/langchainjs/commit/589f29ce844eb252c2d5e6b0f8d26de37763a0d7), [`2e9e696`](https://github.com/langchain-ai/langchainjs/commit/2e9e6969e248a53ede0659a41d0ac8dbaf291ab4)]:
+  - @langchain/core@1.1.41
+
+## 2.1.27
+
+### Patch Changes
+
+- [#10665](https://github.com/langchain-ai/langchainjs/pull/10665) [`c308903`](https://github.com/langchain-ai/langchainjs/commit/c308903ee5046c838af8fb274c45d7ba9baf9ed8) Thanks [@guypy](https://github.com/guypy)! - feat: add MINIMAL thinking level for Gemini 3 Flash models
+
+- Updated dependencies [[`d3e0809`](https://github.com/langchain-ai/langchainjs/commit/d3e080995bb267bf3797067ab53c96bc2a6c8e3f)]:
+  - @langchain/core@1.1.40
+
 ## 2.1.26
 
 ### Patch Changes

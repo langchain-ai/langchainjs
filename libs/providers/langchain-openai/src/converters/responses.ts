@@ -41,6 +41,10 @@ import { Converter } from "@langchain/core/utils/format";
 import { completionsApiContentBlockConverter } from "./completions.js";
 
 const _FUNCTION_CALL_IDS_MAP_KEY = "__openai_function_call_ids__";
+const _CUSTOM_TOOL_CALL_IDS_MAP_KEY = "__openai_custom_tool_call_ids__";
+
+/** Streaming-only marker; not part of @langchain/core ToolCallChunk. */
+type OpenAICustomToolCallChunk = ToolCallChunk & { isCustomTool?: true };
 
 type OpenAIAnnotation =
   OpenAIClient.Responses.ResponseOutputText["annotations"][number];
@@ -336,7 +340,6 @@ export const convertResponsesMessageToAIMessage: Converter<
     throw error;
   }
 
-  let messageId: string | undefined;
   const content: MessageContent = [];
   const tool_calls: ToolCall[] = [];
   const invalid_tool_calls: InvalidToolCall[] = [];
@@ -376,11 +379,11 @@ export const convertResponsesMessageToAIMessage: Converter<
     tool_outputs?: unknown[];
     parsed?: unknown;
     [_FUNCTION_CALL_IDS_MAP_KEY]?: Record<string, string>;
+    [_CUSTOM_TOOL_CALL_IDS_MAP_KEY]?: Record<string, string>;
   } = {};
 
   for (const item of response.output) {
     if (item.type === "message") {
-      messageId = item.id;
       content.push(
         ...item.content.flatMap((part) => {
           if (part.type === "output_text") {
@@ -448,6 +451,11 @@ export const convertResponsesMessageToAIMessage: Converter<
       const parsed = parseCustomToolCall(item);
       if (parsed) {
         tool_calls.push(parsed);
+        additional_kwargs[_CUSTOM_TOOL_CALL_IDS_MAP_KEY] ??= {};
+        if (item.id && item.call_id) {
+          additional_kwargs[_CUSTOM_TOOL_CALL_IDS_MAP_KEY][item.call_id] =
+            item.id;
+        }
       } else {
         invalid_tool_calls.push(
           makeInvalidToolCall(item, "Malformed custom tool call")
@@ -485,7 +493,7 @@ export const convertResponsesMessageToAIMessage: Converter<
   }
 
   return new AIMessage({
-    id: messageId,
+    id: response.id,
     content,
     tool_calls,
     invalid_tool_calls,
@@ -558,7 +566,7 @@ export const convertReasoningSummaryToResponsesReasoningItem: Converter<
   ChatOpenAIReasoningSummary,
   OpenAIClient.Responses.ResponseReasoningItem
 > = (reasoning) => {
-  // combine summary parts that have the the same index and then remove the indexes
+  // combine summary parts that have the same index and then remove the indexes
   const summary = (
     reasoning.summary.length > 1
       ? reasoning.summary.reduce(
@@ -597,7 +605,7 @@ export const convertReasoningSummaryToResponsesReasoningItem: Converter<
  * @returns A ChatGenerationChunk containing:
  *   - `text`: Concatenated text content from all text parts in the event
  *   - `message`: An AIMessageChunk with:
- *     - `id`: Message ID (set when a message output item is added)
+ *     - `id`: Response ID (set on `response.created` / `response.completed`)
  *     - `content`: Array of content blocks (text with optional annotations)
  *     - `tool_call_chunks`: Incremental tool call data (name, args, id)
  *     - `usage_metadata`: Token usage information (only in completion events)
@@ -678,7 +686,6 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
     event.type === "response.output_item.added" &&
     event.item.type === "message"
   ) {
-    id = event.item.id;
     const phase = "phase" in event.item ? event.item.phase : undefined;
     if (phase) {
       content.push({
@@ -701,6 +708,22 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
     });
 
     additional_kwargs[_FUNCTION_CALL_IDS_MAP_KEY] = {
+      [event.item.call_id]: event.item.id,
+    };
+  } else if (
+    event.type === "response.output_item.added" &&
+    event.item.type === "custom_tool_call"
+  ) {
+    tool_call_chunks.push({
+      type: "tool_call_chunk",
+      isCustomTool: true,
+      name: event.item.name,
+      args: event.item.input,
+      id: event.item.call_id,
+      index: event.output_index,
+    } satisfies OpenAICustomToolCallChunk);
+
+    additional_kwargs[_CUSTOM_TOOL_CALL_IDS_MAP_KEY] = {
       [event.item.call_id]: event.item.id,
     };
   } else if (
@@ -753,16 +776,29 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
   ) {
     additional_kwargs.tool_outputs = [event.item];
   } else if (event.type === "response.created") {
+    id = event.response.id;
     response_metadata.id = event.response.id;
     response_metadata.model_name = event.response.model;
     response_metadata.model = event.response.model;
-  } else if (event.type === "response.completed") {
+  } else if (
+    event.type === "response.completed" ||
+    event.type === "response.incomplete"
+  ) {
+    id = event.response.id;
     const msg = convertResponsesMessageToAIMessage(event.response);
 
     usage_metadata = convertResponsesUsageToUsageMetadata(event.response.usage);
 
     if (event.response.text?.format?.type === "json_schema" && msg.text) {
-      additional_kwargs.parsed ??= JSON.parse(msg.text);
+      try {
+        additional_kwargs.parsed ??= JSON.parse(msg.text);
+      } catch {
+        // Some models (observed with gpt-5-mini on service_tier: "auto")
+        // intermittently emit trailing characters after a valid JSON object
+        // in the Responses API path. Throw-on-parse kills the entire stream
+        // even though msg.text is otherwise usable. Leave parsed undefined
+        // and let the caller fall back to msg.text or retry. See #10894.
+      }
     }
     for (const [key, value] of Object.entries(event.response)) {
       if (key === "id") continue;
@@ -782,16 +818,31 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
       type: "tool_call_chunk",
       args: event.delta,
       index: event.output_index,
+      ...(event.type === "response.custom_tool_call_input.delta"
+        ? { isCustomTool: true }
+        : {}),
     });
   } else if (
+    event.type === "response.web_search_call.in_progress" ||
+    event.type === "response.web_search_call.searching" ||
     event.type === "response.web_search_call.completed" ||
-    event.type === "response.file_search_call.completed"
+    event.type === "response.file_search_call.in_progress" ||
+    event.type === "response.file_search_call.searching" ||
+    event.type === "response.file_search_call.completed" ||
+    event.type === "response.image_generation_call.in_progress" ||
+    event.type === "response.image_generation_call.generating" ||
+    event.type === "response.image_generation_call.completed"
   ) {
+    const [, type, status] = event.type.match(/^response\.(.*)\.([^.]+)$/) ?? [
+      "",
+      "",
+      "",
+    ];
     generationInfo = {
       tool_outputs: {
         id: event.item_id,
-        type: event.type.replace("response.", "").replace(".completed", ""),
-        status: "completed",
+        type,
+        status,
       },
     };
   } else if (event.type === "response.refusal.done") {
@@ -840,6 +891,7 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
       content.push({
         type: "reasoning",
         reasoning: event.part.text,
+        index: event.summary_index,
       });
     }
   } else if (event.type === "response.reasoning_summary_text.delta") {
@@ -859,6 +911,7 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
       content.push({
         type: "reasoning",
         reasoning: event.delta,
+        index: event.summary_index,
       });
     }
   } else if (event.type === "response.image_generation_call.partial_image") {
@@ -1525,14 +1578,20 @@ export const convertMessagesToResponsesInput: Converter<
         }
 
         const functionCallIds = additional_kwargs?.[_FUNCTION_CALL_IDS_MAP_KEY];
+        const customToolCallIds =
+          additional_kwargs?.[_CUSTOM_TOOL_CALL_IDS_MAP_KEY];
 
         if (AIMessage.isInstance(lcMsg) && !!lcMsg.tool_calls?.length) {
           input.push(
             ...lcMsg.tool_calls.map((toolCall): ResponsesInputItem => {
-              if (isCustomToolCall(toolCall)) {
+              if (isCustomToolCall(toolCall, customToolCallIds)) {
                 return {
                   type: "custom_tool_call",
-                  id: toolCall.call_id,
+                  id:
+                    "call_id" in toolCall &&
+                    typeof toolCall.call_id === "string"
+                      ? toolCall.call_id
+                      : (customToolCallIds?.[toolCall.id ?? ""] ?? ""),
                   call_id: toolCall.id ?? "",
                   input: toolCall.args.input,
                   name: toolCall.name,
@@ -1610,6 +1669,35 @@ export const convertMessagesToResponsesInput: Converter<
             });
           }
           if (isDataContentBlock(item)) {
+            // The Responses API supports file URLs natively, but the Chat
+            // Completions converter rejects URL file blocks. Convert standard
+            // file blocks to the native `input_file` shape instead of routing
+            // them through the completions converter.
+            if (item.type === "file") {
+              const filename = getFilenameFromMetadata(item);
+              if (item.source_type === "url") {
+                return {
+                  type: "input_file",
+                  file_url: item.url,
+                  ...(filename ? { filename } : {}),
+                };
+              }
+              if (item.source_type === "id") {
+                return {
+                  type: "input_file",
+                  file_id: item.id,
+                  ...(filename ? { filename } : {}),
+                };
+              }
+              if (item.source_type === "base64") {
+                const mimeType = item.mime_type ?? "";
+                return {
+                  type: "input_file",
+                  file_data: `data:${mimeType};base64,${item.data}`,
+                  filename: getRequiredFilenameFromMetadata(item),
+                };
+              }
+            }
             return convertToProviderContentBlock(
               item,
               completionsApiContentBlockConverter

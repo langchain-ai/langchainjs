@@ -8,6 +8,7 @@ import type {
   END,
   StateGraph,
   StateDefinitionInit,
+  StreamTransformer,
 } from "@langchain/langgraph";
 
 import type {
@@ -34,6 +35,7 @@ import type {
 import type { AgentLanguageModelLike } from "./model.js";
 import type {
   AgentMiddleware,
+  AnyAgentMiddleware,
   AnyAnnotationRoot,
   InferSchemaInput,
   InferSchemaValue,
@@ -66,6 +68,11 @@ import type { JumpToTarget } from "./constants.js";
  * @typeParam TTools - The combined tools type from both `createAgent` tools parameter
  *   and middleware tools. This is a readonly array of `ClientTool | ServerTool`.
  *
+ * @typeParam TStreamTransformers - The combined tuple of stream transformer
+ *   factories from `createAgent({ streamTransformers })` and middleware
+ *   `streamTransformers`. Used to type `run.extensions` on the stream returned
+ *   from `streamEvents(..., { version: "v3" })`.
+ *
  * @example
  * ```typescript
  * // Define a type configuration
@@ -74,7 +81,8 @@ import type { JumpToTarget } from "./constants.js";
  *   typeof MyStateSchema,              // State schema
  *   typeof MyContextSchema,            // Context schema
  *   typeof myMiddleware,               // Middleware array
- *   typeof myTools                     // Tools array
+ *   typeof myTools,                    // Tools array
+ *   typeof myStreamTransformers        // Stream transformer factories
  * >;
  *
  * // Use with ReactAgent
@@ -91,11 +99,14 @@ export interface AgentTypeConfig<
   TContext extends AnyAnnotationRoot | InteropZodObject =
     | AnyAnnotationRoot
     | InteropZodObject,
-  TMiddleware extends readonly AgentMiddleware[] = readonly AgentMiddleware[],
+  TMiddleware extends readonly AnyAgentMiddleware[] =
+    readonly AnyAgentMiddleware[],
   TTools extends readonly (ClientTool | ServerTool)[] = readonly (
     | ClientTool
     | ServerTool
   )[],
+  TStreamTransformers extends ReadonlyArray<() => StreamTransformer<any>> =
+    ReadonlyArray<() => StreamTransformer<any>>,
 > {
   /** The structured response type when using `responseFormat` */
   Response: TResponse;
@@ -107,6 +118,13 @@ export interface AgentTypeConfig<
   Middleware: TMiddleware;
   /** The combined tools type from agent and middleware */
   Tools: TTools;
+  /**
+   * The tuple of stream transformer factories registered at
+   * `createAgent({ streamTransformers })`. Used to infer the shape of
+   * `run.extensions` on the stream returned by
+   * `streamEvents(..., { version: "v3" })`.
+   */
+  StreamTransformers: TStreamTransformers;
 }
 
 /**
@@ -117,8 +135,9 @@ export interface DefaultAgentTypeConfig extends AgentTypeConfig {
   Response: Record<string, any>;
   State: undefined;
   Context: AnyAnnotationRoot;
-  Middleware: readonly AgentMiddleware[];
+  Middleware: readonly AnyAgentMiddleware[];
   Tools: readonly (ClientTool | ServerTool)[];
+  StreamTransformers: readonly [];
 }
 
 /**
@@ -126,22 +145,34 @@ export interface DefaultAgentTypeConfig extends AgentTypeConfig {
  * Extracts the TTools type parameter from AgentMiddleware.
  */
 export type InferMiddlewareTools<T extends AgentMiddleware> =
-  T extends AgentMiddleware<any, any, any, infer TTools>
+  T extends AgentMiddleware<any, any, any, infer TTools, any>
     ? TTools extends readonly (ClientTool | ServerTool)[]
       ? TTools
       : readonly []
     : readonly [];
 
 /**
+ * Helper type to infer stream transformers from a single middleware instance.
+ */
+export type InferMiddlewareStreamTransformers<T extends AgentMiddleware> =
+  T extends AgentMiddleware<any, any, any, any, infer TStreamTransformers>
+    ? [TStreamTransformers] extends [readonly []]
+      ? readonly []
+      : TStreamTransformers extends ReadonlyArray<() => StreamTransformer<any>>
+        ? TStreamTransformers
+        : readonly []
+    : readonly [];
+
+/**
  * Helper type to infer and merge tools from an array of middleware.
  * Recursively extracts tools from each middleware and combines them into a single tuple.
  */
-export type InferMiddlewareToolsArray<T extends readonly AgentMiddleware[]> =
+export type InferMiddlewareToolsArray<T extends readonly AnyAgentMiddleware[]> =
   T extends readonly []
     ? readonly []
     : T extends readonly [infer First, ...infer Rest]
       ? First extends AgentMiddleware
-        ? Rest extends readonly AgentMiddleware[]
+        ? Rest extends readonly AnyAgentMiddleware[]
           ? readonly [
               ...InferMiddlewareTools<First>,
               ...InferMiddlewareToolsArray<Rest>,
@@ -155,8 +186,37 @@ export type InferMiddlewareToolsArray<T extends readonly AgentMiddleware[]> =
  */
 export type CombineTools<
   TAgentTools extends readonly (ClientTool | ServerTool)[],
-  TMiddleware extends readonly AgentMiddleware[],
+  TMiddleware extends readonly AnyAgentMiddleware[],
 > = readonly [...TAgentTools, ...InferMiddlewareToolsArray<TMiddleware>];
+
+/**
+ * Helper type to infer and merge stream transformers from an array of middleware.
+ */
+export type InferMiddlewareStreamTransformersArray<
+  T extends readonly AnyAgentMiddleware[],
+> = T extends readonly []
+  ? readonly []
+  : T extends readonly [infer First, ...infer Rest]
+    ? First extends AgentMiddleware
+      ? Rest extends readonly AnyAgentMiddleware[]
+        ? readonly [
+            ...InferMiddlewareStreamTransformers<First>,
+            ...InferMiddlewareStreamTransformersArray<Rest>,
+          ]
+        : InferMiddlewareStreamTransformers<First>
+      : readonly []
+    : readonly [];
+
+/**
+ * Helper type to combine agent stream transformers with middleware stream transformers.
+ */
+export type CombineStreamTransformers<
+  TAgentStreamTransformers extends ReadonlyArray<() => StreamTransformer<any>>,
+  TMiddleware extends readonly AnyAgentMiddleware[],
+> = readonly [
+  ...TAgentStreamTransformers,
+  ...InferMiddlewareStreamTransformersArray<TMiddleware>,
+];
 
 /**
  * Helper type to extract the tool name, input type, and output type from a tool.
@@ -370,6 +430,25 @@ export type InferAgentMiddleware<T> = InferAgentType<T, "Middleware">;
  * ```
  */
 export type InferAgentTools<T> = InferAgentType<T, "Tools">;
+
+/**
+ * Shorthand helper to extract the StreamTransformers type (the tuple of
+ * transformer factories) from an AgentTypeConfig or ReactAgent.
+ *
+ * @example
+ * ```typescript
+ * const agent = createAgent({
+ *   streamTransformers: [costTracker, methodTracker],
+ *   // ...
+ * });
+ * type STF = InferAgentStreamTransformers<typeof agent>;
+ * // readonly [typeof costTracker, typeof methodTracker]
+ * ```
+ */
+export type InferAgentStreamTransformers<T> = InferAgentType<
+  T,
+  "StreamTransformers"
+>;
 
 export type N = typeof START | "model_request" | "tools";
 
@@ -759,7 +838,7 @@ export type CreateAgentParams<
    *
    * @see {@link https://docs.langchain.com/oss/javascript/langchain/middleware | Middleware}
    */
-  middleware?: readonly AgentMiddleware[];
+  middleware?: readonly AnyAgentMiddleware[];
 
   /**
    * An optional name for the agent.
@@ -805,6 +884,43 @@ export type CreateAgentParams<
    * @default `"v2"`
    */
   version?: "v1" | "v2";
+
+  /**
+   * Stream transformer factories baked into the compiled graph. These run
+   * automatically for every `streamEvents(..., { version: "v3" })` call, after the built-in
+   * agent transformers (tool calls, middleware) and before any call-site
+   * transformers passed via
+   * `streamEvents(input, { version: "v3", transformers })`.
+   *
+   * Use this to add domain-specific streaming projections that should always
+   * be available on the agent's run stream. The projection values are
+   * accessible via `run.extensions`.
+   *
+   * @example
+   * ```typescript
+   * import { StreamChannel } from "@langchain/langgraph";
+   *
+   * const costTracker = () => ({
+   *   init: () => ({ cost: StreamChannel.remote<number>("cost") }),
+   *   process(event) {
+   *     // track token costs...
+   *     return true;
+   *   },
+   * });
+   *
+   * const agent = createAgent({
+   *   model: "openai:gpt-4o",
+   *   tools: [myTool],
+   *   streamTransformers: [costTracker],
+   * });
+   *
+   * const run = await agent.streamEvents({ messages }, { version: "v3" });
+   * for await (const c of run.extensions.cost) {
+   *   console.log("cost delta:", c);
+   * }
+   * ```
+   */
+  streamTransformers?: ReadonlyArray<() => StreamTransformer<any>>;
 };
 
 /**

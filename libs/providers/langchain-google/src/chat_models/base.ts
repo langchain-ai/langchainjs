@@ -12,6 +12,8 @@ import {
   type UsageMetadata,
 } from "@langchain/core/messages";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
+import { convertGoogleGeminiStream } from "../utils/stream_events.js";
 import { concat } from "@langchain/core/utils/stream";
 import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
 import { EventSourceParserStream } from "eventsource-parser/stream";
@@ -33,7 +35,7 @@ import {
 } from "@langchain/core/utils/types";
 
 import { ApiClient } from "../clients/index.js";
-import type { ChatGoogleFields } from "./types.js";
+import { ChatGoogleFields, settableServiceTier } from "./types.js";
 import { SafeJsonEventParserStream } from "../utils/stream.js";
 import {
   convertAIMessageToText,
@@ -59,6 +61,7 @@ import {
   convertParamsToPlatformType,
   convertFieldsToSpeechConfig,
   convertFieldsToThinkingConfig,
+  convertFieldsToServiceTier,
 } from "../converters/params.js";
 import { Gemini } from "./api-types.js";
 import { subtractUsageMetadata } from "../utils/metadata.js";
@@ -71,6 +74,8 @@ import {
   createContentParser,
   createFunctionCallingParser,
 } from "@langchain/core/language_models/structured_output";
+import { iife } from "../utils/misc";
+import ServiceTier = Gemini.ServiceTier;
 
 export type GooglePlatformType = "gai" | "gcp";
 
@@ -85,6 +90,14 @@ export function getPlatformType(
   } else {
     return "gcp";
   }
+}
+
+function usageMetadataToTokenUsage(usageMetadata: UsageMetadata) {
+  return {
+    promptTokens: usageMetadata.input_tokens,
+    completionTokens: usageMetadata.output_tokens,
+    totalTokens: usageMetadata.total_tokens,
+  };
 }
 
 function mapDetailToMediaResolution(
@@ -174,6 +187,8 @@ export abstract class BaseChatGoogle<
 
   protected _endpoint?: string;
 
+  protected _customHeaders?: Record<string, string>;
+
   protected _location?: string;
 
   protected _apiVersion?: string;
@@ -194,6 +209,7 @@ export abstract class BaseChatGoogle<
     this.model = params.model;
     this._platform = convertParamsToPlatformType(params);
     this._endpoint = params.endpoint;
+    this._customHeaders = params.customHeaders;
     this._location = params.location;
     this._apiVersion = params.apiVersion;
 
@@ -380,6 +396,7 @@ export abstract class BaseChatGoogle<
         ...(fields.imageConfig ? { imageConfig: fields.imageConfig } : {}),
         ...(mediaResolution ? { mediaResolution } : {}),
       },
+      ...convertFieldsToServiceTier(this.platform, fields),
     };
   }
 
@@ -392,6 +409,25 @@ export abstract class BaseChatGoogle<
       ls_temperature: params.generationConfig?.temperature ?? undefined,
       ls_max_tokens: params.generationConfig?.maxOutputTokens ?? undefined,
       ls_stop: options.stop,
+    };
+  }
+
+  getHeaders(options: this["ParsedCallOptions"]): HeadersInit {
+    const fields = combineGoogleChatModelFields(this.params, options);
+
+    // The priority type is set via header only for Vertex
+    const priorityHeaders: Record<string, string> =
+      this.platform === "gcp" &&
+      typeof fields.serviceTier !== "undefined" &&
+      settableServiceTier.includes(fields.serviceTier)
+        ? { "X-Vertex-AI-LLM-Shared-Request-Type": fields.serviceTier }
+        : {};
+
+    return {
+      "Content-Type": "application/json",
+      ...priorityHeaders,
+      ...this._customHeaders,
+      ...options.customHeaders,
     };
   }
 
@@ -428,6 +464,7 @@ export abstract class BaseChatGoogle<
     }
 
     const url = await this.buildUrl();
+    const headers = this.getHeaders(options);
     const body = {
       ...this.invocationParams(options),
       systemInstruction: convertMessagesToGeminiSystemInstruction(messages),
@@ -437,6 +474,7 @@ export abstract class BaseChatGoogle<
     const moduleName = this.constructor.name;
     await runManager?.handleCustomEvent(`google-request-${moduleName}`, {
       url,
+      headers,
       body,
     });
 
@@ -448,9 +486,7 @@ export abstract class BaseChatGoogle<
           const nextResponse = await this.apiClient.fetch(
             new Request(url, {
               method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
+              headers,
               body: JSON.stringify(body),
               signal: options.signal,
             })
@@ -474,7 +510,7 @@ export abstract class BaseChatGoogle<
     await runManager?.handleCustomEvent(`google-response-${moduleName}`, {
       data,
       url: response.url,
-      headers: response.headers,
+      headers: Array.from(response.headers.entries()),
       status: response.status,
       statusText: response.statusText,
     });
@@ -500,6 +536,21 @@ export abstract class BaseChatGoogle<
       convertGeminiGenerateContentResponseToUsageMetadata(data);
     message.usage_metadata = usageMetadata;
 
+    const serviceTier: ServiceTier = iife((): ServiceTier => {
+      // @ts-expect-error - trafficType is defined on Vertex, so isn't in the OpenAPI spec
+      const trafficType: string | undefined = data.usageMetadata?.trafficType;
+
+      // AI Studio replies with actual service type in the header
+      const serviceTierHeader: string | null = response.headers.get(
+        "x-gemini-service-tier"
+      );
+
+      if (trafficType?.startsWith("ON_DEMAND_")) {
+        return trafficType?.substring("ON_DEMAND_".length).toLowerCase();
+      }
+      return serviceTierHeader || "standard";
+    });
+
     return {
       generations: [
         {
@@ -515,12 +566,85 @@ export abstract class BaseChatGoogle<
         },
       ],
       llmOutput: {
-        tokenUsage: usageMetadata,
+        tokenUsage: usageMetadataToTokenUsage(usageMetadata),
         model: data.modelVersion,
         responseId: data.responseId,
         usageMetadata,
+        serviceTier,
       },
     };
+  }
+
+  async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    const body = {
+      ...this.invocationParams(options),
+      systemInstruction: convertMessagesToGeminiSystemInstruction(messages),
+      contents: convertMessagesToGeminiContents(messages),
+    };
+
+    const url = await this.buildUrl("streamGenerateContent?alt=sse");
+    const headers = this.getHeaders(options);
+
+    const response = await this.apiClient.fetch(
+      new Request(url, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
+        signal: options.signal,
+      })
+    );
+
+    if (!response.ok) {
+      throw await RequestError.fromResponse(response);
+    }
+
+    if (!response.body) {
+      return;
+    }
+
+    const eventStream = response.body
+      .pipeThrough(new TextDecoderStream())
+      .pipeThrough(new EventSourceParserStream())
+      .pipeThrough(
+        new SafeJsonEventParserStream<Gemini.GenerateContentResponse>()
+      );
+
+    const shouldStreamUsage =
+      this.streamUsage !== false && options.streamUsage !== false;
+
+    async function* geminiChunks(
+      stream: ReadableStream<Gemini.GenerateContentResponse | null>,
+      signal?: AbortSignal
+    ) {
+      const reader = stream.getReader();
+      try {
+        while (true) {
+          if (signal?.aborted) {
+            return;
+          }
+          const { done, value } = await reader.read();
+          if (done) {
+            break;
+          }
+          if (value !== null) {
+            yield value;
+          }
+        }
+      } finally {
+        reader.releaseLock();
+      }
+    }
+
+    yield* convertGoogleGeminiStream(
+      geminiChunks(eventStream, options.signal),
+      {
+        streamUsage: shouldStreamUsage,
+      }
+    );
   }
 
   async *_streamResponseChunks(
@@ -537,9 +661,11 @@ export abstract class BaseChatGoogle<
     };
 
     const url = await this.buildUrl("streamGenerateContent?alt=sse");
+    const headers = this.getHeaders(options);
     const moduleName = this.constructor.name;
     await runManager?.handleCustomEvent(`google-request-${moduleName}`, {
       url,
+      headers,
       body,
     });
 
@@ -551,9 +677,7 @@ export abstract class BaseChatGoogle<
           const nextResponse = await this.apiClient.fetch(
             new Request(url, {
               method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
+              headers,
               body: JSON.stringify(body),
               signal: options.signal,
             })
@@ -916,6 +1040,7 @@ export function combineGoogleChatModelFields(
     thinkingBudget: b.thinkingBudget ?? a.thinkingBudget,
     reasoningEffort: b.reasoningEffort ?? a.reasoningEffort,
     thinkingLevel: b.thinkingLevel ?? a.thinkingLevel,
+    serviceTier: b.serviceTier ?? a.serviceTier,
   };
   if (rest.length > 0) {
     return combineGoogleChatModelFields(combined, rest[0], ...rest.slice(1));

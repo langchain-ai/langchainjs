@@ -15,7 +15,6 @@
 
     { "path": "../providers/langchain-deepseek" },
     { "path": "../providers/langchain-fireworks" },
-    { "path": "../providers/langchain-google-cloud-sql-pg" },
     { "path": "../providers/langchain-google-common" },
     { "path": "../providers/langchain-google-genai" },
     { "path": "../providers/langchain-google-vertexai" },

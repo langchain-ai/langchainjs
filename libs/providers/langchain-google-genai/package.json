@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-genai",
-  "version": "2.1.26",
+  "version": "2.2.0",
   "description": "Google Generative AI integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -28,8 +28,7 @@
     "typegen:profiles": "pnpm --filter @langchain/model-profiles make --config profiles.toml"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.24.0",
-    "uuid": "^11.1.0"
+    "@google/generative-ai": "^0.24.1"
   },
   "peerDependencies": {
     "@langchain/core": "workspace:^"
@@ -42,8 +41,8 @@
     "dotenv": "^17.4.0",
     "dpdm": "^3.14.0",
     "hnswlib-node": "^3.0.0",
-    "typescript": "~5.8.3",
-    "vitest": "^4.1.2",
+    "typescript": "~6.0.3",
+    "vitest": "^4.1.8",
     "zod": "^3.25.76"
   },
   "publishConfig": {

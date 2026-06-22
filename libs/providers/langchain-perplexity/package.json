@@ -1,7 +1,7 @@
 {
   "name": "@langchain/perplexity",
-  "version": "0.1.0",
-  "description": "Perplexity integration for LangChain.js",
+  "version": "0.3.0",
+  "description": "Perplexity integration for LangChain.js (chat models, Search retriever, and Search tool).",
   "author": "LangChain",
   "license": "MIT",
   "type": "module",
@@ -25,7 +25,7 @@
     "test:standard": "pnpm test:standard:unit && pnpm test:standard:int"
   },
   "dependencies": {
-    "openai": "^4.100.0"
+    "openai": "^6.41.0"
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0"
@@ -35,11 +35,11 @@
     "@langchain/standard-tests": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
-    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/coverage-v8": "^4.1.8",
     "dotenv": "^17.4.0",
     "dpdm": "^3.14.0",
-    "typescript": "~5.8.3",
-    "vitest": "^4.1.2",
+    "typescript": "~6.0.3",
+    "vitest": "^4.1.8",
     "zod": "^4.0.14"
   },
   "publishConfig": {

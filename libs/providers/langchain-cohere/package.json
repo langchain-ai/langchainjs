@@ -1,6 +1,6 @@
 {
   "name": "@langchain/cohere",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "description": "Cohere integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -31,8 +31,7 @@
     "format:check": "prettier --check \"src\""
   },
   "dependencies": {
-    "cohere-ai": "^7.14.0",
-    "uuid": "^10.0.0"
+    "cohere-ai": "^7.14.0"
   },
   "peerDependencies": {
     "@langchain/core": "workspace:^"
@@ -43,13 +42,13 @@
     "@langchain/standard-tests": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
-    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/coverage-v8": "^4.1.8",
     "dotenv": "^16.6.1",
     "dpdm": "^3.14.0",
     "eslint": "^9.34.0",
     "prettier": "^3.5.0",
-    "typescript": "~5.8.3",
-    "vitest": "^3.2.4",
+    "typescript": "~6.0.3",
+    "vitest": "^4.1.8",
     "zod": "^3.25.76"
   },
   "publishConfig": {

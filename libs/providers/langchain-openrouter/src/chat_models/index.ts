@@ -15,6 +15,8 @@ import {
 } from "@langchain/core/messages";
 import { ChatGenerationChunk, type ChatResult } from "@langchain/core/outputs";
 import type { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
+import { convertOpenRouterStream } from "../utils/stream_events.js";
 import { Runnable } from "@langchain/core/runnables";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
@@ -136,6 +138,8 @@ export class ChatOpenRouter extends BaseChatModel<
       "route",
       "provider",
       "plugins",
+      "sessionId",
+      "trace",
       "prediction",
     ];
   }
@@ -205,6 +209,12 @@ export class ChatOpenRouter extends BaseChatModel<
 
   /** OpenRouter plugins to enable (e.g. web search). */
   plugins?: ChatOpenRouterParams["plugins"];
+
+  /** Identifier used by OpenRouter to group related requests together. */
+  sessionId?: string;
+
+  /** Trace metadata for OpenRouter broadcast destinations. */
+  trace?: OpenRouter.TraceConfig;
 
   /**
    * Application URL for OpenRouter attribution. Maps to `HTTP-Referer` header.
@@ -286,6 +296,9 @@ export class ChatOpenRouter extends BaseChatModel<
     this.route = fields.route;
     this.provider = fields.provider;
     this.plugins = fields.plugins;
+    this.sessionId =
+      fields.sessionId ?? getEnvironmentVariable("OPENROUTER_SESSION_ID");
+    this.trace = fields.trace;
     this.siteUrl = fields.siteUrl ?? "https://docs.langchain.com";
     this.siteName = fields.siteName ?? "LangChain";
     this.appCategories = fields.appCategories;
@@ -336,6 +349,8 @@ export class ChatOpenRouter extends BaseChatModel<
       ? convertToolsToOpenRouter(options.tools, { strict: options.strict })
       : undefined;
     const toolChoice = formatToolChoice(options.tool_choice);
+    const sessionId = options.sessionId ?? this.sessionId;
+    const trace = options.trace ?? this.trace;
 
     return {
       model: this.model,
@@ -362,6 +377,8 @@ export class ChatOpenRouter extends BaseChatModel<
       route: options.route ?? this.route,
       provider: options.provider ?? this.provider,
       plugins: options.plugins ?? this.plugins,
+      ...(sessionId ? { session_id: sessionId } : {}),
+      ...(trace !== undefined ? { trace } : {}),
       ...this.modelKwargs,
     };
   }
@@ -440,6 +457,56 @@ export class ChatOpenRouter extends BaseChatModel<
       ],
       llmOutput: { tokenUsage: data.usage },
     };
+  }
+
+  async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    const body: OpenRouterRequestBody = {
+      ...this.invocationParams(options),
+      messages: convertMessagesToOpenRouterParams(messages, this.model),
+      stream: true,
+    };
+
+    const response = await fetch(this.buildUrl(), {
+      method: "POST",
+      headers: this.buildHeaders(),
+      body: JSON.stringify(body),
+      signal: options.signal,
+    });
+
+    if (!response.ok) {
+      throw await OpenRouterError.fromResponse(response);
+    }
+
+    if (!response.body) {
+      return;
+    }
+
+    const stream = response.body
+      .pipeThrough(new TextDecoderStream())
+      .pipeThrough(new EventSourceParserStream())
+      .pipeThrough(new OpenRouterJsonParseStream());
+
+    const reader = stream.getReader();
+    async function* readChunks() {
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          if (value) yield value;
+        }
+      } finally {
+        reader.releaseLock();
+      }
+    }
+
+    const shouldStreamUsage = this.streamUsage ?? options.streamUsage ?? true;
+    yield* convertOpenRouterStream(readChunks(), {
+      streamUsage: shouldStreamUsage,
+    });
   }
 
   /**

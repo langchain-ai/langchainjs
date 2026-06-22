@@ -1,5 +1,31 @@
 # @langchain/google
 
+## 0.2.0
+
+### Minor Changes
+
+- [#10924](https://github.com/langchain-ai/langchainjs/pull/10924) [`2e28115`](https://github.com/langchain-ai/langchainjs/commit/2e2811509d75af94f57cedcc3842f178f4c020d1) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(google): add native Gemini streamEvents event conversion
+
+### Patch Changes
+
+- [#10537](https://github.com/langchain-ai/langchainjs/pull/10537) [`cdb465b`](https://github.com/langchain-ai/langchainjs/commit/cdb465b57e1eb9b797dd6f741bb7357ed7ef8c96) Thanks [@raashish1601](https://github.com/raashish1601)! - fix(google): normalize ChatGoogle callback token usage metadata
+
+- [#10586](https://github.com/langchain-ai/langchainjs/pull/10586) [`43b10d2`](https://github.com/langchain-ai/langchainjs/commit/43b10d2af7cf2bdbbf1157a0cc2dae78770730be) Thanks [@tysoncung](https://github.com/tysoncung)! - strip type field from executableCode and codeExecutionResult parts
+
+## 0.1.12
+
+### Patch Changes
+
+- [#10704](https://github.com/langchain-ai/langchainjs/pull/10704) [`f7e50fb`](https://github.com/langchain-ai/langchainjs/commit/f7e50fb8b98bd9969c0f5cf0967a06df15453453) Thanks [@afirstenberg](https://github.com/afirstenberg)! - Adds support for flex and priority pricing.
+  Adds support for custom headers.
+  Thanks to @Nico385412 and @pawel-twardziak for their insight and contributions.
+
+## 0.1.11
+
+### Patch Changes
+
+- [#10776](https://github.com/langchain-ai/langchainjs/pull/10776) [`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6) Thanks [@hntrl](https://github.com/hntrl)! - fix(deps): remediate uuid vulnerability by removing direct uuid usage
+
 ## 0.1.10
 
 ### Patch Changes
