@@ -146,7 +146,7 @@ export function handleConverseStreamContentBlockDelta(
       }),
     });
   } else if (contentBlockDelta.delta.toolUse) {
-    const index = contentBlockDelta.contentBlockIndex ?? 0;
+    const index = contentBlockDelta.contentBlockIndex;
     return new ChatGenerationChunk({
       text: "",
       message: new AIMessageChunk({
@@ -185,7 +185,7 @@ export function handleConverseStreamContentBlockDelta(
 export function handleConverseStreamContentBlockStart(
   contentBlockStart: Bedrock.ContentBlockStartEvent
 ): ChatGenerationChunk {
-  const index = contentBlockStart.contentBlockIndex ?? 0;
+  const index = contentBlockStart.contentBlockIndex;
   if (contentBlockStart.start?.toolUse) {
     return new ChatGenerationChunk({
       text: "",

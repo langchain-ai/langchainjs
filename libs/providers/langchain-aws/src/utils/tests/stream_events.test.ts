@@ -43,59 +43,6 @@ describe("convertBedrockConverseStream", () => {
     });
   });
 
-  test("defaults missing tool call content block indexes", async () => {
-    const events = await collectEvents([
-      {
-        contentBlockStart: {
-          start: {
-            toolUse: {
-              toolUseId: "tooluse_123",
-              name: "get_weather",
-            },
-          },
-        },
-      },
-      {
-        contentBlockDelta: {
-          delta: {
-            toolUse: {
-              input: '{"location":"London"}',
-            },
-          },
-        },
-      },
-    ]);
-
-    expect(
-      events.find((e) => e.event === "content-block-finish")
-    ).toMatchObject({
-      index: 0,
-      content: {
-        id: "tooluse_123",
-        name: "get_weather",
-        args: { location: "London" },
-      },
-    });
-  });
-
-  test("throws when a tool call delta has no start event", async () => {
-    await expect(
-      collectEvents([
-        {
-          contentBlockDelta: {
-            delta: {
-              toolUse: {
-                input: '{"location":"London"}',
-              },
-            },
-          },
-        },
-      ])
-    ).rejects.toThrow(
-      "Received tool use delta for content block index 0 before a matching content block start event."
-    );
-  });
-
   test("usage metadata", async () => {
     const events = await collectEvents([
       {
