@@ -5,6 +5,10 @@ import {
 } from "@aws-sdk/client-bedrock-runtime";
 import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
 import { CredentialType } from "./types.js";
+import {
+  createBedrockBearerTokenClientConfig,
+  resolveBedrockBearerToken,
+} from "./utils/bedrock_auth.js";
 
 /**
  * Checks if the given model is an Amazon Nova embedding model.
@@ -43,6 +47,12 @@ export interface BedrockEmbeddingsParams extends EmbeddingsParams {
   region?: string;
 
   credentials?: CredentialType;
+
+  /**
+   * Bedrock API key for bearer-token authentication. Falls back to the
+   * `AWS_BEARER_TOKEN_BEDROCK` environment variable.
+   */
+  bedrockBearerToken?: string;
 
   /**
    * Additional parameters to pass to the model as part of the InvokeModel
@@ -109,6 +119,8 @@ export class BedrockEmbeddings
 
   dimensions?: number;
 
+  bedrockBearerToken?: string;
+
   constructor(fields?: BedrockEmbeddingsParams) {
     super(fields ?? {});
 
@@ -116,13 +128,17 @@ export class BedrockEmbeddings
     this.clientOptions = fields?.clientOptions;
     this.modelParameters = fields?.modelParameters;
     this.dimensions = fields?.dimensions;
+    this.bedrockBearerToken = resolveBedrockBearerToken(
+      fields?.bedrockBearerToken
+    );
 
     this.client =
       fields?.client ??
       new BedrockRuntimeClient({
         ...fields?.clientOptions,
+        ...createBedrockBearerTokenClientConfig(this.bedrockBearerToken),
         region: fields?.region,
-        credentials: fields?.credentials,
+        credentials: this.bedrockBearerToken ? undefined : fields?.credentials,
       });
   }
 

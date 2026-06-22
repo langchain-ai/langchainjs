@@ -823,14 +823,26 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
         : {}),
     });
   } else if (
+    event.type === "response.web_search_call.in_progress" ||
+    event.type === "response.web_search_call.searching" ||
     event.type === "response.web_search_call.completed" ||
-    event.type === "response.file_search_call.completed"
+    event.type === "response.file_search_call.in_progress" ||
+    event.type === "response.file_search_call.searching" ||
+    event.type === "response.file_search_call.completed" ||
+    event.type === "response.image_generation_call.in_progress" ||
+    event.type === "response.image_generation_call.generating" ||
+    event.type === "response.image_generation_call.completed"
   ) {
+    const [, type, status] = event.type.match(/^response\.(.*)\.([^.]+)$/) ?? [
+      "",
+      "",
+      "",
+    ];
     generationInfo = {
       tool_outputs: {
         id: event.item_id,
-        type: event.type.replace("response.", "").replace(".completed", ""),
-        status: "completed",
+        type,
+        status,
       },
     };
   } else if (
@@ -1697,6 +1709,35 @@ export const convertMessagesToResponsesInput: Converter<
             });
           }
           if (isDataContentBlock(item)) {
+            // The Responses API supports file URLs natively, but the Chat
+            // Completions converter rejects URL file blocks. Convert standard
+            // file blocks to the native `input_file` shape instead of routing
+            // them through the completions converter.
+            if (item.type === "file") {
+              const filename = getFilenameFromMetadata(item);
+              if (item.source_type === "url") {
+                return {
+                  type: "input_file",
+                  file_url: item.url,
+                  ...(filename ? { filename } : {}),
+                };
+              }
+              if (item.source_type === "id") {
+                return {
+                  type: "input_file",
+                  file_id: item.id,
+                  ...(filename ? { filename } : {}),
+                };
+              }
+              if (item.source_type === "base64") {
+                const mimeType = item.mime_type ?? "";
+                return {
+                  type: "input_file",
+                  file_data: `data:${mimeType};base64,${item.data}`,
+                  filename: getRequiredFilenameFromMetadata(item),
+                };
+              }
+            }
             return convertToProviderContentBlock(
               item,
               completionsApiContentBlockConverter

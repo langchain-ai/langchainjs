@@ -1,5 +1,23 @@
 # @langchain/deepseek
 
+## 1.1.1
+
+### Patch Changes
+
+- Updated dependencies [[`80b43ec`](https://github.com/langchain-ai/langchainjs/commit/80b43ecffe0701c3c375c407fb601cb452f708ef)]:
+  - @langchain/openai@1.5.1
+
+## 1.1.0
+
+### Minor Changes
+
+- [#10924](https://github.com/langchain-ai/langchainjs/pull/10924) [`2e28115`](https://github.com/langchain-ai/langchainjs/commit/2e2811509d75af94f57cedcc3842f178f4c020d1) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(deepseek): enable native OpenAI-compatible streamEvents events
+
+### Patch Changes
+
+- Updated dependencies [[`2e28115`](https://github.com/langchain-ai/langchainjs/commit/2e2811509d75af94f57cedcc3842f178f4c020d1)]:
+  - @langchain/openai@1.5.0
+
 ## 1.0.27
 
 ### Patch Changes

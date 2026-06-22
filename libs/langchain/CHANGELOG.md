@@ -1,5 +1,33 @@
 # langchain
 
+## 1.5.0
+
+### Minor Changes
+
+- [#11062](https://github.com/langchain-ai/langchainjs/pull/11062) [`3ebd10a`](https://github.com/langchain-ai/langchainjs/commit/3ebd10ae381ef7c9e12759f08d2f2b745bdfae62) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(langchain): surface tool-dispatched subagents on `run.subagents`
+
+  Add a native subagent stream transformer to `createAgent` so v3 runs expose
+  named nested agents (`createAgent({ name })` invoked from tools) as typed
+  `SubagentRunStream` handles with `name`, `cause`, scoped `messages` /
+  `toolCalls`, and `output`. Refactors agent stream transformers into
+  `agents/transformers/` and exports only the public stream types from the
+  package entry.
+
+## 1.4.6
+
+### Patch Changes
+
+- [#11012](https://github.com/langchain-ai/langchainjs/pull/11012) [`4aeaa76`](https://github.com/langchain-ai/langchainjs/commit/4aeaa767a48dcc5451371f14adf4a06f064d23b9) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(langchain): add `when` predicate to human-in-the-loop middleware
+
+  Add an optional `when` callback on `InterruptOnConfig` so callers can
+  dynamically skip interrupts for specific tool calls. The predicate receives
+  a `ToolCallRequest` (batch `afterModel` context) and returns whether to
+  interrupt or auto-approve, matching Python `HumanInTheLoopMiddleware`.
+
+- [#11080](https://github.com/langchain-ai/langchainjs/pull/11080) [`e51478a`](https://github.com/langchain-ai/langchainjs/commit/e51478a4436d69a21f75f1c9e0bb84f3abb6d6f5) Thanks [@aolsenjazz](https://github.com/aolsenjazz)! - feat(aws): bedrock prompt caching middleware
+
+  Adds bedrockPromptCachingMiddleware. The interface largely matches what was previous implemented with anthropicPromptCachingMiddleware, making a best-effort attempt at utilizing prompt caching features for supported models.
+
 ## 1.4.5
 
 ### Patch Changes

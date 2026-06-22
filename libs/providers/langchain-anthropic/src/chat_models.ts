@@ -1014,6 +1014,14 @@ export class ChatAnthropicMessages<
 
   thinking: AnthropicThinkingConfigParam = { type: "disabled" };
 
+  /**
+   * Whether `thinking` was explicitly configured by the user. When it was not,
+   * the default `{ type: "disabled" }` is kept off the request so that models
+   * which reject an explicit disabled value (e.g. adaptive-only models) are not
+   * sent an unsupported parameter.
+   */
+  protected thinkingExplicitlySet = false;
+
   contextManagement?: AnthropicContextManagementConfigParam;
 
   outputConfig?: AnthropicOutputConfig;
@@ -1085,7 +1093,10 @@ export class ChatAnthropicMessages<
     this.streaming = fields?.streaming ?? false;
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
 
-    this.thinking = fields?.thinking ?? this.thinking;
+    if (fields?.thinking !== undefined) {
+      this.thinking = fields.thinking;
+      this.thinkingExplicitlySet = true;
+    }
     this.contextManagement =
       fields?.contextManagement ?? this.contextManagement;
     this.outputConfig = fields?.outputConfig ?? this.outputConfig;
@@ -1250,7 +1261,7 @@ export class ChatAnthropicMessages<
         strict: options?.strict,
       }),
       tool_choice,
-      thinking: this.thinking,
+      thinking: this.thinkingExplicitlySet ? this.thinking : undefined,
       context_management: this.contextManagement,
       ...this.invocationKwargs,
       container: options?.container,

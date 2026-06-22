@@ -611,6 +611,89 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
     });
   });
 
+  describe("built-in tool progress streaming", () => {
+    it("should surface web and file search progress events in generationInfo", () => {
+      const events = [
+        {
+          type: "response.web_search_call.in_progress",
+          item_id: "ws_123",
+          status: "in_progress",
+        },
+        {
+          type: "response.web_search_call.searching",
+          item_id: "ws_123",
+          status: "searching",
+        },
+        {
+          type: "response.web_search_call.completed",
+          item_id: "ws_123",
+          status: "completed",
+        },
+        {
+          type: "response.file_search_call.in_progress",
+          item_id: "fs_123",
+          status: "in_progress",
+        },
+        {
+          type: "response.file_search_call.searching",
+          item_id: "fs_123",
+          status: "searching",
+        },
+        {
+          type: "response.file_search_call.completed",
+          item_id: "fs_123",
+          status: "completed",
+        },
+      ];
+
+      for (const event of events) {
+        const result = convertResponsesDeltaToChatGenerationChunk(event as any);
+
+        expect(result?.generationInfo).toEqual({
+          tool_outputs: {
+            id: event.item_id,
+            type: event.type
+              .replace("response.", "")
+              .replace(`.${event.status}`, ""),
+            status: event.status,
+          },
+        });
+      }
+    });
+
+    it("should surface image generation lifecycle events in generationInfo", () => {
+      const events = [
+        {
+          type: "response.image_generation_call.in_progress",
+          item_id: "ig_123",
+          status: "in_progress",
+        },
+        {
+          type: "response.image_generation_call.generating",
+          item_id: "ig_123",
+          status: "generating",
+        },
+        {
+          type: "response.image_generation_call.completed",
+          item_id: "ig_123",
+          status: "completed",
+        },
+      ];
+
+      for (const event of events) {
+        const result = convertResponsesDeltaToChatGenerationChunk(event as any);
+
+        expect(result?.generationInfo).toEqual({
+          tool_outputs: {
+            id: "ig_123",
+            type: "image_generation_call",
+            status: event.status,
+          },
+        });
+      }
+    });
+  });
+
   describe("reasoning streaming elevation", () => {
     it("should elevate reasoning to content on response.output_item.added with reasoning", () => {
       const event = {
@@ -1215,6 +1298,44 @@ describe("convertMessagesToResponsesInput", () => {
         "https://www.appropedia.org/w/images/c/ca/Writing_Sample.pdf"
       );
       expect(fileBlock.filename).toBeUndefined();
+    });
+
+    it("routes standard url file blocks to native input_file instead of the completions converter", () => {
+      const messages = [
+        new HumanMessage({
+          content: [
+            { type: "text", text: "What is in this document?" },
+            {
+              type: "file",
+              source_type: "url",
+              url: "https://example.com/document.pdf",
+              mime_type: "application/pdf",
+              metadata: { filename: "document.pdf" },
+            },
+          ],
+        }),
+      ];
+
+      const result = convertMessagesToResponsesInput({
+        messages,
+        model: "gpt-4o",
+        zdrEnabled: false,
+      });
+
+      expect(result).toMatchObject([
+        {
+          type: "message",
+          role: "user",
+          content: [
+            { type: "input_text", text: "What is in this document?" },
+            {
+              type: "input_file",
+              file_url: "https://example.com/document.pdf",
+              filename: "document.pdf",
+            },
+          ],
+        },
+      ]);
     });
   });
 

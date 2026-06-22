@@ -54,6 +54,56 @@ function makeSearchMockClient() {
   };
 }
 
+/** Let the fire-and-forget header registration settle before asserting. */
+function flushMicrotasks(): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, 0);
+  });
+}
+
+test("registers the X-Weaviate-Client-Integration header via getConnectionDetails", async () => {
+  const headers: Record<string, string> = {};
+  const client = {
+    collections: {},
+    getConnectionDetails: vi
+      .fn()
+      .mockResolvedValue({ host: "localhost", headers }),
+  } as unknown as WeaviateClient;
+
+  const store = new WeaviateStore(new FakeEmbeddings(), { client });
+  await flushMicrotasks();
+
+  expect(store).toBeInstanceOf(WeaviateStore);
+  // Mutates the live headers object by reference, so subsequent client requests
+  // carry the telemetry header on both transports.
+  expect(headers["X-Weaviate-Client-Integration"]).toBe(
+    `langchain/${__PKG_VERSION__}`
+  );
+});
+
+test("integration header registration never throws when unsupported", async () => {
+  const client = { collections: {} } as unknown as WeaviateClient;
+
+  const store = new WeaviateStore(new FakeEmbeddings(), { client });
+  await flushMicrotasks();
+
+  expect(store).toBeInstanceOf(WeaviateStore);
+});
+
+test("integration header registration leaves array-form headers untouched", async () => {
+  const headers: [string, string][] = [["X-Existing", "1"]];
+  const client = {
+    collections: {},
+    getConnectionDetails: vi.fn().mockResolvedValue({ headers }),
+  } as unknown as WeaviateClient;
+
+  const store = new WeaviateStore(new FakeEmbeddings(), { client });
+  await flushMicrotasks();
+
+  expect(store).toBeInstanceOf(WeaviateStore);
+  expect(headers).toEqual([["X-Existing", "1"]]);
+});
+
 test("initialize with jsonSchema calls createFromJson", async () => {
   const { client, spies } = makeMockClient();
   const jsonSchema = { class: "MyCollection", properties: [] };
