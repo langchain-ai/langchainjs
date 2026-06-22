@@ -195,18 +195,22 @@ describe("ChatOpenAICompletions strict tools for structured output", () => {
   };
 
   /** Return the per-tool `strict` flag invocationParams produces for `options`. */
-  function toolStrict(options: Record<string, unknown>): boolean | undefined {
+  function toolStrict(
+    options: Record<string, unknown>,
+    extra?: { streaming?: boolean }
+  ): boolean | undefined {
     const model = new ChatOpenAICompletions({
       model: "gpt-4",
       apiKey: "test-key",
     });
     const params = (
       model as unknown as {
-        invocationParams: (o: Record<string, unknown>) => {
-          tools?: { function: { strict?: boolean } }[];
-        };
+        invocationParams: (
+          o: Record<string, unknown>,
+          e?: { streaming?: boolean }
+        ) => { tools?: { function: { strict?: boolean } }[] };
       }
-    ).invocationParams({ tools: [weatherTool], ...options });
+    ).invocationParams({ tools: [weatherTool], ...options }, extra);
     return params.tools?.[0]?.function?.strict;
   }
 
@@ -224,6 +228,16 @@ describe("ChatOpenAICompletions strict tools for structured output", () => {
 
   it("does not set strict when no response_format is requested", () => {
     expect(toolStrict({})).toBeUndefined();
+  });
+
+  it("does not set strict for a streaming json_schema request (create() path)", () => {
+    // Streaming goes through create(), not .parse(), so strict isn't required.
+    expect(
+      toolStrict(
+        { response_format: jsonSchemaResponseFormat },
+        { streaming: true }
+      )
+    ).toBeUndefined();
   });
 
   it("does not set strict for a json_object response_format (JSON mode)", () => {
