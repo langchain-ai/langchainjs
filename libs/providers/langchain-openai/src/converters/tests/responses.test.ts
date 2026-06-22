@@ -559,9 +559,7 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
       ];
 
       for (const event of events) {
-        const result = convertResponsesDeltaToChatGenerationChunk(
-          event as any
-        );
+        const result = convertResponsesDeltaToChatGenerationChunk(event as any);
 
         expect(result?.generationInfo).toEqual({
           tool_outputs: {
@@ -595,9 +593,7 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
       ];
 
       for (const event of events) {
-        const result = convertResponsesDeltaToChatGenerationChunk(
-          event as any
-        );
+        const result = convertResponsesDeltaToChatGenerationChunk(event as any);
 
         expect(result?.generationInfo).toEqual({
           tool_outputs: {

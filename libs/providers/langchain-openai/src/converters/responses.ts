@@ -833,9 +833,11 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
     event.type === "response.image_generation_call.generating" ||
     event.type === "response.image_generation_call.completed"
   ) {
-    const [, type, status] = event.type.match(
-      /^response\.(.*)\.([^.]+)$/
-    ) ?? ["", "", ""];
+    const [, type, status] = event.type.match(/^response\.(.*)\.([^.]+)$/) ?? [
+      "",
+      "",
+      "",
+    ];
     generationInfo = {
       tool_outputs: {
         id: event.item_id,
