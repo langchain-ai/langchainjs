@@ -669,6 +669,11 @@ export abstract class BaseChatOpenAI<
     } else if (this.supportsStrictToolCalling !== undefined) {
       strict = this.supportsStrictToolCalling;
     }
+
+    if (kwargs?.response_format != null && strict !== false) {
+      strict = true;
+    }
+
     return this.withConfig({
       tools: tools.map((tool) => {
         // Built-in tools and custom tools pass through as-is
