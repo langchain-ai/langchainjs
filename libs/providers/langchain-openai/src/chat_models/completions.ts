@@ -72,6 +72,22 @@ export class ChatOpenAICompletions<
       strict = this.supportsStrictToolCalling;
     }
 
+    // A `json_schema` response format goes through the SDK `.parse()` helper,
+    // which requires strict function tools — but only on the NON-streaming path
+    // (`completionWithRetry` uses `.parse()` only when `!request.stream`).
+    // Streaming structured output uses `create()`, which doesn't need strict, so
+    // don't force it there. Default to strict for the parse path unless the
+    // caller set strict:false. (Re-applied here because the agent core no longer
+    // forces strict for every provider.)
+    const isStreaming = this.streaming || extra?.streaming;
+    if (
+      !isStreaming &&
+      options?.response_format?.type === "json_schema" &&
+      strict !== false
+    ) {
+      strict = true;
+    }
+
     let streamOptionsConfig = {};
     if (options?.stream_options !== undefined) {
       streamOptionsConfig = { stream_options: options.stream_options };

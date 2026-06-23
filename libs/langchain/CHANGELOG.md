@@ -1,5 +1,30 @@
 # langchain
 
+## 1.5.1
+
+### Patch Changes
+
+- [#11087](https://github.com/langchain-ai/langchainjs/pull/11087) [`534b43a`](https://github.com/langchain-ai/langchainjs/commit/534b43a0719c89e3fb4ab7052d3f39797660aa43) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): keep tool call streams pending across any tool interrupt
+
+  A raw `interrupt()` raised from inside a tool surfaced as a `tool-error` and
+  rejected the call's un-awaited `output` promise, producing an unhandled
+  rejection that crashed HITL runs. The tool-call stream transformer now treats
+  any serialized graph interrupt as control flow (the call stays pending and
+  resumes), not just `humanInTheLoopMiddleware` interrupts.
+
+## 1.5.0
+
+### Minor Changes
+
+- [#11062](https://github.com/langchain-ai/langchainjs/pull/11062) [`3ebd10a`](https://github.com/langchain-ai/langchainjs/commit/3ebd10ae381ef7c9e12759f08d2f2b745bdfae62) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(langchain): surface tool-dispatched subagents on `run.subagents`
+
+  Add a native subagent stream transformer to `createAgent` so v3 runs expose
+  named nested agents (`createAgent({ name })` invoked from tools) as typed
+  `SubagentRunStream` handles with `name`, `cause`, scoped `messages` /
+  `toolCalls`, and `output`. Refactors agent stream transformers into
+  `agents/transformers/` and exports only the public stream types from the
+  package entry.
+
 ## 1.4.6
 
 ### Patch Changes
