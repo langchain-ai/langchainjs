@@ -1,5 +1,17 @@
 # @langchain/groq
 
+## 1.3.1
+
+### Patch Changes
+
+- [#11072](https://github.com/langchain-ai/langchainjs/pull/11072) [`d2e6afc`](https://github.com/langchain-ai/langchainjs/commit/d2e6afcf17b269aa11a2f18444c208bc8a4b2520) Thanks [@atimothee](https://github.com/atimothee)! - fix(groq): require `@langchain/core` >= 1.1.30 in peer dependency
+
+  The package imports `@langchain/core/utils/standard_schema` and
+  `@langchain/core/language_models/structured_output`, both of which were
+  introduced in `@langchain/core@1.1.30`. The previous `^1.0.0` peer
+  dependency range allowed installing incompatible older versions and
+  caused module-resolution failures at build/runtime.
+
 ## 1.3.0
 
 ### Minor Changes

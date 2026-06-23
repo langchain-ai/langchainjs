@@ -478,17 +478,28 @@ export abstract class BaseChatGoogle<
       body,
     });
 
-    const response = await this.apiClient.fetch(
-      new Request(url, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(body),
-        signal: options.signal,
-      })
-    );
+    let response: Response;
+    try {
+      response = await this.caller.callWithOptions(
+        { signal: options.signal },
+        async () => {
+          const nextResponse = await this.apiClient.fetch(
+            new Request(url, {
+              method: "POST",
+              headers,
+              body: JSON.stringify(body),
+              signal: options.signal,
+            })
+          );
 
-    if (!response.ok) {
-      const error = await RequestError.fromResponse(response);
+          if (!nextResponse.ok) {
+            throw await RequestError.fromResponse(nextResponse);
+          }
+
+          return nextResponse;
+        }
+      );
+    } catch (error) {
       await runManager?.handleCustomEvent(`google-response-${moduleName}`, {
         error,
       });
@@ -658,29 +669,40 @@ export abstract class BaseChatGoogle<
       body,
     });
 
-    const response = await this.apiClient.fetch(
-      new Request(url, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(body),
-        signal: options.signal,
-      })
-    );
+    let response: Response;
+    try {
+      response = await this.caller.callWithOptions(
+        { signal: options.signal },
+        async () => {
+          const nextResponse = await this.apiClient.fetch(
+            new Request(url, {
+              method: "POST",
+              headers,
+              body: JSON.stringify(body),
+              signal: options.signal,
+            })
+          );
 
-    await runManager?.handleCustomEvent(`google-response-${moduleName}`, {
-      url: response.url,
-      headers: Array.from(response.headers.entries()),
-      status: response.status,
-      statusText: response.statusText,
-    });
+          if (!nextResponse.ok) {
+            throw await RequestError.fromResponse(nextResponse);
+          }
 
-    if (!response.ok) {
-      const error = await RequestError.fromResponse(response);
+          return nextResponse;
+        }
+      );
+    } catch (error) {
       await runManager?.handleCustomEvent(`google-response-${moduleName}`, {
         error,
       });
       throw error;
     }
+
+    await runManager?.handleCustomEvent(`google-response-${moduleName}`, {
+      url: response.url,
+      headers: response.headers,
+      status: response.status,
+      statusText: response.statusText,
+    });
 
     if (response.body) {
       let previousUsage: UsageMetadata | undefined;
