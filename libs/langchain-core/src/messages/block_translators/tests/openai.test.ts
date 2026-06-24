@@ -153,6 +153,46 @@ describe("openaiTranslator", () => {
   });
 
   describe("Responses", () => {
+    it("should translate reasoning block in content array to v1 reasoning block", () => {
+      // This tests the case where reasoning is in the content array directly
+      // (as added by OpenAI provider's converter)
+      const message = new AIMessage({
+        content: [
+          { type: "reasoning", reasoning: "Let me think about this..." },
+          { type: "text", text: "The answer is 42." },
+        ],
+        response_metadata: { model_provider: "openai" },
+      });
+
+      const expected: Array<ContentBlock.Standard> = [
+        { type: "reasoning", reasoning: "Let me think about this..." },
+        { type: "text", text: "The answer is 42." },
+      ];
+
+      expect(message.contentBlocks).toEqual(expected);
+    });
+
+    it("should translate reasoning block with summary array in content to v1 reasoning block", () => {
+      // This tests the case where reasoning block has summary array format
+      const message = new AIMessage({
+        content: [
+          {
+            type: "reasoning",
+            summary: [{ text: "First thought..." }, { text: " Second thought." }],
+          },
+          { type: "text", text: "Here is my response." },
+        ],
+        response_metadata: { model_provider: "openai" },
+      });
+
+      const expected: Array<ContentBlock.Standard> = [
+        { type: "reasoning", reasoning: "First thought... Second thought." },
+        { type: "text", text: "Here is my response." },
+      ];
+
+      expect(message.contentBlocks).toEqual(expected);
+    });
+
     it("should translate responses message to v1 content blocks", () => {
       const message = new AIMessage({
         content: [
