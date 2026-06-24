@@ -669,51 +669,59 @@ export function mapGenerateContentResultToChatResult(
   ) {
     content = parts[0].text;
   } else if (Array.isArray(parts) && parts.length > 0) {
-    content = parts.map((p) => {
-      if (p.thought && "text" in p && p.text) {
-        return {
-          type: "thinking",
-          thinking: p.text,
-          ...(p.thoughtSignature ? { signature: p.thoughtSignature } : {}),
-        };
-      } else if ("text" in p) {
-        return {
-          type: "text",
-          text: p.text,
-        };
-      } else if ("inlineData" in p) {
-        return {
-          type: "inlineData",
-          inlineData: p.inlineData,
-        };
-      } else if ("functionCall" in p) {
-        return {
-          type: "functionCall",
-          functionCall: p.functionCall,
-        };
-      } else if ("functionResponse" in p) {
-        return {
-          type: "functionResponse",
-          functionResponse: p.functionResponse,
-        };
-      } else if ("fileData" in p) {
-        return {
-          type: "fileData",
-          fileData: p.fileData,
-        };
-      } else if ("executableCode" in p) {
-        return {
-          type: "executableCode",
-          executableCode: p.executableCode,
-        };
-      } else if ("codeExecutionResult" in p) {
-        return {
-          type: "codeExecutionResult",
-          codeExecutionResult: p.codeExecutionResult,
-        };
-      }
-      return p;
-    });
+    content = parts
+      .map((p) => {
+        if (p.thought && "text" in p && p.text) {
+          return {
+            type: "thinking",
+            thinking: p.text,
+            ...(p.thoughtSignature ? { signature: p.thoughtSignature } : {}),
+          };
+        } else if ("text" in p) {
+          return {
+            type: "text",
+            text: p.text,
+          };
+        } else if ("inlineData" in p) {
+          return {
+            type: "inlineData",
+            inlineData: p.inlineData,
+          };
+        } else if ("functionCall" in p) {
+          return {
+            type: "functionCall",
+            functionCall: p.functionCall,
+          };
+        } else if ("functionResponse" in p) {
+          return {
+            type: "functionResponse",
+            functionResponse: p.functionResponse,
+          };
+        } else if ("fileData" in p) {
+          return {
+            type: "fileData",
+            fileData: p.fileData,
+          };
+        } else if ("executableCode" in p) {
+          return {
+            type: "executableCode",
+            executableCode: p.executableCode,
+          };
+        } else if ("codeExecutionResult" in p) {
+          return {
+            type: "codeExecutionResult",
+            codeExecutionResult: p.codeExecutionResult,
+          };
+        }
+        // Skip empty or unrecognized parts (e.g., empty {} from streaming
+        // finish-marker chunks). These cause "Unknown content {}" errors
+        // when the message is later re-serialized via _convertLangChainContentToPart.
+        if (Object.keys(p).length === 0) {
+          return undefined;
+        }
+        return p;
+      })
+      .filter((p): p is NonNullable<typeof p> => p !== undefined);
   } else {
     // no content returned - likely due to abnormal stop reason, e.g. malformed function call
     content = [];
@@ -809,51 +817,59 @@ export function convertResponseContentToChatGenerationChunk(
   ) {
     content = streamParts.map((p) => p.text).join("");
   } else if (Array.isArray(streamParts)) {
-    content = streamParts.map((p) => {
-      if (p.thought && "text" in p && p.text) {
-        return {
-          type: "thinking",
-          thinking: p.text,
-          ...(p.thoughtSignature ? { signature: p.thoughtSignature } : {}),
-        };
-      } else if ("text" in p) {
-        return {
-          type: "text",
-          text: p.text,
-        };
-      } else if ("inlineData" in p) {
-        return {
-          type: "inlineData",
-          inlineData: p.inlineData,
-        };
-      } else if ("functionCall" in p) {
-        return {
-          type: "functionCall",
-          functionCall: p.functionCall,
-        };
-      } else if ("functionResponse" in p) {
-        return {
-          type: "functionResponse",
-          functionResponse: p.functionResponse,
-        };
-      } else if ("fileData" in p) {
-        return {
-          type: "fileData",
-          fileData: p.fileData,
-        };
-      } else if ("executableCode" in p) {
-        return {
-          type: "executableCode",
-          executableCode: p.executableCode,
-        };
-      } else if ("codeExecutionResult" in p) {
-        return {
-          type: "codeExecutionResult",
-          codeExecutionResult: p.codeExecutionResult,
-        };
-      }
-      return p;
-    });
+    content = streamParts
+      .map((p) => {
+        if (p.thought && "text" in p && p.text) {
+          return {
+            type: "thinking",
+            thinking: p.text,
+            ...(p.thoughtSignature ? { signature: p.thoughtSignature } : {}),
+          };
+        } else if ("text" in p) {
+          return {
+            type: "text",
+            text: p.text,
+          };
+        } else if ("inlineData" in p) {
+          return {
+            type: "inlineData",
+            inlineData: p.inlineData,
+          };
+        } else if ("functionCall" in p) {
+          return {
+            type: "functionCall",
+            functionCall: p.functionCall,
+          };
+        } else if ("functionResponse" in p) {
+          return {
+            type: "functionResponse",
+            functionResponse: p.functionResponse,
+          };
+        } else if ("fileData" in p) {
+          return {
+            type: "fileData",
+            fileData: p.fileData,
+          };
+        } else if ("executableCode" in p) {
+          return {
+            type: "executableCode",
+            executableCode: p.executableCode,
+          };
+        } else if ("codeExecutionResult" in p) {
+          return {
+            type: "codeExecutionResult",
+            codeExecutionResult: p.codeExecutionResult,
+          };
+        }
+        // Skip empty or unrecognized parts (e.g., empty {} from streaming
+        // finish-marker chunks). These cause "Unknown content {}" errors
+        // when the message is later re-serialized via _convertLangChainContentToPart.
+        if (Object.keys(p).length === 0) {
+          return undefined;
+        }
+        return p;
+      })
+      .filter((p): p is NonNullable<typeof p> => p !== undefined);
   } else {
     // no content returned - likely due to abnormal stop reason, e.g. malformed function call
     content = [];
