@@ -12,6 +12,8 @@ import {
   type UsageMetadata,
 } from "@langchain/core/messages";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
+import { convertGoogleGeminiStream } from "../utils/stream_events.js";
 import { concat } from "@langchain/core/utils/stream";
 import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
 import { EventSourceParserStream } from "eventsource-parser/stream";
@@ -476,17 +478,28 @@ export abstract class BaseChatGoogle<
       body,
     });
 
-    const response = await this.apiClient.fetch(
-      new Request(url, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(body),
-        signal: options.signal,
-      })
-    );
+    let response: Response;
+    try {
+      response = await this.caller.callWithOptions(
+        { signal: options.signal },
+        async () => {
+          const nextResponse = await this.apiClient.fetch(
+            new Request(url, {
+              method: "POST",
+              headers,
+              body: JSON.stringify(body),
+              signal: options.signal,
+            })
+          );
 
-    if (!response.ok) {
-      const error = await RequestError.fromResponse(response);
+          if (!nextResponse.ok) {
+            throw await RequestError.fromResponse(nextResponse);
+          }
+
+          return nextResponse;
+        }
+      );
+    } catch (error) {
       await runManager?.handleCustomEvent(`google-response-${moduleName}`, {
         error,
       });
@@ -562,6 +575,78 @@ export abstract class BaseChatGoogle<
     };
   }
 
+  async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    const body = {
+      ...this.invocationParams(options),
+      systemInstruction: convertMessagesToGeminiSystemInstruction(messages),
+      contents: convertMessagesToGeminiContents(messages),
+    };
+
+    const url = await this.buildUrl("streamGenerateContent?alt=sse");
+    const headers = this.getHeaders(options);
+
+    const response = await this.apiClient.fetch(
+      new Request(url, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
+        signal: options.signal,
+      })
+    );
+
+    if (!response.ok) {
+      throw await RequestError.fromResponse(response);
+    }
+
+    if (!response.body) {
+      return;
+    }
+
+    const eventStream = response.body
+      .pipeThrough(new TextDecoderStream())
+      .pipeThrough(new EventSourceParserStream())
+      .pipeThrough(
+        new SafeJsonEventParserStream<Gemini.GenerateContentResponse>()
+      );
+
+    const shouldStreamUsage =
+      this.streamUsage !== false && options.streamUsage !== false;
+
+    async function* geminiChunks(
+      stream: ReadableStream<Gemini.GenerateContentResponse | null>,
+      signal?: AbortSignal
+    ) {
+      const reader = stream.getReader();
+      try {
+        while (true) {
+          if (signal?.aborted) {
+            return;
+          }
+          const { done, value } = await reader.read();
+          if (done) {
+            break;
+          }
+          if (value !== null) {
+            yield value;
+          }
+        }
+      } finally {
+        reader.releaseLock();
+      }
+    }
+
+    yield* convertGoogleGeminiStream(
+      geminiChunks(eventStream, options.signal),
+      {
+        streamUsage: shouldStreamUsage,
+      }
+    );
+  }
+
   async *_streamResponseChunks(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
@@ -584,29 +669,40 @@ export abstract class BaseChatGoogle<
       body,
     });
 
-    const response = await this.apiClient.fetch(
-      new Request(url, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(body),
-        signal: options.signal,
-      })
-    );
+    let response: Response;
+    try {
+      response = await this.caller.callWithOptions(
+        { signal: options.signal },
+        async () => {
+          const nextResponse = await this.apiClient.fetch(
+            new Request(url, {
+              method: "POST",
+              headers,
+              body: JSON.stringify(body),
+              signal: options.signal,
+            })
+          );
 
-    await runManager?.handleCustomEvent(`google-response-${moduleName}`, {
-      url: response.url,
-      headers: Array.from(response.headers.entries()),
-      status: response.status,
-      statusText: response.statusText,
-    });
+          if (!nextResponse.ok) {
+            throw await RequestError.fromResponse(nextResponse);
+          }
 
-    if (!response.ok) {
-      const error = await RequestError.fromResponse(response);
+          return nextResponse;
+        }
+      );
+    } catch (error) {
       await runManager?.handleCustomEvent(`google-response-${moduleName}`, {
         error,
       });
       throw error;
     }
+
+    await runManager?.handleCustomEvent(`google-response-${moduleName}`, {
+      url: response.url,
+      headers: response.headers,
+      status: response.status,
+      statusText: response.statusText,
+    });
 
     if (response.body) {
       let previousUsage: UsageMetadata | undefined;

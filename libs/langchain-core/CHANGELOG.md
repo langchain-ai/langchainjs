@@ -1,5 +1,27 @@
 # @langchain/core
 
+## 1.2.1
+
+### Patch Changes
+
+- [#10674](https://github.com/langchain-ai/langchainjs/pull/10674) [`f017708`](https://github.com/langchain-ai/langchainjs/commit/f01770895c06621b469a6c6b5244747f6efdfbf7) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix: classify provider 429s before retrying
+
+- [#11092](https://github.com/langchain-ai/langchainjs/pull/11092) [`7918bbd`](https://github.com/langchain-ai/langchainjs/commit/7918bbdd2eaf8d9aff736b122f359a555267e1e7) Thanks [@aolsenjazz](https://github.com/aolsenjazz)! - fix(core): only treat arrays of content blocks as ToolMessage content
+
+  Fix tool outputs that are arrays of plain objects being forwarded as malformed message content. An array is now only treated as message content blocks when every element is an object with a `type`; otherwise it is JSON-stringified.
+
+## 1.2.0
+
+### Minor Changes
+
+- [#10924](https://github.com/langchain-ai/langchainjs/pull/10924) [`2e28115`](https://github.com/langchain-ai/langchainjs/commit/2e2811509d75af94f57cedcc3842f178f4c020d1) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(core): add OpenAI-compatible stream event conversion
+
+### Patch Changes
+
+- [#11047](https://github.com/langchain-ai/langchainjs/pull/11047) [`ac0f71d`](https://github.com/langchain-ai/langchainjs/commit/ac0f71d03994664cfee98e71a584d4aa3321746f) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): preserve AIMessage content blocks
+
+  Keep existing v1 contentBlocks when constructing AIMessage instances so serialized messages do not lose block content during deserialization.
+
 ## 1.1.49
 
 ### Patch Changes
