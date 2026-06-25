@@ -86,6 +86,11 @@ export interface CreateVoyageContextualizedEmbeddingRequest {
    * The format of the output embeddings.
    */
   encoding_format?: string;
+
+  /**
+   * The maximum chunk size in tokens.
+   */
+  chunk_size?: number;
 }
 
 /**
@@ -251,6 +256,7 @@ export class VoyageContextualizedEmbeddings
       output_dimension: this.outputDimension,
       output_dtype: this.outputDtype,
       encoding_format: this.encodingFormat,
+      chunk_size: 32000,
     });
 
     return response.data.map((doc) => doc.data.map((chunk) => chunk.embedding));
