@@ -71,7 +71,12 @@ function convertToV1FromChatGoogleMessage(
         ) {
           return {
             type: "tool_call",
-            id: message.id,
+            // Prefer the function call's own id (provided by newer Gemini
+            // responses); fall back to the message id for older payloads that
+            // don't carry a per-call id.
+            id: _isString(block.functionCall.id)
+              ? block.functionCall.id
+              : message.id,
             name: block.functionCall.name,
             args: block.functionCall.args,
           };
