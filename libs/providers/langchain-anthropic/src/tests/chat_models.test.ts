@@ -2137,13 +2137,47 @@ describe("Opus 4.7", () => {
       });
     }
   );
+});
 
-  test("auto-adds task budget beta when outputConfig.task_budget is provided", () => {
+describe("Task budget beta auto-append", () => {
+  const taskBudgetModels = [
+    "claude-opus-4-7",
+    "claude-opus-4-8",
+    "claude-fable-5",
+    "claude-mythos-5",
+  ] as const;
+
+  test.each(taskBudgetModels)(
+    "auto-adds task budget beta for %s when outputConfig.task_budget is provided",
+    (modelName) => {
+      const model = new ChatAnthropic({
+        model: modelName,
+        apiKey: "testing",
+        outputConfig: {
+          effort: "high",
+          // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+          task_budget: { type: "tokens", total: 128000 } as any,
+        },
+      });
+
+      const params = model.invocationParams({});
+
+      expect(params.betas).toContain("task-budgets-2026-03-13");
+      expect(params.output_config).toEqual({
+        effort: "high",
+        task_budget: {
+          type: "tokens",
+          total: 128000,
+        },
+      });
+    }
+  );
+
+  test("does not add task budget beta for unsupported models", () => {
     const model = new ChatAnthropic({
-      model: "claude-opus-4-7",
+      model: "claude-sonnet-4-6",
       apiKey: "testing",
       outputConfig: {
-        effort: "high",
         // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         task_budget: { type: "tokens", total: 128000 } as any,
       },
@@ -2151,14 +2185,19 @@ describe("Opus 4.7", () => {
 
     const params = model.invocationParams({});
 
-    expect(params.betas).toContain("task-budgets-2026-03-13");
-    expect(params.output_config).toEqual({
-      effort: "high",
-      task_budget: {
-        type: "tokens",
-        total: 128000,
-      },
+    expect(params.betas ?? []).not.toContain("task-budgets-2026-03-13");
+  });
+
+  test("does not add task budget beta when task_budget is not set", () => {
+    const model = new ChatAnthropic({
+      model: "claude-fable-5",
+      apiKey: "testing",
+      outputConfig: { effort: "high" },
     });
+
+    const params = model.invocationParams({});
+
+    expect(params.betas ?? []).not.toContain("task-budgets-2026-03-13");
   });
 });
 
