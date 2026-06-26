@@ -252,6 +252,72 @@ describe("openaiTranslator", () => {
       expect(message2.content).toEqual(expected);
     });
 
+    it("should translate reasoning blocks from content array", () => {
+      const message = new AIMessage({
+        content: [
+          { type: "reasoning", reasoning: "Let me think about this..." },
+          { type: "text", text: "The answer is 42." },
+        ],
+        response_metadata: { model_provider: "openai" },
+      });
+
+      const expected: Array<ContentBlock.Standard> = [
+        { type: "reasoning", reasoning: "Let me think about this..." },
+        { type: "text", text: "The answer is 42." },
+      ];
+
+      expect(message.contentBlocks).toEqual(expected);
+    });
+
+    it("should not duplicate reasoning when present in both content and additional_kwargs", () => {
+      const message = new AIMessage({
+        content: [
+          { type: "reasoning", reasoning: "Thinking... Done." },
+          { type: "text", text: "The answer is 42." },
+        ],
+        additional_kwargs: {
+          reasoning: {
+            summary: [{ text: "Thinking..." }, { text: " Done." }],
+          },
+        },
+        response_metadata: { model_provider: "openai" },
+      });
+
+      const blocks = message.contentBlocks;
+      const reasoningBlocks = blocks.filter((b) => b.type === "reasoning");
+
+      // Should have exactly one reasoning block (from content), not two
+      expect(reasoningBlocks).toHaveLength(1);
+      expect(reasoningBlocks[0]).toEqual({
+        type: "reasoning",
+        reasoning: "Thinking... Done.",
+      });
+
+      expect(blocks).toEqual([
+        { type: "reasoning", reasoning: "Thinking... Done." },
+        { type: "text", text: "The answer is 42." },
+      ]);
+    });
+
+    it("should handle reasoning with empty string in content during streaming", () => {
+      const message = new AIMessage({
+        content: [
+          { type: "reasoning", reasoning: "" },
+          { type: "text", text: "" },
+        ],
+        response_metadata: { model_provider: "openai" },
+      });
+
+      const blocks = message.contentBlocks;
+      const reasoningBlocks = blocks.filter((b) => b.type === "reasoning");
+
+      expect(reasoningBlocks).toHaveLength(1);
+      expect(reasoningBlocks[0]).toEqual({
+        type: "reasoning",
+        reasoning: "",
+      });
+    });
+
     it("should translate responses chunk and include tool_call when args parse", () => {
       const chunk1 = new AIMessageChunk({
         content: [{ type: "text", text: "Processing ", index: 0 }],

@@ -243,7 +243,19 @@ export function convertToV1FromResponses(
   message: AIMessage
 ): Array<ContentBlock.Standard> {
   function* iterateContent(): Iterable<ContentBlock.Standard> {
+    const content =
+      typeof message.content === "string"
+        ? [{ type: "text", text: message.content }]
+        : message.content;
+
+    // Check if content already has reasoning blocks (preferred source)
+    const hasContentReasoning = content.some(
+      (b) => _isObject(b) && b.type === "reasoning"
+    );
+
+    // Fallback: extract reasoning from additional_kwargs only if content doesn't have it
     if (
+      !hasContentReasoning &&
       _isObject(message.additional_kwargs?.reasoning) &&
       _isArray(message.additional_kwargs.reasoning.summary)
     ) {
@@ -262,10 +274,6 @@ export function convertToV1FromResponses(
         reasoning: summary,
       };
     }
-    const content =
-      typeof message.content === "string"
-        ? [{ type: "text", text: message.content }]
-        : message.content;
     for (const block of content) {
       if (_isContentBlock(block, "text")) {
         const {
@@ -298,6 +306,11 @@ export function convertToV1FromResponses(
             text: String(text),
           };
         }
+      } else if (_isContentBlock(block, "reasoning")) {
+        yield {
+          type: "reasoning",
+          reasoning: _isString(block.reasoning) ? block.reasoning : "",
+        };
       }
     }
     for (const toolCall of message.tool_calls ?? []) {
