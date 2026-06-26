@@ -1,5 +1,11 @@
 # @langchain/aws
 
+## 1.4.2
+
+### Patch Changes
+
+- [#11098](https://github.com/langchain-ai/langchainjs/pull/11098) [`72ffc4b`](https://github.com/langchain-ai/langchainjs/commit/72ffc4bf17dc6dca390546c0e6c9503607198f26) Thanks [@hntrl](https://github.com/hntrl)! - Add a default Bedrock Converse stream idle timeout to prevent stalled response bodies from hanging forever.
+
 ## 1.4.1
 
 ### Patch Changes

@@ -1,5 +1,23 @@
 # langchain
 
+## 1.5.2
+
+### Patch Changes
+
+- [#11100](https://github.com/langchain-ai/langchainjs/pull/11100) [`3205b35`](https://github.com/langchain-ai/langchainjs/commit/3205b35ac83037a2fff2998f16a66b5126b306f8) Thanks [@colifran](https://github.com/colifran)! - fix(langchain, openai): decouple strict tools from strict structured output response
+
+## 1.5.1
+
+### Patch Changes
+
+- [#11087](https://github.com/langchain-ai/langchainjs/pull/11087) [`534b43a`](https://github.com/langchain-ai/langchainjs/commit/534b43a0719c89e3fb4ab7052d3f39797660aa43) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): keep tool call streams pending across any tool interrupt
+
+  A raw `interrupt()` raised from inside a tool surfaced as a `tool-error` and
+  rejected the call's un-awaited `output` promise, producing an unhandled
+  rejection that crashed HITL runs. The tool-call stream transformer now treats
+  any serialized graph interrupt as control flow (the call stays pending and
+  resumes), not just `humanInTheLoopMiddleware` interrupts.
+
 ## 1.5.0
 
 ### Minor Changes
