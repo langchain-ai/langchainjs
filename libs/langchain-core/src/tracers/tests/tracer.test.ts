@@ -218,6 +218,29 @@ test("Test Tool Run", async () => {
   expect(run).toMatchObject(compareRun);
 });
 
+test("Test Tool Run with tool call id", async () => {
+  const tracer = new FakeTracer();
+  const runId = uuid.v4();
+  const toolCallId = "call_abc123";
+  await tracer.handleToolStart(
+    serialized,
+    "test",
+    runId,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    toolCallId
+  );
+  await tracer.handleToolEnd("output", runId);
+  expect(tracer.runs.length).toBe(1);
+  const run = tracer.runs[0];
+  expect(run.inputs).toEqual({
+    input: "test",
+    tool_call_id: toolCallId,
+  });
+});
+
 test("Test Retriever Run", async () => {
   const tracer = new FakeTracer();
   const runId = uuid.v4();
