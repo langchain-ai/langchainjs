@@ -19,7 +19,10 @@ import {
 import { z } from "zod/v3";
 import { describe, expect, test, it, vi } from "vitest";
 import { convertToConverseMessages } from "../utils/message_inputs.js";
-import { handleConverseStreamContentBlockDelta } from "../utils/message_outputs.js";
+import {
+  handleConverseStreamContentBlockDelta,
+  convertConverseMessageToLangChainMessage,
+} from "../utils/message_outputs.js";
 import { ChatBedrockConverse } from "../chat_models.js";
 import { load } from "@langchain/core/load";
 
@@ -2078,5 +2081,76 @@ describe("document content block conversion", () => {
     expect(name1).toBeDefined();
     expect(name2).toBeDefined();
     expect(name1).not.toBe(name2);
+  });
+});
+
+describe("convertConverseMessageToLangChainMessage - $unknown reasoning blocks (GPT-OSS)", () => {
+  const mockResponseMetadata = {
+    $metadata: { requestId: "test-request-id" },
+  };
+
+  it("should parse reasoning_content returned via $unknown wrapper (e.g. GPT-OSS on Bedrock)", () => {
+    // Simulate how the AWS SDK wraps unknown union members.
+    // GPT-OSS returns { type: "reasoning_content", reasoningText: { text: "..." } }
+    // but this type is not in the current SDK union, so it arrives as $unknown.
+    const message = {
+      role: "assistant" as const,
+      content: [
+        {
+          $unknown: [
+            "reasoning_content",
+            {
+              reasoningText: {
+                text: "The user asks how are you? I respond politely.",
+                signature: "",
+              },
+            },
+          ] as [string, unknown],
+        },
+        {
+          text: "I'm doing great, thank you!",
+        },
+      ],
+    };
+
+    const result = convertConverseMessageToLangChainMessage(
+      message,
+      mockResponseMetadata
+    );
+
+    expect(Array.isArray(result.content)).toBe(true);
+    const blocks = result.content as Array<Record<string, unknown>>;
+    const reasoningBlock = blocks.find((b) => b.type === "reasoning_content");
+    expect(reasoningBlock).toBeDefined();
+    expect(reasoningBlock?.reasoningText).toMatchObject({
+      text: "The user asks how are you? I respond politely.",
+    });
+
+    const textBlock = blocks.find((b) => b.type === "text");
+    expect(textBlock?.text).toBe("I'm doing great, thank you!");
+  });
+
+  it("should not produce non_standard blocks for reasoning_content from $unknown", () => {
+    const message = {
+      role: "assistant" as const,
+      content: [
+        {
+          $unknown: [
+            "reasoning_content",
+            { reasoningText: { text: "Thinking...", signature: "" } },
+          ] as [string, unknown],
+        },
+        { text: "Done." },
+      ],
+    };
+
+    const result = convertConverseMessageToLangChainMessage(
+      message,
+      mockResponseMetadata
+    );
+
+    const blocks = result.content as Array<Record<string, unknown>>;
+    const nonStandardBlock = blocks.find((b) => b.type === "non_standard");
+    expect(nonStandardBlock).toBeUndefined();
   });
 });
