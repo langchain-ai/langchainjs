@@ -147,4 +147,54 @@ describe("ChatGoogleTranslator", () => {
       },
     ]);
   });
+
+  it("should use the functionCall id for the tool_call id when present", () => {
+    const message = new AIMessage({
+      content: [
+        {
+          type: "functionCall",
+          functionCall: {
+            id: "abc123",
+            name: "calculator",
+            args: { expression: "1 + 1" },
+          },
+        },
+      ],
+      response_metadata: { model_provider: "google" },
+    });
+
+    expect(message.contentBlocks).toEqual([
+      {
+        type: "tool_call",
+        id: "abc123",
+        name: "calculator",
+        args: { expression: "1 + 1" },
+      },
+    ]);
+  });
+
+  it("should fall back to the message id when the functionCall has no id", () => {
+    const message = new AIMessage({
+      id: "msg-fallback",
+      content: [
+        {
+          type: "functionCall",
+          functionCall: {
+            name: "calculator",
+            args: { expression: "1 + 1" },
+          },
+        },
+      ],
+      response_metadata: { model_provider: "google" },
+    });
+
+    expect(message.contentBlocks).toEqual([
+      {
+        type: "tool_call",
+        id: "msg-fallback",
+        name: "calculator",
+        args: { expression: "1 + 1" },
+      },
+    ]);
+  });
 });
