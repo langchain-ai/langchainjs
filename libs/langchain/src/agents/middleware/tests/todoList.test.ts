@@ -45,6 +45,11 @@ describe("todoListMiddleware", () => {
     expect(messages.text).toContain(
       "You are a helpful assistant.\n\n## `write_todos`\n\nYou have "
     );
+
+    const [tools] = (model.bindTools as unknown as MockInstance).mock.calls[0];
+    expect(tools[0].description.length).toBeLessThan(600);
+    expect(tools[0].description).not.toContain("<example>");
+    expect(tools[0].description).toContain("Call write_todos at most once");
   });
 
   it("should add the custom system prompt to the model request and custom tool description", async () => {
