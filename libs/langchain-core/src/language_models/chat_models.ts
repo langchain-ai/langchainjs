@@ -263,6 +263,44 @@ export abstract class BaseChatModel<
     const [runnableConfig, callOptions] =
       super._separateRunnableConfigFromCallOptions(options);
     (callOptions as this["ParsedCallOptions"]).signal = runnableConfig.signal;
+
+    if (runnableConfig.configurable?.is_structured_output) {
+      const expectedToolName =
+        runnableConfig.configurable.structured_output_tool_name;
+      const parsedTools = (callOptions as Record<string, unknown>).tools;
+      if (parsedTools !== undefined) {
+        const hasExtraOrMissingTools =
+          !Array.isArray(parsedTools) ||
+          parsedTools.length === 0 ||
+          parsedTools.some((tool: unknown) => {
+            if (!tool) return true;
+            if (typeof tool === "object") {
+              const toolObj = tool as Record<string, unknown>;
+              let isExpected = false;
+              if (
+                toolObj.function &&
+                typeof toolObj.function === "object" &&
+                (toolObj.function as Record<string, unknown>).name ===
+                  expectedToolName
+              ) {
+                isExpected = true;
+              } else if (toolObj.name === expectedToolName) {
+                isExpected = true;
+              }
+              return !isExpected;
+            }
+            return true;
+          });
+
+        if (hasExtraOrMissingTools) {
+          throw new Error(
+            `Cannot pass 'tools' call option when using a model configured with structured output. ` +
+              `This overrides the structured output schema tool and causes the model call to fail.`
+          );
+        }
+      }
+    }
+
     return [runnableConfig, callOptions as this["ParsedCallOptions"]];
   }
 
@@ -640,6 +678,10 @@ export abstract class BaseChatModel<
       ...this.getLsParams(options),
       ls_integration: "langchain_chat_model",
     };
+  }
+
+  get tools(): unknown[] {
+    return [];
   }
 
   /** @ignore */
@@ -1317,7 +1359,12 @@ export abstract class BaseChatModel<
       },
     ];
 
-    const llm = this.bindTools(tools);
+    const llm = this.bindTools(tools, {
+      configurable: {
+        is_structured_output: true,
+        structured_output_tool_name: functionName,
+      },
+    } as Partial<CallOptions>);
     const outputParser = RunnableLambda.from<OutputMessageType, RunOutput>(
       (input: BaseMessageChunk): RunOutput => {
         if (!AIMessageChunk.isInstance(input)) {
