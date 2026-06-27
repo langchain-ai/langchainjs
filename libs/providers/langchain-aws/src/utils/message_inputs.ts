@@ -574,7 +574,7 @@ function convertSystemMessageToConverseMessage(
   );
 }
 
-function convertAIMessageToConverseMessage(msg: AIMessage): Bedrock.Message {
+function convertAIMessageToConverseMessage(msg: AIMessage): Bedrock.Message | null {
   if (msg.response_metadata?.output_version === "v1") {
     return {
       role: "assistant",
@@ -648,6 +648,19 @@ function convertAIMessageToConverseMessage(msg: AIMessage): Bedrock.Message {
         },
       })),
     ];
+  }
+
+  // Bedrock Converse API rejects messages with empty content arrays
+  // (ValidationException: "content: must be a non-empty array"). This can
+  // happen when an AIMessage has neither text content nor tool_calls — e.g.
+  // an intermediate assistant message that was synthesised by a middleware
+  // hook without text. Drop the message entirely so the rest of the
+  // conversation can still go through.
+  if (
+    (!assistantMsg.content || assistantMsg.content.length === 0) &&
+    (!msg.tool_calls || msg.tool_calls.length === 0)
+  ) {
+    return null;
   }
 
   return assistantMsg;
@@ -767,7 +780,8 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
       } else {
         throw new Error(`Unsupported message type: ${msg.type}`);
       }
-    });
+    })
+    .filter((msg): msg is Bedrock.Message => msg !== null);
 
   // Combine consecutive user tool result messages into a single message
   const combinedConverseMessages = converseMessages.reduce<Bedrock.Message[]>(
