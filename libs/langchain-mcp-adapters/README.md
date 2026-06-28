@@ -321,7 +321,7 @@ const out = await t?.invoke({ a: 1, b: 2 });
 
 Notes:
 
-- **beforeToolCall** can return `{ args?, headers? }`. Headers are supported for HTTP/SSE. Stdio connections do not support custom headers.
+- **beforeToolCall** can return `{ args?, headers? }`. Headers are supported for HTTP/SSE. Stdio connections do not support custom headers. For HTTP/SSE, per-call headers are applied on top of any headers configured on the transport.
 - **afterToolCall** may return either a 2‑tuple `[content, artifact]`, a `ToolMessage`, a `Command` instance, or nothing (to keep the original result).
 
 ## Tool Configuration Options
