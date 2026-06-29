@@ -13,11 +13,13 @@ import {
   ZodObjectV3,
   interopSafeParse,
 } from "@langchain/core/utils/types";
+import { initWatsonxOrGatewayInstance } from "../../utils/instance.js";
+import { jsonSchemaToZod } from "../../utils/schema.js";
 import {
-  authenticateAndSetInstance,
-  jsonSchemaToZod,
-} from "../../utils/ibm.js";
-import { WatsonxAuth, WatsonxInit } from "../../types.js";
+  WatsonxAuth,
+  WatsonxInit,
+  WatsonxConfigurationError,
+} from "../../types.js";
 
 export interface WatsonxToolParams {
   name: string;
@@ -91,30 +93,8 @@ export class WatsonxToolkit extends BaseToolkit {
 
   constructor(fields: WatsonxAuth & WatsonxInit) {
     super();
-    const {
-      watsonxAIApikey,
-      watsonxAIAuthType,
-      watsonxAIBearerToken,
-      watsonxAIUsername,
-      watsonxAIPassword,
-      watsonxAIUrl,
-      version,
-      disableSSL,
-      serviceUrl,
-    } = fields;
 
-    const auth = authenticateAndSetInstance({
-      watsonxAIApikey,
-      watsonxAIAuthType,
-      watsonxAIBearerToken,
-      watsonxAIUsername,
-      watsonxAIPassword,
-      watsonxAIUrl,
-      disableSSL,
-      version,
-      serviceUrl,
-    });
-    if (auth) this.service = auth;
+    this.service = initWatsonxOrGatewayInstance(fields);
   }
 
   async loadTools() {
@@ -142,7 +122,9 @@ export class WatsonxToolkit extends BaseToolkit {
   getTool(toolName: string, config?: Record<string, any>) {
     const selectedTool = this.tools.find((item) => item.name === toolName);
     if (!selectedTool)
-      throw new Error("Tool with provided name does not exist");
+      throw new WatsonxConfigurationError(
+        "Tool with provided name does not exist"
+      );
     if (config) {
       selectedTool.config = config;
     }

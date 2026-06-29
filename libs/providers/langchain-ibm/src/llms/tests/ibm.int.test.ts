@@ -3,7 +3,7 @@ import { CallbackManager } from "@langchain/core/callbacks/manager";
 import { LLMResult } from "@langchain/core/outputs";
 import { StringPromptValue } from "@langchain/core/prompt_values";
 import { TokenUsage } from "../../types.js";
-import { WatsonxLLM, WatsonxInputLLM } from "../ibm.js";
+import { WatsonxLLM, WatsonxInputLLM } from "../index.js";
 
 const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
 const model = "ibm/granite-4-h-small";
@@ -355,7 +355,6 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
 
         ...params(1024),
       });
-      const chunks: string[] = [];
       await expect(async () => {
         const controller = new AbortController();
         const stream = await llm.stream("Can you explain what a LLM is?", {
@@ -363,10 +362,9 @@ describe.each(parameters)("Text generation for $name", ({ params }) => {
         });
         controller.abort();
         for await (const _chunk of stream) {
-          // do nothing
+          // Will never reach this point
         }
       }).rejects.toThrow();
-      console.log(chunks.join());
     });
   });
 

@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from "vitest";
-import { ChatWatsonx } from "../ibm.js";
+import { ChatWatsonx } from "../index.js";
 
 function watsonxTextChunks() {
   return [

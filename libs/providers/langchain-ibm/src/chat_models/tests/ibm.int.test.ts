@@ -17,7 +17,7 @@ import {
   BaseChatModelCallOptions,
 } from "@langchain/core/language_models/chat_models";
 import { concat } from "@langchain/core/utils/stream";
-import { ChatWatsonx } from "../ibm.js";
+import { ChatWatsonx } from "../index.js";
 
 const models = ["meta-llama/llama-3-3-70b-instruct", "ibm/granite-4-h-small"];
 const modelAlias = models.map((model) => `langchain-nodejs/${model}`);

@@ -4,7 +4,7 @@ import {
   ChatWatsonx,
   ChatWatsonxCallOptions,
   ChatWatsonxInput,
-} from "../ibm.js";
+} from "../index.js";
 
 class ChatWatsonxStandardIntegrationTests extends ChatModelIntegrationTests<
   ChatWatsonxCallOptions,
