@@ -169,6 +169,44 @@ class FakeToolCallStreamModel extends BaseChatModel {
   }
 }
 
+class FakeTextAndToolCallStreamModel extends BaseChatModel {
+  _llmType() {
+    return "fake-text-and-tool-stream";
+  }
+
+  async _generate(
+    _messages: BaseMessage[],
+    _options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): Promise<ChatResult> {
+    return { generations: [] };
+  }
+
+  async *_streamResponseChunks(
+    _messages: BaseMessage[],
+    _options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    yield new ChatGenerationChunk({
+      message: new AIMessageChunk({
+        content: "Checking",
+        id: "msg_text_and_tools",
+        tool_call_chunks: [
+          { id: "call_1", name: "search", args: "", index: 0 },
+        ],
+      }),
+      text: "Checking",
+    });
+    yield new ChatGenerationChunk({
+      message: new AIMessageChunk({
+        content: "",
+        tool_call_chunks: [{ args: '{"q":"hello"}', index: 0 }],
+      }),
+      text: "",
+    });
+  }
+}
+
 /**
  * A model that yields chunks with usage_metadata.
  */
@@ -488,6 +526,28 @@ describe("_streamChatModelEvents bridge", () => {
       expect(toolFinish).toBeDefined();
       expect(toolFinish!.content.name).toBe("search");
       expect(toolFinish!.content.args).toEqual({ q: "hello" });
+    });
+
+    test("keeps text and tool call chunks in separate content blocks", async () => {
+      const model = new FakeTextAndToolCallStreamModel({});
+      const message = await model.streamEvents("Hello");
+
+      expect(message.tool_calls).toHaveLength(1);
+      expect(message.tool_calls?.[0]).toMatchObject({
+        id: "call_1",
+        name: "search",
+        args: { q: "hello" },
+      });
+
+      const content = message.content as ContentBlock[];
+      expect(content).toHaveLength(2);
+      expect(content[0]).toMatchObject({ type: "text", text: "Checking" });
+      expect(content[1]).toMatchObject({
+        type: "tool_call",
+        id: "call_1",
+        name: "search",
+        args: { q: "hello" },
+      });
     });
   });
 
