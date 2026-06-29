@@ -363,6 +363,50 @@ describe("convertCompletionsMessageToBaseMessage", () => {
       });
     });
 
+    it("should normalize provider-specific tool call content blocks", () => {
+      const message = new AIMessage({
+        content: [
+          {
+            type: "functionCall",
+            functionCall: {
+              name: "greet",
+              args: { name: "John" },
+            },
+          },
+        ],
+        tool_calls: [
+          {
+            id: "call_123",
+            name: "greet",
+            args: { name: "John" },
+          },
+        ],
+        response_metadata: {
+          model_provider: "google-genai",
+        },
+      });
+
+      const result = convertMessagesToCompletionsMessageParams({
+        messages: [message],
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({
+        role: "assistant",
+        content: [],
+        tool_calls: [
+          {
+            id: "call_123",
+            type: "function",
+            function: {
+              name: "greet",
+              arguments: '{"name":"John"}',
+            },
+          },
+        ],
+      });
+    });
+
     it("should preserve content with function_call in additional_kwargs", () => {
       const message = new AIMessage({
         content: "Let me call a function for you.",

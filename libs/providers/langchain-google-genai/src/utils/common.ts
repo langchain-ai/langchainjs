@@ -753,6 +753,9 @@ export function mapGenerateContentResultToChatResult(
         ...generationInfo,
         [_FUNCTION_CALL_THOUGHT_SIGNATURES_MAP_KEY]: functionThoughtSignatures,
       },
+      response_metadata: {
+        model_provider: "google-genai",
+      },
       usage_metadata: extra?.usageMetadata,
     }),
     generationInfo,
