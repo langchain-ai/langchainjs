@@ -129,6 +129,40 @@ describe("Thinking content handling", () => {
     expect(typeof result.generations[0].message.content).toBe("string");
     expect(result.generations[0].message.content).toBe("Regular response");
   });
+
+  test("should mark non-streaming function calls with the provider metadata", () => {
+    const mockResponse = createMockResponse([
+      {
+        content: {
+          role: "model",
+          parts: [
+            {
+              functionCall: {
+                name: "lookup",
+                args: { city: "Paris" },
+              },
+            },
+          ] as GoogleGenerativeAIPart[],
+        },
+        finishReason: "STOP" as FinishReason,
+        index: 0,
+        safetyRatings: [],
+      },
+    ]);
+
+    const result = mapGenerateContentResultToChatResult(mockResponse);
+    const message = result.generations[0].message;
+
+    expect(message.response_metadata.model_provider).toBe("google-genai");
+    expect(message.tool_calls).toHaveLength(1);
+    expect(message.tool_calls?.[0]).toEqual(
+      expect.objectContaining({
+        type: "tool_call",
+        name: "lookup",
+        args: { city: "Paris" },
+      })
+    );
+  });
 });
 
 describe("Streaming thinking content handling", () => {

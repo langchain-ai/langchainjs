@@ -787,8 +787,11 @@ export const convertMessagesToCompletionsMessageParams: Converter<
 > = ({ messages, model }) => {
   return messages.flatMap((message) => {
     if (
-      "output_version" in message.response_metadata &&
-      message.response_metadata?.output_version === "v1"
+      ("output_version" in message.response_metadata &&
+        message.response_metadata?.output_version === "v1") ||
+      (Array.isArray(message.content) &&
+        "model_provider" in message.response_metadata &&
+        typeof message.response_metadata.model_provider === "string")
     ) {
       return convertStandardContentMessageToCompletionsMessage({ message });
     }
