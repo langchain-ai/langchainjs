@@ -105,9 +105,10 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
         initParams.response_metadata.output_version === "v1" &&
         initParams.content !== undefined
       ) {
-        initParams.contentBlocks =
+        const contentBlocks =
           initParams.content as Array<ContentBlock.Standard>;
-        initParams.content = undefined;
+        delete initParams.content;
+        initParams.contentBlocks = contentBlocks;
       }
 
       if (initParams.contentBlocks !== undefined) {
