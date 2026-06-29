@@ -44,6 +44,37 @@ type ChatCompletionsInvocationParams = Omit<
 >;
 
 /**
+ * Scalar `response_metadata` fields that identify the response rather than
+ * accumulate across chunks. They are last-wins on merge: `AIMessageChunk.concat`
+ * string-concatenates string fields, so these must be restored when a provider
+ * emits more than one finish_reason chunk to avoid corruption (e.g. "stopstop").
+ */
+const SCALAR_RESPONSE_METADATA_KEYS = [
+  "finish_reason",
+  "model_name",
+  "system_fingerprint",
+  "service_tier",
+] as const;
+
+/**
+ * Overwrite the scalar `response_metadata` fields on `target` with the
+ * (defined) values from `incoming`, in place. Used after `concat` to undo the
+ * string-concatenation it applies to these last-wins identity/finish fields.
+ */
+function mergeScalarResponseMetadata(
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  target: Record<string, any>,
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  incoming: Record<string, any>
+): void {
+  for (const key of SCALAR_RESPONSE_METADATA_KEYS) {
+    if (incoming[key] != null) {
+      target[key] = incoming[key];
+    }
+  }
+}
+
+/**
  * OpenAI Completions API implementation.
  * @internal
  */
@@ -186,6 +217,14 @@ export class ChatOpenAICompletions<
           finalChunks[index] = chunk;
         } else {
           finalChunks[index] = finalChunks[index].concat(chunk);
+          // `concat` string-concatenates response_metadata fields. These
+          // scalar identity/finish fields are last-wins, not accumulated, so
+          // restore them when a provider emits more than one finish_reason
+          // chunk (e.g. OpenRouter) to avoid e.g. "stopstop" / doubled names.
+          mergeScalarResponseMetadata(
+            finalChunks[index].message.response_metadata,
+            chunk.message.response_metadata
+          );
         }
       }
       const generations = Object.entries(finalChunks)
