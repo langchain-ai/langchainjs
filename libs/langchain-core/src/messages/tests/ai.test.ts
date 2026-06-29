@@ -80,6 +80,27 @@ describe("AIMessage", () => {
     ]);
   });
 
+  it("should serialize v1 content blocks once", () => {
+    const message = new AIMessage({
+      content: [{ type: "text", text: "Hi there!" }],
+      response_metadata: {
+        output_version: "v1",
+      },
+    });
+    const serialized = message.toJSON();
+
+    expect(serialized.type).toBe("constructor");
+    if (serialized.type !== "constructor") {
+      throw new Error("Expected AIMessage to serialize as a constructor");
+    }
+    expect(serialized.kwargs).not.toHaveProperty("content");
+    expect(serialized.kwargs).toMatchObject({
+      content_blocks: [{ type: "text", text: "Hi there!" }],
+      response_metadata: { output_version: "v1" },
+    });
+    expect(JSON.stringify(serialized).match(/Hi there!/g)).toHaveLength(1);
+  });
+
   describe(".contentBlocks", () => {
     it("should have tool call content blocks from .tool_calls", () => {
       const message = new AIMessage({
