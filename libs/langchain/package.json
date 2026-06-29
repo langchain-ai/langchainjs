@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "1.5.0",
+  "version": "1.5.2",
   "description": "Typescript bindings for langchain",
   "author": "LangChain",
   "license": "MIT",
@@ -59,7 +59,7 @@
     "cheerio": "1.2.0",
     "dotenv": "^17.4.0",
     "dpdm": "^3.14.0",
-    "hono": "^4.12.18",
+    "hono": "^4.12.25",
     "openai": "^6.41.0",
     "peggy": "^5.1.0",
     "reflect-metadata": "^0.2.2",
