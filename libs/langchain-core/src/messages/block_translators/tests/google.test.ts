@@ -62,8 +62,7 @@ describe("ChatGoogleTranslator", () => {
   });
 
   it("should merge thoughtSignature from originalTextContentBlock into array content", () => {
-    // This is THE BUG FIX scenario: streaming with thinking models causes
-    // content to be an array, but thoughtSignature only ends up in
+    // Streaming with thinking models can keep thoughtSignature in
     // originalTextContentBlock, not in the content blocks themselves.
     const message = new AIMessage({
       content: [
@@ -114,6 +113,57 @@ describe("ChatGoogleTranslator", () => {
 
     expect(message.contentBlocks).toEqual([
       { type: "text", text: "Hello world" },
+    ]);
+  });
+
+  it("should preserve function call ids in tool call content blocks", () => {
+    const message = new AIMessage({
+      id: "message-id",
+      content: [
+        {
+          type: "functionCall",
+          functionCall: {
+            id: "call-abc123",
+            name: "calculator",
+            args: { expression: "1 + 1" },
+          },
+        },
+      ],
+      response_metadata: { model_provider: "google" },
+    });
+
+    expect(message.contentBlocks).toEqual([
+      {
+        type: "tool_call",
+        id: "call-abc123",
+        name: "calculator",
+        args: { expression: "1 + 1" },
+      },
+    ]);
+  });
+
+  it("should fall back to the message id when function call ids are missing", () => {
+    const message = new AIMessage({
+      id: "message-id",
+      content: [
+        {
+          type: "functionCall",
+          functionCall: {
+            name: "calculator",
+            args: { expression: "1 + 1" },
+          },
+        },
+      ],
+      response_metadata: { model_provider: "google" },
+    });
+
+    expect(message.contentBlocks).toEqual([
+      {
+        type: "tool_call",
+        id: "message-id",
+        name: "calculator",
+        args: { expression: "1 + 1" },
+      },
     ]);
   });
 
