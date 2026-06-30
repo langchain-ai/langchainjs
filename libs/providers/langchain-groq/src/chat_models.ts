@@ -198,7 +198,7 @@ export interface ChatGroqInput extends BaseChatModelParams {
 
   /**
    * The maximum number of tokens that the model can process in a single response.
-   * This limits ensures computational efficiency and resource management.
+   * This limit ensures computational efficiency and resource management.
    */
   maxTokens?: number;
 
