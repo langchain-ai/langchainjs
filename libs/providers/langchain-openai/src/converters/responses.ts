@@ -971,7 +971,7 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
  * const items = convertStandardContentMessageToResponsesInput(message);
  * // Returns:
  * // [
- * //   { type: "message", role: "assistant", content: [{ type: "input_text", text: "I'll check the weather for you." }] },
+ * //   { type: "message", role: "assistant", content: [{ type: "output_text", text: "I'll check the weather for you.", annotations: [] }] },
  * //   { type: "function_call", call_id: "call_123", name: "get_weather", arguments: '{"location":"San Francisco"}' }
  * // ]
  * ```
@@ -1220,7 +1220,20 @@ export const convertStandardContentMessageToResponsesInput: Converter<
           return block.extras
             .phase as OpenAIClient.Responses.EasyInputMessage["phase"];
         });
-        pushMessageContent([{ type: "input_text", text: block.text }], phase);
+        pushMessageContent(
+          [
+            messageRole === "assistant"
+              ? {
+                  type: "output_text",
+                  text: block.text,
+                  annotations: (block.annotations ?? []).map(
+                    convertLangChainAnnotationToOpenAI
+                  ),
+                }
+              : { type: "input_text", text: block.text },
+          ],
+          phase
+        );
       } else if (block.type === "invalid_tool_call") {
         // no-op
       } else if (block.type === "reasoning") {
@@ -1289,10 +1302,16 @@ export const convertStandardContentMessageToResponsesInput: Converter<
       } else if (block.type === "text-plain") {
         if (block.text) {
           pushMessageContent([
-            {
-              type: "input_text",
-              text: block.text,
-            },
+            messageRole === "assistant"
+              ? {
+                  type: "output_text",
+                  text: block.text,
+                  annotations: [],
+                }
+              : {
+                  type: "input_text",
+                  text: block.text,
+                },
           ]);
         }
       } else if (block.type === "non_standard" && isResponsesMessage) {
