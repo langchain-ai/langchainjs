@@ -59,7 +59,7 @@
     "@types/debug": "^4.1.13",
     "@types/express": "^5.0.6",
     "@types/node": "^25.9.1",
-    "@vitest/coverage-v8": "^4.1.8",
+    "@vitest/coverage-v8": "^4.1.9",
     "dotenv": "^17.4.0",
     "dpdm": "^3.14.0",
     "eventsource": "^4.1.0",
