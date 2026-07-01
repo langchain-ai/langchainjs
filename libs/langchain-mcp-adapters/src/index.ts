@@ -20,3 +20,5 @@ export type {
 export type SSEConnection = StreamableHTTPConnection;
 
 export { loadMcpTools } from "./tools.js";
+export { enableX402, annotateToolsWithX402 } from "./x402.js";
+export type { X402Config } from "./x402.js";
