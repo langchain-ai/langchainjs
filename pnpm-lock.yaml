@@ -1303,8 +1303,8 @@ importers:
         specifier: ^9.34.0
         version: 9.39.4(jiti@2.7.0)
       prettier:
-        specifier: ^3.5.0
-        version: 3.8.3
+        specifier: ^3.9.4
+        version: 3.9.4
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
@@ -1377,8 +1377,8 @@ importers:
         specifier: ^9.34.0
         version: 9.39.4(jiti@2.7.0)
       prettier:
-        specifier: ^3.5.0
-        version: 3.8.3
+        specifier: ^3.9.4
+        version: 3.9.4
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
@@ -2078,8 +2078,8 @@ importers:
         specifier: ^9.34.0
         version: 9.39.4(jiti@2.7.0)
       prettier:
-        specifier: ^3.5.0
-        version: 3.8.3
+        specifier: ^3.9.4
+        version: 3.9.4
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
@@ -2130,8 +2130,8 @@ importers:
         specifier: workspace:^
         version: link:../../langchain
       prettier:
-        specifier: ^3.5.0
-        version: 3.8.3
+        specifier: ^3.9.4
+        version: 3.9.4
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
@@ -2170,8 +2170,8 @@ importers:
         specifier: ^9.34.0
         version: 9.39.4(jiti@2.7.0)
       prettier:
-        specifier: ^3.5.0
-        version: 3.8.3
+        specifier: ^3.9.4
+        version: 3.9.4
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
@@ -2241,8 +2241,8 @@ importers:
         specifier: ^9.34.0
         version: 9.39.4(jiti@2.7.0)
       prettier:
-        specifier: ^3.5.0
-        version: 3.8.3
+        specifier: ^3.9.4
+        version: 3.9.4
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
@@ -2321,8 +2321,8 @@ importers:
         specifier: workspace:^
         version: link:../../langchain
       prettier:
-        specifier: ^3.5.0
-        version: 3.8.3
+        specifier: ^3.9.4
+        version: 3.9.4
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
@@ -3121,9 +3121,11 @@ packages:
 
   '@clickhouse/client-common@0.2.10':
     resolution: {integrity: sha512-BvTY0IXS96y9RUeNCpKL4HUzHmY80L0lDcGN0lmUD6zjOqYMn78+xyHYJ/AIAX7JQsc+/KwFt2soZutQTKxoGQ==}
+    deprecated: 'Deprecated: import from @clickhouse/client or @clickhouse/client-web instead.'
 
   '@clickhouse/client-common@1.18.3':
     resolution: {integrity: sha512-3axzO3zvrsGT5PzDenxgWscltYCNRDbhaHWUgdsmcM9OnW/VnZn9EarOcZogr9P82Z0mQh+Jd2x+p2K4TFD2fA==}
+    deprecated: 'Deprecated: import from @clickhouse/client or @clickhouse/client-web instead.'
 
   '@clickhouse/client@0.2.10':
     resolution: {integrity: sha512-ZwBgzjEAFN/ogS0ym5KHVbR7Hx/oYCX01qGp2baEyfN2HM73kf/7Vp3GvMHWRy+zUXISONEtFv7UTViOXnmFrg==}
@@ -9520,8 +9522,8 @@ packages:
       socks:
         optional: true
 
-  mongoose@9.7.1:
-    resolution: {integrity: sha512-rOCVA9ufRSdGTG6IdSqJa30avbaSBlI98zkv76xB+5xAzwCn4qvuKi26iE2BeAZrYYqcagjJRjmTA7+qEbSbYg==}
+  mongoose@9.7.3:
+    resolution: {integrity: sha512-9DsD4sq0tL9IKyfttZ6qn74KXBcD4lxDTzGXoAeOLMnDFFp1gqc5oc4s2BiMPbetJrLwvVylfyR4cqLst2pasQ==}
     engines: {node: '>=20.19.0'}
 
   mpath@0.9.0:
@@ -9568,6 +9570,11 @@ packages:
 
   nanoid@3.3.12:
     resolution: {integrity: sha512-ZB9RH/39qpq5Vu6Y+NmUaFhQR6pp+M2Xt76XBnEwDaGcVAqhlvxrl3B2bKS5D3NH3QR76v3aSrKaF/Kiy7lEtQ==}
+    engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
+    hasBin: true
+
+  nanoid@3.3.15:
+    resolution: {integrity: sha512-y7Wygv/7mEOvxTuEQDB8StXdMRBWf1kR/tlhAzBRUFkB2jfcLOAxO/SHmOO2zgz1pVgK29/kyupn059/bCHdjA==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
@@ -10237,6 +10244,10 @@ packages:
     resolution: {integrity: sha512-FfR8sjd4em2T6fb3I2MwAJU7HWVMr9zba+enmQeeWFfCbm+UOC/0X4DS8XtpUTMwWMGbjKYP7xjfNekzyGmB3A==}
     engines: {node: ^10 || ^12 || >=14}
 
+  postcss@8.5.16:
+    resolution: {integrity: sha512-vuwillviilfKZsg0VGj5R/YwwcHx4SLsIOI/7K6mQkWx+l5cUHTjj5g0AasTBcyXsbfTgrwsUNmVUb5xVwyPwg==}
+    engines: {node: ^10 || ^12 || >=14}
+
   postgres-array@2.0.0:
     resolution: {integrity: sha512-VpZrUqU5A69eQyW2c5CA1jtLecCsN2U/bD6VilrFDWq5+5UIEVO7nazS3TEcHf1zuPYO/sqGvUvW62g86RXZuA==}
     engines: {node: '>=4'}
@@ -10282,6 +10293,11 @@ packages:
 
   prettier@3.8.3:
     resolution: {integrity: sha512-7igPTM53cGHMW8xWuVTydi2KO233VFiTNyF5hLJqpilHfmn8C8gPf+PS7dUT64YcXFbiMGZxS9pCSxL/Dxm/Jw==}
+    engines: {node: '>=14'}
+    hasBin: true
+
+  prettier@3.9.4:
+    resolution: {integrity: sha512-yWG/o/4oJfo036EKAfK6ACAoDOfHeRHx4tuxkfBZiauURiaSmYwlpOr5LQqKtIkRD2z1PLteme2WoxEnj4tHTg==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -20425,8 +20441,9 @@ snapshots:
       '@aws-sdk/credential-providers': 3.1034.0
       socks: 2.8.9
 
-  mongoose@9.7.1(@aws-sdk/credential-providers@3.1034.0)(socks@2.8.9):
+  mongoose@9.7.3(@aws-sdk/credential-providers@3.1034.0)(socks@2.8.9):
     dependencies:
+      '@standard-schema/spec': 1.1.0
       kareem: 3.3.0
       mongodb: 7.2.0(@aws-sdk/credential-providers@3.1034.0)(socks@2.8.9)
       mpath: 0.9.0
@@ -20479,6 +20496,8 @@ snapshots:
 
   nanoid@3.3.12: {}
 
+  nanoid@3.3.15: {}
+
   napi-build-utils@2.0.0: {}
 
   napi-postinstall@0.3.4: {}
@@ -20492,7 +20511,7 @@ snapshots:
       apparatus: 0.0.10
       dotenv: 17.4.2
       memjs: 1.3.2
-      mongoose: 9.7.1(@aws-sdk/credential-providers@3.1034.0)(socks@2.8.9)
+      mongoose: 9.7.3(@aws-sdk/credential-providers@3.1034.0)(socks@2.8.9)
       pg: 8.22.0
       redis: 5.12.1(@opentelemetry/api@1.9.1)
       safe-stable-stringify: 2.5.0
@@ -21301,6 +21320,12 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
+  postcss@8.5.16:
+    dependencies:
+      nanoid: 3.3.15
+      picocolors: 1.1.1
+      source-map-js: 1.2.1
+
   postgres-array@2.0.0: {}
 
   postgres-bytea@1.0.1: {}
@@ -21337,6 +21362,8 @@ snapshots:
   prettier@2.8.8: {}
 
   prettier@3.8.3: {}
+
+  prettier@3.9.4: {}
 
   pretty-format@30.3.0:
     dependencies:
@@ -22979,7 +23006,7 @@ snapshots:
       esbuild: 0.28.1
       fdir: 6.5.0(picomatch@4.0.4)
       picomatch: 4.0.4
-      postcss: 8.5.15
+      postcss: 8.5.16
       rollup: 4.62.2
       tinyglobby: 0.2.17
     optionalDependencies:
