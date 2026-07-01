@@ -32,7 +32,7 @@
   "devDependencies": {
     "@jest/globals": "^30.4.1",
     "@langchain/core": "workspace:^",
-    "@swc/core": "^1.15.40",
+    "@swc/core": "^1.15.43",
     "@swc/jest": "^0.2.29",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",

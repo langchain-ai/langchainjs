@@ -9,11 +9,11 @@
     "build": "exit 0"
   },
   "dependencies": {
-    "@arethetypeswrong/core": "^0.18.3",
+    "@arethetypeswrong/core": "^0.18.4",
     "@typescript/native-preview": "^7.0.0-dev.20260401.1",
     "publint": "^0.3.19",
-    "rolldown": "^1.0.3",
-    "tsdown": "^0.21.7",
+    "rolldown": "^1.1.3",
+    "tsdown": "^0.22.3",
     "type-fest": "^5.7.0",
     "typescript": "^6.0.3",
     "unplugin-unused": "^0.5.6"

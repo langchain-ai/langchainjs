@@ -28,7 +28,7 @@
     "format:check": "prettier --check \"src\""
   },
   "dependencies": {
-    "pg": "^8.21.0"
+    "pg": "^8.22.0"
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0"
