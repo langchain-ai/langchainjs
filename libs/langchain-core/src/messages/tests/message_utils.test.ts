@@ -6,6 +6,7 @@ import { ChatMessage } from "../chat.js";
 import { HumanMessage } from "../human.js";
 import { SystemMessage } from "../system.js";
 import { ToolMessage } from "../tool.js";
+import { load } from "../../load/index.js";
 import {
   filterMessages,
   mergeMessageRuns,
@@ -782,5 +783,32 @@ describe("chat message conversions", () => {
       mapStoredMessagesToChatMessages(storedMessages);
 
     expect(convertedBackMessages).toEqual(originalMessages);
+  });
+
+  it("preserves contentBlocks content through a stored-message round-trip", () => {
+    // A message built via the `contentBlocks` input field serializes its
+    // content under the snake-cased `content_blocks` key, which the
+    // stored-message deserializer must map back to `contentBlocks`. Otherwise
+    // the message round-trips to empty content.
+    const message = new AIMessage({
+      contentBlocks: [{ type: "text", text: "hello" }],
+    });
+
+    const stored = mapChatMessagesToStoredMessages([message]);
+    const [back] = mapStoredMessagesToChatMessages(stored);
+
+    expect(back.text).toBe("hello");
+    expect(back.content).toEqual([{ type: "text", text: "hello" }]);
+  });
+
+  it("preserves contentBlocks content through a load() round-trip", async () => {
+    const message = new AIMessage({
+      contentBlocks: [{ type: "text", text: "hello" }],
+    });
+
+    const revived = await load<AIMessage>(JSON.stringify(message.toJSON()));
+
+    expect(revived.text).toBe("hello");
+    expect(revived.content).toEqual([{ type: "text", text: "hello" }]);
   });
 });
