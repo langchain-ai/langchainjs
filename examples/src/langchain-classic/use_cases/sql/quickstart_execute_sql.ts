@@ -5,7 +5,7 @@ import { QuerySqlTool } from "@langchain/classic/tools/sql";
 
 const db = await SqlDatabase.fromOptionsParams({
   appDataSourceOptions: {
-    type: "sqlite",
+    type: "better-sqlite3",
     database: "../../../../Chinook.db",
   },
 });
