@@ -29,7 +29,7 @@ const PROFILES: Record<string, ModelProfile> = {
     audioOutputs: false,
     videoOutputs: false,
     toolCalling: true,
-    structuredOutput: true,
+    structuredOutput: false,
   },
   "deepseek-reasoner": {
     maxInputTokens: 1000000,
@@ -57,7 +57,7 @@ const PROFILES: Record<string, ModelProfile> = {
     audioOutputs: false,
     videoOutputs: false,
     toolCalling: true,
-    structuredOutput: true,
+    structuredOutput: false,
   },
 };
 export default PROFILES;
