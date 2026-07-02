@@ -1553,6 +1553,38 @@ test("invocationParams includes cache_control with 1h ttl", () => {
   expect(params.cache_control).toEqual({ type: "ephemeral", ttl: "1h" });
 });
 
+test("invocationParams preserves constructor cache_control when no call option is provided", () => {
+  const model = new ChatAnthropic({
+    modelName: "claude-haiku-4-5-20251001",
+    temperature: 0,
+    anthropicApiKey: "testing",
+    invocationKwargs: {
+      cache_control: { type: "ephemeral", ttl: "1h" },
+    },
+  });
+
+  const params = model.invocationParams({});
+
+  expect(params.cache_control).toEqual({ type: "ephemeral", ttl: "1h" });
+});
+
+test("invocationParams prefers call option cache_control over constructor cache_control", () => {
+  const model = new ChatAnthropic({
+    modelName: "claude-haiku-4-5-20251001",
+    temperature: 0,
+    anthropicApiKey: "testing",
+    invocationKwargs: {
+      cache_control: { type: "ephemeral", ttl: "1h" },
+    },
+  });
+
+  const params = model.invocationParams({
+    cache_control: { type: "ephemeral", ttl: "5m" },
+  });
+
+  expect(params.cache_control).toEqual({ type: "ephemeral", ttl: "5m" });
+});
+
 test("invocationParams does not include cache_control when not provided", () => {
   const model = new ChatAnthropic({
     modelName: "claude-haiku-4-5-20251001",
