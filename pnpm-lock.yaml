@@ -1303,8 +1303,8 @@ importers:
         specifier: ^9.34.0
         version: 9.39.4(jiti@2.7.0)
       prettier:
-        specifier: ^3.5.0
-        version: 3.8.3
+        specifier: ^3.9.4
+        version: 3.9.4
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
@@ -1377,8 +1377,8 @@ importers:
         specifier: ^9.34.0
         version: 9.39.4(jiti@2.7.0)
       prettier:
-        specifier: ^3.5.0
-        version: 3.8.3
+        specifier: ^3.9.4
+        version: 3.9.4
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
@@ -2078,8 +2078,8 @@ importers:
         specifier: ^9.34.0
         version: 9.39.4(jiti@2.7.0)
       prettier:
-        specifier: ^3.5.0
-        version: 3.8.3
+        specifier: ^3.9.4
+        version: 3.9.4
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
@@ -2130,8 +2130,8 @@ importers:
         specifier: workspace:^
         version: link:../../langchain
       prettier:
-        specifier: ^3.5.0
-        version: 3.8.3
+        specifier: ^3.9.4
+        version: 3.9.4
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
@@ -2170,8 +2170,8 @@ importers:
         specifier: ^9.34.0
         version: 9.39.4(jiti@2.7.0)
       prettier:
-        specifier: ^3.5.0
-        version: 3.8.3
+        specifier: ^3.9.4
+        version: 3.9.4
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
@@ -2241,8 +2241,8 @@ importers:
         specifier: ^9.34.0
         version: 9.39.4(jiti@2.7.0)
       prettier:
-        specifier: ^3.5.0
-        version: 3.8.3
+        specifier: ^3.9.4
+        version: 3.9.4
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
@@ -2321,8 +2321,8 @@ importers:
         specifier: workspace:^
         version: link:../../langchain
       prettier:
-        specifier: ^3.5.0
-        version: 3.8.3
+        specifier: ^3.9.4
+        version: 3.9.4
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
@@ -10301,6 +10301,11 @@ packages:
 
   prettier@3.8.3:
     resolution: {integrity: sha512-7igPTM53cGHMW8xWuVTydi2KO233VFiTNyF5hLJqpilHfmn8C8gPf+PS7dUT64YcXFbiMGZxS9pCSxL/Dxm/Jw==}
+    engines: {node: '>=14'}
+    hasBin: true
+
+  prettier@3.9.4:
+    resolution: {integrity: sha512-yWG/o/4oJfo036EKAfK6ACAoDOfHeRHx4tuxkfBZiauURiaSmYwlpOr5LQqKtIkRD2z1PLteme2WoxEnj4tHTg==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -21395,6 +21400,8 @@ snapshots:
   prettier@2.8.8: {}
 
   prettier@3.8.3: {}
+
+  prettier@3.9.4: {}
 
   pretty-format@30.3.0:
     dependencies:
