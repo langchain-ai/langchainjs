@@ -1303,8 +1303,8 @@ importers:
         specifier: ^9.34.0
         version: 9.39.4(jiti@2.7.0)
       prettier:
-        specifier: ^3.5.0
-        version: 3.8.3
+        specifier: ^3.9.4
+        version: 3.9.4
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
@@ -1377,8 +1377,8 @@ importers:
         specifier: ^9.34.0
         version: 9.39.4(jiti@2.7.0)
       prettier:
-        specifier: ^3.5.0
-        version: 3.8.3
+        specifier: ^3.9.4
+        version: 3.9.4
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
@@ -2078,8 +2078,8 @@ importers:
         specifier: ^9.34.0
         version: 9.39.4(jiti@2.7.0)
       prettier:
-        specifier: ^3.5.0
-        version: 3.8.3
+        specifier: ^3.9.4
+        version: 3.9.4
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
@@ -2130,8 +2130,8 @@ importers:
         specifier: workspace:^
         version: link:../../langchain
       prettier:
-        specifier: ^3.5.0
-        version: 3.8.3
+        specifier: ^3.9.4
+        version: 3.9.4
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
@@ -2170,8 +2170,8 @@ importers:
         specifier: ^9.34.0
         version: 9.39.4(jiti@2.7.0)
       prettier:
-        specifier: ^3.5.0
-        version: 3.8.3
+        specifier: ^3.9.4
+        version: 3.9.4
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
@@ -2241,8 +2241,8 @@ importers:
         specifier: ^9.34.0
         version: 9.39.4(jiti@2.7.0)
       prettier:
-        specifier: ^3.5.0
-        version: 3.8.3
+        specifier: ^3.9.4
+        version: 3.9.4
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
@@ -2321,8 +2321,8 @@ importers:
         specifier: workspace:^
         version: link:../../langchain
       prettier:
-        specifier: ^3.5.0
-        version: 3.8.3
+        specifier: ^3.9.4
+        version: 3.9.4
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
@@ -9573,6 +9573,11 @@ packages:
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
+  nanoid@3.3.15:
+    resolution: {integrity: sha512-y7Wygv/7mEOvxTuEQDB8StXdMRBWf1kR/tlhAzBRUFkB2jfcLOAxO/SHmOO2zgz1pVgK29/kyupn059/bCHdjA==}
+    engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
+    hasBin: true
+
   napi-build-utils@2.0.0:
     resolution: {integrity: sha512-GEbrYkbfF7MoNaoh2iGG84Mnf/WZfB0GdGEsM8wz7Expx/LlWf5U8t9nvJKXSp3qr5IsEbK04cBGhol/KwOsWA==}
 
@@ -10247,6 +10252,10 @@ packages:
     resolution: {integrity: sha512-vuwillviilfKZsg0VGj5R/YwwcHx4SLsIOI/7K6mQkWx+l5cUHTjj5g0AasTBcyXsbfTgrwsUNmVUb5xVwyPwg==}
     engines: {node: ^10 || ^12 || >=14}
 
+  postcss@8.5.16:
+    resolution: {integrity: sha512-vuwillviilfKZsg0VGj5R/YwwcHx4SLsIOI/7K6mQkWx+l5cUHTjj5g0AasTBcyXsbfTgrwsUNmVUb5xVwyPwg==}
+    engines: {node: ^10 || ^12 || >=14}
+
   postgres-array@2.0.0:
     resolution: {integrity: sha512-VpZrUqU5A69eQyW2c5CA1jtLecCsN2U/bD6VilrFDWq5+5UIEVO7nazS3TEcHf1zuPYO/sqGvUvW62g86RXZuA==}
     engines: {node: '>=4'}
@@ -10292,6 +10301,11 @@ packages:
 
   prettier@3.8.3:
     resolution: {integrity: sha512-7igPTM53cGHMW8xWuVTydi2KO233VFiTNyF5hLJqpilHfmn8C8gPf+PS7dUT64YcXFbiMGZxS9pCSxL/Dxm/Jw==}
+    engines: {node: '>=14'}
+    hasBin: true
+
+  prettier@3.9.4:
+    resolution: {integrity: sha512-yWG/o/4oJfo036EKAfK6ACAoDOfHeRHx4tuxkfBZiauURiaSmYwlpOr5LQqKtIkRD2z1PLteme2WoxEnj4tHTg==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -20516,6 +20530,8 @@ snapshots:
 
   nanoid@3.3.15: {}
 
+  nanoid@3.3.15: {}
+
   napi-build-utils@2.0.0: {}
 
   napi-postinstall@0.3.4: {}
@@ -21342,6 +21358,12 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
+  postcss@8.5.16:
+    dependencies:
+      nanoid: 3.3.15
+      picocolors: 1.1.1
+      source-map-js: 1.2.1
+
   postgres-array@2.0.0: {}
 
   postgres-bytea@1.0.1: {}
@@ -21378,6 +21400,8 @@ snapshots:
   prettier@2.8.8: {}
 
   prettier@3.8.3: {}
+
+  prettier@3.9.4: {}
 
   pretty-format@30.3.0:
     dependencies:

@@ -47,7 +47,7 @@
     "dpdm": "^3.14.0",
     "eslint": "^9.34.0",
     "langchain": "workspace:*",
-    "prettier": "^3.5.0",
+    "prettier": "^3.9.4",
     "typescript": "~6.0.3",
     "vitest": "^4.1.8"
   },
