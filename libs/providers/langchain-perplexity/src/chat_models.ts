@@ -227,6 +227,21 @@ function _useResponsesApi(payload: Record<string, unknown>): boolean {
   return Boolean(usesBuiltin || hasResponsesOnly);
 }
 
+function messageContentToString(message: BaseMessage): string {
+  if (typeof message.content === "string") return message.content;
+
+  const textParts: string[] = [];
+  for (const block of message.contentBlocks) {
+    if (block.type !== "text") {
+      throw new Error(
+        `ChatPerplexity only supports text content blocks. Received block type: ${block.type}`
+      );
+    }
+    textParts.push(block.text);
+  }
+  return textParts.join("");
+}
+
 /**
  * Map a Perplexity Agent API (Responses-compatible) response to a `ChatResult`.
  */
@@ -549,17 +564,17 @@ export class ChatPerplexity
     if (message._getType() === "human") {
       return {
         role: "user",
-        content: message.content.toString(),
+        content: messageContentToString(message),
       };
     } else if (message._getType() === "ai") {
       return {
         role: "assistant",
-        content: message.content.toString(),
+        content: messageContentToString(message),
       };
     } else if (message._getType() === "system") {
       return {
         role: "system",
-        content: message.content.toString(),
+        content: messageContentToString(message),
       };
     }
     throw new Error(`Unknown message type: ${message}`);

@@ -289,6 +289,39 @@ describe("ChatPerplexity", () => {
       );
     });
 
+    test("serializes text content blocks as text", async () => {
+      const model = new ChatPerplexity({
+        model: "sonar",
+        apiKey: "test-key",
+      });
+
+      const createSpy = vi
+        .spyOn(
+          // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+          (model as any).client.chat.completions,
+          "create"
+        )
+        .mockResolvedValue({
+          choices: [{ message: { role: "assistant", content: "4" } }],
+          citations: [],
+        });
+
+      await model._generate(
+        [
+          new HumanMessage({
+            contentBlocks: [{ type: "text", text: "What is 2+2?" }],
+          }),
+        ],
+        {}
+      );
+
+      expect(createSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          messages: [{ role: "user", content: "What is 2+2?" }],
+        })
+      );
+    });
+
     test("throws on unknown message type", async () => {
       const model = new ChatPerplexity({
         model: "sonar",
