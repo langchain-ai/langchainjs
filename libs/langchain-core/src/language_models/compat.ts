@@ -154,6 +154,11 @@ export async function* convertChunksToEvents(
     | undefined;
   let audioStream: AudioStreamState | undefined;
   const emittedImageKeys = new Set<string>();
+  // Provider tool-call indexes are scoped to the tool-call list, not to the
+  // global content-block list, so they cannot be used as block indexes
+  // directly (e.g. text occupies block 0 and a tool call with index 0 would
+  // collide with it). Map each distinct tool call onto its own block index.
+  const toolCallBlockIndexes = new Map<string, number>();
 
   for await (const chunk of chunks) {
     options?.signal?.throwIfAborted();
@@ -239,10 +244,18 @@ export async function* convertChunksToEvents(
       msg.tool_call_chunks.length > 0
     ) {
       for (const toolChunk of msg.tool_call_chunks) {
-        const blockIndex =
+        const toolCallKey =
           typeof toolChunk.index === "number"
-            ? toolChunk.index
-            : activeBlocks.size;
+            ? `index:${toolChunk.index}`
+            : typeof toolChunk.id === "string"
+              ? `id:${toolChunk.id}`
+              : `position:${toolCallBlockIndexes.size}`;
+
+        let blockIndex = toolCallBlockIndexes.get(toolCallKey);
+        if (blockIndex === undefined) {
+          blockIndex = nextBlockIndex(activeBlocks);
+          toolCallBlockIndexes.set(toolCallKey, blockIndex);
+        }
 
         if (!activeBlocks.has(blockIndex)) {
           const initial: ContentBlock = {
