@@ -783,4 +783,17 @@ describe("chat message conversions", () => {
 
     expect(convertedBackMessages).toEqual(originalMessages);
   });
+
+  it("preserves AIMessage contentBlocks when converting through stored messages", () => {
+    const contentBlocks = [{ type: "text" as const, text: "hello" }];
+    const originalMessage = new AIMessage({ contentBlocks });
+
+    const [storedMessage] = mapChatMessagesToStoredMessages([originalMessage]);
+    const [convertedBackMessage] = mapStoredMessagesToChatMessages([
+      storedMessage,
+    ]);
+
+    expect(convertedBackMessage.content).toEqual(contentBlocks);
+    expect(convertedBackMessage.text).toBe("hello");
+  });
 });
