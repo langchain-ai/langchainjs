@@ -12,7 +12,7 @@ import type {
 } from "@google/generative-ai";
 import type { GoogleGenerativeAIPart } from "../types.js";
 
-type ThinkingBlock = { type: "thinking"; thinking: string; signature?: string };
+type ReasoningBlock = { type: "reasoning"; reasoning: string; signature?: string };
 type TextBlock = { type: "text"; text: string };
 
 function createMockResponse(
@@ -66,11 +66,11 @@ describe("Thinking content handling", () => {
     if (!Array.isArray(content)) return;
     expect(content.length).toBe(2);
 
-    // First block should be thinking type
-    const thinkingBlock = content[0] as ThinkingBlock;
-    expect(thinkingBlock.type).toBe("thinking");
-    expect(thinkingBlock.thinking).toBe("Let me think about this...");
-    expect(thinkingBlock.signature).toBe("abc123");
+    // First block should be reasoning type
+    const reasoningBlock = content[0] as ReasoningBlock;
+    expect(reasoningBlock.type).toBe("reasoning");
+    expect(reasoningBlock.reasoning).toBe("Let me think about this...");
+    expect(reasoningBlock.signature).toBe("abc123");
 
     // Second block should be text type
     const textBlock = content[1] as TextBlock;
@@ -100,10 +100,10 @@ describe("Thinking content handling", () => {
     const content = result.generations[0].message.content;
 
     if (!Array.isArray(content)) return;
-    const thinkingBlock = content[0] as ThinkingBlock;
-    expect(thinkingBlock.type).toBe("thinking");
-    expect(thinkingBlock.thinking).toBe("Thinking content");
-    expect(thinkingBlock.signature).toBeUndefined();
+    const reasoningBlock = content[0] as ReasoningBlock;
+    expect(reasoningBlock.type).toBe("reasoning");
+    expect(reasoningBlock.reasoning).toBe("Thinking content");
+    expect(reasoningBlock.signature).toBeUndefined();
   });
 
   test("should handle regular text without thought flag", () => {
@@ -128,6 +128,37 @@ describe("Thinking content handling", () => {
     // When there's only one text part, it should be a string
     expect(typeof result.generations[0].message.content).toBe("string");
     expect(result.generations[0].message.content).toBe("Regular response");
+  });
+
+  test("Gemini thought part produces reasoning content block", () => {
+    const mockResponse = createMockResponse([
+      {
+        content: {
+          role: "model",
+          parts: [
+            {
+              text: "step-by-step reasoning",
+              thought: true,
+              thoughtSignature: "sig",
+            },
+          ] as GoogleGenerativeAIPart[],
+        },
+        finishReason: "STOP" as FinishReason,
+        index: 0,
+        safetyRatings: [],
+      },
+    ]);
+
+    const result = mapGenerateContentResultToChatResult(mockResponse);
+    const content = result.generations[0].message.content;
+
+    expect(Array.isArray(content)).toBe(true);
+    if (!Array.isArray(content)) return;
+    expect(content).toHaveLength(1);
+    const block = content[0] as ReasoningBlock;
+    expect(block.type).toBe("reasoning");
+    expect(block.reasoning).toBe("step-by-step reasoning");
+    expect(block.signature).toBe("sig");
   });
 });
 
@@ -166,11 +197,11 @@ describe("Streaming thinking content handling", () => {
     if (!Array.isArray(content)) return;
     expect(content.length).toBe(2);
 
-    // First block should be thinking type
-    const thinkingBlock = content[0] as ThinkingBlock;
-    expect(thinkingBlock.type).toBe("thinking");
-    expect(thinkingBlock.thinking).toBe("Let me think about this...");
-    expect(thinkingBlock.signature).toBe("abc123");
+    // First block should be reasoning type
+    const reasoningBlock = content[0] as ReasoningBlock;
+    expect(reasoningBlock.type).toBe("reasoning");
+    expect(reasoningBlock.reasoning).toBe("Let me think about this...");
+    expect(reasoningBlock.signature).toBe("abc123");
 
     // Second block should be text type
     const textBlock = content[1] as TextBlock;
@@ -204,10 +235,10 @@ describe("Streaming thinking content handling", () => {
     const content = result!.message.content;
 
     if (!Array.isArray(content)) return;
-    const thinkingBlock = content[0] as ThinkingBlock;
-    expect(thinkingBlock.type).toBe("thinking");
-    expect(thinkingBlock.thinking).toBe("Thinking content");
-    expect(thinkingBlock.signature).toBeUndefined();
+    const reasoningBlock = content[0] as ReasoningBlock;
+    expect(reasoningBlock.type).toBe("reasoning");
+    expect(reasoningBlock.reasoning).toBe("Thinking content");
+    expect(reasoningBlock.signature).toBeUndefined();
   });
 
   test("should handle regular text without thought flag in streaming", () => {
@@ -269,6 +300,41 @@ describe("Streaming thinking content handling", () => {
     // Should NOT be a concatenated string like "Thinking...Answer"
     expect(typeof content).not.toBe("string");
     expect(Array.isArray(content)).toBe(true);
+  });
+
+  test("Gemini thought part produces reasoning content block in streaming", () => {
+    const mockResponse = createMockResponse([
+      {
+        content: {
+          role: "model",
+          parts: [
+            {
+              text: "streamed reasoning",
+              thought: true,
+              thoughtSignature: "stream-sig",
+            },
+          ] as GoogleGenerativeAIPart[],
+        },
+        finishReason: "STOP" as FinishReason,
+        index: 0,
+        safetyRatings: [],
+      },
+    ]);
+
+    const result = convertResponseContentToChatGenerationChunk(mockResponse, {
+      index: 0,
+    });
+
+    expect(result).not.toBeNull();
+    const content = result!.message.content;
+
+    expect(Array.isArray(content)).toBe(true);
+    if (!Array.isArray(content)) return;
+    expect(content).toHaveLength(1);
+    const block = content[0] as ReasoningBlock;
+    expect(block.type).toBe("reasoning");
+    expect(block.reasoning).toBe("streamed reasoning");
+    expect(block.signature).toBe("stream-sig");
   });
 });
 
@@ -374,5 +440,48 @@ describe("Round-trip thinking content handling", () => {
     expect(roundTrippedParts[1]).toEqual({
       text: "The final answer is 7.",
     });
+  });
+
+  test("reasoning block converts to Gemini part", () => {
+    const message = new AIMessage({
+      content: [
+        {
+          type: "reasoning",
+          reasoning: "abc",
+          signature: "sig",
+        },
+        { type: "text", text: "The answer is 42." },
+      ],
+    });
+
+    const parts = convertMessageContentToParts(message, true, []);
+
+    expect(parts).toHaveLength(2);
+    expect(parts[0]).toEqual({
+      text: "abc",
+      thought: true,
+      thoughtSignature: "sig",
+    });
+    expect(parts[1]).toEqual({ text: "The answer is 42." });
+  });
+
+  test("legacy thinking block still converts for backwards compatibility", () => {
+    const message = new AIMessage({
+      content: [
+        {
+          type: "thinking",
+          thinking: "legacy thinking",
+        },
+      ],
+    });
+
+    const parts = convertMessageContentToParts(message, true, []);
+
+    expect(parts).toHaveLength(1);
+    expect(parts[0]).toEqual({
+      text: "legacy thinking",
+      thought: true,
+    });
+    expect(parts[0]).not.toHaveProperty("thoughtSignature");
   });
 });
