@@ -58,7 +58,7 @@
     "@tsconfig/recommended": "^1.0.10",
     "@types/debug": "^4.1.13",
     "@types/express": "^5.0.6",
-    "@types/node": "^25.9.1",
+    "@types/node": "^26.1.0",
     "@vitest/coverage-v8": "^4.1.9",
     "dotenv": "^17.4.0",
     "dpdm": "^3.14.0",
