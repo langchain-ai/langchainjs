@@ -422,6 +422,41 @@ describe("convertMessagesToGeminiContents", () => {
     expect(functionResponsePart.functionResponse!.name).toBe("get_weather");
   });
 
+  test("ToolMessage only sends functionResponse parts in v1 path", () => {
+    const aiMsg = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          name: "search",
+          args: {},
+          id: "call-1",
+          type: "tool_call",
+        },
+      ],
+    });
+    aiMsg.response_metadata = { output_version: "v1" };
+    const messages = [
+      new HumanMessage("hello"),
+      aiMsg,
+      new ToolMessage({
+        content: "TOOL RESULT TEXT",
+        tool_call_id: "call-1",
+        response_metadata: { output_version: "v1" },
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const toolResponseContent = contents.find(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
+
+    expect(toolResponseContent).toBeDefined();
+    expect(toolResponseContent!.parts).toHaveLength(1);
+    expect(toolResponseContent!.parts[0]).not.toHaveProperty("text");
+    expect(toolResponseContent!.parts[0]).toHaveProperty("functionResponse");
+  });
+
   test("Multiple tool calls name resolution (v1 path)", () => {
     const aiMsg = new AIMessage({
       content: "",

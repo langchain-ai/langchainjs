@@ -16,7 +16,11 @@ import { RequestError } from "../../utils/errors.js";
 import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import { ChatGoogle, ChatGoogleParams } from "../index.js";
 import { ChatGoogle as ChatGoogleNode } from "../node.js";
-import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
+import {
+  AIMessage,
+  AIMessageChunk,
+  ToolMessage,
+} from "@langchain/core/messages";
 import type { LLMResult } from "@langchain/core/outputs";
 import { OutputParserException } from "@langchain/core/output_parsers";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
@@ -317,6 +321,46 @@ describe("Google Mock", () => {
     expect(recorder?.request?.body?.generationConfig?.candidateCount).toEqual(
       1
     );
+  });
+
+  test("ToolMessage v1 request body only includes functionResponse content", async () => {
+    const llm = newChatGoogle({
+      model: "gemini-3-pro-preview",
+      responseFile: "gemini-chat-001.json",
+    });
+    const aiMsg = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          name: "search",
+          args: {},
+          id: "call-1",
+          type: "tool_call",
+        },
+      ],
+    });
+    aiMsg.response_metadata = { output_version: "v1" };
+    const messages = [
+      aiMsg,
+      new ToolMessage({
+        content: "TOOL RESULT TEXT",
+        tool_call_id: "call-1",
+        response_metadata: { output_version: "v1" },
+      }),
+    ];
+
+    await llm.invoke(messages);
+
+    const toolResponseContent = recorder.request.body.contents.find(
+      (content: Gemini.Content) =>
+        content.role === "user" &&
+        content.parts.some((part) => "functionResponse" in part)
+    ) as Gemini.Content;
+
+    expect(toolResponseContent).toBeDefined();
+    expect(toolResponseContent.parts).toHaveLength(1);
+    expect(toolResponseContent.parts[0]).not.toHaveProperty("text");
+    expect(toolResponseContent.parts[0]).toHaveProperty("functionResponse");
   });
 
   test("handleLLMEnd exposes camelCase tokenUsage for invoke", async () => {
