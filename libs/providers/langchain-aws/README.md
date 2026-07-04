@@ -48,7 +48,7 @@ export BEDROCK_AWS_SECRET_ACCESS_KEY=
 export BEDROCK_AWS_ACCESS_KEY_ID=
 ```
 
-Alternatively, set the `AWS_BEARER_TOKEN_BEDROCK` environment variable locally for API Key authentication. For additional API key details, refer to [docs](https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys.html).
+Alternatively, set the `AWS_BEARER_TOKEN_BEDROCK` environment variable locally for API Key authentication, or pass it as `bedrockBearerToken`. Bearer token authentication is used instead of standard AWS credentials when configured. For additional API key details, refer to [docs](https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys.html).
 
 ```bash
 export BEDROCK_AWS_REGION=

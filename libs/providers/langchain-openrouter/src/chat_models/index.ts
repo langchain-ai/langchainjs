@@ -15,6 +15,8 @@ import {
 } from "@langchain/core/messages";
 import { ChatGenerationChunk, type ChatResult } from "@langchain/core/outputs";
 import type { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
+import { convertOpenRouterStream } from "../utils/stream_events.js";
 import { Runnable } from "@langchain/core/runnables";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
@@ -409,16 +411,23 @@ export class ChatOpenRouter extends BaseChatModel<
       stream: false,
     };
 
-    const response = await fetch(this.buildUrl(), {
-      method: "POST",
-      headers: this.buildHeaders(),
-      body: JSON.stringify(body),
-      signal: options.signal,
-    });
+    const response = await this.caller.callWithOptions(
+      { signal: options.signal },
+      async () => {
+        const nextResponse = await fetch(this.buildUrl(), {
+          method: "POST",
+          headers: this.buildHeaders(),
+          body: JSON.stringify(body),
+          signal: options.signal,
+        });
 
-    if (!response.ok) {
-      throw await OpenRouterError.fromResponse(response);
-    }
+        if (!nextResponse.ok) {
+          throw await OpenRouterError.fromResponse(nextResponse);
+        }
+
+        return nextResponse;
+      }
+    );
 
     const data: OpenRouter.ChatResponse = await response.json();
     const choice = data.choices[0];
@@ -450,16 +459,11 @@ export class ChatOpenRouter extends BaseChatModel<
     };
   }
 
-  /**
-   * Streaming generation. Opens an SSE connection and yields one
-   * `ChatGenerationChunk` per delta received from the API. The stream
-   * pipeline is: raw bytes -> text -> SSE events -> JSON-parsed deltas.
-   */
-  async *_streamResponseChunks(
+  async *_streamChatModelEvents(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
-  ): AsyncGenerator<ChatGenerationChunk> {
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
     const body: OpenRouterRequestBody = {
       ...this.invocationParams(options),
       messages: convertMessagesToOpenRouterParams(messages, this.model),
@@ -476,6 +480,68 @@ export class ChatOpenRouter extends BaseChatModel<
     if (!response.ok) {
       throw await OpenRouterError.fromResponse(response);
     }
+
+    if (!response.body) {
+      return;
+    }
+
+    const stream = response.body
+      .pipeThrough(new TextDecoderStream())
+      .pipeThrough(new EventSourceParserStream())
+      .pipeThrough(new OpenRouterJsonParseStream());
+
+    const reader = stream.getReader();
+    async function* readChunks() {
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          if (value) yield value;
+        }
+      } finally {
+        reader.releaseLock();
+      }
+    }
+
+    const shouldStreamUsage = this.streamUsage ?? options.streamUsage ?? true;
+    yield* convertOpenRouterStream(readChunks(), {
+      streamUsage: shouldStreamUsage,
+    });
+  }
+
+  /**
+   * Streaming generation. Opens an SSE connection and yields one
+   * `ChatGenerationChunk` per delta received from the API. The stream
+   * pipeline is: raw bytes -> text -> SSE events -> JSON-parsed deltas.
+   */
+  async *_streamResponseChunks(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    const body: OpenRouterRequestBody = {
+      ...this.invocationParams(options),
+      messages: convertMessagesToOpenRouterParams(messages, this.model),
+      stream: true,
+    };
+
+    const response = await this.caller.callWithOptions(
+      { signal: options.signal },
+      async () => {
+        const nextResponse = await fetch(this.buildUrl(), {
+          method: "POST",
+          headers: this.buildHeaders(),
+          body: JSON.stringify(body),
+          signal: options.signal,
+        });
+
+        if (!nextResponse.ok) {
+          throw await OpenRouterError.fromResponse(nextResponse);
+        }
+
+        return nextResponse;
+      }
+    );
 
     if (!response.body) {
       return;

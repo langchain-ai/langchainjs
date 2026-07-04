@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-common",
-  "version": "2.1.30",
+  "version": "2.2.0",
   "description": "Core types and classes for Google services.",
   "type": "module",
   "engines": {
@@ -29,13 +29,12 @@
   },
   "devDependencies": {
     "@langchain/core": "workspace:^",
-    "@types/uuid": "^10.0.0",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
     "dotenv": "^17.4.0",
     "dpdm": "^3.14.0",
-    "typescript": "~5.8.3",
-    "vitest": "^4.1.2",
+    "typescript": "~6.0.3",
+    "vitest": "^4.1.8",
     "zod": "^3.25.76"
   },
   "publishConfig": {

@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "1.1.46",
+  "version": "1.2.1",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -35,15 +35,14 @@
   "devDependencies": {
     "@langchain/tsconfig": "workspace:*",
     "@types/mustache": "^4",
-    "@types/node": "^25.5.0",
-    "@types/uuid": "^10.0.0",
+    "@types/node": "^25.9.1",
     "dotenv": "^17.4.0",
     "dpdm": "^3.14.0",
     "ml-matrix": "^6.10.4",
     "rimraf": "^6.1.3",
-    "typescript": "~5.8.3",
-    "vitest": "^4.1.2",
-    "web-streams-polyfill": "^4.2.0"
+    "typescript": "~6.0.3",
+    "vitest": "^4.1.8",
+    "web-streams-polyfill": "^4.3.0"
   },
   "publishConfig": {
     "access": "public"
@@ -303,6 +302,17 @@
       "import": {
         "types": "./dist/language_models/llms.d.ts",
         "default": "./dist/language_models/llms.js"
+      }
+    },
+    "./language_models/openai_completions_stream": {
+      "input": "./src/language_models/openai_completions_stream.ts",
+      "require": {
+        "types": "./dist/language_models/openai_completions_stream.d.cts",
+        "default": "./dist/language_models/openai_completions_stream.cjs"
+      },
+      "import": {
+        "types": "./dist/language_models/openai_completions_stream.d.ts",
+        "default": "./dist/language_models/openai_completions_stream.js"
       }
     },
     "./language_models/profile": {
@@ -840,12 +850,13 @@
     "CHANGELOG.md",
     "README.md",
     "LICENSE",
+    "language_models",
     "retrievers",
-    "load",
     "load.d.cts",
     "load.cjs",
     "load.d.ts",
     "load.js",
+    "load",
     "prompts.d.cts",
     "prompts.cjs",
     "prompts.d.ts",
@@ -853,7 +864,6 @@
     "output_parsers",
     "utils",
     "types",
-    "language_models",
     "callbacks",
     "embeddings.d.cts",
     "embeddings.cjs",
@@ -888,6 +898,10 @@
     "indexing.cjs",
     "indexing.d.ts",
     "indexing.js",
+    "testing.d.cts",
+    "testing.cjs",
+    "testing.d.ts",
+    "testing.js",
     "documents.d.cts",
     "documents.cjs",
     "documents.d.ts",
@@ -918,7 +932,6 @@
     "runnables.cjs",
     "runnables.d.ts",
     "runnables.js",
-    "testing",
     "tools.d.cts",
     "tools.cjs",
     "tools.d.ts",
@@ -935,6 +948,7 @@
     "caches.cjs",
     "caches.d.ts",
     "caches.js",
+    "testing",
     "agents.d.cts",
     "agents.cjs",
     "agents.d.ts",

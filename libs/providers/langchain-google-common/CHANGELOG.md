@@ -1,5 +1,27 @@
 # @langchain/google-common
 
+## 2.2.0
+
+### Minor Changes
+
+- [#10924](https://github.com/langchain-ai/langchainjs/pull/10924) [`2e28115`](https://github.com/langchain-ai/langchainjs/commit/2e2811509d75af94f57cedcc3842f178f4c020d1) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(google-common): add native Gemini streamEvents event conversion
+
+### Patch Changes
+
+- [#10676](https://github.com/langchain-ai/langchainjs/pull/10676) [`de0958c`](https://github.com/langchain-ai/langchainjs/commit/de0958cdb1b2e31868b038ce48e149ebe7151ba7) Thanks [@jackjin1997](https://github.com/jackjin1997)! - Auto-set `toolConfig.includeServerSideToolInvocations` when a Gemini request mixes server-side built-in tools (e.g. `googleSearch`, `codeExecution`) with function declarations. The Gemini API requires this flag in that case and returns HTTP 400 without it.
+
+- [#10547](https://github.com/langchain-ai/langchainjs/pull/10547) [`3aff161`](https://github.com/langchain-ai/langchainjs/commit/3aff161e1ca9cc7e92277ad071e372e5b55a0c6e) Thanks [@alex-levkivskiy](https://github.com/alex-levkivskiy)! - fix(google-common): add Array.isArray guard in toolMessageToContent to prevent crash on plain object ToolMessage content
+
+## 2.1.31
+
+### Patch Changes
+
+- [#10872](https://github.com/langchain-ai/langchainjs/pull/10872) [`a640079`](https://github.com/langchain-ai/langchainjs/commit/a64007997a4940f51bba3c1c83dae89d1ccfb692) Thanks [@hntrl](https://github.com/hntrl)! - chore(deps): remove redundant @types/uuid declarations
+
+  Remove `@types/uuid` from package manifests that rely on `@langchain/core/utils/uuid` or do not require uuid type stubs directly, and refresh the lockfile entries accordingly.
+
+- [#9912](https://github.com/langchain-ai/langchainjs/pull/9912) [`7be1da4`](https://github.com/langchain-ai/langchainjs/commit/7be1da46ee1a2920b08212aeeed34dec57590d62) Thanks [@yukukotani](https://github.com/yukukotani)! - fix missing stream usage metadata on Gemini
+
 ## 2.1.30
 
 ### Patch Changes

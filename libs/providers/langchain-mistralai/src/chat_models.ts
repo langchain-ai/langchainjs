@@ -3,7 +3,7 @@ import { Mistral as MistralClient } from "@mistralai/mistralai";
 import {
   ChatCompletionRequest as MistralAIChatCompletionRequest,
   ChatCompletionRequestToolChoice as MistralAIToolChoice,
-  Messages as MistralAIMessage,
+  ChatCompletionRequestMessage as MistralAIMessage,
 } from "@mistralai/mistralai/models/components/chatcompletionrequest.js";
 import { ContentChunk as MistralAIContentChunk } from "@mistralai/mistralai/models/components/contentchunk.js";
 import { Tool as MistralAITool } from "@mistralai/mistralai/models/components/tool.js";
@@ -38,6 +38,8 @@ import type {
   FunctionDefinition,
 } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
+import { convertMistralStream } from "./utils/stream_events.js";
 import {
   type BaseChatModelParams,
   BaseChatModel,
@@ -1219,8 +1221,15 @@ export class ChatMistralAI<
         text,
         message: mistralAIResponseToChatMessage(part, response?.usage),
       };
+      const generationInfo: Record<string, unknown> = {};
       if (part.finishReason) {
-        generation.generationInfo = { finishReason: part.finishReason };
+        generationInfo.finishReason = part.finishReason;
+      }
+      if (response?.model) {
+        generationInfo.model = response.model;
+      }
+      if (Object.keys(generationInfo).length > 0) {
+        generation.generationInfo = generationInfo;
       }
       generations.push(generation);
     }
@@ -1228,6 +1237,32 @@ export class ChatMistralAI<
       generations,
       llmOutput: { tokenUsage },
     };
+  }
+
+  async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    const mistralMessages = convertMessagesToMistralMessages(messages);
+    const params = this.invocationParams(options);
+    const input = { ...params, messages: mistralMessages };
+    const streamIterable = await this.completionWithRetry(input, true);
+    const shouldStreamUsage = this.streamUsage ?? options.streamUsage ?? true;
+    async function* extractData(
+      source: AsyncIterable<{ data: Record<string, unknown> }>,
+      signal?: AbortSignal
+    ) {
+      for await (const { data } of source) {
+        if (signal?.aborted) {
+          return;
+        }
+        yield data;
+      }
+    }
+    yield* convertMistralStream(extractData(streamIterable, options.signal), {
+      streamUsage: shouldStreamUsage,
+    });
   }
 
   async *_streamResponseChunks(
@@ -1273,10 +1308,17 @@ export class ChatMistralAI<
       if (Array.isArray(text)) {
         text = text[0].type === "text" ? text[0].text : "";
       }
+      const generationInfo: Record<string, unknown> = { ...newTokenIndices };
+      if (data?.model) {
+        generationInfo.model = data.model;
+      }
+      if (choice.finishReason) {
+        generationInfo.finishReason = choice.finishReason;
+      }
       const generationChunk = new ChatGenerationChunk({
         message,
         text,
-        generationInfo: newTokenIndices,
+        generationInfo,
       });
       yield generationChunk;
       // oxlint-disable-next-line no-void

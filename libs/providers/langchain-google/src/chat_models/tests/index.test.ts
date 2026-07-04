@@ -17,6 +17,7 @@ import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import { ChatGoogle, ChatGoogleParams } from "../index.js";
 import { ChatGoogle as ChatGoogleNode } from "../node.js";
 import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
+import type { LLMResult } from "@langchain/core/outputs";
 import { OutputParserException } from "@langchain/core/output_parsers";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import type { Runnable } from "@langchain/core/runnables";
@@ -208,11 +209,14 @@ class MockErrorApiClient extends ApiClient {
 
   response: Response;
 
+  calls = 0;
+
   constructor(private options: MockErrorApiClientOptions) {
     super();
   }
 
   async fetch(request: Request): Promise<Response> {
+    this.calls += 1;
     this.request = request;
     this.response = new Response(this.options.bodyText, {
       status: this.options.status,
@@ -315,6 +319,40 @@ describe("Google Mock", () => {
     );
   });
 
+  test("handleLLMEnd exposes camelCase tokenUsage for invoke", async () => {
+    let callbackResult: LLMResult | undefined;
+
+    const llm = new ChatGoogle({
+      model: "gemini-3-pro-preview",
+      apiClient: new MockApiClient({
+        fileName: "gemini-chat-001.json",
+      }),
+      callbacks: [
+        {
+          async handleLLMEnd(output: LLMResult) {
+            callbackResult = output;
+          },
+        },
+      ],
+    });
+
+    const result = await llm.invoke("What is 1+1?");
+
+    expect(callbackResult?.llmOutput?.tokenUsage).toEqual({
+      promptTokens: 9,
+      completionTokens: 36,
+      totalTokens: 45,
+    });
+    expect(callbackResult?.llmOutput?.usageMetadata).toMatchObject({
+      input_tokens: 9,
+      output_tokens: 36,
+      total_tokens: 45,
+    });
+    expect(result.response_metadata.tokenUsage).toEqual(
+      callbackResult?.llmOutput?.tokenUsage
+    );
+  });
+
   test("mediaResolution uses scalar generation config value from constructor fields", async () => {
     const params: ChatGoogleParams = {
       model: "gemini-3-pro-preview",
@@ -409,6 +447,114 @@ describe("Google Mock", () => {
     expect(apiClient.request.signal.aborted).toBe(true);
   });
 
+  test("includes customHeaders on invoke requests", async () => {
+    const apiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const llm = new ChatGoogle({
+      model: "gemini-3-pro-preview",
+      apiClient,
+      customHeaders: {
+        "X-LC-Test": "invoke-value",
+      },
+    });
+    await llm.invoke("What is 1+1?");
+    expect(apiClient.request.headers.get("X-LC-Test")).toBe("invoke-value");
+    expect(apiClient.request.headers.get("Content-Type")).toBe(
+      "application/json"
+    );
+  });
+
+  test("includes customHeaders on streaming requests", async () => {
+    const apiClient = new MockApiClient({
+      fileName: "gemini-stream-001.txt",
+      streaming: true,
+    });
+    const llm = new ChatGoogle({
+      model: "gemini-2.5-flash",
+      apiClient,
+      streaming: true,
+      customHeaders: {
+        "X-LC-Test": "stream-value",
+      },
+    });
+    for await (const _chunk of await llm.stream("Why is the sky blue?")) {
+      // consume stream so fetch completes
+    }
+    expect(apiClient.request.headers.get("X-LC-Test")).toBe("stream-value");
+    expect(apiClient.request.headers.get("Content-Type")).toBe(
+      "application/json"
+    );
+  });
+
+  test("includes per-invocation customHeaders on invoke requests", async () => {
+    const apiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const llm = new ChatGoogle({
+      model: "gemini-3-pro-preview",
+      apiClient,
+    });
+    await llm.invoke("What is 1+1?", {
+      customHeaders: {
+        "X-Per-Call": "per-call-value",
+      },
+    });
+    expect(apiClient.request.headers.get("X-Per-Call")).toBe("per-call-value");
+    expect(apiClient.request.headers.get("Content-Type")).toBe(
+      "application/json"
+    );
+  });
+
+  test("per-invocation customHeaders override constructor headers", async () => {
+    const apiClient = new MockApiClient({
+      fileName: "gemini-chat-001.json",
+    });
+    const llm = new ChatGoogle({
+      model: "gemini-3-pro-preview",
+      apiClient,
+      customHeaders: {
+        "X-Shared": "constructor-value",
+        "X-Constructor-Only": "stays",
+      },
+    });
+    await llm.invoke("What is 1+1?", {
+      customHeaders: {
+        "X-Shared": "per-call-value",
+        "X-Call-Only": "added",
+      },
+    });
+    expect(apiClient.request.headers.get("X-Shared")).toBe("per-call-value");
+    expect(apiClient.request.headers.get("X-Constructor-Only")).toBe("stays");
+    expect(apiClient.request.headers.get("X-Call-Only")).toBe("added");
+    expect(apiClient.request.headers.get("Content-Type")).toBe(
+      "application/json"
+    );
+  });
+
+  test("includes per-invocation customHeaders on streaming requests", async () => {
+    const apiClient = new MockApiClient({
+      fileName: "gemini-stream-001.txt",
+      streaming: true,
+    });
+    const llm = new ChatGoogle({
+      model: "gemini-2.5-flash",
+      apiClient,
+      streaming: true,
+    });
+    for await (const _chunk of await llm.stream("Why is the sky blue?", {
+      customHeaders: {
+        "X-Per-Call": "stream-per-call",
+      },
+    })) {
+      // consume stream so fetch completes
+    }
+    expect(apiClient.request.headers.get("X-Per-Call")).toBe("stream-per-call");
+    expect(apiClient.request.headers.get("Content-Type")).toBe(
+      "application/json"
+    );
+  });
+
   test("surfaces JSON error bodies from GCP streaming responses labeled as text/event-stream", async () => {
     const apiClient = new MockErrorApiClient({
       status: 400,
@@ -447,6 +593,57 @@ describe("Google Mock", () => {
     expect((caughtError as RequestError).message).not.toContain(
       "Request failed with status code 400"
     );
+  });
+
+  test("retries wait-style 429 responses through AsyncCaller in non-streaming invoke", async () => {
+    const apiClient = new MockErrorApiClient({
+      status: 429,
+      statusText: "Too Many Requests",
+      headers: {
+        "retry-after": "1",
+      },
+      bodyText: JSON.stringify({
+        error: {
+          message: "Rate limit exceeded, retry after 1 second",
+        },
+      }),
+    });
+
+    const llm = new ChatGoogle({
+      model: "gemini-2.5-flash",
+      apiClient,
+      maxRetries: 1,
+    });
+
+    await expect(llm.invoke("Hello")).rejects.toBeInstanceOf(RequestError);
+    expect(apiClient.calls).toBe(2);
+  });
+
+  test("does not retry quota-style 429 responses through AsyncCaller", async () => {
+    const apiClient = new MockErrorApiClient({
+      status: 429,
+      statusText: "Too Many Requests",
+      headers: {
+        "retry-after": "120",
+      },
+      bodyText: JSON.stringify({
+        error: {
+          message: "Usage quota exceeded",
+        },
+      }),
+    });
+
+    const llm = new ChatGoogle({
+      model: "gemini-2.5-flash",
+      apiClient,
+      maxRetries: 3,
+    });
+
+    await expect(llm.invoke("Hello")).rejects.toMatchObject({
+      name: "RequestError",
+      rateLimitType: "stop",
+    });
+    expect(apiClient.calls).toBe(1);
   });
 
   test("getLsParams normalizes provider and includes model metadata for web and node", () => {

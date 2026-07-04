@@ -67,6 +67,33 @@ const pdfModelName = "claude-haiku-4-5-20251001";
 // Use this model for all other tests
 const modelName = "claude-haiku-4-5-20251001";
 
+function isModelAccessRestrictedError(error: unknown): boolean {
+  if (typeof error !== "object" || error === null) {
+    return false;
+  }
+
+  const status = (error as { status?: unknown }).status;
+  if (status === 403 || status === 404) {
+    return true;
+  }
+
+  const message = (error as { message?: unknown }).message;
+  if (typeof message !== "string") {
+    return false;
+  }
+
+  const normalized = message.toLowerCase();
+  return (
+    normalized.includes("model_not_available") ||
+    normalized.includes("data retention enabled") ||
+    normalized.includes("model_not_found") ||
+    normalized.includes("model not found") ||
+    normalized.includes("forbidden") ||
+    normalized.includes("not authorized") ||
+    normalized.includes("project glasswing")
+  );
+}
+
 test("Test ChatAnthropic", async () => {
   const chat = new ChatAnthropic({
     modelName,
@@ -1580,6 +1607,50 @@ describe("Opus 4.5", () => {
       "Please respond to this message simply with: Hello"
     );
     expect(response.content.length).toBeGreaterThan(0);
+  });
+});
+
+describe("Fable 5", () => {
+  it("works with default parameters", async ({ skip }) => {
+    const model = new ChatAnthropic({
+      model: "claude-fable-5",
+    });
+
+    try {
+      const response = await model.invoke(
+        "Please respond to this message simply with: Hello"
+      );
+      expect(response.content.length).toBeGreaterThan(0);
+    } catch (error) {
+      if (isModelAccessRestrictedError(error)) {
+        skip();
+        return;
+      }
+      throw error;
+    }
+  });
+});
+
+describe("Mythos 5", () => {
+  it("works with default parameters when account access is enabled", async ({
+    skip,
+  }) => {
+    const model = new ChatAnthropic({
+      model: "claude-mythos-5",
+    });
+
+    try {
+      const response = await model.invoke(
+        "Please respond to this message simply with: Hello"
+      );
+      expect(response.content.length).toBeGreaterThan(0);
+    } catch (error) {
+      if (isModelAccessRestrictedError(error)) {
+        skip();
+        return;
+      }
+      throw error;
+    }
   });
 });
 

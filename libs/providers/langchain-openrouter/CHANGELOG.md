@@ -1,5 +1,74 @@
 # @langchain/openrouter
 
+## 0.4.3
+
+### Patch Changes
+
+- Updated dependencies [[`3205b35`](https://github.com/langchain-ai/langchainjs/commit/3205b35ac83037a2fff2998f16a66b5126b306f8)]:
+  - @langchain/openai@1.5.3
+
+## 0.4.2
+
+### Patch Changes
+
+- [#10674](https://github.com/langchain-ai/langchainjs/pull/10674) [`f017708`](https://github.com/langchain-ai/langchainjs/commit/f01770895c06621b469a6c6b5244747f6efdfbf7) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix: classify provider 429s before retrying
+
+- Updated dependencies [[`05936ab`](https://github.com/langchain-ai/langchainjs/commit/05936ab45ce1bbb04b955c3ebdd03dc1451b655c), [`798cb70`](https://github.com/langchain-ai/langchainjs/commit/798cb705222f43759e94d02a790ebb706ef2f099), [`80c790b`](https://github.com/langchain-ai/langchainjs/commit/80c790b593ad19668f1101f84f06c175db114909)]:
+  - @langchain/openai@1.5.2
+
+## 0.4.1
+
+### Patch Changes
+
+- Updated dependencies [[`80b43ec`](https://github.com/langchain-ai/langchainjs/commit/80b43ecffe0701c3c375c407fb601cb452f708ef)]:
+  - @langchain/openai@1.5.1
+
+## 0.4.0
+
+### Minor Changes
+
+- [#10924](https://github.com/langchain-ai/langchainjs/pull/10924) [`2e28115`](https://github.com/langchain-ai/langchainjs/commit/2e2811509d75af94f57cedcc3842f178f4c020d1) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(openrouter): add native streamEvents event conversion
+
+### Patch Changes
+
+- Updated dependencies [[`2e28115`](https://github.com/langchain-ai/langchainjs/commit/2e2811509d75af94f57cedcc3842f178f4c020d1)]:
+  - @langchain/openai@1.5.0
+
+## 0.3.0
+
+### Minor Changes
+
+- [#10666](https://github.com/langchain-ai/langchainjs/pull/10666) [`2bb55b0`](https://github.com/langchain-ai/langchainjs/commit/2bb55b053f49f89e81e3252a7af08e86d71ddd95) Thanks [@hnustwjj](https://github.com/hnustwjj)! - feat(openrouter): surface reasoning content as v1 standard content blocks
+
+  `convertOpenRouterResponseToBaseMessage` and
+  `convertOpenRouterDeltaToBaseMessageChunk` now copy OpenRouter's
+  `reasoning` (flat string) and `reasoning_details` (structured array) fields
+  onto `additional_kwargs.reasoning_content` / `additional_kwargs.reasoning_details`.
+  A new `ChatOpenRouterTranslator` is registered in `@langchain/core` under
+  the `"openrouter"` provider key so `AIMessage.contentBlocks` emits standard
+  `{type: "reasoning"}` blocks alongside text and tool calls.
+
+  Previously, reasoning text returned by reasoning-capable models routed
+  through OpenRouter (DeepSeek R1, Minimax M2, Claude extended thinking,
+  o-series, etc.) was silently dropped: only the `reasoning_tokens` count
+  was preserved via `usage_metadata`. Consumers using standard content blocks
+  (including the frontend agent UI patterns shown in the docs) could not
+  display the model's chain of thought.
+
+### Patch Changes
+
+- [#10832](https://github.com/langchain-ai/langchainjs/pull/10832) [`1b24369`](https://github.com/langchain-ai/langchainjs/commit/1b24369a970ad6f56f1f428027f48601f87e62eb) Thanks [@info-arnav](https://github.com/info-arnav)! - fix(core, openrouter): make CJS default re-exports callable
+
+- Updated dependencies [[`3999fab`](https://github.com/langchain-ai/langchainjs/commit/3999fab55870c6eea22d6d90c08aa472f9b2fac3), [`fce9ab4`](https://github.com/langchain-ai/langchainjs/commit/fce9ab418901323618fdfaaa9fc350fa1c0d50e0)]:
+  - @langchain/openai@1.4.7
+
+## 0.2.5
+
+### Patch Changes
+
+- Updated dependencies [[`229a7ad`](https://github.com/langchain-ai/langchainjs/commit/229a7ad67b9a7ebd8df3ca451e0b8195bea0190e), [`36fb0ef`](https://github.com/langchain-ai/langchainjs/commit/36fb0ef1dc76c096dcfa0c777e10c9f9365a5240)]:
+  - @langchain/openai@1.4.6
+
 ## 0.2.4
 
 ### Patch Changes
