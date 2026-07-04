@@ -65,6 +65,12 @@ import {
 } from "./utils/message_outputs.js";
 import { normalizeBedrockError } from "./utils/errors.js";
 import {
+  DEFAULT_STREAM_IDLE_TIMEOUT,
+  createLinkedAbortController,
+  resolveStreamIdleTimeout,
+  withStreamIdleTimeout,
+} from "./utils/stream_timeout.js";
+import {
   AWS_BEARER_TOKEN_BEDROCK,
   createBedrockBearerTokenClientConfig,
   resolveBedrockBearerToken,
@@ -200,6 +206,13 @@ export interface ChatBedrockConverseInput
   streamUsage?: boolean;
 
   /**
+   * Milliseconds to wait for the first or next Bedrock Converse stream chunk.
+   * Set to 0 to disable the idle timeout.
+   * @default 60000
+   */
+  streamIdleTimeout?: number;
+
+  /**
    * Configuration information for a guardrail that you want to use in the request.
    */
   guardrailConfig?: GuardrailConfiguration;
@@ -252,6 +265,7 @@ export interface ChatBedrockConverseCallOptions
       ChatBedrockConverseInput,
       | "additionalModelRequestFields"
       | "streamUsage"
+      | "streamIdleTimeout"
       | "guardrailConfig"
       | "performanceConfig"
       | "serviceTier"
@@ -773,6 +787,8 @@ export class ChatBedrockConverse
 
   streamUsage = true;
 
+  streamIdleTimeout = DEFAULT_STREAM_IDLE_TIMEOUT;
+
   guardrailConfig?: GuardrailConfiguration;
 
   performanceConfig?: PerformanceConfiguration;
@@ -913,6 +929,7 @@ export class ChatBedrockConverse
     this.topP = rest?.topP;
     this.additionalModelRequestFields = rest?.additionalModelRequestFields;
     this.streamUsage = rest?.streamUsage ?? this.streamUsage;
+    this.streamIdleTimeout = rest?.streamIdleTimeout ?? this.streamIdleTimeout;
     this.guardrailConfig = rest?.guardrailConfig;
     this.performanceConfig = rest?.performanceConfig;
     this.serviceTier = rest?.serviceTier;
@@ -1120,27 +1137,44 @@ export class ChatBedrockConverse
         requestMetadata: options.requestMetadata,
         ...params,
       });
-      const response = await this.client.send(command, {
-        abortSignal: options.signal,
-      });
-      if (!response.stream) {
-        return;
-      }
-      const abortableStream = async function* (
-        source: NonNullable<typeof response.stream>,
-        signal?: AbortSignal
-      ) {
-        for await (const chunk of source) {
-          if (signal?.aborted) {
-            return;
-          }
-          yield chunk;
-        }
-      };
-      yield* convertBedrockConverseStream(
-        abortableStream(response.stream, options.signal),
-        { streamUsage: streamUsage ?? true }
+      const { abortController, cleanup } = createLinkedAbortController(
+        options.signal
       );
+      try {
+        const response = await this.client.send(command, {
+          abortSignal: abortController.signal,
+        });
+        if (!response.stream) {
+          return;
+        }
+        const abortableStream = async function* <T>(
+          source: AsyncIterable<T>,
+          signal?: AbortSignal
+        ) {
+          for await (const chunk of source) {
+            if (signal?.aborted) {
+              return;
+            }
+            yield chunk;
+          }
+        };
+        const streamIdleTimeout = resolveStreamIdleTimeout(
+          options.streamIdleTimeout ?? this.streamIdleTimeout
+        );
+        yield* convertBedrockConverseStream(
+          abortableStream(
+            withStreamIdleTimeout(
+              response.stream,
+              streamIdleTimeout,
+              abortController
+            ),
+            abortController.signal
+          ),
+          { streamUsage: streamUsage ?? true }
+        );
+      } finally {
+        cleanup();
+      }
     } catch (error) {
       throw normalizeBedrockError(error);
     }
@@ -1175,58 +1209,72 @@ export class ChatBedrockConverse
         requestMetadata: options.requestMetadata,
         ...params,
       });
-      const response = await this.client.send(command, {
-        abortSignal: options.signal,
-      });
-      if (response.stream) {
-        for await (const chunk of response.stream) {
-          if (options.signal?.aborted) {
-            return;
-          }
-          if (chunk.contentBlockStart) {
-            const toolCallStartChunk = handleConverseStreamContentBlockStart(
-              chunk.contentBlockStart
-            );
-            yield toolCallStartChunk;
-            await runManager?.handleLLMNewToken(
-              toolCallStartChunk.text,
-              undefined,
-              undefined,
-              undefined,
-              undefined,
-              {
-                chunk: toolCallStartChunk,
-              }
-            );
-          } else if (chunk.contentBlockDelta) {
-            const textChatGeneration = handleConverseStreamContentBlockDelta(
-              chunk.contentBlockDelta
-            );
-            yield textChatGeneration;
-            await runManager?.handleLLMNewToken(
-              textChatGeneration.text,
-              undefined,
-              undefined,
-              undefined,
-              undefined,
-              {
-                chunk: textChatGeneration,
-              }
-            );
-          } else if (chunk.metadata) {
-            yield handleConverseStreamMetadata(chunk.metadata, {
-              streamUsage,
-            });
-          } else {
-            yield new ChatGenerationChunk({
-              text: "",
-              message: new AIMessageChunk({
-                content: "",
-                response_metadata: { ...chunk },
-              }),
-            });
+      const { abortController, cleanup } = createLinkedAbortController(
+        options.signal
+      );
+      try {
+        const response = await this.client.send(command, {
+          abortSignal: abortController.signal,
+        });
+        if (response.stream) {
+          const streamIdleTimeout = resolveStreamIdleTimeout(
+            options.streamIdleTimeout ?? this.streamIdleTimeout
+          );
+          for await (const chunk of withStreamIdleTimeout(
+            response.stream,
+            streamIdleTimeout,
+            abortController
+          )) {
+            if (abortController.signal.aborted) {
+              return;
+            }
+            if (chunk.contentBlockStart) {
+              const toolCallStartChunk = handleConverseStreamContentBlockStart(
+                chunk.contentBlockStart
+              );
+              yield toolCallStartChunk;
+              await runManager?.handleLLMNewToken(
+                toolCallStartChunk.text,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                {
+                  chunk: toolCallStartChunk,
+                }
+              );
+            } else if (chunk.contentBlockDelta) {
+              const textChatGeneration = handleConverseStreamContentBlockDelta(
+                chunk.contentBlockDelta
+              );
+              yield textChatGeneration;
+              await runManager?.handleLLMNewToken(
+                textChatGeneration.text,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                {
+                  chunk: textChatGeneration,
+                }
+              );
+            } else if (chunk.metadata) {
+              yield handleConverseStreamMetadata(chunk.metadata, {
+                streamUsage,
+              });
+            } else {
+              yield new ChatGenerationChunk({
+                text: "",
+                message: new AIMessageChunk({
+                  content: "",
+                  response_metadata: { ...chunk },
+                }),
+              });
+            }
           }
         }
+      } finally {
+        cleanup();
       }
     } catch (error) {
       throw normalizeBedrockError(error);

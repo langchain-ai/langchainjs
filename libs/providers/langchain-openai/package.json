@@ -1,6 +1,6 @@
 {
   "name": "@langchain/openai",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "description": "OpenAI integrations for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -42,7 +42,7 @@
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.10",
     "@types/node": "^25.9.1",
-    "@vitest/coverage-v8": "^4.1.8",
+    "@vitest/coverage-v8": "^4.1.9",
     "dotenv": "^17.4.0",
     "dpdm": "^3.14.0",
     "rimraf": "^6.1.3",

@@ -37,11 +37,11 @@
     "@langchain/core": "workspace:^",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
-    "@vitest/coverage-v8": "^4.1.8",
+    "@vitest/coverage-v8": "^4.1.9",
     "dotenv": "^16.3.1",
     "dpdm": "^3.14.0",
     "eslint": "^9.34.0",
-    "prettier": "^3.5.0",
+    "prettier": "^3.9.4",
     "typescript": "~6.0.3",
     "vitest": "^4.1.8"
   },

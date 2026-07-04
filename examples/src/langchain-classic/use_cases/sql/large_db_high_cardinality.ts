@@ -11,7 +11,7 @@ import { MemoryVectorStore } from "@langchain/classic/vectorstores/memory";
 
 const db = await SqlDatabase.fromOptionsParams({
   appDataSourceOptions: {
-    type: "sqlite",
+    type: "better-sqlite3",
     database: "../../../../Chinook.db",
   },
 });
