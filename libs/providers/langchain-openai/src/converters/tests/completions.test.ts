@@ -1,7 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi } from "vitest";
 import { ChatCompletionMessage } from "openai/resources";
-import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
+import {
+  AIMessage,
+  AIMessageChunk,
+  ChatMessageChunk,
+} from "@langchain/core/messages";
 import {
   completionsApiContentBlockConverter,
   convertCompletionsDeltaToBaseMessageChunk,
@@ -57,6 +61,133 @@ describe("convertCompletionsMessageToBaseMessage", () => {
     }) as AIMessageChunk;
 
     expect(result.additional_kwargs.reasoning_content).toBe("The user");
+  });
+
+  describe("convertCompletionsDeltaToBaseMessageChunk", () => {
+    it("infers assistant role for tool call deltas without an explicit role", () => {
+      const delta = {
+        tool_calls: [
+          {
+            index: 0,
+            id: "call_123",
+            type: "function",
+            function: {
+              name: "get_weather",
+              arguments: '{"location":"SF"}',
+            },
+          },
+        ],
+      };
+      const rawResponse = {
+        id: "chatcmpl-tool-stream",
+        choices: [{ index: 0, delta, finish_reason: null }],
+        usage: { total_tokens: 0, total_characters: 0 },
+      };
+
+      const result = convertCompletionsDeltaToBaseMessageChunk({
+        delta,
+        rawResponse: rawResponse as any,
+      });
+
+      expect(result).toBeInstanceOf(AIMessageChunk);
+      expect((result as AIMessageChunk).tool_call_chunks).toEqual([
+        {
+          name: "get_weather",
+          args: '{"location":"SF"}',
+          id: "call_123",
+          index: 0,
+          type: "tool_call_chunk",
+        },
+      ]);
+    });
+
+    it("infers assistant role for function call deltas without an explicit role", () => {
+      const delta = {
+        function_call: {
+          name: "get_weather",
+          arguments: '{"location":"SF"}',
+        },
+      };
+      const rawResponse = {
+        id: "chatcmpl-function-stream",
+        choices: [{ index: 0, delta, finish_reason: null }],
+        usage: { total_tokens: 0, total_characters: 0 },
+      };
+
+      const result = convertCompletionsDeltaToBaseMessageChunk({
+        delta,
+        rawResponse: rawResponse as any,
+      });
+
+      expect(result).toBeInstanceOf(AIMessageChunk);
+      expect(result.additional_kwargs.function_call).toEqual(delta.function_call);
+    });
+
+    it("infers assistant role for reasoning content deltas without an explicit role", () => {
+      const delta = {
+        content: "",
+        reasoning_content: "Thinking through the request.",
+      };
+      const rawResponse = {
+        id: "chatcmpl-reasoning-stream",
+        choices: [{ index: 0, delta, finish_reason: null }],
+        usage: { total_tokens: 0, total_characters: 0 },
+      };
+
+      const result = convertCompletionsDeltaToBaseMessageChunk({
+        delta,
+        rawResponse: rawResponse as any,
+      });
+
+      expect(result).toBeInstanceOf(AIMessageChunk);
+      expect(result.additional_kwargs.reasoning_content).toBe(
+        "Thinking through the request."
+      );
+    });
+
+    it("infers assistant role for audio deltas without an explicit role", () => {
+      const delta = {
+        audio: {
+          id: "audio_123",
+          data: "base64-audio-delta",
+        },
+      };
+      const rawResponse = {
+        id: "chatcmpl-audio-stream",
+        choices: [{ index: 2, delta, finish_reason: null }],
+        usage: { total_tokens: 0, total_characters: 0 },
+      };
+
+      const result = convertCompletionsDeltaToBaseMessageChunk({
+        delta,
+        rawResponse: rawResponse as any,
+      });
+
+      expect(result).toBeInstanceOf(AIMessageChunk);
+      expect(result.additional_kwargs.audio).toEqual({
+        id: "audio_123",
+        data: "base64-audio-delta",
+        index: 2,
+      });
+    });
+
+    it("keeps generic chat chunks for roleless deltas without assistant-only fields", () => {
+      const delta = {
+        content: "hello",
+      };
+      const rawResponse = {
+        id: "chatcmpl-generic-stream",
+        choices: [{ index: 0, delta, finish_reason: null }],
+        usage: { total_tokens: 0, total_characters: 0 },
+      };
+
+      const result = convertCompletionsDeltaToBaseMessageChunk({
+        delta,
+        rawResponse: rawResponse as any,
+      });
+
+      expect(result).toBeInstanceOf(ChatMessageChunk);
+    });
   });
 
   describe("OpenRouter image response handling", () => {
