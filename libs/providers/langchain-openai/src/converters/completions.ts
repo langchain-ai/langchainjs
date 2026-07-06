@@ -399,7 +399,14 @@ export const convertCompletionsDeltaToBaseMessageChunk: Converter<
   },
   BaseMessageChunk
 > = ({ delta, rawResponse, includeRawResponse, defaultRole }) => {
-  const role = delta.role ?? defaultRole;
+  const isAssistantDelta = Boolean(
+    delta.tool_calls ||
+      delta.function_call ||
+      delta.reasoning_content !== undefined ||
+      delta.audio
+  );
+  const role =
+    delta.role ?? defaultRole ?? (isAssistantDelta ? "assistant" : undefined);
   const content = delta.content ?? "";
   let additional_kwargs: Record<string, unknown>;
   if (delta.function_call) {
