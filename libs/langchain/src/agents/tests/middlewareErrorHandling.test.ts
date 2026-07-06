@@ -242,6 +242,53 @@ describe("Middleware Error Handling", () => {
       }
     });
 
+    it("should convert invalid tool arguments to a ToolMessage when middleware is present", async () => {
+      const strictTool = tool(
+        async ({ value }: { value: string }) => `got ${value}`,
+        {
+          name: "strict_tool",
+          description: "A tool with a required string argument",
+          schema: z.object({ value: z.string() }),
+        }
+      );
+
+      const middleware = createMiddleware({
+        name: "testMiddleware",
+        wrapToolCall: async (request, handler) => {
+          return handler(request);
+        },
+      });
+
+      // First turn: model emits invalid args (missing `value`).
+      // Second turn: model recovers and finishes without tool calls.
+      const model = new FakeToolCallingModel({
+        toolCalls: [[{ name: "strict_tool", args: {}, id: "call_1" }], []],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [strictTool],
+        middleware: [middleware],
+      });
+
+      // Without the ToolInvocationError exemption this rejects with a
+      // MiddlewareError instead of feeding the error back to the model.
+      const result = await agent.invoke({
+        messages: [new HumanMessage("test")],
+      });
+
+      const toolMessages = result.messages.filter(
+        (m) => m.getType() === "tool"
+      );
+      expect(toolMessages).toHaveLength(1);
+      expect(toolMessages[0].content).toContain(
+        "Error invoking tool 'strict_tool'"
+      );
+      expect(toolMessages[0].content).toContain(
+        "Please fix the error and try again."
+      );
+    });
+
     it("should handle GraphInterrupt with checkpointer for resume flow", async () => {
       const checkpointer = new MemorySaver();
       const toolCalled = vi.fn();

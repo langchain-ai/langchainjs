@@ -104,6 +104,25 @@ const isSendInput = (
   typeof input === "object" && input != null && "lg_tool_call" in input;
 
 /**
+ * Find a ToolInvocationError in an error's cause chain.
+ *
+ * Errors thrown by the base handler inside wrapToolCall middleware are
+ * wrapped in MiddlewareError (possibly nested once per middleware layer),
+ * with the original error preserved as `cause`.
+ */
+function findToolInvocationError(
+  error: unknown
+): ToolInvocationError | undefined {
+  if (error instanceof ToolInvocationError) {
+    return error;
+  }
+  if (error instanceof Error) {
+    return findToolInvocationError(error.cause);
+  }
+  return undefined;
+}
+
+/**
  * Default error handler for tool errors.
  *
  * This is applied to errors from baseHandler (tool execution).
@@ -246,10 +265,23 @@ export class ToolNode<
     }
 
     /**
+     * ToolInvocationError originates from the model producing invalid tool
+     * arguments (thrown by baseHandler), not from middleware logic - even
+     * when it surfaces through wrapToolCall wrapped in a MiddlewareError.
+     * The documented default converts it to a ToolMessage so the model can
+     * retry, regardless of middleware presence, so unwrap it here.
+     */
+    const toolInvocationError = findToolInvocationError(error);
+
+    /**
      * If error is from middleware and handleToolErrors is not true, bubble up
      * (default handler and false both re-raise middleware errors)
      */
-    if (isMiddlewareError && this.handleToolErrors !== true) {
+    if (
+      isMiddlewareError &&
+      this.handleToolErrors !== true &&
+      toolInvocationError === undefined
+    ) {
       throw error;
     }
 
@@ -264,7 +296,7 @@ export class ToolNode<
      * Apply handleToolErrors to the error
      */
     if (typeof this.handleToolErrors === "function") {
-      const result = this.handleToolErrors(error, call);
+      const result = this.handleToolErrors(toolInvocationError ?? error, call);
       if (result && ToolMessage.isInstance(result)) {
         return result;
       }
