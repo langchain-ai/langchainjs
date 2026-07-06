@@ -12,6 +12,7 @@ import {
   trimMessages,
 } from "../transformers.js";
 import {
+  coerceMessageLikeToMessage,
   getBufferString,
   mapChatMessagesToStoredMessages,
   mapStoredMessagesToChatMessages,
@@ -767,6 +768,54 @@ test("getBufferString preserves non-text content block placeholders", () => {
   expect(getBufferString([mixedMsg])).toBe(
     "Human: Look at this: [image] and listen to this: [audio]"
   );
+});
+
+describe("coerceMessageLikeToMessage tool call argument parsing", () => {
+  it("throws a helpful error when OpenAI-format tool call arguments are malformed", () => {
+    // Models (especially during streaming) occasionally emit syntactically
+    // invalid JSON in tool call arguments. The bare SyntaxError from
+    // `JSON.parse` was very hard to diagnose because it surfaced no context
+    // about which tool call failed or what the offending payload was.
+    expect(() =>
+      coerceMessageLikeToMessage({
+        type: "ai",
+        content: "",
+        tool_calls: [
+          {
+            id: "call_abc123",
+            type: "function",
+            function: {
+              name: "get_weather",
+              arguments: '{"city": "Paris",}', // trailing comma -> invalid JSON
+            },
+          },
+        ],
+      } as never)
+    ).toThrow(/Failed to parse tool call arguments for "get_weather".*call_abc123.*"city": "Paris"/s);
+  });
+
+  it("still parses valid OpenAI-format tool call arguments", () => {
+    const msg = coerceMessageLikeToMessage({
+      type: "ai",
+      content: "",
+      tool_calls: [
+        {
+          id: "call_ok",
+          type: "function",
+          function: {
+            name: "get_weather",
+            arguments: '{"city":"Paris"}',
+          },
+        },
+      ],
+    } as never) as AIMessage;
+    expect(msg.tool_calls?.[0]).toEqual({
+      id: "call_ok",
+      args: { city: "Paris" },
+      name: "get_weather",
+      type: "tool_call",
+    });
+  });
 });
 
 describe("chat message conversions", () => {
