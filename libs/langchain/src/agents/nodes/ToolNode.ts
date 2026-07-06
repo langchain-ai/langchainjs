@@ -113,12 +113,11 @@ const isSendInput = (
 function findToolInvocationError(
   error: unknown
 ): ToolInvocationError | undefined {
-  let current: unknown = error;
-  while (current instanceof Error) {
-    if (current instanceof ToolInvocationError) {
-      return current;
-    }
-    current = current.cause;
+  if (error instanceof ToolInvocationError) {
+    return error;
+  }
+  if (error instanceof Error) {
+    return findToolInvocationError(error.cause);
   }
   return undefined;
 }
