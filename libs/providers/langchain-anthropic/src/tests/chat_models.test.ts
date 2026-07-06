@@ -1708,6 +1708,73 @@ describe("File ContentBlock handling", () => {
       cache_control: { type: "ephemeral" },
     });
   });
+
+  test("throws for a base64 file whose mime type is not a supported document type", () => {
+    // Office docs (.docx/.pptx/.xlsx) cannot be sent as a base64 Anthropic
+    // document (media_type must be application/pdf). Previously the mime type
+    // was passed straight through, producing a request the API rejects with a
+    // 400. It should now fail fast and consistently with the standard-content
+    // converter instead.
+    const message = new HumanMessage({
+      content: [
+        {
+          type: "file",
+          data: "UEsDBAoAAAAAAA==",
+          mimeType:
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        },
+      ],
+    });
+
+    expect(() => _convertMessagesToAnthropicPayload([message])).toThrow(
+      /Unsupported file mime type for Anthropic base64 source/
+    );
+  });
+
+  test("converts a text/plain base64 file to a text document source", () => {
+    const message = new HumanMessage({
+      content: [
+        {
+          type: "file",
+          data: "aGVsbG8=",
+          mimeType: "text/plain",
+        },
+      ],
+    });
+
+    const payload = _convertMessagesToAnthropicPayload([message]);
+    const content = payload.messages[0].content as AnthropicContentBlockParam[];
+    expect(content[0]).toEqual({
+      type: "document",
+      source: {
+        type: "text",
+        media_type: "text/plain",
+        data: "aGVsbG8=",
+      },
+    });
+  });
+
+  test("defaults to application/pdf when a base64 file has no mime type", () => {
+    const message = new HumanMessage({
+      content: [
+        {
+          type: "file",
+          data: "JVBERi0xLjQK",
+        },
+      ],
+    });
+
+    const payload = _convertMessagesToAnthropicPayload([message]);
+    const content = payload.messages[0].content as AnthropicContentBlockParam[];
+    expect(content[0]).toEqual({
+      type: "document",
+      source: {
+        type: "base64",
+        media_type: "application/pdf",
+        data: "JVBERi0xLjQK",
+      },
+    });
+  });
 });
 
 describe("Opus 4.6", () => {

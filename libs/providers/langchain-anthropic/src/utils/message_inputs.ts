@@ -258,6 +258,7 @@ function* _formatContentBlocks(
       let source:
         | { type: "url"; url: string }
         | { type: "base64"; media_type: string; data: string }
+        | { type: "text"; media_type: string; data: string }
         | { type: "file"; file_id: string }
         | undefined;
 
@@ -273,21 +274,42 @@ function* _formatContentBlocks(
           // oxlint-disable-next-line no-instanceof/no-instanceof
           contentPart.data instanceof Uint8Array)
       ) {
-        // File with base64 data (string or Uint8Array)
-        const media_type =
+        // File with base64 data (string or Uint8Array).
+        //
+        // Anthropic's document content block is strict about its source: a
+        // base64 source must be a PDF, and plain text uses a dedicated text
+        // source. Passing any other MIME type straight through as `media_type`
+        // yields a request the API rejects with
+        // `...document.source.base64.media_type: Input should be
+        // 'application/pdf'`. Mirror the standard-content converter (see
+        // ./standard.ts): map PDF and text/plain to their proper sources and
+        // throw on anything else instead of emitting an invalid request.
+        const mimeType =
           "mimeType" in contentPart && typeof contentPart.mimeType === "string"
             ? contentPart.mimeType
-            : "application/pdf";
+            : "";
         const data =
           typeof contentPart.data === "string"
             ? contentPart.data
             : Buffer.from(contentPart.data).toString("base64");
 
-        source = {
-          type: "base64" as const,
-          media_type,
-          data,
-        };
+        if (mimeType === "" || mimeType === "application/pdf") {
+          source = {
+            type: "base64" as const,
+            media_type: "application/pdf",
+            data,
+          };
+        } else if (mimeType === "text/plain") {
+          source = {
+            type: "text" as const,
+            media_type: "text/plain",
+            data,
+          };
+        } else {
+          throw new Error(
+            `Unsupported file mime type for Anthropic base64 source: ${mimeType}`
+          );
+        }
       } else if (
         "fileId" in contentPart &&
         typeof contentPart.fileId === "string"
