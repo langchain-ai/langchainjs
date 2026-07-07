@@ -843,3 +843,52 @@ describe("native structured output does not force strict tools", () => {
     expect(opts.strict).toBeUndefined();
   });
 });
+
+describe("structured-output tool name stability", () => {
+  it("binds the same generated tool name on every model request in an agent loop", async () => {
+    // A model that supports tool calling but not native JSON-schema output, so
+    // structured output is routed through the tool strategy (which generates
+    // the `extract-<n>` tool name from an unnamed schema).
+    const model = new FakeToolCallingModel({
+      toolCalls: [
+        [{ name: "get_weather", args: { city: "London" }, id: "call_1" }],
+        [],
+      ],
+    });
+    const bindTools = vi.spyOn(model, "bindTools");
+
+    const getWeather = tool(async () => "sunny", {
+      name: "get_weather",
+      description: "Get the weather for a city.",
+      schema: z.object({ city: z.string() }),
+    });
+
+    const agent = createAgent({
+      model,
+      tools: [getWeather],
+      // Raw schema with no explicit name — the structured-output tool name is
+      // generated internally and must stay stable across model requests.
+      responseFormat: z.object({ answer: z.string() }),
+    });
+
+    await agent.invoke({
+      messages: [new HumanMessage("What is the weather in London?")],
+    });
+
+    const extractNames = bindTools.mock.calls
+      .map(([toolClasses]) =>
+        (toolClasses as { type?: string; function?: { name?: string } }[])
+          .map((t) => t.function?.name)
+          .find((name) => name?.startsWith("extract-"))
+      )
+      .filter((name): name is string => name !== undefined);
+
+    // The agent runs a tool and calls the model again, so the structured-output
+    // tool is bound on more than one request.
+    expect(extractNames.length).toBeGreaterThan(1);
+    // Every binding must use the same generated name. A name that changes per
+    // request rewrites the tool definitions the model sees and defeats provider
+    // prompt caching (the tool block is part of the cached prefix).
+    expect(new Set(extractNames).size).toBe(1);
+  });
+});
