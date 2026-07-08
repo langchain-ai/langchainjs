@@ -1,5 +1,11 @@
 # langchain
 
+## 1.5.3
+
+### Patch Changes
+
+- [#11167](https://github.com/langchain-ai/langchainjs/pull/11167) [`4c7a06e`](https://github.com/langchain-ai/langchainjs/commit/4c7a06ec3e4728bb036a28f678dd8ec2521e1c82) Thanks [@colifran](https://github.com/colifran)! - fix(langchain): malformed tool input schemas are unrecoverable
+
 ## 1.5.2
 
 ### Patch Changes
