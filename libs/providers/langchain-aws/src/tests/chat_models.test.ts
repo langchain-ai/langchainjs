@@ -699,6 +699,57 @@ describe("convertToConverseMessages", () => {
         ],
       },
     },
+    {
+      name: "reasoning_content block with no text field (signature-only, as Bedrock sometimes returns)",
+      input: [
+        new HumanMessage("What is 2+2?"),
+        new AIMessage({
+          content: [
+            {
+              type: "reasoning_content",
+              reasoningText: {
+                signature: "abc123",
+              },
+            },
+          ],
+        }),
+        new HumanMessage("Thanks! What about 3+3?"),
+      ],
+      output: {
+        converseSystem: [],
+        converseMessages: [
+          {
+            role: BedrockConversationRole.USER,
+            content: [
+              {
+                text: "What is 2+2?",
+              },
+            ],
+          },
+          {
+            role: BedrockConversationRole.ASSISTANT,
+            content: [
+              {
+                reasoningContent: {
+                  reasoningText: {
+                    text: "",
+                    signature: "abc123",
+                  },
+                },
+              },
+            ],
+          },
+          {
+            role: BedrockConversationRole.USER,
+            content: [
+              {
+                text: "Thanks! What about 3+3?",
+              },
+            ],
+          },
+        ],
+      },
+    },
   ];
 
   it.each(testCases.map((tc) => [tc.name, tc]))(

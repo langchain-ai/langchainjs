@@ -801,8 +801,14 @@ export function langchainReasoningBlockToBedrockReasoningBlock(
     throw new Error("Invalid reasoning content");
   }
   if ("reasoningText" in content) {
+    const reasoningText = content.reasoningText as Bedrock.ReasoningTextBlock;
     return {
-      reasoningText: content.reasoningText as Bedrock.ReasoningTextBlock,
+      // Bedrock's Converse API can *return* a reasoning block that's just a
+      // signature with no `text` (e.g. on short turns with no visible
+      // thinking summary), but rejects receiving that same shape back on a
+      // later turn ("Member must not be null"). Default it to an empty
+      // string so replaying history doesn't crash.
+      reasoningText: { ...reasoningText, text: reasoningText.text ?? "" },
     };
   }
   if ("redactedContent" in content) {
