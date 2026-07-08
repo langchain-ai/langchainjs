@@ -800,12 +800,11 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
         // and let the caller fall back to msg.text or retry. See #10894.
       }
     }
-    // Reuse the allowlisted metadata from the converted message rather than
-    // copying every key of event.response. The raw response echoes the
-    // request (tools, instructions, ...), which would otherwise bloat every
-    // streamed message's response_metadata (see #11162). This also keeps the
-    // cleaned output so SDK-only fields like parsed_arguments are not
-    // persisted.
+    // reuse the converted message's allowlisted metadata instead of copying
+    // every key of event.response — the raw response echoes the request
+    // (tools, instructions, ...) and would bloat every streamed message's
+    // response_metadata (#11162). also drops sdk-only fields like
+    // parsed_arguments.
     for (const [key, value] of Object.entries(msg.response_metadata)) {
       if (key === "id") continue;
       response_metadata[key] = value;
