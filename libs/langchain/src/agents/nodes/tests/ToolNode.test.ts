@@ -823,21 +823,25 @@ describe("ToolNode error handling", () => {
     );
   });
 
-  it("recovers a schema error rewrapped by wrapToolCall middleware", async () => {
+  it("recovers a schema error nested under multiple MiddlewareError wrappers", async () => {
     // A tool whose args must satisfy a schema.
     const strictTool = tool(async () => "ok", {
       name: "strict_tool",
       description: "requires a field",
       schema: z.object({ required_field: z.string() }),
     });
-    // Simulate the middleware composer: rethrow any tool error as a
-    // MiddlewareError (keeping the original on `.cause`).
+    // Simulate two stacked wrapToolCall middlewares: the composer wraps once
+    // per middleware, so the recoverable error is nested
+    // MiddlewareError -> MiddlewareError -> ToolInvocationError.
     const toolNode = new ToolNode([strictTool], {
       wrapToolCall: async (request, handler) => {
         try {
           return await handler(request);
         } catch (error) {
-          throw MiddlewareError.wrap(error, "test_middleware");
+          throw MiddlewareError.wrap(
+            MiddlewareError.wrap(error, "inner_middleware"),
+            "outer_middleware"
+          );
         }
       },
     });

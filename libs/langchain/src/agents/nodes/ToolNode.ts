@@ -247,20 +247,23 @@ export class ToolNode<
 
     /**
      * A recoverable tool error (e.g. tool-input schema validation) can be
-     * rewrapped by the middleware composer as a {@link MiddlewareError} with the
-     * original error on `.cause`. Unwrap it so the intended `handleToolErrors`
-     * self-correction path still applies, while genuine middleware errors stay
-     * fatal by default.
+     * rewrapped as a {@link MiddlewareError} with the original error on `.cause`
+     * — once per `wrapToolCall` middleware, so it may be nested several layers
+     * deep. Walk the cause chain to the root; if it's a {@link ToolInvocationError},
+     * unwrap it so the intended `handleToolErrors` self-correction path still
+     * applies. Genuine middleware errors stay fatal by default.
      */
     let effectiveError = error;
     let errorFromMiddleware = isMiddlewareError;
-    if (
-      isMiddlewareError &&
-      error instanceof MiddlewareError &&
-      error.cause instanceof ToolInvocationError
-    ) {
-      effectiveError = error.cause;
-      errorFromMiddleware = false;
+    if (isMiddlewareError) {
+      let unwrapped: unknown = error;
+      while (unwrapped instanceof MiddlewareError) {
+        unwrapped = unwrapped.cause;
+      }
+      if (unwrapped instanceof ToolInvocationError) {
+        effectiveError = unwrapped;
+        errorFromMiddleware = false;
+      }
     }
 
     /**
