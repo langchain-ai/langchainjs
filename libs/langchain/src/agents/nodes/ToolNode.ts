@@ -117,7 +117,7 @@ function defaultHandleToolErrors(
   error: unknown,
   toolCall: ToolCall
 ): ToolMessage | undefined {
-  if (error instanceof ToolInvocationError) {
+  if (ToolInvocationError.isInstance(error)) {
     return new ToolMessage({
       content: error.message,
       tool_call_id: toolCall.id!,
@@ -257,10 +257,10 @@ export class ToolNode<
     let errorFromMiddleware = isMiddlewareError;
     if (isMiddlewareError) {
       let unwrapped: unknown = error;
-      while (unwrapped instanceof MiddlewareError) {
+      while (MiddlewareError.isInstance(unwrapped)) {
         unwrapped = unwrapped.cause;
       }
-      if (unwrapped instanceof ToolInvocationError) {
+      if (ToolInvocationError.isInstance(unwrapped)) {
         effectiveError = unwrapped;
         errorFromMiddleware = false;
       }
