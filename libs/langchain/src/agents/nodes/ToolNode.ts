@@ -20,7 +20,7 @@ import {
 
 import { RunnableCallable } from "../RunnableCallable.js";
 import { mergeAbortSignals } from "./utils.js";
-import { ToolInvocationError } from "../errors.js";
+import { MiddlewareError, ToolInvocationError } from "../errors.js";
 import type {
   WrapToolCallHook,
   ToolCallRequest,
@@ -246,25 +246,43 @@ export class ToolNode<
     }
 
     /**
+     * A recoverable tool error (e.g. tool-input schema validation) can be
+     * rewrapped by the middleware composer as a {@link MiddlewareError} with the
+     * original error on `.cause`. Unwrap it so the intended `handleToolErrors`
+     * self-correction path still applies, while genuine middleware errors stay
+     * fatal by default.
+     */
+    let effectiveError = error;
+    let errorFromMiddleware = isMiddlewareError;
+    if (
+      isMiddlewareError &&
+      error instanceof MiddlewareError &&
+      error.cause instanceof ToolInvocationError
+    ) {
+      effectiveError = error.cause;
+      errorFromMiddleware = false;
+    }
+
+    /**
      * If error is from middleware and handleToolErrors is not true, bubble up
      * (default handler and false both re-raise middleware errors)
      */
-    if (isMiddlewareError && this.handleToolErrors !== true) {
-      throw error;
+    if (errorFromMiddleware && this.handleToolErrors !== true) {
+      throw effectiveError;
     }
 
     /**
      * If handleToolErrors is false, throw all errors
      */
     if (!this.handleToolErrors) {
-      throw error;
+      throw effectiveError;
     }
 
     /**
      * Apply handleToolErrors to the error
      */
     if (typeof this.handleToolErrors === "function") {
-      const result = this.handleToolErrors(error, call);
+      const result = this.handleToolErrors(effectiveError, call);
       if (result && ToolMessage.isInstance(result)) {
         return result;
       }
@@ -272,11 +290,11 @@ export class ToolNode<
       /**
        * `handleToolErrors` returned undefined - re-raise
        */
-      throw error;
+      throw effectiveError;
     } else if (this.handleToolErrors) {
       return new ToolMessage({
         name: call.name,
-        content: `${error}\n Please fix your mistakes.`,
+        content: `${effectiveError}\n Please fix your mistakes.`,
         tool_call_id: call.id!,
       });
     }
@@ -284,7 +302,7 @@ export class ToolNode<
     /**
      * Shouldn't reach here, but throw as fallback
      */
-    throw error;
+    throw effectiveError;
   }
 
   protected async runTool(

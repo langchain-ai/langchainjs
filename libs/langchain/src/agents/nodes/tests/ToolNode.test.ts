@@ -25,6 +25,7 @@ import {
 } from "@langchain/langgraph";
 
 import { ToolNode } from "../ToolNode.js";
+import { MiddlewareError } from "../../errors.js";
 
 import {
   _AnyIdAIMessage,
@@ -820,6 +821,68 @@ describe("ToolNode error handling", () => {
     expect(result.messages[0].content).toBe(
       "Error: some error\n Please fix your mistakes."
     );
+  });
+
+  it("recovers a schema error rewrapped by wrapToolCall middleware", async () => {
+    // A tool whose args must satisfy a schema.
+    const strictTool = tool(async () => "ok", {
+      name: "strict_tool",
+      description: "requires a field",
+      schema: z.object({ required_field: z.string() }),
+    });
+    // Simulate the middleware composer: rethrow any tool error as a
+    // MiddlewareError (keeping the original on `.cause`).
+    const toolNode = new ToolNode([strictTool], {
+      wrapToolCall: async (request, handler) => {
+        try {
+          return await handler(request);
+        } catch (error) {
+          throw MiddlewareError.wrap(error, "test_middleware");
+        }
+      },
+    });
+
+    // Invalid args → ToolInputParsingException → ToolInvocationError →
+    // wrapped as MiddlewareError. It should still be recovered into a
+    // ToolMessage rather than aborting the run.
+    const result = await toolNode.invoke({
+      messages: [
+        new AIMessage({
+          content: "",
+          tool_calls: [{ name: "strict_tool", args: {}, id: "testid" }],
+        }),
+      ],
+    });
+
+    expect(ToolMessage.isInstance(result.messages[0])).toBe(true);
+    expect(result.messages[0].content).toContain(
+      "did not match expected schema"
+    );
+  });
+
+  it("still throws non-recoverable middleware errors by default", async () => {
+    const okTool = tool(async () => "ok", {
+      name: "ok_tool",
+      description: "a tool",
+      schema: z.object({}),
+    });
+    // A genuine middleware failure (cause is not a ToolInvocationError).
+    const toolNode = new ToolNode([okTool], {
+      wrapToolCall: async () => {
+        throw MiddlewareError.wrap(new Error("boom"), "test_middleware");
+      },
+    });
+
+    await expect(
+      toolNode.invoke({
+        messages: [
+          new AIMessage({
+            content: "",
+            tool_calls: [{ name: "ok_tool", args: {}, id: "testid" }],
+          }),
+        ],
+      })
+    ).rejects.toThrow();
   });
 
   it("should throw if handleToolErrors is false", async () => {
