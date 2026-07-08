@@ -1,0 +1,24 @@
+libs/langchain/src/agents/nodes/ToolNode.ts
+  s_2fa6a2d80cc287::t_ad1b07c2abfa02 23
+  s_2fa6a2d80cc287::t_4def33f92ce838 249-265,270-271,278,285,293,297,305
+  s_2fa6a2d80cc287::t_8a85c70f241e50 248
+libs/langchain/src/agents/nodes/tests/ToolNode.test.ts
+  s_2fa6a2d80cc287::t_21ee65dca22c70 28
+  s_2fa6a2d80cc287::t_4504928a7ae4f5 826-887
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "49531badd32053da703b49bf3eb401c6de6d11d5",
+  "prompts": {},
+  "sessions": {
+    "s_2fa6a2d80cc287": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "019cfc43-ff18-4466-b568-393226319cd8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Colin Francis <colin.francis@langchain.dev>"
+    }
+  }
+}
