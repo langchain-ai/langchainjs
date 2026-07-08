@@ -66,6 +66,20 @@ describe("AIMessage", () => {
     ]);
   });
 
+  it("should preserve contentBlocks when output version is v1", () => {
+    const message = new AIMessage({
+      contentBlocks: [{ type: "text", text: "Hi there!" }],
+      response_metadata: {
+        output_version: "v1",
+      },
+    });
+
+    expect(message.content).toEqual([{ type: "text", text: "Hi there!" }]);
+    expect(message.contentBlocks).toEqual([
+      { type: "text", text: "Hi there!" },
+    ]);
+  });
+
   describe(".contentBlocks", () => {
     it("should have tool call content blocks from .tool_calls", () => {
       const message = new AIMessage({

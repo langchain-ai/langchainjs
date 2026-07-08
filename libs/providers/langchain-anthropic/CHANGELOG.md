@@ -1,5 +1,26 @@
 # @langchain/anthropic
 
+## 1.5.1
+
+### Patch Changes
+
+- [#11073](https://github.com/langchain-ai/langchainjs/pull/11073) [`baa57ba`](https://github.com/langchain-ai/langchainjs/commit/baa57ba7cdce2046ba3dd40e9e8cf3c93c9c1ac4) Thanks [@archievi](https://github.com/archievi)! - Stop sending `thinking: { type: "disabled" }` on `ChatAnthropic` requests when the user never configured thinking. The disabled value is now only emitted when it is explicitly set, so adaptive-only models (e.g. `claude-fable-5`) that reject an explicit `thinking.type: "disabled"` no longer fail with a 400 on a default `ChatAnthropic` instance.
+
+## 1.5.0
+
+### Minor Changes
+
+- [#10924](https://github.com/langchain-ai/langchainjs/pull/10924) [`2e28115`](https://github.com/langchain-ai/langchainjs/commit/2e2811509d75af94f57cedcc3842f178f4c020d1) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(anthropic): update native streamEvents event coverage
+
+## 1.4.1
+
+### Patch Changes
+
+- [#11040](https://github.com/langchain-ai/langchainjs/pull/11040) [`7f57363`](https://github.com/langchain-ai/langchainjs/commit/7f573630ccccd9c1377f7e6084a59c0a2ce35531) Thanks [@hntrl](https://github.com/hntrl)! - feat(anthropic): add support for claude-fable-5 and claude-mythos-5 models
+  - upgrade `@anthropic-ai/sdk` to `^0.103.0`
+  - add default token handling and adaptive-thinking parameter compatibility for Anthropic 5-series models
+  - add unit and integration coverage for default-parameter behavior on new model IDs
+
 ## 1.4.0
 
 ### Minor Changes
