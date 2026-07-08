@@ -322,8 +322,8 @@ importers:
         specifier: workspace:^
         version: link:../libs/langchain
       langsmith:
-        specifier: ^0.7.14
-        version: 0.7.14(@opentelemetry/api@1.9.1)(openai@6.41.0(ws@5.2.5(bufferutil@4.1.0))(zod@4.3.6))(ws@5.2.5(bufferutil@4.1.0))
+        specifier: ^0.8.0
+        version: 0.8.0(@opentelemetry/api@1.9.1)(openai@6.41.0(ws@5.2.5(bufferutil@4.1.0))(zod@4.3.6))(ws@5.2.5(bufferutil@4.1.0))
       lorem-ipsum:
         specifier: ^3.0.0
         version: 3.0.0
@@ -598,7 +598,7 @@ importers:
         version: 1.1.3(@langchain/core@libs+langchain-core)
       langsmith:
         specifier: '>=0.5.0 <1.0.0'
-        version: 0.7.14(@opentelemetry/api@1.9.1)(openai@6.41.0(ws@8.21.0(bufferutil@4.1.0))(zod@4.3.6))(ws@8.21.0(bufferutil@4.1.0))
+        version: 0.8.0(@opentelemetry/api@1.9.1)(openai@6.41.0(ws@8.21.0(bufferutil@4.1.0))(zod@4.3.6))(ws@8.21.0(bufferutil@4.1.0))
       zod:
         specifier: ^3.25.76 || ^4
         version: 4.3.6
@@ -982,7 +982,7 @@ importers:
     optionalDependencies:
       langsmith:
         specifier: '>=0.4.0 <1.0.0'
-        version: 0.7.14(@opentelemetry/api@1.9.1)(openai@6.41.0(ws@8.21.0(bufferutil@4.1.0))(zod@4.3.6))(ws@8.21.0(bufferutil@4.1.0))
+        version: 0.8.0(@opentelemetry/api@1.9.1)(openai@6.41.0(ws@8.21.0(bufferutil@4.1.0))(zod@4.3.6))(ws@8.21.0(bufferutil@4.1.0))
 
   libs/langchain-core:
     dependencies:
@@ -997,7 +997,7 @@ importers:
         version: 1.0.21
       langsmith:
         specifier: '>=0.5.0 <1.0.0'
-        version: 0.7.14(@opentelemetry/api@1.9.1)(openai@6.41.0(ws@8.21.0(bufferutil@4.1.0))(zod@4.3.6))(ws@8.21.0(bufferutil@4.1.0))
+        version: 0.8.0(@opentelemetry/api@1.9.1)(openai@6.41.0(ws@8.21.0(bufferutil@4.1.0))(zod@4.3.6))(ws@8.21.0(bufferutil@4.1.0))
       mustache:
         specifier: ^4.2.0
         version: 4.2.0
@@ -8998,8 +8998,8 @@ packages:
   kuler@2.0.0:
     resolution: {integrity: sha512-Xq9nH7KlWZmXAtodXDDRE7vs6DU1gTU8zYDHDiWLSip45Egwq3plLHzPn27NgvzL2r1LMPC1vdqh98sQxtqj4A==}
 
-  langsmith@0.7.14:
-    resolution: {integrity: sha512-sy6KzzLpO/b1EiCF22A9u37IH1Er4Py9rqepHCuaSlsUjGDam0ez1vDS7sNdvWGADrvYE4mTRQ4ipO4LrD9Mcg==}
+  langsmith@0.8.0:
+    resolution: {integrity: sha512-edm/zZ1jMQRt0GzavmJ0YPIsqKkXetffIpmR29li8P0SoZ0MI/xKk/tIAkPnxHCybmzJesIQf5CT7eLQCqv3kA==}
     peerDependencies:
       '@opentelemetry/api': '*'
       '@opentelemetry/exporter-trace-otlp-proto': '*'
@@ -14623,7 +14623,7 @@ snapshots:
       dotenv: 16.6.1
       exit-hook: 4.0.0
       hono: 4.12.27
-      langsmith: 0.7.14(@opentelemetry/api@1.9.1)(openai@6.41.0(ws@8.21.0(bufferutil@4.1.0))(zod@4.3.6))(ws@8.21.0(bufferutil@4.1.0))
+      langsmith: 0.8.0(@opentelemetry/api@1.9.1)(openai@6.41.0(ws@8.21.0(bufferutil@4.1.0))(zod@4.3.6))(ws@8.21.0(bufferutil@4.1.0))
       open: 10.2.0
       semver: 7.8.5
       stacktrace-parser: 0.1.11
@@ -19947,7 +19947,7 @@ snapshots:
 
   kuler@2.0.0: {}
 
-  langsmith@0.7.14(@opentelemetry/api@1.9.1)(openai@6.41.0(ws@5.2.5(bufferutil@4.1.0))(zod@4.3.6))(ws@5.2.5(bufferutil@4.1.0)):
+  langsmith@0.8.0(@opentelemetry/api@1.9.1)(openai@6.41.0(ws@5.2.5(bufferutil@4.1.0))(zod@4.3.6))(ws@5.2.5(bufferutil@4.1.0)):
     dependencies:
       p-queue: 6.6.2
     optionalDependencies:
@@ -19955,7 +19955,7 @@ snapshots:
       openai: 6.41.0(ws@5.2.5(bufferutil@4.1.0))(zod@4.3.6)
       ws: 5.2.5(bufferutil@4.1.0)
 
-  langsmith@0.7.14(@opentelemetry/api@1.9.1)(openai@6.41.0(ws@8.21.0(bufferutil@4.1.0))(zod@4.3.6))(ws@8.21.0(bufferutil@4.1.0)):
+  langsmith@0.8.0(@opentelemetry/api@1.9.1)(openai@6.41.0(ws@8.21.0(bufferutil@4.1.0))(zod@4.3.6))(ws@8.21.0(bufferutil@4.1.0)):
     dependencies:
       p-queue: 6.6.2
     optionalDependencies:
