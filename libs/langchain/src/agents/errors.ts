@@ -52,6 +52,8 @@ export class StructuredOutputParsingError extends Error {
  * Raised when a tool call is throwing an error.
  */
 export class ToolInvocationError extends Error {
+  readonly "~brand" = "ToolInvocationError";
+
   public readonly toolCall: ToolCall;
 
   public readonly toolError: Error;
@@ -67,6 +69,19 @@ export class ToolInvocationError extends Error {
     this.toolCall = toolCall;
     this.toolError = error;
   }
+
+  /**
+   * Check if the error is a ToolInvocationError.
+   * @param error - The error to check
+   * @returns Whether the error is a ToolInvocationError
+   */
+  static isInstance(error: unknown): error is ToolInvocationError {
+    return (
+      error instanceof Error &&
+      "~brand" in error &&
+      error["~brand"] === "ToolInvocationError"
+    );
+  }
 }
 
 /**
@@ -76,7 +91,7 @@ export class ToolInvocationError extends Error {
  * to ensure that GraphBubbleUp errors (like GraphInterrupt) are never wrapped.
  */
 export class MiddlewareError extends Error {
-  static readonly "~brand" = "MiddlewareError";
+  readonly "~brand" = "MiddlewareError";
 
   private constructor(error: unknown, middlewareName: string) {
     const errorMessage = error instanceof Error ? error.message : String(error);
