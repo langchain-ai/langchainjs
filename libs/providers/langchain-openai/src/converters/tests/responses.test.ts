@@ -1175,6 +1175,34 @@ describe("convertStandardContentMessageToResponsesInput", () => {
   });
 });
 
+describe("convertStandardContentMessageToResponsesInput (role-aware text parts)", () => {
+  it("emits output_text for assistant messages (not input_text)", () => {
+    const items = convertStandardContentMessageToResponsesInput(
+      new AIMessage({ contentBlocks: [{ type: "text", text: "hi" }] })
+    );
+    expect(items).toMatchObject([
+      {
+        type: "message",
+        role: "assistant",
+        content: [{ type: "output_text", text: "hi" }],
+      },
+    ]);
+  });
+
+  it("emits input_text for user messages", () => {
+    const items = convertStandardContentMessageToResponsesInput(
+      new HumanMessage({ contentBlocks: [{ type: "text", text: "hi" }] })
+    );
+    expect(items).toMatchObject([
+      {
+        type: "message",
+        role: "user",
+        content: [{ type: "input_text", text: "hi" }],
+      },
+    ]);
+  });
+});
+
 describe("convertMessagesToResponsesInput", () => {
   describe("Regression Tests", () => {
     it("allows file_url without filename metadata and excludes filename from payload", () => {
