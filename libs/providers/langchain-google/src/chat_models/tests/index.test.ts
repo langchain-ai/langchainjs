@@ -353,6 +353,38 @@ describe("Google Mock", () => {
     );
   });
 
+  test("invoke surfaces Vertex traffic_type and model_version on response_metadata", async () => {
+    const llm = newChatGoogle({
+      model: "gemini-3-flash-preview",
+      responseFile: "gemini-chat-traffic-type.json",
+    });
+    const result = await llm.invoke("What is 1+1?");
+    expect(result.response_metadata.traffic_type).toBe(
+      "PROVISIONED_THROUGHPUT"
+    );
+    expect(result.response_metadata.model_version).toBe(
+      "gemini-3-flash-preview"
+    );
+  });
+
+  test("stream surfaces Vertex traffic_type and model_version on the final concatenated chunk", async () => {
+    const llm = newChatGoogle({
+      model: "gemini-2.5-flash",
+      responseFile: "gemini-stream-traffic-type.txt",
+      streaming: true,
+    });
+    const stream = await llm.stream("What color is the sky?");
+    let finalChunk: AIMessageChunk | undefined;
+    for await (const chunk of stream) {
+      finalChunk = finalChunk ? finalChunk.concat(chunk) : chunk;
+    }
+    expect(finalChunk).toBeDefined();
+    expect(finalChunk?.response_metadata.traffic_type).toBe(
+      "PROVISIONED_THROUGHPUT"
+    );
+    expect(finalChunk?.response_metadata.model_version).toBe("gemini-2.5-flash");
+  });
+
   test("mediaResolution uses scalar generation config value from constructor fields", async () => {
     const params: ChatGoogleParams = {
       model: "gemini-3-pro-preview",

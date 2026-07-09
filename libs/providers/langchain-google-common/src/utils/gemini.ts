@@ -1288,6 +1288,15 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
 
     const finish_reason = data.candidates[0]?.finishReason;
 
+    // Vertex response provenance. Not in the OpenAPI spec but present on both
+    // streaming (final chunk) and non-streaming responses. Surface them so
+    // callers can observe PTU consumption (`PROVISIONED_THROUGHPUT`) vs
+    // on-demand (`ON_DEMAND` / `ON_DEMAND_PRIORITY`) and the exact served
+    // model version — useful when PTU is version-bound.
+    const traffic_type = (data.usageMetadata as { trafficType?: string })
+      ?.trafficType;
+    const model_version = (data as { modelVersion?: string })?.modelVersion;
+
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const ret: Record<string, any> = {
       safety_ratings: data.candidates[0]?.safetyRatings?.map((rating) => ({
@@ -1304,6 +1313,8 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       url_context_metadata: candidateToUrlContextMetadata(data.candidates[0]),
       avgLogprobs: data.candidates[0]?.avgLogprobs,
       logprobs: candidateToLogprobs(data.candidates[0]),
+      ...(traffic_type !== undefined ? { traffic_type } : {}),
+      ...(model_version !== undefined ? { model_version } : {}),
     };
 
     // Only add the usage_metadata on the last chunk
@@ -1542,12 +1553,22 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     //   kwargs.reasoning_content = combineContent(gen.reasoning, true);
     // }
 
+    // Surface Vertex response provenance on the message. See
+    // responseToGenerationInfo for the same treatment on per-generation info.
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    const responseData = (response.data as any) ?? {};
+    const traffic_type: string | undefined =
+      responseData?.usageMetadata?.trafficType;
+    const model_version: string | undefined = responseData?.modelVersion;
+
     // Build the message and the generation chunk to return
     const message = new AIMessageChunk({
       content: combinedContent,
       additional_kwargs: kwargs,
       response_metadata: {
         model_provider: "google-vertexai",
+        ...(traffic_type !== undefined ? { traffic_type } : {}),
+        ...(model_version !== undefined ? { model_version } : {}),
       },
       usage_metadata,
       tool_calls: combinedToolCalls.tool_calls,

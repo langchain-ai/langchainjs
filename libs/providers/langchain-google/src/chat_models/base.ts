@@ -536,10 +536,24 @@ export abstract class BaseChatGoogle<
       convertGeminiGenerateContentResponseToUsageMetadata(data);
     message.usage_metadata = usageMetadata;
 
-    const serviceTier: ServiceTier = iife((): ServiceTier => {
-      // @ts-expect-error - trafficType is defined on Vertex, so isn't in the OpenAPI spec
-      const trafficType: string | undefined = data.usageMetadata?.trafficType;
+    // @ts-expect-error - trafficType is defined on Vertex, so isn't in the OpenAPI spec
+    const trafficType: string | undefined = data.usageMetadata?.trafficType;
 
+    // Surface Vertex response provenance on the message so callers can
+    // observe PTU consumption (`PROVISIONED_THROUGHPUT`) vs on-demand
+    // (`ON_DEMAND` / `ON_DEMAND_PRIORITY`) without dropping to the raw HTTP
+    // envelope via the `google-response-*` custom event. `modelVersion`
+    // captures the exact served version (e.g. gemini-3.1-flash-lite vs a
+    // preview variant), useful when PTU is version-bound.
+    message.response_metadata = {
+      ...message.response_metadata,
+      ...(trafficType !== undefined ? { traffic_type: trafficType } : {}),
+      ...(data.modelVersion !== undefined
+        ? { model_version: data.modelVersion }
+        : {}),
+    };
+
+    const serviceTier: ServiceTier = iife((): ServiceTier => {
       // AI Studio replies with actual service type in the header
       const serviceTierHeader: string | null = response.headers.get(
         "x-gemini-service-tier"
@@ -747,11 +761,25 @@ export abstract class BaseChatGoogle<
 
               // Only emit if we have content
               if (parts.length > 0 || candidate.finishReason) {
+                // @ts-expect-error - trafficType is defined on Vertex, so isn't in the OpenAPI spec
+                const chunkTrafficType: string | undefined =
+                  chunk?.usageMetadata?.trafficType;
                 const messageChunkParams: AIMessageChunkFields = {
                   content: message.content,
                   tool_calls: toolCalls,
                   response_metadata: {
                     model_provider: "google",
+                    // Surface Vertex response provenance the same way the
+                    // non-streaming path does. Only present on chunks that
+                    // actually carry these fields (typically the terminal
+                    // chunk with usageMetadata) — merged into the final
+                    // AIMessage by AIMessageChunk.concat.
+                    ...(chunkTrafficType !== undefined
+                      ? { traffic_type: chunkTrafficType }
+                      : {}),
+                    ...(chunk?.modelVersion !== undefined
+                      ? { model_version: chunk.modelVersion }
+                      : {}),
                   },
                   additional_kwargs: {
                     ...(message.additional_kwargs.originalTextContentBlock

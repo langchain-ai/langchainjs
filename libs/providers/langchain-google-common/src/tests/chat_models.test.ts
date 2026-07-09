@@ -3456,6 +3456,23 @@ test("Invoke usage_metadata maps token details", async () => {
   expect(result.usage_metadata?.output_token_details?.reasoning).toBe(4);
 });
 
+test("Invoke surfaces Vertex traffic_type and model_version on response_metadata", async () => {
+  const record: Record<string, unknown> = {};
+  const projectId = mockId();
+  const model = new ChatGoogle({
+    authOptions: {
+      record,
+      projectId,
+      resultFile: "chat-traffic-type-mock.json",
+    },
+  });
+
+  const result = await model.invoke("Hello?");
+
+  expect(result.response_metadata?.traffic_type).toBe("PROVISIONED_THROUGHPUT");
+  expect(result.response_metadata?.model_version).toBe("gemini-2.0-flash-001");
+});
+
 test("Stream usage_metadata includes cache_read", async () => {
   const record: Record<string, unknown> = {};
   const projectId = mockId();
