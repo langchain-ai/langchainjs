@@ -79,6 +79,14 @@ import ServiceTier = Gemini.ServiceTier;
 
 export type GooglePlatformType = "gai" | "gcp";
 
+// Vertex AI multi-region aliases. Unlike single regions (`us-central1`,
+// `europe-west4`, ...) these are served via regional endpoint proxies
+// (`aiplatform.{location}.rep.googleapis.com`), not a
+// `{location}-aiplatform.googleapis.com` host — the latter does not exist
+// for multi-region aliases. See
+// https://docs.cloud.google.com/vertex-ai/generative-ai/docs/learn/locations#regional-endpoints
+const VERTEX_MULTI_REGION_LOCATIONS = new Set(["us", "eu"]);
+
 export function getPlatformType(
   platform: GooglePlatformType | undefined,
   hasApiKey: boolean
@@ -263,6 +271,13 @@ export abstract class BaseChatGoogle<
     } else if (this.location === "global") {
       // See https://docs.cloud.google.com/vertex-ai/generative-ai/docs/learn/locations#use_the_global_endpoint
       return "aiplatform.googleapis.com";
+    } else if (VERTEX_MULTI_REGION_LOCATIONS.has(this.location)) {
+      // Multi-region aliases (`us`, `eu`) are served by regional endpoint
+      // proxies, not by a `{location}-aiplatform.googleapis.com` host (which
+      // only exists for single regions like `us-central1`). Using the wrong
+      // host produces `Invalid hostname: us-aiplatform.googleapis.com`.
+      // See https://docs.cloud.google.com/vertex-ai/generative-ai/docs/learn/locations#regional-endpoints
+      return `aiplatform.${this.location}.rep.googleapis.com`;
     } else {
       return `${this.location}-aiplatform.googleapis.com`;
     }
