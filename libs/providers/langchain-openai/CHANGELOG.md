@@ -1,5 +1,11 @@
 # @langchain/openai
 
+## 1.5.4
+
+### Patch Changes
+
+- [#11169](https://github.com/langchain-ai/langchainjs/pull/11169) [`988ca7d`](https://github.com/langchain-ai/langchainjs/commit/988ca7dc9f1debd48278c6e888553e11c7845ca3) Thanks [@colifran](https://github.com/colifran)! - fix(openai): emit output_text for assistant content in responses input
+
 ## 1.5.3
 
 ### Patch Changes
