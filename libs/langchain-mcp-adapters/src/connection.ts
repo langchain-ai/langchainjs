@@ -1,27 +1,6 @@
-import {
-  SSEClientTransport,
-  SSEClientTransportOptions,
-} from "@modelcontextprotocol/sdk/client/sse.js";
-
-import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
-import type {
-  StreamableHTTPClientTransportOptions,
-  StreamableHTTPReconnectionOptions,
-} from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { Client as MCPClient } from "@modelcontextprotocol/sdk/client/index.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import {
-  LoggingMessageNotificationSchema,
-  CancelledNotificationSchema,
-  InitializedNotificationSchema,
-  PromptListChangedNotificationSchema,
-  ResourceListChangedNotificationSchema,
-  ResourceUpdatedNotificationSchema,
-  RootsListChangedNotificationSchema,
-  ToolListChangedNotificationSchema,
-} from "@modelcontextprotocol/sdk/types.js";
-
+import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
+import { SSEClientTransport, SSEClientTransportOptions, StreamableHTTPClientTransport, Client as MCPClient } from "@modelcontextprotocol/client";
+import type { OAuthClientProvider, StreamableHTTPClientTransportOptions, StreamableHTTPReconnectionOptions } from "@modelcontextprotocol/client";
 import { getDebugLog } from "./logging.js";
 import type {
   ResolvedStreamableHTTPConnection,
@@ -132,7 +111,7 @@ export class ConnectionManager {
 
     if (this.#hooks.onMessage) {
       mcpClient.setNotificationHandler(
-        LoggingMessageNotificationSchema,
+        'notifications/message',
         (notification) =>
           this.#hooks.onMessage?.(notification.params, {
             server: serverName,
@@ -142,7 +121,7 @@ export class ConnectionManager {
     }
 
     if (this.#hooks.onInitialized) {
-      mcpClient.setNotificationHandler(InitializedNotificationSchema, () =>
+      mcpClient.setNotificationHandler('notifications/initialized', () =>
         this.#hooks.onInitialized?.({
           server: serverName,
           options,
@@ -152,7 +131,7 @@ export class ConnectionManager {
 
     if (this.#hooks.onCancelled) {
       mcpClient.setNotificationHandler(
-        CancelledNotificationSchema,
+        'notifications/cancelled',
         (notification) => {
           const { requestId, reason } = notification.params;
 
@@ -179,7 +158,7 @@ export class ConnectionManager {
 
     if (this.#hooks.onPromptsListChanged) {
       mcpClient.setNotificationHandler(
-        PromptListChangedNotificationSchema,
+        'notifications/prompts/list_changed',
         () =>
           this.#hooks.onPromptsListChanged?.({
             server: serverName,
@@ -190,7 +169,7 @@ export class ConnectionManager {
 
     if (this.#hooks.onResourcesListChanged) {
       mcpClient.setNotificationHandler(
-        ResourceListChangedNotificationSchema,
+        'notifications/resources/list_changed',
         () =>
           this.#hooks.onResourcesListChanged?.({
             server: serverName,
@@ -201,7 +180,7 @@ export class ConnectionManager {
 
     if (this.#hooks.onResourcesUpdated) {
       mcpClient.setNotificationHandler(
-        ResourceUpdatedNotificationSchema,
+        'notifications/resources/updated',
         (notification) =>
           this.#hooks.onResourcesUpdated?.(notification.params, {
             server: serverName,
@@ -211,7 +190,7 @@ export class ConnectionManager {
     }
 
     if (this.#hooks.onRootsListChanged) {
-      mcpClient.setNotificationHandler(RootsListChangedNotificationSchema, () =>
+      mcpClient.setNotificationHandler('notifications/roots/list_changed', () =>
         this.#hooks.onRootsListChanged?.({
           server: serverName,
           options,
@@ -220,7 +199,7 @@ export class ConnectionManager {
     }
 
     if (this.#hooks.onToolsListChanged) {
-      mcpClient.setNotificationHandler(ToolListChangedNotificationSchema, () =>
+      mcpClient.setNotificationHandler('notifications/tools/list_changed', () =>
         this.#hooks.onToolsListChanged?.({
           server: serverName,
           options,

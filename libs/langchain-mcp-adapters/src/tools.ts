@@ -1,17 +1,6 @@
 import { z, ZodError as ZodErrorV4 } from "zod/v4";
 import { ZodError as ZodErrorV3 } from "zod/v3";
-import {
-  type CallToolResult,
-  type ContentBlock as MCPContentBlock,
-} from "@modelcontextprotocol/sdk/types.js";
-import type { Client as MCPClient } from "@modelcontextprotocol/sdk/client/index.js";
-import type {
-  EmbeddedResource,
-  ReadResourceResult,
-  Tool as MCPTool,
-  ListToolsResult,
-} from "@modelcontextprotocol/sdk/types.js";
-import type { RequestOptions } from "@modelcontextprotocol/sdk/shared/protocol.js";
+import type { CallToolResult, ContentBlock as MCPContentBlock, Client as MCPClient, EmbeddedResource, ReadResourceResult, Tool as MCPTool, ListToolsResult, RequestOptions } from "@modelcontextprotocol/client";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import type { ContentBlock } from "@langchain/core/messages";
 import { RunnableConfig } from "@langchain/core/runnables";
