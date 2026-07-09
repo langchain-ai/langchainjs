@@ -1,0 +1,24 @@
+libs/providers/langchain-openai/src/converters/tests/responses.test.ts
+  s_2fa6a2d80cc287::t_86ef5f6b995506 1178-1205
+libs/providers/langchain-openai/src/converters/responses.ts
+  s_2fa6a2d80cc287::t_1e943cf79c5c09 1305
+  s_2fa6a2d80cc287::t_68180c68755553 1061
+  s_2fa6a2d80cc287::t_cadd24a831ddd1 1005-1018
+  s_2fa6a2d80cc287::t_4d58df991d6e7f 1237
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "9751209612de3995d2d221c137c3540e766d7b0f",
+  "prompts": {},
+  "sessions": {
+    "s_2fa6a2d80cc287": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "019cfc43-ff18-4466-b568-393226319cd8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": null
+    }
+  }
+}
