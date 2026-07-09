@@ -1,0 +1,19 @@
+libs/providers/langchain-openai/src/converters/responses.ts
+  s_2fa6a2d80cc287::t_e5396a65a2dd5b 1007
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "8242ece8dfc38f7f6d4fa1f499829f489e67f20e",
+  "prompts": {},
+  "sessions": {
+    "s_2fa6a2d80cc287": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "019cfc43-ff18-4466-b568-393226319cd8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Colin Francis <colin.francis@langchain.dev>"
+    }
+  }
+}
