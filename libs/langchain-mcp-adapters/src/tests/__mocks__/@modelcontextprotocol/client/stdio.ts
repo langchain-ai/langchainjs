@@ -1,6 +1,8 @@
 /* oxlint-disable @typescript-eslint/no-explicit-any */
 import { vi } from "vitest";
 
+// Mocks @modelcontextprotocol/client/stdio (v2). Was @modelcontextprotocol/sdk/client/stdio.js in v1.
+
 const stdioClientTransportPrototype = {
   connect: vi.fn().mockReturnValue(Promise.resolve()),
   send: vi.fn().mockReturnValue(Promise.resolve()),

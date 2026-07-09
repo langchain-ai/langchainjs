@@ -31,9 +31,12 @@
     "tools"
   ],
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0",
     "debug": "^4.4.3",
-    "zod": "^3.25.76 || ^4"
+    "zod": "^3.25.76 || ^4",
+    "@modelcontextprotocol/client": "2.0.0-beta.2",
+    "@modelcontextprotocol/server": "2.0.0-beta.2",
+    "@modelcontextprotocol/server-legacy": "2.0.0-beta.2",
+    "@modelcontextprotocol/node": "2.0.0-beta.2"
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0",
