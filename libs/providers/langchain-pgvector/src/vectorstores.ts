@@ -40,7 +40,15 @@ import { maximalMarginalRelevance } from "@langchain/core/utils/math";
  *   tags: { in: ["test1", "test2"] }           // Another operator filter
  * }
  * ```
+ *
+ * `namespace` is a reserved top-level key. If present, it is matched against
+ * the dedicated `namespace` column (not the `metadata` jsonb column) to scope
+ * results to a single tenant/namespace, e.g.:
+ * ```typescript
+ * { namespace: "tenant_a", category: "test" }
+ * ```
  */
+
 export type MetadataFilter = Record<
   string,
   | string
@@ -90,6 +98,7 @@ export interface PGVectorStoreArgs {
     vectorColumnName?: string;
     contentColumnName?: string;
     metadataColumnName?: string;
+    namespaceColumnName?: string;
   };
   filter?: MetadataFilter;
   verbose?: boolean;
@@ -305,6 +314,8 @@ export class PGVectorStore extends VectorStore {
 
   metadataColumnName: string;
 
+  namespaceColumnName: string;
+
   filter?: MetadataFilter;
 
   _verbose?: boolean;
@@ -420,6 +431,8 @@ export class PGVectorStore extends VectorStore {
     this.contentColumnName = config.columns?.contentColumnName ?? "text";
     this.idColumnName = config.columns?.idColumnName ?? "id";
     this.metadataColumnName = config.columns?.metadataColumnName ?? "metadata";
+    this.namespaceColumnName =
+      config.columns?.namespaceColumnName ?? "namespace";
 
     if (!config.postgresConnectionOptions && !config.pool) {
       throw new Error(
@@ -516,7 +529,7 @@ export class PGVectorStore extends VectorStore {
    */
   async addDocuments(
     documents: Document[],
-    options?: { ids?: string[] }
+    options?: { ids?: string[]; namespace?: string }
   ): Promise<void> {
     const texts = documents.map(({ pageContent }) => pageContent);
 
@@ -591,7 +604,10 @@ export class PGVectorStore extends VectorStore {
    * @param rows - The rows of data to be inserted, consisting of values and records.
    * @returns The complete SQL INSERT INTO query string.
    */
-  private async buildInsertQuery(rows: (string | Record<string, unknown>)[][]) {
+  private async buildInsertQuery(
+    rows: (string | Record<string, unknown>)[][],
+    options?: { namespace?: string }
+  ) {
     let collectionId;
     if (this.collectionTableName) {
       collectionId = await this.getOrCreateCollection();
@@ -605,6 +621,10 @@ export class PGVectorStore extends VectorStore {
 
     if (collectionId) {
       columns.push("collection_id");
+    }
+
+    if (options?.namespace !== undefined) {
+      columns.push(this.namespaceColumnName);
     }
 
     if (
@@ -640,9 +660,10 @@ export class PGVectorStore extends VectorStore {
   async addVectors(
     vectors: number[][],
     documents: Document[],
-    options?: { ids?: string[] }
+    options?: { ids?: string[]; namespace?: string }
   ): Promise<void> {
     const ids = options?.ids;
+    const { namespace } = options ?? {};
 
     if (ids !== undefined && ids.length !== vectors.length) {
       throw new Error(
@@ -668,6 +689,9 @@ export class PGVectorStore extends VectorStore {
       if (collectionId) {
         values.push(collectionId);
       }
+      if (namespace !== undefined) {
+        values.push(namespace);
+      }
       if (ids) {
         values.push(ids[i]);
       }
@@ -676,7 +700,7 @@ export class PGVectorStore extends VectorStore {
 
     for (let i = 0; i < rows.length; i += this.chunkSize) {
       const chunk = rows.slice(i, i + this.chunkSize);
-      const insertQuery = await this.buildInsertQuery(chunk);
+      const insertQuery = await this.buildInsertQuery(chunk, { namespace });
       const flatValues = chunk.flat();
       try {
         await this.pool.query(insertQuery, flatValues);
@@ -694,17 +718,27 @@ export class PGVectorStore extends VectorStore {
    * @param ids - Array of document ids.
    * @returns Promise that resolves when the documents have been deleted.
    */
-  private async deleteById(ids: string[]) {
+  private async deleteById(ids: string[], namespace?: string) {
     let collectionId;
     if (this.collectionTableName) {
       collectionId = await this.getOrCreateCollection();
     }
 
-    const params = collectionId ? [ids, collectionId] : [ids];
+    const params: unknown[] = [ids];
+    const clauses: string[] = [];
+
+    if (collectionId) {
+      params.push(collectionId);
+      clauses.push(`collection_id = $${params.length}`);
+    }
+    if (namespace !== undefined) {
+      params.push(namespace);
+      clauses.push(`"${this.namespaceColumnName}" = $${params.length}`);
+    }
 
     const queryString = `
       DELETE FROM ${this.computedTableName}
-      WHERE ${collectionId ? "collection_id = $2 AND " : ""}${
+      WHERE ${clauses.map((clause) => `${clause} AND `).join("")}${
         this.idColumnName
       } = ANY($1::uuid[])
     `;
@@ -728,7 +762,20 @@ export class PGVectorStore extends VectorStore {
       return `$${paramCount}`;
     };
 
-    for (const [key, value] of Object.entries(filter)) {
+    // `namespace` is a reserved key matched against the dedicated namespace
+    // column rather than the jsonb metadata column.
+    const { namespace, ...metadataFilter } = filter as MetadataFilter & {
+      namespace?: string;
+    };
+
+    if (namespace !== undefined) {
+      const namespacePlaceholder = addParameter(namespace);
+      whereClauses.push(
+        `"${this.namespaceColumnName}" = ${namespacePlaceholder}`
+      );
+    }
+
+    for (const [key, value] of Object.entries(metadataFilter)) {
       if (typeof value === "object" && value !== null) {
         const _value = value as Record<string, unknown>;
 
@@ -859,8 +906,9 @@ export class PGVectorStore extends VectorStore {
   override async delete(params: {
     ids?: string[];
     filter?: MetadataFilter;
+    namespace?: string;
   }): Promise<void> {
-    const { ids, filter } = params;
+    const { ids, filter, namespace } = params;
 
     if (!(ids || filter)) {
       throw new Error(
@@ -875,9 +923,9 @@ export class PGVectorStore extends VectorStore {
     }
 
     if (ids) {
-      await this.deleteById(ids);
+      await this.deleteById(ids, namespace);
     } else if (filter) {
-      await this.deleteByFilter(filter);
+      await this.deleteByFilter({ namespace, ...filter });
     }
   }
 
@@ -997,10 +1045,24 @@ export class PGVectorStore extends VectorStore {
         "${this.contentColumnName}" text,
         "${this.metadataColumnName}" jsonb,
         "${this.vectorColumnName}" ${vectorColumnType}
+        "${this.namespaceColumnName}" text
       );
     `;
+
+    // Adds the namespace column (and its index) to tables that were created
+    // before namespace support existed. A no-op on freshly created tables.
+    const namespaceMigrationQuery = `
+      ALTER TABLE ${this.computedTableName}
+        ADD COLUMN IF NOT EXISTS "${this.namespaceColumnName}" text;
+
+      CREATE INDEX IF NOT EXISTS idx_${this.tableName}_${
+        this.namespaceColumnName
+      } ON ${this.computedTableName}("${this.namespaceColumnName}");
+    `;
+
     await this.pool.query(vectorQuery);
     await this.pool.query(tableQuery);
+    await this.pool.query(namespaceMigrationQuery);
   }
 
   /**

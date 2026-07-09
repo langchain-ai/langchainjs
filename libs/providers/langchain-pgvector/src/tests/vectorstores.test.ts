@@ -321,6 +321,46 @@ describe("PGVectorStore", () => {
         )
       ).rejects.toThrow("Error inserting: connection refused");
     });
+
+    test("includes namespace column and value when namespace is provided", async () => {
+      const pool = createMockPool();
+      const store = new PGVectorStore(new MockEmbeddings(), {
+        tableName: "test_table",
+        pool,
+      });
+
+      await store.addVectors(
+        [[0.1, 0.2]],
+        [new Document({ pageContent: "hello", metadata: {} })],
+        { namespace: "tenant_a" }
+      );
+
+      const insertCall = pool.query.mock.calls.find(
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+        (call: any) => typeof call[0] === "string" && call[0].includes("INSERT")
+      );
+      expect(insertCall[0]).toContain('"namespace"');
+      expect(insertCall[1]).toContain("tenant_a");
+    });
+
+    test("omits namespace column when namespace is not provided", async () => {
+      const pool = createMockPool();
+      const store = new PGVectorStore(new MockEmbeddings(), {
+        tableName: "test_table",
+        pool,
+      });
+
+      await store.addVectors(
+        [[0.1, 0.2]],
+        [new Document({ pageContent: "hello", metadata: {} })]
+      );
+
+      const insertCall = pool.query.mock.calls.find(
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+        (call: any) => typeof call[0] === "string" && call[0].includes("INSERT")
+      );
+      expect(insertCall[0]).not.toContain('"namespace"');
+    });
   });
 
   describe("delete", () => {
@@ -367,6 +407,41 @@ describe("PGVectorStore", () => {
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining("DELETE FROM"),
         expect.arrayContaining(["test"])
+      );
+    });
+
+    test("scopes id-based deletion to a namespace", async () => {
+      const pool = createMockPool();
+      const store = new PGVectorStore(new MockEmbeddings(), {
+        tableName: "test_table",
+        pool,
+      });
+
+      await store.delete({ ids: ["id1"], namespace: "tenant_a" });
+
+      const [queryString, params] = pool.query.mock.calls[
+        pool.query.mock.calls.length - 1
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      ] as [string, any[]];
+      expect(queryString).toContain('"namespace" = $2');
+      expect(params).toEqual([["id1"], "tenant_a"]);
+    });
+
+    test("scopes filter-based deletion to a namespace", async () => {
+      const pool = createMockPool();
+      const store = new PGVectorStore(new MockEmbeddings(), {
+        tableName: "test_table",
+        pool,
+      });
+
+      await store.delete({
+        filter: { category: "test" },
+        namespace: "tenant_a",
+      });
+
+      expect(pool.query).toHaveBeenCalledWith(
+        expect.stringContaining('"namespace" = $1'),
+        expect.arrayContaining(["tenant_a", "test"])
       );
     });
   });
@@ -419,6 +494,46 @@ describe("PGVectorStore", () => {
       const queryCall = pool.query.mock.calls[0];
       expect(queryCall[0]).toContain("metadata ->> $");
       expect(queryCall[1]).toContain("category");
+      expect(queryCall[1]).toContain("test");
+    });
+
+    test("applies namespace as a raw column match, not a jsonb filter", async () => {
+      const pool = createMockPool();
+      pool.query.mockResolvedValue({ rows: [] });
+
+      const store = new PGVectorStore(new MockEmbeddings(), {
+        tableName: "test_table",
+        pool,
+      });
+
+      await store.similaritySearchVectorWithScore([0.1, 0.2], 5, {
+        namespace: "tenant_a",
+      });
+
+      const queryCall = pool.query.mock.calls[0];
+      expect(queryCall[0]).toContain('"namespace" = $');
+      expect(queryCall[0]).not.toContain("metadata ->> $1");
+      expect(queryCall[1]).toContain("tenant_a");
+    });
+
+    test("combines namespace with metadata filters", async () => {
+      const pool = createMockPool();
+      pool.query.mockResolvedValue({ rows: [] });
+
+      const store = new PGVectorStore(new MockEmbeddings(), {
+        tableName: "test_table",
+        pool,
+      });
+
+      await store.similaritySearchVectorWithScore([0.1, 0.2], 5, {
+        namespace: "tenant_a",
+        category: "test",
+      });
+
+      const queryCall = pool.query.mock.calls[0];
+      expect(queryCall[0]).toContain('"namespace" = $');
+      expect(queryCall[0]).toContain("metadata ->> $");
+      expect(queryCall[1]).toContain("tenant_a");
       expect(queryCall[1]).toContain("test");
     });
 
@@ -665,6 +780,38 @@ describe("PGVectorStore", () => {
       );
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining("CREATE TABLE IF NOT EXISTS")
+      );
+    });
+
+    test("includes namespace column in table creation and migrates existing tables", async () => {
+      const pool = createMockPool();
+      const store = new PGVectorStore(new MockEmbeddings(), {
+        tableName: "test_table",
+        pool,
+      });
+
+      await store.ensureTableInDatabase();
+
+      expect(pool.query).toHaveBeenCalledWith(
+        expect.stringContaining('"namespace" text')
+      );
+      expect(pool.query).toHaveBeenCalledWith(
+        expect.stringContaining('ADD COLUMN IF NOT EXISTS "namespace" text')
+      );
+    });
+
+    test("respects a custom namespaceColumnName", async () => {
+      const pool = createMockPool();
+      const store = new PGVectorStore(new MockEmbeddings(), {
+        tableName: "test_table",
+        pool,
+        columns: { namespaceColumnName: "tenant" },
+      });
+
+      await store.ensureTableInDatabase();
+
+      expect(pool.query).toHaveBeenCalledWith(
+        expect.stringContaining('"tenant" text')
       );
     });
 
