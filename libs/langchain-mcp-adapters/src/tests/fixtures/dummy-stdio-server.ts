@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { z } from "zod/v3";
+import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
+import { McpServer } from "@modelcontextprotocol/server";
+import { z } from "zod";
 
 // Get server name from command line arguments
 const serverName = process.argv[2] || "dummy-server";
@@ -13,75 +13,65 @@ const server = new McpServer(
 );
 
 // Add test tools that capture request metadata
-server.tool(
-  "test_tool",
-  "A test tool that echoes input and metadata",
-  { input: z.string() },
-  async ({ input }, extra) => {
-    // Emit a logging message
-    await server.server.notification(
-      {
-        method: "notifications/message",
-        params: {
-          level: "info",
-          message: `test_tool invoked with ${input}`,
-          timestamp: new Date().toISOString(),
-        },
-      },
-      { relatedRequestId: extra.requestId }
-    );
-
-    // Simulate progress updates using progressToken if present
-    const progressToken = extra._meta?.progressToken;
-    if (progressToken !== undefined) {
-      const steps = 3;
-      for (let i = 1; i <= steps; i++) {
+server.registerTool("test_tool", { description: "A test tool that echoes input and metadata", inputSchema: z.object({ input: z.string() }) }, async ({ input }, ctx) => {
+        // Emit a logging message
         await server.server.notification(
           {
-            method: "notifications/progress",
+            method: "notifications/message",
             params: {
-              progress: i,
-              total: steps,
-              progressToken,
+              level: "info",
+              message: `test_tool invoked with ${input}`,
+              timestamp: new Date().toISOString(),
             },
           },
-          { relatedRequestId: extra.requestId }
+          { relatedRequestId: ctx.mcpReq.id }
         );
-      }
-    }
 
-    return {
-      content: [
-        {
-          type: "text",
-          text: JSON.stringify({
-            input,
-            meta: extra._meta,
-            serverName,
-          }),
-        },
-      ],
-    };
-  }
-);
+        // Simulate progress updates using progressToken if present
+        const progressToken = ctx.mcpReq._meta?.progressToken;
+        if (progressToken !== undefined) {
+          const steps = 3;
+          for (let i = 1; i <= steps; i++) {
+            await server.server.notification(
+              {
+                method: "notifications/progress",
+                params: {
+                  progress: i,
+                  total: steps,
+                  progressToken,
+                },
+              },
+              { relatedRequestId: ctx.mcpReq.id }
+            );
+          }
+        }
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                input,
+                meta: ctx.mcpReq._meta,
+                serverName,
+              }),
+            },
+          ],
+        };
+      });
 
 // Add a tool that can check environment variables
-server.tool(
-  "check_env",
-  "Check environment variable",
-  { varName: z.string() },
-  async ({ varName }) => {
-    return {
-      content: [
-        {
-          type: "text",
-          // oxlint-disable-next-line no-process-env
-          text: process.env[varName] || "NOT_SET",
-        },
-      ],
-    };
-  }
-);
+server.registerTool("check_env", { description: "Check environment variable", inputSchema: z.object({ varName: z.string() }) }, async ({ varName }) => {
+        return {
+          content: [
+            {
+              type: "text",
+              // oxlint-disable-next-line no-process-env
+              text: process.env[varName] || "NOT_SET",
+            },
+          ],
+        };
+      });
 
 // Connect to stdio transport
 const transport = new StdioServerTransport();

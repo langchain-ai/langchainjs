@@ -1,6 +1,6 @@
 import { z } from "zod/v3";
 import type { Command } from "@langchain/langgraph";
-import type { EmbeddedResource } from "@modelcontextprotocol/sdk/types.js";
+import type { EmbeddedResource } from "@modelcontextprotocol/server";
 import type { ContentBlock } from "@langchain/core/messages";
 import type { RunnableConfig } from "@langchain/core/runnables";
 import type { ToolMessage } from "@langchain/core/messages";
