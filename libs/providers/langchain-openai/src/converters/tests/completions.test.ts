@@ -565,14 +565,21 @@ describe("convertCompletionsMessageToBaseMessage", () => {
       expect((result[0] as any).tool_calls).toHaveLength(1);
     });
 
-    it("should drop reasoning and reasoning_content blocks from content", () => {
-      // Regression: reasoning traces held in message history were echoed back
-      // into the request, which strict openai-compatible providers reject
-      // (e.g. DeepSeek: "unknown variant `reasoning`, expected `text`").
+    it("should drop reasoning, reasoning_content, and tool_call blocks from content", () => {
+      // Regression: standard reasoning/tool-call blocks held in message
+      // history were echoed back into the request, which strict
+      // openai-compatible providers reject (e.g. DeepSeek:
+      // "unknown variant `reasoning`/`tool_call`, expected `text`").
       const message = new AIMessage({
         content: [
           { type: "reasoning", reasoning: "Let me think about this..." },
           { type: "reasoning_content", reasoning_content: "more thoughts" },
+          {
+            type: "tool_call",
+            id: "call_1",
+            name: "search",
+            args: { q: "langchain" },
+          },
           { type: "text", text: "The answer is 42." },
         ],
       });
