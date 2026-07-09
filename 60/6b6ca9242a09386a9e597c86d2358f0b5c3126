@@ -1,0 +1,23 @@
+libs/providers/langchain-openai/src/converters/completions.ts
+  s_2fa6a2d80cc287::t_6d5930ac143626 810-813,815-816
+  s_2fa6a2d80cc287::t_682398e682effe 814,821-824
+libs/providers/langchain-openai/src/converters/tests/completions.test.ts
+  s_2fa6a2d80cc287::t_2fa6d109f793cb 567-588
+  s_2fa6a2d80cc287::t_e8b5000c4678bd 557-559,562
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "606b6ca9242a09386a9e597c86d2358f0b5c3126",
+  "prompts": {},
+  "sessions": {
+    "s_2fa6a2d80cc287": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "019cfc43-ff18-4466-b568-393226319cd8",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Colin Francis <colin.francis@langchain.dev>"
+    }
+  }
+}
