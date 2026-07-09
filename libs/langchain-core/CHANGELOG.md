@@ -1,5 +1,15 @@
 # @langchain/core
 
+## 1.2.2
+
+### Patch Changes
+
+- [#11171](https://github.com/langchain-ai/langchainjs/pull/11171) [`82bef01`](https://github.com/langchain-ai/langchainjs/commit/82bef01ad3dd5e0317e48da40707be6bccc52f94) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): coerce string v1 AIMessage content to text blocks
+
+  Prevent `contentBlocks.push is not a function` when constructing an
+  `AIMessage` with `response_metadata.output_version === "v1"` and string
+  `content` (common in serialized LangGraph stream payloads).
+
 ## 1.2.1
 
 ### Patch Changes
