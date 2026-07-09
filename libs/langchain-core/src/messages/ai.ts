@@ -22,7 +22,7 @@ import {
 } from "./tool.js";
 import { collapseToolCallChunks, Constructor } from "./utils.js";
 
-function coerceToContentBlocks(value: unknown): Array<ContentBlock.Standard> {
+function coerceToContentBlocks(value: unknown): ContentBlock.Standard[] {
   if (typeof value === "string") {
     return value.length > 0 ? [{ type: "text", text: value }] : [];
   }
