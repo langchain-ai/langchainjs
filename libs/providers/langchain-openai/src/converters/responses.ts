@@ -1004,8 +1004,7 @@ export const convertStandardContentMessageToResponsesInput: Converter<
 
     // Text parts must match the message role: assistant content uses
     // `output_text` (the Responses API rejects `input_text` for assistant
-    // messages), every other role uses `input_text`. Mirrors Python's
-    // role-dispatched `_construct_responses_api_input`.
+    // messages), every other role uses `input_text`.
     const makeTextPart = (
       text: string
     ): ResponseInputMessageContentList[number] =>
