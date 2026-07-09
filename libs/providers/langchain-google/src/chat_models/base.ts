@@ -761,24 +761,31 @@ export abstract class BaseChatGoogle<
 
               // Only emit if we have content
               if (parts.length > 0 || candidate.finishReason) {
+                // Surface Vertex response provenance the same way the
+                // non-streaming path does. Attach ONLY on the terminal chunk
+                // (finishReason set) — AIMessageChunk.concat string-appends
+                // response_metadata values across chunks, so putting the same
+                // value on every chunk produces e.g.
+                // "PROVISIONED_THROUGHPUTPROVISIONED_THROUGHPUT" on the merged
+                // AIMessage. Non-terminal chunks don't carry these fields
+                // reliably anyway.
                 // @ts-expect-error - trafficType is defined on Vertex, so isn't in the OpenAPI spec
-                const chunkTrafficType: string | undefined =
-                  chunk?.usageMetadata?.trafficType;
+                const chunkTrafficType: string | undefined = candidate.finishReason
+                  ? chunk?.usageMetadata?.trafficType
+                  : undefined;
+                const chunkModelVersion: string | undefined = candidate.finishReason
+                  ? chunk?.modelVersion
+                  : undefined;
                 const messageChunkParams: AIMessageChunkFields = {
                   content: message.content,
                   tool_calls: toolCalls,
                   response_metadata: {
                     model_provider: "google",
-                    // Surface Vertex response provenance the same way the
-                    // non-streaming path does. Only present on chunks that
-                    // actually carry these fields (typically the terminal
-                    // chunk with usageMetadata) — merged into the final
-                    // AIMessage by AIMessageChunk.concat.
                     ...(chunkTrafficType !== undefined
                       ? { traffic_type: chunkTrafficType }
                       : {}),
-                    ...(chunk?.modelVersion !== undefined
-                      ? { model_version: chunk.modelVersion }
+                    ...(chunkModelVersion !== undefined
+                      ? { model_version: chunkModelVersion }
                       : {}),
                   },
                   additional_kwargs: {

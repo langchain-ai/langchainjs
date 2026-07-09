@@ -1288,15 +1288,6 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
 
     const finish_reason = data.candidates[0]?.finishReason;
 
-    // Vertex response provenance. Not in the OpenAPI spec but present on both
-    // streaming (final chunk) and non-streaming responses. Surface them so
-    // callers can observe PTU consumption (`PROVISIONED_THROUGHPUT`) vs
-    // on-demand (`ON_DEMAND` / `ON_DEMAND_PRIORITY`) and the exact served
-    // model version — useful when PTU is version-bound.
-    const traffic_type = (data.usageMetadata as { trafficType?: string })
-      ?.trafficType;
-    const model_version = (data as { modelVersion?: string })?.modelVersion;
-
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const ret: Record<string, any> = {
       safety_ratings: data.candidates[0]?.safetyRatings?.map((rating) => ({
@@ -1313,14 +1304,19 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       url_context_metadata: candidateToUrlContextMetadata(data.candidates[0]),
       avgLogprobs: data.candidates[0]?.avgLogprobs,
       logprobs: candidateToLogprobs(data.candidates[0]),
-      ...(traffic_type !== undefined ? { traffic_type } : {}),
-      ...(model_version !== undefined ? { model_version } : {}),
     };
 
-    // Only add the usage_metadata on the last chunk
-    // sent while streaming (see issue 8102).
+    // Vertex response provenance (trafficType / modelVersion) + usage_metadata
+    // ONLY on the last chunk. Avoids AIMessageChunk.concat string-appending
+    // the same value across every streaming chunk. Not in the OpenAPI spec
+    // but present on real Vertex responses.
     if (typeof finish_reason === "string") {
       ret.usage_metadata = responseToUsageMetadata(response);
+      const traffic_type = (data.usageMetadata as { trafficType?: string })
+        ?.trafficType;
+      const model_version = (data as { modelVersion?: string })?.modelVersion;
+      if (traffic_type !== undefined) ret.traffic_type = traffic_type;
+      if (model_version !== undefined) ret.model_version = model_version;
     }
 
     return ret;
