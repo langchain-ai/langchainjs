@@ -162,6 +162,18 @@ test("Test ChatModel uses callbacks with a cache", async () => {
   expect(response2.content).toEqual(acc);
 });
 
+test("Test ChatModel invoke throws a diagnostic error for empty generations", async () => {
+  const model = new FakeChatModel({});
+  vi.spyOn(model, "generatePrompt").mockResolvedValue({
+    generations: [[]],
+    llmOutput: {},
+  });
+
+  await expect(model.invoke("Hello there!")).rejects.toThrow(
+    "Received empty response from chat model call."
+  );
+});
+
 test("Test ChatModel legacy params withStructuredOutput", async () => {
   const model = new FakeListChatModel({
     responses: [`{ "test": true, "nested": { "somethingelse": "somevalue" } }`],
