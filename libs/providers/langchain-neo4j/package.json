@@ -1,6 +1,6 @@
 {
   "name": "@langchain/neo4j",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "description": "Neo4j integrations for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
