@@ -444,6 +444,26 @@ describe("PGVectorStore", () => {
         expect.arrayContaining(["tenant_a", "test"])
       );
     });
+
+    test("trusted namespace overrides a conflicting namespace inside filter", async () => {
+      const pool = createMockPool();
+      const store = new PGVectorStore(new MockEmbeddings(), {
+        tableName: "test_table",
+        pool,
+      });
+
+      await store.delete({
+        namespace: "tenant_a",
+        filter: { namespace: "tenant_b", category: "test" },
+      });
+
+      const [, params] = pool.query.mock.calls[
+        pool.query.mock.calls.length - 1
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      ] as [string, any[]];
+      expect(params).toContain("tenant_a");
+      expect(params).not.toContain("tenant_b");
+    });
   });
 
   describe("similaritySearchVectorWithScore", () => {

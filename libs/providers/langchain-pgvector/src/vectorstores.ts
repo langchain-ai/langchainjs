@@ -925,7 +925,9 @@ export class PGVectorStore extends VectorStore {
     if (ids) {
       await this.deleteById(ids, namespace);
     } else if (filter) {
-      await this.deleteByFilter({ namespace, ...filter });
+      await this.deleteByFilter(
+        namespace!==undefined ? {...filter, namespace } : filter 
+      );
     }
   }
 
