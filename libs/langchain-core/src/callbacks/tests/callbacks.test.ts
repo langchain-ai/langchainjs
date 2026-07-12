@@ -12,6 +12,10 @@ import { BaseMessage, HumanMessage } from "../../messages/index.js";
 import type { LLMResult } from "../../outputs.js";
 import type { ChatModelStreamEvent } from "../../language_models/event.js";
 import { RunnableLambda } from "../../runnables/base.js";
+import {
+  getCallbackManagerForConfig,
+  mergeConfigs,
+} from "../../runnables/config.js";
 import { AsyncLocalStorageProviderSingleton } from "../../singletons/index.js";
 import { awaitAllCallbacks } from "../promises.js";
 import { LangChainTracer } from "../../tracers/tracer_langchain.js";
@@ -805,4 +809,104 @@ test("runnables in callbacks should be root runs", async () => {
   expect(res).toEqual("hello world");
   expect(error).toBe(undefined);
   expect(finalInputs).toEqual({ foo: "bar" });
+});
+
+test("tracer configuration preserves inheritable handler identity", () => {
+  const mockClient = {
+    createRun: vi.fn().mockResolvedValue(undefined),
+    updateRun: vi.fn().mockResolvedValue(undefined),
+  } as LangSmithTracingClientInterface;
+  const tracer = new LangChainTracer({ client: mockClient });
+
+  const callbacks = CallbackManager.configure(
+    [tracer],
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    { tracerInheritableMetadata: { tenant: "alpha" } }
+  );
+
+  const configuredTracers = callbacks!.handlers.filter(
+    (handler) => handler instanceof LangChainTracer
+  );
+  const inheritableTracers = callbacks!.inheritableHandlers.filter(
+    (handler) => handler instanceof LangChainTracer
+  );
+
+  expect(configuredTracers).toHaveLength(1);
+  expect(inheritableTracers).toHaveLength(1);
+  expect(inheritableTracers[0]).toBe(configuredTracers[0]);
+});
+
+test("nested callback configs coalesce tracers sharing run state", async () => {
+  const mockClient = {
+    createRun: vi.fn().mockResolvedValue(undefined),
+    updateRun: vi.fn().mockResolvedValue(undefined),
+  } as LangSmithTracingClientInterface;
+  const tracer = new LangChainTracer({ client: mockClient });
+
+  const outerCallbacks = CallbackManager.configure(
+    [tracer],
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    { tracerInheritableMetadata: { tenant: "alpha" } }
+  )!;
+
+  const mergedConfig = mergeConfigs(
+    { callbacks: outerCallbacks },
+    { callbacks: outerCallbacks }
+  );
+  const nestedCallbacks = await getCallbackManagerForConfig({
+    ...mergedConfig,
+    configurable: { thread_id: "thread-1" },
+  });
+
+  const configuredTracers = nestedCallbacks!.handlers.filter(
+    (handler): handler is LangChainTracer => handler instanceof LangChainTracer
+  );
+  const inheritableTracers = nestedCallbacks!.inheritableHandlers.filter(
+    (handler): handler is LangChainTracer => handler instanceof LangChainTracer
+  );
+
+  expect(configuredTracers).toHaveLength(1);
+  expect(inheritableTracers).toHaveLength(1);
+  expect(inheritableTracers[0]).toBe(configuredTracers[0]);
+  expect(configuredTracers[0].tracingMetadata).toEqual({
+    tenant: "alpha",
+    thread_id: "thread-1",
+  });
+
+  const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+  try {
+    const runnable = RunnableLambda.from((input: string) => input);
+    await runnable.invoke("hello", { callbacks: nestedCallbacks! });
+    await awaitAllCallbacks();
+    expect(warnSpy.mock.calls.flat().join("\n")).not.toContain(
+      "No chain run to end"
+    );
+  } finally {
+    warnSpy.mockRestore();
+  }
+});
+
+test("callback configuration keeps independent tracers", () => {
+  const client = () =>
+    ({
+      createRun: vi.fn().mockResolvedValue(undefined),
+      updateRun: vi.fn().mockResolvedValue(undefined),
+    }) as LangSmithTracingClientInterface;
+  const first = new LangChainTracer({ client: client() });
+  const second = new LangChainTracer({ client: client() });
+
+  const callbacks = CallbackManager.configure([first, second]);
+  const configuredTracers = callbacks!.handlers.filter(
+    (handler) => handler instanceof LangChainTracer
+  );
+
+  expect(configuredTracers).toHaveLength(2);
 });

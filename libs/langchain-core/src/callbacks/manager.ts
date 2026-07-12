@@ -42,6 +42,100 @@ export type Callbacks =
   | CallbackManager
   | (BaseCallbackHandler | CallbackHandlerMethods)[];
 
+function getTracerRunStoreKey(tracer: LangChainTracer): object {
+  const candidate = tracer as LangChainTracer & {
+    _getRunStoreKey?: () => object;
+  };
+  return candidate._getRunStoreKey?.() ?? tracer;
+}
+
+function mergeTracerConfig(
+  target: LangChainTracer,
+  source: LangChainTracer
+): LangChainTracer {
+  if (target === source) {
+    return target;
+  }
+  return target.copyWithTracingConfig({
+    metadata: source.tracingMetadata,
+    tags: source.tracingTags,
+  });
+}
+
+function coalesceTracers(
+  handlers: BaseCallbackHandler[],
+  inheritableHandlers: BaseCallbackHandler[]
+): {
+  handlers: BaseCallbackHandler[];
+  inheritableHandlers: BaseCallbackHandler[];
+} {
+  const groups = new Map<object, { index: number; tracer: LangChainTracer }>();
+  const coalescedHandlers: BaseCallbackHandler[] = [];
+
+  for (const handler of handlers) {
+    if (!(handler instanceof LangChainTracer)) {
+      coalescedHandlers.push(handler);
+      continue;
+    }
+
+    const key = getTracerRunStoreKey(handler);
+    const group = groups.get(key);
+    if (group === undefined) {
+      groups.set(key, {
+        index: coalescedHandlers.length,
+        tracer: handler,
+      });
+      coalescedHandlers.push(handler);
+      continue;
+    }
+
+    group.tracer = mergeTracerConfig(group.tracer, handler);
+    coalescedHandlers[group.index] = group.tracer;
+  }
+
+  // Repair aliases broken by separate handler/inheritable-handler copies.
+  for (const handler of inheritableHandlers) {
+    if (!(handler instanceof LangChainTracer)) {
+      continue;
+    }
+
+    const key = getTracerRunStoreKey(handler);
+    const group = groups.get(key);
+    if (group === undefined) {
+      groups.set(key, {
+        index: coalescedHandlers.length,
+        tracer: handler,
+      });
+      coalescedHandlers.push(handler);
+      continue;
+    }
+
+    group.tracer = mergeTracerConfig(group.tracer, handler);
+    coalescedHandlers[group.index] = group.tracer;
+  }
+
+  const seenTracerStores = new Set<object>();
+  const coalescedInheritableHandlers = inheritableHandlers.flatMap(
+    (handler) => {
+      if (!(handler instanceof LangChainTracer)) {
+        return [handler];
+      }
+
+      const key = getTracerRunStoreKey(handler);
+      if (seenTracerStores.has(key)) {
+        return [];
+      }
+      seenTracerStores.add(key);
+      return [groups.get(key)?.tracer ?? handler];
+    }
+  );
+
+  return {
+    handlers: coalescedHandlers,
+    inheritableHandlers: coalescedInheritableHandlers,
+  };
+}
+
 export interface BaseCallbackConfig {
   /**
    * Name for the tracer run for this call. Defaults to the name of the class.
@@ -1381,23 +1475,38 @@ export class CallbackManager
       callbackManager &&
       (tracerInheritableMetadata || tracerInheritableTags)
     ) {
-      callbackManager.handlers = callbackManager.handlers.map((handler) =>
-        handler instanceof LangChainTracer
-          ? handler.copyWithTracingConfig({
-              metadata: tracerInheritableMetadata,
-              tags: tracerInheritableTags,
-            })
-          : handler
-      );
+      const replacements = new Map<BaseCallbackHandler, BaseCallbackHandler>();
+      const applyTracingConfig = (
+        handler: BaseCallbackHandler
+      ): BaseCallbackHandler => {
+        if (!(handler instanceof LangChainTracer)) {
+          return handler;
+        }
+        const existing = replacements.get(handler);
+        if (existing !== undefined) {
+          return existing;
+        }
+        const replacement = handler.copyWithTracingConfig({
+          metadata: tracerInheritableMetadata,
+          tags: tracerInheritableTags,
+        });
+        replacements.set(handler, replacement);
+        return replacement;
+      };
+
+      callbackManager.handlers =
+        callbackManager.handlers.map(applyTracingConfig);
       callbackManager.inheritableHandlers =
-        callbackManager.inheritableHandlers.map((handler) =>
-          handler instanceof LangChainTracer
-            ? handler.copyWithTracingConfig({
-                metadata: tracerInheritableMetadata,
-                tags: tracerInheritableTags,
-              })
-            : handler
-        );
+        callbackManager.inheritableHandlers.map(applyTracingConfig);
+    }
+
+    if (callbackManager) {
+      const coalesced = coalesceTracers(
+        callbackManager.handlers,
+        callbackManager.inheritableHandlers
+      );
+      callbackManager.handlers = coalesced.handlers;
+      callbackManager.inheritableHandlers = coalesced.inheritableHandlers;
     }
 
     return callbackManager;
