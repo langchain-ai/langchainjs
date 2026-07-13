@@ -151,9 +151,7 @@ export declare namespace Tools {
   }
 
   /**
-   * @deprecated Renamed to {@link ServerToolResult} to align the block `type`
-   * literal with `langchain-core` (Python). This alias will be removed in a
-   * future major release.
+   * @deprecated Renamed to {@link ServerToolResult}.
    */
   export type ServerToolCallResult<TOutput = Record<string, unknown>> =
     ServerToolResult<TOutput>;
