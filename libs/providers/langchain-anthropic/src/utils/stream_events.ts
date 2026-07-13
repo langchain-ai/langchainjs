@@ -63,7 +63,28 @@ export async function* convertAnthropicStream(
       case "message_delta": {
         stopReason = data.delta.stop_reason;
         if (shouldStreamUsage && data.usage) {
-          if (!usageSnapshot) {
+          // Cumulative delta usage may carry input-side fields (input_tokens,
+          // cache_creation_input_tokens, cache_read_input_tokens) — notably
+          // from OpenAI-backed Anthropic-compatible gateways, which only know
+          // usage at stream end.
+          const deltaUsage = data.usage as typeof data.usage & {
+            input_tokens?: number | null;
+            cache_creation_input_tokens?: number | null;
+            cache_read_input_tokens?: number | null;
+          };
+          if (
+            deltaUsage.input_tokens != null ||
+            deltaUsage.cache_creation_input_tokens != null ||
+            deltaUsage.cache_read_input_tokens != null
+          ) {
+            usageSnapshot = buildUsageSnapshot({
+              input_tokens: deltaUsage.input_tokens ?? 0,
+              output_tokens: deltaUsage.output_tokens ?? 0,
+              cache_creation_input_tokens:
+                deltaUsage.cache_creation_input_tokens ?? 0,
+              cache_read_input_tokens: deltaUsage.cache_read_input_tokens ?? 0,
+            } as Parameters<typeof buildUsageSnapshot>[0]);
+          } else if (!usageSnapshot) {
             usageSnapshot = {
               input_tokens: 0,
               output_tokens: data.usage.output_tokens,
