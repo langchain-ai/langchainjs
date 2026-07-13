@@ -8,7 +8,7 @@ export const KNOWN_BLOCK_TYPES = [
   "invalid_tool_call",
   "server_tool_call",
   "server_tool_call_chunk",
-  "server_tool_call_result",
+  "server_tool_result",
 ];
 
 // oxlint-disable-next-line @typescript-eslint/no-namespace
@@ -129,13 +129,13 @@ export declare namespace Tools {
     args?: string;
   }
 
-  export interface ServerToolCallResult<
+  export interface ServerToolResult<
     TOutput = Record<string, unknown>,
   > extends BaseContentBlock {
     /**
      * Type of the content block
      */
-    readonly type: "server_tool_call_result";
+    readonly type: "server_tool_result";
     /**
      * The unique identifier of the tool call that this result corresponds to
      */
@@ -150,11 +150,19 @@ export declare namespace Tools {
     output: TOutput;
   }
 
+  /**
+   * @deprecated Renamed to {@link ServerToolResult} to align the block `type`
+   * literal with `langchain-core` (Python). This alias will be removed in a
+   * future major release.
+   */
+  export type ServerToolCallResult<TOutput = Record<string, unknown>> =
+    ServerToolResult<TOutput>;
+
   export type Standard =
     | ToolCall
     | ToolCallChunk
     | InvalidToolCall
     | ServerToolCall
     | ServerToolCallChunk
-    | ServerToolCallResult;
+    | ServerToolResult;
 }
