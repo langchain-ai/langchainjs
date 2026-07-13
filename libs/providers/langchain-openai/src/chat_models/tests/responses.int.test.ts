@@ -1354,8 +1354,8 @@ describe("tool search", () => {
       (b) => b.type === "server_tool_call"
     ) as ContentBlock.Tools.ServerToolCall[];
     const serverToolResults = blocks.filter(
-      (b) => b.type === "server_tool_call_result"
-    ) as ContentBlock.Tools.ServerToolCallResult[];
+      (b) => b.type === "server_tool_result"
+    ) as ContentBlock.Tools.ServerToolResult[];
 
     const toolSearchCall = serverToolCalls.find(
       (b) => b.name === "tool_search"

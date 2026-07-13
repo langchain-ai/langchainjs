@@ -438,7 +438,7 @@ export function convertToV1FromAnthropicMessage(
           return acc;
         }, []);
         yield {
-          type: "server_tool_call_result",
+          type: "server_tool_result",
           name: "web_search",
           toolCallId: tool_use_id,
           status: "success",
@@ -455,7 +455,7 @@ export function convertToV1FromAnthropicMessage(
         _isObject(block.content)
       ) {
         yield {
-          type: "server_tool_call_result",
+          type: "server_tool_result",
           name: "code_execution",
           toolCallId: block.tool_use_id,
           status: "success",
@@ -480,7 +480,7 @@ export function convertToV1FromAnthropicMessage(
         _isObject(block.content)
       ) {
         yield {
-          type: "server_tool_call_result",
+          type: "server_tool_result",
           name: "mcp_tool_use",
           toolCallId: block.tool_use_id,
           status: "success",

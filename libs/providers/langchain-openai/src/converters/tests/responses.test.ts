@@ -892,7 +892,7 @@ describe("convertStandardContentMessageToResponsesInput", () => {
     const message = new AIMessage({
       contentBlocks: [
         {
-          type: "server_tool_call_result",
+          type: "server_tool_result",
           toolCallId: "call-2",
           status: "success",
           output: { foo: "bar" },
