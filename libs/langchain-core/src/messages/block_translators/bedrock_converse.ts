@@ -239,7 +239,7 @@ function convertToV1FromChatBedrockConverseMessage(
         : message.content;
     for (const block of content) {
       if (_isContentBlock(block, "reasoning") && _isString(block.reasoning)) {
-        yield block;
+        yield { ...block, type: "reasoning", reasoning: block.reasoning };
         continue;
       } else if (_isContentBlock(block, "cache_point")) {
         yield { type: "non_standard", value: block };
