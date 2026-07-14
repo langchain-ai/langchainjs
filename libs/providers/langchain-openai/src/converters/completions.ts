@@ -807,14 +807,24 @@ export const convertMessagesToCompletionsMessageParams: Converter<
                 completionsApiContentBlockConverter
               );
             }
-            // Drop Anthropic tool_use blocks from content — these are
-            // already represented in message.tool_calls and would cause
-            // an API error if passed through to OpenAI.
+            // Drop content blocks the Chat Completions API rejects as input:
+            //  - Tool-call blocks (`tool_use`, `tool_call`) are already
+            //    carried in message.tool_calls, so resending them as content
+            //    would be a duplicate/invalid part.
+            //  - Reasoning traces (`reasoning`, `reasoning_content`,
+            //    `thinking`) are output-only.
+            // Echoing any of these back in the request history is rejected by
+            // strict openai-compatible providers, e.g. DeepSeek:
+            // "unknown variant `reasoning`, expected `text`".
             if (
               typeof m === "object" &&
               m !== null &&
               "type" in m &&
-              m.type === "tool_use"
+              (m.type === "tool_use" ||
+                m.type === "tool_call" ||
+                m.type === "reasoning" ||
+                m.type === "reasoning_content" ||
+                m.type === "thinking")
             ) {
               return [];
             }
