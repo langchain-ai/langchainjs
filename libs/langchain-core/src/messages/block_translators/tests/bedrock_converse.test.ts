@@ -93,7 +93,14 @@ describe("ChatBedrockConverseTranslator", () => {
         },
         {
           type: "reasoning_content",
-          reasoningText: "foo",
+          reasoningText: {
+            text: "foo",
+            signature: "opaque-signature",
+          },
+        },
+        {
+          type: "reasoning_content",
+          reasoningText: "legacy reasoning",
         },
         {
           type: "reasoning_content",
@@ -197,7 +204,15 @@ describe("ChatBedrockConverseTranslator", () => {
         mimeType: "image/jpeg",
         data: Buffer.from("image_bytes"),
       },
-      { type: "reasoning", reasoning: "foo" },
+      {
+        type: "reasoning",
+        reasoning: "foo",
+        signature: "opaque-signature",
+      },
+      {
+        type: "reasoning",
+        reasoning: "legacy reasoning",
+      },
       {
         type: "non_standard",
         value: {

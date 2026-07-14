@@ -313,6 +313,19 @@ function convertToV1FromChatBedrockConverseMessage(
         continue;
       } else if (
         _isContentBlock(block, "reasoning_content") &&
+        _isObject(block.reasoningText) &&
+        _isString(block.reasoningText.text)
+      ) {
+        yield {
+          type: "reasoning",
+          reasoning: block.reasoningText.text,
+          ...(_isString(block.reasoningText.signature)
+            ? { signature: block.reasoningText.signature }
+            : {}),
+        };
+        continue;
+      } else if (
+        _isContentBlock(block, "reasoning_content") &&
         _isString(block.reasoningText)
       ) {
         yield {
