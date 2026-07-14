@@ -11,6 +11,7 @@ import { createAgent } from "../../index.js";
 import { FakeToolCallingModel } from "../../tests/utils.js";
 import type { ToolCallRequest } from "../types.js";
 import { toolErrorMiddleware } from "../toolError.js";
+import { toolRetryMiddleware } from "../toolRetry.js";
 
 class SecretToolError extends Error {
   constructor(value: string) {
@@ -66,24 +67,74 @@ describe("toolErrorMiddleware", () => {
   });
 
   it("propagates the original error when the handler returns nothing", async () => {
+    const originalError = new SecretToolError("x");
+    const identityTool = tool(
+      async () => {
+        throw originalError;
+      },
+      {
+        name: "failing_tool",
+        description: "Tool that throws a fixed error",
+        schema: z.object({ value: z.string() }),
+      }
+    );
+    const onError = vi.fn((_error: unknown) => undefined);
     const agent = createAgent({
       model: createModel(),
-      tools: [failingTool],
-      middleware: [
-        toolErrorMiddleware({
-          onError: (error) => {
-            if (error instanceof TypeError) {
-              return "handled";
-            }
-            return undefined;
-          },
-        }),
-      ],
+      tools: [identityTool],
+      middleware: [toolErrorMiddleware({ onError })],
     });
 
     await expect(
       agent.invoke({ messages: [new HumanMessage("Use the failing tool")] })
-    ).rejects.toThrow("secret detail: x");
+    ).rejects.toBe(originalError);
+    expect(onError.mock.calls[0][0]).toBe(originalError);
+    expect(originalError).toBeInstanceOf(SecretToolError);
+  });
+
+  it("handles the original error after retries are exhausted", async () => {
+    const originalError = new SecretToolError("retry");
+    const attempts = vi.fn();
+    const retryingTool = tool(
+      async () => {
+        attempts();
+        throw originalError;
+      },
+      {
+        name: "failing_tool",
+        description: "Tool that fails until retries are exhausted",
+        schema: z.object({ value: z.string() }),
+      }
+    );
+    const onError = vi.fn((error: unknown) =>
+      error instanceof SecretToolError ? "handled after retries" : undefined
+    );
+    const agent = createAgent({
+      model: createModel(),
+      tools: [retryingTool],
+      middleware: [
+        toolErrorMiddleware({ onError }),
+        toolRetryMiddleware({
+          maxRetries: 2,
+          initialDelayMs: 0,
+          jitter: false,
+          onFailure: "error",
+        }),
+      ],
+    });
+
+    const result = await agent.invoke({
+      messages: [new HumanMessage("Use the failing tool")],
+    });
+
+    expect(attempts).toHaveBeenCalledTimes(3);
+    expect(onError).toHaveBeenCalledOnce();
+    expect(onError.mock.calls[0][0]).toBe(originalError);
+    const toolMessages = result.messages.filter(ToolMessage.isInstance);
+    expect(toolMessages[0]).toMatchObject({
+      content: "handled after retries",
+      status: "error",
+    });
   });
 
   it("supports async handlers and content blocks", async () => {
