@@ -92,7 +92,25 @@
       "express>path-to-regexp": "0.1.13",
       "router>path-to-regexp": ">=8.4.0",
       "picomatch@2": ">=2.3.2",
-      "picomatch@4": ">=4.0.4"
+      "picomatch@4": ">=4.0.4",
+      "aggregate-error": "npm:@socketregistry/aggregate-error@^1",
+      "es-define-property": "npm:@socketregistry/es-define-property@^1",
+      "es-set-tostringtag": "npm:@socketregistry/es-set-tostringtag@^1",
+      "function-bind": "npm:@socketregistry/function-bind@^1",
+      "gopd": "npm:@socketregistry/gopd@^1",
+      "has-symbols": "npm:@socketregistry/has-symbols@^1",
+      "has-tostringtag": "npm:@socketregistry/has-tostringtag@^1",
+      "hasown": "npm:@socketregistry/hasown@^1",
+      "indent-string": "npm:@socketregistry/indent-string@^1",
+      "is-interactive": "npm:@socketregistry/is-interactive@^1",
+      "is-unicode-supported": "npm:@socketregistry/is-unicode-supported@^1",
+      "isarray": "npm:@socketregistry/isarray@^1",
+      "object-assign": "npm:@socketregistry/object-assign@^1",
+      "querystringify": "npm:@socketregistry/querystringify@^1",
+      "safe-buffer": "npm:@socketregistry/safe-buffer@^1",
+      "safer-buffer": "npm:@socketregistry/safer-buffer@^1",
+      "side-channel": "npm:@socketregistry/side-channel@^1",
+      "shell-quote": "npm:shell-quote@^1"
     }
   },
   "lint-staged": {
