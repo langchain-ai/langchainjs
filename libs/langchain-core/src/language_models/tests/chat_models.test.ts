@@ -616,3 +616,45 @@ test("Test ChatModel applies v1 outputVersion after implicit streaming aggregati
     },
   ]);
 });
+
+// Verifies the wrapRunExecution hook fires around the model call body.
+test("wrapRunExecution wraps the model call body (non-streaming _generate)", async () => {
+  let activeDuringGenerate = false;
+  let handlerActive = false;
+
+  class WrappingHandler extends BaseCallbackHandler {
+    name = "WrappingHandler";
+
+    wrapRunExecution<T>(_runId: string, fn: () => T): T {
+      handlerActive = true;
+      try {
+        return fn();
+      } finally {
+        handlerActive = false;
+      }
+    }
+  }
+
+  class ProbingChatModel extends FakeChatModel {
+    async _generate(
+      messages: Parameters<FakeChatModel["_generate"]>[0],
+      options: Parameters<FakeChatModel["_generate"]>[1],
+      runManager: Parameters<FakeChatModel["_generate"]>[2]
+    ): ReturnType<FakeChatModel["_generate"]> {
+      // The handler's wrapRunExecution must be active for the duration of the
+      // model call body.
+      activeDuringGenerate = handlerActive;
+      return super._generate(messages, options, runManager);
+    }
+  }
+
+  const model = new ProbingChatModel({});
+  await model.invoke([["human", "Hello there!"]], {
+    callbacks: [new WrappingHandler()],
+  });
+
+  expect(activeDuringGenerate).toBe(true);
+  // Context is torn down after the call returns.
+  expect(handlerActive).toBe(false);
+});
+
