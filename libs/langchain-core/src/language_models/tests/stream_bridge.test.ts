@@ -170,6 +170,48 @@ class FakeToolCallStreamModel extends BaseChatModel {
 }
 
 /**
+ * A model that yields string text content and a tool call in the same chunk,
+ * where the provider tool-call index (0) collides with the text block index.
+ */
+class FakeTextAndToolCallStreamModel extends BaseChatModel {
+  _llmType() {
+    return "fake-text-and-tool-stream";
+  }
+
+  async _generate(
+    _messages: BaseMessage[],
+    _options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): Promise<ChatResult> {
+    return { generations: [] };
+  }
+
+  async *_streamResponseChunks(
+    _messages: BaseMessage[],
+    _options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    yield new ChatGenerationChunk({
+      message: new AIMessageChunk({
+        content: "I will call a tool",
+        id: "msg_text_tool",
+        tool_call_chunks: [
+          { id: "call_1", name: "eval", args: '{"code"', index: 0 },
+        ],
+      }),
+      text: "I will call a tool",
+    });
+    yield new ChatGenerationChunk({
+      message: new AIMessageChunk({
+        content: "",
+        tool_call_chunks: [{ args: ':"new Date()"}', index: 0 }],
+      }),
+      text: "",
+    });
+  }
+}
+
+/**
  * A model that yields chunks with usage_metadata.
  */
 class FakeUsageStreamModel extends BaseChatModel {
@@ -488,6 +530,44 @@ describe("_streamChatModelEvents bridge", () => {
       expect(toolFinish).toBeDefined();
       expect(toolFinish!.content.name).toBe("search");
       expect(toolFinish!.content.args).toEqual({ q: "hello" });
+    });
+
+    test("keeps text and a same-index tool call as separate blocks", async () => {
+      const model = new FakeTextAndToolCallStreamModel({});
+      const events: ChatModelStreamEvent[] = [];
+      for await (const event of model._streamChatModelEvents(
+        [],
+        {} as BaseChatModelCallOptions
+      )) {
+        events.push(event);
+      }
+
+      // The text block and the tool call must not share a content block index.
+      const starts = events.filter(
+        (e) => e.event === "content-block-start"
+      ) as Array<{ index: number; content: ContentBlock }>;
+      const textStart = starts.find((e) => e.content.type === "text");
+      const toolStart = starts.find(
+        (e) => e.content.type === "tool_call_chunk"
+      );
+      expect(textStart).toBeDefined();
+      expect(toolStart).toBeDefined();
+      expect(textStart!.index).not.toBe(toolStart!.index);
+
+      // The finalized message must surface the tool call so agents run it.
+      const message = await model.streamV2("hi").output;
+      expect(message.tool_calls).toEqual([
+        {
+          name: "eval",
+          args: { code: "new Date()" },
+          id: "call_1",
+          type: "tool_call",
+        },
+      ]);
+      const textBlock = (
+        message.content as Array<{ type: string; text?: string }>
+      ).find((b) => b.type === "text");
+      expect(textBlock?.text).toBe("I will call a tool");
     });
   });
 
