@@ -44,7 +44,6 @@ overrides:
   router>path-to-regexp: '>=8.4.0'
   picomatch@2: '>=2.3.2'
   picomatch@4: '>=4.0.4'
-  aggregate-error: npm:@socketregistry/aggregate-error@^1
   es-define-property: npm:@socketregistry/es-define-property@^1
   es-set-tostringtag: npm:@socketregistry/es-set-tostringtag@^1
   function-bind: npm:@socketregistry/function-bind@^1
@@ -57,7 +56,6 @@ overrides:
   is-unicode-supported: npm:@socketregistry/is-unicode-supported@^1
   isarray: npm:@socketregistry/isarray@^1
   object-assign: npm:@socketregistry/object-assign@^1
-  querystringify: npm:@socketregistry/querystringify@^1
   safe-buffer: npm:@socketregistry/safe-buffer@^1
   safer-buffer: npm:@socketregistry/safer-buffer@^1
   side-channel: npm:@socketregistry/side-channel@^1
@@ -5443,16 +5441,16 @@ packages:
   '@so-ric/colorspace@1.1.6':
     resolution: {integrity: sha512-/KiKkpHNOBgkFJwu9sh48LkHSMYGyuTcSFK/qMBdnOAlrRJzRSXAOFB5qwzaVQuDl8wAvHVMkaASQDReTahxuw==}
 
-  '@socketregistry/aggregate-error@1.0.15':
-    resolution: {integrity: sha512-my1J2f4iN6CgZo231DEAMx3TMKx9ykj0QdVuFQTh+/OZWedXqLVdGkQwMyUddWCKEG/Zswq+c2IEEvWADYLmvA==}
-    engines: {node: '>=18'}
-
   '@socketregistry/es-set-tostringtag@1.0.10':
     resolution: {integrity: sha512-btXmvw1JpA8WtSoXx9mTapo9NAyIDKRRzK84i48d8zc0X09M6ORfobVnHbgwhXf7CFhkRzhYrHG9dqbI9vpELQ==}
     engines: {node: '>=18'}
 
   '@socketregistry/hasown@1.0.7':
     resolution: {integrity: sha512-MZ5dyXOtiEc7q3801T+2EmKkxrd55BOSQnG8z/8/IkIJzDxqBxGGBKVyixqFm3W657TyUEBfIT9iWgSB6ipFsA==}
+    engines: {node: '>=18'}
+
+  '@socketregistry/indent-string@1.0.14':
+    resolution: {integrity: sha512-SCb2h+KkZppDEDyzZheazziUpJQVeCpEMQxSiTn4VMbVkGgvpNVAWQyx3IniSzwiSJpASmwTRTlhiYk6AR19bw==}
     engines: {node: '>=18'}
 
   '@socketregistry/is-interactive@1.0.6':
@@ -5469,10 +5467,6 @@ packages:
 
   '@socketregistry/object-assign@1.0.5':
     resolution: {integrity: sha512-Lyh3XnghYXhoq4RzMj++W71bTZdejE87hLnSAFXJxiy/VBc1Cyq5jBnVOu9Y9GWmE+BLzxVGQdtDlssb7PqrnQ==}
-    engines: {node: '>=18'}
-
-  '@socketregistry/querystringify@1.0.10':
-    resolution: {integrity: sha512-bxR2vAnwB7USgTitnUSi+l7trClfcpT0XeaS76Rlg145l8PEEKfR8gfn71CjvjRih7CER/JBEIoOXVKmEKI0KQ==}
     engines: {node: '>=18'}
 
   '@socketregistry/safe-buffer@1.0.9':
@@ -6377,6 +6371,10 @@ packages:
     resolution: {integrity: sha512-kja8j7PjmncONqaTsB8fQ+wE2mSU2DJ9D4XKoJ5PFWIdRMa6SLSN1ff4mOr4jCbfRSsxR4keIiySJU0N9T5hIQ==}
     engines: {node: '>= 8.0.0'}
 
+  aggregate-error@3.1.0:
+    resolution: {integrity: sha512-4I7Td01quW/RpocfNayFdFVk1qSuoh0E7JrbRJ16nH01HhKFQ88INq9Sd+nd72zqRySlr9BmDA8xlEJ6vJMrYA==}
+    engines: {node: '>=8'}
+
   ai@5.0.179:
     resolution: {integrity: sha512-tuq/r2FH/pBuY3jo0yHF3UglDV73WONGLhW80DuwgO6w0ftPIqRsAm5p9cE3Bu4LfEuCkMXpiUG/pQRzqKRRaA==}
     engines: {node: '>=18'}
@@ -6979,6 +6977,10 @@ packages:
 
   cjs-module-lexer@2.2.0:
     resolution: {integrity: sha512-4bHTS2YuzUvtoLjdy+98ykbNB5jS0+07EvFNXerqZQJ89F7DI6ET7OQo/HJuW6K0aVsKA9hj9/RVb2kQVOrPDQ==}
+
+  clean-stack@2.2.0:
+    resolution: {integrity: sha512-4diC9HaTE+KRAMWhDhrGOECgWZxoevMc5TlkObMqNSsVU62PYzXZ/SMTjzyGAFF1YusgxGcSWTEXBhp0CPwQ1A==}
+    engines: {node: '>=6'}
 
   cli-cursor@3.1.0:
     resolution: {integrity: sha512-I/zHAwsKf9FqGoXM4WWRACob9+SNukZTd94DWF57E4toouRulbCxcUh6RKUEOQlYTHJnzkPMySvPNaaSLNfLZw==}
@@ -10268,6 +10270,9 @@ packages:
 
   quansync@1.0.0:
     resolution: {integrity: sha512-5xZacEEufv3HSTPQuchrvV6soaiACMFnq1H8wkVioctoH3TRha9Sz66lOxRwPK/qZj7HPiSveih9yAyh98gvqA==}
+
+  querystringify@2.2.0:
+    resolution: {integrity: sha512-FIqgj2EUvTa7R50u0rGsyTftzjYmv/a3hO345bZNrqabNqjtgiDMgmo4mkUjd+nzU5oF3dClKqFIPUKybUyqoQ==}
 
   queue-microtask@1.2.3:
     resolution: {integrity: sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==}
@@ -15675,12 +15680,12 @@ snapshots:
       color: 5.0.3
       text-hex: 1.0.0
 
-  '@socketregistry/aggregate-error@1.0.15':
-    optional: true
-
   '@socketregistry/es-set-tostringtag@1.0.10': {}
 
   '@socketregistry/hasown@1.0.7': {}
+
+  '@socketregistry/indent-string@1.0.14':
+    optional: true
 
   '@socketregistry/is-interactive@1.0.6': {}
 
@@ -15689,8 +15694,6 @@ snapshots:
   '@socketregistry/isarray@1.0.8': {}
 
   '@socketregistry/object-assign@1.0.5': {}
-
-  '@socketregistry/querystringify@1.0.10': {}
 
   '@socketregistry/safe-buffer@1.0.9': {}
 
@@ -16577,6 +16580,12 @@ snapshots:
     dependencies:
       humanize-ms: 1.2.1
 
+  aggregate-error@3.1.0:
+    dependencies:
+      clean-stack: 2.2.0
+      indent-string: '@socketregistry/indent-string@1.0.14'
+    optional: true
+
   ai@5.0.179(zod@4.3.6):
     dependencies:
       '@ai-sdk/gateway': 2.0.82(zod@4.3.6)
@@ -17296,6 +17305,9 @@ snapshots:
   cjs-module-lexer@1.4.3: {}
 
   cjs-module-lexer@2.2.0: {}
+
+  clean-stack@2.2.0:
+    optional: true
 
   cli-cursor@3.1.0:
     dependencies:
@@ -20570,7 +20582,7 @@ snapshots:
 
   p-map@4.0.0:
     dependencies:
-      aggregate-error: '@socketregistry/aggregate-error@1.0.15'
+      aggregate-error: 3.1.0
     optional: true
 
   p-queue@6.6.2:
@@ -21153,6 +21165,8 @@ snapshots:
   quansync@0.2.11: {}
 
   quansync@1.0.0: {}
+
+  querystringify@2.2.0: {}
 
   queue-microtask@1.2.3: {}
 
@@ -22427,7 +22441,7 @@ snapshots:
 
   url-parse@1.5.10:
     dependencies:
-      querystringify: '@socketregistry/querystringify@1.0.10'
+      querystringify: 2.2.0
       requires-port: 1.0.0
 
   url@0.11.4:

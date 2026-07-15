@@ -25,6 +25,9 @@ Chinook.db
 Chinook_Sqlite.sql
 
 .envrc
+*.pem
+*.key
+*.crt
 *.swp
 *.swo
 
