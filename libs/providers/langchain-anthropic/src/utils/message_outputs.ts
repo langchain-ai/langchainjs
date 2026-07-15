@@ -75,6 +75,7 @@ export function _makeMessageChunkFromAnthropicEvent(
       "document",
       "server_tool_use",
       "web_search_tool_result",
+      "web_fetch_tool_result",
     ].includes(data.content_block.type)
   ) {
     const contentBlock = data.content_block;

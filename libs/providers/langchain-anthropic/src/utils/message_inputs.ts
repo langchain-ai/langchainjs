@@ -166,6 +166,7 @@ function* _formatContentBlocks(
     "tool_use",
     "web_search_result",
     "web_search_tool_result",
+    "web_fetch_tool_result",
   ];
   const textTypes = ["text", "text_delta"];
   for (const contentPart of content) {
