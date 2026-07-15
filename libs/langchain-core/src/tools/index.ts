@@ -307,7 +307,12 @@ export abstract class StructuredTool<
 
     let result;
     try {
-      const raw = await this._call(parsed, runManager, config);
+      // Execute the tool body inside its run context so any client spans it
+      // emits (e.g. a `fetch` the tool makes) nest under the execute_tool span.
+      const invokeCall = () => this._call(parsed, runManager, config);
+      const raw = await (runManager
+        ? runManager.withRunContext(invokeCall)
+        : invokeCall());
       result = isAsyncGenerator(raw)
         ? await consumeAsyncGenerator(raw, async (chunk) => {
             try {

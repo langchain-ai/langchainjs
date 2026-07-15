@@ -557,11 +557,18 @@ export abstract class BaseChatModel<
       // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       let llmOutput: Record<string, any> | undefined;
       try {
-        for await (const chunk of this._streamResponseChunks(
+        const chunkStream = this._streamResponseChunks(
           messages,
           callOptions,
           runManagers?.[0]
-        )) {
+        );
+        // Activate the run context around each iterator step so the streaming
+        // network request (initiated on first `next()`) and its client spans
+        // nest under this chat run's span.
+        const contextualStream = runManagers?.[0]
+          ? runManagers[0].withRunContextAsyncIterable(chunkStream)
+          : chunkStream;
+        for await (const chunk of contextualStream) {
           callOptions.signal?.throwIfAborted();
           if (chunk.message.id == null) {
             const runId = runManagers?.at(0)?.runId;
@@ -851,11 +858,20 @@ export abstract class BaseChatModel<
       // generate results
       const results = await Promise.allSettled(
         baseMessages.map(async (messageList, i) => {
-          const generateResults = await this._generate(
-            messageList,
-            { ...parsedOptions, promptIndex: i },
-            runManagers?.[i]
-          );
+          const runManager = runManagers?.[i];
+          // Execute the model call inside the run's handler context (e.g. an
+          // OpenTelemetry tracer's active span) so that any client spans the
+          // provider emits — such as the outgoing `fetch`/HTTP request — nest
+          // under this run instead of forming a disconnected trace.
+          const invokeGenerate = () =>
+            this._generate(
+              messageList,
+              { ...parsedOptions, promptIndex: i },
+              runManager
+            );
+          const generateResults = await (runManager
+            ? runManager.withRunContext(invokeGenerate)
+            : invokeGenerate());
           if (outputVersion === "v1") {
             for (const generation of generateResults.generations) {
               generation.message = castStandardMessageContent(

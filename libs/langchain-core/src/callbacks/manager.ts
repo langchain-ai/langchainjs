@@ -119,6 +119,66 @@ export class BaseRunManager {
     return this._parentRunId;
   }
 
+  /**
+   * Runs `fn` within the ambient context contributed by any handler that
+   * implements {@link BaseCallbackHandler.wrapRunExecution} for this run.
+   *
+   * Core calls this around the actual execution of a run body (for example a
+   * chat model's `_generate`) so that context-propagating handlers — most
+   * notably OpenTelemetry tracers — can make the run's span active for the
+   * duration of the call. Because the wrapped body and all of its async
+   * descendants (e.g. an outgoing `fetch`) run inside the handler's context,
+   * lower-level client instrumentations nest their spans under the run's span
+   * instead of starting disconnected traces.
+   *
+   * Handlers that do not implement `wrapRunExecution` are skipped; when none
+   * do, `fn` is invoked directly with no added overhead. Multiple handlers are
+   * composed so each wraps the next.
+   */
+  withRunContext<T>(fn: () => T): T {
+    let wrapped = fn;
+    for (const handler of this.handlers) {
+      if (typeof handler.wrapRunExecution === "function") {
+        const next = wrapped;
+        const current = handler;
+        wrapped = () => current.wrapRunExecution!(this.runId, next);
+      }
+    }
+    return wrapped();
+  }
+
+  /**
+   * Wraps an async iterable so that EVERY `next()`/`return()`/`throw()` runs
+   * inside this run's context (see {@link withRunContext}).
+   *
+   * Streaming model calls initiate their network request lazily on the first
+   * `next()` and continue reading on subsequent ones — none of which happen
+   * inside the code that merely *creates* the generator. Activating context
+   * only at creation would therefore miss the request. This proxies each
+   * iterator operation (preserving arguments, results, and thrown errors) so
+   * client spans produced during streaming still nest under the run's span.
+   */
+  withRunContextAsyncIterable<T>(iterable: AsyncIterable<T>): AsyncIterable<T> {
+    const runManager = this;
+    return {
+      [Symbol.asyncIterator](): AsyncIterator<T> {
+        const inner = iterable[Symbol.asyncIterator]();
+        const proxied: AsyncIterator<T> = {
+          next: (...args) => runManager.withRunContext(() => inner.next(...args)),
+        };
+        if (inner.return) {
+          proxied.return = (...args) =>
+            runManager.withRunContext(() => inner.return!(...args));
+        }
+        if (inner.throw) {
+          proxied.throw = (...args) =>
+            runManager.withRunContext(() => inner.throw!(...args));
+        }
+        return proxied;
+      },
+    };
+  }
+
   async handleText(text: string): Promise<void> {
     await Promise.all(
       this.handlers.map((handler) =>
