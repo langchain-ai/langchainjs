@@ -22,7 +22,6 @@ import {
   ConverseCommandParams,
   MessageContentReasoningBlock,
   MessageContentReasoningBlockReasoningText,
-  MessageContentReasoningBlockRedacted,
 } from "../types.js";
 import { convertFromV1ToChatBedrockConverseMessage } from "./compat.js";
 
@@ -610,12 +609,15 @@ function convertAIMessageToConverseMessage(msg: AIMessage): Bedrock.Message {
             text: block.text,
           });
         }
-      } else if (block.type === "reasoning_content") {
-        contentBlocks.push({
-          reasoningContent: langchainReasoningBlockToBedrockReasoningBlock(
-            block as MessageContentReasoningBlock
-          ),
-        });
+      } else if (
+        block.type === "reasoning" ||
+        block.type === "reasoning_content"
+      ) {
+        const reasoningContent =
+          langchainReasoningBlockToBedrockReasoningBlock(block);
+        if (reasoningContent) {
+          contentBlocks.push({ reasoningContent });
+        }
       } else if (isDefaultCachePoint(block)) {
         contentBlocks.push(convertCachePointBlock(block));
       } else {
@@ -798,22 +800,66 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
 }
 
 export function langchainReasoningBlockToBedrockReasoningBlock(
-  content: MessageContentReasoningBlock
-): Bedrock.ReasoningContentBlock {
-  if (content.type !== "reasoning_content") {
-    throw new Error("Invalid reasoning content");
+  content: unknown
+): Bedrock.ReasoningContentBlock | undefined {
+  if (typeof content !== "object" || content === null || !("type" in content)) {
+    return undefined;
   }
-  if ("reasoningText" in content) {
+
+  if (
+    content.type === "reasoning" &&
+    "reasoning" in content &&
+    typeof content.reasoning === "string" &&
+    content.reasoning.length > 0
+  ) {
+    const signature =
+      "signature" in content && typeof content.signature === "string"
+        ? content.signature
+        : undefined;
     return {
-      reasoningText: content.reasoningText as Bedrock.ReasoningTextBlock,
+      reasoningText: {
+        text: content.reasoning,
+        ...(signature !== undefined ? { signature } : {}),
+      },
     };
   }
-  if ("redactedContent" in content) {
+
+  if (content.type !== "reasoning_content") {
+    return undefined;
+  }
+
+  if (
+    "reasoningText" in content &&
+    typeof content.reasoningText === "object" &&
+    content.reasoningText !== null &&
+    "text" in content.reasoningText &&
+    typeof content.reasoningText.text === "string" &&
+    content.reasoningText.text.length > 0
+  ) {
+    const signature =
+      "signature" in content.reasoningText &&
+      typeof content.reasoningText.signature === "string"
+        ? content.reasoningText.signature
+        : undefined;
+    return {
+      reasoningText: {
+        text: content.reasoningText.text,
+        ...(signature !== undefined ? { signature } : {}),
+      },
+    };
+  }
+
+  if (
+    "redactedContent" in content &&
+    typeof content.redactedContent === "string" &&
+    content.redactedContent.length > 0
+  ) {
     return {
       redactedContent: Buffer.from(content.redactedContent, "base64"),
     };
   }
-  throw new Error("Invalid reasoning content");
+
+  return undefined;
 }
 
 export function concatenateLangchainReasoningBlocks(
@@ -887,14 +933,19 @@ export function concatenateLangchainReasoningBlocks(
         concatenatedBlock = {};
       }
       const { redactedContent } = block;
-      const prevRedactedContent = (
+      const prevRedactedContent =
         "redactedContent" in concatenatedBlock
-          ? concatenatedBlock.redactedContent!
-          : ""
-      ) as Partial<MessageContentReasoningBlockRedacted["redactedContent"]>;
+          ? concatenatedBlock.redactedContent
+          : undefined;
+      const redactedBytes = prevRedactedContent
+        ? Buffer.concat([
+            Buffer.from(prevRedactedContent, "base64"),
+            Buffer.from(redactedContent, "base64"),
+          ])
+        : Buffer.from(redactedContent, "base64");
       concatenatedBlock = {
         type: "reasoning_content",
-        redactedContent: prevRedactedContent + redactedContent,
+        redactedContent: redactedBytes.toString("base64"),
       };
     }
   }
