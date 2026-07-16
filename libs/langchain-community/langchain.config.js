@@ -119,7 +119,6 @@ export const config = {
     "llms/watsonx_ai": "llms/watsonx_ai",
     "llms/writer": "llms/writer",
     "llms/yandex": "llms/yandex",
-    "llms/layerup_security": "llms/layerup_security",
     // vectorstores
     "vectorstores/analyticdb": "vectorstores/analyticdb",
     "vectorstores/astradb": "vectorstores/astradb",
@@ -395,7 +394,6 @@ export const config = {
     "llms/llama_cpp",
     "llms/writer",
     "llms/portkey",
-    "llms/layerup_security",
     "vectorstores/analyticdb",
     "vectorstores/astradb",
     "vectorstores/azion_edgesql",

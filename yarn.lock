@@ -8683,7 +8683,6 @@ __metadata:
     "@langchain/scripts": ">=0.1.0 <0.2.0"
     "@langchain/standard-tests": 0.0.0
     "@langchain/weaviate": ^0.2.0
-    "@layerup/layerup-security": ^1.5.12
     "@libsql/client": ^0.14.0
     "@mendable/firecrawl-js": ^1.4.3
     "@mlc-ai/web-llm": ">=0.2.62 <0.3.0"
@@ -8862,7 +8861,6 @@ __metadata:
     "@ibm-cloud/watsonx-ai": "*"
     "@lancedb/lancedb": ^0.19.1
     "@langchain/core": ">=0.3.58 <0.4.0"
-    "@layerup/layerup-security": ^1.5.12
     "@libsql/client": ^0.14.0
     "@mendable/firecrawl-js": ^1.4.3
     "@mlc-ai/web-llm": "*"
@@ -9017,8 +9015,6 @@ __metadata:
     "@huggingface/transformers":
       optional: true
     "@lancedb/lancedb":
-      optional: true
-    "@layerup/layerup-security":
       optional: true
     "@libsql/client":
       optional: true
@@ -10314,16 +10310,6 @@ __metadata:
     "@langchain/core": ">=0.2.21 <0.4.0"
   languageName: unknown
   linkType: soft
-
-"@layerup/layerup-security@npm:^1.5.12":
-  version: 1.5.12
-  resolution: "@layerup/layerup-security@npm:1.5.12"
-  dependencies:
-    axios: ^1.6.8
-    openai: ^4.32.1
-  checksum: f506b7aa266dcf7e062e3eebdba99468363f45f4d87419f108538f13d5cae70b6ac96f1c263d614de4ff7d742cf0ee3bd67b44124de717680bf02c69a458b5e2
-  languageName: node
-  linkType: hard
 
 "@leichtgewicht/ip-codec@npm:^2.0.1":
   version: 2.0.4
@@ -23107,7 +23093,6 @@ __metadata:
     "@langchain/weaviate": "workspace:*"
     "@langchain/xai": "workspace:*"
     "@langchain/yandex": "workspace:*"
-    "@layerup/layerup-security": ^1.5.12
     "@opensearch-project/opensearch": ^2.2.0
     "@pinecone-database/pinecone": ^5.0.2
     "@planetscale/database": ^1.8.0
@@ -31709,31 +31694,6 @@ __metadata:
   bin:
     openai: bin/cli
   checksum: bc572c9ac2a149722193d9f8e88a95fc2da021be9d18e36d5e840ce673dab78943f5b406e2a20d1044453fb259c7d1e10d2e2e34a92d94d73afc24832a183249
-  languageName: node
-  linkType: hard
-
-"openai@npm:^4.32.1":
-  version: 4.96.0
-  resolution: "openai@npm:4.96.0"
-  dependencies:
-    "@types/node": ^18.11.18
-    "@types/node-fetch": ^2.6.4
-    abort-controller: ^3.0.0
-    agentkeepalive: ^4.2.1
-    form-data-encoder: 1.7.2
-    formdata-node: ^4.3.2
-    node-fetch: ^2.6.7
-  peerDependencies:
-    ws: ^8.18.0
-    zod: ^3.23.8
-  peerDependenciesMeta:
-    ws:
-      optional: true
-    zod:
-      optional: true
-  bin:
-    openai: bin/cli
-  checksum: d54ba62c4ad298ce3ea4ccc124f6fef0a81c2121ec830a363a1bec7ab909fa2a0e768c5decd738fe2db4f7fd0f5bbed8c8200debf52dd3ca4b9ba58aa1c11860
   languageName: node
   linkType: hard
 
