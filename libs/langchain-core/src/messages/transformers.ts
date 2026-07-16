@@ -684,7 +684,7 @@ async function _trimMessagesHelper(
     defaultTextSplitter;
   if (textSplitter) {
     if ("splitText" in textSplitter) {
-      textSplitterFunc = textSplitter.splitText;
+      textSplitterFunc = textSplitter.splitText.bind(textSplitter);
     } else {
       textSplitterFunc = async (text: string): Promise<string[]> =>
         textSplitter(text);
