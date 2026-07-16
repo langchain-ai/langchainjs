@@ -828,6 +828,21 @@ export const convertMessagesToCompletionsMessageParams: Converter<
             ) {
               return [];
             }
+            // Drop reasoning blocks — the Chat Completions input schema
+            // does not accept `reasoning` as a content-part type, even on
+            // reasoning-capable models. The v1 path
+            // (convertStandardContentMessageToCompletionsMessage above)
+            // already filters to text; mirror that here so replayed history
+            // carrying a reasoning block doesn't 400 on the legacy path.
+            // See langchain-ai/langchainjs#11049.
+            if (
+              typeof m === "object" &&
+              m !== null &&
+              "type" in m &&
+              m.type === "reasoning"
+            ) {
+              return [];
+            }
             return m;
           });
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
