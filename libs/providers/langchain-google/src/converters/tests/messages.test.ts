@@ -349,6 +349,49 @@ describe("convertMessagesToGeminiContents", () => {
     expect(functionCallPart.functionCall!.args).toEqual({ city: "London" });
   });
 
+  test("round-tripped AIMessage with functionCall in content does not produce duplicate functionCall parts (legacy path)", () => {
+    // Simulates a round-tripped AIMessage where content already contains
+    // functionCall blocks AND tool_calls is populated (the scenario that caused
+    // #10474 — duplicate functionCall parts sent to the Gemini API).
+    const messages = [
+      new HumanMessage("hello"),
+      new AIMessage({
+        content: [
+          {
+            type: "functionCall",
+            functionCall: { name: "get_weather", args: { city: "London" } },
+          },
+        ],
+        tool_calls: [
+          {
+            name: "get_weather",
+            args: { city: "London" },
+            id: "call-1",
+            type: "tool_call" as const,
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: '{"temp": 15}',
+        tool_call_id: "call-1",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+
+    const functionCallParts = modelContent!.parts.filter(
+      (p) => "functionCall" in p && p.functionCall
+    );
+    // Should have exactly 1 functionCall, not 2
+    expect(functionCallParts).toHaveLength(1);
+    expect(
+      (functionCallParts[0] as Gemini.Part.FunctionCall).functionCall!.name
+    ).toBe("get_weather");
+  });
+
   test("AIMessage with tool_calls produces model turn with functionCall parts (v1 path)", () => {
     const aiMsg = new AIMessage({
       content: "",
@@ -586,6 +629,150 @@ describe("convertMessagesToGeminiContents", () => {
       (functionResponsePart as Gemini.Part.FunctionResponse).functionResponse!
         .id
     ).toBeUndefined();
+  });
+
+  test("manually constructed tool_calls get dummy thoughtSignature (legacy path)", () => {
+    const messages = [
+      new HumanMessage("hello"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "get_weather",
+            args: { city: "London" },
+            id: "call-1",
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: '{"temp": 15}',
+        tool_call_id: "call-1",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+
+    const functionCallPart = modelContent!.parts.find(
+      (p) => "functionCall" in p && p.functionCall
+    ) as Gemini.Part.FunctionCall;
+    expect(functionCallPart).toBeDefined();
+    expect(functionCallPart.thoughtSignature).toBe(
+      "context_engineering_is_the_way_to_go"
+    );
+  });
+
+  test("manually constructed tool_calls get dummy thoughtSignature (v1 path)", () => {
+    const aiMsg = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          name: "get_weather",
+          args: { city: "London" },
+          id: "call-1",
+          type: "tool_call",
+        },
+      ],
+    });
+    aiMsg.response_metadata = { output_version: "v1" };
+    const messages = [
+      new HumanMessage("hello"),
+      aiMsg,
+      new ToolMessage({
+        content: '{"temp": 15}',
+        tool_call_id: "call-1",
+        response_metadata: { output_version: "v1" },
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+
+    const functionCallPart = modelContent!.parts.find(
+      (p) => "functionCall" in p && p.functionCall
+    ) as Gemini.Part.FunctionCall;
+    expect(functionCallPart).toBeDefined();
+    expect(functionCallPart.thoughtSignature).toBe(
+      "context_engineering_is_the_way_to_go"
+    );
+  });
+
+  test("real thoughtSignature on tool_calls is preserved, not overwritten (legacy path)", () => {
+    const messages = [
+      new HumanMessage("hello"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "get_weather",
+            args: { city: "London" },
+            id: "call-1",
+            type: "tool_call",
+            thoughtSignature: "real-signature-from-gemini",
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: '{"temp": 15}',
+        tool_call_id: "call-1",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+
+    const functionCallPart = modelContent!.parts.find(
+      (p) => "functionCall" in p && p.functionCall
+    ) as Gemini.Part.FunctionCall;
+    expect(functionCallPart).toBeDefined();
+    expect(functionCallPart.thoughtSignature).toBe(
+      "real-signature-from-gemini"
+    );
+  });
+
+  test("real thoughtSignature on tool_calls is preserved, not overwritten (v1 path)", () => {
+    const aiMsg = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          name: "get_weather",
+          args: { city: "London" },
+          id: "call-1",
+          type: "tool_call",
+          thoughtSignature: "real-signature-from-gemini",
+        },
+      ],
+    });
+    aiMsg.response_metadata = { output_version: "v1" };
+    const messages = [
+      new HumanMessage("hello"),
+      aiMsg,
+      new ToolMessage({
+        content: '{"temp": 15}',
+        tool_call_id: "call-1",
+        response_metadata: { output_version: "v1" },
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+
+    const functionCallPart = modelContent!.parts.find(
+      (p) => "functionCall" in p && p.functionCall
+    ) as Gemini.Part.FunctionCall;
+    expect(functionCallPart).toBeDefined();
+    expect(functionCallPart.thoughtSignature).toBe(
+      "real-signature-from-gemini"
+    );
   });
 
   test("v1 contentBlocks: text-plain block produces fileData part", () => {
