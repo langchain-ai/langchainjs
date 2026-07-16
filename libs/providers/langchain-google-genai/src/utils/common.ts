@@ -442,6 +442,22 @@ function _convertLangChainContentToPart(
         ? { thoughtSignature: thinkingContent.signature }
         : {}),
     } as Part;
+  } else if (content.type === "reasoning") {
+    // Standard v1 reasoning content block (e.g. produced by core's v1 output
+    // pipeline). Convert back to a Gemini thought part, mirroring the
+    // provider-specific "thinking" block handling above.
+    const reasoningContent = content as {
+      type: "reasoning";
+      reasoning: string;
+      signature?: string;
+    };
+    return {
+      text: reasoningContent.reasoning,
+      thought: true,
+      ...(reasoningContent.signature
+        ? { thoughtSignature: reasoningContent.signature }
+        : {}),
+    } as Part;
   } else if ("functionCall" in content) {
     // No action needed here — function calls will be added later from message.tool_calls
     return undefined;
