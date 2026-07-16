@@ -15,7 +15,7 @@ overrides:
   underscore: '>=1.13.8'
   esbuild: '>=0.28.1'
   '@opentelemetry/core': '>=2.8.0'
-  uuid: '>=11.1.1'
+  uuid@<11.1.1: 11.1.1
   undici: '>=8.5.0'
   qs: '>=6.15.2'
   ws@8: '>=8.20.1'
@@ -401,7 +401,7 @@ importers:
         specifier: ^3.0.5
         version: 3.0.6(@babel/runtime@7.29.7)
       uuid:
-        specifier: '>=11.1.1'
+        specifier: ^14.0.1
         version: 14.0.1
       vitest:
         specifier: ^4.1.8
@@ -11219,6 +11219,14 @@ packages:
   utilium@1.10.1:
     resolution: {integrity: sha512-GQINDTb/ocyz4acQj3GXAe0wipYxws6L+9ouqaq10KlInTk9DGvW9TJd0pYa/Xu3cppNnZuB4T/sBuSXpcN2ng==}
 
+  uuid@11.1.1:
+    resolution: {integrity: sha512-vIYxrBCC/N/K+Js3qSN88go7kIfNPssr/hHCesKCQNAjmgvYS2oqr69kIufEG+O4+PfezOH4EbIeHCfFov8ZgQ==}
+    hasBin: true
+
+  uuid@13.0.2:
+    resolution: {integrity: sha512-vzi9uRZ926x4XV73S/4qQaTwPXM2JBj6/6lI/byHH1jOpCzb0zDbfytgA9LcN/hzb2l7WQSQnxITOVx5un/wGw==}
+    hasBin: true
+
   uuid@14.0.1:
     resolution: {integrity: sha512-6ZxzVpzDXDa3bJWaHilVayA+BH/1zmxCJoVgvmqJnid/gPoKHxUrS/aC/T6LGQtNHT+XHG9fXPJB4d+IrU30Ew==}
     hasBin: true
@@ -12688,7 +12696,7 @@ snapshots:
     dependencies:
       '@azure/msal-common': 16.5.1
       jsonwebtoken: 9.0.3
-      uuid: 14.0.1
+      uuid: 11.1.1
 
   '@azure/search-documents@12.2.0':
     dependencies:
@@ -12973,7 +12981,7 @@ snapshots:
       openai: 4.104.0(encoding@0.1.13)(ws@8.21.0(bufferutil@4.1.0))(zod@4.3.6)
       pino: 9.14.0
       pino-pretty: 13.1.3
-      uuid: 14.0.1
+      uuid: 11.1.1
       ws: 8.21.0(bufferutil@4.1.0)
       zod: 4.3.6
       zod-to-json-schema: 3.25.2(zod@4.3.6)
@@ -13570,7 +13578,7 @@ snapshots:
       p-limit: 3.1.0
       retry-request: 7.0.2(encoding@0.1.13)
       teeny-request: 9.0.0(encoding@0.1.13)
-      uuid: 14.0.1
+      uuid: 11.1.1
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -15964,7 +15972,7 @@ snapshots:
 
   '@types/uuid@11.0.0':
     dependencies:
-      uuid: 14.0.1
+      uuid: 11.1.1
 
   '@types/validate-npm-package-name@4.0.2': {}
 
@@ -18178,7 +18186,7 @@ snapshots:
       https-proxy-agent: 7.0.6
       is-stream: 2.0.1
       node-fetch: 2.7.0(encoding@0.1.13)
-      uuid: 14.0.1
+      uuid: 11.1.1
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -18393,7 +18401,7 @@ snapshots:
       proto3-json-serializer: 2.0.2
       protobufjs: 7.6.5
       retry-request: 7.0.2(encoding@0.1.13)
-      uuid: 14.0.1
+      uuid: 11.1.1
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -19588,7 +19596,7 @@ snapshots:
       openai: 4.104.0(encoding@0.1.13)(ws@8.21.0(bufferutil@4.1.0))(zod@3.25.76)
       pg: 8.21.0
       redis: 4.7.1
-      uuid: 14.0.1
+      uuid: 11.1.1
       zod: 3.25.76
     transitivePeerDependencies:
       - debug
@@ -19619,7 +19627,7 @@ snapshots:
       openai: 4.104.0(encoding@0.1.13)(ws@5.2.6(bufferutil@4.1.0))(zod@3.25.76)
       pg: 8.21.0
       redis: 5.12.1(@opentelemetry/api@1.9.1)
-      uuid: 14.0.1
+      uuid: 11.1.1
       zod: 3.25.76
     transitivePeerDependencies:
       - debug
@@ -19856,7 +19864,7 @@ snapshots:
       stopwords-iso: 1.1.0
       sylvester: 0.0.21
       underscore: 1.13.8
-      uuid: 14.0.1
+      uuid: 13.0.2
       wordnet-db: 3.1.14
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
@@ -21666,7 +21674,7 @@ snapshots:
       https-proxy-agent: 5.0.1
       node-fetch: 2.7.0(encoding@0.1.13)
       stream-events: 1.0.5
-      uuid: 14.0.1
+      uuid: 11.1.1
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -21728,7 +21736,7 @@ snapshots:
       isomorphic-ws: 4.0.1(ws@5.2.6(bufferutil@4.1.0))
       node-int64: 0.4.0
       q: 1.5.1
-      uuid: 14.0.1
+      uuid: 13.0.2
       ws: 5.2.6(bufferutil@4.1.0)
     transitivePeerDependencies:
       - bufferutil
@@ -22184,6 +22192,10 @@ snapshots:
       eventemitter3: 5.0.4
     optionalDependencies:
       '@xterm/xterm': 5.5.0
+
+  uuid@11.1.1: {}
+
+  uuid@13.0.2: {}
 
   uuid@14.0.1: {}
 
