@@ -740,6 +740,121 @@ describe("convertMessagesToGeminiContents", () => {
       (userContent!.parts[3] as Gemini.Part.FileData).fileData!.fileUri
     ).toBe("gs://bucket/report.pdf");
   });
+
+  test("legacy path: preserves thought and thoughtSignature on a resent text block", () => {
+    // Shape returned by convertGeminiCandidateToAIMessage for a thinking-model
+    // response — a text part with `thought: true` immediately followed by a
+    // functionCall part carrying `thoughtSignature`. When this AIMessage is
+    // fed back in as history on the next turn, the thought text must keep
+    // its `thought`/`thoughtSignature` markers so Gemini can tell it apart
+    // from a real committed utterance (see
+    // https://ai.google.dev/gemini-api/docs/thinking).
+    const priorAiMessage = new AIMessage({
+      content: [
+        { type: "text", text: "internal reasoning", thought: true },
+        {
+          type: "functionCall",
+          functionCall: { name: "get_weather", args: { city: "London" } },
+          thoughtSignature: "sig-abc",
+        },
+      ],
+      tool_calls: [
+        {
+          name: "get_weather",
+          args: { city: "London" },
+          id: "call-1",
+          type: "tool_call",
+        },
+      ],
+    });
+
+    const messages = [new HumanMessage("what's the weather?"), priorAiMessage];
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+
+    const textPart = modelContent!.parts.find((p) => "text" in p) as
+      | Gemini.Part.Text
+      | undefined;
+    expect(textPart).toBeDefined();
+    expect(textPart!.text).toBe("internal reasoning");
+    expect((textPart as unknown as { thought?: boolean }).thought).toBe(true);
+  });
+
+  test("legacy path: a plain text block with no thought key is unaffected", () => {
+    const message = new AIMessage({
+      content: [{ type: "text", text: "Here are your results." }],
+    });
+
+    const contents = convertMessagesToGeminiContents([
+      new HumanMessage("hi"),
+      message,
+    ]);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+    expect(modelContent!.parts).toEqual([{ text: "Here are your results." }]);
+  });
+
+  test("v1 contentBlocks (explicit output_version): preserves thought and thoughtSignature on a resent text block", () => {
+    // response_metadata.output_version === "v1" makes AIMessage.contentBlocks
+    // return `content` verbatim (ai.ts:196-202), bypassing ChatGoogleTranslator
+    // entirely — exercises convertStandardContentBlockToGeminiPart's "text" case.
+    const priorAiMessage = new AIMessage({
+      content: [
+        { type: "text" as const, text: "internal reasoning", thought: true },
+      ],
+      response_metadata: { output_version: "v1" },
+    });
+
+    const messages = [new HumanMessage("hi"), priorAiMessage];
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+
+    const textPart = modelContent!.parts.find((p) => "text" in p) as
+      | Gemini.Part.Text
+      | undefined;
+    expect(textPart).toBeDefined();
+    expect(textPart!.text).toBe("internal reasoning");
+    expect((textPart as unknown as { thought?: boolean }).thought).toBe(true);
+  });
+
+  test("v1 contentBlocks (via ChatGoogleTranslator): preserves thought on a resent reasoning block", () => {
+    // The real-world shape: every AIMessage this package produces carries
+    // response_metadata.model_provider = "google" (see
+    // convertGeminiCandidateToAIMessage). With no output_version override,
+    // AIMessage.contentBlocks (ai.ts:204-213) routes through
+    // ChatGoogleTranslator, which normalizes a `{ type: "text", thought:
+    // true }` part into `{ type: "reasoning", reasoning, thought,
+    // reasoningContentBlock }` (block_translators/google.ts).
+    // convertStandardContentBlockToGeminiPart must handle that "reasoning"
+    // shape too, or this history is silently dropped on the next turn.
+    const priorAiMessage = new AIMessage({
+      content: [{ text: "internal reasoning", thought: true, type: "text" }],
+      response_metadata: { model_provider: "google" },
+    });
+
+    // Sanity check the premise: this AIMessage's own .contentBlocks getter
+    // really does normalize to "reasoning" via ChatGoogleTranslator.
+    const blocks = priorAiMessage.contentBlocks;
+    expect(blocks.some((b) => b.type === "reasoning")).toBe(true);
+
+    const messages = [new HumanMessage("hi"), priorAiMessage];
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    expect(modelContent).toBeDefined();
+
+    const textPart = modelContent!.parts.find((p) => "text" in p) as
+      | Gemini.Part.Text
+      | undefined;
+    expect(textPart).toBeDefined();
+    expect(textPart!.text).toBe("internal reasoning");
+    expect((textPart as unknown as { thought?: boolean }).thought).toBe(true);
+  });
 });
 
 describe("executableCode and codeExecutionResult round-trip", () => {
