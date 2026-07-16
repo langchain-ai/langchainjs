@@ -39,7 +39,6 @@ export const optionalImportEntrypoints: string[] = [
   "langchain_community/llms/sagemaker_endpoint",
   "langchain_community/llms/watsonx_ai",
   "langchain_community/llms/writer",
-  "langchain_community/llms/layerup_security",
   "langchain_community/vectorstores/analyticdb",
   "langchain_community/vectorstores/astradb",
   "langchain_community/vectorstores/azion_edgesql",

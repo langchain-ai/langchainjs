@@ -86,7 +86,6 @@
     "@langchain/core": "workspace:*",
     "@langchain/scripts": ">=0.1.0 <0.2.0",
     "@langchain/standard-tests": "0.0.0",
-    "@layerup/layerup-security": "^1.5.12",
     "@libsql/client": "^0.14.0",
     "@mendable/firecrawl-js": "^1.4.3",
     "@mlc-ai/web-llm": ">=0.2.62 <0.3.0",
@@ -258,7 +257,6 @@
     "@ibm-cloud/watsonx-ai": "*",
     "@lancedb/lancedb": "^0.19.1",
     "@langchain/core": ">=0.3.58 <0.4.0",
-    "@layerup/layerup-security": "^1.5.12",
     "@libsql/client": "^0.14.0",
     "@mendable/firecrawl-js": "^1.4.3",
     "@mlc-ai/web-llm": "*",
@@ -443,9 +441,6 @@
       "optional": true
     },
     "@lancedb/lancedb": {
-      "optional": true
-    },
-    "@layerup/layerup-security": {
       "optional": true
     },
     "@libsql/client": {
@@ -1466,15 +1461,6 @@
       },
       "import": "./llms/yandex.js",
       "require": "./llms/yandex.cjs"
-    },
-    "./llms/layerup_security": {
-      "types": {
-        "import": "./llms/layerup_security.d.ts",
-        "require": "./llms/layerup_security.d.cts",
-        "default": "./llms/layerup_security.d.ts"
-      },
-      "import": "./llms/layerup_security.js",
-      "require": "./llms/layerup_security.cjs"
     },
     "./vectorstores/analyticdb": {
       "types": {
@@ -3617,10 +3603,6 @@
     "llms/yandex.js",
     "llms/yandex.d.ts",
     "llms/yandex.d.cts",
-    "llms/layerup_security.cjs",
-    "llms/layerup_security.js",
-    "llms/layerup_security.d.ts",
-    "llms/layerup_security.d.cts",
     "vectorstores/analyticdb.cjs",
     "vectorstores/analyticdb.js",
     "vectorstores/analyticdb.d.ts",
