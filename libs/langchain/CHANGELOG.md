@@ -1,5 +1,11 @@
 # langchain
 
+## 1.5.4
+
+### Patch Changes
+
+- [#11201](https://github.com/langchain-ai/langchainjs/pull/11201) [`a8cd4d9`](https://github.com/langchain-ai/langchainjs/commit/a8cd4d9ae35ae8ae05e011115a351d976560ade9) Thanks [@hntrl](https://github.com/hntrl)! - feat(langchain): add middleware for handling tool execution errors
+
 ## 1.5.3
 
 ### Patch Changes
