@@ -1,9 +1,72 @@
 import { describe, expect, test } from "vitest";
 import type * as Bedrock from "@aws-sdk/client-bedrock-runtime";
+import { concat } from "@langchain/core/utils/stream";
 import {
   convertConverseMessageToLangChainMessage,
+  handleConverseStreamContentBlockDelta,
   handleConverseStreamMetadata,
 } from "../message_outputs.js";
+
+describe("reasoning output conversion", () => {
+  test("uses standard reasoning content by default", () => {
+    const result = convertConverseMessageToLangChainMessage(
+      {
+        role: "assistant",
+        content: [
+          {
+            reasoningContent: {
+              reasoningText: {
+                text: "Reasoning summary",
+                signature: "opaque-signature",
+              },
+            },
+          },
+        ],
+      },
+      {
+        stopReason: "end_turn",
+        usage: {
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+        },
+        metrics: { latencyMs: 0 },
+      }
+    );
+
+    expect(result.content).toEqual([
+      {
+        type: "reasoning",
+        reasoning: "Reasoning summary",
+        signature: "opaque-signature",
+      },
+    ]);
+    expect(result.response_metadata).not.toHaveProperty("output_version");
+  });
+
+  test("merges streaming reasoning and signature into a standard block", () => {
+    const reasoning = handleConverseStreamContentBlockDelta({
+      contentBlockIndex: 0,
+      delta: { reasoningContent: { text: "Reasoning summary" } },
+    });
+    const signature = handleConverseStreamContentBlockDelta({
+      contentBlockIndex: 0,
+      delta: { reasoningContent: { signature: "opaque-signature" } },
+    });
+
+    const result = concat(reasoning.message, signature.message);
+
+    expect(result.content).toEqual([
+      {
+        type: "reasoning",
+        reasoning: "Reasoning summary",
+        signature: "opaque-signature",
+        index: 0,
+      },
+    ]);
+    expect(result.response_metadata).not.toHaveProperty("output_version");
+  });
+});
 
 describe("message output usage metadata conversion", () => {
   test("maps Bedrock prompt cache tokens for non-stream responses", () => {

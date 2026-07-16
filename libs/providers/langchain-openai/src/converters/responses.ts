@@ -823,14 +823,26 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
         : {}),
     });
   } else if (
+    event.type === "response.web_search_call.in_progress" ||
+    event.type === "response.web_search_call.searching" ||
     event.type === "response.web_search_call.completed" ||
-    event.type === "response.file_search_call.completed"
+    event.type === "response.file_search_call.in_progress" ||
+    event.type === "response.file_search_call.searching" ||
+    event.type === "response.file_search_call.completed" ||
+    event.type === "response.image_generation_call.in_progress" ||
+    event.type === "response.image_generation_call.generating" ||
+    event.type === "response.image_generation_call.completed"
   ) {
+    const [, type, status] = event.type.match(/^response\.(.*)\.([^.]+)$/) ?? [
+      "",
+      "",
+      "",
+    ];
     generationInfo = {
       tool_outputs: {
         id: event.item_id,
-        type: event.type.replace("response.", "").replace(".completed", ""),
-        status: "completed",
+        type,
+        status,
       },
     };
   } else if (event.type === "response.refusal.done") {
@@ -1013,6 +1025,19 @@ export const convertStandardContentMessageToResponsesInput: Converter<
       }
     });
 
+    // Text parts must match the message role: assistant content uses
+    // `output_text` (the Responses API rejects `input_text` for assistant
+    // messages), every other role uses `input_text`.
+    const makeTextPart = (
+      text: string
+    ): ResponseInputMessageContentList[number] =>
+      (messageRole === "assistant"
+        ? { type: "output_text", text, annotations: [] }
+        : {
+            type: "input_text",
+            text,
+          }) as unknown as ResponseInputMessageContentList[number];
+
     let currentMessage: OpenAIClient.Responses.EasyInputMessage | undefined =
       undefined;
 
@@ -1055,7 +1080,7 @@ export const convertStandardContentMessageToResponsesInput: Converter<
       if (typeof currentMessage.content === "string") {
         currentMessage.content =
           currentMessage.content.length > 0
-            ? [{ type: "input_text", text: currentMessage.content }, ...content]
+            ? [makeTextPart(currentMessage.content), ...content]
             : [...content];
       } else {
         currentMessage.content.push(...content);
@@ -1172,21 +1197,21 @@ export const convertStandardContentMessageToResponsesInput: Converter<
             }))
           : [{ type: "summary_text" as const, text: "" }];
 
-      const reasoningItem: OpenAIClient.Responses.ResponseReasoningItem = {
+      // Only include `id` when we actually have one. Reasoning blocks
+      // reassembled from streaming chunks (e.g. via `streamEvents`) never
+      // carry an id, since OpenAI's streaming protocol omits it. Emitting
+      // `id: ""` makes the Responses API reject the turn with
+      // `400 Invalid 'input[n].id': ''`, so we omit the field instead — the
+      // same way the legacy reconstruction path leaves a missing id off.
+      // Reasoning input items only carry `summary` — the Responses API rejects
+      // a populated `content` array on input (`400 Invalid 'input[n].content':
+      // array too long. Expected an array with maximum length 0`). The reasoning
+      // text is already represented in `summary`, so we do not forward `content`.
+      return {
         type: "reasoning",
-        id: block.id ?? "",
+        ...(block.id ? { id: block.id } : {}),
         summary,
-      };
-
-      if (block.reasoning) {
-        reasoningItem.content = [
-          {
-            type: "reasoning_text" as const,
-            text: block.reasoning,
-          },
-        ];
-      }
-      return reasoningItem;
+      } as OpenAIClient.Responses.ResponseReasoningItem;
     };
 
     const convertFunctionCall = (
@@ -1231,7 +1256,7 @@ export const convertStandardContentMessageToResponsesInput: Converter<
           return block.extras
             .phase as OpenAIClient.Responses.EasyInputMessage["phase"];
         });
-        pushMessageContent([{ type: "input_text", text: block.text }], phase);
+        pushMessageContent([makeTextPart(block.text)], phase);
       } else if (block.type === "invalid_tool_call") {
         // no-op
       } else if (block.type === "reasoning") {
@@ -1299,12 +1324,7 @@ export const convertStandardContentMessageToResponsesInput: Converter<
         }
       } else if (block.type === "text-plain") {
         if (block.text) {
-          pushMessageContent([
-            {
-              type: "input_text",
-              text: block.text,
-            },
-          ]);
+          pushMessageContent([makeTextPart(block.text)]);
         }
       } else if (block.type === "non_standard" && isResponsesMessage) {
         yield* flushMessage();
@@ -1680,6 +1700,35 @@ export const convertMessagesToResponsesInput: Converter<
             });
           }
           if (isDataContentBlock(item)) {
+            // The Responses API supports file URLs natively, but the Chat
+            // Completions converter rejects URL file blocks. Convert standard
+            // file blocks to the native `input_file` shape instead of routing
+            // them through the completions converter.
+            if (item.type === "file") {
+              const filename = getFilenameFromMetadata(item);
+              if (item.source_type === "url") {
+                return {
+                  type: "input_file",
+                  file_url: item.url,
+                  ...(filename ? { filename } : {}),
+                };
+              }
+              if (item.source_type === "id") {
+                return {
+                  type: "input_file",
+                  file_id: item.id,
+                  ...(filename ? { filename } : {}),
+                };
+              }
+              if (item.source_type === "base64") {
+                const mimeType = item.mime_type ?? "";
+                return {
+                  type: "input_file",
+                  file_data: `data:${mimeType};base64,${item.data}`,
+                  filename: getRequiredFilenameFromMetadata(item),
+                };
+              }
+            }
             return convertToProviderContentBlock(
               item,
               completionsApiContentBlockConverter

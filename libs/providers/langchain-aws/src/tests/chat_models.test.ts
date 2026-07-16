@@ -713,6 +713,225 @@ describe("convertToConverseMessages", () => {
   );
 });
 
+describe("reasoning content replay", () => {
+  it("omits signature-only standard reasoning and preserves tool use", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          {
+            type: "reasoning",
+            reasoning: "",
+            signature: "opaque-signature",
+            index: 0,
+          },
+        ],
+        tool_calls: [
+          {
+            id: "tool-call-1",
+            name: "get_weather",
+            args: { location: "San Francisco" },
+          },
+        ],
+      }),
+      new ToolMessage({
+        tool_call_id: "tool-call-1",
+        content: "72°F and sunny",
+      }),
+    ]);
+
+    expect(result.converseMessages).toEqual([
+      {
+        role: "assistant",
+        content: [
+          {
+            toolUse: {
+              toolUseId: "tool-call-1",
+              name: "get_weather",
+              input: { location: "San Francisco" },
+            },
+          },
+        ],
+      },
+      {
+        role: "user",
+        content: [
+          {
+            toolResult: {
+              toolUseId: "tool-call-1",
+              content: [{ text: "72°F and sunny" }],
+            },
+          },
+        ],
+      },
+    ]);
+  });
+
+  it("replays standard reasoning without an output version", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          {
+            type: "reasoning",
+            reasoning: "Reasoning summary",
+            signature: "opaque-signature",
+          },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      {
+        reasoningContent: {
+          reasoningText: {
+            text: "Reasoning summary",
+            signature: "opaque-signature",
+          },
+        },
+      },
+    ]);
+  });
+
+  it("preserves redacted provider reasoning", () => {
+    const redactedContent = Buffer.from("redacted-reasoning");
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          {
+            type: "reasoning_content",
+            redactedContent: redactedContent.toString("base64"),
+          },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      {
+        reasoningContent: {
+          redactedContent,
+        },
+      },
+    ]);
+  });
+
+  it("combines streamed redacted reasoning bytes before replay", () => {
+    const firstFragment = Buffer.from("a");
+    const secondFragment = Buffer.from("bc");
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          {
+            type: "reasoning_content",
+            redactedContent: firstFragment.toString("base64"),
+          },
+          {
+            type: "reasoning_content",
+            redactedContent: secondFragment.toString("base64"),
+          },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      {
+        reasoningContent: {
+          redactedContent: Buffer.concat([firstFragment, secondFragment]),
+        },
+      },
+    ]);
+  });
+
+  it("replays legacy provider-native reasoning", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          {
+            type: "reasoning_content",
+            reasoningText: {
+              text: "Reasoning summary",
+              signature: "opaque-signature",
+            },
+          },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      {
+        reasoningContent: {
+          reasoningText: {
+            text: "Reasoning summary",
+            signature: "opaque-signature",
+          },
+        },
+      },
+    ]);
+  });
+
+  it("unwraps legacy redacted Bedrock reasoning from standard content", () => {
+    const redactedContent = Buffer.from("redacted-reasoning");
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          {
+            type: "non_standard",
+            value: {
+              reasoningContent: {
+                redactedContent,
+              },
+            },
+          },
+        ],
+        response_metadata: {
+          output_version: "v1",
+          model_provider: "bedrock-converse",
+        },
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      {
+        reasoningContent: {
+          redactedContent,
+        },
+      },
+    ]);
+  });
+
+  it("unwraps complete legacy Bedrock reasoning from standard content", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          {
+            type: "non_standard",
+            value: {
+              type: "reasoning_content",
+              reasoningText: {
+                text: "Reasoning summary",
+                signature: "opaque-signature",
+              },
+            },
+          },
+        ],
+        response_metadata: {
+          output_version: "v1",
+          model_provider: "bedrock-converse",
+        },
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      {
+        reasoningContent: {
+          reasoningText: {
+            text: "Reasoning summary",
+            signature: "opaque-signature",
+          },
+        },
+      },
+    ]);
+  });
+});
+
 test("Streaming supports empty string chunks", async () => {
   const contentBlocks = [
     {
@@ -750,6 +969,124 @@ test("Streaming supports empty string chunks", async () => {
   expect(finalChunk).toBeDefined();
   if (!finalChunk) return;
   expect(finalChunk.content).toBe("Hello world!");
+});
+
+test("Streaming throws when Bedrock stream stalls between chunks", async () => {
+  vi.useFakeTimers();
+  try {
+    let aborted = false;
+    const mockSend = vi
+      .fn()
+      .mockImplementation(
+        (_command: unknown, options?: { abortSignal?: AbortSignal }) => {
+          options?.abortSignal?.addEventListener("abort", () => {
+            aborted = true;
+          });
+          return Promise.resolve({
+            stream: (async function* () {
+              await new Promise<never>(() => {});
+              yield {};
+            })(),
+          });
+        }
+      );
+
+    const mockClient = {
+      send: mockSend,
+    } as unknown as BedrockRuntimeClient;
+
+    const model = new ChatBedrockConverse({
+      region: "us-east-1",
+      credentials: {
+        secretAccessKey: "test-secret-key",
+        accessKeyId: "test-access-key",
+      },
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
+      client: mockClient,
+      streamIdleTimeout: 50,
+    });
+
+    const consume = (async () => {
+      for await (const chunk of model._streamResponseChunks(
+        [new HumanMessage("Hello")],
+        {}
+      )) {
+        expect(chunk).toBeDefined();
+      }
+    })();
+
+    const expectation = expect(consume).rejects.toThrow(
+      "Bedrock Converse stream timed out after 50 ms without receiving a chunk."
+    );
+
+    await vi.advanceTimersByTimeAsync(50);
+    await expectation;
+    expect(aborted).toBe(true);
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+test("Streaming resets idle timeout after each Bedrock stream chunk", async () => {
+  vi.useFakeTimers();
+  try {
+    const mockSend = vi.fn().mockResolvedValue({
+      stream: (async function* () {
+        await new Promise((resolve) => setTimeout(resolve, 25));
+        yield {
+          contentBlockDelta: {
+            contentBlockIndex: 0,
+            delta: {
+              text: "Hel",
+            },
+          },
+        };
+        await new Promise((resolve) => setTimeout(resolve, 25));
+        yield {
+          contentBlockDelta: {
+            contentBlockIndex: 0,
+            delta: {
+              text: "lo",
+            },
+          },
+        };
+      })(),
+    });
+
+    const mockClient = {
+      send: mockSend,
+    } as unknown as BedrockRuntimeClient;
+
+    const model = new ChatBedrockConverse({
+      region: "us-east-1",
+      credentials: {
+        secretAccessKey: "test-secret-key",
+        accessKeyId: "test-access-key",
+      },
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
+      client: mockClient,
+      streamIdleTimeout: 50,
+    });
+
+    const consume = (async () => {
+      const chunks = [];
+      for await (const chunk of model._streamResponseChunks(
+        [new HumanMessage("Hello")],
+        {}
+      )) {
+        chunks.push(chunk);
+      }
+      return chunks;
+    })();
+
+    await vi.advanceTimersByTimeAsync(25);
+    await vi.advanceTimersByTimeAsync(25);
+
+    const chunks = await consume;
+    expect(chunks.map((chunk) => chunk.text).join("")).toBe("Hello");
+  } finally {
+    vi.useRealTimers();
+  }
 });
 
 test("Streaming emits tool call start chunks via handleLLMNewToken", async () => {
@@ -1879,6 +2216,10 @@ describe("bedrockApiKey / bedrockApiSecret credentials", () => {
     expect(model.lc_secrets).toHaveProperty(
       "bedrockApiSessionToken",
       "BEDROCK_AWS_SESSION_TOKEN"
+    );
+    expect(model.lc_secrets).toHaveProperty(
+      "bedrockBearerToken",
+      "AWS_BEARER_TOKEN_BEDROCK"
     );
   });
 });

@@ -13,6 +13,7 @@
   },
   "files": [
     "base.json",
-    "env.d.ts"
+    "env.d.ts",
+    "vitest-matchers.d.ts"
   ]
 }

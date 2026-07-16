@@ -265,6 +265,7 @@ describe("state schema reducer preservation", () => {
         .default([])
         .register(registry, {
           reducer: {
+            schema: z4.union([z4.string(), z4.array(z4.string())]),
             fn: (
               existing: string[],
               incoming: string | string[] | undefined

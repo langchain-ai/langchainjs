@@ -202,10 +202,11 @@ describe("Middleware Error Handling", () => {
       expect(result.__interrupt__?.[0].value).toBe("subagent-interrupt");
     });
 
-    it("should still wrap non-GraphBubbleUp errors in MiddlewareError", async () => {
+    it("should preserve errors from the downstream handler", async () => {
+      const originalError = new Error("regular error");
       const errorTool = tool(
         async () => {
-          throw new Error("regular error");
+          throw originalError;
         },
         {
           name: "error_tool",
@@ -216,9 +217,7 @@ describe("Middleware Error Handling", () => {
 
       const middleware = createMiddleware({
         name: "testMiddleware",
-        wrapToolCall: async (request, handler) => {
-          return handler(request);
-        },
+        wrapToolCall: async (request, handler) => handler(request),
       });
 
       const model = new FakeToolCallingModel({
@@ -231,14 +230,41 @@ describe("Middleware Error Handling", () => {
         middleware: [middleware],
       });
 
+      await expect(
+        agent.invoke({ messages: [new HumanMessage("test")] })
+      ).rejects.toBe(originalError);
+    });
+
+    it("should wrap errors thrown by middleware", async () => {
+      const middlewareError = new Error("middleware failed");
+      const okTool = tool(async () => "ok", {
+        name: "ok_tool",
+        description: "A tool that succeeds",
+        schema: z.object({}),
+      });
+      const middleware = createMiddleware({
+        name: "testMiddleware",
+        wrapToolCall: async () => {
+          throw middlewareError;
+        },
+      });
+      const agent = createAgent({
+        model: new FakeToolCallingModel({
+          toolCalls: [[{ name: "ok_tool", args: {}, id: "call_1" }]],
+        }),
+        tools: [okTool],
+        middleware: [middleware],
+      });
+
       try {
         await agent.invoke({ messages: [new HumanMessage("test")] });
         expect.fail("Should have thrown MiddlewareError");
-      } catch (error) {
-        // Regular errors should still be wrapped in MiddlewareError
-        expect(error).toBeInstanceOf(MiddlewareError);
-        expect((error as MiddlewareError).message).toBe("regular error");
-        expect((error as MiddlewareError).cause).toBeInstanceOf(Error);
+      } catch (error: unknown) {
+        expect(MiddlewareError.isInstance(error)).toBe(true);
+        if (!MiddlewareError.isInstance(error)) {
+          return;
+        }
+        expect(error.cause).toBe(middlewareError);
       }
     });
 

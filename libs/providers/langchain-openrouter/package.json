@@ -1,6 +1,6 @@
 {
   "name": "@langchain/openrouter",
-  "version": "0.3.0",
+  "version": "0.4.5",
   "description": "OpenRouter integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",

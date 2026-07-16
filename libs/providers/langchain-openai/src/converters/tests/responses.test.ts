@@ -524,6 +524,89 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
     });
   });
 
+  describe("built-in tool progress streaming", () => {
+    it("should surface web and file search progress events in generationInfo", () => {
+      const events = [
+        {
+          type: "response.web_search_call.in_progress",
+          item_id: "ws_123",
+          status: "in_progress",
+        },
+        {
+          type: "response.web_search_call.searching",
+          item_id: "ws_123",
+          status: "searching",
+        },
+        {
+          type: "response.web_search_call.completed",
+          item_id: "ws_123",
+          status: "completed",
+        },
+        {
+          type: "response.file_search_call.in_progress",
+          item_id: "fs_123",
+          status: "in_progress",
+        },
+        {
+          type: "response.file_search_call.searching",
+          item_id: "fs_123",
+          status: "searching",
+        },
+        {
+          type: "response.file_search_call.completed",
+          item_id: "fs_123",
+          status: "completed",
+        },
+      ];
+
+      for (const event of events) {
+        const result = convertResponsesDeltaToChatGenerationChunk(event as any);
+
+        expect(result?.generationInfo).toEqual({
+          tool_outputs: {
+            id: event.item_id,
+            type: event.type
+              .replace("response.", "")
+              .replace(`.${event.status}`, ""),
+            status: event.status,
+          },
+        });
+      }
+    });
+
+    it("should surface image generation lifecycle events in generationInfo", () => {
+      const events = [
+        {
+          type: "response.image_generation_call.in_progress",
+          item_id: "ig_123",
+          status: "in_progress",
+        },
+        {
+          type: "response.image_generation_call.generating",
+          item_id: "ig_123",
+          status: "generating",
+        },
+        {
+          type: "response.image_generation_call.completed",
+          item_id: "ig_123",
+          status: "completed",
+        },
+      ];
+
+      for (const event of events) {
+        const result = convertResponsesDeltaToChatGenerationChunk(event as any);
+
+        expect(result?.generationInfo).toEqual({
+          tool_outputs: {
+            id: "ig_123",
+            type: "image_generation_call",
+            status: event.status,
+          },
+        });
+      }
+    });
+  });
+
   describe("reasoning streaming elevation", () => {
     it("should elevate reasoning to content on response.output_item.added with reasoning", () => {
       const event = {
@@ -791,9 +874,37 @@ describe("convertStandardContentMessageToResponsesInput", () => {
         type: "reasoning",
         id: "reason-1",
         summary: [{ type: "summary_text", text: "Thoughts..." }],
-        content: [{ type: "reasoning_text", text: "Thoughts..." }],
       },
     ]);
+    // The Responses API rejects a populated `content` on reasoning input items.
+    expect(result[0]).not.toHaveProperty("content");
+  });
+
+  it("omits id on reasoning blocks reassembled from streaming (no id)", () => {
+    // Reasoning blocks rebuilt from streaming chunks (e.g. via streamEvents)
+    // never carry an id. Emitting `id: ""` makes the Responses API reject the
+    // follow-up turn with `400 Invalid 'input[n].id': ''`, so the id field
+    // must be omitted entirely rather than defaulted to an empty string.
+    const message = new AIMessage({
+      contentBlocks: [
+        {
+          type: "reasoning",
+          reasoning: "Thoughts...",
+        },
+      ],
+      response_metadata: { model_provider: "openai" },
+    });
+
+    const result = convertStandardContentMessageToResponsesInput(message);
+
+    expect(result).toEqual([
+      {
+        type: "reasoning",
+        summary: [{ type: "summary_text", text: "Thoughts..." }],
+      },
+    ]);
+    expect(result[0]).not.toHaveProperty("id");
+    expect(result[0]).not.toHaveProperty("content");
   });
 
   it("converts tool call blocks and aggregates chunk fallbacks", () => {
@@ -1112,6 +1223,34 @@ describe("convertStandardContentMessageToResponsesInput", () => {
   });
 });
 
+describe("convertStandardContentMessageToResponsesInput (role-aware text parts)", () => {
+  it("emits output_text for assistant messages (not input_text)", () => {
+    const items = convertStandardContentMessageToResponsesInput(
+      new AIMessage({ contentBlocks: [{ type: "text", text: "hi" }] })
+    );
+    expect(items).toMatchObject([
+      {
+        type: "message",
+        role: "assistant",
+        content: [{ type: "output_text", text: "hi" }],
+      },
+    ]);
+  });
+
+  it("emits input_text for user messages", () => {
+    const items = convertStandardContentMessageToResponsesInput(
+      new HumanMessage({ contentBlocks: [{ type: "text", text: "hi" }] })
+    );
+    expect(items).toMatchObject([
+      {
+        type: "message",
+        role: "user",
+        content: [{ type: "input_text", text: "hi" }],
+      },
+    ]);
+  });
+});
+
 describe("convertMessagesToResponsesInput", () => {
   describe("Regression Tests", () => {
     it("allows file_url without filename metadata and excludes filename from payload", () => {
@@ -1175,6 +1314,44 @@ describe("convertMessagesToResponsesInput", () => {
         "https://www.appropedia.org/w/images/c/ca/Writing_Sample.pdf"
       );
       expect(fileBlock.filename).toBeUndefined();
+    });
+
+    it("routes standard url file blocks to native input_file instead of the completions converter", () => {
+      const messages = [
+        new HumanMessage({
+          content: [
+            { type: "text", text: "What is in this document?" },
+            {
+              type: "file",
+              source_type: "url",
+              url: "https://example.com/document.pdf",
+              mime_type: "application/pdf",
+              metadata: { filename: "document.pdf" },
+            },
+          ],
+        }),
+      ];
+
+      const result = convertMessagesToResponsesInput({
+        messages,
+        model: "gpt-4o",
+        zdrEnabled: false,
+      });
+
+      expect(result).toMatchObject([
+        {
+          type: "message",
+          role: "user",
+          content: [
+            { type: "input_text", text: "What is in this document?" },
+            {
+              type: "input_file",
+              file_url: "https://example.com/document.pdf",
+              filename: "document.pdf",
+            },
+          ],
+        },
+      ]);
     });
   });
 

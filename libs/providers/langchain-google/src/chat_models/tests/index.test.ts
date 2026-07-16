@@ -17,6 +17,7 @@ import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import { ChatGoogle, ChatGoogleParams } from "../index.js";
 import { ChatGoogle as ChatGoogleNode } from "../node.js";
 import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
+import type { LLMResult } from "@langchain/core/outputs";
 import { OutputParserException } from "@langchain/core/output_parsers";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import type { Runnable } from "@langchain/core/runnables";
@@ -208,11 +209,14 @@ class MockErrorApiClient extends ApiClient {
 
   response: Response;
 
+  calls = 0;
+
   constructor(private options: MockErrorApiClientOptions) {
     super();
   }
 
   async fetch(request: Request): Promise<Response> {
+    this.calls += 1;
     this.request = request;
     this.response = new Response(this.options.bodyText, {
       status: this.options.status,
@@ -312,6 +316,40 @@ describe("Google Mock", () => {
     // console.log('request',recorder.request);
     expect(recorder?.request?.body?.generationConfig?.candidateCount).toEqual(
       1
+    );
+  });
+
+  test("handleLLMEnd exposes camelCase tokenUsage for invoke", async () => {
+    let callbackResult: LLMResult | undefined;
+
+    const llm = new ChatGoogle({
+      model: "gemini-3-pro-preview",
+      apiClient: new MockApiClient({
+        fileName: "gemini-chat-001.json",
+      }),
+      callbacks: [
+        {
+          async handleLLMEnd(output: LLMResult) {
+            callbackResult = output;
+          },
+        },
+      ],
+    });
+
+    const result = await llm.invoke("What is 1+1?");
+
+    expect(callbackResult?.llmOutput?.tokenUsage).toEqual({
+      promptTokens: 9,
+      completionTokens: 36,
+      totalTokens: 45,
+    });
+    expect(callbackResult?.llmOutput?.usageMetadata).toMatchObject({
+      input_tokens: 9,
+      output_tokens: 36,
+      total_tokens: 45,
+    });
+    expect(result.response_metadata.tokenUsage).toEqual(
+      callbackResult?.llmOutput?.tokenUsage
     );
   });
 
@@ -555,6 +593,57 @@ describe("Google Mock", () => {
     expect((caughtError as RequestError).message).not.toContain(
       "Request failed with status code 400"
     );
+  });
+
+  test("retries wait-style 429 responses through AsyncCaller in non-streaming invoke", async () => {
+    const apiClient = new MockErrorApiClient({
+      status: 429,
+      statusText: "Too Many Requests",
+      headers: {
+        "retry-after": "1",
+      },
+      bodyText: JSON.stringify({
+        error: {
+          message: "Rate limit exceeded, retry after 1 second",
+        },
+      }),
+    });
+
+    const llm = new ChatGoogle({
+      model: "gemini-2.5-flash",
+      apiClient,
+      maxRetries: 1,
+    });
+
+    await expect(llm.invoke("Hello")).rejects.toBeInstanceOf(RequestError);
+    expect(apiClient.calls).toBe(2);
+  });
+
+  test("does not retry quota-style 429 responses through AsyncCaller", async () => {
+    const apiClient = new MockErrorApiClient({
+      status: 429,
+      statusText: "Too Many Requests",
+      headers: {
+        "retry-after": "120",
+      },
+      bodyText: JSON.stringify({
+        error: {
+          message: "Usage quota exceeded",
+        },
+      }),
+    });
+
+    const llm = new ChatGoogle({
+      model: "gemini-2.5-flash",
+      apiClient,
+      maxRetries: 3,
+    });
+
+    await expect(llm.invoke("Hello")).rejects.toMatchObject({
+      name: "RequestError",
+      rateLimitType: "stop",
+    });
+    expect(apiClient.calls).toBe(1);
   });
 
   test("getLsParams normalizes provider and includes model metadata for web and node", () => {

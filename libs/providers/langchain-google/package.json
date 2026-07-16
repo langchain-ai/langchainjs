@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google",
-  "version": "0.1.12",
+  "version": "0.2.1",
   "description": "Google integrations for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "eventsource-parser": "^3.1.0",
-    "google-auth-library": "^10.6.2",
+    "google-auth-library": "^10.9.0",
     "jose": "^6.2.3"
   },
   "peerDependencies": {
