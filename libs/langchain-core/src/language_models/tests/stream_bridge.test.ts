@@ -129,6 +129,90 @@ class FakeThinkingStreamModel extends BaseChatModel {
 }
 
 /**
+ * A model that streams a thinking block as array content followed by the
+ * answer as a plain string chunk, the way `@langchain/google-genai` does
+ * when Gemini thinking is enabled.
+ */
+class FakeThinkingThenStringModel extends BaseChatModel {
+  _llmType() {
+    return "fake-thinking-then-string";
+  }
+
+  async _generate(
+    _messages: BaseMessage[],
+    _options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): Promise<ChatResult> {
+    return { generations: [] };
+  }
+
+  async *_streamResponseChunks(
+    _messages: BaseMessage[],
+    _options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    yield new ChatGenerationChunk({
+      message: new AIMessageChunk({
+        content: [
+          { type: "thinking", thinking: "let me think " },
+        ] as unknown as ContentBlock[],
+        id: "msg_thinking_string",
+      }),
+      text: "",
+    });
+    yield new ChatGenerationChunk({
+      message: new AIMessageChunk({
+        content: "THE ANSWER",
+        response_metadata: { finishReason: "STOP", model_name: "gemini-test" },
+      }),
+      text: "THE ANSWER",
+    });
+  }
+}
+
+/**
+ * A model that streams continuations of one thinking block as un-indexed
+ * array parts across chunks.
+ */
+class FakeUnindexedThinkingModel extends BaseChatModel {
+  _llmType() {
+    return "fake-unindexed-thinking";
+  }
+
+  async _generate(
+    _messages: BaseMessage[],
+    _options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): Promise<ChatResult> {
+    return { generations: [] };
+  }
+
+  async *_streamResponseChunks(
+    _messages: BaseMessage[],
+    _options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    yield new ChatGenerationChunk({
+      message: new AIMessageChunk({
+        content: [
+          { type: "thinking", thinking: "Thinking" },
+        ] as unknown as ContentBlock[],
+        id: "msg_unindexed_thinking",
+      }),
+      text: "",
+    });
+    yield new ChatGenerationChunk({
+      message: new AIMessageChunk({
+        content: [
+          { type: "thinking", thinking: " hard..." },
+        ] as unknown as ContentBlock[],
+      }),
+      text: "",
+    });
+  }
+}
+
+/**
  * A model that yields tool call chunks via _streamResponseChunks.
  */
 class FakeToolCallStreamModel extends BaseChatModel {
@@ -452,6 +536,105 @@ describe("_streamChatModelEvents bridge", () => {
           (e as { index: number }).index === 0
       ) as { content: { type: string; thinking?: string } };
 
+      expect(finish.content.type).toBe("thinking");
+      expect(finish.content.thinking).toBe("Thinking hard...");
+    });
+
+    test("string chunk after a thinking block opens its own text block", async () => {
+      const model = new FakeThinkingThenStringModel({});
+      const events: ChatModelStreamEvent[] = [];
+      for await (const event of model._streamChatModelEvents(
+        [],
+        {} as BaseChatModelCallOptions
+      )) {
+        events.push(event);
+      }
+
+      const starts = events.filter((e) => e.event === "content-block-start");
+      expect(starts.length).toBe(2);
+      expect((starts[0] as { content: ContentBlock }).content.type).toBe(
+        "thinking"
+      );
+      expect((starts[0] as { index: number }).index).toBe(0);
+      expect((starts[1] as { content: ContentBlock }).content.type).toBe(
+        "text"
+      );
+      expect((starts[1] as { index: number }).index).toBe(1);
+
+      const finishes = events.filter((e) => e.event === "content-block-finish");
+      expect(finishes.length).toBe(2);
+      const thinkingFinish = finishes[0] as {
+        content: { type: string; thinking?: string; text?: string };
+      };
+      expect(thinkingFinish.content.thinking).toBe("let me think ");
+      // The answer must not leak into the thinking block.
+      expect(thinkingFinish.content.text).toBeUndefined();
+      const textFinish = finishes[1] as {
+        content: { type: string; text?: string };
+      };
+      expect(textFinish.content.type).toBe("text");
+      expect(textFinish.content.text).toBe("THE ANSWER");
+    });
+
+    test("assembled message keeps the answer text and response metadata", async () => {
+      const model = new FakeThinkingThenStringModel({});
+      const message = await model.streamEvents("Hello");
+
+      const content = message.content as Array<{
+        type: string;
+        thinking?: string;
+        text?: string;
+      }>;
+      expect(content.length).toBe(2);
+      expect(content[0]!.type).toBe("thinking");
+      expect(content[0]!.thinking).toBe("let me think ");
+      expect(content[0]!.text).toBeUndefined();
+      expect(content[1]!.type).toBe("text");
+      expect(content[1]!.text).toBe("THE ANSWER");
+
+      expect(message.response_metadata.finishReason).toBe("STOP");
+      expect(message.response_metadata.model_name).toBe("gemini-test");
+    });
+
+    test("message-finish carries accumulated response metadata", async () => {
+      const model = new FakeThinkingThenStringModel({});
+      const events: ChatModelStreamEvent[] = [];
+      for await (const event of model._streamChatModelEvents(
+        [],
+        {} as BaseChatModelCallOptions
+      )) {
+        events.push(event);
+      }
+
+      const msgFinish = events[events.length - 1] as {
+        event: string;
+        responseMetadata?: Record<string, unknown>;
+      };
+      expect(msgFinish.event).toBe("message-finish");
+      expect(msgFinish.responseMetadata).toEqual({
+        finishReason: "STOP",
+        model_name: "gemini-test",
+      });
+    });
+
+    test("un-indexed parts of the same type continue one block across chunks", async () => {
+      const model = new FakeUnindexedThinkingModel({});
+      const events: ChatModelStreamEvent[] = [];
+      for await (const event of model._streamChatModelEvents(
+        [],
+        {} as BaseChatModelCallOptions
+      )) {
+        events.push(event);
+      }
+
+      const starts = events.filter((e) => e.event === "content-block-start");
+      expect(starts.length).toBe(1);
+
+      const finishes = events.filter((e) => e.event === "content-block-finish");
+      expect(finishes.length).toBe(1);
+      const finish = finishes[0] as {
+        content: { type: string; thinking?: string };
+      };
       expect(finish.content.type).toBe("thinking");
       expect(finish.content.thinking).toBe("Thinking hard...");
     });

@@ -43,6 +43,25 @@ function nextBlockIndex(activeBlocks: Map<number, unknown>): number {
   return next;
 }
 
+/**
+ * Block types that stream as incremental continuations of a single logical
+ * block. Discrete payloads (images, audio, files) must never be merged this
+ * way — concatenating two images would corrupt both.
+ */
+const CONTINUABLE_BLOCK_TYPES = new Set(["text", "thinking", "reasoning"]);
+
+function lastBlockEntry(
+  activeBlocks: Map<number, { type: string; accumulated: ContentBlock }>
+): { index: number; type: string } | undefined {
+  let entry: { index: number; type: string } | undefined;
+  for (const [index, block] of activeBlocks) {
+    if (entry === undefined || index > entry.index) {
+      entry = { index, type: block.type };
+    }
+  }
+  return entry;
+}
+
 function getAdditionalKwargs(message: unknown): Record<string, unknown> {
   const additional = (message as { additional_kwargs?: unknown })
     .additional_kwargs;
@@ -152,6 +171,7 @@ export async function* convertChunksToEvents(
   let lastUsage:
     | { input_tokens: number; output_tokens: number; total_tokens: number }
     | undefined;
+  let responseMetadata: Record<string, unknown> | undefined;
   let audioStream: AudioStreamState | undefined;
   const emittedImageKeys = new Set<string>();
 
@@ -180,7 +200,12 @@ export async function* convertChunksToEvents(
     const content = msg.content;
     if (typeof content === "string") {
       if (content !== "") {
-        const blockIndex = 0;
+        // Continue the trailing text block if there is one; otherwise open a
+        // new block. String chunks must not mutate whatever lives at index 0
+        // (e.g. a thinking block streamed first as array content).
+        const last = lastBlockEntry(activeBlocks);
+        const blockIndex =
+          last?.type === "text" ? last.index : nextBlockIndex(activeBlocks);
         if (!activeBlocks.has(blockIndex)) {
           const initial: ContentBlock.Text = { type: "text", text: "" };
           activeBlocks.set(blockIndex, {
@@ -206,8 +231,19 @@ export async function* convertChunksToEvents(
       }
     } else if (Array.isArray(content)) {
       for (const part of content) {
-        const blockIndex =
-          typeof part.index === "number" ? part.index : activeBlocks.size;
+        let blockIndex: number;
+        if (typeof part.index === "number") {
+          blockIndex = part.index;
+        } else {
+          // Un-indexed parts continue the trailing block when it streams the
+          // same continuable type; otherwise they open a new block at a free
+          // index (`activeBlocks.size` can collide with explicit indexes).
+          const last = lastBlockEntry(activeBlocks);
+          blockIndex =
+            last?.type === part.type && CONTINUABLE_BLOCK_TYPES.has(part.type)
+              ? last.index
+              : nextBlockIndex(activeBlocks);
+        }
 
         if (!activeBlocks.has(blockIndex)) {
           activeBlocks.set(blockIndex, {
@@ -242,7 +278,7 @@ export async function* convertChunksToEvents(
         const blockIndex =
           typeof toolChunk.index === "number"
             ? toolChunk.index
-            : activeBlocks.size;
+            : nextBlockIndex(activeBlocks);
 
         if (!activeBlocks.has(blockIndex)) {
           const initial: ContentBlock = {
@@ -384,6 +420,17 @@ export async function* convertChunksToEvents(
       };
     }
 
+    // Response metadata (model name, finish reason, response id, ...)
+    const chunkResponseMetadata = (
+      msg as { response_metadata?: Record<string, unknown> }
+    ).response_metadata;
+    if (
+      chunkResponseMetadata != null &&
+      Object.keys(chunkResponseMetadata).length > 0
+    ) {
+      responseMetadata = { ...responseMetadata, ...chunkResponseMetadata };
+    }
+
     // Usage
     if (
       !usageHandledInStart &&
@@ -418,6 +465,7 @@ export async function* convertChunksToEvents(
     event: "message-finish" as const,
     reason: "stop" as const,
     ...(lastUsage ? { usage: lastUsage } : {}),
+    ...(responseMetadata ? { responseMetadata } : {}),
   };
 }
 
