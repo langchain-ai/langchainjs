@@ -227,9 +227,6 @@ importers:
       '@langchain/xai':
         specifier: workspace:*
         version: link:../libs/providers/langchain-xai
-      '@layerup/layerup-security':
-        specifier: ^1.6.0
-        version: 1.6.0(encoding@0.1.13)(ws@5.2.6(bufferutil@4.1.0))(zod@4.3.6)
       '@opensearch-project/opensearch':
         specifier: ^3.5.1
         version: 3.5.1
@@ -828,9 +825,6 @@ importers:
       '@langchain/xai':
         specifier: workspace:*
         version: link:../providers/langchain-xai
-      '@layerup/layerup-security':
-        specifier: ^1.5.12
-        version: 1.6.0(encoding@0.1.13)(ws@8.21.0(bufferutil@4.1.0))(zod@4.3.6)
       '@opensearch-project/opensearch':
         specifier: ^2.2.0
         version: 2.13.0
@@ -4026,9 +4020,6 @@ packages:
 
   '@langchain/protocol@0.0.18':
     resolution: {integrity: sha512-XW1egQtPfsGI41w2AMZNFZrUIwFSQHTjVMZs0OaTpCAvht/QLoaPN8FQcsysMVypOhupG28J29yOorrc70otBQ==}
-
-  '@layerup/layerup-security@1.6.0':
-    resolution: {integrity: sha512-HSBZobDxgi0aHrEoN49RwLSbv60614upoE+noAR/nlysp8K1H1mu9EBw2cY5YTk6XbmEqEjddu9dMPb71NABMA==}
 
   '@loaderkit/resolve@1.0.6':
     resolution: {integrity: sha512-G8FdIoF5CypfwmD9rl8BXod5HDn8JqB0CCNBXDTaRZ+yRYhARrrSToX1zg1zy9jX3zLqigsELwhT4gNtkdQAUg==}
@@ -14190,28 +14181,6 @@ snapshots:
 
   '@langchain/protocol@0.0.18': {}
 
-  '@layerup/layerup-security@1.6.0(encoding@0.1.13)(ws@5.2.6(bufferutil@4.1.0))(zod@4.3.6)':
-    dependencies:
-      axios: 1.16.1(debug@4.3.4)
-      openai: 4.104.0(encoding@0.1.13)(ws@5.2.6(bufferutil@4.1.0))(zod@4.3.6)
-    transitivePeerDependencies:
-      - debug
-      - encoding
-      - supports-color
-      - ws
-      - zod
-
-  '@layerup/layerup-security@1.6.0(encoding@0.1.13)(ws@8.21.0(bufferutil@4.1.0))(zod@4.3.6)':
-    dependencies:
-      axios: 1.16.1(debug@4.3.4)
-      openai: 4.104.0(encoding@0.1.13)(ws@8.21.0(bufferutil@4.1.0))(zod@4.3.6)
-    transitivePeerDependencies:
-      - debug
-      - encoding
-      - supports-color
-      - ws
-      - zod
-
   '@loaderkit/resolve@1.0.6':
     dependencies:
       '@braidai/lang': 1.1.2
@@ -20135,21 +20104,6 @@ snapshots:
     optionalDependencies:
       ws: 5.2.6(bufferutil@4.1.0)
       zod: 3.25.76
-    transitivePeerDependencies:
-      - encoding
-
-  openai@4.104.0(encoding@0.1.13)(ws@5.2.6(bufferutil@4.1.0))(zod@4.3.6):
-    dependencies:
-      '@types/node': 18.19.130
-      '@types/node-fetch': 2.6.13
-      abort-controller: 3.0.0
-      agentkeepalive: 4.6.0
-      form-data-encoder: 1.7.2
-      formdata-node: 4.4.1
-      node-fetch: 2.7.0(encoding@0.1.13)
-    optionalDependencies:
-      ws: 5.2.6(bufferutil@4.1.0)
-      zod: 4.3.6
     transitivePeerDependencies:
       - encoding
 
