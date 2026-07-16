@@ -10,7 +10,7 @@ import { z } from "zod/v3";
 
 const db = await SqlDatabase.fromOptionsParams({
   appDataSourceOptions: {
-    type: "sqlite",
+    type: "better-sqlite3",
     database: "../../../../Chinook.db",
   },
 });

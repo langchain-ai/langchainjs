@@ -32,7 +32,7 @@
     "@langchain/core": "workspace:^",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
-    "@vitest/coverage-v8": "^4.1.8",
+    "@vitest/coverage-v8": "^4.1.9",
     "dotenv": "^17.4.0",
     "dpdm": "^3.14.0",
     "typescript": "~6.0.3",
