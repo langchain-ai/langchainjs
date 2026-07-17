@@ -3,11 +3,8 @@ import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
 import { WatsonXAI } from "@ibm-cloud/watsonx-ai";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import { CreateEmbeddingsParams, Gateway } from "@ibm-cloud/watsonx-ai/gateway";
-import { WatsonxAuth, WatsonxEmbeddingsBasicOptions, XOR,  } from "../types.js";
-import {
-  expectOneOf,
-  initWatsonxOrGatewayInstance,
-} from "../utils/ibm.js";
+import { WatsonxAuth, WatsonxEmbeddingsBasicOptions, XOR } from "../types.js";
+import { expectOneOf, initWatsonxOrGatewayInstance } from "../utils/ibm.js";
 import { checkRequiredProps, PropertyValidator } from "../utils/validation.js";
 
 export interface WatsonxEmbeddingsParams
@@ -86,8 +83,6 @@ export class WatsonxEmbeddings
 
   protected gateway?: Gateway;
 
-  private validator = new PropertyValidator();
-
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   private checkValidProperties(fields: any, includeCommonProps = true) {
     const projectOrSpaceProps = [
@@ -106,12 +101,10 @@ export class WatsonxEmbeddings
       modeProps = projectOrSpaceProps;
     }
 
-    this.validator.validateByMode(
+    PropertyValidator.validateByMode(
       fields as Record<string, unknown>,
       modeProps,
-      {
-        includeCommon: includeCommonProps,
-      }
+      includeCommonProps
     );
   }
 

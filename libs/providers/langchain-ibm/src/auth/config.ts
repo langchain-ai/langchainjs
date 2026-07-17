@@ -63,7 +63,9 @@ export function prepareInstanceConfig({
 }: WatsonxAuth & Omit<WatsonxInit, "authenticator">): InstanceConfig {
   // Auto-detect IAM auth when apiKey is provided without username
   const isIam =
-    (watsonxAIApikey || apiKey) && !watsonxAIUsername ? "iam" : undefined;
+    (watsonxAIApikey || apiKey) && !(watsonxAIUsername || username)
+      ? "iam"
+      : undefined;
 
   const authenticator = createAuthenticator({
     apiKey: watsonxAIApikey ?? apiKey,

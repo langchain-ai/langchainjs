@@ -3,7 +3,6 @@ import { ChatsToolChoice } from "@ibm-cloud/watsonx-ai/gateway";
 import { BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
 import { BaseLLMParams } from "@langchain/core/language_models/llms";
 
-
 /**
  * Utility type that makes all properties of T optional and never.
  * Useful for creating mutually exclusive type unions.

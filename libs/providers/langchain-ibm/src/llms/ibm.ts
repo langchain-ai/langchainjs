@@ -21,7 +21,11 @@ import {
   Gateway,
   TextCompletionStream,
 } from "@ibm-cloud/watsonx-ai/gateway";
-import { PropertyValidator, checkRequiredProps, expectOneOf } from "../utils/validation.js";
+import {
+  PropertyValidator,
+  checkRequiredProps,
+  expectOneOf,
+} from "../utils/validation.js";
 import {
   GenerationInfo,
   ResponseChunk,
@@ -31,7 +35,7 @@ import {
   WatsonxLLMBasicOptions,
   XOR,
 } from "../types.js";
-import {  initWatsonxOrGatewayInstance } from "../utils/ibm.js";
+import { initWatsonxOrGatewayInstance } from "../utils/ibm.js";
 
 export interface WatsonxLLMParams {
   maxNewTokens?: number;
@@ -172,8 +176,6 @@ export class WatsonxLLM<
 
   protected gateway?: Gateway;
 
-  private validator = new PropertyValidator();
-
   private checkValidProperties(
     fields:
       | WatsonxLLMConstructor
@@ -222,13 +224,11 @@ export class WatsonxLLM<
       modeProps = projectOrSpaceProps;
     }
 
-    this.validator.validateByMode(
+    PropertyValidator.validateByMode(
       fields as Record<string, unknown>,
       modeProps,
-      {
-        includeCommon: includeCommonProps,
-      }
-    );  
+      includeCommonProps
+    );
   }
 
   constructor(fields: WatsonxLLMConstructor) {

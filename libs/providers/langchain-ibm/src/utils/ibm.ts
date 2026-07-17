@@ -14,11 +14,9 @@ import {
   interopSafeParseAsync,
 } from "@langchain/core/utils/types";
 import { Gateway } from "@ibm-cloud/watsonx-ai/gateway";
-import {
-  WatsonxAuth,
-  WatsonxInit,
-} from "../types.js";
+import { WatsonxAuth, WatsonxInit } from "../types.js";
 import { prepareInstanceConfig } from "../auth/config.js";
+export { checkValidProps, expectOneOf } from "./validation.js";
 
 /**
  * Initializes and returns a WatsonX AI or Gateway instance with authentication.
@@ -242,38 +240,3 @@ export function jsonSchemaToZod(obj: WatsonXAI.JsonObject | undefined) {
   }
   throw new Error("Unsupported root schema type");
 }
-
-export const expectOneOf = (
-  params: Record<string, any>,
-  keys: string[],
-  exactlyOneOf = false
-) => {
-  const provided = keys.filter(
-    (key) => key in params && params[key] !== undefined
-  );
-  if (exactlyOneOf && provided.length !== 1) {
-    throw new Error(
-      `Expected exactly one of: ${keys.join(", ")}. Got: ${provided.join(", ")}`
-    );
-  } else if (!exactlyOneOf && provided.length > 1) {
-    throw new Error(
-      `Expected one of: ${keys.join(", ")} or none. Got: ${provided.join(", ")}`
-    );
-  }
-};
-
-export const checkValidProps = (
-  params: Record<string, any>,
-  allowedKeys: string[]
-) => {
-  const unexpected = Object.keys(params).filter(
-    (key) => !allowedKeys.includes(key)
-  );
-  if (unexpected.length > 0) {
-    throw new Error(
-      `Unexpected properties: ${unexpected.join(
-        ", "
-      )}. Expected only: ${allowedKeys.join(", ")}.`
-    );
-  }
-};

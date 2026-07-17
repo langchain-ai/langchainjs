@@ -10,19 +10,10 @@ export type {
   WatsonxLLMBasicOptions,
   WatsonxRerankBasicOptions,
   WatsonxEmbeddingsBasicOptions,
-  WatsonxToolChoice,
+  WatsonxTooChoice,
   WatsonxBaseChatParams,
   GenerationInfo,
   ResponseChunk,
-} from "./types.js";
-
-// Re-export error classes
-export {
-  WatsonxError,
-  Error,
-  WatsonxValidationError,
-  WatsonxConfigurationError,
-  WatsonxUnsupportedOperationError,
 } from "./types.js";
 
 // Re-export auth utilities
@@ -35,7 +26,6 @@ export {
   WatsonxToolsOutputParser,
   jsonSchemaToZod,
   expectOneOf,
-  checkValidProps,
 } from "./utils/ibm.js";
 
 export {

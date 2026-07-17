@@ -100,13 +100,11 @@ export class PropertyValidator {
    * );
    * ```
    */
-  validateByMode(
+  static validateByMode(
     fields: Record<string, unknown>,
     modeProps: string[],
-    options: { includeCommon?: boolean } = {}
+    includeCommon = true
   ): void {
-    const { includeCommon = true } = options;
-
     const allowed = [
       ...modeProps,
       ...(includeCommon
@@ -213,12 +211,11 @@ export function checkRequiredProps(
   requiredKeys: string[]
 ): void {
   const missing = requiredKeys.filter(
-    (key) => !(key in params) || params[key] === undefined || params[key] === null
+    (key) =>
+      !(key in params) || params[key] === undefined || params[key] === null
   );
 
   if (missing.length > 0) {
-    throw new Error(
-      `Missing required properties: ${missing.join(", ")}.`
-    );
+    throw new Error(`Missing required properties: ${missing.join(", ")}.`);
   }
 }

@@ -81,7 +81,11 @@ import {
   Gateway,
 } from "@ibm-cloud/watsonx-ai/gateway";
 import { WatsonxAuth, XOR, WatsonxBaseChatParams } from "../types.js";
-import { PropertyValidator, checkRequiredProps, expectOneOf } from "../utils/validation.js";
+import {
+  PropertyValidator,
+  checkRequiredProps,
+  expectOneOf,
+} from "../utils/validation.js";
 import {
   _convertToolCallIdToMistralCompatible,
   initWatsonxOrGatewayInstance,
@@ -498,8 +502,6 @@ export class ChatWatsonx<
     };
   }
 
-  private validator = new PropertyValidator();
-
   private checkValidProperties(
     fields: this["ParsedCallOptions"] | ChatWatsonxConstructorInput
   ) {
@@ -566,12 +568,10 @@ export class ChatWatsonx<
       modeProps.push(...PROJECT_OR_SPACE);
     }
 
-    this.validator.validateByMode(
+    PropertyValidator.validateByMode(
       fields as Record<string, unknown>,
       modeProps,
-      {
-        includeCommon: true,
-      }
+      true
     );
   }
 
@@ -667,9 +667,7 @@ export class ChatWatsonx<
     this.responseFormat = fields?.responseFormat ?? this.responseFormat;
     this.streaming = fields?.streaming ?? this.streaming;
     this.n = fields?.n ?? this.n;
-    this.timeLimit = fields?.timeLimit;
     this.reasoningEffort = fields?.reasoningEffort;
-    this.includeReasoning = fields?.includeReasoning;
 
     if ("modelGateway" in fields) {
       this.modelGatewayKwargs = fields?.modelGatewayKwargs;

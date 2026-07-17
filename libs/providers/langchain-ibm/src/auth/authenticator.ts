@@ -18,30 +18,29 @@ import { WatsonxAuth } from "../types.js";
  * ```typescript
  * // IAM authentication
  * const iamAuth = createAuthenticator({
- *   watsonxAIAuthType: "iam",
- *   watsonxAIApikey: "your-api-key"
+ *   apiKey: "your-api-key"
  * });
  *
  * // Bearer token authentication
  * const bearerAuth = createAuthenticator({
- *   watsonxAIAuthType: "bearertoken",
- *   watsonxAIBearerToken: "your-bearer-token"
+ *   authType: "bearertoken",
+ *   bearerToken: "your-bearer-token"
  * });
  *
  * // Cloud Pak for Data authentication
  * const cp4dAuth = createAuthenticator({
- *   watsonxAIAuthType: "cp4d",
- *   watsonxAIUsername: "your-username",
- *   watsonxAIPassword: "your-password",
- *   watsonxAIUrl: "https://your-cp4d-url.com",
+ *   authType: "cp4d",
+ *   username: "your-username",
+ *   password: "your-password",
+ *   authUrl: "https://your-cp4d-url.com",
  *   serviceUrl: "https://your-service-url.com"
  * });
  *
  * // AWS authentication
  * const awsAuth = createAuthenticator({
- *   watsonxAIAuthType: "aws",
- *   watsonxAIApikey: "your-api-key",
- *   watsonxAIUrl: "https://your-aws-url.com"
+ *   authType: "aws",
+ *   apiKey: "your-api-key",
+ *   authUrl: "https://your-aws-url.com"
  * });
  * ```
  */
@@ -70,9 +69,7 @@ export function createAuthenticator({
           bearerToken,
         });
       }
-      throw new Error(
-        "BearerToken is required for BearerToken auth"
-      );
+      throw new Error("BearerToken is required for BearerToken auth");
 
     case "cp4d":
       if (username && (password || apiKey)) {
