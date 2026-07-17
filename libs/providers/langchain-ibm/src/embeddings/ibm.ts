@@ -3,7 +3,7 @@ import { Embeddings, EmbeddingsParams } from "@langchain/core/embeddings";
 import { WatsonXAI } from "@ibm-cloud/watsonx-ai";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import { CreateEmbeddingsParams, Gateway } from "@ibm-cloud/watsonx-ai/gateway";
-import { WatsonxAuth, WatsonxEmbeddingsBasicOptions, XOR } from "../types.js";
+import { WatsonxAuth, WatsonxEmbeddingsBasicOptions } from "../types.js";
 import {
   authenticateAndSetGatewayInstance,
   authenticateAndSetInstance,
@@ -52,12 +52,86 @@ export interface WatsonxInputGatewayEmbeddings
       keyof WatsonxEmbeddingsGatewayKwargs | "input"
     > {}
 
-export type WatsonxEmbeddingsConstructor = XOR<
-  WatsonxInputEmbeddings,
-  WatsonxInputGatewayEmbeddings
-> &
+export type WatsonxEmbeddingsConstructor = (
+  | WatsonxInputEmbeddings
+  | WatsonxInputGatewayEmbeddings
+) &
   WatsonxAuth;
 
+/**
+ * IBM Watsonx.ai embeddings integration for generating text embeddings.
+ *
+ * Supports two deployment modes:
+ * 1. **Project/Space Mode**: Use with IBM Cloud project or space IDs
+ * 2. **Gateway Mode**: Use with IBM Watsonx.ai Gateway
+ *
+ * @example Basic embeddings with project ID
+ * ```typescript
+ * import { WatsonxEmbeddings } from "@langchain/ibm";
+ *
+ * const embeddings = new WatsonxEmbeddings({
+ *   model: "ibm/slate-125m-english-rtrvr",
+ *   projectId: "your-project-id",
+ *   serviceUrl: "https://us-south.ml.cloud.ibm.com",
+ *   apiKey: process.env.WATSONX_AI_APIKEY,
+ * });
+ *
+ * // Embed a single document
+ * const embedding = await embeddings.embedQuery("Hello world");
+ * console.log(embedding); // Array of numbers
+ * ```
+ *
+ * @example Embedding multiple documents
+ * ```typescript
+ * const embeddings = new WatsonxEmbeddings({
+ *   model: "ibm/slate-125m-english-rtrvr",
+ *   projectId: "your-project-id",
+ *   serviceUrl: "https://us-south.ml.cloud.ibm.com",
+ *   apiKey: process.env.WATSONX_AI_APIKEY,
+ * });
+ *
+ * const docs = [
+ *   "The quick brown fox",
+ *   "jumps over the lazy dog",
+ *   "Hello world",
+ * ];
+ *
+ * const vectors = await embeddings.embedDocuments(docs);
+ * console.log(vectors.length); // 3
+ * console.log(vectors[0].length); // Embedding dimension
+ * ```
+ *
+ * @example Using with space ID
+ * ```typescript
+ * const embeddings = new WatsonxEmbeddings({
+ *   model: "ibm/slate-125m-english-rtrvr",
+ *   spaceId: "your-space-id",
+ *   serviceUrl: "https://us-south.ml.cloud.ibm.com",
+ *   apiKey: process.env.WATSONX_AI_APIKEY,
+ * });
+ * ```
+ *
+ * @example Using Gateway mode
+ * ```typescript
+ * const embeddings = new WatsonxEmbeddings({
+ *   model: "sentence-transformers/all-minilm-l6-v2",
+ *   modelGateway: true,
+ *   serviceUrl: "https://us-south.ml.cloud.ibm.com",
+ *   apiKey: process.env.WATSONX_AI_APIKEY,
+ * });
+ * ```
+ *
+ * @example With truncation
+ * ```typescript
+ * const embeddings = new WatsonxEmbeddings({
+ *   model: "ibm/slate-125m-english-rtrvr",
+ *   projectId: "your-project-id",
+ *   serviceUrl: "https://us-south.ml.cloud.ibm.com",
+ *   apiKey: process.env.WATSONX_AI_APIKEY,
+ *   truncateInputTokens: 512, // Truncate long inputs
+ * });
+ * ```
+ */
 export class WatsonxEmbeddings
   extends Embeddings
   implements WatsonxEmbeddingsParams, WatsonxInputGatewayEmbeddings
@@ -144,27 +218,34 @@ export class WatsonxEmbeddings
 
     checkValidProps(fields, validProps);
   }
-
+  constructor(fields: WatsonxInputEmbeddings & WatsonxAuth);
+  constructor(fields: WatsonxInputGatewayEmbeddings & WatsonxAuth);
   constructor(fields: WatsonxEmbeddingsConstructor) {
     super(fields);
     expectOneOf(fields, ["projectId", "spaceId", "modelGateway"], true);
-    this.projectId = fields?.projectId;
-    this.spaceId = fields?.spaceId;
-    this.modelGateway = fields.modelGateway ?? this.modelGateway;
+    if ("modelGateway" in fields)
+      this.modelGateway = fields.modelGateway ?? this.modelGateway;
+    else {
+      this.projectId = fields?.projectId;
+      this.spaceId = fields?.spaceId;
+    }
 
     checkRequiredProps(fields, ["model", "serviceUrl", "version"]);
 
     this.checkValidProperties(fields);
+    if ("modelGateway" in fields)
+      this.modelGatewayKwargs = fields.modelGatewayKwargs;
+    else {
+      this.truncateInputTokens = fields.truncateInputTokens;
+      this.returnOptions = fields.returnOptions;
+    }
 
     this.model = fields.model;
     this.version = fields.version;
     this.serviceUrl = fields.serviceUrl;
-    this.truncateInputTokens = fields.truncateInputTokens;
-    this.returnOptions = fields.returnOptions;
     this.maxConcurrency = fields.maxConcurrency ?? this.maxConcurrency;
     this.maxRetries = fields.maxRetries ?? 0;
     this.serviceUrl = fields?.serviceUrl;
-    this.modelGatewayKwargs = fields.modelGatewayKwargs;
 
     const {
       watsonxAIApikey,
