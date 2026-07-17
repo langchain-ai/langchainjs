@@ -361,19 +361,66 @@ function convertStandardVideoContentBlockToGeminiPart(
 function convertStandardContentBlockToGeminiPart(
   block: ContentBlock.Standard
 ): Gemini.Part | null {
+  let part: Gemini.Part | null = null;
+
   switch (block.type) {
     case "text":
-      return { text: block.text };
+      part = { text: block.text };
+      break;
     case "image":
     case "audio":
     case "text-plain":
     case "file":
-      return convertStandardDataContentBlockToGeminiPart(block);
+      part = convertStandardDataContentBlockToGeminiPart(block);
+      break;
     case "video":
-      return convertStandardVideoContentBlockToGeminiPart(block);
+      part = convertStandardVideoContentBlockToGeminiPart(block);
+      break;
+    case "reasoning": {
+      const reasoning = "reasoning" in block ? (block.reasoning as string) : "";
+      part = { text: reasoning, thought: true };
+      break;
+    }
+    case "non_standard": {
+      const value =
+        "value" in block ? (block.value as Record<string, unknown>) : undefined;
+      if (value) {
+        if ("executableCode" in value && value.executableCode) {
+          part = { executableCode: value.executableCode } as Gemini.Part;
+        } else if (
+          "codeExecutionResult" in value &&
+          value.codeExecutionResult
+        ) {
+          part = {
+            codeExecutionResult: value.codeExecutionResult,
+          } as Gemini.Part;
+        } else if ("functionResponse" in value && value.functionResponse) {
+          part = { functionResponse: value.functionResponse } as Gemini.Part;
+        } else if ("functionCall" in value && value.functionCall) {
+          part = { functionCall: value.functionCall } as Gemini.Part;
+        }
+      }
+      break;
+    }
     default:
       return null;
   }
+
+  // Propagate Gemini-specific metadata from the standard block to the part
+  if (part) {
+    const blockRecord = block as Record<string, unknown>;
+    if (blockRecord.thoughtSignature !== undefined) {
+      part.thoughtSignature = blockRecord.thoughtSignature as string;
+    }
+    if (blockRecord.partMetadata !== undefined) {
+      part.partMetadata = blockRecord.partMetadata as Record<string, unknown>;
+    }
+    if (blockRecord.thought !== undefined && block.type !== "reasoning") {
+      part.thought = blockRecord.thought as boolean;
+    }
+  }
+
+  return part;
 }
 
 /**
@@ -428,11 +475,8 @@ function convertStandardContentMessageToGeminiContent(
     ? message.contentBlocks
     : [];
   contentBlocks.forEach((block: ContentBlock.Standard) => {
-    const contentBlock =
-      (message.additional_kwargs
-        .originalTextContentBlock as ContentBlock.Standard) || block;
     const part: Gemini.Part | null =
-      convertStandardContentBlockToGeminiPart(contentBlock);
+      convertStandardContentBlockToGeminiPart(block);
     if (part) {
       parts.push(part);
     }
@@ -705,7 +749,19 @@ function convertLegacyContentMessageToGeminiContent(
   if (typeof message.content === "string") {
     // Simple string content
     if (message.content.trim()) {
-      parts.push({ text: message.content });
+      const originalBlock = message.additional_kwargs
+        ?.originalTextContentBlock as Record<string, unknown> | undefined;
+      const part: Gemini.Part = { text: message.content };
+      if (originalBlock?.thoughtSignature !== undefined) {
+        part.thoughtSignature = originalBlock.thoughtSignature as string;
+      }
+      if (originalBlock?.partMetadata !== undefined) {
+        part.partMetadata = originalBlock.partMetadata as Record<
+          string,
+          unknown
+        >;
+      }
+      parts.push(part);
     }
   } else if (Array.isArray(message.content)) {
     // Array of content blocks (legacy format)
