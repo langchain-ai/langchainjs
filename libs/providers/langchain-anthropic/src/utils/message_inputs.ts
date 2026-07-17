@@ -150,6 +150,11 @@ export function _convertLangChainToolCallToAnthropic(
     id: toolCall.id,
     name: toolCall.name,
     input: toolCall.args,
+    // Preserve caller field for programmatic tool calling
+    ...("caller" in toolCall && toolCall.caller
+      ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        { caller: toolCall.caller as any }
+      : {}),
   };
 }
 
