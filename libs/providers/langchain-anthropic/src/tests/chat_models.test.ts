@@ -742,6 +742,40 @@ describe("Tool extras", () => {
     expect(toolDef).toHaveProperty("cache_control", { type: "ephemeral" });
     expect(toolDef).toHaveProperty("input_examples");
   });
+
+  test("eager_input_streaming is passed through to the tool definition", () => {
+    const streamingTool = tool(
+      async (input: { query: string }) => {
+        return `Results for ${input.query}`;
+      },
+      {
+        name: "eager_search",
+        description: "Search with eager input streaming.",
+        schema: z.object({
+          query: z.string(),
+        }),
+        extras: {
+          eager_input_streaming: true,
+        },
+      }
+    );
+
+    const model = new ChatAnthropic({
+      modelName: "claude-haiku-4-5-20251001",
+      anthropicApiKey: "testing",
+    });
+
+    const formattedTools = model.formatStructuredToolToAnthropic([
+      streamingTool,
+    ]);
+
+    expect(formattedTools).toBeDefined();
+    const toolDef = formattedTools?.find(
+      (t) => "name" in t && t.name === "eager_search"
+    );
+    expect(toolDef).toBeDefined();
+    expect(toolDef).toHaveProperty("eager_input_streaming", true);
+  });
 });
 
 describe("Tool extras validation", () => {
@@ -754,6 +788,21 @@ describe("Tool extras validation", () => {
   test("input_examples with wrong type throws error", () => {
     expect(() => {
       AnthropicToolExtrasSchema.parse({ input_examples: "not a list" });
+    }).toThrow(z4.ZodError);
+  });
+
+  test("eager_input_streaming accepts boolean and null", () => {
+    expect(
+      AnthropicToolExtrasSchema.parse({ eager_input_streaming: true })
+    ).toEqual({ eager_input_streaming: true });
+    expect(
+      AnthropicToolExtrasSchema.parse({ eager_input_streaming: null })
+    ).toEqual({ eager_input_streaming: null });
+  });
+
+  test("eager_input_streaming with wrong type throws error", () => {
+    expect(() => {
+      AnthropicToolExtrasSchema.parse({ eager_input_streaming: "not a bool" });
     }).toThrow(z4.ZodError);
   });
 });
