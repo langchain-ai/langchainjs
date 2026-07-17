@@ -58,6 +58,80 @@ export type WatsonxEmbeddingsConstructor = (
 ) &
   WatsonxAuth;
 
+/**
+ * IBM Watsonx.ai embeddings integration for generating text embeddings.
+ *
+ * Supports two deployment modes:
+ * 1. **Project/Space Mode**: Use with IBM Cloud project or space IDs
+ * 2. **Gateway Mode**: Use with IBM Watsonx.ai Gateway
+ *
+ * @example Basic embeddings with project ID
+ * ```typescript
+ * import { WatsonxEmbeddings } from "@langchain/ibm";
+ *
+ * const embeddings = new WatsonxEmbeddings({
+ *   model: "ibm/slate-125m-english-rtrvr",
+ *   projectId: "your-project-id",
+ *   serviceUrl: "https://us-south.ml.cloud.ibm.com",
+ *   apiKey: process.env.WATSONX_AI_APIKEY,
+ * });
+ *
+ * // Embed a single document
+ * const embedding = await embeddings.embedQuery("Hello world");
+ * console.log(embedding); // Array of numbers
+ * ```
+ *
+ * @example Embedding multiple documents
+ * ```typescript
+ * const embeddings = new WatsonxEmbeddings({
+ *   model: "ibm/slate-125m-english-rtrvr",
+ *   projectId: "your-project-id",
+ *   serviceUrl: "https://us-south.ml.cloud.ibm.com",
+ *   apiKey: process.env.WATSONX_AI_APIKEY,
+ * });
+ *
+ * const docs = [
+ *   "The quick brown fox",
+ *   "jumps over the lazy dog",
+ *   "Hello world",
+ * ];
+ *
+ * const vectors = await embeddings.embedDocuments(docs);
+ * console.log(vectors.length); // 3
+ * console.log(vectors[0].length); // Embedding dimension
+ * ```
+ *
+ * @example Using with space ID
+ * ```typescript
+ * const embeddings = new WatsonxEmbeddings({
+ *   model: "ibm/slate-125m-english-rtrvr",
+ *   spaceId: "your-space-id",
+ *   serviceUrl: "https://us-south.ml.cloud.ibm.com",
+ *   apiKey: process.env.WATSONX_AI_APIKEY,
+ * });
+ * ```
+ *
+ * @example Using Gateway mode
+ * ```typescript
+ * const embeddings = new WatsonxEmbeddings({
+ *   model: "sentence-transformers/all-minilm-l6-v2",
+ *   modelGateway: true,
+ *   serviceUrl: "https://us-south.ml.cloud.ibm.com",
+ *   apiKey: process.env.WATSONX_AI_APIKEY,
+ * });
+ * ```
+ *
+ * @example With truncation
+ * ```typescript
+ * const embeddings = new WatsonxEmbeddings({
+ *   model: "ibm/slate-125m-english-rtrvr",
+ *   projectId: "your-project-id",
+ *   serviceUrl: "https://us-south.ml.cloud.ibm.com",
+ *   apiKey: process.env.WATSONX_AI_APIKEY,
+ *   truncateInputTokens: 512, // Truncate long inputs
+ * });
+ * ```
+ */
 export class WatsonxEmbeddings
   extends Embeddings
   implements WatsonxEmbeddingsParams, WatsonxInputGatewayEmbeddings

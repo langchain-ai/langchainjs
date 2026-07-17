@@ -499,6 +499,98 @@ export type ChatWatsonxConstructorInput = (
 export type ChatWatsonxCallOptions = Partial<WatsonxCallOptionsChat> &
   Partial<WatsonxCallOptionsDeployedChat> &
   Partial<WatsonxCallOptionsGatewayChat>;
+/**
+ * IBM Watsonx.ai chat model integration for LangChain.
+ *
+ * Supports three deployment modes:
+ * 1. **Project/Space Mode**: Use with IBM Cloud project or space IDs
+ * 2. **Deployment Mode**: Use with deployed model IDs
+ * 3. **Gateway Mode**: Use with IBM Watsonx.ai Gateway
+ *
+ * @example Basic usage with project ID
+ * ```typescript
+ * import { ChatWatsonx } from "@langchain/ibm";
+ *
+ * const model = new ChatWatsonx({
+ *   model: "ibm/granite-13b-chat-v2",
+ *   projectId: "your-project-id",
+ *   serviceUrl: "https://us-south.ml.cloud.ibm.com",
+ *   apiKey: process.env.WATSONX_AI_APIKEY,
+ *   maxTokens: 100,
+ *   temperature: 0.7,
+ * });
+ *
+ * const response = await model.invoke([
+ *   ["system", "You are a helpful assistant."],
+ *   ["human", "What is the capital of France?"],
+ * ]);
+ * console.log(response.content);
+ * ```
+ *
+ * @example Streaming responses
+ * ```typescript
+ * const model = new ChatWatsonx({
+ *   model: "ibm/granite-13b-chat-v2",
+ *   projectId: "your-project-id",
+ *   serviceUrl: "https://us-south.ml.cloud.ibm.com",
+ *   apiKey: process.env.WATSONX_AI_APIKEY,
+ *   streaming: true,
+ * });
+ *
+ * const stream = await model.stream("Tell me a joke");
+ * for await (const chunk of stream) {
+ *   console.log(chunk.content);
+ * }
+ * ```
+ *
+ * @example Using with tools/function calling
+ * ```typescript
+ * import { tool } from "@langchain/core/tools";
+ * import { z } from "zod";
+ *
+ * const weatherTool = tool(
+ *   async ({ location }) => {
+ *     return `The weather in ${location} is sunny`;
+ *   },
+ *   {
+ *     name: "get_weather",
+ *     description: "Get the current weather for a location",
+ *     schema: z.object({
+ *       location: z.string().describe("The city name"),
+ *     }),
+ *   }
+ * );
+ *
+ * const model = new ChatWatsonx({
+ *   model: "ibm/granite-13b-chat-v2",
+ *   projectId: "your-project-id",
+ *   serviceUrl: "https://us-south.ml.cloud.ibm.com",
+ *   apiKey: process.env.WATSONX_AI_APIKEY,
+ * });
+ *
+ * const modelWithTools = model.bindTools([weatherTool]);
+ * const response = await modelWithTools.invoke("What's the weather in Paris?");
+ * ```
+ *
+ * @example Using Gateway mode
+ * ```typescript
+ * const model = new ChatWatsonx({
+ *   model: "meta-llama/llama-3-70b-instruct",
+ *   modelGateway: true,
+ *   serviceUrl: "https://us-south.ml.cloud.ibm.com",
+ *   apiKey: process.env.WATSONX_AI_APIKEY,
+ * });
+ * ```
+ *
+ * @example Using with deployed model
+ * ```typescript
+ * const model = new ChatWatsonx({
+ *   idOrName: "your-deployment-id",
+ *   serviceUrl: "https://us-south.ml.cloud.ibm.com",
+ *   apiKey: process.env.WATSONX_AI_APIKEY,
+ * });
+ * ```
+ */
 
 export class ChatWatsonx<
   CallOptions extends ChatWatsonxCallOptions = ChatWatsonxCallOptions,
