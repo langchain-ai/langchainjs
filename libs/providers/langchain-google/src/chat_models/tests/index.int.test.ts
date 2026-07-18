@@ -91,12 +91,6 @@ type ModelInfo = {
 
 const allModelInfo: ModelInfo[] = [
   {
-    model: "gemini-2.0-flash-lite",
-  },
-  {
-    model: "gemini-2.0-flash",
-  },
-  {
     model: "gemini-2.5-flash-lite",
   },
   {
@@ -107,13 +101,7 @@ const allModelInfo: ModelInfo[] = [
     model: "gemini-2.5-pro",
   },
   {
-    model: "gemini-3-pro-preview",
-    testConfig: {
-      isThinking: true,
-    },
-  },
-  {
-    model: "gemini-3-flash-preview",
+    model: "gemini-3.1-flash-lite",
     testConfig: {
       isThinking: true,
     },
@@ -125,7 +113,7 @@ const allModelInfo: ModelInfo[] = [
     },
   },
   {
-    model: "gemini-3.1-flash-lite-preview",
+    model: "gemini-3.5-flash",
     testConfig: {
       isThinking: true,
     },
@@ -137,7 +125,21 @@ const allModelInfo: ModelInfo[] = [
     },
   },
   {
-    model: "gemini-3-pro-image-preview",
+    model: "gemini-3-pro-image",
+    testConfig: {
+      isImage: true,
+      hasImageThoughts: true,
+    },
+  },
+  {
+    model: "gemini-3.1-flash-image",
+    testConfig: {
+      isImage: true,
+      hasImageThoughts: true,
+    },
+  },
+  {
+    model: "gemini-3.1-flash-lite-image",
     testConfig: {
       isImage: true,
       hasImageThoughts: true,
@@ -147,6 +149,7 @@ const allModelInfo: ModelInfo[] = [
     model: "gemini-2.5-flash-preview-tts",
     testConfig: {
       isTts: true,
+      skip: true,
     },
   },
   {
@@ -154,6 +157,12 @@ const allModelInfo: ModelInfo[] = [
     testConfig: {
       isTts: true,
       skip: true,
+    },
+  },
+  {
+    model: "gemini-3.1-flash-tts-preview",
+    testConfig: {
+      isTts: true,
     },
   },
   {
