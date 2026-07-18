@@ -205,6 +205,12 @@ export class AgentExecutorIterator
   /**
    * Process the output of the next step,
    * handling AgentFinish and tool return cases.
+   *
+   * When the step resolves to an `AgentFinish`, or the single executed tool
+   * has `returnDirect` set, the final output is stored and returned
+   * immediately so it is yielded to stream consumers as the last chunk.
+   * Otherwise the step is wrapped in `{ intermediateSteps }` and iteration
+   * continues.
    */
   async _processNextStepOutput(
     nextStepOutput: AgentFinish | AgentStep[],
