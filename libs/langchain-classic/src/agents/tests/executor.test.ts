@@ -112,8 +112,8 @@ test("stream() still yields intermediate steps for tools without returnDirect", 
   expect(chunks).toHaveLength(2);
   const [stepChunk, finalChunk] = chunks;
   expect(stepChunk.intermediateSteps).toHaveLength(1);
-  expect(
-    (stepChunk.intermediateSteps as AgentStep[])[0].observation
-  ).toEqual("an intermediate observation");
+  expect((stepChunk.intermediateSteps as AgentStep[])[0].observation).toEqual(
+    "an intermediate observation"
+  );
   expect(finalChunk.output).toEqual("final answer from the agent");
 });
