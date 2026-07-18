@@ -5,7 +5,7 @@ import { AgentExecutor } from "../executor.js";
 import { RunnableSingleActionAgent } from "../agent.js";
 
 // Regression test for https://github.com/langchain-ai/langchainjs/issues/11222
-test.fails("stream() yields the final output when a tool has returnDirect", async () => {
+test("stream() yields the final output when a tool has returnDirect", async () => {
   const agent = new RunnableSingleActionAgent({
     runnable: RunnableLambda.from(
       async (): Promise<AgentAction> => ({
