@@ -2651,6 +2651,64 @@ describe("middleware", () => {
       expect(result.messages[0].content).toBe("Test");
     });
 
+    it("should jump to afterAgent when beforeModel jumps to end", async () => {
+      const executionLog: string[] = [];
+
+      const middleware1 = createMiddleware({
+        name: "Middleware1",
+        beforeModel: {
+          hook: async () => {
+            executionLog.push("before_model_1");
+            return {
+              jumpTo: "end",
+            };
+          },
+          canJumpTo: ["end"],
+        },
+        afterAgent: async () => {
+          executionLog.push("after_agent_1");
+        },
+      });
+
+      const middleware2 = createMiddleware({
+        name: "Middleware2",
+        beforeModel: async () => {
+          executionLog.push("before_model_2");
+        },
+        afterAgent: async () => {
+          executionLog.push("after_agent_2");
+        },
+      });
+
+      const model = new FakeToolCallingChatModel({
+        responses: [new AIMessage("Response")],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [middleware1, middleware2],
+      });
+
+      const result = await agent.invoke({
+        messages: [new HumanMessage("Test")],
+      });
+
+      // When beforeModel jumps to "end", it should:
+      // 1. Skip remaining beforeModel hooks (before_model_2 not called)
+      // 2. Skip model execution
+      // 3. Jump to afterAgent hooks (both after_agent_2 and after_agent_1 are called)
+      expect(executionLog).toEqual([
+        "before_model_1",
+        "after_agent_2",
+        "after_agent_1",
+      ]);
+
+      // Verify that only the input message is in the result (no model response)
+      expect(result.messages).toHaveLength(1);
+      expect(result.messages[0].content).toBe("Test");
+    });
+
     it("should terminate when afterModel jumps to end (skips tools)", async () => {
       const executionLog: string[] = [];
 
