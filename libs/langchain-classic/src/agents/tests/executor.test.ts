@@ -36,6 +36,43 @@ test("stream() yields the final output when a tool has returnDirect", async () =
   ).toBe(true);
 });
 
+test("stream() final chunk matches invoke() output for returnDirect tools", async () => {
+  const makeExecutor = () => {
+    const agent = new RunnableSingleActionAgent({
+      runnable: RunnableLambda.from(
+        async (): Promise<AgentAction> => ({
+          tool: "lookup",
+          toolInput: "answer",
+          log: "Invoking lookup",
+        })
+      ),
+      streamRunnable: false,
+    });
+    const tool = new DynamicTool({
+      name: "lookup",
+      description: "Look up the answer",
+      returnDirect: true,
+      func: async () => "the final answer is 42",
+    });
+    return AgentExecutor.fromAgentAndTools({ agent, tools: [tool] });
+  };
+
+  const invokeResult = await makeExecutor().invoke({
+    input: "What is the answer?",
+  });
+
+  const chunks: Record<string, unknown>[] = [];
+  for await (const chunk of await makeExecutor().stream({
+    input: "What is the answer?",
+  })) {
+    chunks.push(chunk);
+  }
+  const finalChunk = chunks[chunks.length - 1];
+
+  expect(finalChunk.output).toEqual(invokeResult.output);
+  expect(finalChunk.output).toEqual("the final answer is 42");
+});
+
 test("stream() still yields intermediate steps for tools without returnDirect", async () => {
   const agent = new RunnableSingleActionAgent({
     runnable: RunnableLambda.from(
