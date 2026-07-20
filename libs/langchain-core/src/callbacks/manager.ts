@@ -119,6 +119,44 @@ export class BaseRunManager {
     return this._parentRunId;
   }
 
+  /** Runs `fn` inside each execution context supplied by this run's handlers. */
+  withRunContext<T>(fn: () => T): T {
+    let wrapped = fn;
+    for (const handler of this.handlers) {
+      if (handler.wrapRunExecution) {
+        const next = wrapped;
+        wrapped = () => handler.wrapRunExecution!(this.runId, next);
+      }
+    }
+    return wrapped();
+  }
+
+  /**
+   * Wraps every iterator operation, since async generators execute lazily on
+   * `next()`, not when the generator is created.
+   */
+  withRunContextAsyncIterable<T>(iterable: AsyncIterable<T>): AsyncIterable<T> {
+    const runManager = this;
+    return {
+      [Symbol.asyncIterator]() {
+        const iterator = iterable[Symbol.asyncIterator]();
+        const wrapped: AsyncIterator<T> = {
+          next: (...args) =>
+            runManager.withRunContext(() => iterator.next(...args)),
+        };
+        if (iterator.return) {
+          wrapped.return = (...args) =>
+            runManager.withRunContext(() => iterator.return!(...args));
+        }
+        if (iterator.throw) {
+          wrapped.throw = (...args) =>
+            runManager.withRunContext(() => iterator.throw!(...args));
+        }
+        return wrapped;
+      },
+    };
+  }
+
   async handleText(text: string): Promise<void> {
     await Promise.all(
       this.handlers.map((handler) =>

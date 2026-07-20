@@ -307,7 +307,8 @@ export abstract class StructuredTool<
 
     let result;
     try {
-      const raw = await this._call(parsed, runManager, config);
+      const call = () => this._call(parsed, runManager, config);
+      const raw = await (runManager ? runManager.withRunContext(call) : call());
       result = isAsyncGenerator(raw)
         ? await consumeAsyncGenerator(raw, async (chunk) => {
             try {
