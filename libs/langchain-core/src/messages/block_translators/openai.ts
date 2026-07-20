@@ -333,7 +333,7 @@ export function convertToV1FromResponses(
             name: "web_search",
             args: webSearchArgs,
           };
-          // Emit a server_tool_call_result when the search has completed or failed
+          // Emit a server_tool_result when the search has completed or failed
           if (
             toolOutput.status === "completed" ||
             toolOutput.status === "failed"
@@ -343,7 +343,7 @@ export function convertToV1FromResponses(
               output.action = toolOutput.action;
             }
             yield {
-              type: "server_tool_call_result",
+              type: "server_tool_result",
               toolCallId: _isString(toolOutput.id) ? toolOutput.id : "",
               status: toolOutput.status === "completed" ? "success" : "error",
               output,
@@ -359,13 +359,13 @@ export function convertToV1FromResponses(
               queries: _isArray(toolOutput.queries) ? toolOutput.queries : [],
             },
           };
-          // Emit a server_tool_call_result when results are available
+          // Emit a server_tool_result when results are available
           if (
             toolOutput.status === "completed" ||
             toolOutput.status === "failed"
           ) {
             yield {
-              type: "server_tool_call_result",
+              type: "server_tool_result",
               toolCallId: _isString(toolOutput.id) ? toolOutput.id : "",
               status: toolOutput.status === "completed" ? "success" : "error",
               output: _isArray(toolOutput.results)
@@ -398,7 +398,7 @@ export function convertToV1FromResponses(
             for (const output of toolOutput.outputs) {
               if (_isContentBlock(output, "logs")) {
                 yield {
-                  type: "server_tool_call_result",
+                  type: "server_tool_result",
                   toolCallId: toolOutput.id ?? "",
                   status: "success",
                   output: {
@@ -469,7 +469,7 @@ export function convertToV1FromResponses(
             toolSearchOutputExtras.execution = toolOutput.execution;
           }
           yield {
-            type: "server_tool_call_result",
+            type: "server_tool_result",
             toolCallId: _isString(toolOutput.id) ? toolOutput.id : "",
             status:
               toolOutput.status === "completed"
