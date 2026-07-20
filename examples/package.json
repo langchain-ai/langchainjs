@@ -78,7 +78,7 @@
     "graphql": "^16.14.1",
     "hdb": "^2.27.1",
     "ioredis": "^5.11.0",
-    "js-yaml": "^5.1.0",
+    "js-yaml": "^5.2.1",
     "langchain": "workspace:*",
     "lorem-ipsum": "^3.0.0",
     "lunary": "^0.8.8",
