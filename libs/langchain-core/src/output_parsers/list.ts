@@ -42,7 +42,11 @@ export abstract class ListOutputParser extends BaseTransformOutputParser<
           // if there are multiple matches, yield all but the last one
           for (const match of matches.slice(0, -1)) {
             yield [match[1]];
-            doneIdx += (match.index ?? 0) + match[0].length;
+            // `match.index` is an absolute offset into `buffer`, so track the
+            // end of the last yielded match directly rather than accumulating
+            // (accumulating overshoots once >1 match is yielded and drops the
+            // buffered text for an item straddling a chunk boundary).
+            doneIdx = (match.index ?? 0) + match[0].length;
           }
           // keep the last match in the buffer
           buffer = buffer.slice(doneIdx);
