@@ -72,6 +72,7 @@ export const authenticateAndSetInstance = ({
       serviceUrl,
       authenticator: new IamAuthenticator({
         apikey: watsonxAIApikey,
+        url: watsonxAIUrl
       }),
     });
   } else if (watsonxAIAuthType === "bearertoken" && watsonxAIBearerToken) {
