@@ -629,6 +629,7 @@ function convertAIMessageToConverseMessage(msg: AIMessage): Bedrock.Message {
         });
       } else if (block.type === "invalid_tool_call") {
         // Match v1 conversion: invalid tool calls cannot be replayed.
+        return;
       } else {
         const blockValues = Object.fromEntries(
           Object.entries(block).filter(([key]) => key !== "type")
