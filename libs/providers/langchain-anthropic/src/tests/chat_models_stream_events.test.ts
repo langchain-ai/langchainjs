@@ -299,6 +299,29 @@ describe("ChatAnthropic._streamChatModelEvents (native)", () => {
       ).toBe(25);
     });
 
+    test("streaming invoke preserves message_start model in response metadata", async () => {
+      const model = new MockStreamChatAnthropic(textOnlyEvents());
+      model.streaming = true;
+
+      const message = await model.invoke([new HumanMessage("hello")]);
+
+      expect(message.response_metadata).toMatchObject({
+        model_provider: "anthropic",
+        model: "claude-sonnet-4-20250514",
+        usage: {},
+      });
+      expect(message.additional_kwargs).toMatchObject({
+        model: "claude-sonnet-4-20250514",
+        stop_reason: "end_turn",
+        stop_sequence: null,
+      });
+      expect(message.usage_metadata).toMatchObject({
+        input_tokens: 25,
+        output_tokens: 2,
+        total_tokens: 27,
+      });
+    });
+
     test("text deltas accumulate correctly", async () => {
       const model = new MockStreamChatAnthropic(textOnlyEvents());
       const events: ChatModelStreamEvent[] = [];
