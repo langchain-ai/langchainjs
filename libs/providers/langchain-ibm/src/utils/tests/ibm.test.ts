@@ -37,9 +37,9 @@ describe("Utils tests", () => {
         ...fakeAuthProp,
         watsonxAIUrl: privateIamUrl,
       });
-      expect(instance).toBeDefined()
-      const auth = instance?.['authenticator'] as IamAuthenticator;
-      const tokenManagerUrl = auth['tokenManager']['url'];
+      expect(instance).toBeDefined();
+      const auth = instance?.["authenticator"] as IamAuthenticator;
+      const tokenManagerUrl = auth["tokenManager"]["url"];
       expect(tokenManagerUrl).toBe(privateIamUrl);
     });
 
@@ -49,8 +49,8 @@ describe("Utils tests", () => {
         serviceUrl,
         ...fakeAuthProp,
       })!;
-      const auth = instance?.['authenticator'] as IamAuthenticator;
-      const tokenManagerUrl = auth['tokenManager']['url'];
+      const auth = instance?.["authenticator"] as IamAuthenticator;
+      const tokenManagerUrl = auth["tokenManager"]["url"];
       expect(tokenManagerUrl).toBe("https://iam.cloud.ibm.com");
     });
 
