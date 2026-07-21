@@ -627,6 +627,8 @@ function convertAIMessageToConverseMessage(msg: AIMessage): Bedrock.Message {
             input: block.args,
           },
         });
+      } else if (block.type === "invalid_tool_call") {
+        // Match v1 conversion: invalid tool calls cannot be replayed.
       } else {
         const blockValues = Object.fromEntries(
           Object.entries(block).filter(([key]) => key !== "type")
