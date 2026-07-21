@@ -1,7 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi } from "vitest";
 import { ChatCompletionMessage } from "openai/resources";
-import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
+import {
+  AIMessage,
+  AIMessageChunk,
+  HumanMessage,
+} from "@langchain/core/messages";
 import {
   completionsApiContentBlockConverter,
   convertCompletionsDeltaToBaseMessageChunk,
@@ -252,6 +256,44 @@ describe("convertCompletionsMessageToBaseMessage", () => {
   });
 
   describe("convertMessagesToCompletionsMessageParams", () => {
+    it("preserves prompt cache breakpoints and drops other extras", () => {
+      const message = new HumanMessage({
+        content: [
+          {
+            type: "text",
+            text: "Stable prefix",
+            extras: {
+              prompt_cache_breakpoint: { mode: "explicit" },
+              unsupported: true,
+            },
+          },
+          {
+            type: "image",
+            source_type: "url",
+            url: "https://example.com/image.png",
+            extras: { prompt_cache_breakpoint: null },
+          },
+        ],
+      });
+
+      const result = convertMessagesToCompletionsMessageParams({
+        messages: [message],
+      });
+
+      expect(result[0].content).toEqual([
+        {
+          type: "text",
+          text: "Stable prefix",
+          prompt_cache_breakpoint: { mode: "explicit" },
+        },
+        {
+          type: "image_url",
+          image_url: { url: "https://example.com/image.png" },
+          prompt_cache_breakpoint: null,
+        },
+      ]);
+    });
+
     it("should preserve AIMessage content when tool_calls are present", () => {
       const message = new AIMessage({
         content:
