@@ -49,6 +49,7 @@ describe("Utils tests", () => {
         serviceUrl,
         ...fakeAuthProp,
       })!;
+      expect(instance).toBeDefined();
       const auth = instance?.["authenticator"] as IamAuthenticator;
       const tokenManagerUrl = auth["tokenManager"]["url"];
       expect(tokenManagerUrl).toBe("https://iam.cloud.ibm.com");
