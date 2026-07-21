@@ -932,6 +932,82 @@ describe("reasoning content replay", () => {
   });
 });
 
+describe("unstamped tool call content replay", () => {
+  const createToolCallContent = () => [
+    { type: "text", text: "before" },
+    {
+      type: "tool_call",
+      id: "tool-call-1",
+      name: "write_file",
+      args: { file_path: "/tmp/example.txt" },
+    },
+    { type: "text", text: "\n  " },
+    { type: "text", text: "after" },
+  ];
+  const expectedContent = [
+    { text: "before" },
+    {
+      toolUse: {
+        toolUseId: "tool-call-1",
+        name: "write_file",
+        input: { file_path: "/tmp/example.txt" },
+      },
+    },
+    { text: "after" },
+  ];
+
+  it("converts standard tool calls without output version metadata", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({ content: createToolCallContent() }),
+    ]);
+
+    expect(result.converseMessages).toEqual([
+      { role: "assistant", content: expectedContent },
+    ]);
+  });
+
+  it("deduplicates only matching tool calls", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: createToolCallContent(),
+        tool_calls: [
+          {
+            id: "tool-call-1",
+            name: "write_file",
+            args: { file_path: "/tmp/example.txt" },
+          },
+          {
+            id: "tool-call-1",
+            name: "read_file",
+            args: { file_path: "/tmp/example.txt" },
+          },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      ...expectedContent,
+      {
+        toolUse: {
+          toolUseId: "tool-call-1",
+          name: "read_file",
+          input: { file_path: "/tmp/example.txt" },
+        },
+      },
+    ]);
+  });
+
+  it("keeps text-only assistant content unchanged", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({ content: [{ type: "text", text: "hello" }] }),
+    ]);
+
+    expect(result.converseMessages).toEqual([
+      { role: "assistant", content: [{ text: "hello" }] },
+    ]);
+  });
+});
+
 test("Streaming supports empty string chunks", async () => {
   const contentBlocks = [
     {
