@@ -1006,6 +1006,27 @@ describe("unstamped tool call content replay", () => {
       { role: "assistant", content: [{ text: "hello" }] },
     ]);
   });
+
+  it("skips invalid tool calls without output version metadata", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          { type: "text", text: "before" },
+          {
+            type: "invalid_tool_call",
+            id: "tool-call-1",
+            name: "write_file",
+            args: '{"file_path":',
+            error: "Failed to parse tool call arguments as JSON",
+          },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages).toEqual([
+      { role: "assistant", content: [{ text: "before" }] },
+    ]);
+  });
 });
 
 test("Streaming supports empty string chunks", async () => {
