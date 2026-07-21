@@ -119,6 +119,20 @@ const allModelInfo: ModelInfo[] = [
     },
   },
   {
+    model: "gemini-3.5-flash-lite",
+    testConfig: {
+      isThinking: true,
+      only: true,
+    },
+  },
+  {
+    model: "gemini-3.6-flash",
+    testConfig: {
+      isThinking: true,
+      only: true,
+    },
+  },
+  {
     model: "gemini-2.5-flash-image",
     testConfig: {
       isImage: true,
@@ -776,7 +790,7 @@ describe.each(coreModelInfo)(
         urlContext: {},
       };
       const llm: Runnable = newChatGoogle().bindTools([urlTool]);
-      const url = "https://js.langchain.com/";
+      const url = "https://docs.langchain.com/oss/javascript/langchain/overview";
       const prompt = `Summarize this web page: ${url}`;
       const result = await llm.invoke(prompt);
       const meta = result.response_metadata;
