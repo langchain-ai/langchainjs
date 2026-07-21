@@ -38,7 +38,10 @@ import {
   messageToOpenAIRole,
 } from "../utils/misc.js";
 import { Converter } from "@langchain/core/utils/format";
-import { completionsApiContentBlockConverter } from "./completions.js";
+import {
+  applyPromptCacheBreakpoint,
+  completionsApiContentBlockConverter,
+} from "./completions.js";
 
 const _FUNCTION_CALL_IDS_MAP_KEY = "__openai_function_call_ids__";
 const _CUSTOM_TOOL_CALL_IDS_MAP_KEY = "__openai_custom_tool_call_ids__";
@@ -263,7 +266,10 @@ export const convertResponsesUsageToUsageMetadata: Converter<
 > = (usage) => {
   const inputTokenDetails = {
     ...(usage?.input_tokens_details?.cached_tokens != null && {
-      cache_read: usage?.input_tokens_details?.cached_tokens,
+      cache_read: usage.input_tokens_details.cached_tokens,
+    }),
+    ...(usage?.input_tokens_details?.cache_write_tokens != null && {
+      cache_creation: usage.input_tokens_details.cache_write_tokens,
     }),
   };
   const outputTokenDetails = {
@@ -1684,38 +1690,41 @@ export const convertMessagesToResponsesInput: Converter<
             if (item.type === "file") {
               const filename = getFilenameFromMetadata(item);
               if (item.source_type === "url") {
-                return {
+                return applyPromptCacheBreakpoint(item, {
                   type: "input_file",
                   file_url: item.url,
                   ...(filename ? { filename } : {}),
-                };
+                });
               }
               if (item.source_type === "id") {
-                return {
+                return applyPromptCacheBreakpoint(item, {
                   type: "input_file",
                   file_id: item.id,
                   ...(filename ? { filename } : {}),
-                };
+                });
               }
               if (item.source_type === "base64") {
                 const mimeType = item.mime_type ?? "";
-                return {
+                return applyPromptCacheBreakpoint(item, {
                   type: "input_file",
                   file_data: `data:${mimeType};base64,${item.data}`,
                   filename: getRequiredFilenameFromMetadata(item),
-                };
+                });
               }
             }
-            return convertToProviderContentBlock(
+            return applyPromptCacheBreakpoint(
               item,
-              completionsApiContentBlockConverter
+              convertToProviderContentBlock(
+                item,
+                completionsApiContentBlockConverter
+              )
             );
           }
           if (item.type === "text") {
-            return {
+            return applyPromptCacheBreakpoint(item, {
               type: "input_text",
               text: item.text,
-            };
+            });
           }
           if (item.type === "image_url") {
             const imageUrl = iife(() => {
@@ -1742,11 +1751,11 @@ export const convertMessagesToResponsesInput: Converter<
               }
               return undefined;
             });
-            return {
+            return applyPromptCacheBreakpoint(item, {
               type: "input_image",
               image_url: imageUrl,
               detail,
-            };
+            });
           }
           if (
             item.type === "input_text" ||

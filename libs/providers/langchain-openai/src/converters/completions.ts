@@ -40,6 +40,30 @@ import {
   messageToOpenAIRole,
 } from "../utils/misc.js";
 
+export function applyPromptCacheBreakpoint<T extends object>(
+  source: Record<string, unknown>,
+  target: T
+): T {
+  const extras = source.extras;
+  if ("prompt_cache_breakpoint" in source) {
+    return {
+      ...target,
+      prompt_cache_breakpoint: source.prompt_cache_breakpoint,
+    };
+  }
+  if (
+    typeof extras === "object" &&
+    extras !== null &&
+    "prompt_cache_breakpoint" in extras
+  ) {
+    return {
+      ...target,
+      prompt_cache_breakpoint: extras.prompt_cache_breakpoint,
+    };
+  }
+  return target;
+}
+
 /**
  * @deprecated This converter is an internal detail of the OpenAI provider. Do not use it directly. This will be revisited in a future release.
  */
@@ -802,10 +826,19 @@ export const convertMessagesToCompletionsMessageParams: Converter<
         ? message.content
         : message.content.flatMap((m) => {
             if (isDataContentBlock(m)) {
-              return convertToProviderContentBlock(
+              return applyPromptCacheBreakpoint(
                 m,
-                completionsApiContentBlockConverter
+                convertToProviderContentBlock(
+                  m,
+                  completionsApiContentBlockConverter
+                )
               );
+            }
+            if (m.type === "text") {
+              return applyPromptCacheBreakpoint(m, {
+                type: "text",
+                text: m.text,
+              });
             }
             // Drop content blocks the Chat Completions API rejects as input:
             //  - Tool-call blocks (`tool_use`, `tool_call`) are already
