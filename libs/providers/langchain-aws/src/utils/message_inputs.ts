@@ -598,11 +598,9 @@ function convertAIMessageToConverseMessage(msg: AIMessage): Bedrock.Message {
         // Merge whitespace/newlines with previous text blocks to avoid validation errors.
         const cleanedText = block.text?.replace(/\n/g, "").trim();
         if (cleanedText === "") {
-          if (contentBlocks.length > 0) {
-            const mergedTextContent = `${
-              contentBlocks[contentBlocks.length - 1].text
-            }${block.text}`;
-            contentBlocks[contentBlocks.length - 1].text = mergedTextContent;
+          const previousBlock = contentBlocks[contentBlocks.length - 1];
+          if (previousBlock?.text !== undefined) {
+            previousBlock.text = `${previousBlock.text}${block.text}`;
           }
         } else {
           contentBlocks.push({
@@ -620,6 +618,18 @@ function convertAIMessageToConverseMessage(msg: AIMessage): Bedrock.Message {
         }
       } else if (isDefaultCachePoint(block)) {
         contentBlocks.push(convertCachePointBlock(block));
+      } else if (block.type === "tool_call") {
+        // Handle v1 tool call blocks whose output version metadata was lost.
+        contentBlocks.push({
+          toolUse: {
+            toolUseId: block.id,
+            name: block.name,
+            input: block.args,
+          },
+        });
+      } else if (block.type === "invalid_tool_call") {
+        // Match v1 conversion: invalid tool calls cannot be replayed.
+        return;
       } else {
         const blockValues = Object.fromEntries(
           Object.entries(block).filter(([key]) => key !== "type")
@@ -642,13 +652,24 @@ function convertAIMessageToConverseMessage(msg: AIMessage): Bedrock.Message {
   if (msg.tool_calls && msg.tool_calls.length) {
     assistantMsg.content = [
       ...(assistantMsg.content ? assistantMsg.content : []),
-      ...msg.tool_calls.map((tc) => ({
-        toolUse: {
-          toolUseId: tc.id,
-          name: tc.name,
-          input: tc.args,
-        },
-      })),
+      ...msg.tool_calls
+        .filter(
+          (tc) =>
+            !Array.isArray(msg.content) ||
+            !msg.content.some(
+              (block) =>
+                block.type === "tool_call" &&
+                block.id === tc.id &&
+                block.name === tc.name
+            )
+        )
+        .map((tc) => ({
+          toolUse: {
+            toolUseId: tc.id,
+            name: tc.name,
+            input: tc.args,
+          },
+        })),
     ];
   }
 
