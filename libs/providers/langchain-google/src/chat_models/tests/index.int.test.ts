@@ -790,7 +790,8 @@ describe.each(coreModelInfo)(
         urlContext: {},
       };
       const llm: Runnable = newChatGoogle().bindTools([urlTool]);
-      const url = "https://docs.langchain.com/oss/javascript/langchain/overview";
+      const url =
+        "https://docs.langchain.com/oss/javascript/langchain/overview";
       const prompt = `Summarize this web page: ${url}`;
       const result = await llm.invoke(prompt);
       const meta = result.response_metadata;
