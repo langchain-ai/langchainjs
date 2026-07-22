@@ -59,6 +59,7 @@ export function createAuthenticator({
       if (apiKey) {
         return new IamAuthenticator({
           apikey: apiKey,
+          url: authUrl,
         });
       }
       throw new Error("ApiKey is required for IAM auth");

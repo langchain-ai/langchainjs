@@ -44,6 +44,32 @@ describe("Utils tests", () => {
       expect(instance).toBeInstanceOf(Gateway);
     });
 
+    test("authenticateAndSetInstance IAM forwards watsonxAIUrl to IamAuthenticator", () => {
+      const privateIamUrl = "https://private.iam.cloud.ibm.com";
+      const instance = initWatsonxOrGatewayInstance({
+        version: "2024-05-31",
+        serviceUrl,
+        ...fakeAuthProp,
+        watsonxAIUrl: privateIamUrl,
+      });
+      expect(instance).toBeDefined();
+      const auth = instance?.["authenticator"] as IamAuthenticator;
+      const tokenManagerUrl = auth["tokenManager"]["url"];
+      expect(tokenManagerUrl).toBe(privateIamUrl);
+    });
+
+    test("authenticateAndSetInstance IAM uses default IAM URL when watsonxAIUrl is absent", () => {
+      const instance = initWatsonxOrGatewayInstance({
+        version: "2024-05-31",
+        serviceUrl,
+        ...fakeAuthProp,
+      })!;
+      expect(instance).toBeDefined();
+      const auth = instance?.["authenticator"] as IamAuthenticator;
+      const tokenManagerUrl = auth["tokenManager"]["url"];
+      expect(tokenManagerUrl).toBe("https://iam.cloud.ibm.com");
+    });
+
     test("initWatsonxOrGatewayInstance with bearer token", () => {
       const instance = initWatsonxOrGatewayInstance({
         version: "2024-05-31",
