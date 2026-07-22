@@ -43,6 +43,7 @@ export function _makeMessageChunkFromAnthropicEvent(
         usage_metadata: fields.streamUsage ? usageMetadata : undefined,
         response_metadata: {
           ...response_metadata,
+          model: data.message.model,
           usage: {
             ...rest,
           },
