@@ -1,7 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { Server } from "node:http";
 import { join } from "node:path";
-import type { OAuthClientProvider, OAuthTokens } from "@modelcontextprotocol/client";
+import type {
+  OAuthClientProvider,
+  OAuthTokens,
+} from "@modelcontextprotocol/client";
 import type { ContentBlock } from "@langchain/core/messages";
 import type { ToolCall } from "@langchain/core/messages";
 import type { StructuredToolInterface } from "@langchain/core/tools";

@@ -5,6 +5,13 @@ import { vi } from "vitest";
 // separate subpaths (client/index.js, client/sse.js, client/streamableHttp.js); v2
 // re-exports them all from the package root, so their mocks are colocated here.
 
+// SdkHttpError is only `instanceof`-narrowed in src/client.ts — re-export the
+// real class so error identity matches production.
+const actual = await vi.importActual<
+  typeof import("@modelcontextprotocol/client")
+>("@modelcontextprotocol/client");
+export const SdkHttpError = actual.SdkHttpError;
+
 const clientPrototype = {
   connect: vi.fn().mockReturnValue(Promise.resolve()),
   setNotificationHandler: vi.fn().mockReturnValue(Promise.resolve()),

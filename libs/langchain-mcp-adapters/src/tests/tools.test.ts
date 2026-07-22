@@ -1,5 +1,10 @@
 import { describe, test, expect, beforeEach, vi, MockedObject } from "vitest";
-import type { Client, EmbeddedResource, ImageContent, TextContent } from "@modelcontextprotocol/client";
+import type {
+  Client,
+  EmbeddedResource,
+  ImageContent,
+  TextContent,
+} from "@modelcontextprotocol/client";
 import {
   StructuredTool,
   ToolInputParsingException,
@@ -12,11 +17,13 @@ import type {
 
 import { loadMcpTools } from "../tools.js";
 
-vi.mock("@modelcontextprotocol/client", () =>
-  import("./__mocks__/@modelcontextprotocol/client.js")
+vi.mock(
+  "@modelcontextprotocol/client",
+  () => import("./__mocks__/@modelcontextprotocol/client.js")
 );
-vi.mock("@modelcontextprotocol/client/stdio", () =>
-  import("./__mocks__/@modelcontextprotocol/client/stdio.js")
+vi.mock(
+  "@modelcontextprotocol/client/stdio",
+  () => import("./__mocks__/@modelcontextprotocol/client/stdio.js")
 );
 
 // Create a mock client
