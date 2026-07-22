@@ -9,14 +9,20 @@ import {
 } from "vitest";
 import { ZodError } from "zod/v3";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
-import { Client, SSEClientTransport, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
+import {
+  Client,
+  SSEClientTransport,
+  StreamableHTTPClientTransport,
+} from "@modelcontextprotocol/client";
 import { MultiServerMCPClient, MCPClientError } from "../client.js";
 
-vi.mock("@modelcontextprotocol/client", () =>
-  import("./__mocks__/@modelcontextprotocol/client.js")
+vi.mock(
+  "@modelcontextprotocol/client",
+  () => import("./__mocks__/@modelcontextprotocol/client.js")
 );
-vi.mock("@modelcontextprotocol/client/stdio", () =>
-  import("./__mocks__/@modelcontextprotocol/client/stdio.js")
+vi.mock(
+  "@modelcontextprotocol/client/stdio",
+  () => import("./__mocks__/@modelcontextprotocol/client/stdio.js")
 );
 
 describe("MultiServerMCPClient", () => {

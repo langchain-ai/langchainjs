@@ -1,6 +1,15 @@
 import { z, ZodError as ZodErrorV4 } from "zod/v4";
 import { ZodError as ZodErrorV3 } from "zod/v3";
-import type { CallToolResult, ContentBlock as MCPContentBlock, Client as MCPClient, EmbeddedResource, ReadResourceResult, Tool as MCPTool, ListToolsResult, RequestOptions } from "@modelcontextprotocol/client";
+import type {
+  CallToolResult,
+  ContentBlock as MCPContentBlock,
+  Client as MCPClient,
+  EmbeddedResource,
+  ReadResourceResult,
+  Tool as MCPTool,
+  ListToolsResult,
+  RequestOptions,
+} from "@modelcontextprotocol/client";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import type { ContentBlock } from "@langchain/core/messages";
 import { RunnableConfig } from "@langchain/core/runnables";
@@ -1057,6 +1066,7 @@ async function _callTool({
         ? await (client as Client).fork(headers)
         : client;
 
+    // v2 callTool(params, options?) — no result-schema argument in between.
     const callToolArgs: Parameters<typeof finalClient.callTool> = [
       {
         name: toolName,
@@ -1065,7 +1075,6 @@ async function _callTool({
     ];
 
     if (Object.keys(requestOptions).length > 0) {
-      callToolArgs.push(undefined); // optional output schema arg
       callToolArgs.push(requestOptions);
     }
 

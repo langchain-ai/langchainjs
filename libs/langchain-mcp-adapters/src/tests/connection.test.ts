@@ -1,13 +1,19 @@
 import { describe, test, expect, beforeEach, vi, type Mock } from "vitest";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
-import { Client as SDKClient, SSEClientTransport, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
+import {
+  Client as SDKClient,
+  SSEClientTransport,
+  StreamableHTTPClientTransport,
+} from "@modelcontextprotocol/client";
 import { ConnectionManager, type Client } from "../connection.js";
 
-vi.mock("@modelcontextprotocol/client", () =>
-  import("./__mocks__/@modelcontextprotocol/client.js")
+vi.mock(
+  "@modelcontextprotocol/client",
+  () => import("./__mocks__/@modelcontextprotocol/client.js")
 );
-vi.mock("@modelcontextprotocol/client/stdio", () =>
-  import("./__mocks__/@modelcontextprotocol/client/stdio.js")
+vi.mock(
+  "@modelcontextprotocol/client/stdio",
+  () => import("./__mocks__/@modelcontextprotocol/client/stdio.js")
 );
 
 describe("ConnectionManager", () => {
