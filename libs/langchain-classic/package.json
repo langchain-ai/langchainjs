@@ -1,6 +1,6 @@
 {
   "name": "@langchain/classic",
-  "version": "1.0.38",
+  "version": "1.0.40",
   "description": "Old abstractions from LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -104,7 +104,7 @@
     "test:integration": "vitest --mode int"
   },
   "devDependencies": {
-    "@aws-sdk/dsql-signer": "^3.1059.0",
+    "@aws-sdk/dsql-signer": "^3.1078.0",
     "@azure/identity": "^4.12.0",
     "@browserbasehq/stagehand": "^1.3.0",
     "@clickhouse/client": "^0.2.5",

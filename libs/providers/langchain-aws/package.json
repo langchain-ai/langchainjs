@@ -1,6 +1,6 @@
 {
   "name": "@langchain/aws",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "LangChain AWS integration",
   "author": "LangChain",
   "license": "MIT",
@@ -24,19 +24,19 @@
     "test:standard:int": "vitest run --mode standard-int"
   },
   "dependencies": {
-    "@aws-sdk/client-bedrock-agent-runtime": "^3.1059.0",
-    "@aws-sdk/client-bedrock-runtime": "^3.1059.0",
-    "@aws-sdk/client-kendra": "^3.1059.0",
-    "@aws-sdk/credential-provider-node": "^3.972.49"
+    "@aws-sdk/client-bedrock-agent-runtime": "^3.1078.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.1078.0",
+    "@aws-sdk/client-kendra": "^3.1078.0",
+    "@aws-sdk/credential-provider-node": "^3.972.61"
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0"
   },
   "devDependencies": {
-    "@aws-sdk/types": "^3.973.10",
+    "@aws-sdk/types": "^3.973.15",
     "@langchain/core": "workspace:^",
     "@langchain/standard-tests": "workspace:*",
-    "@smithy/types": "^4.14.3",
+    "@smithy/types": "^4.15.1",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
     "@vitest/coverage-v8": "^4.1.9",
