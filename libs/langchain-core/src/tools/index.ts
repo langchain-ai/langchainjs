@@ -310,13 +310,20 @@ export abstract class StructuredTool<
       const call = () => this._call(parsed, runManager, config);
       const raw = await (runManager ? runManager.withRunContext(call) : call());
       result = isAsyncGenerator(raw)
-        ? await consumeAsyncGenerator(raw, async (chunk) => {
-            try {
-              await runManager?.handleToolEvent(chunk);
-            } catch (streamError) {
-              await runManager?.handleToolError(streamError);
+        ? await consumeAsyncGenerator(
+            runManager
+              ? runManager
+                  .withRunContextAsyncIterable(raw)
+                  [Symbol.asyncIterator]()
+              : raw,
+            async (chunk) => {
+              try {
+                await runManager?.handleToolEvent(chunk);
+              } catch (streamError) {
+                await runManager?.handleToolError(streamError);
+              }
             }
-          })
+          )
         : raw;
     } catch (e) {
       await runManager?.handleToolError(e);

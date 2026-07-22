@@ -891,3 +891,40 @@ test("wrapRunExecution wraps the tool call body", async () => {
   expect(contextWasActiveDuringCall).toBe(true);
   expect(contextIsActive).toBe(false);
 });
+
+test("wrapRunExecution wraps every async generator tool step", async () => {
+  let contextIsActive = false;
+  const contextDuringGenerator: boolean[] = [];
+
+  class ContextHandler extends BaseCallbackHandler {
+    name = "generator-context-handler";
+
+    wrapRunExecution<T>(_runId: string, fn: () => T): T {
+      contextIsActive = true;
+      try {
+        return fn();
+      } finally {
+        contextIsActive = false;
+      }
+    }
+  }
+
+  const generatorTool = tool(
+    async function* () {
+      contextDuringGenerator.push(contextIsActive);
+      yield "partial";
+      contextDuringGenerator.push(contextIsActive);
+      return "done";
+    },
+    {
+      name: "generator_context_probe",
+      description: "Checks lazy generator execution context propagation",
+      schema: z.object({}),
+    }
+  );
+
+  await generatorTool.invoke({}, { callbacks: [new ContextHandler()] });
+
+  expect(contextDuringGenerator).toEqual([true, true]);
+  expect(contextIsActive).toBe(false);
+});
