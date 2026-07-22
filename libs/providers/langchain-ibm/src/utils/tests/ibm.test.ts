@@ -1,6 +1,6 @@
 import { WatsonXAI } from "@ibm-cloud/watsonx-ai";
 import { Gateway } from "@ibm-cloud/watsonx-ai/gateway";
-import { Authenticator, IamAuthenticator } from "ibm-cloud-sdk-core";
+import { IamAuthenticator } from "ibm-cloud-sdk-core";
 import { describe, test, expect } from "vitest";
 import {
   authenticateAndSetInstance,
