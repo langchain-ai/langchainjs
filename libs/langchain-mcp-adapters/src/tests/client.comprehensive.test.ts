@@ -1,17 +1,23 @@
 import { vi, describe, test, expect, beforeEach, type Mock } from "vitest";
 import { ZodError } from "zod/v3";
-import { SSEClientTransport, StreamableHTTPClientTransport, Client } from "@modelcontextprotocol/client";
+import {
+  SSEClientTransport,
+  StreamableHTTPClientTransport,
+  Client,
+} from "@modelcontextprotocol/client";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 
 // Import modules after mocking
 import type { Connection } from "../types.js";
 import { MultiServerMCPClient, MCPClientError } from "../client.js";
 
-vi.mock("@modelcontextprotocol/client", () =>
-  import("./__mocks__/@modelcontextprotocol/client.js")
+vi.mock(
+  "@modelcontextprotocol/client",
+  () => import("./__mocks__/@modelcontextprotocol/client.js")
 );
-vi.mock("@modelcontextprotocol/client/stdio", () =>
-  import("./__mocks__/@modelcontextprotocol/client/stdio.js")
+vi.mock(
+  "@modelcontextprotocol/client/stdio",
+  () => import("./__mocks__/@modelcontextprotocol/client/stdio.js")
 );
 
 beforeEach(() => {

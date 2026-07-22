@@ -1,6 +1,15 @@
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
-import { SSEClientTransport, SSEClientTransportOptions, StreamableHTTPClientTransport, Client as MCPClient } from "@modelcontextprotocol/client";
-import type { OAuthClientProvider, StreamableHTTPClientTransportOptions, StreamableHTTPReconnectionOptions } from "@modelcontextprotocol/client";
+import {
+  SSEClientTransport,
+  SSEClientTransportOptions,
+  StreamableHTTPClientTransport,
+  Client as MCPClient,
+} from "@modelcontextprotocol/client";
+import type {
+  OAuthClientProvider,
+  StreamableHTTPClientTransportOptions,
+  StreamableHTTPReconnectionOptions,
+} from "@modelcontextprotocol/client";
 import { getDebugLog } from "./logging.js";
 import type {
   ResolvedStreamableHTTPConnection,
@@ -111,7 +120,7 @@ export class ConnectionManager {
 
     if (this.#hooks.onMessage) {
       mcpClient.setNotificationHandler(
-        'notifications/message',
+        "notifications/message",
         (notification) =>
           this.#hooks.onMessage?.(notification.params, {
             server: serverName,
@@ -121,7 +130,7 @@ export class ConnectionManager {
     }
 
     if (this.#hooks.onInitialized) {
-      mcpClient.setNotificationHandler('notifications/initialized', () =>
+      mcpClient.setNotificationHandler("notifications/initialized", () =>
         this.#hooks.onInitialized?.({
           server: serverName,
           options,
@@ -131,7 +140,7 @@ export class ConnectionManager {
 
     if (this.#hooks.onCancelled) {
       mcpClient.setNotificationHandler(
-        'notifications/cancelled',
+        "notifications/cancelled",
         (notification) => {
           const { requestId, reason } = notification.params;
 
@@ -158,7 +167,7 @@ export class ConnectionManager {
 
     if (this.#hooks.onPromptsListChanged) {
       mcpClient.setNotificationHandler(
-        'notifications/prompts/list_changed',
+        "notifications/prompts/list_changed",
         () =>
           this.#hooks.onPromptsListChanged?.({
             server: serverName,
@@ -169,7 +178,7 @@ export class ConnectionManager {
 
     if (this.#hooks.onResourcesListChanged) {
       mcpClient.setNotificationHandler(
-        'notifications/resources/list_changed',
+        "notifications/resources/list_changed",
         () =>
           this.#hooks.onResourcesListChanged?.({
             server: serverName,
@@ -180,7 +189,7 @@ export class ConnectionManager {
 
     if (this.#hooks.onResourcesUpdated) {
       mcpClient.setNotificationHandler(
-        'notifications/resources/updated',
+        "notifications/resources/updated",
         (notification) =>
           this.#hooks.onResourcesUpdated?.(notification.params, {
             server: serverName,
@@ -190,7 +199,7 @@ export class ConnectionManager {
     }
 
     if (this.#hooks.onRootsListChanged) {
-      mcpClient.setNotificationHandler('notifications/roots/list_changed', () =>
+      mcpClient.setNotificationHandler("notifications/roots/list_changed", () =>
         this.#hooks.onRootsListChanged?.({
           server: serverName,
           options,
@@ -199,7 +208,7 @@ export class ConnectionManager {
     }
 
     if (this.#hooks.onToolsListChanged) {
-      mcpClient.setNotificationHandler('notifications/tools/list_changed', () =>
+      mcpClient.setNotificationHandler("notifications/tools/list_changed", () =>
         this.#hooks.onToolsListChanged?.({
           server: serverName,
           options,
