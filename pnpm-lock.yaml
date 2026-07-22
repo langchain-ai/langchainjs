@@ -1044,15 +1044,6 @@ importers:
       '@modelcontextprotocol/client':
         specifier: 2.0.0-beta.2
         version: 2.0.0-beta.2
-      '@modelcontextprotocol/node':
-        specifier: 2.0.0-beta.2
-        version: 2.0.0-beta.2(@modelcontextprotocol/server@2.0.0-beta.2)(hono@4.12.27)
-      '@modelcontextprotocol/server':
-        specifier: 2.0.0-beta.2
-        version: 2.0.0-beta.2
-      '@modelcontextprotocol/server-legacy':
-        specifier: 2.0.0-beta.2
-        version: 2.0.0-beta.2(express@5.2.1)
       debug:
         specifier: ^4.4.3
         version: 4.4.3
@@ -1072,6 +1063,15 @@ importers:
       '@langchain/tsconfig':
         specifier: workspace:*
         version: link:../../internal/tsconfig
+      '@modelcontextprotocol/node':
+        specifier: 2.0.0-beta.2
+        version: 2.0.0-beta.2(@modelcontextprotocol/server@2.0.0-beta.2)(hono@4.12.27)
+      '@modelcontextprotocol/server':
+        specifier: 2.0.0-beta.2
+        version: 2.0.0-beta.2
+      '@modelcontextprotocol/server-legacy':
+        specifier: 2.0.0-beta.2
+        version: 2.0.0-beta.2(express@5.2.1)
       '@tsconfig/recommended':
         specifier: ^1.0.10
         version: 1.0.13
@@ -4172,6 +4172,7 @@ packages:
 
   '@layerup/layerup-security@1.6.0':
     resolution: {integrity: sha512-HSBZobDxgi0aHrEoN49RwLSbv60614upoE+noAR/nlysp8K1H1mu9EBw2cY5YTk6XbmEqEjddu9dMPb71NABMA==}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   '@loaderkit/resolve@1.0.6':
     resolution: {integrity: sha512-G8FdIoF5CypfwmD9rl8BXod5HDn8JqB0CCNBXDTaRZ+yRYhARrrSToX1zg1zy9jX3zLqigsELwhT4gNtkdQAUg==}
