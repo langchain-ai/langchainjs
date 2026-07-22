@@ -31,9 +31,9 @@
     "tools"
   ],
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0",
     "debug": "^4.4.3",
-    "zod": "^3.25.76 || ^4"
+    "zod": "^3.25.76 || ^4",
+    "@modelcontextprotocol/client": "2.0.0-beta.2"
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0",
@@ -55,6 +55,9 @@
     "@langchain/langgraph": "^1.4.7",
     "@langchain/openai": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
+    "@modelcontextprotocol/node": "2.0.0-beta.2",
+    "@modelcontextprotocol/server": "2.0.0-beta.2",
+    "@modelcontextprotocol/server-legacy": "2.0.0-beta.2",
     "@tsconfig/recommended": "^1.0.10",
     "@types/debug": "^4.1.13",
     "@types/express": "^5.0.6",

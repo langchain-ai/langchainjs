@@ -8,29 +8,21 @@ import {
   type Mock,
 } from "vitest";
 import { ZodError } from "zod/v3";
-
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
-import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-
+import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
+import {
+  Client,
+  SSEClientTransport,
+  StreamableHTTPClientTransport,
+} from "@modelcontextprotocol/client";
 import { MultiServerMCPClient, MCPClientError } from "../client.js";
 
 vi.mock(
-  "@modelcontextprotocol/sdk/client/index.js",
-  () => import("./__mocks__/@modelcontextprotocol/sdk/client/index.js")
+  "@modelcontextprotocol/client",
+  () => import("./__mocks__/@modelcontextprotocol/client.js")
 );
 vi.mock(
-  "@modelcontextprotocol/sdk/client/stdio.js",
-  () => import("./__mocks__/@modelcontextprotocol/sdk/client/stdio.js")
-);
-vi.mock(
-  "@modelcontextprotocol/sdk/client/sse.js",
-  () => import("./__mocks__/@modelcontextprotocol/sdk/client/sse.js")
-);
-vi.mock(
-  "@modelcontextprotocol/sdk/client/streamableHttp.js",
-  () => import("./__mocks__/@modelcontextprotocol/sdk/client/streamableHttp.js")
+  "@modelcontextprotocol/client/stdio",
+  () => import("./__mocks__/@modelcontextprotocol/client/stdio.js")
 );
 
 describe("MultiServerMCPClient", () => {

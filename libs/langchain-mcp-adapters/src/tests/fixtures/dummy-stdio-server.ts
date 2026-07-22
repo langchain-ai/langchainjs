@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { z } from "zod/v3";
+import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
+import { McpServer } from "@modelcontextprotocol/server";
+import { z } from "zod";
 
 // Get server name from command line arguments
 const serverName = process.argv[2] || "dummy-server";
@@ -13,11 +13,13 @@ const server = new McpServer(
 );
 
 // Add test tools that capture request metadata
-server.tool(
+server.registerTool(
   "test_tool",
-  "A test tool that echoes input and metadata",
-  { input: z.string() },
-  async ({ input }, extra) => {
+  {
+    description: "A test tool that echoes input and metadata",
+    inputSchema: z.object({ input: z.string() }),
+  },
+  async ({ input }, ctx) => {
     // Emit a logging message
     await server.server.notification(
       {
@@ -28,11 +30,11 @@ server.tool(
           timestamp: new Date().toISOString(),
         },
       },
-      { relatedRequestId: extra.requestId }
+      { relatedRequestId: ctx.mcpReq.id }
     );
 
     // Simulate progress updates using progressToken if present
-    const progressToken = extra._meta?.progressToken;
+    const progressToken = ctx.mcpReq._meta?.progressToken;
     if (progressToken !== undefined) {
       const steps = 3;
       for (let i = 1; i <= steps; i++) {
@@ -45,7 +47,7 @@ server.tool(
               progressToken,
             },
           },
-          { relatedRequestId: extra.requestId }
+          { relatedRequestId: ctx.mcpReq.id }
         );
       }
     }
@@ -56,7 +58,7 @@ server.tool(
           type: "text",
           text: JSON.stringify({
             input,
-            meta: extra._meta,
+            meta: ctx.mcpReq._meta,
             serverName,
           }),
         },
@@ -66,10 +68,12 @@ server.tool(
 );
 
 // Add a tool that can check environment variables
-server.tool(
+server.registerTool(
   "check_env",
-  "Check environment variable",
-  { varName: z.string() },
+  {
+    description: "Check environment variable",
+    inputSchema: z.object({ varName: z.string() }),
+  },
   async ({ varName }) => {
     return {
       content: [
