@@ -82,12 +82,13 @@ import {
 } from "@ibm-cloud/watsonx-ai/gateway";
 import { WatsonxAuth, XOR, WatsonxBaseChatParams } from "../types.js";
 import {
-  _convertToolCallIdToMistralCompatible,
-  authenticateAndSetGatewayInstance,
-  authenticateAndSetInstance,
+  PropertyValidator,
   checkRequiredProps,
-  checkValidProps,
   expectOneOf,
+} from "../utils/validation.js";
+import {
+  _convertToolCallIdToMistralCompatible,
+  initWatsonxOrGatewayInstance,
   WatsonxToolsOutputParser,
 } from "../utils/ibm.js";
 
@@ -465,6 +466,10 @@ export class ChatWatsonx<
       watsonxAIUsername: "WATSONX_AI_USERNAME",
       watsonxAIPassword: "WATSONX_AI_PASSWORD",
       watsonxAIUrl: "WATSONX_AI_URL",
+      authUrl: "WATSONX_AI_URL",
+      bearerToken: "WATSONX_AI_BEARER_TOKEN",
+      username: "WATSONX_AI_USERNAME",
+      password: "WATSONX_AI_PASSWORD",
     };
   }
 
@@ -479,6 +484,10 @@ export class ChatWatsonx<
       watsonxAIUsername: "watsonx_ai_username",
       watsonxAIPassword: "watsonx_ai_password",
       watsonxAIUrl: "watsonx_ai_url",
+      authUrl: "watsonx_ai_url",
+      bearerToken: "watsonx_ai_bearer_token",
+      username: "watsonx_ai_username",
+      password: "watsonx_ai_password",
     };
   }
 
@@ -496,112 +505,74 @@ export class ChatWatsonx<
   private checkValidProperties(
     fields: this["ParsedCallOptions"] | ChatWatsonxConstructorInput
   ) {
-    const PROPERTY_GROUPS = {
-      ALWAYS_ALLOWED: [
-        "headers",
-        "signal",
-        "tool_choice",
-        "promptIndex",
-        "ls_structured_output_format",
-        "watsonxCallbacks",
-        "writer",
-        "interrupt",
-      ],
-
-      AUTH: [
-        "serviceUrl",
-        "watsonxAIApikey",
-        "watsonxAIBearerToken",
-        "watsonxAIUsername",
-        "watsonxAIPassword",
-        "watsonxAIUrl",
-        "watsonxAIAuthType",
-        "disableSSL",
-      ],
-
-      SHARED: [
-        "maxRetries",
-        "authenticator",
-        "serviceUrl",
-        "version",
-        "streaming",
-        "callbackManager",
-        "callbacks",
-        "maxConcurrency",
-        "cache",
-        "metadata",
-        "concurrency",
-        "onFailedAttempt",
-        "verbose",
-        "tags",
-        "headers",
-        "disableStreaming",
-        "timeout",
-        "stopSequences",
-      ],
-
-      GATEWAY: [
-        "tools",
-        "frequencyPenalty",
-        "logitBias",
-        "logprobs",
-        "topLogprobs",
-        "maxTokens",
-        "n",
-        "presencePenalty",
-        "responseFormat",
-        "seed",
-        "stop",
-        "temperature",
-        "topP",
-        "model",
-        "modelGatewayKwargs",
-        "modelGateway",
-        "reasoningEffort",
-      ],
-
-      DEPLOYMENT: ["idOrName"],
-
-      PROJECT_OR_SPACE: [
-        "spaceId",
-        "projectId",
-        "tools",
-        "toolChoiceOption",
-        "frequencyPenalty",
-        "logitBias",
-        "logprobs",
-        "topLogprobs",
-        "maxTokens",
-        "maxCompletionTokens",
-        "n",
-        "presencePenalty",
-        "responseFormat",
-        "seed",
-        "stop",
-        "temperature",
-        "topP",
-        "timeLimit",
-        "model",
-        "reasoningEffort",
-        "includeReasoning",
-      ],
-    };
-
-    const validProps: string[] = [
-      ...PROPERTY_GROUPS.ALWAYS_ALLOWED,
-      ...PROPERTY_GROUPS.AUTH,
-      ...PROPERTY_GROUPS.SHARED,
+    const ALWAYS_ALLOWED_EXTRA = [
+      "tool_choice",
+      "ls_structured_output_format",
+      "watsonxCallbacks",
+      "writer",
+      "interrupt",
     ];
 
+    const GATEWAY = [
+      "tools",
+      "frequencyPenalty",
+      "logitBias",
+      "logprobs",
+      "topLogprobs",
+      "maxTokens",
+      "n",
+      "presencePenalty",
+      "responseFormat",
+      "seed",
+      "stop",
+      "temperature",
+      "topP",
+      "model",
+      "modelGatewayKwargs",
+      "modelGateway",
+      "reasoningEffort",
+    ];
+
+    const DEPLOYMENT = ["idOrName"];
+
+    const PROJECT_OR_SPACE = [
+      "spaceId",
+      "projectId",
+      "tools",
+      "toolChoiceOption",
+      "frequencyPenalty",
+      "logitBias",
+      "logprobs",
+      "topLogprobs",
+      "maxTokens",
+      "maxCompletionTokens",
+      "n",
+      "presencePenalty",
+      "responseFormat",
+      "seed",
+      "stop",
+      "temperature",
+      "topP",
+      "timeLimit",
+      "model",
+      "reasoningEffort",
+      "includeReasoning",
+    ];
+
+    const modeProps: string[] = [...ALWAYS_ALLOWED_EXTRA];
     if (this.modelGateway) {
-      validProps.push(...PROPERTY_GROUPS.GATEWAY);
+      modeProps.push(...GATEWAY);
     } else if (this.idOrName) {
-      validProps.push(...PROPERTY_GROUPS.DEPLOYMENT);
+      modeProps.push(...DEPLOYMENT);
     } else if (this.spaceId || this.projectId) {
-      validProps.push(...PROPERTY_GROUPS.PROJECT_OR_SPACE);
+      modeProps.push(...PROJECT_OR_SPACE);
     }
 
-    checkValidProps(fields, validProps);
+    PropertyValidator.validateByMode(
+      fields as Record<string, unknown>,
+      modeProps,
+      true
+    );
   }
 
   protected service?: WatsonXAI;
@@ -696,46 +667,19 @@ export class ChatWatsonx<
     this.responseFormat = fields?.responseFormat ?? this.responseFormat;
     this.streaming = fields?.streaming ?? this.streaming;
     this.n = fields?.n ?? this.n;
-    this.timeLimit = fields?.timeLimit;
     this.reasoningEffort = fields?.reasoningEffort;
-    this.includeReasoning = fields?.includeReasoning;
 
-    this.modelGateway = fields?.modelGateway ?? this.modelGateway;
-    this.modelGatewayKwargs = fields?.modelGatewayKwargs;
-
-    const {
-      watsonxAIApikey,
-      watsonxAIAuthType,
-      watsonxAIBearerToken,
-      watsonxAIUsername,
-      watsonxAIPassword,
-      watsonxAIUrl,
-      disableSSL,
-      version,
-      serviceUrl,
-    } = fields;
-
-    const authData = {
-      watsonxAIApikey,
-      watsonxAIAuthType,
-      watsonxAIBearerToken,
-      watsonxAIUsername,
-      watsonxAIPassword,
-      watsonxAIUrl,
-      disableSSL,
-      version,
-      serviceUrl,
-    };
+    if ("modelGateway" in fields) {
+      this.modelGatewayKwargs = fields?.modelGatewayKwargs;
+    } else {
+      this.timeLimit = fields?.timeLimit;
+      this.includeReasoning = fields?.includeReasoning;
+    }
 
     if (this.modelGateway) {
-      const chatGateway = authenticateAndSetGatewayInstance(authData);
-      if (chatGateway) this.gateway = chatGateway;
-      else throw new Error("You have not provided any type of authentication");
+      this.gateway = initWatsonxOrGatewayInstance(fields, true);
     } else {
-      const service = authenticateAndSetInstance(authData);
-
-      if (service) this.service = service;
-      else throw new Error("You have not provided any type of authentication");
+      this.service = initWatsonxOrGatewayInstance(fields);
     }
   }
 
