@@ -381,6 +381,12 @@ export function convertToV1FromAnthropicMessage(
         if (name === "web_search") {
           const query = iife(() => {
             if (typeof block.input === "string") {
+              // During streaming accumulation, input is a JSON string like
+              // '{"query": "..."}' that needs parsing to extract the field.
+              const parsed = safeParseJson<{ query?: string }>(block.input);
+              if (parsed?.query) {
+                return parsed.query;
+              }
               return block.input;
             } else if (_isObject(block.input) && _isString(block.input.query)) {
               return block.input.query;
@@ -404,6 +410,12 @@ export function convertToV1FromAnthropicMessage(
         } else if (block.name === "code_execution") {
           const code = iife(() => {
             if (typeof block.input === "string") {
+              // During streaming accumulation, input is a JSON string like
+              // '{"code": "..."}' that needs parsing to extract the field.
+              const parsed = safeParseJson<{ code?: string }>(block.input);
+              if (parsed?.code) {
+                return parsed.code;
+              }
               return block.input;
             } else if (_isObject(block.input) && _isString(block.input.code)) {
               return block.input.code;
