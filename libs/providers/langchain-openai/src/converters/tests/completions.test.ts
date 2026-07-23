@@ -388,6 +388,57 @@ describe("convertCompletionsMessageToBaseMessage", () => {
         },
       });
     });
+
+    it("re-emits assistant reasoning_content on outbound legacy request", () => {
+      const message = new AIMessage({
+        content: "2",
+        additional_kwargs: {
+          reasoning_content: "The user asked 1+1.",
+        },
+      });
+
+      const result = convertMessagesToCompletionsMessageParams({
+        messages: [message],
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({
+        role: "assistant",
+        content: "2",
+        reasoning_content: "The user asked 1+1.",
+      });
+    });
+
+    it("re-emits assistant reasoning_content on outbound v1 standard request", () => {
+      const message = new AIMessage({
+        content: [{ type: "text", text: "2" }],
+        additional_kwargs: {
+          reasoning_content: "The user asked 1+1.",
+        },
+        response_metadata: { output_version: "v1" },
+      });
+
+      const result = convertMessagesToCompletionsMessageParams({
+        messages: [message],
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({
+        role: "assistant",
+        reasoning_content: "The user asked 1+1.",
+      });
+    });
+
+    it("omits reasoning_content when AIMessage has none (no false-positive field)", () => {
+      const message = new AIMessage({ content: "hello" });
+
+      const result = convertMessagesToCompletionsMessageParams({
+        messages: [message],
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).not.toHaveProperty("reasoning_content");
+    });
   });
 
   describe("completionsApiContentBlockConverter.fromStandardFileBlock", () => {
