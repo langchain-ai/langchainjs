@@ -481,8 +481,13 @@ export class ReactAgent<
         const allowedMapped = node.allowed
           .map((t) => parseJumpToTarget(t))
           .filter((dest) => dest !== TOOLS_NODE_NAME || hasToolsAvailable);
+        // Replace END with exitNode (which could be an afterAgent node) so that
+        // afterAgent hooks run even when beforeModel jumps to end.
         const destinations = Array.from(
-          new Set([nextDefault, ...allowedMapped])
+          new Set([
+            nextDefault,
+            ...allowedMapped.map((dest) => (dest === END ? exitNode : dest)),
+          ])
         ) as BaseGraphDestination[];
 
         allNodeWorkflows.addConditionalEdges(
@@ -490,6 +495,7 @@ export class ReactAgent<
           this.#createBeforeModelRouter(
             clientTools,
             nextDefault,
+            exitNode,
             hasToolsAvailable
           ),
           destinations
@@ -1089,13 +1095,19 @@ export class ReactAgent<
   /**
    * Create routing function for jumpTo functionality after beforeModel hooks.
    * Falls back to the default next node if no jumpTo is present.
+   * When jumping to END, routes to exitNode (which could be an afterAgent node)
+   * so that afterAgent hooks — such as the runModelCallCount reset in
+   * modelCallLimitMiddleware — are guaranteed to run even when the model call
+   * limit is hit mid-run.
    * @param toolClasses - Available tool classes for validation
    * @param nextDefault - Default node to route to
+   * @param exitNode - Exit node to route to (could be after_agent or END)
    * @param hasToolsAvailable - Whether tools are available (includes dynamic tools via middleware)
    */
   #createBeforeModelRouter(
     toolClasses: (ClientTool | ServerTool)[],
     nextDefault: string,
+    exitNode: string | typeof END,
     hasToolsAvailable: boolean = toolClasses.length > 0
   ) {
     return (state: Record<string, unknown>) => {
@@ -1105,11 +1117,18 @@ export class ReactAgent<
       }
       const destination = parseJumpToTarget(builtInState.jumpTo);
       if (destination === END) {
-        return END;
+        /**
+         * When beforeModel jumps to END, route to exitNode (first afterAgent node)
+         * so afterAgent hooks are guaranteed to run. This mirrors the behaviour of
+         * #createBeforeAgentRouter and ensures that cleanup hooks such as
+         * runModelCallCount reset in modelCallLimitMiddleware are not skipped when
+         * the model call limit is hit.
+         */
+        return exitNode;
       }
       if (destination === TOOLS_NODE_NAME) {
         if (!hasToolsAvailable) {
-          return END;
+          return exitNode;
         }
         return new Send(TOOLS_NODE_NAME, { ...state, jumpTo: undefined });
       }
