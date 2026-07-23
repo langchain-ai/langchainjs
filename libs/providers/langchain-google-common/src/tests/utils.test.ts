@@ -16,6 +16,7 @@ import { schemaToGeminiParameters } from "../utils/zod_to_gemini_parameters.js";
 import { getGeminiAPI } from "../utils/gemini.js";
 import { getAnthropicAPI } from "../utils/anthropic.js";
 import {
+  GeminiPart,
   GeminiPartFileData,
   GeminiPartInlineData,
   GeminiPartText,
@@ -1090,5 +1091,104 @@ describe("gemini empty text content handling", () => {
 
     const textPart = modelContent?.parts[0] as GeminiPartText;
     expect(textPart.text).toBe("I am doing well");
+  });
+});
+
+describe("gemini thought signature handling", () => {
+  test("applies signatures positionally when they align with parts", async () => {
+    const api = getGeminiAPI();
+    const messages = [
+      new HumanMessage("Search for LangChain"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          { id: "call_1", name: "search", args: { query: "LangChain" } },
+        ],
+        additional_kwargs: { signatures: ["decafe42"] },
+      }),
+    ];
+
+    const formatted = (await api.formatData(messages, {})) as GeminiRequest;
+
+    const modelContent = formatted.contents?.find((c) => c.role === "model");
+    const part = modelContent?.parts[0] as GeminiPart;
+    expect(part).toHaveProperty("functionCall");
+    expect(part.thoughtSignature).toBe("decafe42");
+  });
+
+  // Regression for https://github.com/langchain-ai/langchainjs/issues/9624:
+  // streamed chunk merging can leave the `signatures` array longer than the
+  // re-serialized parts (e.g. `["sig", ""]` for a single functionCall part).
+  // The exact-length guard used to drop every signature, so the replayed
+  // functionCall carried none and Gemini 3.x rejected the next turn with 400.
+  test("recovers signatures dropped by streamed chunk-merge misalignment", async () => {
+    const api = getGeminiAPI();
+    const messages = [
+      new HumanMessage("Search for LangChain"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          { id: "call_1", name: "search", args: { query: "LangChain" } },
+        ],
+        // one functionCall part, but streaming produced a trailing empty entry
+        additional_kwargs: { signatures: ["decafe42", ""] },
+      }),
+    ];
+
+    const formatted = (await api.formatData(messages, {})) as GeminiRequest;
+
+    const modelContent = formatted.contents?.find((c) => c.role === "model");
+    expect(modelContent?.parts.length).toBe(1);
+    const part = modelContent?.parts[0] as GeminiPart;
+    expect(part).toHaveProperty("functionCall");
+    expect(part.thoughtSignature).toBe("decafe42");
+  });
+
+  test("maps misaligned signatures onto multiple functionCall parts in order", async () => {
+    const api = getGeminiAPI();
+    const messages = [
+      new HumanMessage("Search two things"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          { id: "call_1", name: "search", args: { query: "a" } },
+          { id: "call_2", name: "search", args: { query: "b" } },
+        ],
+        additional_kwargs: { signatures: ["sig_a", "sig_b", ""] },
+      }),
+    ];
+
+    const formatted = (await api.formatData(messages, {})) as GeminiRequest;
+
+    const modelContent = formatted.contents?.find((c) => c.role === "model");
+    const parts = (modelContent?.parts ?? []) as GeminiPart[];
+    expect(parts.length).toBe(2);
+    expect(parts[0].thoughtSignature).toBe("sig_a");
+    expect(parts[1].thoughtSignature).toBe("sig_b");
+  });
+
+  test("leaves parts untouched when the non-empty count cannot be matched", async () => {
+    const api = getGeminiAPI();
+    const messages = [
+      new HumanMessage("Search two things"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          { id: "call_1", name: "search", args: { query: "a" } },
+          { id: "call_2", name: "search", args: { query: "b" } },
+        ],
+        // only one non-empty signature for two functionCall parts — ambiguous,
+        // so we do not guess
+        additional_kwargs: { signatures: ["sig_a", "", ""] },
+      }),
+    ];
+
+    const formatted = (await api.formatData(messages, {})) as GeminiRequest;
+
+    const modelContent = formatted.contents?.find((c) => c.role === "model");
+    const parts = (modelContent?.parts ?? []) as GeminiPart[];
+    expect(parts.length).toBe(2);
+    expect(parts[0].thoughtSignature).toBeUndefined();
+    expect(parts[1].thoughtSignature).toBeUndefined();
   });
 });
