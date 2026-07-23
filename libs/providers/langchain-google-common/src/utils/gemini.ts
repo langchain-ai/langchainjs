@@ -1306,10 +1306,17 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       logprobs: candidateToLogprobs(data.candidates[0]),
     };
 
-    // Only add the usage_metadata on the last chunk
-    // sent while streaming (see issue 8102).
+    // Vertex response provenance (trafficType / modelVersion) + usage_metadata
+    // ONLY on the last chunk. Avoids AIMessageChunk.concat string-appending
+    // the same value across every streaming chunk. Not in the OpenAPI spec
+    // but present on real Vertex responses.
     if (typeof finish_reason === "string") {
       ret.usage_metadata = responseToUsageMetadata(response);
+      const traffic_type = (data.usageMetadata as { trafficType?: string })
+        ?.trafficType;
+      const model_version = (data as { modelVersion?: string })?.modelVersion;
+      if (traffic_type !== undefined) ret.traffic_type = traffic_type;
+      if (model_version !== undefined) ret.model_version = model_version;
     }
 
     return ret;
@@ -1542,12 +1549,22 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     //   kwargs.reasoning_content = combineContent(gen.reasoning, true);
     // }
 
+    // Surface Vertex response provenance on the message. See
+    // responseToGenerationInfo for the same treatment on per-generation info.
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    const responseData = (response.data as any) ?? {};
+    const traffic_type: string | undefined =
+      responseData?.usageMetadata?.trafficType;
+    const model_version: string | undefined = responseData?.modelVersion;
+
     // Build the message and the generation chunk to return
     const message = new AIMessageChunk({
       content: combinedContent,
       additional_kwargs: kwargs,
       response_metadata: {
         model_provider: "google-vertexai",
+        ...(traffic_type !== undefined ? { traffic_type } : {}),
+        ...(model_version !== undefined ? { model_version } : {}),
       },
       usage_metadata,
       tool_calls: combinedToolCalls.tool_calls,
