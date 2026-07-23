@@ -447,30 +447,51 @@ function mapV1MessageToStoredMessage(
   }
 }
 
+type StoredMessageDataWithContentBlocks = StoredMessage["data"] & {
+  contentBlocks?: BaseMessageFields["contentBlocks"];
+  content_blocks?: BaseMessageFields["contentBlocks"];
+};
+
+function mapStoredMessageDataToFields(
+  data: StoredMessage["data"]
+): StoredMessageDataWithContentBlocks {
+  const { content_blocks: contentBlocks, ...fields } =
+    data as StoredMessageDataWithContentBlocks;
+  if (
+    fields.content === undefined &&
+    fields.contentBlocks === undefined &&
+    contentBlocks !== undefined
+  ) {
+    return { ...fields, contentBlocks };
+  }
+  return fields;
+}
+
 export function mapStoredMessageToChatMessage(message: StoredMessage) {
   const storedMessage = mapV1MessageToStoredMessage(message);
+  const fields = mapStoredMessageDataToFields(storedMessage.data);
   switch (storedMessage.type) {
     case "human":
-      return new HumanMessage(storedMessage.data);
+      return new HumanMessage(fields);
     case "ai":
-      return new AIMessage(storedMessage.data);
+      return new AIMessage(fields);
     case "system":
-      return new SystemMessage(storedMessage.data);
+      return new SystemMessage(fields);
     case "function":
-      if (storedMessage.data.name === undefined) {
+      if (fields.name === undefined) {
         throw new Error("Name must be defined for function messages");
       }
-      return new FunctionMessage(storedMessage.data as FunctionMessageFields);
+      return new FunctionMessage(fields as FunctionMessageFields);
     case "tool":
-      if (storedMessage.data.tool_call_id === undefined) {
+      if (fields.tool_call_id === undefined) {
         throw new Error("Tool call ID must be defined for tool messages");
       }
-      return new ToolMessage(storedMessage.data as ToolMessageFields);
+      return new ToolMessage(fields as ToolMessageFields);
     case "generic": {
-      if (storedMessage.data.role === undefined) {
+      if (fields.role === undefined) {
         throw new Error("Role must be defined for chat messages");
       }
-      return new ChatMessage(storedMessage.data as ChatMessageFields);
+      return new ChatMessage(fields as ChatMessageFields);
     }
     default:
       throw new Error(`Got unexpected type: ${storedMessage.type}`);
