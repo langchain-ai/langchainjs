@@ -60,10 +60,14 @@ export function _makeMessageChunkFromAnthropicEvent(
       "context_management" in data.delta
         ? { context_management: data.delta.context_management }
         : undefined;
+    const { cost } = data.usage as typeof data.usage & { cost?: unknown };
     return {
       chunk: new AIMessageChunk({
         content: fields.coerceContentToString ? "" : [],
-        response_metadata: responseMetadata,
+        response_metadata:
+          typeof cost === "number"
+            ? { ...responseMetadata, usage: { cost } }
+            : responseMetadata,
         additional_kwargs: { ...data.delta },
         usage_metadata: fields.streamUsage ? usageMetadata : undefined,
       }),
