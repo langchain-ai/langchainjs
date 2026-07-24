@@ -128,7 +128,7 @@
     "@types/uuid": "^11",
     "reflect-metadata": "^0.2.2",
     "tsx": "^4.22.4",
-    "typeorm": "^1.0.0",
+    "typeorm": "^1.1.0",
     "typescript": "~6.0.3",
     "zod": "^4.3.6"
   }
