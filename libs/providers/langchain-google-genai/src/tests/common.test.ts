@@ -14,6 +14,9 @@ import type { GoogleGenerativeAIPart } from "../types.js";
 
 type ThinkingBlock = { type: "thinking"; thinking: string; signature?: string };
 type TextBlock = { type: "text"; text: string };
+const GROUNDING_METADATA = {
+  webSearchQueries: ["2024 MLB World Series winner"],
+};
 
 function createMockResponse(
   candidates: GenerateContentCandidate[]
@@ -34,6 +37,33 @@ function createMockResponse(
 
 // https://github.com/langchain-ai/langchainjs/issues/9724
 describe("Thinking content handling", () => {
+  test("should preserve grounding metadata in response metadata", () => {
+    const mockResponse = createMockResponse([
+      {
+        content: {
+          role: "model",
+          parts: [
+            {
+              text: "The Dodgers won the 2024 MLB World Series.",
+            },
+          ],
+        },
+        finishReason: "STOP" as FinishReason,
+        groundingMetadata: GROUNDING_METADATA,
+        index: 0,
+        safetyRatings: [],
+      },
+    ]);
+
+    const result = mapGenerateContentResultToChatResult(mockResponse);
+    const aiMessage = result.generations[0].message;
+
+    expect(aiMessage.response_metadata).toHaveProperty(
+      "groundingMetadata",
+      GROUNDING_METADATA
+    );
+  });
+
   test("should separate thinking and text content blocks", () => {
     const mockResponse = createMockResponse([
       {
