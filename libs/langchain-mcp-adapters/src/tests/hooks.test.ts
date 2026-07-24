@@ -172,6 +172,27 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
         await client.close();
       }
     });
+
+    test("_meta from beforeToolCall reaches the MCP server on all transports", async () => {
+      const correlationId = "corr-123";
+      const { client } = await setup({
+        beforeToolCall: () => ({ _meta: { correlationId } }),
+        afterToolCall: (res) => ({ result: res.result }),
+      });
+
+      try {
+        const tools = await client.getTools();
+        const t = tools.find((tool) => tool.name.includes("test_tool"))!;
+        const out = (await t.invoke({ input: "orig" })) as string;
+        const parsed = JSON.parse(out);
+        expect(parsed.meta).toEqual(
+          expect.objectContaining({ correlationId })
+        );
+      } finally {
+        await client.close();
+      }
+    });
+
     test("afterToolCall allows to modify tool result", async () => {
       const { client } = await setup();
 
