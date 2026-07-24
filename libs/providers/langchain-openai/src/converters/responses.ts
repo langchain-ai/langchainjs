@@ -1706,6 +1706,42 @@ export const convertMessagesToResponsesInput: Converter<
                 };
               }
             }
+            // The Responses API expects images as native `input_image` parts.
+            // The Chat Completions converter would emit an `image_url` part,
+            // which the Responses API rejects
+            // (`400 Invalid value: 'image_url' ... 'input_image'`). Convert
+            // standard image blocks natively, mirroring the `file` handling
+            // above. (The adjacent `image_url` branch below already produces
+            // `input_image`; this covers the standard data-block shape.)
+            if (item.type === "image") {
+              // Honor a caller-provided detail hint, matching the standard
+              // content-block path; default to "auto".
+              const detail =
+                (item.metadata as { detail?: "low" | "high" | "auto" })
+                  ?.detail ?? "auto";
+              if (item.source_type === "url") {
+                return {
+                  type: "input_image",
+                  image_url: item.url,
+                  detail,
+                };
+              }
+              if (item.source_type === "id") {
+                return {
+                  type: "input_image",
+                  file_id: item.id,
+                  detail,
+                };
+              }
+              if (item.source_type === "base64") {
+                const mimeType = item.mime_type ?? "image/png";
+                return {
+                  type: "input_image",
+                  image_url: `data:${mimeType};base64,${item.data}`,
+                  detail,
+                };
+              }
+            }
             return convertToProviderContentBlock(
               item,
               completionsApiContentBlockConverter
