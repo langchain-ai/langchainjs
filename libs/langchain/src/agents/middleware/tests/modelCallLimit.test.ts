@@ -225,4 +225,50 @@ describe("ModelCallLimitMiddleware", () => {
       });
     }
   );
+
+  it("should reset run count when exitBehavior end stops from beforeModel", async () => {
+    const checkpointer = new MemorySaver();
+    const config = {
+      configurable: {
+        thread_id: "run-limit-reset",
+      },
+    };
+    const model = new FakeToolCallingChatModel({
+      sleep: 0,
+      responses: [
+        toolCallMessage1,
+        responseMessage1,
+        toolCallMessage2,
+        responseMessage2,
+      ],
+    });
+    const middleware = modelCallLimitMiddleware({
+      runLimit: 1,
+      exitBehavior: "end",
+    });
+    const agent = createAgent({
+      model,
+      tools,
+      checkpointer,
+      middleware: [middleware],
+    });
+
+    const firstResult = await agent.invoke(
+      { messages: ["Hello, world!"] },
+      config
+    );
+
+    expect(firstResult.messages.at(-1)?.content).toBe(
+      "Model call limits exceeded: run level call limit reached with 1 model calls"
+    );
+    expect(firstResult.runModelCallCount).toBe(0);
+
+    const secondResult = await agent.invoke(
+      { messages: ["Hello again!"] },
+      config
+    );
+
+    expect(secondResult.messages.at(-1)?.content).toBe("baz");
+    expect(model.idx).toBe(2);
+  });
 });
