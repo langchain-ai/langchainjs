@@ -350,9 +350,11 @@ async function prepareToolCall(
   }
 
   const finalArgs = parsed.data;
+  const meta = beforeToolCallInterception?._meta;
   const initialRequest = {
     name: toolName,
     arguments: finalArgs,
+    ...(meta ? { _meta: meta } : {}),
   } satisfies CallToolRequest["params"];
 
   return {
