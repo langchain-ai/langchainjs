@@ -811,17 +811,22 @@ export const convertMessagesToCompletionsMessageParams: Converter<
             //  - Tool-call blocks (`tool_use`, `tool_call`) are already
             //    carried in message.tool_calls, so resending them as content
             //    would be a duplicate/invalid part.
+            //  - Streaming tool-call artifacts (`input_json_delta`) are
+            //    residues left in Anthropic-authored content; the finalized
+            //    call is already carried in message.tool_calls.
             //  - Reasoning traces (`reasoning`, `reasoning_content`,
             //    `thinking`) are output-only.
             // Echoing any of these back in the request history is rejected by
             // strict openai-compatible providers, e.g. DeepSeek:
-            // "unknown variant `reasoning`, expected `text`".
+            // "unknown variant `reasoning`, expected `text`", or OpenAI:
+            // "400 Invalid value: 'input_json_delta'".
             if (
               typeof m === "object" &&
               m !== null &&
               "type" in m &&
               (m.type === "tool_use" ||
                 m.type === "tool_call" ||
+                m.type === "input_json_delta" ||
                 m.type === "reasoning" ||
                 m.type === "reasoning_content" ||
                 m.type === "thinking")
