@@ -262,6 +262,7 @@ describe("ModelCallLimitMiddleware", () => {
       "Model call limits exceeded: run level call limit reached with 1 model calls"
     );
     expect(firstResult.runModelCallCount).toBe(0);
+    expect(firstResult.threadModelCallCount).toBe(1);
 
     const secondResult = await agent.invoke(
       { messages: ["Hello again!"] },
@@ -269,6 +270,7 @@ describe("ModelCallLimitMiddleware", () => {
     );
 
     expect(secondResult.messages.at(-1)?.content).toBe("baz");
+    expect(secondResult.threadModelCallCount).toBe(2);
     expect(model.idx).toBe(2);
   });
 });
