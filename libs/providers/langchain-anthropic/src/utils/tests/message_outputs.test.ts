@@ -58,4 +58,46 @@ describe("_makeMessageChunkFromAnthropicEvent", () => {
     expect(usage.input_token_details?.cache_creation).toBeUndefined();
     expect(usage.input_token_details?.cache_read).toBeUndefined();
   });
+
+  test("content_block_start with thinking type and no thinking field defaults thinking to empty string", () => {
+    // Adaptive thinking on Opus 4.7 can emit a content_block_start with type "thinking"
+    // but no `thinking` field. Without the fix, the accumulated block has no `thinking` key
+    // and the outbound converter sends a malformed payload that Anthropic rejects with 400.
+    const event = {
+      type: "content_block_start" as const,
+      index: 0,
+      content_block: { type: "thinking" }, // no `thinking` field — adaptive thinking edge case
+    };
+
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = _makeMessageChunkFromAnthropicEvent(event as any, fields);
+    expect(result).not.toBeNull();
+
+    const contentBlocks = result!.chunk.content;
+    expect(Array.isArray(contentBlocks)).toBe(true);
+    const block = (
+      contentBlocks as Array<{ type: string; thinking?: unknown }>
+    )[0];
+    expect(block.type).toBe("thinking");
+    // thinking must be explicitly set to "" so the accumulated block has the key
+    expect(block).toHaveProperty("thinking", "");
+  });
+
+  test("content_block_start with thinking type and a thinking field preserves the value", () => {
+    const event = {
+      type: "content_block_start" as const,
+      index: 0,
+      content_block: { type: "thinking", thinking: "Let me reason..." },
+    };
+
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = _makeMessageChunkFromAnthropicEvent(event as any, fields);
+    expect(result).not.toBeNull();
+
+    const contentBlocks = result!.chunk.content;
+    const block = (
+      contentBlocks as Array<{ type: string; thinking?: unknown }>
+    )[0];
+    expect(block.thinking).toBe("Let me reason...");
+  });
 });

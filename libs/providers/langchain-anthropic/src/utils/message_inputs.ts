@@ -314,6 +314,16 @@ function* _formatContentBlocks(
         ...(cacheControl ? { cache_control: cacheControl } : {}),
       } as Anthropic.Messages.DocumentBlockParam;
     } else if (_isAnthropicThinkingBlock(contentPart)) {
+      // With adaptive thinking, Anthropic can stream a thinking block that has a
+      // signature but no thinking text (no thinking_delta ever arrives). Sending
+      // such a block back to Anthropic with thinking: undefined causes a 400:
+      // "messages.N.content.M.thinking.thinking: Field required". Skip it.
+      if (
+        typeof contentPart.thinking !== "string" ||
+        contentPart.thinking.length === 0
+      ) {
+        continue;
+      }
       const block: AnthropicThinkingBlockParam = {
         type: "thinking" as const, // Explicitly setting the type as "thinking"
         thinking: contentPart.thinking,

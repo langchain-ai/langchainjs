@@ -214,12 +214,15 @@ export function _makeMessageChunkFromAnthropicEvent(
     data.type === "content_block_start" &&
     data.content_block.type === "thinking"
   ) {
-    const content = data.content_block.thinking;
+    // With adaptive thinking, content_block_start may arrive without a `thinking`
+    // field (the model allocated a thinking budget but produced no thinking text).
+    // Default to "" so the accumulated block has an explicit thinking key.
+    const content = data.content_block.thinking ?? "";
     return {
       chunk: new AIMessageChunk({
         content: fields.coerceContentToString
           ? content
-          : [{ index: data.index, ...data.content_block }],
+          : [{ index: data.index, ...data.content_block, thinking: content }],
         response_metadata,
       }),
     };
