@@ -377,6 +377,27 @@ function convertStandardContentBlockToGeminiPart(
 }
 
 /**
+ * Returns `functionCall` without its `id` when targeting Vertex, which rejects
+ * that field even though it populates it on the way out. Copies rather than
+ * mutates: the block is shared with the caller's message history.
+ */
+function stripNativeFunctionCallId<T>(
+  functionCall: T,
+  platformType?: GooglePlatformType
+): T {
+  if (
+    platformType !== "gcp" ||
+    typeof functionCall !== "object" ||
+    functionCall === null ||
+    !("id" in functionCall)
+  ) {
+    return functionCall;
+  }
+  const { id, ...rest } = functionCall as Record<string, unknown>;
+  return rest as T;
+}
+
+/**
  * Converts a single LangChain message with standard content blocks (v1 format) to Gemini Content.
  * This handles messages that have `response_metadata.output_version === "v1"`.
  *
@@ -731,9 +752,14 @@ function convertLegacyContentMessageToGeminiContent(
           );
         } else if (item?.type === "functionCall") {
           const { type, functionCall, ...etc } = item;
+          // Vertex rejects a native `id` inside function_call for the same
+          // reason it rejects one on functionResponse (see the comments in
+          // the ToolMessage branches). The stored block is pushed by
+          // reference, so copy rather than delete the key — mutating it
+          // would strip the id from the caller's message history too.
           parts.push({
             ...etc,
-            functionCall,
+            functionCall: stripNativeFunctionCallId(functionCall, platformType),
           } as Gemini.Part.FunctionCall);
         } else if (item?.type === "executableCode") {
           const { type, executableCode, ...etc } = item;
