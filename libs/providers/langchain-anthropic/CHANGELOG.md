@@ -1,5 +1,11 @@
 # @langchain/anthropic
 
+## 1.5.2
+
+### Patch Changes
+
+- [#11255](https://github.com/langchain-ai/langchainjs/pull/11255) [`c8bd4c4`](https://github.com/langchain-ai/langchainjs/commit/c8bd4c4a6dbde07fb24deb5870c02dc29c51ab53) Thanks [@hntrl](https://github.com/hntrl)! - feat(anthropic): add claude-opus-5 support
+
 ## 1.5.1
 
 ### Patch Changes
