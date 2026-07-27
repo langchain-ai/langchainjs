@@ -101,6 +101,59 @@ describe("convertGoogleGeminiStream", () => {
     });
   });
 
+  test.each([
+    {
+      label: "preserves a model-provided tool call id",
+      functionCall: {
+        id: "server-assigned-id-123",
+        name: "web_search",
+        args: { query: "weather" },
+      },
+      expectedId: "server-assigned-id-123",
+    },
+    {
+      label: "generates a tool call id when the model omits it",
+      functionCall: {
+        name: "web_search",
+        args: { query: "weather" },
+      },
+      expectedId: expect.stringMatching(/^lc-tool-call-/),
+    },
+  ])("$label", async ({ functionCall, expectedId }) => {
+    const events = await collectEvents([
+      {
+        candidates: [{ content: { parts: [{ functionCall }] } }],
+      },
+    ]);
+
+    expect(
+      events.find((event) => event.event === "content-block-start")
+    ).toMatchObject({
+      content: {
+        type: "tool_call_chunk",
+        id: expectedId,
+      },
+    });
+    expect(
+      events.find((event) => event.event === "content-block-delta")
+    ).toMatchObject({
+      delta: {
+        fields: {
+          type: "tool_call_chunk",
+          id: expectedId,
+        },
+      },
+    });
+    expect(
+      events.find((event) => event.event === "content-block-finish")
+    ).toMatchObject({
+      content: {
+        type: "tool_call",
+        id: expectedId,
+      },
+    });
+  });
+
   test("usage snapshots", async () => {
     const events = await collectEvents([
       {

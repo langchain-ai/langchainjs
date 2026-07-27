@@ -91,6 +91,7 @@ const toolChunks: Gemini.GenerateContentResponse[] = [
           parts: [
             {
               functionCall: {
+                id: "call-weather-1",
                 name: "web_search",
                 args: { query: "weather" },
               },
@@ -138,7 +139,11 @@ describe("ChatGoogle.streamEvents", () => {
     await expect(
       mockChatGoogle(toolChunks).streamEvents("Hello")
     ).toHaveStreamToolCalls([
-      { name: "web_search", args: { query: "weather" } },
+      {
+        id: "call-weather-1",
+        name: "web_search",
+        args: { query: "weather" },
+      },
     ]);
   });
 
