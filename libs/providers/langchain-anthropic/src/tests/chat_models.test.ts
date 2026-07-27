@@ -2037,21 +2037,34 @@ describe("Opus 4.6", () => {
   });
 });
 
-describe("Opus 4.7", () => {
+describe("Opus 4.7 and 5", () => {
   const adaptiveOnlyOpusModels = [
     "claude-opus-4-7",
     "claude-opus-4-8",
+    "claude-opus-5",
   ] as const;
 
-  test("default max_tokens for claude-opus-4-7 is 16384", () => {
+  test.each(["claude-opus-4-7", "claude-opus-5"] as const)(
+    "default max_tokens for %s is 16384",
+    (modelName) => {
+      const model = new ChatAnthropic({
+        model: modelName,
+        apiKey: "testing",
+      });
+
+      const params = model.invocationParams({});
+
+      expect(params.max_tokens).toBe(16384);
+    }
+  );
+
+  test("does not explicitly set thinking for claude-opus-5", () => {
     const model = new ChatAnthropic({
-      model: "claude-opus-4-7",
+      model: "claude-opus-5",
       apiKey: "testing",
     });
 
-    const params = model.invocationParams({});
-
-    expect(params.max_tokens).toBe(16384);
+    expect(model.invocationParams({}).thinking).toBeUndefined();
   });
 
   test.each(adaptiveOnlyOpusModels)(
@@ -2159,6 +2172,33 @@ describe("Opus 4.7", () => {
         total: 128000,
       },
     });
+  });
+
+  test.each(["xhigh", "max"] as const)(
+    "rejects disabled thinking with %s effort for claude-opus-5",
+    (effort) => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-5",
+        apiKey: "testing",
+        thinking: { type: "disabled" },
+        outputConfig: { effort },
+      });
+
+      expect(() => model.invocationParams({})).toThrow(
+        `thinking.type="disabled" is not supported for claude-opus-5 with outputConfig.effort="${effort}"; use thinking.type="adaptive" or omit thinking instead`
+      );
+    }
+  );
+
+  test("allows disabled thinking with high effort for claude-opus-5", () => {
+    const model = new ChatAnthropic({
+      model: "claude-opus-5",
+      apiKey: "testing",
+      thinking: { type: "disabled" },
+      outputConfig: { effort: "high" },
+    });
+
+    expect(model.invocationParams({}).thinking).toEqual({ type: "disabled" });
   });
 });
 
