@@ -20,6 +20,25 @@ updates:
         update-types:
           - "major"
 
+  # Docker-based local GitHub Action
+  - package-ecosystem: docker
+    directory: "/.github/actions/people"
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 10
+    groups:
+      docker-minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      docker-major:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
+
   # npm — single workspace-aware entry.
   # This is a pnpm workspace (see pnpm-workspace.yaml) with one root
   # pnpm-lock.yaml. Dependabot must run from "/" so it discovers every
