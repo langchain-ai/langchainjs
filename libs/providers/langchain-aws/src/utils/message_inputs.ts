@@ -619,6 +619,11 @@ function convertAIMessageToConverseMessage(msg: AIMessage): Bedrock.Message {
       } else if (isDefaultCachePoint(block)) {
         contentBlocks.push(convertCachePointBlock(block));
       } else if (block.type === "tool_call") {
+        if (typeof block.id !== "string" || block.id.trim().length === 0) {
+          throw new Error(
+            "Tool call content blocks must include a non-empty string id for Bedrock Converse."
+          );
+        }
         // Handle v1 tool call blocks whose output version metadata was lost.
         contentBlocks.push({
           toolUse: {
