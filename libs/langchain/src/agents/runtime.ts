@@ -115,6 +115,7 @@ type CreateAgentPregelOptions =
   | "store"
   | "cache"
   | "signal"
+  | "control"
   | "recursionLimit"
   | "maxConcurrency"
   | "timeout"
