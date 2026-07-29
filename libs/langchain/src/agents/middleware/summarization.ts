@@ -454,7 +454,7 @@ export function summarizationMiddleware(
 
       const summaryMessage = new HumanMessage({
         content: `${summaryPrefix}\n\n${summary}`,
-        id: uuid(),
+        id: conversationMessages[0].id,
         additional_kwargs: { lc_source: "summarization" },
       });
 

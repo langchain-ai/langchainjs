@@ -1031,7 +1031,7 @@ describe("summarizationMiddleware", () => {
     });
   });
 
-  it("should not leak summarization model streaming chunks when using streamMode messages", async () => {
+  it("should not leak summarization messages when using streamMode messages", async () => {
     const MAIN_MODEL_CONTENT =
       "I understand your project. Let me analyze the architecture.";
 
@@ -1071,9 +1071,17 @@ describe("summarizationMiddleware", () => {
 
     // Collect all streamed AIMessage content (only assistant/AI responses)
     const streamedAIContents: string[] = [];
+    const streamedSummarizationMessages: string[] = [];
     for await (const [mode, chunk] of stream) {
       if (mode === "messages") {
         const [msg] = chunk as [any, any];
+        if (msg.additional_kwargs?.lc_source === "summarization") {
+          streamedSummarizationMessages.push(
+            typeof msg.content === "string"
+              ? msg.content
+              : JSON.stringify(msg.content)
+          );
+        }
         // Only collect AIMessage content (role === "assistant" or type === "ai")
         const isAIMessage =
           msg._getType?.() === "ai" ||
@@ -1096,6 +1104,7 @@ describe("summarizationMiddleware", () => {
 
     const allStreamedAIContent = streamedAIContents.join(" ");
     expect(allStreamedAIContent).not.toContain("Context Extraction Assistant");
+    expect(streamedSummarizationMessages).toEqual([]);
 
     // Verify the main model's content DOES appear in the stream
     expect(allStreamedAIContent).toContain(MAIN_MODEL_CONTENT);
