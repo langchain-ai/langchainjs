@@ -1,0 +1,19 @@
+libs/langchain-core/src/messages/transformers.ts
+  s_9e167e4ac77e47::t_2566f93ba20527 295-298
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "0210d986fb339cc0ff961ac23ac3a621bc2a453e",
+  "prompts": {},
+  "sessions": {
+    "s_9e167e4ac77e47": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "430e55a3-fcdf-4ae7-a711-a16754601d6f",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Colin Francis <colin.francis@langchain.dev>"
+    }
+  }
+}
