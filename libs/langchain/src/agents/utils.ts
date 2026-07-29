@@ -573,6 +573,9 @@ export function wrapToolCall(middleware: readonly AnyAgentMiddleware[]) {
          * Create a handler that preserves state parsing for this middleware
          * while allowing tool/toolCall/state modifications from inner middleware
          */
+        // Track exact values thrown by the downstream handler so unchanged
+        // propagation is not misclassified as a failure in this middleware.
+        const downstreamErrors = new Set<unknown>();
         const wrappedInnerHandler: ToolCallHandler = async (passedRequest) => {
           /**
            * Merge the passed request with the original state for parsing.
@@ -583,10 +586,15 @@ export function wrapToolCall(middleware: readonly AnyAgentMiddleware[]) {
             ...originalState,
             ...passedRequest.state,
           };
-          return handler({
-            ...passedRequest,
-            state: mergedState,
-          });
+          try {
+            return await handler({
+              ...passedRequest,
+              state: mergedState,
+            });
+          } catch (error: unknown) {
+            downstreamErrors.add(error);
+            throw error;
+          }
         };
 
         try {
@@ -617,7 +625,10 @@ export function wrapToolCall(middleware: readonly AnyAgentMiddleware[]) {
           }
 
           return result;
-        } catch (error) {
+        } catch (error: unknown) {
+          if (downstreamErrors.has(error)) {
+            throw error;
+          }
           throw MiddlewareError.wrap(error, m.name);
         }
       };

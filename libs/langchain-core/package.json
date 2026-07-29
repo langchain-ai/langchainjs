@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "1.2.1",
+  "version": "1.2.3",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -35,7 +35,7 @@
   "devDependencies": {
     "@langchain/tsconfig": "workspace:*",
     "@types/mustache": "^4",
-    "@types/node": "^25.9.1",
+    "@types/node": "^26.1.0",
     "dotenv": "^17.4.0",
     "dpdm": "^3.14.0",
     "ml-matrix": "^6.10.4",

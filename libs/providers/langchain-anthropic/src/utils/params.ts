@@ -9,6 +9,7 @@ import {
 type InvocationCompatibilityFields = {
   model?: string;
   thinking: AnthropicThinkingConfigParam;
+  outputConfig?: AnthropicOutputConfig;
   topK?: number;
   topP?: number;
   temperature?: number;
@@ -17,6 +18,7 @@ type InvocationCompatibilityFields = {
 const ADAPTIVE_ONLY_MODEL_PREFIXES = [
   "claude-opus-4-7",
   "claude-opus-4-8",
+  "claude-opus-5",
   "claude-fable-5",
   "claude-mythos-5",
   "claude-mythos-preview",
@@ -59,7 +61,7 @@ export function getTaskBudgetBetas(
 export function validateInvocationParamCompatibility(
   fields: InvocationCompatibilityFields
 ): void {
-  const { model, thinking, topK, topP, temperature } = fields;
+  const { model, thinking, outputConfig, topK, topP, temperature } = fields;
   const adaptiveOnlyModel = isAdaptiveOnlyModel(model);
   const modelName = model ?? "this model";
 
@@ -76,6 +78,15 @@ export function validateInvocationParamCompatibility(
   ) {
     throw new Error(
       `thinking.budget_tokens is not supported for ${modelName}; use outputConfig.effort instead`
+    );
+  }
+  if (
+    modelStartsWithAnyPrefix(model, ["claude-opus-5"]) &&
+    thinking.type === "disabled" &&
+    (outputConfig?.effort === "xhigh" || outputConfig?.effort === "max")
+  ) {
+    throw new Error(
+      `thinking.type="disabled" is not supported for ${modelName} with outputConfig.effort="${outputConfig.effort}"; use thinking.type="adaptive" or omit thinking instead`
     );
   }
   if (adaptiveOnlyModel) {
