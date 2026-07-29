@@ -2597,6 +2597,148 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(result).toBeDefined();
   });
 
+  const testTools: GeminiTool[] = [
+    {
+      functionDeclarations: [
+        {
+          name: "test",
+          description:
+            "Run a test with a specific name and get if it passed or failed",
+          parameters: {
+            type: "object",
+            properties: {
+              testName: {
+                type: "string",
+                description: "The name of the test that should be run.",
+              },
+            },
+            required: ["testName"],
+          },
+        },
+      ],
+    },
+  ];
+
+  test("5-1. Functions - function reply uses the user role", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-5-mock.json",
+    };
+
+    const model = new ChatGoogle({
+      authOptions,
+    }).bindTools(testTools);
+    const messages: BaseMessageLike[] = [
+      new HumanMessage("Run a test on the cobalt project."),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            id: "test_1",
+            name: "test",
+            args: { testName: "cobalt" },
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        tool_call_id: "test_1",
+        name: "test",
+        content: JSON.stringify({ testPassed: true }),
+      }),
+    ];
+    await model.invoke(messages);
+
+    // Gemini only accepts the roles "user" and "model"
+    const contents = record?.opts?.data?.contents;
+    expect(contents.map((content: any) => content.role)).toEqual([
+      "user",
+      "model",
+      "user",
+    ]);
+    expect(contents[2].parts[0]).toHaveProperty("functionResponse");
+  });
+
+  test("5-2. Functions - parallel function replies stay in one turn", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-5-mock.json",
+    };
+
+    const model = new ChatGoogle({
+      authOptions,
+    }).bindTools(testTools);
+    const messages: BaseMessageLike[] = [
+      new HumanMessage("Run a test on the cobalt and nickel projects."),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            id: "test_1",
+            name: "test",
+            args: { testName: "cobalt" },
+            type: "tool_call",
+          },
+          {
+            id: "test_2",
+            name: "test",
+            args: { testName: "nickel" },
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        tool_call_id: "test_1",
+        name: "test",
+        content: JSON.stringify({ testPassed: true }),
+      }),
+      new ToolMessage({
+        tool_call_id: "test_2",
+        name: "test",
+        content: JSON.stringify({ testPassed: false }),
+      }),
+    ];
+    await model.invoke(messages);
+
+    // Gemini requires one function response part per function call part, so
+    // splitting these into two turns is rejected
+    const contents = record?.opts?.data?.contents;
+    expect(contents).toHaveLength(3);
+    expect(contents[2].role).toEqual("user");
+    expect(contents[2].parts).toHaveLength(2);
+    expect(contents[2].parts[0]).toHaveProperty("functionResponse");
+    expect(contents[2].parts[1]).toHaveProperty("functionResponse");
+  });
+
+  test("5-3. Consecutive human messages are kept separate", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+
+    const model = new ChatGoogle({
+      authOptions,
+    });
+    await model.invoke([
+      new HumanMessage("First question."),
+      new HumanMessage("Second question."),
+    ]);
+
+    // Only function responses are combined - giving tool results the "user"
+    // role must not start folding ordinary turns together
+    const contents = record?.opts?.data?.contents;
+    expect(contents).toHaveLength(2);
+  });
+
   test("4-5. Functions - conversation with signature", async () => {
     const messages: BaseMessageLike[] = [
       new HumanMessage("Run a test on the cobalt project."),

@@ -900,11 +900,13 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       (isAIMessage(prevMessage) && !!prevMessage.tool_calls?.length
         ? prevMessage.tool_calls[0].name
         : prevMessage.name) ?? message.tool_call_id;
+    // Gemini only accepts the roles "user" and "model" on a Content, so a tool
+    // result is sent as a "user" turn that carries a functionResponse part.
     try {
       const content = JSON.parse(contentStr);
       return [
         {
-          role: "function",
+          role: "user",
           parts: [
             {
               functionResponse: {
@@ -918,7 +920,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     } catch (_) {
       return [
         {
-          role: "function",
+          role: "user",
           parts: [
             {
               functionResponse: {
@@ -1728,6 +1730,13 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     return contents;
   }
 
+  function isFunctionResponseContent(content: GeminiContent): boolean {
+    return (
+      content.parts.length > 0 &&
+      content.parts.every((part) => "functionResponse" in part)
+    );
+  }
+
   async function formatBaseMessageContents(
     input: BaseMessage[],
     _parameters: GoogleAIModelParams
@@ -1743,16 +1752,16 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
         return acc;
       }
 
-      // Combine adjacent function messages
+      // Combine adjacent function messages. Tool results no longer carry a
+      // distinguishing role, so they are identified by their parts.
+      const prev = acc[acc.length - 1];
       if (
-        cur[0]?.role === "function" &&
-        acc.length > 0 &&
-        acc[acc.length - 1].role === "function"
+        cur[0] !== undefined &&
+        isFunctionResponseContent(cur[0]) &&
+        prev !== undefined &&
+        isFunctionResponseContent(prev)
       ) {
-        acc[acc.length - 1].parts = [
-          ...acc[acc.length - 1].parts,
-          ...cur[0].parts,
-        ];
+        prev.parts = [...prev.parts, ...cur[0].parts];
       } else {
         acc.push(...cur);
       }
