@@ -542,6 +542,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
 
   test("Can force a model to invoke a tool", async () => {
     const model = new ChatVertexAI({
+      callbacks,
       modelName,
     });
     const modelWithTools = model.bindTools([calculatorTool, weatherTool], {
@@ -557,6 +558,12 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
     if (!result.tool_calls?.[0]) return;
     expect(result.tool_calls?.[0].name).toBe("calculator");
     expect(result.tool_calls?.[0].args).toHaveProperty("expression");
+    expect(
+      recorder.request.data.toolConfig.functionCallingConfig
+    ).toMatchObject({
+      mode: "ANY",
+      allowedFunctionNames: ["calculator"],
+    });
   });
 
   test(`stream tools`, async () => {
