@@ -84,7 +84,6 @@ export function getEnvironmentVariable(name: string): string | undefined {
       // oxlint-disable-next-line no-process-env
       return process.env?.[name];
     } else if (isDeno()) {
-      // @ts-expect-error Langsmith's Deno declaration is missing `env`
       return Deno?.env.get(name);
     } else {
       return undefined;

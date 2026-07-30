@@ -84,6 +84,7 @@ const MODEL_DEFAULT_MAX_OUTPUT_TOKENS: Partial<
   Record<Anthropic.Model, number>
 > = {
   // Claude 5 — 128K max output
+  "claude-opus-5": 16384,
   "claude-fable-5": 16384,
   "claude-mythos-5": 16384,
   "claude-mythos-preview": 16384,
@@ -1281,6 +1282,7 @@ export class ChatAnthropicMessages<
     validateInvocationParamCompatibility({
       model: this.model,
       thinking: this.thinking,
+      outputConfig: mergedOutputConfig,
       topK: this.topK,
       topP: this.topP,
       temperature: this.temperature,
