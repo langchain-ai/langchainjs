@@ -51,3 +51,7 @@ pnpm lint && pnpm format
 ### Adding new entrypoints
 
 If you add a new file to be exported, either import & re-export from `src/index.ts`, or add it to the `exports` field in the `package.json` file and run `pnpm build` to generate the new entrypoint.
+
+## Tools
+
+This package exports Search, Contents, Answer, and Agent tools. Exa Agent runs asynchronously and polls until completion. The existing Find Similar tool remains available for compatibility, but `/findSimilar` is deprecated and Search is preferred.
