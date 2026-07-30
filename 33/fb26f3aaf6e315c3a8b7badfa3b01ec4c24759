@@ -1,0 +1,32 @@
+libs/langchain-core/src/callbacks/tests/callbacks.test.ts
+  s_acad1d7df24bbf::t_93b404d6396659 909,912-954
+  s_acad1d7df24bbf::t_88494b307901ee 815-895
+  s_acad1d7df24bbf::t_3992d21a26934b 813-814
+  s_acad1d7df24bbf::t_445553c0c9333c 896-898,906-908
+  s_acad1d7df24bbf::t_70af64624f4e9b 910-911
+  s_acad1d7df24bbf::t_2efd5643dd2f47 15-18,899-905
+libs/langchain-core/src/callbacks/manager.ts
+  s_acad1d7df24bbf::t_5801160dbd6183 48,58,72-97,100-123,138,144,1509,1521
+  s_acad1d7df24bbf::t_92f30f70bbf502 99
+  s_acad1d7df24bbf::t_217b0d41fd4819 45-47,49-57,59-71,98,124-137,139-143,145-153,1493-1496,1500-1502,1504-1508,1511,1519-1520,1522-1524
+.changeset/fix-nested-tracer-run-store.md
+  s_acad1d7df24bbf::t_26ba1860c85efa 1-5
+libs/langchain-core/src/tracers/tracer_langchain.ts
+  s_acad1d7df24bbf::t_95dc95667f590b 212-213
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "33fb26f3aaf6e315c3a8b7badfa3b01ec4c24759",
+  "prompts": {},
+  "sessions": {
+    "s_acad1d7df24bbf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "8623c38c-61b6-49c5-ab67-d3a6bdb3e38e",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Colin Francis <colin.francis@langchain.dev>"
+    }
+  }
+}
