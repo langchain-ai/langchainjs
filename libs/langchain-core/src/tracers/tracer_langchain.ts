@@ -209,14 +209,8 @@ export class LangChainTracer
     return copied;
   }
 
-  /**
-   * Identity of this tracer's run store.
-   *
-   * Copies made by `copyWithTracingConfig()` share it, so two tracers with the
-   * same key are copies of each other. The callback manager uses this to dedupe
-   * them, since two copies handling the same run makes the second one throw.
-   */
-  getRunStoreKey(): object {
+  /** @internal */
+  _getRunStoreKey(): object {
     return this.runTreeMap;
   }
 

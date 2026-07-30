@@ -42,6 +42,115 @@ export type Callbacks =
   | CallbackManager
   | (BaseCallbackHandler | CallbackHandlerMethods)[];
 
+function getTracerRunStoreKey(tracer: LangChainTracer): object {
+  const candidate = tracer as LangChainTracer & {
+    _getRunStoreKey?: () => object;
+  };
+  return candidate._getRunStoreKey?.() ?? tracer;
+}
+
+function mergeTracerConfig(
+  target: LangChainTracer,
+  source: LangChainTracer
+): LangChainTracer {
+  if (target === source) {
+    return target;
+  }
+  return target.copyWithTracingConfig({
+    metadata: source.tracingMetadata,
+    tags: source.tracingTags,
+  });
+}
+
+function coalesceTracers(
+  handlers: BaseCallbackHandler[],
+  inheritableHandlers: BaseCallbackHandler[]
+): {
+  handlers: BaseCallbackHandler[];
+  inheritableHandlers: BaseCallbackHandler[];
+} {
+  const inheritableSet = new Set<BaseCallbackHandler>(inheritableHandlers);
+  const groups = new Map<
+    object,
+    { index: number; tracer: LangChainTracer; hasInheritable: boolean }
+  >();
+  const coalescedHandlers: BaseCallbackHandler[] = [];
+
+  // Fold a tracer into its run-store group, keeping a single representative per
+  // store (one tracer per store avoids the double-"end" throw). The
+  // representative's tracing config is drawn from inheritable entries once any
+  // exist, so a local-only tracer sharing the store cannot leak its tags or
+  // metadata into child runs, which inherit `inheritableHandlers`. Stores with
+  // only local entries keep merging those local entries.
+  const fold = (handler: LangChainTracer) => {
+    const key = getTracerRunStoreKey(handler);
+    const isInheritable = inheritableSet.has(handler);
+    const group = groups.get(key);
+    if (group === undefined) {
+      groups.set(key, {
+        index: coalescedHandlers.length,
+        tracer: handler,
+        hasInheritable: isInheritable,
+      });
+      coalescedHandlers.push(handler);
+      return;
+    }
+
+    if (isInheritable && !group.hasInheritable) {
+      // First inheritable entry for this store: drop any local-only config
+      // merged so far and restart from an inheritable baseline.
+      group.tracer = handler;
+      group.hasInheritable = true;
+    } else if (isInheritable || !group.hasInheritable) {
+      group.tracer = mergeTracerConfig(group.tracer, handler);
+    }
+    // A local entry on a store that already has inheritable config contributes
+    // nothing, so its config cannot ride into children.
+    coalescedHandlers[group.index] = group.tracer;
+  };
+
+  for (const handler of handlers) {
+    if (handler instanceof LangChainTracer) {
+      fold(handler);
+    } else {
+      coalescedHandlers.push(handler);
+    }
+  }
+
+  // `inheritableHandlers` is a subset of `handlers` by identity, so its tracers
+  // were already folded above. This only promotes an inheritable-only orphan
+  // (an alias broken upstream) back into `handlers`.
+  for (const handler of inheritableHandlers) {
+    if (
+      handler instanceof LangChainTracer &&
+      !groups.has(getTracerRunStoreKey(handler))
+    ) {
+      fold(handler);
+    }
+  }
+
+  const seenTracerStores = new Set<object>();
+  const coalescedInheritableHandlers = inheritableHandlers.flatMap(
+    (handler) => {
+      if (!(handler instanceof LangChainTracer)) {
+        return [handler];
+      }
+
+      const key = getTracerRunStoreKey(handler);
+      if (seenTracerStores.has(key)) {
+        return [];
+      }
+      seenTracerStores.add(key);
+      return [groups.get(key)?.tracer ?? handler];
+    }
+  );
+
+  return {
+    handlers: coalescedHandlers,
+    inheritableHandlers: coalescedInheritableHandlers,
+  };
+}
+
 export interface BaseCallbackConfig {
   /**
    * Name for the tracer run for this call. Defaults to the name of the class.
@@ -1381,24 +1490,25 @@ export class CallbackManager
       callbackManager &&
       (tracerInheritableMetadata || tracerInheritableTags)
     ) {
-      // Copy each tracer once and reuse that copy in both arrays. Copying the
-      // arrays separately would make two copies of the same tracer, which both
-      // handle the same run and make the second one throw.
-      const tracerCopies = new Map<LangChainTracer, LangChainTracer>();
-      const applyTracingConfig = (handler: BaseCallbackHandler) => {
+      const replacements = new Map<BaseCallbackHandler, BaseCallbackHandler>();
+      const applyTracingConfig = (
+        handler: BaseCallbackHandler
+      ): BaseCallbackHandler => {
         if (!(handler instanceof LangChainTracer)) {
           return handler;
         }
-        let copy = tracerCopies.get(handler);
-        if (copy === undefined) {
-          copy = handler.copyWithTracingConfig({
-            metadata: tracerInheritableMetadata,
-            tags: tracerInheritableTags,
-          });
-          tracerCopies.set(handler, copy);
+        const existing = replacements.get(handler);
+        if (existing !== undefined) {
+          return existing;
         }
-        return copy;
+        const replacement = handler.copyWithTracingConfig({
+          metadata: tracerInheritableMetadata,
+          tags: tracerInheritableTags,
+        });
+        replacements.set(handler, replacement);
+        return replacement;
       };
+
       callbackManager.handlers =
         callbackManager.handlers.map(applyTracingConfig);
       callbackManager.inheritableHandlers =
@@ -1406,101 +1516,15 @@ export class CallbackManager
     }
 
     if (callbackManager) {
-      coalesceTracers(callbackManager);
+      const coalesced = coalesceTracers(
+        callbackManager.handlers,
+        callbackManager.inheritableHandlers
+      );
+      callbackManager.handlers = coalesced.handlers;
+      callbackManager.inheritableHandlers = coalesced.inheritableHandlers;
     }
 
     return callbackManager;
-  }
-}
-
-/**
- * Dedupes tracers that share a run store down to one, so a run is not ended
- * twice (which throws "No ... run to end").
- *
- * Nested config merges can leave several copies of the same tracer in one
- * manager; this keeps a single merged survivor in `handlers` (and, if any copy
- * was inheritable, in `inheritableHandlers`). Independent tracers and other
- * handlers are left alone.
- */
-function coalesceTracers(callbackManager: CallbackManager): void {
-  // `instanceof LangChainTracer` also matches look-alikes (via the class's
-  // `Symbol.hasInstance`). Only real tracers have `getRunStoreKey`, so key on
-  // that and skip the rest.
-  const isRunStoreTracer = (
-    handler: BaseCallbackHandler
-  ): handler is LangChainTracer =>
-    handler instanceof LangChainTracer &&
-    typeof (handler as LangChainTracer).getRunStoreKey === "function";
-
-  const inheritableSet = new Set<BaseCallbackHandler>(
-    callbackManager.inheritableHandlers
-  );
-
-  // One merged tracer per run store, plus which run stores were inheritable.
-  const canonicalByRunStore = new Map<object, LangChainTracer>();
-  const inheritableRunStores = new Set<object>();
-  let tracerCount = 0;
-
-  const consider = (handler: BaseCallbackHandler) => {
-    if (!isRunStoreTracer(handler)) {
-      return;
-    }
-    tracerCount += 1;
-    const key = handler.getRunStoreKey();
-    const existing = canonicalByRunStore.get(key);
-    // The merged tracer shares the same run store, so the key stays the same.
-    canonicalByRunStore.set(
-      key,
-      existing === undefined
-        ? handler
-        : existing.copyWithTracingConfig({
-            metadata: handler.tracingMetadata,
-            tags: handler.tracingTags,
-          })
-    );
-    if (inheritableSet.has(handler)) {
-      inheritableRunStores.add(key);
-    }
-  };
-  for (const handler of callbackManager.handlers) consider(handler);
-  for (const handler of callbackManager.inheritableHandlers) consider(handler);
-
-  // Nothing to do unless there was a duplicate.
-  if (tracerCount === canonicalByRunStore.size) {
-    return;
-  }
-
-  const replace = (handlers: BaseCallbackHandler[]) => {
-    const out: BaseCallbackHandler[] = [];
-    for (const handler of handlers) {
-      if (!isRunStoreTracer(handler)) {
-        out.push(handler);
-        continue;
-      }
-      const canonical = canonicalByRunStore.get(handler.getRunStoreKey())!;
-      if (!out.includes(canonical)) {
-        out.push(canonical);
-      }
-    }
-    return out;
-  };
-  callbackManager.handlers = replace(callbackManager.handlers);
-  callbackManager.inheritableHandlers = replace(
-    callbackManager.inheritableHandlers
-  );
-
-  // Keep each survivor in `handlers`, and inheritable ones in
-  // `inheritableHandlers` too.
-  for (const [key, canonical] of canonicalByRunStore) {
-    if (!callbackManager.handlers.includes(canonical)) {
-      callbackManager.handlers.push(canonical);
-    }
-    if (
-      inheritableRunStores.has(key) &&
-      !callbackManager.inheritableHandlers.includes(canonical)
-    ) {
-      callbackManager.inheritableHandlers.push(canonical);
-    }
   }
 }
 
