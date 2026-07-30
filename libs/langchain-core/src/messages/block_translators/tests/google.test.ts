@@ -117,6 +117,41 @@ describe("ChatGoogleTranslator", () => {
     ]);
   });
 
+  it("should preserve the tool call id and thoughtSignature", () => {
+    const message = new AIMessage({
+      id: "message-id",
+      content: [
+        {
+          type: "functionCall",
+          functionCall: {
+            name: "get_weather",
+            args: { city: "London" },
+          },
+          thoughtSignature: "thought-signature",
+        },
+      ],
+      tool_calls: [
+        {
+          type: "tool_call",
+          id: "call-1",
+          name: "get_weather",
+          args: { city: "London" },
+        },
+      ],
+      response_metadata: { model_provider: "google" },
+    });
+
+    expect(message.contentBlocks).toEqual([
+      {
+        type: "tool_call",
+        id: "call-1",
+        name: "get_weather",
+        args: { city: "London" },
+        thoughtSignature: "thought-signature",
+      },
+    ]);
+  });
+
   it("should handle array content with only thinking blocks (no text target)", () => {
     // Edge case: all blocks are thinking blocks, no non-thinking text block
     // to attach the signature to. Should fall through gracefully.
