@@ -910,3 +910,45 @@ test("callback configuration keeps independent tracers", () => {
 
   expect(configuredTracers).toHaveLength(2);
 });
+
+test("coalescing does not leak local tracer config into inheritable handlers", () => {
+  const mockClient = {
+    createRun: vi.fn().mockResolvedValue(undefined),
+    updateRun: vi.fn().mockResolvedValue(undefined),
+  } as LangSmithTracingClientInterface;
+  const inheritable = new LangChainTracer({
+    client: mockClient,
+    tags: ["inheritable-tag"],
+    metadata: { tenant: "alpha" },
+  });
+  // A local-only copy sharing the same run store (as a local handler would).
+  const localCopy = inheritable.copyWithTracingConfig({
+    tags: ["local-only-tag"],
+    metadata: { requestSecret: "local-only" },
+  });
+
+  // Inheritable tracer as the inheritable handler; the local copy as a local
+  // (non-inheritable) handler. Both share a run store, so coalescing collapses
+  // them to a single representative.
+  const callbacks = CallbackManager.configure([inheritable], [localCopy])!;
+
+  const configuredTracers = callbacks.handlers.filter(
+    (handler): handler is LangChainTracer => handler instanceof LangChainTracer
+  );
+  const inheritableTracers = callbacks.inheritableHandlers.filter(
+    (handler): handler is LangChainTracer => handler instanceof LangChainTracer
+  );
+
+  // One tracer per run store (avoids the double-"end" throw) and the
+  // inheritableHandlers ⊆ handlers identity invariant is preserved.
+  expect(configuredTracers).toHaveLength(1);
+  expect(inheritableTracers).toHaveLength(1);
+  expect(inheritableTracers[0]).toBe(configuredTracers[0]);
+
+  // The representative that propagates to children (via getChild ->
+  // inheritableHandlers) must not carry the local-only tag or metadata.
+  expect(inheritableTracers[0].tracingTags).not.toContain("local-only-tag");
+  expect(inheritableTracers[0].tracingMetadata ?? {}).not.toHaveProperty(
+    "requestSecret"
+  );
+});

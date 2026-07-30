@@ -69,49 +69,64 @@ function coalesceTracers(
   handlers: BaseCallbackHandler[];
   inheritableHandlers: BaseCallbackHandler[];
 } {
-  const groups = new Map<object, { index: number; tracer: LangChainTracer }>();
+  const inheritableSet = new Set<BaseCallbackHandler>(inheritableHandlers);
+  const groups = new Map<
+    object,
+    { index: number; tracer: LangChainTracer; hasInheritable: boolean }
+  >();
   const coalescedHandlers: BaseCallbackHandler[] = [];
 
-  for (const handler of handlers) {
-    if (!(handler instanceof LangChainTracer)) {
-      coalescedHandlers.push(handler);
-      continue;
-    }
-
+  // Fold a tracer into its run-store group, keeping a single representative per
+  // store (one tracer per store avoids the double-"end" throw). The
+  // representative's tracing config is drawn from inheritable entries once any
+  // exist, so a local-only tracer sharing the store cannot leak its tags or
+  // metadata into child runs, which inherit `inheritableHandlers`. Stores with
+  // only local entries keep merging those local entries.
+  const fold = (handler: LangChainTracer) => {
     const key = getTracerRunStoreKey(handler);
+    const isInheritable = inheritableSet.has(handler);
     const group = groups.get(key);
     if (group === undefined) {
       groups.set(key, {
         index: coalescedHandlers.length,
         tracer: handler,
+        hasInheritable: isInheritable,
       });
       coalescedHandlers.push(handler);
-      continue;
+      return;
     }
 
-    group.tracer = mergeTracerConfig(group.tracer, handler);
+    if (isInheritable && !group.hasInheritable) {
+      // First inheritable entry for this store: drop any local-only config
+      // merged so far and restart from an inheritable baseline.
+      group.tracer = handler;
+      group.hasInheritable = true;
+    } else if (isInheritable || !group.hasInheritable) {
+      group.tracer = mergeTracerConfig(group.tracer, handler);
+    }
+    // A local entry on a store that already has inheritable config contributes
+    // nothing, so its config cannot ride into children.
     coalescedHandlers[group.index] = group.tracer;
+  };
+
+  for (const handler of handlers) {
+    if (handler instanceof LangChainTracer) {
+      fold(handler);
+    } else {
+      coalescedHandlers.push(handler);
+    }
   }
 
-  // Repair aliases broken by separate handler/inheritable-handler copies.
+  // `inheritableHandlers` is a subset of `handlers` by identity, so its tracers
+  // were already folded above. This only promotes an inheritable-only orphan
+  // (an alias broken upstream) back into `handlers`.
   for (const handler of inheritableHandlers) {
-    if (!(handler instanceof LangChainTracer)) {
-      continue;
+    if (
+      handler instanceof LangChainTracer &&
+      !groups.has(getTracerRunStoreKey(handler))
+    ) {
+      fold(handler);
     }
-
-    const key = getTracerRunStoreKey(handler);
-    const group = groups.get(key);
-    if (group === undefined) {
-      groups.set(key, {
-        index: coalescedHandlers.length,
-        tracer: handler,
-      });
-      coalescedHandlers.push(handler);
-      continue;
-    }
-
-    group.tracer = mergeTracerConfig(group.tracer, handler);
-    coalescedHandlers[group.index] = group.tracer;
   }
 
   const seenTracerStores = new Set<object>();
