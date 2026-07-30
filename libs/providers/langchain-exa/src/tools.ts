@@ -74,8 +74,8 @@ const agentInputSchema = z.object({
   dataSources: z
     .array(z.object({ provider: z.string() }).catchall(z.unknown()))
     .optional(),
-  timeoutMs: z.number().int().positive().optional(),
-  pollInterval: z.number().int().positive().optional(),
+  timeoutMs: z.number().int().min(1).max(3_600_000).optional(),
+  pollInterval: z.number().int().min(500).max(60_000).optional(),
 });
 
 /** Build content options for a Contents request; defaults to text. */
