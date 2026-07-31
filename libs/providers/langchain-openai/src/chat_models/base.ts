@@ -70,6 +70,8 @@ import {
   createFunctionCallingParser,
 } from "@langchain/core/language_models/structured_output";
 
+const MCP_CREDENTIALS_REDACTED = "**REDACTED**";
+
 interface OpenAILLMOutput {
   tokenUsage: {
     completionTokens?: number;
@@ -453,10 +455,10 @@ export abstract class BaseChatOpenAI<
         }
         const redactedTool: Record<string, unknown> = { ...tool };
         if ("headers" in redactedTool) {
-          redactedTool.headers = "**REDACTED**";
+          redactedTool.headers = MCP_CREDENTIALS_REDACTED;
         }
         if ("authorization" in redactedTool) {
-          redactedTool.authorization = "**REDACTED**";
+          redactedTool.authorization = MCP_CREDENTIALS_REDACTED;
         }
         return redactedTool;
       }),
@@ -483,10 +485,10 @@ export abstract class BaseChatOpenAI<
         }
         const redactedTool = { ...tool };
         if ("headers" in redactedTool) {
-          redactedTool.headers = "**REDACTED**";
+          redactedTool.headers = MCP_CREDENTIALS_REDACTED;
         }
         if ("authorization" in redactedTool) {
-          redactedTool.authorization = "**REDACTED**";
+          redactedTool.authorization = MCP_CREDENTIALS_REDACTED;
         }
         return redactedTool;
       }),

@@ -72,6 +72,8 @@ import {
   createFunctionCallingParser,
 } from "@langchain/core/language_models/structured_output";
 
+const MCP_CREDENTIALS_REDACTED = "**REDACTED**";
+
 // Default max output tokens per model family (prefix-matched).
 // These are sensible defaults for the `max_tokens` API parameter when
 // the user does not explicitly set `maxTokens`. Values are based on the
@@ -1317,7 +1319,7 @@ export class ChatAnthropicMessages<
         }
         return {
           ...server,
-          authorization_token: "**REDACTED**",
+          authorization_token: MCP_CREDENTIALS_REDACTED,
         };
       }),
     };
@@ -1338,7 +1340,7 @@ export class ChatAnthropicMessages<
         }
         return {
           ...server,
-          authorization_token: "**REDACTED**",
+          authorization_token: MCP_CREDENTIALS_REDACTED,
         };
       }),
     };
