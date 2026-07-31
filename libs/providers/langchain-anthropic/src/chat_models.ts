@@ -1302,6 +1302,27 @@ export class ChatAnthropicMessages<
     return output;
   }
 
+  protected override _getInvocationParamsForTracing(
+    options?: this["ParsedCallOptions"]
+  ): ReturnType<this["invocationParams"]> {
+    const params = this.invocationParams(options);
+    if (!Array.isArray(params.mcp_servers)) {
+      return params;
+    }
+    return {
+      ...params,
+      mcp_servers: params.mcp_servers.map((server) => {
+        if (!("authorization_token" in server)) {
+          return server;
+        }
+        return {
+          ...server,
+          authorization_token: "**REDACTED**",
+        };
+      }),
+    };
+  }
+
   /** @ignore */
   _identifyingParams() {
     return {
