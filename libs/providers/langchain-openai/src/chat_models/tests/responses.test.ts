@@ -19,8 +19,17 @@ class TraceableChatOpenAIResponses extends ChatOpenAIResponses {
 describe("MCP credential tracing", () => {
   it("redacts MCP credentials without changing request params", () => {
     const model = new TraceableChatOpenAIResponses({ model: "gpt-4o" });
+    const functionTool = {
+      type: "function" as const,
+      function: {
+        name: "lookup",
+        parameters: { type: "object", properties: {} },
+      },
+    };
     const options = {
+      temperature: 0.3,
       tools: [
+        functionTool,
         {
           type: "mcp" as const,
           server_label: "private-server",
@@ -35,18 +44,20 @@ describe("MCP credential tracing", () => {
     const traceParams = model.traceParams(options);
     const traceOptions = model.traceOptions(options);
 
-    expect(requestParams.tools?.[0]).toMatchObject({
+    expect(requestParams.tools?.[1]).toMatchObject({
       headers: { Authorization: "Bearer header-secret" },
       authorization: "Bearer authorization-secret",
     });
-    expect(traceParams.tools?.[0]).toMatchObject({
+    expect(traceParams.tools?.[1]).toMatchObject({
       headers: "**REDACTED**",
       authorization: "**REDACTED**",
     });
-    expect(traceOptions.tools?.[0]).toMatchObject({
+    expect(traceOptions.tools?.[1]).toMatchObject({
       headers: "**REDACTED**",
       authorization: "**REDACTED**",
     });
+    expect(traceOptions.temperature).toBe(options.temperature);
+    expect(traceOptions.tools?.[0]).toBe(functionTool);
     expect(JSON.stringify({ traceParams, traceOptions })).not.toContain(
       "secret"
     );

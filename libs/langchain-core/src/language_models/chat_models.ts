@@ -1164,16 +1164,9 @@ export abstract class BaseChatModel<
 
   protected _getCallOptionsForTracing(
     options: this["ParsedCallOptions"],
-    invocationParams: ReturnType<this["invocationParams"]>
+    _invocationParams: ReturnType<this["invocationParams"]>
   ): this["ParsedCallOptions"] {
-    const traceOptions = { ...options };
-    for (const key of Object.keys(traceOptions)) {
-      if (key in invocationParams) {
-        traceOptions[key as keyof this["ParsedCallOptions"]] =
-          invocationParams[key];
-      }
-    }
-    return traceOptions;
+    return options;
   }
 
   /**

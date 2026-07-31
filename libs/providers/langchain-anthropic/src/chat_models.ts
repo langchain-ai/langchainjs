@@ -1323,6 +1323,27 @@ export class ChatAnthropicMessages<
     };
   }
 
+  protected override _getCallOptionsForTracing(
+    options: this["ParsedCallOptions"],
+    _invocationParams: ReturnType<this["invocationParams"]>
+  ): this["ParsedCallOptions"] {
+    if (!Array.isArray(options.mcp_servers)) {
+      return options;
+    }
+    return {
+      ...options,
+      mcp_servers: options.mcp_servers.map((server) => {
+        if (!("authorization_token" in server)) {
+          return server;
+        }
+        return {
+          ...server,
+          authorization_token: "**REDACTED**",
+        };
+      }),
+    };
+  }
+
   /** @ignore */
   _identifyingParams() {
     return {

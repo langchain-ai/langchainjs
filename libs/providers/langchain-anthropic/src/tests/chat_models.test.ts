@@ -34,8 +34,15 @@ test("MCP authorization tokens are redacted from traces", () => {
     modelName: "claude-haiku-4-5-20251001",
     anthropicApiKey: "testing",
   });
+  const publicServer = {
+    type: "url" as const,
+    url: "https://example.com/public-mcp",
+    name: "public-server",
+  };
   const options = {
+    stop: ["done"],
     mcp_servers: [
+      publicServer,
       {
         type: "url" as const,
         url: "https://example.com/mcp",
@@ -49,13 +56,15 @@ test("MCP authorization tokens are redacted from traces", () => {
   const traceParams = model.traceParams(options);
   const traceOptions = model.traceOptions(options);
 
-  expect(requestParams.mcp_servers?.[0].authorization_token).toBe(
+  expect(requestParams.mcp_servers?.[1].authorization_token).toBe(
     "authorization-secret"
   );
-  expect(traceParams.mcp_servers?.[0].authorization_token).toBe("**REDACTED**");
-  expect(traceOptions.mcp_servers?.[0].authorization_token).toBe(
+  expect(traceParams.mcp_servers?.[1].authorization_token).toBe("**REDACTED**");
+  expect(traceOptions.mcp_servers?.[1].authorization_token).toBe(
     "**REDACTED**"
   );
+  expect(traceOptions.stop).toBe(options.stop);
+  expect(traceOptions.mcp_servers?.[0]).toBe(publicServer);
   expect(JSON.stringify({ traceParams, traceOptions })).not.toContain(
     "authorization-secret"
   );

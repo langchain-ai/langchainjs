@@ -463,6 +463,36 @@ export abstract class BaseChatOpenAI<
     };
   }
 
+  protected override _getCallOptionsForTracing(
+    options: this["ParsedCallOptions"],
+    _invocationParams: ReturnType<this["invocationParams"]>
+  ): this["ParsedCallOptions"] {
+    if (!Array.isArray(options.tools)) {
+      return options;
+    }
+    return {
+      ...options,
+      tools: options.tools.map((tool) => {
+        if (
+          typeof tool !== "object" ||
+          tool === null ||
+          !("type" in tool) ||
+          tool.type !== "mcp"
+        ) {
+          return tool;
+        }
+        const redactedTool = { ...tool };
+        if ("headers" in redactedTool) {
+          redactedTool.headers = "**REDACTED**";
+        }
+        if ("authorization" in redactedTool) {
+          redactedTool.authorization = "**REDACTED**";
+        }
+        return redactedTool;
+      }),
+    };
+  }
+
   /** @ignore */
   _identifyingParams(): Omit<
     OpenAIClient.Chat.ChatCompletionCreateParams,
