@@ -215,4 +215,22 @@ describe("LocalFileStore", () => {
     await expect(store.mget(["\\foo"])).rejects.toThrowError();
     await fs.promises.rm(secondaryRootPath, { recursive: true, force: true });
   });
+
+  test("Should disallow traversal into sibling directories with the same prefix", async () => {
+    const encoder = new TextEncoder();
+    const rootPath = fs.mkdtempSync(path.join(os.tmpdir(), "lc-store-root-"));
+    const siblingPath = `${rootPath}-sibling`;
+    const store = await LocalFileStore.fromPath(rootPath);
+
+    await expect(
+      store.mset([
+        [`../${path.basename(siblingPath)}/foo`, encoder.encode("x")],
+      ])
+    ).rejects.toThrowError();
+
+    expect(fs.existsSync(path.join(siblingPath, "foo.txt"))).toBe(false);
+
+    await fs.promises.rm(rootPath, { recursive: true, force: true });
+    await fs.promises.rm(siblingPath, { recursive: true, force: true });
+  });
 });

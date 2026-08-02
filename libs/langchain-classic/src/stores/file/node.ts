@@ -1,6 +1,6 @@
 import * as fs from "node:fs/promises";
 import { mkdtempSync } from "node:fs";
-import { join } from "node:path";
+import { isAbsolute, relative, resolve } from "node:path";
 
 import { BaseFileStore } from "./base.js";
 
@@ -15,13 +15,27 @@ export class NodeFileStore extends BaseFileStore {
     super();
   }
 
+  private getFullPath(filePath: string): string {
+    const rootPath = resolve(this.basePath);
+    const fullPath = resolve(rootPath, filePath);
+    const relativePath = relative(rootPath, fullPath);
+
+    if (relativePath.startsWith("..") || isAbsolute(relativePath)) {
+      throw new Error(
+        `Invalid path: ${filePath}. Path should be relative to the base path.`
+      );
+    }
+
+    return fullPath;
+  }
+
   /**
    * Reads the contents of a file at the given path.
    * @param path Path of the file to read.
    * @returns The contents of the file as a string.
    */
   async readFile(path: string): Promise<string> {
-    return await fs.readFile(join(this.basePath, path), "utf8");
+    return await fs.readFile(this.getFullPath(path), "utf8");
   }
 
   /**
@@ -31,6 +45,6 @@ export class NodeFileStore extends BaseFileStore {
    * @returns Promise that resolves when the file has been written.
    */
   async writeFile(path: string, contents: string): Promise<void> {
-    await fs.writeFile(join(this.basePath, path), contents, "utf8");
+    await fs.writeFile(this.getFullPath(path), contents, "utf8");
   }
 }
