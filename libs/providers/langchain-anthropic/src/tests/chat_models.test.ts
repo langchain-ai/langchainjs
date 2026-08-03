@@ -14,6 +14,62 @@ import { ChatAnthropic, ChatAnthropicMessages } from "../chat_models.js";
 import { _convertMessagesToAnthropicPayload } from "../utils/message_inputs.js";
 import { AnthropicToolExtrasSchema } from "../utils/tools.js";
 
+class TraceableChatAnthropic extends ChatAnthropicMessages {
+  traceParams(
+    options: Parameters<ChatAnthropicMessages["invocationParams"]>[0]
+  ) {
+    return this._getInvocationParamsForTracing(options);
+  }
+
+  traceOptions(
+    options: Parameters<ChatAnthropicMessages["invocationParams"]>[0]
+  ) {
+    const params = this._getInvocationParamsForTracing(options);
+    return this._getCallOptionsForTracing(options ?? {}, params);
+  }
+}
+
+test("MCP authorization tokens are redacted from traces", () => {
+  const model = new TraceableChatAnthropic({
+    modelName: "claude-haiku-4-5-20251001",
+    anthropicApiKey: "testing",
+  });
+  const publicServer = {
+    type: "url" as const,
+    url: "https://example.com/public-mcp",
+    name: "public-server",
+  };
+  const options = {
+    stop: ["done"],
+    mcp_servers: [
+      publicServer,
+      {
+        type: "url" as const,
+        url: "https://example.com/mcp",
+        name: "private-server",
+        authorization_token: "authorization-secret",
+      },
+    ],
+  };
+
+  const requestParams = model.invocationParams(options);
+  const traceParams = model.traceParams(options);
+  const traceOptions = model.traceOptions(options);
+
+  expect(requestParams.mcp_servers?.[1].authorization_token).toBe(
+    "authorization-secret"
+  );
+  expect(traceParams.mcp_servers?.[1].authorization_token).toBe("**REDACTED**");
+  expect(traceOptions.mcp_servers?.[1].authorization_token).toBe(
+    "**REDACTED**"
+  );
+  expect(traceOptions.stop).toBe(options.stop);
+  expect(traceOptions.mcp_servers?.[0]).toBe(publicServer);
+  expect(JSON.stringify({ traceParams, traceOptions })).not.toContain(
+    "authorization-secret"
+  );
+});
+
 test("constructor supports model shorthand for ChatAnthropicMessages", () => {
   const model = new ChatAnthropicMessages("claude-haiku-4-5-20251001", {
     anthropicApiKey: "testing",

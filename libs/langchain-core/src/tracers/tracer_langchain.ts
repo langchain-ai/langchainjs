@@ -209,6 +209,11 @@ export class LangChainTracer
     return copied;
   }
 
+  /** @internal */
+  _getRunStoreKey(): object {
+    return this.runTreeMap;
+  }
+
   getRun(id: string): Run | undefined {
     return this.runTreeMap.get(id);
   }

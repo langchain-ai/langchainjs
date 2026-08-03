@@ -70,6 +70,8 @@ import {
   createFunctionCallingParser,
 } from "@langchain/core/language_models/structured_output";
 
+const MCP_CREDENTIALS_REDACTED = "**REDACTED**";
+
 interface OpenAILLMOutput {
   tokenUsage: {
     completionTokens?: number;
@@ -435,6 +437,61 @@ export abstract class BaseChatOpenAI<
       ls_temperature: params.temperature ?? undefined,
       ls_max_tokens: params.max_tokens ?? undefined,
       ls_stop: options.stop,
+    };
+  }
+
+  protected override _getInvocationParamsForTracing(
+    options?: this["ParsedCallOptions"]
+  ): ReturnType<this["invocationParams"]> {
+    const params = this.invocationParams(options);
+    if (!Array.isArray(params.tools)) {
+      return params;
+    }
+    return {
+      ...params,
+      tools: params.tools.map((tool) => {
+        if (tool?.type !== "mcp") {
+          return tool;
+        }
+        const redactedTool: Record<string, unknown> = { ...tool };
+        if ("headers" in redactedTool) {
+          redactedTool.headers = MCP_CREDENTIALS_REDACTED;
+        }
+        if ("authorization" in redactedTool) {
+          redactedTool.authorization = MCP_CREDENTIALS_REDACTED;
+        }
+        return redactedTool;
+      }),
+    };
+  }
+
+  protected override _getCallOptionsForTracing(
+    options: this["ParsedCallOptions"],
+    _invocationParams: ReturnType<this["invocationParams"]>
+  ): this["ParsedCallOptions"] {
+    if (!Array.isArray(options.tools)) {
+      return options;
+    }
+    return {
+      ...options,
+      tools: options.tools.map((tool) => {
+        if (
+          typeof tool !== "object" ||
+          tool === null ||
+          !("type" in tool) ||
+          tool.type !== "mcp"
+        ) {
+          return tool;
+        }
+        const redactedTool = { ...tool };
+        if ("headers" in redactedTool) {
+          redactedTool.headers = MCP_CREDENTIALS_REDACTED;
+        }
+        if ("authorization" in redactedTool) {
+          redactedTool.authorization = MCP_CREDENTIALS_REDACTED;
+        }
+        return redactedTool;
+      }),
     };
   }
 
