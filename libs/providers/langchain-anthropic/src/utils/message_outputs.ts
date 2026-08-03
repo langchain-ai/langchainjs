@@ -60,7 +60,7 @@ export function _makeMessageChunkFromAnthropicEvent(
       "context_management" in data.delta
         ? { context_management: data.delta.context_management }
         : undefined;
-    const { cost } = data.usage as typeof data.usage & { cost?: unknown };
+    const cost = (data.usage as typeof data.usage & { cost?: unknown })?.cost;
     return {
       chunk: new AIMessageChunk({
         content: fields.coerceContentToString ? "" : [],
