@@ -172,24 +172,22 @@ function _formatForTracing(messages: BaseMessage[]): BaseMessage[] {
   const messagesToTrace: BaseMessage[] = [];
   for (const message of messages) {
     let messageToTrace = message;
-    if (Array.isArray(message.content)) {
-      for (let idx = 0; idx < message.content.length; idx++) {
-        const block = message.content[idx];
-        if (isURLContentBlock(block) || isBase64ContentBlock(block)) {
-          if (messageToTrace === message) {
-            // Also shallow-copy content
-            // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-            messageToTrace = new (message.constructor as any)({
-              ...messageToTrace,
-              content: [
-                ...message.content.slice(0, idx),
-                convertToOpenAIImageBlock(block),
-                ...message.content.slice(idx + 1),
-              ],
-            });
-          }
-        }
-      }
+    if (
+      Array.isArray(message.content) &&
+      message.content.some(
+        (block) => isURLContentBlock(block) || isBase64ContentBlock(block)
+      )
+    ) {
+      // Also shallow-copy content
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      messageToTrace = new (message.constructor as any)({
+        ...messageToTrace,
+        content: message.content.map((block) =>
+          isURLContentBlock(block) || isBase64ContentBlock(block)
+            ? convertToOpenAIImageBlock(block)
+            : block
+        ),
+      });
     }
     messagesToTrace.push(messageToTrace);
   }
