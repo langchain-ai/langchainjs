@@ -1379,8 +1379,11 @@ importers:
   libs/providers/langchain-exa:
     dependencies:
       exa-js:
-        specifier: ^1.10.3
-        version: 1.10.3(encoding@0.1.13)(ws@8.21.0(bufferutil@4.1.0))
+        specifier: ^2.15.1
+        version: 2.16.3(encoding@0.1.13)(ws@8.21.0(bufferutil@4.1.0))
+      zod:
+        specifier: ^3.25.76 || ^4
+        version: 4.3.6
     devDependencies:
       '@langchain/core':
         specifier: workspace:^
@@ -7619,6 +7622,9 @@ packages:
 
   exa-js@1.10.3:
     resolution: {integrity: sha512-jIcaMTTBrLg1uJ0IPmZvhZjhgTqJjD6ea4+iO2ugOecAxh4+YAqm9dztBfAt7mQqE0p5edaAqlV7pSQX/qOytw==}
+
+  exa-js@2.16.3:
+    resolution: {integrity: sha512-e1oYN1gvMyMSUG64YuwINYQ2oLnVXMGO6/Qk3tXykGg3HUyY87UjcMLQwNePBRlHSA09ccKihMbjp4cKXUH0kg==}
 
   execa@5.1.1:
     resolution: {integrity: sha512-8uSpZZocAZRBAPIEINJj3Lo9HyGitllczc27Eh5YYojjMFMn8yHMDMaUHE2Jqfq05D/wucwI4JGURyXt1vchyg==}
@@ -17950,6 +17956,17 @@ snapshots:
       - ws
 
   exa-js@1.10.3(encoding@0.1.13)(ws@8.21.0(bufferutil@4.1.0)):
+    dependencies:
+      cross-fetch: 4.1.0(encoding@0.1.13)
+      dotenv: 16.4.7
+      openai: 5.23.2(ws@8.21.0(bufferutil@4.1.0))(zod@3.25.76)
+      zod: 3.25.76
+      zod-to-json-schema: 3.25.2(zod@3.25.76)
+    transitivePeerDependencies:
+      - encoding
+      - ws
+
+  exa-js@2.16.3(encoding@0.1.13)(ws@8.21.0(bufferutil@4.1.0)):
     dependencies:
       cross-fetch: 4.1.0(encoding@0.1.13)
       dotenv: 16.4.7

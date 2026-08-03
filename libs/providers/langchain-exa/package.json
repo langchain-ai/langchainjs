@@ -29,7 +29,8 @@
     "format:check": "prettier --check \"src\""
   },
   "dependencies": {
-    "exa-js": "^1.10.3"
+    "exa-js": "^2.15.1",
+    "zod": "^3.25.76 || ^4"
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0"
