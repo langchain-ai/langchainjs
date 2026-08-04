@@ -59,7 +59,7 @@
     "@rockset/client": "^0.9.2",
     "@supabase/supabase-js": "^2.111.0",
     "@tensorflow/tfjs-backend-cpu": "^4.22.0",
-    "@types/pg": "^8.20.0",
+    "@types/pg": "^8.20.3",
     "@upstash/redis": "^1.38.0",
     "@upstash/vector": "^1.2.3",
     "@vercel/kv": "^3.0.0",

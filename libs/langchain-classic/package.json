@@ -148,7 +148,7 @@
     "@tsconfig/recommended": "^1.0.2",
     "@types/js-yaml": "^4",
     "@types/jsdom": "^28.0.3",
-    "@types/pg": "^8.15.5",
+    "@types/pg": "^8.20.3",
     "@types/ws": "^8",
     "@upstash/redis": "^1.38.0",
     "@upstash/vector": "^1.2.2",
