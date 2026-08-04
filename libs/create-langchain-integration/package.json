@@ -15,7 +15,7 @@
     "@langchain/tsconfig": "workspace:*",
     "@types/prompts": "^2",
     "@types/validate-npm-package-name": "4.0.2",
-    "@vercel/ncc": "^0.38.4",
+    "@vercel/ncc": "^0.44.1",
     "commander": "^14.0.3",
     "conf": "^15.1.0",
     "dotenv": "^17.4.0",

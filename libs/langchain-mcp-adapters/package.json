@@ -31,7 +31,7 @@
     "tools"
   ],
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "debug": "^4.4.3",
     "zod": "^3.25.76 || ^4"
   },
@@ -65,7 +65,7 @@
     "eventsource": "^4.1.0",
     "express": "^5.2.1",
     "langchain": "workspace:*",
-    "npm-run-all2": "^9.0.1",
+    "npm-run-all2": "^9.0.3",
     "ts-node": "^10.9.2",
     "typescript": "~6.0.3",
     "vitest": "^4.1.8"
