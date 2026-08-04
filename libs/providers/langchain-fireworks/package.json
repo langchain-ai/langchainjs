@@ -38,7 +38,7 @@
     "@vitest/coverage-v8": "^4.1.9",
     "dotenv": "^17.4.0",
     "dpdm": "^3.14.0",
-    "typescript": "~6.0.3",
+    "typescript": "~7.0.2",
     "vitest": "^4.1.8"
   },
   "publishConfig": {

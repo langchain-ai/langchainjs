@@ -15,7 +15,7 @@
     "rolldown": "^1.2.0",
     "tsdown": "^0.22.14",
     "type-fest": "^5.8.0",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.2",
     "unplugin-unused": "^0.6.0"
   },
   "devDependencies": {
