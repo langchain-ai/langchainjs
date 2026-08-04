@@ -173,22 +173,21 @@ function _formatForTracing(messages: BaseMessage[]): BaseMessage[] {
   for (const message of messages) {
     let messageToTrace = message;
     if (Array.isArray(message.content)) {
-      for (let idx = 0; idx < message.content.length; idx++) {
-        const block = message.content[idx];
+      let converted = false;
+      const content = message.content.map((block) => {
         if (isURLContentBlock(block) || isBase64ContentBlock(block)) {
-          if (messageToTrace === message) {
-            // Also shallow-copy content
-            // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-            messageToTrace = new (message.constructor as any)({
-              ...messageToTrace,
-              content: [
-                ...message.content.slice(0, idx),
-                convertToOpenAIImageBlock(block),
-                ...message.content.slice(idx + 1),
-              ],
-            });
-          }
+          converted = true;
+          return convertToOpenAIImageBlock(block);
         }
+        return block;
+      });
+      if (converted) {
+        // Only shallow-copy the message when at least one block changed.
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+        messageToTrace = new (message.constructor as any)({
+          ...message,
+          content,
+        });
       }
     }
     messagesToTrace.push(messageToTrace);

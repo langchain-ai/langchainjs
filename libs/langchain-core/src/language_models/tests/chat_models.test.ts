@@ -4,6 +4,7 @@ import { z as z4 } from "zod/v4";
 import { zodToJsonSchema } from "../../utils/zod-to-json-schema/index.js";
 import { FakeChatModel, FakeListChatModel } from "../../utils/testing/index.js";
 import { HumanMessage } from "../../messages/human.js";
+import type { BaseMessage } from "../../messages/base.js";
 import { getBufferString } from "../../messages/utils.js";
 import { AIMessage } from "../../messages/ai.js";
 import { RunCollectorCallbackHandler } from "../../tracers/run_collector.js";
@@ -615,4 +616,58 @@ test("Test ChatModel applies v1 outputVersion after implicit streaming aggregati
       text: "Hello world!",
     },
   ]);
+});
+
+test("Traced messages convert every base64/URL content block, not just the first", async () => {
+  // Regression test for _formatForTracing only converting the first
+  // base64/URL content block per message.
+  const capturedInputs: BaseMessage[][] = [];
+  class CaptureInputHandler extends BaseCallbackHandler {
+    name = "CaptureInputHandler";
+
+    async handleChatModelStart(
+      _llm: Parameters<BaseCallbackHandler["handleChatModelStart"]>[0],
+      messages: BaseMessage[][]
+    ): Promise<void> {
+      capturedInputs.push(messages[0]);
+    }
+  }
+
+  const message = new HumanMessage({
+    content: [
+      { type: "text", text: "Compare these images" },
+      {
+        type: "image",
+        source_type: "base64",
+        data: "AAAA",
+        mime_type: "image/png",
+      },
+      {
+        type: "image",
+        source_type: "base64",
+        data: "BBBB",
+        mime_type: "image/jpeg",
+      },
+    ],
+  });
+
+  const model = new FakeChatModel({});
+  await model.invoke([message], { callbacks: [new CaptureInputHandler()] });
+  await awaitAllCallbacks();
+
+  expect(capturedInputs.length).toBe(1);
+  const tracedContent = capturedInputs[0][0].content;
+  // Both image blocks should be converted to the OpenAI image_url shape...
+  expect(tracedContent).toEqual([
+    { type: "text", text: "Compare these images" },
+    { type: "image_url", image_url: { url: "data:image/png;base64,AAAA" } },
+    { type: "image_url", image_url: { url: "data:image/jpeg;base64,BBBB" } },
+  ]);
+  // ...while the original message is left untouched (shallow copy).
+  expect(Array.isArray(message.content) && message.content[2]).toEqual({
+    type: "image",
+    source_type: "base64",
+    data: "BBBB",
+    mime_type: "image/jpeg",
+  });
 });
