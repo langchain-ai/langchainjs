@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@langchain/google-common": "workspace:*",
-    "google-auth-library": "^10.9.0"
+    "google-auth-library": "^10.9.1"
   },
   "devDependencies": {
     "@langchain/tsconfig": "workspace:*",
