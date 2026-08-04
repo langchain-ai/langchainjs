@@ -707,7 +707,7 @@ export function _areEquals(a: any, b: any): boolean {
     if (arrA && arrB) {
       length = a.length;
       if (length != b.length) return false;
-      for (i = length; i-- !== 0; ) if (!_areEquals(a[i], b[i])) return false;
+      for (i = length; i-- !== 0;) if (!_areEquals(a[i], b[i])) return false;
       return true;
     }
 
@@ -718,9 +718,9 @@ export function _areEquals(a: any, b: any): boolean {
 
     if (length !== Object.keys(b).length) return false;
 
-    for (i = length; i-- !== 0; ) if (!b.hasOwnProperty(keys[i])) return false;
+    for (i = length; i-- !== 0;) if (!b.hasOwnProperty(keys[i])) return false;
 
-    for (i = length; i-- !== 0; ) {
+    for (i = length; i-- !== 0;) {
       key = keys[i];
       if (!_areEquals(a[key], b[key])) return false;
     }
