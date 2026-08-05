@@ -1,5 +1,4 @@
 import { getEnvironmentVariable } from "./env.js";
-import { validateSafeUrl } from "./ssrf.js";
 
 const LANGSMITH_GATEWAY = "LANGSMITH_GATEWAY";
 const LANGSMITH_GATEWAY_API_KEY = "LANGSMITH_GATEWAY_API_KEY";
@@ -8,19 +7,16 @@ const DEFAULT_LANGSMITH_GATEWAY = "https://gateway.smith.langchain.com";
 const TRUE_VALUES = ["true", "1", "yes"];
 const FALSE_VALUES = ["false", "0", "no"];
 
-type EnvironmentVariableNames = string | readonly string[];
+export interface LangSmithGatewayConfigOptions<TApiKey> {
+  baseURL?: string;
+  apiKey?: TApiKey;
+  providerApiKey?: string;
+  providerPath: string;
+}
 
-function firstEnvironmentVariable(
-  names: EnvironmentVariableNames
-): string | undefined {
-  const environmentVariableNames = typeof names === "string" ? [names] : names;
-  for (const name of environmentVariableNames) {
-    const value = getEnvironmentVariable(name);
-    if (value) {
-      return value;
-    }
-  }
-  return undefined;
+export interface LangSmithGatewayConfig<TApiKey> {
+  baseURL?: string;
+  apiKey?: TApiKey | string;
 }
 
 function resolveLangSmithGatewayBaseURL(
@@ -32,50 +28,23 @@ function resolveLangSmithGatewayBaseURL(
   }
   const baseURL = TRUE_VALUES.includes(value.toLowerCase())
     ? DEFAULT_LANGSMITH_GATEWAY
-    : validateSafeUrl(value.replace(/\/+$/, ""), {
-        allowPrivate: true,
-        allowHttp: true,
-      });
+    : value.replace(/\/+$/, "");
   return `${baseURL}/${providerPath}`;
 }
 
 export function resolveLangSmithGatewayConfig<TApiKey = string>({
   baseURL,
   apiKey,
+  providerApiKey,
   providerPath,
-  baseURLEnv = [],
-  apiKeyEnv = [],
-  defaultBaseURL,
-}: {
-  baseURL?: string;
-  apiKey?: TApiKey;
-  providerPath: string;
-  baseURLEnv?: EnvironmentVariableNames;
-  apiKeyEnv?: EnvironmentVariableNames;
-  defaultBaseURL?: string;
-}): {
-  baseURL?: string;
-  apiKey?: TApiKey | string;
-  baseURLFromGateway: boolean;
-} {
+}: LangSmithGatewayConfigOptions<TApiKey>): LangSmithGatewayConfig<TApiKey> {
   const gatewayBaseURL = resolveLangSmithGatewayBaseURL(providerPath);
-  let resolvedBaseURL = baseURL;
-  let baseURLFromGateway = false;
-
-  if (resolvedBaseURL === undefined) {
-    resolvedBaseURL = firstEnvironmentVariable(baseURLEnv);
-    if (resolvedBaseURL === undefined) {
-      resolvedBaseURL = gatewayBaseURL ?? defaultBaseURL;
-      baseURLFromGateway = gatewayBaseURL !== undefined;
-    }
-  }
+  const baseURLFromGateway =
+    baseURL === undefined && gatewayBaseURL !== undefined;
+  const resolvedBaseURL = baseURL ?? gatewayBaseURL;
 
   if (apiKey !== undefined) {
-    return {
-      baseURL: resolvedBaseURL,
-      apiKey,
-      baseURLFromGateway,
-    };
+    return { baseURL: resolvedBaseURL, apiKey };
   }
 
   let gatewayApiKey = gatewayBaseURL
@@ -84,14 +53,11 @@ export function resolveLangSmithGatewayConfig<TApiKey = string>({
   if (!gatewayApiKey && baseURLFromGateway) {
     gatewayApiKey = getEnvironmentVariable(LANGSMITH_API_KEY);
   }
-  const providerApiKey = firstEnvironmentVariable(apiKeyEnv);
-  const resolvedApiKey = baseURLFromGateway
-    ? gatewayApiKey || providerApiKey
-    : providerApiKey || gatewayApiKey;
 
   return {
     baseURL: resolvedBaseURL,
-    apiKey: resolvedApiKey,
-    baseURLFromGateway,
+    apiKey: baseURLFromGateway
+      ? gatewayApiKey || providerApiKey
+      : providerApiKey || gatewayApiKey,
   };
 }

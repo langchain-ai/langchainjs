@@ -5,6 +5,7 @@ import { transformJSONSchema } from "@anthropic-ai/sdk/lib/transform-json-schema
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { AIMessageChunk, type BaseMessage } from "@langchain/core/messages";
 import { ChatGenerationChunk, type ChatResult } from "@langchain/core/outputs";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { resolveLangSmithGatewayConfig } from "@langchain/core/utils/gateway";
 import {
   BaseChatModel,
@@ -1065,11 +1066,15 @@ export class ChatAnthropicMessages<
     this._addVersion("@langchain/anthropic", __PKG_VERSION__);
 
     const gatewayConfig = resolveLangSmithGatewayConfig<string>({
-      baseURL: fields.anthropicApiUrl ?? fields.clientOptions?.baseURL,
+      baseURL:
+        fields.anthropicApiUrl ??
+        fields.clientOptions?.baseURL ??
+        (getEnvironmentVariable("ANTHROPIC_API_URL") ||
+          getEnvironmentVariable("ANTHROPIC_BASE_URL") ||
+          undefined),
       apiKey: fields.apiKey ?? fields.anthropicApiKey,
+      providerApiKey: getEnvironmentVariable("ANTHROPIC_API_KEY"),
       providerPath: "anthropic",
-      baseURLEnv: ["ANTHROPIC_API_URL", "ANTHROPIC_BASE_URL"],
-      apiKeyEnv: "ANTHROPIC_API_KEY",
     });
     this.anthropicApiKey = gatewayConfig.apiKey;
 

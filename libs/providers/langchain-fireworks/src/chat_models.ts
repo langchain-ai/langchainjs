@@ -2,6 +2,7 @@ import type {
   BaseChatModelParams,
   LangSmithParams,
 } from "@langchain/core/language_models/chat_models";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { resolveLangSmithGatewayConfig } from "@langchain/core/utils/gateway";
 import {
   ChatOpenAICompletions,
@@ -92,12 +93,14 @@ export class ChatFireworks extends ChatOpenAICompletions<ChatFireworksCallOption
         : (modelOrFields ?? {});
 
     const gatewayConfig = resolveLangSmithGatewayConfig<string>({
-      baseURL: fields.configuration?.baseURL,
+      baseURL:
+        fields.configuration?.baseURL ??
+        (getEnvironmentVariable("FIREWORKS_API_BASE") ||
+          getEnvironmentVariable("FIREWORKS_BASE_URL") ||
+          undefined),
       apiKey: fields.apiKey || fields.fireworksApiKey,
+      providerApiKey: getEnvironmentVariable("FIREWORKS_API_KEY"),
       providerPath: "fireworks",
-      baseURLEnv: "FIREWORKS_API_BASE",
-      apiKeyEnv: "FIREWORKS_API_KEY",
-      defaultBaseURL: FIREWORKS_BASE_URL,
     });
     const fireworksApiKey = gatewayConfig.apiKey;
 
@@ -113,7 +116,7 @@ export class ChatFireworks extends ChatOpenAICompletions<ChatFireworksCallOption
       apiKey: fireworksApiKey,
       configuration: {
         ...fields.configuration,
-        baseURL: gatewayConfig.baseURL,
+        baseURL: gatewayConfig.baseURL ?? FIREWORKS_BASE_URL,
       },
       streamUsage: false,
     });
