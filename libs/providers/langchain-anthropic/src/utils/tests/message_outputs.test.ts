@@ -4,6 +4,86 @@ import { _makeMessageChunkFromAnthropicEvent } from "../message_outputs.js";
 const fields = { streamUsage: true, coerceContentToString: false };
 
 describe("_makeMessageChunkFromAnthropicEvent", () => {
+  test("keeps streamed server tool args raw while JSON is incomplete", () => {
+    const startEvent = {
+      type: "content_block_start" as const,
+      index: 1,
+      content_block: {
+        type: "server_tool_use" as const,
+        id: "srvtoolu_01",
+        name: "web_search",
+        input: "",
+      },
+    };
+    const deltaEvent = {
+      type: "content_block_delta" as const,
+      index: 1,
+      delta: {
+        type: "input_json_delta" as const,
+        partial_json: '{"query": "Melbourne Austr',
+      },
+    };
+
+    const start = _makeMessageChunkFromAnthropicEvent(
+      startEvent as Parameters<typeof _makeMessageChunkFromAnthropicEvent>[0],
+      fields
+    )!.chunk;
+    const delta = _makeMessageChunkFromAnthropicEvent(
+      deltaEvent as Parameters<typeof _makeMessageChunkFromAnthropicEvent>[0],
+      fields
+    )!.chunk;
+
+    const serverToolCall = start
+      .concat(delta)
+      .contentBlocks.find((block) => block.type === "server_tool_call");
+
+    expect(serverToolCall).toMatchObject({
+      id: "srvtoolu_01",
+      name: "web_search",
+      args: '{"query": "Melbourne Austr',
+    });
+  });
+
+  test("parses streamed server tool args after JSON is complete", () => {
+    const startEvent = {
+      type: "content_block_start" as const,
+      index: 1,
+      content_block: {
+        type: "server_tool_use" as const,
+        id: "srvtoolu_01",
+        name: "web_search",
+        input: "",
+      },
+    };
+    const deltaEvent = {
+      type: "content_block_delta" as const,
+      index: 1,
+      delta: {
+        type: "input_json_delta" as const,
+        partial_json: '{"query": "Melbourne Australia news today"}',
+      },
+    };
+
+    const start = _makeMessageChunkFromAnthropicEvent(
+      startEvent as Parameters<typeof _makeMessageChunkFromAnthropicEvent>[0],
+      fields
+    )!.chunk;
+    const delta = _makeMessageChunkFromAnthropicEvent(
+      deltaEvent as Parameters<typeof _makeMessageChunkFromAnthropicEvent>[0],
+      fields
+    )!.chunk;
+
+    const serverToolCall = start
+      .concat(delta)
+      .contentBlocks.find((block) => block.type === "server_tool_call");
+
+    expect(serverToolCall).toMatchObject({
+      id: "srvtoolu_01",
+      name: "web_search",
+      args: { query: "Melbourne Australia news today" },
+    });
+  });
+
   test("message_start chunk contains correct cache token counts", () => {
     const event = {
       type: "message_start" as const,
