@@ -593,5 +593,53 @@ describe("convertCompletionsMessageToBaseMessage", () => {
         { type: "text", text: "The answer is 42." },
       ]);
     });
+
+    it("should drop input_json_delta blocks from content (cross-provider replay)", () => {
+      // Regression: an AIMessage authored by an Anthropic model can retain
+      // streaming tool-call artifacts (`input_json_delta`) in its content.
+      // When replayed to an OpenAI model these were passed through raw and
+      // rejected with "400 Invalid value: 'input_json_delta'". The finalized
+      // tool call is already carried in message.tool_calls, so dropping the
+      // residual delta blocks loses nothing.
+      const message = new AIMessage({
+        content: [
+          { type: "text", text: "reading files" },
+          {
+            type: "input_json_delta",
+            index: 0,
+            input: '{"file_path": "/README.md"}',
+          },
+        ] as any,
+        tool_calls: [
+          {
+            id: "call_1",
+            name: "read_file",
+            args: { file_path: "/README.md" },
+          },
+        ],
+      });
+
+      const result = convertMessagesToCompletionsMessageParams({
+        messages: [message],
+      });
+
+      expect(result).toHaveLength(1);
+      // The streaming artifact is dropped; only the text block remains.
+      expect(result[0].content).toEqual([
+        { type: "text", text: "reading files" },
+      ]);
+      // The finalized tool call is preserved verbatim in tool_calls — proving
+      // we removed only the redundant residual delta, not tool-call data.
+      expect((result[0] as any).tool_calls).toEqual([
+        {
+          id: "call_1",
+          type: "function",
+          function: {
+            name: "read_file",
+            arguments: '{"file_path":"/README.md"}',
+          },
+        },
+      ]);
+    });
   });
 });
