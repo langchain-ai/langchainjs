@@ -1,5 +1,13 @@
 # @langchain/core
 
+## 1.2.5
+
+### Patch Changes
+
+- [#11305](https://github.com/langchain-ai/langchainjs/pull/11305) [`e654022`](https://github.com/langchain-ai/langchainjs/commit/e654022e291b8dae54504ac2d1a3232332406723) Thanks [@jacoblee93](https://github.com/jacoblee93)! - Add LangSmith Gateway environment configuration to OpenAI, Anthropic, and Fireworks chat models.
+
+- [#11295](https://github.com/langchain-ai/langchainjs/pull/11295) [`1a1b347`](https://github.com/langchain-ai/langchainjs/commit/1a1b347d18bc68e842df8badffc987493c81d70a) Thanks [@vladislav-nechakhin](https://github.com/vladislav-nechakhin)! - fix(core): pass the mustache escape override per render call
+
 ## 1.2.4
 
 ### Patch Changes
