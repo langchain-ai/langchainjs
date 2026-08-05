@@ -6,6 +6,7 @@ import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { AIMessageChunk, type BaseMessage } from "@langchain/core/messages";
 import { ChatGenerationChunk, type ChatResult } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { resolveLangSmithGatewayConfig } from "@langchain/core/utils/gateway";
 import {
   BaseChatModel,
   BaseChatModelCallOptions,
@@ -1065,9 +1066,19 @@ export class ChatAnthropicMessages<
     super(fields ?? {});
     this._addVersion("@langchain/anthropic", __PKG_VERSION__);
 
+    const gatewayConfig = resolveLangSmithGatewayConfig({
+      baseURL:
+        fields.anthropicApiUrl ??
+        fields.clientOptions?.baseURL ??
+        (getEnvironmentVariable("ANTHROPIC_API_URL") ||
+          getEnvironmentVariable("ANTHROPIC_BASE_URL") ||
+          undefined),
+      providerPath: "anthropic",
+    });
     this.anthropicApiKey =
-      fields?.apiKey ??
-      fields?.anthropicApiKey ??
+      fields.apiKey ??
+      fields.anthropicApiKey ??
+      gatewayConfig.apiKey ??
       getEnvironmentVariable("ANTHROPIC_API_KEY");
 
     if (!this.anthropicApiKey && !fields?.createClient) {
@@ -1078,7 +1089,7 @@ export class ChatAnthropicMessages<
     this.apiKey = this.anthropicApiKey;
 
     // Support overriding the default API URL (i.e., https://api.anthropic.com)
-    this.apiUrl = fields?.anthropicApiUrl;
+    this.apiUrl = gatewayConfig.baseURL;
 
     /** Keep modelName for backwards compatibility */
     this.modelName = fields?.model ?? fields?.modelName ?? this.model;
