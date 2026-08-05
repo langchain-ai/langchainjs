@@ -1267,14 +1267,29 @@ export class ChatAnthropicMessages<
       : [];
     const taskBudgetBetas = getTaskBudgetBetas(this.model, mergedOutputConfig);
 
+    const tools = this.formatStructuredToolToAnthropic(options?.tools, {
+      strict: options?.strict,
+    });
+    if (
+      tool_choice?.type === "tool" &&
+      !tools?.some((tool) => "name" in tool && tool.name === tool_choice.name)
+    ) {
+      throw new Error(
+        `Anthropic tool_choice references "${tool_choice.name}", but that tool is not available.`
+      );
+    }
+    if (tool_choice?.type === "any" && (!tools || tools.length === 0)) {
+      throw new Error(
+        "Anthropic tool_choice requires at least one available tool."
+      );
+    }
+
     const output: AnthropicInvocationParams = {
       model: this.model,
       stop_sequences: options?.stop ?? this.stopSequences,
       stream: this.streaming,
       max_tokens: this.maxTokens,
-      tools: this.formatStructuredToolToAnthropic(options?.tools, {
-        strict: options?.strict,
-      }),
+      tools,
       tool_choice,
       thinking: this.thinkingExplicitlySet ? this.thinking : undefined,
       context_management: this.contextManagement,
