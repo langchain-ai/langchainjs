@@ -9,9 +9,7 @@ const ENVIRONMENT_VARIABLES = [
 ];
 
 function resolve(
-  overrides: Partial<
-    Parameters<typeof resolveLangSmithGatewayConfig<string>>[0]
-  > = {}
+  overrides: Partial<Parameters<typeof resolveLangSmithGatewayConfig>[0]> = {}
 ) {
   return resolveLangSmithGatewayConfig({
     providerPath: "provider/v1",
@@ -33,10 +31,7 @@ describe("resolveLangSmithGatewayConfig", () => {
   test.each(["false", "0", "no"])('disables the gateway for "%s"', (value) => {
     vi.stubEnv("LANGSMITH_GATEWAY", value);
 
-    expect(resolve()).toEqual({
-      baseURL: undefined,
-      apiKey: undefined,
-    });
+    expect(resolve()).toEqual({});
   });
 
   test.each(["true", "1", "yes", "TRUE"])(
@@ -56,21 +51,11 @@ describe("resolveLangSmithGatewayConfig", () => {
     expect(resolve().baseURL).toBe("http://localhost:8080/custom/provider/v1");
   });
 
-  test("prefers a provider base URL over the gateway", () => {
-    vi.stubEnv("LANGSMITH_GATEWAY", "true");
-
-    expect(resolve({ baseURL: "https://provider.example.com" }).baseURL).toBe(
-      "https://provider.example.com"
-    );
-  });
-
-  test("prefers the gateway key when the gateway supplies the base URL", () => {
+  test("returns the gateway key when the gateway supplies the base URL", () => {
     vi.stubEnv("LANGSMITH_GATEWAY", "true");
     vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
 
-    expect(resolve({ providerApiKey: "provider-key" }).apiKey).toBe(
-      "gateway-key"
-    );
+    expect(resolve().apiKey).toBe("gateway-key");
   });
 
   test("falls back to the LangSmith API key for a gateway base URL", () => {
@@ -80,22 +65,12 @@ describe("resolveLangSmithGatewayConfig", () => {
     expect(resolve().apiKey).toBe("langsmith-key");
   });
 
-  test("prefers the provider key when the base URL did not come from the gateway", () => {
+  test("does not return a gateway key for a provider base URL", () => {
     vi.stubEnv("LANGSMITH_GATEWAY", "true");
     vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
 
-    expect(
-      resolve({
-        baseURL: "https://provider.example.com",
-        providerApiKey: "provider-key",
-      }).apiKey
-    ).toBe("provider-key");
-  });
-
-  test("preserves an explicit API key", () => {
-    vi.stubEnv("LANGSMITH_GATEWAY", "true");
-    vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
-
-    expect(resolve({ apiKey: "explicit-key" }).apiKey).toBe("explicit-key");
+    expect(resolve({ baseURL: "https://provider.example.com" })).toEqual({
+      baseURL: "https://provider.example.com",
+    });
   });
 });

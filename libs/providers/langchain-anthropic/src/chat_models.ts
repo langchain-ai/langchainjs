@@ -1065,18 +1065,20 @@ export class ChatAnthropicMessages<
     super(fields ?? {});
     this._addVersion("@langchain/anthropic", __PKG_VERSION__);
 
-    const gatewayConfig = resolveLangSmithGatewayConfig<string>({
+    const gatewayConfig = resolveLangSmithGatewayConfig({
       baseURL:
         fields.anthropicApiUrl ??
         fields.clientOptions?.baseURL ??
         (getEnvironmentVariable("ANTHROPIC_API_URL") ||
           getEnvironmentVariable("ANTHROPIC_BASE_URL") ||
           undefined),
-      apiKey: fields.apiKey ?? fields.anthropicApiKey,
-      providerApiKey: getEnvironmentVariable("ANTHROPIC_API_KEY"),
       providerPath: "anthropic",
     });
-    this.anthropicApiKey = gatewayConfig.apiKey;
+    this.anthropicApiKey =
+      fields.apiKey ??
+      fields.anthropicApiKey ??
+      gatewayConfig.apiKey ??
+      getEnvironmentVariable("ANTHROPIC_API_KEY");
 
     if (!this.anthropicApiKey && !fields?.createClient) {
       throw new Error("Anthropic API key not found");

@@ -525,17 +525,19 @@ export abstract class BaseChatOpenAI<
       typeof fields?.configuration?.apiKey === "function"
         ? fields?.configuration?.apiKey
         : undefined;
-    const gatewayConfig = resolveLangSmithGatewayConfig<OpenAIApiKey>({
+    const gatewayConfig = resolveLangSmithGatewayConfig({
       baseURL:
         fields?.configuration?.baseURL ??
         (getEnvironmentVariable("OPENAI_API_BASE") ||
           getEnvironmentVariable("OPENAI_BASE_URL") ||
           undefined),
-      apiKey: fields?.apiKey ?? configApiKey,
-      providerApiKey: getEnvironmentVariable("OPENAI_API_KEY"),
       providerPath: "openai/v1",
     });
-    this.apiKey = gatewayConfig.apiKey;
+    this.apiKey =
+      fields?.apiKey ??
+      configApiKey ??
+      gatewayConfig.apiKey ??
+      getEnvironmentVariable("OPENAI_API_KEY");
     this.organization =
       fields?.configuration?.organization ??
       getEnvironmentVariable("OPENAI_ORGANIZATION");

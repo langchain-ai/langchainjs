@@ -7,16 +7,14 @@ const DEFAULT_LANGSMITH_GATEWAY = "https://gateway.smith.langchain.com";
 const TRUE_VALUES = ["true", "1", "yes"];
 const FALSE_VALUES = ["false", "0", "no"];
 
-export interface LangSmithGatewayConfigOptions<TApiKey> {
+export interface LangSmithGatewayConfigOptions {
   baseURL?: string;
-  apiKey?: TApiKey;
-  providerApiKey?: string;
   providerPath: string;
 }
 
-export interface LangSmithGatewayConfig<TApiKey> {
+export interface LangSmithGatewayConfig {
   baseURL?: string;
-  apiKey?: TApiKey | string;
+  apiKey?: string;
 }
 
 function resolveLangSmithGatewayBaseURL(
@@ -32,32 +30,23 @@ function resolveLangSmithGatewayBaseURL(
   return `${baseURL}/${providerPath}`;
 }
 
-export function resolveLangSmithGatewayConfig<TApiKey = string>({
+export function resolveLangSmithGatewayConfig({
   baseURL,
-  apiKey,
-  providerApiKey,
   providerPath,
-}: LangSmithGatewayConfigOptions<TApiKey>): LangSmithGatewayConfig<TApiKey> {
-  const gatewayBaseURL = resolveLangSmithGatewayBaseURL(providerPath);
-  const baseURLFromGateway =
-    baseURL === undefined && gatewayBaseURL !== undefined;
-  const resolvedBaseURL = baseURL ?? gatewayBaseURL;
-
-  if (apiKey !== undefined) {
-    return { baseURL: resolvedBaseURL, apiKey };
+}: LangSmithGatewayConfigOptions): LangSmithGatewayConfig {
+  if (baseURL !== undefined) {
+    return { baseURL };
   }
 
-  let gatewayApiKey = gatewayBaseURL
-    ? getEnvironmentVariable(LANGSMITH_GATEWAY_API_KEY)
-    : undefined;
-  if (!gatewayApiKey && baseURLFromGateway) {
-    gatewayApiKey = getEnvironmentVariable(LANGSMITH_API_KEY);
+  const gatewayBaseURL = resolveLangSmithGatewayBaseURL(providerPath);
+  if (gatewayBaseURL === undefined) {
+    return {};
   }
 
   return {
-    baseURL: resolvedBaseURL,
-    apiKey: baseURLFromGateway
-      ? gatewayApiKey || providerApiKey
-      : providerApiKey || gatewayApiKey,
+    baseURL: gatewayBaseURL,
+    apiKey:
+      getEnvironmentVariable(LANGSMITH_GATEWAY_API_KEY) ||
+      getEnvironmentVariable(LANGSMITH_API_KEY),
   };
 }

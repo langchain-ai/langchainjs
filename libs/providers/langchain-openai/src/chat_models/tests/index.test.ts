@@ -38,6 +38,27 @@ describe("ChatOpenAI", () => {
       }
     });
 
+    it("prefers an explicit API key over the Gateway key", () => {
+      vi.stubEnv("LANGSMITH_GATEWAY", "true");
+      vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
+      vi.stubEnv("OPENAI_API_BASE", "");
+      vi.stubEnv("OPENAI_BASE_URL", "");
+      vi.stubEnv("OPENAI_API_KEY", "provider-key");
+      try {
+        const chat = new ChatOpenAI({
+          model: "gpt-4o-mini",
+          apiKey: "explicit-key",
+        });
+
+        expect(chat.apiKey).toBe("explicit-key");
+        expect(chat.clientConfig.baseURL).toBe(
+          "https://gateway.smith.langchain.com/openai/v1"
+        );
+      } finally {
+        vi.unstubAllEnvs();
+      }
+    });
+
     it("prefers the OpenAI base URL environment configuration", () => {
       vi.stubEnv("LANGSMITH_GATEWAY", "true");
       vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");

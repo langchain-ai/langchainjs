@@ -92,17 +92,19 @@ export class ChatFireworks extends ChatOpenAICompletions<ChatFireworksCallOption
         ? { ...(fieldsArg ?? {}), model: modelOrFields }
         : (modelOrFields ?? {});
 
-    const gatewayConfig = resolveLangSmithGatewayConfig<string>({
+    const gatewayConfig = resolveLangSmithGatewayConfig({
       baseURL:
         fields.configuration?.baseURL ??
         (getEnvironmentVariable("FIREWORKS_API_BASE") ||
           getEnvironmentVariable("FIREWORKS_BASE_URL") ||
           undefined),
-      apiKey: fields.apiKey || fields.fireworksApiKey,
-      providerApiKey: getEnvironmentVariable("FIREWORKS_API_KEY"),
       providerPath: "fireworks",
     });
-    const fireworksApiKey = gatewayConfig.apiKey;
+    const fireworksApiKey =
+      fields.apiKey ||
+      fields.fireworksApiKey ||
+      gatewayConfig.apiKey ||
+      getEnvironmentVariable("FIREWORKS_API_KEY");
 
     if (!fireworksApiKey) {
       throw new Error(
