@@ -5,7 +5,7 @@ import { transformJSONSchema } from "@anthropic-ai/sdk/lib/transform-json-schema
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { AIMessageChunk, type BaseMessage } from "@langchain/core/messages";
 import { ChatGenerationChunk, type ChatResult } from "@langchain/core/outputs";
-import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { resolveLangSmithGatewayConfig } from "@langchain/core/utils/gateway";
 import {
   BaseChatModel,
   BaseChatModelCallOptions,
@@ -1064,10 +1064,14 @@ export class ChatAnthropicMessages<
     super(fields ?? {});
     this._addVersion("@langchain/anthropic", __PKG_VERSION__);
 
-    this.anthropicApiKey =
-      fields?.apiKey ??
-      fields?.anthropicApiKey ??
-      getEnvironmentVariable("ANTHROPIC_API_KEY");
+    const gatewayConfig = resolveLangSmithGatewayConfig<string>({
+      baseURL: fields.anthropicApiUrl ?? fields.clientOptions?.baseURL,
+      apiKey: fields.apiKey ?? fields.anthropicApiKey,
+      providerPath: "anthropic",
+      baseURLEnv: ["ANTHROPIC_API_URL", "ANTHROPIC_BASE_URL"],
+      apiKeyEnv: "ANTHROPIC_API_KEY",
+    });
+    this.anthropicApiKey = gatewayConfig.apiKey;
 
     if (!this.anthropicApiKey && !fields?.createClient) {
       throw new Error("Anthropic API key not found");
@@ -1077,7 +1081,7 @@ export class ChatAnthropicMessages<
     this.apiKey = this.anthropicApiKey;
 
     // Support overriding the default API URL (i.e., https://api.anthropic.com)
-    this.apiUrl = fields?.anthropicApiUrl;
+    this.apiUrl = gatewayConfig.baseURL;
 
     /** Keep modelName for backwards compatibility */
     this.modelName = fields?.model ?? fields?.modelName ?? this.model;

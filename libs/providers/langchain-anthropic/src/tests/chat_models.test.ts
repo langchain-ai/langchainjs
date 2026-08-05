@@ -77,6 +77,25 @@ test("constructor supports model shorthand for ChatAnthropicMessages", () => {
 
   expect(model.model).toBe("claude-haiku-4-5-20251001");
   expect(model.modelName).toBe("claude-haiku-4-5-20251001");
+  expect(model.apiUrl).toBeUndefined();
+});
+
+test("constructor uses LangSmith Gateway environment configuration", () => {
+  vi.stubEnv("LANGSMITH_GATEWAY", "true");
+  vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
+  vi.stubEnv("ANTHROPIC_API_URL", "");
+  vi.stubEnv("ANTHROPIC_BASE_URL", "");
+  vi.stubEnv("ANTHROPIC_API_KEY", "provider-key");
+  try {
+    const model = new ChatAnthropicMessages({
+      model: "claude-haiku-4-5-20251001",
+    });
+
+    expect(model.apiKey).toBe("gateway-key");
+    expect(model.apiUrl).toBe("https://gateway.smith.langchain.com/anthropic");
+  } finally {
+    vi.unstubAllEnvs();
+  }
 });
 
 test("withStructuredOutput with output validation", async () => {
