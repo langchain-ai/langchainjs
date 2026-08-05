@@ -382,6 +382,44 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
     expect(aggregated.response_metadata.id).toBe("resp_top_level");
   });
 
+  it("does not persist echoed request fields (tools, instructions) in response_metadata", () => {
+    const completed = convertResponsesDeltaToChatGenerationChunk({
+      type: "response.completed",
+      response: {
+        id: "resp_top_level",
+        model: "gpt-4o",
+        created_at: 1234567890,
+        object: "response",
+        status: "completed",
+        instructions: "a very long system prompt".repeat(100),
+        tools: [
+          {
+            type: "function",
+            name: "get_weather",
+            parameters: { type: "object", properties: {} },
+          },
+        ],
+        output: [
+          {
+            type: "message",
+            id: "msg_nested",
+            role: "assistant",
+            content: [{ type: "output_text", text: "Hi", annotations: [] }],
+          },
+        ],
+        usage: { input_tokens: 10, output_tokens: 20, total_tokens: 30 },
+      },
+    } as any);
+
+    const metadata = completed!.message.response_metadata;
+    expect(metadata.tools).toBeUndefined();
+    expect(metadata.instructions).toBeUndefined();
+    // The allowlisted fields are still present.
+    expect(metadata.model).toBe("gpt-4o");
+    expect(metadata.status).toBe("completed");
+    expect(metadata.created_at).toBe(1234567890);
+  });
+
   describe("custom tool streaming delta handling", () => {
     it("should preserve custom tool metadata from response.output_item.added events", () => {
       const customToolStart = {
