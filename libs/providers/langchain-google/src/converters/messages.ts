@@ -363,7 +363,30 @@ function convertStandardContentBlockToGeminiPart(
 ): Gemini.Part | null {
   switch (block.type) {
     case "text":
-      return { text: block.text };
+      return {
+        text: block.text,
+        ...(typeof block.thoughtSignature === "string"
+          ? { thoughtSignature: block.thoughtSignature }
+          : {}),
+      };
+    case "reasoning":
+      return {
+        text: block.reasoning,
+        thought: true,
+        ...(typeof block.thoughtSignature === "string"
+          ? { thoughtSignature: block.thoughtSignature }
+          : {}),
+      };
+    case "tool_call":
+      return {
+        functionCall: {
+          name: block.name,
+          args: block.args ?? {},
+        },
+        ...(typeof block.thoughtSignature === "string"
+          ? { thoughtSignature: block.thoughtSignature }
+          : {}),
+      };
     case "image":
     case "audio":
     case "text-plain":
@@ -422,6 +445,7 @@ function convertStandardContentMessageToGeminiContent(
   }
 
   const parts: Gemini.Part[] = [];
+  const contentToolCallIds = new Set<string>();
 
   // Process standard content blocks
   const contentBlocks = Array.isArray(message.contentBlocks)
@@ -435,17 +459,28 @@ function convertStandardContentMessageToGeminiContent(
       convertStandardContentBlockToGeminiPart(contentBlock);
     if (part) {
       parts.push(part);
+      if (block.type === "tool_call" && block.id) {
+        contentToolCallIds.add(block.id);
+      }
     }
   });
 
-  // Convert AIMessage tool_calls to functionCall parts
+  // Convert AIMessage tool_calls that are not already represented by a
+  // standardized content block. Gemini thought signatures live on the
+  // functionCall part, so preferring the content block preserves them.
   if (AIMessage.isInstance(message) && message.tool_calls?.length) {
     for (const toolCall of message.tool_calls) {
+      if (toolCall.id && contentToolCallIds.has(toolCall.id)) {
+        continue;
+      }
       parts.push({
         functionCall: {
           name: toolCall.name,
           args: toolCall.args ?? {},
         },
+        ...(typeof toolCall.thoughtSignature === "string"
+          ? { thoughtSignature: toolCall.thoughtSignature }
+          : {}),
       } as Gemini.Part.FunctionCall);
     }
   }

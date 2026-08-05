@@ -7,6 +7,7 @@ function convertToV1FromChatGoogleMessage(
   message: AIMessage
 ): Array<ContentBlock.Standard> {
   function* iterateContent(): Iterable<ContentBlock.Standard> {
+    let functionCallIndex = 0;
     const content = iife(() => {
       if (typeof message.content === "string") {
         if (message.additional_kwargs.originalTextContentBlock) {
@@ -69,9 +70,15 @@ function convertToV1FromChatGoogleMessage(
           _isString(block.functionCall.name) &&
           _isObject(block.functionCall.args)
         ) {
+          const toolCall = message.tool_calls?.[functionCallIndex];
+          functionCallIndex += 1;
           return {
             type: "tool_call",
-            id: message.id,
+            id:
+              toolCall?.id ??
+              (_isString(block.functionCall.id)
+                ? block.functionCall.id
+                : message.id),
             name: block.functionCall.name,
             args: block.functionCall.args,
           };
