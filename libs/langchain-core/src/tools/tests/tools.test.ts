@@ -13,6 +13,7 @@ import {
 import { ToolCall, ToolMessage } from "../../messages/tool.js";
 import { RunnableConfig } from "../../runnables/types.js";
 import { awaitAllCallbacks } from "../../singletons/callbacks.js";
+import { BaseCallbackHandler } from "../../callbacks/base.js";
 
 test("Tool should error if responseFormat is content_and_artifact but the function doesn't return a tuple", async () => {
   const weatherSchema = z.object({
@@ -854,4 +855,40 @@ describe("Generator tools (async function*)", () => {
 
     expect(generatorCleanupRan).toBe(true);
   });
+});
+
+test("wrapRunExecution wraps the tool call body", async () => {
+  let handlerActive = false;
+  let activeDuringCall = false;
+
+  class WrappingHandler extends BaseCallbackHandler {
+    name = "WrappingHandler";
+
+    wrapRunExecution<T>(_runId: string, fn: () => T): T {
+      handlerActive = true;
+      try {
+        return fn();
+      } finally {
+        handlerActive = false;
+      }
+    }
+  }
+
+  const myTool = tool(
+    async () => {
+      // The handler's wrapRunExecution must be active during the tool body.
+      activeDuringCall = handlerActive;
+      return "result";
+    },
+    {
+      name: "probe_tool",
+      description: "probe",
+      schema: z.object({ q: z.string() }),
+    }
+  );
+
+  await myTool.invoke({ q: "hi" }, { callbacks: [new WrappingHandler()] });
+
+  expect(activeDuringCall).toBe(true);
+  expect(handlerActive).toBe(false);
 });

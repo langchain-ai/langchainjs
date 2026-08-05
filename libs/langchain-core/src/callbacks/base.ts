@@ -300,6 +300,27 @@ abstract class BaseCallbackHandlerMethodsClass {
     metadata?: Record<string, any>
   ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     Promise<any> | any;
+
+  /**
+   * Optional hook that lets a handler run the *body* of a run inside its own
+   * ambient context. Unlike the `handle*Start`/`handle*End` callbacks — which
+   * are point-in-time notifications — this wraps the actual execution of the
+   * run (e.g. a chat model's network call), so a handler can keep some context
+   * active for its whole duration.
+   *
+   * The primary use case is distributed tracing: an OpenTelemetry-based
+   * handler can make the run's span the *active* span here, so that
+   * lower-level client instrumentations (HTTP/`fetch`, DB drivers, etc.)
+   * emit spans nested under it instead of as disconnected root traces.
+   *
+   * Implementations MUST invoke `fn` exactly once and return its result
+   * (propagating both sync return values and rejected promises). Handlers that
+   * do not need this behavior should leave it unimplemented.
+   *
+   * @param runId - The id of the run whose body is about to execute.
+   * @param fn - The run body to execute within the handler's context.
+   */
+  wrapRunExecution?<T>(runId: string, fn: () => T): T;
 }
 
 /**
