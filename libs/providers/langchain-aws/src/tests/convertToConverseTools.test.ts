@@ -293,6 +293,33 @@ describe("supportedToolChoiceValuesForModel", () => {
     ).toEqual(CLAUDE_TOOL_CHOICES);
   });
 
+  it("returns tool choice values for Claude Sonnet 5 models", () => {
+    expect(
+      supportedToolChoiceValuesForModel("anthropic.claude-sonnet-5")
+    ).toEqual(CLAUDE_TOOL_CHOICES);
+    expect(
+      supportedToolChoiceValuesForModel("us.anthropic.claude-sonnet-5")
+    ).toEqual(CLAUDE_TOOL_CHOICES);
+  });
+
+  it("returns tool choice values for Claude Opus 5 models", () => {
+    expect(
+      supportedToolChoiceValuesForModel("anthropic.claude-opus-5")
+    ).toEqual(CLAUDE_TOOL_CHOICES);
+    expect(
+      supportedToolChoiceValuesForModel("eu.anthropic.claude-opus-5")
+    ).toEqual(CLAUDE_TOOL_CHOICES);
+  });
+
+  it("returns tool choice values for Claude Haiku 5 models", () => {
+    expect(
+      supportedToolChoiceValuesForModel("anthropic.claude-haiku-5")
+    ).toEqual(CLAUDE_TOOL_CHOICES);
+    expect(
+      supportedToolChoiceValuesForModel("ap.anthropic.claude-haiku-5")
+    ).toEqual(CLAUDE_TOOL_CHOICES);
+  });
+
   it("returns tool choice values for Mistral Large models", () => {
     expect(
       supportedToolChoiceValuesForModel("mistral.mistral-large-2407-v1:0")
