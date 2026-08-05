@@ -1105,6 +1105,105 @@ describe("formatStructuredToolToAnthropic", () => {
 
     expect(result).toEqual([]);
   });
+
+  test("drops tools with top-level schema composition keys", () => {
+    const model = new ChatAnthropic({
+      modelName: "claude-haiku-4-5-20251001",
+      anthropicApiKey: "testing",
+    });
+    const result = model.formatStructuredToolToAnthropic([
+      {
+        name: "invalid_tool",
+        description: "Uses unsupported root composition.",
+        input_schema: {
+          type: "object",
+          oneOf: [],
+          anyOf: [],
+          allOf: [],
+        },
+      },
+    ]);
+
+    expect(result).toEqual([]);
+  });
+
+  test("retains tools with nested schema composition keys", () => {
+    const model = new ChatAnthropic({
+      modelName: "claude-haiku-4-5-20251001",
+      anthropicApiKey: "testing",
+    });
+    const tool = {
+      name: "valid_tool",
+      description: "Uses nested composition.",
+      input_schema: {
+        type: "object" as const,
+        properties: {
+          choice: {
+            anyOf: [{ type: "string" }, { type: "number" }],
+          },
+        },
+      },
+    };
+    const result = model.formatStructuredToolToAnthropic([tool]);
+
+    expect(result).toEqual([tool]);
+  });
+});
+
+describe("tool choice with filtered tools", () => {
+  const rootCompositionTool = {
+    name: "invalid_composition_tool",
+    description: "Uses unsupported root composition.",
+    input_schema: {
+      type: "object" as const,
+      anyOf: [],
+    },
+  };
+
+  test("throws when a named choice references a filtered tool", () => {
+    const model = new ChatAnthropic({
+      modelName: "claude-haiku-4-5-20251001",
+      anthropicApiKey: "testing",
+    });
+
+    expect(() =>
+      model.invocationParams({
+        tools: [rootCompositionTool],
+        tool_choice: { type: "tool", name: rootCompositionTool.name },
+      })
+    ).toThrow(
+      'Anthropic tool_choice references "invalid_composition_tool", but that tool is not available.'
+    );
+  });
+
+  test("throws when required tool use has no remaining tools", () => {
+    const model = new ChatAnthropic({
+      modelName: "claude-haiku-4-5-20251001",
+      anthropicApiKey: "testing",
+    });
+
+    expect(() =>
+      model.invocationParams({
+        tools: [rootCompositionTool],
+        tool_choice: "required",
+      })
+    ).toThrow("Anthropic tool_choice requires at least one available tool.");
+  });
+
+  test("allows automatic tool choice when all tools are filtered", () => {
+    const model = new ChatAnthropic({
+      modelName: "claude-haiku-4-5-20251001",
+      anthropicApiKey: "testing",
+    });
+
+    const params = model.invocationParams({
+      tools: [rootCompositionTool],
+      tool_choice: "auto",
+    });
+
+    expect(params.tools).toEqual([]);
+    expect(params.tool_choice).toEqual({ type: "auto" });
+  });
 });
 
 describe("Tool search beta auto-append", () => {
