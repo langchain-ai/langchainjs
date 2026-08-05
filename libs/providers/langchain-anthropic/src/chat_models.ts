@@ -1305,7 +1305,8 @@ export class ChatAnthropicMessages<
       output_config: mergedOutputConfig,
       inference_geo: options?.inferenceGeo ?? this.inferenceGeo,
       mcp_servers: options?.mcp_servers,
-      cache_control: options?.cache_control,
+      cache_control:
+        options?.cache_control ?? this.invocationKwargs?.cache_control,
     };
 
     validateInvocationParamCompatibility({
