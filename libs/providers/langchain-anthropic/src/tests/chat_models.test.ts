@@ -1105,6 +1105,49 @@ describe("formatStructuredToolToAnthropic", () => {
 
     expect(result).toEqual([]);
   });
+
+  test("drops tools with top-level schema composition keys", () => {
+    const model = new ChatAnthropic({
+      modelName: "claude-haiku-4-5-20251001",
+      anthropicApiKey: "testing",
+    });
+    const result = model.formatStructuredToolToAnthropic([
+      {
+        name: "invalid_tool",
+        description: "Uses unsupported root composition.",
+        input_schema: {
+          type: "object",
+          oneOf: [],
+          anyOf: [],
+          allOf: [],
+        },
+      },
+    ]);
+
+    expect(result).toEqual([]);
+  });
+
+  test("retains tools with nested schema composition keys", () => {
+    const model = new ChatAnthropic({
+      modelName: "claude-haiku-4-5-20251001",
+      anthropicApiKey: "testing",
+    });
+    const tool = {
+      name: "valid_tool",
+      description: "Uses nested composition.",
+      input_schema: {
+        type: "object" as const,
+        properties: {
+          choice: {
+            anyOf: [{ type: "string" }, { type: "number" }],
+          },
+        },
+      },
+    };
+    const result = model.formatStructuredToolToAnthropic([tool]);
+
+    expect(result).toEqual([tool]);
+  });
 });
 
 describe("Tool search beta auto-append", () => {

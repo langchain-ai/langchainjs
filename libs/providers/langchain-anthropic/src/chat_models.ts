@@ -31,6 +31,7 @@ import { AnthropicToolsOutputParser } from "./output_parsers.js";
 import {
   ANTHROPIC_TOOL_BETAS,
   AnthropicToolExtrasSchema,
+  getTopLevelSchemaCompositionKeys,
   handleToolChoice,
 } from "./utils/tools.js";
 import { _convertMessagesToAnthropicPayload } from "./utils/message_inputs.js";
@@ -1137,7 +1138,7 @@ export class ChatAnthropicMessages<
     if (!tools) {
       return undefined;
     }
-    return tools.map((tool) => {
+    const formattedTools = tools.map((tool) => {
       if (isLangChainTool(tool) && tool.extras?.providerToolDefinition) {
         return tool.extras
           .providerToolDefinition as Anthropic.Messages.ToolUnion;
@@ -1193,6 +1194,17 @@ export class ChatAnthropicMessages<
           2
         )}`
       );
+    });
+
+    return formattedTools.filter((tool) => {
+      if (!isAnthropicTool(tool)) {
+        return true;
+      }
+      const compositionKeys = getTopLevelSchemaCompositionKeys(tool);
+      if (compositionKeys.length === 0) {
+        return true;
+      }
+      return false;
     });
   }
 
