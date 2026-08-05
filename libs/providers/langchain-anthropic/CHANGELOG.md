@@ -1,5 +1,11 @@
 # @langchain/anthropic
 
+## 1.5.3
+
+### Patch Changes
+
+- [#11242](https://github.com/langchain-ai/langchainjs/pull/11242) [`1c4dadb`](https://github.com/langchain-ai/langchainjs/commit/1c4dadbc684b0fe08a34d4a5249d84b6cb110f07) Thanks [@talarari](https://github.com/talarari)! - Preserve gateway-provided cost metadata in Anthropic streams.
+
 ## 1.5.2
 
 ### Patch Changes
