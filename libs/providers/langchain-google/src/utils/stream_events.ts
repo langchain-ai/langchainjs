@@ -10,6 +10,7 @@ import type {
   FinishReason,
 } from "@langchain/core/language_models/event";
 import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
+import { v4 as uuidv4 } from "@langchain/core/utils/uuid";
 import type { Gemini } from "../chat_models/api-types.js";
 
 export type GeminiStreamResponse = Gemini.GenerateContentResponse;
@@ -123,8 +124,11 @@ export async function* convertGoogleGeminiStream(
       } else if (part.functionCall) {
         const key: BlockKey = `tool:${toolIdx}`;
         const args = JSON.stringify(part.functionCall.args ?? {});
+        const id =
+          part.functionCall.id ?? `lc-tool-call-${uuidv4().replace(/-/g, "")}`;
         const { index, isNew } = getOrCreateBlockIndex(key, {
           type: "tool_call_chunk",
+          id,
           name: part.functionCall.name,
           args: "",
           index: toolIdx,
@@ -135,6 +139,7 @@ export async function* convertGoogleGeminiStream(
             index,
             content: {
               type: "tool_call_chunk",
+              id,
               name: part.functionCall.name,
               args: "",
               index: toolIdx,
@@ -150,6 +155,7 @@ export async function* convertGoogleGeminiStream(
             type: "block-delta" as const,
             fields: {
               type: "tool_call_chunk",
+              id: acc.id,
               name: acc.name,
               args: acc.args,
             },
