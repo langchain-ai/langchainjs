@@ -2299,3 +2299,82 @@ describe("document content block conversion", () => {
     expect(name1).not.toBe(name2);
   });
 });
+
+describe("convertToConverseMessages - empty AIMessage filtering", () => {
+  // Bedrock Converse API rejects messages with empty content arrays
+  // (ValidationException: "content: must be a non-empty array"). When an
+  // AIMessage has neither text content nor tool_calls, it must be dropped
+  // before being sent. See #11055.
+  test("drops AIMessage with empty string content and no tool_calls", () => {
+    const result = convertToConverseMessages([
+      new HumanMessage("Hi"),
+      new AIMessage({ content: "" }),
+      new HumanMessage("How are you?"),
+    ]);
+
+    expect(result.converseMessages).toHaveLength(2);
+    expect(result.converseMessages[0].role).toBe("user");
+    expect(result.converseMessages[1].role).toBe("user");
+  });
+
+  test("drops AIMessage with empty content array and no tool_calls", () => {
+    const result = convertToConverseMessages([
+      new HumanMessage("Hi"),
+      new AIMessage({ content: [] }),
+      new HumanMessage("How are you?"),
+    ]);
+
+    expect(result.converseMessages).toHaveLength(2);
+  });
+
+  test("keeps AIMessage with empty string content but with tool_calls", () => {
+    const result = convertToConverseMessages([
+      new HumanMessage("Get weather"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "getWeather",
+            args: { city: "Berkeley" },
+            id: "call_1",
+          },
+        ],
+      }),
+      new ToolMessage({ tool_call_id: "call_1", content: "70F" }),
+    ]);
+
+    expect(result.converseMessages).toHaveLength(3);
+    const assistantMsg = result.converseMessages[1];
+    expect(assistantMsg.role).toBe("assistant");
+    expect(assistantMsg.content).toHaveLength(1);
+    expect(assistantMsg.content![0]).toHaveProperty("toolUse");
+  });
+
+  test("keeps AIMessage with empty content array but with tool_calls", () => {
+    const result = convertToConverseMessages([
+      new HumanMessage("Get weather"),
+      new AIMessage({
+        content: [],
+        tool_calls: [
+          {
+            name: "getWeather",
+            args: { city: "Berkeley" },
+            id: "call_1",
+          },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages).toHaveLength(2);
+    expect(result.converseMessages[1].content![0]).toHaveProperty("toolUse");
+  });
+
+  test("keeps AIMessage with normal text content", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({ content: "Hello back" }),
+    ]);
+
+    expect(result.converseMessages).toHaveLength(1);
+    expect(result.converseMessages[0].content![0]).toEqual({ text: "Hello back" });
+  });
+});
