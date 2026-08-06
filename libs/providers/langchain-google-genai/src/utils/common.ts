@@ -510,14 +510,28 @@ export function convertMessageContentToParts(
   if (Array.isArray(message.content)) {
     messageParts.push(
       ...(message.content
-        .map((c) => _convertLangChainContentToPart(c, isMultimodalModel))
+        .map((c) => {
+          if (
+            isAIMessage(message) &&
+            c.type === "tool_call" &&
+            message.tool_calls?.some(
+              (toolCall) => toolCall.id === c.id && toolCall.name === c.name
+            )
+          ) {
+            return undefined;
+          }
+          return _convertLangChainContentToPart(c, isMultimodalModel);
+        })
         .filter((p) => p !== undefined) as Part[])
     );
   }
 
-  const functionThoughtSignatures = message.additional_kwargs?.[
+  const functionThoughtSignatures = (message.additional_kwargs?.[
     _FUNCTION_CALL_THOUGHT_SIGNATURES_MAP_KEY
-  ] as Record<string, string>;
+  ] ??
+    message.response_metadata?.[_FUNCTION_CALL_THOUGHT_SIGNATURES_MAP_KEY]) as
+    | Record<string, string>
+    | undefined;
 
   if (isAIMessage(message) && message.tool_calls?.length) {
     functionCalls = message.tool_calls.map((tc) => {
