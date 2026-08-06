@@ -9,6 +9,10 @@ on:
         required: false
         default: "dev"
         type: string
+    secrets:
+      NPM_TOKEN:
+        description: "npm token used to authenticate the publish"
+        required: true
 
 permissions:
   contents: read

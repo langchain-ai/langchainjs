@@ -3,6 +3,10 @@ name: 🦋 Changesets Release
 # Called by publish.yml (the npm Trusted Publisher entry point)
 on:
   workflow_call:
+    secrets:
+      NPM_TOKEN:
+        description: "npm token used to authenticate the publish"
+        required: true
 
 permissions:
   contents: read
