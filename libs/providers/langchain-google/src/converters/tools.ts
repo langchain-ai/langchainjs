@@ -421,7 +421,8 @@ export const convertToolsToGeminiTools: Converter<
  *
  * @remarks
  * The conversion logic:
- * - If `hasTools` is `false`, returns `undefined` (no config needed)
+ * - If `hasTools` is `false` and `toolChoice` is not `"none"`, returns `undefined` (no config needed)
+ * - `"none"` is always honoured, even without tools, to explicitly prevent function calling
  * - If `toolChoice` is provided, converts it to a Gemini mode:
  *   - `"auto"` → `"AUTO"` - Model decides whether to call functions
  *   - `"any"` or `"required"` → `"ANY"` - Model must call at least one function
@@ -454,20 +455,29 @@ export const convertToolsToGeminiTools: Converter<
  * convertToolChoiceToGeminiConfig(undefined, true);
  * // Returns: { functionCallingConfig: { mode: "AUTO" } }
  *
- * // No tools - returns undefined
+ * // No tools - returns undefined (except for "none")
  * convertToolChoiceToGeminiConfig("auto", false);
  * // Returns: undefined
+ *
+ * // "none" without tools - still returns NONE config
+ * convertToolChoiceToGeminiConfig("none", false);
+ * // Returns: { functionCallingConfig: { mode: "NONE" } }
  * ```
  *
  * @param toolChoice - The tool choice option from LangChain (string, object, or undefined)
- * @param hasTools - Whether tools are present. If false, returns undefined
- * @returns The Gemini tool configuration object, or undefined if no tools are present
+ * @param hasTools - Whether tools are present. If false, returns undefined unless toolChoice is "none"
+ * @returns The Gemini tool configuration object, or undefined if not applicable
  */
 export function convertToolChoiceToGeminiConfig(
   toolChoice: ToolChoice | undefined,
   hasTools: boolean
 ): Gemini.Tools.ToolConfig | undefined {
-  if (!hasTools || toolChoice === undefined) {
+  if (toolChoice === undefined) {
+    return undefined;
+  }
+  // Only NONE is meaningful without tools — it explicitly prevents function
+  // calling even when no declarations are present (e.g. bindTools([], { tool_choice: 'none' })).
+  if (!hasTools && toolChoice !== "none") {
     return undefined;
   }
 
