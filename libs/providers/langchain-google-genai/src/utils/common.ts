@@ -565,13 +565,30 @@ export function convertBaseMessagesToContent(
         throw new Error("System message should be the first one");
       }
       const role = convertAuthorToRole(author);
+      let actualRole = role;
+      if (
+        actualRole === "function" ||
+        (actualRole === "system" && !convertSystemMessageToHumanContent)
+      ) {
+        actualRole = "user";
+      }
 
-      const prevContent = acc.content[acc.content.length];
+      const prevContent = acc.content[acc.content.length - 1];
       if (
         !acc.mergeWithPreviousContent &&
         prevContent &&
-        prevContent.role === role
+        prevContent.role === actualRole
       ) {
+        if (role === "function") {
+          const parts = convertMessageContentToParts(
+            message,
+            isMultimodalModel,
+            messages.slice(0, index),
+            model
+          );
+          prevContent.parts.push(...parts);
+          return acc;
+        }
         throw new Error(
           "Google Generative AI requires alternate messages between authors"
         );
@@ -597,14 +614,6 @@ export function convertBaseMessagesToContent(
           mergeWithPreviousContent: false,
           content: acc.content,
         };
-      }
-      let actualRole = role;
-      if (
-        actualRole === "function" ||
-        (actualRole === "system" && !convertSystemMessageToHumanContent)
-      ) {
-        // GenerativeAI API will throw an error if the role is not "user" or "model."
-        actualRole = "user";
       }
       const content: Content = {
         role: actualRole,
