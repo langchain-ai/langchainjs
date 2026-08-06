@@ -138,7 +138,7 @@ describe("anthropicTranslator", () => {
         args: { query: "web search query" },
       },
       {
-        type: "server_tool_call_result",
+        type: "server_tool_result",
         name: "web_search",
         toolCallId: "srvtoolu_abc123",
         status: "success",
@@ -153,7 +153,7 @@ describe("anthropicTranslator", () => {
         args: { code: "import numpy as np..." },
       },
       {
-        type: "server_tool_call_result",
+        type: "server_tool_result",
         name: "code_execution",
         toolCallId: "srvtoolu_def456",
         status: "success",

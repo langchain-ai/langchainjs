@@ -347,7 +347,7 @@ function _contentBlockToString(
     case "invalid_tool_call":
     case "server_tool_call":
     case "server_tool_call_chunk":
-    case "server_tool_call_result":
+    case "server_tool_result":
     case "non_standard":
       return "";
     default:
