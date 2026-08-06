@@ -270,6 +270,29 @@ describe("Streaming thinking content handling", () => {
     expect(typeof content).not.toBe("string");
     expect(Array.isArray(content)).toBe(true);
   });
+
+  // https://github.com/langchain-ai/langchainjs/issues/10741
+  test("should return null when streaming candidate has no content (e.g. safety filter)", () => {
+    const mockResponse = createMockResponse([
+      {
+        // content is intentionally undefined here - this is what Gemini
+        // returns when a safety/recitation filter fires mid-stream.
+        content: undefined as unknown as GenerateContentCandidate["content"],
+        finishReason: "SAFETY" as FinishReason,
+        index: 0,
+        safetyRatings: [],
+      },
+    ]);
+
+    expect(() =>
+      convertResponseContentToChatGenerationChunk(mockResponse, { index: 0 })
+    ).not.toThrow();
+
+    const result = convertResponseContentToChatGenerationChunk(mockResponse, {
+      index: 0,
+    });
+    expect(result).toBeNull();
+  });
 });
 
 // https://github.com/langchain-ai/langchainjs/issues/10103
