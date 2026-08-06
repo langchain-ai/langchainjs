@@ -3,6 +3,10 @@ name: 🦋 Changesets Release
 # Called by publish.yml (the npm Trusted Publisher entry point)
 on:
   workflow_call:
+    secrets:
+      NPM_TOKEN:
+        description: "npm token used to authenticate the publish"
+        required: true
 
 permissions:
   contents: read
@@ -36,7 +40,6 @@ jobs:
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version-file: ".nvmrc"
-          cache: "pnpm"
 
       - name: 📥 Install deps
         run: pnpm install --frozen-lockfile

@@ -39,7 +39,8 @@ jobs:
       id-token: write
       contents: write
       pull-requests: write
-    secrets: inherit
+    secrets:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   # Dev release - triggered by workflow_dispatch
   dev-release:
@@ -51,4 +52,5 @@ jobs:
       pull-requests: write
     with:
       npm_tag: ${{ inputs.npm_tag }}
-    secrets: inherit
+    secrets:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

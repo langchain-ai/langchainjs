@@ -1,0 +1,33 @@
+# Plumber scans the GitHub Actions workflows for CI/CD security issues
+# (unpinned actions, over-broad token permissions, risky triggers, ...)
+# and publishes a score badge for the README.
+name: Plumber
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  plumber:
+    name: Plumber Score
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write # upload the SARIF report to code scanning
+      id-token: write # publish the score badge (score-push)
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: 🔍 Plumber Score
+        uses: getplumber/plumber@ce2d9603cc9faf10df2b76b276366104a61c68d0 # v0.4.31
+        with:
+          score-push: true
+          min-points: 85
+          # code scanning upload is not available to fork PRs
+          upload-sarif: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false }}
