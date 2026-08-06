@@ -855,6 +855,25 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
           parts[co].thoughtSignature = signature;
         }
       }
+    } else {
+      // Streaming can misalign the merged `signatures` array against the
+      // re-serialized parts (e.g. `[sig, ""]` for a single functionCall part),
+      // which fails the exact-length check above and drops every signature.
+      // Gemini 3.x then rejects the next turn with 400 INVALID_ARGUMENT because
+      // the replayed functionCall carries no thoughtSignature. Fall back to
+      // mapping the non-empty signatures onto the functionCall parts in order,
+      // which is the shape the non-streaming path already produces.
+      // See https://github.com/langchain-ai/langchainjs/issues/9624
+      const nonEmptySignatures = signatures.filter((s) => s && s.length > 0);
+      const functionCallParts = parts.filter((part) => part.functionCall);
+      if (
+        nonEmptySignatures.length > 0 &&
+        nonEmptySignatures.length === functionCallParts.length
+      ) {
+        functionCallParts.forEach((part, co) => {
+          part.thoughtSignature = nonEmptySignatures[co];
+        });
+      }
     }
 
     return [
