@@ -848,6 +848,33 @@ describe("streaming", () => {
   });
 });
 
+describe("gemini tool config formatting", () => {
+  test.each([
+    ["auto", "AUTO"],
+    ["any", "ANY"],
+    ["none", "NONE"],
+  ] as const)("serializes %s mode as %s", async (toolChoice, expectedMode) => {
+    const api = getGeminiAPI();
+    const request = (await api.formatData([new HumanMessage("Use tools.")], {
+      tool_choice: toolChoice,
+    })) as GeminiRequest;
+
+    expect(request.toolConfig?.functionCallingConfig?.mode).toBe(expectedMode);
+  });
+
+  test("serializes a forced function name as ANY", async () => {
+    const api = getGeminiAPI();
+    const request = (await api.formatData([new HumanMessage("Use tools.")], {
+      tool_choice: "lookup_weather",
+    })) as GeminiRequest;
+
+    expect(request.toolConfig?.functionCallingConfig).toEqual({
+      mode: "ANY",
+      allowedFunctionNames: ["lookup_weather"],
+    });
+  });
+});
+
 describe("gemini image URL handling", () => {
   test("handles image_url with external URL and infers MIME type", async () => {
     const api = getGeminiAPI();
