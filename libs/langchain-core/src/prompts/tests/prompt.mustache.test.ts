@@ -1,6 +1,7 @@
 import { test, expect } from "vitest";
 import { PromptTemplate } from "../prompt.js";
 import { parseTemplate } from "../template.js";
+import { MAX_PROMPT_TEMPLATE_DEPTH } from "../utils.js";
 
 test("Single input variable.", async () => {
   const template = "This is a {{foo}} test.";
@@ -112,4 +113,24 @@ test("Escaped variables", async () => {
     text: `hello i have a "quote`,
   });
   expect(result.value).toBe(`test: hello i have a "quote`);
+});
+
+test("Rejects deeply nested mustache sections", () => {
+  const depth = MAX_PROMPT_TEMPLATE_DEPTH + 1;
+  const template = "{{#dos}}".repeat(depth) + "x" + "{{/dos}}".repeat(depth);
+
+  try {
+    PromptTemplate.fromTemplate(template, {
+      templateFormat: "mustache",
+    });
+    throw new Error("Expected template parsing to fail for deep nesting.");
+  } catch (error) {
+    expect(error).toBeInstanceOf(Error);
+    expect((error as { lc_error_code?: string }).lc_error_code).toBe(
+      "INVALID_PROMPT_INPUT"
+    );
+    expect((error as Error).message).toContain(
+      "Prompt template nesting exceeds maximum depth"
+    );
+  }
 });
