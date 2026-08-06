@@ -333,12 +333,12 @@ export class AIMessageChunk<
             : undefined,
       };
     } else {
-      const collapsed = collapseToolCallChunks(fields.tool_call_chunks ?? []);
+      // Don't collapse tool call chunks here: it re-parses all accumulated
+      // tool args, and constructing a chunk per streamed delta (via `concat`)
+      // would make stream aggregation O(n²). The `tool_calls` /
+      // `invalid_tool_calls` getters collapse lazily on first read.
       initParams = {
         ...fields,
-        tool_call_chunks: collapsed.tool_call_chunks,
-        tool_calls: collapsed.tool_calls as $InferToolCalls<TStructure>[],
-        invalid_tool_calls: collapsed.invalid_tool_calls,
         usage_metadata:
           fields.usage_metadata !== undefined
             ? fields.usage_metadata
@@ -350,10 +350,64 @@ export class AIMessageChunk<
     super(initParams);
     this.tool_call_chunks =
       initParams.tool_call_chunks ?? this.tool_call_chunks;
-    this.tool_calls = initParams.tool_calls ?? this.tool_calls;
-    this.invalid_tool_calls =
-      initParams.invalid_tool_calls ?? this.invalid_tool_calls;
+    if (
+      typeof fields !== "string" &&
+      !Array.isArray(fields) &&
+      fields.tool_call_chunks !== undefined &&
+      fields.tool_call_chunks.length > 0
+    ) {
+      this._defineLazyToolCallGetters(fields.tool_call_chunks);
+    } else {
+      this.tool_calls = initParams.tool_calls ?? this.tool_calls;
+      this.invalid_tool_calls =
+        initParams.invalid_tool_calls ?? this.invalid_tool_calls;
+    }
     this.usage_metadata = initParams.usage_metadata;
+  }
+
+  /**
+   * Defers `collapseToolCallChunks` until `tool_calls` or
+   * `invalid_tool_calls` is actually read. Collapsing re-parses all
+   * accumulated tool args, so doing it eagerly in the constructor makes
+   * streaming aggregation (one `concat` per delta) O(n²) over the stream.
+   *
+   * Implemented as own-property getters (rather than prototype accessors) so
+   * the instance keeps the same own enumerable properties as before: helpers
+   * like `_chunkToMsg` snapshot messages with `Object.entries`, which invokes
+   * the getters and sees the collapsed values. The getters are also installed
+   * on `lc_kwargs` so serialization matches the eager behavior, where the
+   * constructor stored the collapsed values in its kwargs.
+   */
+  private _defineLazyToolCallGetters(toolCallChunks: ToolCallChunk[]) {
+    let collapsed: ReturnType<typeof collapseToolCallChunks> | undefined;
+    const getCollapsed = () => {
+      collapsed ??= collapseToolCallChunks(toolCallChunks);
+      return collapsed;
+    };
+    const defineLazy = (
+      target: object,
+      prop: "tool_calls" | "invalid_tool_calls"
+    ) => {
+      Object.defineProperty(target, prop, {
+        get: () => getCollapsed()[prop],
+        // Writing to the property replaces the getter with a plain value,
+        // restoring normal assignment semantics.
+        set: (value: unknown) => {
+          Object.defineProperty(target, prop, {
+            value,
+            writable: true,
+            enumerable: true,
+            configurable: true,
+          });
+        },
+        enumerable: true,
+        configurable: true,
+      });
+    };
+    defineLazy(this, "tool_calls");
+    defineLazy(this, "invalid_tool_calls");
+    defineLazy(this.lc_kwargs, "tool_calls");
+    defineLazy(this.lc_kwargs, "invalid_tool_calls");
   }
 
   get lc_aliases(): Record<string, string> {
@@ -452,7 +506,15 @@ export class AIMessageChunk<
         combinedFields.tool_call_chunks = rawToolCalls as ToolCallChunk[];
       }
     }
-    if (this.tool_calls !== undefined || chunk.tool_calls !== undefined) {
+    // Only merge `tool_calls` when there are no tool call chunks: when chunks
+    // are present the constructor derives `tool_calls` from them anyway, and
+    // reading `this.tool_calls` here would force a collapse per concat,
+    // making streaming aggregation O(n²).
+    if (
+      (combinedFields.tool_call_chunks === undefined ||
+        combinedFields.tool_call_chunks.length === 0) &&
+      (this.tool_calls !== undefined || chunk.tool_calls !== undefined)
+    ) {
       const rawToolCalls = _mergeLists(
         this.tool_calls as ContentBlock.Tools.ToolCall[],
         chunk.tool_calls as ContentBlock.Tools.ToolCall[]
