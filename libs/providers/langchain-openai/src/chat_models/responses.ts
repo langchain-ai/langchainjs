@@ -159,6 +159,8 @@ export class ChatOpenAIResponses<
       prompt_cache_key: options?.promptCacheKey ?? this.promptCacheKey,
       prompt_cache_retention:
         options?.promptCacheRetention ?? this.promptCacheRetention,
+      prompt_cache_options:
+        options?.promptCacheOptions ?? this.promptCacheOptions,
       ...(this.zdrEnabled ? { store: false } : {}),
       ...this.modelKwargs,
     };

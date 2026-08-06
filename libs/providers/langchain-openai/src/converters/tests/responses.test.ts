@@ -27,6 +27,7 @@ describe("convertResponsesUsageToUsageMetadata", () => {
       total_tokens: 150,
       input_tokens_details: {
         cached_tokens: 75,
+        cache_write_tokens: 25,
         text_tokens: 25,
       },
       output_tokens_details: {
@@ -43,6 +44,7 @@ describe("convertResponsesUsageToUsageMetadata", () => {
       total_tokens: 150,
       input_token_details: {
         cache_read: 75,
+        cache_creation: 25,
       },
       output_token_details: {
         reasoning: 10,
@@ -1204,6 +1206,54 @@ describe("convertStandardContentMessageToResponsesInput (role-aware text parts)"
 });
 
 describe("convertMessagesToResponsesInput", () => {
+  it("preserves prompt cache breakpoints on converted content blocks", () => {
+    const message = new HumanMessage({
+      content: [
+        {
+          type: "text",
+          text: "Stable prefix",
+          extras: { prompt_cache_breakpoint: { mode: "explicit" } },
+        },
+        {
+          type: "image_url",
+          image_url: { url: "https://example.com/image.png" },
+          prompt_cache_breakpoint: null,
+        },
+        {
+          type: "file",
+          source_type: "id",
+          id: "file_123",
+          extras: { prompt_cache_breakpoint: { mode: "explicit" } },
+        },
+      ],
+    });
+
+    const result = convertMessagesToResponsesInput({
+      messages: [message],
+      model: "gpt-5.6",
+      zdrEnabled: false,
+    });
+
+    expect((result[0] as any).content).toEqual([
+      {
+        type: "input_text",
+        text: "Stable prefix",
+        prompt_cache_breakpoint: { mode: "explicit" },
+      },
+      {
+        type: "input_image",
+        image_url: "https://example.com/image.png",
+        detail: undefined,
+        prompt_cache_breakpoint: null,
+      },
+      {
+        type: "input_file",
+        file_id: "file_123",
+        prompt_cache_breakpoint: { mode: "explicit" },
+      },
+    ]);
+  });
+
   describe("Regression Tests", () => {
     it("allows file_url without filename metadata and excludes filename from payload", () => {
       const messages = [
