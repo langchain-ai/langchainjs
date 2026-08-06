@@ -42,6 +42,26 @@ export function removeAdditionalProperties(
       delete newObj.strict;
     }
 
+    // Gemini's schema only supports `minimum`/`maximum`, not their exclusive
+    // variants. Zod's .positive()/.negative()/.gt()/.lt() emit
+    // exclusiveMinimum/exclusiveMaximum, and forwarding those yields a 400
+    // ("Unknown name exclusiveMinimum"). Remap to the inclusive keywords,
+    // mirroring @langchain/google-common's handling.
+    if ("exclusiveMinimum" in newObj && newObj.exclusiveMinimum === 0) {
+      newObj.minimum = 0.01;
+      delete newObj.exclusiveMinimum;
+    } else if ("exclusiveMinimum" in newObj) {
+      newObj.minimum = newObj.exclusiveMinimum + 0.00001;
+      delete newObj.exclusiveMinimum;
+    }
+    if ("exclusiveMaximum" in newObj && newObj.exclusiveMaximum === 0) {
+      newObj.maximum = -0.01;
+      delete newObj.exclusiveMaximum;
+    } else if ("exclusiveMaximum" in newObj) {
+      newObj.maximum = newObj.exclusiveMaximum - 0.00001;
+      delete newObj.exclusiveMaximum;
+    }
+
     for (const key in newObj) {
       if (key in newObj) {
         if (Array.isArray(newObj[key])) {
