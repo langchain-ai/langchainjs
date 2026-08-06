@@ -1,0 +1,12 @@
+# Plumber overlay: everything inherits the built-in defaults
+# (plumber config view), only the deltas below are written.
+extends: plumber:default
+
+github:
+  controls:
+    githubActionMustComeFromAuthorizedSources:
+      # keep the default trusted owners/actions and add the repo's own
+      includePlumberDefaults: true
+      trustedGithubActions:
+        # PR title linting (pr_lint.yml), pinned by commit SHA
+        - amannn/action-semantic-pull-request
