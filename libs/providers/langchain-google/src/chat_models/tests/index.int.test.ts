@@ -1532,6 +1532,62 @@ describe.each(thinkingModelInfo)(
       );
       expect(hasThoughtSignature).toBe(true);
     });
+
+    test("thought/thoughtSignature survive a multi-turn round trip (regression for #10461)", async () => {
+      // Reproduces the production bug: resending a prior thinking AIMessage
+      // as history silently stripped its thought marker/signature before
+      // this fix, either losing the flag (legacy content array) or dropping
+      // the block outright (contentBlocks -> ChatGoogleTranslator ->
+      // "reasoning" -> default: return null in the standard converter).
+      const llm = newChatGoogle({ reasoningEffort: "low" });
+
+      const firstResult = await llm.invoke("Why is the sky blue?");
+      const firstReasoningBlocks = firstResult.contentBlocks.filter(
+        (b) => b.type === "reasoning"
+      );
+      expect(firstReasoningBlocks.length).toBeGreaterThan(0);
+      const firstSignatures = firstResult.contentBlocks
+        .filter((b) => "thoughtSignature" in b)
+        .map((b) => b.thoughtSignature);
+      expect(firstSignatures.length).toBeGreaterThan(0);
+
+      // Feed the thinking AIMessage back in as history and ask a follow-up.
+      // recorder.request captures the actual outbound HTTP body for the
+      // second call — assert the resent turn's `contents` entry still
+      // carries `thought`/`thoughtSignature` on the wire, not just that the
+      // call succeeds (a successful call alone wouldn't catch a silently
+      // dropped/unflagged thought block, since Gemini doesn't require the
+      // resent history to include one).
+      await llm.invoke([
+        new HumanMessage("Why is the sky blue?"),
+        firstResult,
+        new HumanMessage("Now explain it to a 5 year old."),
+      ]);
+
+      const sentContents = recorder.request?.body?.contents ?? [];
+      const modelTurn = sentContents.find(
+        (c: { role?: string }) => c.role === "model"
+      );
+      expect(modelTurn).toBeDefined();
+
+      const sentThoughtParts = (modelTurn?.parts ?? []).filter(
+        (p: { thought?: boolean }) => p.thought === true
+      );
+      expect(sentThoughtParts.length).toBeGreaterThan(0);
+
+      const sentSignatures = (modelTurn?.parts ?? [])
+        .filter((p: { thoughtSignature?: string }) => "thoughtSignature" in p)
+        .map((p: { thoughtSignature?: string }) => p.thoughtSignature);
+      expect(sentSignatures.length).toBeGreaterThan(0);
+      // At least one signature from the first response must round-trip
+      // verbatim — Gemini validates these, so a regenerated/blank value
+      // would defeat the point of preserving the field at all.
+      expect(
+        sentSignatures.some((sig: string | undefined) =>
+          firstSignatures.includes(sig)
+        )
+      ).toBe(true);
+    });
   }
 );
 

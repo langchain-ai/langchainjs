@@ -363,7 +363,28 @@ function convertStandardContentBlockToGeminiPart(
 ): Gemini.Part | null {
   switch (block.type) {
     case "text":
-      return { text: block.text };
+      return {
+        text: block.text,
+        ...("thought" in block ? { thought: block.thought as boolean } : {}),
+        ...("thoughtSignature" in block
+          ? { thoughtSignature: block.thoughtSignature as string }
+          : {}),
+      };
+    case "reasoning":
+      // ChatGoogleTranslator (block_translators/google.ts) normalizes a
+      // Gemini thinking part into `{ type: "reasoning", reasoning, thought,
+      // thoughtSignature, reasoningContentBlock }` for the standard
+      // `contentBlocks` getter. Round-trip it back into the shape Gemini
+      // expects — without this, a thinking model's own chain-of-thought is
+      // silently dropped (hits the `default` branch below) when history
+      // that went through `.contentBlocks` is replayed on the next turn.
+      return {
+        text: block.reasoning,
+        ...("thought" in block ? { thought: block.thought as boolean } : {}),
+        ...("thoughtSignature" in block
+          ? { thoughtSignature: block.thoughtSignature as string }
+          : {}),
+      };
     case "image":
     case "audio":
     case "text-plain":
@@ -714,7 +735,16 @@ function convertLegacyContentMessageToGeminiContent(
         parts.push({ text: item });
       } else if (typeof item === "object" && item !== null) {
         if (isMessageContentText(item)) {
-          parts.push({ text: item.text });
+          const itemRecord = item as Record<string, unknown>;
+          parts.push({
+            text: item.text,
+            ...("thought" in itemRecord
+              ? { thought: itemRecord.thought as boolean }
+              : {}),
+            ...("thoughtSignature" in itemRecord
+              ? { thoughtSignature: itemRecord.thoughtSignature as string }
+              : {}),
+          });
         } else if (isDataContentBlock(item)) {
           parts.push(
             convertToProviderContentBlock(item, geminiContentBlockConverter)
