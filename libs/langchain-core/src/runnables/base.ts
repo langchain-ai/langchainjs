@@ -1330,6 +1330,20 @@ export class RunnableBinding<
     this.configFactories = fields.configFactories;
   }
 
+  get tools(): unknown[] {
+    if (this.config.tools !== undefined) {
+      return this.config.tools;
+    }
+    if (this.kwargs?.tools !== undefined) {
+      return this.kwargs.tools;
+    }
+    if ("tools" in this.bound) {
+      // @ts-expect-error - checking if bound has tools
+      return (this.bound as Record<string, unknown>).tools as unknown[];
+    }
+    return [];
+  }
+
   getName(suffix?: string | undefined): string {
     return this.bound.getName(suffix);
   }
