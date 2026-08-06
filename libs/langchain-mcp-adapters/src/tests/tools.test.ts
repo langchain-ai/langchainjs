@@ -79,6 +79,48 @@ describe("Simplified Tool Adapter Tests", () => {
       expect(tools[1].name).toBe("tool2");
     });
 
+    test("should expose the tool's outputSchema on metadata when present", async () => {
+      const outputSchema = {
+        type: "object",
+        properties: {
+          temperature: { type: "number" },
+        },
+        required: ["temperature"],
+      };
+
+      mockClient.listTools.mockReturnValueOnce(
+        Promise.resolve({
+          tools: [
+            {
+              name: "withOutput",
+              description: "Tool with an output schema",
+              inputSchema: { type: "object", properties: {}, required: [] },
+              outputSchema,
+            },
+            {
+              name: "withoutOutput",
+              description: "Tool without an output schema",
+              inputSchema: { type: "object", properties: {}, required: [] },
+            },
+          ],
+        })
+      );
+
+      const tools = await loadMcpTools(
+        "mockServer(should expose outputSchema)",
+        mockClient as Client
+      );
+
+      expect(tools.length).toBe(2);
+
+      // Tool that declares an outputSchema exposes it on metadata.
+      expect(tools[0].metadata?.outputSchema).toEqual(outputSchema);
+
+      // Tool without an outputSchema does not get the key at all (rather than
+      // an explicit undefined), so consumers can use a simple presence check.
+      expect(tools[1].metadata).not.toHaveProperty("outputSchema");
+    });
+
     test("should validate tool input against input schema", async () => {
       // Set up mock response
       mockClient.listTools.mockReturnValueOnce(
