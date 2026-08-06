@@ -1305,6 +1305,114 @@ describe("convertMessagesToResponsesInput", () => {
         },
       ]);
     });
+
+    it("routes standard base64 image blocks to native input_image instead of the completions converter", () => {
+      const messages = [
+        new HumanMessage({
+          content: [
+            { type: "text", text: "What is in this image?" },
+            {
+              type: "image",
+              source_type: "base64",
+              mime_type: "image/png",
+              data: "iVBORw0KGgoAAAANSUhEUgAAAAE",
+            },
+          ],
+        }),
+      ];
+
+      const result = convertMessagesToResponsesInput({
+        messages,
+        model: "gpt-5-mini",
+        zdrEnabled: false,
+      });
+
+      expect(result).toMatchObject([
+        {
+          type: "message",
+          role: "user",
+          content: [
+            { type: "input_text", text: "What is in this image?" },
+            {
+              type: "input_image",
+              image_url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAE",
+              detail: "auto",
+            },
+          ],
+        },
+      ]);
+    });
+
+    it("routes standard url image blocks to native input_image instead of the completions converter", () => {
+      const messages = [
+        new HumanMessage({
+          content: [
+            {
+              type: "image",
+              source_type: "url",
+              url: "https://example.com/image.png",
+              mime_type: "image/png",
+            },
+          ],
+        }),
+      ];
+
+      const result = convertMessagesToResponsesInput({
+        messages,
+        model: "gpt-5-mini",
+        zdrEnabled: false,
+      });
+
+      expect(result).toMatchObject([
+        {
+          type: "message",
+          role: "user",
+          content: [
+            {
+              type: "input_image",
+              image_url: "https://example.com/image.png",
+              detail: "auto",
+            },
+          ],
+        },
+      ]);
+    });
+
+    it("honors a caller-provided detail hint on standard image blocks", () => {
+      const messages = [
+        new HumanMessage({
+          content: [
+            {
+              type: "image",
+              source_type: "base64",
+              mime_type: "image/png",
+              data: "iVBORw0KGgoAAAANSUhEUgAAAAE",
+              metadata: { detail: "high" },
+            },
+          ],
+        }),
+      ];
+
+      const result = convertMessagesToResponsesInput({
+        messages,
+        model: "gpt-5-mini",
+        zdrEnabled: false,
+      });
+
+      expect(result).toMatchObject([
+        {
+          type: "message",
+          role: "user",
+          content: [
+            {
+              type: "input_image",
+              image_url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAE",
+              detail: "high",
+            },
+          ],
+        },
+      ]);
+    });
   });
 
   describe("ToolMessage conversion", () => {
