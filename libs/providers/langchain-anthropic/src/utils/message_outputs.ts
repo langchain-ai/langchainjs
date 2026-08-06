@@ -51,10 +51,31 @@ export function _makeMessageChunkFromAnthropicEvent(
       }),
     };
   } else if (data.type === "message_delta") {
+    // `message_delta.usage` is cumulative and may carry input-side fields
+    // (input_tokens, cache_creation_input_tokens, cache_read_input_tokens) —
+    // notably from OpenAI-backed Anthropic-compatible gateways (LiteLLM,
+    // Bedrock proxies), which only know usage at stream end.
+    const deltaUsage = data.usage as typeof data.usage & {
+      input_tokens?: number | null;
+      cache_creation_input_tokens?: number | null;
+      cache_read_input_tokens?: number | null;
+    };
+    const cacheCreation = deltaUsage.cache_creation_input_tokens;
+    const cacheRead = deltaUsage.cache_read_input_tokens;
+    const inputTokens =
+      (deltaUsage.input_tokens ?? 0) + (cacheCreation ?? 0) + (cacheRead ?? 0);
     const usageMetadata: UsageMetadata = {
-      input_tokens: 0,
+      input_tokens: inputTokens,
       output_tokens: data.usage.output_tokens,
-      total_tokens: data.usage.output_tokens,
+      total_tokens: inputTokens + data.usage.output_tokens,
+      ...(cacheCreation != null || cacheRead != null
+        ? {
+            input_token_details: {
+              ...(cacheCreation != null && { cache_creation: cacheCreation }),
+              ...(cacheRead != null && { cache_read: cacheRead }),
+            },
+          }
+        : {}),
     };
     const responseMetadata =
       "context_management" in data.delta
