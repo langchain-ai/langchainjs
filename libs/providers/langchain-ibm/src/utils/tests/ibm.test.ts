@@ -1,5 +1,6 @@
 import { WatsonXAI } from "@ibm-cloud/watsonx-ai";
 import { Gateway } from "@ibm-cloud/watsonx-ai/gateway";
+import { IamAuthenticator } from "ibm-cloud-sdk-core";
 import { describe, test, expect } from "vitest";
 import {
   authenticateAndSetInstance,
@@ -26,6 +27,32 @@ describe("Utils tests", () => {
         ...fakeAuthProp,
       });
       expect(instance).toBeInstanceOf(WatsonXAI);
+    });
+
+    test("authenticateAndSetInstance IAM forwards watsonxAIUrl to IamAuthenticator", () => {
+      const privateIamUrl = "https://private.iam.cloud.ibm.com";
+      const instance = authenticateAndSetInstance({
+        version: "2024-05-31",
+        serviceUrl,
+        ...fakeAuthProp,
+        watsonxAIUrl: privateIamUrl,
+      });
+      expect(instance).toBeDefined();
+      const auth = instance?.["authenticator"] as IamAuthenticator;
+      const tokenManagerUrl = auth["tokenManager"]["url"];
+      expect(tokenManagerUrl).toBe(privateIamUrl);
+    });
+
+    test("authenticateAndSetInstance IAM uses default IAM URL when watsonxAIUrl is absent", () => {
+      const instance = authenticateAndSetInstance({
+        version: "2024-05-31",
+        serviceUrl,
+        ...fakeAuthProp,
+      })!;
+      expect(instance).toBeDefined();
+      const auth = instance?.["authenticator"] as IamAuthenticator;
+      const tokenManagerUrl = auth["tokenManager"]["url"];
+      expect(tokenManagerUrl).toBe("https://iam.cloud.ibm.com");
     });
 
     test("authenticateAndSetGatewayInstance creates Gateway with IAM", () => {
