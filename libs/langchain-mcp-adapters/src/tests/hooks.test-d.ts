@@ -24,6 +24,9 @@ test("check tool hooks types", () => {
         serverName: string;
         args?: unknown;
       }>();
+      return {
+        _meta: { traceId: runtime.configurable?.traceId },
+      };
     },
     afterToolCall: (toolCallResult, state, runtime) => {
       expectTypeOf(state).toEqualTypeOf<Record<string, unknown>>();
