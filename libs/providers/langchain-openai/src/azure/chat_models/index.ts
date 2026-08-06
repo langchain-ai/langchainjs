@@ -472,7 +472,29 @@ export class AzureChatOpenAI<
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
     const params = super.getLsParams(options);
     params.ls_provider = "azure";
+    // When no explicit `model` is provided, `BaseChatOpenAI` defaults `this.model`
+    // to "gpt-3.5-turbo", which is incorrect for Azure (the real model identity
+    // lives on `azureOpenAIApiDeploymentName`). Fall back to the deployment name
+    // so observability tools (LangSmith, OpenTelemetry, custom tracers) report
+    // the real model. See https://github.com/langchain-ai/langchainjs/issues/10874
+    // and Python parity: https://github.com/langchain-ai/langchain/pull/24838
+    if (
+      this.azureOpenAIApiDeploymentName &&
+      (!params.ls_model_name || params.ls_model_name === "gpt-3.5-turbo")
+    ) {
+      params.ls_model_name = this.azureOpenAIApiDeploymentName;
+    }
     return params;
+  }
+
+  override invocationParams(options?: this["ParsedCallOptions"]) {
+    return {
+      ...super.invocationParams(options),
+      // Expose the Azure deployment name on invocation params so callback/run
+      // metadata (`run.extra.invocation_params`) carries the real model identity
+      // instead of the BaseChatOpenAI default. See issue #10874.
+      azureOpenAIApiDeploymentName: this.azureOpenAIApiDeploymentName,
+    };
   }
 
   constructor(
