@@ -566,7 +566,14 @@ function hasMergeableId(value: unknown): value is { id: string | number } {
 }
 
 function getMergeableTypeBase(type: string): string {
-  return type.endsWith("_delta") ? type.slice(0, -"_delta".length) : type;
+  if (type === "input_json_delta" || type === "input_json") {
+    return "tool_use";
+  }
+
+  if (type.endsWith("_delta")) {
+    return type.replace("_delta", "");
+  }
+  return type;
 }
 
 function hasMismatchedMergeableType(left: unknown, right: unknown): boolean {
