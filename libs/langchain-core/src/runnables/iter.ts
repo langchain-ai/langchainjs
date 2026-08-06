@@ -40,7 +40,7 @@ export function isAsyncGenerator(x: unknown): x is AsyncGenerator {
 }
 
 export async function consumeAsyncGenerator<T, TReturn>(
-  generator: AsyncGenerator<T, TReturn>,
+  generator: AsyncIterator<T, TReturn>,
   onYield?: (value: T) => Promise<void> | void
 ): Promise<TReturn> {
   try {
