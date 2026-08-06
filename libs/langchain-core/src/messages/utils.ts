@@ -193,10 +193,28 @@ function _coerceToolCall(
     typeof toolCall.function.name === "string"
   ) {
     // Handle OpenAI tool call format
+    const name = toolCall.function.name;
+    const rawArgs = toolCall.function.arguments;
+    let args: Record<string, unknown>;
+    try {
+      args = JSON.parse(rawArgs);
+    } catch (cause) {
+      // Models occasionally emit malformed JSON in tool call arguments. A bare
+      // SyntaxError from JSON.parse gives no clue which tool call failed or
+      // what the offending payload was.
+      throw addLangChainErrorFields(
+        new Error(
+          `Failed to parse tool call arguments for "${name}" (id=${toolCall.id}): ${
+            (cause as Error)?.message ?? cause
+          }. Raw arguments: ${rawArgs}`
+        ),
+        "MESSAGE_COERCION_FAILURE"
+      );
+    }
     return {
       id: toolCall.id,
-      args: JSON.parse(toolCall.function.arguments),
-      name: toolCall.function.name,
+      args,
+      name,
       type: "tool_call",
     };
   } else {
