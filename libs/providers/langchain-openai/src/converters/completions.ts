@@ -673,6 +673,10 @@ export const convertStandardContentMessageToCompletionsMessage: Converter<
       completionParam.tool_calls = message.additional_kwargs
         .tool_calls as OpenAIClient.Chat.Completions.ChatCompletionMessageToolCall[];
     }
+    if (message.additional_kwargs.reasoning_content !== undefined) {
+      (completionParam as Record<string, unknown>).reasoning_content =
+        message.additional_kwargs.reasoning_content;
+    }
     return completionParam;
   } else if (role === "tool" && ToolMessage.isInstance(message)) {
     return {
@@ -852,6 +856,10 @@ export const convertMessagesToCompletionsMessageParams: Converter<
       if (ToolMessage.isInstance(message) && message.tool_call_id != null) {
         completionParam.tool_call_id = message.tool_call_id;
       }
+    }
+    if (message.additional_kwargs.reasoning_content !== undefined) {
+      completionParam.reasoning_content =
+        message.additional_kwargs.reasoning_content;
     }
 
     if (

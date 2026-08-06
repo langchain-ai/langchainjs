@@ -252,6 +252,59 @@ describe("convertCompletionsMessageToBaseMessage", () => {
   });
 
   describe("convertMessagesToCompletionsMessageParams", () => {
+    it("should preserve reasoning_content in AIMessage additional_kwargs", () => {
+      const message = new AIMessage({
+        content: "Here is the response.",
+        additional_kwargs: {
+          reasoning_content: "My detailed reasoning process.",
+        },
+      });
+
+      const result = convertMessagesToCompletionsMessageParams({
+        messages: [message],
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({
+        role: "assistant",
+        content: "Here is the response.",
+        reasoning_content: "My detailed reasoning process.",
+      });
+    });
+
+    it("should preserve reasoning_content in output_version v1 assistant messages", () => {
+      const message = new AIMessage({
+        content: [
+          {
+            type: "text",
+            text: "Here is the response.",
+          },
+        ],
+        additional_kwargs: {
+          reasoning_content: "My detailed reasoning process.",
+        },
+        response_metadata: {
+          output_version: "v1",
+        },
+      });
+
+      const result = convertMessagesToCompletionsMessageParams({
+        messages: [message],
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({
+        role: "assistant",
+        content: [
+          {
+            type: "text",
+            text: "Here is the response.",
+          },
+        ],
+        reasoning_content: "My detailed reasoning process.",
+      });
+    });
+
     it("should preserve AIMessage content when tool_calls are present", () => {
       const message = new AIMessage({
         content:
