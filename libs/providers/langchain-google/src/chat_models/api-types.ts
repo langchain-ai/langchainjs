@@ -386,7 +386,7 @@ export namespace Gemini {
      * Optional. Presence penalty applied to the next token's logprobs if the token has
      * already been seen in the response.
      * 
-     * This penalty is binary on/off and not dependant on the number of times the
+     * This penalty is binary on/off and not dependent on the number of times the
      * token is used (after the first). Use
      * frequency_penalty
      * for a penalty that increases with each use.

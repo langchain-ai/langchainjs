@@ -725,6 +725,18 @@ function convertLegacyContentMessageToGeminiContent(
             ...etc,
             functionCall,
           } as Gemini.Part.FunctionCall);
+        } else if (item?.type === "executableCode") {
+          const { type, executableCode, ...etc } = item;
+          parts.push({
+            ...etc,
+            executableCode,
+          } as Gemini.Part.ExecutableCode);
+        } else if (item?.type === "codeExecutionResult") {
+          const { type, codeExecutionResult, ...etc } = item;
+          parts.push({
+            ...etc,
+            codeExecutionResult,
+          } as Gemini.Part.CodeExecutionResult);
         } else if (isMessageContentImageUrl(item)) {
           parts.push(messageContentImageUrl(item));
         } else if (isMessageContentMedia(item)) {

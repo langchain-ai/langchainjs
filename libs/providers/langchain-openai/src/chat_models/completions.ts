@@ -1,5 +1,6 @@
 import { OpenAI as OpenAIClient } from "openai";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import {
   AIMessage,
   AIMessageChunk,
@@ -33,6 +34,7 @@ import {
   convertCompletionsMessageToBaseMessage,
   convertMessagesToCompletionsMessageParams,
 } from "../converters/completions.js";
+import { convertOpenAICompletionsStream } from "../utils/stream_events.js";
 
 export interface ChatOpenAICompletionsCallOptions extends BaseChatOpenAICallOptions {}
 
@@ -68,6 +70,22 @@ export class ChatOpenAICompletions<
       strict = options.strict;
     } else if (this.supportsStrictToolCalling !== undefined) {
       strict = this.supportsStrictToolCalling;
+    }
+
+    // A `json_schema` response format goes through the SDK `.parse()` helper,
+    // which requires strict function tools — but only on the NON-streaming path
+    // (`completionWithRetry` uses `.parse()` only when `!request.stream`).
+    // Streaming structured output uses `create()`, which doesn't need strict, so
+    // don't force it there. Default to strict for the parse path unless the
+    // caller set strict:false. (Re-applied here because the agent core no longer
+    // forces strict for every provider.)
+    const isStreaming = this.streaming || extra?.streaming;
+    if (
+      !isStreaming &&
+      options?.response_format?.type === "json_schema" &&
+      strict !== false
+    ) {
+      strict = true;
     }
 
     let streamOptionsConfig = {};
@@ -303,6 +321,58 @@ export class ChatOpenAICompletions<
         },
       };
     }
+  }
+
+  /**
+   * Native implementation of the content-block-centric streaming protocol
+   * for OpenAI Chat Completions.
+   */
+  async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    const messagesMapped: OpenAIClient.Chat.Completions.ChatCompletionMessageParam[] =
+      convertMessagesToCompletionsMessageParams({
+        messages,
+        model: this.model,
+      });
+
+    const params = {
+      ...this.invocationParams(options, {
+        streaming: true,
+      }),
+      messages: messagesMapped,
+      stream: true as const,
+    };
+
+    const streamIterable = await this.completionWithRetry(params, options);
+    const shouldStreamUsage = this.streamUsage ?? options.streamUsage;
+
+    const abortableStream = async function* (
+      source: AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>,
+      signal?: AbortSignal
+    ) {
+      for await (const data of source) {
+        if (signal?.aborted) {
+          return;
+        }
+        yield data;
+      }
+    };
+
+    yield* convertOpenAICompletionsStream(
+      abortableStream(streamIterable, options.signal),
+      {
+        streamUsage: shouldStreamUsage ?? true,
+        provider: this.streamEventProvider,
+      }
+    );
+  }
+
+  /** Provider id used in native stream protocol passthrough events. */
+  protected get streamEventProvider(): string {
+    return "openai";
   }
 
   async *_streamResponseChunks(

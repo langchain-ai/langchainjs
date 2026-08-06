@@ -37,5 +37,13 @@ export * from "./tools/index.js";
 export { customTool } from "./tools/custom.js";
 export { convertPromptToOpenAI } from "./utils/prompts.js";
 export { messageToOpenAIRole } from "./utils/misc.js";
+export {
+  convertOpenAICompletionsStream,
+  type ConvertOpenAICompletionsStreamOptions,
+} from "./utils/stream_events.js";
+export {
+  convertOpenAIResponsesStream,
+  type ConvertOpenAIResponsesStreamOptions,
+} from "./utils/responses_stream_events.js";
 
 export * from "./converters/index.js";

@@ -1,5 +1,31 @@
 # @langchain/aws
 
+## 1.4.3
+
+### Patch Changes
+
+- [#11200](https://github.com/langchain-ai/langchainjs/pull/11200) [`08e5888`](https://github.com/langchain-ai/langchainjs/commit/08e588865927c3bf0eb2ec418cfb3fba527e14bb) Thanks [@hntrl](https://github.com/hntrl)! - fix(aws): normalize and safely replay Bedrock reasoning blocks
+
+  Emit standard reasoning blocks with preserved signatures, omit incomplete signature-only reasoning during replay, and retain compatibility with legacy and redacted Bedrock reasoning.
+
+## 1.4.2
+
+### Patch Changes
+
+- [#11098](https://github.com/langchain-ai/langchainjs/pull/11098) [`72ffc4b`](https://github.com/langchain-ai/langchainjs/commit/72ffc4bf17dc6dca390546c0e6c9503607198f26) Thanks [@hntrl](https://github.com/hntrl)! - Add a default Bedrock Converse stream idle timeout to prevent stalled response bodies from hanging forever.
+
+## 1.4.1
+
+### Patch Changes
+
+- [#11082](https://github.com/langchain-ai/langchainjs/pull/11082) [`a186aba`](https://github.com/langchain-ai/langchainjs/commit/a186abacb7dc85f8c5f54895f817eb823eec9d84) Thanks [@hntrl](https://github.com/hntrl)! - fix: support Bedrock bearer token auth
+
+## 1.4.0
+
+### Minor Changes
+
+- [#10924](https://github.com/langchain-ai/langchainjs/pull/10924) [`2e28115`](https://github.com/langchain-ai/langchainjs/commit/2e2811509d75af94f57cedcc3842f178f4c020d1) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(aws): add native Bedrock Converse streamEvents events
+
 ## 1.3.9
 
 ### Patch Changes

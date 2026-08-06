@@ -2,6 +2,7 @@ import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { AIMessageChunk, type BaseMessage } from "@langchain/core/messages";
 import { ChatGenerationChunk, type ChatResult } from "@langchain/core/outputs";
 import { type BaseLanguageModelInput } from "@langchain/core/language_models/base";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import { Runnable } from "@langchain/core/runnables";
 import { type OpenAICallOptions, type OpenAIChatInput } from "../types.js";
 import {
@@ -674,6 +675,26 @@ export class ChatOpenAI<
       return this.responses._generate(messages, options, runManager);
     }
     return this.completions._generate(messages, options, runManager);
+  }
+
+  override async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    if (this._useResponsesApi(options)) {
+      yield* this.responses._streamChatModelEvents(
+        messages,
+        this._combineCallOptions(options),
+        runManager
+      );
+      return;
+    }
+    yield* this.completions._streamChatModelEvents(
+      messages,
+      this._combineCallOptions(options),
+      runManager
+    );
   }
 
   override async *_streamResponseChunks(

@@ -1,5 +1,69 @@
 # @langchain/core
 
+## 1.2.5
+
+### Patch Changes
+
+- [#11305](https://github.com/langchain-ai/langchainjs/pull/11305) [`e654022`](https://github.com/langchain-ai/langchainjs/commit/e654022e291b8dae54504ac2d1a3232332406723) Thanks [@jacoblee93](https://github.com/jacoblee93)! - Add LangSmith Gateway environment configuration to OpenAI, Anthropic, and Fireworks chat models.
+
+- [#11295](https://github.com/langchain-ai/langchainjs/pull/11295) [`1a1b347`](https://github.com/langchain-ai/langchainjs/commit/1a1b347d18bc68e842df8badffc987493c81d70a) Thanks [@vladislav-nechakhin](https://github.com/vladislav-nechakhin)! - fix(core): pass the mustache escape override per render call
+
+## 1.2.4
+
+### Patch Changes
+
+- [#11190](https://github.com/langchain-ai/langchainjs/pull/11190) [`9654bde`](https://github.com/langchain-ai/langchainjs/commit/9654bde694af4e78080a76a0b39d7edd35683449) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - Coalesce nested LangChain tracer callbacks that share run bookkeeping.
+
+- [#11153](https://github.com/langchain-ai/langchainjs/pull/11153) [`84ce6d6`](https://github.com/langchain-ai/langchainjs/commit/84ce6d65ef0ab2c556d5a5a3b5651b5cf3d73303) Thanks [@parveshsaini](https://github.com/parveshsaini)! - fix(core): bind splitText when trimMessages receives a TextSplitter instance
+
+## 1.2.3
+
+### Patch Changes
+
+- [#11200](https://github.com/langchain-ai/langchainjs/pull/11200) [`08e5888`](https://github.com/langchain-ai/langchainjs/commit/08e588865927c3bf0eb2ec418cfb3fba527e14bb) Thanks [@hntrl](https://github.com/hntrl)! - fix(aws): normalize and safely replay Bedrock reasoning blocks
+
+  Emit standard reasoning blocks with preserved signatures, omit incomplete signature-only reasoning during replay, and retain compatibility with legacy and redacted Bedrock reasoning.
+
+## 1.2.2
+
+### Patch Changes
+
+- [#11171](https://github.com/langchain-ai/langchainjs/pull/11171) [`82bef01`](https://github.com/langchain-ai/langchainjs/commit/82bef01ad3dd5e0317e48da40707be6bccc52f94) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): coerce string v1 AIMessage content to text blocks
+
+  Prevent `contentBlocks.push is not a function` when constructing an
+  `AIMessage` with `response_metadata.output_version === "v1"` and string
+  `content` (common in serialized LangGraph stream payloads).
+
+## 1.2.1
+
+### Patch Changes
+
+- [#10674](https://github.com/langchain-ai/langchainjs/pull/10674) [`f017708`](https://github.com/langchain-ai/langchainjs/commit/f01770895c06621b469a6c6b5244747f6efdfbf7) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix: classify provider 429s before retrying
+
+- [#11092](https://github.com/langchain-ai/langchainjs/pull/11092) [`7918bbd`](https://github.com/langchain-ai/langchainjs/commit/7918bbdd2eaf8d9aff736b122f359a555267e1e7) Thanks [@aolsenjazz](https://github.com/aolsenjazz)! - fix(core): only treat arrays of content blocks as ToolMessage content
+
+  Fix tool outputs that are arrays of plain objects being forwarded as malformed message content. An array is now only treated as message content blocks when every element is an object with a `type`; otherwise it is JSON-stringified.
+
+## 1.2.0
+
+### Minor Changes
+
+- [#10924](https://github.com/langchain-ai/langchainjs/pull/10924) [`2e28115`](https://github.com/langchain-ai/langchainjs/commit/2e2811509d75af94f57cedcc3842f178f4c020d1) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(core): add OpenAI-compatible stream event conversion
+
+### Patch Changes
+
+- [#11047](https://github.com/langchain-ai/langchainjs/pull/11047) [`ac0f71d`](https://github.com/langchain-ai/langchainjs/commit/ac0f71d03994664cfee98e71a584d4aa3321746f) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): preserve AIMessage content blocks
+
+  Keep existing v1 contentBlocks when constructing AIMessage instances so serialized messages do not lose block content during deserialization.
+
+## 1.1.49
+
+### Patch Changes
+
+- [#10679](https://github.com/langchain-ai/langchainjs/pull/10679) [`1f7b495`](https://github.com/langchain-ai/langchainjs/commit/1f7b4952ea1d7cebd572453877b670a7740a397b) Thanks [@hnustwjj](https://github.com/hnustwjj)! - fix(core): make `RemoveMessage` type-compatible across `MessageStructure` variants
+
+  Remove unnecessary `TStructure` generic from `RemoveMessage` — its content is always `[]`, so the type parameter only caused incompatibilities when passing `RemoveMessage` into APIs expecting a different `MessageStructure` (e.g. `@langchain/langgraph-sdk`'s `Message<DefaultToolCall>`). Also add `{ type: "remove"; id: string }` to `BaseMessageLike` so the serialized format is accepted by TypeScript, matching the existing runtime behavior in `coerceMessageLikeToMessage`.
+
 ## 1.1.48
 
 ### Patch Changes

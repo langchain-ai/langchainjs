@@ -1,5 +1,27 @@
 # @langchain/groq
 
+## 1.3.1
+
+### Patch Changes
+
+- [#11072](https://github.com/langchain-ai/langchainjs/pull/11072) [`d2e6afc`](https://github.com/langchain-ai/langchainjs/commit/d2e6afcf17b269aa11a2f18444c208bc8a4b2520) Thanks [@atimothee](https://github.com/atimothee)! - fix(groq): require `@langchain/core` >= 1.1.30 in peer dependency
+
+  The package imports `@langchain/core/utils/standard_schema` and
+  `@langchain/core/language_models/structured_output`, both of which were
+  introduced in `@langchain/core@1.1.30`. The previous `^1.0.0` peer
+  dependency range allowed installing incompatible older versions and
+  caused module-resolution failures at build/runtime.
+
+## 1.3.0
+
+### Minor Changes
+
+- [#10924](https://github.com/langchain-ai/langchainjs/pull/10924) [`2e28115`](https://github.com/langchain-ai/langchainjs/commit/2e2811509d75af94f57cedcc3842f178f4c020d1) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(groq): add native OpenAI-compatible streamEvents events
+
+### Patch Changes
+
+- [#11069](https://github.com/langchain-ai/langchainjs/pull/11069) [`7d61f5f`](https://github.com/langchain-ai/langchainjs/commit/7d61f5f19861643bd39eda333628e59783c75fa9) Thanks [@brandonhawi](https://github.com/brandonhawi)! - Tighten the `@langchain/core` peer dependency to `^1.1.30`, the version that introduced the `utils/standard_schema` and `language_models/structured_output` export subpaths imported by `ChatGroq`. The previous `^1.0.0` range allowed core versions below 1.1.30 that lack these exports, causing module-not-found build failures.
+
 ## 1.2.1
 
 ### Patch Changes
