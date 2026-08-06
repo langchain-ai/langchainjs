@@ -95,6 +95,28 @@ function _normalizeMimeType(mimeType?: string | null): string {
   return (mimeType ?? "").split(";")[0].toLowerCase();
 }
 
+/**
+ * Anthropic base64 document sources only accept `application/pdf`. When a file
+ * arrives with an empty/unknown MIME type we must not blindly label it as a PDF:
+ * doing so yields a 400 (`media_type: Input should be 'application/pdf'`) for
+ * non-PDF binaries such as `.pem` or `.keystore` files. Sniff the PDF magic
+ * bytes ("%PDF", which is "JVBERi" once base64-encoded) so genuinely unlabeled
+ * PDFs still work while other binaries fall through to explicit handling.
+ */
+export function _looksLikePdf(data: string | Uint8Array): boolean {
+  if (typeof data !== "string") {
+    return (
+      data[0] === 0x25 && // %
+      data[1] === 0x50 && // P
+      data[2] === 0x44 && // D
+      data[3] === 0x46 //   F
+    );
+  }
+  // Strip an optional data: URI prefix, then compare the base64 prefix.
+  const base64 = data.includes(",") ? data.slice(data.indexOf(",") + 1) : data;
+  return base64.trimStart().startsWith("JVBERi");
+}
+
 function _extractMetadataValue<T>(
   metadata: unknown,
   key: string
@@ -305,7 +327,10 @@ export function _formatStandardContent(
       }
       if (block.data) {
         const mimeType = _normalizeMimeType(block.mimeType);
-        if (mimeType === "" || mimeType === "application/pdf") {
+        if (
+          mimeType === "application/pdf" ||
+          (mimeType === "" && _looksLikePdf(block.data))
+        ) {
           result.push(
             _applyDocumentMetadata(
               {

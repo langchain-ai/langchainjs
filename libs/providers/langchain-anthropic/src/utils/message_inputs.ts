@@ -38,7 +38,7 @@ import {
   _isAnthropicCompactionBlock,
   standardContentBlockConverter,
 } from "./content.js";
-import { _formatStandardContent } from "./standard.js";
+import { _formatStandardContent, _looksLikePdf } from "./standard.js";
 
 function _formatImage(imageUrl: string) {
   const parsed = parseBase64DataUrl({ dataUrl: imageUrl });
@@ -274,18 +274,32 @@ function* _formatContentBlocks(
           contentPart.data instanceof Uint8Array)
       ) {
         // File with base64 data (string or Uint8Array)
-        const media_type =
-          "mimeType" in contentPart && typeof contentPart.mimeType === "string"
-            ? contentPart.mimeType
-            : "application/pdf";
         const data =
           typeof contentPart.data === "string"
             ? contentPart.data
             : Buffer.from(contentPart.data).toString("base64");
+        const rawMimeType =
+          "mimeType" in contentPart && typeof contentPart.mimeType === "string"
+            ? contentPart.mimeType
+            : "";
+        const mimeType = rawMimeType.split(";")[0].toLowerCase();
+        // Anthropic base64 document sources only accept application/pdf. Only
+        // emit one for an actual PDF; do not mislabel an unknown/other binary,
+        // which yields a 400 (media_type must be application/pdf).
+        if (
+          mimeType !== "application/pdf" &&
+          !(mimeType === "" && _looksLikePdf(data))
+        ) {
+          throw new Error(
+            `Unsupported file mime type for Anthropic base64 document source: ` +
+              `${rawMimeType || "(none provided)"}. Only application/pdf is ` +
+              `supported for base64 document blocks.`
+          );
+        }
 
         source = {
           type: "base64" as const,
-          media_type,
+          media_type: "application/pdf",
           data,
         };
       } else if (
