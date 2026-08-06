@@ -1,6 +1,7 @@
 /* oxlint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi } from "vitest";
 import { HumanMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
+import { FakeChatModel } from "@langchain/core/utils/testing";
 
 import { summarizationMiddleware } from "../summarization.js";
 import { createAgent } from "../../index.js";
@@ -1030,22 +1031,12 @@ describe("summarizationMiddleware", () => {
     });
   });
 
-  it("should not leak summarization model streaming chunks when using streamMode messages", async () => {
-    const SUMMARIZATION_RAW_OUTPUT =
-      "INTERNAL_SUMMARY_OUTPUT_SHOULD_NOT_BE_STREAMED_AS_AI_MESSAGE";
+  it("should not leak summarization messages when using streamMode messages", async () => {
     const MAIN_MODEL_CONTENT =
       "I understand your project. Let me analyze the architecture.";
 
-    // Create a summarization model with distinctive content
-    const summarizationModel = {
-      invoke: vi.fn().mockImplementation(async () => {
-        return { content: SUMMARIZATION_RAW_OUTPUT };
-      }),
-      getName: () => "mock-summarizer",
-      _modelType: "mock",
-      lc_runnable: true,
-      profile: {},
-    };
+    const summarizationModel = new FakeChatModel({});
+    const summarizationInvoke = vi.spyOn(summarizationModel, "invoke");
 
     // Create a main model with a distinctive response
     const model = new FakeToolCallingChatModel({
@@ -1053,7 +1044,7 @@ describe("summarizationMiddleware", () => {
     });
 
     const middleware = summarizationMiddleware({
-      model: summarizationModel as any,
+      model: summarizationModel,
       trigger: { tokens: 50 },
       keep: { messages: 2 },
     });
@@ -1080,9 +1071,17 @@ describe("summarizationMiddleware", () => {
 
     // Collect all streamed AIMessage content (only assistant/AI responses)
     const streamedAIContents: string[] = [];
+    const streamedSummarizationMessages: string[] = [];
     for await (const [mode, chunk] of stream) {
       if (mode === "messages") {
         const [msg] = chunk as [any, any];
+        if (msg.additional_kwargs?.lc_source === "summarization") {
+          streamedSummarizationMessages.push(
+            typeof msg.content === "string"
+              ? msg.content
+              : JSON.stringify(msg.content)
+          );
+        }
         // Only collect AIMessage content (role === "assistant" or type === "ai")
         const isAIMessage =
           msg._getType?.() === "ai" ||
@@ -1101,15 +1100,11 @@ describe("summarizationMiddleware", () => {
     }
 
     // Verify summarization was triggered
-    expect(summarizationModel.invoke).toHaveBeenCalled();
+    expect(summarizationInvoke).toHaveBeenCalled();
 
-    // Verify the raw summarization model output does NOT appear as an AIMessage
-    // This would happen if callbacks leaked from the internal model.invoke()
     const allStreamedAIContent = streamedAIContents.join(" ");
-    expect(allStreamedAIContent).not.toContain(
-      "INTERNAL_SUMMARY_OUTPUT_SHOULD_NOT_BE_STREAMED_AS_AI_MESSAGE"
-    );
-    expect(allStreamedAIContent).not.toContain(SUMMARIZATION_RAW_OUTPUT);
+    expect(allStreamedAIContent).not.toContain("Context Extraction Assistant");
+    expect(streamedSummarizationMessages).toEqual([]);
 
     // Verify the main model's content DOES appear in the stream
     expect(allStreamedAIContent).toContain(MAIN_MODEL_CONTENT);

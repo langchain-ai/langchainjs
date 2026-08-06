@@ -454,7 +454,7 @@ export function summarizationMiddleware(
 
       const summaryMessage = new HumanMessage({
         content: `${summaryPrefix}\n\n${summary}`,
-        id: uuid(),
+        id: conversationMessages[0].id,
         additional_kwargs: { lc_source: "summarization" },
       });
 
@@ -942,12 +942,14 @@ async function createSummary(
     );
     /**
      * Merge parent runnable config with summarization metadata so LangGraph's
-     * stream handlers (and other callback-based consumers) can properly track
-     * and tag the summarization model call.
+     * handlers can properly track and tag the summarization model call. Do not
+     * inherit callbacks because this is an internal housekeeping invocation
+     * whose output should not be emitted to the user-facing message stream.
      */
     const baseConfig: RunnableConfig = pickRunnableConfigKeys(runtime) ?? {};
     const config = mergeConfigs(baseConfig, {
       metadata: { lc_source: "summarization" },
+      callbacks: [],
     });
     const response = await model.invoke(formattedPrompt, config);
     const content = response.content;
