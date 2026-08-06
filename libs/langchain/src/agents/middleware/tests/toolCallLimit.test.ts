@@ -697,7 +697,7 @@ describe("toolCallLimitMiddleware", () => {
             content: "",
             tool_calls: [{ id: "4", name: "search", args: { query: "test3" } }],
           }),
-          new AIMessage("Should not reach here"),
+          new AIMessage("Final response after limit"),
         ],
       });
 
@@ -712,9 +712,7 @@ describe("toolCallLimitMiddleware", () => {
       });
 
       const lastMessage = result.messages[result.messages.length - 1];
-      expect(lastMessage.content).toContain(
-        "Tool call limit exceeded. Do not make additional tool calls."
-      );
+      expect(lastMessage.content).toBe("Final response after limit");
       expect(searchToolMock).toHaveBeenCalledTimes(2);
       expect(calculatorToolMock).toHaveBeenCalledTimes(0);
     });
@@ -996,6 +994,55 @@ describe("toolCallLimitMiddleware", () => {
       expect(calcSuccess.length).toBe(3);
       expect(searchBlocked[0].content).toContain("limit");
       expect(searchBlocked[0].content).toContain("search");
+    });
+
+    it("should call the model again when continue blocks all tool calls", async () => {
+      const model = new FakeToolCallingChatModel({
+        responses: [
+          new AIMessage({
+            content: "",
+            tool_calls: [{ id: "1", name: "search", args: { query: "q1" } }],
+          }),
+          new AIMessage({
+            content: "",
+            tool_calls: [{ id: "2", name: "search", args: { query: "q2" } }],
+          }),
+          new AIMessage("Final response after limit"),
+        ],
+      });
+
+      const limiter = toolCallLimitMiddleware({
+        toolName: "search",
+        threadLimit: 1,
+        exitBehavior: "continue",
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [searchTool],
+        middleware: [limiter],
+        checkpointer: new MemorySaver(),
+      });
+
+      const result = await agent.invoke(
+        { messages: [new HumanMessage("Question")] },
+        { configurable: { thread_id: "all_blocked_continue" } }
+      );
+
+      const lastMessage = result.messages.at(-1);
+      expect(AIMessage.isInstance(lastMessage)).toBe(true);
+      expect(lastMessage?.content).toBe("Final response after limit");
+
+      const toolMessages = result.messages.filter((msg): msg is ToolMessage =>
+        ToolMessage.isInstance(msg)
+      );
+      const blockedMessages = toolMessages.filter(
+        (msg) => msg.status === "error"
+      );
+
+      expect(searchToolMock).toHaveBeenCalledTimes(1);
+      expect(blockedMessages).toHaveLength(1);
+      expect(blockedMessages[0].content).toContain("limit");
     });
   });
 
