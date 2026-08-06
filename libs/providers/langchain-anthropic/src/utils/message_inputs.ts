@@ -159,11 +159,15 @@ function* _formatContentBlocks(
 ): Generator<Anthropic.Beta.BetaContentBlockParam> {
   const toolTypes = [
     "bash_code_execution_tool_result",
+    "code_execution_tool_result",
     "input_json_delta",
+    "mcp_tool_result",
+    "mcp_tool_use",
     "server_tool_use",
     "text_editor_code_execution_tool_result",
     "tool_result",
     "tool_use",
+    "web_fetch_tool_result",
     "web_search_result",
     "web_search_tool_result",
   ];
