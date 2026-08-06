@@ -5,6 +5,8 @@ import {
   BaseChatModel,
   type BaseChatModelCallOptions,
 } from "../chat_models.js";
+import { convertChunksToEvents } from "../compat.js";
+import { ChatModelStream } from "../stream.js";
 import type { ChatModelStreamEvent } from "../event.js";
 import type { BaseMessage } from "../../messages/base.js";
 import type { CallbackManagerForLLMRun } from "../../callbacks/manager.js";
@@ -488,6 +490,62 @@ describe("_streamChatModelEvents bridge", () => {
       expect(toolFinish).toBeDefined();
       expect(toolFinish!.content.name).toBe("search");
       expect(toolFinish!.content.args).toEqual({ q: "hello" });
+    });
+
+    test("keeps text and tool call chunks in separate content blocks", async () => {
+      async function* chunks() {
+        yield new ChatGenerationChunk({
+          message: new AIMessageChunk({
+            content: "I will call a tool",
+            tool_call_chunks: [
+              {
+                index: 0,
+                id: "call_1",
+                name: "eval",
+                args: '{"code"',
+              },
+            ],
+          }),
+          text: "I will call a tool",
+        });
+
+        yield new ChatGenerationChunk({
+          message: new AIMessageChunk({
+            content: "",
+            tool_call_chunks: [
+              {
+                index: 0,
+                args: ':"new Date()"}',
+              },
+            ],
+          }),
+          text: "",
+        });
+      }
+
+      const stream = new ChatModelStream(convertChunksToEvents(chunks()));
+      const message = await stream.output;
+
+      expect(message.content).toEqual([
+        {
+          type: "text",
+          text: "I will call a tool",
+        },
+        {
+          type: "tool_call",
+          id: "call_1",
+          name: "eval",
+          args: { code: "new Date()" },
+        },
+      ]);
+      expect(message.tool_calls).toEqual([
+        {
+          type: "tool_call",
+          id: "call_1",
+          name: "eval",
+          args: { code: "new Date()" },
+        },
+      ]);
     });
   });
 
