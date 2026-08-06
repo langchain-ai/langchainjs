@@ -536,10 +536,24 @@ export abstract class BaseChatGoogle<
       convertGeminiGenerateContentResponseToUsageMetadata(data);
     message.usage_metadata = usageMetadata;
 
-    const serviceTier: ServiceTier = iife((): ServiceTier => {
-      // @ts-expect-error - trafficType is defined on Vertex, so isn't in the OpenAPI spec
-      const trafficType: string | undefined = data.usageMetadata?.trafficType;
+    // @ts-expect-error - trafficType is defined on Vertex, so isn't in the OpenAPI spec
+    const trafficType: string | undefined = data.usageMetadata?.trafficType;
 
+    // Surface Vertex response provenance on the message so callers can
+    // observe PTU consumption (`PROVISIONED_THROUGHPUT`) vs on-demand
+    // (`ON_DEMAND` / `ON_DEMAND_PRIORITY`) without dropping to the raw HTTP
+    // envelope via the `google-response-*` custom event. `modelVersion`
+    // captures the exact served version (e.g. gemini-3.1-flash-lite vs a
+    // preview variant), useful when PTU is version-bound.
+    message.response_metadata = {
+      ...message.response_metadata,
+      ...(trafficType !== undefined ? { traffic_type: trafficType } : {}),
+      ...(data.modelVersion !== undefined
+        ? { model_version: data.modelVersion }
+        : {}),
+    };
+
+    const serviceTier: ServiceTier = iife((): ServiceTier => {
       // AI Studio replies with actual service type in the header
       const serviceTierHeader: string | null = response.headers.get(
         "x-gemini-service-tier"
@@ -747,11 +761,32 @@ export abstract class BaseChatGoogle<
 
               // Only emit if we have content
               if (parts.length > 0 || candidate.finishReason) {
+                // Surface Vertex response provenance the same way the
+                // non-streaming path does. Attach ONLY on the terminal chunk
+                // (finishReason set) — AIMessageChunk.concat string-appends
+                // response_metadata values across chunks, so putting the same
+                // value on every chunk produces e.g.
+                // "PROVISIONED_THROUGHPUTPROVISIONED_THROUGHPUT" on the merged
+                // AIMessage. Non-terminal chunks don't carry these fields
+                // reliably anyway.
+                // @ts-expect-error - trafficType is defined on Vertex, so isn't in the OpenAPI spec
+                const chunkTrafficType: string | undefined = candidate.finishReason
+                  ? chunk?.usageMetadata?.trafficType
+                  : undefined;
+                const chunkModelVersion: string | undefined = candidate.finishReason
+                  ? chunk?.modelVersion
+                  : undefined;
                 const messageChunkParams: AIMessageChunkFields = {
                   content: message.content,
                   tool_calls: toolCalls,
                   response_metadata: {
                     model_provider: "google",
+                    ...(chunkTrafficType !== undefined
+                      ? { traffic_type: chunkTrafficType }
+                      : {}),
+                    ...(chunkModelVersion !== undefined
+                      ? { model_version: chunkModelVersion }
+                      : {}),
                   },
                   additional_kwargs: {
                     ...(message.additional_kwargs.originalTextContentBlock
