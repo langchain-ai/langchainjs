@@ -48,6 +48,16 @@ export const ns = baseNs.sub("error");
 export class LangChainError extends ns.brand(Error) {
   readonly name: string = "LangChainError";
 
+  /**
+   * Whether this error is safe to retry (e.g. a transient network/rate-limit
+   * failure) as opposed to deterministic (e.g. bad credentials, malformed
+   * input) — retrying a deterministic failure unchanged will fail identically.
+   *
+   * Defaults to `true` to preserve existing retry-everything behavior for any
+   * subclass that doesn't explicitly override it.
+   */
+  readonly isRetryable: boolean = true;
+
   constructor(message?: string) {
     super(message);
     if (Error.captureStackTrace) {
@@ -87,6 +97,12 @@ export class LangChainError extends ns.brand(Error) {
  */
 export class ModelAbortError extends ns.brand(LangChainError, "model-abort") {
   readonly name = "ModelAbortError";
+
+  /**
+   * A deliberate cancellation, not a failure worth retrying — retrying would
+   * mean ignoring an explicit abort signal from the caller.
+   */
+  readonly isRetryable: boolean = false;
 
   /**
    * The partial message output that was produced before the operation was aborted.
@@ -143,6 +159,13 @@ export class ContextOverflowError extends ns.brand(
   "context-overflow"
 ) {
   readonly name = "ContextOverflowError";
+
+  /**
+   * Blind retry can't shrink the input that caused the overflow — retrying
+   * the exact same request will fail identically every time. Fixing this
+   * requires a deliberate compaction/trim step, not another attempt.
+   */
+  readonly isRetryable: boolean = false;
 
   /**
    * The underlying error that caused this {@link ContextOverflowError}, if any.

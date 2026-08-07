@@ -23,6 +23,7 @@ describe("wrapOpenAIClientError", () => {
       "maximum context length"
     );
     expect((wrapped as ContextOverflowError).cause).toBe(originalError);
+    expect((wrapped as ContextOverflowError).isRetryable).toBe(false);
   });
 
   test("should wrap context overflow error (Input tokens exceed)", () => {
@@ -41,6 +42,7 @@ describe("wrapOpenAIClientError", () => {
       "Input tokens exceed the configured limit"
     );
     expect((wrapped as ContextOverflowError).cause).toBe(originalError);
+    expect((wrapped as ContextOverflowError).isRetryable).toBe(false);
   });
 
   test("should wrap context overflow error (exceeds the context window)", () => {
@@ -59,6 +61,7 @@ describe("wrapOpenAIClientError", () => {
       "exceeds the context window"
     );
     expect((wrapped as ContextOverflowError).cause).toBe(originalError);
+    expect((wrapped as ContextOverflowError).isRetryable).toBe(false);
   });
 
   test("should wrap context overflow error (maximum context length)", () => {
@@ -77,6 +80,7 @@ describe("wrapOpenAIClientError", () => {
       "maximum context length"
     );
     expect((wrapped as ContextOverflowError).cause).toBe(originalError);
+    expect((wrapped as ContextOverflowError).isRetryable).toBe(false);
   });
 
   test("should not wrap non-context-overflow 400 errors", () => {

@@ -1,4 +1,14 @@
 import { z } from "zod/v3";
+import { LangChainError } from "@langchain/core/errors";
+
+/**
+ * Default `retryOn` behavior: if the error is a {@link LangChainError},
+ * honor its `isRetryable`. Otherwise, unclassified errors keep retrying,
+ * unchanged from today's behavior.
+ */
+export function defaultRetryOn(error: Error): boolean {
+  return error instanceof LangChainError ? error.isRetryable : true;
+}
 
 export const RetrySchema = z.object({
   /**
@@ -10,7 +20,9 @@ export const RetrySchema = z.object({
   /**
    * Either an array of error constructors to retry on, or a function
    * that takes an error and returns `true` if it should be retried.
-   * Default is to retry on all errors.
+   * Default: honors `isRetryable` on classified {@link LangChainError}s
+   * (e.g. `ContextOverflowError`); retries everything else, unchanged
+   * from prior behavior.
    */
   retryOn: z
     .union([
@@ -18,7 +30,7 @@ export const RetrySchema = z.object({
       // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       z.array(z.custom<new (...args: any[]) => Error>()),
     ])
-    .default(() => () => true),
+    .default(() => defaultRetryOn),
 
   /**
    * Multiplier for exponential backoff. Each retry waits

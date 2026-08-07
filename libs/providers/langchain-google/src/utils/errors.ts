@@ -66,6 +66,9 @@ export class GoogleError extends ns.brand(LangChainError) {
  */
 export class ConfigurationError extends ns.brand(GoogleError, "configuration") {
   readonly name = "ConfigurationError";
+
+  /** Bad config retried unchanged fails identically. */
+  readonly isRetryable: boolean = false;
 }
 
 /**
@@ -110,6 +113,9 @@ export class PromptBlockedError extends ns.brand(
   "prompt-blocked"
 ) {
   readonly name = "PromptBlockedError";
+
+  /** The same prompt retried unchanged gets blocked for the same reason again. */
+  readonly isRetryable: boolean = false;
 
   /**
    * The reason why the prompt was blocked.
@@ -243,6 +249,9 @@ type AuthErrorParams = {
  */
 export class AuthError extends ns.brand(GoogleError, "auth") {
   readonly name = "AuthError" as const;
+
+  /** Same credentials retried unchanged fail identically. */
+  readonly isRetryable: boolean = false;
 
   /**
    * The HTTP status code of the failed response.
@@ -393,7 +402,7 @@ type RequestErrorParams = {
  * It captures detailed information about the failed request including the URL,
  * status code, headers, and response body to aid in debugging and error handling.
  *
- * The error includes a `isRetryable()` method to determine if the request should
+ * The error includes an `isRetryable` property to determine if the request should
  * be retried based on the HTTP status code (e.g., 429 Too Many Requests, 503 Service Unavailable).
  *
  * @example
@@ -404,7 +413,7 @@ type RequestErrorParams = {
  *     throw await RequestError.fromResponse(response);
  *   }
  * } catch (error) {
- *   if (RequestError.isInstance(error) && error.isRetryable()) {
+ *   if (RequestError.isInstance(error) && error.isRetryable) {
  *     // Retry the request
  *   }
  * }
@@ -447,6 +456,18 @@ export class RequestError extends ns.brand(GoogleError, "request") {
    */
   readonly data?: unknown;
 
+  /**
+   * Whether this request failure represents a temporary issue that might
+   * succeed on retry. `true` for status codes indicating a temporary issue:
+   * - 408 (Request Timeout)
+   * - 429 (Too Many Requests / Rate Limiting)
+   * - 500 (Internal Server Error)
+   * - 502 (Bad Gateway)
+   * - 503 (Service Unavailable)
+   * - 504 (Gateway Timeout)
+   */
+  readonly isRetryable: boolean;
+
   constructor(params: RequestErrorParams) {
     super(params.message);
 
@@ -455,33 +476,9 @@ export class RequestError extends ns.brand(GoogleError, "request") {
     this.statusText = params.statusText;
     this.headers = params.headers;
     this.data = params.data;
-  }
-
-  /**
-   * Determines if this error represents a retryable request failure.
-   *
-   * A request is considered retryable if it failed with a status code that
-   * indicates a temporary issue that might succeed on retry. This includes:
-   * - 408 (Request Timeout)
-   * - 429 (Too Many Requests / Rate Limiting)
-   * - 500 (Internal Server Error)
-   * - 502 (Bad Gateway)
-   * - 503 (Service Unavailable)
-   * - 504 (Gateway Timeout)
-   *
-   * @returns `true` if the request should be retried, `false` otherwise
-   *
-   * @example
-   * ```typescript
-   * if (RequestError.isInstance(error) && error.isRetryable()) {
-   *   await sleep(1000);
-   *   return retry(request);
-   * }
-   * ```
-   */
-  isRetryable(): boolean {
-    if (!this.statusCode) return false;
-    return RETRYABLE_STATUS_CODES.includes(this.statusCode);
+    this.isRetryable = params.statusCode
+      ? RETRYABLE_STATUS_CODES.includes(params.statusCode)
+      : false;
   }
 
   /**
@@ -558,6 +555,10 @@ export class RequestError extends ns.brand(GoogleError, "request") {
 export class NoCandidatesError extends ns.brand(GoogleError, "no-candidates") {
   readonly name = "NoCandidatesError";
 
+  // TODO: determine isRetryable — ambiguous per this class's own cause list
+  // (a safety block is non-retryable; "an error occurred" may be transient).
+  // Defers to the LangChainError base default (true) until decided.
+
   constructor() {
     super(
       "No candidates returned from API. This may indicate the prompt was blocked or an error occurred."
@@ -589,6 +590,9 @@ export class NoCandidatesError extends ns.brand(GoogleError, "no-candidates") {
  */
 export class InvalidToolError extends ns.brand(GoogleError, "invalid-tool") {
   readonly name = "InvalidToolError";
+
+  /** Structural/schema issue — the same tool retried fails identically. */
+  readonly isRetryable: boolean = false;
 
   /**
    * The invalid tool that was provided.
@@ -633,6 +637,9 @@ export class ToolCallNotFoundError extends ns.brand(
   "tool-call-not-found"
 ) {
   readonly name = "ToolCallNotFoundError";
+
+  /** A message-history construction bug, not something a retry fixes. */
+  readonly isRetryable: boolean = false;
 
   /**
    * The tool call ID that could not be found in the conversation history.
@@ -691,6 +698,11 @@ export class MalformedOutputError extends ns.brand(
 ) {
   readonly name = "MalformedOutputError";
 
+  // TODO: determine isRetryable — same open question as OUTPUT_PARSING_FAILURE
+  // elsewhere: could be a deterministic schema mismatch (won't fix itself) or
+  // non-deterministic model output that might parse on a second attempt.
+  // Defers to the LangChainError base default (true) until decided.
+
   /**
    * Optional cause of the parsing error.
    * This may be the original error that occurred during parsing,
@@ -727,4 +739,7 @@ export class MalformedOutputError extends ns.brand(
  */
 export class InvalidInputError extends ns.brand(GoogleError, "invalid-input") {
   readonly name = "InvalidInputError";
+
+  /** Same input retried unchanged fails identically. */
+  readonly isRetryable: boolean = false;
 }
