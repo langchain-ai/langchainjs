@@ -7,7 +7,7 @@ import { LangChainError } from "@langchain/core/errors";
  * unchanged from today's behavior.
  */
 export function defaultRetryOn(error: Error): boolean {
-  return error instanceof LangChainError ? error.isRetryable : true;
+  return LangChainError.isInstance(error) ? (error.isRetryable ?? true) : true;
 }
 
 export const RetrySchema = z.object({

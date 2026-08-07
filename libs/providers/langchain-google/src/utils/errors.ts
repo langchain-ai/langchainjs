@@ -250,8 +250,8 @@ type AuthErrorParams = {
 export class AuthError extends ns.brand(GoogleError, "auth") {
   readonly name = "AuthError" as const;
 
-  /** Same credentials retried unchanged fail identically. */
-  readonly isRetryable: boolean = false;
+  /** Retryable for a transient status (429/5xx); not for a credential failure (400/401/403/404). */
+  readonly isRetryable: boolean;
 
   /**
    * The HTTP status code of the failed response.
@@ -288,6 +288,9 @@ export class AuthError extends ns.brand(GoogleError, "auth") {
     this.statusText = params.statusText;
     this.headers = params.headers;
     this.data = params.data;
+    this.isRetryable = params.statusCode
+      ? RETRYABLE_STATUS_CODES.includes(params.statusCode)
+      : false;
   }
 
   /**

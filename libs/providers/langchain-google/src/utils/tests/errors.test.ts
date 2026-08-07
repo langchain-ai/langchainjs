@@ -14,9 +14,9 @@ import {
 describe("isRetryable defaults", () => {
   test("classified non-retryable errors report isRetryable: false", () => {
     expect(new ConfigurationError("bad config").isRetryable).toBe(false);
-    expect(
-      new PromptBlockedError({ blockReason: "SAFETY" }).isRetryable
-    ).toBe(false);
+    expect(new PromptBlockedError({ blockReason: "SAFETY" }).isRetryable).toBe(
+      false
+    );
     expect(new InvalidToolError({}).isRetryable).toBe(false);
     expect(new ToolCallNotFoundError("abc").isRetryable).toBe(false);
     expect(new InvalidInputError("bad input").isRetryable).toBe(false);
@@ -100,6 +100,22 @@ describe("AuthError.fromResponse", () => {
     expect(error.data).toEqual({
       error_description: "Service account token exchange failed",
     });
+    // 401 is a genuine credential failure, not in the retryable status list
     expect(error.isRetryable).toBe(false);
+  });
+
+  test("a transient status from the token endpoint is retryable, not a credential failure", async () => {
+    const response = new Response("rate limited", {
+      status: 429,
+      statusText: "Too Many Requests",
+      headers: {
+        "content-type": "text/plain",
+      },
+    });
+
+    const error = await AuthError.fromResponse(response);
+
+    // 429 on the OAuth token endpoint is transient, not bad credentials
+    expect(error.isRetryable).toBe(true);
   });
 });

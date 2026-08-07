@@ -8,6 +8,8 @@
 
 `LangChainError` now declares an `isRetryable` property (defaults to `true`). `modelRetryMiddleware` and `toolRetryMiddleware` respect it in their default `retryOn` — a classified, non-retryable error now fails immediately instead of burning `maxRetries` attempts that could never succeed. Only affects the default; an explicit `retryOn` is unaffected.
 
-Classified as non-retryable (`isRetryable: false`): `ModelAbortError`, `ContextOverflowError`, and in `@langchain/google`: `ConfigurationError`, `AuthError`, `PromptBlockedError`, `InvalidToolError`, `ToolCallNotFoundError`, `InvalidInputError`. `NoCandidatesError` and `MalformedOutputError` are left on the base default for now (genuinely ambiguous, still open).
+Classified as non-retryable (`isRetryable: false`): `ModelAbortError`, `ContextOverflowError`, and in `@langchain/google`: `ConfigurationError`, `PromptBlockedError`, `InvalidToolError`, `ToolCallNotFoundError`, `InvalidInputError`. `NoCandidatesError` and `MalformedOutputError` are left on the base default for now (genuinely ambiguous, still open).
+
+`AuthError.isRetryable` is status-code-derived, like `RequestError` — a token-exchange failure isn't always a bad credential; a transient 429/5xx from the OAuth endpoint is retryable, a 400/401/403/404 credential failure is not.
 
 Also fixes a `modelRetryMiddleware` bug: its array-form `retryOn` (e.g. `retryOn: [TimeoutError]`) matched via `error.constructor === ErrorConstructor`, so a subclass of a listed error type was never matched. Now uses `instanceof`, matching `toolRetryMiddleware`'s existing (correct) behavior.
