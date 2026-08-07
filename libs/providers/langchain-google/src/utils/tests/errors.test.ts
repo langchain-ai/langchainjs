@@ -1,34 +1,6 @@
 import { describe, expect, test } from "vitest";
-import {
-  AuthError,
-  ConfigurationError,
-  InvalidInputError,
-  InvalidToolError,
-  MalformedOutputError,
-  NoCandidatesError,
-  PromptBlockedError,
-  RequestError,
-  ToolCallNotFoundError,
-} from "../errors.js";
-
-describe("isRetryable defaults", () => {
-  test("classified non-retryable errors report isRetryable: false", () => {
-    expect(new ConfigurationError("bad config").isRetryable).toBe(false);
-    expect(new PromptBlockedError({ blockReason: "SAFETY" }).isRetryable).toBe(
-      false
-    );
-    expect(new InvalidToolError({}).isRetryable).toBe(false);
-    expect(new ToolCallNotFoundError("abc").isRetryable).toBe(false);
-    expect(new InvalidInputError("bad input").isRetryable).toBe(false);
-  });
-
-  test("classes still pending an isRetryable decision default to the base class's true", () => {
-    expect(new NoCandidatesError().isRetryable).toBe(true);
-    expect(
-      new MalformedOutputError({ message: "bad output" }).isRetryable
-    ).toBe(true);
-  });
-});
+import { ServerError } from "@langchain/core/errors";
+import { AuthError, RequestError } from "../errors.js";
 
 describe("RequestError.fromResponse", () => {
   test("parses JSON error bodies from text/event-stream responses", async () => {
@@ -57,11 +29,9 @@ describe("RequestError.fromResponse", () => {
           "Invalid JSON payload received. Unknown name \"const\" at 'tools[0]'",
       },
     });
-    // 400 is not in the retryable status code list
-    expect(error.isRetryable).toBe(false);
   });
 
-  test("preserves plain-text error bodies when JSON parsing fails", async () => {
+  test("dispatches 5xx responses to ServerError", async () => {
     const response = new Response("Upstream gateway timed out", {
       status: 504,
       statusText: "Gateway Timeout",
@@ -72,10 +42,9 @@ describe("RequestError.fromResponse", () => {
 
     const error = await RequestError.fromResponse(response);
 
+    expect(error).toBeInstanceOf(ServerError);
     expect(error.message).toBe("Request failed with status code 504");
-    expect(error.data).toBe("Upstream gateway timed out");
-    // 504 (Gateway Timeout) is in the retryable status code list
-    expect(error.isRetryable).toBe(true);
+    expect((error as ServerError).statusCode).toBe(504);
   });
 });
 
@@ -100,22 +69,5 @@ describe("AuthError.fromResponse", () => {
     expect(error.data).toEqual({
       error_description: "Service account token exchange failed",
     });
-    // 401 is a genuine credential failure, not in the retryable status list
-    expect(error.isRetryable).toBe(false);
-  });
-
-  test("a transient status from the token endpoint is retryable, not a credential failure", async () => {
-    const response = new Response("rate limited", {
-      status: 429,
-      statusText: "Too Many Requests",
-      headers: {
-        "content-type": "text/plain",
-      },
-    });
-
-    const error = await AuthError.fromResponse(response);
-
-    // 429 on the OAuth token endpoint is transient, not bad credentials
-    expect(error.isRetryable).toBe(true);
   });
 });

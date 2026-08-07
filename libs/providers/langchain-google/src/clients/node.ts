@@ -1,5 +1,6 @@
 import { GoogleAuth, type GoogleAuthOptions } from "google-auth-library";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { ConfigurationError } from "@langchain/core/errors";
 import { GCP_API_KEY_HEADER, GOOGLE_API_KEY_HEADER } from "../const.js";
 import { ApiClient } from "./index.js";
 import {
@@ -7,7 +8,6 @@ import {
   getGCPCredentialsAccessToken,
   normalizeGCPCredentials,
 } from "../utils/gcp-auth.js";
-import { ConfigurationError } from "../utils/errors.js";
 import { iife } from "../utils/misc.js";
 
 /**

@@ -53,9 +53,24 @@ describe("TimeoutError / RateLimitError / ConnectionError / ServerError", () => 
     );
   });
 
-  test("RateLimitError carries retryAfterMs when provided", () => {
-    const error = new RateLimitError(undefined, { retryAfterMs: 5000 });
+  test("RateLimitError carries retryAfterMs and statusCode when provided", () => {
+    const error = new RateLimitError(undefined, {
+      retryAfterMs: 5000,
+      statusCode: 429,
+    });
     expect(error.retryAfterMs).toBe(5000);
+    expect(error.statusCode).toBe(429);
+  });
+
+  test("RateLimitError is not retryable when quota is exhausted", () => {
+    expect(
+      new RateLimitError(undefined, { quotaExhausted: true }).isRetryable
+    ).toBe(false);
+  });
+
+  test("ModelNotFoundError carries statusCode when provided", () => {
+    const error = new ModelNotFoundError(undefined, 404);
+    expect(error.statusCode).toBe(404);
   });
 
   test("ServerError carries statusCode when provided", () => {

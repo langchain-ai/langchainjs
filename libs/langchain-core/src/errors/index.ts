@@ -331,10 +331,16 @@ export class ModelNotFoundError extends ns.brand(
 ) {
   readonly name = "ModelNotFoundError";
 
+  /**
+   * The HTTP status code of the failed response, if known.
+   */
+  readonly statusCode?: number;
+
   readonly isRetryable: boolean = false;
 
-  constructor(message?: string) {
+  constructor(message?: string, statusCode?: number) {
     super(message ?? "The requested model could not be found.");
+    this.statusCode = statusCode;
   }
 }
 
@@ -379,10 +385,12 @@ export class TimeoutError extends ns.brand(ModelError, "timeout") {
  * Error class representing a model provider's rate limit being exceeded.
  *
  * Retryable by default (the textbook transient case), and may carry
- * `retryAfterMs` when the provider communicates how long to wait. Like
- * {@link TimeoutError}, `isRetryable` becomes `false` if this happened
- * mid-stream, since blind-retrying would risk duplicating output already
- * received.
+ * `retryAfterMs` when the provider communicates how long to wait.
+ * `isRetryable` becomes `false` if `quotaExhausted` is set — a
+ * billing/quota exhaustion resolves on its own no sooner than a plain
+ * wait would, so retrying is just as wasteful as any other deterministic
+ * failure — or if this happened mid-stream, since blind-retrying would
+ * risk duplicating output already received.
  *
  * @example
  * ```typescript
@@ -397,6 +405,11 @@ export class TimeoutError extends ns.brand(ModelError, "timeout") {
  */
 export class RateLimitError extends ns.brand(ModelError, "rate-limit") {
   readonly name = "RateLimitError";
+
+  /**
+   * The HTTP status code of the failed response, if known.
+   */
+  readonly statusCode?: number;
 
   /**
    * How long to wait before retrying, in milliseconds, if the provider
@@ -414,12 +427,22 @@ export class RateLimitError extends ns.brand(ModelError, "rate-limit") {
 
   constructor(
     message?: string,
-    options?: { retryAfterMs?: number; partialOutput?: AIMessageChunk }
+    options?: {
+      statusCode?: number;
+      retryAfterMs?: number;
+      partialOutput?: AIMessageChunk;
+      /**
+       * Set when the provider indicated this rate limit is a billing/quota
+       * exhaustion rather than a transient, self-resolving limit.
+       */
+      quotaExhausted?: boolean;
+    }
   ) {
     super(message ?? "The model provider's rate limit was exceeded.");
+    this.statusCode = options?.statusCode;
     this.retryAfterMs = options?.retryAfterMs;
     this.partialOutput = options?.partialOutput;
-    this.isRetryable = !options?.partialOutput;
+    this.isRetryable = !options?.partialOutput && !options?.quotaExhausted;
   }
 }
 

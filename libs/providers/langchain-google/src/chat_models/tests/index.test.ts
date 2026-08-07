@@ -10,6 +10,7 @@ import {
 } from "vitest";
 import * as fs from "node:fs";
 import { z } from "zod/v3";
+import { RateLimitError } from "@langchain/core/errors";
 import { ApiClient } from "../../clients/index.js";
 import { GoogleRequestRecorder } from "../../utils/handler.js";
 import { RequestError } from "../../utils/errors.js";
@@ -615,7 +616,7 @@ describe("Google Mock", () => {
       maxRetries: 1,
     });
 
-    await expect(llm.invoke("Hello")).rejects.toBeInstanceOf(RequestError);
+    await expect(llm.invoke("Hello")).rejects.toBeInstanceOf(RateLimitError);
     expect(apiClient.calls).toBe(2);
   });
 
@@ -640,7 +641,7 @@ describe("Google Mock", () => {
     });
 
     await expect(llm.invoke("Hello")).rejects.toMatchObject({
-      name: "RequestError",
+      name: "RateLimitError",
       rateLimitType: "stop",
     });
     expect(apiClient.calls).toBe(1);
