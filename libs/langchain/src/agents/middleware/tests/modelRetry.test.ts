@@ -382,7 +382,7 @@ describe("modelRetryMiddleware", () => {
       expect(model._generate).toHaveBeenCalledTimes(2);
     });
 
-    it("should retry on a subclass of a specified error type (instanceof, not exact constructor)", async () => {
+    it("should not retry on a subclass of a specified error type (exact constructor match, not instanceof)", async () => {
       class SpecificTimeoutError extends TimeoutError {}
 
       class SubclassTimeoutFailureModel extends FakeToolCallingModel {
@@ -428,10 +428,10 @@ describe("modelRetryMiddleware", () => {
 
       const aiMessages = result.messages.filter(AIMessage.isInstance);
       expect(aiMessages.length).toBeGreaterThan(0);
-      // Would have been called only once under the old `error.constructor
-      // === ErrorConstructor` check, since SpecificTimeoutError's
-      // constructor isn't exactly TimeoutError's constructor.
-      expect(model._generate).toHaveBeenCalledTimes(2);
+      // Fails on attempt 1 — SpecificTimeoutError's constructor isn't
+      // exactly TimeoutError's constructor, so the array-form retryOn
+      // (exact constructor match) doesn't match it.
+      expect(model._generate).toHaveBeenCalledTimes(1);
     });
 
     it("should not retry on non-specified error types", async () => {

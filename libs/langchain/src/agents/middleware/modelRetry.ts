@@ -147,10 +147,9 @@ export function modelRetryMiddleware(config: ModelRetryMiddlewareConfig = {}) {
       return retryOn(error);
     }
     // retryOn is an array of error constructors
-    return retryOn.some((ErrorConstructor) => {
-      // oxlint-disable-next-line no-instanceof/no-instanceof
-      return error instanceof ErrorConstructor;
-    });
+    return retryOn.some(
+      (ErrorConstructor) => error.constructor === ErrorConstructor
+    );
   };
 
   // Use the exported calculateRetryDelay function with our config

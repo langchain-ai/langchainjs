@@ -48,22 +48,63 @@ export const ns = baseNs.sub("error");
 export class LangChainError extends ns.brand(Error) {
   readonly name: string = "LangChainError";
 
-  /**
-   * Whether this error is safe to retry (e.g. a transient network/rate-limit
-   * failure) as opposed to deterministic (e.g. bad credentials, malformed
-   * input) — retrying a deterministic failure unchanged will fail identically.
-   *
-   * Defaults to `true` to preserve existing retry-everything behavior for any
-   * subclass that doesn't explicitly override it.
-   */
-  readonly isRetryable: boolean = true;
-
   constructor(message?: string) {
     super(message);
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, this.constructor);
     }
   }
+}
+
+/**
+ * Error class representing an invalid client-side configuration or setup.
+ *
+ * This error is thrown when a LangChain integration is constructed with
+ * invalid options or settings that prevent it from functioning correctly —
+ * before any model is ever invoked. It is not a {@link ModelError}: nothing
+ * was sent anywhere, so there's no request/response involved and no
+ * question of retryability — the same invalid configuration will fail the
+ * same way every time until it's fixed.
+ *
+ * @example
+ * ```typescript
+ * try {
+ *   const model = new ChatSomeProvider({ invalidOption: true });
+ * } catch (error) {
+ *   if (ConfigurationError.isInstance(error)) {
+ *     console.log(`Configuration error: ${error.message}`);
+ *   }
+ * }
+ * ```
+ */
+export class ConfigurationError extends ns.brand(
+  LangChainError,
+  "configuration"
+) {
+  readonly name = "ConfigurationError";
+}
+
+/**
+ * Base error class for errors related to model usage (invocation, streaming,
+ * or the response the model produced), as opposed to errors that never
+ * reach a model at all (e.g. bad client configuration).
+ *
+ * All model-related LangChain error classes should extend this class
+ * (directly or indirectly). Use `ModelError.isInstance(obj)` to check if an
+ * object is any model-related LangChain error.
+ */
+export class ModelError extends ns.brand(LangChainError) {
+  readonly name: string = "ModelError";
+
+  /**
+   * Whether this error is safe to retry (e.g. a transient network/rate-limit
+   * failure) as opposed to deterministic (e.g. bad credentials, malformed
+   * input) — retrying a deterministic failure unchanged will fail identically.
+   *
+   * Defaults to `false` — a model-related failure should be proven safe to
+   * retry (a specific subclass overriding this) rather than assumed safe.
+   */
+  readonly isRetryable: boolean = false;
 }
 
 /**
@@ -80,7 +121,7 @@ export class LangChainError extends ns.brand(Error) {
  * @remarks
  * - The `partialOutput` field includes message content that was generated prior to the abort,
  *   such as a partial AIMessageChunk.
- * - This error extends the {@link LangChainError} base class with the marker `"model-abort"`.
+ * - This error extends the {@link ModelError} base class with the marker `"model-abort"`.
  *
  * @example
  * ```typescript
@@ -95,7 +136,7 @@ export class LangChainError extends ns.brand(Error) {
  * }
  * ```
  */
-export class ModelAbortError extends ns.brand(LangChainError, "model-abort") {
+export class ModelAbortError extends ns.brand(ModelError, "model-abort") {
   readonly name = "ModelAbortError";
 
   /**
@@ -131,7 +172,7 @@ export class ModelAbortError extends ns.brand(LangChainError, "model-abort") {
  * tokens or characters allowed in a context, and exceeding this limit will prevent
  * the operation from proceeding.
  *
- * The {@link ContextOverflowError} extends the {@link LangChainError} base class with
+ * The {@link ContextOverflowError} extends the {@link ModelError} base class with
  * the marker `"context-overflow"`.
  *
  * @remarks
@@ -155,7 +196,7 @@ export class ModelAbortError extends ns.brand(LangChainError, "model-abort") {
  * ```
  */
 export class ContextOverflowError extends ns.brand(
-  LangChainError,
+  ModelError,
   "context-overflow"
 ) {
   readonly name = "ContextOverflowError";
@@ -202,5 +243,336 @@ export class ContextOverflowError extends ns.brand(
     const error = new ContextOverflowError(obj.message);
     error.cause = obj;
     return error;
+  }
+}
+
+/**
+ * HTTP status codes that indicate a temporary issue that might succeed on
+ * retry, shared by any {@link ModelError} subclass whose retryability is
+ * derived from a status code rather than fixed.
+ */
+const RETRYABLE_STATUS_CODES = [
+  408, // Request Timeout
+  429, // Too Many Requests
+  500, // Internal Server Error
+  502, // Bad Gateway
+  503, // Service Unavailable
+  504, // Gateway Timeout
+];
+
+/**
+ * Error class for authentication failures when calling a model provider.
+ *
+ * This is thrown for an invalid, expired, or missing API key or credential.
+ * It carries the response's status code, if known — an auth/token endpoint
+ * can occasionally fail transiently (e.g. a 429 or 5xx from the auth server
+ * itself), so this isn't unconditionally non-retryable the way a bad
+ * credential is.
+ *
+ * @example
+ * ```typescript
+ * try {
+ *   await model.invoke("hello");
+ * } catch (err) {
+ *   if (AuthenticationError.isInstance(err)) {
+ *     console.log("Bad or expired credentials:", err.message);
+ *   }
+ * }
+ * ```
+ */
+export class AuthenticationError extends ns.brand(
+  ModelError,
+  "authentication"
+) {
+  readonly name = "AuthenticationError";
+
+  /**
+   * The HTTP status code of the failed response, if known.
+   */
+  readonly statusCode?: number;
+
+  /**
+   * `true` only if the status code indicates a transient issue (e.g. a
+   * 429/5xx from the auth server itself); `false` for an actual bad
+   * credential (400/401/403/404), or when no status code is known.
+   */
+  readonly isRetryable: boolean;
+
+  constructor(message?: string, statusCode?: number) {
+    super(message ?? "Authentication with the model provider failed.");
+    this.statusCode = statusCode;
+    this.isRetryable = statusCode
+      ? RETRYABLE_STATUS_CODES.includes(statusCode)
+      : false;
+  }
+}
+
+/**
+ * Error class representing a model that could not be found.
+ *
+ * This is thrown when a requested model ID/name doesn't exist or isn't
+ * available to the caller. Retrying with the same model ID fails
+ * identically — there's nothing transient about a model that doesn't exist.
+ *
+ * @example
+ * ```typescript
+ * try {
+ *   await model.invoke("hello");
+ * } catch (err) {
+ *   if (ModelNotFoundError.isInstance(err)) {
+ *     console.log("Model not found:", err.message);
+ *   }
+ * }
+ * ```
+ */
+export class ModelNotFoundError extends ns.brand(
+  ModelError,
+  "model-not-found"
+) {
+  readonly name = "ModelNotFoundError";
+
+  readonly isRetryable: boolean = false;
+
+  constructor(message?: string) {
+    super(message ?? "The requested model could not be found.");
+  }
+}
+
+/**
+ * Error class representing a request to a model provider that timed out.
+ *
+ * Retryable by default. If the timeout happened mid-stream (some output
+ * had already arrived), `isRetryable` is `false` instead — blind-retrying
+ * would mean re-generating from scratch and risking a duplicate of output
+ * already received, rather than a cheap, safe retry of a request that
+ * never got a response at all.
+ *
+ * @example
+ * ```typescript
+ * try {
+ *   await model.invoke("hello");
+ * } catch (err) {
+ *   if (TimeoutError.isInstance(err)) {
+ *     console.log("Request timed out:", err.message);
+ *   }
+ * }
+ * ```
+ */
+export class TimeoutError extends ns.brand(ModelError, "timeout") {
+  readonly name = "TimeoutError";
+
+  /**
+   * The partial message output that was produced before the timeout, if any.
+   */
+  readonly partialOutput?: AIMessageChunk;
+
+  readonly isRetryable: boolean;
+
+  constructor(message?: string, partialOutput?: AIMessageChunk) {
+    super(message ?? "The request to the model timed out.");
+    this.partialOutput = partialOutput;
+    this.isRetryable = !partialOutput;
+  }
+}
+
+/**
+ * Error class representing a model provider's rate limit being exceeded.
+ *
+ * Retryable by default (the textbook transient case), and may carry
+ * `retryAfterMs` when the provider communicates how long to wait. Like
+ * {@link TimeoutError}, `isRetryable` becomes `false` if this happened
+ * mid-stream, since blind-retrying would risk duplicating output already
+ * received.
+ *
+ * @example
+ * ```typescript
+ * try {
+ *   await model.invoke("hello");
+ * } catch (err) {
+ *   if (RateLimitError.isInstance(err)) {
+ *     console.log("Rate limited, retry after:", err.retryAfterMs);
+ *   }
+ * }
+ * ```
+ */
+export class RateLimitError extends ns.brand(ModelError, "rate-limit") {
+  readonly name = "RateLimitError";
+
+  /**
+   * How long to wait before retrying, in milliseconds, if the provider
+   * communicated this (e.g. via a `Retry-After` header).
+   */
+  readonly retryAfterMs?: number;
+
+  /**
+   * The partial message output that was produced before the rate limit
+   * was hit, if any.
+   */
+  readonly partialOutput?: AIMessageChunk;
+
+  readonly isRetryable: boolean;
+
+  constructor(
+    message?: string,
+    options?: { retryAfterMs?: number; partialOutput?: AIMessageChunk }
+  ) {
+    super(message ?? "The model provider's rate limit was exceeded.");
+    this.retryAfterMs = options?.retryAfterMs;
+    this.partialOutput = options?.partialOutput;
+    this.isRetryable = !options?.partialOutput;
+  }
+}
+
+/**
+ * Error class representing a failure to connect to a model provider (e.g.
+ * a network/DNS/TLS failure) — no response was received at all.
+ *
+ * Retryable by default. Like {@link TimeoutError}, `isRetryable` becomes
+ * `false` if the connection dropped mid-stream after some output had
+ * already arrived, since blind-retrying would risk duplicating it.
+ *
+ * @example
+ * ```typescript
+ * try {
+ *   await model.invoke("hello");
+ * } catch (err) {
+ *   if (ConnectionError.isInstance(err)) {
+ *     console.log("Failed to connect:", err.message);
+ *   }
+ * }
+ * ```
+ */
+export class ConnectionError extends ns.brand(ModelError, "connection") {
+  readonly name = "ConnectionError";
+
+  /**
+   * The partial message output that was produced before the connection
+   * failed, if any.
+   */
+  readonly partialOutput?: AIMessageChunk;
+
+  readonly isRetryable: boolean;
+
+  constructor(message?: string, partialOutput?: AIMessageChunk) {
+    super(message ?? "Failed to connect to the model provider.");
+    this.partialOutput = partialOutput;
+    this.isRetryable = !partialOutput;
+  }
+}
+
+/**
+ * Error class representing a server-side failure at the model provider
+ * (e.g. an internal error, bad gateway, or service temporarily
+ * unavailable) — distinct from {@link ConnectionError} in that a response
+ * *was* received, it just indicated the provider's own failure.
+ *
+ * Retryable by default — the textbook transient, provider-side case. Like
+ * {@link TimeoutError}, `isRetryable` becomes `false` if this happened
+ * mid-stream, since blind-retrying would risk duplicating output already
+ * received.
+ *
+ * @example
+ * ```typescript
+ * try {
+ *   await model.invoke("hello");
+ * } catch (err) {
+ *   if (ServerError.isInstance(err)) {
+ *     console.log("Provider-side failure:", err.message);
+ *   }
+ * }
+ * ```
+ */
+export class ServerError extends ns.brand(ModelError, "server") {
+  readonly name = "ServerError";
+
+  /**
+   * The HTTP status code of the failed response, if known.
+   */
+  readonly statusCode?: number;
+
+  /**
+   * The partial message output that was produced before the failure, if any.
+   */
+  readonly partialOutput?: AIMessageChunk;
+
+  readonly isRetryable: boolean;
+
+  constructor(
+    message?: string,
+    options?: { statusCode?: number; partialOutput?: AIMessageChunk }
+  ) {
+    super(message ?? "The model provider reported a server-side error.");
+    this.statusCode = options?.statusCode;
+    this.partialOutput = options?.partialOutput;
+    this.isRetryable = !options?.partialOutput;
+  }
+}
+
+/**
+ * Error class representing valid credentials that lack permission for a
+ * specific resource or action — distinct from {@link AuthenticationError},
+ * which means the credentials themselves are invalid/missing.
+ *
+ * Always non-retryable: the same credentials retried against the same
+ * resource fail identically. Fixing this requires a different action
+ * (requesting access, upgrading a plan), not another attempt.
+ *
+ * @example
+ * ```typescript
+ * try {
+ *   await model.invoke("hello");
+ * } catch (err) {
+ *   if (PermissionDeniedError.isInstance(err)) {
+ *     console.log("Insufficient permission:", err.message);
+ *   }
+ * }
+ * ```
+ */
+export class PermissionDeniedError extends ns.brand(
+  ModelError,
+  "permission-denied"
+) {
+  readonly name = "PermissionDeniedError";
+
+  /**
+   * The HTTP status code of the failed response, if known.
+   */
+  readonly statusCode?: number;
+
+  readonly isRetryable: boolean = false;
+
+  constructor(message?: string, statusCode?: number) {
+    super(message ?? "Insufficient permission for this request.");
+    this.statusCode = statusCode;
+  }
+}
+
+/**
+ * Error class representing billing or quota exhaustion — distinct from
+ * {@link RateLimitError} even though some providers surface both under the
+ * same HTTP status code.
+ *
+ * Always non-retryable: exhausted quota/billing is permanent until an
+ * account action is taken (adding funds, upgrading a plan), unlike a rate
+ * limit, which resolves on its own.
+ *
+ * @example
+ * ```typescript
+ * try {
+ *   await model.invoke("hello");
+ * } catch (err) {
+ *   if (QuotaExceededError.isInstance(err)) {
+ *     console.log("Quota/billing limit exceeded:", err.message);
+ *   }
+ * }
+ * ```
+ */
+export class QuotaExceededError extends ns.brand(ModelError, "quota-exceeded") {
+  readonly name = "QuotaExceededError";
+
+  readonly isRetryable: boolean = false;
+
+  constructor(message?: string) {
+    super(message ?? "The account's quota or billing limit was exceeded.");
   }
 }
