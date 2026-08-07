@@ -20,6 +20,7 @@ import {
 import { OpenAI } from "@langchain/openai";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { StringOutputParser } from "@langchain/core/output_parsers";
+import { calculateMaxTokens } from "@langchain/core/language_models/base";
 
 export interface Env {
   OPENAI_API_KEY?: string;
@@ -35,6 +36,14 @@ export default {
     env: Env,
     ctx: ExecutionContext
   ): Promise<Response> {
+    if (new URL(request.url).pathname === "/token-count") {
+      const maxTokens = await calculateMaxTokens({
+        prompt: "hello",
+        modelName: "gpt-3.5-turbo",
+      });
+      return Response.json({ maxTokens });
+    }
+
     const constructorParameters = env.AZURE_OPENAI_API_KEY
       ? {
           azureOpenAIApiKey: env.AZURE_OPENAI_API_KEY,
