@@ -7,6 +7,7 @@ describe("Worker", () => {
 
   beforeAll(async () => {
     worker = await unstable_dev("src/index.ts", {
+      compatibilityFlags: ["nodejs_compat"],
       experimental: { disableExperimentalWarning: true },
     });
   }, 30000);
@@ -15,7 +16,10 @@ describe("Worker", () => {
     await worker.stop();
   });
 
-  it("should start", async () => {
-    expect(true).toBe(true);
-  });
+  it("should count tokens", async () => {
+    const response = await worker.fetch("http://example.com/token-count");
+
+    expect(response.ok).toBe(true);
+    await expect(response.json()).resolves.toEqual({ maxTokens: 4095 });
+  }, 30000);
 });

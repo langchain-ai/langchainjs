@@ -1,0 +1,358 @@
+{
+  "representative": [
+    {
+      "encoding": "cl100k_base",
+      "category": "empty-and-small",
+      "input": "",
+      "canonicalLength": 0
+    },
+    {
+      "encoding": "cl100k_base",
+      "category": "prose",
+      "input": "It was the best of times, it was the worst of times.",
+      "canonicalLength": 14
+    },
+    {
+      "encoding": "cl100k_base",
+      "category": "code",
+      "input": "const answer = (value) => value * 42;",
+      "canonicalLength": 12
+    },
+    {
+      "encoding": "cl100k_base",
+      "category": "cjk",
+      "input": "中文分词测试。",
+      "canonicalLength": 7
+    },
+    {
+      "encoding": "cl100k_base",
+      "category": "emoji",
+      "input": "😀 😃 😄 😁 😆 😅 😂 🤣",
+      "canonicalLength": 17
+    },
+    {
+      "encoding": "cl100k_base",
+      "category": "ascii-whitespace",
+      "input": " ",
+      "canonicalLength": 1
+    },
+    {
+      "encoding": "cl100k_base",
+      "category": "unicode-whitespace",
+      "input": "a b",
+      "canonicalLength": 3
+    },
+    {
+      "encoding": "cl100k_base",
+      "category": "zero-width-and-feff",
+      "input": "​",
+      "canonicalLength": 1
+    },
+    {
+      "encoding": "cl100k_base",
+      "category": "combining-and-normalization",
+      "input": "café",
+      "canonicalLength": 2
+    },
+    {
+      "encoding": "cl100k_base",
+      "category": "punctuation-and-symbols",
+      "input": "!@#$%^&*()_+-=[]{}|;':,./<>?",
+      "canonicalLength": 18
+    },
+    {
+      "encoding": "o200k_base",
+      "category": "empty-and-small",
+      "input": "",
+      "canonicalLength": 0
+    },
+    {
+      "encoding": "o200k_base",
+      "category": "prose",
+      "input": "It was the best of times, it was the worst of times.",
+      "canonicalLength": 14
+    },
+    {
+      "encoding": "o200k_base",
+      "category": "code",
+      "input": "const answer = (value) => value * 42;",
+      "canonicalLength": 12
+    },
+    {
+      "encoding": "o200k_base",
+      "category": "cjk",
+      "input": "中文分词测试。",
+      "canonicalLength": 5
+    },
+    {
+      "encoding": "o200k_base",
+      "category": "emoji",
+      "input": "😀 😃 😄 😁 😆 😅 😂 🤣",
+      "canonicalLength": 14
+    },
+    {
+      "encoding": "o200k_base",
+      "category": "ascii-whitespace",
+      "input": " ",
+      "canonicalLength": 1
+    },
+    {
+      "encoding": "o200k_base",
+      "category": "unicode-whitespace",
+      "input": "a b",
+      "canonicalLength": 3
+    },
+    {
+      "encoding": "o200k_base",
+      "category": "zero-width-and-feff",
+      "input": "​",
+      "canonicalLength": 1
+    },
+    {
+      "encoding": "o200k_base",
+      "category": "combining-and-normalization",
+      "input": "café",
+      "canonicalLength": 2
+    },
+    {
+      "encoding": "o200k_base",
+      "category": "punctuation-and-symbols",
+      "input": "!@#$%^&*()_+-=[]{}|;':,./<>?",
+      "canonicalLength": 18
+    },
+    {
+      "encoding": "r50k_base/gpt2",
+      "category": "empty-and-small",
+      "input": "",
+      "canonicalLength": 0
+    },
+    {
+      "encoding": "r50k_base/gpt2",
+      "category": "prose",
+      "input": "It was the best of times, it was the worst of times.",
+      "canonicalLength": 14
+    },
+    {
+      "encoding": "r50k_base/gpt2",
+      "category": "code",
+      "input": "const answer = (value) => value * 42;",
+      "canonicalLength": 11
+    },
+    {
+      "encoding": "r50k_base/gpt2",
+      "category": "cjk",
+      "input": "中文分词测试。",
+      "canonicalLength": 12
+    },
+    {
+      "encoding": "r50k_base/gpt2",
+      "category": "emoji",
+      "input": "😀 😃 😄 😁 😆 😅 😂 🤣",
+      "canonicalLength": 17
+    },
+    {
+      "encoding": "r50k_base/gpt2",
+      "category": "ascii-whitespace",
+      "input": " ",
+      "canonicalLength": 1
+    },
+    {
+      "encoding": "r50k_base/gpt2",
+      "category": "unicode-whitespace",
+      "input": "a b",
+      "canonicalLength": 3
+    },
+    {
+      "encoding": "r50k_base/gpt2",
+      "category": "zero-width-and-feff",
+      "input": "​",
+      "canonicalLength": 1
+    },
+    {
+      "encoding": "r50k_base/gpt2",
+      "category": "combining-and-normalization",
+      "input": "café",
+      "canonicalLength": 3
+    },
+    {
+      "encoding": "r50k_base/gpt2",
+      "category": "punctuation-and-symbols",
+      "input": "!@#$%^&*()_+-=[]{}|;':,./<>?",
+      "canonicalLength": 23
+    },
+    {
+      "encoding": "p50k_base",
+      "category": "empty-and-small",
+      "input": "",
+      "canonicalLength": 0
+    },
+    {
+      "encoding": "p50k_base",
+      "category": "prose",
+      "input": "It was the best of times, it was the worst of times.",
+      "canonicalLength": 14
+    },
+    {
+      "encoding": "p50k_base",
+      "category": "code",
+      "input": "const answer = (value) => value * 42;",
+      "canonicalLength": 11
+    },
+    {
+      "encoding": "p50k_base",
+      "category": "cjk",
+      "input": "中文分词测试。",
+      "canonicalLength": 12
+    },
+    {
+      "encoding": "p50k_base",
+      "category": "emoji",
+      "input": "😀 😃 😄 😁 😆 😅 😂 🤣",
+      "canonicalLength": 17
+    },
+    {
+      "encoding": "p50k_base",
+      "category": "ascii-whitespace",
+      "input": " ",
+      "canonicalLength": 1
+    },
+    {
+      "encoding": "p50k_base",
+      "category": "unicode-whitespace",
+      "input": "a b",
+      "canonicalLength": 3
+    },
+    {
+      "encoding": "p50k_base",
+      "category": "zero-width-and-feff",
+      "input": "​",
+      "canonicalLength": 1
+    },
+    {
+      "encoding": "p50k_base",
+      "category": "combining-and-normalization",
+      "input": "café",
+      "canonicalLength": 3
+    },
+    {
+      "encoding": "p50k_base",
+      "category": "punctuation-and-symbols",
+      "input": "!@#$%^&*()_+-=[]{}|;':,./<>?",
+      "canonicalLength": 23
+    }
+  ],
+  "knownEdgeCases": [
+    {
+      "encoding": "o200k_base",
+      "category": "zero-width-and-feff",
+      "input": ".\n\n﻿﻿Also on HuffPost:\n\n",
+      "canonicalLength": 7
+    },
+    {
+      "encoding": "o200k_base",
+      "category": "zero-width-and-feff",
+      "input": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.\n\n﻿﻿Also on HuffPost:\n\nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+      "canonicalLength": 27
+    },
+    {
+      "encoding": "o200k_base",
+      "category": "zero-width-and-feff",
+      "input": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.\n\n﻿﻿Also on HuffPost:\n\nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+      "canonicalLength": 82
+    },
+    {
+      "encoding": "r50k_base/gpt2",
+      "category": "emoji",
+      "input": "emoji\n\n﻿following BOM",
+      "canonicalLength": 11
+    },
+    {
+      "encoding": "r50k_base/gpt2",
+      "category": "unicode-whitespace",
+      "input": "\n\nnext",
+      "canonicalLength": 4
+    },
+    {
+      "encoding": "r50k_base/gpt2",
+      "category": "zero-width-and-feff",
+      "input": "\n\n﻿",
+      "canonicalLength": 5
+    },
+    {
+      "encoding": "r50k_base/gpt2",
+      "category": "zero-width-and-feff",
+      "input": ".\n\n﻿﻿Also on HuffPost:\n\n",
+      "canonicalLength": 14
+    },
+    {
+      "encoding": "r50k_base/gpt2",
+      "category": "zero-width-and-feff",
+      "input": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.\n\n﻿﻿Also on HuffPost:\n\nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+      "canonicalLength": 47
+    },
+    {
+      "encoding": "r50k_base/gpt2",
+      "category": "zero-width-and-feff",
+      "input": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.\n\n﻿﻿Also on HuffPost:\n\nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+      "canonicalLength": 140
+    },
+    {
+      "encoding": "p50k_base",
+      "category": "emoji",
+      "input": "emoji\n\n﻿following BOM",
+      "canonicalLength": 11
+    },
+    {
+      "encoding": "p50k_base",
+      "category": "unicode-whitespace",
+      "input": "\n\nnext",
+      "canonicalLength": 4
+    },
+    {
+      "encoding": "p50k_base",
+      "category": "zero-width-and-feff",
+      "input": "\n\n﻿",
+      "canonicalLength": 5
+    },
+    {
+      "encoding": "p50k_base",
+      "category": "zero-width-and-feff",
+      "input": ".\n\n﻿﻿Also on HuffPost:\n\n",
+      "canonicalLength": 14
+    },
+    {
+      "encoding": "p50k_base",
+      "category": "zero-width-and-feff",
+      "input": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.\n\n﻿﻿Also on HuffPost:\n\nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+      "canonicalLength": 47
+    },
+    {
+      "encoding": "p50k_base",
+      "category": "zero-width-and-feff",
+      "input": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.\n\n﻿﻿Also on HuffPost:\n\nyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+      "canonicalLength": 140
+    }
+  ],
+  "specialPolicy": [
+    {
+      "encoding": "cl100k_base",
+      "input": "<|endoftext|>",
+      "allowedAllLength": 1
+    },
+    {
+      "encoding": "o200k_base",
+      "input": "<|endoftext|>",
+      "allowedAllLength": 1
+    },
+    {
+      "encoding": "r50k_base/gpt2",
+      "input": "<|endoftext|>",
+      "allowedAllLength": 1
+    },
+    {
+      "encoding": "p50k_base",
+      "input": "<|endoftext|>",
+      "allowedAllLength": 1
+    }
+  ]
+}
