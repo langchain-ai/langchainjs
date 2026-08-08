@@ -4,6 +4,7 @@ import {
   AuthenticationError,
   ConfigurationError,
   ConnectionError,
+  ContextOverflowError,
   ModelError,
   ModelNotFoundError,
   PermissionDeniedError,
@@ -16,6 +17,25 @@ import {
 describe("ConfigurationError", () => {
   test("is not a ModelError — it sits outside that subtree by design", () => {
     expect(new ConfigurationError("bad config")).not.toBeInstanceOf(ModelError);
+  });
+});
+
+describe("ContextOverflowError", () => {
+  test("fromError copies status/statusCode from the wrapped error", () => {
+    const withStatus = ContextOverflowError.fromError(
+      Object.assign(new Error("prompt is too long"), { status: 400 })
+    );
+    expect(withStatus.statusCode).toBe(400);
+
+    const withStatusCode = ContextOverflowError.fromError(
+      Object.assign(new Error("prompt is too long"), { statusCode: 400 })
+    );
+    expect(withStatusCode.statusCode).toBe(400);
+  });
+
+  test("fromError leaves statusCode undefined when the wrapped error has none", () => {
+    const error = ContextOverflowError.fromError(new Error("too long"));
+    expect(error.statusCode).toBeUndefined();
   });
 });
 

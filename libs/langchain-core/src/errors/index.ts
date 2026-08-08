@@ -209,6 +209,14 @@ export class ContextOverflowError extends ns.brand(
   readonly isRetryable: boolean = false;
 
   /**
+   * The HTTP status code of the failed response, if known. Preserved so
+   * that duck-typed status checks (e.g. in `AsyncCaller`'s retry logic)
+   * can still see this was a client error, even though `isRetryable` is
+   * already `false` regardless of status code.
+   */
+  readonly statusCode?: number;
+
+  /**
    * The underlying error that caused this {@link ContextOverflowError}, if any.
    *
    * This property is optionally set when wrapping a lower-level error using {@link ContextOverflowError.fromError}.
@@ -216,8 +224,9 @@ export class ContextOverflowError extends ns.brand(
    */
   cause?: Error;
 
-  constructor(message?: string) {
+  constructor(message?: string, statusCode?: number) {
     super(message ?? "Input exceeded the model's context window.");
+    this.statusCode = statusCode;
   }
 
   /**
@@ -225,7 +234,11 @@ export class ContextOverflowError extends ns.brand(
    *
    * This static utility copies the message from the provided error and
    * attaches the original error as the {@link ContextOverflowError.cause} property,
-   * enabling error handlers to inspect or propagate the original failure.
+   * enabling error handlers to inspect or propagate the original failure. If
+   * the provided error carries a `status`/`statusCode`, it's copied onto
+   * {@link ContextOverflowError.statusCode} — without this, duck-typed
+   * status checks elsewhere (e.g. `AsyncCaller`'s retry logic) can't see
+   * this was a client error, and would blindly retry it.
    *
    * @param obj - The original error object causing the context overflow.
    * @returns A new {@link ContextOverflowError} instance with the original error set as its cause.
@@ -240,7 +253,15 @@ export class ContextOverflowError extends ns.brand(
    * ```
    */
   static fromError(obj: Error): ContextOverflowError {
-    const error = new ContextOverflowError(obj.message);
+    const record = obj as { status?: unknown; statusCode?: unknown };
+    const statusCode =
+      typeof record.status === "number"
+        ? record.status
+        : typeof record.statusCode === "number"
+          ? record.statusCode
+          : undefined;
+
+    const error = new ContextOverflowError(obj.message, statusCode);
     error.cause = obj;
     return error;
   }
