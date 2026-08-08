@@ -365,4 +365,23 @@ describe("classifyRateLimitError", () => {
       reason: "headerless_429",
     });
   });
+
+  test("trusts an already-computed retryAfterMs over re-deriving from headers/message", () => {
+    // Regression test: a provider's own RateLimitError class may already
+    // carry retryAfterMs computed from a real Retry-After header, but not
+    // the header itself. Re-classifying that error later (e.g. inside
+    // AsyncCaller's own failed-attempt handler) must not silently downgrade
+    // a short, retryable wait to "capacity" just because the header/message
+    // no longer carry the delay.
+    const error = Object.assign(new Error("Too Many Requests"), {
+      statusCode: 429,
+      retryAfterMs: 1000,
+    });
+
+    expect(classifyRateLimitError(error)).toEqual({
+      action: "wait",
+      retryAfterMs: 1000,
+      reason: "retry_after_hint",
+    });
+  });
 });

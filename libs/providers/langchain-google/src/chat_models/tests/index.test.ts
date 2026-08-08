@@ -10,6 +10,7 @@ import {
 } from "vitest";
 import * as fs from "node:fs";
 import { z } from "zod/v3";
+import { RateLimitError } from "@langchain/core/errors";
 import { ApiClient } from "../../clients/index.js";
 import { GoogleRequestRecorder } from "../../utils/handler.js";
 import { RequestError } from "../../utils/errors.js";
@@ -615,7 +616,36 @@ describe("Google Mock", () => {
       maxRetries: 1,
     });
 
-    await expect(llm.invoke("Hello")).rejects.toBeInstanceOf(RequestError);
+    await expect(llm.invoke("Hello")).rejects.toBeInstanceOf(RateLimitError);
+    expect(apiClient.calls).toBe(2);
+  });
+
+  test("retries a 429 whose delay is only in the retry-after header, not the message", async () => {
+    // Regression test: unlike the test above, the message here doesn't
+    // restate the delay — this is the case that exposed the bug where
+    // AsyncCaller's second classification pass (working off the thrown
+    // RateLimitError, which has no `.headers`) couldn't re-derive the delay
+    // and misclassified a retryable wait as non-retryable "capacity".
+    const apiClient = new MockErrorApiClient({
+      status: 429,
+      statusText: "Too Many Requests",
+      headers: {
+        "retry-after": "1",
+      },
+      bodyText: JSON.stringify({
+        error: {
+          message: "Too Many Requests",
+        },
+      }),
+    });
+
+    const llm = new ChatGoogle({
+      model: "gemini-2.5-flash",
+      apiClient,
+      maxRetries: 1,
+    });
+
+    await expect(llm.invoke("Hello")).rejects.toBeInstanceOf(RateLimitError);
     expect(apiClient.calls).toBe(2);
   });
 
@@ -640,7 +670,7 @@ describe("Google Mock", () => {
     });
 
     await expect(llm.invoke("Hello")).rejects.toMatchObject({
-      name: "RequestError",
+      name: "RateLimitError",
       rateLimitType: "stop",
     });
     expect(apiClient.calls).toBe(1);

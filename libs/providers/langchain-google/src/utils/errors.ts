@@ -1,4 +1,15 @@
-import { ns as baseNs, LangChainError } from "@langchain/core/errors";
+import {
+  AuthenticationError,
+  LangChainError,
+  ModelError,
+  ModelNotFoundError,
+  ns as baseNs,
+  PermissionDeniedError,
+  RateLimitError,
+  ServerError,
+  TimeoutError,
+} from "@langchain/core/errors";
+import { classifyRateLimitError } from "@langchain/core/utils/async_caller";
 import type { Gemini } from "../chat_models/types.js";
 import { iife } from "./misc.js";
 
@@ -26,11 +37,21 @@ async function readErrorResponseBody(response: Response): Promise<unknown> {
 }
 
 /**
- * Base error class for all Google provider errors.
+ * Base error class for all Google provider errors related to model usage
+ * (invocation, streaming, or the response the model produced).
  *
- * All Google-specific error classes extend this class. Use
- * `GoogleError.isInstance(obj)` to check if an object is any
- * Google provider error.
+ * All Google-specific model-error classes extend this class, as do
+ * {@link AuthError} and {@link RequestError} — both of which extend a
+ * generic `@langchain/core/errors` class instead (to inherit its
+ * `isRetryable` logic) but are re-branded here to still satisfy
+ * `GoogleError.isInstance(obj)`. The other HTTP-status-mapped classes
+ * `RequestError.fromResponse` can return (`PermissionDeniedError`,
+ * `ModelNotFoundError`, `TimeoutError`, `RateLimitError`, `ServerError`)
+ * are returned as plain, unbranded `@langchain/core/errors` instances —
+ * `GoogleError.isInstance` does *not* match those; check `ModelError.isInstance`
+ * or the specific class instead. For configuration errors (invalid
+ * options/setup, before any model is ever invoked), see the generic
+ * `ConfigurationError` from `@langchain/core/errors`.
  *
  * @example
  * ```typescript
@@ -43,29 +64,8 @@ async function readErrorResponseBody(response: Response): Promise<unknown> {
  * }
  * ```
  */
-export class GoogleError extends ns.brand(LangChainError) {
+export class GoogleError extends ns.brand(ModelError) {
   readonly name: string = "GoogleError";
-}
-
-/**
- * Error thrown when there is a configuration issue with the Google provider.
- *
- * This error is thrown when the Google provider encounters invalid configuration
- * parameters or settings that prevent it from functioning correctly.
- *
- * @example
- * ```typescript
- * try {
- *   const model = new ChatGoogle({ invalidOption: true });
- * } catch (error) {
- *   if (ConfigurationError.isInstance(error)) {
- *     console.log(`Configuration error: ${error.message}`);
- *   }
- * }
- * ```
- */
-export class ConfigurationError extends ns.brand(GoogleError, "configuration") {
-  readonly name = "ConfigurationError";
 }
 
 /**
@@ -241,16 +241,12 @@ type AuthErrorParams = {
  * }
  * ```
  */
-export class AuthError extends ns.brand(GoogleError, "auth") {
+// Double-wrapped: the inner ns.brand(AuthenticationError) re-establishes the
+// Google brand (lost by extending a core class instead of GoogleError), the
+// outer adds AuthError's own leaf marker — so both GoogleError.isInstance()
+// and AuthError.isInstance() match.
+export class AuthError extends ns.brand(ns.brand(AuthenticationError), "auth") {
   readonly name = "AuthError" as const;
-
-  /**
-   * The HTTP status code of the failed response.
-   * Common values include 400 (Bad Request), 401 (Unauthorized),
-   * 403 (Forbidden), 404 (Not Found), 429 (Too Many Requests),
-   * 500 (Internal Server Error), etc.
-   */
-  readonly statusCode?: number;
 
   /**
    * The HTTP status text of the failed response.
@@ -273,9 +269,8 @@ export class AuthError extends ns.brand(GoogleError, "auth") {
   readonly data?: unknown;
 
   constructor(params: AuthErrorParams) {
-    super(params.message);
+    super(params.message, params.statusCode);
 
-    this.statusCode = params.statusCode;
     this.statusText = params.statusText;
     this.headers = params.headers;
     this.data = params.data;
@@ -387,14 +382,13 @@ type RequestErrorParams = {
 };
 
 /**
- * Error class for HTTP request failures when communicating with Google APIs.
+ * Fallback error class for HTTP request failures when communicating with
+ * Google APIs that don't map to one of the more specific model-error
+ * classes (see {@link RequestError.fromResponse}).
  *
- * This error is thrown when an HTTP request to a Google API endpoint fails.
- * It captures detailed information about the failed request including the URL,
- * status code, headers, and response body to aid in debugging and error handling.
- *
- * The error includes a `isRetryable()` method to determine if the request should
- * be retried based on the HTTP status code (e.g., 429 Too Many Requests, 503 Service Unavailable).
+ * This error captures detailed information about the failed request
+ * including the URL, status code, headers, and response body to aid in
+ * debugging and error handling.
  *
  * @example
  * ```typescript
@@ -404,13 +398,16 @@ type RequestErrorParams = {
  *     throw await RequestError.fromResponse(response);
  *   }
  * } catch (error) {
- *   if (RequestError.isInstance(error) && error.isRetryable()) {
+ *   if (RequestError.isInstance(error) && error.isRetryable) {
  *     // Retry the request
  *   }
  * }
  * ```
  */
-export class RequestError extends ns.brand(GoogleError, "request") {
+// Double-wrapped: see the comment on AuthError above — this restores the
+// Google brand that extending ModelError directly (instead of GoogleError)
+// would otherwise drop.
+export class RequestError extends ns.brand(ns.brand(ModelError), "request") {
   readonly name = "RequestError" as const;
 
   /**
@@ -421,9 +418,9 @@ export class RequestError extends ns.brand(GoogleError, "request") {
 
   /**
    * The HTTP status code of the failed response.
-   * Common values include 400 (Bad Request), 401 (Unauthorized),
-   * 403 (Forbidden), 404 (Not Found), 429 (Too Many Requests),
-   * 500 (Internal Server Error), etc.
+   * Common values include 400 (Bad Request), 405 (Method Not Allowed),
+   * 409 (Conflict), etc. — any status not handled by a more specific
+   * model-error class.
    */
   readonly statusCode?: number;
 
@@ -447,6 +444,8 @@ export class RequestError extends ns.brand(GoogleError, "request") {
    */
   readonly data?: unknown;
 
+  readonly isRetryable: boolean;
+
   constructor(params: RequestErrorParams) {
     super(params.message);
 
@@ -455,49 +454,24 @@ export class RequestError extends ns.brand(GoogleError, "request") {
     this.statusText = params.statusText;
     this.headers = params.headers;
     this.data = params.data;
+    this.isRetryable = params.statusCode
+      ? RETRYABLE_STATUS_CODES.includes(params.statusCode)
+      : false;
   }
 
   /**
-   * Determines if this error represents a retryable request failure.
+   * Creates a model error from a failed HTTP Response object.
    *
-   * A request is considered retryable if it failed with a status code that
-   * indicates a temporary issue that might succeed on retry. This includes:
-   * - 408 (Request Timeout)
-   * - 429 (Too Many Requests / Rate Limiting)
-   * - 500 (Internal Server Error)
-   * - 502 (Bad Gateway)
-   * - 503 (Service Unavailable)
-   * - 504 (Gateway Timeout)
-   *
-   * @returns `true` if the request should be retried, `false` otherwise
-   *
-   * @example
-   * ```typescript
-   * if (RequestError.isInstance(error) && error.isRetryable()) {
-   *   await sleep(1000);
-   *   return retry(request);
-   * }
-   * ```
-   */
-  isRetryable(): boolean {
-    if (!this.statusCode) return false;
-    return RETRYABLE_STATUS_CODES.includes(this.statusCode);
-  }
-
-  /**
-   * Creates a RequestError from a failed HTTP Response object.
-   *
-   * This is a factory method that extracts all relevant information from a
-   * Response object and constructs a RequestError with appropriate details.
-   * It attempts to parse the response body as JSON first, falling back to
-   * text if that fails, and finally to null if the body cannot be read.
-   *
-   * The error message is extracted from the response body if available
-   * (looking for `message` or `error` fields), otherwise a generic message
-   * is constructed using the status code.
+   * This factory extracts the relevant information from a Response object
+   * and dispatches to the model-error class matching its status code —
+   * {@link AuthError} (401), {@link PermissionDeniedError} (403),
+   * {@link ModelNotFoundError} (404), {@link TimeoutError} (408),
+   * {@link RateLimitError} (429), or {@link ServerError}
+   * (500/502/503/504) — falling back to a plain {@link RequestError} for
+   * anything else.
    *
    * @param response - The failed HTTP Response object to convert into an error
-   * @returns A Promise that resolves to a new RequestError instance
+   * @returns A Promise that resolves to a new model error instance
    *
    * @example
    * ```typescript
@@ -507,7 +481,7 @@ export class RequestError extends ns.brand(GoogleError, "request") {
    * }
    * ```
    */
-  static async fromResponse(response: Response): Promise<RequestError> {
+  static async fromResponse(response: Response): Promise<ModelError> {
     const errorBody = await readErrorResponseBody(response);
 
     const message =
@@ -524,14 +498,44 @@ export class RequestError extends ns.brand(GoogleError, "request") {
       return object;
     });
 
-    return new RequestError({
+    const params: RequestErrorParams = {
       message,
       url: response.url,
       statusCode: response.status,
       statusText: response.statusText,
       headers,
       data: errorBody,
-    });
+    };
+
+    switch (response.status) {
+      case 401:
+        return new AuthError(params);
+      case 403:
+        return new PermissionDeniedError(message, response.status);
+      case 404:
+        return new ModelNotFoundError(message, response.status);
+      case 408:
+        return new TimeoutError(message);
+      case 429: {
+        const classification = classifyRateLimitError({
+          statusCode: response.status,
+          message,
+          headers,
+        });
+        return new RateLimitError(message, {
+          statusCode: response.status,
+          retryAfterMs: classification?.retryAfterMs,
+          quotaExhausted: classification?.action === "stop",
+        });
+      }
+      case 500:
+      case 502:
+      case 503:
+      case 504:
+        return new ServerError(message, { statusCode: response.status });
+      default:
+        return new RequestError(params);
+    }
   }
 }
 
@@ -557,6 +561,13 @@ export class RequestError extends ns.brand(GoogleError, "request") {
  */
 export class NoCandidatesError extends ns.brand(GoogleError, "no-candidates") {
   readonly name = "NoCandidatesError";
+
+  /**
+   * The cause is ambiguous — it could be an unreported block or a
+   * transient generation failure — so this defaults to retryable rather
+   * than foreclosing a case that a retry could fix.
+   */
+  readonly isRetryable: boolean = true;
 
   constructor() {
     super(
@@ -587,7 +598,7 @@ export class NoCandidatesError extends ns.brand(GoogleError, "no-candidates") {
  * }
  * ```
  */
-export class InvalidToolError extends ns.brand(GoogleError, "invalid-tool") {
+export class InvalidToolError extends ns.brand(LangChainError, "invalid-tool") {
   readonly name = "InvalidToolError";
 
   /**
@@ -629,7 +640,7 @@ export class InvalidToolError extends ns.brand(GoogleError, "invalid-tool") {
  * ```
  */
 export class ToolCallNotFoundError extends ns.brand(
-  GoogleError,
+  LangChainError,
   "tool-call-not-found"
 ) {
   readonly name = "ToolCallNotFoundError";
@@ -692,6 +703,13 @@ export class MalformedOutputError extends ns.brand(
   readonly name = "MalformedOutputError";
 
   /**
+   * The cause is ambiguous — it could be a transient glitch in the model's
+   * output or a deterministic schema mismatch — so this defaults to
+   * retryable rather than foreclosing a case that a retry could fix.
+   */
+  readonly isRetryable: boolean = true;
+
+  /**
    * Optional cause of the parsing error.
    * This may be the original error that occurred during parsing,
    * or additional context about what went wrong.
@@ -725,6 +743,9 @@ export class MalformedOutputError extends ns.brand(
  * }
  * ```
  */
-export class InvalidInputError extends ns.brand(GoogleError, "invalid-input") {
+export class InvalidInputError extends ns.brand(
+  LangChainError,
+  "invalid-input"
+) {
   readonly name = "InvalidInputError";
 }
