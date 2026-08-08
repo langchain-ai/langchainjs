@@ -105,6 +105,16 @@ export class ModelError extends ns.brand(LangChainError, "model") {
    * retry (a specific subclass overriding this) rather than assumed safe.
    */
   readonly isRetryable: boolean = false;
+
+  /**
+   * The original error this was constructed from, if any — typically a
+   * provider SDK's own error instance (e.g. `OpenAI.RateLimitError`,
+   * `Anthropic.APIError`). Classifying an error onto this hierarchy means
+   * it's no longer `instanceof` the SDK's own class; set this so callers
+   * who need that can still recover it via `error.cause instanceof SdkClass`
+   * instead of losing access to it entirely.
+   */
+  cause?: Error;
 }
 
 /**
@@ -215,14 +225,6 @@ export class ContextOverflowError extends ns.brand(
    * already `false` regardless of status code.
    */
   readonly statusCode?: number;
-
-  /**
-   * The underlying error that caused this {@link ContextOverflowError}, if any.
-   *
-   * This property is optionally set when wrapping a lower-level error using {@link ContextOverflowError.fromError}.
-   * It allows error handlers to access or inspect the original error that led to the context overflow.
-   */
-  cause?: Error;
 
   constructor(message?: string, statusCode?: number) {
     super(message ?? "Input exceeded the model's context window.");

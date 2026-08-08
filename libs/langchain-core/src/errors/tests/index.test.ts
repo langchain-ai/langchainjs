@@ -37,6 +37,26 @@ describe("ModelError branding", () => {
   });
 });
 
+describe("ModelError.cause", () => {
+  test("preserves instanceof-checkability of the wrapped error via .cause", () => {
+    class FakeProviderRateLimitError extends Error {
+      status = 429;
+    }
+
+    const original = new FakeProviderRateLimitError("slow down");
+    const wrapped = new RateLimitError("Rate limited", { statusCode: 429 });
+    wrapped.cause = original;
+
+    expect(wrapped).not.toBeInstanceOf(FakeProviderRateLimitError);
+    expect(wrapped.cause).toBeInstanceOf(FakeProviderRateLimitError);
+    expect((wrapped.cause as FakeProviderRateLimitError).status).toBe(429);
+  });
+
+  test("is undefined when the error wasn't constructed from another error", () => {
+    expect(new RateLimitError("Rate limited").cause).toBeUndefined();
+  });
+});
+
 describe("ContextOverflowError", () => {
   test("fromError copies status/statusCode from the wrapped error", () => {
     const withStatus = ContextOverflowError.fromError(
