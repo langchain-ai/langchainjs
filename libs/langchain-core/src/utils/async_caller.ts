@@ -67,6 +67,22 @@ function getDirectStatus(error: unknown): number | undefined {
   return undefined;
 }
 
+/**
+ * Some errors (e.g. a provider's own `RateLimitError` class) already carry
+ * a computed `retryAfterMs` — from a `Retry-After` header that isn't
+ * preserved on the error object itself. Trust that value over re-deriving
+ * from headers/message, which would silently fail once the header is gone
+ * and misclassify a short, retryable wait as an unretryable "capacity" case.
+ */
+function getDirectRetryAfterMs(error: unknown): number | undefined {
+  return typeof error === "object" &&
+    error !== null &&
+    "retryAfterMs" in error &&
+    typeof error.retryAfterMs === "number"
+    ? error.retryAfterMs
+    : undefined;
+}
+
 function getErrorMessage(error: unknown): string | undefined {
   return typeof error === "object" &&
     error !== null &&
@@ -226,6 +242,7 @@ export function classifyRateLimitError(
   }
 
   const retryAfterMs =
+    getDirectRetryAfterMs(error) ??
     parseRetryAfterMs(_getRetryAfterHeader(error)) ??
     parseRetryAfterFromMessageMs(message);
 

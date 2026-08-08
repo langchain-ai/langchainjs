@@ -5,6 +5,7 @@ import {
   ConfigurationError,
   ConnectionError,
   ContextOverflowError,
+  LangChainError,
   ModelError,
   ModelNotFoundError,
   PermissionDeniedError,
@@ -17,6 +18,22 @@ import {
 describe("ConfigurationError", () => {
   test("is not a ModelError — it sits outside that subtree by design", () => {
     expect(new ConfigurationError("bad config")).not.toBeInstanceOf(ModelError);
+  });
+});
+
+describe("ModelError branding", () => {
+  test("isInstance does not match every LangChainError — only its own subtree", () => {
+    // Regression test: a markerless ns.brand() call reuses the parent's own
+    // symbol rather than minting a new one, so ModelError.isInstance() must
+    // not accidentally match ConfigurationError/LangChainError/other
+    // provider errors that never touched this subtree — that would make
+    // defaultRetryOn read a nonexistent `isRetryable` off them and silently
+    // stop retrying errors that used to always retry.
+    expect(ModelError.isInstance(new ConfigurationError("bad config"))).toBe(
+      false
+    );
+    expect(ModelError.isInstance(new LangChainError("generic"))).toBe(false);
+    expect(ModelError.isInstance(new AuthenticationError("x"))).toBe(true);
   });
 });
 

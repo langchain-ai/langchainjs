@@ -93,7 +93,7 @@ export class ConfigurationError extends ns.brand(
  * (directly or indirectly). Use `ModelError.isInstance(obj)` to check if an
  * object is any model-related LangChain error.
  */
-export class ModelError extends ns.brand(LangChainError) {
+export class ModelError extends ns.brand(LangChainError, "model") {
   readonly name: string = "ModelError";
 
   /**

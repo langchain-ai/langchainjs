@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { ServerError } from "@langchain/core/errors";
-import { AuthError, RequestError } from "../errors.js";
+import { AuthError, GoogleError, RequestError } from "../errors.js";
 
 describe("RequestError.fromResponse", () => {
   test("parses JSON error bodies from text/event-stream responses", async () => {
@@ -45,6 +45,22 @@ describe("RequestError.fromResponse", () => {
     expect(error).toBeInstanceOf(ServerError);
     expect(error.message).toBe("Request failed with status code 504");
     expect((error as ServerError).statusCode).toBe(504);
+    // ServerError here is the plain generic core class, not a Google
+    // subclass — GoogleError.isInstance intentionally does not match it.
+    expect(GoogleError.isInstance(error)).toBe(false);
+  });
+
+  test("the fallback RequestError itself still satisfies GoogleError.isInstance", async () => {
+    const response = new Response("Bad Request", {
+      status: 400,
+      statusText: "Bad Request",
+      headers: { "content-type": "text/plain" },
+    });
+
+    const error = await RequestError.fromResponse(response);
+
+    expect(error).toBeInstanceOf(RequestError);
+    expect(GoogleError.isInstance(error)).toBe(true);
   });
 });
 
@@ -69,5 +85,6 @@ describe("AuthError.fromResponse", () => {
     expect(error.data).toEqual({
       error_description: "Service account token exchange failed",
     });
+    expect(GoogleError.isInstance(error)).toBe(true);
   });
 });

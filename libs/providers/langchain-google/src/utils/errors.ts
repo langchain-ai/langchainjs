@@ -40,9 +40,16 @@ async function readErrorResponseBody(response: Response): Promise<unknown> {
  * Base error class for all Google provider errors related to model usage
  * (invocation, streaming, or the response the model produced).
  *
- * All Google-specific model-error classes extend this class. Use
- * `GoogleError.isInstance(obj)` to check if an object is any
- * Google provider model error. For configuration errors (invalid
+ * All Google-specific model-error classes extend this class, as do
+ * {@link AuthError} and {@link RequestError} — both of which extend a
+ * generic `@langchain/core/errors` class instead (to inherit its
+ * `isRetryable` logic) but are re-branded here to still satisfy
+ * `GoogleError.isInstance(obj)`. The other HTTP-status-mapped classes
+ * `RequestError.fromResponse` can return (`PermissionDeniedError`,
+ * `ModelNotFoundError`, `TimeoutError`, `RateLimitError`, `ServerError`)
+ * are returned as plain, unbranded `@langchain/core/errors` instances —
+ * `GoogleError.isInstance` does *not* match those; check `ModelError.isInstance`
+ * or the specific class instead. For configuration errors (invalid
  * options/setup, before any model is ever invoked), see the generic
  * `ConfigurationError` from `@langchain/core/errors`.
  *
@@ -234,7 +241,11 @@ type AuthErrorParams = {
  * }
  * ```
  */
-export class AuthError extends ns.brand(AuthenticationError, "auth") {
+// Double-wrapped: the inner ns.brand(AuthenticationError) re-establishes the
+// Google brand (lost by extending a core class instead of GoogleError), the
+// outer adds AuthError's own leaf marker — so both GoogleError.isInstance()
+// and AuthError.isInstance() match.
+export class AuthError extends ns.brand(ns.brand(AuthenticationError), "auth") {
   readonly name = "AuthError" as const;
 
   /**
@@ -393,7 +404,10 @@ type RequestErrorParams = {
  * }
  * ```
  */
-export class RequestError extends ns.brand(ModelError, "request") {
+// Double-wrapped: see the comment on AuthError above — this restores the
+// Google brand that extending ModelError directly (instead of GoogleError)
+// would otherwise drop.
+export class RequestError extends ns.brand(ns.brand(ModelError), "request") {
   readonly name = "RequestError" as const;
 
   /**
