@@ -113,8 +113,13 @@ export class ModelError extends ns.brand(LangChainError, "model") {
    * it's no longer `instanceof` the SDK's own class; set this so callers
    * who need that can still recover it via `error.cause instanceof SdkClass`
    * instead of losing access to it entirely.
+   *
+   * Typed `unknown` (matching the standard `Error.cause` shape) rather
+   * than `Error`, so subclasses that accept a non-Error cause — e.g. a
+   * parser failure that isn't itself an `Error` instance — aren't forced
+   * to narrow it.
    */
-  cause?: Error;
+  cause?: unknown;
 }
 
 /**
