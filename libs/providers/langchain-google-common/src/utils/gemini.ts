@@ -1993,7 +1993,10 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
       if (["auto", "any", "none"].includes(parameters.tool_choice)) {
         config = {
           functionCallingConfig: {
-            mode: parameters.tool_choice as "auto" | "any" | "none",
+            mode: parameters.tool_choice.toUpperCase() as
+              | "AUTO"
+              | "ANY"
+              | "NONE",
             allowedFunctionNames: parameters.allowed_function_names,
           },
         };
@@ -2001,7 +2004,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
         // force tool choice to be a single function name in case of structured output
         config = {
           functionCallingConfig: {
-            mode: "any",
+            mode: "ANY",
             allowedFunctionNames: [parameters.tool_choice],
           },
         };
