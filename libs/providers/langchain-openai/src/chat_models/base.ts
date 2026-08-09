@@ -2,6 +2,7 @@ import OpenAI, { type ClientOptions, OpenAI as OpenAIClient } from "openai";
 import { AIMessageChunk, type BaseMessage } from "@langchain/core/messages";
 import { type ChatGeneration } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { resolveLangSmithGatewayConfig } from "@langchain/core/utils/gateway";
 import {
   BaseChatModel,
   type LangSmithParams,
@@ -524,9 +525,18 @@ export abstract class BaseChatOpenAI<
       typeof fields?.configuration?.apiKey === "function"
         ? fields?.configuration?.apiKey
         : undefined;
+    const gatewayConfig = resolveLangSmithGatewayConfig({
+      baseURL:
+        fields?.configuration?.baseURL ??
+        (getEnvironmentVariable("OPENAI_API_BASE") ||
+          getEnvironmentVariable("OPENAI_BASE_URL") ||
+          undefined),
+      providerPath: "openai/v1",
+    });
     this.apiKey =
       fields?.apiKey ??
       configApiKey ??
+      gatewayConfig.apiKey ??
       getEnvironmentVariable("OPENAI_API_KEY");
     this.organization =
       fields?.configuration?.organization ??
@@ -571,6 +581,7 @@ export abstract class BaseChatOpenAI<
       organization: this.organization,
       dangerouslyAllowBrowser: true,
       ...fields?.configuration,
+      baseURL: gatewayConfig.baseURL,
     };
 
     // If `supportsStrictToolCalling` is explicitly set, use that value.
