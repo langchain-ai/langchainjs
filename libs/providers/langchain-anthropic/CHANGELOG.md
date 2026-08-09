@@ -1,5 +1,13 @@
 # @langchain/anthropic
 
+## 1.5.4
+
+### Patch Changes
+
+- [#11305](https://github.com/langchain-ai/langchainjs/pull/11305) [`e654022`](https://github.com/langchain-ai/langchainjs/commit/e654022e291b8dae54504ac2d1a3232332406723) Thanks [@jacoblee93](https://github.com/jacoblee93)! - Add LangSmith Gateway environment configuration to OpenAI, Anthropic, and Fireworks chat models.
+
+- [#11310](https://github.com/langchain-ai/langchainjs/pull/11310) [`1b96abe`](https://github.com/langchain-ai/langchainjs/commit/1b96abe4979d514e11fb794ed9e85b646ea3b4a5) Thanks [@hntrl](https://github.com/hntrl)! - fix(anthropic): filter tools with unsupported root schema composition
+
 ## 1.5.3
 
 ### Patch Changes
