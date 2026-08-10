@@ -1,6 +1,7 @@
 ---
 "@langchain/core": minor
 "@langchain/google": minor
+"@langchain/openai": minor
 "langchain": patch
 ---
 
@@ -15,6 +16,8 @@ Nine new/updated `ModelError` subclasses, each with a considered `isRetryable` d
 
 `modelRetryMiddleware`/`toolRetryMiddleware`'s default `retryOn` now honors this: `ModelError.isInstance(error) ? error.isRetryable : true`. Unclassified errors keep retrying, unchanged from before. Array-form `retryOn` (e.g. `retryOn: [TimeoutError]`) matches via exact `error.constructor === ErrorConstructor`, not `instanceof`.
 
+`LangChainError` also gained a `cause?: unknown` field. Classifying a provider SDK's own error onto this hierarchy means the thrown value is no longer `instanceof` the SDK's class — `cause` preserves the original so it can still be recovered via `error.cause instanceof SdkClass`. See the `@langchain/openai` section below for why this matters in practice.
+
 **Fixes**:
 
 - `ContextOverflowError.fromError` previously copied only `message`/`cause`, dropping any HTTP status the wrapped error had. Since retry logic elsewhere (`AsyncCaller`) duck-types on status to decide whether to retry, a context-overflow error with no status was blindly retried up to `maxRetries` despite `isRetryable` being `false`. `fromError` now copies `status`/`statusCode` onto the new `ContextOverflowError.statusCode` field — this fixes the bug for every existing caller (`@langchain/openai`, `@langchain/anthropic`) with no change needed on their end.
@@ -27,4 +30,10 @@ Nine new/updated `ModelError` subclasses, each with a considered `isRetryable` d
 
 `GoogleError` now extends the core `ModelError` (was `LangChainError` directly). Google's own `ConfigurationError` has been removed in favor of the generic `ConfigurationError` from `@langchain/core/errors`. `NoCandidatesError` and `MalformedOutputError` default to `isRetryable: true` — each has a plausible transient cause with nothing on the instance to distinguish it from a deterministic one, so retrying is the safer of the two mistakes. `InvalidToolError`, `ToolCallNotFoundError`, and `InvalidInputError` are tool/input-validation errors, not model errors — they now extend `LangChainError` directly instead of `GoogleError`, and no longer match `GoogleError.isInstance`.
 
-Provider mapping for other `@langchain/*` model packages (OpenAI, Anthropic, etc.) is not part of this change and will follow separately.
+**Breaking (`@langchain/openai`)**: `wrapOpenAIClientError` (moved from `utils/client.js` to `utils/errors.js`, same as every other provider's dispatcher) now dispatches `openai` SDK errors onto the shared hierarchy above via real `instanceof` checks, instead of duck-typed status codes: 401 → `AuthenticationError`, 403 → `PermissionDeniedError`, 404 → `ModelNotFoundError`, 429 → `RateLimitError` (with `quotaExhausted` derived from the error's `code`), 5xx → `ServerError`, a network failure → `ConnectionError`, a client-side timeout → `TimeoutError`, a user-initiated abort → `ModelAbortError`. A `tool_calls`-related 400 becomes `InvalidToolResultsError` (bad client input, not a model failure — extends `LangChainError` directly, no `isRetryable`). 409, 422, and any other unclassified 400 are unchanged — passed through raw, since there's no clean fit in the shared hierarchy.
+
+**What actually breaks:** for the statuses above, code doing `error instanceof OpenAI.RateLimitError` (or any of the other SDK error classes) on the thrown error stops matching, and direct field access using the SDK's own names (`error.status`, `error.code`, `error.type`) no longer works on the thrown value — our classes use `statusCode`, not `status`, and don't surface `code`/`type` at all. Recover all of it via `.cause`: `error.cause instanceof OpenAI.RateLimitError`, `error.cause.status`, `error.cause.code`.
+
+**Why a minor bump despite `@langchain/openai` being past 1.0:** unlike a typical breaking change, nothing crashes and no information is lost — `.cause` is the exact original `openai` SDK error, so every affected call site has a one-line, mechanical fix (check `.cause` instead of the thrown value directly) rather than losing access to the data it needs. The new error also carries a strict superset of useful information (message, a computed `retryAfterMs`, explicit quota detection) that the raw SDK error didn't surface as conveniently. Given that, and consistent with how `@langchain/google`'s equivalent change shipped as minor, we're treating this as minor rather than reserving a major version for it — flag if that read is wrong for how this package's consumers actually use it.
+
+Anthropic is next; not part of this change.
