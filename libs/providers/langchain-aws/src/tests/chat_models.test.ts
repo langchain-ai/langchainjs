@@ -713,6 +713,225 @@ describe("convertToConverseMessages", () => {
   );
 });
 
+describe("reasoning content replay", () => {
+  it("omits signature-only standard reasoning and preserves tool use", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          {
+            type: "reasoning",
+            reasoning: "",
+            signature: "opaque-signature",
+            index: 0,
+          },
+        ],
+        tool_calls: [
+          {
+            id: "tool-call-1",
+            name: "get_weather",
+            args: { location: "San Francisco" },
+          },
+        ],
+      }),
+      new ToolMessage({
+        tool_call_id: "tool-call-1",
+        content: "72°F and sunny",
+      }),
+    ]);
+
+    expect(result.converseMessages).toEqual([
+      {
+        role: "assistant",
+        content: [
+          {
+            toolUse: {
+              toolUseId: "tool-call-1",
+              name: "get_weather",
+              input: { location: "San Francisco" },
+            },
+          },
+        ],
+      },
+      {
+        role: "user",
+        content: [
+          {
+            toolResult: {
+              toolUseId: "tool-call-1",
+              content: [{ text: "72°F and sunny" }],
+            },
+          },
+        ],
+      },
+    ]);
+  });
+
+  it("replays standard reasoning without an output version", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          {
+            type: "reasoning",
+            reasoning: "Reasoning summary",
+            signature: "opaque-signature",
+          },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      {
+        reasoningContent: {
+          reasoningText: {
+            text: "Reasoning summary",
+            signature: "opaque-signature",
+          },
+        },
+      },
+    ]);
+  });
+
+  it("preserves redacted provider reasoning", () => {
+    const redactedContent = Buffer.from("redacted-reasoning");
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          {
+            type: "reasoning_content",
+            redactedContent: redactedContent.toString("base64"),
+          },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      {
+        reasoningContent: {
+          redactedContent,
+        },
+      },
+    ]);
+  });
+
+  it("combines streamed redacted reasoning bytes before replay", () => {
+    const firstFragment = Buffer.from("a");
+    const secondFragment = Buffer.from("bc");
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          {
+            type: "reasoning_content",
+            redactedContent: firstFragment.toString("base64"),
+          },
+          {
+            type: "reasoning_content",
+            redactedContent: secondFragment.toString("base64"),
+          },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      {
+        reasoningContent: {
+          redactedContent: Buffer.concat([firstFragment, secondFragment]),
+        },
+      },
+    ]);
+  });
+
+  it("replays legacy provider-native reasoning", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          {
+            type: "reasoning_content",
+            reasoningText: {
+              text: "Reasoning summary",
+              signature: "opaque-signature",
+            },
+          },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      {
+        reasoningContent: {
+          reasoningText: {
+            text: "Reasoning summary",
+            signature: "opaque-signature",
+          },
+        },
+      },
+    ]);
+  });
+
+  it("unwraps legacy redacted Bedrock reasoning from standard content", () => {
+    const redactedContent = Buffer.from("redacted-reasoning");
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          {
+            type: "non_standard",
+            value: {
+              reasoningContent: {
+                redactedContent,
+              },
+            },
+          },
+        ],
+        response_metadata: {
+          output_version: "v1",
+          model_provider: "bedrock-converse",
+        },
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      {
+        reasoningContent: {
+          redactedContent,
+        },
+      },
+    ]);
+  });
+
+  it("unwraps complete legacy Bedrock reasoning from standard content", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          {
+            type: "non_standard",
+            value: {
+              type: "reasoning_content",
+              reasoningText: {
+                text: "Reasoning summary",
+                signature: "opaque-signature",
+              },
+            },
+          },
+        ],
+        response_metadata: {
+          output_version: "v1",
+          model_provider: "bedrock-converse",
+        },
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      {
+        reasoningContent: {
+          reasoningText: {
+            text: "Reasoning summary",
+            signature: "opaque-signature",
+          },
+        },
+      },
+    ]);
+  });
+});
+
 test("Streaming supports empty string chunks", async () => {
   const contentBlocks = [
     {

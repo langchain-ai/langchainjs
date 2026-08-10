@@ -1,5 +1,23 @@
 # langchain
 
+## 1.5.5
+
+### Patch Changes
+
+- [#11277](https://github.com/langchain-ai/langchainjs/pull/11277) [`0bd12f0`](https://github.com/langchain-ai/langchainjs/commit/0bd12f0bbb3c3f71e016f2ac26fd63a0f6ad0556) Thanks [@vladislav-nechakhin](https://github.com/vladislav-nechakhin)! - fix(langchain): resolve LocalFileStore keys with path.relative
+
+## 1.5.4
+
+### Patch Changes
+
+- [#11201](https://github.com/langchain-ai/langchainjs/pull/11201) [`a8cd4d9`](https://github.com/langchain-ai/langchainjs/commit/a8cd4d9ae35ae8ae05e011115a351d976560ade9) Thanks [@hntrl](https://github.com/hntrl)! - feat(langchain): add middleware for handling tool execution errors
+
+## 1.5.3
+
+### Patch Changes
+
+- [#11167](https://github.com/langchain-ai/langchainjs/pull/11167) [`4c7a06e`](https://github.com/langchain-ai/langchainjs/commit/4c7a06ec3e4728bb036a28f678dd8ec2521e1c82) Thanks [@colifran](https://github.com/colifran)! - fix(langchain): malformed tool input schemas are unrecoverable
+
 ## 1.5.2
 
 ### Patch Changes

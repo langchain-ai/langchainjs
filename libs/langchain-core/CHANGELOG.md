@@ -1,5 +1,39 @@
 # @langchain/core
 
+## 1.2.5
+
+### Patch Changes
+
+- [#11305](https://github.com/langchain-ai/langchainjs/pull/11305) [`e654022`](https://github.com/langchain-ai/langchainjs/commit/e654022e291b8dae54504ac2d1a3232332406723) Thanks [@jacoblee93](https://github.com/jacoblee93)! - Add LangSmith Gateway environment configuration to OpenAI, Anthropic, and Fireworks chat models.
+
+- [#11295](https://github.com/langchain-ai/langchainjs/pull/11295) [`1a1b347`](https://github.com/langchain-ai/langchainjs/commit/1a1b347d18bc68e842df8badffc987493c81d70a) Thanks [@vladislav-nechakhin](https://github.com/vladislav-nechakhin)! - fix(core): pass the mustache escape override per render call
+
+## 1.2.4
+
+### Patch Changes
+
+- [#11190](https://github.com/langchain-ai/langchainjs/pull/11190) [`9654bde`](https://github.com/langchain-ai/langchainjs/commit/9654bde694af4e78080a76a0b39d7edd35683449) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - Coalesce nested LangChain tracer callbacks that share run bookkeeping.
+
+- [#11153](https://github.com/langchain-ai/langchainjs/pull/11153) [`84ce6d6`](https://github.com/langchain-ai/langchainjs/commit/84ce6d65ef0ab2c556d5a5a3b5651b5cf3d73303) Thanks [@parveshsaini](https://github.com/parveshsaini)! - fix(core): bind splitText when trimMessages receives a TextSplitter instance
+
+## 1.2.3
+
+### Patch Changes
+
+- [#11200](https://github.com/langchain-ai/langchainjs/pull/11200) [`08e5888`](https://github.com/langchain-ai/langchainjs/commit/08e588865927c3bf0eb2ec418cfb3fba527e14bb) Thanks [@hntrl](https://github.com/hntrl)! - fix(aws): normalize and safely replay Bedrock reasoning blocks
+
+  Emit standard reasoning blocks with preserved signatures, omit incomplete signature-only reasoning during replay, and retain compatibility with legacy and redacted Bedrock reasoning.
+
+## 1.2.2
+
+### Patch Changes
+
+- [#11171](https://github.com/langchain-ai/langchainjs/pull/11171) [`82bef01`](https://github.com/langchain-ai/langchainjs/commit/82bef01ad3dd5e0317e48da40707be6bccc52f94) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): coerce string v1 AIMessage content to text blocks
+
+  Prevent `contentBlocks.push is not a function` when constructing an
+  `AIMessage` with `response_metadata.output_version === "v1"` and string
+  `content` (common in serialized LangGraph stream payloads).
+
 ## 1.2.1
 
 ### Patch Changes
