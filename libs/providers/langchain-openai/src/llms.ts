@@ -20,7 +20,7 @@ import {
   getEndpoint,
   getHeadersWithUserAgent,
 } from "./utils/azure.js";
-import { wrapOpenAIClientError } from "./utils/client.js";
+import { wrapOpenAIClientError } from "./utils/errors.js";
 
 export type { OpenAICallOptions, OpenAIInput };
 

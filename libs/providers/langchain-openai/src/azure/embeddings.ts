@@ -11,7 +11,7 @@ import {
   OpenAIEndpointConfig,
   getHeadersWithUserAgent,
 } from "../utils/azure.js";
-import { wrapOpenAIClientError } from "../utils/client.js";
+import { wrapOpenAIClientError } from "../utils/errors.js";
 
 export class AzureOpenAIEmbeddings extends OpenAIEmbeddings {
   azureOpenAIApiVersion?: string;

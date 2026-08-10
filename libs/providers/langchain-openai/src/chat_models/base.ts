@@ -59,7 +59,7 @@ import {
   _convertOpenAIResponsesUsageToLangChainUsage,
 } from "../utils/output.js";
 import { isReasoningModel, messageToOpenAIRole } from "../utils/misc.js";
-import { wrapOpenAIClientError } from "../utils/client.js";
+import { wrapOpenAIClientError } from "../utils/errors.js";
 import PROFILES from "./profiles.js";
 import {
   isSerializableSchema,

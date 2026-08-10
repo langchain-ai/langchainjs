@@ -1,3 +1,4 @@
+import { APIError } from "openai";
 import { ContextOverflowError } from "@langchain/core/errors";
 import { HumanMessage } from "@langchain/core/messages";
 import { describe, it, expect, vi } from "vitest";
@@ -138,14 +139,12 @@ describe("service_tier configuration", () => {
 describe("streaming errors", () => {
   it("wraps errors thrown while iterating the response stream", async () => {
     const model = new ChatOpenAIResponses({ model: "gpt-4o" });
-    const originalError = {
-      code: "context_length_exceeded",
-      message: "The request exceeds the context window.",
-      constructor: { name: "APIError" },
-      toString() {
-        return `APIError: ${this.message} (code: ${this.code})`;
-      },
-    };
+    const originalError = APIError.generate(
+      400,
+      { error: { message: "The request exceeds the context window." } },
+      undefined,
+      new Headers()
+    );
 
     async function* streamWithError() {
       yield await Promise.reject(originalError);

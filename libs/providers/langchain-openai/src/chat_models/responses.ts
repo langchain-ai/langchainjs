@@ -4,7 +4,7 @@ import type { ChatModelStreamEvent } from "@langchain/core/language_models/event
 import { AIMessage, type BaseMessage } from "@langchain/core/messages";
 import { ChatGenerationChunk, type ChatResult } from "@langchain/core/outputs";
 import { isOpenAITool as isOpenAIFunctionTool } from "@langchain/core/language_models/base";
-import { wrapOpenAIClientError } from "../utils/client.js";
+import { wrapOpenAIClientError } from "../utils/errors.js";
 import {
   ChatOpenAIToolType,
   convertCompletionsCustomTool,

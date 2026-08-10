@@ -16,7 +16,7 @@ import {
   type ChatResult,
 } from "@langchain/core/outputs";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
-import { wrapOpenAIClientError } from "../utils/client.js";
+import { wrapOpenAIClientError } from "../utils/errors.js";
 import {
   OpenAIToolChoice,
   formatToOpenAIToolChoice,
