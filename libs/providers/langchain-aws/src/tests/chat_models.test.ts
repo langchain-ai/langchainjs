@@ -13,8 +13,12 @@ import {
   ConversationRole as BedrockConversationRole,
   BedrockRuntimeClient,
   type Message as BedrockMessage,
+  ModelNotReadyException,
   type SystemContentBlock as BedrockSystemContentBlock,
+  ServiceUnavailableException,
   ServiceTierType,
+  ThrottlingException,
+  ValidationException,
 } from "@aws-sdk/client-bedrock-runtime";
 import { z } from "zod/v3";
 import { describe, expect, test, it, vi } from "vitest";
@@ -971,6 +975,345 @@ test("Streaming supports empty string chunks", async () => {
   expect(finalChunk.content).toBe("Hello world!");
 });
 
+describe("retry configuration", () => {
+  const baseConstructorArgs = {
+    region: "us-east-1",
+    credentials: {
+      secretAccessKey: "test-secret-key",
+      accessKeyId: "test-access-key",
+    },
+    model: "anthropic.claude-haiku-4-5-20251001-v1:0",
+  };
+
+  const createRetryingModel = (response: unknown) => {
+    const transientError = Object.assign(new Error("Service unavailable"), {
+      status: 503,
+    });
+    const onFailedAttempt = vi.fn();
+    const mockSend = vi
+      .fn()
+      .mockRejectedValueOnce(transientError)
+      .mockResolvedValueOnce(response);
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      client: { send: mockSend } as unknown as BedrockRuntimeClient,
+      maxRetries: 1,
+      onFailedAttempt,
+    });
+
+    return { model, mockSend, onFailedAttempt, transientError };
+  };
+
+  const runRetryTimers = async <T>(operation: () => Promise<T>) => {
+    vi.useFakeTimers();
+    try {
+      const result = operation();
+      result.catch(() => undefined);
+      await vi.runAllTimersAsync();
+      return await result;
+    } finally {
+      vi.useRealTimers();
+    }
+  };
+
+  const consume = async (stream: AsyncIterable<unknown>) => {
+    for await (const _chunk of stream) {
+      continue;
+    }
+  };
+
+  const expectRetry = (setup: ReturnType<typeof createRetryingModel>) => {
+    expect(setup.mockSend).toHaveBeenCalledTimes(2);
+    expect(setup.onFailedAttempt).toHaveBeenCalledOnce();
+    expect(setup.onFailedAttempt).toHaveBeenCalledWith(setup.transientError);
+  };
+
+  test("disables AWS SDK retries by default", async () => {
+    const model = new ChatBedrockConverse(baseConstructorArgs);
+
+    await expect(model.client.config.maxAttempts()).resolves.toBe(1);
+  });
+
+  test("preserves an explicit AWS SDK retry configuration", async () => {
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      clientOptions: { maxAttempts: 4 },
+    });
+
+    await expect(model.client.config.maxAttempts()).resolves.toBe(4);
+  });
+
+  test("retries non-streaming requests and calls onFailedAttempt", async () => {
+    const setup = createRetryingModel({
+      output: {
+        message: {
+          role: "assistant",
+          content: [{ text: "Hello" }],
+        },
+      },
+    });
+
+    const message = await runRetryTimers(() =>
+      setup.model.invoke([new HumanMessage("Hello")])
+    );
+
+    expect(message.content).toBe("Hello");
+    expectRetry(setup);
+  });
+
+  test("does not retry AWS client errors", async () => {
+    const validationError = new ValidationException({
+      message: "Invalid request",
+      $metadata: { httpStatusCode: 400 },
+    });
+    const mockSend = vi.fn().mockRejectedValue(validationError);
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      client: { send: mockSend } as unknown as BedrockRuntimeClient,
+      maxRetries: 1,
+    });
+
+    await expect(
+      runRetryTimers(() => model.invoke([new HumanMessage("Hello")]))
+    ).rejects.toBe(validationError);
+
+    expect(mockSend).toHaveBeenCalledOnce();
+    expect(validationError).toMatchObject({ status: 400 });
+  });
+
+  test("retries AWS server errors", async () => {
+    const serviceError = new ServiceUnavailableException({
+      message: "Service unavailable",
+      $metadata: { httpStatusCode: 503 },
+    });
+    const mockSend = vi
+      .fn()
+      .mockRejectedValueOnce(serviceError)
+      .mockResolvedValue({
+        output: {
+          message: {
+            role: "assistant",
+            content: [{ text: "Hello" }],
+          },
+        },
+      });
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      client: { send: mockSend } as unknown as BedrockRuntimeClient,
+      maxRetries: 1,
+    });
+
+    const message = await runRetryTimers(() =>
+      model.invoke([new HumanMessage("Hello")])
+    );
+
+    expect(message.content).toBe("Hello");
+    expect(mockSend).toHaveBeenCalledTimes(2);
+    expect(serviceError).toMatchObject({ status: 503 });
+  });
+
+  test("preserves plain object error properties for onFailedAttempt", async () => {
+    const rawError = {
+      message: "Service unavailable",
+      code: "ECONNRESET",
+      $retryable: { throttling: false },
+      $metadata: { httpStatusCode: 503 },
+    };
+    const onFailedAttempt = vi.fn();
+    const mockSend = vi
+      .fn()
+      .mockRejectedValueOnce(rawError)
+      .mockResolvedValue({
+        output: {
+          message: {
+            role: "assistant",
+            content: [{ text: "Hello" }],
+          },
+        },
+      });
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      client: { send: mockSend } as unknown as BedrockRuntimeClient,
+      maxRetries: 1,
+      onFailedAttempt,
+    });
+
+    const message = await runRetryTimers(() =>
+      model.invoke([new HumanMessage("Hello")])
+    );
+
+    expect(message.content).toBe("Hello");
+    expect(mockSend).toHaveBeenCalledTimes(2);
+    expect(onFailedAttempt).toHaveBeenCalledOnce();
+    const failedAttempt = onFailedAttempt.mock.calls[0][0];
+    expect(failedAttempt).toBeInstanceOf(Error);
+    expect(failedAttempt).toMatchObject({
+      message: rawError.message,
+      code: rawError.code,
+      status: 503,
+      $retryable: rawError.$retryable,
+      $metadata: rawError.$metadata,
+      cause: rawError,
+    });
+  });
+
+  const streamInitializers: Array<
+    [string, (model: ChatBedrockConverse) => AsyncIterable<unknown>]
+  > = [
+    [
+      "legacy stream",
+      (model) => model._streamResponseChunks([new HumanMessage("Hello")], {}),
+    ],
+    [
+      "chat model event stream",
+      (model) => model._streamChatModelEvents([new HumanMessage("Hello")], {}),
+    ],
+  ];
+
+  const retryableBedrockErrors: Array<[string, () => unknown]> = [
+    [
+      "ThrottlingException",
+      () =>
+        new ThrottlingException({
+          message: "Too many requests",
+          $metadata: { httpStatusCode: 429 },
+        }),
+    ],
+    [
+      "ModelNotReadyException",
+      () =>
+        new ModelNotReadyException({
+          message: "Model not ready",
+          $metadata: { httpStatusCode: 429 },
+        }),
+    ],
+    [
+      "metadata-only 429",
+      () => ({
+        message: "Too many requests",
+        $metadata: { httpStatusCode: 429 },
+      }),
+    ],
+  ];
+
+  const retryableStreamInitializers: Array<
+    [
+      string,
+      () => unknown,
+      (model: ChatBedrockConverse) => AsyncIterable<unknown>,
+    ]
+  > = retryableBedrockErrors.flatMap(([errorName, createError]) =>
+    streamInitializers.map(([streamName, initializeStream]) => [
+      `${errorName} during ${streamName}`,
+      createError,
+      initializeStream,
+    ])
+  );
+
+  test.each(retryableBedrockErrors)(
+    "retries %s for non-streaming requests",
+    async (_name, createError) => {
+      const error = createError();
+      const mockSend = vi
+        .fn()
+        .mockRejectedValueOnce(error)
+        .mockResolvedValue({
+          output: {
+            message: {
+              role: "assistant",
+              content: [{ text: "Hello" }],
+            },
+          },
+        });
+      const model = new ChatBedrockConverse({
+        ...baseConstructorArgs,
+        client: { send: mockSend } as unknown as BedrockRuntimeClient,
+        maxRetries: 1,
+      });
+
+      const message = await runRetryTimers(() =>
+        model.invoke([new HumanMessage("Hello")])
+      );
+
+      expect(message.content).toBe("Hello");
+      expect(mockSend).toHaveBeenCalledTimes(2);
+    }
+  );
+
+  test.each(retryableStreamInitializers)(
+    "retries %s initialization",
+    async (_name, createError, initializeStream) => {
+      const error = createError();
+      const mockSend = vi
+        .fn()
+        .mockRejectedValueOnce(error)
+        .mockResolvedValue({
+          stream: (async function* () {})(),
+        });
+      const model = new ChatBedrockConverse({
+        ...baseConstructorArgs,
+        client: { send: mockSend } as unknown as BedrockRuntimeClient,
+        maxRetries: 1,
+      });
+
+      await runRetryTimers(() => consume(initializeStream(model)));
+
+      expect(mockSend).toHaveBeenCalledTimes(2);
+    }
+  );
+
+  test.each(streamInitializers)(
+    "retries %s initialization",
+    async (_name, initializeStream) => {
+      const setup = createRetryingModel({
+        stream: (async function* () {})(),
+      });
+
+      await runRetryTimers(() => consume(initializeStream(setup.model)));
+
+      expectRetry(setup);
+    }
+  );
+
+  test("does not retry after stream initialization", async () => {
+    const streamError = new Error("Stream disconnected");
+    const onFailedAttempt = vi.fn();
+    const mockSend = vi.fn().mockResolvedValue({
+      stream: (async function* () {
+        yield {
+          contentBlockDelta: {
+            contentBlockIndex: 0,
+            delta: { text: "Hello" },
+          },
+        };
+        throw streamError;
+      })(),
+    });
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      client: { send: mockSend } as unknown as BedrockRuntimeClient,
+      maxRetries: 1,
+      onFailedAttempt,
+    });
+    const chunks: string[] = [];
+
+    await expect(
+      (async () => {
+        for await (const chunk of model._streamResponseChunks(
+          [new HumanMessage("Hello")],
+          {}
+        )) {
+          chunks.push(chunk.text);
+        }
+      })()
+    ).rejects.toBe(streamError);
+
+    expect(chunks).toEqual(["Hello"]);
+    expect(mockSend).toHaveBeenCalledOnce();
+    expect(onFailedAttempt).not.toHaveBeenCalled();
+  });
+});
+
 test("Streaming throws when Bedrock stream stalls between chunks", async () => {
   vi.useFakeTimers();
   try {
@@ -1565,6 +1908,7 @@ describe("applicationInferenceProfile parameter", () => {
       ...baseConstructorArgs,
       model: "anthropic.claude-haiku-4-5-20251001-v1:0",
       client: mockClient,
+      maxRetries: 0,
     });
 
     let thrown: unknown;
@@ -1596,6 +1940,7 @@ describe("applicationInferenceProfile parameter", () => {
       model: "anthropic.claude-haiku-4-5-20251001-v1:0",
       streaming: true,
       client: mockClient,
+      maxRetries: 0,
     });
 
     let thrown: unknown;
