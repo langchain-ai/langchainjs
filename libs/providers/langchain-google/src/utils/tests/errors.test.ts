@@ -45,8 +45,6 @@ describe("RequestError.fromResponse", () => {
     expect(error).toBeInstanceOf(ServerError);
     expect(error.message).toBe("Request failed with status code 504");
     expect((error as ServerError).statusCode).toBe(504);
-    // ServerError here is the plain generic core class, not a Google
-    // subclass — GoogleError.isInstance intentionally does not match it.
     expect(GoogleError.isInstance(error)).toBe(false);
   });
 

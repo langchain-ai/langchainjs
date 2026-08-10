@@ -68,13 +68,7 @@ function getDirectStatus(error: unknown): number | undefined {
   return undefined;
 }
 
-/**
- * Some errors (e.g. a provider's own `RateLimitError` class) already carry
- * a computed `retryAfterMs` — from a `Retry-After` header that isn't
- * preserved on the error object itself. Trust that value over re-deriving
- * from headers/message, which would silently fail once the header is gone
- * and misclassify a short, retryable wait as an unretryable "capacity" case.
- */
+/** Trusts an already-computed `retryAfterMs` over re-deriving it from headers/message. */
 function getDirectRetryAfterMs(error: unknown): number | undefined {
   return typeof error === "object" &&
     error !== null &&
@@ -334,12 +328,7 @@ const defaultFailedAttemptHandler = (error: unknown) => {
     throw err;
   }
 
-  // Final fallback: a classified ModelError that says it's not retryable
-  // is authoritative. This only matters for cases none of the heuristics
-  // above already handle — e.g. a ModelAbortError has no status code and
-  // its name/message don't match the abort check above — since anything
-  // they DO handle already throws or returns before reaching here, and
-  // this doesn't run for a retryable ModelError either.
+  // Fallback: a classified ModelError's isRetryable is authoritative.
   if (ModelError.isInstance(error) && !error.isRetryable) {
     throw error;
   }

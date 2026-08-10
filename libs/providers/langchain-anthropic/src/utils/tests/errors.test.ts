@@ -38,8 +38,6 @@ function generate(
   ) as APIError;
 }
 
-// addLangChainErrorFields sets this dynamically; no wrapper class declares
-// it, so read it through this shape instead of casting to `any`.
 function lcErrorCode(error: unknown): string | undefined {
   return (error as { lc_error_code?: string }).lc_error_code;
 }
@@ -89,8 +87,6 @@ describe("wrapAnthropicClientError", () => {
     expect((wrapped as InvalidToolResultsError).message).toContain(
       "Troubleshooting URL"
     );
-    // Not a ModelError by design, but AsyncCaller's own retry-suppression
-    // duck-types on status code independently of ModelError.
     expect((wrapped as InvalidToolResultsError).statusCode).toBe(400);
   });
 

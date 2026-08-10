@@ -241,10 +241,7 @@ type AuthErrorParams = {
  * }
  * ```
  */
-// Double-wrapped: the inner ns.brand(AuthenticationError) re-establishes the
-// Google brand (lost by extending a core class instead of GoogleError), the
-// outer adds AuthError's own leaf marker — so both GoogleError.isInstance()
-// and AuthError.isInstance() match.
+// Double-wrapped to restore the Google brand lost by extending a core class.
 export class AuthError extends ns.brand(ns.brand(AuthenticationError), "auth") {
   readonly name = "AuthError" as const;
 
@@ -404,9 +401,7 @@ type RequestErrorParams = {
  * }
  * ```
  */
-// Double-wrapped: see the comment on AuthError above — this restores the
-// Google brand that extending ModelError directly (instead of GoogleError)
-// would otherwise drop.
+// Same double-wrap as AuthError above.
 export class RequestError extends ns.brand(ns.brand(ModelError), "request") {
   readonly name = "RequestError" as const;
 
@@ -416,12 +411,7 @@ export class RequestError extends ns.brand(ns.brand(ModelError), "request") {
    */
   readonly url: string;
 
-  /**
-   * The HTTP status code of the failed response.
-   * Common values include 400 (Bad Request), 405 (Method Not Allowed),
-   * 409 (Conflict), etc. — any status not handled by a more specific
-   * model-error class.
-   */
+  /** The HTTP status code of the failed response, if known — any status not handled by a more specific model-error class. */
   readonly statusCode?: number;
 
   /**
@@ -459,28 +449,7 @@ export class RequestError extends ns.brand(ns.brand(ModelError), "request") {
       : false;
   }
 
-  /**
-   * Creates a model error from a failed HTTP Response object.
-   *
-   * This factory extracts the relevant information from a Response object
-   * and dispatches to the model-error class matching its status code —
-   * {@link AuthError} (401), {@link PermissionDeniedError} (403),
-   * {@link ModelNotFoundError} (404), {@link TimeoutError} (408),
-   * {@link RateLimitError} (429), or {@link ServerError}
-   * (500/502/503/504) — falling back to a plain {@link RequestError} for
-   * anything else.
-   *
-   * @param response - The failed HTTP Response object to convert into an error
-   * @returns A Promise that resolves to a new model error instance
-   *
-   * @example
-   * ```typescript
-   * const response = await fetch(url);
-   * if (!response.ok) {
-   *   throw await RequestError.fromResponse(response);
-   * }
-   * ```
-   */
+  /** Dispatches a failed Response to the model-error class matching its status code, falling back to a plain `RequestError`. */
   static async fromResponse(response: Response): Promise<ModelError> {
     const errorBody = await readErrorResponseBody(response);
 
@@ -562,11 +531,7 @@ export class RequestError extends ns.brand(ns.brand(ModelError), "request") {
 export class NoCandidatesError extends ns.brand(GoogleError, "no-candidates") {
   readonly name = "NoCandidatesError";
 
-  /**
-   * The cause is ambiguous — it could be an unreported block or a
-   * transient generation failure — so this defaults to retryable rather
-   * than foreclosing a case that a retry could fix.
-   */
+  /** Cause is ambiguous, so default to retryable rather than foreclosing a fixable case. */
   readonly isRetryable: boolean = true;
 
   constructor() {
@@ -702,11 +667,7 @@ export class MalformedOutputError extends ns.brand(
 ) {
   readonly name = "MalformedOutputError";
 
-  /**
-   * The cause is ambiguous — it could be a transient glitch in the model's
-   * output or a deterministic schema mismatch — so this defaults to
-   * retryable rather than foreclosing a case that a retry could fix.
-   */
+  /** Cause is ambiguous, so default to retryable rather than foreclosing a fixable case. */
   readonly isRetryable: boolean = true;
 
   /**

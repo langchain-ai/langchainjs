@@ -428,9 +428,6 @@ describe("modelRetryMiddleware", () => {
 
       const aiMessages = result.messages.filter(AIMessage.isInstance);
       expect(aiMessages.length).toBeGreaterThan(0);
-      // Fails on attempt 1 — SpecificTimeoutError's constructor isn't
-      // exactly TimeoutError's constructor, so the array-form retryOn
-      // (exact constructor match) doesn't match it.
       expect(model._generate).toHaveBeenCalledTimes(1);
     });
 
@@ -473,7 +470,6 @@ describe("modelRetryMiddleware", () => {
         initialDelayMs: 10,
         jitter: false,
         onFailure: "continue",
-        // retryOn intentionally left unset — exercising the default
       });
 
       const agent = createAgent({
@@ -490,8 +486,6 @@ describe("modelRetryMiddleware", () => {
 
       const aiMessages = result.messages.filter(AIMessage.isInstance);
       expect(aiMessages.length).toBeGreaterThan(0);
-      // ContextOverflowError.isRetryable is false — should fail on attempt 1,
-      // not burn maxRetries attempts the way an unclassified error would.
       expect(model._generate).toHaveBeenCalledTimes(1);
       expect(aiMessages[aiMessages.length - 1].content).toContain("1 attempt");
     });
@@ -505,8 +499,6 @@ describe("modelRetryMiddleware", () => {
         maxRetries: 2,
         initialDelayMs: 10,
         jitter: false,
-        // onFailure intentionally left unset — "continue" is the actual
-        // default for modelRetryMiddleware, not "error".
       });
 
       const agent = createAgent({
@@ -523,8 +515,6 @@ describe("modelRetryMiddleware", () => {
 
       const aiMessages = result.messages.filter(AIMessage.isInstance);
       expect(aiMessages.length).toBeGreaterThan(0);
-      // ModelAbortError.isRetryable is false — fails on attempt 1, same as
-      // any other non-retryable classified error.
       expect(model._generate).toHaveBeenCalledTimes(1);
       expect(aiMessages[aiMessages.length - 1].content).toContain("1 attempt");
     });

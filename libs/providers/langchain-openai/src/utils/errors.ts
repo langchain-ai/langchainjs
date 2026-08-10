@@ -95,22 +95,7 @@ export class InvalidToolResultsError extends ns.brand(
   }
 }
 
-/**
- * Classifies a raw `openai` SDK error onto the shared {@link ModelError}
- * hierarchy from `@langchain/core/errors`, so `modelRetryMiddleware`/
- * `toolRetryMiddleware` can tell retryable failures (timeouts, rate
- * limits, server errors) from deterministic ones (bad credentials,
- * model not found) without retrying either kind blindly.
- *
- * The original `openai` SDK error is preserved as `.cause` — classifying
- * it onto this hierarchy means the thrown error is no longer `instanceof`
- * the SDK's own class, so code that needs that can recover it via
- * `error.cause instanceof OpenAI.RateLimitError` instead.
- *
- * Statuses with no clean fit in the shared hierarchy (403 Conflict, 422
- * Unprocessable Entity, and any `BadRequestError` that isn't a context
- * overflow or invalid tool result) are returned unchanged, same as before.
- */
+/** Classifies a raw `openai` SDK error onto the shared ModelError hierarchy; original SDK error kept as `.cause`. */
 export function wrapOpenAIClientError(e: unknown): unknown {
   if (e instanceof APIUserAbortError) {
     const error = new ModelAbortError(e.message);

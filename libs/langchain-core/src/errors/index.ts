@@ -48,19 +48,7 @@ export const ns = baseNs.sub("error");
 export class LangChainError extends ns.brand(Error) {
   readonly name: string = "LangChainError";
 
-  /**
-   * The original error this was constructed from, if any — typically a
-   * provider SDK's own error instance (e.g. `OpenAI.RateLimitError`,
-   * `Anthropic.APIError`). Classifying an error onto this hierarchy means
-   * it's no longer `instanceof` the SDK's own class; set this so callers
-   * who need that can still recover it via `error.cause instanceof SdkClass`
-   * instead of losing access to it entirely.
-   *
-   * Typed `unknown` (matching the standard `Error.cause` shape) rather
-   * than `Error`, so subclasses that accept a non-Error cause — e.g. a
-   * parser failure that isn't itself an `Error` instance — aren't forced
-   * to narrow it.
-   */
+  /** The original error this was constructed from, if any — e.g. a provider SDK's own error instance, recoverable via `error.cause instanceof SdkClass`. */
   cause?: unknown;
 
   constructor(message?: string) {
@@ -111,14 +99,7 @@ export class ConfigurationError extends ns.brand(
 export class ModelError extends ns.brand(LangChainError, "model") {
   readonly name: string = "ModelError";
 
-  /**
-   * Whether this error is safe to retry (e.g. a transient network/rate-limit
-   * failure) as opposed to deterministic (e.g. bad credentials, malformed
-   * input) — retrying a deterministic failure unchanged will fail identically.
-   *
-   * Defaults to `false` — a model-related failure should be proven safe to
-   * retry (a specific subclass overriding this) rather than assumed safe.
-   */
+  /** Whether this is safe to retry (transient) vs. deterministic. Defaults to `false` — must be proven safe by a subclass. */
   readonly isRetryable: boolean = false;
 }
 
@@ -154,24 +135,12 @@ export class ModelError extends ns.brand(LangChainError, "model") {
 export class ModelAbortError extends ns.brand(ModelError, "model-abort") {
   readonly name = "ModelAbortError";
 
-  /**
-   * A deliberate cancellation, not a failure worth retrying — retrying would
-   * mean ignoring an explicit abort signal from the caller.
-   */
+  /** Deliberate cancellation, not worth retrying. */
   readonly isRetryable: boolean = false;
 
-  /**
-   * The partial message output that was produced before the operation was aborted.
-   * This is typically an AIMessageChunk, or could be undefined if no output was available.
-   */
+  /** Partial message output produced before the abort, if any. */
   readonly partialOutput?: AIMessageChunk;
 
-  /**
-   * Constructs a new ModelAbortError instance.
-   *
-   * @param message - A human-readable message describing the abort event.
-   * @param partialOutput - Any partial model output generated before the abort (optional).
-   */
   constructor(message: string, partialOutput?: AIMessageChunk) {
     super(message);
     this.partialOutput = partialOutput;
@@ -216,19 +185,10 @@ export class ContextOverflowError extends ns.brand(
 ) {
   readonly name = "ContextOverflowError";
 
-  /**
-   * Blind retry can't shrink the input that caused the overflow — retrying
-   * the exact same request will fail identically every time. Fixing this
-   * requires a deliberate compaction/trim step, not another attempt.
-   */
+  /** Retrying the same oversized input fails identically — needs a trim/compaction step instead. */
   readonly isRetryable: boolean = false;
 
-  /**
-   * The HTTP status code of the failed response, if known. Preserved so
-   * that duck-typed status checks (e.g. in `AsyncCaller`'s retry logic)
-   * can still see this was a client error, even though `isRetryable` is
-   * already `false` regardless of status code.
-   */
+  /** The HTTP status code of the failed response, if known — kept for `AsyncCaller`'s duck-typed status checks. */
   readonly statusCode?: number;
 
   constructor(message?: string, statusCode?: number) {
@@ -236,29 +196,7 @@ export class ContextOverflowError extends ns.brand(
     this.statusCode = statusCode;
   }
 
-  /**
-   * Creates a new {@link ContextOverflowError} instance from an existing error.
-   *
-   * This static utility copies the message from the provided error and
-   * attaches the original error as the {@link ContextOverflowError.cause} property,
-   * enabling error handlers to inspect or propagate the original failure. If
-   * the provided error carries a `status`/`statusCode`, it's copied onto
-   * {@link ContextOverflowError.statusCode} — without this, duck-typed
-   * status checks elsewhere (e.g. `AsyncCaller`'s retry logic) can't see
-   * this was a client error, and would blindly retry it.
-   *
-   * @param obj - The original error object causing the context overflow.
-   * @returns A new {@link ContextOverflowError} instance with the original error set as its cause.
-   *
-   * @example
-   * ```typescript
-   * try {
-   *   await model.invoke(input);
-   * } catch (err) {
-   *   throw ContextOverflowError.fromError(err);
-   * }
-   * ```
-   */
+  /** Builds a `ContextOverflowError` from an existing error, preserving `.cause` and any `status`/`statusCode`. */
   static fromError(obj: Error): ContextOverflowError {
     const record = obj as { status?: unknown; statusCode?: unknown };
     const statusCode =
@@ -274,11 +212,7 @@ export class ContextOverflowError extends ns.brand(
   }
 }
 
-/**
- * HTTP status codes that indicate a temporary issue that might succeed on
- * retry, shared by any {@link ModelError} subclass whose retryability is
- * derived from a status code rather than fixed.
- */
+/** Status codes that indicate a temporary issue, shared by any {@link ModelError} subclass deriving retryability from status. */
 const RETRYABLE_STATUS_CODES = [
   408, // Request Timeout
   429, // Too Many Requests
@@ -314,16 +248,10 @@ export class AuthenticationError extends ns.brand(
 ) {
   readonly name = "AuthenticationError";
 
-  /**
-   * The HTTP status code of the failed response, if known.
-   */
+  /** The HTTP status code of the failed response, if known. */
   readonly statusCode?: number;
 
-  /**
-   * `true` only if the status code indicates a transient issue (e.g. a
-   * 429/5xx from the auth server itself); `false` for an actual bad
-   * credential (400/401/403/404), or when no status code is known.
-   */
+  /** `true` only for a transient status (429/5xx) from the auth server itself, not an actual bad credential. */
   readonly isRetryable: boolean;
 
   constructor(message?: string, statusCode?: number) {
@@ -359,9 +287,7 @@ export class ModelNotFoundError extends ns.brand(
 ) {
   readonly name = "ModelNotFoundError";
 
-  /**
-   * The HTTP status code of the failed response, if known.
-   */
+  /** The HTTP status code of the failed response, if known. */
   readonly statusCode?: number;
 
   readonly isRetryable: boolean = false;
@@ -395,9 +321,7 @@ export class ModelNotFoundError extends ns.brand(
 export class TimeoutError extends ns.brand(ModelError, "timeout") {
   readonly name = "TimeoutError";
 
-  /**
-   * The partial message output that was produced before the timeout, if any.
-   */
+  /** Partial message output produced before the timeout, if any. */
   readonly partialOutput?: AIMessageChunk;
 
   readonly isRetryable: boolean;
@@ -434,21 +358,13 @@ export class TimeoutError extends ns.brand(ModelError, "timeout") {
 export class RateLimitError extends ns.brand(ModelError, "rate-limit") {
   readonly name = "RateLimitError";
 
-  /**
-   * The HTTP status code of the failed response, if known.
-   */
+  /** The HTTP status code of the failed response, if known. */
   readonly statusCode?: number;
 
-  /**
-   * How long to wait before retrying, in milliseconds, if the provider
-   * communicated this (e.g. via a `Retry-After` header).
-   */
+  /** How long to wait before retrying, in milliseconds, if the provider communicated this. */
   readonly retryAfterMs?: number;
 
-  /**
-   * The partial message output that was produced before the rate limit
-   * was hit, if any.
-   */
+  /** Partial message output produced before the rate limit was hit, if any. */
   readonly partialOutput?: AIMessageChunk;
 
   readonly isRetryable: boolean;
@@ -459,10 +375,7 @@ export class RateLimitError extends ns.brand(ModelError, "rate-limit") {
       statusCode?: number;
       retryAfterMs?: number;
       partialOutput?: AIMessageChunk;
-      /**
-       * Set when the provider indicated this rate limit is a billing/quota
-       * exhaustion rather than a transient, self-resolving limit.
-       */
+      /** Set when this is a billing/quota exhaustion rather than a transient, self-resolving limit. */
       quotaExhausted?: boolean;
     }
   ) {
@@ -496,10 +409,7 @@ export class RateLimitError extends ns.brand(ModelError, "rate-limit") {
 export class ConnectionError extends ns.brand(ModelError, "connection") {
   readonly name = "ConnectionError";
 
-  /**
-   * The partial message output that was produced before the connection
-   * failed, if any.
-   */
+  /** Partial message output produced before the connection failed, if any. */
   readonly partialOutput?: AIMessageChunk;
 
   readonly isRetryable: boolean;
@@ -536,14 +446,10 @@ export class ConnectionError extends ns.brand(ModelError, "connection") {
 export class ServerError extends ns.brand(ModelError, "server") {
   readonly name = "ServerError";
 
-  /**
-   * The HTTP status code of the failed response, if known.
-   */
+  /** The HTTP status code of the failed response, if known. */
   readonly statusCode?: number;
 
-  /**
-   * The partial message output that was produced before the failure, if any.
-   */
+  /** Partial message output produced before the failure, if any. */
   readonly partialOutput?: AIMessageChunk;
 
   readonly isRetryable: boolean;
@@ -585,9 +491,7 @@ export class PermissionDeniedError extends ns.brand(
 ) {
   readonly name = "PermissionDeniedError";
 
-  /**
-   * The HTTP status code of the failed response, if known.
-   */
+  /** The HTTP status code of the failed response, if known. */
   readonly statusCode?: number;
 
   readonly isRetryable: boolean = false;

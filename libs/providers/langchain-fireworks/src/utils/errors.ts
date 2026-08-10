@@ -22,18 +22,7 @@ function _errorMessage(status: number, body: unknown): string {
   return `Error ${status}: ${detail}`;
 }
 
-/**
- * Classifies a failed Fireworks HTTP response onto the shared `ModelError`
- * hierarchy from `@langchain/core/errors`. Fireworks has no client SDK of
- * its own here (requests are raw `fetch` calls), so there's no original
- * SDK error to preserve as `.cause` — the parsed response body is used
- * instead, when there is one.
- *
- * Status codes with no clean fit in the shared hierarchy (400, 405, 409,
- * 412, 422, and any 5xx-adjacent code we don't recognize) get a plain
- * `Error` with `statusCode` set, so `AsyncCaller`'s own status-based retry
- * logic still works even without a `ModelError` classification.
- */
+/** Classifies a failed Fireworks HTTP response onto the shared `ModelError` hierarchy; unclassified statuses still get `statusCode` set. */
 export function wrapFireworksResponseError(
   response: Response,
   body: unknown
@@ -94,14 +83,7 @@ function _directStatus(error: unknown): number | undefined {
     : undefined;
 }
 
-/**
- * Extra classification layer for `ChatFireworks`/`Fireworks`, which go
- * through `@langchain/openai`'s client and `wrapOpenAIClientError`. That
- * dispatcher already handles the statuses `openai`'s SDK maps to a named
- * error subclass (401/403/404/429/5xx/etc) — this only handles the
- * Fireworks-specific statuses (402, 408, 413) that fall through as the
- * generic, unclassified `APIError` base class.
- */
+/** Reclassifies the Fireworks-specific statuses (402/408/413) that `wrapOpenAIClientError` leaves as a generic, unclassified `APIError`. */
 export function wrapFireworksModelError(error: unknown): unknown {
   if (ModelError.isInstance(error)) {
     return error;

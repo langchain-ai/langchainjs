@@ -1,11 +1,7 @@
 import { z } from "zod/v3";
 import { ModelError } from "@langchain/core/errors";
 
-/**
- * Default `retryOn` behavior: if the error is a {@link ModelError}, honor
- * its `isRetryable`. Otherwise, unclassified errors keep retrying,
- * unchanged from today's behavior.
- */
+/** Honors a classified {@link ModelError}'s `isRetryable`; unclassified errors keep retrying. */
 export function defaultRetryOn(error: Error): boolean {
   return ModelError.isInstance(error) ? error.isRetryable : true;
 }
@@ -20,9 +16,7 @@ export const RetrySchema = z.object({
   /**
    * Either an array of error constructors to retry on, or a function
    * that takes an error and returns `true` if it should be retried.
-   * Default: honors `isRetryable` on classified {@link ModelError}s
-   * (e.g. `ContextOverflowError`); retries everything else, unchanged
-   * from prior behavior.
+   * Defaults to {@link defaultRetryOn}.
    */
   retryOn: z
     .union([

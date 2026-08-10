@@ -81,11 +81,6 @@ describe("AsyncCaller", () => {
   });
 
   test("defaultFailedAttemptHandler treats a non-retryable ModelError as non-retryable", async () => {
-    // Regression test: a ModelAbortError has no status code and its name/
-    // message don't match any of the duck-typed heuristics below (unlike
-    // the "AbortError" case above), so without an explicit isRetryable
-    // check it fell through to the default retry-everything behavior and
-    // got retried up to maxRetries despite being a deliberate cancellation.
     const caller = new AsyncCaller({ maxRetries: 2 });
     const callable = vi.fn(async () => {
       throw new ModelAbortError("Request was aborted.");
@@ -399,12 +394,6 @@ describe("classifyRateLimitError", () => {
   });
 
   test("trusts an already-computed retryAfterMs over re-deriving from headers/message", () => {
-    // Regression test: a provider's own RateLimitError class may already
-    // carry retryAfterMs computed from a real Retry-After header, but not
-    // the header itself. Re-classifying that error later (e.g. inside
-    // AsyncCaller's own failed-attempt handler) must not silently downgrade
-    // a short, retryable wait to "capacity" just because the header/message
-    // no longer carry the delay.
     const error = Object.assign(new Error("Too Many Requests"), {
       statusCode: 429,
       retryAfterMs: 1000,

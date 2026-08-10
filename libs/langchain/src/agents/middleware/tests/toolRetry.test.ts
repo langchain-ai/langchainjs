@@ -773,7 +773,6 @@ describe("toolRetryMiddleware", () => {
         initialDelayMs: 10,
         jitter: false,
         onFailure: "continue",
-        // retryOn intentionally left unset — exercising the default
       });
 
       const agent = createAgent({
@@ -790,8 +789,6 @@ describe("toolRetryMiddleware", () => {
 
       const toolMessages = result.messages.filter(ToolMessage.isInstance);
       expect(toolMessages).toHaveLength(1);
-      // ContextOverflowError.isRetryable is false — should fail on attempt 1,
-      // not burn maxRetries attempts the way an unclassified error would.
       expect(toolMessages[0].status).toBe("error");
       expect(toolMessages[0].content).toContain("1 attempt");
     });

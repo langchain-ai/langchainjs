@@ -35,8 +35,6 @@ function generate(
   ) as APIError;
 }
 
-// addLangChainErrorFields sets this dynamically; no wrapper class declares
-// it, so read it through this shape instead of casting to `any`.
 function lcErrorCode(error: unknown): string | undefined {
   return (error as { lc_error_code?: string }).lc_error_code;
 }
@@ -132,15 +130,10 @@ describe("wrapOpenAIClientError", () => {
     expect(wrapped).toBeInstanceOf(InvalidToolResultsError);
     expect(wrapped).not.toBeInstanceOf(ModelError);
     expect((wrapped as InvalidToolResultsError).cause).toBe(originalError);
-    // Legacy annotation, not recoverable via .cause — set directly instead.
     expect(lcErrorCode(wrapped)).toBe("INVALID_TOOL_RESULTS");
     expect((wrapped as InvalidToolResultsError).message).toContain(
       "Troubleshooting URL"
     );
-    // Not a ModelError by design (bad client input, not a model failure),
-    // but AsyncCaller's own retry-suppression duck-types on status code
-    // independently of ModelError — without this, a deterministic,
-    // never-succeeds-on-retry request would be retried up to maxRetries.
     expect((wrapped as InvalidToolResultsError).statusCode).toBe(400);
   });
 
@@ -196,9 +189,6 @@ describe("wrapOpenAIClientError", () => {
     expect((wrapped as RateLimitError).retryAfterMs).toBe(2000);
     expect((wrapped as RateLimitError).cause).toBe(originalError);
 
-    // The whole point of preserving .cause: code that needs the raw SDK
-    // type back (rather than our ModelError wrapper) can still get it —
-    // `wrapped instanceof OpenAI.RateLimitError` is false, but this isn't.
     expect(wrapped).not.toBeInstanceOf(OpenAIRateLimitError);
     expect((wrapped as RateLimitError).cause).toBeInstanceOf(
       OpenAIRateLimitError
@@ -285,9 +275,6 @@ describe("wrapOpenAIClientError", () => {
   });
 
   test("does not set lc_error_code on classes that never had one before this dispatcher existed", () => {
-    // Only tool_calls/401/404/429 carried a legacy code historically — the
-    // rest (403, 5xx, connection, timeout, abort) are new classifications
-    // this dispatcher introduced, so there's nothing to preserve for them.
     const permissionDenied = wrapOpenAIClientError(
       generate(403, { error: { message: "denied" } })
     );
