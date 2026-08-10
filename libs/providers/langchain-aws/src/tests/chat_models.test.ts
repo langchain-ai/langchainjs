@@ -1189,18 +1189,19 @@ describe("retry configuration", () => {
     ],
   ];
 
-  const retryableStreamInitializers: Array<
-    [
-      string,
-      () => unknown,
-      (model: ChatBedrockConverse) => AsyncIterable<unknown>,
-    ]
-  > = retryableBedrockErrors.flatMap(([errorName, createError]) =>
-    streamInitializers.map(([streamName, initializeStream]) => [
-      `${errorName} during ${streamName}`,
-      createError,
-      initializeStream,
-    ])
+  const retryableStreamInitializers = retryableBedrockErrors.flatMap(
+    ([errorName, createError]) =>
+      streamInitializers.map(
+        ([streamName, initializeStream]): [
+          string,
+          () => unknown,
+          (model: ChatBedrockConverse) => AsyncIterable<unknown>,
+        ] => [
+          `${errorName} during ${streamName}`,
+          createError,
+          initializeStream,
+        ]
+      )
   );
 
   test.each(retryableBedrockErrors)(
