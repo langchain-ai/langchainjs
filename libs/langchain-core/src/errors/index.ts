@@ -48,6 +48,21 @@ export const ns = baseNs.sub("error");
 export class LangChainError extends ns.brand(Error) {
   readonly name: string = "LangChainError";
 
+  /**
+   * The original error this was constructed from, if any — typically a
+   * provider SDK's own error instance (e.g. `OpenAI.RateLimitError`,
+   * `Anthropic.APIError`). Classifying an error onto this hierarchy means
+   * it's no longer `instanceof` the SDK's own class; set this so callers
+   * who need that can still recover it via `error.cause instanceof SdkClass`
+   * instead of losing access to it entirely.
+   *
+   * Typed `unknown` (matching the standard `Error.cause` shape) rather
+   * than `Error`, so subclasses that accept a non-Error cause — e.g. a
+   * parser failure that isn't itself an `Error` instance — aren't forced
+   * to narrow it.
+   */
+  cause?: unknown;
+
   constructor(message?: string) {
     super(message);
     if (Error.captureStackTrace) {
@@ -105,21 +120,6 @@ export class ModelError extends ns.brand(LangChainError, "model") {
    * retry (a specific subclass overriding this) rather than assumed safe.
    */
   readonly isRetryable: boolean = false;
-
-  /**
-   * The original error this was constructed from, if any — typically a
-   * provider SDK's own error instance (e.g. `OpenAI.RateLimitError`,
-   * `Anthropic.APIError`). Classifying an error onto this hierarchy means
-   * it's no longer `instanceof` the SDK's own class; set this so callers
-   * who need that can still recover it via `error.cause instanceof SdkClass`
-   * instead of losing access to it entirely.
-   *
-   * Typed `unknown` (matching the standard `Error.cause` shape) rather
-   * than `Error`, so subclasses that accept a non-Error cause — e.g. a
-   * parser failure that isn't itself an `Error` instance — aren't forced
-   * to narrow it.
-   */
-  cause?: unknown;
 }
 
 /**
