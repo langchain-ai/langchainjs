@@ -5,6 +5,7 @@ import {
   APIConnectionTimeoutError,
   APIUserAbortError,
   ConflictError,
+  RateLimitError as OpenAIRateLimitError,
   UnprocessableEntityError,
 } from "openai";
 import {
@@ -176,6 +177,14 @@ describe("wrapOpenAIClientError", () => {
     expect((wrapped as RateLimitError).isRetryable).toBe(true);
     expect((wrapped as RateLimitError).retryAfterMs).toBe(2000);
     expect((wrapped as RateLimitError).cause).toBe(originalError);
+
+    // The whole point of preserving .cause: code that needs the raw SDK
+    // type back (rather than our ModelError wrapper) can still get it —
+    // `wrapped instanceof OpenAI.RateLimitError` is false, but this isn't.
+    expect(wrapped).not.toBeInstanceOf(OpenAIRateLimitError);
+    expect((wrapped as RateLimitError).cause).toBeInstanceOf(
+      OpenAIRateLimitError
+    );
   });
 
   test("wraps a quota-exhausted 429 as non-retryable RateLimitError", () => {
