@@ -2,6 +2,7 @@
 "@langchain/core": minor
 "@langchain/google": minor
 "@langchain/openai": minor
+"@langchain/anthropic": minor
 "langchain": patch
 ---
 
@@ -36,4 +37,8 @@ Nine new/updated `ModelError` subclasses, each with a considered `isRetryable` d
 
 **Why a minor bump despite `@langchain/openai` being past 1.0:** unlike a typical breaking change, nothing crashes, and everything the raw `openai` SDK error itself carried is still reachable — `.cause` is the exact original instance, so every affected call site has a one-line, mechanical fix (check `.cause` instead of the thrown value directly). The one exception: the legacy `lc_error_code` annotation (`INVALID_TOOL_RESULTS`/`MODEL_AUTHENTICATION`/`MODEL_NOT_FOUND`/`MODEL_RATE_LIMIT`) was never on the SDK error to begin with — it's set directly on the new typed classes so it keeps working, not recovered via `.cause`. Given the `.cause` escape hatch and how `@langchain/google`'s equivalent change shipped as minor, we're treating this as minor rather than reserving a major version for it — flag if that read is wrong for how this package's consumers actually use it.
 
-Anthropic is next; not part of this change.
+**Breaking (`@langchain/anthropic`):** `wrapAnthropicClientError` now dispatches `@anthropic-ai/sdk` errors onto the shared hierarchy above via real `instanceof` checks, instead of duck-typed status codes: 401 → `AuthenticationError`, 403 → `PermissionDeniedError`, 404 → `ModelNotFoundError`, 429 → `RateLimitError` (with `quotaExhausted` derived from the error's message), 5xx (including 529 "overloaded") → `ServerError`, a network failure → `ConnectionError`, a client-side timeout → `TimeoutError`, a user-initiated abort → `ModelAbortError`. A tool-related 400 becomes `InvalidToolResultsError` (bad client input, not a model failure — extends `LangChainError` directly, no `isRetryable`). A context-overflow 400 (`"prompt is too long"`) keeps mapping to `ContextOverflowError`, same as before. 403, 409, 422, and any other unclassified 400 are unchanged — passed through raw.
+
+Same recovery path and reasoning as `@langchain/openai` above: the original `@anthropic-ai/sdk` error is preserved as `.cause` (`error.cause instanceof Anthropic.RateLimitError`), and the legacy `lc_error_code` codes (`CONTEXT_OVERFLOW`/`INVALID_TOOL_RESULTS`/`MODEL_AUTHENTICATION`/`MODEL_NOT_FOUND`/`MODEL_RATE_LIMIT`) are reapplied directly on the classified error so they keep working. Shipped as minor for the same reason.
+
+**Known limitation:** this only covers errors from establishing the request. An error that occurs mid-stream, after some content has already been received, still propagates unclassified — tracked as a follow-up, not covered by this change.
