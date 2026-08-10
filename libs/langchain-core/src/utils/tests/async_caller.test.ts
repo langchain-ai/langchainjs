@@ -1,4 +1,5 @@
 import { describe, test, expect, vi } from "vitest";
+import { ModelAbortError, ServerError } from "../../errors/index.js";
 import {
   AsyncCaller,
   parseRetryAfterMs,
@@ -77,6 +78,37 @@ describe("AsyncCaller", () => {
 
     await expect(() => caller.call(callable)).rejects.toThrow("AbortError");
     expect(callable).toHaveBeenCalledTimes(1);
+  });
+
+  test("defaultFailedAttemptHandler treats a non-retryable ModelError as non-retryable", async () => {
+    // Regression test: a ModelAbortError has no status code and its name/
+    // message don't match any of the duck-typed heuristics below (unlike
+    // the "AbortError" case above), so without an explicit isRetryable
+    // check it fell through to the default retry-everything behavior and
+    // got retried up to maxRetries despite being a deliberate cancellation.
+    const caller = new AsyncCaller({ maxRetries: 2 });
+    const callable = vi.fn(async () => {
+      throw new ModelAbortError("Request was aborted.");
+    });
+
+    await expect(() => caller.call(callable)).rejects.toBeInstanceOf(
+      ModelAbortError
+    );
+    expect(callable).toHaveBeenCalledTimes(1);
+  });
+
+  test("defaultFailedAttemptHandler still retries a retryable ModelError", async () => {
+    const caller = new AsyncCaller({ maxRetries: 2 });
+    const callable = vi
+      .fn<() => Promise<string>>()
+      .mockRejectedValueOnce(new ServerError("boom", { statusCode: 500 }))
+      .mockRejectedValueOnce(new ServerError("boom", { statusCode: 500 }))
+      .mockResolvedValueOnce("ok");
+
+    const result = await caller.call(callable);
+
+    expect(result).toBe("ok");
+    expect(callable).toHaveBeenCalledTimes(3);
   });
 
   test("defaultFailedAttemptHandler treats ECONNABORTED as non-retryable", async () => {

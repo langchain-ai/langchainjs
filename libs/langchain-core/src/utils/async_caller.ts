@@ -1,5 +1,6 @@
 import PQueueMod from "p-queue";
 
+import { ModelError } from "../errors/index.js";
 import { getAbortSignalError } from "./signal.js";
 import pRetry from "./p-retry/index.js";
 
@@ -331,6 +332,16 @@ const defaultFailedAttemptHandler = (error: unknown) => {
     }
     setRateLimitMetadata(err, rateLimitClassification);
     throw err;
+  }
+
+  // Final fallback: a classified ModelError that says it's not retryable
+  // is authoritative. This only matters for cases none of the heuristics
+  // above already handle — e.g. a ModelAbortError has no status code and
+  // its name/message don't match the abort check above — since anything
+  // they DO handle already throws or returns before reaching here, and
+  // this doesn't run for a retryable ModelError either.
+  if (ModelError.isInstance(error) && !error.isRetryable) {
+    throw error;
   }
 };
 

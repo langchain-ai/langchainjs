@@ -35,6 +35,12 @@ function generate(
   ) as APIError;
 }
 
+// addLangChainErrorFields sets this dynamically; no wrapper class declares
+// it, so read it through this shape instead of casting to `any`.
+function lcErrorCode(error: unknown): string | undefined {
+  return (error as { lc_error_code?: string }).lc_error_code;
+}
+
 describe("wrapOpenAIClientError", () => {
   test("wraps context overflow (context_length_exceeded code) as ContextOverflowError", () => {
     const originalError = generate(400, {
@@ -126,6 +132,16 @@ describe("wrapOpenAIClientError", () => {
     expect(wrapped).toBeInstanceOf(InvalidToolResultsError);
     expect(wrapped).not.toBeInstanceOf(ModelError);
     expect((wrapped as InvalidToolResultsError).cause).toBe(originalError);
+    // Legacy annotation, not recoverable via .cause — set directly instead.
+    expect(lcErrorCode(wrapped)).toBe("INVALID_TOOL_RESULTS");
+    expect((wrapped as InvalidToolResultsError).message).toContain(
+      "Troubleshooting URL"
+    );
+    // Not a ModelError by design (bad client input, not a model failure),
+    // but AsyncCaller's own retry-suppression duck-types on status code
+    // independently of ModelError — without this, a deterministic,
+    // never-succeeds-on-retry request would be retried up to maxRetries.
+    expect((wrapped as InvalidToolResultsError).statusCode).toBe(400);
   });
 
   test("wraps 401 as AuthenticationError", () => {
@@ -139,6 +155,7 @@ describe("wrapOpenAIClientError", () => {
     expect((wrapped as AuthenticationError).statusCode).toBe(401);
     expect((wrapped as AuthenticationError).isRetryable).toBe(false);
     expect((wrapped as AuthenticationError).cause).toBe(originalError);
+    expect(lcErrorCode(wrapped)).toBe("MODEL_AUTHENTICATION");
   });
 
   test("wraps 403 as PermissionDeniedError", () => {
@@ -162,6 +179,7 @@ describe("wrapOpenAIClientError", () => {
     expect(wrapped).toBeInstanceOf(ModelNotFoundError);
     expect((wrapped as ModelNotFoundError).statusCode).toBe(404);
     expect((wrapped as ModelNotFoundError).cause).toBe(originalError);
+    expect(lcErrorCode(wrapped)).toBe("MODEL_NOT_FOUND");
   });
 
   test("wraps a plain rate-limit 429 as retryable RateLimitError with retryAfterMs from the header", () => {
@@ -185,6 +203,7 @@ describe("wrapOpenAIClientError", () => {
     expect((wrapped as RateLimitError).cause).toBeInstanceOf(
       OpenAIRateLimitError
     );
+    expect(lcErrorCode(wrapped)).toBe("MODEL_RATE_LIMIT");
   });
 
   test("wraps a quota-exhausted 429 as non-retryable RateLimitError", () => {
@@ -199,6 +218,7 @@ describe("wrapOpenAIClientError", () => {
 
     expect(wrapped).toBeInstanceOf(RateLimitError);
     expect((wrapped as RateLimitError).isRetryable).toBe(false);
+    expect(lcErrorCode(wrapped)).toBe("MODEL_RATE_LIMIT");
   });
 
   test("wraps 500 as retryable ServerError", () => {
@@ -262,6 +282,21 @@ describe("wrapOpenAIClientError", () => {
 
     expect(wrapOpenAIClientError(conflict)).toBe(conflict);
     expect(wrapOpenAIClientError(unprocessable)).toBe(unprocessable);
+  });
+
+  test("does not set lc_error_code on classes that never had one before this dispatcher existed", () => {
+    // Only tool_calls/401/404/429 carried a legacy code historically — the
+    // rest (403, 5xx, connection, timeout, abort) are new classifications
+    // this dispatcher introduced, so there's nothing to preserve for them.
+    const permissionDenied = wrapOpenAIClientError(
+      generate(403, { error: { message: "denied" } })
+    );
+    const serverError = wrapOpenAIClientError(
+      generate(500, { error: { message: "boom" } })
+    );
+
+    expect(lcErrorCode(permissionDenied)).toBeUndefined();
+    expect(lcErrorCode(serverError)).toBeUndefined();
   });
 
   test("passes through null/undefined", () => {

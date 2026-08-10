@@ -38,6 +38,22 @@ function _isOpenAIContextOverflowError(e: BadRequestError): boolean {
   );
 }
 
+/** Legacy `lc_error_code` values, owned locally instead of importing core's deprecated `addLangChainErrorFields`. */
+type LegacyErrorCode =
+  | "INVALID_TOOL_RESULTS"
+  | "MODEL_AUTHENTICATION"
+  | "MODEL_NOT_FOUND"
+  | "MODEL_RATE_LIMIT";
+
+function addLegacyErrorCode<T extends Error>(
+  error: T,
+  code: LegacyErrorCode
+): T {
+  (error as T & { lc_error_code: LegacyErrorCode }).lc_error_code = code;
+  error.message = `${error.message}\n\nTroubleshooting URL: https://docs.langchain.com/oss/javascript/langchain/errors/${code}/\n`;
+  return error;
+}
+
 /**
  * Error thrown when a `ToolMessage`/`tool_calls` entry sent to OpenAI is
  * malformed or references a tool call OpenAI can't resolve (e.g. a
@@ -45,7 +61,14 @@ function _isOpenAIContextOverflowError(e: BadRequestError): boolean {
  *
  * This is bad client input, not a model failure — it extends
  * {@link LangChainError} directly rather than {@link ModelError}, so it
- * has no `isRetryable` and falls through to the default retry behavior.
+ * has no `isRetryable` and falls through to the default retry behavior
+ * at the `modelRetryMiddleware`/`toolRetryMiddleware` level.
+ *
+ * `statusCode` is preserved separately from that, for a lower layer:
+ * `AsyncCaller`'s own retry-suppression duck-types on status code
+ * (400 is in its `STATUS_NO_RETRY` list) independently of `ModelError` —
+ * without it, a deterministic, unfixable-by-retrying request would be
+ * retried up to `maxRetries` before `AsyncCaller` ever gives up on it.
  *
  * @example
  * ```typescript
@@ -63,6 +86,13 @@ export class InvalidToolResultsError extends ns.brand(
   "invalid-tool-results"
 ) {
   readonly name = "InvalidToolResultsError";
+
+  readonly statusCode?: number;
+
+  constructor(message?: string, statusCode?: number) {
+    super(message);
+    this.statusCode = statusCode;
+  }
 }
 
 /**
@@ -105,8 +135,9 @@ export function wrapOpenAIClientError(e: unknown): unknown {
       return ContextOverflowError.fromError(e);
     }
     if (e.message.includes("tool_calls")) {
-      const error = new InvalidToolResultsError(e.message);
+      const error = new InvalidToolResultsError(e.message, e.status);
       error.cause = e;
+      addLegacyErrorCode(error, "INVALID_TOOL_RESULTS");
       return error;
     }
     return e;
@@ -115,6 +146,7 @@ export function wrapOpenAIClientError(e: unknown): unknown {
   if (e instanceof OpenAIAuthenticationError) {
     const error = new AuthenticationError(e.message, e.status);
     error.cause = e;
+    addLegacyErrorCode(error, "MODEL_AUTHENTICATION");
     return error;
   }
 
@@ -127,6 +159,7 @@ export function wrapOpenAIClientError(e: unknown): unknown {
   if (e instanceof OpenAINotFoundError) {
     const error = new ModelNotFoundError(e.message, e.status);
     error.cause = e;
+    addLegacyErrorCode(error, "MODEL_NOT_FOUND");
     return error;
   }
 
@@ -138,6 +171,7 @@ export function wrapOpenAIClientError(e: unknown): unknown {
       quotaExhausted: classification?.action === "stop",
     });
     error.cause = e;
+    addLegacyErrorCode(error, "MODEL_RATE_LIMIT");
     return error;
   }
 
