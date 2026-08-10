@@ -50,6 +50,16 @@ function getBedrockHttpStatusCode(error: unknown): number | undefined {
   return error.$metadata.httpStatusCode;
 }
 
+function isRetryableBedrock429(error: unknown): boolean {
+  if (!error || typeof error !== "object" || !("name" in error)) {
+    return false;
+  }
+  return (
+    error.name === "ThrottlingException" ||
+    error.name === "ModelNotReadyException"
+  );
+}
+
 function preserveBedrockErrorProperties(source: object, target: Error) {
   let keys: Array<string | symbol>;
   try {
@@ -74,7 +84,11 @@ function preserveBedrockErrorProperties(source: object, target: Error) {
 
 function attachBedrockHttpStatus(error: Error, source: unknown) {
   const status = getBedrockHttpStatusCode(source);
-  if (status === undefined || status === 429 || "status" in error) {
+  if (status === undefined || "status" in error) {
+    return;
+  }
+  if (status === 429 && isRetryableBedrock429(source)) {
+    // These transient Bedrock errors must remain retryable after SDK retries are disabled.
     return;
   }
   try {

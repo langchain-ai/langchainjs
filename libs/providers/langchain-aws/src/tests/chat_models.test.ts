@@ -1187,13 +1187,6 @@ describe("retry configuration", () => {
           $metadata: { httpStatusCode: 429 },
         }),
     ],
-    [
-      "metadata-only 429",
-      () => ({
-        message: "Too many requests",
-        $metadata: { httpStatusCode: 429 },
-      }),
-    ],
   ];
 
   const retryableStreamInitializers: Array<
@@ -1239,6 +1232,61 @@ describe("retry configuration", () => {
       expect(mockSend).toHaveBeenCalledTimes(2);
     }
   );
+
+  test("does not retry an unknown metadata-only 429", async () => {
+    const rawError = {
+      message: "Too many requests",
+      $metadata: { httpStatusCode: 429 },
+    };
+    const mockSend = vi.fn().mockRejectedValue(rawError);
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      client: { send: mockSend } as unknown as BedrockRuntimeClient,
+      maxRetries: 1,
+    });
+
+    await expect(
+      runRetryTimers(() => model.invoke([new HumanMessage("Hello")]))
+    ).rejects.toMatchObject({
+      message: rawError.message,
+      status: 429,
+      $metadata: rawError.$metadata,
+      cause: rawError,
+      rateLimitType: "capacity",
+      rateLimitReason: "headerless_429",
+    });
+
+    expect(mockSend).toHaveBeenCalledOnce();
+  });
+
+  test("preserves Bedrock 429 details for onFailedAttempt", async () => {
+    const throttlingError = new ThrottlingException({
+      message: "Too many requests",
+      $metadata: { httpStatusCode: 429 },
+    });
+    const onFailedAttempt = vi.fn();
+    const mockSend = vi
+      .fn()
+      .mockRejectedValueOnce(throttlingError)
+      .mockResolvedValue({
+        output: {
+          message: {
+            role: "assistant",
+            content: [{ text: "Hello" }],
+          },
+        },
+      });
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      client: { send: mockSend } as unknown as BedrockRuntimeClient,
+      maxRetries: 1,
+      onFailedAttempt,
+    });
+
+    await runRetryTimers(() => model.invoke([new HumanMessage("Hello")]));
+
+    expect(onFailedAttempt).toHaveBeenCalledWith(throttlingError);
+  });
 
   test.each(retryableStreamInitializers)(
     "retries %s initialization",
