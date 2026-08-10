@@ -5,6 +5,7 @@ import { HumanMessage } from "@langchain/core/messages";
 import type { StructuredToolInterface } from "@langchain/core/tools";
 
 import { createMiddleware } from "../middleware.js";
+import { INTERNAL_CALL_TAG } from "./internalCall.js";
 import { initChatModel } from "../../chat_models/universal.js";
 import type { Runtime } from "../runtime.js";
 import type { ModelRequest } from "../nodes/types.js";
@@ -148,6 +149,7 @@ export function llmToolSelectorMiddleware(options: LLMToolSelectorConfig) {
         pickRunnableConfigKeys(request.runtime) ?? {};
       const config = mergeConfigs(baseConfig, {
         metadata: { lc_source: "llmToolSelector" },
+        tags: [INTERNAL_CALL_TAG],
         callbacks: [],
       });
 

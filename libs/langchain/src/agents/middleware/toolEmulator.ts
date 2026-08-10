@@ -2,7 +2,13 @@ import { HumanMessage, ToolMessage } from "@langchain/core/messages";
 import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
 import { initChatModel } from "../../chat_models/universal.js";
+import {
+  mergeConfigs,
+  pickRunnableConfigKeys,
+  type RunnableConfig,
+} from "@langchain/core/runnables";
 import { createMiddleware } from "../middleware.js";
+import { INTERNAL_CALL_TAG } from "./internalCall.js";
 
 /**
  * Options for configuring the Tool Emulator middleware.
@@ -155,7 +161,16 @@ Return ONLY the tool's output, no explanation or preamble. Introduce variation i
 
       // Get emulated response from LLM
       const emulator = await getEmulatorModel();
-      const response = await emulator.invoke([new HumanMessage(prompt)]);
+      const baseConfig: RunnableConfig =
+        pickRunnableConfigKeys(request.runtime) ?? {};
+      const config = mergeConfigs(baseConfig, {
+        metadata: { lc_source: "toolEmulation" },
+        tags: [INTERNAL_CALL_TAG],
+      });
+      const response = await emulator.invoke(
+        [new HumanMessage(prompt)],
+        config
+      );
 
       // Extract content from response
       const content =

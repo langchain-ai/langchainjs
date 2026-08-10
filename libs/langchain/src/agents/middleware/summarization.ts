@@ -27,6 +27,7 @@ import {
 } from "@langchain/core/runnables";
 import { REMOVE_ALL_MESSAGES } from "@langchain/langgraph";
 import { createMiddleware } from "../middleware.js";
+import { INTERNAL_CALL_TAG } from "./internalCall.js";
 import { countTokensApproximately } from "./utils.js";
 import { hasToolCalls } from "../utils.js";
 import { initChatModel } from "../../chat_models/universal.js";
@@ -948,6 +949,7 @@ async function createSummary(
     const baseConfig: RunnableConfig = pickRunnableConfigKeys(runtime) ?? {};
     const config = mergeConfigs(baseConfig, {
       metadata: { lc_source: "summarization" },
+      tags: [INTERNAL_CALL_TAG],
     });
     const response = await model.invoke(formattedPrompt, config);
     const content = response.content;
