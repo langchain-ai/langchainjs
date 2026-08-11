@@ -318,8 +318,7 @@ const defaultFailedAttemptHandler = (error: unknown) => {
           : "RateLimitCapacityError";
     }
     setRateLimitMetadata(err, rateLimitClassification);
-    // "stop" is exhausted quota; "capacity" is a transient 429 this caller
-    // just declines to wait out, which an outer retry may still handle.
+    // Only "stop" is exhausted quota; "capacity" can still succeed later.
     throw stampRetryable(err, rateLimitClassification.action !== "stop");
   }
 };
@@ -342,6 +341,9 @@ export interface AsyncCallerParams {
    * Custom handler to handle failed attempts. Takes the originally thrown
    * error object as input, and should itself throw an error if the input
    * error is not retryable.
+   *
+   * Replaces the built-in handler entirely, so supplying one opts out of its
+   * retryability marking (see `stampRetryable` in `@langchain/core/errors`).
    */
   onFailedAttempt?: FailedAttemptHandler;
 }

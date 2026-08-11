@@ -18,7 +18,6 @@ const RETRYABLE_STATUS_CODES = [
   504, // Gateway Timeout
 ];
 
-/** A missing status code means no response arrived, which we can't call transient. */
 function isRetryableStatus(statusCode?: number): boolean {
   if (!statusCode) return false;
   return RETRYABLE_STATUS_CODES.includes(statusCode);
@@ -88,7 +87,6 @@ export class ConfigurationError extends ns.brand(GoogleError, "configuration") {
 
   constructor(message?: string) {
     super(message);
-    // Invalid setup fails the same way until the configuration itself changes.
     stampRetryable(this, false);
   }
 }
@@ -171,7 +169,6 @@ export class PromptBlockedError extends ns.brand(
     super(message);
     this.blockReason = params.blockReason;
     this.safetyRatings = params.safetyRatings;
-    // The same prompt gets the same safety verdict on every attempt.
     stampRetryable(this, false);
   }
 
@@ -306,7 +303,6 @@ export class AuthError extends ns.brand(GoogleError, "auth") {
     this.statusText = params.statusText;
     this.headers = params.headers;
     this.data = params.data;
-    // A bad credential is permanent, but the auth endpoint itself can fail transiently.
     stampRetryable(this, isRetryableStatus(this.statusCode));
   }
 
@@ -622,7 +618,6 @@ export class InvalidToolError extends ns.brand(GoogleError, "invalid-tool") {
 
     super(message ?? defaultMessage);
     this.tool = tool;
-    // A malformed tool definition is a caller-side mistake, not a transient failure.
     stampRetryable(this, false);
   }
 }
@@ -666,7 +661,6 @@ export class ToolCallNotFoundError extends ns.brand(
 
     super(message ?? defaultMessage);
     this.toolCallId = toolCallId;
-    // The referenced tool call won't appear in history by retrying.
     stampRetryable(this, false);
   }
 }
@@ -754,7 +748,6 @@ export class InvalidInputError extends ns.brand(GoogleError, "invalid-input") {
 
   constructor(message?: string) {
     super(message);
-    // The same invalid input is rejected identically every time.
     stampRetryable(this, false);
   }
 }

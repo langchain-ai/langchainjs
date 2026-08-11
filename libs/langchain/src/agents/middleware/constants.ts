@@ -11,9 +11,7 @@ export const RetrySchema = z.object({
   /**
    * Either an array of error constructors to retry on, or a function
    * that takes an error and returns `true` if it should be retried.
-   * Default is to retry unless the error was explicitly marked
-   * non-retryable (e.g. bad credentials, unknown model), which would
-   * fail identically on every attempt. Unclassified errors still retry.
+   * Default is to retry unless the error is marked non-retryable.
    */
   retryOn: z
     .union([

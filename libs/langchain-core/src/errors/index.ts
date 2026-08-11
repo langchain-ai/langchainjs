@@ -36,22 +36,12 @@ const MAX_CAUSE_DEPTH = 10;
 /**
  * Mark an error as safe or unsafe to retry.
  *
- * The mark is a non-enumerable symbol property set directly on the error, so
- * it carries retryability without changing the error's class, prototype,
- * fields, or JSON serialization. That makes it safe to apply to a provider
- * SDK's own error instance: callers doing `err instanceof SomeSdkError`
- * keep working exactly as before.
+ * Sets a non-enumerable symbol on the error itself, leaving its class and
+ * shape untouched, so it is safe to apply to a provider SDK's own error.
  *
  * @param error - The error to mark. Non-objects are returned untouched.
- * @param retryable - `true` if retrying may succeed, `false` if an identical
- *   retry will fail identically.
+ * @param retryable - `true` if retrying may succeed.
  * @returns The same error instance, for chaining.
- *
- * @example
- * ```typescript
- * if (e.status === 429) throw stampRetryable(e, true);
- * if (e.status === 401) throw stampRetryable(e, false);
- * ```
  */
 export function stampRetryable<T>(error: T, retryable: boolean): T {
   if (typeof error !== "object" || error === null) {
@@ -69,16 +59,10 @@ export function stampRetryable<T>(error: T, retryable: boolean): T {
 }
 
 /**
- * Read an error's retryability mark, following the `.cause` chain so a
- * classified error that later got rewrapped is still recognized.
+ * Read an error's retryability mark, following the `.cause` chain.
  *
- * @param error - The error to inspect.
- * @returns `true` or `false` when the error was marked by
- *   {@link stampRetryable}, or `undefined` when it was never classified.
- *   Callers must supply their own default for the `undefined` case — e.g.
- *   `getRetryable(error) ?? true`. Do not rely on truthiness: a bare
- *   `if (getRetryable(error))` silently treats every unclassified error as
- *   non-retryable, which is rarely what you want.
+ * @returns `true`/`false` when marked, `undefined` when unclassified —
+ *   supply your own default, e.g. `getRetryable(error) ?? true`.
  */
 export function getRetryable(error: unknown): boolean | undefined {
   let current: unknown = error;
