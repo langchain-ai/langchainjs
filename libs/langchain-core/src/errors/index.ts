@@ -27,6 +27,82 @@ export function addLangChainErrorFields(
 /** The error namespace for all LangChain errors */
 export const ns = baseNs.sub("error");
 
+/** Registered globally so duplicate copies of core in one dependency tree agree. */
+const retryableSymbol = Symbol.for("langchain.errors.retryable");
+
+/** Bounds the `.cause` walk so a cyclic chain can't spin forever. */
+const MAX_CAUSE_DEPTH = 10;
+
+/**
+ * Mark an error as safe or unsafe to retry.
+ *
+ * The mark is a non-enumerable symbol property set directly on the error, so
+ * it carries retryability without changing the error's class, prototype,
+ * fields, or JSON serialization. That makes it safe to apply to a provider
+ * SDK's own error instance: callers doing `err instanceof SomeSdkError`
+ * keep working exactly as before.
+ *
+ * @param error - The error to mark. Non-objects are returned untouched.
+ * @param retryable - `true` if retrying may succeed, `false` if an identical
+ *   retry will fail identically.
+ * @returns The same error instance, for chaining.
+ *
+ * @example
+ * ```typescript
+ * if (e.status === 429) throw stampRetryable(e, true);
+ * if (e.status === 401) throw stampRetryable(e, false);
+ * ```
+ */
+export function stampRetryable<T>(error: T, retryable: boolean): T {
+  if (typeof error !== "object" || error === null) {
+    return error;
+  }
+  try {
+    Object.defineProperty(error, retryableSymbol, {
+      value: retryable,
+      configurable: true,
+    });
+  } catch {
+    // Frozen or sealed error object; leave it unmarked rather than throwing.
+  }
+  return error;
+}
+
+/**
+ * Read an error's retryability mark, following the `.cause` chain so a
+ * classified error that later got rewrapped is still recognized.
+ *
+ * @param error - The error to inspect.
+ * @returns `true` or `false` when the error was marked by
+ *   {@link stampRetryable}, or `undefined` when it was never classified.
+ *   Callers must supply their own default for the `undefined` case — e.g.
+ *   `getRetryable(error) ?? true`. Do not rely on truthiness: a bare
+ *   `if (getRetryable(error))` silently treats every unclassified error as
+ *   non-retryable, which is rarely what you want.
+ */
+export function getRetryable(error: unknown): boolean | undefined {
+  let current: unknown = error;
+  for (let depth = 0; depth < MAX_CAUSE_DEPTH; depth += 1) {
+    if (typeof current !== "object" || current === null) {
+      return undefined;
+    }
+    try {
+      const descriptor = Object.getOwnPropertyDescriptor(
+        current,
+        retryableSymbol
+      );
+      if (descriptor) {
+        return descriptor.value as boolean;
+      }
+      current = (current as { cause?: unknown }).cause;
+    } catch {
+      // A throwing `cause` getter shouldn't take down the error path.
+      return undefined;
+    }
+  }
+  return undefined;
+}
+
 /**
  * Base error class for all LangChain errors.
  *
@@ -103,6 +179,8 @@ export class ModelAbortError extends ns.brand(LangChainError, "model-abort") {
   constructor(message: string, partialOutput?: AIMessageChunk) {
     super(message);
     this.partialOutput = partialOutput;
+    // Retrying would mean ignoring the caller's explicit abort signal.
+    stampRetryable(this, false);
   }
 }
 
@@ -154,6 +232,8 @@ export class ContextOverflowError extends ns.brand(
 
   constructor(message?: string) {
     super(message ?? "Input exceeded the model's context window.");
+    // The same oversized input fails identically; it needs trimming, not another attempt.
+    stampRetryable(this, false);
   }
 
   /**

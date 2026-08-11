@@ -1,6 +1,7 @@
 /* oxlint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi } from "vitest";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
+import { ContextOverflowError, stampRetryable } from "@langchain/core/errors";
 import { MemorySaver } from "@langchain/langgraph-checkpoint";
 import { StructuredTool } from "@langchain/core/tools";
 import { RunnableBinding } from "@langchain/core/runnables";
@@ -468,6 +469,69 @@ describe("modelRetryMiddleware", () => {
       expect(aiMessages.length).toBeGreaterThan(0);
       expect(shouldRetry).toHaveBeenCalledTimes(1);
       expect(model._generate).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe("Default retryability classification", () => {
+    const runWithDefaultRetryOn = async (error: Error, threadId: string) => {
+      const model = new AlwaysFailingModel(error);
+
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [
+          modelRetryMiddleware({
+            maxRetries: 2,
+            initialDelayMs: 10,
+            jitter: false,
+            onFailure: "continue",
+          }),
+        ] as const,
+        checkpointer: new MemorySaver(),
+      });
+
+      await agent.invoke(
+        { messages: [new HumanMessage("Hello")] },
+        { configurable: { thread_id: threadId } }
+      );
+
+      return model._generate;
+    };
+
+    it("should not retry an error marked non-retryable", async () => {
+      const generate = await runWithDefaultRetryOn(
+        stampRetryable(new Error("Invalid API key"), false),
+        "non-retryable"
+      );
+
+      expect(generate).toHaveBeenCalledTimes(1);
+    });
+
+    it("should retry an error marked retryable", async () => {
+      const generate = await runWithDefaultRetryOn(
+        stampRetryable(new Error("Rate limited"), true),
+        "retryable"
+      );
+
+      expect(generate).toHaveBeenCalledTimes(3);
+    });
+
+    it("should retry an unclassified error", async () => {
+      const generate = await runWithDefaultRetryOn(
+        new Error("Who knows"),
+        "unclassified"
+      );
+
+      expect(generate).toHaveBeenCalledTimes(3);
+    });
+
+    it("should not retry a core error that is non-retryable by construction", async () => {
+      const generate = await runWithDefaultRetryOn(
+        new ContextOverflowError(),
+        "context-overflow"
+      );
+
+      expect(generate).toHaveBeenCalledTimes(1);
     });
   });
 

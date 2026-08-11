@@ -1,5 +1,6 @@
 import PQueueMod from "p-queue";
 
+import { stampRetryable } from "../errors/index.js";
 import { getAbortSignalError } from "./signal.js";
 import pRetry from "./p-retry/index.js";
 
@@ -267,7 +268,8 @@ const defaultFailedAttemptHandler = (error: unknown) => {
       typeof error.name === "string" &&
       error.name === "AbortError")
   ) {
-    throw error;
+    // Deliberate cancellation, not a failure worth another attempt.
+    throw stampRetryable(error, false);
   }
   if (
     "code" in error &&
@@ -278,7 +280,8 @@ const defaultFailedAttemptHandler = (error: unknown) => {
   }
   const status = getResponseStatus(error) ?? getDirectStatus(error);
   if (status && STATUS_NO_RETRY.includes(+status)) {
-    throw error;
+    // Deterministic client error; retrying it unchanged fails identically.
+    throw stampRetryable(error, false);
   }
 
   const code = getErrorCode(error);
@@ -292,13 +295,15 @@ const defaultFailedAttemptHandler = (error: unknown) => {
       action: "stop",
       reason: "insufficient_quota",
     });
-    throw err;
+    // Exhausted quota needs an account action, not another attempt.
+    throw stampRetryable(err, false);
   }
 
   const rateLimitClassification = classifyRateLimitError(error);
   if (rateLimitClassification) {
     if (rateLimitClassification.action === "wait") {
       setRateLimitMetadata(error, rateLimitClassification);
+      stampRetryable(error, true);
       return;
     }
 
@@ -313,7 +318,9 @@ const defaultFailedAttemptHandler = (error: unknown) => {
           : "RateLimitCapacityError";
     }
     setRateLimitMetadata(err, rateLimitClassification);
-    throw err;
+    // "stop" is exhausted quota; "capacity" is a transient 429 this caller
+    // just declines to wait out, which an outer retry may still handle.
+    throw stampRetryable(err, rateLimitClassification.action !== "stop");
   }
 };
 

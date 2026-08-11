@@ -1,4 +1,5 @@
 import { describe, test, expect, vi } from "vitest";
+import { getRetryable } from "../../errors/index.js";
 import {
   AsyncCaller,
   parseRetryAfterMs,
@@ -364,5 +365,72 @@ describe("classifyRateLimitError", () => {
       action: "capacity",
       reason: "headerless_429",
     });
+  });
+});
+
+describe("AsyncCaller retryability marking", () => {
+  const handle = (error: unknown) => {
+    const caller = new AsyncCaller({ maxRetries: 0 });
+    try {
+      (
+        caller as unknown as { onFailedAttempt: (error: unknown) => void }
+      ).onFailedAttempt(error);
+    } catch (thrown) {
+      return thrown;
+    }
+    return error;
+  };
+
+  test.each([400, 401, 402, 403, 404, 405, 406, 407, 409])(
+    "marks status %i non-retryable",
+    (status) => {
+      expect(
+        getRetryable(handle(Object.assign(new Error("nope"), { status })))
+      ).toBe(false);
+    }
+  );
+
+  test("marks an aborted call non-retryable", () => {
+    expect(
+      getRetryable(
+        handle(Object.assign(new Error("boom"), { name: "AbortError" }))
+      )
+    ).toBe(false);
+  });
+
+  test("marks insufficient quota non-retryable", () => {
+    const error = new Error("Insufficient quota");
+    (error as unknown as { error: { code: string } }).error = {
+      code: "insufficient_quota",
+    };
+
+    expect(getRetryable(handle(error))).toBe(false);
+  });
+
+  test("marks a rate limit with a retry hint retryable", () => {
+    const error = Object.assign(new Error("Rate limit exceeded"), {
+      status: 429,
+      headers: { "retry-after": "4" },
+    });
+
+    expect(getRetryable(handle(error))).toBe(true);
+  });
+
+  test("marks headerless capacity pressure retryable", () => {
+    const error = Object.assign(new Error("Rate limit exceeded"), {
+      statusCode: 429,
+    });
+
+    expect(getRetryable(handle(error))).toBe(true);
+  });
+
+  test("leaves an unrecognized error unmarked", () => {
+    expect(getRetryable(handle(new Error("who knows")))).toBeUndefined();
+  });
+
+  test("leaves a 500 unmarked so outer retries still apply", () => {
+    expect(
+      getRetryable(handle(Object.assign(new Error("server"), { status: 500 })))
+    ).toBeUndefined();
   });
 });

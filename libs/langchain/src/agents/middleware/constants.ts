@@ -1,3 +1,4 @@
+import { getRetryable } from "@langchain/core/errors";
 import { z } from "zod/v3";
 
 export const RetrySchema = z.object({
@@ -10,7 +11,9 @@ export const RetrySchema = z.object({
   /**
    * Either an array of error constructors to retry on, or a function
    * that takes an error and returns `true` if it should be retried.
-   * Default is to retry on all errors.
+   * Default is to retry unless the error was explicitly marked
+   * non-retryable (e.g. bad credentials, unknown model), which would
+   * fail identically on every attempt. Unclassified errors still retry.
    */
   retryOn: z
     .union([
@@ -18,7 +21,7 @@ export const RetrySchema = z.object({
       // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       z.array(z.custom<new (...args: any[]) => Error>()),
     ])
-    .default(() => () => true),
+    .default(() => (error: Error) => getRetryable(error) ?? true),
 
   /**
    * Multiplier for exponential backoff. Each retry waits
