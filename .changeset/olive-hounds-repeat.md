@@ -2,6 +2,7 @@
 "@langchain/core": minor
 "langchain": minor
 "@langchain/google": minor
+"@langchain/openai": patch
 ---
 
 feat(core): mark errors as retryable or not, and stop retrying the ones that aren't
@@ -32,5 +33,11 @@ getRetryable(error); // true | false | undefined
 `NoCandidatesError` and `MalformedOutputError` are deliberately left unmarked: both can plausibly resolve on a regeneration, so they keep the existing retry behavior rather than being guessed at in either direction.
 
 The `@langchain/core` peer range moves from a hardcoded `^1.0.0` to `workspace:^`, matching `@langchain/openai` and `@langchain/anthropic`. It publishes as the core version shipped in the same release, so the range tracks the version that actually introduces `stampRetryable`. Left at `^1.0.0`, npm would happily resolve this package against a core that lacks the export, and the failure would only surface on the error path.
+
+**`@langchain/openai`**: `wrapOpenAIClientError` marks each branch it already dispatches on — connection timeouts retryable; user aborts, context overflow, invalid tool results, authentication failures, and unknown models non-retryable; rate limits retryable. Statuses it doesn't branch on, including 5xx, stay unmarked and keep retrying.
+
+The branches that call `addLangChainErrorFields` mark the SDK's own error object in place, so `error instanceof OpenAI.APIError` is unaffected. The timeout and abort branches construct a fresh `Error` and discard the original status, which is why they have to be marked here — `AsyncCaller` has nothing left to classify them by.
+
+Rate limits are marked retryable, but `wrapOpenAIClientError` runs inside `AsyncCaller`, which re-marks them non-retryable when it recognizes quota exhaustion rather than transient pressure. The more specific verdict wins.
 
 **Behavior change:** errors explicitly marked non-retryable now fail on the first attempt instead of being retried. Unclassified errors — including any from third-party integrations or custom tools — still retry exactly as before. An explicit `retryOn` is unaffected. To restore the old behavior, pass `retryOn: () => true`.
