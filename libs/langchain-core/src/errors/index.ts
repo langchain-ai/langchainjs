@@ -107,6 +107,42 @@ export class ModelAbortError extends ns.brand(LangChainError, "model-abort") {
 }
 
 /**
+ * Error class representing a stalled model stream in LangChain.
+ *
+ * This error is thrown when a streaming model operation stops producing output
+ * (e.g. no response is received, or no new chunk arrives) within a configured
+ * idle timeout window.
+ *
+ * @remarks
+ * - This error extends the {@link LangChainError} base class with the marker `"model-stream-timeout"`.
+ *
+ * @example
+ * ```typescript
+ * try {
+ *   for await (const chunk of await model.stream(input)) {
+ *     // ...
+ *   }
+ * } catch (err) {
+ *   if (ModelStreamTimeoutError.isInstance(err)) {
+ *     // Handle the stall, e.g. retry or surface a timeout to the user
+ *   } else {
+ *     throw err;
+ *   }
+ * }
+ * ```
+ */
+export class ModelStreamTimeoutError extends ns.brand(
+  LangChainError,
+  "model-stream-timeout"
+) {
+  readonly name = "ModelStreamTimeoutError";
+
+  constructor(message?: string) {
+    super(message ?? "The model stream timed out.");
+  }
+}
+
+/**
  * Error class representing a context window overflow in a language model operation.
  *
  * This error is thrown when the combined input to a language model (such as prompt tokens,
