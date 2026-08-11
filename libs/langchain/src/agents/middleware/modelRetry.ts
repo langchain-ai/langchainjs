@@ -5,7 +5,6 @@ import { z } from "zod/v3";
 import { AIMessage } from "@langchain/core/messages";
 
 import { createMiddleware } from "../middleware.js";
-import { MiddlewareError } from "../errors.js";
 import { sleep, calculateRetryDelay } from "./utils.js";
 import { RetrySchema } from "./constants.js";
 import { InvalidRetryConfigError } from "./error.js";
@@ -141,29 +140,6 @@ export function modelRetryMiddleware(config: ModelRetryMiddlewareConfig = {}) {
   } = data;
 
   /**
-   * Recover the error as it was originally thrown.
-   *
-   * `AgentNode` re-wraps every middleware throw in a `MiddlewareError`, which
-   * keeps only `message`/`name` and moves the original error to `cause`. So when
-   * any middleware sits inside the retry, `retryOn` would otherwise see the
-   * wrapper - losing `constructor`, `code`, custom properties, and the prototype -
-   * and never match, silently disabling retries. Walk the `cause` chain so both
-   * the class-array (`error.constructor === Ctor`) and predicate forms see the
-   * error as thrown, regardless of how many middleware wrapped it.
-   */
-  const unwrapMiddlewareError = (error: Error): Error => {
-    let current = error;
-    while (
-      MiddlewareError.isInstance(current) &&
-      // oxlint-disable-next-line no-instanceof/no-instanceof
-      current.cause instanceof Error
-    ) {
-      current = current.cause;
-    }
-    return current;
-  };
-
-  /**
    * Check if the exception should trigger a retry.
    */
   const shouldRetryException = (error: Error): boolean => {
@@ -220,14 +196,10 @@ export function modelRetryMiddleware(config: ModelRetryMiddlewareConfig = {}) {
           const attemptsMade = attempt + 1; // attempt is 0-indexed
 
           // Ensure error is an Error instance
-          const rawError =
+          const err =
             error && typeof error === "object" && "message" in error
               ? (error as Error)
               : new Error(String(error));
-
-          // Unwrap any MiddlewareError layers added by AgentNode so retryOn and
-          // the failure handler see the error as it was originally thrown.
-          const err = unwrapMiddlewareError(rawError);
 
           // Check if we should retry this exception
           if (!shouldRetryException(err)) {
