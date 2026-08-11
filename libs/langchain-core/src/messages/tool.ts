@@ -208,6 +208,14 @@ export class ToolMessageChunk<
     });
   }
 
+  static isInstance(obj: unknown): obj is ToolMessageChunk {
+    return super.isInstance(obj) && obj.type === "tool";
+  }
+
+  static [Symbol.hasInstance](obj: unknown) {
+    return this.isInstance(obj);
+  }
+
   override get _printableFields(): Record<string, unknown> {
     return {
       ...super._printableFields,

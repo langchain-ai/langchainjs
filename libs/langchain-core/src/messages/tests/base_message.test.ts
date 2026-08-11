@@ -2,7 +2,10 @@ import { test, describe, it, expect } from "vitest";
 import { ChatPromptTemplate } from "../../prompts/chat.js";
 import {
   HumanMessage,
+  HumanMessageChunk,
   AIMessage,
+  FunctionMessage,
+  FunctionMessageChunk,
   ToolMessage,
   ToolMessageChunk,
   RemoveMessage,
@@ -19,6 +22,29 @@ import { load } from "../../load/index.js";
 import { concat } from "../../utils/stream.js";
 import { ToolCallChunk } from "../tool.js";
 import type { RawInputToolCallChunk } from "../utils.js";
+
+describe("message type instanceof checks", () => {
+  it("distinguishes FunctionMessage instances", () => {
+    expect(new FunctionMessage({ content: "", name: "test" })).toBeInstanceOf(
+      FunctionMessage
+    );
+    expect(new HumanMessage("")).not.toBeInstanceOf(FunctionMessage);
+  });
+
+  it("distinguishes FunctionMessageChunk instances", () => {
+    expect(
+      new FunctionMessageChunk({ content: "", name: "test" })
+    ).toBeInstanceOf(FunctionMessageChunk);
+    expect(new HumanMessageChunk("")).not.toBeInstanceOf(FunctionMessageChunk);
+  });
+
+  it("distinguishes ToolMessageChunk instances", () => {
+    expect(
+      new ToolMessageChunk({ content: "", tool_call_id: "test" })
+    ).toBeInstanceOf(ToolMessageChunk);
+    expect(new HumanMessageChunk("")).not.toBeInstanceOf(ToolMessageChunk);
+  });
+});
 
 test("Test ChatPromptTemplate can format OpenAI content image messages", async () => {
   const message = new HumanMessage({
