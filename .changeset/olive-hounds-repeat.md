@@ -3,6 +3,7 @@
 "langchain": minor
 "@langchain/google": minor
 "@langchain/openai": patch
+"@langchain/anthropic": patch
 ---
 
 feat(core): mark errors as retryable or not, and stop retrying the ones that aren't
@@ -39,5 +40,9 @@ The `@langchain/core` peer range moves from a hardcoded `^1.0.0` to `workspace:^
 The branches that call `addLangChainErrorFields` mark the SDK's own error object in place, so `error instanceof OpenAI.APIError` is unaffected. The timeout and abort branches construct a fresh `Error` and discard the original status, which is why they have to be marked here — `AsyncCaller` has nothing left to classify them by.
 
 Rate limits are marked retryable, but `wrapOpenAIClientError` runs inside `AsyncCaller`, which re-marks them non-retryable when it recognizes quota exhaustion rather than transient pressure. The more specific verdict wins.
+
+**`@langchain/anthropic`**: `wrapAnthropicClientError` gets the same treatment — invalid tool results, authentication failures, and unknown models non-retryable; rate limits retryable; context overflow already non-retryable by construction. As with `@langchain/openai`, the SDK's own error object is marked in place, and rate limits can still be re-marked by `AsyncCaller` when it recognizes quota exhaustion.
+
+Two differences from `@langchain/openai` worth noting. This dispatcher has no connection-timeout or user-abort branches, so those keep falling through unmarked and retrying, which is already the right behavior for a timeout. And it applies a legacy `CONTEXT_OVERFLOW` error code that the OpenAI dispatcher does not — that divergence is preserved rather than normalized away, and is now pinned by a test.
 
 **Behavior change:** errors explicitly marked non-retryable now fail on the first attempt instead of being retried. Unclassified errors — including any from third-party integrations or custom tools — still retry exactly as before. An explicit `retryOn` is unaffected. To restore the old behavior, pass `retryOn: () => true`.
