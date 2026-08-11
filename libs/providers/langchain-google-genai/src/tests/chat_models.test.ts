@@ -18,7 +18,11 @@ import {
 } from "@langchain/core/messages";
 import { OutputParserException } from "@langchain/core/output_parsers";
 import { ChatGoogleGenerativeAI } from "../chat_models.js";
-import { removeAdditionalProperties } from "../utils/zod_to_genai_parameters.js";
+import {
+  jsonSchemaToGeminiParameters,
+  removeAdditionalProperties,
+  schemaToGenerativeAIParameters,
+} from "../utils/zod_to_genai_parameters.js";
 import {
   convertBaseMessagesToContent,
   convertMessageContentToParts,
@@ -248,6 +252,53 @@ test("removeAdditionalProperties can remove all instances of additionalPropertie
   expect(
     analysisSchemaObj.find((key) => key === "additionalProperties")
   ).toBeUndefined();
+});
+
+test("normalizes JSON Schema type arrays for Gemini", () => {
+  const schema = jsonSchemaToGeminiParameters({
+    type: "object",
+    properties: {
+      nullableString: { type: ["string", "null"] },
+      singleType: { type: ["string"] },
+      nullType: { type: ["null"] },
+      repeatedNull: { type: ["null", "null"] },
+      stringOrNumber: {
+        type: ["string", "number"],
+        description: "A string or number",
+      },
+    },
+  });
+
+  expect(schema).toEqual({
+    type: "object",
+    properties: {
+      nullableString: { type: "string", nullable: true },
+      singleType: { type: "string" },
+      nullType: { type: "null" },
+      repeatedNull: { nullable: true },
+      stringOrNumber: {
+        anyOf: [{ type: "string" }, { type: "number" }],
+        description: "A string or number",
+      },
+    },
+  });
+});
+
+test("normalizes Zod 3 nullable schemas for Gemini", () => {
+  const schema = schemaToGenerativeAIParameters(
+    z.object({
+      nickname: z.string().nullable(),
+      age: z.number(),
+    })
+  );
+
+  expect(schema).toMatchObject({
+    type: "object",
+    properties: {
+      nickname: { type: "string", nullable: true },
+      age: { type: "number" },
+    },
+  });
 });
 
 test("convertMessageContentToParts correctly handles message types", () => {

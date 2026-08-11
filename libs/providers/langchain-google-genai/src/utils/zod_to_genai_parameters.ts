@@ -16,8 +16,10 @@ import {
 } from "@langchain/core/utils/standard_schema";
 
 export interface GenerativeAIJsonSchema extends Record<string, unknown> {
+  anyOf?: GenerativeAIJsonSchema[];
+  nullable?: boolean;
   properties?: Record<string, GenerativeAIJsonSchema>;
-  type: FunctionDeclarationSchemaType;
+  type?: FunctionDeclarationSchemaType;
 }
 
 export interface GenerativeAIJsonSchemaDirty extends GenerativeAIJsonSchema {
@@ -40,6 +42,38 @@ export function removeAdditionalProperties(
     }
     if ("strict" in newObj) {
       delete newObj.strict;
+    }
+
+    if (Array.isArray(newObj.type)) {
+      const types = newObj.type;
+      if (
+        types.every((type: unknown): type is string => typeof type === "string")
+      ) {
+        const hasNull = types.includes("null");
+        const nonNullTypes = [
+          ...new Set(types.filter((type: string) => type !== "null")),
+        ];
+
+        if (nonNullTypes.length === 1) {
+          newObj.type = nonNullTypes[0];
+          if (hasNull) {
+            newObj.nullable = true;
+          }
+        } else if (nonNullTypes.length > 1) {
+          delete newObj.type;
+          newObj.anyOf = nonNullTypes.map((type) => ({ type }));
+          if (hasNull) {
+            newObj.nullable = true;
+          }
+        } else if (hasNull) {
+          if (types.length === 1) {
+            newObj.type = "null";
+          } else {
+            delete newObj.type;
+            newObj.nullable = true;
+          }
+        }
+      }
     }
 
     for (const key in newObj) {
