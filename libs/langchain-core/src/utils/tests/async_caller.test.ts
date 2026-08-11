@@ -1,5 +1,9 @@
 import { describe, test, expect, vi } from "vitest";
-import { getRetryable } from "../../errors/index.js";
+import {
+  ContextOverflowError,
+  getRetryable,
+  stampRetryable,
+} from "../../errors/index.js";
 import {
   AsyncCaller,
   parseRetryAfterMs,
@@ -432,5 +436,54 @@ describe("AsyncCaller retryability marking", () => {
     expect(
       getRetryable(handle(Object.assign(new Error("server"), { status: 500 })))
     ).toBeUndefined();
+  });
+});
+
+describe("AsyncCaller honors marks applied inside the callable", () => {
+  test("stops retrying an error marked non-retryable by the callable", async () => {
+    const caller = new AsyncCaller({ maxRetries: 3 });
+    const callable = vi.fn(async () => {
+      throw stampRetryable(
+        Object.assign(new Error("payload too large"), { status: 413 }),
+        false
+      );
+    });
+
+    await expect(() => caller.call(callable)).rejects.toThrow(
+      "payload too large"
+    );
+    expect(callable).toHaveBeenCalledTimes(1);
+  });
+
+  test("stops retrying a marked error with no status at all", async () => {
+    const caller = new AsyncCaller({ maxRetries: 3 });
+    const callable = vi.fn(async () => {
+      throw stampRetryable(new ContextOverflowError(), false);
+    });
+
+    await expect(() => caller.call(callable)).rejects.toThrow();
+    expect(callable).toHaveBeenCalledTimes(1);
+  });
+
+  test("still retries an error marked retryable", async () => {
+    const caller = new AsyncCaller({ maxRetries: 2 });
+    const callable = vi
+      .fn<() => Promise<void>>()
+      .mockRejectedValueOnce(stampRetryable(new Error("upstream busy"), true))
+      .mockResolvedValueOnce();
+
+    await expect(caller.call(callable)).resolves.toBeUndefined();
+    expect(callable).toHaveBeenCalledTimes(2);
+  });
+
+  test("still retries an unmarked error", async () => {
+    const caller = new AsyncCaller({ maxRetries: 2 });
+    const callable = vi
+      .fn<() => Promise<void>>()
+      .mockRejectedValueOnce(new Error("transient"))
+      .mockResolvedValueOnce();
+
+    await expect(caller.call(callable)).resolves.toBeUndefined();
+    expect(callable).toHaveBeenCalledTimes(2);
   });
 });

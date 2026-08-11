@@ -1,6 +1,6 @@
 import PQueueMod from "p-queue";
 
-import { stampRetryable } from "../errors/index.js";
+import { getRetryable, stampRetryable } from "../errors/index.js";
 import { getAbortSignalError } from "./signal.js";
 import pRetry from "./p-retry/index.js";
 
@@ -257,6 +257,11 @@ export function classifyRateLimitError(
 const defaultFailedAttemptHandler = (error: unknown) => {
   if (typeof error !== "object" || error === null) {
     return;
+  }
+
+  // Honor a verdict already reached inside the callable, e.g. by a provider.
+  if (getRetryable(error) === false) {
+    throw error;
   }
 
   if (

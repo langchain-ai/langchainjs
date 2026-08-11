@@ -24,7 +24,7 @@ getRetryable(error); // true | false | undefined
 
 The mark is a non-enumerable symbol set on the error itself, so a provider SDK error can be marked in place without changing its class — `instanceof` is unaffected. `getRetryable` returns `undefined` for unclassified errors and follows the `.cause` chain. It is exported, so tool authors can classify their own failures too.
 
-`modelRetryMiddleware` and `toolRetryMiddleware` now default to `retryOn: (error) => getRetryable(error) ?? true`. `ModelAbortError` and `ContextOverflowError` are marked at construction, and `AsyncCaller` marks what it already classifies. Google, OpenAI, Anthropic, and Fireworks mark the errors their dispatchers already recognize; `FireworksEmbeddings` also exposes the HTTP status as a field instead of only inside the message string, which had hidden it from every retry layer.
+`modelRetryMiddleware` and `toolRetryMiddleware` now default to `retryOn: (error) => getRetryable(error) ?? true`. `AsyncCaller` also stops retrying once it sees an error already marked non-retryable, so a verdict reached inside the call — a provider's own dispatcher, or a tool — takes effect on the first failure instead of after the retry budget is spent. `ModelAbortError` and `ContextOverflowError` are marked at construction, and `AsyncCaller` marks what it already classifies. Google, OpenAI, Anthropic, and Fireworks mark the errors their dispatchers already recognize; `FireworksEmbeddings` also exposes the HTTP status as a field instead of only inside the message string, which had hidden it from every retry layer.
 
 `@langchain/google` and `@langchain/fireworks` move their `@langchain/core` peer range to `workspace:^`.
 
