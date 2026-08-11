@@ -7,7 +7,6 @@ import {
   type OpenAICoreRequestOptions,
   type OpenAIInput,
 } from "@langchain/openai";
-import { wrapFireworksModelError } from "./utils/errors.js";
 
 const FIREWORKS_BASE_URL = "https://api.fireworks.ai/inference/v1";
 const DEFAULT_FIREWORKS_LLM_MODEL = "accounts/fireworks/models/llama-v2-13b";
@@ -175,10 +174,6 @@ export class Fireworks extends OpenAI<FireworksCallOptions> {
     delete request.best_of;
     delete request.logit_bias;
 
-    try {
-      return await super.completionWithRetry(request, options);
-    } catch (e) {
-      throw wrapFireworksModelError(e);
-    }
+    return super.completionWithRetry(request, options);
   }
 }

@@ -14,6 +14,7 @@ const STATUS_NO_RETRY = [
   406, // Not Acceptable
   407, // Proxy Authentication Required
   409, // Conflict
+  413, // Payload Too Large
 ];
 
 const RETRY_AFTER_AUTO_RETRY_THRESHOLD_MS = 60_000;

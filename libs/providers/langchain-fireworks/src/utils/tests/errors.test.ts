@@ -1,9 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { getRetryable, stampRetryable } from "@langchain/core/errors";
-import {
-  createFireworksResponseError,
-  wrapFireworksModelError,
-} from "../errors.js";
+import { getRetryable } from "@langchain/core/errors";
+import { createFireworksResponseError } from "../errors.js";
 
 describe("createFireworksResponseError", () => {
   test("exposes the status as a field", () => {
@@ -40,57 +37,5 @@ describe("createFireworksResponseError", () => {
     expect(
       getRetryable(createFireworksResponseError(418, "teapot"))
     ).toBeUndefined();
-  });
-});
-
-describe("wrapFireworksModelError", () => {
-  test.each([402, 413])(
-    "marks Fireworks-specific status %i non-retryable",
-    (status) => {
-      const error = Object.assign(new Error("nope"), { status });
-
-      expect(getRetryable(wrapFireworksModelError(error))).toBe(false);
-    }
-  );
-
-  test("marks a 408 timeout retryable", () => {
-    const error = Object.assign(new Error("timed out"), { status: 408 });
-
-    expect(getRetryable(wrapFireworksModelError(error))).toBe(true);
-  });
-
-  test("does not override an existing mark", () => {
-    const error = stampRetryable(
-      Object.assign(new Error("nope"), { status: 402 }),
-      true
-    );
-
-    expect(getRetryable(wrapFireworksModelError(error))).toBe(true);
-  });
-
-  test("reads statusCode when status is absent", () => {
-    const error = Object.assign(new Error("nope"), { statusCode: 413 });
-
-    expect(getRetryable(wrapFireworksModelError(error))).toBe(false);
-  });
-
-  test("passes through errors with no status", () => {
-    const error = new Error("who knows");
-
-    expect(wrapFireworksModelError(error)).toBe(error);
-    expect(getRetryable(error)).toBeUndefined();
-  });
-
-  test("passes through non-objects", () => {
-    expect(wrapFireworksModelError(null)).toBeNull();
-    expect(wrapFireworksModelError("boom")).toBe("boom");
-  });
-
-  test("returns the same instance and adds no enumerable property", () => {
-    const error = Object.assign(new Error("nope"), { status: 402 });
-    const wrapped = wrapFireworksModelError(error);
-
-    expect(wrapped).toBe(error);
-    expect(Object.keys(error)).toEqual(["status"]);
   });
 });

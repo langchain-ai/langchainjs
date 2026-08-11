@@ -437,6 +437,28 @@ describe("AsyncCaller retryability marking", () => {
       getRetryable(handle(Object.assign(new Error("server"), { status: 500 })))
     ).toBeUndefined();
   });
+
+  test("marks an unmarked 413 non-retryable", () => {
+    expect(
+      getRetryable(
+        handle(Object.assign(new Error("too large"), { status: 413 }))
+      )
+    ).toBe(false);
+  });
+});
+
+describe("AsyncCaller 413 handling", () => {
+  test("does not retry an unmarked payload-too-large error", async () => {
+    const caller = new AsyncCaller({ maxRetries: 3 });
+    const callable = vi.fn(async () => {
+      throw Object.assign(new Error("payload too large"), { status: 413 });
+    });
+
+    await expect(() => caller.call(callable)).rejects.toThrow(
+      "payload too large"
+    );
+    expect(callable).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe("AsyncCaller honors marks applied inside the callable", () => {

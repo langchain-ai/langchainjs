@@ -76,52 +76,6 @@ describe("getRetryable", () => {
     expect(getRetryable("boom")).toBeUndefined();
     expect(getRetryable(429)).toBeUndefined();
   });
-
-  test("finds a mark through the cause chain", () => {
-    const root = stampRetryable(new Error("root"), true);
-    const wrapped = new Error("outer", { cause: new Error("mid") });
-    (wrapped.cause as Error).cause = root;
-
-    expect(getRetryable(wrapped)).toBe(true);
-  });
-
-  test("nearest mark in the chain wins", () => {
-    const root = stampRetryable(new Error("root"), true);
-    const wrapped = stampRetryable(new Error("outer", { cause: root }), false);
-
-    expect(getRetryable(wrapped)).toBe(false);
-  });
-
-  test("terminates on a cyclic cause chain", () => {
-    const a = new Error("a");
-    const b = new Error("b");
-    a.cause = b;
-    b.cause = a;
-
-    expect(getRetryable(a)).toBeUndefined();
-  });
-
-  test("gives up past the depth cap", () => {
-    const root = stampRetryable(new Error("root"), true);
-    let current: Error = root;
-    for (let i = 0; i < 12; i += 1) {
-      current = new Error(`wrap-${i}`, { cause: current });
-    }
-
-    expect(getRetryable(current)).toBeUndefined();
-  });
-
-  test("does not throw when cause has a throwing getter", () => {
-    const error = new Error("boom");
-    Object.defineProperty(error, "cause", {
-      get() {
-        throw new Error("nope");
-      },
-    });
-
-    expect(() => getRetryable(error)).not.toThrow();
-    expect(getRetryable(error)).toBeUndefined();
-  });
 });
 
 describe("core error classification", () => {

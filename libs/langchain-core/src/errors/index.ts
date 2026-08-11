@@ -30,9 +30,6 @@ export const ns = baseNs.sub("error");
 /** Registered globally so duplicate copies of core in one dependency tree agree. */
 const retryableSymbol = Symbol.for("langchain.errors.retryable");
 
-/** Bounds the `.cause` walk so a cyclic chain can't spin forever. */
-const MAX_CAUSE_DEPTH = 10;
-
 /**
  * Mark an error as safe or unsafe to retry.
  *
@@ -59,32 +56,18 @@ export function stampRetryable<T>(error: T, retryable: boolean): T {
 }
 
 /**
- * Read an error's retryability mark, following the `.cause` chain.
+ * Read an error's retryability mark.
  *
  * @returns `true`/`false` when marked, `undefined` when unclassified —
  *   supply your own default, e.g. `getRetryable(error) ?? true`.
  */
 export function getRetryable(error: unknown): boolean | undefined {
-  let current: unknown = error;
-  for (let depth = 0; depth < MAX_CAUSE_DEPTH; depth += 1) {
-    if (typeof current !== "object" || current === null) {
-      return undefined;
-    }
-    try {
-      const descriptor = Object.getOwnPropertyDescriptor(
-        current,
-        retryableSymbol
-      );
-      if (descriptor) {
-        return descriptor.value as boolean;
-      }
-      current = (current as { cause?: unknown }).cause;
-    } catch {
-      // A throwing `cause` getter shouldn't take down the error path.
-      return undefined;
-    }
+  if (typeof error !== "object" || error === null) {
+    return undefined;
   }
-  return undefined;
+  return Object.getOwnPropertyDescriptor(error, retryableSymbol)?.value as
+    | boolean
+    | undefined;
 }
 
 /**

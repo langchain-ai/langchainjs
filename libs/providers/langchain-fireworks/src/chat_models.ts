@@ -11,7 +11,6 @@ import {
   type OpenAIClient,
   type OpenAICoreRequestOptions,
 } from "@langchain/openai";
-import { wrapFireworksModelError } from "./utils/errors.js";
 
 const FIREWORKS_BASE_URL = "https://api.fireworks.ai/inference/v1";
 const DEFAULT_FIREWORKS_CHAT_MODEL =
@@ -185,11 +184,7 @@ export class ChatFireworks extends ChatOpenAICompletions<ChatFireworksCallOption
     delete request.logit_bias;
     delete request.functions;
 
-    try {
-      return await super.completionWithRetry(request, options);
-    } catch (e) {
-      throw wrapFireworksModelError(e);
-    }
+    return super.completionWithRetry(request, options);
   }
 
   protected override get streamEventProvider(): string {
