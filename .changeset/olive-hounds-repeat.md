@@ -4,6 +4,7 @@
 "@langchain/google": minor
 "@langchain/openai": patch
 "@langchain/anthropic": patch
+"@langchain/fireworks": minor
 ---
 
 feat(core): mark errors as retryable or not, and stop retrying the ones that aren't
@@ -44,5 +45,13 @@ Rate limits are marked retryable, but `wrapOpenAIClientError` runs inside `Async
 **`@langchain/anthropic`**: `wrapAnthropicClientError` gets the same treatment — invalid tool results, authentication failures, and unknown models non-retryable; rate limits retryable; context overflow already non-retryable by construction. As with `@langchain/openai`, the SDK's own error object is marked in place, and rate limits can still be re-marked by `AsyncCaller` when it recognizes quota exhaustion.
 
 Two differences from `@langchain/openai` worth noting. This dispatcher has no connection-timeout or user-abort branches, so those keep falling through unmarked and retrying, which is already the right behavior for a timeout. And it applies a legacy `CONTEXT_OVERFLOW` error code that the OpenAI dispatcher does not — that divergence is preserved rather than normalized away, and is now pinned by a test.
+
+**`@langchain/fireworks`**: two separate problems.
+
+`ChatFireworks` and `Fireworks` are `openai` SDK clients pointed at a different base URL, so they inherit that package's classification for free. Fireworks also returns 402, 408, and 413, which the OpenAI SDK has no named error class for and therefore leaves unmarked. `wrapFireworksModelError` fills that gap — 402 (billing) and 413 (oversized payload) non-retryable, 408 retryable — and passes through anything already marked, so an earlier, more specific verdict wins.
+
+`FireworksEmbeddings` was the real bug. It doesn't use the SDK at all, just raw `fetch`, and threw a plain `Error` with the status embedded only in the message _string_ — no `status` field anywhere. Nothing downstream could act on it: not the retry middleware, and not `AsyncCaller`'s own status-based suppression. A bad API key was retried to exhaustion on every embed call. The status is now a field as well, and the error is marked. The message text is unchanged.
+
+The `@langchain/core` peer range moves from `^1.0.0` to `workspace:^`, for the same reason as `@langchain/google`.
 
 **Behavior change:** errors explicitly marked non-retryable now fail on the first attempt instead of being retried. Unclassified errors — including any from third-party integrations or custom tools — still retry exactly as before. An explicit `retryOn` is unaffected. To restore the old behavior, pass `retryOn: () => true`.

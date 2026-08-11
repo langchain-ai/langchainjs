@@ -28,7 +28,7 @@
     "@langchain/openai": "workspace:*"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0"
+    "@langchain/core": "workspace:^"
   },
   "devDependencies": {
     "@langchain/core": "workspace:^",
