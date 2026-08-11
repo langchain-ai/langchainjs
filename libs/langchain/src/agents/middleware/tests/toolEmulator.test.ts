@@ -3,11 +3,16 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { z } from "zod/v3";
 import { tool } from "@langchain/core/tools";
 import { HumanMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
+import { fakeModel } from "@langchain/core/testing";
 import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
 
 import { toolEmulatorMiddleware } from "../toolEmulator.js";
 import { createAgent } from "../../index.js";
-import { FakeToolCallingChatModel } from "../../tests/utils.js";
+import {
+  FakeToolCallingChatModel,
+  collectV3Messages,
+  collectClassicMessages,
+} from "../../tests/utils.js";
 
 vi.mock(
   "@langchain/anthropic",
@@ -457,6 +462,54 @@ describe("toolEmulatorMiddleware", () => {
       expect(toolMessages.length).toBe(1);
       expect(toolMessages[0].content).toContain(emulatedResponseContent);
       expect(result.messages.at(-1)?.content).toContain("Final response");
+    });
+  });
+  describe("internal call suppression", () => {
+    const EMULATED = "EMULATED_TOOL_RESULT";
+    const MAIN = "Main model answer.";
+    const input = { messages: [new HumanMessage("search for cats")] };
+
+    /** Fresh agent per run: fake model responses are a consumable queue. */
+    const buildAgent = () =>
+      createAgent({
+        model: new FakeToolCallingChatModel({
+          responses: [
+            new AIMessage({
+              content: "Calling the tool.",
+              tool_calls: [
+                { id: "call_1", name: "search", args: { query: "cats" } },
+              ],
+            }),
+            new AIMessage(MAIN),
+          ],
+        }),
+        tools: [searchTool],
+        middleware: [
+          toolEmulatorMiddleware({
+            model: fakeModel().respond(new AIMessage(EMULATED)),
+          }),
+        ],
+      });
+
+    it("omits the emulation call from run.messages", async () => {
+      const run = await buildAgent().streamEvents(input, { version: "v3" });
+
+      const { texts } = await collectV3Messages(run.messages);
+
+      expect(texts).not.toContain(EMULATED);
+      expect(texts).toContain(MAIN);
+    });
+
+    it('omits the emulation call from stream({ streamMode: "messages" })', async () => {
+      const { model, tools } = await collectClassicMessages(
+        buildAgent(),
+        input
+      );
+
+      expect(model).not.toContain(EMULATED);
+      expect(model).toContain(MAIN);
+      // The emulated result still reaches the caller as the tool's output.
+      expect(tools).toContain(EMULATED);
     });
   });
 });
