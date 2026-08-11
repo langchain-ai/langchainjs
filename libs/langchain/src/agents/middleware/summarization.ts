@@ -453,9 +453,10 @@ export function summarizationMiddleware(
         runtime
       );
 
+      // Reuse a replaced message's id so the summary projects as an update, not a new message.
       const summaryMessage = new HumanMessage({
         content: `${summaryPrefix}\n\n${summary}`,
-        id: uuid(),
+        id: conversationMessages[0].id,
         additional_kwargs: { lc_source: "summarization" },
       });
 
