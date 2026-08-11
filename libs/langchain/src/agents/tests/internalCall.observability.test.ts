@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest";
 import { AIMessage, HumanMessage } from "@langchain/core/messages";
-import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { fakeModel } from "@langchain/core/testing";
 import {
   mergeConfigs,
@@ -9,14 +8,12 @@ import {
 } from "@langchain/core/runnables";
 
 import { createAgent, createMiddleware } from "../index.js";
-import { INTERNAL_CALL_TAG } from "../middleware/internalCall.js";
+import { INTERNAL_CALL_TAG } from "../middleware/constants.js";
 
-// Pins which stream surfaces `INTERNAL_CALL_TAG` affects.
+// Pins where internal calls stay observable once tagged, and where they don't.
 
 function buildAgent(tagged: boolean) {
-  const internalModel = fakeModel().respond(
-    new AIMessage("INTERNAL_CALL")
-  ) as unknown as BaseChatModel;
+  const internalModel = fakeModel().respond(new AIMessage("INTERNAL_CALL"));
 
   const middleware = createMiddleware({
     name: "InternalCallMiddleware",
@@ -32,9 +29,7 @@ function buildAgent(tagged: boolean) {
   });
 
   return createAgent({
-    model: fakeModel().respond(
-      new AIMessage("MAIN_ANSWER")
-    ) as unknown as BaseChatModel,
+    model: fakeModel().respond(new AIMessage("MAIN_ANSWER")),
     tools: [],
     middleware: [middleware],
   });
@@ -76,7 +71,7 @@ async function coreV2Outputs(tagged: boolean): Promise<string[]> {
   return seen;
 }
 
-describe("INTERNAL_CALL_TAG blast radius", () => {
+describe("observability of tagged internal calls", () => {
   it("hides internal calls from classic streamMode: messages", async () => {
     expect(await classicMessages(false)).toEqual([
       "INTERNAL_CALL",

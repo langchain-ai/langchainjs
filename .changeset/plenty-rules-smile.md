@@ -4,11 +4,11 @@
 
 fix(langchain): exclude middleware-internal model calls from the message stream
 
-`summarizationMiddleware`, `toolEmulatorMiddleware`, and `llmToolSelectorMiddleware` make bookkeeping model calls that are not part of the agent's conversation. These were indistinguishable from the agent's main model call, so they surfaced as extra assistant messages in `run.messages` and in `stream({ streamMode: "messages" })`.
+`summarizationMiddleware` and `toolEmulatorMiddleware` make bookkeeping model calls that are not part of the agent's conversation. These were indistinguishable from the agent's main model call, so they surfaced as extra assistant messages in `run.messages` and in `stream({ streamMode: "messages" })`. They are now tagged so LangGraph's messages handler skips them.
 
-These calls are now tagged so LangGraph's messages handler skips them.
+`llmToolSelectorMiddleware` is tagged for consistency, but its internal call was already isolated from these streams — its behavior is unchanged.
 
-**Behavior change:** if you relied on seeing these internal calls in `run.messages` or `stream({ streamMode: "messages" })`, they no longer appear there. They remain fully observable via Core's event stream, tagged with `lc_source`:
+**Behavior change:** if you relied on seeing the summarization or tool-emulation calls in `run.messages` or `stream({ streamMode: "messages" })`, they no longer appear there. They remain observable via Core's event stream, identified by `lc_source`:
 
 ```ts
 for await (const event of agent.streamEvents(input, { version: "v2" })) {
@@ -19,4 +19,4 @@ for await (const event of agent.streamEvents(input, { version: "v2" })) {
 }
 ```
 
-`lc_source` is `"summarization"`, `"toolEmulation"`, or `"llmToolSelector"`. Custom callback handlers and LangSmith tracing are unaffected.
+`lc_source` is `"summarization"` or `"toolEmulation"`. Custom callback handlers and LangSmith tracing are unaffected.

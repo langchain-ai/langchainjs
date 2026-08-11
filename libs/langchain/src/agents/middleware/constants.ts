@@ -1,5 +1,8 @@
 import { z } from "zod/v3";
 
+/** LangGraph's messages handlers skip runs tagged with this, keeping middleware-internal model calls out of the messages stream. */
+export const INTERNAL_CALL_TAG = "nostream";
+
 export const RetrySchema = z.object({
   /**
    * Maximum number of retry attempts after the initial call.

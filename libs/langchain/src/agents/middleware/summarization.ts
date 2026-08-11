@@ -27,7 +27,7 @@ import {
 } from "@langchain/core/runnables";
 import { REMOVE_ALL_MESSAGES } from "@langchain/langgraph";
 import { createMiddleware } from "../middleware.js";
-import { INTERNAL_CALL_TAG } from "./internalCall.js";
+import { INTERNAL_CALL_TAG } from "./constants.js";
 import { countTokensApproximately } from "./utils.js";
 import { hasToolCalls } from "../utils.js";
 import { initChatModel } from "../../chat_models/universal.js";

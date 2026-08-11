@@ -8,7 +8,7 @@ import {
   type RunnableConfig,
 } from "@langchain/core/runnables";
 import { createMiddleware } from "../middleware.js";
-import { INTERNAL_CALL_TAG } from "./internalCall.js";
+import { INTERNAL_CALL_TAG } from "./constants.js";
 
 /**
  * Options for configuring the Tool Emulator middleware.

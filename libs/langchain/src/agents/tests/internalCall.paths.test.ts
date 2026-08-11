@@ -10,17 +10,17 @@ import {
 } from "@langchain/core/runnables";
 
 import { createAgent, createMiddleware } from "../index.js";
-import { INTERNAL_CALL_TAG } from "../middleware/internalCall.js";
+import { INTERNAL_CALL_TAG } from "../middleware/constants.js";
 
 // Both LangGraph messages paths must be suppressed: streamed and whole-message.
 
 /** Streams: one delta per character. */
 const streamingModel = (text: string) =>
-  new FakeListChatModel({ responses: [text] }) as unknown as BaseChatModel;
+  new FakeListChatModel({ responses: [text] });
 
 /** Does not stream: one synthetic delta total. */
 const nonStreamingModel = (text: string) =>
-  fakeModel().respond(new AIMessage(text)) as unknown as BaseChatModel;
+  fakeModel().respond(new AIMessage(text));
 
 /** Middleware making a bookkeeping model call, optionally tagged. */
 function internalCallMiddleware(model: BaseChatModel, tagged: boolean) {
@@ -77,7 +77,7 @@ async function runAgent(
   return { texts, deltaCount };
 }
 
-describe("INTERNAL_CALL_TAG suppresses both langgraph messages paths", () => {
+describe("`nostream` tag suppresses both langgraph messages paths", () => {
   describe("streamed path (handleChatModelStreamEvent)", () => {
     it("leaks the internal call when untagged", async () => {
       const { texts, deltaCount } = await runAgent(
