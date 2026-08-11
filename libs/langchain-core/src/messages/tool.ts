@@ -138,6 +138,10 @@ export class ToolMessage<TStructure extends MessageStructure = MessageStructure>
     );
   }
 
+  static [Symbol.hasInstance](obj: unknown) {
+    return this.isInstance(obj);
+  }
+
   override get _printableFields(): Record<string, unknown> {
     return {
       ...super._printableFields,
