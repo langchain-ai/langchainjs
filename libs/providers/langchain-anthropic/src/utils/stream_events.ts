@@ -37,6 +37,7 @@ export async function* convertAnthropicStream(
   >();
   let usageSnapshot: UsageMetadata | undefined;
   let stopReason: string | null = null;
+  let gatewayCost: number | undefined;
 
   for await (const data of source) {
     switch (data.type) {
@@ -62,6 +63,15 @@ export async function* convertAnthropicStream(
 
       case "message_delta": {
         stopReason = data.delta.stop_reason;
+        // Anthropic-compatible gateways (e.g. LiteLLM) may add a numeric `cost` to the terminal
+        // usage object. It is not token accounting, so it is kept out of `usage` and surfaced on
+        // `response_metadata.usage.cost` — the same place the chunk path puts it — and it is read
+        // outside the `streamUsage` gate so disabling token streaming does not discard it.
+        const cost = (data.usage as typeof data.usage & { cost?: unknown })
+          ?.cost;
+        if (typeof cost === "number") {
+          gatewayCost = cost;
+        }
         if (shouldStreamUsage && data.usage) {
           if (!usageSnapshot) {
             usageSnapshot = {
@@ -102,6 +112,8 @@ export async function* convertAnthropicStream(
           reason: mapStopReason(stopReason),
           ...(usageSnapshot ? { usage: usageSnapshot } : {}),
           metadata: { model_provider: "anthropic" },
+          responseMetadata:
+            gatewayCost === undefined ? {} : { usage: { cost: gatewayCost } },
         };
         break;
       }
