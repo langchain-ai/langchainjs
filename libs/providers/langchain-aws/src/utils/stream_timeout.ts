@@ -1,4 +1,4 @@
-import { ModelStreamTimeoutError } from "@langchain/core/errors";
+import { addLangChainErrorFields } from "./errors.js";
 
 /** Default milliseconds to wait for the first or next Bedrock stream chunk. */
 export const DEFAULT_STREAM_IDLE_TIMEOUT = 60_000;
@@ -21,9 +21,10 @@ export function createStreamIdleTimeoutError(
   timeout: number,
   phase: "initial response" | "next chunk" = "next chunk"
 ) {
-  return new ModelStreamTimeoutError(
+  const error = new Error(
     `Bedrock Converse timed out after ${timeout} ms while waiting for the ${phase}.`
   );
+  return addLangChainErrorFields(error, "MODEL_STREAM_TIMEOUT");
 }
 
 /** Creates an AbortController that follows an optional caller-provided signal. */

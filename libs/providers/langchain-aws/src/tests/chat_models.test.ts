@@ -22,7 +22,6 @@ import { convertToConverseMessages } from "../utils/message_inputs.js";
 import { handleConverseStreamContentBlockDelta } from "../utils/message_outputs.js";
 import { ChatBedrockConverse } from "../chat_models.js";
 import { load } from "@langchain/core/load";
-import { ModelStreamTimeoutError } from "@langchain/core/errors";
 
 describe("convertToConverseMessages", () => {
   const testCases: {
@@ -1022,7 +1021,10 @@ test("Streaming throws when Bedrock stream stalls between chunks", async () => {
 
     await vi.advanceTimersByTimeAsync(50);
     await expectation;
-    await expect(consume).rejects.toBeInstanceOf(ModelStreamTimeoutError);
+    await expect(consume).rejects.toHaveProperty(
+      "lc_error_code",
+      "MODEL_STREAM_TIMEOUT"
+    );
     expect(aborted).toBe(true);
   } finally {
     vi.useRealTimers();
@@ -1074,7 +1076,10 @@ test("Streaming throws when Bedrock never responds to the initial request", asyn
 
     await vi.advanceTimersByTimeAsync(50);
     await expectation;
-    await expect(consume).rejects.toBeInstanceOf(ModelStreamTimeoutError);
+    await expect(consume).rejects.toHaveProperty(
+      "lc_error_code",
+      "MODEL_STREAM_TIMEOUT"
+    );
     expect(aborted).toBe(true);
   } finally {
     vi.useRealTimers();

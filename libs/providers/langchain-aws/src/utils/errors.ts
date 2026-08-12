@@ -1,3 +1,25 @@
+/* oxlint-disable @typescript-eslint/no-explicit-any */
+
+export type LangChainErrorCodes =
+  | "CONTEXT_OVERFLOW"
+  | "INVALID_PROMPT_INPUT"
+  | "INVALID_TOOL_RESULTS"
+  | "MESSAGE_COERCION_FAILURE"
+  | "MODEL_AUTHENTICATION"
+  | "MODEL_NOT_FOUND"
+  | "MODEL_RATE_LIMIT"
+  | "MODEL_STREAM_TIMEOUT"
+  | "OUTPUT_PARSING_FAILURE";
+
+export function addLangChainErrorFields(
+  error: any,
+  lc_error_code: LangChainErrorCodes
+) {
+  (error as any).lc_error_code = lc_error_code;
+  error.message = `${error.message}\n\nTroubleshooting URL: https://docs.langchain.com/oss/javascript/langchain/errors/${lc_error_code}/\n`;
+  return error;
+}
+
 function extractBedrockErrorMessage(error: unknown): string | undefined {
   if (typeof error === "string") {
     return error;
