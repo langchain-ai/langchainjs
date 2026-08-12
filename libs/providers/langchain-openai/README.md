@@ -58,7 +58,7 @@ const model = new ChatOpenAI({
 const response = await model.invoke(new HumanMessage("Hello world!"));
 ```
 
-OpenAI-compatible multi-model gateways work the same way via `configuration.baseURL` — for example [DaoXE](https://daoxe.com?utm_source=github&utm_medium=organic&utm_campaign=langchainjs&utm_content=openai) at `https://api.daoxe.com/v1`:
+OpenAI-compatible multi-model gateways work the same way via `configuration.baseURL` — for example [DaoXE](https://daoxe.com) at `https://api.daoxe.com/v1`:
 
 ```typescript
 const model = new ChatOpenAI({
