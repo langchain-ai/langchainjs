@@ -1,5 +1,17 @@
 # langchain
 
+## 1.5.6
+
+### Patch Changes
+
+- [#11331](https://github.com/langchain-ai/langchainjs/pull/11331) [`18765b0`](https://github.com/langchain-ai/langchainjs/commit/18765b002c3819bc4dc42123a293cab27a35ce4f) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - fix(langchain): exclude middleware-internal model calls from the message projection
+
+  Bookkeeping model calls made by `summarizationMiddleware` and `toolEmulatorMiddleware` no longer appear in `run.messages` or `stream({ streamMode: "messages" })`, and the summary `summarizationMiddleware` writes back to state is no longer projected as a new message. These calls remain observable via `streamEvents({ version: "v2" })`, identified by `lc_source`.
+
+- [#11344](https://github.com/langchain-ai/langchainjs/pull/11344) [`f08e0c6`](https://github.com/langchain-ai/langchainjs/commit/f08e0c6d50156accf95a36469a3e107a5598a3a0) Thanks [@hntrl](https://github.com/hntrl)! - fix: apply [Symbol.hasInstance] method to all comparable properties using .isInstance()
+
+  We have some internal schemas that rely on `z.instanceof()`. This uses a strict `instanceof` check which can conflict if there are multiple versions of core installed. This overrides the [Symbol.hasInstance](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/hasInstance) method to use the same logic as `.isInstance()` to compare objects at runtime.
+
 ## 1.5.5
 
 ### Patch Changes

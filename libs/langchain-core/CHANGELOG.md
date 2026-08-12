@@ -1,5 +1,13 @@
 # @langchain/core
 
+## 1.2.6
+
+### Patch Changes
+
+- [#11344](https://github.com/langchain-ai/langchainjs/pull/11344) [`f08e0c6`](https://github.com/langchain-ai/langchainjs/commit/f08e0c6d50156accf95a36469a3e107a5598a3a0) Thanks [@hntrl](https://github.com/hntrl)! - fix: apply [Symbol.hasInstance] method to all comparable properties using .isInstance()
+
+  We have some internal schemas that rely on `z.instanceof()`. This uses a strict `instanceof` check which can conflict if there are multiple versions of core installed. This overrides the [Symbol.hasInstance](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/hasInstance) method to use the same logic as `.isInstance()` to compare objects at runtime.
+
 ## 1.2.5
 
 ### Patch Changes
