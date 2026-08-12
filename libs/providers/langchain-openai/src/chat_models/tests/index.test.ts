@@ -20,6 +20,61 @@ describe("ChatOpenAI", () => {
       expect(chat.temperature).toBe(0.2);
     });
 
+    it("uses LangSmith Gateway environment configuration", () => {
+      vi.stubEnv("LANGSMITH_GATEWAY", "true");
+      vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
+      vi.stubEnv("OPENAI_API_BASE", "");
+      vi.stubEnv("OPENAI_BASE_URL", "");
+      vi.stubEnv("OPENAI_API_KEY", "provider-key");
+      try {
+        const chat = new ChatOpenAI({ model: "gpt-4o-mini" });
+
+        expect(chat.apiKey).toBe("gateway-key");
+        expect(chat.clientConfig.baseURL).toBe(
+          "https://gateway.smith.langchain.com/openai/v1"
+        );
+      } finally {
+        vi.unstubAllEnvs();
+      }
+    });
+
+    it("prefers an explicit API key over the Gateway key", () => {
+      vi.stubEnv("LANGSMITH_GATEWAY", "true");
+      vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
+      vi.stubEnv("OPENAI_API_BASE", "");
+      vi.stubEnv("OPENAI_BASE_URL", "");
+      vi.stubEnv("OPENAI_API_KEY", "provider-key");
+      try {
+        const chat = new ChatOpenAI({
+          model: "gpt-4o-mini",
+          apiKey: "explicit-key",
+        });
+
+        expect(chat.apiKey).toBe("explicit-key");
+        expect(chat.clientConfig.baseURL).toBe(
+          "https://gateway.smith.langchain.com/openai/v1"
+        );
+      } finally {
+        vi.unstubAllEnvs();
+      }
+    });
+
+    it("prefers the OpenAI base URL environment configuration", () => {
+      vi.stubEnv("LANGSMITH_GATEWAY", "true");
+      vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
+      vi.stubEnv("OPENAI_API_BASE", "");
+      vi.stubEnv("OPENAI_BASE_URL", "https://openai.example.com/v1");
+      vi.stubEnv("OPENAI_API_KEY", "provider-key");
+      try {
+        const chat = new ChatOpenAI({ model: "gpt-4o-mini" });
+
+        expect(chat.apiKey).toBe("provider-key");
+        expect(chat.clientConfig.baseURL).toBe("https://openai.example.com/v1");
+      } finally {
+        vi.unstubAllEnvs();
+      }
+    });
+
     it("should handle disableStreaming and streaming properties", () => {
       let chat = new ChatOpenAI({
         model: "gpt-4o-mini",

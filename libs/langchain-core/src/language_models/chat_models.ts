@@ -523,7 +523,7 @@ export abstract class BaseChatModel<
         ...runnableConfig.metadata,
         ...this.getLsParamsWithDefaults(callOptions),
       };
-      const invocationParams = this.invocationParams(callOptions);
+      const invocationParams = this._getInvocationParamsForTracing(callOptions);
       const callbackManager_ = await CallbackManager.configure(
         runnableConfig.callbacks,
         this.callbacks,
@@ -538,7 +538,7 @@ export abstract class BaseChatModel<
         }
       );
       const extra = {
-        options: callOptions,
+        options: this._getCallOptionsForTracing(callOptions, invocationParams),
         invocation_params: invocationParams,
         batch_size: 1,
       };
@@ -664,7 +664,8 @@ export abstract class BaseChatModel<
         ...handledOptions.metadata,
         ...this.getLsParamsWithDefaults(parsedOptions),
       };
-      const invocationParams = this.invocationParams(parsedOptions);
+      const invocationParams =
+        this._getInvocationParamsForTracing(parsedOptions);
       // create callback manager and start run
       const callbackManager_ = await CallbackManager.configure(
         handledOptions.callbacks,
@@ -680,7 +681,10 @@ export abstract class BaseChatModel<
         }
       );
       const extra = {
-        options: parsedOptions,
+        options: this._getCallOptionsForTracing(
+          parsedOptions,
+          invocationParams
+        ),
         invocation_params: invocationParams,
         batch_size: 1,
       };
@@ -944,7 +948,7 @@ export abstract class BaseChatModel<
       ...handledOptions.metadata,
       ...this.getLsParamsWithDefaults(parsedOptions),
     };
-    const invocationParams = this.invocationParams(parsedOptions);
+    const invocationParams = this._getInvocationParamsForTracing(parsedOptions);
     // create callback manager and start run
     const callbackManager_ = await CallbackManager.configure(
       handledOptions.callbacks,
@@ -960,7 +964,7 @@ export abstract class BaseChatModel<
       }
     );
     const extra = {
-      options: parsedOptions,
+      options: this._getCallOptionsForTracing(parsedOptions, invocationParams),
       invocation_params: invocationParams,
       batch_size: 1,
     };
@@ -1150,6 +1154,19 @@ export abstract class BaseChatModel<
     }
 
     return { generations, llmOutput } as LLMResult;
+  }
+
+  protected _getInvocationParamsForTracing(
+    options?: this["ParsedCallOptions"]
+  ): ReturnType<this["invocationParams"]> {
+    return this.invocationParams(options);
+  }
+
+  protected _getCallOptionsForTracing(
+    options: this["ParsedCallOptions"],
+    _invocationParams: ReturnType<this["invocationParams"]>
+  ): this["ParsedCallOptions"] {
+    return options;
   }
 
   /**
