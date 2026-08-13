@@ -3,7 +3,8 @@ import { getEnvironmentVariable } from "./env.js";
 const LANGSMITH_GATEWAY = "LANGSMITH_GATEWAY";
 const LANGSMITH_GATEWAY_API_KEY = "LANGSMITH_GATEWAY_API_KEY";
 const LANGSMITH_API_KEY = "LANGSMITH_API_KEY";
-const DEFAULT_LANGSMITH_GATEWAY = "https://gateway.smith.langchain.com";
+export const DEFAULT_LANGSMITH_GATEWAY =
+  "https://gateway.smith.langchain.com";
 const TRUE_VALUES = ["true", "1", "yes"];
 const FALSE_VALUES = ["false", "0", "no"];
 

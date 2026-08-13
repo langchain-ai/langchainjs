@@ -34,6 +34,38 @@ import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { ChatResult } from "@langchain/core/outputs";
 import { ModelProfile } from "@langchain/core/language_models/profile";
 import { ChatModelStream } from "@langchain/core/language_models/stream";
+import {
+  DEFAULT_LANGSMITH_GATEWAY,
+  resolveLangSmithGatewayConfig,
+} from "@langchain/core/utils/gateway";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
+
+function getLangSmithChatModelParams({
+  apiKey,
+  configuration = {},
+}: {
+  apiKey?: unknown;
+  configuration?: { apiKey?: unknown; baseURL?: string };
+}) {
+  const gatewayConfig = resolveLangSmithGatewayConfig({
+    baseURL: configuration.baseURL,
+    providerPath: "openai/v1",
+  });
+
+  return {
+    apiKey:
+      apiKey ??
+      configuration.apiKey ??
+      gatewayConfig.apiKey ??
+      getEnvironmentVariable("LANGSMITH_GATEWAY_API_KEY") ??
+      getEnvironmentVariable("LANGSMITH_API_KEY"),
+    configuration: {
+      ...configuration,
+      baseURL: gatewayConfig.baseURL ?? `${DEFAULT_LANGSMITH_GATEWAY}/openai/v1`,
+    },
+    useResponsesApi: true,
+  };
+}
 
 // TODO: remove once `EventStreamCallbackHandlerInput` is exposed in core
 interface EventStreamCallbackHandlerInput extends Omit<
@@ -63,6 +95,10 @@ export const MODEL_PROVIDER_CONFIG = {
   azure_openai: {
     package: "@langchain/openai",
     className: "AzureChatOpenAI",
+  },
+  langsmith: {
+    package: "@langchain/openai",
+    className: "ChatOpenAI",
   },
   cohere: {
     package: "@langchain/cohere",
@@ -233,7 +269,13 @@ async function _initChatModelHelper(
     config.className,
     modelProviderCopy
   );
-  return new ProviderClass({ model, ...passedParams });
+  return new ProviderClass({
+    model,
+    ...passedParams,
+    ...(modelProviderCopy === "langsmith"
+      ? getLangSmithChatModelParams(passedParams)
+      : {}),
+  });
 }
 
 /**
@@ -831,6 +873,7 @@ export async function initChatModel<
  * @param {Object} [fields] - Additional configuration options.
  * @param {string} [fields.modelProvider] - The model provider. Supported values include:
  *   - openai (@langchain/openai)
+ *   - langsmith (@langchain/openai, via the [LangSmith LLM Gateway](https://docs.langchain.com/langsmith/llm-gateway))
  *   - anthropic (@langchain/anthropic)
  *   - azure_openai (@langchain/openai)
  *   - google-vertexai (@langchain/google-vertexai)
