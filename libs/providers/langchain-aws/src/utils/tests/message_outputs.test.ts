@@ -66,6 +66,39 @@ describe("reasoning output conversion", () => {
     ]);
     expect(result.response_metadata).not.toHaveProperty("output_version");
   });
+
+  test("merges streaming text deltas after a reasoning block", () => {
+    const reasoning = handleConverseStreamContentBlockDelta({
+      contentBlockIndex: 0,
+      delta: { reasoningContent: { text: "Reasoning summary" } },
+    });
+    const firstText = handleConverseStreamContentBlockDelta({
+      contentBlockIndex: 1,
+      delta: { text: "Hello" },
+    });
+    const secondText = handleConverseStreamContentBlockDelta({
+      contentBlockIndex: 1,
+      delta: { text: " world" },
+    });
+
+    const result = concat(
+      concat(reasoning.message, firstText.message),
+      secondText.message
+    );
+
+    expect(result.content).toEqual([
+      {
+        type: "reasoning",
+        reasoning: "Reasoning summary",
+        index: 0,
+      },
+      {
+        type: "text",
+        text: "Hello world",
+        index: 1,
+      },
+    ]);
+  });
 });
 
 describe("message output usage metadata conversion", () => {
