@@ -57,11 +57,12 @@ function getLangSmithChatModelParams({
       apiKey ??
       configuration.apiKey ??
       gatewayConfig.apiKey ??
-      getEnvironmentVariable("LANGSMITH_GATEWAY_API_KEY") ??
-      getEnvironmentVariable("LANGSMITH_API_KEY"),
+      (getEnvironmentVariable("LANGSMITH_GATEWAY_API_KEY") ||
+        getEnvironmentVariable("LANGSMITH_API_KEY")),
     configuration: {
       ...configuration,
-      baseURL: gatewayConfig.baseURL ?? `${DEFAULT_LANGSMITH_GATEWAY}/openai/v1`,
+      baseURL:
+        gatewayConfig.baseURL ?? `${DEFAULT_LANGSMITH_GATEWAY}/openai/v1`,
     },
     useResponsesApi: true,
   };
