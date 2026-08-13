@@ -1,5 +1,11 @@
 # @langchain/core
 
+## 1.2.7
+
+### Patch Changes
+
+- [#11366](https://github.com/langchain-ai/langchainjs/pull/11366) [`c068bbf`](https://github.com/langchain-ai/langchainjs/commit/c068bbf8c113132bf16ac7a8add44e486a147b41) Thanks [@hntrl](https://github.com/hntrl)! - fix(core,langchain): patch and release core, update peer dependencies
+
 ## 1.2.6
 
 ### Patch Changes
