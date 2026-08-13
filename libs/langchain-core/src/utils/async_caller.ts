@@ -347,9 +347,6 @@ export interface AsyncCallerParams {
    * Custom handler to handle failed attempts. Takes the originally thrown
    * error object as input, and should itself throw an error if the input
    * error is not retryable.
-   *
-   * Replaces the built-in handler entirely, so supplying one opts out of its
-   * retryability marking (see `stampRetryable` in `@langchain/core/errors`).
    */
   onFailedAttempt?: FailedAttemptHandler;
 }
