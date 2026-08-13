@@ -1,5 +1,5 @@
 ---
-"@langchain/google": minor
+"@langchain/google": patch
 ---
 
 feat(google): mark Google provider errors as retryable or not

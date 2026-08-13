@@ -1,6 +1,6 @@
 ---
-"@langchain/core": minor
-"langchain": minor
+"@langchain/core": patch
+"langchain": patch
 ---
 
 feat(core): mark errors as retryable or not, and stop retrying the ones that aren't

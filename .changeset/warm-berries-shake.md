@@ -1,5 +1,5 @@
 ---
-"@langchain/fireworks": minor
+"@langchain/fireworks": patch
 ---
 
 fix(fireworks): stop retrying deterministic embeddings failures

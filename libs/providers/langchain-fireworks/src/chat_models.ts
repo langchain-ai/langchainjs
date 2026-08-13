@@ -162,22 +162,19 @@ export class ChatFireworks extends ChatOpenAICompletions<ChatFireworksCallOption
 
   async completionWithRetry(
     request: OpenAIClient.Chat.ChatCompletionCreateParamsStreaming,
-    options?: OpenAICoreRequestOptions,
-    callerMaxRetries?: number
+    options?: OpenAICoreRequestOptions
   ): Promise<AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>>;
 
   async completionWithRetry(
     request: OpenAIClient.Chat.ChatCompletionCreateParamsNonStreaming,
-    options?: OpenAICoreRequestOptions,
-    callerMaxRetries?: number
+    options?: OpenAICoreRequestOptions
   ): Promise<OpenAIClient.Chat.Completions.ChatCompletion>;
 
   async completionWithRetry(
     request:
       | OpenAIClient.Chat.ChatCompletionCreateParamsStreaming
       | OpenAIClient.Chat.ChatCompletionCreateParamsNonStreaming,
-    options?: OpenAICoreRequestOptions,
-    callerMaxRetries?: number
+    options?: OpenAICoreRequestOptions
   ): Promise<
     | AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>
     | OpenAIClient.Chat.Completions.ChatCompletion
@@ -187,7 +184,7 @@ export class ChatFireworks extends ChatOpenAICompletions<ChatFireworksCallOption
     delete request.logit_bias;
     delete request.functions;
 
-    return super.completionWithRetry(request, options, callerMaxRetries);
+    return super.completionWithRetry(request, options);
   }
 
   protected override get streamEventProvider(): string {

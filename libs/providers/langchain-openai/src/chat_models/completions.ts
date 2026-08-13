@@ -227,9 +227,9 @@ export class ChatOpenAICompletions<
         },
         {
           signal: options?.signal,
+          maxRetries: options?.maxRetries,
           ...options?.options,
-        },
-        options?.maxRetries
+        }
       );
 
       const {
@@ -347,11 +347,7 @@ export class ChatOpenAICompletions<
       stream: true as const,
     };
 
-    const streamIterable = await this.completionWithRetry(
-      params,
-      options,
-      options.maxRetries
-    );
+    const streamIterable = await this.completionWithRetry(params, options);
     const shouldStreamUsage = this.streamUsage ?? options.streamUsage;
 
     const abortableStream = async function* (
@@ -400,11 +396,7 @@ export class ChatOpenAICompletions<
     };
     let defaultRole: OpenAIClient.Chat.ChatCompletionRole | undefined;
 
-    const streamIterable = await this.completionWithRetry(
-      params,
-      options,
-      options.maxRetries
-    );
+    const streamIterable = await this.completionWithRetry(params, options);
     let usage: OpenAIClient.Completions.CompletionUsage | undefined;
     for await (const data of streamIterable) {
       if (options.signal?.aborted) {
@@ -520,48 +512,45 @@ export class ChatOpenAICompletions<
 
   async completionWithRetry(
     request: OpenAIClient.Chat.ChatCompletionCreateParamsStreaming,
-    requestOptions?: OpenAIClient.RequestOptions,
-    callerMaxRetries?: number
+    requestOptions?: OpenAIClient.RequestOptions
   ): Promise<AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>>;
 
   async completionWithRetry(
     request: OpenAIClient.Chat.ChatCompletionCreateParamsNonStreaming,
-    requestOptions?: OpenAIClient.RequestOptions,
-    callerMaxRetries?: number
+    requestOptions?: OpenAIClient.RequestOptions
   ): Promise<OpenAIClient.Chat.Completions.ChatCompletion>;
 
   async completionWithRetry(
     request: OpenAIClient.Chat.ChatCompletionCreateParams,
-    requestOptions?: OpenAIClient.RequestOptions,
-    callerMaxRetries?: number
+    requestOptions?: OpenAIClient.RequestOptions
   ): Promise<
     | AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>
     | OpenAIClient.Chat.Completions.ChatCompletion
   > {
-    const clientOptions = this._getClientOptions(requestOptions);
+    // The SDK has its own `maxRetries`; take it for our caller instead so
+    // the two retry loops don't multiply.
+    const { maxRetries, ...sdkOptions } = requestOptions ?? {};
+    const clientOptions = this._getClientOptions(sdkOptions);
     const isParseableFormat =
       request.response_format && request.response_format.type === "json_schema";
-    return this.caller.callWithOptions(
-      { maxRetries: callerMaxRetries },
-      async () => {
-        try {
-          if (isParseableFormat && !request.stream) {
-            return await this.client.chat.completions.parse(
-              request,
-              clientOptions
-            );
-          } else {
-            return await this.client.chat.completions.create(
-              request,
-              clientOptions
-            );
-          }
-        } catch (e) {
-          const error = wrapOpenAIClientError(e);
-          throw error;
+    return this.caller.callWithOptions({ maxRetries }, async () => {
+      try {
+        if (isParseableFormat && !request.stream) {
+          return await this.client.chat.completions.parse(
+            request,
+            clientOptions
+          );
+        } else {
+          return await this.client.chat.completions.create(
+            request,
+            clientOptions
+          );
         }
+      } catch (e) {
+        const error = wrapOpenAIClientError(e);
+        throw error;
       }
-    );
+    });
   }
 
   /**
