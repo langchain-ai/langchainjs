@@ -299,7 +299,8 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
                 stream: true,
                 prompt: subPrompts[i],
               },
-              options
+              options,
+              options.maxRetries
             );
             for await (const message of stream) {
               // on the first message set the response properties
@@ -343,7 +344,8 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
             {
               signal: options.signal,
               ...options.options,
-            }
+            },
+            options.maxRetries
           );
 
       choices.push(...data.choices);
@@ -399,7 +401,11 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
       prompt: input,
       stream: true as const,
     };
-    const stream = await this.completionWithRetry(params, options);
+    const stream = await this.completionWithRetry(
+      params,
+      options,
+      options.maxRetries
+    );
     for await (const data of stream) {
       const choice = data?.choices[0];
       if (!choice) {
@@ -424,39 +430,46 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
    * Calls the OpenAI API with retry logic in case of failures.
    * @param request The request to send to the OpenAI API.
    * @param options Optional configuration for the API call.
+   * @param callerMaxRetries Optional per-call retry limit for LangChain's caller, not the OpenAI SDK's.
    * @returns The response from the OpenAI API.
    */
   async completionWithRetry(
     request: OpenAIClient.CompletionCreateParamsStreaming,
-    options?: OpenAICoreRequestOptions
+    options?: OpenAICoreRequestOptions,
+    callerMaxRetries?: number
   ): Promise<AsyncIterable<OpenAIClient.Completion>>;
 
   async completionWithRetry(
     request: OpenAIClient.CompletionCreateParamsNonStreaming,
-    options?: OpenAICoreRequestOptions
+    options?: OpenAICoreRequestOptions,
+    callerMaxRetries?: number
   ): Promise<OpenAIClient.Completions.Completion>;
 
   async completionWithRetry(
     request:
       | OpenAIClient.CompletionCreateParamsStreaming
       | OpenAIClient.CompletionCreateParamsNonStreaming,
-    options?: OpenAICoreRequestOptions
+    options?: OpenAICoreRequestOptions,
+    callerMaxRetries?: number
   ): Promise<
     AsyncIterable<OpenAIClient.Completion> | OpenAIClient.Completions.Completion
   > {
     const requestOptions = this._getClientOptions(options);
-    return this.caller.call(async () => {
-      try {
-        const res = await this.client.completions.create(
-          request,
-          requestOptions
-        );
-        return res;
-      } catch (e) {
-        const error = wrapOpenAIClientError(e);
-        throw error;
+    return this.caller.callWithOptions(
+      { maxRetries: callerMaxRetries },
+      async () => {
+        try {
+          const res = await this.client.completions.create(
+            request,
+            requestOptions
+          );
+          return res;
+        } catch (e) {
+          const error = wrapOpenAIClientError(e);
+          throw error;
+        }
       }
-    });
+    );
   }
 
   /**

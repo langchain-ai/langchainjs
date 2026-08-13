@@ -1421,10 +1421,14 @@ export class ChatAnthropicMessages<
       !_thinkingInParams(payload) &&
       !_compactionInParams(payload);
 
-    const stream = await this.createStreamWithRetry(payload, {
-      headers: options.headers,
-      signal: options.signal,
-    });
+    const stream = await this.createStreamWithRetry(
+      payload,
+      {
+        headers: options.headers,
+        signal: options.signal,
+      },
+      options.maxRetries
+    );
 
     for await (const data of stream) {
       if (options.signal?.aborted) {
@@ -1493,10 +1497,14 @@ export class ChatAnthropicMessages<
       stream: true,
     } as const;
 
-    const stream = await this.createStreamWithRetry(payload, {
-      headers: options.headers,
-      signal: options.signal,
-    });
+    const stream = await this.createStreamWithRetry(
+      payload,
+      {
+        headers: options.headers,
+        signal: options.signal,
+      },
+      options.maxRetries
+    );
 
     const shouldStreamUsage = this.streamUsage ?? options.streamUsage;
 
@@ -1529,7 +1537,8 @@ export class ChatAnthropicMessages<
       "messages"
     > &
       Kwargs,
-    requestOptions: AnthropicRequestOptions
+    requestOptions: AnthropicRequestOptions,
+    callerMaxRetries?: number
   ) {
     const formattedMessages = _convertMessagesToAnthropicPayload(messages);
 
@@ -1539,7 +1548,8 @@ export class ChatAnthropicMessages<
         stream: false,
         ...formattedMessages,
       },
-      requestOptions
+      requestOptions,
+      callerMaxRetries
     );
 
     const { content, ...additionalKwargs } = response;
@@ -1588,10 +1598,12 @@ export class ChatAnthropicMessages<
         ],
       };
     } else {
-      return this._generateNonStreaming(messages, params, {
-        signal: options.signal,
-        headers: options.headers,
-      });
+      return this._generateNonStreaming(
+        messages,
+        params,
+        { signal: options.signal, headers: options.headers },
+        options.maxRetries
+      );
     }
   }
 
@@ -1603,7 +1615,8 @@ export class ChatAnthropicMessages<
    */
   protected async createStreamWithRetry(
     request: AnthropicStreamingMessageCreateParams & Kwargs,
-    options?: AnthropicRequestOptions
+    options?: AnthropicRequestOptions,
+    callerMaxRetries?: number
   ): Promise<Stream<AnthropicMessageStreamEvent>> {
     if (!this.streamingClient) {
       const options_ = this.apiUrl ? { baseURL: this.apiUrl } : undefined;
@@ -1645,13 +1658,17 @@ export class ChatAnthropicMessages<
         throw error;
       }
     };
-    return this.caller.call(makeCompletionRequest);
+    return this.caller.callWithOptions(
+      { maxRetries: callerMaxRetries },
+      makeCompletionRequest
+    );
   }
 
   /** @ignore */
   protected async completionWithRetry(
     request: AnthropicMessageCreateParams & Kwargs,
-    options: AnthropicRequestOptions
+    options: AnthropicRequestOptions,
+    callerMaxRetries?: number
   ): Promise<Anthropic.Message> {
     if (!this.batchClient) {
       const options = this.apiUrl ? { baseURL: this.apiUrl } : undefined;
@@ -1691,7 +1708,7 @@ export class ChatAnthropicMessages<
       }
     };
     return this.caller.callWithOptions(
-      { signal: options.signal ?? undefined },
+      { signal: options.signal ?? undefined, maxRetries: callerMaxRetries },
       makeCompletionRequest
     );
   }

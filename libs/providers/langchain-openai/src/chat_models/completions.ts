@@ -228,7 +228,8 @@ export class ChatOpenAICompletions<
         {
           signal: options?.signal,
           ...options?.options,
-        }
+        },
+        options?.maxRetries
       );
 
       const {
@@ -346,7 +347,11 @@ export class ChatOpenAICompletions<
       stream: true as const,
     };
 
-    const streamIterable = await this.completionWithRetry(params, options);
+    const streamIterable = await this.completionWithRetry(
+      params,
+      options,
+      options.maxRetries
+    );
     const shouldStreamUsage = this.streamUsage ?? options.streamUsage;
 
     const abortableStream = async function* (
@@ -395,7 +400,11 @@ export class ChatOpenAICompletions<
     };
     let defaultRole: OpenAIClient.Chat.ChatCompletionRole | undefined;
 
-    const streamIterable = await this.completionWithRetry(params, options);
+    const streamIterable = await this.completionWithRetry(
+      params,
+      options,
+      options.maxRetries
+    );
     let usage: OpenAIClient.Completions.CompletionUsage | undefined;
     for await (const data of streamIterable) {
       if (options.signal?.aborted) {
@@ -511,17 +520,20 @@ export class ChatOpenAICompletions<
 
   async completionWithRetry(
     request: OpenAIClient.Chat.ChatCompletionCreateParamsStreaming,
-    requestOptions?: OpenAIClient.RequestOptions
+    requestOptions?: OpenAIClient.RequestOptions,
+    callerMaxRetries?: number
   ): Promise<AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>>;
 
   async completionWithRetry(
     request: OpenAIClient.Chat.ChatCompletionCreateParamsNonStreaming,
-    requestOptions?: OpenAIClient.RequestOptions
+    requestOptions?: OpenAIClient.RequestOptions,
+    callerMaxRetries?: number
   ): Promise<OpenAIClient.Chat.Completions.ChatCompletion>;
 
   async completionWithRetry(
     request: OpenAIClient.Chat.ChatCompletionCreateParams,
-    requestOptions?: OpenAIClient.RequestOptions
+    requestOptions?: OpenAIClient.RequestOptions,
+    callerMaxRetries?: number
   ): Promise<
     | AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>
     | OpenAIClient.Chat.Completions.ChatCompletion
@@ -529,24 +541,27 @@ export class ChatOpenAICompletions<
     const clientOptions = this._getClientOptions(requestOptions);
     const isParseableFormat =
       request.response_format && request.response_format.type === "json_schema";
-    return this.caller.call(async () => {
-      try {
-        if (isParseableFormat && !request.stream) {
-          return await this.client.chat.completions.parse(
-            request,
-            clientOptions
-          );
-        } else {
-          return await this.client.chat.completions.create(
-            request,
-            clientOptions
-          );
+    return this.caller.callWithOptions(
+      { maxRetries: callerMaxRetries },
+      async () => {
+        try {
+          if (isParseableFormat && !request.stream) {
+            return await this.client.chat.completions.parse(
+              request,
+              clientOptions
+            );
+          } else {
+            return await this.client.chat.completions.create(
+              request,
+              clientOptions
+            );
+          }
+        } catch (e) {
+          const error = wrapOpenAIClientError(e);
+          throw error;
         }
-      } catch (e) {
-        const error = wrapOpenAIClientError(e);
-        throw error;
       }
-    });
+    );
   }
 
   /**

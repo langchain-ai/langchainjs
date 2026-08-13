@@ -208,7 +208,8 @@ export class ChatOpenAIResponses<
           ...invocationParams,
           stream: false,
         },
-        { signal: options?.signal, ...options?.options }
+        { signal: options?.signal, ...options?.options },
+        options?.maxRetries
       );
 
       return {
@@ -247,7 +248,8 @@ export class ChatOpenAIResponses<
         }),
         stream: true,
       },
-      options
+      options,
+      options.maxRetries
     );
 
     const shouldStreamUsage = this.streamUsage ?? options.streamUsage;
@@ -293,7 +295,8 @@ export class ChatOpenAIResponses<
         }),
         stream: true,
       },
-      options
+      options,
+      options.maxRetries
     );
 
     try {
@@ -330,34 +333,40 @@ export class ChatOpenAIResponses<
    */
   async completionWithRetry(
     request: OpenAIClient.Responses.ResponseCreateParamsStreaming,
-    requestOptions?: OpenAIClient.RequestOptions
+    requestOptions?: OpenAIClient.RequestOptions,
+    callerMaxRetries?: number
   ): Promise<AsyncIterable<OpenAIClient.Responses.ResponseStreamEvent>>;
 
   async completionWithRetry(
     request: OpenAIClient.Responses.ResponseCreateParamsNonStreaming,
-    requestOptions?: OpenAIClient.RequestOptions
+    requestOptions?: OpenAIClient.RequestOptions,
+    callerMaxRetries?: number
   ): Promise<OpenAIClient.Responses.Response>;
 
   async completionWithRetry(
     request: OpenAIClient.Responses.ResponseCreateParams,
-    requestOptions?: OpenAIClient.RequestOptions
+    requestOptions?: OpenAIClient.RequestOptions,
+    callerMaxRetries?: number
   ): Promise<
     | AsyncIterable<OpenAIClient.Responses.ResponseStreamEvent>
     | OpenAIClient.Responses.Response
   > {
-    return this.caller.call(async () => {
-      const clientOptions = this._getClientOptions(requestOptions);
-      try {
-        // use parse if dealing with json_schema
-        if (request.text?.format?.type === "json_schema" && !request.stream) {
-          return await this.client.responses.parse(request, clientOptions);
+    return this.caller.callWithOptions(
+      { maxRetries: callerMaxRetries },
+      async () => {
+        const clientOptions = this._getClientOptions(requestOptions);
+        try {
+          // use parse if dealing with json_schema
+          if (request.text?.format?.type === "json_schema" && !request.stream) {
+            return await this.client.responses.parse(request, clientOptions);
+          }
+          return await this.client.responses.create(request, clientOptions);
+        } catch (e) {
+          const error = wrapOpenAIClientError(e);
+          throw error;
         }
-        return await this.client.responses.create(request, clientOptions);
-      } catch (e) {
-        const error = wrapOpenAIClientError(e);
-        throw error;
       }
-    });
+    );
   }
 
   /** @internal */

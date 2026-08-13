@@ -140,19 +140,22 @@ export class Fireworks extends OpenAI<FireworksCallOptions> {
 
   async completionWithRetry(
     request: OpenAIClient.CompletionCreateParamsStreaming,
-    options?: OpenAICoreRequestOptions
+    options?: OpenAICoreRequestOptions,
+    callerMaxRetries?: number
   ): Promise<AsyncIterable<OpenAIClient.Completion>>;
 
   async completionWithRetry(
     request: OpenAIClient.CompletionCreateParamsNonStreaming,
-    options?: OpenAICoreRequestOptions
+    options?: OpenAICoreRequestOptions,
+    callerMaxRetries?: number
   ): Promise<OpenAIClient.Completions.Completion>;
 
   async completionWithRetry(
     request:
       | OpenAIClient.CompletionCreateParamsStreaming
       | OpenAIClient.CompletionCreateParamsNonStreaming,
-    options?: OpenAICoreRequestOptions
+    options?: OpenAICoreRequestOptions,
+    callerMaxRetries?: number
   ): Promise<
     AsyncIterable<OpenAIClient.Completion> | OpenAIClient.Completions.Completion
   > {
@@ -174,6 +177,6 @@ export class Fireworks extends OpenAI<FireworksCallOptions> {
     delete request.best_of;
     delete request.logit_bias;
 
-    return super.completionWithRetry(request, options);
+    return super.completionWithRetry(request, options, callerMaxRetries);
   }
 }

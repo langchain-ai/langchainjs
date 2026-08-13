@@ -1,4 +1,4 @@
-import { test, expect, describe } from "vitest";
+import { test, expect, describe, vi } from "vitest";
 import { ContextOverflowError, getRetryable } from "@langchain/core/errors";
 import { wrapAnthropicClientError } from "../errors.js";
 
@@ -166,5 +166,41 @@ describe("wrapAnthropicClientError retryability", () => {
 
     expect(wrapped.lc_error_code).toBe("CONTEXT_OVERFLOW");
     expect(getRetryable(wrapped)).toBe(false);
+  });
+});
+
+describe("per-call maxRetries", () => {
+  test("a call option of 0 stops the caller retrying", async () => {
+    const { ChatAnthropic } = await import("../../chat_models.js");
+    const model = new ChatAnthropic({ apiKey: "test", maxRetries: 3 });
+
+    const create = vi.fn(async () => {
+      throw Object.assign(new Error("server"), { status: 500 });
+    });
+    (model as unknown as { batchClient: unknown }).batchClient = {
+      messages: { create },
+      beta: { messages: { create } },
+    };
+
+    await expect(model.invoke("hi", { maxRetries: 0 })).rejects.toThrow(
+      "server"
+    );
+    expect(create).toHaveBeenCalledTimes(1);
+  });
+
+  test("without the option the configured retries still apply", async () => {
+    const { ChatAnthropic } = await import("../../chat_models.js");
+    const model = new ChatAnthropic({ apiKey: "test", maxRetries: 2 });
+
+    const create = vi.fn(async () => {
+      throw Object.assign(new Error("server"), { status: 500 });
+    });
+    (model as unknown as { batchClient: unknown }).batchClient = {
+      messages: { create },
+      beta: { messages: { create } },
+    };
+
+    await expect(model.invoke("hi")).rejects.toThrow("server");
+    expect(create).toHaveBeenCalledTimes(3);
   });
 });
