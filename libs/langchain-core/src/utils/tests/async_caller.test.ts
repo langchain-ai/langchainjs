@@ -509,3 +509,66 @@ describe("AsyncCaller honors marks applied inside the callable", () => {
     expect(callable).toHaveBeenCalledTimes(2);
   });
 });
+
+describe("AsyncCaller per-call maxRetries override", () => {
+  test("honors a per-call override of 0", async () => {
+    const caller = new AsyncCaller({ maxRetries: 5 });
+    const callable = vi.fn(async () => {
+      throw new Error("boom");
+    });
+
+    await expect(() =>
+      caller.callWithOptions({ maxRetries: 0 }, callable)
+    ).rejects.toThrow("boom");
+    expect(callable).toHaveBeenCalledTimes(1);
+  });
+
+  test("honors a per-call override above zero", async () => {
+    const caller = new AsyncCaller({ maxRetries: 5 });
+    const callable = vi.fn(async () => {
+      throw new Error("boom");
+    });
+
+    await expect(() =>
+      caller.callWithOptions({ maxRetries: 2 }, callable)
+    ).rejects.toThrow("boom");
+    expect(callable).toHaveBeenCalledTimes(3);
+  });
+
+  test("falls back to the configured value when not overridden", async () => {
+    const caller = new AsyncCaller({ maxRetries: 2 });
+    const callable = vi.fn(async () => {
+      throw new Error("boom");
+    });
+
+    await expect(() => caller.callWithOptions({}, callable)).rejects.toThrow(
+      "boom"
+    );
+    expect(callable).toHaveBeenCalledTimes(3);
+  });
+
+  test("call() is unaffected by the option", async () => {
+    const caller = new AsyncCaller({ maxRetries: 1 });
+    const callable = vi.fn(async () => {
+      throw new Error("boom");
+    });
+
+    await expect(() => caller.call(callable)).rejects.toThrow("boom");
+    expect(callable).toHaveBeenCalledTimes(2);
+  });
+
+  test("an override of 0 skips the Retry-After wait entirely", async () => {
+    const caller = new AsyncCaller({ maxRetries: 3 });
+    const callable = vi.fn(async () => {
+      throw Object.assign(new Error("rate limited"), {
+        status: 429,
+        headers: { "retry-after": "30" },
+      });
+    });
+
+    await expect(() =>
+      caller.callWithOptions({ maxRetries: 0 }, callable)
+    ).rejects.toThrow("rate limited");
+    expect(callable).toHaveBeenCalledTimes(1);
+  });
+});

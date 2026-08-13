@@ -353,6 +353,7 @@ export interface AsyncCallerParams {
 
 export interface AsyncCallerCallOptions {
   signal?: AbortSignal;
+  maxRetries?: number;
 }
 
 /**
@@ -394,6 +395,19 @@ export class AsyncCaller {
     callable: T,
     ...args: Parameters<T>
   ): Promise<Awaited<ReturnType<T>>> {
+    return this.callWithRetries(this.maxRetries, callable, args);
+  }
+
+  private callWithRetries<
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    A extends any[],
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    T extends (...args: A) => Promise<any>,
+  >(
+    retries: AsyncCallerParams["maxRetries"],
+    callable: T,
+    args: Parameters<T>
+  ): Promise<Awaited<ReturnType<T>>> {
     return this.queue.add(
       () =>
         pRetry(
@@ -408,7 +422,7 @@ export class AsyncCaller {
             }),
           {
             onFailedAttempt: ({ error }) => this.onFailedAttempt?.(error),
-            retries: this.maxRetries,
+            retries,
             randomize: true,
             // If needed we can change some of the defaults here,
             // but they're quite sensible.
@@ -424,12 +438,13 @@ export class AsyncCaller {
     callable: T,
     ...args: Parameters<T>
   ): Promise<Awaited<ReturnType<T>>> {
+    const retries = options.maxRetries ?? this.maxRetries;
     // Note this doesn't cancel the underlying request,
     // when available prefer to use the signal option of the underlying call
     if (options.signal) {
       let listener: (() => void) | undefined;
       return Promise.race([
-        this.call<A, T>(callable, ...args),
+        this.callWithRetries<A, T>(retries, callable, args),
         new Promise<never>((_, reject) => {
           listener = () => {
             reject(getAbortSignalError(options.signal));
@@ -442,7 +457,7 @@ export class AsyncCaller {
         }
       });
     }
-    return this.call<A, T>(callable, ...args);
+    return this.callWithRetries<A, T>(retries, callable, args);
   }
 
   fetch(...args: Parameters<typeof fetch>): ReturnType<typeof fetch> {

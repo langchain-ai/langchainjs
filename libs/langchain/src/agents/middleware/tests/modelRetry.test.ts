@@ -669,3 +669,62 @@ describe("modelRetryMiddleware", () => {
     });
   });
 });
+
+describe("Retry-After handling", () => {
+  it("waits at least as long as the error asks", async () => {
+    const error = Object.assign(new Error("rate limited"), {
+      retryAfterMs: 300,
+    });
+    const model = new AlwaysFailingModel(error);
+
+    const agent = createAgent({
+      model,
+      tools: [],
+      middleware: [
+        modelRetryMiddleware({
+          maxRetries: 1,
+          initialDelayMs: 1,
+          jitter: false,
+          onFailure: "continue",
+        }),
+      ] as const,
+      checkpointer: new MemorySaver(),
+    });
+
+    const start = Date.now();
+    await agent.invoke(
+      { messages: [new HumanMessage("Hello")] },
+      { configurable: { thread_id: "retry-after" } }
+    );
+
+    expect(Date.now() - start).toBeGreaterThanOrEqual(280);
+    expect(model._generate).toHaveBeenCalledTimes(2);
+  });
+
+  it("uses its own backoff when no hint is present", async () => {
+    const model = new AlwaysFailingModel(new Error("boom"));
+
+    const agent = createAgent({
+      model,
+      tools: [],
+      middleware: [
+        modelRetryMiddleware({
+          maxRetries: 1,
+          initialDelayMs: 1,
+          jitter: false,
+          onFailure: "continue",
+        }),
+      ] as const,
+      checkpointer: new MemorySaver(),
+    });
+
+    const start = Date.now();
+    await agent.invoke(
+      { messages: [new HumanMessage("Hello")] },
+      { configurable: { thread_id: "no-hint" } }
+    );
+
+    expect(Date.now() - start).toBeLessThan(200);
+    expect(model._generate).toHaveBeenCalledTimes(2);
+  });
+});
