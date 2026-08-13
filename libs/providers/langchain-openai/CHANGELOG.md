@@ -1,5 +1,17 @@
 # @langchain/openai
 
+## 1.5.7
+
+### Patch Changes
+
+- [#11347](https://github.com/langchain-ai/langchainjs/pull/11347) [`3fe4c43`](https://github.com/langchain-ai/langchainjs/commit/3fe4c43ce3399ebf2391ed612d78fedcd3ea5ec6) Thanks [@talarari](https://github.com/talarari)! - fix(openai): include `usage` in `response_metadata` when `system_fingerprint` is absent
+
+## 1.5.6
+
+### Patch Changes
+
+- [#11305](https://github.com/langchain-ai/langchainjs/pull/11305) [`e654022`](https://github.com/langchain-ai/langchainjs/commit/e654022e291b8dae54504ac2d1a3232332406723) Thanks [@jacoblee93](https://github.com/jacoblee93)! - Add LangSmith Gateway environment configuration to OpenAI, Anthropic, and Fireworks chat models.
+
 ## 1.5.5
 
 ### Patch Changes

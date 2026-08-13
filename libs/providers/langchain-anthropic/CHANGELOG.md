@@ -1,5 +1,33 @@
 # @langchain/anthropic
 
+## 1.5.5
+
+### Patch Changes
+
+- [#11359](https://github.com/langchain-ai/langchainjs/pull/11359) [`d36ec6a`](https://github.com/langchain-ai/langchainjs/commit/d36ec6a6f4b1c474b0d9f9cb6037ff37f54183bf) Thanks [@talarari](https://github.com/talarari)! - fix(anthropic): preserve gateway cost on the native stream path
+
+  `convertAnthropicStream` now surfaces an Anthropic-compatible gateway's numeric `usage.cost` at `response_metadata.usage.cost`, matching the chunk path. Token accounting in `usage_metadata` is unchanged.
+
+## 1.5.4
+
+### Patch Changes
+
+- [#11305](https://github.com/langchain-ai/langchainjs/pull/11305) [`e654022`](https://github.com/langchain-ai/langchainjs/commit/e654022e291b8dae54504ac2d1a3232332406723) Thanks [@jacoblee93](https://github.com/jacoblee93)! - Add LangSmith Gateway environment configuration to OpenAI, Anthropic, and Fireworks chat models.
+
+- [#11310](https://github.com/langchain-ai/langchainjs/pull/11310) [`1b96abe`](https://github.com/langchain-ai/langchainjs/commit/1b96abe4979d514e11fb794ed9e85b646ea3b4a5) Thanks [@hntrl](https://github.com/hntrl)! - fix(anthropic): filter tools with unsupported root schema composition
+
+## 1.5.3
+
+### Patch Changes
+
+- [#11242](https://github.com/langchain-ai/langchainjs/pull/11242) [`1c4dadb`](https://github.com/langchain-ai/langchainjs/commit/1c4dadbc684b0fe08a34d4a5249d84b6cb110f07) Thanks [@talarari](https://github.com/talarari)! - Preserve gateway-provided cost metadata in Anthropic streams.
+
+## 1.5.2
+
+### Patch Changes
+
+- [#11255](https://github.com/langchain-ai/langchainjs/pull/11255) [`c8bd4c4`](https://github.com/langchain-ai/langchainjs/commit/c8bd4c4a6dbde07fb24deb5870c02dc29c51ab53) Thanks [@hntrl](https://github.com/hntrl)! - feat(anthropic): add claude-opus-5 support
+
 ## 1.5.1
 
 ### Patch Changes

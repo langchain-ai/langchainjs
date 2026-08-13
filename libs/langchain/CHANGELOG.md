@@ -1,5 +1,35 @@
 # langchain
 
+## 1.5.7
+
+### Patch Changes
+
+- [#11363](https://github.com/langchain-ai/langchainjs/pull/11363) [`2d1f744`](https://github.com/langchain-ai/langchainjs/commit/2d1f7449c95a554d429535abae0115b4f578bbac) Thanks [@hntrl](https://github.com/hntrl)! - feat(langchain): add langsmith gateway to initChatModel- [#11362](https://github.com/langchain-ai/langchainjs/issues/11362)
+
+## 1.5.6
+
+### Patch Changes
+
+- [#11331](https://github.com/langchain-ai/langchainjs/pull/11331) [`18765b0`](https://github.com/langchain-ai/langchainjs/commit/18765b002c3819bc4dc42123a293cab27a35ce4f) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - fix(langchain): exclude middleware-internal model calls from the message projection
+
+  Bookkeeping model calls made by `summarizationMiddleware` and `toolEmulatorMiddleware` no longer appear in `run.messages` or `stream({ streamMode: "messages" })`, and the summary `summarizationMiddleware` writes back to state is no longer projected as a new message. These calls remain observable via `streamEvents({ version: "v2" })`, identified by `lc_source`.
+
+- [#11344](https://github.com/langchain-ai/langchainjs/pull/11344) [`f08e0c6`](https://github.com/langchain-ai/langchainjs/commit/f08e0c6d50156accf95a36469a3e107a5598a3a0) Thanks [@hntrl](https://github.com/hntrl)! - fix: apply [Symbol.hasInstance] method to all comparable properties using .isInstance()
+
+  We have some internal schemas that rely on `z.instanceof()`. This uses a strict `instanceof` check which can conflict if there are multiple versions of core installed. This overrides the [Symbol.hasInstance](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/hasInstance) method to use the same logic as `.isInstance()` to compare objects at runtime.
+
+## 1.5.5
+
+### Patch Changes
+
+- [#11277](https://github.com/langchain-ai/langchainjs/pull/11277) [`0bd12f0`](https://github.com/langchain-ai/langchainjs/commit/0bd12f0bbb3c3f71e016f2ac26fd63a0f6ad0556) Thanks [@vladislav-nechakhin](https://github.com/vladislav-nechakhin)! - fix(langchain): resolve LocalFileStore keys with path.relative
+
+## 1.5.4
+
+### Patch Changes
+
+- [#11201](https://github.com/langchain-ai/langchainjs/pull/11201) [`a8cd4d9`](https://github.com/langchain-ai/langchainjs/commit/a8cd4d9ae35ae8ae05e011115a351d976560ade9) Thanks [@hntrl](https://github.com/hntrl)! - feat(langchain): add middleware for handling tool execution errors
+
 ## 1.5.3
 
 ### Patch Changes

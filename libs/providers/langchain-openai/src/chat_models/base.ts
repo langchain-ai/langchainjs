@@ -2,6 +2,7 @@ import OpenAI, { type ClientOptions, OpenAI as OpenAIClient } from "openai";
 import { AIMessageChunk, type BaseMessage } from "@langchain/core/messages";
 import { type ChatGeneration } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { resolveLangSmithGatewayConfig } from "@langchain/core/utils/gateway";
 import {
   BaseChatModel,
   type LangSmithParams,
@@ -69,6 +70,8 @@ import {
   createContentParser,
   createFunctionCallingParser,
 } from "@langchain/core/language_models/structured_output";
+
+const MCP_CREDENTIALS_REDACTED = "**REDACTED**";
 
 interface OpenAILLMOutput {
   tokenUsage: {
@@ -438,6 +441,61 @@ export abstract class BaseChatOpenAI<
     };
   }
 
+  protected override _getInvocationParamsForTracing(
+    options?: this["ParsedCallOptions"]
+  ): ReturnType<this["invocationParams"]> {
+    const params = this.invocationParams(options);
+    if (!Array.isArray(params.tools)) {
+      return params;
+    }
+    return {
+      ...params,
+      tools: params.tools.map((tool) => {
+        if (tool?.type !== "mcp") {
+          return tool;
+        }
+        const redactedTool: Record<string, unknown> = { ...tool };
+        if ("headers" in redactedTool) {
+          redactedTool.headers = MCP_CREDENTIALS_REDACTED;
+        }
+        if ("authorization" in redactedTool) {
+          redactedTool.authorization = MCP_CREDENTIALS_REDACTED;
+        }
+        return redactedTool;
+      }),
+    };
+  }
+
+  protected override _getCallOptionsForTracing(
+    options: this["ParsedCallOptions"],
+    _invocationParams: ReturnType<this["invocationParams"]>
+  ): this["ParsedCallOptions"] {
+    if (!Array.isArray(options.tools)) {
+      return options;
+    }
+    return {
+      ...options,
+      tools: options.tools.map((tool) => {
+        if (
+          typeof tool !== "object" ||
+          tool === null ||
+          !("type" in tool) ||
+          tool.type !== "mcp"
+        ) {
+          return tool;
+        }
+        const redactedTool = { ...tool };
+        if ("headers" in redactedTool) {
+          redactedTool.headers = MCP_CREDENTIALS_REDACTED;
+        }
+        if ("authorization" in redactedTool) {
+          redactedTool.authorization = MCP_CREDENTIALS_REDACTED;
+        }
+        return redactedTool;
+      }),
+    };
+  }
+
   /** @ignore */
   _identifyingParams(): Omit<
     OpenAIClient.Chat.ChatCompletionCreateParams,
@@ -467,9 +525,18 @@ export abstract class BaseChatOpenAI<
       typeof fields?.configuration?.apiKey === "function"
         ? fields?.configuration?.apiKey
         : undefined;
+    const gatewayConfig = resolveLangSmithGatewayConfig({
+      baseURL:
+        fields?.configuration?.baseURL ??
+        (getEnvironmentVariable("OPENAI_API_BASE") ||
+          getEnvironmentVariable("OPENAI_BASE_URL") ||
+          undefined),
+      providerPath: "openai/v1",
+    });
     this.apiKey =
       fields?.apiKey ??
       configApiKey ??
+      gatewayConfig.apiKey ??
       getEnvironmentVariable("OPENAI_API_KEY");
     this.organization =
       fields?.configuration?.organization ??
@@ -514,6 +581,7 @@ export abstract class BaseChatOpenAI<
       organization: this.organization,
       dangerouslyAllowBrowser: true,
       ...fields?.configuration,
+      baseURL: gatewayConfig.baseURL,
     };
 
     // If `supportsStrictToolCalling` is explicitly set, use that value.
