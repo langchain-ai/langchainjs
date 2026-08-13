@@ -47,7 +47,7 @@ describe("initChatModel LangSmith provider", () => {
 
     expect(chat.model).toBe("moonshotai/kimi-k3");
     expect(chat.clientConfig.baseURL).toBe(
-      "https://gateway.smith.langchain.com/openai/v1"
+      "https://gateway.smith.langchain.com/v1"
     );
     expect(chat.apiKey).toBe("gateway-key");
     expect(chat.useResponsesApi).toBe(true);
@@ -72,9 +72,7 @@ describe("initChatModel LangSmith provider", () => {
     });
     const chat = (await model._getModelInstance()) as ChatOpenAI;
 
-    expect(chat.clientConfig.baseURL).toBe(
-      "https://eu.gateway.example.com/openai/v1"
-    );
+    expect(chat.clientConfig.baseURL).toBe("https://eu.gateway.example.com/v1");
     expect(chat.apiKey).toBe("langsmith-key");
     expect(chat.useResponsesApi).toBe(true);
   });
