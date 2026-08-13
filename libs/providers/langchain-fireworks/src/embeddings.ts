@@ -1,6 +1,7 @@
 import { type EmbeddingsParams, Embeddings } from "@langchain/core/embeddings";
 import { chunkArray } from "@langchain/core/utils/chunk_array";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { wrapFireworksResponseError } from "./utils/errors.js";
 
 const FIREWORKS_BASE_URL = "https://api.fireworks.ai/inference/v1";
 const DEFAULT_FIREWORKS_EMBEDDING_MODEL = "nomic-ai/nomic-embed-text-v1.5";
@@ -160,10 +161,8 @@ export class FireworksEmbeddings
       });
 
       if (!response.ok) {
-        const body = (await response.json()) as { error?: string };
-        throw new Error(
-          `Error ${response.status}: ${body.error ?? "Unspecified error"}`
-        );
+        const body = await response.json().catch(() => undefined);
+        throw wrapFireworksResponseError(response, body);
       }
 
       return (await response.json()) as FireworksEmbeddingResponse;

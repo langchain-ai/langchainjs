@@ -1,6 +1,29 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
+import {
+  AuthenticationError,
+  ContextOverflowError,
+  ModelNotFoundError,
+  PermissionDeniedError,
+  QuotaExceededError,
+  RateLimitError,
+  ServerError,
+  TimeoutError,
+} from "@langchain/core/errors";
 
 import { FireworksEmbeddings } from "../embeddings.js";
+
+function mockErrorResponse(
+  status: number,
+  body: Record<string, unknown>,
+  headers?: Record<string, string>
+) {
+  return {
+    ok: false,
+    status,
+    headers: new Headers(headers),
+    json: async () => body,
+  } as Response;
+}
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -87,5 +110,160 @@ describe("FireworksEmbeddings", () => {
     await expect(embeddings.embedQuery("hello world")).rejects.toThrow(
       "Error 400: bad request"
     );
+  });
+
+  test("wraps 401 as AuthenticationError", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      mockErrorResponse(401, { error: "invalid api key" })
+    );
+    const embeddings = new FireworksEmbeddings({
+      apiKey: "test-api-key",
+      maxRetries: 0,
+    });
+
+    const error: AuthenticationError = await embeddings
+      .embedQuery("hello world")
+      .catch((e) => e);
+
+    expect(error).toBeInstanceOf(AuthenticationError);
+    expect(error.statusCode).toBe(401);
+    expect(error.isRetryable).toBe(false);
+  });
+
+  test("wraps 402 as non-retryable QuotaExceededError", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      mockErrorResponse(402, { error: "payment required" })
+    );
+    const embeddings = new FireworksEmbeddings({
+      apiKey: "test-api-key",
+      maxRetries: 0,
+    });
+
+    const error: QuotaExceededError = await embeddings
+      .embedQuery("hello world")
+      .catch((e) => e);
+
+    expect(error).toBeInstanceOf(QuotaExceededError);
+    expect(error.isRetryable).toBe(false);
+  });
+
+  test("wraps 403 as PermissionDeniedError", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      mockErrorResponse(403, { error: "forbidden" })
+    );
+    const embeddings = new FireworksEmbeddings({
+      apiKey: "test-api-key",
+      maxRetries: 0,
+    });
+
+    const error: PermissionDeniedError = await embeddings
+      .embedQuery("hello world")
+      .catch((e) => e);
+
+    expect(error).toBeInstanceOf(PermissionDeniedError);
+    expect(error.statusCode).toBe(403);
+  });
+
+  test("wraps 404 as ModelNotFoundError", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      mockErrorResponse(404, { error: "model not found" })
+    );
+    const embeddings = new FireworksEmbeddings({
+      apiKey: "test-api-key",
+      maxRetries: 0,
+    });
+
+    const error: ModelNotFoundError = await embeddings
+      .embedQuery("hello world")
+      .catch((e) => e);
+
+    expect(error).toBeInstanceOf(ModelNotFoundError);
+    expect(error.statusCode).toBe(404);
+  });
+
+  test("wraps 408 as TimeoutError", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      mockErrorResponse(408, { error: "request timeout" })
+    );
+    const embeddings = new FireworksEmbeddings({
+      apiKey: "test-api-key",
+      maxRetries: 0,
+    });
+
+    const error: TimeoutError = await embeddings
+      .embedQuery("hello world")
+      .catch((e) => e);
+
+    expect(error).toBeInstanceOf(TimeoutError);
+    expect(error.isRetryable).toBe(true);
+  });
+
+  test("wraps 413 as ContextOverflowError", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      mockErrorResponse(413, { error: "payload too large" })
+    );
+    const embeddings = new FireworksEmbeddings({
+      apiKey: "test-api-key",
+      maxRetries: 0,
+    });
+
+    const error: ContextOverflowError = await embeddings
+      .embedQuery("hello world")
+      .catch((e) => e);
+
+    expect(error).toBeInstanceOf(ContextOverflowError);
+    expect(error.statusCode).toBe(413);
+    expect(error.isRetryable).toBe(false);
+  });
+
+  test("wraps 429 as retryable RateLimitError with retryAfterMs from the header", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      mockErrorResponse(429, { error: "rate limited" }, { "retry-after": "2" })
+    );
+    const embeddings = new FireworksEmbeddings({
+      apiKey: "test-api-key",
+      maxRetries: 0,
+    });
+
+    const error: RateLimitError = await embeddings
+      .embedQuery("hello world")
+      .catch((e) => e);
+
+    expect(error).toBeInstanceOf(RateLimitError);
+    expect(error.isRetryable).toBe(true);
+    expect(error.retryAfterMs).toBe(2000);
+  });
+
+  test("wraps 500 as retryable ServerError", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      mockErrorResponse(500, { error: "internal error" })
+    );
+    const embeddings = new FireworksEmbeddings({
+      apiKey: "test-api-key",
+      maxRetries: 0,
+    });
+
+    const error: ServerError = await embeddings
+      .embedQuery("hello world")
+      .catch((e) => e);
+
+    expect(error).toBeInstanceOf(ServerError);
+    expect(error.statusCode).toBe(500);
+    expect(error.isRetryable).toBe(true);
+  });
+
+  test("does not retry a 402 at the transport layer", async () => {
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(mockErrorResponse(402, { error: "payment required" }));
+    const embeddings = new FireworksEmbeddings({
+      apiKey: "test-api-key",
+      maxRetries: 3,
+    });
+
+    await expect(embeddings.embedQuery("hello world")).rejects.toBeInstanceOf(
+      QuotaExceededError
+    );
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
   });
 });

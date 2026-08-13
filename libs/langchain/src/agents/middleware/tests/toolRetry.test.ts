@@ -8,6 +8,7 @@ import { tool } from "@langchain/core/tools";
 import { z } from "zod/v3";
 import { MemorySaver } from "@langchain/langgraph-checkpoint";
 import { performance } from "node:perf_hooks";
+import { ContextOverflowError } from "@langchain/core/errors";
 
 import { createAgent, createMiddleware } from "../../index.js";
 import { toolRetryMiddleware } from "../toolRetry.js";
@@ -47,6 +48,26 @@ const failingTool = tool(
  * Helper function to create a tool that fails a certain number of times before succeeding.
  * Uses closure state to track attempts.
  */
+function createContextOverflowTool() {
+  let attempt = 0;
+
+  return tool(
+    async ({ input }) => {
+      attempt += 1;
+      throw ContextOverflowError.fromError(
+        new Error(`prompt is too long: ${input} (attempt ${attempt})`)
+      );
+    },
+    {
+      name: "context_overflow_tool",
+      description: "Tool that always raises ContextOverflowError",
+      schema: z.object({
+        input: z.string(),
+      }),
+    }
+  );
+}
+
 function createTemporaryFailureTool(failCount: number) {
   let attempt = 0;
 
@@ -729,6 +750,47 @@ describe("toolRetryMiddleware", () => {
       expect(msg400!.status).toBe("error");
       expect(msg400!.content).toContain("1 attempt");
       expect(msg400!.content).toContain("HTTPError");
+    });
+
+    it("should not retry a ContextOverflowError with default retryOn", async () => {
+      const contextOverflowTool = createContextOverflowTool();
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [
+          [
+            {
+              name: "context_overflow_tool",
+              args: { input: "a very long prompt" },
+              id: "1",
+            },
+          ],
+          [],
+        ],
+      });
+
+      const retry = toolRetryMiddleware({
+        maxRetries: 2,
+        initialDelayMs: 10,
+        jitter: false,
+        onFailure: "continue",
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [contextOverflowTool],
+        middleware: [retry] as const,
+        checkpointer: new MemorySaver(),
+      });
+
+      const result = await agent.invoke(
+        { messages: [new HumanMessage("Use context overflow tool")] },
+        { configurable: { thread_id: "test" } }
+      );
+
+      const toolMessages = result.messages.filter(ToolMessage.isInstance);
+      expect(toolMessages).toHaveLength(1);
+      expect(toolMessages[0].status).toBe("error");
+      expect(toolMessages[0].content).toContain("1 attempt");
     });
   });
 

@@ -1,6 +1,19 @@
 import { describe, expect, test, vi } from "vitest";
+import {
+  ContextOverflowError,
+  QuotaExceededError,
+} from "@langchain/core/errors";
 
 import { Fireworks } from "../llms.js";
+
+function parentCompletionWithRetry(model: Fireworks) {
+  return Object.getPrototypeOf(Object.getPrototypeOf(model)) as {
+    completionWithRetry: (
+      request: Record<string, unknown>,
+      options?: unknown
+    ) => Promise<unknown>;
+  };
+}
 
 describe("Fireworks LLM", () => {
   test("supports string model shorthand", () => {
@@ -77,5 +90,51 @@ describe("Fireworks LLM", () => {
         stream: false,
       })
     ).rejects.toThrow("Multiple prompts are not supported by Fireworks");
+  });
+
+  test("wraps a 402 as non-retryable QuotaExceededError", async () => {
+    const model = new Fireworks({ apiKey: "test-api-key" });
+    vi.spyOn(
+      parentCompletionWithRetry(model),
+      "completionWithRetry"
+    ).mockRejectedValue(
+      Object.assign(new Error("payment required"), {
+        status: 402,
+      })
+    );
+
+    const error: QuotaExceededError = await model
+      .completionWithRetry({
+        model: "accounts/fireworks/models/llama-v2-13b",
+        prompt: "hello",
+        stream: false,
+      })
+      .catch((e) => e);
+
+    expect(error).toBeInstanceOf(QuotaExceededError);
+    expect(error.isRetryable).toBe(false);
+  });
+
+  test("wraps a 413 as non-retryable ContextOverflowError", async () => {
+    const model = new Fireworks({ apiKey: "test-api-key" });
+    vi.spyOn(
+      parentCompletionWithRetry(model),
+      "completionWithRetry"
+    ).mockRejectedValue(
+      Object.assign(new Error("payload too large"), {
+        status: 413,
+      })
+    );
+
+    const error: ContextOverflowError = await model
+      .completionWithRetry({
+        model: "accounts/fireworks/models/llama-v2-13b",
+        prompt: "hello",
+        stream: false,
+      })
+      .catch((e) => e);
+
+    expect(error).toBeInstanceOf(ContextOverflowError);
+    expect(error.statusCode).toBe(413);
   });
 });

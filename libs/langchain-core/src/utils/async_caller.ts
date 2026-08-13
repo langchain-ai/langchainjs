@@ -1,5 +1,6 @@
 import PQueueMod from "p-queue";
 
+import { ModelError } from "../errors/index.js";
 import { getAbortSignalError } from "./signal.js";
 import pRetry from "./p-retry/index.js";
 
@@ -65,6 +66,16 @@ function getDirectStatus(error: unknown): number | undefined {
   }
 
   return undefined;
+}
+
+/** Trusts an already-computed `retryAfterMs` over re-deriving it from headers/message. */
+function getDirectRetryAfterMs(error: unknown): number | undefined {
+  return typeof error === "object" &&
+    error !== null &&
+    "retryAfterMs" in error &&
+    typeof error.retryAfterMs === "number"
+    ? error.retryAfterMs
+    : undefined;
 }
 
 function getErrorMessage(error: unknown): string | undefined {
@@ -226,6 +237,7 @@ export function classifyRateLimitError(
   }
 
   const retryAfterMs =
+    getDirectRetryAfterMs(error) ??
     parseRetryAfterMs(_getRetryAfterHeader(error)) ??
     parseRetryAfterFromMessageMs(message);
 
@@ -314,6 +326,11 @@ const defaultFailedAttemptHandler = (error: unknown) => {
     }
     setRateLimitMetadata(err, rateLimitClassification);
     throw err;
+  }
+
+  // Fallback: a classified ModelError's isRetryable is authoritative.
+  if (ModelError.isInstance(error) && !error.isRetryable) {
+    throw error;
   }
 };
 

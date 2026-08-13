@@ -12,6 +12,7 @@ import {
   type UsageMetadata,
 } from "@langchain/core/messages";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import { ConfigurationError } from "@langchain/core/errors";
 import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import { convertGoogleGeminiStream } from "../utils/stream_events.js";
 import { concat } from "@langchain/core/utils/stream";
@@ -46,7 +47,6 @@ import {
   convertMessagesToGeminiSystemInstruction,
 } from "../converters/messages.js";
 import {
-  ConfigurationError,
   MalformedOutputError,
   NoCandidatesError,
   PromptBlockedError,

@@ -8,7 +8,7 @@ import {
   OpenAIEndpointConfig,
   getHeadersWithUserAgent,
 } from "./utils/azure.js";
-import { wrapOpenAIClientError } from "./utils/client.js";
+import { wrapOpenAIClientError } from "./utils/errors.js";
 
 /**
  * @see https://platform.openai.com/docs/guides/embeddings#embedding-models

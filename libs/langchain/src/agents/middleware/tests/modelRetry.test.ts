@@ -5,6 +5,7 @@ import { MemorySaver } from "@langchain/langgraph-checkpoint";
 import { StructuredTool } from "@langchain/core/tools";
 import { RunnableBinding } from "@langchain/core/runnables";
 
+import { ContextOverflowError, ModelAbortError } from "@langchain/core/errors";
 import { createAgent } from "../../index.js";
 import { modelRetryMiddleware } from "../modelRetry.js";
 import { FakeToolCallingModel } from "../../tests/utils.js";
@@ -381,6 +382,55 @@ describe("modelRetryMiddleware", () => {
       expect(model._generate).toHaveBeenCalledTimes(2);
     });
 
+    it("should not retry on a subclass of a specified error type (exact constructor match, not instanceof)", async () => {
+      class SpecificTimeoutError extends TimeoutError {}
+
+      class SubclassTimeoutFailureModel extends FakeToolCallingModel {
+        private attempt = 0;
+
+        _generate = vi.fn(
+          async (...args: Parameters<FakeToolCallingModel["_generate"]>) => {
+            this.attempt += 1;
+            if (this.attempt <= 1) {
+              throw new SpecificTimeoutError("Timeout");
+            }
+            return super._generate(...args);
+          }
+        );
+
+        bindTools(tools: StructuredTool[]) {
+          // oxlint-disable-next-line dot-notation
+          this["tools"] = [...this["tools"], ...tools];
+          return this as unknown as RunnableBinding<any, any, any>;
+        }
+      }
+
+      const model = new SubclassTimeoutFailureModel();
+
+      const retry = modelRetryMiddleware({
+        maxRetries: 2,
+        initialDelayMs: 10,
+        jitter: false,
+        retryOn: [TimeoutError],
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [retry] as const,
+        checkpointer: new MemorySaver(),
+      });
+
+      const result = await agent.invoke(
+        { messages: [new HumanMessage("Hello")] },
+        { configurable: { thread_id: "test" } }
+      );
+
+      const aiMessages = result.messages.filter(AIMessage.isInstance);
+      expect(aiMessages.length).toBeGreaterThan(0);
+      expect(model._generate).toHaveBeenCalledTimes(1);
+    });
+
     it("should not retry on non-specified error types", async () => {
       const model = new AlwaysFailingModel(new Error("Generic error"));
 
@@ -407,6 +457,65 @@ describe("modelRetryMiddleware", () => {
       const aiMessages = result.messages.filter(AIMessage.isInstance);
       expect(aiMessages.length).toBeGreaterThan(0);
       // Should fail immediately without retries since Error is not in retryOn list
+      expect(aiMessages[aiMessages.length - 1].content).toContain("1 attempt");
+    });
+
+    it("should not retry a ContextOverflowError with default retryOn", async () => {
+      const model = new AlwaysFailingModel(
+        ContextOverflowError.fromError(new Error("prompt is too long"))
+      );
+
+      const retry = modelRetryMiddleware({
+        maxRetries: 2,
+        initialDelayMs: 10,
+        jitter: false,
+        onFailure: "continue",
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [retry] as const,
+        checkpointer: new MemorySaver(),
+      });
+
+      const result = await agent.invoke(
+        { messages: [new HumanMessage("Hello")] },
+        { configurable: { thread_id: "test" } }
+      );
+
+      const aiMessages = result.messages.filter(AIMessage.isInstance);
+      expect(aiMessages.length).toBeGreaterThan(0);
+      expect(model._generate).toHaveBeenCalledTimes(1);
+      expect(aiMessages[aiMessages.length - 1].content).toContain("1 attempt");
+    });
+
+    it("should not retry a ModelAbortError, and documents that default onFailure swallows the cancellation into an AIMessage", async () => {
+      const model = new AlwaysFailingModel(
+        new ModelAbortError("The model call was aborted")
+      );
+
+      const retry = modelRetryMiddleware({
+        maxRetries: 2,
+        initialDelayMs: 10,
+        jitter: false,
+      });
+
+      const agent = createAgent({
+        model,
+        tools: [],
+        middleware: [retry] as const,
+        checkpointer: new MemorySaver(),
+      });
+
+      const result = await agent.invoke(
+        { messages: [new HumanMessage("Hello")] },
+        { configurable: { thread_id: "test" } }
+      );
+
+      const aiMessages = result.messages.filter(AIMessage.isInstance);
+      expect(aiMessages.length).toBeGreaterThan(0);
+      expect(model._generate).toHaveBeenCalledTimes(1);
       expect(aiMessages[aiMessages.length - 1].content).toContain("1 attempt");
     });
 
