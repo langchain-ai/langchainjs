@@ -38,7 +38,6 @@ export async function* convertAnthropicStream(
   let usageSnapshot: UsageMetadata | undefined;
   let responseMetadata: Record<string, any> | undefined;
   let stopReason: string | null = null;
-  let gatewayCost: number | undefined;
 
   for await (const data of source) {
     switch (data.type) {
@@ -112,8 +111,7 @@ export async function* convertAnthropicStream(
           reason: mapStopReason(stopReason),
           ...(usageSnapshot ? { usage: usageSnapshot } : {}),
           metadata: { model_provider: "anthropic" },
-          responseMetadata:
-            gatewayCost === undefined ? {} : { usage: { cost: gatewayCost } },
+          responseMetadata,
         };
         break;
       }
