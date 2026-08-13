@@ -1,5 +1,13 @@
 # @langchain/anthropic
 
+## 1.5.5
+
+### Patch Changes
+
+- [#11359](https://github.com/langchain-ai/langchainjs/pull/11359) [`d36ec6a`](https://github.com/langchain-ai/langchainjs/commit/d36ec6a6f4b1c474b0d9f9cb6037ff37f54183bf) Thanks [@talarari](https://github.com/talarari)! - fix(anthropic): preserve gateway cost on the native stream path
+
+  `convertAnthropicStream` now surfaces an Anthropic-compatible gateway's numeric `usage.cost` at `response_metadata.usage.cost`, matching the chunk path. Token accounting in `usage_metadata` is unchanged.
+
 ## 1.5.4
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # langchain
 
+## 1.5.7
+
+### Patch Changes
+
+- [#11363](https://github.com/langchain-ai/langchainjs/pull/11363) [`2d1f744`](https://github.com/langchain-ai/langchainjs/commit/2d1f7449c95a554d429535abae0115b4f578bbac) Thanks [@hntrl](https://github.com/hntrl)! - feat(langchain): add langsmith gateway to initChatModel- [#11362](https://github.com/langchain-ai/langchainjs/issues/11362)
+
 ## 1.5.6
 
 ### Patch Changes
