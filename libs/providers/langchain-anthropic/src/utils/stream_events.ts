@@ -36,7 +36,7 @@ export async function* convertAnthropicStream(
     Record<string, any>
   >();
   let usageSnapshot: UsageMetadata | undefined;
-  let responseMetadata: Record<string, any> | undefined;
+  let responseMetadata: Record<string, unknown> = {};
   let stopReason: string | null = null;
 
   for await (const data of source) {
