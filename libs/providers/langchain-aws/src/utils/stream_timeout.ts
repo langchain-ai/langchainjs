@@ -54,7 +54,6 @@ export async function withRequestIdleTimeout<T>(
     return request;
   }
 
-  request.catch(() => undefined);
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
   try {
