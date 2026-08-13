@@ -122,14 +122,12 @@ const allModelInfo: ModelInfo[] = [
     model: "gemini-3.5-flash-lite",
     testConfig: {
       isThinking: true,
-      only: true,
     },
   },
   {
     model: "gemini-3.6-flash",
     testConfig: {
       isThinking: true,
-      only: true,
     },
   },
   {
@@ -653,6 +651,51 @@ describe.each(coreModelInfo)(
       const result2 = await llm.invoke(history);
 
       expect(result2.content).toMatch(/21/);
+    });
+
+    test("function conversation multi-round", async () => {
+      const tools = [weatherTool];
+      const llm = newChatGoogle().bindTools(tools);
+      const history: BaseMessage[] = [
+        new HumanMessage("What is the weather in New York?"),
+      ];
+      const result1 = await llm.invoke(history);
+      history.push(result1);
+
+      const toolCalls = result1.tool_calls!;
+      const toolCall = toolCalls[0];
+      const toolMessage = await weatherTool.invoke(toolCall);
+      history.push(toolMessage);
+
+      const result2 = await llm.invoke(history);
+      history.push(result2);
+
+      expect(result2.content).toMatch(/21/);
+
+      const request3 = new HumanMessage("What about DC?")
+      history.push(request3);
+      const result3 = await llm.invoke(history);
+      history.push(result3);
+
+      expect(result3.type).toBe("ai");
+
+      const toolCalls3 = result3.tool_calls!;
+      const toolCall3 = toolCalls3[0];
+
+      console.log("Tool Call", toolCall3);
+
+      const toolMessage4 = await weatherTool.invoke(toolCall3);
+      history.push(toolMessage4);
+
+      const result4 = await llm.invoke(history);
+      expect(result4.type).toBe("ai");
+
+      console.log("Test Summary", {
+        platformType: defaultGoogleParams?.platformType,
+        isNode: testConfig?.node,
+        toolCall1Id: toolCall?.id,
+        toolCall3Id: toolCall3?.id
+      })
     });
 
     test("function reply", async () => {
