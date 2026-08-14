@@ -131,6 +131,12 @@ const allModelInfo: ModelInfo[] = [
     },
   },
   {
+    model: "gemini-3.7-flash",
+    testConfig: {
+      isThinking: true,
+    },
+  },
+  {
     model: "gemini-2.5-flash-image",
     testConfig: {
       isImage: true,
