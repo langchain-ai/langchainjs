@@ -297,4 +297,42 @@ describe("toJsonSchema", () => {
       expect(result1.parameters).toBe(result2.parameters);
     });
   });
+
+  describe("with ZodDefault-wrapped zod v3 schemas", () => {
+    // https://github.com/langchain-ai/langchainjs/issues/11240
+    // Zod v3.24+ adds a `~standard.jsonSchema` property to Zod schemas,
+    // causing isStandardJsonSchema() to return true for them. However,
+    // ~standard.jsonSchema.input() on ZodDefault(ZodEffects(ZodObject)) returns
+    // the raw Zod _def structure instead of a valid JSON Schema, which causes
+    // the Anthropic API to reject the tool definition with "Field required: type".
+    it("should produce a valid JSON schema (with a type field) for ZodDefault(ZodObject)", () => {
+      const schema = z.object({ count: z.number() }).default({ count: 0 });
+      const jsonSchema = toJsonSchema(schema);
+      expect(jsonSchema).toMatchObject({
+        type: "object",
+        properties: { count: { type: "number" } },
+        required: ["count"],
+      });
+      // Must not expose raw Zod internals
+      expect(jsonSchema).not.toHaveProperty("_def");
+    });
+
+    it("should produce a valid JSON schema for ZodDefault(ZodEffects(ZodObject))", () => {
+      // This is the exact shape that n8n's built-in Think tool produces:
+      // ZodDefault wrapping a ZodEffects (transform) wrapping a ZodObject
+      const inner = z.object({}).catchall(z.never());
+      const schema = inner.transform((v) => v).default(() => ({}));
+      const jsonSchema = toJsonSchema(schema);
+      // Must have a top-level "type" — Anthropic rejects schemas without it
+      expect(jsonSchema).toHaveProperty("type");
+      expect(jsonSchema).not.toHaveProperty("_def");
+    });
+
+    it("should produce a valid JSON schema for ZodDefault(ZodString)", () => {
+      const schema = z.string().default("hello");
+      const jsonSchema = toJsonSchema(schema);
+      expect(jsonSchema).toMatchObject({ type: "string" });
+      expect(jsonSchema).not.toHaveProperty("_def");
+    });
+  });
 });
