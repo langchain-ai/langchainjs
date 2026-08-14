@@ -94,7 +94,6 @@ export function getAzureChatOpenAIInvocationParams<
       deploymentName,
       modelWasExplicitlyConfigured
     ),
-    azureOpenAIApiDeploymentName: deploymentName,
   };
 }
 

@@ -262,13 +262,12 @@ describe("Azure OpenAI callback model attribution", () => {
       });
       expect(invocationParams).toMatchObject({
         model: deploymentName,
-        azureOpenAIApiDeploymentName: deploymentName,
       });
       const requestBody = JSON.parse(
         String(mockFetch.mock.calls[0]?.[1]?.body)
       ) as Record<string, unknown>;
       expect(requestBody.model).toBe(deploymentName);
-      expect(requestBody.azureOpenAIApiDeploymentName).toBe(deploymentName);
+      expect(requestBody).not.toHaveProperty("azureOpenAIApiDeploymentName");
     }
   );
 
@@ -285,7 +284,6 @@ describe("Azure OpenAI callback model attribution", () => {
       });
       expect(chat.invocationParams({})).toMatchObject({
         model: explicitModel,
-        azureOpenAIApiDeploymentName: deploymentName,
       });
     }
   );
