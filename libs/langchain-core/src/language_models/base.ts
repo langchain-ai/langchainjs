@@ -323,6 +323,10 @@ export interface BaseLanguageModelCallOptions
    * If not provided, the default stop tokens for the model will be used.
    */
   stop?: string[];
+  /**
+   * Overrides the model's configured `maxRetries` for this call only.
+   */
+  maxRetries?: number;
 }
 
 export interface FunctionDefinition {

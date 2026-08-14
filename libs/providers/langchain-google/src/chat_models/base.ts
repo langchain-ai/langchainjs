@@ -481,7 +481,7 @@ export abstract class BaseChatGoogle<
     let response: Response;
     try {
       response = await this.caller.callWithOptions(
-        { signal: options.signal },
+        { signal: options.signal, maxRetries: options.maxRetries },
         async () => {
           const nextResponse = await this.apiClient.fetch(
             new Request(url, {
@@ -672,7 +672,7 @@ export abstract class BaseChatGoogle<
     let response: Response;
     try {
       response = await this.caller.callWithOptions(
-        { signal: options.signal },
+        { signal: options.signal, maxRetries: options.maxRetries },
         async () => {
           const nextResponse = await this.apiClient.fetch(
             new Request(url, {

@@ -35,7 +35,7 @@
     "jose": "^6.2.4"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0"
+    "@langchain/core": "workspace:^"
   },
   "devDependencies": {
     "@langchain/core": "workspace:^",
