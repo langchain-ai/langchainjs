@@ -14,12 +14,16 @@ export function resolveStreamIdleTimeout(timeout: number | undefined) {
   return timeout;
 }
 
-/** Creates the catchable error thrown when Bedrock stops yielding stream chunks. */
-export function createStreamIdleTimeoutError(timeout: number) {
-  return new Error(
-    `Bedrock Converse stream timed out after ${timeout} ms without receiving a chunk.`,
-    { cause: { lc_error_code: "MODEL_STREAM_TIMEOUT" } }
+/** Creates the catchable error thrown when Bedrock stops responding within the idle timeout. */
+export function createStreamIdleTimeoutError(
+  timeout: number,
+  phase: "initial response" | "next chunk" = "next chunk"
+) {
+  const error = new Error(
+    `Bedrock Converse timed out after ${timeout} ms while waiting for the ${phase}.`
   );
+  (error as { lc_error_code?: string }).lc_error_code = "MODEL_STREAM_TIMEOUT";
+  return error;
 }
 
 /** Creates an AbortController that follows an optional caller-provided signal. */
@@ -38,6 +42,39 @@ export function createLinkedAbortController(signal?: AbortSignal) {
     abortController,
     cleanup: () => signal.removeEventListener("abort", onAbort),
   };
+}
+
+/** Races a pending request against the idle timeout, aborting on a pre-response stall. */
+export async function withRequestIdleTimeout<T>(
+  request: Promise<T>,
+  timeout: number | undefined,
+  abortController: AbortController
+): Promise<T> {
+  if (timeout === undefined) {
+    return request;
+  }
+
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+  try {
+    return await Promise.race([
+      request,
+      new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => {
+          const error = createStreamIdleTimeoutError(
+            timeout,
+            "initial response"
+          );
+          abortController.abort(error);
+          reject(error);
+        }, timeout);
+      }),
+    ]);
+  } finally {
+    if (timeoutId !== undefined) {
+      clearTimeout(timeoutId);
+    }
+  }
 }
 
 /** Wraps a stream with a first/inter-chunk idle timeout that aborts on stalls. */
