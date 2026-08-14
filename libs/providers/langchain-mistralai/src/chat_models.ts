@@ -70,6 +70,7 @@ import {
 import {
   _convertToolCallIdToMistralCompatible,
   _mistralContentChunkToMessageContentComplex,
+  _normalizeStreamedToolCallId,
 } from "./utils.js";
 import {
   isSerializableSchema,
@@ -98,6 +99,7 @@ export interface ChatMistralAICallOptions extends Omit<
   };
   tools?: ChatMistralAIToolType[];
   tool_choice?: MistralAIToolChoice;
+  parallel_tool_calls?: boolean;
   /**
    * Whether or not to include token usage in the stream.
    * @default {true}
@@ -475,12 +477,18 @@ function _convertDeltaToMessageChunk(
   // need to insert it here.
   const rawToolCallChunksWithIndex = delta.toolCalls?.length
     ? delta.toolCalls?.map(
-        (toolCall, index): MistralAIToolCall & { index: number } => ({
-          ...toolCall,
-          index,
-          id: toolCall.id ?? uuidv4().replace(/-/g, ""),
-          type: "function",
-        })
+        (
+          toolCall,
+          position
+        ): MistralAIToolCall & { index: number; id?: string } => {
+          const normalizedId = _normalizeStreamedToolCallId(toolCall.id);
+          return {
+            ...toolCall,
+            index: toolCall.index ?? position,
+            id: normalizedId,
+            type: "function",
+          };
+        }
       )
     : undefined;
 
@@ -1048,7 +1056,8 @@ export class ChatMistralAI<
     MistralAIChatCompletionRequest | MistralAIChatCompletionStreamRequest,
     "messages"
   > {
-    const { response_format, tools, tool_choice } = options ?? {};
+    const { response_format, tools, tool_choice, parallel_tool_calls } =
+      options ?? {};
     const mistralAITools: Array<MistralAITool> | undefined = tools?.length
       ? _convertToolToMistralTool(tools)
       : undefined;
@@ -1065,6 +1074,7 @@ export class ChatMistralAI<
       presencePenalty: this.presencePenalty,
       frequencyPenalty: this.frequencyPenalty,
       n: this.numCompletions,
+      parallelToolCalls: parallel_tool_calls,
     };
     return params;
   }
