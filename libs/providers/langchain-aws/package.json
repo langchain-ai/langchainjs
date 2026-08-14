@@ -1,6 +1,6 @@
 {
   "name": "@langchain/aws",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "description": "LangChain AWS integration",
   "author": "LangChain",
   "license": "MIT",
