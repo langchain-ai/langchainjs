@@ -124,7 +124,27 @@ export class MiddlewareError extends Error {
     if (isGraphBubbleUp(error)) {
       return error;
     }
-    return new MiddlewareError(error, middlewareName);
+
+    const wrapped = new MiddlewareError(error, middlewareName);
+
+    if (error instanceof Error) {
+      // Preserve the original error's identity:
+      // - its prototype chain, so `instanceof` checks and the `retryOn`
+      //   constructor-matching form keep working,
+      // - its own enumerable properties (`code`, custom flags, ...),
+      // - its stack trace.
+      //
+      // The wrapped error is still recognized as a `MiddlewareError` because
+      // `Symbol.hasInstance` checks the `~brand` property, which is set in the
+      // constructor and remains an own property of the instance.
+      Object.setPrototypeOf(wrapped, Object.getPrototypeOf(error));
+      Object.assign(wrapped, error);
+      if (error.stack) {
+        wrapped.stack = error.stack;
+      }
+    }
+
+    return wrapped;
   }
 
   /**
