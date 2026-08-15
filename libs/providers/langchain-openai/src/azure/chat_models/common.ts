@@ -1,6 +1,7 @@
 import { AzureOpenAI as AzureOpenAIClient, type ClientOptions } from "openai";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import type { Serialized } from "@langchain/core/load/serializable";
+import type { LangSmithParams } from "@langchain/core/language_models/chat_models";
 import { ChatOpenAICallOptions } from "../../chat_models/index.js";
 import {
   OpenAIEndpointConfig,
@@ -47,6 +48,54 @@ export interface AzureChatOpenAIFields
    * only when required in order to fulfill the request.
    */
   useResponsesApi?: boolean;
+}
+
+const DEFAULT_OPENAI_MODEL = "gpt-3.5-turbo";
+
+function getAzureChatOpenAIModelName(
+  modelName: string | undefined,
+  deploymentName: string | undefined,
+  modelWasExplicitlyConfigured: boolean
+) {
+  if (
+    !modelWasExplicitlyConfigured &&
+    modelName === DEFAULT_OPENAI_MODEL &&
+    deploymentName
+  ) {
+    return deploymentName;
+  }
+  return modelName;
+}
+
+export function getAzureChatOpenAILsParams(
+  params: LangSmithParams,
+  deploymentName: string | undefined,
+  modelWasExplicitlyConfigured: boolean
+) {
+  params.ls_provider = "azure";
+  params.ls_model_name = getAzureChatOpenAIModelName(
+    params.ls_model_name,
+    deploymentName,
+    modelWasExplicitlyConfigured
+  );
+  return params;
+}
+
+export function getAzureChatOpenAIInvocationParams<
+  Params extends { model?: string },
+>(
+  params: Params,
+  deploymentName: string | undefined,
+  modelWasExplicitlyConfigured: boolean
+) {
+  return {
+    ...params,
+    model: getAzureChatOpenAIModelName(
+      params.model,
+      deploymentName,
+      modelWasExplicitlyConfigured
+    ),
+  };
 }
 
 export function getAzureChatOpenAIParams(
