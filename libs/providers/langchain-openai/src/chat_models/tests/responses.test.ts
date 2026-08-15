@@ -133,6 +133,16 @@ describe("service_tier configuration", () => {
     const params = model.invocationParams({});
     expect(params.service_tier).toBe("auto");
   });
+
+  it("prefers per-call service_tier over the model configuration", () => {
+    const model = new ChatOpenAIResponses({
+      model: "gpt-4o",
+      service_tier: "auto",
+    });
+
+    const params = model.invocationParams({ service_tier: "flex" });
+    expect(params.service_tier).toBe("flex");
+  });
 });
 
 describe("streaming errors", () => {
