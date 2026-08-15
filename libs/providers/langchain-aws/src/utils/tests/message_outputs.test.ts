@@ -99,6 +99,40 @@ describe("reasoning output conversion", () => {
       },
     ]);
   });
+
+  test("preserves a reasoning signature after streamed text", () => {
+    const reasoning = handleConverseStreamContentBlockDelta({
+      contentBlockIndex: 0,
+      delta: { reasoningContent: { text: "Reasoning summary" } },
+    });
+    const signature = handleConverseStreamContentBlockDelta({
+      contentBlockIndex: 0,
+      delta: { reasoningContent: { signature: "opaque-signature" } },
+    });
+    const text = handleConverseStreamContentBlockDelta({
+      contentBlockIndex: 1,
+      delta: { text: "Answer" },
+    });
+
+    const result = concat(
+      concat(reasoning.message, signature.message),
+      text.message
+    );
+
+    expect(result.content).toEqual([
+      {
+        type: "reasoning",
+        reasoning: "Reasoning summary",
+        signature: "opaque-signature",
+        index: 0,
+      },
+      {
+        type: "text",
+        text: "Answer",
+        index: 1,
+      },
+    ]);
+  });
 });
 
 describe("message output usage metadata conversion", () => {
