@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Google integrations for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -35,7 +35,7 @@
     "jose": "^6.2.4"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0"
+    "@langchain/core": "workspace:^"
   },
   "devDependencies": {
     "@langchain/core": "workspace:^",

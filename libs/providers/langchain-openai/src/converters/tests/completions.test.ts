@@ -39,6 +39,35 @@ describe("convertCompletionsMessageToBaseMessage", () => {
     );
   });
 
+  it("includes usage in response_metadata when system_fingerprint is absent", () => {
+    const mockMessage = {
+      role: "assistant" as const,
+      content: "Hello",
+    };
+
+    const mockRawResponse = {
+      id: "chatcmpl-no-fingerprint",
+      model: "gpt-5.2",
+      // Newer OpenAI models no longer populate system_fingerprint
+      system_fingerprint: null,
+      choices: [{ index: 0, message: mockMessage, finish_reason: "stop" }],
+      usage: {
+        prompt_tokens: 10,
+        completion_tokens: 20,
+        total_tokens: 30,
+        prompt_tokens_details: { cached_tokens: 5 },
+      },
+    };
+
+    const result = convertCompletionsMessageToBaseMessage({
+      message: mockMessage as unknown as ChatCompletionMessage,
+      rawResponse: mockRawResponse as any,
+    }) as AIMessage;
+
+    expect(result.response_metadata.usage).toEqual(mockRawResponse.usage);
+    expect(result.response_metadata.system_fingerprint).toBeUndefined();
+  });
+
   it("preserves delta reasoning_content in streaming chunks", () => {
     const delta = {
       role: "assistant" as const,

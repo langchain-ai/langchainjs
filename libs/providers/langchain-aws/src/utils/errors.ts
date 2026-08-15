@@ -1,3 +1,5 @@
+import { stampRetryable } from "@langchain/core/errors";
+
 function extractBedrockErrorMessage(error: unknown): string | undefined {
   if (typeof error === "string") {
     return error;
@@ -33,6 +35,14 @@ function extractBedrockErrorMessage(error: unknown): string | undefined {
     }
   }
   return undefined;
+}
+
+function isBedrockContentFilterError(error: unknown): boolean {
+  return (
+    extractBedrockErrorMessage(error)
+      ?.toLowerCase()
+      .includes("content filtering policy") ?? false
+  );
 }
 
 function getBedrockHttpStatusCode(error: unknown): number | undefined {
@@ -107,7 +117,9 @@ export function normalizeBedrockError(error: unknown): Error {
   // oxlint-disable-next-line no-instanceof/no-instanceof
   if (error instanceof Error) {
     attachBedrockHttpStatus(error, error);
-    return error;
+    return isBedrockContentFilterError(error)
+      ? stampRetryable(error, false)
+      : error;
   }
   const message =
     extractBedrockErrorMessage(error) ??
@@ -117,5 +129,7 @@ export function normalizeBedrockError(error: unknown): Error {
     preserveBedrockErrorProperties(error, normalizedError);
   }
   attachBedrockHttpStatus(normalizedError, error);
-  return normalizedError;
+  return isBedrockContentFilterError(error)
+    ? stampRetryable(normalizedError, false)
+    : normalizedError;
 }

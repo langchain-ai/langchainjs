@@ -68,6 +68,7 @@ import {
   DEFAULT_STREAM_IDLE_TIMEOUT,
   createLinkedAbortController,
   resolveStreamIdleTimeout,
+  withRequestIdleTimeout,
   withStreamIdleTimeout,
 } from "./utils/stream_timeout.js";
 import {
@@ -1086,7 +1087,7 @@ export class ChatBedrockConverse
         ...params,
       });
       const response = await this.caller.callWithOptions(
-        { signal: options.signal },
+        { signal: options.signal, maxRetries: options.maxRetries },
         async () => {
           try {
             return await this.client.send(command, {
@@ -1152,17 +1153,27 @@ export class ChatBedrockConverse
         options.signal
       );
       try {
-        const response = await this.caller.callWithOptions(
-          { signal: abortController.signal },
-          async () => {
-            try {
-              return await this.client.send(command, {
-                abortSignal: abortController.signal,
-              });
-            } catch (error) {
-              throw normalizeBedrockError(error);
+        const streamIdleTimeout = resolveStreamIdleTimeout(
+          options.streamIdleTimeout ?? this.streamIdleTimeout
+        );
+        const response = await withRequestIdleTimeout(
+          this.caller.callWithOptions(
+            {
+              signal: abortController.signal,
+              maxRetries: options.maxRetries,
+            },
+            async () => {
+              try {
+                return await this.client.send(command, {
+                  abortSignal: abortController.signal,
+                });
+              } catch (error) {
+                throw normalizeBedrockError(error);
+              }
             }
-          }
+          ),
+          streamIdleTimeout,
+          abortController
         );
         if (!response.stream) {
           return;
@@ -1178,9 +1189,6 @@ export class ChatBedrockConverse
             yield chunk;
           }
         };
-        const streamIdleTimeout = resolveStreamIdleTimeout(
-          options.streamIdleTimeout ?? this.streamIdleTimeout
-        );
         yield* convertBedrockConverseStream(
           abortableStream(
             withStreamIdleTimeout(
@@ -1233,22 +1241,29 @@ export class ChatBedrockConverse
         options.signal
       );
       try {
-        const response = await this.caller.callWithOptions(
-          { signal: abortController.signal },
-          async () => {
-            try {
-              return await this.client.send(command, {
-                abortSignal: abortController.signal,
-              });
-            } catch (error) {
-              throw normalizeBedrockError(error);
+        const streamIdleTimeout = resolveStreamIdleTimeout(
+          options.streamIdleTimeout ?? this.streamIdleTimeout
+        );
+        const response = await withRequestIdleTimeout(
+          this.caller.callWithOptions(
+            {
+              signal: abortController.signal,
+              maxRetries: options.maxRetries,
+            },
+            async () => {
+              try {
+                return await this.client.send(command, {
+                  abortSignal: abortController.signal,
+                });
+              } catch (error) {
+                throw normalizeBedrockError(error);
+              }
             }
-          }
+          ),
+          streamIdleTimeout,
+          abortController
         );
         if (response.stream) {
-          const streamIdleTimeout = resolveStreamIdleTimeout(
-            options.streamIdleTimeout ?? this.streamIdleTimeout
-          );
           for await (const chunk of withStreamIdleTimeout(
             response.stream,
             streamIdleTimeout,

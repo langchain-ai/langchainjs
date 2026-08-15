@@ -1,5 +1,25 @@
 # @langchain/anthropic
 
+## 1.5.6
+
+### Patch Changes
+
+- [#11342](https://github.com/langchain-ai/langchainjs/pull/11342) [`3b0e4c4`](https://github.com/langchain-ai/langchainjs/commit/3b0e4c48a31811031a460c4d95519a7c1163dc41) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - feat(anthropic): mark Anthropic provider errors as retryable or not
+
+  Builds on `stampRetryable` in `@langchain/core` so the retry middleware can tell a transient failure from a deterministic one. Rate limits are marked retryable; context overflow, invalid tool results, bad credentials, and unknown models non-retryable. Anything else stays unmarked and retries as before.
+
+  Also forwards a per-call `maxRetries` to the retry loop, so a surrounding retry loop such as `modelRetryMiddleware` can take over instead of the two multiplying against each other.
+
+  Errors keep their original class, so `instanceof` against the `@anthropic-ai/sdk` error types is unaffected.
+
+## 1.5.5
+
+### Patch Changes
+
+- [#11359](https://github.com/langchain-ai/langchainjs/pull/11359) [`d36ec6a`](https://github.com/langchain-ai/langchainjs/commit/d36ec6a6f4b1c474b0d9f9cb6037ff37f54183bf) Thanks [@talarari](https://github.com/talarari)! - fix(anthropic): preserve gateway cost on the native stream path
+
+  `convertAnthropicStream` now surfaces an Anthropic-compatible gateway's numeric `usage.cost` at `response_metadata.usage.cost`, matching the chunk path. Token accounting in `usage_metadata` is unchanged.
+
 ## 1.5.4
 
 ### Patch Changes

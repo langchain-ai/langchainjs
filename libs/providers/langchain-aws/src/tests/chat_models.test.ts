@@ -24,7 +24,10 @@ import { z } from "zod/v3";
 import { describe, expect, test, it, vi } from "vitest";
 import { convertToConverseMessages } from "../utils/message_inputs.js";
 import { handleConverseStreamContentBlockDelta } from "../utils/message_outputs.js";
-import { ChatBedrockConverse } from "../chat_models.js";
+import {
+  ChatBedrockConverse,
+  type ChatBedrockConverseCallOptions,
+} from "../chat_models.js";
 import { load } from "@langchain/core/load";
 
 describe("convertToConverseMessages", () => {
@@ -1061,6 +1064,26 @@ describe("retry configuration", () => {
     expectRetry(setup);
   });
 
+  test("honors a per-call maxRetries override for non-streaming requests", async () => {
+    const transientError = Object.assign(new Error("Service unavailable"), {
+      status: 503,
+    });
+    const mockSend = vi.fn().mockRejectedValue(transientError);
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      client: { send: mockSend } as unknown as BedrockRuntimeClient,
+      maxRetries: 1,
+    });
+
+    await expect(
+      runRetryTimers(() =>
+        model.invoke([new HumanMessage("Hello")], { maxRetries: 0 })
+      )
+    ).rejects.toBe(transientError);
+
+    expect(mockSend).toHaveBeenCalledOnce();
+  });
+
   test("does not retry AWS client errors", async () => {
     const validationError = new ValidationException({
       message: "Invalid request",
@@ -1158,15 +1181,23 @@ describe("retry configuration", () => {
   });
 
   const streamInitializers: Array<
-    [string, (model: ChatBedrockConverse) => AsyncIterable<unknown>]
+    [
+      string,
+      (
+        model: ChatBedrockConverse,
+        options?: ChatBedrockConverseCallOptions
+      ) => AsyncIterable<unknown>,
+    ]
   > = [
     [
       "legacy stream",
-      (model) => model._streamResponseChunks([new HumanMessage("Hello")], {}),
+      (model, options = {}) =>
+        model._streamResponseChunks([new HumanMessage("Hello")], options),
     ],
     [
       "chat model event stream",
-      (model) => model._streamChatModelEvents([new HumanMessage("Hello")], {}),
+      (model, options = {}) =>
+        model._streamChatModelEvents([new HumanMessage("Hello")], options),
     ],
   ];
 
@@ -1324,6 +1355,29 @@ describe("retry configuration", () => {
     }
   );
 
+  test.each(streamInitializers)(
+    "honors a per-call maxRetries override for %s initialization",
+    async (_name, initializeStream) => {
+      const transientError = Object.assign(new Error("Service unavailable"), {
+        status: 503,
+      });
+      const mockSend = vi.fn().mockRejectedValue(transientError);
+      const model = new ChatBedrockConverse({
+        ...baseConstructorArgs,
+        client: { send: mockSend } as unknown as BedrockRuntimeClient,
+        maxRetries: 1,
+      });
+
+      await expect(
+        runRetryTimers(() =>
+          consume(initializeStream(model, { maxRetries: 0 }))
+        )
+      ).rejects.toBe(transientError);
+
+      expect(mockSend).toHaveBeenCalledOnce();
+    }
+  );
+
   test("does not retry after stream initialization", async () => {
     const streamError = new Error("Stream disconnected");
     const onFailedAttempt = vi.fn();
@@ -1408,11 +1462,72 @@ test("Streaming throws when Bedrock stream stalls between chunks", async () => {
     })();
 
     const expectation = expect(consume).rejects.toThrow(
-      "Bedrock Converse stream timed out after 50 ms without receiving a chunk."
+      "Bedrock Converse timed out after 50 ms while waiting for the next chunk."
     );
 
     await vi.advanceTimersByTimeAsync(50);
     await expectation;
+    await expect(consume).rejects.toHaveProperty(
+      "lc_error_code",
+      "MODEL_STREAM_TIMEOUT"
+    );
+    expect(mockSend).toHaveBeenCalledOnce();
+    expect(aborted).toBe(true);
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+test("Streaming throws when Bedrock never responds to the initial request", async () => {
+  vi.useFakeTimers();
+  try {
+    let aborted = false;
+    const mockSend = vi
+      .fn()
+      .mockImplementation(
+        (_command: unknown, options?: { abortSignal?: AbortSignal }) => {
+          options?.abortSignal?.addEventListener("abort", () => {
+            aborted = true;
+          });
+          return new Promise<never>(() => {});
+        }
+      );
+
+    const mockClient = {
+      send: mockSend,
+    } as unknown as BedrockRuntimeClient;
+
+    const model = new ChatBedrockConverse({
+      region: "us-east-1",
+      credentials: {
+        secretAccessKey: "test-secret-key",
+        accessKeyId: "test-access-key",
+      },
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
+      client: mockClient,
+      streamIdleTimeout: 50,
+    });
+
+    const consume = (async () => {
+      for await (const chunk of model._streamResponseChunks(
+        [new HumanMessage("Hello")],
+        {}
+      )) {
+        expect(chunk).toBeDefined();
+      }
+    })();
+
+    const expectation = expect(consume).rejects.toThrow(
+      "Bedrock Converse timed out after 50 ms while waiting for the initial response."
+    );
+
+    await vi.advanceTimersByTimeAsync(50);
+    await expectation;
+    await expect(consume).rejects.toHaveProperty(
+      "lc_error_code",
+      "MODEL_STREAM_TIMEOUT"
+    );
+    expect(mockSend).toHaveBeenCalledOnce();
     expect(aborted).toBe(true);
   } finally {
     vi.useRealTimers();
@@ -1957,7 +2072,6 @@ describe("applicationInferenceProfile parameter", () => {
       ...baseConstructorArgs,
       model: "anthropic.claude-haiku-4-5-20251001-v1:0",
       client: mockClient,
-      maxRetries: 0,
     });
 
     let thrown: unknown;
@@ -1973,6 +2087,7 @@ describe("applicationInferenceProfile parameter", () => {
       expect(thrown.message).toBe(rawError.message);
       expect(thrown.cause).toEqual(rawError);
     }
+    expect(mockClient.send).toHaveBeenCalledOnce();
   });
 
   it("should surface plain object Bedrock errors in streaming mode", async () => {
@@ -1989,7 +2104,6 @@ describe("applicationInferenceProfile parameter", () => {
       model: "anthropic.claude-haiku-4-5-20251001-v1:0",
       streaming: true,
       client: mockClient,
-      maxRetries: 0,
     });
 
     let thrown: unknown;
@@ -2005,6 +2119,7 @@ describe("applicationInferenceProfile parameter", () => {
       expect(thrown.message).toBe(rawError.message);
       expect(thrown.cause).toEqual(rawError);
     }
+    expect(mockClient.send).toHaveBeenCalledOnce();
   });
 });
 
