@@ -1,6 +1,6 @@
 {
   "name": "@langchain/aws",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "description": "LangChain AWS integration",
   "author": "LangChain",
   "license": "MIT",
@@ -30,7 +30,7 @@
     "@aws-sdk/credential-provider-node": "^3.972.74"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0"
+    "@langchain/core": "workspace:^"
   },
   "devDependencies": {
     "@aws-sdk/types": "^3.974.2",

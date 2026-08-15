@@ -49,7 +49,7 @@ function getLangSmithChatModelParams({
 }) {
   const gatewayConfig = resolveLangSmithGatewayConfig({
     baseURL: configuration.baseURL,
-    providerPath: "openai/v1",
+    providerPath: "v1",
   });
 
   return {
@@ -61,8 +61,7 @@ function getLangSmithChatModelParams({
         getEnvironmentVariable("LANGSMITH_API_KEY")),
     configuration: {
       ...configuration,
-      baseURL:
-        gatewayConfig.baseURL ?? `${DEFAULT_LANGSMITH_GATEWAY}/openai/v1`,
+      baseURL: gatewayConfig.baseURL ?? `${DEFAULT_LANGSMITH_GATEWAY}/v1`,
     },
     useResponsesApi: true,
   };
