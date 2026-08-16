@@ -509,9 +509,11 @@ describe("MultiServerMCPClient", () => {
 
     test("should throw on transport creation errors", async () => {
       // Force an error when creating transport
-      (StdioClientTransport as Mock).mockImplementationOnce(() => {
-        throw new Error("Transport creation failed");
-      });
+      (StdioClientTransport as Mock).mockImplementationOnce(
+        function mockStdioTransport() {
+          throw new Error("Transport creation failed");
+        }
+      );
 
       const client = new MultiServerMCPClient({
         "test-server": {
@@ -535,9 +537,11 @@ describe("MultiServerMCPClient", () => {
 
     test("should throw on streamable HTTP transport creation errors", async () => {
       // Force an error when creating transport
-      (StreamableHTTPClientTransport as Mock).mockImplementationOnce(() => {
-        throw new Error("Streamable HTTP transport creation failed");
-      });
+      (StreamableHTTPClientTransport as Mock).mockImplementationOnce(
+        function mockStreamableHTTPTransport() {
+          throw new Error("Streamable HTTP transport creation failed");
+        }
+      );
 
       const client = new MultiServerMCPClient({
         "test-server": {

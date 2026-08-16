@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 
 /**
  * A constructor type that can be used as a base class for branding.
@@ -134,6 +134,10 @@ export function createNamespace(path: string): Namespace {
             brandSymbol in obj &&
             (obj as Record<symbol, unknown>)[brandSymbol] === true
           );
+        }
+
+        static [Symbol.hasInstance](obj: unknown) {
+          return this.isInstance(obj);
         }
       }
 

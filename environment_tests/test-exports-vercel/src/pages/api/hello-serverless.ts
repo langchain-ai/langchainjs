@@ -4,7 +4,6 @@
 import "../../entrypoints.js";
 
 // Import a few things we'll use to test the exports
-import { LLMChain } from "@langchain/classic/chains";
 import { ChatOpenAI } from "@langchain/openai";
 import {
   ChatPromptTemplate,
@@ -12,7 +11,6 @@ import {
 } from "@langchain/core/prompts";
 import { OpenAI } from "@langchain/openai";
 import { OpenAIEmbeddings } from "@langchain/openai";
-import { TextLoader } from "@langchain/classic/document_loaders/fs/text";
 
 import { NextApiRequest, NextApiResponse } from "next";
 
@@ -26,17 +24,14 @@ export default async function handler(
     openAIApiKey: process.env.OPENAI_API_KEY,
   });
 
-  // Test a document loader from a blob
-  const docs = new TextLoader(new Blob(["hello"]));
-
-  // Test a chain + prompt + model
-  const chain = new LLMChain({
-    llm: new ChatOpenAI({ openAIApiKey: process.env.OPENAI_API_KEY }),
-    prompt: ChatPromptTemplate.fromMessages([
-      HumanMessagePromptTemplate.fromTemplate("{input}"),
-    ]),
-  });
-  const output = await chain.run("hello");
+  // Test a chain + prompt + model using LCEL
+  const prompt = ChatPromptTemplate.fromMessages([
+    HumanMessagePromptTemplate.fromTemplate("{input}"),
+  ]);
+  const chain = prompt.pipe(
+    new ChatOpenAI({ openAIApiKey: process.env.OPENAI_API_KEY })
+  );
+  const output = await chain.invoke({ input: "hello" });
 
   return res.status(200).json({
     name: `Hello, from ${req.url} I'm a Serverless Function! Assistant says: ${output}`,

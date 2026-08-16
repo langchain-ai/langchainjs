@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { VertexAIEmbeddings } from "../embeddings.js";
 
 test("Test VertexAIEmbeddings.embedQuery", async () => {

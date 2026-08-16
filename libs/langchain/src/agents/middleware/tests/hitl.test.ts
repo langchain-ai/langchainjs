@@ -24,6 +24,7 @@ import {
   _AnyIdAIMessage,
 } from "../../tests/utils.js";
 import type { Interrupt } from "../../types.js";
+import type { ToolCallRequest } from "../types.js";
 
 const writeFileFn = vi.fn(
   async ({ filename, content }: { filename: string; content: string }) => {
@@ -606,7 +607,7 @@ describe("humanInTheLoopMiddleware", () => {
 
     // Resume with manual response - this should fail because message must be a string
     // but we're passing an object
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const invalidMessage: any = {
       action: "write_file",
       args: "File operation not allowed in demo mode",
@@ -1069,7 +1070,7 @@ describe("humanInTheLoopMiddleware", () => {
     );
 
     // Resume with invalid edited action (name is not a string)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const invalidEditedAction: any = {
       name: 123, // Invalid: should be string
       args: { filename: "test.txt", content: "test" },
@@ -1138,7 +1139,7 @@ describe("humanInTheLoopMiddleware", () => {
     );
 
     // Resume with invalid edited action (args is not an object)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const invalidEditedAction: any = {
       name: "write_file",
       args: "not an object", // Invalid: should be object
@@ -1207,7 +1208,7 @@ describe("humanInTheLoopMiddleware", () => {
     );
 
     // Resume with missing editedAction
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const invalidDecision: any = {
       type: "edit",
       // editedAction is missing
@@ -1271,7 +1272,7 @@ describe("humanInTheLoopMiddleware", () => {
     );
 
     // Resume with invalid HITLResponse (no decisions array)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const invalidResponse: any = {
       // decisions is missing
     };
@@ -1332,7 +1333,7 @@ describe("humanInTheLoopMiddleware", () => {
     );
 
     // Resume with invalid HITLResponse (decisions is not an array)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const invalidResponse: any = {
       decisions: "not an array",
     };
@@ -2001,6 +2002,192 @@ describe("humanInTheLoopMiddleware", () => {
         filename: "original2.txt",
         content: "Original 2",
       });
+    });
+  });
+
+  describe("when predicate", () => {
+    it("auto-approves the tool call when `when` returns false", async () => {
+      const hitlMiddleware = humanInTheLoopMiddleware({
+        interruptOn: {
+          write_file: {
+            allowedDecisions: ["approve"],
+            when: (request) =>
+              String(request.toolCall.args.filename ?? "").startsWith("danger"),
+          },
+        },
+      });
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [
+          [
+            {
+              id: "call_1",
+              name: "write_file",
+              args: { filename: "safe.txt", content: "Safe content" },
+            },
+          ],
+          [],
+        ],
+      });
+
+      const checkpointer = new MemorySaver();
+      const agent = createAgent({
+        model,
+        checkpointer,
+        tools: [writeFileTool],
+        middleware: [hitlMiddleware],
+      });
+
+      const config = {
+        configurable: { thread_id: "test-when-false" },
+      };
+
+      await agent.invoke(
+        { messages: [new HumanMessage("Write to safe.txt")] },
+        config
+      );
+
+      // The agent should run to completion without interrupting.
+      const state = await agent.graph.getState(config);
+      expect(state.next.length).toBe(0);
+      expect(state.tasks?.[0]?.interrupts ?? []).toHaveLength(0);
+
+      // The tool executed because the `when` predicate auto-approved it.
+      expect(writeFileFn).toHaveBeenCalledTimes(1);
+      expect(writeFileFn).toHaveBeenCalledWith(
+        { filename: "safe.txt", content: "Safe content" },
+        expect.anything()
+      );
+    });
+
+    it("interrupts for the tool call when `when` returns true", async () => {
+      const hitlMiddleware = humanInTheLoopMiddleware({
+        interruptOn: {
+          write_file: {
+            allowedDecisions: ["approve"],
+            when: (request) =>
+              String(request.toolCall.args.filename ?? "").startsWith("danger"),
+          },
+        },
+      });
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [
+          [
+            {
+              id: "call_1",
+              name: "write_file",
+              args: { filename: "danger.txt", content: "Dangerous content" },
+            },
+          ],
+        ],
+      });
+
+      const checkpointer = new MemorySaver();
+      const agent = createAgent({
+        model,
+        checkpointer,
+        tools: [writeFileTool],
+        middleware: [hitlMiddleware],
+      });
+
+      const config = {
+        configurable: { thread_id: "test-when-true" },
+      };
+
+      await agent.invoke(
+        { messages: [new HumanMessage("Write to danger.txt")] },
+        config
+      );
+
+      // The tool must not run until the human approves.
+      expect(writeFileFn).not.toHaveBeenCalled();
+
+      const state = await agent.graph.getState(config);
+      expect(state.next.length).toBe(1);
+
+      const task = state.tasks?.[0];
+      expect(task?.interrupts).toHaveLength(1);
+      const hitlRequest = task!.interrupts[0].value as HITLRequest;
+      expect(hitlRequest.actionRequests).toHaveLength(1);
+      expect(hitlRequest.actionRequests[0]?.name).toBe("write_file");
+    });
+
+    it("passes a ToolCallRequest with the correct values to `when`", async () => {
+      const captured: ToolCallRequest[] = [];
+
+      const hitlMiddleware = humanInTheLoopMiddleware({
+        interruptOn: {
+          write_file: {
+            allowedDecisions: ["approve"],
+            when: (request) => {
+              captured.push(request);
+              return true;
+            },
+          },
+        },
+      });
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [
+          [
+            {
+              id: "tc-1",
+              name: "write_file",
+              args: { filename: "report.txt", content: "data" },
+            },
+          ],
+        ],
+      });
+
+      const checkpointer = new MemorySaver();
+      const agent = createAgent({
+        model,
+        checkpointer,
+        tools: [writeFileTool],
+        middleware: [hitlMiddleware],
+      });
+
+      const config = {
+        configurable: { thread_id: "test-when-args" },
+      };
+
+      await agent.invoke(
+        { messages: [new HumanMessage("Write report")] },
+        config
+      );
+
+      expect(captured).toHaveLength(1);
+      const request = captured[0]!;
+
+      // The captured tool call matches the one emitted by the model.
+      expect(request.toolCall).toEqual({
+        id: "tc-1",
+        name: "write_file",
+        args: { filename: "report.txt", content: "data" },
+        type: "tool_call",
+      });
+
+      // In batch mode the request is constructed without a concrete tool.
+      expect(request.tool).toBeUndefined();
+
+      // The request carries the live agent state: the human prompt followed by
+      // the AI message whose tool call is being evaluated.
+      expect(request.state.messages).toEqual([
+        new _AnyIdHumanMessage("Write report"),
+        expect.objectContaining({
+          tool_calls: [
+            expect.objectContaining({ id: "tc-1", name: "write_file" }),
+          ],
+        }),
+      ]);
+      const lastMessage =
+        request.state.messages[request.state.messages.length - 1];
+      expect(AIMessage.isInstance(lastMessage)).toBe(true);
+
+      // The request exposes the node-level runtime.
+      expect(request.runtime).toBeDefined();
+      expect(request.runtime.configurable?.thread_id).toBe("test-when-args");
     });
   });
 });

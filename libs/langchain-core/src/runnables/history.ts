@@ -19,7 +19,7 @@ import { RunnableConfig } from "./config.js";
 import { RunnablePassthrough } from "./passthrough.js";
 
 type GetSessionHistoryCallable = (
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   ...args: Array<any>
 ) =>
   | Promise<BaseChatMessageHistory | BaseListChatMessageHistory>
@@ -42,18 +42,19 @@ export interface RunnableWithMessageHistoryInputs<
  * Wraps a LCEL chain and manages history. It appends input messages
  * and chain outputs as history, and adds the current history messages to
  * the chain input.
+ *
+ * @deprecated Use LangGraph's built-in persistence instead.
+ *
  * @example
  * ```typescript
- * // pnpm install @langchain/anthropic @langchain/community @upstash/redis
+ * // pnpm install @langchain/anthropic @langchain/classic
  *
  * import {
  *   ChatPromptTemplate,
  *   MessagesPlaceholder,
  * } from "@langchain/core/prompts";
  * import { ChatAnthropic } from "@langchain/anthropic";
- * import { UpstashRedisChatMessageHistory } from "@langchain/community/stores/message/upstash_redis";
- * // For demos, you can also use an in-memory store:
- * // import { ChatMessageHistory } from "@langchain/classic/stores/message/in_memory";
+ * import { ChatMessageHistory } from "@langchain/classic/stores/message/in_memory";
  *
  * const prompt = ChatPromptTemplate.fromMessages([
  *   ["system", "You're an assistant who's good at {ability}"],
@@ -151,7 +152,7 @@ export class RunnableWithMessageHistory<
   }
 
   _getInputMessages(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     inputValue: string | BaseMessage | Array<BaseMessage> | Record<string, any>
   ): Array<BaseMessage> {
     let parsedInputValue;
@@ -194,7 +195,7 @@ export class RunnableWithMessageHistory<
   }
 
   _getOutputMessages(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     outputValue: string | BaseMessage | Array<BaseMessage> | Record<string, any>
   ): Array<BaseMessage> {
     let parsedOutputValue;
@@ -240,7 +241,7 @@ export class RunnableWithMessageHistory<
   }
 
   async _enterHistory(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     input: any,
     kwargs?: RunnableConfig
   ): Promise<BaseMessage[]> {

@@ -2,6 +2,7 @@ import { z } from "zod/v3";
 import { describe, it, expectTypeOf } from "vitest";
 import { tool, type DynamicStructuredTool } from "@langchain/core/tools";
 
+import { tool as headlessTool } from "../../tools/headless.js";
 import { createMiddleware } from "../middleware.js";
 import { createAgent } from "../index.js";
 import type { InferAgentTools } from "../types.js";
@@ -110,5 +111,29 @@ describe("tools", () => {
         { middlewareReturnValue: number }
       >
     >();
+  });
+
+  it("should allow to infer tool types from headless tool primitive", () => {
+    const tool = headlessTool({
+      name: "test",
+      description: "Test",
+      schema: z.object({
+        message: z.string(),
+      }),
+    });
+
+    const agent = createAgent({
+      tools: [tool],
+      model: "gpt-4",
+      responseFormat: z.object({
+        output: z.string(),
+      }),
+    });
+
+    type AgentTools = InferAgentTools<typeof agent>;
+
+    // Verify individual tool types are preserved at specific indices
+    type FirstTool = AgentTools[0];
+    expectTypeOf<FirstTool>().toEqualTypeOf<typeof tool>();
   });
 });

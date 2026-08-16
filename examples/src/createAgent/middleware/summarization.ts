@@ -21,12 +21,15 @@ const summarizationModel = new ChatOpenAI({
   temperature: 0.3,
 });
 
+const approximateTokenCounter = (messages: BaseMessage[]) =>
+  countTokensApproximately(messages);
+
 // Create summarization middleware with a low token threshold for demo purposes
 const summaryMiddleware = summarizationMiddleware({
   model: summarizationModel,
-  maxTokensBeforeSummary: 2000, // Low threshold to trigger summarization quickly
-  messagesToKeep: 5, // Keep only the last 5 messages after summarization
-  tokenCounter: countTokensApproximately, // Use the built-in token counter
+  trigger: { tokens: 2000 }, // Low threshold to trigger summarization quickly
+  keep: { messages: 5 }, // Keep only the last 5 messages after summarization
+  tokenCounter: approximateTokenCounter, // Use the built-in token counter
 });
 
 // Create the agent with summarization middleware

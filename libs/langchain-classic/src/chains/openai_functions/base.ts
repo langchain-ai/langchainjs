@@ -22,7 +22,7 @@ import { JsonOutputFunctionsParser } from "../../output_parsers/openai_functions
  * Configuration params for the createOpenAIFnRunnable method.
  */
 export type CreateOpenAIFnRunnableConfig<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends Record<string, any>,
   RunOutput,
 > = {
@@ -99,9 +99,9 @@ export type CreateOpenAIFnRunnableConfig<
  * ```
  */
 export function createOpenAIFnRunnable<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends Record<string, any> = Record<string, any>,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunOutput extends Record<string, any> = Record<string, any>,
 >(
   config: CreateOpenAIFnRunnableConfig<RunInput, RunOutput>
@@ -131,7 +131,7 @@ export function createOpenAIFnRunnable<
  * Configuration params for the createStructuredOutputRunnable method.
  */
 export type CreateStructuredOutputRunnableConfig<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends Record<string, any>,
   RunOutput,
 > = {
@@ -211,9 +211,9 @@ export type CreateStructuredOutputRunnableConfig<
  * ```
  */
 export function createStructuredOutputRunnable<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends Record<string, any> = Record<string, any>,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunOutput extends Record<string, any> = Record<string, any>,
 >(
   config: CreateStructuredOutputRunnableConfig<RunInput, RunOutput>

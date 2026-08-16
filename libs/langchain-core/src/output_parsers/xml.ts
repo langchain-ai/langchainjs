@@ -7,12 +7,12 @@ import { sax } from "../utils/sax-js/sax.js";
 import { ChatGeneration, Generation } from "../outputs.js";
 
 export const XML_FORMAT_INSTRUCTIONS = `The output should be formatted as a XML file.
-1. Output should conform to the tags below. 
+1. Output should conform to the tags below.
 2. If tags are not given, make them on your own.
 3. Remember to always open and close all the tags.
 
 As an example, for the tags ["foo", "bar", "baz"]:
-1. String "<foo>\n   <bar>\n      <baz></baz>\n   </bar>\n</foo>" is a well-formatted instance of the schema. 
+1. String "<foo>\n   <bar>\n      <baz></baz>\n   </bar>\n</foo>" is a well-formatted instance of the schema.
 2. String "<foo>\n   <bar>\n   </foo>" is a badly-formatted instance.
 3. String "<foo>\n   <tag>\n   </tag>\n</foo>" is a badly-formatted instance.
 
@@ -92,7 +92,7 @@ const strip = (text: string) =>
 
 type ParsedResult = {
   name: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   attributes: Record<string, any>;
   children: Array<ParsedResult>;
   text?: string;
@@ -119,7 +119,7 @@ export function parseXMLMarkdown(s: string): XMLResult {
   let parsedResult: ParsedResult = {} as ParsedResult;
   const elementStack: ParsedResult[] = [];
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   parser.onopentag = (node: any) => {
     const element = {
       name: node.name,
@@ -150,7 +150,7 @@ export function parseXMLMarkdown(s: string): XMLResult {
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   parser.ontext = (text: any) => {
     if (elementStack.length > 0) {
       const currentElement = elementStack[elementStack.length - 1];
@@ -158,7 +158,7 @@ export function parseXMLMarkdown(s: string): XMLResult {
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   parser.onattribute = (attr: any) => {
     if (elementStack.length > 0) {
       const currentElement = elementStack[elementStack.length - 1];

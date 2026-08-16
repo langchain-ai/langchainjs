@@ -1,8 +1,7 @@
 // import { test, expect } from "@jest/globals";
 // import { ChatPromptTemplate } from "@langchain/core/prompts";
-// import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
+// import { TavilySearchResults } from "@langchain/tavily";
 // import { AgentExecutor, createToolCallingAgent } from "langchain/agents";
-// import { Calculator } from "@langchain/community/tools/calculator";
 // import { ChatVertexAI } from "../index.js";
 
 // const tools = [new TavilySearchResults({ maxResults: 1 }), new Calculator()];

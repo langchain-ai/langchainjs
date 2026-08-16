@@ -2,6 +2,7 @@ import OpenAI, { type ClientOptions, OpenAI as OpenAIClient } from "openai";
 import { AIMessageChunk, type BaseMessage } from "@langchain/core/messages";
 import { type ChatGeneration } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { resolveLangSmithGatewayConfig } from "@langchain/core/utils/gateway";
 import {
   BaseChatModel,
   type LangSmithParams,
@@ -15,6 +16,7 @@ import {
   type FunctionDefinition,
   type StructuredOutputMethodOptions,
 } from "@langchain/core/language_models/base";
+import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import { ModelProfile } from "@langchain/core/language_models/profile";
 import { Runnable, RunnableLambda } from "@langchain/core/runnables";
 import { JsonOutputParser } from "@langchain/core/output_parsers";
@@ -68,6 +70,8 @@ import {
   createContentParser,
   createFunctionCallingParser,
 } from "@langchain/core/language_models/structured_output";
+
+const MCP_CREDENTIALS_REDACTED = "**REDACTED**";
 
 interface OpenAILLMOutput {
   tokenUsage: {
@@ -440,6 +444,61 @@ export abstract class BaseChatOpenAI<
     };
   }
 
+  protected override _getInvocationParamsForTracing(
+    options?: this["ParsedCallOptions"]
+  ): ReturnType<this["invocationParams"]> {
+    const params = this.invocationParams(options);
+    if (!Array.isArray(params.tools)) {
+      return params;
+    }
+    return {
+      ...params,
+      tools: params.tools.map((tool) => {
+        if (tool?.type !== "mcp") {
+          return tool;
+        }
+        const redactedTool: Record<string, unknown> = { ...tool };
+        if ("headers" in redactedTool) {
+          redactedTool.headers = MCP_CREDENTIALS_REDACTED;
+        }
+        if ("authorization" in redactedTool) {
+          redactedTool.authorization = MCP_CREDENTIALS_REDACTED;
+        }
+        return redactedTool;
+      }),
+    };
+  }
+
+  protected override _getCallOptionsForTracing(
+    options: this["ParsedCallOptions"],
+    _invocationParams: ReturnType<this["invocationParams"]>
+  ): this["ParsedCallOptions"] {
+    if (!Array.isArray(options.tools)) {
+      return options;
+    }
+    return {
+      ...options,
+      tools: options.tools.map((tool) => {
+        if (
+          typeof tool !== "object" ||
+          tool === null ||
+          !("type" in tool) ||
+          tool.type !== "mcp"
+        ) {
+          return tool;
+        }
+        const redactedTool = { ...tool };
+        if ("headers" in redactedTool) {
+          redactedTool.headers = MCP_CREDENTIALS_REDACTED;
+        }
+        if ("authorization" in redactedTool) {
+          redactedTool.authorization = MCP_CREDENTIALS_REDACTED;
+        }
+        return redactedTool;
+      }),
+    };
+  }
+
   /** @ignore */
   _identifyingParams(): Omit<
     OpenAIClient.Chat.ChatCompletionCreateParams,
@@ -469,9 +528,18 @@ export abstract class BaseChatOpenAI<
       typeof fields?.configuration?.apiKey === "function"
         ? fields?.configuration?.apiKey
         : undefined;
+    const gatewayConfig = resolveLangSmithGatewayConfig({
+      baseURL:
+        fields?.configuration?.baseURL ??
+        (getEnvironmentVariable("OPENAI_API_BASE") ||
+          getEnvironmentVariable("OPENAI_BASE_URL") ||
+          undefined),
+      providerPath: "openai/v1",
+    });
     this.apiKey =
       fields?.apiKey ??
       configApiKey ??
+      gatewayConfig.apiKey ??
       getEnvironmentVariable("OPENAI_API_KEY");
     this.organization =
       fields?.configuration?.organization ??
@@ -517,6 +585,7 @@ export abstract class BaseChatOpenAI<
       organization: this.organization,
       dangerouslyAllowBrowser: true,
       ...fields?.configuration,
+      baseURL: gatewayConfig.baseURL,
     };
 
     // If `supportsStrictToolCalling` is explicitly set, use that value.
@@ -684,7 +753,13 @@ export abstract class BaseChatOpenAI<
           return tool.extras.providerToolDefinition;
         }
         // Regular tools get converted to OpenAI function format
-        return this._convertChatOpenAIToolToCompletionsTool(tool, { strict });
+        const converted = this._convertChatOpenAIToolToCompletionsTool(tool, {
+          strict,
+        });
+        if (isLangChainTool(tool) && tool.extras?.defer_loading === true) {
+          return { ...converted, defer_loading: true };
+        }
+        return converted;
       }),
       ...kwargs,
     } as Partial<CallOptions>);
@@ -966,37 +1041,37 @@ export abstract class BaseChatOpenAI<
   }
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
   ):

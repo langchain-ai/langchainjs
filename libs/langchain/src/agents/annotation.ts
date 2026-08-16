@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import {
   StateSchema,
   MessagesValue,
@@ -8,7 +8,7 @@ import {
 } from "@langchain/langgraph";
 import { schemaMetaRegistry } from "@langchain/langgraph/zod";
 
-import type { AgentMiddleware } from "./middleware/types.js";
+import type { AnyAgentMiddleware } from "./middleware/types.js";
 import {
   type InteropZodObject,
   isZodSchemaV4,
@@ -23,7 +23,7 @@ type JumpToTarget = "model_request" | "tools" | "end" | undefined;
 
 export function createAgentState<
   TStateSchema extends StateDefinitionInit | undefined = undefined,
-  TMiddleware extends readonly AgentMiddleware<any, any, any>[] = [],
+  TMiddleware extends readonly AnyAgentMiddleware[] = [],
 >(
   hasStructuredResponse = true,
   stateSchema: TStateSchema,

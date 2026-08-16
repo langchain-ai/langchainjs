@@ -40,7 +40,7 @@ export async function pull<T extends Runnable>(
     apiKey?: string;
     apiUrl?: string;
     includeModel?: boolean;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     modelClass?: new (...args: any[]) => BaseLanguageModel;
     secrets?: Record<string, string>;
     secretsFromEnv?: boolean;
@@ -56,7 +56,7 @@ export async function pull<T extends Runnable>(
       options?.secretsFromEnv
     );
     return bindOutputSchema(loadedPrompt);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
     if (options?.includeModel) {
       throw new Error(

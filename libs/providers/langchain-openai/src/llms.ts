@@ -326,7 +326,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
                   choice.finish_reason = part.finish_reason;
                   choice.logprobs = part.logprobs;
                 }
-                // eslint-disable-next-line no-void
+                // oxlint-disable-next-line no-void
                 void runManager?.handleLLMNewToken(part.text, {
                   prompt: Math.floor(part.index / this.n),
                   completion: part.index % this.n,
@@ -346,6 +346,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
             },
             {
               signal: options.signal,
+              maxRetries: options.maxRetries,
               ...options.options,
             }
           );
@@ -416,7 +417,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
         },
       });
       yield chunk;
-      // eslint-disable-next-line no-void
+      // oxlint-disable-next-line no-void
       void runManager?.handleLLMNewToken(chunk.text ?? "");
     }
     if (options.signal?.aborted) {
@@ -448,8 +449,11 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
   ): Promise<
     AsyncIterable<OpenAIClient.Completion> | OpenAIClient.Completions.Completion
   > {
-    const requestOptions = this._getClientOptions(options);
-    return this.caller.call(async () => {
+    // The SDK has its own `maxRetries`; take it for our caller instead so
+    // the two retry loops don't multiply.
+    const { maxRetries, ...sdkOptions } = options ?? {};
+    const requestOptions = this._getClientOptions(sdkOptions);
+    return this.caller.callWithOptions({ maxRetries }, async () => {
       try {
         const res = await this.client.completions.create(
           request,

@@ -15,7 +15,7 @@ import { logVersion020MigrationWarning } from "../../util/entrypoint_deprecation
 export const INTERMEDIATE_STEPS_KEY = "intermediateSteps";
 
 export interface GraphCypherQAChainInput extends ChainInputs {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   graph: any;
   cypherGenerationChain: LLMChain;
   qaChain: LLMChain;
@@ -27,7 +27,7 @@ export interface GraphCypherQAChainInput extends ChainInputs {
 }
 
 export interface FromLLMInput {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   graph: any;
   llm?: BaseLanguageModelInterface;
   cypherLLM?: BaseLanguageModelInterface;
@@ -63,7 +63,7 @@ export interface FromLLMInput {
  * See https://js.langchain.com/docs/security for more information.
  */
 export class GraphCypherQAChain extends BaseChain {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   private graph: any;
 
   private cypherGenerationChain: LLMChain;

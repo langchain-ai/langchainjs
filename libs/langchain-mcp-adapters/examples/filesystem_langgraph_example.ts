@@ -42,7 +42,7 @@ export async function runExample(client?: MultiServerMCPClient) {
     console.log("Initializing MCP client...");
 
     // Create a client with configurations for the filesystem server
-    // eslint-disable-next-line no-param-reassign
+    // oxlint-disable-next-line no-param-reassign
     client =
       client ??
       new MultiServerMCPClient({

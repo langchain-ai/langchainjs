@@ -29,25 +29,25 @@ test("Test ConversationalRetrievalAgent", async () => {
   const executor = await createConversationalRetrievalAgent(llm, tools, {
     verbose: true,
   });
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const result = await executor.invoke({
     input: "Hi, I'm Bob!",
   });
   // console.log(result);
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const result2 = await executor.invoke({
     input: "What's my name?",
   });
   // console.log(result2);
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const result3 = await executor.invoke({
     input: "How much money did LangCo make in July?",
   });
   // console.log(result3);
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const result4 = await executor.invoke({
     input: "How about in August?",

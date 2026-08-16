@@ -6,6 +6,8 @@ import type {
   ToolDefinition,
 } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
+import { convertBedrockConverseStream } from "./utils/stream_events.js";
 import {
   type BaseChatModelParams,
   BaseChatModel,
@@ -43,6 +45,7 @@ import {
   ChatBedrockConverseToolType,
   ConverseCommandParams,
   CredentialType,
+  BedrockPromptCacheControl,
 } from "./types.js";
 import {
   BedrockConverseToolChoice,
@@ -50,13 +53,29 @@ import {
   convertToConverseTools,
   supportedToolChoiceValuesForModel,
 } from "./utils/tools.js";
-import { convertToConverseMessages } from "./utils/message_inputs.js";
+import {
+  applyCachePointsToConversePayload,
+  convertToConverseMessages,
+} from "./utils/message_inputs.js";
 import {
   convertConverseMessageToLangChainMessage,
   handleConverseStreamContentBlockDelta,
   handleConverseStreamContentBlockStart,
   handleConverseStreamMetadata,
 } from "./utils/message_outputs.js";
+import { normalizeBedrockError } from "./utils/errors.js";
+import {
+  DEFAULT_STREAM_IDLE_TIMEOUT,
+  createLinkedAbortController,
+  resolveStreamIdleTimeout,
+  withRequestIdleTimeout,
+  withStreamIdleTimeout,
+} from "./utils/stream_timeout.js";
+import {
+  AWS_BEARER_TOKEN_BEDROCK,
+  createBedrockBearerTokenClientConfig,
+  resolveBedrockBearerToken,
+} from "./utils/bedrock_auth.js";
 import {
   isSerializableSchema,
   SerializableSchema,
@@ -83,18 +102,45 @@ export interface ChatBedrockConverseInput
   clientOptions?: BedrockRuntimeClientConfig;
 
   /**
+   * AWS access key ID. If provided along with `bedrockApiSecret`, these will be
+   * used to construct credentials for the Bedrock client. Falls back to the
+   * `BEDROCK_AWS_ACCESS_KEY_ID` environment variable.
+   */
+  bedrockApiKey?: string;
+
+  /**
+   * AWS secret access key. If provided along with `bedrockApiKey`, these will be
+   * used to construct credentials for the Bedrock client. Falls back to the
+   * `BEDROCK_AWS_SECRET_ACCESS_KEY` environment variable.
+   */
+  bedrockApiSecret?: string;
+
+  /**
+   * AWS session token. Optionally provided alongside `bedrockApiKey` and
+   * `bedrockApiSecret` for temporary credentials. Falls back to the
+   * `BEDROCK_AWS_SESSION_TOKEN` environment variable.
+   */
+  bedrockApiSessionToken?: string;
+
+  /**
+   * Bedrock API key for bearer-token authentication. Falls back to the
+   * `AWS_BEARER_TOKEN_BEDROCK` environment variable.
+   */
+  bedrockBearerToken?: string;
+
+  /**
    * Whether or not to stream responses
    */
   streaming?: boolean;
 
   /**
    * Model to use.
-   * For example, "anthropic.claude-3-haiku-20240307-v1:0", this is equivalent to the modelId property in the
+   * For example, "anthropic.claude-haiku-4-5-20251001-v1:0", this is equivalent to the modelId property in the
    * list-foundation-models api.
    * See the below link for a full list of models.
    * @link https://docs.aws.amazon.com/bedrock/latest/userguide/model-ids.html#model-ids-arns
    *
-   * @default anthropic.claude-3-haiku-20240307-v1:0
+   * @default anthropic.claude-haiku-4-5-20251001-v1:0
    */
   model?: string;
 
@@ -161,6 +207,13 @@ export interface ChatBedrockConverseInput
   streamUsage?: boolean;
 
   /**
+   * Milliseconds to wait for the first or next Bedrock Converse stream chunk.
+   * Set to 0 to disable the idle timeout.
+   * @default 60000
+   */
+  streamIdleTimeout?: number;
+
+  /**
    * Configuration information for a guardrail that you want to use in the request.
    */
   guardrailConfig?: GuardrailConfiguration;
@@ -196,6 +249,14 @@ export interface ChatBedrockConverseInput
    * model is used, ['auto', 'any'] if a 'mistral-large' model is used, empty otherwise.
    */
   supportsToolChoiceValues?: Array<"auto" | "any" | "tool">;
+
+  /**
+   * Default headers to include in every request to the Bedrock API.
+   * Useful for custom authentication headers, Anthropic beta features,
+   * or proxy tagging. Mirrors `default_headers` in the Python implementation.
+   * @example { "anthropic-beta": "prompt-caching-2024-07-31" }
+   */
+  defaultHeaders?: Record<string, string>;
 }
 
 export interface ChatBedrockConverseCallOptions
@@ -205,6 +266,7 @@ export interface ChatBedrockConverseCallOptions
       ChatBedrockConverseInput,
       | "additionalModelRequestFields"
       | "streamUsage"
+      | "streamIdleTimeout"
       | "guardrailConfig"
       | "performanceConfig"
       | "serviceTier"
@@ -232,6 +294,15 @@ export interface ChatBedrockConverseCallOptions
    * Key-value pairs that you can use to filter invocation logs.
    */
   requestMetadata?: ConverseRequest["requestMetadata"];
+
+  /**
+   * Prompt cache-control settings.
+   *
+   * When provided, cache points are applied at request-build time for
+   * Bedrock Converse payloads (system, last message, and tools where
+   * applicable), matching Python ChatBedrockConverse behavior.
+   */
+  cache_control?: BedrockPromptCacheControl;
 }
 
 /**
@@ -682,6 +753,10 @@ export class ChatBedrockConverse
   get lc_secrets(): { [key: string]: string } | undefined {
     return {
       apiKey: "API_KEY_NAME",
+      bedrockApiKey: "BEDROCK_AWS_ACCESS_KEY_ID",
+      bedrockApiSecret: "BEDROCK_AWS_SECRET_ACCESS_KEY",
+      bedrockApiSessionToken: "BEDROCK_AWS_SESSION_TOKEN",
+      bedrockBearerToken: AWS_BEARER_TOKEN_BEDROCK,
     };
   }
 
@@ -693,7 +768,7 @@ export class ChatBedrockConverse
     };
   }
 
-  model = "anthropic.claude-3-haiku-20240307-v1:0";
+  model = "anthropic.claude-haiku-4-5-20251001-v1:0";
 
   applicationInferenceProfile?: string;
 
@@ -713,11 +788,21 @@ export class ChatBedrockConverse
 
   streamUsage = true;
 
+  streamIdleTimeout = DEFAULT_STREAM_IDLE_TIMEOUT;
+
   guardrailConfig?: GuardrailConfiguration;
 
   performanceConfig?: PerformanceConfiguration;
 
   serviceTier?: ServiceTierType | undefined = undefined;
+
+  bedrockApiKey?: string;
+
+  bedrockApiSecret?: string;
+
+  bedrockApiSessionToken?: string;
+
+  bedrockBearerToken?: string;
 
   client: BedrockRuntimeClient;
 
@@ -730,6 +815,8 @@ export class ChatBedrockConverse
    * model is used, ['auto', 'any'] if a 'mistral-large' model is used, empty otherwise.
    */
   supportsToolChoiceValues?: Array<"auto" | "any" | "tool">;
+
+  defaultHeaders?: Record<string, string>;
 
   constructor(model: string, params?: Omit<ChatBedrockConverseInput, "model">);
   constructor(fields?: ChatBedrockConverseInput);
@@ -756,9 +843,34 @@ export class ChatBedrockConverse
       ...rest
     } = fields;
 
-    const credentials =
-      rest?.credentials ??
-      defaultProvider({
+    const bedrockApiKey =
+      rest?.bedrockApiKey ??
+      getEnvironmentVariable("BEDROCK_AWS_ACCESS_KEY_ID");
+    const bedrockApiSecret =
+      rest?.bedrockApiSecret ??
+      getEnvironmentVariable("BEDROCK_AWS_SECRET_ACCESS_KEY");
+    const bedrockApiSessionToken =
+      rest?.bedrockApiSessionToken ??
+      getEnvironmentVariable("BEDROCK_AWS_SESSION_TOKEN");
+    const bedrockBearerToken = resolveBedrockBearerToken(
+      rest?.bedrockBearerToken
+    );
+
+    let credentials: CredentialType | undefined;
+    if (bedrockBearerToken) {
+      credentials = undefined;
+    } else if (rest?.credentials) {
+      credentials = rest.credentials;
+    } else if (bedrockApiKey && bedrockApiSecret) {
+      credentials = {
+        accessKeyId: bedrockApiKey,
+        secretAccessKey: bedrockApiSecret,
+        ...(bedrockApiSessionToken
+          ? { sessionToken: bedrockApiSessionToken }
+          : {}),
+      };
+    } else {
+      credentials = defaultProvider({
         profile,
         filepath,
         configFilepath,
@@ -769,6 +881,7 @@ export class ChatBedrockConverse
         webIdentityTokenFile,
         roleAssumerWithWebIdentity,
       });
+    }
 
     const region = rest?.region ?? getEnvironmentVariable("AWS_DEFAULT_REGION");
     if (!region) {
@@ -781,12 +894,27 @@ export class ChatBedrockConverse
       fields.client ??
       new BedrockRuntimeClient({
         ...fields.clientOptions,
+        ...createBedrockBearerTokenClientConfig(bedrockBearerToken),
         region,
         credentials,
         endpoint: rest.endpointHost
           ? `https://${rest.endpointHost}`
           : undefined,
       });
+
+    if (rest?.defaultHeaders && Object.keys(rest.defaultHeaders).length > 0) {
+      const headers = rest.defaultHeaders;
+      this.client.middlewareStack.add(
+        (next) => async (args) => {
+          for (const [key, value] of Object.entries(headers)) {
+            // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+            (args.request as any).headers[key] = value;
+          }
+          return next(args);
+        },
+        { step: "build", name: "langchain_aws_default_headers" }
+      );
+    }
 
     this.region = region;
     this.model = rest?.model ?? this.model;
@@ -795,13 +923,19 @@ export class ChatBedrockConverse
     this.temperature = rest?.temperature;
     this.maxTokens = rest?.maxTokens;
     this.endpointHost = rest?.endpointHost;
+    this.bedrockApiKey = bedrockApiKey;
+    this.bedrockApiSecret = bedrockApiSecret;
+    this.bedrockApiSessionToken = bedrockApiSessionToken;
+    this.bedrockBearerToken = bedrockBearerToken;
     this.topP = rest?.topP;
     this.additionalModelRequestFields = rest?.additionalModelRequestFields;
     this.streamUsage = rest?.streamUsage ?? this.streamUsage;
+    this.streamIdleTimeout = rest?.streamIdleTimeout ?? this.streamIdleTimeout;
     this.guardrailConfig = rest?.guardrailConfig;
     this.performanceConfig = rest?.performanceConfig;
     this.serviceTier = rest?.serviceTier;
     this.clientOptions = rest?.clientOptions;
+    this.defaultHeaders = rest?.defaultHeaders;
 
     if (rest?.supportsToolChoiceValues === undefined) {
       this.supportsToolChoiceValues = supportedToolChoiceValuesForModel(
@@ -929,39 +1063,126 @@ export class ChatBedrockConverse
     options: Partial<this["ParsedCallOptions"]>,
     _runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
-    const { converseMessages, converseSystem } =
-      convertToConverseMessages(messages);
-    const params = this.invocationParams(options);
+    try {
+      const { converseMessages, converseSystem } =
+        convertToConverseMessages(messages);
+      const params = this.invocationParams(options);
+      applyCachePointsToConversePayload({
+        cacheControl: options.cache_control,
+        system: converseSystem,
+        messages: converseMessages,
+        params,
+        modelId: this.applicationInferenceProfile ?? this.model,
+      });
 
-    const command = new ConverseCommand({
-      modelId: this.applicationInferenceProfile ?? this.model,
-      messages: converseMessages,
-      ...(Array.isArray(converseSystem) && converseSystem.length > 0
-        ? { system: converseSystem }
-        : {}),
-      requestMetadata: options.requestMetadata,
-      ...params,
-    });
-    const response = await this.client.send(command, {
-      abortSignal: options.signal,
-    });
-    const { output, ...responseMetadata } = response;
-    if (!output?.message) {
-      throw new Error("No message found in Bedrock response.");
+      const command = new ConverseCommand({
+        modelId: this.applicationInferenceProfile ?? this.model,
+        messages: converseMessages,
+        ...(Array.isArray(converseSystem) && converseSystem.length > 0
+          ? { system: converseSystem }
+          : {}),
+        requestMetadata: options.requestMetadata,
+        ...params,
+      });
+      const response = await this.client.send(command, {
+        abortSignal: options.signal,
+      });
+      const { output, ...responseMetadata } = response;
+      if (!output?.message) {
+        throw new Error("No message found in Bedrock response.");
+      }
+
+      const message = convertConverseMessageToLangChainMessage(
+        output.message,
+        responseMetadata
+      );
+      return {
+        generations: [
+          {
+            text: typeof message.content === "string" ? message.content : "",
+            message,
+          },
+        ],
+      };
+    } catch (error) {
+      throw normalizeBedrockError(error);
     }
+  }
 
-    const message = convertConverseMessageToLangChainMessage(
-      output.message,
-      responseMetadata
-    );
-    return {
-      generations: [
-        {
-          text: typeof message.content === "string" ? message.content : "",
-          message,
-        },
-      ],
-    };
+  async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    try {
+      const { converseMessages, converseSystem } =
+        convertToConverseMessages(messages);
+      const params = this.invocationParams(options);
+      applyCachePointsToConversePayload({
+        cacheControl: options.cache_control,
+        system: converseSystem,
+        messages: converseMessages,
+        params,
+        modelId: this.applicationInferenceProfile ?? this.model,
+      });
+      let { streamUsage } = this;
+      if (options.streamUsage !== undefined) {
+        streamUsage = options.streamUsage;
+      }
+      const command = new ConverseStreamCommand({
+        modelId: this.applicationInferenceProfile ?? this.model,
+        messages: converseMessages,
+        ...(Array.isArray(converseSystem) && converseSystem.length > 0
+          ? { system: converseSystem }
+          : {}),
+        requestMetadata: options.requestMetadata,
+        ...params,
+      });
+      const { abortController, cleanup } = createLinkedAbortController(
+        options.signal
+      );
+      try {
+        const streamIdleTimeout = resolveStreamIdleTimeout(
+          options.streamIdleTimeout ?? this.streamIdleTimeout
+        );
+        const response = await withRequestIdleTimeout(
+          this.client.send(command, {
+            abortSignal: abortController.signal,
+          }),
+          streamIdleTimeout,
+          abortController
+        );
+        if (!response.stream) {
+          return;
+        }
+        const abortableStream = async function* <T>(
+          source: AsyncIterable<T>,
+          signal?: AbortSignal
+        ) {
+          for await (const chunk of source) {
+            if (signal?.aborted) {
+              return;
+            }
+            yield chunk;
+          }
+        };
+        yield* convertBedrockConverseStream(
+          abortableStream(
+            withStreamIdleTimeout(
+              response.stream,
+              streamIdleTimeout,
+              abortController
+            ),
+            abortController.signal
+          ),
+          { streamUsage: streamUsage ?? true }
+        );
+      } finally {
+        cleanup();
+      }
+    } catch (error) {
+      throw normalizeBedrockError(error);
+    }
   }
 
   async *_streamResponseChunks(
@@ -969,96 +1190,138 @@ export class ChatBedrockConverse
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
-    const { converseMessages, converseSystem } =
-      convertToConverseMessages(messages);
-    const params = this.invocationParams(options);
-    let { streamUsage } = this;
-    if (options.streamUsage !== undefined) {
-      streamUsage = options.streamUsage;
-    }
-    const command = new ConverseStreamCommand({
-      modelId: this.applicationInferenceProfile ?? this.model,
-      messages: converseMessages,
-      ...(Array.isArray(converseSystem) && converseSystem.length > 0
-        ? { system: converseSystem }
-        : {}),
-      requestMetadata: options.requestMetadata,
-      ...params,
-    });
-    const response = await this.client.send(command, {
-      abortSignal: options.signal,
-    });
-    if (response.stream) {
-      for await (const chunk of response.stream) {
-        if (options.signal?.aborted) {
-          return;
-        }
-        if (chunk.contentBlockStart) {
-          yield handleConverseStreamContentBlockStart(chunk.contentBlockStart);
-        } else if (chunk.contentBlockDelta) {
-          const textChatGeneration = handleConverseStreamContentBlockDelta(
-            chunk.contentBlockDelta
-          );
-          yield textChatGeneration;
-          await runManager?.handleLLMNewToken(
-            textChatGeneration.text,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            {
-              chunk: textChatGeneration,
-            }
-          );
-        } else if (chunk.metadata) {
-          yield handleConverseStreamMetadata(chunk.metadata, {
-            streamUsage,
-          });
-        } else {
-          yield new ChatGenerationChunk({
-            text: "",
-            message: new AIMessageChunk({
-              content: "",
-              response_metadata: { ...chunk },
-            }),
-          });
-        }
+    try {
+      const { converseMessages, converseSystem } =
+        convertToConverseMessages(messages);
+      const params = this.invocationParams(options);
+      applyCachePointsToConversePayload({
+        cacheControl: options.cache_control,
+        system: converseSystem,
+        messages: converseMessages,
+        params,
+        modelId: this.applicationInferenceProfile ?? this.model,
+      });
+      let { streamUsage } = this;
+      if (options.streamUsage !== undefined) {
+        streamUsage = options.streamUsage;
       }
+      const command = new ConverseStreamCommand({
+        modelId: this.applicationInferenceProfile ?? this.model,
+        messages: converseMessages,
+        ...(Array.isArray(converseSystem) && converseSystem.length > 0
+          ? { system: converseSystem }
+          : {}),
+        requestMetadata: options.requestMetadata,
+        ...params,
+      });
+      const { abortController, cleanup } = createLinkedAbortController(
+        options.signal
+      );
+      try {
+        const streamIdleTimeout = resolveStreamIdleTimeout(
+          options.streamIdleTimeout ?? this.streamIdleTimeout
+        );
+        const response = await withRequestIdleTimeout(
+          this.client.send(command, {
+            abortSignal: abortController.signal,
+          }),
+          streamIdleTimeout,
+          abortController
+        );
+        if (response.stream) {
+          for await (const chunk of withStreamIdleTimeout(
+            response.stream,
+            streamIdleTimeout,
+            abortController
+          )) {
+            if (abortController.signal.aborted) {
+              return;
+            }
+            if (chunk.contentBlockStart) {
+              const toolCallStartChunk = handleConverseStreamContentBlockStart(
+                chunk.contentBlockStart
+              );
+              yield toolCallStartChunk;
+              await runManager?.handleLLMNewToken(
+                toolCallStartChunk.text,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                {
+                  chunk: toolCallStartChunk,
+                }
+              );
+            } else if (chunk.contentBlockDelta) {
+              const textChatGeneration = handleConverseStreamContentBlockDelta(
+                chunk.contentBlockDelta
+              );
+              yield textChatGeneration;
+              await runManager?.handleLLMNewToken(
+                textChatGeneration.text,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                {
+                  chunk: textChatGeneration,
+                }
+              );
+            } else if (chunk.metadata) {
+              yield handleConverseStreamMetadata(chunk.metadata, {
+                streamUsage,
+              });
+            } else {
+              yield new ChatGenerationChunk({
+                text: "",
+                message: new AIMessageChunk({
+                  content: "",
+                  response_metadata: { ...chunk },
+                }),
+              });
+            }
+          }
+        }
+      } finally {
+        cleanup();
+      }
+    } catch (error) {
+      throw normalizeBedrockError(error);
     }
   }
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
   ):

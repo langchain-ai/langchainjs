@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { expect, it, describe } from "vitest";
 import { tools } from "../index.js";
 
@@ -34,7 +34,7 @@ describe("OpenAI Apply Patch Tool Tests", () => {
 
     // Access the underlying execute function from the tool
     const executeFunc = patch.func;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const result = await executeFunc(createOp as any);
 
     expect(operations).toHaveLength(1);
@@ -59,14 +59,14 @@ describe("OpenAI Apply Patch Tool Tests", () => {
       type: "create_file",
       path: "a.txt",
       diff: "+a",
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
     await executeFunc({
       type: "update_file",
       path: "b.txt",
       diff: "-x\n+y",
     } as any);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     await executeFunc({ type: "delete_file", path: "c.txt" } as any);
 
     expect(operations).toEqual(["create_file", "update_file", "delete_file"]);

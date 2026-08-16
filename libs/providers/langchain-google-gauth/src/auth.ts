@@ -36,7 +36,7 @@ export class NodeAbstractStream implements AbstractStream {
     return this.baseStream.closeBuffer();
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   nextChunk(): Promise<any> {
     return this.baseStream.nextChunk();
   }
@@ -77,7 +77,7 @@ export class GAuthClient extends GoogleAbstractedFetchClient {
     this.gauth = new GoogleAuth(options);
     this._fetch = async (...args) => {
       const url = args[0];
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       const opts: any = args[1] ?? {};
       opts.responseType = "stream";
       return await this.gauth.fetch(url, opts);

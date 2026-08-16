@@ -1,5 +1,276 @@
 # @langchain/core
 
+## 1.2.8
+
+### Patch Changes
+
+- [#11369](https://github.com/langchain-ai/langchainjs/pull/11369) [`d6ad973`](https://github.com/langchain-ai/langchainjs/commit/d6ad9735640a6c729f81ef79361acc5e83c526f1) Thanks [@hntrl](https://github.com/hntrl)! - fix(langchain): use unified endpoint for gateway
+
+- [#11342](https://github.com/langchain-ai/langchainjs/pull/11342) [`3b0e4c4`](https://github.com/langchain-ai/langchainjs/commit/3b0e4c48a31811031a460c4d95519a7c1163dc41) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - feat(core): mark errors as retryable or not, and stop retrying the ones that aren't
+
+  Retry middleware retried every failure up to `maxRetries`, including deterministic ones like a bad API key or an unknown model. Retries also nest, so a single such failure could cost dozens of API calls.
+
+  `@langchain/core/errors` adds `stampRetryable(error, retryable)` and `getRetryable(error)`. Marking an error leaves its class and shape untouched, so a provider SDK error can be classified without breaking `instanceof`. `getRetryable` returns `undefined` for errors nobody classified, and both are exported so tool authors can mark their own failures.
+
+  `modelRetryMiddleware` and `toolRetryMiddleware` now respect the mark by default, and retries stop as soon as one is found rather than each layer spending its own budget. Aborted calls, context overflow, and oversized payloads are marked non-retryable out of the box.
+  Models accept a per-call `maxRetries` so a surrounding retry loop can take over.
+
+  **Behavior change:** errors marked non-retryable now fail on the first attempt. Unclassified errors — including any from third-party integrations or custom tools — retry exactly as before. Pass `retryOn: () => true` to restore the old default. A custom `onFailedAttempt` replaces the built-in handler and opts out of marking.
+
+## 1.2.7
+
+### Patch Changes
+
+- [#11366](https://github.com/langchain-ai/langchainjs/pull/11366) [`c068bbf`](https://github.com/langchain-ai/langchainjs/commit/c068bbf8c113132bf16ac7a8add44e486a147b41) Thanks [@hntrl](https://github.com/hntrl)! - fix(core,langchain): patch and release core, update peer dependencies
+
+## 1.2.6
+
+### Patch Changes
+
+- [#11344](https://github.com/langchain-ai/langchainjs/pull/11344) [`f08e0c6`](https://github.com/langchain-ai/langchainjs/commit/f08e0c6d50156accf95a36469a3e107a5598a3a0) Thanks [@hntrl](https://github.com/hntrl)! - fix: apply [Symbol.hasInstance] method to all comparable properties using .isInstance()
+
+  We have some internal schemas that rely on `z.instanceof()`. This uses a strict `instanceof` check which can conflict if there are multiple versions of core installed. This overrides the [Symbol.hasInstance](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/hasInstance) method to use the same logic as `.isInstance()` to compare objects at runtime.
+
+## 1.2.5
+
+### Patch Changes
+
+- [#11305](https://github.com/langchain-ai/langchainjs/pull/11305) [`e654022`](https://github.com/langchain-ai/langchainjs/commit/e654022e291b8dae54504ac2d1a3232332406723) Thanks [@jacoblee93](https://github.com/jacoblee93)! - Add LangSmith Gateway environment configuration to OpenAI, Anthropic, and Fireworks chat models.
+
+- [#11295](https://github.com/langchain-ai/langchainjs/pull/11295) [`1a1b347`](https://github.com/langchain-ai/langchainjs/commit/1a1b347d18bc68e842df8badffc987493c81d70a) Thanks [@vladislav-nechakhin](https://github.com/vladislav-nechakhin)! - fix(core): pass the mustache escape override per render call
+
+## 1.2.4
+
+### Patch Changes
+
+- [#11190](https://github.com/langchain-ai/langchainjs/pull/11190) [`9654bde`](https://github.com/langchain-ai/langchainjs/commit/9654bde694af4e78080a76a0b39d7edd35683449) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - Coalesce nested LangChain tracer callbacks that share run bookkeeping.
+
+- [#11153](https://github.com/langchain-ai/langchainjs/pull/11153) [`84ce6d6`](https://github.com/langchain-ai/langchainjs/commit/84ce6d65ef0ab2c556d5a5a3b5651b5cf3d73303) Thanks [@parveshsaini](https://github.com/parveshsaini)! - fix(core): bind splitText when trimMessages receives a TextSplitter instance
+
+## 1.2.3
+
+### Patch Changes
+
+- [#11200](https://github.com/langchain-ai/langchainjs/pull/11200) [`08e5888`](https://github.com/langchain-ai/langchainjs/commit/08e588865927c3bf0eb2ec418cfb3fba527e14bb) Thanks [@hntrl](https://github.com/hntrl)! - fix(aws): normalize and safely replay Bedrock reasoning blocks
+
+  Emit standard reasoning blocks with preserved signatures, omit incomplete signature-only reasoning during replay, and retain compatibility with legacy and redacted Bedrock reasoning.
+
+## 1.2.2
+
+### Patch Changes
+
+- [#11171](https://github.com/langchain-ai/langchainjs/pull/11171) [`82bef01`](https://github.com/langchain-ai/langchainjs/commit/82bef01ad3dd5e0317e48da40707be6bccc52f94) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): coerce string v1 AIMessage content to text blocks
+
+  Prevent `contentBlocks.push is not a function` when constructing an
+  `AIMessage` with `response_metadata.output_version === "v1"` and string
+  `content` (common in serialized LangGraph stream payloads).
+
+## 1.2.1
+
+### Patch Changes
+
+- [#10674](https://github.com/langchain-ai/langchainjs/pull/10674) [`f017708`](https://github.com/langchain-ai/langchainjs/commit/f01770895c06621b469a6c6b5244747f6efdfbf7) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix: classify provider 429s before retrying
+
+- [#11092](https://github.com/langchain-ai/langchainjs/pull/11092) [`7918bbd`](https://github.com/langchain-ai/langchainjs/commit/7918bbdd2eaf8d9aff736b122f359a555267e1e7) Thanks [@aolsenjazz](https://github.com/aolsenjazz)! - fix(core): only treat arrays of content blocks as ToolMessage content
+
+  Fix tool outputs that are arrays of plain objects being forwarded as malformed message content. An array is now only treated as message content blocks when every element is an object with a `type`; otherwise it is JSON-stringified.
+
+## 1.2.0
+
+### Minor Changes
+
+- [#10924](https://github.com/langchain-ai/langchainjs/pull/10924) [`2e28115`](https://github.com/langchain-ai/langchainjs/commit/2e2811509d75af94f57cedcc3842f178f4c020d1) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(core): add OpenAI-compatible stream event conversion
+
+### Patch Changes
+
+- [#11047](https://github.com/langchain-ai/langchainjs/pull/11047) [`ac0f71d`](https://github.com/langchain-ai/langchainjs/commit/ac0f71d03994664cfee98e71a584d4aa3321746f) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): preserve AIMessage content blocks
+
+  Keep existing v1 contentBlocks when constructing AIMessage instances so serialized messages do not lose block content during deserialization.
+
+## 1.1.49
+
+### Patch Changes
+
+- [#10679](https://github.com/langchain-ai/langchainjs/pull/10679) [`1f7b495`](https://github.com/langchain-ai/langchainjs/commit/1f7b4952ea1d7cebd572453877b670a7740a397b) Thanks [@hnustwjj](https://github.com/hnustwjj)! - fix(core): make `RemoveMessage` type-compatible across `MessageStructure` variants
+
+  Remove unnecessary `TStructure` generic from `RemoveMessage` — its content is always `[]`, so the type parameter only caused incompatibilities when passing `RemoveMessage` into APIs expecting a different `MessageStructure` (e.g. `@langchain/langgraph-sdk`'s `Message<DefaultToolCall>`). Also add `{ type: "remove"; id: string }` to `BaseMessageLike` so the serialized format is accepted by TypeScript, matching the existing runtime behavior in `coerceMessageLikeToMessage`.
+
+## 1.1.48
+
+### Patch Changes
+
+- [#10832](https://github.com/langchain-ai/langchainjs/pull/10832) [`1b24369`](https://github.com/langchain-ai/langchainjs/commit/1b24369a970ad6f56f1f428027f48601f87e62eb) Thanks [@info-arnav](https://github.com/info-arnav)! - fix(core, openrouter): make CJS default re-exports callable
+
+- [#10666](https://github.com/langchain-ai/langchainjs/pull/10666) [`2bb55b0`](https://github.com/langchain-ai/langchainjs/commit/2bb55b053f49f89e81e3252a7af08e86d71ddd95) Thanks [@hnustwjj](https://github.com/hnustwjj)! - feat(openrouter): surface reasoning content as v1 standard content blocks
+
+  `convertOpenRouterResponseToBaseMessage` and
+  `convertOpenRouterDeltaToBaseMessageChunk` now copy OpenRouter's
+  `reasoning` (flat string) and `reasoning_details` (structured array) fields
+  onto `additional_kwargs.reasoning_content` / `additional_kwargs.reasoning_details`.
+  A new `ChatOpenRouterTranslator` is registered in `@langchain/core` under
+  the `"openrouter"` provider key so `AIMessage.contentBlocks` emits standard
+  `{type: "reasoning"}` blocks alongside text and tool calls.
+
+  Previously, reasoning text returned by reasoning-capable models routed
+  through OpenRouter (DeepSeek R1, Minimax M2, Claude extended thinking,
+  o-series, etc.) was silently dropped: only the `reasoning_tokens` count
+  was preserved via `usage_metadata`. Consumers using standard content blocks
+  (including the frontend agent UI patterns shown in the docs) could not
+  display the model's chain of thought.
+
+- [#10918](https://github.com/langchain-ai/langchainjs/pull/10918) [`3999fab`](https://github.com/langchain-ai/langchainjs/commit/3999fab55870c6eea22d6d90c08aa472f9b2fac3) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(openai): stream custom tool calls through Responses API chunks
+
+## 1.1.47
+
+### Patch Changes
+
+- [#10906](https://github.com/langchain-ai/langchainjs/pull/10906) [`f61b345`](https://github.com/langchain-ai/langchainjs/commit/f61b3450f275831e47e69c08899b4a2b67b4bdb3) Thanks [@hntrl](https://github.com/hntrl)! - feat(core): add uuid v6 utility support
+
+  Add `v6` UUID generation support to `@langchain/core/utils/uuid` by vendoring the upstream uuidjs `v6` implementation and its `v1ToV6` helper, exporting `v6` from the UUID utils index, and adding tests for deterministic generation, buffer/offset behavior, validation/versioning, and ordering.
+
+- [#10872](https://github.com/langchain-ai/langchainjs/pull/10872) [`a640079`](https://github.com/langchain-ai/langchainjs/commit/a64007997a4940f51bba3c1c83dae89d1ccfb692) Thanks [@hntrl](https://github.com/hntrl)! - chore(deps): remove redundant @types/uuid declarations
+
+  Remove `@types/uuid` from package manifests that rely on `@langchain/core/utils/uuid` or do not require uuid type stubs directly, and refresh the lockfile entries accordingly.
+
+- [#10792](https://github.com/langchain-ai/langchainjs/pull/10792) [`3682268`](https://github.com/langchain-ai/langchainjs/commit/3682268cd1844b2573b01f07bee367e21cb7bdc7) Thanks [@Genmin](https://github.com/Genmin)! - fix(core): apply v1 message casting after implicit streaming aggregation
+
+- [#10901](https://github.com/langchain-ai/langchainjs/pull/10901) [`f26fc4a`](https://github.com/langchain-ai/langchainjs/commit/f26fc4a6f461d6d0f86d59bd00197ad510432c4a) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(testing): share fakeModel invocation state across bindTools instances
+
+## 1.1.46
+
+### Patch Changes
+
+- [#10847](https://github.com/langchain-ai/langchainjs/pull/10847) [`1659e7d`](https://github.com/langchain-ai/langchainjs/commit/1659e7d36e31e315c890fa98f43db887f7a2d52b) Thanks [@hntrl](https://github.com/hntrl)! - chore(core): reduce transitive dependency exposure and tighten release hygiene
+
+  Remove direct runtime dependencies on `ansi-styles`, `camelcase`, and `decamelize`
+  by inlining equivalent logic in core internals, and enable npm provenance in the
+  release workflow.
+
+- [#10790](https://github.com/langchain-ai/langchainjs/pull/10790) [`ef78bc6`](https://github.com/langchain-ai/langchainjs/commit/ef78bc6a21f9a8808ba95c98db2023f0a6b51bcc) Thanks [@Genmin](https://github.com/Genmin)! - fix(core): keep different content block types separate when merging chunks
+
+## 1.1.45
+
+### Patch Changes
+
+- [#10833](https://github.com/langchain-ai/langchainjs/pull/10833) [`6cf39fe`](https://github.com/langchain-ai/langchainjs/commit/6cf39fe9636804f6280db0b98c4a4c72d5b103a0) Thanks [@colifran](https://github.com/colifran)! - chore(core): deprecate streamLog, streamEvents v1, RunnableWithMessageHistory and improve threat model verbiage for loads
+
+- [#10835](https://github.com/langchain-ai/langchainjs/pull/10835) [`0aebe50`](https://github.com/langchain-ai/langchainjs/commit/0aebe5054cfb982f09d9775b017317a731b6576f) Thanks [@colifran](https://github.com/colifran)! - fix(core): deno re-declaration in LangSmith is causing unit test failures
+
+## 1.1.44
+
+### Patch Changes
+
+- [#10822](https://github.com/langchain-ai/langchainjs/pull/10822) [`922a040`](https://github.com/langchain-ai/langchainjs/commit/922a040421391700fd92e04e6f44a37e3f24710b) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): translate content block delta for other models
+
+## 1.1.43
+
+### Patch Changes
+
+- [#10814](https://github.com/langchain-ai/langchainjs/pull/10814) [`dfec1b7`](https://github.com/langchain-ai/langchainjs/commit/dfec1b7f8b2c530a43f639dc79d4965a80ea4b79) Thanks [@hntrl](https://github.com/hntrl)! - fix(google): restore structured output parsing with includeRaw and reasoning blocks
+
+  Ensure structured output parsers read `BaseMessage` text content when `includeRaw: true`, so responses that include reasoning/thought blocks plus JSON text continue to parse correctly.
+
+- [#10772](https://github.com/langchain-ai/langchainjs/pull/10772) [`1ba7131`](https://github.com/langchain-ai/langchainjs/commit/1ba71319150847438fa517fe612f65cfed85ffab) Thanks [@christian-bromann](https://github.com/christian-bromann)! - chore(core): new stream primitives
+
+## 1.1.42
+
+### Patch Changes
+
+- [#10776](https://github.com/langchain-ai/langchainjs/pull/10776) [`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6) Thanks [@hntrl](https://github.com/hntrl)! - fix(deps): remediate uuid vulnerability by removing direct uuid usage
+
+## 1.1.41
+
+### Patch Changes
+
+- [#10733](https://github.com/langchain-ai/langchainjs/pull/10733) [`589f29c`](https://github.com/langchain-ai/langchainjs/commit/589f29ce844eb252c2d5e6b0f8d26de37763a0d7) Thanks [@jacoblee93](https://github.com/jacoblee93)! - fix(core): Update inheritance behavior for tracer metadata for special keys
+
+- [#10711](https://github.com/langchain-ai/langchainjs/pull/10711) [`2e9e696`](https://github.com/langchain-ai/langchainjs/commit/2e9e6969e248a53ede0659a41d0ac8dbaf291ab4) Thanks [@jacoblee93](https://github.com/jacoblee93)! - feat(core): Add chat model and llm invocation params to traced metadata
+
+## 1.1.40
+
+### Patch Changes
+
+- [#10694](https://github.com/langchain-ai/langchainjs/pull/10694) [`d3e0809`](https://github.com/langchain-ai/langchainjs/commit/d3e080995bb267bf3797067ab53c96bc2a6c8e3f) Thanks [@hntrl](https://github.com/hntrl)! - refactor(core): decouple tracer-only metadata defaults from runnable metadata
+  - Add tracer-scoped inheritable metadata/tag options in callback manager while keeping backward-compatible aliases.
+  - Move configurable-to-tracing metadata derivation into a tracer-only path and keep `ensureConfig` metadata mirroring limited to `model`.
+  - Update `LangChainTracer` default metadata/tag handling and add regression tests for stream events metadata behavior.
+
+## 1.1.39
+
+### Patch Changes
+
+- [#10430](https://github.com/langchain-ai/langchainjs/pull/10430) [`d3d0922`](https://github.com/langchain-ai/langchainjs/commit/d3d0922c24afcd3006fb94dcadd3ebe08fbf2383) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(langchain): support for browser tools
+
+## 1.1.38
+
+### Patch Changes
+
+- [#10552](https://github.com/langchain-ai/langchainjs/pull/10552) [`589ab9b`](https://github.com/langchain-ai/langchainjs/commit/589ab9be391a5d6c104f34877fc1b3e2a32fa449) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): accept cross-version runnable models in createAgent
+
+## 1.1.37
+
+### Patch Changes
+
+- [#10511](https://github.com/langchain-ai/langchainjs/pull/10511) [`6933769`](https://github.com/langchain-ai/langchainjs/commit/6933769836fe3cec835588e5f8db9883200865f6) Thanks [@hntrl](https://github.com/hntrl)! - cache Zod-to-JSON-Schema conversions in toJsonSchema()
+
+- [#10541](https://github.com/langchain-ai/langchainjs/pull/10541) [`50d5f32`](https://github.com/langchain-ai/langchainjs/commit/50d5f32fd30cabebf058b1c13255c1daadde6107) Thanks [@jacoblee93](https://github.com/jacoblee93)! - revert: Revert "feat(core): Add all chat model/llm invocation params to metadata"
+
+- [#10509](https://github.com/langchain-ai/langchainjs/pull/10509) [`5552999`](https://github.com/langchain-ai/langchainjs/commit/555299917c90322e25d7671bad2e20c9b104bad6) Thanks [@hntrl](https://github.com/hntrl)! - feat(openai): add support for phase parameter on Responses API messages
+  - Extract `phase` from message output items and surface it on text content blocks
+  - Support phase in streaming via `response.output_item.added` events
+  - Round-trip phase through both raw provider and standard content paths
+  - Move phase into `extras` dict in the core standard content translator
+
+- [#10528](https://github.com/langchain-ai/langchainjs/pull/10528) [`8331833`](https://github.com/langchain-ai/langchainjs/commit/8331833c93ba907063c9fe28e9f935ed5dfec11c) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): normalize single-block content in mergeContent
+
+## 1.1.36
+
+### Patch Changes
+
+- [#10512](https://github.com/langchain-ai/langchainjs/pull/10512) [`bbbfea1`](https://github.com/langchain-ai/langchainjs/commit/bbbfea185c0777ae06df2b24a1a84f941d499c2a) Thanks [@hntrl](https://github.com/hntrl)! - fix(core): fix streaming chunk merge for providers without `index` on tool call deltas
+
+  `_mergeLists` now falls back to `id`-based matching when items don't have an `index` field. Previously, providers routing through the OpenAI-compatible API without `index` on streaming tool call deltas (e.g. Anthropic models via `ChatOpenAI`) would accumulate hundreds of individual raw deltas in `tool_call_chunks` and `additional_kwargs.tool_calls` instead of merging them into a single entry per tool call. In a real trace with 3 concurrent subagents, this caused a single AI message to balloon from ~4KB to 146KB -- with 826 uncollapsed streaming fragments carrying a few bytes each.
+
+  Also fixes `SystemMessage.concat()` which used `...this` to spread all instance properties (including `lc_kwargs`) into the new constructor, causing each chained `concat()` call to nest one level deeper. After 7 middleware `concat()` calls (typical in deepagents), a 7KB system prompt would serialize to 81KB due to content being duplicated at every nesting level.
+
+## 1.1.35
+
+### Patch Changes
+
+- [#10327](https://github.com/langchain-ai/langchainjs/pull/10327) [`5dc11b5`](https://github.com/langchain-ai/langchainjs/commit/5dc11b55cccfe35e4dad910a33e904cf49b3088a) Thanks [@hntrl](https://github.com/hntrl)! - fix(core): replace exported zod type references with structural duck-type interfaces to fix TypeScript OOM
+
+  Replaces all exported Zod type references (`z3.ZodType`, `z4.$ZodType`, etc.) in `@langchain/core`'s public API with minimal structural ("duck-type") interfaces. This prevents TypeScript from performing expensive deep structural comparisons (~3,400+ lines of mutually recursive generics) when downstream packages resolve a different Zod version than `@langchain/core`, which was causing OOM crashes and unresponsive language servers in monorepo setups.
+
+- [#10433](https://github.com/langchain-ai/langchainjs/pull/10433) [`7af0b65`](https://github.com/langchain-ai/langchainjs/commit/7af0b65d5ab9a173b528d6a821d269a79fbabdc6) Thanks [@tanushree-sharma](https://github.com/tanushree-sharma)! - feat: Add LangSmith integration metadata to createAgent and initChatModel
+
+## 1.1.34
+
+### Patch Changes
+
+- [#10312](https://github.com/langchain-ai/langchainjs/pull/10312) [`bfb7944`](https://github.com/langchain-ai/langchainjs/commit/bfb7944a105470eee98fe4a0eef91e586600e1de) Thanks [@jacoblee93](https://github.com/jacoblee93)! - feat(core): Add all invocation params as part of metadata
+
+## 1.1.33
+
+### Patch Changes
+
+- [#10412](https://github.com/langchain-ai/langchainjs/pull/10412) [`6db417b`](https://github.com/langchain-ai/langchainjs/commit/6db417b03ecb5e2ace413389d982294e0ac88433) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(core): respect timeout option in streamEvents v2
+
+- [#10424](https://github.com/langchain-ai/langchainjs/pull/10424) [`d69dfcc`](https://github.com/langchain-ai/langchainjs/commit/d69dfcca97503cf1c0b7e70ccf5fb7d507c60982) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(core): preserve multimodal content in getBufferString as placeholders
+
+## 1.1.32
+
+### Patch Changes
+
+- [#10330](https://github.com/langchain-ai/langchainjs/pull/10330) [`26488b5`](https://github.com/langchain-ai/langchainjs/commit/26488b596f01b7b7fe2f1d97d07164e52365ade5) Thanks [@hntrl](https://github.com/hntrl)! - fix(core): treat empty string tool call chunk IDs as missing during merge
+
+  Fixed `_mergeLists` in message base to treat empty string `""` IDs the same as `null`/`undefined` when merging tool call chunks. This fixes old completions-style streaming where follow-up chunks carry `id: ""` instead of `undefined`, which previously prevented chunks from being merged by index.
+
+- [#10167](https://github.com/langchain-ai/langchainjs/pull/10167) [`ca826f6`](https://github.com/langchain-ai/langchainjs/commit/ca826f6fecae6087bf0dee7781ee80b587396ec1) Thanks [@colifran](https://github.com/colifran)! - feat: implement type inference for tool streams
+
+- [#10334](https://github.com/langchain-ai/langchainjs/pull/10334) [`a602c42`](https://github.com/langchain-ai/langchainjs/commit/a602c42db75d7e7e01cab38b12e0b65b9c0cce95) Thanks [@maahir30](https://github.com/maahir30)! - fix(core): add JSDoc docstrings to fakeModel builder API and export FakeBuiltModel
+
+- [#10254](https://github.com/langchain-ai/langchainjs/pull/10254) [`db7d017`](https://github.com/langchain-ai/langchainjs/commit/db7d017f7ce13cb937147aabcbfa3847d80bde9d) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(core): preserve thoughtSignature in array content during streaming with thinking models
+
 ## 1.1.31
 
 ### Patch Changes

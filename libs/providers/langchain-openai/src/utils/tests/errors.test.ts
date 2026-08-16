@@ -1,5 +1,5 @@
 import { test, expect, describe } from "vitest";
-import { ContextOverflowError } from "@langchain/core/errors";
+import { ContextOverflowError, getRetryable } from "@langchain/core/errors";
 import { wrapOpenAIClientError } from "../client.js";
 
 describe("wrapOpenAIClientError", () => {
@@ -61,6 +61,24 @@ describe("wrapOpenAIClientError", () => {
     expect((wrapped as ContextOverflowError).cause).toBe(originalError);
   });
 
+  test("should wrap context overflow error (maximum context length)", () => {
+    const originalError = {
+      status: 400,
+      message:
+        "This model's maximum context length is 131072 tokens. However, you requested 131079 tokens (131079 in the messages, 0 in the completion). Please reduce the length of the messages or completion.",
+      constructor: { name: "BadRequestError" },
+    };
+
+    const wrapped = wrapOpenAIClientError(originalError);
+
+    expect(wrapped).toBeInstanceOf(ContextOverflowError);
+    expect(ContextOverflowError.isInstance(wrapped)).toBe(true);
+    expect((wrapped as ContextOverflowError).message).toContain(
+      "maximum context length"
+    );
+    expect((wrapped as ContextOverflowError).cause).toBe(originalError);
+  });
+
   test("should not wrap non-context-overflow 400 errors", () => {
     const originalError = {
       status: 400,
@@ -83,7 +101,7 @@ describe("wrapOpenAIClientError", () => {
     const wrapped = wrapOpenAIClientError(originalError);
 
     expect(wrapped).not.toBeInstanceOf(ContextOverflowError);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect((wrapped as any).lc_error_code).toBe("INVALID_TOOL_RESULTS");
   });
 
@@ -96,7 +114,7 @@ describe("wrapOpenAIClientError", () => {
 
     const wrapped = wrapOpenAIClientError(originalError);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect((wrapped as any).lc_error_code).toBe("MODEL_AUTHENTICATION");
   });
 
@@ -109,7 +127,7 @@ describe("wrapOpenAIClientError", () => {
 
     const wrapped = wrapOpenAIClientError(originalError);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect((wrapped as any).lc_error_code).toBe("MODEL_NOT_FOUND");
   });
 
@@ -122,7 +140,7 @@ describe("wrapOpenAIClientError", () => {
 
     const wrapped = wrapOpenAIClientError(originalError);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect((wrapped as any).lc_error_code).toBe("MODEL_RATE_LIMIT");
   });
 
@@ -141,5 +159,124 @@ describe("wrapOpenAIClientError", () => {
     const wrapped = wrapOpenAIClientError(originalError);
 
     expect(wrapped).toBe(originalError);
+  });
+});
+
+describe("wrapOpenAIClientError retryability", () => {
+  test("marks a connection timeout retryable", () => {
+    const wrapped = wrapOpenAIClientError({
+      message: "Request timed out.",
+      constructor: { name: "APIConnectionTimeoutError" },
+    });
+
+    expect((wrapped as Error).name).toBe("TimeoutError");
+    expect(getRetryable(wrapped)).toBe(true);
+  });
+
+  test("marks a user abort non-retryable", () => {
+    const wrapped = wrapOpenAIClientError({
+      message: "Request was aborted.",
+      constructor: { name: "APIUserAbortError" },
+    });
+
+    expect((wrapped as Error).name).toBe("AbortError");
+    expect(getRetryable(wrapped)).toBe(false);
+  });
+
+  test("marks context overflow non-retryable", () => {
+    const wrapped = wrapOpenAIClientError({
+      status: 400,
+      message: "This model's maximum context length is 8192 tokens",
+      constructor: { name: "BadRequestError" },
+    });
+
+    expect(wrapped).toBeInstanceOf(ContextOverflowError);
+    expect(getRetryable(wrapped)).toBe(false);
+  });
+
+  test("marks invalid tool results non-retryable", () => {
+    expect(
+      getRetryable(
+        wrapOpenAIClientError({
+          status: 400,
+          message: "invalid tool_calls block",
+          constructor: { name: "BadRequestError" },
+        })
+      )
+    ).toBe(false);
+  });
+
+  test("marks authentication failures non-retryable", () => {
+    expect(
+      getRetryable(
+        wrapOpenAIClientError({
+          status: 401,
+          message: "Unauthorized",
+          constructor: { name: "AuthenticationError" },
+        })
+      )
+    ).toBe(false);
+  });
+
+  test("marks a missing model non-retryable", () => {
+    expect(
+      getRetryable(
+        wrapOpenAIClientError({
+          status: 404,
+          message: "Not Found",
+          constructor: { name: "NotFoundError" },
+        })
+      )
+    ).toBe(false);
+  });
+
+  test("marks rate limits retryable", () => {
+    expect(
+      getRetryable(
+        wrapOpenAIClientError({
+          status: 429,
+          message: "Too Many Requests",
+          constructor: { name: "RateLimitError" },
+        })
+      )
+    ).toBe(true);
+  });
+
+  test("leaves server errors unclassified so they still retry", () => {
+    expect(
+      getRetryable(
+        wrapOpenAIClientError({
+          status: 500,
+          message: "Internal Server Error",
+          constructor: { name: "InternalServerError" },
+        })
+      )
+    ).toBeUndefined();
+  });
+
+  test("marks the original error in place without replacing it", () => {
+    class APIError extends Error {
+      status = 401;
+    }
+    const original = new APIError("Unauthorized");
+    const wrapped = wrapOpenAIClientError(original);
+
+    expect(wrapped).toBe(original);
+    expect(wrapped).toBeInstanceOf(APIError);
+    expect(getRetryable(wrapped)).toBe(false);
+    expect(Object.keys(original as object)).not.toContain("isRetryable");
+  });
+
+  test("marking adds no enumerable property", () => {
+    const raw = {
+      status: 429,
+      message: "Too Many Requests",
+      constructor: { name: "RateLimitError" },
+    };
+    const before = Object.keys(raw);
+    const wrapped = wrapOpenAIClientError(raw) as Record<string, unknown>;
+
+    expect(getRetryable(wrapped)).toBe(true);
+    expect(Object.keys(wrapped)).toEqual([...before, "lc_error_code"]);
   });
 });

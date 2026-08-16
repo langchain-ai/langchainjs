@@ -10,7 +10,7 @@ export const KNOWN_BLOCK_TYPES = [
   "file",
 ];
 
-// eslint-disable-next-line @typescript-eslint/no-namespace
+// oxlint-disable-next-line @typescript-eslint/no-namespace
 export declare namespace Multimodal {
   type BaseDataRecord = {
     /**

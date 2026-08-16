@@ -174,11 +174,7 @@ export const completionsApiContentBlockConverter: StandardContentBlockConverter<
         type: "file",
         file: {
           file_data: block.url, // formatted as base64 data URL
-          ...(block.metadata?.filename || block.metadata?.name
-            ? {
-                filename,
-              }
-            : {}),
+          filename,
         },
       };
     }
@@ -190,13 +186,7 @@ export const completionsApiContentBlockConverter: StandardContentBlockConverter<
         type: "file",
         file: {
           file_data: `data:${block.mime_type ?? ""};base64,${block.data}`,
-          ...(block.metadata?.filename ||
-          block.metadata?.name ||
-          block.metadata?.title
-            ? {
-                filename,
-              }
-            : {}),
+          filename,
         },
       };
     }
@@ -283,6 +273,8 @@ export const convertCompletionsMessageToBaseMessage: Converter<
   const rawToolCalls: OpenAIToolCall[] | undefined = message.tool_calls as
     | OpenAIToolCall[]
     | undefined;
+  const providerReasoningContent = (message as { reasoning_content?: string })
+    .reasoning_content;
   switch (message.role) {
     case "assistant": {
       const toolCalls = [];
@@ -290,7 +282,7 @@ export const convertCompletionsMessageToBaseMessage: Converter<
       for (const rawToolCall of rawToolCalls ?? []) {
         try {
           toolCalls.push(parseToolCall(rawToolCall, { returnId: true }));
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (e: any) {
           invalidToolCalls.push(makeInvalidToolCall(rawToolCall, e.message));
         }
@@ -302,14 +294,15 @@ export const convertCompletionsMessageToBaseMessage: Converter<
       if (includeRawResponse !== undefined) {
         additional_kwargs.__raw_response = rawResponse;
       }
+      if (providerReasoningContent !== undefined) {
+        additional_kwargs.reasoning_content = providerReasoningContent;
+      }
       const response_metadata: Record<string, unknown> | undefined = {
         model_provider: "openai",
         model_name: rawResponse.model,
+        usage: { ...rawResponse.usage },
         ...(rawResponse.system_fingerprint
-          ? {
-              usage: { ...rawResponse.usage },
-              system_fingerprint: rawResponse.system_fingerprint,
-            }
+          ? { system_fingerprint: rawResponse.system_fingerprint }
           : {}),
       };
 
@@ -396,7 +389,7 @@ export const convertCompletionsMessageToBaseMessage: Converter<
  */
 export const convertCompletionsDeltaToBaseMessageChunk: Converter<
   {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     delta: Record<string, any>;
     rawResponse: OpenAIClient.Chat.Completions.ChatCompletionChunk;
     includeRawResponse?: boolean;
@@ -420,6 +413,9 @@ export const convertCompletionsDeltaToBaseMessageChunk: Converter<
   }
   if (includeRawResponse) {
     additional_kwargs.__raw_response = rawResponse;
+  }
+  if (delta.reasoning_content !== undefined) {
+    additional_kwargs.reasoning_content = delta.reasoning_content;
   }
 
   if (delta.audio) {
@@ -662,10 +658,20 @@ export const convertStandardContentMessageToCompletionsMessage: Converter<
       content: message.contentBlocks.filter((block) => block.type === "text"),
     };
   } else if (role === "assistant") {
-    return {
-      role: "assistant",
-      content: message.contentBlocks.filter((block) => block.type === "text"),
-    };
+    const completionParam: OpenAIClient.Chat.Completions.ChatCompletionAssistantMessageParam =
+      {
+        role: "assistant",
+        content: message.contentBlocks.filter((block) => block.type === "text"),
+      };
+    if (AIMessage.isInstance(message) && !!message.tool_calls?.length) {
+      completionParam.tool_calls = message.tool_calls.map(
+        convertLangChainToolCallToOpenAI
+      ) as OpenAIClient.Chat.Completions.ChatCompletionMessageToolCall[];
+    } else if (message.additional_kwargs.tool_calls != null) {
+      completionParam.tool_calls = message.additional_kwargs
+        .tool_calls as OpenAIClient.Chat.Completions.ChatCompletionMessageToolCall[];
+    }
+    return completionParam;
   } else if (role === "tool" && ToolMessage.isInstance(message)) {
     return {
       role: "tool",
@@ -799,20 +805,30 @@ export const convertMessagesToCompletionsMessageParams: Converter<
                 completionsApiContentBlockConverter
               );
             }
-            // Drop Anthropic tool_use blocks from content — these are
-            // already represented in message.tool_calls and would cause
-            // an API error if passed through to OpenAI.
+            // Drop content blocks the Chat Completions API rejects as input:
+            //  - Tool-call blocks (`tool_use`, `tool_call`) are already
+            //    carried in message.tool_calls, so resending them as content
+            //    would be a duplicate/invalid part.
+            //  - Reasoning traces (`reasoning`, `reasoning_content`,
+            //    `thinking`) are output-only.
+            // Echoing any of these back in the request history is rejected by
+            // strict openai-compatible providers, e.g. DeepSeek:
+            // "unknown variant `reasoning`, expected `text`".
             if (
               typeof m === "object" &&
               m !== null &&
               "type" in m &&
-              m.type === "tool_use"
+              (m.type === "tool_use" ||
+                m.type === "tool_call" ||
+                m.type === "reasoning" ||
+                m.type === "reasoning_content" ||
+                m.type === "thinking")
             ) {
               return [];
             }
             return m;
           });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const completionParam: Record<string, any> = {
       role,
       content,

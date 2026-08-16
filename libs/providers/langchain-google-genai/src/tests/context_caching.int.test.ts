@@ -1,4 +1,4 @@
-import { test } from "@jest/globals";
+import { test } from "vitest";
 
 import { fileURLToPath } from "node:url";
 import * as path from "node:path";

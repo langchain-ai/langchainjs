@@ -32,6 +32,17 @@ import {
 export type $Expand<T> = T extends infer U ? { [K in keyof U]: U[K] } : never;
 
 /**
+ * Provider streaming marker for raw (non-JSON) tool input.
+ * Not part of the public {@link ToolCallChunk} type; integrations may attach
+ * `isCustomTool` at runtime and pass chunks typed as this alias.
+ */
+export type RawInputToolCallChunk = ToolCallChunk & { isCustomTool?: boolean };
+
+function chunkUsesRawInputArgs(chunk: ToolCallChunk): boolean {
+  return (chunk as RawInputToolCallChunk).isCustomTool === true;
+}
+
+/**
  * Extracts the explicitly declared keys from a type T.
  *
  * @template T - The type to extract keys from
@@ -306,6 +317,45 @@ export function coerceMessageLikeToMessage(
 }
 
 /**
+ * Renders a single content block to a compact string representation.
+ * Text blocks are returned as-is; multimodal blocks (image, audio, video, file)
+ * become short placeholders like `[image]` so their existence is preserved
+ * without inflating token counts with base64 data or metadata.
+ */
+function _contentBlockToString(
+  block: string | { type?: string; [key: string]: unknown }
+): string {
+  if (typeof block === "string") return block;
+  switch (block.type) {
+    case "text":
+      return (block as { text: string }).text ?? "";
+    case "text-plain":
+      return (block as { text?: string }).text ?? "[text-plain file]";
+    case "image":
+    case "image_url":
+      return "[image]";
+    case "audio":
+    case "input_audio":
+      return "[audio]";
+    case "video":
+      return "[video]";
+    case "file":
+      return "[file]";
+    case "reasoning":
+    case "tool_call":
+    case "tool_call_chunk":
+    case "invalid_tool_call":
+    case "server_tool_call":
+    case "server_tool_call_chunk":
+    case "server_tool_call_result":
+    case "non_standard":
+      return "";
+    default:
+      return block.type ? `[${block.type}]` : "";
+  }
+}
+
+/**
  * This function is used by memory classes to get a string representation
  * of the chat message history, based on the message content and role.
  *
@@ -341,9 +391,13 @@ export function getBufferString(
     }
     const nameStr = m.name ? `${m.name}, ` : "";
 
-    // Use m.text property which extracts only text content, avoiding metadata
-    // For non-string content (e.g., content blocks), m.text extracts only text blocks
-    const readableContent = m.text;
+    // Render content compactly: text as-is, multimodal blocks as placeholders
+    const readableContent =
+      typeof m.content === "string"
+        ? m.content
+        : Array.isArray(m.content)
+          ? m.content.map(_contentBlockToString).filter(Boolean).join("")
+          : "";
 
     let message = `${role}: ${nameStr}${readableContent}`;
 
@@ -544,13 +598,21 @@ export function collapseToolCallChunks(chunks: ToolCallChunk[]): {
   const invalidToolCalls: InvalidToolCall[] = [];
   for (const chunks of groupedToolCallChunks) {
     let parsedArgs: Record<string, unknown> | null = null;
+    const usesRawInputArgs = chunks.some(chunkUsesRawInputArgs);
     const name = chunks[0]?.name ?? "";
-    const joinedArgs = chunks
-      .map((c) => c.args || "")
-      .join("")
-      .trim();
+    const joinedArgsRaw = chunks.map((c) => c.args || "").join("");
+    const joinedArgs = usesRawInputArgs ? joinedArgsRaw : joinedArgsRaw.trim();
     const argsStr = joinedArgs.length ? joinedArgs : "{}";
-    const id = chunks[0]?.id;
+    const id = chunks.find((c) => c.id)?.id ?? chunks[0]?.id;
+    if (usesRawInputArgs && id) {
+      toolCalls.push({
+        name,
+        args: { input: joinedArgs },
+        id,
+        type: "tool_call",
+      });
+      continue;
+    }
     try {
       parsedArgs = parsePartialJson(argsStr);
       if (

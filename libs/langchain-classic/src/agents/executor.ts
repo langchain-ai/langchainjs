@@ -135,7 +135,7 @@ export class AgentExecutorIterator
 
         const result = await this._callNext();
         yield result;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (e: any) {
         if (
           "message" in e &&
@@ -510,7 +510,7 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
           config
         );
       } catch (e) {
-        // eslint-disable-next-line no-instanceof/no-instanceof
+        // oxlint-disable-next-line no-instanceof/no-instanceof
         if (e instanceof OutputParserException) {
           let observation;
           let text = e.message;
@@ -569,9 +569,9 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
                 "Received unsupported non-string response from tool call."
               );
             }
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // oxlint-disable-next-line @typescript-eslint/no-explicit-any
           } catch (e: any) {
-            // eslint-disable-next-line no-instanceof/no-instanceof
+            // oxlint-disable-next-line no-instanceof/no-instanceof
             if (e instanceof ToolInputParsingException) {
               if (this.handleParsingErrors === true) {
                 observation =
@@ -637,7 +637,7 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
         config
       );
     } catch (e) {
-      // eslint-disable-next-line no-instanceof/no-instanceof
+      // oxlint-disable-next-line no-instanceof/no-instanceof
       if (e instanceof OutputParserException) {
         let observation;
         let text = e.message;
@@ -695,7 +695,7 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
             );
           }
         } catch (e) {
-          // eslint-disable-next-line no-instanceof/no-instanceof
+          // oxlint-disable-next-line no-instanceof/no-instanceof
           if (e instanceof ToolInputParsingException) {
             if (this.handleParsingErrors === true) {
               observation =
@@ -776,7 +776,7 @@ export class AgentExecutor extends BaseChain<ChainValues, AgentExecutorOutput> {
   }
 
   async *_streamIterator(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     inputs: Record<string, any>,
     options?: Partial<RunnableConfig>
   ): AsyncGenerator<ChainValues> {

@@ -85,7 +85,7 @@ export class OutputFixingParser<T> extends BaseOutputParser<T> {
     try {
       return await this.parser.parse(completion, callbacks);
     } catch (e) {
-      // eslint-disable-next-line no-instanceof/no-instanceof
+      // oxlint-disable-next-line no-instanceof/no-instanceof
       if (e instanceof OutputParserException) {
         const retryInput = {
           instructions: this.parser.getFormatInstructions(),

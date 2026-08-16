@@ -10,7 +10,6 @@ import { createAgent, tool, toolCallLimitMiddleware } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph";
-const config = { configurable: { thread_id: "demo-thread" } };
 
 /**
  * Define a simple search tool
@@ -70,7 +69,7 @@ console.log(result.messages[result.messages.length - 1].content);
 /**
  * Create an agent with a tool call limit
  */
-const agent2 = createAgent({
+const followUpAgent = createAgent({
   model: new ChatOpenAI({ model: "gpt-4o-mini" }),
   tools: [searchTool],
   checkpointer: new MemorySaver(),
@@ -88,7 +87,7 @@ const agent2 = createAgent({
   ],
 });
 
-const result2 = await agent.invoke(
+const result2 = await followUpAgent.invoke(
   {
     messages: [new HumanMessage("Search for 'AI' and 'ML'")],
   },

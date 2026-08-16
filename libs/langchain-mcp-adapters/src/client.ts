@@ -736,7 +736,7 @@ export class MultiServerMCPClient {
     restart: NonNullable<ResolvedStdioConnection["restart"]>
   ): void {
     const originalOnClose = transport.onclose;
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    // oxlint-disable-next-line @typescript-eslint/no-misused-promises
     transport.onclose = async () => {
       if (originalOnClose) {
         await originalOnClose();
@@ -966,7 +966,7 @@ export class MultiServerMCPClient {
     reconnect: NonNullable<ResolvedStreamableHTTPConnection["reconnect"]>
   ): void {
     const originalOnClose = transport.onclose;
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    // oxlint-disable-next-line @typescript-eslint/no-misused-promises
     transport.onclose = async () => {
       if (originalOnClose) {
         await originalOnClose();

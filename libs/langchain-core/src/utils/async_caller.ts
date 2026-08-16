@@ -1,5 +1,6 @@
 import PQueueMod from "p-queue";
 
+import { getRetryable, stampRetryable } from "../errors/index.js";
 import { getAbortSignalError } from "./signal.js";
 import pRetry from "./p-retry/index.js";
 
@@ -13,7 +14,241 @@ const STATUS_NO_RETRY = [
   406, // Not Acceptable
   407, // Proxy Authentication Required
   409, // Conflict
+  413, // Payload Too Large
 ];
+
+const RETRY_AFTER_AUTO_RETRY_THRESHOLD_MS = 60_000;
+
+const QUOTA_EXHAUSTED_MESSAGE_PATTERNS = [
+  /insufficient[_ -]?quota/i,
+  /exceeded (?:your|the current|the available).+quota/i,
+  /usage quota/i,
+  /quota (?:has been )?exhausted/i,
+  /billing/i,
+  /credit balance/i,
+  /out of credits/i,
+  /will reset at/i,
+];
+
+const RETRY_AFTER_MESSAGE_PATTERN =
+  /(?:try again in|retry after)\s+(\d+(?:\.\d+)?)\s*(milliseconds?|ms|seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h)\b/i;
+
+type RateLimitAction = "wait" | "capacity" | "stop";
+
+type RateLimitClassification = {
+  action: RateLimitAction;
+  retryAfterMs?: number;
+  reason: string;
+};
+
+function getResponseStatus(error: unknown): number | undefined {
+  return typeof error === "object" &&
+    error !== null &&
+    "response" in error &&
+    typeof error.response === "object" &&
+    error.response !== null &&
+    "status" in error.response &&
+    typeof error.response.status === "number"
+    ? error.response.status
+    : undefined;
+}
+
+function getDirectStatus(error: unknown): number | undefined {
+  if (typeof error !== "object" || error === null) {
+    return undefined;
+  }
+
+  if ("status" in error && typeof error.status === "number") {
+    return error.status;
+  }
+
+  if ("statusCode" in error && typeof error.statusCode === "number") {
+    return error.statusCode;
+  }
+
+  return undefined;
+}
+
+function getErrorMessage(error: unknown): string | undefined {
+  return typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof error.message === "string"
+    ? error.message
+    : undefined;
+}
+
+function getErrorCode(error: unknown): string | undefined {
+  if (typeof error !== "object" || error === null) {
+    return undefined;
+  }
+
+  if ("code" in error && typeof error.code === "string") {
+    return error.code;
+  }
+
+  return "error" in error &&
+    typeof error.error === "object" &&
+    error.error !== null &&
+    "code" in error.error &&
+    typeof error.error.code === "string"
+    ? error.error.code
+    : undefined;
+}
+
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
+function _getRetryAfterHeader(error: any): string | null | undefined {
+  if (error?.headers) {
+    if (typeof error.headers.get === "function") {
+      return error.headers.get("retry-after");
+    }
+    return error.headers["retry-after"] ?? error.headers["Retry-After"];
+  }
+
+  if (error?.response?.headers) {
+    if (typeof error.response.headers.get === "function") {
+      return error.response.headers.get("retry-after");
+    }
+    return (
+      error.response.headers["retry-after"] ??
+      error.response.headers["Retry-After"]
+    );
+  }
+
+  return undefined;
+}
+
+function parseRetryAfterFromMessageMs(
+  message: string | undefined
+): number | undefined {
+  if (message == null) {
+    return undefined;
+  }
+
+  const match = RETRY_AFTER_MESSAGE_PATTERN.exec(message);
+  if (!match) {
+    return undefined;
+  }
+
+  const rawValue = Number(match[1]);
+  const unit = match[2]?.toLowerCase();
+  if (Number.isNaN(rawValue) || !unit) {
+    return undefined;
+  }
+
+  if (unit === "ms" || unit.startsWith("millisecond")) {
+    return rawValue;
+  }
+
+  if (unit === "m" || unit.startsWith("min")) {
+    return rawValue * 60_000;
+  }
+
+  if (unit === "h" || unit.startsWith("hr") || unit.startsWith("hour")) {
+    return rawValue * 3_600_000;
+  }
+
+  return rawValue * 1000;
+}
+
+function coerceError(error: unknown, fallbackMessage: string): Error {
+  if (error instanceof Error) {
+    return error;
+  }
+
+  const coerced = new Error(fallbackMessage);
+  if (typeof error === "object" && error !== null) {
+    Object.assign(coerced, error);
+  }
+  return coerced;
+}
+
+function setRateLimitMetadata(
+  error: unknown,
+  classification: RateLimitClassification
+) {
+  if (typeof error !== "object" || error === null) {
+    return;
+  }
+
+  const mutableError = error as Record<string, unknown>;
+  mutableError.rateLimitType = classification.action;
+  mutableError.rateLimitReason = classification.reason;
+
+  if (classification.retryAfterMs !== undefined) {
+    mutableError.retryAfterMs = classification.retryAfterMs;
+  }
+}
+
+export function parseRetryAfterMs(
+  headerValue: string | null | undefined
+): number | undefined {
+  if (headerValue == null) {
+    return undefined;
+  }
+
+  const trimmed = headerValue.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+
+  const seconds = Number(trimmed);
+  if (!Number.isNaN(seconds) && seconds >= 0) {
+    return seconds * 1000;
+  }
+
+  const date = Date.parse(trimmed);
+  if (!Number.isNaN(date)) {
+    const delayMs = date - Date.now();
+    return delayMs > 0 ? delayMs : 0;
+  }
+
+  return undefined;
+}
+
+export function classifyRateLimitError(
+  error: unknown
+): RateLimitClassification | undefined {
+  const status = getResponseStatus(error) ?? getDirectStatus(error);
+  if (status !== 429) {
+    return undefined;
+  }
+
+  const code = getErrorCode(error);
+  if (code === "insufficient_quota") {
+    return { action: "stop", reason: "insufficient_quota" };
+  }
+
+  const message = getErrorMessage(error);
+  if (
+    message &&
+    QUOTA_EXHAUSTED_MESSAGE_PATTERNS.some((pattern) => pattern.test(message))
+  ) {
+    return { action: "stop", reason: "quota_message" };
+  }
+
+  const retryAfterMs =
+    parseRetryAfterMs(_getRetryAfterHeader(error)) ??
+    parseRetryAfterFromMessageMs(message);
+
+  if (retryAfterMs !== undefined) {
+    if (retryAfterMs <= RETRY_AFTER_AUTO_RETRY_THRESHOLD_MS) {
+      return {
+        action: "wait",
+        retryAfterMs,
+        reason: "retry_after_hint",
+      };
+    }
+
+    return {
+      action: "capacity",
+      retryAfterMs,
+      reason: "retry_after_too_large",
+    };
+  }
+
+  return { action: "capacity", reason: "headerless_429" };
+}
 
 /**
  * The default failed attempt handler for the AsyncCaller.
@@ -25,6 +260,11 @@ const defaultFailedAttemptHandler = (error: unknown) => {
     return;
   }
 
+  // Honor a verdict already reached inside the callable, e.g. by a provider.
+  if (getRetryable(error) === false) {
+    throw error;
+  }
+
   if (
     ("message" in error &&
       typeof error.message === "string" &&
@@ -34,7 +274,8 @@ const defaultFailedAttemptHandler = (error: unknown) => {
       typeof error.name === "string" &&
       error.name === "AbortError")
   ) {
-    throw error;
+    // Deliberate cancellation, not a failure worth another attempt.
+    throw stampRetryable(error, false);
   }
   if (
     "code" in error &&
@@ -43,46 +284,52 @@ const defaultFailedAttemptHandler = (error: unknown) => {
   ) {
     throw error;
   }
-  const responseStatus =
-    "response" in error &&
-    typeof error.response === "object" &&
-    error.response !== null &&
-    "status" in error.response &&
-    typeof error.response.status === "number"
-      ? error.response.status
-      : undefined;
-
-  // OpenAI SDK errors expose status directly on the error object
-  const directStatus =
-    "status" in error && typeof error.status === "number"
-      ? error.status
-      : undefined;
-
-  const status = responseStatus ?? directStatus;
+  const status = getResponseStatus(error) ?? getDirectStatus(error);
   if (status && STATUS_NO_RETRY.includes(+status)) {
-    throw error;
+    // Deterministic client error; retrying it unchanged fails identically.
+    throw stampRetryable(error, false);
   }
 
-  const code =
-    "error" in error &&
-    typeof error.error === "object" &&
-    error.error !== null &&
-    "code" in error.error &&
-    typeof error.error.code === "string"
-      ? error.error.code
-      : undefined;
+  const code = getErrorCode(error);
   if (code === "insufficient_quota") {
-    const err = new Error(
-      "message" in error && typeof error.message === "string"
-        ? error.message
-        : "Insufficient quota"
+    const err = coerceError(
+      error,
+      getErrorMessage(error) ?? "Insufficient quota"
     );
     err.name = "InsufficientQuotaError";
-    throw err;
+    setRateLimitMetadata(err, {
+      action: "stop",
+      reason: "insufficient_quota",
+    });
+    // Exhausted quota needs an account action, not another attempt.
+    throw stampRetryable(err, false);
+  }
+
+  const rateLimitClassification = classifyRateLimitError(error);
+  if (rateLimitClassification) {
+    if (rateLimitClassification.action === "wait") {
+      setRateLimitMetadata(error, rateLimitClassification);
+      stampRetryable(error, true);
+      return;
+    }
+
+    const err = coerceError(
+      error,
+      getErrorMessage(error) ?? "Rate limit exceeded"
+    );
+    if (err.name === "Error") {
+      err.name =
+        rateLimitClassification.action === "stop"
+          ? "RateLimitQuotaExhaustedError"
+          : "RateLimitCapacityError";
+    }
+    setRateLimitMetadata(err, rateLimitClassification);
+    // Only "stop" is exhausted quota; "capacity" can still succeed later.
+    throw stampRetryable(err, rateLimitClassification.action !== "stop");
   }
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export type FailedAttemptHandler = (error: any) => any;
 
 export interface AsyncCallerParams {
@@ -106,6 +353,7 @@ export interface AsyncCallerParams {
 
 export interface AsyncCallerCallOptions {
   signal?: AbortSignal;
+  maxRetries?: number;
 }
 
 /**
@@ -142,17 +390,30 @@ export class AsyncCaller {
     this.queue = new PQueue({ concurrency: this.maxConcurrency });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   async call<A extends any[], T extends (...args: A) => Promise<any>>(
     callable: T,
     ...args: Parameters<T>
+  ): Promise<Awaited<ReturnType<T>>> {
+    return this.callWithRetries(this.maxRetries, callable, args);
+  }
+
+  private callWithRetries<
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    A extends any[],
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    T extends (...args: A) => Promise<any>,
+  >(
+    retries: AsyncCallerParams["maxRetries"],
+    callable: T,
+    args: Parameters<T>
   ): Promise<Awaited<ReturnType<T>>> {
     return this.queue.add(
       () =>
         pRetry(
           () =>
             callable(...args).catch((error) => {
-              // eslint-disable-next-line no-instanceof/no-instanceof
+              // oxlint-disable-next-line no-instanceof/no-instanceof
               if (error instanceof Error) {
                 throw error;
               } else {
@@ -161,7 +422,7 @@ export class AsyncCaller {
             }),
           {
             onFailedAttempt: ({ error }) => this.onFailedAttempt?.(error),
-            retries: this.maxRetries,
+            retries,
             randomize: true,
             // If needed we can change some of the defaults here,
             // but they're quite sensible.
@@ -171,18 +432,19 @@ export class AsyncCaller {
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   callWithOptions<A extends any[], T extends (...args: A) => Promise<any>>(
     options: AsyncCallerCallOptions,
     callable: T,
     ...args: Parameters<T>
   ): Promise<Awaited<ReturnType<T>>> {
+    const retries = options.maxRetries ?? this.maxRetries;
     // Note this doesn't cancel the underlying request,
     // when available prefer to use the signal option of the underlying call
     if (options.signal) {
       let listener: (() => void) | undefined;
       return Promise.race([
-        this.call<A, T>(callable, ...args),
+        this.callWithRetries<A, T>(retries, callable, args),
         new Promise<never>((_, reject) => {
           listener = () => {
             reject(getAbortSignalError(options.signal));
@@ -195,7 +457,7 @@ export class AsyncCaller {
         }
       });
     }
-    return this.call<A, T>(callable, ...args);
+    return this.callWithRetries<A, T>(retries, callable, args);
   }
 
   fetch(...args: Parameters<typeof fetch>): ReturnType<typeof fetch> {

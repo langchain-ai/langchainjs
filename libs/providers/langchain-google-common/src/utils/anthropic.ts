@@ -520,7 +520,7 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
   }
 
   function thinkingContentToAnthropicContent(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     content: Record<string, any>
   ): AnthropicMessageContentThinking | undefined {
     // TODO: Once a Langchain Thinking type is defined, use it
@@ -532,7 +532,7 @@ export function getAnthropicAPI(config?: AnthropicAPIConfig): GoogleAIAPI {
   }
 
   function redactedThinkingContentToAnthropicContent(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     content: Record<string, any>
   ): AnthropicMessageContentRedactedThinking | undefined {
     // TODO: Once a Langchain Thinking type is defined, use it

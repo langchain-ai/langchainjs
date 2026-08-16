@@ -1,6 +1,6 @@
 import path from "node:path";
 import type { Plugin } from "rolldown";
-import { formatWithPrettier } from "../utils.ts";
+import { formatWithOxfmt } from "../utils.ts";
 
 /**
  * Configuration for an extra import map entry that should be included
@@ -186,7 +186,7 @@ export function importMapPlugin(param: ImportMapPluginOptions = {}): Plugin {
 
       await this.fs.writeFile(
         outputPath,
-        await formatWithPrettier(lines.join("\n"))
+        await formatWithOxfmt(lines.join("\n"), outputPath)
       );
       this.info(`📝 Generated import map file: ${outputPath}`);
     },

@@ -2,9 +2,23 @@ import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
 
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 
 import { LocalFileStore } from "../file_system.js";
+
+function createDeferred<T>() {
+  let resolve!: (value: T | PromiseLike<T>) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return {
+    promise,
+    resolve: (value: T | PromiseLike<T>) => resolve(value),
+    reject: (reason?: unknown) => reject(reason),
+  };
+}
 
 describe("LocalFileStore", () => {
   const keys = ["key1", "key2"];
@@ -30,6 +44,100 @@ describe("LocalFileStore", () => {
       value1,
       value2,
     ]);
+  });
+
+  test("LocalFileStore uses last value for duplicate keys in mset", async () => {
+    const encoder = new TextEncoder();
+    const decoder = new TextDecoder();
+    const store = await LocalFileStore.fromPath(tempDir);
+    const key = "duplicate-key";
+    await store.mset([
+      [key, encoder.encode("first")],
+      [key, encoder.encode("second")],
+    ]);
+    const [value] = await store.mget([key]);
+    expect(value).toBeDefined();
+    expect(decoder.decode(value!)).toBe("second");
+    await store.mdelete([key]);
+  });
+
+  test("LocalFileStore queues writes for the same key while a lock is held", async () => {
+    const encoder = new TextEncoder();
+    const decoder = new TextDecoder();
+    const store = await LocalFileStore.fromPath(tempDir);
+    const key = "locked-key";
+
+    const prototype = Object.getPrototypeOf(store) as {
+      writeFileAtomically: (
+        this: LocalFileStore,
+        content: Uint8Array,
+        fullPath: string
+      ) => Promise<void>;
+    };
+    type WriteFileArgs = [Uint8Array, string];
+    const originalWriteFileAtomically = prototype.writeFileAtomically;
+    const firstWriteGate = createDeferred<void>();
+    const writeFileSpy = vi
+      .spyOn(prototype, "writeFileAtomically")
+      .mockImplementationOnce(async function (
+        this: LocalFileStore,
+        ...args: WriteFileArgs
+      ) {
+        await firstWriteGate.promise;
+        // Preserve original behavior once the first write is allowed to proceed.
+        return originalWriteFileAtomically.apply(this, args);
+      })
+      .mockImplementation(function (
+        this: LocalFileStore,
+        ...args: WriteFileArgs
+      ) {
+        return originalWriteFileAtomically.apply(this, args);
+      });
+
+    try {
+      const firstWrite = store.mset([[key, encoder.encode("first")]]);
+
+      await expect.poll(() => writeFileSpy.mock.calls.length).toBe(1);
+
+      const secondWrite = store.mset([[key, encoder.encode("second")]]);
+
+      await new Promise((resolve) => setTimeout(resolve, 25));
+
+      expect(writeFileSpy.mock.calls.length).toBe(1);
+
+      firstWriteGate.resolve();
+
+      await Promise.all([firstWrite, secondWrite]);
+
+      expect(writeFileSpy.mock.calls.length).toBe(2);
+
+      const [value] = await store.mget([key]);
+      expect(value).toBeDefined();
+      expect(decoder.decode(value!)).toBe("second");
+
+      const { keyLocks } = store as unknown as {
+        keyLocks: Map<string, Promise<void>>;
+      };
+      expect(keyLocks.size).toBe(0);
+    } finally {
+      writeFileSpy.mockRestore();
+      await store.mdelete([key]);
+    }
+  });
+
+  test("LocalFileStore removes orphaned temp files during initialization", async () => {
+    const cleanupDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), "file_system_store_cleanup")
+    );
+    const orphanFile = path.join(cleanupDir, "orphan.tmp");
+    fs.writeFileSync(orphanFile, "stale");
+
+    await LocalFileStore.fromPath(cleanupDir);
+
+    const remaining = await fs.promises.readdir(cleanupDir);
+    expect(remaining).not.toContain("orphan.tmp");
+
+    await fs.promises.rm(cleanupDir, { recursive: true, force: true });
   });
 
   test("LocalFileStore can delete values", async () => {
@@ -106,5 +214,55 @@ describe("LocalFileStore", () => {
     await expect(store.mget(["/foo"])).rejects.toThrowError();
     await expect(store.mget(["\\foo"])).rejects.toThrowError();
     await fs.promises.rm(secondaryRootPath, { recursive: true, force: true });
+  });
+
+  test("Should disallow writes into a sibling directory sharing the root path prefix", async () => {
+    const encoder = new TextEncoder();
+    const containerDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), "file_system_store_sibling")
+    );
+    const rootPath = path.join(containerDir, "root");
+    const siblingPath = path.join(containerDir, "root2");
+    await fs.promises.mkdir(siblingPath, { recursive: true });
+    const store = await LocalFileStore.fromPath(rootPath);
+
+    await expect(
+      store.mset([["../root2/pwn", encoder.encode("pwned")]])
+    ).rejects.toThrowError();
+    expect(fs.existsSync(path.join(siblingPath, "pwn.txt"))).toBe(false);
+
+    await fs.promises.rm(containerDir, { recursive: true, force: true });
+  });
+
+  test("Should disallow deletes in a sibling directory sharing the root path prefix", async () => {
+    const containerDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), "file_system_store_sibling")
+    );
+    const rootPath = path.join(containerDir, "root");
+    const siblingPath = path.join(containerDir, "root2");
+    await fs.promises.mkdir(siblingPath, { recursive: true });
+    const victimFile = path.join(siblingPath, "victim.txt");
+    fs.writeFileSync(victimFile, "do not delete");
+    const store = await LocalFileStore.fromPath(rootPath);
+
+    await expect(store.mdelete(["../root2/victim"])).rejects.toThrowError();
+    expect(fs.existsSync(victimFile)).toBe(true);
+
+    await fs.promises.rm(containerDir, { recursive: true, force: true });
+  });
+
+  test("Should allow keys nested in a subdirectory of the root path", async () => {
+    const encoder = new TextEncoder();
+    const nestedDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), "file_system_store_nested")
+    );
+    const store = await LocalFileStore.fromPath(nestedDir);
+
+    await store.mset([["sub/dir/key", encoder.encode("nested")]]);
+    expect(
+      fs.readFileSync(path.join(nestedDir, "sub/dir/key.txt"), "utf8")
+    ).toBe("nested");
+
+    await fs.promises.rm(nestedDir, { recursive: true, force: true });
   });
 });

@@ -1,4 +1,4 @@
-/** eslint-disable @typescript-eslint/no-non-null-assertion */
+/** oxlint-disable @typescript-eslint/no-non-null-assertion */
 
 import { test, expect } from "vitest";
 import { ChatOpenAI } from "@langchain/openai";

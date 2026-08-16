@@ -1,5 +1,4 @@
-import { test, expect } from "@jest/globals";
-import { ChatModelIntegrationTests } from "@langchain/standard-tests";
+import { ChatModelIntegrationTests } from "@langchain/standard-tests/vitest";
 import { AIMessageChunk } from "@langchain/core/messages";
 import {
   ChatGoogleGenerativeAI,
@@ -17,7 +16,7 @@ class ChatGoogleGenerativeAIStandardIntegrationTests extends ChatModelIntegratio
       );
     }
     super({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       Cls: ChatGoogleGenerativeAI as any,
       chatModelHasToolCalling: true,
       chatModelHasStructuredOutput: true,
@@ -46,8 +45,4 @@ class ChatGoogleGenerativeAIStandardIntegrationTests extends ChatModelIntegratio
 }
 
 const testClass = new ChatGoogleGenerativeAIStandardIntegrationTests();
-
-test("ChatGoogleGenerativeAIStandardIntegrationTests", async () => {
-  const testResults = await testClass.runTests();
-  expect(testResults).toBe(true);
-});
+testClass.runTests("ChatGoogleGenerativeAIStandardIntegrationTests");

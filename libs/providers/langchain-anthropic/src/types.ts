@@ -5,7 +5,7 @@ export type AnthropicToolResponse = {
   type: "tool_use";
   id: string;
   name: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   input: Record<string, any>;
 };
 export type AnthropicMessageParam = Anthropic.MessageParam;
@@ -143,7 +143,7 @@ export type AnthropicBuiltInToolUnion = Exclude<
  * A type representing additional parameters that can be passed to the
  * Anthropic API.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export type Kwargs = Record<string, any>;
 
 export type AnthropicInvocationParams = Omit<

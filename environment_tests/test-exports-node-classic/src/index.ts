@@ -9,10 +9,6 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { RunnableSequence } from "@langchain/core/runnables";
 
-// Test imports from @langchain/classic
-import { LLMChain } from "@langchain/classic/chains";
-import { MemoryVectorStore } from "@langchain/classic/vectorstores/memory";
-
 async function test() {
   // Test that types are imported correctly from langchain
   assert(typeof createAgent === "function");
@@ -25,10 +21,6 @@ async function test() {
   assert(typeof Document === "function");
   assert(typeof StringOutputParser === "function");
   assert(typeof RunnableSequence === "function");
-
-  // Test that types are imported correctly from @langchain/classic
-  assert(typeof LLMChain === "function");
-  assert(typeof MemoryVectorStore === "function");
 
   // Test that we can instantiate some of these classes
   const parser = new StringOutputParser();
@@ -52,4 +44,3 @@ test()
     console.error("✗ Test failed:", e);
     process.exit(1);
   });
-

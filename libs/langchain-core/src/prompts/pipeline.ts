@@ -132,7 +132,7 @@ export class PipelinePromptTemplate<
           allValues,
           pipelinePrompt.inputVariables
         );
-      // eslint-disable-next-line no-instanceof/no-instanceof
+      // oxlint-disable-next-line no-instanceof/no-instanceof
       if (pipelinePrompt instanceof ChatPromptTemplate) {
         allValues[pipelinePromptName] = await pipelinePrompt.formatMessages(
           pipelinePromptInputValues

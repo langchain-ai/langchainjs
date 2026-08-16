@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 //  yarn test:single src/experimental/masking/tests/masking.test.ts
 import { vi } from "vitest";
 import {
@@ -302,7 +302,7 @@ describe("MaskingParser and PIIMaskingTransformer", () => {
 
     it("throws an error when initialized with invalid regex pattern", () => {
       expect(() => {
-        // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+        // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
         // @ts-expect-error unused var
         const transformer = new RegexMaskingTransformer({
           // @ts-expect-error Should throw with invalid regex

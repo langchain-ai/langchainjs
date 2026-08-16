@@ -6,7 +6,7 @@ import { ToolMessage } from "@langchain/core/messages";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
 
 import { createMiddleware } from "../middleware.js";
-import { sleep, calculateRetryDelay } from "./utils.js";
+import { sleep, calculateRetryDelay, getRetryAfterMs } from "./utils.js";
 import { RetrySchema } from "./constants.js";
 import { InvalidRetryConfigError } from "./error.js";
 
@@ -222,7 +222,7 @@ export function toolRetryMiddleware(config: ToolRetryMiddlewareConfig = {}) {
     }
     // retryOn is an array of error constructors
     return retryOn.some((ErrorConstructor) => {
-      // eslint-disable-next-line no-instanceof/no-instanceof
+      // oxlint-disable-next-line no-instanceof/no-instanceof
       return error instanceof ErrorConstructor;
     });
   };
@@ -306,7 +306,11 @@ export function toolRetryMiddleware(config: ToolRetryMiddlewareConfig = {}) {
           // Check if we have more retries left
           if (attempt < maxRetries) {
             // Calculate and apply backoff delay
-            const delay = calculateRetryDelay(delayConfig, attempt);
+            const delay = calculateRetryDelay(
+              delayConfig,
+              attempt,
+              getRetryAfterMs(error)
+            );
             if (delay > 0) {
               await sleep(delay);
             }

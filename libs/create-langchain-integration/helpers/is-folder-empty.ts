@@ -1,4 +1,4 @@
-/* eslint-disable import/no-extraneous-dependencies */
+/* oxlint-disable import-x/no-extraneous-dependencies */
 import fs from "fs";
 import path from "path";
 import { blue, green } from "picocolors";

@@ -47,6 +47,6 @@ const { output } = await agentExecutor.invoke({ input });
 
 console.log(output);
 
-/* 
+/*
   The current weather in Paris is 28 °C.
 */

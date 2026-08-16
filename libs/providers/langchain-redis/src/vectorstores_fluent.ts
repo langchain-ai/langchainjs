@@ -7,7 +7,7 @@ import type {
   RediSearchSchema,
   SearchOptions,
 } from "redis";
-import { v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4 } from "@langchain/core/utils/uuid";
 import { SchemaFieldTypes, VectorAlgorithms } from "redis";
 import {
   FilterExpression,
@@ -180,7 +180,7 @@ export class FluentRedisVectorStore extends VectorStore {
     embeddings: EmbeddingsInterface,
     _dbConfig: FluentRedisVectorStoreConfig
   ) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     super(embeddings, _dbConfig as Record<string, any>);
 
     this.redisClient = _dbConfig.redisClient;
@@ -415,7 +415,7 @@ export class FluentRedisVectorStore extends VectorStore {
         ? "legacy"
         : "default";
     } catch (err) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       if ((err as any)?.message.includes("unknown command")) {
         throw new Error(
           "Failed to run FT.INFO command. Please ensure that you are running a RediSearch-capable Redis instance: https://js.langchain.com/docs/integrations/vectorstores/redis/#setup"

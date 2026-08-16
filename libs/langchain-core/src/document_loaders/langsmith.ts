@@ -31,7 +31,7 @@ export interface LangSmithLoaderFields {
   metadata?: KVMap;
   filter?: string;
   contentKey?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   formatContent?: (content: any) => string;
   client?: Client;
   clientConfig?: ClientConfig;
@@ -104,7 +104,7 @@ export class LangSmithLoader extends BaseDocumentLoader {
 
   contentKey: string[];
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   formatContent: (content: any) => string;
 
   client: Client;

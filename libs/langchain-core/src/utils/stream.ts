@@ -57,7 +57,7 @@ export class IterableReadableStream<T>
     return { done: true, value: undefined };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   async throw(e: any): Promise<IteratorResult<T>> {
     this.ensureReader();
     if (this.locked) {
@@ -72,7 +72,7 @@ export class IterableReadableStream<T>
     return this;
   }
 
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // oxlint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore Not present in Node 18 types, required in latest Node 22
   async [Symbol.asyncDispose]() {
     await this.return();
@@ -146,7 +146,7 @@ export function atee<T>(
 }
 
 export function concat<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   T extends Array<any> | string | number | Record<string, any> | any,
 >(first: T, second: T): T {
   if (Array.isArray(first) && Array.isArray(second)) {
@@ -156,17 +156,17 @@ export function concat<
   } else if (typeof first === "number" && typeof second === "number") {
     return (first + second) as T;
   } else if (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     "concat" in (first as any) &&
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     typeof (first as any).concat === "function"
   ) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     return (first as any).concat(second) as T;
   } else if (typeof first === "object" && typeof second === "object") {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const chunk = { ...first } as Record<string, any>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     for (const [key, value] of Object.entries(second as Record<string, any>)) {
       if (key in chunk && !Array.isArray(chunk[key])) {
         chunk[key] = concat(chunk[key], value);
@@ -206,20 +206,24 @@ export class AsyncGeneratorWithSetup<
   }) {
     this.generator = params.generator;
     this.config = params.config;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     this.signal = params.signal ?? (this.config as any)?.signal;
     // setup is a promise that resolves only after the first iterator value
     // is available. this is useful when setup of several piped generators
     // needs to happen in logical order, ie. in the order in which input to
     // to each generator is available.
     this.setup = new Promise((resolve, reject) => {
-      // eslint-disable-next-line no-void
+      // oxlint-disable-next-line no-void
       void AsyncLocalStorageProviderSingleton.runWithConfig(
         pickRunnableConfigKeys(
           params.config as Record<string, unknown> | undefined
         ),
         async () => {
-          this.firstResult = params.generator.next();
+          // Abort the first read too so timeouts can stop streams before the
+          // first chunk is available.
+          this.firstResult = this.signal
+            ? raceWithSignal(params.generator.next(), this.signal)
+            : params.generator.next();
           if (params.startSetup) {
             this.firstResult.then(params.startSetup).then(resolve, reject);
           } else {
@@ -268,7 +272,7 @@ export class AsyncGeneratorWithSetup<
     return this;
   }
 
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // oxlint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore Not present in Node 18 types, required in latest Node 22
   async [Symbol.asyncDispose]() {
     await this.return();

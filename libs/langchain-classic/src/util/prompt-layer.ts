@@ -8,7 +8,7 @@ export const promptLayerTrackRequest = async (
     | OpenAIClient.CompletionCreateParams
     | OpenAIClient.Chat.ChatCompletionCreateParams,
   plTags: string[] | undefined,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   requestResponse: any,
   startTime: number,
   endTime: number,

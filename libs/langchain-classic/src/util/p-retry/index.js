@@ -1,4 +1,4 @@
-/* eslint-disable */
+/* oxlint-disable */
 import isNetworkError from "../is-network-error/index.js";
 
 function validateRetries(retries) {

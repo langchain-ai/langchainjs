@@ -1,4 +1,4 @@
-import { FireworksEmbeddings } from "@langchain/community/embeddings/fireworks";
+import { FireworksEmbeddings } from "@langchain/fireworks";
 
 /* Embed queries */
 const fireworksEmbeddings = new FireworksEmbeddings();

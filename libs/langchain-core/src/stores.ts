@@ -52,7 +52,7 @@ export abstract class BaseStore<K, V> extends Serializable {
  * await store.mdelete(await store.yieldKeys("message:id:").toArray());
  * ```
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export class InMemoryStore<T = any> extends BaseStore<string, T> {
   lc_namespace = ["langchain", "storage"];
 

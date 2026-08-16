@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 
 import { vi, expect, test } from "vitest";
 import {
@@ -43,7 +43,7 @@ class WeatherTool extends StructuredTool {
 }
 
 const model = new ChatAnthropic({
-  modelName: "claude-3-haiku-20240307",
+  modelName: "claude-haiku-4-5-20251001",
   temperature: 0,
 });
 
@@ -229,6 +229,32 @@ test("Can bind & invoke AnthropicTools", async () => {
   expect(name).toBe("get_weather");
   expect(input).toBeTruthy();
   expect(input.location).toBeTruthy();
+});
+
+test("drops tools with root schema composition before invoking Anthropic", async () => {
+  const invalidTool = {
+    name: "invalid_composition_tool",
+    description: "This tool has an unsupported root schema composition.",
+    input_schema: {
+      type: "object" as const,
+      anyOf: [
+        {
+          type: "object",
+          properties: { query: { type: "string" } },
+          required: ["query"],
+        },
+      ],
+    },
+  };
+  const modelWithTools = model.bindTools([anthropicTool, invalidTool], {
+    tool_choice: { type: "tool", name: "get_weather" },
+  });
+
+  const result = await modelWithTools.invoke(
+    "What is the weather in London today?"
+  );
+
+  expect(result.tool_calls?.[0].name).toBe("get_weather");
 });
 
 test("Can bind & stream AnthropicTools", async () => {

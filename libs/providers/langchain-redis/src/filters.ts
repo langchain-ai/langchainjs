@@ -1,3 +1,8 @@
+import {
+  assertSafeRedisearchFieldName,
+  escapeRedisearchValue,
+} from "./query_safety.js";
+
 /**
  * Filter expression classes for advanced metadata filtering in Redis vector stores.
  *
@@ -64,7 +69,7 @@ export abstract class FilterExpression {
    * ```
    */
   and(other: FilterExpression): FilterExpression {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    // oxlint-disable-next-line @typescript-eslint/no-use-before-define
     return new AndFilter([this, other]);
   }
 
@@ -84,7 +89,7 @@ export abstract class FilterExpression {
    * ```
    */
   or(other: FilterExpression): FilterExpression {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    // oxlint-disable-next-line @typescript-eslint/no-use-before-define
     return new OrFilter([this, other]);
   }
 }
@@ -227,14 +232,18 @@ export class TagFilter extends FilterExpression {
       return "*"; // Return wildcard for empty filters
     }
 
-    let valueStr: string;
-    if (typeof this.values === "string") {
-      valueStr = this.values;
-    } else if (Array.isArray(this.values)) {
-      valueStr = this.values.join("|");
-    } else {
-      valueStr = Array.from(this.values).join("|");
-    }
+    assertSafeRedisearchFieldName(this.field);
+
+    const normalizedValues =
+      typeof this.values === "string"
+        ? [this.values]
+        : Array.isArray(this.values)
+          ? this.values
+          : Array.from(this.values);
+
+    const valueStr = normalizedValues
+      .map((value) => escapeRedisearchValue(value))
+      .join("|");
 
     const filter = `@${this.field}:{${valueStr}}`;
     return this.negate ? `(-${filter})` : filter;
@@ -308,6 +317,8 @@ export class NumericFilter extends FilterExpression {
   }
 
   toString(): string {
+    assertSafeRedisearchFieldName(this.field);
+
     let rangeStr: string;
 
     switch (this.operator) {
@@ -416,26 +427,39 @@ export class TextFilter extends FilterExpression {
       return "*"; // Return wildcard for empty queries
     }
 
+    assertSafeRedisearchFieldName(this.field);
+
     let queryStr: string;
     switch (this.operator) {
       case "exact":
         // Exact phrase match using quotes
-        queryStr = `"${this.query}"`;
+        queryStr = `"${escapeRedisearchValue(this.query, {
+          preserveWhitespace: true,
+        })}"`;
         break;
       case "match":
         // Tokenized word matching
-        queryStr = this.query;
+        queryStr = escapeRedisearchValue(this.query, {
+          preserveWhitespace: true,
+        });
         break;
       case "wildcard":
         // Wildcard matching - wildcards should be included in the query string
-        queryStr = this.query;
+        queryStr = escapeRedisearchValue(this.query, {
+          preserveWhitespace: true,
+          preserveWildcard: true,
+        });
         break;
       case "fuzzy":
         // Fuzzy matching using %% prefix and suffix
-        queryStr = `%%${this.query}%%`;
+        queryStr = `%%${escapeRedisearchValue(this.query, {
+          preserveWhitespace: true,
+        })}%%`;
         break;
       default:
-        queryStr = this.query;
+        queryStr = escapeRedisearchValue(this.query, {
+          preserveWhitespace: true,
+        });
     }
 
     const filter = `@${this.field}:(${queryStr})`;
@@ -511,6 +535,8 @@ export class GeoFilter extends FilterExpression {
   }
 
   toString(): string {
+    assertSafeRedisearchFieldName(this.field);
+
     const filter = `@${this.field}:[${this.longitude} ${this.latitude} ${this.radius} ${this.unit}]`;
     return this.negate ? `(-${filter})` : filter;
   }
@@ -653,6 +679,8 @@ export class TimestampFilter extends FilterExpression {
   }
 
   toString(): string {
+    assertSafeRedisearchFieldName(this.field);
+
     let rangeStr: string;
 
     switch (this.operator) {

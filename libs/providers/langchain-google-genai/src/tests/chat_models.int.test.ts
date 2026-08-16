@@ -1,4 +1,4 @@
-import { test, describe, expect } from "@jest/globals";
+import { test, describe, expect } from "vitest";
 import * as fs from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import * as path from "node:path";
@@ -753,8 +753,7 @@ test("pass pdf to request", async () => {
     temperature: 0,
     maxRetries: 0,
   });
-  const pdfPath =
-    "../langchain-community/src/document_loaders/tests/example_data/Jacob_Lee_Resume_2023.pdf";
+  const pdfPath = "./test_data/Jacob_Lee_Resume_2023.pdf";
   const pdfBase64 = await fs.readFile(pdfPath, "base64");
 
   const response = await model.invoke([
@@ -939,7 +938,7 @@ describe("Google GenAI Reasoning with contentBlocks", () => {
 
     const reasoningBlocks = blocks.filter((b) => b.type === "reasoning");
     expect(reasoningBlocks.length).toBeGreaterThan(0);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect((reasoningBlocks[0] as any).reasoning.length).toBeGreaterThan(0);
 
     const textBlocks = blocks.filter((b) => b.type === "text");
@@ -967,7 +966,7 @@ describe("Google GenAI Reasoning with contentBlocks", () => {
 
     const reasoningBlocks = blocks.filter((b) => b.type === "reasoning");
     expect(reasoningBlocks.length).toBeGreaterThan(0);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect((reasoningBlocks[0] as any).reasoning.length).toBeGreaterThan(0);
   }, 60000);
 });

@@ -219,7 +219,7 @@ export abstract class BlobStoreGoogle<
     await Promise.all(ret);
   }
 
-  // eslint-disable-next-line require-yield
+  // oxlint-disable-next-line require-yield
   async *yieldKeys(_prefix: string | undefined): AsyncGenerator<string> {
     // TODO: Implement. Most have an implementation that uses nextToken.
     throw new Error("yieldKeys is not implemented");

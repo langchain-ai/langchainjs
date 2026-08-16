@@ -1,4 +1,4 @@
-import { expect, test } from "@jest/globals";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import fs from "fs/promises";
 import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
@@ -406,7 +406,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
     });
     const blobStore = new ReadThroughBlobStore({
       baseStore: aliasStore,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       backingStore: backingStore as any,
     });
     const resolver = new SimpleWebBlobStore();
@@ -417,7 +417,7 @@ describe.each(testGeminiModelNames)("GAuth Gemini Chat (%s)", (modelName) => {
     const model = new ChatGoogle({
       modelName,
       apiConfig: {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         mediaManager: mediaManager as any,
       },
     });
@@ -775,7 +775,7 @@ describe.each(testAnthropicModelNames)(
 
     afterEach(() => {
       // restore any spy created with spyOn
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     });
 
     test("invoke", async () => {
@@ -801,7 +801,7 @@ describe.each(testAnthropicModelNames)(
     });
 
     test("system", async () => {
-      const consoleWarn = jest.spyOn(console, "warn");
+      const consoleWarn = vi.spyOn(console, "warn");
       const model = new ChatVertexAI({
         modelName,
         callbacks,

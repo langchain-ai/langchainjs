@@ -255,14 +255,14 @@ export function _formatStandardContent(
         result.push({
           type: "code_execution_tool_result",
           tool_use_id: block.toolCallId ?? "",
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // oxlint-disable-next-line @typescript-eslint/no-explicit-any
           content: block.output as any,
         });
       } else if (block.name === "mcp_tool_result") {
         result.push({
           type: "mcp_tool_result",
           tool_use_id: block.toolCallId ?? "",
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // oxlint-disable-next-line @typescript-eslint/no-explicit-any
           content: block.output as any,
         });
       }

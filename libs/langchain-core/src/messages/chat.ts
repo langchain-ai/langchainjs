@@ -47,7 +47,7 @@ export class ChatMessage<TStructure extends MessageStructure = MessageStructure>
     role?: string
   ) {
     if (typeof fields === "string" || Array.isArray(fields)) {
-      // eslint-disable-next-line no-param-reassign, @typescript-eslint/no-non-null-assertion
+      // oxlint-disable-next-line no-param-reassign, @typescript-eslint/no-non-null-assertion
       fields = { content: fields, role: role! };
     }
     super(fields);
@@ -56,6 +56,10 @@ export class ChatMessage<TStructure extends MessageStructure = MessageStructure>
 
   static isInstance(obj: unknown): obj is ChatMessage {
     return super.isInstance(obj) && obj.type === "generic";
+  }
+
+  static [Symbol.hasInstance](obj: unknown) {
+    return this.isInstance(obj);
   }
 
   override get _printableFields(): Record<string, unknown> {
@@ -95,7 +99,7 @@ export class ChatMessageChunk<
     role?: string
   ) {
     if (typeof fields === "string" || Array.isArray(fields)) {
-      // eslint-disable-next-line no-param-reassign, @typescript-eslint/no-non-null-assertion
+      // oxlint-disable-next-line no-param-reassign, @typescript-eslint/no-non-null-assertion
       fields = { content: fields, role: role! };
     }
     super(fields);
@@ -121,6 +125,10 @@ export class ChatMessageChunk<
 
   static isInstance(obj: unknown): obj is ChatMessageChunk {
     return super.isInstance(obj) && obj.type === "generic";
+  }
+
+  static [Symbol.hasInstance](obj: unknown) {
+    return this.isInstance(obj);
   }
 
   override get _printableFields(): Record<string, unknown> {

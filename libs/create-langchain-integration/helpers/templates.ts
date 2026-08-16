@@ -31,7 +31,7 @@ export async function installTemplate({
    * Update the package.json scripts.
    */
   const packageJsonFile = path.join(root, "package.json");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   const packageJson: Record<string, any> = JSON.parse(
     await fs.readFile(packageJsonFile, "utf8")
   );

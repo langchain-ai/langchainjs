@@ -1,5 +1,4 @@
-/* eslint-disable import/no-extraneous-dependencies */
-/* eslint-disable no-process-env */
+/* oxlint-disable no-process-env */
 
 // * THIS IS INLINED FROM /internal/test-helpers/src/env.ts
 // * Dependency range tests do a shallow copy of the packages it needs from workspace deps, but not exigent workspace deps (like test-helpers).

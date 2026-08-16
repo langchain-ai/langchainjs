@@ -1,5 +1,5 @@
 export function parseJsonMarkdown(s: string, parser = parsePartialJson) {
-  // eslint-disable-next-line no-param-reassign
+  // oxlint-disable-next-line no-param-reassign
   s = s.trim();
 
   const firstFenceIndex = s.indexOf("```");
@@ -316,7 +316,7 @@ export function strictParsePartialJson(s: string): unknown {
   return value;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export function parsePartialJson(s: string): any | null {
   // Attempt to parse the modified string as JSON.
   try {

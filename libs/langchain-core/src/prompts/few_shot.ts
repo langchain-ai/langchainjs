@@ -331,9 +331,9 @@ export interface FewShotChatMessagePromptTemplateInput extends BasePromptTemplat
  * @augments FewShotChatMessagePromptTemplateInput
  */
 export class FewShotChatMessagePromptTemplate<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends InputValues = any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   PartialVariableName extends string = any,
 >
   extends BaseChatPromptTemplate
@@ -431,7 +431,7 @@ export class FewShotChatMessagePromptTemplate<
     let examples = await this.getExamples(allValues);
 
     examples = examples.map((example) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       const result: Record<string, any> = {};
       this.examplePrompt.inputVariables.forEach((inputVariable) => {
         result[inputVariable] = example[inputVariable];

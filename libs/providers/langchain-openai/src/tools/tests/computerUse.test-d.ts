@@ -8,6 +8,7 @@ describe("OpenAI Computer Use Tool Tests", () => {
       displayHeight: 768,
       environment: "browser",
       execute: async (cmd) => {
+        if (!cmd) throw new Error("cmd is undefined");
         expectTypeOf(cmd.type).toEqualTypeOf<
           | "type"
           | "click"

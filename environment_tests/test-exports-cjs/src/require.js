@@ -2,45 +2,31 @@ const assert = require("assert");
 const { OpenAI } = require("@langchain/openai");
 const { ChatOllama } = require("@langchain/ollama");
 const { ChatGoogle } = require("@langchain/google-gauth");
-const { LLMChain } = require("@langchain/classic/chains");
 const { ChatPromptTemplate } = require("@langchain/core/prompts");
-const { MemoryVectorStore } = require("@langchain/classic/vectorstores/memory");
-const {
-  HuggingFaceTransformersEmbeddings,
-} = require("@langchain/community/embeddings/huggingface_transformers");
-const { Document } = require("@langchain/core/documents");
 const { RunnableLambda } = require("@langchain/core/runnables");
+const uuid = require("@langchain/core/utils/uuid");
 
 async function test() {
   // Test exports
   assert(typeof OpenAI === "function");
-  assert(typeof LLMChain === "function");
   assert(typeof ChatPromptTemplate === "function");
-  assert(typeof MemoryVectorStore === "function");
   assert(typeof ChatOllama === "function");
   assert(typeof ChatGoogle === "function");
 
-  const vs = new MemoryVectorStore(
-    new HuggingFaceTransformersEmbeddings({ model: "Xenova/all-MiniLM-L6-v2" })
-  );
-
-  await vs.addVectors(
-    [
-      [0, 1, 0],
-      [0, 0, 1],
-    ],
-    [
-      new Document({
-        pageContent: "a",
-      }),
-      new Document({
-        pageContent: "b",
-      }),
-    ]
-  );
-
-  assert((await vs.similaritySearchVectorWithScore([0, 0, 1], 1)).length === 1);
   assert(typeof RunnableLambda === "function");
+
+  assert(typeof uuid.v1 === "function");
+  assert(typeof uuid.v4 === "function");
+  assert(typeof uuid.v5 === "function");
+  assert(typeof uuid.v6 === "function");
+  assert(typeof uuid.v7 === "function");
+  assert(typeof uuid.parse === "function");
+  assert(typeof uuid.stringify === "function");
+  assert(typeof uuid.validate === "function");
+  assert(typeof uuid.version === "function");
+  assert(typeof uuid.MAX === "string");
+  assert(typeof uuid.NIL === "string");
+  assert(/^[0-9a-f-]{36}$/.test(uuid.v4()));
   let attemptCount = 0;
   const flakyRunnable = new RunnableLambda({
     func: () => {

@@ -1,5 +1,6 @@
 import { OpenAI as OpenAIClient } from "openai";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import {
   AIMessage,
   AIMessageChunk,
@@ -33,6 +34,7 @@ import {
   convertCompletionsMessageToBaseMessage,
   convertMessagesToCompletionsMessageParams,
 } from "../converters/completions.js";
+import { convertOpenAICompletionsStream } from "../utils/stream_events.js";
 
 export interface ChatOpenAICompletionsCallOptions extends BaseChatOpenAICallOptions {}
 
@@ -68,6 +70,22 @@ export class ChatOpenAICompletions<
       strict = options.strict;
     } else if (this.supportsStrictToolCalling !== undefined) {
       strict = this.supportsStrictToolCalling;
+    }
+
+    // A `json_schema` response format goes through the SDK `.parse()` helper,
+    // which requires strict function tools — but only on the NON-streaming path
+    // (`completionWithRetry` uses `.parse()` only when `!request.stream`).
+    // Streaming structured output uses `create()`, which doesn't need strict, so
+    // don't force it there. Default to strict for the parse path unless the
+    // caller set strict:false. (Re-applied here because the agent core no longer
+    // forces strict for every provider.)
+    const isStreaming = this.streaming || extra?.streaming;
+    if (
+      !isStreaming &&
+      options?.response_format?.type === "json_schema" &&
+      strict !== false
+    ) {
+      strict = true;
     }
 
     let streamOptionsConfig = {};
@@ -209,6 +227,7 @@ export class ChatOpenAICompletions<
         },
         {
           signal: options?.signal,
+          maxRetries: options?.maxRetries,
           ...options?.options,
         }
       );
@@ -305,6 +324,58 @@ export class ChatOpenAICompletions<
     }
   }
 
+  /**
+   * Native implementation of the content-block-centric streaming protocol
+   * for OpenAI Chat Completions.
+   */
+  async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    const messagesMapped: OpenAIClient.Chat.Completions.ChatCompletionMessageParam[] =
+      convertMessagesToCompletionsMessageParams({
+        messages,
+        model: this.model,
+      });
+
+    const params = {
+      ...this.invocationParams(options, {
+        streaming: true,
+      }),
+      messages: messagesMapped,
+      stream: true as const,
+    };
+
+    const streamIterable = await this.completionWithRetry(params, options);
+    const shouldStreamUsage = this.streamUsage ?? options.streamUsage;
+
+    const abortableStream = async function* (
+      source: AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>,
+      signal?: AbortSignal
+    ) {
+      for await (const data of source) {
+        if (signal?.aborted) {
+          return;
+        }
+        yield data;
+      }
+    };
+
+    yield* convertOpenAICompletionsStream(
+      abortableStream(streamIterable, options.signal),
+      {
+        streamUsage: shouldStreamUsage ?? true,
+        provider: this.streamEventProvider,
+      }
+    );
+  }
+
+  /** Provider id used in native stream protocol passthrough events. */
+  protected get streamEventProvider(): string {
+    return "openai";
+  }
+
   async *_streamResponseChunks(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
@@ -359,7 +430,7 @@ export class ChatOpenAICompletions<
         );
         continue;
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       const generationInfo: Record<string, any> = { ...newTokenIndices };
       if (choice.finish_reason != null) {
         generationInfo.finish_reason = choice.finish_reason;
@@ -456,10 +527,13 @@ export class ChatOpenAICompletions<
     | AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>
     | OpenAIClient.Chat.Completions.ChatCompletion
   > {
-    const clientOptions = this._getClientOptions(requestOptions);
+    // The SDK has its own `maxRetries`; take it for our caller instead so
+    // the two retry loops don't multiply.
+    const { maxRetries, ...sdkOptions } = requestOptions ?? {};
+    const clientOptions = this._getClientOptions(sdkOptions);
     const isParseableFormat =
       request.response_format && request.response_format.type === "json_schema";
-    return this.caller.call(async () => {
+    return this.caller.callWithOptions({ maxRetries }, async () => {
       try {
         if (isParseableFormat && !request.stream) {
           return await this.client.chat.completions.parse(
@@ -487,7 +561,7 @@ export class ChatOpenAICompletions<
    * method. This will be removed in a future release
    */
   protected _convertCompletionsDeltaToBaseMessageChunk(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     delta: Record<string, any>,
     rawResponse: OpenAIClient.Chat.Completions.ChatCompletionChunk,
     defaultRole?: OpenAIClient.Chat.ChatCompletionRole

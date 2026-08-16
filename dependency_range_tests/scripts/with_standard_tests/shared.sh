@@ -13,9 +13,6 @@ else
   # For regular packages, apply the mapping
   package_name="$package_path"
   case "$package_name" in
-    "community")
-      package_dir="langchain-community"
-      ;;
     "openai")
       package_dir="langchain-openai"
       ;;

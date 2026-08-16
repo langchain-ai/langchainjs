@@ -47,7 +47,7 @@ export function parseAIMessageToToolAction(
       try {
         const args = JSON.parse(toolCall.function.arguments);
         toolCalls.push({ name: functionName, args, id: toolCall.id });
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (e: any) {
         throw new OutputParserException(
           `Failed to parse tool arguments from chat model response. Text: "${JSON.stringify(

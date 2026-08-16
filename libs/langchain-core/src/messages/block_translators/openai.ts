@@ -268,10 +268,24 @@ export function convertToV1FromResponses(
         : message.content;
     for (const block of content) {
       if (_isContentBlock(block, "text")) {
-        const { text, annotations, ...rest } = block;
+        const {
+          text,
+          annotations,
+          phase,
+          extras: existingExtras,
+          ...rest
+        } = block;
+        const extras: Record<string, unknown> = _isObject(existingExtras)
+          ? { ...(existingExtras as Record<string, unknown>) }
+          : {};
+        if (_isString(phase)) {
+          extras.phase = phase;
+        }
+        const extrasSpread = Object.keys(extras).length > 0 ? { extras } : {};
         if (Array.isArray(annotations)) {
           yield {
             ...rest,
+            ...extrasSpread,
             type: "text",
             text: String(text),
             annotations: annotations.map(convertResponsesAnnotation),
@@ -279,6 +293,7 @@ export function convertToV1FromResponses(
         } else {
           yield {
             ...rest,
+            ...extrasSpread,
             type: "text",
             text: String(text),
           };
@@ -420,6 +435,53 @@ export function convertToV1FromResponses(
           continue;
         } else if (_isContentBlock(toolOutput, "mcp_approval_request")) {
           yield { type: "non_standard", value: toolOutput };
+          continue;
+        } else if (_isContentBlock(toolOutput, "tool_search_call")) {
+          const toolSearchArgs: Record<string, unknown> = {};
+          if (_isObject(toolOutput.arguments)) {
+            Object.assign(toolSearchArgs, toolOutput.arguments);
+          }
+          const toolSearchCallExtras: Record<string, unknown> = {};
+          if (_isString(toolOutput.execution)) {
+            toolSearchCallExtras.execution = toolOutput.execution;
+          }
+          if (_isString(toolOutput.status)) {
+            toolSearchCallExtras.status = toolOutput.status;
+          }
+          if (_isString(toolOutput.call_id)) {
+            toolSearchCallExtras.call_id = toolOutput.call_id;
+          }
+          yield {
+            id: _isString(toolOutput.id) ? toolOutput.id : "",
+            type: "server_tool_call",
+            name: "tool_search",
+            args: toolSearchArgs,
+            ...(Object.keys(toolSearchCallExtras).length > 0
+              ? { extras: toolSearchCallExtras }
+              : {}),
+          };
+          continue;
+        } else if (_isContentBlock(toolOutput, "tool_search_output")) {
+          const toolSearchOutputExtras: Record<string, unknown> = {
+            name: "tool_search",
+          };
+          if (_isString(toolOutput.execution)) {
+            toolSearchOutputExtras.execution = toolOutput.execution;
+          }
+          yield {
+            type: "server_tool_call_result",
+            toolCallId: _isString(toolOutput.id) ? toolOutput.id : "",
+            status:
+              toolOutput.status === "completed"
+                ? "success"
+                : toolOutput.status === "failed"
+                  ? "error"
+                  : "success",
+            output: {
+              tools: _isArray(toolOutput.tools) ? toolOutput.tools : [],
+            },
+            extras: toolSearchOutputExtras,
+          };
           continue;
         } else if (_isContentBlock(toolOutput, "image_generation_call")) {
           // Convert image_generation_call to proper image content block if result is available

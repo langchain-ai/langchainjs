@@ -1,5 +1,101 @@
 # @langchain/google
 
+## 0.2.2
+
+### Patch Changes
+
+- [#11342](https://github.com/langchain-ai/langchainjs/pull/11342) [`3b0e4c4`](https://github.com/langchain-ai/langchainjs/commit/3b0e4c48a31811031a460c4d95519a7c1163dc41) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - feat(google): mark Google provider errors as retryable or not
+
+  Builds on `stampRetryable` in `@langchain/core` so the retry middleware can tell a transient failure from a deterministic one. Timeouts, rate limits, and server errors are marked retryable; bad credentials, blocked prompts, invalid tools, and invalid input non-retryable. Errors that may succeed on a regeneration stay unmarked and retry as before.
+
+  Also forwards a per-call `maxRetries` to the retry loop, so a surrounding retry loop such as `modelRetryMiddleware` can take over instead of the two multiplying against each other.
+
+  The `@langchain/core` peer range moves from `^1.0.0` to `workspace:^`, since this release depends on `stampRetryable`.
+
+## 0.2.1
+
+### Patch Changes
+
+- [#10674](https://github.com/langchain-ai/langchainjs/pull/10674) [`f017708`](https://github.com/langchain-ai/langchainjs/commit/f01770895c06621b469a6c6b5244747f6efdfbf7) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix: classify provider 429s before retrying
+
+## 0.2.0
+
+### Minor Changes
+
+- [#10924](https://github.com/langchain-ai/langchainjs/pull/10924) [`2e28115`](https://github.com/langchain-ai/langchainjs/commit/2e2811509d75af94f57cedcc3842f178f4c020d1) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(google): add native Gemini streamEvents event conversion
+
+### Patch Changes
+
+- [#10537](https://github.com/langchain-ai/langchainjs/pull/10537) [`cdb465b`](https://github.com/langchain-ai/langchainjs/commit/cdb465b57e1eb9b797dd6f741bb7357ed7ef8c96) Thanks [@raashish1601](https://github.com/raashish1601)! - fix(google): normalize ChatGoogle callback token usage metadata
+
+- [#10586](https://github.com/langchain-ai/langchainjs/pull/10586) [`43b10d2`](https://github.com/langchain-ai/langchainjs/commit/43b10d2af7cf2bdbbf1157a0cc2dae78770730be) Thanks [@tysoncung](https://github.com/tysoncung)! - strip type field from executableCode and codeExecutionResult parts
+
+## 0.1.12
+
+### Patch Changes
+
+- [#10704](https://github.com/langchain-ai/langchainjs/pull/10704) [`f7e50fb`](https://github.com/langchain-ai/langchainjs/commit/f7e50fb8b98bd9969c0f5cf0967a06df15453453) Thanks [@afirstenberg](https://github.com/afirstenberg)! - Adds support for flex and priority pricing.
+  Adds support for custom headers.
+  Thanks to @Nico385412 and @pawel-twardziak for their insight and contributions.
+
+## 0.1.11
+
+### Patch Changes
+
+- [#10776](https://github.com/langchain-ai/langchainjs/pull/10776) [`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6) Thanks [@hntrl](https://github.com/hntrl)! - fix(deps): remediate uuid vulnerability by removing direct uuid usage
+
+## 0.1.10
+
+### Patch Changes
+
+- [#10550](https://github.com/langchain-ai/langchainjs/pull/10550) [`9781bff`](https://github.com/langchain-ai/langchainjs/commit/9781bff525bffdd3b6a75adfa8a30fdb4bfc505e) Thanks [@muhammadosama984](https://github.com/muhammadosama984)! - fix(google): align `mediaResolution` with Gemini scalar values and support `detail` alias mapping (`low`/`high`/`auto`) for media prompts.
+
+## 0.1.9
+
+### Patch Changes
+
+- [#10522](https://github.com/langchain-ai/langchainjs/pull/10522) [`6e2d29e`](https://github.com/langchain-ai/langchainjs/commit/6e2d29e28a8f2a84f6fbbe5755d6b4fe2d5d4fd1) Thanks [@afirstenberg](https://github.com/afirstenberg)! - tests(@langchain/google): Lyria 3
+
+## 0.1.8
+
+### Patch Changes
+
+- [#10471](https://github.com/langchain-ai/langchainjs/pull/10471) [`8f15dd1`](https://github.com/langchain-ai/langchainjs/commit/8f15dd13256647f6c0f40abf6ee7ed949492bd4f) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(@langchain/google): pass abort signal to fetch in non-streaming invoke
+  - Added `signal: options.signal` to the `Request` constructor in `_generate`'s non-streaming branch, mirroring what `_streamResponseChunks` already does
+
+- [#10493](https://github.com/langchain-ai/langchainjs/pull/10493) [`63b7268`](https://github.com/langchain-ai/langchainjs/commit/63b72689a1f245037aaa7d910ea4b881ead84856) Thanks [@afirstenberg](https://github.com/afirstenberg)! - Undo regression introduced in [#10397](https://github.com/langchain-ai/langchainjs/issues/10397) in legacy content processing path.
+  Fixes issues with a false duplicate functionCall sent in response ([#10474](https://github.com/langchain-ai/langchainjs/issues/10474)).
+
+## 0.1.7
+
+### Patch Changes
+
+- [#10343](https://github.com/langchain-ai/langchainjs/pull/10343) [`a1062b7`](https://github.com/langchain-ai/langchainjs/commit/a1062b74ceb3bfde08765237db92b28eddf3e22e) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix: merge consecutive same-role Gemini content blocks
+
+- [#10313](https://github.com/langchain-ai/langchainjs/pull/10313) [`bc4cd65`](https://github.com/langchain-ai/langchainjs/commit/bc4cd6549b043a811021ae3641f9344ff6537a38) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(langchain-google): parse JSON error bodies from non-JSON content types
+
+- [#10397](https://github.com/langchain-ai/langchainjs/pull/10397) [`955ef6b`](https://github.com/langchain-ai/langchainjs/commit/955ef6b81da7a155bb829ed67ea20f0ad4c3f901) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(google): fix v1 converter dropping tool_calls, text-plain and file blocks
+
+- [#10402](https://github.com/langchain-ai/langchainjs/pull/10402) [`9099f53`](https://github.com/langchain-ai/langchainjs/commit/9099f5362ce1d424b0d820b69ed1ca8fec6be9d3) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(google): use dynamic ls_provider based on platform instead of hardcoded "google"
+
+- [#10415](https://github.com/langchain-ai/langchainjs/pull/10415) [`d7d0bc7`](https://github.com/langchain-ai/langchainjs/commit/d7d0bc70cdb2ea92b365807600fa85ec107ffd0e) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(genai): round-trip thinking content blocks in multi-turn convos
+
+- [#10407](https://github.com/langchain-ai/langchainjs/pull/10407) [`c2960fe`](https://github.com/langchain-ai/langchainjs/commit/c2960fe97a299ed1b748eeab53806badbfd35704) Thanks [@fahe1em1](https://github.com/fahe1em1)! - lazy-load jose in CJS auth helpers
+
+- [#10292](https://github.com/langchain-ai/langchainjs/pull/10292) [`e4193f8`](https://github.com/langchain-ai/langchainjs/commit/e4193f8934b5fdb5f553a7068aca2e945d0e3763) Thanks [@afirstenberg](https://github.com/afirstenberg)! - fixes for Vertex function calls
+
+- [#10400](https://github.com/langchain-ai/langchainjs/pull/10400) [`a870750`](https://github.com/langchain-ai/langchainjs/commit/a870750d6edc002b7987f867fd1aae3b1eabe089) Thanks [@afirstenberg](https://github.com/afirstenberg)! - support role name for function response in Vertex
+
+## 0.1.6
+
+### Patch Changes
+
+- [#10300](https://github.com/langchain-ai/langchainjs/pull/10300) [`a26dc7d`](https://github.com/langchain-ai/langchainjs/commit/a26dc7d2a5b8dae811852e80f5478301b9c4bc93) Thanks [@MaxwellCalkin](https://github.com/MaxwellCalkin)! - resolve functionResponse.name from tool_calls in legacy converter
+
+- [#10314](https://github.com/langchain-ai/langchainjs/pull/10314) [`418a3fc`](https://github.com/langchain-ai/langchainjs/commit/418a3fc1ff2bd4dc73ba52414ff8ec6710bd5572) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - add getLsParams for LangSmith tracing metadata
+
+- [#10267](https://github.com/langchain-ai/langchainjs/pull/10267) [`b68f083`](https://github.com/langchain-ai/langchainjs/commit/b68f083dfeb433aa535c50223935a4059a25be8e) Thanks [@afirstenberg](https://github.com/afirstenberg)! - feat(@langchain/google) Test Gemini 3.1 Flash-Lite
+
 ## 0.1.5
 
 ### Patch Changes

@@ -13,7 +13,7 @@ export type OpenRouterResponseFormat =
  */
 export interface OpenRouterPlugin {
   id: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 }
 
@@ -57,14 +57,17 @@ export interface ChatOpenRouterFields {
   provider?: OpenRouter.ProviderPreferences;
   /** OpenRouter plugins to enable (e.g. web search). */
   plugins?: OpenRouterPlugin[];
+  /** Identifier used by OpenRouter to group related requests together. */
+  sessionId?: string;
+  /** Trace metadata for OpenRouter broadcast destinations. */
+  trace?: OpenRouter.TraceConfig;
 }
 
 /**
  * Constructor parameters for `ChatOpenRouter`.
  */
 export interface ChatOpenRouterParams
-  extends BaseChatModelParams,
-    ChatOpenRouterFields {
+  extends BaseChatModelParams, ChatOpenRouterFields {
   /** Model identifier, e.g. "anthropic/claude-4-sonnet". */
   model?: string;
   /** OpenRouter API key. Falls back to `OPENROUTER_API_KEY` env var. */
@@ -80,11 +83,24 @@ export interface ChatOpenRouterParams
   siteUrl?: string;
   /**
    * Application title for OpenRouter attribution. Maps to `X-Title` header.
-   * Defaults to `"langchain"`.
+   * Defaults to `"LangChain"`. Set this to your app's name to get attribution
+   * for API usage in the OpenRouter dashboard.
    *
    * See https://openrouter.ai/docs/app-attribution for details.
    */
   siteName?: string;
+  /**
+   * Marketplace categories for OpenRouter attribution.
+   * Maps to `X-OpenRouter-Categories` header. Pass a list of lowercase,
+   * hyphen-separated category strings (max 30 characters each),
+   * e.g. `['cli-agent', 'programming-app']`.
+   *
+   * Only recognized categories are accepted (unrecognized values are silently
+   * dropped by OpenRouter).
+   *
+   * See https://openrouter.ai/docs/app-attribution for recognized categories.
+   */
+  appCategories?: string[];
   /** Stable identifier for end-users, used for abuse detection. */
   user?: string;
   /** Extra params passed through to the API body. */
@@ -97,8 +113,7 @@ export interface ChatOpenRouterParams
  * Per-call options for `ChatOpenRouter`.
  */
 export interface ChatOpenRouterCallOptions
-  extends BaseChatModelCallOptions,
-    ChatOpenRouterFields {
+  extends BaseChatModelCallOptions, ChatOpenRouterFields {
   /** Tool definitions to bind for this call. */
   tools?: BindToolsInput[];
   /** Response format constraint (text, JSON object, or JSON schema). */

@@ -27,7 +27,7 @@ export class LocalFileCache extends BaseCache {
    */
   public static async create(cacheDir?: string): Promise<LocalFileCache> {
     if (!cacheDir) {
-      // eslint-disable-next-line no-param-reassign
+      // oxlint-disable-next-line no-param-reassign
       cacheDir = await fs.mkdtemp("langchain-cache-");
     } else {
       // ensure the cache directory exists

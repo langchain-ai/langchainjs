@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { BaseLanguageModelCallOptions } from "@langchain/core/language_models/base";
 import {
   AsyncCaller,

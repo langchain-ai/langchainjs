@@ -24,9 +24,10 @@ concurrency:
   cancel-in-progress: true
 
 # OIDC permissions for trusted publishing - these must be in the entry point workflow
+# Job-level overrides grant write only where needed
 permissions:
   id-token: write
-  contents: write
+  contents: read
   pull-requests: write
 
 jobs:

@@ -1,4 +1,4 @@
-import { ChatTogetherAI } from "@langchain/community/chat_models/togetherai";
+import { ChatTogetherAI } from "@langchain/together-ai";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 
 // Define a JSON schema for the response

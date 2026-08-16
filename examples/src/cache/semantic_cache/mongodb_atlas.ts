@@ -1,5 +1,8 @@
 import { MongoClient } from "mongodb";
-import { MongoDBAtlasSemanticCache } from "@langchain/mongodb";
+import {
+  MongoDBAtlasSemanticCache,
+  type MongoDBAtlasSemanticCacheArgs,
+} from "@langchain/mongodb";
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 
 // Connect to MongoDB Atlas
@@ -18,9 +21,13 @@ const llmSemCacheCollection = db.collection("llm_semantic_cache");
 const embeddings = new OpenAIEmbeddings();
 
 // Set up the semantic cache with a similarity threshold (optional)
-const cache = new MongoDBAtlasSemanticCache(llmSemCacheCollection, embeddings, {
-  scoreThreshold: 0.99,
-});
+const cache = new MongoDBAtlasSemanticCache(
+  llmSemCacheCollection as unknown as MongoDBAtlasSemanticCacheArgs["collection"],
+  embeddings,
+  {
+    scoreThreshold: 0.99,
+  }
+);
 
 // Set up the LLM with semantic cache
 const model = new ChatOpenAI({

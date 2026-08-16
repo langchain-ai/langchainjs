@@ -18,13 +18,48 @@ import {
 import type * as Bedrock from "@aws-sdk/client-bedrock-runtime";
 import type { DocumentType as __DocumentType } from "@smithy/types";
 import {
+  BedrockPromptCacheControl,
+  ConverseCommandParams,
   MessageContentReasoningBlock,
   MessageContentReasoningBlockReasoningText,
-  MessageContentReasoningBlockRedacted,
 } from "../types.js";
 import { convertFromV1ToChatBedrockConverseMessage } from "./compat.js";
 
-function isDefaultCachePoint(block: unknown): boolean {
+function isDefaultCachePoint(
+  block: unknown
+): block is { cachePoint: Bedrock.CachePointBlock } {
+  if (
+    !(
+      typeof block === "object" &&
+      block !== null &&
+      "cachePoint" in block &&
+      block.cachePoint &&
+      typeof block.cachePoint === "object" &&
+      block.cachePoint !== null &&
+      "type" in block.cachePoint &&
+      block.cachePoint.type === "default"
+    )
+  ) {
+    return false;
+  }
+
+  const { ttl } = block.cachePoint as { ttl?: unknown };
+  return ttl === undefined || ttl === "5m" || ttl === "1h";
+}
+
+function convertCachePointBlock(block: {
+  cachePoint: Bedrock.CachePointBlock;
+}): { cachePoint: Bedrock.CachePointBlock } {
+  const { ttl } = block.cachePoint;
+  return {
+    cachePoint: {
+      type: "default",
+      ...(ttl !== undefined ? { ttl } : {}),
+    },
+  };
+}
+
+function isConverseCachePoint(block: unknown): boolean {
   return Boolean(
     typeof block === "object" &&
     block !== null &&
@@ -32,9 +67,75 @@ function isDefaultCachePoint(block: unknown): boolean {
     block.cachePoint &&
     typeof block.cachePoint === "object" &&
     block.cachePoint !== null &&
-    "type" in block.cachePoint &&
-    block.cachePoint.type === "default"
+    "type" in block.cachePoint
   );
+}
+
+function createConverseCachePointBlock(
+  cacheControl: BedrockPromptCacheControl,
+  isNovaModel: boolean
+): { cachePoint: { type: "default"; ttl?: "1h" } } {
+  const ttl =
+    !isNovaModel && cacheControl.ttl && cacheControl.ttl !== "5m"
+      ? cacheControl.ttl
+      : undefined;
+  return {
+    cachePoint: {
+      type: "default",
+      ...(ttl ? { ttl } : {}),
+    },
+  };
+}
+
+export function applyCachePointsToConversePayload(fields: {
+  cacheControl?: BedrockPromptCacheControl;
+  system: Bedrock.SystemContentBlock[];
+  messages: Bedrock.Message[];
+  params?: Partial<ConverseCommandParams>;
+  modelId: string;
+}): void {
+  const { cacheControl, system, messages, params, modelId } = fields;
+  if (!cacheControl) {
+    return;
+  }
+
+  const isNovaModel = modelId.toLowerCase().includes("amazon.nova");
+  const cacheBlock = createConverseCachePointBlock(cacheControl, isNovaModel);
+
+  if (
+    system.length > 0 &&
+    !system.some((block) => isConverseCachePoint(block))
+  ) {
+    system.push(cacheBlock);
+  }
+
+  const lastMessage = messages[messages.length - 1];
+  const lastContent = lastMessage?.content;
+  if (Array.isArray(lastContent)) {
+    const hasNovaToolBlock =
+      isNovaModel &&
+      lastContent.some(
+        (block) =>
+          typeof block === "object" &&
+          block !== null &&
+          ("toolResult" in block || "toolUse" in block)
+      );
+    if (
+      !hasNovaToolBlock &&
+      !lastContent.some((block) => isConverseCachePoint(block))
+    ) {
+      lastContent.push(cacheBlock);
+    }
+  }
+
+  const tools = params?.toolConfig?.tools;
+  if (
+    !isNovaModel &&
+    Array.isArray(tools) &&
+    !tools.some((tool) => isConverseCachePoint(tool))
+  ) {
+    tools.push(cacheBlock as unknown as Bedrock.Tool);
+  }
 }
 
 export function extractImageInfo(
@@ -109,7 +210,7 @@ function resolveMediaSource(
     };
   }
 
-  // eslint-disable-next-line no-instanceof/no-instanceof
+  // oxlint-disable-next-line no-instanceof/no-instanceof
   if (block.data instanceof Uint8Array) {
     return { bytes: block.data };
   }
@@ -257,9 +358,10 @@ const standardContentBlockConverter: StandardContentBlockConverter<{
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
         "xlsx",
     };
-    const name: string | undefined = (block.metadata?.name ??
+    const name: string = (block.metadata?.name ??
       block.metadata?.filename ??
-      block.metadata?.title) as string | undefined;
+      block.metadata?.title ??
+      crypto.randomUUID().replace(/-/g, "").slice(0, 12)) as string;
 
     if (block.source_type === "text") {
       return {
@@ -438,11 +540,7 @@ function convertLangChainContentBlockToConverseContentBlock<
   }
 
   if (isDefaultCachePoint(block)) {
-    return {
-      cachePoint: {
-        type: "default",
-      },
-    };
+    return convertCachePointBlock(block);
   }
 
   if (onUnknown === "throw") {
@@ -465,11 +563,7 @@ function convertSystemMessageToConverseMessage(
           text: block.text,
         });
       } else if (isDefaultCachePoint(block)) {
-        contentBlocks.push({
-          cachePoint: {
-            type: "default",
-          },
-        });
+        contentBlocks.push(convertCachePointBlock(block));
       } else break;
     }
     if (msg.content.length === contentBlocks.length) return contentBlocks;
@@ -515,18 +609,17 @@ function convertAIMessageToConverseMessage(msg: AIMessage): Bedrock.Message {
             text: block.text,
           });
         }
-      } else if (block.type === "reasoning_content") {
-        contentBlocks.push({
-          reasoningContent: langchainReasoningBlockToBedrockReasoningBlock(
-            block as MessageContentReasoningBlock
-          ),
-        });
+      } else if (
+        block.type === "reasoning" ||
+        block.type === "reasoning_content"
+      ) {
+        const reasoningContent =
+          langchainReasoningBlockToBedrockReasoningBlock(block);
+        if (reasoningContent) {
+          contentBlocks.push({ reasoningContent });
+        }
       } else if (isDefaultCachePoint(block)) {
-        contentBlocks.push({
-          cachePoint: {
-            type: "default",
-          },
-        });
+        contentBlocks.push(convertCachePointBlock(block));
       } else {
         const blockValues = Object.fromEntries(
           Object.entries(block).filter(([key]) => key !== "type")
@@ -704,22 +797,66 @@ export function convertToConverseMessages(messages: BaseMessage[]): {
 }
 
 export function langchainReasoningBlockToBedrockReasoningBlock(
-  content: MessageContentReasoningBlock
-): Bedrock.ReasoningContentBlock {
-  if (content.type !== "reasoning_content") {
-    throw new Error("Invalid reasoning content");
+  content: unknown
+): Bedrock.ReasoningContentBlock | undefined {
+  if (typeof content !== "object" || content === null || !("type" in content)) {
+    return undefined;
   }
-  if ("reasoningText" in content) {
+
+  if (
+    content.type === "reasoning" &&
+    "reasoning" in content &&
+    typeof content.reasoning === "string" &&
+    content.reasoning.length > 0
+  ) {
+    const signature =
+      "signature" in content && typeof content.signature === "string"
+        ? content.signature
+        : undefined;
     return {
-      reasoningText: content.reasoningText as Bedrock.ReasoningTextBlock,
+      reasoningText: {
+        text: content.reasoning,
+        ...(signature !== undefined ? { signature } : {}),
+      },
     };
   }
-  if ("redactedContent" in content) {
+
+  if (content.type !== "reasoning_content") {
+    return undefined;
+  }
+
+  if (
+    "reasoningText" in content &&
+    typeof content.reasoningText === "object" &&
+    content.reasoningText !== null &&
+    "text" in content.reasoningText &&
+    typeof content.reasoningText.text === "string" &&
+    content.reasoningText.text.length > 0
+  ) {
+    const signature =
+      "signature" in content.reasoningText &&
+      typeof content.reasoningText.signature === "string"
+        ? content.reasoningText.signature
+        : undefined;
+    return {
+      reasoningText: {
+        text: content.reasoningText.text,
+        ...(signature !== undefined ? { signature } : {}),
+      },
+    };
+  }
+
+  if (
+    "redactedContent" in content &&
+    typeof content.redactedContent === "string" &&
+    content.redactedContent.length > 0
+  ) {
     return {
       redactedContent: Buffer.from(content.redactedContent, "base64"),
     };
   }
-  throw new Error("Invalid reasoning content");
+
+  return undefined;
 }
 
 export function concatenateLangchainReasoningBlocks(
@@ -793,14 +930,19 @@ export function concatenateLangchainReasoningBlocks(
         concatenatedBlock = {};
       }
       const { redactedContent } = block;
-      const prevRedactedContent = (
+      const prevRedactedContent =
         "redactedContent" in concatenatedBlock
-          ? concatenatedBlock.redactedContent!
-          : ""
-      ) as Partial<MessageContentReasoningBlockRedacted["redactedContent"]>;
+          ? concatenatedBlock.redactedContent
+          : undefined;
+      const redactedBytes = prevRedactedContent
+        ? Buffer.concat([
+            Buffer.from(prevRedactedContent, "base64"),
+            Buffer.from(redactedContent, "base64"),
+          ])
+        : Buffer.from(redactedContent, "base64");
       concatenatedBlock = {
         type: "reasoning_content",
-        redactedContent: prevRedactedContent + redactedContent,
+        redactedContent: redactedBytes.toString("base64"),
       };
     }
   }

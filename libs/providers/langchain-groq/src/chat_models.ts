@@ -1,6 +1,8 @@
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
+import { convertOpenAICompletionsStream } from "@langchain/core/language_models/openai_completions_stream";
 import {
   BaseChatModel,
   BaseChatModelCallOptions,
@@ -271,12 +273,12 @@ export interface ChatGroqInput extends BaseChatModelParams {
   /**
    * HTTP agent used to manage connections
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   httpAgent?: any;
   /**
    * Custom fetch function implementation
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   fetch?: (...args: any) => any;
 
   /**
@@ -356,7 +358,7 @@ function convertMessagesToGroqParams(
   messages: BaseMessage[]
 ): Array<ChatCompletionsAPI.ChatCompletionMessage> {
   return messages.map((message): ChatCompletionsAPI.ChatCompletionMessage => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const completionParam: Record<string, any> = {
       role: messageToGroqRole(message),
       content: message.content,
@@ -398,7 +400,7 @@ function groqResponseToChatMessage(
       for (const rawToolCall of rawToolCalls ?? []) {
         try {
           toolCalls.push(parseToolCall(rawToolCall, { returnId: true }));
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (e: any) {
           invalidToolCalls.push(makeInvalidToolCall(rawToolCall, e.message));
         }
@@ -418,7 +420,7 @@ function groqResponseToChatMessage(
 }
 
 function _convertDeltaToMessageChunk(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   delta: Record<string, any>,
   defaultRole: GroqRoleEnum | undefined,
   rawResponse: ChatCompletionsAPI.ChatCompletionChunk,
@@ -522,7 +524,7 @@ function _convertDeltaToMessageChunk(
 
 /*
 function _oldConvertDeltaToMessageChunk(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   delta: Record<string, any>,
   rawResponse: ChatCompletionsAPI.ChatCompletionChunk,
   index: number,
@@ -1181,6 +1183,34 @@ export class ChatGroq extends BaseChatModel<
     });
   }
 
+  override async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    const params = this.invocationParams(options, { streaming: true });
+    const messagesMapped = convertMessagesToGroqParams(messages);
+    const response = await this.completionWithRetry(
+      { ...params, messages: messagesMapped, stream: true },
+      { signal: options?.signal, headers: options?.headers }
+    );
+    const abortableStream = async function* (
+      source: AsyncIterable<ChatCompletionsAPI.ChatCompletionChunk>,
+      signal?: AbortSignal
+    ) {
+      for await (const data of source) {
+        if (signal?.aborted) {
+          return;
+        }
+        yield data;
+      }
+    };
+    yield* convertOpenAICompletionsStream(
+      abortableStream(response, options.signal),
+      { streamUsage: true, provider: "groq" }
+    );
+  }
+
   override async *_streamResponseChunks(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
@@ -1200,9 +1230,8 @@ export class ChatGroq extends BaseChatModel<
       }
     );
     let role: GroqRoleEnum | undefined;
-    let lastMessageId: string | undefined;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     let responseMetadata: Record<string, any> | undefined;
 
     for await (const data of response) {
@@ -1224,7 +1253,7 @@ export class ChatGroq extends BaseChatModel<
         choice.delta,
         role,
         data,
-        lastMessageId
+        undefined
       );
       const newTokenIndices = {
         prompt: options.promptIndex ?? 0,
@@ -1236,7 +1265,7 @@ export class ChatGroq extends BaseChatModel<
         );
         continue;
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       const generationInfo: Record<string, any> = { ...newTokenIndices };
       if (choice.finish_reason != null) {
         generationInfo.finish_reason = choice.finish_reason;
@@ -1411,37 +1440,37 @@ export class ChatGroq extends BaseChatModel<
   }
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<false>
   ): Runnable<BaseLanguageModelInput, RunOutput>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<true>
   ): Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }>;
 
   withStructuredOutput<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     RunOutput extends Record<string, any> = Record<string, any>,
   >(
     outputSchema:
       | InteropZodType<RunOutput>
       | SerializableSchema<RunOutput>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       | Record<string, any>,
     config?: StructuredOutputMethodOptions<boolean>
   ):

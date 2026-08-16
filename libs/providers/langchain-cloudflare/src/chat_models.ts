@@ -12,6 +12,8 @@ import {
 import { ChatGenerationChunk } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
+import { convertCloudflareStream } from "./utils/stream_events.js";
 
 import type { CloudflareWorkersAIInput } from "./llms.js";
 import { convertEventStreamToIterableReadableDataStream } from "./utils/event_source_parse.js";
@@ -173,12 +175,40 @@ export class ChatCloudflareWorkersAI
         const error = new Error(
           `Cloudflare LLM call failed with status code ${response.status}`
         );
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         (error as any).response = response;
         throw error;
       }
       return response;
     });
+  }
+
+  async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    const response = await this._request(messages, options, true);
+    if (!response.body) {
+      throw new Error("Empty response from Cloudflare. Please try again.");
+    }
+    const byteStream = convertEventStreamToIterableReadableDataStream(
+      response.body
+    );
+    async function* parseChunks(
+      source: AsyncIterable<string>,
+      signal?: AbortSignal
+    ) {
+      for await (const chunk of source) {
+        if (signal?.aborted) {
+          return;
+        }
+        if (chunk !== "[DONE]") {
+          yield JSON.parse(chunk) as { response?: string };
+        }
+      }
+    }
+    yield* convertCloudflareStream(parseChunks(byteStream, options.signal));
   }
 
   async *_streamResponseChunks(
@@ -204,7 +234,7 @@ export class ChatCloudflareWorkersAI
           text: parsedChunk.response,
         });
         yield generationChunk;
-        // eslint-disable-next-line no-void
+        // oxlint-disable-next-line no-void
         void runManager?.handleLLMNewToken(generationChunk.text ?? "");
       }
     }

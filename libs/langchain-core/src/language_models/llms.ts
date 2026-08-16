@@ -25,7 +25,7 @@ import { callbackHandlerPrefersStreaming } from "../callbacks/base.js";
 export type SerializedLLM = {
   _model: string;
   _type: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
 } & Record<string, any>;
 
 export interface BaseLLMParams extends BaseLanguageModelParams {}
@@ -68,7 +68,7 @@ export abstract class BaseLLM<
     return result.generations[0][0].text;
   }
 
-  // eslint-disable-next-line require-yield
+  // oxlint-disable-next-line require-yield
   async *_streamResponseChunks(
     _input: string,
     _options: this["ParsedCallOptions"],
@@ -100,6 +100,7 @@ export abstract class BaseLLM<
       const prompt = BaseLLM._convertInputToPromptValue(input);
       const [runnableConfig, callOptions] =
         this._separateRunnableConfigFromCallOptionsCompat(options);
+      const invocationParams = this.invocationParams(callOptions);
       const callbackManager_ = await CallbackManager.configure(
         runnableConfig.callbacks,
         this.callbacks,
@@ -107,11 +108,15 @@ export abstract class BaseLLM<
         this.tags,
         runnableConfig.metadata,
         this.metadata,
-        { verbose: this.verbose }
+        {
+          verbose: this.verbose,
+          tracerInheritableMetadata:
+            this._filterInvocationParamsForTracing(invocationParams),
+        }
       );
       const extra = {
         options: callOptions,
-        invocation_params: this?.invocationParams(callOptions),
+        invocation_params: invocationParams,
         batch_size: 1,
       };
       const runManagers = await callbackManager_?.handleLLMStart(
@@ -191,7 +196,7 @@ export abstract class BaseLLM<
   /**
    * Get the parameters used to invoke the model
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   invocationParams(_options?: this["ParsedCallOptions"]): any {
     return {};
   }
@@ -236,6 +241,7 @@ export abstract class BaseLLM<
     ) {
       runManagers = startedRunManagers;
     } else {
+      const invocationParams = this.invocationParams(parsedOptions);
       const callbackManager_ = await CallbackManager.configure(
         handledOptions.callbacks,
         this.callbacks,
@@ -243,11 +249,15 @@ export abstract class BaseLLM<
         this.tags,
         handledOptions.metadata,
         this.metadata,
-        { verbose: this.verbose }
+        {
+          verbose: this.verbose,
+          tracerInheritableMetadata:
+            this._filterInvocationParamsForTracing(invocationParams),
+        }
       );
       const extra = {
         options: parsedOptions,
-        invocation_params: this?.invocationParams(parsedOptions),
+        invocation_params: invocationParams,
         batch_size: prompts.length,
       };
       runManagers = await callbackManager_?.handleLLMStart(
@@ -337,7 +347,7 @@ export abstract class BaseLLM<
     prompts: string[];
     cache: BaseCache<Generation[]>;
     llmStringKey: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     parsedOptions: any;
     handledOptions: RunnableConfig;
     runId?: string;
@@ -347,6 +357,7 @@ export abstract class BaseLLM<
       startedRunManagers?: CallbackManagerForLLMRun[];
     }
   > {
+    const invocationParams = this.invocationParams(parsedOptions);
     const callbackManager_ = await CallbackManager.configure(
       handledOptions.callbacks,
       this.callbacks,
@@ -354,11 +365,15 @@ export abstract class BaseLLM<
       this.tags,
       handledOptions.metadata,
       this.metadata,
-      { verbose: this.verbose }
+      {
+        verbose: this.verbose,
+        tracerInheritableMetadata:
+          this._filterInvocationParamsForTracing(invocationParams),
+      }
     );
     const extra = {
       options: parsedOptions,
-      invocation_params: this?.invocationParams(parsedOptions),
+      invocation_params: invocationParams,
       batch_size: prompts.length,
     };
     const runManagers = await callbackManager_?.handleLLMStart(
@@ -523,7 +538,7 @@ export abstract class BaseLLM<
   /**
    * Get the identifying parameters of the LLM.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   _identifyingParams(): Record<string, any> {
     return {};
   }

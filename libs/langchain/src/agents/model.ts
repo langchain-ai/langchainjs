@@ -1,5 +1,14 @@
-import type { LanguageModelLike } from "@langchain/core/language_models/base";
+import type {
+  BaseLanguageModelInput,
+  LanguageModelOutput,
+} from "@langchain/core/language_models/base";
 import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
+import type { RunnableInterface } from "@langchain/core/runnables";
+
+export type AgentLanguageModelLike = RunnableInterface<
+  BaseLanguageModelInput,
+  LanguageModelOutput
+>;
 
 export interface ConfigurableModelInterface {
   _queuedMethodOperations: Record<string, unknown>;
@@ -7,7 +16,7 @@ export interface ConfigurableModelInterface {
 }
 
 export function isBaseChatModel(
-  model: LanguageModelLike
+  model: AgentLanguageModelLike
 ): model is BaseChatModel {
   return (
     "invoke" in model &&

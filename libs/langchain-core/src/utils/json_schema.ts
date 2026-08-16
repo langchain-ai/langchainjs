@@ -1,4 +1,4 @@
-import { toJSONSchema } from "zod/v4/core";
+import { toJSONSchema, type $ZodType } from "zod/v4/core";
 import { dereference, type Schema } from "@cfworker/json-schema";
 import {
   isZodSchemaV3,
@@ -6,7 +6,6 @@ import {
   InteropZodType,
   interopZodObjectStrict,
   isZodObjectV4,
-  ZodObjectV4,
   interopZodTransformInputSchema,
 } from "./types/zod.js";
 import {
@@ -23,7 +22,25 @@ export type ToJSONSchemaParams = NonNullable<
 >;
 
 /**
+ * WeakMap cache for Zod/Standard-Schema → JSON Schema conversions.
+ *
+ * Keyed on the schema object reference. Since Zod schemas are immutable and
+ * the same `tool.schema` reference is passed on every LLM call, this
+ * eliminates redundant serializations. For example, an agent with 6 tools
+ * doing 15 steps across 3 parallel subagents would otherwise run 270
+ * identical conversions per invocation.
+ *
+ * Only used when no custom `params` are passed (the common case for tool
+ * binding). WeakMap ensures cached entries are GC'd when the schema goes
+ * out of scope.
+ *
+ * @internal
+ */
+const _jsonSchemaCache = new WeakMap<object, JSONSchema>();
+
+/**
  * Converts a Standard JSON schema, Zod schema or JSON schema to a JSON schema.
+ * Results are cached by schema reference when no custom params are passed.
  * @param schema - The schema to convert.
  * @param params - The parameters to pass to the toJSONSchema function.
  * @returns The converted schema.
@@ -32,27 +49,41 @@ export function toJsonSchema(
   schema: StandardJSONSchemaV1 | InteropZodType | JSONSchema,
   params?: ToJSONSchemaParams
 ): JSONSchema {
+  // Cache when no custom params are passed (the default for tool binding).
+  // Params can change the output (e.g., different target draft), so we
+  // bypass the cache when they're provided.
+  const canCache = !params && schema != null && typeof schema === "object";
+
+  if (canCache) {
+    const cached = _jsonSchemaCache.get(schema);
+    if (cached) return cached;
+  }
+
+  let result: JSONSchema;
+
   if (isStandardJsonSchema(schema) && !isZodSchemaV4(schema)) {
-    return schema["~standard"].jsonSchema.input({
+    result = schema["~standard"].jsonSchema.input({
       target: "draft-07",
     }) as JSONSchema;
-  }
-  if (isZodSchemaV4(schema)) {
+  } else if (isZodSchemaV4(schema)) {
     const inputSchema = interopZodTransformInputSchema(schema, true);
     if (isZodObjectV4(inputSchema)) {
-      const strictSchema = interopZodObjectStrict(
-        inputSchema,
-        true
-      ) as ZodObjectV4;
-      return toJSONSchema(strictSchema, params);
+      const strictSchema = interopZodObjectStrict(inputSchema, true);
+      result = toJSONSchema(strictSchema as unknown as $ZodType, params);
     } else {
-      return toJSONSchema(schema, params);
+      result = toJSONSchema(schema as unknown as $ZodType, params);
     }
+  } else if (isZodSchemaV3(schema)) {
+    result = zodToJsonSchema(schema as never);
+  } else {
+    result = schema as JSONSchema;
   }
-  if (isZodSchemaV3(schema)) {
-    return zodToJsonSchema(schema);
+
+  if (canCache && result != null && typeof result === "object") {
+    _jsonSchemaCache.set(schema, result);
   }
-  return schema as JSONSchema;
+
+  return result;
 }
 
 /**

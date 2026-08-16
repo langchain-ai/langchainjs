@@ -1,5 +1,10 @@
-import { describe, expect, jest, test } from "@jest/globals";
-import type { HarmBlockThreshold, HarmCategory } from "@google/generative-ai";
+import { describe, expect, vi, test } from "vitest";
+import type {
+  GenerateContentRequest,
+  HarmBlockThreshold,
+  HarmCategory,
+  Schema,
+} from "@google/generative-ai";
 import { z } from "zod/v3";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import {
@@ -20,7 +25,31 @@ import {
   getMessageAuthor,
 } from "../utils/common.js";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type TestGoogleGenAIClient = {
+  systemInstruction?: unknown;
+  generationConfig: {
+    responseSchema?: unknown;
+    responseMimeType?: string;
+  };
+};
+
+function getTestClient(model: ChatGoogleGenerativeAI): TestGoogleGenAIClient {
+  return (model as unknown as { client: TestGoogleGenAIClient }).client;
+}
+
+function mockGenerateContentResponse(text: string) {
+  return {
+    candidates: [
+      {
+        content: {
+          parts: [{ text }],
+        },
+      },
+    ],
+  };
+}
+
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 function extractKeys(obj: Record<string, any>, keys: string[] = []) {
   for (const key in obj) {
     if (Object.prototype.hasOwnProperty.call(obj, key)) {
@@ -95,6 +124,49 @@ test("Google AI - `topK` must be positive", async () => {
         model: "gemini-2.0-flash",
       })
   ).toThrow();
+});
+
+test("Google AI - passes system instruction and response schema per request", async () => {
+  const model = new ChatGoogleGenerativeAI({
+    apiKey: "testing",
+    model: "gemini-2.0-flash",
+  });
+  const client = getTestClient(model);
+  const responseSchema = {
+    type: "object",
+    properties: {
+      answer: { type: "string" },
+    },
+  } as unknown as Schema;
+  const requests: GenerateContentRequest[] = [];
+  vi.spyOn(model, "completionWithRetry").mockImplementation(async (request) => {
+    requests.push(request as GenerateContentRequest);
+    return { response: mockGenerateContentResponse("ok") } as never;
+  });
+
+  await model.invoke(
+    [new SystemMessage("First system instruction"), new HumanMessage("Hello")],
+    { responseSchema }
+  );
+  await model.invoke([new HumanMessage("No system instruction")]);
+
+  expect(requests[0].systemInstruction).toEqual({
+    role: "system",
+    parts: [{ text: "First system instruction" }],
+  });
+  expect(requests[0].contents).toEqual([
+    { role: "user", parts: [{ text: "Hello" }] },
+  ]);
+  expect(requests[0].generationConfig?.responseSchema).toBe(responseSchema);
+  expect(requests[0].generationConfig?.responseMimeType).toBe(
+    "application/json"
+  );
+  expect(requests[1].systemInstruction).toBeUndefined();
+  expect(requests[1].generationConfig?.responseSchema).toBeUndefined();
+  expect(requests[1].generationConfig?.responseMimeType).toBeUndefined();
+  expect(client.systemInstruction).toBeUndefined();
+  expect(client.generationConfig.responseSchema).toBeUndefined();
+  expect(client.generationConfig.responseMimeType).toBeUndefined();
 });
 
 test("Google AI - `safetySettings` category array must be unique", async () => {
@@ -1047,7 +1119,7 @@ describe("withStructuredOutput - StandardSchema", () => {
       model: "gemini-1.5-flash",
       apiKey: "testing",
     });
-    jest.spyOn(model, "invoke").mockResolvedValue(
+    vi.spyOn(model, "invoke").mockResolvedValue(
       new AIMessage({
         content: "",
         tool_calls: [
@@ -1076,7 +1148,7 @@ describe("withStructuredOutput - StandardSchema", () => {
       model: "gemini-1.5-flash",
       apiKey: "testing",
     });
-    jest.spyOn(model, "invoke").mockResolvedValue(
+    vi.spyOn(model, "invoke").mockResolvedValue(
       new AIMessageChunk({
         content: "",
         tool_calls: [
@@ -1106,7 +1178,7 @@ describe("withStructuredOutput - StandardSchema", () => {
       model: "gemini-1.5-flash",
       apiKey: "testing",
     });
-    jest.spyOn(model, "invoke").mockResolvedValue(
+    vi.spyOn(model, "invoke").mockResolvedValue(
       new AIMessage({
         content: "",
         tool_calls: [
@@ -1146,7 +1218,7 @@ describe("withStructuredOutput - StandardSchema", () => {
       model: "gemini-1.5-flash",
       apiKey: "testing",
     });
-    jest.spyOn(model, "invoke").mockResolvedValue(mockResponse);
+    vi.spyOn(model, "invoke").mockResolvedValue(mockResponse);
 
     const schema = makeSerializableSchema();
     const structured = model.withStructuredOutput(schema, {
@@ -1158,7 +1230,7 @@ describe("withStructuredOutput - StandardSchema", () => {
     const result = await structured.invoke("What?");
     expect(result).toHaveProperty("raw");
     expect(result).toHaveProperty("parsed");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect((result as any).parsed).toEqual({ name: "cobalt" });
   });
 });

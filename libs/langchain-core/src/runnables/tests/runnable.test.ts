@@ -1,6 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { Run } from "langsmith";
-import { v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4 } from "../../utils/uuid/index.js";
 import { z } from "zod/v3";
 import { vi, test, expect, describe } from "vitest";
 import {

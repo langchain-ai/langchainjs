@@ -1,4 +1,4 @@
-import { ChatTogetherAI } from "@langchain/community/chat_models/togetherai";
+import { ChatTogetherAI } from "@langchain/together-ai";
 import { HumanMessage } from "@langchain/core/messages";
 
 const model = new ChatTogetherAI({

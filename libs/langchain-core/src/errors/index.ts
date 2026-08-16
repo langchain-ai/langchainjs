@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 
 import type { AIMessageChunk } from "../messages/ai.js";
 import { ns as baseNs } from "../utils/namespace.js";
@@ -26,6 +26,49 @@ export function addLangChainErrorFields(
 
 /** The error namespace for all LangChain errors */
 export const ns = baseNs.sub("error");
+
+/** Registered globally so duplicate copies of core in one dependency tree agree. */
+const retryableSymbol = Symbol.for("langchain.errors.retryable");
+
+/**
+ * Mark an error as safe or unsafe to retry.
+ *
+ * Sets a non-enumerable symbol on the error itself, leaving its class and
+ * shape untouched, so it is safe to apply to a provider SDK's own error.
+ *
+ * @param error - The error to mark. Non-objects are returned untouched.
+ * @param retryable - `true` if retrying may succeed.
+ * @returns The same error instance, for chaining.
+ */
+export function stampRetryable<T>(error: T, retryable: boolean): T {
+  if (typeof error !== "object" || error === null) {
+    return error;
+  }
+  try {
+    Object.defineProperty(error, retryableSymbol, {
+      value: retryable,
+      configurable: true,
+    });
+  } catch {
+    // Frozen or sealed error object; leave it unmarked rather than throwing.
+  }
+  return error;
+}
+
+/**
+ * Read an error's retryability mark.
+ *
+ * @returns `true`/`false` when marked, `undefined` when unclassified —
+ *   supply your own default, e.g. `getRetryable(error) ?? true`.
+ */
+export function getRetryable(error: unknown): boolean | undefined {
+  if (typeof error !== "object" || error === null) {
+    return undefined;
+  }
+  return Object.getOwnPropertyDescriptor(error, retryableSymbol)?.value as
+    | boolean
+    | undefined;
+}
 
 /**
  * Base error class for all LangChain errors.
@@ -103,6 +146,8 @@ export class ModelAbortError extends ns.brand(LangChainError, "model-abort") {
   constructor(message: string, partialOutput?: AIMessageChunk) {
     super(message);
     this.partialOutput = partialOutput;
+    // Retrying would mean ignoring the caller's explicit abort signal.
+    stampRetryable(this, false);
   }
 }
 
@@ -154,6 +199,8 @@ export class ContextOverflowError extends ns.brand(
 
   constructor(message?: string) {
     super(message ?? "Input exceeded the model's context window.");
+    // The same oversized input fails identically; it needs trimming, not another attempt.
+    stampRetryable(this, false);
   }
 
   /**

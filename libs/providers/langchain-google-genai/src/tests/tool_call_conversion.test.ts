@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect, describe } from "vitest";
 import { AIMessage } from "@langchain/core/messages";
 import { convertBaseMessagesToContent } from "../utils/common.js";
 import { z } from "zod";
@@ -48,6 +48,7 @@ describe("Gemini Tool Schema Validation - Empty String in Enum", () => {
   test("should throw descriptive error for empty string in z.enum", () => {
     const model = new ChatGoogleGenerativeAI({
       model: "gemini-2.0-flash-exp",
+      apiKey: "fake-api-key",
     });
 
     const schema = z.object({
@@ -74,6 +75,7 @@ describe("Gemini Tool Schema Validation - Empty String in Enum", () => {
 
     const model = new ChatGoogleGenerativeAI({
       model: "gemini-2.0-flash-exp",
+      apiKey: "fake-api-key",
     });
 
     const schema = z.object({

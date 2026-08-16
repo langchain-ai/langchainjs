@@ -1,8 +1,7 @@
-import type { InteropZodObject } from "@langchain/core/utils/types";
 import type { RunnableCallable } from "./RunnableCallable.js";
-import type { AgentMiddleware } from "./middleware/types.js";
+import type { AnyAgentMiddleware } from "./middleware/types.js";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 type AgentNode = RunnableCallable<any, any>;
 
 /**
@@ -21,10 +20,7 @@ export class StateManager {
    * @param name - The name of the middleware group.
    * @param node - The node to add.
    */
-  addNode(
-    middleware: AgentMiddleware<InteropZodObject | undefined>,
-    node: AgentNode
-  ) {
+  addNode(middleware: AnyAgentMiddleware, node: AgentNode) {
     this.#nodes.set(middleware.name, [
       ...(this.#nodes.get(middleware.name) ?? []),
       node,

@@ -155,6 +155,31 @@ describe.each(Object.keys(TEST_CASES))("Test runnable %s", (name) => {
   });
 });
 
+test("Runnable invoke should respect timeout option", async () => {
+  const runnable = RunnableLambda.from(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    return "done";
+  });
+
+  await expect(runnable.invoke({}, { timeout: 50 })).rejects.toThrow(
+    /timeout/i
+  );
+});
+
+test("Runnable stream should respect timeout option before first chunk", async () => {
+  const runnable = RunnableLambda.from(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    return "done";
+  });
+
+  await expect(async () => {
+    const stream = await runnable.stream({}, { timeout: 50 });
+    for await (const _ of stream) {
+      // drain
+    }
+  }).rejects.toThrow(/timeout/i);
+});
+
 test("Should not raise node warning", async () => {
   const formatDocumentsAsString = (documents: Document[]) => {
     return documents.map((doc) => doc.pageContent).join("\n\n");

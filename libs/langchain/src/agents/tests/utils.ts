@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import {
   BaseChatModel,
@@ -7,6 +7,7 @@ import {
   BindToolsInput,
   ToolChoice,
 } from "@langchain/core/language_models/chat_models";
+import type { ModelProfile } from "@langchain/core/language_models/profile";
 import { StructuredTool } from "@langchain/core/tools";
 import {
   BaseMessage,
@@ -189,6 +190,13 @@ export class FakeToolCallingChatModel extends BaseChatModel {
 
   _llmType() {
     return "fake";
+  }
+
+  get profile(): ModelProfile {
+    return {
+      toolCalling: true,
+      structuredOutput: true,
+    };
   }
 
   async _generate(
@@ -505,4 +513,43 @@ export class SearchAPI extends StructuredTool {
     }
     return `result for ${input?.query}`;
   }
+}
+
+export async function collectV3Messages(
+  messages: AsyncIterable<any>
+): Promise<{ texts: string[]; deltaCount: number }> {
+  const texts: string[] = [];
+  let deltaCount = 0;
+  for await (const stream of messages) {
+    let text = "";
+    for await (const event of stream) {
+      if (event.event === "content-block-delta") {
+        deltaCount += 1;
+        text += event.delta?.text ?? "";
+      }
+      if (event.event === "content-block-start") {
+        text += (event.contentBlock ?? event.content_block)?.text ?? "";
+      }
+    }
+    texts.push(text);
+  }
+  return { texts, deltaCount };
+}
+
+export async function collectClassicMessages(
+  agent: any,
+  input: any
+): Promise<{ model: string[]; tools: string[] }> {
+  const model: string[] = [];
+  const tools: string[] = [];
+  for await (const chunk of await agent.stream(input, {
+    streamMode: "messages",
+  })) {
+    const message = chunk[0];
+    const text = typeof message?.content === "string" ? message.content : "";
+    if (!text) continue;
+    if (message.getType?.() === "tool") tools.push(text);
+    else model.push(text);
+  }
+  return { model, tools };
 }

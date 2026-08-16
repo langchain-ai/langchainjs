@@ -46,6 +46,6 @@ const { output } = await agentExecutor.invoke({ input });
 
 console.log(output);
 
-/* 
+/*
   The current weather in San Francisco, CA is 28°C.
 */

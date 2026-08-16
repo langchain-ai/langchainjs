@@ -1,4 +1,4 @@
-/* eslint-disable */
+/* oxlint-disable */
 const objectToString = Object.prototype.toString;
 
 const isError = (value) => objectToString.call(value) === "[object Error]";

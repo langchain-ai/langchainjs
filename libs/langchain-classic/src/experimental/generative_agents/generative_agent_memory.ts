@@ -263,7 +263,7 @@ class GenerativeAgentMemoryChain extends BaseChain {
    * @returns An array of strings.
    */
   static parseList(text: string): string[] {
-    // parse a newine seperates string into a list of strings
+    // parse a newline-separated string into a list of strings
     return text.split("\n").map((s) => s.trim());
   }
 
@@ -474,7 +474,7 @@ export class GenerativeAgentMemory extends BaseMemory {
         }
         break;
       }
-      // eslint-disable-next-line no-param-reassign
+      // oxlint-disable-next-line no-param-reassign
       consumedTokens += await this.llm.getNumTokens(doc.pageContent);
       if (consumedTokens < this.maxTokensLimit) {
         result.push(doc);

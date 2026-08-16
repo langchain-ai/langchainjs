@@ -4,7 +4,7 @@ import { BaseOutputParser } from "@langchain/core/output_parsers";
 /**
  * Type for the combined output of the CombiningOutputParser class.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export type CombinedOutput = Record<string, any>;
 
 /**
@@ -40,7 +40,7 @@ export class CombiningOutputParser extends BaseOutputParser<object> {
     ...parsers: BaseOutputParser[]
   ) {
     if (parsers.length > 0 || !("parsers" in fields)) {
-      // eslint-disable-next-line no-param-reassign
+      // oxlint-disable-next-line no-param-reassign
       fields = {
         parsers: [fields as BaseOutputParser, ...parsers],
       };

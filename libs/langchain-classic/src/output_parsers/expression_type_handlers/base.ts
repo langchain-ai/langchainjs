@@ -35,7 +35,7 @@ export abstract class NodeHandler {
    * @param node The node to be handled.
    * @returns A Promise that resolves to the result of handling the node.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   abstract handle(node: ExpressionNode): Promise<any>;
 }
 

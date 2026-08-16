@@ -17,7 +17,7 @@ test("Test summary memory", async () => {
     { input: "How's it going?" },
     { response: "Hello! I'm doing fine. and you?" }
   );
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const result2 = await memory.loadMemoryVariables({});
   // console.log("result2", result2);
@@ -40,7 +40,7 @@ test("Test summary memory with chat model", async () => {
     { input: "How's it going?" },
     { response: "Hello! I'm doing fine. and you?" }
   );
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const result2 = await memory.loadMemoryVariables({});
   // console.log("result2", result2);
@@ -64,7 +64,7 @@ test("Test summary memory return messages", async () => {
     { input: "How's it going?" },
     { response: "Hello! I'm doing fine. and you?" }
   );
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   const result2 = await memory.loadMemoryVariables({});
   // console.log("result2", result2);

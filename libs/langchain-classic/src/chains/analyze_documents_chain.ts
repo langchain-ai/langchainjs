@@ -7,7 +7,7 @@ import {
 import { BaseChain, ChainInputs } from "./base.js";
 import { SerializedAnalyzeDocumentChain } from "./serde.js";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
 
 /**

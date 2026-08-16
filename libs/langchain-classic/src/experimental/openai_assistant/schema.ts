@@ -14,5 +14,5 @@ export type OpenAIAssistantAction = AgentAction & {
   threadId: string;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export type OpenAIToolType = Array<any>;

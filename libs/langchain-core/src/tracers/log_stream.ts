@@ -30,20 +30,20 @@ export type LogEntry = {
   /** List of tags for the run. */
   tags: string[];
   /** Key-value pairs of metadata for the run. */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   metadata: Record<string, any>;
   /** ISO-8601 timestamp of when the run started. */
   start_time: string;
   /** List of general output chunks streamed by this run. */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   streamed_output: any[];
   /** List of LLM tokens streamed by this run, if applicable. */
   streamed_output_str: string[];
   /** Inputs to this run. Not available currently via streamLog. */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   inputs?: any;
   /** Final output of this run. Only available after the run has finished successfully. */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   final_output?: any;
   /** ISO-8601 timestamp of when the run ended. Only available after the run has finished. */
   end_time?: string;
@@ -53,10 +53,10 @@ export type RunState = {
   /** ID of the sub-run. */
   id: string;
   /** List of output chunks streamed by Runnable.stream() */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   streamed_output: any[];
   /** Final output of the run, usually the result of aggregating streamed_output. Only available after the run has finished successfully. */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   final_output?: any;
   /**
    * List of sub-runs contained in this run, if any, in the order they were started.
@@ -86,7 +86,7 @@ export class RunLogPatch {
   concat(other: RunLogPatch) {
     const ops = this.ops.concat(other.ops);
     const states = applyPatch({}, ops);
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    // oxlint-disable-next-line @typescript-eslint/no-use-before-define
     return new RunLog({
       ops,
       state: states[states.length - 1].newDocument as RunState,

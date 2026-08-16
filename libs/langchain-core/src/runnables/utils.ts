@@ -1,7 +1,7 @@
 import { StreamEvent } from "../tracers/event_stream.js";
 import type { RunnableInterface } from "./types.js";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export function isRunnableInterface(thing: any): thing is RunnableInterface {
   return thing ? thing.lc_runnable : false;
 }

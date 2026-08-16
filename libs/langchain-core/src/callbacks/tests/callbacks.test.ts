@@ -1,6 +1,7 @@
-import { test, expect } from "vitest";
-import * as uuid from "uuid";
+import { test, expect, vi } from "vitest";
+import * as uuid from "../../utils/uuid/index.js";
 import { AsyncLocalStorage } from "node:async_hooks";
+import type { LangSmithTracingClientInterface } from "langsmith";
 import { CallbackManager } from "../manager.js";
 import { BaseCallbackHandler, type BaseCallbackHandlerInput } from "../base.js";
 import type { Serialized } from "../../load/serializable.js";
@@ -9,9 +10,15 @@ import type { ChainValues } from "../../utils/types/index.js";
 import type { AgentAction, AgentFinish } from "../../agents.js";
 import { BaseMessage, HumanMessage } from "../../messages/index.js";
 import type { LLMResult } from "../../outputs.js";
+import type { ChatModelStreamEvent } from "../../language_models/event.js";
 import { RunnableLambda } from "../../runnables/base.js";
+import {
+  getCallbackManagerForConfig,
+  mergeConfigs,
+} from "../../runnables/config.js";
 import { AsyncLocalStorageProviderSingleton } from "../../singletons/index.js";
 import { awaitAllCallbacks } from "../promises.js";
+import { LangChainTracer } from "../../tracers/tracer_langchain.js";
 
 class FakeCallbackHandler extends BaseCallbackHandler {
   name = `fake-${uuid.v4()}`;
@@ -164,6 +171,20 @@ class FakeCallbackHandlerWithChatStart extends FakeCallbackHandler {
   }
 }
 
+class FakeChatModelStreamEventHandler extends BaseCallbackHandler {
+  name = `fake-stream-event-${uuid.v4()}`;
+
+  events: ChatModelStreamEvent[] = [];
+
+  constructor(inputs?: BaseCallbackHandlerInput) {
+    super(inputs);
+  }
+
+  handleChatModelStreamEvent(event: ChatModelStreamEvent): void {
+    this.events.push(event);
+  }
+}
+
 const serialized: Serialized = {
   lc: 1,
   type: "constructor",
@@ -276,6 +297,46 @@ test("CallbackHandler with ignoreLLM", async () => {
   expect(handler.llmStarts).toBe(0);
   expect(handler.llmEnds).toBe(0);
   expect(handler.llmStreams).toBe(0);
+});
+
+test("CallbackManager dispatches chat model stream events", async () => {
+  const manager = new CallbackManager();
+  const handler = new FakeChatModelStreamEventHandler();
+  manager.addHandler(handler);
+
+  const llmCbs = await manager.handleChatModelStart(serialized, [
+    [new HumanMessage("test")],
+  ]);
+  await Promise.all(
+    llmCbs.map(async (llmCb) => {
+      await llmCb.handleChatModelStreamEvent({
+        event: "message-start",
+        id: "msg-1",
+      });
+    })
+  );
+
+  expect(handler.events).toEqual([{ event: "message-start", id: "msg-1" }]);
+});
+
+test("CallbackManager respects ignoreLLM for chat model stream events", async () => {
+  const manager = new CallbackManager();
+  const handler = new FakeChatModelStreamEventHandler({ ignoreLLM: true });
+  manager.addHandler(handler);
+
+  const llmCbs = await manager.handleChatModelStart(serialized, [
+    [new HumanMessage("test")],
+  ]);
+  await Promise.all(
+    llmCbs.map(async (llmCb) => {
+      await llmCb.handleChatModelStreamEvent({
+        event: "message-start",
+        id: "msg-1",
+      });
+    })
+  );
+
+  expect(handler.events).toEqual([]);
 });
 
 test("CallbackHandler with ignoreRetriever", async () => {
@@ -479,6 +540,182 @@ test("CallbackManager.copy()", () => {
   ]);
 });
 
+test("langsmith inheritable metadata/tags apply only to LangChainTracer", async () => {
+  const captured: { metadata?: Record<string, unknown>; tags?: string[] }[] =
+    [];
+  class CaptureHandler extends BaseCallbackHandler {
+    name = `capture-${uuid.v4()}`;
+
+    async handleChainStart(
+      _chain: Serialized,
+      _inputs: ChainValues,
+      _runId: string,
+      _runType?: string,
+      tags?: string[],
+      metadata?: Record<string, unknown>
+    ) {
+      captured.push({ tags, metadata });
+    }
+  }
+
+  const createRunMock = vi.fn().mockResolvedValue(undefined);
+  const updateRunMock = vi.fn().mockResolvedValue(undefined);
+  const mockClient = {
+    createRun: createRunMock,
+    updateRun: updateRunMock,
+  } as LangSmithTracingClientInterface;
+  const tracer = new LangChainTracer({ client: mockClient });
+  const capture = new CaptureHandler();
+
+  const callbacks = CallbackManager.configure(
+    [tracer, capture],
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    {
+      tracerInheritableMetadata: { tracer_only: "yes" },
+      tracerInheritableTags: ["tenant:alpha"],
+    }
+  );
+
+  const configuredTracer = callbacks?.handlers.find(
+    (handler) => handler instanceof LangChainTracer
+  );
+  expect(configuredTracer).toBeDefined();
+  expect(configuredTracer).not.toBe(tracer);
+
+  const runnable = RunnableLambda.from((x: string) => x);
+  await runnable.invoke("hello", { callbacks: callbacks! });
+  await awaitAllCallbacks();
+
+  expect(captured.length).toBeGreaterThan(0);
+  expect(captured[0].metadata?.tracer_only).toBeUndefined();
+  expect(captured[0].tags).not.toContain("tenant:alpha");
+
+  expect(createRunMock).toHaveBeenCalled();
+  const postedRun = createRunMock.mock.calls[0]?.[0];
+  expect(postedRun.extra?.metadata?.tracer_only).toBe("yes");
+  expect(postedRun.tags).toContain("tenant:alpha");
+});
+
+test("tracer inheritable metadata follows first-wins for regular keys", async () => {
+  const createRunMock = vi.fn().mockResolvedValue(undefined);
+  const updateRunMock = vi.fn().mockResolvedValue(undefined);
+  const mockClient = {
+    createRun: createRunMock,
+    updateRun: updateRunMock,
+  } as LangSmithTracingClientInterface;
+  const tracer = new LangChainTracer({ client: mockClient });
+
+  // First configure: ancestor sets `tenant: "alpha"` as tracer-inheritable.
+  const outerCallbacks = CallbackManager.configure(
+    [tracer],
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    { tracerInheritableMetadata: { tenant: "alpha" } }
+  );
+
+  // Second configure: nested caller tries to override `tenant`. Since
+  // `tenant` is NOT in the LangSmith allowlist, the ancestor value wins.
+  const nestedCallbacks = CallbackManager.configure(
+    outerCallbacks,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    { tracerInheritableMetadata: { tenant: "beta" } }
+  );
+
+  const runnable = RunnableLambda.from((x: string) => x);
+  await runnable.invoke("hello", { callbacks: nestedCallbacks! });
+  await awaitAllCallbacks();
+
+  expect(createRunMock).toHaveBeenCalled();
+  const postedRun = createRunMock.mock.calls[0]?.[0];
+  // Non-allowlisted keys keep first-wins semantics.
+  expect(postedRun.extra?.metadata?.tenant).toBe("alpha");
+});
+
+test("tracer inheritable metadata allows nested override for allowlisted ls_* keys", async () => {
+  const createRunMock = vi.fn().mockResolvedValue(undefined);
+  const updateRunMock = vi.fn().mockResolvedValue(undefined);
+  const mockClient = {
+    createRun: createRunMock,
+    updateRun: updateRunMock,
+  } as LangSmithTracingClientInterface;
+  const tracer = new LangChainTracer({ client: mockClient });
+
+  // First configure: ancestor sets `ls_agent_type: "root"`.
+  const outerCallbacks = CallbackManager.configure(
+    [tracer],
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    { tracerInheritableMetadata: { ls_agent_type: "root" } }
+  );
+
+  // Second configure: nested caller overrides with `ls_agent_type: "subagent"`.
+  // Since `ls_agent_type` IS in the LangSmith allowlist, the nested value wins.
+  const nestedCallbacks = CallbackManager.configure(
+    outerCallbacks,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    { tracerInheritableMetadata: { ls_agent_type: "subagent" } }
+  );
+
+  const runnable = RunnableLambda.from((x: string) => x);
+  await runnable.invoke("hello", { callbacks: nestedCallbacks! });
+  await awaitAllCallbacks();
+
+  expect(createRunMock).toHaveBeenCalled();
+  const postedRun = createRunMock.mock.calls[0]?.[0];
+  expect(postedRun.extra?.metadata?.ls_agent_type).toBe("subagent");
+});
+
+test("tracer inheritable options apply via Symbol.hasInstance structural match", () => {
+  class ForeignTracer extends BaseCallbackHandler {
+    name = "langchain_tracer";
+
+    copyWithTracingConfig = vi.fn().mockReturnThis();
+
+    getRunTreeWithTracingConfig() {
+      return undefined;
+    }
+  }
+
+  const foreignTracer = new ForeignTracer();
+  expect(foreignTracer instanceof LangChainTracer).toBe(true);
+
+  CallbackManager.configure(
+    [foreignTracer],
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    {
+      tracerInheritableMetadata: { tenant: "alpha" },
+      tracerInheritableTags: ["tenant:alpha"],
+    }
+  );
+
+  expect(foreignTracer.copyWithTracingConfig).toHaveBeenCalledWith({
+    metadata: { tenant: "alpha" },
+    tags: ["tenant:alpha"],
+  });
+});
+
 class FakeCallbackHandlerWithErrors extends FakeCallbackHandler {
   constructor(input: BaseCallbackHandlerInput) {
     super({ ...input, raiseError: true });
@@ -572,4 +809,146 @@ test("runnables in callbacks should be root runs", async () => {
   expect(res).toEqual("hello world");
   expect(error).toBe(undefined);
   expect(finalInputs).toEqual({ foo: "bar" });
+});
+
+test("tracer configuration preserves inheritable handler identity", () => {
+  const mockClient = {
+    createRun: vi.fn().mockResolvedValue(undefined),
+    updateRun: vi.fn().mockResolvedValue(undefined),
+  } as LangSmithTracingClientInterface;
+  const tracer = new LangChainTracer({ client: mockClient });
+
+  const callbacks = CallbackManager.configure(
+    [tracer],
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    { tracerInheritableMetadata: { tenant: "alpha" } }
+  );
+
+  const configuredTracers = callbacks!.handlers.filter(
+    (handler) => handler instanceof LangChainTracer
+  );
+  const inheritableTracers = callbacks!.inheritableHandlers.filter(
+    (handler) => handler instanceof LangChainTracer
+  );
+
+  expect(configuredTracers).toHaveLength(1);
+  expect(inheritableTracers).toHaveLength(1);
+  expect(inheritableTracers[0]).toBe(configuredTracers[0]);
+});
+
+test("nested callback configs coalesce tracers sharing run state", async () => {
+  const mockClient = {
+    createRun: vi.fn().mockResolvedValue(undefined),
+    updateRun: vi.fn().mockResolvedValue(undefined),
+  } as LangSmithTracingClientInterface;
+  const tracer = new LangChainTracer({ client: mockClient });
+
+  const outerCallbacks = CallbackManager.configure(
+    [tracer],
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    { tracerInheritableMetadata: { tenant: "alpha" } }
+  )!;
+
+  const mergedConfig = mergeConfigs(
+    { callbacks: outerCallbacks },
+    { callbacks: outerCallbacks }
+  );
+  const nestedCallbacks = await getCallbackManagerForConfig({
+    ...mergedConfig,
+    configurable: { thread_id: "thread-1" },
+  });
+
+  const configuredTracers = nestedCallbacks!.handlers.filter(
+    (handler): handler is LangChainTracer => handler instanceof LangChainTracer
+  );
+  const inheritableTracers = nestedCallbacks!.inheritableHandlers.filter(
+    (handler): handler is LangChainTracer => handler instanceof LangChainTracer
+  );
+
+  expect(configuredTracers).toHaveLength(1);
+  expect(inheritableTracers).toHaveLength(1);
+  expect(inheritableTracers[0]).toBe(configuredTracers[0]);
+  expect(configuredTracers[0].tracingMetadata).toEqual({
+    tenant: "alpha",
+    thread_id: "thread-1",
+  });
+
+  const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+  try {
+    const runnable = RunnableLambda.from((input: string) => input);
+    await runnable.invoke("hello", { callbacks: nestedCallbacks! });
+    await awaitAllCallbacks();
+    expect(warnSpy.mock.calls.flat().join("\n")).not.toContain(
+      "No chain run to end"
+    );
+  } finally {
+    warnSpy.mockRestore();
+  }
+});
+
+test("callback configuration keeps independent tracers", () => {
+  const client = () =>
+    ({
+      createRun: vi.fn().mockResolvedValue(undefined),
+      updateRun: vi.fn().mockResolvedValue(undefined),
+    }) as LangSmithTracingClientInterface;
+  const first = new LangChainTracer({ client: client() });
+  const second = new LangChainTracer({ client: client() });
+
+  const callbacks = CallbackManager.configure([first, second]);
+  const configuredTracers = callbacks!.handlers.filter(
+    (handler) => handler instanceof LangChainTracer
+  );
+
+  expect(configuredTracers).toHaveLength(2);
+});
+
+test("coalescing does not leak local tracer config into inheritable handlers", () => {
+  const mockClient = {
+    createRun: vi.fn().mockResolvedValue(undefined),
+    updateRun: vi.fn().mockResolvedValue(undefined),
+  } as LangSmithTracingClientInterface;
+  const inheritable = new LangChainTracer({
+    client: mockClient,
+    tags: ["inheritable-tag"],
+    metadata: { tenant: "alpha" },
+  });
+  // A local-only copy sharing the same run store (as a local handler would).
+  const localCopy = inheritable.copyWithTracingConfig({
+    tags: ["local-only-tag"],
+    metadata: { requestSecret: "local-only" },
+  });
+
+  // Inheritable tracer as the inheritable handler; the local copy as a local
+  // (non-inheritable) handler. Both share a run store, so coalescing collapses
+  // them to a single representative.
+  const callbacks = CallbackManager.configure([inheritable], [localCopy])!;
+
+  const configuredTracers = callbacks.handlers.filter(
+    (handler): handler is LangChainTracer => handler instanceof LangChainTracer
+  );
+  const inheritableTracers = callbacks.inheritableHandlers.filter(
+    (handler): handler is LangChainTracer => handler instanceof LangChainTracer
+  );
+
+  // One tracer per run store (avoids the double-"end" throw) and the
+  // inheritableHandlers ⊆ handlers identity invariant is preserved.
+  expect(configuredTracers).toHaveLength(1);
+  expect(inheritableTracers).toHaveLength(1);
+  expect(inheritableTracers[0]).toBe(configuredTracers[0]);
+
+  // The representative that propagates to children (via getChild ->
+  // inheritableHandlers) must not carry the local-only tag or metadata.
+  expect(inheritableTracers[0].tracingTags).not.toContain("local-only-tag");
+  expect(inheritableTracers[0].tracingMetadata ?? {}).not.toHaveProperty(
+    "requestSecret"
+  );
 });

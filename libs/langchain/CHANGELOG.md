@@ -1,5 +1,335 @@
 # langchain
 
+## 1.5.9
+
+### Patch Changes
+
+- [#11369](https://github.com/langchain-ai/langchainjs/pull/11369) [`d6ad973`](https://github.com/langchain-ai/langchainjs/commit/d6ad9735640a6c729f81ef79361acc5e83c526f1) Thanks [@hntrl](https://github.com/hntrl)! - fix(langchain): use unified endpoint for gateway
+
+- [#11342](https://github.com/langchain-ai/langchainjs/pull/11342) [`3b0e4c4`](https://github.com/langchain-ai/langchainjs/commit/3b0e4c48a31811031a460c4d95519a7c1163dc41) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - feat(core): mark errors as retryable or not, and stop retrying the ones that aren't
+
+  Retry middleware retried every failure up to `maxRetries`, including deterministic ones like a bad API key or an unknown model. Retries also nest, so a single such failure could cost dozens of API calls.
+
+  `@langchain/core/errors` adds `stampRetryable(error, retryable)` and `getRetryable(error)`. Marking an error leaves its class and shape untouched, so a provider SDK error can be classified without breaking `instanceof`. `getRetryable` returns `undefined` for errors nobody classified, and both are exported so tool authors can mark their own failures.
+
+  `modelRetryMiddleware` and `toolRetryMiddleware` now respect the mark by default, and retries stop as soon as one is found rather than each layer spending its own budget. Aborted calls, context overflow, and oversized payloads are marked non-retryable out of the box.
+  Models accept a per-call `maxRetries` so a surrounding retry loop can take over.
+
+  **Behavior change:** errors marked non-retryable now fail on the first attempt. Unclassified errors — including any from third-party integrations or custom tools — retry exactly as before. Pass `retryOn: () => true` to restore the old default. A custom `onFailedAttempt` replaces the built-in handler and opts out of marking.
+
+## 1.5.8
+
+### Patch Changes
+
+- [#11366](https://github.com/langchain-ai/langchainjs/pull/11366) [`c068bbf`](https://github.com/langchain-ai/langchainjs/commit/c068bbf8c113132bf16ac7a8add44e486a147b41) Thanks [@hntrl](https://github.com/hntrl)! - fix(core,langchain): patch and release core, update peer dependencies
+
+## 1.5.7
+
+### Patch Changes
+
+- [#11363](https://github.com/langchain-ai/langchainjs/pull/11363) [`2d1f744`](https://github.com/langchain-ai/langchainjs/commit/2d1f7449c95a554d429535abae0115b4f578bbac) Thanks [@hntrl](https://github.com/hntrl)! - feat(langchain): add langsmith gateway to initChatModel- [#11362](https://github.com/langchain-ai/langchainjs/issues/11362)
+
+## 1.5.6
+
+### Patch Changes
+
+- [#11331](https://github.com/langchain-ai/langchainjs/pull/11331) [`18765b0`](https://github.com/langchain-ai/langchainjs/commit/18765b002c3819bc4dc42123a293cab27a35ce4f) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - fix(langchain): exclude middleware-internal model calls from the message projection
+
+  Bookkeeping model calls made by `summarizationMiddleware` and `toolEmulatorMiddleware` no longer appear in `run.messages` or `stream({ streamMode: "messages" })`, and the summary `summarizationMiddleware` writes back to state is no longer projected as a new message. These calls remain observable via `streamEvents({ version: "v2" })`, identified by `lc_source`.
+
+- [#11344](https://github.com/langchain-ai/langchainjs/pull/11344) [`f08e0c6`](https://github.com/langchain-ai/langchainjs/commit/f08e0c6d50156accf95a36469a3e107a5598a3a0) Thanks [@hntrl](https://github.com/hntrl)! - fix: apply [Symbol.hasInstance] method to all comparable properties using .isInstance()
+
+  We have some internal schemas that rely on `z.instanceof()`. This uses a strict `instanceof` check which can conflict if there are multiple versions of core installed. This overrides the [Symbol.hasInstance](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/hasInstance) method to use the same logic as `.isInstance()` to compare objects at runtime.
+
+## 1.5.5
+
+### Patch Changes
+
+- [#11277](https://github.com/langchain-ai/langchainjs/pull/11277) [`0bd12f0`](https://github.com/langchain-ai/langchainjs/commit/0bd12f0bbb3c3f71e016f2ac26fd63a0f6ad0556) Thanks [@vladislav-nechakhin](https://github.com/vladislav-nechakhin)! - fix(langchain): resolve LocalFileStore keys with path.relative
+
+## 1.5.4
+
+### Patch Changes
+
+- [#11201](https://github.com/langchain-ai/langchainjs/pull/11201) [`a8cd4d9`](https://github.com/langchain-ai/langchainjs/commit/a8cd4d9ae35ae8ae05e011115a351d976560ade9) Thanks [@hntrl](https://github.com/hntrl)! - feat(langchain): add middleware for handling tool execution errors
+
+## 1.5.3
+
+### Patch Changes
+
+- [#11167](https://github.com/langchain-ai/langchainjs/pull/11167) [`4c7a06e`](https://github.com/langchain-ai/langchainjs/commit/4c7a06ec3e4728bb036a28f678dd8ec2521e1c82) Thanks [@colifran](https://github.com/colifran)! - fix(langchain): malformed tool input schemas are unrecoverable
+
+## 1.5.2
+
+### Patch Changes
+
+- [#11100](https://github.com/langchain-ai/langchainjs/pull/11100) [`3205b35`](https://github.com/langchain-ai/langchainjs/commit/3205b35ac83037a2fff2998f16a66b5126b306f8) Thanks [@colifran](https://github.com/colifran)! - fix(langchain, openai): decouple strict tools from strict structured output response
+
+## 1.5.1
+
+### Patch Changes
+
+- [#11087](https://github.com/langchain-ai/langchainjs/pull/11087) [`534b43a`](https://github.com/langchain-ai/langchainjs/commit/534b43a0719c89e3fb4ab7052d3f39797660aa43) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): keep tool call streams pending across any tool interrupt
+
+  A raw `interrupt()` raised from inside a tool surfaced as a `tool-error` and
+  rejected the call's un-awaited `output` promise, producing an unhandled
+  rejection that crashed HITL runs. The tool-call stream transformer now treats
+  any serialized graph interrupt as control flow (the call stays pending and
+  resumes), not just `humanInTheLoopMiddleware` interrupts.
+
+## 1.5.0
+
+### Minor Changes
+
+- [#11062](https://github.com/langchain-ai/langchainjs/pull/11062) [`3ebd10a`](https://github.com/langchain-ai/langchainjs/commit/3ebd10ae381ef7c9e12759f08d2f2b745bdfae62) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(langchain): surface tool-dispatched subagents on `run.subagents`
+
+  Add a native subagent stream transformer to `createAgent` so v3 runs expose
+  named nested agents (`createAgent({ name })` invoked from tools) as typed
+  `SubagentRunStream` handles with `name`, `cause`, scoped `messages` /
+  `toolCalls`, and `output`. Refactors agent stream transformers into
+  `agents/transformers/` and exports only the public stream types from the
+  package entry.
+
+## 1.4.6
+
+### Patch Changes
+
+- [#11012](https://github.com/langchain-ai/langchainjs/pull/11012) [`4aeaa76`](https://github.com/langchain-ai/langchainjs/commit/4aeaa767a48dcc5451371f14adf4a06f064d23b9) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(langchain): add `when` predicate to human-in-the-loop middleware
+
+  Add an optional `when` callback on `InterruptOnConfig` so callers can
+  dynamically skip interrupts for specific tool calls. The predicate receives
+  a `ToolCallRequest` (batch `afterModel` context) and returns whether to
+  interrupt or auto-approve, matching Python `HumanInTheLoopMiddleware`.
+
+- [#11080](https://github.com/langchain-ai/langchainjs/pull/11080) [`e51478a`](https://github.com/langchain-ai/langchainjs/commit/e51478a4436d69a21f75f1c9e0bb84f3abb6d6f5) Thanks [@aolsenjazz](https://github.com/aolsenjazz)! - feat(aws): bedrock prompt caching middleware
+
+  Adds bedrockPromptCachingMiddleware. The interface largely matches what was previous implemented with anthropicPromptCachingMiddleware, making a best-effort attempt at utilizing prompt caching features for supported models.
+
+## 1.4.5
+
+### Patch Changes
+
+- [#11026](https://github.com/langchain-ai/langchainjs/pull/11026) [`cbf274c`](https://github.com/langchain-ai/langchainjs/commit/cbf274c21d25f3c131aaceaa37c35a390d3ea9c1) Thanks [@aolsenjazz](https://github.com/aolsenjazz)! - feat(langchain): add `providerToolSearchMiddleware`
+
+  Adds `providerToolSearchMiddleware` - provider-side tool search for agents. `providerToolSearchMiddleware` enables API consumers to opt tools into tool deferral + discovery by providing tool instances/names to the middleware's `searchableTools` arg. `searchableTools` are marked as `defer_loading` in subsequent model requests, consumed by OpenAI and Anthopic to power their tool search systems.
+
+## 1.4.4
+
+### Patch Changes
+
+- [#10945](https://github.com/langchain-ai/langchainjs/pull/10945) [`bb30838`](https://github.com/langchain-ai/langchainjs/commit/bb30838d884000d168dbbb26ddf7cfb9fa63b437) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): propagate ReactAgent withConfig defaults to inner graph
+
+  Apply static defaults from `#defaultConfig` onto the compiled pregel so
+  `recursionLimit`, metadata, and other LangGraph config survives LangGraph API
+  loading, which unwraps ReactAgent to `.graph` before execution.
+
+- [#10939](https://github.com/langchain-ai/langchainjs/pull/10939) [`58f4c1f`](https://github.com/langchain-ai/langchainjs/commit/58f4c1fee51424c538402a695b91e9720c718320) Thanks [@oritwoen](https://github.com/oritwoen)! - fix(langchain): support agent invoke messages when strictNullChecks is disabled
+
+## 1.4.3
+
+### Patch Changes
+
+- [#10936](https://github.com/langchain-ai/langchainjs/pull/10936) [`1a4ac84`](https://github.com/langchain-ai/langchainjs/commit/1a4ac8451748cfc0d014ff1bac8c641dad4d467b) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(langchain): register stream transformers on middleware
+
+  `createMiddleware` accepts `streamTransformers` factories that are merged with
+  `createAgent({ streamTransformers })` at compile time. Types flow through
+  `CombineStreamTransformers` so `run.extensions` is inferred from both sources.
+
+## 1.4.2
+
+### Patch Changes
+
+- [#10900](https://github.com/langchain-ai/langchainjs/pull/10900) [`6bbddca`](https://github.com/langchain-ai/langchainjs/commit/6bbddca1f8f7f280583fd839bb40c00bf19a0d51) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): unwrap tool message outputs in agent streams
+
+- [#10706](https://github.com/langchain-ai/langchainjs/pull/10706) [`4ecb660`](https://github.com/langchain-ai/langchainjs/commit/4ecb6606feae3156a07de67e39e2027f857c476e) Thanks [@JadenKim-dev](https://github.com/JadenKim-dev)! - fix(langchain): set name on todoListMiddleware ToolMessages
+
+## 1.4.1
+
+### Patch Changes
+
+- [#10879](https://github.com/langchain-ai/langchainjs/pull/10879) [`eb480cb`](https://github.com/langchain-ai/langchainjs/commit/eb480cb6df8e0fa792826155bfa00a6db4536444) Thanks [@vignesh-gep](https://github.com/vignesh-gep)! - fix(langchain/createAgent): throw on terminal `providerStrategy` parse failure instead of silently resolving with `structuredResponse: undefined`
+
+  When `createAgent` was configured with `responseFormat` resolving to a `providerStrategy` (either passed explicitly or auto-promoted from a bare Zod / JSON schema for models whose profile reports `structuredOutput: true`), and the model produced a terminal response (no `tool_calls`) whose text could not be JSON-parsed or did not satisfy the schema, the agent silently exited with no `structuredResponse`, surfacing later as `TypeError: Cannot read properties of undefined`. The agent now throws a `StructuredOutputParsingError` in that case while still allowing the agent loop to continue when tool calls are present. Closes [#10878](https://github.com/langchain-ai/langchainjs/issues/10878).
+
+- [#10872](https://github.com/langchain-ai/langchainjs/pull/10872) [`a640079`](https://github.com/langchain-ai/langchainjs/commit/a64007997a4940f51bba3c1c83dae89d1ccfb692) Thanks [@hntrl](https://github.com/hntrl)! - chore(deps): remove redundant @types/uuid declarations
+
+  Remove `@types/uuid` from package manifests that rely on `@langchain/core/utils/uuid` or do not require uuid type stubs directly, and refresh the lockfile entries accordingly.
+
+- [#10160](https://github.com/langchain-ai/langchainjs/pull/10160) [`bba900c`](https://github.com/langchain-ai/langchainjs/commit/bba900c7c8781c7efec856d5d3e539a93f14e797) Thanks [@JadenKim-dev](https://github.com/JadenKim-dev)! - fix(langchain): prevent llmToolSelectorMiddleware from leaking into message stream
+
+## 1.4.0
+
+### Minor Changes
+
+- [#10815](https://github.com/langchain-ai/langchainjs/pull/10815) [`499ce78`](https://github.com/langchain-ai/langchainjs/commit/499ce78a65cddd85b04a38d40f44ac8b65bd085d) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(langchain): adopt new streaming primitives
+
+## 1.3.5
+
+### Patch Changes
+
+- [#10776](https://github.com/langchain-ai/langchainjs/pull/10776) [`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6) Thanks [@hntrl](https://github.com/hntrl)! - fix(deps): remediate uuid vulnerability by removing direct uuid usage
+
+- Updated dependencies [[`20a9abe`](https://github.com/langchain-ai/langchainjs/commit/20a9abea23ffacf4ae8dc9a7aeec217143bbdeb6)]:
+  - @langchain/core@1.1.42
+
+## 1.3.4
+
+### Patch Changes
+
+- [#10713](https://github.com/langchain-ai/langchainjs/pull/10713) [`49ac9e7`](https://github.com/langchain-ai/langchainjs/commit/49ac9e7404e5a9269b9ac047711ee96dd928b231) Thanks [@jacoblee93](https://github.com/jacoblee93)! - feat(langchain): Adds ls_agent_type to create agent runs as tracing metadata
+
+- Updated dependencies [[`589f29c`](https://github.com/langchain-ai/langchainjs/commit/589f29ce844eb252c2d5e6b0f8d26de37763a0d7), [`2e9e696`](https://github.com/langchain-ai/langchainjs/commit/2e9e6969e248a53ede0659a41d0ac8dbaf291ab4)]:
+  - @langchain/core@1.1.41
+
+## 1.3.3
+
+### Patch Changes
+
+- [#9386](https://github.com/langchain-ai/langchainjs/pull/9386) [`71e53f1`](https://github.com/langchain-ai/langchainjs/commit/71e53f1c07bc60e2c2304b10f0edd3c85c62b192) Thanks [@Josh-Engle](https://github.com/Josh-Engle)! - Prevent local file corruption when using `LocalFileStore`
+
+- Updated dependencies [[`d3e0809`](https://github.com/langchain-ai/langchainjs/commit/d3e080995bb267bf3797067ab53c96bc2a6c8e3f)]:
+  - @langchain/core@1.1.40
+
+## 1.3.2
+
+### Patch Changes
+
+- [#10693](https://github.com/langchain-ai/langchainjs/pull/10693) [`5a6e0ab`](https://github.com/langchain-ai/langchainjs/commit/5a6e0ab6617587f3aed19d07bf3ed91994dcdac8) Thanks [@hntrl](https://github.com/hntrl)! - fix(agents): derive middleware hook state from invocation state
+
+  Prevents middleware state from leaking across threads by deriving middleware hook input state from the current invocation state instead of cross-node cached state.
+
+## 1.3.1
+
+### Patch Changes
+
+- [#10673](https://github.com/langchain-ai/langchainjs/pull/10673) [`f069365`](https://github.com/langchain-ai/langchainjs/commit/f0693657b7e5bdbf888a46d04e68431e446c7bc0) Thanks [@hntrl](https://github.com/hntrl)! - bump langgraph dependency to 1.2.8
+
+## 1.3.0
+
+### Minor Changes
+
+- [#10430](https://github.com/langchain-ai/langchainjs/pull/10430) [`d3d0922`](https://github.com/langchain-ai/langchainjs/commit/d3d0922c24afcd3006fb94dcadd3ebe08fbf2383) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(langchain): support for browser tools
+
+### Patch Changes
+
+- [#10591](https://github.com/langchain-ai/langchainjs/pull/10591) [`d7a98cd`](https://github.com/langchain-ai/langchainjs/commit/d7a98cda1a5d9bf9b93b503fc54374f1aaf1a37e) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat: add @langchain/perplexity standalone provider package
+
+- [#10594](https://github.com/langchain-ai/langchainjs/pull/10594) [`884c2d3`](https://github.com/langchain-ai/langchainjs/commit/884c2d3d1b2c49225d73ddec2235ad174db36f86) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(fireworks): extract standalone provider package
+
+- [#10593](https://github.com/langchain-ai/langchainjs/pull/10593) [`0fb6fa4`](https://github.com/langchain-ai/langchainjs/commit/0fb6fa40dcd3a09a4fb91f36c9f2ca869552961e) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(together-ai): migrate Together AI into provider package
+
+- [#10654](https://github.com/langchain-ai/langchainjs/pull/10654) [`3bd85c1`](https://github.com/langchain-ai/langchainjs/commit/3bd85c17869e95d5d1a67c5fccc0c4cab2646616) Thanks [@jabiinfante](https://github.com/jabiinfante)! - feat(langchain): add ChatGoogle support to initChatModel
+
+- Updated dependencies [[`d3d0922`](https://github.com/langchain-ai/langchainjs/commit/d3d0922c24afcd3006fb94dcadd3ebe08fbf2383)]:
+  - @langchain/core@1.1.39
+
+## 1.2.39
+
+### Patch Changes
+
+- [#10543](https://github.com/langchain-ai/langchainjs/pull/10543) [`7ed93b8`](https://github.com/langchain-ai/langchainjs/commit/7ed93b8b8a6e9eb0da3e103d74087c692fee2773) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(langchain): allow dynamic tools in wrapModelCall with wrapToolCall
+
+- [#10554](https://github.com/langchain-ai/langchainjs/pull/10554) [`11a295f`](https://github.com/langchain-ai/langchainjs/commit/11a295fdadec3809f40c10492e3fd474e832c468) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): add support for dynamic structured output
+
+- [#10555](https://github.com/langchain-ai/langchainjs/pull/10555) [`f548053`](https://github.com/langchain-ai/langchainjs/commit/f54805305787fa383c3ce1e287daafdb5464a98b) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): bump langgraph dep
+
+- [#10552](https://github.com/langchain-ai/langchainjs/pull/10552) [`589ab9b`](https://github.com/langchain-ai/langchainjs/commit/589ab9be391a5d6c104f34877fc1b3e2a32fa449) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): accept cross-version runnable models in createAgent
+
+- Updated dependencies [[`589ab9b`](https://github.com/langchain-ai/langchainjs/commit/589ab9be391a5d6c104f34877fc1b3e2a32fa449)]:
+  - @langchain/core@1.1.38
+
+## 1.2.38
+
+### Patch Changes
+
+- [#10527](https://github.com/langchain-ai/langchainjs/pull/10527) [`3408008`](https://github.com/langchain-ai/langchainjs/commit/3408008fe59eb8ee72f733349ae85afe5c23eaca) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - fix(langchain): export createAgent and prebuilt middleware from browser entry point
+
+- [#10545](https://github.com/langchain-ai/langchainjs/pull/10545) [`68e0a19`](https://github.com/langchain-ai/langchainjs/commit/68e0a19238be592514b6c01243c41aefaa6a7668) Thanks [@JadenKim-dev](https://github.com/JadenKim-dev)! - fix(langchain): revert zod import in utils.ts to fix v3/v4 interop
+
+- Updated dependencies [[`6933769`](https://github.com/langchain-ai/langchainjs/commit/6933769836fe3cec835588e5f8db9883200865f6), [`50d5f32`](https://github.com/langchain-ai/langchainjs/commit/50d5f32fd30cabebf058b1c13255c1daadde6107), [`5552999`](https://github.com/langchain-ai/langchainjs/commit/555299917c90322e25d7671bad2e20c9b104bad6), [`8331833`](https://github.com/langchain-ai/langchainjs/commit/8331833c93ba907063c9fe28e9f935ed5dfec11c)]:
+  - @langchain/core@1.1.37
+
+## 1.2.37
+
+### Patch Changes
+
+- [#10475](https://github.com/langchain-ai/langchainjs/pull/10475) [`3d35eb1`](https://github.com/langchain-ai/langchainjs/commit/3d35eb112b46b36aea80cebe0147e315d03a1d8e) Thanks [@hntrl](https://github.com/hntrl)! - fix(langchain): add "aws" alias to MODEL_PROVIDER_CONFIG so hub/node auto-detects ChatBedrockConverse from Python-serialized prompts
+
+- [#10258](https://github.com/langchain-ai/langchainjs/pull/10258) [`ae4122f`](https://github.com/langchain-ai/langchainjs/commit/ae4122f9523904423504e5a92c134c625977261d) Thanks [@irfiacre](https://github.com/irfiacre)! - Align Zod Importation For 'libs/langchain/src/agents/nodes/utils.ts'
+
+- Updated dependencies [[`bbbfea1`](https://github.com/langchain-ai/langchainjs/commit/bbbfea185c0777ae06df2b24a1a84f941d499c2a)]:
+  - @langchain/core@1.1.36
+
+## 1.2.36
+
+### Patch Changes
+
+- [#10489](https://github.com/langchain-ai/langchainjs/pull/10489) [`21094f3`](https://github.com/langchain-ai/langchainjs/commit/21094f31d99e30a9c8433072523cb08b8539c1ab) Thanks [@maahir30](https://github.com/maahir30)! - support structured output (providerStrategy) for Google Gemini models in createAgent
+
+- [#10433](https://github.com/langchain-ai/langchainjs/pull/10433) [`7af0b65`](https://github.com/langchain-ai/langchainjs/commit/7af0b65d5ab9a173b528d6a821d269a79fbabdc6) Thanks [@tanushree-sharma](https://github.com/tanushree-sharma)! - feat: Add LangSmith integration metadata to createAgent and initChatModel
+
+- Updated dependencies [[`5dc11b5`](https://github.com/langchain-ai/langchainjs/commit/5dc11b55cccfe35e4dad910a33e904cf49b3088a), [`7af0b65`](https://github.com/langchain-ai/langchainjs/commit/7af0b65d5ab9a173b528d6a821d269a79fbabdc6)]:
+  - @langchain/core@1.1.35
+
+## 1.2.35
+
+### Patch Changes
+
+- [#10466](https://github.com/langchain-ai/langchainjs/pull/10466) [`4b1a874`](https://github.com/langchain-ai/langchainjs/commit/4b1a874a93d8475a98421e157fe7a1e65ec94076) Thanks [@hntrl](https://github.com/hntrl)! - fix: renamed getSubgraphAsync -> getSubgraphsAsync
+
+- Updated dependencies [[`bfb7944`](https://github.com/langchain-ai/langchainjs/commit/bfb7944a105470eee98fe4a0eef91e586600e1de)]:
+  - @langchain/core@1.1.34
+
+## 1.2.34
+
+### Patch Changes
+
+- [#10443](https://github.com/langchain-ai/langchainjs/pull/10443) [`ff6822e`](https://github.com/langchain-ai/langchainjs/commit/ff6822e43c38c4328d3f2c0ef1cf67998741339a) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): respect version:"v1" in afterModel router's pending tool call path
+
+- [#10446](https://github.com/langchain-ai/langchainjs/pull/10446) [`888224c`](https://github.com/langchain-ai/langchainjs/commit/888224c64e4c95935836a5089f8b28a8c90da5e6) Thanks [@hntrl](https://github.com/hntrl)! - fix(agents): propagate store and configurable to ToolNode middleware runtime
+
+- [#10444](https://github.com/langchain-ai/langchainjs/pull/10444) [`82d56cb`](https://github.com/langchain-ai/langchainjs/commit/82d56cbdfb59b48b3f8d98a294e4d4720e12c733) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain/agents): dispatch tool calls via Send in afterModel router for version:"v2"
+
+  **Breaking change for `version: "v2"` + `afterModel` middleware users.**
+
+  Previously, when `afterModel` middleware was present, `createAgent` always routed all tool calls from an `AIMessage` to a single `ToolNode` invocation — regardless of the `version` option. This meant `version: "v2"` silently behaved like `version: "v1"` (parallel via `Promise.all` in one node) whenever `afterModel` middleware was used.
+
+  `#createAfterModelRouter` now correctly respects `#toolBehaviorVersion`:
+  - `version: "v1"` — routes the full `AIMessage` to a single `ToolNode` invocation; all tool calls run concurrently via `Promise.all` (unchanged behaviour).
+  - `version: "v2"` — dispatches each tool call as a separate `Send` task, matching the behaviour of `#createModelRouter` when no `afterModel` middleware is present, and matching Python LangGraph's `post_model_hook_router`.
+
+  **Migration:** If you use `version: "v2"` (the default) together with `afterModel` middleware and rely on the previous single-node parallel execution, switch to `version: "v1"` to preserve that behaviour. See the `version` JSDoc on `CreateAgentParams` for guidance on which option to choose.
+
+## 1.2.33
+
+### Patch Changes
+
+- [#9862](https://github.com/langchain-ai/langchainjs/pull/9862) [`5b250b1`](https://github.com/langchain-ai/langchainjs/commit/5b250b1a273df0ab4126b22d140dc2420130421f) Thanks [@stellarrover](https://github.com/stellarrover)! - fix(langchain/agents): Fix ReactAgent routing with returnDirect + beforeModel middleware
+
+  This fixes a routing error when an agent has both tools with returnDirect: true and middleware with beforeModel hooks (e.g., summarizationMiddleware). Before this fix, non-returnDirect tools would fail with "Branch condition returned unknown or null destination".
+
+- Updated dependencies [[`6db417b`](https://github.com/langchain-ai/langchainjs/commit/6db417b03ecb5e2ace413389d982294e0ac88433), [`d69dfcc`](https://github.com/langchain-ai/langchainjs/commit/d69dfcca97503cf1c0b7e70ccf5fb7d507c60982)]:
+  - @langchain/core@1.1.33
+
+## 1.2.32
+
+### Patch Changes
+
+- [#10405](https://github.com/langchain-ai/langchainjs/pull/10405) [`afbf5f1`](https://github.com/langchain-ai/langchainjs/commit/afbf5f1b1a9c6014f994829ab92bbfcaecb8a30b) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): add browser export
+
+## 1.2.31
+
+### Patch Changes
+
+- [#10265](https://github.com/langchain-ai/langchainjs/pull/10265) [`2647b48`](https://github.com/langchain-ai/langchainjs/commit/2647b4841bc4ae28dc6c8b245532df8620611a74) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): export todo schema
+
+- [#10167](https://github.com/langchain-ai/langchainjs/pull/10167) [`ca826f6`](https://github.com/langchain-ai/langchainjs/commit/ca826f6fecae6087bf0dee7781ee80b587396ec1) Thanks [@colifran](https://github.com/colifran)! - feat: implement type inference for tool streams
+
+- [#10290](https://github.com/langchain-ai/langchainjs/pull/10290) [`a596d3f`](https://github.com/langchain-ai/langchainjs/commit/a596d3f7395c0ab27357aa0cd30bafb2d5d967c1) Thanks [@colifran](https://github.com/colifran)! - fix(langchain): serializable schemas aren't exposed on create agent response format
+
+- Updated dependencies [[`26488b5`](https://github.com/langchain-ai/langchainjs/commit/26488b596f01b7b7fe2f1d97d07164e52365ade5), [`ca826f6`](https://github.com/langchain-ai/langchainjs/commit/ca826f6fecae6087bf0dee7781ee80b587396ec1), [`a602c42`](https://github.com/langchain-ai/langchainjs/commit/a602c42db75d7e7e01cab38b12e0b65b9c0cce95), [`db7d017`](https://github.com/langchain-ai/langchainjs/commit/db7d017f7ce13cb937147aabcbfa3847d80bde9d)]:
+  - @langchain/core@1.1.32
+
 ## 1.2.30
 
 ### Patch Changes

@@ -1,5 +1,5 @@
 import { MongoClient } from "mongodb";
-import { MongoDBCache } from "@langchain/mongodb";
+import { MongoDBCache, type MongoDBCacheArgs } from "@langchain/mongodb";
 import { OpenAI } from "@langchain/openai";
 
 let client;
@@ -12,7 +12,9 @@ if (process.env.MONGODB_ATLAS_URI) {
 await client.connect();
 const collection = client.db("langchain").collection("llm_cache");
 
-const cache = new MongoDBCache({ collection });
+const cache = new MongoDBCache({
+  collection: collection as unknown as MongoDBCacheArgs["collection"],
+});
 
 const model = new OpenAI({ cache });
 

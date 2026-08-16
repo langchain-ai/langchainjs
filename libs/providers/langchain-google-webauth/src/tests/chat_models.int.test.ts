@@ -523,7 +523,7 @@ describe.each(testGeminiModelNames)(
     let recorder: GoogleRequestRecorder;
     let callbacks: BaseCallbackHandler[];
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     let warnSpy: MockedFunction<any>;
 
     function newChatGoogle(fields?: ChatGoogleInput): ChatGoogle {
@@ -1511,7 +1511,7 @@ describe.each(testTtsModelNames)(
       const prompt = "Say cheerfully: Have a wonderful day!";
       const res = await model.invoke(prompt);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       const content = res?.content?.[0] as Record<string, any>;
       writeData(content.data as string);
     });
@@ -1535,7 +1535,7 @@ describe.each(testTtsModelNames)(
         Jane: Not too bad, how about you?
       `;
       const res = await model.invoke(prompt);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       const content = res?.content?.[0] as Record<string, any>;
       writeData(content.data as string);
     });
@@ -1556,14 +1556,14 @@ describe.each(testTtsModelNames)(
       const prompt = `
         TTS the following conversation between Joe and Jane.
         Pay attention to instructions about how each each person speaks,
-        and other sounds they may make.  
+        and other sounds they may make.
         Joe: Hows it going today, Jane?
         Jane: Not too bad, how about you?
-        Joe: [Sighs and sounds tired] It has been a rough day. 
+        Joe: [Sighs and sounds tired] It has been a rough day.
         Joe: [Perks up] But the week should improve!
       `;
       const res = await model.invoke(prompt);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       const content = res?.content?.[0] as Record<string, any>;
       writeData(content.data as string);
     });
@@ -1642,7 +1642,7 @@ describe.each(testReasoningModelNames)(
     let recorder: GoogleRequestRecorder;
     let callbacks: BaseCallbackHandler[];
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     let warnSpy: MockedFunction<any>;
 
     function newChatGoogle(fields?: ChatGoogleInput): ChatGoogle {

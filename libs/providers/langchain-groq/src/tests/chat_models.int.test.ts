@@ -159,7 +159,7 @@ test("stream with bound tools, yielding a single chunk", async () => {
       }
     )
     .stream([message]);
-  // @eslint-disable-next-line/@typescript-eslint/ban-ts-comment
+  // @oxlint-disable-next-line/@typescript-eslint/ban-ts-comment
   // @ts-expect-error unused var
   for await (const chunk of stream) {
     // console.log(JSON.stringify(chunk));
@@ -332,7 +332,7 @@ describe("Groq Reasoning with contentBlocks", () => {
     // Check if reasoning is present (depends on model response)
     const reasoningBlocks = blocks.filter((b) => b.type === "reasoning");
     if (reasoningBlocks.length > 0) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       expect((reasoningBlocks[0] as any).reasoning.length).toBeGreaterThan(0);
     }
   });

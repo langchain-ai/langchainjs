@@ -4,7 +4,7 @@ import { StandardJSONSchemaV1, StandardSchemaV1 } from "@standard-schema/spec";
  * A schema that supports both runtime validation and JSON Schema generation. Any schema passed
  * to withStructuredOutput must satisfy both interfaces.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export type SerializableSchema<Input = any, Output = Input> = StandardSchemaV1<
   Input,
   Output
@@ -15,7 +15,7 @@ export type SerializableSchema<Input = any, Output = Input> = StandardSchemaV1<
  * Type guard for Standard Schema V1. Returns true if the value has a `~standard.validate`
  * interface, indicating it can validate unknown values at runtime (e.g. for parsing LLM output).
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export function isStandardSchema<Input = any, Output = Input>(
   schema: unknown
 ): schema is StandardSchemaV1<Input, Output> {
@@ -34,7 +34,7 @@ export function isStandardSchema<Input = any, Output = Input>(
  * interface, indicating it can be converted to a JSON Schema object (e.g. for sending as a tool
  * definition to an LLM).
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export function isStandardJsonSchema<Input = any, Output = Input>(
   schema: unknown
 ): schema is StandardJSONSchemaV1<Input, Output> {
@@ -52,7 +52,7 @@ export function isStandardJsonSchema<Input = any, Output = Input>(
  * Type guard for Standard Schema V1. Returns true if the value has a `~standard.validate` interface,
  * indicating it can validate unknown values at runtime (e.g. for parsing LLM output).
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export function isSerializableSchema<Input = any, Output = Input>(
   schema: unknown
 ): schema is SerializableSchema<Input, Output> {

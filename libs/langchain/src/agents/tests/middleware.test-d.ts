@@ -4,11 +4,19 @@ import { HumanMessage, BaseMessage, AIMessage } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 import type { InferInteropZodInput } from "@langchain/core/utils/types";
 import type { ServerTool, ClientTool } from "@langchain/core/tools";
+import { StreamChannel, type StreamTransformer } from "@langchain/langgraph";
 
-import { createAgent, createMiddleware } from "../index.js";
+import {
+  createAgent,
+  createMiddleware,
+  providerStrategy,
+  toolStrategy,
+} from "../index.js";
 import type { AgentBuiltInState } from "../runtime.js";
 import type { InferAgentState } from "../types.js";
 import type { InferMiddlewareType } from "../middleware/types.js";
+import type { InferAgentStreamTransformers } from "../types.js";
+import type { JsonSchemaFormat } from "../responses.js";
 
 describe("middleware types", () => {
   it("a middleware can define a state schema which is propagated to the result", async () => {
@@ -336,6 +344,51 @@ describe("middleware types", () => {
       );
     });
 
+    it("allows wrapModelCall to override responseFormat dynamically", () => {
+      const jsonSchema: JsonSchemaFormat = {
+        type: "object",
+        properties: {
+          answer: {
+            type: "string",
+          },
+        },
+        required: ["answer"],
+        additionalProperties: false,
+      };
+
+      createMiddleware({
+        name: "ResponseFormatMiddleware",
+        wrapModelCall: async (request, handler) => {
+          expectTypeOf(request).toHaveProperty("responseFormat");
+
+          await handler({
+            ...request,
+            responseFormat: providerStrategy(
+              z.object({
+                providerAnswer: z.string(),
+              })
+            ),
+          });
+
+          await handler({
+            ...request,
+            responseFormat: toolStrategy(
+              z.object({
+                toolAnswer: z.string(),
+              })
+            ),
+          });
+
+          await handler({
+            ...request,
+            responseFormat: jsonSchema,
+          });
+
+          return new AIMessage("done");
+        },
+      });
+    });
+
     it("doesn't require users to pass in a context if all middleware context properties are optional", async () => {
       const middleware = createMiddleware({
         name: "Middleware",
@@ -423,5 +476,49 @@ describe("middleware types", () => {
     }>();
     type Tools = InferMiddlewareType<typeof middleware, "Tools">;
     expectTypeOf<Tools[0]>().toExtend<ClientTool>();
+  });
+
+  it("should infer stream transformers from middleware", () => {
+    const eventCounter = (): StreamTransformer<{
+      eventCount: StreamChannel<number>;
+    }> => ({
+      init: () => ({ eventCount: StreamChannel.remote<number>("eventCount") }),
+      process() {
+        return true;
+      },
+    });
+
+    const methodTracker = (): StreamTransformer<{
+      methods: StreamChannel<string>;
+    }> => ({
+      init: () => ({ methods: StreamChannel.remote<string>("methods") }),
+      process() {
+        return true;
+      },
+    });
+
+    const middleware = createMiddleware({
+      name: "StreamMiddleware",
+      streamTransformers: [eventCounter],
+    });
+
+    expectTypeOf<
+      InferMiddlewareType<typeof middleware, "StreamTransformers">
+    >().toEqualTypeOf<readonly [typeof eventCounter]>();
+
+    const agent = createAgent({
+      model: "gpt-4",
+      tools: [],
+      middleware: [middleware],
+      streamTransformers: [methodTracker],
+    });
+
+    type AgentStreamTransformers = InferAgentStreamTransformers<typeof agent>;
+    expectTypeOf<AgentStreamTransformers[0]>().toEqualTypeOf<
+      typeof methodTracker
+    >();
+    expectTypeOf<AgentStreamTransformers[1]>().toEqualTypeOf<
+      typeof eventCounter
+    >();
   });
 });

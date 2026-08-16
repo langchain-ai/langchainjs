@@ -15,9 +15,9 @@ import type {
   OpenAIToolType,
 } from "./schema.js";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 type ThreadMessage = any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 type RequiredActionFunctionToolCall = any;
 
 type ExtractRunOutput<AsAgent extends boolean | undefined> =
@@ -37,7 +37,7 @@ export type OpenAIAssistantRunnableInput<
 
 export class OpenAIAssistantRunnable<
   AsAgent extends boolean | undefined,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   RunInput extends Record<string, any> = Record<string, any>,
 > extends Runnable<RunInput, ExtractRunOutput<AsAgent>> {
   lc_namespace = ["langchain", "experimental", "openai_assistant"];
@@ -76,7 +76,7 @@ export class OpenAIAssistantRunnable<
   }) {
     const formattedTools =
       tools?.map((tool) => {
-        // eslint-disable-next-line no-instanceof/no-instanceof
+        // oxlint-disable-next-line no-instanceof/no-instanceof
         if (tool instanceof StructuredTool) {
           return formatToOpenAIAssistantTool(tool);
         }
@@ -89,7 +89,7 @@ export class OpenAIAssistantRunnable<
       tools: formattedTools,
       model,
       file_ids: fileIds,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     return new this({
@@ -104,7 +104,7 @@ export class OpenAIAssistantRunnable<
     input: RunInput,
     _options?: RunnableConfig
   ): Promise<ExtractRunOutput<AsAgent>> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     let run: any;
     if (this.asAgent && input.steps && input.steps.length > 0) {
       const parsedStepsInput = await this._parseStepsInput(input);
@@ -137,7 +137,7 @@ export class OpenAIAssistantRunnable<
         role: "user",
         attachments: input.attachments,
         metadata: input.messagesMetadata,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       } as any);
       run = await this._createRun(input);
     } else {
@@ -194,7 +194,7 @@ export class OpenAIAssistantRunnable<
       instructions,
       model,
       file_ids: fileIds,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
   }
 
@@ -207,7 +207,7 @@ export class OpenAIAssistantRunnable<
     if (!toolCalls) {
       return input;
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const toolOutputs = toolCalls.flatMap((toolCall: any) => {
       const matchedAction = (
         input.steps as {
@@ -271,7 +271,7 @@ export class OpenAIAssistantRunnable<
 
   private async _waitForRun(runId: string, threadId: string) {
     let inProgress = true;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     let run = {} as any;
     while (inProgress) {
       run = await this.client.beta.threads.runs.retrieve(runId, {
@@ -330,7 +330,7 @@ export class OpenAIAssistantRunnable<
       }
       const actions: OpenAIAssistantAction[] = [];
       run.required_action?.submit_tool_outputs.tool_calls.forEach(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
         (item: any) => {
           const functionCall = item.function;
           const args = JSON.parse(functionCall.arguments);

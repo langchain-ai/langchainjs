@@ -74,12 +74,12 @@ export abstract class TextSplitter
 
   async createDocuments(
     texts: string[],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     metadatas: Record<string, any>[] = [],
     chunkHeaderOptions: TextSplitterChunkHeaderOptions = {}
   ): Promise<Document[]> {
     // if no metadata is provided, we create an empty one for each text
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const _metadatas: Record<string, any>[] =
       metadatas.length > 0
         ? metadatas

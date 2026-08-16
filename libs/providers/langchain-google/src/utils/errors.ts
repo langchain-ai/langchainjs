@@ -1,9 +1,47 @@
-import { ns as baseNs, LangChainError } from "@langchain/core/errors";
+import {
+  ns as baseNs,
+  LangChainError,
+  stampRetryable,
+} from "@langchain/core/errors";
 import type { Gemini } from "../chat_models/types.js";
 import { iife } from "./misc.js";
 
 // Internal namespace for all Google provider errors
 const ns = baseNs.sub("google");
+
+const RETRYABLE_STATUS_CODES = [
+  408, // Request Timeout
+  429, // Too Many Requests
+  500, // Internal Server Error
+  502, // Bad Gateway
+  503, // Service Unavailable
+  504, // Gateway Timeout
+];
+
+function isRetryableStatus(statusCode?: number): boolean {
+  if (!statusCode) return false;
+  return RETRYABLE_STATUS_CODES.includes(statusCode);
+}
+
+async function readErrorResponseBody(response: Response): Promise<unknown> {
+  return iife(async () => {
+    try {
+      const contentType = response.headers.get("content-type") ?? "";
+      if (contentType.includes("application/json")) {
+        return await response.json();
+      }
+
+      const text = await response.text();
+      try {
+        return JSON.parse(text);
+      } catch {
+        return text;
+      }
+    } catch {
+      return null;
+    }
+  });
+}
 
 /**
  * Base error class for all Google provider errors.
@@ -46,6 +84,11 @@ export class GoogleError extends ns.brand(LangChainError) {
  */
 export class ConfigurationError extends ns.brand(GoogleError, "configuration") {
   readonly name = "ConfigurationError";
+
+  constructor(message?: string) {
+    super(message);
+    stampRetryable(this, false);
+  }
 }
 
 /**
@@ -126,6 +169,7 @@ export class PromptBlockedError extends ns.brand(
     super(message);
     this.blockReason = params.blockReason;
     this.safetyRatings = params.safetyRatings;
+    stampRetryable(this, false);
   }
 
   /**
@@ -259,6 +303,7 @@ export class AuthError extends ns.brand(GoogleError, "auth") {
     this.statusText = params.statusText;
     this.headers = params.headers;
     this.data = params.data;
+    stampRetryable(this, isRetryableStatus(this.statusCode));
   }
 
   /**
@@ -289,17 +334,7 @@ export class AuthError extends ns.brand(GoogleError, "auth") {
    * ```
    */
   static async fromResponse(response: Response): Promise<AuthError> {
-    const errorBody = await iife(async () => {
-      try {
-        const contentType = response.headers.get("content-type") ?? "";
-        if (contentType.includes("application/json")) {
-          return await response.json();
-        }
-        return await response.text();
-      } catch {
-        return null;
-      }
-    });
+    const errorBody = await readErrorResponseBody(response);
 
     const message =
       errorBody?.error_description ??
@@ -322,15 +357,6 @@ export class AuthError extends ns.brand(GoogleError, "auth") {
     });
   }
 }
-
-const RETRYABLE_STATUS_CODES = [
-  408, // Request Timeout
-  429, // Too Many Requests
-  500, // Internal Server Error
-  502, // Bad Gateway
-  503, // Service Unavailable
-  504, // Gateway Timeout
-];
 
 /**
  * Parameters for constructing a RequestError
@@ -445,6 +471,7 @@ export class RequestError extends ns.brand(GoogleError, "request") {
     this.statusText = params.statusText;
     this.headers = params.headers;
     this.data = params.data;
+    stampRetryable(this, this.isRetryable());
   }
 
   /**
@@ -470,8 +497,7 @@ export class RequestError extends ns.brand(GoogleError, "request") {
    * ```
    */
   isRetryable(): boolean {
-    if (!this.statusCode) return false;
-    return RETRYABLE_STATUS_CODES.includes(this.statusCode);
+    return isRetryableStatus(this.statusCode);
   }
 
   /**
@@ -498,17 +524,7 @@ export class RequestError extends ns.brand(GoogleError, "request") {
    * ```
    */
   static async fromResponse(response: Response): Promise<RequestError> {
-    const errorBody = await iife(async () => {
-      try {
-        const contentType = response.headers.get("content-type") ?? "";
-        if (contentType.includes("application/json")) {
-          return await response.json();
-        }
-        return await response.text();
-      } catch {
-        return null;
-      }
-    });
+    const errorBody = await readErrorResponseBody(response);
 
     const message =
       errorBody?.error?.message ??
@@ -602,6 +618,7 @@ export class InvalidToolError extends ns.brand(GoogleError, "invalid-tool") {
 
     super(message ?? defaultMessage);
     this.tool = tool;
+    stampRetryable(this, false);
   }
 }
 
@@ -644,6 +661,7 @@ export class ToolCallNotFoundError extends ns.brand(
 
     super(message ?? defaultMessage);
     this.toolCallId = toolCallId;
+    stampRetryable(this, false);
   }
 }
 
@@ -727,4 +745,9 @@ export class MalformedOutputError extends ns.brand(
  */
 export class InvalidInputError extends ns.brand(GoogleError, "invalid-input") {
   readonly name = "InvalidInputError";
+
+  constructor(message?: string) {
+    super(message);
+    stampRetryable(this, false);
+  }
 }

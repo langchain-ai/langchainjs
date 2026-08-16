@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// eslint-disable-next-line import/no-extraneous-dependencies
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { vi } from "vitest";
 
 const streamableHTTPClientTransportPrototype = {
@@ -9,10 +8,11 @@ const streamableHTTPClientTransportPrototype = {
 };
 export const StreamableHTTPClientTransport: any = vi
   .fn()
-  .mockImplementation((config) => {
+  .mockImplementation(function mockStreamableHTTPClientTransport(url, options) {
     return {
       ...streamableHTTPClientTransportPrototype,
-      config,
+      url,
+      options,
     };
   });
 StreamableHTTPClientTransport.prototype =

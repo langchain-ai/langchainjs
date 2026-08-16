@@ -14,7 +14,7 @@ import {
 } from "@langchain/core/language_models/base";
 import { SerializedBaseChain } from "./serde.js";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any
 export type LoadValues = Record<string, any>;
 
 export interface ChainInputs extends BaseLangChainParams {
@@ -202,7 +202,7 @@ export abstract class BaseChain<
 
   /** @deprecated Use .invoke() instead. Will be removed in 0.2.0. */
   async run(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     input: any,
     config?: Callbacks | RunnableConfig
   ): Promise<string> {
@@ -215,7 +215,7 @@ export abstract class BaseChain<
         `Chain ${this._chainType()} expects multiple inputs, cannot use 'run' `
       );
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const values = inputKeys.length ? { [inputKeys[0]]: input } : ({} as any);
     const returnValues = await this.call(values, config);
     const keys = Object.keys(returnValues);
