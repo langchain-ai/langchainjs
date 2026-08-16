@@ -89,6 +89,83 @@ function makeParseableResponseFormat<ParsedT>(
   return obj;
 }
 
+/**
+ * OpenAI strict mode rejects `$ref` nodes that carry sibling keywords
+ * ("$ref cannot have keywords"). zod v4's `toJSONSchema` with
+ * `cycles: "ref"` / `reused: "ref"` can emit exactly that: a field written
+ * `.default().describe()` gets hoisted into `$defs`, while the referencing
+ * node keeps `default` / `description` / `title` as siblings of the `$ref`.
+ *
+ * The reversed chain (`.describe().default()`) keeps the field inline and is
+ * accepted by strict mode, so inlining the `$defs` target into the
+ * referencing node — merging the sibling keywords — produces the accepted
+ * shape.
+ *
+ * @internal
+ */
+export function inlineRefSiblings(
+  schema: Record<string, unknown>
+): Record<string, unknown> {
+  const defs = (schema.$defs ?? schema.definitions) as
+    | Record<string, unknown>
+    | undefined;
+  return _inlineRefSiblings(schema, defs, new Set()) as Record<string, unknown>;
+}
+
+function _inlineRefSiblings(
+  node: unknown,
+  defs: Record<string, unknown> | undefined,
+  expanding: Set<string>
+): unknown {
+  if (Array.isArray(node)) {
+    return node.map((item) => _inlineRefSiblings(item, defs, expanding));
+  }
+  if (typeof node !== "object" || node === null) {
+    return node;
+  }
+
+  const obj = node as Record<string, unknown>;
+
+  // A `$ref` with sibling keywords: inline the `$defs` target so strict
+  // mode accepts the node. Skip when the target is already being expanded
+  // (recursive refs would loop forever) or cannot be resolved.
+  if (typeof obj.$ref === "string" && Object.keys(obj).length > 1 && defs) {
+    const refKey = obj.$ref.split("/").pop() ?? "";
+    const target = defs[refKey];
+    if (target != null && !expanding.has(refKey)) {
+      const nextExpanding = new Set(expanding).add(refKey);
+      const inlined = _inlineRefSiblings(target, defs, nextExpanding);
+      if (typeof inlined === "object" && inlined !== null) {
+        const siblings = { ...obj };
+        delete siblings.$ref;
+        return { ...(inlined as Record<string, unknown>), ...siblings };
+      }
+    }
+  }
+
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (key === "$defs" || key === "definitions") {
+      // Recurse into individual definitions so refs inside `$defs` are also
+      // handled, but keep the container itself.
+      if (typeof value === "object" && value !== null) {
+        const processed: Record<string, unknown> = {};
+        for (const [defKey, defValue] of Object.entries(
+          value as Record<string, unknown>
+        )) {
+          processed[defKey] = _inlineRefSiblings(defValue, defs, expanding);
+        }
+        result[key] = processed;
+      } else {
+        result[key] = value;
+      }
+      continue;
+    }
+    result[key] = _inlineRefSiblings(value, defs, expanding);
+  }
+  return result;
+}
+
 export function interopZodResponseFormat(
   zodSchema: InteropZodType,
   name: string,
@@ -105,21 +182,23 @@ export function interopZodResponseFormat(
           ...props,
           name,
           strict: true,
-          schema: toJsonSchema(zodSchema, {
-            cycles: "ref", // equivalent to nameStrategy: 'duplicate-ref'
-            reused: "ref", // equivalent to $refStrategy: 'extract-to-root'
-            override(ctx) {
-              ctx.jsonSchema.title = name; // equivalent to `name` property
-              // TODO: implement `nullableStrategy` patch-fix (zod doesn't support openApi3 json schema target)
-              // TODO: implement `openaiStrictMode` patch-fix (where optional properties without `nullable` are not supported)
-            },
-            /// property equivalents from native `zodResponseFormat` fn
-            // openaiStrictMode: true,
-            // name,
-            // nameStrategy: 'duplicate-ref',
-            // $refStrategy: 'extract-to-root',
-            // nullableStrategy: 'property',
-          }),
+          schema: inlineRefSiblings(
+            toJsonSchema(zodSchema, {
+              cycles: "ref", // equivalent to nameStrategy: 'duplicate-ref'
+              reused: "ref", // equivalent to $refStrategy: 'extract-to-root'
+              override(ctx) {
+                ctx.jsonSchema.title = name; // equivalent to `name` property
+                // TODO: implement `nullableStrategy` patch-fix (zod doesn't support openApi3 json schema target)
+                // TODO: implement `openaiStrictMode` patch-fix (where optional properties without `nullable` are not supported)
+              },
+              /// property equivalents from native `zodResponseFormat` fn
+              // openaiStrictMode: true,
+              // name,
+              // nameStrategy: 'duplicate-ref',
+              // $refStrategy: 'extract-to-root',
+              // nullableStrategy: 'property',
+            })
+          ) as ResponseFormatJSONSchema.JSONSchema,
         },
       },
       (content) =>
