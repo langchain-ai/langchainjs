@@ -67,6 +67,14 @@ function getAzureChatOpenAIModelName(
   return modelName;
 }
 
+/**
+ * `BaseChatOpenAI` resolves `model ?? modelName`, so either field counts as an
+ * explicit configuration and must be preserved against the deployment fallback.
+ */
+export function wasModelExplicitlyConfigured(fields?: AzureChatOpenAIFields) {
+  return fields?.model != null || fields?.modelName != null;
+}
+
 export function getAzureChatOpenAILsParams(
   params: LangSmithParams,
   deploymentName: string | undefined,

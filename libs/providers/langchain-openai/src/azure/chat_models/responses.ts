@@ -16,6 +16,7 @@ import {
   getAzureChatOpenAIInvocationParams,
   getAzureChatOpenAIParams,
   getAzureChatOpenAILsParams,
+  wasModelExplicitlyConfigured,
 } from "./common.js";
 
 export class AzureChatOpenAIResponses<
@@ -96,7 +97,7 @@ export class AzureChatOpenAIResponses<
   ) {
     const fields = getAzureChatOpenAIParams(deploymentOrFields, fieldsArg);
     super(fields);
-    this.modelWasExplicitlyConfigured = fields?.model != null;
+    this.modelWasExplicitlyConfigured = wasModelExplicitlyConfigured(fields);
     _constructAzureFields.call(this, fields);
   }
 

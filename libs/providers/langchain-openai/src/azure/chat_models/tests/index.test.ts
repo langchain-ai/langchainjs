@@ -170,7 +170,10 @@ describe("Azure OpenAI callback model attribution", () => {
     };
   }
 
-  function createModel(useResponsesApi: boolean, model?: string) {
+  function createModel(
+    useResponsesApi: boolean,
+    modelFields?: { model?: string; modelName?: string }
+  ) {
     const mockFetch = vi.fn(
       async (_input: RequestInfo | URL, _init?: RequestInit) =>
         new Response(
@@ -186,7 +189,7 @@ describe("Azure OpenAI callback model attribution", () => {
         )
     );
     const chat = new AzureChatOpenAI({
-      ...(model ? { model } : {}),
+      ...(modelFields ?? {}),
       azureOpenAIEndpoint: "https://foobar.openai.azure.com/",
       azureOpenAIApiDeploymentName: deploymentName,
       azureOpenAIApiVersion: "2024-08-01-preview",
@@ -271,11 +274,26 @@ describe("Azure OpenAI callback model attribution", () => {
     }
   );
 
-  test.each([false, true])(
-    "preserves an explicit model for useResponsesApi=%s",
-    (useResponsesApi) => {
-      const explicitModel = "explicit-model";
-      const { chat } = createModel(useResponsesApi, explicitModel);
+  // `model` and its `modelName` alias are both explicit configurations —
+  // `BaseChatOpenAI` resolves `model ?? modelName` — so neither may be
+  // overwritten by the deployment fallback. `gpt-3.5-turbo` is the sharp case:
+  // it is also the inherited default the fallback keys off, so a naive check
+  // cannot tell "user asked for it" from "nobody set anything".
+  test.each([
+    ["model", "explicit-model", false],
+    ["model", "explicit-model", true],
+    ["model", "gpt-3.5-turbo", false],
+    ["model", "gpt-3.5-turbo", true],
+    ["modelName", "explicit-model", false],
+    ["modelName", "explicit-model", true],
+    ["modelName", "gpt-3.5-turbo", false],
+    ["modelName", "gpt-3.5-turbo", true],
+  ] as const)(
+    "preserves an explicit %s=%s for useResponsesApi=%s",
+    (field, explicitModel, useResponsesApi) => {
+      const { chat } = createModel(useResponsesApi, {
+        [field]: explicitModel,
+      });
       expect(
         chat.getLsParams({} as Parameters<typeof chat.getLsParams>[0])
       ).toMatchObject({
@@ -285,6 +303,73 @@ describe("Azure OpenAI callback model attribution", () => {
       expect(chat.invocationParams({})).toMatchObject({
         model: explicitModel,
       });
+    }
+  );
+
+  test.each([
+    ["Chat Completions", "bare", false, (chat: AzureChatOpenAI) => chat],
+    [
+      "Chat Completions",
+      "withConfig",
+      false,
+      (chat: AzureChatOpenAI) => chat.withConfig({ tags: ["configured"] }),
+    ],
+    [
+      "Chat Completions",
+      "bindTools",
+      false,
+      (chat: AzureChatOpenAI) => chat.bindTools([tool]),
+    ],
+    ["Responses API", "bare", true, (chat: AzureChatOpenAI) => chat],
+    [
+      "Responses API",
+      "withConfig",
+      true,
+      (chat: AzureChatOpenAI) => chat.withConfig({ tags: ["configured"] }),
+    ],
+    [
+      "Responses API",
+      "bindTools",
+      true,
+      (chat: AzureChatOpenAI) => chat.bindTools([tool]),
+    ],
+  ])(
+    "%s %s preserves an explicit modelName in callbacks",
+    async (_protocol, _scenario, useResponsesApi, wrap) => {
+      const explicitModel = "gpt-3.5-turbo";
+      const { chat } = createModel(useResponsesApi, {
+        modelName: explicitModel,
+      });
+      const runnable = wrap(chat);
+      let metadata: Record<string, unknown> | undefined;
+      let invocationParams: Record<string, unknown> | undefined;
+
+      await runnable.invoke("What is the weather?", {
+        callbacks: [
+          {
+            handleLLMStart: (
+              _llm,
+              _prompts,
+              _runId,
+              _parentRunId,
+              extraParams,
+              _tags,
+              runMetadata
+            ) => {
+              invocationParams = extraParams?.invocation_params as
+                | Record<string, unknown>
+                | undefined;
+              metadata = runMetadata;
+            },
+          },
+        ],
+      });
+
+      expect(metadata).toMatchObject({
+        ls_model_name: explicitModel,
+        ls_provider: "azure",
+      });
+      expect(invocationParams).toMatchObject({ model: explicitModel });
     }
   );
 });
