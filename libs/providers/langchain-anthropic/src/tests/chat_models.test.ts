@@ -14,6 +14,62 @@ import { ChatAnthropic, ChatAnthropicMessages } from "../chat_models.js";
 import { _convertMessagesToAnthropicPayload } from "../utils/message_inputs.js";
 import { AnthropicToolExtrasSchema } from "../utils/tools.js";
 
+class TraceableChatAnthropic extends ChatAnthropicMessages {
+  traceParams(
+    options: Parameters<ChatAnthropicMessages["invocationParams"]>[0]
+  ) {
+    return this._getInvocationParamsForTracing(options);
+  }
+
+  traceOptions(
+    options: Parameters<ChatAnthropicMessages["invocationParams"]>[0]
+  ) {
+    const params = this._getInvocationParamsForTracing(options);
+    return this._getCallOptionsForTracing(options ?? {}, params);
+  }
+}
+
+test("MCP authorization tokens are redacted from traces", () => {
+  const model = new TraceableChatAnthropic({
+    modelName: "claude-haiku-4-5-20251001",
+    anthropicApiKey: "testing",
+  });
+  const publicServer = {
+    type: "url" as const,
+    url: "https://example.com/public-mcp",
+    name: "public-server",
+  };
+  const options = {
+    stop: ["done"],
+    mcp_servers: [
+      publicServer,
+      {
+        type: "url" as const,
+        url: "https://example.com/mcp",
+        name: "private-server",
+        authorization_token: "authorization-secret",
+      },
+    ],
+  };
+
+  const requestParams = model.invocationParams(options);
+  const traceParams = model.traceParams(options);
+  const traceOptions = model.traceOptions(options);
+
+  expect(requestParams.mcp_servers?.[1].authorization_token).toBe(
+    "authorization-secret"
+  );
+  expect(traceParams.mcp_servers?.[1].authorization_token).toBe("**REDACTED**");
+  expect(traceOptions.mcp_servers?.[1].authorization_token).toBe(
+    "**REDACTED**"
+  );
+  expect(traceOptions.stop).toBe(options.stop);
+  expect(traceOptions.mcp_servers?.[0]).toBe(publicServer);
+  expect(JSON.stringify({ traceParams, traceOptions })).not.toContain(
+    "authorization-secret"
+  );
+});
+
 test("constructor supports model shorthand for ChatAnthropicMessages", () => {
   const model = new ChatAnthropicMessages("claude-haiku-4-5-20251001", {
     anthropicApiKey: "testing",
@@ -21,6 +77,25 @@ test("constructor supports model shorthand for ChatAnthropicMessages", () => {
 
   expect(model.model).toBe("claude-haiku-4-5-20251001");
   expect(model.modelName).toBe("claude-haiku-4-5-20251001");
+  expect(model.apiUrl).toBeUndefined();
+});
+
+test("constructor uses LangSmith Gateway environment configuration", () => {
+  vi.stubEnv("LANGSMITH_GATEWAY", "true");
+  vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
+  vi.stubEnv("ANTHROPIC_API_URL", "");
+  vi.stubEnv("ANTHROPIC_BASE_URL", "");
+  vi.stubEnv("ANTHROPIC_API_KEY", "provider-key");
+  try {
+    const model = new ChatAnthropicMessages({
+      model: "claude-haiku-4-5-20251001",
+    });
+
+    expect(model.apiKey).toBe("gateway-key");
+    expect(model.apiUrl).toBe("https://gateway.smith.langchain.com/anthropic");
+  } finally {
+    vi.unstubAllEnvs();
+  }
 });
 
 test("withStructuredOutput with output validation", async () => {
@@ -296,6 +371,42 @@ test("invocationParams includes container with thinking enabled", () => {
   const params = model.invocationParams({ container: "container_456" });
 
   expect(params.container).toBe("container_456");
+  expect(params.thinking).toEqual({ type: "enabled", budget_tokens: 1000 });
+});
+
+test("invocationParams omits thinking when not explicitly configured", () => {
+  const model = new ChatAnthropic({
+    modelName: "claude-haiku-4-5-20251001",
+    anthropicApiKey: "testing",
+  });
+
+  const params = model.invocationParams({});
+
+  expect(params.thinking).toBeUndefined();
+});
+
+test("invocationParams includes thinking when explicitly disabled", () => {
+  const model = new ChatAnthropic({
+    modelName: "claude-haiku-4-5-20251001",
+    anthropicApiKey: "testing",
+    thinking: { type: "disabled" },
+  });
+
+  const params = model.invocationParams({});
+
+  expect(params.thinking).toEqual({ type: "disabled" });
+});
+
+test("invocationParams includes thinking when explicitly enabled", () => {
+  const model = new ChatAnthropic({
+    modelName: "claude-haiku-4-5-20251001",
+    temperature: 1,
+    anthropicApiKey: "testing",
+    thinking: { type: "enabled", budget_tokens: 1000 },
+  });
+
+  const params = model.invocationParams({});
+
   expect(params.thinking).toEqual({ type: "enabled", budget_tokens: 1000 });
 });
 
@@ -1012,6 +1123,105 @@ describe("formatStructuredToolToAnthropic", () => {
     const result = model.formatStructuredToolToAnthropic([]);
 
     expect(result).toEqual([]);
+  });
+
+  test("drops tools with top-level schema composition keys", () => {
+    const model = new ChatAnthropic({
+      modelName: "claude-haiku-4-5-20251001",
+      anthropicApiKey: "testing",
+    });
+    const result = model.formatStructuredToolToAnthropic([
+      {
+        name: "invalid_tool",
+        description: "Uses unsupported root composition.",
+        input_schema: {
+          type: "object",
+          oneOf: [],
+          anyOf: [],
+          allOf: [],
+        },
+      },
+    ]);
+
+    expect(result).toEqual([]);
+  });
+
+  test("retains tools with nested schema composition keys", () => {
+    const model = new ChatAnthropic({
+      modelName: "claude-haiku-4-5-20251001",
+      anthropicApiKey: "testing",
+    });
+    const tool = {
+      name: "valid_tool",
+      description: "Uses nested composition.",
+      input_schema: {
+        type: "object" as const,
+        properties: {
+          choice: {
+            anyOf: [{ type: "string" }, { type: "number" }],
+          },
+        },
+      },
+    };
+    const result = model.formatStructuredToolToAnthropic([tool]);
+
+    expect(result).toEqual([tool]);
+  });
+});
+
+describe("tool choice with filtered tools", () => {
+  const rootCompositionTool = {
+    name: "invalid_composition_tool",
+    description: "Uses unsupported root composition.",
+    input_schema: {
+      type: "object" as const,
+      anyOf: [],
+    },
+  };
+
+  test("throws when a named choice references a filtered tool", () => {
+    const model = new ChatAnthropic({
+      modelName: "claude-haiku-4-5-20251001",
+      anthropicApiKey: "testing",
+    });
+
+    expect(() =>
+      model.invocationParams({
+        tools: [rootCompositionTool],
+        tool_choice: { type: "tool", name: rootCompositionTool.name },
+      })
+    ).toThrow(
+      'Anthropic tool_choice references "invalid_composition_tool", but that tool is not available.'
+    );
+  });
+
+  test("throws when required tool use has no remaining tools", () => {
+    const model = new ChatAnthropic({
+      modelName: "claude-haiku-4-5-20251001",
+      anthropicApiKey: "testing",
+    });
+
+    expect(() =>
+      model.invocationParams({
+        tools: [rootCompositionTool],
+        tool_choice: "required",
+      })
+    ).toThrow("Anthropic tool_choice requires at least one available tool.");
+  });
+
+  test("allows automatic tool choice when all tools are filtered", () => {
+    const model = new ChatAnthropic({
+      modelName: "claude-haiku-4-5-20251001",
+      anthropicApiKey: "testing",
+    });
+
+    const params = model.invocationParams({
+      tools: [rootCompositionTool],
+      tool_choice: "auto",
+    });
+
+    expect(params.tools).toEqual([]);
+    expect(params.tool_choice).toEqual({ type: "auto" });
   });
 });
 
@@ -2001,21 +2211,34 @@ describe("Opus 4.6", () => {
   });
 });
 
-describe("Opus 4.7", () => {
+describe("Opus 4.7 and 5", () => {
   const adaptiveOnlyOpusModels = [
     "claude-opus-4-7",
     "claude-opus-4-8",
+    "claude-opus-5",
   ] as const;
 
-  test("default max_tokens for claude-opus-4-7 is 16384", () => {
+  test.each(["claude-opus-4-7", "claude-opus-5"] as const)(
+    "default max_tokens for %s is 16384",
+    (modelName) => {
+      const model = new ChatAnthropic({
+        model: modelName,
+        apiKey: "testing",
+      });
+
+      const params = model.invocationParams({});
+
+      expect(params.max_tokens).toBe(16384);
+    }
+  );
+
+  test("does not explicitly set thinking for claude-opus-5", () => {
     const model = new ChatAnthropic({
-      model: "claude-opus-4-7",
+      model: "claude-opus-5",
       apiKey: "testing",
     });
 
-    const params = model.invocationParams({});
-
-    expect(params.max_tokens).toBe(16384);
+    expect(model.invocationParams({}).thinking).toBeUndefined();
   });
 
   test.each(adaptiveOnlyOpusModels)(
@@ -2123,6 +2346,33 @@ describe("Opus 4.7", () => {
         total: 128000,
       },
     });
+  });
+
+  test.each(["xhigh", "max"] as const)(
+    "rejects disabled thinking with %s effort for claude-opus-5",
+    (effort) => {
+      const model = new ChatAnthropic({
+        model: "claude-opus-5",
+        apiKey: "testing",
+        thinking: { type: "disabled" },
+        outputConfig: { effort },
+      });
+
+      expect(() => model.invocationParams({})).toThrow(
+        `thinking.type="disabled" is not supported for claude-opus-5 with outputConfig.effort="${effort}"; use thinking.type="adaptive" or omit thinking instead`
+      );
+    }
+  );
+
+  test("allows disabled thinking with high effort for claude-opus-5", () => {
+    const model = new ChatAnthropic({
+      model: "claude-opus-5",
+      apiKey: "testing",
+      thinking: { type: "disabled" },
+      outputConfig: { effort: "high" },
+    });
+
+    expect(model.invocationParams({}).thinking).toEqual({ type: "disabled" });
   });
 });
 

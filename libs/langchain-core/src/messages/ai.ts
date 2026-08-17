@@ -22,6 +22,19 @@ import {
 } from "./tool.js";
 import { collapseToolCallChunks, Constructor } from "./utils.js";
 
+function coerceToContentBlocks(value: unknown): ContentBlock.Standard[] {
+  if (typeof value === "string") {
+    return value.length > 0 ? [{ type: "text", text: value }] : [];
+  }
+  if (Array.isArray(value)) {
+    return value as Array<ContentBlock.Standard>;
+  }
+  if (value == null) {
+    return [];
+  }
+  return [value as ContentBlock.Standard];
+}
+
 export interface AIMessageFields<
   TStructure extends MessageStructure = MessageStructure,
 > extends BaseMessageFields<TStructure, "ai"> {
@@ -98,19 +111,25 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
         initParams.invalid_tool_calls = [];
       }
 
-      // Convert content to content blocks if output version is v1
+      // Convert content to content blocks if output version is v1.
+      // Serialized LangGraph payloads often still carry string `content` even
+      // when `output_version` is "v1"; normalize to an array before mutating.
       if (
         initParams.response_metadata !== undefined &&
         "output_version" in initParams.response_metadata &&
         initParams.response_metadata.output_version === "v1" &&
         initParams.content !== undefined
       ) {
-        initParams.contentBlocks =
-          initParams.content as Array<ContentBlock.Standard>;
+        initParams.contentBlocks = coerceToContentBlocks(initParams.content);
         initParams.content = undefined;
       }
 
       if (initParams.contentBlocks !== undefined) {
+        if (!Array.isArray(initParams.contentBlocks)) {
+          initParams.contentBlocks = coerceToContentBlocks(
+            initParams.contentBlocks
+          );
+        }
         // Add constructor tool calls as content blocks only when they are not
         // already represented in the v1 content payload.
         if (initParams.tool_calls) {
@@ -239,6 +258,10 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
     obj: BaseMessage<T> | unknown
   ): obj is AIMessage<T> {
     return super.isInstance(obj) && (obj as { type: string }).type === "ai";
+  }
+
+  static [Symbol.hasInstance](obj: unknown) {
+    return this.isInstance(obj);
   }
 }
 
@@ -473,5 +496,9 @@ export class AIMessageChunk<
     obj: BaseMessage<T> | unknown
   ): obj is AIMessageChunk<T> {
     return super.isInstance(obj) && (obj as { type: string }).type === "ai";
+  }
+
+  static [Symbol.hasInstance](obj: unknown) {
+    return this.isInstance(obj);
   }
 }

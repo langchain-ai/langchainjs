@@ -26,6 +26,22 @@ if [ "$monorepo_dir" = "/app" ]; then
   cp -r "$original_internal_dir/tsconfig"/* "/internal/tsconfig/" 2>/dev/null || true
 fi
 
+# The shared tsconfig base pulls in vitest-matchers.d.ts (via "files"), which augments
+# Vitest's matcher types. In the real monorepo it imports LangChainMatchers from
+# langchain-core *source* via a relative path and relies on TS project references. This
+# partial-workspace harness has no project references and a strict mock tsconfig
+# (composite + rootDir: src), so pulling core source into the program triggers
+# rootDir/composite errors. Rewrite the import to the published package specifier so the
+# type resolves from langchain-core's built .d.ts under node_modules (exempt from those
+# checks). Without this, custom matchers (e.g. toBeAIMessage) fail to typecheck.
+for matchers_dts in \
+  "$monorepo_internal_dir/tsconfig/vitest-matchers.d.ts" \
+  "/internal/tsconfig/vitest-matchers.d.ts"; do
+  if [ -f "$matchers_dts" ]; then
+    sed -i 's#import type { LangChainMatchers } from "[^"]*";#import type { LangChainMatchers } from "@langchain/core/testing";#' "$matchers_dts"
+  fi
+done
+
 # Calculate relative path from package to internal/tsconfig
 if [ -z "$package_dir" ] || [ "$package_dir" = "." ]; then
   # Langchain scripts copy to /app directly, use absolute path since vite has issues with relative paths

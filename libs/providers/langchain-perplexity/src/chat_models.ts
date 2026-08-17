@@ -16,6 +16,8 @@ import {
   BaseChatModelCallOptions,
 } from "@langchain/core/language_models/chat_models";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
+import { convertOpenAICompletionsStream } from "@langchain/core/language_models/openai_completions_stream";
 import {
   ChatGeneration,
   ChatGenerationChunk,
@@ -722,6 +724,47 @@ export class ChatPerplexity
         tokenUsage,
       },
     };
+  }
+
+  async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    const messagesList = messages.map((message) =>
+      this.messageToPerplexityRole(message)
+    );
+    const basePayload: Record<string, unknown> = {
+      messages: messagesList,
+      ...this.invocationParams(options),
+      ...this._responsesOptions(options),
+    };
+
+    if (this._useResponsesApi(basePayload)) {
+      yield* super._streamChatModelEvents(messages, options, runManager);
+      return;
+    }
+
+    const stream = await this.client.chat.completions.create({
+      messages: messagesList,
+      ...this.invocationParams(options),
+      stream: true,
+    });
+    const abortableStream = async function* (
+      source: AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>,
+      signal?: AbortSignal
+    ) {
+      for await (const chunk of source) {
+        if (signal?.aborted) {
+          return;
+        }
+        yield chunk;
+      }
+    };
+    yield* convertOpenAICompletionsStream(
+      abortableStream(stream, options.signal),
+      { streamUsage: true, provider: "perplexity" }
+    );
   }
 
   async *_streamResponseChunks(

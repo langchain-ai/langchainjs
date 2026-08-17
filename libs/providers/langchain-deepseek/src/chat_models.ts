@@ -455,6 +455,10 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
     this._addVersion("@langchain/deepseek", __PKG_VERSION__);
   }
 
+  protected override get streamEventProvider(): string {
+    return "deepseek";
+  }
+
   protected override _convertCompletionsDeltaToBaseMessageChunk(
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     delta: Record<string, any>,

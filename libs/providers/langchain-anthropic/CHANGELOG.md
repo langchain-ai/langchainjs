@@ -1,5 +1,57 @@
 # @langchain/anthropic
 
+## 1.5.6
+
+### Patch Changes
+
+- [#11342](https://github.com/langchain-ai/langchainjs/pull/11342) [`3b0e4c4`](https://github.com/langchain-ai/langchainjs/commit/3b0e4c48a31811031a460c4d95519a7c1163dc41) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - feat(anthropic): mark Anthropic provider errors as retryable or not
+
+  Builds on `stampRetryable` in `@langchain/core` so the retry middleware can tell a transient failure from a deterministic one. Rate limits are marked retryable; context overflow, invalid tool results, bad credentials, and unknown models non-retryable. Anything else stays unmarked and retries as before.
+
+  Also forwards a per-call `maxRetries` to the retry loop, so a surrounding retry loop such as `modelRetryMiddleware` can take over instead of the two multiplying against each other.
+
+  Errors keep their original class, so `instanceof` against the `@anthropic-ai/sdk` error types is unaffected.
+
+## 1.5.5
+
+### Patch Changes
+
+- [#11359](https://github.com/langchain-ai/langchainjs/pull/11359) [`d36ec6a`](https://github.com/langchain-ai/langchainjs/commit/d36ec6a6f4b1c474b0d9f9cb6037ff37f54183bf) Thanks [@talarari](https://github.com/talarari)! - fix(anthropic): preserve gateway cost on the native stream path
+
+  `convertAnthropicStream` now surfaces an Anthropic-compatible gateway's numeric `usage.cost` at `response_metadata.usage.cost`, matching the chunk path. Token accounting in `usage_metadata` is unchanged.
+
+## 1.5.4
+
+### Patch Changes
+
+- [#11305](https://github.com/langchain-ai/langchainjs/pull/11305) [`e654022`](https://github.com/langchain-ai/langchainjs/commit/e654022e291b8dae54504ac2d1a3232332406723) Thanks [@jacoblee93](https://github.com/jacoblee93)! - Add LangSmith Gateway environment configuration to OpenAI, Anthropic, and Fireworks chat models.
+
+- [#11310](https://github.com/langchain-ai/langchainjs/pull/11310) [`1b96abe`](https://github.com/langchain-ai/langchainjs/commit/1b96abe4979d514e11fb794ed9e85b646ea3b4a5) Thanks [@hntrl](https://github.com/hntrl)! - fix(anthropic): filter tools with unsupported root schema composition
+
+## 1.5.3
+
+### Patch Changes
+
+- [#11242](https://github.com/langchain-ai/langchainjs/pull/11242) [`1c4dadb`](https://github.com/langchain-ai/langchainjs/commit/1c4dadbc684b0fe08a34d4a5249d84b6cb110f07) Thanks [@talarari](https://github.com/talarari)! - Preserve gateway-provided cost metadata in Anthropic streams.
+
+## 1.5.2
+
+### Patch Changes
+
+- [#11255](https://github.com/langchain-ai/langchainjs/pull/11255) [`c8bd4c4`](https://github.com/langchain-ai/langchainjs/commit/c8bd4c4a6dbde07fb24deb5870c02dc29c51ab53) Thanks [@hntrl](https://github.com/hntrl)! - feat(anthropic): add claude-opus-5 support
+
+## 1.5.1
+
+### Patch Changes
+
+- [#11073](https://github.com/langchain-ai/langchainjs/pull/11073) [`baa57ba`](https://github.com/langchain-ai/langchainjs/commit/baa57ba7cdce2046ba3dd40e9e8cf3c93c9c1ac4) Thanks [@archievi](https://github.com/archievi)! - Stop sending `thinking: { type: "disabled" }` on `ChatAnthropic` requests when the user never configured thinking. The disabled value is now only emitted when it is explicitly set, so adaptive-only models (e.g. `claude-fable-5`) that reject an explicit `thinking.type: "disabled"` no longer fail with a 400 on a default `ChatAnthropic` instance.
+
+## 1.5.0
+
+### Minor Changes
+
+- [#10924](https://github.com/langchain-ai/langchainjs/pull/10924) [`2e28115`](https://github.com/langchain-ai/langchainjs/commit/2e2811509d75af94f57cedcc3842f178f4c020d1) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(anthropic): update native streamEvents event coverage
+
 ## 1.4.1
 
 ### Patch Changes

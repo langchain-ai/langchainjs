@@ -1,6 +1,6 @@
 {
   "name": "@langchain/aws",
-  "version": "1.3.9",
+  "version": "1.4.4",
   "description": "LangChain AWS integration",
   "author": "LangChain",
   "license": "MIT",
@@ -24,25 +24,25 @@
     "test:standard:int": "vitest run --mode standard-int"
   },
   "dependencies": {
-    "@aws-sdk/client-bedrock-agent-runtime": "^3.1059.0",
-    "@aws-sdk/client-bedrock-runtime": "^3.1059.0",
-    "@aws-sdk/client-kendra": "^3.1059.0",
-    "@aws-sdk/credential-provider-node": "^3.972.49"
+    "@aws-sdk/client-bedrock-agent-runtime": "^3.1097.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.1097.0",
+    "@aws-sdk/client-kendra": "^3.1097.0",
+    "@aws-sdk/credential-provider-node": "^3.972.74"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0"
+    "@langchain/core": "workspace:^"
   },
   "devDependencies": {
-    "@aws-sdk/types": "^3.973.10",
+    "@aws-sdk/types": "^3.974.2",
     "@langchain/core": "workspace:^",
     "@langchain/standard-tests": "workspace:*",
-    "@smithy/types": "^4.14.3",
+    "@smithy/types": "^4.16.1",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
-    "@vitest/coverage-v8": "^4.1.8",
+    "@vitest/coverage-v8": "^4.1.10",
     "dotenv": "^17.4.0",
     "dpdm": "^3.14.0",
-    "typescript": "~6.0.3",
+    "typescript": "~7.0.2",
     "vitest": "^4.1.8",
     "zod": "^3.25.76"
   },

@@ -1,122 +1,13 @@
-/* oxlint-disable @typescript-eslint/no-explicit-any */
-
-/**
- * Agent-level streaming support (experimental).
- *
- * Provides native stream transformer factories for tool calls and
- * middleware events.  When marked `__native: true`, their projections
- * are assigned directly onto the `GraphRunStream` instance by
- * `createGraphRunStream` in langgraph-core — no subclass or wrapper
- * needed.
- *
- * See protocol proposal §15 (In-Process Streaming Interface) and §16
- * (Native Stream Transformers).
- */
-
 import {
-  GraphRunStream,
   StreamChannel,
   type NativeStreamTransformer,
   type ProtocolEvent,
-  type StreamTransformer,
   type ToolCallStream,
   type ToolCallStatus,
   type ToolsEventData,
   type Namespace,
 } from "@langchain/langgraph";
-import type {
-  ClientTool,
-  ServerTool,
-  DynamicStructuredTool,
-  StructuredToolInterface,
-} from "@langchain/core/tools";
 import { ToolMessage } from "@langchain/core/messages";
-
-/**
- * Infers the merged extensions shape from a tuple of stream transformer
- * factories. Mirrors `InferExtensions` from `@langchain/langgraph`, which
- * is not exported from the package's public surface.
- *
- * Given `[() => StreamTransformer<{ a: number }>, () => StreamTransformer<{ b: string }>]`,
- * produces `{ a: number } & { b: string }`.
- */
-export type InferStreamExtensions<
-  T extends ReadonlyArray<() => StreamTransformer<any>>,
-> = T extends readonly []
-  ? Record<string, never>
-  : T extends readonly [
-        () => StreamTransformer<infer P>,
-        ...infer Rest extends ReadonlyArray<() => StreamTransformer<any>>,
-      ]
-    ? P & InferStreamExtensions<Rest>
-    : Record<string, unknown>;
-
-/** Extract the literal `name` string from a tool type. */
-type ToolNameOf<T> = T extends { name: infer N extends string } ? N : string;
-
-/** Extract the parsed input type from a tool type. */
-type ToolInputOf<T> =
-  T extends DynamicStructuredTool<any, any, infer SchemaInputT, any, any, any>
-    ? SchemaInputT
-    : T extends StructuredToolInterface<any, infer SchemaInputT, any>
-      ? SchemaInputT
-      : unknown;
-
-/** Extract the return/output type from a tool type. */
-type ToolOutputOf<T> =
-  T extends DynamicStructuredTool<any, any, any, infer ToolOutputT, any, any>
-    ? ToolOutputT
-    : T extends StructuredToolInterface<any, any, infer ToolOutputT>
-      ? ToolOutputT
-      : unknown;
-
-/**
- * Discriminated union of {@link ToolCallStream} variants, one per tool
- * in `TTools`.  Enables TypeScript to narrow `.input` and `.output`
- * when the consumer checks `call.name === "someToolName"`.
- *
- * Falls back to `ToolCallStream` (untyped) when the tools tuple is a
- * plain `(ClientTool | ServerTool)[]` without literal name types.
- */
-export type ToolCallStreamUnion<
-  TTools extends readonly (ClientTool | ServerTool)[],
-> = {
-  [K in keyof TTools]: ToolCallStream<
-    ToolNameOf<TTools[K]>,
-    ToolInputOf<TTools[K]>,
-    ToolOutputOf<TTools[K]>
-  >;
-}[number];
-
-/**
- * A {@link GraphRunStream} with native agent-level projections assigned
- * directly on the instance by `createGraphRunStream` (via `__native`
- * transformers).
- *
- * This is a pure type overlay — no runtime subclass exists.  Use the
- * `AgentRunStream` type when you need to describe the return type of
- * `streamEvents(..., { version: "v3" })`.
- *
- * @typeParam TValues - Shape of the graph's state values.
- * @typeParam TTools - Tuple of tools registered on the agent, used to type
- *   the per-tool `toolCalls` discriminated union.
- * @typeParam TMiddleware - Tuple of middleware registered on the agent, used
- *   to type the per-middleware `middleware` event union.
- * @typeParam TExtensions - Shape of `run.extensions` produced by user-supplied
- *   stream transformer factories. Derived via
- *   `InferExtensions<TStreamTransformers>`.
- */
-export type AgentRunStream<
-  TValues = Record<string, unknown>,
-  TTools extends readonly (ClientTool | ServerTool)[] = readonly (
-    | ClientTool
-    | ServerTool
-  )[],
-  TExtensions extends Record<string, unknown> = Record<string, unknown>,
-> = GraphRunStream<TValues, TExtensions> & {
-  /** Tool call streams from the native ToolCallTransformer. */
-  toolCalls: AsyncIterable<ToolCallStreamUnion<TTools>>;
-};
 
 interface ToolCallProjection {
   toolCalls: AsyncIterable<ToolCallStream>;
@@ -139,31 +30,42 @@ function isOwnEvent(ns: Namespace, path: Namespace): boolean {
   return true;
 }
 
-function isHeadlessToolInterruptError(
-  message: string,
-  toolCallId: string | undefined
-): boolean {
+/**
+ * Detects when a `tool-error` payload is actually a graph interrupt rather
+ * than a genuine tool failure.
+ *
+ * A tool that calls `interrupt()` throws a `GraphInterrupt`, whose message is
+ * the JSON-serialized `Interrupt[]` array. Each entry has the LangGraph
+ * `Interrupt` shape `{ id, value }`: a stable `id` (a hash of the checkpoint
+ * namespace, generated by `interrupt()` and always present during graph
+ * execution) plus the `value` passed to `interrupt(...)`. We require BOTH a
+ * string `id` and a `value` on every entry — a bare `value` is not a reliable
+ * discriminator, since a genuine tool error message can also be a JSON array
+ * of `{ value }` records (e.g. a validator emitting
+ * `[{ "value": "bad input", "message": "invalid" }]`). Keying off the
+ * interrupt `id` keeps real tool failures on the error path.
+ *
+ * An interrupt is control flow that *suspends* the run (the tool re-runs on
+ * resume); it is not an error, so the tool call must stay pending rather than
+ * have its `output` promise rejected. Any interrupt qualifies regardless of
+ * its `value` shape: HITL middleware interrupts (`value.type === "tool"`) and
+ * raw `interrupt(...)` calls from inside a tool are treated identically —
+ * raising an interrupt in a tool must work whether or not
+ * `humanInTheLoopMiddleware` is involved.
+ */
+function isToolInterrupt(message: string): boolean {
+  let parsed: unknown;
   try {
-    const parsed = JSON.parse(message) as unknown;
-    if (!Array.isArray(parsed)) return false;
-    return parsed.some((entry) => {
-      if (entry == null || typeof entry !== "object") return false;
-      const value = (entry as { value?: unknown }).value;
-      if (value == null || typeof value !== "object") return false;
-      const payload = value as {
-        type?: unknown;
-        toolCall?: { id?: unknown };
-      };
-      return (
-        payload.type === "tool" &&
-        (toolCallId == null ||
-          payload.toolCall?.id == null ||
-          payload.toolCall.id === toolCallId)
-      );
-    });
+    parsed = JSON.parse(message);
   } catch {
     return false;
   }
+  if (!Array.isArray(parsed) || parsed.length === 0) return false;
+  return parsed.every((entry) => {
+    if (entry == null || typeof entry !== "object") return false;
+    const record = entry as Record<string, unknown>;
+    return typeof record.id === "string" && "value" in record;
+  });
 }
 
 /**
@@ -321,7 +223,13 @@ export function createToolCallTransformer(
               const message =
                 ((data as Record<string, unknown>).message as string) ??
                 "unknown error";
-              if (isHeadlessToolInterruptError(message, toolCallId)) {
+              // An interrupt raised inside a tool (HITL middleware *or* a
+              // raw `interrupt()`) surfaces here as a `tool-error` whose
+              // message is the serialized interrupt. It is control flow,
+              // not a failure: keep the call pending (it re-runs on resume)
+              // and never reject `output`, which would otherwise become an
+              // unhandled rejection and crash the run.
+              if (isToolInterrupt(message)) {
                 return true;
               }
               pending.rejectOutput(new Error(message));

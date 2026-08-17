@@ -164,4 +164,8 @@ export class ChatTogetherAI extends ChatOpenAICompletions<ChatTogetherAICallOpti
 
     return super.completionWithRetry(request, options);
   }
+
+  protected override get streamEventProvider(): string {
+    return "together";
+  }
 }

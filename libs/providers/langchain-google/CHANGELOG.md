@@ -1,5 +1,35 @@
 # @langchain/google
 
+## 0.2.2
+
+### Patch Changes
+
+- [#11342](https://github.com/langchain-ai/langchainjs/pull/11342) [`3b0e4c4`](https://github.com/langchain-ai/langchainjs/commit/3b0e4c48a31811031a460c4d95519a7c1163dc41) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - feat(google): mark Google provider errors as retryable or not
+
+  Builds on `stampRetryable` in `@langchain/core` so the retry middleware can tell a transient failure from a deterministic one. Timeouts, rate limits, and server errors are marked retryable; bad credentials, blocked prompts, invalid tools, and invalid input non-retryable. Errors that may succeed on a regeneration stay unmarked and retry as before.
+
+  Also forwards a per-call `maxRetries` to the retry loop, so a surrounding retry loop such as `modelRetryMiddleware` can take over instead of the two multiplying against each other.
+
+  The `@langchain/core` peer range moves from `^1.0.0` to `workspace:^`, since this release depends on `stampRetryable`.
+
+## 0.2.1
+
+### Patch Changes
+
+- [#10674](https://github.com/langchain-ai/langchainjs/pull/10674) [`f017708`](https://github.com/langchain-ai/langchainjs/commit/f01770895c06621b469a6c6b5244747f6efdfbf7) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix: classify provider 429s before retrying
+
+## 0.2.0
+
+### Minor Changes
+
+- [#10924](https://github.com/langchain-ai/langchainjs/pull/10924) [`2e28115`](https://github.com/langchain-ai/langchainjs/commit/2e2811509d75af94f57cedcc3842f178f4c020d1) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(google): add native Gemini streamEvents event conversion
+
+### Patch Changes
+
+- [#10537](https://github.com/langchain-ai/langchainjs/pull/10537) [`cdb465b`](https://github.com/langchain-ai/langchainjs/commit/cdb465b57e1eb9b797dd6f741bb7357ed7ef8c96) Thanks [@raashish1601](https://github.com/raashish1601)! - fix(google): normalize ChatGoogle callback token usage metadata
+
+- [#10586](https://github.com/langchain-ai/langchainjs/pull/10586) [`43b10d2`](https://github.com/langchain-ai/langchainjs/commit/43b10d2af7cf2bdbbf1157a0cc2dae78770730be) Thanks [@tysoncung](https://github.com/tysoncung)! - strip type field from executableCode and codeExecutionResult parts
+
 ## 0.1.12
 
 ### Patch Changes

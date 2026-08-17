@@ -1,7 +1,7 @@
 /* oxlint-disable @typescript-eslint/no-explicit-any */
 /* oxlint-disable no-param-reassign */
 
-import { ContextOverflowError } from "@langchain/core/errors";
+import { ContextOverflowError, stampRetryable } from "@langchain/core/errors";
 
 // Duplicate of core
 // TODO: Remove once we stop supporting 0.2.x core versions
@@ -32,18 +32,32 @@ export function wrapAnthropicClientError(e: any) {
     typeof e.message === "string" &&
     e.message.includes("prompt is too long")
   ) {
+    // ContextOverflowError marks itself non-retryable at construction.
     error = addLangChainErrorFields(
       ContextOverflowError.fromError(e),
       "CONTEXT_OVERFLOW"
     );
   } else if (e.status === 400 && e.message.includes("tool")) {
-    error = addLangChainErrorFields(e, "INVALID_TOOL_RESULTS");
+    error = stampRetryable(
+      addLangChainErrorFields(e, "INVALID_TOOL_RESULTS"),
+      false
+    );
   } else if (e.status === 401) {
-    error = addLangChainErrorFields(e, "MODEL_AUTHENTICATION");
+    error = stampRetryable(
+      addLangChainErrorFields(e, "MODEL_AUTHENTICATION"),
+      false
+    );
   } else if (e.status === 404) {
-    error = addLangChainErrorFields(e, "MODEL_NOT_FOUND");
+    error = stampRetryable(
+      addLangChainErrorFields(e, "MODEL_NOT_FOUND"),
+      false
+    );
   } else if (e.status === 429) {
-    error = addLangChainErrorFields(e, "MODEL_RATE_LIMIT");
+    // AsyncCaller runs after this and re-marks false if it's quota exhaustion.
+    error = stampRetryable(
+      addLangChainErrorFields(e, "MODEL_RATE_LIMIT"),
+      true
+    );
   } else {
     error = e;
   }

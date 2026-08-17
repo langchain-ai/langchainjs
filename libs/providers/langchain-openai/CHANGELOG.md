@@ -1,5 +1,75 @@
 # @langchain/openai
 
+## 1.5.8
+
+### Patch Changes
+
+- [#11342](https://github.com/langchain-ai/langchainjs/pull/11342) [`3b0e4c4`](https://github.com/langchain-ai/langchainjs/commit/3b0e4c48a31811031a460c4d95519a7c1163dc41) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - feat(openai): mark OpenAI provider errors as retryable or not
+
+  Builds on `stampRetryable` in `@langchain/core` so the retry middleware can tell a transient failure from a deterministic one. Timeouts and rate limits are marked retryable; aborts, context overflow, invalid tool results, bad credentials, and unknown models non-retryable. Anything else stays unmarked and retries as before.
+
+  Also forwards a per-call `maxRetries` to the retry loop, so a surrounding retry loop such as `modelRetryMiddleware` can take over instead of the two multiplying against each other.
+
+  Errors keep their original class, so `instanceof` against the `openai` SDK error types is unaffected.
+
+## 1.5.7
+
+### Patch Changes
+
+- [#11347](https://github.com/langchain-ai/langchainjs/pull/11347) [`3fe4c43`](https://github.com/langchain-ai/langchainjs/commit/3fe4c43ce3399ebf2391ed612d78fedcd3ea5ec6) Thanks [@talarari](https://github.com/talarari)! - fix(openai): include `usage` in `response_metadata` when `system_fingerprint` is absent
+
+## 1.5.6
+
+### Patch Changes
+
+- [#11305](https://github.com/langchain-ai/langchainjs/pull/11305) [`e654022`](https://github.com/langchain-ai/langchainjs/commit/e654022e291b8dae54504ac2d1a3232332406723) Thanks [@jacoblee93](https://github.com/jacoblee93)! - Add LangSmith Gateway environment configuration to OpenAI, Anthropic, and Fireworks chat models.
+
+## 1.5.5
+
+### Patch Changes
+
+- [#11175](https://github.com/langchain-ai/langchainjs/pull/11175) [`a9f123a`](https://github.com/langchain-ai/langchainjs/commit/a9f123a49c1c50fd32d54fe4cb15963d21252d5d) Thanks [@colifran](https://github.com/colifran)! - fix(openai): filter out content blocks the chat completions api rejects as input
+
+- [#11177](https://github.com/langchain-ai/langchainjs/pull/11177) [`09e7f6d`](https://github.com/langchain-ai/langchainjs/commit/09e7f6d3408323fee5e19fc9af277114b1e8c89d) Thanks [@colifran](https://github.com/colifran)! - fix(openai): drop tool_call content blocks from chat completions input
+
+## 1.5.4
+
+### Patch Changes
+
+- [#11169](https://github.com/langchain-ai/langchainjs/pull/11169) [`988ca7d`](https://github.com/langchain-ai/langchainjs/commit/988ca7dc9f1debd48278c6e888553e11c7845ca3) Thanks [@colifran](https://github.com/colifran)! - fix(openai): emit output_text for assistant content in responses input
+
+## 1.5.3
+
+### Patch Changes
+
+- [#11100](https://github.com/langchain-ai/langchainjs/pull/11100) [`3205b35`](https://github.com/langchain-ai/langchainjs/commit/3205b35ac83037a2fff2998f16a66b5126b306f8) Thanks [@colifran](https://github.com/colifran)! - fix(langchain, openai): decouple strict tools from strict structured output response
+
+## 1.5.2
+
+### Patch Changes
+
+- [#11045](https://github.com/langchain-ai/langchainjs/pull/11045) [`05936ab`](https://github.com/langchain-ai/langchainjs/commit/05936ab45ce1bbb04b955c3ebdd03dc1451b655c) Thanks [@jackjin1997](https://github.com/jackjin1997)! - fix(openai): omit empty id and content on reasoning items in Responses API input
+
+  Reasoning blocks reassembled from streaming chunks (e.g. via `streamEvents`) never carry an id, since OpenAI's streaming protocol only includes it in non-streaming responses. When such a message was replayed as Responses API input on the next turn, the reasoning item was emitted with `id: ""`, which OpenAI rejects with `400 Invalid 'input[n].id': ''`. The `id` field is now omitted when absent.
+
+  A second error surfaced immediately after that fix: the same converter set a populated `content` array on the reasoning input item, which the Responses API also rejects (`400 Invalid 'input[n].content': array too long. Expected an array with maximum length 0`). Reasoning input items only carry `summary`, so `content` is no longer forwarded. Thanks to @csrujanreddy for catching the second issue and verifying both fixes against the live API.
+
+- [#11065](https://github.com/langchain-ai/langchainjs/pull/11065) [`798cb70`](https://github.com/langchain-ai/langchainjs/commit/798cb705222f43759e94d02a790ebb706ef2f099) Thanks [@rxits](https://github.com/rxits)! - fix(openai): route standard url file blocks to native input_file in Responses API
+
+- [#11090](https://github.com/langchain-ai/langchainjs/pull/11090) [`80c790b`](https://github.com/langchain-ai/langchainjs/commit/80c790b593ad19668f1101f84f06c175db114909) Thanks [@nikhilpakhloo](https://github.com/nikhilpakhloo)! - fix(openai): stream built-in tool progress events
+
+## 1.5.1
+
+### Patch Changes
+
+- [#11001](https://github.com/langchain-ai/langchainjs/pull/11001) [`80b43ec`](https://github.com/langchain-ai/langchainjs/commit/80b43ecffe0701c3c375c407fb601cb452f708ef) Thanks [@Herrtian](https://github.com/Herrtian)! - Wrap Responses API stream iteration errors with existing OpenAI client error handling.
+
+## 1.5.0
+
+### Minor Changes
+
+- [#10924](https://github.com/langchain-ai/langchainjs/pull/10924) [`2e28115`](https://github.com/langchain-ai/langchainjs/commit/2e2811509d75af94f57cedcc3842f178f4c020d1) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(openai): add native streamEvents event converters
+
 ## 1.4.7
 
 ### Patch Changes
