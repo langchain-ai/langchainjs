@@ -1469,6 +1469,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.10
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.1.2
+        version: 26.1.2
       dpdm:
         specifier: ^3.14.0
         version: 3.15.1

@@ -91,12 +91,6 @@ type ModelInfo = {
 
 const allModelInfo: ModelInfo[] = [
   {
-    model: "gemini-2.0-flash-lite",
-  },
-  {
-    model: "gemini-2.0-flash",
-  },
-  {
     model: "gemini-2.5-flash-lite",
   },
   {
@@ -107,13 +101,7 @@ const allModelInfo: ModelInfo[] = [
     model: "gemini-2.5-pro",
   },
   {
-    model: "gemini-3-pro-preview",
-    testConfig: {
-      isThinking: true,
-    },
-  },
-  {
-    model: "gemini-3-flash-preview",
+    model: "gemini-3.1-flash-lite",
     testConfig: {
       isThinking: true,
     },
@@ -125,7 +113,25 @@ const allModelInfo: ModelInfo[] = [
     },
   },
   {
-    model: "gemini-3.1-flash-lite-preview",
+    model: "gemini-3.5-flash",
+    testConfig: {
+      isThinking: true,
+    },
+  },
+  {
+    model: "gemini-3.5-flash-lite",
+    testConfig: {
+      isThinking: true,
+    },
+  },
+  {
+    model: "gemini-3.6-flash",
+    testConfig: {
+      isThinking: true,
+    },
+  },
+  {
+    model: "gemini-3.7-flash",
     testConfig: {
       isThinking: true,
     },
@@ -137,7 +143,21 @@ const allModelInfo: ModelInfo[] = [
     },
   },
   {
-    model: "gemini-3-pro-image-preview",
+    model: "gemini-3-pro-image",
+    testConfig: {
+      isImage: true,
+      hasImageThoughts: true,
+    },
+  },
+  {
+    model: "gemini-3.1-flash-image",
+    testConfig: {
+      isImage: true,
+      hasImageThoughts: true,
+    },
+  },
+  {
+    model: "gemini-3.1-flash-lite-image",
     testConfig: {
       isImage: true,
       hasImageThoughts: true,
@@ -147,6 +167,7 @@ const allModelInfo: ModelInfo[] = [
     model: "gemini-2.5-flash-preview-tts",
     testConfig: {
       isTts: true,
+      skip: true,
     },
   },
   {
@@ -154,6 +175,12 @@ const allModelInfo: ModelInfo[] = [
     testConfig: {
       isTts: true,
       skip: true,
+    },
+  },
+  {
+    model: "gemini-3.1-flash-tts-preview",
+    testConfig: {
+      isTts: true,
     },
   },
   {
@@ -632,6 +659,51 @@ describe.each(coreModelInfo)(
       expect(result2.content).toMatch(/21/);
     });
 
+    test("function conversation multi-round", async () => {
+      const tools = [weatherTool];
+      const llm = newChatGoogle().bindTools(tools);
+      const history: BaseMessage[] = [
+        new HumanMessage("What is the weather in New York?"),
+      ];
+      const result1 = await llm.invoke(history);
+      history.push(result1);
+
+      const toolCalls = result1.tool_calls!;
+      const toolCall = toolCalls[0];
+      const toolMessage = await weatherTool.invoke(toolCall);
+      history.push(toolMessage);
+
+      const result2 = await llm.invoke(history);
+      history.push(result2);
+
+      expect(result2.content).toMatch(/21/);
+
+      const request3 = new HumanMessage("What about DC?");
+      history.push(request3);
+      const result3 = await llm.invoke(history);
+      history.push(result3);
+
+      expect(result3.type).toBe("ai");
+
+      const toolCalls3 = result3.tool_calls!;
+      const toolCall3 = toolCalls3[0];
+
+      console.log("Tool Call", toolCall3);
+
+      const toolMessage4 = await weatherTool.invoke(toolCall3);
+      history.push(toolMessage4);
+
+      const result4 = await llm.invoke(history);
+      expect(result4.type).toBe("ai");
+
+      console.log("Test Summary", {
+        platformType: defaultGoogleParams?.platformType,
+        isNode: testConfig?.node,
+        toolCall1Id: toolCall?.id,
+        toolCall3Id: toolCall3?.id,
+      });
+    });
+
     test("function reply", async () => {
       const tools: Gemini.Tool[] = [
         {
@@ -767,7 +839,8 @@ describe.each(coreModelInfo)(
         urlContext: {},
       };
       const llm: Runnable = newChatGoogle().bindTools([urlTool]);
-      const url = "https://js.langchain.com/";
+      const url =
+        "https://docs.langchain.com/oss/javascript/langchain/overview";
       const prompt = `Summarize this web page: ${url}`;
       const result = await llm.invoke(prompt);
       const meta = result.response_metadata;
