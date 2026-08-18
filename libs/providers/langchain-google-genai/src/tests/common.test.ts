@@ -4,6 +4,7 @@ import {
   convertMessageContentToParts,
   mapGenerateContentResultToChatResult,
 } from "../utils/common.js";
+import { ContentBlockedError } from "../utils/errors.js";
 import { AIMessage } from "@langchain/core/messages";
 import type {
   EnhancedGenerateContentResponse,
@@ -374,5 +375,62 @@ describe("Round-trip thinking content handling", () => {
     expect(roundTrippedParts[1]).toEqual({
       text: "The final answer is 7.",
     });
+  });
+});
+
+describe("Missing candidate content throws ContentBlockedError", () => {
+  test("mapGenerateContentResultToChatResult throws when a candidate has no content", () => {
+    const mockResponse = createMockResponse([
+      {
+        // Real Gemini responses omit `content` entirely when generation is
+        // cut short (e.g. a malformed function call); the SDK's type says
+        // it's required, but at runtime it isn't.
+        finishReason: "MALFORMED_FUNCTION_CALL" as FinishReason,
+        index: 0,
+        safetyRatings: [],
+      } as unknown as GenerateContentCandidate,
+    ]);
+
+    try {
+      mapGenerateContentResultToChatResult(mockResponse);
+      expect.fail("should have thrown");
+    } catch (e) {
+      expect(e).toBeInstanceOf(ContentBlockedError);
+      expect((e as ContentBlockedError).finishReason).toBe(
+        "MALFORMED_FUNCTION_CALL"
+      );
+    }
+  });
+
+  test("mapGenerateContentResultToChatResult throws when there are no candidates at all", () => {
+    const mockResponse: EnhancedGenerateContentResponse = {
+      candidates: [],
+      promptFeedback: { blockReason: "SAFETY" } as never,
+      text: () => "",
+      functionCall: () => undefined,
+      functionCalls: () => undefined,
+    };
+
+    try {
+      mapGenerateContentResultToChatResult(mockResponse);
+      expect.fail("should have thrown");
+    } catch (e) {
+      expect(e).toBeInstanceOf(ContentBlockedError);
+      expect((e as ContentBlockedError).blockReason).toBe("SAFETY");
+    }
+  });
+
+  test("convertResponseContentToChatGenerationChunk throws when a candidate has no content (streaming)", () => {
+    const mockResponse = createMockResponse([
+      {
+        finishReason: "SAFETY" as FinishReason,
+        index: 0,
+        safetyRatings: [],
+      } as unknown as GenerateContentCandidate,
+    ]);
+
+    expect(() =>
+      convertResponseContentToChatGenerationChunk(mockResponse, { index: 0 })
+    ).toThrow(ContentBlockedError);
   });
 });
