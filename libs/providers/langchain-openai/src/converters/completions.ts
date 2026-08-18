@@ -291,7 +291,7 @@ export const convertCompletionsMessageToBaseMessage: Converter<
         function_call: message.function_call,
         tool_calls: rawToolCalls,
       };
-      if (includeRawResponse !== undefined) {
+      if (includeRawResponse) {
         additional_kwargs.__raw_response = rawResponse;
       }
       if (providerReasoningContent !== undefined) {
