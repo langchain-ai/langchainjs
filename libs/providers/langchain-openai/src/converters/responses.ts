@@ -262,17 +262,12 @@ export const convertResponsesUsageToUsageMetadata: Converter<
   OpenAIClient.Responses.ResponseUsage | undefined,
   UsageMetadata
 > = (usage) => {
-  const cacheWriteTokens = (
-    usage?.input_tokens_details as
-      | { cache_write_tokens?: number | null }
-      | undefined
-  )?.cache_write_tokens;
   const inputTokenDetails = {
     ...(usage?.input_tokens_details?.cached_tokens != null && {
       cache_read: usage?.input_tokens_details?.cached_tokens,
     }),
-    ...(cacheWriteTokens != null && {
-      cache_creation: cacheWriteTokens,
+    ...(usage?.input_tokens_details?.cache_write_tokens != null && {
+      cache_creation: usage?.input_tokens_details?.cache_write_tokens,
     }),
   };
   const outputTokenDetails = {
