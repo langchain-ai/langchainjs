@@ -678,7 +678,7 @@ describe.each(coreModelInfo)(
 
       expect(result2.content).toMatch(/21/);
 
-      const request3 = new HumanMessage("What about DC?")
+      const request3 = new HumanMessage("What about DC?");
       history.push(request3);
       const result3 = await llm.invoke(history);
       history.push(result3);
@@ -700,8 +700,8 @@ describe.each(coreModelInfo)(
         platformType: defaultGoogleParams?.platformType,
         isNode: testConfig?.node,
         toolCall1Id: toolCall?.id,
-        toolCall3Id: toolCall3?.id
-      })
+        toolCall3Id: toolCall3?.id,
+      });
     });
 
     test("function reply", async () => {
