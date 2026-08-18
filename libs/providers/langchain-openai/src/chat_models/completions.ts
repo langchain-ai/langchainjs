@@ -255,9 +255,15 @@ export class ChatOpenAICompletions<
           (usageMetadata.total_tokens ?? 0) + totalTokens;
       }
 
+      const cacheWriteTokens = (
+        promptTokensDetails as
+          | { cache_write_tokens?: number | null }
+          | undefined
+      )?.cache_write_tokens;
       if (
         promptTokensDetails?.audio_tokens !== null ||
-        promptTokensDetails?.cached_tokens !== null
+        promptTokensDetails?.cached_tokens !== null ||
+        cacheWriteTokens !== null
       ) {
         usageMetadata.input_token_details = {
           ...(promptTokensDetails?.audio_tokens !== null && {
@@ -265,6 +271,9 @@ export class ChatOpenAICompletions<
           }),
           ...(promptTokensDetails?.cached_tokens !== null && {
             cache_read: promptTokensDetails?.cached_tokens,
+          }),
+          ...(cacheWriteTokens !== null && {
+            cache_creation: cacheWriteTokens,
           }),
         };
       }
@@ -459,12 +468,20 @@ export class ChatOpenAICompletions<
       );
     }
     if (usage) {
+      const cacheWriteTokens = (
+        usage.prompt_tokens_details as
+          | { cache_write_tokens?: number | null }
+          | undefined
+      )?.cache_write_tokens;
       const inputTokenDetails = {
         ...(usage.prompt_tokens_details?.audio_tokens !== null && {
           audio: usage.prompt_tokens_details?.audio_tokens,
         }),
         ...(usage.prompt_tokens_details?.cached_tokens !== null && {
           cache_read: usage.prompt_tokens_details?.cached_tokens,
+        }),
+        ...(cacheWriteTokens !== null && {
+          cache_creation: cacheWriteTokens,
         }),
       };
       const outputTokenDetails = {
