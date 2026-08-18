@@ -1,0 +1,37 @@
+libs/providers/langchain-openai/src/converters/tests/responses.test.ts
+  s_550dd7e2027bc8::t_e58093ed1b442b 71-102
+libs/providers/langchain-openai/src/utils/output.ts
+  s_550dd7e2027bc8::t_a498acfe98be06 172-176,181-182
+  s_550dd7e2027bc8::t_78737f43f67c54 183
+.changeset/quiet-otters-invite.md
+  s_550dd7e2027bc8::t_f7f345b13a11a5 1-5
+libs/providers/langchain-openai/src/chat_models/tests/index.test.ts
+  s_550dd7e2027bc8::t_353632311ca85b 1022-1053
+libs/providers/langchain-openai/src/chat_models/completions.ts
+  s_550dd7e2027bc8::t_5a9fd520400a21 259-261
+  s_550dd7e2027bc8::t_3ad7f9e54d139a 471-475,483-484
+  s_550dd7e2027bc8::t_ad58b2f1ac6063 258,262,265-266,275-276
+  s_550dd7e2027bc8::t_f99e85992208fc 277,485
+libs/providers/langchain-openai/src/converters/responses.ts
+  s_550dd7e2027bc8::t_1a0e310d3f40f5 227,237,247,255-256
+  s_550dd7e2027bc8::t_49ce624bec5424 265-269,274-275
+  s_550dd7e2027bc8::t_1a88d8af6ee375 276
+libs/providers/langchain-openai/src/chat_models/tests/completions.test.ts
+  s_550dd7e2027bc8::t_e93e77275dce87 120-213
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "0b53eef06278faf40094f0e9b178e88ca8f8561b",
+  "prompts": {},
+  "sessions": {
+    "s_550dd7e2027bc8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b4d62e02-a176-4f06-a93b-61aeaa97a4e5",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "gdibben <gethin.dibben@langchain.dev>"
+    }
+  }
+}
