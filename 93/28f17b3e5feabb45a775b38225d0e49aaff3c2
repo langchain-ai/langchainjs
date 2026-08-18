@@ -1,0 +1,23 @@
+libs/providers/langchain-openai/src/chat_models/completions.ts
+  s_550dd7e2027bc8::t_38cb468218279a 266,275
+  s_550dd7e2027bc8::t_38dcc5def5a940 483
+libs/providers/langchain-openai/src/chat_models/tests/completions.test.ts
+  s_550dd7e2027bc8::t_b8e2363b717c31 212-242,246
+  s_550dd7e2027bc8::t_74971ecd75ae2c 243-245
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "9328f17b3e5feabb45a775b38225d0e49aaff3c2",
+  "prompts": {},
+  "sessions": {
+    "s_550dd7e2027bc8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b4d62e02-a176-4f06-a93b-61aeaa97a4e5",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "gdibben <gethin.dibben@langchain.dev>"
+    }
+  }
+}
