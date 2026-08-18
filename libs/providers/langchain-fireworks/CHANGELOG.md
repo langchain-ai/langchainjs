@@ -1,5 +1,22 @@
 # @langchain/fireworks
 
+## 0.2.8
+
+### Patch Changes
+
+- [#11342](https://github.com/langchain-ai/langchainjs/pull/11342) [`3b0e4c4`](https://github.com/langchain-ai/langchainjs/commit/3b0e4c48a31811031a460c4d95519a7c1163dc41) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - fix(fireworks): stop retrying deterministic embeddings failures
+
+  `FireworksEmbeddings` threw errors with the HTTP status buried in the message text, so nothing downstream could act on it and a bad API key was retried to exhaustion on every embed call. The status is now available on the error, and failures are marked retryable or not using `stampRetryable` from `@langchain/core`. Error messages are unchanged.
+
+  `ChatFireworks` and `Fireworks` already inherit marking from `@langchain/openai`.
+
+  Also forwards a per-call `maxRetries` to the retry loop, so a surrounding retry loop such as `modelRetryMiddleware` can take over instead of the two multiplying against each other.
+
+  The `@langchain/core` peer range moves from `^1.0.0` to `workspace:^`, since this release depends on `stampRetryable`.
+
+- Updated dependencies [[`3b0e4c4`](https://github.com/langchain-ai/langchainjs/commit/3b0e4c48a31811031a460c4d95519a7c1163dc41)]:
+  - @langchain/openai@1.5.8
+
 ## 0.2.7
 
 ### Patch Changes
