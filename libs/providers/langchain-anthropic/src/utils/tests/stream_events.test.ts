@@ -4,11 +4,12 @@ import { convertAnthropicStream } from "../stream_events.js";
 
 interface StreamOverrides {
   cost?: unknown;
+  contextManagement?: Record<string, unknown>;
   streamUsage?: boolean;
 }
 
 /** One response's raw Anthropic events, optionally with a gateway `cost` on the terminal usage. */
-function rawEvents({ cost }: StreamOverrides = {}) {
+function rawEvents({ cost, contextManagement }: StreamOverrides = {}) {
   return [
     {
       type: "message_start" as const,
@@ -36,7 +37,13 @@ function rawEvents({ cost }: StreamOverrides = {}) {
     { type: "content_block_stop" as const, index: 0 },
     {
       type: "message_delta" as const,
-      delta: { stop_reason: "end_turn" as const, stop_sequence: null },
+      delta: {
+        stop_reason: "end_turn" as const,
+        stop_sequence: null,
+        ...(contextManagement === undefined
+          ? {}
+          : { context_management: contextManagement }),
+      },
       usage: {
         output_tokens: 42,
         ...(cost === undefined ? {} : { cost }),
@@ -46,9 +53,13 @@ function rawEvents({ cost }: StreamOverrides = {}) {
   ];
 }
 
-async function convert({ cost, streamUsage }: StreamOverrides = {}) {
+async function convert({
+  cost,
+  contextManagement,
+  streamUsage,
+}: StreamOverrides = {}) {
   const source = (async function* () {
-    yield* rawEvents({ cost });
+    yield* rawEvents({ cost, contextManagement });
   })();
   const events = [];
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
@@ -148,5 +159,55 @@ describe("convertAnthropicStream", () => {
 
     expect(message.response_metadata.usage).toEqual({ cost: 0.0123 });
     expect(message.usage_metadata?.output_tokens).toBe(43);
+  });
+
+  test("preserves context management on provider and message-finish events", async () => {
+    const contextManagement = {
+      applied_edits: [
+        {
+          type: "clear_tool_uses_20250919",
+          cleared_tool_uses: 1,
+          cleared_input_tokens: 25,
+        },
+      ],
+    };
+    const events = await convert({ contextManagement });
+
+    expect(
+      events.find(
+        (event) =>
+          event.event === "provider" && event.name === "context_management"
+      )
+    ).toMatchObject({
+      provider: "anthropic",
+      payload: contextManagement,
+    });
+    expect(messageFinish(events).responseMetadata).toEqual({
+      context_management: contextManagement,
+    });
+  });
+
+  test("assembles context management alongside gateway cost", async () => {
+    const contextManagement = {
+      applied_edits: [
+        {
+          type: "clear_tool_uses_20250919",
+          cleared_tool_uses: 1,
+          cleared_input_tokens: 25,
+        },
+      ],
+    };
+    const source = (async function* () {
+      yield* rawEvents({ cost: 0.0123, contextManagement });
+    })();
+    const message = await new ChatModelStream(
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      convertAnthropicStream(source as any) as any
+    );
+
+    expect(message.response_metadata).toMatchObject({
+      context_management: contextManagement,
+      usage: { cost: 0.0123 },
+    });
   });
 });
