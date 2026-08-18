@@ -295,6 +295,76 @@ describe("Streaming thinking content handling", () => {
   });
 });
 
+// https://github.com/langchain-ai/langchainjs/issues/9705
+describe("Function call content handling", () => {
+  test("should not include a functionCall block in content and should populate tool_calls", () => {
+    const mockResponse = createMockResponse([
+      {
+        content: {
+          role: "model",
+          parts: [
+            { text: "Let me check the weather." },
+            {
+              functionCall: {
+                name: "get_weather",
+                args: { location: "San Francisco" },
+              },
+            },
+          ] as GoogleGenerativeAIPart[],
+        },
+        finishReason: "STOP" as FinishReason,
+        index: 0,
+        safetyRatings: [],
+      },
+    ]);
+
+    const result = mapGenerateContentResultToChatResult(mockResponse);
+    const message = result.generations[0].message;
+
+    expect(message.content).toEqual([
+      { type: "text", text: "Let me check the weather." },
+    ]);
+    expect(message.tool_calls).toHaveLength(1);
+    expect(message.tool_calls?.[0]).toMatchObject({
+      name: "get_weather",
+      args: { location: "San Francisco" },
+    });
+  });
+
+  test("should not include a functionCall block in content and should populate tool_call_chunks in streaming", () => {
+    const mockResponse = createMockResponse([
+      {
+        content: {
+          role: "model",
+          parts: [
+            {
+              functionCall: {
+                name: "get_weather",
+                args: { location: "San Francisco" },
+              },
+            },
+          ] as GoogleGenerativeAIPart[],
+        },
+        finishReason: "STOP" as FinishReason,
+        index: 0,
+        safetyRatings: [],
+      },
+    ]);
+
+    const result = convertResponseContentToChatGenerationChunk(mockResponse, {
+      index: 0,
+    });
+
+    expect(result).not.toBeNull();
+    expect(result!.message.content).toEqual([]);
+    expect(result!.message.tool_call_chunks).toHaveLength(1);
+    expect(result!.message.tool_call_chunks?.[0]).toMatchObject({
+      name: "get_weather",
+      args: JSON.stringify({ location: "San Francisco" }),
+    });
+  });
+});
+
 // https://github.com/langchain-ai/langchainjs/issues/10103
 describe("Round-trip thinking content handling", () => {
   test("thinking block with signature converts back to Gemini part", () => {
