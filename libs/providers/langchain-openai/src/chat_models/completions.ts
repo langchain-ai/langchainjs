@@ -257,7 +257,8 @@ export class ChatOpenAICompletions<
 
       if (
         promptTokensDetails?.audio_tokens !== null ||
-        promptTokensDetails?.cached_tokens !== null
+        promptTokensDetails?.cached_tokens !== null ||
+        promptTokensDetails?.cache_write_tokens != null
       ) {
         usageMetadata.input_token_details = {
           ...(promptTokensDetails?.audio_tokens !== null && {
@@ -265,6 +266,9 @@ export class ChatOpenAICompletions<
           }),
           ...(promptTokensDetails?.cached_tokens !== null && {
             cache_read: promptTokensDetails?.cached_tokens,
+          }),
+          ...(promptTokensDetails?.cache_write_tokens != null && {
+            cache_creation: promptTokensDetails?.cache_write_tokens,
           }),
         };
       }
@@ -465,6 +469,9 @@ export class ChatOpenAICompletions<
         }),
         ...(usage.prompt_tokens_details?.cached_tokens !== null && {
           cache_read: usage.prompt_tokens_details?.cached_tokens,
+        }),
+        ...(usage.prompt_tokens_details?.cache_write_tokens != null && {
+          cache_creation: usage.prompt_tokens_details?.cache_write_tokens,
         }),
       };
       const outputTokenDetails = {
