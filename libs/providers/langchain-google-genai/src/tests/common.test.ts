@@ -378,7 +378,7 @@ describe("Round-trip thinking content handling", () => {
   });
 });
 
-describe("Missing candidate content throws EmptyContentError", () => {
+describe("Missing candidate content", () => {
   test("mapGenerateContentResultToChatResult throws when a candidate has no content", () => {
     const mockResponse = createMockResponse([
       {
@@ -420,7 +420,7 @@ describe("Missing candidate content throws EmptyContentError", () => {
     }
   });
 
-  test("convertResponseContentToChatGenerationChunk throws when a candidate has no content (streaming)", () => {
+  test("convertResponseContentToChatGenerationChunk returns null when a candidate has no content (streaming)", () => {
     const mockResponse = createMockResponse([
       {
         finishReason: "SAFETY" as FinishReason,
@@ -431,6 +431,9 @@ describe("Missing candidate content throws EmptyContentError", () => {
 
     expect(() =>
       convertResponseContentToChatGenerationChunk(mockResponse, { index: 0 })
-    ).toThrow(EmptyContentError);
+    ).not.toThrow();
+    expect(
+      convertResponseContentToChatGenerationChunk(mockResponse, { index: 0 })
+    ).toBeNull();
   });
 });

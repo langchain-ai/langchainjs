@@ -786,9 +786,10 @@ export function convertResponseContentToChatGenerationChunk(
   const [candidate] = response.candidates;
   const { content: candidateContent, ...generationInfo } = candidate;
   if (!candidateContent) {
-    throw new EmptyContentError({
-      finishReason: generationInfo.finishReason,
-    });
+    // No content on the candidate (e.g. safety/recitation filter triggered
+    // mid-stream, or finishReason is SAFETY/RECITATION/OTHER). Skip this
+    // chunk rather than throwing on candidateContent.parts.
+    return null;
   }
   const functionCalls = candidateContent.parts?.reduce(
     (acc, p) => {

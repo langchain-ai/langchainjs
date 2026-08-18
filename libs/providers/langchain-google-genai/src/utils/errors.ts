@@ -26,7 +26,8 @@ export interface EmptyContentErrorParams {
 }
 
 /**
- * Error thrown when a Gemini candidate is returned with no usable content.
+ * Error thrown by non-streaming calls (`.invoke()`, `.generate()`,
+ * `.batch()`) when a Gemini candidate is returned with no usable content.
  *
  * This covers two distinct situations that both surface the same way —
  * a candidate with no `content` at all:
@@ -40,6 +41,10 @@ export interface EmptyContentErrorParams {
  * Previously this was silently converted into an empty message; it's now
  * surfaced as a typed, catchable error. Check `finishReason`/`blockReason`
  * to distinguish an explicit block from the model just being odd.
+ *
+ * Note: `.stream()` does not throw this error. A contentless candidate
+ * mid-stream is silently skipped there instead, since a single missing
+ * chunk isn't necessarily fatal to an otherwise-successful stream.
  *
  * @example
  * ```typescript
