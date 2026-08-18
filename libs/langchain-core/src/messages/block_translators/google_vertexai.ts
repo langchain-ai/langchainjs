@@ -49,6 +49,9 @@ function convertToV1FromChatVertexMessage(
         };
         continue;
       } else if (_isContentBlock(block, "text") && _isString(block.text)) {
+        if (block.text === "") {
+          continue;
+        }
         yield { type: "text", text: block.text };
         continue;
       } else if (_isContentBlock(block, "image_url")) {
@@ -77,7 +80,15 @@ function convertToV1FromChatVertexMessage(
       yield { type: "non_standard", value: block };
     }
   }
-  return Array.from(iterateContent());
+  const toolCallBlocks: ContentBlock.Standard[] = (
+    message.tool_calls ?? []
+  ).map((toolCall) => ({
+    type: "tool_call",
+    id: toolCall.id,
+    name: toolCall.name,
+    args: toolCall.args,
+  }));
+  return [...iterateContent(), ...toolCallBlocks];
 }
 
 export const ChatVertexTranslator: StandardContentBlockTranslator = {
