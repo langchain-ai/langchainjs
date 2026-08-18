@@ -209,6 +209,41 @@ describe("ChatOpenAICompletions cache token usage_metadata", () => {
       cache_creation: 20,
     });
   });
+
+  it("should omit cache_creation when cache_write_tokens is absent (non-streaming)", async () => {
+    const model = new ChatOpenAICompletions({
+      model: "gpt-4o-mini",
+      apiKey: "test-key",
+    });
+
+    model.completionWithRetry = vi.fn().mockResolvedValue({
+      id: "chatcmpl-test",
+      choices: [
+        {
+          index: 0,
+          message: { role: "assistant", content: "Hello" },
+          finish_reason: "stop",
+          logprobs: null,
+        },
+      ],
+      usage: {
+        prompt_tokens: 100,
+        completion_tokens: 5,
+        total_tokens: 105,
+        // No cache_write_tokens key at all, as returned by models that
+        // don't support explicit prompt caching.
+        prompt_tokens_details: { cached_tokens: 0, audio_tokens: null },
+        completion_tokens_details: null,
+      },
+    }) as typeof model.completionWithRetry;
+
+    const result = await model._generate([new HumanMessage("test")], {});
+
+    const message = result.generations[0].message as AIMessageChunk;
+    expect(message.usage_metadata?.input_token_details).not.toHaveProperty(
+      "cache_creation"
+    );
+  });
 });
 
 describe("ChatOpenAICompletions reasoning_content compatibility", () => {
