@@ -1,0 +1,47 @@
+libs/langchain/src/agents/tests/state.test.ts
+  s_1df0b50a5d0a9d::t_e73a95c62c9e98 238
+  s_1df0b50a5d0a9d::t_6743fc06aaaf24 239-243
+libs/langchain/src/agents/annotation.ts
+  s_1df0b50a5d0a9d::t_6159aeecdad7d2 162,164
+  s_1df0b50a5d0a9d::t_93f72fb52ac9ee 163,165-166
+  s_1df0b50a5d0a9d::t_3e795d06e6a9f1 160-161
+  s_1df0b50a5d0a9d::t_261b9bd92701fe 153-158
+  s_1df0b50a5d0a9d::t_1a175078f49b84 2
+  s_1df0b50a5d0a9d::t_96c976bd36c65f 159,167
+  s_1df0b50a5d0a9d::t_436d8b37bd7bda 152
+libs/langchain/src/agents/runtime.ts
+  s_1df0b50a5d0a9d::t_245b809df243f9 45-47
+  s_1df0b50a5d0a9d::t_5958536b5baf90 44,48-49
+libs/langchain/src/agents/tests/priorResponses.test.ts
+  s_1df0b50a5d0a9d::t_a540516cd59b77 8
+  s_1df0b50a5d0a9d::t_8c8283158c5b21 1-7,9-174
+libs/langchain/src/agents/utils.ts
+  s_1df0b50a5d0a9d::t_1946a2442b7152 383-392
+  s_1df0b50a5d0a9d::t_ed00e01101ea9a 382
+.changeset/tame-eagles-yell.md
+  s_1df0b50a5d0a9d::t_a9791207e25bac 1-11
+libs/langchain/src/agents/nodes/AgentNode.ts
+  s_1df0b50a5d0a9d::t_9cf63761370593 293-302,314,316,321-325,327-330
+  s_1df0b50a5d0a9d::t_09b42e387cdb9d 315,326
+  s_1df0b50a5d0a9d::t_4a26d3f4e7cc29 292
+  s_1df0b50a5d0a9d::t_491c4e5a6f2743 36
+libs/langchain/src/agents/types.ts
+  s_1df0b50a5d0a9d::t_0b894c9b296c67 484-486
+  s_1df0b50a5d0a9d::t_55375ca0f9ec00 483,487-488
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "edd4cd340cf80186fa23b08585e71fe7092b8187",
+  "prompts": {},
+  "sessions": {
+    "s_1df0b50a5d0a9d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "232e0c8f-f0dd-4ac4-957c-a6dd56a7f04a",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "gdibben <gethin.dibben@langchain.dev>"
+    }
+  }
+}
