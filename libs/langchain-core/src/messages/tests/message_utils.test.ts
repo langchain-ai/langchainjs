@@ -1,5 +1,5 @@
 import { describe, expect, it, test } from "vitest";
-import { v4 } from "uuid";
+import { v4 } from "../../utils/uuid/index.js";
 import { AIMessage, AIMessageChunk } from "../ai.js";
 import { BaseMessage, MessageContent } from "../base.js";
 import { ChatMessage } from "../chat.js";
@@ -583,6 +583,38 @@ describe("trimMessages can trim", () => {
     // `func` is protected, so we need to cast it to any to access it
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     expect(typeof (trimmedMessages as any).bound.func).toBe("function");
+  });
+
+  it("supports a TextSplitter-style object as textSplitter", async () => {
+    class FakeTextSplitter {
+      separator = " ";
+
+      async splitText(text: string): Promise<string[]> {
+        return text
+          .split(this.separator)
+          .map((w, i, arr) => (i < arr.length - 1 ? `${w} ` : w));
+      }
+    }
+    const messages = [
+      new HumanMessage("aaaa bbbb cccc dddd eeee ffff gggg hhhh"),
+    ];
+    const trimmed = await trimMessages(messages, {
+      maxTokens: 4,
+      tokenCounter: (msgs) =>
+        msgs.reduce(
+          (n, m) =>
+            n +
+            (typeof m.content === "string"
+              ? m.content.split(/\s+/).filter(Boolean).length
+              : 1),
+          0
+        ),
+      strategy: "first",
+      allowPartial: true,
+      textSplitter: new FakeTextSplitter(),
+    });
+    expect(trimmed).toHaveLength(1);
+    expect(typeof trimmed[0].content).toBe("string");
   });
 });
 

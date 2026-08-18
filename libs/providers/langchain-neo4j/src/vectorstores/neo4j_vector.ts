@@ -3,7 +3,7 @@ import neo4j, {
   type Record as Neo4jRecord,
   type Path as Neo4jPath,
 } from "neo4j-driver";
-import * as uuid from "uuid";
+import * as uuid from "@langchain/core/utils/uuid";
 import type { EmbeddingsInterface } from "@langchain/core/embeddings";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { Document } from "@langchain/core/documents";

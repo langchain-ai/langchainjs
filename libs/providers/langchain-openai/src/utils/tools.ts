@@ -390,16 +390,29 @@ export function isComputerToolCall(
 }
 
 export function isCustomToolCall(
-  toolCall: unknown
+  toolCall: unknown,
+  customToolCallIds?: Record<string, string>
 ): toolCall is CustomToolCall {
-  return (
-    typeof toolCall === "object" &&
-    toolCall !== null &&
-    "type" in toolCall &&
-    toolCall.type === "tool_call" &&
-    "isCustomTool" in toolCall &&
-    toolCall.isCustomTool === true
-  );
+  if (
+    typeof toolCall !== "object" ||
+    toolCall === null ||
+    !("type" in toolCall) ||
+    toolCall.type !== "tool_call"
+  ) {
+    return false;
+  }
+  if ("isCustomTool" in toolCall && toolCall.isCustomTool === true) {
+    return true;
+  }
+  if (
+    customToolCallIds &&
+    "id" in toolCall &&
+    typeof toolCall.id === "string" &&
+    toolCall.id in customToolCallIds
+  ) {
+    return true;
+  }
+  return false;
 }
 
 export function convertCompletionsCustomTool(

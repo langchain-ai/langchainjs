@@ -1,4 +1,4 @@
-import { v4 } from "uuid";
+import { v4 } from "@langchain/core/utils/uuid";
 import type { D1Database } from "@cloudflare/workers-types";
 import { BaseListChatMessageHistory } from "@langchain/core/chat_history";
 import {

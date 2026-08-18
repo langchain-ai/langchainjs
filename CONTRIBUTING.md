@@ -47,7 +47,7 @@ Integrations are a core component of LangChain. LangChain provides standard inte
 - **Interoperability**: LangChain components expose a standard interface, allowing developers to easily swap them for each other. If you implement a LangChain integration, any developer using a different component will easily be able to swap yours in.
 - **Best Practices**: Through their standard interface, LangChain components encourage and facilitate best practices (streaming, async, etc.) that improve developer experience and application performance.
 
-See our dedicated [integration contribution guide](https://github.com/langchain-ai/langchainjs/blob/main/.github/contributing/INTEGRATIONS.md) for specific details and patterns. You can also check out the [guides on extending LangChain.js](https://js.langchain.com/docs/how_to/#custom) in our docs.
+See our dedicated [integration contribution guide](https://github.com/langchain-ai/langchainjs/blob/main/.github/contributing/INTEGRATIONS.md) for specific details and patterns. You can also check out the [guides on extending LangChain.js](https://docs.langchain.com/oss/javascript/langchain/how_to/#custom) in our docs.
 
 #### Integration Packages
 

@@ -1,6 +1,6 @@
 import { test, expect } from "vitest";
 
-import { v4 as uuidV4 } from "uuid";
+import { v4 as uuidV4 } from "@langchain/core/utils/uuid";
 
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { Document } from "@langchain/core/documents";

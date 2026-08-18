@@ -67,6 +67,33 @@ const pdfModelName = "claude-haiku-4-5-20251001";
 // Use this model for all other tests
 const modelName = "claude-haiku-4-5-20251001";
 
+function isModelAccessRestrictedError(error: unknown): boolean {
+  if (typeof error !== "object" || error === null) {
+    return false;
+  }
+
+  const status = (error as { status?: unknown }).status;
+  if (status === 403 || status === 404) {
+    return true;
+  }
+
+  const message = (error as { message?: unknown }).message;
+  if (typeof message !== "string") {
+    return false;
+  }
+
+  const normalized = message.toLowerCase();
+  return (
+    normalized.includes("model_not_available") ||
+    normalized.includes("data retention enabled") ||
+    normalized.includes("model_not_found") ||
+    normalized.includes("model not found") ||
+    normalized.includes("forbidden") ||
+    normalized.includes("not authorized") ||
+    normalized.includes("project glasswing")
+  );
+}
+
 test("Test ChatAnthropic", async () => {
   const chat = new ChatAnthropic({
     modelName,
@@ -1583,6 +1610,50 @@ describe("Opus 4.5", () => {
   });
 });
 
+describe("Fable 5", () => {
+  it("works with default parameters", async ({ skip }) => {
+    const model = new ChatAnthropic({
+      model: "claude-fable-5",
+    });
+
+    try {
+      const response = await model.invoke(
+        "Please respond to this message simply with: Hello"
+      );
+      expect(response.content.length).toBeGreaterThan(0);
+    } catch (error) {
+      if (isModelAccessRestrictedError(error)) {
+        skip();
+        return;
+      }
+      throw error;
+    }
+  });
+});
+
+describe("Mythos 5", () => {
+  it("works with default parameters when account access is enabled", async ({
+    skip,
+  }) => {
+    const model = new ChatAnthropic({
+      model: "claude-mythos-5",
+    });
+
+    try {
+      const response = await model.invoke(
+        "Please respond to this message simply with: Hello"
+      );
+      expect(response.content.length).toBeGreaterThan(0);
+    } catch (error) {
+      if (isModelAccessRestrictedError(error)) {
+        skip();
+        return;
+      }
+      throw error;
+    }
+  });
+});
+
 it("won't modify structured output content if outputVersion is set", async () => {
   const schema = z.object({ name: z.string() });
   const model = new ChatAnthropic({
@@ -1652,6 +1723,19 @@ describe("Anthropic Reasoning with contentBlocks", () => {
     const reasoningBlocks = blocks.filter((b) => b.type === "reasoning");
     expect(reasoningBlocks.length).toBeGreaterThan(0);
     expect((reasoningBlocks[0] as any).reasoning.length).toBeGreaterThan(10);
+  }, 60000);
+});
+
+describe("Opus 5", () => {
+  test("invokes with adaptive thinking enabled by default", async () => {
+    const model = new ChatAnthropic({
+      model: "claude-opus-5",
+      maxTokens: 1024,
+      outputConfig: { effort: "low" },
+    });
+
+    const result = await model.invoke("Reply with the word 'ready'.");
+    expect(result.content).toBeDefined();
   }, 60000);
 });
 

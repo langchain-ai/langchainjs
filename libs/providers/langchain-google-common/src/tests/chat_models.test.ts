@@ -16,6 +16,7 @@ import { Serialized } from "@langchain/core/load/serializable";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod/v3";
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
+import { concat } from "@langchain/core/utils/stream";
 import { ChatGoogleBase, ChatGoogleBaseInput } from "../chat_models.js";
 import {
   authOptions,
@@ -276,6 +277,60 @@ describe("Mock ChatGoogle - Gemini", () => {
 
     expect(record?.opts.url).toEqual(
       `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-pro:generateContent`
+    );
+  });
+
+  test("platform endpoint - gcp multi-region location", async () => {
+    const projectId = mockId();
+    for (const location of ["eu", "us"]) {
+      const record: Record<string, any> = {};
+      const authOptions: MockClientAuthInfo = {
+        record,
+        projectId,
+        resultFile: "chat-1-mock.json",
+      };
+      const model = new ChatGoogle({
+        authOptions,
+        platformType: "gcp",
+        location,
+      });
+      const messages: BaseMessageLike[] = [
+        new HumanMessage("Flip a coin and tell me H for heads and T for tails"),
+        new AIMessage("H"),
+        new HumanMessage("Flip it again"),
+      ];
+      await model.invoke(messages);
+
+      expect(record?.opts.url).toEqual(
+        `https://aiplatform.${location}.rep.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/gemini-pro:generateContent`
+      );
+    }
+  });
+
+  test("platform endpoint - gcp multi-region location with custom endpoint", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-1-mock.json",
+    };
+    const endpoint = "aiplatform.eu.rep.googleapis.com";
+    const model = new ChatGoogle({
+      authOptions,
+      platformType: "gcp",
+      location: "eu",
+      endpoint,
+    });
+    const messages: BaseMessageLike[] = [
+      new HumanMessage("Flip a coin and tell me H for heads and T for tails"),
+      new AIMessage("H"),
+      new HumanMessage("Flip it again"),
+    ];
+    await model.invoke(messages);
+
+    expect(record?.opts.url).toEqual(
+      `https://${endpoint}/v1/projects/${projectId}/locations/eu/publishers/google/models/gemini-pro:generateContent`
     );
   });
 
@@ -2336,6 +2391,32 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(data.generationConfig.responseMimeType).toBe("application/json");
   });
 
+  test("4. Functions withStructuredOutput - includeRaw parses thought content blocks", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-json-schema-thinking-mock.json",
+    };
+
+    const schema = z.object({
+      testName: z.string().describe("The name of the test."),
+    });
+
+    const baseModel = new ChatGoogle({
+      authOptions,
+    });
+    const model = baseModel.withStructuredOutput(schema, {
+      includeRaw: true,
+    });
+
+    const result = await model.invoke("What is the test name?");
+
+    expect(result.raw).toBeDefined();
+    expect(result.parsed).toEqual({ testName: "cobalt" });
+  });
+
   test("4. Functions withStructuredOutput - functionCalling method request", async () => {
     const record: Record<string, any> = {};
     const projectId = mockId();
@@ -2777,6 +2858,65 @@ describe("Mock ChatGoogle - Gemini", () => {
     expect(result.content as string).toContain("Dodgers");
 
     expect(record.opts.data.tools[0]).toHaveProperty("googleSearch");
+  });
+
+  test("6. mixing googleSearch with function tool sets includeServerSideToolInvocations", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-6-mock.json",
+    };
+
+    const myTool = tool(async ({ query }) => `Result for ${query}`, {
+      name: "my_tool",
+      description: "A custom tool",
+      schema: z.object({ query: z.string() }),
+    });
+
+    const model = new ChatGoogle({
+      authOptions,
+      modelName: "gemini-2.0-flash",
+      temperature: 0,
+      maxRetries: 0,
+    }).bindTools([myTool, { googleSearch: {} }]);
+
+    await model.invoke("Search for the latest news about AI");
+
+    expect(record.opts.data.toolConfig).toBeDefined();
+    expect(record.opts.data.toolConfig.includeServerSideToolInvocations).toBe(
+      true
+    );
+  });
+
+  test("6. function tool only does not set includeServerSideToolInvocations", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-6-mock.json",
+    };
+
+    const myTool = tool(async ({ query }) => `Result for ${query}`, {
+      name: "my_tool",
+      description: "A custom tool",
+      schema: z.object({ query: z.string() }),
+    });
+
+    const model = new ChatGoogle({
+      authOptions,
+      modelName: "gemini-2.0-flash",
+      temperature: 0,
+      maxRetries: 0,
+    }).bindTools([myTool]);
+
+    await model.invoke("Anything");
+
+    expect(
+      record.opts.data.toolConfig?.includeServerSideToolInvocations
+    ).toBeUndefined();
   });
 
   test("7. logprobs request true", async () => {
@@ -3345,6 +3485,57 @@ test("Can set streaming param", () => {
     streaming: true,
   });
   expect(modelWithStreamingTrue.streaming).toBe(true);
+});
+
+test("Invoke usage_metadata maps token details", async () => {
+  const record: Record<string, unknown> = {};
+  const projectId = mockId();
+  const model = new ChatGoogle({
+    authOptions: {
+      record,
+      projectId,
+      resultFile: "chat-usage-metadata-mock.json",
+    },
+  });
+
+  const result = await model.invoke("Hello?");
+
+  expect(result.usage_metadata?.input_tokens).toBe(30);
+  expect(result.usage_metadata?.output_tokens).toBe(10);
+  expect(result.usage_metadata?.total_tokens).toBe(40);
+  expect(result.usage_metadata?.input_token_details?.text).toBe(20);
+  expect(result.usage_metadata?.input_token_details?.image).toBe(10);
+  expect(result.usage_metadata?.input_token_details?.cache_read).toBe(8);
+  expect(result.usage_metadata?.output_token_details?.text).toBe(6);
+  expect(result.usage_metadata?.output_token_details?.reasoning).toBe(4);
+});
+
+test("Stream usage_metadata includes cache_read", async () => {
+  const record: Record<string, unknown> = {};
+  const projectId = mockId();
+  const model = new ChatGoogle({
+    authOptions: {
+      record,
+      projectId,
+      resultFile: "chat-stream-usage-cache-mock.json",
+    },
+    streaming: true,
+  });
+
+  const stream = await model.stream("Hello?", { streamUsage: true });
+  let finalChunk;
+  for await (const chunk of stream) {
+    finalChunk = finalChunk ? concat(finalChunk, chunk) : chunk;
+  }
+
+  expect(finalChunk).toBeDefined();
+  expect(finalChunk?.usage_metadata?.input_tokens).toBe(12);
+  expect(finalChunk?.usage_metadata?.output_tokens).toBe(6);
+  expect(finalChunk?.usage_metadata?.total_tokens).toBe(18);
+  expect(finalChunk?.usage_metadata?.input_token_details?.text).toBe(12);
+  expect(finalChunk?.usage_metadata?.input_token_details?.cache_read).toBe(5);
+  expect(finalChunk?.usage_metadata?.output_token_details?.text).toBe(4);
+  expect(finalChunk?.usage_metadata?.output_token_details?.reasoning).toBe(2);
 });
 
 describe("withStructuredOutput - StandardSchema", () => {

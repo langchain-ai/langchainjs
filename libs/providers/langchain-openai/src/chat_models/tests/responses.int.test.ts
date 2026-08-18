@@ -831,7 +831,8 @@ describe("reasoning summaries", () => {
       aiMessage = await llm.invoke(prompt);
     }
 
-    expect(aiMessage.id).toMatch(/^msg_[a-f0-9]+$/);
+    expect(aiMessage.id).toMatch(/^resp_[a-f0-9]+$/);
+    expect(aiMessage.id).toBe(aiMessage.response_metadata.id);
 
     // Check the final aggregated message
     const reasoning = aiMessage?.additional_kwargs

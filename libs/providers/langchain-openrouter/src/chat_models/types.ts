@@ -57,6 +57,10 @@ export interface ChatOpenRouterFields {
   provider?: OpenRouter.ProviderPreferences;
   /** OpenRouter plugins to enable (e.g. web search). */
   plugins?: OpenRouterPlugin[];
+  /** Identifier used by OpenRouter to group related requests together. */
+  sessionId?: string;
+  /** Trace metadata for OpenRouter broadcast destinations. */
+  trace?: OpenRouter.TraceConfig;
 }
 
 /**

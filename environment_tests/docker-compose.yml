@@ -1,6 +1,6 @@
 services:
   test-exports-esbuild:
-    image: node:20
+    image: node:22
     environment:
       PUPPETEER_SKIP_DOWNLOAD: "true"
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
@@ -17,6 +17,7 @@ services:
 
       - ../libs/providers/langchain-ollama:/langchain-ollama
       - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
+      - ../libs/providers/langchain-google-common:/langchain-google-common
       - ../internal/standard-tests:/langchain-standard-tests
       - ../libs/langchain-scripts:/langchain-scripts
       - ../libs/langchain-textsplitters:/langchain-textsplitters
@@ -24,7 +25,7 @@ services:
       - ../internal/tsconfig:/langchain-tsconfig
     command: bash /scripts/docker-entrypoint.sh
   test-exports-esm:
-    image: node:20
+    image: node:22
     environment:
       PUPPETEER_SKIP_DOWNLOAD: "true"
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
@@ -41,6 +42,7 @@ services:
 
       - ../libs/providers/langchain-ollama:/langchain-ollama
       - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
+      - ../libs/providers/langchain-google-common:/langchain-google-common
       - ../internal/standard-tests:/langchain-standard-tests
       - ../libs/langchain-scripts:/langchain-scripts
       - ../libs/langchain-textsplitters:/langchain-textsplitters
@@ -48,7 +50,7 @@ services:
       - ../internal/tsconfig:/langchain-tsconfig
     command: bash /scripts/docker-entrypoint.sh
   test-exports-tsc:
-    image: node:20
+    image: node:22
     environment:
       PUPPETEER_SKIP_DOWNLOAD: "true"
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
@@ -65,6 +67,7 @@ services:
 
       - ../libs/providers/langchain-ollama:/langchain-ollama
       - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
+      - ../libs/providers/langchain-google-common:/langchain-google-common
       - ../internal/standard-tests:/langchain-standard-tests
       - ../libs/langchain-scripts:/langchain-scripts
       - ../libs/langchain-textsplitters:/langchain-textsplitters
@@ -72,7 +75,7 @@ services:
       - ../internal/tsconfig:/langchain-tsconfig
     command: bash /scripts/docker-entrypoint.sh
   test-exports-cjs:
-    image: node:20
+    image: node:22
     environment:
       PUPPETEER_SKIP_DOWNLOAD: "true"
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
@@ -89,6 +92,7 @@ services:
 
       - ../libs/providers/langchain-ollama:/langchain-ollama
       - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
+      - ../libs/providers/langchain-google-common:/langchain-google-common
       - ../internal/standard-tests:/langchain-standard-tests
       - ../libs/langchain-scripts:/langchain-scripts
       - ../libs/langchain-textsplitters:/langchain-textsplitters
@@ -96,7 +100,7 @@ services:
       - ../internal/tsconfig:/langchain-tsconfig
     command: bash /scripts/docker-entrypoint.sh
   test-exports-cf:
-    image: node:20
+    image: node:22
     environment:
       PUPPETEER_SKIP_DOWNLOAD: "true"
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
@@ -113,6 +117,7 @@ services:
 
       - ../libs/providers/langchain-ollama:/langchain-ollama
       - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
+      - ../libs/providers/langchain-google-common:/langchain-google-common
       - ../internal/standard-tests:/langchain-standard-tests
       - ../libs/langchain-scripts:/langchain-scripts
       - ../libs/langchain-textsplitters:/langchain-textsplitters
@@ -120,7 +125,7 @@ services:
       - ../internal/tsconfig:/langchain-tsconfig
     command: bash /scripts/docker-entrypoint.sh
   test-exports-vercel:
-    image: node:20
+    image: node:22
     environment:
       PUPPETEER_SKIP_DOWNLOAD: "true"
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
@@ -137,6 +142,7 @@ services:
 
       - ../libs/providers/langchain-ollama:/langchain-ollama
       - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
+      - ../libs/providers/langchain-google-common:/langchain-google-common
       - ../internal/standard-tests:/langchain-standard-tests
       - ../libs/langchain-scripts:/langchain-scripts
       - ../libs/langchain-textsplitters:/langchain-textsplitters
@@ -144,7 +150,7 @@ services:
       - ../internal/tsconfig:/langchain-tsconfig
     command: bash /scripts/docker-entrypoint.sh
   test-exports-vite:
-    image: node:20
+    image: node:22
     environment:
       PUPPETEER_SKIP_DOWNLOAD: "true"
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
@@ -161,6 +167,7 @@ services:
 
       - ../libs/providers/langchain-ollama:/langchain-ollama
       - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
+      - ../libs/providers/langchain-google-common:/langchain-google-common
       - ../internal/standard-tests:/langchain-standard-tests
       - ../libs/langchain-scripts:/langchain-scripts
       - ../libs/langchain-textsplitters:/langchain-textsplitters
@@ -182,6 +189,7 @@ services:
 
       - ../libs/providers/langchain-ollama:/langchain-ollama
       - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
+      - ../libs/providers/langchain-google-common:/langchain-google-common
       - ../internal/standard-tests:/langchain-standard-tests
       - ../libs/langchain-scripts:/langchain-scripts
       - ../libs/langchain-textsplitters:/langchain-textsplitters
@@ -189,7 +197,7 @@ services:
       - ../internal/tsconfig:/langchain-tsconfig
     command: bash /scripts/docker-bun-entrypoint.sh
   test-exports-node-classic:
-    image: node:20
+    image: node:22
     environment:
       PUPPETEER_SKIP_DOWNLOAD: "true"
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
@@ -206,6 +214,7 @@ services:
 
       - ../libs/providers/langchain-ollama:/langchain-ollama
       - ../libs/providers/langchain-google-gauth:/langchain-google-gauth
+      - ../libs/providers/langchain-google-common:/langchain-google-common
       - ../internal/standard-tests:/langchain-standard-tests
       - ../libs/langchain-scripts:/langchain-scripts
       - ../libs/langchain-textsplitters:/langchain-textsplitters

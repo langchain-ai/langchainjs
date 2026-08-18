@@ -1,7 +1,9 @@
-import { z } from "zod/v4";
 import { RunnableConfig } from "@langchain/core/runnables";
 import { MiddlewareNode } from "./middleware.js";
-import type { AgentMiddleware, MiddlewareResult } from "../middleware/types.js";
+import type {
+  AnyAgentMiddleware,
+  MiddlewareResult,
+} from "../middleware/types.js";
 import type { AgentBuiltInState, Runtime } from "../runtime.js";
 import { getHookFunction } from "../middleware/utils.js";
 
@@ -14,12 +16,7 @@ export class AfterModelNode<
 > extends MiddlewareNode<TStateSchema, TContextSchema> {
   lc_namespace = ["langchain", "agents", "afterModelNodes"];
 
-  constructor(
-    public middleware: AgentMiddleware<
-      z.ZodObject<z.ZodRawShape>,
-      z.ZodObject<z.ZodRawShape>
-    >
-  ) {
+  constructor(public middleware: AnyAgentMiddleware) {
     super({
       name: `AfterModelNode_${middleware.name}`,
       func: async (

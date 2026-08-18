@@ -163,6 +163,13 @@ describe("todoListMiddleware", () => {
     expect(result.todos).toEqual([
       { content: "Complete the requested task", status: "in_progress" },
     ]);
+
+    const writeTodosToolMessage = result.messages.find(
+      (msg): msg is ToolMessage =>
+        ToolMessage.isInstance(msg) && msg.tool_call_id === "call_test123"
+    );
+    expect(writeTodosToolMessage).toBeDefined();
+    expect(writeTodosToolMessage!.name).toBe("write_todos");
   });
 
   describe("parallel write_todos detection", () => {
@@ -224,6 +231,9 @@ describe("todoListMiddleware", () => {
       expect(msg2.content).toContain(
         "Error: The `write_todos` tool should never be called multiple times in parallel"
       );
+
+      expect(msg1.name).toBe("write_todos");
+      expect(msg2.name).toBe("write_todos");
     });
 
     it("should reject parallel write_todos calls even when mixed with other tools", async () => {

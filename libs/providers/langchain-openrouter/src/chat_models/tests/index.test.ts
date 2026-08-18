@@ -1,4 +1,13 @@
-import { describe, it, expect, beforeAll, afterAll, vi, test } from "vitest";
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  beforeEach,
+  afterAll,
+  vi,
+  test,
+} from "vitest";
 import { AIMessage } from "@langchain/core/messages";
 import { OutputParserException } from "@langchain/core/output_parsers";
 import { ChatOpenRouter } from "../index.js";
@@ -6,10 +15,16 @@ import type { ChatOpenRouterCallOptions } from "../types.js";
 import { OpenRouterAuthError } from "../../utils/errors.js";
 
 let savedKey: string | undefined;
+let savedSessionId: string | undefined;
 
 beforeAll(() => {
   savedKey = process.env.OPENROUTER_API_KEY;
+  savedSessionId = process.env.OPENROUTER_SESSION_ID;
   process.env.OPENROUTER_API_KEY = "test-key";
+});
+
+beforeEach(() => {
+  delete process.env.OPENROUTER_SESSION_ID;
 });
 
 afterAll(() => {
@@ -17,6 +32,11 @@ afterAll(() => {
     process.env.OPENROUTER_API_KEY = savedKey;
   } else {
     delete process.env.OPENROUTER_API_KEY;
+  }
+  if (savedSessionId !== undefined) {
+    process.env.OPENROUTER_SESSION_ID = savedSessionId;
+  } else {
+    delete process.env.OPENROUTER_SESSION_ID;
   }
 });
 
@@ -234,6 +254,8 @@ describe("invocationParams", () => {
       models: ["a", "b"],
       route: "fallback",
       provider: { order: ["OpenAI"] },
+      sessionId: "session-abc",
+      trace: { trace_id: "trace-1", span_name: "summarize" },
     });
 
     const params = model.invocationParams({} as ChatOpenRouterCallOptions);
@@ -242,6 +264,88 @@ describe("invocationParams", () => {
     expect(params.models).toEqual(["a", "b"]);
     expect(params.route).toBe("fallback");
     expect(params.provider).toEqual({ order: ["OpenAI"] });
+    expect(params.session_id).toBe("session-abc");
+    expect(params.trace).toEqual({
+      trace_id: "trace-1",
+      span_name: "summarize",
+    });
+  });
+
+  it("omits session ID and trace when unset", () => {
+    const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
+
+    const params = model.invocationParams({} as ChatOpenRouterCallOptions);
+
+    expect(params).not.toHaveProperty("session_id");
+    expect(params).not.toHaveProperty("trace");
+  });
+
+  it("loads session ID from OPENROUTER_SESSION_ID", () => {
+    process.env.OPENROUTER_SESSION_ID = "env-session-xyz";
+    const model = new ChatOpenRouter({ model: "openai/gpt-4o" });
+
+    const params = model.invocationParams({} as ChatOpenRouterCallOptions);
+
+    expect(model.sessionId).toBe("env-session-xyz");
+    expect(params.session_id).toBe("env-session-xyz");
+    delete process.env.OPENROUTER_SESSION_ID;
+  });
+
+  it("prefers explicit session ID over OPENROUTER_SESSION_ID", () => {
+    process.env.OPENROUTER_SESSION_ID = "env-session";
+    const model = new ChatOpenRouter({
+      model: "openai/gpt-4o",
+      sessionId: "explicit-session",
+    });
+
+    const params = model.invocationParams({} as ChatOpenRouterCallOptions);
+
+    expect(model.sessionId).toBe("explicit-session");
+    expect(params.session_id).toBe("explicit-session");
+    delete process.env.OPENROUTER_SESSION_ID;
+  });
+
+  it("allows per-call session ID and trace overrides", () => {
+    const constructorTrace = { trace_id: "constructor-trace" };
+    const callTrace = { trace_id: "call-trace", span_name: "summarize" };
+    const model = new ChatOpenRouter({
+      model: "openai/gpt-4o",
+      sessionId: "constructor-session",
+      trace: constructorTrace,
+    });
+
+    const params = model.invocationParams({
+      sessionId: "call-session",
+      trace: callTrace,
+    } as ChatOpenRouterCallOptions);
+    const fallbackParams = model.invocationParams(
+      {} as ChatOpenRouterCallOptions
+    );
+
+    expect(params.session_id).toBe("call-session");
+    expect(params.trace).toEqual(callTrace);
+    expect(model.sessionId).toBe("constructor-session");
+    expect(model.trace).toEqual(constructorTrace);
+    expect(fallbackParams.session_id).toBe("constructor-session");
+    expect(fallbackParams.trace).toEqual(constructorTrace);
+  });
+
+  it("treats empty session ID as unset", () => {
+    const model = new ChatOpenRouter({
+      model: "openai/gpt-4o",
+      sessionId: "",
+    });
+    const params = model.invocationParams({} as ChatOpenRouterCallOptions);
+
+    process.env.OPENROUTER_SESSION_ID = "";
+    const envModel = new ChatOpenRouter({ model: "openai/gpt-4o" });
+    const envParams = envModel.invocationParams(
+      {} as ChatOpenRouterCallOptions
+    );
+
+    expect(params).not.toHaveProperty("session_id");
+    expect(envParams).not.toHaveProperty("session_id");
+    delete process.env.OPENROUTER_SESSION_ID;
   });
 
   it("includes prediction only when set", () => {
@@ -352,6 +456,96 @@ describe("stream callbacks", () => {
         chunk: expect.objectContaining({ text }),
       })
     );
+  });
+});
+
+describe("retry behavior", () => {
+  it("retries a 429 response with short Retry-After through AsyncCaller", async () => {
+    const model = new ChatOpenRouter({
+      model: "openai/gpt-4o-mini",
+      maxRetries: 1,
+    });
+
+    const okResponse = new Response(
+      JSON.stringify({
+        id: "chatcmpl-1",
+        choices: [
+          {
+            index: 0,
+            message: { role: "assistant", content: "Hello back" },
+            finish_reason: "stop",
+          },
+        ],
+        usage: {
+          prompt_tokens: 1,
+          completion_tokens: 1,
+          total_tokens: 2,
+        },
+      }),
+      {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }
+    );
+
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            error: { message: "Rate limit exceeded", code: 429 },
+          }),
+          {
+            status: 429,
+            headers: {
+              "content-type": "application/json",
+              "retry-after": "1",
+            },
+          }
+        )
+      )
+      .mockResolvedValueOnce(okResponse);
+
+    try {
+      const result = await model.invoke("Hello");
+      expect(result.content).toBe("Hello back");
+      expect(fetchSpy).toHaveBeenCalledTimes(2);
+    } finally {
+      fetchSpy.mockRestore();
+    }
+  });
+
+  it("does not retry quota-style 429 responses with long Retry-After", async () => {
+    const model = new ChatOpenRouter({
+      model: "openai/gpt-4o-mini",
+      maxRetries: 2,
+    });
+
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          error: { message: "Quota exhausted", code: 429 },
+        }),
+        {
+          status: 429,
+          headers: {
+            "content-type": "application/json",
+            "retry-after": "120",
+          },
+        }
+      )
+    );
+
+    try {
+      await expect(model.invoke("Hello")).rejects.toMatchObject({
+        name: "OpenRouterRateLimitError",
+        rateLimitType: "stop",
+        rateLimitReason: "quota_message",
+      });
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+    } finally {
+      fetchSpy.mockRestore();
+    }
   });
 });
 

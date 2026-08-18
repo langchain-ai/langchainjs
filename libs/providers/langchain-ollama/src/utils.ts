@@ -12,7 +12,7 @@ import type {
   Message as OllamaMessage,
   ToolCall as OllamaToolCall,
 } from "ollama";
-import { v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4 } from "@langchain/core/utils/uuid";
 
 export function convertOllamaMessagesToLangChain(
   messages: OllamaMessage,

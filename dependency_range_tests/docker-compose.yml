@@ -1,7 +1,7 @@
 services:
   # LangChain
   langchain-latest-deps:
-    image: node:20
+    image: node:22
     environment:
       PUPPETEER_SKIP_DOWNLOAD: "true"
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
@@ -13,6 +13,7 @@ services:
       - ../libs/langchain-textsplitters:/libs/langchain-textsplitters
       - ../libs/providers/langchain-openai:/libs/langchain-openai
       - ../libs/providers/langchain-anthropic:/libs/langchain-anthropic
+      - ../libs/providers/langchain-aws:/libs/langchain-aws
       - ../libs/providers/langchain-cohere:/libs/langchain-cohere
       - ../libs/providers/langchain-fireworks:/libs/langchain-fireworks
       - ../libs/providers/langchain-xai:/libs/langchain-xai
@@ -20,7 +21,7 @@ services:
       - ./scripts:/scripts
     command: bash /scripts/langchain/test-with-latest-deps.sh
   langchain-lowest-deps:
-    image: node:20
+    image: node:22
     environment:
       PUPPETEER_SKIP_DOWNLOAD: "true"
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
@@ -32,6 +33,7 @@ services:
       - ../libs/langchain-textsplitters:/libs/langchain-textsplitters
       - ../libs/providers/langchain-openai:/libs/langchain-openai
       - ../libs/providers/langchain-anthropic:/libs/langchain-anthropic
+      - ../libs/providers/langchain-aws:/libs/langchain-aws
       - ../libs/providers/langchain-cohere:/libs/langchain-cohere
       - ../libs/providers/langchain-fireworks:/libs/langchain-fireworks
       - ../libs/providers/langchain-xai:/libs/langchain-xai
@@ -41,7 +43,7 @@ services:
 
   # OpenAI
   # openai-latest-deps:
-  #   image: node:20
+  #   image: node:22
   #   environment:
   #     PUPPETEER_SKIP_DOWNLOAD: "true"
   #     PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
@@ -57,7 +59,7 @@ services:
   #     - ./scripts:/scripts
   #   command: bash /scripts/with_standard_tests/openai/test-with-latest-deps.sh
   # openai-lowest-deps:
-  #   image: node:20
+  #   image: node:22
   #   environment:
   #     PUPPETEER_SKIP_DOWNLOAD: "true"
   #     PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
@@ -75,7 +77,7 @@ services:
 
   # Anthropic
   # anthropic-latest-deps:
-  #   image: node:20
+  #   image: node:22
   #   environment:
   #     PUPPETEER_SKIP_DOWNLOAD: "true"
   #     PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
@@ -91,7 +93,7 @@ services:
   #     - ./scripts:/scripts
   #   command: bash /scripts/with_standard_tests/anthropic/test-with-latest-deps.sh
   # anthropic-lowest-deps:
-  #   image: node:20
+  #   image: node:22
   #   environment:
   #     PUPPETEER_SKIP_DOWNLOAD: "true"
   #     PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
@@ -109,7 +111,7 @@ services:
 
   # Google VertexAI
   google-vertexai-latest-deps:
-    image: node:20
+    image: node:22
     environment:
       PUPPETEER_SKIP_DOWNLOAD: "true"
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
@@ -125,7 +127,7 @@ services:
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/google-vertexai/test-with-latest-deps.sh
   google-vertexai-lowest-deps:
-    image: node:20
+    image: node:22
     environment:
       PUPPETEER_SKIP_DOWNLOAD: "true"
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
@@ -143,7 +145,7 @@ services:
 
   # Cohere
   cohere-latest-deps:
-    image: node:20
+    image: node:22
     environment:
       PUPPETEER_SKIP_DOWNLOAD: "true"
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"
@@ -159,7 +161,7 @@ services:
       - ./scripts:/scripts
     command: bash /scripts/with_standard_tests/cohere/test-with-latest-deps.sh
   # cohere-lowest-deps:
-  #   image: node:20
+  #   image: node:22
   #   environment:
   #     PUPPETEER_SKIP_DOWNLOAD: "true"
   #     PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "true"

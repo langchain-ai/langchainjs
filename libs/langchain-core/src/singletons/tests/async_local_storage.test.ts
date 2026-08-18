@@ -1,5 +1,5 @@
 import { test, expect } from "vitest";
-import { v4 } from "uuid";
+import { v4 } from "../../utils/uuid/index.js";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { AsyncLocalStorageProviderSingleton } from "../index.js";
 import { RunnableLambda } from "../../runnables/base.js";

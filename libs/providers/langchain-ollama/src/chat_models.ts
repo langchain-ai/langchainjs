@@ -10,6 +10,7 @@ import {
   FunctionDefinition,
 } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import {
   type BaseChatModelParams,
   BaseChatModel,
@@ -28,6 +29,7 @@ import type {
   Tool as OllamaTool,
 } from "ollama";
 import { Runnable } from "@langchain/core/runnables";
+import { convertOllamaStream } from "./utils/stream_events.js";
 import { convertToOpenAITool } from "@langchain/core/utils/function_calling";
 import { concat } from "@langchain/core/utils/stream";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
@@ -59,6 +61,7 @@ export interface ChatOllamaCallOptions extends BaseChatModelCallOptions {
   tools?: BindToolsInput[];
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   format?: string | Record<string, any>;
+  streamUsage?: boolean;
   /** @deprecated Tool choice is not supported for ChatOllama */
   tool_choice?: never;
 }
@@ -681,12 +684,7 @@ export class ChatOllama
     );
   }
 
-  async _generate(
-    messages: BaseMessage[],
-    options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
-  ): Promise<ChatResult> {
-    options.signal?.throwIfAborted();
+  private async ensureModelAvailable(): Promise<void> {
     if (this.checkOrPullModel) {
       if (!(await this.checkModelExistsOnMachine(this.model))) {
         await this.pull(this.model, {
@@ -694,6 +692,15 @@ export class ChatOllama
         });
       }
     }
+  }
+
+  async _generate(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): Promise<ChatResult> {
+    options.signal?.throwIfAborted();
+    await this.ensureModelAvailable();
 
     let finalChunk: AIMessageChunk | undefined;
     for await (const chunk of this._streamResponseChunks(
@@ -730,18 +737,44 @@ export class ChatOllama
     };
   }
 
+  async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    await this.ensureModelAvailable();
+
+    const params = this.invocationParams(options);
+    const ollamaMessages = convertToOllamaMessages(messages) as OllamaMessage[];
+    const stream = await this.client.chat({
+      ...params,
+      messages: ollamaMessages,
+      stream: true,
+    });
+    const shouldStreamUsage = options.streamUsage ?? true;
+    const abortableStream = async function* (
+      source: AsyncIterable<OllamaChatResponse>,
+      signal?: AbortSignal
+    ) {
+      for await (const chunk of source) {
+        if (signal?.aborted) {
+          return;
+        }
+        yield chunk;
+      }
+    };
+    yield* convertOllamaStream(abortableStream(stream, options.signal), {
+      streamUsage: shouldStreamUsage,
+      think: this.think,
+    });
+  }
+
   async *_streamResponseChunks(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
-    if (this.checkOrPullModel) {
-      if (!(await this.checkModelExistsOnMachine(this.model))) {
-        await this.pull(this.model, {
-          logProgress: true,
-        });
-      }
-    }
+    await this.ensureModelAvailable();
 
     const params = this.invocationParams(options);
     // TODO: remove cast after SDK adds support for tool calls

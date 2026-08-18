@@ -1,8 +1,23 @@
-import { test, expect } from "@jest/globals";
+import { test, expect, beforeAll, beforeEach, afterAll } from "vitest";
 import { MongoClient, Collection } from "mongodb";
 import { Generation } from "@langchain/core/outputs";
 import { MongoDBCache, MongoDBAtlasSemanticCache } from "../cache.js";
 import { uri, waitForIndexToBeQueryable } from "./utils.js";
+
+async function waitForCacheIndexed(
+  cache: MongoDBAtlasSemanticCache,
+  prompt: string,
+  llmKey: string,
+  maxWaitMs = 30_000
+): Promise<void> {
+  const start = Date.now();
+  while (Date.now() - start < maxWaitMs) {
+    const result = await cache.lookup(prompt, llmKey);
+    if (result !== null) return;
+    await new Promise((resolve) => setTimeout(resolve, 2_000));
+  }
+  throw new Error(`Semantic cache entry not indexed after ${maxWaitMs}ms`);
+}
 
 class TestEmbeddings {
   async embedQuery(text: string): Promise<number[]> {
@@ -84,7 +99,6 @@ test("MongoDBAtlasSemanticCache: caches and retrieves a prompt", async () => {
   const embeddings = new TestEmbeddings();
   const cache = new MongoDBAtlasSemanticCache(semanticCollection, embeddings, {
     scoreThreshold: 0.99,
-    waitUntilReady: 1,
   });
 
   const prompt = "What is the capital of France?";
@@ -92,7 +106,7 @@ test("MongoDBAtlasSemanticCache: caches and retrieves a prompt", async () => {
   const gen = [{ text: "Paris" }];
 
   await cache.update(prompt, llmKey, gen);
-  await waitForIndexToBeQueryable(semanticCollection, "default");
+  await waitForCacheIndexed(cache, prompt, llmKey);
   const result = await cache.lookup(prompt, llmKey);
   expect(result?.[0].text).toBe("Paris");
 });
@@ -101,7 +115,6 @@ test("MongoDBAtlasSemanticCache: similar prompts share cache", async () => {
   const embeddings = new TestEmbeddings();
   const cache = new MongoDBAtlasSemanticCache(semanticCollection, embeddings, {
     scoreThreshold: 0.99,
-    waitUntilReady: 1,
   });
 
   const prompt1 = "What is the capital of France?";
@@ -110,7 +123,7 @@ test("MongoDBAtlasSemanticCache: similar prompts share cache", async () => {
   const gen = [{ text: "Paris" }];
 
   await cache.update(prompt1, llmKey, gen);
-  await waitForIndexToBeQueryable(semanticCollection, "default");
+  await waitForCacheIndexed(cache, prompt1, llmKey);
   const result = await cache.lookup(prompt2, llmKey);
   expect(result?.[0].text).toBe("Paris");
 });
@@ -119,7 +132,6 @@ test("MongoDBAtlasSemanticCache: dissimilar prompts do not share cache", async (
   const embeddings = new TestEmbeddings();
   const cache = new MongoDBAtlasSemanticCache(semanticCollection, embeddings, {
     scoreThreshold: 0.99,
-    waitUntilReady: 1,
   });
 
   const prompt1 = "What is the capital of France?";
@@ -130,7 +142,7 @@ test("MongoDBAtlasSemanticCache: dissimilar prompts do not share cache", async (
 
   await cache.update(prompt1, llmKey, gen1);
   await cache.update(prompt3, llmKey, gen3);
-  await waitForIndexToBeQueryable(semanticCollection, "default");
+  await waitForCacheIndexed(cache, prompt3, llmKey);
   const result = await cache.lookup(prompt3, llmKey);
   expect(result?.[0].text).toBe("Mount Everest");
 });

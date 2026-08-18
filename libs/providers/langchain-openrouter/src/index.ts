@@ -12,4 +12,6 @@ export {
   OpenRouterAuthError,
   OpenRouterRateLimitError,
 } from "./utils/errors.js";
-export { default as OPENROUTER_MODEL_PROFILES } from "./profiles.js";
+import _OPENROUTER_MODEL_PROFILES from "./profiles.js";
+
+export const OPENROUTER_MODEL_PROFILES = _OPENROUTER_MODEL_PROFILES;

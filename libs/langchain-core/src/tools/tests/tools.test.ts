@@ -87,6 +87,54 @@ test("ToolMessage content coerces to empty string when tool returns undefined", 
   expect(toolResult).toHaveProperty("content", "");
 });
 
+test("ToolMessage content is JSON-stringified when a tool returns an array of plain objects", async () => {
+  const toolCall = {
+    id: "testid",
+    args: { location: "San Francisco" },
+    name: "weather",
+    type: "tool_call",
+  } as const;
+
+  const forecast = [
+    { day: "Mon", highF: 64, condition: "Foggy" },
+    { day: "Tue", highF: 67, condition: "Sunny" },
+  ];
+
+  const weatherTool = tool(() => forecast, {
+    name: "weather",
+    schema: z.object({ location: z.string() }),
+  });
+
+  const toolResult = await weatherTool.invoke(toolCall);
+
+  expect(toolResult).toBeInstanceOf(ToolMessage);
+  expect(toolResult.content).toBe(JSON.stringify(forecast));
+});
+
+test("ToolMessage content passes an array of content blocks through unchanged", async () => {
+  const toolCall = {
+    id: "testid",
+    args: { location: "San Francisco" },
+    name: "weather",
+    type: "tool_call",
+  } as const;
+
+  const blocks = [
+    { type: "text", text: "Sunny" },
+    { type: "image_url", image_url: { url: "https://example.com/sf.png" } },
+  ];
+
+  const weatherTool = tool(() => blocks, {
+    name: "weather",
+    schema: z.object({ location: z.string() }),
+  });
+
+  const toolResult = await weatherTool.invoke(toolCall);
+
+  expect(toolResult).toBeInstanceOf(ToolMessage);
+  expect(toolResult.content).toEqual(blocks);
+});
+
 test("Does not return tool message if responseFormat is content_and_artifact and returns a tuple and a tool call with no id is passed in", async () => {
   const weatherSchema = z.object({
     location: z.string(),

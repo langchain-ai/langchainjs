@@ -30,6 +30,10 @@ const dockerPackages: WorkspacePackage[] = [
     path: "/langchain-google-gauth",
   },
   {
+    pkg: { name: "@langchain/google-common" },
+    path: "/langchain-google-common",
+  },
+  {
     pkg: { name: "@langchain/standard-tests" },
     path: "/langchain-standard-tests",
   },
@@ -189,6 +193,13 @@ class EnvironmentTestRunner {
     // Enable corepack for pnpm
     if (!this.isBun) {
       await this.execCommand("corepack", ["enable"]);
+      // Keep environment tests on the repo's pinned pnpm major to avoid
+      // strict build-script policy changes from floating Corepack downloads.
+      await this.execCommand("corepack", [
+        "prepare",
+        "pnpm@10.14.0",
+        "--activate",
+      ]);
     }
   }
 

@@ -1,5 +1,6 @@
 // Inlined from https://github.com/flexdinesh/browser-or-node
 declare global {
+  // @ts-expect-error Conflicts with langsmith's ambient Deno declaration
   const Deno:
     | {
         version: {

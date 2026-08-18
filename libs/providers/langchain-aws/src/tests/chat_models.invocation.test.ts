@@ -24,7 +24,11 @@ vi.mock("@aws-sdk/client-bedrock-runtime", () => {
     }
   }
   class BedrockRuntimeClient {
+    static lastConfig: unknown;
     middlewareStack = { add: vi.fn() };
+    constructor(config: unknown) {
+      BedrockRuntimeClient.lastConfig = config;
+    }
     async send(command: unknown) {
       // Non-stream path
       if (
@@ -80,6 +84,7 @@ vi.mock("@aws-sdk/client-bedrock-runtime", () => {
 });
 
 import {
+  BedrockRuntimeClient,
   ConverseCommand,
   ConverseStreamCommand,
 } from "@aws-sdk/client-bedrock-runtime";
@@ -93,6 +98,54 @@ describe("ChatBedrockConverse invocationParams", () => {
     },
     model: "anthropic.claude-3-sonnet-20240229-v1:0",
   };
+
+  test("configures bearer auth from constructor token", async () => {
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      bedrockBearerToken: "test-bearer-token",
+    });
+    const clientClass = BedrockRuntimeClient as unknown as {
+      lastConfig?: {
+        authSchemePreference?: string[];
+        credentials?: unknown;
+        token?: () => Promise<{ token: string }>;
+      };
+    };
+
+    expect(model.bedrockBearerToken).toBe("test-bearer-token");
+    expect(clientClass.lastConfig?.authSchemePreference).toEqual([
+      "httpBearerAuth",
+    ]);
+    expect(clientClass.lastConfig?.credentials).toBeUndefined();
+    await expect(clientClass.lastConfig?.token?.()).resolves.toEqual({
+      token: "test-bearer-token",
+    });
+  });
+
+  test("configures bearer auth from AWS_BEARER_TOKEN_BEDROCK", async () => {
+    process.env.AWS_BEARER_TOKEN_BEDROCK = "env-bearer-token";
+    try {
+      const model = new ChatBedrockConverse(baseConstructorArgs);
+      const clientClass = BedrockRuntimeClient as unknown as {
+        lastConfig?: {
+          authSchemePreference?: string[];
+          credentials?: unknown;
+          token?: () => Promise<{ token: string }>;
+        };
+      };
+
+      expect(model.bedrockBearerToken).toBe("env-bearer-token");
+      expect(clientClass.lastConfig?.authSchemePreference).toEqual([
+        "httpBearerAuth",
+      ]);
+      expect(clientClass.lastConfig?.credentials).toBeUndefined();
+      await expect(clientClass.lastConfig?.token?.()).resolves.toEqual({
+        token: "env-bearer-token",
+      });
+    } finally {
+      delete process.env.AWS_BEARER_TOKEN_BEDROCK;
+    }
+  });
 
   describe("inferenceConfig conditional logic", () => {
     test("covers all inferenceConfig scenarios compactly", () => {
@@ -305,6 +358,82 @@ describe("ChatBedrockConverse invocationParams", () => {
         }
       }
     );
+  });
+
+  describe("prompt caching request mapping", () => {
+    test("invoke maps cache_control to system, messages, and tools", async () => {
+      const model = new ChatBedrockConverse(baseConstructorArgs);
+      await model.invoke(
+        [new SystemMessage("System prompt"), new HumanMessage("Hello")],
+        {
+          cache_control: { type: "ephemeral", ttl: "1h" },
+          tools: [
+            {
+              toolSpec: {
+                name: "get_weather",
+                description: "Get weather",
+                inputSchema: {
+                  json: { type: "object", properties: {} },
+                },
+              },
+            },
+          ],
+        }
+      );
+
+      const input = Reflect.get(
+        ConverseCommand,
+        "lastInput"
+      ) as ConverseCommandInput;
+
+      expect(input.system).toEqual([
+        { text: "System prompt" },
+        { cachePoint: { type: "default", ttl: "1h" } },
+      ]);
+      expect(input.messages?.[0].content).toEqual([
+        { text: "Hello" },
+        { cachePoint: { type: "default", ttl: "1h" } },
+      ]);
+      expect(input.toolConfig?.tools).toEqual([
+        {
+          toolSpec: {
+            name: "get_weather",
+            description: "Get weather",
+            inputSchema: {
+              json: { type: "object", properties: {} },
+            },
+          },
+        },
+        { cachePoint: { type: "default", ttl: "1h" } },
+      ]);
+    });
+
+    test("stream maps cache_control to system and last message", async () => {
+      const model = new ChatBedrockConverse(baseConstructorArgs);
+      const stream = await model.stream(
+        [new SystemMessage("System prompt"), new HumanMessage("Hello")],
+        {
+          cache_control: { type: "ephemeral" },
+        }
+      );
+      for await (const _chunk of stream) {
+        // Fully consume stream so command is executed.
+      }
+
+      const input = Reflect.get(
+        ConverseStreamCommand,
+        "lastInput"
+      ) as ConverseStreamCommandInput;
+
+      expect(input.system).toEqual([
+        { text: "System prompt" },
+        { cachePoint: { type: "default" } },
+      ]);
+      expect(input.messages?.[0].content).toEqual([
+        { text: "Hello" },
+        { cachePoint: { type: "default" } },
+      ]);
+    });
   });
 
   describe("defaultHeaders middleware", () => {

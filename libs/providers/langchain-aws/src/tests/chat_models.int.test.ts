@@ -1,5 +1,6 @@
 import { test, expect, describe } from "vitest";
 import { z } from "zod/v3";
+import type { HandleLLMNewTokenCallbackFields } from "@langchain/core/callbacks/base";
 import {
   AIMessage,
   AIMessageChunk,
@@ -14,8 +15,6 @@ import { tool } from "@langchain/core/tools";
 import { concat } from "@langchain/core/utils/stream";
 
 import { ChatBedrockConverse } from "../chat_models.js";
-import { concatenateLangchainReasoningBlocks } from "../utils/message_inputs.js";
-import { MessageContentReasoningBlockReasoningText } from "../types.js";
 
 // Save the original value of the 'LANGCHAIN_CALLBACKS_BACKGROUND' environment variable
 const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
@@ -282,6 +281,69 @@ test("Test ChatBedrockConverse can stream tools", async () => {
   expect(finalChunk?.tool_calls?.[0].id).toBeDefined();
 });
 
+test("Test ChatBedrockConverse streams tool call identity via callbacks", async () => {
+  process.env.LANGCHAIN_CALLBACKS_BACKGROUND = "false";
+
+  try {
+    const streamedToolCallChunks: AIMessageChunk[] = [];
+    const model = new ChatBedrockConverse({
+      ...baseConstructorArgs,
+      streaming: true,
+      callbacks: [
+        {
+          handleLLMNewToken(
+            _token: string,
+            _idx,
+            _runId,
+            _parentRunId,
+            _tags,
+            fields?: HandleLLMNewTokenCallbackFields
+          ) {
+            if (!fields?.chunk || !("message" in fields.chunk)) {
+              return;
+            }
+
+            const chunkMessage = fields.chunk.message as AIMessageChunk;
+            if (chunkMessage.tool_call_chunks?.length) {
+              streamedToolCallChunks.push(chunkMessage);
+            }
+          },
+        },
+      ],
+    });
+
+    const tools = [
+      tool((_input) => "Hello", {
+        name: "get_weather",
+        description: "Get the weather",
+        schema: z.object({
+          location: z.string().describe("Location to get the weather for"),
+        }),
+      }),
+    ];
+    const modelWithTools = model.bindTools(tools);
+    const result = await modelWithTools.invoke([
+      new HumanMessage("Get the weather for London"),
+    ]);
+
+    expect(result.tool_calls).toBeDefined();
+    expect(result.tool_calls).toHaveLength(1);
+    expect(result.tool_calls?.[0].name).toBe("get_weather");
+    expect(result.tool_calls?.[0].id).toBeDefined();
+
+    expect(
+      streamedToolCallChunks.some((chunk) =>
+        chunk.tool_call_chunks?.some(
+          (toolChunk) =>
+            toolChunk.id !== undefined && toolChunk.name !== undefined
+        )
+      )
+    ).toBe(true);
+  } finally {
+    process.env.LANGCHAIN_CALLBACKS_BACKGROUND = originalBackground;
+  }
+}, 10000);
+
 test("Test ChatBedrockConverse tool_choice works", async () => {
   const model = new ChatBedrockConverse({
     ...baseConstructorArgs,
@@ -373,7 +435,7 @@ test("Model can handle empty content messages", async () => {
   expect(result.content.length).toBeGreaterThan(1);
 });
 
-test("Test reasoning_content blocks multiturn invoke", async () => {
+test("Test standard reasoning blocks multiturn invoke", async () => {
   const model = new ChatBedrockConverse({
     ...baseConstructorArgs,
     model: "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -388,22 +450,16 @@ test("Test reasoning_content blocks multiturn invoke", async () => {
 
     expect(Array.isArray(response.content)).toBe(true);
     const content = response.content as MessageContentComplex[];
-    expect(content.some((block) => block.type === "reasoning_content")).toBe(
-      true
-    );
+    expect(content.some((block) => block.type === "reasoning")).toBe(true);
 
     for (const block of content) {
       expect(typeof block).toBe("object");
-      if (block.type === "reasoning_content") {
+      if (block.type === "reasoning") {
         expect(Object.keys(block).sort()).toEqual(
-          ["type", "reasoningText"].sort()
+          ["type", "reasoning", "signature"].sort()
         );
-        expect(block.reasoningText).toBeTruthy();
-        expect(typeof block.reasoningText).toBe("object");
-        expect(block.reasoningText.text).toBeTruthy();
-        expect(typeof block.reasoningText.text).toBe("string");
-        expect(block.reasoningText.signature).toBeTruthy();
-        expect(typeof block.reasoningText.signature).toBe("string");
+        expect(typeof block.reasoning).toBe("string");
+        expect(typeof block.signature).toBe("string");
       }
     }
     return response;
@@ -418,7 +474,7 @@ test("Test reasoning_content blocks multiturn invoke", async () => {
   await model.invoke(invokeMessages);
 });
 
-test("Test reasoning_content blocks multiturn streaming", async () => {
+test("Test standard reasoning blocks multiturn streaming", async () => {
   const model = new ChatBedrockConverse({
     ...baseConstructorArgs,
     model: "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -435,28 +491,18 @@ test("Test reasoning_content blocks multiturn streaming", async () => {
     }
     expect(full).toBeInstanceOf(AIMessageChunk);
     expect(Array.isArray(full?.content)).toBe(true);
-    const content = concatenateLangchainReasoningBlocks(
-      full?.content as MessageContentComplex[]
-    );
-    expect(content.some((block) => block.type === "reasoning_content")).toBe(
-      true
-    );
+    const content = full?.content as MessageContentComplex[];
+    expect(content.some((block) => block.type === "reasoning")).toBe(true);
 
     for (const block of content) {
       expect(typeof block).toBe("object");
-      if (block.type === "reasoning_content") {
+      if (block.type === "reasoning") {
         expect(Object.keys(block).sort()).toEqual(
-          ["type", "reasoningText"].sort()
+          ["type", "reasoning", "signature", "index"].sort()
         );
-
-        const reasoningBlock =
-          block as MessageContentReasoningBlockReasoningText;
-        expect(reasoningBlock.reasoningText).toBeTruthy();
-        expect(typeof reasoningBlock.reasoningText).toBe("object");
-        expect(reasoningBlock.reasoningText.text).toBeTruthy();
-        expect(typeof reasoningBlock.reasoningText.text).toBe("string");
-        expect(reasoningBlock.reasoningText.signature).toBeTruthy();
-        expect(typeof reasoningBlock.reasoningText.signature).toBe("string");
+        expect(typeof block.reasoning).toBe("string");
+        expect(typeof block.signature).toBe("string");
+        expect(typeof block.index).toBe("number");
       }
     }
     return full as AIMessageChunk;
@@ -523,7 +569,7 @@ test("Test ChatBedrockConverse can respond to tool invocations with thinking ena
 });
 
 describe("AWS Bedrock Reasoning with contentBlocks", () => {
-  test("invoke returns reasoning_content as reasoning in contentBlocks", async () => {
+  test("invoke returns standard reasoning in contentBlocks", async () => {
     const model = new ChatBedrockConverse({
       ...baseConstructorArgs,
       model: "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
@@ -548,7 +594,7 @@ describe("AWS Bedrock Reasoning with contentBlocks", () => {
     expect(textBlocks.length).toBeGreaterThan(0);
   });
 
-  test("stream returns reasoning_content as reasoning in contentBlocks", async () => {
+  test("stream returns standard reasoning in contentBlocks", async () => {
     const model = new ChatBedrockConverse({
       ...baseConstructorArgs,
       model: "us.anthropic.claude-sonnet-4-5-20250929-v1:0",

@@ -1,4 +1,4 @@
-import { v7 as uuidv7 } from "uuid";
+import { v7 as uuidv7 } from "../utils/uuid/index.js";
 import { AgentAction, AgentFinish } from "../agents.js";
 import type { ChainValues } from "../utils/types/index.js";
 import { LLMResult } from "../outputs.js";
@@ -17,6 +17,7 @@ import { LangChainTracer } from "../tracers/tracer_langchain.js";
 import { consumeCallback } from "./promises.js";
 import { Serialized } from "../load/serializable.js";
 import type { DocumentInterface } from "../documents/document.js";
+import type { ChatModelStreamEvent } from "../language_models/event.js";
 import { isTracingEnabled } from "../utils/callbacks.js";
 import { isBaseTracer } from "../tracers/base.js";
 import {
@@ -40,6 +41,115 @@ export interface CallbackManagerOptions {
 export type Callbacks =
   | CallbackManager
   | (BaseCallbackHandler | CallbackHandlerMethods)[];
+
+function getTracerRunStoreKey(tracer: LangChainTracer): object {
+  const candidate = tracer as LangChainTracer & {
+    _getRunStoreKey?: () => object;
+  };
+  return candidate._getRunStoreKey?.() ?? tracer;
+}
+
+function mergeTracerConfig(
+  target: LangChainTracer,
+  source: LangChainTracer
+): LangChainTracer {
+  if (target === source) {
+    return target;
+  }
+  return target.copyWithTracingConfig({
+    metadata: source.tracingMetadata,
+    tags: source.tracingTags,
+  });
+}
+
+function coalesceTracers(
+  handlers: BaseCallbackHandler[],
+  inheritableHandlers: BaseCallbackHandler[]
+): {
+  handlers: BaseCallbackHandler[];
+  inheritableHandlers: BaseCallbackHandler[];
+} {
+  const inheritableSet = new Set<BaseCallbackHandler>(inheritableHandlers);
+  const groups = new Map<
+    object,
+    { index: number; tracer: LangChainTracer; hasInheritable: boolean }
+  >();
+  const coalescedHandlers: BaseCallbackHandler[] = [];
+
+  // Fold a tracer into its run-store group, keeping a single representative per
+  // store (one tracer per store avoids the double-"end" throw). The
+  // representative's tracing config is drawn from inheritable entries once any
+  // exist, so a local-only tracer sharing the store cannot leak its tags or
+  // metadata into child runs, which inherit `inheritableHandlers`. Stores with
+  // only local entries keep merging those local entries.
+  const fold = (handler: LangChainTracer) => {
+    const key = getTracerRunStoreKey(handler);
+    const isInheritable = inheritableSet.has(handler);
+    const group = groups.get(key);
+    if (group === undefined) {
+      groups.set(key, {
+        index: coalescedHandlers.length,
+        tracer: handler,
+        hasInheritable: isInheritable,
+      });
+      coalescedHandlers.push(handler);
+      return;
+    }
+
+    if (isInheritable && !group.hasInheritable) {
+      // First inheritable entry for this store: drop any local-only config
+      // merged so far and restart from an inheritable baseline.
+      group.tracer = handler;
+      group.hasInheritable = true;
+    } else if (isInheritable || !group.hasInheritable) {
+      group.tracer = mergeTracerConfig(group.tracer, handler);
+    }
+    // A local entry on a store that already has inheritable config contributes
+    // nothing, so its config cannot ride into children.
+    coalescedHandlers[group.index] = group.tracer;
+  };
+
+  for (const handler of handlers) {
+    if (handler instanceof LangChainTracer) {
+      fold(handler);
+    } else {
+      coalescedHandlers.push(handler);
+    }
+  }
+
+  // `inheritableHandlers` is a subset of `handlers` by identity, so its tracers
+  // were already folded above. This only promotes an inheritable-only orphan
+  // (an alias broken upstream) back into `handlers`.
+  for (const handler of inheritableHandlers) {
+    if (
+      handler instanceof LangChainTracer &&
+      !groups.has(getTracerRunStoreKey(handler))
+    ) {
+      fold(handler);
+    }
+  }
+
+  const seenTracerStores = new Set<object>();
+  const coalescedInheritableHandlers = inheritableHandlers.flatMap(
+    (handler) => {
+      if (!(handler instanceof LangChainTracer)) {
+        return [handler];
+      }
+
+      const key = getTracerRunStoreKey(handler);
+      if (seenTracerStores.has(key)) {
+        return [];
+      }
+      seenTracerStores.add(key);
+      return [groups.get(key)?.tracer ?? handler];
+    }
+  );
+
+  return {
+    handlers: coalescedHandlers,
+    inheritableHandlers: coalescedInheritableHandlers,
+  };
+}
 
 export interface BaseCallbackConfig {
   /**
@@ -291,6 +401,35 @@ export class CallbackManagerForLLMRun
                 : console.warn;
               logFunction(
                 `Error in handler ${handler.constructor.name}, handleLLMNewToken: ${err}`
+              );
+              if (handler.raiseError) {
+                throw err;
+              }
+            }
+          }
+        }, handler.awaitHandlers)
+      )
+    );
+  }
+
+  async handleChatModelStreamEvent(event: ChatModelStreamEvent): Promise<void> {
+    await Promise.all(
+      this.handlers.map((handler) =>
+        consumeCallback(async () => {
+          if (!handler.ignoreLLM) {
+            try {
+              await handler.handleChatModelStreamEvent?.(
+                event,
+                this.runId,
+                this._parentRunId,
+                this.tags
+              );
+            } catch (err) {
+              const logFunction = handler.raiseError
+                ? console.error
+                : console.warn;
+              logFunction(
+                `Error in handler ${handler.constructor.name}, handleChatModelStreamEvent: ${err}`
               );
               if (handler.raiseError) {
                 throw err;
@@ -1351,23 +1490,38 @@ export class CallbackManager
       callbackManager &&
       (tracerInheritableMetadata || tracerInheritableTags)
     ) {
-      callbackManager.handlers = callbackManager.handlers.map((handler) =>
-        handler instanceof LangChainTracer
-          ? handler.copyWithTracingConfig({
-              metadata: tracerInheritableMetadata,
-              tags: tracerInheritableTags,
-            })
-          : handler
-      );
+      const replacements = new Map<BaseCallbackHandler, BaseCallbackHandler>();
+      const applyTracingConfig = (
+        handler: BaseCallbackHandler
+      ): BaseCallbackHandler => {
+        if (!(handler instanceof LangChainTracer)) {
+          return handler;
+        }
+        const existing = replacements.get(handler);
+        if (existing !== undefined) {
+          return existing;
+        }
+        const replacement = handler.copyWithTracingConfig({
+          metadata: tracerInheritableMetadata,
+          tags: tracerInheritableTags,
+        });
+        replacements.set(handler, replacement);
+        return replacement;
+      };
+
+      callbackManager.handlers =
+        callbackManager.handlers.map(applyTracingConfig);
       callbackManager.inheritableHandlers =
-        callbackManager.inheritableHandlers.map((handler) =>
-          handler instanceof LangChainTracer
-            ? handler.copyWithTracingConfig({
-                metadata: tracerInheritableMetadata,
-                tags: tracerInheritableTags,
-              })
-            : handler
-        );
+        callbackManager.inheritableHandlers.map(applyTracingConfig);
+    }
+
+    if (callbackManager) {
+      const coalesced = coalesceTracers(
+        callbackManager.handlers,
+        callbackManager.inheritableHandlers
+      );
+      callbackManager.handlers = coalesced.handlers;
+      callbackManager.inheritableHandlers = coalesced.inheritableHandlers;
     }
 
     return callbackManager;

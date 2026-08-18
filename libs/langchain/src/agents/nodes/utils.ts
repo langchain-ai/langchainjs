@@ -14,7 +14,7 @@ import type { StateDefinitionInit } from "@langchain/langgraph";
 import { END, StateSchema, ReducedValue } from "@langchain/langgraph";
 
 import type { JumpTo } from "../types.js";
-import type { AgentMiddleware } from "../middleware/types.js";
+import type { AnyAgentMiddleware } from "../middleware/types.js";
 
 /**
  * Helper function to initialize middleware state defaults.
@@ -24,7 +24,7 @@ import type { AgentMiddleware } from "../middleware/types.js";
  * users cannot provide them when invoking the agent.
  */
 export async function initializeMiddlewareStates(
-  middlewareList: readonly AgentMiddleware[],
+  middlewareList: readonly AnyAgentMiddleware[],
   state: unknown
 ): Promise<Record<string, any>> {
   const middlewareStates: Record<string, any> = {};
@@ -38,7 +38,7 @@ export async function initializeMiddlewareStates(
     }
 
     // Convert StateSchema to Zod object if needed
-    let zodSchema = middleware.stateSchema;
+    let zodSchema: InteropZodObject;
     if (StateSchema.isInstance(middleware.stateSchema)) {
       const zodShape: Record<string, any> = {};
       for (const [key, field] of Object.entries(
@@ -52,6 +52,10 @@ export async function initializeMiddlewareStates(
         }
       }
       zodSchema = z.object(zodShape);
+    } else if (isInteropZodObject(middleware.stateSchema)) {
+      zodSchema = middleware.stateSchema;
+    } else {
+      continue;
     }
 
     // Create a modified schema where private properties are optional
@@ -106,7 +110,7 @@ export async function initializeMiddlewareStates(
  * @returns A new schema containing only the private properties (underscore-prefixed), all made optional
  */
 export function derivePrivateState(
-  stateSchema?: InteropZodObject | StateSchema<any>
+  stateSchema?: StateDefinitionInit
 ): InteropZodObject {
   const builtInStateSchema = {
     messages: z.custom<BaseMessage[]>(() => []),
@@ -131,8 +135,10 @@ export function derivePrivateState(
         shape[key] = field;
       }
     }
-  } else {
+  } else if (isInteropZodObject(stateSchema)) {
     shape = getInteropZodObjectShape(stateSchema);
+  } else {
+    return z.object(builtInStateSchema);
   }
 
   const privateShape: Record<string, any> = { ...builtInStateSchema };
