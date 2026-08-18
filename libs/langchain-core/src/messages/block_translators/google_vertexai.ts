@@ -79,16 +79,16 @@ function convertToV1FromChatVertexMessage(
       }
       yield { type: "non_standard", value: block };
     }
+    for (const toolCall of message.tool_calls ?? []) {
+      yield {
+        type: "tool_call",
+        id: toolCall.id,
+        name: toolCall.name,
+        args: toolCall.args,
+      };
+    }
   }
-  const toolCallBlocks: ContentBlock.Standard[] = (
-    message.tool_calls ?? []
-  ).map((toolCall) => ({
-    type: "tool_call",
-    id: toolCall.id,
-    name: toolCall.name,
-    args: toolCall.args,
-  }));
-  return [...iterateContent(), ...toolCallBlocks];
+  return Array.from(iterateContent());
 }
 
 export const ChatVertexTranslator: StandardContentBlockTranslator = {
