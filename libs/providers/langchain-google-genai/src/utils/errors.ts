@@ -7,10 +7,10 @@ import type { FinishReason } from "@google/generative-ai";
 
 const ns = baseNs.sub("google-genai");
 
-export interface ContentBlockedErrorParams {
+export interface EmptyContentErrorParams {
   /**
    * The candidate's `finishReason`, when available (e.g. `"SAFETY"`,
-   * `"RECITATION"`, `"MALFORMED_FUNCTION_CALL"`, `"OTHER"`).
+   * `"RECITATION"`, `"MALFORMED_FUNCTION_CALL"`, `"MAX_TOKENS"`, `"OTHER"`).
    */
   finishReason?: FinishReason | string;
   /**
@@ -28,35 +28,41 @@ export interface ContentBlockedErrorParams {
 /**
  * Error thrown when a Gemini candidate is returned with no usable content.
  *
- * Gemini signals that generation was cut short (a safety/recitation filter,
- * a malformed function call, etc.) by returning a candidate whose `content`
- * is missing entirely, rather than an error response. Previously this was
- * silently converted into an empty message; it's now surfaced as a typed,
- * catchable error so callers can distinguish "the model said nothing" from
- * "the model was blocked."
+ * This covers two distinct situations that both surface the same way —
+ * a candidate with no `content` at all:
+ * - An explicit block from Google (a safety/recitation/prohibited-content
+ *   filter, or a rejected prompt via `blockReason`).
+ * - The model just not producing usable output for other reasons, e.g. a
+ *   thinking model exhausting its token budget on reasoning (`MAX_TOKENS`)
+ *   or an invalid tool call (`MALFORMED_FUNCTION_CALL`) — nothing was
+ *   "blocked" in either case, the model simply returned nothing.
+ *
+ * Previously this was silently converted into an empty message; it's now
+ * surfaced as a typed, catchable error. Check `finishReason`/`blockReason`
+ * to distinguish an explicit block from the model just being odd.
  *
  * @example
  * ```typescript
  * try {
  *   await model.invoke("...");
  * } catch (error) {
- *   if (ContentBlockedError.isInstance(error)) {
- *     console.log(`Blocked: ${error.finishReason}`);
+ *   if (EmptyContentError.isInstance(error)) {
+ *     console.log(`No content: ${error.finishReason ?? error.blockReason}`);
  *   }
  * }
  * ```
  */
-export class ContentBlockedError extends ns.brand(
+export class EmptyContentError extends ns.brand(
   LangChainError,
-  "content-blocked"
+  "empty-content"
 ) {
-  readonly name = "ContentBlockedError";
+  readonly name = "EmptyContentError";
 
   readonly finishReason?: FinishReason | string;
 
   readonly blockReason?: string;
 
-  constructor(params: ContentBlockedErrorParams = {}) {
+  constructor(params: EmptyContentErrorParams = {}) {
     const message =
       params.message ??
       `The model returned no content.${

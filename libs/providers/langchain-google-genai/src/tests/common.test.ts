@@ -4,7 +4,7 @@ import {
   convertMessageContentToParts,
   mapGenerateContentResultToChatResult,
 } from "../utils/common.js";
-import { ContentBlockedError } from "../utils/errors.js";
+import { EmptyContentError } from "../utils/errors.js";
 import { AIMessage } from "@langchain/core/messages";
 import type {
   EnhancedGenerateContentResponse,
@@ -378,7 +378,7 @@ describe("Round-trip thinking content handling", () => {
   });
 });
 
-describe("Missing candidate content throws ContentBlockedError", () => {
+describe("Missing candidate content throws EmptyContentError", () => {
   test("mapGenerateContentResultToChatResult throws when a candidate has no content", () => {
     const mockResponse = createMockResponse([
       {
@@ -395,8 +395,8 @@ describe("Missing candidate content throws ContentBlockedError", () => {
       mapGenerateContentResultToChatResult(mockResponse);
       expect.fail("should have thrown");
     } catch (e) {
-      expect(e).toBeInstanceOf(ContentBlockedError);
-      expect((e as ContentBlockedError).finishReason).toBe(
+      expect(e).toBeInstanceOf(EmptyContentError);
+      expect((e as EmptyContentError).finishReason).toBe(
         "MALFORMED_FUNCTION_CALL"
       );
     }
@@ -415,8 +415,8 @@ describe("Missing candidate content throws ContentBlockedError", () => {
       mapGenerateContentResultToChatResult(mockResponse);
       expect.fail("should have thrown");
     } catch (e) {
-      expect(e).toBeInstanceOf(ContentBlockedError);
-      expect((e as ContentBlockedError).blockReason).toBe("SAFETY");
+      expect(e).toBeInstanceOf(EmptyContentError);
+      expect((e as EmptyContentError).blockReason).toBe("SAFETY");
     }
   });
 
@@ -431,6 +431,6 @@ describe("Missing candidate content throws ContentBlockedError", () => {
 
     expect(() =>
       convertResponseContentToChatGenerationChunk(mockResponse, { index: 0 })
-    ).toThrow(ContentBlockedError);
+    ).toThrow(EmptyContentError);
   });
 });

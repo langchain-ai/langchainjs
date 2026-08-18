@@ -49,7 +49,7 @@ import {
   GoogleGenerativeAIToolType,
 } from "../types.js";
 import { assertNoEmptyStringEnums } from "./validate_schema.js";
-import { ContentBlockedError } from "./errors.js";
+import { EmptyContentError } from "./errors.js";
 
 export const _FUNCTION_CALL_THOUGHT_SIGNATURES_MAP_KEY =
   "__gemini_function_call_thought_signatures__";
@@ -633,14 +633,14 @@ export function mapGenerateContentResultToChatResult(
     response.candidates.length === 0 ||
     !response.candidates[0]
   ) {
-    throw new ContentBlockedError({
+    throw new EmptyContentError({
       blockReason: response.promptFeedback?.blockReason,
     });
   }
   const [candidate] = response.candidates;
   const { content: candidateContent, ...generationInfo } = candidate;
   if (!candidateContent) {
-    throw new ContentBlockedError({
+    throw new EmptyContentError({
       finishReason: generationInfo.finishReason,
     });
   }
@@ -786,7 +786,7 @@ export function convertResponseContentToChatGenerationChunk(
   const [candidate] = response.candidates;
   const { content: candidateContent, ...generationInfo } = candidate;
   if (!candidateContent) {
-    throw new ContentBlockedError({
+    throw new EmptyContentError({
       finishReason: generationInfo.finishReason,
     });
   }

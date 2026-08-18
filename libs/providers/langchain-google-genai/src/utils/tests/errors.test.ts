@@ -1,24 +1,24 @@
 import { describe, expect, test } from "vitest";
 import { LangChainError, getRetryable } from "@langchain/core/errors";
-import { ContentBlockedError } from "../errors.js";
+import { EmptyContentError } from "../errors.js";
 
-describe("ContentBlockedError", () => {
+describe("EmptyContentError", () => {
   test("is a LangChainError and reports as such via isInstance", () => {
-    const error = new ContentBlockedError({ finishReason: "SAFETY" });
+    const error = new EmptyContentError({ finishReason: "SAFETY" });
 
     expect(error).toBeInstanceOf(LangChainError);
-    expect(ContentBlockedError.isInstance(error)).toBe(true);
+    expect(EmptyContentError.isInstance(error)).toBe(true);
     expect(LangChainError.isInstance(error)).toBe(true);
   });
 
   test("is marked non-retryable", () => {
-    const error = new ContentBlockedError({ finishReason: "SAFETY" });
+    const error = new EmptyContentError({ finishReason: "SAFETY" });
 
     expect(getRetryable(error)).toBe(false);
   });
 
   test("default message includes the finish reason", () => {
-    const error = new ContentBlockedError({
+    const error = new EmptyContentError({
       finishReason: "MALFORMED_FUNCTION_CALL",
     });
 
@@ -28,7 +28,7 @@ describe("ContentBlockedError", () => {
   });
 
   test("default message includes the block reason", () => {
-    const error = new ContentBlockedError({ blockReason: "SAFETY" });
+    const error = new EmptyContentError({ blockReason: "SAFETY" });
 
     expect(error.blockReason).toBe("SAFETY");
     expect(error.finishReason).toBeUndefined();
@@ -36,7 +36,7 @@ describe("ContentBlockedError", () => {
   });
 
   test("default message includes both reasons when both are present", () => {
-    const error = new ContentBlockedError({
+    const error = new EmptyContentError({
       blockReason: "SAFETY",
       finishReason: "OTHER",
     });
@@ -46,13 +46,13 @@ describe("ContentBlockedError", () => {
   });
 
   test("falls back to a generic message when no reason is given", () => {
-    const error = new ContentBlockedError();
+    const error = new EmptyContentError();
 
     expect(error.message).toBe("The model returned no content.");
   });
 
   test("a custom message overrides the generated one", () => {
-    const error = new ContentBlockedError({
+    const error = new EmptyContentError({
       finishReason: "SAFETY",
       message: "custom message",
     });
