@@ -376,3 +376,83 @@ describe("Round-trip thinking content handling", () => {
     });
   });
 });
+
+// https://github.com/langchain-ai/langchainjs/issues/11180
+describe("Round-trip standard v1 reasoning content handling", () => {
+  test("reasoning block converts back to Gemini thought part", () => {
+    const message = new AIMessage({
+      content: [
+        { type: "reasoning", reasoning: "Let me reason about this..." },
+        { type: "text", text: "The answer is 42." },
+      ],
+    });
+
+    const parts = convertMessageContentToParts(message, true, []);
+
+    expect(parts).toHaveLength(2);
+    expect(parts[0]).toEqual({
+      text: "Let me reason about this...",
+      thought: true,
+    });
+    expect(parts[0]).not.toHaveProperty("thoughtSignature");
+    expect(parts[1]).toEqual({ text: "The answer is 42." });
+  });
+
+  test("reasoning block with signature keeps thoughtSignature", () => {
+    const message = new AIMessage({
+      content: [
+        {
+          type: "reasoning",
+          reasoning: "Signed reasoning",
+          signature: "sig456",
+        },
+      ],
+    });
+
+    const parts = convertMessageContentToParts(message, true, []);
+
+    expect(parts).toHaveLength(1);
+    expect(parts[0]).toEqual({
+      text: "Signed reasoning",
+      thought: true,
+      thoughtSignature: "sig456",
+    });
+  });
+
+  test("multi-turn replay: v1 AIMessage with reasoning and tool_call serializes", () => {
+    // Shape produced by core's v1 output pipeline (output_version: "v1"),
+    // e.g. when replaying checkpointed agent history.
+    const message = new AIMessage({
+      content: [
+        { type: "reasoning", reasoning: "thinking about it" },
+        {
+          type: "tool_call",
+          id: "tc-1",
+          name: "get_weather",
+          args: { city: "Paris" },
+        },
+      ],
+      tool_calls: [
+        { name: "get_weather", args: { city: "Paris" }, id: "tc-1" },
+      ],
+      response_metadata: {
+        output_version: "v1",
+        model_provider: "google-genai",
+        finish_reason: "stop",
+      },
+    });
+
+    const parts = convertMessageContentToParts(message, true, []);
+
+    expect(parts[0]).toEqual({
+      text: "thinking about it",
+      thought: true,
+    });
+    const functionCallParts = parts.filter((p) => "functionCall" in p);
+    expect(functionCallParts.length).toBeGreaterThanOrEqual(1);
+    expect(
+      (functionCallParts[0] as { functionCall: { name: string } }).functionCall
+        .name
+    ).toBe("get_weather");
+  });
+});
