@@ -12,6 +12,7 @@ import { ChatGeneration } from "@langchain/core/outputs";
 import { AnthropicMessageResponse } from "../types.js";
 import { extractToolCalls } from "../output_parsers.js";
 import { _isAnthropicCompactionBlock } from "./content.js";
+import { iife } from "./index.js";
 
 export function _makeMessageChunkFromAnthropicEvent(
   data: Anthropic.Beta.Messages.BetaRawMessageStreamEvent,
@@ -56,18 +57,24 @@ export function _makeMessageChunkFromAnthropicEvent(
       output_tokens: data.usage.output_tokens,
       total_tokens: data.usage.output_tokens,
     };
-    const responseMetadata =
-      "context_management" in data.delta
-        ? { context_management: data.delta.context_management }
-        : undefined;
-    const cost = (data.usage as typeof data.usage & { cost?: unknown })?.cost;
+    const responseMetadata = iife(() => {
+      const output = {};
+      if ("context_management" in data.delta) {
+        output["context_management"] = data.delta.context_management;
+      }
+      if (
+        "usage" in data &&
+        "cost" in data.usage &&
+        typeof data.usage.cost === "number"
+      ) {
+        output["usage"] = { cost: data.usage.cost };
+      }
+      return output;
+    });
     return {
       chunk: new AIMessageChunk({
         content: fields.coerceContentToString ? "" : [],
-        response_metadata:
-          typeof cost === "number"
-            ? { ...responseMetadata, usage: { cost } }
-            : responseMetadata,
+        response_metadata: responseMetadata,
         additional_kwargs: { ...data.delta },
         usage_metadata: fields.streamUsage ? usageMetadata : undefined,
       }),

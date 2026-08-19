@@ -224,6 +224,7 @@ export type ResponsesInputItem = OpenAIClient.Responses.ResponseInputItem;
  *   - `total_tokens`: Combined total of input and output tokens (defaults to 0 if not provided)
  *   - `input_token_details`: Object containing detailed input token information:
  *     - `cache_read`: Number of tokens read from cache (only included if available)
+ *     - `cache_creation`: Number of tokens written to cache (only included if available)
  *   - `output_token_details`: Object containing detailed output token information:
  *     - `reasoning`: Number of tokens used for reasoning (only included if available)
  *
@@ -233,7 +234,7 @@ export type ResponsesInputItem = OpenAIClient.Responses.ResponseInputItem;
  *   input_tokens: 100,
  *   output_tokens: 50,
  *   total_tokens: 150,
- *   input_tokens_details: { cached_tokens: 20 },
+ *   input_tokens_details: { cached_tokens: 20, cache_write_tokens: 30 },
  *   output_tokens_details: { reasoning_tokens: 10 }
  * };
  *
@@ -243,7 +244,7 @@ export type ResponsesInputItem = OpenAIClient.Responses.ResponseInputItem;
  * //   input_tokens: 100,
  * //   output_tokens: 50,
  * //   total_tokens: 150,
- * //   input_token_details: { cache_read: 20 },
+ * //   input_token_details: { cache_read: 20, cache_creation: 30 },
  * //   output_token_details: { reasoning: 10 }
  * // }
  * ```
@@ -251,8 +252,8 @@ export type ResponsesInputItem = OpenAIClient.Responses.ResponseInputItem;
  * @remarks
  * - The function safely handles undefined or null values by using optional chaining
  *   and nullish coalescing operators
- * - Detailed token information (cache_read, reasoning) is only included in the result
- *   if the corresponding values are present in the input
+ * - Detailed token information (cache_read, cache_creation, reasoning) is only included
+ *   in the result if the corresponding values are present in the input
  * - Token counts default to 0 if not provided in the usage object
  * - This converter is specifically designed for OpenAI's Responses API format and
  *   may differ from other OpenAI API endpoints
@@ -264,6 +265,9 @@ export const convertResponsesUsageToUsageMetadata: Converter<
   const inputTokenDetails = {
     ...(usage?.input_tokens_details?.cached_tokens != null && {
       cache_read: usage?.input_tokens_details?.cached_tokens,
+    }),
+    ...(usage?.input_tokens_details?.cache_write_tokens != null && {
+      cache_creation: usage?.input_tokens_details?.cache_write_tokens,
     }),
   };
   const outputTokenDetails = {

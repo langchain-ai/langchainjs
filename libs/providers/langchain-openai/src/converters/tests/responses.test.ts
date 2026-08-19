@@ -68,6 +68,38 @@ describe("convertResponsesUsageToUsageMetadata", () => {
     });
   });
 
+  it("should convert OpenAI Responses usage to LangChain format with cache write tokens", () => {
+    const usage = {
+      input_tokens: 100,
+      output_tokens: 50,
+      total_tokens: 150,
+      input_tokens_details: {
+        cached_tokens: 75,
+        cache_write_tokens: 30,
+        text_tokens: 25,
+      },
+      output_tokens_details: {
+        reasoning_tokens: 10,
+        text_tokens: 40,
+      },
+    };
+
+    const result = convertResponsesUsageToUsageMetadata(usage as any);
+
+    expect(result).toEqual({
+      input_tokens: 100,
+      output_tokens: 50,
+      total_tokens: 150,
+      input_token_details: {
+        cache_read: 75,
+        cache_creation: 30,
+      },
+      output_token_details: {
+        reasoning: 10,
+      },
+    });
+  });
+
   it("should handle undefined usage", () => {
     const result = convertResponsesUsageToUsageMetadata(undefined);
 

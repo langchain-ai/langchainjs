@@ -1,5 +1,23 @@
 # @langchain/openai
 
+## 1.5.8
+
+### Patch Changes
+
+- [#11342](https://github.com/langchain-ai/langchainjs/pull/11342) [`3b0e4c4`](https://github.com/langchain-ai/langchainjs/commit/3b0e4c48a31811031a460c4d95519a7c1163dc41) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - feat(openai): mark OpenAI provider errors as retryable or not
+
+  Builds on `stampRetryable` in `@langchain/core` so the retry middleware can tell a transient failure from a deterministic one. Timeouts and rate limits are marked retryable; aborts, context overflow, invalid tool results, bad credentials, and unknown models non-retryable. Anything else stays unmarked and retries as before.
+
+  Also forwards a per-call `maxRetries` to the retry loop, so a surrounding retry loop such as `modelRetryMiddleware` can take over instead of the two multiplying against each other.
+
+  Errors keep their original class, so `instanceof` against the `openai` SDK error types is unaffected.
+
+## 1.5.7
+
+### Patch Changes
+
+- [#11347](https://github.com/langchain-ai/langchainjs/pull/11347) [`3fe4c43`](https://github.com/langchain-ai/langchainjs/commit/3fe4c43ce3399ebf2391ed612d78fedcd3ea5ec6) Thanks [@talarari](https://github.com/talarari)! - fix(openai): include `usage` in `response_metadata` when `system_fingerprint` is absent
+
 ## 1.5.6
 
 ### Patch Changes
