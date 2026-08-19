@@ -623,4 +623,51 @@ describe("convertCompletionsMessageToBaseMessage", () => {
       ]);
     });
   });
+
+  describe("Google GenAI cross-provider compatibility", () => {
+    // Regression for https://github.com/langchain-ai/langchainjs/issues/9705:
+    // ChatGoogleGenerativeAI embeds a Gemini-native `functionCall` block in
+    // content alongside `tool_calls`. Echoing it back verbatim is rejected by
+    // the Chat Completions API: "Invalid value: 'functionCall'. Supported
+    // values are: 'text', 'image_url', 'input_audio', 'refusal', 'audio',
+    // and 'file'."
+    it("should drop functionCall blocks from content (already in tool_calls)", () => {
+      const message = new AIMessage({
+        content: [
+          { type: "text", text: "Let me check the weather." },
+          {
+            type: "functionCall",
+            functionCall: { name: "get_weather", args: { location: "SF" } },
+          },
+        ],
+        tool_calls: [
+          {
+            id: "call_1",
+            name: "get_weather",
+            args: { location: "SF" },
+          },
+        ],
+      });
+
+      const result = convertMessagesToCompletionsMessageParams({
+        messages: [message],
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({
+        role: "assistant",
+        content: [{ type: "text", text: "Let me check the weather." }],
+        tool_calls: [
+          {
+            id: "call_1",
+            type: "function",
+            function: {
+              name: "get_weather",
+              arguments: '{"location":"SF"}',
+            },
+          },
+        ],
+      });
+    });
+  });
 });
