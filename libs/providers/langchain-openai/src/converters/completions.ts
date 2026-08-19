@@ -300,11 +300,9 @@ export const convertCompletionsMessageToBaseMessage: Converter<
       const response_metadata: Record<string, unknown> | undefined = {
         model_provider: "openai",
         model_name: rawResponse.model,
+        usage: { ...rawResponse.usage },
         ...(rawResponse.system_fingerprint
-          ? {
-              usage: { ...rawResponse.usage },
-              system_fingerprint: rawResponse.system_fingerprint,
-            }
+          ? { system_fingerprint: rawResponse.system_fingerprint }
           : {}),
       };
 
