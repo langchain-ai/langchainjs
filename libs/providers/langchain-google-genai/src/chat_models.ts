@@ -23,6 +23,7 @@ import {
 } from "@langchain/core/messages";
 import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { resolveLangSmithGatewayConfig } from "@langchain/core/utils/gateway";
 import {
   BaseChatModel,
   type BaseChatModelCallOptions,
@@ -634,6 +635,8 @@ export class ChatGoogleGenerativeAI
 
   apiKey?: string;
 
+  baseUrl?: string;
+
   streaming = false;
 
   json?: boolean;
@@ -702,11 +705,21 @@ export class ChatGoogleGenerativeAI
 
     this.stopSequences = fields.stopSequences ?? this.stopSequences;
 
-    this.apiKey = fields.apiKey ?? getEnvironmentVariable("GOOGLE_API_KEY");
+    const gatewayConfig = resolveLangSmithGatewayConfig({
+      baseURL: fields.baseUrl,
+      providerPath: "gemini",
+    });
+    this.baseUrl = gatewayConfig.baseURL;
+
+    this.apiKey =
+      fields.apiKey ??
+      gatewayConfig.apiKey ??
+      (getEnvironmentVariable("GOOGLE_API_KEY") ||
+        getEnvironmentVariable("GEMINI_API_KEY"));
     if (!this.apiKey) {
       throw new Error(
         "Please set an API key for Google GenerativeAI " +
-          "in the environment variable GOOGLE_API_KEY " +
+          "in the environment variable GOOGLE_API_KEY or GEMINI_API_KEY " +
           "or in the `apiKey` field of the " +
           "ChatGoogleGenerativeAI constructor"
       );
@@ -747,7 +760,7 @@ export class ChatGoogleGenerativeAI
       },
       {
         apiVersion: fields.apiVersion,
-        baseUrl: fields.baseUrl,
+        baseUrl: this.baseUrl,
         customHeaders: fields.customHeaders,
       }
     );

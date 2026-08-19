@@ -75,9 +75,68 @@ import {
   createFunctionCallingParser,
 } from "@langchain/core/language_models/structured_output";
 import { iife } from "../utils/misc";
+import { resolveLangSmithGatewayConfig } from "@langchain/core/utils/gateway";
 import ServiceTier = Gemini.ServiceTier;
 
 export type GooglePlatformType = "gai" | "gcp";
+
+/**
+ * Resolves LangSmith gateway routing for Google chat model params.
+ *
+ * The LangSmith gateway proxies the **Gemini Developer API** (the API-key,
+ * `gai` platform), not Vertex AI. So this only applies when the resolved
+ * platform is `gai` and the caller has not set an explicit `endpoint`. An
+ * explicit `endpoint`, or a Vertex configuration (`vertexai: true` /
+ * `platformType: "gcp"`), suppresses gateway routing entirely.
+ *
+ * When `LANGSMITH_GATEWAY` is set, this rewrites `endpoint` to the gateway
+ * host (scheme-less, since the URL builders prepend `https://`) and lets the
+ * gateway key take precedence over the provider key (which then rides as the
+ * `x-goog-api-key` header via the ApiClient).
+ *
+ * This function is pure: it never mutates `params`. It returns a new object
+ * with the gateway overrides applied when routing is active, or an unchanged
+ * shallow copy otherwise.
+ *
+ * @returns a new params object with gateway routing applied when applicable.
+ */
+export function applyGeminiGatewayParams<
+  TParams extends {
+    apiKey?: string;
+    endpoint?: string;
+    platformType?: GooglePlatformType;
+    vertexai?: boolean;
+  },
+>(params: TParams): TParams {
+  // An explicit endpoint always wins; a Vertex config is out of scope (the
+  // gateway proxies the Gemini Developer API, not Vertex AI).
+  if (typeof params.endpoint !== "undefined") {
+    return { ...params };
+  }
+  const explicitPlatform = convertParamsToPlatformType(params);
+  if (explicitPlatform === "gcp") {
+    return { ...params };
+  }
+
+  const gatewayConfig = resolveLangSmithGatewayConfig({
+    providerPath: "gemini",
+  });
+  if (typeof gatewayConfig.baseURL === "undefined") {
+    return { ...params };
+  }
+
+  // When routing through the gateway with no explicitly requested platform and
+  // no credentials that would imply Vertex, treat this as a Gemini Developer
+  // API (`gai`) call. A provider key still wins over the gateway key.
+  // The URL builders compose `https://${endpoint}/${apiVersion}/...`, so the
+  // endpoint must be scheme-less: host (with port) plus the provider path.
+  const gatewayUrl = new URL(gatewayConfig.baseURL);
+  return {
+    ...params,
+    apiKey: params.apiKey ?? gatewayConfig.apiKey,
+    endpoint: `${gatewayUrl.host}${gatewayUrl.pathname.replace(/\/+$/, "")}`,
+  };
+}
 
 export function getPlatformType(
   platform: GooglePlatformType | undefined,
