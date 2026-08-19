@@ -4,6 +4,7 @@ import {
   convertMessageContentToParts,
   mapGenerateContentResultToChatResult,
 } from "../utils/common.js";
+import { EmptyContentError } from "../utils/errors.js";
 import { AIMessage } from "@langchain/core/messages";
 import type {
   EnhancedGenerateContentResponse,
@@ -270,29 +271,6 @@ describe("Streaming thinking content handling", () => {
     expect(typeof content).not.toBe("string");
     expect(Array.isArray(content)).toBe(true);
   });
-
-  // https://github.com/langchain-ai/langchainjs/issues/10741
-  test("should return null when streaming candidate has no content (e.g. safety filter)", () => {
-    const mockResponse = createMockResponse([
-      {
-        // content is intentionally undefined here - this is what Gemini
-        // returns when a safety/recitation filter fires mid-stream.
-        content: undefined as unknown as GenerateContentCandidate["content"],
-        finishReason: "SAFETY" as FinishReason,
-        index: 0,
-        safetyRatings: [],
-      },
-    ]);
-
-    expect(() =>
-      convertResponseContentToChatGenerationChunk(mockResponse, { index: 0 })
-    ).not.toThrow();
-
-    const result = convertResponseContentToChatGenerationChunk(mockResponse, {
-      index: 0,
-    });
-    expect(result).toBeNull();
-  });
 });
 
 // https://github.com/langchain-ai/langchainjs/issues/10103
@@ -397,5 +375,65 @@ describe("Round-trip thinking content handling", () => {
     expect(roundTrippedParts[1]).toEqual({
       text: "The final answer is 7.",
     });
+  });
+});
+
+describe("Missing candidate content", () => {
+  test("mapGenerateContentResultToChatResult throws when a candidate has no content", () => {
+    const mockResponse = createMockResponse([
+      {
+        // Real Gemini responses omit `content` entirely when generation is
+        // cut short (e.g. a malformed function call); the SDK's type says
+        // it's required, but at runtime it isn't.
+        finishReason: "MALFORMED_FUNCTION_CALL" as FinishReason,
+        index: 0,
+        safetyRatings: [],
+      } as unknown as GenerateContentCandidate,
+    ]);
+
+    try {
+      mapGenerateContentResultToChatResult(mockResponse);
+      expect.fail("should have thrown");
+    } catch (e) {
+      expect(e).toBeInstanceOf(EmptyContentError);
+      expect((e as EmptyContentError).finishReason).toBe(
+        "MALFORMED_FUNCTION_CALL"
+      );
+    }
+  });
+
+  test("mapGenerateContentResultToChatResult throws when there are no candidates at all", () => {
+    const mockResponse: EnhancedGenerateContentResponse = {
+      candidates: [],
+      promptFeedback: { blockReason: "SAFETY" } as never,
+      text: () => "",
+      functionCall: () => undefined,
+      functionCalls: () => undefined,
+    };
+
+    try {
+      mapGenerateContentResultToChatResult(mockResponse);
+      expect.fail("should have thrown");
+    } catch (e) {
+      expect(e).toBeInstanceOf(EmptyContentError);
+      expect((e as EmptyContentError).blockReason).toBe("SAFETY");
+    }
+  });
+
+  test("convertResponseContentToChatGenerationChunk returns null when a candidate has no content (streaming)", () => {
+    const mockResponse = createMockResponse([
+      {
+        finishReason: "SAFETY" as FinishReason,
+        index: 0,
+        safetyRatings: [],
+      } as unknown as GenerateContentCandidate,
+    ]);
+
+    expect(() =>
+      convertResponseContentToChatGenerationChunk(mockResponse, { index: 0 })
+    ).not.toThrow();
+    expect(
+      convertResponseContentToChatGenerationChunk(mockResponse, { index: 0 })
+    ).toBeNull();
   });
 });
