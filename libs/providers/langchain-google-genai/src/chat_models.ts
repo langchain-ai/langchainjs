@@ -773,12 +773,20 @@ export class ChatGoogleGenerativeAI
     requestOptions?: RequestOptions
   ): void {
     if (!this.apiKey) return;
+    // Preserve the resolved request options (notably `baseUrl`) so cached-content
+    // requests keep routing through the configured LangSmith gateway. Without
+    // this, a gateway-enabled model would rebuild the client against Google's
+    // default endpoint while using the gateway key, and fail authentication.
+    const resolvedRequestOptions: RequestOptions = {
+      baseUrl: this.baseUrl,
+      ...requestOptions,
+    };
     this.client = new GenerativeAI(
       this.apiKey
     ).getGenerativeModelFromCachedContent(
       cachedContent,
       modelParams,
-      requestOptions
+      resolvedRequestOptions
     );
   }
 

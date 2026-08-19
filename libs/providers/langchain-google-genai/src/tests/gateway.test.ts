@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { ChatGoogleGenerativeAI } from "../chat_models.js";
 
 describe("ChatGoogleGenerativeAI LangSmith gateway", () => {
@@ -74,5 +75,55 @@ describe("ChatGoogleGenerativeAI LangSmith gateway", () => {
 
     expect(model.apiKey).toBe("gemini-env-key");
     expect(model.baseUrl).toBeUndefined();
+  });
+
+  test("useCachedContent preserves the gateway baseUrl", () => {
+    vi.stubEnv("LANGSMITH_GATEWAY", "true");
+    vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
+
+    const spy = vi
+      .spyOn(
+        GoogleGenerativeAI.prototype,
+        "getGenerativeModelFromCachedContent"
+      )
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      .mockReturnValue({} as any);
+
+    try {
+      const model = new ChatGoogleGenerativeAI({ model: "gemini-2.5-flash" });
+      model.useCachedContent({ name: "cached/abc" } as never);
+
+      const requestOptions = spy.mock.calls[0]?.[2];
+      expect(requestOptions?.baseUrl).toBe(
+        "https://gateway.smith.langchain.com/gemini"
+      );
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  test("useCachedContent lets an explicit baseUrl win over the gateway", () => {
+    vi.stubEnv("LANGSMITH_GATEWAY", "true");
+    vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
+
+    const spy = vi
+      .spyOn(
+        GoogleGenerativeAI.prototype,
+        "getGenerativeModelFromCachedContent"
+      )
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      .mockReturnValue({} as any);
+
+    try {
+      const model = new ChatGoogleGenerativeAI({ model: "gemini-2.5-flash" });
+      model.useCachedContent({ name: "cached/abc" } as never, undefined, {
+        baseUrl: "https://explicit.example.com",
+      });
+
+      const requestOptions = spy.mock.calls[0]?.[2];
+      expect(requestOptions?.baseUrl).toBe("https://explicit.example.com");
+    } finally {
+      spy.mockRestore();
+    }
   });
 });

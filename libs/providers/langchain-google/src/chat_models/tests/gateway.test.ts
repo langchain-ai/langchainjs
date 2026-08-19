@@ -109,6 +109,47 @@ describe("applyGeminiGatewayParams", () => {
     expect(vertexByPlatform.endpoint).toBeUndefined();
   });
 
+  test("service-account credentials are not routed through the gateway", () => {
+    vi.stubEnv("LANGSMITH_GATEWAY", "true");
+    vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
+
+    const byCredentials = applyGeminiGatewayParams({
+      model: "gemini-2.5-flash",
+      credentials: { client_email: "svc@example.iam.gserviceaccount.com" },
+    });
+    expect(byCredentials.endpoint).toBeUndefined();
+    expect(byCredentials.apiKey).toBeUndefined();
+
+    const byAuthOptions = applyGeminiGatewayParams({
+      model: "gemini-2.5-flash",
+      googleAuthOptions: {
+        scopes: ["https://www.googleapis.com/auth/cloud-platform"],
+      },
+    });
+    expect(byAuthOptions.endpoint).toBeUndefined();
+  });
+
+  test("GOOGLE_CLOUD_CREDENTIALS env is not routed through the gateway", () => {
+    vi.stubEnv("LANGSMITH_GATEWAY", "true");
+    vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
+    vi.stubEnv("GOOGLE_CLOUD_CREDENTIALS", '{"type":"service_account"}');
+
+    const params = applyGeminiGatewayParams({ model: "gemini-2.5-flash" });
+
+    expect(params.endpoint).toBeUndefined();
+    expect(params.apiKey).toBeUndefined();
+  });
+
+  test("a non-https custom gateway keeps its scheme", () => {
+    vi.stubEnv("LANGSMITH_GATEWAY", "http://localhost:8080/custom");
+    vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
+
+    const params = applyGeminiGatewayParams({ model: "gemini-2.5-flash" });
+
+    // Scheme preserved (host+port+path) so the URL builder does not force TLS.
+    expect(params.endpoint).toBe("http://localhost:8080/custom/gemini");
+  });
+
   test("no-op when the gateway is disabled", () => {
     vi.stubEnv("LANGSMITH_GATEWAY", "false");
 
@@ -146,6 +187,19 @@ describe("ChatGoogle gateway routing (end to end)", () => {
 
     expect(apiClient.request?.url).toBe(
       "https://gateway.smith.langchain.com/gemini/v1beta/models/gemini-2.5-flash:generateContent"
+    );
+  });
+
+  test("a non-https custom gateway is not forced to TLS", async () => {
+    vi.stubEnv("LANGSMITH_GATEWAY", "http://localhost:8080/custom");
+    vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
+
+    const apiClient = new RecordingApiClient();
+    const model = new ChatGoogle({ model: "gemini-2.5-flash", apiClient });
+    await model.invoke("hi");
+
+    expect(apiClient.request?.url).toBe(
+      "http://localhost:8080/custom/gemini/v1beta/models/gemini-2.5-flash:generateContent"
     );
   });
 });
