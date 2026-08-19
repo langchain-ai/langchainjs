@@ -141,7 +141,7 @@ export class LangChainTracer
     if (run.extra?.lc_defers_inputs) {
       await runTree?.postRun();
     } else {
-      await runTree?.patchRun();
+      await runTree?.patchRun({ excludeInputs: true });
     }
   }
 
