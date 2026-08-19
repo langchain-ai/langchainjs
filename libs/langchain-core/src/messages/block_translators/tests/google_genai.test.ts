@@ -67,6 +67,13 @@ describe("ChatGoogleGenAITranslator", () => {
           },
         },
         {
+          type: "functionCall",
+          functionCall: {
+            name: "get_weather",
+            args: { location: "San Francisco" },
+          },
+        },
+        {
           type: "functionResponse",
           functionResponse: {
             name: "get_weather",
@@ -101,6 +108,12 @@ describe("ChatGoogleGenAITranslator", () => {
       { type: "text", text: "Hello from Google" },
       { type: "file", mimeType: "text/plain", data: "Hello from Google" },
       {
+        type: "tool_call",
+        id: undefined,
+        name: "get_weather",
+        args: { location: "San Francisco" },
+      },
+      {
         type: "non_standard",
         value: {
           type: "functionResponse",
@@ -134,64 +147,6 @@ describe("ChatGoogleGenAITranslator", () => {
             output: "Hello from Google",
           },
         },
-      },
-    ]);
-  });
-
-  it("should translate tool_calls to tool_call content blocks", () => {
-    const message = new AIMessage({
-      content: "",
-      tool_calls: [
-        {
-          id: "call_1",
-          name: "get_weather",
-          args: { location: "San Francisco" },
-        },
-      ],
-      response_metadata: { model_provider: "google-genai" },
-    });
-
-    expect(message.contentBlocks).toEqual([
-      {
-        type: "tool_call",
-        id: "call_1",
-        name: "get_weather",
-        args: { location: "San Francisco" },
-      },
-    ]);
-  });
-
-  it("should translate text alongside tool_calls without dropping either", () => {
-    const message = new AIMessage({
-      content: "Let me check the weather for you.",
-      tool_calls: [
-        {
-          id: "call_1",
-          name: "get_weather",
-          args: { location: "San Francisco" },
-        },
-        {
-          id: "call_2",
-          name: "get_weather",
-          args: { location: "New York" },
-        },
-      ],
-      response_metadata: { model_provider: "google-genai" },
-    });
-
-    expect(message.contentBlocks).toEqual([
-      { type: "text", text: "Let me check the weather for you." },
-      {
-        type: "tool_call",
-        id: "call_1",
-        name: "get_weather",
-        args: { location: "San Francisco" },
-      },
-      {
-        type: "tool_call",
-        id: "call_2",
-        name: "get_weather",
-        args: { location: "New York" },
       },
     ]);
   });

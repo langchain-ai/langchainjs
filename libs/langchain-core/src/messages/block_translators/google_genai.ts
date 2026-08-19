@@ -14,9 +14,6 @@ function convertToV1FromChatGoogleMessage(
         : message.content;
     for (const block of content) {
       if (_isContentBlock(block, "text") && _isString(block.text)) {
-        if (block.text === "") {
-          continue;
-        }
         yield { type: "text", text: block.text };
         continue;
       } else if (
@@ -42,6 +39,19 @@ function convertToV1FromChatGoogleMessage(
           data: block.inlineData.data,
         };
         continue;
+      } else if (
+        _isContentBlock(block, "functionCall") &&
+        _isObject(block.functionCall) &&
+        _isString(block.functionCall.name) &&
+        _isObject(block.functionCall.args)
+      ) {
+        yield {
+          type: "tool_call",
+          id: message.id,
+          name: block.functionCall.name,
+          args: block.functionCall.args,
+        };
+        continue;
       } else if (_isContentBlock(block, "functionResponse")) {
         yield { type: "non_standard", value: block };
         continue;
@@ -65,14 +75,6 @@ function convertToV1FromChatGoogleMessage(
         continue;
       }
       yield { type: "non_standard", value: block };
-    }
-    for (const toolCall of message.tool_calls ?? []) {
-      yield {
-        type: "tool_call",
-        id: toolCall.id,
-        name: toolCall.name,
-        args: toolCall.args,
-      };
     }
   }
   return Array.from(iterateContent());
