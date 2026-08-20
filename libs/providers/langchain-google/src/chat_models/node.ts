@@ -1,6 +1,7 @@
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { ChatGoogleParams } from "./index.js";
 import {
+  applyGeminiGatewayParams,
   BaseChatGoogle,
   getGoogleChatModelParams,
   getPlatformType,
@@ -22,8 +23,13 @@ class ChatGoogleNode extends BaseChatGoogle {
     modelOrParams: string | ChatGoogleNodeParams,
     paramsArg?: Omit<ChatGoogleNodeParams, "model">
   ) {
-    const params = getGoogleChatModelParams(modelOrParams, paramsArg);
+    let params = getGoogleChatModelParams(modelOrParams, paramsArg);
     if (!params.googleAuthOptions) {
+      // Route through the LangSmith gateway (Gemini Developer API path) when
+      // configured, before falling back to the provider API-key env var so the
+      // gateway key can take precedence. Skipped when Vertex OAuth
+      // (`googleAuthOptions`) is used, which the gateway does not proxy.
+      params = applyGeminiGatewayParams(params);
       params.apiKey = params.apiKey ?? getEnvironmentVariable("GOOGLE_API_KEY");
     }
     const requiredScopes: string[] = getRequiredAuthScopes(params);
