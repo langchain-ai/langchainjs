@@ -1009,7 +1009,8 @@ export class ChatGoogleGenerativeAI
     let usageMetadata: UsageMetadata | undefined;
     // Keep prior cumulative counts for calculating token deltas while streaming
     let prevPromptTokenCount = 0;
-    let prevCandidatesTokenCount = 0;
+    let prevOutputTokenCount = 0;
+    let prevThoughtsTokenCount = 0;
     let prevTotalTokenCount = 0;
     let index = 0;
     for await (const response of stream) {
@@ -1037,13 +1038,28 @@ export class ChatGoogleGenerativeAI
         );
         prevPromptTokenCount = newPromptTokenCount;
 
-        const newCandidatesTokenCount =
-          response.usageMetadata.candidatesTokenCount ?? 0;
+        // `output_tokens` covers every output token type, so reasoning tokens
+        // count toward it alongside `candidatesTokenCount`. Both are cumulative
+        // on the wire and have to be turned into per-chunk deltas, otherwise
+        // concatenating the chunks sums the running totals.
+        const newThoughtsTokenCount =
+          usageMetadata.output_token_details?.reasoning ?? 0;
+        const newOutputTokenCount =
+          (response.usageMetadata.candidatesTokenCount ?? 0) +
+          newThoughtsTokenCount;
         usageMetadata.output_tokens = Math.max(
           0,
-          newCandidatesTokenCount - prevCandidatesTokenCount
+          newOutputTokenCount - prevOutputTokenCount
         );
-        prevCandidatesTokenCount = newCandidatesTokenCount;
+        prevOutputTokenCount = newOutputTokenCount;
+
+        if (usageMetadata.output_token_details?.reasoning !== undefined) {
+          usageMetadata.output_token_details.reasoning = Math.max(
+            0,
+            newThoughtsTokenCount - prevThoughtsTokenCount
+          );
+        }
+        prevThoughtsTokenCount = newThoughtsTokenCount;
 
         const newTotalTokenCount = response.usageMetadata.totalTokenCount ?? 0;
         usageMetadata.total_tokens = Math.max(

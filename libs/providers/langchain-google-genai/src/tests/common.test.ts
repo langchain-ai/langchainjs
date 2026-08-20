@@ -2,6 +2,7 @@ import { describe, test, expect } from "vitest";
 import {
   convertResponseContentToChatGenerationChunk,
   convertMessageContentToParts,
+  convertUsageMetadata,
   mapGenerateContentResultToChatResult,
 } from "../utils/common.js";
 import { EmptyContentError } from "../utils/errors.js";
@@ -435,5 +436,112 @@ describe("Missing candidate content", () => {
     expect(
       convertResponseContentToChatGenerationChunk(mockResponse, { index: 0 })
     ).toBeNull();
+  });
+});
+
+// `thoughtsTokenCount` is returned by the API for thinking models but is not
+// declared on the legacy `@google/generative-ai` `UsageMetadata` type.
+type UsageWithThoughts = {
+  promptTokenCount?: number;
+  candidatesTokenCount?: number;
+  totalTokenCount?: number;
+  cachedContentTokenCount?: number;
+  thoughtsTokenCount?: number;
+};
+
+const usage = (u: UsageWithThoughts) =>
+  u as Parameters<typeof convertUsageMetadata>[0];
+
+describe("convertUsageMetadata reasoning tokens", () => {
+  test("reports reasoning tokens returned by thinking models", () => {
+    const result = convertUsageMetadata(
+      usage({
+        promptTokenCount: 41,
+        candidatesTokenCount: 5,
+        thoughtsTokenCount: 381,
+        totalTokenCount: 427,
+      }),
+      "gemini-2.5-flash"
+    );
+
+    expect(result.output_token_details?.reasoning).toBe(381);
+  });
+
+  test("counts reasoning tokens toward output_tokens", () => {
+    const result = convertUsageMetadata(
+      usage({
+        promptTokenCount: 41,
+        candidatesTokenCount: 5,
+        thoughtsTokenCount: 381,
+        totalTokenCount: 427,
+      }),
+      "gemini-2.5-flash"
+    );
+
+    // `output_tokens` is documented as the sum of all output token types, and
+    // Gemini reports reasoning separately from `candidatesTokenCount`.
+    expect(result.output_tokens).toBe(386);
+  });
+
+  test("keeps the token counts internally consistent", () => {
+    const result = convertUsageMetadata(
+      usage({
+        promptTokenCount: 41,
+        candidatesTokenCount: 5,
+        thoughtsTokenCount: 381,
+        totalTokenCount: 427,
+      }),
+      "gemini-2.5-flash"
+    );
+
+    expect(result.input_tokens + result.output_tokens).toBe(
+      result.total_tokens
+    );
+  });
+
+  test("omits reasoning details when the model does not think", () => {
+    const result = convertUsageMetadata(
+      usage({
+        promptTokenCount: 10,
+        candidatesTokenCount: 20,
+        totalTokenCount: 30,
+      }),
+      "gemini-2.5-flash"
+    );
+
+    expect(result.output_tokens).toBe(20);
+    expect(result.output_token_details?.reasoning).toBeUndefined();
+  });
+});
+
+describe("convertUsageMetadata 200k bracket tracking", () => {
+  test("does not report an overage for prompts under 200k", () => {
+    const result = convertUsageMetadata(
+      usage({
+        promptTokenCount: 500,
+        candidatesTokenCount: 10,
+        cachedContentTokenCount: 100,
+        totalTokenCount: 510,
+      }),
+      "gemini-3-pro-preview"
+    );
+
+    expect(result.input_token_details?.over_200k).toBeUndefined();
+    expect(result.input_token_details?.cache_read_over_200k).toBeUndefined();
+  });
+
+  test("reports only the amount above 200k", () => {
+    const result = convertUsageMetadata(
+      usage({
+        promptTokenCount: 250000,
+        candidatesTokenCount: 10,
+        cachedContentTokenCount: 220000,
+        totalTokenCount: 250010,
+      }),
+      "gemini-3-pro-preview"
+    );
+
+    expect(result.input_token_details?.over_200k).toBe(50000);
+    expect(result.input_token_details?.cache_read_over_200k).toBe(20000);
   });
 });
