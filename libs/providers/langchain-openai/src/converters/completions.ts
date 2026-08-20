@@ -673,8 +673,7 @@ export const convertStandardContentMessageToCompletionsMessage: Converter<
     }
     if (
       Array.isArray(completionParam.content) &&
-      completionParam.content.length === 0 &&
-      completionParam.tool_calls != null
+      completionParam.content.length === 0
     ) {
       completionParam.content = "";
     }

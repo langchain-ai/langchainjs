@@ -392,6 +392,31 @@ describe("convertCompletionsMessageToBaseMessage", () => {
       });
     });
 
+    it("should use empty string content for output_version v1 reasoning", () => {
+      const message = new AIMessage({
+        content: [
+          {
+            type: "reasoning",
+            reasoning: "Let me think about this...",
+          },
+        ],
+        response_metadata: {
+          output_version: "v1",
+        },
+      });
+
+      const result = convertMessagesToCompletionsMessageParams({
+        messages: [message],
+      });
+
+      expect(result).toEqual([
+        {
+          role: "assistant",
+          content: "",
+        },
+      ]);
+    });
+
     it("should preserve content with function_call in additional_kwargs", () => {
       const message = new AIMessage({
         content: "Let me call a function for you.",
