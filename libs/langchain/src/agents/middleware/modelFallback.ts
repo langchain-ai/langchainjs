@@ -127,19 +127,20 @@ function getBuiltinToolProvider(
 function withoutForeignBuiltinTools(
   tools: readonly (ClientTool | ServerTool)[] | undefined,
   model: LanguageModelLike
-): (ClientTool | ServerTool)[] | undefined {
-  if (!tools?.length) return tools as (ClientTool | ServerTool)[] | undefined;
+): (ClientTool | ServerTool)[] {
+  const current = tools ?? [];
+  if (current.length === 0) return [];
 
   const provider = getModelProvider(model);
-  const kept = tools.filter((tool) => {
+  const kept = current.filter((tool) => {
     const owner = getBuiltinToolProvider(tool);
     return owner === undefined || owner === provider;
   });
-  if (kept.length === tools.length) return tools as (ClientTool | ServerTool)[];
+  if (kept.length === current.length) return [...current];
 
   console.warn(
     `modelFallbackMiddleware: dropped ${
-      tools.length - kept.length
+      current.length - kept.length
     } provider built-in tool(s) not supported by fallback model ${model.getName()}`
   );
   return kept;
