@@ -1,4 +1,4 @@
-import { expect, describe, it, vi } from "vitest";
+import { expect, describe, it, vi, afterEach } from "vitest";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { LanguageModelLike } from "@langchain/core/language_models/base";
 
@@ -93,5 +93,70 @@ describe("modelFallbackMiddleware", () => {
     await expect(
       agent.invoke({ messages: [new HumanMessage("Hello, world!")] })
     ).rejects.toThrow("Model error");
+  });
+});
+
+describe("modelFallbackMiddleware built-in tools", () => {
+  const clientTool = {
+    name: "lookup",
+    description: "client tool that must survive every fallback attempt",
+    schema: { type: "object", properties: {} },
+  };
+  const openaiBuiltinTool = { type: "web_search" };
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  async function fallbackTools(
+    fallbackModelName: string,
+    fallbackProvider: string
+  ) {
+    const primary = createMockModel("ChatOpenAI", "openai");
+    const fallback = createMockModel(fallbackModelName, fallbackProvider);
+    const middleware = modelFallbackMiddleware(fallback);
+    const handler = vi.fn(async (req: { model: unknown }) => {
+      if (req.model === primary) throw new Error("Model error");
+      return new AIMessage("fallback response");
+    });
+
+    await middleware.wrapModelCall!(
+      {
+        model: primary,
+        tools: [clientTool, openaiBuiltinTool],
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any,
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      handler as any
+    );
+
+    return handler.mock.calls[1][0] as unknown as {
+      tools: unknown[];
+    };
+  }
+
+  it("drops built-in tools the fallback provider does not define", async () => {
+    const request = await fallbackTools("ChatAnthropic", "anthropic");
+    expect(request.tools).toEqual([clientTool]);
+  });
+
+  it("keeps built-in tools when the fallback is the same provider", async () => {
+    const request = await fallbackTools("ChatOpenAI", "openai");
+    expect(request.tools).toEqual([clientTool, openaiBuiltinTool]);
+  });
+
+  it("drops built-in tools when the fallback provider is unrecognized", async () => {
+    const request = await fallbackTools("ChatFireworks", "fireworks");
+    expect(request.tools).toEqual([clientTool]);
+  });
+
+  it("warns when a fallback attempt starts", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    await fallbackTools("ChatAnthropic", "anthropic");
+    expect(
+      warn.mock.calls.some(([message]) =>
+        String(message).includes("retrying with fallback model ChatAnthropic")
+      )
+    ).toBe(true);
   });
 });

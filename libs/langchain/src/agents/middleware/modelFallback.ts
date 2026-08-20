@@ -1,6 +1,111 @@
+import type { ClientTool, ServerTool } from "@langchain/core/tools";
+import { isLangChainTool } from "@langchain/core/utils/function_calling";
 import type { AgentLanguageModelLike as LanguageModelLike } from "../model.js";
-import { initChatModel } from "../../chat_models/universal.js";
+import {
+  initChatModel,
+  type ConfigurableModel,
+} from "../../chat_models/universal.js";
 import { createMiddleware } from "../middleware.js";
+
+type BuiltinToolProvider = "anthropic" | "openai" | "google";
+
+/**
+ * Provider built-in tools are plain records and are only accepted by the provider
+ * that defines them: OpenAI Responses built-ins are bare `{ type }` entries,
+ * Anthropic server tools carry a dated `type` (`web_search_20250305`), and Gemini
+ * built-ins are single-key payloads (`{ google_search: {} }`). Client tools match
+ * none of those shapes and are never touched.
+ */
+const OPENAI_BUILTIN_TOOL_TYPES = new Set([
+  "code_interpreter",
+  "computer_use_preview",
+  "file_search",
+  "image_generation",
+  "mcp",
+  "web_search",
+  "web_search_preview",
+]);
+const ANTHROPIC_BUILTIN_TOOL_TYPE = /_\d{8}$/;
+const GOOGLE_BUILTIN_TOOL_KEYS = new Set([
+  "code_execution",
+  "enterprise_web_search",
+  "google_search",
+  "google_search_retrieval",
+  "url_context",
+]);
+
+function getModelProvider(
+  model: LanguageModelLike
+): BuiltinToolProvider | undefined {
+  const name = model.getName();
+  const configured =
+    name === "ConfigurableModel"
+      ? (model as ConfigurableModel)._defaultConfig?.modelProvider
+      : undefined;
+  if (name === "ChatAnthropic" || configured === "anthropic")
+    return "anthropic";
+  if (
+    name === "ChatOpenAI" ||
+    name === "AzureChatOpenAI" ||
+    configured === "openai" ||
+    configured === "azure_openai"
+  )
+    return "openai";
+  if (
+    name === "ChatGoogleGenerativeAI" ||
+    name === "ChatVertexAI" ||
+    configured === "google_genai" ||
+    configured === "google_vertexai"
+  )
+    return "google";
+  return undefined;
+}
+
+/** The provider that defines this built-in tool, or `undefined` for client tools. */
+function getBuiltinToolProvider(
+  tool: ClientTool | ServerTool
+): BuiltinToolProvider | undefined {
+  if (isLangChainTool(tool)) return undefined;
+  const payload = tool as Record<string, unknown>;
+  const type = payload.type;
+  if (typeof type === "string") {
+    if (OPENAI_BUILTIN_TOOL_TYPES.has(type)) return "openai";
+    if (ANTHROPIC_BUILTIN_TOOL_TYPE.test(type)) return "anthropic";
+    return undefined;
+  }
+  const keys = Object.keys(payload);
+  if (keys.length === 1 && GOOGLE_BUILTIN_TOOL_KEYS.has(keys[0]))
+    return "google";
+  return undefined;
+}
+
+/**
+ * Drop built-in tools the fallback model's provider does not define.
+ *
+ * An unrecognized fallback provider drops them too: a built-in tool only exists
+ * on its own provider's API, so losing the capability on a retry beats failing
+ * the retry outright on an unknown tool type.
+ */
+function withoutForeignBuiltinTools(
+  tools: readonly (ClientTool | ServerTool)[] | undefined,
+  model: LanguageModelLike
+): (ClientTool | ServerTool)[] | undefined {
+  if (!tools?.length) return tools as (ClientTool | ServerTool)[] | undefined;
+
+  const provider = getModelProvider(model);
+  const kept = tools.filter((tool) => {
+    const owner = getBuiltinToolProvider(tool);
+    return owner === undefined || owner === provider;
+  });
+  if (kept.length === tools.length) return tools as (ClientTool | ServerTool)[];
+
+  console.warn(
+    `modelFallbackMiddleware: dropped ${
+      tools.length - kept.length
+    } provider built-in tool(s) not supported by fallback model ${model.getName()}`
+  );
+  return kept;
+}
 
 /**
  * Middleware that provides automatic model fallback on errors.
@@ -60,9 +165,16 @@ export function modelFallbackMiddleware(
                 ? await initChatModel(fallbackModel)
                 : fallbackModel;
 
+            console.warn(
+              `modelFallbackMiddleware: model call failed (${
+                error instanceof Error ? error.name : typeof error
+              }); retrying with fallback model ${model.getName()}`
+            );
+
             return await handler({
               ...request,
               model,
+              tools: withoutForeignBuiltinTools(request.tools, model),
             });
           } catch (fallbackError) {
             /**
