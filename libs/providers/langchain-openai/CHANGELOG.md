@@ -1,5 +1,39 @@
 # @langchain/openai
 
+## 1.5.9
+
+### Patch Changes
+
+- [#11399](https://github.com/langchain-ai/langchainjs/pull/11399) [`5c9fdf2`](https://github.com/langchain-ai/langchainjs/commit/5c9fdf2f0339deb92db84eaa838cf35c7dcdb027) Thanks [@gethin-langchain](https://github.com/gethin-langchain)! - update to v7 openai sdk
+
+- [#11403](https://github.com/langchain-ai/langchainjs/pull/11403) [`fe8eec1`](https://github.com/langchain-ai/langchainjs/commit/fe8eec1915cc5580b8e7a2f3d4f68fe5e577d641) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Drop Gemini-native `functionCall` content blocks (already carried in `tool_calls`) when converting messages to Chat Completions API params, fixing requests that fail when a `ChatGoogleGenerativeAI` message is passed to `ChatOpenAI` (e.g. a cross-provider handoff in LangGraph).
+
+- [#11399](https://github.com/langchain-ai/langchainjs/pull/11399) [`5c9fdf2`](https://github.com/langchain-ai/langchainjs/commit/5c9fdf2f0339deb92db84eaa838cf35c7dcdb027) Thanks [@gethin-langchain](https://github.com/gethin-langchain)! - Map OpenAI's `cache_write_tokens` to `cache_creation` in `usage_metadata.input_token_details`, mirroring the existing `cached_tokens` -> `cache_read` mapping across the Chat Completions and Responses APIs. Previously, prompt cache-write token counts were silently dropped.
+
+## 1.5.8
+
+### Patch Changes
+
+- [#11342](https://github.com/langchain-ai/langchainjs/pull/11342) [`3b0e4c4`](https://github.com/langchain-ai/langchainjs/commit/3b0e4c48a31811031a460c4d95519a7c1163dc41) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - feat(openai): mark OpenAI provider errors as retryable or not
+
+  Builds on `stampRetryable` in `@langchain/core` so the retry middleware can tell a transient failure from a deterministic one. Timeouts and rate limits are marked retryable; aborts, context overflow, invalid tool results, bad credentials, and unknown models non-retryable. Anything else stays unmarked and retries as before.
+
+  Also forwards a per-call `maxRetries` to the retry loop, so a surrounding retry loop such as `modelRetryMiddleware` can take over instead of the two multiplying against each other.
+
+  Errors keep their original class, so `instanceof` against the `openai` SDK error types is unaffected.
+
+## 1.5.7
+
+### Patch Changes
+
+- [#11347](https://github.com/langchain-ai/langchainjs/pull/11347) [`3fe4c43`](https://github.com/langchain-ai/langchainjs/commit/3fe4c43ce3399ebf2391ed612d78fedcd3ea5ec6) Thanks [@talarari](https://github.com/talarari)! - fix(openai): include `usage` in `response_metadata` when `system_fingerprint` is absent
+
+## 1.5.6
+
+### Patch Changes
+
+- [#11305](https://github.com/langchain-ai/langchainjs/pull/11305) [`e654022`](https://github.com/langchain-ai/langchainjs/commit/e654022e291b8dae54504ac2d1a3232332406723) Thanks [@jacoblee93](https://github.com/jacoblee93)! - Add LangSmith Gateway environment configuration to OpenAI, Anthropic, and Fireworks chat models.
+
 ## 1.5.5
 
 ### Patch Changes

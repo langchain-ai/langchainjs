@@ -514,3 +514,42 @@ export class SearchAPI extends StructuredTool {
     return `result for ${input?.query}`;
   }
 }
+
+export async function collectV3Messages(
+  messages: AsyncIterable<any>
+): Promise<{ texts: string[]; deltaCount: number }> {
+  const texts: string[] = [];
+  let deltaCount = 0;
+  for await (const stream of messages) {
+    let text = "";
+    for await (const event of stream) {
+      if (event.event === "content-block-delta") {
+        deltaCount += 1;
+        text += event.delta?.text ?? "";
+      }
+      if (event.event === "content-block-start") {
+        text += (event.contentBlock ?? event.content_block)?.text ?? "";
+      }
+    }
+    texts.push(text);
+  }
+  return { texts, deltaCount };
+}
+
+export async function collectClassicMessages(
+  agent: any,
+  input: any
+): Promise<{ model: string[]; tools: string[] }> {
+  const model: string[] = [];
+  const tools: string[] = [];
+  for await (const chunk of await agent.stream(input, {
+    streamMode: "messages",
+  })) {
+    const message = chunk[0];
+    const text = typeof message?.content === "string" ? message.content : "";
+    if (!text) continue;
+    if (message.getType?.() === "tool") tools.push(text);
+    else model.push(text);
+  }
+  return { model, tools };
+}

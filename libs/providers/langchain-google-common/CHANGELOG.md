@@ -1,5 +1,11 @@
 # @langchain/google-common
 
+## 2.3.0
+
+### Patch Changes
+
+- [#11032](https://github.com/langchain-ai/langchainjs/pull/11032) [`477c75a`](https://github.com/langchain-ai/langchainjs/commit/477c75a97f4883f2ae9a40b83ca589405b8944cb) Thanks [@neuralmanacle](https://github.com/neuralmanacle)! - Fixes endpoint routing and parameter validation for the "eu" multi-region location.
+
 ## 2.2.0
 
 ### Minor Changes

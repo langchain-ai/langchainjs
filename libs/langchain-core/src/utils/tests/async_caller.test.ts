@@ -1,5 +1,10 @@
 import { describe, test, expect, vi } from "vitest";
 import {
+  ContextOverflowError,
+  getRetryable,
+  stampRetryable,
+} from "../../errors/index.js";
+import {
   AsyncCaller,
   parseRetryAfterMs,
   classifyRateLimitError,
@@ -364,5 +369,206 @@ describe("classifyRateLimitError", () => {
       action: "capacity",
       reason: "headerless_429",
     });
+  });
+});
+
+describe("AsyncCaller retryability marking", () => {
+  const handle = (error: unknown) => {
+    const caller = new AsyncCaller({ maxRetries: 0 });
+    try {
+      (
+        caller as unknown as { onFailedAttempt: (error: unknown) => void }
+      ).onFailedAttempt(error);
+    } catch (thrown) {
+      return thrown;
+    }
+    return error;
+  };
+
+  test.each([400, 401, 402, 403, 404, 405, 406, 407, 409])(
+    "marks status %i non-retryable",
+    (status) => {
+      expect(
+        getRetryable(handle(Object.assign(new Error("nope"), { status })))
+      ).toBe(false);
+    }
+  );
+
+  test("marks an aborted call non-retryable", () => {
+    expect(
+      getRetryable(
+        handle(Object.assign(new Error("boom"), { name: "AbortError" }))
+      )
+    ).toBe(false);
+  });
+
+  test("marks insufficient quota non-retryable", () => {
+    const error = new Error("Insufficient quota");
+    (error as unknown as { error: { code: string } }).error = {
+      code: "insufficient_quota",
+    };
+
+    expect(getRetryable(handle(error))).toBe(false);
+  });
+
+  test("marks a rate limit with a retry hint retryable", () => {
+    const error = Object.assign(new Error("Rate limit exceeded"), {
+      status: 429,
+      headers: { "retry-after": "4" },
+    });
+
+    expect(getRetryable(handle(error))).toBe(true);
+  });
+
+  test("marks headerless capacity pressure retryable", () => {
+    const error = Object.assign(new Error("Rate limit exceeded"), {
+      statusCode: 429,
+    });
+
+    expect(getRetryable(handle(error))).toBe(true);
+  });
+
+  test("leaves an unrecognized error unmarked", () => {
+    expect(getRetryable(handle(new Error("who knows")))).toBeUndefined();
+  });
+
+  test("leaves a 500 unmarked so outer retries still apply", () => {
+    expect(
+      getRetryable(handle(Object.assign(new Error("server"), { status: 500 })))
+    ).toBeUndefined();
+  });
+
+  test("marks an unmarked 413 non-retryable", () => {
+    expect(
+      getRetryable(
+        handle(Object.assign(new Error("too large"), { status: 413 }))
+      )
+    ).toBe(false);
+  });
+});
+
+describe("AsyncCaller 413 handling", () => {
+  test("does not retry an unmarked payload-too-large error", async () => {
+    const caller = new AsyncCaller({ maxRetries: 3 });
+    const callable = vi.fn(async () => {
+      throw Object.assign(new Error("payload too large"), { status: 413 });
+    });
+
+    await expect(() => caller.call(callable)).rejects.toThrow(
+      "payload too large"
+    );
+    expect(callable).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("AsyncCaller honors marks applied inside the callable", () => {
+  test("stops retrying an error marked non-retryable by the callable", async () => {
+    const caller = new AsyncCaller({ maxRetries: 3 });
+    const callable = vi.fn(async () => {
+      throw stampRetryable(
+        Object.assign(new Error("payload too large"), { status: 413 }),
+        false
+      );
+    });
+
+    await expect(() => caller.call(callable)).rejects.toThrow(
+      "payload too large"
+    );
+    expect(callable).toHaveBeenCalledTimes(1);
+  });
+
+  test("stops retrying a marked error with no status at all", async () => {
+    const caller = new AsyncCaller({ maxRetries: 3 });
+    const callable = vi.fn(async () => {
+      throw stampRetryable(new ContextOverflowError(), false);
+    });
+
+    await expect(() => caller.call(callable)).rejects.toThrow();
+    expect(callable).toHaveBeenCalledTimes(1);
+  });
+
+  test("still retries an error marked retryable", async () => {
+    const caller = new AsyncCaller({ maxRetries: 2 });
+    const callable = vi
+      .fn<() => Promise<void>>()
+      .mockRejectedValueOnce(stampRetryable(new Error("upstream busy"), true))
+      .mockResolvedValueOnce();
+
+    await expect(caller.call(callable)).resolves.toBeUndefined();
+    expect(callable).toHaveBeenCalledTimes(2);
+  });
+
+  test("still retries an unmarked error", async () => {
+    const caller = new AsyncCaller({ maxRetries: 2 });
+    const callable = vi
+      .fn<() => Promise<void>>()
+      .mockRejectedValueOnce(new Error("transient"))
+      .mockResolvedValueOnce();
+
+    await expect(caller.call(callable)).resolves.toBeUndefined();
+    expect(callable).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("AsyncCaller per-call maxRetries override", () => {
+  test("honors a per-call override of 0", async () => {
+    const caller = new AsyncCaller({ maxRetries: 5 });
+    const callable = vi.fn(async () => {
+      throw new Error("boom");
+    });
+
+    await expect(() =>
+      caller.callWithOptions({ maxRetries: 0 }, callable)
+    ).rejects.toThrow("boom");
+    expect(callable).toHaveBeenCalledTimes(1);
+  });
+
+  test("honors a per-call override above zero", async () => {
+    const caller = new AsyncCaller({ maxRetries: 5 });
+    const callable = vi.fn(async () => {
+      throw new Error("boom");
+    });
+
+    await expect(() =>
+      caller.callWithOptions({ maxRetries: 2 }, callable)
+    ).rejects.toThrow("boom");
+    expect(callable).toHaveBeenCalledTimes(3);
+  });
+
+  test("falls back to the configured value when not overridden", async () => {
+    const caller = new AsyncCaller({ maxRetries: 2 });
+    const callable = vi.fn(async () => {
+      throw new Error("boom");
+    });
+
+    await expect(() => caller.callWithOptions({}, callable)).rejects.toThrow(
+      "boom"
+    );
+    expect(callable).toHaveBeenCalledTimes(3);
+  });
+
+  test("call() is unaffected by the option", async () => {
+    const caller = new AsyncCaller({ maxRetries: 1 });
+    const callable = vi.fn(async () => {
+      throw new Error("boom");
+    });
+
+    await expect(() => caller.call(callable)).rejects.toThrow("boom");
+    expect(callable).toHaveBeenCalledTimes(2);
+  });
+
+  test("an override of 0 skips the Retry-After wait entirely", async () => {
+    const caller = new AsyncCaller({ maxRetries: 3 });
+    const callable = vi.fn(async () => {
+      throw Object.assign(new Error("rate limited"), {
+        status: 429,
+        headers: { "retry-after": "30" },
+      });
+    });
+
+    await expect(() =>
+      caller.callWithOptions({ maxRetries: 0 }, callable)
+    ).rejects.toThrow("rate limited");
+    expect(callable).toHaveBeenCalledTimes(1);
   });
 });

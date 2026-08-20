@@ -35,6 +35,10 @@ export class HumanMessage<
   static isInstance(obj: unknown): obj is HumanMessage {
     return super.isInstance(obj) && obj.type === "human";
   }
+
+  static [Symbol.hasInstance](obj: unknown) {
+    return this.isInstance(obj);
+  }
 }
 
 /**
@@ -76,6 +80,10 @@ export class HumanMessageChunk<
 
   static isInstance(obj: unknown): obj is HumanMessageChunk {
     return super.isInstance(obj) && obj.type === "human";
+  }
+
+  static [Symbol.hasInstance](obj: unknown) {
+    return this.isInstance(obj);
   }
 }
 

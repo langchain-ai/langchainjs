@@ -259,6 +259,10 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
   ): obj is AIMessage<T> {
     return super.isInstance(obj) && (obj as { type: string }).type === "ai";
   }
+
+  static [Symbol.hasInstance](obj: unknown) {
+    return this.isInstance(obj);
+  }
 }
 
 /**
@@ -492,5 +496,9 @@ export class AIMessageChunk<
     obj: BaseMessage<T> | unknown
   ): obj is AIMessageChunk<T> {
     return super.isInstance(obj) && (obj as { type: string }).type === "ai";
+  }
+
+  static [Symbol.hasInstance](obj: unknown) {
+    return this.isInstance(obj);
   }
 }

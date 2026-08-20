@@ -300,11 +300,9 @@ export const convertCompletionsMessageToBaseMessage: Converter<
       const response_metadata: Record<string, unknown> | undefined = {
         model_provider: "openai",
         model_name: rawResponse.model,
+        usage: { ...rawResponse.usage },
         ...(rawResponse.system_fingerprint
-          ? {
-              usage: { ...rawResponse.usage },
-              system_fingerprint: rawResponse.system_fingerprint,
-            }
+          ? { system_fingerprint: rawResponse.system_fingerprint }
           : {}),
       };
 
@@ -808,9 +806,10 @@ export const convertMessagesToCompletionsMessageParams: Converter<
               );
             }
             // Drop content blocks the Chat Completions API rejects as input:
-            //  - Tool-call blocks (`tool_use`, `tool_call`) are already
-            //    carried in message.tool_calls, so resending them as content
-            //    would be a duplicate/invalid part.
+            //  - Tool-call blocks (`tool_use`, `tool_call`, Gemini's
+            //    `functionCall`) are already carried in message.tool_calls,
+            //    so resending them as content would be a duplicate/invalid
+            //    part.
             //  - Reasoning traces (`reasoning`, `reasoning_content`,
             //    `thinking`) are output-only.
             // Echoing any of these back in the request history is rejected by
@@ -822,6 +821,7 @@ export const convertMessagesToCompletionsMessageParams: Converter<
               "type" in m &&
               (m.type === "tool_use" ||
                 m.type === "tool_call" ||
+                m.type === "functionCall" ||
                 m.type === "reasoning" ||
                 m.type === "reasoning_content" ||
                 m.type === "thinking")

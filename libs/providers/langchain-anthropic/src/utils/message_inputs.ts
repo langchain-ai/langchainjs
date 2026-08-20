@@ -163,6 +163,8 @@ function* _formatContentBlocks(
     "server_tool_use",
     "text_editor_code_execution_tool_result",
     "tool_result",
+    "tool_search_tool_bm25_tool_result",
+    "tool_search_tool_regex_tool_result",
     "tool_use",
     "web_search_result",
     "web_search_tool_result",
