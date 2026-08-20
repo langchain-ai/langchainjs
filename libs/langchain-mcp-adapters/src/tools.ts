@@ -471,7 +471,52 @@ function simplifyJsonSchemaForLLM(schema: JsonSchemaObject): JsonSchemaObject {
     );
   }
 
+  // Drop regex patterns that fail to compile under the "u" flag. Tool-input
+  // validation runs through @cfworker/json-schema, which compiles every `pattern`
+  // with `new RegExp(pattern, "u")`. Patterns using Annex B identity escapes
+  // (e.g. `\:`) are legal in plain ECMAScript but throw a SyntaxError under "u",
+  // which surfaces as a failure on every invocation of the tool. Removing the
+  // unenforceable constraint keeps the tool usable rather than permanently broken.
+  if (typeof result.pattern === "string" && !isUnicodeCompilableRegex(result.pattern)) {
+    delete result.pattern;
+  }
+  if (
+    typeof result.patternProperties === "object" &&
+    result.patternProperties !== null
+  ) {
+    const patternProps = result.patternProperties as Record<string, unknown>;
+    let removedInvalidPattern = false;
+    for (const patternKey of Object.keys(patternProps)) {
+      if (!isUnicodeCompilableRegex(patternKey)) {
+        delete patternProps[patternKey];
+        removedInvalidPattern = true;
+      }
+    }
+    // A dropped patternProperties key must not turn into a rejection of keys that
+    // previously validated, so relax additionalProperties: false at this level.
+    if (removedInvalidPattern && result.additionalProperties === false) {
+      delete result.additionalProperties;
+    }
+    if (Object.keys(patternProps).length === 0) {
+      delete result.patternProperties;
+    }
+  }
+
   return result;
+}
+
+/**
+ * Whether a JSON Schema `pattern` compiles under the Unicode ("u") flag that
+ * @cfworker/json-schema uses. Patterns that only compile without "u" (e.g. Annex B
+ * identity escapes such as `\:`) would otherwise throw on every tool invocation.
+ */
+function isUnicodeCompilableRegex(pattern: string): boolean {
+  try {
+    void new RegExp(pattern, "u");
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /**
