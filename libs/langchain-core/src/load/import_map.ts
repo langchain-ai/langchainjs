@@ -55,6 +55,7 @@ export * as utils__env from "../utils/env.js";
 export * as utils__event_source_parse from "../utils/event_source_parse.js";
 export * as utils__format from "../utils/format.js";
 export * as utils__function_calling from "../utils/function_calling.js";
+export * as utils__gateway from "../utils/gateway.js";
 export * as utils__hash from "../utils/hash.js";
 export * as utils__json_patch from "../utils/json_patch.js";
 export * as utils__json_schema from "../utils/json_schema.js";
