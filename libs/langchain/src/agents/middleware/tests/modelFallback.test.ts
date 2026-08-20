@@ -140,6 +140,68 @@ describe("modelFallbackMiddleware built-in tools", () => {
     expect(request.tools).toEqual([clientTool]);
   });
 
+  it.each([
+    [{ type: "web_search" }, "openai"],
+    [{ type: "web_search_preview_2025_03_11" }, "openai"],
+    [{ type: "apply_patch" }, "openai"],
+    [{ type: "tool_search" }, "openai"],
+    [{ type: "web_search_20250305", name: "web_search" }, "anthropic"],
+    [{ type: "mcp_toolset", mcp_servers: [] }, "anthropic"],
+    [{ type: "tool_search_tool_bm25" }, "anthropic"],
+    [{ type: "tool_search_tool_bm25_20251119" }, "anthropic"],
+    [{ google_search: {} }, "google"],
+    [{ googleSearch: {}, urlContext: {} }, "google"],
+  ])("keeps %o only for its own provider (%s)", async (builtinTool, owner) => {
+    const primary = createMockModel("ChatOpenAI", "openai");
+    const fallback = createMockModel(
+      owner === "anthropic" ? "ChatAnthropic" : "ChatGoogleGenerativeAI",
+      owner
+    );
+    const middleware = modelFallbackMiddleware(fallback);
+    const handler = vi.fn(async (req: { model: unknown }) => {
+      if (req.model === primary) throw new Error("Model error");
+      return new AIMessage("fallback response");
+    });
+
+    await middleware.wrapModelCall!(
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      { model: primary, tools: [clientTool, builtinTool] } as any,
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      handler as any
+    );
+
+    const fallbackRequest = handler.mock.calls[1][0] as unknown as {
+      tools: unknown[];
+    };
+    const kept = owner === "openai" ? [clientTool] : [clientTool, builtinTool];
+    // An OpenAI built-in never survives a non-OpenAI fallback; the others do
+    // reach the provider that defines them.
+    expect(fallbackRequest.tools).toEqual(kept);
+  });
+
+  it("keeps a Gemini payload that also declares function tools", async () => {
+    const primary = createMockModel("ChatGoogleGenerativeAI", "google");
+    const fallback = createMockModel("ChatOpenAI", "openai");
+    const mixedTool = { googleSearch: {}, functionDeclarations: [] };
+    const middleware = modelFallbackMiddleware(fallback);
+    const handler = vi.fn(async (req: { model: unknown }) => {
+      if (req.model === primary) throw new Error("Model error");
+      return new AIMessage("fallback response");
+    });
+
+    await middleware.wrapModelCall!(
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      { model: primary, tools: [mixedTool] } as any,
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      handler as any
+    );
+
+    const fallbackRequest = handler.mock.calls[1][0] as unknown as {
+      tools: unknown[];
+    };
+    expect(fallbackRequest.tools).toEqual([mixedTool]);
+  });
+
   it("keeps built-in tools when the fallback is the same provider", async () => {
     const request = await fallbackTools("ChatOpenAI", "openai");
     expect(request.tools).toEqual([clientTool, openaiBuiltinTool]);

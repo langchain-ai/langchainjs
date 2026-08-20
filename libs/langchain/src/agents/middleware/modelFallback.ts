@@ -11,28 +11,46 @@ type BuiltinToolProvider = "anthropic" | "openai" | "google";
 
 /**
  * Provider built-in tools are plain records and are only accepted by the provider
- * that defines them: OpenAI Responses built-ins are bare `{ type }` entries,
- * Anthropic server tools carry a dated `type` (`web_search_20250305`), and Gemini
- * built-ins are single-key payloads (`{ google_search: {} }`). Client tools match
- * none of those shapes and are never touched.
+ * that defines them. OpenAI Responses built-ins are `{ type: <name> }` entries, with
+ * dated variants (`web_search_preview_2025_03_11`); Anthropic tools carry a dated
+ * `type` (`web_search_20250305`) plus a few undated ones; Gemini built-ins are keyed
+ * payloads (`{ google_search: {} }`) in either snake or camel case. Client tools and
+ * plain function payloads match none of these shapes and are never dropped.
  */
-const OPENAI_BUILTIN_TOOL_TYPES = new Set([
+const OPENAI_BUILTIN_TOOL_TYPES = [
+  "apply_patch",
   "code_interpreter",
   "computer_use_preview",
   "file_search",
   "image_generation",
+  "local_shell",
   "mcp",
+  "shell",
+  "tool_search",
   "web_search",
   "web_search_preview",
+];
+const ANTHROPIC_BUILTIN_TOOL_TYPES = new Set([
+  "mcp_toolset",
+  "tool_search_tool_bm25",
+  "tool_search_tool_regex",
 ]);
-const ANTHROPIC_BUILTIN_TOOL_TYPE = /_\d{8}$/;
+const ANTHROPIC_DATED_BUILTIN_TOOL_TYPE = /_\d{8}$/;
 const GOOGLE_BUILTIN_TOOL_KEYS = new Set([
-  "code_execution",
-  "enterprise_web_search",
-  "google_search",
-  "google_search_retrieval",
-  "url_context",
+  "codeexecution",
+  "computeruse",
+  "enterprisewebsearch",
+  "filesearch",
+  "googlemaps",
+  "googlesearch",
+  "googlesearchretrieval",
+  "urlcontext",
 ]);
+
+/** Fold a Gemini tool key so snake and camel spellings compare equal. */
+function normalizeKey(key: string): string {
+  return key.replaceAll("_", "").toLowerCase();
+}
 
 function getModelProvider(
   model: LanguageModelLike
@@ -61,7 +79,12 @@ function getModelProvider(
   return undefined;
 }
 
-/** The provider that defines this built-in tool, or `undefined` for client tools. */
+/**
+ * The provider that defines this built-in tool, or `undefined` for client tools.
+ *
+ * Anthropic is matched before OpenAI: `tool_search_tool_bm25_20251119` would also
+ * match the `tool_search` prefix, and `web_search_20250305` the `web_search` one.
+ */
 function getBuiltinToolProvider(
   tool: ClientTool | ServerTool
 ): BuiltinToolProvider | undefined {
@@ -69,12 +92,26 @@ function getBuiltinToolProvider(
   const payload = tool as Record<string, unknown>;
   const type = payload.type;
   if (typeof type === "string") {
-    if (OPENAI_BUILTIN_TOOL_TYPES.has(type)) return "openai";
-    if (ANTHROPIC_BUILTIN_TOOL_TYPE.test(type)) return "anthropic";
+    if (
+      ANTHROPIC_BUILTIN_TOOL_TYPES.has(type) ||
+      ANTHROPIC_DATED_BUILTIN_TOOL_TYPE.test(type)
+    )
+      return "anthropic";
+    if (
+      OPENAI_BUILTIN_TOOL_TYPES.some(
+        (name) => type === name || type.startsWith(`${name}_`)
+      )
+    )
+      return "openai";
     return undefined;
   }
+  // A payload mixing built-ins with `functionDeclarations` keeps its function tools
+  // rather than being dropped whole, so every key must be a built-in to qualify.
   const keys = Object.keys(payload);
-  if (keys.length === 1 && GOOGLE_BUILTIN_TOOL_KEYS.has(keys[0]))
+  if (
+    keys.length > 0 &&
+    keys.every((key) => GOOGLE_BUILTIN_TOOL_KEYS.has(normalizeKey(key)))
+  )
     return "google";
   return undefined;
 }
