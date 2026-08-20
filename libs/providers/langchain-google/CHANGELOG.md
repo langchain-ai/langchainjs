@@ -1,5 +1,11 @@
 # @langchain/google
 
+## 0.2.3
+
+### Patch Changes
+
+- [#11405](https://github.com/langchain-ai/langchainjs/pull/11405) [`8cfff4d`](https://github.com/langchain-ai/langchainjs/commit/8cfff4dced1327fc87893a86dfc63c553403aec0) Thanks [@hntrl](https://github.com/hntrl)! - Add LangSmith gateway support for Google Gemini (Developer API) models. When `LANGSMITH_GATEWAY` is set, `ChatGoogleGenerativeAI` and `ChatGoogle` (and `initChatModel("google-genai:...")`) route requests through the gateway's Gemini path, using the gateway key (falling back to `LANGSMITH_API_KEY`). An explicit `baseUrl`/`endpoint`, an explicit `apiKey`, or a Vertex AI configuration suppress gateway routing. Also adds `GEMINI_API_KEY` as a fallback env var for `ChatGoogleGenerativeAI`.
+
 ## 0.2.2
 
 ### Patch Changes
