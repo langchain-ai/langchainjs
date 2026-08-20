@@ -349,7 +349,7 @@ describe("convertCompletionsMessageToBaseMessage", () => {
       });
     });
 
-    it("should preserve tool_calls for output_version v1 assistant messages", () => {
+    it("should send content null (not []) for output_version v1 tool-call-only assistant messages", () => {
       const message = new AIMessage({
         content: [
           {
@@ -376,9 +376,11 @@ describe("convertCompletionsMessageToBaseMessage", () => {
       });
 
       expect(result).toHaveLength(1);
+      // Must be `null`, not `[]`: the OpenAI Chat Completions API rejects an
+      // assistant message with an empty content array (issue #11416).
       expect(result[0]).toEqual({
         role: "assistant",
-        content: [],
+        content: null,
         tool_calls: [
           {
             id: "call_123",
