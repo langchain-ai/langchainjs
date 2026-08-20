@@ -152,6 +152,8 @@ describe("modelFallbackMiddleware built-in tools", () => {
     [{ type: "tool_search_tool_bm25_20251119" }, "anthropic"],
     [{ google_search: {} }, "google"],
     [{ googleSearch: {}, urlContext: {} }, "google"],
+    [{ mcpServers: [] }, "google"],
+    [{ googleSearch: {}, functionDeclarations: [] }, "google"],
   ])("keeps %o only for its own provider (%s)", async (builtinTool, owner) => {
     const primary = createMockModel("ChatOpenAI", "openai");
     const fallback = createMockModel(
@@ -180,9 +182,10 @@ describe("modelFallbackMiddleware built-in tools", () => {
     expect(fallbackRequest.tools).toEqual(kept);
   });
 
-  it("keeps a Gemini payload that also declares function tools", async () => {
+  it("drops a Gemini payload that also declares function tools", async () => {
     const primary = createMockModel("ChatGoogleGenerativeAI", "google");
     const fallback = createMockModel("ChatOpenAI", "openai");
+    // Both keys are Gemini-shaped, so OpenAI cannot read either half.
     const mixedTool = { googleSearch: {}, functionDeclarations: [] };
     const middleware = modelFallbackMiddleware(fallback);
     const handler = vi.fn(async (req: { model: unknown }) => {
@@ -200,7 +203,7 @@ describe("modelFallbackMiddleware built-in tools", () => {
     const fallbackRequest = handler.mock.calls[1][0] as unknown as {
       tools: unknown[];
     };
-    expect(fallbackRequest.tools).toEqual([mixedTool]);
+    expect(fallbackRequest.tools).toEqual([]);
   });
 
   it("keeps built-in tools when the fallback is the same provider", async () => {

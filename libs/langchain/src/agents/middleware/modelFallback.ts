@@ -15,7 +15,7 @@ type BuiltinToolProvider = "anthropic" | "openai" | "google";
  * dated variants (`web_search_preview_2025_03_11`); Anthropic tools carry a dated
  * `type` (`web_search_20250305`) plus a few undated ones; Gemini built-ins are keyed
  * payloads (`{ google_search: {} }`) in either snake or camel case. Client tools and
- * plain function payloads match none of these shapes and are never dropped.
+ * provider-neutral function payloads match none of these shapes and are never dropped.
  */
 const OPENAI_BUILTIN_TOOL_TYPES = [
   "apply_patch",
@@ -37,14 +37,22 @@ const ANTHROPIC_BUILTIN_TOOL_TYPES = new Set([
   "tool_search_tool_regex",
 ]);
 const ANTHROPIC_DATED_BUILTIN_TOOL_TYPE = /_\d{8}$/;
-const GOOGLE_BUILTIN_TOOL_KEYS = new Set([
+/**
+ * Every field of the Gemini `Tool` payload, `functionDeclarations` included: a Gemini
+ * tool object is Gemini-shaped in all of its parts, so no other provider can read one
+ * even when it carries function declarations.
+ */
+const GOOGLE_TOOL_KEYS = new Set([
   "codeexecution",
   "computeruse",
   "enterprisewebsearch",
   "filesearch",
+  "functiondeclarations",
   "googlemaps",
   "googlesearch",
   "googlesearchretrieval",
+  "mcpservers",
+  "retrieval",
   "urlcontext",
 ]);
 
@@ -106,12 +114,10 @@ function getBuiltinToolProvider(
       return "openai";
     return undefined;
   }
-  // A payload mixing built-ins with `functionDeclarations` keeps its function tools
-  // rather than being dropped whole, so every key must be a built-in to qualify.
   const keys = Object.keys(payload);
   if (
     keys.length > 0 &&
-    keys.every((key) => GOOGLE_BUILTIN_TOOL_KEYS.has(normalizeKey(key)))
+    keys.every((key) => GOOGLE_TOOL_KEYS.has(normalizeKey(key)))
   )
     return "google";
   return undefined;
