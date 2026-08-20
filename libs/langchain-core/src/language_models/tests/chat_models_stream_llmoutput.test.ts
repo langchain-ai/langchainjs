@@ -1,5 +1,6 @@
 import { describe, test, expect } from "vitest";
 import { BaseChatModel } from "../chat_models.js";
+import { BaseCallbackHandler } from "../../callbacks/base.js";
 import { AIMessageChunk } from "../../messages/ai.js";
 import { ChatGenerationChunk } from "../../outputs.js";
 import type { ChatResult, LLMResult } from "../../outputs.js";
@@ -122,6 +123,47 @@ describe("streaming llmOutput token usage", () => {
       promptTokens: merged?.usage_metadata?.input_tokens,
       completionTokens: merged?.usage_metadata?.output_tokens,
       totalTokens: merged?.usage_metadata?.total_tokens,
+    });
+  });
+});
+
+/**
+ * A handler that opts into implicit streaming, which routes `invoke()` through
+ * `_generateUncached`'s streaming branch rather than `_generate`.
+ */
+class StreamingPreferringHandler extends BaseCallbackHandler {
+  name = "streaming-preferring-handler";
+
+  lc_prefer_streaming = true;
+
+  captured: LLMResult["llmOutput"];
+
+  handleLLMEnd(output: LLMResult) {
+    this.captured = output.llmOutput;
+  }
+}
+
+describe("implicit streaming llmOutput token usage", () => {
+  test("sums deltas when invoke() streams for a streaming-preferring handler", async () => {
+    const handler = new StreamingPreferringHandler();
+    const model = new UsageStreamingChatModel([
+      {
+        text: "a",
+        usage: { input_tokens: 4, output_tokens: 6, total_tokens: 10 },
+      },
+      {
+        text: "b",
+        usage: { input_tokens: 0, output_tokens: 3, total_tokens: 3 },
+      },
+    ]);
+
+    await model.invoke("hi", { callbacks: [handler] });
+
+    // Keeping only the final chunk would report 0 / 3 / 3.
+    expect(handler.captured?.tokenUsage).toEqual({
+      promptTokens: 4,
+      completionTokens: 9,
+      totalTokens: 13,
     });
   });
 });
