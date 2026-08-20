@@ -1,5 +1,11 @@
 # @langchain/anthropic
 
+## 1.5.8
+
+### Patch Changes
+
+- [#11421](https://github.com/langchain-ai/langchainjs/pull/11421) [`041a755`](https://github.com/langchain-ai/langchainjs/commit/041a75581666a7fd551e6df62226dcf873be50cc) Thanks [@priprocess](https://github.com/priprocess)! - Preserve the generic `tool_search_tool_result` block type in streaming output and message payload conversion. The Anthropic API emits this un-suffixed type for both tool search variants; previously only the variant-suffixed names were allowlisted, so multi-turn conversations using tool search still failed with INVALID_TOOL_RESULTS after a client-tool round-trip.
+
 ## 1.5.7
 
 ### Patch Changes
