@@ -144,6 +144,7 @@ describe("modelFallbackMiddleware built-in tools", () => {
     [{ type: "web_search" }, "openai"],
     [{ type: "web_search_preview_2025_03_11" }, "openai"],
     [{ type: "apply_patch" }, "openai"],
+    [{ type: "computer" }, "openai"],
     [{ type: "tool_search" }, "openai"],
     [{ type: "web_search_20250305", name: "web_search" }, "anthropic"],
     [{ type: "mcp_toolset", mcp_servers: [] }, "anthropic"],

@@ -20,6 +20,7 @@ type BuiltinToolProvider = "anthropic" | "openai" | "google";
 const OPENAI_BUILTIN_TOOL_TYPES = [
   "apply_patch",
   "code_interpreter",
+  "computer",
   "computer_use_preview",
   "file_search",
   "image_generation",
