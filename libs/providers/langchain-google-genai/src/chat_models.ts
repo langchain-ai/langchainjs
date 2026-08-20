@@ -18,6 +18,7 @@ import type { ChatModelStreamEvent } from "@langchain/core/language_models/event
 import { convertGoogleGenAIStream } from "./utils/stream_events.js";
 import {
   AIMessageChunk,
+  isAIMessageChunk,
   BaseMessage,
   UsageMetadata,
 } from "@langchain/core/messages";
@@ -912,7 +913,6 @@ export class ChatGoogleGenerativeAI
 
     // Handle streaming
     if (this.streaming) {
-      const tokenUsage: TokenUsage = {};
       const stream = this._streamResponseChunks(messages, options, runManager);
       const finalChunks: ChatGenerationChunk[] = [];
 
@@ -929,7 +929,26 @@ export class ChatGoogleGenerativeAI
         (c): c is ChatGenerationChunk => c !== undefined
       );
 
-      return { generations, llmOutput: { estimatedTokenUsage: tokenUsage } };
+      // Mirror the non-streaming path, which reports the counts the API
+      // returned under `tokenUsage`. `finalChunks` entries are already
+      // concatenated, so their usage metadata is summed across the stream.
+      const tokenUsage: TokenUsage = {};
+      for (const generation of generations) {
+        const usage = isAIMessageChunk(generation.message)
+          ? generation.message.usage_metadata
+          : undefined;
+        if (usage === undefined) {
+          continue;
+        }
+        tokenUsage.promptTokens =
+          (tokenUsage.promptTokens ?? 0) + usage.input_tokens;
+        tokenUsage.completionTokens =
+          (tokenUsage.completionTokens ?? 0) + usage.output_tokens;
+        tokenUsage.totalTokens =
+          (tokenUsage.totalTokens ?? 0) + usage.total_tokens;
+      }
+
+      return { generations, llmOutput: { tokenUsage } };
     }
 
     const res = await this.completionWithRetry(
