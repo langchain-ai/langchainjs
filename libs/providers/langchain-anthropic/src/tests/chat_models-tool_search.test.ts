@@ -76,3 +76,62 @@ test("Tool Search Tool - LangChain message to Anthropic format", () => {
     )
   ).toBe(true);
 });
+
+// On the wire the API emits the un-suffixed `tool_search_tool_result` type for
+// both search variants (also the shape shown in Anthropic's tool-search docs);
+// the variant-suffixed names above are kept for compatibility.
+const genericToolSearchResultBlock = {
+  type: "tool_search_tool_result",
+  tool_use_id: "srvtoolu_01DEF456",
+  content: {
+    type: "tool_search_tool_search_result",
+    tool_references: [{ type: "tool_reference", tool_name: "send_email" }],
+  },
+};
+
+test("Tool Search Tool - generic result block is captured in streaming", () => {
+  const result = _makeMessageChunkFromAnthropicEvent(
+    {
+      type: "content_block_start",
+      index: 1,
+      content_block: genericToolSearchResultBlock,
+    } as unknown as Anthropic.Beta.Messages.BetaRawMessageStreamEvent,
+    { streamUsage: true, coerceContentToString: false }
+  );
+
+  expect(result).not.toBeNull();
+  const content = result?.chunk.content;
+  expect(Array.isArray(content)).toBe(true);
+  expect(
+    (content as { type?: string }[]).some(
+      (block) => block.type === "tool_search_tool_result"
+    )
+  ).toBe(true);
+});
+
+test("Tool Search Tool - generic result block survives payload conversion", () => {
+  const langChainMessage = new AIMessage({
+    content: [
+      {
+        type: "server_tool_use",
+        id: "srvtoolu_01DEF456",
+        name: "tool_search_tool_regex",
+        input: { pattern: "email" },
+      },
+      genericToolSearchResultBlock,
+    ],
+  });
+
+  const result = _convertMessagesToAnthropicPayload([
+    new HumanMessage("Email the team the summary"),
+    langChainMessage,
+  ]);
+
+  const assistant = result.messages[1];
+  expect(assistant.role).toBe("assistant");
+  expect(
+    (assistant.content as { type?: string }[]).some(
+      (block) => block.type === "tool_search_tool_result"
+    )
+  ).toBe(true);
+});
