@@ -1,5 +1,11 @@
 # @langchain/core
 
+## 1.2.9
+
+### Patch Changes
+
+- [#11402](https://github.com/langchain-ai/langchainjs/pull/11402) [`43e4396`](https://github.com/langchain-ai/langchainjs/commit/43e439698fa7794c10ab8d7355d4433e058e4d62) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Fix ChatVertexAI/ChatGoogle content blocks: include `tool_call` blocks from `message.tool_calls` and skip spurious empty `text` blocks in `contentBlocks`.
+
 ## 1.2.8
 
 ### Patch Changes

@@ -1,5 +1,15 @@
 # @langchain/openai
 
+## 1.5.9
+
+### Patch Changes
+
+- [#11399](https://github.com/langchain-ai/langchainjs/pull/11399) [`5c9fdf2`](https://github.com/langchain-ai/langchainjs/commit/5c9fdf2f0339deb92db84eaa838cf35c7dcdb027) Thanks [@gethin-langchain](https://github.com/gethin-langchain)! - update to v7 openai sdk
+
+- [#11403](https://github.com/langchain-ai/langchainjs/pull/11403) [`fe8eec1`](https://github.com/langchain-ai/langchainjs/commit/fe8eec1915cc5580b8e7a2f3d4f68fe5e577d641) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Drop Gemini-native `functionCall` content blocks (already carried in `tool_calls`) when converting messages to Chat Completions API params, fixing requests that fail when a `ChatGoogleGenerativeAI` message is passed to `ChatOpenAI` (e.g. a cross-provider handoff in LangGraph).
+
+- [#11399](https://github.com/langchain-ai/langchainjs/pull/11399) [`5c9fdf2`](https://github.com/langchain-ai/langchainjs/commit/5c9fdf2f0339deb92db84eaa838cf35c7dcdb027) Thanks [@gethin-langchain](https://github.com/gethin-langchain)! - Map OpenAI's `cache_write_tokens` to `cache_creation` in `usage_metadata.input_token_details`, mirroring the existing `cached_tokens` -> `cache_read` mapping across the Chat Completions and Responses APIs. Previously, prompt cache-write token counts were silently dropped.
+
 ## 1.5.8
 
 ### Patch Changes
