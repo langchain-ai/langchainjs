@@ -658,10 +658,13 @@ export const convertStandardContentMessageToCompletionsMessage: Converter<
       content: message.contentBlocks.filter((block) => block.type === "text"),
     };
   } else if (role === "assistant") {
+    const textContent = message.contentBlocks.filter(
+      (block) => block.type === "text"
+    );
     const completionParam: OpenAIClient.Chat.Completions.ChatCompletionAssistantMessageParam =
       {
         role: "assistant",
-        content: message.contentBlocks.filter((block) => block.type === "text"),
+        content: textContent,
       };
     if (AIMessage.isInstance(message) && !!message.tool_calls?.length) {
       completionParam.tool_calls = message.tool_calls.map(
@@ -670,6 +673,18 @@ export const convertStandardContentMessageToCompletionsMessage: Converter<
     } else if (message.additional_kwargs.tool_calls != null) {
       completionParam.tool_calls = message.additional_kwargs
         .tool_calls as OpenAIClient.Chat.Completions.ChatCompletionMessageToolCall[];
+    }
+    // The OpenAI Chat Completions API rejects an assistant message whose
+    // `content` is an empty array ("empty array. Expected an array with minimum
+    // length 1"). A tool-call-only AIMessage (all content blocks are tool_call
+    // blocks, so the text filter yields []) must therefore send `content: null`
+    // instead of `[]`; tool_calls carry the payload.
+    if (
+      Array.isArray(completionParam.content) &&
+      completionParam.content.length === 0 &&
+      completionParam.tool_calls != null
+    ) {
+      completionParam.content = null;
     }
     return completionParam;
   } else if (role === "tool" && ToolMessage.isInstance(message)) {
