@@ -349,7 +349,7 @@ describe("convertCompletionsMessageToBaseMessage", () => {
       });
     });
 
-    it("should preserve tool_calls for output_version v1 assistant messages", () => {
+    it("should use empty string content for output_version v1 tool calls", () => {
       const message = new AIMessage({
         content: [
           {
@@ -378,7 +378,7 @@ describe("convertCompletionsMessageToBaseMessage", () => {
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual({
         role: "assistant",
-        content: [],
+        content: "",
         tool_calls: [
           {
             id: "call_123",

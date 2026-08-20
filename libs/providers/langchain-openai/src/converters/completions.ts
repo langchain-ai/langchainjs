@@ -671,6 +671,13 @@ export const convertStandardContentMessageToCompletionsMessage: Converter<
       completionParam.tool_calls = message.additional_kwargs
         .tool_calls as OpenAIClient.Chat.Completions.ChatCompletionMessageToolCall[];
     }
+    if (
+      Array.isArray(completionParam.content) &&
+      completionParam.content.length === 0 &&
+      completionParam.tool_calls != null
+    ) {
+      completionParam.content = "";
+    }
     return completionParam;
   } else if (role === "tool" && ToolMessage.isInstance(message)) {
     return {
