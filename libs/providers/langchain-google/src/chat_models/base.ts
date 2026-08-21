@@ -360,7 +360,7 @@ export abstract class BaseChatGoogle<
     } else if (this.location === "global") {
       // See https://docs.cloud.google.com/vertex-ai/generative-ai/docs/learn/locations#use_the_global_endpoint
       return "aiplatform.googleapis.com";
-    } else if (["eu", "us"].includes(this.location)) {
+    } else if (!this.location.includes("-")) {
       return `aiplatform.${this.location}.rep.googleapis.com`;
     } else {
       return `${this.location}-aiplatform.googleapis.com`;
