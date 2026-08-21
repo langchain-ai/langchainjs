@@ -23,6 +23,7 @@ import {
 } from "@langchain/core/messages";
 import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { resolveLangSmithGatewayConfig } from "@langchain/core/utils/gateway";
 import {
   BaseChatModel,
   type BaseChatModelCallOptions,
@@ -634,6 +635,8 @@ export class ChatGoogleGenerativeAI
 
   apiKey?: string;
 
+  baseUrl?: string;
+
   streaming = false;
 
   json?: boolean;
@@ -702,11 +705,21 @@ export class ChatGoogleGenerativeAI
 
     this.stopSequences = fields.stopSequences ?? this.stopSequences;
 
-    this.apiKey = fields.apiKey ?? getEnvironmentVariable("GOOGLE_API_KEY");
+    const gatewayConfig = resolveLangSmithGatewayConfig({
+      baseURL: fields.baseUrl,
+      providerPath: "gemini",
+    });
+    this.baseUrl = gatewayConfig.baseURL;
+
+    this.apiKey =
+      fields.apiKey ??
+      gatewayConfig.apiKey ??
+      (getEnvironmentVariable("GOOGLE_API_KEY") ||
+        getEnvironmentVariable("GEMINI_API_KEY"));
     if (!this.apiKey) {
       throw new Error(
         "Please set an API key for Google GenerativeAI " +
-          "in the environment variable GOOGLE_API_KEY " +
+          "in the environment variable GOOGLE_API_KEY or GEMINI_API_KEY " +
           "or in the `apiKey` field of the " +
           "ChatGoogleGenerativeAI constructor"
       );
@@ -747,7 +760,7 @@ export class ChatGoogleGenerativeAI
       },
       {
         apiVersion: fields.apiVersion,
-        baseUrl: fields.baseUrl,
+        baseUrl: this.baseUrl,
         customHeaders: fields.customHeaders,
       }
     );
@@ -760,12 +773,20 @@ export class ChatGoogleGenerativeAI
     requestOptions?: RequestOptions
   ): void {
     if (!this.apiKey) return;
+    // Preserve the resolved request options (notably `baseUrl`) so cached-content
+    // requests keep routing through the configured LangSmith gateway. Without
+    // this, a gateway-enabled model would rebuild the client against Google's
+    // default endpoint while using the gateway key, and fail authentication.
+    const resolvedRequestOptions: RequestOptions = {
+      baseUrl: this.baseUrl,
+      ...requestOptions,
+    };
     this.client = new GenerativeAI(
       this.apiKey
     ).getGenerativeModelFromCachedContent(
       cachedContent,
       modelParams,
-      requestOptions
+      resolvedRequestOptions
     );
   }
 
@@ -929,12 +950,9 @@ export class ChatGoogleGenerativeAI
         usageMetadata,
       }
     );
-    // may not have generations in output if there was a refusal for safety reasons, malformed function call, etc.
-    if (generationResult.generations?.length > 0) {
-      await runManager?.handleLLMNewToken(
-        generationResult.generations[0]?.text ?? ""
-      );
-    }
+    await runManager?.handleLLMNewToken(
+      generationResult.generations[0]?.text ?? ""
+    );
     return generationResult;
   }
 
