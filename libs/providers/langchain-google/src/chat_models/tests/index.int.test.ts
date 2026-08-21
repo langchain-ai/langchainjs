@@ -486,6 +486,22 @@ describe.each(coreModelInfo)(
       expect(result.response_metadata.serviceTier).toEqual("standard");
     });
 
+    test.runIf(testConfig?.node === true && model === "gemini-2.5-flash")(
+      "invoke from the Vertex multi-region endpoint",
+      async () => {
+        const llm = newChatGoogle({
+          platformType: "gcp",
+          location: "eu",
+        });
+
+        await llm.invoke("What is 1 + 1?");
+
+        expect(recorder.request?.url).toContain(
+          "https://aiplatform.eu.rep.googleapis.com/"
+        );
+      }
+    );
+
     test("invoke seed", async () => {
       const llm = newChatGoogle({
         seed: 6,
