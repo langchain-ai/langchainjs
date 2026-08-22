@@ -2,6 +2,14 @@
 
 This document provides guidance for AI coding agents working with the LangChain.js codebase.
 
+<corridor>
+
+## Corridor security analysis
+
+Before generating or modifying code, create a plan and use Corridor's `analyzePlan` tool to analyze it. Apply the resulting security guidance before writing code.
+
+</corridor>
+
 ## Project Overview
 
 LangChain.js is a TypeScript framework for building LLM-powered applications. It provides standard interfaces for agents, models, embeddings, vector stores, and more, enabling developers to chain together interoperable components and third-party integrations.
