@@ -45,6 +45,7 @@ overrides:
   lodash: '>=4.18.0'
   path-to-regexp: '>=8.4.0'
   brace-expansion: '>=5.0.9'
+  deepmerge-ts: '>=8.0.0'
   micromatch>picomatch: 2.3.2
   anymatch>picomatch: 2.3.2
   readdirp>picomatch: 2.3.2
@@ -206,8 +207,8 @@ importers:
         specifier: workspace:*
         version: link:../libs/providers/langchain-groq
       '@langchain/langgraph':
-        specifier: ^1.4.8
-        version: 1.4.8(@langchain/core@libs+langchain-core)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(zod@4.3.6)
+        specifier: ^1.4.10
+        version: 1.4.10(@langchain/core@libs+langchain-core)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(zod@4.3.6)
       '@langchain/mistralai':
         specifier: workspace:*
         version: link:../libs/providers/langchain-mistralai
@@ -616,11 +617,11 @@ importers:
   libs/langchain:
     dependencies:
       '@langchain/langgraph':
-        specifier: ^1.4.8
-        version: 1.4.8(@langchain/core@libs+langchain-core)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(zod@4.3.6)
+        specifier: ^1.4.10
+        version: 1.4.10(@langchain/core@libs+langchain-core)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(zod@4.3.6)
       '@langchain/langgraph-checkpoint':
-        specifier: ^1.1.3
-        version: 1.1.3(@langchain/core@libs+langchain-core)
+        specifier: ^1.1.5
+        version: 1.1.5(@langchain/core@libs+langchain-core)
       langsmith:
         specifier: '>=0.5.0 <1.0.0'
         version: 0.7.14(@opentelemetry/api@1.9.1)(openai@6.41.0(ws@8.21.1(bufferutil@4.1.0))(zod@4.3.6))(ws@8.21.1(bufferutil@4.1.0))
@@ -645,7 +646,7 @@ importers:
         version: link:../providers/langchain-fireworks
       '@langchain/langgraph-api':
         specifier: ^1.4.3
-        version: 1.4.4(@langchain/core@libs+langchain-core)(@langchain/langgraph-checkpoint@1.1.3(@langchain/core@libs+langchain-core))(@langchain/langgraph-sdk@1.9.28(@langchain/core@libs+langchain-core)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(@langchain/langgraph@1.4.8(@langchain/core@libs+langchain-core)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(zod@4.3.6))(@opentelemetry/api@1.9.1)(bufferutil@4.1.0)(openai@6.41.0(ws@8.21.1(bufferutil@4.1.0))(zod@4.3.6))(ts-node@10.9.2(@swc/core@1.15.46(@swc/helpers@0.5.21))(@types/node@26.1.2)(typescript@7.0.2))(typescript@7.0.2)(ws@8.21.1(bufferutil@4.1.0))
+        version: 1.4.4(@langchain/core@libs+langchain-core)(@langchain/langgraph-checkpoint@1.1.5(@langchain/core@libs+langchain-core))(@langchain/langgraph-sdk@1.9.28(@langchain/core@libs+langchain-core)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(@langchain/langgraph@1.4.10(@langchain/core@libs+langchain-core)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(zod@4.3.6))(@opentelemetry/api@1.9.1)(bufferutil@4.1.0)(openai@6.41.0(ws@8.21.1(bufferutil@4.1.0))(zod@4.3.6))(ts-node@10.9.2(@swc/core@1.15.46(@swc/helpers@0.5.21))(@types/node@26.1.2)(typescript@7.0.2))(typescript@7.0.2)(ws@8.21.1(bufferutil@4.1.0))
       '@langchain/langgraph-sdk':
         specifier: ^1.9.28
         version: 1.9.28(@langchain/core@libs+langchain-core)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -699,7 +700,7 @@ importers:
         version: 6.1.2
       typeorm:
         specifier: ^1.1.0
-        version: 1.1.0(better-sqlite3@12.9.0)(ioredis@5.11.1)(mongodb@7.5.0(@aws-sdk/credential-providers@3.1034.0)(socks@2.8.9))(mysql2@3.15.3)(pg@8.22.0)(redis@5.12.1(@opentelemetry/api@1.9.1))(ts-node@10.9.2(@swc/core@1.15.46(@swc/helpers@0.5.21))(@types/node@26.1.2)(typescript@7.0.2))
+        version: 1.1.0(better-sqlite3@12.9.0)(ioredis@5.11.1)(mongodb@7.5.0(@aws-sdk/credential-providers@3.1034.0)(socks@2.8.9))(mysql2@3.15.3)(pg@8.23.0)(redis@5.12.1(@opentelemetry/api@1.9.1))(ts-node@10.9.2(@swc/core@1.15.46(@swc/helpers@0.5.21))(@types/node@26.1.2)(typescript@7.0.2))
       typescript:
         specifier: ~7.0.2
         version: 7.0.2
@@ -810,8 +811,8 @@ importers:
         specifier: workspace:*
         version: link:../providers/langchain-groq
       '@langchain/langgraph':
-        specifier: 1.4.8
-        version: 1.4.8(@langchain/core@libs+langchain-core)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(zod@4.3.6)
+        specifier: 1.4.10
+        version: 1.4.10(@langchain/core@libs+langchain-core)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(zod@4.3.6)
       '@langchain/mistralai':
         specifier: workspace:*
         version: link:../providers/langchain-mistralai
@@ -1022,7 +1023,7 @@ importers:
         version: 1.0.21
       langsmith:
         specifier: '>=0.5.0 <1.0.0'
-        version: 0.7.14(@opentelemetry/api@1.9.1)(openai@6.41.0(ws@8.21.1(bufferutil@4.1.0))(zod@4.3.6))(ws@8.21.1(bufferutil@4.1.0))
+        version: 0.7.14(@opentelemetry/api@1.9.1)(openai@7.5.0(@aws-sdk/credential-provider-node@3.972.77)(@smithy/signature-v4@5.6.12)(ws@8.21.1(bufferutil@4.1.0))(zod@4.3.6))(ws@8.21.1(bufferutil@4.1.0))
       mustache:
         specifier: ^4.2.0
         version: 4.2.0
@@ -1080,8 +1081,8 @@ importers:
         specifier: workspace:^
         version: link:../langchain-core
       '@langchain/langgraph':
-        specifier: ^1.4.8
-        version: 1.4.8(@langchain/core@libs+langchain-core)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(zod@4.3.6)
+        specifier: ^1.4.10
+        version: 1.4.10(@langchain/core@libs+langchain-core)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(zod@4.3.6)
       '@langchain/openai':
         specifier: workspace:*
         version: link:../providers/langchain-openai
@@ -1469,6 +1470,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.10
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.1.2
+        version: 26.1.2
       dpdm:
         specifier: ^3.14.0
         version: 3.15.1
@@ -1949,8 +1953,8 @@ importers:
         specifier: ^1.0.12
         version: 1.0.21
       openai:
-        specifier: ^6.41.0
-        version: 6.41.0(ws@8.21.1(bufferutil@4.1.0))(zod@4.3.6)
+        specifier: ^7.5.0
+        version: 7.5.0(@aws-sdk/credential-provider-node@3.972.77)(@smithy/signature-v4@5.6.12)(ws@8.21.1(bufferutil@4.1.0))(zod@4.3.6)
       zod:
         specifier: ^3.25.76 || ^4
         version: 4.3.6
@@ -4183,8 +4187,32 @@ packages:
     peerDependencies:
       '@langchain/core': workspace:^
 
+  '@langchain/langgraph-checkpoint@1.1.5':
+    resolution: {integrity: sha512-BwDwl5VeTOh6CVuiIPgsUgfK51vTJDMSbFcSCUfjJWsl8/DPdK/mbv+ejxJstkSk/BlSPMP4JfXWcN6jD2ea2Q==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@langchain/core': workspace:^
+
   '@langchain/langgraph-sdk@1.9.28':
     resolution: {integrity: sha512-4j3XuM0PvtmAbL8mPfBS99ez3+ytRfgbOpAR/nOeaejTRF3Q9dNw2QnaGLGng8wLPtGLoSj+SYgUOVxy9Bv9vg==}
+    peerDependencies:
+      '@langchain/core': workspace:^
+      react: ^18 || ^19
+      react-dom: ^18 || ^19
+      svelte: ^4.0.0 || ^5.0.0
+      vue: ^3.0.0
+    peerDependenciesMeta:
+      react:
+        optional: true
+      react-dom:
+        optional: true
+      svelte:
+        optional: true
+      vue:
+        optional: true
+
+  '@langchain/langgraph-sdk@1.9.30':
+    resolution: {integrity: sha512-hPzbhenvvFRn46PHnlkad3E+TuUIfRhNGpekR5cY12D1WKh3Viwfyz9HpzCbfVebChU9Kgk494V9RJTnh1jrPQ==}
     peerDependencies:
       '@langchain/core': workspace:^
       react: ^18 || ^19
@@ -4206,8 +4234,8 @@ packages:
     engines: {node: ^18.19.0 || >=20.16.0}
     hasBin: true
 
-  '@langchain/langgraph@1.4.8':
-    resolution: {integrity: sha512-DN1Np1XefdBEbp1qBKlt39cwoL743AAGpR5Ipja0gY2YbWvsoQnOTIrjnj/orSAhaUYsdTKS8VSWdFzsHZo6Ig==}
+  '@langchain/langgraph@1.4.10':
+    resolution: {integrity: sha512-QBNbbIWDp3pcyvaINGEYHdekGYSQm6ZYuC9/h7arEAZckAl5mRLaoRGw5t61V4Bf+rspEj2VcylqNAN3fcdBNQ==}
     engines: {node: '>=18'}
     peerDependencies:
       '@langchain/core': workspace:^
@@ -4276,6 +4304,13 @@ packages:
     peerDependencies:
       '@emnapi/core': ^1.7.1 || ^2.0.0-alpha.3
       '@emnapi/runtime': ^1.7.1 || ^2.0.0-alpha.3
+
+  '@napi-rs/wasm-runtime@1.2.3':
+    resolution: {integrity: sha512-UMduMbqO5s5zF2NkNacMT/yK5Y5QiKvWr2+50bzIIxFDwVJ2h49b+oyjaCGPhJxd2/gC2x39EHv/gHVuu36x2Q==}
+    engines: {node: ^20.19.0 || ^22.13.0 || >=23.5.0}
+    peerDependencies:
+      '@emnapi/core': ^1.7.1 || ^2.0.0-alpha.4
+      '@emnapi/runtime': ^1.7.1 || ^2.0.0-alpha.4
 
   '@nodable/entities@2.1.1':
     resolution: {integrity: sha512-Pig3HxDIoMgjdEH8OCf/dkcTmLFjJRjWuq8jSnklu284/TKOPibSRERmOykiwmyXTtv61mP+44f3GMx0tLAyjg==}
@@ -7113,6 +7148,10 @@ packages:
     resolution: {integrity: sha512-h/C0qe6857pQhcSJHLfsR1uYGj98Ge3wKAD3Ed9KqH3wcVh+BM4Jq4xISD7vs9OPuT07n+q3QQVjslJ286j6ag==}
     engines: {node: '>=20.19.0'}
 
+  bson@7.3.2:
+    resolution: {integrity: sha512-1w0ra+ho1cuE+w8jzwgzTFIimFtCfZeCoOsvIPQg6uyFCsp8M29U7bNNf5GrFh88TXbYg1g3TyKUGpd6O7q6zA==}
+    engines: {node: '>=20.19.0'}
+
   buffer-crc32@0.2.13:
     resolution: {integrity: sha512-VO9Ht/+p3SN7SKWqcrgEzjGbRSJYTx+Q1pTQC0wrWqHx0vpJraQ6GtHx8tvcg1rlK1byhU5gccxgOgj7B0TDkQ==}
 
@@ -7751,8 +7790,8 @@ packages:
   deep-is@0.1.4:
     resolution: {integrity: sha512-oIPzksmTg4/MriiaYGO+okXDT7ztn/w3Eptv/+gSIdMdKsJo0u4CfYNFJPy+4SKMuCqGw2wxnA+URMg3t8a/bQ==}
 
-  deepmerge-ts@7.1.5:
-    resolution: {integrity: sha512-HOJkrhaYsweh+W+e74Yn7YStZOilkoPb6fycpwNLKzSPtruFs48nYis0zy5yJz1+ktUhHxoRDJ27RQAWLIJVJw==}
+  deepmerge-ts@8.0.1:
+    resolution: {integrity: sha512-szCXE7YLCvLKR9bFPJcvsezOShdalctSvrgN/LM/QGUEPZQajwjmsMObZ6/DuANT5lxzM/wtO8Feubwdkz8myA==}
     engines: {node: '>=16.0.0'}
 
   deepmerge@4.3.1:
@@ -9930,8 +9969,8 @@ packages:
       socks:
         optional: true
 
-  mongoose@9.9.1:
-    resolution: {integrity: sha512-hI00baDVPjV5VfYA3j+oLuPvLfmCQICWot9zJZgkuDMXnWEYhIx9xCPEOt2IC3lDJz6ajsz2bpgO24E+xsP6wg==}
+  mongoose@9.9.3:
+    resolution: {integrity: sha512-9dQaKct05LNgVkunDzFPZsGGBhinobl3Qc5B5KYJkLNG5lBLgqESUEItl1EUIkVaCwZJGBgTuvJiFAjjIATCiw==}
     engines: {node: '>=20.19.0'}
 
   mpath@0.9.0:
@@ -10260,6 +10299,27 @@ packages:
       zod:
         optional: true
 
+  openai@7.5.0:
+    resolution: {integrity: sha512-ZbDBz8FSB8Mv8fFYIUvzTFMdV5vl93/octp1MdtK2lfYepSpfv/ewmeugpKz/cwGtFSx+YuUM4NwpZ2P55YiPA==}
+    engines: {node: '>=22.0.0'}
+    peerDependencies:
+      '@aws-sdk/credential-provider-node': '>=3.972.0 <4'
+      '@smithy/hash-node': '>=4.3.0 <5'
+      '@smithy/signature-v4': '>=5.4.0 <6'
+      ws: '>=8.20.1'
+      zod: ^3.25 || ^4.0
+    peerDependenciesMeta:
+      '@aws-sdk/credential-provider-node':
+        optional: true
+      '@smithy/hash-node':
+        optional: true
+      '@smithy/signature-v4':
+        optional: true
+      ws:
+        optional: true
+      zod:
+        optional: true
+
   openapi-types@12.1.3:
     resolution: {integrity: sha512-N4YtSYJqghVu4iek2ZUvcN/0aqH1kRDuNqzcycDxhOUpg7GdvLa2F3DgS6yBNhInhv2r/6I0Flkn7CqL8+nIcw==}
 
@@ -10512,12 +10572,24 @@ packages:
   pg-protocol@1.15.0:
     resolution: {integrity: sha512-cq9sECI5s0+uPUXjbz8ioyPJni6RzsRib0US67i5IoTZKw8fNeYlVE7u8F4dG7vEJJtc5wdD1K189lCCUwqWTQ==}
 
+  pg-protocol@1.16.0:
+    resolution: {integrity: sha512-sILXutLVjCLjcDuOmvhX5e2Z4cS5qG/6Bu3VkpFwdf/633ElGLpEh9bgmuI5I4sqKqkifQiGyiCcx1HdtrK7tg==}
+
   pg-types@2.2.0:
     resolution: {integrity: sha512-qTAAlrEsl8s4OiEQY69wDvcMIdQN6wdz5ojQiOy6YRMuynxenON0O5oCpJI6lshc6scgAY8qvJ2On/p+CXY0GA==}
     engines: {node: '>=4'}
 
   pg@8.22.0:
     resolution: {integrity: sha512-8wih1vVIBMxoUM2oB4soJsD9tDnDpLv4OXBJ+EJzFsvycD+lfyIreC2gGHq78f8jbLLt+bvlPTFdFZfJkOuzAA==}
+    engines: {node: '>= 16.0.0'}
+    peerDependencies:
+      pg-native: '>=3.0.1'
+    peerDependenciesMeta:
+      pg-native:
+        optional: true
+
+  pg@8.23.0:
+    resolution: {integrity: sha512-Ip2EQCngowJLGOfCwkFhPXU7/ljlhn6Rxlmy4XYfL2Y+vyRM59+8uR2xqRWKdYmbXmxCFOAmKxBuSUCdF34qLg==}
     engines: {node: '>= 16.0.0'}
     peerDependencies:
       pg-native: '>=3.0.1'
@@ -15122,15 +15194,15 @@ snapshots:
       - '@types/node'
       - encoding
 
-  '@langchain/langgraph-api@1.4.4(@langchain/core@libs+langchain-core)(@langchain/langgraph-checkpoint@1.1.3(@langchain/core@libs+langchain-core))(@langchain/langgraph-sdk@1.9.28(@langchain/core@libs+langchain-core)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(@langchain/langgraph@1.4.8(@langchain/core@libs+langchain-core)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(zod@4.3.6))(@opentelemetry/api@1.9.1)(bufferutil@4.1.0)(openai@6.41.0(ws@8.21.1(bufferutil@4.1.0))(zod@4.3.6))(ts-node@10.9.2(@swc/core@1.15.46(@swc/helpers@0.5.21))(@types/node@26.1.2)(typescript@7.0.2))(typescript@7.0.2)(ws@8.21.1(bufferutil@4.1.0))':
+  '@langchain/langgraph-api@1.4.4(@langchain/core@libs+langchain-core)(@langchain/langgraph-checkpoint@1.1.5(@langchain/core@libs+langchain-core))(@langchain/langgraph-sdk@1.9.28(@langchain/core@libs+langchain-core)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(@langchain/langgraph@1.4.10(@langchain/core@libs+langchain-core)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(zod@4.3.6))(@opentelemetry/api@1.9.1)(bufferutil@4.1.0)(openai@6.41.0(ws@8.21.1(bufferutil@4.1.0))(zod@4.3.6))(ts-node@10.9.2(@swc/core@1.15.46(@swc/helpers@0.5.21))(@types/node@26.1.2)(typescript@7.0.2))(typescript@7.0.2)(ws@8.21.1(bufferutil@4.1.0))':
     dependencies:
       '@babel/code-frame': 7.29.7
       '@hono/node-server': 2.0.12(hono@4.13.0)
       '@hono/node-ws': 1.3.1(@hono/node-server@2.0.12(hono@4.13.0))(bufferutil@4.1.0)(hono@4.13.0)
       '@hono/zod-validator': 0.7.6(hono@4.13.0)(zod@4.3.6)
       '@langchain/core': link:libs/langchain-core
-      '@langchain/langgraph': 1.4.8(@langchain/core@libs+langchain-core)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(zod@4.3.6)
-      '@langchain/langgraph-checkpoint': 1.1.3(@langchain/core@libs+langchain-core)
+      '@langchain/langgraph': 1.4.10(@langchain/core@libs+langchain-core)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(zod@4.3.6)
+      '@langchain/langgraph-checkpoint': 1.1.5(@langchain/core@libs+langchain-core)
       '@langchain/langgraph-ui': 1.4.4
       '@langchain/protocol': 0.0.18
       '@types/json-schema': 7.0.15
@@ -15167,7 +15239,22 @@ snapshots:
     dependencies:
       '@langchain/core': link:libs/langchain-core
 
+  '@langchain/langgraph-checkpoint@1.1.5(@langchain/core@libs+langchain-core)':
+    dependencies:
+      '@langchain/core': link:libs/langchain-core
+
   '@langchain/langgraph-sdk@1.9.28(@langchain/core@libs+langchain-core)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
+    dependencies:
+      '@langchain/core': link:libs/langchain-core
+      '@langchain/protocol': 0.0.18
+      '@types/json-schema': 7.0.15
+      p-queue: 9.3.0
+      p-retry: 7.1.1
+    optionalDependencies:
+      react: 19.2.5
+      react-dom: 19.2.5(react@19.2.5)
+
+  '@langchain/langgraph-sdk@1.9.30(@langchain/core@libs+langchain-core)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
       '@langchain/protocol': 0.0.18
@@ -15186,11 +15273,11 @@ snapshots:
       esbuild-plugin-tailwindcss: 2.2.0
       zod: 4.3.6
 
-  '@langchain/langgraph@1.4.8(@langchain/core@libs+langchain-core)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(zod@4.3.6)':
+  '@langchain/langgraph@1.4.10(@langchain/core@libs+langchain-core)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(zod@4.3.6)':
     dependencies:
       '@langchain/core': link:libs/langchain-core
       '@langchain/langgraph-checkpoint': 1.1.3(@langchain/core@libs+langchain-core)
-      '@langchain/langgraph-sdk': 1.9.28(@langchain/core@libs+langchain-core)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      '@langchain/langgraph-sdk': 1.9.30(@langchain/core@libs+langchain-core)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@langchain/protocol': 0.0.18
       '@standard-schema/spec': 1.1.0
       zod: 4.3.6
@@ -15334,6 +15421,13 @@ snapshots:
     dependencies:
       '@emnapi/core': 1.11.2
       '@emnapi/runtime': 1.11.2
+      '@tybys/wasm-util': 0.10.3
+    optional: true
+
+  '@napi-rs/wasm-runtime@1.2.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)':
+    dependencies:
+      '@emnapi/core': 1.10.0
+      '@emnapi/runtime': 1.10.0
       '@tybys/wasm-util': 0.10.3
     optional: true
 
@@ -15617,7 +15711,7 @@ snapshots:
   '@prisma/config@7.9.1(magicast@0.3.5)':
     dependencies:
       c12: 3.3.4(magicast@0.3.5)
-      deepmerge-ts: 7.1.5
+      deepmerge-ts: 8.0.1
       effect: 3.20.0
       empathic: 2.0.0
     transitivePeerDependencies:
@@ -15626,7 +15720,7 @@ snapshots:
   '@prisma/config@7.9.1(magicast@0.5.4)':
     dependencies:
       c12: 3.3.4(magicast@0.5.4)
-      deepmerge-ts: 7.1.5
+      deepmerge-ts: 8.0.1
       effect: 3.20.0
       empathic: 2.0.0
     transitivePeerDependencies:
@@ -15947,7 +16041,7 @@ snapshots:
     dependencies:
       '@emnapi/core': 1.10.0
       '@emnapi/runtime': 1.10.0
-      '@napi-rs/wasm-runtime': 1.2.2(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
+      '@napi-rs/wasm-runtime': 1.2.3(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
     optional: true
 
   '@rolldown/binding-wasm32-wasi@1.2.0':
@@ -18068,6 +18162,8 @@ snapshots:
 
   bson@7.3.1: {}
 
+  bson@7.3.2: {}
+
   buffer-crc32@0.2.13:
     optional: true
 
@@ -18745,7 +18841,7 @@ snapshots:
 
   deep-is@0.1.4: {}
 
-  deepmerge-ts@7.1.5: {}
+  deepmerge-ts@8.0.1: {}
 
   deepmerge@4.3.1: {}
 
@@ -20674,6 +20770,14 @@ snapshots:
       openai: 6.41.0(ws@8.21.1(bufferutil@4.1.0))(zod@4.3.6)
       ws: 8.21.1(bufferutil@4.1.0)
 
+  langsmith@0.7.14(@opentelemetry/api@1.9.1)(openai@7.5.0(@aws-sdk/credential-provider-node@3.972.77)(@smithy/signature-v4@5.6.12)(ws@8.21.1(bufferutil@4.1.0))(zod@4.3.6))(ws@8.21.1(bufferutil@4.1.0)):
+    dependencies:
+      p-queue: 6.6.2
+    optionalDependencies:
+      '@opentelemetry/api': 1.9.1
+      openai: 7.5.0(@aws-sdk/credential-provider-node@3.972.77)(@smithy/signature-v4@5.6.12)(ws@8.21.1(bufferutil@4.1.0))(zod@4.3.6)
+      ws: 8.21.1(bufferutil@4.1.0)
+
   langsmith@0.8.9(@opentelemetry/api@1.9.1)(openai@6.41.0(ws@5.2.7(bufferutil@4.1.0))(zod@4.3.6))(ws@5.2.7(bufferutil@4.1.0)):
     dependencies:
       p-queue: 6.6.2
@@ -21201,13 +21305,13 @@ snapshots:
   mongodb@7.5.0(@aws-sdk/credential-providers@3.1034.0)(socks@2.8.9):
     dependencies:
       '@mongodb-js/saslprep': 1.4.13
-      bson: 7.3.1
+      bson: 7.3.2
       mongodb-connection-string-url: 7.0.2
     optionalDependencies:
       '@aws-sdk/credential-providers': 3.1034.0
       socks: 2.8.9
 
-  mongoose@9.9.1(@aws-sdk/credential-providers@3.1034.0)(socks@2.8.9):
+  mongoose@9.9.3(@aws-sdk/credential-providers@3.1034.0)(socks@2.8.9):
     dependencies:
       '@standard-schema/spec': 1.1.0
       kareem: 3.3.0
@@ -21273,8 +21377,8 @@ snapshots:
       apparatus: 0.0.10
       dotenv: 17.4.2
       memjs: 1.3.2
-      mongoose: 9.9.1(@aws-sdk/credential-providers@3.1034.0)(socks@2.8.9)
-      pg: 8.22.0
+      mongoose: 9.9.3(@aws-sdk/credential-providers@3.1034.0)(socks@2.8.9)
+      pg: 8.23.0
       redis: 5.12.1(@opentelemetry/api@1.9.1)
       safe-stable-stringify: 2.5.0
       stopwords-iso: 1.1.0
@@ -21685,6 +21789,13 @@ snapshots:
       ws: 8.21.1(bufferutil@4.1.0)
       zod: 4.3.6
 
+  openai@7.5.0(@aws-sdk/credential-provider-node@3.972.77)(@smithy/signature-v4@5.6.12)(ws@8.21.1(bufferutil@4.1.0))(zod@4.3.6):
+    optionalDependencies:
+      '@aws-sdk/credential-provider-node': 3.972.77
+      '@smithy/signature-v4': 5.6.12
+      ws: 8.21.1(bufferutil@4.1.0)
+      zod: 4.3.6
+
   openapi-types@12.1.3: {}
 
   optionator@0.9.4:
@@ -21974,7 +22085,13 @@ snapshots:
     dependencies:
       pg: 8.22.0
 
+  pg-pool@3.14.0(pg@8.23.0):
+    dependencies:
+      pg: 8.23.0
+
   pg-protocol@1.15.0: {}
+
+  pg-protocol@1.16.0: {}
 
   pg-types@2.2.0:
     dependencies:
@@ -21989,6 +22106,16 @@ snapshots:
       pg-connection-string: 2.14.0
       pg-pool: 3.14.0(pg@8.22.0)
       pg-protocol: 1.15.0
+      pg-types: 2.2.0
+      pgpass: 1.0.5
+    optionalDependencies:
+      pg-cloudflare: 1.4.0
+
+  pg@8.23.0:
+    dependencies:
+      pg-connection-string: 2.14.0
+      pg-pool: 3.14.0(pg@8.23.0)
+      pg-protocol: 1.16.0
       pg-types: 2.2.0
       pgpass: 1.0.5
     optionalDependencies:
@@ -23526,7 +23653,7 @@ snapshots:
       - babel-plugin-macros
       - supports-color
 
-  typeorm@1.1.0(better-sqlite3@12.9.0)(ioredis@5.11.1)(mongodb@7.5.0(@aws-sdk/credential-providers@3.1034.0)(socks@2.8.9))(mysql2@3.15.3)(pg@8.22.0)(redis@5.12.1(@opentelemetry/api@1.9.1))(ts-node@10.9.2(@swc/core@1.15.46(@swc/helpers@0.5.21))(@types/node@26.1.2)(typescript@7.0.2)):
+  typeorm@1.1.0(better-sqlite3@12.9.0)(ioredis@5.11.1)(mongodb@7.5.0(@aws-sdk/credential-providers@3.1034.0)(socks@2.8.9))(mysql2@3.15.3)(pg@8.23.0)(redis@5.12.1(@opentelemetry/api@1.9.1))(ts-node@10.9.2(@swc/core@1.15.46(@swc/helpers@0.5.21))(@types/node@26.1.2)(typescript@7.0.2)):
     dependencies:
       '@sqltools/formatter': 1.2.5
       ansis: 4.3.1
@@ -23543,7 +23670,7 @@ snapshots:
       ioredis: 5.11.1
       mongodb: 7.5.0(@aws-sdk/credential-providers@3.1034.0)(socks@2.8.9)
       mysql2: 3.15.3
-      pg: 8.22.0
+      pg: 8.23.0
       redis: 5.12.1(@opentelemetry/api@1.9.1)
       ts-node: 10.9.2(@swc/core@1.15.46(@swc/helpers@0.5.21))(@types/node@26.1.2)(typescript@7.0.2)
     transitivePeerDependencies:
