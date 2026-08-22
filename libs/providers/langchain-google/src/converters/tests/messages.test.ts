@@ -283,6 +283,56 @@ describe("convertMessagesToGeminiContents", () => {
     expect(responses[1].functionResponse!.id).toBe("call-london");
   });
 
+  test("keeps a ToolMessage and a following HumanMessage in separate user turns (legacy path)", () => {
+    // A ToolMessage (functionResponse) and a following HumanMessage (text) both
+    // map to the `user` role. They must NOT be merged into one content: Gemini /
+    // Vertex rejects a single `user` content that mixes a functionResponse with
+    // text (see issue #11444). Expected: user, model, user(functionResponse),
+    // user(text) — four separate contents.
+    const messages = [
+      new HumanMessage("read it"),
+      new AIMessage({
+        content: "Reading the agreement now.",
+        tool_calls: [
+          {
+            name: "read_document_pages",
+            args: { fileId: "f1" },
+            id: "call_1",
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: "page text",
+        tool_call_id: "call_1",
+        name: "read_document_pages",
+      }),
+      new HumanMessage("continue"),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    expect(contents).toHaveLength(4);
+
+    expect(contents[0].role).toBe("user");
+    expect(contents[0].parts.some((p) => "text" in p)).toBe(true);
+    expect(contents[0].parts.some((p) => "functionResponse" in p)).toBe(false);
+
+    expect(contents[1].role).toBe("model");
+
+    // The tool response turn carries ONLY the functionResponse, no text.
+    expect(contents[2].role).toBe("user");
+    expect(contents[2].parts.some((p) => "functionResponse" in p)).toBe(true);
+    expect(contents[2].parts.some((p) => "text" in p)).toBe(false);
+
+    // The following human turn is its own user content with just the text.
+    expect(contents[3].role).toBe("user");
+    expect(contents[3].parts.some((p) => "functionResponse" in p)).toBe(false);
+    expect(
+      (contents[3].parts.find((p) => "text" in p) as Gemini.Part.Text).text
+    ).toBe("continue");
+  });
+
   test("falls back to ToolMessage.name when tool call lookup succeeds (legacy path)", () => {
     // Even when ToolMessage has a name, the tool_calls lookup should take priority
     const messages = [
