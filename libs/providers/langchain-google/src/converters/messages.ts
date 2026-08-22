@@ -849,7 +849,18 @@ export const convertMessagesToGeminiContents: Converter<
     });
     if (content) {
       const prev = contents[contents.length - 1];
-      if (prev && prev.role === content.role) {
+      // Merge adjacent contents of the same role, but do NOT merge a content
+      // carrying a functionResponse (a converted ToolMessage) with one that
+      // does not (e.g. a following HumanMessage's text). Both map to the
+      // `user` role, and Gemini/Vertex rejects a single `user` content that
+      // mixes a functionResponse with text. Two functionResponse contents
+      // (parallel tool results) still merge, as do two plain contents.
+      // See issue #11444.
+      if (
+        prev &&
+        prev.role === content.role &&
+        hasFunctionResponse(prev) === hasFunctionResponse(content)
+      ) {
         prev.parts.push(...content.parts);
       } else {
         contents.push(content);
@@ -859,6 +870,14 @@ export const convertMessagesToGeminiContents: Converter<
 
   return contents;
 };
+
+/**
+ * Returns true if any part of the given content is a functionResponse part
+ * (i.e. it was produced from a ToolMessage).
+ */
+function hasFunctionResponse(content: Gemini.Content): boolean {
+  return content.parts.some((part) => "functionResponse" in part);
+}
 
 /**
  * Converts LangChain system messages to Gemini API system instruction format.
