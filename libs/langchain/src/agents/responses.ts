@@ -256,7 +256,12 @@ export class ProviderStrategy<T = unknown> {
           "type" in block &&
           block.type === "text" &&
           "text" in block &&
-          typeof block.text === "string"
+          typeof block.text === "string" &&
+          // Gemini returns thought summaries as text blocks flagged with
+          // `thought`, so they cannot be told apart by `type` alone. They are
+          // prose, never the structured payload, and taking one here means the
+          // real output block is never reached.
+          !("thought" in block && block.thought)
         ) {
           textContent = block.text;
           break; // Use the first text block found

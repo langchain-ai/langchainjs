@@ -537,6 +537,55 @@ describe("structured output handling", () => {
       });
     });
 
+    describe("thought summary blocks", () => {
+      it("parses the structured block, not a Gemini thought summary ahead of it", () => {
+        const responseSchema = z.object({ result: z.string() });
+        const message = new AIMessage({
+          content: [
+            // Gemini flags thought summaries with `thought`, keeping type
+            // "text", so they are indistinguishable by type alone.
+            {
+              text: "A returned thought summary.",
+              thought: true,
+              type: "text",
+            },
+            {
+              text: JSON.stringify({ result: "Structured response." }),
+              type: "text",
+            },
+          ],
+        });
+
+        expect(providerStrategy(responseSchema).parse(message)).toEqual({
+          result: "Structured response.",
+        });
+      });
+
+      it("still parses a lone unflagged text block", () => {
+        const responseSchema = z.object({ result: z.string() });
+        const message = new AIMessage({
+          content: [
+            { text: JSON.stringify({ result: "Only block." }), type: "text" },
+          ],
+        });
+
+        expect(providerStrategy(responseSchema).parse(message)).toEqual({
+          result: "Only block.",
+        });
+      });
+
+      it("returns undefined when every text block is a thought summary", () => {
+        const responseSchema = z.object({ result: z.string() });
+        const message = new AIMessage({
+          content: [
+            { text: "Only thinking out loud.", thought: true, type: "text" },
+          ],
+        });
+
+        expect(providerStrategy(responseSchema).parse(message)).toBeUndefined();
+      });
+    });
+
     describe("error handling on parse failure", () => {
       const errorMessage = /did not satisfy the provided response/;
 
