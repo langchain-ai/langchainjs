@@ -99,7 +99,10 @@ export class ChatOpenAIResponses<
       temperature: this.temperature,
       top_p: this.topP,
       user: this.user,
-      service_tier: this.service_tier,
+      // Per-call value wins over the constructor default, matching the
+      // completions path. `service_tier` is declared on the call options and
+      // listed in `callKeys`, so it reaches here already parsed.
+      service_tier: options?.service_tier ?? this.service_tier,
 
       // if include_usage is set or streamUsage then stream must be set to true.
       stream: this.streaming,
