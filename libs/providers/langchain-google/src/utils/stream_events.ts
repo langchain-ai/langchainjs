@@ -10,6 +10,7 @@ import type {
   FinishReason,
 } from "@langchain/core/language_models/event";
 import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
+import { v4 as uuidv4 } from "@langchain/core/utils/uuid";
 import type { Gemini } from "../chat_models/api-types.js";
 
 export type GeminiStreamResponse = Gemini.GenerateContentResponse;
@@ -123,10 +124,17 @@ export async function* convertGoogleGeminiStream(
       } else if (part.functionCall) {
         const key: BlockKey = `tool:${toolIdx}`;
         const args = JSON.stringify(part.functionCall.args ?? {});
+        // One id must survive block start -> delta -> finalization so a later
+        // `ToolMessage.tool_call_id` can match it. Gemini may omit `id`, so
+        // fall back to the same generated shape the non-streaming converter
+        // uses rather than leaving the finalized block without one.
+        const toolCallId =
+          part.functionCall.id ?? `lc-tool-call-${uuidv4().replace(/-/g, "")}`;
         const { index, isNew } = getOrCreateBlockIndex(key, {
           type: "tool_call_chunk",
           name: part.functionCall.name,
           args: "",
+          id: toolCallId,
           index: toolIdx,
         });
         if (isNew) {
@@ -137,6 +145,7 @@ export async function* convertGoogleGeminiStream(
               type: "tool_call_chunk",
               name: part.functionCall.name,
               args: "",
+              id: toolCallId,
               index: toolIdx,
             } as ContentBlock,
           };
@@ -152,6 +161,9 @@ export async function* convertGoogleGeminiStream(
               type: "tool_call_chunk",
               name: acc.name,
               args: acc.args,
+              // Read from the accumulator, not the local: on a reused block
+              // the accumulator holds the id issued at block start.
+              id: acc.id,
             },
           },
         };
