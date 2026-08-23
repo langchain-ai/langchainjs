@@ -2358,3 +2358,55 @@ describe("document content block conversion", () => {
     expect(name1).not.toBe(name2);
   });
 });
+
+describe("convertToConverseMessages — guardContent", () => {
+  const guardContent = { text: { text: "What is the enrollment target?" } };
+
+  it("passes through the raw Converse guardContent shape", () => {
+    const { converseMessages } = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          { type: "text", text: "…untrusted RAG context…" },
+          // The shape the Converse API accepts, and what the Python
+          // langchain-aws binding sends. It carries no `type` field.
+          { guardContent } as never,
+        ],
+      }),
+    ]);
+
+    expect(converseMessages).toEqual([
+      {
+        role: BedrockConversationRole.USER,
+        content: [{ text: "…untrusted RAG context…" }, { guardContent }],
+      },
+    ]);
+  });
+
+  it("accepts the typed shape this package's output converter emits", () => {
+    // message_outputs.ts turns a Bedrock `{ guardContent }` block into
+    // `{ type: "guard_content", guardContent }`, so that shape has to survive
+    // being fed back in.
+    const { converseMessages } = convertToConverseMessages([
+      new HumanMessage({
+        content: [{ type: "guard_content", guardContent } as never],
+      }),
+    ]);
+
+    expect(converseMessages).toEqual([
+      {
+        role: BedrockConversationRole.USER,
+        content: [{ guardContent }],
+      },
+    ]);
+  });
+
+  it("still rejects a genuinely unknown block", () => {
+    expect(() =>
+      convertToConverseMessages([
+        new HumanMessage({
+          content: [{ type: "not_a_real_block" } as never],
+        }),
+      ])
+    ).toThrow(/Unsupported content block type/);
+  });
+});
