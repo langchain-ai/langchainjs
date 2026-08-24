@@ -13,7 +13,7 @@ import type {
   AnyAgentMiddleware,
   MiddlewareResult,
 } from "../middleware/types.js";
-import { derivePrivateState } from "./utils.js";
+import { derivePrivateState, resolveInvokeContext } from "./utils.js";
 import { getHookConstraint } from "../middleware/utils.js";
 
 /**
@@ -67,7 +67,7 @@ export abstract class MiddlewareNode<
       );
       if (schemaShape) {
         const relevantContext: Record<string, unknown> = {};
-        const invokeContext = config?.context || {};
+        const invokeContext = resolveInvokeContext(config);
         for (const key of Object.keys(schemaShape)) {
           if (key in invokeContext) {
             relevantContext[key] = invokeContext[key];
