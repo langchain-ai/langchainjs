@@ -732,6 +732,16 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
     };
   } else if (
     event.type === "response.output_item.done" &&
+    event.item.type === "reasoning" &&
+    event.item.encrypted_content
+  ) {
+    // Encrypted reasoning content is only complete on the done event. Emit it
+    // separately so it merges with the id and summary from output_item.added.
+    additional_kwargs.reasoning = {
+      encrypted_content: event.item.encrypted_content,
+    };
+  } else if (
+    event.type === "response.output_item.done" &&
     event.item.type === "computer_call"
   ) {
     // Handle computer_call as a tool call so ToolNode can process it
@@ -1520,9 +1530,10 @@ export const convertMessagesToResponsesInput: Converter<
         const reasoning = additional_kwargs?.reasoning;
         const hasEncryptedContent = !!reasoning?.encrypted_content;
         /**
-         * With ZDR enabled, OpenAI does not retain reasoning items, so we only send
-         * them when encrypted content is available (via include: ["reasoning.encrypted_content"]).
-         * With ZDR disabled, we include reasoning item ids so OpenAI can reference them, as it's storing them.
+         * With ZDR enabled, OpenAI returns encrypted reasoning content for stateless
+         * replay, so only send reasoning items when that payload is available.
+         * With ZDR disabled, include reasoning item IDs so OpenAI can reference
+         * the stored items.
          */
         if (reasoning && (!zdrEnabled || hasEncryptedContent)) {
           const reasoningItem =
