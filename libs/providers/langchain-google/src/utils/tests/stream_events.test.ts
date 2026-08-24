@@ -154,6 +154,34 @@ describe("convertGoogleGeminiStream", () => {
     });
   });
 
+  test("generates distinct ids for concurrent tool calls", async () => {
+    const events = await collectEvents([
+      {
+        candidates: [
+          {
+            content: {
+              parts: [
+                { functionCall: { name: "first_tool", args: {} } },
+                { functionCall: { name: "second_tool", args: {} } },
+              ],
+            },
+          },
+        ],
+      },
+    ]);
+
+    const ids = events
+      .filter((event) => event.event === "content-block-start")
+      .map((event) => event.content.id);
+
+    expect(ids).toHaveLength(2);
+    expect(ids).toEqual([
+      expect.stringMatching(/^lc-tool-call-/),
+      expect.stringMatching(/^lc-tool-call-/),
+    ]);
+    expect(new Set(ids).size).toBe(2);
+  });
+
   test("usage snapshots", async () => {
     const events = await collectEvents([
       {
