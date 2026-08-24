@@ -1,4 +1,5 @@
 ---
+"@langchain/core": patch
 "@langchain/openai": patch
 ---
 

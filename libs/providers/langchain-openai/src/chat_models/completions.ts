@@ -429,7 +429,7 @@ export class ChatOpenAICompletions<
       const responseMetadata = chunk.response_metadata as
         | Record<string, unknown>
         | undefined;
-      if (responseMetadata?.usage !== undefined) {
+      if (data.usage != null && responseMetadata?.usage !== undefined) {
         const responseMetadataWithoutUsage = { ...responseMetadata };
         delete responseMetadataWithoutUsage.usage;
         chunk.response_metadata =
