@@ -1,5 +1,10 @@
 import { describe, expect, test } from "vitest";
-import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
+import {
+  AIMessage,
+  AIMessageChunk,
+  HumanMessage,
+  ToolMessage,
+} from "@langchain/core/messages";
 import type { Gemini } from "../../chat_models/types.js";
 import {
   convertGeminiPartsToToolCalls,
@@ -783,5 +788,53 @@ describe("executableCode and codeExecutionResult round-trip", () => {
       codeExecutionResult: { outcome: "OUTCOME_OK", output: "2\n" },
     });
     expect(parts[2]).not.toHaveProperty("type");
+  });
+});
+
+// chat_models/base.ts's _streamResponseChunks calls convertGeminiPartsToToolCalls
+// per raw stream event and sets the result directly as `tool_calls` on a fresh
+// AIMessageChunk, then relies on AIMessageChunk.concat (core's generic
+// _mergeDicts/_mergeLists) to combine successive chunks for the same call.
+// If Gemini re-sends the same functionCall (with its thoughtSignature already
+// attached) on more than one chunk before the turn finalizes -- plausible for
+// cumulative candidate state -- the generic string merge concatenates the
+// repeated values instead of recognizing them as identical, corrupting both
+// the signature and any repeated arg values.
+describe("streaming tool_call thoughtSignature merge", () => {
+  test("thoughtSignature is corrupted if the same call id repeats the signature across chunks", () => {
+    const toolCalls1 = convertGeminiPartsToToolCalls([
+      {
+        functionCall: {
+          id: "call_1",
+          name: "get_weather",
+          args: { city: "SF" },
+        },
+        thoughtSignature: "sig-xyz",
+      } as Gemini.Part.FunctionCall,
+    ]);
+    const toolCalls2 = convertGeminiPartsToToolCalls([
+      {
+        functionCall: {
+          id: "call_1",
+          name: "get_weather",
+          args: { city: "SF" },
+        },
+        thoughtSignature: "sig-xyz",
+      } as Gemini.Part.FunctionCall,
+    ]);
+
+    const chunk1 = new AIMessageChunk({ content: "", tool_calls: toolCalls1 });
+    const chunk2 = new AIMessageChunk({ content: "", tool_calls: toolCalls2 });
+    const merged = chunk1.concat(chunk2);
+
+    const mergedCall = merged.tool_calls?.[0];
+    // The city was reported identically on both chunks -- it should still be
+    // "SF" after merging, not "SFSF".
+    expect(mergedCall?.args).toEqual({ city: "SF" });
+    // The signature should still be the single value Gemini sent, not
+    // "sig-xyzsig-xyz".
+    expect(
+      (mergedCall as { thoughtSignature?: string })?.thoughtSignature
+    ).toBe("sig-xyz");
   });
 });

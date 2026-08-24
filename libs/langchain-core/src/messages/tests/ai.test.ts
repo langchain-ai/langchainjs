@@ -660,3 +660,75 @@ describe("AIMessageChunk", () => {
     ]);
   });
 });
+
+// A provider-agnostic reproduction of the streaming thought-signature
+// corruption reported against @langchain/google-genai and @langchain/google:
+// see the corresponding tests in those packages
+// (`src/tests/common.test.ts` and `src/converters/tests/messages.test.ts`).
+// The root cause lives here, in `_mergeDicts`: any string field not on the
+// explicit "keep incoming value" allowlist (currently only `id`, `name`,
+// `output_version`, `model_provider`) is merged by naive concatenation
+// (`merged[key] += value`). That is correct for genuinely fragmentary
+// streamed values (partial JSON args, partial thinking text), but corrupts
+// any field whose value is repeated verbatim across chunks -- such as a
+// Gemini `thoughtSignature`, which is delivered whole, not in pieces.
+describe("AIMessageChunk.concat corrupts repeated non-fragmentary string fields", () => {
+  it("doubles a signature-like additional_kwargs string that repeats identically across chunks", () => {
+    const chunk1 = new AIMessageChunk({
+      content: "",
+      additional_kwargs: { thoughtSignature: "sig-xyz" },
+    });
+    const chunk2 = new AIMessageChunk({
+      content: "",
+      additional_kwargs: { thoughtSignature: "sig-xyz" },
+    });
+
+    const merged = chunk1.concat(chunk2);
+
+    // Gemini re-sent the identical, complete signature on both chunks (as
+    // it does for a signature carried across candidate deltas before the
+    // turn finalizes). The signature is a whole value, not a fragment, so
+    // merging should keep it as-is -- not concatenate it into garbage.
+    expect(merged.additional_kwargs.thoughtSignature).toBe("sig-xyz");
+  });
+
+  it("doubles a repeated thoughtSignature nested on a merged tool_call object", () => {
+    // Mirrors @langchain/google's streaming path, which sets `tool_calls`
+    // directly (not `tool_call_chunks`) per raw stream event, relying on
+    // AIMessageChunk.concat to combine successive events for the same
+    // call id. See libs/providers/langchain-google/src/chat_models/base.ts.
+    const chunk1 = new AIMessageChunk({
+      content: "",
+      tool_calls: [
+        {
+          type: "tool_call",
+          id: "call_1",
+          name: "get_weather",
+          args: { city: "SF" },
+          thoughtSignature: "sig-xyz",
+          // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
+      ],
+    });
+    const chunk2 = new AIMessageChunk({
+      content: "",
+      tool_calls: [
+        {
+          type: "tool_call",
+          id: "call_1",
+          name: "get_weather",
+          args: { city: "SF" },
+          thoughtSignature: "sig-xyz",
+          // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
+      ],
+    });
+
+    const merged = chunk1.concat(chunk2);
+
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    const mergedCall = merged.tool_calls?.[0] as any;
+    expect(mergedCall?.args).toEqual({ city: "SF" });
+    expect(mergedCall?.thoughtSignature).toBe("sig-xyz");
+  });
+});

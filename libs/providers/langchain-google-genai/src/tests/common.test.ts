@@ -5,7 +5,7 @@ import {
   mapGenerateContentResultToChatResult,
 } from "../utils/common.js";
 import { EmptyContentError } from "../utils/errors.js";
-import { AIMessage } from "@langchain/core/messages";
+import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
 import type {
   EnhancedGenerateContentResponse,
   FinishReason,
@@ -435,5 +435,86 @@ describe("Missing candidate content", () => {
     expect(
       convertResponseContentToChatGenerationChunk(mockResponse, { index: 0 })
     ).toBeNull();
+  });
+});
+
+// https://github.com/langchain-ai/langchainjs/issues/11444#issuecomment-thought-signature-followup
+//
+// Gemini can omit `functionCall.id` on a streaming delta that continues a
+// tool call started in an earlier chunk (only the first delta is guaranteed
+// to carry the real id). When that happens, `convertResponseContentToChatGenerationChunk`
+// falls back to a freshly generated uuid for that delta's tool_call_chunk id
+// (see the `uuidv4()` fallback in `common.ts`). Because the per-chunk
+// thoughtSignature map is keyed by that same id, the signature ends up
+// stored under a random id that never matches the final, merged tool call's
+// real id -- so it is silently unreachable once the stream is fully
+// consumed and `AIMessageChunk.concat()` has combined all the deltas.
+describe("streaming function-call thoughtSignature survives chunk merging", () => {
+  test("thoughtSignature stays attached to its tool call once all stream chunks are concatenated", () => {
+    // Delta 1: the tool call starts here and carries its real id, no
+    // signature yet.
+    const delta1 = createMockResponse([
+      {
+        content: {
+          role: "model",
+          parts: [
+            {
+              functionCall: { id: "call_1", name: "get_weather", args: {} },
+            },
+          ] as GoogleGenerativeAIPart[],
+        },
+        finishReason: undefined as unknown as FinishReason,
+        index: 0,
+        safetyRatings: [],
+      },
+    ]);
+
+    // Delta 2: a continuation of the SAME call. Gemini omits `id` on this
+    // delta (as it does for continuations), and this is the delta that
+    // carries the thoughtSignature.
+    const delta2 = createMockResponse([
+      {
+        content: {
+          role: "model",
+          parts: [
+            {
+              functionCall: { name: "get_weather", args: { city: "SF" } },
+              thoughtSignature: "sig-xyz",
+            },
+          ] as GoogleGenerativeAIPart[],
+        },
+        finishReason: "STOP" as FinishReason,
+        index: 0,
+        safetyRatings: [],
+      },
+    ]);
+
+    const chunk1 = convertResponseContentToChatGenerationChunk(delta1, {
+      index: 0,
+    });
+    const chunk2 = convertResponseContentToChatGenerationChunk(delta2, {
+      index: 0,
+    });
+    expect(chunk1).not.toBeNull();
+    expect(chunk2).not.toBeNull();
+
+    // This is exactly what the real streaming path does: fold each raw
+    // chunk into the running AIMessageChunk via `.concat()`.
+    const merged = (chunk1!.message as AIMessageChunk).concat(
+      chunk2!.message as AIMessageChunk
+    );
+
+    const finalCallId = merged.tool_calls?.[0]?.id;
+    const signatureMap = (
+      merged.additional_kwargs as Record<
+        string,
+        Record<string, string> | undefined
+      >
+    ).__gemini_function_call_thought_signatures__;
+
+    // The signature Gemini sent must be retrievable under the id of the
+    // tool call it actually belongs to once the stream is fully merged.
+    expect(finalCallId).toBeDefined();
+    expect(signatureMap?.[finalCallId as string]).toBe("sig-xyz");
   });
 });
