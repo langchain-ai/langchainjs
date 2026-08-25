@@ -1,5 +1,21 @@
 # @langchain/aws
 
+## 1.4.4
+
+### Patch Changes
+
+- [#11345](https://github.com/langchain-ai/langchainjs/pull/11345) [`8ba1fd9`](https://github.com/langchain-ai/langchainjs/commit/8ba1fd996ff9efe93e5cb75afa946204c00528a4) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - fix(aws): put `lc_error_code` directly on Bedrock Converse stream-idle timeouts, cover the pre-response hang window
+
+  `ChatBedrockConverse`'s stream watchdog previously threw a bare `Error` with `lc_error_code` nested under `cause`, making the timeout undetectable via a plain `error.lc_error_code` check. It now sets `lc_error_code: "MODEL_STREAM_TIMEOUT"` directly on the error, matching the convention used elsewhere in the codebase. The `streamIdleTimeout` watchdog also now covers the window before the initial response is received, not just gaps between stream chunks.
+
+## 1.4.3
+
+### Patch Changes
+
+- [#11200](https://github.com/langchain-ai/langchainjs/pull/11200) [`08e5888`](https://github.com/langchain-ai/langchainjs/commit/08e588865927c3bf0eb2ec418cfb3fba527e14bb) Thanks [@hntrl](https://github.com/hntrl)! - fix(aws): normalize and safely replay Bedrock reasoning blocks
+
+  Emit standard reasoning blocks with preserved signatures, omit incomplete signature-only reasoning during replay, and retain compatibility with legacy and redacted Bedrock reasoning.
+
 ## 1.4.2
 
 ### Patch Changes

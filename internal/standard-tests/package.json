@@ -29,10 +29,10 @@
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
     "dpdm": "^4.0.1",
-    "typescript": "~6.0.3"
+    "typescript": "~7.0.2"
   },
   "peerDependencies": {
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.6"
   },
   "peerDependenciesMeta": {
     "vitest": {

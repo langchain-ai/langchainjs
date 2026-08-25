@@ -12,13 +12,13 @@
     "@iarna/toml": "^2.2.5",
     "@langchain/core": "workspace:^",
     "commander": "^14.0.3",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.2",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/iarna__toml": "^2.0.5",
-    "@types/node": "^25.9.1",
-    "tsx": "^4.22.4",
+    "@types/node": "^26.1.2",
+    "tsx": "^4.23.1",
     "vitest": "^4.1.8"
   }
 }

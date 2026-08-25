@@ -43,6 +43,35 @@ describe("convertCompletionsMessageToBaseMessage", () => {
     );
   });
 
+  it("includes usage in response_metadata when system_fingerprint is absent", () => {
+    const mockMessage = {
+      role: "assistant" as const,
+      content: "Hello",
+    };
+
+    const mockRawResponse = {
+      id: "chatcmpl-no-fingerprint",
+      model: "gpt-5.2",
+      // Newer OpenAI models no longer populate system_fingerprint
+      system_fingerprint: null,
+      choices: [{ index: 0, message: mockMessage, finish_reason: "stop" }],
+      usage: {
+        prompt_tokens: 10,
+        completion_tokens: 20,
+        total_tokens: 30,
+        prompt_tokens_details: { cached_tokens: 5 },
+      },
+    };
+
+    const result = convertCompletionsMessageToBaseMessage({
+      message: mockMessage as unknown as ChatCompletionMessage,
+      rawResponse: mockRawResponse as any,
+    }) as AIMessage;
+
+    expect(result.response_metadata.usage).toEqual(mockRawResponse.usage);
+    expect(result.response_metadata.system_fingerprint).toBeUndefined();
+  });
+
   it("preserves delta reasoning_content in streaming chunks", () => {
     const delta = {
       role: "assistant" as const,
@@ -451,7 +480,7 @@ describe("convertCompletionsMessageToBaseMessage", () => {
       });
     });
 
-    it("should preserve tool_calls for output_version v1 assistant messages", () => {
+    it("should send content null (not []) for output_version v1 tool-call-only assistant messages", () => {
       const message = new AIMessage({
         content: [
           {
@@ -478,9 +507,11 @@ describe("convertCompletionsMessageToBaseMessage", () => {
       });
 
       expect(result).toHaveLength(1);
+      // Must be `null`, not `[]`: the OpenAI Chat Completions API rejects an
+      // assistant message with an empty content array (issue #11416).
       expect(result[0]).toEqual({
         role: "assistant",
-        content: [],
+        content: null,
         tool_calls: [
           {
             id: "call_123",
@@ -685,13 +716,91 @@ describe("convertCompletionsMessageToBaseMessage", () => {
       });
 
       expect(result).toHaveLength(1);
-      // tool_use is dropped; thinking and text pass through (thinking is
-      // unrecognised by OpenAI but that's a separate concern)
+      // Both tool_use and thinking are dropped; only text remains. Reasoning
+      // traces are output-only and are rejected when echoed back to strict
+      // openai-compatible providers (e.g. DeepSeek).
       const contentArr = result[0].content as any[];
       expect(contentArr.some((c: any) => c.type === "tool_use")).toBe(false);
+      expect(contentArr.some((c: any) => c.type === "thinking")).toBe(false);
       expect(contentArr.some((c: any) => c.type === "text")).toBe(true);
       // tool_calls should still be present
       expect((result[0] as any).tool_calls).toHaveLength(1);
+    });
+
+    it("should drop reasoning, reasoning_content, and tool_call blocks from content", () => {
+      // Regression: standard reasoning/tool-call blocks held in message
+      // history were echoed back into the request, which strict
+      // openai-compatible providers reject (e.g. DeepSeek:
+      // "unknown variant `reasoning`/`tool_call`, expected `text`").
+      const message = new AIMessage({
+        content: [
+          { type: "reasoning", reasoning: "Let me think about this..." },
+          { type: "reasoning_content", reasoning_content: "more thoughts" },
+          {
+            type: "tool_call",
+            id: "call_1",
+            name: "search",
+            args: { q: "langchain" },
+          },
+          { type: "text", text: "The answer is 42." },
+        ],
+      });
+
+      const result = convertMessagesToCompletionsMessageParams({
+        messages: [message],
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0].content).toEqual([
+        { type: "text", text: "The answer is 42." },
+      ]);
+    });
+  });
+
+  describe("Google GenAI cross-provider compatibility", () => {
+    // Regression for https://github.com/langchain-ai/langchainjs/issues/9705:
+    // ChatGoogleGenerativeAI embeds a Gemini-native `functionCall` block in
+    // content alongside `tool_calls`. Echoing it back verbatim is rejected by
+    // the Chat Completions API: "Invalid value: 'functionCall'. Supported
+    // values are: 'text', 'image_url', 'input_audio', 'refusal', 'audio',
+    // and 'file'."
+    it("should drop functionCall blocks from content (already in tool_calls)", () => {
+      const message = new AIMessage({
+        content: [
+          { type: "text", text: "Let me check the weather." },
+          {
+            type: "functionCall",
+            functionCall: { name: "get_weather", args: { location: "SF" } },
+          },
+        ],
+        tool_calls: [
+          {
+            id: "call_1",
+            name: "get_weather",
+            args: { location: "SF" },
+          },
+        ],
+      });
+
+      const result = convertMessagesToCompletionsMessageParams({
+        messages: [message],
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({
+        role: "assistant",
+        content: [{ type: "text", text: "Let me check the weather." }],
+        tool_calls: [
+          {
+            id: "call_1",
+            type: "function",
+            function: {
+              name: "get_weather",
+              arguments: '{"location":"SF"}',
+            },
+          },
+        ],
+      });
     });
   });
 });

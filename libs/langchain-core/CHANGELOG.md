@@ -1,5 +1,76 @@
 # @langchain/core
 
+## 1.2.9
+
+### Patch Changes
+
+- [#11402](https://github.com/langchain-ai/langchainjs/pull/11402) [`43e4396`](https://github.com/langchain-ai/langchainjs/commit/43e439698fa7794c10ab8d7355d4433e058e4d62) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Fix ChatVertexAI/ChatGoogle content blocks: include `tool_call` blocks from `message.tool_calls` and skip spurious empty `text` blocks in `contentBlocks`.
+
+## 1.2.8
+
+### Patch Changes
+
+- [#11369](https://github.com/langchain-ai/langchainjs/pull/11369) [`d6ad973`](https://github.com/langchain-ai/langchainjs/commit/d6ad9735640a6c729f81ef79361acc5e83c526f1) Thanks [@hntrl](https://github.com/hntrl)! - fix(langchain): use unified endpoint for gateway
+
+- [#11342](https://github.com/langchain-ai/langchainjs/pull/11342) [`3b0e4c4`](https://github.com/langchain-ai/langchainjs/commit/3b0e4c48a31811031a460c4d95519a7c1163dc41) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - feat(core): mark errors as retryable or not, and stop retrying the ones that aren't
+
+  Retry middleware retried every failure up to `maxRetries`, including deterministic ones like a bad API key or an unknown model. Retries also nest, so a single such failure could cost dozens of API calls.
+
+  `@langchain/core/errors` adds `stampRetryable(error, retryable)` and `getRetryable(error)`. Marking an error leaves its class and shape untouched, so a provider SDK error can be classified without breaking `instanceof`. `getRetryable` returns `undefined` for errors nobody classified, and both are exported so tool authors can mark their own failures.
+
+  `modelRetryMiddleware` and `toolRetryMiddleware` now respect the mark by default, and retries stop as soon as one is found rather than each layer spending its own budget. Aborted calls, context overflow, and oversized payloads are marked non-retryable out of the box.
+  Models accept a per-call `maxRetries` so a surrounding retry loop can take over.
+
+  **Behavior change:** errors marked non-retryable now fail on the first attempt. Unclassified errors — including any from third-party integrations or custom tools — retry exactly as before. Pass `retryOn: () => true` to restore the old default. A custom `onFailedAttempt` replaces the built-in handler and opts out of marking.
+
+## 1.2.7
+
+### Patch Changes
+
+- [#11366](https://github.com/langchain-ai/langchainjs/pull/11366) [`c068bbf`](https://github.com/langchain-ai/langchainjs/commit/c068bbf8c113132bf16ac7a8add44e486a147b41) Thanks [@hntrl](https://github.com/hntrl)! - fix(core,langchain): patch and release core, update peer dependencies
+
+## 1.2.6
+
+### Patch Changes
+
+- [#11344](https://github.com/langchain-ai/langchainjs/pull/11344) [`f08e0c6`](https://github.com/langchain-ai/langchainjs/commit/f08e0c6d50156accf95a36469a3e107a5598a3a0) Thanks [@hntrl](https://github.com/hntrl)! - fix: apply [Symbol.hasInstance] method to all comparable properties using .isInstance()
+
+  We have some internal schemas that rely on `z.instanceof()`. This uses a strict `instanceof` check which can conflict if there are multiple versions of core installed. This overrides the [Symbol.hasInstance](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/hasInstance) method to use the same logic as `.isInstance()` to compare objects at runtime.
+
+## 1.2.5
+
+### Patch Changes
+
+- [#11305](https://github.com/langchain-ai/langchainjs/pull/11305) [`e654022`](https://github.com/langchain-ai/langchainjs/commit/e654022e291b8dae54504ac2d1a3232332406723) Thanks [@jacoblee93](https://github.com/jacoblee93)! - Add LangSmith Gateway environment configuration to OpenAI, Anthropic, and Fireworks chat models.
+
+- [#11295](https://github.com/langchain-ai/langchainjs/pull/11295) [`1a1b347`](https://github.com/langchain-ai/langchainjs/commit/1a1b347d18bc68e842df8badffc987493c81d70a) Thanks [@vladislav-nechakhin](https://github.com/vladislav-nechakhin)! - fix(core): pass the mustache escape override per render call
+
+## 1.2.4
+
+### Patch Changes
+
+- [#11190](https://github.com/langchain-ai/langchainjs/pull/11190) [`9654bde`](https://github.com/langchain-ai/langchainjs/commit/9654bde694af4e78080a76a0b39d7edd35683449) Thanks [@pawel-twardziak](https://github.com/pawel-twardziak)! - Coalesce nested LangChain tracer callbacks that share run bookkeeping.
+
+- [#11153](https://github.com/langchain-ai/langchainjs/pull/11153) [`84ce6d6`](https://github.com/langchain-ai/langchainjs/commit/84ce6d65ef0ab2c556d5a5a3b5651b5cf3d73303) Thanks [@parveshsaini](https://github.com/parveshsaini)! - fix(core): bind splitText when trimMessages receives a TextSplitter instance
+
+## 1.2.3
+
+### Patch Changes
+
+- [#11200](https://github.com/langchain-ai/langchainjs/pull/11200) [`08e5888`](https://github.com/langchain-ai/langchainjs/commit/08e588865927c3bf0eb2ec418cfb3fba527e14bb) Thanks [@hntrl](https://github.com/hntrl)! - fix(aws): normalize and safely replay Bedrock reasoning blocks
+
+  Emit standard reasoning blocks with preserved signatures, omit incomplete signature-only reasoning during replay, and retain compatibility with legacy and redacted Bedrock reasoning.
+
+## 1.2.2
+
+### Patch Changes
+
+- [#11171](https://github.com/langchain-ai/langchainjs/pull/11171) [`82bef01`](https://github.com/langchain-ai/langchainjs/commit/82bef01ad3dd5e0317e48da40707be6bccc52f94) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(core): coerce string v1 AIMessage content to text blocks
+
+  Prevent `contentBlocks.push is not a function` when constructing an
+  `AIMessage` with `response_metadata.output_version === "v1"` and string
+  `content` (common in serialized LangGraph stream payloads).
+
 ## 1.2.1
 
 ### Patch Changes

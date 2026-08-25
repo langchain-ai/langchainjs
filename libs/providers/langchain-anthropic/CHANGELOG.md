@@ -1,5 +1,57 @@
 # @langchain/anthropic
 
+## 1.5.8
+
+### Patch Changes
+
+- [#11421](https://github.com/langchain-ai/langchainjs/pull/11421) [`041a755`](https://github.com/langchain-ai/langchainjs/commit/041a75581666a7fd551e6df62226dcf873be50cc) Thanks [@priprocess](https://github.com/priprocess)! - Preserve the generic `tool_search_tool_result` block type in streaming output and message payload conversion. The Anthropic API emits this un-suffixed type for both tool search variants; previously only the variant-suffixed names were allowlisted, so multi-turn conversations using tool search still failed with INVALID_TOOL_RESULTS after a client-tool round-trip.
+
+## 1.5.7
+
+### Patch Changes
+
+- [#11407](https://github.com/langchain-ai/langchainjs/pull/11407) [`3ceef4b`](https://github.com/langchain-ai/langchainjs/commit/3ceef4baadfaec8f0b1e43191b9363cfcc04187f) Thanks [@chenzimin](https://github.com/chenzimin)! - Round-trip the tool search server-tool result blocks (`tool_search_tool_bm25_tool_result` / `tool_search_tool_regex_tool_result`) through message translation, mirroring `web_search_tool_result`. Without this, a multi-turn conversation using the tool search tool fails on the next request with `400 invalid_request_error … tool use … found without a corresponding … tool_result block`, because the result block was dropped from the assistant message (streaming capture) and on re-send (`toolTypes` passthrough).
+
+## 1.5.6
+
+### Patch Changes
+
+- [#11342](https://github.com/langchain-ai/langchainjs/pull/11342) [`3b0e4c4`](https://github.com/langchain-ai/langchainjs/commit/3b0e4c48a31811031a460c4d95519a7c1163dc41) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - feat(anthropic): mark Anthropic provider errors as retryable or not
+
+  Builds on `stampRetryable` in `@langchain/core` so the retry middleware can tell a transient failure from a deterministic one. Rate limits are marked retryable; context overflow, invalid tool results, bad credentials, and unknown models non-retryable. Anything else stays unmarked and retries as before.
+
+  Also forwards a per-call `maxRetries` to the retry loop, so a surrounding retry loop such as `modelRetryMiddleware` can take over instead of the two multiplying against each other.
+
+  Errors keep their original class, so `instanceof` against the `@anthropic-ai/sdk` error types is unaffected.
+
+## 1.5.5
+
+### Patch Changes
+
+- [#11359](https://github.com/langchain-ai/langchainjs/pull/11359) [`d36ec6a`](https://github.com/langchain-ai/langchainjs/commit/d36ec6a6f4b1c474b0d9f9cb6037ff37f54183bf) Thanks [@talarari](https://github.com/talarari)! - fix(anthropic): preserve gateway cost on the native stream path
+
+  `convertAnthropicStream` now surfaces an Anthropic-compatible gateway's numeric `usage.cost` at `response_metadata.usage.cost`, matching the chunk path. Token accounting in `usage_metadata` is unchanged.
+
+## 1.5.4
+
+### Patch Changes
+
+- [#11305](https://github.com/langchain-ai/langchainjs/pull/11305) [`e654022`](https://github.com/langchain-ai/langchainjs/commit/e654022e291b8dae54504ac2d1a3232332406723) Thanks [@jacoblee93](https://github.com/jacoblee93)! - Add LangSmith Gateway environment configuration to OpenAI, Anthropic, and Fireworks chat models.
+
+- [#11310](https://github.com/langchain-ai/langchainjs/pull/11310) [`1b96abe`](https://github.com/langchain-ai/langchainjs/commit/1b96abe4979d514e11fb794ed9e85b646ea3b4a5) Thanks [@hntrl](https://github.com/hntrl)! - fix(anthropic): filter tools with unsupported root schema composition
+
+## 1.5.3
+
+### Patch Changes
+
+- [#11242](https://github.com/langchain-ai/langchainjs/pull/11242) [`1c4dadb`](https://github.com/langchain-ai/langchainjs/commit/1c4dadbc684b0fe08a34d4a5249d84b6cb110f07) Thanks [@talarari](https://github.com/talarari)! - Preserve gateway-provided cost metadata in Anthropic streams.
+
+## 1.5.2
+
+### Patch Changes
+
+- [#11255](https://github.com/langchain-ai/langchainjs/pull/11255) [`c8bd4c4`](https://github.com/langchain-ai/langchainjs/commit/c8bd4c4a6dbde07fb24deb5870c02dc29c51ab53) Thanks [@hntrl](https://github.com/hntrl)! - feat(anthropic): add claude-opus-5 support
+
 ## 1.5.1
 
 ### Patch Changes

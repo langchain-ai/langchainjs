@@ -68,6 +68,38 @@ describe("convertResponsesUsageToUsageMetadata", () => {
     });
   });
 
+  it("should convert OpenAI Responses usage to LangChain format with cache write tokens", () => {
+    const usage = {
+      input_tokens: 100,
+      output_tokens: 50,
+      total_tokens: 150,
+      input_tokens_details: {
+        cached_tokens: 75,
+        cache_write_tokens: 30,
+        text_tokens: 25,
+      },
+      output_tokens_details: {
+        reasoning_tokens: 10,
+        text_tokens: 40,
+      },
+    };
+
+    const result = convertResponsesUsageToUsageMetadata(usage as any);
+
+    expect(result).toEqual({
+      input_tokens: 100,
+      output_tokens: 50,
+      total_tokens: 150,
+      input_token_details: {
+        cache_read: 75,
+        cache_creation: 30,
+      },
+      output_token_details: {
+        reasoning: 10,
+      },
+    });
+  });
+
   it("should handle undefined usage", () => {
     const result = convertResponsesUsageToUsageMetadata(undefined);
 
@@ -607,6 +639,50 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
   });
 
   describe("reasoning streaming elevation", () => {
+    it("replays encrypted reasoning from streaming responses in ZDR mode", () => {
+      const added = convertResponsesDeltaToChatGenerationChunk({
+        type: "response.output_item.added",
+        output_index: 0,
+        item: {
+          type: "reasoning",
+          id: "rs_abc123",
+          summary: [],
+          encrypted_content: "incomplete_payload",
+        },
+      } as any);
+      const done = convertResponsesDeltaToChatGenerationChunk({
+        type: "response.output_item.done",
+        output_index: 0,
+        item: {
+          type: "reasoning",
+          id: "rs_abc123",
+          summary: [],
+          encrypted_content: "canonical_payload",
+        },
+      } as any);
+
+      expect(added).not.toBeNull();
+      expect(done).not.toBeNull();
+
+      const streamedMessage = (added!.message as AIMessageChunk).concat(
+        done!.message as AIMessageChunk
+      );
+      const replayInput = convertMessagesToResponsesInput({
+        messages: [streamedMessage],
+        zdrEnabled: true,
+        model: "o3",
+      });
+
+      expect(replayInput).toEqual([
+        {
+          id: "rs_abc123",
+          type: "reasoning",
+          summary: [],
+          encrypted_content: "canonical_payload",
+        },
+      ]);
+    });
+
     it("should elevate reasoning to content on response.output_item.added with reasoning", () => {
       const event = {
         type: "response.output_item.added",
@@ -1170,6 +1246,34 @@ describe("convertStandardContentMessageToResponsesInput", () => {
             file_id: fileId,
           },
         ],
+      },
+    ]);
+  });
+});
+
+describe("convertStandardContentMessageToResponsesInput (role-aware text parts)", () => {
+  it("emits output_text for assistant messages (not input_text)", () => {
+    const items = convertStandardContentMessageToResponsesInput(
+      new AIMessage({ contentBlocks: [{ type: "text", text: "hi" }] })
+    );
+    expect(items).toMatchObject([
+      {
+        type: "message",
+        role: "assistant",
+        content: [{ type: "output_text", text: "hi" }],
+      },
+    ]);
+  });
+
+  it("emits input_text for user messages", () => {
+    const items = convertStandardContentMessageToResponsesInput(
+      new HumanMessage({ contentBlocks: [{ type: "text", text: "hi" }] })
+    );
+    expect(items).toMatchObject([
+      {
+        type: "message",
+        role: "user",
+        content: [{ type: "input_text", text: "hi" }],
       },
     ]);
   });

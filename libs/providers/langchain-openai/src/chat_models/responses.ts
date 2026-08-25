@@ -208,7 +208,11 @@ export class ChatOpenAIResponses<
           ...invocationParams,
           stream: false,
         },
-        { signal: options?.signal, ...options?.options }
+        {
+          signal: options?.signal,
+          maxRetries: options?.maxRetries,
+          ...options?.options,
+        }
       );
 
       return {
@@ -345,8 +349,11 @@ export class ChatOpenAIResponses<
     | AsyncIterable<OpenAIClient.Responses.ResponseStreamEvent>
     | OpenAIClient.Responses.Response
   > {
-    return this.caller.call(async () => {
-      const clientOptions = this._getClientOptions(requestOptions);
+    // The SDK has its own `maxRetries`; take it for our caller instead so
+    // the two retry loops don't multiply.
+    const { maxRetries, ...sdkOptions } = requestOptions ?? {};
+    const clientOptions = this._getClientOptions(sdkOptions);
+    return this.caller.callWithOptions({ maxRetries }, async () => {
       try {
         // use parse if dealing with json_schema
         if (request.text?.format?.type === "json_schema" && !request.stream) {

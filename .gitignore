@@ -6,6 +6,7 @@ lib/
 .turbo
 .eslintcache
 .env
+.env.*
 .env.local
 npm-debug.log*
 yarn-debug.log*
@@ -25,6 +26,9 @@ Chinook.db
 Chinook_Sqlite.sql
 
 .envrc
+*.pem
+*.key
+*.crt
 *.swp
 *.swo
 
