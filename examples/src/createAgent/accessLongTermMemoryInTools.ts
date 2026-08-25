@@ -19,6 +19,7 @@
  */
 
 import fs from "node:fs/promises";
+import { fileURLToPath } from "node:url";
 import { createAgent, tool } from "langchain";
 import { InMemoryStore } from "@langchain/langgraph";
 import { ChatOpenAI } from "@langchain/openai";
@@ -307,7 +308,7 @@ console.log(johnResult3.messages.at(-1)?.content);
 /**
  * Get the current file's path and derive the output PNG path
  */
-const currentFilePath = new URL(import.meta.url).pathname;
+const currentFilePath = fileURLToPath(import.meta.url);
 const outputPath = currentFilePath.replace(/\.ts$/, ".png");
 console.log(`\nSaving visualization to: ${outputPath}`);
 await fs.writeFile(outputPath, await agent.drawMermaidPng());
