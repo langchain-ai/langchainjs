@@ -414,6 +414,40 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
     expect(aggregated.response_metadata.id).toBe("resp_top_level");
   });
 
+  it.each(["response.completed", "response.incomplete"] as const)(
+    "uses the resolved model metadata from %s",
+    (type) => {
+      const created = convertResponsesDeltaToChatGenerationChunk({
+        type: "response.created",
+        response: {
+          id: "resp_1",
+          model: "gpt-5.4",
+          object: "response",
+          status: "in_progress",
+          output: [],
+        },
+      } as any);
+      const finished = convertResponsesDeltaToChatGenerationChunk({
+        type,
+        response: {
+          id: "resp_1",
+          model: "gpt-5.4-2026-03-05",
+          created_at: 1234567890,
+          object: "response",
+          status: type === "response.completed" ? "completed" : "incomplete",
+          output: [],
+        },
+      } as any);
+
+      const aggregated = created!.message.concat(finished!.message);
+
+      expect(aggregated.response_metadata.model).toBe("gpt-5.4-2026-03-05");
+      expect(aggregated.response_metadata.model_name).toBe(
+        "gpt-5.4-2026-03-05"
+      );
+    }
+  );
+
   describe("custom tool streaming delta handling", () => {
     it("should preserve custom tool metadata from response.output_item.added events", () => {
       const customToolStart = {
