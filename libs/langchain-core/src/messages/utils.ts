@@ -559,8 +559,15 @@ export function convertToChunk(message: BaseMessage) {
  * 2. Attempts to parse the concatenated string as JSON
  * 3. Validates that the result is a non-null object with a valid id
  * 4. Creates either a `ToolCall` (if valid) or `InvalidToolCall` (if invalid)
+ *
+ * When `truncated` is true (e.g. a stream ended with `finish_reason: "length"`),
+ * partially-repaired arguments are treated as invalid instead of being presented
+ * as a finished tool call: only strictly-complete JSON survives.
  */
-export function collapseToolCallChunks(chunks: ToolCallChunk[]): {
+export function collapseToolCallChunks(
+  chunks: ToolCallChunk[],
+  truncated?: boolean
+): {
   tool_call_chunks: ToolCallChunk[];
   tool_calls: ToolCall[];
   invalid_tool_calls: InvalidToolCall[];
@@ -604,6 +611,22 @@ export function collapseToolCallChunks(chunks: ToolCallChunk[]): {
     const joinedArgs = usesRawInputArgs ? joinedArgsRaw : joinedArgsRaw.trim();
     const argsStr = joinedArgs.length ? joinedArgs : "{}";
     const id = chunks.find((c) => c.id)?.id ?? chunks[0]?.id;
+    if (truncated) {
+      // A truncated stream must not present repaired partial JSON as a
+      // finished tool call; only strictly-complete arguments survive.
+      try {
+        JSON.parse(argsStr);
+      } catch {
+        invalidToolCalls.push({
+          name,
+          args: argsStr,
+          id,
+          error: "Truncated tool call args.",
+          type: "invalid_tool_call",
+        });
+        continue;
+      }
+    }
     if (usesRawInputArgs && id) {
       toolCalls.push({
         name,

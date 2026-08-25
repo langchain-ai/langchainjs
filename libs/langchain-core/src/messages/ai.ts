@@ -337,7 +337,12 @@ export class AIMessageChunk<
             : undefined,
       };
     } else {
-      const collapsed = collapseToolCallChunks(fields.tool_call_chunks ?? []);
+      const collapsed = collapseToolCallChunks(
+        fields.tool_call_chunks ?? [],
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+        (fields.response_metadata as Record<string, unknown> | undefined)
+          ?.finish_reason === "length"
+      );
       initParams = {
         ...fields,
         tool_call_chunks: collapsed.tool_call_chunks,
