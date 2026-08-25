@@ -414,6 +414,14 @@ const calculatorTool = tool((_) => "no-op", {
   }),
 });
 
+// Used by the "Google Tool History" section below to exercise tool-call
+// request shapes against the live Vertex AI API.
+const readPages = tool(async ({ fileId }) => `page text for ${fileId}`, {
+  name: "read_document_pages",
+  description: "Read pages of a document.",
+  schema: z.object({ fileId: z.string() }),
+});
+
 const coreModelInfo: ModelInfo[] = filterTestableModels([
   (modelInfo: ModelInfo) => !modelInfo.testConfig?.isImage,
   (modelInfo: ModelInfo) => !modelInfo.testConfig?.isTts,
@@ -2011,6 +2019,222 @@ describe.sequential.each(audioModelInfo)(
       const res = await model.invoke(prompt);
       const content = res?.contentBlocks;
       await handleResult(content);
+    });
+  }
+);
+
+const toolHistoryModelInfo: ModelInfo[] = [
+  {
+    model: "gemini-2.5-flash",
+    defaultGoogleParams: {
+      vertexai: true,
+      location: "global",
+      apiVersion: "v1",
+      googleAuthOptions: {
+        scopes: ["https://www.googleapis.com/auth/cloud-platform"],
+        projectId: getEnvironmentVariable("GOOGLE_CLOUD_PROJECT"),
+      },
+    },
+    testConfig: {
+      node: true,
+    },
+  },
+];
+
+describe
+  .skipIf(!getEnvironmentVariable("GOOGLE_CLOUD_PROJECT"))
+  .each(toolHistoryModelInfo)(
+  "Google Tool History ($model) $testConfig",
+  ({ model, defaultGoogleParams }: ModelInfo) => {
+    // Regression coverage for https://github.com/langchain-ai/langchainjs/issues/11444
+    //
+    // Exercises the request shapes produced from tool-call histories against
+    // the live Vertex AI API using Application Default Credentials. Vertex is
+    // where a `user` content mixing a functionResponse with text parts gets
+    // rejected or corrupted, and ADC keeps these tests independent of the
+    // TEST_API_KEY harness used above. Skipped entirely unless
+    // GOOGLE_CLOUD_PROJECT is configured.
+
+    let recorder: GoogleRequestRecorder;
+    let callbacks: BaseCallbackHandler[];
+
+    function newChatGoogle(fields?: DefaultGoogleParams): ChatGoogleNode {
+      recorder = new GoogleRequestRecorder();
+      callbacks = buildTestCallbacks(recorder);
+
+      const params = {
+        model,
+        callbacks,
+        ...(defaultGoogleParams ?? {}),
+        ...(fields ?? {}),
+      };
+      return new ChatGoogleNode(params);
+    }
+
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    function recordedContents(recorderArg: GoogleRequestRecorder): any[] {
+      return recorderArg.request?.body?.contents ?? [];
+    }
+
+    test("keeps a tool response turn separate from a following human message (#11444)", async () => {
+      const llm = newChatGoogle().bindTools([readPages]);
+
+      const messages: BaseMessage[] = [
+        new HumanMessage("read it"),
+        new AIMessage({
+          content: "Reading the agreement now.",
+          tool_calls: [
+            {
+              name: "read_document_pages",
+              args: { fileId: "f1" },
+              id: "call_1",
+              type: "tool_call",
+            },
+          ],
+        }),
+        new ToolMessage({
+          content: "page text",
+          tool_call_id: "call_1",
+          name: "read_document_pages",
+        }),
+        new HumanMessage("continue"),
+      ];
+
+      const result = await llm.invoke(messages);
+      expect(result).toBeInstanceOf(AIMessage);
+
+      // The emitted request must keep the tool response turn and the human
+      // turn as SEPARATE user contents: a single user content mixing a
+      // functionResponse with text is rejected outright by newer Gemini
+      // models and corrupts generation on older ones.
+      const contents = recordedContents(recorder);
+      expect(contents).toHaveLength(4);
+
+      expect(contents[2].role).toBe("user");
+      expect(contents[2].parts).toHaveLength(1);
+      expect(contents[2].parts[0]).toHaveProperty("functionResponse");
+      expect(contents[2].parts[0].functionResponse.name).toBe(
+        "read_document_pages"
+      );
+
+      expect(contents[3]).toEqual({
+        role: "user",
+        parts: [{ text: "continue" }],
+      });
+    });
+
+    test("groups parallel tool responses into one user content", async () => {
+      // Parallel tool calls are the one case where merging is REQUIRED:
+      // all function responses for one model turn must share a single user
+      // content with a part count matching the call count.
+      const llm = newChatGoogle().bindTools([readPages]);
+
+      const messages: BaseMessage[] = [
+        new HumanMessage("Read both documents."),
+        new AIMessage({
+          content: "Reading both documents now.",
+          tool_calls: [
+            {
+              name: "read_document_pages",
+              args: { fileId: "f1" },
+              id: "call_1",
+              type: "tool_call",
+            },
+            {
+              name: "read_document_pages",
+              args: { fileId: "f2" },
+              id: "call_2",
+              type: "tool_call",
+            },
+          ],
+        }),
+        new ToolMessage({
+          content: "page text for f1",
+          tool_call_id: "call_1",
+          name: "read_document_pages",
+        }),
+        new ToolMessage({
+          content: "page text for f2",
+          tool_call_id: "call_2",
+          name: "read_document_pages",
+        }),
+      ];
+
+      const result = await llm.invoke(messages);
+      expect(result).toBeInstanceOf(AIMessage);
+
+      const contents = recordedContents(recorder);
+      expect(contents).toHaveLength(3);
+
+      expect(contents[2].role).toBe("user");
+      expect(contents[2].parts).toHaveLength(2);
+      for (const part of contents[2].parts) {
+        expect(part).toHaveProperty("functionResponse");
+      }
+      expect(contents[2].parts.map((p) => p.functionResponse.id)).toEqual([
+        "call_1",
+        "call_2",
+      ]);
+    });
+
+    test("keeps a v1-path tool response turn separate from a following human message (#11444)", async () => {
+      // Same contract as the legacy-path scenario, exercised through the v1
+      // standard-content path (`output_version: "v1"`), which this package
+      // stamps on messages it generates itself.
+      const llm = newChatGoogle().bindTools([readPages]);
+
+      const V1 = { output_version: "v1" };
+      const messages: BaseMessage[] = [
+        new HumanMessage("read it", { response_metadata: V1 }),
+        new AIMessage({
+          content: "Reading the agreement now.",
+          tool_calls: [
+            {
+              name: "read_document_pages",
+              args: { fileId: "f1" },
+              id: "call_1",
+              type: "tool_call",
+            },
+          ],
+          response_metadata: V1,
+        }),
+        new ToolMessage({
+          content: "page text",
+          tool_call_id: "call_1",
+          name: "read_document_pages",
+          response_metadata: V1,
+        }),
+        new HumanMessage("continue", { response_metadata: V1 }),
+      ];
+
+      const result = await llm.invoke(messages);
+      expect(result).toBeInstanceOf(AIMessage);
+
+      const contents = recordedContents(recorder);
+      expect(contents).toHaveLength(4);
+
+      // The v1 model turn keeps its functionCall part...
+      expect(contents[1].role).toBe("model");
+      expect(contents[1].parts.some((p) => "functionCall" in p)).toBe(true);
+
+      // ...and the v1 tool turn carries ONLY its functionResponse, no text.
+      expect(contents[2]).toEqual({
+        role: "user",
+        parts: [
+          {
+            functionResponse: {
+              id: "call_1",
+              name: "read_document_pages",
+              response: { result: "page text" },
+            },
+          },
+        ],
+      });
+
+      expect(contents[3]).toEqual({
+        role: "user",
+        parts: [{ text: "continue" }],
+      });
     });
   }
 );
