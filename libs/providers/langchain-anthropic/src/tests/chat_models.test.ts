@@ -2,6 +2,7 @@ import { vi, test, expect, describe } from "vitest";
 import {
   AIMessage,
   HumanMessage,
+  SystemMessage,
   ToolMessage,
   AIMessageChunk,
 } from "@langchain/core/messages";
@@ -28,6 +29,22 @@ class TraceableChatAnthropic extends ChatAnthropicMessages {
     return this._getCallOptionsForTracing(options ?? {}, params);
   }
 }
+
+test("Can format mid-conversation system messages", () => {
+  const formattedMessages = _convertMessagesToAnthropicPayload([
+    new SystemMessage("You are a coding assistant."),
+    new HumanMessage("Update this project."),
+    new SystemMessage("Follow the project README."),
+  ]);
+
+  expect(formattedMessages).toEqual({
+    system: "You are a coding assistant.",
+    messages: [
+      { role: "user", content: "Update this project." },
+      { role: "system", content: "Follow the project README." },
+    ],
+  });
+});
 
 test("MCP authorization tokens are redacted from traces", () => {
   const model = new TraceableChatAnthropic({
