@@ -421,7 +421,7 @@ function convertStandardContentMessageToGeminiContent(
     role = "user";
   }
 
-  const parts: Gemini.Part[] = [];
+  let parts: Gemini.Part[] = [];
 
   // Process standard content blocks
   const contentBlocks = Array.isArray(message.contentBlocks)
@@ -473,6 +473,13 @@ function convertStandardContentMessageToGeminiContent(
         response: { result: responseContent },
       },
     });
+
+    // For tool messages, keep only the functionResponse part(s): any text is
+    // already included in functionResponse.response.result, and a `user`
+    // content mixing a functionResponse with text is rejected or corrupted
+    // by the API. Mirrors the legacy-path filter.
+    // See issue #11444.
+    parts = parts.filter((part) => "functionResponse" in part);
   }
 
   // Only return content if we have parts
@@ -849,17 +856,20 @@ export const convertMessagesToGeminiContents: Converter<
     });
     if (content) {
       const prev = contents[contents.length - 1];
-      // Merge adjacent contents of the same role, but do NOT merge a content
-      // carrying a functionResponse (a converted ToolMessage) with one that
-      // does not (e.g. a following HumanMessage's text). Both map to the
-      // `user` role, and Gemini/Vertex rejects a single `user` content that
-      // mixes a functionResponse with text. Two functionResponse contents
-      // (parallel tool results) still merge, as do two plain contents.
+      // Merge two adjacent contents only when BOTH carry functionResponse
+      // parts, i.e. a run of ToolMessages answering one model turn's parallel
+      // function calls: Gemini/Vertex requires those grouped in a single
+      // `user` content whose part count matches the call count. Never merge
+      // a functionResponse content with a text-only one: a `user` content
+      // mixing a functionResponse with text is rejected outright by newer
+      // Gemini models and corrupts generation on older ones. Plain same-role
+      // contents are accepted unmerged, so they are left separate.
       // See issue #11444.
       if (
         prev &&
         prev.role === content.role &&
-        hasFunctionResponse(prev) === hasFunctionResponse(content)
+        hasFunctionResponse(prev) &&
+        hasFunctionResponse(content)
       ) {
         prev.parts.push(...content.parts);
       } else {

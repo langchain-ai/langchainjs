@@ -333,6 +333,65 @@ describe("convertMessagesToGeminiContents", () => {
     ).toBe("continue");
   });
 
+  test("keeps a ToolMessage and a following HumanMessage in separate user turns (v1 standard path)", () => {
+    // Same contract as the legacy path, exercised through the v1 standard
+    // content path (`output_version: "v1"`): the tool turn must carry ONLY
+    // its functionResponse part, and the follow-up human text must remain
+    // its own user content. See issue #11444.
+    const V1 = { output_version: "v1" };
+    const messages = [
+      new HumanMessage("read it", { response_metadata: V1 }),
+      new AIMessage({
+        content: "Reading the agreement now.",
+        tool_calls: [
+          {
+            name: "read_document_pages",
+            args: { fileId: "f1" },
+            id: "call_1",
+            type: "tool_call",
+          },
+        ],
+        response_metadata: V1,
+      }),
+      new ToolMessage({
+        content: "page text",
+        tool_call_id: "call_1",
+        name: "read_document_pages",
+        response_metadata: V1,
+      }),
+      new HumanMessage("continue", { response_metadata: V1 }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    expect(contents).toHaveLength(4);
+
+    expect(contents[1].role).toBe("model");
+    expect(
+      contents[1].parts.some((p) => "functionCall" in p && p.functionCall)
+    ).toBe(true);
+
+    // The tool turn carries ONLY the functionResponse, no text.
+    expect(contents[2]).toEqual({
+      role: "user",
+      parts: [
+        {
+          functionResponse: {
+            id: "call_1",
+            name: "read_document_pages",
+            response: { result: "page text" },
+          },
+        },
+      ],
+    });
+
+    // The follow-up human turn is its own user content with just the text.
+    expect(contents[3]).toEqual({
+      role: "user",
+      parts: [{ text: "continue" }],
+    });
+  });
+
   test("falls back to ToolMessage.name when tool call lookup succeeds (legacy path)", () => {
     // Even when ToolMessage has a name, the tool_calls lookup should take priority
     const messages = [
