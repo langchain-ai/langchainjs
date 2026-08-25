@@ -816,7 +816,7 @@ export abstract class BaseChatGoogle<
 
     if (response.body) {
       let previousUsage: UsageMetadata | undefined;
-      const toolCallIdContext: { current?: string } = {};
+      const toolCallIdContext: Record<string, string> = {};
       const stream = response.body
         .pipeThrough(new TextDecoderStream())
         .pipeThrough(new EventSourceParserStream())

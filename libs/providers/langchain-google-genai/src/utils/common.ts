@@ -778,8 +778,8 @@ export function convertResponseContentToChatGenerationChunk(
   extra: {
     usageMetadata?: UsageMetadata | undefined;
     index: number;
-    // Reuses the last real functionCall.id when a delta omits it; assumes parallel calls don't interleave without ids.
-    toolCallIdContext?: { current?: string };
+    // Reuses the last real functionCall.id (keyed by tool name) when a delta omits it. Two parallel calls to the SAME tool that both omit id can still collide.
+    toolCallIdContext?: Record<string, string>;
   }
 ): ChatGenerationChunk | null {
   if (!response.candidates || response.candidates.length === 0) {
@@ -800,10 +800,11 @@ export function convertResponseContentToChatGenerationChunk(
           "id" in p.functionCall && typeof p.functionCall.id === "string"
             ? p.functionCall.id
             : undefined;
+        const name = p.functionCall.name;
         if (realId && extra.toolCallIdContext) {
-          extra.toolCallIdContext.current = realId;
+          extra.toolCallIdContext[name] = realId;
         }
-        const id = realId ?? extra.toolCallIdContext?.current ?? uuidv4();
+        const id = realId ?? extra.toolCallIdContext?.[name] ?? uuidv4();
         acc.push({ ...p, id });
       }
       return acc;

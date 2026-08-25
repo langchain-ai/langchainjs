@@ -826,7 +826,7 @@ describe("streaming tool_call thoughtSignature merge", () => {
   });
 
   test("thoughtSignature survives when Gemini omits functionCall.id on the continuation delta that carries it", () => {
-    const toolCallIdContext: { current?: string } = {};
+    const toolCallIdContext: Record<string, string> = {};
     const toolCalls1 = convertGeminiPartsToToolCalls(
       [
         {
@@ -859,10 +859,7 @@ describe("streaming tool_call thoughtSignature merge", () => {
   });
 
   test("two distinct tool calls that both omit id are not merged into one", () => {
-    // toolCallIdContext only reuses an id it saw for real; it must not seed
-    // itself from a generated fallback, or a later unrelated id-less call
-    // would collide with an earlier one's synthetic id.
-    const toolCallIdContext: { current?: string } = {};
+    const toolCallIdContext: Record<string, string> = {};
     const toolCallsA = convertGeminiPartsToToolCalls(
       [{ functionCall: { name: "get_weather", args: { city: "SF" } } }],
       toolCallIdContext
@@ -873,5 +870,30 @@ describe("streaming tool_call thoughtSignature merge", () => {
     );
 
     expect(toolCallsA[0].id).not.toBe(toolCallsB[0].id);
+  });
+
+  test("a continuation delta for one call in a parallel pair reuses that call's id, not the other's", () => {
+    const toolCallIdContext: Record<string, string> = {};
+    // Both calls announce their real ids in the same chunk, as Gemini's
+    // parallel function-calling does.
+    convertGeminiPartsToToolCalls(
+      [
+        { functionCall: { id: "call_weather", name: "get_weather" } },
+        { functionCall: { id: "call_time", name: "get_time" } },
+      ] as Gemini.Part.FunctionCall[],
+      toolCallIdContext
+    );
+
+    // A later continuation for get_weather omits id.
+    const continuation = convertGeminiPartsToToolCalls(
+      [
+        {
+          functionCall: { name: "get_weather", args: { city: "SF" } },
+        } as Gemini.Part.FunctionCall,
+      ],
+      toolCallIdContext
+    );
+
+    expect(continuation[0].id).toBe("call_weather");
   });
 });

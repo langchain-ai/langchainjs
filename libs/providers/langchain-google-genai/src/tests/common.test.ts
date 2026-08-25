@@ -474,7 +474,7 @@ describe("streaming function-call thoughtSignature survives chunk merging", () =
       },
     ]);
 
-    const toolCallIdContext: { current?: string } = {};
+    const toolCallIdContext: Record<string, string> = {};
     const chunk1 = convertResponseContentToChatGenerationChunk(delta1, {
       index: 0,
       toolCallIdContext,
@@ -503,7 +503,7 @@ describe("streaming function-call thoughtSignature survives chunk merging", () =
   });
 
   test("two distinct tool calls that both omit id are not merged into one", () => {
-    const toolCallIdContext: { current?: string } = {};
+    const toolCallIdContext: Record<string, string> = {};
     const responseA = createMockResponse([
       {
         content: {
@@ -545,5 +545,49 @@ describe("streaming function-call thoughtSignature survives chunk merging", () =
     const idA = (chunkA!.message as AIMessageChunk).tool_call_chunks?.[0]?.id;
     const idB = (chunkB!.message as AIMessageChunk).tool_call_chunks?.[0]?.id;
     expect(idA).not.toBe(idB);
+  });
+
+  test("a continuation delta for one call in a parallel pair reuses that call's id, not the other's", () => {
+    const toolCallIdContext: Record<string, string> = {};
+    const bothCalls = createMockResponse([
+      {
+        content: {
+          role: "model",
+          parts: [
+            { functionCall: { id: "call_weather", name: "get_weather" } },
+            { functionCall: { id: "call_time", name: "get_time" } },
+          ] as GoogleGenerativeAIPart[],
+        },
+        finishReason: undefined as unknown as FinishReason,
+        index: 0,
+        safetyRatings: [],
+      },
+    ]);
+    convertResponseContentToChatGenerationChunk(bothCalls, {
+      index: 0,
+      toolCallIdContext,
+    });
+
+    const continuation = createMockResponse([
+      {
+        content: {
+          role: "model",
+          parts: [
+            {
+              functionCall: { name: "get_weather", args: { city: "SF" } },
+            },
+          ] as GoogleGenerativeAIPart[],
+        },
+        finishReason: "STOP" as FinishReason,
+        index: 0,
+        safetyRatings: [],
+      },
+    ]);
+    const chunk = convertResponseContentToChatGenerationChunk(continuation, {
+      index: 0,
+      toolCallIdContext,
+    });
+
+    expect(chunk!.message.tool_call_chunks?.[0]?.id).toBe("call_weather");
   });
 });

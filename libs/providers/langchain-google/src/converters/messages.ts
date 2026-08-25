@@ -962,13 +962,10 @@ export const convertMessagesToGeminiSystemInstruction: Converter<
  * // ]
  * ```
  */
-export const convertGeminiPartsToToolCalls: Converter<
-  Gemini.Part[],
-  ContentBlock.Tools.ToolCall<string, Record<string, unknown>>[]
-> = (
+export const convertGeminiPartsToToolCalls = (
   parts: Gemini.Part[],
-  // Reuses the last real functionCall.id when a delta omits it; assumes parallel calls don't interleave without ids.
-  toolCallIdContext?: { current?: string }
+  // Reuses the last real functionCall.id (keyed by tool name) when a delta omits it. Two parallel calls to the SAME tool that both omit id can still collide.
+  toolCallIdContext?: Record<string, string>
 ): ContentBlock.Tools.ToolCall<string, Record<string, unknown>>[] => {
   const toolCalls: ContentBlock.Tools.ToolCall<
     string,
@@ -980,12 +977,13 @@ export const convertGeminiPartsToToolCalls: Converter<
     if ("functionCall" in part && part.functionCall) {
       const functionCallPart = part as Gemini.Part.FunctionCall;
       const realId = functionCallPart.functionCall.id;
+      const name = functionCallPart.functionCall.name;
       if (realId && toolCallIdContext) {
-        toolCallIdContext.current = realId;
+        toolCallIdContext[name] = realId;
       }
       const id =
         realId ??
-        toolCallIdContext?.current ??
+        toolCallIdContext?.[name] ??
         `lc-tool-call-${uuidv4().replace(/-/g, "")}`;
       toolCalls.push({
         type: "tool_call",
