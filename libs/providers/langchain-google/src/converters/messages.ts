@@ -278,6 +278,35 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
   },
 };
 
+const MEDIA_BLOCK_TYPES = new Set([
+  "media",
+  "image",
+  "audio",
+  "video",
+  "file",
+  "text-plain",
+]);
+
+function isMediaContentBlock(item: unknown): boolean {
+  if (typeof item !== "object" || item === null) {
+    return false;
+  }
+  if (isDataContentBlock(item)) {
+    return item.source_type !== "text";
+  }
+  if ("image_url" in item || "inlineData" in item || "fileData" in item) {
+    return true;
+  }
+  return MEDIA_BLOCK_TYPES.has((item as { type?: unknown }).type as string);
+}
+
+function stripMediaBlocksForFunctionResponse(content: unknown): unknown {
+  if (!Array.isArray(content)) {
+    return content;
+  }
+  return content.filter((item) => !isMediaContentBlock(item));
+}
+
 function convertStandardDataContentBlockToGeminiPart(
   block: ContentBlock.Multimodal.Data
 ): Gemini.Part | null {
@@ -452,10 +481,9 @@ function convertStandardContentMessageToGeminiContent(
 
   // Handle tool messages as function responses
   if (ToolMessage.isInstance(message) && message.tool_call_id) {
-    const responseContent =
-      typeof message.content === "string"
-        ? message.content
-        : JSON.stringify(message.content);
+    const responseContent = stripMediaBlocksForFunctionResponse(
+      message.content
+    );
     // Find the matching tool call in a preceding AIMessage to get the function name
     const aiMsg = messages
       .filter(AIMessage.isInstance)
@@ -750,10 +778,9 @@ function convertLegacyContentMessageToGeminiContent(
 
   // Handle tool messages as function responses
   if (ToolMessage.isInstance(message) && message.tool_call_id) {
-    const responseContent =
-      typeof message.content === "string"
-        ? message.content
-        : JSON.stringify(message.content);
+    const responseContent = stripMediaBlocksForFunctionResponse(
+      message.content
+    );
     // Find the matching tool call in a preceding AIMessage to get the function name
     const aiMsg = messages
       .filter(AIMessage.isInstance)
@@ -775,9 +802,14 @@ function convertLegacyContentMessageToGeminiContent(
       },
     });
 
-    // For tool messages, only keep functionResponse parts since the text content
-    // is already included in the functionResponse.response.result
-    parts = parts.filter((part) => "functionResponse" in part);
+    // For tool messages, drop the redundant text parts - their content is
+    // already folded into functionResponse.response.result above - but keep
+    // any media parts (inlineData/fileData) as siblings so images/audio/video
+    // reach Gemini as real parts instead of being lost inside the JSON string.
+    parts = parts.filter(
+      (part) =>
+        "functionResponse" in part || "inlineData" in part || "fileData" in part
+    );
   }
 
   // Only add content if we have parts
