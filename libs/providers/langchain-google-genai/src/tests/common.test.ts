@@ -547,7 +547,7 @@ describe("streaming function-call thoughtSignature survives chunk merging", () =
     expect(idA).not.toBe(idB);
   });
 
-  test("a continuation delta for one call in a parallel pair reuses that call's id, not the other's", () => {
+  test("a continuation delta for one call in a differently-named parallel pair reuses that call's id, not the other's", () => {
     const toolCallIdContext: Record<string, string> = {};
     const bothCalls = createMockResponse([
       {
@@ -589,5 +589,67 @@ describe("streaming function-call thoughtSignature survives chunk merging", () =
     });
 
     expect(chunk!.message.tool_call_chunks?.[0]?.id).toBe("call_weather");
+  });
+
+  // Known, unresolved gap: toolCallIdContext is keyed by tool name, so two
+  // parallel calls to the SAME tool (e.g. get_weather for two cities, see
+  // issue #10341) that both omit id still collide -- the second real id
+  // clobbers the first. Marked `.fails` so this stays visible as a known
+  // issue rather than silently passing or being deleted; remove `.fails`
+  // once this is actually fixed.
+  test.fails("continuation for one of two SAME-named parallel calls is misattributed to the other", () => {
+    const toolCallIdContext: Record<string, string> = {};
+    const bothCalls = createMockResponse([
+      {
+        content: {
+          role: "model",
+          parts: [
+            {
+              functionCall: {
+                id: "call_paris",
+                name: "get_weather",
+                args: { city: "Paris" },
+              },
+            },
+            {
+              functionCall: {
+                id: "call_london",
+                name: "get_weather",
+                args: { city: "London" },
+              },
+            },
+          ] as GoogleGenerativeAIPart[],
+        },
+        finishReason: undefined as unknown as FinishReason,
+        index: 0,
+        safetyRatings: [],
+      },
+    ]);
+    convertResponseContentToChatGenerationChunk(bothCalls, {
+      index: 0,
+      toolCallIdContext,
+    });
+
+    const continuationForParis = createMockResponse([
+      {
+        content: {
+          role: "model",
+          parts: [
+            {
+              functionCall: { name: "get_weather", args: { city: "Paris" } },
+            },
+          ] as GoogleGenerativeAIPart[],
+        },
+        finishReason: "STOP" as FinishReason,
+        index: 0,
+        safetyRatings: [],
+      },
+    ]);
+    const chunk = convertResponseContentToChatGenerationChunk(
+      continuationForParis,
+      { index: 0, toolCallIdContext }
+    );
+
+    expect(chunk!.message.tool_call_chunks?.[0]?.id).toBe("call_paris");
   });
 });

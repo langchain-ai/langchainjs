@@ -872,7 +872,7 @@ describe("streaming tool_call thoughtSignature merge", () => {
     expect(toolCallsA[0].id).not.toBe(toolCallsB[0].id);
   });
 
-  test("a continuation delta for one call in a parallel pair reuses that call's id, not the other's", () => {
+  test("a continuation delta for one call in a differently-named parallel pair reuses that call's id, not the other's", () => {
     const toolCallIdContext: Record<string, string> = {};
     // Both calls announce their real ids in the same chunk, as Gemini's
     // parallel function-calling does.
@@ -895,5 +895,43 @@ describe("streaming tool_call thoughtSignature merge", () => {
     );
 
     expect(continuation[0].id).toBe("call_weather");
+  });
+
+  // Known, unresolved gap: toolCallIdContext is keyed by tool name, so two
+  // parallel calls to the SAME tool (e.g. get_weather for two cities, see
+  // issue #10341) that both omit id still collide. Marked `.fails` so this
+  // stays visible; remove `.fails` once this is actually fixed.
+  test.fails("continuation for one of two SAME-named parallel calls is misattributed to the other", () => {
+    const toolCallIdContext: Record<string, string> = {};
+    convertGeminiPartsToToolCalls(
+      [
+        {
+          functionCall: {
+            id: "call_paris",
+            name: "get_weather",
+            args: { city: "Paris" },
+          },
+        },
+        {
+          functionCall: {
+            id: "call_london",
+            name: "get_weather",
+            args: { city: "London" },
+          },
+        },
+      ] as Gemini.Part.FunctionCall[],
+      toolCallIdContext
+    );
+
+    const continuationForParis = convertGeminiPartsToToolCalls(
+      [
+        {
+          functionCall: { name: "get_weather", args: { city: "Paris" } },
+        } as Gemini.Part.FunctionCall,
+      ],
+      toolCallIdContext
+    );
+
+    expect(continuationForParis[0].id).toBe("call_paris");
   });
 });
