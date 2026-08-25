@@ -1886,10 +1886,10 @@ describe.sequential.each(ttsModelInfo)(
       const prompt = `
         TTS the following conversation between Joe and Jane.
         Pay attention to instructions about how each each person speaks,
-        and other sounds they may make.  
+        and other sounds they may make.
         Joe: Hows it going today, Jane?
         Jane: Not too bad, how about you?
-        Joe: [Sighs and sounds tired] It has been a rough day. 
+        Joe: [Sighs and sounds tired] It has been a rough day.
         Joe: [Perks up] But the week should improve!
       `;
       const res = await model.invoke(prompt);
@@ -2046,8 +2046,6 @@ describe
   .each(toolHistoryModelInfo)(
   "Google Tool History ($model) $testConfig",
   ({ model, defaultGoogleParams }: ModelInfo) => {
-    // Regression coverage for https://github.com/langchain-ai/langchainjs/issues/11444
-    //
     // Exercises the request shapes produced from tool-call histories against
     // the live Vertex AI API using Application Default Credentials. Vertex is
     // where a `user` content mixing a functionResponse with text parts gets
@@ -2183,9 +2181,9 @@ describe
       // stamps on messages it generates itself.
       const llm = newChatGoogle().bindTools([readPages]);
 
-      const V1 = { output_version: "v1" };
+      const V1 = { output_version: "v1" } as const;
       const messages: BaseMessage[] = [
-        new HumanMessage("read it", { response_metadata: V1 }),
+        new HumanMessage({ content: "read it", response_metadata: V1 }),
         new AIMessage({
           content: "Reading the agreement now.",
           tool_calls: [
@@ -2204,7 +2202,7 @@ describe
           name: "read_document_pages",
           response_metadata: V1,
         }),
-        new HumanMessage("continue", { response_metadata: V1 }),
+        new HumanMessage({ content: "continue", response_metadata: V1 }),
       ];
 
       const result = await llm.invoke(messages);
