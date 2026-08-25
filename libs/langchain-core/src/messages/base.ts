@@ -517,7 +517,13 @@ export function _mergeDicts(
         // Do not merge 'type' fields
         continue;
       } else if (
-        ["id", "name", "output_version", "model_provider"].includes(key)
+        [
+          "id",
+          "name",
+          "output_version",
+          "model_provider",
+          "thoughtSignature",
+        ].includes(key)
       ) {
         // Keep the incoming value for these fields if its defined
         if (value) {

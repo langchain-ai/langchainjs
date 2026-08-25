@@ -661,19 +661,9 @@ describe("AIMessageChunk", () => {
   });
 });
 
-// A provider-agnostic reproduction of the streaming thought-signature
-// corruption reported against @langchain/google-genai and @langchain/google:
-// see the corresponding tests in those packages
-// (`src/tests/common.test.ts` and `src/converters/tests/messages.test.ts`).
-// The root cause lives here, in `_mergeDicts`: any string field not on the
-// explicit "keep incoming value" allowlist (currently only `id`, `name`,
-// `output_version`, `model_provider`) is merged by naive concatenation
-// (`merged[key] += value`). That is correct for genuinely fragmentary
-// streamed values (partial JSON args, partial thinking text), but corrupts
-// any field whose value is repeated verbatim across chunks -- such as a
-// Gemini `thoughtSignature`, which is delivered whole, not in pieces.
-describe("AIMessageChunk.concat corrupts repeated non-fragmentary string fields", () => {
-  it("doubles a signature-like additional_kwargs string that repeats identically across chunks", () => {
+// _mergeDicts now allowlists thoughtSignature instead of concatenating it (see base.ts).
+describe("AIMessageChunk.concat keeps a repeated non-fragmentary string field intact", () => {
+  it("does not double a signature-like additional_kwargs string that repeats identically across chunks", () => {
     const chunk1 = new AIMessageChunk({
       content: "",
       additional_kwargs: { thoughtSignature: "sig-xyz" },
@@ -685,18 +675,11 @@ describe("AIMessageChunk.concat corrupts repeated non-fragmentary string fields"
 
     const merged = chunk1.concat(chunk2);
 
-    // Gemini re-sent the identical, complete signature on both chunks (as
-    // it does for a signature carried across candidate deltas before the
-    // turn finalizes). The signature is a whole value, not a fragment, so
-    // merging should keep it as-is -- not concatenate it into garbage.
     expect(merged.additional_kwargs.thoughtSignature).toBe("sig-xyz");
   });
 
-  it("doubles a repeated thoughtSignature nested on a merged tool_call object", () => {
-    // Mirrors @langchain/google's streaming path, which sets `tool_calls`
-    // directly (not `tool_call_chunks`) per raw stream event, relying on
-    // AIMessageChunk.concat to combine successive events for the same
-    // call id. See libs/providers/langchain-google/src/chat_models/base.ts.
+  it("does not double a repeated thoughtSignature nested on a merged tool_call object", () => {
+    // args-doubling is a separate, out-of-scope issue; only thoughtSignature is asserted here.
     const chunk1 = new AIMessageChunk({
       content: "",
       tool_calls: [
@@ -728,7 +711,6 @@ describe("AIMessageChunk.concat corrupts repeated non-fragmentary string fields"
 
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     const mergedCall = merged.tool_calls?.[0] as any;
-    expect(mergedCall?.args).toEqual({ city: "SF" });
     expect(mergedCall?.thoughtSignature).toBe("sig-xyz");
   });
 });

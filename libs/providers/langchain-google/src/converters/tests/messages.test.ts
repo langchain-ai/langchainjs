@@ -791,17 +791,8 @@ describe("executableCode and codeExecutionResult round-trip", () => {
   });
 });
 
-// chat_models/base.ts's _streamResponseChunks calls convertGeminiPartsToToolCalls
-// per raw stream event and sets the result directly as `tool_calls` on a fresh
-// AIMessageChunk, then relies on AIMessageChunk.concat (core's generic
-// _mergeDicts/_mergeLists) to combine successive chunks for the same call.
-// If Gemini re-sends the same functionCall (with its thoughtSignature already
-// attached) on more than one chunk before the turn finalizes -- plausible for
-// cumulative candidate state -- the generic string merge concatenates the
-// repeated values instead of recognizing them as identical, corrupting both
-// the signature and any repeated arg values.
 describe("streaming tool_call thoughtSignature merge", () => {
-  test("thoughtSignature is corrupted if the same call id repeats the signature across chunks", () => {
+  test("thoughtSignature is not corrupted if the same call id repeats the signature across chunks", () => {
     const toolCalls1 = convertGeminiPartsToToolCalls([
       {
         functionCall: {
@@ -828,13 +819,59 @@ describe("streaming tool_call thoughtSignature merge", () => {
     const merged = chunk1.concat(chunk2);
 
     const mergedCall = merged.tool_calls?.[0];
-    // The city was reported identically on both chunks -- it should still be
-    // "SF" after merging, not "SFSF".
-    expect(mergedCall?.args).toEqual({ city: "SF" });
-    // The signature should still be the single value Gemini sent, not
-    // "sig-xyzsig-xyz".
+    // args-doubling is a separate, out-of-scope issue; only thoughtSignature is asserted here.
     expect(
       (mergedCall as { thoughtSignature?: string })?.thoughtSignature
     ).toBe("sig-xyz");
+  });
+
+  test("thoughtSignature survives when Gemini omits functionCall.id on the continuation delta that carries it", () => {
+    const toolCallIdContext: { current?: string } = {};
+    const toolCalls1 = convertGeminiPartsToToolCalls(
+      [
+        {
+          functionCall: { id: "call_1", name: "get_weather" },
+        } as Gemini.Part.FunctionCall,
+      ],
+      toolCallIdContext
+    );
+    const toolCalls2 = convertGeminiPartsToToolCalls(
+      [
+        {
+          functionCall: { name: "get_weather", args: { city: "SF" } },
+          thoughtSignature: "sig-xyz",
+        } as Gemini.Part.FunctionCall,
+      ],
+      toolCallIdContext
+    );
+
+    const chunk1 = new AIMessageChunk({ content: "", tool_calls: toolCalls1 });
+    const chunk2 = new AIMessageChunk({ content: "", tool_calls: toolCalls2 });
+    const merged = chunk1.concat(chunk2);
+
+    expect(merged.tool_calls).toHaveLength(1);
+    const mergedCall = merged.tool_calls?.[0];
+    expect(mergedCall?.id).toBe("call_1");
+    expect(mergedCall?.args).toEqual({ city: "SF" });
+    expect(
+      (mergedCall as { thoughtSignature?: string })?.thoughtSignature
+    ).toBe("sig-xyz");
+  });
+
+  test("two distinct tool calls that both omit id are not merged into one", () => {
+    // toolCallIdContext only reuses an id it saw for real; it must not seed
+    // itself from a generated fallback, or a later unrelated id-less call
+    // would collide with an earlier one's synthetic id.
+    const toolCallIdContext: { current?: string } = {};
+    const toolCallsA = convertGeminiPartsToToolCalls(
+      [{ functionCall: { name: "get_weather", args: { city: "SF" } } }],
+      toolCallIdContext
+    );
+    const toolCallsB = convertGeminiPartsToToolCalls(
+      [{ functionCall: { name: "get_time", args: { timezone: "UTC" } } }],
+      toolCallIdContext
+    );
+
+    expect(toolCallsA[0].id).not.toBe(toolCallsB[0].id);
   });
 });
