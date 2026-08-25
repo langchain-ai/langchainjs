@@ -240,7 +240,14 @@ export class NodeApiClient extends ApiClient {
   constructor(protected params: NodeApiClientParams = {}) {
     super();
 
-    this.apiKey = params.apiKey ?? getEnvironmentVariable("GOOGLE_API_KEY");
+    // An explicitly provided googleAuthOptions is a deliberate choice of
+    // OAuth (e.g. Vertex ADC): it must take precedence over an ambient
+    // GOOGLE_API_KEY env var, which may belong to an unrelated service.
+    this.apiKey =
+      params.apiKey ??
+      (params.googleAuthOptions
+        ? undefined
+        : getEnvironmentVariable("GOOGLE_API_KEY"));
     this.credentials = iife(() => {
       if (params.credentials) {
         return normalizeGCPCredentials(params.credentials);
