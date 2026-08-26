@@ -240,9 +240,6 @@ export class NodeApiClient extends ApiClient {
   constructor(protected params: NodeApiClientParams = {}) {
     super();
 
-    // An explicitly provided googleAuthOptions is a deliberate choice of
-    // OAuth (e.g. Vertex ADC): it must take precedence over an ambient
-    // GOOGLE_API_KEY env var, which may belong to an unrelated service.
     this.apiKey =
       params.apiKey ??
       (params.googleAuthOptions
