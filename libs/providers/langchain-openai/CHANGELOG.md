@@ -1,5 +1,13 @@
 # @langchain/openai
 
+## 1.5.11
+
+### Patch Changes
+
+- [#11448](https://github.com/langchain-ai/langchainjs/pull/11448) [`53dbfc2`](https://github.com/langchain-ai/langchainjs/commit/53dbfc2fa033250fe7b711d7c3c8f6e7bfea9216) Thanks [@hntrl](https://github.com/hntrl)! - fix(openai): resolve encrypted content with zdr when streaming
+
+  OpenAI recently changed the disposition of `encrypted_content` to contain the canonical payload on the final `done` event. Encrypted content also does not need to be a parameter in the `include` call options in order to propagate.
+
 ## 1.5.10
 
 ### Patch Changes
