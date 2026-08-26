@@ -147,7 +147,7 @@
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.2",
     "@types/js-yaml": "^4",
-    "@types/jsdom": "^28.0.3",
+    "@types/jsdom": "^30.0.0",
     "@types/pg": "^8.20.3",
     "@types/ws": "^8",
     "@upstash/redis": "^1.38.0",
