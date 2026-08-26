@@ -58,6 +58,10 @@ export class ChatMessage<TStructure extends MessageStructure = MessageStructure>
     return super.isInstance(obj) && obj.type === "generic";
   }
 
+  static [Symbol.hasInstance](obj: unknown) {
+    return this.isInstance(obj);
+  }
+
   override get _printableFields(): Record<string, unknown> {
     return {
       ...super._printableFields,
@@ -121,6 +125,10 @@ export class ChatMessageChunk<
 
   static isInstance(obj: unknown): obj is ChatMessageChunk {
     return super.isInstance(obj) && obj.type === "generic";
+  }
+
+  static [Symbol.hasInstance](obj: unknown) {
+    return this.isInstance(obj);
   }
 
   override get _printableFields(): Record<string, unknown> {

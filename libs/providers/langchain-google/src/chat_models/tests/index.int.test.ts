@@ -91,12 +91,6 @@ type ModelInfo = {
 
 const allModelInfo: ModelInfo[] = [
   {
-    model: "gemini-2.0-flash-lite",
-  },
-  {
-    model: "gemini-2.0-flash",
-  },
-  {
     model: "gemini-2.5-flash-lite",
   },
   {
@@ -107,13 +101,7 @@ const allModelInfo: ModelInfo[] = [
     model: "gemini-2.5-pro",
   },
   {
-    model: "gemini-3-pro-preview",
-    testConfig: {
-      isThinking: true,
-    },
-  },
-  {
-    model: "gemini-3-flash-preview",
+    model: "gemini-3.1-flash-lite",
     testConfig: {
       isThinking: true,
     },
@@ -125,7 +113,25 @@ const allModelInfo: ModelInfo[] = [
     },
   },
   {
-    model: "gemini-3.1-flash-lite-preview",
+    model: "gemini-3.5-flash",
+    testConfig: {
+      isThinking: true,
+    },
+  },
+  {
+    model: "gemini-3.5-flash-lite",
+    testConfig: {
+      isThinking: true,
+    },
+  },
+  {
+    model: "gemini-3.6-flash",
+    testConfig: {
+      isThinking: true,
+    },
+  },
+  {
+    model: "gemini-3.7-flash",
     testConfig: {
       isThinking: true,
     },
@@ -137,7 +143,21 @@ const allModelInfo: ModelInfo[] = [
     },
   },
   {
-    model: "gemini-3-pro-image-preview",
+    model: "gemini-3-pro-image",
+    testConfig: {
+      isImage: true,
+      hasImageThoughts: true,
+    },
+  },
+  {
+    model: "gemini-3.1-flash-image",
+    testConfig: {
+      isImage: true,
+      hasImageThoughts: true,
+    },
+  },
+  {
+    model: "gemini-3.1-flash-lite-image",
     testConfig: {
       isImage: true,
       hasImageThoughts: true,
@@ -147,6 +167,7 @@ const allModelInfo: ModelInfo[] = [
     model: "gemini-2.5-flash-preview-tts",
     testConfig: {
       isTts: true,
+      skip: true,
     },
   },
   {
@@ -154,6 +175,12 @@ const allModelInfo: ModelInfo[] = [
     testConfig: {
       isTts: true,
       skip: true,
+    },
+  },
+  {
+    model: "gemini-3.1-flash-tts-preview",
+    testConfig: {
+      isTts: true,
     },
   },
   {
@@ -632,6 +659,51 @@ describe.each(coreModelInfo)(
       expect(result2.content).toMatch(/21/);
     });
 
+    test("function conversation multi-round", async () => {
+      const tools = [weatherTool];
+      const llm = newChatGoogle().bindTools(tools);
+      const history: BaseMessage[] = [
+        new HumanMessage("What is the weather in New York?"),
+      ];
+      const result1 = await llm.invoke(history);
+      history.push(result1);
+
+      const toolCalls = result1.tool_calls!;
+      const toolCall = toolCalls[0];
+      const toolMessage = await weatherTool.invoke(toolCall);
+      history.push(toolMessage);
+
+      const result2 = await llm.invoke(history);
+      history.push(result2);
+
+      expect(result2.content).toMatch(/21/);
+
+      const request3 = new HumanMessage("What about DC?");
+      history.push(request3);
+      const result3 = await llm.invoke(history);
+      history.push(result3);
+
+      expect(result3.type).toBe("ai");
+
+      const toolCalls3 = result3.tool_calls!;
+      const toolCall3 = toolCalls3[0];
+
+      console.log("Tool Call", toolCall3);
+
+      const toolMessage4 = await weatherTool.invoke(toolCall3);
+      history.push(toolMessage4);
+
+      const result4 = await llm.invoke(history);
+      expect(result4.type).toBe("ai");
+
+      console.log("Test Summary", {
+        platformType: defaultGoogleParams?.platformType,
+        isNode: testConfig?.node,
+        toolCall1Id: toolCall?.id,
+        toolCall3Id: toolCall3?.id,
+      });
+    });
+
     test("function reply", async () => {
       const tools: Gemini.Tool[] = [
         {
@@ -679,6 +751,138 @@ describe.each(coreModelInfo)(
       for await (const chunk of res) {
         resArray.push(chunk);
       }
+    });
+
+    test("function reply with image content is sent as a sibling part, not lost in JSON (#10297)", async () => {
+      const dataPath = "src/chat_models/tests/data/blue-square.png";
+      const dataType = "image/png";
+      const data = await fs.readFile(dataPath);
+      const data64 = data.toString("base64");
+      const dataUri = `data:${dataType};base64,${data64}`;
+
+      const tools: Gemini.Tool[] = [
+        {
+          functionDeclarations: [
+            {
+              name: "get_screenshot",
+              description: "Get a screenshot of the current screen.",
+              parameters: { type: "object", properties: {} },
+            },
+          ],
+        },
+      ];
+      const llm = newChatGoogle().bindTools(tools);
+      const messages: BaseMessage[] = [
+        new HumanMessage(
+          "Take a screenshot of the current screen and tell me what color it is."
+        ),
+        new AIMessage({
+          tool_calls: [
+            {
+              type: "tool_call",
+              id: "lc-tool-call-screenshot-id",
+              name: "get_screenshot",
+              args: {},
+            },
+          ],
+        }),
+        new ToolMessage({
+          content: [
+            { type: "text", text: "Screenshot captured successfully." },
+            { type: "image_url", image_url: dataUri },
+          ],
+          tool_call_id: "lc-tool-call-screenshot-id",
+        }),
+      ];
+
+      const res = await llm.invoke(messages);
+      expect(res).toBeDefined();
+
+      const sentContents = recorder.request?.body?.contents as
+        | Gemini.Content[]
+        | undefined;
+      expect(sentContents).toBeDefined();
+      const toolResponseContent = sentContents!.find((c) =>
+        c.parts?.some((p) => "functionResponse" in p)
+      );
+      expect(toolResponseContent).toBeDefined();
+
+      const functionResponsePart = toolResponseContent!.parts!.find(
+        (p) => "functionResponse" in p && p.functionResponse
+      ) as Gemini.Part.FunctionResponse;
+      const resultStr = JSON.stringify(
+        functionResponsePart.functionResponse!.response
+      );
+      expect(resultStr).not.toContain(data64);
+
+      const inlineDataPart = toolResponseContent!.parts!.find(
+        (p) => "inlineData" in p && p.inlineData
+      ) as Gemini.Part.InlineData;
+      expect(inlineDataPart).toBeDefined();
+      expect(inlineDataPart.inlineData!.data).toBe(data64);
+    });
+
+    test("function reply with non-string content is sent as JSON, not double-stringified (#10439)", async () => {
+      const tools: Gemini.Tool[] = [
+        {
+          functionDeclarations: [
+            {
+              name: "get_video_captions",
+              description: "Get captions for a video.",
+              parameters: {
+                type: "object",
+                properties: {
+                  url: { type: "string", description: "The video URL." },
+                },
+                required: ["url"],
+              },
+            },
+          ],
+        },
+      ];
+      const llm = newChatGoogle().bindTools(tools);
+      const toolResult = [
+        {
+          url: "https://www.youtube.com/watch?v=redacted",
+          error: "All 5 caption URLs failed",
+        },
+      ];
+      const messages: BaseMessage[] = [
+        new HumanMessage("Get the captions for this video."),
+        new AIMessage({
+          tool_calls: [
+            {
+              type: "tool_call",
+              id: "lc-tool-call-captions-id",
+              name: "get_video_captions",
+              args: { url: "https://www.youtube.com/watch?v=redacted" },
+            },
+          ],
+        }),
+        new ToolMessage({
+          content: toolResult as unknown as string,
+          tool_call_id: "lc-tool-call-captions-id",
+        }),
+      ];
+
+      const res = await llm.invoke(messages);
+      expect(res).toBeDefined();
+
+      const sentContents = recorder.request?.body?.contents as
+        | Gemini.Content[]
+        | undefined;
+      expect(sentContents).toBeDefined();
+      const toolResponseContent = sentContents!.find((c) =>
+        c.parts?.some((p) => "functionResponse" in p)
+      );
+      expect(toolResponseContent).toBeDefined();
+
+      const functionResponsePart = toolResponseContent!.parts!.find(
+        (p) => "functionResponse" in p && p.functionResponse
+      ) as Gemini.Part.FunctionResponse;
+      const result = functionResponsePart.functionResponse!.response!.result;
+      expect(typeof result).not.toBe("string");
+      expect(result).toEqual(toolResult);
     });
 
     test("function - force tool", async () => {
@@ -767,7 +971,8 @@ describe.each(coreModelInfo)(
         urlContext: {},
       };
       const llm: Runnable = newChatGoogle().bindTools([urlTool]);
-      const url = "https://js.langchain.com/";
+      const url =
+        "https://docs.langchain.com/oss/javascript/langchain/overview";
       const prompt = `Summarize this web page: ${url}`;
       const result = await llm.invoke(prompt);
       const meta = result.response_metadata;

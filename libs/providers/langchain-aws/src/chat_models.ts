@@ -68,6 +68,7 @@ import {
   DEFAULT_STREAM_IDLE_TIMEOUT,
   createLinkedAbortController,
   resolveStreamIdleTimeout,
+  withRequestIdleTimeout,
   withStreamIdleTimeout,
 } from "./utils/stream_timeout.js";
 import {
@@ -1141,9 +1142,16 @@ export class ChatBedrockConverse
         options.signal
       );
       try {
-        const response = await this.client.send(command, {
-          abortSignal: abortController.signal,
-        });
+        const streamIdleTimeout = resolveStreamIdleTimeout(
+          options.streamIdleTimeout ?? this.streamIdleTimeout
+        );
+        const response = await withRequestIdleTimeout(
+          this.client.send(command, {
+            abortSignal: abortController.signal,
+          }),
+          streamIdleTimeout,
+          abortController
+        );
         if (!response.stream) {
           return;
         }
@@ -1158,9 +1166,6 @@ export class ChatBedrockConverse
             yield chunk;
           }
         };
-        const streamIdleTimeout = resolveStreamIdleTimeout(
-          options.streamIdleTimeout ?? this.streamIdleTimeout
-        );
         yield* convertBedrockConverseStream(
           abortableStream(
             withStreamIdleTimeout(
@@ -1213,13 +1218,17 @@ export class ChatBedrockConverse
         options.signal
       );
       try {
-        const response = await this.client.send(command, {
-          abortSignal: abortController.signal,
-        });
+        const streamIdleTimeout = resolveStreamIdleTimeout(
+          options.streamIdleTimeout ?? this.streamIdleTimeout
+        );
+        const response = await withRequestIdleTimeout(
+          this.client.send(command, {
+            abortSignal: abortController.signal,
+          }),
+          streamIdleTimeout,
+          abortController
+        );
         if (response.stream) {
-          const streamIdleTimeout = resolveStreamIdleTimeout(
-            options.streamIdleTimeout ?? this.streamIdleTimeout
-          );
           for await (const chunk of withStreamIdleTimeout(
             response.stream,
             streamIdleTimeout,
