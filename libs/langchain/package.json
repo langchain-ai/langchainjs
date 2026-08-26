@@ -47,8 +47,8 @@
     "@langchain/aws": "workspace:*",
     "@langchain/core": "workspace:^",
     "@langchain/fireworks": "workspace:*",
-    "@langchain/langgraph-api": "^1.4.3",
-    "@langchain/langgraph-sdk": "^1.9.28",
+    "@langchain/langgraph-api": "^1.4.5",
+    "@langchain/langgraph-sdk": "^1.9.31",
     "@langchain/openai": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.2",
@@ -74,7 +74,7 @@
     "@langchain/core": "workspace:^"
   },
   "dependencies": {
-    "@langchain/langgraph": "^1.4.10",
+    "@langchain/langgraph": "^1.4.12",
     "@langchain/langgraph-checkpoint": "^1.1.5",
     "langsmith": ">=0.5.0 <1.0.0",
     "zod": "^3.25.76 || ^4"

@@ -128,7 +128,7 @@
     "@langchain/google-vertexai": "workspace:*",
     "@langchain/google-vertexai-web": "workspace:*",
     "@langchain/groq": "workspace:*",
-    "@langchain/langgraph": "1.4.10",
+    "@langchain/langgraph": "1.4.12",
     "@langchain/mistralai": "workspace:*",
     "@langchain/mongodb": "workspace:*",
     "@langchain/ollama": "workspace:*",
