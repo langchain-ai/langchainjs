@@ -283,6 +283,121 @@ describe("convertMessagesToGeminiContents", () => {
     expect(responses[1].functionResponse!.id).toBe("call-london");
   });
 
+  test("keeps a ToolMessage and a following HumanMessage in separate user turns (legacy path)", () => {
+    // A ToolMessage (functionResponse) and a following HumanMessage (text) both
+    // map to the `user` role. They must NOT be merged into one content: Gemini /
+    // Vertex rejects a single `user` content that mixes a functionResponse with
+    // text (see issue #11444). Expected: user, model, user(functionResponse),
+    // user(text) — four separate contents.
+    const messages = [
+      new HumanMessage("read it"),
+      new AIMessage({
+        content: "Reading the agreement now.",
+        tool_calls: [
+          {
+            name: "read_document_pages",
+            args: { fileId: "f1" },
+            id: "call_1",
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: "page text",
+        tool_call_id: "call_1",
+        name: "read_document_pages",
+      }),
+      new HumanMessage("continue"),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    expect(contents).toHaveLength(4);
+
+    expect(contents[0].role).toBe("user");
+    expect(contents[0].parts.some((p) => "text" in p)).toBe(true);
+    expect(contents[0].parts.some((p) => "functionResponse" in p)).toBe(false);
+
+    expect(contents[1].role).toBe("model");
+
+    // The tool response turn carries ONLY the functionResponse, no text.
+    expect(contents[2].role).toBe("user");
+    expect(contents[2].parts.some((p) => "functionResponse" in p)).toBe(true);
+    expect(contents[2].parts.some((p) => "text" in p)).toBe(false);
+
+    // The following human turn is its own user content with just the text.
+    expect(contents[3].role).toBe("user");
+    expect(contents[3].parts.some((p) => "functionResponse" in p)).toBe(false);
+    expect(
+      (contents[3].parts.find((p) => "text" in p) as Gemini.Part.Text).text
+    ).toBe("continue");
+  });
+
+  test("keeps a ToolMessage and a following HumanMessage in separate user turns (v1 standard path)", () => {
+    // Same contract as the legacy path, exercised through the v1 standard
+    // content path (`output_version: "v1"`): the tool turn must carry ONLY
+    // its functionResponse part, and the follow-up human text must remain
+    // its own user content.
+    const response_metadata = { output_version: "v1" } as const;
+    const messages = [
+      new HumanMessage({
+        content: "read it",
+        response_metadata,
+      }),
+      new AIMessage({
+        content: "Reading the agreement now.",
+        tool_calls: [
+          {
+            name: "read_document_pages",
+            args: { fileId: "f1" },
+            id: "call_1",
+            type: "tool_call",
+          },
+        ],
+        response_metadata,
+      }),
+      new ToolMessage({
+        content: "page text",
+        tool_call_id: "call_1",
+        name: "read_document_pages",
+        response_metadata,
+      }),
+      new HumanMessage({
+        content: "continue",
+        response_metadata,
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    expect(contents).toHaveLength(4);
+
+    expect(contents[1].role).toBe("model");
+    expect(
+      contents[1].parts.some((p) => "functionCall" in p && p.functionCall)
+    ).toBe(true);
+
+    // The tool turn carries ONLY the functionResponse, no text.
+    expect(contents[2]).toEqual({
+      role: "user",
+      parts: [
+        {
+          functionResponse: {
+            id: "call_1",
+            name: "read_document_pages",
+            response: { result: "page text" },
+          },
+        },
+      ],
+    });
+
+    // The follow-up human turn is its own user content with just the text.
+    expect(contents[3]).toEqual({
+      role: "user",
+      parts: [{ text: "continue" }],
+    });
+  });
+
   test("falls back to ToolMessage.name when tool call lookup succeeds (legacy path)", () => {
     // Even when ToolMessage has a name, the tool_calls lookup should take priority
     const messages = [
@@ -1054,6 +1169,18 @@ describe("convertMessagesToGeminiContents", () => {
       },
     ]);
   });
+});
+
+test("coalesces consecutive plain HumanMessages into one user content", () => {
+  // Plain same-role turns have always been coalesced; only the
+  // functionResponse + text boundary introduced by #11444 must stay split.
+  const messages = [new HumanMessage("first"), new HumanMessage("second")];
+
+  const contents = convertMessagesToGeminiContents(messages);
+
+  expect(contents).toHaveLength(1);
+  expect(contents[0].role).toBe("user");
+  expect(contents[0].parts).toEqual([{ text: "first" }, { text: "second" }]);
 });
 
 describe("executableCode and codeExecutionResult round-trip", () => {
