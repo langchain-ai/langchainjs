@@ -478,7 +478,6 @@ function convertStandardContentMessageToGeminiContent(
     // already included in functionResponse.response.result, and a `user`
     // content mixing a functionResponse with text is rejected or corrupted
     // by the API. Mirrors the legacy-path filter.
-    // See issue #11444.
     parts = parts.filter((part) => "functionResponse" in part);
   }
 
@@ -859,19 +858,14 @@ export const convertMessagesToGeminiContents: Converter<
       // Merge two adjacent contents only when BOTH carry functionResponse
       // parts, i.e. a run of ToolMessages answering one model turn's parallel
       // function calls: Gemini/Vertex requires those grouped in a single
-      // `user` content whose part count matches the call count. Never merge
-      // a functionResponse content with a text-only one: a `user` content
-      // mixing a functionResponse with text is rejected outright by newer
-      // Gemini models and corrupts generation on older ones. Plain same-role
-      // contents are accepted unmerged, so they are left separate.
-      // See issue #11444.
+      // `user` content whose part count matches the call count.
       if (
         prev &&
         prev.role === content.role &&
         hasFunctionResponse(prev) &&
         hasFunctionResponse(content)
       ) {
-        prev.parts.push(...content.parts);
+        (prev.parts ??= []).push(...(content.parts ?? []));
       } else {
         contents.push(content);
       }
@@ -886,7 +880,7 @@ export const convertMessagesToGeminiContents: Converter<
  * (i.e. it was produced from a ToolMessage).
  */
 function hasFunctionResponse(content: Gemini.Content): boolean {
-  return content.parts.some((part) => "functionResponse" in part);
+  return content.parts?.some((part) => "functionResponse" in part) === true;
 }
 
 /**
