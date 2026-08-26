@@ -855,8 +855,9 @@ export const convertMessagesToGeminiContents: Converter<
     });
     if (content) {
       const prev = contents[contents.length - 1];
-      if (isParallelToolResponseTurn(prev, content)) {
-        (prev.parts ??= []).push(...(content.parts ?? []));
+      if (isParallelToolResponseTurn(prev, content) && content.parts) {
+        prev.parts ??= [];
+        prev.parts.push(...content.parts);
       } else {
         contents.push(content);
       }
