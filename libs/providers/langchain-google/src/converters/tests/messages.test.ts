@@ -385,6 +385,49 @@ describe("convertMessagesToGeminiContents", () => {
     expect(functionCallPart.functionCall!.args).toEqual({ city: "London" });
   });
 
+  test("preserves a streamed functionCall thought signature when replaying v1 messages", () => {
+    const aiMsg = new AIMessage({
+      content: [
+        {
+          type: "tool_call",
+          id: "call-1",
+          name: "get_weather",
+          args: { city: "London" },
+          thoughtSignature: "thought-signature",
+        },
+      ],
+      response_metadata: {
+        model_provider: "google",
+        output_version: "v1",
+      },
+    });
+    const messages = [
+      new HumanMessage("hello"),
+      aiMsg,
+      new ToolMessage({
+        content: '{"temp": 15}',
+        tool_call_id: "call-1",
+        response_metadata: { output_version: "v1" },
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+    const modelContent = contents.find((content) => content.role === "model");
+    const functionCallParts = modelContent!.parts.filter(
+      (part) => "functionCall" in part && part.functionCall
+    ) as Gemini.Part.FunctionCall[];
+
+    expect(functionCallParts).toEqual([
+      {
+        functionCall: {
+          name: "get_weather",
+          args: { city: "London" },
+        },
+        thoughtSignature: "thought-signature",
+      },
+    ]);
+  });
+
   test("ToolMessage name resolved from tool_calls (v1 path)", () => {
     const aiMsg = new AIMessage({
       content: "",
