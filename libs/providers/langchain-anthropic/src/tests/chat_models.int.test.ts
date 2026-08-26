@@ -1739,6 +1739,19 @@ describe("Opus 5", () => {
   }, 60000);
 });
 
+describe("Sonnet 5", () => {
+  test("invokes with adaptive thinking enabled by default", async () => {
+    const model = new ChatAnthropic({
+      model: "claude-sonnet-5",
+      maxTokens: 1024,
+      outputConfig: { effort: "low" },
+    });
+
+    const result = await model.invoke("Reply with the word 'ready'.");
+    expect(result.content).toBeDefined();
+  }, 60000);
+});
+
 describe("Opus 4.6", () => {
   const opus46Model = "claude-opus-4-6";
 

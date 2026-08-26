@@ -2421,6 +2421,81 @@ describe("Fable 5 and Mythos 5", () => {
   );
 });
 
+describe("Sonnet 5", () => {
+  test("default max_tokens for claude-sonnet-5 is 16384", () => {
+    const model = new ChatAnthropic({
+      model: "claude-sonnet-5",
+      apiKey: "testing",
+    });
+
+    const params = model.invocationParams({});
+    expect(params.max_tokens).toBe(16384);
+  });
+
+  test("rejects thinking.type=enabled for claude-sonnet-5", () => {
+    const model = new ChatAnthropic({
+      model: "claude-sonnet-5",
+      apiKey: "testing",
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      thinking: { type: "enabled", budget_tokens: 2048 } as any,
+    });
+
+    expect(() => model.invocationParams({})).toThrow(
+      `thinking.type="enabled" is not supported for claude-sonnet-5; use thinking.type="adaptive" instead`
+    );
+  });
+
+  test("rejects thinking.budget_tokens for claude-sonnet-5", () => {
+    const model = new ChatAnthropic({
+      model: "claude-sonnet-5",
+      apiKey: "testing",
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      thinking: { type: "adaptive", budget_tokens: 2048 } as any,
+    });
+
+    expect(() => model.invocationParams({})).toThrow(
+      `thinking.budget_tokens is not supported for claude-sonnet-5; use outputConfig.effort instead`
+    );
+  });
+
+  test("rejects non-default sampling params for claude-sonnet-5", () => {
+    const model = new ChatAnthropic({
+      model: "claude-sonnet-5",
+      apiKey: "testing",
+      temperature: 0.1,
+    });
+
+    expect(() => model.invocationParams({})).toThrow(
+      `temperature is not supported for claude-sonnet-5 when set to non-default values`
+    );
+  });
+
+  test("does not include sampling params for claude-sonnet-5 even if set to defaults", () => {
+    const model = new ChatAnthropic({
+      model: "claude-sonnet-5",
+      apiKey: "testing",
+      temperature: 1,
+      topP: 1,
+    });
+
+    const params = model.invocationParams({});
+
+    expect(params.temperature).toBeUndefined();
+    expect(params.top_p).toBeUndefined();
+    expect(params.top_k).toBeUndefined();
+  });
+
+  test("allows disabled thinking for claude-sonnet-5", () => {
+    const model = new ChatAnthropic({
+      model: "claude-sonnet-5",
+      apiKey: "testing",
+      thinking: { type: "disabled" },
+    });
+
+    expect(model.invocationParams({}).thinking).toEqual({ type: "disabled" });
+  });
+});
+
 describe("withStructuredOutput - StandardSchema", () => {
   function makeSerializableSchema() {
     return {
