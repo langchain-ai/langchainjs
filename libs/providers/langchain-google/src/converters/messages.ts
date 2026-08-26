@@ -450,7 +450,7 @@ function convertStandardContentMessageToGeminiContent(
     role = "user";
   }
 
-  const parts: Gemini.Part[] = [];
+  let parts: Gemini.Part[] = [];
 
   // Process standard content blocks
   const contentBlocks = Array.isArray(message.contentBlocks)
@@ -501,6 +501,12 @@ function convertStandardContentMessageToGeminiContent(
         response: { result: responseContent },
       },
     });
+
+    // For tool messages, keep only the functionResponse part(s): any text is
+    // already included in functionResponse.response.result, and a `user`
+    // content mixing a functionResponse with text is rejected or corrupted
+    // by the API. Mirrors the legacy-path filter.
+    parts = parts.filter((part) => "functionResponse" in part);
   }
 
   // Only return content if we have parts
@@ -881,7 +887,8 @@ export const convertMessagesToGeminiContents: Converter<
     });
     if (content) {
       const prev = contents[contents.length - 1];
-      if (prev && prev.role === content.role) {
+      if (canMergeInto(prev, content) && content.parts) {
+        prev.parts ??= [];
         prev.parts.push(...content.parts);
       } else {
         contents.push(content);
@@ -891,6 +898,38 @@ export const convertMessagesToGeminiContents: Converter<
 
   return contents;
 };
+
+/**
+ * Returns true if any part of the given content is a functionResponse part
+ * (i.e. it was produced from a ToolMessage).
+ */
+function hasFunctionResponse(content: Gemini.Content): boolean {
+  return content.parts?.some((part) => "functionResponse" in part) === true;
+}
+
+/**
+ * Adjacent same-role contents merge only when they are the same kind of
+ * turn:
+ *
+ * - Both carry functionResponse parts (a run of tool responses answering
+ *   one model turn's parallel calls): the API requires those to share a
+ *   single `user` content whose part count matches the call count.
+ * - Neither does (plain text turns): coalesced as before #11444.
+ *
+ * A functionResponse turn never merges with a plain one: a `user` content
+ * mixing the two is rejected by newer Gemini models and corrupts
+ * generation on older ones.
+ */
+function canMergeInto(
+  prev: Gemini.Content | undefined,
+  content: Gemini.Content
+): boolean {
+  return (
+    prev !== undefined &&
+    prev.role === content.role &&
+    hasFunctionResponse(prev) === hasFunctionResponse(content)
+  );
+}
 
 /**
  * Converts LangChain system messages to Gemini API system instruction format.
