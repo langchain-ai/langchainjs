@@ -337,10 +337,13 @@ describe("convertMessagesToGeminiContents", () => {
     // Same contract as the legacy path, exercised through the v1 standard
     // content path (`output_version: "v1"`): the tool turn must carry ONLY
     // its functionResponse part, and the follow-up human text must remain
-    // its own user content. See issue #11444.
-    const V1 = { output_version: "v1" };
+    // its own user content.
+    const response_metadata = { output_version: "v1" } as const;
     const messages = [
-      new HumanMessage("read it", { response_metadata: V1 }),
+      new HumanMessage({
+        content: "read it",
+        response_metadata,
+      }),
       new AIMessage({
         content: "Reading the agreement now.",
         tool_calls: [
@@ -351,15 +354,18 @@ describe("convertMessagesToGeminiContents", () => {
             type: "tool_call",
           },
         ],
-        response_metadata: V1,
+        response_metadata,
       }),
       new ToolMessage({
         content: "page text",
         tool_call_id: "call_1",
         name: "read_document_pages",
-        response_metadata: V1,
+        response_metadata,
       }),
-      new HumanMessage("continue", { response_metadata: V1 }),
+      new HumanMessage({
+        content: "continue",
+        response_metadata,
+      }),
     ];
 
     const contents = convertMessagesToGeminiContents(messages);

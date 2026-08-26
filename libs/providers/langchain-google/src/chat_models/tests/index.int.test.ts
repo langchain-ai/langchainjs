@@ -414,8 +414,6 @@ const calculatorTool = tool((_) => "no-op", {
   }),
 });
 
-// Used by the "Google Tool History" section below to exercise tool-call
-// request shapes against the live Vertex AI API.
 const readPages = tool(async ({ fileId }) => `page text for ${fileId}`, {
   name: "read_document_pages",
   description: "Read pages of a document.",
