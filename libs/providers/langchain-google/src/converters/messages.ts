@@ -855,16 +855,7 @@ export const convertMessagesToGeminiContents: Converter<
     });
     if (content) {
       const prev = contents[contents.length - 1];
-      // Merge two adjacent contents only when BOTH carry functionResponse
-      // parts, i.e. a run of ToolMessages answering one model turn's parallel
-      // function calls: Gemini/Vertex requires those grouped in a single
-      // `user` content whose part count matches the call count.
-      if (
-        prev &&
-        prev.role === content.role &&
-        hasFunctionResponse(prev) &&
-        hasFunctionResponse(content)
-      ) {
+      if (isParallelToolResponseTurn(prev, content)) {
         (prev.parts ??= []).push(...(content.parts ?? []));
       } else {
         contents.push(content);
@@ -881,6 +872,25 @@ export const convertMessagesToGeminiContents: Converter<
  */
 function hasFunctionResponse(content: Gemini.Content): boolean {
   return content.parts?.some((part) => "functionResponse" in part) === true;
+}
+
+/**
+ * Adjacent Gemini contents merge in exactly one case: a run of tool
+ * responses answering one model turn's parallel function calls. The API
+ * requires all of those responses to share a single `user` content whose
+ * part count matches the call count. Every other adjacency — including a
+ * tool response followed by human text (#11444) — stays its own content.
+ */
+function isParallelToolResponseTurn(
+  prev: Gemini.Content | undefined,
+  content: Gemini.Content
+): boolean {
+  return (
+    prev !== undefined &&
+    prev.role === content.role &&
+    hasFunctionResponse(prev) &&
+    hasFunctionResponse(content)
+  );
 }
 
 /**
