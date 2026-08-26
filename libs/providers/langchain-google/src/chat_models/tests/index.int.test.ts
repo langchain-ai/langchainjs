@@ -753,6 +753,138 @@ describe.each(coreModelInfo)(
       }
     });
 
+    test("function reply with image content is sent as a sibling part, not lost in JSON (#10297)", async () => {
+      const dataPath = "src/chat_models/tests/data/blue-square.png";
+      const dataType = "image/png";
+      const data = await fs.readFile(dataPath);
+      const data64 = data.toString("base64");
+      const dataUri = `data:${dataType};base64,${data64}`;
+
+      const tools: Gemini.Tool[] = [
+        {
+          functionDeclarations: [
+            {
+              name: "get_screenshot",
+              description: "Get a screenshot of the current screen.",
+              parameters: { type: "object", properties: {} },
+            },
+          ],
+        },
+      ];
+      const llm = newChatGoogle().bindTools(tools);
+      const messages: BaseMessage[] = [
+        new HumanMessage(
+          "Take a screenshot of the current screen and tell me what color it is."
+        ),
+        new AIMessage({
+          tool_calls: [
+            {
+              type: "tool_call",
+              id: "lc-tool-call-screenshot-id",
+              name: "get_screenshot",
+              args: {},
+            },
+          ],
+        }),
+        new ToolMessage({
+          content: [
+            { type: "text", text: "Screenshot captured successfully." },
+            { type: "image_url", image_url: dataUri },
+          ],
+          tool_call_id: "lc-tool-call-screenshot-id",
+        }),
+      ];
+
+      const res = await llm.invoke(messages);
+      expect(res).toBeDefined();
+
+      const sentContents = recorder.request?.body?.contents as
+        | Gemini.Content[]
+        | undefined;
+      expect(sentContents).toBeDefined();
+      const toolResponseContent = sentContents!.find((c) =>
+        c.parts?.some((p) => "functionResponse" in p)
+      );
+      expect(toolResponseContent).toBeDefined();
+
+      const functionResponsePart = toolResponseContent!.parts!.find(
+        (p) => "functionResponse" in p && p.functionResponse
+      ) as Gemini.Part.FunctionResponse;
+      const resultStr = JSON.stringify(
+        functionResponsePart.functionResponse!.response
+      );
+      expect(resultStr).not.toContain(data64);
+
+      const inlineDataPart = toolResponseContent!.parts!.find(
+        (p) => "inlineData" in p && p.inlineData
+      ) as Gemini.Part.InlineData;
+      expect(inlineDataPart).toBeDefined();
+      expect(inlineDataPart.inlineData!.data).toBe(data64);
+    });
+
+    test("function reply with non-string content is sent as JSON, not double-stringified (#10439)", async () => {
+      const tools: Gemini.Tool[] = [
+        {
+          functionDeclarations: [
+            {
+              name: "get_video_captions",
+              description: "Get captions for a video.",
+              parameters: {
+                type: "object",
+                properties: {
+                  url: { type: "string", description: "The video URL." },
+                },
+                required: ["url"],
+              },
+            },
+          ],
+        },
+      ];
+      const llm = newChatGoogle().bindTools(tools);
+      const toolResult = [
+        {
+          url: "https://www.youtube.com/watch?v=redacted",
+          error: "All 5 caption URLs failed",
+        },
+      ];
+      const messages: BaseMessage[] = [
+        new HumanMessage("Get the captions for this video."),
+        new AIMessage({
+          tool_calls: [
+            {
+              type: "tool_call",
+              id: "lc-tool-call-captions-id",
+              name: "get_video_captions",
+              args: { url: "https://www.youtube.com/watch?v=redacted" },
+            },
+          ],
+        }),
+        new ToolMessage({
+          content: toolResult as unknown as string,
+          tool_call_id: "lc-tool-call-captions-id",
+        }),
+      ];
+
+      const res = await llm.invoke(messages);
+      expect(res).toBeDefined();
+
+      const sentContents = recorder.request?.body?.contents as
+        | Gemini.Content[]
+        | undefined;
+      expect(sentContents).toBeDefined();
+      const toolResponseContent = sentContents!.find((c) =>
+        c.parts?.some((p) => "functionResponse" in p)
+      );
+      expect(toolResponseContent).toBeDefined();
+
+      const functionResponsePart = toolResponseContent!.parts!.find(
+        (p) => "functionResponse" in p && p.functionResponse
+      ) as Gemini.Part.FunctionResponse;
+      const result = functionResponsePart.functionResponse!.response!.result;
+      expect(typeof result).not.toBe("string");
+      expect(result).toEqual(toolResult);
+    });
+
     test("function - force tool", async () => {
       const llm = newChatGoogle();
       const llmWithTools: Runnable = llm.bindTools(

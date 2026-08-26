@@ -740,6 +740,320 @@ describe("convertMessagesToGeminiContents", () => {
       (userContent!.parts[3] as Gemini.Part.FileData).fileData!.fileUri
     ).toBe("gs://bucket/report.pdf");
   });
+
+  test("ToolMessage image content becomes a sibling inlineData part, not inline JSON (legacy path)", () => {
+    const imageDataUri = "data:image/png;base64,iVBORw0KGgo=";
+    const messages = [
+      new HumanMessage("hello"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "get_screenshot",
+            args: {},
+            id: "call-image",
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: [
+          { type: "text", text: "Here is the screenshot." },
+          { type: "image_url", image_url: imageDataUri },
+        ],
+        tool_call_id: "call-image",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const toolResponseContent = contents.find(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
+    expect(toolResponseContent).toBeDefined();
+
+    const functionResponsePart = toolResponseContent!.parts.find(
+      (p) => "functionResponse" in p && p.functionResponse
+    ) as Gemini.Part.FunctionResponse;
+    expect(functionResponsePart).toBeDefined();
+    const resultStr = JSON.stringify(
+      functionResponsePart.functionResponse!.response
+    );
+    expect(resultStr).toContain("Here is the screenshot.");
+    expect(resultStr).not.toContain("iVBORw0KGgo=");
+
+    const inlineDataPart = toolResponseContent!.parts.find(
+      (p) => "inlineData" in p && p.inlineData
+    ) as Gemini.Part.InlineData;
+    expect(inlineDataPart).toBeDefined();
+    expect(inlineDataPart.inlineData!.mimeType).toBe("image/png");
+    expect(inlineDataPart.inlineData!.data).toBe("iVBORw0KGgo=");
+  });
+
+  test("ToolMessage media content becomes a sibling part, not inline JSON (legacy path)", () => {
+    const messages = [
+      new HumanMessage("hello"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "get_recording",
+            args: {},
+            id: "call-media",
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: [
+          { type: "text", text: "Here is the recording." },
+          { type: "media", mimeType: "audio/mp3", data: "ZmFrZS1hdWRpbw==" },
+        ],
+        tool_call_id: "call-media",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const toolResponseContent = contents.find(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
+    expect(toolResponseContent).toBeDefined();
+
+    const functionResponsePart = toolResponseContent!.parts.find(
+      (p) => "functionResponse" in p && p.functionResponse
+    ) as Gemini.Part.FunctionResponse;
+    const resultStr = JSON.stringify(
+      functionResponsePart.functionResponse!.response
+    );
+    expect(resultStr).toContain("Here is the recording.");
+    expect(resultStr).not.toContain("ZmFrZS1hdWRpbw==");
+
+    const inlineDataPart = toolResponseContent!.parts.find(
+      (p) => "inlineData" in p && p.inlineData
+    ) as Gemini.Part.InlineData;
+    expect(inlineDataPart).toBeDefined();
+    expect(inlineDataPart.inlineData!.mimeType).toBe("audio/mp3");
+    expect(inlineDataPart.inlineData!.data).toBe("ZmFrZS1hdWRpbw==");
+  });
+
+  test("ToolMessage image content becomes a sibling inlineData part, not inline JSON (v1 path)", () => {
+    const imageDataUri = "data:image/png;base64,iVBORw0KGgo=";
+    const aiMsg = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          name: "get_screenshot",
+          args: {},
+          id: "call-image-v1",
+          type: "tool_call",
+        },
+      ],
+    });
+    aiMsg.response_metadata = { output_version: "v1" };
+    const messages = [
+      new HumanMessage("hello"),
+      aiMsg,
+      new ToolMessage({
+        content: [
+          { type: "text", text: "Here is the screenshot." },
+          { type: "image_url", image_url: { url: imageDataUri } },
+        ],
+        tool_call_id: "call-image-v1",
+        response_metadata: { output_version: "v1" },
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const toolResponseContent = contents.find(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
+    expect(toolResponseContent).toBeDefined();
+
+    const functionResponsePart = toolResponseContent!.parts.find(
+      (p) => "functionResponse" in p && p.functionResponse
+    ) as Gemini.Part.FunctionResponse;
+    const resultStr = JSON.stringify(
+      functionResponsePart.functionResponse!.response
+    );
+    expect(resultStr).not.toContain("iVBORw0KGgo=");
+
+    const inlineDataPart = toolResponseContent!.parts.find(
+      (p) => "inlineData" in p && p.inlineData
+    ) as Gemini.Part.InlineData;
+    expect(inlineDataPart).toBeDefined();
+    expect(inlineDataPart.inlineData!.mimeType).toBe("image/png");
+    expect(inlineDataPart.inlineData!.data).toBe("iVBORw0KGgo=");
+  });
+
+  test("ToolMessage v1 standard image content block is excluded from functionResponse.result (v1 path)", () => {
+    const aiMsg = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          name: "get_screenshot",
+          args: {},
+          id: "call-v1-block",
+          type: "tool_call",
+        },
+      ],
+    });
+    aiMsg.response_metadata = { output_version: "v1" };
+    const messages = [
+      new HumanMessage("hello"),
+      aiMsg,
+      new ToolMessage({
+        content: [
+          { type: "text", text: "Here is the screenshot." },
+          { type: "image", mimeType: "image/png", data: "iVBORw0KGgo=" },
+        ],
+        tool_call_id: "call-v1-block",
+        response_metadata: { output_version: "v1" },
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const toolResponseContent = contents.find(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
+    expect(toolResponseContent).toBeDefined();
+
+    const functionResponsePart = toolResponseContent!.parts.find(
+      (p) => "functionResponse" in p && p.functionResponse
+    ) as Gemini.Part.FunctionResponse;
+    const resultStr = JSON.stringify(
+      functionResponsePart.functionResponse!.response
+    );
+    expect(resultStr).not.toContain("iVBORw0KGgo=");
+  });
+
+  test("ToolMessage native inlineData content item is excluded from functionResponse.result (legacy path)", () => {
+    const messages = [
+      new HumanMessage("hello"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "get_screenshot",
+            args: {},
+            id: "call-native-inline",
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: [
+          { type: "text", text: "Here is the screenshot." },
+          { inlineData: { mimeType: "image/png", data: "iVBORw0KGgo=" } },
+        ],
+        tool_call_id: "call-native-inline",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const toolResponseContent = contents.find(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
+    expect(toolResponseContent).toBeDefined();
+
+    const functionResponsePart = toolResponseContent!.parts.find(
+      (p) => "functionResponse" in p && p.functionResponse
+    ) as Gemini.Part.FunctionResponse;
+    const resultStr = JSON.stringify(
+      functionResponsePart.functionResponse!.response
+    );
+    expect(resultStr).not.toContain("iVBORw0KGgo=");
+
+    const inlineDataPart = toolResponseContent!.parts.find(
+      (p) => "inlineData" in p && p.inlineData
+    ) as Gemini.Part.InlineData;
+    expect(inlineDataPart).toBeDefined();
+    expect(inlineDataPart.inlineData!.data).toBe("iVBORw0KGgo=");
+  });
+
+  test("ToolMessage plain-text file block is preserved in functionResponse.result, not treated as media (legacy path)", () => {
+    const messages = [
+      new HumanMessage("hello"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "read_file",
+            args: {},
+            id: "call-file-text",
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: [{ type: "file", source_type: "text", text: "line one" }],
+        tool_call_id: "call-file-text",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const toolResponseContent = contents.find(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
+    expect(toolResponseContent).toBeDefined();
+
+    const functionResponsePart = toolResponseContent!.parts.find(
+      (p) => "functionResponse" in p && p.functionResponse
+    ) as Gemini.Part.FunctionResponse;
+    const resultStr = JSON.stringify(
+      functionResponsePart.functionResponse!.response
+    );
+    expect(resultStr).toContain("line one");
+  });
+
+  test("ToolMessage non-string content is passed through as a JSON object, not double-stringified (legacy path)", () => {
+    const messages = [
+      new HumanMessage("hello"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "get_video_captions",
+            args: {},
+            id: "call-captions",
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: [
+          {
+            url: "https://www.youtube.com/watch?v=redacted",
+            error: "All 5 caption URLs failed",
+          },
+        ] as unknown as string,
+        tool_call_id: "call-captions",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const toolResponseContent = contents.find(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
+    expect(toolResponseContent).toBeDefined();
+
+    const functionResponsePart = toolResponseContent!.parts.find(
+      (p) => "functionResponse" in p && p.functionResponse
+    ) as Gemini.Part.FunctionResponse;
+    const result = functionResponsePart.functionResponse!.response!.result;
+    expect(typeof result).not.toBe("string");
+    expect(result).toEqual([
+      {
+        url: "https://www.youtube.com/watch?v=redacted",
+        error: "All 5 caption URLs failed",
+      },
+    ]);
+  });
 });
 
 describe("executableCode and codeExecutionResult round-trip", () => {
