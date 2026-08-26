@@ -2023,7 +2023,14 @@ describe.sequential.each(audioModelInfo)(
   }
 );
 
-const toolHistoryModelInfo: ModelInfo[] = [
+// Vertex auth configuration only exists on the Node client params, so this
+// section narrows ModelInfo rather than reusing DefaultGoogleParams (whose
+// union type collapses to the web client, where googleAuthOptions is `never`).
+type ToolHistoryModelInfo = Omit<ModelInfo, "defaultGoogleParams"> & {
+  defaultGoogleParams?: Omit<ChatGoogleNodeParams, "model">;
+};
+
+const toolHistoryModelInfo: ToolHistoryModelInfo[] = [
   {
     model: "gemini-2.5-flash",
     defaultGoogleParams: {
@@ -2045,7 +2052,7 @@ describe
   .skipIf(!getEnvironmentVariable("GOOGLE_CLOUD_PROJECT"))
   .each(toolHistoryModelInfo)(
   "Google Tool History ($model) $testConfig",
-  ({ model, defaultGoogleParams }: ModelInfo) => {
+  ({ model, defaultGoogleParams }: ToolHistoryModelInfo) => {
     // Exercises the request shapes produced from tool-call histories against
     // the live Vertex AI API using Application Default Credentials. Vertex is
     // where a `user` content mixing a functionResponse with text parts gets
@@ -2070,7 +2077,12 @@ describe
     }
 
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-    function recordedContents(recorderArg: GoogleRequestRecorder): any[] {
+    type RecordedPart = Record<string, any>;
+    type RecordedContent = { role: string; parts: RecordedPart[] };
+
+    function recordedContents(
+      recorderArg: GoogleRequestRecorder
+    ): RecordedContent[] {
       return recorderArg.request?.body?.contents ?? [];
     }
 
