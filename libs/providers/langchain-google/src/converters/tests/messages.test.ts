@@ -857,6 +857,18 @@ describe("convertMessagesToGeminiContents", () => {
   });
 });
 
+test("coalesces consecutive plain HumanMessages into one user content", () => {
+  // Plain same-role turns have always been coalesced; only the
+  // functionResponse + text boundary introduced by #11444 must stay split.
+  const messages = [new HumanMessage("first"), new HumanMessage("second")];
+
+  const contents = convertMessagesToGeminiContents(messages);
+
+  expect(contents).toHaveLength(1);
+  expect(contents[0].role).toBe("user");
+  expect(contents[0].parts).toEqual([{ text: "first" }, { text: "second" }]);
+});
+
 describe("executableCode and codeExecutionResult round-trip", () => {
   test("strips type field from executableCode content blocks", () => {
     const message = new AIMessage({

@@ -855,7 +855,7 @@ export const convertMessagesToGeminiContents: Converter<
     });
     if (content) {
       const prev = contents[contents.length - 1];
-      if (isParallelToolResponseTurn(prev, content) && content.parts) {
+      if (canMergeInto(prev, content) && content.parts) {
         prev.parts ??= [];
         prev.parts.push(...content.parts);
       } else {
@@ -876,21 +876,26 @@ function hasFunctionResponse(content: Gemini.Content): boolean {
 }
 
 /**
- * Adjacent Gemini contents merge in exactly one case: a run of tool
- * responses answering one model turn's parallel function calls. The API
- * requires all of those responses to share a single `user` content whose
- * part count matches the call count. Every other adjacency — including a
- * tool response followed by human text (#11444) — stays its own content.
+ * Adjacent same-role contents merge only when they are the same kind of
+ * turn:
+ *
+ * - Both carry functionResponse parts (a run of tool responses answering
+ *   one model turn's parallel calls): the API requires those to share a
+ *   single `user` content whose part count matches the call count.
+ * - Neither does (plain text turns): coalesced as before #11444.
+ *
+ * A functionResponse turn never merges with a plain one: a `user` content
+ * mixing the two is rejected by newer Gemini models and corrupts
+ * generation on older ones.
  */
-function isParallelToolResponseTurn(
+function canMergeInto(
   prev: Gemini.Content | undefined,
   content: Gemini.Content
 ): boolean {
   return (
     prev !== undefined &&
     prev.role === content.role &&
-    hasFunctionResponse(prev) &&
-    hasFunctionResponse(content)
+    hasFunctionResponse(prev) === hasFunctionResponse(content)
   );
 }
 
