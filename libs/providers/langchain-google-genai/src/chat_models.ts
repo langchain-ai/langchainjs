@@ -1012,7 +1012,6 @@ export class ChatGoogleGenerativeAI
     let prevCandidatesTokenCount = 0;
     let prevTotalTokenCount = 0;
     let index = 0;
-    const toolCallIdContext: Record<string, string> = {};
     for await (const response of stream) {
       if (options.signal?.aborted) {
         return;
@@ -1057,7 +1056,6 @@ export class ChatGoogleGenerativeAI
       const chunk = convertResponseContentToChatGenerationChunk(response, {
         usageMetadata,
         index,
-        toolCallIdContext,
       });
       index += 1;
       if (!chunk) {

@@ -816,7 +816,6 @@ export abstract class BaseChatGoogle<
 
     if (response.body) {
       let previousUsage: UsageMetadata | undefined;
-      const toolCallIdContext: Record<string, string> = {};
       const stream = response.body
         .pipeThrough(new TextDecoderStream())
         .pipeThrough(new EventSourceParserStream())
@@ -854,10 +853,7 @@ export abstract class BaseChatGoogle<
               const text = convertAIMessageToText(message);
 
               const parts = candidate.content?.parts ?? [];
-              const toolCalls = convertGeminiPartsToToolCalls(
-                parts,
-                toolCallIdContext
-              );
+              const toolCalls = convertGeminiPartsToToolCalls(parts);
 
               // Only emit if we have content
               if (parts.length > 0 || candidate.finishReason) {

@@ -962,10 +962,11 @@ export const convertMessagesToGeminiSystemInstruction: Converter<
  * // ]
  * ```
  */
-export const convertGeminiPartsToToolCalls = (
-  parts: Gemini.Part[],
-  // Reuses the last real functionCall.id (keyed by tool name) when a delta omits it. Two parallel calls to the SAME tool that both omit id can still collide.
-  toolCallIdContext?: Record<string, string>
+export const convertGeminiPartsToToolCalls: Converter<
+  Gemini.Part[],
+  ContentBlock.Tools.ToolCall<string, Record<string, unknown>>[]
+> = (
+  parts: Gemini.Part[]
 ): ContentBlock.Tools.ToolCall<string, Record<string, unknown>>[] => {
   const toolCalls: ContentBlock.Tools.ToolCall<
     string,
@@ -976,18 +977,11 @@ export const convertGeminiPartsToToolCalls = (
     const part = parts[i];
     if ("functionCall" in part && part.functionCall) {
       const functionCallPart = part as Gemini.Part.FunctionCall;
-      const realId = functionCallPart.functionCall.id;
-      const name = functionCallPart.functionCall.name;
-      if (realId && toolCallIdContext) {
-        toolCallIdContext[name] = realId;
-      }
-      const id =
-        realId ??
-        toolCallIdContext?.[name] ??
-        `lc-tool-call-${uuidv4().replace(/-/g, "")}`;
       toolCalls.push({
         type: "tool_call",
-        id,
+        id:
+          functionCallPart.functionCall.id ??
+          `lc-tool-call-${uuidv4().replace(/-/g, "")}`,
         name: functionCallPart.functionCall.name,
         args: functionCallPart.functionCall.args ?? {},
         thoughtSignature: functionCallPart.thoughtSignature,

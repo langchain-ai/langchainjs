@@ -2014,3 +2014,172 @@ describe.sequential.each(audioModelInfo)(
     });
   }
 );
+
+describe("thought signature wire-level verification", () => {
+  // Equivalent to the same-named tests in
+  // @langchain/google-genai/src/tests/chat_models.int.test.ts -- this
+  // package has its own, separate implementation of the same mechanism
+  // (convertGeminiPartsToToolCalls), so this needs its own live
+  // verification rather than inheriting the google-genai result.
+  function newRecordedChatGoogle(fields?: Partial<ChatGoogleParams>): {
+    model: ChatGoogle;
+    recorder: GoogleRequestRecorder;
+  } {
+    const recorder = new GoogleRequestRecorder();
+    const model = new ChatGoogle({
+      apiKey: getEnvironmentVariable("TEST_API_KEY"),
+      model: "gemini-2.5-flash",
+      temperature: 0,
+      callbacks: [recorder],
+      ...fields,
+    });
+    return { model, recorder };
+  }
+
+  const getWeather = tool(
+    async ({ city }: { city: string }) =>
+      `The weather in ${city} is sunny and 72F.`,
+    {
+      name: "get_weather",
+      description: "Get the current weather for a city",
+      schema: z.object({ city: z.string() }),
+    }
+  );
+
+  test("a thoughtSignature captured while streaming a tool call round-trips into the follow-up request, and Gemini accepts it", async () => {
+    const { model } = newRecordedChatGoogle();
+    const modelWithTools = model.bindTools([getWeather], {
+      tool_choice: "any",
+    });
+
+    const stream = await modelWithTools.stream([
+      new HumanMessage("What's the weather in San Francisco?"),
+    ]);
+
+    let merged: AIMessageChunk | undefined;
+    for await (const chunk of stream) {
+      merged = merged ? merged.concat(chunk) : chunk;
+    }
+
+    expect(merged?.tool_calls).toHaveLength(1);
+    const toolCall = merged!.tool_calls![0];
+    // @langchain/google stores thoughtSignature directly on the tool call,
+    // not in a side-map keyed by id (unlike google-genai).
+    const expectedSignature = (toolCall as { thoughtSignature?: string })
+      .thoughtSignature;
+
+    const toolMessage = new ToolMessage({
+      content: await getWeather.invoke(toolCall.args as { city: string }),
+      tool_call_id: toolCall.id ?? "unknown",
+      name: toolCall.name,
+    });
+
+    // tool_choice: "none" this time -- we want a plain-text summary, not
+    // another forced tool call. Fresh recorder so we capture only the
+    // follow-up request, not the initial streaming one.
+    //
+    // Deliberately ends on the ToolMessage rather than adding a trailing
+    // HumanMessage: a ToolMessage immediately followed by a HumanMessage
+    // both map to Gemini role "user" and get merged into one malformed
+    // content by convertMessagesToGeminiContents (see issue #11444) --
+    // a separate, already-known bug we don't want this test tripping over.
+    const { model: followUpModel, recorder: followUpRecorder } =
+      newRecordedChatGoogle();
+    const followUp = await followUpModel
+      .bindTools([getWeather], { tool_choice: "none" })
+      .invoke([
+        new HumanMessage("What's the weather in San Francisco?"),
+        merged!,
+        toolMessage,
+      ]);
+
+    // Gemini accepted the follow-up (no 400/malformed-signature rejection)
+    // and produced a real text answer.
+    expect(typeof followUp.content).toBe("string");
+    expect((followUp.content as string).length).toBeGreaterThan(0);
+
+    // If Gemini gave us a signature, confirm we actually sent it back --
+    // not just that our in-memory representation has it.
+    if (expectedSignature) {
+      const sentBody = JSON.stringify(followUpRecorder.request?.body ?? {});
+      expect(sentBody).toContain(expectedSignature);
+    }
+  }, 30_000);
+
+  test("a thoughtSignature that repeats across raw stream chunks is not corrupted by concat -- and reports whether repetition ever actually happens", async () => {
+    const { model, recorder } = newRecordedChatGoogle({
+      thinkingConfig: { includeThoughts: true },
+    });
+    const modelWithTools = model.bindTools([getWeather], {
+      tool_choice: "any",
+    });
+
+    const stream = await modelWithTools.stream([
+      new HumanMessage(
+        "Think step by step about which city has better weather, San " +
+          "Francisco or London, considering climate, typical " +
+          "temperatures, and rainfall patterns. Then call get_weather " +
+          "for whichever city you'd recommend."
+      ),
+    ]);
+
+    let merged: AIMessageChunk | undefined;
+    for await (const chunk of stream) {
+      merged = merged ? merged.concat(chunk) : chunk;
+    }
+
+    // recorder.chunk accumulates every raw { chunk: Gemini.GenerateContentResponse }
+    // event emitted during streaming -- ground truth, independent of how
+    // our own merge code assembles the final message.
+    const byKey = new Map<string, string[]>();
+    for (const { chunk } of recorder.chunk as {
+      chunk: Gemini.GenerateContentResponse;
+    }[]) {
+      const parts = chunk?.candidates?.[0]?.content?.parts ?? [];
+      for (const p of parts as Record<string, unknown>[]) {
+        const signature = p.thoughtSignature as string | undefined;
+        if (!signature) continue;
+        const key = p.functionCall
+          ? `functionCall:${(p.functionCall as { name?: string }).name}`
+          : "thinking";
+        byKey.set(key, [...(byKey.get(key) ?? []), signature]);
+      }
+    }
+    const repeatedKeys = [...byKey.entries()].filter(
+      ([, sigs]) => sigs.length > 1
+    );
+    const totalRaw = [...byKey.values()].reduce(
+      (n, sigs) => n + sigs.length,
+      0
+    );
+    console.log(
+      `Observed ${totalRaw} raw signature(s) across ${byKey.size} block(s); ` +
+        `${repeatedKeys.length} block(s) saw the signature on more than one delta.`
+    );
+
+    // Whatever the final thinking-block signature is, it must be exactly
+    // one of the raw values seen for the thinking block -- not a
+    // concatenation of two.
+    const thinkingBlock = Array.isArray(merged?.content)
+      ? merged.content.find(
+          (b): b is { type: "thinking"; signature?: string } =>
+            typeof b === "object" && b !== null && b.type === "thinking"
+        )
+      : undefined;
+    const rawThinkingSignatures = byKey.get("thinking") ?? [];
+    if (thinkingBlock?.signature && rawThinkingSignatures.length > 0) {
+      expect(rawThinkingSignatures).toContain(thinkingBlock.signature);
+    }
+
+    // Same check for each function call's signature (stored directly on
+    // the tool call for this package).
+    for (const toolCall of merged?.tool_calls ?? []) {
+      const finalSignature = (toolCall as { thoughtSignature?: string })
+        .thoughtSignature;
+      const rawForThisTool = byKey.get(`functionCall:${toolCall.name}`) ?? [];
+      if (finalSignature && rawForThisTool.length > 0) {
+        expect(rawForThisTool).toContain(finalSignature);
+      }
+    }
+  }, 30_000);
+});

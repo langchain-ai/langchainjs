@@ -778,8 +778,6 @@ export function convertResponseContentToChatGenerationChunk(
   extra: {
     usageMetadata?: UsageMetadata | undefined;
     index: number;
-    // Reuses the last real functionCall.id (keyed by tool name) when a delta omits it. Two parallel calls to the SAME tool that both omit id can still collide.
-    toolCallIdContext?: Record<string, string>;
   }
 ): ChatGenerationChunk | null {
   if (!response.candidates || response.candidates.length === 0) {
@@ -796,16 +794,13 @@ export function convertResponseContentToChatGenerationChunk(
   const functionCalls = candidateContent.parts?.reduce(
     (acc, p) => {
       if ("functionCall" in p && p.functionCall) {
-        const realId =
-          "id" in p.functionCall && typeof p.functionCall.id === "string"
-            ? p.functionCall.id
-            : undefined;
-        const name = p.functionCall.name;
-        if (realId && extra.toolCallIdContext) {
-          extra.toolCallIdContext[name] = realId;
-        }
-        const id = realId ?? extra.toolCallIdContext?.[name] ?? uuidv4();
-        acc.push({ ...p, id });
+        acc.push({
+          ...p,
+          id:
+            "id" in p.functionCall && typeof p.functionCall.id === "string"
+              ? p.functionCall.id
+              : uuidv4(),
+        });
       }
       return acc;
     },
