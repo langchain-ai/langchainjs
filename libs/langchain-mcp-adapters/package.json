@@ -37,7 +37,7 @@
   },
   "peerDependencies": {
     "@langchain/core": "^1.0.0",
-    "@langchain/langgraph": "^1.4.10"
+    "@langchain/langgraph": "^1.4.12"
   },
   "peerDependenciesMeta": {
     "@langchain/core": {
@@ -52,14 +52,14 @@
   },
   "devDependencies": {
     "@langchain/core": "workspace:^",
-    "@langchain/langgraph": "^1.4.10",
+    "@langchain/langgraph": "^1.4.12",
     "@langchain/openai": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.10",
     "@types/debug": "^4.1.13",
     "@types/express": "^5.0.6",
-    "@types/node": "^26.1.2",
-    "@vitest/coverage-v8": "^4.1.10",
+    "@types/node": "^26.2.0",
+    "@vitest/coverage-v8": "^4.1.11",
     "dotenv": "^17.4.0",
     "dpdm": "^3.14.0",
     "eventsource": "^4.1.0",

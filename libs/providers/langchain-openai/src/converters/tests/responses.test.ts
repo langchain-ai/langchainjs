@@ -639,6 +639,50 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
   });
 
   describe("reasoning streaming elevation", () => {
+    it("replays encrypted reasoning from streaming responses in ZDR mode", () => {
+      const added = convertResponsesDeltaToChatGenerationChunk({
+        type: "response.output_item.added",
+        output_index: 0,
+        item: {
+          type: "reasoning",
+          id: "rs_abc123",
+          summary: [],
+          encrypted_content: "incomplete_payload",
+        },
+      } as any);
+      const done = convertResponsesDeltaToChatGenerationChunk({
+        type: "response.output_item.done",
+        output_index: 0,
+        item: {
+          type: "reasoning",
+          id: "rs_abc123",
+          summary: [],
+          encrypted_content: "canonical_payload",
+        },
+      } as any);
+
+      expect(added).not.toBeNull();
+      expect(done).not.toBeNull();
+
+      const streamedMessage = (added!.message as AIMessageChunk).concat(
+        done!.message as AIMessageChunk
+      );
+      const replayInput = convertMessagesToResponsesInput({
+        messages: [streamedMessage],
+        zdrEnabled: true,
+        model: "o3",
+      });
+
+      expect(replayInput).toEqual([
+        {
+          id: "rs_abc123",
+          type: "reasoning",
+          summary: [],
+          encrypted_content: "canonical_payload",
+        },
+      ]);
+    });
+
     it("should elevate reasoning to content on response.output_item.added with reasoning", () => {
       const event = {
         type: "response.output_item.added",
