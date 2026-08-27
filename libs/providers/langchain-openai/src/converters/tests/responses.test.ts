@@ -1052,6 +1052,37 @@ describe("convertStandardContentMessageToResponsesInput", () => {
     ]);
   });
 
+  it("converts v1 audio blocks to Responses API input_audio", () => {
+    const message = new HumanMessage({
+      content: [
+        { type: "text", text: "Transcribe this clip" },
+        {
+          type: "audio",
+          source_type: "base64",
+          mime_type: "audio/wav",
+          data: "UklGRg==",
+        },
+      ],
+      response_metadata: { output_version: "v1" },
+    });
+
+    const result = convertStandardContentMessageToResponsesInput(message);
+
+    expect(result).toEqual([
+      {
+        type: "message",
+        role: "user",
+        content: [
+          { type: "input_text", text: "Transcribe this clip" },
+          {
+            type: "input_audio",
+            input_audio: { data: "UklGRg==", format: "wav" },
+          },
+        ],
+      },
+    ]);
+  });
+
   it("preserves OpenAI-only non_standard content when present", () => {
     const message = new AIMessage({
       contentBlocks: [

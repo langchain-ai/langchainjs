@@ -1163,6 +1163,30 @@ export const convertStandardContentMessageToResponsesInput: Converter<
       return undefined;
     };
 
+    const resolveAudioItem = (
+      block: ContentBlock.Multimodal.Audio
+    ): OpenAIClient.Responses.ResponseInputAudio | undefined => {
+      if (!block.data) {
+        return undefined;
+      }
+      const format = block.mimeType?.split("/")[1];
+      if (format !== "mp3" && format !== "wav") {
+        throw new Error(
+          "Audio content blocks must have mime type of audio/wav or audio/mp3 for the Responses API"
+        );
+      }
+      return {
+        type: "input_audio",
+        input_audio: {
+          data:
+            typeof block.data === "string"
+              ? block.data
+              : Buffer.from(block.data).toString("base64"),
+          format,
+        },
+      };
+    };
+
     const convertReasoningBlock = (
       block: ContentBlock.Reasoning
     ): OpenAIClient.Responses.ResponseReasoningItem => {
@@ -1297,7 +1321,10 @@ export const convertStandardContentMessageToResponsesInput: Converter<
         yield* flushMessage();
         yield convertFunctionCallOutput(block);
       } else if (block.type === "audio") {
-        // no-op
+        const audioItem = resolveAudioItem(block);
+        if (audioItem) {
+          pushMessageContent([audioItem]);
+        }
       } else if (block.type === "file") {
         const fileItem = resolveFileItem(block);
         if (fileItem) {
