@@ -2067,6 +2067,10 @@ describe("thought signature wire-level verification", () => {
     // not in a side-map keyed by id (unlike google-genai).
     const expectedSignature = (toolCall as { thoughtSignature?: string })
       .thoughtSignature;
+    // This test specifically verifies signature round-tripping -- if
+    // extraction ever regresses to undefined, that must fail the test, not
+    // silently skip the checks below.
+    expect(expectedSignature).toBeDefined();
 
     const toolMessage = new ToolMessage({
       content: await getWeather.invoke(toolCall.args as { city: string }),
@@ -2098,12 +2102,10 @@ describe("thought signature wire-level verification", () => {
     expect(typeof followUp.content).toBe("string");
     expect((followUp.content as string).length).toBeGreaterThan(0);
 
-    // If Gemini gave us a signature, confirm we actually sent it back --
-    // not just that our in-memory representation has it.
-    if (expectedSignature) {
-      const sentBody = JSON.stringify(followUpRecorder.request?.body ?? {});
-      expect(sentBody).toContain(expectedSignature);
-    }
+    // Confirm we actually sent the signature back -- not just that our
+    // in-memory representation has it.
+    const sentBody = JSON.stringify(followUpRecorder.request?.body ?? {});
+    expect(sentBody).toContain(expectedSignature as string);
   }, 30_000);
 
   test("a thoughtSignature that repeats across raw stream chunks is not corrupted by concat -- and reports whether repetition ever actually happens", async () => {
