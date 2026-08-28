@@ -419,6 +419,99 @@ describe("convertCompletionsMessageToBaseMessage", () => {
         },
       });
     });
+
+    describe("invalid_tool_calls vs additional_kwargs.tool_calls", () => {
+      const rawLegacyToolCalls = [
+        {
+          id: "call_legacy",
+          type: "function" as const,
+          function: {
+            name: "get_weather",
+            arguments: '{"location":"SF"}',
+          },
+        },
+      ];
+
+      const invalidToolCalls = [
+        {
+          id: "call_legacy",
+          name: "get_weather",
+          args: '{"location":"SF"}',
+          error: "Malformed args.",
+        },
+      ];
+
+      function makeLegacyKwargsMessage(options: {
+        invalid: boolean;
+        outputVersion?: "v1";
+      }) {
+        return new AIMessage({
+          content: "",
+          // Explicit empty tool_calls so AIMessage does not parse
+          // additional_kwargs.tool_calls into structured tool_calls.
+          tool_calls: [],
+          invalid_tool_calls: options.invalid ? invalidToolCalls : [],
+          additional_kwargs: { tool_calls: rawLegacyToolCalls },
+          ...(options.outputVersion
+            ? { response_metadata: { output_version: options.outputVersion } }
+            : {}),
+        });
+      }
+
+      it("legacy converter skips kwargs.tool_calls when invalid_tool_calls is set", () => {
+        const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+        const result = convertMessagesToCompletionsMessageParams({
+          messages: [makeLegacyKwargsMessage({ invalid: true })],
+        });
+        warnSpy.mockRestore();
+
+        expect(result).toHaveLength(1);
+        expect(result[0]).not.toHaveProperty("tool_calls");
+      });
+
+      it("legacy converter still serializes kwargs.tool_calls without invalid_tool_calls", () => {
+        const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+        const result = convertMessagesToCompletionsMessageParams({
+          messages: [makeLegacyKwargsMessage({ invalid: false })],
+        });
+        warnSpy.mockRestore();
+
+        expect(result).toHaveLength(1);
+        expect(result[0]).toMatchObject({
+          role: "assistant",
+          tool_calls: rawLegacyToolCalls,
+        });
+      });
+
+      it("standard-content converter skips kwargs.tool_calls when invalid_tool_calls is set", () => {
+        const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+        const result = convertMessagesToCompletionsMessageParams({
+          messages: [
+            makeLegacyKwargsMessage({ invalid: true, outputVersion: "v1" }),
+          ],
+        });
+        warnSpy.mockRestore();
+
+        expect(result).toHaveLength(1);
+        expect(result[0]).not.toHaveProperty("tool_calls");
+      });
+
+      it("standard-content converter still serializes kwargs.tool_calls without invalid_tool_calls", () => {
+        const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+        const result = convertMessagesToCompletionsMessageParams({
+          messages: [
+            makeLegacyKwargsMessage({ invalid: false, outputVersion: "v1" }),
+          ],
+        });
+        warnSpy.mockRestore();
+
+        expect(result).toHaveLength(1);
+        expect(result[0]).toMatchObject({
+          role: "assistant",
+          tool_calls: rawLegacyToolCalls,
+        });
+      });
+    });
   });
 
   describe("completionsApiContentBlockConverter.fromStandardFileBlock", () => {
