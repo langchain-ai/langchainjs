@@ -1,5 +1,11 @@
 # @langchain/openai
 
+## 1.5.10
+
+### Patch Changes
+
+- [#11419](https://github.com/langchain-ai/langchainjs/pull/11419) [`c26c87e`](https://github.com/langchain-ai/langchainjs/commit/c26c87e41bccd01111e170c32ba1e5eec94ba3a6) Thanks [@chiliec](https://github.com/chiliec)! - fix(openai): send content null (not []) for tool-call-only v1 assistant messages
+
 ## 1.5.9
 
 ### Patch Changes

@@ -30,7 +30,7 @@ jobs:
           fetch-depth: 0
 
       - name: 📦 Setup pnpm
-        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
 
       - name: ⎔ Setup node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -54,7 +54,7 @@ jobs:
         # and this action will build + publish to npm.
       - name: 🚀 PR / Publish
         id: changesets
-        uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d
+        uses: changesets/action@8488615a623b1b9c987934bb89eae8af6a946ac1
         with:
           version: pnpm run changeset:version
           commit: "chore: version packages"
