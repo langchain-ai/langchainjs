@@ -227,6 +227,7 @@ export class ChatOpenAICompletions<
         },
         {
           signal: options?.signal,
+          maxRetries: options?.maxRetries,
           ...options?.options,
         }
       );
@@ -256,7 +257,8 @@ export class ChatOpenAICompletions<
 
       if (
         promptTokensDetails?.audio_tokens !== null ||
-        promptTokensDetails?.cached_tokens !== null
+        promptTokensDetails?.cached_tokens !== null ||
+        promptTokensDetails?.cache_write_tokens != null
       ) {
         usageMetadata.input_token_details = {
           ...(promptTokensDetails?.audio_tokens !== null && {
@@ -264,6 +266,9 @@ export class ChatOpenAICompletions<
           }),
           ...(promptTokensDetails?.cached_tokens !== null && {
             cache_read: promptTokensDetails?.cached_tokens,
+          }),
+          ...(promptTokensDetails?.cache_write_tokens != null && {
+            cache_creation: promptTokensDetails?.cache_write_tokens,
           }),
         };
       }
@@ -465,6 +470,9 @@ export class ChatOpenAICompletions<
         ...(usage.prompt_tokens_details?.cached_tokens !== null && {
           cache_read: usage.prompt_tokens_details?.cached_tokens,
         }),
+        ...(usage.prompt_tokens_details?.cache_write_tokens != null && {
+          cache_creation: usage.prompt_tokens_details?.cache_write_tokens,
+        }),
       };
       const outputTokenDetails = {
         ...(usage.completion_tokens_details?.audio_tokens !== null && {
@@ -526,10 +534,13 @@ export class ChatOpenAICompletions<
     | AsyncIterable<OpenAIClient.Chat.Completions.ChatCompletionChunk>
     | OpenAIClient.Chat.Completions.ChatCompletion
   > {
-    const clientOptions = this._getClientOptions(requestOptions);
+    // The SDK has its own `maxRetries`; take it for our caller instead so
+    // the two retry loops don't multiply.
+    const { maxRetries, ...sdkOptions } = requestOptions ?? {};
+    const clientOptions = this._getClientOptions(sdkOptions);
     const isParseableFormat =
       request.response_format && request.response_format.type === "json_schema";
-    return this.caller.call(async () => {
+    return this.caller.callWithOptions({ maxRetries }, async () => {
       try {
         if (isParseableFormat && !request.stream) {
           return await this.client.chat.completions.parse(

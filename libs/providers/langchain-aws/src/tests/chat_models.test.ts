@@ -1016,11 +1016,70 @@ test("Streaming throws when Bedrock stream stalls between chunks", async () => {
     })();
 
     const expectation = expect(consume).rejects.toThrow(
-      "Bedrock Converse stream timed out after 50 ms without receiving a chunk."
+      "Bedrock Converse timed out after 50 ms while waiting for the next chunk."
     );
 
     await vi.advanceTimersByTimeAsync(50);
     await expectation;
+    await expect(consume).rejects.toHaveProperty(
+      "lc_error_code",
+      "MODEL_STREAM_TIMEOUT"
+    );
+    expect(aborted).toBe(true);
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+test("Streaming throws when Bedrock never responds to the initial request", async () => {
+  vi.useFakeTimers();
+  try {
+    let aborted = false;
+    const mockSend = vi
+      .fn()
+      .mockImplementation(
+        (_command: unknown, options?: { abortSignal?: AbortSignal }) => {
+          options?.abortSignal?.addEventListener("abort", () => {
+            aborted = true;
+          });
+          return new Promise<never>(() => {});
+        }
+      );
+
+    const mockClient = {
+      send: mockSend,
+    } as unknown as BedrockRuntimeClient;
+
+    const model = new ChatBedrockConverse({
+      region: "us-east-1",
+      credentials: {
+        secretAccessKey: "test-secret-key",
+        accessKeyId: "test-access-key",
+      },
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
+      client: mockClient,
+      streamIdleTimeout: 50,
+    });
+
+    const consume = (async () => {
+      for await (const chunk of model._streamResponseChunks(
+        [new HumanMessage("Hello")],
+        {}
+      )) {
+        expect(chunk).toBeDefined();
+      }
+    })();
+
+    const expectation = expect(consume).rejects.toThrow(
+      "Bedrock Converse timed out after 50 ms while waiting for the initial response."
+    );
+
+    await vi.advanceTimersByTimeAsync(50);
+    await expectation;
+    await expect(consume).rejects.toHaveProperty(
+      "lc_error_code",
+      "MODEL_STREAM_TIMEOUT"
+    );
     expect(aborted).toBe(true);
   } finally {
     vi.useRealTimers();
