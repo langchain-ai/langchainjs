@@ -32,10 +32,10 @@
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
     "@vitest/coverage-v8": "^4.1.11",
-    "bson": "^7.3.1",
+    "bson": "^7.3.2",
     "dotenv": "^17.4.0",
     "dpdm": "^3.14.0",
-    "testcontainers": "^12.0.4",
+    "testcontainers": "^12.1.0",
     "vitest": "^4.1.8",
     "typescript": "~7.0.2"
   },
