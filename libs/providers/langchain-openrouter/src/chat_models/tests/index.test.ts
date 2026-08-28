@@ -12,7 +12,7 @@ import { AIMessage } from "@langchain/core/messages";
 import { OutputParserException } from "@langchain/core/output_parsers";
 import { ChatOpenRouter } from "../index.js";
 import type { ChatOpenRouterCallOptions } from "../types.js";
-import { OpenRouterAuthError } from "../../utils/errors.js";
+import { OpenRouterAuthError, OpenRouterError } from "../../utils/errors.js";
 
 let savedKey: string | undefined;
 let savedSessionId: string | undefined;
@@ -460,6 +460,25 @@ describe("stream callbacks", () => {
 });
 
 describe("retry behavior", () => {
+  it("raises OpenRouterError when a successful response has no choices", async () => {
+    const model = new ChatOpenRouter({ model: "openai/gpt-4o-mini" });
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ error: { message: "upstream failed" } }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      })
+    );
+
+    try {
+      await expect(model.invoke("Hello")).rejects.toBeInstanceOf(
+        OpenRouterError
+      );
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+    } finally {
+      fetchSpy.mockRestore();
+    }
+  });
+
   it("retries a 429 response with short Retry-After through AsyncCaller", async () => {
     const model = new ChatOpenRouter({
       model: "openai/gpt-4o-mini",
