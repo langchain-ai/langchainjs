@@ -39,8 +39,8 @@ const debugLog = getDebugLog("connection");
 
 export interface Client extends MCPClient {
   /**
-   * Fork the client with a new set of headers, it either returns a new client or the same client if the headers are the same
-   * @param headers - The headers to fork the client with
+   * Fork the client with additional or overridden headers. Existing headers are preserved unless overridden.
+   * @param headers - The headers to merge into the forked client configuration
    * @returns The forked client
    */
   fork: (headers: Record<string, string>) => Promise<Client>;
@@ -57,6 +57,7 @@ type ClientKeyObject = Omit<TransportOptions, "headers"> & {
 };
 
 export interface Connection {
+  type: "http" | "sse" | "stdio";
   transport:
     | StreamableHTTPClientTransport
     | SSEClientTransport
@@ -67,6 +68,28 @@ export interface Connection {
 }
 
 const transportTypes = ["http", "sse", "stdio"] as const;
+
+function mergeHeaders(
+  baseHeaders: Record<string, string> | undefined,
+  overrideHeaders: Record<string, string>
+): Record<string, string> {
+  const mergedHeaders = { ...(baseHeaders ?? {}) };
+
+  for (const [headerName, headerValue] of Object.entries(overrideHeaders)) {
+    for (const existingHeaderName of Object.keys(mergedHeaders)) {
+      if (
+        existingHeaderName !== headerName &&
+        existingHeaderName.toLowerCase() === headerName.toLowerCase()
+      ) {
+        delete mergedHeaders[existingHeaderName];
+      }
+    }
+
+    mergedHeaders[headerName] = headerValue;
+  }
+
+  return mergedHeaders;
+}
 
 type ConnectionManagerConfig = Pick<
   ResolvedClientConfig,
@@ -252,6 +275,7 @@ export class ConnectionManager {
     }) as Client;
 
     this.#connections.set(key, {
+      type,
       transport,
       client,
       transportOptions: options,
@@ -262,7 +286,7 @@ export class ConnectionManager {
   }
 
   /**
-   * Allows to fork a client with a new set of headers
+   * Allows to fork a client with merged headers
    */
   #forkClient(
     key: ClientKeyObject,
@@ -275,16 +299,25 @@ export class ConnectionManager {
       throw new Error("Transport not found");
     }
 
-    const type =
-      connection.transportOptions.type ?? connection.transportOptions.transport;
-    if (type === "stdio") {
+    if (connection.type === "stdio") {
       throw new Error("Forking stdio transport is not supported");
     }
 
-    return this.createClient(type as "http", key.serverName, {
-      ...connection.transportOptions,
-      headers,
-    } as ResolvedStreamableHTTPConnection);
+    const transportOptions = connection.transportOptions;
+    if ("command" in transportOptions) {
+      throw new Error("Forking stdio transport is not supported");
+    }
+
+    const forkedTransportOptions = {
+      ...transportOptions,
+      headers: mergeHeaders(transportOptions.headers, headers),
+    } as ResolvedStreamableHTTPConnection;
+
+    if (connection.type === "http") {
+      return this.createClient("http", key.serverName, forkedTransportOptions);
+    }
+
+    return this.createClient("sse", key.serverName, forkedTransportOptions);
   }
 
   /**
