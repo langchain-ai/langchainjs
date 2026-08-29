@@ -393,12 +393,14 @@ export type $MergeOutputVersion<T, U> =
  * ```
  */
 export type $MergeContentDefinition<T, U> = {
-  [K in keyof T | keyof U as Extract<
-    (K extends keyof T ? T[K] : never) | (K extends keyof U ? U[K] : never),
-    ContentBlock
-  > extends never
-    ? never
-    : K]: K extends keyof T
+  [
+    K in keyof T | keyof U as Extract<
+      (K extends keyof T ? T[K] : never) | (K extends keyof U ? U[K] : never),
+      ContentBlock
+    > extends never
+      ? never
+      : K
+  ]: K extends keyof T
     ? K extends keyof U
       ? $MergeDiscriminatedUnion<
           Extract<T[K], ContentBlock>,
@@ -608,7 +610,7 @@ export type $InferMessageContent<
       ? string | Array<ContentBlock | ContentBlock.Text>
       : [unknown] extends [TOutput]
         ? // Fallback to default when TOutput is unknown (no specific tools defined)
-            string | Array<ContentBlock | ContentBlock.Text>
+          string | Array<ContentBlock | ContentBlock.Text>
         : TOutput | string | Array<ContentBlock | ContentBlock.Text>
     : string | Array<ContentBlock | ContentBlock.Text>
   : TStructure["outputVersion"] extends "v1"
