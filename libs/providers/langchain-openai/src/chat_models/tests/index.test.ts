@@ -14,6 +14,23 @@ import { NewTokenIndices } from "@langchain/core/callbacks/base";
 
 describe("ChatOpenAI", () => {
   describe("should initialize with correct values", () => {
+    it("forwards and overrides prompt cache options", () => {
+      const chat = new ChatOpenAI({
+        model: "gpt-5.6",
+        promptCacheOptions: { mode: "explicit", ttl: "30m" },
+      });
+
+      expect(chat.invocationParams().prompt_cache_options).toEqual({
+        mode: "explicit",
+        ttl: "30m",
+      });
+      expect(
+        chat.invocationParams({
+          promptCacheOptions: { mode: "implicit" },
+        }).prompt_cache_options
+      ).toEqual({ mode: "implicit" });
+    });
+
     it("supports string model shorthand", () => {
       const chat = new ChatOpenAI("gpt-4o-mini", { temperature: 0.2 });
       expect(chat.model).toBe("gpt-4o-mini");
