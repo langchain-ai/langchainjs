@@ -194,6 +194,12 @@ export interface GoogleGenerativeAIChatInput
    */
   customHeaders?: Record<string, string>;
 
+  /**
+   * Custom fetch function to use for API requests.
+   * Useful for routing through proxies, adding custom authentication, or request/response logging.
+   */
+  customFetch?: typeof fetch;
+
   /** Whether to stream the results or not */
   streaming?: boolean;
 
@@ -762,6 +768,7 @@ export class ChatGoogleGenerativeAI
         apiVersion: fields.apiVersion,
         baseUrl: this.baseUrl,
         customHeaders: fields.customHeaders,
+        customFetch: fields.customFetch,
       }
     );
     this.streamUsage = fields.streamUsage ?? this.streamUsage;
