@@ -37,6 +37,10 @@ export function _makeMessageChunkFromAnthropicEvent(
     const { input_tokens, output_tokens, ...rest }: Record<string, any> =
       usage ?? {};
     const usageMetadata = buildUsageMetadata(usage);
+    const model =
+      "model" in filteredAdditionalKwargs
+        ? { model: filteredAdditionalKwargs.model }
+        : {};
     return {
       chunk: new AIMessageChunk({
         content: fields.coerceContentToString ? "" : [],
@@ -44,6 +48,7 @@ export function _makeMessageChunkFromAnthropicEvent(
         usage_metadata: fields.streamUsage ? usageMetadata : undefined,
         response_metadata: {
           ...response_metadata,
+          ...model,
           usage: {
             ...rest,
           },
