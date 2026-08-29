@@ -8,6 +8,7 @@ import { type OpenAICallOptions, type OpenAIChatInput } from "../types.js";
 import {
   _convertToOpenAITool,
   isBuiltInTool,
+  isOpenAIBuiltInTool,
   isCustomTool,
   isOpenAICustomTool,
 } from "../utils/tools.js";
@@ -628,7 +629,7 @@ export class ChatOpenAI<
   }
 
   protected _useResponsesApi(options: this["ParsedCallOptions"] | undefined) {
-    const usesBuiltInTools = options?.tools?.some(isBuiltInTool);
+    const usesBuiltInTools = options?.tools?.some(isOpenAIBuiltInTool);
     const hasResponsesOnlyKwargs =
       options?.previous_response_id != null ||
       options?.text != null ||
