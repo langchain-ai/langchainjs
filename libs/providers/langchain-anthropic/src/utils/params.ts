@@ -36,10 +36,6 @@ function isThinkingEnabled(thinking: AnthropicThinkingConfigParam): boolean {
   return thinking.type === "enabled" || thinking.type === "adaptive";
 }
 
-export function isOpus47Model(model?: string): boolean {
-  return modelStartsWithAnyPrefix(model, ["claude-opus-4-7"]);
-}
-
 export function isAdaptiveOnlyModel(model?: string): boolean {
   return modelStartsWithAnyPrefix(model, ADAPTIVE_ONLY_MODEL_PREFIXES);
 }
@@ -54,7 +50,9 @@ export function getTaskBudgetBetas(
     "task_budget" in outputConfig &&
     outputConfig.task_budget != null;
 
-  return isOpus47Model(model) && hasTaskBudget
+  // Task budgets are in beta on the same models that are adaptive-only
+  // (Opus 4.7/4.8, Fable 5, Mythos 5).
+  return isAdaptiveOnlyModel(model) && hasTaskBudget
     ? (["task-budgets-2026-03-13"] as AnthropicBeta[])
     : [];
 }
