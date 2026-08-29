@@ -4,13 +4,8 @@ import { WatsonXAI } from "@ibm-cloud/watsonx-ai";
 import { AsyncCaller } from "@langchain/core/utils/async_caller";
 import { CreateEmbeddingsParams, Gateway } from "@ibm-cloud/watsonx-ai/gateway";
 import { WatsonxAuth, WatsonxEmbeddingsBasicOptions, XOR } from "../types.js";
-import {
-  authenticateAndSetGatewayInstance,
-  authenticateAndSetInstance,
-  checkRequiredProps,
-  checkValidProps,
-  expectOneOf,
-} from "../utils/ibm.js";
+import { expectOneOf, initWatsonxOrGatewayInstance } from "../utils/ibm.js";
+import { checkRequiredProps, PropertyValidator } from "../utils/validation.js";
 
 export interface WatsonxEmbeddingsParams
   extends
@@ -90,41 +85,6 @@ export class WatsonxEmbeddings
 
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   private checkValidProperties(fields: any, includeCommonProps = true) {
-    const alwaysAllowedProps = ["headers", "signal", "promptIndex"];
-
-    const authProps = [
-      "serviceUrl",
-      "watsonxAIApikey",
-      "watsonxAIBearerToken",
-      "watsonxAIUsername",
-      "watsonxAIPassword",
-      "watsonxAIUrl",
-      "watsonxAIAuthType",
-      "disableSSL",
-    ];
-
-    const sharedProps = [
-      "maxRetries",
-      "watsonxCallbacks",
-      "authenticator",
-      "serviceUrl",
-      "version",
-      "streaming",
-      "callbackManager",
-      "callbacks",
-      "maxConcurrency",
-      "cache",
-      "metadata",
-      "concurrency",
-      "onFailedAttempt",
-      "concurrency",
-      "verbose",
-      "tags",
-      "headers",
-      "signal",
-      "disableStreaming",
-    ];
-
     const projectOrSpaceProps = [
       "truncateInputTokens",
       "returnOptions",
@@ -133,16 +93,19 @@ export class WatsonxEmbeddings
       "spaceId",
     ];
     const gatewayProps = ["model", "modelGatewayKwargs", "modelGateway"];
-    const validProps: string[] = [...alwaysAllowedProps];
-    if (includeCommonProps) validProps.push(...authProps, ...sharedProps);
 
+    let modeProps: string[] = [];
     if (this.modelGateway) {
-      validProps.push(...gatewayProps);
+      modeProps = gatewayProps;
     } else if (this.spaceId || this.projectId) {
-      validProps.push(...projectOrSpaceProps);
+      modeProps = projectOrSpaceProps;
     }
 
-    checkValidProps(fields, validProps);
+    PropertyValidator.validateByMode(
+      fields as Record<string, unknown>,
+      modeProps,
+      includeCommonProps
+    );
   }
 
   constructor(fields: WatsonxEmbeddingsConstructor) {
@@ -156,6 +119,13 @@ export class WatsonxEmbeddings
 
     this.checkValidProperties(fields);
 
+    if ("modelGateway" in fields)
+      this.modelGatewayKwargs = fields.modelGatewayKwargs;
+    else {
+      this.truncateInputTokens = fields.truncateInputTokens;
+      this.returnOptions = fields.returnOptions;
+    }
+
     this.model = fields.model;
     this.version = fields.version;
     this.serviceUrl = fields.serviceUrl;
@@ -164,39 +134,11 @@ export class WatsonxEmbeddings
     this.maxConcurrency = fields.maxConcurrency ?? this.maxConcurrency;
     this.maxRetries = fields.maxRetries ?? 0;
     this.serviceUrl = fields?.serviceUrl;
-    this.modelGatewayKwargs = fields.modelGatewayKwargs;
 
-    const {
-      watsonxAIApikey,
-      watsonxAIAuthType,
-      watsonxAIBearerToken,
-      watsonxAIUsername,
-      watsonxAIPassword,
-      watsonxAIUrl,
-      disableSSL,
-      version,
-      serviceUrl,
-    } = fields;
-
-    const authData = {
-      watsonxAIApikey,
-      watsonxAIAuthType,
-      watsonxAIBearerToken,
-      watsonxAIUsername,
-      watsonxAIPassword,
-      watsonxAIUrl,
-      disableSSL,
-      version,
-      serviceUrl,
-    };
     if (this.modelGateway) {
-      const auth = authenticateAndSetGatewayInstance(authData);
-      if (auth) this.gateway = auth;
-      else throw new Error("You have not provided one type of authentication");
+      this.gateway = initWatsonxOrGatewayInstance(fields, true);
     } else {
-      const auth = authenticateAndSetInstance(authData);
-      if (auth) this.service = auth;
-      else throw new Error("You have not provided one type of authentication");
+      this.service = initWatsonxOrGatewayInstance(fields);
     }
   }
 
