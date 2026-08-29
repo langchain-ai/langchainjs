@@ -131,7 +131,10 @@ export class FakeStreamingChatModel extends BaseChatModel<FakeStreamingChatModel
     return "fake";
   }
 
-  bindTools(tools: (StructuredTool | ToolSpec)[]) {
+  bindTools(
+    tools: (StructuredTool | ToolSpec)[],
+    kwargs?: Partial<FakeStreamingChatModelCallOptions>
+  ) {
     const merged = [...this.tools, ...tools];
 
     const toolDicts = merged.map((t) => {
@@ -185,7 +188,10 @@ export class FakeStreamingChatModel extends BaseChatModel<FakeStreamingChatModel
     });
     next.tools = merged;
 
-    return next.withConfig({ tools: wrapped } as BaseChatModelCallOptions);
+    return next.withConfig({
+      tools: wrapped,
+      ...kwargs,
+    } as BaseChatModelCallOptions);
   }
 
   async _generate(
@@ -463,7 +469,10 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
     }
   }
 
-  bindTools(tools: (StructuredTool | ToolSpec)[]) {
+  bindTools(
+    tools: (StructuredTool | ToolSpec)[],
+    kwargs?: Partial<FakeListChatModelCallOptions>
+  ) {
     const merged = [...this.tools, ...tools];
 
     const toolDicts = merged.map((t) => {
@@ -517,7 +526,10 @@ export class FakeListChatModel extends BaseChatModel<FakeListChatModelCallOption
     next.toolStyle = this.toolStyle;
     next.i = this.i;
 
-    return next.withConfig({ tools: wrapped } as BaseChatModelCallOptions);
+    return next.withConfig({
+      tools: wrapped,
+      ...kwargs,
+    } as BaseChatModelCallOptions);
   }
 
   withStructuredOutput<

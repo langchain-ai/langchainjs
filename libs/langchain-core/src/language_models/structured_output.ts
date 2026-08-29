@@ -109,8 +109,19 @@ export function assembleStructuredOutputPipeline<
 ):
   | Runnable<BaseLanguageModelInput, RunOutput>
   | Runnable<BaseLanguageModelInput, { raw: BaseMessage; parsed: RunOutput }> {
+  let configuredLlm = llm;
+  const keyName = (outputParser as Record<string, unknown>).keyName;
+  if (typeof keyName === "string") {
+    configuredLlm = llm.withConfig({
+      configurable: {
+        is_structured_output: true,
+        structured_output_tool_name: keyName,
+      },
+    });
+  }
+
   if (!includeRaw) {
-    const result = llm.pipe(outputParser);
+    const result = configuredLlm.pipe(outputParser);
     return runName ? result.withConfig({ runName }) : result;
   }
 
@@ -127,6 +138,6 @@ export function assembleStructuredOutputPipeline<
   const result = RunnableSequence.from<
     BaseLanguageModelInput,
     { raw: BaseMessage; parsed: RunOutput }
-  >([{ raw: llm }, parsedWithFallback]);
+  >([{ raw: configuredLlm }, parsedWithFallback]);
   return runName ? result.withConfig({ runName }) : result;
 }
