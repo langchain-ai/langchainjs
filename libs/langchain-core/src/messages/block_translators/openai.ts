@@ -298,6 +298,30 @@ export function convertToV1FromResponses(
             text: String(text),
           };
         }
+      } else if (_isContentBlock(block, "reasoning")) {
+        // Handle reasoning block that may have either:
+        // - reasoning: string (already converted by provider)
+        // - summary: [{text: "..."}] (raw API format)
+        if (_isString(block.reasoning)) {
+          yield {
+            type: "reasoning",
+            reasoning: block.reasoning,
+          };
+        } else if (_isArray(block.summary)) {
+          const reasoningText = block.summary.reduce<string>(
+            (acc, item) => {
+              if (_isObject(item) && _isString(item.text)) {
+                return `${acc}${item.text}`;
+              }
+              return acc;
+            },
+            ""
+          );
+          yield {
+            type: "reasoning",
+            reasoning: reasoningText,
+          };
+        }
       }
     }
     for (const toolCall of message.tool_calls ?? []) {
