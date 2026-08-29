@@ -3,6 +3,11 @@
  */
 export * from "./hitl.js";
 export {
+  perActionHumanInTheLoopMiddleware,
+  paHitlMiddleware,
+  type PerActionHumanInTheLoopMiddlewareConfig,
+} from "./perActionHitl.js";
+export {
   summarizationMiddleware,
   type SummarizationMiddlewareConfig,
   type TokenCounter,
