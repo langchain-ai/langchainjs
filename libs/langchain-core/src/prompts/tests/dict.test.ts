@@ -1,6 +1,15 @@
 import { describe, it, expect } from "vitest";
 import { DictPromptTemplate } from "../dict.js";
 import { load } from "../../load/index.js";
+import { MAX_PROMPT_TEMPLATE_DEPTH } from "../utils.js";
+
+function createNestedTemplate(depth: number): Record<string, unknown> {
+  let template: Record<string, unknown> = { text: "{text}" };
+  for (let i = 0; i < depth; i += 1) {
+    template = { nested: template };
+  }
+  return template;
+}
 
 describe("DictPromptTemplate", () => {
   it("should format dicts with f-string template values", async () => {
@@ -123,5 +132,47 @@ describe("DictPromptTemplate", () => {
         mimeType: "text/plain",
       })
     );
+  });
+
+  it("should reject deeply nested dict templates in constructor", () => {
+    const template = createNestedTemplate(MAX_PROMPT_TEMPLATE_DEPTH + 1);
+
+    try {
+      new DictPromptTemplate({
+        template,
+        templateFormat: "f-string",
+      });
+      throw new Error("Expected constructor to fail for deep nesting.");
+    } catch (error) {
+      expect(error).toBeInstanceOf(Error);
+      expect((error as { lc_error_code?: string }).lc_error_code).toBe(
+        "INVALID_PROMPT_INPUT"
+      );
+      expect((error as Error).message).toContain(
+        "Prompt template nesting exceeds maximum depth"
+      );
+    }
+  });
+
+  it("should reject deeply nested dict templates in format", async () => {
+    const prompt = new DictPromptTemplate({
+      template: { text: "{text}" },
+      templateFormat: "f-string",
+    });
+
+    prompt.template = createNestedTemplate(MAX_PROMPT_TEMPLATE_DEPTH + 1);
+
+    try {
+      await prompt.format({ text: "important message" });
+      throw new Error("Expected formatting to fail for deep nesting.");
+    } catch (error) {
+      expect(error).toBeInstanceOf(Error);
+      expect((error as { lc_error_code?: string }).lc_error_code).toBe(
+        "INVALID_PROMPT_INPUT"
+      );
+      expect((error as Error).message).toContain(
+        "Prompt template nesting exceeds maximum depth"
+      );
+    }
   });
 });
