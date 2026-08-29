@@ -1063,7 +1063,14 @@ export class ChatGoogleGenerativeAI
       }
 
       yield chunk;
-      await runManager?.handleLLMNewToken(chunk.text ?? "");
+      await runManager?.handleLLMNewToken(
+        chunk.text ?? "",
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        { chunk }
+      );
     }
   }
 
