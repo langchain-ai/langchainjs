@@ -45,6 +45,12 @@ export interface GoogleGenerativeAIEmbeddingsParams extends EmbeddingsParams {
   stripNewLines?: boolean;
 
   /**
+   * The number of dimensions the resulting output embeddings should have.
+   * Only supported by newer embedding models like `gemini-embedding-001`.
+   */
+  outputDimensionality?: number;
+
+  /**
    * Google API key to use
    */
   apiKey?: string;
@@ -92,6 +98,8 @@ export class GoogleGenerativeAIEmbeddings
 
   stripNewLines = true;
 
+  outputDimensionality?: number;
+
   maxBatchSize = 100; // Max batch size for embedDocuments set by GenerativeModel client's batchEmbedContents call
 
   private client: GenerativeModel;
@@ -108,6 +116,8 @@ export class GoogleGenerativeAIEmbeddings
     this.taskType = fields?.taskType ?? this.taskType;
 
     this.title = fields?.title ?? this.title;
+
+    this.outputDimensionality = fields?.outputDimensionality;
 
     if (this.title && this.taskType !== "RETRIEVAL_DOCUMENT") {
       throw new Error(
@@ -137,11 +147,14 @@ export class GoogleGenerativeAIEmbeddings
 
   private _convertToContent(text: string): EmbedContentRequest {
     const cleanedText = this.stripNewLines ? text.replace(/\n/g, " ") : text;
+    // Note: outputDimensionality is supported by the Google API but not yet
+    // included in the SDK's EmbedContentRequest type definition
     return {
       content: { role: "user", parts: [{ text: cleanedText }] },
       taskType: this.taskType,
       title: this.title,
-    };
+      outputDimensionality: this.outputDimensionality,
+    } as EmbedContentRequest;
   }
 
   protected async _embedQueryContent(text: string): Promise<number[]> {
