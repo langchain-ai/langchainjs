@@ -1,11 +1,17 @@
 /* oxlint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi } from "vitest";
 import { HumanMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
+import { fakeModel } from "@langchain/core/testing";
+import { FakeListChatModel } from "@langchain/core/utils/testing";
 
 import { summarizationMiddleware } from "../summarization.js";
 import { createAgent } from "../../index.js";
 import { hasToolCalls } from "../../utils.js";
-import { FakeToolCallingChatModel } from "../../tests/utils.js";
+import {
+  FakeToolCallingChatModel,
+  collectV3Messages,
+  collectClassicMessages,
+} from "../../tests/utils.js";
 
 vi.mock(
   "@langchain/anthropic",
@@ -1030,40 +1036,11 @@ describe("summarizationMiddleware", () => {
     });
   });
 
-  it("should not leak summarization model streaming chunks when using streamMode messages", async () => {
-    const SUMMARIZATION_RAW_OUTPUT =
-      "INTERNAL_SUMMARY_OUTPUT_SHOULD_NOT_BE_STREAMED_AS_AI_MESSAGE";
-    const MAIN_MODEL_CONTENT =
-      "I understand your project. Let me analyze the architecture.";
+  describe("internal call suppression", () => {
+    const SUMMARY = "INTERNAL_SUMMARY_OUTPUT";
+    const SUMMARY_PREFIX = "Here is a summary of the conversation to date:";
+    const MAIN = "Main model answer.";
 
-    // Create a summarization model with distinctive content
-    const summarizationModel = {
-      invoke: vi.fn().mockImplementation(async () => {
-        return { content: SUMMARIZATION_RAW_OUTPUT };
-      }),
-      getName: () => "mock-summarizer",
-      _modelType: "mock",
-      lc_runnable: true,
-      profile: {},
-    };
-
-    // Create a main model with a distinctive response
-    const model = new FakeToolCallingChatModel({
-      responses: [new AIMessage(MAIN_MODEL_CONTENT)],
-    });
-
-    const middleware = summarizationMiddleware({
-      model: summarizationModel as any,
-      trigger: { tokens: 50 },
-      keep: { messages: 2 },
-    });
-
-    const agent = createAgent({
-      model,
-      middleware: [middleware],
-    });
-
-    // Create enough messages to trigger summarization
     const inputMessages = [
       new HumanMessage(`Message 1: ${"x".repeat(200)}`),
       new AIMessage(`Response 1: ${"x".repeat(200)}`),
@@ -1072,47 +1049,73 @@ describe("summarizationMiddleware", () => {
       new HumanMessage("Final question"),
     ];
 
-    // Stream with messages mode to capture all message chunks
-    const stream = await agent.stream(
-      { messages: inputMessages },
-      { streamMode: ["messages"] }
-    );
-
-    // Collect all streamed AIMessage content (only assistant/AI responses)
-    const streamedAIContents: string[] = [];
-    for await (const [mode, chunk] of stream) {
-      if (mode === "messages") {
-        const [msg] = chunk as [any, any];
-        // Only collect AIMessage content (role === "assistant" or type === "ai")
-        const isAIMessage =
-          msg._getType?.() === "ai" ||
-          msg.role === "assistant" ||
-          AIMessage.isInstance(msg);
-        if (isAIMessage) {
-          const content =
-            typeof msg.content === "string"
-              ? msg.content
-              : JSON.stringify(msg.content);
-          if (content) {
-            streamedAIContents.push(content);
-          }
-        }
-      }
+    function buildAgent(summarizer: any) {
+      return createAgent({
+        model: new FakeToolCallingChatModel({
+          responses: [new AIMessage(MAIN)],
+        }),
+        middleware: [
+          summarizationMiddleware({
+            model: summarizer,
+            trigger: { tokens: 50 },
+            keep: { messages: 2 },
+          }),
+        ],
+      });
     }
 
-    // Verify summarization was triggered
-    expect(summarizationModel.invoke).toHaveBeenCalled();
+    it("omits the summarization call from run.messages", async () => {
+      const run = await buildAgent(
+        fakeModel().respond(new AIMessage(SUMMARY))
+      ).streamEvents({ messages: inputMessages }, { version: "v3" });
 
-    // Verify the raw summarization model output does NOT appear as an AIMessage
-    // This would happen if callbacks leaked from the internal model.invoke()
-    const allStreamedAIContent = streamedAIContents.join(" ");
-    expect(allStreamedAIContent).not.toContain(
-      "INTERNAL_SUMMARY_OUTPUT_SHOULD_NOT_BE_STREAMED_AS_AI_MESSAGE"
-    );
-    expect(allStreamedAIContent).not.toContain(SUMMARIZATION_RAW_OUTPUT);
+      const { texts } = await collectV3Messages(run.messages);
 
-    // Verify the main model's content DOES appear in the stream
-    expect(allStreamedAIContent).toContain(MAIN_MODEL_CONTENT);
+      expect(texts).not.toContain(SUMMARY);
+      expect(texts).toContain(MAIN);
+      expect(texts.some((t) => t.includes(SUMMARY_PREFIX))).toBe(false);
+    });
+
+    it("omits a streaming summarization call from run.messages", async () => {
+      const run = await buildAgent(
+        new FakeListChatModel({ responses: [SUMMARY] })
+      ).streamEvents({ messages: inputMessages }, { version: "v3" });
+
+      const { texts, deltaCount } = await collectV3Messages(run.messages);
+
+      expect(texts).not.toContain(SUMMARY);
+      expect(texts).toContain(MAIN);
+      // Main model's synthetic delta only; a leaked stream would add one per character.
+      expect(deltaCount).toBe(1);
+    });
+
+    it('omits the summarization call from stream({ streamMode: "messages" })', async () => {
+      const { model } = await collectClassicMessages(
+        buildAgent(fakeModel().respond(new AIMessage(SUMMARY))),
+        { messages: inputMessages }
+      );
+
+      expect(model).not.toContain(SUMMARY);
+      expect(model).toContain(MAIN);
+      expect(model.some((t) => t.includes(SUMMARY_PREFIX))).toBe(false);
+    });
+
+    it("still surfaces the summarization call on streamEvents v2", async () => {
+      const events = buildAgent(
+        fakeModel().respond(new AIMessage(SUMMARY))
+      ).streamEvents({ messages: inputMessages }, { version: "v2" });
+
+      const sources: (string | null)[] = [];
+      for await (const event of events) {
+        if (event.event !== "on_chat_model_end") continue;
+        if (event.data?.output?.content === SUMMARY) {
+          sources.push(event.metadata?.lc_source ?? null);
+        }
+      }
+
+      // Suppression is scoped to LangGraph's messages channel, not Core's callbacks.
+      expect(sources).toEqual(["summarization"]);
+    });
   });
 
   it("should move cutoff backward to preserve AI/Tool pairs when cutoff lands on ToolMessage", async () => {

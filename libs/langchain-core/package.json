@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "1.2.4",
+  "version": "1.2.9",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -35,10 +35,10 @@
   "devDependencies": {
     "@langchain/tsconfig": "workspace:*",
     "@types/mustache": "^4",
-    "@types/node": "^26.1.2",
+    "@types/node": "^26.2.0",
     "dotenv": "^17.4.0",
     "dpdm": "^3.14.0",
-    "ml-matrix": "^6.14.0",
+    "ml-matrix": "^6.15.0",
     "rimraf": "^6.1.3",
     "typescript": "~7.0.2",
     "vitest": "^4.1.8",
@@ -709,6 +709,17 @@
       "import": {
         "types": "./dist/utils/function_calling.d.ts",
         "default": "./dist/utils/function_calling.js"
+      }
+    },
+    "./utils/gateway": {
+      "input": "./src/utils/gateway.ts",
+      "require": {
+        "types": "./dist/utils/gateway.d.cts",
+        "default": "./dist/utils/gateway.cjs"
+      },
+      "import": {
+        "types": "./dist/utils/gateway.d.ts",
+        "default": "./dist/utils/gateway.js"
       }
     },
     "./utils/hash": {

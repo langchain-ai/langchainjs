@@ -6,6 +6,7 @@ import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { AIMessageChunk, type BaseMessage } from "@langchain/core/messages";
 import { ChatGenerationChunk, type ChatResult } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { resolveLangSmithGatewayConfig } from "@langchain/core/utils/gateway";
 import {
   BaseChatModel,
   BaseChatModelCallOptions,
@@ -31,6 +32,7 @@ import { AnthropicToolsOutputParser } from "./output_parsers.js";
 import {
   ANTHROPIC_TOOL_BETAS,
   AnthropicToolExtrasSchema,
+  getTopLevelSchemaCompositionKeys,
   handleToolChoice,
 } from "./utils/tools.js";
 import { _convertMessagesToAnthropicPayload } from "./utils/message_inputs.js";
@@ -87,6 +89,7 @@ const MODEL_DEFAULT_MAX_OUTPUT_TOKENS: Partial<
 > = {
   // Claude 5 — 128K max output
   "claude-opus-5": 16384,
+  "claude-sonnet-5": 16384,
   "claude-fable-5": 16384,
   "claude-mythos-5": 16384,
   "claude-mythos-preview": 16384,
@@ -1064,9 +1067,19 @@ export class ChatAnthropicMessages<
     super(fields ?? {});
     this._addVersion("@langchain/anthropic", __PKG_VERSION__);
 
+    const gatewayConfig = resolveLangSmithGatewayConfig({
+      baseURL:
+        fields.anthropicApiUrl ??
+        fields.clientOptions?.baseURL ??
+        (getEnvironmentVariable("ANTHROPIC_API_URL") ||
+          getEnvironmentVariable("ANTHROPIC_BASE_URL") ||
+          undefined),
+      providerPath: "anthropic",
+    });
     this.anthropicApiKey =
-      fields?.apiKey ??
-      fields?.anthropicApiKey ??
+      fields.apiKey ??
+      fields.anthropicApiKey ??
+      gatewayConfig.apiKey ??
       getEnvironmentVariable("ANTHROPIC_API_KEY");
 
     if (!this.anthropicApiKey && !fields?.createClient) {
@@ -1077,7 +1090,7 @@ export class ChatAnthropicMessages<
     this.apiKey = this.anthropicApiKey;
 
     // Support overriding the default API URL (i.e., https://api.anthropic.com)
-    this.apiUrl = fields?.anthropicApiUrl;
+    this.apiUrl = gatewayConfig.baseURL;
 
     /** Keep modelName for backwards compatibility */
     this.modelName = fields?.model ?? fields?.modelName ?? this.model;
@@ -1137,7 +1150,7 @@ export class ChatAnthropicMessages<
     if (!tools) {
       return undefined;
     }
-    return tools.map((tool) => {
+    const formattedTools = tools.map((tool) => {
       if (isLangChainTool(tool) && tool.extras?.providerToolDefinition) {
         return tool.extras
           .providerToolDefinition as Anthropic.Messages.ToolUnion;
@@ -1193,6 +1206,17 @@ export class ChatAnthropicMessages<
           2
         )}`
       );
+    });
+
+    return formattedTools.filter((tool) => {
+      if (!isAnthropicTool(tool)) {
+        return true;
+      }
+      const compositionKeys = getTopLevelSchemaCompositionKeys(tool);
+      if (compositionKeys.length === 0) {
+        return true;
+      }
+      return false;
     });
   }
 
@@ -1255,14 +1279,29 @@ export class ChatAnthropicMessages<
       : [];
     const taskBudgetBetas = getTaskBudgetBetas(this.model, mergedOutputConfig);
 
+    const tools = this.formatStructuredToolToAnthropic(options?.tools, {
+      strict: options?.strict,
+    });
+    if (
+      tool_choice?.type === "tool" &&
+      !tools?.some((tool) => "name" in tool && tool.name === tool_choice.name)
+    ) {
+      throw new Error(
+        `Anthropic tool_choice references "${tool_choice.name}", but that tool is not available.`
+      );
+    }
+    if (tool_choice?.type === "any" && (!tools || tools.length === 0)) {
+      throw new Error(
+        "Anthropic tool_choice requires at least one available tool."
+      );
+    }
+
     const output: AnthropicInvocationParams = {
       model: this.model,
       stop_sequences: options?.stop ?? this.stopSequences,
       stream: this.streaming,
       max_tokens: this.maxTokens,
-      tools: this.formatStructuredToolToAnthropic(options?.tools, {
-        strict: options?.strict,
-      }),
+      tools,
       tool_choice,
       thinking: this.thinkingExplicitlySet ? this.thinking : undefined,
       context_management: this.contextManagement,
@@ -1386,6 +1425,7 @@ export class ChatAnthropicMessages<
     const stream = await this.createStreamWithRetry(payload, {
       headers: options.headers,
       signal: options.signal,
+      maxRetries: options.maxRetries,
     });
 
     for await (const data of stream) {
@@ -1458,6 +1498,7 @@ export class ChatAnthropicMessages<
     const stream = await this.createStreamWithRetry(payload, {
       headers: options.headers,
       signal: options.signal,
+      maxRetries: options.maxRetries,
     });
 
     const shouldStreamUsage = this.streamUsage ?? options.streamUsage;
@@ -1553,6 +1594,7 @@ export class ChatAnthropicMessages<
       return this._generateNonStreaming(messages, params, {
         signal: options.signal,
         headers: options.headers,
+        maxRetries: options.maxRetries,
       });
     }
   }
@@ -1607,7 +1649,10 @@ export class ChatAnthropicMessages<
         throw error;
       }
     };
-    return this.caller.call(makeCompletionRequest);
+    return this.caller.callWithOptions(
+      { maxRetries: options?.maxRetries },
+      makeCompletionRequest
+    );
   }
 
   /** @ignore */
@@ -1653,7 +1698,7 @@ export class ChatAnthropicMessages<
       }
     };
     return this.caller.callWithOptions(
-      { signal: options.signal ?? undefined },
+      { signal: options.signal ?? undefined, maxRetries: options.maxRetries },
       makeCompletionRequest
     );
   }

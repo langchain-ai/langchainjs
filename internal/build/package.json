@@ -11,8 +11,8 @@
   "dependencies": {
     "@arethetypeswrong/core": "^0.18.5",
     "@typescript/native-preview": "^7.0.0-dev.20260401.1",
-    "publint": "^0.3.22",
-    "rolldown": "^1.2.0",
+    "publint": "^0.3.24",
+    "rolldown": "^1.2.5",
     "tsdown": "^0.22.14",
     "type-fest": "^5.8.0",
     "typescript": "^7.0.2",

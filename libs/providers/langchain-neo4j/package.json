@@ -1,6 +1,6 @@
 {
   "name": "@langchain/neo4j",
-  "version": "0.1.12",
+  "version": "0.1.17",
   "description": "Neo4j integrations for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -39,8 +39,8 @@
     "@langchain/standard-tests": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.10",
-    "@types/node": "^26.1.2",
-    "@vitest/coverage-v8": "^4.1.10",
+    "@types/node": "^26.2.0",
+    "@vitest/coverage-v8": "^4.1.11",
     "dotenv": "^17.4.0",
     "dpdm": "^3.14.0",
     "rimraf": "^6.1.3",

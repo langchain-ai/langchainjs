@@ -231,6 +231,32 @@ test("Can bind & invoke AnthropicTools", async () => {
   expect(input.location).toBeTruthy();
 });
 
+test("drops tools with root schema composition before invoking Anthropic", async () => {
+  const invalidTool = {
+    name: "invalid_composition_tool",
+    description: "This tool has an unsupported root schema composition.",
+    input_schema: {
+      type: "object" as const,
+      anyOf: [
+        {
+          type: "object",
+          properties: { query: { type: "string" } },
+          required: ["query"],
+        },
+      ],
+    },
+  };
+  const modelWithTools = model.bindTools([anthropicTool, invalidTool], {
+    tool_choice: { type: "tool", name: "get_weather" },
+  });
+
+  const result = await modelWithTools.invoke(
+    "What is the weather in London today?"
+  );
+
+  expect(result.tool_calls?.[0].name).toBe("get_weather");
+});
+
 test("Can bind & stream AnthropicTools", async () => {
   const modelWithTools = model.bindTools([anthropicTool]).withConfig({
     tool_choice: {
