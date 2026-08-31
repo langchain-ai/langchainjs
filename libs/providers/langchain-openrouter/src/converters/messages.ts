@@ -90,6 +90,16 @@ export function convertOpenRouterResponseToBaseMessage(
     finish_reason: choice.finish_reason,
   };
 
+  // Surface the upstream inference provider that actually served the call
+  // (e.g. "DigitalOcean"). OpenRouter routes each request to one of several
+  // upstreams, and the OpenAI completions converter doesn't know about this
+  // OpenRouter-specific top-level field, so copy it through when present.
+  // Mirrors the Python `langchain-openrouter` package, which sets
+  // `response_metadata["provider"]` in `_create_chat_result`.
+  if (typeof rawResponse.provider === "string") {
+    message.response_metadata.provider = rawResponse.provider;
+  }
+
   return message;
 }
 
