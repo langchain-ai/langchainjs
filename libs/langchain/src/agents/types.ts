@@ -259,9 +259,9 @@ type ExtractToolDefinition<T> =
 export type ToolsToMessageToolSet<
   T extends readonly (ClientTool | ServerTool)[],
 > = {
-  [K in T[number] as K extends { name: infer N extends string }
-    ? N
-    : never]: ExtractToolDefinition<K>;
+  [
+    K in T[number] as K extends { name: infer N extends string } ? N : never
+  ]: ExtractToolDefinition<K>;
 };
 
 /**

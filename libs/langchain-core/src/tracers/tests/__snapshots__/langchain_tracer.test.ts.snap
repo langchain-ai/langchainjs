@@ -106,9 +106,6 @@ exports[`LangChainTracer payload snapshots for run create and update 3`] = `
       "runtime": "node",
     },
   },
-  "inputs": {
-    "input": "test input",
-  },
   "name": Any<String>,
   "outputs": {
     "output": "processed: test input",
@@ -140,9 +137,6 @@ exports[`LangChainTracer payload snapshots for run create and update 4`] = `
       "library": "langchain-js",
       "runtime": "node",
     },
-  },
-  "inputs": {
-    "input": "test input",
   },
   "name": Any<String>,
   "outputs": {
