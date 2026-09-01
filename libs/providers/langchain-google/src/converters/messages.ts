@@ -278,6 +278,35 @@ export const geminiContentBlockConverter: StandardContentBlockConverter<{
   },
 };
 
+const MEDIA_BLOCK_TYPES = new Set([
+  "media",
+  "image",
+  "audio",
+  "video",
+  "file",
+  "text-plain",
+]);
+
+function isMediaContentBlock(item: unknown): boolean {
+  if (typeof item !== "object" || item === null) {
+    return false;
+  }
+  if (isDataContentBlock(item)) {
+    return item.source_type !== "text";
+  }
+  if ("image_url" in item || "inlineData" in item || "fileData" in item) {
+    return true;
+  }
+  return MEDIA_BLOCK_TYPES.has((item as { type?: unknown }).type as string);
+}
+
+function stripMediaBlocksForFunctionResponse(content: unknown): unknown {
+  if (!Array.isArray(content)) {
+    return content;
+  }
+  return content.filter((item) => !isMediaContentBlock(item));
+}
+
 function convertStandardDataContentBlockToGeminiPart(
   block: ContentBlock.Multimodal.Data
 ): Gemini.Part | null {
@@ -421,7 +450,7 @@ function convertStandardContentMessageToGeminiContent(
     role = "user";
   }
 
-  const parts: Gemini.Part[] = [];
+  let parts: Gemini.Part[] = [];
 
   // Process standard content blocks
   const contentBlocks = Array.isArray(message.contentBlocks)
@@ -452,10 +481,9 @@ function convertStandardContentMessageToGeminiContent(
 
   // Handle tool messages as function responses
   if (ToolMessage.isInstance(message) && message.tool_call_id) {
-    const responseContent =
-      typeof message.content === "string"
-        ? message.content
-        : JSON.stringify(message.content);
+    const responseContent = stripMediaBlocksForFunctionResponse(
+      message.content
+    );
     // Find the matching tool call in a preceding AIMessage to get the function name
     const aiMsg = messages
       .filter(AIMessage.isInstance)
@@ -473,6 +501,12 @@ function convertStandardContentMessageToGeminiContent(
         response: { result: responseContent },
       },
     });
+
+    // For tool messages, keep only the functionResponse part(s): any text is
+    // already included in functionResponse.response.result, and a `user`
+    // content mixing a functionResponse with text is rejected or corrupted
+    // by the API. Mirrors the legacy-path filter.
+    parts = parts.filter((part) => "functionResponse" in part);
   }
 
   // Only return content if we have parts
@@ -750,10 +784,9 @@ function convertLegacyContentMessageToGeminiContent(
 
   // Handle tool messages as function responses
   if (ToolMessage.isInstance(message) && message.tool_call_id) {
-    const responseContent =
-      typeof message.content === "string"
-        ? message.content
-        : JSON.stringify(message.content);
+    const responseContent = stripMediaBlocksForFunctionResponse(
+      message.content
+    );
     // Find the matching tool call in a preceding AIMessage to get the function name
     const aiMsg = messages
       .filter(AIMessage.isInstance)
@@ -775,9 +808,14 @@ function convertLegacyContentMessageToGeminiContent(
       },
     });
 
-    // For tool messages, only keep functionResponse parts since the text content
-    // is already included in the functionResponse.response.result
-    parts = parts.filter((part) => "functionResponse" in part);
+    // For tool messages, drop the redundant text parts - their content is
+    // already folded into functionResponse.response.result above - but keep
+    // any media parts (inlineData/fileData) as siblings so images/audio/video
+    // reach Gemini as real parts instead of being lost inside the JSON string.
+    parts = parts.filter(
+      (part) =>
+        "functionResponse" in part || "inlineData" in part || "fileData" in part
+    );
   }
 
   // Only add content if we have parts
@@ -849,7 +887,8 @@ export const convertMessagesToGeminiContents: Converter<
     });
     if (content) {
       const prev = contents[contents.length - 1];
-      if (prev && prev.role === content.role) {
+      if (canMergeInto(prev, content) && content.parts) {
+        prev.parts ??= [];
         prev.parts.push(...content.parts);
       } else {
         contents.push(content);
@@ -859,6 +898,38 @@ export const convertMessagesToGeminiContents: Converter<
 
   return contents;
 };
+
+/**
+ * Returns true if any part of the given content is a functionResponse part
+ * (i.e. it was produced from a ToolMessage).
+ */
+function hasFunctionResponse(content: Gemini.Content): boolean {
+  return content.parts?.some((part) => "functionResponse" in part) === true;
+}
+
+/**
+ * Adjacent same-role contents merge only when they are the same kind of
+ * turn:
+ *
+ * - Both carry functionResponse parts (a run of tool responses answering
+ *   one model turn's parallel calls): the API requires those to share a
+ *   single `user` content whose part count matches the call count.
+ * - Neither does (plain text turns): coalesced as before #11444.
+ *
+ * A functionResponse turn never merges with a plain one: a `user` content
+ * mixing the two is rejected by newer Gemini models and corrupts
+ * generation on older ones.
+ */
+function canMergeInto(
+  prev: Gemini.Content | undefined,
+  content: Gemini.Content
+): boolean {
+  return (
+    prev !== undefined &&
+    prev.role === content.role &&
+    hasFunctionResponse(prev) === hasFunctionResponse(content)
+  );
+}
 
 /**
  * Converts LangChain system messages to Gemini API system instruction format.

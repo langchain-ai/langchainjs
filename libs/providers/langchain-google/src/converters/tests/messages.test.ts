@@ -283,6 +283,121 @@ describe("convertMessagesToGeminiContents", () => {
     expect(responses[1].functionResponse!.id).toBe("call-london");
   });
 
+  test("keeps a ToolMessage and a following HumanMessage in separate user turns (legacy path)", () => {
+    // A ToolMessage (functionResponse) and a following HumanMessage (text) both
+    // map to the `user` role. They must NOT be merged into one content: Gemini /
+    // Vertex rejects a single `user` content that mixes a functionResponse with
+    // text (see issue #11444). Expected: user, model, user(functionResponse),
+    // user(text) — four separate contents.
+    const messages = [
+      new HumanMessage("read it"),
+      new AIMessage({
+        content: "Reading the agreement now.",
+        tool_calls: [
+          {
+            name: "read_document_pages",
+            args: { fileId: "f1" },
+            id: "call_1",
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: "page text",
+        tool_call_id: "call_1",
+        name: "read_document_pages",
+      }),
+      new HumanMessage("continue"),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    expect(contents).toHaveLength(4);
+
+    expect(contents[0].role).toBe("user");
+    expect(contents[0].parts.some((p) => "text" in p)).toBe(true);
+    expect(contents[0].parts.some((p) => "functionResponse" in p)).toBe(false);
+
+    expect(contents[1].role).toBe("model");
+
+    // The tool response turn carries ONLY the functionResponse, no text.
+    expect(contents[2].role).toBe("user");
+    expect(contents[2].parts.some((p) => "functionResponse" in p)).toBe(true);
+    expect(contents[2].parts.some((p) => "text" in p)).toBe(false);
+
+    // The following human turn is its own user content with just the text.
+    expect(contents[3].role).toBe("user");
+    expect(contents[3].parts.some((p) => "functionResponse" in p)).toBe(false);
+    expect(
+      (contents[3].parts.find((p) => "text" in p) as Gemini.Part.Text).text
+    ).toBe("continue");
+  });
+
+  test("keeps a ToolMessage and a following HumanMessage in separate user turns (v1 standard path)", () => {
+    // Same contract as the legacy path, exercised through the v1 standard
+    // content path (`output_version: "v1"`): the tool turn must carry ONLY
+    // its functionResponse part, and the follow-up human text must remain
+    // its own user content.
+    const response_metadata = { output_version: "v1" } as const;
+    const messages = [
+      new HumanMessage({
+        content: "read it",
+        response_metadata,
+      }),
+      new AIMessage({
+        content: "Reading the agreement now.",
+        tool_calls: [
+          {
+            name: "read_document_pages",
+            args: { fileId: "f1" },
+            id: "call_1",
+            type: "tool_call",
+          },
+        ],
+        response_metadata,
+      }),
+      new ToolMessage({
+        content: "page text",
+        tool_call_id: "call_1",
+        name: "read_document_pages",
+        response_metadata,
+      }),
+      new HumanMessage({
+        content: "continue",
+        response_metadata,
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    expect(contents).toHaveLength(4);
+
+    expect(contents[1].role).toBe("model");
+    expect(
+      contents[1].parts.some((p) => "functionCall" in p && p.functionCall)
+    ).toBe(true);
+
+    // The tool turn carries ONLY the functionResponse, no text.
+    expect(contents[2]).toEqual({
+      role: "user",
+      parts: [
+        {
+          functionResponse: {
+            id: "call_1",
+            name: "read_document_pages",
+            response: { result: "page text" },
+          },
+        },
+      ],
+    });
+
+    // The follow-up human turn is its own user content with just the text.
+    expect(contents[3]).toEqual({
+      role: "user",
+      parts: [{ text: "continue" }],
+    });
+  });
+
   test("falls back to ToolMessage.name when tool call lookup succeeds (legacy path)", () => {
     // Even when ToolMessage has a name, the tool_calls lookup should take priority
     const messages = [
@@ -740,6 +855,332 @@ describe("convertMessagesToGeminiContents", () => {
       (userContent!.parts[3] as Gemini.Part.FileData).fileData!.fileUri
     ).toBe("gs://bucket/report.pdf");
   });
+
+  test("ToolMessage image content becomes a sibling inlineData part, not inline JSON (legacy path)", () => {
+    const imageDataUri = "data:image/png;base64,iVBORw0KGgo=";
+    const messages = [
+      new HumanMessage("hello"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "get_screenshot",
+            args: {},
+            id: "call-image",
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: [
+          { type: "text", text: "Here is the screenshot." },
+          { type: "image_url", image_url: imageDataUri },
+        ],
+        tool_call_id: "call-image",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const toolResponseContent = contents.find(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
+    expect(toolResponseContent).toBeDefined();
+
+    const functionResponsePart = toolResponseContent!.parts.find(
+      (p) => "functionResponse" in p && p.functionResponse
+    ) as Gemini.Part.FunctionResponse;
+    expect(functionResponsePart).toBeDefined();
+    const resultStr = JSON.stringify(
+      functionResponsePart.functionResponse!.response
+    );
+    expect(resultStr).toContain("Here is the screenshot.");
+    expect(resultStr).not.toContain("iVBORw0KGgo=");
+
+    const inlineDataPart = toolResponseContent!.parts.find(
+      (p) => "inlineData" in p && p.inlineData
+    ) as Gemini.Part.InlineData;
+    expect(inlineDataPart).toBeDefined();
+    expect(inlineDataPart.inlineData!.mimeType).toBe("image/png");
+    expect(inlineDataPart.inlineData!.data).toBe("iVBORw0KGgo=");
+  });
+
+  test("ToolMessage media content becomes a sibling part, not inline JSON (legacy path)", () => {
+    const messages = [
+      new HumanMessage("hello"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "get_recording",
+            args: {},
+            id: "call-media",
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: [
+          { type: "text", text: "Here is the recording." },
+          { type: "media", mimeType: "audio/mp3", data: "ZmFrZS1hdWRpbw==" },
+        ],
+        tool_call_id: "call-media",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const toolResponseContent = contents.find(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
+    expect(toolResponseContent).toBeDefined();
+
+    const functionResponsePart = toolResponseContent!.parts.find(
+      (p) => "functionResponse" in p && p.functionResponse
+    ) as Gemini.Part.FunctionResponse;
+    const resultStr = JSON.stringify(
+      functionResponsePart.functionResponse!.response
+    );
+    expect(resultStr).toContain("Here is the recording.");
+    expect(resultStr).not.toContain("ZmFrZS1hdWRpbw==");
+
+    const inlineDataPart = toolResponseContent!.parts.find(
+      (p) => "inlineData" in p && p.inlineData
+    ) as Gemini.Part.InlineData;
+    expect(inlineDataPart).toBeDefined();
+    expect(inlineDataPart.inlineData!.mimeType).toBe("audio/mp3");
+    expect(inlineDataPart.inlineData!.data).toBe("ZmFrZS1hdWRpbw==");
+  });
+
+  test("ToolMessage image content becomes a sibling inlineData part, not inline JSON (v1 path)", () => {
+    const imageDataUri = "data:image/png;base64,iVBORw0KGgo=";
+    const aiMsg = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          name: "get_screenshot",
+          args: {},
+          id: "call-image-v1",
+          type: "tool_call",
+        },
+      ],
+    });
+    aiMsg.response_metadata = { output_version: "v1" };
+    const messages = [
+      new HumanMessage("hello"),
+      aiMsg,
+      new ToolMessage({
+        content: [
+          { type: "text", text: "Here is the screenshot." },
+          { type: "image_url", image_url: { url: imageDataUri } },
+        ],
+        tool_call_id: "call-image-v1",
+        response_metadata: { output_version: "v1" },
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const toolResponseContent = contents.find(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
+    expect(toolResponseContent).toBeDefined();
+
+    const functionResponsePart = toolResponseContent!.parts.find(
+      (p) => "functionResponse" in p && p.functionResponse
+    ) as Gemini.Part.FunctionResponse;
+    const resultStr = JSON.stringify(
+      functionResponsePart.functionResponse!.response
+    );
+    expect(resultStr).not.toContain("iVBORw0KGgo=");
+
+    const inlineDataPart = toolResponseContent!.parts.find(
+      (p) => "inlineData" in p && p.inlineData
+    ) as Gemini.Part.InlineData;
+    expect(inlineDataPart).toBeDefined();
+    expect(inlineDataPart.inlineData!.mimeType).toBe("image/png");
+    expect(inlineDataPart.inlineData!.data).toBe("iVBORw0KGgo=");
+  });
+
+  test("ToolMessage v1 standard image content block is excluded from functionResponse.result (v1 path)", () => {
+    const aiMsg = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          name: "get_screenshot",
+          args: {},
+          id: "call-v1-block",
+          type: "tool_call",
+        },
+      ],
+    });
+    aiMsg.response_metadata = { output_version: "v1" };
+    const messages = [
+      new HumanMessage("hello"),
+      aiMsg,
+      new ToolMessage({
+        content: [
+          { type: "text", text: "Here is the screenshot." },
+          { type: "image", mimeType: "image/png", data: "iVBORw0KGgo=" },
+        ],
+        tool_call_id: "call-v1-block",
+        response_metadata: { output_version: "v1" },
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const toolResponseContent = contents.find(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
+    expect(toolResponseContent).toBeDefined();
+
+    const functionResponsePart = toolResponseContent!.parts.find(
+      (p) => "functionResponse" in p && p.functionResponse
+    ) as Gemini.Part.FunctionResponse;
+    const resultStr = JSON.stringify(
+      functionResponsePart.functionResponse!.response
+    );
+    expect(resultStr).not.toContain("iVBORw0KGgo=");
+  });
+
+  test("ToolMessage native inlineData content item is excluded from functionResponse.result (legacy path)", () => {
+    const messages = [
+      new HumanMessage("hello"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "get_screenshot",
+            args: {},
+            id: "call-native-inline",
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: [
+          { type: "text", text: "Here is the screenshot." },
+          { inlineData: { mimeType: "image/png", data: "iVBORw0KGgo=" } },
+        ],
+        tool_call_id: "call-native-inline",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const toolResponseContent = contents.find(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
+    expect(toolResponseContent).toBeDefined();
+
+    const functionResponsePart = toolResponseContent!.parts.find(
+      (p) => "functionResponse" in p && p.functionResponse
+    ) as Gemini.Part.FunctionResponse;
+    const resultStr = JSON.stringify(
+      functionResponsePart.functionResponse!.response
+    );
+    expect(resultStr).not.toContain("iVBORw0KGgo=");
+
+    const inlineDataPart = toolResponseContent!.parts.find(
+      (p) => "inlineData" in p && p.inlineData
+    ) as Gemini.Part.InlineData;
+    expect(inlineDataPart).toBeDefined();
+    expect(inlineDataPart.inlineData!.data).toBe("iVBORw0KGgo=");
+  });
+
+  test("ToolMessage plain-text file block is preserved in functionResponse.result, not treated as media (legacy path)", () => {
+    const messages = [
+      new HumanMessage("hello"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "read_file",
+            args: {},
+            id: "call-file-text",
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: [{ type: "file", source_type: "text", text: "line one" }],
+        tool_call_id: "call-file-text",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const toolResponseContent = contents.find(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
+    expect(toolResponseContent).toBeDefined();
+
+    const functionResponsePart = toolResponseContent!.parts.find(
+      (p) => "functionResponse" in p && p.functionResponse
+    ) as Gemini.Part.FunctionResponse;
+    const resultStr = JSON.stringify(
+      functionResponsePart.functionResponse!.response
+    );
+    expect(resultStr).toContain("line one");
+  });
+
+  test("ToolMessage non-string content is passed through as a JSON object, not double-stringified (legacy path)", () => {
+    const messages = [
+      new HumanMessage("hello"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "get_video_captions",
+            args: {},
+            id: "call-captions",
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: [
+          {
+            url: "https://www.youtube.com/watch?v=redacted",
+            error: "All 5 caption URLs failed",
+          },
+        ] as unknown as string,
+        tool_call_id: "call-captions",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    const toolResponseContent = contents.find(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
+    expect(toolResponseContent).toBeDefined();
+
+    const functionResponsePart = toolResponseContent!.parts.find(
+      (p) => "functionResponse" in p && p.functionResponse
+    ) as Gemini.Part.FunctionResponse;
+    const result = functionResponsePart.functionResponse!.response!.result;
+    expect(typeof result).not.toBe("string");
+    expect(result).toEqual([
+      {
+        url: "https://www.youtube.com/watch?v=redacted",
+        error: "All 5 caption URLs failed",
+      },
+    ]);
+  });
+});
+
+test("coalesces consecutive plain HumanMessages into one user content", () => {
+  // Plain same-role turns have always been coalesced; only the
+  // functionResponse + text boundary introduced by #11444 must stay split.
+  const messages = [new HumanMessage("first"), new HumanMessage("second")];
+
+  const contents = convertMessagesToGeminiContents(messages);
+
+  expect(contents).toHaveLength(1);
+  expect(contents[0].role).toBe("user");
+  expect(contents[0].parts).toEqual([{ text: "first" }, { text: "second" }]);
 });
 
 describe("executableCode and codeExecutionResult round-trip", () => {
