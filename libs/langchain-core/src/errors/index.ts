@@ -197,6 +197,13 @@ export class ContextOverflowError extends ns.brand(
    */
   cause?: Error;
 
+  /**
+   * The HTTP status from the underlying provider error, if one was provided.
+   * Keeping this on the wrapper lets retry handlers classify the error without
+   * needing to know about the original error's shape.
+   */
+  status?: number;
+
   constructor(message?: string) {
     super(message ?? "Input exceeded the model's context window.");
     // The same oversized input fails identically; it needs trimming, not another attempt.
@@ -225,6 +232,12 @@ export class ContextOverflowError extends ns.brand(
   static fromError(obj: Error): ContextOverflowError {
     const error = new ContextOverflowError(obj.message);
     error.cause = obj;
+
+    const status = (obj as Error & { status?: unknown }).status;
+    if (typeof status === "number") {
+      error.status = status;
+    }
+
     return error;
   }
 }
