@@ -24,9 +24,9 @@
     "test:standard:int": "vitest run --mode standard-int"
   },
   "dependencies": {
-    "@aws-sdk/client-bedrock-agent-runtime": "^3.1116.0",
-    "@aws-sdk/client-bedrock-runtime": "^3.1116.0",
-    "@aws-sdk/client-kendra": "^3.1116.0",
+    "@aws-sdk/client-bedrock-agent-runtime": "^3.1121.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.1121.0",
+    "@aws-sdk/client-kendra": "^3.1121.0",
     "@aws-sdk/credential-provider-node": "^3.972.81"
   },
   "peerDependencies": {
