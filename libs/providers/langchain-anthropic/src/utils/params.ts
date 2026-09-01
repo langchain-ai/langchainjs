@@ -9,6 +9,7 @@ import {
 type InvocationCompatibilityFields = {
   model?: string;
   thinking: AnthropicThinkingConfigParam;
+  thinkingExplicitlySet?: boolean;
   outputConfig?: AnthropicOutputConfig;
   topK?: number;
   topP?: number;
@@ -20,6 +21,12 @@ const ADAPTIVE_ONLY_MODEL_PREFIXES = [
   "claude-opus-4-8",
   "claude-opus-5",
   "claude-sonnet-5",
+  "claude-fable-5",
+  "claude-mythos-5",
+  "claude-mythos-preview",
+] as const;
+
+const ALWAYS_ON_THINKING_MODEL_PREFIXES = [
   "claude-fable-5",
   "claude-mythos-5",
   "claude-mythos-preview",
@@ -62,10 +69,31 @@ export function getTaskBudgetBetas(
 export function validateInvocationParamCompatibility(
   fields: InvocationCompatibilityFields
 ): void {
-  const { model, thinking, outputConfig, topK, topP, temperature } = fields;
+  const {
+    model,
+    thinking,
+    thinkingExplicitlySet,
+    outputConfig,
+    topK,
+    topP,
+    temperature,
+  } = fields;
   const adaptiveOnlyModel = isAdaptiveOnlyModel(model);
+  const alwaysOnThinkingModel = modelStartsWithAnyPrefix(
+    model,
+    ALWAYS_ON_THINKING_MODEL_PREFIXES
+  );
   const modelName = model ?? "this model";
 
+  if (
+    alwaysOnThinkingModel &&
+    thinkingExplicitlySet &&
+    thinking.type === "disabled"
+  ) {
+    throw new Error(
+      `thinking.type="disabled" is not supported for ${modelName}; omit thinking to use adaptive thinking instead`
+    );
+  }
   if (adaptiveOnlyModel && thinking.type === "enabled") {
     throw new Error(
       `thinking.type="enabled" is not supported for ${modelName}; use thinking.type="adaptive" instead`
