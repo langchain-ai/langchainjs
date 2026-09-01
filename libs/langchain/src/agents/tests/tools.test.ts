@@ -36,7 +36,10 @@ describe("tools", () => {
         expect(runtime.toolCallId).toEqual("1");
         expect(runtime.config.recursionLimit).toEqual(25);
         expect(typeof runtime.writer).toBe("function");
-        expect(runtime.store?.constructor.name).toEqual("AsyncBatchedStore");
+        expect(
+          (runtime.store as { constructor: { name: string } } | null)
+            ?.constructor.name
+        ).toEqual("AsyncBatchedStore");
         return `The weather in ${input.city} is sunny. The foo is ${runtime.context.foo} and the bar is ${runtime.state.bar}.`;
       },
       {
