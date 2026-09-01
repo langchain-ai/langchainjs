@@ -90,6 +90,7 @@ const MODEL_DEFAULT_MAX_OUTPUT_TOKENS: Partial<
   // Claude 5 — 128K max output
   "claude-opus-5": 16384,
   "claude-sonnet-5": 16384,
+  "claude-fable-5-1": 16384,
   "claude-fable-5": 16384,
   "claude-mythos-5": 16384,
   "claude-mythos-preview": 16384,
@@ -1322,7 +1323,8 @@ export class ChatAnthropicMessages<
 
     validateInvocationParamCompatibility({
       model: this.model,
-      thinking: this.thinking,
+      thinking: output.thinking ?? this.thinking,
+      thinkingExplicitlySet: output.thinking !== undefined,
       outputConfig: mergedOutputConfig,
       topK: this.topK,
       topP: this.topP,
