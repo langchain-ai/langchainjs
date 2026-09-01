@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@arethetypeswrong/core": "^0.18.5",
-    "@typescript/native-preview": "^7.0.0-dev.20260401.1",
+    "@typescript/native-preview": "^7.0.0-dev.20260707.2",
     "publint": "^0.3.24",
     "rolldown": "^1.2.5",
     "tsdown": "^0.22.14",
