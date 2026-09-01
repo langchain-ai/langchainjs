@@ -1323,8 +1323,10 @@ export class ChatAnthropicMessages<
 
     validateInvocationParamCompatibility({
       model: this.model,
-      thinking: this.thinking,
-      thinkingExplicitlySet: this.thinkingExplicitlySet,
+      thinking:
+        this.model.startsWith("claude-fable-5") && !this.thinkingExplicitlySet
+          ? { type: "adaptive" }
+          : this.thinking,
       outputConfig: mergedOutputConfig,
       topK: this.topK,
       topP: this.topP,

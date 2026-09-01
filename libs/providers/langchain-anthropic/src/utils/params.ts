@@ -9,7 +9,6 @@ import {
 type InvocationCompatibilityFields = {
   model?: string;
   thinking: AnthropicThinkingConfigParam;
-  thinkingExplicitlySet?: boolean;
   outputConfig?: AnthropicOutputConfig;
   topK?: number;
   topP?: number;
@@ -26,11 +25,7 @@ const ADAPTIVE_ONLY_MODEL_PREFIXES = [
   "claude-mythos-preview",
 ] as const;
 
-const ALWAYS_ON_THINKING_MODEL_PREFIXES = [
-  "claude-fable-5",
-  "claude-mythos-5",
-  "claude-mythos-preview",
-] as const;
+const FABLE_MODEL_PREFIXES = ["claude-fable-5"] as const;
 
 function modelStartsWithAnyPrefix(
   model: string | undefined,
@@ -69,27 +64,12 @@ export function getTaskBudgetBetas(
 export function validateInvocationParamCompatibility(
   fields: InvocationCompatibilityFields
 ): void {
-  const {
-    model,
-    thinking,
-    thinkingExplicitlySet,
-    outputConfig,
-    topK,
-    topP,
-    temperature,
-  } = fields;
+  const { model, thinking, outputConfig, topK, topP, temperature } = fields;
   const adaptiveOnlyModel = isAdaptiveOnlyModel(model);
-  const alwaysOnThinkingModel = modelStartsWithAnyPrefix(
-    model,
-    ALWAYS_ON_THINKING_MODEL_PREFIXES
-  );
+  const fableModel = modelStartsWithAnyPrefix(model, FABLE_MODEL_PREFIXES);
   const modelName = model ?? "this model";
 
-  if (
-    alwaysOnThinkingModel &&
-    thinkingExplicitlySet &&
-    thinking.type === "disabled"
-  ) {
+  if (fableModel && thinking.type === "disabled") {
     throw new Error(
       `thinking.type="disabled" is not supported for ${modelName}; omit thinking to use adaptive thinking instead`
     );
@@ -136,7 +116,7 @@ export function validateInvocationParamCompatibility(
     }
   }
 
-  if (isThinkingEnabled(thinking)) {
+  if (!fableModel && isThinkingEnabled(thinking)) {
     if (topK !== undefined) {
       throw new Error("topK is not supported when thinking is enabled");
     }
