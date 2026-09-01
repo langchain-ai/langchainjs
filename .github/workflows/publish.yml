@@ -17,7 +17,7 @@ jobs:
     if: github.repository == 'langchain-ai/langchainjs'
     runs-on: ubuntu-latest
     outputs:
-      published_packages: ${{ steps.changesets.outputs.publishedPackages }}
+      published_packages: ${{ steps.changesets.outputs.published-packages }}
       published: ${{ steps.changesets.outputs.published }}
     permissions:
       contents: write # enable pushing changes to the origin
@@ -56,10 +56,10 @@ jobs:
         id: changesets
         uses: changesets/action@8488615a623b1b9c987934bb89eae8af6a946ac1
         with:
-          version: pnpm run changeset:version
-          commit: "chore: version packages"
-          title: "chore: version packages"
-          publish: pnpm run release
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          version-script: pnpm run changeset:version
+          commit-message: "chore: version packages"
+          pr-title: "chore: version packages"
+          publish-script: pnpm run release
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
