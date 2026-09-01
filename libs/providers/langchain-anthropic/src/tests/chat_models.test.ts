@@ -2421,6 +2421,18 @@ describe("Fable 5 and Mythos 5", () => {
     }
   );
 
+  test("rejects disabled thinking from invocationKwargs for Fable 5.1", () => {
+    const model = new ChatAnthropic({
+      model: "claude-fable-5-1",
+      apiKey: "testing",
+      invocationKwargs: { thinking: { type: "disabled" } },
+    });
+
+    expect(() => model.invocationParams({})).toThrow(
+      'thinking.type="disabled" is not supported for claude-fable-5-1; omit thinking to use adaptive thinking instead'
+    );
+  });
+
   test.each(modelNames)("rejects thinking.type=enabled for %s", (modelName) => {
     const model = new ChatAnthropic({
       model: modelName,

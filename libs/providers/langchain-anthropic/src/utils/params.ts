@@ -9,6 +9,7 @@ import {
 type InvocationCompatibilityFields = {
   model?: string;
   thinking: AnthropicThinkingConfigParam;
+  thinkingExplicitlySet?: boolean;
   outputConfig?: AnthropicOutputConfig;
   topK?: number;
   topP?: number;
@@ -64,12 +65,20 @@ export function getTaskBudgetBetas(
 export function validateInvocationParamCompatibility(
   fields: InvocationCompatibilityFields
 ): void {
-  const { model, thinking, outputConfig, topK, topP, temperature } = fields;
+  const {
+    model,
+    thinking,
+    thinkingExplicitlySet,
+    outputConfig,
+    topK,
+    topP,
+    temperature,
+  } = fields;
   const adaptiveOnlyModel = isAdaptiveOnlyModel(model);
   const fableModel = modelStartsWithAnyPrefix(model, FABLE_MODEL_PREFIXES);
   const modelName = model ?? "this model";
 
-  if (fableModel && thinking.type === "disabled") {
+  if (fableModel && thinkingExplicitlySet && thinking.type === "disabled") {
     throw new Error(
       `thinking.type="disabled" is not supported for ${modelName}; omit thinking to use adaptive thinking instead`
     );
