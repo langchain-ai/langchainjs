@@ -1,5 +1,42 @@
 # @langchain/classic
 
+## 1.0.46
+
+### Patch Changes
+
+- Updated dependencies [[`53dbfc2`](https://github.com/langchain-ai/langchainjs/commit/53dbfc2fa033250fe7b711d7c3c8f6e7bfea9216)]:
+  - @langchain/openai@1.5.11
+
+## 1.0.45
+
+### Patch Changes
+
+- Updated dependencies [[`c26c87e`](https://github.com/langchain-ai/langchainjs/commit/c26c87e41bccd01111e170c32ba1e5eec94ba3a6)]:
+  - @langchain/openai@1.5.10
+
+## 1.0.44
+
+### Patch Changes
+
+- [#11412](https://github.com/langchain-ai/langchainjs/pull/11412) [`7df258c`](https://github.com/langchain-ai/langchainjs/commit/7df258c0af8362fede14d42bb982597a56f41b78) Thanks [@hntrl](https://github.com/hntrl)! - chore(langgraph): update langgraph deps to track serialization fix
+
+- Updated dependencies [[`5c9fdf2`](https://github.com/langchain-ai/langchainjs/commit/5c9fdf2f0339deb92db84eaa838cf35c7dcdb027), [`fe8eec1`](https://github.com/langchain-ai/langchainjs/commit/fe8eec1915cc5580b8e7a2f3d4f68fe5e577d641), [`5c9fdf2`](https://github.com/langchain-ai/langchainjs/commit/5c9fdf2f0339deb92db84eaa838cf35c7dcdb027)]:
+  - @langchain/openai@1.5.9
+
+## 1.0.43
+
+### Patch Changes
+
+- Updated dependencies [[`3b0e4c4`](https://github.com/langchain-ai/langchainjs/commit/3b0e4c48a31811031a460c4d95519a7c1163dc41)]:
+  - @langchain/openai@1.5.8
+
+## 1.0.42
+
+### Patch Changes
+
+- Updated dependencies [[`3fe4c43`](https://github.com/langchain-ai/langchainjs/commit/3fe4c43ce3399ebf2391ed612d78fedcd3ea5ec6)]:
+  - @langchain/openai@1.5.7
+
 ## 1.0.41
 
 ### Patch Changes

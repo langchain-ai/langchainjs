@@ -28,7 +28,7 @@
     "format:check": "prettier --check \"src\""
   },
   "dependencies": {
-    "@qdrant/js-client-rest": "^1.18.0"
+    "@qdrant/js-client-rest": "^1.19.0"
   },
   "peerDependencies": {
     "@langchain/core": "workspace:^"
@@ -38,7 +38,7 @@
     "@langchain/core": "workspace:^",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
-    "@vitest/coverage-v8": "^4.1.10",
+    "@vitest/coverage-v8": "^4.1.11",
     "dotenv": "^16.3.1",
     "dpdm": "^3.14.0",
     "eslint": "^9.39.5",

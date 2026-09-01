@@ -1,5 +1,19 @@
 # @langchain/aws
 
+## 1.4.5
+
+### Patch Changes
+
+- [#11307](https://github.com/langchain-ai/langchainjs/pull/11307) [`e927605`](https://github.com/langchain-ai/langchainjs/commit/e92760538352ba43599b18d94753ba15e7dc363f) Thanks [@taoche](https://github.com/taoche)! - fix(aws): add claude-sonnet-5, claude-opus-5, and claude-haiku-5 to supportedToolChoiceValuesForModel
+
+## 1.4.4
+
+### Patch Changes
+
+- [#11345](https://github.com/langchain-ai/langchainjs/pull/11345) [`8ba1fd9`](https://github.com/langchain-ai/langchainjs/commit/8ba1fd996ff9efe93e5cb75afa946204c00528a4) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - fix(aws): put `lc_error_code` directly on Bedrock Converse stream-idle timeouts, cover the pre-response hang window
+
+  `ChatBedrockConverse`'s stream watchdog previously threw a bare `Error` with `lc_error_code` nested under `cause`, making the timeout undetectable via a plain `error.lc_error_code` check. It now sets `lc_error_code: "MODEL_STREAM_TIMEOUT"` directly on the error, matching the convention used elsewhere in the codebase. The `streamIdleTimeout` watchdog also now covers the window before the initial response is received, not just gaps between stream chunks.
+
 ## 1.4.3
 
 ### Patch Changes

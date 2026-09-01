@@ -224,6 +224,7 @@ export type ResponsesInputItem = OpenAIClient.Responses.ResponseInputItem;
  *   - `total_tokens`: Combined total of input and output tokens (defaults to 0 if not provided)
  *   - `input_token_details`: Object containing detailed input token information:
  *     - `cache_read`: Number of tokens read from cache (only included if available)
+ *     - `cache_creation`: Number of tokens written to cache (only included if available)
  *   - `output_token_details`: Object containing detailed output token information:
  *     - `reasoning`: Number of tokens used for reasoning (only included if available)
  *
@@ -233,7 +234,7 @@ export type ResponsesInputItem = OpenAIClient.Responses.ResponseInputItem;
  *   input_tokens: 100,
  *   output_tokens: 50,
  *   total_tokens: 150,
- *   input_tokens_details: { cached_tokens: 20 },
+ *   input_tokens_details: { cached_tokens: 20, cache_write_tokens: 30 },
  *   output_tokens_details: { reasoning_tokens: 10 }
  * };
  *
@@ -243,7 +244,7 @@ export type ResponsesInputItem = OpenAIClient.Responses.ResponseInputItem;
  * //   input_tokens: 100,
  * //   output_tokens: 50,
  * //   total_tokens: 150,
- * //   input_token_details: { cache_read: 20 },
+ * //   input_token_details: { cache_read: 20, cache_creation: 30 },
  * //   output_token_details: { reasoning: 10 }
  * // }
  * ```
@@ -251,8 +252,8 @@ export type ResponsesInputItem = OpenAIClient.Responses.ResponseInputItem;
  * @remarks
  * - The function safely handles undefined or null values by using optional chaining
  *   and nullish coalescing operators
- * - Detailed token information (cache_read, reasoning) is only included in the result
- *   if the corresponding values are present in the input
+ * - Detailed token information (cache_read, cache_creation, reasoning) is only included
+ *   in the result if the corresponding values are present in the input
  * - Token counts default to 0 if not provided in the usage object
  * - This converter is specifically designed for OpenAI's Responses API format and
  *   may differ from other OpenAI API endpoints
@@ -264,6 +265,9 @@ export const convertResponsesUsageToUsageMetadata: Converter<
   const inputTokenDetails = {
     ...(usage?.input_tokens_details?.cached_tokens != null && {
       cache_read: usage?.input_tokens_details?.cached_tokens,
+    }),
+    ...(usage?.input_tokens_details?.cache_write_tokens != null && {
+      cache_creation: usage?.input_tokens_details?.cache_write_tokens,
     }),
   };
   const outputTokenDetails = {
@@ -725,6 +729,16 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
 
     additional_kwargs[_CUSTOM_TOOL_CALL_IDS_MAP_KEY] = {
       [event.item.call_id]: event.item.id,
+    };
+  } else if (
+    event.type === "response.output_item.done" &&
+    event.item.type === "reasoning" &&
+    event.item.encrypted_content
+  ) {
+    // Encrypted reasoning content is only complete on the done event. Emit it
+    // separately so it merges with the id and summary from output_item.added.
+    additional_kwargs.reasoning = {
+      encrypted_content: event.item.encrypted_content,
     };
   } else if (
     event.type === "response.output_item.done" &&
@@ -1516,9 +1530,10 @@ export const convertMessagesToResponsesInput: Converter<
         const reasoning = additional_kwargs?.reasoning;
         const hasEncryptedContent = !!reasoning?.encrypted_content;
         /**
-         * With ZDR enabled, OpenAI does not retain reasoning items, so we only send
-         * them when encrypted content is available (via include: ["reasoning.encrypted_content"]).
-         * With ZDR disabled, we include reasoning item ids so OpenAI can reference them, as it's storing them.
+         * With ZDR enabled, OpenAI returns encrypted reasoning content for stateless
+         * replay, so only send reasoning items when that payload is available.
+         * With ZDR disabled, include reasoning item IDs so OpenAI can reference
+         * the stored items.
          */
         if (reasoning && (!zdrEnabled || hasEncryptedContent)) {
           const reasoningItem =

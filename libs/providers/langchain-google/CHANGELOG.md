@@ -1,5 +1,41 @@
 # @langchain/google
 
+## 0.2.4
+
+### Patch Changes
+
+- [#11426](https://github.com/langchain-ai/langchainjs/pull/11426) [`2e865ea`](https://github.com/langchain-ai/langchainjs/commit/2e865ea06047d6a71e9fb694dfb0dee5c1a46f4b) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - fix: keep image/audio/video content in ToolMessages as sibling Gemini parts instead of losing it inside functionResponse.response.result JSON, and stop double-stringifying non-string tool results ([#10297](https://github.com/langchain-ai/langchainjs/issues/10297), [#10439](https://github.com/langchain-ai/langchainjs/issues/10439))
+
+- [#11477](https://github.com/langchain-ai/langchainjs/pull/11477) [`9a0f244`](https://github.com/langchain-ai/langchainjs/commit/9a0f244c161412ba54c7308e635ce773abc88c4a) Thanks [@hntrl](https://github.com/hntrl)! - Fix `convertMessagesToGeminiContents` merging a `ToolMessage` (functionResponse)
+  with a following `HumanMessage` (text) into one `user` content. Both map to the
+  `user` role, and Vertex/Gemini rejects a single `user` content that mixes a
+  `functionResponse` with text, so a tool result followed by a user message would
+  fail with a 400. Merging is now limited to runs of adjacent tool results
+  (parallel tool calls), which the API requires to be grouped into one content;
+  all other same-role contents stay separate.
+
+  Also fixes the v1 standard-content path, where a single `ToolMessage` could emit
+  a `user` content mixing its `functionResponse` part with text parts; tool turns
+  now carry only their functionResponse part(s), mirroring the legacy path.
+
+## 0.2.3
+
+### Patch Changes
+
+- [#11405](https://github.com/langchain-ai/langchainjs/pull/11405) [`8cfff4d`](https://github.com/langchain-ai/langchainjs/commit/8cfff4dced1327fc87893a86dfc63c553403aec0) Thanks [@hntrl](https://github.com/hntrl)! - Add LangSmith gateway support for Google Gemini (Developer API) models. When `LANGSMITH_GATEWAY` is set, `ChatGoogleGenerativeAI` and `ChatGoogle` (and `initChatModel("google-genai:...")`) route requests through the gateway's Gemini path, using the gateway key (falling back to `LANGSMITH_API_KEY`). An explicit `baseUrl`/`endpoint`, an explicit `apiKey`, or a Vertex AI configuration suppress gateway routing. Also adds `GEMINI_API_KEY` as a fallback env var for `ChatGoogleGenerativeAI`.
+
+## 0.2.2
+
+### Patch Changes
+
+- [#11342](https://github.com/langchain-ai/langchainjs/pull/11342) [`3b0e4c4`](https://github.com/langchain-ai/langchainjs/commit/3b0e4c48a31811031a460c4d95519a7c1163dc41) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - feat(google): mark Google provider errors as retryable or not
+
+  Builds on `stampRetryable` in `@langchain/core` so the retry middleware can tell a transient failure from a deterministic one. Timeouts, rate limits, and server errors are marked retryable; bad credentials, blocked prompts, invalid tools, and invalid input non-retryable. Errors that may succeed on a regeneration stay unmarked and retry as before.
+
+  Also forwards a per-call `maxRetries` to the retry loop, so a surrounding retry loop such as `modelRetryMiddleware` can take over instead of the two multiplying against each other.
+
+  The `@langchain/core` peer range moves from `^1.0.0` to `workspace:^`, since this release depends on `stampRetryable`.
+
 ## 0.2.1
 
 ### Patch Changes

@@ -89,6 +89,8 @@ const MODEL_DEFAULT_MAX_OUTPUT_TOKENS: Partial<
 > = {
   // Claude 5 — 128K max output
   "claude-opus-5": 16384,
+  "claude-sonnet-5": 16384,
+  "claude-fable-5-1": 16384,
   "claude-fable-5": 16384,
   "claude-mythos-5": 16384,
   "claude-mythos-preview": 16384,
@@ -1321,7 +1323,8 @@ export class ChatAnthropicMessages<
 
     validateInvocationParamCompatibility({
       model: this.model,
-      thinking: this.thinking,
+      thinking: output.thinking ?? this.thinking,
+      thinkingExplicitlySet: output.thinking !== undefined,
       outputConfig: mergedOutputConfig,
       topK: this.topK,
       topP: this.topP,
@@ -1424,6 +1427,7 @@ export class ChatAnthropicMessages<
     const stream = await this.createStreamWithRetry(payload, {
       headers: options.headers,
       signal: options.signal,
+      maxRetries: options.maxRetries,
     });
 
     for await (const data of stream) {
@@ -1496,6 +1500,7 @@ export class ChatAnthropicMessages<
     const stream = await this.createStreamWithRetry(payload, {
       headers: options.headers,
       signal: options.signal,
+      maxRetries: options.maxRetries,
     });
 
     const shouldStreamUsage = this.streamUsage ?? options.streamUsage;
@@ -1591,6 +1596,7 @@ export class ChatAnthropicMessages<
       return this._generateNonStreaming(messages, params, {
         signal: options.signal,
         headers: options.headers,
+        maxRetries: options.maxRetries,
       });
     }
   }
@@ -1645,7 +1651,10 @@ export class ChatAnthropicMessages<
         throw error;
       }
     };
-    return this.caller.call(makeCompletionRequest);
+    return this.caller.callWithOptions(
+      { maxRetries: options?.maxRetries },
+      makeCompletionRequest
+    );
   }
 
   /** @ignore */
@@ -1691,7 +1700,7 @@ export class ChatAnthropicMessages<
       }
     };
     return this.caller.callWithOptions(
-      { signal: options.signal ?? undefined },
+      { signal: options.signal ?? undefined, maxRetries: options.maxRetries },
       makeCompletionRequest
     );
   }

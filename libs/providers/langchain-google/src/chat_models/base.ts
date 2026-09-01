@@ -75,9 +75,106 @@ import {
   createFunctionCallingParser,
 } from "@langchain/core/language_models/structured_output";
 import { iife } from "../utils/misc";
+import { resolveLangSmithGatewayConfig } from "@langchain/core/utils/gateway";
+import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import ServiceTier = Gemini.ServiceTier;
 
 export type GooglePlatformType = "gai" | "gcp";
+
+/**
+ * Returns true when the params (or environment) configure Vertex AI /
+ * service-account authentication, which the LangSmith gateway does not proxy.
+ *
+ * This covers the cases `convertParamsToPlatformType` cannot see: explicit
+ * service-account `credentials`, the `GOOGLE_CLOUD_CREDENTIALS` env var, and
+ * Node-only `googleAuthOptions` (Application Default Credentials). Without this
+ * check a credentials-only model would resolve to `gcp` today, but injecting a
+ * gateway API key below would flip it to `gai` and misroute the request to the
+ * Gemini Developer API gateway path.
+ */
+function hasVertexCredentials(params: {
+  credentials?: unknown;
+  googleAuthOptions?: unknown;
+}): boolean {
+  return (
+    typeof params.credentials !== "undefined" ||
+    typeof params.googleAuthOptions !== "undefined" ||
+    typeof getEnvironmentVariable("GOOGLE_CLOUD_CREDENTIALS") !== "undefined"
+  );
+}
+
+/**
+ * Resolves LangSmith gateway routing for Google chat model params.
+ *
+ * The LangSmith gateway proxies the **Gemini Developer API** (the API-key,
+ * `gai` platform), not Vertex AI. So this only applies when the resolved
+ * platform is `gai` and the caller has not set an explicit `endpoint`. An
+ * explicit `endpoint`, a Vertex configuration (`vertexai: true` /
+ * `platformType: "gcp"`), or service-account credentials (`credentials`,
+ * `googleAuthOptions`, or `GOOGLE_CLOUD_CREDENTIALS`) suppress gateway routing
+ * entirely.
+ *
+ * When `LANGSMITH_GATEWAY` is set, this rewrites `endpoint` to the gateway
+ * host and lets the gateway key take precedence over the provider key (which
+ * then rides as the `x-goog-api-key` header via the ApiClient). The default
+ * `https` gateway host is written scheme-less (the URL builders prepend
+ * `https://`); a non-`https` custom gateway keeps its scheme so it is not
+ * forced to TLS.
+ *
+ * This function is pure: it never mutates `params`. It returns a new object
+ * with the gateway overrides applied when routing is active, or an unchanged
+ * shallow copy otherwise.
+ *
+ * @returns a new params object with gateway routing applied when applicable.
+ */
+export function applyGeminiGatewayParams<
+  TParams extends {
+    apiKey?: string;
+    endpoint?: string;
+    platformType?: GooglePlatformType;
+    vertexai?: boolean;
+    credentials?: unknown;
+    googleAuthOptions?: unknown;
+  },
+>(params: TParams): TParams & { apiKey?: string; endpoint?: string } {
+  // An explicit endpoint always wins; a Vertex config is out of scope (the
+  // gateway proxies the Gemini Developer API, not Vertex AI).
+  if (typeof params.endpoint !== "undefined") {
+    return { ...params };
+  }
+  const explicitPlatform = convertParamsToPlatformType(params);
+  if (explicitPlatform === "gcp" || hasVertexCredentials(params)) {
+    return { ...params };
+  }
+
+  const gatewayConfig = resolveLangSmithGatewayConfig({
+    providerPath: "gemini",
+  });
+  if (typeof gatewayConfig.baseURL === "undefined") {
+    return { ...params };
+  }
+
+  // When routing through the gateway with no explicitly requested platform and
+  // no credentials that would imply Vertex, treat this as a Gemini Developer
+  // API (`gai`) call. A provider key still wins over the gateway key.
+  const gatewayUrl = new URL(gatewayConfig.baseURL);
+  const path = gatewayUrl.pathname.replace(/\/+$/, "");
+  // The URL builders compose `https://${endpoint}/${apiVersion}/...`. For the
+  // default `https` gateway, keep the endpoint scheme-less (host + path) so the
+  // builder's `https://` prefix produces the right URL. For a non-`https`
+  // custom gateway (e.g. `http://localhost:8080`), keep the full scheme so the
+  // builder does not force TLS; `buildUrlGemini` skips its prefix when the
+  // endpoint already includes a scheme.
+  const endpoint =
+    gatewayUrl.protocol === "https:"
+      ? `${gatewayUrl.host}${path}`
+      : `${gatewayUrl.protocol}//${gatewayUrl.host}${path}`;
+  return {
+    ...params,
+    apiKey: params.apiKey ?? gatewayConfig.apiKey,
+    endpoint,
+  };
+}
 
 export function getPlatformType(
   platform: GooglePlatformType | undefined,
@@ -294,9 +391,22 @@ export abstract class BaseChatGoogle<
   }
 
   protected async buildUrlGemini(urlMethod?: string): Promise<string> {
-    return `https://${this.endpoint}/${this.apiVersion}/models/${this.model}:${
-      urlMethod ?? this.urlMethod
-    }`;
+    // `endpoint` is normally scheme-less (e.g. `generativelanguage.googleapis.com`)
+    // and defaults to `https`, but a gateway endpoint may already carry a scheme
+    // and a base path (e.g. a custom `http://` LangSmith gateway). Let `URL`
+    // resolve the scheme so a custom `http://` gateway is not forced to TLS.
+    const url = this.endpoint.includes("://")
+      ? new URL(this.endpoint)
+      : new URL(`https://${this.endpoint}`);
+    // `urlMethod` may include a query string (e.g. `streamGenerateContent?alt=sse`);
+    // split it out so `URL` keeps it as a query rather than encoding the `?`.
+    const [method, search] = (urlMethod ?? this.urlMethod).split("?", 2);
+    const basePath = url.pathname.replace(/\/+$/, "");
+    url.pathname = `${basePath}/${this.apiVersion}/models/${this.model}:${method}`;
+    if (search) {
+      url.search = search;
+    }
+    return url.toString();
   }
 
   protected async buildUrlVertexExpress(urlMethod?: string): Promise<string> {
@@ -481,7 +591,7 @@ export abstract class BaseChatGoogle<
     let response: Response;
     try {
       response = await this.caller.callWithOptions(
-        { signal: options.signal },
+        { signal: options.signal, maxRetries: options.maxRetries },
         async () => {
           const nextResponse = await this.apiClient.fetch(
             new Request(url, {
@@ -672,7 +782,7 @@ export abstract class BaseChatGoogle<
     let response: Response;
     try {
       response = await this.caller.callWithOptions(
-        { signal: options.signal },
+        { signal: options.signal, maxRetries: options.maxRetries },
         async () => {
           const nextResponse = await this.apiClient.fetch(
             new Request(url, {
