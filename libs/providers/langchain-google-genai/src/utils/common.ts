@@ -974,13 +974,36 @@ export function convertToGenerativeAITools(
   ];
 }
 
+/**
+ * Reads `thoughtsTokenCount` (reasoning tokens on Gemini thinking models).
+ *
+ * The field is present on the wire but is not declared on the legacy
+ * `@google/generative-ai` `UsageMetadata` type, so it must be read defensively
+ * rather than accessed directly.
+ */
+function getThoughtsTokenCount(
+  usageMetadata: GenerateContentResponse["usageMetadata"]
+): number {
+  const count = (usageMetadata as { thoughtsTokenCount?: number } | undefined)
+    ?.thoughtsTokenCount;
+  return typeof count === "number" ? count : 0;
+}
+
 export function convertUsageMetadata(
   usageMetadata: GenerateContentResponse["usageMetadata"],
   model: string
 ): UsageMetadata {
+  // The API returns `thoughtsTokenCount` for thinking models, but the legacy
+  // `@google/generative-ai` `UsageMetadata` type does not declare it, so it has
+  // to be read defensively.
+  const thoughtsTokenCount = getThoughtsTokenCount(usageMetadata);
+  const candidatesTokenCount = usageMetadata?.candidatesTokenCount ?? 0;
+
   const output: UsageMetadata = {
     input_tokens: usageMetadata?.promptTokenCount ?? 0,
-    output_tokens: usageMetadata?.candidatesTokenCount ?? 0,
+    // Gemini reports reasoning tokens separately from `candidatesTokenCount`,
+    // while `output_tokens` is defined as the sum of all output token types.
+    output_tokens: candidatesTokenCount + thoughtsTokenCount,
     total_tokens: usageMetadata?.totalTokenCount ?? 0,
   };
   if (usageMetadata?.cachedContentTokenCount) {
@@ -988,13 +1011,20 @@ export function convertUsageMetadata(
     output.input_token_details.cache_read =
       usageMetadata.cachedContentTokenCount;
   }
+  if (thoughtsTokenCount) {
+    output.output_token_details ??= {};
+    output.output_token_details.reasoning = thoughtsTokenCount;
+  }
   // gemini-3-pro-preview has bracket based tracking of tokens per request
   // FIXME(hntrl): move this usageMetadata calculation elsewhere
   if (model === "gemini-3-pro-preview") {
-    const over200k = Math.max(0, usageMetadata?.promptTokenCount ?? 0 - 200000);
+    const over200k = Math.max(
+      0,
+      (usageMetadata?.promptTokenCount ?? 0) - 200000
+    );
     const cachedOver200k = Math.max(
       0,
-      usageMetadata?.cachedContentTokenCount ?? 0 - 200000
+      (usageMetadata?.cachedContentTokenCount ?? 0) - 200000
     );
     if (over200k) {
       output.input_token_details = {
