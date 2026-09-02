@@ -21,7 +21,7 @@
     "clean": "rm -rf .turbo"
   },
   "dependencies": {
-    "@jest/globals": "^30.4.1",
+    "@jest/globals": "^30.5.0",
     "@langchain/core": "workspace:^",
     "zod": "^4.3.6"
   },
