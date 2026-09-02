@@ -227,7 +227,10 @@ function parseToolArgs(value: unknown): Record<string, unknown> {
   }
 }
 
-function standardizeToolBlock(block: ContentBlock): ContentBlock {
+function standardizeToolBlock(
+  block: ContentBlock,
+  truncatedToolCall = false
+): ContentBlock {
   const record = block as Record<string, unknown>;
   if (block.type === "tool_call") return block;
   if (
@@ -242,6 +245,15 @@ function standardizeToolBlock(block: ContentBlock): ContentBlock {
   if (name == null) return block;
 
   const args = record.args ?? record.input;
+  if (truncatedToolCall) {
+    return {
+      ...record,
+      type: "invalid_tool_call",
+      name,
+      args: typeof args === "string" ? args : JSON.stringify(args ?? {}),
+      error: "Tool call arguments were truncated before the stream completed.",
+    } as ContentBlock;
+  }
   return {
     ...record,
     type: "tool_call",
@@ -669,7 +681,9 @@ export class ChatModelStream
 
     const filteredBlocks = contentBlocks
       .filter((b): b is ContentBlock => b != null)
-      .map(standardizeToolBlock);
+      .map((block) =>
+        standardizeToolBlock(block, finishReason === "length")
+      );
 
     return new AIMessage({
       id,

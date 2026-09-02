@@ -554,6 +554,38 @@ describe("ChatModelStream", () => {
       ]);
     });
 
+    test("keeps truncated tool arguments invalid when the stream hits its limit", async () => {
+      const stream = new ChatModelStream(
+        iterEvents([
+          { event: "message-start", id: "msg_truncated_tool" },
+          {
+            event: "content-block-finish",
+            index: 0,
+            content: {
+              type: "tool_call_chunk",
+              id: "tool_1",
+              name: "write",
+              args: '{"content":"line1',
+            } as unknown as ContentBlock,
+          },
+          { event: "message-finish", reason: "length" },
+        ])
+      );
+
+      const message = await stream.output;
+
+      expect(message.tool_calls).toEqual([]);
+      expect(message.invalid_tool_calls).toEqual([
+        expect.objectContaining({
+          type: "invalid_tool_call",
+          id: "tool_1",
+          name: "write",
+          args: '{"content":"line1',
+        }),
+      ]);
+      expect(message.response_metadata?.finish_reason).toBe("length");
+    });
+
     test("assembles multimodal data chunks", async () => {
       const stream = new ChatModelStream(
         iterEvents([
