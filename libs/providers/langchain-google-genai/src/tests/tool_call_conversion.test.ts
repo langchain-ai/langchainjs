@@ -1,9 +1,11 @@
 import { test, expect, describe } from "vitest";
+import type { CodeExecutionTool } from "@google/generative-ai";
 import { AIMessage } from "@langchain/core/messages";
 import { convertBaseMessagesToContent } from "../utils/common.js";
 import { z } from "zod";
 import { tool } from "@langchain/core/tools";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import { convertToolsToGenAI } from "../utils/tools.js";
 
 test("converts standard tool_call content blocks to Google functionCall format", () => {
   // Create AIMessage with standard tool_call content block
@@ -42,6 +44,50 @@ test("converts standard tool_call content blocks to Google functionCall format",
     number1: 2,
     number2: 3,
   });
+});
+
+test("merges LangChain tool declarations into native Gemini tools", () => {
+  const codeExecutionTool: CodeExecutionTool = {
+    codeExecution: {},
+  };
+  const lookupTool = tool(async () => "ok", {
+    name: "lookup_record",
+    description: "Looks up a record by ID.",
+    schema: z.object({
+      id: z.string().describe("Record ID"),
+    }),
+  });
+
+  const result = convertToolsToGenAI([codeExecutionTool, lookupTool]);
+
+  expect(result.tools).toHaveLength(1);
+  expect(result.tools[0]).toMatchObject({
+    codeExecution: {},
+  });
+  expect("functionDeclarations" in result.tools[0]).toBe(true);
+  if (!("functionDeclarations" in result.tools[0])) return;
+  expect(result.tools[0].functionDeclarations).toHaveLength(1);
+  expect(result.tools[0].functionDeclarations?.[0].name).toBe("lookup_record");
+});
+
+test("preserves empty and declaration-only Gemini tool lists", () => {
+  expect(convertToolsToGenAI([]).tools).toEqual([]);
+
+  const lookupTool = tool(async () => "ok", {
+    name: "lookup_record",
+    description: "Looks up a record by ID.",
+    schema: z.object({
+      id: z.string().describe("Record ID"),
+    }),
+  });
+
+  const result = convertToolsToGenAI([lookupTool]);
+
+  expect(result.tools).toHaveLength(1);
+  expect("functionDeclarations" in result.tools[0]).toBe(true);
+  if (!("functionDeclarations" in result.tools[0])) return;
+  expect(result.tools[0].functionDeclarations).toHaveLength(1);
+  expect(result.tools[0].functionDeclarations?.[0].name).toBe("lookup_record");
 });
 
 describe("Gemini Tool Schema Validation - Empty String in Enum", () => {
