@@ -135,7 +135,7 @@ export class VoyageEmbeddings
   private apiKey: string;
 
   /** Do not modify directly. Pass in the basePath option to the constructor. */
-  basePath?: string = "https://api.voyageai.com/v1";
+  basePath?: string;
 
   apiUrl: string;
 
@@ -179,7 +179,11 @@ export class VoyageEmbeddings
     this.modelName = fieldsWithDefaults?.modelName ?? this.modelName;
     this.batchSize = fieldsWithDefaults?.batchSize ?? this.batchSize;
     this.apiKey = apiKey;
-    this.basePath = fieldsWithDefaults?.basePath ?? this.basePath;
+    this.basePath =
+      fieldsWithDefaults?.basePath ??
+      (apiKey.startsWith("al-")
+        ? "https://ai.mongodb.com/v1"
+        : "https://api.voyageai.com/v1");
     this.apiUrl = `${this.basePath}/embeddings`;
     this.inputType = fieldsWithDefaults?.inputType;
     this.truncation = fieldsWithDefaults?.truncation;
