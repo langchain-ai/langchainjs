@@ -28,23 +28,23 @@
     "format:check": "prettier --check \"src\""
   },
   "dependencies": {
-    "flat": "^5.0.2"
+    "flat": "^6.0.1"
   },
   "peerDependencies": {
     "@langchain/core": "workspace:^",
-    "@pinecone-database/pinecone": "^5.0.2"
+    "@pinecone-database/pinecone": "^8.2.0"
   },
   "devDependencies": {
     "@faker-js/faker": "^10.5.0",
     "@langchain/core": "workspace:^",
     "@langchain/openai": "workspace:*",
-    "@pinecone-database/pinecone": "^5.0.2",
+    "@pinecone-database/pinecone": "^8.2.0",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
     "@types/flat": "^5.0.5",
     "@vitest/coverage-v8": "^4.1.11",
-    "dotenv": "^16.3.1",
-    "dpdm": "^3.14.0",
+    "dotenv": "^17.4.2",
+    "dpdm": "^4.3.0",
     "eslint": "^9.39.5",
     "langchain": "workspace:*",
     "prettier": "^3.9.6",
