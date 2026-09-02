@@ -92,4 +92,28 @@ describe("core error classification", () => {
       getRetryable(ContextOverflowError.fromError(new Error("too long")))
     ).toBe(false);
   });
+
+  test("ContextOverflowError.fromError preserves the underlying status", () => {
+    const original = Object.assign(
+      new Error("prompt is too long: 1373536 tokens > 1000000 maximum"),
+      { status: 400 }
+    );
+    const wrapped = ContextOverflowError.fromError(original);
+
+    expect(wrapped.status).toBe(400);
+    expect(wrapped.cause).toBe(original);
+  });
+
+  test("ContextOverflowError.fromError preserves statusCode when status is absent", () => {
+    const original = Object.assign(new Error("too long"), { statusCode: 429 });
+    const wrapped = ContextOverflowError.fromError(original);
+
+    expect(wrapped.status).toBe(429);
+  });
+
+  test("ContextOverflowError.fromError leaves status undefined for plain errors", () => {
+    const wrapped = ContextOverflowError.fromError(new Error("too long"));
+
+    expect(wrapped.status).toBeUndefined();
+  });
 });
