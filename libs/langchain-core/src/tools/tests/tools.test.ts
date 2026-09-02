@@ -13,6 +13,7 @@ import {
 import { ToolCall, ToolMessage } from "../../messages/tool.js";
 import { RunnableConfig } from "../../runnables/types.js";
 import { awaitAllCallbacks } from "../../singletons/callbacks.js";
+import { BaseCallbackHandler } from "../../callbacks/base.js";
 
 test("Tool should error if responseFormat is content_and_artifact but the function doesn't return a tuple", async () => {
   const weatherSchema = z.object({
@@ -854,4 +855,76 @@ describe("Generator tools (async function*)", () => {
 
     expect(generatorCleanupRan).toBe(true);
   });
+});
+
+test("wrapRunExecution wraps the tool call body", async () => {
+  let contextIsActive = false;
+  let contextWasActiveDuringCall = false;
+
+  class ContextHandler extends BaseCallbackHandler {
+    name = "context-handler";
+
+    wrapRunExecution<T>(_runId: string, fn: () => T): T {
+      contextIsActive = true;
+      try {
+        return fn();
+      } finally {
+        contextIsActive = false;
+      }
+    }
+  }
+
+  const contextProbeTool = tool(
+    async () => {
+      contextWasActiveDuringCall = contextIsActive;
+      return "done";
+    },
+    {
+      name: "context_probe",
+      description: "Checks execution context propagation",
+      schema: z.object({}),
+    }
+  );
+
+  await contextProbeTool.invoke({}, { callbacks: [new ContextHandler()] });
+
+  expect(contextWasActiveDuringCall).toBe(true);
+  expect(contextIsActive).toBe(false);
+});
+
+test("wrapRunExecution wraps every async generator tool step", async () => {
+  let contextIsActive = false;
+  const contextDuringGenerator: boolean[] = [];
+
+  class ContextHandler extends BaseCallbackHandler {
+    name = "generator-context-handler";
+
+    wrapRunExecution<T>(_runId: string, fn: () => T): T {
+      contextIsActive = true;
+      try {
+        return fn();
+      } finally {
+        contextIsActive = false;
+      }
+    }
+  }
+
+  const generatorTool = tool(
+    async function* () {
+      contextDuringGenerator.push(contextIsActive);
+      yield "partial";
+      contextDuringGenerator.push(contextIsActive);
+      return "done";
+    },
+    {
+      name: "generator_context_probe",
+      description: "Checks lazy generator execution context propagation",
+      schema: z.object({}),
+    }
+  );
+
+  await generatorTool.invoke({}, { callbacks: [new ContextHandler()] });
+
+  expect(contextDuringGenerator).toEqual([true, true]);
+  expect(contextIsActive).toBe(false);
 });

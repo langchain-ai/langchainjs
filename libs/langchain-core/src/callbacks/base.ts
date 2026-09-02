@@ -57,6 +57,12 @@ export type HandleLLMNewTokenCallbackFields = {
  */
 abstract class BaseCallbackHandlerMethodsClass {
   /**
+   * Runs a run body inside context supplied by this callback handler.
+   * Implementations must invoke `fn` exactly once and return its result.
+   */
+  wrapRunExecution?<T>(runId: string, fn: () => T): T;
+
+  /**
    * Called at the start of an LLM or Chat Model run, with the prompt(s)
    * and the run ID.
    */
