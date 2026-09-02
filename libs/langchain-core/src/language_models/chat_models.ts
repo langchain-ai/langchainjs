@@ -173,22 +173,26 @@ function _formatForTracing(messages: BaseMessage[]): BaseMessage[] {
   for (const message of messages) {
     let messageToTrace = message;
     if (Array.isArray(message.content)) {
-      for (let idx = 0; idx < message.content.length; idx++) {
-        const block = message.content[idx];
+      const content = message.content;
+      // Collect every conversion into one copy. Converting in place against a
+      // freshly sliced `message.content` per block would discard the previous
+      // block's conversion, so a message carrying two images or two files
+      // traced only the first.
+      let convertedContent: typeof content | undefined;
+      for (let idx = 0; idx < content.length; idx++) {
+        const block = content[idx];
         if (isURLContentBlock(block) || isBase64ContentBlock(block)) {
-          if (messageToTrace === message) {
-            // Also shallow-copy content
-            // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-            messageToTrace = new (message.constructor as any)({
-              ...messageToTrace,
-              content: [
-                ...message.content.slice(0, idx),
-                convertToOpenAIImageBlock(block),
-                ...message.content.slice(idx + 1),
-              ],
-            });
-          }
+          convertedContent ??= [...content];
+          convertedContent[idx] = convertToOpenAIImageBlock(block);
         }
+      }
+      if (convertedContent !== undefined) {
+        // Also shallow-copy content
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+        messageToTrace = new (message.constructor as any)({
+          ...message,
+          content: convertedContent,
+        });
       }
     }
     messagesToTrace.push(messageToTrace);
