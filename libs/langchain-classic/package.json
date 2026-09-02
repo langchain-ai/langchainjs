@@ -110,7 +110,7 @@
     "@clickhouse/client": "^0.2.5",
     "@cloudflare/workers-types": "^4.20260602.1",
     "@elastic/elasticsearch": "^8.19.2",
-    "@faker-js/faker": "^10.4.0",
+    "@faker-js/faker": "^10.5.0",
     "@getmetal/metal-sdk": "^7.7.1",
     "@getzep/zep-cloud": "^1.0.12",
     "@getzep/zep-js": "^2.0.2",
