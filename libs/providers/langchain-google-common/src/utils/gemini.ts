@@ -1988,10 +1988,18 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     let config: GeminiRequest["toolConfig"] | undefined;
 
     if (parameters.tool_choice && typeof parameters.tool_choice === "string") {
-      if (["auto", "any", "none"].includes(parameters.tool_choice)) {
+      // The API defines the mode as an enum, which is matched case-sensitively.
+      const modeMap = {
+        auto: "AUTO",
+        any: "ANY",
+        none: "NONE",
+      } as const;
+      const mode = modeMap[parameters.tool_choice as keyof typeof modeMap];
+
+      if (mode) {
         config = {
           functionCallingConfig: {
-            mode: parameters.tool_choice as "auto" | "any" | "none",
+            mode,
             allowedFunctionNames: parameters.allowed_function_names,
           },
         };
@@ -1999,7 +2007,7 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
         // force tool choice to be a single function name in case of structured output
         config = {
           functionCallingConfig: {
-            mode: "any",
+            mode: "ANY",
             allowedFunctionNames: [parameters.tool_choice],
           },
         };

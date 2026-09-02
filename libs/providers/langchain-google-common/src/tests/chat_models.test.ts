@@ -2919,6 +2919,76 @@ describe("Mock ChatGoogle - Gemini", () => {
     ).toBeUndefined();
   });
 
+  test.each([
+    ["auto", "AUTO"],
+    ["any", "ANY"],
+    ["none", "NONE"],
+  ])(
+    "6. tool_choice %s is sent as the %s enum value",
+    async (toolChoice, expectedMode) => {
+      const record: Record<string, any> = {};
+      const projectId = mockId();
+      const authOptions: MockClientAuthInfo = {
+        record,
+        projectId,
+        resultFile: "chat-6-mock.json",
+      };
+
+      const myTool = tool(async ({ query }) => `Result for ${query}`, {
+        name: "my_tool",
+        description: "A custom tool",
+        schema: z.object({ query: z.string() }),
+      });
+
+      const model = new ChatGoogle({
+        authOptions,
+        modelName: "gemini-2.0-flash",
+        temperature: 0,
+        maxRetries: 0,
+      })
+        .bindTools([myTool])
+        .withConfig({ tool_choice: toolChoice });
+
+      await model.invoke("Anything");
+
+      expect(record.opts.data.toolConfig.functionCallingConfig.mode).toBe(
+        expectedMode
+      );
+    }
+  );
+
+  test("6. tool_choice with a function name forces the ANY enum value", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-6-mock.json",
+    };
+
+    const myTool = tool(async ({ query }) => `Result for ${query}`, {
+      name: "my_tool",
+      description: "A custom tool",
+      schema: z.object({ query: z.string() }),
+    });
+
+    const model = new ChatGoogle({
+      authOptions,
+      modelName: "gemini-2.0-flash",
+      temperature: 0,
+      maxRetries: 0,
+    })
+      .bindTools([myTool])
+      .withConfig({ tool_choice: "my_tool" });
+
+    await model.invoke("Anything");
+
+    expect(record.opts.data.toolConfig.functionCallingConfig).toEqual({
+      mode: "ANY",
+      allowedFunctionNames: ["my_tool"],
+    });
+  });
+
   test("7. logprobs request true", async () => {
     const record: Record<string, any> = {};
     const projectId = mockId();
