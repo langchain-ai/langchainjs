@@ -766,6 +766,47 @@ describe("reasoning content replay", () => {
     ]);
   });
 
+  it("skips tool_call content blocks when no output version is set", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          { type: "text", text: "Let me check the weather for you." },
+          {
+            type: "tool_call",
+            id: "call_123",
+            name: "get_weather",
+            args: { location: "San Francisco" },
+          },
+        ],
+        tool_calls: [
+          {
+            name: "get_weather",
+            args: { location: "San Francisco" },
+            id: "call_123",
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        tool_call_id: "call_123",
+        content: "72°F and sunny",
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      {
+        text: "Let me check the weather for you.",
+      },
+      {
+        toolUse: {
+          toolUseId: "call_123",
+          name: "get_weather",
+          input: { location: "San Francisco" },
+        },
+      },
+    ]);
+  });
+
   it("replays standard reasoning without an output version", () => {
     const result = convertToConverseMessages([
       new AIMessage({

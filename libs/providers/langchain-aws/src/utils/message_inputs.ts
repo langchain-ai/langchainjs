@@ -620,6 +620,10 @@ function convertAIMessageToConverseMessage(msg: AIMessage): Bedrock.Message {
         }
       } else if (isDefaultCachePoint(block)) {
         contentBlocks.push(convertCachePointBlock(block));
+      } else if (block.type === "tool_call" || block.type === "tool_use") {
+        // Tool calls are already serialized from msg.tool_calls below; a
+        // tool_call/tool_use content block is a duplicate that must be
+        // skipped rather than rejected.
       } else {
         const blockValues = Object.fromEntries(
           Object.entries(block).filter(([key]) => key !== "type")
