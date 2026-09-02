@@ -423,6 +423,18 @@ export class ChatOpenAICompletions<
         data,
         defaultRole
       );
+      // OpenAI-compatible providers may repeat a cumulative usage snapshot on
+      // choice chunks. Keep usage on the dedicated final usage chunk so
+      // AIMessageChunk.concat does not sum the same snapshot more than once.
+      const responseMetadata = chunk.response_metadata as
+        | Record<string, unknown>
+        | undefined;
+      if (data.usage != null && responseMetadata?.usage !== undefined) {
+        const responseMetadataWithoutUsage = { ...responseMetadata };
+        delete responseMetadataWithoutUsage.usage;
+        chunk.response_metadata =
+          responseMetadataWithoutUsage as typeof chunk.response_metadata;
+      }
       defaultRole = delta.role ?? defaultRole;
       const newTokenIndices = {
         prompt: options.promptIndex ?? 0,

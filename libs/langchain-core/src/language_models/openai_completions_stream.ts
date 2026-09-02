@@ -96,6 +96,17 @@ export interface ConvertOpenAICompletionsStreamOptions {
 
 type BlockKey = "text" | "reasoning" | "audio" | `tool:${number}`;
 
+const TOKEN_DETAIL_KEYS = [
+  "audio",
+  "cache_creation",
+  "cache_read",
+  "document",
+  "image",
+  "reasoning",
+  "text",
+  "video",
+] as const;
+
 /**
  * Convert an async iterable of OpenAI Chat Completions-shaped stream chunks into
  * LangChain `ChatModelStreamEvent`s with typed deltas.
@@ -116,7 +127,7 @@ export async function* convertOpenAICompletionsStream(
   const blockKeyToIndex = new Map<BlockKey, number>();
   let nextBlockIndex = 0;
   let messageStarted = false;
-  let usageSnapshot: UsageMetadata | undefined;
+  let lastEmittedUsageSnapshot: UsageMetadata | undefined;
   let finishReason: FinishReason | undefined;
   let responseMetadata: Record<string, unknown> | undefined;
   let emittedProviderMetadata = false;
@@ -161,14 +172,24 @@ export async function* convertOpenAICompletionsStream(
     }
 
     if (data.usage && shouldStreamUsage) {
-      usageSnapshot = buildUsageSnapshot(data.usage);
-      yield { event: "usage" as const, usage: usageSnapshot };
+      const nextUsageSnapshot = buildUsageSnapshot(data.usage);
+      if (
+        !areUsageSnapshotsEqual(lastEmittedUsageSnapshot, nextUsageSnapshot)
+      ) {
+        lastEmittedUsageSnapshot = nextUsageSnapshot;
+        yield { event: "usage" as const, usage: nextUsageSnapshot };
+      }
     }
 
     const groqUsage = data.x_groq?.usage;
     if (groqUsage && shouldStreamUsage) {
-      usageSnapshot = buildGroqUsageSnapshot(groqUsage);
-      yield { event: "usage" as const, usage: usageSnapshot };
+      const nextUsageSnapshot = buildGroqUsageSnapshot(groqUsage);
+      if (
+        !areUsageSnapshotsEqual(lastEmittedUsageSnapshot, nextUsageSnapshot)
+      ) {
+        lastEmittedUsageSnapshot = nextUsageSnapshot;
+        yield { event: "usage" as const, usage: nextUsageSnapshot };
+      }
     }
 
     const choice = data.choices?.[0];
@@ -364,7 +385,7 @@ export async function* convertOpenAICompletionsStream(
   yield {
     event: "message-finish" as const,
     reason: finishReason,
-    ...(usageSnapshot ? { usage: usageSnapshot } : {}),
+    ...(lastEmittedUsageSnapshot ? { usage: lastEmittedUsageSnapshot } : {}),
     ...(responseMetadata ? { responseMetadata } : {}),
   };
 }
@@ -388,6 +409,37 @@ function buildGroqUsageSnapshot(usage: {
     output_tokens: usage.completion_tokens ?? 0,
     total_tokens: usage.total_tokens ?? 0,
   };
+}
+
+function areUsageSnapshotsEqual(
+  left: UsageMetadata | undefined,
+  right: UsageMetadata
+): boolean {
+  if (!left) return false;
+  return (
+    left.input_tokens === right.input_tokens &&
+    left.output_tokens === right.output_tokens &&
+    left.total_tokens === right.total_tokens &&
+    areTokenDetailsEqual(left.input_token_details, right.input_token_details) &&
+    areTokenDetailsEqual(left.output_token_details, right.output_token_details)
+  );
+}
+
+function areTokenDetailsEqual(
+  left:
+    | NonNullable<UsageMetadata["input_token_details"]>
+    | NonNullable<UsageMetadata["output_token_details"]>
+    | undefined,
+  right:
+    | NonNullable<UsageMetadata["input_token_details"]>
+    | NonNullable<UsageMetadata["output_token_details"]>
+    | undefined
+): boolean {
+  const leftDetails = left as Record<string, number | undefined> | undefined;
+  const rightDetails = right as Record<string, number | undefined> | undefined;
+  return TOKEN_DETAIL_KEYS.every(
+    (key) => leftDetails?.[key] === rightDetails?.[key]
+  );
 }
 
 function mapFinishReason(reason: OpenAICompletionsFinishReason): FinishReason {
