@@ -936,8 +936,11 @@ describe("ChatOpenAI", () => {
       expect(_modelPrefersResponsesAPI("gpt-5.5-pro")).toBe(true);
     });
 
-    it("should return true for gpt-5.6-sol", () => {
+    it("should return true for gpt-5.6 models", () => {
+      expect(_modelPrefersResponsesAPI("gpt-5.6")).toBe(true);
       expect(_modelPrefersResponsesAPI("gpt-5.6-sol")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5.6-terra")).toBe(true);
+      expect(_modelPrefersResponsesAPI("gpt-5.6-luna")).toBe(true);
     });
 
     it("should return true for codex models", () => {
