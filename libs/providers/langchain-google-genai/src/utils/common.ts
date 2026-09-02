@@ -430,17 +430,19 @@ function _convertLangChainContentToPart(
         data: content.data,
       },
     };
-  } else if (content.type === "thinking") {
-    const thinkingContent = content as {
-      type: "thinking";
-      thinking: string;
+  } else if (content.type === "reasoning" || content.type === "thinking") {
+    const reasoningBlock = content as {
+      type: "reasoning" | "thinking";
+      reasoning?: string;
+      thinking?: string;
       signature?: string;
     };
+    const reasoningText = reasoningBlock.reasoning ?? reasoningBlock.thinking ?? "";
     return {
-      text: thinkingContent.thinking,
+      text: reasoningText,
       thought: true,
-      ...(thinkingContent.signature
-        ? { thoughtSignature: thinkingContent.signature }
+      ...(reasoningBlock.signature
+        ? { thoughtSignature: reasoningBlock.signature }
         : {}),
     } as Part;
   } else if ("functionCall" in content) {
@@ -675,8 +677,8 @@ export function mapGenerateContentResultToChatResult(
     content = parts.map((p) => {
       if (p.thought && "text" in p && p.text) {
         return {
-          type: "thinking",
-          thinking: p.text,
+          type: "reasoning",
+          reasoning: p.text,
           ...(p.thoughtSignature ? { signature: p.thoughtSignature } : {}),
         };
       } else if ("text" in p) {
@@ -821,8 +823,8 @@ export function convertResponseContentToChatGenerationChunk(
     content = streamParts.map((p) => {
       if (p.thought && "text" in p && p.text) {
         return {
-          type: "thinking",
-          thinking: p.text,
+          type: "reasoning",
+          reasoning: p.text,
           ...(p.thoughtSignature ? { signature: p.thoughtSignature } : {}),
         };
       } else if ("text" in p) {
