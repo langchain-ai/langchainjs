@@ -88,12 +88,11 @@ export interface WeaviateLibArgs {
 }
 
 /**
- * Integration identifier reported to Weaviate telemetry. Matches the Python
- * `langchain-weaviate` integration: the value is intentionally just `langchain`
- * (not language-specific) since language disambiguation is already carried by
- * the client's own `X-Weaviate-Client` header.
+ * Integration identifier reported to Weaviate telemetry. The value is
+ * `langchain-typescript` so Weaviate can distinguish the TypeScript integration
+ * from the Python `langchain` integration in telemetry.
  */
-const INTEGRATION_NAME = "langchain";
+const INTEGRATION_NAME = "langchain-typescript";
 
 /**
  * Telemetry header that tags the connection so Weaviate can track langchain
@@ -109,7 +108,8 @@ const INTEGRATION_HEADER = "X-Weaviate-Client-Integration";
  * `integrations.configure(...)` API. However, `getConnectionDetails()` returns
  * the client's live `headers` object by reference, and the client spreads that
  * same object into every HTTP and gRPC request. Mutating it therefore tags all
- * subsequent requests with `X-Weaviate-Client-Integration: langchain/<version>`
+ * subsequent requests with `X-Weaviate-Client-Integration:
+ * langchain-typescript/<version>`
  * without depending on any private internals. The whole thing is wrapped so a
  * future change to the client's shape silently skips registration instead of
  * breaking store construction.
