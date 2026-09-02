@@ -34,15 +34,15 @@
     "changeset:version": "changeset version"
   },
   "devDependencies": {
-    "@changesets/changelog-github": "^0.7.0",
+    "@changesets/changelog-github": "^1.0.0",
     "@changesets/cli": "^3.0.0",
     "@langchain/build": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.2",
     "@types/jest": "^30.0.0",
     "@types/semver": "^7",
-    "commander": "^14.0.3",
-    "dotenv": "^17.4.0",
+    "commander": "^15.0.0",
+    "dotenv": "^17.4.2",
     "lint-staged": "^17.4.1",
     "oxfmt": "^0.65.0",
     "oxlint": "^1.80.0",
