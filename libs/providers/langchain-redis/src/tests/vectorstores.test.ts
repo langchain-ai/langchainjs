@@ -1,7 +1,7 @@
 /* oxlint-disable @typescript-eslint/no-explicit-any */
 import { vi, test, expect, describe } from "vitest";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
-import { SchemaFieldTypes } from "redis";
+import { SCHEMA_FIELD_TYPE as SchemaFieldTypes } from "redis";
 
 import { RedisVectorStore, RedisVectorStoreConfig } from "../vectorstores.js";
 

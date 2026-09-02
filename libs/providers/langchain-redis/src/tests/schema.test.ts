@@ -1,6 +1,6 @@
 /* oxlint-disable @typescript-eslint/no-explicit-any */
 import { describe, test, expect } from "vitest";
-import { SchemaFieldTypes } from "redis";
+import { SCHEMA_FIELD_TYPE as SchemaFieldTypes } from "redis";
 import { Document } from "@langchain/core/documents";
 import {
   buildMetadataSchema,

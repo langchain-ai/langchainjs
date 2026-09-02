@@ -7,7 +7,10 @@ import type {
   RediSearchSchema,
   SearchOptions,
 } from "redis";
-import { VectorAlgorithms, SchemaFieldTypes } from "redis";
+import {
+  SCHEMA_FIELD_TYPE as SchemaFieldTypes,
+  SCHEMA_VECTOR_FIELD_ALGORITHM as VectorAlgorithms,
+} from "redis";
 import {
   assertSafeRedisearchFieldName,
   escapeRedisearchValue,

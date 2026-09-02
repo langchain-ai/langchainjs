@@ -8,7 +8,10 @@
  */
 
 import type { createClient, RediSearchSchema } from "redis";
-import { SchemaFieldTypes, VectorAlgorithms } from "redis";
+import {
+  SCHEMA_FIELD_TYPE as SchemaFieldTypes,
+  SCHEMA_VECTOR_FIELD_ALGORITHM as VectorAlgorithms,
+} from "redis";
 import type { Document } from "@langchain/core/documents";
 
 /**
