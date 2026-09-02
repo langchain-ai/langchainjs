@@ -1,5 +1,11 @@
 # @langchain/openai
 
+## 1.5.12
+
+### Patch Changes
+
+- [#11534](https://github.com/langchain-ai/langchainjs/pull/11534) [`80c5c93`](https://github.com/langchain-ai/langchainjs/commit/80c5c934d7768c842598c808b2c13a0a1b03e96a) Thanks [@chiliec](https://github.com/chiliec)! - Route gpt-5.6-sol to the Responses API so function tools work with reasoning.
+
 ## 1.5.11
 
 ### Patch Changes
