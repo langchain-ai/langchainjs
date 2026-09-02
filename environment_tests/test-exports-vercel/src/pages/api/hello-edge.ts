@@ -13,6 +13,7 @@ import {
 import { OpenAI } from "@langchain/openai";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { CallbackManager } from "@langchain/core/callbacks/manager";
+import { calculateMaxTokens } from "@langchain/core/language_models/base";
 
 import { NextRequest, NextResponse } from "next/server";
 
@@ -21,6 +22,14 @@ export const config = {
 };
 
 export default async function handler(req: NextRequest) {
+  if (req.nextUrl.searchParams.has("token-count")) {
+    const maxTokens = await calculateMaxTokens({
+      prompt: "hello",
+      modelName: "gpt-3.5-turbo",
+    });
+    return NextResponse.json({ maxTokens });
+  }
+
   // Intantiate a few things to test the exports
   new OpenAI({ openAIApiKey: process.env.OPENAI_API_KEY });
   const emb = new OpenAIEmbeddings({
