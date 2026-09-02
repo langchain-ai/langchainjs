@@ -116,3 +116,61 @@ describe("convertGoogleGeminiStream", () => {
     expect(events.filter((e) => e.event === "usage").length).toBe(1);
   });
 });
+
+describe("grounding provenance", () => {
+  const groundingMetadata = {
+    webSearchQueries: ["who won the 2024 world series"],
+    groundingChunks: [
+      { web: { uri: "https://example.com/a", title: "example.com" } },
+    ],
+    groundingSupports: [
+      { segment: { startIndex: 0, endIndex: 12 }, groundingChunkIndices: [0] },
+    ],
+  };
+
+  test("surfaces grounding and citation metadata on message-finish", async () => {
+    const events = await collectEvents([
+      { candidates: [{ content: { parts: [{ text: "The Dodgers" }] } }] },
+      {
+        candidates: [
+          {
+            content: { parts: [{ text: " won." }] },
+            finishReason: "STOP",
+            groundingMetadata,
+            citationMetadata: {
+              citationSources: [{ uri: "https://example.com/a" }],
+            },
+          },
+        ],
+      },
+    ]);
+
+    const finish = events.find((e) => e.event === "message-finish") as
+      | { responseMetadata: Record<string, unknown> }
+      | undefined;
+
+    expect(finish?.responseMetadata).toMatchObject({
+      model_provider: "google",
+      grounding_metadata: groundingMetadata,
+      citation_metadata: {
+        citationSources: [{ uri: "https://example.com/a" }],
+      },
+    });
+  });
+
+  test("omits the keys entirely when the response is not grounded", async () => {
+    const events = await collectEvents([
+      {
+        candidates: [
+          { content: { parts: [{ text: "no search" }] }, finishReason: "STOP" },
+        ],
+      },
+    ]);
+
+    const finish = events.find((e) => e.event === "message-finish") as
+      | { responseMetadata: Record<string, unknown> }
+      | undefined;
+
+    expect(finish?.responseMetadata).toEqual({ model_provider: "google" });
+  });
+});
