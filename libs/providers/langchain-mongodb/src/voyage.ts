@@ -7,6 +7,13 @@ import { chunkArray } from "@langchain/core/utils/chunk_array";
  * parameters specific to the VoyageEmbeddings class.
  */
 export interface VoyageEmbeddingsParams extends EmbeddingsParams {
+  /**
+   * The ID of the Voyage AI model to use for generating embeddings, e.g.
+   * `"voyage-3"`, `"voyage-3-large"`, `"voyage-code-3"`, or `"voyage-code-4"`.
+   * `voyage-code-4` is optimized for code retrieval and accepts the same
+   * request parameters as `voyage-code-3`.
+   * @see https://docs.voyageai.com/docs/embeddings
+   */
   modelName: string;
 
   /**
