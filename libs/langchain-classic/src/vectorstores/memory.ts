@@ -220,7 +220,7 @@ export class MemoryVectorStore extends VectorStore {
         embedding: vector.embedding,
         id: vector.id,
       }))
-      .sort((a, b) => (a.similarity > b.similarity ? -1 : 0))
+      .sort((a, b) => b.similarity - a.similarity)
       .slice(0, k);
   }
 
