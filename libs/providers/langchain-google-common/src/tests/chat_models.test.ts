@@ -2890,6 +2890,75 @@ describe("Mock ChatGoogle - Gemini", () => {
     );
   });
 
+  test("6. tool_choice serializes functionCallingConfig.mode uppercase", async () => {
+    const myTool = tool(async ({ query }) => `Result for ${query}`, {
+      name: "my_tool",
+      description: "A custom tool",
+      schema: z.object({ query: z.string() }),
+    });
+
+    // The Gemini enum is case-sensitive; a lowercase mode is silently ignored
+    // and the request falls back to AUTO.
+    const cases: [string, string][] = [
+      ["auto", "AUTO"],
+      ["any", "ANY"],
+      ["none", "NONE"],
+    ];
+
+    for (const [toolChoice, expected] of cases) {
+      const record: Record<string, any> = {};
+      const projectId = mockId();
+      const authOptions: MockClientAuthInfo = {
+        record,
+        projectId,
+        resultFile: "chat-6-mock.json",
+      };
+
+      const model = new ChatGoogle({
+        authOptions,
+        modelName: "gemini-2.0-flash",
+        temperature: 0,
+        maxRetries: 0,
+      }).bindTools([myTool], { tool_choice: toolChoice });
+
+      await model.invoke("Search for the latest news about AI");
+
+      expect(record.opts.data.toolConfig.functionCallingConfig.mode).toBe(
+        expected
+      );
+    }
+  });
+
+  test("6. a forced function name serializes mode ANY uppercase", async () => {
+    const record: Record<string, any> = {};
+    const projectId = mockId();
+    const authOptions: MockClientAuthInfo = {
+      record,
+      projectId,
+      resultFile: "chat-6-mock.json",
+    };
+
+    const myTool = tool(async ({ query }) => `Result for ${query}`, {
+      name: "my_tool",
+      description: "A custom tool",
+      schema: z.object({ query: z.string() }),
+    });
+
+    const model = new ChatGoogle({
+      authOptions,
+      modelName: "gemini-2.0-flash",
+      temperature: 0,
+      maxRetries: 0,
+    }).bindTools([myTool], { tool_choice: "my_tool" });
+
+    await model.invoke("Search for the latest news about AI");
+
+    expect(record.opts.data.toolConfig.functionCallingConfig).toEqual({
+      mode: "ANY",
+      allowedFunctionNames: ["my_tool"],
+    });
+  });
+
   test("6. function tool only does not set includeServerSideToolInvocations", async () => {
     const record: Record<string, any> = {};
     const projectId = mockId();

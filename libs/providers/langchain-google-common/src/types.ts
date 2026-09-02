@@ -757,7 +757,12 @@ export interface GeminiRequest {
   tools?: GeminiTool[];
   toolConfig?: {
     functionCallingConfig?: {
-      mode: "auto" | "any" | "none";
+      /**
+       * The Gemini API's `FunctionCallingConfig.Mode` enum. It is
+       * case-sensitive: a lowercase value does not match any member and is
+       * silently ignored, leaving the request in the default AUTO mode.
+       */
+      mode: "AUTO" | "ANY" | "NONE";
       allowedFunctionNames?: string[];
     };
     /**
