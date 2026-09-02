@@ -530,7 +530,8 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     parentRunId?: string,
     tags?: string[],
     metadata?: KVMap,
-    name?: string
+    name?: string,
+    toolCallId?: string
   ) {
     const execution_order = this._getExecutionOrder(parentRunId);
     const start_time = Date.now();
@@ -546,7 +547,10 @@ export abstract class BaseTracer extends BaseCallbackHandler {
           time: new Date(start_time).toISOString(),
         },
       ],
-      inputs: { input },
+      inputs:
+        toolCallId !== undefined
+          ? { input, tool_call_id: toolCallId }
+          : { input },
       execution_order,
       child_execution_order: execution_order,
       run_type: "tool",
@@ -564,7 +568,8 @@ export abstract class BaseTracer extends BaseCallbackHandler {
     parentRunId?: string,
     tags?: string[],
     metadata?: KVMap,
-    name?: string
+    name?: string,
+    toolCallId?: string
   ): Promise<Run> {
     const run =
       this.getRunById(runId) ??
@@ -575,8 +580,12 @@ export abstract class BaseTracer extends BaseCallbackHandler {
         parentRunId,
         tags,
         metadata,
-        name
+        name,
+        toolCallId
       );
+    if (toolCallId !== undefined) {
+      run.inputs.tool_call_id = toolCallId;
+    }
     await this.onRunCreate?.(run);
     await this.onToolStart?.(run);
     return run;
