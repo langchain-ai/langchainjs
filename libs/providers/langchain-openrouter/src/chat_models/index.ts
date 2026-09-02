@@ -430,7 +430,7 @@ export class ChatOpenRouter extends BaseChatModel<
     );
 
     const data: OpenRouter.ChatResponse = await response.json();
-    const choice = data.choices[0];
+    const choice = data.choices?.[0];
 
     if (!choice) {
       throw new OpenRouterError("No choices returned in response.");
