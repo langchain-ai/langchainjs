@@ -430,7 +430,10 @@ export class ChatOpenRouter extends BaseChatModel<
     );
 
     const data: OpenRouter.ChatResponse = await response.json();
-    const choice = data.choices[0];
+    // Use optional chaining so a 200 body with no `choices` key surfaces the
+    // intended OpenRouterError below instead of a bare TypeError one line up
+    // (the streaming path already does this). See #11417.
+    const choice = data.choices?.[0];
 
     if (!choice) {
       throw new OpenRouterError("No choices returned in response.");
