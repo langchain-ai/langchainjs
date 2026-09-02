@@ -508,7 +508,10 @@ export function finalizeContentBlock(block: ContentBlock): ContentBlock {
     const chunk = block as ContentBlock.Tools.ToolCallChunk;
     let parsedArgs: unknown;
     try {
-      parsedArgs = JSON.parse(chunk.args ?? "{}");
+      // A tool that takes no arguments produces no input deltas, leaving
+      // `args` as an empty string. `??` does not catch "", so fall back to
+      // "{}" for empty (or whitespace-only) accumulated args.
+      parsedArgs = JSON.parse(chunk.args?.trim() ? chunk.args : "{}");
     } catch {
       return {
         type: "invalid_tool_call" as const,
