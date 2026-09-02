@@ -583,18 +583,25 @@ export abstract class BaseChatModel<
           } else {
             generationChunk = generationChunk.concat(chunk);
           }
-          if (
-            isAIMessageChunk(chunk.message) &&
-            chunk.message.usage_metadata !== undefined
-          ) {
-            llmOutput = {
-              tokenUsage: {
-                promptTokens: chunk.message.usage_metadata.input_tokens,
-                completionTokens: chunk.message.usage_metadata.output_tokens,
-                totalTokens: chunk.message.usage_metadata.total_tokens,
-              },
-            };
-          }
+        }
+        // Derive token usage from the concatenated chunk rather than from the
+        // last chunk seen. Providers differ: some report cumulative totals on a
+        // final usage chunk, others emit per-chunk deltas. Reading the last
+        // chunk is only correct for the former, and truncates the latter to its
+        // final delta. `generationChunk` has already summed either shape.
+        if (
+          generationChunk !== undefined &&
+          isAIMessageChunk(generationChunk.message) &&
+          generationChunk.message.usage_metadata !== undefined
+        ) {
+          llmOutput = {
+            tokenUsage: {
+              promptTokens: generationChunk.message.usage_metadata.input_tokens,
+              completionTokens:
+                generationChunk.message.usage_metadata.output_tokens,
+              totalTokens: generationChunk.message.usage_metadata.total_tokens,
+            },
+          };
         }
         // Throw error if stream ended due to abort (provider returned early)
         callOptions.signal?.throwIfAborted();
@@ -811,18 +818,6 @@ export abstract class BaseChatModel<
           } else {
             aggregated = concat(aggregated, chunk);
           }
-          if (
-            isAIMessageChunk(chunk.message) &&
-            chunk.message.usage_metadata !== undefined
-          ) {
-            llmOutput = {
-              tokenUsage: {
-                promptTokens: chunk.message.usage_metadata.input_tokens,
-                completionTokens: chunk.message.usage_metadata.output_tokens,
-                totalTokens: chunk.message.usage_metadata.total_tokens,
-              },
-            };
-          }
         }
         // Check if stream ended due to abort (provider returned early)
         if (parsedOptions.signal?.aborted) {
@@ -836,6 +831,21 @@ export abstract class BaseChatModel<
         }
         if (aggregated === undefined) {
           throw new Error("Received empty response from chat model call.");
+        }
+        // As in `_streamIterator`, derive usage from the aggregated chunk so
+        // providers that emit per-chunk deltas are summed rather than reduced
+        // to their final delta.
+        if (
+          isAIMessageChunk(aggregated.message) &&
+          aggregated.message.usage_metadata !== undefined
+        ) {
+          llmOutput = {
+            tokenUsage: {
+              promptTokens: aggregated.message.usage_metadata.input_tokens,
+              completionTokens: aggregated.message.usage_metadata.output_tokens,
+              totalTokens: aggregated.message.usage_metadata.total_tokens,
+            },
+          };
         }
         if (outputVersion === "v1") {
           aggregated.message = castStandardMessageContent(
