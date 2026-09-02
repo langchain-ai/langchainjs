@@ -1,5 +1,11 @@
 # @langchain/anthropic
 
+## 1.5.10
+
+### Patch Changes
+
+- [#11530](https://github.com/langchain-ai/langchainjs/pull/11530) [`c9b7eac`](https://github.com/langchain-ai/langchainjs/commit/c9b7eac3523cbaa3aead92196d6bca275ebaf55c) Thanks [@hntrl](https://github.com/hntrl)! - Add support for Claude Fable 5.1.
+
 ## 1.5.9
 
 ### Patch Changes
