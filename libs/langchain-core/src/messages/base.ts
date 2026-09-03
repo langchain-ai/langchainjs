@@ -577,12 +577,14 @@ function hasMismatchedMergeableType(left: unknown, right: unknown): boolean {
   if (typeof left !== "object" || left === null) return false;
   if (typeof right !== "object" || right === null) return false;
   if (!("type" in left) || !("type" in right)) return false;
+  if (typeof left.type !== "string" || typeof right.type !== "string") {
+    return false;
+  }
+  if (left.type === "tool_use" && right.type === "input_json_delta") {
+    return false;
+  }
 
-  return (
-    typeof left.type === "string" &&
-    typeof right.type === "string" &&
-    getMergeableTypeBase(left.type) !== getMergeableTypeBase(right.type)
-  );
+  return getMergeableTypeBase(left.type) !== getMergeableTypeBase(right.type);
 }
 
 /**

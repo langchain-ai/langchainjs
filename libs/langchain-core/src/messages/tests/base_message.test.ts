@@ -274,6 +274,42 @@ test("_mergeLists keeps different content block types separate when indices coll
   ]);
 });
 
+test("_mergeLists merges Anthropic input JSON deltas into tool use blocks", () => {
+  const chunk1 = new AIMessageChunk({
+    content: [
+      {
+        type: "tool_use",
+        index: 0,
+        id: "toolu_abc123",
+        name: "get_weather",
+        input: {},
+      },
+    ],
+  });
+
+  const chunk2 = new AIMessageChunk({
+    content: [
+      {
+        type: "input_json_delta",
+        index: 0,
+        partial_json: '{"location":"San Francisco"}',
+      },
+    ],
+  });
+
+  const merged = chunk1.concat(chunk2);
+  expect(merged.content).toEqual([
+    {
+      type: "tool_use",
+      index: 0,
+      id: "toolu_abc123",
+      name: "get_weather",
+      input: {},
+      partial_json: '{"location":"San Francisco"}',
+    },
+  ]);
+});
+
 test("_mergeLists merges blocks by string index", () => {
   const chunk1 = new AIMessageChunk({
     content: [
