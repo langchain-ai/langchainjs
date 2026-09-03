@@ -835,9 +835,11 @@ describe("reasoning summaries", () => {
     expect(aiMessage.id).toBe(aiMessage.response_metadata.id);
 
     // Check the final aggregated message
-    const reasoning = aiMessage?.additional_kwargs
-      .reasoning as ChatOpenAIReasoningSummary;
-    expect(reasoning).toBeDefined();
+    const reasoningItems = aiMessage?.additional_kwargs
+      .reasoning as ChatOpenAIReasoningSummary[];
+    expect(reasoningItems).toBeDefined();
+    expect(reasoningItems.length).toBeGreaterThan(0);
+    const reasoning = reasoningItems[0];
     expect(reasoning.id).toBeDefined();
     expect(typeof reasoning.id).toBe("string");
     expect(reasoning.id).toMatch(/^rs_[a-f0-9]+$/);
@@ -881,8 +883,9 @@ describe("reasoning summaries", () => {
     });
 
     const aiMessage = await concatStream(llm.stream(prompt));
-    const reasoning = aiMessage.additional_kwargs
-      .reasoning as ChatOpenAIReasoningSummary;
+    const reasoningItems = aiMessage.additional_kwargs
+      .reasoning as ChatOpenAIReasoningSummary[];
+    const reasoning = reasoningItems[0];
 
     expect(reasoning.encrypted_content).toEqual(expect.any(String));
     expect(reasoning.encrypted_content).not.toHaveLength(0);
