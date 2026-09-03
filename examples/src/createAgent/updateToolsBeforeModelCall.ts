@@ -31,6 +31,7 @@
  */
 
 import fs from "node:fs/promises";
+import { fileURLToPath } from "node:url";
 import { createAgent, createMiddleware, tool } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
@@ -206,7 +207,7 @@ console.log("Turn 4:", turn4.messages.at(-1)?.content);
 /**
  * Get the current file's path and derive the output PNG path
  */
-const currentFilePath = new URL(import.meta.url).pathname;
+const currentFilePath = fileURLToPath(import.meta.url);
 const outputPath = currentFilePath.replace(/\.ts$/, ".png");
 console.log(`\nSaving visualization to: ${outputPath}`);
 await fs.writeFile(outputPath, await agent.drawMermaidPng());
