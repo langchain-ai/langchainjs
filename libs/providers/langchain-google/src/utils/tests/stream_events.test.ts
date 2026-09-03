@@ -116,3 +116,104 @@ describe("convertGoogleGeminiStream", () => {
     expect(events.filter((e) => e.event === "usage").length).toBe(1);
   });
 });
+
+describe("tool call ids", () => {
+  test("preserves a server-assigned functionCall id across start, delta and finish", async () => {
+    const events = await collectEvents([
+      {
+        candidates: [
+          {
+            content: {
+              parts: [
+                {
+                  functionCall: {
+                    id: "server-assigned-id-123",
+                    name: "web_search",
+                    args: { query: "weather" },
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    ]);
+
+    const start = events.find((e) => e.event === "content-block-start") as
+      | { content: Record<string, unknown> }
+      | undefined;
+    const delta = events.find((e) => e.event === "content-block-delta") as
+      | { delta: { fields: Record<string, unknown> } }
+      | undefined;
+    const finish = events.find((e) => e.event === "content-block-finish") as
+      | { content: Record<string, unknown> }
+      | undefined;
+
+    expect(start?.content.id).toBe("server-assigned-id-123");
+    expect(delta?.delta.fields.id).toBe("server-assigned-id-123");
+    expect(finish?.content).toMatchObject({
+      type: "tool_call",
+      name: "web_search",
+      args: { query: "weather" },
+      id: "server-assigned-id-123",
+    });
+  });
+
+  test("generates a stable fallback id when Gemini omits one", async () => {
+    const events = await collectEvents([
+      {
+        candidates: [
+          {
+            content: {
+              parts: [
+                {
+                  functionCall: {
+                    name: "web_search",
+                    args: { query: "weather" },
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    ]);
+
+    const start = events.find((e) => e.event === "content-block-start") as
+      | { content: Record<string, unknown> }
+      | undefined;
+    const finish = events.find((e) => e.event === "content-block-finish") as
+      | { content: Record<string, unknown> }
+      | undefined;
+
+    // Same generated shape the non-streaming converter uses.
+    expect(start?.content.id).toMatch(/^lc-tool-call-[0-9a-f]{32}$/);
+    // One id, not a fresh one per event.
+    expect(finish?.content.id).toBe(start?.content.id);
+  });
+
+  test("gives concurrent tool calls distinct ids", async () => {
+    const events = await collectEvents([
+      {
+        candidates: [
+          {
+            content: {
+              parts: [
+                { functionCall: { name: "a", args: {} } },
+                { functionCall: { name: "b", args: {} } },
+              ],
+            },
+          },
+        ],
+      },
+    ]);
+
+    const finished = events
+      .filter((e) => e.event === "content-block-finish")
+      .map((e) => (e as { content: Record<string, unknown> }).content);
+
+    expect(finished).toHaveLength(2);
+    expect(finished[0].id).toBeDefined();
+    expect(finished[0].id).not.toBe(finished[1].id);
+  });
+});
