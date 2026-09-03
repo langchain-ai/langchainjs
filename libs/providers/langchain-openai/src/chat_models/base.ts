@@ -1159,7 +1159,7 @@ export abstract class BaseChatOpenAI<
             if ("parsed" in aiMessage.additional_kwargs) {
               return aiMessage.additional_kwargs.parsed as RunOutput;
             }
-            return altParser.invoke(aiMessage.content as string);
+            return altParser.invoke(aiMessage);
           }
         );
       } else {
