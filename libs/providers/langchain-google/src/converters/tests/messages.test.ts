@@ -500,6 +500,61 @@ describe("convertMessagesToGeminiContents", () => {
     expect(functionCallPart.functionCall!.args).toEqual({ city: "London" });
   });
 
+  test("AIMessage tool_calls carrying a thoughtSignature reattach it to the rebuilt functionCall part (v1 path)", () => {
+    const aiMsg = new AIMessage({
+      content: "",
+      tool_calls: [
+        {
+          name: "get_weather",
+          args: { city: "London" },
+          id: "call-1",
+          type: "tool_call",
+          thoughtSignature: "sig-abc",
+        } as {
+          name: string;
+          args: object;
+          id: string;
+          thoughtSignature: string;
+        },
+      ],
+    });
+    aiMsg.response_metadata = { output_version: "v1" };
+
+    const contents = convertMessagesToGeminiContents([
+      new HumanMessage("hello"),
+      aiMsg,
+    ]);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    const functionCallPart = modelContent!.parts.find(
+      (p) => "functionCall" in p && p.functionCall
+    ) as Gemini.Part.FunctionCall;
+    expect(functionCallPart).toBeDefined();
+    expect(functionCallPart.thoughtSignature).toBe("sig-abc");
+  });
+
+  test("AIMessage tool_calls with no thoughtSignature produce a functionCall part with no thoughtSignature key (v1 path)", () => {
+    const aiMsg = new AIMessage({
+      content: "",
+      tool_calls: [
+        { name: "get_weather", args: { city: "London" }, id: "call-1" },
+      ],
+    });
+    aiMsg.response_metadata = { output_version: "v1" };
+
+    const contents = convertMessagesToGeminiContents([
+      new HumanMessage("hello"),
+      aiMsg,
+    ]);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    const functionCallPart = modelContent!.parts.find(
+      (p) => "functionCall" in p && p.functionCall
+    ) as Gemini.Part.FunctionCall;
+    expect(functionCallPart).toBeDefined();
+    expect("thoughtSignature" in functionCallPart).toBe(false);
+  });
+
   test("ToolMessage name resolved from tool_calls (v1 path)", () => {
     const aiMsg = new AIMessage({
       content: "",

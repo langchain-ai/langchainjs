@@ -491,11 +491,15 @@ function convertStandardContentMessageToGeminiContent(
   // Convert AIMessage tool_calls to functionCall parts
   if (AIMessage.isInstance(message) && message.tool_calls?.length) {
     for (const toolCall of message.tool_calls) {
+      const toolCallSignature = (toolCall as { thoughtSignature?: string })
+        .thoughtSignature;
       parts.push({
         functionCall: {
           name: toolCall.name,
           args: toolCall.args ?? {},
         },
+        // thoughtSignature also rides on functionCall parts, not just text
+        ...(toolCallSignature ? { thoughtSignature: toolCallSignature } : {}),
       } as Gemini.Part.FunctionCall);
     }
   }

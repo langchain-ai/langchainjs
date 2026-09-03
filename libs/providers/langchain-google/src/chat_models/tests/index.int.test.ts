@@ -1799,6 +1799,45 @@ describe.each(thinkingModelInfo)(
         )
       ).toBe(true);
     });
+
+    test("functionCall thoughtSignature survives a multi-turn round trip after a real tool call (root cause: tool_calls-rebuild path)", async () => {
+      // convertStandardContentMessageToGeminiContent rebuilds functionCall
+      // parts from AIMessage.tool_calls directly, not from a content-block
+      // item - it's the one outgoing path that doesn't get thoughtSignature
+      // "for free" via an object spread, so it's the one that can silently
+      // drop it. Verifies that against a real tool-calling thinking response.
+      const tools = [weatherTool];
+      const llm: Runnable = newChatGoogle({
+        reasoningEffort: "low",
+      }).bindTools(tools);
+
+      const firstResult = (await llm.invoke(
+        "What is the weather in New York?"
+      )) as AIMessage;
+      expect(firstResult.tool_calls?.length).toBeGreaterThan(0);
+      const toolCall = firstResult.tool_calls![0];
+      const toolCallSignature = (toolCall as { thoughtSignature?: string })
+        .thoughtSignature;
+      expect(toolCallSignature).toBeDefined();
+
+      await llm.invoke([
+        new HumanMessage("What is the weather in New York?"),
+        firstResult,
+        new ToolMessage(JSON.stringify({ temp: 21 }), toolCall.id as string),
+      ]);
+
+      const sentContents = recorder.request?.body?.contents ?? [];
+      const modelTurn = sentContents.find(
+        (c: { role?: string }) => c.role === "model"
+      );
+      expect(modelTurn).toBeDefined();
+
+      const sentFunctionCallPart = (modelTurn?.parts ?? []).find(
+        (p: { functionCall?: unknown }) => "functionCall" in p
+      ) as { thoughtSignature?: string } | undefined;
+      expect(sentFunctionCallPart).toBeDefined();
+      expect(sentFunctionCallPart?.thoughtSignature).toBe(toolCallSignature);
+    });
   }
 );
 
