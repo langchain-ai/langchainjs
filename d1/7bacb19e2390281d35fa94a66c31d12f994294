@@ -1,0 +1,66 @@
+libs/langchain-core/src/messages/block_translators/openai.ts
+  s_d743b041086dff::t_2a50007c8b9b9d 220
+  s_d743b041086dff::t_9ed7ec5fd09be8 246-247
+  s_d743b041086dff::t_ce3915fbe06ced 248-265
+libs/providers/langchain-openai/src/types.ts
+  s_d743b041086dff::t_b65116b9f7faa1 324-325
+  s_d743b041086dff::t_61dac8c4d39685 322-323
+  s_d743b041086dff::t_eb07698036cef5 321
+libs/providers/langchain-openai/src/chat_models/tests/responses.int.test.ts
+  s_d743b041086dff::t_6145585107fd23 838-842
+  s_d743b041086dff::t_dff7dde9876778 886-888
+libs/providers/langchain-openai/src/converters/responses.ts
+  s_d743b041086dff::t_576c31f26e6485 442-443
+  s_d743b041086dff::t_7b54e7ce371175 1551
+  s_d743b041086dff::t_b05be386abd460 742-743
+  s_d743b041086dff::t_e20d3bf78d8a2e 1566-1568
+  s_d743b041086dff::t_fb39bdc9cb9f72 744-749
+  s_d743b041086dff::t_c223f16a4a6c64 884-885,887-895,906,910-916,924,928-940,948
+  s_d743b041086dff::t_23607ce1930c82 1422
+  s_d743b041086dff::t_d457e906b50ec4 672
+  s_d743b041086dff::t_e74486eab99649 1420-1421
+  s_d743b041086dff::t_d16e9a1a105c0c 596-597,599
+  s_d743b041086dff::t_36089ed34637c9 1552-1565,1569
+  s_d743b041086dff::t_452916810da441 918-919,942-943
+  s_d743b041086dff::t_f07ad2de966570 886
+  s_d743b041086dff::t_8e0033f6604e0b 595
+  s_d743b041086dff::t_293ff23c93b17a 382
+libs/langchain-core/src/messages/block_translators/tests/openai.test.ts
+  s_d743b041086dff::t_4ba20bd712523d 255-275
+.changeset/tame-donkeys-shout.md
+  s_d743b041086dff::t_f567afba98c6a5 8
+  s_d743b041086dff::t_cdb5b04b5c70bb 1-7
+libs/providers/langchain-openai/src/converters/tests/responses.test.ts
+  s_d743b041086dff::t_fcf3285877eda2 1058-1059,1133-1134
+  s_d743b041086dff::t_7d3e5231dbb30a 1216-1222,1237
+  s_d743b041086dff::t_8bbbcbb1585863 151-160
+  s_d743b041086dff::t_1e7039b2c72082 867-943,946-956,959-963,967-972,976-988,999-1006,1009-1012,1014-1018,1020,1027-1030
+  s_d743b041086dff::t_a20437a2964ba2 771,773-815,818-866
+  s_d743b041086dff::t_b8496ca689d4dc 1299-1307,1322
+  s_d743b041086dff::t_3b5d370088d6a4 183-239,243-247,264-265
+  s_d743b041086dff::t_97d60616d90214 240-242,248-263
+  s_d743b041086dff::t_7ee57593921072 772
+  s_d743b041086dff::t_74187ef315c131 944-945,989-998,1013,1019
+  s_d743b041086dff::t_ba37e3285b4363 1021-1026
+  s_d743b041086dff::t_48970bc9ac078b 1031-1057,1060-1132,1135-1196
+  s_d743b041086dff::t_e20d3bf78d8a2e 816-817
+  s_d743b041086dff::t_da549dc70b651a 1258-1266,1281
+  s_d743b041086dff::t_913c67e064fb4c 957-958,964-966,973-975
+  s_d743b041086dff::t_94b4dfdd01d2ee 1007-1008
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "d17bacb19e2390281d35fa94a66c31d12f994294",
+  "prompts": {},
+  "sessions": {
+    "s_d743b041086dff": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "641129bc-273f-42ba-a6f3-02b0a7e67123",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "gdibben <gethin.dibben@langchain.dev>"
+    }
+  }
+}
