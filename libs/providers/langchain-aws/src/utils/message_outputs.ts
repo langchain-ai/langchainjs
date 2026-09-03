@@ -133,10 +133,20 @@ export function handleConverseStreamContentBlockDelta(
     throw new Error("No delta found in content block.");
   }
   if (typeof contentBlockDelta.delta.text === "string") {
+    const index = contentBlockDelta.contentBlockIndex;
     return new ChatGenerationChunk({
       text: contentBlockDelta.delta.text,
       message: new AIMessageChunk({
-        content: contentBlockDelta.delta.text,
+        content:
+          index === undefined || index === 0
+            ? contentBlockDelta.delta.text
+            : [
+                {
+                  type: "text",
+                  text: contentBlockDelta.delta.text,
+                  index,
+                },
+              ],
       }),
     });
   } else if (contentBlockDelta.delta.toolUse) {
