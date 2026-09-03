@@ -4,6 +4,7 @@ import { z as z4 } from "zod/v4";
 import { zodToJsonSchema } from "../../utils/zod-to-json-schema/index.js";
 import { FakeChatModel, FakeListChatModel } from "../../utils/testing/index.js";
 import { HumanMessage } from "../../messages/human.js";
+import type { BaseMessage } from "../../messages/base.js";
 import { getBufferString } from "../../messages/utils.js";
 import { AIMessage } from "../../messages/ai.js";
 import { RunCollectorCallbackHandler } from "../../tracers/run_collector.js";
@@ -15,6 +16,7 @@ import type { ChatModelStream } from "../stream.js";
 import type { IterableReadableStream } from "../../utils/stream.js";
 import type { StreamEvent } from "../../tracers/event_stream.js";
 import type { LangSmithTracingClientInterface } from "langsmith";
+import type { Serialized } from "../../load/serializable.js";
 
 test("Test ChatModel accepts array shorthand for messages", async () => {
   const model = new FakeChatModel({});
@@ -139,6 +141,59 @@ test("Test ChatModel uses callbacks", async () => {
     ],
   });
   expect(response.content).toEqual(acc);
+});
+
+test("Test ChatModel formats every data content block for tracing", async () => {
+  class CaptureInputHandler extends BaseCallbackHandler {
+    name = "capture-input";
+
+    messages: BaseMessage[] | undefined;
+
+    handleChatModelStart(_llm: Serialized, messages: BaseMessage[][]) {
+      [this.messages] = messages;
+    }
+  }
+
+  const handler = new CaptureInputHandler();
+  const model = new FakeListChatModel({ responses: ["ok"] });
+  await model.invoke(
+    [
+      new HumanMessage({
+        content: [
+          { type: "text", text: "two PDFs" },
+          {
+            type: "file",
+            source_type: "base64",
+            mime_type: "application/pdf",
+            data: "JVBERi0xLjQK",
+          },
+          {
+            type: "file",
+            source_type: "base64",
+            mime_type: "application/pdf",
+            data: "JVBERi0xLjUK",
+          },
+        ],
+      }),
+    ],
+    { callbacks: [handler] }
+  );
+
+  expect(handler.messages?.[0].content).toEqual([
+    { type: "text", text: "two PDFs" },
+    {
+      type: "image_url",
+      image_url: {
+        url: "data:application/pdf;base64,JVBERi0xLjQK",
+      },
+    },
+    {
+      type: "image_url",
+      image_url: {
+        url: "data:application/pdf;base64,JVBERi0xLjUK",
+      },
+    },
+  ]);
 });
 
 test("Test ChatModel uses callbacks with a cache", async () => {
