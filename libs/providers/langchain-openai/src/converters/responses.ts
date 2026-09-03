@@ -792,14 +792,13 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
   } else if (event.type === "response.created") {
     id = event.response.id;
     response_metadata.id = event.response.id;
-    response_metadata.model_name = event.response.model;
-    response_metadata.model = event.response.model;
   } else if (
     event.type === "response.completed" ||
     event.type === "response.incomplete"
   ) {
     id = event.response.id;
     const msg = convertResponsesMessageToAIMessage(event.response);
+    response_metadata.model_name = event.response.model;
 
     usage_metadata = convertResponsesUsageToUsageMetadata(event.response.usage);
 
