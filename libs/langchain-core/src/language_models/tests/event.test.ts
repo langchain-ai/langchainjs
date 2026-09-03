@@ -10,8 +10,25 @@ import type {
   ProviderEvent,
   StreamErrorEvent,
 } from "../event.js";
+import { finalizeContentBlock } from "../compat.js";
 
 describe("ChatModelStreamEvent types", () => {
+  test("finalizes a zero-argument tool call with empty args", () => {
+    expect(
+      finalizeContentBlock({
+        type: "tool_call_chunk",
+        id: "call_empty",
+        name: "ping",
+        args: "",
+      })
+    ).toEqual({
+      type: "tool_call",
+      id: "call_empty",
+      name: "ping",
+      args: {},
+    });
+  });
+
   test("MessageStartEvent", () => {
     const event: MessageStartEvent = {
       event: "message-start",
