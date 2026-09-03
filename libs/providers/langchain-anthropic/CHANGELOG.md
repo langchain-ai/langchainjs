@@ -1,5 +1,11 @@
 # @langchain/anthropic
 
+## 1.5.9
+
+### Patch Changes
+
+- [#11475](https://github.com/langchain-ai/langchainjs/pull/11475) [`6bffc71`](https://github.com/langchain-ai/langchainjs/commit/6bffc7120a8d696089cc2f88e2eb15ad871deeca) Thanks [@davila7](https://github.com/davila7)! - feat(anthropic): add claude-sonnet-5 support
+
 ## 1.5.8
 
 ### Patch Changes

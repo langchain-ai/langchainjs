@@ -1,6 +1,6 @@
 {
   "name": "@langchain/xai",
-  "version": "1.4.10",
+  "version": "1.4.11",
   "description": "xAI integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -38,9 +38,9 @@
     "@langchain/standard-tests": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
-    "@vitest/coverage-v8": "^4.1.10",
-    "dotenv": "^17.4.0",
-    "dpdm": "^3.14.0",
+    "@vitest/coverage-v8": "^4.1.11",
+    "dotenv": "^17.4.2",
+    "dpdm": "^4.3.0",
     "typescript": "~7.0.2",
     "vitest": "^4.1.8",
     "zod": "^3.25.76"

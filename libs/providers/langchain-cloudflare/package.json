@@ -24,14 +24,14 @@
     "test:standard": "pnpm test:standard:unit && pnpm test:standard:int"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260602.1",
+    "@cloudflare/workers-types": "^5.20260830.1",
     "@langchain/core": "workspace:^",
     "@langchain/standard-tests": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
-    "@vitest/coverage-v8": "^4.1.10",
-    "dotenv": "^17.4.0",
-    "dpdm": "^3.14.0",
+    "@vitest/coverage-v8": "^4.1.11",
+    "dotenv": "^17.4.2",
+    "dpdm": "^4.3.0",
     "typescript": "~7.0.2",
     "vitest": "^4.1.8"
   },
