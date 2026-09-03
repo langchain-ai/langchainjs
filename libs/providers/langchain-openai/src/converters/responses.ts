@@ -379,7 +379,7 @@ export const convertResponsesMessageToAIMessage: Converter<
   const additional_kwargs: {
     [key: string]: unknown;
     refusal?: string;
-    reasoning?: OpenAIClient.Responses.ResponseReasoningItem;
+    reasoning?: OpenAIClient.Responses.ResponseReasoningItem[];
     tool_outputs?: unknown[];
     parsed?: unknown;
     [_FUNCTION_CALL_IDS_MAP_KEY]?: Record<string, string>;
@@ -439,7 +439,8 @@ export const convertResponsesMessageToAIMessage: Converter<
         additional_kwargs[_FUNCTION_CALL_IDS_MAP_KEY][item.call_id] = item.id;
       }
     } else if (item.type === "reasoning") {
-      additional_kwargs.reasoning = item;
+      additional_kwargs.reasoning ??= [];
+      additional_kwargs.reasoning.push(item);
       // Also elevate reasoning to content for UI rendering
       const reasoningText = item.summary
         ?.map((s) => s.text)
@@ -591,8 +592,11 @@ export const convertReasoningSummaryToResponsesReasoningItem: Converter<
     Object.fromEntries(Object.entries(s).filter(([k]) => k !== "index"))
   ) as OpenAIClient.Responses.ResponseReasoningItem.Summary[];
 
+  // `index` is merge bookkeeping, not part of the Responses API schema.
+  const { index: _index, ...rest } = reasoning;
+
   return {
-    ...reasoning,
+    ...rest,
     summary,
   } as OpenAIClient.Responses.ResponseReasoningItem;
 };
@@ -665,7 +669,7 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
   };
   const additional_kwargs: {
     [key: string]: unknown;
-    reasoning?: Partial<ChatOpenAIReasoningSummary>;
+    reasoning?: Array<Partial<ChatOpenAIReasoningSummary>>;
     tool_outputs?: unknown[];
   } = {};
   let id: string | undefined;
@@ -735,11 +739,14 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
     event.item.type === "reasoning" &&
     event.item.encrypted_content
   ) {
-    // Encrypted reasoning content is only complete on the done event. Emit it
-    // separately so it merges with the id and summary from output_item.added.
-    additional_kwargs.reasoning = {
-      encrypted_content: event.item.encrypted_content,
-    };
+    // Encrypted content is only complete on the done event; keyed by
+    // output_index so concurrent reasoning items don't collide when merged.
+    additional_kwargs.reasoning = [
+      {
+        index: event.output_index,
+        encrypted_content: event.item.encrypted_content,
+      },
+    ];
   } else if (
     event.type === "response.output_item.done" &&
     event.item.type === "computer_call"
@@ -874,14 +881,18 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
         }))
       : undefined;
 
-    additional_kwargs.reasoning = {
-      // We only capture ID in the first event or else the concatenated result of all chunks will
-      // have an ID field that is repeated once per event. There is special handling for the `type`
-      // field that prevents this, however.
-      id: event.item.id,
-      type: event.item.type,
-      ...(summary ? { summary } : {}),
-    };
+    additional_kwargs.reasoning = [
+      {
+        // Keyed by output_index to keep concurrent reasoning items separate.
+        index: event.output_index,
+        // We only capture ID in the first event or else the concatenated result of all chunks will
+        // have an ID field that is repeated once per event. There is special handling for the `type`
+        // field that prevents this, however.
+        id: event.item.id,
+        type: event.item.type,
+        ...(summary ? { summary } : {}),
+      },
+    ];
 
     // Also elevate reasoning to content for UI rendering
     const reasoningText = event.item.summary
@@ -892,40 +903,49 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
       content.push({
         type: "reasoning",
         reasoning: reasoningText,
+        index: event.output_index,
       });
     }
   } else if (event.type === "response.reasoning_summary_part.added") {
-    additional_kwargs.reasoning = {
-      type: "reasoning",
-      summary: [{ ...event.part, index: event.summary_index }],
-    };
+    additional_kwargs.reasoning = [
+      {
+        index: event.output_index,
+        type: "reasoning",
+        summary: [{ ...event.part, index: event.summary_index }],
+      },
+    ];
 
-    // Also elevate reasoning to content for UI rendering
+    // Also elevate to content, keyed by output_index + summary_index so
+    // concurrent items' summary text doesn't merge into the same block.
     if (event.part.text) {
       content.push({
         type: "reasoning",
         reasoning: event.part.text,
-        index: event.summary_index,
+        index: `${event.output_index}:${event.summary_index}`,
       });
     }
   } else if (event.type === "response.reasoning_summary_text.delta") {
-    additional_kwargs.reasoning = {
-      type: "reasoning",
-      summary: [
-        {
-          text: event.delta,
-          type: "summary_text",
-          index: event.summary_index,
-        },
-      ],
-    };
+    additional_kwargs.reasoning = [
+      {
+        index: event.output_index,
+        type: "reasoning",
+        summary: [
+          {
+            text: event.delta,
+            type: "summary_text",
+            index: event.summary_index,
+          },
+        ],
+      },
+    ];
 
-    // Also elevate reasoning to content for UI rendering
+    // Also elevate to content, keyed by output_index + summary_index so
+    // concurrent items' summary text doesn't merge into the same block.
     if (event.delta) {
       content.push({
         type: "reasoning",
         reasoning: event.delta,
-        index: event.summary_index,
+        index: `${event.output_index}:${event.summary_index}`,
       });
     }
   } else if (event.type === "response.image_generation_call.partial_image") {
@@ -1397,7 +1417,9 @@ export const convertMessagesToResponsesInput: Converter<
       const additional_kwargs =
         lcMsg.additional_kwargs as BaseMessageFields["additional_kwargs"] & {
           [_FUNCTION_CALL_IDS_MAP_KEY]?: Record<string, string>;
-          reasoning?: OpenAIClient.Responses.ResponseReasoningItem;
+          // May still be a bare object on messages persisted before this
+          // became an array (to support multiple reasoning items).
+          reasoning?: ChatOpenAIReasoningSummary | ChatOpenAIReasoningSummary[];
           type?: string;
           refusal?: string;
         };
@@ -1526,19 +1548,25 @@ export const convertMessagesToResponsesInput: Converter<
 
         const input: ResponsesInputItem[] = [];
 
-        // reasoning items
-        const reasoning = additional_kwargs?.reasoning;
-        const hasEncryptedContent = !!reasoning?.encrypted_content;
-        /**
-         * With ZDR enabled, OpenAI returns encrypted reasoning content for stateless
-         * replay, so only send reasoning items when that payload is available.
-         * With ZDR disabled, include reasoning item IDs so OpenAI can reference
-         * the stored items.
-         */
-        if (reasoning && (!zdrEnabled || hasEncryptedContent)) {
-          const reasoningItem =
-            convertReasoningSummaryToResponsesReasoningItem(reasoning);
-          input.push(reasoningItem);
+        // reasoning items (a response can contain more than one)
+        const reasoningItems = Array.isArray(additional_kwargs?.reasoning)
+          ? additional_kwargs.reasoning
+          : additional_kwargs?.reasoning
+            ? [additional_kwargs.reasoning]
+            : [];
+        for (const reasoning of reasoningItems) {
+          const hasEncryptedContent = !!reasoning?.encrypted_content;
+          /**
+           * With ZDR enabled, OpenAI returns encrypted reasoning content for stateless
+           * replay, so only send reasoning items when that payload is available.
+           * With ZDR disabled, include reasoning item IDs so OpenAI can reference
+           * the stored items.
+           */
+          if (reasoning && (!zdrEnabled || hasEncryptedContent)) {
+            input.push(
+              convertReasoningSummaryToResponsesReasoningItem(reasoning)
+            );
+          }
         }
 
         // ai content

@@ -252,6 +252,27 @@ describe("openaiTranslator", () => {
       expect(message2.content).toEqual(expected);
     });
 
+    it("should translate multiple concurrent reasoning items to separate reasoning blocks", () => {
+      const message = new AIMessage({
+        content: [{ type: "text", text: "Done." }],
+        additional_kwargs: {
+          reasoning: [
+            { index: 0, summary: [{ text: "First item thinking..." }] },
+            { index: 1, summary: [{ text: "Second item thinking..." }] },
+          ],
+        },
+        response_metadata: { model_provider: "openai" },
+      });
+
+      const expected: Array<ContentBlock.Standard> = [
+        { type: "reasoning", reasoning: "First item thinking..." },
+        { type: "reasoning", reasoning: "Second item thinking..." },
+        { type: "text", text: "Done." },
+      ];
+
+      expect(message.contentBlocks).toEqual(expected);
+    });
+
     it("should translate responses chunk and include tool_call when args parse", () => {
       const chunk1 = new AIMessageChunk({
         content: [{ type: "text", text: "Processing ", index: 0 }],
