@@ -319,6 +319,27 @@ describe("Google Mock", () => {
     );
   });
 
+  test.each(["eu", "us"])(
+    "uses the Vertex %s multi-region endpoint",
+    async (location) => {
+      const apiClient = new MockApiClient({
+        fileName: "gemini-chat-001.json",
+      });
+      const llm = new ChatGoogle({
+        model: "gemini-2.5-flash",
+        platformType: "gcp",
+        location,
+        apiClient,
+      });
+
+      await llm.invoke("What is 1+1?");
+
+      expect(apiClient.request.url).toBe(
+        `https://aiplatform.${location}.rep.googleapis.com/v1/projects/unknown-project-id/locations/${location}/publishers/google/models/gemini-2.5-flash:generateContent`
+      );
+    }
+  );
+
   test("handleLLMEnd exposes camelCase tokenUsage for invoke", async () => {
     let callbackResult: LLMResult | undefined;
 
