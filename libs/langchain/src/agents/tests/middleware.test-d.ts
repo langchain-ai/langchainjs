@@ -14,7 +14,10 @@ import {
 } from "../index.js";
 import type { AgentBuiltInState } from "../runtime.js";
 import type { InferAgentState } from "../types.js";
-import type { InferMiddlewareType } from "../middleware/types.js";
+import type {
+  InferMiddlewareType,
+  WrapModelCallStructuredResponse,
+} from "../middleware/types.js";
 import type { InferAgentStreamTransformers } from "../types.js";
 import type { JsonSchemaFormat } from "../responses.js";
 
@@ -299,6 +302,32 @@ describe("middleware types", () => {
           },
         }
       );
+    });
+
+    it("allows wrapModelCall to end the run with a structured response", async () => {
+      const middleware = createMiddleware({
+        name: "Middleware",
+        wrapModelCall: async (request, handler) => {
+          if (request.messages.length > 10) {
+            const stop: WrapModelCallStructuredResponse = {
+              structuredResponse: { stopped: true },
+              messages: [new AIMessage("Stopped.")],
+            };
+            return stop;
+          }
+          return handler(request);
+        },
+      });
+
+      const agent = createAgent({
+        middleware: [middleware],
+        tools: [],
+        model: "gpt-4",
+      });
+
+      await agent.invoke({
+        messages: [new HumanMessage("Hello, world!")],
+      });
     });
 
     it("doesn't require users to pass in a context if a middleware has context schema as optional", async () => {

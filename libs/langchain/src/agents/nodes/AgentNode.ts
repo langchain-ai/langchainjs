@@ -43,6 +43,7 @@ import type {
   AgentMiddleware,
   AnyAnnotationRoot,
   WrapModelCallHandler,
+  WrapModelCallStructuredResponse,
 } from "../middleware/types.js";
 import type { ModelRequest } from "./types.js";
 import { withAgentName } from "../withAgentName.js";
@@ -55,10 +56,7 @@ import {
 } from "../responses.js";
 
 type ResponseHandlerResult<StructuredResponseFormat> =
-  | {
-      structuredResponse: StructuredResponseFormat;
-      messages: BaseMessage[];
-    }
+  | WrapModelCallStructuredResponse<StructuredResponseFormat>
   | Promise<Command>;
 
 /**
@@ -686,7 +684,7 @@ export class AgentNode<
               throw new Error(
                 `Invalid response from "wrapModelCall" in middleware "${
                   currentMiddleware.name
-                }": expected AIMessage or Command, got ${typeof middlewareResponse}`
+                }": expected AIMessage, Command, or { structuredResponse, messages }, got ${typeof middlewareResponse}`
               );
             }
 
@@ -696,7 +694,11 @@ export class AgentNode<
               collectedCommands.push(middlewareResponse);
             }
 
-            return middlewareResponse;
+            /**
+             * A middleware does not know the agent's response format, so its
+             * structured response is typed as `Record<string, unknown>`.
+             */
+            return middlewareResponse as InternalModelResponse<StructuredResponseFormat>;
           } catch (error) {
             throw MiddlewareError.wrap(error, currentMiddleware.name);
           }

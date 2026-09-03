@@ -18,6 +18,7 @@ import type {
   AIMessage,
   SystemMessage,
   ToolMessage,
+  BaseMessage,
 } from "@langchain/core/messages";
 import type { ToolCall } from "@langchain/core/messages/tool";
 import type { Command, StreamTransformer } from "@langchain/langgraph";
@@ -225,6 +226,20 @@ export type WrapModelCallHandler<
 ) => PromiseOrValue<AIMessage>;
 
 /**
+ * A final structured response a `wrapModelCall` hook can return instead of an
+ * `AIMessage`. The agent writes `structuredResponse` and appends `messages` to
+ * the state, so the run ends with a structured response without another model
+ * call. The base handler returns this shape when a `providerStrategy` response
+ * format parses the model output.
+ */
+export interface WrapModelCallStructuredResponse<
+  TStructuredResponse = Record<string, unknown>,
+> {
+  structuredResponse: TStructuredResponse;
+  messages: BaseMessage[];
+}
+
+/**
  * Wrapper function type for the wrapModelCall hook.
  * Allows middleware to intercept and modify model execution.
  * This enables you to:
@@ -235,7 +250,9 @@ export type WrapModelCallHandler<
  *
  * @param request - The model request containing all parameters needed for the model call
  * @param handler - The function that invokes the model. Call this with a ModelRequest to get the response
- * @returns The AI message response from the model (or a modified version)
+ * @returns The AI message response from the model (or a modified version), a
+ *   `Command`, or a {@link WrapModelCallStructuredResponse} that ends the run
+ *   with a structured response
  */
 export type WrapModelCallHook<
   TSchema extends StateDefinitionInit | undefined = undefined,
@@ -243,7 +260,7 @@ export type WrapModelCallHook<
 > = (
   request: ModelRequest<NormalizedSchemaInput<TSchema>, TContext>,
   handler: WrapModelCallHandler<TSchema, TContext>
-) => PromiseOrValue<AIMessage | Command>;
+) => PromiseOrValue<AIMessage | Command | WrapModelCallStructuredResponse>;
 
 /**
  * Handler function type for the beforeAgent hook.

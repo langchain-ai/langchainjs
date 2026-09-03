@@ -754,7 +754,9 @@ describe("middleware", () => {
         agent.invoke({
           messages: [{ role: "user", content: "Hi" }],
         })
-      ).rejects.toThrow("expected AIMessage or Command, got undefined");
+      ).rejects.toThrow(
+        "expected AIMessage, Command, or { structuredResponse, messages }, got undefined"
+      );
     });
 
     it("should propagate the middleware name in the error", async () => {
@@ -3034,7 +3036,7 @@ describe("middleware", () => {
         })
       ).rejects.toThrow(
         'Invalid response from "wrapModelCall" in middleware "InvalidMiddleware": ' +
-          "expected AIMessage or Command, got string"
+          "expected AIMessage, Command, or { structuredResponse, messages }, got string"
       );
     });
 
