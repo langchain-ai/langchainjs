@@ -73,9 +73,10 @@ export type DescriptionFactory = z.infer<typeof DescriptionFunctionSchema>;
 /**
  * The type of decision a human can make.
  */
-const ALLOWED_DECISIONS = ["approve", "edit", "reject"] as const;
+const ALLOWED_DECISIONS = ["approve", "edit", "reject", "respond"] as const;
 const DecisionType = z.enum(ALLOWED_DECISIONS);
 export type DecisionType = z.infer<typeof DecisionType>;
+const DEFAULT_ALLOWED_DECISIONS: DecisionType[] = ["approve", "edit", "reject"];
 
 const InterruptOnConfigSchema = z.object({
   /**
@@ -267,9 +268,24 @@ export interface RejectDecision {
 }
 
 /**
+ * Response when a human answers on behalf of the tool.
+ */
+export interface RespondDecision {
+  type: "respond";
+  /**
+   * The message sent to the model as the tool result.
+   */
+  message: string;
+}
+
+/**
  * Union of all possible decision types.
  */
-export type Decision = ApproveDecision | EditDecision | RejectDecision;
+export type Decision =
+  | ApproveDecision
+  | EditDecision
+  | RejectDecision
+  | RespondDecision;
 
 /**
  * Response payload for a HITLRequest.
@@ -661,6 +677,25 @@ export function humanInTheLoopMiddleware(
       return { revisedToolCall: toolCall, toolMessage };
     }
 
+    if (decision.type === "respond" && allowedDecisions.includes("respond")) {
+      if (typeof decision.message !== "string") {
+        throw new Error(
+          `Tool call response for "${
+            toolCall.name
+          }" must be a string, got ${typeof decision.message}`
+        );
+      }
+
+      const toolMessage = new ToolMessage({
+        content: decision.message,
+        name: toolCall.name,
+        tool_call_id: toolCall.id!,
+        status: "success",
+      });
+
+      return { revisedToolCall: toolCall, toolMessage };
+    }
+
     const msg = `Unexpected human decision: ${JSON.stringify(
       decision
     )}. Decision type '${decision.type}' is not allowed for tool '${
@@ -717,7 +752,7 @@ export function humanInTheLoopMiddleware(
           if (typeof toolConfig === "boolean") {
             if (toolConfig === true) {
               resolvedConfigs[toolName] = {
-                allowedDecisions: [...ALLOWED_DECISIONS],
+                allowedDecisions: [...DEFAULT_ALLOWED_DECISIONS],
               };
             }
           } else if (toolConfig.allowedDecisions) {
@@ -811,6 +846,9 @@ export function humanInTheLoopMiddleware(
         const hasRejectedToolCalls = decisions.some(
           (decision) => decision.type === "reject"
         );
+        const hasRespondedToolCalls = decisions.some(
+          (decision) => decision.type === "respond"
+        );
 
         /**
          * Process each decision using helper method
@@ -833,7 +871,9 @@ export function humanInTheLoopMiddleware(
              * with only the tool calls that were rejected as we don't know
              * the results of the approved/updated tool calls at this point.
              */
-            (!hasRejectedToolCalls || decision.type === "reject")
+            (!hasRejectedToolCalls ||
+              decision.type === "reject" ||
+              decision.type === "respond")
           ) {
             revisedToolCalls.push(revisedToolCall);
           }
@@ -849,9 +889,17 @@ export function humanInTheLoopMiddleware(
           lastMessage.tool_calls = revisedToolCalls;
         }
 
-        const jumpTo: JumpToTarget | undefined = hasRejectedToolCalls
-          ? "model"
-          : undefined;
+        const hasPendingToolCalls = revisedToolCalls.some(
+          (toolCall) =>
+            !artificialToolMessages.some(
+              (message) => message.tool_call_id === toolCall.id
+            )
+        );
+        const jumpTo: JumpToTarget | undefined =
+          hasRejectedToolCalls ||
+          (hasRespondedToolCalls && !hasPendingToolCalls)
+            ? "model"
+            : undefined;
         return {
           messages: [lastMessage, ...artificialToolMessages],
           jumpTo,
