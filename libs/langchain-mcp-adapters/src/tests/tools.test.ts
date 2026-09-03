@@ -4,6 +4,7 @@ import {
   StructuredTool,
   ToolInputParsingException,
 } from "@langchain/core/tools";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import type {
   EmbeddedResource,
   ImageContent,
@@ -194,6 +195,42 @@ describe("Simplified Tool Adapter Tests", () => {
       expect(mockClient.callTool).toHaveBeenCalledWith({
         arguments: {},
         name: "weather",
+      });
+    });
+
+    test("should preserve the original error as ToolException cause when a tool call fails", async () => {
+      // Set up mock response
+      mockClient.listTools.mockReturnValueOnce(
+        Promise.resolve({
+          tools: [
+            {
+              name: "failing",
+              description: "Always fails",
+              inputSchema: { type: "object", properties: {}, required: [] },
+            },
+          ],
+        })
+      );
+
+      const originalError = new McpError(
+        ErrorCode.ConnectionClosed,
+        "Connection closed"
+      );
+      mockClient.callTool.mockImplementation(() =>
+        Promise.reject(originalError)
+      );
+
+      // Load tools
+      const tools = await loadMcpTools(
+        "mockServer(should preserve ToolException cause)",
+        mockClient as Client
+      );
+
+      // The structured McpError (e.g. its code) must survive for programmatic
+      // handling instead of being flattened into the message string
+      await expect(tools[0].invoke({})).rejects.toMatchObject({
+        name: "ToolException",
+        cause: originalError,
       });
     });
 
