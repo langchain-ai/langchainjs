@@ -1,11 +1,10 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import * as ts from "typescript";
-import { format, type FormatConfig } from "oxfmt";
+import { format } from "oxfmt";
 import type { ModelProfile } from "@langchain/core/language_models/profile";
 import type { Model, ProviderMap } from "./api-schema.js";
 import { type ModelProfileOverride, applyOverrides } from "./config.js";
-import { findMonorepoRoot, validatePathInMonorepo } from "./config.js";
+import { validatePathInMonorepo } from "./config.js";
 
 /**
  * Converts a Model from the API schema to a ModelProfile.
@@ -28,124 +27,35 @@ function modelToProfile(model: Model): ModelProfile {
 }
 
 /**
- * Converts a JavaScript value to a TypeScript expression node.
+ * Generates a static TypeScript module from model profiles.
  */
-function valueToExpression(value: unknown): ts.Expression {
-  if (value === undefined || value === null) {
-    return ts.factory.createIdentifier("undefined");
-  }
-  if (typeof value === "boolean") {
-    return value ? ts.factory.createTrue() : ts.factory.createFalse();
-  }
-  if (typeof value === "number") {
-    return ts.factory.createNumericLiteral(value);
-  }
-  if (typeof value === "string") {
-    return ts.factory.createStringLiteral(value);
-  }
-  // Fallback to JSON for complex types
-  return ts.factory.createStringLiteral(JSON.stringify(value));
+function formatPropertyName(key: string): string {
+  return /^[$A-Z_a-z][$\w]*$/u.test(key) ? key : JSON.stringify(key);
 }
 
-/**
- * Generates TypeScript code for model profiles using the TypeScript AST API.
- */
 function generateTypeScript(models: Record<string, ModelProfile>): string {
-  // Create property assignments for each profile
-  const modelProfiles = Object.entries(models).map(([modelName, profile]) => {
-    // Create property assignments for the profile
-    const profileProperties = Object.entries(profile)
-      .filter(([, value]) => value !== undefined)
-      .map(([key, value]) =>
-        ts.factory.createPropertyAssignment(
-          ts.factory.createIdentifier(key),
-          valueToExpression(value)
+  const modelProfiles = Object.entries(models)
+    .map(([modelName, profile]) => {
+      const profileProperties = Object.entries(profile)
+        .filter(([, value]) => value !== undefined)
+        .map(
+          ([key, value]) =>
+            `    ${formatPropertyName(key)}: ${JSON.stringify(value)},`
         )
-      );
+        .join("\n");
+      return `  ${JSON.stringify(modelName)}: {\n${profileProperties}\n  },`;
+    })
+    .join("\n");
 
-    return ts.factory.createPropertyAssignment(
-      ts.factory.createStringLiteral(modelName),
-      ts.factory.createObjectLiteralExpression(profileProperties, true)
-    );
-  });
-
-  // Create the profiles object literal - use multiline for proper formatting
-  const profilesObject = ts.factory.createObjectLiteralExpression(
-    modelProfiles,
-    true // Use multiline to get newlines between entries
-  );
-
-  // Create the type annotation: Record<string, ModelProfile>
-  const recordType = ts.factory.createTypeReferenceNode(
-    ts.factory.createIdentifier("Record"),
-    [
-      ts.factory.createKeywordTypeNode(ts.SyntaxKind.StringKeyword),
-      ts.factory.createTypeReferenceNode(
-        ts.factory.createIdentifier("ModelProfile"),
-        undefined
-      ),
-    ]
-  );
-
-  // Create: const profiles: Record<string, ModelProfile> = { ... }
-  const profilesVariable = ts.factory.createVariableStatement(
-    undefined,
-    ts.factory.createVariableDeclarationList(
-      [
-        ts.factory.createVariableDeclaration(
-          ts.factory.createIdentifier("PROFILES"),
-          undefined,
-          recordType,
-          profilesObject
-        ),
-      ],
-      ts.NodeFlags.Const
-    )
-  );
-
-  // Create import: import type { ModelProfile } from "@langchain/core/language_models/profile";
-  const importSpecifier = ts.factory.createImportSpecifier(
-    false, // Specifier itself is not type-only (clause handles it)
-    undefined,
-    ts.factory.createIdentifier("ModelProfile")
-  );
-  const importDeclaration = ts.factory.createImportDeclaration(
-    undefined,
-    ts.factory.createImportClause(
-      true, // Mark the entire import clause as type-only
-      undefined,
-      ts.factory.createNamedImports([importSpecifier])
-    ),
-    ts.factory.createStringLiteral("@langchain/core/language_models/profile")
-  );
-
-  // Create export: export default models;
-  const exportDefault = ts.factory.createExportAssignment(
-    undefined,
-    false,
-    ts.factory.createIdentifier("PROFILES")
-  );
-
-  // Create the source file with empty statements for spacing
-  const sourceFile = ts.factory.createSourceFile(
-    [importDeclaration, profilesVariable, exportDefault],
-    ts.factory.createToken(ts.SyntaxKind.EndOfFileToken),
-    ts.NodeFlags.None
-  );
-
-  // Add JSDoc comment to the source file
-  ts.addSyntheticLeadingComment(
-    importDeclaration,
-    ts.SyntaxKind.MultiLineCommentTrivia,
-    "*\n * This file was automatically generated by an automated script. Do not edit manually.\n ",
-    true
-  );
-
-  // Print the source file to string
-  const printer = ts.createPrinter({
-    removeComments: false,
-  });
-  return printer.printFile(sourceFile);
+  return `/**
+ * This file was automatically generated by an automated script. Do not edit manually.
+ */
+import type { ModelProfile } from "@langchain/core/language_models/profile";
+const PROFILES: Record<string, ModelProfile> = {
+${modelProfiles}
+};
+export default PROFILES;
+`;
 }
 
 /**
@@ -228,12 +138,7 @@ export async function generateModelProfiles(
   // Format with Oxfmt using project's configuration
   let formattedCode: string;
   try {
-    const oxfmtConfig = await loadOxfmtConfig();
-    const result = await format(
-      resolvedOutputPath,
-      typescriptCode,
-      oxfmtConfig
-    );
+    const result = await format(resolvedOutputPath, typescriptCode);
     if (result.errors.length > 0) {
       throw new Error(result.errors[0]?.message ?? "Unknown oxfmt error");
     }
@@ -248,37 +153,4 @@ export async function generateModelProfiles(
 
   fs.writeFileSync(resolvedOutputPath, formattedCode, "utf-8");
   console.log(`✅ Generated model profiles file: ${resolvedOutputPath}`);
-}
-
-const OXFMT_CONFIG_FILES = [".oxfmtrc.jsonc", ".oxfmtrc.json"];
-let cachedOxfmtConfig: FormatConfig | undefined;
-
-async function loadOxfmtConfig(): Promise<FormatConfig | undefined> {
-  if (cachedOxfmtConfig) return cachedOxfmtConfig;
-
-  const monorepoRoot = findMonorepoRoot();
-  for (const filename of OXFMT_CONFIG_FILES) {
-    const configPath = path.join(monorepoRoot, filename);
-    try {
-      const raw = await fs.promises.readFile(configPath, "utf-8");
-      const { config, error } = ts.parseConfigFileTextToJson(configPath, raw);
-      if (error) {
-        throw new Error(
-          ts.flattenDiagnosticMessageText(error.messageText, "\n")
-        );
-      }
-      const parsed = config as Record<string, unknown>;
-      if ("$schema" in parsed) {
-        delete parsed.$schema;
-      }
-      cachedOxfmtConfig = parsed as FormatConfig;
-      return cachedOxfmtConfig;
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
-        throw error;
-      }
-    }
-  }
-
-  return undefined;
 }

@@ -352,11 +352,7 @@ describe("generator", () => {
       await generateModelProfiles("openai", {}, {}, outputPath);
 
       expect(oxfmt.format).toHaveBeenCalled();
-      expect(oxfmt.format).toHaveBeenCalledWith(
-        outputPath,
-        expect.any(String),
-        expect.anything()
-      );
+      expect(oxfmt.format).toHaveBeenCalledWith(outputPath, expect.any(String));
     });
   });
 });
