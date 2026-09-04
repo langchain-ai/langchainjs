@@ -1816,6 +1816,12 @@ describe.each(thinkingModelInfo)(
         .thoughtSignature;
       expect(toolCallSignature).toBeDefined();
 
+      // Force v1 - the default (legacy) route already preserves this signature
+      firstResult.response_metadata = {
+        ...firstResult.response_metadata,
+        output_version: "v1",
+      };
+
       await llm.invoke([
         new HumanMessage("What is the weather in New York?"),
         firstResult,
