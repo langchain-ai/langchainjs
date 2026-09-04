@@ -18,7 +18,7 @@
     "@langchain/openai": "workspace:*",
     "@tsconfig/recommended": "^1.0.2",
     "@types/node": "^18.15.11",
-    "esbuild": "^0.25.0",
+    "esbuild": "^0.28.1",
     "langchain": "workspace:*",
     "typescript": "^5.0.0"
   },

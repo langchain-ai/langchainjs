@@ -87,6 +87,48 @@ export interface WeaviateLibArgs {
   jsonSchema?: WeaviateClass;
 }
 
+/**
+ * Integration identifier reported to Weaviate telemetry. Matches the Python
+ * `langchain-weaviate` integration: the value is intentionally just `langchain`
+ * (not language-specific) since language disambiguation is already carried by
+ * the client's own `X-Weaviate-Client` header.
+ */
+const INTEGRATION_NAME = "langchain";
+
+/**
+ * Telemetry header that tags the connection so Weaviate can track langchain
+ * usage across both the HTTP and gRPC transports.
+ */
+const INTEGRATION_HEADER = "X-Weaviate-Client-Integration";
+
+/**
+ * Best-effort registration of the {@link INTEGRATION_HEADER} on a Weaviate
+ * client. Never throws.
+ *
+ * Unlike the Python `weaviate-client`, the JS client exposes no public
+ * `integrations.configure(...)` API. However, `getConnectionDetails()` returns
+ * the client's live `headers` object by reference, and the client spreads that
+ * same object into every HTTP and gRPC request. Mutating it therefore tags all
+ * subsequent requests with `X-Weaviate-Client-Integration: langchain/<version>`
+ * without depending on any private internals. The whole thing is wrapped so a
+ * future change to the client's shape silently skips registration instead of
+ * breaking store construction.
+ */
+async function registerIntegrationHeader(
+  client: WeaviateClient
+): Promise<void> {
+  try {
+    const { headers } = await client.getConnectionDetails();
+    // The client only spreads object-form headers into requests, so only the
+    // `Record<string, string>` form can be augmented in place.
+    if (headers && !Array.isArray(headers)) {
+      headers[INTEGRATION_HEADER] = `${INTEGRATION_NAME}/${__PKG_VERSION__}`;
+    }
+  } catch {
+    // Best-effort telemetry: never let header registration break the store.
+  }
+}
+
 export class WeaviateDocument extends Document {
   generated?: string;
 
@@ -128,6 +170,10 @@ export class WeaviateStore extends VectorStore {
     super(embeddings, args);
 
     this.client = args.client;
+    // Tag the connection for Weaviate telemetry. Fire-and-forget and best-effort
+    // (the helper never throws) so it mirrors Python's registration in `__init__`
+    // without blocking synchronous construction.
+    registerIntegrationHeader(this.client);
     // `class` is Weaviate's legacy field name for the collection identifier in the
     // raw REST/JSON schema — it is not the standard JSON Schema `class` keyword.
     // See WeaviateClass in weaviate-client/openapi/types.

@@ -366,6 +366,10 @@ export abstract class BaseMessage<
     );
   }
 
+  static [Symbol.hasInstance](obj: unknown) {
+    return this.isInstance(obj);
+  }
+
   // this private method is used to update the ID for the runtime
   // value as well as in lc_kwargs for serialisation
   _updateId(value: string | undefined) {
@@ -707,6 +711,10 @@ export abstract class BaseMessageChunk<
       proto = Object.getPrototypeOf(proto);
     }
     return false;
+  }
+
+  static [Symbol.hasInstance](obj: unknown) {
+    return this.isInstance(obj);
   }
 }
 

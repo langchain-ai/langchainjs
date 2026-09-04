@@ -11,8 +11,11 @@ import {
   RequestOptions,
   type CachedContent,
   Schema,
+  type EnhancedGenerateContentResponse,
 } from "@google/generative-ai";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
+import { convertGoogleGenAIStream } from "./utils/stream_events.js";
 import {
   AIMessageChunk,
   BaseMessage,
@@ -20,6 +23,7 @@ import {
 } from "@langchain/core/messages";
 import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { resolveLangSmithGatewayConfig } from "@langchain/core/utils/gateway";
 import {
   BaseChatModel,
   type BaseChatModelCallOptions,
@@ -631,6 +635,8 @@ export class ChatGoogleGenerativeAI
 
   apiKey?: string;
 
+  baseUrl?: string;
+
   streaming = false;
 
   json?: boolean;
@@ -699,11 +705,21 @@ export class ChatGoogleGenerativeAI
 
     this.stopSequences = fields.stopSequences ?? this.stopSequences;
 
-    this.apiKey = fields.apiKey ?? getEnvironmentVariable("GOOGLE_API_KEY");
+    const gatewayConfig = resolveLangSmithGatewayConfig({
+      baseURL: fields.baseUrl,
+      providerPath: "gemini",
+    });
+    this.baseUrl = gatewayConfig.baseURL;
+
+    this.apiKey =
+      fields.apiKey ??
+      gatewayConfig.apiKey ??
+      (getEnvironmentVariable("GOOGLE_API_KEY") ||
+        getEnvironmentVariable("GEMINI_API_KEY"));
     if (!this.apiKey) {
       throw new Error(
         "Please set an API key for Google GenerativeAI " +
-          "in the environment variable GOOGLE_API_KEY " +
+          "in the environment variable GOOGLE_API_KEY or GEMINI_API_KEY " +
           "or in the `apiKey` field of the " +
           "ChatGoogleGenerativeAI constructor"
       );
@@ -744,7 +760,7 @@ export class ChatGoogleGenerativeAI
       },
       {
         apiVersion: fields.apiVersion,
-        baseUrl: fields.baseUrl,
+        baseUrl: this.baseUrl,
         customHeaders: fields.customHeaders,
       }
     );
@@ -757,12 +773,20 @@ export class ChatGoogleGenerativeAI
     requestOptions?: RequestOptions
   ): void {
     if (!this.apiKey) return;
+    // Preserve the resolved request options (notably `baseUrl`) so cached-content
+    // requests keep routing through the configured LangSmith gateway. Without
+    // this, a gateway-enabled model would rebuild the client against Google's
+    // default endpoint while using the gateway key, and fail authentication.
+    const resolvedRequestOptions: RequestOptions = {
+      baseUrl: this.baseUrl,
+      ...requestOptions,
+    };
     this.client = new GenerativeAI(
       this.apiKey
     ).getGenerativeModelFromCachedContent(
       cachedContent,
       modelParams,
-      requestOptions
+      resolvedRequestOptions
     );
   }
 
@@ -832,21 +856,50 @@ export class ChatGoogleGenerativeAI
         })
       : undefined;
 
-    if (options?.responseSchema) {
-      this.client.generationConfig.responseSchema = options.responseSchema;
-      this.client.generationConfig.responseMimeType = "application/json";
-    } else {
-      this.client.generationConfig.responseSchema = undefined;
-      this.client.generationConfig.responseMimeType = this.json
-        ? "application/json"
-        : undefined;
-    }
-
     return {
       ...(toolsAndConfig?.tools ? { tools: toolsAndConfig.tools } : {}),
       ...(toolsAndConfig?.toolConfig
         ? { toolConfig: toolsAndConfig.toolConfig }
         : {}),
+      generationConfig: {
+        stopSequences: this.stopSequences,
+        maxOutputTokens: this.maxOutputTokens,
+        temperature: this.temperature,
+        topP: this.topP,
+        topK: this.topK,
+        ...(this.json ? { responseMimeType: "application/json" } : {}),
+        ...(this.thinkingConfig ? { thinkingConfig: this.thinkingConfig } : {}),
+        ...(options?.responseSchema
+          ? {
+              responseSchema: options.responseSchema,
+              responseMimeType: "application/json",
+            }
+          : {}),
+      },
+    };
+  }
+
+  private _buildGenerateContentRequest(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"]
+  ): GenerateContentRequest {
+    const prompt = convertBaseMessagesToContent(
+      messages,
+      this._isMultimodalModel,
+      this.useSystemInstruction,
+      this.model
+    );
+    let actualPrompt = prompt;
+    let systemInstruction: (typeof prompt)[number] | undefined;
+    if (prompt[0]?.role === "system") {
+      [systemInstruction, ...actualPrompt] = prompt;
+    }
+    const parameters = this.invocationParams(options);
+
+    return {
+      ...parameters,
+      ...(systemInstruction ? { systemInstruction } : {}),
+      contents: actualPrompt,
     };
   }
 
@@ -856,19 +909,6 @@ export class ChatGoogleGenerativeAI
     runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
     options.signal?.throwIfAborted();
-    const prompt = convertBaseMessagesToContent(
-      messages,
-      this._isMultimodalModel,
-      this.useSystemInstruction,
-      this.model
-    );
-    let actualPrompt = prompt;
-    if (prompt[0].role === "system") {
-      const [systemInstruction] = prompt;
-      this.client.systemInstruction = systemInstruction;
-      actualPrompt = prompt.slice(1);
-    }
-    const parameters = this.invocationParams(options);
 
     // Handle streaming
     if (this.streaming) {
@@ -892,10 +932,9 @@ export class ChatGoogleGenerativeAI
       return { generations, llmOutput: { estimatedTokenUsage: tokenUsage } };
     }
 
-    const res = await this.completionWithRetry({
-      ...parameters,
-      contents: actualPrompt,
-    });
+    const res = await this.completionWithRetry(
+      this._buildGenerateContentRequest(messages, options)
+    );
 
     let usageMetadata: UsageMetadata | undefined;
     if ("usageMetadata" in res.response) {
@@ -911,13 +950,44 @@ export class ChatGoogleGenerativeAI
         usageMetadata,
       }
     );
-    // may not have generations in output if there was a refusal for safety reasons, malformed function call, etc.
-    if (generationResult.generations?.length > 0) {
-      await runManager?.handleLLMNewToken(
-        generationResult.generations[0]?.text ?? ""
-      );
-    }
+    await runManager?.handleLLMNewToken(
+      generationResult.generations[0]?.text ?? ""
+    );
     return generationResult;
+  }
+
+  async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    const request = this._buildGenerateContentRequest(messages, options);
+    const stream = await this.caller.callWithOptions(
+      { signal: options?.signal },
+      async () => {
+        const { stream: s } = await this.client.generateContentStream(request, {
+          signal: options?.signal,
+        });
+        return s;
+      }
+    );
+    const shouldStreamUsage =
+      this.streamUsage !== false && options.streamUsage !== false;
+    const abortableStream = async function* (
+      source: AsyncIterable<EnhancedGenerateContentResponse>,
+      signal?: AbortSignal
+    ) {
+      for await (const chunk of source) {
+        if (signal?.aborted) {
+          return;
+        }
+        yield chunk;
+      }
+    };
+    yield* convertGoogleGenAIStream(abortableStream(stream, options.signal), {
+      streamUsage: shouldStreamUsage,
+      model: this.model,
+    });
   }
 
   async *_streamResponseChunks(
@@ -925,23 +995,7 @@ export class ChatGoogleGenerativeAI
     options: this["ParsedCallOptions"],
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
-    const prompt = convertBaseMessagesToContent(
-      messages,
-      this._isMultimodalModel,
-      this.useSystemInstruction,
-      this.model
-    );
-    let actualPrompt = prompt;
-    if (prompt[0].role === "system") {
-      const [systemInstruction] = prompt;
-      this.client.systemInstruction = systemInstruction;
-      actualPrompt = prompt.slice(1);
-    }
-    const parameters = this.invocationParams(options);
-    const request = {
-      ...parameters,
-      contents: actualPrompt,
-    };
+    const request = this._buildGenerateContentRequest(messages, options);
     const stream = await this.caller.callWithOptions(
       { signal: options?.signal },
       async () => {

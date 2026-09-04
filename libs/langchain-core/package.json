@@ -1,6 +1,6 @@
 {
   "name": "@langchain/core",
-  "version": "1.1.49",
+  "version": "1.2.9",
   "description": "Core LangChain.js abstractions and schemas",
   "type": "module",
   "engines": {
@@ -35,12 +35,12 @@
   "devDependencies": {
     "@langchain/tsconfig": "workspace:*",
     "@types/mustache": "^4",
-    "@types/node": "^25.9.1",
-    "dotenv": "^17.4.0",
-    "dpdm": "^3.14.0",
-    "ml-matrix": "^6.10.4",
+    "@types/node": "^26.4.0",
+    "dotenv": "^17.4.2",
+    "dpdm": "^4.3.0",
+    "ml-matrix": "^6.15.0",
     "rimraf": "^6.1.3",
-    "typescript": "~6.0.3",
+    "typescript": "~7.0.2",
     "vitest": "^4.1.8",
     "web-streams-polyfill": "^4.3.0"
   },
@@ -302,6 +302,17 @@
       "import": {
         "types": "./dist/language_models/llms.d.ts",
         "default": "./dist/language_models/llms.js"
+      }
+    },
+    "./language_models/openai_completions_stream": {
+      "input": "./src/language_models/openai_completions_stream.ts",
+      "require": {
+        "types": "./dist/language_models/openai_completions_stream.d.cts",
+        "default": "./dist/language_models/openai_completions_stream.cjs"
+      },
+      "import": {
+        "types": "./dist/language_models/openai_completions_stream.d.ts",
+        "default": "./dist/language_models/openai_completions_stream.js"
       }
     },
     "./language_models/profile": {
@@ -700,6 +711,17 @@
         "default": "./dist/utils/function_calling.js"
       }
     },
+    "./utils/gateway": {
+      "input": "./src/utils/gateway.ts",
+      "require": {
+        "types": "./dist/utils/gateway.d.cts",
+        "default": "./dist/utils/gateway.cjs"
+      },
+      "import": {
+        "types": "./dist/utils/gateway.d.ts",
+        "default": "./dist/utils/gateway.js"
+      }
+    },
     "./utils/hash": {
       "input": "./src/utils/hash.ts",
       "require": {
@@ -839,12 +861,13 @@
     "CHANGELOG.md",
     "README.md",
     "LICENSE",
+    "language_models",
     "retrievers",
-    "load",
     "load.d.cts",
     "load.cjs",
     "load.d.ts",
     "load.js",
+    "load",
     "prompts.d.cts",
     "prompts.cjs",
     "prompts.d.ts",
@@ -852,7 +875,6 @@
     "output_parsers",
     "utils",
     "types",
-    "language_models",
     "callbacks",
     "embeddings.d.cts",
     "embeddings.cjs",
@@ -887,6 +909,10 @@
     "indexing.cjs",
     "indexing.d.ts",
     "indexing.js",
+    "testing.d.cts",
+    "testing.cjs",
+    "testing.d.ts",
+    "testing.js",
     "documents.d.cts",
     "documents.cjs",
     "documents.d.ts",
@@ -917,7 +943,6 @@
     "runnables.cjs",
     "runnables.d.ts",
     "runnables.js",
-    "testing",
     "tools.d.cts",
     "tools.cjs",
     "tools.d.ts",
@@ -934,6 +959,7 @@
     "caches.cjs",
     "caches.d.ts",
     "caches.js",
+    "testing",
     "agents.d.cts",
     "agents.cjs",
     "agents.d.ts",

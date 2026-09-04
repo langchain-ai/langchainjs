@@ -54,9 +54,10 @@ import {
 } from "./nodes/utils.js";
 import {
   createToolCallTransformer,
+  createSubagentTransformer,
   type AgentRunStream,
   type InferStreamExtensions,
-} from "./stream.js";
+} from "./transformers/index.js";
 
 import type {
   WithStateGraphNodes,
@@ -679,6 +680,7 @@ export class ReactAgent<
     const compileTransformers = [
       /* built-in stream transformers */
       createToolCallTransformer([]),
+      createSubagentTransformer([]),
       /* middleware stream transformers */
       ...middlewareStreamTransformers,
       /* user-defined stream transformers */

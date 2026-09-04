@@ -224,6 +224,7 @@ export type ResponsesInputItem = OpenAIClient.Responses.ResponseInputItem;
  *   - `total_tokens`: Combined total of input and output tokens (defaults to 0 if not provided)
  *   - `input_token_details`: Object containing detailed input token information:
  *     - `cache_read`: Number of tokens read from cache (only included if available)
+ *     - `cache_creation`: Number of tokens written to cache (only included if available)
  *   - `output_token_details`: Object containing detailed output token information:
  *     - `reasoning`: Number of tokens used for reasoning (only included if available)
  *
@@ -233,7 +234,7 @@ export type ResponsesInputItem = OpenAIClient.Responses.ResponseInputItem;
  *   input_tokens: 100,
  *   output_tokens: 50,
  *   total_tokens: 150,
- *   input_tokens_details: { cached_tokens: 20 },
+ *   input_tokens_details: { cached_tokens: 20, cache_write_tokens: 30 },
  *   output_tokens_details: { reasoning_tokens: 10 }
  * };
  *
@@ -243,7 +244,7 @@ export type ResponsesInputItem = OpenAIClient.Responses.ResponseInputItem;
  * //   input_tokens: 100,
  * //   output_tokens: 50,
  * //   total_tokens: 150,
- * //   input_token_details: { cache_read: 20 },
+ * //   input_token_details: { cache_read: 20, cache_creation: 30 },
  * //   output_token_details: { reasoning: 10 }
  * // }
  * ```
@@ -251,8 +252,8 @@ export type ResponsesInputItem = OpenAIClient.Responses.ResponseInputItem;
  * @remarks
  * - The function safely handles undefined or null values by using optional chaining
  *   and nullish coalescing operators
- * - Detailed token information (cache_read, reasoning) is only included in the result
- *   if the corresponding values are present in the input
+ * - Detailed token information (cache_read, cache_creation, reasoning) is only included
+ *   in the result if the corresponding values are present in the input
  * - Token counts default to 0 if not provided in the usage object
  * - This converter is specifically designed for OpenAI's Responses API format and
  *   may differ from other OpenAI API endpoints
@@ -264,6 +265,9 @@ export const convertResponsesUsageToUsageMetadata: Converter<
   const inputTokenDetails = {
     ...(usage?.input_tokens_details?.cached_tokens != null && {
       cache_read: usage?.input_tokens_details?.cached_tokens,
+    }),
+    ...(usage?.input_tokens_details?.cache_write_tokens != null && {
+      cache_creation: usage?.input_tokens_details?.cache_write_tokens,
     }),
   };
   const outputTokenDetails = {
@@ -728,6 +732,16 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
     };
   } else if (
     event.type === "response.output_item.done" &&
+    event.item.type === "reasoning" &&
+    event.item.encrypted_content
+  ) {
+    // Encrypted reasoning content is only complete on the done event. Emit it
+    // separately so it merges with the id and summary from output_item.added.
+    additional_kwargs.reasoning = {
+      encrypted_content: event.item.encrypted_content,
+    };
+  } else if (
+    event.type === "response.output_item.done" &&
     event.item.type === "computer_call"
   ) {
     // Handle computer_call as a tool call so ToolNode can process it
@@ -823,14 +837,26 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
         : {}),
     });
   } else if (
+    event.type === "response.web_search_call.in_progress" ||
+    event.type === "response.web_search_call.searching" ||
     event.type === "response.web_search_call.completed" ||
-    event.type === "response.file_search_call.completed"
+    event.type === "response.file_search_call.in_progress" ||
+    event.type === "response.file_search_call.searching" ||
+    event.type === "response.file_search_call.completed" ||
+    event.type === "response.image_generation_call.in_progress" ||
+    event.type === "response.image_generation_call.generating" ||
+    event.type === "response.image_generation_call.completed"
   ) {
+    const [, type, status] = event.type.match(/^response\.(.*)\.([^.]+)$/) ?? [
+      "",
+      "",
+      "",
+    ];
     generationInfo = {
       tool_outputs: {
         id: event.item_id,
-        type: event.type.replace("response.", "").replace(".completed", ""),
-        status: "completed",
+        type,
+        status,
       },
     };
   } else if (event.type === "response.refusal.done") {
@@ -990,6 +1016,19 @@ export const convertStandardContentMessageToResponsesInput: Converter<
       }
     });
 
+    // Text parts must match the message role: assistant content uses
+    // `output_text` (the Responses API rejects `input_text` for assistant
+    // messages), every other role uses `input_text`.
+    const makeTextPart = (
+      text: string
+    ): ResponseInputMessageContentList[number] =>
+      (messageRole === "assistant"
+        ? { type: "output_text", text, annotations: [] }
+        : {
+            type: "input_text",
+            text,
+          }) as unknown as ResponseInputMessageContentList[number];
+
     let currentMessage: OpenAIClient.Responses.EasyInputMessage | undefined =
       undefined;
 
@@ -1032,7 +1071,7 @@ export const convertStandardContentMessageToResponsesInput: Converter<
       if (typeof currentMessage.content === "string") {
         currentMessage.content =
           currentMessage.content.length > 0
-            ? [{ type: "input_text", text: currentMessage.content }, ...content]
+            ? [makeTextPart(currentMessage.content), ...content]
             : [...content];
       } else {
         currentMessage.content.push(...content);
@@ -1149,21 +1188,21 @@ export const convertStandardContentMessageToResponsesInput: Converter<
             }))
           : [{ type: "summary_text" as const, text: "" }];
 
-      const reasoningItem: OpenAIClient.Responses.ResponseReasoningItem = {
+      // Only include `id` when we actually have one. Reasoning blocks
+      // reassembled from streaming chunks (e.g. via `streamEvents`) never
+      // carry an id, since OpenAI's streaming protocol omits it. Emitting
+      // `id: ""` makes the Responses API reject the turn with
+      // `400 Invalid 'input[n].id': ''`, so we omit the field instead — the
+      // same way the legacy reconstruction path leaves a missing id off.
+      // Reasoning input items only carry `summary` — the Responses API rejects
+      // a populated `content` array on input (`400 Invalid 'input[n].content':
+      // array too long. Expected an array with maximum length 0`). The reasoning
+      // text is already represented in `summary`, so we do not forward `content`.
+      return {
         type: "reasoning",
-        id: block.id ?? "",
+        ...(block.id ? { id: block.id } : {}),
         summary,
-      };
-
-      if (block.reasoning) {
-        reasoningItem.content = [
-          {
-            type: "reasoning_text" as const,
-            text: block.reasoning,
-          },
-        ];
-      }
-      return reasoningItem;
+      } as OpenAIClient.Responses.ResponseReasoningItem;
     };
 
     const convertFunctionCall = (
@@ -1208,7 +1247,7 @@ export const convertStandardContentMessageToResponsesInput: Converter<
           return block.extras
             .phase as OpenAIClient.Responses.EasyInputMessage["phase"];
         });
-        pushMessageContent([{ type: "input_text", text: block.text }], phase);
+        pushMessageContent([makeTextPart(block.text)], phase);
       } else if (block.type === "invalid_tool_call") {
         // no-op
       } else if (block.type === "reasoning") {
@@ -1276,12 +1315,7 @@ export const convertStandardContentMessageToResponsesInput: Converter<
         }
       } else if (block.type === "text-plain") {
         if (block.text) {
-          pushMessageContent([
-            {
-              type: "input_text",
-              text: block.text,
-            },
-          ]);
+          pushMessageContent([makeTextPart(block.text)]);
         }
       } else if (block.type === "non_standard" && isResponsesMessage) {
         yield* flushMessage();
@@ -1496,9 +1530,10 @@ export const convertMessagesToResponsesInput: Converter<
         const reasoning = additional_kwargs?.reasoning;
         const hasEncryptedContent = !!reasoning?.encrypted_content;
         /**
-         * With ZDR enabled, OpenAI does not retain reasoning items, so we only send
-         * them when encrypted content is available (via include: ["reasoning.encrypted_content"]).
-         * With ZDR disabled, we include reasoning item ids so OpenAI can reference them, as it's storing them.
+         * With ZDR enabled, OpenAI returns encrypted reasoning content for stateless
+         * replay, so only send reasoning items when that payload is available.
+         * With ZDR disabled, include reasoning item IDs so OpenAI can reference
+         * the stored items.
          */
         if (reasoning && (!zdrEnabled || hasEncryptedContent)) {
           const reasoningItem =
@@ -1657,6 +1692,35 @@ export const convertMessagesToResponsesInput: Converter<
             });
           }
           if (isDataContentBlock(item)) {
+            // The Responses API supports file URLs natively, but the Chat
+            // Completions converter rejects URL file blocks. Convert standard
+            // file blocks to the native `input_file` shape instead of routing
+            // them through the completions converter.
+            if (item.type === "file") {
+              const filename = getFilenameFromMetadata(item);
+              if (item.source_type === "url") {
+                return {
+                  type: "input_file",
+                  file_url: item.url,
+                  ...(filename ? { filename } : {}),
+                };
+              }
+              if (item.source_type === "id") {
+                return {
+                  type: "input_file",
+                  file_id: item.id,
+                  ...(filename ? { filename } : {}),
+                };
+              }
+              if (item.source_type === "base64") {
+                const mimeType = item.mime_type ?? "";
+                return {
+                  type: "input_file",
+                  file_data: `data:${mimeType};base64,${item.data}`,
+                  filename: getRequiredFilenameFromMetadata(item),
+                };
+              }
+            }
             return convertToProviderContentBlock(
               item,
               completionsApiContentBlockConverter

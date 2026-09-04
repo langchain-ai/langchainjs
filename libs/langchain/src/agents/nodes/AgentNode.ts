@@ -1019,7 +1019,13 @@ export class AgentNode<
           kwargs: { method: "json_schema" },
           schema: structuredResponseFormat.strategy.schema,
         },
-        strict: resolvedStrict,
+
+        /**
+         * Don't force strict on tools: it makes Anthropic's combined grammar
+         * "too complex for compilation", and only OpenAI Chat Completions needs
+         * it (re-applied there). Honor an explicit override; else leave unset.
+         */
+        strict: preparedOptions?.modelSettings?.strict,
       });
     }
 

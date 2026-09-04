@@ -1,5 +1,116 @@
 # langchain
 
+## 1.5.10
+
+### Patch Changes
+
+- [#11412](https://github.com/langchain-ai/langchainjs/pull/11412) [`7df258c`](https://github.com/langchain-ai/langchainjs/commit/7df258c0af8362fede14d42bb982597a56f41b78) Thanks [@hntrl](https://github.com/hntrl)! - chore(langgraph): update langgraph deps to track serialization fix
+
+## 1.5.9
+
+### Patch Changes
+
+- [#11369](https://github.com/langchain-ai/langchainjs/pull/11369) [`d6ad973`](https://github.com/langchain-ai/langchainjs/commit/d6ad9735640a6c729f81ef79361acc5e83c526f1) Thanks [@hntrl](https://github.com/hntrl)! - fix(langchain): use unified endpoint for gateway
+
+- [#11342](https://github.com/langchain-ai/langchainjs/pull/11342) [`3b0e4c4`](https://github.com/langchain-ai/langchainjs/commit/3b0e4c48a31811031a460c4d95519a7c1163dc41) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - feat(core): mark errors as retryable or not, and stop retrying the ones that aren't
+
+  Retry middleware retried every failure up to `maxRetries`, including deterministic ones like a bad API key or an unknown model. Retries also nest, so a single such failure could cost dozens of API calls.
+
+  `@langchain/core/errors` adds `stampRetryable(error, retryable)` and `getRetryable(error)`. Marking an error leaves its class and shape untouched, so a provider SDK error can be classified without breaking `instanceof`. `getRetryable` returns `undefined` for errors nobody classified, and both are exported so tool authors can mark their own failures.
+
+  `modelRetryMiddleware` and `toolRetryMiddleware` now respect the mark by default, and retries stop as soon as one is found rather than each layer spending its own budget. Aborted calls, context overflow, and oversized payloads are marked non-retryable out of the box.
+  Models accept a per-call `maxRetries` so a surrounding retry loop can take over.
+
+  **Behavior change:** errors marked non-retryable now fail on the first attempt. Unclassified errors — including any from third-party integrations or custom tools — retry exactly as before. Pass `retryOn: () => true` to restore the old default. A custom `onFailedAttempt` replaces the built-in handler and opts out of marking.
+
+## 1.5.8
+
+### Patch Changes
+
+- [#11366](https://github.com/langchain-ai/langchainjs/pull/11366) [`c068bbf`](https://github.com/langchain-ai/langchainjs/commit/c068bbf8c113132bf16ac7a8add44e486a147b41) Thanks [@hntrl](https://github.com/hntrl)! - fix(core,langchain): patch and release core, update peer dependencies
+
+## 1.5.7
+
+### Patch Changes
+
+- [#11363](https://github.com/langchain-ai/langchainjs/pull/11363) [`2d1f744`](https://github.com/langchain-ai/langchainjs/commit/2d1f7449c95a554d429535abae0115b4f578bbac) Thanks [@hntrl](https://github.com/hntrl)! - feat(langchain): add langsmith gateway to initChatModel- [#11362](https://github.com/langchain-ai/langchainjs/issues/11362)
+
+## 1.5.6
+
+### Patch Changes
+
+- [#11331](https://github.com/langchain-ai/langchainjs/pull/11331) [`18765b0`](https://github.com/langchain-ai/langchainjs/commit/18765b002c3819bc4dc42123a293cab27a35ce4f) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - fix(langchain): exclude middleware-internal model calls from the message projection
+
+  Bookkeeping model calls made by `summarizationMiddleware` and `toolEmulatorMiddleware` no longer appear in `run.messages` or `stream({ streamMode: "messages" })`, and the summary `summarizationMiddleware` writes back to state is no longer projected as a new message. These calls remain observable via `streamEvents({ version: "v2" })`, identified by `lc_source`.
+
+- [#11344](https://github.com/langchain-ai/langchainjs/pull/11344) [`f08e0c6`](https://github.com/langchain-ai/langchainjs/commit/f08e0c6d50156accf95a36469a3e107a5598a3a0) Thanks [@hntrl](https://github.com/hntrl)! - fix: apply [Symbol.hasInstance] method to all comparable properties using .isInstance()
+
+  We have some internal schemas that rely on `z.instanceof()`. This uses a strict `instanceof` check which can conflict if there are multiple versions of core installed. This overrides the [Symbol.hasInstance](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/hasInstance) method to use the same logic as `.isInstance()` to compare objects at runtime.
+
+## 1.5.5
+
+### Patch Changes
+
+- [#11277](https://github.com/langchain-ai/langchainjs/pull/11277) [`0bd12f0`](https://github.com/langchain-ai/langchainjs/commit/0bd12f0bbb3c3f71e016f2ac26fd63a0f6ad0556) Thanks [@vladislav-nechakhin](https://github.com/vladislav-nechakhin)! - fix(langchain): resolve LocalFileStore keys with path.relative
+
+## 1.5.4
+
+### Patch Changes
+
+- [#11201](https://github.com/langchain-ai/langchainjs/pull/11201) [`a8cd4d9`](https://github.com/langchain-ai/langchainjs/commit/a8cd4d9ae35ae8ae05e011115a351d976560ade9) Thanks [@hntrl](https://github.com/hntrl)! - feat(langchain): add middleware for handling tool execution errors
+
+## 1.5.3
+
+### Patch Changes
+
+- [#11167](https://github.com/langchain-ai/langchainjs/pull/11167) [`4c7a06e`](https://github.com/langchain-ai/langchainjs/commit/4c7a06ec3e4728bb036a28f678dd8ec2521e1c82) Thanks [@colifran](https://github.com/colifran)! - fix(langchain): malformed tool input schemas are unrecoverable
+
+## 1.5.2
+
+### Patch Changes
+
+- [#11100](https://github.com/langchain-ai/langchainjs/pull/11100) [`3205b35`](https://github.com/langchain-ai/langchainjs/commit/3205b35ac83037a2fff2998f16a66b5126b306f8) Thanks [@colifran](https://github.com/colifran)! - fix(langchain, openai): decouple strict tools from strict structured output response
+
+## 1.5.1
+
+### Patch Changes
+
+- [#11087](https://github.com/langchain-ai/langchainjs/pull/11087) [`534b43a`](https://github.com/langchain-ai/langchainjs/commit/534b43a0719c89e3fb4ab7052d3f39797660aa43) Thanks [@christian-bromann](https://github.com/christian-bromann)! - fix(langchain): keep tool call streams pending across any tool interrupt
+
+  A raw `interrupt()` raised from inside a tool surfaced as a `tool-error` and
+  rejected the call's un-awaited `output` promise, producing an unhandled
+  rejection that crashed HITL runs. The tool-call stream transformer now treats
+  any serialized graph interrupt as control flow (the call stays pending and
+  resumes), not just `humanInTheLoopMiddleware` interrupts.
+
+## 1.5.0
+
+### Minor Changes
+
+- [#11062](https://github.com/langchain-ai/langchainjs/pull/11062) [`3ebd10a`](https://github.com/langchain-ai/langchainjs/commit/3ebd10ae381ef7c9e12759f08d2f2b745bdfae62) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(langchain): surface tool-dispatched subagents on `run.subagents`
+
+  Add a native subagent stream transformer to `createAgent` so v3 runs expose
+  named nested agents (`createAgent({ name })` invoked from tools) as typed
+  `SubagentRunStream` handles with `name`, `cause`, scoped `messages` /
+  `toolCalls`, and `output`. Refactors agent stream transformers into
+  `agents/transformers/` and exports only the public stream types from the
+  package entry.
+
+## 1.4.6
+
+### Patch Changes
+
+- [#11012](https://github.com/langchain-ai/langchainjs/pull/11012) [`4aeaa76`](https://github.com/langchain-ai/langchainjs/commit/4aeaa767a48dcc5451371f14adf4a06f064d23b9) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(langchain): add `when` predicate to human-in-the-loop middleware
+
+  Add an optional `when` callback on `InterruptOnConfig` so callers can
+  dynamically skip interrupts for specific tool calls. The predicate receives
+  a `ToolCallRequest` (batch `afterModel` context) and returns whether to
+  interrupt or auto-approve, matching Python `HumanInTheLoopMiddleware`.
+
+- [#11080](https://github.com/langchain-ai/langchainjs/pull/11080) [`e51478a`](https://github.com/langchain-ai/langchainjs/commit/e51478a4436d69a21f75f1c9e0bb84f3abb6d6f5) Thanks [@aolsenjazz](https://github.com/aolsenjazz)! - feat(aws): bedrock prompt caching middleware
+
+  Adds bedrockPromptCachingMiddleware. The interface largely matches what was previous implemented with anthropicPromptCachingMiddleware, making a best-effort attempt at utilizing prompt caching features for supported models.
+
 ## 1.4.5
 
 ### Patch Changes

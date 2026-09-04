@@ -843,8 +843,8 @@ describe("middleware", () => {
       expect(error).toBeInstanceOf(MiddlewareError);
       expect(error.name).toBe("Error");
       expect(error.message).toBe("original error");
-      expect(error.cause).toBeInstanceOf(MiddlewareError);
-      expect(error.cause?.cause).toBeInstanceOf(Error);
+      expect(error.cause).toBeInstanceOf(Error);
+      expect(error.cause).not.toBeInstanceOf(MiddlewareError);
     });
 
     it("should allow middleware to modify tool calls in response", async () => {

@@ -1024,6 +1024,10 @@ export function tool<
   >;
 }
 
+function _isMessageContentBlockShaped(item: unknown) {
+  return typeof item === "object" && item !== null && "type" in item;
+}
+
 function _formatToolOutput<TOutput extends ToolOutputType>(params: {
   content: TOutput;
   name: string;
@@ -1035,8 +1039,7 @@ function _formatToolOutput<TOutput extends ToolOutputType>(params: {
   if (toolCallId && !isDirectToolOutput(content)) {
     if (
       typeof content === "string" ||
-      (Array.isArray(content) &&
-        content.every((item) => typeof item === "object"))
+      (Array.isArray(content) && content.every(_isMessageContentBlockShaped))
     ) {
       return new ToolMessage({
         status: "success",

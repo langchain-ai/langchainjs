@@ -596,10 +596,10 @@ describe("_streamChatModelEvents bridge", () => {
     });
   });
 
-  describe("streamV2 method", () => {
-    test("returns ChatModelStream from streamV2()", async () => {
+  describe("streamEvents method", () => {
+    test("returns ChatModelStream from streamEvents()", async () => {
       const model = new FakeTextStreamModel({});
-      const stream = model.streamV2("Hello");
+      const stream = model.streamEvents("Hello");
 
       // Should be iterable
       const events: ChatModelStreamEvent[] = [];
@@ -609,17 +609,17 @@ describe("_streamChatModelEvents bridge", () => {
       expect(events.length).toBeGreaterThan(0);
     });
 
-    test("text sub-stream works via streamV2()", async () => {
+    test("text sub-stream works via streamEvents()", async () => {
       const model = new FakeTextStreamModel({});
-      const stream = model.streamV2("Hello");
+      const stream = model.streamEvents("Hello");
 
       const text = await stream.text;
       expect(text).toBe("Hello world");
     });
 
-    test("output works via streamV2()", async () => {
+    test("output works via streamEvents()", async () => {
       const model = new FakeTextStreamModel({});
-      const stream = model.streamV2("Hello");
+      const stream = model.streamEvents("Hello");
 
       const message = await stream.output;
       expect(message._getType()).toBe("ai");
@@ -631,7 +631,7 @@ describe("_streamChatModelEvents bridge", () => {
 
     test("await stream returns AIMessage", async () => {
       const model = new FakeTextStreamModel({});
-      const message = await model.streamV2("Hello");
+      const message = await model.streamEvents("Hello");
 
       expect(message._getType()).toBe("ai");
       expect(message.id).toBe("msg_test");

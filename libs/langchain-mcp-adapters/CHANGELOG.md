@@ -1,5 +1,11 @@
 # @langchain/mcp-adapters
 
+## 1.1.4
+
+### Patch Changes
+
+- [#11412](https://github.com/langchain-ai/langchainjs/pull/11412) [`7df258c`](https://github.com/langchain-ai/langchainjs/commit/7df258c0af8362fede14d42bb982597a56f41b78) Thanks [@hntrl](https://github.com/hntrl)! - chore(langgraph): update langgraph deps to track serialization fix
+
 ## 1.1.3
 
 ### Patch Changes

@@ -825,14 +825,12 @@ export function getGeminiAPI(config?: GeminiAPIConfig): GoogleAIAPI {
     );
     let toolParts: GeminiPart[];
     if (isAIMessage(message) && !!message.tool_calls?.length) {
-      toolParts = message.tool_calls.map(
-        (toolCall): GeminiPart => ({
-          functionCall: {
-            name: toolCall.name,
-            args: toolCall.args,
-          },
-        })
-      );
+      toolParts = message.tool_calls.map((toolCall): GeminiPart => ({
+        functionCall: {
+          name: toolCall.name,
+          args: toolCall.args,
+        },
+      }));
     } else {
       toolParts = messageKwargsToParts(message.additional_kwargs);
     }

@@ -1,4 +1,8 @@
+import { getRetryable } from "@langchain/core/errors";
 import { z } from "zod/v3";
+
+/** LangGraph's messages handlers skip runs tagged with this, keeping middleware-internal model calls out of the messages stream. */
+export const INTERNAL_CALL_TAG = "nostream";
 
 export const RetrySchema = z.object({
   /**
@@ -10,7 +14,7 @@ export const RetrySchema = z.object({
   /**
    * Either an array of error constructors to retry on, or a function
    * that takes an error and returns `true` if it should be retried.
-   * Default is to retry on all errors.
+   * Default is to retry unless the error is marked non-retryable.
    */
   retryOn: z
     .union([
@@ -18,7 +22,7 @@ export const RetrySchema = z.object({
       // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       z.array(z.custom<new (...args: any[]) => Error>()),
     ])
-    .default(() => () => true),
+    .default(() => (error: Error) => getRetryable(error) ?? true),
 
   /**
    * Multiplier for exponential backoff. Each retry waits

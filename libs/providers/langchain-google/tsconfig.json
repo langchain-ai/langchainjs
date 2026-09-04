@@ -18,6 +18,6 @@
     "allowJs": true,
     "strict": true
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "../../../internal/tsconfig/vitest-matchers.d.ts"],
   "exclude": ["node_modules", "dist", "docs"]
 }
