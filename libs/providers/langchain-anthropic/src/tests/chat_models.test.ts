@@ -2377,8 +2377,11 @@ describe("Opus 4.7 and 5", () => {
 });
 
 describe("Fable 5 and Mythos 5", () => {
-  const modelNames = ["claude-fable-5", "claude-mythos-5"] as const;
-
+  const modelNames = [
+    "claude-fable-5",
+    "claude-fable-5-1",
+    "claude-mythos-5",
+  ] as const;
   test.each(modelNames)("default max_tokens for %s is 16384", (modelName) => {
     const model = new ChatAnthropic({
       model: modelName,
@@ -2387,6 +2390,46 @@ describe("Fable 5 and Mythos 5", () => {
 
     const params = model.invocationParams({});
     expect(params.max_tokens).toBe(16384);
+  });
+
+  test.each(modelNames)(
+    "does not explicitly set thinking for %s",
+    (modelName) => {
+      const model = new ChatAnthropic({
+        model: modelName,
+        apiKey: "testing",
+      });
+
+      expect(model.invocationParams({}).thinking).toBeUndefined();
+    }
+  );
+
+  test.each(modelNames)("handles disabled thinking for %s", (modelName) => {
+    const model = new ChatAnthropic({
+      model: modelName,
+      apiKey: "testing",
+      thinking: { type: "disabled" },
+    });
+
+    if (modelName.startsWith("claude-fable-")) {
+      expect(() => model.invocationParams({})).toThrow(
+        `thinking.type="disabled" is not supported for ${modelName}; omit thinking to use adaptive thinking instead`
+      );
+    } else {
+      expect(model.invocationParams({}).thinking).toEqual({ type: "disabled" });
+    }
+  });
+
+  test("rejects disabled thinking from invocationKwargs for Fable 5.1", () => {
+    const model = new ChatAnthropic({
+      model: "claude-fable-5-1",
+      apiKey: "testing",
+      invocationKwargs: { thinking: { type: "disabled" } },
+    });
+
+    expect(() => model.invocationParams({})).toThrow(
+      'thinking.type="disabled" is not supported for claude-fable-5-1; omit thinking to use adaptive thinking instead'
+    );
   });
 
   test.each(modelNames)("rejects thinking.type=enabled for %s", (modelName) => {
