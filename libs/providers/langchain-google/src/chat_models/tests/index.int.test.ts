@@ -1059,6 +1059,115 @@ describe.each(coreModelInfo)(
       expect(finalMsg.content as string).toContain("Dodgers");
     });
 
+    test("Supports CodeExecutionTool", async () => {
+      const codeExecutionTool: Gemini.Tool = {
+        codeExecution: {},
+      };
+      const llm: Runnable = newChatGoogle().bindTools([codeExecutionTool]);
+
+      const result: AIMessageChunk = await llm.invoke(
+        "Use code execution to find the sum of the first and last 3 numbers in the following list: [1, 2, 3, 72638, 8, 727, 4, 5, 6]"
+      );
+
+      const texts = result.contentBlocks
+        .filter((b: ContentBlock.Standard) => b.type === "text")
+        .map((b) => b.text)
+        .join("\n");
+      expect(texts).toContain("21");
+
+      const executableCode = result.contentBlocks.find(
+        (b: ContentBlock.Standard) => "executableCode" in b
+      );
+      expect(executableCode).toBeDefined();
+
+      const codeExecutionResult = result.contentBlocks.find(
+        (b: ContentBlock.Standard) => "codeExecutionResult" in b
+      );
+      expect(codeExecutionResult).toBeDefined();
+    });
+
+    test("Can stream CodeExecutionTool", async () => {
+      const codeExecutionTool: Gemini.Tool = {
+        codeExecution: {},
+      };
+      const llm: Runnable = newChatGoogle().bindTools([codeExecutionTool]);
+
+      const stream = await llm.stream(
+        "Use code execution to find the sum of the first and last 3 numbers in the following list: [1, 2, 3, 72638, 8, 727, 4, 5, 6]"
+      );
+      let finalMsg: AIMessageChunk | undefined;
+      for await (const chunk of stream) {
+        finalMsg = finalMsg ? concat(finalMsg, chunk) : chunk;
+      }
+      if (!finalMsg) {
+        throw new Error("finalMsg is undefined");
+      }
+
+      const texts = finalMsg.contentBlocks
+        .filter((b: ContentBlock.Standard) => b.type === "text")
+        .map((b) => b.text)
+        .join("\n");
+      expect(texts).toContain("21");
+
+      const executableCode = finalMsg.contentBlocks.find(
+        (b: ContentBlock.Standard) => "executableCode" in b
+      );
+      expect(executableCode).toBeDefined();
+
+      const codeExecutionResult = finalMsg.contentBlocks.find(
+        (b: ContentBlock.Standard) => "codeExecutionResult" in b
+      );
+      expect(codeExecutionResult).toBeDefined();
+    });
+
+    test("streamEvents surfaces non-text CodeExecutionTool chunks", async () => {
+      // Regression test for https://github.com/langchain-ai/langchainjs/issues/10071
+      // on_chat_model_stream events used to be skipped for chunks whose only
+      // content was non-text (executableCode / codeExecutionResult), because
+      // the callback was gated behind `if (chunk.text)`.
+      const codeExecutionTool: Gemini.Tool = {
+        codeExecution: {},
+      };
+      const llm: Runnable = newChatGoogle().bindTools([codeExecutionTool]);
+
+      const streamedChunks: AIMessageChunk[] = [];
+      const eventStream = await llm.streamEvents(
+        "Use code execution to find the sum of the first and last 3 numbers in the following list: [1, 2, 3, 72638, 8, 727, 4, 5, 6]",
+        { version: "v2" }
+      );
+      for await (const event of eventStream) {
+        if (event.event === "on_chat_model_stream") {
+          streamedChunks.push(event.data.chunk as AIMessageChunk);
+        }
+      }
+
+      expect(streamedChunks.length).toBeGreaterThan(0);
+
+      const finalMsg = streamedChunks.reduce((acc, chunk) =>
+        acc ? concat(acc, chunk) : chunk
+      );
+
+      const executableCode = finalMsg.contentBlocks.find(
+        (b: ContentBlock.Standard) => "executableCode" in b
+      );
+      expect(executableCode).toBeDefined();
+
+      const codeExecutionResult = finalMsg.contentBlocks.find(
+        (b: ContentBlock.Standard) => "codeExecutionResult" in b
+      );
+      expect(codeExecutionResult).toBeDefined();
+
+      // The bug in #10071 meant chunks carrying only non-text content were
+      // silently dropped from on_chat_model_stream, so every individual event
+      // chunk should be reachable, not just the concatenated final message.
+      const hasExecutableCodeChunk = streamedChunks.some((chunk) =>
+        chunk.contentBlocks.some(
+          (b: ContentBlock.Standard) => "executableCode" in b
+        )
+      );
+      expect(hasExecutableCodeChunk).toBe(true);
+    });
+
     test("withStructuredOutput classic", async () => {
       const tool = {
         name: "get_weather",
