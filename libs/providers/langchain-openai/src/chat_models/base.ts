@@ -184,6 +184,27 @@ export interface BaseChatOpenAICallOptions
    * API. If these options are set, the responses API will be used to fulfill the request.
    *
    * These options will be ignored when not using a reasoning model.
+   *
+   * Changing this value part-way through a conversation changes a request-level
+   * parameter, which invalidates the cached prompt prefix. Models that support it (currently GPT-6)
+   * can instead carry the new effort in a `configuration_update` content block
+   * attached to the message that should start using it:
+   *
+   * ```ts
+   * new HumanMessage({
+   *   content: [
+   *     { type: "configuration_update", reasoning: { effort: "high" } },
+   *     { type: "text", text: "Analyze the failure modes." },
+   *   ],
+   * });
+   * ```
+   *
+   * The new effort applies from that message onward, until another update
+   * overrides it.
+   *
+   * Two `configuration_update` blocks cannot be adjacent in the conversation
+   * history, and they cannot be combined with automatic truncation
+   * (`truncation: "auto"`) — OpenAI rejects both with an HTTP 400.
    */
   reasoning?: OpenAIClient.Reasoning;
 

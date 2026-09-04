@@ -1691,6 +1691,13 @@ export const convertMessagesToResponsesInput: Converter<
               approve: item.approve as boolean,
             });
           }
+          if (item.type === "configuration_update") {
+            // Hoisted to a top-level item preceding the message.
+            messages.push({
+              type: "configuration_update",
+              reasoning: item.reasoning,
+            } as unknown as ResponsesInputItem);
+          }
           if (isDataContentBlock(item)) {
             // The Responses API supports file URLs natively, but the Chat
             // Completions converter rejects URL file blocks. Convert standard
