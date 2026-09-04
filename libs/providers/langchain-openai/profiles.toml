@@ -17,3 +17,11 @@ pdfInputs = false
 pdfToolMessage = false
 imageToolMessage = false
 structuredOutput = false
+
+[overrides."gpt-6-astra"]
+maxInputTokens = 1050000
+imageInputs = true
+maxOutputTokens = 128000
+reasoningOutput = true
+toolCalling = true
+structuredOutput = true

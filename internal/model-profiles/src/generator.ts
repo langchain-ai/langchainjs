@@ -201,6 +201,18 @@ export async function generateModelProfiles(
     profiles[modelName] = finalProfile;
   }
 
+  for (const [modelName, modelSpecificOverrides] of Object.entries(
+    modelOverrides
+  )) {
+    if (!(modelName in profiles)) {
+      profiles[modelName] = applyOverrides(
+        {},
+        providerOverrides,
+        modelSpecificOverrides
+      );
+    }
+  }
+
   const typescriptCode = generateTypeScript(profiles);
 
   // Validate that the output path is within the monorepo (defensive check)
