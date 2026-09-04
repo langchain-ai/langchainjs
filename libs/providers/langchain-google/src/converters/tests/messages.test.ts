@@ -703,6 +703,250 @@ describe("convertMessagesToGeminiContents", () => {
     ).toBeUndefined();
   });
 
+  test("omits a native tool_call_id from functionResponse.id when platformType is gcp (Vertex) (legacy path)", () => {
+    const messages = [
+      new HumanMessage("hello"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "my_tool",
+            args: { query: "test" },
+            id: "native-vertex-id-123",
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: "result",
+        tool_call_id: "native-vertex-id-123",
+        name: "my_tool",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages, "gcp");
+
+    const toolResponseContent = contents.find(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
+    expect(toolResponseContent).toBeDefined();
+
+    const functionResponsePart = toolResponseContent!.parts!.find(
+      (p) => "functionResponse" in p && p.functionResponse
+    );
+    expect(functionResponsePart).toBeDefined();
+    expect(
+      (functionResponsePart as Gemini.Part.FunctionResponse).functionResponse!
+        .id
+    ).toBeUndefined();
+  });
+
+  test("omits a native tool_call_id from functionResponse.id when platformType is gcp (Vertex) (v1 standard path)", () => {
+    const messages = [
+      new HumanMessage("hello"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "my_tool",
+            args: { query: "test" },
+            id: "native-vertex-id-456",
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: "result",
+        tool_call_id: "native-vertex-id-456",
+        name: "my_tool",
+        response_metadata: { output_version: "v1" },
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages, "gcp");
+
+    const toolResponseContent = contents.find(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
+    expect(toolResponseContent).toBeDefined();
+
+    const functionResponsePart = toolResponseContent!.parts!.find(
+      (p) => "functionResponse" in p && p.functionResponse
+    );
+    expect(functionResponsePart).toBeDefined();
+    expect(
+      (functionResponsePart as Gemini.Part.FunctionResponse).functionResponse!
+        .id
+    ).toBeUndefined();
+  });
+
+  test("preserves a native tool_call_id in functionResponse.id when platformType is gai (Developer API) (legacy path)", () => {
+    const messages = [
+      new HumanMessage("hello"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "my_tool",
+            args: { query: "test" },
+            id: "native-gai-id-123",
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: "result",
+        tool_call_id: "native-gai-id-123",
+        name: "my_tool",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages, "gai");
+
+    const toolResponseContent = contents.find(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
+    expect(toolResponseContent).toBeDefined();
+
+    const functionResponsePart = toolResponseContent!.parts!.find(
+      (p) => "functionResponse" in p && p.functionResponse
+    );
+    expect(functionResponsePart).toBeDefined();
+    expect(
+      (functionResponsePart as Gemini.Part.FunctionResponse).functionResponse!
+        .id
+    ).toBe("native-gai-id-123");
+  });
+
+  test("still omits a generated tool_call_id from functionResponse.id when platformType is gai (Developer API)", () => {
+    const messages = [
+      new HumanMessage("hello"),
+      new AIMessage({
+        content: "",
+        tool_calls: [
+          {
+            name: "my_tool",
+            args: { query: "test" },
+            id: "lc-tool-call-gai",
+            type: "tool_call",
+          },
+        ],
+      }),
+      new ToolMessage({
+        content: "result",
+        tool_call_id: "lc-tool-call-gai",
+        name: "my_tool",
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages, "gai");
+
+    const toolResponseContent = contents.find(
+      (c) => c.role === "user" && c.parts.some((p) => "functionResponse" in p)
+    );
+    expect(toolResponseContent).toBeDefined();
+
+    const functionResponsePart = toolResponseContent!.parts!.find(
+      (p) => "functionResponse" in p && p.functionResponse
+    );
+    expect(functionResponsePart).toBeDefined();
+    expect(
+      (functionResponsePart as Gemini.Part.FunctionResponse).functionResponse!
+        .id
+    ).toBeUndefined();
+  });
+
+  // Vertex began populating functionCall.id on 2026-07-24 20:33 UTC and
+  // rejects the same field on the way back in, 400ing any multi-turn
+  // tool-calling conversation once a prior functionCall is replayed. The
+  // content blocks below are the real production wire shape (see #11209).
+  const nativeFunctionCallBlock = (id: string) => ({
+    type: "functionCall" as const,
+    functionCall: { name: "get_fares", args: { flightKey: "UA485" }, id },
+    thoughtSignature: "AY89a19oJM6nWmBqSbgAk0C9",
+  });
+
+  test("omits a native functionCall.id when platformType is gcp (Vertex)", () => {
+    const messages = [
+      new HumanMessage("hello"),
+      new AIMessage({
+        content: [nativeFunctionCallBlock("a323kt5y")],
+        tool_calls: [
+          {
+            name: "get_fares",
+            args: { flightKey: "UA485" },
+            id: "a323kt5y",
+            type: "tool_call",
+          },
+        ],
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages, "gcp");
+
+    const functionCallPart = contents
+      .flatMap((c) => c.parts ?? [])
+      .find((p) => "functionCall" in p && p.functionCall);
+    expect(functionCallPart).toBeDefined();
+    const { functionCall } = functionCallPart as Gemini.Part.FunctionCall;
+    expect(functionCall).not.toHaveProperty("id");
+    // The rest of the part must survive — name/args are load-bearing, and
+    // thoughtSignature is required for the model to continue its reasoning.
+    expect(functionCall!.name).toBe("get_fares");
+    expect(functionCall!.args).toEqual({ flightKey: "UA485" });
+    expect(functionCallPart).toHaveProperty(
+      "thoughtSignature",
+      "AY89a19oJM6nWmBqSbgAk0C9"
+    );
+  });
+
+  test("preserves a native functionCall.id when platformType is gai (Developer API)", () => {
+    const messages = [
+      new HumanMessage("hello"),
+      new AIMessage({
+        content: [nativeFunctionCallBlock("m4v7k35n")],
+        tool_calls: [
+          {
+            name: "get_fares",
+            args: { flightKey: "UA485" },
+            id: "m4v7k35n",
+            type: "tool_call",
+          },
+        ],
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages, "gai");
+
+    const functionCallPart = contents
+      .flatMap((c) => c.parts ?? [])
+      .find((p) => "functionCall" in p && p.functionCall);
+    expect(
+      (functionCallPart as Gemini.Part.FunctionCall).functionCall
+    ).toHaveProperty("id", "m4v7k35n");
+  });
+
+  test("does not mutate the caller's message history when stripping functionCall.id", () => {
+    const block = nativeFunctionCallBlock("dontmutate");
+    const messages = [
+      new AIMessage({
+        content: [block],
+        tool_calls: [
+          {
+            name: "get_fares",
+            args: { flightKey: "UA485" },
+            id: "dontmutate",
+            type: "tool_call",
+          },
+        ],
+      }),
+    ];
+
+    convertMessagesToGeminiContents(messages, "gcp");
+
+    expect(block.functionCall).toHaveProperty("id", "dontmutate");
+  });
+
   test("v1 contentBlocks: text-plain block produces fileData part", () => {
     const messages = [
       new HumanMessage({
