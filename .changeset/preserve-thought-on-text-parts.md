@@ -6,3 +6,4 @@ Preserve `thought` and `thoughtSignature` when converting `AIMessage` history ba
 
 - The legacy/default `AIMessage.content` array (`{ type: "text", thought: true, ... }`), read directly by `convertLegacyContentMessageToGeminiContent`.
 - The standardized `AIMessage.contentBlocks` getter, which `ChatGoogleTranslator` (`@langchain/core`) normalizes into `{ type: "reasoning", reasoning, thought, ... }` — read by `convertStandardContentMessageToGeminiContent` whenever `response_metadata.model_provider === "google"` (i.e. on every real response this package produces) and `output_version` isn't explicitly `"v1"`.
+- `AIMessage.tool_calls`: `convertStandardContentMessageToGeminiContent` rebuilds `functionCall` parts directly from `tool_calls` rather than from a content-block item, which was dropping `thoughtSignature` on a thinking model's tool calls.

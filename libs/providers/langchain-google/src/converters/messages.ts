@@ -400,16 +400,12 @@ function convertStandardContentBlockToGeminiPart(
           : {}),
       };
     case "reasoning":
-      // ChatGoogleTranslator (block_translators/google.ts) normalizes a
-      // Gemini thinking part into `{ type: "reasoning", reasoning, thought,
-      // thoughtSignature, reasoningContentBlock }` for the standard
-      // `contentBlocks` getter. Round-trip it back into the shape Gemini
-      // expects — without this, a thinking model's own chain-of-thought is
-      // silently dropped (hits the `default` branch below) when history
-      // that went through `.contentBlocks` is replayed on the next turn.
+      if (block.thought !== true) {
+        return null;
+      }
       return {
         text: block.reasoning,
-        ...("thought" in block ? { thought: block.thought as boolean } : {}),
+        thought: true,
         ...("thoughtSignature" in block
           ? { thoughtSignature: block.thoughtSignature as string }
           : {}),

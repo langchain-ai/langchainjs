@@ -1801,11 +1801,7 @@ describe.each(thinkingModelInfo)(
     });
 
     test("functionCall thoughtSignature survives a multi-turn round trip after a real tool call (root cause: tool_calls-rebuild path)", async () => {
-      // convertStandardContentMessageToGeminiContent rebuilds functionCall
-      // parts from AIMessage.tool_calls directly, not from a content-block
-      // item - it's the one outgoing path that doesn't get thoughtSignature
-      // "for free" via an object spread, so it's the one that can silently
-      // drop it. Verifies that against a real tool-calling thinking response.
+      // tool_calls-rebuilt functionCall parts don't get thoughtSignature "for free" like content-block items do.
       const tools = [weatherTool];
       const llm: Runnable = newChatGoogle({
         reasoningEffort: "low",

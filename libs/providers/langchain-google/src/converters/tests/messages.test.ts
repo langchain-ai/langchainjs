@@ -1339,6 +1339,20 @@ describe("convertMessagesToGeminiContents", () => {
     expect(textPart!.text).toBe("internal reasoning");
     expect((textPart as unknown as { thought?: boolean }).thought).toBe(true);
   });
+
+  test("a non-Google reasoning block with no thought flag is dropped, not sent as visible text", () => {
+    const message = new AIMessage({
+      content: [{ type: "reasoning", reasoning: "private reasoning" }],
+      response_metadata: { output_version: "v1" },
+    });
+
+    const contents = convertMessagesToGeminiContents([
+      new HumanMessage("hi"),
+      message,
+    ]);
+
+    expect(contents.find((c) => c.role === "model")).toBeUndefined();
+  });
 });
 
 test("coalesces consecutive plain HumanMessages into one user content", () => {
