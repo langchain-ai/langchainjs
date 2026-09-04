@@ -1048,4 +1048,108 @@ describe("Simplified Tool Adapter Tests", () => {
       expect(result).toBe("User created");
     });
   });
+
+  describe("_meta forwarding via beforeToolCall", () => {
+    const pingTool = {
+      name: "ping",
+      description: "Ping tool",
+      inputSchema: {
+        type: "object" as const,
+        properties: { message: { type: "string" } },
+        required: ["message"],
+      },
+    };
+
+    test("forwards _meta returned by beforeToolCall as _meta on the callTool request", async () => {
+      mockClient.listTools.mockReturnValueOnce(
+        Promise.resolve({ tools: [pingTool] })
+      );
+      mockClient.callTool.mockResolvedValue({
+        content: [{ type: "text", text: "pong" }],
+      });
+
+      const tools = await loadMcpTools("mockServer", mockClient as Client, {
+        beforeToolCall: () => ({
+          _meta: { trace_id: "t-1", span_id: "s-1" },
+        }),
+      });
+
+      await tools[0].invoke({ message: "hello" });
+
+      expect(mockClient.callTool).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: "ping",
+          arguments: { message: "hello" },
+          _meta: { trace_id: "t-1", span_id: "s-1" },
+        })
+      );
+    });
+
+    test("does not include _meta when no beforeToolCall hook is provided", async () => {
+      mockClient.listTools.mockReturnValueOnce(
+        Promise.resolve({ tools: [pingTool] })
+      );
+      mockClient.callTool.mockResolvedValue({
+        content: [{ type: "text", text: "pong" }],
+      });
+
+      const tools = await loadMcpTools("mockServer", mockClient as Client);
+
+      await tools[0].invoke({ message: "hello" });
+
+      const callArgs = mockClient.callTool.mock.calls[0][0];
+      expect(callArgs).not.toHaveProperty("_meta");
+    });
+
+    test("does not include _meta when beforeToolCall omits it", async () => {
+      mockClient.listTools.mockReturnValueOnce(
+        Promise.resolve({ tools: [pingTool] })
+      );
+      mockClient.callTool.mockResolvedValue({
+        content: [{ type: "text", text: "pong" }],
+      });
+
+      const tools = await loadMcpTools("mockServer", mockClient as Client, {
+        beforeToolCall: ({ args }) => ({
+          args: { ...(args as Record<string, unknown>), extra: true },
+        }),
+      });
+
+      await tools[0].invoke({ message: "hello" });
+
+      const callArgs = mockClient.callTool.mock.calls[0][0];
+      expect(callArgs).not.toHaveProperty("_meta");
+    });
+
+    test("derives _meta per call from the RunnableConfig passed to invoke", async () => {
+      mockClient.listTools.mockReturnValueOnce(
+        Promise.resolve({ tools: [pingTool] })
+      );
+      mockClient.callTool.mockResolvedValue({
+        content: [{ type: "text", text: "pong" }],
+      });
+
+      const tools = await loadMcpTools("mockServer", mockClient as Client, {
+        beforeToolCall: (_req, _state, config) => ({
+          _meta: { trace_id: config.configurable?.traceId },
+        }),
+      });
+
+      await tools[0].invoke(
+        { message: "a" },
+        { configurable: { traceId: "trace-a" } }
+      );
+      await tools[0].invoke(
+        { message: "b" },
+        { configurable: { traceId: "trace-b" } }
+      );
+
+      expect(mockClient.callTool.mock.calls[0][0]).toEqual(
+        expect.objectContaining({ _meta: { trace_id: "trace-a" } })
+      );
+      expect(mockClient.callTool.mock.calls[1][0]).toEqual(
+        expect.objectContaining({ _meta: { trace_id: "trace-b" } })
+      );
+    });
+  });
 });

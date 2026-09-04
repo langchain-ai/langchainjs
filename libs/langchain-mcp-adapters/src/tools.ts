@@ -1068,10 +1068,13 @@ async function _callTool({
         ? await (client as Client).fork(headers)
         : client;
 
+    const meta = beforeToolCallInterception?._meta;
+
     const callToolArgs: Parameters<typeof finalClient.callTool> = [
       {
         name: toolName,
         arguments: finalArgs,
+        ...(meta ? { _meta: meta } : {}),
       },
     ];
 

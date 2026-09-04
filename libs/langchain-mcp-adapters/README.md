@@ -287,7 +287,7 @@ const client = new MultiServerMCPClient({
     },
   },
 
-  // Change args/headers before the tool call
+  // Change args/headers/_meta before the tool call
   beforeToolCall: ({ serverName, name, args }) => {
     // Add/override an argument
     const nextArgs = { ...(args as Record<string, unknown>), injected: true };
@@ -295,6 +295,7 @@ const client = new MultiServerMCPClient({
     return {
       args: nextArgs,
       headers: { "X-Request-ID": crypto.randomUUID() },
+      _meta: { "com.example/correlationId": crypto.randomUUID() },
     };
   },
 
@@ -321,8 +322,44 @@ const out = await t?.invoke({ a: 1, b: 2 });
 
 Notes:
 
-- **beforeToolCall** can return `{ args?, headers? }`. Headers are supported for HTTP/SSE. Stdio connections do not support custom headers.
+- **beforeToolCall** can return `{ args?, headers?, _meta? }`. Headers are supported for HTTP/SSE only (stdio connections do not support custom headers). `_meta` is forwarded as the MCP protocol-level `_meta` field on the `callTool` request and works for all transports, including stdio.
 - **afterToolCall** may return either a 2‑tuple `[content, artifact]`, a `ToolMessage`, a `Command` instance, or nothing (to keep the original result).
+
+### Passing `_meta` for tracing / correlation
+
+The `_meta` field is the MCP-native channel for attaching metadata (distributed-tracing IDs, correlation IDs, per-request context) that the server can read but that is **not** exposed to the model as tool arguments. Because `beforeToolCall` receives the per-call `RunnableConfig` (and LangGraph state), you can derive `_meta` per invocation — run-scoped values from `config.configurable`, and fresh per-call values inline:
+
+```ts
+const client = new MultiServerMCPClient({
+  mcpServers: {
+    /* ... */
+  },
+  beforeToolCall: (_req, _state, config) => ({
+    _meta: {
+      // run-scoped: supplied by the caller (see below), propagates to every tool call
+      "com.example/traceId": config.configurable?.traceId,
+      // per-call: a new span for each individual tool invocation
+      "com.example/spanId": crypto.randomUUID(),
+    },
+  }),
+});
+```
+
+> [!NOTE]
+> MCP recommends namespacing `_meta` keys with a reverse-DNS prefix (e.g. `com.example/`) to avoid collisions. Prefixes whose second label is `mcp` or `modelcontextprotocol` are reserved by the protocol. See the [MCP `_meta` specification](https://modelcontextprotocol.io/specification/2025-11-25/basic/index#_meta).
+
+The caller supplies run-scoped context via `configurable`, which LangGraph/`createAgent` propagates to every tool call in the run:
+
+```ts
+import { createAgent } from "langchain";
+
+const agent = createAgent({ llm, tools: await client.getTools() });
+
+await agent.invoke(
+  { messages: [new HumanMessage("What's the weather in SF?")] },
+  { configurable: { traceId: "trace-abc-123" } }
+);
+```
 
 ## Tool Configuration Options
 
