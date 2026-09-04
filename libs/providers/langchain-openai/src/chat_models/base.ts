@@ -201,6 +201,10 @@ export interface BaseChatOpenAICallOptions
    *
    * The new effort applies from that message onward, until another update
    * overrides it.
+   *
+   * Two `configuration_update` blocks cannot be adjacent in the conversation
+   * history, and they cannot be combined with automatic truncation
+   * (`truncation: "auto"`) — OpenAI rejects both with an HTTP 400.
    */
   reasoning?: OpenAIClient.Reasoning;
 
