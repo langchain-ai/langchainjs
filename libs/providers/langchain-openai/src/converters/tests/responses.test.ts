@@ -1675,6 +1675,101 @@ describe("convertMessagesToResponsesInput", () => {
       expect(input).toEqual(response.output);
     });
   });
+
+  describe("configuration_update block support", () => {
+    it("hoists a configuration_update block out of the message content into a preceding top-level item", () => {
+      const messages = [
+        new HumanMessage({
+          content: [
+            { type: "configuration_update", reasoning: { effort: "high" } },
+            { type: "text", text: "Hello" },
+          ],
+        }),
+      ];
+
+      const result = convertMessagesToResponsesInput({
+        messages,
+        zdrEnabled: false,
+        model: "gpt-6-astra",
+      });
+
+      expect(result).toEqual([
+        { type: "configuration_update", reasoning: { effort: "high" } },
+        {
+          type: "message",
+          role: "user",
+          content: [{ type: "input_text", text: "Hello" }],
+        },
+      ]);
+    });
+
+    it("keeps the configuration_update item's position stable as the conversation grows", () => {
+      const messages: any[] = [
+        new HumanMessage("First question"),
+        new AIMessage({
+          content: "First answer",
+          response_metadata: { id: "resp_123" },
+        }),
+        new HumanMessage({
+          content: [
+            { type: "configuration_update", reasoning: { effort: "high" } },
+            { type: "text", text: "Second question" },
+          ],
+        }),
+      ];
+
+      const first = convertMessagesToResponsesInput({
+        messages,
+        zdrEnabled: false,
+        model: "gpt-6-astra",
+      });
+
+      expect(
+        first.map((item: any) => item.role ?? item.type)
+      ).toEqual(["user", "assistant", "configuration_update", "user"]);
+
+      const grown = [
+        ...messages,
+        new AIMessage({
+          content: "Second answer",
+          response_metadata: { id: "resp_456" },
+        }),
+        new HumanMessage("Third question"),
+      ];
+
+      const second = convertMessagesToResponsesInput({
+        messages: grown,
+        zdrEnabled: false,
+        model: "gpt-6-astra",
+      });
+
+      expect(second.slice(0, first.length)).toEqual(first);
+    });
+
+    it("still yields the input item when there is no accompanying text", () => {
+      const messages = [
+        new HumanMessage("Earlier question"),
+        new AIMessage({
+          content: "Earlier answer",
+          response_metadata: { id: "resp_123" },
+        }),
+        new HumanMessage({
+          content: [{ type: "configuration_update", reasoning: { effort: "low" } }],
+        }),
+      ];
+
+      const result = convertMessagesToResponsesInput({
+        messages,
+        zdrEnabled: false,
+        model: "gpt-6-astra",
+      });
+
+      expect(result[result.length - 1]).toEqual({
+        type: "configuration_update",
+        reasoning: { effort: "low" },
+      });
+    });
+  });
 });
 
 describe("convertResponsesMessageToAIMessage", () => {
