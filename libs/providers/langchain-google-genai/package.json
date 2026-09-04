@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-genai",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "Google Generative AI integration for LangChain.js",
   "author": "LangChain",
   "license": "MIT",
@@ -38,8 +38,8 @@
     "@langchain/standard-tests": "workspace:*",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
-    "dotenv": "^17.4.0",
-    "dpdm": "^3.14.0",
+    "dotenv": "^17.4.2",
+    "dpdm": "^4.3.0",
     "hnswlib-node": "^3.0.0",
     "typescript": "~7.0.2",
     "vitest": "^4.1.8",

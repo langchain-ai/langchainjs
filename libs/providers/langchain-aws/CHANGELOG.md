@@ -1,5 +1,11 @@
 # @langchain/aws
 
+## 1.4.5
+
+### Patch Changes
+
+- [#11307](https://github.com/langchain-ai/langchainjs/pull/11307) [`e927605`](https://github.com/langchain-ai/langchainjs/commit/e92760538352ba43599b18d94753ba15e7dc363f) Thanks [@taoche](https://github.com/taoche)! - fix(aws): add claude-sonnet-5, claude-opus-5, and claude-haiku-5 to supportedToolChoiceValuesForModel
+
 ## 1.4.4
 
 ### Patch Changes

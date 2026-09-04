@@ -49,6 +49,7 @@ import {
   GoogleGenerativeAIToolType,
 } from "../types.js";
 import { assertNoEmptyStringEnums } from "./validate_schema.js";
+import { EmptyContentError } from "./errors.js";
 
 export const _FUNCTION_CALL_THOUGHT_SIGNATURES_MAP_KEY =
   "__gemini_function_call_thought_signatures__";
@@ -626,22 +627,24 @@ export function mapGenerateContentResultToChatResult(
     usageMetadata: UsageMetadata | undefined;
   }
 ): ChatResult {
-  // if rejected or error, return empty generations with reason in filters
+  // if rejected before any candidate was generated, surface why
   if (
     !response.candidates ||
     response.candidates.length === 0 ||
     !response.candidates[0]
   ) {
-    return {
-      generations: [],
-      llmOutput: {
-        filters: response.promptFeedback,
-      },
-    };
+    throw new EmptyContentError({
+      blockReason: response.promptFeedback?.blockReason,
+    });
   }
   const [candidate] = response.candidates;
   const { content: candidateContent, ...generationInfo } = candidate;
-  const functionCalls = candidateContent?.parts?.reduce(
+  if (!candidateContent) {
+    throw new EmptyContentError({
+      finishReason: generationInfo.finishReason,
+    });
+  }
+  const functionCalls = candidateContent.parts?.reduce(
     (acc, p) => {
       if ("functionCall" in p && p.functionCall) {
         acc.push({
@@ -658,7 +661,7 @@ export function mapGenerateContentResultToChatResult(
   );
   let content: MessageContent | undefined;
 
-  const parts = candidateContent?.parts as GoogleGenerativeAIPart[] | undefined;
+  const parts = candidateContent.parts as GoogleGenerativeAIPart[] | undefined;
 
   if (
     Array.isArray(parts) &&
@@ -715,7 +718,7 @@ export function mapGenerateContentResultToChatResult(
       return p;
     });
   } else {
-    // no content returned - likely due to abnormal stop reason, e.g. malformed function call
+    // candidateContent is present but has no parts
     content = [];
   }
 
@@ -786,6 +789,12 @@ export function convertResponseContentToChatGenerationChunk(
   }
   const [candidate] = response.candidates;
   const { content: candidateContent, ...generationInfo } = candidate;
+  if (!candidateContent) {
+    // No content on the candidate (e.g. safety/recitation filter triggered
+    // mid-stream, or finishReason is SAFETY/RECITATION/OTHER). Skip this
+    // chunk rather than throwing on candidateContent.parts.
+    return null;
+  }
   const functionCalls = candidateContent.parts?.reduce(
     (acc, p) => {
       if ("functionCall" in p && p.functionCall) {
@@ -802,7 +811,7 @@ export function convertResponseContentToChatGenerationChunk(
     [] as (FunctionCallPart & { id: string })[]
   );
   let content: MessageContent | undefined;
-  const streamParts = candidateContent?.parts as
+  const streamParts = candidateContent.parts as
     | GoogleGenerativeAIPart[]
     | undefined;
 
@@ -859,7 +868,7 @@ export function convertResponseContentToChatGenerationChunk(
       return p;
     });
   } else {
-    // no content returned - likely due to abnormal stop reason, e.g. malformed function call
+    // candidateContent is present but has no parts
     content = [];
   }
 
@@ -899,7 +908,7 @@ export function convertResponseContentToChatGenerationChunk(
     text,
     message: new AIMessageChunk({
       content: content || "",
-      name: !candidateContent ? undefined : candidateContent.role,
+      name: candidateContent.role,
       tool_call_chunks: toolCallChunks,
       // Each chunk can have unique "generationInfo", and merging strategy is unclear,
       // so leave blank for now.

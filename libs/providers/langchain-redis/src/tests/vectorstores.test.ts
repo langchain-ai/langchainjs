@@ -1,7 +1,7 @@
 /* oxlint-disable @typescript-eslint/no-explicit-any */
 import { vi, test, expect, describe } from "vitest";
 import { FakeEmbeddings } from "@langchain/core/utils/testing";
-import { SchemaFieldTypes } from "redis";
+import { SCHEMA_FIELD_TYPE } from "redis";
 
 import { RedisVectorStore, RedisVectorStoreConfig } from "../vectorstores.js";
 
@@ -375,11 +375,15 @@ describe("RedisVectorStore with Custom Schema", () => {
     const embeddings = new FakeEmbeddings();
 
     const customSchema: RedisVectorStoreConfig["customSchema"] = {
-      userId: { type: SchemaFieldTypes.TEXT, required: true, SORTABLE: true },
-      category: { type: SchemaFieldTypes.TAG, SORTABLE: true, SEPARATOR: "," },
-      score: { type: SchemaFieldTypes.NUMERIC, SORTABLE: true },
-      tags: { type: SchemaFieldTypes.TAG, SEPARATOR: ",", CASESENSITIVE: true },
-      description: { type: SchemaFieldTypes.TEXT, NOSTEM: true, WEIGHT: 2.0 },
+      userId: { type: SCHEMA_FIELD_TYPE.TEXT, required: true, SORTABLE: true },
+      category: { type: SCHEMA_FIELD_TYPE.TAG, SORTABLE: true, SEPARATOR: "," },
+      score: { type: SCHEMA_FIELD_TYPE.NUMERIC, SORTABLE: true },
+      tags: {
+        type: SCHEMA_FIELD_TYPE.TAG,
+        SEPARATOR: ",",
+        CASESENSITIVE: true,
+      },
+      description: { type: SCHEMA_FIELD_TYPE.TEXT, NOSTEM: true, WEIGHT: 2.0 },
     };
 
     const store = new RedisVectorStore(embeddings, {
@@ -398,25 +402,25 @@ describe("RedisVectorStore with Custom Schema", () => {
         content: "TEXT",
         metadata: "TEXT",
         "metadata.userId": {
-          type: SchemaFieldTypes.TEXT,
+          type: SCHEMA_FIELD_TYPE.TEXT,
           SORTABLE: true,
         },
         "metadata.category": {
-          type: SchemaFieldTypes.TAG,
+          type: SCHEMA_FIELD_TYPE.TAG,
           SORTABLE: true,
           SEPARATOR: ",",
         },
         "metadata.score": {
-          type: SchemaFieldTypes.NUMERIC,
+          type: SCHEMA_FIELD_TYPE.NUMERIC,
           SORTABLE: true,
         },
         "metadata.tags": {
-          type: SchemaFieldTypes.TAG,
+          type: SCHEMA_FIELD_TYPE.TAG,
           SORTABLE: undefined,
           SEPARATOR: ",",
         },
         "metadata.description": {
-          type: SchemaFieldTypes.TEXT,
+          type: SCHEMA_FIELD_TYPE.TEXT,
           SORTABLE: undefined,
         },
       }),
@@ -429,10 +433,10 @@ describe("RedisVectorStore with Custom Schema", () => {
     const embeddings = new FakeEmbeddings();
 
     const customSchema: RedisVectorStoreConfig["customSchema"] = {
-      userId: { type: SchemaFieldTypes.TEXT, required: true },
-      category: { type: SchemaFieldTypes.TAG },
-      score: { type: SchemaFieldTypes.NUMERIC },
-      tags: { type: SchemaFieldTypes.TAG },
+      userId: { type: SCHEMA_FIELD_TYPE.TEXT, required: true },
+      category: { type: SCHEMA_FIELD_TYPE.TAG },
+      score: { type: SCHEMA_FIELD_TYPE.NUMERIC },
+      tags: { type: SCHEMA_FIELD_TYPE.TAG },
     };
 
     const store = new RedisVectorStore(embeddings, {
@@ -461,8 +465,8 @@ describe("RedisVectorStore with Custom Schema", () => {
     const embeddings = new FakeEmbeddings();
 
     const customSchema: RedisVectorStoreConfig["customSchema"] = {
-      userId: { type: SchemaFieldTypes.TEXT, required: true },
-      category: { type: SchemaFieldTypes.TAG },
+      userId: { type: SCHEMA_FIELD_TYPE.TEXT, required: true },
+      category: { type: SCHEMA_FIELD_TYPE.TAG },
     };
 
     const store = new RedisVectorStore(embeddings, {
@@ -489,7 +493,7 @@ describe("RedisVectorStore with Custom Schema", () => {
     const embeddings = new FakeEmbeddings();
 
     const customSchema: RedisVectorStoreConfig["customSchema"] = {
-      score: { type: SchemaFieldTypes.NUMERIC, required: true },
+      score: { type: SCHEMA_FIELD_TYPE.NUMERIC, required: true },
     };
 
     const store = new RedisVectorStore(embeddings, {
@@ -515,10 +519,10 @@ describe("RedisVectorStore with Custom Schema", () => {
     const embeddings = new FakeEmbeddings();
 
     const customSchema: RedisVectorStoreConfig["customSchema"] = {
-      userId: { type: SchemaFieldTypes.TEXT },
-      category: { type: SchemaFieldTypes.TAG },
-      score: { type: SchemaFieldTypes.NUMERIC },
-      tags: { type: SchemaFieldTypes.TAG, SEPARATOR: "," },
+      userId: { type: SCHEMA_FIELD_TYPE.TEXT },
+      category: { type: SCHEMA_FIELD_TYPE.TAG },
+      score: { type: SCHEMA_FIELD_TYPE.NUMERIC },
+      tags: { type: SCHEMA_FIELD_TYPE.TAG, SEPARATOR: "," },
     };
 
     const store = new RedisVectorStore(embeddings, {
@@ -555,9 +559,9 @@ describe("RedisVectorStore with Custom Schema", () => {
     const embeddings = new FakeEmbeddings();
 
     const customSchema: RedisVectorStoreConfig["customSchema"] = {
-      userId: { type: SchemaFieldTypes.TEXT },
-      category: { type: SchemaFieldTypes.TAG },
-      score: { type: SchemaFieldTypes.NUMERIC },
+      userId: { type: SCHEMA_FIELD_TYPE.TEXT },
+      category: { type: SCHEMA_FIELD_TYPE.TAG },
+      score: { type: SCHEMA_FIELD_TYPE.NUMERIC },
     };
 
     const store = new RedisVectorStore(embeddings, {
@@ -615,8 +619,8 @@ describe("RedisVectorStore with Custom Schema", () => {
     const embeddings = new FakeEmbeddings();
 
     const customSchema = {
-      score: { type: SchemaFieldTypes.NUMERIC },
-      price: { type: SchemaFieldTypes.NUMERIC },
+      score: { type: SCHEMA_FIELD_TYPE.NUMERIC },
+      price: { type: SCHEMA_FIELD_TYPE.NUMERIC },
     };
 
     const store = new RedisVectorStore(embeddings, {
@@ -650,8 +654,8 @@ describe("RedisVectorStore with Custom Schema", () => {
     const embeddings = new FakeEmbeddings();
 
     const customSchema = {
-      category: { type: SchemaFieldTypes.TAG },
-      tags: { type: SchemaFieldTypes.TAG },
+      category: { type: SCHEMA_FIELD_TYPE.TAG },
+      tags: { type: SCHEMA_FIELD_TYPE.TAG },
     };
 
     const store = new RedisVectorStore(embeddings, {
@@ -684,8 +688,8 @@ describe("RedisVectorStore with Custom Schema", () => {
     const embeddings = new FakeEmbeddings();
 
     const customSchema = {
-      title: { type: SchemaFieldTypes.TEXT },
-      description: { type: SchemaFieldTypes.TEXT },
+      title: { type: SCHEMA_FIELD_TYPE.TEXT },
+      description: { type: SCHEMA_FIELD_TYPE.TEXT },
     };
 
     const store = new RedisVectorStore(embeddings, {
@@ -708,9 +712,9 @@ describe("RedisVectorStore with Custom Schema", () => {
     const embeddings = new FakeEmbeddings();
 
     const customSchema = {
-      category: { type: SchemaFieldTypes.TAG },
-      score: { type: SchemaFieldTypes.NUMERIC },
-      title: { type: SchemaFieldTypes.TEXT },
+      category: { type: SCHEMA_FIELD_TYPE.TAG },
+      score: { type: SCHEMA_FIELD_TYPE.NUMERIC },
+      title: { type: SCHEMA_FIELD_TYPE.TEXT },
     };
 
     const store = new RedisVectorStore(embeddings, {
@@ -735,8 +739,8 @@ describe("RedisVectorStore with Custom Schema", () => {
     const embeddings = new FakeEmbeddings();
 
     const customSchema = {
-      category: { type: SchemaFieldTypes.TAG },
-      title: { type: SchemaFieldTypes.TEXT },
+      category: { type: SCHEMA_FIELD_TYPE.TAG },
+      title: { type: SCHEMA_FIELD_TYPE.TEXT },
     };
 
     const store = new RedisVectorStore(embeddings, {
@@ -760,7 +764,7 @@ describe("RedisVectorStore with Custom Schema", () => {
     const embeddings = new FakeEmbeddings();
 
     const customSchema = {
-      score: { type: SchemaFieldTypes.NUMERIC },
+      score: { type: SCHEMA_FIELD_TYPE.NUMERIC },
     };
 
     const store = new RedisVectorStore(embeddings, {
@@ -781,9 +785,9 @@ describe("RedisVectorStore with Custom Schema", () => {
     const embeddings = new FakeEmbeddings();
 
     const customSchema = {
-      userId: { type: SchemaFieldTypes.TEXT },
-      category: { type: SchemaFieldTypes.TAG },
-      score: { type: SchemaFieldTypes.NUMERIC },
+      userId: { type: SCHEMA_FIELD_TYPE.TEXT },
+      category: { type: SCHEMA_FIELD_TYPE.TAG },
+      score: { type: SCHEMA_FIELD_TYPE.NUMERIC },
     };
 
     const store = new RedisVectorStore(embeddings, {
@@ -815,9 +819,9 @@ describe("RedisVectorStore with Custom Schema", () => {
     const embeddings = new FakeEmbeddings();
 
     const customSchema = {
-      userId: { type: SchemaFieldTypes.TEXT, required: true },
-      category: { type: SchemaFieldTypes.TAG, required: false }, // Optional
-      score: { type: SchemaFieldTypes.NUMERIC }, // Optional (default)
+      userId: { type: SCHEMA_FIELD_TYPE.TEXT, required: true },
+      category: { type: SCHEMA_FIELD_TYPE.TAG, required: false }, // Optional
+      score: { type: SCHEMA_FIELD_TYPE.NUMERIC }, // Optional (default)
     };
 
     const store = new RedisVectorStore(embeddings, {
@@ -844,7 +848,7 @@ describe("RedisVectorStore with Custom Schema", () => {
     const embeddings = new FakeEmbeddings();
 
     const customSchema = {
-      category: { type: SchemaFieldTypes.TAG },
+      category: { type: SCHEMA_FIELD_TYPE.TAG },
     };
 
     const store = new RedisVectorStore(embeddings, {

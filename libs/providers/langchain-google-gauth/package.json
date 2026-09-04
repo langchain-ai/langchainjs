@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-gauth",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "Google auth based authentication support for Google services",
   "author": "LangChain",
   "license": "MIT",
@@ -27,13 +27,13 @@
   },
   "dependencies": {
     "@langchain/google-common": "workspace:*",
-    "google-auth-library": "^10.9.1"
+    "google-auth-library": "^11.0.2"
   },
   "devDependencies": {
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
-    "dotenv": "^17.4.0",
-    "dpdm": "^3.14.0",
+    "dotenv": "^17.4.2",
+    "dpdm": "^4.3.0",
     "typescript": "~7.0.2",
     "vitest": "^4.1.8",
     "zod": "^3.25.76"
