@@ -48,7 +48,7 @@
     }
   },
   "optionalDependencies": {
-    "extended-eventsource": "^1.7.0"
+    "extended-eventsource": "^2.1.0"
   },
   "devDependencies": {
     "@langchain/core": "workspace:^",
@@ -60,9 +60,9 @@
     "@types/express": "^5.0.6",
     "@types/node": "^26.4.0",
     "@vitest/coverage-v8": "^4.1.11",
-    "dotenv": "^17.4.0",
-    "dpdm": "^3.14.0",
-    "eventsource": "^4.1.0",
+    "dotenv": "^17.4.2",
+    "dpdm": "^4.3.0",
+    "eventsource": "^5.1.1",
     "express": "^5.2.1",
     "langchain": "workspace:*",
     "npm-run-all2": "^9.0.3",
