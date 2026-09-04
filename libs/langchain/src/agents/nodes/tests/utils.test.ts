@@ -3,7 +3,11 @@ import { z as z3 } from "zod/v3";
 import { z as z4 } from "zod/v4";
 import { StateSchema } from "@langchain/langgraph";
 import { getInteropZodObjectShape } from "@langchain/core/utils/types";
-import { initializeMiddlewareStates, derivePrivateState } from "../utils.js";
+import {
+  initializeMiddlewareStates,
+  derivePrivateState,
+  resolveInvokeContext,
+} from "../utils.js";
 import type { AgentMiddleware } from "../../middleware/types.js";
 
 const baseState = { messages: [] };
@@ -50,6 +54,47 @@ describe("initializeMiddlewareStates", () => {
     await expect(
       initializeMiddlewareStates([middleware], baseState)
     ).rejects.toThrow(/requiredField/);
+  });
+});
+
+describe("resolveInvokeContext", () => {
+  it("returns an empty object when config is missing", () => {
+    expect(resolveInvokeContext()).toEqual({});
+    expect(resolveInvokeContext({})).toEqual({});
+  });
+
+  it("uses config.context", () => {
+    expect(resolveInvokeContext({ context: { enableCaching: false } })).toEqual(
+      { enableCaching: false }
+    );
+  });
+
+  it("uses configurable.middleware_context", () => {
+    expect(
+      resolveInvokeContext({
+        configurable: { middleware_context: { enableCaching: false } },
+      })
+    ).toEqual({ enableCaching: false });
+  });
+
+  it("lets config.context override middleware_context on overlapping keys", () => {
+    expect(
+      resolveInvokeContext({
+        context: { enableCaching: true, ttl: "1h" },
+        configurable: {
+          middleware_context: { enableCaching: false, ttl: "5m" },
+        },
+      })
+    ).toEqual({ enableCaching: true, ttl: "1h" });
+  });
+
+  it("ignores a non-object middleware_context", () => {
+    expect(
+      resolveInvokeContext({
+        configurable: { middleware_context: "nope" },
+        context: { a: 1 },
+      })
+    ).toEqual({ a: 1 });
   });
 });
 

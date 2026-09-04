@@ -36,7 +36,11 @@ import {
   isClientTool,
 } from "../utils.js";
 import { isConfigurableModel } from "../model.js";
-import { mergeAbortSignals, toPartialZodObject } from "../nodes/utils.js";
+import {
+  mergeAbortSignals,
+  resolveInvokeContext,
+  toPartialZodObject,
+} from "../nodes/utils.js";
 import { CreateAgentParams } from "../types.js";
 import type { InternalAgentState, Runtime } from "../runtime.js";
 import type {
@@ -505,7 +509,7 @@ export class AgentNode<
           const context = currentMiddleware.contextSchema
             ? interopParse(
                 currentMiddleware.contextSchema,
-                lgConfig?.context || {}
+                resolveInvokeContext(lgConfig)
               )
             : lgConfig?.context;
 
