@@ -1,0 +1,4 @@
+data: {"candidates":[{"content":{"parts":[{"text":"The"}],"role":"model"}}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":1,"totalTokenCount":11},"modelVersion":"gemini-2.5-flash"}
+
+data: {"candidates":[{"content":{"parts":[{"text":" sky is blue."}],"role":"model"},"finishReason":"STOP"}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":12,"totalTokenCount":22,"trafficType":"PROVISIONED_THROUGHPUT"},"modelVersion":"gemini-2.5-flash"}
+
