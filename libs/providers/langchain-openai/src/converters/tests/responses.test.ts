@@ -1724,9 +1724,12 @@ describe("convertMessagesToResponsesInput", () => {
         model: "gpt-6-astra",
       });
 
-      expect(
-        first.map((item: any) => item.role ?? item.type)
-      ).toEqual(["user", "assistant", "configuration_update", "user"]);
+      expect(first.map((item: any) => item.role ?? item.type)).toEqual([
+        "user",
+        "assistant",
+        "configuration_update",
+        "user",
+      ]);
 
       const grown = [
         ...messages,
@@ -1754,7 +1757,9 @@ describe("convertMessagesToResponsesInput", () => {
           response_metadata: { id: "resp_123" },
         }),
         new HumanMessage({
-          content: [{ type: "configuration_update", reasoning: { effort: "low" } }],
+          content: [
+            { type: "configuration_update", reasoning: { effort: "low" } },
+          ],
         }),
       ];
 
