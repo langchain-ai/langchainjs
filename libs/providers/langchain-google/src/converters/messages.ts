@@ -392,7 +392,23 @@ function convertStandardContentBlockToGeminiPart(
 ): Gemini.Part | null {
   switch (block.type) {
     case "text":
-      return { text: block.text };
+      return {
+        text: block.text,
+        ...("thoughtSignature" in block
+          ? { thoughtSignature: block.thoughtSignature as string }
+          : {}),
+      };
+    case "reasoning":
+      if (block.thought !== true) {
+        return null;
+      }
+      return {
+        text: block.reasoning,
+        thought: true,
+        ...("thoughtSignature" in block
+          ? { thoughtSignature: block.thoughtSignature as string }
+          : {}),
+      };
     case "image":
     case "audio":
     case "text-plain":
@@ -470,11 +486,15 @@ function convertStandardContentMessageToGeminiContent(
   // Convert AIMessage tool_calls to functionCall parts
   if (AIMessage.isInstance(message) && message.tool_calls?.length) {
     for (const toolCall of message.tool_calls) {
+      const toolCallSignature = (toolCall as { thoughtSignature?: string })
+        .thoughtSignature;
       parts.push({
         functionCall: {
           name: toolCall.name,
           args: toolCall.args ?? {},
         },
+        // thoughtSignature also rides on functionCall parts, not just text
+        ...(toolCallSignature ? { thoughtSignature: toolCallSignature } : {}),
       } as Gemini.Part.FunctionCall);
     }
   }
@@ -748,7 +768,16 @@ function convertLegacyContentMessageToGeminiContent(
         parts.push({ text: item });
       } else if (typeof item === "object" && item !== null) {
         if (isMessageContentText(item)) {
-          parts.push({ text: item.text });
+          const itemRecord = item as Record<string, unknown>;
+          parts.push({
+            text: item.text,
+            ...("thought" in itemRecord
+              ? { thought: itemRecord.thought as boolean }
+              : {}),
+            ...("thoughtSignature" in itemRecord
+              ? { thoughtSignature: itemRecord.thoughtSignature as string }
+              : {}),
+          });
         } else if (isDataContentBlock(item)) {
           parts.push(
             convertToProviderContentBlock(item, geminiContentBlockConverter)
@@ -1069,10 +1098,21 @@ export const convertGeminiPartToContentBlock: Converter<
 > = (part: Gemini.Part): ContentBlock => {
   const block: ContentBlock = iife(() => {
     if ("text" in part && typeof part.text === "string") {
-      return {
-        type: "text",
-        text: part.text,
-      };
+      if (
+        "thought" in part &&
+        typeof part.thought === "boolean" &&
+        part.thought
+      ) {
+        return {
+          type: "reasoning",
+          reasoning: part.text,
+        };
+      } else {
+        return {
+          type: "text",
+          text: part.text,
+        };
+      }
     } else if ("inlineData" in part && part.inlineData) {
       return {
         type: "inlineData",
