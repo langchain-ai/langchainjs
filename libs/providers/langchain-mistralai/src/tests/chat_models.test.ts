@@ -14,6 +14,7 @@ import {
   _isValidMistralToolCallId,
   _convertToolCallIdToMistralCompatible,
   _mistralContentChunkToMessageContentComplex,
+  _normalizeStreamedToolCallId,
 } from "../utils.js";
 import { ChatCompletionRequest } from "@mistralai/mistralai/models/components/chatcompletionrequest.js";
 
@@ -344,5 +345,94 @@ describe("Streaming", () => {
     expect(capturedStreamParam).toBe(true);
     expect(chunks.length).toBe(2);
     expect(chunks.join("")).toBe("Hello world!");
+  });
+
+  test("merges streamed tool-call fragments by API index", async () => {
+    const mockStreamFn = vi.fn().mockImplementation(async function* () {
+      for (const toolCall of [
+        {
+          id: "call-abc",
+          index: 2,
+          function: { name: "get_weather", arguments: '{"location":"' },
+        },
+        {
+          id: "null",
+          index: 2,
+          function: { name: "", arguments: 'Paris"}' },
+        },
+      ]) {
+        yield {
+          data: {
+            choices: [
+              {
+                index: 0,
+                delta: { role: "assistant", toolCalls: [toolCall] },
+              },
+            ],
+          },
+        };
+      }
+    });
+
+    const model = new ChatMistralAI({
+      apiKey: "test-api-key",
+      model: "mistral-small-latest",
+    });
+    model.completionWithRetry = (async (
+      _input: unknown,
+      streaming: boolean
+    ) => {
+      if (!streaming) {
+        throw new Error("expected streaming");
+      }
+      return mockStreamFn();
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+    }) as any;
+
+    let merged: AIMessageChunk | undefined;
+    for await (const chunk of model._streamResponseChunks(
+      [new HumanMessage("Weather in Paris?")],
+      {}
+    )) {
+      const message = chunk.message as AIMessageChunk;
+      merged = merged ? merged.concat(message) : message;
+    }
+
+    expect(merged?.tool_calls).toHaveLength(1);
+    expect(merged?.tool_calls?.[0]).toMatchObject({
+      id: "call-abc",
+      name: "get_weather",
+      args: { location: "Paris" },
+    });
+    expect(merged?.tool_call_chunks?.[0].index).toBe(2);
+  });
+});
+
+describe("Streamed tool call id normalization", () => {
+  test("drops placeholder ids", () => {
+    expect(_normalizeStreamedToolCallId("null")).toBeUndefined();
+    expect(_normalizeStreamedToolCallId("undefined")).toBeUndefined();
+    expect(_normalizeStreamedToolCallId("")).toBeUndefined();
+    expect(_normalizeStreamedToolCallId("  ")).toBeUndefined();
+    expect(_normalizeStreamedToolCallId(null)).toBeUndefined();
+    expect(_normalizeStreamedToolCallId(undefined)).toBeUndefined();
+    expect(_normalizeStreamedToolCallId("chatcmpl-tool-abc")).toBe(
+      "chatcmpl-tool-abc"
+    );
+  });
+});
+
+describe("invocationParams", () => {
+  test("forwards parallel_tool_calls to parallelToolCalls", () => {
+    const model = new ChatMistralAI({
+      apiKey: "test-api-key",
+      model: "mistral-small-latest",
+    });
+    expect(
+      model.invocationParams({ parallel_tool_calls: false }).parallelToolCalls
+    ).toBe(false);
+    expect(
+      model.invocationParams({ parallel_tool_calls: true }).parallelToolCalls
+    ).toBe(true);
   });
 });
