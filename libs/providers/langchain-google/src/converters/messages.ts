@@ -394,7 +394,6 @@ function convertStandardContentBlockToGeminiPart(
     case "text":
       return {
         text: block.text,
-        ...("thought" in block ? { thought: block.thought as boolean } : {}),
         ...("thoughtSignature" in block
           ? { thoughtSignature: block.thoughtSignature as string }
           : {}),
@@ -1099,10 +1098,21 @@ export const convertGeminiPartToContentBlock: Converter<
 > = (part: Gemini.Part): ContentBlock => {
   const block: ContentBlock = iife(() => {
     if ("text" in part && typeof part.text === "string") {
-      return {
-        type: "text",
-        text: part.text,
-      };
+      if (
+        "thought" in part &&
+        typeof part.thought === "boolean" &&
+        part.thought
+      ) {
+        return {
+          type: "reasoning",
+          reasoning: part.text,
+        };
+      } else {
+        return {
+          type: "text",
+          text: part.text,
+        };
+      }
     } else if ("inlineData" in part && part.inlineData) {
       return {
         type: "inlineData",
