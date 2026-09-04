@@ -1,5 +1,29 @@
 # @langchain/openai
 
+## 1.5.11
+
+### Patch Changes
+
+- [#11448](https://github.com/langchain-ai/langchainjs/pull/11448) [`53dbfc2`](https://github.com/langchain-ai/langchainjs/commit/53dbfc2fa033250fe7b711d7c3c8f6e7bfea9216) Thanks [@hntrl](https://github.com/hntrl)! - fix(openai): resolve encrypted content with zdr when streaming
+
+  OpenAI recently changed the disposition of `encrypted_content` to contain the canonical payload on the final `done` event. Encrypted content also does not need to be a parameter in the `include` call options in order to propagate.
+
+## 1.5.10
+
+### Patch Changes
+
+- [#11419](https://github.com/langchain-ai/langchainjs/pull/11419) [`c26c87e`](https://github.com/langchain-ai/langchainjs/commit/c26c87e41bccd01111e170c32ba1e5eec94ba3a6) Thanks [@chiliec](https://github.com/chiliec)! - fix(openai): send content null (not []) for tool-call-only v1 assistant messages
+
+## 1.5.9
+
+### Patch Changes
+
+- [#11399](https://github.com/langchain-ai/langchainjs/pull/11399) [`5c9fdf2`](https://github.com/langchain-ai/langchainjs/commit/5c9fdf2f0339deb92db84eaa838cf35c7dcdb027) Thanks [@gethin-langchain](https://github.com/gethin-langchain)! - update to v7 openai sdk
+
+- [#11403](https://github.com/langchain-ai/langchainjs/pull/11403) [`fe8eec1`](https://github.com/langchain-ai/langchainjs/commit/fe8eec1915cc5580b8e7a2f3d4f68fe5e577d641) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Drop Gemini-native `functionCall` content blocks (already carried in `tool_calls`) when converting messages to Chat Completions API params, fixing requests that fail when a `ChatGoogleGenerativeAI` message is passed to `ChatOpenAI` (e.g. a cross-provider handoff in LangGraph).
+
+- [#11399](https://github.com/langchain-ai/langchainjs/pull/11399) [`5c9fdf2`](https://github.com/langchain-ai/langchainjs/commit/5c9fdf2f0339deb92db84eaa838cf35c7dcdb027) Thanks [@gethin-langchain](https://github.com/gethin-langchain)! - Map OpenAI's `cache_write_tokens` to `cache_creation` in `usage_metadata.input_token_details`, mirroring the existing `cached_tokens` -> `cache_read` mapping across the Chat Completions and Responses APIs. Previously, prompt cache-write token counts were silently dropped.
+
 ## 1.5.8
 
 ### Patch Changes

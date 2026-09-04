@@ -15,7 +15,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@jest/globals": "^30.4.1"
+    "@jest/globals": "^30.5.0"
   },
   "devDependencies": {
     "@langchain/tsconfig": "workspace:*"
