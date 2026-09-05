@@ -513,9 +513,6 @@ importers:
       commander:
         specifier: ^15.0.0
         version: 15.0.0
-      typescript:
-        specifier: ^7.0.2
-        version: 7.0.2
       zod:
         specifier: ^4.3.6
         version: 4.3.6
