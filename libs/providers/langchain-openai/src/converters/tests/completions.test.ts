@@ -88,6 +88,42 @@ describe("convertCompletionsMessageToBaseMessage", () => {
     expect(result.additional_kwargs.reasoning_content).toBe("The user");
   });
 
+  it("keeps tool calls on deltas with an empty-string role", () => {
+    const delta = {
+      role: "" as const,
+      content: "",
+      tool_calls: [
+        {
+          index: 0,
+          id: "call_1",
+          type: "function",
+          function: { name: "get_weather", arguments: '{"city":"BJ"}' },
+        },
+      ],
+    };
+    const rawResponse = {
+      id: "chatcmpl-empty-role",
+      choices: [{ index: 0, delta, finish_reason: "tool_calls" }],
+      usage: { total_tokens: 0, total_characters: 0 },
+    };
+
+    const result = convertCompletionsDeltaToBaseMessageChunk({
+      delta,
+      rawResponse: rawResponse as any,
+    }) as AIMessageChunk;
+
+    expect(result).toBeInstanceOf(AIMessageChunk);
+    expect(result.tool_call_chunks).toEqual([
+      {
+        name: "get_weather",
+        args: '{"city":"BJ"}',
+        id: "call_1",
+        index: 0,
+        type: "tool_call_chunk",
+      },
+    ]);
+  });
+
   describe("OpenRouter image response handling", () => {
     it("Should correctly parse OpenRouter-style image responses", () => {
       // Mock message with images from OpenRouter
