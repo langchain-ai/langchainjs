@@ -47,7 +47,7 @@ export function matrixFunc(
 }
 
 export function normalize(M: number[][], similarity = false): number[][] {
-  const max = matrixMaxVal(M);
+  const max = matrixMaxVal(M) || 1;
   return M.map((row) =>
     row.map((val) => (similarity ? 1 - val / max : val / max))
   );

@@ -165,6 +165,45 @@ test("Test normalize", async () => {
   expect(actual).toEqual(expected);
 });
 
+test("normalize returns finite distances for an all-zero matrix", () => {
+  const input = [
+    [0, 0],
+    [0, 0],
+  ];
+  expect(normalize(input)).toEqual([
+    [0, 0],
+    [0, 0],
+  ]);
+  expect(normalize(input, true)).toEqual([
+    [1, 1],
+    [1, 1],
+  ]);
+  expect(input).toEqual([
+    [0, 0],
+    [0, 0],
+  ]);
+});
+
+test("normalize preserves empty matrix shapes", () => {
+  expect(normalize([])).toEqual([]);
+  expect(normalize([[]])).toEqual([[]]);
+});
+
+test("normalize converts nonzero distances to similarities", () => {
+  expect(
+    normalize(
+      [
+        [0, 2],
+        [2, 0],
+      ],
+      true
+    )
+  ).toEqual([
+    [1, 0],
+    [0, 1],
+  ]);
+});
+
 test("Test innerProduct", async () => {
   const x = [
     [1, 2],
