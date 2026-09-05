@@ -187,6 +187,45 @@ test("normalize returns finite distances for an all-zero matrix", () => {
 test("normalize preserves empty matrix shapes", () => {
   expect(normalize([])).toEqual([]);
   expect(normalize([[]])).toEqual([[]]);
+  expect(normalize([[], []], true)).toEqual([[], []]);
+});
+
+test("normalize uses the actual maximum for all-negative matrices", () => {
+  const input = [[-4, -2], [-6]];
+  expect(normalize(input)).toEqual([[2, 1], [3]]);
+  expect(normalize(input, true)).toEqual([[-1, 0], [-2]]);
+  expect(input).toEqual([[-4, -2], [-6]]);
+});
+
+test("normalize retains maximum-based scaling for mixed-sign matrices", () => {
+  const input = [[-2, 0, 4]];
+  expect(normalize(input)).toEqual([[-0.5, 0, 1]]);
+  expect(normalize(input, true)).toEqual([[1.5, 1, 0]]);
+});
+
+test("normalize ignores empty rows when finding the maximum", () => {
+  expect(normalize([[], [2], [], [4], []])).toEqual([[], [0.5], [], [1], []]);
+  expect(normalize([[], [2], [], [4], []], true)).toEqual([
+    [],
+    [0.5],
+    [],
+    [0],
+    [],
+  ]);
+  expect(normalize([[], [-4, -2], []])).toEqual([[], [2, 1], []]);
+  expect(normalize([[], [0], []])).toEqual([[], [0], []]);
+  expect(normalize([[], [0], []], true)).toEqual([[], [1], []]);
+});
+
+test("normalize uses a unit divisor when signed inputs have a zero maximum", () => {
+  expect(normalize([[-2, 0]])).toEqual([[-2, 0]]);
+  expect(normalize([[-2, 0]], true)).toEqual([[3, 1]]);
+});
+
+test("normalize does not replace a NaN maximum with a unit divisor", () => {
+  const result = normalize([[NaN], [2]]);
+  expect(result[0][0]).toBeNaN();
+  expect(result[1][0]).toBeNaN();
 });
 
 test("normalize converts nonzero distances to similarities", () => {

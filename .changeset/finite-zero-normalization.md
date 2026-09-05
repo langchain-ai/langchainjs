@@ -2,4 +2,4 @@
 "@langchain/core": patch
 ---
 
-Avoid NaN scores when normalizing an all-zero distance matrix.
+Handle zero maxima, all-negative matrices, and empty rows when normalizing matrices.

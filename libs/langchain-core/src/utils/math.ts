@@ -46,10 +46,17 @@ export function matrixFunc(
   );
 }
 
+/**
+ * Divide each value by the matrix maximum, using a divisor of 1 when it is zero.
+ * When similarity is true, return 1 minus each scaled value.
+ * Finite non-negative inputs produce values in [0, 1]; signed inputs can produce
+ * values outside that range. This does not perform min-max scaling or clamping.
+ */
 export function normalize(M: number[][], similarity = false): number[][] {
-  const max = matrixMaxVal(M) || 1;
+  const max = matrixMaxVal(M);
+  const divisor = max === 0 ? 1 : max;
   return M.map((row) =>
-    row.map((val) => (similarity ? 1 - val / max : val / max))
+    row.map((val) => (similarity ? 1 - val / divisor : val / divisor))
   );
 }
 
@@ -172,8 +179,13 @@ function argMax(array: number[]): MaxInfo {
 }
 
 function matrixMaxVal(arrays: number[][]): number {
-  return arrays.reduce(
-    (acc, array) => Math.max(acc, argMax(array).maxValue),
-    0
-  );
+  let max: number | undefined;
+  for (const array of arrays) {
+    if (array.length === 0) {
+      continue;
+    }
+    const { maxValue } = argMax(array);
+    max = max === undefined ? maxValue : Math.max(max, maxValue);
+  }
+  return max ?? 0;
 }
