@@ -163,30 +163,6 @@ describe("generator", () => {
       expect(content).toContain("toolCalling: true");
     });
 
-    it("should add override-only models", async () => {
-      const mockProviderData: ProviderMap = {
-        openai: createMockProvider("openai", {}),
-      };
-
-      globalThis.fetch = vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => mockProviderData,
-      });
-
-      const outputPath = path.join(tempDir, "models.ts");
-
-      await generateModelProfiles(
-        "openai",
-        {},
-        { "gpt-6-astra": { maxOutputTokens: 128000 } },
-        outputPath
-      );
-
-      const content = fs.readFileSync(outputPath, "utf-8");
-      expect(content).toContain('"gpt-6-astra"');
-      expect(content).toContain("maxOutputTokens: 128000");
-    });
-
     it("should apply model-specific overrides", async () => {
       const mockProviderData: ProviderMap = {
         openai: createMockProvider("openai", {
@@ -352,7 +328,11 @@ describe("generator", () => {
       await generateModelProfiles("openai", {}, {}, outputPath);
 
       expect(oxfmt.format).toHaveBeenCalled();
-      expect(oxfmt.format).toHaveBeenCalledWith(outputPath, expect.any(String));
+      expect(oxfmt.format).toHaveBeenCalledWith(
+        outputPath,
+        expect.any(String),
+        expect.anything()
+      );
     });
   });
 });

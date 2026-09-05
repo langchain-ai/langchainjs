@@ -831,18 +831,5 @@ const PROFILES: Record<string, ModelProfile> = {
     imageToolMessage: true,
     toolChoice: true,
   },
-  "gpt-6-astra": {
-    imageUrlInputs: true,
-    pdfInputs: true,
-    pdfToolMessage: true,
-    imageToolMessage: true,
-    toolChoice: true,
-    structuredOutput: true,
-    maxInputTokens: 1050000,
-    imageInputs: true,
-    maxOutputTokens: 128000,
-    reasoningOutput: true,
-    toolCalling: true,
-  },
 };
 export default PROFILES;
