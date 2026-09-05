@@ -933,7 +933,8 @@ export class ChatGoogleGenerativeAI
     }
 
     const res = await this.completionWithRetry(
-      this._buildGenerateContentRequest(messages, options)
+      this._buildGenerateContentRequest(messages, options),
+      options
     );
 
     let usageMetadata: UsageMetadata | undefined;
