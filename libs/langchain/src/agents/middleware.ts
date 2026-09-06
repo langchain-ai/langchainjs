@@ -117,7 +117,6 @@ export function createMiddleware<
   streamTransformers?: TStreamTransformers;
   /**
    * Controls the payloads recorded by this middleware's lifecycle hook spans.
-   * This overrides the process-wide default set by `configureTracePolicy`.
    * Processors affect chain callback payloads, including `streamEvents`; output
    * omission can suppress messages directly returned by a lifecycle hook, and
    * input omission can affect message deduplication. They do not affect execution.

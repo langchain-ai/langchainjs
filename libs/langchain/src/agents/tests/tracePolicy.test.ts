@@ -1,15 +1,10 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { tool } from "@langchain/core/tools";
 import { FakeTracer } from "@langchain/core/utils/testing";
 import { z } from "zod/v3";
 
-import {
-  configureTracePolicy,
-  createAgent,
-  createMiddleware,
-  omitPayload,
-} from "../index.js";
+import { createAgent, createMiddleware, omitPayload } from "../index.js";
 import { FakeToolCallingModel } from "./utils.js";
 
 function runsFor(tracer: FakeTracer, name: string) {
@@ -17,8 +12,6 @@ function runsFor(tracer: FakeTracer, name: string) {
     runs.flatMap((run) => [run, ...flatten(run.child_runs)]);
   return flatten(tracer.runs).filter((run) => run.name === name);
 }
-
-afterEach(() => configureTracePolicy(null));
 
 describe("middleware tracePolicy", () => {
   it("preserves default hook payloads and agent results", async () => {
@@ -42,6 +35,49 @@ describe("middleware tracePolicy", () => {
     expect(runsFor(tracer, "Default.before_model")[0].inputs).toMatchObject({
       messages: [expect.objectContaining({ content: "hello" })],
     });
+  });
+
+  it("applies policies independently for each middleware", async () => {
+    const inputOnly = createMiddleware({
+      name: "InputOnly",
+      tracePolicy: { processInputs: omitPayload },
+      beforeModel: () => undefined,
+    });
+    const outputOnly = createMiddleware({
+      name: "OutputOnly",
+      tracePolicy: { processOutputs: omitPayload },
+      beforeModel: () => undefined,
+    });
+    const unfiltered = createMiddleware({
+      name: "Unfiltered",
+      beforeModel: () => undefined,
+    });
+    const agent = createAgent({
+      model: new FakeToolCallingModel(),
+      middleware: [inputOnly, outputOnly, unfiltered],
+      tools: [],
+    });
+    const tracer = new FakeTracer();
+
+    await agent.invoke(
+      { messages: [new HumanMessage("hello")] },
+      { callbacks: [tracer] }
+    );
+
+    expect(runsFor(tracer, "InputOnly.before_model")[0].inputs).toEqual({});
+    expect(runsFor(tracer, "InputOnly.before_model")[0].outputs).toHaveProperty(
+      "jumpTo"
+    );
+    expect(runsFor(tracer, "OutputOnly.before_model")[0].inputs).toMatchObject({
+      messages: [expect.anything()],
+    });
+    expect(runsFor(tracer, "OutputOnly.before_model")[0].outputs).toEqual({});
+    expect(runsFor(tracer, "Unfiltered.before_model")[0].inputs).toMatchObject({
+      messages: [expect.anything()],
+    });
+    expect(
+      runsFor(tracer, "Unfiltered.before_model")[0].outputs
+    ).toHaveProperty("jumpTo");
   });
 
   it("filters all lifecycle hook spans while preserving child model traces", async () => {
@@ -104,60 +140,6 @@ describe("middleware tracePolicy", () => {
     const [run] = runsFor(tracer, "OutputOnly.before_model");
     expect(run.inputs.messages[0].content).toBe("hello");
     expect(run.outputs).toEqual({ output: undefined });
-  });
-
-  it("resolves the global policy at hook execution with wholesale overrides", async () => {
-    const inherited = createMiddleware({
-      name: "Inherited",
-      beforeModel: () => undefined,
-    });
-    const emptyOverride = createMiddleware({
-      name: "EmptyOverride",
-      tracePolicy: {},
-      beforeModel: () => undefined,
-    });
-    const outputOverride = createMiddleware({
-      name: "OutputOverride",
-      tracePolicy: { processOutputs: omitPayload },
-      beforeModel: () => undefined,
-    });
-    const agent = createAgent({
-      model: new FakeToolCallingModel(),
-      middleware: [inherited, emptyOverride, outputOverride],
-      tools: [],
-    });
-    configureTracePolicy({
-      processInputs: omitPayload,
-      processOutputs: omitPayload,
-    });
-    let tracer = new FakeTracer();
-
-    await agent.invoke(
-      { messages: [new HumanMessage("hello")] },
-      { callbacks: [tracer] }
-    );
-
-    expect(runsFor(tracer, "Inherited.before_model")[0]).toMatchObject({
-      inputs: {},
-      outputs: {},
-    });
-    expect(runsFor(tracer, "EmptyOverride.before_model")[0]).toMatchObject({
-      inputs: { messages: [expect.anything()] },
-    });
-    expect(runsFor(tracer, "OutputOverride.before_model")[0]).toMatchObject({
-      inputs: { messages: [expect.anything()] },
-      outputs: {},
-    });
-
-    configureTracePolicy(null);
-    tracer = new FakeTracer();
-    await agent.invoke(
-      { messages: [new HumanMessage("goodbye")] },
-      { callbacks: [tracer] }
-    );
-    expect(runsFor(tracer, "Inherited.before_model")[0].inputs).toMatchObject({
-      messages: [expect.anything()],
-    });
   });
 
   it("preserves null processor results", async () => {
