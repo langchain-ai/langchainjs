@@ -120,7 +120,6 @@ export function createMiddleware<
    * Processors affect chain callback payloads, including `streamEvents`; output
    * omission can suppress messages directly returned by a lifecycle hook, Processors
    * must not mutate payloads, which are shared with agent execution.
-   * JavaScript wrapper hooks are directly composed and do not create their own spans.
    */
   tracePolicy?: TracePolicy;
   /**

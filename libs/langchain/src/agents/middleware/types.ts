@@ -478,7 +478,6 @@ export interface AgentMiddleware<
    * Processors affect chain callback payloads, including `streamEvents`; output
    * omission can suppress messages directly returned by a lifecycle hook, and
    * input omission can affect message deduplication. They do not affect execution.
-   * JavaScript wrapper hooks are directly composed and do not create their own spans.
    *
    * @example
    * ```ts
