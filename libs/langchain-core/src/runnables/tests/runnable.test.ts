@@ -427,8 +427,8 @@ test("RunnableSequence trace processors transform only sequence callbacks", asyn
       (input: { value: string }) => ({ value: `${input.value}!` }),
     ],
     {
-      traceInputs: () => null,
-      traceOutputs: () => undefined,
+      processInputs: () => null,
+      processOutputs: () => undefined,
     }
   );
 
@@ -448,19 +448,19 @@ test("RunnableSequence trace processors transform only sequence callbacks", asyn
 });
 
 test("RunnableSequence trace processors run without callbacks and preserve failures", async () => {
-  const traceInputs = vi.fn(() => {
+  const processInputs = vi.fn(() => {
     throw new Error("processor failure");
   });
-  const traceOutputs = vi.fn((output: string) => output.toUpperCase());
+  const processOutputs = vi.fn((output: string) => output.toUpperCase());
   const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
   const sequence = RunnableSequence.from(
     [(input: string) => input, (input: string) => `${input}!`],
-    { traceInputs, traceOutputs }
+    { processInputs, processOutputs }
   );
 
   await expect(sequence.invoke("original")).resolves.toBe("original!");
-  expect(traceInputs).toHaveBeenCalledWith("original");
-  expect(traceOutputs).toHaveBeenCalledWith("original!");
+  expect(processInputs).toHaveBeenCalledWith("original");
+  expect(processOutputs).toHaveBeenCalledWith("original!");
   expect(warn).toHaveBeenCalledWith(
     "Failed to process RunnableSequence trace input.",
     expect.any(Error)
@@ -473,8 +473,8 @@ test("RunnableSequence batch traces each result with its matching run", async ()
   const sequence = RunnableSequence.from(
     [(input: number) => input, (input: number) => input + 1],
     {
-      traceInputs: (input) => ({ traced: input }),
-      traceOutputs: (output) => ({ traced: output }),
+      processInputs: (input) => ({ traced: input }),
+      processOutputs: (output) => ({ traced: output }),
     }
   );
 
@@ -505,7 +505,7 @@ test("RunnableSequence streaming traces processed aggregate output", async () =>
           yield "lo";
         })(),
     ],
-    { traceInputs: () => [], traceOutputs: () => false }
+    { processInputs: () => [], processOutputs: () => false }
   );
 
   const chunks = [];
@@ -527,8 +527,8 @@ test("RunnableSequence retains processors through withConfig and pipe", async ()
   const sequence = RunnableSequence.from(
     [(input: string) => input, (input: string) => `${input}!`],
     {
-      traceInputs: () => ({ input: "traced" }),
-      traceOutputs: () => ({ output: "traced" }),
+      processInputs: () => ({ input: "traced" }),
+      processOutputs: () => ({ output: "traced" }),
     }
   );
 
@@ -540,8 +540,8 @@ test("RunnableSequence retains processors through withConfig and pipe", async ()
 
   expect(tracer.runs[0].inputs).toEqual({ input: "traced" });
   expect(tracer.runs[0].outputs).toEqual({ output: "traced" });
-  expect(sequence.toJSON().kwargs).not.toHaveProperty("traceInputs");
-  expect(sequence.toJSON().kwargs).not.toHaveProperty("traceOutputs");
+  expect(sequence.toJSON().kwargs).not.toHaveProperty("processInputs");
+  expect(sequence.toJSON().kwargs).not.toHaveProperty("processOutputs");
 });
 
 test("RunnableSequence keeps the left sequence trace processors when piping sequences", async () => {
@@ -549,15 +549,15 @@ test("RunnableSequence keeps the left sequence trace processors when piping sequ
   const first = RunnableSequence.from(
     [(input: string) => input, (input: string) => `${input}!`],
     {
-      traceInputs: () => "left input",
-      traceOutputs: () => "left output",
+      processInputs: () => "left input",
+      processOutputs: () => "left output",
     }
   );
   const last = RunnableSequence.from(
     [(input: string) => input, (input: string) => `${input}?`],
     {
-      traceInputs: () => "right input",
-      traceOutputs: () => "right output",
+      processInputs: () => "right input",
+      processOutputs: () => "right output",
     }
   );
 

@@ -1910,9 +1910,9 @@ export type RunnableSequenceFields<RunInput, RunOutput> = {
   name?: string;
   omitSequenceTags?: boolean;
   /** Receives the input by reference and must not mutate it. */
-  traceInputs?: (input: RunInput) => unknown;
+  processInputs?: (input: RunInput) => unknown;
   /** Receives the output by reference and must not mutate it. */
-  traceOutputs?: (output: RunOutput) => unknown;
+  processOutputs?: (output: RunOutput) => unknown;
 };
 
 /**
@@ -1945,9 +1945,9 @@ export class RunnableSequence<
 
   omitSequenceTags = false;
 
-  protected traceInputs?: (input: RunInput) => unknown;
+  protected processInputs?: (input: RunInput) => unknown;
 
-  protected traceOutputs?: (output: RunOutput) => unknown;
+  protected processOutputs?: (output: RunOutput) => unknown;
 
   lc_serializable = true;
 
@@ -1960,8 +1960,8 @@ export class RunnableSequence<
     this.last = fields.last;
     this.name = fields.name;
     this.omitSequenceTags = fields.omitSequenceTags ?? this.omitSequenceTags;
-    this.traceInputs = fields.traceInputs;
-    this.traceOutputs = fields.traceOutputs;
+    this.processInputs = fields.processInputs;
+    this.processOutputs = fields.processOutputs;
   }
 
   get lc_serializable_keys(): string[] {
@@ -1969,11 +1969,11 @@ export class RunnableSequence<
   }
 
   protected _processTraceInput(input: RunInput): unknown {
-    return this._processTraceValue(input, this.traceInputs, "input");
+    return this._processTraceValue(input, this.processInputs, "input");
   }
 
   protected _processTraceOutput(output: RunOutput): unknown {
-    return this._processTraceValue(output, this.traceOutputs, "output");
+    return this._processTraceValue(output, this.processOutputs, "output");
   }
 
   private _processTraceValue<T>(
@@ -2071,7 +2071,7 @@ export class RunnableSequence<
     batchOptions?: RunnableBatchOptions
   ): Promise<(RunOutput | Error)[]> {
     const configList = this._getOptionsList(options ?? {}, inputs.length);
-    const traceInputs = inputs.map((input) => this._processTraceInput(input));
+    const processInputs = inputs.map((input) => this._processTraceInput(input));
     const callbackManagers = await Promise.all(
       configList.map(getCallbackManagerForConfig)
     );
@@ -2079,7 +2079,7 @@ export class RunnableSequence<
       callbackManagers.map(async (callbackManager, i) => {
         const handleStartRes = await callbackManager?.handleChainStart(
           this.toJSON(),
-          _coerceToDict(traceInputs[i], "input"),
+          _coerceToDict(processInputs[i], "input"),
           configList[i].runId,
           undefined,
           undefined,
@@ -2242,8 +2242,8 @@ export class RunnableSequence<
         last: coerceable.last,
         name: this.name ?? coerceable.name,
         omitSequenceTags: this.omitSequenceTags,
-        traceInputs: this.traceInputs,
-        traceOutputs: this.traceOutputs,
+        processInputs: this.processInputs,
+        processOutputs: this.processOutputs,
       });
     } else {
       return new RunnableSequence({
@@ -2252,8 +2252,8 @@ export class RunnableSequence<
         last: _coerceToRunnable(coerceable),
         name: this.name,
         omitSequenceTags: this.omitSequenceTags,
-        traceInputs: this.traceInputs,
-        traceOutputs: this.traceOutputs,
+        processInputs: this.processInputs,
+        processOutputs: this.processOutputs,
       });
     }
   }
