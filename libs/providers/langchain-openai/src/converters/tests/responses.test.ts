@@ -148,14 +148,16 @@ describe("convertResponsesMessageToAIMessage", () => {
 
     // Verify reasoning is in additional_kwargs
     expect(result.additional_kwargs.reasoning).toBeDefined();
-    expect(result.additional_kwargs.reasoning).toEqual({
-      type: "reasoning",
-      id: "rs_abc123",
-      summary: [
-        { type: "summary_text", text: "First reasoning step" },
-        { type: "summary_text", text: "Second reasoning step" },
-      ],
-    });
+    expect(result.additional_kwargs.reasoning).toEqual([
+      {
+        type: "reasoning",
+        id: "rs_abc123",
+        summary: [
+          { type: "summary_text", text: "First reasoning step" },
+          { type: "summary_text", text: "Second reasoning step" },
+        ],
+      },
+    ]);
 
     // Verify reasoning is elevated to content array
     expect(Array.isArray(result.content)).toBe(true);
@@ -176,6 +178,89 @@ describe("convertResponsesMessageToAIMessage", () => {
     const textBlocks = contentArray.filter((block) => block.type === "text");
     expect(textBlocks.length).toBe(1);
     expect(textBlocks[0]).toMatchObject({ type: "text", text: "Hello!" });
+  });
+
+  it("should keep multiple reasoning items separate (non-streaming)", () => {
+    const response = {
+      id: "resp_123",
+      model: "o3-mini",
+      created_at: 1234567890,
+      object: "response",
+      status: "completed",
+      output: [
+        {
+          type: "reasoning",
+          id: "rs_first",
+          summary: [{ type: "summary_text", text: "First item" }],
+        },
+        {
+          type: "function_call",
+          id: "fc_1",
+          call_id: "call_1",
+          name: "get_weather",
+          arguments: "{}",
+        },
+        {
+          type: "reasoning",
+          id: "rs_second",
+          summary: [{ type: "summary_text", text: "Second item" }],
+        },
+      ],
+      usage: { input_tokens: 10, output_tokens: 20, total_tokens: 30 },
+    };
+
+    const result = convertResponsesMessageToAIMessage(response as any);
+
+    // Both reasoning items are kept, not overwritten by one another.
+    expect(result.additional_kwargs.reasoning).toEqual([
+      {
+        type: "reasoning",
+        id: "rs_first",
+        summary: [{ type: "summary_text", text: "First item" }],
+      },
+      {
+        type: "reasoning",
+        id: "rs_second",
+        summary: [{ type: "summary_text", text: "Second item" }],
+      },
+    ]);
+
+    const contentArray = result.content as Array<{
+      type: string;
+      [key: string]: unknown;
+    }>;
+    const reasoningBlocks = contentArray.filter(
+      (block) => block.type === "reasoning"
+    );
+    expect(reasoningBlocks).toEqual([
+      { type: "reasoning", reasoning: "First item" },
+      { type: "reasoning", reasoning: "Second item" },
+    ]);
+
+    // Force reconstruction instead of the response_metadata.output fast path,
+    // to actually exercise the multi-item reasoning replay logic.
+    delete result.response_metadata.output;
+    const replayInput = convertMessagesToResponsesInput({
+      messages: [result],
+      zdrEnabled: false,
+      model: "o3-mini",
+    });
+    const replayedReasoning = replayInput.filter(
+      (item): item is OpenAIClient.Responses.ResponseReasoningItem =>
+        "type" in item && item.type === "reasoning"
+    );
+    expect(replayedReasoning).toEqual([
+      {
+        id: "rs_first",
+        type: "reasoning",
+        summary: [{ type: "summary_text", text: "First item" }],
+      },
+      {
+        id: "rs_second",
+        type: "reasoning",
+        summary: [{ type: "summary_text", text: "Second item" }],
+      },
+    ]);
   });
 
   it("should handle reasoning with empty summary", () => {
@@ -683,6 +768,432 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
       ]);
     });
 
+    it("keeps two concurrent reasoning items separate when streamed interleaved", () => {
+      // Two reasoning items at different output_index values, interleaved.
+      const events = [
+        {
+          type: "response.output_item.added",
+          output_index: 0,
+          item: {
+            type: "reasoning",
+            id: "rs_first",
+            summary: [],
+            encrypted_content: "incomplete_first",
+          },
+        },
+        {
+          type: "response.output_item.added",
+          output_index: 1,
+          item: {
+            type: "reasoning",
+            id: "rs_second",
+            summary: [],
+            encrypted_content: "incomplete_second",
+          },
+        },
+        {
+          type: "response.output_item.done",
+          output_index: 0,
+          item: {
+            type: "reasoning",
+            id: "rs_first",
+            summary: [],
+            encrypted_content: "canonical_first",
+          },
+        },
+        {
+          type: "response.output_item.done",
+          output_index: 1,
+          item: {
+            type: "reasoning",
+            id: "rs_second",
+            summary: [],
+            encrypted_content: "canonical_second",
+          },
+        },
+      ];
+
+      const chunks = events.map((event) =>
+        convertResponsesDeltaToChatGenerationChunk(event as any)!
+      );
+      expect(chunks.every((chunk) => chunk !== null)).toBe(true);
+
+      const streamedMessage = chunks
+        .slice(1)
+        .reduce(
+          (acc, chunk) => acc.concat(chunk.message as AIMessageChunk),
+          chunks[0].message as AIMessageChunk
+        );
+
+      expect(streamedMessage.additional_kwargs.reasoning).toEqual([
+        {
+          index: 0,
+          id: "rs_first",
+          type: "reasoning",
+          summary: [],
+          encrypted_content: "canonical_first",
+        },
+        {
+          index: 1,
+          id: "rs_second",
+          type: "reasoning",
+          summary: [],
+          encrypted_content: "canonical_second",
+        },
+      ]);
+
+      const replayInput = convertMessagesToResponsesInput({
+        messages: [streamedMessage],
+        zdrEnabled: true,
+        model: "o3",
+      });
+
+      expect(replayInput).toEqual([
+        {
+          id: "rs_first",
+          type: "reasoning",
+          summary: [],
+          encrypted_content: "canonical_first",
+        },
+        {
+          id: "rs_second",
+          type: "reasoning",
+          summary: [],
+          encrypted_content: "canonical_second",
+        },
+      ]);
+    });
+
+    it("keeps summary text separate for two items with interleaved summary deltas", () => {
+      // Closer to real GPT-5.6 tool-loop streaming: summary text for two
+      // reasoning items arrives incrementally and interleaved, not just via
+      // whole added/done payloads.
+      const events = [
+        {
+          type: "response.output_item.added",
+          output_index: 0,
+          item: { type: "reasoning", id: "rs_first", summary: [] },
+        },
+        {
+          type: "response.output_item.added",
+          output_index: 1,
+          item: { type: "reasoning", id: "rs_second", summary: [] },
+        },
+        {
+          type: "response.reasoning_summary_part.added",
+          output_index: 0,
+          summary_index: 0,
+          part: { type: "summary_text", text: "" },
+        },
+        {
+          type: "response.reasoning_summary_part.added",
+          output_index: 1,
+          summary_index: 0,
+          part: { type: "summary_text", text: "" },
+        },
+        {
+          type: "response.reasoning_summary_text.delta",
+          output_index: 0,
+          summary_index: 0,
+          delta: "Thinking about A",
+        },
+        {
+          type: "response.reasoning_summary_text.delta",
+          output_index: 1,
+          summary_index: 0,
+          delta: "Thinking about B",
+        },
+        {
+          type: "response.reasoning_summary_text.delta",
+          output_index: 0,
+          summary_index: 0,
+          delta: " more A",
+        },
+        {
+          type: "response.reasoning_summary_text.delta",
+          output_index: 1,
+          summary_index: 0,
+          delta: " more B",
+        },
+        {
+          type: "response.output_item.done",
+          output_index: 0,
+          item: {
+            type: "reasoning",
+            id: "rs_first",
+            summary: [
+              { type: "summary_text", text: "Thinking about A more A" },
+            ],
+            encrypted_content: "canonical_first",
+          },
+        },
+        {
+          type: "response.output_item.done",
+          output_index: 1,
+          item: {
+            type: "reasoning",
+            id: "rs_second",
+            summary: [
+              { type: "summary_text", text: "Thinking about B more B" },
+            ],
+            encrypted_content: "canonical_second",
+          },
+        },
+      ];
+
+      const chunks = events.map((event) =>
+        convertResponsesDeltaToChatGenerationChunk(event as any)!
+      );
+      expect(chunks.every((chunk) => chunk !== null)).toBe(true);
+
+      const streamedMessage = chunks
+        .slice(1)
+        .reduce(
+          (acc, chunk) => acc.concat(chunk.message as AIMessageChunk),
+          chunks[0].message as AIMessageChunk
+        );
+
+      // Summary text for each item accumulated independently, not mixed.
+      // (The nested summary index is per-summary-part bookkeeping, only
+      // stripped later by convertReasoningSummaryToResponsesReasoningItem.)
+      expect(streamedMessage.additional_kwargs.reasoning).toEqual([
+        {
+          index: 0,
+          id: "rs_first",
+          type: "reasoning",
+          summary: [
+            { type: "summary_text", text: "Thinking about A more A", index: 0 },
+          ],
+          encrypted_content: "canonical_first",
+        },
+        {
+          index: 1,
+          id: "rs_second",
+          type: "reasoning",
+          summary: [
+            { type: "summary_text", text: "Thinking about B more B", index: 0 },
+          ],
+          encrypted_content: "canonical_second",
+        },
+      ]);
+
+      // Elevated content blocks stay separate per item too (composite index).
+      const reasoningBlocks = (
+        streamedMessage.content as Array<{
+          type: string;
+          reasoning?: string;
+          index?: string;
+        }>
+      ).filter((block) => block.type === "reasoning");
+      expect(reasoningBlocks).toEqual([
+        {
+          type: "reasoning",
+          reasoning: "Thinking about A more A",
+          index: "0:0",
+        },
+        {
+          type: "reasoning",
+          reasoning: "Thinking about B more B",
+          index: "1:0",
+        },
+      ]);
+
+      const replayInput = convertMessagesToResponsesInput({
+        messages: [streamedMessage],
+        zdrEnabled: true,
+        model: "o3",
+      });
+
+      // Trailing empty message item is an unrelated existing quirk: elevated
+      // "reasoning" content blocks make content.length > 0.
+      expect(replayInput).toEqual([
+        {
+          id: "rs_first",
+          type: "reasoning",
+          summary: [{ type: "summary_text", text: "Thinking about A more A" }],
+          encrypted_content: "canonical_first",
+        },
+        {
+          id: "rs_second",
+          type: "reasoning",
+          summary: [{ type: "summary_text", text: "Thinking about B more B" }],
+          encrypted_content: "canonical_second",
+        },
+        {
+          type: "message",
+          role: "assistant",
+          content: [],
+          phase: undefined,
+        },
+      ]);
+    });
+
+    it("only replays items with encrypted content when ZDR is mixed across items", () => {
+      // One item never gets encrypted_content (e.g. dropped by the provider);
+      // in ZDR mode it must be excluded from replay, the other still included.
+      const events = [
+        {
+          type: "response.output_item.added",
+          output_index: 0,
+          item: { type: "reasoning", id: "rs_with_content", summary: [] },
+        },
+        {
+          type: "response.output_item.added",
+          output_index: 1,
+          item: { type: "reasoning", id: "rs_without_content", summary: [] },
+        },
+        {
+          type: "response.output_item.done",
+          output_index: 0,
+          item: {
+            type: "reasoning",
+            id: "rs_with_content",
+            summary: [],
+            encrypted_content: "canonical_content",
+          },
+        },
+        // No output_item.done with encrypted_content for output_index 1.
+      ];
+
+      const chunks = events.map((event) =>
+        convertResponsesDeltaToChatGenerationChunk(event as any)!
+      );
+      const streamedMessage = chunks
+        .slice(1)
+        .reduce(
+          (acc, chunk) => acc.concat(chunk.message as AIMessageChunk),
+          chunks[0].message as AIMessageChunk
+        );
+
+      const replayInput = convertMessagesToResponsesInput({
+        messages: [streamedMessage],
+        zdrEnabled: true,
+        model: "o3",
+      });
+
+      expect(replayInput).toEqual([
+        {
+          id: "rs_with_content",
+          type: "reasoning",
+          summary: [],
+          encrypted_content: "canonical_content",
+        },
+      ]);
+    });
+
+    it("keeps three items separate with non-sequential output_index values", () => {
+      const events = [
+        {
+          type: "response.output_item.added",
+          output_index: 0,
+          item: { type: "reasoning", id: "rs_a", summary: [] },
+        },
+        {
+          type: "response.output_item.added",
+          output_index: 2,
+          item: { type: "reasoning", id: "rs_c", summary: [] },
+        },
+        {
+          type: "response.output_item.added",
+          output_index: 5,
+          item: { type: "reasoning", id: "rs_f", summary: [] },
+        },
+        {
+          type: "response.output_item.done",
+          output_index: 5,
+          item: {
+            type: "reasoning",
+            id: "rs_f",
+            summary: [],
+            encrypted_content: "content_f",
+          },
+        },
+        {
+          type: "response.output_item.done",
+          output_index: 0,
+          item: {
+            type: "reasoning",
+            id: "rs_a",
+            summary: [],
+            encrypted_content: "content_a",
+          },
+        },
+        {
+          type: "response.output_item.done",
+          output_index: 2,
+          item: {
+            type: "reasoning",
+            id: "rs_c",
+            summary: [],
+            encrypted_content: "content_c",
+          },
+        },
+      ];
+
+      const chunks = events.map((event) =>
+        convertResponsesDeltaToChatGenerationChunk(event as any)!
+      );
+      const streamedMessage = chunks
+        .slice(1)
+        .reduce(
+          (acc, chunk) => acc.concat(chunk.message as AIMessageChunk),
+          chunks[0].message as AIMessageChunk
+        );
+
+      // Each item keeps its own id/encrypted_content; none collide despite
+      // done-events arriving out of output_index order.
+      expect(streamedMessage.additional_kwargs.reasoning).toEqual([
+        {
+          index: 0,
+          id: "rs_a",
+          type: "reasoning",
+          summary: [],
+          encrypted_content: "content_a",
+        },
+        {
+          index: 2,
+          id: "rs_c",
+          type: "reasoning",
+          summary: [],
+          encrypted_content: "content_c",
+        },
+        {
+          index: 5,
+          id: "rs_f",
+          type: "reasoning",
+          summary: [],
+          encrypted_content: "content_f",
+        },
+      ]);
+
+      const replayInput = convertMessagesToResponsesInput({
+        messages: [streamedMessage],
+        zdrEnabled: true,
+        model: "o3",
+      });
+
+      expect(replayInput).toEqual([
+        {
+          id: "rs_a",
+          type: "reasoning",
+          summary: [],
+          encrypted_content: "content_a",
+        },
+        {
+          id: "rs_c",
+          type: "reasoning",
+          summary: [],
+          encrypted_content: "content_c",
+        },
+        {
+          id: "rs_f",
+          type: "reasoning",
+          summary: [],
+          encrypted_content: "content_f",
+        },
+      ]);
+    });
+
     it("should elevate reasoning to content on response.output_item.added with reasoning", () => {
       const event = {
         type: "response.output_item.added",
@@ -702,10 +1213,13 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
 
       // Verify reasoning is in additional_kwargs
       expect(aiMessageChunk.additional_kwargs.reasoning).toBeDefined();
-      expect(aiMessageChunk.additional_kwargs.reasoning).toMatchObject({
-        id: "rs_abc123",
-        type: "reasoning",
-      });
+      expect(aiMessageChunk.additional_kwargs.reasoning).toMatchObject([
+        {
+          index: 0,
+          id: "rs_abc123",
+          type: "reasoning",
+        },
+      ]);
 
       // Verify reasoning is elevated to content
       expect(Array.isArray(aiMessageChunk.content)).toBe(true);
@@ -720,6 +1234,7 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
       expect(reasoningBlocks[0]).toEqual({
         type: "reasoning",
         reasoning: "Thinking about this...Let me reason through.",
+        index: 0,
       });
     });
 
@@ -740,12 +1255,15 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
 
       // Verify reasoning is in additional_kwargs
       expect(aiMessageChunk.additional_kwargs.reasoning).toBeDefined();
-      expect(aiMessageChunk.additional_kwargs.reasoning).toMatchObject({
-        type: "reasoning",
-        summary: [
-          { type: "summary_text", text: "Initial reasoning step", index: 0 },
-        ],
-      });
+      expect(aiMessageChunk.additional_kwargs.reasoning).toMatchObject([
+        {
+          index: 0,
+          type: "reasoning",
+          summary: [
+            { type: "summary_text", text: "Initial reasoning step", index: 0 },
+          ],
+        },
+      ]);
 
       // Verify reasoning is elevated to content
       expect(Array.isArray(aiMessageChunk.content)).toBe(true);
@@ -760,7 +1278,7 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
       expect(reasoningBlocks[0]).toEqual({
         type: "reasoning",
         reasoning: "Initial reasoning step",
-        index: 0,
+        index: "0:0",
       });
     });
 
@@ -778,12 +1296,15 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
 
       // Verify reasoning is in additional_kwargs
       expect(aiMessageChunk.additional_kwargs.reasoning).toBeDefined();
-      expect(aiMessageChunk.additional_kwargs.reasoning).toMatchObject({
-        type: "reasoning",
-        summary: [
-          { type: "summary_text", text: "more reasoning text", index: 0 },
-        ],
-      });
+      expect(aiMessageChunk.additional_kwargs.reasoning).toMatchObject([
+        {
+          index: 0,
+          type: "reasoning",
+          summary: [
+            { type: "summary_text", text: "more reasoning text", index: 0 },
+          ],
+        },
+      ]);
 
       // Verify reasoning is elevated to content
       expect(Array.isArray(aiMessageChunk.content)).toBe(true);
@@ -798,7 +1319,7 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
       expect(reasoningBlocks[0]).toEqual({
         type: "reasoning",
         reasoning: "more reasoning text",
-        index: 0,
+        index: "0:0",
       });
     });
 

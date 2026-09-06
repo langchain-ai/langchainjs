@@ -217,7 +217,7 @@ function convertResponsesAnnotation(
  *   content: [{ type: "text", text: "Hello world", annotations: [] }],
  *   tool_calls: [{ id: "123", name: "calculator", args: { a: 1, b: 2 } }],
  *   additional_kwargs: {
- *     reasoning: { summary: [{ text: "Let me calculate this..." }] },
+ *     reasoning: [{ summary: [{ text: "Let me calculate this..." }] }],
  *     tool_outputs: [
  *       {
  *         type: "code_interpreter_call",
@@ -243,24 +243,26 @@ export function convertToV1FromResponses(
   message: AIMessage
 ): Array<ContentBlock.Standard> {
   function* iterateContent(): Iterable<ContentBlock.Standard> {
-    if (
-      _isObject(message.additional_kwargs?.reasoning) &&
-      _isArray(message.additional_kwargs.reasoning.summary)
-    ) {
-      const summary =
-        message.additional_kwargs.reasoning.summary.reduce<string>(
-          (acc, item) => {
-            if (_isObject(item) && _isString(item.text)) {
-              return `${acc}${item.text}`;
-            }
-            return acc;
-          },
-          ""
-        );
-      yield {
-        type: "reasoning",
-        reasoning: summary,
-      };
+    // One entry per reasoning item; older messages may still have the
+    // legacy single-object shape, so both are supported here.
+    const reasoningItems = _isArray(message.additional_kwargs?.reasoning)
+      ? message.additional_kwargs.reasoning
+      : _isObject(message.additional_kwargs?.reasoning)
+        ? [message.additional_kwargs.reasoning]
+        : [];
+    for (const reasoningItem of reasoningItems) {
+      if (_isObject(reasoningItem) && _isArray(reasoningItem.summary)) {
+        const summary = reasoningItem.summary.reduce<string>((acc, item) => {
+          if (_isObject(item) && _isString(item.text)) {
+            return `${acc}${item.text}`;
+          }
+          return acc;
+        }, "");
+        yield {
+          type: "reasoning",
+          reasoning: summary,
+        };
+      }
     }
     const content =
       typeof message.content === "string"

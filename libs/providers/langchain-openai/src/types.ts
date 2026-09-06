@@ -319,6 +319,11 @@ export type ChatOpenAIReasoningSummary = Omit<
   "summary"
 > & {
   /**
+   * The item's output_index, when streamed. Keeps concurrent reasoning items
+   * from colliding while their chunks are merged.
+   */
+  index?: number;
+  /**
    * The summary of the reasoning step. The index field will be populated if the response was
    * streamed. This allows LangChain to recompose the reasoning summary output correctly when the
    * AIMessage is used as an input for future generation requests.
