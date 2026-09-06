@@ -20,7 +20,11 @@ import type {
   ToolMessage,
 } from "@langchain/core/messages";
 import type { ToolCall } from "@langchain/core/messages/tool";
-import type { Command, StreamTransformer } from "@langchain/langgraph";
+import type {
+  Command,
+  StreamTransformer,
+  TracePolicy,
+} from "@langchain/langgraph";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
 
 import type { JumpToTarget } from "../constants.js";
@@ -468,6 +472,27 @@ export interface AgentMiddleware<
    * is compiled.
    */
   streamTransformers?: TStreamTransformers;
+
+  /**
+   * Controls the payloads recorded by this middleware's lifecycle hook spans.
+   * This overrides the process-wide default set by `configureTracePolicy`.
+   * Processors affect chain callback payloads, including `streamEvents`; output
+   * omission can suppress messages directly returned by a lifecycle hook, and
+   * input omission can affect message deduplication. They do not affect execution.
+   * JavaScript wrapper hooks are directly composed and do not create their own spans.
+   *
+   * @example
+   * ```ts
+   * import { createMiddleware, omitPayload } from "langchain";
+   *
+   * const middleware = createMiddleware({
+   *   name: "PrivateMiddleware",
+   *   tracePolicy: { processInputs: omitPayload },
+   *   beforeModel: () => undefined,
+   * });
+   * ```
+   */
+  tracePolicy?: TracePolicy;
 
   /**
    * Wraps tool execution with custom logic. This allows you to:
