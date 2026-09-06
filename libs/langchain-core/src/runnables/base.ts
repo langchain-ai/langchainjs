@@ -2232,7 +2232,7 @@ export class RunnableSequence<
     coerceable: RunnableLike<RunOutput, NewRunOutput>
   ): RunnableSequence<RunInput, Exclude<NewRunOutput, Error>> {
     if (RunnableSequence.isRunnableSequence(coerceable)) {
-      return new RunnableSequence({
+      return new RunnableSequence<RunInput, Exclude<NewRunOutput, Error>>({
         first: this.first,
         middle: this.middle.concat([
           this.last,
@@ -2243,17 +2243,21 @@ export class RunnableSequence<
         name: this.name ?? coerceable.name,
         omitSequenceTags: this.omitSequenceTags,
         processInputs: this.processInputs,
-        processOutputs: this.processOutputs,
+        processOutputs: this.processOutputs as
+          | ((output: Exclude<NewRunOutput, Error>) => unknown)
+          | undefined,
       });
     } else {
-      return new RunnableSequence({
+      return new RunnableSequence<RunInput, Exclude<NewRunOutput, Error>>({
         first: this.first,
         middle: [...this.middle, this.last],
         last: _coerceToRunnable(coerceable),
         name: this.name,
         omitSequenceTags: this.omitSequenceTags,
         processInputs: this.processInputs,
-        processOutputs: this.processOutputs,
+        processOutputs: this.processOutputs as
+          | ((output: Exclude<NewRunOutput, Error>) => unknown)
+          | undefined,
       });
     }
   }

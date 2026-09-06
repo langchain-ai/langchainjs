@@ -540,8 +540,13 @@ test("RunnableSequence retains processors through withConfig and pipe", async ()
 
   expect(tracer.runs[0].inputs).toEqual({ input: "traced" });
   expect(tracer.runs[0].outputs).toEqual({ output: "traced" });
-  expect(sequence.toJSON().kwargs).not.toHaveProperty("processInputs");
-  expect(sequence.toJSON().kwargs).not.toHaveProperty("processOutputs");
+  const serialized = sequence.toJSON();
+  expect("kwargs" in serialized && serialized.kwargs).not.toHaveProperty(
+    "processInputs"
+  );
+  expect("kwargs" in serialized && serialized.kwargs).not.toHaveProperty(
+    "processOutputs"
+  );
 });
 
 test("RunnableSequence keeps the left sequence trace processors when piping sequences", async () => {
