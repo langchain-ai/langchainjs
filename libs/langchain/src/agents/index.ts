@@ -717,6 +717,8 @@ export {
   type ResponseFormatUndefined,
 } from "./responses.js";
 export { createMiddleware } from "./middleware.js";
+export { configureTracePolicy } from "./middleware/tracePolicy.js";
+export { omitPayload, type TracePolicy } from "@langchain/langgraph";
 export { MIDDLEWARE_BRAND } from "./middleware/types.js";
 export type * from "./middleware/types.js";
 export { FakeToolCallingModel } from "./tests/utils.js";

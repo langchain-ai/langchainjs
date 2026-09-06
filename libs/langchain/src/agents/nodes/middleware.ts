@@ -15,6 +15,7 @@ import type {
 } from "../middleware/types.js";
 import { derivePrivateState } from "./utils.js";
 import { getHookConstraint } from "../middleware/utils.js";
+import { resolveTracePolicy } from "../middleware/tracePolicy.js";
 
 /**
  * Named class for context objects to provide better error messages
@@ -187,6 +188,7 @@ export abstract class MiddlewareNode<
   get nodeOptions() {
     return {
       input: derivePrivateState(this.middleware.stateSchema),
+      tracePolicy: resolveTracePolicy(this.middleware.tracePolicy),
     };
   }
 }
