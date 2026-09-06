@@ -1171,7 +1171,10 @@ async function _callTool({
     if (isToolException(error)) {
       throw error;
     }
-    throw new ToolException(`Error calling tool ${toolName}: ${String(error)}`);
+    throw new ToolException(
+      `Error calling tool ${toolName}: ${String(error)}`,
+      error instanceof Error ? error : undefined
+    );
   }
 }
 
