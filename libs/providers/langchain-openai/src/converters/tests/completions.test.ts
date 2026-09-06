@@ -11,6 +11,47 @@ import {
 } from "../completions.js";
 
 describe("convertCompletionsMessageToBaseMessage", () => {
+  const mockMessage = {
+    role: "assistant" as const,
+    content: "Hello",
+  };
+
+  const mockRawResponse = {
+    id: "chatcmpl-raw-response",
+    model: "gpt-5.4",
+    choices: [{ index: 0, message: mockMessage }],
+    usage: {
+      prompt_tokens: 1,
+      completion_tokens: 1,
+      total_tokens: 2,
+    },
+  };
+
+  it("includes the raw response when explicitly requested", () => {
+    const result = convertCompletionsMessageToBaseMessage({
+      message: mockMessage as ChatCompletionMessage,
+      rawResponse: mockRawResponse as any,
+      includeRawResponse: true,
+    }) as AIMessage;
+
+    expect(result.additional_kwargs.__raw_response).toBe(mockRawResponse);
+  });
+
+  it.each([false, undefined])(
+    "does not include the raw response when includeRawResponse is %s",
+    (includeRawResponse) => {
+      const result = convertCompletionsMessageToBaseMessage({
+        message: mockMessage as ChatCompletionMessage,
+        rawResponse: mockRawResponse as any,
+        includeRawResponse,
+      }) as AIMessage;
+
+      expect(Object.hasOwn(result.additional_kwargs, "__raw_response")).toBe(
+        false
+      );
+    }
+  );
+
   it("preserves assistant reasoning_content in additional_kwargs", () => {
     const mockMessage = {
       role: "assistant" as const,
