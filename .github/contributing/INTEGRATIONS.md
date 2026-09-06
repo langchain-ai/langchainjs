@@ -8,72 +8,27 @@ Integrations tend to fall into a set number of categories, each of which will ha
 
 The following guidelines apply broadly to all type of integrations:
 
-### Creating a separate entrypoint
+### Standalone provider packages
 
-You should generally not export your new module from an `index.ts` file that contains many other exports. Instead, you should add a separate entrypoint for your integration in [`libs/community/langchain-community/langchain.config.js`](https://github.com/langchain-ai/langchainjs/blob/main/libs/community/langchain-community/langchain.config.js) within the `entrypoints` field in the config object:
+New integrations are published as **standalone packages** under `libs/providers/` (for example [`@langchain/openai`](https://github.com/langchain-ai/langchainjs/tree/main/libs/providers/langchain-openai)). The monolithic `@langchain/community` package was removed in [PR #10600](https://github.com/langchain-ai/langchainjs/pull/10600).
 
-```js
-export const config = {
-  internals: [ ... ],
-  entrypoints: {
-    load: "load/index",
-    ...
-    "vectorstores/chroma": "vectorstores/chroma",
-    "vectorstores/hnswlib": "vectorstores/hnswlib",
-    ...
-  },
-  ...
-}
-```
+When adding a new integration:
 
-The entrypoint name should conform to its path in the repo. For example, if you were adding a new vector store for a hypothetical provider "langco", you might create it under `vectorstores/langco.ts`. You should add it above as:
+1. Create a new package under `libs/providers/langchain-<provider>/` following the layout of an existing provider such as `@langchain/openai`.
+2. Export public APIs from that package's `src/index.ts` (or equivalent entrypoint defined in its `package.json`).
+3. Declare third-party dependencies in that package's `package.json` — not in `@langchain/core` or legacy community paths.
 
-```js
-export const config = {
-  internals: [ ... ],
-  entrypoints: {
-    load: "load/index",
-    ...
-    "vectorstores/chroma": "vectorstores/chroma",
-    "vectorstores/hnswlib": "vectorstores/hnswlib",
-    "vectorstores/langco": "vectorstores/langco",
-    ...
-  },
-  ...
-}
-```
+See [`CONTRIBUTING.md`](https://github.com/langchain-ai/langchainjs/blob/main/CONTRIBUTING.md) for the canonical standalone-integration policy.
 
 ### Third-party dependencies
 
-You may use third-party dependencies in new integrations, but they should be added as `peerDependencies` and `devDependencies` with an entry under `peerDependenciesMeta` in [`libs/community/langchain-community/package.json`](https://github.com/langchain-ai/langchainjs/blob/main/libs/community/langchain-community/package.json), **not under any core `dependencies` list**. This keeps the overall package size small, as only people who are using your integration will need to install, and allows us to support a wider range of runtimes.
+You may use third-party dependencies in new integrations, but they should be declared in your **standalone provider package's** `package.json` as `dependencies`, `peerDependencies`, and/or `devDependencies` as appropriate — **not** under any core `@langchain/core` dependency list. This keeps install sizes small and allows us to support a wider range of runtimes.
 
 We suggest using caret syntax (`^`) for peer dependencies to support a wider range of people trying to use them as well as to be somewhat tolerant to non-major version updates, which should (theoretically) be the only breaking ones.
 
 Please make sure all introduced dependencies are permissively licensed (MIT is recommended) and well-supported and maintained.
 
-You must also add your new entrypoint under `requiresOptionalDependency` in the [`langchain.config.js`](https://github.com/langchain-ai/langchainjs/blob/main/libs/community/langchain-community/langchain.config.js) file to avoid breaking the build:
-
-```js
-export const config = {
-  internals: [ ... ],
-  entrypoints: {
-    load: "load/index",
-    ...
-    "vectorstores/chroma": "vectorstores/chroma",
-    "vectorstores/hnswlib": "vectorstores/hnswlib",
-    "vectorstores/langco": "vectorstores/langco",
-    ...
-  },
-  requiresOptionalDependency: [
-    ...
-    "vectorstores/langco",
-    ...
-  ],
-  ...
-}
-```
-
-If you have conformed to all of the above guidelines, you can just import your dependency as normal in your integration's file in the LangChain repo. Developers who import your entrypoint will then see an error message if they are missing the required peer dependency.
+Developers who import your package will install its declared dependencies directly from npm.
 
 ### Prioritize using exported third-party types for client config
 
