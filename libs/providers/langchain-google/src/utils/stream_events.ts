@@ -35,6 +35,7 @@ export async function* convertGoogleGeminiStream(
   let messageStarted = false;
   let usageSnapshot: UsageMetadata | undefined;
   let finishReason: FinishReason = "stop";
+  let provenanceMetadata: Record<string, unknown> | undefined;
 
   const getOrCreateBlockIndex = (
     key: BlockKey,
@@ -71,6 +72,21 @@ export async function* convertGoogleGeminiStream(
     const candidate = response.candidates?.[0];
     if (candidate?.finishReason) {
       finishReason = mapGeminiFinishReason(candidate.finishReason);
+    }
+
+    // Grounding and citation provenance arrives on the candidate, usually on
+    // the last chunk. The non-streaming converter surfaces it on
+    // `response_metadata`; without this the native stream dropped it, so a
+    // googleSearch-grounded answer reached the caller with no citations.
+    // Later chunks win: Gemini resends the accumulated metadata.
+    for (const [key, value] of [
+      ["grounding_metadata", candidate?.groundingMetadata],
+      ["citation_metadata", candidate?.citationMetadata],
+      ["grounding_attributions", candidate?.groundingAttributions],
+    ] as const) {
+      if (value !== undefined) {
+        provenanceMetadata = { ...provenanceMetadata, [key]: value };
+      }
     }
 
     const parts = candidate?.content?.parts;
@@ -172,7 +188,7 @@ export async function* convertGoogleGeminiStream(
     event: "message-finish" as const,
     reason: finishReason,
     ...(usageSnapshot ? { usage: usageSnapshot } : {}),
-    responseMetadata: { model_provider: "google" },
+    responseMetadata: { model_provider: "google", ...provenanceMetadata },
   };
 }
 
