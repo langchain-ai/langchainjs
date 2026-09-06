@@ -142,6 +142,15 @@ export function createToolCallTransformer(
         resolveOutput = res;
         rejectOutput = rej;
       });
+      // `output` is created eagerly for every tool call, but consuming it is
+      // optional — a caller may never iterate `run.toolCalls`, or may read
+      // only `status`/`error`. Without a handler attached here, a failing tool
+      // rejects a promise nobody awaits, and Node's default
+      // `--unhandled-rejections=throw` terminates the whole process. The no-op
+      // catch marks the rejection as handled; callers that do await `output`
+      // still observe it, since `catch` returns a new promise and leaves
+      // `output` itself rejected.
+      output.catch(() => {});
       const status = new Promise<ToolCallStatus>((res) => {
         resolveStatus = res;
       });
