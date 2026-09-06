@@ -24,7 +24,9 @@ import {
   FakeListChatModel,
   SingleRunExtractor,
   FakeStreamingChatModel,
+  FakeTracer,
 } from "../../utils/testing/index.js";
+import { awaitAllCallbacks } from "../../singletons/callbacks.js";
 import { charChunks } from "../../utils/testing/helpers.js";
 import { RunnableSequence, RunnableLambda } from "../base.js";
 import { RouterRunnable } from "../router.js";
@@ -415,6 +417,155 @@ test("Create a runnable sequence with a static method with no tags", async () =>
   for (const event of events) {
     expect(event.tags?.find((tag) => tag.startsWith("seq:"))).toBeUndefined();
   }
+});
+
+test("RunnableSequence trace processors transform only sequence callbacks", async () => {
+  const tracer = new FakeTracer();
+  const sequence = RunnableSequence.from(
+    [
+      (input: { value: string }) => input,
+      (input: { value: string }) => ({ value: `${input.value}!` }),
+    ],
+    {
+      traceInputs: () => null,
+      traceOutputs: () => undefined,
+    }
+  );
+
+  await expect(
+    sequence.invoke({ value: "original" }, { callbacks: [tracer] })
+  ).resolves.toEqual({
+    value: "original!",
+  });
+  await awaitAllCallbacks();
+
+  expect(tracer.runs).toHaveLength(1);
+  expect(tracer.runs[0].inputs).toEqual({ input: null });
+  expect(tracer.runs[0].outputs).toEqual({ output: undefined });
+  expect(tracer.runs[0].child_runs).toHaveLength(2);
+  expect(tracer.runs[0].child_runs[0].inputs).toEqual({ value: "original" });
+  expect(tracer.runs[0].child_runs[1].outputs).toEqual({ value: "original!" });
+});
+
+test("RunnableSequence trace processors run without callbacks and preserve failures", async () => {
+  const traceInputs = vi.fn(() => {
+    throw new Error("processor failure");
+  });
+  const traceOutputs = vi.fn((output: string) => output.toUpperCase());
+  const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+  const sequence = RunnableSequence.from(
+    [(input: string) => input, (input: string) => `${input}!`],
+    { traceInputs, traceOutputs }
+  );
+
+  await expect(sequence.invoke("original")).resolves.toBe("original!");
+  expect(traceInputs).toHaveBeenCalledWith("original");
+  expect(traceOutputs).toHaveBeenCalledWith("original!");
+  expect(warn).toHaveBeenCalledWith(
+    "Failed to process RunnableSequence trace input.",
+    expect.any(Error)
+  );
+  warn.mockRestore();
+});
+
+test("RunnableSequence batch traces each result with its matching run", async () => {
+  const tracer = new FakeTracer();
+  const sequence = RunnableSequence.from(
+    [(input: number) => input, (input: number) => input + 1],
+    {
+      traceInputs: (input) => ({ traced: input }),
+      traceOutputs: (output) => ({ traced: output }),
+    }
+  );
+
+  await expect(
+    sequence.batch([1, 2], { callbacks: [tracer] })
+  ).resolves.toEqual([2, 3]);
+  await awaitAllCallbacks();
+
+  expect(tracer.runs).toHaveLength(2);
+  expect(tracer.runs.map((run) => run.inputs)).toEqual([
+    { traced: 1 },
+    { traced: 2 },
+  ]);
+  expect(tracer.runs.map((run) => run.outputs)).toEqual([
+    { traced: 2 },
+    { traced: 3 },
+  ]);
+});
+
+test("RunnableSequence streaming traces processed aggregate output", async () => {
+  const tracer = new FakeTracer();
+  const sequence = RunnableSequence.from(
+    [
+      (input: string) => input,
+      () =>
+        (async function* () {
+          yield "hel";
+          yield "lo";
+        })(),
+    ],
+    { traceInputs: () => [], traceOutputs: () => false }
+  );
+
+  const chunks = [];
+  for await (const chunk of await sequence.stream("original", {
+    callbacks: [tracer],
+  })) {
+    chunks.push(chunk);
+  }
+  await awaitAllCallbacks();
+
+  expect(chunks).toEqual(["hel", "lo"]);
+  expect(tracer.runs).toHaveLength(1);
+  expect(tracer.runs[0].inputs).toEqual({ input: [] });
+  expect(tracer.runs[0].outputs).toEqual({ output: false });
+});
+
+test("RunnableSequence retains processors through withConfig and pipe", async () => {
+  const tracer = new FakeTracer();
+  const sequence = RunnableSequence.from(
+    [(input: string) => input, (input: string) => `${input}!`],
+    {
+      traceInputs: () => ({ input: "traced" }),
+      traceOutputs: () => ({ output: "traced" }),
+    }
+  );
+
+  await sequence
+    .withConfig({ callbacks: [tracer] })
+    .pipe((input) => `${input}?`)
+    .invoke("original");
+  await awaitAllCallbacks();
+
+  expect(tracer.runs[0].inputs).toEqual({ input: "traced" });
+  expect(tracer.runs[0].outputs).toEqual({ output: "traced" });
+  expect(sequence.toJSON().kwargs).not.toHaveProperty("traceInputs");
+  expect(sequence.toJSON().kwargs).not.toHaveProperty("traceOutputs");
+});
+
+test("RunnableSequence keeps the left sequence trace processors when piping sequences", async () => {
+  const tracer = new FakeTracer();
+  const first = RunnableSequence.from(
+    [(input: string) => input, (input: string) => `${input}!`],
+    {
+      traceInputs: () => "left input",
+      traceOutputs: () => "left output",
+    }
+  );
+  const last = RunnableSequence.from(
+    [(input: string) => input, (input: string) => `${input}?`],
+    {
+      traceInputs: () => "right input",
+      traceOutputs: () => "right output",
+    }
+  );
+
+  await first.pipe(last).invoke("original", { callbacks: [tracer] });
+  await awaitAllCallbacks();
+
+  expect(tracer.runs[0].inputs).toEqual({ input: "left input" });
+  expect(tracer.runs[0].outputs).toEqual({ output: "left output" });
 });
 
 test("RunnableSequence can pass config to every step in batched request", async () => {
