@@ -1,6 +1,5 @@
 import {
   GenericContainer,
-  StartedTestContainer,
   StartupCheckStrategy,
   StartupStatus,
 } from "testcontainers";
@@ -8,7 +7,7 @@ import { MongoClient } from "mongodb";
 
 // @ts-expect-error In order for jest to succesfully load this file, we need the TS extension
 // instead of the JS extension.  This errors because `allowImportingTsExtensions` is
-// not set but this is okay because this file isn't not technically a part of the project
+// not set but this is okay because this file isn't technically a part of the project
 // (not imported by any code in the project).
 import { isUsingLocalAtlas, uri } from "./utils.ts";
 
@@ -67,14 +66,30 @@ class ReadyWhenMongotEstablished extends StartupCheckStrategy {
 }
 
 export default async function setup() {
-  if (!isUsingLocalAtlas()) return;
+  // oxlint-disable-next-line no-process-env
+  if (process.env.MONGODB_URI || process.env.MONGODB_ATLAS_URI) return;
 
-  let container: StartedTestContainer;
+  let container: Awaited<ReturnType<GenericContainer["start"]>>;
   try {
-    container = await new GenericContainer("mongodb/mongodb-atlas-local")
+    container = await new GenericContainer(
+      "mongodb/mongodb-atlas-local:preview"
+    )
       .withExposedPorts({ host: 27017, container: 27017 })
+      .withEnvironment({
+        // The :preview image reads VOYAGE_API_KEY internally. Accept either
+        // name from the host so both CI (VOYAGEAI_API_KEY) and local (.env
+        // with VOYAGE_API_KEY) work without changes.
+        // oxlint-disable-next-line no-process-env
+        VOYAGE_API_KEY:
+          process.env.VOYAGEAI_API_KEY ?? process.env.VOYAGE_API_KEY ?? "",
+        EMBEDDING_PROVIDER_ENDPOINT:
+          // oxlint-disable-next-line no-process-env
+          process.env.EMBEDDING_PROVIDER_ENDPOINT ??
+          "https://api.voyageai.com/v1/embeddings",
+        MONGODB_ATLAS_LOCAL_PREVIEW: "true",
+      })
       .withWaitStrategy(new ReadyWhenMongotEstablished())
-      .withStartupTimeout(30_000)
+      .withStartupTimeout(120_000)
       .start();
   } catch (error: Error | unknown) {
     const hasMessage = (err: unknown): err is { message: string } =>

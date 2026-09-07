@@ -312,6 +312,7 @@ export function todoListMiddleware(options?: TodoListMiddlewareOptions) {
             new ToolMessage({
               content: `Updated todo list to ${JSON.stringify(todos)}`,
               tool_call_id: config.toolCall?.id as string,
+              name: "write_todos",
             }),
           ],
         },
@@ -385,6 +386,7 @@ export function todoListMiddleware(options?: TodoListMiddlewareOptions) {
                 "in parallel. Please call it only once per model invocation to update " +
                 "the todo list.",
               tool_call_id: tc.id as string,
+              name: "write_todos",
               status: "error",
             })
         );

@@ -4,11 +4,7 @@ import type { ToolCall } from "@langchain/core/messages/tool";
 import type * as Bedrock from "@aws-sdk/client-bedrock-runtime";
 import type { DocumentType as __DocumentType } from "@smithy/types";
 import { ChatGenerationChunk } from "@langchain/core/outputs";
-import {
-  MessageContentReasoningBlock,
-  MessageContentReasoningBlockReasoningTextPartial,
-  MessageContentReasoningBlockRedacted,
-} from "../types.js";
+import { MessageContentReasoningBlockRedacted } from "../types.js";
 
 export function convertConverseMessageToLangChainMessage(
   message: Bedrock.Message,
@@ -33,13 +29,31 @@ export function convertConverseMessageToLangChainMessage(
   }
   let tokenUsage: UsageMetadata | undefined;
   if (responseMetadata.usage) {
-    const input_tokens = responseMetadata.usage.inputTokens ?? 0;
+    const cacheReadInputTokens =
+      responseMetadata.usage.cacheReadInputTokens ?? 0;
+    const cacheWriteInputTokens =
+      responseMetadata.usage.cacheWriteInputTokens ?? 0;
+    const inputTokenDetails = {
+      ...(responseMetadata.usage.cacheReadInputTokens !== undefined && {
+        cache_read: responseMetadata.usage.cacheReadInputTokens,
+      }),
+      ...(responseMetadata.usage.cacheWriteInputTokens !== undefined && {
+        cache_creation: responseMetadata.usage.cacheWriteInputTokens,
+      }),
+    };
+    const input_tokens =
+      (responseMetadata.usage.inputTokens ?? 0) +
+      cacheReadInputTokens +
+      cacheWriteInputTokens;
     const output_tokens = responseMetadata.usage.outputTokens ?? 0;
     tokenUsage = {
       input_tokens,
       output_tokens,
       total_tokens:
         responseMetadata.usage.totalTokens ?? input_tokens + output_tokens,
+      input_token_details: Object.keys(inputTokenDetails).length
+        ? inputTokenDetails
+        : undefined,
     };
   }
 
@@ -74,11 +88,9 @@ export function convertConverseMessageToLangChainMessage(
         content.push({ type: "guard_content", guardContent: c.guardContent });
       } else if ("image" in c) {
         content.push({ type: "image", image: c.image });
-      } else if ("reasoningContent" in c) {
+      } else if ("reasoningContent" in c && c.reasoningContent) {
         content.push(
-          bedrockReasoningBlockToLangchainReasoningBlock(
-            c.reasoningContent as Bedrock.ReasoningContentBlock
-          )
+          bedrockReasoningBlockToLangchainReasoningBlock(c.reasoningContent)
         );
       } else if ("text" in c && typeof c.text === "string") {
         content.push({ type: "text", text: c.text });
@@ -148,7 +160,8 @@ export function handleConverseStreamContentBlockDelta(
       message: new AIMessageChunk({
         content: [
           bedrockReasoningDeltaToLangchainPartialReasoningBlock(
-            contentBlockDelta.delta.reasoningContent
+            contentBlockDelta.delta.reasoningContent,
+            contentBlockDelta.contentBlockIndex
           ),
         ],
       }),
@@ -193,12 +206,28 @@ export function handleConverseStreamMetadata(
     streamUsage: boolean;
   }
 ): ChatGenerationChunk {
-  const inputTokens = metadata.usage?.inputTokens ?? 0;
+  const cacheReadInputTokens = metadata.usage?.cacheReadInputTokens ?? 0;
+  const cacheWriteInputTokens = metadata.usage?.cacheWriteInputTokens ?? 0;
+  const inputTokenDetails = {
+    ...(metadata.usage?.cacheReadInputTokens !== undefined && {
+      cache_read: metadata.usage.cacheReadInputTokens,
+    }),
+    ...(metadata.usage?.cacheWriteInputTokens !== undefined && {
+      cache_creation: metadata.usage.cacheWriteInputTokens,
+    }),
+  };
+  const inputTokens =
+    (metadata.usage?.inputTokens ?? 0) +
+    cacheReadInputTokens +
+    cacheWriteInputTokens;
   const outputTokens = metadata.usage?.outputTokens ?? 0;
   const usage_metadata: UsageMetadata = {
     input_tokens: inputTokens,
     output_tokens: outputTokens,
     total_tokens: metadata.usage?.totalTokens ?? inputTokens + outputTokens,
+    input_token_details: Object.keys(inputTokenDetails).length
+      ? inputTokenDetails
+      : undefined,
   };
   return new ChatGenerationChunk({
     text: "",
@@ -215,21 +244,23 @@ export function handleConverseStreamMetadata(
 }
 
 export function bedrockReasoningDeltaToLangchainPartialReasoningBlock(
-  reasoningContent: Bedrock.ReasoningContentBlockDelta
-):
-  | MessageContentReasoningBlockReasoningTextPartial
-  | MessageContentReasoningBlockRedacted {
+  reasoningContent: Bedrock.ReasoningContentBlockDelta,
+  index?: number
+): ContentBlock.Reasoning | MessageContentReasoningBlockRedacted {
   const { text, redactedContent, signature } = reasoningContent;
   if (typeof text === "string") {
     return {
-      type: "reasoning_content",
-      reasoningText: { text },
+      type: "reasoning",
+      reasoning: text,
+      ...(index !== undefined ? { index } : {}),
     };
   }
-  if (signature) {
+  if (typeof signature === "string") {
     return {
-      type: "reasoning_content",
-      reasoningText: { signature },
+      type: "reasoning",
+      reasoning: "",
+      signature,
+      ...(index !== undefined ? { index } : {}),
     };
   }
   if (redactedContent) {
@@ -243,12 +274,15 @@ export function bedrockReasoningDeltaToLangchainPartialReasoningBlock(
 
 export function bedrockReasoningBlockToLangchainReasoningBlock(
   reasoningContent: Bedrock.ReasoningContentBlock
-): MessageContentReasoningBlock {
+): ContentBlock.Reasoning | MessageContentReasoningBlockRedacted {
   const { reasoningText, redactedContent } = reasoningContent;
-  if (reasoningText) {
+  if (reasoningText && typeof reasoningText.text === "string") {
     return {
-      type: "reasoning_content",
-      reasoningText: reasoningText as Required<Bedrock.ReasoningTextBlock>,
+      type: "reasoning",
+      reasoning: reasoningText.text,
+      ...(typeof reasoningText.signature === "string"
+        ? { signature: reasoningText.signature }
+        : {}),
     };
   }
 

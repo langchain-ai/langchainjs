@@ -6,6 +6,7 @@ import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { AIMessageChunk, type BaseMessage } from "@langchain/core/messages";
 import { ChatGenerationChunk, type ChatResult } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
+import { resolveLangSmithGatewayConfig } from "@langchain/core/utils/gateway";
 import {
   BaseChatModel,
   BaseChatModelCallOptions,
@@ -31,12 +32,10 @@ import { AnthropicToolsOutputParser } from "./output_parsers.js";
 import {
   ANTHROPIC_TOOL_BETAS,
   AnthropicToolExtrasSchema,
+  getTopLevelSchemaCompositionKeys,
   handleToolChoice,
 } from "./utils/tools.js";
-import {
-  _convertMessagesToAnthropicPayload,
-  applyCacheControlToPayload,
-} from "./utils/message_inputs.js";
+import { _convertMessagesToAnthropicPayload } from "./utils/message_inputs.js";
 import {
   getSamplingParams,
   getTaskBudgetBetas,
@@ -75,6 +74,8 @@ import {
   createFunctionCallingParser,
 } from "@langchain/core/language_models/structured_output";
 
+const MCP_CREDENTIALS_REDACTED = "**REDACTED**";
+
 // Default max output tokens per model family (prefix-matched).
 // These are sensible defaults for the `max_tokens` API parameter when
 // the user does not explicitly set `maxTokens`. Values are based on the
@@ -86,6 +87,13 @@ import {
 const MODEL_DEFAULT_MAX_OUTPUT_TOKENS: Partial<
   Record<Anthropic.Model, number>
 > = {
+  // Claude 5 — 128K max output
+  "claude-opus-5": 16384,
+  "claude-sonnet-5": 16384,
+  "claude-fable-5-1": 16384,
+  "claude-fable-5": 16384,
+  "claude-mythos-5": 16384,
+  "claude-mythos-preview": 16384,
   // Claude 4.7 — 128K max output
   "claude-opus-4-7": 16384,
   // Claude 4.6 — 128K max output
@@ -176,17 +184,29 @@ export interface ChatAnthropicCallOptions
    */
   inferenceGeo?: string;
   /**
-   * Cache control configuration for prompt caching.
-   * When provided, applies cache_control to the last content block of the
-   * last message, enabling Anthropic's prompt caching feature.
-   *
-   * This is the recommended way to enable prompt caching as it applies
-   * cache_control at the final message formatting layer, avoiding issues
-   * with message content block manipulation during earlier processing stages.
+   * Cache control configuration for prompt caching. When provided, the value
+   * is forwarded to the Anthropic API as a top-level `cache_control` parameter,
+   * which automatically applies a cache breakpoint to the last cacheable block
+   * in the request and advances it as the conversation grows. This is ideal
+   * for multi-turn conversations and removes the need to place `cache_control`
+   * on individual content blocks manually.
    *
    * @see https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
    */
   cache_control?: AnthropicCacheControl;
+
+  /**
+   * If `true`, model output is guaranteed to exactly match the JSON Schema
+   * provided in the tool definition. If `true`, the input schema will also be
+   * validated according to
+   * https://platform.claude.com/docs/en/agents-and-tools/tool-use/strict-tool-use.
+   *
+   * If `false`, input schema will not be validated and model output will not
+   * be validated.
+   *
+   * If `undefined`, `strict` argument will not be passed to the model.
+   */
+  strict?: boolean;
 }
 
 function _toolsInParams(
@@ -1001,6 +1021,14 @@ export class ChatAnthropicMessages<
 
   thinking: AnthropicThinkingConfigParam = { type: "disabled" };
 
+  /**
+   * Whether `thinking` was explicitly configured by the user. When it was not,
+   * the default `{ type: "disabled" }` is kept off the request so that models
+   * which reject an explicit disabled value (e.g. adaptive-only models) are not
+   * sent an unsupported parameter.
+   */
+  protected thinkingExplicitlySet = false;
+
   contextManagement?: AnthropicContextManagementConfigParam;
 
   outputConfig?: AnthropicOutputConfig;
@@ -1040,9 +1068,19 @@ export class ChatAnthropicMessages<
     super(fields ?? {});
     this._addVersion("@langchain/anthropic", __PKG_VERSION__);
 
+    const gatewayConfig = resolveLangSmithGatewayConfig({
+      baseURL:
+        fields.anthropicApiUrl ??
+        fields.clientOptions?.baseURL ??
+        (getEnvironmentVariable("ANTHROPIC_API_URL") ||
+          getEnvironmentVariable("ANTHROPIC_BASE_URL") ||
+          undefined),
+      providerPath: "anthropic",
+    });
     this.anthropicApiKey =
-      fields?.apiKey ??
-      fields?.anthropicApiKey ??
+      fields.apiKey ??
+      fields.anthropicApiKey ??
+      gatewayConfig.apiKey ??
       getEnvironmentVariable("ANTHROPIC_API_KEY");
 
     if (!this.anthropicApiKey && !fields?.createClient) {
@@ -1053,7 +1091,7 @@ export class ChatAnthropicMessages<
     this.apiKey = this.anthropicApiKey;
 
     // Support overriding the default API URL (i.e., https://api.anthropic.com)
-    this.apiUrl = fields?.anthropicApiUrl;
+    this.apiUrl = gatewayConfig.baseURL;
 
     /** Keep modelName for backwards compatibility */
     this.modelName = fields?.model ?? fields?.modelName ?? this.model;
@@ -1072,7 +1110,10 @@ export class ChatAnthropicMessages<
     this.streaming = fields?.streaming ?? false;
     this.streamUsage = fields?.streamUsage ?? this.streamUsage;
 
-    this.thinking = fields?.thinking ?? this.thinking;
+    if (fields?.thinking !== undefined) {
+      this.thinking = fields.thinking;
+      this.thinkingExplicitlySet = true;
+    }
     this.contextManagement =
       fields?.contextManagement ?? this.contextManagement;
     this.outputConfig = fields?.outputConfig ?? this.outputConfig;
@@ -1100,15 +1141,17 @@ export class ChatAnthropicMessages<
    * Formats LangChain StructuredTools to AnthropicTools.
    *
    * @param {ChatAnthropicCallOptions["tools"]} tools The tools to format
+   * @param fields Optional `strict` flag applied to every formatted custom tool.
    * @returns {AnthropicTool[] | undefined} The formatted tools, or undefined if none are passed.
    */
   formatStructuredToolToAnthropic(
-    tools: ChatAnthropicCallOptions["tools"]
+    tools: ChatAnthropicCallOptions["tools"],
+    fields?: { strict?: boolean }
   ): Anthropic.Messages.ToolUnion[] | undefined {
     if (!tools) {
       return undefined;
     }
-    return tools.map((tool) => {
+    const formattedTools = tools.map((tool) => {
       if (isLangChainTool(tool) && tool.extras?.providerToolDefinition) {
         return tool.extras
           .providerToolDefinition as Anthropic.Messages.ToolUnion;
@@ -1117,24 +1160,44 @@ export class ChatAnthropicMessages<
         return tool;
       }
       if (isAnthropicTool(tool)) {
+        if (fields?.strict !== undefined) {
+          return {
+            ...tool,
+            strict: fields.strict,
+          };
+        }
         return tool;
       }
       if (isOpenAITool(tool)) {
+        // LangChain's OpenAI tool type doesn't surface the optional `strict`
+        // flag that the OpenAI API itself supports on function definitions,
+        // so we read it through a runtime check rather than a type assertion.
+        const functionStrict =
+          "strict" in tool.function && typeof tool.function.strict === "boolean"
+            ? tool.function.strict
+            : undefined;
+        const strict = fields?.strict ?? functionStrict;
         return {
           name: tool.function.name,
           description: tool.function.description,
           input_schema: tool.function
             .parameters as Anthropic.Messages.Tool.InputSchema,
+          ...(strict !== undefined ? { strict } : {}),
         };
       }
       if (isLangChainTool(tool)) {
+        const { strict: extrasStrict, ...restExtras } = tool.extras
+          ? AnthropicToolExtrasSchema.parse(tool.extras)
+          : {};
+        const strict = fields?.strict ?? extrasStrict;
         return {
           name: tool.name,
           description: tool.description,
           input_schema: (isInteropZodSchema(tool.schema)
             ? toJsonSchema(tool.schema)
             : tool.schema) as Anthropic.Messages.Tool.InputSchema,
-          ...(tool.extras ? AnthropicToolExtrasSchema.parse(tool.extras) : {}),
+          ...restExtras,
+          ...(strict !== undefined ? { strict } : {}),
         };
       }
       throw new Error(
@@ -1145,6 +1208,17 @@ export class ChatAnthropicMessages<
         )}`
       );
     });
+
+    return formattedTools.filter((tool) => {
+      if (!isAnthropicTool(tool)) {
+        return true;
+      }
+      const compositionKeys = getTopLevelSchemaCompositionKeys(tool);
+      if (compositionKeys.length === 0) {
+        return true;
+      }
+      return false;
+    });
   }
 
   override bindTools(
@@ -1152,7 +1226,9 @@ export class ChatAnthropicMessages<
     kwargs?: Partial<CallOptions>
   ): Runnable<BaseLanguageModelInput, AIMessageChunk, CallOptions> {
     return this.withConfig({
-      tools: this.formatStructuredToolToAnthropic(tools),
+      tools: this.formatStructuredToolToAnthropic(tools, {
+        strict: kwargs?.strict,
+      }),
       ...kwargs,
     } as Partial<CallOptions>);
   }
@@ -1204,14 +1280,31 @@ export class ChatAnthropicMessages<
       : [];
     const taskBudgetBetas = getTaskBudgetBetas(this.model, mergedOutputConfig);
 
+    const tools = this.formatStructuredToolToAnthropic(options?.tools, {
+      strict: options?.strict,
+    });
+    if (
+      tool_choice?.type === "tool" &&
+      !tools?.some((tool) => "name" in tool && tool.name === tool_choice.name)
+    ) {
+      throw new Error(
+        `Anthropic tool_choice references "${tool_choice.name}", but that tool is not available.`
+      );
+    }
+    if (tool_choice?.type === "any" && (!tools || tools.length === 0)) {
+      throw new Error(
+        "Anthropic tool_choice requires at least one available tool."
+      );
+    }
+
     const output: AnthropicInvocationParams = {
       model: this.model,
       stop_sequences: options?.stop ?? this.stopSequences,
       stream: this.streaming,
       max_tokens: this.maxTokens,
-      tools: this.formatStructuredToolToAnthropic(options?.tools),
+      tools,
       tool_choice,
-      thinking: this.thinking,
+      thinking: this.thinkingExplicitlySet ? this.thinking : undefined,
       context_management: this.contextManagement,
       ...this.invocationKwargs,
       container: options?.container,
@@ -1225,11 +1318,14 @@ export class ChatAnthropicMessages<
       output_config: mergedOutputConfig,
       inference_geo: options?.inferenceGeo ?? this.inferenceGeo,
       mcp_servers: options?.mcp_servers,
+      cache_control: options?.cache_control,
     };
 
     validateInvocationParamCompatibility({
       model: this.model,
-      thinking: this.thinking,
+      thinking: output.thinking ?? this.thinking,
+      thinkingExplicitlySet: output.thinking !== undefined,
+      outputConfig: mergedOutputConfig,
       topK: this.topK,
       topP: this.topP,
       temperature: this.temperature,
@@ -1247,6 +1343,48 @@ export class ChatAnthropicMessages<
     );
 
     return output;
+  }
+
+  protected override _getInvocationParamsForTracing(
+    options?: this["ParsedCallOptions"]
+  ): ReturnType<this["invocationParams"]> {
+    const params = this.invocationParams(options);
+    if (!Array.isArray(params.mcp_servers)) {
+      return params;
+    }
+    return {
+      ...params,
+      mcp_servers: params.mcp_servers.map((server) => {
+        if (!("authorization_token" in server)) {
+          return server;
+        }
+        return {
+          ...server,
+          authorization_token: MCP_CREDENTIALS_REDACTED,
+        };
+      }),
+    };
+  }
+
+  protected override _getCallOptionsForTracing(
+    options: this["ParsedCallOptions"],
+    _invocationParams: ReturnType<this["invocationParams"]>
+  ): this["ParsedCallOptions"] {
+    if (!Array.isArray(options.mcp_servers)) {
+      return options;
+    }
+    return {
+      ...options,
+      mcp_servers: options.mcp_servers.map((server) => {
+        if (!("authorization_token" in server)) {
+          return server;
+        }
+        return {
+          ...server,
+          authorization_token: MCP_CREDENTIALS_REDACTED,
+        };
+      }),
+    };
   }
 
   /** @ignore */
@@ -1273,17 +1411,7 @@ export class ChatAnthropicMessages<
     runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatGenerationChunk> {
     const params = this.invocationParams(options);
-    let formattedMessages = _convertMessagesToAnthropicPayload(messages);
-
-    // Apply cache_control to the last message's last content block if specified
-    // This is the recommended approach for prompt caching - applying at the final
-    // formatting layer rather than modifying message content blocks earlier
-    if (options.cache_control) {
-      formattedMessages = applyCacheControlToPayload(
-        formattedMessages,
-        options.cache_control
-      );
-    }
+    const formattedMessages = _convertMessagesToAnthropicPayload(messages);
 
     const payload = {
       ...params,
@@ -1299,6 +1427,7 @@ export class ChatAnthropicMessages<
     const stream = await this.createStreamWithRetry(payload, {
       headers: options.headers,
       signal: options.signal,
+      maxRetries: options.maxRetries,
     });
 
     for await (const data of stream) {
@@ -1360,14 +1489,7 @@ export class ChatAnthropicMessages<
     _runManager?: CallbackManagerForLLMRun
   ): AsyncGenerator<ChatModelStreamEvent> {
     const params = this.invocationParams(options);
-    let formattedMessages = _convertMessagesToAnthropicPayload(messages);
-
-    if (options.cache_control) {
-      formattedMessages = applyCacheControlToPayload(
-        formattedMessages,
-        options.cache_control
-      );
-    }
+    const formattedMessages = _convertMessagesToAnthropicPayload(messages);
 
     const payload = {
       ...params,
@@ -1378,6 +1500,7 @@ export class ChatAnthropicMessages<
     const stream = await this.createStreamWithRetry(payload, {
       headers: options.headers,
       signal: options.signal,
+      maxRetries: options.maxRetries,
     });
 
     const shouldStreamUsage = this.streamUsage ?? options.streamUsage;
@@ -1411,20 +1534,9 @@ export class ChatAnthropicMessages<
       "messages"
     > &
       Kwargs,
-    requestOptions: AnthropicRequestOptions,
-    cacheControl?: { type: "ephemeral"; ttl?: "5m" | "1h" }
+    requestOptions: AnthropicRequestOptions
   ) {
-    let formattedMessages = _convertMessagesToAnthropicPayload(messages);
-
-    // Apply cache_control to the last message's last content block if specified
-    // This is the recommended approach for prompt caching - applying at the final
-    // formatting layer rather than modifying message content blocks earlier
-    if (cacheControl) {
-      formattedMessages = applyCacheControlToPayload(
-        formattedMessages,
-        cacheControl
-      );
-    }
+    const formattedMessages = _convertMessagesToAnthropicPayload(messages);
 
     const response = await this.completionWithRetry(
       {
@@ -1481,15 +1593,11 @@ export class ChatAnthropicMessages<
         ],
       };
     } else {
-      return this._generateNonStreaming(
-        messages,
-        params,
-        {
-          signal: options.signal,
-          headers: options.headers,
-        },
-        options.cache_control
-      );
+      return this._generateNonStreaming(messages, params, {
+        signal: options.signal,
+        headers: options.headers,
+        maxRetries: options.maxRetries,
+      });
     }
   }
 
@@ -1543,7 +1651,10 @@ export class ChatAnthropicMessages<
         throw error;
       }
     };
-    return this.caller.call(makeCompletionRequest);
+    return this.caller.callWithOptions(
+      { maxRetries: options?.maxRetries },
+      makeCompletionRequest
+    );
   }
 
   /** @ignore */
@@ -1589,7 +1700,7 @@ export class ChatAnthropicMessages<
       }
     };
     return this.caller.callWithOptions(
-      { signal: options.signal ?? undefined },
+      { signal: options.signal ?? undefined, maxRetries: options.maxRetries },
       makeCompletionRequest
     );
   }
@@ -1667,6 +1778,12 @@ export class ChatAnthropicMessages<
       schema: outputSchema,
     };
     let method = config?.method ?? "functionCalling";
+
+    if (config?.strict !== undefined && method !== "functionCalling") {
+      throw new Error(
+        `Argument \`strict\` is only supported for \`method\` = "functionCalling" on Anthropic models. Got method = "${method}".`
+      );
+    }
 
     if (method === "jsonMode") {
       console.warn(
@@ -1748,6 +1865,7 @@ export class ChatAnthropicMessages<
             kwargs: { method: "functionCalling" },
             schema: toJsonSchema(schema),
           },
+          ...(config?.strict !== undefined ? { strict: config.strict } : {}),
         } as Partial<CallOptions>);
 
         const raiseIfNoToolCalls = (message: AIMessageChunk) => {
@@ -1770,6 +1888,7 @@ export class ChatAnthropicMessages<
             kwargs: { method: "functionCalling" },
             schema: toJsonSchema(schema),
           },
+          ...(config?.strict !== undefined ? { strict: config.strict } : {}),
         } as Partial<CallOptions>);
       }
     } else {

@@ -2,6 +2,23 @@ import type { Anthropic } from "@anthropic-ai/sdk";
 import * as z from "zod/v4";
 import { AnthropicToolChoice } from "../types.js";
 
+const TOP_LEVEL_SCHEMA_COMPOSITION_KEYS = ["oneOf", "anyOf", "allOf"] as const;
+
+/**
+ * Returns root-level JSON Schema composition keys that Anthropic rejects for
+ * custom tool input schemas. Nested composition keys remain supported.
+ */
+export function getTopLevelSchemaCompositionKeys(
+  tool: Anthropic.Messages.Tool
+): string[] {
+  if (typeof tool.input_schema !== "object" || tool.input_schema === null) {
+    return [];
+  }
+  return TOP_LEVEL_SCHEMA_COMPOSITION_KEYS.filter((key) =>
+    Object.prototype.hasOwnProperty.call(tool.input_schema, key)
+  );
+}
+
 export function handleToolChoice(
   toolChoice?: AnthropicToolChoice
 ):
@@ -43,6 +60,7 @@ export const AnthropicToolExtrasSchema = z.object({
   defer_loading: z.boolean().optional(),
   input_examples: z.array(z.unknown()).optional(),
   allowed_callers: z.array(z.unknown()).optional(),
+  strict: z.boolean().optional(),
 });
 
 /**

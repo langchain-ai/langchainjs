@@ -10,8 +10,7 @@ import type {
   ContentBlockDelta,
   FinishReason,
 } from "@langchain/core/language_models/event";
-import type { ContentBlock } from "@langchain/core/messages/content";
-import type { UsageMetadata } from "@langchain/core/messages/metadata";
+import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
 import type { AnthropicMessageStreamEvent } from "../types.js";
 
 // ─── Public API ─────────────────────────────────────────────────
@@ -37,6 +36,7 @@ export async function* convertAnthropicStream(
     Record<string, any>
   >();
   let usageSnapshot: UsageMetadata | undefined;
+  let responseMetadata: Record<string, unknown> = {};
   let stopReason: string | null = null;
 
   for await (const data of source) {
@@ -63,6 +63,14 @@ export async function* convertAnthropicStream(
 
       case "message_delta": {
         stopReason = data.delta.stop_reason;
+        // Some gateway providers add additional usage values to the final usage object
+        if (
+          "usage" in data &&
+          "cost" in data.usage &&
+          typeof data.usage.cost === "number"
+        ) {
+          responseMetadata = { usage: { cost: data.usage.cost } };
+        }
         if (shouldStreamUsage && data.usage) {
           if (!usageSnapshot) {
             usageSnapshot = {
@@ -103,6 +111,7 @@ export async function* convertAnthropicStream(
           reason: mapStopReason(stopReason),
           ...(usageSnapshot ? { usage: usageSnapshot } : {}),
           metadata: { model_provider: "anthropic" },
+          responseMetadata,
         };
         break;
       }

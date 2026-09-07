@@ -975,3 +975,30 @@ describe("toolRetryMiddleware", () => {
     });
   });
 });
+
+describe("calculateRetryDelay retryAfterMs floor", () => {
+  const config = {
+    backoffFactor: 2.0,
+    initialDelayMs: 100,
+    maxDelayMs: 60000,
+    jitter: false,
+  };
+
+  it("raises the delay to the hint when the hint is larger", () => {
+    expect(calculateRetryDelay(config, 0, 5000)).toBe(5000);
+  });
+
+  it("keeps the backoff when it already exceeds the hint", () => {
+    expect(calculateRetryDelay(config, 0, 50)).toBe(100);
+  });
+
+  it("ignores maxDelayMs for the hint", () => {
+    expect(calculateRetryDelay({ ...config, maxDelayMs: 200 }, 0, 9000)).toBe(
+      9000
+    );
+  });
+
+  it("is unchanged when no hint is given", () => {
+    expect(calculateRetryDelay(config, 0)).toBe(100);
+  });
+});

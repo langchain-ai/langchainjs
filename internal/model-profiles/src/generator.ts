@@ -249,7 +249,13 @@ async function loadOxfmtConfig(): Promise<FormatConfig | undefined> {
     const configPath = path.join(monorepoRoot, filename);
     try {
       const raw = await fs.promises.readFile(configPath, "utf-8");
-      const parsed = JSON.parse(raw) as Record<string, unknown>;
+      const { config, error } = ts.parseConfigFileTextToJson(configPath, raw);
+      if (error) {
+        throw new Error(
+          ts.flattenDiagnosticMessageText(error.messageText, "\n")
+        );
+      }
+      const parsed = config as Record<string, unknown>;
       if ("$schema" in parsed) {
         delete parsed.$schema;
       }

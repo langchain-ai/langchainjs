@@ -27,7 +27,7 @@ const prompt = PromptTemplate.fromTemplate(template);
  * in the examples folder.
  */
 const datasourceConfig = {
-  type: "sqlite",
+  type: "better-sqlite3",
   database: "data/Chinook.db",
 } as const;
 

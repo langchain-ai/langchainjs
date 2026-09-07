@@ -11,6 +11,25 @@ describe("BedrockEmbeddings", () => {
     },
   };
 
+  it("configures bearer auth from constructor token", async () => {
+    const embeddings = new BedrockEmbeddings({
+      ...baseConstructorArgs,
+      bedrockBearerToken: "test-bearer-token",
+    });
+    const clientConfig = embeddings.client.config as {
+      authSchemePreference?: () => Promise<string[]>;
+      token?: () => Promise<{ token: string }>;
+    };
+
+    expect(embeddings.bedrockBearerToken).toBe("test-bearer-token");
+    await expect(clientConfig.authSchemePreference?.()).resolves.toEqual([
+      "httpBearerAuth",
+    ]);
+    await expect(clientConfig.token?.()).resolves.toEqual({
+      token: "test-bearer-token",
+    });
+  });
+
   describe("Nova embedding model support", () => {
     it("should use messages format for Nova embedding models", async () => {
       const mockSend = vi.fn().mockResolvedValue({

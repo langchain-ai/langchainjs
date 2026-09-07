@@ -27,6 +27,7 @@ import {
 } from "@langchain/core/runnables";
 import { REMOVE_ALL_MESSAGES } from "@langchain/langgraph";
 import { createMiddleware } from "../middleware.js";
+import { INTERNAL_CALL_TAG } from "./constants.js";
 import { countTokensApproximately } from "./utils.js";
 import { hasToolCalls } from "../utils.js";
 import { initChatModel } from "../../chat_models/universal.js";
@@ -452,9 +453,10 @@ export function summarizationMiddleware(
         runtime
       );
 
+      // Reuse a replaced message's id so the summary projects as an update, not a new message.
       const summaryMessage = new HumanMessage({
         content: `${summaryPrefix}\n\n${summary}`,
-        id: uuid(),
+        id: conversationMessages[0].id,
         additional_kwargs: { lc_source: "summarization" },
       });
 
@@ -948,6 +950,7 @@ async function createSummary(
     const baseConfig: RunnableConfig = pickRunnableConfigKeys(runtime) ?? {};
     const config = mergeConfigs(baseConfig, {
       metadata: { lc_source: "summarization" },
+      tags: [INTERNAL_CALL_TAG],
     });
     const response = await model.invoke(formattedPrompt, config);
     const content = response.content;

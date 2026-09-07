@@ -1,17 +1,21 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { generateModelProfiles } from "../generator.js";
 import type { ProviderMap } from "../api-schema.js";
 import { findMonorepoRoot } from "../config.js";
 
-// Mock oxfmt
-vi.mock("oxfmt", () => ({
-  format: vi.fn(async (_fileName: string, code: string) => ({
+const formatMock = vi.hoisted(() =>
+  vi.fn(async (_fileName: string, code: string) => ({
     code,
     errors: [],
-  })),
+  }))
+);
+
+vi.mock("oxfmt", () => ({
+  format: formatMock,
 }));
+
+const { generateModelProfiles } = await import("../generator.js");
 
 /**
  * Helper function to create a mock model for testing.

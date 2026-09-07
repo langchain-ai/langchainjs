@@ -1155,6 +1155,32 @@ describe("createAgent", () => {
       expect(configuredAgent.options.systemPrompt).toBe(systemPrompt);
     });
 
+    it("should propagate withConfig defaults to the compiled graph", () => {
+      const model = new FakeToolCallingModel();
+      const agent = createAgent({
+        model,
+        tools: [],
+      }).withConfig({ recursionLimit: 1000, tags: ["test"] });
+
+      expect(agent.graph.config?.recursionLimit).toBe(1000);
+      expect(agent.graph.config?.tags).toContain("test");
+    });
+
+    it("should apply built-in default metadata to the compiled graph", () => {
+      const model = new FakeToolCallingModel();
+      const agent = createAgent({
+        model,
+        tools: [],
+        name: "weather-agent",
+      });
+
+      expect(agent.graph.config?.metadata?.ls_integration).toBe(
+        "langchain_create_agent"
+      );
+      expect(agent.graph.config?.metadata?.lc_agent_name).toBe("weather-agent");
+      expect(agent.graph.config?.configurable?.ls_agent_type).toBe("root");
+    });
+
     it("should propagate configurable values to tools", async () => {
       // This test verifies that config values set via withConfig()
       // are actually propagated to the graph and accessible in tools

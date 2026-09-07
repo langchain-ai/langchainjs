@@ -1,6 +1,9 @@
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { UsageMetadata, type BaseMessage } from "@langchain/core/messages";
+import { type BaseMessage } from "@langchain/core/messages";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
+import { convertGoogleGeminiStream } from "./utils/stream_events.js";
+import { JsonStream } from "./utils/stream.js";
 
 import {
   BaseChatModel,
@@ -43,7 +46,6 @@ import {
 import { AbstractGoogleLLMConnection } from "./connection.js";
 import { DefaultGeminiSafetyHandler, getGeminiAPI } from "./utils/gemini.js";
 import { ApiKeyGoogleAuth, GoogleAbstractedClient } from "./auth.js";
-import { JsonStream } from "./utils/stream.js";
 import { ensureParams } from "./utils/failed_handler.js";
 import type {
   GoogleBaseLLMInput,
@@ -370,6 +372,37 @@ export abstract class ChatGoogleBase<AuthOptions>
     return ret;
   }
 
+  async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    const parameters = this.invocationParams(options);
+    const response = await this.streamedConnection.request(
+      messages,
+      parameters,
+      options,
+      _runManager
+    );
+    const stream = response.data as JsonStream;
+    const shouldStreamUsage =
+      this.streamUsage !== false && options.streamUsage !== false;
+    async function* geminiChunks(jsonStream: JsonStream, signal?: AbortSignal) {
+      while (!jsonStream.streamDone) {
+        if (signal?.aborted) {
+          return;
+        }
+        const output = await jsonStream.nextChunk();
+        if (output !== null) {
+          yield output;
+        }
+      }
+    }
+    yield* convertGoogleGeminiStream(geminiChunks(stream, options.signal), {
+      streamUsage: shouldStreamUsage,
+    });
+  }
+
   async *_streamResponseChunks(
     _messages: BaseMessage[],
     options: this["ParsedCallOptions"],
@@ -386,7 +419,8 @@ export abstract class ChatGoogleBase<AuthOptions>
 
     // Get the streaming parser of the response
     const stream = response.data as JsonStream;
-    let usageMetadata: UsageMetadata | undefined;
+    const shouldStreamUsage =
+      this.streamUsage !== false && options.streamUsage !== false;
     // Loop until the end of the stream
     // During the loop, yield each time we get a chunk from the streaming parser
     // that is either available or added to the queue
@@ -401,18 +435,7 @@ export abstract class ChatGoogleBase<AuthOptions>
           output,
         }
       );
-      if (
-        output &&
-        output.usageMetadata &&
-        this.streamUsage !== false &&
-        options.streamUsage !== false
-      ) {
-        usageMetadata = {
-          input_tokens: output.usageMetadata.promptTokenCount,
-          output_tokens: output.usageMetadata.candidatesTokenCount,
-          total_tokens: output.usageMetadata.totalTokenCount,
-        };
-      }
+
       const chunk =
         output !== null
           ? this.connection.api.responseToChatGeneration({ data: output })
@@ -421,9 +444,16 @@ export abstract class ChatGoogleBase<AuthOptions>
               generationInfo: { finishReason: "stop" },
               message: new AIMessageChunk({
                 content: "",
-                usage_metadata: usageMetadata,
               }),
             });
+
+      if (shouldStreamUsage && chunk) {
+        chunk.message = new AIMessageChunk({
+          ...chunk.message,
+          usage_metadata: chunk.generationInfo?.usage_metadata,
+        });
+      }
+
       if (chunk) {
         yield chunk;
         await runManager?.handleLLMNewToken(

@@ -66,6 +66,84 @@ describe("AIMessage", () => {
     ]);
   });
 
+  it("should preserve contentBlocks when output version is v1", () => {
+    const message = new AIMessage({
+      contentBlocks: [{ type: "text", text: "Hi there!" }],
+      response_metadata: {
+        output_version: "v1",
+      },
+    });
+
+    expect(message.content).toEqual([{ type: "text", text: "Hi there!" }]);
+    expect(message.contentBlocks).toEqual([
+      { type: "text", text: "Hi there!" },
+    ]);
+  });
+
+  it("should coerce string content to text blocks when output version is v1", () => {
+    const message = new AIMessage({
+      content: "Hi there!",
+      response_metadata: {
+        output_version: "v1",
+      },
+    });
+
+    expect(message.content).toEqual([{ type: "text", text: "Hi there!" }]);
+    expect(message.contentBlocks).toEqual([
+      { type: "text", text: "Hi there!" },
+    ]);
+  });
+
+  it("should coerce string content and merge tool_calls when output version is v1", () => {
+    const message = new AIMessage({
+      content: "Hi there!",
+      tool_calls: [
+        {
+          id: "123",
+          name: "get_weather",
+          args: {
+            location: "San Francisco",
+          },
+        },
+      ],
+      response_metadata: {
+        output_version: "v1",
+      },
+    });
+
+    expect(message.content).toEqual([
+      { type: "text", text: "Hi there!" },
+      {
+        type: "tool_call",
+        id: "123",
+        name: "get_weather",
+        args: {
+          location: "San Francisco",
+        },
+      },
+    ]);
+    expect(message.contentBlocks).toEqual([
+      { type: "text", text: "Hi there!" },
+      {
+        type: "tool_call",
+        id: "123",
+        name: "get_weather",
+        args: {
+          location: "San Francisco",
+        },
+      },
+    ]);
+    expect(message.tool_calls).toEqual([
+      {
+        id: "123",
+        name: "get_weather",
+        args: {
+          location: "San Francisco",
+        },
+      },
+    ]);
+  });
+
   describe(".contentBlocks", () => {
     it("should have tool call content blocks from .tool_calls", () => {
       const message = new AIMessage({

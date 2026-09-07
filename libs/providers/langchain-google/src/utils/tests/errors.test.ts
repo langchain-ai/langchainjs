@@ -1,5 +1,16 @@
 import { describe, expect, test } from "vitest";
-import { AuthError, RequestError } from "../errors.js";
+import { getRetryable } from "@langchain/core/errors";
+import {
+  AuthError,
+  ConfigurationError,
+  InvalidInputError,
+  InvalidToolError,
+  MalformedOutputError,
+  NoCandidatesError,
+  PromptBlockedError,
+  RequestError,
+  ToolCallNotFoundError,
+} from "../errors.js";
 
 describe("RequestError.fromResponse", () => {
   test("parses JSON error bodies from text/event-stream responses", async () => {
@@ -67,5 +78,85 @@ describe("AuthError.fromResponse", () => {
     expect(error.data).toEqual({
       error_description: "Service account token exchange failed",
     });
+  });
+});
+
+describe("retryability classification", () => {
+  test.each([408, 429, 500, 502, 503, 504])(
+    "marks RequestError %i retryable",
+    (statusCode) => {
+      const error = new RequestError({
+        message: "boom",
+        url: "https://example.com",
+        statusCode,
+      });
+
+      expect(error.isRetryable()).toBe(true);
+      expect(getRetryable(error)).toBe(true);
+    }
+  );
+
+  test.each([400, 401, 403, 404, 413])(
+    "marks RequestError %i non-retryable",
+    (statusCode) => {
+      const error = new RequestError({
+        message: "boom",
+        url: "https://example.com",
+        statusCode,
+      });
+
+      expect(error.isRetryable()).toBe(false);
+      expect(getRetryable(error)).toBe(false);
+    }
+  );
+
+  test("marks a statusless RequestError non-retryable", () => {
+    const error = new RequestError({
+      message: "boom",
+      url: "https://example.com",
+    });
+
+    expect(getRetryable(error)).toBe(false);
+  });
+
+  test("marks AuthError from a bad credential non-retryable", () => {
+    expect(
+      getRetryable(new AuthError({ message: "bad key", statusCode: 401 }))
+    ).toBe(false);
+  });
+
+  test("marks AuthError from a transient auth failure retryable", () => {
+    expect(
+      getRetryable(new AuthError({ message: "auth down", statusCode: 503 }))
+    ).toBe(true);
+  });
+
+  test("marks deterministic Google errors non-retryable", () => {
+    expect(getRetryable(new ConfigurationError("bad config"))).toBe(false);
+    expect(getRetryable(new InvalidInputError("bad input"))).toBe(false);
+    expect(getRetryable(new InvalidToolError({ nope: true }))).toBe(false);
+    expect(getRetryable(new ToolCallNotFoundError("call_1"))).toBe(false);
+    expect(
+      getRetryable(new PromptBlockedError({ blockReason: "SAFETY" }))
+    ).toBe(false);
+  });
+
+  test("leaves ambiguous Google errors unclassified", () => {
+    expect(getRetryable(new NoCandidatesError())).toBeUndefined();
+    expect(
+      getRetryable(new MalformedOutputError({ message: "bad json" }))
+    ).toBeUndefined();
+  });
+
+  test("preserves the error class when marking", () => {
+    const error = new RequestError({
+      message: "boom",
+      url: "https://example.com",
+      statusCode: 429,
+    });
+
+    expect(RequestError.isInstance(error)).toBe(true);
+    expect(error).toBeInstanceOf(Error);
+    expect(Object.keys(error)).not.toContain("isRetryable");
   });
 });

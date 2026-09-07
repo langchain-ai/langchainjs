@@ -42,6 +42,9 @@ export interface RunnableWithMessageHistoryInputs<
  * Wraps a LCEL chain and manages history. It appends input messages
  * and chain outputs as history, and adds the current history messages to
  * the chain input.
+ *
+ * @deprecated Use LangGraph's built-in persistence instead.
+ *
  * @example
  * ```typescript
  * // pnpm install @langchain/anthropic @langchain/classic

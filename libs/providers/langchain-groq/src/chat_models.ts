@@ -1,6 +1,8 @@
 import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
+import { convertOpenAICompletionsStream } from "@langchain/core/language_models/openai_completions_stream";
 import {
   BaseChatModel,
   BaseChatModelCallOptions,
@@ -1179,6 +1181,34 @@ export class ChatGroq extends BaseChatModel<
       tools: tools.map((tool) => convertToOpenAITool(tool)),
       ...kwargs,
     });
+  }
+
+  override async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    const params = this.invocationParams(options, { streaming: true });
+    const messagesMapped = convertMessagesToGroqParams(messages);
+    const response = await this.completionWithRetry(
+      { ...params, messages: messagesMapped, stream: true },
+      { signal: options?.signal, headers: options?.headers }
+    );
+    const abortableStream = async function* (
+      source: AsyncIterable<ChatCompletionsAPI.ChatCompletionChunk>,
+      signal?: AbortSignal
+    ) {
+      for await (const data of source) {
+        if (signal?.aborted) {
+          return;
+        }
+        yield data;
+      }
+    };
+    yield* convertOpenAICompletionsStream(
+      abortableStream(response, options.signal),
+      { streamUsage: true, provider: "groq" }
+    );
   }
 
   override async *_streamResponseChunks(

@@ -9,7 +9,7 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 
 const db = await SqlDatabase.fromOptionsParams({
   appDataSourceOptions: {
-    type: "sqlite",
+    type: "better-sqlite3",
     database: "Chinook.db",
   },
 });

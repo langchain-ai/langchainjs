@@ -831,7 +831,8 @@ describe("reasoning summaries", () => {
       aiMessage = await llm.invoke(prompt);
     }
 
-    expect(aiMessage.id).toMatch(/^msg_[a-f0-9]+$/);
+    expect(aiMessage.id).toMatch(/^resp_[a-f0-9]+$/);
+    expect(aiMessage.id).toBe(aiMessage.response_metadata.id);
 
     // Check the final aggregated message
     const reasoning = aiMessage?.additional_kwargs
@@ -866,6 +867,34 @@ describe("reasoning summaries", () => {
     expect(secondResult).toBeInstanceOf(AIMessage);
     expect(secondResult.content).toBeTruthy();
   };
+
+  test("streams encrypted reasoning for ZDR replay", async () => {
+    const prompt = "What is 3 to the power of 3?";
+    const llm = new ChatOpenAI({
+      model: "o4-mini",
+      reasoning: {
+        effort: "low",
+        summary: "auto",
+      },
+      zdrEnabled: true,
+      maxRetries: 0,
+    });
+
+    const aiMessage = await concatStream(llm.stream(prompt));
+    const reasoning = aiMessage.additional_kwargs
+      .reasoning as ChatOpenAIReasoningSummary;
+
+    expect(reasoning.encrypted_content).toEqual(expect.any(String));
+    expect(reasoning.encrypted_content).not.toHaveLength(0);
+
+    const replay = await llm.invoke([
+      new HumanMessage(prompt),
+      aiMessage,
+      new HumanMessage("What number did I ask you to calculate?"),
+    ]);
+    expect(replay).toBeInstanceOf(AIMessage);
+    expect(replay.content).toBeTruthy();
+  });
 
   test.each(["stream", "invoke"])(
     "normal responses API usage (Zero Data Retention disabled), %s",

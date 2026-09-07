@@ -2,10 +2,12 @@ import {
   SystemMessage,
   HumanMessage,
   AIMessage,
+  AIMessageChunk,
   ToolMessage,
   BaseMessage,
   BaseMessageChunk,
 } from "@langchain/core/messages";
+import type { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { concat } from "@langchain/core/utils/stream";
 import {
   ConversationRole as BedrockConversationRole,
@@ -245,6 +247,133 @@ describe("convertToConverseMessages", () => {
           },
           {
             text: "Answer the user's questions using your own knowledge or provided tool.",
+          },
+        ],
+      },
+    },
+    {
+      name: "prompt caching with cache point ttl",
+      input: [
+        new SystemMessage({
+          content: [
+            { type: "text", text: "You're an advanced AI assistant." },
+            {
+              type: "cache_point",
+              cachePoint: {
+                type: "default",
+                ttl: "1h",
+              },
+            },
+          ],
+        }),
+        new HumanMessage({
+          content: [
+            {
+              type: "text",
+              text: "Summarize this long policy.",
+            },
+            {
+              type: "cache_point",
+              cachePoint: {
+                type: "default",
+                ttl: "1h",
+              },
+            },
+          ],
+        }),
+        new AIMessage({
+          content: [
+            {
+              type: "text",
+              text: "Here is a concise summary.",
+            },
+            {
+              type: "cache_point",
+              cachePoint: {
+                type: "default",
+                ttl: "5m",
+              },
+            },
+          ],
+        }),
+        new ToolMessage({
+          content: [
+            {
+              type: "text",
+              text: "long tool result...",
+            },
+            {
+              type: "cache_point",
+              cachePoint: {
+                type: "default",
+                ttl: "1h",
+              },
+            },
+          ],
+          tool_call_id: "long_policy_tool",
+        }),
+      ],
+      output: {
+        converseMessages: [
+          {
+            role: BedrockConversationRole.USER,
+            content: [
+              {
+                text: "Summarize this long policy.",
+              },
+              {
+                cachePoint: {
+                  type: "default",
+                  ttl: "1h",
+                },
+              },
+            ],
+          },
+          {
+            role: BedrockConversationRole.ASSISTANT,
+            content: [
+              {
+                text: "Here is a concise summary.",
+              },
+              {
+                cachePoint: {
+                  type: "default",
+                  ttl: "5m",
+                },
+              },
+            ],
+          },
+          {
+            role: BedrockConversationRole.USER,
+            content: [
+              {
+                toolResult: {
+                  toolUseId: "long_policy_tool",
+                  content: [
+                    {
+                      text: "long tool result...",
+                    },
+                  ],
+                },
+              },
+              {
+                cachePoint: {
+                  type: "default",
+                  ttl: "1h",
+                },
+              },
+            ],
+          },
+        ],
+        converseSystem: [
+          {
+            text: "You're an advanced AI assistant.",
+          },
+          {
+            cachePoint: {
+              type: "default",
+              ttl: "1h",
+            },
           },
         ],
       },
@@ -584,6 +713,225 @@ describe("convertToConverseMessages", () => {
   );
 });
 
+describe("reasoning content replay", () => {
+  it("omits signature-only standard reasoning and preserves tool use", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          {
+            type: "reasoning",
+            reasoning: "",
+            signature: "opaque-signature",
+            index: 0,
+          },
+        ],
+        tool_calls: [
+          {
+            id: "tool-call-1",
+            name: "get_weather",
+            args: { location: "San Francisco" },
+          },
+        ],
+      }),
+      new ToolMessage({
+        tool_call_id: "tool-call-1",
+        content: "72°F and sunny",
+      }),
+    ]);
+
+    expect(result.converseMessages).toEqual([
+      {
+        role: "assistant",
+        content: [
+          {
+            toolUse: {
+              toolUseId: "tool-call-1",
+              name: "get_weather",
+              input: { location: "San Francisco" },
+            },
+          },
+        ],
+      },
+      {
+        role: "user",
+        content: [
+          {
+            toolResult: {
+              toolUseId: "tool-call-1",
+              content: [{ text: "72°F and sunny" }],
+            },
+          },
+        ],
+      },
+    ]);
+  });
+
+  it("replays standard reasoning without an output version", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          {
+            type: "reasoning",
+            reasoning: "Reasoning summary",
+            signature: "opaque-signature",
+          },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      {
+        reasoningContent: {
+          reasoningText: {
+            text: "Reasoning summary",
+            signature: "opaque-signature",
+          },
+        },
+      },
+    ]);
+  });
+
+  it("preserves redacted provider reasoning", () => {
+    const redactedContent = Buffer.from("redacted-reasoning");
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          {
+            type: "reasoning_content",
+            redactedContent: redactedContent.toString("base64"),
+          },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      {
+        reasoningContent: {
+          redactedContent,
+        },
+      },
+    ]);
+  });
+
+  it("combines streamed redacted reasoning bytes before replay", () => {
+    const firstFragment = Buffer.from("a");
+    const secondFragment = Buffer.from("bc");
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          {
+            type: "reasoning_content",
+            redactedContent: firstFragment.toString("base64"),
+          },
+          {
+            type: "reasoning_content",
+            redactedContent: secondFragment.toString("base64"),
+          },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      {
+        reasoningContent: {
+          redactedContent: Buffer.concat([firstFragment, secondFragment]),
+        },
+      },
+    ]);
+  });
+
+  it("replays legacy provider-native reasoning", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          {
+            type: "reasoning_content",
+            reasoningText: {
+              text: "Reasoning summary",
+              signature: "opaque-signature",
+            },
+          },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      {
+        reasoningContent: {
+          reasoningText: {
+            text: "Reasoning summary",
+            signature: "opaque-signature",
+          },
+        },
+      },
+    ]);
+  });
+
+  it("unwraps legacy redacted Bedrock reasoning from standard content", () => {
+    const redactedContent = Buffer.from("redacted-reasoning");
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          {
+            type: "non_standard",
+            value: {
+              reasoningContent: {
+                redactedContent,
+              },
+            },
+          },
+        ],
+        response_metadata: {
+          output_version: "v1",
+          model_provider: "bedrock-converse",
+        },
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      {
+        reasoningContent: {
+          redactedContent,
+        },
+      },
+    ]);
+  });
+
+  it("unwraps complete legacy Bedrock reasoning from standard content", () => {
+    const result = convertToConverseMessages([
+      new AIMessage({
+        content: [
+          {
+            type: "non_standard",
+            value: {
+              type: "reasoning_content",
+              reasoningText: {
+                text: "Reasoning summary",
+                signature: "opaque-signature",
+              },
+            },
+          },
+        ],
+        response_metadata: {
+          output_version: "v1",
+          model_provider: "bedrock-converse",
+        },
+      }),
+    ]);
+
+    expect(result.converseMessages[0].content).toEqual([
+      {
+        reasoningContent: {
+          reasoningText: {
+            text: "Reasoning summary",
+            signature: "opaque-signature",
+          },
+        },
+      },
+    ]);
+  });
+});
+
 test("Streaming supports empty string chunks", async () => {
   const contentBlocks = [
     {
@@ -621,6 +969,265 @@ test("Streaming supports empty string chunks", async () => {
   expect(finalChunk).toBeDefined();
   if (!finalChunk) return;
   expect(finalChunk.content).toBe("Hello world!");
+});
+
+test("Streaming throws when Bedrock stream stalls between chunks", async () => {
+  vi.useFakeTimers();
+  try {
+    let aborted = false;
+    const mockSend = vi
+      .fn()
+      .mockImplementation(
+        (_command: unknown, options?: { abortSignal?: AbortSignal }) => {
+          options?.abortSignal?.addEventListener("abort", () => {
+            aborted = true;
+          });
+          return Promise.resolve({
+            stream: (async function* () {
+              await new Promise<never>(() => {});
+              yield {};
+            })(),
+          });
+        }
+      );
+
+    const mockClient = {
+      send: mockSend,
+    } as unknown as BedrockRuntimeClient;
+
+    const model = new ChatBedrockConverse({
+      region: "us-east-1",
+      credentials: {
+        secretAccessKey: "test-secret-key",
+        accessKeyId: "test-access-key",
+      },
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
+      client: mockClient,
+      streamIdleTimeout: 50,
+    });
+
+    const consume = (async () => {
+      for await (const chunk of model._streamResponseChunks(
+        [new HumanMessage("Hello")],
+        {}
+      )) {
+        expect(chunk).toBeDefined();
+      }
+    })();
+
+    const expectation = expect(consume).rejects.toThrow(
+      "Bedrock Converse timed out after 50 ms while waiting for the next chunk."
+    );
+
+    await vi.advanceTimersByTimeAsync(50);
+    await expectation;
+    await expect(consume).rejects.toHaveProperty(
+      "lc_error_code",
+      "MODEL_STREAM_TIMEOUT"
+    );
+    expect(aborted).toBe(true);
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+test("Streaming throws when Bedrock never responds to the initial request", async () => {
+  vi.useFakeTimers();
+  try {
+    let aborted = false;
+    const mockSend = vi
+      .fn()
+      .mockImplementation(
+        (_command: unknown, options?: { abortSignal?: AbortSignal }) => {
+          options?.abortSignal?.addEventListener("abort", () => {
+            aborted = true;
+          });
+          return new Promise<never>(() => {});
+        }
+      );
+
+    const mockClient = {
+      send: mockSend,
+    } as unknown as BedrockRuntimeClient;
+
+    const model = new ChatBedrockConverse({
+      region: "us-east-1",
+      credentials: {
+        secretAccessKey: "test-secret-key",
+        accessKeyId: "test-access-key",
+      },
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
+      client: mockClient,
+      streamIdleTimeout: 50,
+    });
+
+    const consume = (async () => {
+      for await (const chunk of model._streamResponseChunks(
+        [new HumanMessage("Hello")],
+        {}
+      )) {
+        expect(chunk).toBeDefined();
+      }
+    })();
+
+    const expectation = expect(consume).rejects.toThrow(
+      "Bedrock Converse timed out after 50 ms while waiting for the initial response."
+    );
+
+    await vi.advanceTimersByTimeAsync(50);
+    await expectation;
+    await expect(consume).rejects.toHaveProperty(
+      "lc_error_code",
+      "MODEL_STREAM_TIMEOUT"
+    );
+    expect(aborted).toBe(true);
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+test("Streaming resets idle timeout after each Bedrock stream chunk", async () => {
+  vi.useFakeTimers();
+  try {
+    const mockSend = vi.fn().mockResolvedValue({
+      stream: (async function* () {
+        await new Promise((resolve) => setTimeout(resolve, 25));
+        yield {
+          contentBlockDelta: {
+            contentBlockIndex: 0,
+            delta: {
+              text: "Hel",
+            },
+          },
+        };
+        await new Promise((resolve) => setTimeout(resolve, 25));
+        yield {
+          contentBlockDelta: {
+            contentBlockIndex: 0,
+            delta: {
+              text: "lo",
+            },
+          },
+        };
+      })(),
+    });
+
+    const mockClient = {
+      send: mockSend,
+    } as unknown as BedrockRuntimeClient;
+
+    const model = new ChatBedrockConverse({
+      region: "us-east-1",
+      credentials: {
+        secretAccessKey: "test-secret-key",
+        accessKeyId: "test-access-key",
+      },
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
+      client: mockClient,
+      streamIdleTimeout: 50,
+    });
+
+    const consume = (async () => {
+      const chunks = [];
+      for await (const chunk of model._streamResponseChunks(
+        [new HumanMessage("Hello")],
+        {}
+      )) {
+        chunks.push(chunk);
+      }
+      return chunks;
+    })();
+
+    await vi.advanceTimersByTimeAsync(25);
+    await vi.advanceTimersByTimeAsync(25);
+
+    const chunks = await consume;
+    expect(chunks.map((chunk) => chunk.text).join("")).toBe("Hello");
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+test("Streaming emits tool call start chunks via handleLLMNewToken", async () => {
+  const mockSend = vi.fn().mockResolvedValue({
+    stream: (async function* () {
+      yield {
+        contentBlockStart: {
+          contentBlockIndex: 0,
+          start: {
+            toolUse: {
+              name: "get_weather",
+              toolUseId: "tooluse_123",
+            },
+          },
+        },
+      };
+      yield {
+        contentBlockDelta: {
+          contentBlockIndex: 0,
+          delta: {
+            toolUse: {
+              input: '{"location":"London"}',
+            },
+          },
+        },
+      };
+    })(),
+  });
+
+  const mockClient = {
+    send: mockSend,
+  } as unknown as BedrockRuntimeClient;
+
+  const model = new ChatBedrockConverse({
+    region: "us-east-1",
+    credentials: {
+      secretAccessKey: "test-secret-key",
+      accessKeyId: "test-access-key",
+    },
+    model: "anthropic.claude-haiku-4-5-20251001-v1:0",
+    client: mockClient,
+  });
+
+  const handleLLMNewToken = vi.fn();
+  const runManager = {
+    handleLLMNewToken,
+  } as unknown as CallbackManagerForLLMRun;
+
+  const chunks = [];
+  for await (const chunk of model._streamResponseChunks(
+    [new HumanMessage("Get the weather for London")],
+    {},
+    runManager
+  )) {
+    chunks.push(chunk);
+  }
+
+  expect(chunks).toHaveLength(2);
+  expect(handleLLMNewToken).toHaveBeenCalledTimes(2);
+
+  const firstCallbackFields = handleLLMNewToken.mock.calls[0][5] as {
+    chunk: { message: AIMessageChunk };
+  };
+  expect(firstCallbackFields.chunk.message.tool_call_chunks).toEqual([
+    {
+      id: "tooluse_123",
+      index: 0,
+      name: "get_weather",
+      type: "tool_call_chunk",
+    },
+  ]);
+
+  const secondCallbackFields = handleLLMNewToken.mock.calls[1][5] as {
+    chunk: { message: AIMessageChunk };
+  };
+  expect(secondCallbackFields.chunk.message.tool_call_chunks).toEqual([
+    {
+      args: '{"location":"London"}',
+      index: 0,
+      type: "tool_call_chunk",
+    },
+  ]);
 });
 
 describe("video content block conversion", () => {
@@ -1668,6 +2275,10 @@ describe("bedrockApiKey / bedrockApiSecret credentials", () => {
     expect(model.lc_secrets).toHaveProperty(
       "bedrockApiSessionToken",
       "BEDROCK_AWS_SESSION_TOKEN"
+    );
+    expect(model.lc_secrets).toHaveProperty(
+      "bedrockBearerToken",
+      "AWS_BEARER_TOKEN_BEDROCK"
     );
   });
 });

@@ -8,7 +8,15 @@ This package contains the LangChain.js integrations for Ollama via the `ollama` 
 npm install @langchain/ollama @langchain/core
 ```
 
-TODO: add setup instructions for Ollama locally
+## Setup
+
+To use this package, you need to have Ollama running locally:
+
+1. Download and install Ollama from [ollama.com](https://ollama.com/)
+2. Pull a model: `ollama pull llama3`
+3. Ensure the Ollama server is running (it starts automatically after installation)
+
+By default, the package connects to `http://localhost:11434`. You can customize this by setting the `baseUrl` option when instantiating the model.
 
 ## Chat Models
 

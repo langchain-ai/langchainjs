@@ -1,3 +1,4 @@
+/* oxlint-disable @typescript-eslint/no-explicit-any */
 // Default generic "any" values are for backwards compatibility.
 // Replace with "string" when we are comfortable with a breaking change.
 
@@ -81,10 +82,12 @@ type ExtractTemplateParamsRecursive<
   : Result;
 
 export type ParamsFromFString<T extends string> = {
-  [Key in
-    | ExtractTemplateParamsRecursive<T>[number]
-    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-    | (string & Record<never, never>)]: any;
+  [
+    Key in
+      | ExtractTemplateParamsRecursive<T>[number]
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      | (string & Record<never, never>)
+  ]: any;
 };
 
 export type ExtractedFStringParams<
@@ -183,7 +186,7 @@ export class PromptTemplate<
   /**
    * Take examples in list format with prefix and suffix to create a prompt.
    *
-   * Intended to be used a a way to dynamically create a prompt from examples.
+   * Intended to be used as a way to dynamically create a prompt from examples.
    *
    * @param examples - List of examples to use in the prompt.
    * @param suffix - String to go after the list of examples. Should generally set up the user's input.

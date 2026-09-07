@@ -6,6 +6,8 @@ import type {
   ToolDefinition,
 } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
+import { convertBedrockConverseStream } from "./utils/stream_events.js";
 import {
   type BaseChatModelParams,
   BaseChatModel,
@@ -43,6 +45,7 @@ import {
   ChatBedrockConverseToolType,
   ConverseCommandParams,
   CredentialType,
+  BedrockPromptCacheControl,
 } from "./types.js";
 import {
   BedrockConverseToolChoice,
@@ -50,7 +53,10 @@ import {
   convertToConverseTools,
   supportedToolChoiceValuesForModel,
 } from "./utils/tools.js";
-import { convertToConverseMessages } from "./utils/message_inputs.js";
+import {
+  applyCachePointsToConversePayload,
+  convertToConverseMessages,
+} from "./utils/message_inputs.js";
 import {
   convertConverseMessageToLangChainMessage,
   handleConverseStreamContentBlockDelta,
@@ -58,6 +64,18 @@ import {
   handleConverseStreamMetadata,
 } from "./utils/message_outputs.js";
 import { normalizeBedrockError } from "./utils/errors.js";
+import {
+  DEFAULT_STREAM_IDLE_TIMEOUT,
+  createLinkedAbortController,
+  resolveStreamIdleTimeout,
+  withRequestIdleTimeout,
+  withStreamIdleTimeout,
+} from "./utils/stream_timeout.js";
+import {
+  AWS_BEARER_TOKEN_BEDROCK,
+  createBedrockBearerTokenClientConfig,
+  resolveBedrockBearerToken,
+} from "./utils/bedrock_auth.js";
 import {
   isSerializableSchema,
   SerializableSchema,
@@ -103,6 +121,12 @@ export interface ChatBedrockConverseInput
    * `BEDROCK_AWS_SESSION_TOKEN` environment variable.
    */
   bedrockApiSessionToken?: string;
+
+  /**
+   * Bedrock API key for bearer-token authentication. Falls back to the
+   * `AWS_BEARER_TOKEN_BEDROCK` environment variable.
+   */
+  bedrockBearerToken?: string;
 
   /**
    * Whether or not to stream responses
@@ -183,6 +207,13 @@ export interface ChatBedrockConverseInput
   streamUsage?: boolean;
 
   /**
+   * Milliseconds to wait for the first or next Bedrock Converse stream chunk.
+   * Set to 0 to disable the idle timeout.
+   * @default 60000
+   */
+  streamIdleTimeout?: number;
+
+  /**
    * Configuration information for a guardrail that you want to use in the request.
    */
   guardrailConfig?: GuardrailConfiguration;
@@ -235,6 +266,7 @@ export interface ChatBedrockConverseCallOptions
       ChatBedrockConverseInput,
       | "additionalModelRequestFields"
       | "streamUsage"
+      | "streamIdleTimeout"
       | "guardrailConfig"
       | "performanceConfig"
       | "serviceTier"
@@ -262,6 +294,15 @@ export interface ChatBedrockConverseCallOptions
    * Key-value pairs that you can use to filter invocation logs.
    */
   requestMetadata?: ConverseRequest["requestMetadata"];
+
+  /**
+   * Prompt cache-control settings.
+   *
+   * When provided, cache points are applied at request-build time for
+   * Bedrock Converse payloads (system, last message, and tools where
+   * applicable), matching Python ChatBedrockConverse behavior.
+   */
+  cache_control?: BedrockPromptCacheControl;
 }
 
 /**
@@ -715,6 +756,7 @@ export class ChatBedrockConverse
       bedrockApiKey: "BEDROCK_AWS_ACCESS_KEY_ID",
       bedrockApiSecret: "BEDROCK_AWS_SECRET_ACCESS_KEY",
       bedrockApiSessionToken: "BEDROCK_AWS_SESSION_TOKEN",
+      bedrockBearerToken: AWS_BEARER_TOKEN_BEDROCK,
     };
   }
 
@@ -746,6 +788,8 @@ export class ChatBedrockConverse
 
   streamUsage = true;
 
+  streamIdleTimeout = DEFAULT_STREAM_IDLE_TIMEOUT;
+
   guardrailConfig?: GuardrailConfiguration;
 
   performanceConfig?: PerformanceConfiguration;
@@ -757,6 +801,8 @@ export class ChatBedrockConverse
   bedrockApiSecret?: string;
 
   bedrockApiSessionToken?: string;
+
+  bedrockBearerToken?: string;
 
   client: BedrockRuntimeClient;
 
@@ -806,9 +852,14 @@ export class ChatBedrockConverse
     const bedrockApiSessionToken =
       rest?.bedrockApiSessionToken ??
       getEnvironmentVariable("BEDROCK_AWS_SESSION_TOKEN");
+    const bedrockBearerToken = resolveBedrockBearerToken(
+      rest?.bedrockBearerToken
+    );
 
-    let credentials: CredentialType;
-    if (rest?.credentials) {
+    let credentials: CredentialType | undefined;
+    if (bedrockBearerToken) {
+      credentials = undefined;
+    } else if (rest?.credentials) {
       credentials = rest.credentials;
     } else if (bedrockApiKey && bedrockApiSecret) {
       credentials = {
@@ -843,6 +894,7 @@ export class ChatBedrockConverse
       fields.client ??
       new BedrockRuntimeClient({
         ...fields.clientOptions,
+        ...createBedrockBearerTokenClientConfig(bedrockBearerToken),
         region,
         credentials,
         endpoint: rest.endpointHost
@@ -874,9 +926,11 @@ export class ChatBedrockConverse
     this.bedrockApiKey = bedrockApiKey;
     this.bedrockApiSecret = bedrockApiSecret;
     this.bedrockApiSessionToken = bedrockApiSessionToken;
+    this.bedrockBearerToken = bedrockBearerToken;
     this.topP = rest?.topP;
     this.additionalModelRequestFields = rest?.additionalModelRequestFields;
     this.streamUsage = rest?.streamUsage ?? this.streamUsage;
+    this.streamIdleTimeout = rest?.streamIdleTimeout ?? this.streamIdleTimeout;
     this.guardrailConfig = rest?.guardrailConfig;
     this.performanceConfig = rest?.performanceConfig;
     this.serviceTier = rest?.serviceTier;
@@ -1013,6 +1067,13 @@ export class ChatBedrockConverse
       const { converseMessages, converseSystem } =
         convertToConverseMessages(messages);
       const params = this.invocationParams(options);
+      applyCachePointsToConversePayload({
+        cacheControl: options.cache_control,
+        system: converseSystem,
+        messages: converseMessages,
+        params,
+        modelId: this.applicationInferenceProfile ?? this.model,
+      });
 
       const command = new ConverseCommand({
         modelId: this.applicationInferenceProfile ?? this.model,
@@ -1048,15 +1109,22 @@ export class ChatBedrockConverse
     }
   }
 
-  async *_streamResponseChunks(
+  async *_streamChatModelEvents(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
-    runManager?: CallbackManagerForLLMRun
-  ): AsyncGenerator<ChatGenerationChunk> {
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
     try {
       const { converseMessages, converseSystem } =
         convertToConverseMessages(messages);
       const params = this.invocationParams(options);
+      applyCachePointsToConversePayload({
+        cacheControl: options.cache_control,
+        system: converseSystem,
+        messages: converseMessages,
+        params,
+        modelId: this.applicationInferenceProfile ?? this.model,
+      });
       let { streamUsage } = this;
       if (options.streamUsage !== undefined) {
         streamUsage = options.streamUsage;
@@ -1070,47 +1138,152 @@ export class ChatBedrockConverse
         requestMetadata: options.requestMetadata,
         ...params,
       });
-      const response = await this.client.send(command, {
-        abortSignal: options.signal,
-      });
-      if (response.stream) {
-        for await (const chunk of response.stream) {
-          if (options.signal?.aborted) {
-            return;
+      const { abortController, cleanup } = createLinkedAbortController(
+        options.signal
+      );
+      try {
+        const streamIdleTimeout = resolveStreamIdleTimeout(
+          options.streamIdleTimeout ?? this.streamIdleTimeout
+        );
+        const response = await withRequestIdleTimeout(
+          this.client.send(command, {
+            abortSignal: abortController.signal,
+          }),
+          streamIdleTimeout,
+          abortController
+        );
+        if (!response.stream) {
+          return;
+        }
+        const abortableStream = async function* <T>(
+          source: AsyncIterable<T>,
+          signal?: AbortSignal
+        ) {
+          for await (const chunk of source) {
+            if (signal?.aborted) {
+              return;
+            }
+            yield chunk;
           }
-          if (chunk.contentBlockStart) {
-            yield handleConverseStreamContentBlockStart(
-              chunk.contentBlockStart
-            );
-          } else if (chunk.contentBlockDelta) {
-            const textChatGeneration = handleConverseStreamContentBlockDelta(
-              chunk.contentBlockDelta
-            );
-            yield textChatGeneration;
-            await runManager?.handleLLMNewToken(
-              textChatGeneration.text,
-              undefined,
-              undefined,
-              undefined,
-              undefined,
-              {
-                chunk: textChatGeneration,
-              }
-            );
-          } else if (chunk.metadata) {
-            yield handleConverseStreamMetadata(chunk.metadata, {
-              streamUsage,
-            });
-          } else {
-            yield new ChatGenerationChunk({
-              text: "",
-              message: new AIMessageChunk({
-                content: "",
-                response_metadata: { ...chunk },
-              }),
-            });
+        };
+        yield* convertBedrockConverseStream(
+          abortableStream(
+            withStreamIdleTimeout(
+              response.stream,
+              streamIdleTimeout,
+              abortController
+            ),
+            abortController.signal
+          ),
+          { streamUsage: streamUsage ?? true }
+        );
+      } finally {
+        cleanup();
+      }
+    } catch (error) {
+      throw normalizeBedrockError(error);
+    }
+  }
+
+  async *_streamResponseChunks(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatGenerationChunk> {
+    try {
+      const { converseMessages, converseSystem } =
+        convertToConverseMessages(messages);
+      const params = this.invocationParams(options);
+      applyCachePointsToConversePayload({
+        cacheControl: options.cache_control,
+        system: converseSystem,
+        messages: converseMessages,
+        params,
+        modelId: this.applicationInferenceProfile ?? this.model,
+      });
+      let { streamUsage } = this;
+      if (options.streamUsage !== undefined) {
+        streamUsage = options.streamUsage;
+      }
+      const command = new ConverseStreamCommand({
+        modelId: this.applicationInferenceProfile ?? this.model,
+        messages: converseMessages,
+        ...(Array.isArray(converseSystem) && converseSystem.length > 0
+          ? { system: converseSystem }
+          : {}),
+        requestMetadata: options.requestMetadata,
+        ...params,
+      });
+      const { abortController, cleanup } = createLinkedAbortController(
+        options.signal
+      );
+      try {
+        const streamIdleTimeout = resolveStreamIdleTimeout(
+          options.streamIdleTimeout ?? this.streamIdleTimeout
+        );
+        const response = await withRequestIdleTimeout(
+          this.client.send(command, {
+            abortSignal: abortController.signal,
+          }),
+          streamIdleTimeout,
+          abortController
+        );
+        if (response.stream) {
+          for await (const chunk of withStreamIdleTimeout(
+            response.stream,
+            streamIdleTimeout,
+            abortController
+          )) {
+            if (abortController.signal.aborted) {
+              return;
+            }
+            if (chunk.contentBlockStart) {
+              const toolCallStartChunk = handleConverseStreamContentBlockStart(
+                chunk.contentBlockStart
+              );
+              yield toolCallStartChunk;
+              await runManager?.handleLLMNewToken(
+                toolCallStartChunk.text,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                {
+                  chunk: toolCallStartChunk,
+                }
+              );
+            } else if (chunk.contentBlockDelta) {
+              const textChatGeneration = handleConverseStreamContentBlockDelta(
+                chunk.contentBlockDelta
+              );
+              yield textChatGeneration;
+              await runManager?.handleLLMNewToken(
+                textChatGeneration.text,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                {
+                  chunk: textChatGeneration,
+                }
+              );
+            } else if (chunk.metadata) {
+              yield handleConverseStreamMetadata(chunk.metadata, {
+                streamUsage,
+              });
+            } else {
+              yield new ChatGenerationChunk({
+                text: "",
+                message: new AIMessageChunk({
+                  content: "",
+                  response_metadata: { ...chunk },
+                }),
+              });
+            }
           }
         }
+      } finally {
+        cleanup();
       }
     } catch (error) {
       throw normalizeBedrockError(error);

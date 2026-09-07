@@ -30,6 +30,11 @@ interface FakeModelCall {
   options: any;
 }
 
+interface FakeModelState {
+  callIndex: number;
+  calls: FakeModelCall[];
+}
+
 function deriveContent(messages: BaseMessage[]): string {
   return messages
     .map((m) => m.text)
@@ -60,9 +65,7 @@ export class FakeBuiltModel extends BaseChatModel {
 
   private _tools: (StructuredTool | ToolSpec)[] = [];
 
-  private _callIndex = 0;
-
-  private _calls: FakeModelCall[] = [];
+  private _state: FakeModelState = { callIndex: 0, calls: [] };
 
   /**
    * All invocations recorded by this model, in order.
@@ -70,14 +73,14 @@ export class FakeBuiltModel extends BaseChatModel {
    * passed to `invoke()`.
    */
   get calls(): FakeModelCall[] {
-    return this._calls;
+    return this._state.calls;
   }
 
   /**
    * The number of times this model has been invoked.
    */
   get callCount(): number {
-    return this._calls.length;
+    return this._state.calls.length;
   }
 
   constructor() {
@@ -165,8 +168,7 @@ export class FakeBuiltModel extends BaseChatModel {
     next._alwaysThrowError = this._alwaysThrowError;
     next._structuredResponseValue = this._structuredResponseValue;
     next._tools = merged;
-    next._calls = this._calls;
-    next._callIndex = this._callIndex;
+    next._state = this._state;
 
     return next.withConfig({} as BaseChatModelCallOptions);
   }
@@ -203,10 +205,10 @@ export class FakeBuiltModel extends BaseChatModel {
     options?: this["ParsedCallOptions"],
     _runManager?: CallbackManagerForLLMRun
   ): Promise<ChatResult> {
-    this._calls.push({ messages: [...messages], options });
+    this._state.calls.push({ messages: [...messages], options });
 
-    const currentCallIndex = this._callIndex;
-    this._callIndex += 1;
+    const currentCallIndex = this._state.callIndex;
+    this._state.callIndex += 1;
 
     if (this._alwaysThrowError) {
       throw this._alwaysThrowError;

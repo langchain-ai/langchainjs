@@ -17,6 +17,8 @@ import {
   StructuredOutputMethodOptions,
 } from "@langchain/core/language_models/base";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
+import { convertWatsonxStream } from "../utils/stream_events.js";
 import {
   BaseChatModel,
   BindToolsInput,
@@ -83,6 +85,7 @@ import {
   _convertToolCallIdToMistralCompatible,
   authenticateAndSetGatewayInstance,
   authenticateAndSetInstance,
+  checkRequiredProps,
   checkValidProps,
   expectOneOf,
   WatsonxToolsOutputParser,
@@ -171,6 +174,13 @@ type ChatWatsonxToolType =
   | BindToolsInput
   | TextChatParameterTools
   | ChatsRequestTool;
+
+/** Error object returned in streaming responses (not in SDK type definitions). */
+type WatsonxStreamApiError = {
+  code: string;
+  message: string;
+  more_info?: string;
+};
 
 function _convertToolToWatsonxTool(
   tools: ChatWatsonxToolType[]
@@ -417,7 +427,7 @@ function _convertToolChoiceToWatsonxToolChoice(
   } else if ("type" in toolChoice) return { toolChoice };
   else
     throw new Error(
-      `Unrecognized tool_choice type. Expected string or TextChatParameterTools. Recieved ${toolChoice}`
+      `Unrecognized tool_choice type. Expected string or TextChatParameterTools. Received ${toolChoice}`
     );
 }
 
@@ -657,6 +667,14 @@ export class ChatWatsonx<
     this.projectId = fields?.projectId;
     this.modelGateway = fields.modelGateway || this.modelGateway;
     this.spaceId = fields?.spaceId;
+
+    if (this.modelGateway) {
+      checkRequiredProps(fields, ["model", "serviceUrl", "version"]);
+    } else if (this.idOrName) {
+      checkRequiredProps(fields, ["serviceUrl", "version"]);
+    } else {
+      checkRequiredProps(fields, ["model", "serviceUrl", "version"]);
+    }
 
     this.checkValidProperties(fields);
 
@@ -989,6 +1007,77 @@ export class ChatWatsonx<
     }
   }
 
+  async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    const params = this.invocationParams(options);
+    const scopeId = this.scopeId(options);
+    const watsonxMessages = _convertMessagesToWatsonxMessages(
+      messages,
+      this.model
+    );
+    const watsonxCallbacks = this.invocationCallbacks(options);
+    const { signal } = options;
+    const callback = () => {
+      if (this.modelGateway) {
+        return this._chatModelGateway(
+          scopeId,
+          params,
+          watsonxMessages,
+          signal,
+          true
+        );
+      }
+      if (this.service) {
+        if ("idOrName" in scopeId)
+          return this.service.deploymentsTextChatStream(
+            {
+              ...scopeId,
+              messages: watsonxMessages,
+              returnObject: true,
+              signal,
+            },
+            watsonxCallbacks
+          );
+        if ("modelId" in scopeId)
+          return this.service.textChatStream(
+            {
+              ...params,
+              ...scopeId,
+              messages: watsonxMessages,
+              returnObject: true,
+              signal,
+            },
+            watsonxCallbacks
+          );
+        throw new Error(
+          "No idOrName or modelId specified. At least one of these needs to be specified in basic mode"
+        );
+      }
+      throw new Error(
+        "No service or gateway set. Please check your intsance init"
+      );
+    };
+    const stream = await this.completionWithRetry(callback, options);
+    const abortableStream = async function* (
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      source: AsyncIterable<{ data: Record<string, any> }>,
+      sig?: AbortSignal
+    ) {
+      for await (const chunk of source) {
+        if (sig?.aborted) {
+          return;
+        }
+        yield chunk;
+      }
+    };
+    yield* convertWatsonxStream(abortableStream(stream, options.signal), {
+      streamUsage: true,
+    });
+  }
+
   async *_streamResponseChunks(
     messages: BaseMessage[],
     options: this["ParsedCallOptions"],
@@ -1051,6 +1140,22 @@ export class ChatWatsonx<
     for await (const chunk of stream) {
       if (chunk?.data?.usage) usage = chunk.data.usage;
       const { data } = chunk;
+      // Check for errors in the response (not in type definitions but can be returned by API)
+      if (
+        "errors" in data &&
+        Array.isArray(data.errors) &&
+        data.errors.length > 0
+      ) {
+        const errorDetails = (data.errors as WatsonxStreamApiError[])
+          .map((err) => `[${err.code}] ${err.message}`)
+          .join("; ");
+        const statusCode = "status_code" in data ? data.status_code : "unknown";
+        const trace =
+          "trace" in data && data.trace ? ` (trace: ${data.trace})` : "";
+        throw new Error(
+          `IBM WatsonX API error (status ${statusCode}): ${errorDetails}${trace}`
+        );
+      }
       const choice = data.choices[0] as TextChatResultChoice &
         Record<"delta", TextChatResultMessage>;
 

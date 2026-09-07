@@ -342,6 +342,7 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
             },
             {
               signal: options.signal,
+              maxRetries: options.maxRetries,
               ...options.options,
             }
           );
@@ -444,8 +445,11 @@ export class OpenAI<CallOptions extends OpenAICallOptions = OpenAICallOptions>
   ): Promise<
     AsyncIterable<OpenAIClient.Completion> | OpenAIClient.Completions.Completion
   > {
-    const requestOptions = this._getClientOptions(options);
-    return this.caller.call(async () => {
+    // The SDK has its own `maxRetries`; take it for our caller instead so
+    // the two retry loops don't multiply.
+    const { maxRetries, ...sdkOptions } = options ?? {};
+    const requestOptions = this._getClientOptions(sdkOptions);
+    return this.caller.callWithOptions({ maxRetries }, async () => {
       try {
         const res = await this.client.completions.create(
           request,
