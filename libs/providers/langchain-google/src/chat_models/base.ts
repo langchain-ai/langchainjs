@@ -578,7 +578,7 @@ export abstract class BaseChatGoogle<
     const body = {
       ...this.invocationParams(options),
       systemInstruction: convertMessagesToGeminiSystemInstruction(messages),
-      contents: convertMessagesToGeminiContents(messages),
+      contents: convertMessagesToGeminiContents(messages, this.platform),
     };
 
     const moduleName = this.constructor.name;
@@ -693,7 +693,7 @@ export abstract class BaseChatGoogle<
     const body = {
       ...this.invocationParams(options),
       systemInstruction: convertMessagesToGeminiSystemInstruction(messages),
-      contents: convertMessagesToGeminiContents(messages),
+      contents: convertMessagesToGeminiContents(messages, this.platform),
     };
 
     const url = await this.buildUrl("streamGenerateContent?alt=sse");
@@ -767,7 +767,7 @@ export abstract class BaseChatGoogle<
     const body = {
       ...this.invocationParams(options),
       systemInstruction: convertMessagesToGeminiSystemInstruction(messages),
-      contents: convertMessagesToGeminiContents(messages),
+      contents: convertMessagesToGeminiContents(messages, this.platform),
     };
 
     const url = await this.buildUrl("streamGenerateContent?alt=sse");

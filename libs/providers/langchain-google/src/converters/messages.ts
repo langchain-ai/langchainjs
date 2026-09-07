@@ -21,7 +21,7 @@ import {
 } from "@langchain/core/messages";
 import { v4 as uuidv4 } from "@langchain/core/utils/uuid";
 import { Converter } from "@langchain/core/utils/format";
-import type { Gemini } from "../chat_models/types.js";
+import type { Gemini, GooglePlatformType } from "../chat_models/types.js";
 import { iife } from "../utils/misc.js";
 import { InvalidInputError, ToolCallNotFoundError } from "../utils/errors.js";
 
@@ -406,6 +406,27 @@ function convertStandardContentBlockToGeminiPart(
 }
 
 /**
+ * Returns `functionCall` without its `id` when targeting Vertex, which rejects
+ * that field even though it populates it on the way out. Copies rather than
+ * mutates: the block is shared with the caller's message history.
+ */
+function stripNativeFunctionCallId<T>(
+  functionCall: T,
+  platformType?: GooglePlatformType
+): T {
+  if (
+    platformType !== "gcp" ||
+    typeof functionCall !== "object" ||
+    functionCall === null ||
+    !("id" in functionCall)
+  ) {
+    return functionCall;
+  }
+  const { id, ...rest } = functionCall as Record<string, unknown>;
+  return rest as T;
+}
+
+/**
  * Converts a single LangChain message with standard content blocks (v1 format) to Gemini Content.
  * This handles messages that have `response_metadata.output_version === "v1"`.
  *
@@ -413,7 +434,8 @@ function convertStandardContentBlockToGeminiPart(
  */
 function convertStandardContentMessageToGeminiContent(
   message: BaseMessage,
-  messages: BaseMessage[]
+  messages: BaseMessage[],
+  platformType?: GooglePlatformType
 ): Gemini.Content | null {
   // Skip system messages - they're handled separately
   if (SystemMessage.isInstance(message)) {
@@ -494,9 +516,17 @@ function convertStandardContentMessageToGeminiContent(
       (tc) => tc.id === message.tool_call_id
     );
     const isGeneratedId = message.tool_call_id.startsWith("lc-tool-call-");
+    // Vertex AI's generateContent endpoint rejects an "id" field on
+    // functionResponse outright (see #10266), even when the id is one
+    // Vertex itself supplied natively rather than a LangChain-generated
+    // one. The Gemini Developer API accepts a native id and needs it to
+    // disambiguate parallel calls to the same tool name, so only omit a
+    // native id for Vertex; a generated id is never sent to either.
     parts.push({
       functionResponse: {
-        ...(isGeneratedId ? {} : { id: message.tool_call_id }),
+        ...(isGeneratedId || platformType === "gcp"
+          ? {}
+          : { id: message.tool_call_id }),
         name: matchedToolCall?.name ?? message.name ?? "unknown",
         response: { result: responseContent },
       },
@@ -525,7 +555,8 @@ function convertStandardContentMessageToGeminiContent(
  */
 function convertLegacyContentMessageToGeminiContent(
   message: BaseMessage,
-  messages: BaseMessage[]
+  messages: BaseMessage[],
+  platformType?: GooglePlatformType
 ): Gemini.Content | null {
   // Skip system messages - they're handled separately
   if (SystemMessage.isInstance(message)) {
@@ -755,9 +786,14 @@ function convertLegacyContentMessageToGeminiContent(
           );
         } else if (item?.type === "functionCall") {
           const { type, functionCall, ...etc } = item;
+          // Vertex rejects a native `id` inside function_call for the same
+          // reason it rejects one on functionResponse (see the comments in
+          // the ToolMessage branches). The stored block is pushed by
+          // reference, so copy rather than delete the key — mutating it
+          // would strip the id from the caller's message history too.
           parts.push({
             ...etc,
-            functionCall,
+            functionCall: stripNativeFunctionCallId(functionCall, platformType),
           } as Gemini.Part.FunctionCall);
         } else if (item?.type === "executableCode") {
           const { type, executableCode, ...etc } = item;
@@ -800,9 +836,15 @@ function convertLegacyContentMessageToGeminiContent(
     const matchedToolCall = aiMsg.tool_calls?.find(
       (tc) => tc.id === message.tool_call_id
     );
+    // See the comment in convertStandardContentMessageToGeminiContent:
+    // Vertex rejects a native functionResponse.id outright; gai relies on
+    // a native id to disambiguate parallel calls to the same tool name. A
+    // generated id is never meaningful to the model, so it's never sent.
     parts.push({
       functionResponse: {
-        ...(isGeneratedId ? {} : { id: message.tool_call_id }),
+        ...(isGeneratedId || platformType === "gcp"
+          ? {}
+          : { id: message.tool_call_id }),
         name: matchedToolCall?.name ?? message.name ?? "unknown",
         response: { result: responseContent },
       },
@@ -861,10 +903,10 @@ function convertLegacyContentMessageToGeminiContent(
  * // ]
  * ```
  */
-export const convertMessagesToGeminiContents: Converter<
-  BaseMessage[],
-  Gemini.GenerateContentRequest["contents"]
-> = (messages) => {
+export const convertMessagesToGeminiContents = (
+  messages: BaseMessage[],
+  platformType?: GooglePlatformType
+): Gemini.GenerateContentRequest["contents"] => {
   const contents: Gemini.Content[] = [];
 
   for (const message of messages) {
@@ -878,11 +920,16 @@ export const convertMessagesToGeminiContents: Converter<
         case "v1":
           return convertStandardContentMessageToGeminiContent(
             message,
-            messages
+            messages,
+            platformType
           );
         case "v0":
         default:
-          return convertLegacyContentMessageToGeminiContent(message, messages);
+          return convertLegacyContentMessageToGeminiContent(
+            message,
+            messages,
+            platformType
+          );
       }
     });
     if (content) {
