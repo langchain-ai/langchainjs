@@ -1,6 +1,9 @@
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import { type BaseMessage } from "@langchain/core/messages";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
+import { convertGoogleGeminiStream } from "./utils/stream_events.js";
+import { JsonStream } from "./utils/stream.js";
 
 import {
   BaseChatModel,
@@ -43,7 +46,6 @@ import {
 import { AbstractGoogleLLMConnection } from "./connection.js";
 import { DefaultGeminiSafetyHandler, getGeminiAPI } from "./utils/gemini.js";
 import { ApiKeyGoogleAuth, GoogleAbstractedClient } from "./auth.js";
-import { JsonStream } from "./utils/stream.js";
 import { ensureParams } from "./utils/failed_handler.js";
 import type {
   GoogleBaseLLMInput,
@@ -368,6 +370,37 @@ export abstract class ChatGoogleBase<AuthOptions>
       await runManager?.handleLLMNewToken(chunk.text || "");
     }
     return ret;
+  }
+
+  async *_streamChatModelEvents(
+    messages: BaseMessage[],
+    options: this["ParsedCallOptions"],
+    _runManager?: CallbackManagerForLLMRun
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    const parameters = this.invocationParams(options);
+    const response = await this.streamedConnection.request(
+      messages,
+      parameters,
+      options,
+      _runManager
+    );
+    const stream = response.data as JsonStream;
+    const shouldStreamUsage =
+      this.streamUsage !== false && options.streamUsage !== false;
+    async function* geminiChunks(jsonStream: JsonStream, signal?: AbortSignal) {
+      while (!jsonStream.streamDone) {
+        if (signal?.aborted) {
+          return;
+        }
+        const output = await jsonStream.nextChunk();
+        if (output !== null) {
+          yield output;
+        }
+      }
+    }
+    yield* convertGoogleGeminiStream(geminiChunks(stream, options.signal), {
+      streamUsage: shouldStreamUsage,
+    });
   }
 
   async *_streamResponseChunks(

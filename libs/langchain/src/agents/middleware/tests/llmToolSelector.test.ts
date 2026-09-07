@@ -13,6 +13,7 @@ import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { FakeListChatModel } from "@langchain/core/utils/testing";
 
 import { llmToolSelectorMiddleware } from "../llmToolSelector.js";
+import { collectV3Messages } from "../../tests/utils.js";
 import { createAgent } from "../../index.js";
 
 function createMockModel(name = "ChatAnthropic", modelType = "anthropic") {
@@ -496,5 +497,31 @@ describe("llmToolSelectorMiddleware – streaming isolation", () => {
       /"content":"[^"]*tools[^"]*","tool_call_chunks":\[\]/.test(serialized);
 
     expect(hasToolSelectorLeak).toBe(false);
+  });
+
+  it("does not leak tool-selector output into run.messages", async () => {
+    const selectorModel = new FakeListChatModel({
+      responses: [JSON.stringify({ tools: ["get_weather"] })],
+    });
+    const MAIN = "The weather in Seoul is sunny and 72°F.";
+    const agentModel = new FakeListChatModel({ responses: [MAIN] });
+
+    const agent = createAgent({
+      model: agentModel,
+      tools: [getWeather, searchDatabase, calculatePrice],
+      middleware: [
+        llmToolSelectorMiddleware({ model: selectorModel, maxTools: 1 }),
+      ],
+    });
+
+    const run = await agent.streamEvents(
+      { messages: [new HumanMessage("What's the weather in Seoul?")] },
+      { version: "v3" }
+    );
+
+    const { texts } = await collectV3Messages(run.messages);
+
+    expect(texts.some((t) => t.includes("tools"))).toBe(false);
+    expect(texts).toContain(MAIN);
   });
 });

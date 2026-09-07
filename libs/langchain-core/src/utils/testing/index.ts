@@ -1,4 +1,12 @@
 export * from "./chat_models.js";
+export * from "./openai_stream_fixtures.js";
+export {
+  streamMatchers,
+  type StreamMatchers,
+  type StreamOutputExpectation,
+  type StreamToolCallExpectation,
+  type StreamUsageExpectation,
+} from "./stream.js";
 export * from "./embeddings.js";
 export * from "./llms.js";
 export * from "./message_history.js";

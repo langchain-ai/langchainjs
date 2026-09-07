@@ -70,6 +70,10 @@ export class SystemMessage<
   static isInstance(obj: unknown): obj is SystemMessage {
     return super.isInstance(obj) && obj.type === "system";
   }
+
+  static [Symbol.hasInstance](obj: unknown) {
+    return this.isInstance(obj);
+  }
 }
 
 /**
@@ -111,6 +115,10 @@ export class SystemMessageChunk<
 
   static isInstance(obj: unknown): obj is SystemMessageChunk {
     return super.isInstance(obj) && obj.type === "system";
+  }
+
+  static [Symbol.hasInstance](obj: unknown) {
+    return this.isInstance(obj);
   }
 }
 

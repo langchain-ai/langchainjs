@@ -60,7 +60,6 @@ jobs:
             exa
             fireworks
             google
-            google-cloud-sql-pg
             google-common
             google-gauth
             google-genai

@@ -10,6 +10,37 @@ import { interrupt } from "@langchain/langgraph";
 import { createMiddleware } from "../middleware.js";
 import type { AgentBuiltInState, Runtime } from "../runtime.js";
 import type { JumpToTarget } from "../constants.js";
+import type { ToolCallRequest } from "./types.js";
+
+const WhenFunctionSchema = z
+  .function()
+  .args(z.custom<ToolCallRequest<AgentBuiltInState>>()) // request
+  .returns(z.union([z.boolean(), z.promise(z.boolean())]));
+
+/**
+ * Predicate controlling whether a given tool call triggers an interrupt.
+ *
+ * Receives a {@link ToolCallRequest} and returns `true` to interrupt or `false`
+ * to auto-approve the tool call.
+ *
+ * The request is constructed with `tool` set to `undefined` and `runtime` set to
+ * the node-level {@link Runtime}, so it reflects the batch (`afterModel`) context
+ * rather than a per-call tool execution.
+ *
+ * @param request - The tool call request being evaluated
+ * @returns `true` to interrupt for the tool call, `false` to auto-approve it.
+ * May also return a promise resolving to a boolean.
+ *
+ * @example
+ * ```typescript
+ * import { type WhenPredicate } from "langchain";
+ *
+ * // Only interrupt delete_file calls targeting /etc
+ * const when: WhenPredicate = (request) =>
+ *   String(request.toolCall.args.path ?? "").startsWith("/etc");
+ * ```
+ */
+export type WhenPredicate = z.infer<typeof WhenFunctionSchema>;
 
 const DescriptionFunctionSchema = z
   .function()
@@ -99,6 +130,28 @@ const InterruptOnConfigSchema = z.object({
    * JSON schema for the arguments associated with the action, if edits are allowed.
    */
   argsSchema: z.record(z.any()).optional(),
+  /**
+   * Optional predicate controlling whether to interrupt for a given tool call.
+   *
+   * Receives a {@link ToolCallRequest} and returns `true` to interrupt or
+   * `false` to auto-approve the tool call.
+   *
+   * The request is constructed with `tool` set to `undefined` and `runtime` set
+   * to the node-level {@link Runtime}, so `request.tool` is not available.
+   *
+   * @example
+   * ```typescript
+   * import type { InterruptOnConfig } from "langchain";
+   *
+   * // Only interrupt delete_file calls targeting /etc
+   * const config: InterruptOnConfig = {
+   *   allowedDecisions: ["approve", "reject"],
+   *   when: (request) =>
+   *     String(request.toolCall.args.path ?? "").startsWith("/etc"),
+   * };
+   * ```
+   */
+  when: WhenFunctionSchema.optional(),
 });
 export type InterruptOnConfig = z.input<typeof InterruptOnConfigSchema>;
 
@@ -313,6 +366,7 @@ export type HumanInTheLoopMiddlewareConfig = InferInteropZodInput<
  * @param options.interruptOn[toolName].allowedDecisions - Array of decision types allowed for this tool (e.g., ["approve", "edit", "reject"])
  * @param options.interruptOn[toolName].description - Custom approval message for the tool. Can be either a static string or a callable that dynamically generates the description based on agent state, runtime, and tool call information
  * @param options.interruptOn[toolName].argsSchema - JSON schema for the arguments associated with the action, if edits are allowed
+ * @param options.interruptOn[toolName].when - Optional predicate that dynamically controls whether a tool call triggers an interrupt. Returns `true` to interrupt or `false` to auto-approve the tool call.
  * @param options.descriptionPrefix - Default prefix for approval messages (default: "Tool execution requires approval"). Only used for tools that do not define a custom `description` in their InterruptOnConfig.
  *
  * @returns A middleware instance that can be passed to `createAgent`
@@ -515,6 +569,30 @@ export function humanInTheLoopMiddleware(
     return { actionRequest, reviewConfig };
   };
 
+  /**
+   * Return `false` if the `when` predicate rejects this tool call, `true` otherwise.
+   *
+   * When no `when` predicate is configured the tool call always interrupts.
+   */
+  const shouldInterrupt = async (
+    toolCall: ToolCall,
+    config: InterruptOnConfig,
+    state: AgentBuiltInState,
+    runtime: Runtime<unknown>
+  ): Promise<boolean> => {
+    const { when } = config;
+    if (when == null) {
+      return true;
+    }
+    const request: ToolCallRequest<AgentBuiltInState> = {
+      toolCall,
+      tool: undefined,
+      state,
+      runtime,
+    };
+    return when(request);
+  };
+
   const processDecision = (
     decision: Decision,
     toolCall: ToolCall,
@@ -651,7 +729,16 @@ export function humanInTheLoopMiddleware(
         const autoApprovedToolCalls: ToolCall[] = [];
 
         for (const toolCall of lastMessage.tool_calls) {
-          if (toolCall.name in resolvedConfigs) {
+          const interruptConfig = resolvedConfigs[toolCall.name];
+          /**
+           * A tool call is interrupted only when it has a resolved config and its
+           * optional `when` predicate doesn't opt it out. Otherwise it is
+           * auto-approved.
+           */
+          if (
+            interruptConfig &&
+            (await shouldInterrupt(toolCall, interruptConfig, state, runtime))
+          ) {
             interruptToolCalls.push(toolCall);
           } else {
             autoApprovedToolCalls.push(toolCall);

@@ -135,6 +135,10 @@ export function createNamespace(path: string): Namespace {
             (obj as Record<symbol, unknown>)[brandSymbol] === true
           );
         }
+
+        static [Symbol.hasInstance](obj: unknown) {
+          return this.isInstance(obj);
+        }
       }
 
       // Inherit the base class's name so "_Branded" doesn't leak

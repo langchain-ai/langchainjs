@@ -111,6 +111,8 @@ export function sleep(ms: number): Promise<void> {
  *
  * @param retryNumber - The retry attempt number (0-indexed)
  * @param config - Configuration for backoff calculation
+ * @param retryAfterMs - A provider-supplied wait hint, e.g. from a `Retry-After`
+ *   header. Used as a floor so we never retry sooner than the server asked.
  * @returns Delay in milliseconds before next retry
  *
  * @internal Exported for testing purposes
@@ -122,7 +124,8 @@ export function calculateRetryDelay(
     maxDelayMs: number;
     jitter: boolean;
   },
-  retryNumber: number
+  retryNumber: number,
+  retryAfterMs?: number
 ): number {
   const { backoffFactor, initialDelayMs, maxDelayMs, jitter } = config;
 
@@ -143,5 +146,15 @@ export function calculateRetryDelay(
     delay = Math.max(0, delay);
   }
 
-  return delay;
+  return Math.max(delay, retryAfterMs ?? 0);
+}
+
+export function getRetryAfterMs(error: unknown): number | undefined {
+  if (typeof error !== "object" || error === null) {
+    return undefined;
+  }
+  const { retryAfterMs } = error as { retryAfterMs?: unknown };
+  return typeof retryAfterMs === "number" && retryAfterMs >= 0
+    ? retryAfterMs
+    : undefined;
 }

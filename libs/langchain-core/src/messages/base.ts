@@ -375,6 +375,10 @@ export abstract class BaseMessage<
     );
   }
 
+  static [Symbol.hasInstance](obj: unknown) {
+    return this.isInstance(obj);
+  }
+
   // this private method is used to update the ID for the runtime
   // value as well as in lc_kwargs for serialisation
   _updateId(value: string | undefined) {
@@ -717,6 +721,10 @@ export abstract class BaseMessageChunk<
     }
     return false;
   }
+
+  static [Symbol.hasInstance](obj: unknown) {
+    return this.isInstance(obj);
+  }
 }
 
 export type MessageFieldWithRole = {
@@ -736,6 +744,12 @@ export type BaseMessageLike =
   | MessageFieldWithRole
   | [MessageType, MessageContent]
   | string
+  /**
+   * Serialized form of {@link RemoveMessage}. At runtime,
+   * {@link coerceMessageLikeToMessage} converts this to a `RemoveMessage`
+   * instance which the `add_messages` reducer uses to delete messages by ID.
+   */
+  | { type: "remove"; id: string }
   /**
    * @deprecated Specifying "type" is deprecated and will be removed in 0.4.0.
    */

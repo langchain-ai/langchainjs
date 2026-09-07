@@ -22,7 +22,6 @@
     { "path": "../libs/providers/langchain-deepseek" },
     { "path": "../libs/providers/langchain-exa" },
     { "path": "../libs/providers/langchain-fireworks" },
-    { "path": "../libs/providers/langchain-google-cloud-sql-pg" },
     { "path": "../libs/providers/langchain-google-common" },
     { "path": "../libs/providers/langchain-google-genai" },
     { "path": "../libs/providers/langchain-google-vertexai" },

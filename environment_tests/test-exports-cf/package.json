@@ -9,7 +9,7 @@
     "@langchain/openai": "workspace:*",
     "langchain": "workspace:*",
     "wrangler": "^3.19.0",
-    "vitest": "0.34.3",
+    "vitest": "4.1.8",
     "typescript": "^5.0.3"
   },
   "private": true,

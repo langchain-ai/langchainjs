@@ -20,6 +20,61 @@ describe("ChatOpenAI", () => {
       expect(chat.temperature).toBe(0.2);
     });
 
+    it("uses LangSmith Gateway environment configuration", () => {
+      vi.stubEnv("LANGSMITH_GATEWAY", "true");
+      vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
+      vi.stubEnv("OPENAI_API_BASE", "");
+      vi.stubEnv("OPENAI_BASE_URL", "");
+      vi.stubEnv("OPENAI_API_KEY", "provider-key");
+      try {
+        const chat = new ChatOpenAI({ model: "gpt-4o-mini" });
+
+        expect(chat.apiKey).toBe("gateway-key");
+        expect(chat.clientConfig.baseURL).toBe(
+          "https://gateway.smith.langchain.com/openai/v1"
+        );
+      } finally {
+        vi.unstubAllEnvs();
+      }
+    });
+
+    it("prefers an explicit API key over the Gateway key", () => {
+      vi.stubEnv("LANGSMITH_GATEWAY", "true");
+      vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
+      vi.stubEnv("OPENAI_API_BASE", "");
+      vi.stubEnv("OPENAI_BASE_URL", "");
+      vi.stubEnv("OPENAI_API_KEY", "provider-key");
+      try {
+        const chat = new ChatOpenAI({
+          model: "gpt-4o-mini",
+          apiKey: "explicit-key",
+        });
+
+        expect(chat.apiKey).toBe("explicit-key");
+        expect(chat.clientConfig.baseURL).toBe(
+          "https://gateway.smith.langchain.com/openai/v1"
+        );
+      } finally {
+        vi.unstubAllEnvs();
+      }
+    });
+
+    it("prefers the OpenAI base URL environment configuration", () => {
+      vi.stubEnv("LANGSMITH_GATEWAY", "true");
+      vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
+      vi.stubEnv("OPENAI_API_BASE", "");
+      vi.stubEnv("OPENAI_BASE_URL", "https://openai.example.com/v1");
+      vi.stubEnv("OPENAI_API_KEY", "provider-key");
+      try {
+        const chat = new ChatOpenAI({ model: "gpt-4o-mini" });
+
+        expect(chat.apiKey).toBe("provider-key");
+        expect(chat.clientConfig.baseURL).toBe("https://openai.example.com/v1");
+      } finally {
+        vi.unstubAllEnvs();
+      }
+    });
+
     it("should handle disableStreaming and streaming properties", () => {
       let chat = new ChatOpenAI({
         model: "gpt-4o-mini",
@@ -881,6 +936,10 @@ describe("ChatOpenAI", () => {
       expect(_modelPrefersResponsesAPI("gpt-5.5-pro")).toBe(true);
     });
 
+    it("should return true for gpt-5.6-sol", () => {
+      expect(_modelPrefersResponsesAPI("gpt-5.6-sol")).toBe(true);
+    });
+
     it("should return true for codex models", () => {
       expect(_modelPrefersResponsesAPI("codex-mini-latest")).toBe(true);
       expect(_modelPrefersResponsesAPI("gpt-5-codex")).toBe(true);
@@ -962,6 +1021,38 @@ describe("ChatOpenAI", () => {
         total_tokens: 0,
         input_token_details: {},
         output_token_details: {},
+      });
+    });
+
+    it("should convert OpenAI Responses usage to LangChain format with cache write tokens", () => {
+      const usage = {
+        input_tokens: 100,
+        output_tokens: 50,
+        total_tokens: 150,
+        input_tokens_details: {
+          cached_tokens: 75,
+          cache_write_tokens: 30,
+          text_tokens: 25,
+        },
+        output_tokens_details: {
+          reasoning_tokens: 10,
+          text_tokens: 40,
+        },
+      };
+
+      const result = _convertOpenAIResponsesUsageToLangChainUsage(usage as any);
+
+      expect(result).toEqual({
+        input_tokens: 100,
+        output_tokens: 50,
+        total_tokens: 150,
+        input_token_details: {
+          cache_read: 75,
+          cache_creation: 30,
+        },
+        output_token_details: {
+          reasoning: 10,
+        },
       });
     });
   });

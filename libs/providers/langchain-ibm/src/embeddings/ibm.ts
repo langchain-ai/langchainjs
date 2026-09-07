@@ -7,6 +7,7 @@ import { WatsonxAuth, WatsonxEmbeddingsBasicOptions, XOR } from "../types.js";
 import {
   authenticateAndSetGatewayInstance,
   authenticateAndSetInstance,
+  checkRequiredProps,
   checkValidProps,
   expectOneOf,
 } from "../utils/ibm.js";
@@ -150,6 +151,8 @@ export class WatsonxEmbeddings
     this.projectId = fields?.projectId;
     this.spaceId = fields?.spaceId;
     this.modelGateway = fields.modelGateway ?? this.modelGateway;
+
+    checkRequiredProps(fields, ["model", "serviceUrl", "version"]);
 
     this.checkValidProperties(fields);
 

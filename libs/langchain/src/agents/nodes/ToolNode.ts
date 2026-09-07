@@ -20,7 +20,7 @@ import {
 
 import { RunnableCallable } from "../RunnableCallable.js";
 import { mergeAbortSignals } from "./utils.js";
-import { ToolInvocationError } from "../errors.js";
+import { MiddlewareError, ToolInvocationError } from "../errors.js";
 import type {
   WrapToolCallHook,
   ToolCallRequest,
@@ -117,7 +117,7 @@ function defaultHandleToolErrors(
   error: unknown,
   toolCall: ToolCall
 ): ToolMessage | undefined {
-  if (error instanceof ToolInvocationError) {
+  if (ToolInvocationError.isInstance(error)) {
     return new ToolMessage({
       content: error.message,
       tool_call_id: toolCall.id!,
@@ -246,25 +246,46 @@ export class ToolNode<
     }
 
     /**
+     * A recoverable tool error (e.g. tool-input schema validation) can be
+     * rewrapped as a {@link MiddlewareError} with the original error on `.cause`
+     * — once per `wrapToolCall` middleware, so it may be nested several layers
+     * deep. Walk the cause chain to the root; if it's a {@link ToolInvocationError},
+     * unwrap it so the intended `handleToolErrors` self-correction path still
+     * applies. Genuine middleware errors stay fatal by default.
+     */
+    let effectiveError = error;
+    let errorFromMiddleware = isMiddlewareError;
+    if (isMiddlewareError) {
+      let unwrapped: unknown = error;
+      while (MiddlewareError.isInstance(unwrapped)) {
+        unwrapped = unwrapped.cause;
+      }
+      if (ToolInvocationError.isInstance(unwrapped)) {
+        effectiveError = unwrapped;
+        errorFromMiddleware = false;
+      }
+    }
+
+    /**
      * If error is from middleware and handleToolErrors is not true, bubble up
      * (default handler and false both re-raise middleware errors)
      */
-    if (isMiddlewareError && this.handleToolErrors !== true) {
-      throw error;
+    if (errorFromMiddleware && this.handleToolErrors !== true) {
+      throw effectiveError;
     }
 
     /**
      * If handleToolErrors is false, throw all errors
      */
     if (!this.handleToolErrors) {
-      throw error;
+      throw effectiveError;
     }
 
     /**
      * Apply handleToolErrors to the error
      */
     if (typeof this.handleToolErrors === "function") {
-      const result = this.handleToolErrors(error, call);
+      const result = this.handleToolErrors(effectiveError, call);
       if (result && ToolMessage.isInstance(result)) {
         return result;
       }
@@ -272,11 +293,11 @@ export class ToolNode<
       /**
        * `handleToolErrors` returned undefined - re-raise
        */
-      throw error;
+      throw effectiveError;
     } else if (this.handleToolErrors) {
       return new ToolMessage({
         name: call.name,
-        content: `${error}\n Please fix your mistakes.`,
+        content: `${effectiveError}\n Please fix your mistakes.`,
         tool_call_id: call.id!,
       });
     }
@@ -284,7 +305,7 @@ export class ToolNode<
     /**
      * Shouldn't reach here, but throw as fallback
      */
-    throw error;
+    throw effectiveError;
   }
 
   protected async runTool(

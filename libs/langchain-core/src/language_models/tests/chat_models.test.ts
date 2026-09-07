@@ -1,4 +1,4 @@
-import { test, expect, vi } from "vitest";
+import { test, expect, expectTypeOf, vi } from "vitest";
 import { z } from "zod/v3";
 import { z as z4 } from "zod/v4";
 import { zodToJsonSchema } from "../../utils/zod-to-json-schema/index.js";
@@ -11,6 +11,9 @@ import { BaseCallbackHandler } from "../../callbacks/base.js";
 import { StandardJSONSchemaV1, StandardSchemaV1 } from "@standard-schema/spec";
 import { LangChainTracer } from "../../tracers/tracer_langchain.js";
 import { awaitAllCallbacks } from "../../callbacks/promises.js";
+import type { ChatModelStream } from "../stream.js";
+import type { IterableReadableStream } from "../../utils/stream.js";
+import type { StreamEvent } from "../../tracers/event_stream.js";
 import type { LangSmithTracingClientInterface } from "langsmith";
 
 test("Test ChatModel accepts array shorthand for messages", async () => {
@@ -30,6 +33,39 @@ test("Test ChatModel accepts object shorthand for messages", async () => {
     },
   ]);
   expect(response.content).toEqual("Hello there!");
+});
+
+test("ChatModel streamEvents preserves chat and runnable overloads", () => {
+  const model = new FakeChatModel({});
+  const version: "v1" | "v2" = Math.random() > 0.5 ? "v1" : "v2";
+
+  expectTypeOf(
+    model.streamEvents("Hello there!")
+  ).toEqualTypeOf<ChatModelStream>();
+  expectTypeOf(
+    model.streamEvents("Hello there!", {})
+  ).toEqualTypeOf<ChatModelStream>();
+  expectTypeOf(
+    model.streamEvents("Hello there!", { version: "v1" })
+  ).toMatchTypeOf<IterableReadableStream<StreamEvent>>();
+  expectTypeOf(
+    model.streamEvents("Hello there!", { version: "v2" })
+  ).toMatchTypeOf<IterableReadableStream<StreamEvent>>();
+  expectTypeOf(
+    model.streamEvents("Hello there!", {
+      version: "v2",
+      encoding: "text/event-stream",
+    })
+  ).toMatchTypeOf<IterableReadableStream<Uint8Array>>();
+  expectTypeOf(model.streamEvents("Hello there!", { version })).toMatchTypeOf<
+    IterableReadableStream<StreamEvent>
+  >();
+  expectTypeOf(
+    model.streamEvents("Hello there!", {
+      version,
+      encoding: "text/event-stream",
+    })
+  ).toMatchTypeOf<IterableReadableStream<Uint8Array>>();
 });
 
 test("Test ChatModel accepts object with role for messages", async () => {

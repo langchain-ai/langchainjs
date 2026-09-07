@@ -13,6 +13,7 @@ services:
       - ../libs/langchain-textsplitters:/libs/langchain-textsplitters
       - ../libs/providers/langchain-openai:/libs/langchain-openai
       - ../libs/providers/langchain-anthropic:/libs/langchain-anthropic
+      - ../libs/providers/langchain-aws:/libs/langchain-aws
       - ../libs/providers/langchain-cohere:/libs/langchain-cohere
       - ../libs/providers/langchain-fireworks:/libs/langchain-fireworks
       - ../libs/providers/langchain-xai:/libs/langchain-xai
@@ -32,6 +33,7 @@ services:
       - ../libs/langchain-textsplitters:/libs/langchain-textsplitters
       - ../libs/providers/langchain-openai:/libs/langchain-openai
       - ../libs/providers/langchain-anthropic:/libs/langchain-anthropic
+      - ../libs/providers/langchain-aws:/libs/langchain-aws
       - ../libs/providers/langchain-cohere:/libs/langchain-cohere
       - ../libs/providers/langchain-fireworks:/libs/langchain-fireworks
       - ../libs/providers/langchain-xai:/libs/langchain-xai

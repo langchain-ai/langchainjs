@@ -215,4 +215,54 @@ describe("LocalFileStore", () => {
     await expect(store.mget(["\\foo"])).rejects.toThrowError();
     await fs.promises.rm(secondaryRootPath, { recursive: true, force: true });
   });
+
+  test("Should disallow writes into a sibling directory sharing the root path prefix", async () => {
+    const encoder = new TextEncoder();
+    const containerDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), "file_system_store_sibling")
+    );
+    const rootPath = path.join(containerDir, "root");
+    const siblingPath = path.join(containerDir, "root2");
+    await fs.promises.mkdir(siblingPath, { recursive: true });
+    const store = await LocalFileStore.fromPath(rootPath);
+
+    await expect(
+      store.mset([["../root2/pwn", encoder.encode("pwned")]])
+    ).rejects.toThrowError();
+    expect(fs.existsSync(path.join(siblingPath, "pwn.txt"))).toBe(false);
+
+    await fs.promises.rm(containerDir, { recursive: true, force: true });
+  });
+
+  test("Should disallow deletes in a sibling directory sharing the root path prefix", async () => {
+    const containerDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), "file_system_store_sibling")
+    );
+    const rootPath = path.join(containerDir, "root");
+    const siblingPath = path.join(containerDir, "root2");
+    await fs.promises.mkdir(siblingPath, { recursive: true });
+    const victimFile = path.join(siblingPath, "victim.txt");
+    fs.writeFileSync(victimFile, "do not delete");
+    const store = await LocalFileStore.fromPath(rootPath);
+
+    await expect(store.mdelete(["../root2/victim"])).rejects.toThrowError();
+    expect(fs.existsSync(victimFile)).toBe(true);
+
+    await fs.promises.rm(containerDir, { recursive: true, force: true });
+  });
+
+  test("Should allow keys nested in a subdirectory of the root path", async () => {
+    const encoder = new TextEncoder();
+    const nestedDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), "file_system_store_nested")
+    );
+    const store = await LocalFileStore.fromPath(nestedDir);
+
+    await store.mset([["sub/dir/key", encoder.encode("nested")]]);
+    expect(
+      fs.readFileSync(path.join(nestedDir, "sub/dir/key.txt"), "utf8")
+    ).toBe("nested");
+
+    await fs.promises.rm(nestedDir, { recursive: true, force: true });
+  });
 });

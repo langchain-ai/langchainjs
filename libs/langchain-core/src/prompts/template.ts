@@ -3,11 +3,12 @@ import { MessageContent } from "../messages/index.js";
 import type { InputValues } from "../utils/types/index.js";
 import { addLangChainErrorFields } from "../errors/index.js";
 
-function configureMustache() {
-  // Use unescaped HTML
-  // https://github.com/janl/mustache.js?tab=readme-ov-file#variables
-  mustache.escape = (text) => text;
-}
+// Use unescaped HTML, passed per render call so the shared mustache module
+// keeps escaping for unrelated callers in the same process.
+// https://github.com/janl/mustache.js?tab=readme-ov-file#variables
+const MUSTACHE_RENDER_OPTIONS: mustache.RenderOptions = {
+  escape: (text) => text,
+};
 
 /**
  * Type that specifies the format of a template.
@@ -116,7 +117,6 @@ const mustacheTemplateToNodes = (
 };
 
 export const parseMustache = (template: string) => {
-  configureMustache();
   const parsed = mustache.parse(template);
   return mustacheTemplateToNodes(parsed);
 };
@@ -139,8 +139,7 @@ export const interpolateFString = (template: string, values: InputValues) => {
 };
 
 export const interpolateMustache = (template: string, values: InputValues) => {
-  configureMustache();
-  return mustache.render(template, values);
+  return mustache.render(template, values, undefined, MUSTACHE_RENDER_OPTIONS);
 };
 
 /**

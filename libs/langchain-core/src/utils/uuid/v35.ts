@@ -46,7 +46,7 @@ export default function v35<TBuf extends Uint8Array = Uint8Array>(
   // Compute hash of namespace and value, Per 4.3
   // Future: Use spread syntax when supported on all platforms, e.g. `bytes =
   // hashfunc([...namespace, ... value])`
-  let bytes = new Uint8Array(16 + valueBytes.length);
+  let bytes: Uint8Array = new Uint8Array(16 + valueBytes.length);
   bytes.set(namespaceBytes);
   bytes.set(valueBytes, namespaceBytes.length);
   bytes = hash(bytes);

@@ -1,5 +1,21 @@
 # @langchain/google-genai
 
+## 2.3.0
+
+### Minor Changes
+
+- [#11400](https://github.com/langchain-ai/langchainjs/pull/11400) [`0e7c765`](https://github.com/langchain-ai/langchainjs/commit/0e7c7654c8bd84b80fe9a2495ab2703355ff8c1e) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - fix(google-genai): throw a typed, catchable `EmptyContentError` instead of silently returning empty content / an empty `generations` array when a non-streaming call (`.invoke()`, `.generate()`, `.batch()`) gets back a Gemini candidate with no content — whether from an explicit block (safety/recitation filter, rejected prompt) or the model just not producing usable output (a malformed function call, a thinking model exhausting its token budget). The streaming path (`.stream()`) is unaffected by this behavior change; it now safely skips a contentless chunk instead of throwing a raw `TypeError`.
+
+### Patch Changes
+
+- [#11405](https://github.com/langchain-ai/langchainjs/pull/11405) [`8cfff4d`](https://github.com/langchain-ai/langchainjs/commit/8cfff4dced1327fc87893a86dfc63c553403aec0) Thanks [@hntrl](https://github.com/hntrl)! - Add LangSmith gateway support for Google Gemini (Developer API) models. When `LANGSMITH_GATEWAY` is set, `ChatGoogleGenerativeAI` and `ChatGoogle` (and `initChatModel("google-genai:...")`) route requests through the gateway's Gemini path, using the gateway key (falling back to `LANGSMITH_API_KEY`). An explicit `baseUrl`/`endpoint`, an explicit `apiKey`, or a Vertex AI configuration suppress gateway routing. Also adds `GEMINI_API_KEY` as a fallback env var for `ChatGoogleGenerativeAI`.
+
+## 2.2.0
+
+### Minor Changes
+
+- [#10924](https://github.com/langchain-ai/langchainjs/pull/10924) [`2e28115`](https://github.com/langchain-ai/langchainjs/commit/2e2811509d75af94f57cedcc3842f178f4c020d1) Thanks [@christian-bromann](https://github.com/christian-bromann)! - feat(google-genai): add native streamEvents event conversion
+
 ## 2.1.31
 
 ## 2.1.30

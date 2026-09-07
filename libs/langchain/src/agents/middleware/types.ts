@@ -20,7 +20,11 @@ import type {
   ToolMessage,
 } from "@langchain/core/messages";
 import type { ToolCall } from "@langchain/core/messages/tool";
-import type { Command, StreamTransformer } from "@langchain/langgraph";
+import type {
+  Command,
+  StreamTransformer,
+  TracePolicy,
+} from "@langchain/langgraph";
 import type { ClientTool, ServerTool } from "@langchain/core/tools";
 
 import type { JumpToTarget } from "../constants.js";
@@ -470,6 +474,25 @@ export interface AgentMiddleware<
   streamTransformers?: TStreamTransformers;
 
   /**
+   * Controls the payloads recorded by this middleware's lifecycle hook spans.
+   * Processors affect chain callback payloads, including `streamEvents`; output
+   * omission can suppress messages directly returned by a lifecycle hook, and
+   * input omission can affect message deduplication. They do not affect execution.
+   *
+   * @example
+   * ```ts
+   * import { createMiddleware, omitPayload } from "langchain";
+   *
+   * const middleware = createMiddleware({
+   *   name: "PrivateMiddleware",
+   *   tracePolicy: { processInputs: omitPayload },
+   *   beforeModel: () => undefined,
+   * });
+   * ```
+   */
+  tracePolicy?: TracePolicy;
+
+  /**
    * Wraps tool execution with custom logic. This allows you to:
    * - Modify tool call parameters before execution
    * - Handle errors and retry with different parameters
@@ -836,8 +859,11 @@ export type ToAnnotationRoot<A extends StateDefinitionInit> =
       ? InteropZodToStateDefinition<A>
       : never;
 
-export type InferSchemaValue<A extends StateDefinitionInit | undefined> =
-  A extends StateSchema<infer TFields>
+export type InferSchemaValue<A extends StateDefinitionInit | undefined> = [
+  A,
+] extends [undefined]
+  ? {}
+  : A extends StateSchema<infer TFields>
     ? InferStateSchemaValue<TFields>
     : A extends InteropZodObject
       ? InferInteropZodOutput<A>
@@ -845,8 +871,11 @@ export type InferSchemaValue<A extends StateDefinitionInit | undefined> =
         ? A["State"]
         : {};
 
-export type InferSchemaInput<A extends StateDefinitionInit | undefined> =
-  A extends StateSchema<infer TFields>
+export type InferSchemaInput<A extends StateDefinitionInit | undefined> = [
+  A,
+] extends [undefined]
+  ? {}
+  : A extends StateSchema<infer TFields>
     ? InferStateSchemaUpdate<TFields>
     : A extends InteropZodObject
       ? InferInteropZodInput<A>

@@ -238,7 +238,10 @@ function convertToV1FromChatBedrockConverseMessage(
         ? [{ type: "text", text: message.content }]
         : message.content;
     for (const block of content) {
-      if (_isContentBlock(block, "cache_point")) {
+      if (_isContentBlock(block, "reasoning") && _isString(block.reasoning)) {
+        yield { ...block, type: "reasoning", reasoning: block.reasoning };
+        continue;
+      } else if (_isContentBlock(block, "cache_point")) {
         yield { type: "non_standard", value: block };
         continue;
       } else if (
@@ -310,6 +313,19 @@ function convertToV1FromChatBedrockConverseMessage(
         continue;
       } else if (_isContentBlock(block, "image") && _isObject(block.image)) {
         yield convertConverseImageBlock(block);
+        continue;
+      } else if (
+        _isContentBlock(block, "reasoning_content") &&
+        _isObject(block.reasoningText) &&
+        _isString(block.reasoningText.text)
+      ) {
+        yield {
+          type: "reasoning",
+          reasoning: block.reasoningText.text,
+          ...(_isString(block.reasoningText.signature)
+            ? { signature: block.reasoningText.signature }
+            : {}),
+        };
         continue;
       } else if (
         _isContentBlock(block, "reasoning_content") &&

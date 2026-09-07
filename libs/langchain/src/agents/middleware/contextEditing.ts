@@ -489,9 +489,8 @@ export class ClearToolUsesEdit implements ContextEdit {
         /**
          * Skip if already cleared
          */
-        const contextEditing = toolMessage.response_metadata?.context_editing as
-          | { cleared?: boolean }
-          | undefined;
+        const contextEditing = toolMessage.response_metadata
+          ?.context_editing as { cleared?: boolean } | undefined;
         if (contextEditing?.cleared) {
           continue;
         }
