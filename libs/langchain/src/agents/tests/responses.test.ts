@@ -777,9 +777,17 @@ describe("hasSupportForJsonSchemaOutput", () => {
     expect(hasSupportForJsonSchemaOutput(model)).toBe(false);
   });
 
-  it("should return false for Anthropic models whose profile does not report structuredOutput", () => {
+  it("should return true for Anthropic models whose profile reports structuredOutput", () => {
     const model = new ChatAnthropic({
       model: "claude-sonnet-4-5-20250929",
+      anthropicApiKey: "foobar",
+    });
+    expect(hasSupportForJsonSchemaOutput(model)).toBe(true);
+  });
+  
+  it("should return false for Anthropic models without native structured output support", () => {
+    const model = new ChatAnthropic({
+      model: "claude-opus-4-1-20250805",
       anthropicApiKey: "foobar",
     });
     expect(hasSupportForJsonSchemaOutput(model)).toBe(false);
