@@ -228,12 +228,6 @@ export interface BaseChatOpenAIFields
    * Optional configuration options for the OpenAI client.
    */
   configuration?: ClientOptions;
-
-  /**
-   * Base URL for the OpenAI API, also used when loading Python `base_url` fields.
-   * Prefer `configuration.baseURL` in JavaScript; it takes precedence.
-   */
-  baseUrl?: string;
 }
 
 export function getChatOpenAIModelParams<TParams extends BaseChatOpenAIFields>(
@@ -532,10 +526,16 @@ export abstract class BaseChatOpenAI<
       typeof fields?.configuration?.apiKey === "function"
         ? fields?.configuration?.apiKey
         : undefined;
+    // The Python-serialized base_url is camel-cased by load(). Keep this
+    // compatibility input internal; JS callers should use configuration.baseURL.
+    const serializedBaseUrl =
+      fields && "baseUrl" in fields && typeof fields.baseUrl === "string"
+        ? fields.baseUrl
+        : undefined;
     const gatewayConfig = resolveLangSmithGatewayConfig({
       baseURL:
         fields?.configuration?.baseURL ??
-        fields?.baseUrl ??
+        serializedBaseUrl ??
         (getEnvironmentVariable("OPENAI_API_BASE") ||
           getEnvironmentVariable("OPENAI_BASE_URL") ||
           undefined),

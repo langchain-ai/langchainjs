@@ -63,11 +63,6 @@ describe("Python ChatOpenAI manifest base URLs", () => {
     expect(reloaded.clientConfig.baseURL).toBe(baseURL);
   });
 
-  it("accepts baseUrl directly", () => {
-    const model = new ChatOpenAI({ apiKey: "test-key", baseUrl: baseURL });
-    expect(model.clientConfig.baseURL).toBe(baseURL);
-  });
-
   it("prefers configuration.baseURL over base_url", async () => {
     const model = await loadModel({
       base_url: "https://alias.example.com/v1",
@@ -83,11 +78,14 @@ describe("Python ChatOpenAI manifest base URLs", () => {
     expect(model.clientConfig.baseURL).toBe(baseURL);
   });
 
-  it("falls back to environment configuration for a null base_url", async () => {
-    vi.stubEnv("OPENAI_BASE_URL", baseURL);
-    const model = await loadModel({ base_url: null });
-    expect(model.clientConfig.baseURL).toBe(baseURL);
-  });
+  it.each([null, 123, false, {}])(
+    "falls back to environment configuration for a non-string base_url (%j)",
+    async (value) => {
+      vi.stubEnv("OPENAI_BASE_URL", baseURL);
+      const model = await loadModel({ base_url: value });
+      expect(model.clientConfig.baseURL).toBe(baseURL);
+    }
+  );
 
   it.each([true, false])(
     "routes a loaded prompt to the gateway with use_responses_api=%s",
