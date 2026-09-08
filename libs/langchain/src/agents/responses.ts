@@ -8,6 +8,7 @@ import {
 } from "@langchain/core/utils/types";
 import { type AIMessage } from "@langchain/core/messages";
 import { toJsonSchema, Validator } from "@langchain/core/utils/json_schema";
+import { sha256 } from "@langchain/core/utils/hash";
 import { type FunctionDefinition } from "@langchain/core/language_models/base";
 import {
   type SerializableSchema,
@@ -41,9 +42,20 @@ export type ResponseFormatUndefined = {
 const PROVIDER_STRATEGY_DEFAULT_STRICT = true;
 
 /**
- * This is a global counter for generating unique names for tools.
+ * Derives the name of the tool used to extract structured output.
+ *
+ * Tools must have a name so a tool call can be mapped back to the strategy that
+ * produced it. When the schema carries no title the name is hashed from the
+ * schema the tool definition is built from, so the same schema always yields
+ * the same name - within an agent loop, across conversation turns, and across
+ * processes.
+ *
+ * @param schema - The schema the tool definition is built from
+ * @param title - The schema's title, used verbatim when present
  */
-let bindingIdentifier = 0;
+function getFunctionName(schema: Record<string, unknown>, title?: string) {
+  return title ?? `extract-${sha256(JSON.stringify(schema)).slice(0, 16)}`;
+}
 
 /**
  * Information for tracking structured output tool metadata.
@@ -95,20 +107,12 @@ export class ToolStrategy<_T = unknown> {
     schema: InteropZodObject | SerializableSchema | Record<string, unknown>,
     outputOptions?: ToolStrategyOptions
   ): ToolStrategy<any> {
-    /**
-     * It is required for tools to have a name so we can map the tool call to the correct tool
-     * when parsing the response.
-     */
-    function getFunctionName(name?: string) {
-      return name ?? `extract-${++bindingIdentifier}`;
-    }
-
     if (isSerializableSchema(schema) || isInteropZodSchema(schema)) {
       const asJsonSchema = toJsonSchema(schema);
       const tool = {
         type: "function" as const,
         function: {
-          name: getFunctionName(asJsonSchema.title),
+          name: getFunctionName(asJsonSchema, asJsonSchema.title),
           strict: false,
           description:
             asJsonSchema.description ??
@@ -128,7 +132,7 @@ export class ToolStrategy<_T = unknown> {
       functionDefinition = schema as unknown as FunctionDefinition;
     } else {
       functionDefinition = {
-        name: getFunctionName(schema.title as string),
+        name: getFunctionName(schema, schema.title as string),
         description: (schema.description as string) ?? "",
         parameters: schema.schema || (schema as Record<string, unknown>),
       };
