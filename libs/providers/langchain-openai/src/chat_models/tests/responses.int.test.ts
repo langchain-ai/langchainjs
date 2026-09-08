@@ -456,6 +456,75 @@ describe("OpenAI Reasoning elevation to message.content", () => {
   });
 });
 
+const FARMER_PROBLEM =
+  "A farmer has chickens and cows totaling 30 heads and 74 legs. How many of each?";
+const FARMER_FOLLOWUP =
+  "Now solve the same style of problem for 40 heads and 100 legs.";
+
+describe("OpenAI configuration_update", () => {
+  test("invoke: configuration_update block switches reasoning effort mid-conversation", async () => {
+    const llm = new ChatOpenAI({
+      model: "gpt-6-astra",
+      reasoning: { effort: "low", summary: "auto" },
+      useResponsesApi: true,
+    });
+
+    const first = await llm.invoke(FARMER_PROBLEM);
+    expect(first).toBeInstanceOf(AIMessage);
+    expect(first.additional_kwargs.reasoning).toBeDefined();
+
+    // A second configuration_update block would be rejected as adjacent, so this
+    // also exercises that the hoisted item only appears once per eligible message.
+    const second = await llm.invoke([
+      new HumanMessage(FARMER_PROBLEM),
+      first,
+      new HumanMessage({
+        content: [
+          { type: "configuration_update", reasoning: { effort: "high" } },
+          { type: "text", text: FARMER_FOLLOWUP },
+        ],
+      }),
+    ]);
+
+    expect(second).toBeInstanceOf(AIMessage);
+    expect(Array.isArray(second.content)).toBe(true);
+    const textBlocks = (second.content as ContentBlock[]).filter(
+      (block) => block.type === "text"
+    );
+    expect(textBlocks.length).toBeGreaterThan(0);
+  }, 60000);
+
+  test("stream: configuration_update block switches reasoning effort mid-conversation", async () => {
+    const llm = new ChatOpenAI({
+      model: "gpt-6-astra",
+      reasoning: { effort: "low", summary: "auto" },
+      useResponsesApi: true,
+    });
+
+    const first = await concatStream(llm.stream(FARMER_PROBLEM));
+    expect(first.additional_kwargs.reasoning).toBeDefined();
+
+    const second = await concatStream(
+      llm.stream([
+        new HumanMessage(FARMER_PROBLEM),
+        first,
+        new HumanMessage({
+          content: [
+            { type: "configuration_update", reasoning: { effort: "high" } },
+            { type: "text", text: FARMER_FOLLOWUP },
+          ],
+        }),
+      ])
+    );
+
+    expect(Array.isArray(second.content)).toBe(true);
+    const textBlocks = (second.content as ContentBlock[]).filter(
+      (block) => block.type === "text"
+    );
+    expect(textBlocks.length).toBeGreaterThan(0);
+  }, 60000);
+});
+
 test("Test stateful API", async () => {
   const llm = new ChatOpenAI({
     model: "gpt-4o-mini",
