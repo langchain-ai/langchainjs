@@ -1198,10 +1198,18 @@ export const convertStandardContentMessageToResponsesInput: Converter<
       // a populated `content` array on input (`400 Invalid 'input[n].content':
       // array too long. Expected an array with maximum length 0`). The reasoning
       // text is already represented in `summary`, so we do not forward `content`.
+      //
+      // `encrypted_content` is required to replay this item under Zero Data
+      // Retention, so forward it when the block carries one.
+      const encryptedContent = (block as { encrypted_content?: unknown })
+        .encrypted_content;
       return {
         type: "reasoning",
         ...(block.id ? { id: block.id } : {}),
         summary,
+        ...(typeof encryptedContent === "string"
+          ? { encrypted_content: encryptedContent }
+          : {}),
       } as OpenAIClient.Responses.ResponseReasoningItem;
     };
 
