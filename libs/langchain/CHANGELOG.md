@@ -1,5 +1,11 @@
 # langchain
 
+## 1.5.11-rc.0
+
+### Patch Changes
+
+- [#11568](https://github.com/langchain-ai/langchainjs/pull/11568) [`fbc3206`](https://github.com/langchain-ai/langchainjs/commit/fbc32067aee6068dd7f96aff1889deba76d5c838) Thanks [@hntrl](https://github.com/hntrl)! - Add opt-in middleware `tracePolicy` support for transforming hook span input and output payloads, plus re-exports of LangGraph's `TracePolicy` and `omitPayload`.
+
 ## 1.5.10
 
 ### Patch Changes

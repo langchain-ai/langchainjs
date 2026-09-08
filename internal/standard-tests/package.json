@@ -21,14 +21,14 @@
     "clean": "rm -rf .turbo"
   },
   "dependencies": {
-    "@jest/globals": "^30.4.1",
+    "@jest/globals": "^30.5.0",
     "@langchain/core": "workspace:^",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
-    "dpdm": "^4.0.1",
+    "dpdm": "^4.3.0",
     "typescript": "~7.0.2"
   },
   "peerDependencies": {

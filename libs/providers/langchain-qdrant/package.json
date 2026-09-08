@@ -34,13 +34,13 @@
     "@langchain/core": "workspace:^"
   },
   "devDependencies": {
-    "@faker-js/faker": "^8.4.1",
+    "@faker-js/faker": "^10.5.0",
     "@langchain/core": "workspace:^",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
     "@vitest/coverage-v8": "^4.1.11",
-    "dotenv": "^16.3.1",
-    "dpdm": "^3.14.0",
+    "dotenv": "^17.4.2",
+    "dpdm": "^4.3.0",
     "eslint": "^9.39.5",
     "prettier": "^3.9.6",
     "typescript": "~7.0.2",
