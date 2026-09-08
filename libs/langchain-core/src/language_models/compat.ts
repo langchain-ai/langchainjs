@@ -154,6 +154,7 @@ export async function* convertChunksToEvents(
     | undefined;
   let audioStream: AudioStreamState | undefined;
   const emittedImageKeys = new Set<string>();
+  const toolCallBlockIndexes = new Map<string, number>();
 
   for await (const chunk of chunks) {
     options?.signal?.throwIfAborted();
@@ -239,10 +240,20 @@ export async function* convertChunksToEvents(
       msg.tool_call_chunks.length > 0
     ) {
       for (const toolChunk of msg.tool_call_chunks) {
-        const blockIndex =
-          typeof toolChunk.index === "number"
-            ? toolChunk.index
-            : activeBlocks.size;
+        let toolCallKey: string;
+        if (typeof toolChunk.index === "number") {
+          toolCallKey = `index:${toolChunk.index}`;
+        } else if (typeof toolChunk.id === "string") {
+          toolCallKey = `id:${toolChunk.id}`;
+        } else {
+          toolCallKey = `next:${toolCallBlockIndexes.size}`;
+        }
+
+        let blockIndex = toolCallBlockIndexes.get(toolCallKey);
+        if (blockIndex === undefined) {
+          blockIndex = nextBlockIndex(activeBlocks);
+          toolCallBlockIndexes.set(toolCallKey, blockIndex);
+        }
 
         if (!activeBlocks.has(blockIndex)) {
           const initial: ContentBlock = {
