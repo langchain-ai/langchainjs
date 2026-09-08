@@ -1,4 +1,7 @@
 import { BaseTracer, type Run } from "./base.js";
+import type { ChainValues } from "../utils/types/index.js";
+import type { LLMResult } from "../outputs.js";
+import type { Document } from "../documents/document.js";
 import {
   BaseCallbackHandler,
   BaseCallbackHandlerInput,
@@ -417,13 +420,64 @@ export class EventStreamCallbackHandler
     );
   }
 
+  override async handleLLMEnd(
+    output: LLMResult,
+    runId: string,
+    parentRunId?: string,
+    tags?: string[],
+    extraParams?: Record<string, unknown>
+  ): Promise<Run> {
+    // Idempotent end guard: when this handler instance is registered twice
+    // (nested graph + tracing), the second delivery must not throw. The
+    // base tracer deletes the run bookkeeping on first end, so a missing
+    // entry means the run was already processed. See #11360.
+    if (!this.runInfoMap.has(runId)) {
+      return undefined as unknown as Run;
+    }
+    return super.handleLLMEnd(output, runId, parentRunId, tags, extraParams);
+  }
+
+  override async handleChainEnd(
+    outputs: ChainValues,
+    runId: string,
+    parentRunId?: string,
+    tags?: string[],
+    kwargs?: { inputs?: Record<string, unknown> }
+  ): Promise<Run> {
+    if (!this.runInfoMap.has(runId)) {
+      return undefined as unknown as Run;
+    }
+    return super.handleChainEnd(outputs, runId, parentRunId, tags, kwargs);
+  }
+
+  override async handleToolEnd(output: unknown, runId: string): Promise<Run> {
+    if (!this.runInfoMap.has(runId)) {
+      return undefined as unknown as Run;
+    }
+    return super.handleToolEnd(output, runId);
+  }
+
+  override async handleRetrieverEnd(
+    documents: Document<Record<string, unknown>>[],
+    runId: string
+  ): Promise<Run> {
+    if (!this.runInfoMap.has(runId)) {
+      return undefined as unknown as Run;
+    }
+    return super.handleRetrieverEnd(documents, runId);
+  }
+
   async onLLMEnd(run: Run): Promise<void> {
     const runInfo = this.runInfoMap.get(run.id);
+    if (runInfo === undefined) {
+      // Idempotent end: the same handler instance can receive a run's end
+      // twice when registered more than once (e.g. a nested graph run with
+      // tracing enabled). The first delivery already emitted the event and
+      // removed the entry; skip instead of throwing. See #11360.
+      return;
+    }
     this.runInfoMap.delete(run.id);
     let eventName: string;
-    if (runInfo === undefined) {
-      throw new Error(`onLLMEnd: Run ID ${run.id} not found in run map.`);
-    }
     const generations: ChatGeneration[][] | Generation[][] | undefined =
       run.outputs?.generations;
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
@@ -505,10 +559,12 @@ export class EventStreamCallbackHandler
 
   async onChainEnd(run: Run): Promise<void> {
     const runInfo = this.runInfoMap.get(run.id);
-    this.runInfoMap.delete(run.id);
     if (runInfo === undefined) {
-      throw new Error(`onChainEnd: Run ID ${run.id} not found in run map.`);
+      // Idempotent end: duplicate handler delivery of an already-ended run.
+      // See #11360.
+      return;
     }
+    this.runInfoMap.delete(run.id);
     const eventName = `on_${run.run_type}_end`;
     const inputs = run.inputs ?? runInfo.inputs ?? {};
     const outputs = run.outputs?.output ?? run.outputs;
@@ -560,10 +616,12 @@ export class EventStreamCallbackHandler
 
   async onToolEnd(run: Run): Promise<void> {
     const runInfo = this.runInfoMap.get(run.id);
-    this.runInfoMap.delete(run.id);
     if (runInfo === undefined) {
-      throw new Error(`onToolEnd: Run ID ${run.id} not found in run map.`);
+      // Idempotent end: duplicate handler delivery of an already-ended run.
+      // See #11360.
+      return;
     }
+    this.runInfoMap.delete(run.id);
     if (runInfo.inputs === undefined) {
       throw new Error(
         `onToolEnd: Run ID ${run.id} is a tool call, and is expected to have traced inputs.`
@@ -589,10 +647,12 @@ export class EventStreamCallbackHandler
 
   async onToolError(run: Run): Promise<void> {
     const runInfo = this.runInfoMap.get(run.id);
-    this.runInfoMap.delete(run.id);
     if (runInfo === undefined) {
-      throw new Error(`onToolEnd: Run ID ${run.id} not found in run map.`);
+      // Idempotent end: duplicate handler delivery of an already-ended run.
+      // See #11360.
+      return;
     }
+    this.runInfoMap.delete(run.id);
     if (runInfo.inputs === undefined) {
       throw new Error(
         `onToolEnd: Run ID ${run.id} is a tool call, and is expected to have traced inputs.`
@@ -647,10 +707,12 @@ export class EventStreamCallbackHandler
 
   async onRetrieverEnd(run: Run): Promise<void> {
     const runInfo = this.runInfoMap.get(run.id);
-    this.runInfoMap.delete(run.id);
     if (runInfo === undefined) {
-      throw new Error(`onRetrieverEnd: Run ID ${run.id} not found in run map.`);
+      // Idempotent end: duplicate handler delivery of an already-ended run.
+      // See #11360.
+      return;
     }
+    this.runInfoMap.delete(run.id);
     await this.sendEndEvent(
       {
         event: "on_retriever_end",
