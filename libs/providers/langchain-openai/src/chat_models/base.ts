@@ -411,6 +411,7 @@ export abstract class BaseChatOpenAI<
   get lc_serializable_keys(): string[] {
     return [
       "configuration",
+      "baseUrl",
       "logprobs",
       "topLogprobs",
       "prefixMessages",
@@ -546,9 +547,16 @@ export abstract class BaseChatOpenAI<
       typeof fields?.configuration?.apiKey === "function"
         ? fields?.configuration?.apiKey
         : undefined;
+    // The Python-serialized base_url is camel-cased by load(). Keep this
+    // compatibility input internal; JS callers should use configuration.baseURL.
+    const serializedBaseUrl =
+      fields && "baseUrl" in fields && typeof fields.baseUrl === "string"
+        ? fields.baseUrl
+        : undefined;
     const gatewayConfig = resolveLangSmithGatewayConfig({
       baseURL:
         fields?.configuration?.baseURL ??
+        serializedBaseUrl ??
         (getEnvironmentVariable("OPENAI_API_BASE") ||
           getEnvironmentVariable("OPENAI_BASE_URL") ||
           undefined),
