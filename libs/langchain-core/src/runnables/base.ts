@@ -1909,6 +1909,10 @@ export type RunnableSequenceFields<RunInput, RunOutput> = {
   last: Runnable<any, RunOutput>;
   name?: string;
   omitSequenceTags?: boolean;
+  /** Receives the input by reference and must not mutate it. */
+  processInputs?: (input: RunInput) => unknown;
+  /** Receives the output by reference and must not mutate it. */
+  processOutputs?: (output: RunOutput) => unknown;
 };
 
 /**
@@ -1941,6 +1945,10 @@ export class RunnableSequence<
 
   omitSequenceTags = false;
 
+  protected processInputs?: (input: RunInput) => unknown;
+
+  protected processOutputs?: (output: RunOutput) => unknown;
+
   lc_serializable = true;
 
   lc_namespace = ["langchain_core", "runnables"];
@@ -1952,6 +1960,36 @@ export class RunnableSequence<
     this.last = fields.last;
     this.name = fields.name;
     this.omitSequenceTags = fields.omitSequenceTags ?? this.omitSequenceTags;
+    this.processInputs = fields.processInputs;
+    this.processOutputs = fields.processOutputs;
+  }
+
+  get lc_serializable_keys(): string[] {
+    return ["first", "middle", "last", "name", "omitSequenceTags"];
+  }
+
+  protected _processTraceInput(input: RunInput): unknown {
+    return this._processTraceValue(input, this.processInputs, "input");
+  }
+
+  protected _processTraceOutput(output: RunOutput): unknown {
+    return this._processTraceValue(output, this.processOutputs, "output");
+  }
+
+  private _processTraceValue<T>(
+    value: T,
+    processor: ((value: T) => unknown) | undefined,
+    type: "input" | "output"
+  ): unknown {
+    if (processor === undefined) {
+      return value;
+    }
+    try {
+      return processor(value);
+    } catch (error) {
+      console.warn(`Failed to process RunnableSequence trace ${type}.`, error);
+      return value;
+    }
   }
 
   get steps() {
@@ -1960,10 +1998,11 @@ export class RunnableSequence<
 
   async invoke(input: RunInput, options?: RunnableConfig): Promise<RunOutput> {
     const config = ensureConfig(options);
+    const traceInput = this._processTraceInput(input);
     const callbackManager_ = await getCallbackManagerForConfig(config);
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
-      _coerceToDict(input, "input"),
+      _coerceToDict(traceInput, "input"),
       config.runId,
       undefined,
       undefined,
@@ -2003,7 +2042,8 @@ export class RunnableSequence<
       await runManager?.handleChainError(e);
       throw e;
     }
-    await runManager?.handleChainEnd(_coerceToDict(finalOutput, "output"));
+    const traceOutput = this._processTraceOutput(finalOutput);
+    await runManager?.handleChainEnd(_coerceToDict(traceOutput, "output"));
     return finalOutput;
   }
 
@@ -2031,6 +2071,7 @@ export class RunnableSequence<
     batchOptions?: RunnableBatchOptions
   ): Promise<(RunOutput | Error)[]> {
     const configList = this._getOptionsList(options ?? {}, inputs.length);
+    const processInputs = inputs.map((input) => this._processTraceInput(input));
     const callbackManagers = await Promise.all(
       configList.map(getCallbackManagerForConfig)
     );
@@ -2038,7 +2079,7 @@ export class RunnableSequence<
       callbackManagers.map(async (callbackManager, i) => {
         const handleStartRes = await callbackManager?.handleChainStart(
           this.toJSON(),
-          _coerceToDict(inputs[i], "input"),
+          _coerceToDict(processInputs[i], "input"),
           configList[i].runId,
           undefined,
           undefined,
@@ -2073,8 +2114,10 @@ export class RunnableSequence<
       throw e;
     }
     await Promise.all(
-      runManagers.map((runManager) =>
-        runManager?.handleChainEnd(_coerceToDict(nextStepInputs, "output"))
+      runManagers.map((runManager, i) =>
+        runManager?.handleChainEnd(
+          _coerceToDict(this._processTraceOutput(nextStepInputs[i]), "output")
+        )
       )
     );
     return nextStepInputs;
@@ -2089,11 +2132,12 @@ export class RunnableSequence<
     input: RunInput,
     options?: RunnableConfig
   ): AsyncGenerator<RunOutput> {
+    const traceInput = this._processTraceInput(input);
     const callbackManager_ = await getCallbackManagerForConfig(options);
     const { runId, ...otherOptions } = options ?? {};
     const runManager = await callbackManager_?.handleChainStart(
       this.toJSON(),
-      _coerceToDict(input, "input"),
+      _coerceToDict(traceInput, "input"),
       runId,
       undefined,
       undefined,
@@ -2147,7 +2191,8 @@ export class RunnableSequence<
       await runManager?.handleChainError(e);
       throw e;
     }
-    await runManager?.handleChainEnd(_coerceToDict(finalOutput, "output"));
+    const traceOutput = this._processTraceOutput(finalOutput);
+    await runManager?.handleChainEnd(_coerceToDict(traceOutput, "output"));
   }
 
   getGraph(config?: RunnableConfig): Graph {
@@ -2187,7 +2232,7 @@ export class RunnableSequence<
     coerceable: RunnableLike<RunOutput, NewRunOutput>
   ): RunnableSequence<RunInput, Exclude<NewRunOutput, Error>> {
     if (RunnableSequence.isRunnableSequence(coerceable)) {
-      return new RunnableSequence({
+      return new RunnableSequence<RunInput, Exclude<NewRunOutput, Error>>({
         first: this.first,
         middle: this.middle.concat([
           this.last,
@@ -2196,13 +2241,23 @@ export class RunnableSequence<
         ]),
         last: coerceable.last,
         name: this.name ?? coerceable.name,
+        omitSequenceTags: this.omitSequenceTags,
+        processInputs: this.processInputs,
+        processOutputs: this.processOutputs as
+          | ((output: Exclude<NewRunOutput, Error>) => unknown)
+          | undefined,
       });
     } else {
-      return new RunnableSequence({
+      return new RunnableSequence<RunInput, Exclude<NewRunOutput, Error>>({
         first: this.first,
         middle: [...this.middle, this.last],
         last: _coerceToRunnable(coerceable),
         name: this.name,
+        omitSequenceTags: this.omitSequenceTags,
+        processInputs: this.processInputs,
+        processOutputs: this.processOutputs as
+          | ((output: Exclude<NewRunOutput, Error>) => unknown)
+          | undefined,
       });
     }
   }

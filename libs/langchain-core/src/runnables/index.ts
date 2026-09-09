@@ -7,6 +7,7 @@ export {
   RunnableBinding,
   RunnableEach,
   RunnableRetry,
+  type RunnableSequenceFields,
   RunnableSequence,
   RunnableMap,
   RunnableParallel,
