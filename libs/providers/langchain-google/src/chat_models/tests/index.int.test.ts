@@ -137,6 +137,12 @@ const allModelInfo: ModelInfo[] = [
     },
   },
   {
+    model: "gemini-3.8-flash",
+    testConfig: {
+      isThinking: true,
+    },
+  },
+  {
     model: "gemini-2.5-flash-image",
     testConfig: {
       isImage: true,
@@ -1715,9 +1721,12 @@ describe.each(thinkingModelInfo)(
       expect(reasoningSteps?.length).toBeGreaterThan(0);
       expect(textSteps?.length).toBeGreaterThan(0);
 
-      // I think result.text should just have actual text, not reasoning, but the code says otherwise
-      // const textStepsText: string = textSteps.reduce((acc: string, val: ContentBlock.Text) => acc + val.text, "");
-      // expect(textStepsText).toEqual(result.text);
+      // Result.text should just have actual text, not reasoning
+      const textStepsText: string = textSteps.reduce(
+        (acc: string, val: ContentBlock.Text) => acc + val.text,
+        ""
+      );
+      expect(textStepsText).toEqual(result.text);
     });
 
     test("thinking - invoke with uppercase reasoningEffort", async () => {
@@ -1742,6 +1751,104 @@ describe.each(thinkingModelInfo)(
         (b) => "thoughtSignature" in b
       );
       expect(hasThoughtSignature).toBe(true);
+    });
+    test("thought/thoughtSignature survive a multi-turn round trip (regression for #10461)", async () => {
+      // Reproduces the production bug: resending a prior thinking AIMessage
+      // as history silently stripped its thought marker/signature before
+      // this fix, either losing the flag (legacy content array) or dropping
+      // the block outright (contentBlocks -> ChatGoogleTranslator ->
+      // "reasoning" -> default: return null in the standard converter).
+
+      // Make sure reasoning effort is high to force thinking blocks
+      const llm = newChatGoogle({ reasoningEffort: "high" });
+
+      const firstResult = await llm.invoke("Why is the sky blue?");
+      const firstReasoningBlocks = firstResult.contentBlocks.filter(
+        (b) => b.type === "reasoning"
+      );
+      expect(firstReasoningBlocks.length).toBeGreaterThan(0);
+      const firstSignatures = firstResult.contentBlocks
+        .filter((b) => "thoughtSignature" in b)
+        .map((b) => b.thoughtSignature);
+      expect(firstSignatures.length).toBeGreaterThan(0);
+
+      // Feed the thinking AIMessage back in as history and ask a follow-up.
+      // recorder.request captures the actual outbound HTTP body for the
+      // second call — assert the resent turn's `contents` entry still
+      // carries `thought`/`thoughtSignature` on the wire, not just that the
+      // call succeeds (a successful call alone wouldn't catch a silently
+      // dropped/unflagged thought block, since Gemini doesn't require the
+      // resent history to include one).
+      await llm.invoke([
+        new HumanMessage("Why is the sky blue?"),
+        firstResult,
+        new HumanMessage("Now explain it to a 5 year old."),
+      ]);
+
+      const sentContents = recorder.request?.body?.contents ?? [];
+      const modelTurn = sentContents.find(
+        (c: { role?: string }) => c.role === "model"
+      );
+      expect(modelTurn).toBeDefined();
+
+      const sentThoughtParts = (modelTurn?.parts ?? []).filter(
+        (p: { thought?: boolean }) => p.thought === true
+      );
+      expect(sentThoughtParts.length).toBeGreaterThan(0);
+
+      const sentSignatures = (modelTurn?.parts ?? [])
+        .filter((p: { thoughtSignature?: string }) => "thoughtSignature" in p)
+        .map((p: { thoughtSignature?: string }) => p.thoughtSignature);
+      expect(sentSignatures.length).toBeGreaterThan(0);
+      // At least one signature from the first response must round-trip
+      // verbatim — Gemini validates these, so a regenerated/blank value
+      // would defeat the point of preserving the field at all.
+      expect(
+        sentSignatures.some((sig: string | undefined) =>
+          firstSignatures.includes(sig)
+        )
+      ).toBe(true);
+    });
+
+    test("functionCall thoughtSignature survives a multi-turn round trip after a real tool call (root cause: tool_calls-rebuild path)", async () => {
+      // tool_calls-rebuilt functionCall parts don't get thoughtSignature "for free" like content-block items do.
+      const tools = [weatherTool];
+      const llm: Runnable = newChatGoogle({
+        reasoningEffort: "high",
+      }).bindTools(tools);
+
+      const firstResult = (await llm.invoke(
+        "What is the weather in New York?"
+      )) as AIMessage;
+      expect(firstResult.tool_calls?.length).toBeGreaterThan(0);
+      const toolCall = firstResult.tool_calls![0];
+      const toolCallSignature = (toolCall as { thoughtSignature?: string })
+        .thoughtSignature;
+      expect(toolCallSignature).toBeDefined();
+
+      // Force v1 - the default (legacy) route already preserves this signature
+      firstResult.response_metadata = {
+        ...firstResult.response_metadata,
+        output_version: "v1",
+      };
+
+      await llm.invoke([
+        new HumanMessage("What is the weather in New York?"),
+        firstResult,
+        new ToolMessage(JSON.stringify({ temp: 21 }), toolCall.id as string),
+      ]);
+
+      const sentContents = recorder.request?.body?.contents ?? [];
+      const modelTurn = sentContents.find(
+        (c: { role?: string }) => c.role === "model"
+      );
+      expect(modelTurn).toBeDefined();
+
+      const sentFunctionCallPart = (modelTurn?.parts ?? []).find(
+        (p: { functionCall?: unknown }) => "functionCall" in p
+      ) as { thoughtSignature?: string } | undefined;
+      expect(sentFunctionCallPart).toBeDefined();
+      expect(sentFunctionCallPart?.thoughtSignature).toBe(toolCallSignature);
     });
   }
 );
