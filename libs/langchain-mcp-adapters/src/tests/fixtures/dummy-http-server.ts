@@ -45,7 +45,7 @@ export function createDummyHttpServer(
         description: "A test tool that echoes input and request metadata",
         inputSchema: z.object({ input: z.string() }),
       },
-      async ({ input }, ctx) => {
+      async ({ input }, extra) => {
         // Logging message
         await server.server.notification(
           {
@@ -56,11 +56,11 @@ export function createDummyHttpServer(
               data: `test_tool invoked with ${input}`,
             },
           },
-          { relatedRequestId: ctx.mcpReq.id }
+          { relatedRequestId: extra.mcpReq.id }
         );
 
         // Progress with token if present
-        const progressToken = ctx.mcpReq._meta?.progressToken;
+        const progressToken = extra.mcpReq._meta?.progressToken;
         if (progressToken !== undefined) {
           const steps = 3;
           for (let i = 1; i <= steps; i++) {
@@ -69,7 +69,7 @@ export function createDummyHttpServer(
                 method: "notifications/progress",
                 params: { progress: i, total: steps, progressToken },
               },
-              { relatedRequestId: ctx.mcpReq.id }
+              { relatedRequestId: extra.mcpReq.id }
             );
           }
         }
@@ -80,7 +80,7 @@ export function createDummyHttpServer(
               type: "text",
               text: JSON.stringify({
                 input,
-                meta: ctx.mcpReq._meta,
+                meta: extra.mcpReq._meta,
                 serverName: name,
               }),
             },
@@ -122,9 +122,9 @@ export function createDummyHttpServer(
           description: "Check if specific headers were received",
           inputSchema: z.object({ headerName: z.string() }),
         },
-        async ({ headerName }, ctx) => {
+        async ({ headerName }, extra) => {
           // Get headers for this session
-          const sessionId = ctx.sessionId || "default";
+          const sessionId = extra.sessionId || "default";
           const headers = sessionHeaders[sessionId] || {};
           return {
             content: [

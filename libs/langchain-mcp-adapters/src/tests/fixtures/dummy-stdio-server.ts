@@ -19,7 +19,7 @@ server.registerTool(
     description: "A test tool that echoes input and metadata",
     inputSchema: z.object({ input: z.string() }),
   },
-  async ({ input }, ctx) => {
+  async ({ input }, extra) => {
     // Emit a logging message
     await server.server.notification(
       {
@@ -30,11 +30,11 @@ server.registerTool(
           timestamp: new Date().toISOString(),
         },
       },
-      { relatedRequestId: ctx.mcpReq.id }
+      { relatedRequestId: extra.mcpReq.id }
     );
 
     // Simulate progress updates using progressToken if present
-    const progressToken = ctx.mcpReq._meta?.progressToken;
+    const progressToken = extra.mcpReq._meta?.progressToken;
     if (progressToken !== undefined) {
       const steps = 3;
       for (let i = 1; i <= steps; i++) {
@@ -47,7 +47,7 @@ server.registerTool(
               progressToken,
             },
           },
-          { relatedRequestId: ctx.mcpReq.id }
+          { relatedRequestId: extra.mcpReq.id }
         );
       }
     }
@@ -58,7 +58,7 @@ server.registerTool(
           type: "text",
           text: JSON.stringify({
             input,
-            meta: ctx.mcpReq._meta,
+            meta: extra.mcpReq._meta,
             serverName,
           }),
         },
