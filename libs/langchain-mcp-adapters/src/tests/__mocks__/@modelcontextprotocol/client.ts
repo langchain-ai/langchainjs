@@ -1,12 +1,10 @@
-/* oxlint-disable @typescript-eslint/no-explicit-any */
 import { vi } from "vitest";
 
 // Mocks the exports of @modelcontextprotocol/client (v2). In v1 these lived under
 // separate subpaths (client/index.js, client/sse.js, client/streamableHttp.js); v2
 // re-exports them all from the package root, so their mocks are colocated here.
 
-// SdkHttpError is only `instanceof`-narrowed in src/client.ts — re-export the
-// real class so error identity matches production.
+// Keep SDK error construction identical to production.
 const actual = await vi.importActual<
   typeof import("@modelcontextprotocol/client")
 >("@modelcontextprotocol/client");
@@ -39,14 +37,14 @@ const clientPrototype = {
   close: vi.fn().mockImplementation(() => Promise.resolve()),
   tools: [], // Add the tools property
 };
-export const Client: any = vi
-  .fn()
-  .mockImplementation(function mockClient(clientInfo) {
-    return {
-      ...clientPrototype,
-      clientInfo,
-    };
-  });
+export const Client = vi.fn().mockImplementation(function mockClient(
+  ...[clientInfo]: ConstructorParameters<typeof actual.Client>
+) {
+  return {
+    ...clientPrototype,
+    clientInfo,
+  };
+});
 Client.prototype = clientPrototype;
 
 const sseClientTransportPrototype = {
@@ -54,9 +52,11 @@ const sseClientTransportPrototype = {
   send: vi.fn().mockReturnValue(Promise.resolve()),
   close: vi.fn().mockReturnValue(Promise.resolve()),
 };
-export const SSEClientTransport: any = vi
+export const SSEClientTransport = vi
   .fn()
-  .mockImplementation(function mockSSEClientTransport(url, options) {
+  .mockImplementation(function mockSSEClientTransport(
+    ...[url, options]: ConstructorParameters<typeof actual.SSEClientTransport>
+  ) {
     return {
       ...sseClientTransportPrototype,
       url,
@@ -70,9 +70,13 @@ const streamableHTTPClientTransportPrototype = {
   send: vi.fn().mockReturnValue(Promise.resolve()),
   close: vi.fn().mockReturnValue(Promise.resolve()),
 };
-export const StreamableHTTPClientTransport: any = vi
+export const StreamableHTTPClientTransport = vi
   .fn()
-  .mockImplementation(function mockStreamableHTTPClientTransport(url, options) {
+  .mockImplementation(function mockStreamableHTTPClientTransport(
+    ...[url, options]: ConstructorParameters<
+      typeof actual.StreamableHTTPClientTransport
+    >
+  ) {
     return {
       ...streamableHTTPClientTransportPrototype,
       url,

@@ -1,10 +1,8 @@
 import {
   SSEClientTransport,
   StreamableHTTPClientTransport,
-  SdkHttpError,
 } from "@modelcontextprotocol/client";
 import type {
-  SseError,
   OAuthClientProvider,
   LoggingLevel,
 } from "@modelcontextprotocol/client";
@@ -12,6 +10,7 @@ import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import type { DynamicStructuredTool } from "@langchain/core/tools";
 import { z } from "zod/v3";
 import { loadMcpTools } from "./tools.js";
+import { getHttpErrorStatus } from "./http_error.js";
 import { ConnectionManager, type Client } from "./connection.js";
 import { getDebugLog } from "./logging.js";
 import {
@@ -757,21 +756,7 @@ export class MultiServerMCPClient {
   }
 
   private _getHttpErrorCode(error: unknown): number | undefined {
-    const streamableError = error as SdkHttpError | SseError;
-    // v2: SdkHttpError carries the HTTP status on `.status` (its `.code` is an SdkErrorCode enum);
-    // SseError still carries the numeric status on `.code`.
-    let code: number | undefined =
-      streamableError instanceof SdkHttpError
-        ? streamableError.status
-        : streamableError.code;
-    // try parsing from error message if code is not set
-    if (code == null) {
-      const m = streamableError.message.match(/\(HTTP (\d\d\d)\)/);
-      if (m && m.length > 1) {
-        code = parseInt(m[1], 10);
-      }
-    }
-    return code;
+    return getHttpErrorStatus(error);
   }
 
   private _createAuthenticationErrorMessage(
