@@ -22,12 +22,10 @@ import {
   TextCompletionStream,
 } from "@ibm-cloud/watsonx-ai/gateway";
 import {
-  authenticateAndSetGatewayInstance,
-  authenticateAndSetInstance,
+  PropertyValidator,
   checkRequiredProps,
-  checkValidProps,
   expectOneOf,
-} from "../utils/ibm.js";
+} from "../utils/validation.js";
 import {
   GenerationInfo,
   ResponseChunk,
@@ -37,6 +35,7 @@ import {
   WatsonxLLMBasicOptions,
   XOR,
 } from "../types.js";
+import { initWatsonxOrGatewayInstance } from "../utils/ibm.js";
 
 export interface WatsonxLLMParams {
   maxNewTokens?: number;
@@ -183,36 +182,6 @@ export class WatsonxLLM<
       | XOR<Partial<WatsonxLLMParams>, Partial<WatsonxLLMGatewayParams>>,
     includeCommonProps = true
   ) {
-    const authProps = [
-      "serviceUrl",
-      "watsonxAIApikey",
-      "watsonxAIBearerToken",
-      "watsonxAIUsername",
-      "watsonxAIPassword",
-      "watsonxAIUrl",
-      "watsonxAIAuthType",
-      "disableSSL",
-    ];
-
-    const sharedProps = [
-      "maxRetries",
-      "watsonxCallbacks",
-      "authenticator",
-      "serviceUrl",
-      "version",
-      "streaming",
-      "callbackManager",
-      "callbacks",
-      "maxConcurrency",
-      "cache",
-      "metadata",
-      "concurrency",
-      "onFailedAttempt",
-      "concurrency",
-      "verbose",
-      "tags",
-    ];
-
     const gatewayProps = [
       "temperature",
       "topP",
@@ -246,17 +215,20 @@ export class WatsonxLLM<
       "includeStopSequence",
     ];
 
-    const validProps: string[] = [];
-    if (includeCommonProps) validProps.push(...authProps, ...sharedProps);
-
+    let modeProps: string[] = [];
     if (this.modelGateway) {
-      validProps.push(...gatewayProps);
+      modeProps = gatewayProps;
     } else if (this.idOrName) {
-      validProps.push(...deploymentProps);
+      modeProps = deploymentProps;
     } else if (this.spaceId || this.projectId) {
-      validProps.push(...projectOrSpaceProps);
+      modeProps = projectOrSpaceProps;
     }
-    checkValidProps(fields, validProps);
+
+    PropertyValidator.validateByMode(
+      fields as Record<string, unknown>,
+      modeProps,
+      includeCommonProps
+    );
   }
 
   constructor(fields: WatsonxLLMConstructor) {
@@ -309,40 +281,10 @@ export class WatsonxLLM<
     this.streaming = fields.streaming || this.streaming;
     this.watsonxCallbacks = fields.watsonxCallbacks || this.watsonxCallbacks;
 
-    const {
-      watsonxAIApikey,
-      watsonxAIAuthType,
-      watsonxAIBearerToken,
-      watsonxAIUsername,
-      watsonxAIPassword,
-      watsonxAIUrl,
-      disableSSL,
-      version,
-      serviceUrl,
-    } = fields;
-
-    const authData = {
-      watsonxAIApikey,
-      watsonxAIAuthType,
-      watsonxAIBearerToken,
-      watsonxAIUsername,
-      watsonxAIPassword,
-      watsonxAIUrl,
-      disableSSL,
-      version,
-      serviceUrl,
-    };
-
     if (this.modelGateway) {
-      const gateway = authenticateAndSetGatewayInstance(authData);
-
-      if (gateway) this.gateway = gateway;
-      else throw new Error("You have not provided any type of authentication");
+      this.gateway = initWatsonxOrGatewayInstance(fields, true);
     } else {
-      const service = authenticateAndSetInstance(authData);
-
-      if (service) this.service = service;
-      else throw new Error("You have not provided any type of authentication");
+      this.service = initWatsonxOrGatewayInstance(fields);
     }
   }
 
@@ -357,6 +299,11 @@ export class WatsonxLLM<
       watsonxAIUsername: "WATSONX_AI_USERNAME",
       watsonxAIPassword: "WATSONX_AI_PASSWORD",
       watsonxAIUrl: "WATSONX_AI_URL",
+      authUrl: "WATSONX_AI_URL",
+      bearerToken: "WATSONX_AI_BEARER_TOKEN",
+      username: "WATSONX_AI_USERNAME",
+      password: "WATSONX_AI_PASSWORD",
+      authType: "WATSONX_AI_AUTH_TYPE",
     };
   }
 
@@ -371,6 +318,11 @@ export class WatsonxLLM<
       watsonxAIUsername: "watsonx_ai_username",
       watsonxAIPassword: "watsonx_ai_password",
       watsonxAIUrl: "watsonx_ai_url",
+      authUrl: "watsonx_ai_url",
+      bearerToken: "watsonx_ai_bearer_token",
+      username: "watsonx_ai_username",
+      password: "watsonx_ai_password",
+      authType: "watsonx_ai_auth_type",
     };
   }
 
