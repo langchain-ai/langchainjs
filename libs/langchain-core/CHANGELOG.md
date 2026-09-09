@@ -1,5 +1,11 @@
 # @langchain/core
 
+## 1.2.10
+
+### Patch Changes
+
+- [#10047](https://github.com/langchain-ai/langchainjs/pull/10047) [`ff1248f`](https://github.com/langchain-ai/langchainjs/commit/ff1248fd49dacdb35f5da128278cd777068481d7) Thanks [@afirstenberg](https://github.com/afirstenberg)! - fix(core): BaseMessage.text use contentBlocks
+
 ## 1.2.9
 
 ### Patch Changes
