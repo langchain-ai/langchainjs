@@ -250,6 +250,30 @@ test("removeAdditionalProperties can remove all instances of additionalPropertie
   ).toBeUndefined();
 });
 
+test("removeAdditionalProperties remaps exclusiveMinimum/exclusiveMaximum to minimum/maximum", () => {
+  // Zod's .positive()/.negative()/.gt()/.lt() emit exclusiveMinimum/exclusiveMaximum,
+  // which Gemini's responseSchema rejects with a 400. They must be remapped.
+  const schema = z.object({
+    pos: z.number().positive(), // exclusiveMinimum: 0
+    neg: z.number().negative(), // exclusiveMaximum: 0
+    gt: z.number().gt(5), // exclusiveMinimum: 5
+    lt: z.number().lt(10), // exclusiveMaximum: 10
+  });
+
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  const props = (removeAdditionalProperties(toJsonSchema(schema)) as any)
+    .properties;
+
+  expect(props.pos).not.toHaveProperty("exclusiveMinimum");
+  expect(props.pos.minimum).toBe(0.01);
+  expect(props.neg).not.toHaveProperty("exclusiveMaximum");
+  expect(props.neg.maximum).toBe(-0.01);
+  expect(props.gt).not.toHaveProperty("exclusiveMinimum");
+  expect(props.gt.minimum).toBeCloseTo(5.00001);
+  expect(props.lt).not.toHaveProperty("exclusiveMaximum");
+  expect(props.lt.maximum).toBeCloseTo(9.99999);
+});
+
 test("convertMessageContentToParts correctly handles message types", () => {
   const messages = [
     new SystemMessage("You are a helpful assistant"),
