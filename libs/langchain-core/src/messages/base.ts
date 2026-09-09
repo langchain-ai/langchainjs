@@ -316,7 +316,7 @@ export abstract class BaseMessage<
       (block: ContentBlock.Standard) => block.type === "text"
     );
     return textBlocks.reduce(
-      (acc: string, block: ContentBlock.Text) => acc + block.text,
+      (acc: string, block: ContentBlock.Text) => acc + (block.text ?? ""),
       ""
     );
   }
