@@ -768,6 +768,45 @@ describe("Simplified Tool Adapter Tests", () => {
       expect(result).toBe("Configured");
     });
 
+    test("should resolve Optional[T] anyOf (T | null) to the non-null variant", async () => {
+      const schemaWithOptionalArray = {
+        type: "object" as const,
+        properties: {
+          name: {
+            anyOf: [
+              { type: "array", items: { type: "string" } },
+              { type: "null" },
+            ],
+            default: null,
+            description: "List of name",
+          },
+        },
+      };
+
+      mockClient.listTools.mockReturnValueOnce(
+        Promise.resolve({
+          tools: [
+            {
+              name: "search",
+              description: "Search something",
+              inputSchema: schemaWithOptionalArray,
+            },
+          ],
+        })
+      );
+
+      const tools = await loadMcpTools(
+        "mockServer(optional anyOf)",
+        mockClient as Client
+      );
+
+      const nameSchema = (tools[0].schema as { properties: Record<string, unknown> })
+        .properties.name as { type?: string; items?: { type?: string } };
+
+      expect(nameSchema.type).toBe("array");
+      expect(nameSchema.items).toEqual({ type: "string" });
+    });
+
     test("should simplify schemas with oneOf at top level by merging object schemas", async () => {
       // Test oneOf at the TOP level (where OpenAI restriction applies)
       const schemaWithOneOf = {
