@@ -190,6 +190,42 @@ describe("middleware", () => {
     );
   });
 
+  it("should read middleware context from configurable.middleware_context", async () => {
+    const model = new FakeToolCallingChatModel({
+      responses: [new AIMessage("Hello")],
+    });
+    const middleware = createMiddleware({
+      name: "middleware",
+      contextSchema: z.object({
+        customMiddlewareContext: z.string(),
+      }),
+      beforeModel: (_, { context }) => {
+        expect(context).toEqual({
+          customMiddlewareContext: "from-middleware-context",
+        });
+      },
+    });
+
+    const agent = createAgent({
+      model,
+      tools: [],
+      middleware: [middleware],
+    });
+
+    await agent.invoke(
+      {
+        messages: [new HumanMessage("Hello, world!")],
+      },
+      {
+        configurable: {
+          middleware_context: {
+            customMiddlewareContext: "from-middleware-context",
+          },
+        },
+      }
+    );
+  });
+
   describe("control actions", () => {
     it("should terminate the agent in beforeModel hook", async () => {
       const model = new FakeToolCallingChatModel({
