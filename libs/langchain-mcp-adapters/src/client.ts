@@ -41,7 +41,7 @@ const debugLog = getDebugLog();
 export class MCPClientError extends Error {
   constructor(
     message: string,
-    public readonly serverName?: string
+    public readonly serverName?: string,
   ) {
     super(message);
     this.name = "MCPClientError";
@@ -54,7 +54,7 @@ export class MCPClientError extends Error {
  * @returns True if the connection configuration is for a stdio transport
  */
 function isResolvedStdioConnection(
-  connection: unknown
+  connection: unknown,
 ): connection is ResolvedStdioConnection {
   if (
     typeof connection !== "object" ||
@@ -85,7 +85,7 @@ function isResolvedStdioConnection(
  * @returns True if the connection configuration is for a streamable HTTP transport
  */
 function isResolvedStreamableHTTPConnection(
-  connection: unknown
+  connection: unknown,
 ): connection is ResolvedStreamableHTTPConnection {
   if (
     typeof connection !== "object" ||
@@ -158,6 +158,11 @@ export class MultiServerMCPClient {
   #failedServers: Set<string> = new Set();
 
   /**
+   * Deduplication guard: if initializeConnections is already in-flight, reuse the same promise.
+   */
+  #initPromise: Promise<Record<string, DynamicStructuredTool[]>> | null = null;
+
+  /**
    * Returns clone of server config for inspection purposes.
    *
    * Client does not support config modifications.
@@ -191,11 +196,11 @@ export class MultiServerMCPClient {
     }
 
     for (const [serverName, serverConfig] of Object.entries(
-      parsedServerConfig.mcpServers
+      parsedServerConfig.mcpServers,
     )) {
       const outputHandling = _resolveAndApplyOverrideHandlingOverrides(
         parsedServerConfig.outputHandling,
-        serverConfig.outputHandling
+        serverConfig.outputHandling,
       );
       const defaultToolTimeout =
         parsedServerConfig.defaultToolTimeout ??
@@ -227,65 +232,98 @@ export class MultiServerMCPClient {
   }
 
   /**
-   * Proactively initialize connections to all servers. This will be called automatically when
-   * methods requiring an active connection (like {@link getTools} or {@link getClient}) are called,
-   * but you can call it directly to ensure all connections are established before using the tools.
+   * Proactively initialize connections to all servers in parallel. This will be called
+   * automatically when methods requiring an active connection (like {@link getTools} or
+   * {@link getClient}) are called, but you can call it directly to ensure all connections
+   * are established before using the tools.
    *
-   * When a server fails to connect, the client will throw an error if `onConnectionError` is "throw",
-   * otherwise it will skip the server and continue with the remaining servers.
+   * All servers are connected concurrently for faster startup. When a server fails to connect,
+   * the client will throw an error if `onConnectionError` is "throw", otherwise it will skip
+   * the server and continue with the remaining servers.
    *
    * @returns A map of server names to arrays of tools
    * @throws {MCPClientError} If initialization fails and `onConnectionError` is "throw" (default)
    */
   async initializeConnections(
-    customTransportOptions?: CustomHTTPTransportOptions
+    customTransportOptions?: CustomHTTPTransportOptions,
+  ): Promise<Record<string, DynamicStructuredTool[]>> {
+    if (this.#initPromise) {
+      return this.#initPromise;
+    }
+    this.#initPromise = this._initializeConnectionsImpl(customTransportOptions);
+    try {
+      return await this.#initPromise;
+    } finally {
+      this.#initPromise = null;
+    }
+  }
+
+  private async _initializeConnectionsImpl(
+    customTransportOptions?: CustomHTTPTransportOptions,
   ): Promise<Record<string, DynamicStructuredTool[]>> {
     if (!this.#mcpServers || Object.keys(this.#mcpServers).length === 0) {
       throw new MCPClientError("No connections to initialize");
     }
 
-    for (const [serverName, connection] of Object.entries(this.#mcpServers)) {
-      // Skip servers that have already failed (when onConnectionError is "ignore")
+    const entries = Object.entries(this.#mcpServers).filter(([serverName]) => {
       if (
         (this.#onConnectionError === "ignore" ||
           typeof this.#onConnectionError === "function") &&
         this.#failedServers.has(serverName)
       ) {
-        continue;
+        return false;
       }
+      return true;
+    });
 
-      try {
+    const results = await Promise.allSettled(
+      entries.map(async ([serverName, connection]) => {
         await this._initializeConnection(
           serverName,
           connection,
-          customTransportOptions
+          customTransportOptions,
         );
-        // If we successfully initialized, remove from failed set (in case it was there before)
+        return serverName;
+      }),
+    );
+
+    let firstError: unknown = null;
+
+    for (let i = 0; i < results.length; i += 1) {
+      const result = results[i];
+      const serverName = entries[i][0];
+
+      if (result.status === "fulfilled") {
         this.#failedServers.delete(serverName);
-      } catch (error) {
+      } else {
         if (this.#onConnectionError === "throw") {
-          throw error;
+          if (!firstError) firstError = result.reason;
+          continue;
         }
 
-        // Handle custom error handler function
         if (typeof this.#onConnectionError === "function") {
-          this.#onConnectionError({ serverName, error });
-          // If we get here, the handler didn't throw, so treat as ignored
+          this.#onConnectionError({ serverName, error: result.reason });
           this.#failedServers.add(serverName);
           debugLog(
-            `WARN: Failed to initialize connection to server "${serverName}": ${String(error)}`
+            `WARN: Failed to initialize connection to server "${serverName}": ${String(result.reason)}`,
           );
           continue;
         }
 
-        // Default "ignore" behavior
-        // Mark this server as failed so we don't try again
+        // "ignore" mode
         this.#failedServers.add(serverName);
         debugLog(
-          `WARN: Failed to initialize connection to server "${serverName}": ${String(error)}`
+          `WARN: Failed to initialize connection to server "${serverName}": ${String(result.reason)}`,
         );
-        continue;
       }
+    }
+
+    if (this.#onConnectionError === "throw" && firstError) {
+      throw firstError instanceof MCPClientError
+        ? firstError
+        : new MCPClientError(
+            `Failed to initialize connection: ${String(firstError)}`,
+          );
     }
 
     // Warn if no servers successfully connected when using "ignore" mode
@@ -294,7 +332,7 @@ export class MultiServerMCPClient {
       Object.keys(this.#serverNameToTools).length === 0
     ) {
       debugLog(
-        `WARN: No servers successfully connected. All connection attempts failed.`
+        `WARN: No servers successfully connected. All connection attempts failed.`,
       );
     }
 
@@ -333,7 +371,7 @@ export class MultiServerMCPClient {
   async getTools(...servers: string[]): Promise<DynamicStructuredTool[]>;
   async getTools(
     servers: string[],
-    options?: CustomHTTPTransportOptions
+    options?: CustomHTTPTransportOptions,
   ): Promise<DynamicStructuredTool[]>;
   async getTools(...args: unknown[]): Promise<DynamicStructuredTool[]> {
     if (args.length === 0 || args.every((arg) => typeof arg === "string")) {
@@ -382,7 +420,7 @@ export class MultiServerMCPClient {
       await Promise.all(
         this.#clientConnections
           .getAllClients()
-          .map((client) => client.setLoggingLevel(level))
+          .map((client) => client.setLoggingLevel(level)),
       );
       return;
     }
@@ -399,7 +437,7 @@ export class MultiServerMCPClient {
    */
   async getClient(
     serverName: string,
-    options?: CustomHTTPTransportOptions
+    options?: CustomHTTPTransportOptions,
   ): Promise<Client | undefined> {
     await this.initializeConnections(options);
     return this.#clientConnections.get({
@@ -434,7 +472,7 @@ export class MultiServerMCPClient {
   ): Promise<Record<string, MCPResource[]>>;
   async listResources(
     servers: string[],
-    options?: CustomHTTPTransportOptions
+    options?: CustomHTTPTransportOptions,
   ): Promise<Record<string, MCPResource[]>>;
   async listResources(
     ...args: unknown[]
@@ -474,11 +512,11 @@ export class MultiServerMCPClient {
           mimeType: resource.mimeType,
         }));
         debugLog(
-          `INFO: Listed ${result[serverName].length} resources from server "${serverName}"`
+          `INFO: Listed ${result[serverName].length} resources from server "${serverName}"`,
         );
       } catch (error) {
         debugLog(
-          `ERROR: Failed to list resources from server "${serverName}": ${error}`
+          `ERROR: Failed to list resources from server "${serverName}": ${error}`,
         );
         result[serverName] = [];
       }
@@ -514,7 +552,7 @@ export class MultiServerMCPClient {
   ): Promise<Record<string, MCPResourceTemplate[]>>;
   async listResourceTemplates(
     servers: string[],
-    options?: CustomHTTPTransportOptions
+    options?: CustomHTTPTransportOptions,
   ): Promise<Record<string, MCPResourceTemplate[]>>;
   async listResourceTemplates(
     ...args: unknown[]
@@ -553,14 +591,14 @@ export class MultiServerMCPClient {
             name: template.title ?? template.name,
             description: template.description,
             mimeType: template.mimeType,
-          })
+          }),
         );
         debugLog(
-          `INFO: Listed ${result[serverName].length} resource templates from server "${serverName}"`
+          `INFO: Listed ${result[serverName].length} resource templates from server "${serverName}"`,
         );
       } catch (error) {
         debugLog(
-          `ERROR: Failed to list resource templates from server "${serverName}": ${error}`
+          `ERROR: Failed to list resource templates from server "${serverName}": ${error}`,
         );
         result[serverName] = [];
       }
@@ -585,7 +623,7 @@ export class MultiServerMCPClient {
   async readResource(
     serverName: string,
     uri: string,
-    options?: CustomHTTPTransportOptions
+    options?: CustomHTTPTransportOptions,
   ): Promise<MCPResourceContent[]> {
     await this.initializeConnections(options);
 
@@ -593,7 +631,7 @@ export class MultiServerMCPClient {
     if (!client) {
       throw new MCPClientError(
         `Server "${serverName}" not found or not connected`,
-        serverName
+        serverName,
       );
     }
 
@@ -609,7 +647,7 @@ export class MultiServerMCPClient {
     } catch (error) {
       throw new MCPClientError(
         `Failed to read resource "${uri}" from server "${serverName}": ${error}`,
-        serverName
+        serverName,
       );
     }
   }
@@ -621,6 +659,7 @@ export class MultiServerMCPClient {
     debugLog(`INFO: Closing all MCP connections...`);
     this.#serverNameToTools = {};
     this.#failedServers.clear();
+    this.#initPromise = null;
     await this.#clientConnections.delete();
     debugLog(`INFO: All MCP connections closed`);
   }
@@ -631,11 +670,11 @@ export class MultiServerMCPClient {
   private async _initializeConnection(
     serverName: string,
     connection: ResolvedConnection,
-    customTransportOptions?: CustomHTTPTransportOptions
+    customTransportOptions?: CustomHTTPTransportOptions,
   ): Promise<void> {
     if (isResolvedStdioConnection(connection)) {
       debugLog(
-        `INFO: Initializing stdio connection to server "${serverName}"...`
+        `INFO: Initializing stdio connection to server "${serverName}"...`,
       );
 
       /**
@@ -674,14 +713,14 @@ export class MultiServerMCPClient {
       } else {
         await this._initializeStreamableHTTPConnection(
           serverName,
-          updatedConnection
+          updatedConnection,
         );
       }
     } else {
       // This should never happen due to the validation in the constructor
       throw new MCPClientError(
         `Unsupported transport type for server "${serverName}"`,
-        serverName
+        serverName,
       );
     }
   }
@@ -691,21 +730,21 @@ export class MultiServerMCPClient {
    */
   private async _initializeStdioConnection(
     serverName: string,
-    connection: ResolvedStdioConnection
+    connection: ResolvedStdioConnection,
   ): Promise<void> {
     const { command, args, restart } = connection;
 
     debugLog(
       `DEBUG: Creating stdio transport for server "${serverName}" with command: ${command} ${args.join(
-        " "
-      )}`
+        " ",
+      )}`,
     );
 
     try {
       const client = await this.#clientConnections.createClient(
         "stdio",
         serverName,
-        connection
+        connection,
       );
       const transport = this.#clientConnections.getTransport({
         serverName,
@@ -721,7 +760,7 @@ export class MultiServerMCPClient {
     } catch (error) {
       throw new MCPClientError(
         `Failed to connect to stdio server "${serverName}": ${error}`,
-        serverName
+        serverName,
       );
     }
   }
@@ -733,7 +772,7 @@ export class MultiServerMCPClient {
     serverName: string,
     transport: StdioClientTransport,
     connection: ResolvedStdioConnection,
-    restart: NonNullable<ResolvedStdioConnection["restart"]>
+    restart: NonNullable<ResolvedStdioConnection["restart"]>,
   ): void {
     const originalOnClose = transport.onclose;
     // oxlint-disable-next-line @typescript-eslint/no-misused-promises
@@ -745,13 +784,13 @@ export class MultiServerMCPClient {
       // Only attempt restart if we haven't cleaned up
       if (this.#clientConnections.get(serverName)) {
         debugLog(
-          `INFO: Process for server "${serverName}" exited, attempting to restart...`
+          `INFO: Process for server "${serverName}" exited, attempting to restart...`,
         );
         await this._attemptReconnect(
           serverName,
           connection,
           restart.maxAttempts,
-          restart.delayMs
+          restart.delayMs,
         );
       }
     };
@@ -774,7 +813,7 @@ export class MultiServerMCPClient {
     serverName: string,
     url: string,
     transport: "HTTP" | "SSE",
-    originalError: string
+    originalError: string,
   ): string {
     return (
       `Authentication failed for ${transport} server "${serverName}" at ${url}. ` +
@@ -799,14 +838,14 @@ export class MultiServerMCPClient {
    */
   private async _initializeStreamableHTTPConnection(
     serverName: string,
-    connection: ResolvedStreamableHTTPConnection
+    connection: ResolvedStreamableHTTPConnection,
   ): Promise<void> {
     const { url, type: typeField, transport: transportField } = connection;
     const automaticSSEFallback = connection.automaticSSEFallback ?? true;
     const transportType = typeField || transportField;
 
     debugLog(
-      `DEBUG: Creating Streamable HTTP transport for server "${serverName}" with URL: ${url}`
+      `DEBUG: Creating Streamable HTTP transport for server "${serverName}" with URL: ${url}`,
     );
 
     if (transportType === "http" || transportType == null) {
@@ -814,7 +853,7 @@ export class MultiServerMCPClient {
         const client = await this.#clientConnections.createClient(
           "http",
           serverName,
-          connection
+          connection,
         );
 
         await this._loadToolsForServer(serverName, client);
@@ -842,14 +881,14 @@ export class MultiServerMCPClient {
                       serverName,
                       url,
                       "HTTP",
-                      `${error}. Also tried SSE fallback at ${url} and ${sseUrl}, but both failed with authentication errors.`
+                      `${error}. Also tried SSE fallback at ${url} and ${sseUrl}, but both failed with authentication errors.`,
                     ),
-                    serverName
+                    serverName,
                   );
                 }
                 throw new MCPClientError(
                   `Failed to connect to streamable HTTP server "${serverName}, url: ${url}": ${error}. Additionally, tried falling back to SSE at ${url} and ${sseUrl}, but this also failed: ${secondSSEError}`,
-                  serverName
+                  serverName,
                 );
               }
             } else {
@@ -860,14 +899,14 @@ export class MultiServerMCPClient {
                     serverName,
                     url,
                     "HTTP",
-                    `${error}. Also tried SSE fallback at ${url}, but it failed with authentication error: ${firstSSEError}`
+                    `${error}. Also tried SSE fallback at ${url}, but it failed with authentication error: ${firstSSEError}`,
                   ),
-                  serverName
+                  serverName,
                 );
               }
               throw new MCPClientError(
                 `Failed to connect to streamable HTTP server after trying to fall back to SSE: "${serverName}, url: ${url}": ${error} (SSE fallback failed with error ${firstSSEError})`,
-                serverName
+                serverName,
               );
             }
           }
@@ -879,14 +918,14 @@ export class MultiServerMCPClient {
                 serverName,
                 url,
                 "HTTP",
-                `${error}`
+                `${error}`,
               ),
-              serverName
+              serverName,
             );
           }
           throw new MCPClientError(
             `Failed to connect to streamable HTTP server "${serverName}, url: ${url}": ${error}`,
-            serverName
+            serverName,
           );
         }
       }
@@ -905,7 +944,7 @@ export class MultiServerMCPClient {
    */
   private async _initializeSSEConnection(
     serverName: string,
-    connection: ResolvedStreamableHTTPConnection // used for both SSE and streamable HTTP
+    connection: ResolvedStreamableHTTPConnection, // used for both SSE and streamable HTTP
   ): Promise<void> {
     const { url, headers, reconnect, authProvider } = connection;
 
@@ -913,7 +952,7 @@ export class MultiServerMCPClient {
       const client = await this.#clientConnections.createClient(
         "sse",
         serverName,
-        connection
+        connection,
       );
       const transport = this.#clientConnections.getTransport({
         serverName,
@@ -943,15 +982,15 @@ export class MultiServerMCPClient {
             serverName,
             url,
             "SSE",
-            `${error}`
+            `${error}`,
           ),
-          serverName
+          serverName,
         );
       }
 
       throw new MCPClientError(
         `Failed to create SSE transport for server "${serverName}, url: ${url}": ${error}`,
-        serverName
+        serverName,
       );
     }
   }
@@ -963,7 +1002,7 @@ export class MultiServerMCPClient {
     serverName: string,
     transport: SSEClientTransport | StreamableHTTPClientTransport,
     connection: ResolvedStreamableHTTPConnection,
-    reconnect: NonNullable<ResolvedStreamableHTTPConnection["reconnect"]>
+    reconnect: NonNullable<ResolvedStreamableHTTPConnection["reconnect"]>,
   ): void {
     const originalOnClose = transport.onclose;
     // oxlint-disable-next-line @typescript-eslint/no-misused-promises
@@ -981,13 +1020,13 @@ export class MultiServerMCPClient {
         })
       ) {
         debugLog(
-          `INFO: HTTP connection for server "${serverName}" closed, attempting to reconnect...`
+          `INFO: HTTP connection for server "${serverName}" closed, attempting to reconnect...`,
         );
         await this._attemptReconnect(
           serverName,
           connection,
           reconnect.maxAttempts,
-          reconnect.delayMs
+          reconnect.delayMs,
         );
       }
     };
@@ -998,22 +1037,22 @@ export class MultiServerMCPClient {
    */
   private async _loadToolsForServer(
     serverName: string,
-    client: Client
+    client: Client,
   ): Promise<void> {
     try {
       debugLog(`DEBUG: Loading tools for server "${serverName}"...`);
       const tools = await loadMcpTools(
         serverName,
         client,
-        this.#loadToolsOptions[serverName]
+        this.#loadToolsOptions[serverName],
       );
       this.#serverNameToTools[serverName] = tools;
       debugLog(
-        `INFO: Successfully loaded ${tools.length} tools from server "${serverName}"`
+        `INFO: Successfully loaded ${tools.length} tools from server "${serverName}"`,
       );
     } catch (error) {
       throw new MCPClientError(
-        `Failed to load tools from server "${serverName}": ${error}`
+        `Failed to load tools from server "${serverName}": ${error}`,
       );
     }
   }
@@ -1031,7 +1070,7 @@ export class MultiServerMCPClient {
     serverName: string,
     connection: ResolvedConnection,
     maxAttempts = 3,
-    delayMs = 1000
+    delayMs = 1000,
   ): Promise<void> {
     let connected = false;
     let attempts = 0;
@@ -1052,7 +1091,7 @@ export class MultiServerMCPClient {
       debugLog(
         `INFO: Reconnection attempt ${attempts}${
           maxAttempts ? `/${maxAttempts}` : ""
-        } for server "${serverName}"`
+        } for server "${serverName}"`,
       );
 
       try {
@@ -1072,7 +1111,7 @@ export class MultiServerMCPClient {
           } else {
             await this._initializeStreamableHTTPConnection(
               serverName,
-              connection
+              connection,
             );
           }
         }
@@ -1092,14 +1131,14 @@ export class MultiServerMCPClient {
         }
       } catch (error) {
         debugLog(
-          `ERROR: Failed to reconnect to server "${serverName}" (attempt ${attempts}): ${error}`
+          `ERROR: Failed to reconnect to server "${serverName}" (attempt ${attempts}): ${error}`,
         );
       }
     }
 
     if (!connected) {
       debugLog(
-        `ERROR: Failed to reconnect to server "${serverName}" after ${attempts} attempts`
+        `ERROR: Failed to reconnect to server "${serverName}" after ${attempts} attempts`,
       );
     }
   }
