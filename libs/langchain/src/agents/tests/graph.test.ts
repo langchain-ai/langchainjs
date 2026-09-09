@@ -244,6 +244,16 @@ const strategicCases: Omit<Case, "hasTool">[] = [
     bBefore: undefined,
     bAfter: undefined,
   },
+
+  // beforeModel end-jump must route through the afterAgent chain (#11207)
+  {
+    aBeforeAgent: undefined,
+    aAfterAgent: [],
+    aBefore: ["end"],
+    aAfter: undefined,
+    bBefore: undefined,
+    bAfter: undefined,
+  },
 ];
 
 const hasToolOptions = [false, true];

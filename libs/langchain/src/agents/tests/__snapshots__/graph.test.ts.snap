@@ -263,6 +263,47 @@ graph TD;
 "
 `;
 
+exports[`graph (A beforeAgent: undefined, A afterAgent: [], A before: [ 'end' ], A after: undefined | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: undefined | tools: false) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	MiddlewareA_after_agent(MiddlewareA.after_agent)
+	model_request(model_request)
+	__end__([<p>__end__</p>]):::last
+	MiddlewareA_after_agent --> __end__;
+	__start__ --> MiddlewareA_before_model;
+	model_request --> MiddlewareA_after_agent;
+	MiddlewareA_before_model -.-> model_request;
+	MiddlewareA_before_model -.-> MiddlewareA_after_agent;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
+exports[`graph (A beforeAgent: undefined, A afterAgent: [], A before: [ 'end' ], A after: undefined | B beforeAgent: undefined, B afterAgent: undefined, B before: undefined, B after: undefined | tools: true) > should create correct graph structure 1`] = `
+"%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	MiddlewareA_before_model(MiddlewareA.before_model)
+	MiddlewareA_after_agent(MiddlewareA.after_agent)
+	model_request(model_request)
+	tools(tools)
+	__end__([<p>__end__</p>]):::last
+	MiddlewareA_after_agent --> __end__;
+	__start__ --> MiddlewareA_before_model;
+	tools --> MiddlewareA_before_model;
+	MiddlewareA_before_model -.-> model_request;
+	MiddlewareA_before_model -.-> MiddlewareA_after_agent;
+	model_request -.-> tools;
+	model_request -.-> MiddlewareA_after_agent;
+	classDef default fill:#f2f0ff,line-height:1.2;
+	classDef first fill-opacity:0;
+	classDef last fill:#bfb6fc;
+"
+`;
+
 exports[`graph (A beforeAgent: undefined, A afterAgent: undefined, A before: [ 'end' ], A after: [ 'tools' ] | B beforeAgent: undefined, B afterAgent: undefined, B before: [ 'end' ], B after: [ 'model' ] | tools: false) > should create correct graph structure 1`] = `
 "%%{init: {'flowchart': {'curve': 'linear'}}}%%
 graph TD;
