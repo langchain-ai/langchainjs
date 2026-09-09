@@ -888,19 +888,6 @@ export namespace Gemini {
     }
 
     /**
-     * Different types of search that can be enabled on the GoogleSearch tool.
-     */
-    export interface SearchTypes {
-      /** Optional. Enables image search. Image bytes are returned. */
-      imageSearch?: ImageSearch;
-
-      /**
-       * Optional. Enables web search. Only text results are returned.
-       */
-      webSearch?: WebSearch;
-    }
-
-    /**
      * Represents a time interval, encoded as a Timestamp start (inclusive) and a
      * Timestamp end (exclusive).
      * 
@@ -924,6 +911,19 @@ export namespace Gemini {
        * or after the start.
        */
       startTime?: string;
+    }
+
+    /**
+     * Different types of search that can be enabled on the GoogleSearch tool.
+     */
+    export interface SearchTypes {
+      /** Optional. Enables image search. Image bytes are returned. */
+      imageSearch?: ImageSearch;
+
+      /**
+       * Optional. Enables web search. Only text results are returned.
+       */
+      webSearch?: WebSearch;
     }
 
     export type Type = "TYPE_UNSPECIFIED" | "STRING" | "NUMBER" | "INTEGER" | "BOOLEAN" | "ARRAY" | "OBJECT" | "NULL" | (string & {});
@@ -1500,6 +1500,22 @@ export namespace Gemini {
     readonly usageMetadata?: UsageMetadata;
   }
 
+  /** Config for translation features. */
+  export interface TranslationConfig {
+    /**
+     * Optional. If true, the model will generate audio when the target language is spoken,
+     * essentially it will parrot the input. If false, we will not produce audio
+     * for the target language.
+     */
+    echoTargetLanguage?: boolean;
+
+    /**
+     * Required. The target language for translation. Supported values are BCP-47 language
+     * codes (e.g. "en", "es", "fr").
+     */
+    targetLanguageCode: string;
+  }
+
   /** A citation to a source for a portion of a specific response. */
   export interface CitationSource {
     /** Optional. End of the attributed segment, exclusive. */
@@ -1525,66 +1541,28 @@ export namespace Gemini {
     uri?: string;
   }
 
-  /**
-   * The status of the underlying model. This is used to indicate the stage of the
-   * underlying model and the retirement time if applicable.
-   */
-  export interface ModelStatus {
-    /** A message explaining the model status. */
-    message?: string;
+  /** Chunk from image search. */
+  export interface Image {
+    /**
+     * The root domain of the web page that the image is from, e.g.
+     * "example.com".
+     */
+    domain?: string;
 
-    /** The stage of the underlying model. */
-    modelStage?: ModelStage;
+    /** The image asset URL. */
+    imageUri?: string;
 
-    /** The time at which the model will be retired. */
-    retirementTime?: string;
+    /** The web page URI for attribution. */
+    sourceUri?: string;
+
+    /** The title of the web page that the image is from. */
+    title?: string;
   }
 
   /** The configuration for the prebuilt speaker to use. */
   export interface PrebuiltVoiceConfig {
     /** Optional. The name of the preset voice to use. */
     voiceName?: string;
-  }
-
-  /** URI based data. */
-  export interface FileData {
-    /**
-     * Optional. Specifies the name used to refer to this file to the model (e.g.
-     * "my_file.pdf"). Used as the file reference identifier when
-     * `verbalization_mode` is set to `REFERENCE_ONLY`.
-     */
-    displayName?: string;
-
-    /** Required. URI. */
-    fileUri: string;
-
-    /** Optional. The IANA standard MIME type of the source data. */
-    mimeType?: string;
-  }
-
-  /**
-   * A predicted `FunctionCall` returned from the model that contains
-   * a string representing the `FunctionDeclaration.name` with the
-   * arguments and their values.
-   */
-  export interface FunctionCall {
-    /**
-     * Optional. The function parameters and values in JSON object format.
-     */
-    args?: Record<string, unknown>;
-
-    /**
-     * Optional. Unique identifier of the function call. If populated, the client to
-     * execute the `function_call` and return the response with the matching `id`.
-     */
-    id?: string;
-
-    /**
-     * Required. The name of the function to call.
-     * Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum
-     * length of 128.
-     */
-    name: string;
   }
 
   /**
@@ -1648,81 +1626,13 @@ export namespace Gemini {
     willContinue?: boolean;
   }
 
-  /**
-   * A predicted server-side `ToolCall` returned from the model. This message
-   * contains information about a tool that the model wants to invoke.
-   * The client is NOT expected to execute this `ToolCall`. Instead, the
-   * client should pass this `ToolCall` back to the API in a subsequent turn
-   * within a `Content` message, along with the corresponding `ToolResponse`.
-   */
-  export interface ToolCall {
+  /** Media resolution for tokenization. */
+  export interface V1mainMediaResolution {
     /**
-     * Optional. The tool call arguments.
-     * Example: {"arg1" : "value1", "arg2" : "value2" , ...}
+     * The tokenization quality used for given media.
+     *  for Gemini API support .
      */
-    args?: Record<string, unknown>;
-
-    /**
-     * Optional. Unique identifier of the tool call.
-     * The server returns the tool response with the matching `id`.
-     */
-    id?: string;
-
-    /** Optional. The name of the tool that was called. */
-    toolName?: string;
-
-    /** Required. The type of tool that was called. */
-    toolType: V1mainToolType;
-  }
-
-  /** Chunk from image search. */
-  export interface Image {
-    /**
-     * The root domain of the web page that the image is from, e.g.
-     * "example.com".
-     */
-    domain?: string;
-
-    /** The image asset URL. */
-    imageUri?: string;
-
-    /** The web page URI for attribution. */
-    sourceUri?: string;
-
-    /** The title of the web page that the image is from. */
-    title?: string;
-  }
-
-  /** Chunk from the web. */
-  export interface Web {
-    /** Output only. Title of the chunk. */
-    readonly title?: string;
-
-    /** Output only. URI reference of the chunk. */
-    readonly uri?: string;
-  }
-
-  /**
-   * The output from a server-side `ToolCall` execution. This message contains
-   * the results of a tool invocation that was initiated by a `ToolCall`
-   * from the model. The client should pass this `ToolResponse` back to the API
-   * in a subsequent turn within a `Content` message, along with the corresponding
-   * `ToolCall`.
-   */
-  export interface ToolResponse {
-    /**
-     * Optional. The identifier of the tool call this response is for.
-     */
-    id?: string;
-
-    /** Optional. The tool response. */
-    response?: Record<string, unknown>;
-
-    /**
-     * Required. The type of tool that was called, matching the `tool_type` in the
-     * corresponding `ToolCall`.
-     */
-    toolType: V1mainToolType;
+    level?: "MEDIA_RESOLUTION_UNSPECIFIED" | "MEDIA_RESOLUTION_LOW" | "MEDIA_RESOLUTION_MEDIUM" | "MEDIA_RESOLUTION_HIGH" | "MEDIA_RESOLUTION_ULTRA_HIGH" | (string & {});
   }
 
   export type ServiceTier = "unspecified" | "standard" | "flex" | "priority" | (string & {});
@@ -1793,17 +1703,6 @@ export namespace Gemini {
     urlContext?: Gemini.Tools.UrlContext;
   }
 
-  /** Google search entry point. */
-  export interface SearchEntryPoint {
-    /**
-     * Optional. Web content snippet that can be embedded in a web page or an app webview.
-     */
-    renderedContent?: string;
-
-    /** Optional. Base64 encoded JSON representing array of  tuple. */
-    sdkBlob?: string;
-  }
-
   /** User provided metadata about the GroundingFact. */
   export interface GroundingChunkCustomMetadata {
     /** The key of the metadata. */
@@ -1858,52 +1757,6 @@ export namespace Gemini {
     mimeType?: string;
   }
 
-  /** Media resolution for tokenization. */
-  export interface V1mainMediaResolution {
-    /**
-     * The tokenization quality used for given media.
-     *  for Gemini API support .
-     */
-    level?: "MEDIA_RESOLUTION_UNSPECIFIED" | "MEDIA_RESOLUTION_LOW" | "MEDIA_RESOLUTION_MEDIUM" | "MEDIA_RESOLUTION_HIGH" | "MEDIA_RESOLUTION_ULTRA_HIGH" | (string & {});
-  }
-
-  /**
-   * Configuration for the response output format. This is a flat object
-   * where each optional sub-field configures a specific output modality.
-   */
-  export interface ResponseFormatConfig {
-    /** Optional. Audio output format configuration. */
-    audio?: AudioResponseFormat;
-
-    /** Optional. Image output format configuration. */
-    image?: ImageResponseFormat;
-
-    /** Optional. Text output format configuration. */
-    text?: TextResponseFormat;
-  }
-
-  /**
-   * The transcription of an audio part.
-   * For multi-speaker audio, each speaker segment is a separate Part with its
-   * own AudioTranscription carrying the speaker_label.
-   */
-  export interface AudioTranscription {
-    /**
-     * Optional. A label identifying the speaker of this audio segment (e.g. "spk_1",
-     * "spk_2"). Present when diarization is set.
-     */
-    speakerLabel?: string;
-
-    /** Required. The transcription text of this audio segment. */
-    text: string;
-
-    /**
-     * Optional. Detailed word-level transcriptions and timing details.
-     * Present when word_timestamp is set.
-     */
-    words?: Array<WordInfo>;
-  }
-
   /** The audio transcription configuration. */
   export interface AudioTranscriptionConfig {
     /**
@@ -1948,20 +1801,142 @@ export namespace Gemini {
     wordTimestamp?: boolean;
   }
 
-  /** Config for translation features. */
-  export interface TranslationConfig {
+  /**
+   * Configuration for the response output format. This is a flat object
+   * where each optional sub-field configures a specific output modality.
+   */
+  export interface ResponseFormatConfig {
+    /** Optional. Audio output format configuration. */
+    audio?: AudioResponseFormat;
+
+    /** Optional. Image output format configuration. */
+    image?: ImageResponseFormat;
+
+    /** Optional. Text output format configuration. */
+    text?: TextResponseFormat;
+  }
+
+  /**
+   * The output from a server-side `ToolCall` execution. This message contains
+   * the results of a tool invocation that was initiated by a `ToolCall`
+   * from the model. The client should pass this `ToolResponse` back to the API
+   * in a subsequent turn within a `Content` message, along with the corresponding
+   * `ToolCall`.
+   */
+  export interface ToolResponse {
     /**
-     * Optional. If true, the model will generate audio when the target language is spoken,
-     * essentially it will parrot the input. If false, we will not produce audio
-     * for the target language.
+     * Optional. The identifier of the tool call this response is for.
      */
-    echoTargetLanguage?: boolean;
+    id?: string;
+
+    /** Optional. The tool response. */
+    response?: Record<string, unknown>;
 
     /**
-     * Required. The target language for translation. Supported values are BCP-47 language
-     * codes (e.g. "en", "es", "fr").
+     * Required. The type of tool that was called, matching the `tool_type` in the
+     * corresponding `ToolCall`.
      */
-    targetLanguageCode: string;
+    toolType: V1mainToolType;
+  }
+
+  /** Google search entry point. */
+  export interface SearchEntryPoint {
+    /**
+     * Optional. Web content snippet that can be embedded in a web page or an app webview.
+     */
+    renderedContent?: string;
+
+    /** Optional. Base64 encoded JSON representing array of  tuple. */
+    sdkBlob?: string;
+  }
+
+  /** Chunk from the web. */
+  export interface Web {
+    /** Output only. Title of the chunk. */
+    readonly title?: string;
+
+    /** Output only. URI reference of the chunk. */
+    readonly uri?: string;
+  }
+
+  /**
+   * The status of the underlying model. This is used to indicate the stage of the
+   * underlying model and the retirement time if applicable.
+   */
+  export interface ModelStatus {
+    /** A message explaining the model status. */
+    message?: string;
+
+    /** The stage of the underlying model. */
+    modelStage?: ModelStage;
+
+    /** The time at which the model will be retired. */
+    retirementTime?: string;
+  }
+
+  /**
+   * The transcription of an audio part.
+   * For multi-speaker audio, each speaker segment is a separate Part with its
+   * own AudioTranscription carrying the speaker_label.
+   */
+  export interface AudioTranscription {
+    /**
+     * Optional. A label identifying the speaker of this audio segment (e.g. "spk_1",
+     * "spk_2"). Present when diarization is set.
+     */
+    speakerLabel?: string;
+
+    /** Required. The transcription text of this audio segment. */
+    text: string;
+
+    /**
+     * Optional. Detailed word-level transcriptions and timing details.
+     * Present when word_timestamp is set.
+     */
+    words?: Array<WordInfo>;
+  }
+
+  /** URI based data. */
+  export interface FileData {
+    /**
+     * Optional. Specifies the name used to refer to this file to the model (e.g.
+     * "my_file.pdf"). Used as the file reference identifier when
+     * `verbalization_mode` is set to `REFERENCE_ONLY`.
+     */
+    displayName?: string;
+
+    /** Required. URI. */
+    fileUri: string;
+
+    /** Optional. The IANA standard MIME type of the source data. */
+    mimeType?: string;
+  }
+
+  /**
+   * A predicted server-side `ToolCall` returned from the model. This message
+   * contains information about a tool that the model wants to invoke.
+   * The client is NOT expected to execute this `ToolCall`. Instead, the
+   * client should pass this `ToolCall` back to the API in a subsequent turn
+   * within a `Content` message, along with the corresponding `ToolResponse`.
+   */
+  export interface ToolCall {
+    /**
+     * Optional. The tool call arguments.
+     * Example: {"arg1" : "value1", "arg2" : "value2" , ...}
+     */
+    args?: Record<string, unknown>;
+
+    /**
+     * Optional. Unique identifier of the tool call.
+     * The server returns the tool response with the matching `id`.
+     */
+    id?: string;
+
+    /** Optional. The name of the tool that was called. */
+    toolName?: string;
+
+    /** Required. The type of tool that was called. */
+    toolType: V1mainToolType;
   }
 
   /**
@@ -1991,20 +1966,88 @@ export namespace Gemini {
     uri?: string;
   }
 
-  /** Information about a single recognized word. */
-  export interface WordInfo {
+  /**
+   * A predicted `FunctionCall` returned from the model that contains
+   * a string representing the `FunctionDeclaration.name` with the
+   * arguments and their values.
+   */
+  export interface FunctionCall {
     /**
-     * Optional. End offset in time of the word relative to the start of the audio.
+     * Optional. The function parameters and values in JSON object format.
      */
-    endOffset?: string;
+    args?: Record<string, unknown>;
 
     /**
-     * Optional. Start offset in time of the word relative to the start of the audio.
+     * Optional. Unique identifier of the function call. If populated, the client to
+     * execute the `function_call` and return the response with the matching `id`.
      */
-    startOffset?: string;
+    id?: string;
 
-    /** Required. Transcript of the word. */
-    word: string;
+    /**
+     * Required. The name of the function to call.
+     * Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum
+     * length of 128.
+     */
+    name: string;
+  }
+
+  /**
+   * A MCPServer is a server that can be called by the model to perform actions.
+   * It is a server that implements the MCP protocol.
+   * Next ID: 7
+   */
+  export interface McpServer {
+    /** The name of the MCPServer. */
+    name?: string;
+
+    /** A transport that can stream HTTP requests and responses. */
+    streamableHttpTransport?: StreamableHttpTransport;
+  }
+
+  /** Configuration for audio output format. */
+  export interface AudioResponseFormat {
+    /**
+     * Optional. Bit rate in bits per second (bps). Only applicable for compressed formats
+     * (MP3, Opus).
+     */
+    bitRate?: number;
+
+    /** Optional. The delivery mode for the audio output. */
+    delivery?: "DELIVERY_UNSPECIFIED" | "INLINE" | "URI" | (string & {});
+
+    /** Optional. The MIME type of the audio output. */
+    mimeType?: "MIME_TYPE_UNSPECIFIED" | "AUDIO_MP3" | "AUDIO_OGG_OPUS" | "AUDIO_L16" | "AUDIO_WAV" | "AUDIO_ALAW" | "AUDIO_MULAW" | (string & {});
+
+    /** Optional. Sample rate in Hz. */
+    sampleRate?: number;
+  }
+
+  /** Configuration for text output format. */
+  export interface TextResponseFormat {
+    /** Optional. The MIME type of the text output. */
+    mimeType?: "MIME_TYPE_UNSPECIFIED" | "APPLICATION_JSON" | "TEXT_PLAIN" | (string & {});
+
+    /**
+     * Optional. The JSON schema that the output should conform to. Only applicable when
+     * mime_type is APPLICATION_JSON.
+     */
+    schema?: unknown;
+  }
+
+  /**
+   * A datatype containing media that is part of a `FunctionResponse` message.
+   * 
+   * A `FunctionResponsePart` consists of data which has an associated datatype. A
+   * `FunctionResponsePart` can only contain one of the accepted types in
+   * `FunctionResponsePart.data`.
+   * 
+   * A `FunctionResponsePart` must have a fixed IANA MIME type identifying the
+   * type and subtype of the media if the `inline_data` field is filled with raw
+   * bytes.
+   */
+  export interface FunctionResponsePart {
+    /** Inline media bytes. */
+    inlineData?: FunctionResponseBlob;
   }
 
   /**
@@ -2012,6 +2055,18 @@ export namespace Gemini {
    */
   export interface LanguageAuto {
   }
+
+  /**
+   * Provides hints to the model about possible languages present in the audio.
+   */
+  export interface LanguageHints {
+    /** Required. BCP-47 language codes. */
+    languageCodes: Array<string>;
+  }
+
+  export type V1mainToolType = "TOOL_TYPE_UNSPECIFIED" | "GOOGLE_SEARCH_WEB" | "GOOGLE_SEARCH_IMAGE" | "URL_CONTEXT" | "GOOGLE_MAPS" | "FILE_SEARCH" | (string & {});
+
+  export type ModelStage = "MODEL_STAGE_UNSPECIFIED" | "UNSTABLE_EXPERIMENTAL" | "EXPERIMENTAL" | "PREVIEW" | "STABLE" | "LEGACY" | "DEPRECATED" | "RETIRED" | (string & {});
 
   /**
    * Collection of sources that provide answers about the features of a given
@@ -2028,8 +2083,6 @@ export namespace Gemini {
      */
     reviewSnippets?: Array<ReviewSnippet>;
   }
-
-  export type V1mainToolType = "TOOL_TYPE_UNSPECIFIED" | "GOOGLE_SEARCH_WEB" | "GOOGLE_SEARCH_IMAGE" | "URL_CONTEXT" | "GOOGLE_MAPS" | "FILE_SEARCH" | (string & {});
 
   /** A list of string values. */
   export interface GroundingChunkStringList {
@@ -2052,22 +2105,20 @@ export namespace Gemini {
     mimeType?: "MIME_TYPE_UNSPECIFIED" | "IMAGE_JPEG" | (string & {});
   }
 
-  /** Configuration for audio output format. */
-  export interface AudioResponseFormat {
+  /** Information about a single recognized word. */
+  export interface WordInfo {
     /**
-     * Optional. Bit rate in bits per second (bps). Only applicable for compressed formats
-     * (MP3, Opus).
+     * Optional. End offset in time of the word relative to the start of the audio.
      */
-    bitRate?: number;
+    endOffset?: string;
 
-    /** Optional. The delivery mode for the audio output. */
-    delivery?: "DELIVERY_UNSPECIFIED" | "INLINE" | "URI" | (string & {});
+    /**
+     * Optional. Start offset in time of the word relative to the start of the audio.
+     */
+    startOffset?: string;
 
-    /** Optional. The MIME type of the audio output. */
-    mimeType?: "MIME_TYPE_UNSPECIFIED" | "AUDIO_MP3" | "AUDIO_OGG_OPUS" | "AUDIO_L16" | "AUDIO_WAV" | "AUDIO_ALAW" | "AUDIO_MULAW" | (string & {});
-
-    /** Optional. Sample rate in Hz. */
-    sampleRate?: number;
+    /** Required. Transcript of the word. */
+    word: string;
   }
 
   /**
@@ -2078,106 +2129,6 @@ export namespace Gemini {
      * Specifies the dynamic retrieval configuration for the given source.
      */
     dynamicRetrievalConfig?: DynamicRetrievalConfig;
-  }
-
-  /** Configuration for text output format. */
-  export interface TextResponseFormat {
-    /** Optional. The MIME type of the text output. */
-    mimeType?: "MIME_TYPE_UNSPECIFIED" | "APPLICATION_JSON" | "TEXT_PLAIN" | (string & {});
-
-    /**
-     * Optional. The JSON schema that the output should conform to. Only applicable when
-     * mime_type is APPLICATION_JSON.
-     */
-    schema?: unknown;
-  }
-
-  export type ModelStage = "MODEL_STAGE_UNSPECIFIED" | "UNSTABLE_EXPERIMENTAL" | "EXPERIMENTAL" | "PREVIEW" | "STABLE" | "LEGACY" | "DEPRECATED" | "RETIRED" | (string & {});
-
-  /**
-   * A datatype containing media that is part of a `FunctionResponse` message.
-   * 
-   * A `FunctionResponsePart` consists of data which has an associated datatype. A
-   * `FunctionResponsePart` can only contain one of the accepted types in
-   * `FunctionResponsePart.data`.
-   * 
-   * A `FunctionResponsePart` must have a fixed IANA MIME type identifying the
-   * type and subtype of the media if the `inline_data` field is filled with raw
-   * bytes.
-   */
-  export interface FunctionResponsePart {
-    /** Inline media bytes. */
-    inlineData?: FunctionResponseBlob;
-  }
-
-  /**
-   * A MCPServer is a server that can be called by the model to perform actions.
-   * It is a server that implements the MCP protocol.
-   * Next ID: 7
-   */
-  export interface McpServer {
-    /** The name of the MCPServer. */
-    name?: string;
-
-    /** A transport that can stream HTTP requests and responses. */
-    streamableHttpTransport?: StreamableHttpTransport;
-  }
-
-  /**
-   * Provides hints to the model about possible languages present in the audio.
-   */
-  export interface LanguageHints {
-    /** Required. BCP-47 language codes. */
-    languageCodes: Array<string>;
-  }
-
-  /**
-   * Encapsulates a snippet of a user review that answers a question about
-   * the features of a specific place in Google Maps.
-   */
-  export interface ReviewSnippet {
-    /** A link that corresponds to the user review on Google Maps. */
-    googleMapsUri?: string;
-
-    /** The ID of the review snippet. */
-    reviewId?: string;
-
-    /** Title of the review. */
-    title?: string;
-  }
-
-  /** Describes the options to customize dynamic retrieval. */
-  export interface DynamicRetrievalConfig {
-    /**
-     * The threshold to be used in dynamic retrieval.
-     * If not set, a system default value is used.
-     */
-    dynamicThreshold?: number;
-
-    /** The mode of the predictor to be used in dynamic retrieval. */
-    mode?: "MODE_UNSPECIFIED" | "MODE_DYNAMIC" | (string & {});
-  }
-
-  /**
-   * Raw media bytes for function response.
-   * 
-   * Text should not be sent as raw bytes, use the 'FunctionResponse.response'
-   * field.
-   */
-  export interface FunctionResponseBlob {
-    /** Raw bytes for media formats. */
-    data?: string;
-
-    /**
-     * The IANA standard MIME type of the source data.
-     * Examples:
-     *   - image/png
-     *   - image/jpeg
-     * If an unsupported MIME type is provided, an error will be returned. For a
-     * complete list of supported types, see [Supported file
-     * formats](https://ai.google.dev/gemini-api/docs/prompting_with_media#supported_file_formats).
-     */
-    mimeType?: string;
   }
 
   /**
@@ -2206,5 +2157,54 @@ export namespace Gemini {
      * Example: "https://api.example.com/mcp"
      */
     url?: string;
+  }
+
+  /**
+   * Raw media bytes for function response.
+   * 
+   * Text should not be sent as raw bytes, use the 'FunctionResponse.response'
+   * field.
+   */
+  export interface FunctionResponseBlob {
+    /** Raw bytes for media formats. */
+    data?: string;
+
+    /**
+     * The IANA standard MIME type of the source data.
+     * Examples:
+     *   - image/png
+     *   - image/jpeg
+     * If an unsupported MIME type is provided, an error will be returned. For a
+     * complete list of supported types, see [Supported file
+     * formats](https://ai.google.dev/gemini-api/docs/prompting_with_media#supported_file_formats).
+     */
+    mimeType?: string;
+  }
+
+  /**
+   * Encapsulates a snippet of a user review that answers a question about
+   * the features of a specific place in Google Maps.
+   */
+  export interface ReviewSnippet {
+    /** A link that corresponds to the user review on Google Maps. */
+    googleMapsUri?: string;
+
+    /** The ID of the review snippet. */
+    reviewId?: string;
+
+    /** Title of the review. */
+    title?: string;
+  }
+
+  /** Describes the options to customize dynamic retrieval. */
+  export interface DynamicRetrievalConfig {
+    /**
+     * The threshold to be used in dynamic retrieval.
+     * If not set, a system default value is used.
+     */
+    dynamicThreshold?: number;
+
+    /** The mode of the predictor to be used in dynamic retrieval. */
+    mode?: "MODE_UNSPECIFIED" | "MODE_DYNAMIC" | (string & {});
   }
 }
