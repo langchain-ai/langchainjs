@@ -1722,7 +1722,10 @@ describe.each(thinkingModelInfo)(
       expect(textSteps?.length).toBeGreaterThan(0);
 
       // Result.text should just have actual text, not reasoning
-      const textStepsText: string = textSteps.reduce((acc: string, val: ContentBlock.Text) => acc + val.text, "");
+      const textStepsText: string = textSteps.reduce(
+        (acc: string, val: ContentBlock.Text) => acc + val.text,
+        ""
+      );
       expect(textStepsText).toEqual(result.text);
     });
 
