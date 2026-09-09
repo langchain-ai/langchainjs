@@ -1,5 +1,11 @@
 # @langchain/google-common
 
+## 2.3.1
+
+### Patch Changes
+
+- [#11266](https://github.com/langchain-ai/langchainjs/pull/11266) [`2750442`](https://github.com/langchain-ai/langchainjs/commit/2750442d9aad08446153b87a1f3ff334d7c30d21) Thanks [@jackjin1997](https://github.com/jackjin1997)! - fix Google tool choice modes sent to Vertex AI
+
 ## 2.3.0
 
 ### Patch Changes
