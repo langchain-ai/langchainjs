@@ -616,3 +616,40 @@ test("Test ChatModel applies v1 outputVersion after implicit streaming aggregati
     },
   ]);
 });
+
+test("wrapRunExecution wraps the non-streaming model call body", async () => {
+  let contextIsActive = false;
+  let contextWasActiveDuringGenerate = false;
+
+  class ContextHandler extends BaseCallbackHandler {
+    name = "context-handler";
+
+    wrapRunExecution<T>(_runId: string, fn: () => T): T {
+      contextIsActive = true;
+      try {
+        return fn();
+      } finally {
+        contextIsActive = false;
+      }
+    }
+  }
+
+  class ContextProbeChatModel extends FakeChatModel {
+    async _generate(
+      messages: Parameters<FakeChatModel["_generate"]>[0],
+      options: Parameters<FakeChatModel["_generate"]>[1],
+      runManager: Parameters<FakeChatModel["_generate"]>[2]
+    ): ReturnType<FakeChatModel["_generate"]> {
+      contextWasActiveDuringGenerate = contextIsActive;
+      return super._generate(messages, options, runManager);
+    }
+  }
+
+  const model = new ContextProbeChatModel({});
+  await model.invoke("Hello", {
+    callbacks: [new ContextHandler()],
+  });
+
+  expect(contextWasActiveDuringGenerate).toBe(true);
+  expect(contextIsActive).toBe(false);
+});
