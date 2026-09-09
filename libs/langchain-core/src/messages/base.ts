@@ -312,8 +312,13 @@ export abstract class BaseMessage<
 
   /** Get text content of the message. */
   get text(): string {
-    const textBlocks:ContentBlock.Text[] = this.contentBlocks.filter((block: ContentBlock.Standard) => block.type === "text");
-    return textBlocks.reduce((acc: string, block: ContentBlock.Text) => acc + block.text,"");
+    const textBlocks: ContentBlock.Text[] = this.contentBlocks.filter(
+      (block: ContentBlock.Standard) => block.type === "text"
+    );
+    return textBlocks.reduce(
+      (acc: string, block: ContentBlock.Text) => acc + block.text,
+      ""
+    );
   }
 
   get contentBlocks(): Array<ContentBlock.Standard> {
