@@ -25,8 +25,7 @@ import {
   type MCPResourceContent,
   type ConnectionErrorHandler,
   clientConfigSchema,
-  connectionSchema,
-  _copyConnection,
+  adapterConfigSchema,
   type LoadMcpToolsOptions,
   _resolveAndApplyOverrideHandlingOverrides,
 } from "./types.js";
@@ -44,76 +43,6 @@ export class MCPClientError extends Error {
     super(message);
     this.name = "MCPClientError";
   }
-}
-
-/**
- * Checks if the connection configuration is for a stdio transport
- * @param connection - The connection configuration
- * @returns True if the connection configuration is for a stdio transport
- */
-function isResolvedStdioConnection(
-  connection: unknown
-): connection is ResolvedStdioConnection {
-  if (
-    typeof connection !== "object" ||
-    connection === null ||
-    Array.isArray(connection)
-  ) {
-    return false;
-  }
-
-  if ("transport" in connection && connection.transport === "stdio") {
-    return true;
-  }
-
-  if ("type" in connection && connection.type === "stdio") {
-    return true;
-  }
-
-  if ("command" in connection && typeof connection.command === "string") {
-    return true;
-  }
-
-  return false;
-}
-
-/**
- * Checks if the connection configuration is for a streamable HTTP transport
- * @param connection - The connection configuration
- * @returns True if the connection configuration is for a streamable HTTP transport
- */
-function isResolvedStreamableHTTPConnection(
-  connection: unknown
-): connection is ResolvedStreamableHTTPConnection {
-  if (
-    typeof connection !== "object" ||
-    connection === null ||
-    Array.isArray(connection)
-  ) {
-    return false;
-  }
-
-  if (
-    ("transport" in connection &&
-      typeof connection.transport === "string" &&
-      ["http", "sse"].includes(connection.transport)) ||
-    ("type" in connection &&
-      typeof connection.type === "string" &&
-      ["http", "sse"].includes(connection.type))
-  ) {
-    return true;
-  }
-
-  if ("url" in connection && typeof connection.url === "string") {
-    try {
-      new URL(connection.url);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  return false;
 }
 
 /**
@@ -161,21 +90,8 @@ export class MCPAdapter {
    *
    * Client does not support config modifications.
    */
-  get config(): ClientConfig {
-    // clone config so it can't be mutated
-    return {
-      ...this.#config,
-      outputHandling:
-        typeof this.#config.outputHandling === "object"
-          ? { ...this.#config.outputHandling }
-          : this.#config.outputHandling,
-      mcpServers: Object.fromEntries(
-        Object.entries(this.#config.mcpServers).map(([name, connection]) => [
-          name,
-          _copyConnection(connection),
-        ])
-      ),
-    };
+  get config(): ResolvedClientConfig {
+    return clientConfigSchema.parse(this.#config);
   }
 
   /**
@@ -189,33 +105,7 @@ export class MCPAdapter {
   constructor(
     config: MCPAdapterConfig | ClientConfig | Record<string, Connection>
   ) {
-    let parsedServerConfig: ResolvedClientConfig;
-
-    const configSchema = clientConfigSchema;
-
-    // A direct legacy server map may itself contain a server named "servers".
-    const legacyServerNamedServers =
-      "servers" in config && connectionSchema.safeParse(config.servers).success;
-    if (
-      !legacyServerNamedServers &&
-      "servers" in config &&
-      "mcpServers" in config
-    ) {
-      throw new Error("Specify servers or legacy mcpServers, not both");
-    }
-    if (legacyServerNamedServers) {
-      parsedServerConfig = configSchema.parse({ mcpServers: config });
-    } else if ("servers" in config) {
-      const { servers, ...options } = config;
-      parsedServerConfig = configSchema.parse({
-        ...options,
-        mcpServers: servers,
-      });
-    } else if ("mcpServers" in config) {
-      parsedServerConfig = configSchema.parse(config);
-    } else {
-      parsedServerConfig = configSchema.parse({ mcpServers: config });
-    }
+    const parsedServerConfig = adapterConfigSchema.parse(config);
 
     if (Object.keys(parsedServerConfig.mcpServers).length === 0) {
       throw new MCPClientError("No MCP servers provided");
@@ -664,7 +554,7 @@ export class MCPAdapter {
     connection: ResolvedConnection,
     customTransportOptions?: CustomHTTPTransportOptions
   ): Promise<void> {
-    if (isResolvedStdioConnection(connection)) {
+    if (connection.transport === "stdio") {
       debugLog(
         `INFO: Initializing stdio connection to server "${serverName}"...`
       );
@@ -677,7 +567,10 @@ export class MCPAdapter {
       }
 
       await this._initializeStdioConnection(serverName, connection);
-    } else if (isResolvedStreamableHTTPConnection(connection)) {
+    } else if (
+      connection.transport === "http" ||
+      connection.transport === "sse"
+    ) {
       /**
        * Users may want to use different connection options for tool calls or tool discovery.
        */
@@ -700,7 +593,7 @@ export class MCPAdapter {
         return;
       }
 
-      if (connection.type === "sse" || connection.transport === "sse") {
+      if (connection.transport === "sse") {
         await this._initializeSSEConnection(serverName, updatedConnection);
       } else {
         await this._initializeStreamableHTTPConnection(
@@ -840,9 +733,8 @@ export class MCPAdapter {
     serverName: string,
     connection: ResolvedStreamableHTTPConnection
   ): Promise<void> {
-    const { url, type: typeField, transport: transportField } = connection;
+    const { url, transport: transportType } = connection;
     const automaticSSEFallback = connection.automaticSSEFallback ?? true;
-    const transportType = typeField || transportField;
 
     debugLog(
       `DEBUG: Creating Streamable HTTP transport for server "${serverName}" with URL: ${url}`
@@ -1103,10 +995,13 @@ export class MCPAdapter {
         }
 
         // Initialize just this connection based on its type
-        if (isResolvedStdioConnection(connection)) {
+        if (connection.transport === "stdio") {
           await this._initializeStdioConnection(serverName, connection);
-        } else if (isResolvedStreamableHTTPConnection(connection)) {
-          if (connection.type === "sse" || connection.transport === "sse") {
+        } else if (
+          connection.transport === "http" ||
+          connection.transport === "sse"
+        ) {
+          if (connection.transport === "sse") {
             await this._initializeSSEConnection(serverName, connection);
           } else {
             await this._initializeStreamableHTTPConnection(

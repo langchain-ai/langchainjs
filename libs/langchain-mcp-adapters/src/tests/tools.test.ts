@@ -15,7 +15,7 @@ import type {
   ToolMessage,
 } from "@langchain/core/messages";
 
-import { z } from "zod/v4";
+import { z } from "zod";
 import type { ToolHooks } from "../hooks.js";
 import { loadMcpTools } from "../tools.js";
 
@@ -51,6 +51,31 @@ describe("Simplified Tool Adapter Tests", () => {
       mockClient.callTool.mockResolvedValue({
         content: [{ type: "text", text: "original" }],
       });
+    });
+
+    test("does not mutate the arguments previously passed to a hook", async () => {
+      let observed: unknown;
+      const [tool] = await loadMcpTools("test", mockClient, {
+        beforeToolCall: ({ args }) => {
+          observed = args;
+          return { args: { value: "effective" } };
+        },
+      });
+      await tool.invoke({});
+      expect(observed).toEqual({});
+      expect(mockClient.callTool).toHaveBeenCalledWith({
+        name: "echo",
+        arguments: { value: "effective" },
+      });
+    });
+
+    test("rejects scalar argument overrides before issuing a request", async () => {
+      const [tool] = await loadMcpTools("test", mockClient, {
+        // @ts-expect-error Invalid JavaScript callback input is rejected at runtime too.
+        beforeToolCall: () => ({ args: "invalid" }),
+      });
+      await expect(tool.invoke({})).rejects.toThrow();
+      expect(mockClient.callTool).not.toHaveBeenCalled();
     });
 
     test.each([false, true])(

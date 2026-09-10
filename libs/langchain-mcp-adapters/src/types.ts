@@ -1,4 +1,4 @@
-import { z } from "zod/v4";
+import { z } from "zod";
 import type {
   OAuthClientProvider,
   LoggingMessageNotificationParams,
@@ -40,8 +40,8 @@ const detailedOutputHandlingSchema = z.partialRecord(
   z.enum(callToolResultContentTypes),
   outputTypesUnion.optional()
 );
-export type DetailedOutputHandling = Partial<
-  Record<CallToolResultContentType, "content" | "artifact">
+export type DetailedOutputHandling = z.output<
+  typeof detailedOutputHandlingSchema
 >;
 
 export const outputHandlingSchema = z
@@ -192,7 +192,7 @@ export const stdioRestartSchema = z
 /**
  * Stdio transport connection
  */
-export const stdioConnectionSchema = z
+const stdioOptionsSchema = z
   .object({
     /**
      * Optional transport type, inferred from the structure of the config if not provided. Included
@@ -208,6 +208,9 @@ export const stdioConnectionSchema = z
      * The executable to run the server (e.g. `node`, `npx`, etc)
      */
     command: z.string().describe("The executable to run the server"),
+    url: z
+      .never({ error: "Specify a stdio command or an HTTP URL, not both" })
+      .optional(),
     /**
      * Array of command line arguments to pass to the executable
      */
@@ -259,7 +262,7 @@ export const stdioConnectionSchema = z
      */
     restart: stdioRestartSchema.optional(),
   })
-  .and(baseConfigSchema)
+  .extend(baseConfigSchema.shape)
   .describe("Configuration for stdio transport connection");
 
 /**
@@ -294,7 +297,7 @@ export const streamableHttpReconnectSchema = z
 /**
  * Streamable HTTP transport connection
  */
-export const streamableHttpConnectionSchema = z
+const httpOptionsSchema = z
   .object({
     /**
      * Optional transport type, inferred from the structure of the config. If "sse", will not attempt
@@ -310,6 +313,9 @@ export const streamableHttpConnectionSchema = z
      * The URL to connect to
      */
     url: z.string().url(),
+    command: z
+      .never({ error: "Specify a stdio command or an HTTP URL, not both" })
+      .optional(),
     /**
      * Additional headers to send with the request, useful for authentication
      */
@@ -332,56 +338,53 @@ export const streamableHttpConnectionSchema = z
      */
     automaticSSEFallback: z.boolean().optional().default(true),
   })
-  .and(baseConfigSchema)
+  .extend(baseConfigSchema.shape)
   .describe("Configuration for streamable HTTP transport connection");
 
-/**
- * Create combined schema for all transport connection types
- */
-const resolvedConnectionSchema = z
-  .union([stdioConnectionSchema, streamableHttpConnectionSchema])
-  .superRefine((connection, ctx) => {
-    if (
-      connection.transport &&
-      connection.type &&
-      connection.transport !== connection.type
-    ) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["type"],
-        message: "type conflicts with transport; use transport only",
-      });
-    }
+/** Parse legacy aliases once and retain a concrete transport discriminator. */
+export const stdioConnectionSchema = stdioOptionsSchema.transform(
+  ({ type: _type, url: _url, ...options }) => ({
+    ...options,
+    transport: "stdio" as const,
   })
-  .transform(
-    (
-      connection
-    ): ResolvedStdioConnection | ResolvedStreamableHTTPConnection => {
-      if ("command" in connection) {
-        const { type, ...options } = connection;
-        return { ...options, transport: options.transport ?? type ?? "stdio" };
-      }
-      const { type, ...options } = connection;
-      return { ...options, transport: options.transport ?? type ?? "http" };
-    }
-  )
-  .describe("Configuration for a single MCP server");
+);
 
-// Inspect ambiguous raw shapes before the union parser can strip unknown keys.
-export const connectionSchema = z.preprocess((value, ctx) => {
-  if (
-    typeof value === "object" &&
-    value !== null &&
-    "command" in value &&
-    "url" in value
-  ) {
-    ctx.addIssue({
-      code: "custom",
-      message: "Specify a stdio command or an HTTP URL, not both",
-    });
-  }
-  return value;
-}, resolvedConnectionSchema);
+const httpConnectionSchema = httpOptionsSchema
+  .extend({
+    transport: z.literal("http").optional(),
+    type: z
+      .literal("http", {
+        error: "type conflicts with transport; use transport only",
+      })
+      .optional(),
+  })
+  .transform(({ type: _type, command: _command, ...options }) => ({
+    ...options,
+    transport: "http" as const,
+  }));
+
+const sseConnectionSchema = httpOptionsSchema
+  .extend({
+    transport: z.literal("sse").optional(),
+    type: z
+      .literal("sse", {
+        error: "type conflicts with transport; use transport only",
+      })
+      .optional(),
+  })
+  .transform(({ type: _type, command: _command, ...options }) => ({
+    ...options,
+    transport: "sse" as const,
+  }));
+
+export const streamableHttpConnectionSchema = z.union([
+  httpConnectionSchema,
+  sseConnectionSchema,
+]);
+export const connectionSchema = z.union([
+  stdioConnectionSchema,
+  streamableHttpConnectionSchema,
+]);
 
 export type EventContext =
   | { type: "tool"; name: string; args: unknown; server: string }
@@ -392,103 +395,78 @@ export interface ServerMessageSource {
   options: ResolvedConnection;
 }
 
-/** SDK notification payloads are validated by the SDK before dispatch. */
-export interface Notifications {
-  onMessage?: (
-    message: LoggingMessageNotificationParams,
-    source: ServerMessageSource
-  ) => void | Promise<void>;
-  onProgress?: (
-    progress: Progress,
-    source: EventContext
-  ) => void | Promise<void>;
-  onCancelled?: (
-    notification: CancelledNotificationParams,
-    source: ServerMessageSource
-  ) => void | Promise<void>;
-  onInitialized?: (source: ServerMessageSource) => void | Promise<void>;
-  onPromptsListChanged?: (source: ServerMessageSource) => void | Promise<void>;
-  onResourcesListChanged?: (
-    source: ServerMessageSource
-  ) => void | Promise<void>;
-  onResourcesUpdated?: (
-    resource: ResourceUpdatedNotificationParams,
-    source: ServerMessageSource
-  ) => void | Promise<void>;
-  onRootsListChanged?: (source: ServerMessageSource) => void | Promise<void>;
-  onToolsListChanged?: (source: ServerMessageSource) => void | Promise<void>;
-}
-
-// Check runtime configuration once; do not parse already validated SDK payloads
-// again. ConnectionManager supplies an isolated options snapshot per notification.
+// SDK payloads are already parsed by the SDK. Keep callbacks as opaque runtime
+// services; parsing a function schema would replace their identity with a wrapper.
 const notifications = z.object({
   onMessage: z
-    .custom<NonNullable<Notifications["onMessage"]>>(
-      (value) => typeof value === "function",
-      "Expected a callback"
-    )
+    .custom<
+      (
+        message: LoggingMessageNotificationParams,
+        source: ServerMessageSource
+      ) => void | Promise<void>
+    >((value) => typeof value === "function", "Expected a callback")
     .optional(),
   onProgress: z
-    .custom<NonNullable<Notifications["onProgress"]>>(
+    .custom<(progress: Progress, source: EventContext) => void | Promise<void>>(
       (value) => typeof value === "function",
       "Expected a callback"
     )
     .optional(),
   onCancelled: z
-    .custom<NonNullable<Notifications["onCancelled"]>>(
-      (value) => typeof value === "function",
-      "Expected a callback"
-    )
+    .custom<
+      (
+        notification: CancelledNotificationParams,
+        source: ServerMessageSource
+      ) => void | Promise<void>
+    >((value) => typeof value === "function", "Expected a callback")
     .optional(),
   onInitialized: z
-    .custom<NonNullable<Notifications["onInitialized"]>>(
+    .custom<(source: ServerMessageSource) => void | Promise<void>>(
       (value) => typeof value === "function",
       "Expected a callback"
     )
     .optional(),
   onPromptsListChanged: z
-    .custom<NonNullable<Notifications["onPromptsListChanged"]>>(
+    .custom<(source: ServerMessageSource) => void | Promise<void>>(
       (value) => typeof value === "function",
       "Expected a callback"
     )
     .optional(),
   onResourcesListChanged: z
-    .custom<NonNullable<Notifications["onResourcesListChanged"]>>(
+    .custom<(source: ServerMessageSource) => void | Promise<void>>(
       (value) => typeof value === "function",
       "Expected a callback"
     )
     .optional(),
   onResourcesUpdated: z
-    .custom<NonNullable<Notifications["onResourcesUpdated"]>>(
-      (value) => typeof value === "function",
-      "Expected a callback"
-    )
+    .custom<
+      (
+        resource: ResourceUpdatedNotificationParams,
+        source: ServerMessageSource
+      ) => void | Promise<void>
+    >((value) => typeof value === "function", "Expected a callback")
     .optional(),
   onRootsListChanged: z
-    .custom<NonNullable<Notifications["onRootsListChanged"]>>(
+    .custom<(source: ServerMessageSource) => void | Promise<void>>(
       (value) => typeof value === "function",
       "Expected a callback"
     )
     .optional(),
   onToolsListChanged: z
-    .custom<NonNullable<Notifications["onToolsListChanged"]>>(
+    .custom<(source: ServerMessageSource) => void | Promise<void>>(
       (value) => typeof value === "function",
       "Expected a callback"
     )
     .optional(),
 });
 
+export type Notifications = z.output<typeof notifications>;
+
 /**
  * {@link MultiServerMCPClient} configuration
  */
-export const clientConfigSchema = z
+const clientOptionsSchema = z
   .object({
-    /**
-     * A map of server names to their configuration
-     */
-    mcpServers: z
-      .record(z.string(), connectionSchema)
-      .describe("A map of server names to their configuration"),
     /**
      * Whether to throw an error if a tool fails to load
      *
@@ -564,10 +542,44 @@ export const clientConfigSchema = z
       .optional()
       .default("throw"),
   })
-  .and(baseConfigSchema)
-  .and(toolHooksSchema)
-  .and(notifications)
+  .extend(baseConfigSchema.shape)
+  .extend(toolHooksSchema.shape)
+  .extend(notifications.shape)
   .describe("Configuration for the MCP client");
+
+const serverMapSchema = z.record(z.string(), connectionSchema);
+const exclusiveServerMap = z
+  .never({ error: "Specify servers or legacy mcpServers, not both" })
+  .optional();
+
+/** Resolved legacy-shaped configuration also provides isolated public snapshots. */
+export const clientConfigSchema = clientOptionsSchema.extend({
+  mcpServers: serverMapSchema,
+});
+
+const canonicalConfigSchema = clientOptionsSchema.extend({
+  servers: serverMapSchema,
+  mcpServers: exclusiveServerMap,
+});
+
+const legacyConfigSchema = clientConfigSchema
+  .extend({ servers: exclusiveServerMap })
+  .transform(({ servers: _canonical, ...options }) => options);
+
+/** All supported external shapes produce the same resolved configuration. */
+export const adapterConfigSchema = z.union([
+  canonicalConfigSchema.transform(
+    ({ servers, mcpServers: _legacy, ...options }) => ({
+      ...options,
+      mcpServers: servers,
+    })
+  ),
+  legacyConfigSchema,
+  serverMapSchema.transform((mcpServers) => ({
+    ...clientOptionsSchema.parse({}),
+    mcpServers,
+  })),
+]);
 
 /**
  * Configuration for stdio transport connection
@@ -596,22 +608,15 @@ export type ResolvedStreamableHTTPConnection = z.output<
 /**
  * Union type for all transport connection types
  */
-export type Connection = StdioConnection | StreamableHTTPConnection;
+export type Connection = z.input<typeof connectionSchema>;
 
 /**
  * Type for {@link MultiServerMCPClient} configuration
  */
-export type ClientConfig = Omit<
-  z.input<typeof clientConfigSchema>,
-  "mcpServers"
-> & {
-  mcpServers: Record<string, Connection>;
-};
+export type ClientConfig = z.input<typeof clientConfigSchema>;
 
-/** Canonical adapter options. Legacy `mcpServers` is accepted only by the migration overload. */
-export type MCPAdapterConfig = Omit<ClientConfig, "mcpServers"> & {
-  servers: Record<string, Connection>;
-};
+/** Canonical adapter options. */
+export type MCPAdapterConfig = z.input<typeof canonicalConfigSchema>;
 
 /**
  * Type for {@link Connection} with default values applied.
@@ -835,28 +840,3 @@ export type MCPResourceContent = {
    */
   blob?: string;
 };
-
-/** Copy mutable adapter options while retaining application-owned services. @internal */
-export function _copyConnection(
-  connection: ResolvedConnection
-): ResolvedConnection {
-  const outputHandling =
-    typeof connection.outputHandling === "object"
-      ? { ...connection.outputHandling }
-      : connection.outputHandling;
-  if ("command" in connection) {
-    return {
-      ...connection,
-      outputHandling,
-      args: [...connection.args],
-      env: connection.env && { ...connection.env },
-      restart: connection.restart && { ...connection.restart },
-    };
-  }
-  return {
-    ...connection,
-    outputHandling,
-    headers: connection.headers && { ...connection.headers },
-    reconnect: connection.reconnect && { ...connection.reconnect },
-  };
-}

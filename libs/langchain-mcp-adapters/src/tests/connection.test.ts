@@ -59,6 +59,7 @@ describe("ConnectionManager", () => {
         const options: ResolvedConnection =
           transport === "http"
             ? {
+                transport: "http",
                 url: "https://example.com/mcp",
                 automaticSSEFallback: false,
                 headers: { "X-Test": "original" },
@@ -66,6 +67,7 @@ describe("ConnectionManager", () => {
                 outputHandling: { text: "content" },
               }
             : {
+                transport: "stdio",
                 command: "node",
                 args: ["server.js"],
                 stderr: "inherit",

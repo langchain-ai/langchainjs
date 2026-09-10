@@ -7,7 +7,7 @@ import {
   afterEach,
   type Mock,
 } from "vitest";
-import { ZodError } from "zod/v4";
+import { ZodError } from "zod";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import {
   Client,
@@ -1021,6 +1021,7 @@ describe("MCPAdapter configuration boundary", () => {
       () =>
         new MCPAdapter({
           servers: {
+            // @ts-expect-error Conflicting transport aliases are invalid input.
             remote: {
               transport: "http",
               type: "sse",
@@ -1037,6 +1038,7 @@ describe("MCPAdapter configuration boundary", () => {
         remote: { command: "node", args: [], url: "https://example.com/mcp" },
       },
     };
+    // @ts-expect-error A command and URL cannot belong to the same connection.
     expect(() => new MCPAdapter(ambiguous)).toThrow(/command or an HTTP URL/);
   });
 
@@ -1065,12 +1067,12 @@ describe("MCPAdapter configuration boundary", () => {
     expect(snapshot.onMessage).toBe(onMessage);
     expect(snapshot.beforeToolCall).toBe(beforeToolCall);
     const local = snapshot.mcpServers.local;
-    if (!("command" in local)) throw new Error("Expected stdio config");
+    if (local.transport !== "stdio") throw new Error("Expected stdio config");
     local.args.push("changed");
     local.env!.MODE = "changed";
     local.restart!.enabled = true;
     const remote = snapshot.mcpServers.remote;
-    if (!("url" in remote)) throw new Error("Expected HTTP config");
+    if (remote.transport !== "http") throw new Error("Expected HTTP config");
     remote.headers!["X-Test"] = "changed";
     remote.reconnect!.enabled = true;
     expect(adapter.config.mcpServers.local).toMatchObject({

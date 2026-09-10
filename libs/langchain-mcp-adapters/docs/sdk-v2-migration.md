@@ -89,7 +89,9 @@ try {
 The old class name is the same constructor, not a second implementation. Legacy
 configuration remains accepted. Use one server-map spelling and one transport
 selection; conflicting forms and connections combining `command` with `url` fail during construction. Legacy `type` is
-normalized to `transport` in the resolved configuration.
+normalized to a required `transport` discriminator in the resolved configuration.
+Use `connection.transport` to narrow resolved stdio, HTTP, or SSE options;
+resolved connections no longer expose the legacy `type` alias.
 
 The adapter now requires Zod `^4.2.0`; its configuration validation errors are
 Zod4 errors. Remove v3-only dependency overrides for this package. LangChain core
@@ -101,7 +103,8 @@ payloads use the SDK's types and validation; the adapter no longer reconstructs
 and strips their fields through duplicate schemas. Hook modifications are
 validated after awaiting the callback, for both synchronous and asynchronous
 implementations. Return `undefined` for no change, `{ args, headers }` before a
-call, or `{ result }` after it. Invalid return containers now fail consistently;
+call, or `{ result }` after it. Argument overrides must be objects and are merged
+without mutating the original request arguments. Invalid return containers now fail consistently;
 `Command` and `ToolMessage` values must be real native values. Detailed
 `outputHandling` objects reject unknown content-type keys instead of silently
 ignoring typos; explicit `undefined` destinations remain valid. Callback request `args` is a present field typed `unknown`.

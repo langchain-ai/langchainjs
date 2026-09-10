@@ -1,5 +1,5 @@
 import { vi, describe, test, expect, beforeEach, type Mock } from "vitest";
-import { ZodError } from "zod/v4";
+import { ZodError } from "zod";
 import {
   SSEClientTransport,
   StreamableHTTPClientTransport,

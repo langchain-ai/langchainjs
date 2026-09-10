@@ -3,7 +3,7 @@ import {
   InMemoryTransport,
 } from "@modelcontextprotocol/client";
 import { McpServer } from "@modelcontextprotocol/server";
-import { z } from "zod/v4";
+import { z } from "zod";
 import { MCPAdapter, loadMcpTools } from "../index.js";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { Server } from "node:http";

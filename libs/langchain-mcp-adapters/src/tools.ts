@@ -1,4 +1,4 @@
-import { z } from "zod/v4";
+import { z } from "zod";
 import { isInteropZodError } from "@langchain/core/utils/types";
 import {
   toolCallModificationSchema,
@@ -1052,10 +1052,7 @@ async function _callTool({
         )
       );
 
-    const finalArgs = Object.assign(
-      args,
-      beforeToolCallInterception?.args || {}
-    );
+    const finalArgs = { ...args, ...beforeToolCallInterception?.args };
 
     const headers = beforeToolCallInterception?.headers || {};
     const hasHeaderChanges = Object.entries(headers).length > 0;

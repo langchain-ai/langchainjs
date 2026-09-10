@@ -10,7 +10,7 @@ import type {
   StreamableHTTPClientTransportOptions,
   StreamableHTTPReconnectionOptions,
 } from "@modelcontextprotocol/client";
-import { _copyConnection } from "./types.js";
+import { connectionSchema } from "./types.js";
 import { getDebugLog } from "./logging.js";
 import type {
   ResolvedStreamableHTTPConnection,
@@ -87,12 +87,7 @@ export class ConnectionManager {
     options: ResolvedStdioConnection
   ): Promise<Client>;
   async createClient(
-    type: "http",
-    serverName: string,
-    options: ResolvedStreamableHTTPConnection
-  ): Promise<Client>;
-  async createClient(
-    type: "sse",
+    type: "http" | "sse",
     serverName: string,
     options: ResolvedStreamableHTTPConnection
   ): Promise<Client>;
@@ -125,7 +120,7 @@ export class ConnectionManager {
         (notification) =>
           this.#hooks.onMessage?.(notification.params, {
             server: serverName,
-            options: _copyConnection(options),
+            options: connectionSchema.parse(options),
           })
       );
     }
@@ -134,7 +129,7 @@ export class ConnectionManager {
       mcpClient.setNotificationHandler("notifications/initialized", () =>
         this.#hooks.onInitialized?.({
           server: serverName,
-          options: _copyConnection(options),
+          options: connectionSchema.parse(options),
         })
       );
     }
@@ -153,7 +148,7 @@ export class ConnectionManager {
             { requestId, reason },
             {
               server: serverName,
-              options: _copyConnection(options),
+              options: connectionSchema.parse(options),
             }
           );
 
@@ -172,7 +167,7 @@ export class ConnectionManager {
         () =>
           this.#hooks.onPromptsListChanged?.({
             server: serverName,
-            options: _copyConnection(options),
+            options: connectionSchema.parse(options),
           })
       );
     }
@@ -183,7 +178,7 @@ export class ConnectionManager {
         () =>
           this.#hooks.onResourcesListChanged?.({
             server: serverName,
-            options: _copyConnection(options),
+            options: connectionSchema.parse(options),
           })
       );
     }
@@ -194,7 +189,7 @@ export class ConnectionManager {
         (notification) =>
           this.#hooks.onResourcesUpdated?.(notification.params, {
             server: serverName,
-            options: _copyConnection(options),
+            options: connectionSchema.parse(options),
           })
       );
     }
@@ -203,7 +198,7 @@ export class ConnectionManager {
       mcpClient.setNotificationHandler("notifications/roots/list_changed", () =>
         this.#hooks.onRootsListChanged?.({
           server: serverName,
-          options: _copyConnection(options),
+          options: connectionSchema.parse(options),
         })
       );
     }
@@ -212,7 +207,7 @@ export class ConnectionManager {
       mcpClient.setNotificationHandler("notifications/tools/list_changed", () =>
         this.#hooks.onToolsListChanged?.({
           server: serverName,
-          options: _copyConnection(options),
+          options: connectionSchema.parse(options),
         })
       );
     }
@@ -264,16 +259,15 @@ export class ConnectionManager {
       throw new Error("Transport not found");
     }
 
-    const type =
-      connection.transportOptions.type ?? connection.transportOptions.transport;
-    if (type === "stdio") {
+    const options = connection.transportOptions;
+    if (options.transport === "stdio") {
       throw new Error("Forking stdio transport is not supported");
     }
 
-    return this.createClient(type as "http", key.serverName, {
-      ...connection.transportOptions,
+    return this.createClient(options.transport, key.serverName, {
+      ...options,
       headers,
-    } as ResolvedStreamableHTTPConnection);
+    });
   }
 
   /**

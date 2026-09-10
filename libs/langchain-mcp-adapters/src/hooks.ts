@@ -1,4 +1,4 @@
-import { z } from "zod/v4";
+import { z } from "zod";
 import { isCommand, type Command } from "@langchain/langgraph";
 import type { EmbeddedResource } from "@modelcontextprotocol/client";
 import type { ContentBlock } from "@langchain/core/messages";
@@ -13,17 +13,18 @@ import { ToolMessage } from "@langchain/core/messages";
  */
 export type State = Record<string, unknown>;
 
-export interface ToolCallRequest {
-  serverName: string;
-  name: string;
-  args: unknown;
-}
+const toolCallRequestSchema = z.object({
+  serverName: z.string(),
+  name: z.string(),
+  args: z.unknown(),
+});
+export type ToolCallRequest = z.output<typeof toolCallRequestSchema>;
 
 type ToolContent =
   | string
   | (ContentBlock | ContentBlock.Data.DataContentBlock)[];
 type ToolArtifacts = (EmbeddedResource | ContentBlock.Multimodal.Standard)[];
-type ToolResultBefore = [ToolContent, ToolArtifacts];
+type ToolResultBefore = z.output<typeof toolResultBeforeSchema>;
 
 // Validate the hook's result container; native content and artifact semantics
 // belong to the result adapter rather than a duplicate core/MCP schema here.
@@ -55,9 +56,12 @@ const toolResultSchema = z.union([
    */
   z.custom<ToolMessage>(ToolMessage.isInstance),
 ]);
-export type ToolResult = string | Command | ToolResultBefore | ToolMessage;
+export type ToolResult = z.output<typeof toolResultSchema>;
 
-export type ModifiedToolCallResult = ToolCallRequest & { result: ToolResult };
+const toolCallResultSchema = toolCallRequestSchema.extend({
+  result: toolResultSchema,
+});
+export type ModifiedToolCallResult = z.output<typeof toolCallResultSchema>;
 
 export const toolCallResultModificationSchema = z.object({
   result: toolResultSchema,
@@ -66,7 +70,7 @@ export const toolCallResultModificationSchema = z.object({
 export const toolCallModificationSchema = z
   .object({
     headers: z.record(z.string(), z.string()),
-    args: z.unknown(),
+    args: z.record(z.string(), z.unknown()),
   })
   .partial();
 export type ToolCallModification = z.output<typeof toolCallModificationSchema>;
@@ -99,7 +103,13 @@ export const toolHooksSchema = z.object({
    * ```
    */
   beforeToolCall: z
-    .custom<NonNullable<ToolHooks["beforeToolCall"]>>(
+    .custom<
+      (
+        request: ToolCallRequest,
+        state: State,
+        config: RunnableConfig
+      ) => ToolCallModification | void | Promise<ToolCallModification | void>
+    >(
       (value) => typeof value === "function",
       "Expected a beforeToolCall callback"
     )
@@ -129,26 +139,21 @@ export const toolHooksSchema = z.object({
    * ```
    */
   afterToolCall: z
-    .custom<NonNullable<ToolHooks["afterToolCall"]>>(
+    .custom<
+      (
+        request: ToolCallRequest & { result: ToolResultBefore },
+        state: State,
+        config: RunnableConfig
+      ) =>
+        | z.output<typeof toolCallResultModificationSchema>
+        | void
+        | Promise<z.output<typeof toolCallResultModificationSchema> | void>
+    >(
       (value) => typeof value === "function",
       "Expected an afterToolCall callback"
     )
     .optional(),
 });
 
-/** Hooks receive native values. Their returned modifications are parsed after awaiting them. */
-export interface ToolHooks {
-  beforeToolCall?: (
-    request: ToolCallRequest,
-    state: State,
-    config: RunnableConfig
-  ) => ToolCallModification | void | Promise<ToolCallModification | void>;
-  afterToolCall?: (
-    request: ToolCallRequest & { result: ToolResultBefore },
-    state: State,
-    config: RunnableConfig
-  ) =>
-    | Pick<ModifiedToolCallResult, "result">
-    | void
-    | Promise<Pick<ModifiedToolCallResult, "result"> | void>;
-}
+/** Hooks preserve native inputs; awaited modifications are parsed at invocation. */
+export type ToolHooks = z.input<typeof toolHooksSchema>;
