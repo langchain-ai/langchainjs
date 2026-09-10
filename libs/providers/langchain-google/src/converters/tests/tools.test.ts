@@ -110,7 +110,9 @@ describe("schemaToGeminiParameters", () => {
     );
     const result = schemaToGeminiParameters(schema);
 
-    expect(Object.prototype.hasOwnProperty.call(result.properties, "__proto__")).toBe(true);
+    expect(
+      Object.prototype.hasOwnProperty.call(result.properties, "__proto__")
+    ).toBe(true);
     expect(result.properties?.__proto__).toEqual({ type: "string" });
   });
 
