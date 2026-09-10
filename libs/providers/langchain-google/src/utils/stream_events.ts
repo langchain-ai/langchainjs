@@ -10,6 +10,7 @@ import type {
   FinishReason,
 } from "@langchain/core/language_models/event";
 import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
+import { v4 as uuidv4 } from "@langchain/core/utils/uuid";
 import type { Gemini } from "../chat_models/api-types.js";
 
 export type GeminiStreamResponse = Gemini.GenerateContentResponse;
@@ -94,6 +95,8 @@ export async function* convertGoogleGeminiStream(
           }
           const acc = blockAccumulators.get(index)!;
           acc.reasoning = (acc.reasoning ?? "") + part.text;
+          if (part.thoughtSignature)
+            acc.thoughtSignature = part.thoughtSignature;
           yield {
             event: "content-block-delta" as const,
             index,
@@ -123,26 +126,34 @@ export async function* convertGoogleGeminiStream(
       } else if (part.functionCall) {
         const key: BlockKey = `tool:${toolIdx}`;
         const args = JSON.stringify(part.functionCall.args ?? {});
+        // Only used to seed a *new* block; an id already assigned to this
+        // block must not change on later chunks.
+        const candidateId =
+          part.functionCall.id ?? `lc-tool-call-${uuidv4().replace(/-/g, "")}`;
         const { index, isNew } = getOrCreateBlockIndex(key, {
           type: "tool_call_chunk",
+          id: candidateId,
           name: part.functionCall.name,
           args: "",
           index: toolIdx,
         });
+        const acc = blockAccumulators.get(index)!;
+        const id = acc.id as string;
         if (isNew) {
           yield {
             event: "content-block-start" as const,
             index,
             content: {
               type: "tool_call_chunk",
+              id,
               name: part.functionCall.name,
               args: "",
               index: toolIdx,
             } as ContentBlock,
           };
         }
-        const acc = blockAccumulators.get(index)!;
         acc.args = args;
+        if (part.thoughtSignature) acc.thoughtSignature = part.thoughtSignature;
         yield {
           event: "content-block-delta" as const,
           index,
@@ -150,6 +161,7 @@ export async function* convertGoogleGeminiStream(
             type: "block-delta" as const,
             fields: {
               type: "tool_call_chunk",
+              id,
               name: acc.name,
               args: acc.args,
             },
@@ -161,10 +173,18 @@ export async function* convertGoogleGeminiStream(
   }
 
   for (const [index, acc] of blockAccumulators) {
+    // finalizeContentBlock rebuilds tool_call_chunk -> tool_call as
+    // {type, id, name, args} only, so thoughtSignature has to be re-attached.
+    const finalized = finalizeContentBlock(acc as ContentBlock);
     yield {
       event: "content-block-finish" as const,
       index,
-      content: finalizeContentBlock(acc as ContentBlock),
+      content: acc.thoughtSignature
+        ? ({
+            ...finalized,
+            thoughtSignature: acc.thoughtSignature,
+          } as ContentBlock)
+        : finalized,
     };
   }
 

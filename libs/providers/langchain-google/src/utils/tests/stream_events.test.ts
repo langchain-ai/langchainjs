@@ -115,4 +115,112 @@ describe("convertGoogleGeminiStream", () => {
 
     expect(events.filter((e) => e.event === "usage").length).toBe(1);
   });
+
+  test("threads a model-provided tool call id through start, delta, and finish", async () => {
+    const events = await collectEvents([
+      {
+        candidates: [
+          {
+            content: {
+              parts: [
+                {
+                  functionCall: {
+                    id: "server-id-1",
+                    name: "web_search",
+                    args: { query: "weather" },
+                  },
+                  thoughtSignature: "sig-1",
+                },
+              ],
+            },
+          },
+        ],
+      },
+    ]);
+
+    expect(events.find((e) => e.event === "content-block-start")).toMatchObject(
+      { content: { id: "server-id-1" } }
+    );
+    expect(events.find((e) => e.event === "content-block-delta")).toMatchObject(
+      { delta: { fields: { id: "server-id-1" } } }
+    );
+    expect(
+      events.find((e) => e.event === "content-block-finish")
+    ).toMatchObject({
+      content: { id: "server-id-1", thoughtSignature: "sig-1" },
+    });
+  });
+
+  test("generates a fallback id when Gemini omits it", async () => {
+    const events = await collectEvents([
+      {
+        candidates: [
+          {
+            content: {
+              parts: [
+                { functionCall: { name: "web_search", args: { query: "x" } } },
+              ],
+            },
+          },
+        ],
+      },
+    ]);
+
+    const start = events.find((e) => e.event === "content-block-start");
+    expect((start as { content: { id: string } }).content.id).toMatch(
+      /^lc-tool-call-/
+    );
+  });
+
+  test("keeps the same id across chunks for the same tool call", async () => {
+    const events = await collectEvents([
+      {
+        candidates: [
+          {
+            content: {
+              parts: [
+                { functionCall: { name: "web_search", args: { query: "w" } } },
+              ],
+            },
+          },
+        ],
+      },
+      {
+        candidates: [
+          {
+            content: {
+              parts: [
+                {
+                  functionCall: {
+                    id: "late-server-id",
+                    name: "web_search",
+                    args: { query: "weather" },
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    ]);
+
+    const deltaIds = events
+      .filter((e) => e.event === "content-block-delta")
+      .map((e) => (e as { delta: { fields: { id: string } } }).delta.fields.id);
+    const startId = (
+      events.find((e) => e.event === "content-block-start") as {
+        content: { id: string };
+      }
+    ).content.id;
+    const finishId = (
+      events.find((e) => e.event === "content-block-finish") as {
+        content: { id: string };
+      }
+    ).content.id;
+
+    expect(new Set(deltaIds).size).toBe(1);
+    expect(deltaIds[0]).toBe(startId);
+    expect(finishId).toBe(startId);
+    expect(finishId).not.toBe("late-server-id");
+  });
 });

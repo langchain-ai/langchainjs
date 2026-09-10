@@ -1709,6 +1709,21 @@ describe.each(thinkingModelInfo)(
       expect(hasThoughtSignature).toBe(true);
     });
 
+    test("thought signature - function via streamEvents", async () => {
+      const llm = newChatGoogle({ reasoningEffort: "high" });
+      const result = await llm.streamEvents(
+        "What is the weather in New York?",
+        { tools: [weatherTool], tool_choice: "get_weather" }
+      );
+      expect(result.tool_calls).toBeDefined();
+      expect(result.tool_calls!.length).toBeGreaterThan(0);
+      expect(result.tool_calls![0].id).toBeDefined();
+      expect(
+        (result.tool_calls![0] as { thoughtSignature?: string })
+          .thoughtSignature
+      ).toBeDefined();
+    });
+
     test("thinking - invoke", async () => {
       const llm = newChatGoogle({
         reasoningEffort: "high",
