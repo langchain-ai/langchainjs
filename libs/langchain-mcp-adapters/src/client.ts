@@ -9,8 +9,8 @@ import type {
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import type { DynamicStructuredTool } from "@langchain/core/tools";
 import { z } from "zod/v3";
+import { z as z4 } from "zod/v4";
 import { loadMcpTools } from "./tools.js";
-import { getHttpErrorStatus } from "./http_error.js";
 import { ConnectionManager, type Client } from "./connection.js";
 import { getDebugLog } from "./logging.js";
 import {
@@ -30,6 +30,13 @@ import {
   type LoadMcpToolsOptions,
   _resolveAndApplyOverrideHandlingOverrides,
 } from "./types.js";
+
+const httpStatusSchema = z4.number().int().min(100).max(599);
+const httpErrorSchema = z4.object({
+  status: httpStatusSchema.optional().catch(undefined),
+  code: httpStatusSchema.optional().catch(undefined),
+  message: z4.string().optional().catch(undefined),
+});
 
 const debugLog = getDebugLog();
 
@@ -756,7 +763,18 @@ export class MultiServerMCPClient {
   }
 
   private _getHttpErrorCode(error: unknown): number | undefined {
-    return getHttpErrorStatus(error);
+    const parsed = httpErrorSchema.safeParse(error);
+    if (!parsed.success) return undefined;
+
+    // SDK 2 HTTP errors use status; SSE errors use a numeric code.
+    const { status, code, message } = parsed.data;
+    if (status !== undefined) return status;
+    if (code !== undefined) return code;
+
+    const match = message?.match(/\(HTTP (\d{3})\)/);
+    if (!match) return undefined;
+    const parsedStatus = httpStatusSchema.safeParse(Number(match[1]));
+    return parsedStatus.success ? parsedStatus.data : undefined;
   }
 
   private _createAuthenticationErrorMessage(

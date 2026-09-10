@@ -1,22 +1,26 @@
-import { vi } from "vitest";
+import { vi, type Mock } from "vitest";
+
+type SDKTransport =
+  import("@modelcontextprotocol/client/stdio").StdioClientTransport;
 
 // Mocks @modelcontextprotocol/client/stdio (v2). Was @modelcontextprotocol/sdk/client/stdio.js in v1.
 
 const stdioClientTransportPrototype = {
-  connect: vi.fn().mockReturnValue(Promise.resolve()),
-  send: vi.fn().mockReturnValue(Promise.resolve()),
-  close: vi.fn().mockReturnValue(Promise.resolve()),
+  start: vi.fn<SDKTransport["start"]>().mockResolvedValue(undefined),
+  send: vi.fn<SDKTransport["send"]>().mockResolvedValue(undefined),
+  close: vi.fn<SDKTransport["close"]>().mockResolvedValue(undefined),
 };
-export const StdioClientTransport = vi
-  .fn()
-  .mockImplementation(function mockStdioClientTransport(
-    ...[config]: ConstructorParameters<
-      typeof import("@modelcontextprotocol/client/stdio").StdioClientTransport
-    >
-  ) {
-    return {
-      ...stdioClientTransportPrototype,
-      config,
-    };
-  });
+function mockStdioClientTransport(
+  ...[config]: ConstructorParameters<
+    typeof import("@modelcontextprotocol/client/stdio").StdioClientTransport
+  >
+) {
+  return {
+    ...stdioClientTransportPrototype,
+    config,
+  };
+}
+export const StdioClientTransport: Mock<typeof mockStdioClientTransport> =
+  vi.fn(mockStdioClientTransport);
+
 StdioClientTransport.prototype = stdioClientTransportPrototype;
