@@ -139,10 +139,12 @@ test("Google AI - passes system instruction and response schema per request", as
     },
   } as unknown as Schema;
   const requests: GenerateContentRequest[] = [];
-  vi.spyOn(model, "completionWithRetry").mockImplementation(async (request) => {
-    requests.push(request as GenerateContentRequest);
-    return { response: mockGenerateContentResponse("ok") } as never;
-  });
+  vi.spyOn(model, "completionWithRetry").mockImplementation(
+    async (request, _options) => {
+      requests.push(request as GenerateContentRequest);
+      return { response: mockGenerateContentResponse("ok") } as never;
+    }
+  );
 
   await model.invoke(
     [new SystemMessage("First system instruction"), new HumanMessage("Hello")],
@@ -167,6 +169,26 @@ test("Google AI - passes system instruction and response schema per request", as
   expect(client.systemInstruction).toBeUndefined();
   expect(client.generationConfig.responseSchema).toBeUndefined();
   expect(client.generationConfig.responseMimeType).toBeUndefined();
+});
+
+test("Google AI - forwards call options to non-streaming completion", async () => {
+  const model = new ChatGoogleGenerativeAI({
+    apiKey: "testing",
+    model: "gemini-2.0-flash",
+  });
+  const signal = new AbortController().signal;
+  const completionWithRetry = vi
+    .spyOn(model, "completionWithRetry")
+    .mockResolvedValue({
+      response: mockGenerateContentResponse("ok"),
+    } as never);
+
+  await model.invoke([new HumanMessage("Hello")], { signal });
+
+  expect(completionWithRetry).toHaveBeenCalledWith(
+    expect.any(Object),
+    expect.objectContaining({ signal })
+  );
 });
 
 test("Google AI - `safetySettings` category array must be unique", async () => {
