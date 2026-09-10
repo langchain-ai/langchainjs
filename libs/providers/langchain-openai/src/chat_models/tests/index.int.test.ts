@@ -2,6 +2,7 @@
 import * as z4 from "zod/v4";
 import { describe, test, expect, vi } from "vitest";
 import {
+  AIMessage,
   AIMessageChunk,
   BaseMessage,
   ChatMessage,
@@ -17,6 +18,7 @@ import {
   SystemMessagePromptTemplate,
 } from "@langchain/core/prompts";
 import { CallbackManager } from "@langchain/core/callbacks/manager";
+import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import { NewTokenIndices } from "@langchain/core/callbacks/base";
 import { InMemoryCache } from "@langchain/core/caches";
 import { concat } from "@langchain/core/utils/stream";
@@ -1284,4 +1286,61 @@ test("will call responses api for gpt-5.2-pro", async () => {
 
   expect(response).toBeDefined();
   expect(generateSpy).toHaveBeenCalled();
+});
+
+describe("llmOutput.tokenUsage matches usage_metadata on streaming paths (#11424 regression)", () => {
+  test(".stream()", async () => {
+    let callbackResult: LLMResult | undefined;
+    const model = new ChatOpenAI({
+      model: "gpt-4o-mini",
+      callbacks: [
+        {
+          async handleLLMEnd(output: LLMResult) {
+            callbackResult = output;
+          },
+        },
+      ],
+    });
+
+    let res: AIMessageChunk | undefined;
+    for await (const chunk of await model.stream("Say OK.")) {
+      res = res ? res.concat(chunk) : chunk;
+    }
+
+    expect(callbackResult?.llmOutput?.tokenUsage).toEqual({
+      promptTokens: res?.usage_metadata?.input_tokens,
+      completionTokens: res?.usage_metadata?.output_tokens,
+      totalTokens: res?.usage_metadata?.total_tokens,
+    });
+  });
+
+  test("invoke() with a streaming-preferring callback", async () => {
+    class PreferStreamingCallbackHandler extends BaseCallbackHandler {
+      name = "prefer-streaming";
+
+      lc_prefer_streaming = true;
+
+      handleLLMNewToken() {}
+    }
+
+    let callbackResult: LLMResult | undefined;
+    const model = new ChatOpenAI({ model: "gpt-4o-mini" });
+
+    const res: AIMessage = await model.invoke("Say OK.", {
+      callbacks: [
+        new PreferStreamingCallbackHandler(),
+        {
+          async handleLLMEnd(output: LLMResult) {
+            callbackResult = output;
+          },
+        },
+      ],
+    });
+
+    expect(callbackResult?.llmOutput?.tokenUsage).toEqual({
+      promptTokens: res.usage_metadata?.input_tokens,
+      completionTokens: res.usage_metadata?.output_tokens,
+      totalTokens: res.usage_metadata?.total_tokens,
+    });
+  });
 });
