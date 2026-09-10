@@ -379,6 +379,13 @@ describe("openaiTranslator", () => {
                 query: "melbourne australia news today",
                 sources: [{ type: "url", url: "https://example.com/news" }],
               },
+              results: [
+                {
+                  type: "url",
+                  url: "https://example.com/news",
+                  title: "Melbourne news",
+                },
+              ],
             },
           ],
         },
@@ -403,6 +410,13 @@ describe("openaiTranslator", () => {
               query: "melbourne australia news today",
               sources: [{ type: "url", url: "https://example.com/news" }],
             },
+            results: [
+              {
+                type: "url",
+                url: "https://example.com/news",
+                title: "Melbourne news",
+              },
+            ],
           },
         },
       ];
