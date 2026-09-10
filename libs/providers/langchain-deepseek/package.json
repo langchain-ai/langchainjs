@@ -1,6 +1,6 @@
 {
   "name": "@langchain/deepseek",
-  "version": "1.1.12-rc.0",
+  "version": "1.1.12",
   "description": "Deepseek integration for LangChain.js",
   "type": "module",
   "author": "LangChain",
@@ -41,7 +41,7 @@
     "dotenv": "^17.4.2",
     "dpdm": "^4.3.0",
     "typescript": "~7.0.2",
-    "vitest": "^4.1.8"
+    "vitest": "^4.1.11"
   },
   "publishConfig": {
     "access": "public"

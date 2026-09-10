@@ -1,6 +1,6 @@
 {
   "name": "@langchain/google-vertexai",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "description": "LangChain.js support for Google Vertex AI",
   "author": "LangChain",
   "license": "MIT",
@@ -33,7 +33,7 @@
     "dotenv": "^17.4.2",
     "dpdm": "^4.3.0",
     "typescript": "~7.0.2",
-    "vitest": "^4.1.8",
+    "vitest": "^4.1.11",
     "zod": "^3.25.76"
   },
   "publishConfig": {

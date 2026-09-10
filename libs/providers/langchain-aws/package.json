@@ -43,7 +43,7 @@
     "dotenv": "^17.4.2",
     "dpdm": "^4.3.0",
     "typescript": "~7.0.2",
-    "vitest": "^4.1.8",
+    "vitest": "^4.1.11",
     "zod": "^3.25.76"
   },
   "publishConfig": {

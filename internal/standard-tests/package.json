@@ -32,7 +32,7 @@
     "typescript": "~7.0.2"
   },
   "peerDependencies": {
-    "vitest": "^3.2.6"
+    "vitest": "^4.1.11"
   },
   "peerDependenciesMeta": {
     "vitest": {
