@@ -616,3 +616,58 @@ test("Test ChatModel applies v1 outputVersion after implicit streaming aggregati
     },
   ]);
 });
+
+test("_formatForTracing converts all base64 content blocks, not just the first", async () => {
+  // Regression test for https://github.com/langchain-ai/langchainjs/issues/11291
+  // The previous implementation used `if (messageToTrace === message)` as a
+  // once-only guard, so only the first base64 block per message was converted;
+  // every subsequent block was left as raw base64 data in the traced message.
+  let capturedMessages: HumanMessage[] | undefined;
+
+  class CaptureHandler extends BaseCallbackHandler {
+    name = "capture";
+
+    async handleChatModelStart(
+      _llm: unknown,
+      messages: HumanMessage[][]
+    ): Promise<void> {
+      capturedMessages = messages[0] as HumanMessage[];
+    }
+  }
+
+  const model = new FakeListChatModel({ responses: ["ok"] });
+
+  const message = new HumanMessage({
+    content: [
+      { type: "text", text: "two PDFs" },
+      {
+        type: "file",
+        source_type: "base64",
+        mime_type: "application/pdf",
+        data: "JVBERi0xLjQK",
+      },
+      {
+        type: "file",
+        source_type: "base64",
+        mime_type: "application/pdf",
+        data: "JVBERi0xLjUK",
+      },
+    ],
+  });
+
+  await model.invoke([message], { callbacks: [new CaptureHandler()] });
+
+  expect(capturedMessages).toBeDefined();
+  const tracedContent = capturedMessages![0].content as Array<
+    Record<string, unknown>
+  >;
+
+  // The text block should be unchanged.
+  expect(tracedContent[0]).toEqual({ type: "text", text: "two PDFs" });
+
+  // Both base64 blocks must have been converted — not just the first one.
+  expect(tracedContent[1].source_type).toBeUndefined();
+  expect(tracedContent[2].source_type).toBeUndefined();
+  expect(tracedContent[1].type).toBe("image_url");
+  expect(tracedContent[2].type).toBe("image_url");
+});

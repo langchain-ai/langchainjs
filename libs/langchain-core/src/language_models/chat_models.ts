@@ -171,27 +171,29 @@ export type BaseChatModelCallOptions = BaseLanguageModelCallOptions & {
 function _formatForTracing(messages: BaseMessage[]): BaseMessage[] {
   const messagesToTrace: BaseMessage[] = [];
   for (const message of messages) {
-    let messageToTrace = message;
     if (Array.isArray(message.content)) {
-      for (let idx = 0; idx < message.content.length; idx++) {
-        const block = message.content[idx];
+      let changed = false;
+      const convertedContent = message.content.map((block) => {
         if (isURLContentBlock(block) || isBase64ContentBlock(block)) {
-          if (messageToTrace === message) {
-            // Also shallow-copy content
-            // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-            messageToTrace = new (message.constructor as any)({
-              ...messageToTrace,
-              content: [
-                ...message.content.slice(0, idx),
-                convertToOpenAIImageBlock(block),
-                ...message.content.slice(idx + 1),
-              ],
-            });
-          }
+          changed = true;
+          return convertToOpenAIImageBlock(block);
         }
+        return block;
+      });
+      if (changed) {
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+        messagesToTrace.push(
+          new (message.constructor as any)({
+            ...message,
+            content: convertedContent,
+          })
+        );
+      } else {
+        messagesToTrace.push(message);
       }
+    } else {
+      messagesToTrace.push(message);
     }
-    messagesToTrace.push(messageToTrace);
   }
   return messagesToTrace;
 }
