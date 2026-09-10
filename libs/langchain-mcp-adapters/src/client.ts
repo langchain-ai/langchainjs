@@ -25,6 +25,8 @@ import {
   type MCPResourceContent,
   type ConnectionErrorHandler,
   clientConfigSchema,
+  connectionSchema,
+  _copyConnection,
   type LoadMcpToolsOptions,
   _resolveAndApplyOverrideHandlingOverrides,
 } from "./types.js";
@@ -170,25 +172,7 @@ export class MCPAdapter {
       mcpServers: Object.fromEntries(
         Object.entries(this.#config.mcpServers).map(([name, connection]) => [
           name,
-          {
-            ...connection,
-            outputHandling:
-              typeof connection.outputHandling === "object"
-                ? { ...connection.outputHandling }
-                : connection.outputHandling,
-            ...("command" in connection
-              ? {
-                  args: [...connection.args],
-                  env: connection.env && { ...connection.env },
-                  restart: connection.restart && { ...connection.restart },
-                }
-              : {
-                  headers: connection.headers && { ...connection.headers },
-                  reconnect: connection.reconnect && {
-                    ...connection.reconnect,
-                  },
-                }),
-          },
+          _copyConnection(connection),
         ])
       ),
     };
@@ -209,10 +193,19 @@ export class MCPAdapter {
 
     const configSchema = clientConfigSchema;
 
-    if ("servers" in config && "mcpServers" in config) {
+    // A direct legacy server map may itself contain a server named "servers".
+    const legacyServerNamedServers =
+      "servers" in config && connectionSchema.safeParse(config.servers).success;
+    if (
+      !legacyServerNamedServers &&
+      "servers" in config &&
+      "mcpServers" in config
+    ) {
       throw new Error("Specify servers or legacy mcpServers, not both");
     }
-    if ("servers" in config) {
+    if (legacyServerNamedServers) {
+      parsedServerConfig = configSchema.parse({ mcpServers: config });
+    } else if ("servers" in config) {
       const { servers, ...options } = config;
       parsedServerConfig = configSchema.parse({
         ...options,

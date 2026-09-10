@@ -5,6 +5,7 @@ import {
   SSEClientTransport,
   StreamableHTTPClientTransport,
 } from "@modelcontextprotocol/client";
+import type { ResolvedConnection, ServerMessageSource } from "../types.js";
 import { ConnectionManager, type Client } from "../connection.js";
 
 vi.mock(
@@ -22,6 +23,101 @@ describe("ConnectionManager", () => {
   });
 
   describe("createClient", () => {
+    test.each(["http", "stdio"] as const)(
+      "isolates notification options for %s clients",
+      async (transport) => {
+        const observed: ResolvedConnection[] = [];
+        const mutateOptions = (source: ServerMessageSource) => {
+          const options = source.options;
+          observed.push(options);
+          expect(options.outputHandling).toEqual({ text: "content" });
+          if (typeof options.outputHandling === "object")
+            options.outputHandling.text = "artifact";
+          if ("command" in options) {
+            expect(options.args).toEqual(["server.js"]);
+            expect(options.env).toEqual({ MODE: "test" });
+            expect(options.restart).toEqual({ enabled: false });
+            options.args.push("changed");
+            options.env!.MODE = "changed";
+            options.restart!.enabled = true;
+          } else {
+            expect(options.url).toBe("https://example.com/mcp");
+            expect(options.headers).toEqual({ "X-Test": "original" });
+            expect(options.reconnect).toEqual({ enabled: false });
+            options.url = "https://example.com/changed";
+            options.headers!["X-Test"] = "changed";
+            options.reconnect!.enabled = true;
+          }
+        };
+        const onMessage = vi.fn((_message, source: ServerMessageSource) =>
+          mutateOptions(source)
+        );
+        const manager = new ConnectionManager({
+          onMessage,
+          onResourcesListChanged: mutateOptions,
+        });
+        const options: ResolvedConnection =
+          transport === "http"
+            ? {
+                url: "https://example.com/mcp",
+                automaticSSEFallback: false,
+                headers: { "X-Test": "original" },
+                reconnect: { enabled: false },
+                outputHandling: { text: "content" },
+              }
+            : {
+                command: "node",
+                args: ["server.js"],
+                stderr: "inherit",
+                env: { MODE: "test" },
+                restart: { enabled: false },
+                outputHandling: { text: "content" },
+              };
+        if ("command" in options)
+          await manager.createClient("stdio", "test", options);
+        else await manager.createClient("http", "test", options);
+        const handlers = vi.mocked(SDKClient.prototype.setNotificationHandler)
+          .mock.calls;
+        const message = handlers.find(
+          ([method]) => method === "notifications/message"
+        )![1];
+        const changed = handlers.find(
+          ([method]) => method === "notifications/resources/list_changed"
+        )![1];
+        // The SDK overload also accepts a schema argument in this position.
+        if (typeof message !== "function" || typeof changed !== "function") {
+          throw new Error("Expected registered notification handlers");
+        }
+        const params = {
+          level: "info",
+          data: "test",
+          _meta: { extension: true },
+        };
+        try {
+          // Exercise the actual registered dispatch functions with an unused SDK context.
+          await Reflect.apply(message, undefined, [
+            { method: "notifications/message", params },
+            {},
+          ]);
+          await Reflect.apply(message, undefined, [
+            { method: "notifications/message", params },
+            {},
+          ]);
+          await Reflect.apply(changed, undefined, [
+            { method: "notifications/resources/list_changed" },
+            {},
+          ]);
+          expect(onMessage.mock.calls[0][0]).toBe(params);
+          expect(options.outputHandling).toEqual({ text: "content" });
+          expect(observed).toHaveLength(3);
+          expect(observed[0]).not.toBe(options);
+          expect(observed[0]).not.toBe(observed[1]);
+        } finally {
+          await manager.delete();
+        }
+      }
+    );
+
     test("creates stdio client and connects", async () => {
       const mgr = new ConnectionManager();
 

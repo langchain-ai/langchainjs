@@ -38,7 +38,7 @@ export type CallToolResultContentType =
 const outputTypesUnion = z.enum(["content", "artifact"]);
 const detailedOutputHandlingSchema = z.partialRecord(
   z.enum(callToolResultContentTypes),
-  outputTypesUnion
+  outputTypesUnion.optional()
 );
 export type DetailedOutputHandling = Partial<
   Record<CallToolResultContentType, "content" | "artifact">
@@ -420,7 +420,7 @@ export interface Notifications {
 }
 
 // Check runtime configuration once; do not parse already validated SDK payloads
-// again or clone the application-owned callback context on every notification.
+// again. ConnectionManager supplies an isolated options snapshot per notification.
 const notifications = z.object({
   onMessage: z
     .custom<NonNullable<Notifications["onMessage"]>>(
@@ -835,3 +835,28 @@ export type MCPResourceContent = {
    */
   blob?: string;
 };
+
+/** Copy mutable adapter options while retaining application-owned services. @internal */
+export function _copyConnection(
+  connection: ResolvedConnection
+): ResolvedConnection {
+  const outputHandling =
+    typeof connection.outputHandling === "object"
+      ? { ...connection.outputHandling }
+      : connection.outputHandling;
+  if ("command" in connection) {
+    return {
+      ...connection,
+      outputHandling,
+      args: [...connection.args],
+      env: connection.env && { ...connection.env },
+      restart: connection.restart && { ...connection.restart },
+    };
+  }
+  return {
+    ...connection,
+    outputHandling,
+    headers: connection.headers && { ...connection.headers },
+    reconnect: connection.reconnect && { ...connection.reconnect },
+  };
+}

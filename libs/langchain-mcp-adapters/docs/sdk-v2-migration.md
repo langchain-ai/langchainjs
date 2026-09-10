@@ -104,9 +104,15 @@ implementations. Return `undefined` for no change, `{ args, headers }` before a
 call, or `{ result }` after it. Invalid return containers now fail consistently;
 `Command` and `ToolMessage` values must be real native values. Detailed
 `outputHandling` objects reject unknown content-type keys instead of silently
-ignoring typos. Callback request `args` is a present field typed `unknown`.
+ignoring typos; explicit `undefined` destinations remain valid. Callback request `args` is a present field typed `unknown`.
 
 `config` remains a snapshot using the legacy `mcpServers` field. Mutable options
 are copied; callback functions and OAuth provider instances retain their
 identity. Treat this as runtime configuration, not a JSON-serializable or
 redacted diagnostic object. Changing a snapshot does not reconfigure the adapter.
+
+Notification callbacks receive a fresh connection-options snapshot for each
+event. Mutating that snapshot cannot reconfigure the adapter or alter the next
+notification's options. OAuth providers retain their application-owned identity.
+Direct legacy server maps can still contain a server named `servers`; the
+constructor distinguishes a connection definition from the canonical wrapper.

@@ -963,6 +963,55 @@ describe("MCPAdapter configuration boundary", () => {
     expect(Client.prototype.connect).not.toHaveBeenCalled();
   });
 
+  test.each([
+    { url: "https://example.com/mcp" },
+    { command: "node", args: ["server.js"] },
+  ])("accepts a legacy server named servers: %j", (connection) => {
+    const adapter = new MultiServerMCPClient({
+      servers: connection,
+      other: { url: "https://example.com/other" },
+    });
+    expect(Object.keys(adapter.config.mcpServers)).toEqual([
+      "servers",
+      "other",
+    ]);
+    expect(adapter.config.mcpServers.servers).toMatchObject(connection);
+  });
+
+  test("keeps canonical server names independent of connection field names", () => {
+    const adapter = new MCPAdapter({
+      servers: {
+        url: { url: "https://example.com/mcp" },
+        command: { command: "node", args: [] },
+        servers: { url: "https://example.com/other" },
+      },
+    });
+    expect(Object.keys(adapter.config.mcpServers)).toEqual([
+      "url",
+      "command",
+      "servers",
+    ]);
+  });
+
+  test("accepts undefined output destinations at global and server scope", () => {
+    const adapter = new MCPAdapter({
+      servers: {
+        remote: {
+          url: "https://example.com/mcp",
+          outputHandling: { image: undefined },
+        },
+      },
+      outputHandling: { text: undefined, audio: "artifact" },
+    });
+    expect(adapter.config.outputHandling).toEqual({
+      text: undefined,
+      audio: "artifact",
+    });
+    expect(adapter.config.mcpServers.remote.outputHandling).toEqual({
+      image: undefined,
+    });
+  });
+
   test("rejects mixed configuration spellings and conflicting transport choices", () => {
     // @ts-expect-error Conflicting configuration keys must also fail at runtime.
     expect(() => new MCPAdapter({ servers: {}, mcpServers: {} })).toThrow(

@@ -10,6 +10,7 @@ import type {
   StreamableHTTPClientTransportOptions,
   StreamableHTTPReconnectionOptions,
 } from "@modelcontextprotocol/client";
+import { _copyConnection } from "./types.js";
 import { getDebugLog } from "./logging.js";
 import type {
   ResolvedStreamableHTTPConnection,
@@ -124,7 +125,7 @@ export class ConnectionManager {
         (notification) =>
           this.#hooks.onMessage?.(notification.params, {
             server: serverName,
-            options,
+            options: _copyConnection(options),
           })
       );
     }
@@ -133,7 +134,7 @@ export class ConnectionManager {
       mcpClient.setNotificationHandler("notifications/initialized", () =>
         this.#hooks.onInitialized?.({
           server: serverName,
-          options,
+          options: _copyConnection(options),
         })
       );
     }
@@ -152,7 +153,7 @@ export class ConnectionManager {
             { requestId, reason },
             {
               server: serverName,
-              options,
+              options: _copyConnection(options),
             }
           );
 
@@ -171,7 +172,7 @@ export class ConnectionManager {
         () =>
           this.#hooks.onPromptsListChanged?.({
             server: serverName,
-            options,
+            options: _copyConnection(options),
           })
       );
     }
@@ -182,7 +183,7 @@ export class ConnectionManager {
         () =>
           this.#hooks.onResourcesListChanged?.({
             server: serverName,
-            options,
+            options: _copyConnection(options),
           })
       );
     }
@@ -193,7 +194,7 @@ export class ConnectionManager {
         (notification) =>
           this.#hooks.onResourcesUpdated?.(notification.params, {
             server: serverName,
-            options,
+            options: _copyConnection(options),
           })
       );
     }
@@ -202,7 +203,7 @@ export class ConnectionManager {
       mcpClient.setNotificationHandler("notifications/roots/list_changed", () =>
         this.#hooks.onRootsListChanged?.({
           server: serverName,
-          options,
+          options: _copyConnection(options),
         })
       );
     }
@@ -211,7 +212,7 @@ export class ConnectionManager {
       mcpClient.setNotificationHandler("notifications/tools/list_changed", () =>
         this.#hooks.onToolsListChanged?.({
           server: serverName,
-          options,
+          options: _copyConnection(options),
         })
       );
     }
