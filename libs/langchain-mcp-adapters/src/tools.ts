@@ -1,5 +1,9 @@
-import { z, ZodError as ZodErrorV4 } from "zod/v4";
-import { ZodError as ZodErrorV3 } from "zod/v3";
+import { z } from "zod/v4";
+import { isInteropZodError } from "@langchain/core/utils/types";
+import {
+  toolCallModificationSchema,
+  toolCallResultModificationSchema,
+} from "./hooks.js";
 import type {
   CallToolResult,
   ContentBlock as MCPContentBlock,
@@ -493,12 +497,8 @@ export class ToolException extends Error {
     /**
      * don't display the large ZodError stack trace
      */
-    if (
-      cause &&
-      // oxlint-disable-next-line no-instanceof/no-instanceof
-      (cause instanceof ZodErrorV4 || cause instanceof ZodErrorV3)
-    ) {
-      const minifiedZodError = new Error(z.prettifyError(cause));
+    if (cause && isInteropZodError(cause)) {
+      const minifiedZodError = new Error(z.prettifyError(cause as z.ZodError));
       const stackByLine = cause.stack?.split("\n") || [];
       minifiedZodError.stack = cause.stack
         ?.split("\n")
@@ -1038,15 +1038,19 @@ async function _callTool({
       );
     }
 
-    const beforeToolCallInterception = await beforeToolCall?.(
-      {
-        name: toolName,
-        args,
-        serverName,
-      },
-      state,
-      config ?? {}
-    );
+    const beforeToolCallInterception = toolCallModificationSchema
+      .optional()
+      .parse(
+        await beforeToolCall?.(
+          {
+            name: toolName,
+            args,
+            serverName,
+          },
+          state,
+          config ?? {}
+        )
+      );
 
     const finalArgs = Object.assign(
       args,
@@ -1124,15 +1128,17 @@ async function _callTool({
           "source_type" in artifact)
     ) as (EmbeddedResource | ContentBlock.Multimodal.Standard)[];
 
-    const interceptedResult = await afterToolCall?.(
-      {
-        name: toolName,
-        args: finalArgs,
-        result: [normalizedContent, normalizedArtifacts],
-        serverName,
-      },
-      state,
-      config ?? {}
+    const interceptedResult = toolCallResultModificationSchema.optional().parse(
+      await afterToolCall?.(
+        {
+          name: toolName,
+          args: finalArgs,
+          result: [normalizedContent, normalizedArtifacts],
+          serverName,
+        },
+        state,
+        config ?? {}
+      )
     );
 
     if (!interceptedResult) {
@@ -1161,8 +1167,8 @@ async function _callTool({
     );
   } catch (error) {
     // oxlint-disable-next-line no-instanceof/no-instanceof
-    if (error instanceof ZodErrorV4 || error instanceof ZodErrorV3) {
-      throw new ToolException(z.prettifyError(error), error);
+    if (error instanceof Error && isInteropZodError(error)) {
+      throw new ToolException(z.prettifyError(error as z.ZodError), error);
     }
 
     debugLog(`Error calling tool ${toolName}: ${String(error)}`);

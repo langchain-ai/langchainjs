@@ -15,6 +15,8 @@ import type {
   ToolMessage,
 } from "@langchain/core/messages";
 
+import { z } from "zod/v4";
+import type { ToolHooks } from "../hooks.js";
 import { loadMcpTools } from "../tools.js";
 
 vi.mock(
@@ -37,6 +39,66 @@ describe("Simplified Tool Adapter Tests", () => {
     } as MockedObject<Client>;
 
     vi.clearAllMocks();
+  });
+
+  describe("hook return validation", () => {
+    beforeEach(() => {
+      mockClient.listTools.mockResolvedValue({
+        tools: [
+          { name: "echo", inputSchema: { type: "object", properties: {} } },
+        ],
+      });
+      mockClient.callTool.mockResolvedValue({
+        content: [{ type: "text", text: "original" }],
+      });
+    });
+
+    test.each([false, true])(
+      "validates before hooks after awaiting them (async=%s)",
+      async (asyncHook) => {
+        const invalid = { headers: { test: 42 } };
+        const beforeToolCall = (asyncHook
+          ? async () => invalid
+          : () => invalid) as unknown as ToolHooks["beforeToolCall"];
+        const [tool] = await loadMcpTools("test", mockClient, {
+          beforeToolCall,
+        });
+        await expect(tool.invoke({})).rejects.toThrow(/string/);
+        expect(mockClient.callTool).not.toHaveBeenCalled();
+      }
+    );
+
+    test.each([false, true])(
+      "validates after hooks after awaiting them (async=%s)",
+      async (asyncHook) => {
+        const afterToolCall = (asyncHook
+          ? async () => ({ result: 42 })
+          : () => ({ result: 42 })) as unknown as ToolHooks["afterToolCall"];
+        const [tool] = await loadMcpTools("test", mockClient, {
+          afterToolCall,
+        });
+        await expect(tool.invoke({})).rejects.toThrow();
+        expect(mockClient.callTool).toHaveBeenCalledTimes(1);
+      }
+    );
+
+    test("preserves successful async modifications and formats Zod4 hook failures", async () => {
+      const [tool] = await loadMcpTools("test", mockClient, {
+        beforeToolCall: async () => ({ args: { value: "effective" } }),
+        afterToolCall: async () => ({ result: "changed" }),
+      });
+      expect(await tool.invoke({})).toBe("changed");
+      expect(mockClient.callTool).toHaveBeenCalledWith({
+        name: "echo",
+        arguments: { value: "effective" },
+      });
+      const [invalid] = await loadMcpTools("test", mockClient, {
+        beforeToolCall: () => {
+          z.string().parse(123);
+        },
+      });
+      await expect(invalid.invoke({})).rejects.toThrow(/string/);
+    });
   });
 
   describe("loadMcpTools", () => {

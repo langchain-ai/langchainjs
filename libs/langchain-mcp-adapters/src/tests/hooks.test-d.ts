@@ -1,3 +1,5 @@
+import { MCPAdapter } from "../index.js";
+import type { LoggingMessageNotificationParams } from "@modelcontextprotocol/client";
 import { test, expectTypeOf } from "vitest";
 import { ToolMessage } from "@langchain/core/messages";
 import { RunnableConfig } from "@langchain/core/runnables";
@@ -22,7 +24,7 @@ test("check tool hooks types", () => {
       expectTypeOf(toolCallRequest).toEqualTypeOf<{
         name: string;
         serverName: string;
-        args?: unknown;
+        args: unknown;
       }>();
     },
     afterToolCall: (toolCallResult, state, runtime) => {
@@ -57,7 +59,7 @@ test("check tool hooks types", () => {
             type: "tool";
             name: string;
             server: string;
-            args?: unknown;
+            args: unknown;
           }
         | {
             type: "unknown";
@@ -115,4 +117,19 @@ test("check tool hooks types", () => {
       }>();
     },
   });
+});
+
+test("canonical adapter API retains typed SDK callbacks and native tools", () => {
+  const adapter = new MCPAdapter({
+    servers: { remote: { transport: "http", url: "https://example.com/mcp" } },
+    onMessage: (message) => {
+      expectTypeOf(message).toEqualTypeOf<LoggingMessageNotificationParams>();
+    },
+    beforeToolCall: async ({ args }) => {
+      expectTypeOf(args).toEqualTypeOf<unknown>();
+      return { args: { value: 1 } };
+    },
+  });
+  expectTypeOf(adapter).toEqualTypeOf<MultiServerMCPClient>();
+  expectTypeOf(adapter.close()).toEqualTypeOf<Promise<void>>();
 });

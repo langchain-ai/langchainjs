@@ -1,9 +1,9 @@
-import { z } from "zod/v3";
-import type { Command } from "@langchain/langgraph";
+import { z } from "zod/v4";
+import { isCommand, type Command } from "@langchain/langgraph";
 import type { EmbeddedResource } from "@modelcontextprotocol/client";
 import type { ContentBlock } from "@langchain/core/messages";
 import type { RunnableConfig } from "@langchain/core/runnables";
-import type { ToolMessage } from "@langchain/core/messages";
+import { ToolMessage } from "@langchain/core/messages";
 
 /**
  * state messages
@@ -13,21 +13,25 @@ import type { ToolMessage } from "@langchain/core/messages";
  */
 export type State = Record<string, unknown>;
 
-const toolCallRequestSchema = z.object({
-  serverName: z.string(),
-  name: z.string(),
-  args: z.unknown(),
-});
-export type ToolCallRequest = z.output<typeof toolCallRequestSchema>;
+export interface ToolCallRequest {
+  serverName: string;
+  name: string;
+  args: unknown;
+}
 
+type ToolContent =
+  | string
+  | (ContentBlock | ContentBlock.Data.DataContentBlock)[];
+type ToolArtifacts = (EmbeddedResource | ContentBlock.Multimodal.Standard)[];
+type ToolResultBefore = [ToolContent, ToolArtifacts];
+
+// Validate the hook's result container; native content and artifact semantics
+// belong to the result adapter rather than a duplicate core/MCP schema here.
 const toolResultBeforeSchema = z.tuple([
-  z.custom<string | (ContentBlock | ContentBlock.Data.DataContentBlock)[]>(),
-  z.array(
-    z.union([
-      z.custom<EmbeddedResource>(),
-      z.custom<ContentBlock.Multimodal.Standard>(),
-    ])
+  z.custom<ToolContent>(
+    (value) => typeof value === "string" || Array.isArray(value)
   ),
+  z.custom<ToolArtifacts>(Array.isArray),
 ]);
 
 /**
@@ -41,7 +45,7 @@ const toolResultSchema = z.union([
   /**
    * Command from LangGraph
    */
-  z.custom<Command>(),
+  z.custom<Command>(isCommand),
   /**
    * 2-tuple of content, artifact
    */
@@ -49,26 +53,19 @@ const toolResultSchema = z.union([
   /**
    * ToolMessage return
    */
-  z.custom<ToolMessage>(),
+  z.custom<ToolMessage>(ToolMessage.isInstance),
 ]);
-export type ToolResult = z.output<typeof toolResultSchema>;
+export type ToolResult = string | Command | ToolResultBefore | ToolMessage;
 
-const toolCallResultSchema = z.object({
-  ...toolCallRequestSchema.shape,
-  result: toolResultBeforeSchema,
-});
+export type ModifiedToolCallResult = ToolCallRequest & { result: ToolResult };
 
-const modifiedToolCallResultSchema = z.object({
-  ...toolCallRequestSchema.shape,
+export const toolCallResultModificationSchema = z.object({
   result: toolResultSchema,
 });
-export type ModifiedToolCallResult = z.output<
-  typeof modifiedToolCallResultSchema
->;
 
-const toolCallModificationSchema = z
+export const toolCallModificationSchema = z
   .object({
-    headers: z.record(z.string()),
+    headers: z.record(z.string(), z.string()),
     args: z.unknown(),
   })
   .partial();
@@ -95,22 +92,16 @@ export const toolHooksSchema = z.object({
    *         ...toolCallRequest.args,
    *         custom: "Custom Value"
    *       },
-   *       header: { "X-Custom-Header": "Custom Value" }
+   *       headers: { "X-Custom-Header": "Custom Value" }
    *     };
    *   },
    * };
    * ```
    */
   beforeToolCall: z
-    .function()
-    .args(toolCallRequestSchema, z.custom<State>(), z.custom<RunnableConfig>())
-    .returns(
-      z.union([
-        z.promise(toolCallModificationSchema),
-        toolCallModificationSchema,
-        z.void(),
-        z.promise(z.void()),
-      ])
+    .custom<NonNullable<ToolHooks["beforeToolCall"]>>(
+      (value) => typeof value === "function",
+      "Expected a beforeToolCall callback"
     )
     .optional(),
 
@@ -130,24 +121,34 @@ export const toolHooksSchema = z.object({
    * const interceptor = {
    *   afterToolCall: (toolCallResult, state, runtime) => {
    *     if (toolCallResult.name === "calculator") {
-   *       return ["Custom Value", []];
+   *       return { result: ["Custom Value", []] };
    *     }
-   *     return toolCallResult.result;
+   *     return { result: toolCallResult.result };
    *   },
    * };
    * ```
    */
   afterToolCall: z
-    .function()
-    .args(toolCallResultSchema, z.custom<State>(), z.custom<RunnableConfig>())
-    .returns(
-      z.union([
-        z.promise(modifiedToolCallResultSchema.pick({ result: true })),
-        modifiedToolCallResultSchema.pick({ result: true }),
-        z.void(),
-        z.promise(z.void()),
-      ])
+    .custom<NonNullable<ToolHooks["afterToolCall"]>>(
+      (value) => typeof value === "function",
+      "Expected an afterToolCall callback"
     )
     .optional(),
 });
-export type ToolHooks = z.input<typeof toolHooksSchema>;
+
+/** Hooks receive native values. Their returned modifications are parsed after awaiting them. */
+export interface ToolHooks {
+  beforeToolCall?: (
+    request: ToolCallRequest,
+    state: State,
+    config: RunnableConfig
+  ) => ToolCallModification | void | Promise<ToolCallModification | void>;
+  afterToolCall?: (
+    request: ToolCallRequest & { result: ToolResultBefore },
+    state: State,
+    config: RunnableConfig
+  ) =>
+    | Pick<ModifiedToolCallResult, "result">
+    | void
+    | Promise<Pick<ModifiedToolCallResult, "result"> | void>;
+}

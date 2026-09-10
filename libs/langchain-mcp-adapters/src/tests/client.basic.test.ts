@@ -7,14 +7,14 @@ import {
   afterEach,
   type Mock,
 } from "vitest";
-import { ZodError } from "zod/v3";
+import { ZodError } from "zod/v4";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import {
   Client,
   SSEClientTransport,
   StreamableHTTPClientTransport,
 } from "@modelcontextprotocol/client";
-import { MultiServerMCPClient, MCPClientError } from "../client.js";
+import { MCPAdapter, MultiServerMCPClient, MCPClientError } from "../client.js";
 
 vi.mock(
   "@modelcontextprotocol/client",
@@ -946,5 +946,111 @@ describe("MultiServerMCPClient", () => {
       expect(workingClient1).toBeDefined();
       expect(workingClient2).toBeDefined();
     });
+  });
+});
+
+describe("MCPAdapter configuration boundary", () => {
+  test("shares the implementation and normalizes legacy transport names without connecting", () => {
+    vi.clearAllMocks();
+    expect(MCPAdapter).toBe(MultiServerMCPClient);
+    const adapter = new MCPAdapter({
+      servers: { remote: { type: "sse", url: "https://example.com/mcp" } },
+    });
+    expect(adapter.config.mcpServers.remote).toMatchObject({
+      transport: "sse",
+    });
+    expect(adapter.config.mcpServers.remote).not.toHaveProperty("type");
+    expect(Client.prototype.connect).not.toHaveBeenCalled();
+  });
+
+  test("rejects mixed configuration spellings and conflicting transport choices", () => {
+    // @ts-expect-error Conflicting configuration keys must also fail at runtime.
+    expect(() => new MCPAdapter({ servers: {}, mcpServers: {} })).toThrow(
+      /not both/
+    );
+    expect(
+      () =>
+        new MCPAdapter({
+          servers: {
+            remote: {
+              transport: "http",
+              type: "sse",
+              url: "https://example.com/mcp",
+            },
+          },
+        })
+    ).toThrow(/conflicts with transport/);
+  });
+
+  test("rejects a connection that mixes a command and URL before dropping unknown keys", () => {
+    const ambiguous = {
+      servers: {
+        remote: { command: "node", args: [], url: "https://example.com/mcp" },
+      },
+    };
+    expect(() => new MCPAdapter(ambiguous)).toThrow(/command or an HTTP URL/);
+  });
+
+  test("retains callback identity and isolates mutable configuration snapshots", () => {
+    const onMessage = vi.fn();
+    const beforeToolCall = vi.fn();
+    const adapter = new MCPAdapter({
+      servers: {
+        local: {
+          command: "node",
+          args: ["server.js"],
+          env: { MODE: "test" },
+          restart: { enabled: false },
+        },
+        remote: {
+          url: "https://example.com/mcp",
+          headers: { "X-Test": "original" },
+          reconnect: { enabled: false },
+        },
+      },
+      outputHandling: { text: "content" },
+      onMessage,
+      beforeToolCall,
+    });
+    const snapshot = adapter.config;
+    expect(snapshot.onMessage).toBe(onMessage);
+    expect(snapshot.beforeToolCall).toBe(beforeToolCall);
+    const local = snapshot.mcpServers.local;
+    if (!("command" in local)) throw new Error("Expected stdio config");
+    local.args.push("changed");
+    local.env!.MODE = "changed";
+    local.restart!.enabled = true;
+    const remote = snapshot.mcpServers.remote;
+    if (!("url" in remote)) throw new Error("Expected HTTP config");
+    remote.headers!["X-Test"] = "changed";
+    remote.reconnect!.enabled = true;
+    expect(adapter.config.mcpServers.local).toMatchObject({
+      args: ["server.js"],
+      env: { MODE: "test" },
+      restart: { enabled: false },
+    });
+    expect(adapter.config.mcpServers.remote).toMatchObject({
+      headers: { "X-Test": "original" },
+      reconnect: { enabled: false },
+    });
+  });
+
+  test("rejects invalid callbacks and unknown output destinations with Zod4", () => {
+    expect(
+      () =>
+        new MCPAdapter(
+          JSON.parse(
+            '{"servers":{"remote":{"url":"https://example.com/mcp"}},"beforeToolCall":"invalid"}'
+          )
+        )
+    ).toThrow(ZodError);
+    expect(
+      () =>
+        new MCPAdapter(
+          JSON.parse(
+            '{"servers":{"remote":{"url":"https://example.com/mcp"}},"outputHandling":{"typo":"content"}}'
+          )
+        )
+    ).toThrow(ZodError);
   });
 });

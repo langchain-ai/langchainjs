@@ -8,12 +8,12 @@ import type {
 } from "@modelcontextprotocol/client";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import type { DynamicStructuredTool } from "@langchain/core/tools";
-import { z } from "zod/v3";
 import { loadMcpTools } from "./tools.js";
 import { ConnectionManager, type Client } from "./connection.js";
 import { getDebugLog } from "./logging.js";
 import {
   type ClientConfig,
+  type MCPAdapterConfig,
   type Connection,
   type ResolvedClientConfig,
   type ResolvedConnection,
@@ -25,7 +25,6 @@ import {
   type MCPResourceContent,
   type ConnectionErrorHandler,
   clientConfigSchema,
-  connectionSchema,
   type LoadMcpToolsOptions,
   _resolveAndApplyOverrideHandlingOverrides,
 } from "./types.js";
@@ -118,7 +117,7 @@ function isResolvedStreamableHTTPConnection(
 /**
  * Client for connecting to multiple MCP servers and loading LangChain-compatible tools.
  */
-export class MultiServerMCPClient {
+export class MCPAdapter {
   /**
    * Cached map of server names to tools
    */
@@ -155,32 +154,74 @@ export class MultiServerMCPClient {
   #failedServers: Set<string> = new Set();
 
   /**
-   * Returns clone of server config for inspection purposes.
+   * Returns a configuration snapshot. Callbacks and OAuth providers retain their identity.
+   * This is runtime configuration, not a redacted or JSON-serializable diagnostic view.
    *
    * Client does not support config modifications.
    */
   get config(): ClientConfig {
     // clone config so it can't be mutated
-    return JSON.parse(JSON.stringify(this.#config));
+    return {
+      ...this.#config,
+      outputHandling:
+        typeof this.#config.outputHandling === "object"
+          ? { ...this.#config.outputHandling }
+          : this.#config.outputHandling,
+      mcpServers: Object.fromEntries(
+        Object.entries(this.#config.mcpServers).map(([name, connection]) => [
+          name,
+          {
+            ...connection,
+            outputHandling:
+              typeof connection.outputHandling === "object"
+                ? { ...connection.outputHandling }
+                : connection.outputHandling,
+            ...("command" in connection
+              ? {
+                  args: [...connection.args],
+                  env: connection.env && { ...connection.env },
+                  restart: connection.restart && { ...connection.restart },
+                }
+              : {
+                  headers: connection.headers && { ...connection.headers },
+                  reconnect: connection.reconnect && {
+                    ...connection.reconnect,
+                  },
+                }),
+          },
+        ])
+      ),
+    };
   }
 
   /**
-   * Create a new MultiServerMCPClient.
+   * Create an MCP adapter. Construction does not open connections.
    *
    * @param config - Configuration object
    */
-  constructor(config: ClientConfig | Record<string, Connection>) {
+  constructor(config: MCPAdapterConfig);
+  /** @deprecated Use `{ servers: { ... } }`. */
+  constructor(config: ClientConfig | Record<string, Connection>);
+  constructor(
+    config: MCPAdapterConfig | ClientConfig | Record<string, Connection>
+  ) {
     let parsedServerConfig: ResolvedClientConfig;
 
     const configSchema = clientConfigSchema;
 
-    if ("mcpServers" in config) {
+    if ("servers" in config && "mcpServers" in config) {
+      throw new Error("Specify servers or legacy mcpServers, not both");
+    }
+    if ("servers" in config) {
+      const { servers, ...options } = config;
+      parsedServerConfig = configSchema.parse({
+        ...options,
+        mcpServers: servers,
+      });
+    } else if ("mcpServers" in config) {
       parsedServerConfig = configSchema.parse(config);
     } else {
-      // two step parse so parse errors are referencing the correct object paths
-      const parsedMcpServers = z.record(connectionSchema).parse(config);
-
-      parsedServerConfig = configSchema.parse({ mcpServers: parsedMcpServers });
+      parsedServerConfig = configSchema.parse({ mcpServers: config });
     }
 
     if (Object.keys(parsedServerConfig.mcpServers).length === 0) {
@@ -1152,3 +1193,6 @@ export class MultiServerMCPClient {
     return allTools;
   }
 }
+
+/** @deprecated Use MCPAdapter. This alias shares the same implementation. */
+export { MCPAdapter as MultiServerMCPClient };

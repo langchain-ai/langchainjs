@@ -32,7 +32,7 @@
   ],
   "dependencies": {
     "debug": "^4.4.3",
-    "zod": "^3.25.76 || ^4",
+    "zod": "^4.2.0",
     "@modelcontextprotocol/client": "^2.0.0"
   },
   "peerDependencies": {

@@ -4,7 +4,7 @@ import {
 } from "@modelcontextprotocol/client";
 import { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod/v4";
-import { loadMcpTools } from "../index.js";
+import { MCPAdapter, loadMcpTools } from "../index.js";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { Server } from "node:http";
 import { join } from "node:path";
@@ -145,9 +145,9 @@ describe("MultiServerMCPClient Integration Tests", () => {
     it("should connect to and communicate with an HTTP MCP server", async () => {
       const { baseUrl } = await testServers.createHTTPServer("http-test");
 
-      const client = new MultiServerMCPClient({
-        "http-server": {
-          url: `${baseUrl}/mcp`,
+      const client = new MCPAdapter({
+        servers: {
+          "http-server": { transport: "http", url: `${baseUrl}/mcp` },
         },
       });
 
