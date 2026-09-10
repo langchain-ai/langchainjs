@@ -104,6 +104,16 @@ describe("schemaToGeminiParameters", () => {
     expect(JSON.stringify(result)).not.toContain("propertyNames");
   });
 
+  test("preserves a property literally named __proto__", () => {
+    const schema = JSON.parse(
+      '{"type":"object","properties":{"__proto__":{"type":"string"}},"required":["__proto__"]}'
+    );
+    const result = schemaToGeminiParameters(schema);
+
+    expect(Object.prototype.hasOwnProperty.call(result.properties, "__proto__")).toBe(true);
+    expect(result.properties?.__proto__).toEqual({ type: "string" });
+  });
+
   test("throws on a recursive/$ref schema instead of silently emptying it", () => {
     type Node = { value: string; children?: Node[] };
     const nodeSchema: z.ZodType<Node> = z.lazy(() =>

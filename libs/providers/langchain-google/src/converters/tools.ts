@@ -126,11 +126,13 @@ function sanitizeGeminiSchema(node: unknown): unknown {
   adjustObjectType(schema);
 
   if (schema.properties && typeof schema.properties === "object") {
-    const properties: Record<string, unknown> = {};
-    for (const [name, value] of Object.entries(schema.properties)) {
-      properties[name] = sanitizeGeminiSchema(value);
-    }
-    schema.properties = properties;
+    // fromEntries defines properties (safe for a field literally named "__proto__"), unlike bracket assignment on a plain {}.
+    schema.properties = Object.fromEntries(
+      Object.entries(schema.properties).map(([name, value]) => [
+        name,
+        sanitizeGeminiSchema(value),
+      ])
+    );
   }
   if (schema.items !== undefined) {
     schema.items = sanitizeGeminiSchema(schema.items);
