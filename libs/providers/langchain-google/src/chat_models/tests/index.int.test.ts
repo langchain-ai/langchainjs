@@ -1173,6 +1173,30 @@ describe.each(coreModelInfo)(
       ).toEqual("application/json");
     });
 
+    test("function calling with a z.record() schema", async () => {
+      const recordTool = tool(({ input }) => `${input + 2}`, {
+        name: "magic_function",
+        description: "Applies a magic function to an input.",
+        schema: z.object({
+          input: z
+            .number()
+            .describe("Input number to apply the magic function to."),
+          metadata: z
+            .record(z.string(), z.string())
+            .optional()
+            .describe(
+              "A complex field that can hold various string key-value pairs."
+            ),
+        }),
+      });
+
+      const llm: Runnable = newChatGoogle().bindTools([recordTool]);
+      const result = await llm.invoke("Call magic_function with input 5.");
+
+      expect(result.tool_calls?.length).toBeGreaterThan(0);
+      expect(result.tool_calls?.[0].name).toBe("magic_function");
+    });
+
     test("service tier - flex", async () => {
       const llm = newChatGoogle({
         serviceTier: "flex",

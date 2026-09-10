@@ -74,47 +74,72 @@ function adjustObjectType(
   return obj;
 }
 
-/**
- * Recursively removes unsupported properties from a JSON Schema object to make it
- * compatible with Gemini's function schema format.
- *
- * Gemini's function schema format does not support:
- * - `additionalProperties` property
- * - Array types (must be converted to string types with nullable flag)
- * - Union types
- *
- * @param obj - The JSON Schema object to clean
- * @returns A cleaned GeminiFunctionSchema object
- *
- * @internal
- */
-function removeAdditionalProperties(
-  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-  obj: Record<string, any>
-): Gemini.Tools.Schema & { $schema?: string } {
-  if (typeof obj === "object" && obj !== null) {
-    const newObj = { ...obj };
+// Keywords Gemini's function schema accepts. Keep in sync with Gemini.Tools.Schema (api-types.ts); anything else 400s (#8584).
+const GEMINI_SCHEMA_KEYS = new Set([
+  "anyOf",
+  "default",
+  "description",
+  "enum",
+  "example",
+  "format",
+  "items",
+  "maxItems",
+  "maxLength",
+  "maxProperties",
+  "maximum",
+  "minItems",
+  "minLength",
+  "minProperties",
+  "minimum",
+  "nullable",
+  "pattern",
+  "properties",
+  "propertyOrdering",
+  "required",
+  "title",
+  "type",
+]);
 
-    if ("additionalProperties" in newObj) {
-      delete newObj.additionalProperties;
-    }
-
-    adjustObjectType(newObj);
-
-    for (const key in newObj) {
-      if (key in newObj) {
-        if (Array.isArray(newObj[key])) {
-          newObj[key] = newObj[key].map(removeAdditionalProperties);
-        } else if (typeof newObj[key] === "object" && newObj[key] !== null) {
-          newObj[key] = removeAdditionalProperties(newObj[key]);
-        }
-      }
-    }
-
-    return newObj as Gemini.Tools.Schema;
+// Recursively allowlist-filters a schema node; `properties`' own keys are user field names, not schema keywords, so only its values recurse.
+function sanitizeGeminiSchema(node: unknown): unknown {
+  if (Array.isArray(node)) {
+    return node.map(sanitizeGeminiSchema);
+  }
+  if (typeof node !== "object" || node === null) {
+    return node;
   }
 
-  return obj as Gemini.Tools.Schema;
+  if ("$ref" in node) {
+    throw new InvalidInputError(
+      "Gemini does not support recursive or referenced ($ref) schemas in function or response schemas. Inline the schema instead."
+    );
+  }
+
+  const source = node as Record<string, unknown>;
+  const schema: Record<string, unknown> = {};
+  for (const key of Object.keys(source)) {
+    if (GEMINI_SCHEMA_KEYS.has(key)) {
+      schema[key] = source[key];
+    }
+  }
+
+  adjustObjectType(schema);
+
+  if (schema.properties && typeof schema.properties === "object") {
+    const properties: Record<string, unknown> = {};
+    for (const [name, value] of Object.entries(schema.properties)) {
+      properties[name] = sanitizeGeminiSchema(value);
+    }
+    schema.properties = properties;
+  }
+  if (schema.items !== undefined) {
+    schema.items = sanitizeGeminiSchema(schema.items);
+  }
+  if (Array.isArray(schema.anyOf)) {
+    schema.anyOf = schema.anyOf.map(sanitizeGeminiSchema);
+  }
+
+  return schema;
 }
 
 /**
@@ -138,17 +163,11 @@ export function schemaToGeminiParameters<
     | InteropZodType<RunOutput>
     | JsonSchema7Type
 ): Gemini.Tools.Schema {
-  // Gemini doesn't accept either the $schema or additionalProperties
-  // attributes, so we need to explicitly remove them.
-  // Zod sometimes also makes an array of type (because of .nullish()),
-  // which needs cleaning up.
-  const jsonSchema = removeAdditionalProperties(
+  return sanitizeGeminiSchema(
     isInteropZodSchema(schema) || isSerializableSchema(schema)
       ? toJsonSchema(schema)
       : schema
-  );
-  const { $schema, ...rest } = jsonSchema;
-  return rest;
+  ) as Gemini.Tools.Schema;
 }
 
 /**
@@ -163,10 +182,7 @@ function jsonSchemaToGeminiParameters(
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   schema: Record<string, any>
 ): Gemini.Tools.Schema {
-  const jsonSchema = removeAdditionalProperties(schema);
-  const { $schema, ...rest } = jsonSchema;
-
-  return rest;
+  return sanitizeGeminiSchema(schema) as Gemini.Tools.Schema;
 }
 
 /**
