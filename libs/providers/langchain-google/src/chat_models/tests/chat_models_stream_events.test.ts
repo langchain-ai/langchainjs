@@ -140,11 +140,41 @@ describe("ChatGoogle.streamEvents", () => {
       mockChatGoogle(toolChunks).streamEvents("Hello")
     ).toHaveStreamToolCalls([
       {
-        id: "call-weather-1",
         name: "web_search",
         args: { query: "weather" },
       },
     ]);
+  });
+
+  test("preserves tool call ids in native events", async () => {
+    const events = [];
+    for await (const event of mockChatGoogle(toolChunks).streamEvents(
+      "Hello"
+    )) {
+      events.push(event);
+    }
+
+    expect(
+      events.find(
+        (event) =>
+          event.event === "content-block-start" &&
+          event.content.type === "tool_call_chunk"
+      )
+    ).toMatchObject({ content: { id: "call-weather-1" } });
+    expect(
+      events.find(
+        (event) =>
+          event.event === "content-block-delta" &&
+          event.delta.type === "block-delta"
+      )
+    ).toMatchObject({ delta: { fields: { id: "call-weather-1" } } });
+    expect(
+      events.find(
+        (event) =>
+          event.event === "content-block-finish" &&
+          event.content.type === "tool_call"
+      )
+    ).toMatchObject({ content: { id: "call-weather-1" } });
   });
 
   test("streams usage", async () => {

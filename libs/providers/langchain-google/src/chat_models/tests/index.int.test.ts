@@ -426,50 +426,6 @@ const readPages = tool(async ({ fileId }) => `page text for ${fileId}`, {
   schema: z.object({ fileId: z.string() }),
 });
 
-describe("Google stream event tool calls", () => {
-  test("include a stable id from the live API path", async () => {
-    const model = new ChatGoogle({
-      model: "gemini-2.0-flash",
-      apiKey: getEnvironmentVariable("TEST_API_KEY"),
-    }).bindTools([weatherTool], {
-      tool_choice: "get_weather",
-    });
-
-    const events = [];
-    for await (const event of model.streamEvents(
-      "What is the weather in New York?"
-    )) {
-      events.push(event);
-    }
-
-    const toolCallStart = events.find(
-      (event) =>
-        event.event === "content-block-start" &&
-        event.content.type === "tool_call_chunk"
-    );
-    const toolCallFinish = events.find(
-      (event) =>
-        event.event === "content-block-finish" &&
-        event.content.type === "tool_call"
-    );
-
-    expect(toolCallStart).toMatchObject({
-      content: {
-        type: "tool_call_chunk",
-        id: expect.any(String),
-        name: "get_weather",
-      },
-    });
-    expect(toolCallFinish).toMatchObject({
-      content: {
-        type: "tool_call",
-        id: toolCallStart?.content.id,
-        name: "get_weather",
-      },
-    });
-  });
-});
-
 const coreModelInfo: ModelInfo[] = filterTestableModels([
   (modelInfo: ModelInfo) => !modelInfo.testConfig?.isImage,
   (modelInfo: ModelInfo) => !modelInfo.testConfig?.isTts,
@@ -939,6 +895,35 @@ describe.each(coreModelInfo)(
       const result = functionResponsePart.functionResponse!.response!.result;
       expect(typeof result).not.toBe("string");
       expect(result).toEqual(toolResult);
+    });
+
+    test("streamEvents preserves stable tool call ids", async () => {
+      const llm = newChatGoogle();
+      const events = [];
+      for await (const event of llm.streamEvents(
+        "What is the weather in New York?",
+        { tools: [weatherTool], tool_choice: "get_weather" }
+      )) {
+        events.push(event);
+      }
+
+      const toolCallStart = events
+        .filter((event) => event.event === "content-block-start")
+        .map((event) => event.content)
+        .find((content) => content.type === "tool_call_chunk");
+      const toolCallFinish = events
+        .filter((event) => event.event === "content-block-finish")
+        .map((event) => event.content)
+        .find((content) => content.type === "tool_call");
+
+      expect(toolCallStart).toMatchObject({
+        id: expect.any(String),
+        name: "get_weather",
+      });
+      expect(toolCallFinish).toMatchObject({
+        id: toolCallStart?.id,
+        name: "get_weather",
+      });
     });
 
     test("function - force tool", async () => {
