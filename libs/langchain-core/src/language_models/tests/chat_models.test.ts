@@ -15,6 +15,8 @@ import type { ChatModelStream } from "../stream.js";
 import type { IterableReadableStream } from "../../utils/stream.js";
 import type { StreamEvent } from "../../tracers/event_stream.js";
 import type { LangSmithTracingClientInterface } from "langsmith";
+import type { BaseMessage } from "../../messages/base.js";
+import type { Serialized } from "../../load/serializable.js";
 
 test("Test ChatModel accepts array shorthand for messages", async () => {
   const model = new FakeChatModel({});
@@ -615,4 +617,56 @@ test("Test ChatModel applies v1 outputVersion after implicit streaming aggregati
       text: "Hello world!",
     },
   ]);
+});
+
+test("Tracing converts every base64 content block, not just the first", async () => {
+  class CaptureInputHandler extends BaseCallbackHandler {
+    name = "CaptureInputHandler";
+
+    messages: BaseMessage[] | undefined;
+
+    async handleChatModelStart(
+      _llm: Serialized,
+      messages: BaseMessage[][]
+    ): Promise<void> {
+      this.messages = messages[0];
+    }
+  }
+
+  const message = new HumanMessage({
+    content: [
+      { type: "text", text: "two PDFs" },
+      {
+        type: "file",
+        source_type: "base64",
+        mime_type: "application/pdf",
+        data: "JVBERi0xLjQK",
+      },
+      {
+        type: "file",
+        source_type: "base64",
+        mime_type: "application/pdf",
+        data: "JVBERi0xLjUK",
+      },
+    ],
+  });
+
+  const handler = new CaptureInputHandler();
+  await new FakeListChatModel({ responses: ["ok"] }).invoke([message], {
+    callbacks: [handler],
+  });
+
+  const traced = handler.messages?.[0];
+  expect(Array.isArray(traced?.content)).toBe(true);
+  const blocks = traced?.content as Record<string, unknown>[];
+
+  // The untouched text block is carried through unchanged.
+  expect(blocks[0]).toEqual({ type: "text", text: "two PDFs" });
+  // Both file blocks convert — the second one used to be left in its original
+  // shape because the copy was only made for the first convertible block.
+  for (const idx of [1, 2]) {
+    expect(blocks[idx]).not.toHaveProperty("source_type");
+    expect(blocks[idx].type).toBe("image_url");
+  }
+  expect(blocks[1]).not.toEqual(blocks[2]);
 });
