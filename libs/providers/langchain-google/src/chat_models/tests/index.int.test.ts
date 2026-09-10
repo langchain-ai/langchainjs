@@ -920,6 +920,35 @@ describe.each(coreModelInfo)(
       }
     });
 
+    test("streamEvents preserves stable tool call ids (regression for #11261)", async () => {
+      const llm = newChatGoogle();
+      const events = [];
+      for await (const event of llm.streamEvents(
+        "What is the weather in New York?",
+        { tools: [weatherTool], tool_choice: "get_weather" }
+      )) {
+        events.push(event);
+      }
+
+      const toolCallStart = events
+        .filter((event) => event.event === "content-block-start")
+        .map((event) => event.content)
+        .find((content) => content.type === "tool_call_chunk");
+      const toolCallFinish = events
+        .filter((event) => event.event === "content-block-finish")
+        .map((event) => event.content)
+        .find((content) => content.type === "tool_call");
+
+      expect(toolCallStart).toMatchObject({
+        id: expect.any(String),
+        name: "get_weather",
+      });
+      expect(toolCallFinish).toMatchObject({
+        id: toolCallStart?.id,
+        name: "get_weather",
+      });
+    });
+
     test("function - tool with nullish parameters", async () => {
       // Fails with gemini-2.0-flash-lite ?
       const tools = [nullishWeatherTool];
@@ -1709,7 +1738,7 @@ describe.each(thinkingModelInfo)(
       expect(hasThoughtSignature).toBe(true);
     });
 
-    test("thought signature - function via streamEvents", async () => {
+    test("thought signature - function via streamEvents (regression for #11181)", async () => {
       const llm = newChatGoogle({ reasoningEffort: "high" });
       const result = await llm.streamEvents(
         "What is the weather in New York?",

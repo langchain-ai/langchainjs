@@ -223,4 +223,30 @@ describe("convertGoogleGeminiStream", () => {
     expect(finishId).toBe(startId);
     expect(finishId).not.toBe("late-server-id");
   });
+
+  test("generates distinct ids for concurrent tool calls", async () => {
+    const events = await collectEvents([
+      {
+        candidates: [
+          {
+            content: {
+              parts: [
+                { functionCall: { name: "first_tool", args: {} } },
+                { functionCall: { name: "second_tool", args: {} } },
+              ],
+            },
+          },
+        ],
+      },
+    ]);
+
+    const ids = events
+      .filter((e) => e.event === "content-block-start")
+      .map((e) => (e as { content: { id: string } }).content.id);
+
+    expect(ids).toHaveLength(2);
+    expect(ids[0]).toMatch(/^lc-tool-call-/);
+    expect(ids[1]).toMatch(/^lc-tool-call-/);
+    expect(new Set(ids).size).toBe(2);
+  });
 });
