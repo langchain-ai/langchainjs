@@ -6,7 +6,6 @@ import {
   type BaseMessageLike,
   coerceMessageLikeToMessage,
   AIMessageChunk,
-  isAIMessageChunk,
   isBaseMessage,
   isAIMessage,
   MessageOutputVersion,
@@ -554,8 +553,6 @@ export abstract class BaseChatModel<
         runnableConfig.runName
       );
       let generationChunk: ChatGenerationChunk | undefined;
-      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-      let llmOutput: Record<string, any> | undefined;
       try {
         for await (const chunk of this._streamResponseChunks(
           messages,
@@ -583,18 +580,6 @@ export abstract class BaseChatModel<
           } else {
             generationChunk = generationChunk.concat(chunk);
           }
-          if (
-            isAIMessageChunk(chunk.message) &&
-            chunk.message.usage_metadata !== undefined
-          ) {
-            llmOutput = {
-              tokenUsage: {
-                promptTokens: chunk.message.usage_metadata.input_tokens,
-                completionTokens: chunk.message.usage_metadata.output_tokens,
-                totalTokens: chunk.message.usage_metadata.total_tokens,
-              },
-            };
-          }
         }
         // Throw error if stream ended due to abort (provider returned early)
         callOptions.signal?.throwIfAborted();
@@ -605,6 +590,22 @@ export abstract class BaseChatModel<
           )
         );
         throw err;
+      }
+      // Built from the fully-accumulated chunk, not any single chunk's delta.
+      let llmOutput: LLMResult["llmOutput"];
+      if (
+        generationChunk &&
+        AIMessageChunk.isInstance(generationChunk.message) &&
+        generationChunk.message.usage_metadata !== undefined
+      ) {
+        llmOutput = {
+          tokenUsage: {
+            promptTokens: generationChunk.message.usage_metadata.input_tokens,
+            completionTokens:
+              generationChunk.message.usage_metadata.output_tokens,
+            totalTokens: generationChunk.message.usage_metadata.total_tokens,
+          },
+        };
       }
       await Promise.all(
         (runManagers ?? []).map((runManager) =>
@@ -789,8 +790,6 @@ export abstract class BaseChatModel<
           runManagers?.[0]
         );
         let aggregated: ChatGenerationChunk | undefined;
-        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-        let llmOutput: Record<string, any> | undefined;
         for await (const chunk of stream) {
           // Check for abort signal - throw ModelAbortError with partial output
           if (parsedOptions.signal?.aborted) {
@@ -810,18 +809,6 @@ export abstract class BaseChatModel<
             aggregated = chunk;
           } else {
             aggregated = concat(aggregated, chunk);
-          }
-          if (
-            isAIMessageChunk(chunk.message) &&
-            chunk.message.usage_metadata !== undefined
-          ) {
-            llmOutput = {
-              tokenUsage: {
-                promptTokens: chunk.message.usage_metadata.input_tokens,
-                completionTokens: chunk.message.usage_metadata.output_tokens,
-                totalTokens: chunk.message.usage_metadata.total_tokens,
-              },
-            };
           }
         }
         // Check if stream ended due to abort (provider returned early)
@@ -843,6 +830,20 @@ export abstract class BaseChatModel<
           ) as AIMessageChunk;
         }
         generations.push([aggregated]);
+        // Built from the fully-accumulated chunk, same as _streamIterator above.
+        let llmOutput: LLMResult["llmOutput"];
+        if (
+          AIMessageChunk.isInstance(aggregated.message) &&
+          aggregated.message.usage_metadata !== undefined
+        ) {
+          llmOutput = {
+            tokenUsage: {
+              promptTokens: aggregated.message.usage_metadata.input_tokens,
+              completionTokens: aggregated.message.usage_metadata.output_tokens,
+              totalTokens: aggregated.message.usage_metadata.total_tokens,
+            },
+          };
+        }
         await runManagers?.[0].handleLLMEnd({
           generations,
           llmOutput,

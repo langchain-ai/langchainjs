@@ -568,8 +568,17 @@ export abstract class BaseChatGoogle<
             .originalTextContentBlock as Record<string, unknown>
         ).text = finalChunk.message.content;
       }
+      const usageMetadata = finalChunk?.message?.usage_metadata;
       return {
         generations: finalChunk ? [finalChunk] : [],
+        ...(usageMetadata
+          ? {
+              llmOutput: {
+                tokenUsage: usageMetadataToTokenUsage(usageMetadata),
+                usageMetadata,
+              },
+            }
+          : {}),
       };
     }
 

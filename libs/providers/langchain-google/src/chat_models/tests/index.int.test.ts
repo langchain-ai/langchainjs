@@ -47,6 +47,7 @@ import {
   ChatPromptTemplate,
   MessagesPlaceholder,
 } from "@langchain/core/prompts";
+import type { LLMResult } from "@langchain/core/outputs";
 
 /**
  * Builds the callback handler list for integration tests.
@@ -2481,6 +2482,63 @@ describe
       expect(contents[3]).toEqual({
         role: "user",
         parts: [{ text: "continue" }],
+      });
+    });
+  }
+);
+
+describe.skipIf(!getEnvironmentVariable("TEST_API_KEY"))(
+  "Google token usage & cost accounting root-cause checks (live API)",
+  () => {
+    test("llmOutput.tokenUsage vs usage_metadata across call styles (#11424)", async () => {
+      async function run(streamingCtor: boolean, useStreamMethod: boolean) {
+        let callbackResult: LLMResult | undefined;
+        const llm = new ChatGoogle({
+          model: "gemini-3.8-flash",
+          apiKey: getEnvironmentVariable("TEST_API_KEY"),
+          streaming: streamingCtor,
+          callbacks: [
+            {
+              async handleLLMEnd(output: LLMResult) {
+                callbackResult = output;
+              },
+            },
+          ],
+        });
+
+        const prompt =
+          "Write a 300 word essay about why the sky is blue, covering Rayleigh scattering, wavelength, and atmospheric composition.";
+        let res: AIMessageChunk | AIMessage | null = null;
+        if (useStreamMethod) {
+          for await (const chunk of await llm.stream(prompt)) {
+            res = res ? (res as AIMessageChunk).concat(chunk) : chunk;
+          }
+        } else {
+          res = await llm.invoke(prompt);
+        }
+        return { res, callbackResult };
+      }
+
+      const nonStreaming = await run(false, false);
+      const invokeStreaming = await run(true, false);
+      const dotStream = await run(false, true);
+
+      expect(nonStreaming.callbackResult?.llmOutput?.tokenUsage).toEqual({
+        promptTokens: nonStreaming.res?.usage_metadata?.input_tokens,
+        completionTokens: nonStreaming.res?.usage_metadata?.output_tokens,
+        totalTokens: nonStreaming.res?.usage_metadata?.total_tokens,
+      });
+
+      expect(invokeStreaming.callbackResult?.llmOutput?.tokenUsage).toEqual({
+        promptTokens: invokeStreaming.res?.usage_metadata?.input_tokens,
+        completionTokens: invokeStreaming.res?.usage_metadata?.output_tokens,
+        totalTokens: invokeStreaming.res?.usage_metadata?.total_tokens,
+      });
+
+      expect(dotStream.callbackResult?.llmOutput?.tokenUsage).toEqual({
+        promptTokens: dotStream.res?.usage_metadata?.input_tokens,
+        completionTokens: dotStream.res?.usage_metadata?.output_tokens,
+        totalTokens: dotStream.res?.usage_metadata?.total_tokens,
       });
     });
   }
