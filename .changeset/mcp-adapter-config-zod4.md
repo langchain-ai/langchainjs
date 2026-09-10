@@ -7,3 +7,5 @@ Add the canonical `MCPAdapter({ servers })` API, retaining `MultiServerMCPClient
 Notification options are isolated per event. Legacy servers named `servers` and explicitly undefined output destinations remain supported.
 
 Parse configuration into connections with a required transport discriminator. Infer adapter-owned configuration and hook types from Zod schemas, and merge object-shaped argument overrides without mutating the original request.
+
+Parse error formatting data without asserting a Zod error version, check hook content/artifact elements, and validate required OAuth methods without replacing the provider. Remove type assertions from tool invocation and schema traversal.

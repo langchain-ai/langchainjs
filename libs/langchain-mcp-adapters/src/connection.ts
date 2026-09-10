@@ -225,15 +225,7 @@ export class ConnectionManager {
       return this.#forkClient(key, headers);
     };
 
-    const client = new Proxy(mcpClient, {
-      get(target, prop) {
-        if (prop === "fork") {
-          return forkClient.bind(this);
-        }
-
-        return target[prop as keyof MCPClient];
-      },
-    }) as Client;
+    const client = Object.assign(mcpClient, { fork: forkClient });
 
     this.#connections.set(key, {
       transport,

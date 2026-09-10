@@ -25,19 +25,22 @@ export type {
   CommandParams,
 };
 
-export const callToolResultContentTypes = [
+const callToolResultContentTypeSchema = z.enum([
   "audio",
   "image",
   "resource",
   "resource_link",
   "text",
-] as const;
-export type CallToolResultContentType =
-  (typeof callToolResultContentTypes)[number];
+]);
+export const callToolResultContentTypes =
+  callToolResultContentTypeSchema.options;
+export type CallToolResultContentType = z.output<
+  typeof callToolResultContentTypeSchema
+>;
 
 const outputTypesUnion = z.enum(["content", "artifact"]);
 const detailedOutputHandlingSchema = z.partialRecord(
-  z.enum(callToolResultContentTypes),
+  callToolResultContentTypeSchema,
   outputTypesUnion.optional()
 );
 export type DetailedOutputHandling = z.output<
@@ -89,40 +92,30 @@ export const outputHandlingSchema = z
 export type OutputHandling = z.output<typeof outputHandlingSchema>;
 
 /**
- * Zod schema for validating OAuthClientProvider interface
- * Since OAuthClientProvider has methods, we create a custom validator
+ * Preserve the SDK-owned service and its prototype. Property checks validate
+ * callable methods without replacing them or evaluating metadata getters.
+ * The SDK remains responsible for parsing OAuth metadata and method results.
  */
-export const oAuthClientProviderSchema = z.custom<OAuthClientProvider>(
-  (val) => {
-    if (!val || typeof val !== "object") return false;
-
-    // Check required properties and methods exist
-    const requiredMethods = [
-      "redirectUrl",
-      "clientMetadata",
-      "clientInformation",
-      "tokens",
-      "saveTokens",
-    ];
-
-    // redirectUrl can be a string, URL, or getter returning string/URL
-    if (!("redirectUrl" in val)) return false;
-
-    // clientMetadata can be an object or getter returning an object
-    if (!("clientMetadata" in val)) return false;
-
-    // Check that required methods exist (they can be functions or getters)
-    for (const method of requiredMethods) {
-      if (!(method in val)) return false;
+export const oAuthClientProviderSchema = z
+  .custom<OAuthClientProvider>(
+    (value) =>
+      value !== null &&
+      typeof value === "object" &&
+      "redirectUrl" in value &&
+      "clientMetadata" in value,
+    {
+      error:
+        "Expected an OAuthClientProvider with redirectUrl and clientMetadata",
     }
-
-    return true;
-  },
-  {
-    message:
-      "Must be a valid OAuthClientProvider implementation with required properties: redirectUrl, clientMetadata, clientInformation, tokens, saveTokens",
-  }
-);
+  )
+  .check(
+    z.property("clientInformation", z.function()),
+    z.property("tokens", z.function()),
+    z.property("saveTokens", z.function()),
+    z.property("redirectToAuthorization", z.function()),
+    z.property("saveCodeVerifier", z.function()),
+    z.property("codeVerifier", z.function())
+  );
 
 export const baseConfigSchema = z.object({
   /**
@@ -198,7 +191,7 @@ const stdioOptionsSchema = z
      * Optional transport type, inferred from the structure of the config if not provided. Included
      * for compatibility with common MCP client config file formats.
      */
-    transport: z.literal("stdio").optional(),
+    transport: z.literal("stdio").default("stdio"),
     /**
      * Optional transport type, inferred from the structure of the config if not provided. Included
      * for compatibility with common MCP client config file formats.
@@ -343,39 +336,30 @@ const httpOptionsSchema = z
 
 /** Parse legacy aliases once and retain a concrete transport discriminator. */
 export const stdioConnectionSchema = stdioOptionsSchema.transform(
-  ({ type: _type, url: _url, ...options }) => ({
-    ...options,
-    transport: "stdio" as const,
-  })
+  ({ type: _type, url: _url, ...options }) => options
 );
 
 const httpConnectionSchema = httpOptionsSchema
   .extend({
-    transport: z.literal("http").optional(),
+    transport: z.literal("http").default("http"),
     type: z
       .literal("http", {
         error: "type conflicts with transport; use transport only",
       })
       .optional(),
   })
-  .transform(({ type: _type, command: _command, ...options }) => ({
-    ...options,
-    transport: "http" as const,
-  }));
+  .transform(({ type: _type, command: _command, ...options }) => options);
 
 const sseConnectionSchema = httpOptionsSchema
   .extend({
-    transport: z.literal("sse").optional(),
+    transport: z.literal("sse").default("sse"),
     type: z
       .literal("sse", {
         error: "type conflicts with transport; use transport only",
       })
       .optional(),
   })
-  .transform(({ type: _type, command: _command, ...options }) => ({
-    ...options,
-    transport: "sse" as const,
-  }));
+  .transform(({ type: _type, command: _command, ...options }) => options);
 
 export const streamableHttpConnectionSchema = z.union([
   httpConnectionSchema,

@@ -105,7 +105,13 @@ validated after awaiting the callback, for both synchronous and asynchronous
 implementations. Return `undefined` for no change, `{ args, headers }` before a
 call, or `{ result }` after it. Argument overrides must be objects and are merged
 without mutating the original request arguments. Invalid return containers now fail consistently;
-`Command` and `ToolMessage` values must be real native values. Detailed
+`Command` and `ToolMessage` values must pass their framework predicates.
+Content and artifact arrays now check each block's extensible `type`/optional
+`id` boundary; embedded resource artifacts use the SDK's resource guard.
+Provider-specific fields and existing data-block formats remain supported.
+OAuth providers retain their identity, but their six required SDK methods must
+be callable. Metadata getters remain lazy. Numeric timeout overrides in
+`metadata.timeoutMs` are parsed before invoking the SDK. Detailed
 `outputHandling` objects reject unknown content-type keys instead of silently
 ignoring typos; explicit `undefined` destinations remain valid. Callback request `args` is a present field typed `unknown`.
 

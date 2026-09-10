@@ -15,6 +15,7 @@ import {
   StreamableHTTPClientTransport,
 } from "@modelcontextprotocol/client";
 import { MCPAdapter, MultiServerMCPClient, MCPClientError } from "../client.js";
+import { oAuthClientProviderSchema } from "../types.js";
 
 vi.mock(
   "@modelcontextprotocol/client",
@@ -33,6 +34,63 @@ describe("MultiServerMCPClient", () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+  });
+
+  describe("OAuth provider parsing", () => {
+    class Provider {
+      get redirectUrl(): undefined {
+        throw new Error("Read redirectUrl only during authorization");
+      }
+
+      get clientMetadata(): never {
+        throw new Error("Read clientMetadata only during authorization");
+      }
+
+      clientInformation() {
+        return undefined;
+      }
+      tokens() {
+        return undefined;
+      }
+      saveTokens() {}
+      redirectToAuthorization() {}
+      saveCodeVerifier() {}
+      codeVerifier() {
+        return "verifier";
+      }
+    }
+
+    test("preserves provider identity, prototype methods, and lazy metadata", () => {
+      const provider = new Provider();
+      const parsed = oAuthClientProviderSchema.parse(provider);
+      expect(parsed).toBe(provider);
+      expect(parsed.tokens).toBe(provider.tokens);
+    });
+
+    test.each([
+      "clientInformation",
+      "tokens",
+      "saveTokens",
+      "redirectToAuthorization",
+      "saveCodeVerifier",
+      "codeVerifier",
+    ])("rejects a non-callable %s before connecting", (method) => {
+      const provider = Object.assign(new Provider(), { [method]: 42 });
+      const result = oAuthClientProviderSchema.safeParse(provider);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0].path).toEqual([method]);
+      }
+    });
+
+    test.each([null, undefined, "provider", {}])(
+      "rejects invalid provider %j",
+      (provider) => {
+        expect(oAuthClientProviderSchema.safeParse(provider).success).toBe(
+          false
+        );
+      }
+    );
   });
 
   describe("HTTP error handling", () => {

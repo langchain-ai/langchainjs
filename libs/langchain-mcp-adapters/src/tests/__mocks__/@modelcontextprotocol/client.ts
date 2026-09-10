@@ -4,11 +4,12 @@ import { vi, type Mock } from "vitest";
 // separate subpaths (client/index.js, client/sse.js, client/streamableHttp.js); v2
 // re-exports them all from the package root, so their mocks are colocated here.
 
-// Keep SDK error construction identical to production.
+// Keep SDK error construction and protocol guards identical to production.
 const actual = await vi.importActual<
   typeof import("@modelcontextprotocol/client")
 >("@modelcontextprotocol/client");
 export const SdkHttpError = actual.SdkHttpError;
+export const isSpecType = actual.isSpecType;
 
 const clientPrototype = {
   connect: vi

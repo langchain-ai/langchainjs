@@ -1,6 +1,9 @@
 import { z } from "zod";
 import { isCommand, type Command } from "@langchain/langgraph";
-import type { EmbeddedResource } from "@modelcontextprotocol/client";
+import {
+  isSpecType,
+  type EmbeddedResource,
+} from "@modelcontextprotocol/client";
 import type { ContentBlock } from "@langchain/core/messages";
 import type { RunnableConfig } from "@langchain/core/runnables";
 import { ToolMessage } from "@langchain/core/messages";
@@ -20,20 +23,28 @@ const toolCallRequestSchema = z.object({
 });
 export type ToolCallRequest = z.output<typeof toolCallRequestSchema>;
 
-type ToolContent =
-  | string
-  | (ContentBlock | ContentBlock.Data.DataContentBlock)[];
-type ToolArtifacts = (EmbeddedResource | ContentBlock.Multimodal.Standard)[];
-type ToolResultBefore = z.output<typeof toolResultBeforeSchema>;
+// Core content blocks are extensible records, not a closed list of provider
+// formats. Preserve extension fields without claiming their format is validated.
+const contentBlockSchema = z.looseObject({
+  type: z.string(),
+  id: z.string().optional(),
+}) satisfies z.ZodType<ContentBlock>;
 
-// Validate the hook's result container; native content and artifact semantics
-// belong to the result adapter rather than a duplicate core/MCP schema here.
-const toolResultBeforeSchema = z.tuple([
-  z.custom<ToolContent>(
-    (value) => typeof value === "string" || Array.isArray(value)
-  ),
-  z.custom<ToolArtifacts>(Array.isArray),
+const toolContentSchema = z.union([z.string(), z.array(contentBlockSchema)]);
+
+// MCP owns embedded resource semantics. Other artifacts include both legacy
+// data blocks and current LangChain blocks, so validate their shared boundary.
+const toolArtifactSchema = z.union([
+  z.custom<EmbeddedResource>(isSpecType.EmbeddedResource),
+  contentBlockSchema.refine((block) => block.type !== "resource", {
+    error: "Expected a valid MCP embedded resource",
+  }),
 ]);
+const toolResultBeforeSchema = z.tuple([
+  toolContentSchema,
+  z.array(toolArtifactSchema),
+]);
+type ToolResultBefore = z.output<typeof toolResultBeforeSchema>;
 
 /**
  * Tool result schema that users can return within the `afterToolCall` callback
