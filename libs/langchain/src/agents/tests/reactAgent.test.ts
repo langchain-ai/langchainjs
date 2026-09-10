@@ -199,12 +199,14 @@ describe("createAgent", () => {
 
     type WeatherResponse = z.infer<typeof WeatherResponseSchema>;
 
+    const [structuredTool] = toolStrategy(WeatherResponseSchema);
+
     const toolCalls = [
       [
         {
           args: { temperature: 75 },
           id: "2",
-          name: "extract-1",
+          name: structuredTool.name,
           type: "tool_call" as const,
         },
       ],
