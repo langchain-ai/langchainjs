@@ -21,6 +21,7 @@ import {
   hasSupportForJsonSchemaOutput,
   ProviderStrategy,
   ToolStrategy,
+  type ResponseFormatInput,
 } from "../responses.js";
 
 function makeSerializableSchema(
@@ -105,10 +106,10 @@ describe("structured output handling", () => {
           toolCalls: [
             [
               /**
-               * `extract-3` and `extract-5` are the computed function names for the json schemas
+               * Anonymous schemas are named by their position in the list.
                */
-              { name: "extract-3", args: { foo: "foo" }, id: "call_1" },
-              { name: "extract-4", args: { bar: "bar" }, id: "call_2" },
+              { name: "extract-1", args: { foo: "foo" }, id: "call_1" },
+              { name: "extract-2", args: { bar: "bar" }, id: "call_2" },
             ],
           ],
         });
@@ -139,12 +140,12 @@ describe("structured output handling", () => {
 
       it("should retry if error handler is set to true", async () => {
         const toolCalls = [
-          { name: "extract-5", args: { foo: "foo" }, id: "call_1" },
-          { name: "extract-6", args: { bar: "bar" }, id: "call_2" },
+          { name: "extract-1", args: { foo: "foo" }, id: "call_1" },
+          { name: "extract-2", args: { bar: "bar" }, id: "call_2" },
         ];
         const toolCall2 = [
           {
-            name: "extract-5",
+            name: "extract-1",
             args: { foo: "valid structured value" },
             id: "call_3",
           },
@@ -205,12 +206,12 @@ describe("structured output handling", () => {
 
       it("should retry if the error handler is set to the MultipleStructuredOutputsError", async () => {
         const toolCalls = [
-          { name: "extract-7", args: { foo: "foo" }, id: "call_1" },
-          { name: "extract-8", args: { bar: "bar" }, id: "call_2" },
+          { name: "extract-1", args: { foo: "foo" }, id: "call_1" },
+          { name: "extract-2", args: { bar: "bar" }, id: "call_2" },
         ];
         const toolCall2 = [
           {
-            name: "extract-7",
+            name: "extract-1",
             args: { foo: "fixed structured value" },
             id: "call_3",
           },
@@ -220,15 +221,15 @@ describe("structured output handling", () => {
             new AIMessage({
               content: "",
               tool_calls: [
-                { name: "extract-7", args: { foo: "foo" }, id: "call_1" },
-                { name: "extract-8", args: { bar: "bar" }, id: "call_2" },
+                { name: "extract-1", args: { foo: "foo" }, id: "call_1" },
+                { name: "extract-2", args: { bar: "bar" }, id: "call_2" },
               ],
             }),
             new AIMessage({
               content: "",
               tool_calls: [
                 {
-                  name: "extract-7",
+                  name: "extract-1",
                   args: { foo: "fixed structured value" },
                   id: "call_3",
                 },
@@ -282,8 +283,8 @@ describe("structured output handling", () => {
             new AIMessage({
               content: "",
               tool_calls: [
-                { name: "extract-9", args: { foo: "foo" }, id: "call_1" },
-                { name: "extract-10", args: { bar: "bar" }, id: "call_2" },
+                { name: "extract-1", args: { foo: "foo" }, id: "call_1" },
+                { name: "extract-2", args: { bar: "bar" }, id: "call_2" },
               ],
             }),
           ],
@@ -320,10 +321,10 @@ describe("structured output handling", () => {
       it("should retry if error handler is set to true", async () => {
         const model = new FakeToolCallingModel({
           toolCalls: [
-            [{ name: "extract-11", args: { bar: "foo" }, id: "call_1" }],
+            [{ name: "extract-1", args: { bar: "foo" }, id: "call_1" }],
             [
               {
-                name: "extract-11",
+                name: "extract-1",
                 args: { foo: "fixed structured value" },
                 id: "call_2",
               },
@@ -364,7 +365,7 @@ describe("structured output handling", () => {
           toolCalls: [
             [
               { name: "something", args: { result: 123 }, id: "call_1" },
-              { name: "extract-12", args: { foo: "bar" }, id: "call_2" },
+              { name: "extract-1", args: { foo: "bar" }, id: "call_2" },
             ],
           ],
         });
@@ -388,7 +389,7 @@ describe("structured output handling", () => {
       it("should return a structured response if it matches the schema and toolMessageContent is provided", async () => {
         const model = new FakeToolCallingModel({
           toolCalls: [
-            [{ name: "extract-13", args: { foo: "bar" }, id: "call_1" }],
+            [{ name: "extract-1", args: { foo: "bar" }, id: "call_1" }],
           ],
         });
 
@@ -424,7 +425,7 @@ describe("structured output handling", () => {
       it("should return structured response if it matches one of the schemas", async () => {
         const model = new FakeToolCallingModel({
           toolCalls: [
-            [{ name: "extract-15", args: { bar: "foo" }, id: "call_1" }],
+            [{ name: "extract-2", args: { bar: "foo" }, id: "call_1" }],
           ],
         });
         const agent = createAgent({
@@ -473,14 +474,14 @@ describe("structured output handling", () => {
         expect(strategy.name).toBe("my_json_tool");
       });
 
-      it("should fall back to extract-{n} when no title is provided", () => {
+      it("should fall back to a positional name when no title is provided", () => {
         const zodSchema = z4.object({
           status: z4.string(),
         });
 
         const [strategy] = toolStrategy(zodSchema);
 
-        expect(strategy.name).toMatch(/^extract-\d+$/);
+        expect(strategy.name).toBe("extract-1");
       });
 
       it("should use title from ToolStrategy.fromSchema with Zod v4 schema", () => {
@@ -516,7 +517,7 @@ describe("structured output handling", () => {
       it("should not throw error if use provider strategy directly", async () => {
         const model = new FakeToolCallingModel({
           toolCalls: [
-            [{ name: "extract-16", args: { foo: "bar" }, id: "call_2" }],
+            [{ name: "extract-1", args: { foo: "bar" }, id: "call_2" }],
           ],
         });
         const agent = createAgent({
@@ -841,5 +842,126 @@ describe("native structured output does not force strict tools", () => {
   it("keeps tools non-strict for an explicit providerStrategy strict: false", async () => {
     const opts = await bindOptions(ProviderStrategy.fromSchema(schema, false));
     expect(opts.strict).toBeUndefined();
+  });
+});
+
+describe("generated structured output tool names", () => {
+  const echo = tool(async () => "ok", {
+    name: "echo",
+    description: "Echo the text.",
+    schema: z.object({ text: z.string() }),
+  });
+
+  /**
+   * Run an agent and return the tool names bound on each model request, in
+   * order. Structured output tools are plain `{ function: { name } }` objects
+   * where the user's own tools are `StructuredTool` instances, so both shapes
+   * are read here.
+   */
+  async function boundToolNames(
+    responseFormat: ResponseFormatInput,
+    toolCalls: FakeToolCallingModel["toolCalls"] = [[]]
+  ) {
+    const model = new FakeToolCallingModel({ toolCalls });
+    const bindTools = vi.spyOn(model, "bindTools");
+    const agent = createAgent({
+      model,
+      tools: [echo],
+      // These cases deliberately span every accepted `responseFormat` shape,
+      // which no single `createAgent` overload covers.
+      responseFormat: responseFormat as never,
+    });
+    await agent.invoke({ messages: [new HumanMessage("hi")] });
+    return bindTools.mock.calls.map(([tools]) =>
+      (tools as unknown as { name?: string; function?: { name: string } }[])
+        .map((t) => t.name ?? t.function?.name)
+        .filter((name) => name !== echo.name)
+    );
+  }
+
+  it("binds the same generated name on every model request", async () => {
+    const names = await boundToolNames(z.object({ answer: z.string() }), [
+      [{ name: "echo", args: { text: "hi" }, id: "call_1" }],
+      [],
+    ]);
+
+    expect(names).toEqual([["extract-1"], ["extract-1"]]);
+  });
+
+  it("numbers strategies constructed separately and composed into one list", async () => {
+    const names = await boundToolNames([
+      ...toolStrategy(z.object({ a: z.string() })),
+      ...toolStrategy(z.object({ b: z.string() })),
+    ]);
+
+    expect(names).toEqual([["extract-1", "extract-2"]]);
+  });
+
+  it("does not spend a number on a titled schema", async () => {
+    const names = await boundToolNames([
+      {
+        type: "object",
+        title: "titled_schema",
+        properties: { a: { type: "string" } },
+      },
+      { type: "object", properties: { b: { type: "string" } } },
+    ]);
+
+    expect(names).toEqual([["titled_schema", "extract-1"]]);
+  });
+
+  it("names every composition form of the same schemas identically", async () => {
+    const a = z.object({ a: z.string() });
+    const b = z.object({ b: z.string() });
+
+    expect([
+      await boundToolNames(toolStrategy([a, b])),
+      await boundToolNames([...toolStrategy(a), ...toolStrategy(b)]),
+      await boundToolNames([a, b]),
+    ]).toEqual([
+      [["extract-1", "extract-2"]],
+      [["extract-1", "extract-2"]],
+      [["extract-1", "extract-2"]],
+    ]);
+  });
+
+  it("leaves a title alone even when it looks like a generated name", async () => {
+    const names = await boundToolNames([
+      {
+        type: "object",
+        title: "extract-5",
+        properties: { a: { type: "string" } },
+      },
+      { type: "object", properties: { b: { type: "string" } } },
+    ]);
+
+    expect(names).toEqual([["extract-5", "extract-1"]]);
+  });
+
+  it("numbers past a title that collides with the generated sequence", async () => {
+    // The agent keys strategies by tool name, so handing the anonymous schema
+    // `extract-1` here would drop one of the two schemas before it reached the
+    // model.
+    const names = await boundToolNames([
+      {
+        type: "object",
+        title: "extract-1",
+        properties: { a: { type: "string" } },
+      },
+      { type: "object", properties: { b: { type: "string" } } },
+    ]);
+
+    expect(names).toEqual([["extract-1", "extract-2"]]);
+  });
+
+  it("binds two tools for the same schema listed twice", async () => {
+    // Content-derived naming collapsed these to one tool. Positional naming
+    // does not, which is the trade recorded in the spec: the model is offered
+    // two identical options again.
+    const schema = z.object({ answer: z.string() });
+
+    const names = await boundToolNames(toolStrategy([schema, schema]));
+
+    expect(names).toEqual([["extract-1", "extract-2"]]);
   });
 });
