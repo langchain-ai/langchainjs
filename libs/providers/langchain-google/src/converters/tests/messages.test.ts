@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
 import type { Gemini } from "../../chat_models/types.js";
 import {
+  convertGeminiCandidateToAIMessage,
   convertGeminiPartsToToolCalls,
   convertMessagesToGeminiContents,
 } from "../messages.js";
@@ -1224,5 +1225,219 @@ describe("executableCode and codeExecutionResult round-trip", () => {
       codeExecutionResult: { outcome: "OUTCOME_OK", output: "2\n" },
     });
     expect(parts[2]).not.toHaveProperty("type");
+  });
+});
+
+describe("mediaProcessing (Agentic Video Understanding)", () => {
+  test("v1 standard video content block attaches mediaProcessing", () => {
+    const messages = [
+      new HumanMessage({
+        content: [
+          {
+            type: "video" as const,
+            mimeType: "video/mp4",
+            url: "gs://bucket/video.mp4",
+            mediaProcessing: "AGENTIC",
+          },
+        ],
+        response_metadata: { output_version: "v1" },
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+    const userContent = contents.find((c) => c.role === "user");
+    expect(userContent).toBeDefined();
+    expect(userContent!.parts).toHaveLength(1);
+
+    const part = userContent!.parts![0] as Gemini.Part.FileData;
+    expect(part.fileData).toBeDefined();
+    expect(part.fileData!.fileUri).toBe("gs://bucket/video.mp4");
+    expect(part.fileData!.mimeType).toBe("video/mp4");
+    expect(part.mediaProcessing).toBe("AGENTIC");
+  });
+
+  test("v1 standard video block with media_processing in metadata attaches mediaProcessing", () => {
+    const messages = [
+      new HumanMessage({
+        content: [
+          {
+            type: "video" as const,
+            mimeType: "video/mp4",
+            url: "gs://bucket/video.mp4",
+            metadata: {
+              media_processing: "static",
+            },
+          },
+        ],
+        response_metadata: { output_version: "v1" },
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+    const userContent = contents.find((c) => c.role === "user");
+    expect(userContent).toBeDefined();
+    expect(userContent!.parts).toHaveLength(1);
+
+    const part = userContent!.parts![0] as Gemini.Part.FileData;
+    expect(part.mediaProcessing).toBe("STATIC");
+  });
+
+  test("legacy media content block with media_processing attaches mediaProcessing", () => {
+    const messages = [
+      new HumanMessage({
+        content: [
+          {
+            type: "media",
+            mimeType: "video/mp4",
+            fileUri: "gs://bucket/video.mp4",
+            media_processing: "agentic",
+          },
+        ],
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+    const userContent = contents.find((c) => c.role === "user");
+    expect(userContent).toBeDefined();
+    expect(userContent!.parts).toHaveLength(1);
+
+    const part = userContent!.parts![0] as Gemini.Part.FileData;
+    expect(part.fileData).toBeDefined();
+    expect(part.fileData!.fileUri).toBe("gs://bucket/video.mp4");
+    expect(part.fileData!.mimeType).toBe("video/mp4");
+    expect(part.mediaProcessing).toBe("AGENTIC");
+  });
+
+  test("candidate response with toolCall and toolResponse parses into server_tool_call and server_tool_call_result", () => {
+    const candidate: Gemini.Candidate = {
+      content: {
+        role: "model",
+        parts: [
+          {
+            toolCall: {
+              id: "call_media_1",
+              toolName: "media_processing",
+              args: { start_offset_sec: 10, end_offset_sec: 20 },
+              toolType: "MEDIA_PROCESSING",
+            },
+            thoughtSignature: "sig_call",
+          },
+          {
+            toolResponse: {
+              id: "call_media_1",
+              response: { frames_inspected: 15 },
+              toolType: "MEDIA_PROCESSING",
+            },
+            thoughtSignature: "sig_resp",
+          },
+          {
+            text: "The person appears at second 12.",
+          },
+        ],
+      },
+    };
+
+    const aiMessage = convertGeminiCandidateToAIMessage(candidate);
+    expect(Array.isArray(aiMessage.content)).toBe(true);
+    const contentBlocks = aiMessage.content as Array<
+      Record<string, unknown>
+    >;
+    expect(contentBlocks).toHaveLength(3);
+
+    // Server tool call block
+    expect(contentBlocks[0].type).toBe("server_tool_call");
+    expect(contentBlocks[0].name).toBe("media_processing");
+    expect(contentBlocks[0].id).toBe("call_media_1");
+    expect(contentBlocks[0].args).toEqual({
+      start_offset_sec: 10,
+      end_offset_sec: 20,
+    });
+    expect(
+      (contentBlocks[0].extras as Record<string, unknown> | undefined)
+        ?.signature
+    ).toBe("sig_call");
+
+    // Server tool result block
+    expect(contentBlocks[1].type).toBe("server_tool_call_result");
+    expect(contentBlocks[1].toolCallId).toBe("call_media_1");
+    expect(contentBlocks[1].status).toBe("success");
+    expect(contentBlocks[1].output).toEqual({ frames_inspected: 15 });
+    expect(
+      (contentBlocks[1].extras as Record<string, unknown> | undefined)
+        ?.block_type
+    ).toBe("media_processing");
+    expect(
+      (contentBlocks[1].extras as Record<string, unknown> | undefined)
+        ?.signature
+    ).toBe("sig_resp");
+
+    // Text block
+    expect(contentBlocks[2].type).toBe("text");
+    expect(contentBlocks[2].text).toBe("The person appears at second 12.");
+  });
+
+  test("multi-turn replay filters out media_processing server tool steps while keeping video part", () => {
+    const messages = [
+      new HumanMessage({
+        content: [
+          {
+            type: "video" as const,
+            mimeType: "video/mp4",
+            url: "gs://bucket/video.mp4",
+            mediaProcessing: "AGENTIC",
+          },
+          { type: "text" as const, text: "What happens in this video?" },
+        ],
+        response_metadata: { output_version: "v1" },
+      }),
+      new AIMessage({
+        content: [
+          {
+            type: "server_tool_call",
+            name: "media_processing",
+            id: "call_media_1",
+            args: { start_offset_sec: 10 },
+          },
+          {
+            type: "server_tool_call_result",
+            toolCallId: "call_media_1",
+            status: "success",
+            output: { frames: 10 },
+            extras: { block_type: "media_processing" },
+          },
+          {
+            type: "text",
+            text: "A cat jumps on the table.",
+          },
+        ],
+        response_metadata: { output_version: "v1" },
+      }),
+      new HumanMessage({
+        content: "What color was the cat?",
+        response_metadata: { output_version: "v1" },
+      }),
+    ];
+
+    const contents = convertMessagesToGeminiContents(messages);
+
+    // 3 turns: user, model, user
+    expect(contents).toHaveLength(3);
+
+    // Turn 1: user with video (mediaProcessing retained) and text
+    expect(contents[0].role).toBe("user");
+    expect(contents[0].parts![0].mediaProcessing).toBe("AGENTIC");
+
+    // Turn 2: model should ONLY have the text part; server tool call & result dropped
+    expect(contents[1].role).toBe("model");
+    expect(contents[1].parts).toHaveLength(1);
+    expect((contents[1].parts![0] as Gemini.Part.Text).text).toBe(
+      "A cat jumps on the table."
+    );
+
+    // Turn 3: user follow-up
+    expect(contents[2].role).toBe("user");
+    expect((contents[2].parts![0] as Gemini.Part.Text).text).toBe(
+      "What color was the cat?"
+    );
   });
 });

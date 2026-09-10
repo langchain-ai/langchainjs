@@ -307,6 +307,28 @@ function stripMediaBlocksForFunctionResponse(content: unknown): unknown {
   return content.filter((item) => !isMediaContentBlock(item));
 }
 
+function extractMediaProcessing(
+  block: Record<string, unknown>
+): Gemini.Part["mediaProcessing"] | undefined {
+  const raw =
+    block.mediaProcessing ??
+    block.media_processing ??
+    (block.metadata as Record<string, unknown> | undefined)?.mediaProcessing ??
+    (block.metadata as Record<string, unknown> | undefined)?.media_processing;
+  if (typeof raw === "string") {
+    const upper = raw.toUpperCase();
+    if (
+      upper === "AGENTIC" ||
+      upper === "STATIC" ||
+      upper === "MEDIA_PROCESSING_UNSPECIFIED"
+    ) {
+      return upper;
+    }
+    return raw as Gemini.Part["mediaProcessing"];
+  }
+  return undefined;
+}
+
 function convertStandardDataContentBlockToGeminiPart(
   block: ContentBlock.Multimodal.Data
 ): Gemini.Part | null {
@@ -334,13 +356,14 @@ function convertStandardDataContentBlockToGeminiPart(
     };
   }
 
+  let ret: Gemini.Part | null = null;
   if ("mimeType" in block && "data" in block) {
     const mimeType = block.mimeType!;
     const data: string =
       typeof block.data === "string"
         ? block.data
         : uint8arrayToString(block.data!);
-    return {
+    ret = {
       inlineData: {
         mimeType,
         data,
@@ -349,7 +372,7 @@ function convertStandardDataContentBlockToGeminiPart(
   } else if ("mimeType" in block && "url" in block) {
     const mimeType = block.mimeType!;
     const fileUri = block.url!;
-    return {
+    ret = {
       fileData: {
         mimeType,
         fileUri,
@@ -358,7 +381,7 @@ function convertStandardDataContentBlockToGeminiPart(
   } else if ("url" in block && block.url?.startsWith("data:")) {
     const { mimeType, data } = extractMimeType(block.url!);
     if (mimeType && data) {
-      return {
+      ret = {
         inlineData: {
           mimeType,
           data,
@@ -366,8 +389,17 @@ function convertStandardDataContentBlockToGeminiPart(
       };
     }
   }
-  // FIXME - report this somehow?
-  return null;
+
+  if (ret) {
+    const mediaProcessing = extractMediaProcessing(
+      block as unknown as Record<string, unknown>
+    );
+    if (mediaProcessing) {
+      ret.mediaProcessing = mediaProcessing;
+    }
+  }
+
+  return ret;
 }
 
 function convertStandardVideoContentBlockToGeminiPart(
@@ -460,6 +492,26 @@ function convertStandardContentMessageToGeminiContent(
     const contentBlock =
       (message.additional_kwargs
         .originalTextContentBlock as ContentBlock.Standard) || block;
+
+    // Filter out server-side media processing steps on replay
+    const rawBlock = contentBlock as unknown as Record<string, unknown>;
+    if (
+      rawBlock.type === "server_tool_call" &&
+      (rawBlock.name === "media_processing" || rawBlock.toolName === "media_processing")
+    ) {
+      return;
+    }
+    if (
+      (rawBlock.type === "server_tool_call_result" ||
+        rawBlock.type === "server_tool_result") &&
+      ((rawBlock.extras as Record<string, unknown> | undefined)?.block_type ===
+        "media_processing" ||
+        (rawBlock.extras as Record<string, unknown> | undefined)?.blockType ===
+          "media_processing")
+    ) {
+      return;
+    }
+
     const part: Gemini.Part | null =
       convertStandardContentBlockToGeminiPart(contentBlock);
     if (part) {
@@ -653,18 +705,21 @@ function convertLegacyContentMessageToGeminiContent(
     // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     content: Record<string, any>
   ): Gemini.Part.InlineData | Gemini.Part.FileData {
-    if ("mimeType" in content && "data" in content) {
+    const mimeType = content.mimeType ?? content.mime_type;
+    const fileUri = content.fileUri ?? content.file_uri;
+    const data = content.data;
+    if (mimeType && data) {
       return {
         inlineData: {
-          mimeType: content.mimeType,
-          data: content.data,
+          mimeType,
+          data,
         },
       };
-    } else if ("mimeType" in content && "fileUri" in content) {
+    } else if (mimeType && fileUri) {
       return {
         fileData: {
-          mimeType: content.mimeType,
-          fileUri: content.fileUri,
+          mimeType,
+          fileUri,
         },
       };
     } else {
@@ -699,6 +754,10 @@ function convertLegacyContentMessageToGeminiContent(
   ): Gemini.Part.InlineData | Gemini.Part.FileData {
     const ret = messageContentMediaData(content);
     supplementVideoMetadata(content, ret);
+    const mediaProcessing = extractMediaProcessing(content);
+    if (mediaProcessing) {
+      ret.mediaProcessing = mediaProcessing;
+    }
     return ret;
   }
 
@@ -747,7 +806,43 @@ function convertLegacyContentMessageToGeminiContent(
       if (typeof item === "string") {
         parts.push({ text: item });
       } else if (typeof item === "object" && item !== null) {
-        if (isMessageContentText(item)) {
+        const rawItem = item as Record<string, unknown>;
+        if (
+          rawItem.type === "server_tool_call" &&
+          (rawItem.name === "media_processing" ||
+            rawItem.toolName === "media_processing")
+        ) {
+          continue;
+        } else if (
+          (rawItem.type === "server_tool_call_result" ||
+            rawItem.type === "server_tool_result") &&
+          ((rawItem.extras as Record<string, unknown> | undefined)?.block_type ===
+            "media_processing" ||
+            (rawItem.extras as Record<string, unknown> | undefined)?.blockType ===
+              "media_processing")
+        ) {
+          continue;
+        } else if (
+          "toolCall" in rawItem &&
+          rawItem.toolCall &&
+          ((rawItem.toolCall as Record<string, unknown>).toolName ===
+            "media_processing" ||
+            !(rawItem.toolCall as Record<string, unknown>).toolType ||
+            String(
+              (rawItem.toolCall as Record<string, unknown>).toolType
+            ).toLowerCase() === "media_processing")
+        ) {
+          continue;
+        } else if (
+          "toolResponse" in rawItem &&
+          rawItem.toolResponse &&
+          (!(rawItem.toolResponse as Record<string, unknown>).toolType ||
+            String(
+              (rawItem.toolResponse as Record<string, unknown>).toolType
+            ).toLowerCase() === "media_processing")
+        ) {
+          continue;
+        } else if (isMessageContentText(item)) {
           parts.push({ text: item.text });
         } else if (isDataContentBlock(item)) {
           parts.push(
@@ -1103,6 +1198,34 @@ export const convertGeminiPartToContentBlock: Converter<
         type: "codeExecutionResult",
         codeExecutionResult: part.codeExecutionResult,
       };
+    } else if ("toolCall" in part && part.toolCall) {
+      const tc = part.toolCall;
+      const toolName =
+        tc.toolName ||
+        (tc.toolType
+          ? String(tc.toolType).toLowerCase()
+          : "media_processing");
+      return {
+        type: "server_tool_call",
+        name: toolName,
+        id: tc.id ?? `call_${uuidv4().replace(/-/g, "").slice(0, 8)}`,
+        args: tc.args ?? {},
+      };
+    } else if ("toolResponse" in part && part.toolResponse) {
+      const tr = part.toolResponse;
+      const blockType = tr.toolType
+        ? String(tr.toolType).toLowerCase()
+        : "media_processing";
+      return {
+        type: "server_tool_call_result",
+        toolCallId: tr.id ?? "",
+        tool_call_id: tr.id ?? "",
+        status: "success",
+        output: tr.response ?? {},
+        extras: {
+          block_type: blockType,
+        },
+      };
     }
     return part as unknown as ContentBlock;
   });
@@ -1112,6 +1235,12 @@ export const convertGeminiPartToContentBlock: Converter<
     partMetadata: part.partMetadata,
     ...block,
   };
+  if (part.thoughtSignature) {
+    ret.extras = {
+      ...(typeof ret.extras === "object" && ret.extras !== null ? ret.extras : {}),
+      signature: part.thoughtSignature,
+    };
+  }
   for (const attribute in ret) {
     if (ret[attribute] === undefined) {
       delete ret[attribute];
@@ -1209,7 +1338,9 @@ export const convertGeminiCandidateToAIMessage: Converter<
     !!p.functionCall ||
     !!p.functionResponse ||
     !!p.executableCode ||
-    !!p.codeExecutionResult;
+    !!p.codeExecutionResult ||
+    !!p.toolCall ||
+    !!p.toolResponse;
 
   const contentParts = parts.filter(hasContentPayload);
 
