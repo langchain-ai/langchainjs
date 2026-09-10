@@ -1,4 +1,4 @@
-import { vi } from "vitest";
+import { vi, type Mock } from "vitest";
 
 // Mocks the exports of @modelcontextprotocol/client (v2). In v1 these lived under
 // separate subpaths (client/index.js, client/sse.js, client/streamableHttp.js); v2
@@ -11,77 +11,102 @@ const actual = await vi.importActual<
 export const SdkHttpError = actual.SdkHttpError;
 
 const clientPrototype = {
-  connect: vi.fn().mockReturnValue(Promise.resolve()),
-  setNotificationHandler: vi.fn().mockReturnValue(Promise.resolve()),
-  listTools: vi.fn().mockReturnValue(
-    Promise.resolve({
-      tools: [
-        {
-          name: "tool1",
-          description: "Test tool 1",
-          inputSchema: { type: "object", properties: {} },
-        },
-        {
-          name: "tool2",
-          description: "Test tool 2",
-          inputSchema: { type: "object", properties: {} },
-        },
-      ],
-    })
-  ),
+  connect: vi
+    .fn<InstanceType<typeof actual.Client>["connect"]>()
+    .mockResolvedValue(undefined),
+  setNotificationHandler:
+    vi.fn<InstanceType<typeof actual.Client>["setNotificationHandler"]>(),
+  listTools: vi
+    .fn<InstanceType<typeof actual.Client>["listTools"]>()
+    .mockReturnValue(
+      Promise.resolve({
+        tools: [
+          {
+            name: "tool1",
+            description: "Test tool 1",
+            inputSchema: { type: "object", properties: {} },
+          },
+          {
+            name: "tool2",
+            description: "Test tool 2",
+            inputSchema: { type: "object", properties: {} },
+          },
+        ],
+      })
+    ),
   callTool: vi
-    .fn()
+    .fn<InstanceType<typeof actual.Client>["callTool"]>()
     .mockReturnValue(
       Promise.resolve({ content: [{ type: "text", text: "result" }] })
     ),
-  close: vi.fn().mockImplementation(() => Promise.resolve()),
-  tools: [], // Add the tools property
+  close: vi
+    .fn<InstanceType<typeof actual.Client>["close"]>()
+    .mockResolvedValue(undefined),
 };
-export const Client = vi.fn().mockImplementation(function mockClient(
-  ...[clientInfo]: ConstructorParameters<typeof actual.Client>
+function mockClient(
+  ...[clientInfo, options]: ConstructorParameters<typeof actual.Client>
 ) {
   return {
     ...clientPrototype,
     clientInfo,
+    options,
   };
-});
+}
+export const Client: Mock<typeof mockClient> = vi.fn(mockClient);
+
 Client.prototype = clientPrototype;
 
 const sseClientTransportPrototype = {
-  connect: vi.fn().mockReturnValue(Promise.resolve()),
-  send: vi.fn().mockReturnValue(Promise.resolve()),
-  close: vi.fn().mockReturnValue(Promise.resolve()),
+  start: vi
+    .fn<InstanceType<typeof actual.SSEClientTransport>["start"]>()
+    .mockResolvedValue(undefined),
+  send: vi
+    .fn<InstanceType<typeof actual.SSEClientTransport>["send"]>()
+    .mockResolvedValue(undefined),
+  close: vi
+    .fn<InstanceType<typeof actual.SSEClientTransport>["close"]>()
+    .mockResolvedValue(undefined),
 };
-export const SSEClientTransport = vi
-  .fn()
-  .mockImplementation(function mockSSEClientTransport(
-    ...[url, options]: ConstructorParameters<typeof actual.SSEClientTransport>
-  ) {
-    return {
-      ...sseClientTransportPrototype,
-      url,
-      options,
-    };
-  });
+function mockSSEClientTransport(
+  ...[url, options]: ConstructorParameters<typeof actual.SSEClientTransport>
+) {
+  return {
+    ...sseClientTransportPrototype,
+    url,
+    options,
+  };
+}
+export const SSEClientTransport: Mock<typeof mockSSEClientTransport> = vi.fn(
+  mockSSEClientTransport
+);
+
 SSEClientTransport.prototype = sseClientTransportPrototype;
 
 const streamableHTTPClientTransportPrototype = {
-  connect: vi.fn().mockReturnValue(Promise.resolve()),
-  send: vi.fn().mockReturnValue(Promise.resolve()),
-  close: vi.fn().mockReturnValue(Promise.resolve()),
+  start: vi
+    .fn<InstanceType<typeof actual.StreamableHTTPClientTransport>["start"]>()
+    .mockResolvedValue(undefined),
+  send: vi
+    .fn<InstanceType<typeof actual.StreamableHTTPClientTransport>["send"]>()
+    .mockResolvedValue(undefined),
+  close: vi
+    .fn<InstanceType<typeof actual.StreamableHTTPClientTransport>["close"]>()
+    .mockResolvedValue(undefined),
 };
-export const StreamableHTTPClientTransport = vi
-  .fn()
-  .mockImplementation(function mockStreamableHTTPClientTransport(
-    ...[url, options]: ConstructorParameters<
-      typeof actual.StreamableHTTPClientTransport
-    >
-  ) {
-    return {
-      ...streamableHTTPClientTransportPrototype,
-      url,
-      options,
-    };
-  });
+function mockStreamableHTTPClientTransport(
+  ...[url, options]: ConstructorParameters<
+    typeof actual.StreamableHTTPClientTransport
+  >
+) {
+  return {
+    ...streamableHTTPClientTransportPrototype,
+    url,
+    options,
+  };
+}
+export const StreamableHTTPClientTransport: Mock<
+  typeof mockStreamableHTTPClientTransport
+> = vi.fn(mockStreamableHTTPClientTransport);
+
 StreamableHTTPClientTransport.prototype =
   streamableHTTPClientTransportPrototype;

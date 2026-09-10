@@ -35,6 +35,43 @@ describe("MultiServerMCPClient", () => {
     vi.clearAllMocks();
   });
 
+  describe("HTTP error handling", () => {
+    test.each([
+      [{ status: 404, code: "HTTP_ERROR" }, true],
+      [{ code: 405 }, true],
+      [{ status: 503, code: 404 }, false],
+      [new Error("Connection failed (HTTP 404)"), true],
+      [null, false],
+      [undefined, false],
+      ["failed", false],
+      [{ code: "404" }, false],
+      [{ code: -32000 }, false],
+      [{ status: 600 }, false],
+      [{ status: 401.5 }, false],
+      [{ message: 404 }, false],
+      [new Error("Failed (HTTP 999)"), false],
+    ])(
+      "handles %j without losing the original transport failure",
+      async (error, fallsBack) => {
+        vi.mocked(Client.prototype.connect).mockRejectedValueOnce(error);
+        const client = new MultiServerMCPClient({
+          remote: { transport: "http", url: "https://example.com/mcp" },
+        });
+        try {
+          if (fallsBack) {
+            await client.initializeConnections();
+            expect(SSEClientTransport).toHaveBeenCalledTimes(1);
+          } else {
+            await expect(client.initializeConnections()).rejects.toThrow();
+            expect(SSEClientTransport).not.toHaveBeenCalled();
+          }
+        } finally {
+          await client.close();
+        }
+      }
+    );
+  });
+
   // Constructor functionality tests
   describe("constructor", () => {
     test("should throw if initialized with empty connections", () => {

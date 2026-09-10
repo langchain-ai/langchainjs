@@ -2,7 +2,7 @@
 
 > This version uses the stable MCP TypeScript SDK 2.x. Legacy MCP servers remain
 > supported. Applications supplying their own SDK client must migrate to
-> `@modelcontextprotocol/client`; see [the SDK migration guide](./docs/sdk-v2-migration.md).
+> `@modelcontextprotocol/client`; see [the SDK migration guide](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-mcp-adapters/docs/sdk-v2-migration.md).
 > Upgrading the SDK alone does not enable modern stateless elicitation.
 
 [![npm version](https://img.shields.io/npm/v/@langchain/mcp-adapters.svg)](https://www.npmjs.com/package/@langchain/mcp-adapters)

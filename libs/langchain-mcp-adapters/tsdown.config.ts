@@ -4,7 +4,7 @@ export default getBuildConfig({
   entry: ["./src/index.ts"],
   plugins: [
     cjsCompatPlugin({
-      files: ["dist/", "docs/", "CHANGELOG.md", "README.md", "LICENSE"],
+      files: ["dist/", "CHANGELOG.md", "README.md", "LICENSE"],
     }),
   ],
 });
