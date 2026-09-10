@@ -41,7 +41,7 @@
     "ml-matrix": "^6.15.0",
     "rimraf": "^6.1.3",
     "typescript": "~7.0.2",
-    "vitest": "^4.1.8",
+    "vitest": "^4.1.11",
     "web-streams-polyfill": "^4.3.0"
   },
   "publishConfig": {
