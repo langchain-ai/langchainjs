@@ -1234,3 +1234,29 @@ describe("withStructuredOutput - StandardSchema", () => {
     expect((result as any).parsed).toEqual({ name: "cobalt" });
   });
 });
+
+test("Google AI - abort signal reaches the non-streaming request", async () => {
+  const model = new ChatGoogleGenerativeAI({
+    apiKey: "testing",
+    model: "gemini-2.0-flash",
+  });
+
+  const spy = vi
+    .spyOn(model, "completionWithRetry")
+    .mockImplementation(
+      async () => ({ response: mockGenerateContentResponse("ok") }) as never
+    );
+
+  const controller = new AbortController();
+  await model.invoke([new HumanMessage("Hello")], {
+    signal: controller.signal,
+  });
+
+  // Regression: `_generate` invoked `completionWithRetry(request)` with no
+  // second argument, so `options` — and therefore `signal` — was `undefined`.
+  // `completionWithRetry` passes that signal to both `caller.callWithOptions`
+  // and `client.generateContent`, so an in-flight non-streaming request could
+  // not be aborted. Both streaming paths already forward it.
+  expect(spy).toHaveBeenCalledTimes(1);
+  expect(spy.mock.calls[0][1]?.signal).toBe(controller.signal);
+});
