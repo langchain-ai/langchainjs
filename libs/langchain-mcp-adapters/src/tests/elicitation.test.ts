@@ -148,9 +148,11 @@ it.each(["accept", "invalid", "throws", "exhausted", "missing"])(
 
     try {
       const tools = await adapter.getTools();
+
       const tool = tools.find((candidate) =>
         candidate.name.endsWith("approve")
       );
+
       const legacy = tools.find((candidate) =>
         candidate.name.endsWith("legacy_tool")
       );
