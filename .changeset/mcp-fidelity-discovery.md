@@ -2,7 +2,7 @@
 "@langchain/mcp-adapters": major
 ---
 
-Always use native LangChain content blocks and remove the `useStandardContentBlocks` toggle; preserve structured output, resource provenance and protocol metadata in artifacts. Preserve native ToolMessage/Command results and graph interrupts. Expose semantic tool error envelopes through ToolException and retain transport causes. Resource conversion no longer performs implicit reads.
+Preserve structured output, resource provenance and protocol metadata in artifacts. Preserve native ToolMessage/Command results and graph interrupts. Expose semantic tool error envelopes through ToolException and retain transport causes.
 
 Validate effective post-hook arguments against the original server JSON Schema without mutating descriptors. Keep model schema projection separate from invocation authority and avoid narrowing unions to their final branch.
 
