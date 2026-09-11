@@ -536,8 +536,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
             ).toBe("test://legacy");
             expect(
               (await client.readResource("stdio-server", "test://legacy"))[0]
-                .text
-            ).toBe("multi-stdio");
+            ).toMatchObject({ text: "multi-stdio" });
           }
 
           for (const [server, label] of [
