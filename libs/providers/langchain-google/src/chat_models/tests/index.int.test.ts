@@ -37,7 +37,6 @@ import { ChatPromptValue } from "@langchain/core/prompt_values";
 import { tool } from "@langchain/core/tools";
 import type { Gemini } from "../types.js";
 import { convertMessagesToGeminiContents } from "../../converters/messages.js";
-import { GOOGLE_TOOL_CALL_THOUGHT_SIGNATURES_KEY } from "../../const.js";
 import { Runnable } from "@langchain/core/runnables";
 import { InteropZodType } from "@langchain/core/utils/types";
 import { concat } from "@langchain/core/utils/stream";
@@ -1754,13 +1753,7 @@ describe.each(thinkingModelInfo)(
       const toolCallBlock = firstResult.contentBlocks.find(
         (block) => block.type === "tool_call"
       ) as { thoughtSignature?: string } | undefined;
-      expect(toolCallBlock?.thoughtSignature).toBeDefined();
-
-      const expectedSignature = (
-        firstResult.response_metadata?.[
-          GOOGLE_TOOL_CALL_THOUGHT_SIGNATURES_KEY
-        ] as Record<string, string> | undefined
-      )?.[toolCall.id as string];
+      const expectedSignature = toolCallBlock?.thoughtSignature;
       expect(expectedSignature).toBeDefined();
 
       const contents = convertMessagesToGeminiContents([

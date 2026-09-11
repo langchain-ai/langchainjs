@@ -24,7 +24,6 @@ import { Converter } from "@langchain/core/utils/format";
 import type { Gemini } from "../chat_models/types.js";
 import { iife } from "../utils/misc.js";
 import { InvalidInputError, ToolCallNotFoundError } from "../utils/errors.js";
-import { GOOGLE_TOOL_CALL_THOUGHT_SIGNATURES_KEY } from "../const.js";
 
 /**
  * Standard content block converter for Google Gemini API.
@@ -502,11 +501,19 @@ function convertStandardContentMessageToGeminiContent(
     }
   });
 
-  // Convert AIMessage tool_calls to functionCall parts, reading thoughtSignature from response_metadata (native path) or the tool_call itself (legacy path).
+  // Convert tool_calls to functionCall parts, reading thoughtSignature from the matching content block, falling back to the tool_call itself.
   if (AIMessage.isInstance(message) && message.tool_calls?.length) {
-    const signaturesById = message.response_metadata?.[
-      GOOGLE_TOOL_CALL_THOUGHT_SIGNATURES_KEY
-    ] as Record<string, string> | undefined;
+    const signaturesById: Record<string, string> = {};
+    for (const block of contentBlocks) {
+      if (
+        block.type === "tool_call" &&
+        block.id &&
+        "thoughtSignature" in block &&
+        typeof block.thoughtSignature === "string"
+      ) {
+        signaturesById[block.id] = block.thoughtSignature;
+      }
+    }
     for (const toolCall of message.tool_calls) {
       const part = {
         functionCall: {
@@ -515,7 +522,7 @@ function convertStandardContentMessageToGeminiContent(
         },
       } as Gemini.Part.FunctionCall;
       const thoughtSignature =
-        (toolCall.id && signaturesById?.[toolCall.id]) ??
+        (toolCall.id && signaturesById[toolCall.id]) ??
         ("thoughtSignature" in toolCall
           ? (toolCall.thoughtSignature as string)
           : undefined);

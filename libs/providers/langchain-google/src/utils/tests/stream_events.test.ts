@@ -1,7 +1,6 @@
 import { describe, test, expect } from "vitest";
 import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import { convertGoogleGeminiStream } from "../stream_events.js";
-import { GOOGLE_TOOL_CALL_THOUGHT_SIGNATURES_KEY } from "../../const.js";
 
 async function collectEvents(
   chunks: Record<string, unknown>[]
@@ -150,50 +149,6 @@ describe("convertGoogleGeminiStream", () => {
     ).toMatchObject({
       content: { id: "server-id-1", thoughtSignature: "sig-1" },
     });
-  });
-
-  test("carries tool call thoughtSignatures on message-finish, keyed by id", async () => {
-    const events = await collectEvents([
-      {
-        candidates: [
-          {
-            content: {
-              parts: [
-                {
-                  functionCall: {
-                    id: "server-id-1",
-                    name: "web_search",
-                    args: { query: "weather" },
-                  },
-                  thoughtSignature: "sig-1",
-                },
-              ],
-            },
-          },
-        ],
-      },
-    ]);
-
-    expect(events.find((e) => e.event === "message-finish")).toMatchObject({
-      responseMetadata: {
-        [GOOGLE_TOOL_CALL_THOUGHT_SIGNATURES_KEY]: { "server-id-1": "sig-1" },
-      },
-    });
-  });
-
-  test("omits the thoughtSignature map when no tool call has a signature", async () => {
-    const events = await collectEvents([
-      {
-        candidates: [{ content: { parts: [{ text: "Hi" }] } }],
-      },
-    ]);
-
-    const finish = events.find((e) => e.event === "message-finish") as {
-      responseMetadata?: Record<string, unknown>;
-    };
-    expect(
-      finish.responseMetadata?.[GOOGLE_TOOL_CALL_THOUGHT_SIGNATURES_KEY]
-    ).toBeUndefined();
   });
 
   test("generates a fallback id when Gemini omits it", async () => {

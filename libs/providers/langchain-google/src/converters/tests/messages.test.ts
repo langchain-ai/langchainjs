@@ -5,7 +5,6 @@ import {
   convertGeminiPartsToToolCalls,
   convertMessagesToGeminiContents,
 } from "../messages.js";
-import { GOOGLE_TOOL_CALL_THOUGHT_SIGNATURES_KEY } from "../../const.js";
 
 describe("convertGeminiPartsToToolCalls", () => {
   test("uses native functionCall.id when present", () => {
@@ -556,19 +555,22 @@ describe("convertMessagesToGeminiContents", () => {
     expect("thoughtSignature" in functionCallPart).toBe(false);
   });
 
-  test("resolves thoughtSignature from response_metadata by tool call id, without it living on tool_calls (v1 path)", () => {
+  test("resolves thoughtSignature from the matching tool_call content block, without it living on tool_calls (v1 path)", () => {
     const aiMsg = new AIMessage({
-      content: "",
+      content: [
+        {
+          type: "tool_call",
+          id: "call-1",
+          name: "get_weather",
+          args: { city: "London" },
+          thoughtSignature: "sig-from-content-block",
+        },
+      ],
       tool_calls: [
         { name: "get_weather", args: { city: "London" }, id: "call-1" },
       ],
+      response_metadata: { output_version: "v1" },
     });
-    aiMsg.response_metadata = {
-      output_version: "v1",
-      [GOOGLE_TOOL_CALL_THOUGHT_SIGNATURES_KEY]: {
-        "call-1": "sig-from-metadata",
-      },
-    };
 
     const contents = convertMessagesToGeminiContents([
       new HumanMessage("hello"),
@@ -580,12 +582,20 @@ describe("convertMessagesToGeminiContents", () => {
       (p) => "functionCall" in p && p.functionCall
     ) as Gemini.Part.FunctionCall;
     expect(functionCallPart).toBeDefined();
-    expect(functionCallPart.thoughtSignature).toBe("sig-from-metadata");
+    expect(functionCallPart.thoughtSignature).toBe("sig-from-content-block");
   });
 
-  test("prefers response_metadata thoughtSignature over a direct tool_calls property (v1 path)", () => {
+  test("prefers the content block's thoughtSignature over a direct tool_calls property (v1 path)", () => {
     const aiMsg = new AIMessage({
-      content: "",
+      content: [
+        {
+          type: "tool_call",
+          id: "call-1",
+          name: "get_weather",
+          args: { city: "London" },
+          thoughtSignature: "sig-from-content-block",
+        },
+      ],
       tool_calls: [
         {
           name: "get_weather",
@@ -597,16 +607,12 @@ describe("convertMessagesToGeminiContents", () => {
           name: string;
           args: object;
           id: string;
+          type: "tool_call";
           thoughtSignature: string;
         },
       ],
+      response_metadata: { output_version: "v1" },
     });
-    aiMsg.response_metadata = {
-      output_version: "v1",
-      [GOOGLE_TOOL_CALL_THOUGHT_SIGNATURES_KEY]: {
-        "call-1": "sig-from-metadata",
-      },
-    };
 
     const contents = convertMessagesToGeminiContents([
       new HumanMessage("hello"),
@@ -617,7 +623,7 @@ describe("convertMessagesToGeminiContents", () => {
     const functionCallPart = modelContent!.parts.find(
       (p) => "functionCall" in p && p.functionCall
     ) as Gemini.Part.FunctionCall;
-    expect(functionCallPart.thoughtSignature).toBe("sig-from-metadata");
+    expect(functionCallPart.thoughtSignature).toBe("sig-from-content-block");
   });
 
   test("ToolMessage name resolved from tool_calls (v1 path)", () => {
