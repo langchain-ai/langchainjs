@@ -359,6 +359,7 @@ function simplifyJsonSchemaForLLM(schema: JSONObject): JSONObject {
         for (const name of Object.keys(simplified.properties))
           mergedProperties[name] = {};
       }
+
       // Collect required sets for intersection
       requiredSets.push(new Set(simplified.required ?? []));
 
