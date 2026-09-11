@@ -392,10 +392,9 @@ function simplifyJsonSchemaForLLM(schema: JSONObject): JSONObject {
 
     // Merge the collected properties
     if (Object.keys(mergedProperties).length > 0) {
-      result.properties = {
-        ...mergedProperties,
-        ...(isSchemaRecord(result.properties) ? result.properties : {}),
-      };
+      result.properties = isSchemaRecord(result.properties)
+        ? { ...mergedProperties, ...result.properties }
+        : { ...mergedProperties };
     }
 
     // Only add required fields that are common to ALL schemas (intersection)
@@ -586,11 +585,10 @@ function _toolOutputToContentBlocks(
     }
 
     case "resource_link": {
-      const metadata = {
-        uri: content.uri,
-        name: content.name,
-        ...(content.title !== undefined ? { title: content.title } : {}),
-      };
+      const metadata =
+        content.title === undefined
+          ? { uri: content.uri, name: content.name }
+          : { uri: content.uri, name: content.name, title: content.title };
 
       return [
         {
