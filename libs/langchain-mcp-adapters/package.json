@@ -36,7 +36,7 @@
     "@modelcontextprotocol/client": "^2.0.0"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0",
+    "@langchain/core": "^1.2.6",
     "@langchain/langgraph": "^1.4.13"
   },
   "peerDependenciesMeta": {

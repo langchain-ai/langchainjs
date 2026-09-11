@@ -1,9 +1,32 @@
+import { LangChainError } from "@langchain/core/errors";
 import { Client } from "@modelcontextprotocol/client";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { z } from "zod";
-import { ToolException, loadMcpTools } from "../tools.js";
+import { ToolException, isToolException, loadMcpTools } from "../tools.js";
 
 describe("ToolException error formatting", () => {
+  test("uses core error branding instead of accepting name-only lookalikes", () => {
+    const error = new ToolException("Failure", new Error("Cause"));
+    expect(ToolException.isInstance(error)).toBe(true);
+    expect(isToolException(error)).toBe(true);
+    expect(LangChainError.isInstance(error)).toBe(true);
+    expect(isToolException({ name: "ToolException" })).toBe(false);
+    expect(
+      isToolException(
+        Object.assign(new Error("Unrelated"), { name: "ToolException" })
+      )
+    ).toBe(false);
+  });
+
+  test("recognizes errors from separately loaded adapter modules", async () => {
+    vi.resetModules();
+    const other = await import("../tools.js");
+    expect(other.ToolException).not.toBe(ToolException);
+    const error = new other.ToolException("Other copy");
+    expect(ToolException.isInstance(error)).toBe(true);
+    expect(isToolException(error)).toBe(true);
+  });
+
   test("formats parsed Zod issues with their nested paths", () => {
     const result = z.object({ count: z.number() }).safeParse({ count: "one" });
 
