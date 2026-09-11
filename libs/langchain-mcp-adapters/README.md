@@ -801,3 +801,43 @@ Big thanks to [@vrknetha](https://github.com/vrknetha), [@knacklabs](https://www
 ## Contributing
 
 Contributions are welcome! Please check out our [contributing guidelines](CONTRIBUTING.md) for more information.
+
+## Protocol negotiation and elicitation
+
+Each server negotiates independently. HTTP and stdio connections use `protocolVersion: "auto"`
+by default, so one adapter can connect to modern and legacy servers. Explicit SSE connections
+use legacy negotiation. Set `protocolVersion: "legacy"` to require the legacy handshake, or
+`protocolVersion: { pin: "2026-07-28" }` to require a specific revision. SDK package versions
+and MCP protocol revisions are separate version numbers.
+
+Servers can ask your application for structured input (form elicitation) or ask a user to
+complete an action at a URL. Supply `onElicitation` to handle these requests:
+
+```typescript
+const adapter = new MCPAdapter({
+  servers: {
+    workspace: { transport: "http", url: "http://localhost:3000/mcp" },
+  },
+  onElicitation: async (request, { server, signal }) => {
+    // Your application supplies this function and owns consent and presentation.
+    return requestUserInput({ server, request, signal });
+  },
+  maxElicitationRounds: 32,
+});
+```
+
+Return `{ action: "accept", content: { ... } }` for an accepted form, or
+`{ action: "decline" }` / `{ action: "cancel" }`. Accepted form content must match the
+server's requested JSON Schema. URL answers contain an action without form content;
+your application decides whether and how to open the URL. URL elicitation is separate
+from the OAuth flow used to authorize an MCP connection.
+
+The adapter advertises elicitation only when a callback is configured. It supplies the
+server name and cancellation signal to the callback and validates the answer before
+sending it. The SDK handles legacy reverse requests and modern `input_required` rounds,
+including continuation state. The round limit bounds input exchanges; it does not enable
+retries after transport failures.
+
+A callback waits inside a running invocation. It is not a durable LangGraph pause: do not
+call `interrupt()` from this callback or assume a pending legacy request survives process
+restart. Durable interruption needs a checkpointed continuation boundary.

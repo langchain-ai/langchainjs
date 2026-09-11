@@ -1,6 +1,8 @@
+import type { MCPElicitationHandler } from "./elicitation.js";
 import { z } from "zod";
 import type {
   OAuthClientProvider,
+  VersionNegotiationMode,
   LoggingMessageNotificationParams,
   Progress,
   CancelledNotificationParams,
@@ -186,6 +188,12 @@ export const stdioRestartSchema = z
   })
   .describe("Configuration for stdio transport restart");
 
+/** Per-server policy; SDK negotiation owns supported revisions and fallback. */
+const protocolVersionSchema = z.union([
+  z.enum(["auto", "legacy"]),
+  z.object({ pin: z.string().min(1) }),
+]) satisfies z.ZodType<VersionNegotiationMode>;
+
 /**
  * Stdio transport connection
  */
@@ -260,6 +268,7 @@ const stdioOptionsSchema = z
     restart: stdioRestartSchema.optional(),
   })
   .extend(baseConfigSchema.shape)
+  .extend({ protocolVersion: protocolVersionSchema.optional() })
   .describe("Configuration for stdio transport connection");
 
 /**
@@ -336,6 +345,7 @@ const httpOptionsSchema = z
     automaticSSEFallback: z.boolean().optional().default(true),
   })
   .extend(baseConfigSchema.shape)
+  .extend({ protocolVersion: protocolVersionSchema.optional() })
   .describe("Configuration for streamable HTTP transport connection");
 
 /** Parse legacy aliases once and retain a concrete transport discriminator. */
@@ -615,6 +625,16 @@ export type Notifications = z.output<typeof notifications>;
  */
 const clientOptionsSchema = z
   .object({
+    /** Answer form and URL requests. Without a callback, elicitation is not advertised. */
+    onElicitation: z
+      .custom<MCPElicitationHandler>(
+        (value) => typeof value === "function",
+        "Expected an elicitation callback"
+      )
+      .optional(),
+    /** Maximum input-required rounds per SDK operation; does not retry transport failures. */
+    maxElicitationRounds: z.number().int().positive().default(32),
+
     /**
      * Whether to throw an error if a tool fails to load
      *

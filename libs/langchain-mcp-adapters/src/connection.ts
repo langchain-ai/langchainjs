@@ -1,3 +1,4 @@
+import { configureElicitation } from "./elicitation.js";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import {
   SSEClientTransport,
@@ -57,16 +58,20 @@ export interface Connection {
 
 const transportTypes = ["http", "sse", "stdio"] as const;
 
-type ConnectionManagerConfig = Pick<
-  ResolvedClientConfig,
-  | "onCancelled"
-  | "onInitialized"
-  | "onMessage"
-  | "onPromptsListChanged"
-  | "onResourcesListChanged"
-  | "onResourcesUpdated"
-  | "onRootsListChanged"
-  | "onToolsListChanged"
+type ConnectionManagerConfig = Partial<
+  Pick<
+    ResolvedClientConfig,
+    | "onElicitation"
+    | "maxElicitationRounds"
+    | "onCancelled"
+    | "onInitialized"
+    | "onMessage"
+    | "onPromptsListChanged"
+    | "onResourcesListChanged"
+    | "onResourcesUpdated"
+    | "onRootsListChanged"
+    | "onToolsListChanged"
+  >
 >;
 
 /**
@@ -170,10 +175,21 @@ export class ConnectionManager {
         : type === "sse"
           ? await this.#createSSETransport(serverName, options)
           : await this.#createStdioTransport(options);
-    const mcpClient = new MCPClient({
-      name: packageJson.name,
-      version: packageJson.version,
-    });
+
+    const mcpClient = new MCPClient(
+      { name: packageJson.name, version: packageJson.version },
+      {
+        versionNegotiation: {
+          mode: options.protocolVersion ?? (type === "sse" ? "legacy" : "auto"),
+        },
+        capabilities: this.#hooks.onElicitation
+          ? { elicitation: { form: {}, url: {} } }
+          : {},
+        inputRequired: { maxRounds: this.#hooks.maxElicitationRounds ?? 32 },
+      }
+    );
+
+    configureElicitation(mcpClient, serverName, this.#hooks.onElicitation);
 
     if (this.#hooks.onMessage) {
       mcpClient.setNotificationHandler(

@@ -191,10 +191,14 @@ describe("MultiServerMCPClient", () => {
 
       await client.initializeConnections();
 
-      expect(Client).toHaveBeenCalledWith({
-        name: "@langchain/mcp-adapters",
-        version: expect.any(String),
-      });
+      expect(Client).toHaveBeenCalledWith(
+        { name: "@langchain/mcp-adapters", version: expect.any(String) },
+        {
+          capabilities: {},
+          inputRequired: { maxRounds: 32 },
+          versionNegotiation: { mode: "auto" },
+        }
+      );
 
       expect(StdioClientTransport).toHaveBeenCalledWith({
         command: "python",

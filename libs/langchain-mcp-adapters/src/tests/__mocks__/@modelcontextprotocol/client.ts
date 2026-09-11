@@ -10,6 +10,8 @@ const actual = await vi.importActual<
 >("@modelcontextprotocol/client");
 export const SdkHttpError = actual.SdkHttpError;
 
+export const specTypeSchemas = actual.specTypeSchemas;
+
 export const isSpecType = actual.isSpecType;
 
 export const fromJsonSchema = actual.fromJsonSchema;
@@ -18,6 +20,8 @@ const clientPrototype = {
   connect: vi
     .fn<InstanceType<typeof actual.Client>["connect"]>()
     .mockResolvedValue(undefined),
+  setRequestHandler:
+    vi.fn<InstanceType<typeof actual.Client>["setRequestHandler"]>(),
   setNotificationHandler:
     vi.fn<InstanceType<typeof actual.Client>["setNotificationHandler"]>(),
   listTools: vi
