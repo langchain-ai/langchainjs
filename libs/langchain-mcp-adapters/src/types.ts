@@ -410,18 +410,18 @@ const notifications = z.object({
    * Called when a log message is received.
    *
    * @param logMessage - The log message
-   * @param logMessage.message - The log message
+   * @param logMessage.data - The data logged by the server
    * @param logMessage.level - The log level
-   * @param logMessage.timestamp - The log timestamp
+   * @param logMessage.logger - Optional logger name
    * @param source - The source of the log message
    * @param source.server - The server of the source, e.g. "my-server"
-   * @param source.option - The connection options of the source, e.g. `{ transport: "stdio", command: "node", args: ["server.js"] }`
+   * @param source.options - The connection options of the source, e.g. `{ transport: "stdio", command: "node", args: ["server.js"] }`
    *
    * @example
    * ```ts
    * const client = new MCPAdapter({
    *   servers: { local: { command: "node", args: ["server.js"] } },
-   *   onLog: (logMessage) => {
+   *   onMessage: (logMessage) => {
    *     console.log(logMessage);
    *   },
    * });
