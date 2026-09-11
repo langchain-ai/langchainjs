@@ -276,6 +276,7 @@ export class ConnectionManager {
                   authProvider: options.authProvider,
                 }
           );
+
           return options.onToolsListChanged?.({
             server: serverName,
             options: connectionSchema.parse(options),

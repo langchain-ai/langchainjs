@@ -15,6 +15,7 @@ export class MCPClientError extends ns
     options?: ErrorOptions
   ) {
     super(message);
+
     if (options && "cause" in options) this.cause = options.cause;
   }
 }
@@ -59,6 +60,7 @@ export function isToolException(error: unknown): error is ToolException {
 }
 
 const httpStatusSchema = z.int().min(100).max(599);
+
 const httpErrorFieldsSchema = z.object({
   status: httpStatusSchema.optional().catch(undefined),
   code: httpStatusSchema.optional().catch(undefined),
@@ -67,11 +69,13 @@ const httpErrorFieldsSchema = z.object({
 
 export function getHttpErrorCode(error: unknown): number | undefined {
   const parsed = httpErrorFieldsSchema.safeParse(error);
+
   if (!parsed.success) return undefined;
 
   // SDK 2 HTTP errors use status; SSE errors use a numeric code.
   const { status, code, message } = parsed.data;
   const match = message?.match(/\(HTTP (\d{3})\)/);
+
   return status ?? code ?? httpStatusSchema.safeParse(Number(match?.[1])).data;
 }
 
