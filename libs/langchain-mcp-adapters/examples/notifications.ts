@@ -22,11 +22,13 @@ const client = new MCPAdapter({
           progress.progress != null && progress.total
             ? Math.round((progress.progress / progress.total) * 100)
             : undefined;
+
         if (pct != null) {
           const origin =
             context.type === "tool"
               ? `${context.server}/${context.name}`
               : "unknown";
+
           console.log(`[progress:${origin}] ${pct}%`);
         }
       },

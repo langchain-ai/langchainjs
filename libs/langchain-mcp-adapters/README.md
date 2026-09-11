@@ -665,8 +665,9 @@ try {
       },
     },
   });
-  const tools = await adapter.listTools();
-  await tools[0].invoke({ expression: "1 + 2" });
+  const [tool] = await adapter.listTools();
+  if (!tool) throw new Error("No tools available");
+  await tool.invoke({ expression: "1 + 2" });
 } catch (error) {
   if (isToolException(error)) {
     console.error("Tool execution failed:", error.message);
