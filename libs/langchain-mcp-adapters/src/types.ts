@@ -657,13 +657,10 @@ export type LoadMcpToolsOptions = {
   additionalToolNamePrefix?: string;
 
   /**
-   * If true, the tool will use LangChain's standard multimodal content blocks for tools that output
-   * image or audio content, and embedded resources will be converted to `StandardFileBlock` objects.
-   * When `false`, all artifacts are left in their MCP format, but embedded resources will be
-   * converted to `StandardFileBlock` objects if {@link outputHandling} causes embedded resources to
-   * be treated as content, as otherwise ChatModel providers will not be able to interpret them.
+   * Use native LangChain image/audio/file content blocks. Artifacts remain
+   * in MCP format. Set false for legacy content shapes; conversion never fetches resources.
    *
-   * @default false
+   * @default true
    */
   useStandardContentBlocks?: boolean;
 
