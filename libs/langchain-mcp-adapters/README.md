@@ -801,3 +801,18 @@ Big thanks to [@vrknetha](https://github.com/vrknetha), [@knacklabs](https://www
 ## Contributing
 
 Contributions are welcome! Please check out our [contributing guidelines](CONTRIBUTING.md) for more information.
+
+### Discovery freshness
+
+`getTools()` consults the SDK cache on each discovery. The SDK owns cache hints,
+TTL, and pagination; the adapter reuses adapted tools while the cached descriptors
+remain the same. Tools already returned to a running agent are not mutated.
+
+```typescript
+const tools = await adapter.getTools([], { cacheMode: "refresh" });
+```
+
+Use `"use"` (default) to honor the SDK cache, `"refresh"` to fetch and update it,
+or `"bypass"` to fetch without reading or updating it. Keep each OAuth provider
+bound to one authorization identity; close and recreate the adapter when changing
+accounts, rather than changing the identity behind an existing provider.
