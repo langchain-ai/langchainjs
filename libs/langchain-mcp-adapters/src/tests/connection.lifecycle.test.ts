@@ -284,10 +284,13 @@ test("resource discovery failure is not an empty catalog", async () => {
 
 test("consults SDK discovery again and preserves already-issued tools", async () => {
   mockConnect();
+
   const list = vi.spyOn(SDKClient.prototype, "listTools").mockResolvedValue({
     tools: [{ name: "before", inputSchema: { type: "object" } }],
   });
+
   const adapter = new MCPAdapter({ servers: { test: connection } });
+
   try {
     const [before] = await adapter.getTools();
     list.mockResolvedValue({
@@ -309,10 +312,13 @@ test.each([
   "forwards SDK cache policy %s",
   async (cacheMode) => {
     mockConnect();
+
     const list = vi
       .spyOn(SDKClient.prototype, "listTools")
       .mockResolvedValue({ tools: [] });
+
     const adapter = new MCPAdapter({ servers: { test: connection } });
+
     try {
       await adapter.getTools([], { cacheMode });
       expect(list).toHaveBeenCalledWith(undefined, { cacheMode });
