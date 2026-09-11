@@ -2241,7 +2241,10 @@ describe("MultiServerMCPClient Integration Tests", () => {
           expect(content.length).toBeGreaterThan(0);
           expect(content[0].uri).toBe("mem://test.txt");
           expect(content[0].mimeType).toBe("text/plain");
-          expect(content[0].text).toBe("This is a test resource content.");
+          expect(content[0]).toMatchObject({
+            text: "This is a test resource content.",
+            _meta: { revision: "test-revision" },
+          });
         } finally {
           await client.close();
         }

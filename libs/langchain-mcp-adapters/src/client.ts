@@ -520,12 +520,7 @@ export class MCPAdapter {
     try {
       debugLog(`INFO: Reading resource "${uri}" from server "${serverName}"`);
       const result = await client.readResource({ uri });
-      return result.contents.map((content) => ({
-        uri: content.uri,
-        mimeType: content.mimeType,
-        text: "text" in content ? content.text : undefined,
-        blob: "blob" in content ? content.blob : undefined,
-      }));
+      return result.contents;
     } catch (error) {
       throw new MCPClientError(
         `Failed to read resource "${uri}" from server "${serverName}": ${error}`,

@@ -9,3 +9,5 @@ Upgrade to Zod 4. Configuration now rejects conflicting options and unknown outp
 Hook `state` is now typed as `unknown` rather than an object record. Its runtime value is unchanged. Applications must narrow it before accessing properties.
 
 Remove `useStandardContentBlocks`; tool content always uses standard LangChain blocks. Update image/audio consumers to use `data` and `mimeType`. Artifact-routed blocks keep their MCP format, including when passed through `afterToolCall`; resource reads remain explicit.
+
+Resource types now derive from the MCP SDK. `readResource()` preserves SDK content metadata; narrow with `"text" in content` or `"blob" in content` before accessing those fields.
