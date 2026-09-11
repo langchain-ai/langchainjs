@@ -508,7 +508,7 @@ export function finalizeContentBlock(block: ContentBlock): ContentBlock {
     const chunk = block as ContentBlock.Tools.ToolCallChunk;
     let parsedArgs: unknown;
     try {
-      parsedArgs = JSON.parse(chunk.args ?? "{}");
+      parsedArgs = JSON.parse(chunk.args || "{}");
     } catch {
       return {
         type: "invalid_tool_call" as const,
