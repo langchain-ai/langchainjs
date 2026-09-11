@@ -611,7 +611,7 @@ The library provides different error types to help with debugging:
 Example error handling:
 
 ```ts
-import { z } from "zod";
+import { isInteropZodError } from "@langchain/core/utils/types";
 import { MCPAdapter, isToolException } from "@langchain/mcp-adapters";
 
 let adapter: MCPAdapter | undefined;
@@ -630,12 +630,11 @@ try {
 } catch (error) {
   if (isToolException(error)) {
     console.error("Tool execution failed:", error.message);
-    if (error.cause instanceof z.ZodError) {
-      console.error(z.prettifyError(error.cause));
-      console.error(error.cause.issues);
+    if (isInteropZodError(error.cause)) {
+      console.error("Validation details:", error.cause);
     }
-  } else if (error instanceof z.ZodError) {
-    console.error("Configuration error:", z.prettifyError(error));
+  } else if (isInteropZodError(error)) {
+    console.error("Configuration error:", error);
   } else {
     console.error("Connection or other error:", error);
   }
