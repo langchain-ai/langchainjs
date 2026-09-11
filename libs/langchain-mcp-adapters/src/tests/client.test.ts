@@ -2959,7 +2959,7 @@ describe("explicit protocol modes with live HTTP servers", () => {
       expect((await adapter.getClient("legacy"))?.getProtocolEra()).toBe(
         "legacy"
       );
-      await expect(mismatch.listTools()).rejects.toThrow();
+      await expect(mismatch.listTools()).rejects.toThrow(/modern mode/);
     } finally {
       await Promise.all([adapter.close(), mismatch.close()]);
       await legacyServers.cleanup();

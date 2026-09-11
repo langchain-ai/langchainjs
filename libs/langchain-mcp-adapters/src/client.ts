@@ -635,7 +635,7 @@ export class MCPAdapter {
       }
     } catch (error) {
       throw new MCPClientError(
-        `Failed to connect to stdio server "${serverName}": ${error}`,
+        `Failed to connect to stdio server "${serverName}" in ${connection.mode} mode: ${error}`,
         serverName,
         { cause: error }
       );
@@ -780,7 +780,7 @@ export class MCPAdapter {
             );
           }
           throw new MCPClientError(
-            `Failed to connect to streamable HTTP server "${serverName}, url: ${url}": ${error}`,
+            `Failed to connect to streamable HTTP server "${serverName}, url: ${url}" in ${connection.mode} mode: ${error}`,
             serverName,
             { cause: error }
           );
