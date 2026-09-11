@@ -645,7 +645,7 @@ describe("Simplified Tool Adapter Tests", () => {
       // Load tools with content_and_artifact response format
       const tools = await loadMcpTools(
         "mockServer(should load tools with specified response format)",
-        mockClient as Client,
+        mockClient,
         { useStandardContentBlocks: false }
       );
 

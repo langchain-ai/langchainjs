@@ -1,6 +1,7 @@
 import { collectPages } from "./pagination.js";
 import { z } from "zod";
 import { fromJsonSchema } from "@modelcontextprotocol/client";
+import { DefaultJsonSchemaValidator } from "@modelcontextprotocol/client/_shims";
 import { isInteropZodError } from "@langchain/core/utils/types";
 import {
   toolCallModificationSchema,
@@ -1084,7 +1085,12 @@ export async function loadMcpTools(
         .map(async (tool: MCPTool) => {
           try {
             const originalSchema = jsonObjectSchema.parse(tool.inputSchema);
-            const inputValidator = fromJsonSchema(originalSchema);
+            // Scope the SDK engine to this descriptor: its default shared cache keys by $id.
+            // The SDK export selects the same engine as Client for Node/browser/workerd.
+            const inputValidator = fromJsonSchema(
+              originalSchema,
+              new DefaultJsonSchemaValidator()
+            );
 
             // Dereference $defs/$ref in the schema to support Pydantic v2 schemas
             // and other JSON schemas that use $defs for nested type definitions

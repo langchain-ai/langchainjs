@@ -293,3 +293,43 @@ test("rejects a required value removed by a hook", async () => {
   await expect(tool.invoke({ value: "original" })).rejects.toThrow(/arguments/);
   expect(client.callTool).not.toHaveBeenCalled();
 });
+
+describe("validator identity", () => {
+  function descriptor(id: string, forbidden: number): Tool["inputSchema"] {
+    return {
+      $id: id,
+      type: "object",
+      properties: { value: { type: "number" } },
+      $defs: { forbidden: { properties: { value: { const: forbidden } } } },
+      not: { $ref: "#/$defs/forbidden" },
+    };
+  }
+
+  test("isolates servers advertising different constraints under the same schema ID", async () => {
+    const id = "https://example.com/schema/shared";
+    const firstClient = mockClient(descriptor(id, 2));
+    const secondClient = mockClient(descriptor(id, 1));
+    const [first] = await loadMcpTools("first", firstClient);
+    const [second] = await loadMcpTools("second", secondClient);
+    await expect(second.invoke({ value: 1 })).rejects.toThrow(/arguments/);
+    expect(secondClient.callTool).not.toHaveBeenCalled();
+    expect(await second.invoke({ value: 2 })).toBe("ok");
+    expect(await first.invoke({ value: 1 })).toBe("ok");
+    await expect(first.invoke({ value: 2 })).rejects.toThrow(/arguments/);
+  });
+
+  test("recompiles changed constraints on rediscovery without changing existing tools", async () => {
+    const id = "https://example.com/schema/refreshed";
+    const client = mockClient(descriptor(id, 2));
+    const [original] = await loadMcpTools("test", client);
+    vi.mocked(client.listTools).mockResolvedValue({
+      tools: [{ name: "echo", inputSchema: descriptor(id, 1) }],
+    });
+    const [refreshed] = await loadMcpTools("test", client);
+    await expect(refreshed.invoke({ value: 1 })).rejects.toThrow(/arguments/);
+    expect(client.callTool).not.toHaveBeenCalled();
+    expect(await refreshed.invoke({ value: 2 })).toBe("ok");
+    expect(await original.invoke({ value: 1 })).toBe("ok");
+    await expect(original.invoke({ value: 2 })).rejects.toThrow(/arguments/);
+  });
+});
