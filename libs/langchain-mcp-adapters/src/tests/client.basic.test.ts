@@ -99,9 +99,11 @@ describe("MultiServerMCPClient", () => {
       vi.mocked(Client.prototype.connect).mockRejectedValueOnce({
         status: 404,
       });
+
       const client = new MCPAdapter({
         servers: { remote: { url: "https://example.com/mcp" } },
       });
+
       try {
         await expect(client.listTools()).rejects.toThrow();
         expect(SSEClientTransport).not.toHaveBeenCalled();
@@ -1260,6 +1262,7 @@ describe("protocol-specific server configuration", () => {
   test("keeps callbacks on their owning server and preserves their identity", () => {
     const onMessage = vi.fn();
     const onInitialized = vi.fn();
+
     const client = new MCPAdapter({
       servers: {
         modern: { url: "https://example.com/mcp", onMessage },
@@ -1270,6 +1273,7 @@ describe("protocol-specific server configuration", () => {
         },
       },
     });
+
     expect(client.config.mcpServers.modern.onMessage).toBe(onMessage);
     expect(client.config.mcpServers.legacy.onMessage).toBeUndefined();
     expect(client.config.mcpServers.legacy.onInitialized).toBe(onInitialized);
@@ -1284,6 +1288,7 @@ describe("protocol-specific server configuration", () => {
     "rejects invalid modern fields in all constructor shapes: %j",
     (invalid) => {
       const remote = { url: "https://example.com/mcp", ...invalid };
+
       for (const config of [
         { servers: { remote } },
         { mcpServers: { remote } },
@@ -1299,6 +1304,7 @@ describe("protocol-specific server configuration", () => {
       servers: { remote: { url: "https://example.com/mcp" } },
       onMessage: () => undefined,
     };
+
     // @ts-expect-error Protocol callbacks belong to a server, even on predeclared configs.
     expect(() => new MCPAdapter(config)).toThrow(/onMessage/);
   });

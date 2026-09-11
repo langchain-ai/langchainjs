@@ -351,6 +351,7 @@ export const eventContextSchema = z.discriminatedUnion("type", [
   }),
   z.object({ type: z.literal("unknown") }),
 ]);
+
 export type EventContext = z.output<typeof eventContextSchema>;
 
 /** Trusted notification context; preserves runtime callback and OAuth identities. */
@@ -601,7 +602,9 @@ const removedRootsObserver = z
       "onRootsListChanged was removed: roots notifications originate from clients, not servers",
   })
   .optional();
+
 const serverNotifications = notifications.omit({ onInitialized: true });
+
 const modernPolicy = z
   .object({
     mode: z.literal("modern").optional().default("modern"),
@@ -614,6 +617,7 @@ const modernPolicy = z
     onRootsListChanged: removedRootsObserver,
   })
   .extend(serverNotifications.shape);
+
 const legacyPolicy = z
   .object({
     mode: z.literal("legacy"),
@@ -639,13 +643,16 @@ const httpTransport = httpOptionsSchema
       })
       .optional(),
   });
+
 const modernHttp = httpTransport.extend(modernPolicy.shape).strict();
+
 const legacyHttp = httpTransport
   .extend(legacyPolicy.shape)
   .extend({
     automaticSSEFallback: z.boolean().default(true),
   })
   .strict();
+
 const legacySse = httpOptionsSchema
   .extend(legacyPolicy.shape)
   .extend({
@@ -657,6 +664,7 @@ const legacySse = httpOptionsSchema
       .optional(),
   })
   .strict();
+
 export const streamableHttpConnectionSchema = z
   .union([z.discriminatedUnion("mode", [modernHttp, legacyHttp]), legacySse])
   .transform(({ type: _type, command: _command, ...options }) => options);
@@ -919,6 +927,7 @@ export const customHTTPTransportOptionsSchema = httpOptionsSchema.pick({
   authProvider: true,
   headers: true,
 });
+
 export type CustomHTTPTransportOptions = z.input<
   typeof customHTTPTransportOptionsSchema
 >;

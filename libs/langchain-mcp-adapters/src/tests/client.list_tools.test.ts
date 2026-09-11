@@ -10,24 +10,29 @@ describe("adapter tool listing", () => {
     vi.spyOn(ConnectionManager.prototype, "createClient").mockImplementation(
       async (_transport, serverName) => {
         const client = new Client({ name: serverName, version: "1" });
+
         const connected = Object.assign(client, {
           fork: async () => connected,
         });
+
         vi.spyOn(client, "listTools").mockResolvedValue({
           tools: [{ name: serverName, inputSchema: { type: "object" } }],
         });
         vi.spyOn(client, "callTool").mockResolvedValue({
           content: [{ type: "text", text: serverName }],
         });
+
         return connected;
       }
     );
+
     const adapter = new MCPAdapter({
       servers: {
         first: { command: "node", args: [] },
         second: { command: "node", args: [] },
       },
     });
+
     try {
       expect((await adapter.listTools()).map((tool) => tool.name)).toEqual([
         "first",

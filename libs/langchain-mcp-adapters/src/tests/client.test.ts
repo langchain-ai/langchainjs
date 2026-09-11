@@ -2580,6 +2580,7 @@ describe("explicit protocol modes with live HTTP servers", () => {
   it("connects a default modern server and an explicit legacy server in one adapter", async () => {
     const legacyServers = new TestMCPServers();
     const { baseUrl } = await legacyServers.createHTTPServer("legacy-mode");
+
     const handler = createMcpHandler(
       () => {
         const server = new McpServer({ name: "modern-mode", version: "1" });
@@ -2588,28 +2589,35 @@ describe("explicit protocol modes with live HTTP servers", () => {
           { inputSchema: z.object({ value: z.string() }) },
           ({ value }) => ({ content: [{ type: "text", text: value }] })
         );
+
         return server;
       },
       { legacy: "reject" }
     );
+
     const http = createServer(toNodeHandler(handler));
     http.listen(0, "127.0.0.1");
     await once(http, "listening");
     const address = http.address();
+
     if (!address || typeof address === "string")
       throw new Error("Missing HTTP address");
+
     const adapter = new MCPAdapter({
       servers: {
         modern: { url: `http://127.0.0.1:${address.port}` },
         legacy: { mode: "legacy", url: `${baseUrl}/mcp` },
       },
     });
+
     const mismatch = new MCPAdapter({
       servers: { wrong: { url: `${baseUrl}/mcp` } },
     });
+
     try {
       const tools = await adapter.listTools();
       const modern = tools.find((tool) => tool.name === "modern_echo");
+
       if (!modern) throw new Error("Modern tool was not discovered");
       expect(await modern.invoke({ value: "modern response" })).toContain(
         "modern response"

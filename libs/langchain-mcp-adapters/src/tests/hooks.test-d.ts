@@ -168,11 +168,13 @@ test("protocol modes reject fields belonging to the other server interface", () 
     url: "https://example.com/mcp",
     onInitialized: () => undefined,
   };
+
   const legacy: import("../types.js").Connection = {
     mode: "legacy",
     url: "https://example.com/mcp",
     onInitialized: () => undefined,
   };
+
   expectTypeOf(modern).toMatchTypeOf<import("../types.js").Connection>();
   expectTypeOf(legacy).toMatchTypeOf<import("../types.js").Connection>();
 });

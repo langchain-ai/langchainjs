@@ -740,6 +740,7 @@ export class MCPAdapter {
     connection: ResolvedStreamableHTTPConnection
   ): Promise<void> {
     const { url, transport: transportType } = connection;
+
     const automaticSSEFallback =
       connection.mode === "legacy" && connection.automaticSSEFallback;
 

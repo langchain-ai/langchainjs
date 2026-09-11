@@ -89,6 +89,7 @@ export class ConnectionManager {
         : type === "sse"
           ? await this.#createSSETransport(serverName, options)
           : await this.#createStdioTransport(options);
+
     // SDK LATEST_PROTOCOL_VERSION still names the legacy revision; pin the
     // modern revision explicitly so negotiation cannot fall back to legacy.
     const mcpClient = new MCPClient(
@@ -102,6 +103,7 @@ export class ConnectionManager {
         },
       }
     );
+
     await mcpClient.connect(transport);
 
     if (options.onMessage) {
