@@ -145,7 +145,7 @@ describe("catalog identity", () => {
     expect(
       (await adapter.getTools(["test"], { headers: { tenant: "one" } }))[0]
     ).toBe(first);
-    expect(list).toHaveBeenCalledTimes(2);
+    expect(list).toHaveBeenCalledTimes(3);
     await first.invoke({});
     await second.invoke({});
     expect(call.mock.contexts[0]).not.toBe(call.mock.contexts[1]);
@@ -211,7 +211,7 @@ test("partitions catalogs by OAuth provider identity even with identical headers
   expect(
     (await adapter.getTools(["test"], { authProvider: firstProvider }))[0]
   ).toBe(first);
-  expect(list).toHaveBeenCalledTimes(2);
+  expect(list).toHaveBeenCalledTimes(3);
   await adapter.close();
 });
 
@@ -251,7 +251,7 @@ test("tool catalog notifications invalidate only their connection identity", asy
   expect(
     (await adapter.getTools(["test"], { headers: { tenant: "two" } }))[0]
   ).toBe(second);
-  expect(list).toHaveBeenCalledTimes(3);
+  expect(list).toHaveBeenCalledTimes(4);
   await adapter.close();
 });
 
@@ -281,3 +281,43 @@ test("resource discovery failure is not an empty catalog", async () => {
     await adapter.close();
   }
 });
+
+test("consults SDK discovery again and preserves already-issued tools", async () => {
+  mockConnect();
+  const list = vi.spyOn(SDKClient.prototype, "listTools").mockResolvedValue({
+    tools: [{ name: "before", inputSchema: { type: "object" } }],
+  });
+  const adapter = new MCPAdapter({ servers: { test: connection } });
+  try {
+    const [before] = await adapter.getTools();
+    list.mockResolvedValue({
+      tools: [{ name: "after", inputSchema: { type: "object" } }],
+    });
+    const [after] = await adapter.getTools();
+    expect(after.name).toContain("after");
+    expect(before.name).toContain("before");
+  } finally {
+    await adapter.close();
+  }
+});
+
+test.each([
+  "use",
+  "refresh",
+  "bypass",
+] satisfies import("@modelcontextprotocol/client").CacheMode[])(
+  "forwards SDK cache policy %s",
+  async (cacheMode) => {
+    mockConnect();
+    const list = vi
+      .spyOn(SDKClient.prototype, "listTools")
+      .mockResolvedValue({ tools: [] });
+    const adapter = new MCPAdapter({ servers: { test: connection } });
+    try {
+      await adapter.getTools([], { cacheMode });
+      expect(list).toHaveBeenCalledWith(undefined, { cacheMode });
+    } finally {
+      await adapter.close();
+    }
+  }
+);

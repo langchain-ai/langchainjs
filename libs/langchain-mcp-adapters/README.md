@@ -926,7 +926,51 @@ credential storage, issuer/account isolation, PKCE state, and handing authorizat
 application. The adapter does not open a browser or host an authorization callback.
 
 The local acceptance suite verifies refresh, dynamic client registration (DCR), and selection of
-a client ID metadata document (CIMD) when advertised by the authorization server. Registration
-tests stop at the application authorization handoff; they do not claim an end-to-end login against
-a production identity provider. URL elicitation is a tool interaction and is separate from OAuth
+a client ID metadata document (CIMD) when advertised by the authorization server. Local tests also complete the authorization-code callback and reject mismatched state or issuer before token exchange; they do not claim interoperability with a production identity provider. URL elicitation is a tool interaction and is separate from OAuth
+connection authorization.
+
+### Discovery freshness
+
+`getTools()` consults the SDK cache on each discovery. The SDK owns cache hints,
+TTL, and pagination; the adapter reuses adapted tools while the cached descriptors
+remain the same. Tools already returned to a running agent are not mutated.
+
+```typescript
+const tools = await adapter.getTools([], { cacheMode: "refresh" });
+```
+
+Use `"use"` (default) to honor the SDK cache, `"refresh"` to fetch and update it,
+or `"bypass"` to fetch without reading or updating it. Keep each OAuth provider
+bound to one authorization identity; close and recreate the adapter when changing
+accounts, rather than changing the identity behind an existing provider.
+
+### Modern notifications and logging
+
+When a modern server advertises catalog change notifications, the adapter opens
+an SDK subscription for configured list-change callbacks. Closing the adapter
+closes its subscription; legacy servers continue using their existing notifications.
+A subscription setup failure rejects the connection rather than silently disabling
+requested callbacks.
+
+Set `logLevel: "info"` globally or per server to request modern tool-call logs.
+Without a level, modern servers omit request logs. `setLoggingLevel()` remains a
+legacy-only operation and rejects for modern connections before sending an RPC.
+
+### Complete an OAuth callback
+
+The application owns the redirect endpoint and a one-time state value bound to the
+initiating user. The provider must persist `saveDiscoveryState`/`discoveryState`,
+the PKCE verifier, and issuer-scoped client information and tokens.
+
+```typescript
+// callbackParams comes from your redirect URL. expectedState is retrieved from
+// your application's authorization attempt, bound to this user and consumed once.
+await adapter.finishAuth("oauth", callbackParams, expectedState);
+const tools = await adapter.getTools();
+```
+
+`finishAuth` checks state, delegates the full callback parameters (including `iss`)
+to the SDK, and discards the old connection/catalog after success. It never opens
+a browser or stores credentials. Start with a provider dedicated to this user;
+do not reuse one provider across accounts. URL elicitation remains separate from
 connection authorization.

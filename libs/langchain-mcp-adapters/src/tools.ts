@@ -13,6 +13,7 @@ import {
   toolCallResultModificationSchema,
 } from "./hooks.js";
 import type {
+  LoggingLevel,
   CallToolResult,
   ContentBlock as MCPContentBlock,
   Client as MCPClient,
@@ -787,6 +788,7 @@ function _convertCallToolResult({
  * @internal
  */
 type CallToolArgs = {
+  logLevel?: LoggingLevel;
   /**
    * The name of the server to call the tool on (used for error messages and logging)
    */
@@ -846,6 +848,7 @@ type ContentBlocksWithArtifacts = [
  * @returns A tuple of [textContent, nonTextContent]
  */
 async function _callTool({
+  logLevel,
   serverName,
   toolName,
   client,
@@ -952,6 +955,10 @@ async function _callTool({
       {
         name: toolName,
         arguments: finalArgs,
+        _meta:
+          logLevel !== undefined && finalClient.getProtocolEra() === "modern"
+            ? { "io.modelcontextprotocol/logLevel": logLevel }
+            : undefined,
       },
     ];
 
@@ -1057,6 +1064,17 @@ export async function loadMcpTools(
   client: MCPInstance,
   options?: LoadMcpToolsOptions
 ): Promise<DynamicStructuredTool[]> {
+  const { tools } = await client.listTools();
+  return convertMcpTools(serverName, client, tools, options);
+}
+
+/** @internal Adapt SDK-validated descriptors without issuing another discovery request. */
+export async function convertMcpTools(
+  serverName: string,
+  client: MCPInstance,
+  mcpTools: MCPTool[],
+  options?: LoadMcpToolsOptions
+): Promise<DynamicStructuredTool[]> {
   const {
     throwOnLoadError,
     prefixToolNameWithServerName,
@@ -1067,8 +1085,6 @@ export async function loadMcpTools(
     ...defaultLoadMcpToolsOptions,
     ...(options ?? {}),
   };
-
-  const { tools: mcpTools } = await client.listTools();
 
   debugLog(`INFO: Found ${mcpTools.length} MCP tools`);
 
@@ -1122,6 +1138,7 @@ export async function loadMcpTools(
                   hookState?: unknown
                 ) =>
                   _callTool({
+                    logLevel: options?.logLevel,
                     serverName,
                     inputValidator,
                     toolName: tool.name,

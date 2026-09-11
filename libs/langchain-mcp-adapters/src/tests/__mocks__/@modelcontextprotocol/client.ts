@@ -17,6 +17,9 @@ export const isSpecType = actual.isSpecType;
 export const fromJsonSchema = actual.fromJsonSchema;
 
 const clientPrototype = {
+  getProtocolEra: vi
+    .fn<InstanceType<typeof actual.Client>["getProtocolEra"]>()
+    .mockReturnValue("legacy"),
   connect: vi
     .fn<InstanceType<typeof actual.Client>["connect"]>()
     .mockResolvedValue(undefined),
