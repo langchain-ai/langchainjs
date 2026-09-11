@@ -1,9 +1,11 @@
-import { describe, test, expect, beforeEach, afterEach } from "vitest";
+import { Client } from "@modelcontextprotocol/client";
+import { loadMcpTools } from "../tools.js";
+import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import { Server } from "node:http";
 import { join } from "node:path";
 import { ToolMessage, BaseMessage } from "@langchain/core/messages";
 import { createAgent, FakeToolCallingModel } from "langchain";
-import { entrypoint } from "@langchain/langgraph";
+import { Command, GraphInterrupt, entrypoint } from "@langchain/langgraph";
 import type { RunnableConfig } from "@langchain/core/runnables";
 
 import { createDummyHttpServer } from "./fixtures/dummy-http-server.js";
@@ -429,4 +431,168 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
       await client.close();
     }
   });
+});
+
+describe("tool hook results", () => {
+  // Spy on SDK methods instead of replacing protocol types and validators.
+  function mockClient() {
+    const client = new Client({ name: "hook-test", version: "1" });
+    vi.spyOn(client, "listTools").mockResolvedValue({
+      tools: [{ name: "echo", inputSchema: { type: "object" } }],
+    });
+    vi.spyOn(client, "callTool").mockResolvedValue({
+      content: [{ type: "text", text: "ok" }],
+    });
+
+    return client;
+  }
+
+  test.each(
+    [false, 0, null, [], { value: 1 }].map((structuredContent) => ({
+      structuredContent,
+    }))
+  )(
+    "preserves structured data $structuredContent through a no-op hook",
+    async ({ structuredContent }) => {
+      const client = mockClient();
+      vi.mocked(client.callTool).mockResolvedValue({
+        content: [{ type: "text", text: "ok" }],
+        structuredContent,
+        _meta: { private: "metadata" },
+      });
+
+      const [tool] = await loadMcpTools("test", client, {
+        afterToolCall: ({ result }) => ({ result }),
+      });
+
+      const output = await tool.invoke({
+        type: "tool_call",
+        id: "call",
+        name: "echo",
+        args: {},
+      });
+
+      expect(ToolMessage.isInstance(output)).toBe(true);
+      expect(output.content).toBe("ok");
+      expect(output.artifact).toEqual(
+        expect.arrayContaining([
+          { type: "mcp_structured_content", data: structuredContent },
+          { type: "mcp_meta", data: { private: "metadata" } },
+        ])
+      );
+    }
+  );
+
+  test("preserves native ToolMessage identity and error status", async () => {
+    const message = new ToolMessage({
+      content: "denied",
+      tool_call_id: "original",
+      status: "error",
+      artifact: { reason: "policy" },
+    });
+
+    const [tool] = await loadMcpTools("test", mockClient(), {
+      afterToolCall: () => ({ result: message }),
+    });
+
+    expect(
+      await tool.invoke({
+        type: "tool_call",
+        id: "call",
+        name: "echo",
+        args: {},
+      })
+    ).toBe(message);
+  });
+
+  test("preserves native Commands", async () => {
+    const command = new Command({ update: { approved: true } });
+
+    const [tool] = await loadMcpTools("test", mockClient(), {
+      afterToolCall: () => ({ result: command }),
+    });
+
+    expect(await tool.invoke({})).toBe(command);
+  });
+
+  test("does not wrap GraphInterrupt", async () => {
+    const interrupt = new GraphInterrupt([
+      { value: "approval", id: "approval" },
+    ]);
+
+    const [tool] = await loadMcpTools("test", mockClient(), {
+      beforeToolCall: () => {
+        throw interrupt;
+      },
+    });
+
+    await expect(tool.invoke({})).rejects.toBe(interrupt);
+  });
+  test.each([true, false])(
+    "preserves resource provenance without reading resources (standard=%s)",
+    async (useStandardContentBlocks) => {
+      const client = mockClient();
+      const read = vi.spyOn(client, "readResource");
+
+      const content = [
+        {
+          type: "resource",
+          resource: {
+            uri: "memory://embedded",
+            text: "embedded",
+            mimeType: "text/plain",
+            _meta: { private: true },
+          },
+        },
+        {
+          type: "resource_link",
+          uri: "memory://reference",
+          name: "reference",
+          _meta: { private: true },
+        },
+      ] satisfies Awaited<ReturnType<Client["callTool"]>>["content"];
+
+      vi.mocked(client.callTool).mockResolvedValue({ content });
+
+      const [tool] = await loadMcpTools("test", client, {
+        useStandardContentBlocks,
+        outputHandling: "content",
+        afterToolCall: ({ result }) => ({ result }),
+      });
+
+      const output = await tool.invoke({
+        type: "tool_call",
+        name: "echo",
+        id: "call",
+        args: {},
+      });
+
+      expect(output.artifact).toEqual(
+        content.map((data) => ({ type: "mcp_content", data }))
+      );
+      expect(JSON.stringify(output.content)).not.toContain("private");
+      expect(JSON.stringify(output.content)).toContain("memory://embedded");
+      expect(read).not.toHaveBeenCalled();
+    }
+  );
+
+  test("does not invent structured output when it is absent", async () => {
+    const client = mockClient();
+
+    const [tool] = await loadMcpTools("test", client, {
+      afterToolCall: ({ result }) => ({ result }),
+    });
+
+    const output = await tool.invoke({
+      type: "tool_call",
+      id: "call",
+      name: "echo",
+      args: {},
+    });
+
+    expect(output.content).toBe("ok");
+    expect(output.artifact).toEqual([]);
+  });
+
+  afterEach(() => vi.restoreAllMocks());
 });

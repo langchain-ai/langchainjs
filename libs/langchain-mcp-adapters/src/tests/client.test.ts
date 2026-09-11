@@ -1,5 +1,6 @@
 import {
   Client as SDKClient,
+  type Tool,
   InMemoryTransport,
 } from "@modelcontextprotocol/client";
 import { McpServer } from "@modelcontextprotocol/server";
@@ -2666,4 +2667,195 @@ describe("MultiServerMCPClient Integration Tests", () => {
       );
     });
   });
+});
+
+describe("server tool schemas", () => {
+  // Spy on SDK methods instead of replacing protocol types and validators.
+  function mockClient(inputSchema: Tool["inputSchema"] = { type: "object" }) {
+    const client = new SDKClient({ name: "schema-test", version: "1" });
+    vi.spyOn(client, "listTools").mockResolvedValue({
+      tools: [{ name: "echo", inputSchema }],
+    });
+    vi.spyOn(client, "callTool").mockResolvedValue({
+      content: [{ type: "text", text: "ok" }],
+    });
+
+    return client;
+  }
+
+  describe("original server schema", () => {
+    it("does not mutate descriptors without properties", async () => {
+      const schema = Object.freeze({
+        type: "object",
+      } satisfies Tool["inputSchema"]);
+
+      await expect(
+        loadMcpTools("test", mockClient(schema))
+      ).resolves.toHaveLength(1);
+      expect(schema).toEqual({ type: "object" });
+    });
+
+    it("validates hook overrides against constraints removed from model projection", async () => {
+      const client = mockClient({
+        type: "object",
+        properties: { value: { type: "number" } },
+        required: ["value"],
+        not: { properties: { value: { const: 2 } } },
+      });
+
+      const [tool] = await loadMcpTools("test", client, {
+        beforeToolCall: () => ({ args: { value: 2 } }),
+      });
+
+      await expect(tool.invoke({ value: 1 })).rejects.toThrow(/arguments/);
+      expect(client.callTool).not.toHaveBeenCalled();
+    });
+
+    it("accepts valid effective arguments with local references", async () => {
+      const client = mockClient({
+        type: "object",
+        $defs: { value: { type: "integer", minimum: 1 } },
+        properties: { value: { $ref: "#/$defs/value" } },
+        required: ["value"],
+        additionalProperties: false,
+      });
+
+      const [tool] = await loadMcpTools("test", client, {
+        beforeToolCall: () => ({ args: { value: 3 } }),
+      });
+
+      expect(await tool.invoke({ value: 1 })).toBe("ok");
+      expect(client.callTool).toHaveBeenCalledWith({
+        name: "echo",
+        arguments: { value: 3 },
+      });
+    });
+  });
+
+  it.each([
+    {
+      constraint: {
+        anyOf: [
+          { properties: { value: { const: 1 } } },
+          { properties: { value: { const: 3 } } },
+        ],
+      },
+      value: 2,
+    },
+    {
+      constraint: {
+        oneOf: [
+          { properties: { value: { minimum: 1 } } },
+          { properties: { value: { minimum: 2 } } },
+        ],
+      },
+      value: 3,
+    },
+    {
+      constraint: {
+        allOf: [
+          { properties: { value: { minimum: 1 } } },
+          { properties: { value: { maximum: 2 } } },
+        ],
+      },
+      value: 3,
+    },
+    {
+      constraint: {
+        if: { properties: { value: { minimum: 2 } } },
+        then: { properties: { value: { minimum: 4 } } },
+      },
+      value: 3,
+    },
+  ])(
+    "validates effective arguments against $constraint",
+    async ({ constraint, value }) => {
+      const client = mockClient({
+        type: "object",
+        properties: { value: { type: "number" } },
+        ...constraint,
+      });
+
+      const [tool] = await loadMcpTools("test", client, {
+        beforeToolCall: () => ({ args: { value } }),
+      });
+
+      await expect(tool.invoke({ value: 1 })).rejects.toThrow(/arguments/);
+      expect(client.callTool).not.toHaveBeenCalled();
+    }
+  );
+
+  it("rejects additional properties added by a hook", async () => {
+    const client = mockClient({
+      type: "object",
+      properties: {},
+      additionalProperties: false,
+    });
+
+    const [tool] = await loadMcpTools("test", client, {
+      beforeToolCall: () => ({ args: { injected: true } }),
+    });
+
+    await expect(tool.invoke({})).rejects.toThrow(/additional properties/);
+    expect(client.callTool).not.toHaveBeenCalled();
+  });
+
+  it("rejects a required value removed by a hook", async () => {
+    const client = mockClient({
+      type: "object",
+      properties: { value: { type: "string" } },
+      required: ["value"],
+    });
+
+    const [tool] = await loadMcpTools("test", client, {
+      beforeToolCall: () => ({ args: { value: undefined } }),
+    });
+
+    await expect(tool.invoke({ value: "original" })).rejects.toThrow(
+      /arguments/
+    );
+    expect(client.callTool).not.toHaveBeenCalled();
+  });
+
+  describe("validator identity", () => {
+    function descriptor(id: string, forbidden: number): Tool["inputSchema"] {
+      return {
+        $id: id,
+        type: "object",
+        properties: { value: { type: "number" } },
+        $defs: { forbidden: { properties: { value: { const: forbidden } } } },
+        not: { $ref: "#/$defs/forbidden" },
+      };
+    }
+
+    it("isolates servers advertising different constraints under the same schema ID", async () => {
+      const id = "https://example.com/schema/shared";
+      const firstClient = mockClient(descriptor(id, 2));
+      const secondClient = mockClient(descriptor(id, 1));
+      const [first] = await loadMcpTools("first", firstClient);
+      const [second] = await loadMcpTools("second", secondClient);
+      await expect(second.invoke({ value: 1 })).rejects.toThrow(/arguments/);
+      expect(secondClient.callTool).not.toHaveBeenCalled();
+      expect(await second.invoke({ value: 2 })).toBe("ok");
+      expect(await first.invoke({ value: 1 })).toBe("ok");
+      await expect(first.invoke({ value: 2 })).rejects.toThrow(/arguments/);
+    });
+
+    it("recompiles changed constraints on rediscovery without changing existing tools", async () => {
+      const id = "https://example.com/schema/refreshed";
+      const client = mockClient(descriptor(id, 2));
+      const [original] = await loadMcpTools("test", client);
+      vi.mocked(client.listTools).mockResolvedValue({
+        tools: [{ name: "echo", inputSchema: descriptor(id, 1) }],
+      });
+      const [refreshed] = await loadMcpTools("test", client);
+      await expect(refreshed.invoke({ value: 1 })).rejects.toThrow(/arguments/);
+      expect(client.callTool).not.toHaveBeenCalled();
+      expect(await refreshed.invoke({ value: 2 })).toBe("ok");
+      expect(await original.invoke({ value: 1 })).toBe("ok");
+      await expect(original.invoke({ value: 2 })).rejects.toThrow(/arguments/);
+    });
+  });
+
+  afterEach(() => vi.restoreAllMocks());
 });

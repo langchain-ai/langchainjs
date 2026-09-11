@@ -1,6 +1,7 @@
-import { describe, expect, test } from "vitest";
+import { Client } from "@modelcontextprotocol/client";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import { z } from "zod";
-import { ToolException } from "../tools.js";
+import { ToolException, loadMcpTools } from "../tools.js";
 
 describe("ToolException error formatting", () => {
   test("formats parsed Zod issues with their nested paths", () => {
@@ -44,4 +45,36 @@ describe("ToolException error formatting", () => {
     expect(new ToolException("Failure", null).cause).toBeNull();
     expect(new ToolException("Failure", false).cause).toBe(false);
   });
+});
+
+describe("tool invocation errors", () => {
+  test("preserves semantic error envelopes and transport causes separately", async () => {
+    const client = new Client({ name: "error-test", version: "1" });
+    vi.spyOn(client, "listTools").mockResolvedValue({
+      tools: [{ name: "echo", inputSchema: { type: "object" } }],
+    });
+    vi.spyOn(client, "callTool");
+
+    const result = {
+      isError: true,
+      content: [{ type: "text", text: "denied" }],
+      structuredContent: false,
+      _meta: { reason: "policy" },
+    } satisfies Awaited<ReturnType<Client["callTool"]>>;
+
+    vi.mocked(client.callTool).mockResolvedValueOnce(result);
+    const [tool] = await loadMcpTools("test", client);
+    await expect(tool.invoke({})).rejects.toMatchObject({
+      name: "ToolException",
+      result,
+    });
+    const failure = new Error("connection lost");
+    vi.mocked(client.callTool).mockRejectedValueOnce(failure);
+    await expect(tool.invoke({})).rejects.toMatchObject({
+      name: "ToolException",
+      cause: failure,
+    });
+  });
+
+  afterEach(() => vi.restoreAllMocks());
 });
