@@ -339,7 +339,7 @@ Notes:
 ## Tool Configuration Options
 
 > [!TIP]
-> Tool content always uses standard LangChain blocks. Use `outputHandling` to choose which outputs reach the model.
+> Tool content uses standard LangChain blocks. Use `outputHandling` to choose which outputs reach the model.
 
 When loading MCP tools either directly through `loadMcpTools` or via `MCPAdapter`, you can configure the following options:
 
@@ -357,24 +357,32 @@ When loading MCP tools either directly through `loadMcpTools` or via `MCPAdapter
 > [!TIP]
 > This section is important if you are working with multimodal tools, tools that produce embedded resources, or tools that produce large outputs that you may not want to be included in LLM input context. If you are writing a new application that only works with tools that produce simple text or JSON output, leave `outputHandling` undefined to use the defaults.
 
-MCP tools return arrays of content blocks. A content block can contain text, an image, audio, or an embedded resource. The right way to map these outputs into LangChain `ToolMessage` objects can differ based on the needs of your application, which is why the adapter provides the `outputHandling` option.
+MCP tools return arrays of content blocks. A content block can contain text, an image, audio, or an embedded resource. The right way to map these outputs into LangChain `ToolMessage` objects can differ based on the needs of your application, which is why the adapter provides the `outputHandling` configuration option.
 
-The `outputHandling` field allows you to specify whether a given type of content should be sent to the LLM, or set aside for some other part of your application to use in some future processing step (e.g. to use a dataframe from a database query in a code execution environment).
+Content blocks use the standard LangChain format recognized by chat model integrations. The `outputHandling` field allows you to specify whether a given type of content should be sent to the LLM, or set aside for some other part of your application to use in some future processing step (e.g. to use a dataframe from a database query in a code execution environment).
 
 ### Standardizing the Format of Tool Outputs
 
-LangChain core introduced standard multimodal blocks in version 0.3.48. Earlier
-adapter releases offered `useStandardContentBlocks` to opt into those formats
-while retaining older provider-specific shapes. This major release removes that
-toggle: images and audio now use `{ type, data, mimeType }` blocks. Update code
-that reads `image_url`, `source_type`, or `mime_type` to the standard fields.
+LangChain core introduced standard multimodal content blocks in version 0.3.48.
+Earlier adapter releases offered `useStandardContentBlocks` to opt into those
+formats while retaining older provider-specific shapes. This major release
+removes that toggle. Model-visible images and audio use LangChain's native blocks:
+`{ type: "image", data, mimeType }` and `{ type: "audio", data, mimeType }`.
+A single plain text result remains a string. Embedded text retains its resource
+URI in metadata; binary resources become image, audio or file blocks by MIME type.
 
-Text stays text, and embedded resources are converted according to their MIME
-type. Artifact-routed blocks retain their original MCP format. Conversion does
-not fetch resource links; call `readResource` explicitly when needed.
+`outputHandling` selects what reaches the model. Artifact-routed blocks retain
+their MCP shape. Converted resources
+and blocks with extra protocol fields retain an original copy in an
+`{ type: "mcp_content", data }` artifact. Structured data and result metadata use
+`mcp_structured_content` and `mcp_meta` artifacts, including `false`, `0`, `null`
+and empty arrays. Result `_meta` is never appended to model-visible text.
 
-A single plain-text result is returned as a string. Other content is returned as
-an array of blocks; `ToolMessage.artifact` holds outputs routed away from the model.
+Conversion does not fetch resource links. Use `adapter.readResource(server, uri)`
+explicitly when your application needs a resource's contents.
+
+When upgrading, remove `useStandardContentBlocks` from configuration and update
+code that reads `image_url`, `source_type`, or `mime_type` to the standard fields.
 
 ### Determining Which Tool Outputs will be Visible to the LLM
 
@@ -644,36 +652,44 @@ The library provides different error types to help with debugging:
 Example error handling:
 
 ```ts
-import { MCPAdapter } from "@langchain/mcp-adapters";
 import { isInteropZodError } from "@langchain/core/utils/types";
+import { MCPAdapter, isToolException } from "@langchain/mcp-adapters";
 
-let client: MCPAdapter | undefined;
+let adapter: MCPAdapter | undefined;
 try {
-  client = new MCPAdapter({
+  adapter = new MCPAdapter({
     servers: {
       math: {
         mode: "legacy",
         transport: "stdio",
-        command: "npx",
-        args: ["-y", "@modelcontextprotocol/server-math"],
+        command: "node",
+        args: ["./math-server.js"],
       },
     },
   });
-
-  const [tool] = await client.listTools();
+  const [tool] = await adapter.listTools();
   if (!tool) throw new Error("No tools available");
-  console.log(await tool.invoke({ expression: "1 + 2" }));
+  await tool.invoke({ expression: "1 + 2" });
 } catch (error) {
-  if (isInteropZodError(error)) {
+  if (isToolException(error)) {
+    console.error("Tool execution failed:", error.message);
+    if (isInteropZodError(error.cause)) {
+      console.error("Validation details:", error.cause);
+    }
+  } else if (isInteropZodError(error)) {
     console.error("Configuration error:", error);
   } else {
-    // Connection and tool errors retain their original cause for inspection.
-    console.error("MCP operation failed:", error);
+    console.error("Connection or other error:", error);
   }
 } finally {
-  await client?.close();
+  await adapter?.close();
 }
 ```
+
+Configuration validation throws Zod4 errors directly. Tool execution wraps
+validation failures in `ToolException`, preserving the original Zod error as
+`cause`. SDK argument-validation issues become Zod4 custom issues with their
+messages and paths. Server and transport failures are not Zod validation errors.
 
 ### Common Zod Validation Errors
 
@@ -683,21 +699,9 @@ The library uses Zod for validating configuration. Here are some common validati
 - **Invalid parameter types**: For example, providing a number where a string is expected
 - **Invalid connection configuration**: For example, using an invalid URL format for SSE transport
 
-Example Zod error for an invalid SSE URL:
-
-```json
-{
-  "issues": [
-    {
-      "code": "invalid_string",
-      "validation": "url",
-      "path": ["mcpServers", "weather", "url"],
-      "message": "Invalid url"
-    }
-  ],
-  "name": "ZodError"
-}
-```
+Inspect `error.issues` for structured paths and messages rather than matching
+formatted error text. Use `z.prettifyError(error)` for a readable display. Zod4
+issue codes differ from Zod3; avoid relying on the old `invalid_string` URL code.
 
 ### Connection Error Handling
 
@@ -804,3 +808,35 @@ Big thanks to [@vrknetha](https://github.com/vrknetha), [@knacklabs](https://www
 ## Contributing
 
 Contributions are welcome! Please check out our [contributing guidelines](CONTRIBUTING.md) for more information.
+
+### Discovery freshness
+
+`getTools()` consults the SDK cache on each discovery. The SDK owns cache hints,
+TTL, and pagination; the adapter reuses adapted tools while the cached descriptors
+remain the same. Tools already returned to a running agent are not mutated.
+
+```typescript
+const tools = await adapter.getTools([], { cacheMode: "refresh" });
+```
+
+Use `"use"` (default) to honor the SDK cache, `"refresh"` to fetch and update it,
+or `"bypass"` to fetch without reading or updating it. Keep each OAuth provider
+bound to one authorization identity; close and recreate the adapter when changing
+accounts, rather than changing the identity behind an existing provider.
+
+## Server tool schemas
+
+Tools expose the server's JSON Schema unchanged, including references, unions,
+and conditional constraints. The adapter does not simplify schemas for a model
+provider. Check the chosen provider's supported schema subset before binding
+tools; the Anthropic integration omits tools with root-level `allOf`, `anyOf`, or
+`oneOf`.
+
+Prefer a compatible schema on the server. If the model needs a different schema,
+set the returned tool's `schema` explicitly before binding it. Core uses that
+schema for initial input validation; the adapter still validates post-hook
+arguments against an independent copy of the original server schema.
+
+`ToolException` requires `@langchain/core ^1.2.6`. Use
+`ToolException.isInstance(error)` or `isToolException(error)` to identify it;
+name-only objects are not treated as adapter errors.

@@ -13,6 +13,8 @@ export const SdkHttpError = actual.SdkHttpError;
 
 export const isSpecType = actual.isSpecType;
 
+export const fromJsonSchema = actual.fromJsonSchema;
+
 const clientPrototype = {
   connect: vi
     .fn<InstanceType<typeof actual.Client>["connect"]>()

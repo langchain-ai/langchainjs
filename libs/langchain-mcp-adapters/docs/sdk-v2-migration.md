@@ -8,7 +8,7 @@ mean a server uses the modern wire protocol.
 
 ## Applications using the adapter
 
-The names `MultiServerMCPClient`, `mcpServers`, and `getTools()` remain compatibility
+The names `MultiServerMCPClient`, `mcpServers`, and `listTools()` remain compatibility
 aliases, but their configurations follow the same new mode validation. Applications using these APIs do not need to construct an SDK client.
 
 ## Applications supplying an SDK client
@@ -132,14 +132,81 @@ including arrays and primitives from functional entrypoints. Narrow or parse it
 using your application schema before accessing fields. Calls outside LangGraph
 continue to receive `{}`.
 
-## Standard tool content
+## Tool results, hooks and schemas
 
-Remove `useStandardContentBlocks` from adapter and `loadMcpTools` options. Tool
-content always uses standard LangChain blocks: images and audio expose `data`
-and `mimeType`, replacing `image_url`, `source_type`, and `mime_type` shapes.
-`outputHandling` still selects content versus artifact destinations. Artifact
-blocks retain their MCP representation. Resource conversion no longer fetches
-URIs implicitly; use `readResource` explicitly when needed.
+Tool content always uses standard LangChain blocks. Remove the
+`useStandardContentBlocks` option from configuration. Images/audio use `data`
+and `mimeType`; update code that reads the old `image_url`, `source_type`, or
+`mime_type` fields. Artifact-routed blocks retain their original MCP shapes.
+
+Keep protocol data in `ToolMessage.artifact`, not model-visible content:
+
+| Artifact type            | Data                                                              |
+| ------------------------ | ----------------------------------------------------------------- |
+| `mcp_structured_content` | Structured output, including false, zero, null and arrays         |
+| `mcp_meta`               | The result's `_meta` object                                       |
+| `mcp_content`            | Original converted resources or blocks with extra protocol fields |
+
+Blocks explicitly routed to artifacts remain in their original MCP format.
+A no-op `afterToolCall` preserves these artifacts. Returning a `ToolMessage` or
+LangGraph `Command` preserves that object, including message status and identity.
+Graph interrupts propagate unchanged. A server result with `isError: true`
+throws `ToolException` with the original response in `error.result`; transport
+failures retain their original cause. Validation failures retain the original Zod error in
+`error.cause`, including its structured `issues`. SDK argument-validation issues
+are represented as Zod4 custom issues, preserving messages and paths. Catch the
+outer tool failure using exported `isToolException`.
+
+Arguments modified by `beforeToolCall` are now checked against the **original
+server JSON Schema** before being sent. For example, a hook adding an undeclared
+property fails if the server declares `additionalProperties: false`, even if the
+model-facing schema override accepts it. Original descriptors are not mutated.
+
+The adapter no longer flattens `allOf`/`anyOf`/`oneOf`, inlines `$ref`, or removes
+conditional keywords. `tool.schema` preserves the server's JSON Schema. Your
+model provider must support that schema: the Anthropic integration, for example,
+omits tools containing root-level composition keywords. Publish a compatible
+schema on the server, or explicitly set `tool.schema` before binding the tool to
+your model. That override does not weaken post-hook validation against the
+original server schema.
+
+Core validates initial arguments against `tool.schema` before hooks run. Inputs
+that previously passed a simplified schema may now fail before `beforeToolCall`.
+Do not rely on hooks to repair initially invalid input unless you intentionally
+provide a different model-facing schema.
+
+The minimum core version is now `1.2.6`. `ToolException` extends core's branded
+`LangChainError`; use `ToolException.isInstance(error)` or `isToolException(error)`
+to narrow it. Both recognize errors from duplicate adapter modules but reject
+name-only lookalikes. Zod issue formatting, `cause`, and `result` are preserved.
+
+## Connection and discovery behavior
+
+Tools and connections are isolated by server name, effective headers and OAuth
+provider identity. Configured headers take precedence over discovery overrides;
+an invocation hook's headers override its existing connection's headers. Empty
+fork overrides reuse the existing client. Default lookups cannot select another
+request's identity. A tools-list notification invalidates only that connection's
+catalog; separate OAuth providers remain separate even if their headers match.
+
+Concurrent acquisition is deduplicated. Failed handshakes and failed discovery
+release owned connections, and closing attempts every connection even if one
+fails. Clients supplied to `loadMcpTools` remain owned by the caller.
+
+Tool, resource, and template discovery delegates pagination to the SDK. Server
+errors reject instead of appearing as an empty catalog. Resource conversion
+never performs implicit reads; explicitly call
+`readResource` if needed. Modern servers use the current revision by default; legacy servers require
+`mode: "legacy"`. Durable modern elicitation is introduced separately.
+
+### Discovery freshness
+
+`listTools()` consults the SDK cache each time and reuses adapted tools when the
+returned descriptors are unchanged. The default `cacheMode: "use"` honors SDK
+cache hints and TTL. Pass `listTools([], { cacheMode: "refresh" })` to fetch and
+update the cache, or `"bypass"` to fetch without updating it. Existing tools held
+by an agent are not mutated. Close and recreate the adapter when changing the
+account associated with an OAuth provider.
 
 ## Separate modern and legacy server options
 
