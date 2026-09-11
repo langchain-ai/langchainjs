@@ -2,13 +2,14 @@
 
 The adapter uses the stable `@modelcontextprotocol/client` 2.x package. Existing
 legacy MCP servers remain supported over stdio, Streamable HTTP, and legacy SSE.
-The SDK upgrade preserves legacy negotiation by default; modern protocol support
-and elicitation require separate adapter features.
+Connections now default to modern protocol negotiation. Add `mode: "legacy"`
+to each existing legacy server configuration; SDK package version 2 does not
+mean a server uses the modern wire protocol.
 
 ## Applications using the adapter
 
-Existing `MultiServerMCPClient` configuration, `getTools()`, and `close()` remain
-available. Applications using these APIs do not need to construct an SDK client.
+The names `MultiServerMCPClient`, `mcpServers`, and `getTools()` remain compatibility
+aliases, but their configurations follow the same new mode validation. Applications using these APIs do not need to construct an SDK client.
 
 ## Applications supplying an SDK client
 
@@ -68,7 +69,7 @@ existing Node version requirement remains unchanged.
 ## Canonical API and Zod4
 
 Rename `MultiServerMCPClient` to `MCPAdapter` and the configuration key
-`mcpServers` to `servers`. Keep `getTools()`, native LangChain tools and `close()`:
+`mcpServers` to `servers`. Prefer `listTools()`; native LangChain tools and `close()` remain:
 
 ```ts
 import { MCPAdapter } from "@langchain/mcp-adapters";
@@ -79,7 +80,7 @@ const adapter = new MCPAdapter({
   },
 });
 try {
-  const tools = await adapter.getTools();
+  const tools = await adapter.listTools();
   console.log(tools.map((tool) => tool.name));
 } finally {
   await adapter.close();
@@ -87,7 +88,7 @@ try {
 ```
 
 The old class name is the same constructor, not a second implementation. Legacy
-configuration remains accepted. Use one server-map spelling and one transport
+configuration names remain accepted; they do not bypass protocol validation. Use one server-map spelling and one transport
 selection; conflicting forms and connections combining `command` with `url` fail during construction. Legacy `type` is
 normalized to a required `transport` discriminator in the resolved configuration.
 Use `connection.transport` to narrow resolved stdio, HTTP, or SSE options;
@@ -139,3 +140,32 @@ and `mimeType`, replacing `image_url`, `source_type`, and `mime_type` shapes.
 `outputHandling` still selects content versus artifact destinations. Artifact
 blocks retain their MCP representation. Resource conversion no longer fetches
 URIs implicitly; use `readResource` explicitly when needed.
+
+## Separate modern and legacy server options
+
+```ts
+const adapter = new MCPAdapter({
+  servers: {
+    modern: { url: "https://example.com/mcp" },
+    legacy: {
+      mode: "legacy",
+      url: "https://legacy.example.com/mcp",
+      automaticSSEFallback: true,
+      onMessage: (message) => console.log(message.data),
+    },
+  },
+});
+```
+
+Omitting `mode` means `"modern"`. Modern connections require the SDK's current
+modern protocol revision; there is no automatic fallback into legacy behavior.
+Explicit legacy mode supports stdio, Streamable HTTP, and SSE. `transport: "sse"`,
+`automaticSSEFallback`, and `onInitialized` require legacy mode. Invalid mode and
+transport combinations, unknown options, and empty server maps fail with Zod
+errors before opening a connection.
+
+Move notification and progress callbacks from the adapter root into each server
+that should receive them. Global LangChain tool hooks and naming/output policies
+remain available. `onRootsListChanged` has been removed: roots notifications
+originate from the client. Use tool arguments, resource URIs, or server
+configuration to supply workspace paths instead.

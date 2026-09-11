@@ -1,18 +1,19 @@
 /**
  * Basic example showing how to use beforeToolCall and afterToolCall hooks
- * with the MultiServerMCPClient.
+ * with the MCPAdapter.
  *
  * This example connects to the official Filesystem MCP server over stdio,
  * then demonstrates:
  * - beforeToolCall: modifying tool arguments prior to invocation
  * - afterToolCall: modifying the tool result after invocation
  */
-import { MultiServerMCPClient } from "../src/index.js";
+import { MCPAdapter } from "../src/index.js";
 
 // Create MCP client with global interceptors
-const client = new MultiServerMCPClient({
-  mcpServers: {
+const client = new MCPAdapter({
+  servers: {
     filesystem: {
+      mode: "legacy",
       transport: "stdio" as const,
       command: "npx",
       args: ["-y", "@modelcontextprotocol/server-filesystem", "./"],
@@ -45,7 +46,7 @@ const client = new MultiServerMCPClient({
 
 try {
   console.log("Initializing MCP client and discovering tools...");
-  const tools = await client.getTools();
+  const tools = await client.listTools();
 
   // Find the filesystem tool we want to demonstrate
   const listDir = tools.find((t) => t.name.includes("list_directory"));

@@ -750,7 +750,6 @@ async function _convertCallToolResult({
     });
   }
 
-  // If we have structuredContent or meta, create an enhanced content that includes all info
   const firstBlock = convertedContent[0];
 
   if (
@@ -766,18 +765,6 @@ async function _convertCallToolResult({
     } satisfies ContentBlock.Text;
 
     const textContent = textBlock.text;
-
-    // If we have structuredContent or meta, wrap the content with additional info
-    if (structuredContent || meta) {
-      return [
-        {
-          ...textBlock,
-          ...(structuredContent ? { structuredContent } : {}),
-          ...(meta ? { meta } : {}),
-        } satisfies ExtendedContent,
-        enhancedArtifacts,
-      ];
-    }
 
     return [textContent, enhancedArtifacts];
   }

@@ -9,7 +9,7 @@ import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 
 // Import modules after mocking
 import type { Connection } from "../types.js";
-import { MultiServerMCPClient, MCPClientError } from "../client.js";
+import { MultiServerMCPClient } from "../client.js";
 
 vi.mock(
   "@modelcontextprotocol/client",
@@ -27,17 +27,18 @@ beforeEach(() => {
 describe("MultiServerMCPClient", () => {
   describe("Constructor", () => {
     test("should throw when initialized with empty connections", async () => {
-      expect(() => new MultiServerMCPClient({})).toThrow(MCPClientError);
+      expect(() => new MultiServerMCPClient({})).toThrow(ZodError);
     });
 
     test("should process valid stdio connection config", async () => {
       const config = {
         "test-server": {
+          mode: "legacy",
           transport: "stdio" as const,
           command: "python",
           args: ["./script.py"],
         },
-      };
+      } satisfies Record<string, Connection>;
 
       const client = new MultiServerMCPClient(config);
       expect(client).toBeDefined();
@@ -51,10 +52,11 @@ describe("MultiServerMCPClient", () => {
     test("should process valid streamable HTTP connection config", async () => {
       const config = {
         "test-server": {
+          mode: "legacy",
           transport: "http" as const,
           url: "http://localhost:8000/mcp",
         },
-      };
+      } satisfies Record<string, Connection>;
 
       const client = new MultiServerMCPClient(config);
       expect(client).toBeDefined();
@@ -68,12 +70,12 @@ describe("MultiServerMCPClient", () => {
     test("should process valid SSE connection config", async () => {
       const config = {
         "test-server": {
+          mode: "legacy",
           transport: "sse" as const,
           url: "http://localhost:8000/sse",
           headers: { Authorization: "Bearer token" },
-          useNodeEventSource: true,
         },
-      };
+      } satisfies Record<string, Connection>;
 
       const client = new MultiServerMCPClient(config);
       expect(client).toBeDefined();
@@ -112,6 +114,7 @@ describe("MultiServerMCPClient", () => {
       // Create a client instance with the config
       const client = new MultiServerMCPClient({
         "stdio-server": {
+          mode: "legacy",
           transport: "stdio" as const,
           command: "python",
           args: ["./script.py"],
@@ -141,6 +144,7 @@ describe("MultiServerMCPClient", () => {
       // Create a client instance with the config
       const client = new MultiServerMCPClient({
         "sse-server": {
+          mode: "legacy",
           transport: "sse" as const,
           url: "http://example.com/sse",
         },
@@ -168,6 +172,7 @@ describe("MultiServerMCPClient", () => {
 
       const client = new MultiServerMCPClient({
         "test-server": {
+          mode: "legacy",
           transport: "stdio" as const,
           command: "python",
           args: ["./script.py"],
@@ -186,6 +191,7 @@ describe("MultiServerMCPClient", () => {
 
       const client = new MultiServerMCPClient({
         "test-server": {
+          mode: "legacy",
           transport: "stdio" as const,
           command: "python",
           args: ["./script.py"],
@@ -201,6 +207,7 @@ describe("MultiServerMCPClient", () => {
     test("should attempt to reconnect stdio transport when enabled", async () => {
       const client = new MultiServerMCPClient({
         "test-server": {
+          mode: "legacy",
           transport: "stdio" as const,
           command: "python",
           args: ["./script.py"],
@@ -242,6 +249,7 @@ describe("MultiServerMCPClient", () => {
     test("should attempt to reconnect SSE transport when enabled", async () => {
       const client = new MultiServerMCPClient({
         "test-server": {
+          mode: "legacy",
           transport: "sse" as const,
           url: "http://localhost:8000/sse",
           reconnect: {
@@ -284,6 +292,7 @@ describe("MultiServerMCPClient", () => {
       const maxAttempts = 2;
       const client = new MultiServerMCPClient({
         "test-server": {
+          mode: "legacy",
           transport: "stdio" as const,
           command: "python",
           args: ["./script.py"],
@@ -337,6 +346,7 @@ describe("MultiServerMCPClient", () => {
 
       const client = new MultiServerMCPClient({
         server1: {
+          mode: "legacy",
           transport: "stdio" as const,
           command: "python",
           args: ["./script1.py"],
@@ -369,6 +379,7 @@ describe("MultiServerMCPClient", () => {
     test("should get client for a specific server", async () => {
       const client = new MultiServerMCPClient({
         "test-server": {
+          mode: "legacy",
           transport: "stdio" as const,
           command: "python",
           args: ["./script.py"],
@@ -390,11 +401,13 @@ describe("MultiServerMCPClient", () => {
     test("should close all connections properly", async () => {
       const client = new MultiServerMCPClient({
         "stdio-server": {
+          mode: "legacy",
           transport: "stdio" as const,
           command: "python",
           args: ["./script1.py"],
         },
         "sse-server": {
+          mode: "legacy",
           transport: "sse" as const,
           url: "http://localhost:8000/sse",
         },
@@ -415,6 +428,7 @@ describe("MultiServerMCPClient", () => {
 
       const client = new MultiServerMCPClient({
         "test-server": {
+          mode: "legacy",
           transport: "stdio" as const,
           command: "python",
           args: ["./script.py"],
@@ -438,11 +452,13 @@ describe("MultiServerMCPClient", () => {
 
       const client = new MultiServerMCPClient({
         "stdio-server": {
+          mode: "legacy",
           transport: "stdio" as const,
           command: "python",
           args: ["./script1.py"],
         },
         "sse-server": {
+          mode: "legacy",
           transport: "sse" as const,
           url: "http://localhost:8000/sse",
         },
@@ -458,6 +474,7 @@ describe("MultiServerMCPClient", () => {
     test("should clear internal state after close", async () => {
       const client = new MultiServerMCPClient({
         "test-server": {
+          mode: "legacy",
           transport: "stdio" as const,
           command: "python",
           args: ["./script.py"],
@@ -477,6 +494,7 @@ describe("MultiServerMCPClient", () => {
     test("should handle invalid server name when getting client", async () => {
       const client = new MultiServerMCPClient({
         "test-server": {
+          mode: "legacy",
           transport: "stdio" as const,
           command: "python",
           args: ["./script.py"],
@@ -489,6 +507,7 @@ describe("MultiServerMCPClient", () => {
     test("should handle invalid server name when getting tools", async () => {
       const client = new MultiServerMCPClient({
         "test-server": {
+          mode: "legacy",
           transport: "stdio" as const,
           command: "python",
           args: ["./script.py"],
@@ -510,6 +529,7 @@ describe("MultiServerMCPClient", () => {
 
       const client = new MultiServerMCPClient({
         "test-server": {
+          mode: "legacy",
           transport: "stdio" as const,
           command: "python",
           args: ["./script.py"],
@@ -538,6 +558,7 @@ describe("MultiServerMCPClient", () => {
 
       const client = new MultiServerMCPClient({
         "test-server": {
+          mode: "legacy",
           transport: "http" as const,
           url: "http://localhost:8000/mcp",
         },

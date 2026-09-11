@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { Client } from "@modelcontextprotocol/client";
 import { loadMcpTools } from "../tools.js";
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
@@ -136,6 +137,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
         const client = new MultiServerMCPClient({
           mcpServers: {
             stdio: {
+              mode: "legacy",
               transport: "stdio",
               command,
               args,
@@ -164,6 +166,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
         const client = new MultiServerMCPClient({
           mcpServers: {
             http: {
+              mode: "legacy",
               transport: "http",
               url: `${baseUrl}/mcp`,
               automaticSSEFallback: true,
@@ -193,6 +196,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
         const client = new MultiServerMCPClient({
           mcpServers: {
             sse: {
+              mode: "legacy",
               transport: "sse",
               url: `${baseUrl}/sse`,
             },
@@ -315,25 +319,19 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
     const client = new MultiServerMCPClient({
       mcpServers: {
         http: {
+          mode: "legacy",
           transport: "http",
           url: `${baseUrl}/mcp`,
+          onMessage: (log) => {
+            logs.push(z.string().parse(log.data));
+          },
+          onProgress: (p) => {
+            progresses.push(
+              p.total ? Math.round((p.progress / p.total) * 100) : p.progress
+            );
+          },
           automaticSSEFallback: true,
         },
-      },
-      onMessage: (log) => {
-        logs.push((log.data as string) ?? "");
-      },
-      onProgress: (p) => {
-        const anyP = p as unknown as {
-          percentage?: number;
-          progress?: number;
-          total?: number;
-        };
-        let pct = anyP.percentage;
-        if (pct == null && anyP.progress != null && anyP.total) {
-          pct = Math.round((anyP.progress / anyP.total) * 100);
-        }
-        progresses.push(Number(pct ?? 0));
       },
     });
     try {
@@ -357,6 +355,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
     const client = new MultiServerMCPClient({
       mcpServers: {
         http: {
+          mode: "legacy",
           transport: "http",
           url: `${baseUrl}/mcp`,
           automaticSSEFallback: true,
@@ -395,7 +394,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
     const observed: unknown[] = [];
 
     const client = new MultiServerMCPClient({
-      mcpServers: { http: { url: `${baseUrl}/mcp` } },
+      mcpServers: { http: { mode: "legacy", url: `${baseUrl}/mcp` } },
       beforeToolCall: (_, state) => {
         observed.push(state);
       },
@@ -443,6 +442,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
     const client = new MultiServerMCPClient({
       mcpServers: {
         http: {
+          mode: "legacy",
           transport: "http",
           url: `${baseUrl}/mcp`,
           automaticSSEFallback: true,

@@ -1,3 +1,4 @@
+import { z } from "zod";
 import {
   SSEClientTransport,
   StreamableHTTPClientTransport,
@@ -26,9 +27,17 @@ import {
   type ConnectionErrorHandler,
   clientConfigSchema,
   adapterConfigSchema,
+  customHTTPTransportOptionsSchema,
   type LoadMcpToolsOptions,
   _resolveAndApplyOverrideHandlingOverrides,
 } from "./types.js";
+
+const serverSelectionSchema = z.union([
+  z.array(z.string()).transform((servers) => ({ servers, options: undefined })),
+  z
+    .tuple([z.array(z.string()), customHTTPTransportOptionsSchema.optional()])
+    .transform(([servers, options]) => ({ servers, options })),
+]);
 
 const debugLog = getDebugLog();
 
@@ -107,10 +116,6 @@ export class MCPAdapter {
   ) {
     const parsedServerConfig = adapterConfigSchema.parse(config);
 
-    if (Object.keys(parsedServerConfig.mcpServers).length === 0) {
-      throw new MCPClientError("No MCP servers provided");
-    }
-
     for (const [serverName, serverConfig] of Object.entries(
       parsedServerConfig.mcpServers
     )) {
@@ -129,7 +134,7 @@ export class MCPAdapter {
         additionalToolNamePrefix: parsedServerConfig.additionalToolNamePrefix,
         ...(Object.keys(outputHandling).length > 0 ? { outputHandling } : {}),
         ...(defaultToolTimeout ? { defaultToolTimeout } : {}),
-        onProgress: parsedServerConfig.onProgress,
+        onProgress: serverConfig.onProgress,
         /**
          * make sure to place global hooks (e.g. parsedServerConfig) first before
          * server-specific hooks (e.g. serverConfig) so they can override tool call
@@ -142,7 +147,7 @@ export class MCPAdapter {
 
     this.#config = parsedServerConfig;
     this.#mcpServers = parsedServerConfig.mcpServers;
-    this.#clientConnections = new ConnectionManager(parsedServerConfig);
+    this.#clientConnections = new ConnectionManager();
     this.#onConnectionError = parsedServerConfig.onConnectionError;
   }
 
@@ -232,43 +237,46 @@ export class MCPAdapter {
    * @example
    * ```ts
    * // Get tools from all servers
-   * const tools = await client.getTools();
+   * const tools = await client.listTools();
    * ```
    *
    * @example
    * ```ts
    * // Get tools from specific servers
-   * const tools = await client.getTools("server1", "server2");
+   * const tools = await client.listTools("server1", "server2");
    * ```
    *
    * @example
    * ```ts
    * // Get tools from specific servers with custom connection options
-   * const tools = await client.getTools(["server1", "server2"], {
+   * const tools = await client.listTools(["server1", "server2"], {
    *   authProvider: new OAuthClientProvider(),
    *   headers: { "X-Custom-Header": "value" },
    * });
    * ```
    */
+  async listTools(...servers: string[]): Promise<DynamicStructuredTool[]>;
+  async listTools(
+    servers: string[],
+    options?: CustomHTTPTransportOptions
+  ): Promise<DynamicStructuredTool[]>;
+  async listTools(...args: unknown[]): Promise<DynamicStructuredTool[]> {
+    return this.#listTools(args);
+  }
+
+  /** @deprecated Use listTools(). Returns the same LangChain tools. */
   async getTools(...servers: string[]): Promise<DynamicStructuredTool[]>;
+  /** @deprecated Use listTools(). */
   async getTools(
     servers: string[],
     options?: CustomHTTPTransportOptions
   ): Promise<DynamicStructuredTool[]>;
   async getTools(...args: unknown[]): Promise<DynamicStructuredTool[]> {
-    if (args.length === 0 || args.every((arg) => typeof arg === "string")) {
-      await this.initializeConnections();
+    return this.#listTools(args);
+  }
 
-      const servers = args as string[];
-      return servers.length === 0
-        ? this._getAllToolsAsFlatArray()
-        : this._getToolsFromServers(servers);
-    }
-
-    const [servers, options] = args as [
-      string[],
-      CustomHTTPTransportOptions | undefined,
-    ];
+  async #listTools(args: unknown[]): Promise<DynamicStructuredTool[]> {
+    const { servers, options } = serverSelectionSchema.parse(args);
     await this.initializeConnections(options);
     return servers.length === 0
       ? this._getAllToolsAsFlatArray()
@@ -732,7 +740,8 @@ export class MCPAdapter {
     connection: ResolvedStreamableHTTPConnection
   ): Promise<void> {
     const { url, transport: transportType } = connection;
-    const automaticSSEFallback = connection.automaticSSEFallback ?? true;
+    const automaticSSEFallback =
+      connection.mode === "legacy" && connection.automaticSSEFallback;
 
     debugLog(
       `DEBUG: Creating Streamable HTTP transport for server "${serverName}" with URL: ${url}`
