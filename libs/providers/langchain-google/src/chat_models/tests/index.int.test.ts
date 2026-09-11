@@ -36,6 +36,7 @@ import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
 import { tool } from "@langchain/core/tools";
 import type { Gemini } from "../types.js";
+import { convertMessagesToGeminiContents } from "../../converters/messages.js";
 import { Runnable } from "@langchain/core/runnables";
 import { InteropZodType } from "@langchain/core/utils/types";
 import { concat } from "@langchain/core/utils/stream";
@@ -937,6 +938,35 @@ describe.each(coreModelInfo)(
       }
     });
 
+    test("streamEvents preserves stable tool call ids (regression for #11261)", async () => {
+      const llm = newChatGoogle();
+      const events = [];
+      for await (const event of llm.streamEvents(
+        "What is the weather in New York?",
+        { tools: [weatherTool], tool_choice: "get_weather" }
+      )) {
+        events.push(event);
+      }
+
+      const toolCallStart = events
+        .filter((event) => event.event === "content-block-start")
+        .map((event) => event.content)
+        .find((content) => content.type === "tool_call_chunk");
+      const toolCallFinish = events
+        .filter((event) => event.event === "content-block-finish")
+        .map((event) => event.content)
+        .find((content) => content.type === "tool_call");
+
+      expect(toolCallStart).toMatchObject({
+        id: expect.any(String),
+        name: "get_weather",
+      });
+      expect(toolCallFinish).toMatchObject({
+        id: toolCallStart?.id,
+        name: "get_weather",
+      });
+    });
+
     test("function - tool with nullish parameters", async () => {
       // Fails with gemini-2.0-flash-lite ?
       const tools = [nullishWeatherTool];
@@ -1770,6 +1800,37 @@ describe.each(thinkingModelInfo)(
         (b: ContentBlock.Standard) => "thoughtSignature" in b
       );
       expect(hasThoughtSignature).toBe(true);
+    });
+
+    test("thoughtSignature survives a real multi-turn round trip via streamEvents (regression for #11181)", async () => {
+      const llm = newChatGoogle({ reasoningEffort: "high" });
+      const firstResult = await llm.streamEvents(
+        "What is the weather in New York?",
+        { tools: [weatherTool], tool_choice: "get_weather" }
+      );
+      expect(firstResult.tool_calls).toBeDefined();
+      expect(firstResult.tool_calls!.length).toBeGreaterThan(0);
+      const toolCall = firstResult.tool_calls![0];
+      expect(toolCall.id).toBeDefined();
+
+      const toolCallBlock = firstResult.contentBlocks.find(
+        (block) => block.type === "tool_call"
+      ) as { thoughtSignature?: string } | undefined;
+      const expectedSignature = toolCallBlock?.thoughtSignature;
+      expect(expectedSignature).toBeDefined();
+
+      const contents = convertMessagesToGeminiContents([
+        new HumanMessage("What is the weather in New York?"),
+        firstResult,
+        new ToolMessage(JSON.stringify({ temp: 21 }), toolCall.id as string),
+      ]);
+      const modelTurn = contents.find((c) => c.role === "model");
+      const sentFunctionCallPart = modelTurn?.parts.find(
+        (p): p is Gemini.Part.FunctionCall => "functionCall" in p
+      );
+
+      expect(sentFunctionCallPart).toBeDefined();
+      expect(sentFunctionCallPart?.thoughtSignature).toBe(expectedSignature);
     });
 
     test("thinking - invoke", async () => {

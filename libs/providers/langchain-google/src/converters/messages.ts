@@ -501,8 +501,19 @@ function convertStandardContentMessageToGeminiContent(
     }
   });
 
-  // Convert AIMessage tool_calls to functionCall parts
+  // Convert tool_calls to functionCall parts, reading thoughtSignature from the matching content block, falling back to the tool_call itself.
   if (AIMessage.isInstance(message) && message.tool_calls?.length) {
+    const signaturesById: Record<string, string> = {};
+    for (const block of contentBlocks) {
+      if (
+        block.type === "tool_call" &&
+        block.id &&
+        "thoughtSignature" in block &&
+        typeof block.thoughtSignature === "string"
+      ) {
+        signaturesById[block.id] = block.thoughtSignature;
+      }
+    }
     for (const toolCall of message.tool_calls) {
       const part = {
         functionCall: {
@@ -510,8 +521,13 @@ function convertStandardContentMessageToGeminiContent(
           args: toolCall.args ?? {},
         },
       } as Gemini.Part.FunctionCall;
-      if ("thoughtSignature" in toolCall) {
-        part.thoughtSignature = toolCall.thoughtSignature as string;
+      const thoughtSignature =
+        (toolCall.id && signaturesById[toolCall.id]) ??
+        ("thoughtSignature" in toolCall
+          ? (toolCall.thoughtSignature as string)
+          : undefined);
+      if (thoughtSignature) {
+        part.thoughtSignature = thoughtSignature;
       }
       parts.push(part);
     }

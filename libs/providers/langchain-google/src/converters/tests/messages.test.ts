@@ -555,6 +555,77 @@ describe("convertMessagesToGeminiContents", () => {
     expect("thoughtSignature" in functionCallPart).toBe(false);
   });
 
+  test("resolves thoughtSignature from the matching tool_call content block, without it living on tool_calls (v1 path)", () => {
+    const aiMsg = new AIMessage({
+      content: [
+        {
+          type: "tool_call",
+          id: "call-1",
+          name: "get_weather",
+          args: { city: "London" },
+          thoughtSignature: "sig-from-content-block",
+        },
+      ],
+      tool_calls: [
+        { name: "get_weather", args: { city: "London" }, id: "call-1" },
+      ],
+      response_metadata: { output_version: "v1" },
+    });
+
+    const contents = convertMessagesToGeminiContents([
+      new HumanMessage("hello"),
+      aiMsg,
+    ]);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    const functionCallPart = modelContent!.parts.find(
+      (p) => "functionCall" in p && p.functionCall
+    ) as Gemini.Part.FunctionCall;
+    expect(functionCallPart).toBeDefined();
+    expect(functionCallPart.thoughtSignature).toBe("sig-from-content-block");
+  });
+
+  test("prefers the content block's thoughtSignature over a direct tool_calls property (v1 path)", () => {
+    const aiMsg = new AIMessage({
+      content: [
+        {
+          type: "tool_call",
+          id: "call-1",
+          name: "get_weather",
+          args: { city: "London" },
+          thoughtSignature: "sig-from-content-block",
+        },
+      ],
+      tool_calls: [
+        {
+          name: "get_weather",
+          args: { city: "London" },
+          id: "call-1",
+          type: "tool_call",
+          thoughtSignature: "sig-on-tool-call",
+        } as {
+          name: string;
+          args: object;
+          id: string;
+          type: "tool_call";
+          thoughtSignature: string;
+        },
+      ],
+      response_metadata: { output_version: "v1" },
+    });
+
+    const contents = convertMessagesToGeminiContents([
+      new HumanMessage("hello"),
+      aiMsg,
+    ]);
+
+    const modelContent = contents.find((c) => c.role === "model");
+    const functionCallPart = modelContent!.parts.find(
+      (p) => "functionCall" in p && p.functionCall
+    ) as Gemini.Part.FunctionCall;
+    expect(functionCallPart.thoughtSignature).toBe("sig-from-content-block");
+  });
+
   test("ToolMessage name resolved from tool_calls (v1 path)", () => {
     const aiMsg = new AIMessage({
       content: "",
