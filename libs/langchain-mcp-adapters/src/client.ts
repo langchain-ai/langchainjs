@@ -376,6 +376,7 @@ export class MCPAdapter {
     expectedState: string
   ): Promise<void> {
     const state = z.string().min(1).parse(expectedState);
+
     if (
       callbackParams.getAll("state").length !== 1 ||
       callbackParams.get("state") !== state
@@ -385,7 +386,9 @@ export class MCPAdapter {
         serverName
       );
     }
+
     const connection = this.#config.mcpServers[serverName];
+
     if (
       !connection ||
       connection.transport === "stdio" ||
@@ -396,12 +399,14 @@ export class MCPAdapter {
         serverName
       );
     }
+
     if (!(await connection.authProvider.discoveryState?.())) {
       throw new MCPClientError(
         "OAuth completion requires provider discoveryState from the authorization attempt",
         serverName
       );
     }
+
     await this.#clientConnections.finishAuth(
       serverName,
       connection,

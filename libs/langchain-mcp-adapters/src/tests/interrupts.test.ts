@@ -162,6 +162,7 @@ it.each([
       expect(calls).toHaveLength(2);
       expect(before).toHaveBeenCalledTimes(1);
       expect(after).toHaveBeenCalledTimes(1);
+
       return;
     }
 

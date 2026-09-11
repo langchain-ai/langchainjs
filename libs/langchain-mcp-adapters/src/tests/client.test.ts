@@ -2794,6 +2794,7 @@ describe("modern OAuth acceptance", () => {
     "wrong-issuer",
     "scope-stepup",
   ];
+
   it.each(scenarios)("delegates %s to the SDK/provider", async (scenario) => {
     let registrations = 0;
     let refreshes = 0;
@@ -2915,10 +2916,13 @@ describe("modern OAuth acceptance", () => {
     let discovery: Awaited<
       ReturnType<NonNullable<OAuthClientProvider["discoveryState"]>>
     >;
+
     let clientInformation: Awaited<
       ReturnType<OAuthClientProvider["clientInformation"]>
     >;
+
     let verifier = "fixture-verifier";
+
     const provider: OAuthClientProvider = {
       state: () => "fixture-state",
       discoveryState: () => discovery,
@@ -2985,6 +2989,7 @@ describe("modern OAuth acceptance", () => {
         expect(registrations).toBe(
           ["cimd", "scope-stepup"].includes(scenario) ? 0 : 1
         );
+
         if (
           ["callback", "wrong-state", "wrong-issuer", "scope-stepup"].includes(
             scenario
@@ -2995,6 +3000,7 @@ describe("modern OAuth acceptance", () => {
             state: scenario === "wrong-state" ? "other-state" : "fixture-state",
             iss: scenario === "wrong-issuer" ? "https://other.example" : base,
           });
+
           if (scenario === "callback" || scenario === "scope-stepup") {
             await adapter.finishAuth("oauth", callback, "fixture-state");
             const [tool] = await adapter.getTools();

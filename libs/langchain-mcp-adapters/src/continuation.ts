@@ -43,6 +43,7 @@ export class InterruptMCPClient extends Client {
     const request = await sdkSchema(specTypeSchemas.CallToolRequest).parseAsync(
       flow.request
     );
+
     throw new PendingMCPInput(decoded, request.params);
   }
 }
@@ -60,6 +61,7 @@ const elicitationInterruptSchema = z.object({
   tool: z.string(),
   requests: z.record(z.string(), elicitationRequestSchema),
 });
+
 export type MCPElicitationInterrupt = z.output<
   typeof elicitationInterruptSchema
 >;
@@ -68,6 +70,7 @@ const elicitationResponsesSchema = z.record(
   z.string(),
   elicitationAnswerSchema
 );
+
 export type MCPElicitationResume = z.output<typeof elicitationResponsesSchema>;
 
 type RoundResult<T> =
@@ -126,6 +129,7 @@ export async function withMCPInterrupts<T>(
       tool: source.tool,
       requests: result.pending.inputRequests,
     });
+
     const { requests } = elicitation;
 
     const keys = Object.keys(requests);
@@ -143,6 +147,7 @@ export async function withMCPInterrupts<T>(
           )
         )
       );
+
       responses = await resumeSchema.parseAsync(interrupt(elicitation));
     } else {
       // A state-only response is progress, not a user question. Avoid a tight polling loop.

@@ -318,5 +318,6 @@ it("composes Standard Schema defaults and issue paths through Zod", async () => 
   expect(await parser.parseAsync({})).toEqual({ label: "default" });
   const result = await parser.safeParseAsync({ label: 42 });
   expect(result.success).toBe(false);
+
   if (!result.success) expect(result.error.issues[0].path).toEqual(["label"]);
 });

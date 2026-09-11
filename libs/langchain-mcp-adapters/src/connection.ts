@@ -355,6 +355,7 @@ export class ConnectionManager {
       options.transport === "sse"
         ? await this.#createSSETransport(serverName, options)
         : await this.#createStreamableHTTPTransport(serverName, options);
+
     try {
       await transport.finishAuth(callbackParams);
     } finally {

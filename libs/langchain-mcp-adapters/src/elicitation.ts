@@ -14,6 +14,7 @@ export function sdkSchema<Output>(schema: {
 }) {
   return z.unknown().transform(async (input, ctx) => {
     const parsed = await schema["~standard"].validate(input);
+
     if (parsed.issues) {
       for (const issue of parsed.issues) {
         ctx.issues.push({
@@ -25,13 +26,16 @@ export function sdkSchema<Output>(schema: {
           ),
         });
       }
+
       return z.NEVER;
     }
+
     return parsed.value;
   });
 }
 
 export const elicitationAnswerSchema = sdkSchema(specTypeSchemas.ElicitResult);
+
 export const elicitationRequestSchema = sdkSchema(
   specTypeSchemas.ElicitRequest
 ).transform((request) => request.params);
@@ -57,6 +61,7 @@ export type MCPElicitationHandler = (
 export function elicitationAnswerFor(request: MCPElicitationRequest) {
   return elicitationAnswerSchema.check(async (ctx) => {
     const answer = ctx.value;
+
     if (request.mode === "url") {
       if (answer.content !== undefined) {
         ctx.issues.push({
@@ -71,9 +76,11 @@ export function elicitationAnswerFor(request: MCPElicitationRequest) {
         request.requestedSchema,
         new DefaultJsonSchemaValidator()
       );
+
       const parsed = await sdkSchema(validator).safeParseAsync(
         answer.content ?? {}
       );
+
       if (!parsed.success) {
         for (const issue of parsed.error.issues) {
           ctx.issues.push({
