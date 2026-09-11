@@ -965,6 +965,64 @@ describe("reasoning summaries", () => {
     expect(replay.content).toBeTruthy();
   });
 
+  test("replays interleaved reasoning and tool calls under ZDR", async () => {
+    const model = new ChatOpenAI({
+      model: "gpt-5.6",
+      useResponsesApi: true,
+      zdrEnabled: true,
+      reasoning: { effort: "high", summary: "detailed" },
+      maxRetries: 0,
+    }).bindTools([
+      { type: "web_search" },
+      { type: "code_interpreter", container: { type: "auto" } },
+    ]);
+    const prompt = [
+      "Search the web for the current populations of San Francisco and San Jose.",
+      "Then use the code interpreter to calculate the difference between them.",
+      "You must use web_search first and code_interpreter second.",
+    ].join("\n");
+
+    const firstResponse = await model.invoke(prompt);
+    const output = firstResponse.response_metadata.output;
+    expect(Array.isArray(output)).toBe(true);
+    if (!Array.isArray(output)) {
+      throw new Error("Expected response_metadata.output to be an array");
+    }
+
+    const reasoningAndToolCalls = output.filter(
+      (item) =>
+        typeof item === "object" &&
+        item != null &&
+        "type" in item &&
+        (item.type === "reasoning" ||
+          item.type === "web_search_call" ||
+          item.type === "code_interpreter_call")
+    ) as Array<{
+      type: "reasoning" | "web_search_call" | "code_interpreter_call";
+      encrypted_content?: string;
+    }>;
+    expect(reasoningAndToolCalls.map((item) => item.type)).toEqual([
+      "reasoning",
+      "web_search_call",
+      "reasoning",
+      "code_interpreter_call",
+    ]);
+    for (const reasoningItem of reasoningAndToolCalls.filter(
+      (item) => item.type === "reasoning"
+    )) {
+      expect(reasoningItem.encrypted_content).toEqual(expect.any(String));
+      expect(reasoningItem.encrypted_content).not.toHaveLength(0);
+    }
+
+    const followUp = await model.invoke([
+      new HumanMessage(prompt),
+      firstResponse,
+      new HumanMessage("What difference did you calculate?"),
+    ]);
+    expect(followUp).toBeInstanceOf(AIMessage);
+    expect(followUp.content).toBeTruthy();
+  });
+
   test.each(["stream", "invoke"])(
     "normal responses API usage (Zero Data Retention disabled), %s",
     async (requestType) => {
