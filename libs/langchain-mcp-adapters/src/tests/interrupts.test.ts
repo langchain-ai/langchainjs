@@ -40,6 +40,8 @@ it.each([
   "concurrent",
   "headers",
   "outside-graph",
+  "outside-graph-complete",
+  "without-checkpointer",
 ])("resumes a reconstructed adapter: %s", async (scenario) => {
   const calls: string[] = [];
 
@@ -68,6 +70,13 @@ it.each([
         },
         async ({ label }, context) => {
           calls.push(label);
+
+          if (scenario === "outside-graph-complete") {
+            return {
+              content: [{ type: "text", text: "approved" }],
+              structuredContent: { approved: true },
+            };
+          }
 
           if (scenario === "state-only") {
             return calls.length === 1
@@ -151,7 +160,10 @@ it.each([
       })
       .addEdge(START, "call")
       .addEdge("call", END)
-      .compile({ checkpointer });
+      .compile({
+        checkpointer:
+          scenario === "without-checkpointer" ? undefined : checkpointer,
+      });
 
   const config = { configurable: { thread_id: "durable-round" } };
 
@@ -178,8 +190,27 @@ it.each([
 
     if (scenario === "outside-graph") {
       const [tool] = await adapter.getTools();
-      await expect(tool.invoke({ label: "original" })).rejects.toThrow();
-      expect(calls).toHaveLength(0);
+      await expect(tool.invoke({ label: "original" })).rejects.toThrow(
+        /inside a LangGraph with a checkpointer/
+      );
+      expect(calls).toHaveLength(1);
+
+      return;
+    }
+
+    if (scenario === "outside-graph-complete") {
+      const [tool] = await adapter.getTools();
+      await expect(tool.invoke({ label: "original" })).resolves.toBeDefined();
+      expect(calls).toHaveLength(1);
+
+      return;
+    }
+
+    if (scenario === "without-checkpointer") {
+      await expect(graph.invoke({ done: false }, config)).rejects.toThrow(
+        /No checkpointer set/
+      );
+      expect(calls).toHaveLength(1);
 
       return;
     }
@@ -509,4 +540,25 @@ it("resumes a modern stdio interrupt after reconstructing the adapter and server
   } finally {
     await adapter.close();
   }
+});
+
+it("recognizes pending input across adapter copies without matching lookalikes", async () => {
+  const pending = {
+    kind: "input_required",
+    inputRequests: {},
+  } satisfies ConstructorParameters<typeof PendingMCPInput>[0];
+  const request = { name: "confirm", arguments: {} };
+  const original = new PendingMCPInput(pending, request);
+  vi.resetModules();
+  const duplicate = await import("../continuation.js");
+
+  expect(duplicate.PendingMCPInput).not.toBe(PendingMCPInput);
+  expect(duplicate.PendingMCPInput.isInstance(original)).toBe(true);
+  expect(
+    PendingMCPInput.isInstance(new duplicate.PendingMCPInput(pending, request))
+  ).toBe(true);
+  expect(PendingMCPInput.isInstance({ pending, request })).toBe(false);
+  expect(PendingMCPInput.isInstance(new Error("MCP tool requires input"))).toBe(
+    false
+  );
 });

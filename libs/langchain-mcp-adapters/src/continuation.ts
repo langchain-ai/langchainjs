@@ -4,6 +4,7 @@ import {
   type CallToolRequest,
   type ElicitResult,
 } from "@modelcontextprotocol/client";
+import { ns, LangChainError } from "@langchain/core/errors";
 import { interrupt, task } from "@langchain/langgraph";
 import { z } from "zod";
 import {
@@ -15,7 +16,9 @@ import {
 
 type PendingInput = Parameters<Client["_resolveNonCompleteResult"]>[0];
 
-export class PendingMCPInput extends Error {
+export class PendingMCPInput extends ns
+  .sub("mcp")
+  .brand(LangChainError, "pending-input") {
   constructor(
     readonly pending: PendingInput,
     readonly request: CallToolRequest["params"]
@@ -99,7 +102,7 @@ export async function withMCPInterrupts<T>(
       try {
         return { kind: "complete", value: await invoke(continuation) };
       } catch (error) {
-        if (error instanceof PendingMCPInput) {
+        if (PendingMCPInput.isInstance(error)) {
           return {
             kind: "pending",
             pending: error.pending,

@@ -469,8 +469,25 @@ function createToolInvocation(
   if (durable) {
     return {
       execute,
-      run(call: InvokeToolRound, config?: RunnableConfig) {
-        const state = getCurrentTaskInput(config);
+      async run(call: InvokeToolRound, config?: RunnableConfig) {
+        let state: unknown;
+
+        try {
+          state = getCurrentTaskInput(config);
+        } catch {
+          try {
+            return await call();
+          } catch (error) {
+            if (PendingMCPInput.isInstance(error)) {
+              throw new ToolException(
+                "This MCP tool requested user input. Invoke it inside a LangGraph with a checkpointer to pause and resume elicitation.",
+                error
+              );
+            }
+
+            throw error;
+          }
+        }
 
         return withMCPInterrupts((continuation) => call(continuation, state), {
           server: serverName,
@@ -657,7 +674,7 @@ async function _callTool(
   } catch (error) {
     if (
       isGraphInterrupt(error) ||
-      error instanceof PendingMCPInput ||
+      PendingMCPInput.isInstance(error) ||
       config?.signal?.aborted
     )
       throw error;
