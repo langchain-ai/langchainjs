@@ -1,3 +1,8 @@
+import {
+  MCPClientError,
+  getHttpErrorCode,
+  createAuthenticationErrorMessage,
+} from "./utils/errors.js";
 import { z } from "zod";
 import {
   SSEClientTransport,
@@ -36,18 +41,7 @@ import {
 
 const debugLog = debug("@langchain/mcp-adapters:client");
 
-/**
- * Error class for MCP client operations
- */
-export class MCPClientError extends Error {
-  constructor(
-    message: string,
-    public readonly serverName?: string
-  ) {
-    super(message);
-    this.name = "MCPClientError";
-  }
-}
+export { MCPClientError } from "./utils/errors.js";
 
 /**
  * Client for connecting to multiple MCP servers and loading LangChain-compatible tools.
@@ -528,7 +522,8 @@ export class MCPAdapter {
     } catch (error) {
       throw new MCPClientError(
         `Failed to read resource "${uri}" from server "${serverName}": ${error}`,
-        serverName
+        serverName,
+        { cause: error }
       );
     }
   }
@@ -645,7 +640,8 @@ export class MCPAdapter {
     } catch (error) {
       throw new MCPClientError(
         `Failed to connect to stdio server "${serverName}": ${error}`,
-        serverName
+        serverName,
+        { cause: error }
       );
     }
   }
@@ -681,43 +677,6 @@ export class MCPAdapter {
     };
   }
 
-  private _getHttpErrorCode(error: unknown): number | undefined {
-    if (typeof error !== "object" || error === null) return undefined;
-
-    const isHttpStatus = (value: unknown): value is number =>
-      typeof value === "number" &&
-      Number.isInteger(value) &&
-      value >= 100 &&
-      value <= 599;
-
-    // SDK 2 HTTP errors use status; SSE errors use a numeric code.
-    if ("status" in error && isHttpStatus(error.status)) return error.status;
-
-    if ("code" in error && isHttpStatus(error.code)) return error.code;
-
-    if (!("message" in error) || typeof error.message !== "string") {
-      return undefined;
-    }
-
-    const match = error.message.match(/\(HTTP (\d{3})\)/);
-    const status = match ? Number(match[1]) : undefined;
-
-    return isHttpStatus(status) ? status : undefined;
-  }
-
-  private _createAuthenticationErrorMessage(
-    serverName: string,
-    url: string,
-    transport: "HTTP" | "SSE",
-    originalError: string
-  ): string {
-    return (
-      `Authentication failed for ${transport} server "${serverName}" at ${url}. ` +
-      `Please check your credentials, authorization headers, or OAuth configuration. ` +
-      `Original error: ${originalError}`
-    );
-  }
-
   private _toSSEConnectionURL(url: string): string {
     const urlObj = new URL(url);
     const pathnameParts = urlObj.pathname.split("/");
@@ -751,7 +710,7 @@ export class MCPAdapter {
           connection
         );
       } catch (error) {
-        const code = this._getHttpErrorCode(error);
+        const code = getHttpErrorCode(error);
         if (automaticSSEFallback && code != null && code >= 400 && code < 500) {
           // Streamable HTTP error is a 4xx, so fall back to SSE
           try {
@@ -770,36 +729,40 @@ export class MCPAdapter {
                 // Provide specific error message for authentication failures
                 if (code === 401) {
                   throw new MCPClientError(
-                    this._createAuthenticationErrorMessage(
+                    createAuthenticationErrorMessage(
                       serverName,
                       url,
                       "HTTP",
                       `${error}. Also tried SSE fallback at ${url} and ${sseUrl}, but both failed with authentication errors.`
                     ),
-                    serverName
+                    serverName,
+                    { cause: secondSSEError }
                   );
                 }
                 throw new MCPClientError(
                   `Failed to connect to streamable HTTP server "${serverName}, url: ${url}": ${error}. Additionally, tried falling back to SSE at ${url} and ${sseUrl}, but this also failed: ${secondSSEError}`,
-                  serverName
+                  serverName,
+                  { cause: secondSSEError }
                 );
               }
             } else {
               // Provide specific error message for authentication failures
               if (code === 401) {
                 throw new MCPClientError(
-                  this._createAuthenticationErrorMessage(
+                  createAuthenticationErrorMessage(
                     serverName,
                     url,
                     "HTTP",
                     `${error}. Also tried SSE fallback at ${url}, but it failed with authentication error: ${firstSSEError}`
                   ),
-                  serverName
+                  serverName,
+                  { cause: firstSSEError }
                 );
               }
               throw new MCPClientError(
                 `Failed to connect to streamable HTTP server after trying to fall back to SSE: "${serverName}, url: ${url}": ${error} (SSE fallback failed with error ${firstSSEError})`,
-                serverName
+                serverName,
+                { cause: firstSSEError }
               );
             }
           }
@@ -807,18 +770,20 @@ export class MCPAdapter {
           // Provide specific error message for authentication failures
           if (code === 401) {
             throw new MCPClientError(
-              this._createAuthenticationErrorMessage(
+              createAuthenticationErrorMessage(
                 serverName,
                 url,
                 "HTTP",
                 `${error}`
               ),
-              serverName
+              serverName,
+              { cause: error }
             );
           }
           throw new MCPClientError(
             `Failed to connect to streamable HTTP server "${serverName}, url: ${url}": ${error}`,
-            serverName
+            serverName,
+            { cause: error }
           );
         }
       }
@@ -856,28 +821,25 @@ export class MCPAdapter {
       }
     } catch (error) {
       // Check if this is already a wrapped error that should be re-thrown
-      if (error && (error as Error).name === "MCPClientError") {
+      if (MCPClientError.isInstance(error)) {
         throw error;
       }
 
       // Check if this is an authentication error that needs better messaging
-      const isAuthError = error && this._getHttpErrorCode(error) === 401;
+      const isAuthError = error && getHttpErrorCode(error) === 401;
 
       if (isAuthError) {
         throw new MCPClientError(
-          this._createAuthenticationErrorMessage(
-            serverName,
-            url,
-            "SSE",
-            `${error}`
-          ),
-          serverName
+          createAuthenticationErrorMessage(serverName, url, "SSE", `${error}`),
+          serverName,
+          { cause: error }
         );
       }
 
       throw new MCPClientError(
         `Failed to create SSE transport for server "${serverName}, url: ${url}": ${error}`,
-        serverName
+        serverName,
+        { cause: error }
       );
     }
   }
@@ -964,7 +926,8 @@ export class MCPAdapter {
 
       throw new MCPClientError(
         `Failed to load tools from server "${serverName}": ${error}`,
-        serverName
+        serverName,
+        { cause: error }
       );
     }
   }

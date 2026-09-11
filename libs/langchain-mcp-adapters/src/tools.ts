@@ -1,8 +1,11 @@
-import { ns, LangChainError } from "@langchain/core/errors";
+import {
+  ToolException,
+  isToolException,
+  parseZodErrorDetails,
+} from "./utils/errors.js";
 import { z } from "zod";
 import { fromJsonSchema } from "@modelcontextprotocol/client";
 import { DefaultJsonSchemaValidator } from "@modelcontextprotocol/client/_shims";
-import { isInteropZodError } from "@langchain/core/utils/types";
 import {
   toolCallModificationSchema,
   toolCallResultModificationSchema,
@@ -43,44 +46,7 @@ const debugLog = debug("@langchain/mcp-adapters:tools");
 
 type MCPInstance = Client | MCPClient;
 
-// Parse only the Zod issue fields needed for formatting, without depending
-// on a particular Zod version or constructor.
-const errorPathKeySchema = z.union([z.string(), z.number(), z.symbol()]);
-
-const zodErrorDetailsSchema = z.object({
-  issues: z.array(
-    z.object({
-      message: z.string(),
-      path: z.array(errorPathKeySchema).optional(),
-    })
-  ),
-});
-
-function parseZodErrorDetails(error: unknown) {
-  if (!isInteropZodError(error)) return undefined;
-  const parsed = zodErrorDetailsSchema.safeParse(error);
-
-  return parsed.success ? parsed.data : undefined;
-}
-
-/**
- * Custom error class for tool exceptions
- */
-export class ToolException extends ns.sub("mcp").brand(LangChainError, "tool") {
-  readonly name = "ToolException";
-  readonly result?: CallToolResult;
-
-  constructor(message: string, cause?: unknown, result?: CallToolResult) {
-    super(message);
-    this.result = result;
-
-    if (cause !== undefined) this.cause = cause;
-  }
-}
-
-export function isToolException(error: unknown): error is ToolException {
-  return ToolException.isInstance(error);
-}
+export { ToolException, isToolException } from "./utils/errors.js";
 
 /** Terminal conversion never dereferences resource URIs or performs network IO. */
 function _toolOutputToContentBlocks(
