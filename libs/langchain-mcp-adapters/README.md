@@ -642,8 +642,12 @@ The library provides different error types to help with debugging:
 Example error handling:
 
 ```ts
+import { MCPAdapter } from "@langchain/mcp-adapters";
+import { isInteropZodError } from "@langchain/core/utils/types";
+
+let client: MCPAdapter | undefined;
 try {
-  const client = new MCPAdapter({
+  client = new MCPAdapter({
     servers: {
       math: {
         mode: "legacy",
@@ -654,26 +658,18 @@ try {
     },
   });
 
-  const tools = await client.listTools();
-  const result = await tools[0].invoke({ expression: "1 + 2" });
+  const [tool] = await client.listTools();
+  if (!tool) throw new Error("No tools available");
+  console.log(await tool.invoke({ expression: "1 + 2" }));
 } catch (error) {
-  if (error.name === "MCPClientError") {
-    // Handle connection issues
-    console.error(`Connection error (${error.serverName}):`, error.message);
-  } else if (error.name === "ToolException") {
-    // Handle tool execution errors
-    console.error("Tool execution failed:", error.message);
-  } else if (error.name === "ZodError") {
-    // Handle configuration validation errors
-    console.error("Configuration error:", error.issues);
-    // Zod errors contain detailed information about what went wrong
-    error.issues.forEach((issue) => {
-      console.error(`- Path: ${issue.path.join(".")}, Error: ${issue.message}`);
-    });
+  if (isInteropZodError(error)) {
+    console.error("Configuration error:", error);
   } else {
-    // Handle other errors
-    console.error("Unexpected error:", error);
+    // Connection and tool errors retain their original cause for inspection.
+    console.error("MCP operation failed:", error);
   }
+} finally {
+  await client?.close();
 }
 ```
 
