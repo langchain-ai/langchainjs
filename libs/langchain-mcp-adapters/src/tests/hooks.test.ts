@@ -674,23 +674,29 @@ describe("negotiated tool invocation policy", () => {
       vi.spyOn(client, "listTools").mockResolvedValue({
         tools: [{ name: "echo", inputSchema: { type: "object" } }],
       });
+
       const call = vi.spyOn(client, "callTool").mockResolvedValue({
         content: [{ type: "text", text: "done" }],
       });
+
       const before = vi.fn(() => ({ args: { effective: true } }));
+
       const [tool] = await loadMcpTools("test", client, {
         beforeToolCall: before,
         logLevel: "info",
       });
+
       protocol.mockClear();
 
       if (durable) {
         await expect(tool.invoke({})).rejects.toThrow();
         expect(call).not.toHaveBeenCalled();
+
         const graph = entrypoint(
           { name: "policy-test", checkpointer: new MemorySaver() },
           async () => tool.invoke({})
         );
+
         await expect(
           graph.invoke({}, { configurable: { thread_id: "policy" } })
         ).resolves.toBe("done");

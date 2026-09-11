@@ -852,6 +852,7 @@ function createToolInvocation(
 
     return (request: CallToolRequest["params"], options: RequestOptions) => {
       const params = { ...request, _meta: metadata };
+
       return Object.keys(options).length > 0
         ? connectedClient.callTool(params, options)
         : connectedClient.callTool(params);
@@ -872,8 +873,10 @@ function createToolInvocation(
 
     if ("fork" in client && typeof client.fork === "function") {
       const fork = client.fork.bind(client);
+
       return async (headers: NonNullable<ToolCallModification["headers"]>) => {
         const connectedClient = await fork(headers);
+
         return executor(
           connectedClient,
           connectedClient.getProtocolEra() === "modern"
@@ -889,6 +892,7 @@ function createToolInvocation(
   }
 
   const withHeaders = selectHeaderPolicy();
+
   const execute = async (
     request: CallToolRequest["params"],
     options: RequestOptions,
@@ -897,6 +901,7 @@ function createToolInvocation(
     if (!headers || Object.keys(headers).length === 0)
       return direct(request, options);
     const call = await withHeaders(headers);
+
     return call(request, options);
   };
 
@@ -905,6 +910,7 @@ function createToolInvocation(
       execute,
       run(call: InvokeToolRound, config?: RunnableConfig) {
         const state = getCurrentTaskInput(config);
+
         return withMCPInterrupts((continuation) => call(continuation, state), {
           server: serverName,
           tool: toolName,
@@ -938,8 +944,11 @@ async function prepareToolCall({
     z.number().nullish().parse(config?.metadata?.timeoutMs) ?? config?.timeout;
 
   const requestOptions: RequestOptions = {};
+
   if (numericTimeout) requestOptions.timeout = numericTimeout;
+
   if (config?.signal) requestOptions.signal = config.signal;
+
   if (onProgress) {
     requestOptions.onprogress = (progress) => {
       // oxlint-disable-next-line @typescript-eslint/no-floating-promises
@@ -988,6 +997,7 @@ async function prepareToolCall({
     name: toolName,
     arguments: finalArgs,
   } satisfies CallToolRequest["params"];
+
   const request = continuation
     ? {
         ...initialRequest,
@@ -1017,14 +1027,17 @@ async function _callTool(
     outputHandling,
     afterToolCall,
   } = call;
+
   try {
     debugLog(`INFO: Calling tool ${toolName}(${JSON.stringify(call.args)})`);
     const prepared = await prepareToolCall(call);
+
     const result = await invocation.execute(
       prepared.request,
       prepared.requestOptions,
       prepared.headers
     );
+
     const { args: finalArgs, state } = prepared;
 
     const [content, artifacts] = _convertCallToolResult({
