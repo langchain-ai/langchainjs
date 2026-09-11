@@ -1022,6 +1022,17 @@ export async function loadMcpTools(
   client: MCPInstance,
   options?: LoadMcpToolsOptions
 ): Promise<DynamicStructuredTool[]> {
+  const { tools } = await client.listTools();
+  return convertMcpTools(serverName, client, tools, options);
+}
+
+/** @internal Adapt SDK-validated descriptors without issuing another discovery request. */
+export async function convertMcpTools(
+  serverName: string,
+  client: MCPInstance,
+  mcpTools: MCPTool[],
+  options?: LoadMcpToolsOptions
+): Promise<DynamicStructuredTool[]> {
   const {
     throwOnLoadError,
     prefixToolNameWithServerName,
@@ -1032,8 +1043,6 @@ export async function loadMcpTools(
     ...defaultLoadMcpToolsOptions,
     ...(options ?? {}),
   };
-
-  const { tools: mcpTools } = await client.listTools();
 
   debugLog(`INFO: Found ${mcpTools.length} MCP tools`);
 

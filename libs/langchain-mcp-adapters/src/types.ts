@@ -1,6 +1,7 @@
 import type { MCPElicitationHandler } from "./elicitation.js";
 import { z } from "zod";
 import type {
+  CacheMode,
   CallToolResult,
   ListResourcesResult,
   ListResourceTemplatesResult,
@@ -936,3 +937,12 @@ export type MCPResourceTemplate =
  * Represents the content of a resource retrieved from an MCP server.
  */
 export type MCPResourceContent = ReadResourceResult["contents"][number];
+
+/** SDK cache policy for discovery; the SDK owns TTL and storage semantics. */
+export const toolDiscoveryOptionsSchema =
+  customHTTPTransportOptionsSchema.extend({
+    cacheMode: z
+      .enum(["use", "refresh", "bypass"] satisfies CacheMode[])
+      .optional(),
+  });
+export type ToolDiscoveryOptions = z.input<typeof toolDiscoveryOptionsSchema>;

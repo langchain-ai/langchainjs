@@ -841,3 +841,18 @@ retries after transport failures.
 A callback waits inside a running invocation. It is not a durable LangGraph pause: do not
 call `interrupt()` from this callback or assume a pending legacy request survives process
 restart. Durable interruption needs a checkpointed continuation boundary.
+
+### Discovery freshness
+
+`getTools()` consults the SDK cache on each discovery. The SDK owns cache hints,
+TTL, and pagination; the adapter reuses adapted tools while the cached descriptors
+remain the same. Tools already returned to a running agent are not mutated.
+
+```typescript
+const tools = await adapter.getTools([], { cacheMode: "refresh" });
+```
+
+Use `"use"` (default) to honor the SDK cache, `"refresh"` to fetch and update it,
+or `"bypass"` to fetch without reading or updating it. Keep each OAuth provider
+bound to one authorization identity; close and recreate the adapter when changing
+accounts, rather than changing the identity behind an existing provider.

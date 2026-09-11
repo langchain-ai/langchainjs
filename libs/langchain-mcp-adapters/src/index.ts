@@ -9,6 +9,7 @@ export type {
   MCPAdapterConfig,
   Connection,
   LoadMcpToolsOptions,
+  ToolDiscoveryOptions,
   OutputHandling,
   StdioConnection,
   StreamableHTTPConnection,
