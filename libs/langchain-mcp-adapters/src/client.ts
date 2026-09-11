@@ -12,7 +12,7 @@ import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import type { DynamicStructuredTool } from "@langchain/core/tools";
 import { convertMcpTools } from "./tools.js";
 import { ConnectionManager, mergeHeaders, type Client } from "./connection.js";
-import { getDebugLog } from "./logging.js";
+import debug from "debug";
 import {
   type ClientConfig,
   type MCPAdapterConfig,
@@ -35,7 +35,7 @@ import {
   _resolveAndApplyOverrideHandlingOverrides,
 } from "./types.js";
 
-const debugLog = getDebugLog();
+const debugLog = debug("@langchain/mcp-adapters:client");
 
 /**
  * Error class for MCP client operations

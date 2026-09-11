@@ -13,7 +13,7 @@ import type {
   StreamableHTTPReconnectionOptions,
 } from "@modelcontextprotocol/client";
 import { connectionSchema } from "./types.js";
-import { getDebugLog } from "./logging.js";
+import debug from "debug";
 import type {
   ResolvedStreamableHTTPConnection,
   ResolvedStdioConnection,
@@ -26,7 +26,7 @@ import type {
  */
 import packageJson from "../package.json" with { type: "json" };
 
-const debugLog = getDebugLog("connection");
+const debugLog = debug("@langchain/mcp-adapters:connection");
 
 export interface Client extends MCPClient {
   /**
