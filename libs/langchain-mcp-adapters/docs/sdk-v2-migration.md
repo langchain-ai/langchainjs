@@ -177,3 +177,13 @@ errors reject instead of appearing as an empty catalog. Resource conversion
 never performs implicit reads; explicitly call
 `readResource` if needed. These changes do not enable modern request rounds or
 change the current legacy protocol-negotiation default.
+
+
+### Discovery freshness
+
+`getTools()` consults the SDK cache each time and reuses adapted tools when the
+returned descriptors are unchanged. The default `cacheMode: "use"` honors SDK
+cache hints and TTL. Pass `getTools([], { cacheMode: "refresh" })` to fetch and
+update the cache, or `"bypass"` to fetch without updating it. Existing tools held
+by an agent are not mutated. Close and recreate the adapter when changing the
+account associated with an OAuth provider.
