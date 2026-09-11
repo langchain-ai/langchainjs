@@ -19,9 +19,11 @@ describe("ToolException error formatting", () => {
       issues = [{ message: "Required", path: ["args", 0] }];
     }
     const cause = new ZodError("Verbose details");
+    cause.stack = "Verbose details\n    at caller (example.ts:1:1)";
     const error = new ToolException("Invalid hook result", cause);
     expect(error.cause).toMatchObject({
       message: "✖ Required\n  → at args[0]",
+      stack: "    at caller (example.ts:1:1)",
     });
   });
 

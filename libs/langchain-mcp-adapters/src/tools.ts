@@ -453,22 +453,16 @@ function simplifyJsonSchemaForLLM(schema: JsonSchemaObject): JsonSchemaObject {
  */
 type MCPInstance = Client | MCPClient;
 
-// Error formatting only needs Standard Schema issues, not a particular Zod
-// constructor. Parse that projection so errors from other Zod versions/copies
-// remain supported without asserting that they are our installed ZodError.
+// Parse only the Zod issue fields needed for formatting, without depending
+// on a particular Zod version or constructor.
 const errorPathKeySchema = z.union([z.string(), z.number(), z.symbol()]);
 const zodErrorDetailsSchema = z.object({
   issues: z.array(
     z.object({
       message: z.string(),
-      path: z
-        .array(
-          z.union([errorPathKeySchema, z.object({ key: errorPathKeySchema })])
-        )
-        .optional(),
+      path: z.array(errorPathKeySchema).optional(),
     })
   ),
-  stack: z.string().optional(),
 });
 
 function parseZodErrorDetails(error: unknown) {
@@ -488,7 +482,13 @@ export class ToolException extends Error {
     const details = parseZodErrorDetails(cause);
     if (details) {
       const minifiedZodError = new Error(z.prettifyError(details));
-      const stackLines = details.stack?.split("\n") ?? [];
+      const stackLines =
+        typeof cause === "object" &&
+        cause !== null &&
+        "stack" in cause &&
+        typeof cause.stack === "string"
+          ? cause.stack.split("\n")
+          : [];
       const firstFrame = stackLines.findIndex((line) =>
         line.includes("    at")
       );
