@@ -1,4 +1,3 @@
-import { collectPages } from "./pagination.js";
 import { z } from "zod";
 import {
   SSEClientTransport,
@@ -390,13 +389,7 @@ export class MCPAdapter {
       }
 
       try {
-        const resources = await collectPages(async (cursor) => {
-          const page = await client.listResources(
-            cursor === undefined ? undefined : { cursor }
-          );
-
-          return { items: page.resources, nextCursor: page.nextCursor };
-        });
+        const { resources } = await client.listResources();
 
         result[serverName] = resources.map((resource) => ({
           ...resource,
@@ -467,13 +460,8 @@ export class MCPAdapter {
       }
 
       try {
-        const templates = await collectPages(async (cursor) => {
-          const page = await client.listResourceTemplates(
-            cursor === undefined ? undefined : { cursor }
-          );
-
-          return { items: page.resourceTemplates, nextCursor: page.nextCursor };
-        });
+        const { resourceTemplates: templates } =
+          await client.listResourceTemplates();
 
         result[serverName] = templates.map((template) => ({
           ...template,

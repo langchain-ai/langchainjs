@@ -267,3 +267,17 @@ test("failed discovery releases its client and can be retried", async () => {
   expect(connect).toHaveBeenCalledTimes(2);
   await adapter.close();
 });
+
+test("resource discovery failure is not an empty catalog", async () => {
+  mockConnect();
+  vi.spyOn(SDKClient.prototype, "listTools").mockResolvedValue({ tools: [] });
+  const error = new Error("discovery failed");
+  vi.spyOn(SDKClient.prototype, "listResources").mockRejectedValue(error);
+  const adapter = new MCPAdapter({ servers: { test: connection } });
+
+  try {
+    await expect(adapter.listResources()).rejects.toBe(error);
+  } finally {
+    await adapter.close();
+  }
+});

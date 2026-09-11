@@ -171,8 +171,8 @@ Concurrent acquisition is deduplicated. Failed handshakes and failed discovery
 release owned connections, and closing attempts every connection even if one
 fails. Clients supplied to `loadMcpTools` remain owned by the caller.
 
-Resource and template discovery follows pagination. Repeated cursors, a catalog
-exceeding 1,000 pages, and server errors reject instead of appearing as an empty
-catalog. Resource conversion never performs implicit reads; explicitly call
+Tool, resource, and template discovery delegates pagination to the SDK. Server
+errors reject instead of appearing as an empty catalog. Resource conversion
+never performs implicit reads; explicitly call
 `readResource` if needed. These changes do not enable modern request rounds or
 change the current legacy protocol-negotiation default.

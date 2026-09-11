@@ -1,4 +1,3 @@
-import { collectPages } from "./pagination.js";
 import { z } from "zod";
 import { fromJsonSchema } from "@modelcontextprotocol/client";
 import { DefaultJsonSchemaValidator } from "@modelcontextprotocol/client/_shims";
@@ -1103,11 +1102,7 @@ export async function loadMcpTools(
     ...(options ?? {}),
   };
 
-  const mcpTools = await collectPages(async (cursor) => {
-    const page = await client.listTools(cursor === undefined ? {} : { cursor });
-
-    return { items: page.tools, nextCursor: page.nextCursor };
-  });
+  const { tools: mcpTools } = await client.listTools();
 
   debugLog(`INFO: Found ${mcpTools.length} MCP tools`);
 
