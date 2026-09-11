@@ -2,8 +2,9 @@
 
 The adapter uses the stable `@modelcontextprotocol/client` 2.x package. Existing
 legacy MCP servers remain supported over stdio, Streamable HTTP, and legacy SSE.
-The SDK upgrade preserves legacy negotiation by default; modern protocol support
-and elicitation require separate adapter features.
+HTTP and stdio connections negotiate modern or legacy protocols automatically;
+explicit SSE connections use legacy negotiation. A single adapter can connect
+to both generations. SDK 2.0.0 is a package version, not a protocol revision.
 
 ## Applications using the adapter
 
@@ -175,5 +176,33 @@ fails. Clients supplied to `loadMcpTools` remain owned by the caller.
 Tool, resource, and template discovery delegates pagination to the SDK. Server
 errors reject instead of appearing as an empty catalog. Resource conversion
 never performs implicit reads; explicitly call
-`readResource` if needed. These changes do not enable modern request rounds or
-change the current legacy protocol-negotiation default.
+`readResource` if needed.
+
+
+### Discovery freshness
+
+`getTools()` consults the SDK cache each time and reuses adapted tools when the
+returned descriptors are unchanged. The default `cacheMode: "use"` honors SDK
+cache hints and TTL. Pass `getTools([], { cacheMode: "refresh" })` to fetch and
+update the cache, or `"bypass"` to fetch without updating it. Existing tools held
+by an agent are not mutated. Close and recreate the adapter when changing the
+account associated with an OAuth provider.
+
+
+## Protocol negotiation and callbacks
+
+Leave `protocolVersion` unset for automatic HTTP/stdio negotiation. Set it to
+`"legacy"` to require the legacy handshake, or `{ pin: "2026-07-28" }` to require
+that modern revision. Existing legacy servers do not need to upgrade with the
+adapter.
+
+Use `onElicitation` for form and URL requests. The callback returns an accepted,
+declined, or cancelled answer; accepted form content must match the requested
+schema. The SDK handles modern continuation rounds and legacy reverse requests.
+Do not call LangGraph `interrupt()` inside this callback. See the README's
+[protocol and elicitation guide](../README.md#protocol-negotiation-and-elicitation).
+
+Modern catalog-change callbacks open an SDK subscription when the server
+advertises support; subscription setup failures reject the connection. Set
+`logLevel` globally or per server to request modern tool-call logs.
+`setLoggingLevel()` is legacy-only and rejects modern connections.
