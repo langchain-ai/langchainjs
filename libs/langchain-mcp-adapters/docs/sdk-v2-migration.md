@@ -151,7 +151,10 @@ A no-op `afterToolCall` preserves these artifacts. Returning a `ToolMessage` or
 LangGraph `Command` preserves that object, including message status and identity.
 Graph interrupts propagate unchanged. A server result with `isError: true`
 throws `ToolException` with the original response in `error.result`; transport
-failures retain their original cause. Catch using exported `isToolException`.
+failures retain their original cause. Validation failures retain the original Zod error in
+`error.cause`, including its structured `issues`. SDK argument-validation issues
+are represented as Zod4 custom issues, preserving messages and paths. Catch the
+outer tool failure using exported `isToolException`.
 
 Arguments modified by `beforeToolCall` are now checked against the **original
 server JSON Schema** before being sent. For example, a hook adding an undeclared

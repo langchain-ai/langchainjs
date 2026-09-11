@@ -48,7 +48,6 @@ type MCPInstance = Client | MCPClient;
 const errorPathKeySchema = z.union([z.string(), z.number(), z.symbol()]);
 
 const zodErrorDetailsSchema = z.object({
-  stack: z.string().optional().catch(undefined),
   issues: z.array(
     z.object({
       message: z.string(),
@@ -75,23 +74,7 @@ export class ToolException extends ns.sub("mcp").brand(LangChainError, "tool") {
     super(message);
     this.result = result;
 
-    const details = parseZodErrorDetails(cause);
-
-    if (details) {
-      const minifiedZodError = new Error(z.prettifyError(details));
-
-      const stackLines = details.stack?.split("\n") ?? [];
-
-      const firstFrame = stackLines.findIndex((line) =>
-        line.includes("    at")
-      );
-
-      minifiedZodError.stack =
-        firstFrame < 0 ? undefined : stackLines.slice(firstFrame).join("\n");
-      this.cause = minifiedZodError;
-    } else if (cause !== undefined) {
-      this.cause = cause;
-    }
+    if (cause !== undefined) this.cause = cause;
   }
 }
 
@@ -478,7 +461,17 @@ async function _callTool({
 
     if (validation.issues) {
       throw new ToolException(
-        `Invalid arguments for MCP tool "${toolName}": ${validation.issues.map((issue) => issue.message).join("; ")}`
+        `Invalid arguments for MCP tool "${toolName}": ${validation.issues.map((issue) => issue.message).join("; ")}`,
+        new z.ZodError(
+          validation.issues.map((issue) => ({
+            code: "custom",
+            message: issue.message,
+            path:
+              issue.path?.map((segment) =>
+                typeof segment === "object" ? segment.key : segment
+              ) ?? [],
+          }))
+        )
       );
     }
 
