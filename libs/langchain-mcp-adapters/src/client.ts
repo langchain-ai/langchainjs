@@ -330,6 +330,7 @@ export class MCPAdapter {
           .transform(([serverName, level]) => ({ serverName, level })),
       ])
       .parse(args);
+
     const clients =
       parsed.serverName === undefined
         ? this.#clientConnections.getAllClients()
@@ -338,11 +339,13 @@ export class MCPAdapter {
               this.#transportOptions(parsed.serverName)
             ),
           ].filter((client) => client !== undefined);
+
     if (clients.some((client) => client.getProtocolEra() === "modern")) {
       throw new MCPClientError(
         "setLoggingLevel is legacy-only; configure logLevel for modern tool requests"
       );
     }
+
     await Promise.all(
       clients.map((client) => client.setLoggingLevel(parsed.level))
     );
