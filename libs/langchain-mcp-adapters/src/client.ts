@@ -520,6 +520,7 @@ export class MCPAdapter {
     try {
       debugLog(`INFO: Reading resource "${uri}" from server "${serverName}"`);
       const result = await client.readResource({ uri });
+
       return result.contents;
     } catch (error) {
       throw new MCPClientError(
