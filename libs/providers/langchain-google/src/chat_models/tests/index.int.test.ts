@@ -1770,8 +1770,7 @@ describe.each(thinkingModelInfo)(
       ]);
       const modelTurn = contents.find((c) => c.role === "model");
       const sentFunctionCallPart = modelTurn?.parts.find(
-        (p): p is { functionCall: unknown; thoughtSignature?: string } =>
-          "functionCall" in p
+        (p): p is Gemini.Part.FunctionCall => "functionCall" in p
       );
 
       expect(sentFunctionCallPart).toBeDefined();
