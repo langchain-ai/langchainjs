@@ -3,4 +3,4 @@
 "@langchain/openai": patch
 ---
 
-Fix `AIMessage.contentBlocks` to correctly represent OpenAI responses with more than one reasoning item (e.g. a reasoning model making multiple tool calls in one turn). Reasoning blocks are now derived from `response_metadata.output` when available, with `id`/`encrypted_content` included, fixing dropped/failed replay under Zero Data Retention. `additional_kwargs.reasoning` is unchanged.
+Fix OpenAI Responses API replay under Zero Data Retention when a response contains more than one reasoning item, for both v0 and v1. In v0, the default replay path now reuses `response_metadata.output` directly, preserving every reasoning item's `id`/`encrypted_content` in original order. In v1, `AIMessage.contentBlocks` (`outputVersion: "v1"`) is fixed the same way. `additional_kwargs.reasoning` is unchanged.

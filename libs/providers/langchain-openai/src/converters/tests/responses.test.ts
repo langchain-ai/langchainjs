@@ -1707,6 +1707,68 @@ describe("convertMessagesToResponsesInput", () => {
       expect(result).toEqual(output);
     });
 
+    it("preserves multiple ordered reasoning items from response_metadata.output in ZDR mode", () => {
+      const output = [
+        {
+          type: "reasoning",
+          id: "rs_first",
+          summary: [{ type: "summary_text", text: "First" }],
+          encrypted_content: "encrypted_first",
+          created_by: "provider",
+        },
+        {
+          type: "function_call",
+          id: "fc_first",
+          call_id: "call_first",
+          name: "add",
+          arguments: '{"a":1,"b":2}',
+          created_by: "provider",
+        },
+        {
+          type: "reasoning",
+          id: "rs_second",
+          summary: [{ type: "summary_text", text: "Second" }],
+          encrypted_content: "encrypted_second",
+          created_by: "provider",
+        },
+        {
+          type: "function_call",
+          id: "fc_second",
+          call_id: "call_second",
+          name: "multiply",
+          arguments: '{"a":3,"b":4}',
+          created_by: "provider",
+        },
+      ];
+      const message = new AIMessage({
+        content: [],
+        tool_calls: [
+          { name: "add", args: { a: 1, b: 2 }, id: "call_first" },
+          {
+            name: "multiply",
+            args: { a: 3, b: 4 },
+            id: "call_second",
+          },
+        ],
+        additional_kwargs: {
+          // The legacy field can only retain one reasoning item. The original
+          // output must take precedence when it is available.
+          reasoning: output[2],
+        },
+        response_metadata: { output },
+      });
+
+      const result = convertMessagesToResponsesInput({
+        messages: [message],
+        zdrEnabled: true,
+        model: "o3-mini",
+      });
+
+      expect(result).toEqual(
+        output.map(({ created_by: _createdBy, ...item }) => item)
+      );
+    });
+
     it("round-trips reasoning + tool calls through AIMessage", () => {
       const response = {
         id: "resp_123",
@@ -1747,7 +1809,7 @@ describe("convertMessagesToResponsesInput", () => {
   });
 
   describe("v1 content-block replay (multi-reasoning-item ordering, ZDR)", () => {
-    it('default (v0) path loses a reasoning item under ZDR; opting into outputVersion "v1" replays both correctly', () => {
+    it('both the default (v0) path and opting into outputVersion "v1" replay multiple reasoning items correctly under ZDR', () => {
       const response = {
         id: "resp_123",
         model: "gpt-5.6",
@@ -1788,8 +1850,9 @@ describe("convertMessagesToResponsesInput", () => {
       const message = convertResponsesMessageToAIMessage(response as any);
 
       // --- Default (v0) path: additional_kwargs.reasoning only ever holds
-      // one item, so under ZDR the first reasoning item -- and the call it
-      // informed -- is silently dropped from replay.
+      // one item, but replay now reuses response_metadata.output directly
+      // (normalized via the SDK's toResponseInputItems), so every reasoning
+      // item is preserved in its original position.
       const defaultReplay = (
         convertMessagesToResponsesInput({
           messages: [message],
@@ -1806,15 +1869,12 @@ describe("convertMessagesToResponsesInput", () => {
             : `function_call:${item.call_id}`
         );
       expect(defaultReplay).toEqual([
-        "reasoning:rs_second:enc_2",
+        "reasoning:rs_first:enc_1",
         "function_call:call_1",
+        "reasoning:rs_second:enc_2",
         "function_call:call_2",
       ]);
 
-      // --- Opting into outputVersion: "v1": mirrors @langchain/core's
-      // castStandardMessageContent exactly, using the same message's
-      // response_metadata.output (untouched by the defect above, since it's
-      // the original response, not the reconstructed additional_kwargs.reasoning).
       const standardizedMessage = new AIMessage({
         ...message,
         content: message.contentBlocks,
