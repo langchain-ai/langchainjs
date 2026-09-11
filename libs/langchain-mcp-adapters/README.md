@@ -60,7 +60,6 @@ const client = new MCPAdapter({
   // Optional additional prefix for tool names (optional, default: "")
   additionalToolNamePrefix: "",
 
-
   // Behavior when a server fails to connect: "throw" (default) or "ignore"
   onConnectionError: "ignore",
 
