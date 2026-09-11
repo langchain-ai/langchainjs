@@ -12,7 +12,12 @@ import { MCPAdapter } from "../index.js";
 
 import { describe, expect, it, vi } from "vitest";
 import { sdkSchema, validateElicitationAnswer } from "../elicitation.js";
-import type { MCPElicitationRequest } from "../elicitation.js";
+import type {
+  MCPElicitationRequest,
+  MCPElicitationAnswer,
+  MCPElicitationHandler,
+} from "../elicitation.js";
+import type { StdioConnection } from "../types.js";
 
 const form = {
   message: "Approve deployment?",
@@ -329,3 +334,70 @@ it("composes Standard Schema defaults and issue paths through Zod", async () => 
 
   if (!result.success) expect(result.error.issues[0].path).toEqual(["label"]);
 });
+
+it.each(["legacy", "modern", "mixed"])(
+  "answers accept/decline/cancel using real %s stdio servers",
+  async (mode) => {
+    const servers = {
+      legacy: {
+        transport: "stdio",
+        command: process.execPath,
+        args: [
+          "--import",
+          "tsx",
+          join(__dirname, "fixtures", "sdk1-stdio-server.ts"),
+          "legacy",
+          "--elicitation",
+        ],
+      },
+      modern: {
+        transport: "stdio",
+        command: process.execPath,
+        args: [
+          "--import",
+          "tsx",
+          join(__dirname, "fixtures", "modern-stdio-server.ts"),
+        ],
+      },
+    } satisfies Record<string, StdioConnection>;
+    const names = mode === "mixed" ? ["legacy", "modern"] : [mode];
+    const callback = vi.fn<MCPElicitationHandler>();
+    const adapter = new MCPAdapter({
+      servers: Object.fromEntries(
+        Object.entries(servers).filter(([name]) => names.includes(name))
+      ),
+      prefixToolNameWithServerName: true,
+      onElicitation: callback,
+    });
+    try {
+      const tools = await adapter.getTools();
+      expect(tools).toHaveLength(names.length);
+      for (const name of names) {
+        expect((await adapter.getClient(name))?.getProtocolEra()).toBe(name);
+        const tool = tools.find(
+          (candidate) => candidate.name === `${name}__approve`
+        );
+        if (!tool) throw new Error("Missing server tool");
+        for (const action of [
+          "accept",
+          "decline",
+          "cancel",
+        ] satisfies MCPElicitationAnswer["action"][]) {
+          callback.mockImplementation(() =>
+            action === "accept"
+              ? { action, content: { confirm: true } }
+              : { action }
+          );
+          await expect(tool.invoke({})).resolves.toBe(action);
+          expect(callback).toHaveBeenLastCalledWith(
+            expect.anything(),
+            expect.objectContaining({ server: name })
+          );
+        }
+      }
+      expect(callback).toHaveBeenCalledTimes(names.length * 3);
+    } finally {
+      await adapter.close();
+    }
+  }
+);

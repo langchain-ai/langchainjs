@@ -12,6 +12,7 @@ import {
 } from "@modelcontextprotocol/client";
 import { createServer } from "node:http";
 import { once } from "node:events";
+import { join } from "node:path";
 import {
   createMcpHandler,
   inputRequired,
@@ -445,3 +446,59 @@ it.each(["state-only", "limit", "abort", "transport"])(
     }
   }
 );
+
+it("resumes a modern stdio interrupt after reconstructing the adapter and server process", async () => {
+  const before = vi.fn();
+  const after = vi.fn();
+  const createAdapter = () =>
+    new MCPAdapter({
+      servers: {
+        modern: {
+          transport: "stdio",
+          command: process.execPath,
+          args: [
+            "--import",
+            "tsx",
+            join(__dirname, "fixtures", "modern-stdio-server.ts"),
+          ],
+          elicitationMode: "interrupt",
+        },
+      },
+      beforeToolCall: before,
+      afterToolCall: after,
+    });
+  let adapter = createAdapter();
+  const State = Annotation.Root({ done: Annotation<string>() });
+  const checkpointer = new MemorySaver();
+  const graph = () =>
+    new StateGraph(State)
+      .addNode("call", async () => {
+        const [tool] = await adapter.getTools();
+        return { done: await tool.invoke({}) };
+      })
+      .addEdge(START, "call")
+      .addEdge("call", END)
+      .compile({ checkpointer });
+  const config = { configurable: { thread_id: "stdio-reconstruction" } };
+  try {
+    const pending = await graph().invoke({}, config);
+    expect(pending).toHaveProperty("__interrupt__.length", 1);
+    expect(before).toHaveBeenCalledTimes(1);
+    expect(after).not.toHaveBeenCalled();
+    await adapter.close();
+    adapter = createAdapter();
+    const result = await graph().invoke(
+      new Command({
+        resume: {
+          confirmation: { action: "accept", content: { confirm: true } },
+        },
+      }),
+      config
+    );
+    expect(result.done).toBe("accept");
+    expect(before).toHaveBeenCalledTimes(1);
+    expect(after).toHaveBeenCalledTimes(1);
+  } finally {
+    await adapter.close();
+  }
+});
