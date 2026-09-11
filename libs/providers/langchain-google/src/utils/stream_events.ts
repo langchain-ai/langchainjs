@@ -36,6 +36,8 @@ export async function* convertGoogleGeminiStream(
   let messageStarted = false;
   let usageSnapshot: UsageMetadata | undefined;
   let finishReason: FinishReason = "stop";
+  let groundingMetadata: Gemini.GroundingMetadata | undefined;
+  let citationMetadata: Gemini.CitationMetadata | undefined;
 
   const getOrCreateBlockIndex = (
     key: BlockKey,
@@ -72,6 +74,12 @@ export async function* convertGoogleGeminiStream(
     const candidate = response.candidates?.[0];
     if (candidate?.finishReason) {
       finishReason = mapGeminiFinishReason(candidate.finishReason);
+    }
+    if (candidate?.groundingMetadata) {
+      groundingMetadata = candidate.groundingMetadata;
+    }
+    if (candidate?.citationMetadata) {
+      citationMetadata = candidate.citationMetadata;
     }
 
     const parts = candidate?.content?.parts;
@@ -192,7 +200,19 @@ export async function* convertGoogleGeminiStream(
     event: "message-finish" as const,
     reason: finishReason,
     ...(usageSnapshot ? { usage: usageSnapshot } : {}),
-    responseMetadata: { model_provider: "google" },
+    responseMetadata: {
+      model_provider: "google",
+      ...(citationMetadata ? { citationMetadata } : {}),
+      ...(groundingMetadata
+        ? {
+            groundingMetadata,
+            // Support entries for the first content part only (matches messages.ts).
+            groundingSupport: groundingMetadata.groundingSupports?.filter(
+              (s) => (s?.segment?.partIndex ?? 0) === 0
+            ),
+          }
+        : {}),
+    },
   };
 }
 

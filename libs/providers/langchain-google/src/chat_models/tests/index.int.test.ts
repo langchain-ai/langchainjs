@@ -1019,6 +1019,26 @@ describe.each(coreModelInfo)(
       expect(result.response_metadata).toHaveProperty("groundingSupport");
     });
 
+    test("Supports GoogleSearchTool - streaming (#9264)", async () => {
+      const searchTool: Gemini.Tool = {
+        googleSearch: {},
+      };
+      const llm: Runnable = newChatGoogle().bindTools([searchTool]);
+
+      const stream = await llm.stream("Who won the 2024 MLB World Series?");
+      let finalMsg: AIMessageChunk | undefined;
+      for await (const chunk of stream) {
+        finalMsg = finalMsg
+          ? concat(finalMsg, chunk as AIMessageChunk)
+          : (chunk as AIMessageChunk);
+      }
+      expect(finalMsg?.content as string).toContain("Dodgers");
+      expect(finalMsg).toHaveProperty("response_metadata");
+
+      expect(finalMsg?.response_metadata).toHaveProperty("groundingMetadata");
+      expect(finalMsg?.response_metadata).toHaveProperty("groundingSupport");
+    });
+
     test("URL Context Tool", async () => {
       // Not available on Gemini 1.5
       // Not available on Gemini 2.0 Flash
