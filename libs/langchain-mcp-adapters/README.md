@@ -40,7 +40,25 @@ npm install @langchain/mcp-adapters
 
 ## Connect to one or more servers
 
-The library allows you to connect to one or more MCP servers and load tools from them, without needing to manage your own MCP client instances.
+Start with a named server and load its LangChain tools:
+
+```ts
+import { MCPAdapter } from "@langchain/mcp-adapters";
+
+const adapter = new MCPAdapter({
+  servers: { workspace: { url: "https://example.com/mcp" } },
+});
+const tools = await adapter.listTools();
+// Pass tools to your agent. When it finishes:
+await adapter.close();
+```
+
+Add more entries to `servers` to connect to several servers. Each defaults to modern
+MCP; add `mode: "legacy"` only to older servers. The same schema validates each entry,
+so one server and a mixed server map follow the same path. Empty maps and incompatible
+options fail before connecting.
+
+The following example includes model integration and optional configuration:
 
 ```ts
 import { createAgent } from "langchain";
@@ -608,7 +626,13 @@ The `authProvider` automatically handles:
 
 ## Reconnection Strategies
 
-Both transport types support automatic reconnection:
+Modern calls do not replay lost response streams. `reconnect` is accepted only
+for legacy servers. Retrying a failed tool call starts a new request and can repeat
+side effects; the application must decide whether that operation is safe to retry.
+Modern subscription streams also require an explicit new connection after they close.
+
+The settings below concern legacy recovery and process lifecycle; neither promises
+exactly-once tool execution:
 
 ### Stdio Transport Restart
 
@@ -888,3 +912,39 @@ arguments against an independent copy of the original server schema.
 `ToolException` requires `@langchain/core ^1.2.6`. Use
 `ToolException.isInstance(error)` or `isToolException(error)` to identify it;
 name-only objects are not treated as adapter errors.
+
+## Watch resource changes
+
+Configure the URIs and callback together on the server:
+
+```ts
+const adapter = new MCPAdapter({
+  servers: {
+    workspace: {
+      url: "https://example.com/mcp",
+      resourceSubscriptions: ["file:///workspace/README.md"],
+      onResourcesUpdated: ({ uri }) => console.log("Changed:", uri),
+    },
+  },
+});
+await adapter.listResources(); // Connect and start watching.
+// Later: await adapter.close();
+```
+
+Modern servers use `subscriptions/listen`; explicit legacy servers use
+`resources/subscribe`. The server must advertise resource subscription support.
+The callback alone does not select resources. Closing the adapter closes its
+subscriptions; no automatic re-listen or tool replay is promised after disconnection.
+
+## Deprecated protocol features
+
+SSE transport and protocol logging (`logLevel`, `onMessage`, and `setLoggingLevel`)
+remain compatibility features. Prefer Streamable HTTP and OpenTelemetry or stderr.
+Roots and sampling are deprecated; this adapter does not add new APIs for them.
+Experimental tasks are a separate protocol extension, not implied by modern mode.
+
+OAuth Dynamic Client Registration (DCR) is deprecated in favor of Client ID Metadata
+Documents (CIMD), but remains necessary for some authorization servers. Registration
+selection follows the authorization server's capabilities, independently of the MCP
+server's modern/legacy mode. Keep credentials scoped to their issuing authorization
+server and account.
