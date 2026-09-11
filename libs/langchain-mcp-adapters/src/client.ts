@@ -152,6 +152,7 @@ export class MCPAdapter {
       ...parsedServerConfig,
       onToolsListChanged: (source) => {
         const connection = source.options;
+
         const client = this.#clientConnections.get(
           connection.transport === "stdio"
             ? { serverName: source.server }
@@ -161,7 +162,9 @@ export class MCPAdapter {
                 authProvider: connection.authProvider,
               }
         );
+
         if (client) this.#toolsByClient.delete(client);
+
         return parsedServerConfig.onToolsListChanged?.(source);
       },
     });
@@ -189,20 +192,25 @@ export class MCPAdapter {
     if (this.#closing) throw new MCPClientError("MCP connections are closing");
     const generation = this.#generation;
     const catalog: Record<string, DynamicStructuredTool[]> = {};
+
     for (const [serverName, connection] of Object.entries(this.#mcpServers)) {
       const key = this.#clientConnections.identity(
         this.#transportOptions(serverName, customTransportOptions)
       );
+
       if (this.#failedServers.has(key)) continue;
+
       try {
         await this._initializeConnection(
           serverName,
           connection,
           customTransportOptions
         );
+
         const client = this.#clientConnections.get(
           this.#transportOptions(serverName, customTransportOptions)
         );
+
         if (client)
           catalog[serverName] = await this._loadToolsForServer(
             serverName,
@@ -210,6 +218,7 @@ export class MCPAdapter {
           );
       } catch (error) {
         if (this.#onConnectionError === "throw") throw error;
+
         if (typeof this.#onConnectionError === "function")
           this.#onConnectionError({ serverName, error });
         this.#failedServers.add(key);
@@ -218,13 +227,16 @@ export class MCPAdapter {
         );
       }
     }
+
     if (generation !== this.#generation)
       throw new MCPClientError("MCP connections closed during discovery");
+
     return catalog;
   }
 
   #transportOptions(serverName: string, options?: CustomHTTPTransportOptions) {
     const connection = this.#config.mcpServers[serverName];
+
     return !connection || connection.transport === "stdio"
       ? { serverName }
       : {
@@ -271,6 +283,7 @@ export class MCPAdapter {
   async getTools(...args: unknown[]): Promise<DynamicStructuredTool[]> {
     const { servers, options } = parseServerSelection(args);
     const catalog = await this.initializeConnections(options);
+
     return (servers.length ? servers : Object.keys(catalog)).flatMap(
       (name) => catalog[name] ?? []
     );
@@ -325,6 +338,7 @@ export class MCPAdapter {
     options?: CustomHTTPTransportOptions
   ): Promise<Client | undefined> {
     await this.initializeConnections(options);
+
     return this.#clientConnections.get(
       this.#transportOptions(serverName, options)
     );
@@ -380,8 +394,10 @@ export class MCPAdapter {
           const page = await client.listResources(
             cursor === undefined ? undefined : { cursor }
           );
+
           return { items: page.resources, nextCursor: page.nextCursor };
         });
+
         result[serverName] = resources.map((resource) => ({
           ...resource,
           uri: resource.uri,
@@ -455,8 +471,10 @@ export class MCPAdapter {
           const page = await client.listResourceTemplates(
             cursor === undefined ? undefined : { cursor }
           );
+
           return { items: page.resourceTemplates, nextCursor: page.nextCursor };
         });
+
         result[serverName] = templates.map((template) => ({
           ...template,
           uriTemplate: template.uriTemplate,
@@ -529,6 +547,7 @@ export class MCPAdapter {
   async close(): Promise<void> {
     this.#generation += 1;
     this.#closing = true;
+
     try {
       await this.#clientConnections.delete();
     } finally {
@@ -924,17 +943,22 @@ export class MCPAdapter {
     client: Client
   ): Promise<DynamicStructuredTool[]> {
     const existing = this.#toolsByClient.get(client);
+
     if (existing) return existing;
+
     const discovery = loadMcpTools(
       serverName,
       client,
       this.#loadToolsOptions[serverName]
     );
+
     this.#toolsByClient.set(client, discovery);
+
     try {
       return await discovery;
     } catch (error) {
       this.#toolsByClient.delete(client);
+
       try {
         await this.#clientConnections.release(client);
       } catch (cleanupError) {
@@ -943,6 +967,7 @@ export class MCPAdapter {
           `MCP discovery and cleanup failed for "${serverName}"`
         );
       }
+
       throw new MCPClientError(
         `Failed to load tools from server "${serverName}": ${error}`,
         serverName
@@ -1052,6 +1077,7 @@ export class MCPAdapter {
   }): Promise<void> {
     const { serverName, authProvider, headers } = transportOptions;
     const client = this.#clientConnections.get(transportOptions);
+
     if (client) this.#toolsByClient.delete(client);
     await this.#clientConnections.delete({ serverName, authProvider, headers });
   }

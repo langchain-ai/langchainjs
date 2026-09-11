@@ -756,6 +756,7 @@ export const customHTTPTransportOptionsSchema = httpOptionsSchema.pick({
   authProvider: true,
   headers: true,
 });
+
 export type CustomHTTPTransportOptions = z.input<
   typeof customHTTPTransportOptionsSchema
 >;

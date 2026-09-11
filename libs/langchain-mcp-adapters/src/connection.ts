@@ -82,19 +82,24 @@ export class ConnectionManager {
 
   identity(options: TransportOptions): ClientKeyObject {
     const headers = serializeHeaders(options.headers);
+
     const existing = this.#identities.find(
       (key) =>
         key.serverName === options.serverName &&
         key.headers === headers &&
         key.authProvider === options.authProvider
     );
+
     if (existing) return existing;
+
     const key = {
       serverName: options.serverName,
       headers,
       authProvider: options.authProvider,
     };
+
     this.#identities.push(key);
+
     return key;
   }
 
@@ -120,6 +125,7 @@ export class ConnectionManager {
   ): Promise<Client> {
     if (this.#closing) throw new Error("MCP connections are closing");
     const [type, serverName, options] = args;
+
     const key = this.identity(
       type === "stdio"
         ? { serverName }
@@ -129,12 +135,16 @@ export class ConnectionManager {
             authProvider: options.authProvider,
           }
     );
+
     const existing = this.#connections.get(key)?.client;
+
     if (existing) return existing;
     const pending = this.#pending.get(key);
+
     if (pending) return pending;
     const acquisition = this.#connect(args, key);
     this.#pending.set(key, acquisition);
+
     try {
       return await acquisition;
     } finally {
@@ -352,6 +362,7 @@ export class ConnectionManager {
   ): { key: ClientKeyObject; connection: Connection } | undefined {
     const key = this.identity(options);
     const connection = this.#connections.get(key);
+
     return connection ? { key, connection } : undefined;
   }
 
@@ -374,15 +385,19 @@ export class ConnectionManager {
    */
   async delete(options?: TransportOptions): Promise<void> {
     if (this.#closing) return this.#closing;
+
     if (options) {
       const key = this.identity(options);
       await this.#pending.get(key)?.catch(() => undefined);
       const connection = this.#connections.get(key);
       this.#connections.delete(key);
       await connection?.closeCallback();
+
       return;
     }
+
     this.#closing = this.#closeAll();
+
     try {
       await this.#closing;
     } finally {
@@ -394,6 +409,7 @@ export class ConnectionManager {
     const entry = [...this.#connections.entries()].find(
       ([, connection]) => connection.client === client
     );
+
     if (!entry) return;
     this.#connections.delete(entry[0]);
     await entry[1].closeCallback();
@@ -404,12 +420,15 @@ export class ConnectionManager {
     const connections = [...this.#connections.values()];
     this.#connections.clear();
     this.#identities = [];
+
     const results = await Promise.allSettled(
       connections.map((connection) => connection.closeCallback())
     );
+
     const errors = results.flatMap((result) =>
       result.status === "rejected" ? [result.reason] : []
     );
+
     if (errors.length)
       throw new AggregateError(errors, "Failed to close MCP connections");
   }
@@ -611,6 +630,7 @@ function serializeHeaders(
   if (!headers || Object.keys(headers).length === 0) {
     return;
   }
+
   return JSON.stringify([...new Headers(headers)]);
 }
 
@@ -620,7 +640,9 @@ export function mergeHeaders(
   overrides: Record<string, string> | undefined
 ): Record<string, string> {
   const headers = new Headers(base);
+
   for (const [name, value] of Object.entries(overrides ?? {}))
     headers.set(name, value);
+
   return Object.fromEntries(headers);
 }

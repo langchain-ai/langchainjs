@@ -105,6 +105,7 @@ function dereferenceJsonSchema(schema: JSONObject): JSONObject {
             debugLog(
               `WARNING: Circular reference detected for ${refPath}, using empty object`
             );
+
             return {};
           }
 
@@ -249,10 +250,12 @@ function extractPropertiesFromConditional(schema: JSONObject): JSONObject {
   // Either branch can be inactive. Project its field names, not conditional
   // constraints or required fields; the original schema validates invocation.
   const branches = [schema.then, schema.else].filter(isSchemaRecord);
+
   return {
     properties: Object.fromEntries(
       branches.flatMap((branch) => {
         const parsed = schemaKeywordsSchema.parse(branch);
+
         return Object.keys(parsed.properties ?? {}).map((name) => [name, {}]);
       })
     ),
@@ -349,6 +352,7 @@ function simplifyJsonSchemaForLLM(schema: JSONObject): JSONObject {
       const simplified = schemaKeywordsSchema.parse(
         simplifyJsonSchemaForLLM(subSchema)
       );
+
       // Flatten alternative field names without narrowing to the last branch.
       // Branch-specific constraints remain authoritative in originalSchema.
       if (isSchemaRecord(simplified.properties)) {
@@ -357,6 +361,7 @@ function simplifyJsonSchemaForLLM(schema: JSONObject): JSONObject {
       }
       // Collect required sets for intersection
       requiredSets.push(new Set(simplified.required ?? []));
+
       // Merge type if present
       if (simplified.type && !result.type) {
         result.type = simplified.type;
@@ -367,6 +372,7 @@ function simplifyJsonSchemaForLLM(schema: JSONObject): JSONObject {
       const alternatives = schemasToMerge.map((branch) =>
         isSchemaRecord(branch.properties) ? branch.properties[name] : undefined
       );
+
       if (!alternatives.every(isSchemaRecord)) continue;
       const [first] = alternatives;
       mergedProperties[name] = Object.fromEntries(
@@ -571,6 +577,7 @@ function _toolOutputToContentBlocks(
     case "resource": {
       const resource = content.resource;
       const metadata = { uri: resource.uri };
+
       if ("text" in resource) {
         return useStandardContentBlocks
           ? [{ type: "text", text: resource.text, metadata }]
@@ -584,7 +591,9 @@ function _toolOutputToContentBlocks(
               },
             ];
       }
+
       const mimeType = resource.mimeType ?? "application/octet-stream";
+
       return useStandardContentBlocks
         ? [
             {
@@ -608,12 +617,14 @@ function _toolOutputToContentBlocks(
             },
           ];
     }
+
     case "resource_link": {
       const metadata = {
         uri: content.uri,
         name: content.name,
         ...(content.title !== undefined ? { title: content.title } : {}),
       };
+
       return useStandardContentBlocks
         ? [
             {
@@ -770,6 +781,7 @@ function _convertCallToolResult({
         serverName
       )
     );
+
   const artifacts = result.content.filter(
     (block) =>
       _getOutputTypeForContentType(block.type, outputHandling) === "artifact"
@@ -782,9 +794,11 @@ function _convertCallToolResult({
 
   // Add structuredContent and meta as special artifacts
   const enhancedArtifacts: ExtendedArtifact[] = [...artifacts];
+
   for (const block of result.content) {
     const retainedKeys =
       block.type === "text" ? ["type", "text"] : ["type", "data", "mimeType"];
+
     if (
       !artifacts.includes(block) &&
       (block.type === "resource" ||
@@ -794,6 +808,7 @@ function _convertCallToolResult({
       enhancedArtifacts.push({ type: "mcp_content", data: block });
     }
   }
+
   if (structuredContent !== undefined) {
     enhancedArtifacts.push({
       type: "mcp_structured_content",
@@ -954,6 +969,7 @@ async function _callTool({
     const finalArgs = { ...args, ...beforeToolCallInterception?.args };
 
     const validation = await inputValidator["~standard"].validate(finalArgs);
+
     if (validation.issues) {
       throw new ToolException(
         `Invalid arguments for MCP tool "${toolName}": ${validation.issues.map((issue) => issue.message).join("; ")}`
@@ -990,6 +1006,7 @@ async function _callTool({
     }
 
     const result = await finalClient.callTool(...callToolArgs);
+
     const [content, artifacts] = _convertCallToolResult({
       serverName,
       toolName,
@@ -1046,6 +1063,7 @@ async function _callTool({
     if (isToolException(error)) {
       throw error;
     }
+
     throw new ToolException(
       `Error calling tool ${toolName}: ${String(error)}`,
       error
@@ -1086,6 +1104,7 @@ export async function loadMcpTools(
 
   const mcpTools = await collectPages(async (cursor) => {
     const page = await client.listTools(cursor === undefined ? {} : { cursor });
+
     return { items: page.tools, nextCursor: page.nextCursor };
   });
 
@@ -1105,6 +1124,7 @@ export async function loadMcpTools(
         .map(async (tool: MCPTool) => {
           try {
             const originalSchema = jsonObjectSchema.parse(tool.inputSchema);
+
             // Scope the SDK engine to this descriptor: its default shared cache keys by $id.
             // The SDK export selects the same engine as Client for Node/browser/workerd.
             const inputValidator = fromJsonSchema(

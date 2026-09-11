@@ -4,6 +4,7 @@ import { collectPages } from "../pagination.js";
 import { MCPAdapter } from "../client.js";
 
 const config = { servers: { test: { url: "https://example.com/mcp" } } };
+
 afterEach(() => vi.restoreAllMocks());
 
 function mockConnection() {
@@ -14,6 +15,7 @@ function mockConnection() {
 
 test("lists all resource and template pages with opaque cursors", async () => {
   mockConnection();
+
   const resources = vi
     .spyOn(Client.prototype, "listResources")
     .mockResolvedValueOnce({
@@ -23,12 +25,14 @@ test("lists all resource and template pages with opaque cursors", async () => {
     .mockResolvedValueOnce({
       resources: [{ name: "second", uri: "test://second" }],
     });
+
   const templates = vi
     .spyOn(Client.prototype, "listResourceTemplates")
     .mockResolvedValueOnce({ resourceTemplates: [], nextCursor: "next" })
     .mockResolvedValueOnce({
       resourceTemplates: [{ name: "template", uriTemplate: "test://{id}" }],
     });
+
   const adapter = new MCPAdapter(config);
   expect((await adapter.listResources()).test.map(({ uri }) => uri)).toEqual([
     "test://first",

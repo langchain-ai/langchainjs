@@ -13,6 +13,7 @@ function mockClient(inputSchema: Tool["inputSchema"] = { type: "object" }) {
   vi.spyOn(client, "callTool").mockResolvedValue({
     content: [{ type: "text", text: "ok" }],
   });
+
   return client;
 }
 
@@ -23,6 +24,7 @@ describe("original server schema", () => {
     const schema = Object.freeze({
       type: "object",
     } satisfies Tool["inputSchema"]);
+
     await expect(
       loadMcpTools("test", mockClient(schema))
     ).resolves.toHaveLength(1);
@@ -36,9 +38,11 @@ describe("original server schema", () => {
       required: ["value"],
       not: { properties: { value: { const: 2 } } },
     });
+
     const [tool] = await loadMcpTools("test", client, {
       beforeToolCall: () => ({ args: { value: 2 } }),
     });
+
     await expect(tool.invoke({ value: 1 })).rejects.toThrow(/arguments/);
     expect(client.callTool).not.toHaveBeenCalled();
   });
@@ -51,9 +55,11 @@ describe("original server schema", () => {
       required: ["value"],
       additionalProperties: false,
     });
+
     const [tool] = await loadMcpTools("test", client, {
       beforeToolCall: () => ({ args: { value: 3 } }),
     });
+
     expect(await tool.invoke({ value: 1 })).toBe("ok");
     expect(client.callTool).toHaveBeenCalledWith({
       name: "echo",
@@ -76,15 +82,18 @@ describe("result fidelity", () => {
         structuredContent,
         _meta: { private: "metadata" },
       });
+
       const [tool] = await loadMcpTools("test", client, {
         afterToolCall: ({ result }) => ({ result }),
       });
+
       const output = await tool.invoke({
         type: "tool_call",
         id: "call",
         name: "echo",
         args: {},
       });
+
       expect(ToolMessage.isInstance(output)).toBe(true);
       expect(output.content).toBe("ok");
       expect(output.artifact).toEqual(
@@ -103,9 +112,11 @@ describe("result fidelity", () => {
       status: "error",
       artifact: { reason: "policy" },
     });
+
     const [tool] = await loadMcpTools("test", mockClient(), {
       afterToolCall: () => ({ result: message }),
     });
+
     expect(
       await tool.invoke({
         type: "tool_call",
@@ -118,9 +129,11 @@ describe("result fidelity", () => {
 
   test("preserves native Commands", async () => {
     const command = new Command({ update: { approved: true } });
+
     const [tool] = await loadMcpTools("test", mockClient(), {
       afterToolCall: () => ({ result: command }),
     });
+
     expect(await tool.invoke({})).toBe(command);
   });
 
@@ -128,11 +141,13 @@ describe("result fidelity", () => {
     const interrupt = new GraphInterrupt([
       { value: "approval", id: "approval" },
     ]);
+
     const [tool] = await loadMcpTools("test", mockClient(), {
       beforeToolCall: () => {
         throw interrupt;
       },
     });
+
     await expect(tool.invoke({})).rejects.toBe(interrupt);
   });
 });
@@ -180,9 +195,11 @@ test.each([
       properties: { value: { type: "number" } },
       ...constraint,
     });
+
     const [tool] = await loadMcpTools("test", client, {
       beforeToolCall: () => ({ args: { value } }),
     });
+
     await expect(tool.invoke({ value: 1 })).rejects.toThrow(/arguments/);
     expect(client.callTool).not.toHaveBeenCalled();
   }
@@ -194,21 +211,25 @@ test("rejects additional properties added by a hook", async () => {
     properties: {},
     additionalProperties: false,
   });
+
   const [tool] = await loadMcpTools("test", client, {
     beforeToolCall: () => ({ args: { injected: true } }),
   });
+
   await expect(tool.invoke({})).rejects.toThrow(/additional properties/);
   expect(client.callTool).not.toHaveBeenCalled();
 });
 
 test("preserves semantic error envelopes and transport causes separately", async () => {
   const client = mockClient();
+
   const result = {
     isError: true,
     content: [{ type: "text", text: "denied" }],
     structuredContent: false,
     _meta: { reason: "policy" },
   } satisfies Awaited<ReturnType<Client["callTool"]>>;
+
   vi.mocked(client.callTool).mockResolvedValueOnce(result);
   const [tool] = await loadMcpTools("test", client);
   await expect(tool.invoke({})).rejects.toMatchObject({
@@ -228,6 +249,7 @@ test.each([true, false])(
   async (useStandardContentBlocks) => {
     const client = mockClient();
     const read = vi.spyOn(client, "readResource");
+
     const content = [
       {
         type: "resource",
@@ -245,18 +267,22 @@ test.each([true, false])(
         _meta: { private: true },
       },
     ] satisfies Awaited<ReturnType<Client["callTool"]>>["content"];
+
     vi.mocked(client.callTool).mockResolvedValue({ content });
+
     const [tool] = await loadMcpTools("test", client, {
       useStandardContentBlocks,
       outputHandling: "content",
       afterToolCall: ({ result }) => ({ result }),
     });
+
     const output = await tool.invoke({
       type: "tool_call",
       name: "echo",
       id: "call",
       args: {},
     });
+
     expect(output.artifact).toEqual(
       content.map((data) => ({ type: "mcp_content", data }))
     );
@@ -268,15 +294,18 @@ test.each([true, false])(
 
 test("does not invent structured output when it is absent", async () => {
   const client = mockClient();
+
   const [tool] = await loadMcpTools("test", client, {
     afterToolCall: ({ result }) => ({ result }),
   });
+
   const output = await tool.invoke({
     type: "tool_call",
     id: "call",
     name: "echo",
     args: {},
   });
+
   expect(output.content).toBe("ok");
   expect(output.artifact).toEqual([]);
 });
@@ -287,9 +316,11 @@ test("rejects a required value removed by a hook", async () => {
     properties: { value: { type: "string" } },
     required: ["value"],
   });
+
   const [tool] = await loadMcpTools("test", client, {
     beforeToolCall: () => ({ args: { value: undefined } }),
   });
+
   await expect(tool.invoke({ value: "original" })).rejects.toThrow(/arguments/);
   expect(client.callTool).not.toHaveBeenCalled();
 });

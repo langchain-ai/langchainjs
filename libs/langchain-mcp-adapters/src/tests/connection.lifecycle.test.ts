@@ -19,6 +19,7 @@ afterEach(() => vi.restoreAllMocks());
 
 function mockConnect() {
   vi.spyOn(SDKClient.prototype, "close").mockResolvedValue();
+
   return vi.spyOn(SDKClient.prototype, "connect").mockResolvedValue();
 }
 
@@ -26,10 +27,12 @@ describe("connection ownership", () => {
   test("deduplicates concurrent acquisitions and reuses matching forks", async () => {
     const connect = mockConnect();
     const manager = new ConnectionManager();
+
     const [first, second] = await Promise.all([
       manager.createClient("http", "test", connection),
       manager.createClient("http", "test", connection),
     ]);
+
     expect(first).toBe(second);
     expect(connect).toHaveBeenCalledTimes(1);
     expect(await first.fork({})).toBe(first);
@@ -46,9 +49,11 @@ describe("connection ownership", () => {
 
   test("registers notification handlers before connect and cleans up failed handshakes", async () => {
     const connect = mockConnect();
+
     const transportClose = vi
       .spyOn(StreamableHTTPClientTransport.prototype, "close")
       .mockResolvedValue();
+
     const handler = vi.spyOn(SDKClient.prototype, "setNotificationHandler");
     const failure = new Error("handshake failed");
     connect.mockRejectedValueOnce(failure);
@@ -72,9 +77,11 @@ describe("connection ownership", () => {
     const manager = new ConnectionManager();
     const first = await manager.createClient("http", "one", connection);
     const second = await manager.createClient("http", "two", connection);
+
     const firstClose = vi
       .fn<SDKClient["close"]>()
       .mockRejectedValue(new Error("close failed"));
+
     const secondClose = vi.fn<SDKClient["close"]>().mockResolvedValue();
     first.close = firstClose;
     second.close = secondClose;
@@ -89,6 +96,7 @@ describe("connection ownership", () => {
   test("close waits for an in-flight acquisition and prevents new acquisitions while draining", async () => {
     const connect = mockConnect();
     let release = () => {};
+
     connect.mockImplementationOnce(
       () =>
         new Promise<void>((resolve) => {
@@ -113,21 +121,26 @@ describe("connection ownership", () => {
 describe("catalog identity", () => {
   test("isolates same-server tools across concurrent contexts and preserves configured header precedence", async () => {
     mockConnect();
+
     const list = vi.spyOn(SDKClient.prototype, "listTools").mockResolvedValue({
       tools: [{ name: "echo", inputSchema: { type: "object" } }],
     });
+
     const call = vi
       .spyOn(SDKClient.prototype, "callTool")
       .mockResolvedValue({ content: [{ type: "text", text: "ok" }] });
+
     const adapter = new MCPAdapter({
       servers: { test: { ...connection, headers: { fixed: "configured" } } },
     });
+
     const [[first], [second]] = await Promise.all([
       adapter.getTools(["test"], {
         headers: { tenant: "one", fixed: "override" },
       }),
       adapter.getTools(["test"], { headers: { tenant: "two" } }),
     ]);
+
     expect(first).not.toBe(second);
     expect(
       (await adapter.getTools(["test"], { headers: { tenant: "one" } }))[0]
@@ -148,10 +161,12 @@ describe("catalog identity", () => {
     vi.spyOn(SDKClient.prototype, "listTools").mockResolvedValue({
       tools: [{ name: "echo", inputSchema: { type: "object" } }],
     });
+
     const adapter = new MCPAdapter({
       servers: { test: connection },
       onConnectionError: "ignore",
     });
+
     expect(
       await adapter.getTools(["test"], { headers: { tenant: "failed" } })
     ).toEqual([]);
@@ -164,9 +179,11 @@ describe("catalog identity", () => {
 
 test("partitions catalogs by OAuth provider identity even with identical headers", async () => {
   mockConnect();
+
   const list = vi.spyOn(SDKClient.prototype, "listTools").mockResolvedValue({
     tools: [{ name: "echo", inputSchema: { type: "object" } }],
   });
+
   const makeProvider = () => ({
     redirectUrl: "http://localhost/callback",
     clientMetadata: { redirect_uris: ["http://localhost/callback"] },
@@ -177,15 +194,19 @@ test("partitions catalogs by OAuth provider identity even with identical headers
     saveCodeVerifier: () => {},
     codeVerifier: () => "test-verifier",
   });
+
   const firstProvider = makeProvider();
   const secondProvider = makeProvider();
   const adapter = new MCPAdapter({ servers: { test: connection } });
+
   const [first] = await adapter.getTools(["test"], {
     authProvider: firstProvider,
   });
+
   const [second] = await adapter.getTools(["test"], {
     authProvider: secondProvider,
   });
+
   expect(first).not.toBe(second);
   expect(
     (await adapter.getTools(["test"], { authProvider: firstProvider }))[0]
@@ -197,25 +218,32 @@ test("partitions catalogs by OAuth provider identity even with identical headers
 test("tool catalog notifications invalidate only their connection identity", async () => {
   mockConnect();
   vi.spyOn(SDKClient.prototype, "setNotificationHandler");
+
   const register: <M extends NotificationMethod>(
     method: M,
     handler: (notification: NotificationTypeMap[M]) => void | Promise<void>
   ) => void = SDKClient.prototype.setNotificationHandler;
+
   const list = vi.spyOn(SDKClient.prototype, "listTools").mockResolvedValue({
     tools: [{ name: "echo", inputSchema: { type: "object" } }],
   });
+
   const adapter = new MCPAdapter({ servers: { test: connection } });
+
   const [first] = await adapter.getTools(["test"], {
     headers: { tenant: "one" },
   });
+
   const [second] = await adapter.getTools(["test"], {
     headers: { tenant: "two" },
   });
+
   const handlers = vi
     .mocked(register<"notifications/tools/list_changed">)
     .mock.calls.filter(
       ([method]) => method === "notifications/tools/list_changed"
     );
+
   await handlers[0][1]({ method: "notifications/tools/list_changed" });
   expect(
     (await adapter.getTools(["test"], { headers: { tenant: "one" } }))[0]
