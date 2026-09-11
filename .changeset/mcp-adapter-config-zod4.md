@@ -2,14 +2,10 @@
 "@langchain/mcp-adapters": major
 ---
 
-Add the canonical `MCPAdapter({ servers })` API, retaining `MultiServerMCPClient` as a deprecated alias. Require Zod4, replace duplicated notification schemas with SDK types, and validate hook modifications after awaiting sync or async callbacks. Reject conflicting configuration spellings and unknown output-handling keys. Preserve callbacks and OAuth providers in configuration snapshots.
+Use `MCPAdapter({ servers })` as the canonical client API. `MultiServerMCPClient` and existing server-map configurations remain supported; the old class name is deprecated.
 
-Notification options are isolated per event. Legacy servers named `servers` and explicitly undefined output destinations remain supported.
+Upgrade to Zod 4. Configuration now rejects conflicting options and unknown output-handling keys. Hook argument overrides must be objects. Configuration snapshots preserve callbacks and OAuth provider identity.
 
-Parse configuration into connections with a required transport discriminator. Infer adapter-owned configuration and hook types from Zod schemas, and merge object-shaped argument overrides without mutating the original request.
+Hook `state` is now `unknown` because LangGraph task inputs can be objects, arrays, or primitives. The value is unchanged; narrow it before accessing application-specific fields. Outside a graph, hooks still receive `{}`.
 
-Parse error formatting data without asserting a Zod error version, check hook content/artifact elements, and validate required OAuth methods without replacing the provider. Remove type assertions from tool invocation and schema traversal.
-
-Hook callbacks receive the current LangGraph task input unchanged, or `{}` outside a graph. The `state` parameter is now `unknown` because a task can receive an object, array, or primitive; applications must narrow it before accessing properties.
-
-Remove `useStandardContentBlocks`: always emit standard LangChain content blocks, keep artifact-routed blocks in MCP format, and require explicit resource reads. Migrate image/audio consumers to `data` and `mimeType`.
+Remove `useStandardContentBlocks`; tool content always uses standard LangChain blocks. Update image/audio consumers to use `data` and `mimeType`. Artifact-routed blocks keep their MCP format, including when passed through `afterToolCall`; resource reads remain explicit.
