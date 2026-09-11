@@ -1637,6 +1637,68 @@ describe("convertMessagesToResponsesInput", () => {
       expect(result).toEqual(output);
     });
 
+    it("preserves multiple ordered reasoning items from response_metadata.output in ZDR mode", () => {
+      const output = [
+        {
+          type: "reasoning",
+          id: "rs_first",
+          summary: [{ type: "summary_text", text: "First" }],
+          encrypted_content: "encrypted_first",
+          created_by: "provider",
+        },
+        {
+          type: "function_call",
+          id: "fc_first",
+          call_id: "call_first",
+          name: "add",
+          arguments: '{"a":1,"b":2}',
+          created_by: "provider",
+        },
+        {
+          type: "reasoning",
+          id: "rs_second",
+          summary: [{ type: "summary_text", text: "Second" }],
+          encrypted_content: "encrypted_second",
+          created_by: "provider",
+        },
+        {
+          type: "function_call",
+          id: "fc_second",
+          call_id: "call_second",
+          name: "multiply",
+          arguments: '{"a":3,"b":4}',
+          created_by: "provider",
+        },
+      ];
+      const message = new AIMessage({
+        content: [],
+        tool_calls: [
+          { name: "add", args: { a: 1, b: 2 }, id: "call_first" },
+          {
+            name: "multiply",
+            args: { a: 3, b: 4 },
+            id: "call_second",
+          },
+        ],
+        additional_kwargs: {
+          // The legacy field can only retain one reasoning item. The original
+          // output must take precedence when it is available.
+          reasoning: output[2],
+        },
+        response_metadata: { output },
+      });
+
+      const result = convertMessagesToResponsesInput({
+        messages: [message],
+        zdrEnabled: true,
+        model: "o3-mini",
+      });
+
+      expect(result).toEqual(
+        output.map(({ created_by: _createdBy, ...item }) => item)
+      );
+    });
+
     it("round-trips reasoning + tool calls through AIMessage", () => {
       const response = {
         id: "resp_123",
