@@ -311,7 +311,7 @@ function _convertCallToolResult({
  * @internal
  */
 type CallToolArgs = {
-  invocation: ReturnType<typeof createToolInvocation>;
+  invocation: ReturnType<ReturnType<typeof createToolInvocationFactory>>;
   /**
    * The name of the server to call the tool on (used for error messages and logging)
    */
@@ -374,7 +374,7 @@ function toolExecutionContext(config?: RunnableConfig) {
   }
 }
 
-function createToolInvocation(
+function createToolInvocationFactory(
   client: MCPInstance,
   serverName: string,
   toolName: string,
@@ -433,43 +433,47 @@ function createToolInvocation(
     };
   }
 
-  const execute = async (
-    request: CallToolRequest["params"],
-    options: RequestOptions,
-    headers: ToolCallModification["headers"],
-    config?: RunnableConfig
-  ) => {
-    if (!headers || Object.keys(headers).length === 0)
-      return direct(request, options);
-    const call = await selectHeaderPolicy(config)(headers);
+  return () => {
+    let executeRound = direct;
 
-    return call(request, options);
-  };
+    const execute = async (
+      request: CallToolRequest["params"],
+      options: RequestOptions,
+      headers: ToolCallModification["headers"],
+      config?: RunnableConfig
+    ) => {
+      if (headers && Object.keys(headers).length > 0) {
+        executeRound = await selectHeaderPolicy(config)(headers);
+      }
 
-  if (runInterrupts) {
-    return {
-      execute,
-      async run(call: InvokeToolRound, config?: RunnableConfig) {
-        const context = toolExecutionContext(config);
-
-        return runInterrupts(
-          (continuation) =>
-            call(
-              continuation,
-              context.kind === "graph" ? context.state : undefined
-            ),
-          {
-            server: serverName,
-            tool: toolName,
-            signal: config?.signal,
-            execution: context.kind,
-          }
-        );
-      },
+      return executeRound(request, options);
     };
-  }
 
-  return { execute, run: (call: InvokeToolRound) => call() };
+    if (runInterrupts) {
+      return {
+        execute,
+        async run(call: InvokeToolRound, config?: RunnableConfig) {
+          const context = toolExecutionContext(config);
+
+          return runInterrupts(
+            (continuation) =>
+              call(
+                continuation,
+                context.kind === "graph" ? context.state : undefined
+              ),
+            {
+              server: serverName,
+              tool: toolName,
+              signal: config?.signal,
+              execution: context.kind,
+            }
+          );
+        },
+      };
+    }
+
+    return { execute, run: (call: InvokeToolRound) => call() };
+  };
 }
 
 /** Parse hook output and validate effective arguments before choosing a wire request. */
@@ -734,7 +738,7 @@ export async function convertMcpTools(
               new DefaultJsonSchemaValidator()
             );
 
-            const invocation = createToolInvocation(
+            const createInvocation = createToolInvocationFactory(
               client,
               serverName,
               tool.name,
@@ -755,6 +759,8 @@ export async function convertMcpTools(
                 _runManager?: CallbackManagerForToolRun,
                 config?: RunnableConfig
               ) => {
+                const invocation = createInvocation();
+
                 const call = (
                   continuation?: MCPContinuation,
                   hookState?: unknown

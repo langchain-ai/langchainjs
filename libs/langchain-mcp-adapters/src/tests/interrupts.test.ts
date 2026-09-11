@@ -774,3 +774,94 @@ it.each(["modern", "mixed"])(
     }
   }
 );
+
+it("retains per-call headers across direct rounds without sharing them between invocations", async () => {
+  const observed: { account: string; header: string }[] = [];
+
+  const handler = createMcpHandler(
+    (request) => {
+      const server = new McpServer(
+        { name: "header-continuation", version: "1" },
+        {
+          requestState: {
+            verify: async (state) => ({ account: z.string().parse(state) }),
+          },
+        }
+      );
+
+      server.registerTool(
+        "account",
+        { inputSchema: z.object({ account: z.string() }) },
+        async ({ account }, context) => {
+          const header =
+            request.requestInfo?.headers.get("x-test-account") ?? "missing";
+
+          observed.push({ account, header });
+
+          if (!context.mcpReq.inputResponses) {
+            return inputRequired({ requestState: account, inputRequests: {} });
+          }
+
+          expect(context.mcpReq.requestState()).toEqual({ account });
+
+          return { content: [{ type: "text", text: header }] };
+        }
+      );
+
+      return server;
+    },
+    { legacy: "reject" }
+  );
+
+  const http = createServer(toNodeHandler(handler));
+  http.listen(0, "127.0.0.1");
+  await once(http, "listening");
+  const { port } = z.object({ port: z.number() }).parse(http.address());
+
+  const before = vi.fn(({ args }) =>
+    args.account === "default"
+      ? undefined
+      : {
+          headers: { "X-Test-Account": z.string().parse(args.account) },
+        }
+  );
+
+  const after = vi.fn();
+
+  const adapter = new MCPAdapter({
+    servers: {
+      server: {
+        url: `http://127.0.0.1:${port}/mcp`,
+        headers: { "X-Test-Account": "default" },
+      },
+    },
+    beforeToolCall: before,
+    afterToolCall: after,
+  });
+
+  try {
+    const [tool] = await adapter.listTools();
+    await expect(
+      Promise.all([
+        tool.invoke({ account: "alpha" }),
+        tool.invoke({ account: "beta" }),
+      ])
+    ).resolves.toEqual(["alpha", "beta"]);
+    await expect(tool.invoke({ account: "default" })).resolves.toBe("default");
+
+    for (const account of ["alpha", "beta", "default"]) {
+      expect(observed.filter((call) => call.account === account)).toEqual([
+        { account, header: account },
+        { account, header: account },
+      ]);
+    }
+
+    expect(before).toHaveBeenCalledTimes(3);
+    expect(after).toHaveBeenCalledTimes(3);
+  } finally {
+    await adapter.close();
+    http.close();
+    http.closeAllConnections();
+    await once(http, "close");
+  }
+});
