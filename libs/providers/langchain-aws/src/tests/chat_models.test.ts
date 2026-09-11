@@ -971,6 +971,86 @@ test("Streaming supports empty string chunks", async () => {
   expect(finalChunk.content).toBe("Hello world!");
 });
 
+test.each([
+  {
+    name: "v0",
+    outputVersion: undefined,
+    expected: [
+      {
+        type: "reasoning_content",
+        reasoningText: { text: "Reasoning summary" },
+      },
+      {
+        type: "reasoning_content",
+        reasoningText: { signature: "opaque-signature" },
+      },
+    ],
+  },
+  {
+    name: "v1",
+    outputVersion: "v1" as const,
+    expected: [
+      {
+        type: "reasoning",
+        reasoning: "Reasoning summary",
+        index: 0,
+      },
+      {
+        type: "reasoning",
+        reasoning: "",
+        signature: "opaque-signature",
+        index: 0,
+      },
+    ],
+  },
+])(
+  "Streaming respects $name reasoning output shape",
+  async ({ outputVersion, expected }) => {
+    const mockClient = {
+      send: vi.fn().mockResolvedValue({
+        stream: (async function* () {
+          yield {
+            contentBlockDelta: {
+              contentBlockIndex: 0,
+              delta: {
+                reasoningContent: { text: "Reasoning summary" },
+              },
+            },
+          };
+          yield {
+            contentBlockDelta: {
+              contentBlockIndex: 0,
+              delta: {
+                reasoningContent: { signature: "opaque-signature" },
+              },
+            },
+          };
+        })(),
+      }),
+    } as unknown as BedrockRuntimeClient;
+
+    const model = new ChatBedrockConverse({
+      region: "us-east-1",
+      credentials: {
+        secretAccessKey: "test-secret-key",
+        accessKeyId: "test-access-key",
+      },
+      model: "anthropic.claude-haiku-4-5-20251001-v1:0",
+      client: mockClient,
+      ...(outputVersion ? { outputVersion } : {}),
+    });
+
+    const content = [];
+    for await (const chunk of await model.stream("Think step by step")) {
+      if (Array.isArray(chunk.content)) {
+        content.push(...chunk.content);
+      }
+    }
+
+    expect(content).toEqual(expected);
+  }
+);
+
 test("Streaming throws when Bedrock stream stalls between chunks", async () => {
   vi.useFakeTimers();
   try {

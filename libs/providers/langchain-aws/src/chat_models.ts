@@ -1094,7 +1094,8 @@ export class ChatBedrockConverse
 
       const message = convertConverseMessageToLangChainMessage(
         output.message,
-        responseMetadata
+        responseMetadata,
+        options.outputVersion ?? this.outputVersion ?? "v0"
       );
       return {
         generations: [
@@ -1254,7 +1255,8 @@ export class ChatBedrockConverse
               );
             } else if (chunk.contentBlockDelta) {
               const textChatGeneration = handleConverseStreamContentBlockDelta(
-                chunk.contentBlockDelta
+                chunk.contentBlockDelta,
+                options.outputVersion ?? this.outputVersion ?? "v0"
               );
               yield textChatGeneration;
               await runManager?.handleLLMNewToken(

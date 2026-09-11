@@ -1,14 +1,22 @@
-import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
+import type {
+  ContentBlock,
+  MessageOutputVersion,
+  UsageMetadata,
+} from "@langchain/core/messages";
 import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
 import type { ToolCall } from "@langchain/core/messages/tool";
 import type * as Bedrock from "@aws-sdk/client-bedrock-runtime";
 import type { DocumentType as __DocumentType } from "@smithy/types";
 import { ChatGenerationChunk } from "@langchain/core/outputs";
-import { MessageContentReasoningBlockRedacted } from "../types.js";
+import {
+  MessageContentReasoningBlock,
+  MessageContentReasoningBlockRedacted,
+} from "../types.js";
 
 export function convertConverseMessageToLangChainMessage(
   message: Bedrock.Message,
-  responseMetadata: Omit<Bedrock.ConverseResponse, "output">
+  responseMetadata: Omit<Bedrock.ConverseResponse, "output">,
+  outputVersion: MessageOutputVersion = "v0"
 ): AIMessage {
   if (!message.content) {
     throw new Error("No message content found in response.");
@@ -90,7 +98,10 @@ export function convertConverseMessageToLangChainMessage(
         content.push({ type: "image", image: c.image });
       } else if ("reasoningContent" in c && c.reasoningContent) {
         content.push(
-          bedrockReasoningBlockToLangchainReasoningBlock(c.reasoningContent)
+          bedrockReasoningBlockToLangchainReasoningBlock(
+            c.reasoningContent,
+            outputVersion
+          )
         );
       } else if ("text" in c && typeof c.text === "string") {
         content.push({ type: "text", text: c.text });
@@ -127,7 +138,8 @@ export function convertConverseMessageToLangChainMessage(
 }
 
 export function handleConverseStreamContentBlockDelta(
-  contentBlockDelta: Bedrock.ContentBlockDeltaEvent
+  contentBlockDelta: Bedrock.ContentBlockDeltaEvent,
+  outputVersion: MessageOutputVersion = "v0"
 ): ChatGenerationChunk {
   if (!contentBlockDelta.delta) {
     throw new Error("No delta found in content block.");
@@ -161,7 +173,8 @@ export function handleConverseStreamContentBlockDelta(
         content: [
           bedrockReasoningDeltaToLangchainPartialReasoningBlock(
             contentBlockDelta.delta.reasoningContent,
-            contentBlockDelta.contentBlockIndex
+            contentBlockDelta.contentBlockIndex,
+            outputVersion
           ),
         ],
       }),
@@ -245,10 +258,20 @@ export function handleConverseStreamMetadata(
 
 export function bedrockReasoningDeltaToLangchainPartialReasoningBlock(
   reasoningContent: Bedrock.ReasoningContentBlockDelta,
-  index?: number
-): ContentBlock.Reasoning | MessageContentReasoningBlockRedacted {
+  index?: number,
+  outputVersion: MessageOutputVersion = "v0"
+):
+  | ContentBlock.Reasoning
+  | MessageContentReasoningBlock
+  | MessageContentReasoningBlockRedacted {
   const { text, redactedContent, signature } = reasoningContent;
   if (typeof text === "string") {
+    if (outputVersion === "v0") {
+      return {
+        type: "reasoning_content",
+        reasoningText: { text },
+      };
+    }
     return {
       type: "reasoning",
       reasoning: text,
@@ -256,6 +279,12 @@ export function bedrockReasoningDeltaToLangchainPartialReasoningBlock(
     };
   }
   if (typeof signature === "string") {
+    if (outputVersion === "v0") {
+      return {
+        type: "reasoning_content",
+        reasoningText: { signature },
+      };
+    }
     return {
       type: "reasoning",
       reasoning: "",
@@ -273,10 +302,25 @@ export function bedrockReasoningDeltaToLangchainPartialReasoningBlock(
 }
 
 export function bedrockReasoningBlockToLangchainReasoningBlock(
-  reasoningContent: Bedrock.ReasoningContentBlock
-): ContentBlock.Reasoning | MessageContentReasoningBlockRedacted {
+  reasoningContent: Bedrock.ReasoningContentBlock,
+  outputVersion: MessageOutputVersion = "v0"
+):
+  | ContentBlock.Reasoning
+  | MessageContentReasoningBlock
+  | MessageContentReasoningBlockRedacted {
   const { reasoningText, redactedContent } = reasoningContent;
   if (reasoningText && typeof reasoningText.text === "string") {
+    if (outputVersion === "v0") {
+      return {
+        type: "reasoning_content",
+        reasoningText: {
+          text: reasoningText.text,
+          ...(typeof reasoningText.signature === "string"
+            ? { signature: reasoningText.signature }
+            : {}),
+        },
+      };
+    }
     return {
       type: "reasoning",
       reasoning: reasoningText.text,
