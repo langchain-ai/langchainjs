@@ -230,9 +230,11 @@ it("subscribes to modern catalog changes and honors SDK cache policy", async () 
   let requests = 0;
   const logs: unknown[] = [];
   let changed: () => void = () => {};
+
   const notification = new Promise<void>((resolve) => {
     changed = resolve;
   });
+
   const handler = createMcpHandler(
     () => {
       const server = new McpServer(
@@ -244,25 +246,30 @@ it("subscribes to modern catalog changes and honors SDK cache policy", async () 
           },
         }
       );
+
       requests += 1;
       server.registerTool(
         toolName,
         { inputSchema: z.object({}) },
         async (_args, context) => {
           await context.mcpReq.log("info", "catalog invoked");
+
           return { content: [] };
         }
       );
+
       return server;
     },
     { legacy: "reject" }
   );
+
   const http = createServer(toNodeHandler(handler));
   http.listen(0, "127.0.0.1");
   await once(http, "listening");
   const address = z.object({ port: z.number() }).parse(http.address());
   let timestamp = Date.now();
   const clock = vi.spyOn(Date, "now").mockImplementation(() => timestamp);
+
   const adapter = new MCPAdapter({
     servers: {
       catalog: {
@@ -276,6 +283,7 @@ it("subscribes to modern catalog changes and honors SDK cache policy", async () 
     },
     onToolsListChanged: changed,
   });
+
   try {
     const [first] = await adapter.getTools();
     await first.invoke({});

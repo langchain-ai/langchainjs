@@ -291,8 +291,10 @@ export class ConnectionManager {
 
     try {
       await mcpClient.connect(transport);
+
       if (mcpClient.getProtocolEra() === "modern") {
         const capabilities = mcpClient.getServerCapabilities();
+
         const filter = {
           toolsListChanged: Boolean(
             this.#hooks.onToolsListChanged && capabilities?.tools?.listChanged
@@ -306,6 +308,7 @@ export class ConnectionManager {
             capabilities?.resources?.listChanged
           ),
         };
+
         if (Object.values(filter).some(Boolean)) await mcpClient.listen(filter);
       }
     } catch (error) {
