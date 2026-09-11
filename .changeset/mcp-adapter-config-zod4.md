@@ -10,4 +10,4 @@ Parse configuration into connections with a required transport discriminator. In
 
 Parse error formatting data without asserting a Zod error version, check hook content/artifact elements, and validate required OAuth methods without replacing the provider. Remove type assertions from tool invocation and schema traversal.
 
-Preserve arbitrary LangGraph task inputs in hooks; type hook state as `unknown` so applications narrow their own state without assuming a record.
+Hook callbacks receive the current LangGraph task input unchanged, or `{}` outside a graph. The `state` parameter is now `unknown` because a task can receive an object, array, or primitive; applications must narrow it before accessing properties.
