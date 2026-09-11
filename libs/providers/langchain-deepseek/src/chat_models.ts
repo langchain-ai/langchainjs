@@ -738,6 +738,27 @@ export class ChatDeepSeek extends ChatOpenAICompletions<ChatDeepSeekCallOptions>
       ...langChainMessage.response_metadata,
       model_provider: "deepseek",
     };
+    // Surface DeepSeek-R1 reasoning consistently with the streaming path.
+    // DeepSeek returns the reasoning either as a dedicated `reasoning_content`
+    // field (deepseek-reasoner) or inline as `<think>...</think>` text.
+    langChainMessage.additional_kwargs ||= {};
+    const reasoningFromField =
+      (message as Record<string, any>).reasoning_content ??
+      (message as Record<string, any>).reasoning;
+    if (reasoningFromField && !langChainMessage.additional_kwargs.reasoning_content) {
+      langChainMessage.additional_kwargs.reasoning_content = reasoningFromField;
+    }
+    if (typeof langChainMessage.content === "string") {
+      const thinkMatch = langChainMessage.content.match(/<think>([\s\S]*?)<\/think>/);
+      if (thinkMatch) {
+        const thought = thinkMatch[1];
+        langChainMessage.content = langChainMessage.content
+          .replace(/<think>[\s\S]*?<\/think>/, "")
+          .trim();
+        langChainMessage.additional_kwargs.reasoning_content =
+          langChainMessage.additional_kwargs.reasoning_content ?? thought;
+      }
+    }
     return langChainMessage;
   }
 
