@@ -38,6 +38,19 @@ describe("ToolException error formatting", () => {
     expect(new ToolException("Original failure", cause).cause).toBe(cause);
   });
 
+  test("formats valid issues even when an external Zod error has a malformed stack", () => {
+    class ZodError extends Error {
+      issues = [{ message: "Required", path: ["args"] }];
+    }
+
+    const cause = new ZodError("Verbose details");
+    Object.defineProperty(cause, "stack", { value: 42 });
+    expect(new ToolException("Invalid input", cause).cause).toMatchObject({
+      message: "✖ Required\n  → at args",
+      stack: undefined,
+    });
+  });
+
   test("preserves ordinary and non-Error causes", () => {
     const cause = new Error("Connection failed");
     expect(new ToolException("Failure", cause).cause).toBe(cause);

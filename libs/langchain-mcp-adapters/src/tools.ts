@@ -469,6 +469,7 @@ type MCPInstance = Client | MCPClient;
 const errorPathKeySchema = z.union([z.string(), z.number(), z.symbol()]);
 
 const zodErrorDetailsSchema = z.object({
+  stack: z.string().optional().catch(undefined),
   issues: z.array(
     z.object({
       message: z.string(),
@@ -497,13 +498,7 @@ export class ToolException extends Error {
     if (details) {
       const minifiedZodError = new Error(z.prettifyError(details));
 
-      const stackLines =
-        typeof cause === "object" &&
-        cause !== null &&
-        "stack" in cause &&
-        typeof cause.stack === "string"
-          ? cause.stack.split("\n")
-          : [];
+      const stackLines = details.stack?.split("\n") ?? [];
 
       const firstFrame = stackLines.findIndex((line) =>
         line.includes("    at")
