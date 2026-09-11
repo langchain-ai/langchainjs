@@ -539,8 +539,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
             ).toBe("test://legacy");
             expect(
               (await client.readResource("stdio-server", "test://legacy"))[0]
-                .text
-            ).toBe("multi-stdio");
+            ).toMatchObject({ text: "multi-stdio" });
           }
 
           for (const [server, label] of [
@@ -2331,7 +2330,10 @@ describe("MultiServerMCPClient Integration Tests", () => {
           expect(content.length).toBeGreaterThan(0);
           expect(content[0].uri).toBe("mem://test.txt");
           expect(content[0].mimeType).toBe("text/plain");
-          expect(content[0].text).toBe("This is a test resource content.");
+          expect(content[0]).toMatchObject({
+            text: "This is a test resource content.",
+            _meta: { revision: "test-revision" },
+          });
         } finally {
           await client.close();
         }

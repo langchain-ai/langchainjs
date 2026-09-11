@@ -1,10 +1,20 @@
 import { MCPAdapter } from "../index.js";
-import type { LoggingMessageNotificationParams } from "@modelcontextprotocol/client";
+import type {
+  CallToolResult,
+  ListResourcesResult,
+  ListResourceTemplatesResult,
+  ReadResourceResult,
+  LoggingMessageNotificationParams,
+} from "@modelcontextprotocol/client";
 import { test, expectTypeOf } from "vitest";
 import { ToolMessage } from "@langchain/core/messages";
 import { RunnableConfig } from "@langchain/core/runnables";
 import { MultiServerMCPClient } from "../client.js";
 import type {
+  MCPResource,
+  MCPResourceTemplate,
+  MCPResourceContent,
+  CallToolResultContentType,
   ResolvedStreamableHTTPConnection,
   ResolvedStdioConnection,
 } from "../types.js";
@@ -159,4 +169,19 @@ test("elicitation uses SDK answers and adapter-owned source context", () => {
       return { action: "cancel" };
     },
   });
+});
+
+test("resource and content types follow the SDK", () => {
+  expectTypeOf<MCPResource>().toEqualTypeOf<
+    ListResourcesResult["resources"][number]
+  >();
+  expectTypeOf<MCPResourceTemplate>().toEqualTypeOf<
+    ListResourceTemplatesResult["resourceTemplates"][number]
+  >();
+  expectTypeOf<MCPResourceContent>().toEqualTypeOf<
+    ReadResourceResult["contents"][number]
+  >();
+  expectTypeOf<CallToolResultContentType>().toEqualTypeOf<
+    CallToolResult["content"][number]["type"]
+  >();
 });

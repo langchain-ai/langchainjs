@@ -1,6 +1,10 @@
 import type { MCPElicitationHandler } from "./elicitation.js";
 import { z } from "zod";
 import type {
+  CallToolResult,
+  ListResourcesResult,
+  ListResourceTemplatesResult,
+  ReadResourceResult,
   OAuthClientProvider,
   VersionNegotiationMode,
   LoggingMessageNotificationParams,
@@ -33,7 +37,7 @@ const callToolResultContentTypeSchema = z.enum([
   "resource",
   "resource_link",
   "text",
-]);
+] satisfies CallToolResult["content"][number]["type"][]);
 
 export const callToolResultContentTypes =
   callToolResultContentTypeSchema.options;
@@ -194,6 +198,11 @@ const protocolVersionSchema = z.union([
   z.object({ pin: z.string().min(1) }),
 ]) satisfies z.ZodType<VersionNegotiationMode>;
 
+const interactionOptionsSchema = z.object({
+  protocolVersion: protocolVersionSchema.optional(),
+  elicitationMode: z.enum(["callback", "interrupt"]).optional(),
+});
+
 /**
  * Stdio transport connection
  */
@@ -268,10 +277,7 @@ const stdioOptionsSchema = z
     restart: stdioRestartSchema.optional(),
   })
   .extend(baseConfigSchema.shape)
-  .extend({
-    protocolVersion: protocolVersionSchema.optional(),
-    elicitationMode: z.enum(["callback", "interrupt"]).optional(),
-  })
+  .extend(interactionOptionsSchema.shape)
   .describe("Configuration for stdio transport connection");
 
 /**
@@ -348,10 +354,7 @@ const httpOptionsSchema = z
     automaticSSEFallback: z.boolean().optional().default(true),
   })
   .extend(baseConfigSchema.shape)
-  .extend({
-    protocolVersion: protocolVersionSchema.optional(),
-    elicitationMode: z.enum(["callback", "interrupt"]).optional(),
-  })
+  .extend(interactionOptionsSchema.shape)
   .describe("Configuration for streamable HTTP transport connection");
 
 /** Parse legacy aliases once and retain a concrete transport discriminator. */
@@ -925,66 +928,16 @@ export type CustomHTTPTransportOptions = z.input<
 /**
  * Represents a resource provided by an MCP server.
  */
-export type MCPResource = {
-  /**
-   * The URI of the resource
-   */
-  uri: string;
-  /**
-   * Human-readable name of the resource
-   */
-  name: string;
-  /**
-   * Optional description of what the resource represents
-   */
-  description?: string;
-  /**
-   * Optional MIME type of the resource content
-   */
-  mimeType?: string;
-};
+export type MCPResource = ListResourcesResult["resources"][number];
 
 /**
  * Represents a resource template provided by an MCP server.
  * Resource templates are used for dynamic resources with parameterized URIs.
  */
-export type MCPResourceTemplate = {
-  /**
-   * The URI template with parameter placeholders (e.g., "users://{userId}/profile")
-   */
-  uriTemplate: string;
-  /**
-   * Human-readable name of the resource template
-   */
-  name: string;
-  /**
-   * Optional description of what the resource template represents
-   */
-  description?: string;
-  /**
-   * Optional MIME type of the resource content
-   */
-  mimeType?: string;
-};
+export type MCPResourceTemplate =
+  ListResourceTemplatesResult["resourceTemplates"][number];
 
 /**
  * Represents the content of a resource retrieved from an MCP server.
  */
-export type MCPResourceContent = {
-  /**
-   * The URI of the resource
-   */
-  uri: string;
-  /**
-   * Optional MIME type of the content
-   */
-  mimeType?: string;
-  /**
-   * Optional text content of the resource
-   */
-  text?: string;
-  /**
-   * Optional base64-encoded binary content of the resource
-   */
-  blob?: string;
-};
+export type MCPResourceContent = ReadResourceResult["contents"][number];
