@@ -36,6 +36,8 @@ import { BaseLanguageModelInput } from "@langchain/core/language_models/base";
 import { ChatPromptValue } from "@langchain/core/prompt_values";
 import { tool } from "@langchain/core/tools";
 import type { Gemini } from "../types.js";
+import { convertMessagesToGeminiContents } from "../../converters/messages.js";
+import { GOOGLE_TOOL_CALL_THOUGHT_SIGNATURES_KEY } from "../../const.js";
 import { Runnable } from "@langchain/core/runnables";
 import { InteropZodType } from "@langchain/core/utils/types";
 import { concat } from "@langchain/core/utils/stream";
@@ -1738,19 +1740,42 @@ describe.each(thinkingModelInfo)(
       expect(hasThoughtSignature).toBe(true);
     });
 
-    test("thought signature - function via streamEvents (regression for #11181)", async () => {
+    test("thoughtSignature survives a real multi-turn round trip via streamEvents (regression for #11181)", async () => {
       const llm = newChatGoogle({ reasoningEffort: "high" });
-      const result = await llm.streamEvents(
+      const firstResult = await llm.streamEvents(
         "What is the weather in New York?",
         { tools: [weatherTool], tool_choice: "get_weather" }
       );
-      expect(result.tool_calls).toBeDefined();
-      expect(result.tool_calls!.length).toBeGreaterThan(0);
-      expect(result.tool_calls![0].id).toBeDefined();
-      expect(
-        (result.tool_calls![0] as { thoughtSignature?: string })
-          .thoughtSignature
-      ).toBeDefined();
+      expect(firstResult.tool_calls).toBeDefined();
+      expect(firstResult.tool_calls!.length).toBeGreaterThan(0);
+      const toolCall = firstResult.tool_calls![0];
+      expect(toolCall.id).toBeDefined();
+
+      const toolCallBlock = firstResult.contentBlocks.find(
+        (block) => block.type === "tool_call"
+      ) as { thoughtSignature?: string } | undefined;
+      expect(toolCallBlock?.thoughtSignature).toBeDefined();
+
+      const expectedSignature = (
+        firstResult.response_metadata?.[
+          GOOGLE_TOOL_CALL_THOUGHT_SIGNATURES_KEY
+        ] as Record<string, string> | undefined
+      )?.[toolCall.id as string];
+      expect(expectedSignature).toBeDefined();
+
+      const contents = convertMessagesToGeminiContents([
+        new HumanMessage("What is the weather in New York?"),
+        firstResult,
+        new ToolMessage(JSON.stringify({ temp: 21 }), toolCall.id as string),
+      ]);
+      const modelTurn = contents.find((c) => c.role === "model");
+      const sentFunctionCallPart = modelTurn?.parts.find(
+        (p): p is { functionCall: unknown; thoughtSignature?: string } =>
+          "functionCall" in p
+      );
+
+      expect(sentFunctionCallPart).toBeDefined();
+      expect(sentFunctionCallPart?.thoughtSignature).toBe(expectedSignature);
     });
 
     test("thinking - invoke", async () => {

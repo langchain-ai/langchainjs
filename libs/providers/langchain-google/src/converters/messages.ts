@@ -24,6 +24,7 @@ import { Converter } from "@langchain/core/utils/format";
 import type { Gemini } from "../chat_models/types.js";
 import { iife } from "../utils/misc.js";
 import { InvalidInputError, ToolCallNotFoundError } from "../utils/errors.js";
+import { GOOGLE_TOOL_CALL_THOUGHT_SIGNATURES_KEY } from "../const.js";
 
 /**
  * Standard content block converter for Google Gemini API.
@@ -501,8 +502,11 @@ function convertStandardContentMessageToGeminiContent(
     }
   });
 
-  // Convert AIMessage tool_calls to functionCall parts
+  // Convert AIMessage tool_calls to functionCall parts, reading thoughtSignature from response_metadata (native path) or the tool_call itself (legacy path).
   if (AIMessage.isInstance(message) && message.tool_calls?.length) {
+    const signaturesById = message.response_metadata?.[
+      GOOGLE_TOOL_CALL_THOUGHT_SIGNATURES_KEY
+    ] as Record<string, string> | undefined;
     for (const toolCall of message.tool_calls) {
       const part = {
         functionCall: {
@@ -510,8 +514,13 @@ function convertStandardContentMessageToGeminiContent(
           args: toolCall.args ?? {},
         },
       } as Gemini.Part.FunctionCall;
-      if ("thoughtSignature" in toolCall) {
-        part.thoughtSignature = toolCall.thoughtSignature as string;
+      const thoughtSignature =
+        (toolCall.id && signaturesById?.[toolCall.id]) ??
+        ("thoughtSignature" in toolCall
+          ? (toolCall.thoughtSignature as string)
+          : undefined);
+      if (thoughtSignature) {
+        part.thoughtSignature = thoughtSignature;
       }
       parts.push(part);
     }

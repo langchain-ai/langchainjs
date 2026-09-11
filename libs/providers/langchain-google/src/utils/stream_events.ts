@@ -11,6 +11,7 @@ import type {
 } from "@langchain/core/language_models/event";
 import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
 import { v4 as uuidv4 } from "@langchain/core/utils/uuid";
+import { GOOGLE_TOOL_CALL_THOUGHT_SIGNATURES_KEY } from "../const.js";
 import type { Gemini } from "../chat_models/api-types.js";
 
 export type GeminiStreamResponse = Gemini.GenerateContentResponse;
@@ -172,10 +173,24 @@ export async function* convertGoogleGeminiStream(
     }
   }
 
+  // Keyed by tool call id, so the outbound converter can look signatures up
+  // for replay without needing them on AIMessage.tool_calls[i] itself -
+  // thoughtSignature's home is the tool_call content block; this is just
+  // plumbing to get it there reliably across the tool_calls/contentBlocks
+  // boundary without touching @langchain/core.
+  const toolCallThoughtSignatures: Record<string, string> = {};
+
   for (const [index, acc] of blockAccumulators) {
     // finalizeContentBlock rebuilds tool_call_chunk -> tool_call as
     // {type, id, name, args} only, so thoughtSignature has to be re-attached.
     const finalized = finalizeContentBlock(acc as ContentBlock);
+    if (
+      acc.type === "tool_call_chunk" &&
+      acc.thoughtSignature &&
+      typeof acc.id === "string"
+    ) {
+      toolCallThoughtSignatures[acc.id] = acc.thoughtSignature;
+    }
     yield {
       event: "content-block-finish" as const,
       index,
@@ -192,7 +207,15 @@ export async function* convertGoogleGeminiStream(
     event: "message-finish" as const,
     reason: finishReason,
     ...(usageSnapshot ? { usage: usageSnapshot } : {}),
-    responseMetadata: { model_provider: "google" },
+    responseMetadata: {
+      model_provider: "google",
+      ...(Object.keys(toolCallThoughtSignatures).length > 0
+        ? {
+            [GOOGLE_TOOL_CALL_THOUGHT_SIGNATURES_KEY]:
+              toolCallThoughtSignatures,
+          }
+        : {}),
+    },
   };
 }
 

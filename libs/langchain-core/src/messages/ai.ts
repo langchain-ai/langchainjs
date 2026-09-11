@@ -148,9 +148,6 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
               id: toolCall.id,
               name: toolCall.name,
               args: toolCall.args,
-              ...("thoughtSignature" in toolCall
-                ? { thoughtSignature: toolCall.thoughtSignature }
-                : {}),
             }))
           );
         }
@@ -175,9 +172,6 @@ export class AIMessage<TStructure extends MessageStructure = MessageStructure>
               id: block.id!,
               name: block.name,
               args: block.args as Record<string, unknown>,
-              ...("thoughtSignature" in block
-                ? { thoughtSignature: block.thoughtSignature }
-                : {}),
             })),
           ] as $InferToolCalls<TStructure>[];
         }
