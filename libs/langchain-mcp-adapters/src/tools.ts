@@ -360,72 +360,74 @@ function simplifyJsonSchemaForLLM(schema: JsonSchemaObject): JsonSchemaObject {
     );
   }
 
-  // Handle anyOf/oneOf by attempting to merge object schemas or picking first viable option
-  // Note: When merging anyOf/oneOf, we only merge properties but NOT required arrays,
-  // because the union semantics mean any ONE of the schemas should match, not all.
+  // Handle anyOf/oneOf.
+  // OpenAI rejects *top-level* unions, so when this schema already has an
+  // object shape (type/properties) we still flatten by merging properties.
+  // Pure nested unions (e.g. a property whose schema is only `anyOf`) must
+  // keep their branches — intersecting `required` / overwriting `const`
+  // otherwise produces a schema the MCP server will reject (#11302).
   const unionSchemas = anyOf || oneOf;
   if (Array.isArray(unionSchemas) && unionSchemas.length > 0) {
-    // Check if all schemas in the union are object-like (have type: object or have properties)
-    const allAreObjects = unionSchemas.every(
-      (s) =>
-        typeof s === "object" &&
-        s !== null &&
-        (s.type === "object" || s.properties)
-    );
+    const hasOwnObjectShape =
+      result.type === "object" ||
+      (result.properties != null &&
+        Object.keys(result.properties as object).length > 0);
 
-    // Collect all properties from all schemas, but only keep required fields
-    // that are common to ALL schemas (intersection)
-    const mergedProperties: Record<string, JsonSchemaObject> = {};
-    const requiredSets: Set<string>[] = [];
+    if (!hasOwnObjectShape) {
+      const key = anyOf ? "anyOf" : "oneOf";
+      result[key] = unionSchemas.map((subSchema) =>
+        simplifyJsonSchemaForLLM(subSchema)
+      );
+      debugLog(
+        `INFO: Preserved ${unionSchemas.length} schemas in nested ${key}`
+      );
+    } else {
+      // Check if all schemas in the union are object-like (have type: object or have properties)
+      const allAreObjects = unionSchemas.every(
+        (s) =>
+          typeof s === "object" &&
+          s !== null &&
+          (s.type === "object" || s.properties)
+      );
 
-    const schemasToMerge = allAreObjects
-      ? unionSchemas
-      : unionSchemas.filter(
-          (s) =>
-            typeof s === "object" &&
-            s !== null &&
-            (s.type === "object" || s.properties)
-        );
+      // Collect properties from all schemas. Do NOT merge `required` —
+      // union semantics mean any ONE branch may match, and intersecting
+      // required loses per-branch constraints.
+      const mergedProperties: Record<string, JsonSchemaObject> = {};
 
-    for (const subSchema of schemasToMerge) {
-      const simplified = simplifyJsonSchemaForLLM(subSchema);
-      // Merge properties
-      if (simplified.properties) {
-        Object.assign(mergedProperties, simplified.properties);
+      const schemasToMerge = allAreObjects
+        ? unionSchemas
+        : unionSchemas.filter(
+            (s) =>
+              typeof s === "object" &&
+              s !== null &&
+              (s.type === "object" || s.properties)
+          );
+
+      for (const subSchema of schemasToMerge) {
+        const simplified = simplifyJsonSchemaForLLM(subSchema);
+        // Merge properties
+        if (simplified.properties) {
+          Object.assign(mergedProperties, simplified.properties);
+        }
+        // Merge type if present
+        if (simplified.type && !result.type) {
+          result.type = simplified.type;
+        }
       }
-      // Collect required sets for intersection
-      if (simplified.required && Array.isArray(simplified.required)) {
-        requiredSets.push(new Set(simplified.required));
+
+      // Merge the collected properties
+      if (Object.keys(mergedProperties).length > 0) {
+        result.properties = {
+          ...(result.properties as Record<string, JsonSchemaObject>),
+          ...mergedProperties,
+        };
       }
-      // Merge type if present
-      if (simplified.type && !result.type) {
-        result.type = simplified.type;
-      }
+
+      debugLog(
+        `INFO: Merged ${schemasToMerge.length} object schemas from ${anyOf ? "anyOf" : "oneOf"}`
+      );
     }
-
-    // Merge the collected properties
-    if (Object.keys(mergedProperties).length > 0) {
-      result.properties = {
-        ...(result.properties as Record<string, JsonSchemaObject>),
-        ...mergedProperties,
-      };
-    }
-
-    // Only add required fields that are common to ALL schemas (intersection)
-    if (requiredSets.length > 0) {
-      const commonRequired = requiredSets.reduce((acc, set) => {
-        return new Set([...acc].filter((x) => set.has(x)));
-      });
-      if (commonRequired.size > 0) {
-        result.required = [
-          ...new Set([...(result.required || []), ...commonRequired]),
-        ];
-      }
-    }
-
-    debugLog(
-      `INFO: Merged ${schemasToMerge.length} object schemas from ${anyOf ? "anyOf" : "oneOf"}`
-    );
   }
 
   // Ensure we have type: "object" if there are properties

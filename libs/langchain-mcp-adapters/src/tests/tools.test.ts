@@ -1047,5 +1047,86 @@ describe("Simplified Tool Adapter Tests", () => {
 
       expect(result).toBe("User created");
     });
+
+    test("preserves nested anyOf required/const instead of intersecting", async () => {
+      // Regression for #11302: intersecting required across anyOf branches
+      // dropped `start` for kind=range and overwrote kind's const, so the LLM
+      // saw a schema the MCP server rejects.
+      const inputSchema = {
+        type: "object" as const,
+        properties: {
+          filter: {
+            anyOf: [
+              {
+                type: "object",
+                properties: { kind: { const: "none" } },
+                required: ["kind"],
+              },
+              {
+                type: "object",
+                properties: {
+                  kind: { const: "range" },
+                  start: { type: "string" },
+                },
+                required: ["kind", "start"],
+              },
+            ],
+          },
+        },
+      };
+
+      mockClient.listTools.mockReturnValueOnce(
+        Promise.resolve({
+          tools: [
+            {
+              name: "search",
+              description: "Search with a filter",
+              inputSchema,
+            },
+          ],
+        })
+      );
+
+      mockClient.callTool.mockImplementation(() => {
+        return Promise.resolve({
+          content: [{ type: "text", text: "ok" }],
+        });
+      });
+
+      const tools = await loadMcpTools(
+        "mockServer(nested anyOf preserve)",
+        mockClient as Client
+      );
+
+      expect(tools.length).toBe(1);
+      const schema = tools[0].schema as {
+        properties?: {
+          filter?: {
+            anyOf?: Array<{
+              required?: string[];
+              properties?: { kind?: { const?: string }; start?: unknown };
+            }>;
+          };
+        };
+      };
+
+      expect(schema.properties?.filter?.anyOf).toHaveLength(2);
+      expect(schema.properties?.filter?.anyOf?.[0]).toMatchObject({
+        required: ["kind"],
+        properties: { kind: { const: "none" } },
+      });
+      expect(schema.properties?.filter?.anyOf?.[1]).toMatchObject({
+        required: ["kind", "start"],
+        properties: {
+          kind: { const: "range" },
+          start: { type: "string" },
+        },
+      });
+
+      const result = await tools[0].invoke({
+        filter: { kind: "range", start: "2026-01-01" },
+      });
+      expect(result).toBe("ok");
+    });
   });
 });
