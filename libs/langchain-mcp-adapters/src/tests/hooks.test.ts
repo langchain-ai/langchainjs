@@ -1,4 +1,6 @@
-import { describe, test, expect, beforeEach, afterEach } from "vitest";
+import { Client } from "@modelcontextprotocol/client";
+import { loadMcpTools } from "../tools.js";
+import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import { Server } from "node:http";
 import { join } from "node:path";
 import { ToolMessage, BaseMessage } from "@langchain/core/messages";
@@ -53,6 +55,61 @@ class TestServers {
     this.httpServers = [];
   }
 }
+
+test.each(["sync", "async"])(
+  "preserves MCP artifacts through a %s pass-through hook",
+  async (mode) => {
+    const client = new Client({ name: "artifact-test", version: "1" });
+
+    const artifacts = [
+      { type: "image", data: "aW1hZ2U=", mimeType: "image/png" },
+      { type: "audio", data: "YXVkaW8=", mimeType: "audio/wav" },
+      { type: "text", text: "artifact text" },
+      { type: "resource_link", uri: "memory://linked", name: "linked" },
+      {
+        type: "resource",
+        resource: { uri: "memory://embedded", text: "embedded" },
+      },
+    ] satisfies Awaited<ReturnType<Client["callTool"]>>["content"];
+
+    vi.spyOn(client, "listTools").mockResolvedValue({
+      tools: [
+        { name: "echo", inputSchema: { type: "object", properties: {} } },
+      ],
+    });
+    vi.spyOn(client, "callTool").mockResolvedValue({ content: artifacts });
+
+    const afterToolCall = vi.fn(
+      ({
+        result,
+      }: Parameters<NonNullable<ClientConfig["afterToolCall"]>>[0]) => {
+        expect(result).toEqual([expect.anything(), artifacts]);
+
+        return mode === "async" ? Promise.resolve({ result }) : { result };
+      }
+    );
+
+    try {
+      const [tool] = await loadMcpTools("test", client, {
+        outputHandling: "artifact",
+        afterToolCall,
+      });
+
+      const output = await tool.invoke({
+        type: "tool_call",
+        id: "call",
+        name: "echo",
+        args: {},
+      });
+
+      expect(output.artifact).toEqual(artifacts);
+      expect(afterToolCall).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.restoreAllMocks();
+      await client.close();
+    }
+  }
+);
 
 describe("Interceptor hooks (stdio/http/sse)", () => {
   let servers: TestServers;

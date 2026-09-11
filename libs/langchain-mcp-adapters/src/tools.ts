@@ -964,14 +964,11 @@ async function _callTool({
           ? content
           : [content];
 
-    // Preserve the existing hook view of resources and data artifacts. The
-    // hook parser checks block containers without asserting a provider format.
+    // Expose artifact-routed MCP blocks while keeping internal metadata out of hooks.
     const normalizedArtifacts = artifacts.filter(
       (artifact) =>
-        artifact.type === "resource" ||
-        (artifact.type !== "mcp_structured_content" &&
-          artifact.type !== "mcp_meta" &&
-          "source_type" in artifact)
+        artifact.type !== "mcp_structured_content" &&
+        artifact.type !== "mcp_meta"
     );
 
     const interceptedResult = toolCallResultModificationSchema.optional().parse(
