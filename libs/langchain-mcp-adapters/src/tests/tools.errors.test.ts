@@ -31,6 +31,7 @@ describe("ToolException error formatting", () => {
 
   test("preserves the original Zod error and structured issues", () => {
     const result = z.object({ count: z.number() }).safeParse({ count: "one" });
+
     if (result.success) throw new Error("Expected invalid input");
     const error = new ToolException("Invalid hook result", result.error);
     expect(error.cause).toBe(result.error);
