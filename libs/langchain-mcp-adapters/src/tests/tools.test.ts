@@ -36,6 +36,7 @@ describe("Simplified Tool Adapter Tests", () => {
     mockClient = {
       callTool: vi.fn(),
       listTools: vi.fn(),
+      getProtocolEra: vi.fn(() => "legacy"),
     } as MockedObject<Client>;
 
     vi.clearAllMocks();
