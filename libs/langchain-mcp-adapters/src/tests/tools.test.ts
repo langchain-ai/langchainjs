@@ -645,7 +645,8 @@ describe("Simplified Tool Adapter Tests", () => {
       // Load tools with content_and_artifact response format
       const tools = await loadMcpTools(
         "mockServer(should load tools with specified response format)",
-        mockClient as Client
+        mockClient as Client,
+        { useStandardContentBlocks: false }
       );
 
       // Verify tool was loaded
@@ -928,13 +929,14 @@ describe("Simplified Tool Adapter Tests", () => {
 
       expect(tools.length).toBe(1);
 
-      // The merged schema should allow properties from any variant
-      const result = await tools[0].invoke({
-        paymentType: "credit_card",
-        cardNumber: "1234-5678-9012-3456",
-      });
-
-      expect(result).toBe("Payment processed");
+      // Projection can merge variants, but invocation must satisfy exactly one.
+      await expect(
+        tools[0].invoke({
+          paymentType: "credit_card",
+          cardNumber: "1234-5678-9012-3456",
+        })
+      ).rejects.toThrow(/exactly one/);
+      expect(mockClient.callTool).not.toHaveBeenCalled();
     });
 
     test("should remove $schema and unevaluatedProperties from schemas", async () => {
@@ -1085,17 +1087,19 @@ describe("Simplified Tool Adapter Tests", () => {
       expect(tools.length).toBe(1);
       expect(tools[0].name).toBe("createEvent");
 
-      const result = await tools[0].invoke({
-        calendarId: "primary",
-        summary: "Team Meeting",
-        startDate: "2024-01-15T10:00:00Z",
-        endDate: "2024-01-15T11:00:00Z",
-        allDay: false,
-        attendees: [{ email: "test@example.com", displayName: "Test User" }],
-        status: "confirmed",
-      });
-
-      expect(result).toBe("Event created successfully");
+      // Projection loads, but the original additionalProperties constraint rejects dates.
+      await expect(
+        tools[0].invoke({
+          calendarId: "primary",
+          summary: "Team Meeting",
+          startDate: "2024-01-15T10:00:00Z",
+          endDate: "2024-01-15T11:00:00Z",
+          allDay: false,
+          attendees: [{ email: "test@example.com", displayName: "Test User" }],
+          status: "confirmed",
+        })
+      ).rejects.toThrow(/additional properties/);
+      expect(mockClient.callTool).not.toHaveBeenCalled();
     });
 
     test("should handle allOf with multiple schemas to merge", async () => {

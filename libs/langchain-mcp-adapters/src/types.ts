@@ -484,25 +484,18 @@ const clientOptionsSchema = z
       .optional()
       .default(""),
     /**
-     * If true, the tool will use LangChain's standard multimodal content blocks for tools that output
-     * image or audio content, and embedded resources will be converted to `StandardFileBlock` objects.
-     * When `false`, all artifacts are left in their MCP format, but embedded resources will be
-     * converted to `StandardFileBlock` objects if {@link ClientConfig#outputHandling} causes embedded resources to
-     * be treated as content, as otherwise ChatModel providers will not be able to interpret them.
+     * Use native LangChain image/audio/file content blocks. Artifacts remain
+     * in MCP format. Set false for legacy content shapes; conversion never fetches resources.
      *
-     * @default false
+     * @default true
      */
     useStandardContentBlocks: z
       .boolean()
       .describe(
-        "If true, the tool will use LangChain's standard multimodal content blocks for tools that output\n" +
-          "image or audio content. When true, embedded resources will be converted to `StandardFileBlock`\n" +
-          "objects. When `false`, all artifacts are left in their MCP format, but embedded resources will\n" +
-          "be converted to `StandardFileBlock` objects if `outputHandling` causes embedded resources to be\n" +
-          "treated as content, as otherwise ChatModel providers will not be able to interpret them."
+        "Use native LangChain content blocks; artifacts retain MCP data"
       )
       .optional()
-      .default(false),
+      .default(true),
     /**
      * Behavior when a server fails to connect.
      * - "throw": Throw an error immediately if any server fails to connect (default)
@@ -753,10 +746,13 @@ export function _resolveAndApplyOverrideHandlingOverrides(
   };
 }
 
-export interface CustomHTTPTransportOptions {
-  authProvider?: OAuthClientProvider;
-  headers?: Record<string, string>;
-}
+export const customHTTPTransportOptionsSchema = httpOptionsSchema.pick({
+  authProvider: true,
+  headers: true,
+});
+export type CustomHTTPTransportOptions = z.input<
+  typeof customHTTPTransportOptionsSchema
+>;
 
 /**
  * Represents a resource provided by an MCP server.

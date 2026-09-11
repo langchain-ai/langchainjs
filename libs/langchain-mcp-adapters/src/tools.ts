@@ -1,4 +1,6 @@
+import { collectPages } from "./pagination.js";
 import { z } from "zod";
+import { fromJsonSchema } from "@modelcontextprotocol/client";
 import { isInteropZodError } from "@langchain/core/utils/types";
 import {
   toolCallModificationSchema,
@@ -8,10 +10,7 @@ import type {
   CallToolResult,
   ContentBlock as MCPContentBlock,
   Client as MCPClient,
-  EmbeddedResource,
-  ReadResourceResult,
   Tool as MCPTool,
-  ListToolsResult,
   RequestOptions,
   JSONObject,
   JSONValue,
@@ -23,6 +22,7 @@ import type { CallbackManagerForToolRun } from "@langchain/core/callbacks/manage
 import { ToolMessage } from "@langchain/core/messages";
 import {
   isCommand,
+  isGraphInterrupt,
   getCurrentTaskInput,
   type Command,
 } from "@langchain/langgraph";
@@ -103,7 +103,7 @@ function dereferenceJsonSchema(schema: JSONObject): JSONObject {
             debugLog(
               `WARNING: Circular reference detected for ${refPath}, using empty object`
             );
-            return { type: "object" };
+            return {};
           }
 
           // Track this ref as visited
@@ -242,41 +242,17 @@ function deepMergeSchemas(target: JSONObject, source: JSONObject): JSONObject {
  * @returns Properties extracted from both then and else branches
  */
 function extractPropertiesFromConditional(schema: JSONObject): JSONObject {
-  let result: JSONObject = {};
-
-  // Extract properties from 'then' branch
-  if (isSchemaRecord(schema.then)) {
-    const thenSchema = schemaKeywordsSchema.parse(schema.then);
-    if (thenSchema.properties) {
-      result = deepMergeSchemas(result, { properties: thenSchema.properties });
-    }
-    if (thenSchema.required) {
-      result.required = [
-        ...new Set([
-          ...(Array.isArray(result.required) ? result.required : []),
-          ...thenSchema.required,
-        ]),
-      ];
-    }
-  }
-
-  // Extract properties from 'else' branch
-  if (isSchemaRecord(schema.else)) {
-    const elseSchema = schemaKeywordsSchema.parse(schema.else);
-    if (elseSchema.properties) {
-      result = deepMergeSchemas(result, { properties: elseSchema.properties });
-    }
-    if (elseSchema.required) {
-      result.required = [
-        ...new Set([
-          ...(Array.isArray(result.required) ? result.required : []),
-          ...elseSchema.required,
-        ]),
-      ];
-    }
-  }
-
-  return result;
+  // Either branch can be inactive. Project its field names, not conditional
+  // constraints or required fields; the original schema validates invocation.
+  const branches = [schema.then, schema.else].filter(isSchemaRecord);
+  return {
+    properties: Object.fromEntries(
+      branches.flatMap((branch) => {
+        const parsed = schemaKeywordsSchema.parse(branch);
+        return Object.keys(parsed.properties ?? {}).map((name) => [name, {}]);
+      })
+    ),
+  };
 }
 
 /**
@@ -365,25 +341,40 @@ function simplifyJsonSchemaForLLM(schema: JSONObject): JSONObject {
       const simplified = schemaKeywordsSchema.parse(
         simplifyJsonSchemaForLLM(subSchema)
       );
-      // Merge properties
+      // Flatten alternative field names without narrowing to the last branch.
+      // Branch-specific constraints remain authoritative in originalSchema.
       if (isSchemaRecord(simplified.properties)) {
-        Object.assign(mergedProperties, simplified.properties);
+        for (const name of Object.keys(simplified.properties))
+          mergedProperties[name] = {};
       }
       // Collect required sets for intersection
-      if (simplified.required && Array.isArray(simplified.required)) {
-        requiredSets.push(new Set(simplified.required));
-      }
+      requiredSets.push(new Set(simplified.required ?? []));
       // Merge type if present
       if (simplified.type && !result.type) {
         result.type = simplified.type;
       }
     }
 
+    for (const name of Object.keys(mergedProperties)) {
+      const alternatives = schemasToMerge.map((branch) =>
+        isSchemaRecord(branch.properties) ? branch.properties[name] : undefined
+      );
+      if (!alternatives.every(isSchemaRecord)) continue;
+      const [first] = alternatives;
+      mergedProperties[name] = Object.fromEntries(
+        Object.entries(first).filter(([key, value]) =>
+          alternatives.every(
+            (branch) => JSON.stringify(branch[key]) === JSON.stringify(value)
+          )
+        )
+      );
+    }
+
     // Merge the collected properties
     if (Object.keys(mergedProperties).length > 0) {
       result.properties = {
-        ...(isSchemaRecord(result.properties) ? result.properties : {}),
         ...mergedProperties,
+        ...(isSchemaRecord(result.properties) ? result.properties : {}),
       };
     }
 
@@ -478,8 +469,11 @@ function parseZodErrorDetails(error: unknown) {
  * Custom error class for tool exceptions
  */
 export class ToolException extends Error {
-  constructor(message: string, cause?: unknown) {
+  readonly result?: CallToolResult;
+
+  constructor(message: string, cause?: unknown, result?: CallToolResult) {
     super(message);
+    this.result = result;
     this.name = "ToolException";
 
     const details = parseZodErrorDetails(cause);
@@ -513,201 +507,121 @@ export function isToolException(error: unknown): error is ToolException {
   );
 }
 
-function isResourceReference(
-  resource:
-    | EmbeddedResource["resource"]
-    | ReadResourceResult["contents"][number]
-): boolean {
-  return (
-    typeof resource === "object" &&
-    resource !== null &&
-    "uri" in resource &&
-    typeof resource.uri === "string" &&
-    (!("blob" in resource) || resource.blob == null) &&
-    (!("text" in resource) || resource.text == null)
-  );
-}
-
-async function* _embeddedResourceToStandardFileBlocks(
-  resource:
-    | EmbeddedResource["resource"]
-    | ReadResourceResult["contents"][number],
-  client: MCPInstance
-): AsyncGenerator<
-  | (ContentBlock.Data.StandardFileBlock & ContentBlock.Data.Base64ContentBlock)
-  | (ContentBlock.Data.StandardFileBlock &
-      ContentBlock.Data.PlainTextContentBlock)
-> {
-  if (isResourceReference(resource)) {
-    const response: ReadResourceResult = await client.readResource({
-      uri: resource.uri,
-    });
-    for (const content of response.contents) {
-      yield* _embeddedResourceToStandardFileBlocks(content, client);
-    }
-    return;
-  }
-
-  if ("blob" in resource && resource.blob != null) {
-    yield {
-      type: "file",
-      source_type: "base64",
-      data: resource.blob,
-      mime_type: resource.mimeType,
-      ...(resource.uri != null ? { metadata: { uri: resource.uri } } : {}),
-    } satisfies ContentBlock.Data.StandardFileBlock &
-      ContentBlock.Data.Base64ContentBlock;
-  }
-  if ("text" in resource && resource.text != null) {
-    yield {
-      type: "file",
-      source_type: "text",
-      mime_type: resource.mimeType,
-      text: resource.text,
-      ...(resource.uri != null ? { metadata: { uri: resource.uri } } : {}),
-    } satisfies ContentBlock.Data.StandardFileBlock &
-      ContentBlock.Data.PlainTextContentBlock;
-  }
-}
-
-async function _toolOutputToContentBlocks(
+/** Terminal conversion never dereferences resource URIs or performs network IO. */
+function _toolOutputToContentBlocks(
   content: MCPContentBlock,
-  useStandardContentBlocks: true,
-  client: MCPInstance,
+  useStandardContentBlocks: boolean,
   toolName: string,
   serverName: string
-): Promise<ContentBlock.Multimodal.Standard[]>;
-async function _toolOutputToContentBlocks(
-  content: MCPContentBlock,
-  useStandardContentBlocks: false | undefined,
-  client: MCPInstance,
-  toolName: string,
-  serverName: string
-): Promise<ContentBlock[]>;
-async function _toolOutputToContentBlocks(
-  content: MCPContentBlock,
-  useStandardContentBlocks: boolean | undefined,
-  client: MCPInstance,
-  toolName: string,
-  serverName: string
-): Promise<(ContentBlock | ContentBlock.Multimodal.Standard)[]>;
-async function _toolOutputToContentBlocks(
-  content: MCPContentBlock,
-  useStandardContentBlocks: boolean | undefined,
-  client: MCPInstance,
-  toolName: string,
-  serverName: string
-): Promise<(ContentBlock | ContentBlock.Multimodal.Standard)[]> {
-  const blocks: ContentBlock.Data.StandardFileBlock[] = [];
+): ContentBlock[] {
   const contentType = content.type;
   switch (content.type) {
     case "text":
-      return [
-        {
-          type: "text",
-          ...(useStandardContentBlocks
-            ? {
-                source_type: "text",
-              }
-            : {}),
-          text: content.text,
-        } satisfies ContentBlock.Text,
-      ];
+      return [{ type: "text", text: content.text }];
     case "image":
-      if (useStandardContentBlocks) {
-        return [
-          {
-            type: "image",
-            source_type: "base64",
-            data: content.data,
-            mime_type: content.mimeType,
-          } satisfies ContentBlock.Data.StandardImageBlock,
-        ];
-      }
-      return [
-        {
-          type: "image_url",
-          image_url: {
-            url: `data:${content.mimeType};base64,${content.data}`,
-          },
-        } satisfies ContentBlock,
-      ];
+      return useStandardContentBlocks
+        ? [
+            {
+              type: "image",
+              data: content.data,
+              mimeType: content.mimeType,
+            } satisfies ContentBlock.Multimodal.Image,
+          ]
+        : [
+            {
+              type: "image_url",
+              image_url: {
+                url: `data:${content.mimeType};base64,${content.data}`,
+              },
+            },
+          ];
     case "audio":
-      // We don't check `useStandardContentBlocks` here because we only support audio via
-      // standard content blocks
-      return [
-        {
-          type: "audio",
-          source_type: "base64",
-          data: content.data,
-          mime_type: content.mimeType,
-        } satisfies ContentBlock.Data.StandardAudioBlock,
-      ];
-    case "resource":
-      for await (const block of _embeddedResourceToStandardFileBlocks(
-        content.resource,
-        client
-      )) {
-        blocks.push(block);
+      return useStandardContentBlocks
+        ? [
+            {
+              type: "audio",
+              data: content.data,
+              mimeType: content.mimeType,
+            } satisfies ContentBlock.Multimodal.Audio,
+          ]
+        : [
+            {
+              type: "audio",
+              source_type: "base64",
+              data: content.data,
+              mime_type: content.mimeType,
+            },
+          ];
+    case "resource": {
+      const resource = content.resource;
+      const metadata = { uri: resource.uri };
+      if ("text" in resource) {
+        return useStandardContentBlocks
+          ? [{ type: "text", text: resource.text, metadata }]
+          : [
+              {
+                type: "file",
+                source_type: "text",
+                text: resource.text,
+                mime_type: resource.mimeType,
+                metadata,
+              },
+            ];
       }
-      return blocks;
+      const mimeType = resource.mimeType ?? "application/octet-stream";
+      return useStandardContentBlocks
+        ? [
+            {
+              type: mimeType.startsWith("image/")
+                ? "image"
+                : mimeType.startsWith("audio/")
+                  ? "audio"
+                  : "file",
+              data: resource.blob,
+              mimeType,
+              metadata,
+            } satisfies ContentBlock.Multimodal.Standard,
+          ]
+        : [
+            {
+              type: "file",
+              source_type: "base64",
+              data: resource.blob,
+              mime_type: resource.mimeType,
+              metadata,
+            },
+          ];
+    }
     case "resource_link": {
-      return [
-        {
-          type: "file",
-          source_type: "url",
-          url: content.uri,
-          mime_type: content.mimeType,
-        } satisfies ContentBlock.Data.StandardFileBlock &
-          ContentBlock.Data.URLContentBlock,
-      ];
+      const metadata = {
+        uri: content.uri,
+        name: content.name,
+        ...(content.title !== undefined ? { title: content.title } : {}),
+      };
+      return useStandardContentBlocks
+        ? [
+            {
+              type: "file",
+              url: content.uri,
+              mimeType: content.mimeType,
+              metadata,
+            } satisfies ContentBlock.Multimodal.File,
+          ]
+        : [
+            {
+              type: "file",
+              source_type: "url",
+              url: content.uri,
+              mime_type: content.mimeType,
+              metadata,
+            },
+          ];
     }
     default:
       throw new ToolException(
-        `MCP tool '${toolName}' on server '${serverName}' returned a content block with unexpected type "${
-          contentType
-        }." Expected one of ${callToolResultContentTypes.map((t: string) => `"${t}"`).join(", ")}.`
+        `MCP tool '${toolName}' on server '${serverName}' returned unexpected content type "${contentType}". Expected ${callToolResultContentTypes.join(", ")}.`
       );
   }
-}
-
-async function _embeddedResourceToArtifact(
-  resource: MCPContentBlock,
-  useStandardContentBlocks: boolean | undefined,
-  client: MCPInstance,
-  toolName: string,
-  serverName: string
-): Promise<(MCPContentBlock | ContentBlock)[]> {
-  if (useStandardContentBlocks) {
-    return _toolOutputToContentBlocks(
-      resource,
-      useStandardContentBlocks,
-      client,
-      toolName,
-      serverName
-    );
-  }
-
-  if (
-    (!("blob" in resource) || resource.blob == null) &&
-    (!("text" in resource) || resource.text == null) &&
-    "uri" in resource &&
-    typeof resource.uri === "string"
-  ) {
-    const response: ReadResourceResult = await client.readResource({
-      uri: resource.uri,
-    });
-
-    return response.contents.map(
-      (content: ReadResourceResult["contents"][number]) => ({
-        type: "resource",
-        resource: {
-          ...content,
-        },
-      })
-    );
-  }
-  return [resource];
 }
 
 /**
@@ -716,7 +630,7 @@ async function _embeddedResourceToArtifact(
  */
 type MCPStructuredContentArtifact = {
   type: "mcp_structured_content";
-  data: NonNullable<CallToolResult["structuredContent"]>;
+  data: Exclude<CallToolResult["structuredContent"], undefined>;
 };
 
 /**
@@ -735,20 +649,15 @@ type MCPMetaArtifact = {
 type ExtendedArtifact =
   | MCPContentBlock
   | ContentBlock
+  | { type: "mcp_content"; data: MCPContentBlock }
   | MCPStructuredContentArtifact
   | MCPMetaArtifact;
 
 /**
- * Content type that may include structuredContent and meta
+ * Model-visible content; protocol metadata belongs in artifacts.
  * @internal
  */
-type ExtendedContent =
-  | (ContentBlock | ContentBlock.Multimodal.Standard)[]
-  | (ContentBlock.Text & {
-      structuredContent?: NonNullable<CallToolResult["structuredContent"]>;
-      meta?: NonNullable<CallToolResult["_meta"]>;
-    })
-  | string;
+type ExtendedContent = ContentBlock[] | string;
 
 /**
  * @internal
@@ -767,12 +676,7 @@ type ConvertCallToolResultArgs = {
    */
   result: CallToolResult;
   /**
-   * The MCP client that was used to call the tool
-   */
-  client: Client | MCPClient;
-  /**
-   * If true, the tool will use LangChain's standard multimodal content blocks for tools that output
-   * image or audio content. This option has no effect on handling of embedded resource tool output.
+   * Use native LangChain content blocks; artifacts retain their MCP data.
    */
   useStandardContentBlocks?: boolean;
   /**
@@ -806,14 +710,13 @@ function _getOutputTypeForContentType(
  * @param args - The arguments to pass to the tool
  * @returns A tuple of [textContent, nonTextContent]
  */
-async function _convertCallToolResult({
+function _convertCallToolResult({
   serverName,
   toolName,
   result,
-  client,
-  useStandardContentBlocks,
+  useStandardContentBlocks = true,
   outputHandling,
-}: ConvertCallToolResultArgs): Promise<[ExtendedContent, ExtendedArtifact[]]> {
+}: ConvertCallToolResultArgs): [ExtendedContent, ExtendedArtifact[]] {
   if (!result) {
     throw new ToolException(
       `MCP tool '${toolName}' on server '${serverName}' returned an invalid result - tool call response was undefined`
@@ -832,51 +735,29 @@ async function _convertCallToolResult({
         .map((content: MCPContentBlock) =>
           content.type === "text" ? content.text : ""
         )
-        .join("\n")}`
+        .join("\n")}`,
+      undefined,
+      result
     );
   }
 
-  const convertedContent: (ContentBlock | ContentBlock.Multimodal.Standard)[] =
-    (
-      await Promise.all(
-        result.content
-          .filter(
-            (content: MCPContentBlock) =>
-              _getOutputTypeForContentType(content.type, outputHandling) ===
-              "content"
-          )
-          .map((content: MCPContentBlock) =>
-            _toolOutputToContentBlocks(
-              content,
-              useStandardContentBlocks,
-              client,
-              toolName,
-              serverName
-            )
-          )
-      )
-    ).flat();
-
-  // Create the text content output
-  const artifacts = (
-    await Promise.all(
-      result.content
-        .filter(
-          (content: MCPContentBlock) =>
-            _getOutputTypeForContentType(content.type, outputHandling) ===
-            "artifact"
-        )
-        .map((content) => {
-          return _embeddedResourceToArtifact(
-            content,
-            useStandardContentBlocks,
-            client,
-            toolName,
-            serverName
-          );
-        })
+  const convertedContent = result.content
+    .filter(
+      (block) =>
+        _getOutputTypeForContentType(block.type, outputHandling) === "content"
     )
-  ).flat();
+    .flatMap((block) =>
+      _toolOutputToContentBlocks(
+        block,
+        useStandardContentBlocks,
+        toolName,
+        serverName
+      )
+    );
+  const artifacts = result.content.filter(
+    (block) =>
+      _getOutputTypeForContentType(block.type, outputHandling) === "artifact"
+  );
 
   // Extract structuredContent and _meta from result
   // These are optional fields that are part of the CallToolResult type
@@ -885,7 +766,19 @@ async function _convertCallToolResult({
 
   // Add structuredContent and meta as special artifacts
   const enhancedArtifacts: ExtendedArtifact[] = [...artifacts];
-  if (structuredContent) {
+  for (const block of result.content) {
+    const retainedKeys =
+      block.type === "text" ? ["type", "text"] : ["type", "data", "mimeType"];
+    if (
+      !artifacts.includes(block) &&
+      (block.type === "resource" ||
+        block.type === "resource_link" ||
+        Object.keys(block).some((key) => !retainedKeys.includes(key)))
+    ) {
+      enhancedArtifacts.push({ type: "mcp_content", data: block });
+    }
+  }
+  if (structuredContent !== undefined) {
     enhancedArtifacts.push({
       type: "mcp_structured_content",
       data: structuredContent,
@@ -898,34 +791,16 @@ async function _convertCallToolResult({
     });
   }
 
-  // If we have structuredContent or meta, create an enhanced content that includes all info
+  // Preserve the plain-text convenience without dropping resource provenance.
   const firstBlock = convertedContent[0];
   if (
     convertedContent.length === 1 &&
     firstBlock.type === "text" &&
     "text" in firstBlock &&
-    typeof firstBlock.text === "string"
+    typeof firstBlock.text === "string" &&
+    !("metadata" in firstBlock)
   ) {
-    const textBlock = {
-      ...firstBlock,
-      type: "text",
-      text: firstBlock.text,
-    } satisfies ContentBlock.Text;
-    const textContent = textBlock.text;
-
-    // If we have structuredContent or meta, wrap the content with additional info
-    if (structuredContent || meta) {
-      return [
-        {
-          ...textBlock,
-          ...(structuredContent ? { structuredContent } : {}),
-          ...(meta ? { meta } : {}),
-        } satisfies ExtendedContent,
-        enhancedArtifacts,
-      ];
-    }
-
-    return [textContent, enhancedArtifacts];
+    return [firstBlock.text, enhancedArtifacts];
   }
 
   return [convertedContent, enhancedArtifacts];
@@ -956,8 +831,7 @@ type CallToolArgs = {
    */
   config?: RunnableConfig;
   /**
-   * If true, the tool will use LangChain's standard multimodal content blocks for tools that output
-   * image or audio content. This option has no effect on handling of embedded resource tool output.
+   * Use native LangChain content blocks; artifacts retain their MCP data.
    */
   useStandardContentBlocks?: boolean;
   /**
@@ -979,11 +853,13 @@ type CallToolArgs = {
    * `afterToolCall` callbacks used for tool calls.
    */
   afterToolCall?: ToolHooks["afterToolCall"];
+  inputValidator: ReturnType<typeof fromJsonSchema>;
 };
 
-type ContentBlocksWithArtifacts =
-  | [ExtendedContent, ExtendedArtifact[]]
-  | Command;
+type ContentBlocksWithArtifacts = [
+  ExtendedContent | ToolMessage | Command,
+  ExtendedArtifact[],
+];
 
 /**
  * Call an MCP tool.
@@ -1005,6 +881,7 @@ async function _callTool({
   onProgress,
   beforeToolCall,
   afterToolCall,
+  inputValidator,
 }: CallToolArgs): Promise<ContentBlocksWithArtifacts> {
   try {
     debugLog(`INFO: Calling tool ${toolName}(${JSON.stringify(args)})`);
@@ -1057,6 +934,13 @@ async function _callTool({
 
     const finalArgs = { ...args, ...beforeToolCallInterception?.args };
 
+    const validation = await inputValidator["~standard"].validate(finalArgs);
+    if (validation.issues) {
+      throw new ToolException(
+        `Invalid arguments for MCP tool "${toolName}": ${validation.issues.map((issue) => issue.message).join("; ")}`
+      );
+    }
+
     const headers = beforeToolCallInterception?.headers || {};
     const hasHeaderChanges = Object.entries(headers).length > 0;
     if (
@@ -1086,43 +970,20 @@ async function _callTool({
     }
 
     const result = await finalClient.callTool(...callToolArgs);
-    const [content, artifacts] = await _convertCallToolResult({
+    const [content, artifacts] = _convertCallToolResult({
       serverName,
       toolName,
       result,
-      client: finalClient,
       useStandardContentBlocks,
       outputHandling,
     });
-
-    // Convert ExtendedContent to the format expected by afterToolCall
-    // afterToolCall expects: string | (ContentBlock | ContentBlock.Data.DataContentBlock)[]
-    // ExtendedContent can be: string | ContentBlock[] | (ContentBlock.Text & {...})
-    const normalizedContent:
-      | string
-      | (ContentBlock | ContentBlock.Data.DataContentBlock)[] =
-      typeof content === "string"
-        ? content
-        : Array.isArray(content)
-          ? content
-          : [content];
-
-    // Preserve the existing hook view of resources and data artifacts. The
-    // hook parser checks block containers without asserting a provider format.
-    const normalizedArtifacts = artifacts.filter(
-      (artifact) =>
-        artifact.type === "resource" ||
-        (artifact.type !== "mcp_structured_content" &&
-          artifact.type !== "mcp_meta" &&
-          "source_type" in artifact)
-    );
 
     const interceptedResult = toolCallResultModificationSchema.optional().parse(
       await afterToolCall?.(
         {
           name: toolName,
           args: finalArgs,
-          result: [normalizedContent, normalizedArtifacts],
+          result: [content, artifacts],
           serverName,
         },
         state,
@@ -1143,17 +1004,18 @@ async function _callTool({
     }
 
     if (ToolMessage.isInstance(interceptedResult.result)) {
-      return [interceptedResult.result.contentBlocks, []];
+      return [interceptedResult.result, []];
     }
 
     if (isCommand(interceptedResult.result)) {
-      return interceptedResult.result;
+      return [interceptedResult.result, []];
     }
 
     throw new Error(
       `Unexpected result value type from afterToolCall: expected either a Command, a ToolMessage or a tuple of ContentBlock and Artifact, but got ${interceptedResult.result}`
     );
   } catch (error) {
+    if (isGraphInterrupt(error) || config?.signal?.aborted) throw error;
     const details = parseZodErrorDetails(error);
     if (details) {
       throw new ToolException(z.prettifyError(details), error);
@@ -1163,7 +1025,10 @@ async function _callTool({
     if (isToolException(error)) {
       throw error;
     }
-    throw new ToolException(`Error calling tool ${toolName}: ${String(error)}`);
+    throw new ToolException(
+      `Error calling tool ${toolName}: ${String(error)}`,
+      error
+    );
   }
 }
 
@@ -1171,7 +1036,7 @@ const defaultLoadMcpToolsOptions: LoadMcpToolsOptions = {
   throwOnLoadError: true,
   prefixToolNameWithServerName: false,
   additionalToolNamePrefix: "",
-  useStandardContentBlocks: false,
+  useStandardContentBlocks: true,
 };
 
 /**
@@ -1198,18 +1063,10 @@ export async function loadMcpTools(
     ...(options ?? {}),
   };
 
-  const mcpTools: MCPTool[] = [];
-
-  // Get tools in a single operation
-  let toolsResponse: ListToolsResult | undefined;
-  do {
-    toolsResponse = await client.listTools({
-      ...(toolsResponse?.nextCursor
-        ? { cursor: toolsResponse.nextCursor }
-        : {}),
-    });
-    mcpTools.push(...(toolsResponse.tools || []));
-  } while (toolsResponse.nextCursor);
+  const mcpTools = await collectPages(async (cursor) => {
+    const page = await client.listTools(cursor === undefined ? {} : { cursor });
+    return { items: page.tools, nextCursor: page.nextCursor };
+  });
 
   debugLog(`INFO: Found ${mcpTools.length} MCP tools`);
 
@@ -1226,16 +1083,12 @@ export async function loadMcpTools(
         .filter((tool: MCPTool) => !!tool.name)
         .map(async (tool: MCPTool) => {
           try {
-            if (!tool.inputSchema.properties) {
-              // Workaround for MCP SDK not consistently providing properties
-              tool.inputSchema.properties = {};
-            }
+            const originalSchema = jsonObjectSchema.parse(tool.inputSchema);
+            const inputValidator = fromJsonSchema(originalSchema);
 
             // Dereference $defs/$ref in the schema to support Pydantic v2 schemas
             // and other JSON schemas that use $defs for nested type definitions
-            const dereferencedSchema = dereferenceJsonSchema(
-              jsonObjectSchema.parse(tool.inputSchema)
-            );
+            const dereferencedSchema = dereferenceJsonSchema(originalSchema);
 
             // Simplify schema for LLM compatibility by removing allOf, anyOf, oneOf,
             // if/then/else, not, and other patterns that OpenAI doesn't support
@@ -1258,6 +1111,7 @@ export async function loadMcpTools(
               ) => {
                 return _callTool({
                   serverName,
+                  inputValidator,
                   toolName: tool.name,
                   client,
                   args,

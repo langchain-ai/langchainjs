@@ -76,6 +76,27 @@ type ConnectionManagerConfig = Pick<
 export class ConnectionManager {
   #connections: Map<ClientKeyObject, Connection> = new Map();
   #hooks: ConnectionManagerConfig;
+  #identities: ClientKeyObject[] = [];
+  #pending = new Map<ClientKeyObject, Promise<Client>>();
+  #closing?: Promise<void>;
+
+  identity(options: TransportOptions): ClientKeyObject {
+    const headers = serializeHeaders(options.headers);
+    const existing = this.#identities.find(
+      (key) =>
+        key.serverName === options.serverName &&
+        key.headers === headers &&
+        key.authProvider === options.authProvider
+    );
+    if (existing) return existing;
+    const key = {
+      serverName: options.serverName,
+      headers,
+      authProvider: options.authProvider,
+    };
+    this.#identities.push(key);
+    return key;
+  }
 
   constructor(hooks: ConnectionManagerConfig = {}) {
     this.#hooks = hooks;
@@ -97,6 +118,37 @@ export class ConnectionManager {
       | ["sse", string, ResolvedStreamableHTTPConnection]
       | ["http", string, ResolvedStreamableHTTPConnection]
   ): Promise<Client> {
+    if (this.#closing) throw new Error("MCP connections are closing");
+    const [type, serverName, options] = args;
+    const key = this.identity(
+      type === "stdio"
+        ? { serverName }
+        : {
+            serverName,
+            headers: options.headers,
+            authProvider: options.authProvider,
+          }
+    );
+    const existing = this.#connections.get(key)?.client;
+    if (existing) return existing;
+    const pending = this.#pending.get(key);
+    if (pending) return pending;
+    const acquisition = this.#connect(args, key);
+    this.#pending.set(key, acquisition);
+    try {
+      return await acquisition;
+    } finally {
+      this.#pending.delete(key);
+    }
+  }
+
+  async #connect(
+    args:
+      | ["stdio", string, ResolvedStdioConnection]
+      | ["sse", string, ResolvedStreamableHTTPConnection]
+      | ["http", string, ResolvedStreamableHTTPConnection],
+    key: ClientKeyObject
+  ): Promise<Client> {
     const [type, serverName, options] = args;
     if (!transportTypes.includes(type)) {
       throw new Error(`Invalid transport type: ${type}`);
@@ -112,7 +164,6 @@ export class ConnectionManager {
       name: packageJson.name,
       version: packageJson.version,
     });
-    await mcpClient.connect(transport);
 
     if (this.#hooks.onMessage) {
       mcpClient.setNotificationHandler(
@@ -212,14 +263,12 @@ export class ConnectionManager {
       );
     }
 
-    const key: ClientKeyObject =
-      type === "stdio"
-        ? { serverName }
-        : {
-            serverName,
-            headers: serializeHeaders(options.headers),
-            authProvider: options.authProvider,
-          };
+    try {
+      await mcpClient.connect(transport);
+    } catch (error) {
+      await Promise.allSettled([mcpClient.close(), transport.close()]);
+      throw error;
+    }
 
     const forkClient = (headers: Record<string, string>): Promise<Client> => {
       return this.#forkClient(key, headers);
@@ -251,6 +300,8 @@ export class ConnectionManager {
       throw new Error("Transport not found");
     }
 
+    if (Object.keys(headers).length === 0)
+      return Promise.resolve(connection.client);
     const options = connection.transportOptions;
     if (options.transport === "stdio") {
       throw new Error("Forking stdio transport is not supported");
@@ -258,7 +309,7 @@ export class ConnectionManager {
 
     return this.createClient(options.transport, key.serverName, {
       ...options,
-      headers,
+      headers: mergeHeaders(options.headers, headers),
     });
   }
 
@@ -298,35 +349,9 @@ export class ConnectionManager {
   #queryConnection(
     options: TransportOptions
   ): { key: ClientKeyObject; connection: Connection } | undefined {
-    const headers = serializeHeaders(options.headers);
-    const [key, connection] =
-      [...this.#connections.entries()].find(([key]) => {
-        if (options.headers && options.authProvider) {
-          return (
-            key.serverName === options.serverName &&
-            key.headers === headers &&
-            key.authProvider === options.authProvider
-          );
-        }
-        if (options.headers && !options.authProvider) {
-          return (
-            key.serverName === options.serverName && key.headers === headers
-          );
-        }
-        if (options.authProvider && !options.headers) {
-          return (
-            key.serverName === options.serverName &&
-            key.authProvider === options.authProvider
-          );
-        }
-        return key.serverName === options.serverName;
-      }) ?? [];
-
-    if (key && connection) {
-      return { key, connection };
-    }
-
-    return undefined;
+    const key = this.identity(options);
+    const connection = this.#connections.get(key);
+    return connection ? { key, connection } : undefined;
   }
 
   /**
@@ -346,22 +371,46 @@ export class ConnectionManager {
    * Delete the transport based on server name and connection configuration.
    * @param options - The options for the transport, if not provided, all transports are deleted
    */
-  async delete(options?: TransportOptions) {
-    if (!options) {
-      await Promise.all(
-        Array.from(this.#connections.values()).map((connection) =>
-          connection.closeCallback()
-        )
-      );
-      this.#connections.clear();
+  async delete(options?: TransportOptions): Promise<void> {
+    if (this.#closing) return this.#closing;
+    if (options) {
+      const key = this.identity(options);
+      await this.#pending.get(key)?.catch(() => undefined);
+      const connection = this.#connections.get(key);
+      this.#connections.delete(key);
+      await connection?.closeCallback();
       return;
     }
-
-    const result = this.#queryConnection(options);
-    if (result) {
-      await result.connection.closeCallback();
-      this.#connections.delete(result.key);
+    this.#closing = this.#closeAll();
+    try {
+      await this.#closing;
+    } finally {
+      this.#closing = undefined;
     }
+  }
+
+  async release(client: Client): Promise<void> {
+    const entry = [...this.#connections.entries()].find(
+      ([, connection]) => connection.client === client
+    );
+    if (!entry) return;
+    this.#connections.delete(entry[0]);
+    await entry[1].closeCallback();
+  }
+
+  async #closeAll(): Promise<void> {
+    await Promise.allSettled(this.#pending.values());
+    const connections = [...this.#connections.values()];
+    this.#connections.clear();
+    this.#identities = [];
+    const results = await Promise.allSettled(
+      connections.map((connection) => connection.closeCallback())
+    );
+    const errors = results.flatMap((result) =>
+      result.status === "rejected" ? [result.reason] : []
+    );
+    if (errors.length)
+      throw new AggregateError(errors, "Failed to close MCP connections");
   }
 
   /**
@@ -558,11 +607,19 @@ export class ConnectionManager {
 function serializeHeaders(
   headers?: Record<string, string>
 ): string | undefined {
-  if (!headers) {
+  if (!headers || Object.keys(headers).length === 0) {
     return;
   }
-  return Object.entries(headers)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([key, value]) => `${key}: ${value}`)
-    .join("\n");
+  return JSON.stringify([...new Headers(headers)]);
+}
+
+/** HTTP header names are case-insensitive; later sources take precedence. */
+export function mergeHeaders(
+  base: Record<string, string> | undefined,
+  overrides: Record<string, string> | undefined
+): Record<string, string> {
+  const headers = new Headers(base);
+  for (const [name, value] of Object.entries(overrides ?? {}))
+    headers.set(name, value);
+  return Object.fromEntries(headers);
 }

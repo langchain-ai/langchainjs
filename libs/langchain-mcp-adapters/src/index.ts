@@ -21,7 +21,7 @@ export type {
  */
 export type SSEConnection = StreamableHTTPConnection;
 
-export { loadMcpTools } from "./tools.js";
+export { loadMcpTools, ToolException, isToolException } from "./tools.js";
 
 export type {
   ToolHooks,

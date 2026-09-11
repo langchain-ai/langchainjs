@@ -125,8 +125,8 @@ try {
     prefixToolNameWithServerName: false,
     // Optional additional prefix for tool names (optional, default: "")
     additionalToolNamePrefix: "",
-    // Use standardized content block format in tool outputs (default: false)
-    useStandardContentBlocks: false,
+    // Use native LangChain content blocks (default: true)
+    useStandardContentBlocks: true,
   });
 
   // Create and run the agent
@@ -254,7 +254,7 @@ Notes:
 ## Tool Configuration Options
 
 > [!TIP]
-> The `useStandardContentBlocks` defaults to `false` for backward compatibility, however we recommend setting it to `true` for new applications, as this will likely become the default in a future release.
+> `useStandardContentBlocks` defaults to `true`. Set it to `false` only when migrating code that expects legacy image/audio/file shapes.
 
 When loading MCP tools either directly through `loadMcpTools` or via `MultiServerMCPClient`, you can configure the following options:
 
@@ -263,7 +263,7 @@ When loading MCP tools either directly through `loadMcpTools` or via `MultiServe
 | `throwOnLoadError`             | `boolean`                              | `true`                                                | Whether to throw an error if a tool fails to load                                                    |
 | `prefixToolNameWithServerName` | `boolean`                              | `false`                                               | If true, prefixes all tool names with the server name (e.g., `serverName__toolName`)                 |
 | `additionalToolNamePrefix`     | `string`                               | `""`                                                  | Additional prefix to add to tool names (e.g., `prefix__serverName__toolName`)                        |
-| `useStandardContentBlocks`     | `boolean`                              | `false`                                               | See [Tool Output Mapping](#tool-output-mapping); set true for new applications                       |
+| `useStandardContentBlocks`     | `boolean`                              | `true`                                                | See [Tool Output Mapping](#tool-output-mapping); set true for new applications                       |
 | `outputHandling`               | `"content"`, `"artifact"`, or `object` | `resource` -> `"artifact"`, all others -> `"content"` | See [Tool Output Mapping](#tool-output-mapping)                                                      |
 | `defaultToolTimeout`           | `number`                               | `0`                                                   | Default timeout for all tools (overridable on a per-tool basis)                                      |
 | `onConnectionError`            | `"throw"` \| `"ignore"` \| `Function`  | `"throw"`                                             | Behavior when a server fails to connect. See [Connection Error Handling](#connection-error-handling) |
@@ -279,27 +279,23 @@ The `useStandardContentBlocks` field determines how individual MCP content block
 
 ### Standardizing the Format of Tool Outputs
 
-In `@langchain/core` version 0.3.48 we created a new set of content block types that offer a standardized structure for multimodal inputs. As you might guess from the name, the `useStandardContentBlocks` setting determines whether `@langchain/mcp-adapters` converts tool outputs to this format. For backward compatibility with older versions of `@langchain/mcp-adapters`, it also determines whether tool message artifacts are converted. See the conversion rules below for more info.
+By default, model-visible images and audio use LangChain's native blocks:
+`{ type: "image", data, mimeType }` and `{ type: "audio", data, mimeType }`.
+A single plain text result remains a string. Embedded text retains its resource
+URI in metadata; binary resources become image, audio or file blocks by MIME type.
 
-> [!IMPORTANT] > `ToolMessage.content` and `ToolMessage.artifact` will always be arrays of content block objects as described by the rules below, except in one special case. When the `outputHandling` option routes `text` output to the `ToolMessage.content` field and the only content block produced by a tool call is a `text` block, `ToolMessage.content` will be a `string` containing the text content produced by the tool.
+`outputHandling` selects what reaches the model. Artifact-routed blocks retain
+their MCP shape regardless of `useStandardContentBlocks`. Converted resources
+and blocks with extra protocol fields retain an original copy in an
+`{ type: "mcp_content", data }` artifact. Structured data and result metadata use
+`mcp_structured_content` and `mcp_meta` artifacts, including `false`, `0`, `null`
+and empty arrays. Result `_meta` is never appended to model-visible text.
 
-**When `useStandardContentBlocks` is `true` (recommended for new applications):**
+Conversion does not fetch resource links. Use `adapter.readResource(server, uri)`
+explicitly when your application needs a resource's contents.
 
-- **Text**: Returned as [`StandardTextBlock`](https://v03.api.js.langchain.com/types/_langchain_core.messages.StandardTextBlock.html) objects.
-- **Images**: Returned as base64 [`StandardImageBlock`](https://v03.api.js.langchain.com/types/_langchain_core.messages.StandardImageBlock.html) objects.
-- **Audio**: Returned as base64 [`StandardAudioBlock`](https://v03.api.js.langchain.com/types/_langchain_core.messages.StandardAudioBlock.html) objects.
-- **Embedded Resources**: Returned as [`StandardFileBlock`](https://v03.api.js.langchain.com/types/_langchain_core.messages.StandardFileBlock.html), with a `source_type` of `text` or `base64` depending on whether the resource was binary or text. URI resources are fetched eagerly from the server and the results of the fetch are returned following these same rules. We treat all embedded resource URIs as resolvable by the server, and we do not attempt to fetch external URIs.
-
-**When `useStandardContentBlocks` is `false` (default for backward compatibility):**
-
-- Tool outputs routed to `ToolMessage.artifact` (controlled by the `outputHandling` option):
-  - **Embedded Resources**: Embedded resources containing only a URI are fetched eagerly from the server and the results of the fetch operation are stored in the artifact array without transformation. Otherwise embedded resources are stored in the `artifact` array in their original MCP content block structure without modification.
-  - **All other content types**: Stored in the `artifact` array in their original MCP content block structure without modification.
-- Tool outputs routed to the `ToolMessage.content` array (controlled by the `outputHandling` option):
-  - **Text**: Returned as [`MessageContentText`](https://v03.api.js.langchain.com/types/_langchain_core.messages.MessageContentText.html) objects, unless it is the only content block in the output, in which case it's assigned directly to `ToolMessage.content` as a `string`.
-  - **Images**: Returned as [`MessageContentImageUrl`](https://v03.api.js.langchain.com/types/_langchain_core.messages.MessageContentImageUrl.html) objects with base64 data URLs (`data:image/png;base64,<data>`)
-  - **Audio**: Returned as [`StandardAudioBlock`](https://v03.api.js.langchain.com/types/_langchain_core.messages.StandardAudioBlock.html) objects.
-  - **Embedded Resources**: Returned as [`StandardFileBlock`](https://v03.api.js.langchain.com/types/_langchain_core.messages.StandardFileBlock.html), with a `source_type` of `text` or `base64` depending on whether the resource was binary or text. URI resources are fetched eagerly from the server and the results of the fetch are returned following these same rules. We treat all embedded resource URIs as resolvable by the server, and we do not attempt to fetch external URIs.
+For migration, `useStandardContentBlocks: false` keeps legacy `image_url` and
+`source_type`/`mime_type` content shapes. It does not restore implicit fetching.
 
 ### Determining Which Tool Outputs will be Visible to the LLM
 

@@ -24,13 +24,20 @@ import { type ClientConfig } from "../types.js";
 class TestMCPServers {
   private _httpServers: Server[] = [];
 
-  createStdioServer(name: string): { command: string; args: string[] } {
+  createStdioServer(
+    name: string,
+    sdk = 2
+  ): { command: string; args: string[] } {
     // Use the fixture file instead of inline server code
-    const fixturePath = join(__dirname, "fixtures", "dummy-stdio-server.ts");
+    const fixturePath = join(
+      __dirname,
+      "fixtures",
+      sdk === 1 ? "sdk1-stdio-server.ts" : "dummy-stdio-server.ts"
+    );
 
     return {
       command: "node",
-      args: ["--loader", "tsx", "--no-warnings", fixturePath, name],
+      args: ["--import", "tsx", "--no-warnings", fixturePath, name],
     };
   }
 
@@ -451,61 +458,103 @@ describe("MultiServerMCPClient Integration Tests", () => {
   });
 
   describe("Multiple Servers", () => {
-    it.skip("should connect to multiple servers of different transport types", async () => {
-      const { command, args } = testServers.createStdioServer("multi-stdio");
-      const { baseUrl: streamableHttpBaseUrl } =
-        await testServers.createHTTPServer("multi-http");
-      const { baseUrl: sseBaseUrl } = await testServers.createHTTPServer(
-        "multi-sse",
-        {
-          supportSSEFallback: true,
-        }
-      );
-
-      const client = new MultiServerMCPClient({
-        mcpServers: {
-          "stdio-server": {
-            command,
-            args,
-          },
-          "http-server": {
-            url: `${streamableHttpBaseUrl}/mcp`,
-          },
-          "sse-server": {
-            url: `${sseBaseUrl}/sse`,
-            transport: "sse",
-          },
-        },
-        prefixToolNameWithServerName: true,
-      });
-
-      try {
-        const tools = await client.getTools();
-        // Check tools from each server
-        const stdioTools = tools.filter((t) => t.name.includes("stdio-server"));
-        const httpTools = tools.filter((t) => t.name.includes("http-server"));
-        const sseTools = tools.filter((t) => t.name.includes("sse-server"));
-
-        expect(stdioTools.length).toBe(2);
-        expect(httpTools.length).toBe(5);
-        expect(sseTools.length).toBe(5);
-
-        expect(tools.length).toBe(12);
-
-        // Test tool from each server
-        const stdioTestTool = tools.find(
-          (t) => t.name.includes("stdio-server") && t.name.includes("test_tool")
+    it.each([1, 2])(
+      "connects SDK %s stdio alongside SDK 2 HTTP and SSE",
+      async (sdk) => {
+        const { command, args } = testServers.createStdioServer(
+          "multi-stdio",
+          sdk
         );
-        const result = await stdioTestTool!.invoke({
-          input: "multi-server test",
-        });
-        expect(result).toContain("multi-stdio");
-      } finally {
-        await client.close();
-      }
-    });
+        const { baseUrl: streamableHttpBaseUrl } =
+          await testServers.createHTTPServer("multi-http");
+        const { baseUrl: sseBaseUrl } = await testServers.createHTTPServer(
+          "multi-sse",
+          {
+            supportSSEFallback: true,
+          }
+        );
 
-    it.skip("should filter tools by server name", async () => {
+        const client = new MultiServerMCPClient({
+          mcpServers: {
+            "stdio-server": {
+              command,
+              args,
+            },
+            "http-server": {
+              url: `${streamableHttpBaseUrl}/mcp`,
+            },
+            "sse-server": {
+              url: `${sseBaseUrl}/sse`,
+              transport: "sse",
+            },
+          },
+          prefixToolNameWithServerName: true,
+        });
+
+        try {
+          const tools = await client.getTools();
+          // Check tools from each server
+          const stdioTools = tools.filter((t) =>
+            t.name.includes("stdio-server")
+          );
+          const httpTools = tools.filter((t) => t.name.includes("http-server"));
+          const sseTools = tools.filter((t) => t.name.includes("sse-server"));
+
+          expect(stdioTools.length).toBe(2);
+          expect(httpTools.length).toBeGreaterThanOrEqual(5);
+          expect(sseTools.length).toBe(httpTools.length);
+
+          expect(tools.length).toBe(
+            stdioTools.length + httpTools.length + sseTools.length
+          );
+
+          // Test tool from each server
+          const stdioTestTool = tools.find(
+            (t) =>
+              t.name.includes("stdio-server") && t.name.includes("test_tool")
+          );
+          const result = await stdioTestTool!.invoke({
+            input: "multi-server test",
+          });
+          expect(result).toContain("multi-stdio");
+          if (sdk === 1) {
+            expect(
+              (await client.getClient("stdio-server"))?.getServerVersion()
+                ?.version
+            ).toBe("1.30.0");
+            expect(
+              (await client.listResources("stdio-server"))["stdio-server"][0]
+                .uri
+            ).toBe("test://legacy");
+            expect(
+              (await client.readResource("stdio-server", "test://legacy"))[0]
+                .text
+            ).toBe("multi-stdio");
+          }
+          for (const [server, label] of [
+            ["http-server", "multi-http"],
+            ["sse-server", "multi-sse"],
+          ]) {
+            const selected = tools.find(
+              (tool) => tool.name === `${server}__test_tool`
+            );
+            expect(selected).toBeDefined();
+            expect(await selected!.invoke({ input: "routing" })).toContain(
+              label
+            );
+          }
+          const resources = await client.listResources(
+            "http-server",
+            "sse-server"
+          );
+          expect(Object.keys(resources)).toEqual(["http-server", "sse-server"]);
+        } finally {
+          await client.close();
+        }
+      }
+    );
+
+    it("should filter tools by server name", async () => {
       const { command, args } = testServers.createStdioServer("filter-stdio");
       const { baseUrl: streamableHttpBaseUrl } =
         await testServers.createHTTPServer("filter-http");
@@ -1547,8 +1596,8 @@ describe("MultiServerMCPClient Integration Tests", () => {
             (c) => c.type === "audio"
           ) as ContentBlock.Multimodal.Audio;
           expect(audioBlock).toBeDefined();
-          expect(audioBlock.source_type).toBe("base64");
-          expect(audioBlock.mime_type).toBe("audio/wav");
+          expect(audioBlock.source_type).toBeUndefined();
+          expect(audioBlock.mimeType).toBe("audio/wav");
           expect(typeof audioBlock.data).toBe("string");
           expect(audioBlock.data?.length).toBeGreaterThan(10);
         } finally {
@@ -1612,8 +1661,8 @@ describe("MultiServerMCPClient Integration Tests", () => {
           const imgBlock = imgContentArray.find(
             (c) => c.type === "image"
           ) as ContentBlock.Multimodal.Data;
-          expect(imgBlock.source_type).toBe("base64");
-          expect(imgBlock.mime_type).toBe("image/png");
+          expect(imgBlock.source_type).toBeUndefined();
+          expect(imgBlock.mimeType).toBe("image/png");
           expect(typeof imgBlock.data).toBe("string");
 
           // Test Audio Tool (should always use StandardAudioBlock)
@@ -1635,8 +1684,8 @@ describe("MultiServerMCPClient Integration Tests", () => {
           const audioBlock = audioContentArray.find(
             (c) => c.type === "audio"
           ) as ContentBlock.Multimodal.Audio;
-          expect(audioBlock.source_type).toBe("base64");
-          expect(audioBlock.mime_type).toBe("audio/wav");
+          expect(audioBlock.source_type).toBeUndefined();
+          expect(audioBlock.mimeType).toBe("audio/wav");
         } finally {
           await client.close();
         }
@@ -1659,7 +1708,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
               url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
             },
           },
-          /* useStandardContentBlocks: false */ // defaults to false
+          useStandardContentBlocks: false,
         });
 
         try {
@@ -1783,10 +1832,9 @@ describe("MultiServerMCPClient Integration Tests", () => {
                 ),
               }),
               expect.objectContaining({
-                type: "image_url",
-                image_url: expect.objectContaining({
-                  url: expect.stringMatching(/^data:image\/png;base64,/),
-                }),
+                type: "image",
+                mimeType: "image/png",
+                data: expect.any(String),
               }),
             ])
           );
@@ -1967,7 +2015,19 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
           const { content: resContent, artifact: resArtifact } =
             await resourceTool.invoke(resourceToolInput);
-          expect(resArtifact).toEqual([]);
+          expect(resArtifact).toEqual([
+            {
+              type: "mcp_content",
+              data: {
+                type: "resource",
+                resource: {
+                  uri: "mem://test.txt",
+                  mimeType: "text/plain",
+                  text: "This is a test resource.",
+                },
+              },
+            },
+          ]);
           expect(Array.isArray(resContent)).toBe(true);
           const resContentArray = resContent as ContentBlock[];
           expect(resContentArray).toHaveLength(2);
@@ -2043,7 +2103,19 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
           const { content: resContent, artifact: resArtifact } =
             await resourceTool.invoke(resourceToolInput);
-          expect(resArtifact).toEqual([]);
+          expect(resArtifact).toEqual([
+            {
+              type: "mcp_content",
+              data: {
+                type: "resource",
+                resource: {
+                  uri: "mem://test.txt",
+                  mimeType: "text/plain",
+                  text: "This is a test resource.",
+                },
+              },
+            },
+          ]);
           const resContentArray = resContent as ContentBlock[];
           expect(resContentArray).toHaveLength(2);
           expect(resContentArray).toEqual(
@@ -2163,7 +2235,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
             const imgContentArray = imgContent as ContentBlock[];
             expect(imgContentArray).toHaveLength(1);
             expect(imgContentArray[0]).toEqual(
-              expect.objectContaining({ type: "text", source_type: "text" })
+              expect.objectContaining({ type: "text" })
             );
           } else {
             expect(imgContent).toEqual([]);
@@ -2172,8 +2244,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
           expect(imgArtifact[0]).toEqual(
             expect.objectContaining({
               type: "image",
-              source_type: "base64",
-              mime_type: "image/png",
+              mimeType: "image/png",
             })
           );
 
@@ -2184,11 +2255,10 @@ describe("MultiServerMCPClient Integration Tests", () => {
           expect(audioContentArray).toHaveLength(2);
           expect(audioContentArray).toEqual(
             expect.arrayContaining([
-              expect.objectContaining({ type: "text", source_type: "text" }),
+              expect.objectContaining({ type: "text" }),
               expect.objectContaining({
                 type: "audio",
-                source_type: "base64",
-                mime_type: "audio/wav",
+                mimeType: "audio/wav",
               }),
             ])
           );
@@ -2201,7 +2271,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
             const resContentArray = resContent as ContentBlock[];
             expect(resContentArray).toHaveLength(1);
             expect(resContentArray[0]).toEqual(
-              expect.objectContaining({ type: "text", source_type: "text" })
+              expect.objectContaining({ type: "text" })
             );
           } else {
             expect(resContent).toEqual([]);
@@ -2209,10 +2279,12 @@ describe("MultiServerMCPClient Integration Tests", () => {
           expect(resArtifact).toHaveLength(1);
           expect(resArtifact[0]).toEqual(
             expect.objectContaining({
-              type: "file",
-              source_type: "text",
-              mime_type: "text/plain",
-              metadata: { uri: "mem://test.txt" },
+              type: "resource",
+              resource: {
+                uri: "mem://test.txt",
+                mimeType: "text/plain",
+                text: "This is a test resource.",
+              },
             })
           );
         } finally {

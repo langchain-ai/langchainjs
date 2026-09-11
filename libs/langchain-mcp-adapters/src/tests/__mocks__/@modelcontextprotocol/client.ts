@@ -10,6 +10,7 @@ const actual = await vi.importActual<
 >("@modelcontextprotocol/client");
 export const SdkHttpError = actual.SdkHttpError;
 export const isSpecType = actual.isSpecType;
+export const fromJsonSchema = actual.fromJsonSchema;
 
 const clientPrototype = {
   connect: vi

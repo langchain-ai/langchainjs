@@ -130,3 +130,49 @@ Hook `state` is typed `unknown`: it is the unchanged LangGraph task input,
 including arrays and primitives from functional entrypoints. Narrow or parse it
 using your application schema before accessing fields. Calls outside LangGraph
 continue to receive `{}`.
+
+## Tool results, hooks and schemas
+
+Standard LangChain content blocks now default to `true`. Images/audio use
+`data` and `mimeType`; set `useStandardContentBlocks: false` temporarily if your
+application reads the old `image_url` or `source_type` shapes.
+
+Keep protocol data in `ToolMessage.artifact`, not model-visible content:
+
+| Artifact type            | Data                                                              |
+| ------------------------ | ----------------------------------------------------------------- |
+| `mcp_structured_content` | Structured output, including false, zero, null and arrays         |
+| `mcp_meta`               | The result's `_meta` object                                       |
+| `mcp_content`            | Original converted resources or blocks with extra protocol fields |
+
+Blocks explicitly routed to artifacts remain in their original MCP format.
+A no-op `afterToolCall` preserves these artifacts. Returning a `ToolMessage` or
+LangGraph `Command` preserves that object, including message status and identity.
+Graph interrupts propagate unchanged. A server result with `isError: true`
+throws `ToolException` with the original response in `error.result`; transport
+failures retain their original cause. Catch using exported `isToolException`.
+
+Arguments modified by `beforeToolCall` are now checked against the **original
+server JSON Schema** before being sent. For example, a hook adding an undeclared
+property fails if the server declares `additionalProperties: false`, even if the
+model-facing projection accepts it. Projection cannot remove server constraints.
+Original descriptors are not mutated.
+
+## Connection and discovery behavior
+
+Tools and connections are isolated by server name, effective headers and OAuth
+provider identity. Configured headers take precedence over discovery overrides;
+an invocation hook's headers override its existing connection's headers. Empty
+fork overrides reuse the existing client. Default lookups cannot select another
+request's identity. A tools-list notification invalidates only that connection's
+catalog; separate OAuth providers remain separate even if their headers match.
+
+Concurrent acquisition is deduplicated. Failed handshakes and failed discovery
+release owned connections, and closing attempts every connection even if one
+fails. Clients supplied to `loadMcpTools` remain owned by the caller.
+
+Resource and template discovery follows pagination. Repeated cursors, a catalog
+exceeding 1,000 pages, and server errors reject instead of appearing as an empty
+catalog. Resource conversion never performs implicit reads; explicitly call
+`readResource` if needed. These changes do not enable modern request rounds or
+change the current legacy protocol-negotiation default.

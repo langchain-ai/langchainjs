@@ -225,7 +225,9 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
         const tools = await client.getTools();
         const t = tools.find((tool) => tool.name.includes("test_tool"))!;
         const res = await t.invoke({ input: "orig" });
-        expect(res).toEqual([{ type: "text", text: "server-after" }]);
+        expect(ToolMessage.isInstance(res)).toBe(true);
+        expect(res.content).toBe("server-after");
+        expect(res.tool_call_id).toBe("test-tool-call-id");
       } finally {
         await client.close();
       }
