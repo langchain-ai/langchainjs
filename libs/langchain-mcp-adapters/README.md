@@ -1,5 +1,10 @@
 # LangChain.js MCP Adapters
 
+> This version uses the stable MCP TypeScript SDK 2.x. Legacy MCP servers remain
+> supported. Applications supplying their own SDK client must migrate to
+> `@modelcontextprotocol/client`; see [the SDK migration guide](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-mcp-adapters/docs/sdk-v2-migration.md).
+> Upgrading the SDK alone does not enable modern stateless elicitation.
+
 [![npm version](https://img.shields.io/npm/v/@langchain/mcp-adapters.svg)](https://www.npmjs.com/package/@langchain/mcp-adapters)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -155,17 +160,20 @@ await client.close();
 
 This example shows how you can manage your own MCP client and use it to get LangChain tools. These tools can be used anywhere LangChain tools are used, including with LangGraph prebuilt agents, as shown below.
 
-The example below requires some prerequisites:
+This is an optional advanced API. `MultiServerMCPClient` manages the SDK client
+for you and does not require a separate SDK installation. Install
+`@modelcontextprotocol/client` directly only when your application imports and
+constructs its own SDK client, as this example does.
 
 ```bash
-npm install @langchain/mcp-adapters @langchain/langgraph @langchain/core @langchain/openai
+npm install @langchain/mcp-adapters @langchain/langgraph @langchain/core @langchain/openai @modelcontextprotocol/client
 
 export OPENAI_API_KEY=<your_api_key>
 ```
 
 ```ts
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { Client } from "@modelcontextprotocol/client";
+import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 
 import { createAgent } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
@@ -526,7 +534,7 @@ New in v0.4.6.
 ### Basic OAuth Setup
 
 ```ts
-import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
+import type { OAuthClientProvider } from "@langchain/mcp-adapters";
 
 class MyOAuthProvider implements OAuthClientProvider {
   constructor(

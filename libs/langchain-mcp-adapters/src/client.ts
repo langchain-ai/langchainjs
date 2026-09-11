@@ -1,16 +1,13 @@
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import {
   SSEClientTransport,
-  type SseError,
-} from "@modelcontextprotocol/sdk/client/sse.js";
-import {
   StreamableHTTPClientTransport,
-  type StreamableHTTPError,
-} from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
+} from "@modelcontextprotocol/client";
+import type {
+  OAuthClientProvider,
+  LoggingLevel,
+} from "@modelcontextprotocol/client";
+import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import type { DynamicStructuredTool } from "@langchain/core/tools";
-import type { LoggingLevel } from "@modelcontextprotocol/sdk/types.js";
-
 import { z } from "zod/v3";
 import { loadMcpTools } from "./tools.js";
 import { ConnectionManager, type Client } from "./connection.js";
@@ -758,16 +755,27 @@ export class MultiServerMCPClient {
   }
 
   private _getHttpErrorCode(error: unknown): number | undefined {
-    const streamableError = error as StreamableHTTPError | SseError;
-    let { code } = streamableError;
-    // try parsing from error message if code is not set
-    if (code == null) {
-      const m = streamableError.message.match(/\(HTTP (\d\d\d)\)/);
-      if (m && m.length > 1) {
-        code = parseInt(m[1], 10);
-      }
+    if (typeof error !== "object" || error === null) return undefined;
+
+    const isHttpStatus = (value: unknown): value is number =>
+      typeof value === "number" &&
+      Number.isInteger(value) &&
+      value >= 100 &&
+      value <= 599;
+
+    // SDK 2 HTTP errors use status; SSE errors use a numeric code.
+    if ("status" in error && isHttpStatus(error.status)) return error.status;
+
+    if ("code" in error && isHttpStatus(error.code)) return error.code;
+
+    if (!("message" in error) || typeof error.message !== "string") {
+      return undefined;
     }
-    return code;
+
+    const match = error.message.match(/\(HTTP (\d{3})\)/);
+    const status = match ? Number(match[1]) : undefined;
+
+    return isHttpStatus(status) ? status : undefined;
   }
 
   private _createAuthenticationErrorMessage(
