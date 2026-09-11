@@ -1018,6 +1018,28 @@ describe.each(coreModelInfo)(
       );
     });
 
+    test("mixing a native tool with a custom tool (#10675, #10819)", async () => {
+      // Only Gemini 3+ models can mix built-in and function-calling tools at
+      // all, and only with toolConfig.includeServerSideToolInvocations set.
+      if (!testConfig?.isThinking) {
+        return;
+      }
+      const customTool = tool(({ query }) => `Result for ${query}`, {
+        name: "custom_tool",
+        description: "A custom tool",
+        schema: z.object({ query: z.string() }),
+      });
+      const searchTool: Gemini.Tool = { googleSearch: {} };
+      const llm: Runnable = newChatGoogle().bindTools([customTool, searchTool]);
+
+      const result = await llm.invoke(
+        "What is the weather in Paris right now, and also call custom_tool with query 'hello'?"
+      );
+      expect(result.tool_calls?.some((c) => c.name === "custom_tool")).toBe(
+        true
+      );
+    });
+
     test(`function - stream tools`, async () => {
       const model = newChatGoogle();
 
