@@ -61,6 +61,7 @@ export function createDummyHttpServer(
 
         // Progress with token if present
         const progressToken = extra.mcpReq._meta?.progressToken;
+
         if (progressToken !== undefined) {
           const steps = 3;
           for (let i = 1; i <= steps; i++) {
@@ -332,10 +333,10 @@ export function createDummyHttpServer(
   app.use(express.json());
 
   // Store transports and metadata
-  const transports = {
-    streamable: {} as Record<string, NodeStreamableHTTPServerTransport>,
-    sse: {} as Record<string, SSEServerTransport>,
-  };
+  const transports: {
+    streamable: Record<string, NodeStreamableHTTPServerTransport>;
+    sse: Record<string, SSEServerTransport>;
+  } = { streamable: {}, sse: {} };
 
   // Helper function to capture headers
   const captureHeaders = (req: express.Request, sessionId: string) => {

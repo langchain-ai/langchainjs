@@ -2417,9 +2417,12 @@ describe("MultiServerMCPClient Integration Tests", () => {
         async ({ value }) => ({ content: [{ type: "text", text: value }] })
       );
       const client = new SDKClient({ name: "consumer", version: "1.0.0" });
+
       const [clientTransport, serverTransport] =
         InMemoryTransport.createLinkedPair();
+
       await server.connect(serverTransport);
+
       try {
         await client.connect(clientTransport);
         const callTool = vi.spyOn(client, "callTool");
@@ -2451,9 +2454,12 @@ describe("MultiServerMCPClient Integration Tests", () => {
       const server = new McpServer({ name: "compatibility", version: "1.0.0" });
       configure(server);
       const client = new SDKClient({ name: "consumer", version: "1.0.0" });
+
       const [clientTransport, serverTransport] =
         InMemoryTransport.createLinkedPair();
+
       await server.connect(serverTransport);
+
       try {
         await client.connect(clientTransport);
         await run(client, serverTransport);
@@ -2478,9 +2484,11 @@ describe("MultiServerMCPClient Integration Tests", () => {
           const request = client.request.bind(client);
           vi.spyOn(client, "request").mockImplementation(async (...args) => {
             const result = await request(...args);
+
             if (args[0].method === "tools/call") {
               return { content: [], structuredContent: { value: 123 } };
             }
+
             return result;
           });
           await expect(tool.invoke({})).rejects.toThrow(/schema|validat/i);
@@ -2496,6 +2504,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
             { inputSchema: z.object({}) },
             async (_args, extra) => {
               const progressToken = extra.mcpReq._meta?.progressToken;
+
               if (progressToken === undefined)
                 throw new Error("Missing progress token");
               await server.server.notification({
@@ -2506,6 +2515,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
                   total: 1,
                 },
               });
+
               return { content: [{ type: "text", text: "done" }] };
             }
           );
@@ -2526,33 +2536,40 @@ describe("MultiServerMCPClient Integration Tests", () => {
       "honors %s through the SDK 2 call options",
       async (mode) => {
         let started!: () => void;
+
         const toolStarted = new Promise<void>((resolve) => {
           started = resolve;
         });
+
         await withClient(
           (server) => {
             server.registerTool("slow", {}, async () => {
               started();
               await new Promise((resolve) => setTimeout(resolve, 50));
+
               return { content: [{ type: "text", text: "done" }] };
             });
           },
           async (client) => {
             const [tool] = await loadMcpTools("external", client);
             const controller = new AbortController();
+
             const result = tool.invoke(
               {},
               mode === "timeout"
                 ? { metadata: { timeoutMs: 5 } }
                 : { signal: controller.signal }
             );
+
             const rejected = expect(result).rejects.toThrow(
               /timeout|timed out|abort/i
             );
+
             if (mode === "abort") {
               await toolStarted;
               controller.abort();
             }
+
             await rejected;
           }
         );
