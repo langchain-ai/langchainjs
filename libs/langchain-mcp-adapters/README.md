@@ -101,8 +101,8 @@ const client = new MCPAdapter({
       authProvider,
       // Can still include custom headers for non-auth purposes
       headers: {
-        "User-Agent": "My-MCP-Client/1.0"
-      }
+        "User-Agent": "My-MCP-Client/1.0",
+      },
     },
 
     // how to force SSE, for old servers that are known to only support SSE (streamable HTTP falls back automatically if unsure)
@@ -246,9 +246,9 @@ const client = new MCPAdapter({
   // Receive progress updates (e.g. from long‑running tool calls)
   onProgress: (progress, source) => {
     const pct =
-      (progress.progress != null && progress.total
+      progress.progress != null && progress.total
         ? Math.round((progress.progress / progress.total) * 100)
-        : undefined);
+        : undefined;
     if (pct != null) {
       const origin =
         source.type === "tool" ? `${source.server}/${source.name}` : "unknown";
