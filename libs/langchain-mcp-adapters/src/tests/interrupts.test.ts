@@ -38,6 +38,10 @@ it.each([
   "url",
   "url-content",
   "state-only",
+  "direct-state-only",
+  "direct-limit",
+  "direct-abort",
+  "direct-state-then-question",
   "bad-content",
   "wrong-key",
   "extra-key",
@@ -49,6 +53,7 @@ it.each([
   "without-checkpointer",
 ])("resumes a reconstructed adapter: %s", async (scenario) => {
   const calls: string[] = [];
+  const controller = new AbortController();
 
   const handler = createMcpHandler(
     () => {
@@ -87,16 +92,19 @@ it.each([
             };
           }
 
-          if (scenario === "state-only") {
-            return calls.length === 1
-              ? inputRequired({
-                  requestState: "opaque:+/%==",
-                  inputRequests: {},
-                })
-              : {
-                  content: [{ type: "text", text: "approved" }],
-                  structuredContent: { approved: true },
-                };
+          if (scenario === "direct-abort") controller.abort();
+
+          if (scenario === "state-only" || scenario.startsWith("direct-")) {
+            if (scenario !== "direct-state-then-question" || calls.length === 1)
+              return calls.length === 1 || scenario === "direct-limit"
+                ? inputRequired({
+                    requestState: "opaque:+/%==",
+                    inputRequests: {},
+                  })
+                : {
+                    content: [{ type: "text", text: "approved" }],
+                    structuredContent: { approved: true },
+                  };
           }
 
           if (!context.mcpReq.inputResponses?.confirmation) {
@@ -155,6 +163,7 @@ it.each([
         modern: {
           transport: "http",
           url: `http://127.0.0.1:${address.port}`,
+          maxElicitationRounds: 2,
         },
       },
       beforeToolCall: before,
@@ -184,6 +193,39 @@ it.each([
 
   try {
     const graph = createGraph();
+
+    if (scenario.startsWith("direct-")) {
+      const [tool] = await adapter.listTools();
+
+      const result = tool.invoke(
+        { label: "original" },
+        { signal: controller.signal }
+      );
+
+      if (scenario === "direct-state-only") {
+        await expect(result).resolves.toBeDefined();
+        expect(calls).toHaveLength(2);
+        expect(after).toHaveBeenCalledTimes(1);
+      } else {
+        const message =
+          scenario === "direct-limit"
+            ? /round limit/
+            : scenario === "direct-abort"
+              ? /abort/i
+              : /inside a LangGraph with a checkpointer/;
+
+        await expect(result).rejects.toThrow(message);
+        expect(calls).toHaveLength(
+          scenario === "direct-limit" ? 3 : scenario === "direct-abort" ? 1 : 2
+        );
+        expect(after).not.toHaveBeenCalled();
+      }
+
+      expect(before).toHaveBeenCalledTimes(1);
+      expect(calls.every((label) => label === "effective")).toBe(true);
+
+      return;
+    }
 
     if (scenario === "state-only") {
       expect((await graph.invoke({ done: false }, config)).done).toBe(true);

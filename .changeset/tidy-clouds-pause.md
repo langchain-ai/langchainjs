@@ -19,3 +19,5 @@ token exchange and issuer validation to the SDK, and discards the old connection
 and catalog after success. The application owns one-time state consumption,
 user binding, credential storage, and the redirect endpoint. The configured
 provider must persist discovery state, PKCE, and issuer-scoped credentials.
+
+Continue state-only modern responses outside LangGraph without requesting user input. Direct and graph calls share bounded continuation handling, preserving effective arguments and cancellation; actual questions still require a checkpointed graph.

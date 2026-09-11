@@ -13,6 +13,7 @@ import {
   modernElicitationRequestSchema,
   elicitationAnswerFor,
 } from "./elicitation.js";
+import { ToolException } from "./utils/errors.js";
 
 type PendingInput = Parameters<Client["_resolveNonCompleteResult"]>[0];
 
@@ -38,7 +39,12 @@ export class InterruptMCPClient extends Client {
 
   withInterrupts<T>(
     invoke: (continuation?: MCPContinuation) => Promise<T>,
-    source: { server: string; tool: string; signal?: AbortSignal }
+    source: {
+      server: string;
+      tool: string;
+      signal?: AbortSignal;
+      execution?: "direct" | "graph";
+    }
   ): Promise<T> {
     return withMCPInterrupts(invoke, {
       ...source,
@@ -103,36 +109,44 @@ type RoundResult<T> =
       request: CallToolRequest["params"];
     };
 
-/** Checkpoint wire rounds, keeping opaque continuation state out of interrupt values. */
+/** Drive bounded continuation rounds; graph calls checkpoint each round before interrupting. */
 export async function withMCPInterrupts<T>(
   invoke: (continuation?: MCPContinuation) => Promise<T>,
   source: {
     server: string;
     tool: string;
     maxRounds: number;
+    execution?: "direct" | "graph";
     signal?: AbortSignal;
   }
 ): Promise<T> {
-  const callRound = task(
-    { name: "mcp.tool.round", retry: { maxAttempts: 1 } },
-    async (continuation?: MCPContinuation): Promise<RoundResult<T>> => {
-      source.signal?.throwIfAborted();
+  const invokeRound = async (
+    continuation?: MCPContinuation
+  ): Promise<RoundResult<T>> => {
+    source.signal?.throwIfAborted();
 
-      try {
-        return { kind: "complete", value: await invoke(continuation) };
-      } catch (error) {
-        if (PendingMCPInput.isInstance(error)) {
-          return {
-            kind: "pending",
-            pending: error.pending,
-            request: error.request,
-          };
-        }
-
-        throw error;
+    try {
+      return { kind: "complete", value: await invoke(continuation) };
+    } catch (error) {
+      if (PendingMCPInput.isInstance(error)) {
+        return {
+          kind: "pending",
+          pending: error.pending,
+          request: error.request,
+        };
       }
+
+      throw error;
     }
-  );
+  };
+
+  const callRound =
+    source.execution === "direct"
+      ? invokeRound
+      : task(
+          { name: "mcp.tool.round", retry: { maxAttempts: 1 } },
+          invokeRound
+        );
 
   let continuation: MCPContinuation | undefined;
 
@@ -158,6 +172,13 @@ export async function withMCPInterrupts<T>(
     let responses: Record<string, ElicitResult> = {};
 
     if (keys.length > 0) {
+      if (source.execution === "direct") {
+        throw new ToolException(
+          "This MCP tool requested user input. Invoke it inside a LangGraph with a checkpointer to pause and resume elicitation.",
+          new PendingMCPInput(result.pending, result.request)
+        );
+      }
+
       const resumeSchema = z.strictObject(
         Object.fromEntries(
           keys.map(

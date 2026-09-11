@@ -452,27 +452,17 @@ function createToolInvocation(
       async run(call: InvokeToolRound, config?: RunnableConfig) {
         const context = toolExecutionContext(config);
 
-        if (context.kind === "direct") {
-          try {
-            return await call();
-          } catch (error) {
-            if (PendingMCPInput.isInstance(error)) {
-              throw new ToolException(
-                "This MCP tool requested user input. Invoke it inside a LangGraph with a checkpointer to pause and resume elicitation.",
-                error
-              );
-            }
-
-            throw error;
-          }
-        }
-
         return runInterrupts(
-          (continuation) => call(continuation, context.state),
+          (continuation) =>
+            call(
+              continuation,
+              context.kind === "graph" ? context.state : undefined
+            ),
           {
             server: serverName,
             tool: toolName,
             signal: config?.signal,
+            execution: context.kind,
           }
         );
       },
