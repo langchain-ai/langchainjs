@@ -50,10 +50,10 @@ export async function main() {
   app.use(express.json());
 
   // Store transports for each session type
-  const transports = {
-    streamable: {} as Record<string, NodeStreamableHTTPServerTransport>,
-    sse: {} as Record<string, SSEServerTransport>,
-  };
+  const transports: {
+    streamable: Record<string, NodeStreamableHTTPServerTransport>;
+    sse: Record<string, SSEServerTransport>;
+  } = { streamable: {}, sse: {} };
 
   // Streamable HTTP endpoint using legacy protocol sessions
   app.post("/mcp", async (req, res) => {

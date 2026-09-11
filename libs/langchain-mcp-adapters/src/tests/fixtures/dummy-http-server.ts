@@ -331,10 +331,10 @@ export function createDummyHttpServer(
   app.use(express.json());
 
   // Store transports and metadata
-  const transports = {
-    streamable: {} as Record<string, NodeStreamableHTTPServerTransport>,
-    sse: {} as Record<string, SSEServerTransport>,
-  };
+  const transports: {
+    streamable: Record<string, NodeStreamableHTTPServerTransport>;
+    sse: Record<string, SSEServerTransport>;
+  } = { streamable: {}, sse: {} };
 
   // Helper function to capture headers
   const captureHeaders = (req: express.Request, sessionId: string) => {
