@@ -187,7 +187,6 @@ update the cache, or `"bypass"` to fetch without updating it. Existing tools hel
 by an agent are not mutated. Close and recreate the adapter when changing the
 account associated with an OAuth provider.
 
-
 ## Protocol negotiation and callbacks
 
 Leave `protocolVersion` unset for automatic HTTP/stdio negotiation. Set it to
