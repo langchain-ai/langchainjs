@@ -10,7 +10,7 @@ import { toNodeHandler } from "@modelcontextprotocol/node";
 import { z } from "zod";
 import { MCPAdapter } from "../index.js";
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { sdkSchema, validateElicitationAnswer } from "../elicitation.js";
 import type { MCPElicitationRequest } from "../elicitation.js";
 
@@ -261,6 +261,8 @@ it("subscribes to modern catalog changes and honors SDK cache policy", async () 
   http.listen(0, "127.0.0.1");
   await once(http, "listening");
   const address = z.object({ port: z.number() }).parse(http.address());
+  let timestamp = Date.now();
+  const clock = vi.spyOn(Date, "now").mockImplementation(() => timestamp);
   const adapter = new MCPAdapter({
     servers: {
       catalog: {
@@ -296,8 +298,12 @@ it("subscribes to modern catalog changes and honors SDK cache policy", async () 
     expect(
       (await adapter.getTools([], { cacheMode: "refresh" }))[0].name
     ).toContain("third");
+    timestamp += 60_001;
+    toolName = "expired";
+    expect((await adapter.getTools())[0].name).toContain("expired");
     expect(first.name).toContain("first");
   } finally {
+    clock.mockRestore();
     await adapter.close();
     await handler.close();
     http.closeAllConnections();
