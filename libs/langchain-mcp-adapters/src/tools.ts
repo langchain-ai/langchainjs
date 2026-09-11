@@ -45,6 +45,7 @@ const debugLog = getDebugLog("tools");
 // Decode JSON once at discovery; only parse the schema keywords this
 // simplifier consumes. Extension keywords remain intact.
 const jsonObjectSchema = z.record(z.string(), z.json());
+
 const schemaKeywordsSchema = z
   .object({
     properties: jsonObjectSchema.optional(),
@@ -191,6 +192,7 @@ function deepMergeSchemas(target: JSONObject, source: JSONObject): JSONObject {
     } else if (key === "enum" && Array.isArray(sourceValue)) {
       // Merge enum values (union of all possible values)
       const values = new Set<JSONValue>();
+
       if (Array.isArray(targetValue)) {
         for (const v of targetValue) values.add(v);
       }
@@ -208,6 +210,7 @@ function deepMergeSchemas(target: JSONObject, source: JSONObject): JSONObject {
     ) {
       // Recursively merge properties - merge each property individually
       const mergedProps: JSONObject = { ...targetValue };
+
       for (const [propKey, propValue] of Object.entries(sourceValue)) {
         if (isSchemaRecord(mergedProps[propKey]) && isSchemaRecord(propValue)) {
           mergedProps[propKey] = deepMergeSchemas(
@@ -247,6 +250,7 @@ function extractPropertiesFromConditional(schema: JSONObject): JSONObject {
   // Extract properties from 'then' branch
   if (isSchemaRecord(schema.then)) {
     const thenSchema = schemaKeywordsSchema.parse(schema.then);
+
     if (thenSchema.properties) {
       result = deepMergeSchemas(result, { properties: thenSchema.properties });
     }
@@ -263,6 +267,7 @@ function extractPropertiesFromConditional(schema: JSONObject): JSONObject {
   // Extract properties from 'else' branch
   if (isSchemaRecord(schema.else)) {
     const elseSchema = schemaKeywordsSchema.parse(schema.else);
+
     if (elseSchema.properties) {
       result = deepMergeSchemas(result, { properties: elseSchema.properties });
     }
@@ -322,6 +327,7 @@ function simplifyJsonSchemaForLLM(schema: JSONObject): JSONObject {
       then: schemaThen,
       else: schemaElse,
     });
+
     result = deepMergeSchemas(result, conditionalProps);
     debugLog(`INFO: Extracted properties from if/then/else conditional`);
   }
@@ -330,6 +336,7 @@ function simplifyJsonSchemaForLLM(schema: JSONObject): JSONObject {
   if (Array.isArray(allOf)) {
     for (const subSchema of allOf) {
       if (!isSchemaRecord(subSchema)) continue;
+
       // First extract properties from any if/then/else in this subschema
       if (subSchema.if || subSchema.then || subSchema.else) {
         const conditionalProps = extractPropertiesFromConditional(subSchema);
@@ -348,9 +355,11 @@ function simplifyJsonSchemaForLLM(schema: JSONObject): JSONObject {
   // Note: When merging anyOf/oneOf, we only merge properties but NOT required arrays,
   // because the union semantics mean any ONE of the schemas should match, not all.
   const rawUnionSchemas = anyOf || oneOf;
+
   const unionSchemas = Array.isArray(rawUnionSchemas)
     ? rawUnionSchemas.filter(isSchemaRecord)
     : [];
+
   if (unionSchemas.length > 0) {
     // Collect all properties from all schemas, but only keep required fields
     // that are common to ALL schemas (intersection)
@@ -365,6 +374,7 @@ function simplifyJsonSchemaForLLM(schema: JSONObject): JSONObject {
       const simplified = schemaKeywordsSchema.parse(
         simplifyJsonSchemaForLLM(subSchema)
       );
+
       // Merge properties
       if (isSchemaRecord(simplified.properties)) {
         Object.assign(mergedProperties, simplified.properties);
@@ -415,6 +425,7 @@ function simplifyJsonSchemaForLLM(schema: JSONObject): JSONObject {
   // Recursively simplify nested schemas in properties
   if (isSchemaRecord(result.properties)) {
     const simplifiedProperties: JSONObject = {};
+
     for (const [propName, propSchema] of Object.entries(result.properties)) {
       if (isSchemaRecord(propSchema)) {
         simplifiedProperties[propName] = simplifyJsonSchemaForLLM(propSchema);
@@ -459,6 +470,7 @@ type MCPInstance = Client | MCPClient;
 // Parse only the Zod issue fields needed for formatting, without depending
 // on a particular Zod version or constructor.
 const errorPathKeySchema = z.union([z.string(), z.number(), z.symbol()]);
+
 const zodErrorDetailsSchema = z.object({
   issues: z.array(
     z.object({
@@ -471,6 +483,7 @@ const zodErrorDetailsSchema = z.object({
 function parseZodErrorDetails(error: unknown) {
   if (!isInteropZodError(error)) return undefined;
   const parsed = zodErrorDetailsSchema.safeParse(error);
+
   return parsed.success ? parsed.data : undefined;
 }
 
@@ -483,8 +496,10 @@ export class ToolException extends Error {
     this.name = "ToolException";
 
     const details = parseZodErrorDetails(cause);
+
     if (details) {
       const minifiedZodError = new Error(z.prettifyError(details));
+
       const stackLines =
         typeof cause === "object" &&
         cause !== null &&
@@ -492,9 +507,11 @@ export class ToolException extends Error {
         typeof cause.stack === "string"
           ? cause.stack.split("\n")
           : [];
+
       const firstFrame = stackLines.findIndex((line) =>
         line.includes("    at")
       );
+
       minifiedZodError.stack =
         firstFrame < 0 ? undefined : stackLines.slice(firstFrame).join("\n");
       this.cause = minifiedZodError;
@@ -600,6 +617,7 @@ async function _toolOutputToContentBlocks(
 ): Promise<(ContentBlock | ContentBlock.Multimodal.Standard)[]> {
   const blocks: ContentBlock.Data.StandardFileBlock[] = [];
   const contentType = content.type;
+
   switch (content.type) {
     case "text":
       return [
@@ -900,6 +918,7 @@ async function _convertCallToolResult({
 
   // If we have structuredContent or meta, create an enhanced content that includes all info
   const firstBlock = convertedContent[0];
+
   if (
     convertedContent.length === 1 &&
     firstBlock.type === "text" &&
@@ -911,6 +930,7 @@ async function _convertCallToolResult({
       type: "text",
       text: firstBlock.text,
     } satisfies ContentBlock.Text;
+
     const textContent = textBlock.text;
 
     // If we have structuredContent or meta, wrap the content with additional info
@@ -1016,6 +1036,7 @@ async function _callTool({
     const numericTimeout =
       z.number().nullish().parse(config?.metadata?.timeoutMs) ??
       config?.timeout;
+
     const requestOptions: RequestOptions = {
       ...(numericTimeout ? { timeout: numericTimeout } : {}),
       ...(config?.signal ? { signal: config.signal } : {}),
@@ -1035,6 +1056,7 @@ async function _callTool({
     };
 
     let state: unknown = {};
+
     try {
       state = getCurrentTaskInput(config);
     } catch (error) {
@@ -1059,6 +1081,7 @@ async function _callTool({
 
     const headers = beforeToolCallInterception?.headers || {};
     const hasHeaderChanges = Object.entries(headers).length > 0;
+
     if (
       hasHeaderChanges &&
       !("fork" in client && typeof client.fork === "function")
@@ -1086,6 +1109,7 @@ async function _callTool({
     }
 
     const result = await finalClient.callTool(...callToolArgs);
+
     const [content, artifacts] = await _convertCallToolResult({
       serverName,
       toolName,
@@ -1155,6 +1179,7 @@ async function _callTool({
     );
   } catch (error) {
     const details = parseZodErrorDetails(error);
+
     if (details) {
       throw new ToolException(z.prettifyError(details), error);
     }

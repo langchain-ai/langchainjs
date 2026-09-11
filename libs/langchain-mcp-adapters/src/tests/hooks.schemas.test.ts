@@ -16,6 +16,7 @@ describe("hook result parsing", () => {
         ],
       ],
     };
+
     expect(toolCallResultModificationSchema.parse(modification)).toEqual(
       modification
     );
@@ -33,6 +34,7 @@ describe("hook result parsing", () => {
         ],
       ],
     };
+
     expect(toolCallResultModificationSchema.parse(modification)).toEqual(
       modification
     );

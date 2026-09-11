@@ -252,6 +252,7 @@ export class ConnectionManager {
     }
 
     const options = connection.transportOptions;
+
     if (options.transport === "stdio") {
       throw new Error("Forking stdio transport is not supported");
     }

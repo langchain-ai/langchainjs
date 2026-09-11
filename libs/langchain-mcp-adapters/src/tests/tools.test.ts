@@ -51,6 +51,7 @@ describe("Simplified Tool Adapter Tests", () => {
       },
       "x-provider": { choices: [1, "two", null, { enabled: true }] },
     } satisfies Tool["inputSchema"];
+
     mockClient.listTools.mockResolvedValue({
       tools: [{ name: "schema", inputSchema }],
     });
@@ -88,12 +89,15 @@ describe("Simplified Tool Adapter Tests", () => {
 
     test("does not mutate the arguments previously passed to a hook", async () => {
       let observed: unknown;
+
       const [tool] = await loadMcpTools("test", mockClient, {
         beforeToolCall: ({ args }) => {
           observed = args;
+
           return { args: { value: "effective" } };
         },
       });
+
       await tool.invoke({});
       expect(observed).toEqual({});
       expect(mockClient.callTool).toHaveBeenCalledWith({
@@ -107,6 +111,7 @@ describe("Simplified Tool Adapter Tests", () => {
         // @ts-expect-error Invalid JavaScript callback input is rejected at runtime too.
         beforeToolCall: () => ({ args: "invalid" }),
       });
+
       await expect(tool.invoke({})).rejects.toThrow();
       expect(mockClient.callTool).not.toHaveBeenCalled();
     });
@@ -116,10 +121,12 @@ describe("Simplified Tool Adapter Tests", () => {
       async (asyncHook) => {
         const invalid = { headers: { test: 42 } };
         const beforeToolCall = asyncHook ? async () => invalid : () => invalid;
+
         const [tool] = await loadMcpTools("test", mockClient, {
           // @ts-expect-error Exercise malformed JavaScript callback results.
           beforeToolCall,
         });
+
         await expect(tool.invoke({})).rejects.toThrow(/string/);
         expect(mockClient.callTool).not.toHaveBeenCalled();
       }
@@ -131,10 +138,12 @@ describe("Simplified Tool Adapter Tests", () => {
         const afterToolCall = asyncHook
           ? async () => ({ result: 42 })
           : () => ({ result: 42 });
+
         const [tool] = await loadMcpTools("test", mockClient, {
           // @ts-expect-error Exercise malformed JavaScript callback results.
           afterToolCall,
         });
+
         await expect(tool.invoke({})).rejects.toThrow();
         expect(mockClient.callTool).toHaveBeenCalledTimes(1);
       }
@@ -145,16 +154,19 @@ describe("Simplified Tool Adapter Tests", () => {
         beforeToolCall: async () => ({ args: { value: "effective" } }),
         afterToolCall: async () => ({ result: "changed" }),
       });
+
       expect(await tool.invoke({})).toBe("changed");
       expect(mockClient.callTool).toHaveBeenCalledWith({
         name: "echo",
         arguments: { value: "effective" },
       });
+
       const [invalid] = await loadMcpTools("test", mockClient, {
         beforeToolCall: () => {
           z.string().parse(123);
         },
       });
+
       await expect(invalid.invoke({})).rejects.toThrow(/string/);
     });
   });

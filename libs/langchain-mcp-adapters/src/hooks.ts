@@ -32,10 +32,12 @@ const toolArtifactSchema = z.union([
     error: "Expected a valid MCP embedded resource",
   }),
 ]);
+
 const toolResultBeforeSchema = z.tuple([
   toolContentSchema,
   z.array(toolArtifactSchema),
 ]);
+
 type ToolResultBefore = z.output<typeof toolResultBeforeSchema>;
 
 /**
@@ -64,6 +66,7 @@ export type ToolResult = z.output<typeof toolResultSchema>;
 const toolCallResultSchema = toolCallRequestSchema.extend({
   result: toolResultSchema,
 });
+
 export type ModifiedToolCallResult = z.output<typeof toolCallResultSchema>;
 
 export const toolCallResultModificationSchema = z.object({

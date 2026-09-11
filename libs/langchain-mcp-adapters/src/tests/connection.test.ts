@@ -29,12 +29,15 @@ describe("ConnectionManager", () => {
       "isolates notification options for %s clients",
       async (transport) => {
         const observed: ResolvedConnection[] = [];
+
         const mutateOptions = (source: ServerMessageSource) => {
           const options = source.options;
           observed.push(options);
           expect(options.outputHandling).toEqual({ text: "content" });
+
           if (typeof options.outputHandling === "object")
             options.outputHandling.text = "artifact";
+
           if ("command" in options) {
             expect(options.args).toEqual(["server.js"]);
             expect(options.env).toEqual({ MODE: "test" });
@@ -51,13 +54,16 @@ describe("ConnectionManager", () => {
             options.reconnect!.enabled = true;
           }
         };
+
         const onMessage = vi.fn((_message, source: ServerMessageSource) =>
           mutateOptions(source)
         );
+
         const manager = new ConnectionManager({
           onMessage,
           onResourcesListChanged: mutateOptions,
         });
+
         const options: ResolvedConnection =
           transport === "http"
             ? {
@@ -77,33 +83,40 @@ describe("ConnectionManager", () => {
                 restart: { enabled: false },
                 outputHandling: { text: "content" },
               };
+
         if ("command" in options)
           await manager.createClient("stdio", "test", options);
         else await manager.createClient("http", "test", options);
+
         const registerNotification: <M extends NotificationMethod>(
           method: M,
           handler: (
             notification: NotificationTypeMap[M]
           ) => void | Promise<void>
         ) => void = SDKClient.prototype.setNotificationHandler;
+
         const message = vi
           .mocked(registerNotification<"notifications/message">)
           .mock.calls.find(
             ([method]) => method === "notifications/message"
           )?.[1];
+
         const changed = vi
           .mocked(registerNotification<"notifications/resources/list_changed">)
           .mock.calls.find(
             ([method]) => method === "notifications/resources/list_changed"
           )?.[1];
+
         if (!message || !changed) {
           throw new Error("Expected registered notification handlers");
         }
+
         const params = {
           level: "info",
           data: "test",
           _meta: { extension: true },
         } satisfies Parameters<typeof message>[0]["params"];
+
         try {
           await message({ method: "notifications/message", params });
           await message({ method: "notifications/message", params });

@@ -5,6 +5,7 @@ import { ToolException } from "../tools.js";
 describe("ToolException error formatting", () => {
   test("formats parsed Zod issues with their nested paths", () => {
     const result = z.object({ count: z.number() }).safeParse({ count: "one" });
+
     if (result.success) throw new Error("Expected invalid input");
 
     const error = new ToolException("Invalid hook result", result.error);
@@ -18,6 +19,7 @@ describe("ToolException error formatting", () => {
     class ZodError extends Error {
       issues = [{ message: "Required", path: ["args", 0] }];
     }
+
     const cause = new ZodError("Verbose details");
     cause.stack = "Verbose details\n    at caller (example.ts:1:1)";
     const error = new ToolException("Invalid hook result", cause);
@@ -31,6 +33,7 @@ describe("ToolException error formatting", () => {
     class ZodError extends Error {
       issues = [{ message: 42, path: null }];
     }
+
     const cause = new ZodError("Malformed details");
     expect(new ToolException("Original failure", cause).cause).toBe(cause);
   });
