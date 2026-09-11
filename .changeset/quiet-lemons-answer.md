@@ -1,14 +1,7 @@
 ---
-"@langchain/mcp-adapters": minor
+"@langchain/mcp-adapters": major
 ---
 
-Negotiate modern and legacy MCP connections per server and support validated form and URL elicitation callbacks with bounded input rounds.
+Default HTTP and stdio connections to modern MCP. Select `mode: "legacy"` explicitly for legacy servers, including SSE. SDK package versions and protocol revisions are separate values.
 
-HTTP and stdio connections now negotiate automatically; explicit SSE remains
-legacy. Use `protocolVersion: "legacy"` or `{ pin: "2026-07-28" }` to constrain
-negotiation. SDK package versions and protocol revisions are different values.
-
-Subscribe to advertised modern catalog changes when list-change callbacks are
-configured. Subscription setup failures reject the connection. Set `logLevel`
-globally or per server for modern tool-call logs; `setLoggingLevel()` remains
-legacy-only. Callback elicitation does not create a checkpointed graph pause.
+Configure validated form and URL elicitation callbacks on individual legacy servers. Configure `logLevel` and `maxElicitationRounds` on modern servers. Modern catalog subscriptions keep tool caches current even without an application observer; subscription failures reject the connection. `setLoggingLevel()` remains legacy-only.

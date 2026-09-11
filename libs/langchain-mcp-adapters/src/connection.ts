@@ -69,6 +69,7 @@ function protocolClientOptions(
         capabilities: { elicitation: { form: {}, url: {} } },
       };
     }
+
     return { versionNegotiation: { mode: "legacy" } };
   }
 
@@ -184,6 +185,7 @@ export class ConnectionManager {
 
     const identity = { name: packageJson.name, version: packageJson.version };
     const clientOptions = protocolClientOptions(options);
+
     const mcpClient =
       options.mode === "modern"
         ? new InterruptMCPClient(identity, clientOptions)

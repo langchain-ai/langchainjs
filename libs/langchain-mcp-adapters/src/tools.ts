@@ -362,7 +362,7 @@ type InvokeToolRound = (
   hookState?: unknown
 ) => Promise<ContentBlocksWithArtifacts>;
 
-/** Choose interaction and header policies once for this connected tool. */
+/** Read graph context for this invocation; direct calls have no task state. */
 function toolExecutionContext(config?: RunnableConfig) {
   try {
     return { kind: "graph", state: getCurrentTaskInput(config) } satisfies {
@@ -398,6 +398,7 @@ function createToolInvocation(
   }
 
   const direct = executor(client, modern);
+
   const runInterrupts =
     modern && supportsMCPInterrupts(client)
       ? client.withInterrupts.bind(client)

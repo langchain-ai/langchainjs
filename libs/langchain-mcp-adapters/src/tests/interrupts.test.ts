@@ -238,6 +238,7 @@ it.each([
     const questions = snapshot.tasks.flatMap((entry) => entry.interrupts ?? []);
 
     expect(questions).toHaveLength(1);
+
     if (["url", "url-content"].includes(scenario)) {
       expect(questions[0].value).toMatchObject({
         requests: {
@@ -246,6 +247,7 @@ it.each([
       });
       expect(JSON.stringify(questions)).not.toContain("elicitationId");
     }
+
     expect(JSON.stringify(questions)).toContain("effective");
     expect(JSON.stringify(questions)).not.toContain("opaque");
     expect(calls).toEqual(["effective"]);
@@ -574,6 +576,7 @@ it("recognizes pending input across adapter copies without matching lookalikes",
     kind: "input_required",
     inputRequests: {},
   } satisfies ConstructorParameters<typeof PendingMCPInput>[0];
+
   const request = { name: "confirm", arguments: {} };
   const original = new PendingMCPInput(pending, request);
   vi.resetModules();
@@ -593,11 +596,13 @@ it("recognizes pending input across adapter copies without matching lookalikes",
 it("bounds answered elicitation rounds without replaying earlier requests", async () => {
   let calls = 0;
   const State = Annotation.Root({ result: Annotation<string>() });
+
   const graph = new StateGraph(State)
     .addNode("call", async () => ({
       result: await withMCPInterrupts<string>(
         async (continuation) => {
           calls += 1;
+
           if (continuation)
             expect(continuation.inputResponses).toEqual({
               confirmation: { action: "decline" },
@@ -621,6 +626,7 @@ it("bounds answered elicitation rounds without replaying earlier requests", asyn
     .addEdge(START, "call")
     .addEdge("call", END)
     .compile({ checkpointer: new MemorySaver() });
+
   const config = { configurable: { thread_id: "answered-round-limit" } };
   await graph.invoke({ result: "" }, config);
   expect(calls).toBe(1);
@@ -639,6 +645,7 @@ it.each(["modern", "mixed"])(
     const legacyCallback = vi.fn<MCPElicitationHandler>(() => ({
       action: "decline",
     }));
+
     const servers = {
       legacy: {
         mode: "legacy",
@@ -663,6 +670,7 @@ it.each(["modern", "mixed"])(
         ],
       },
     } satisfies Record<string, StdioConnection>;
+
     const adapter = new MCPAdapter({
       servers: Object.fromEntries(
         Object.entries(servers).filter(
@@ -671,24 +679,30 @@ it.each(["modern", "mixed"])(
       ),
       prefixToolNameWithServerName: true,
     });
+
     try {
       const tools = await adapter.listTools();
       expect(tools).toHaveLength(mode === "mixed" ? 2 : 1);
       const modern = tools.find((tool) => tool.name === "modern__approve");
+
       if (!modern) throw new Error("Missing modern tool");
+
       for (const action of ["accept", "decline", "cancel"]) {
         const State = Annotation.Root({ result: Annotation<string>() });
+
         const graph = new StateGraph(State)
           .addNode("call", async () => ({ result: await modern.invoke({}) }))
           .addEdge(START, "call")
           .addEdge("call", END)
           .compile({ checkpointer: new MemorySaver() });
+
         const config = { configurable: { thread_id: `${mode}-${action}` } };
         await graph.invoke({ result: "" }, config);
         const state = await graph.getState(config);
         expect(
           state.tasks.flatMap((task) => task.interrupts ?? [])
         ).toHaveLength(1);
+
         const result = await graph.invoke(
           new Command({
             resume: {
@@ -700,11 +714,15 @@ it.each(["modern", "mixed"])(
           }),
           config
         );
+
         expect(result.result).toBe(action);
       }
+
       expect(legacyCallback).not.toHaveBeenCalled();
+
       if (mode === "mixed") {
         const legacy = tools.find((tool) => tool.name === "legacy__approve");
+
         if (!legacy) throw new Error("Missing legacy tool");
         expect(await legacy.invoke({})).toBe("decline");
         expect(legacyCallback).toHaveBeenCalledTimes(1);
