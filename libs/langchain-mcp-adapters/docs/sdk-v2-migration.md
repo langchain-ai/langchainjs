@@ -2,14 +2,14 @@
 
 The adapter uses the stable `@modelcontextprotocol/client` 2.x package. Existing
 legacy MCP servers remain supported over stdio, Streamable HTTP, and legacy SSE.
-HTTP and stdio connections negotiate modern or legacy protocols automatically;
-explicit SSE connections use legacy negotiation. A single adapter can connect
-to both generations. SDK 2.0.0 is a package version, not a protocol revision.
+Connections now default to modern protocol negotiation. Add `mode: "legacy"`
+to each existing legacy server configuration; SDK package version 2 does not
+mean a server uses the modern wire protocol.
 
 ## Applications using the adapter
 
-Existing `MultiServerMCPClient` configuration, `getTools()`, and `close()` remain
-available. Applications using these APIs do not need to construct an SDK client.
+The names `MultiServerMCPClient`, `mcpServers`, and `getTools()` remain compatibility
+aliases, but their configurations follow the same new mode validation. Applications using these APIs do not need to construct an SDK client.
 
 ## Applications supplying an SDK client
 
@@ -69,7 +69,7 @@ existing Node version requirement remains unchanged.
 ## Canonical API and Zod4
 
 Rename `MultiServerMCPClient` to `MCPAdapter` and the configuration key
-`mcpServers` to `servers`. Keep `getTools()`, native LangChain tools and `close()`:
+`mcpServers` to `servers`. Prefer `listTools()`; native LangChain tools and `close()` remain:
 
 ```ts
 import { MCPAdapter } from "@langchain/mcp-adapters";
@@ -80,7 +80,7 @@ const adapter = new MCPAdapter({
   },
 });
 try {
-  const tools = await adapter.getTools();
+  const tools = await adapter.listTools();
   console.log(tools.map((tool) => tool.name));
 } finally {
   await adapter.close();
@@ -88,7 +88,7 @@ try {
 ```
 
 The old class name is the same constructor, not a second implementation. Legacy
-configuration remains accepted. Use one server-map spelling and one transport
+configuration names remain accepted; they do not bypass protocol validation. Use one server-map spelling and one transport
 selection; conflicting forms and connections combining `command` with `url` fail during construction. Legacy `type` is
 normalized to a required `transport` discriminator in the resolved configuration.
 Use `connection.transport` to narrow resolved stdio, HTTP, or SSE options;
@@ -196,31 +196,56 @@ fails. Clients supplied to `loadMcpTools` remain owned by the caller.
 Tool, resource, and template discovery delegates pagination to the SDK. Server
 errors reject instead of appearing as an empty catalog. Resource conversion
 never performs implicit reads; explicitly call
-`readResource` if needed.
+`readResource` if needed. Modern servers use the current revision by default; legacy servers require
+`mode: "legacy"`. Durable modern elicitation is introduced separately.
 
 ### Discovery freshness
 
-`getTools()` consults the SDK cache each time and reuses adapted tools when the
+`listTools()` consults the SDK cache each time and reuses adapted tools when the
 returned descriptors are unchanged. The default `cacheMode: "use"` honors SDK
-cache hints and TTL. Pass `getTools([], { cacheMode: "refresh" })` to fetch and
+cache hints and TTL. Pass `listTools([], { cacheMode: "refresh" })` to fetch and
 update the cache, or `"bypass"` to fetch without updating it. Existing tools held
 by an agent are not mutated. Close and recreate the adapter when changing the
 account associated with an OAuth provider.
 
-## Protocol negotiation and callbacks
+## Separate modern and legacy server options
 
-Leave `protocolVersion` unset for automatic HTTP/stdio negotiation. Set it to
-`"legacy"` to require the legacy handshake, or `{ pin: "2026-07-28" }` to require
-that modern revision. Existing legacy servers do not need to upgrade with the
-adapter.
+```ts
+const adapter = new MCPAdapter({
+  servers: {
+    modern: { url: "https://example.com/mcp" },
+    legacy: {
+      mode: "legacy",
+      url: "https://legacy.example.com/mcp",
+      automaticSSEFallback: true,
+      onMessage: (message) => console.log(message.data),
+    },
+  },
+});
+```
 
-Use `onElicitation` for form and URL requests. The callback returns an accepted,
-declined, or cancelled answer; accepted form content must match the requested
-schema. The SDK handles modern continuation rounds and legacy reverse requests.
-Do not call LangGraph `interrupt()` inside this callback. See the README's
-[protocol and elicitation guide](../README.md#protocol-negotiation-and-elicitation).
+Omitting `mode` means `"modern"`. Modern connections require the SDK's current
+modern protocol revision; there is no automatic fallback into legacy behavior.
+Explicit legacy mode supports stdio, Streamable HTTP, and SSE. `transport: "sse"`,
+`automaticSSEFallback`, and `onInitialized` require legacy mode. Invalid mode and
+transport combinations, unknown options, and empty server maps fail with Zod
+errors before opening a connection.
 
-Modern catalog-change callbacks open an SDK subscription when the server
-advertises support; subscription setup failures reject the connection. Set
-`logLevel` globally or per server to request modern tool-call logs.
-`setLoggingLevel()` is legacy-only and rejects modern connections.
+Move notification and progress callbacks from the adapter root into each server
+that should receive them. Global LangChain tool hooks and naming/output policies
+remain available. `onRootsListChanged` has been removed: roots notifications
+originate from the client. Use tool arguments, resource URIs, or server
+configuration to supply workspace paths instead.
+
+## Elicitation and request logging
+
+Move `onElicitation` onto each legacy server that handles user input. Modern server
+configuration rejects this callback; durable modern elicitation belongs to the
+following interruption layer. Legacy callbacks execute within the active request.
+Their answers are parsed with SDK schemas, with Zod issues preserving validation
+paths. They cannot be resumed after the underlying connection closes.
+
+Modern `logLevel` and `maxElicitationRounds` are server options, not adapter-wide
+policies. Legacy configurations reject them; use `setLoggingLevel` for legacy
+logging. Tool-catalog subscriptions keep caches fresh even without an application
+notification callback.

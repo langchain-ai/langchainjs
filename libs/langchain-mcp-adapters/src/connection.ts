@@ -16,7 +16,6 @@ import debug from "debug";
 import type {
   ResolvedStreamableHTTPConnection,
   ResolvedStdioConnection,
-  ResolvedClientConfig,
 } from "./types.js";
 
 /**
@@ -58,32 +57,19 @@ export interface Connection {
 
 const transportTypes = ["http", "sse", "stdio"] as const;
 
-type ConnectionManagerConfig = Partial<
-  Pick<
-    ResolvedClientConfig,
-    | "onElicitation"
-    | "maxElicitationRounds"
-    | "onCancelled"
-    | "onInitialized"
-    | "onMessage"
-    | "onPromptsListChanged"
-    | "onResourcesListChanged"
-    | "onResourcesUpdated"
-    | "onRootsListChanged"
-    | "onToolsListChanged"
-  >
->;
-
 /**
  * Manages a pool of MCP clients with different transport, server name and connection configurations.
  * This ensures we don't create multiple connections for the same server with the same configuration.
  */
 export class ConnectionManager {
   #connections: Map<ClientKeyObject, Connection> = new Map();
-  #hooks: ConnectionManagerConfig;
   #identities: ClientKeyObject[] = [];
   #pending = new Map<ClientKeyObject, Promise<Client>>();
   #closing?: Promise<void>;
+
+  constructor(
+    private readonly onToolsChanged?: (options: TransportOptions) => void
+  ) {}
 
   identity(options: TransportOptions): ClientKeyObject {
     const headers = serializeHeaders(options.headers);
@@ -106,10 +92,6 @@ export class ConnectionManager {
     this.#identities.push(key);
 
     return key;
-  }
-
-  constructor(hooks: ConnectionManagerConfig = {}) {
-    this.#hooks = hooks;
   }
 
   async createClient(
@@ -176,42 +158,52 @@ export class ConnectionManager {
           ? await this.#createSSETransport(serverName, options)
           : await this.#createStdioTransport(options);
 
+    // SDK LATEST_PROTOCOL_VERSION still names the legacy revision; pin the
+    // modern revision explicitly so negotiation cannot fall back to legacy.
     const mcpClient = new MCPClient(
-      { name: packageJson.name, version: packageJson.version },
+      {
+        name: packageJson.name,
+        version: packageJson.version,
+      },
       {
         versionNegotiation: {
-          mode: options.protocolVersion ?? (type === "sse" ? "legacy" : "auto"),
+          mode: options.mode === "legacy" ? "legacy" : { pin: "2026-07-28" },
         },
-        capabilities: this.#hooks.onElicitation
-          ? { elicitation: { form: {}, url: {} } }
-          : {},
-        inputRequired: { maxRounds: this.#hooks.maxElicitationRounds ?? 32 },
+        ...(options.mode === "legacy" && options.onElicitation
+          ? {
+              capabilities: { elicitation: { form: {}, url: {} } },
+            }
+          : {}),
+        ...(options.mode === "modern"
+          ? { inputRequired: { maxRounds: options.maxElicitationRounds } }
+          : {}),
       }
     );
 
-    configureElicitation(mcpClient, serverName, this.#hooks.onElicitation);
+    if (options.mode === "legacy")
+      configureElicitation(mcpClient, serverName, options.onElicitation);
 
-    if (this.#hooks.onMessage) {
+    if (options.onMessage) {
       mcpClient.setNotificationHandler(
         "notifications/message",
         (notification) =>
-          this.#hooks.onMessage?.(notification.params, {
+          options.onMessage?.(notification.params, {
             server: serverName,
             options: connectionSchema.parse(options),
           })
       );
     }
 
-    if (this.#hooks.onInitialized) {
+    if (options.onInitialized) {
       mcpClient.setNotificationHandler("notifications/initialized", () =>
-        this.#hooks.onInitialized?.({
+        options.onInitialized?.({
           server: serverName,
           options: connectionSchema.parse(options),
         })
       );
     }
 
-    if (this.#hooks.onCancelled) {
+    if (options.onCancelled) {
       mcpClient.setNotificationHandler(
         "notifications/cancelled",
         (notification) => {
@@ -221,7 +213,7 @@ export class ConnectionManager {
             return;
           }
 
-          const result = this.#hooks.onCancelled?.(
+          const result = options.onCancelled?.(
             { requestId, reason },
             {
               server: serverName,
@@ -238,54 +230,57 @@ export class ConnectionManager {
       );
     }
 
-    if (this.#hooks.onPromptsListChanged) {
+    if (options.onPromptsListChanged) {
       mcpClient.setNotificationHandler(
         "notifications/prompts/list_changed",
         () =>
-          this.#hooks.onPromptsListChanged?.({
+          options.onPromptsListChanged?.({
             server: serverName,
             options: connectionSchema.parse(options),
           })
       );
     }
 
-    if (this.#hooks.onResourcesListChanged) {
+    if (options.onResourcesListChanged) {
       mcpClient.setNotificationHandler(
         "notifications/resources/list_changed",
         () =>
-          this.#hooks.onResourcesListChanged?.({
+          options.onResourcesListChanged?.({
             server: serverName,
             options: connectionSchema.parse(options),
           })
       );
     }
 
-    if (this.#hooks.onResourcesUpdated) {
+    if (options.onResourcesUpdated) {
       mcpClient.setNotificationHandler(
         "notifications/resources/updated",
         (notification) =>
-          this.#hooks.onResourcesUpdated?.(notification.params, {
+          options.onResourcesUpdated?.(notification.params, {
             server: serverName,
             options: connectionSchema.parse(options),
           })
       );
     }
 
-    if (this.#hooks.onRootsListChanged) {
-      mcpClient.setNotificationHandler("notifications/roots/list_changed", () =>
-        this.#hooks.onRootsListChanged?.({
-          server: serverName,
-          options: connectionSchema.parse(options),
-        })
-      );
-    }
-
-    if (this.#hooks.onToolsListChanged) {
-      mcpClient.setNotificationHandler("notifications/tools/list_changed", () =>
-        this.#hooks.onToolsListChanged?.({
-          server: serverName,
-          options: connectionSchema.parse(options),
-        })
+    if (options.onToolsListChanged || this.onToolsChanged) {
+      mcpClient.setNotificationHandler(
+        "notifications/tools/list_changed",
+        () => {
+          this.onToolsChanged?.(
+            options.transport === "stdio"
+              ? { serverName }
+              : {
+                  serverName,
+                  headers: options.headers,
+                  authProvider: options.authProvider,
+                }
+          );
+          return options.onToolsListChanged?.({
+            server: serverName,
+            options: connectionSchema.parse(options),
+          });
+        }
       );
     }
 
@@ -297,14 +292,14 @@ export class ConnectionManager {
 
         const filter = {
           toolsListChanged: Boolean(
-            this.#hooks.onToolsListChanged && capabilities?.tools?.listChanged
+            (this.onToolsChanged || options.onToolsListChanged) &&
+            capabilities?.tools?.listChanged
           ),
           promptsListChanged: Boolean(
-            this.#hooks.onPromptsListChanged &&
-            capabilities?.prompts?.listChanged
+            options.onPromptsListChanged && capabilities?.prompts?.listChanged
           ),
           resourcesListChanged: Boolean(
-            this.#hooks.onResourcesListChanged &&
+            options.onResourcesListChanged &&
             capabilities?.resources?.listChanged
           ),
         };

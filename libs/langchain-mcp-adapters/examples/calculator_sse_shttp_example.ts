@@ -64,7 +64,7 @@ export async function runExample(client?: MCPAdapter) {
     console.log("Connected to server");
 
     // Get all tools (flattened array is the default now)
-    const mcpTools = await client.getTools();
+    const mcpTools = await client.listTools();
 
     if (mcpTools.length === 0) {
       throw new Error("No tools found");

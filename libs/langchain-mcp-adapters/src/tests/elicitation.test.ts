@@ -1,13 +1,10 @@
 import { createServer } from "node:http";
 import { once } from "node:events";
 import { join } from "node:path";
-import {
-  createMcpHandler,
-  inputRequired,
-  McpServer,
-} from "@modelcontextprotocol/server";
+import { createMcpHandler, McpServer } from "@modelcontextprotocol/server";
 import { toNodeHandler } from "@modelcontextprotocol/node";
 import { z } from "zod";
+import { adapterConfigSchema } from "../types.js";
 import { MCPAdapter } from "../index.js";
 
 import { describe, expect, it, vi } from "vitest";
@@ -62,59 +59,14 @@ describe("elicitation answers", () => {
   });
 });
 
-it.each(["accept", "invalid", "throws", "exhausted", "missing"])(
-  "handles modern elicitation: %s",
+it.each(["accept", "decline", "cancel", "invalid", "throws", "missing"])(
+  "handles legacy adapter elicitation: %s",
   async (scenario) => {
-    let calls = 0;
-
-    const handler = createMcpHandler(
-      () => {
-        const server = new McpServer({ name: "elicitation", version: "1" });
-        server.registerTool(
-          "approve",
-          {
-            inputSchema: z.object({ label: z.string() }),
-            outputSchema: z.object({ approved: z.boolean() }),
-          },
-          async ({ label }, context) => {
-            calls += 1;
-            const response = context.mcpReq.inputResponses?.confirmation;
-
-            if (!response || scenario === "exhausted") {
-              return inputRequired({
-                inputRequests: {
-                  confirmation: inputRequired.elicit({
-                    ...form,
-                    message: label,
-                  }),
-                },
-              });
-            }
-
-            return {
-              content: [{ type: "text", text: "approved" }],
-              structuredContent: { approved: true },
-            };
-          }
-        );
-
-        return server;
-      },
-      { legacy: "reject" }
-    );
-
-    const http = createServer(toNodeHandler(handler));
-    http.listen(0, "127.0.0.1");
-    await once(http, "listening");
-    const address = http.address();
-
-    if (!address || typeof address === "string")
-      throw new Error("Missing HTTP address");
     const questions: string[] = [];
-
     const adapter = new MCPAdapter({
       servers: {
         legacy: {
+          mode: "legacy",
           transport: "stdio",
           command: "node",
           args: [
@@ -123,57 +75,37 @@ it.each(["accept", "invalid", "throws", "exhausted", "missing"])(
             "--no-warnings",
             join(__dirname, "fixtures", "sdk1-stdio-server.ts"),
             "legacy",
+            "--elicitation",
           ],
+          onElicitation:
+            scenario === "missing"
+              ? undefined
+              : (request, context) => {
+                  expect(context.server).toBe("legacy");
+                  expect(context.signal.aborted).toBe(false);
+                  questions.push(request.message);
+                  if (scenario === "throws")
+                    throw new Error("Application rejected input");
+                  if (scenario === "decline" || scenario === "cancel")
+                    return { action: scenario };
+                  return {
+                    action: "accept",
+                    content: { confirm: scenario === "invalid" ? "yes" : true },
+                  };
+                },
         },
-        modern: { transport: "http", url: `http://127.0.0.1:${address.port}` },
       },
-      maxElicitationRounds: 2,
-      onElicitation:
-        scenario === "missing"
-          ? undefined
-          : (request, context) => {
-              expect(context.server).toBe("modern");
-              expect(context.signal.aborted).toBe(false);
-              questions.push(request.message);
-
-              if (scenario === "throws")
-                throw new Error("Application rejected input");
-
-              return {
-                action: "accept",
-                content: { confirm: scenario === "invalid" ? "yes" : true },
-              };
-            },
     });
-
     try {
-      const tools = await adapter.getTools();
-
-      const tool = tools.find((candidate) =>
-        candidate.name.endsWith("approve")
-      );
-
-      const legacy = tools.find((candidate) =>
-        candidate.name.endsWith("legacy_tool")
-      );
-
-      if (!tool || !legacy) throw new Error("Mixed server discovery failed");
-      expect(await legacy.invoke({ input: "hello" })).toBe("legacy:hello");
-
-      if (scenario === "accept") {
-        await tool.invoke({ label: "Deploy?" });
-        expect(questions).toEqual(["Deploy?"]);
-        expect(calls).toBe(2);
+      const [tool] = await adapter.listTools();
+      if (["accept", "decline", "cancel"].includes(scenario)) {
+        expect(await tool.invoke({})).toBe(scenario);
+        expect(questions).toEqual(["Approve legacy?"]);
       } else {
-        await expect(tool.invoke({ label: "Deploy?" })).rejects.toThrow();
-        expect(calls).toBeLessThanOrEqual(3);
+        await expect(tool.invoke({})).rejects.toThrow();
       }
     } finally {
       await adapter.close();
-      await handler.close();
-      http.close();
-      http.closeAllConnections();
-      await once(http, "close");
     }
   }
 );
@@ -225,98 +157,136 @@ it("answers legacy reverse requests using the same callback contract", async () 
   }
 });
 
-it("subscribes to modern catalog changes and honors SDK cache policy", async () => {
-  let toolName = "first";
-  let requests = 0;
-  const logs: unknown[] = [];
-  let changed: () => void = () => {};
+it.each([true, false])(
+  "subscribes to modern catalog changes with external observer %s",
+  async (externalObserver) => {
+    let toolName = "first";
+    let requests = 0;
+    const logs: unknown[] = [];
+    let changed: () => void = () => {};
 
-  const notification = new Promise<void>((resolve) => {
-    changed = resolve;
-  });
+    const notification = new Promise<void>((resolve) => {
+      changed = resolve;
+    });
 
-  const handler = createMcpHandler(
-    () => {
-      const server = new McpServer(
-        { name: "catalog", version: "1" },
-        {
-          capabilities: { tools: { listChanged: true }, logging: {} },
-          cacheHints: {
-            "tools/list": { ttlMs: 60_000, cacheScope: "private" },
+    const handler = createMcpHandler(
+      () => {
+        const server = new McpServer(
+          { name: "catalog", version: "1" },
+          {
+            capabilities: { tools: { listChanged: true }, logging: {} },
+            cacheHints: {
+              "tools/list": { ttlMs: 60_000, cacheScope: "private" },
+            },
+          }
+        );
+
+        requests += 1;
+        server.registerTool(
+          toolName,
+          { inputSchema: z.object({}) },
+          async (_args, context) => {
+            await context.mcpReq.log("info", "catalog invoked");
+
+            return { content: [] };
+          }
+        );
+
+        return server;
+      },
+      { legacy: "reject" }
+    );
+
+    const http = createServer(toNodeHandler(handler));
+    http.listen(0, "127.0.0.1");
+    await once(http, "listening");
+    const address = z.object({ port: z.number() }).parse(http.address());
+    let timestamp = Date.now();
+    const clock = vi.spyOn(Date, "now").mockImplementation(() => timestamp);
+
+    const adapter = new MCPAdapter({
+      servers: {
+        catalog: {
+          transport: "http",
+          url: `http://127.0.0.1:${address.port}/mcp`,
+          logLevel: "info",
+          onMessage: (message) => {
+            logs.push(message.data);
           },
-        }
+          onToolsListChanged: externalObserver ? changed : undefined,
+        },
+      },
+    });
+
+    try {
+      const [first] = await adapter.listTools();
+      await first.invoke({});
+      expect(logs).toEqual(["catalog invoked"]);
+      await expect(adapter.setLoggingLevel("debug")).rejects.toThrow(
+        /legacy-only/
       );
-
-      requests += 1;
-      server.registerTool(
-        toolName,
-        { inputSchema: z.object({}) },
-        async (_args, context) => {
-          await context.mcpReq.log("info", "catalog invoked");
-
-          return { content: [] };
-        }
+      const beforeCache = requests;
+      expect((await adapter.listTools())[0]).toBe(first);
+      expect(requests).toBe(beforeCache);
+      toolName = "second";
+      await handler.notify.toolsChanged();
+      if (externalObserver) await notification;
+      await vi.waitFor(async () =>
+        expect((await adapter.listTools())[0].name).toContain("second")
       );
+      toolName = "third";
+      expect(
+        (await adapter.listTools([], { cacheMode: "bypass" }))[0].name
+      ).toContain("third");
+      expect((await adapter.listTools())[0].name).toContain("second");
+      expect(
+        (await adapter.listTools([], { cacheMode: "refresh" }))[0].name
+      ).toContain("third");
+      timestamp += 60_001;
+      toolName = "expired";
+      expect((await adapter.listTools())[0].name).toContain("expired");
+      expect(first.name).toContain("first");
+    } finally {
+      clock.mockRestore();
+      await adapter.close();
+      await handler.close();
+      http.closeAllConnections();
+      await new Promise<void>((resolve, reject) =>
+        http.close((error) => (error ? reject(error) : resolve()))
+      );
+    }
+  }
+);
 
-      return server;
-    },
-    { legacy: "reject" }
-  );
-
-  const http = createServer(toNodeHandler(handler));
-  http.listen(0, "127.0.0.1");
-  await once(http, "listening");
-  const address = z.object({ port: z.number() }).parse(http.address());
-  let timestamp = Date.now();
-  const clock = vi.spyOn(Date, "now").mockImplementation(() => timestamp);
-
-  const adapter = new MCPAdapter({
-    servers: {
-      catalog: {
-        transport: "http",
-        url: `http://127.0.0.1:${address.port}/mcp`,
+describe("elicitation and logging configuration", () => {
+  it.each([
+    {
+      servers: {
+        modern: {
+          command: "node",
+          onElicitation: () => ({ action: "decline" }),
+        },
       },
     },
-    logLevel: "info",
-    onMessage: (message) => {
-      logs.push(message.data);
+    {
+      servers: {
+        legacy: { mode: "legacy", command: "node", maxElicitationRounds: 2 },
+      },
     },
-    onToolsListChanged: changed,
+    {
+      servers: {
+        legacy: { mode: "legacy", command: "node", logLevel: "info" },
+      },
+    },
+    {
+      servers: { modern: { command: "node" } },
+      onElicitation: () => ({ action: "decline" }),
+    },
+    { servers: { modern: { command: "node" } }, maxElicitationRounds: 2 },
+    { servers: { modern: { command: "node" } }, logLevel: "info" },
+  ])("rejects unsupported server policy with Zod errors: %j", (input) => {
+    const parsed = adapterConfigSchema.safeParse(input);
+    expect(parsed.success).toBe(false);
+    if (!parsed.success) expect(parsed.error.issues.length).toBeGreaterThan(0);
   });
-
-  try {
-    const [first] = await adapter.getTools();
-    await first.invoke({});
-    expect(logs).toEqual(["catalog invoked"]);
-    await expect(adapter.setLoggingLevel("debug")).rejects.toThrow(
-      /legacy-only/
-    );
-    const beforeCache = requests;
-    expect((await adapter.getTools())[0]).toBe(first);
-    expect(requests).toBe(beforeCache);
-    toolName = "second";
-    await handler.notify.toolsChanged();
-    await notification;
-    expect((await adapter.getTools())[0].name).toContain("second");
-    toolName = "third";
-    expect(
-      (await adapter.getTools([], { cacheMode: "bypass" }))[0].name
-    ).toContain("third");
-    expect((await adapter.getTools())[0].name).toContain("second");
-    expect(
-      (await adapter.getTools([], { cacheMode: "refresh" }))[0].name
-    ).toContain("third");
-    timestamp += 60_001;
-    toolName = "expired";
-    expect((await adapter.getTools())[0].name).toContain("expired");
-    expect(first.name).toContain("first");
-  } finally {
-    clock.mockRestore();
-    await adapter.close();
-    await handler.close();
-    http.closeAllConnections();
-    await new Promise<void>((resolve, reject) =>
-      http.close((error) => (error ? reject(error) : resolve()))
-    );
-  }
 });
