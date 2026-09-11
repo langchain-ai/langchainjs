@@ -41,11 +41,6 @@ export type ResponseFormatUndefined = {
 const PROVIDER_STRATEGY_DEFAULT_STRICT = true;
 
 /**
- * This is a global counter for generating unique names for tools.
- */
-let bindingIdentifier = 0;
-
-/**
  * Information for tracking structured output tool metadata.
  * This contains all necessary information to handle structured responses generated
  * via tool calls, including the original schema, its type classification, and the
@@ -78,29 +73,29 @@ export class ToolStrategy<_T = unknown> {
 
   static fromSchema<S extends InteropZodObject>(
     schema: S,
-    outputOptions?: ToolStrategyOptions
+    options?: ToolStrategyOptions
   ): ToolStrategy<S extends InteropZodType<infer U> ? U : unknown>;
 
   static fromSchema(
     schema: SerializableSchema,
-    outputOptions?: ToolStrategyOptions
+    options?: ToolStrategyOptions
   ): ToolStrategy<Record<string, unknown>>;
 
   static fromSchema(
     schema: Record<string, unknown>,
-    outputOptions?: ToolStrategyOptions
+    options?: ToolStrategyOptions
   ): ToolStrategy<Record<string, unknown>>;
 
   static fromSchema(
     schema: InteropZodObject | SerializableSchema | Record<string, unknown>,
-    outputOptions?: ToolStrategyOptions
+    options?: ToolStrategyOptions
   ): ToolStrategy<any> {
     /**
      * It is required for tools to have a name so we can map the tool call to the correct tool
      * when parsing the response.
      */
     function getFunctionName(name?: string) {
-      return name ?? `extract-${++bindingIdentifier}`;
+      return options?.toolName ?? name ?? "extract";
     }
 
     if (isSerializableSchema(schema) || isInteropZodSchema(schema)) {
@@ -116,7 +111,7 @@ export class ToolStrategy<_T = unknown> {
           parameters: asJsonSchema,
         },
       };
-      return new ToolStrategy(asJsonSchema, tool, outputOptions);
+      return new ToolStrategy(asJsonSchema, tool, options);
     }
 
     let functionDefinition: FunctionDefinition;
@@ -125,7 +120,10 @@ export class ToolStrategy<_T = unknown> {
       typeof schema.parameters === "object" &&
       schema.parameters != null
     ) {
-      functionDefinition = schema as unknown as FunctionDefinition;
+      functionDefinition = {
+        ...(schema as unknown as FunctionDefinition),
+        name: getFunctionName(schema.name),
+      };
     } else {
       functionDefinition = {
         name: getFunctionName(schema.title as string),
@@ -138,7 +136,7 @@ export class ToolStrategy<_T = unknown> {
       type: "function" as const,
       function: functionDefinition,
     };
-    return new ToolStrategy(asJsonSchema, tool, outputOptions);
+    return new ToolStrategy(asJsonSchema, tool, options);
   }
 
   /**
@@ -338,10 +336,12 @@ export function transformResponseFormat(
   }
 
   /**
-   * If users provide an array, it should only contain raw schemas (Zod, Standard Schema or JSON schema),
-   * not ToolStrategy or ProviderStrategy instances.
+   * If users provide an array, the response formats should be compatible with each other
+   * (e.g. [ToolStrategy, ProviderStrategy] not allowed)
    */
   if (Array.isArray(responseFormat)) {
+    let formatList: ResponseFormat[] | undefined;
+
     /**
      * if every entry is a ToolStrategy or ProviderStrategy instance, return the array as is
      */
@@ -351,14 +351,14 @@ export function transformResponseFormat(
           item instanceof ToolStrategy || item instanceof ProviderStrategy
       )
     ) {
-      return responseFormat as unknown as ResponseFormat[];
+      formatList = responseFormat as unknown as ResponseFormat[];
     }
 
     /**
      * Check if all items are Standard Schema
      */
-    if (responseFormat.every((item) => isSerializableSchema(item))) {
-      return responseFormat.map((item) =>
+    else if (responseFormat.every((item) => isSerializableSchema(item))) {
+      formatList = responseFormat.map((item) =>
         ToolStrategy.fromSchema(item as SerializableSchema, options)
       );
     }
@@ -366,8 +366,8 @@ export function transformResponseFormat(
     /**
      * Check if all items are Zod schemas
      */
-    if (responseFormat.every((item) => isInteropZodObject(item))) {
-      return responseFormat.map((item) =>
+    else if (responseFormat.every((item) => isInteropZodObject(item))) {
+      formatList = responseFormat.map((item) =>
         ToolStrategy.fromSchema(item as InteropZodObject, options)
       );
     }
@@ -375,7 +375,7 @@ export function transformResponseFormat(
     /**
      * Check if all items are plain objects (JSON schema)
      */
-    if (
+    else if (
       responseFormat.every(
         (item) =>
           typeof item === "object" &&
@@ -384,14 +384,32 @@ export function transformResponseFormat(
           !isSerializableSchema(item)
       )
     ) {
-      return responseFormat.map((item) =>
+      formatList = responseFormat.map((item) =>
         ToolStrategy.fromSchema(item as JsonSchemaFormat, options)
       );
     }
 
-    throw new Error(
-      `Invalid response format: list contains mixed types.\n` +
-        `All items must be either InteropZodObject, Standard Schema, or plain JSON schema objects.`
+    if (formatList === undefined) {
+      throw new Error(
+        `Invalid response format: list contains mixed types.\n` +
+          `All items must be either InteropZodObject, Standard Schema, or plain JSON schema objects.`
+      );
+    }
+
+    /**
+     * Normalize multiple tool strategies by assigning a monotonic index
+     * to the tool name (if it doesn't have a schema name).
+     */
+    let toolIndex = 0;
+    return formatList.map((format) =>
+      format instanceof ToolStrategy &&
+      format.options?.toolName === undefined &&
+      format.name === "extract"
+        ? ToolStrategy.fromSchema(format.schema, {
+            ...format.options,
+            toolName: `extract-${++toolIndex}`,
+          })
+        : format
     );
   }
 
@@ -450,6 +468,12 @@ export type ToolStrategyError =
   | StructuredOutputParsingError
   | MultipleStructuredOutputsError;
 export interface ToolStrategyOptions {
+  /**
+   * Override the name of the structured output tool.
+   *
+   * If omitted, the schema title is used, falling back to `extract`.
+   */
+  toolName?: string;
   /**
    * Allows you to customize the message that appears in the conversation history when structured
    * output is generated.
@@ -517,6 +541,7 @@ export function toolStrategy(
  * @param responseFormat - The schema(s) to enforce. Can be a single Zod schema, a Standard Schema
  *   (e.g., Valibot, ArkType, TypeBox), a JSON schema object, or arrays of any of these.
  * @param options - Optional configuration for the tool strategy
+ * @param options.toolName - Override the name of the structured output tool
  * @param options.handleError - How to handle errors when the model calls multiple structured output tools
  *   or when the output doesn't match the schema. Defaults to `true` (auto-retry). Can be `false` (throw),
  *   a `string` (retry with message), or a `function` (custom handler).
