@@ -259,31 +259,56 @@ it.each([true, false])(
 );
 
 describe("elicitation and logging configuration", () => {
+  it("uses SDK logging levels", () => {
+    expect(
+      adapterConfigSchema.safeParse({
+        servers: { modern: { url: "http://localhost/mcp", logLevel: "info" } },
+      }).success
+    ).toBe(true);
+    const invalid = adapterConfigSchema.safeParse({
+      servers: { modern: { url: "http://localhost/mcp", logLevel: "trace" } },
+    });
+    expect(invalid.success).toBe(false);
+    if (!invalid.success)
+      expect(JSON.stringify(invalid.error.issues)).toContain(
+        "Invalid MCP logging level"
+      );
+  });
+
   it.each([
     {
       servers: {
         modern: {
           command: "node",
+          args: [],
           onElicitation: () => ({ action: "decline" }),
         },
       },
     },
     {
       servers: {
-        legacy: { mode: "legacy", command: "node", maxElicitationRounds: 2 },
+        legacy: {
+          mode: "legacy",
+          command: "node",
+          args: [],
+          maxElicitationRounds: 2,
+        },
       },
     },
     {
       servers: {
-        legacy: { mode: "legacy", command: "node", logLevel: "info" },
+        legacy: { mode: "legacy", command: "node", args: [], logLevel: "info" },
       },
     },
     {
-      servers: { modern: { command: "node" } },
+      servers: { modern: { command: "node", args: [] } },
       onElicitation: () => ({ action: "decline" }),
     },
-    { servers: { modern: { command: "node" } }, maxElicitationRounds: 2 },
-    { servers: { modern: { command: "node" } }, logLevel: "info" },
+    {
+      servers: { modern: { command: "node", args: [] } },
+      maxElicitationRounds: 2,
+    },
+    { servers: { modern: { command: "node", args: [] } }, logLevel: "info" },
   ])("rejects unsupported server policy with Zod errors: %j", (input) => {
     const parsed = adapterConfigSchema.safeParse(input);
     expect(parsed.success).toBe(false);

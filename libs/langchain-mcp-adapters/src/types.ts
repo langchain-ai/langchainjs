@@ -1,5 +1,6 @@
 import type { MCPElicitationHandler } from "./elicitation.js";
 import { z } from "zod";
+import { isSpecType } from "@modelcontextprotocol/client";
 import type {
   LoggingLevel,
   CacheMode,
@@ -129,16 +130,10 @@ export const oAuthClientProviderSchema = z
   );
 
 /** SDK logging levels, exposed as an adapter request option. */
-export const loggingLevelSchema = z.enum([
-  "debug",
-  "info",
-  "notice",
-  "warning",
-  "error",
-  "critical",
-  "alert",
-  "emergency",
-] satisfies LoggingLevel[]);
+export const loggingLevelSchema = z.custom<LoggingLevel>(
+  isSpecType.LoggingLevel,
+  "Invalid MCP logging level"
+);
 
 export const baseConfigSchema = z.object({
   /**
@@ -724,9 +719,17 @@ const serverOnlyCallback = z
 
 const clientOptionsSchema = z
   .object({
-    onElicitation: serverOnlyCallback,
-    maxElicitationRounds: serverOnlyCallback,
-    logLevel: serverOnlyCallback,
+    onElicitation: z
+      .never({ error: "Move onElicitation into a legacy server definition" })
+      .optional(),
+    maxElicitationRounds: z
+      .never({
+        error: "Move maxElicitationRounds into a modern server definition",
+      })
+      .optional(),
+    logLevel: z
+      .never({ error: "Move logLevel into a modern server definition" })
+      .optional(),
     /**
      * Whether to throw an error if a tool fails to load
      *

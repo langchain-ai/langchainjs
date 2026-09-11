@@ -57,6 +57,28 @@ export interface Connection {
 
 const transportTypes = ["http", "sse", "stdio"] as const;
 
+/** Resolve only the SDK features supported by the parsed server mode. */
+function protocolClientOptions(
+  options: ResolvedStdioConnection | ResolvedStreamableHTTPConnection
+): ConstructorParameters<typeof MCPClient>[1] {
+  if (options.mode === "legacy") {
+    if (options.onElicitation) {
+      return {
+        versionNegotiation: { mode: "legacy" },
+        capabilities: { elicitation: { form: {}, url: {} } },
+      };
+    }
+    return { versionNegotiation: { mode: "legacy" } };
+  }
+
+  // SDK LATEST_PROTOCOL_VERSION still names a legacy revision. Pin modern
+  // explicitly so the configured mode cannot silently fall back to legacy.
+  return {
+    versionNegotiation: { mode: { pin: "2026-07-28" } },
+    inputRequired: { maxRounds: options.maxElicitationRounds },
+  };
+}
+
 /**
  * Manages a pool of MCP clients with different transport, server name and connection configurations.
  * This ensures we don't create multiple connections for the same server with the same configuration.
@@ -158,26 +180,9 @@ export class ConnectionManager {
           ? await this.#createSSETransport(serverName, options)
           : await this.#createStdioTransport(options);
 
-    // SDK LATEST_PROTOCOL_VERSION still names the legacy revision; pin the
-    // modern revision explicitly so negotiation cannot fall back to legacy.
     const mcpClient = new MCPClient(
-      {
-        name: packageJson.name,
-        version: packageJson.version,
-      },
-      {
-        versionNegotiation: {
-          mode: options.mode === "legacy" ? "legacy" : { pin: "2026-07-28" },
-        },
-        ...(options.mode === "legacy" && options.onElicitation
-          ? {
-              capabilities: { elicitation: { form: {}, url: {} } },
-            }
-          : {}),
-        ...(options.mode === "modern"
-          ? { inputRequired: { maxRounds: options.maxElicitationRounds } }
-          : {}),
-      }
+      { name: packageJson.name, version: packageJson.version },
+      protocolClientOptions(options)
     );
 
     if (options.mode === "legacy")
