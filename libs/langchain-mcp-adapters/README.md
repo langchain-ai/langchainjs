@@ -638,39 +638,43 @@ The library provides different error types to help with debugging:
 Example error handling:
 
 ```ts
+import { z } from "zod";
+import { MCPAdapter, isToolException } from "@langchain/mcp-adapters";
+
+let adapter: MCPAdapter | undefined;
 try {
-  const client = new MCPAdapter({
+  adapter = new MCPAdapter({
     servers: {
       math: {
         transport: "stdio",
-        command: "npx",
-        args: ["-y", "@modelcontextprotocol/server-math"],
+        command: "node",
+        args: ["./math-server.js"],
       },
     },
   });
-
-  const tools = await client.getTools();
-  const result = await tools[0].invoke({ expression: "1 + 2" });
+  const tools = await adapter.getTools();
+  await tools[0].invoke({ expression: "1 + 2" });
 } catch (error) {
-  if (error.name === "MCPClientError") {
-    // Handle connection issues
-    console.error(`Connection error (${error.serverName}):`, error.message);
-  } else if (error.name === "ToolException") {
-    // Handle tool execution errors
+  if (isToolException(error)) {
     console.error("Tool execution failed:", error.message);
-  } else if (error.name === "ZodError") {
-    // Handle configuration validation errors
-    console.error("Configuration error:", error.issues);
-    // Zod errors contain detailed information about what went wrong
-    error.issues.forEach((issue) => {
-      console.error(`- Path: ${issue.path.join(".")}, Error: ${issue.message}`);
-    });
+    if (error.cause instanceof z.ZodError) {
+      console.error(z.prettifyError(error.cause));
+      console.error(error.cause.issues);
+    }
+  } else if (error instanceof z.ZodError) {
+    console.error("Configuration error:", z.prettifyError(error));
   } else {
-    // Handle other errors
-    console.error("Unexpected error:", error);
+    console.error("Connection or other error:", error);
   }
+} finally {
+  await adapter?.close();
 }
 ```
+
+Configuration validation throws Zod4 errors directly. Tool execution wraps
+validation failures in `ToolException`, preserving the original Zod error as
+`cause`. SDK argument-validation issues become Zod4 custom issues with their
+messages and paths. Server and transport failures are not Zod validation errors.
 
 ### Common Zod Validation Errors
 
@@ -680,21 +684,9 @@ The library uses Zod for validating configuration. Here are some common validati
 - **Invalid parameter types**: For example, providing a number where a string is expected
 - **Invalid connection configuration**: For example, using an invalid URL format for SSE transport
 
-Example Zod error for an invalid SSE URL:
-
-```json
-{
-  "issues": [
-    {
-      "code": "invalid_string",
-      "validation": "url",
-      "path": ["mcpServers", "weather", "url"],
-      "message": "Invalid url"
-    }
-  ],
-  "name": "ZodError"
-}
-```
+Inspect `error.issues` for structured paths and messages rather than matching
+formatted error text. Use `z.prettifyError(error)` for a readable display. Zod4
+issue codes differ from Zod3; avoid relying on the old `invalid_string` URL code.
 
 ### Connection Error Handling
 
