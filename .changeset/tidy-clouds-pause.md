@@ -2,12 +2,15 @@
 "@langchain/mcp-adapters": minor
 ---
 
-Add opt-in checkpointed LangGraph elicitation for modern MCP tools, preserving effective arguments and validating resumed answers and terminal output. Verify SDK-owned OAuth refresh, DCR, and CIMD selection with local acceptance fixtures.
+Use checkpointed LangGraph elicitation by default for modern MCP tools, preserving effective arguments and validating resumed answers and terminal output. Verify SDK-owned OAuth refresh, DCR, and CIMD selection with local acceptance fixtures.
 
-Set `elicitationMode: "interrupt"` on modern connections to resume through a
-LangGraph checkpointer. Legacy fallback requires `onElicitation`. Keep durable
-call headers and authentication in connection configuration; per-call header
-overrides are rejected. Continuation rounds disable automatic retries and do
+Remove `elicitationMode`; modern tools interrupt a checkpointed graph when the
+server asks for input. Direct calls outside a graph still work without user input;
+an input request requires a checkpointed graph. Legacy servers use explicit
+`mode: "legacy"` and their own `onElicitation` callback, with no protocol fallback.
+Keep graph-call headers and authentication in connection configuration; modern
+graph executions reject per-call header overrides, while direct HTTP calls retain
+them. Continuation rounds disable automatic retries and do
 not guarantee exactly-once server side effects.
 
 Add `finishAuth(serverName, callbackParams, expectedState)` for an

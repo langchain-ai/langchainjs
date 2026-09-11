@@ -36,6 +36,16 @@ export class InterruptMCPClient extends Client {
     this.maxElicitationRounds = options?.inputRequired?.maxRounds ?? 32;
   }
 
+  withInterrupts<T>(
+    invoke: (continuation?: MCPContinuation) => Promise<T>,
+    source: { server: string; tool: string; signal?: AbortSignal }
+  ): Promise<T> {
+    return withMCPInterrupts(invoke, {
+      ...source,
+      maxRounds: this.maxElicitationRounds,
+    });
+  }
+
   protected override async _resolveNonCompleteResult(
     ...[decoded, flow]: Parameters<Client["_resolveNonCompleteResult"]>
   ): Promise<unknown> {
@@ -49,6 +59,15 @@ export class InterruptMCPClient extends Client {
 
     throw new PendingMCPInput(decoded, request.params);
   }
+}
+
+/** Recognize the execution capability without relying on SDK subclass identity. */
+export function supportsMCPInterrupts(
+  client: Client
+): client is Client & Pick<InterruptMCPClient, "withInterrupts"> {
+  return (
+    "withInterrupts" in client && typeof client.withInterrupts === "function"
+  );
 }
 
 export interface MCPContinuation {

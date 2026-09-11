@@ -31,6 +31,7 @@ import { z } from "zod";
 import { expect, it, vi } from "vitest";
 import { MCPAdapter } from "../index.js";
 import type { MCPElicitationHandler } from "../elicitation.js";
+import type { StdioConnection } from "../types.js";
 
 it.each([
   "accept",
@@ -154,7 +155,6 @@ it.each([
         modern: {
           transport: "http",
           url: `http://127.0.0.1:${address.port}`,
-          elicitationMode: "interrupt",
         },
       },
       beforeToolCall: before,
@@ -168,7 +168,7 @@ it.each([
   const createGraph = () =>
     new StateGraph(State)
       .addNode("call", async () => {
-        const [tool] = await adapter.getTools();
+        const [tool] = await adapter.listTools();
         await tool.invoke({ label: "original" });
 
         return { done: true };
@@ -204,7 +204,7 @@ it.each([
     }
 
     if (scenario === "outside-graph") {
-      const [tool] = await adapter.getTools();
+      const [tool] = await adapter.listTools();
       await expect(tool.invoke({ label: "original" })).rejects.toThrow(
         /inside a LangGraph with a checkpointer/
       );
@@ -216,7 +216,7 @@ it.each([
     if (
       ["outside-graph-complete", "outside-graph-headers"].includes(scenario)
     ) {
-      const [tool] = await adapter.getTools();
+      const [tool] = await adapter.listTools();
       await expect(tool.invoke({ label: "original" })).resolves.toBeDefined();
       expect(calls).toHaveLength(1);
 
@@ -521,7 +521,6 @@ it("resumes a modern stdio interrupt after reconstructing the adapter and server
             "tsx",
             join(__dirname, "fixtures", "modern-stdio-server.ts"),
           ],
-          elicitationMode: "interrupt",
         },
       },
       beforeToolCall: before,
@@ -535,7 +534,7 @@ it("resumes a modern stdio interrupt after reconstructing the adapter and server
   const graph = () =>
     new StateGraph(State)
       .addNode("call", async () => {
-        const [tool] = await adapter.getTools();
+        const [tool] = await adapter.listTools();
 
         return { done: await tool.invoke({}) };
       })
@@ -640,39 +639,40 @@ it.each(["modern", "mixed"])(
     const legacyCallback = vi.fn<MCPElicitationHandler>(() => ({
       action: "decline",
     }));
-    const adapter = new MCPAdapter({
-      servers: {
-        ...(mode === "mixed"
-          ? {
-              legacy: {
-                transport: "stdio",
-                command: process.execPath,
-                args: [
-                  "--import",
-                  "tsx",
-                  join(__dirname, "fixtures", "sdk1-stdio-server.ts"),
-                  "legacy",
-                  "--elicitation",
-                ],
-              },
-            }
-          : {}),
-        modern: {
-          transport: "stdio",
-          command: process.execPath,
-          args: [
-            "--import",
-            "tsx",
-            join(__dirname, "fixtures", "modern-stdio-server.ts"),
-          ],
-          elicitationMode: "interrupt",
-        },
+    const servers = {
+      legacy: {
+        mode: "legacy",
+        transport: "stdio",
+        command: process.execPath,
+        args: [
+          "--import",
+          "tsx",
+          join(__dirname, "fixtures", "sdk1-stdio-server.ts"),
+          "legacy",
+          "--elicitation",
+        ],
+        onElicitation: legacyCallback,
       },
+      modern: {
+        transport: "stdio",
+        command: process.execPath,
+        args: [
+          "--import",
+          "tsx",
+          join(__dirname, "fixtures", "modern-stdio-server.ts"),
+        ],
+      },
+    } satisfies Record<string, StdioConnection>;
+    const adapter = new MCPAdapter({
+      servers: Object.fromEntries(
+        Object.entries(servers).filter(
+          ([name]) => mode === "mixed" || name === "modern"
+        )
+      ),
       prefixToolNameWithServerName: true,
-      onElicitation: legacyCallback,
     });
     try {
-      const tools = await adapter.getTools();
+      const tools = await adapter.listTools();
       expect(tools).toHaveLength(mode === "mixed" ? 2 : 1);
       const modern = tools.find((tool) => tool.name === "modern__approve");
       if (!modern) throw new Error("Missing modern tool");

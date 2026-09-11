@@ -10,6 +10,7 @@ import { MCPAdapter } from "../client.js";
 import type { ResolvedStreamableHTTPConnection } from "../types.js";
 
 const connection = {
+  mode: "legacy",
   transport: "http",
   url: "https://example.com/mcp",
   automaticSSEFallback: false,
@@ -57,10 +58,13 @@ describe("connection ownership", () => {
     const handler = vi.spyOn(SDKClient.prototype, "setNotificationHandler");
     const failure = new Error("handshake failed");
     connect.mockRejectedValueOnce(failure);
-    const manager = new ConnectionManager({ onMessage: () => {} });
-    await expect(manager.createClient("http", "test", connection)).rejects.toBe(
-      failure
-    );
+    const manager = new ConnectionManager();
+    await expect(
+      manager.createClient("http", "test", {
+        ...connection,
+        onMessage: () => {},
+      })
+    ).rejects.toBe(failure);
     expect(handler.mock.invocationCallOrder[0]).toBeLessThan(
       connect.mock.invocationCallOrder[0]
     );

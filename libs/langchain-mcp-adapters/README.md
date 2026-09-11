@@ -3,7 +3,7 @@
 > This version uses the stable MCP TypeScript SDK 2.x. Legacy MCP servers remain
 > supported. Applications supplying their own SDK client must migrate to
 > `@modelcontextprotocol/client`; see [the SDK migration guide](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-mcp-adapters/docs/sdk-v2-migration.md).
-> Upgrading the SDK alone does not enable modern stateless elicitation.
+> Modern tools use LangGraph interrupts for user input. Legacy servers use per-server callbacks.
 
 [![npm version](https://img.shields.io/npm/v/@langchain/mcp-adapters.svg)](https://www.npmjs.com/package/@langchain/mcp-adapters)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -67,6 +67,7 @@ const client = new MCPAdapter({
   servers: {
     // adds a STDIO connection to a server named "math"
     math: {
+      mode: "legacy",
       transport: "stdio",
       command: "npx",
       args: ["-y", "@modelcontextprotocol/server-math"],
@@ -80,18 +81,18 @@ const client = new MCPAdapter({
 
     // here's a filesystem server
     filesystem: {
+      mode: "legacy",
       transport: "stdio",
       command: "npx",
       args: ["-y", "@modelcontextprotocol/server-filesystem"],
     },
 
-    // Streamable HTTP transport example, with auth headers and automatic SSE fallback disabled (defaults to enabled)
+    // Modern Streamable HTTP transport with authentication headers
     weather: {
       url: "https://example.com/weather/mcp",
       headers: {
         Authorization: "Bearer token123",
       },
-      automaticSSEFallback: false,
     },
 
     // OAuth 2.0 authentication (recommended for secure servers)
@@ -104,8 +105,9 @@ const client = new MCPAdapter({
       },
     },
 
-    // how to force SSE, for old servers that are known to only support SSE (streamable HTTP falls back automatically if unsure)
+    // Explicit legacy SSE endpoint
     github: {
+      mode: "legacy",
       transport: "sse", // also works with "type" field instead of "transport"
       url: "https://example.com/mcp",
       reconnect: {
@@ -117,7 +119,7 @@ const client = new MCPAdapter({
   },
 });
 
-const tools = await client.getTools();
+const tools = await client.listTools();
 
 // Create an OpenAI model
 const model = new ChatOpenAI({
@@ -143,13 +145,14 @@ try {
 ```
 
 Construction validates configuration; discovery and invocation open connections.
-No MCP SDK import is needed for this workflow. Use `transport: "sse"` for a
-known legacy SSE endpoint. The current default still uses legacy negotiation;
-modern request rounds and elicitation are separate work in this release stack.
+No MCP SDK import is needed for this workflow. Connections default to `mode: "modern"`
+and require the current modern protocol. Set `mode: "legacy"` for a legacy
+stdio, Streamable HTTP, or SSE server. Modern connections never fall back to SSE.
 
 `MultiServerMCPClient` is a deprecated alias of `MCPAdapter`. Existing
 `mcpServers` and direct server-map configurations remain accepted; new code
-should use `servers`. Do not combine `servers` with `mcpServers`, or conflicting
+should use `servers` and `listTools()`. `getTools()` remains a compatibility alias.
+The old constructor names use the same mode validation. Do not combine `servers` with `mcpServers`, or conflicting
 `transport` and legacy `type` values. See the [migration guide](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-mcp-adapters/docs/sdk-v2-migration.md)
 for Zod4, callback and configuration changes.
 
@@ -223,7 +226,7 @@ For more detailed examples, see the [examples](./examples) directory.
 
 ## Notifications and Progress
 
-You can subscribe to server notifications and tool progress events directly on the `MCPAdapter` via top‑level callbacks.
+You can subscribe to server notifications and tool progress events on the server configuration that owns them. Callbacks are not top-level adapter options.
 
 ```ts
 import { MCPAdapter } from "@langchain/mcp-adapters";
@@ -231,37 +234,39 @@ import { MCPAdapter } from "@langchain/mcp-adapters";
 const client = new MCPAdapter({
   servers: {
     everything: {
+      mode: "legacy",
       transport: "stdio",
+      // Receive log/notification messages from the server
+      onMessage: (log, source) => {
+        console.log(`[${source.server}] ${log.data}`);
+      },
+
+      // Receive progress updates (e.g. from long‑running tool calls)
+      onProgress: (progress, source) => {
+        const pct =
+          progress.progress != null && progress.total
+            ? Math.round((progress.progress / progress.total) * 100)
+            : undefined;
+        if (pct != null) {
+          const origin =
+            source.type === "tool"
+              ? `${source.server}/${source.name}`
+              : "unknown";
+          console.log(`[progress:${origin}] ${pct}%`);
+        }
+      },
+
+      // Optional: react to server-side list changes
+      onToolsListChanged: (source) => {
+        console.log(`[${source.server}] tools changed`);
+      },
       command: "npx",
       args: ["-y", "@modelcontextprotocol/server-everything"],
     },
   },
-
-  // Receive log/notification messages from the server
-  onMessage: (log, source) => {
-    console.log(`[${source.server}] ${log.data}`);
-  },
-
-  // Receive progress updates (e.g. from long‑running tool calls)
-  onProgress: (progress, source) => {
-    const pct =
-      progress.progress != null && progress.total
-        ? Math.round((progress.progress / progress.total) * 100)
-        : undefined;
-    if (pct != null) {
-      const origin =
-        source.type === "tool" ? `${source.server}/${source.name}` : "unknown";
-      console.log(`[progress:${origin}] ${pct}%`);
-    }
-  },
-
-  // Optional: react to server-side list changes
-  onToolsListChanged: (source) => {
-    console.log(`[${source.server}] tools changed`);
-  },
 });
 
-const tools = await client.getTools();
+const tools = await client.listTools();
 // ... invoke tools as usual ...
 await client.close();
 ```
@@ -270,8 +275,13 @@ Available notification callbacks you can register:
 
 - **onMessage**: server log/diagnostic messages
 - **onProgress**: progress events (`progress` and optional `total`) with `source` describing origin (e.g., tool name/server)
-- **onInitialized**, **onCancelled**
-- **onPromptsListChanged**, **onResourcesListChanged**, **onResourcesUpdated**, **onRootsListChanged**, **onToolsListChanged**
+- **onInitialized**: legacy only; **onCancelled**: cancellation notifications not consumed by the SDK
+- **onPromptsListChanged**, **onResourcesListChanged**, **onResourcesUpdated**, **onToolsListChanged**
+
+`onRootsListChanged` was removed: roots changes are sent by clients, not observed
+from servers. Pass workspace paths through tool arguments, resource URIs, or
+server configuration. Modern subscription cancellation is handled by the SDK;
+`onCancelled` observes notifications the SDK does not consume.
 
 ## Tool Hooks (modify args/results)
 
@@ -283,6 +293,7 @@ import { MCPAdapter } from "@langchain/mcp-adapters";
 const client = new MCPAdapter({
   servers: {
     math: {
+      mode: "legacy",
       transport: "stdio",
       command: "npx",
       args: ["-y", "@modelcontextprotocol/server-math"],
@@ -315,14 +326,14 @@ const client = new MCPAdapter({
   },
 });
 
-const tools = await client.getTools();
+const tools = await client.listTools();
 const t = tools.find((tool) => tool.name.includes("add"));
 const out = await t?.invoke({ a: 1, b: 2 });
 ```
 
 Notes:
 
-- **beforeToolCall** can return `{ args?, headers? }`. Headers are supported for HTTP/SSE. Stdio connections do not support custom headers.
+- **beforeToolCall** can return `{ args?, headers? }`. Headers are supported for HTTP/SSE calls. Modern tools running inside LangGraph reject header overrides; configure their headers on the connection. Stdio connections do not support custom headers.
 - **afterToolCall** may return `{ result }`, where `result` is a string, a 2‑tuple `[content, artifact]`, a `ToolMessage`, or a `Command`. Return nothing to keep the original result.
 
 ## Tool Configuration Options
@@ -439,7 +450,9 @@ Similarly, when calling tools on the `microphone` MCP server, the following `out
 
 You can configure a global timeout for all tools by setting the `defaultToolTimeout` field in the client params. You can include a `defaultToolTimeout` field in the server config to set the timeout for all tools for that server, or globally for the entire client by setting it in the top-level config.
 
-This timeout will be used as the default timeout for all tools unless overridden by a tool-specific timeout.
+A top-level `defaultToolTimeout` takes precedence over server-level defaults.
+When the top-level setting is omitted, each server uses its own default. A
+tool-specific timeout can override the resulting default.
 
 ```typescript
 const client = new MCPAdapter({
@@ -447,7 +460,7 @@ const client = new MCPAdapter({
     "data-processor": {
       command: "python",
       args: ["data_server.py"],
-      defaultToolTimeout: 30000, // timeout will be 30 seconds
+      defaultToolTimeout: 30000, // used when no top-level default is set
     },
     "image-processor": {
       transport: "stdio",
@@ -459,10 +472,10 @@ const client = new MCPAdapter({
   defaultToolTimeout: 10000, // 10 seconds
 });
 
-const tools = await client.getTools();
+const tools = await client.listTools();
 const slowTool = tools.find((t) => t.name.includes("process_large_dataset"));
 
-// Will timeout after 30 seconds (defaultToolTimeout)
+// Will timeout after 10 seconds (the top-level defaultToolTimeout)
 const result = await slowTool.invoke({ dataset: "huge_file.csv" });
 ```
 
@@ -480,7 +493,7 @@ const client = new MCPAdapter({
   },
 });
 
-const tools = await client.getTools();
+const tools = await client.listTools();
 const slowTool = tools.find((t) => t.name.includes("process_large_dataset"));
 
 // You can use withConfig to set tool-specific timeouts before handing
@@ -589,6 +602,7 @@ Both transport types support automatic reconnection:
 
 ```ts
 {
+  mode: "legacy",
   transport: "sse",
   url: "https://example.com/mcp-server",
   headers: { "Authorization": "Bearer token123" },
@@ -619,14 +633,16 @@ try {
   adapter = new MCPAdapter({
     servers: {
       math: {
+        mode: "legacy",
         transport: "stdio",
         command: "node",
         args: ["./math-server.js"],
       },
     },
   });
-  const tools = await adapter.getTools();
-  await tools[0].invoke({ expression: "1 + 2" });
+  const [tool] = await adapter.listTools();
+  if (!tool) throw new Error("No tools available");
+  await tool.invoke({ expression: "1 + 2" });
 } catch (error) {
   if (isToolException(error)) {
     console.error("Tool execution failed:", error.message);
@@ -692,7 +708,7 @@ const client = new MCPAdapter({
 });
 
 // This won't throw even though "broken-server" fails to connect
-const tools = await client.getTools(); // Only tools from "working-server"
+const tools = await client.listTools(); // Only tools from "working-server"
 
 // You can check which servers are actually connected
 const workingClient = await client.getClient("working-server"); // Returns client
@@ -768,49 +784,46 @@ Contributions are welcome! Please check out our [contributing guidelines](CONTRI
 
 ## Protocol negotiation and elicitation
 
-Each server negotiates independently. HTTP and stdio connections use `protocolVersion: "auto"`
-by default, so one adapter can connect to modern and legacy servers. Explicit SSE connections
-use legacy negotiation. Set `protocolVersion: "legacy"` to require the legacy handshake, or
-`protocolVersion: { pin: "2026-07-28" }` to require a specific revision. SDK package versions
-and MCP protocol revisions are separate version numbers.
+Connections default to the modern protocol. Use `mode: "legacy"` for a legacy
+stdio, HTTP, or SSE server. Each server is validated independently, so one adapter
+can connect to both generations without silently falling back between them.
 
-Servers can ask your application for structured input (form elicitation) or ask a user to
-complete an action at a URL. Supply `onElicitation` to handle these requests:
+Legacy servers can ask for form input or completion of an action at a URL. Put
+`onElicitation` on that server:
 
 ```typescript
 const adapter = new MCPAdapter({
   servers: {
-    workspace: { transport: "http", url: "http://localhost:3000/mcp" },
+    workspace: {
+      mode: "legacy",
+      url: "http://localhost:3000/mcp",
+      onElicitation: async (request, { server, signal }) => {
+        return requestUserInput({ server, request, signal });
+      },
+    },
   },
-  onElicitation: async (request, { server, signal }) => {
-    // Your application supplies this function and owns consent and presentation.
-    return requestUserInput({ server, request, signal });
-  },
-  maxElicitationRounds: 32,
 });
 ```
 
-Return `{ action: "accept", content: { ... } }` for an accepted form, or
-`{ action: "decline" }` / `{ action: "cancel" }`. Accepted form content must match the
-server's requested JSON Schema. URL answers contain an action without form content;
-your application decides whether and how to open the URL. URL elicitation is separate
-from the OAuth flow used to authorize an MCP connection.
+Your application owns `requestUserInput`, consent, and presentation. Return
+`{ action: "accept", content: { ... } }`, `{ action: "decline" }`, or
+`{ action: "cancel" }`. Accepted form content must match the server's JSON Schema;
+URL answers have no form content. Invalid answers produce Zod validation errors.
+The callback receives the server name and cancellation signal.
 
-The adapter advertises elicitation when `onElicitation` is configured or the
-connection uses `elicitationMode: "interrupt"`. It supplies the
-server name and cancellation signal to the callback and validates the answer before
-sending it. The SDK handles legacy reverse requests and modern `input_required` rounds,
-including continuation state. The round limit bounds input exchanges; it does not enable
-retries after transport failures.
-
-A callback waits inside a running invocation. It is not a durable LangGraph pause: do not
-call `interrupt()` from this callback or assume a pending legacy request survives process
-restart. Durable interruption needs a checkpointed continuation boundary.
+Legacy callbacks wait within the running request. They cannot survive a process
+restart; do not call LangGraph `interrupt()` inside them. Modern configurations
+reject `onElicitation` and use LangGraph interrupts by default.
 
 ## Durable LangGraph elicitation
 
-Set `elicitationMode: "interrupt"` on a modern server connection to pause a graph for
-input. The graph must use a checkpointer and a stable thread ID:
+Modern tools pause a LangGraph run when the server asks for input. No elicitation
+option is needed. Use a checkpointer and a stable thread ID to resume the run.
+Direct calls outside LangGraph still work when the server does not ask for input;
+if it does, the call raises an error explaining that a checkpointed graph is required.
+A graph without a checkpointer also fails when it reaches the input request.
+
+For example, a deployment tool can ask for approval before it continues:
 
 ```typescript
 import { MCPAdapter, type MCPElicitationResume } from "@langchain/mcp-adapters";
@@ -828,14 +841,13 @@ const adapter = new MCPAdapter({
     workspace: {
       transport: "http",
       url: "http://localhost:3000/mcp",
-      elicitationMode: "interrupt",
     },
   },
 });
 const State = Annotation.Root({ done: Annotation<boolean>() });
 const graph = new StateGraph(State)
   .addNode("call", async () => {
-    const tools = await adapter.getTools("workspace");
+    const tools = await adapter.listTools("workspace");
     const deploy = tools.find((tool) => tool.name === "deploy");
     if (!deploy) throw new Error("Deploy tool unavailable");
     await deploy.invoke({ environment: "staging" });
@@ -846,23 +858,29 @@ const graph = new StateGraph(State)
   .compile({ checkpointer: new MemorySaver() });
 
 const config = { configurable: { thread_id: "deployment-123" } };
-await graph.invoke({ done: false }, config);
-const snapshot = await graph.getState(config);
-// Present snapshot.tasks' interrupts using your application's input flow.
-// Each MCP interrupt has { type: "mcp_elicitation", server, tool, requests }.
+try {
+  await graph.invoke({ done: false }, config);
+  const snapshot = await graph.getState(config);
+  // Present these interrupts using your application's input flow.
+  // Each MCP interrupt has { type: "mcp_elicitation", server, tool, requests }.
+  console.log(snapshot.tasks);
 
-// Use the actual keys from requests and answers explicitly supplied by the user.
-const answers: MCPElicitationResume = {
-  confirmation: { action: "accept", content: { confirm: true } },
-};
-await graph.invoke(new Command({ resume: answers }), config);
-await adapter.close();
+  // Use the actual keys from requests and answers explicitly supplied by the user.
+  const answers: MCPElicitationResume = {
+    confirmation: { action: "accept", content: { confirm: true } },
+  };
+  await graph.invoke(new Command({ resume: answers }), config);
+} finally {
+  await adapter.close();
+}
 ```
 
 The adapter checkpoints each tool-call round. Resuming a saved round reuses its effective
 arguments and opaque server continuation instead of starting the tool again. The initial
 `beforeToolCall` and terminal `afterToolCall` hooks are part of those checkpointed rounds.
 Answers must contain exactly the pending question keys and pass the server's form schema.
+Use those keys to identify URL questions too: modern URL requests need not include
+legacy `elicitationId` values.
 State-only rounds do not ask the user a question and remain bounded by `maxElicitationRounds`.
 
 `MemorySaver` demonstrates the flow in one process. To survive a process restart, use a
@@ -873,15 +891,17 @@ They are not included in the public interrupt value. This does not guarantee exa
 execution if a process fails after a server performs work but before the round is checkpointed;
 the server must make side-effectful operations safe to resume.
 
-Configure durable-call authentication and headers on the connection. `beforeToolCall` header
-overrides are rejected in interrupt mode so credentials are not saved as continuation data.
-Provider objects, access tokens, and PKCE state stay in the application/provider, not the graph's
+Configure authentication and headers on the connection when running modern tools
+inside LangGraph. These graph executions reject `beforeToolCall` header overrides
+before sending the tool request, so headers are not saved as continuation data.
+Direct HTTP calls outside the graph can still override headers. Provider objects,
+access tokens, and PKCE state stay in the application/provider, not the graph's
 interrupt payload. Keep the authenticated account stable when reconstructing a client.
 
-Legacy requests still use `onElicitation`. If an interrupt-enabled connection negotiates a
-legacy server, a callback is required. Ordinary legacy connections can remain in callback mode
-alongside modern interrupt-enabled connections in the same adapter. Sampling and roots input
-requests are not advertised or handled by this elicitation bridge.
+Legacy servers use their own `onElicitation` callbacks alongside modern servers in
+the same adapter. Each connection keeps its configured protocol mode; modern
+connections never fall back to legacy. MCP deprecates sampling and roots, and this
+adapter does not advertise or handle those input requests.
 
 ### OAuth responsibilities
 
@@ -896,12 +916,12 @@ connection authorization.
 
 ### Discovery freshness
 
-`getTools()` consults the SDK cache on each discovery. The SDK owns cache hints,
+`listTools()` consults the SDK cache on each discovery. The SDK owns cache hints,
 TTL, and pagination; the adapter reuses adapted tools while the cached descriptors
 remain the same. Tools already returned to a running agent are not mutated.
 
 ```typescript
-const tools = await adapter.getTools([], { cacheMode: "refresh" });
+const tools = await adapter.listTools([], { cacheMode: "refresh" });
 ```
 
 Use `"use"` (default) to honor the SDK cache, `"refresh"` to fetch and update it,
@@ -912,12 +932,14 @@ accounts, rather than changing the identity behind an existing provider.
 ### Modern notifications and logging
 
 When a modern server advertises catalog change notifications, the adapter opens
-an SDK subscription for configured list-change callbacks. Closing the adapter
+an SDK subscription for tool-cache invalidation and configured list-change callbacks. Closing the adapter
 closes its subscription; legacy servers continue using their existing notifications.
 A subscription setup failure rejects the connection rather than silently disabling
 requested callbacks.
 
-Set `logLevel: "info"` globally or per server to request modern tool-call logs.
+Set `logLevel: "info"` on a modern server to request tool-call logs.
+`logLevel` and `maxElicitationRounds` are rejected on legacy servers and at the
+adapter root; they apply only to modern requests.
 Without a level, modern servers omit request logs. `setLoggingLevel()` remains a
 legacy-only operation and rejects for modern connections before sending an RPC.
 
@@ -931,7 +953,7 @@ the PKCE verifier, and issuer-scoped client information and tokens.
 // callbackParams comes from your redirect URL. expectedState is retrieved from
 // your application's authorization attempt, bound to this user and consumed once.
 await adapter.finishAuth("oauth", callbackParams, expectedState);
-const tools = await adapter.getTools();
+const tools = await adapter.listTools();
 ```
 
 `finishAuth` checks state, delegates the full callback parameters (including `iss`)

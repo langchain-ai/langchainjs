@@ -8,7 +8,6 @@ import type {
   ListResourceTemplatesResult,
   ReadResourceResult,
   OAuthClientProvider,
-  VersionNegotiationMode,
   LoggingMessageNotificationParams,
   Progress,
   CancelledNotificationParams,
@@ -22,7 +21,7 @@ import type {
 import type { RunnableConfig } from "@langchain/core/runnables";
 import type { Command, CommandParams } from "@langchain/langgraph";
 
-import { toolHooksSchema, type ToolHooks } from "./hooks.js";
+import { toolHooksSchema } from "./hooks.js";
 
 export type {
   Command,
@@ -142,8 +141,6 @@ export const loggingLevelSchema = z.enum([
 ] satisfies LoggingLevel[]);
 
 export const baseConfigSchema = z.object({
-  /** Minimum level for modern tool-request logs; omitted means no logs. */
-  logLevel: loggingLevelSchema.optional(),
   /**
    * Defines where to place each tool output type in the LangChain ToolMessage.
    *
@@ -207,17 +204,6 @@ export const stdioRestartSchema = z
       .optional(),
   })
   .describe("Configuration for stdio transport restart");
-
-/** Per-server policy; SDK negotiation owns supported revisions and fallback. */
-const protocolVersionSchema = z.union([
-  z.enum(["auto", "legacy"]),
-  z.object({ pin: z.string().min(1) }),
-]) satisfies z.ZodType<VersionNegotiationMode>;
-
-const interactionOptionsSchema = z.object({
-  protocolVersion: protocolVersionSchema.optional(),
-  elicitationMode: z.enum(["callback", "interrupt"]).optional(),
-});
 
 /**
  * Stdio transport connection
@@ -293,7 +279,6 @@ const stdioOptionsSchema = z
     restart: stdioRestartSchema.optional(),
   })
   .extend(baseConfigSchema.shape)
-  .extend(interactionOptionsSchema.shape)
   .describe("Configuration for stdio transport connection");
 
 /**
@@ -370,55 +355,23 @@ const httpOptionsSchema = z
     automaticSSEFallback: z.boolean().optional().default(true),
   })
   .extend(baseConfigSchema.shape)
-  .extend(interactionOptionsSchema.shape)
   .describe("Configuration for streamable HTTP transport connection");
 
-/** Parse legacy aliases once and retain a concrete transport discriminator. */
-export const stdioConnectionSchema = stdioOptionsSchema.transform(
-  ({ type: _type, url: _url, ...options }) => options
-);
-
-const httpConnectionSchema = httpOptionsSchema
-  .extend({
-    transport: z.literal("http").default("http"),
-    type: z
-      .literal("http", {
-        error: "type conflicts with transport; use transport only",
-      })
-      .optional(),
-  })
-  .transform(({ type: _type, command: _command, ...options }) => options);
-
-const sseConnectionSchema = httpOptionsSchema
-  .extend({
-    transport: z.literal("sse").default("sse"),
-    type: z
-      .literal("sse", {
-        error: "type conflicts with transport; use transport only",
-      })
-      .optional(),
-  })
-  .transform(({ type: _type, command: _command, ...options }) => options);
-
-export const streamableHttpConnectionSchema = z.union([
-  httpConnectionSchema,
-  sseConnectionSchema,
+export const eventContextSchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("tool"),
+    name: z.string(),
+    args: z.unknown(),
+    server: z.string(),
+  }),
+  z.object({ type: z.literal("unknown") }),
 ]);
 
-export const connectionSchema = z.union([
-  stdioConnectionSchema,
-  streamableHttpConnectionSchema,
-]);
+export type EventContext = z.output<typeof eventContextSchema>;
 
-export type EventContext =
-  | { type: "tool"; name: string; args: unknown; server: string }
-  | { type: "unknown" };
-
-/** Origin of a server notification. */
+/** Trusted notification context; preserves runtime callback and OAuth identities. */
 export interface ServerMessageSource {
-  /** Configured server name, rather than the server's self-reported name. */
   server: string;
-  /** A per-notification snapshot; callbacks and OAuth providers retain identity. */
   options: ResolvedConnection;
 }
 
@@ -439,9 +392,14 @@ const notifications = z.object({
    * @example
    * ```ts
    * const client = new MCPAdapter({
-   *   servers: { local: { command: "node", args: ["server.js"] } },
-   *   onMessage: (logMessage) => {
-   *     console.log(logMessage);
+   *   servers: {
+   *     local: {
+   *       command: "node",
+   *       args: ["server.js"],
+   *       onMessage: (logMessage) => {
+   *         console.log(logMessage);
+   *       },
+   *     },
    *   },
    * });
    * ```
@@ -470,11 +428,16 @@ const notifications = z.object({
    * @example
    * ```ts
    * const client = new MCPAdapter({
-   *   servers: { local: { command: "node", args: ["server.js"] } },
-   *   onProgress: (progress, source) => {
-   *     if (source.type === "tool") {
-   *       console.log(source.name, progress.progress, progress.total);
-   *     }
+   *   servers: {
+   *     local: {
+   *       command: "node",
+   *       args: ["server.js"],
+   *       onProgress: (progress, source) => {
+   *         if (source.type === "tool") {
+   *           console.log(source.name, progress.progress, progress.total);
+   *         }
+   *       },
+   *     },
    *   },
    * });
    * ```
@@ -509,9 +472,15 @@ const notifications = z.object({
    * @example
    * ```ts
    * const client = new MCPAdapter({
-   *   servers: { local: { command: "node", args: ["server.js"] } },
-   *   onInitialized: (source) => {
-   *     console.log(source);
+   *   servers: {
+   *     local: {
+   *       mode: "legacy",
+   *       command: "node",
+   *       args: ["server.js"],
+   *       onInitialized: (source) => {
+   *         console.log(source);
+   *       },
+   *     },
    *   },
    * });
    * ```
@@ -532,9 +501,14 @@ const notifications = z.object({
    * @example
    * ```ts
    * const client = new MCPAdapter({
-   *   servers: { local: { command: "node", args: ["server.js"] } },
-   *   onPromptsListChanged: (source) => {
-   *     console.log(source);
+   *   servers: {
+   *     local: {
+   *       command: "node",
+   *       args: ["server.js"],
+   *       onPromptsListChanged: (source) => {
+   *         console.log(source);
+   *       },
+   *     },
    *   },
    * });
    * ```
@@ -555,9 +529,14 @@ const notifications = z.object({
    * @example
    * ```ts
    * const client = new MCPAdapter({
-   *   servers: { local: { command: "node", args: ["server.js"] } },
-   *   onResourcesListChanged: (source) => {
-   *     console.log(source);
+   *   servers: {
+   *     local: {
+   *       command: "node",
+   *       args: ["server.js"],
+   *       onResourcesListChanged: (source) => {
+   *         console.log(source);
+   *       },
+   *     },
    *   },
    * });
    * ```
@@ -580,9 +559,14 @@ const notifications = z.object({
    * @example
    * ```ts
    * const client = new MCPAdapter({
-   *   servers: { local: { command: "node", args: ["server.js"] } },
-   *   onResourcesUpdated: (updatedResource, source) => {
-   *     console.log(`Resource ${updatedResource.uri} updated`);
+   *   servers: {
+   *     local: {
+   *       command: "node",
+   *       args: ["server.js"],
+   *       onResourcesUpdated: (updatedResource, source) => {
+   *         console.log(`Resource ${updatedResource.uri} updated`);
+   *       },
+   *     },
    *   },
    * });
    * ```
@@ -596,29 +580,6 @@ const notifications = z.object({
     >((value) => typeof value === "function", "Expected a callback")
     .optional(),
   /**
-   * Called when the roots list is changed.
-   *
-   * @param source - The source of the roots list changed message
-   * @param source.server - The server of the source, e.g. "my-server"
-   * @param source.options - The connection options of the source, e.g. `{ transport: "stdio", command: "node", args: ["server.js"] }`, see {@link ServerMessageSource}
-   *
-   * @example
-   * ```ts
-   * const client = new MCPAdapter({
-   *   servers: { local: { command: "node", args: ["server.js"] } },
-   *   onRootsListChanged: (source) => {
-   *     console.log(source);
-   *   },
-   * });
-   * ```
-   */
-  onRootsListChanged: z
-    .custom<(source: ServerMessageSource) => void | Promise<void>>(
-      (value) => typeof value === "function",
-      "Expected a callback"
-    )
-    .optional(),
-  /**
    * Called when the tools list is changed.
    *
    * @param source - The source of the tools list changed message
@@ -628,9 +589,14 @@ const notifications = z.object({
    * @example
    * ```ts
    * const client = new MCPAdapter({
-   *   servers: { local: { command: "node", args: ["server.js"] } },
-   *   onToolsListChanged: (source) => {
-   *     console.log(source);
+   *   servers: {
+   *     local: {
+   *       command: "node",
+   *       args: ["server.js"],
+   *       onToolsListChanged: (source) => {
+   *         console.log(source);
+   *       },
+   *     },
    *   },
    * });
    * ```
@@ -645,21 +611,122 @@ const notifications = z.object({
 
 export type Notifications = z.output<typeof notifications>;
 
-/**
- * {@link MultiServerMCPClient} configuration
- */
-const clientOptionsSchema = z
+const removedRootsObserver = z
+  .never({
+    error:
+      "onRootsListChanged was removed: roots notifications originate from clients, not servers",
+  })
+  .optional();
+
+const serverNotifications = notifications.omit({ onInitialized: true });
+
+const modernPolicy = z
   .object({
-    /** Answer form and URL requests. Without a callback, elicitation is not advertised. */
+    mode: z.literal("modern").optional().default("modern"),
+    logLevel: loggingLevelSchema.optional(),
+    maxElicitationRounds: z.int().positive().default(32),
+    onElicitation: z
+      .never({
+        error:
+          "onElicitation requires mode: legacy; modern elicitation uses LangGraph interrupts",
+      })
+      .optional(),
+    onInitialized: z
+      .never({ error: "onInitialized requires mode: legacy" })
+      .optional(),
+    automaticSSEFallback: z
+      .never({ error: "automaticSSEFallback requires mode: legacy" })
+      .optional(),
+    onRootsListChanged: removedRootsObserver,
+  })
+  .extend(serverNotifications.shape);
+
+const legacyPolicy = z
+  .object({
+    mode: z.literal("legacy"),
     onElicitation: z
       .custom<MCPElicitationHandler>(
         (value) => typeof value === "function",
         "Expected an elicitation callback"
       )
       .optional(),
-    /** Maximum input-required rounds per SDK operation; does not retry transport failures. */
-    maxElicitationRounds: z.number().int().positive().default(32),
+    maxElicitationRounds: z
+      .never({ error: "maxElicitationRounds requires mode: modern" })
+      .optional(),
+    logLevel: z
+      .never({
+        error:
+          "logLevel requires mode: modern; use setLoggingLevel for legacy servers",
+      })
+      .optional(),
+    onRootsListChanged: removedRootsObserver,
+  })
+  .extend(notifications.shape);
 
+/** Transport aliases are normalized once; every public entry uses the same mode rules. */
+export const stdioConnectionSchema = z
+  .discriminatedUnion("mode", [
+    stdioOptionsSchema.extend(modernPolicy.shape).strict(),
+    stdioOptionsSchema.extend(legacyPolicy.shape).strict(),
+  ])
+  .transform(({ type: _type, url: _url, ...options }) => options);
+
+const httpTransport = httpOptionsSchema
+  .omit({ automaticSSEFallback: true })
+  .extend({
+    transport: z.literal("http").default("http"),
+    type: z
+      .literal("http", {
+        error: "type conflicts with transport; use transport only",
+      })
+      .optional(),
+  });
+
+const modernHttp = httpTransport.extend(modernPolicy.shape).strict();
+
+const legacyHttp = httpTransport
+  .extend(legacyPolicy.shape)
+  .extend({
+    automaticSSEFallback: z.boolean().default(true),
+  })
+  .strict();
+
+const legacySse = httpOptionsSchema
+  .extend(legacyPolicy.shape)
+  .extend({
+    transport: z.literal("sse").default("sse"),
+    type: z
+      .literal("sse", {
+        error: "type conflicts with transport; use transport only",
+      })
+      .optional(),
+  })
+  .strict();
+
+export const streamableHttpConnectionSchema = z
+  .union([z.discriminatedUnion("mode", [modernHttp, legacyHttp]), legacySse])
+  .transform(({ type: _type, command: _command, ...options }) => options);
+
+export const connectionSchema = z.union([
+  stdioConnectionSchema,
+  streamableHttpConnectionSchema,
+]);
+
+/**
+ * {@link MultiServerMCPClient} configuration
+ */
+const serverOnlyCallback = z
+  .never({
+    error:
+      "Configure notification and progress callbacks on a named server under servers, not on the adapter",
+  })
+  .optional();
+
+const clientOptionsSchema = z
+  .object({
+    onElicitation: serverOnlyCallback,
+    maxElicitationRounds: serverOnlyCallback,
+    logLevel: serverOnlyCallback,
     /**
      * Whether to throw an error if a tool fails to load
      *
@@ -717,10 +784,25 @@ const clientOptionsSchema = z
   })
   .extend(baseConfigSchema.shape)
   .extend(toolHooksSchema.shape)
-  .extend(notifications.shape)
+  .extend({
+    onMessage: serverOnlyCallback,
+    onProgress: serverOnlyCallback,
+    onCancelled: serverOnlyCallback,
+    onInitialized: serverOnlyCallback,
+    onPromptsListChanged: serverOnlyCallback,
+    onResourcesListChanged: serverOnlyCallback,
+    onResourcesUpdated: serverOnlyCallback,
+    onToolsListChanged: serverOnlyCallback,
+    onRootsListChanged: removedRootsObserver,
+  })
+  .strict()
   .describe("Configuration for the MCP client");
 
-const serverMapSchema = z.record(z.string(), connectionSchema);
+const serverMapSchema = z
+  .record(z.string(), connectionSchema)
+  .refine((servers) => Object.keys(servers).length > 0, {
+    error: "No MCP servers provided",
+  });
 
 const exclusiveServerMap = z
   .never({ error: "Specify servers or legacy mcpServers, not both" })
@@ -816,71 +898,21 @@ export type ConnectionErrorHandler = (params: {
   error: unknown;
 }) => void;
 
-export type LoadMcpToolsOptions = {
-  logLevel?: z.output<typeof loggingLevelSchema>;
-  /**
-   * If true, throw an error if a tool fails to load.
-   *
-   * @default true
-   */
-  throwOnLoadError?: boolean;
+export const loadMcpToolsOptionsSchema = clientOptionsSchema
+  .pick({
+    throwOnLoadError: true,
+    prefixToolNameWithServerName: true,
+    additionalToolNamePrefix: true,
+    outputHandling: true,
+    defaultToolTimeout: true,
+    beforeToolCall: true,
+    afterToolCall: true,
+  })
+  .partial()
+  .extend(notifications.pick({ onProgress: true }).shape)
+  .extend({ logLevel: loggingLevelSchema.optional() });
 
-  /**
-   * If true, the tool name will be prefixed with the server name followed by a double underscore.
-   * This is useful if you want to avoid tool name collisions across servers.
-   *
-   * @default false
-   */
-  prefixToolNameWithServerName?: boolean;
-
-  /**
-   * An additional prefix to add to the tool name. Will be added at the very beginning of the tool
-   * name, separated by a double underscore.
-   *
-   * For example, if `additionalToolNamePrefix` is `"mcp"`, and `prefixToolNameWithServerName` is
-   * `true`, the tool name `"my-tool"` provided by server `"my-server"` will become
-   * `"mcp__my-server__my-tool"`.
-   *
-   * Similarly, if `additionalToolNamePrefix` is `mcp` and `prefixToolNameWithServerName` is false,
-   * the tool name would be `"mcp__my-tool"`.
-   *
-   * @default ""
-   */
-  additionalToolNamePrefix?: string;
-
-  /**
-   * Defines where to place each tool output type in the LangChain ToolMessage.
-   *
-   * @default {
-   *   "text": "content",
-   *   "image": "content",
-   *   "audio": "content",
-   *   "resource": "artifact"
-   * }
-   */
-  outputHandling?: OutputHandling;
-
-  /**
-   * Default timeout in milliseconds for tool execution. Must be greater than 0.
-   * If not specified, tools will use their own configured timeout values.
-   */
-  defaultToolTimeout?: number;
-
-  /**
-   * `onProgress` callbacks used for tool calls.
-   */
-  onProgress?: Notifications["onProgress"];
-
-  /**
-   * `beforeToolCall` callbacks used for tool calls.
-   */
-  beforeToolCall?: ToolHooks["beforeToolCall"];
-
-  /**
-   * `afterToolCall` callbacks used for tool calls.
-   */
-  afterToolCall?: ToolHooks["afterToolCall"];
-};
+export type LoadMcpToolsOptions = z.input<typeof loadMcpToolsOptionsSchema>;
 
 /**
  * Helper function that expands a string literal OutputHandling to an object with all content types.

@@ -1,15 +1,18 @@
 import {
-  InterruptMCPClient,
+  supportsMCPInterrupts,
   PendingMCPInput,
-  withMCPInterrupts,
   type MCPContinuation,
 } from "./continuation.js";
 
-import { ns, LangChainError } from "@langchain/core/errors";
+import {
+  ToolException,
+  isToolException,
+  parseZodErrorDetails,
+} from "./utils/errors.js";
+
 import { z } from "zod";
 import { fromJsonSchema } from "@modelcontextprotocol/client";
 import { DefaultJsonSchemaValidator } from "@modelcontextprotocol/client/_shims";
-import { isInteropZodError } from "@langchain/core/utils/types";
 import {
   toolCallModificationSchema,
   toolCallResultModificationSchema,
@@ -52,44 +55,7 @@ const debugLog = debug("@langchain/mcp-adapters:tools");
 
 type MCPInstance = Client | MCPClient;
 
-// Parse only the Zod issue fields needed for formatting, without depending
-// on a particular Zod version or constructor.
-const errorPathKeySchema = z.union([z.string(), z.number(), z.symbol()]);
-
-const zodErrorDetailsSchema = z.object({
-  issues: z.array(
-    z.object({
-      message: z.string(),
-      path: z.array(errorPathKeySchema).optional(),
-    })
-  ),
-});
-
-function parseZodErrorDetails(error: unknown) {
-  if (!isInteropZodError(error)) return undefined;
-  const parsed = zodErrorDetailsSchema.safeParse(error);
-
-  return parsed.success ? parsed.data : undefined;
-}
-
-/**
- * Custom error class for tool exceptions
- */
-export class ToolException extends ns.sub("mcp").brand(LangChainError, "tool") {
-  readonly name = "ToolException";
-  readonly result?: CallToolResult;
-
-  constructor(message: string, cause?: unknown, result?: CallToolResult) {
-    super(message);
-    this.result = result;
-
-    if (cause !== undefined) this.cause = cause;
-  }
-}
-
-export function isToolException(error: unknown): error is ToolException {
-  return ToolException.isInstance(error);
-}
+export { ToolException, isToolException } from "./utils/errors.js";
 
 /** Terminal conversion never dereferences resource URIs or performs network IO. */
 function _toolOutputToContentBlocks(
@@ -432,10 +398,13 @@ function createToolInvocation(
   }
 
   const direct = executor(client, modern);
-  const durable = client instanceof InterruptMCPClient && modern;
+  const runInterrupts =
+    modern && supportsMCPInterrupts(client)
+      ? client.withInterrupts.bind(client)
+      : undefined;
 
   function selectHeaderPolicy(config?: RunnableConfig) {
-    if (durable && toolExecutionContext(config).kind === "graph") {
+    if (runInterrupts && toolExecutionContext(config).kind === "graph") {
       return async (_headers: NonNullable<ToolCallModification["headers"]>) => {
         throw new ToolException(
           "Durable MCP calls require authentication and headers in the server connection configuration, not beforeToolCall header overrides"
@@ -476,7 +445,7 @@ function createToolInvocation(
     return call(request, options);
   };
 
-  if (durable) {
+  if (runInterrupts) {
     return {
       execute,
       async run(call: InvokeToolRound, config?: RunnableConfig) {
@@ -497,12 +466,11 @@ function createToolInvocation(
           }
         }
 
-        return withMCPInterrupts(
+        return runInterrupts(
           (continuation) => call(continuation, context.state),
           {
             server: serverName,
             tool: toolName,
-            maxRounds: client.maxElicitationRounds,
             signal: config?.signal,
           }
         );

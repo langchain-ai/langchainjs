@@ -59,22 +59,23 @@ describe("ConnectionManager", () => {
           mutateOptions(source)
         );
 
-        const manager = new ConnectionManager({
-          onMessage,
-          onResourcesListChanged: mutateOptions,
-        });
+        const manager = new ConnectionManager();
 
         const options: ResolvedConnection =
           transport === "http"
             ? {
+                mode: "legacy",
                 transport: "http",
                 url: "https://example.com/mcp",
                 automaticSSEFallback: false,
                 headers: { "X-Test": "original" },
                 reconnect: { enabled: false },
                 outputHandling: { text: "content" },
+                onMessage,
+                onResourcesListChanged: mutateOptions,
               }
             : {
+                mode: "legacy",
                 transport: "stdio",
                 command: "node",
                 args: ["server.js"],
@@ -82,6 +83,8 @@ describe("ConnectionManager", () => {
                 env: { MODE: "test" },
                 restart: { enabled: false },
                 outputHandling: { text: "content" },
+                onMessage,
+                onResourcesListChanged: mutateOptions,
               };
 
         if ("command" in options)
@@ -136,6 +139,7 @@ describe("ConnectionManager", () => {
       const mgr = new ConnectionManager();
 
       const client = await mgr.createClient("stdio", "stdio-server", {
+        mode: "legacy",
         transport: "stdio",
         command: "python",
         args: ["./script.py"],
@@ -153,6 +157,7 @@ describe("ConnectionManager", () => {
       const mgr = new ConnectionManager();
 
       const client = await mgr.createClient("stdio", "stdio-server", {
+        mode: "legacy",
         transport: "stdio",
         command: "node",
         args: ["./server.js"],
@@ -174,6 +179,7 @@ describe("ConnectionManager", () => {
       const mgr = new ConnectionManager();
 
       await mgr.createClient("http", "http-server", {
+        mode: "legacy",
         transport: "http",
         url: "http://localhost:8000/mcp",
         automaticSSEFallback: true,
@@ -204,6 +210,7 @@ describe("ConnectionManager", () => {
       } as never;
 
       await mgr.createClient("sse", "sse-server", {
+        mode: "legacy",
         transport: "sse",
         url: "http://localhost:8000/sse",
         automaticSSEFallback: true,
@@ -228,12 +235,14 @@ describe("ConnectionManager", () => {
       const mgr = new ConnectionManager();
 
       const c1 = await mgr.createClient("http", "svc", {
+        mode: "legacy",
         transport: "http",
         url: "http://localhost:8000/mcp",
         automaticSSEFallback: true,
         headers: { A: "1" },
       });
       const c2 = await mgr.createClient("http", "svc", {
+        mode: "legacy",
         transport: "http",
         url: "http://localhost:8000/mcp",
         automaticSSEFallback: true,
@@ -259,6 +268,7 @@ describe("ConnectionManager", () => {
       };
       const client = await mgr.createClient("stdio", "s", {
         ...config,
+        mode: "legacy",
         transport: "stdio",
       });
 
@@ -276,12 +286,14 @@ describe("ConnectionManager", () => {
     test("deletes specific connection and all connections", async () => {
       const mgr = new ConnectionManager();
       await mgr.createClient("http", "svc", {
+        mode: "legacy",
         transport: "http",
         url: "http://localhost:8000/mcp",
         automaticSSEFallback: true,
         headers: { A: "1" },
       });
       await mgr.createClient("sse", "svc", {
+        mode: "legacy",
         transport: "sse",
         url: "http://localhost:8000/sse",
         automaticSSEFallback: true,
@@ -301,6 +313,7 @@ describe("ConnectionManager", () => {
     test("forks HTTP client with new headers and creates a new connection", async () => {
       const mgr = new ConnectionManager();
       const base = await mgr.createClient("http", "svc", {
+        mode: "legacy",
         transport: "http",
         url: "http://localhost:8000/mcp",
         automaticSSEFallback: true,
@@ -316,6 +329,7 @@ describe("ConnectionManager", () => {
     test("forking stdio client is not supported", async () => {
       const mgr = new ConnectionManager();
       const stdio = await mgr.createClient("stdio", "svc", {
+        mode: "legacy",
         transport: "stdio",
         command: "python",
         args: ["./script.py"],

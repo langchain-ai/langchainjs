@@ -25,3 +25,5 @@ objects that merely have `name: "ToolException"` no longer match. Original cause
 and MCP error envelopes remain available.
 
 Preserve Zod validation errors as tool failure causes, including structured issues; convert SDK argument-validation issues to Zod4 errors rather than discarding them in a message.
+
+Export branded `MCPClientError` and preserve the original cause of connection and discovery failures. Connection errors identify the configured protocol mode without interpreting every HTTP failure as a protocol mismatch. Shared error parsing now retains HTTP status precedence and structured Zod diagnostics.
