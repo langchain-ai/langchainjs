@@ -26,6 +26,8 @@ export class AzureOpenAIEmbeddings extends OpenAIEmbeddings {
 
   azureOpenAIBasePath?: string;
 
+  azureOpenAIEndpoint?: string;
+
   constructor(
     fields?: Partial<OpenAIEmbeddingsParams> &
       Partial<AzureOpenAIInput> & {
@@ -53,6 +55,10 @@ export class AzureOpenAIEmbeddings extends OpenAIEmbeddings {
       fields?.azureOpenAIBasePath ??
       getEnvironmentVariable("AZURE_OPENAI_BASE_PATH");
 
+    this.azureOpenAIEndpoint =
+      fields?.azureOpenAIEndpoint ??
+      getEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
+
     this.azureOpenAIApiInstanceName =
       fields?.azureOpenAIApiInstanceName ??
       getEnvironmentVariable("AZURE_OPENAI_API_INSTANCE_NAME");
@@ -77,6 +83,7 @@ export class AzureOpenAIEmbeddings extends OpenAIEmbeddings {
         azureOpenAIBasePath: this.azureOpenAIBasePath,
         azureADTokenProvider: this.azureADTokenProvider,
         baseURL: this.clientConfig.baseURL,
+        azureOpenAIEndpoint: this.azureOpenAIEndpoint,
       };
 
       const endpoint = getEndpoint(openAIEndpointConfig);
