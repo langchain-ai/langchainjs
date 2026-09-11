@@ -3,6 +3,7 @@ import {
   parseBase64DataUrl,
   type StandardContentBlockConverter,
 } from "@langchain/core/messages";
+import { _looksLikePdf } from "./standard.js";
 
 export function _isAnthropicThinkingBlock(
   block: unknown
@@ -230,7 +231,10 @@ export const standardContentBlockConverter: StandardContentBlockConverter<{
         );
       }
     } else if (block.source_type === "base64") {
-      if (mime_type === "application/pdf" || mime_type === "") {
+      if (
+        mime_type === "application/pdf" ||
+        (mime_type === "" && _looksLikePdf(block.data))
+      ) {
         return {
           type: "document",
           source: {

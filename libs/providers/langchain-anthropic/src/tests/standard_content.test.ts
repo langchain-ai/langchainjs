@@ -134,6 +134,45 @@ describe("_formatStandardContent", () => {
     });
   });
 
+  it("treats an unlabeled base64 file as a PDF only when it has PDF magic bytes", () => {
+    // "%PDF-1.4" — the PDF header, so an empty MIME type should resolve to a PDF.
+    const pdfData = Uint8Array.from([
+      0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x34,
+    ]);
+    const fileBlock: ContentBlock.Multimodal.File = {
+      type: "file",
+      data: pdfData,
+      mimeType: "",
+    };
+
+    const [content] = _formatStandardContent(
+      createAnthropicMessage([fileBlock])
+    );
+
+    expect(content).toMatchObject({
+      type: "document",
+      source: {
+        type: "base64",
+        data: Buffer.from(pdfData).toString("base64"),
+        media_type: "application/pdf",
+      },
+    });
+  });
+
+  it("throws instead of mislabeling an unknown-MIME binary as a PDF", () => {
+    // Arbitrary binary (e.g. a .pem/.keystore) with no MIME type must not be
+    // sent as an application/pdf document — that yields a 400 from the API.
+    const fileBlock: ContentBlock.Multimodal.File = {
+      type: "file",
+      data: Uint8Array.from([0x00, 0x01, 0x02, 0x03]),
+      mimeType: "",
+    };
+
+    expect(() =>
+      _formatStandardContent(createAnthropicMessage([fileBlock]))
+    ).toThrowError(/unsupported file mime type/i);
+  });
+
   it("throws for unsupported audio blocks", () => {
     const audioBlock: ContentBlock.Multimodal.Audio = {
       type: "audio",
