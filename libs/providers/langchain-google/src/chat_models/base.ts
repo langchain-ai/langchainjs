@@ -923,6 +923,17 @@ export abstract class BaseChatGoogle<
                       ...(candidate.safetyRatings && {
                         safetyRatings: candidate.safetyRatings,
                       }),
+                      ...(candidate.citationMetadata && {
+                        citationMetadata: candidate.citationMetadata,
+                      }),
+                      ...(candidate.groundingMetadata && {
+                        groundingMetadata: candidate.groundingMetadata,
+                        // Support entries for the first content part only (matches messages.ts).
+                        groundingSupport:
+                          candidate.groundingMetadata.groundingSupports?.filter(
+                            (s) => (s?.segment?.partIndex ?? 0) === 0
+                          ),
+                      }),
                     },
                   })
                 );
