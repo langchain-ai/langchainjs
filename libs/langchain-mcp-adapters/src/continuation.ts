@@ -10,7 +10,7 @@ import { z } from "zod";
 import {
   sdkSchema,
   elicitationAnswerSchema,
-  elicitationRequestSchema,
+  modernElicitationRequestSchema,
   elicitationAnswerFor,
 } from "./elicitation.js";
 
@@ -62,7 +62,7 @@ const elicitationInterruptSchema = z.object({
   type: z.literal("mcp_elicitation"),
   server: z.string(),
   tool: z.string(),
-  requests: z.record(z.string(), elicitationRequestSchema),
+  requests: z.record(z.string(), modernElicitationRequestSchema),
 });
 
 export type MCPElicitationInterrupt = z.output<

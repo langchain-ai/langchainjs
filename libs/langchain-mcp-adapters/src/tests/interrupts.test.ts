@@ -30,9 +30,12 @@ import {
 import { z } from "zod";
 import { expect, it, vi } from "vitest";
 import { MCPAdapter } from "../index.js";
+import type { MCPElicitationHandler } from "../elicitation.js";
 
 it.each([
   "accept",
+  "url",
+  "url-content",
   "state-only",
   "bad-content",
   "wrong-key",
@@ -99,14 +102,19 @@ it.each([
             return inputRequired({
               requestState: "opaque:+/%==",
               inputRequests: {
-                confirmation: inputRequired.elicit({
-                  message: label,
-                  requestedSchema: {
-                    type: "object",
-                    properties: { confirm: { type: "boolean" } },
-                    required: ["confirm"],
-                  },
-                }),
+                confirmation: ["url", "url-content"].includes(scenario)
+                  ? inputRequired.elicitUrl({
+                      message: label,
+                      url: "https://example.com/authorize",
+                    })
+                  : inputRequired.elicit({
+                      message: label,
+                      requestedSchema: {
+                        type: "object",
+                        properties: { confirm: { type: "boolean" } },
+                        required: ["confirm"],
+                      },
+                    }),
               },
             });
           }
@@ -230,6 +238,14 @@ it.each([
     const questions = snapshot.tasks.flatMap((entry) => entry.interrupts ?? []);
 
     expect(questions).toHaveLength(1);
+    if (["url", "url-content"].includes(scenario)) {
+      expect(questions[0].value).toMatchObject({
+        requests: {
+          confirmation: { mode: "url", url: "https://example.com/authorize" },
+        },
+      });
+      expect(JSON.stringify(questions)).not.toContain("elicitationId");
+    }
     expect(JSON.stringify(questions)).toContain("effective");
     expect(JSON.stringify(questions)).not.toContain("opaque");
     expect(calls).toEqual(["effective"]);
@@ -245,10 +261,13 @@ it.each([
     await adapter.close();
     adapter = createAdapter();
 
-    const answer = {
-      action: "accept",
-      content: { confirm: scenario === "bad-content" ? "yes" : true },
-    };
+    const answer =
+      scenario === "url"
+        ? { action: "accept" }
+        : {
+            action: "accept",
+            content: { confirm: scenario === "bad-content" ? "yes" : true },
+          };
 
     const resume =
       scenario === "wrong-key"
@@ -259,7 +278,7 @@ it.each([
 
     const pending = createGraph().invoke(new Command({ resume }), config);
 
-    if (scenario === "accept" || scenario === "concurrent") {
+    if (["accept", "url", "concurrent"].includes(scenario)) {
       const resumed = await pending;
       expect(resumed.done).toBe(true);
       expect(calls).toHaveLength(scenario === "concurrent" ? 3 : 2);
@@ -571,3 +590,127 @@ it("recognizes pending input across adapter copies without matching lookalikes",
     false
   );
 });
+
+it("bounds answered elicitation rounds without replaying earlier requests", async () => {
+  let calls = 0;
+  const State = Annotation.Root({ result: Annotation<string>() });
+  const graph = new StateGraph(State)
+    .addNode("call", async () => ({
+      result: await withMCPInterrupts<string>(
+        async (continuation) => {
+          calls += 1;
+          if (continuation)
+            expect(continuation.inputResponses).toEqual({
+              confirmation: { action: "decline" },
+            });
+          throw new PendingMCPInput(
+            {
+              kind: "input_required",
+              inputRequests: {
+                confirmation: inputRequired.elicit({
+                  message: "Continue?",
+                  requestedSchema: { type: "object", properties: {} },
+                }),
+              },
+            },
+            { name: "repeat", arguments: {} }
+          );
+        },
+        { server: "modern", tool: "repeat", maxRounds: 2 }
+      ),
+    }))
+    .addEdge(START, "call")
+    .addEdge("call", END)
+    .compile({ checkpointer: new MemorySaver() });
+  const config = { configurable: { thread_id: "answered-round-limit" } };
+  await graph.invoke({ result: "" }, config);
+  expect(calls).toBe(1);
+  const resume = { confirmation: { action: "decline" } };
+  await graph.invoke(new Command({ resume }), config);
+  expect(calls).toBe(2);
+  await expect(graph.invoke(new Command({ resume }), config)).rejects.toThrow(
+    /round limit/
+  );
+  expect(calls).toBe(3);
+});
+
+it.each(["modern", "mixed"])(
+  "resumes accept/decline/cancel against real %s stdio servers",
+  async (mode) => {
+    const legacyCallback = vi.fn<MCPElicitationHandler>(() => ({
+      action: "decline",
+    }));
+    const adapter = new MCPAdapter({
+      servers: {
+        ...(mode === "mixed"
+          ? {
+              legacy: {
+                transport: "stdio",
+                command: process.execPath,
+                args: [
+                  "--import",
+                  "tsx",
+                  join(__dirname, "fixtures", "sdk1-stdio-server.ts"),
+                  "legacy",
+                  "--elicitation",
+                ],
+              },
+            }
+          : {}),
+        modern: {
+          transport: "stdio",
+          command: process.execPath,
+          args: [
+            "--import",
+            "tsx",
+            join(__dirname, "fixtures", "modern-stdio-server.ts"),
+          ],
+          elicitationMode: "interrupt",
+        },
+      },
+      prefixToolNameWithServerName: true,
+      onElicitation: legacyCallback,
+    });
+    try {
+      const tools = await adapter.getTools();
+      expect(tools).toHaveLength(mode === "mixed" ? 2 : 1);
+      const modern = tools.find((tool) => tool.name === "modern__approve");
+      if (!modern) throw new Error("Missing modern tool");
+      for (const action of ["accept", "decline", "cancel"]) {
+        const State = Annotation.Root({ result: Annotation<string>() });
+        const graph = new StateGraph(State)
+          .addNode("call", async () => ({ result: await modern.invoke({}) }))
+          .addEdge(START, "call")
+          .addEdge("call", END)
+          .compile({ checkpointer: new MemorySaver() });
+        const config = { configurable: { thread_id: `${mode}-${action}` } };
+        await graph.invoke({ result: "" }, config);
+        const state = await graph.getState(config);
+        expect(
+          state.tasks.flatMap((task) => task.interrupts ?? [])
+        ).toHaveLength(1);
+        const result = await graph.invoke(
+          new Command({
+            resume: {
+              confirmation:
+                action === "accept"
+                  ? { action, content: { confirm: true } }
+                  : { action },
+            },
+          }),
+          config
+        );
+        expect(result.result).toBe(action);
+      }
+      expect(legacyCallback).not.toHaveBeenCalled();
+      if (mode === "mixed") {
+        const legacy = tools.find((tool) => tool.name === "legacy__approve");
+        if (!legacy) throw new Error("Missing legacy tool");
+        expect(await legacy.invoke({})).toBe("decline");
+        expect(legacyCallback).toHaveBeenCalledTimes(1);
+      }
+    } finally {
+      await adapter.close();
+    }
+  }
+);
