@@ -4,6 +4,7 @@ import type {
   EmbeddedResource,
   ImageContent,
   TextContent,
+  Tool,
 } from "@modelcontextprotocol/client";
 import {
   StructuredTool,
@@ -15,6 +16,7 @@ import type {
   ToolMessage,
 } from "@langchain/core/messages";
 
+import { z } from "zod";
 import { loadMcpTools } from "../tools.js";
 
 vi.mock(
@@ -37,6 +39,136 @@ describe("Simplified Tool Adapter Tests", () => {
     } as MockedObject<Client>;
 
     vi.clearAllMocks();
+  });
+
+  test("schema parsing preserves boolean schemas and extension values", async () => {
+    const inputSchema = {
+      type: "object",
+      properties: {
+        anything: true,
+        never: false,
+        value: { type: ["string", "null"] },
+      },
+      "x-provider": { choices: [1, "two", null, { enabled: true }] },
+    } satisfies Tool["inputSchema"];
+
+    mockClient.listTools.mockResolvedValue({
+      tools: [{ name: "schema", inputSchema }],
+    });
+    const [tool] = await loadMcpTools("test", mockClient);
+    expect(tool.schema).toEqual(inputSchema);
+  });
+
+  test("rejects invalid consumed schema keywords instead of dropping them", async () => {
+    mockClient.listTools.mockResolvedValue({
+      tools: [
+        {
+          name: "schema",
+          inputSchema: {
+            type: "object",
+            properties: {},
+            allOf: [{ required: [42] }],
+          },
+        },
+      ],
+    });
+    await expect(loadMcpTools("test", mockClient)).rejects.toThrow(z.ZodError);
+  });
+
+  describe("hook return validation", () => {
+    beforeEach(() => {
+      mockClient.listTools.mockResolvedValue({
+        tools: [
+          { name: "echo", inputSchema: { type: "object", properties: {} } },
+        ],
+      });
+      mockClient.callTool.mockResolvedValue({
+        content: [{ type: "text", text: "original" }],
+      });
+    });
+
+    test("does not mutate the arguments previously passed to a hook", async () => {
+      let observed: unknown;
+
+      const [tool] = await loadMcpTools("test", mockClient, {
+        beforeToolCall: ({ args }) => {
+          observed = args;
+
+          return { args: { value: "effective" } };
+        },
+      });
+
+      await tool.invoke({});
+      expect(observed).toEqual({});
+      expect(mockClient.callTool).toHaveBeenCalledWith({
+        name: "echo",
+        arguments: { value: "effective" },
+      });
+    });
+
+    test("rejects scalar argument overrides before issuing a request", async () => {
+      const [tool] = await loadMcpTools("test", mockClient, {
+        // @ts-expect-error Invalid JavaScript callback input is rejected at runtime too.
+        beforeToolCall: () => ({ args: "invalid" }),
+      });
+
+      await expect(tool.invoke({})).rejects.toThrow();
+      expect(mockClient.callTool).not.toHaveBeenCalled();
+    });
+
+    test.each([false, true])(
+      "validates before hooks after awaiting them (async=%s)",
+      async (asyncHook) => {
+        const invalid = { headers: { test: 42 } };
+        const beforeToolCall = asyncHook ? async () => invalid : () => invalid;
+
+        const [tool] = await loadMcpTools("test", mockClient, {
+          // @ts-expect-error Exercise malformed JavaScript callback results.
+          beforeToolCall,
+        });
+
+        await expect(tool.invoke({})).rejects.toThrow(/string/);
+        expect(mockClient.callTool).not.toHaveBeenCalled();
+      }
+    );
+
+    test.each([false, true])(
+      "validates after hooks after awaiting them (async=%s)",
+      async (asyncHook) => {
+        const afterToolCall = asyncHook
+          ? async () => ({ result: 42 })
+          : () => ({ result: 42 });
+
+        const [tool] = await loadMcpTools("test", mockClient, {
+          // @ts-expect-error Exercise malformed JavaScript callback results.
+          afterToolCall,
+        });
+
+        await expect(tool.invoke({})).rejects.toThrow();
+        expect(mockClient.callTool).toHaveBeenCalledTimes(1);
+      }
+    );
+
+    test("preserves successful async modifications and formats Zod4 hook failures", async () => {
+      const [tool] = await loadMcpTools("test", mockClient, {
+        beforeToolCall: async () => ({ args: { value: "effective" } }),
+        afterToolCall: async () => ({ result: "changed" }),
+      });
+
+      expect(await tool.invoke({})).toBe("changed");
+      expect(mockClient.callTool).toHaveBeenCalledWith({
+        name: "echo",
+        arguments: { value: "effective" },
+      });
+
+      const [invalid] = await loadMcpTools("test", mockClient, {
+        beforeToolCall: () => {
+          z.string().parse(123);
+        },
+      });
+
+      await expect(invalid.invoke({})).rejects.toThrow(/string/);
+    });
   });
 
   describe("loadMcpTools", () => {
@@ -566,10 +698,9 @@ describe("Simplified Tool Adapter Tests", () => {
           text: "Here is your image",
         },
         {
-          type: "image_url",
-          image_url: {
-            url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
-          },
+          type: "image",
+          mimeType: "image/png",
+          data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
         },
       ];
 

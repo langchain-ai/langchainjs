@@ -2,13 +2,14 @@
 
 The adapter uses the stable `@modelcontextprotocol/client` 2.x package. Existing
 legacy MCP servers remain supported over stdio, Streamable HTTP, and legacy SSE.
-The SDK upgrade preserves legacy negotiation by default; modern protocol support
-and elicitation require separate adapter features.
+Connections now default to modern protocol negotiation. Add `mode: "legacy"`
+to each existing legacy server configuration; SDK package version 2 does not
+mean a server uses the modern wire protocol.
 
 ## Applications using the adapter
 
-Existing `MultiServerMCPClient` configuration, `getTools()`, and `close()` remain
-available. Applications using these APIs do not need to construct an SDK client.
+The names `MultiServerMCPClient`, `mcpServers`, and `getTools()` remain compatibility
+aliases, but their configurations follow the same new mode validation. Applications using these APIs do not need to construct an SDK client.
 
 ## Applications supplying an SDK client
 
@@ -64,3 +65,107 @@ package is used to exercise legacy-server interoperability.
 
 Both the SDK client and adapter provide ESM and CommonJS exports. The adapter's
 existing Node version requirement remains unchanged.
+
+## Canonical API and Zod4
+
+Rename `MultiServerMCPClient` to `MCPAdapter` and the configuration key
+`mcpServers` to `servers`. Prefer `listTools()`; native LangChain tools and `close()` remain:
+
+```ts
+import { MCPAdapter } from "@langchain/mcp-adapters";
+
+const adapter = new MCPAdapter({
+  servers: {
+    local: { transport: "stdio", command: "node", args: ["./server.js"] },
+  },
+});
+try {
+  const tools = await adapter.listTools();
+  console.log(tools.map((tool) => tool.name));
+} finally {
+  await adapter.close();
+}
+```
+
+The old class name is the same constructor, not a second implementation. Legacy
+configuration names remain accepted; they do not bypass protocol validation. Use one server-map spelling and one transport
+selection; conflicting forms and connections combining `command` with `url` fail during construction. Legacy `type` is
+normalized to a required `transport` discriminator in the resolved configuration.
+Use `connection.transport` to narrow resolved stdio, HTTP, or SSE options;
+resolved connections no longer expose the legacy `type` alias.
+
+The adapter now requires Zod `^4.2.0`; its configuration validation errors are
+Zod4 errors. Remove v3-only dependency overrides for this package. LangChain core
+may still use Zod3 transitively. Recognition of caller-originated Zod errors uses
+core's interoperability helper and does not import the v3 runtime here.
+
+Callbacks are checked for callability during configuration. Notification
+payloads use the SDK's types and validation; the adapter no longer reconstructs
+and strips their fields through duplicate schemas. Hook modifications are
+validated after awaiting the callback, for both synchronous and asynchronous
+implementations. Return `undefined` for no change, `{ args, headers }` before a
+call, or `{ result }` after it. Argument overrides must be objects and are merged
+without mutating the original request arguments. Invalid return containers now fail consistently;
+`Command` and `ToolMessage` values must pass their framework predicates.
+Content and artifact arrays now check each block's extensible `type`/optional
+`id` boundary; embedded resource artifacts use the SDK's resource guard.
+Provider-specific fields and existing data-block formats remain supported.
+OAuth providers retain their identity, but their six required SDK methods must
+be callable. Metadata getters remain lazy. Numeric timeout overrides in
+`metadata.timeoutMs` are parsed before invoking the SDK. Detailed
+`outputHandling` objects reject unknown content-type keys instead of silently
+ignoring typos; explicit `undefined` destinations remain valid. Callback request `args` is a present field typed `unknown`.
+
+`config` remains a snapshot using the legacy `mcpServers` field. Mutable options
+are copied; callback functions and OAuth provider instances retain their
+identity. Treat this as runtime configuration, not a JSON-serializable or
+redacted diagnostic object. Changing a snapshot does not reconfigure the adapter.
+
+Notification callbacks receive a fresh connection-options snapshot for each
+event. Mutating that snapshot cannot reconfigure the adapter or alter the next
+notification's options. OAuth providers retain their application-owned identity.
+Direct legacy server maps can still contain a server named `servers`; the
+constructor distinguishes a connection definition from the canonical wrapper.
+
+Hook `state` is typed `unknown`: it is the unchanged LangGraph task input,
+including arrays and primitives from functional entrypoints. Narrow or parse it
+using your application schema before accessing fields. Calls outside LangGraph
+continue to receive `{}`.
+
+## Standard tool content
+
+Remove `useStandardContentBlocks` from adapter and `loadMcpTools` options. Tool
+content always uses standard LangChain blocks: images and audio expose `data`
+and `mimeType`, replacing `image_url`, `source_type`, and `mime_type` shapes.
+`outputHandling` still selects content versus artifact destinations. Artifact
+blocks retain their MCP representation. Resource conversion no longer fetches
+URIs implicitly; use `readResource` explicitly when needed.
+
+## Separate modern and legacy server options
+
+```ts
+const adapter = new MCPAdapter({
+  servers: {
+    modern: { url: "https://example.com/mcp" },
+    legacy: {
+      mode: "legacy",
+      url: "https://legacy.example.com/mcp",
+      automaticSSEFallback: true,
+      onMessage: (message) => console.log(message.data),
+    },
+  },
+});
+```
+
+Omitting `mode` means `"modern"`. Modern connections require the SDK's current
+modern protocol revision; there is no automatic fallback into legacy behavior.
+Explicit legacy mode supports stdio, Streamable HTTP, and SSE. `transport: "sse"`,
+`automaticSSEFallback`, and `onInitialized` require legacy mode. Invalid mode and
+transport combinations, unknown options, and empty server maps fail with Zod
+errors before opening a connection.
+
+Move notification and progress callbacks from the adapter root into each server
+that should receive them. Global LangChain tool hooks and naming/output policies
+remain available. `onRootsListChanged` has been removed: roots notifications
+originate from the client. Use tool arguments, resource URIs, or server
+configuration to supply workspace paths instead.

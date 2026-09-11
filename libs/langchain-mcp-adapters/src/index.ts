@@ -1,11 +1,12 @@
 import { type StreamableHTTPConnection } from "./types.js";
 
-export { MultiServerMCPClient } from "./client.js";
+export { MCPAdapter, MultiServerMCPClient } from "./client.js";
 
 export type { OAuthClientProvider } from "@modelcontextprotocol/client";
 
 export type {
   ClientConfig,
+  MCPAdapterConfig,
   Connection,
   LoadMcpToolsOptions,
   OutputHandling,
@@ -22,3 +23,12 @@ export type {
 export type SSEConnection = StreamableHTTPConnection;
 
 export { loadMcpTools } from "./tools.js";
+
+export type {
+  ToolHooks,
+  ToolCallRequest,
+  ToolCallModification,
+  ToolResult,
+} from "./hooks.js";
+
+export type { Notifications, ConnectionErrorHandler } from "./types.js";

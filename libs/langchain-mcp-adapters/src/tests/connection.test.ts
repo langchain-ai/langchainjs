@@ -4,7 +4,10 @@ import {
   Client as SDKClient,
   SSEClientTransport,
   StreamableHTTPClientTransport,
+  type NotificationMethod,
+  type NotificationTypeMap,
 } from "@modelcontextprotocol/client";
+import type { ResolvedConnection, ServerMessageSource } from "../types.js";
 import { ConnectionManager, type Client } from "../connection.js";
 
 vi.mock(
@@ -22,10 +25,121 @@ describe("ConnectionManager", () => {
   });
 
   describe("createClient", () => {
+    test.each(["http", "stdio"] as const)(
+      "isolates notification options for %s clients",
+      async (transport) => {
+        const observed: ResolvedConnection[] = [];
+
+        const mutateOptions = (source: ServerMessageSource) => {
+          const options = source.options;
+          observed.push(options);
+          expect(options.outputHandling).toEqual({ text: "content" });
+
+          if (typeof options.outputHandling === "object")
+            options.outputHandling.text = "artifact";
+
+          if ("command" in options) {
+            expect(options.args).toEqual(["server.js"]);
+            expect(options.env).toEqual({ MODE: "test" });
+            expect(options.restart).toEqual({ enabled: false });
+            options.args.push("changed");
+            options.env!.MODE = "changed";
+            options.restart!.enabled = true;
+          } else {
+            expect(options.url).toBe("https://example.com/mcp");
+            expect(options.headers).toEqual({ "X-Test": "original" });
+            expect(options.reconnect).toEqual({ enabled: false });
+            options.url = "https://example.com/changed";
+            options.headers!["X-Test"] = "changed";
+            options.reconnect!.enabled = true;
+          }
+        };
+
+        const onMessage = vi.fn((_message, source: ServerMessageSource) =>
+          mutateOptions(source)
+        );
+
+        const manager = new ConnectionManager();
+
+        const options: ResolvedConnection =
+          transport === "http"
+            ? {
+                mode: "legacy",
+                transport: "http",
+                url: "https://example.com/mcp",
+                automaticSSEFallback: false,
+                headers: { "X-Test": "original" },
+                reconnect: { enabled: false },
+                outputHandling: { text: "content" },
+                onMessage,
+                onResourcesListChanged: mutateOptions,
+              }
+            : {
+                mode: "legacy",
+                transport: "stdio",
+                command: "node",
+                args: ["server.js"],
+                stderr: "inherit",
+                env: { MODE: "test" },
+                restart: { enabled: false },
+                outputHandling: { text: "content" },
+                onMessage,
+                onResourcesListChanged: mutateOptions,
+              };
+
+        if ("command" in options)
+          await manager.createClient("stdio", "test", options);
+        else await manager.createClient("http", "test", options);
+
+        const registerNotification: <M extends NotificationMethod>(
+          method: M,
+          handler: (
+            notification: NotificationTypeMap[M]
+          ) => void | Promise<void>
+        ) => void = SDKClient.prototype.setNotificationHandler;
+
+        const message = vi
+          .mocked(registerNotification<"notifications/message">)
+          .mock.calls.find(
+            ([method]) => method === "notifications/message"
+          )?.[1];
+
+        const changed = vi
+          .mocked(registerNotification<"notifications/resources/list_changed">)
+          .mock.calls.find(
+            ([method]) => method === "notifications/resources/list_changed"
+          )?.[1];
+
+        if (!message || !changed) {
+          throw new Error("Expected registered notification handlers");
+        }
+
+        const params = {
+          level: "info",
+          data: "test",
+          _meta: { extension: true },
+        } satisfies Parameters<typeof message>[0]["params"];
+
+        try {
+          await message({ method: "notifications/message", params });
+          await message({ method: "notifications/message", params });
+          await changed({ method: "notifications/resources/list_changed" });
+          expect(onMessage.mock.calls[0][0]).toBe(params);
+          expect(options.outputHandling).toEqual({ text: "content" });
+          expect(observed).toHaveLength(3);
+          expect(observed[0]).not.toBe(options);
+          expect(observed[0]).not.toBe(observed[1]);
+        } finally {
+          await manager.delete();
+        }
+      }
+    );
+
     test("creates stdio client and connects", async () => {
       const mgr = new ConnectionManager();
 
       const client = await mgr.createClient("stdio", "stdio-server", {
+        mode: "legacy",
         transport: "stdio",
         command: "python",
         args: ["./script.py"],
@@ -43,6 +157,7 @@ describe("ConnectionManager", () => {
       const mgr = new ConnectionManager();
 
       const client = await mgr.createClient("stdio", "stdio-server", {
+        mode: "legacy",
         transport: "stdio",
         command: "node",
         args: ["./server.js"],
@@ -64,6 +179,7 @@ describe("ConnectionManager", () => {
       const mgr = new ConnectionManager();
 
       await mgr.createClient("http", "http-server", {
+        mode: "legacy",
         transport: "http",
         url: "http://localhost:8000/mcp",
         automaticSSEFallback: true,
@@ -94,6 +210,7 @@ describe("ConnectionManager", () => {
       } as never;
 
       await mgr.createClient("sse", "sse-server", {
+        mode: "legacy",
         transport: "sse",
         url: "http://localhost:8000/sse",
         automaticSSEFallback: true,
@@ -118,12 +235,14 @@ describe("ConnectionManager", () => {
       const mgr = new ConnectionManager();
 
       const c1 = await mgr.createClient("http", "svc", {
+        mode: "legacy",
         transport: "http",
         url: "http://localhost:8000/mcp",
         automaticSSEFallback: true,
         headers: { A: "1" },
       });
       const c2 = await mgr.createClient("http", "svc", {
+        mode: "legacy",
         transport: "http",
         url: "http://localhost:8000/mcp",
         automaticSSEFallback: true,
@@ -149,6 +268,7 @@ describe("ConnectionManager", () => {
       };
       const client = await mgr.createClient("stdio", "s", {
         ...config,
+        mode: "legacy",
         transport: "stdio",
       });
 
@@ -166,12 +286,14 @@ describe("ConnectionManager", () => {
     test("deletes specific connection and all connections", async () => {
       const mgr = new ConnectionManager();
       await mgr.createClient("http", "svc", {
+        mode: "legacy",
         transport: "http",
         url: "http://localhost:8000/mcp",
         automaticSSEFallback: true,
         headers: { A: "1" },
       });
       await mgr.createClient("sse", "svc", {
+        mode: "legacy",
         transport: "sse",
         url: "http://localhost:8000/sse",
         automaticSSEFallback: true,
@@ -191,6 +313,7 @@ describe("ConnectionManager", () => {
     test("forks HTTP client with new headers and creates a new connection", async () => {
       const mgr = new ConnectionManager();
       const base = await mgr.createClient("http", "svc", {
+        mode: "legacy",
         transport: "http",
         url: "http://localhost:8000/mcp",
         automaticSSEFallback: true,
@@ -206,6 +329,7 @@ describe("ConnectionManager", () => {
     test("forking stdio client is not supported", async () => {
       const mgr = new ConnectionManager();
       const stdio = await mgr.createClient("stdio", "svc", {
+        mode: "legacy",
         transport: "stdio",
         command: "python",
         args: ["./script.py"],

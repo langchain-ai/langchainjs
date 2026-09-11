@@ -10,11 +10,11 @@ import type {
   StreamableHTTPClientTransportOptions,
   StreamableHTTPReconnectionOptions,
 } from "@modelcontextprotocol/client";
+import { connectionSchema } from "./types.js";
 import { getDebugLog } from "./logging.js";
 import type {
   ResolvedStreamableHTTPConnection,
   ResolvedStdioConnection,
-  ResolvedClientConfig,
 } from "./types.js";
 
 /**
@@ -56,42 +56,19 @@ export interface Connection {
 
 const transportTypes = ["http", "sse", "stdio"] as const;
 
-type ConnectionManagerConfig = Pick<
-  ResolvedClientConfig,
-  | "onCancelled"
-  | "onInitialized"
-  | "onMessage"
-  | "onPromptsListChanged"
-  | "onResourcesListChanged"
-  | "onResourcesUpdated"
-  | "onRootsListChanged"
-  | "onToolsListChanged"
->;
-
 /**
  * Manages a pool of MCP clients with different transport, server name and connection configurations.
  * This ensures we don't create multiple connections for the same server with the same configuration.
  */
 export class ConnectionManager {
   #connections: Map<ClientKeyObject, Connection> = new Map();
-  #hooks: ConnectionManagerConfig;
-
-  constructor(hooks: ConnectionManagerConfig = {}) {
-    this.#hooks = hooks;
-  }
-
   async createClient(
     type: "stdio",
     serverName: string,
     options: ResolvedStdioConnection
   ): Promise<Client>;
   async createClient(
-    type: "http",
-    serverName: string,
-    options: ResolvedStreamableHTTPConnection
-  ): Promise<Client>;
-  async createClient(
-    type: "sse",
+    type: "http" | "sse",
     serverName: string,
     options: ResolvedStreamableHTTPConnection
   ): Promise<Client>;
@@ -112,33 +89,44 @@ export class ConnectionManager {
         : type === "sse"
           ? await this.#createSSETransport(serverName, options)
           : await this.#createStdioTransport(options);
-    const mcpClient = new MCPClient({
-      name: packageJson.name,
-      version: packageJson.version,
-    });
+
+    // SDK LATEST_PROTOCOL_VERSION still names the legacy revision; pin the
+    // modern revision explicitly so negotiation cannot fall back to legacy.
+    const mcpClient = new MCPClient(
+      {
+        name: packageJson.name,
+        version: packageJson.version,
+      },
+      {
+        versionNegotiation: {
+          mode: options.mode === "legacy" ? "legacy" : { pin: "2026-07-28" },
+        },
+      }
+    );
+
     await mcpClient.connect(transport);
 
-    if (this.#hooks.onMessage) {
+    if (options.onMessage) {
       mcpClient.setNotificationHandler(
         "notifications/message",
         (notification) =>
-          this.#hooks.onMessage?.(notification.params, {
+          options.onMessage?.(notification.params, {
             server: serverName,
-            options,
+            options: connectionSchema.parse(options),
           })
       );
     }
 
-    if (this.#hooks.onInitialized) {
+    if (options.onInitialized) {
       mcpClient.setNotificationHandler("notifications/initialized", () =>
-        this.#hooks.onInitialized?.({
+        options.onInitialized?.({
           server: serverName,
-          options,
+          options: connectionSchema.parse(options),
         })
       );
     }
 
-    if (this.#hooks.onCancelled) {
+    if (options.onCancelled) {
       mcpClient.setNotificationHandler(
         "notifications/cancelled",
         (notification) => {
@@ -148,11 +136,11 @@ export class ConnectionManager {
             return;
           }
 
-          const result = this.#hooks.onCancelled?.(
+          const result = options.onCancelled?.(
             { requestId, reason },
             {
               server: serverName,
-              options,
+              options: connectionSchema.parse(options),
             }
           );
 
@@ -165,53 +153,44 @@ export class ConnectionManager {
       );
     }
 
-    if (this.#hooks.onPromptsListChanged) {
+    if (options.onPromptsListChanged) {
       mcpClient.setNotificationHandler(
         "notifications/prompts/list_changed",
         () =>
-          this.#hooks.onPromptsListChanged?.({
+          options.onPromptsListChanged?.({
             server: serverName,
-            options,
+            options: connectionSchema.parse(options),
           })
       );
     }
 
-    if (this.#hooks.onResourcesListChanged) {
+    if (options.onResourcesListChanged) {
       mcpClient.setNotificationHandler(
         "notifications/resources/list_changed",
         () =>
-          this.#hooks.onResourcesListChanged?.({
+          options.onResourcesListChanged?.({
             server: serverName,
-            options,
+            options: connectionSchema.parse(options),
           })
       );
     }
 
-    if (this.#hooks.onResourcesUpdated) {
+    if (options.onResourcesUpdated) {
       mcpClient.setNotificationHandler(
         "notifications/resources/updated",
         (notification) =>
-          this.#hooks.onResourcesUpdated?.(notification.params, {
+          options.onResourcesUpdated?.(notification.params, {
             server: serverName,
-            options,
+            options: connectionSchema.parse(options),
           })
       );
     }
 
-    if (this.#hooks.onRootsListChanged) {
-      mcpClient.setNotificationHandler("notifications/roots/list_changed", () =>
-        this.#hooks.onRootsListChanged?.({
-          server: serverName,
-          options,
-        })
-      );
-    }
-
-    if (this.#hooks.onToolsListChanged) {
+    if (options.onToolsListChanged) {
       mcpClient.setNotificationHandler("notifications/tools/list_changed", () =>
-        this.#hooks.onToolsListChanged?.({
+        options.onToolsListChanged?.({
           server: serverName,
-          options,
+          options: connectionSchema.parse(options),
         })
       );
     }
@@ -229,15 +208,7 @@ export class ConnectionManager {
       return this.#forkClient(key, headers);
     };
 
-    const client = new Proxy(mcpClient, {
-      get(target, prop) {
-        if (prop === "fork") {
-          return forkClient.bind(this);
-        }
-
-        return target[prop as keyof MCPClient];
-      },
-    }) as Client;
+    const client = Object.assign(mcpClient, { fork: forkClient });
 
     this.#connections.set(key, {
       transport,
@@ -263,16 +234,16 @@ export class ConnectionManager {
       throw new Error("Transport not found");
     }
 
-    const type =
-      connection.transportOptions.type ?? connection.transportOptions.transport;
-    if (type === "stdio") {
+    const options = connection.transportOptions;
+
+    if (options.transport === "stdio") {
       throw new Error("Forking stdio transport is not supported");
     }
 
-    return this.createClient(type as "http", key.serverName, {
-      ...connection.transportOptions,
+    return this.createClient(options.transport, key.serverName, {
+      ...options,
       headers,
-    } as ResolvedStreamableHTTPConnection);
+    });
   }
 
   /**

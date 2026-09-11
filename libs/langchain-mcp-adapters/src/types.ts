@@ -1,5 +1,15 @@
-import { z } from "zod/v3";
-import type { OAuthClientProvider } from "@modelcontextprotocol/client";
+import { z } from "zod";
+import type {
+  CallToolResult,
+  ListResourcesResult,
+  ListResourceTemplatesResult,
+  ReadResourceResult,
+  OAuthClientProvider,
+  LoggingMessageNotificationParams,
+  Progress,
+  CancelledNotificationParams,
+  ResourceUpdatedNotificationParams,
+} from "@modelcontextprotocol/client";
 import type {
   ContentBlock,
   ToolMessage,
@@ -8,7 +18,7 @@ import type {
 import type { RunnableConfig } from "@langchain/core/runnables";
 import type { Command, CommandParams } from "@langchain/langgraph";
 
-import { toolHooksSchema, type ToolHooks } from "./hooks.js";
+import { toolHooksSchema } from "./hooks.js";
 
 export type {
   Command,
@@ -19,73 +29,26 @@ export type {
   CommandParams,
 };
 
-export const callToolResultContentTypes = [
+const callToolResultContentTypeSchema = z.enum([
   "audio",
   "image",
   "resource",
   "resource_link",
   "text",
-] as const;
-export type CallToolResultContentType =
-  (typeof callToolResultContentTypes)[number];
+] satisfies CallToolResult["content"][number]["type"][]);
 
-/**
- * The severity of a log message.
- * @see {@link https://github.com/modelcontextprotocol/typescript-sdk/blob/main/src/types.ts#L1067}
- */
-export const LoggingLevelSchema = z.enum([
-  "debug",
-  "info",
-  "notice",
-  "warning",
-  "error",
-  "critical",
-  "alert",
-  "emergency",
-]);
+export const callToolResultContentTypes =
+  callToolResultContentTypeSchema.options;
 
-/**
- * A uniquely identifying ID for a request in JSON-RPC.
- * @see {@link https://github.com/modelcontextprotocol/typescript-sdk/blob/main/src/types.ts#L71C1-L74C72}
- */
-export const RequestIdSchema = z.union([z.string(), z.number().int()]);
+export type CallToolResultContentType = z.output<
+  typeof callToolResultContentTypeSchema
+>;
 
-const outputTypesUnion = z.union([
-  z
-    .literal("content")
-    .describe("Put tool output into the ToolMessage.content array"),
-  z
-    .literal("artifact")
-    .describe("Put tool output into the ToolMessage.artifact array"),
-]);
+const outputTypesUnion = z.enum(["content", "artifact"]);
 
-const detailedOutputHandlingSchema = z.object(
-  Object.fromEntries(
-    callToolResultContentTypes.map((contentType) => [
-      contentType,
-      z
-        .union([
-          z
-            .literal("content")
-            .describe(
-              `Put all ${contentType} tool output into the ToolMessage.content array`
-            ),
-          z
-            .literal("artifact")
-            .describe(
-              `Put all ${contentType} tool output into the ToolMessage.artifact array`
-            ),
-        ])
-        .describe(
-          `Where to place ${contentType} tool output in the LangChain ToolMessage`
-        )
-        .optional(),
-    ])
-  ) as {
-    [K in CallToolResultContentType]: z.ZodOptional<
-      z.ZodUnion<[z.ZodLiteral<"content">, z.ZodLiteral<"artifact">]>
-    >;
-  }
+const detailedOutputHandlingSchema = z.partialRecord(
+  callToolResultContentTypeSchema,
+  outputTypesUnion.optional()
 );
 
 export type DetailedOutputHandling = z.output<
@@ -137,40 +100,30 @@ export const outputHandlingSchema = z
 export type OutputHandling = z.output<typeof outputHandlingSchema>;
 
 /**
- * Zod schema for validating OAuthClientProvider interface
- * Since OAuthClientProvider has methods, we create a custom validator
+ * Preserve the SDK-owned service and its prototype. Property checks validate
+ * callable methods without replacing them or evaluating metadata getters.
+ * The SDK remains responsible for parsing OAuth metadata and method results.
  */
-export const oAuthClientProviderSchema = z.custom<OAuthClientProvider>(
-  (val) => {
-    if (!val || typeof val !== "object") return false;
-
-    // Check required properties and methods exist
-    const requiredMethods = [
-      "redirectUrl",
-      "clientMetadata",
-      "clientInformation",
-      "tokens",
-      "saveTokens",
-    ];
-
-    // redirectUrl can be a string, URL, or getter returning string/URL
-    if (!("redirectUrl" in val)) return false;
-
-    // clientMetadata can be an object or getter returning an object
-    if (!("clientMetadata" in val)) return false;
-
-    // Check that required methods exist (they can be functions or getters)
-    for (const method of requiredMethods) {
-      if (!(method in val)) return false;
+export const oAuthClientProviderSchema = z
+  .custom<OAuthClientProvider>(
+    (value) =>
+      value !== null &&
+      typeof value === "object" &&
+      "redirectUrl" in value &&
+      "clientMetadata" in value,
+    {
+      error:
+        "Expected an OAuthClientProvider with redirectUrl and clientMetadata",
     }
-
-    return true;
-  },
-  {
-    message:
-      "Must be a valid OAuthClientProvider implementation with required properties: redirectUrl, clientMetadata, clientInformation, tokens, saveTokens",
-  }
-);
+  )
+  .check(
+    z.property("clientInformation", z.function()),
+    z.property("tokens", z.function()),
+    z.property("saveTokens", z.function()),
+    z.property("redirectToAuthorization", z.function()),
+    z.property("saveCodeVerifier", z.function()),
+    z.property("codeVerifier", z.function())
+  );
 
 export const baseConfigSchema = z.object({
   /**
@@ -240,13 +193,13 @@ export const stdioRestartSchema = z
 /**
  * Stdio transport connection
  */
-export const stdioConnectionSchema = z
+const stdioOptionsSchema = z
   .object({
     /**
      * Optional transport type, inferred from the structure of the config if not provided. Included
      * for compatibility with common MCP client config file formats.
      */
-    transport: z.literal("stdio").optional(),
+    transport: z.literal("stdio").default("stdio"),
     /**
      * Optional transport type, inferred from the structure of the config if not provided. Included
      * for compatibility with common MCP client config file formats.
@@ -256,6 +209,9 @@ export const stdioConnectionSchema = z
      * The executable to run the server (e.g. `node`, `npx`, etc)
      */
     command: z.string().describe("The executable to run the server"),
+    url: z
+      .never({ error: "Specify a stdio command or an HTTP URL, not both" })
+      .optional(),
     /**
      * Array of command line arguments to pass to the executable
      */
@@ -266,7 +222,7 @@ export const stdioConnectionSchema = z
      * Environment variables to set when spawning the process.
      */
     env: z
-      .record(z.string())
+      .record(z.string(), z.string())
       .describe("The environment to use when spawning the process")
       .optional(),
     /**
@@ -307,7 +263,7 @@ export const stdioConnectionSchema = z
      */
     restart: stdioRestartSchema.optional(),
   })
-  .and(baseConfigSchema)
+  .extend(baseConfigSchema.shape)
   .describe("Configuration for stdio transport connection");
 
 /**
@@ -342,7 +298,7 @@ export const streamableHttpReconnectSchema = z
 /**
  * Streamable HTTP transport connection
  */
-export const streamableHttpConnectionSchema = z
+const httpOptionsSchema = z
   .object({
     /**
      * Optional transport type, inferred from the structure of the config. If "sse", will not attempt
@@ -358,10 +314,13 @@ export const streamableHttpConnectionSchema = z
      * The URL to connect to
      */
     url: z.string().url(),
+    command: z
+      .never({ error: "Specify a stdio command or an HTTP URL, not both" })
+      .optional(),
     /**
      * Additional headers to send with the request, useful for authentication
      */
-    headers: z.record(z.string()).optional(),
+    headers: z.record(z.string(), z.string()).optional(),
     /**
      * OAuth client provider for automatic authentication handling.
      * When provided, the transport will automatically handle token refresh,
@@ -380,169 +339,142 @@ export const streamableHttpConnectionSchema = z
      */
     automaticSSEFallback: z.boolean().optional().default(true),
   })
-  .and(baseConfigSchema)
+  .extend(baseConfigSchema.shape)
   .describe("Configuration for streamable HTTP transport connection");
 
-/**
- * Create combined schema for all transport connection types
- */
-export const connectionSchema = z
-  .union([stdioConnectionSchema, streamableHttpConnectionSchema])
-  .describe("Configuration for a single MCP server");
+export const eventContextSchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("tool"),
+    name: z.string(),
+    args: z.unknown(),
+    server: z.string(),
+  }),
+  z.object({ type: z.literal("unknown") }),
+]);
 
-const toolSourceSchema = z.object({
-  type: z.literal("tool"),
-  name: z.string(),
-  args: z.unknown(),
-  server: z.string(),
-});
-/**
- * we don't know yet what other types of sources may send progress messages
- */
-const unknownSourceSchema = z.object({
-  type: z.literal("unknown"),
-});
-const eventContextSchema = z.union([toolSourceSchema, unknownSourceSchema]);
 export type EventContext = z.output<typeof eventContextSchema>;
 
-const serverMessageSourceSchema = z.object({
-  server: z.string(),
-  options: connectionSchema,
-});
-export type ServerMessageSource = z.output<typeof serverMessageSourceSchema>;
+/** Trusted notification context; preserves runtime callback and OAuth identities. */
+export interface ServerMessageSource {
+  server: string;
+  options: ResolvedConnection;
+}
 
-export const notifications = z.object({
+// SDK payloads are already parsed by the SDK. Keep callbacks as opaque runtime
+// services; parsing a function schema would replace their identity with a wrapper.
+const notifications = z.object({
   /**
    * Called when a log message is received.
    *
    * @param logMessage - The log message
-   * @param logMessage.message - The log message
+   * @param logMessage.data - The data logged by the server
    * @param logMessage.level - The log level
-   * @param logMessage.timestamp - The log timestamp
+   * @param logMessage.logger - Optional logger name
    * @param source - The source of the log message
    * @param source.server - The server of the source, e.g. "my-server"
-   * @param source.option - The connection options of the source, e.g. `{ transport: "stdio", command: "node", args: ["server.js"] }`
-   * @returns The log message
+   * @param source.options - The connection options of the source, e.g. `{ transport: "stdio", command: "node", args: ["server.js"] }`
    *
    * @example
    * ```ts
-   * const client = new MultiServerMCPClient({
-   *   // ...
-   *   onLog: (logMessage) => {
-   *     console.log(logMessage);
+   * const client = new MCPAdapter({
+   *   servers: {
+   *     local: {
+   *       command: "node",
+   *       args: ["server.js"],
+   *       onMessage: (logMessage) => {
+   *         console.log(logMessage);
+   *       },
+   *     },
    *   },
    * });
    * ```
    */
   onMessage: z
-    .function()
-    .args(
-      z.object({
-        /**
-         * The severity of this log message.
-         */
-        level: LoggingLevelSchema,
-        /**
-         * An optional name of the logger issuing this message.
-         */
-        logger: z.optional(z.string()),
-        /**
-         * The data to be logged, such as a string message or an object. Any JSON serializable type is allowed here.
-         */
-        data: z.unknown(),
-      }),
-      serverMessageSourceSchema
-    )
-    .returns(z.union([z.void(), z.promise(z.void())]))
+    .custom<
+      (
+        message: LoggingMessageNotificationParams,
+        source: ServerMessageSource
+      ) => void | Promise<void>
+    >((value) => typeof value === "function", "Expected a callback")
     .optional(),
   /**
    * Called when a progress message is received.
    *
    * @param progress - The progress message
-   * @param progress.message - The progress message
-   * @param progress.percentage - The progress percentage
-   * @param progress.timestamp - The progress timestamp
+   * @param progress.progress - Progress completed so far
+   * @param progress.total - Total progress, if known
+   * @param progress.message - Optional progress message
    * @param source - The source of the progress message
    * @param source.type - The type of the source, e.g. "tool"
    * @param source.server - The server of the source, e.g. "my-server"
    * @param source.name - The name of the source, e.g. "my-name"
    * @param source.args - The arguments of the source, e.g. { a: 1, b: 2 }
-   * @returns The progress message
    *
    * @example
    * ```ts
-   * const client = new MultiServerMCPClient({
-   *   // ...
-   *   onProgress: (progress, source) => {
-   *     if (source.type === "tool") {
-   *     console.log(progress);
+   * const client = new MCPAdapter({
+   *   servers: {
+   *     local: {
+   *       command: "node",
+   *       args: ["server.js"],
+   *       onProgress: (progress, source) => {
+   *         if (source.type === "tool") {
+   *           console.log(source.name, progress.progress, progress.total);
+   *         }
+   *       },
+   *     },
    *   },
    * });
    * ```
    */
   onProgress: z
-    .function()
-    .args(
-      z.object({
-        /**
-         * The progress thus far. This should increase every time progress is made, even if the total is unknown.
-         */
-        progress: z.number(),
-        /**
-         * Total number of items to process (or total progress required), if known.
-         */
-        total: z.optional(z.number()),
-        /**
-         * An optional message describing the current progress.
-         */
-        message: z.optional(z.string()),
-      }),
-      eventContextSchema
+    .custom<(progress: Progress, source: EventContext) => void | Promise<void>>(
+      (value) => typeof value === "function",
+      "Expected a callback"
     )
-    .returns(z.union([z.void(), z.promise(z.void())]))
-    .optional(),
-  onCancelled: z
-    .function()
-    .args(
-      z.object({
-        /**
-         * The ID of the request to cancel.
-         *
-         * This MUST correspond to the ID of a request previously issued in the same direction.
-         */
-        requestId: RequestIdSchema,
-
-        /**
-         * An optional string describing the reason for the cancellation. This MAY be logged or presented to the user.
-         */
-        reason: z.string().optional(),
-      }),
-      serverMessageSourceSchema
-    )
-    .returns(z.union([z.void(), z.promise(z.void())]))
     .optional(),
   /**
-   * Called when the server is initialized.
+   * Observes server cancellation of a request it previously issued.
+   * @param notification - Request ID and optional cancellation reason
+   * @param source - Server identity and connection-options snapshot
+   */
+  onCancelled: z
+    .custom<
+      (
+        notification: CancelledNotificationParams,
+        source: ServerMessageSource
+      ) => void | Promise<void>
+    >((value) => typeof value === "function", "Expected a callback")
+    .optional(),
+  /**
+   * Called when an initialized notification is received from the server.
+   * This is a notification observer, not a connection-ready callback.
    *
    * @param source - The source of the initialized message
    * @param source.server - The server of the source, e.g. "my-server"
    * @param source.options - The connection options of the source, e.g. `{ transport: "stdio", command: "node", args: ["server.js"] }`, see {@link ServerMessageSource}
-   * @returns The initialized message
    *
    * @example
    * ```ts
-   * const client = new MultiServerMCPClient({
-   *   // ...
-   *   onInitialized: (source) => {
-   *     console.log(source);
+   * const client = new MCPAdapter({
+   *   servers: {
+   *     local: {
+   *       mode: "legacy",
+   *       command: "node",
+   *       args: ["server.js"],
+   *       onInitialized: (source) => {
+   *         console.log(source);
+   *       },
+   *     },
    *   },
    * });
    * ```
    */
   onInitialized: z
-    .function()
-    .args(serverMessageSourceSchema)
-    .returns(z.union([z.void(), z.promise(z.void())]))
+    .custom<(source: ServerMessageSource) => void | Promise<void>>(
+      (value) => typeof value === "function",
+      "Expected a callback"
+    )
     .optional(),
   /**
    * Called when the prompts list is changed.
@@ -550,22 +482,27 @@ export const notifications = z.object({
    * @param source - The source of the prompts list changed message
    * @param source.server - The server of the source, e.g. "my-server"
    * @param source.options - The connection options of the source, e.g. `{ transport: "stdio", command: "node", args: ["server.js"] }`, see {@link ServerMessageSource}
-   * @returns The prompts list changed message
    *
    * @example
    * ```ts
-   * const client = new MultiServerMCPClient({
-   *   // ...
-   *   onPromptsListChanged: (source) => {
-   *     console.log(source);
+   * const client = new MCPAdapter({
+   *   servers: {
+   *     local: {
+   *       command: "node",
+   *       args: ["server.js"],
+   *       onPromptsListChanged: (source) => {
+   *         console.log(source);
+   *       },
+   *     },
    *   },
    * });
    * ```
    */
   onPromptsListChanged: z
-    .function()
-    .args(serverMessageSourceSchema)
-    .returns(z.union([z.void(), z.promise(z.void())]))
+    .custom<(source: ServerMessageSource) => void | Promise<void>>(
+      (value) => typeof value === "function",
+      "Expected a callback"
+    )
     .optional(),
   /**
    * Called when the resources list is changed.
@@ -573,22 +510,27 @@ export const notifications = z.object({
    * @param source - The source of the resources list changed message
    * @param source.server - The server of the source, e.g. "my-server"
    * @param source.options - The connection options of the source, e.g. `{ transport: "stdio", command: "node", args: ["server.js"] }`, see {@link ServerMessageSource}
-   * @returns The resources list changed message
    *
    * @example
    * ```ts
-   * const client = new MultiServerMCPClient({
-   *   // ...
-   *   onResourcesListChanged: (source) => {
-   *     console.log(source);
+   * const client = new MCPAdapter({
+   *   servers: {
+   *     local: {
+   *       command: "node",
+   *       args: ["server.js"],
+   *       onResourcesListChanged: (source) => {
+   *         console.log(source);
+   *       },
+   *     },
    *   },
    * });
    * ```
    */
   onResourcesListChanged: z
-    .function()
-    .args(serverMessageSourceSchema)
-    .returns(z.union([z.void(), z.promise(z.void())]))
+    .custom<(source: ServerMessageSource) => void | Promise<void>>(
+      (value) => typeof value === "function",
+      "Expected a callback"
+    )
     .optional(),
   /**
    * Called when the resources are updated.
@@ -598,53 +540,29 @@ export const notifications = z.object({
    * @param source - The source of the resources updated message
    * @param source.server - The server of the source, e.g. "my-server"
    * @param source.options - The connection options of the source, e.g. `{ transport: "stdio", command: "node", args: ["server.js"] }`, see {@link ServerMessageSource}
-   * @returns The resources updated message
    *
    * @example
    * ```ts
-   * const client = new MultiServerMCPClient({
-   *   // ...
-   *   onResourcesUpdated: (updatedResource, source) => {
-   *     console.log(`Resource ${updatedResource.uri} updated`);
+   * const client = new MCPAdapter({
+   *   servers: {
+   *     local: {
+   *       command: "node",
+   *       args: ["server.js"],
+   *       onResourcesUpdated: (updatedResource, source) => {
+   *         console.log(`Resource ${updatedResource.uri} updated`);
+   *       },
+   *     },
    *   },
    * });
    * ```
    */
   onResourcesUpdated: z
-    .function()
-    .args(
-      z.object({
-        /**
-         * The URI of the resource that has been updated. This might be a sub-resource of the one that the client actually subscribed to.
-         */
-        uri: z.string(),
-      }),
-      serverMessageSourceSchema
-    )
-    .returns(z.union([z.void(), z.promise(z.void())]))
-    .optional(),
-  /**
-   * Called when the roots list is changed.
-   *
-   * @param source - The source of the roots list changed message
-   * @param source.server - The server of the source, e.g. "my-server"
-   * @param source.options - The connection options of the source, e.g. `{ transport: "stdio", command: "node", args: ["server.js"] }`, see {@link ServerMessageSource}
-   * @returns The roots list changed message
-   *
-   * @example
-   * ```ts
-   * const client = new MultiServerMCPClient({
-   *   // ...
-   *   onRootsListChanged: (source) => {
-   *     console.log(source);
-   *   },
-   * });
-   * ```
-   */
-  onRootsListChanged: z
-    .function()
-    .args(serverMessageSourceSchema)
-    .returns(z.union([z.void(), z.promise(z.void())]))
+    .custom<
+      (
+        resource: ResourceUpdatedNotificationParams,
+        source: ServerMessageSource
+      ) => void | Promise<void>
+    >((value) => typeof value === "function", "Expected a callback")
     .optional(),
   /**
    * Called when the tools list is changed.
@@ -652,37 +570,122 @@ export const notifications = z.object({
    * @param source - The source of the tools list changed message
    * @param source.server - The server of the source, e.g. "my-server"
    * @param source.options - The connection options of the source, e.g. `{ transport: "stdio", command: "node", args: ["server.js"] }`, see {@link ServerMessageSource}
-   * @returns The tools list changed message
    *
    * @example
    * ```ts
-   * const client = new MultiServerMCPClient({
-   *   // ...
-   *   onToolsListChanged: (source) => {
-   *     console.log(source);
+   * const client = new MCPAdapter({
+   *   servers: {
+   *     local: {
+   *       command: "node",
+   *       args: ["server.js"],
+   *       onToolsListChanged: (source) => {
+   *         console.log(source);
+   *       },
+   *     },
    *   },
    * });
    * ```
    */
   onToolsListChanged: z
-    .function()
-    .args(serverMessageSourceSchema)
-    .returns(z.union([z.void(), z.promise(z.void())]))
+    .custom<(source: ServerMessageSource) => void | Promise<void>>(
+      (value) => typeof value === "function",
+      "Expected a callback"
+    )
     .optional(),
 });
+
 export type Notifications = z.output<typeof notifications>;
+
+const removedRootsObserver = z
+  .never({
+    error:
+      "onRootsListChanged was removed: roots notifications originate from clients, not servers",
+  })
+  .optional();
+
+const serverNotifications = notifications.omit({ onInitialized: true });
+
+const modernPolicy = z
+  .object({
+    mode: z.literal("modern").optional().default("modern"),
+    onInitialized: z
+      .never({ error: "onInitialized requires mode: legacy" })
+      .optional(),
+    automaticSSEFallback: z
+      .never({ error: "automaticSSEFallback requires mode: legacy" })
+      .optional(),
+    onRootsListChanged: removedRootsObserver,
+  })
+  .extend(serverNotifications.shape);
+
+const legacyPolicy = z
+  .object({
+    mode: z.literal("legacy"),
+    onRootsListChanged: removedRootsObserver,
+  })
+  .extend(notifications.shape);
+
+/** Transport aliases are normalized once; every public entry uses the same mode rules. */
+export const stdioConnectionSchema = z
+  .discriminatedUnion("mode", [
+    stdioOptionsSchema.extend(modernPolicy.shape).strict(),
+    stdioOptionsSchema.extend(legacyPolicy.shape).strict(),
+  ])
+  .transform(({ type: _type, url: _url, ...options }) => options);
+
+const httpTransport = httpOptionsSchema
+  .omit({ automaticSSEFallback: true })
+  .extend({
+    transport: z.literal("http").default("http"),
+    type: z
+      .literal("http", {
+        error: "type conflicts with transport; use transport only",
+      })
+      .optional(),
+  });
+
+const modernHttp = httpTransport.extend(modernPolicy.shape).strict();
+
+const legacyHttp = httpTransport
+  .extend(legacyPolicy.shape)
+  .extend({
+    automaticSSEFallback: z.boolean().default(true),
+  })
+  .strict();
+
+const legacySse = httpOptionsSchema
+  .extend(legacyPolicy.shape)
+  .extend({
+    transport: z.literal("sse").default("sse"),
+    type: z
+      .literal("sse", {
+        error: "type conflicts with transport; use transport only",
+      })
+      .optional(),
+  })
+  .strict();
+
+export const streamableHttpConnectionSchema = z
+  .union([z.discriminatedUnion("mode", [modernHttp, legacyHttp]), legacySse])
+  .transform(({ type: _type, command: _command, ...options }) => options);
+
+export const connectionSchema = z.union([
+  stdioConnectionSchema,
+  streamableHttpConnectionSchema,
+]);
 
 /**
  * {@link MultiServerMCPClient} configuration
  */
-export const clientConfigSchema = z
+const serverOnlyCallback = z
+  .never({
+    error:
+      "Configure notification and progress callbacks on a named server under servers, not on the adapter",
+  })
+  .optional();
+
+const clientOptionsSchema = z
   .object({
-    /**
-     * A map of server names to their configuration
-     */
-    mcpServers: z
-      .record(connectionSchema)
-      .describe("A map of server names to their configuration"),
     /**
      * Whether to throw an error if a tool fails to load
      *
@@ -716,26 +719,6 @@ export const clientConfigSchema = z
       .optional()
       .default(""),
     /**
-     * If true, the tool will use LangChain's standard multimodal content blocks for tools that output
-     * image or audio content, and embedded resources will be converted to `StandardFileBlock` objects.
-     * When `false`, all artifacts are left in their MCP format, but embedded resources will be
-     * converted to `StandardFileBlock` objects if {@link ClientConfig#outputHandling} causes embedded resources to
-     * be treated as content, as otherwise ChatModel providers will not be able to interpret them.
-     *
-     * @default false
-     */
-    useStandardContentBlocks: z
-      .boolean()
-      .describe(
-        "If true, the tool will use LangChain's standard multimodal content blocks for tools that output\n" +
-          "image or audio content. When true, embedded resources will be converted to `StandardFileBlock`\n" +
-          "objects. When `false`, all artifacts are left in their MCP format, but embedded resources will\n" +
-          "be converted to `StandardFileBlock` objects if `outputHandling` causes embedded resources to be\n" +
-          "treated as content, as otherwise ChatModel providers will not be able to interpret them."
-      )
-      .optional()
-      .default(false),
-    /**
      * Behavior when a server fails to connect.
      * - "throw": Throw an error immediately if any server fails to connect (default)
      * - "ignore": Skip failed servers and continue with successfully connected ones
@@ -747,15 +730,10 @@ export const clientConfigSchema = z
     onConnectionError: z
       .union([
         z.enum(["throw", "ignore"]),
-        z
-          .function()
-          .args(
-            z.object({
-              serverName: z.string(),
-              error: z.unknown(),
-            })
-          )
-          .returns(z.void()),
+        z.custom<ConnectionErrorHandler>(
+          (value) => typeof value === "function",
+          "Expected a connection error handler"
+        ),
       ])
       .describe(
         "Behavior when a server fails to connect: 'throw' to error immediately, 'ignore' to skip failed servers, or a function for custom error handling"
@@ -763,10 +741,60 @@ export const clientConfigSchema = z
       .optional()
       .default("throw"),
   })
-  .and(baseConfigSchema)
-  .and(toolHooksSchema)
-  .and(notifications)
+  .extend(baseConfigSchema.shape)
+  .extend(toolHooksSchema.shape)
+  .extend({
+    onMessage: serverOnlyCallback,
+    onProgress: serverOnlyCallback,
+    onCancelled: serverOnlyCallback,
+    onInitialized: serverOnlyCallback,
+    onPromptsListChanged: serverOnlyCallback,
+    onResourcesListChanged: serverOnlyCallback,
+    onResourcesUpdated: serverOnlyCallback,
+    onToolsListChanged: serverOnlyCallback,
+    onRootsListChanged: removedRootsObserver,
+  })
+  .strict()
   .describe("Configuration for the MCP client");
+
+const serverMapSchema = z
+  .record(z.string(), connectionSchema)
+  .refine((servers) => Object.keys(servers).length > 0, {
+    error: "No MCP servers provided",
+  });
+
+const exclusiveServerMap = z
+  .never({ error: "Specify servers or legacy mcpServers, not both" })
+  .optional();
+
+/** Resolved legacy-shaped configuration also provides isolated public snapshots. */
+export const clientConfigSchema = clientOptionsSchema.extend({
+  mcpServers: serverMapSchema,
+});
+
+const canonicalConfigSchema = clientOptionsSchema.extend({
+  servers: serverMapSchema,
+  mcpServers: exclusiveServerMap,
+});
+
+const legacyConfigSchema = clientConfigSchema
+  .extend({ servers: exclusiveServerMap })
+  .transform(({ servers: _canonical, ...options }) => options);
+
+/** All supported external shapes produce the same resolved configuration. */
+export const adapterConfigSchema = z.union([
+  canonicalConfigSchema.transform(
+    ({ servers, mcpServers: _legacy, ...options }) => ({
+      ...options,
+      mcpServers: servers,
+    })
+  ),
+  legacyConfigSchema,
+  serverMapSchema.transform((mcpServers) => ({
+    ...clientOptionsSchema.parse({}),
+    mcpServers,
+  })),
+]);
 
 /**
  * Configuration for stdio transport connection
@@ -802,6 +830,9 @@ export type Connection = z.input<typeof connectionSchema>;
  */
 export type ClientConfig = z.input<typeof clientConfigSchema>;
 
+/** Canonical adapter options. */
+export type MCPAdapterConfig = z.input<typeof canonicalConfigSchema>;
+
 /**
  * Type for {@link Connection} with default values applied.
  */
@@ -826,81 +857,20 @@ export type ConnectionErrorHandler = (params: {
   error: unknown;
 }) => void;
 
-export type LoadMcpToolsOptions = {
-  /**
-   * If true, throw an error if a tool fails to load.
-   *
-   * @default true
-   */
-  throwOnLoadError?: boolean;
+export const loadMcpToolsOptionsSchema = clientOptionsSchema
+  .pick({
+    throwOnLoadError: true,
+    prefixToolNameWithServerName: true,
+    additionalToolNamePrefix: true,
+    outputHandling: true,
+    defaultToolTimeout: true,
+    beforeToolCall: true,
+    afterToolCall: true,
+  })
+  .partial()
+  .extend(notifications.pick({ onProgress: true }).shape);
 
-  /**
-   * If true, the tool name will be prefixed with the server name followed by a double underscore.
-   * This is useful if you want to avoid tool name collisions across servers.
-   *
-   * @default false
-   */
-  prefixToolNameWithServerName?: boolean;
-
-  /**
-   * An additional prefix to add to the tool name. Will be added at the very beginning of the tool
-   * name, separated by a double underscore.
-   *
-   * For example, if `additionalToolNamePrefix` is `"mcp"`, and `prefixToolNameWithServerName` is
-   * `true`, the tool name `"my-tool"` provided by server `"my-server"` will become
-   * `"mcp__my-server__my-tool"`.
-   *
-   * Similarly, if `additionalToolNamePrefix` is `mcp` and `prefixToolNameWithServerName` is false,
-   * the tool name would be `"mcp__my-tool"`.
-   *
-   * @default ""
-   */
-  additionalToolNamePrefix?: string;
-
-  /**
-   * If true, the tool will use LangChain's standard multimodal content blocks for tools that output
-   * image or audio content, and embedded resources will be converted to `StandardFileBlock` objects.
-   * When `false`, all artifacts are left in their MCP format, but embedded resources will be
-   * converted to `StandardFileBlock` objects if {@link outputHandling} causes embedded resources to
-   * be treated as content, as otherwise ChatModel providers will not be able to interpret them.
-   *
-   * @default false
-   */
-  useStandardContentBlocks?: boolean;
-
-  /**
-   * Defines where to place each tool output type in the LangChain ToolMessage.
-   *
-   * @default {
-   *   "text": "content",
-   *   "image": "content",
-   *   "audio": "content",
-   *   "resource": "artifact"
-   * }
-   */
-  outputHandling?: OutputHandling;
-
-  /**
-   * Default timeout in milliseconds for tool execution. Must be greater than 0.
-   * If not specified, tools will use their own configured timeout values.
-   */
-  defaultToolTimeout?: number;
-
-  /**
-   * `onProgress` callbacks used for tool calls.
-   */
-  onProgress?: Notifications["onProgress"];
-
-  /**
-   * `beforeToolCall` callbacks used for tool calls.
-   */
-  beforeToolCall?: ToolHooks["beforeToolCall"];
-
-  /**
-   * `afterToolCall` callbacks used for tool calls.
-   */
-  afterToolCall?: ToolHooks["afterToolCall"];
-};
+export type LoadMcpToolsOptions = z.input<typeof loadMcpToolsOptionsSchema>;
 
 /**
  * Helper function that expands a string literal OutputHandling to an object with all content types.
@@ -953,74 +923,28 @@ export function _resolveAndApplyOverrideHandlingOverrides(
   };
 }
 
-export interface CustomHTTPTransportOptions {
-  authProvider?: OAuthClientProvider;
-  headers?: Record<string, string>;
-}
+export const customHTTPTransportOptionsSchema = httpOptionsSchema.pick({
+  authProvider: true,
+  headers: true,
+});
+
+export type CustomHTTPTransportOptions = z.input<
+  typeof customHTTPTransportOptionsSchema
+>;
 
 /**
  * Represents a resource provided by an MCP server.
  */
-export type MCPResource = {
-  /**
-   * The URI of the resource
-   */
-  uri: string;
-  /**
-   * Human-readable name of the resource
-   */
-  name: string;
-  /**
-   * Optional description of what the resource represents
-   */
-  description?: string;
-  /**
-   * Optional MIME type of the resource content
-   */
-  mimeType?: string;
-};
+export type MCPResource = ListResourcesResult["resources"][number];
 
 /**
  * Represents a resource template provided by an MCP server.
  * Resource templates are used for dynamic resources with parameterized URIs.
  */
-export type MCPResourceTemplate = {
-  /**
-   * The URI template with parameter placeholders (e.g., "users://{userId}/profile")
-   */
-  uriTemplate: string;
-  /**
-   * Human-readable name of the resource template
-   */
-  name: string;
-  /**
-   * Optional description of what the resource template represents
-   */
-  description?: string;
-  /**
-   * Optional MIME type of the resource content
-   */
-  mimeType?: string;
-};
+export type MCPResourceTemplate =
+  ListResourceTemplatesResult["resourceTemplates"][number];
 
 /**
  * Represents the content of a resource retrieved from an MCP server.
  */
-export type MCPResourceContent = {
-  /**
-   * The URI of the resource
-   */
-  uri: string;
-  /**
-   * Optional MIME type of the content
-   */
-  mimeType?: string;
-  /**
-   * Optional text content of the resource
-   */
-  text?: string;
-  /**
-   * Optional base64-encoded binary content of the resource
-   */
-  blob?: string;
-};
+export type MCPResourceContent = ReadResourceResult["contents"][number];

@@ -10,7 +10,7 @@ import { HumanMessage, createAgent } from "langchain";
 import dotenv from "dotenv";
 
 // MCP client imports
-import { type ClientConfig, MultiServerMCPClient } from "../src/index.js";
+import { type MCPAdapterConfig, MCPAdapter } from "../src/index.js";
 
 // Load environment variables from .env file
 dotenv.config();
@@ -18,9 +18,10 @@ dotenv.config();
 /**
  * A custom configuration for Firecrawl
  */
-const config: ClientConfig = {
-  mcpServers: {
+const config: MCPAdapterConfig = {
+  servers: {
     firecrawl: {
+      mode: "legacy",
       transport: "sse",
       url: process.env.FIRECRAWL_SERVER_URL || "http://localhost:8000/v1/mcp",
       headers: {
@@ -28,14 +29,13 @@ const config: ClientConfig = {
       },
     },
   },
-  useStandardContentBlocks: true,
 };
 
 /**
  * Example demonstrating loading from custom configuration
  */
 async function runExample() {
-  let client: MultiServerMCPClient | null = null;
+  let client: MCPAdapter | null = null;
 
   // Add a timeout to prevent the process from hanging indefinitely
   const timeout = setTimeout(() => {
@@ -46,10 +46,10 @@ async function runExample() {
   try {
     // Initialize the MCP client with the custom configuration
     console.log("Initializing MCP client from custom configuration...");
-    client = new MultiServerMCPClient(config);
+    client = new MCPAdapter(config);
 
     // Get Firecrawl tools specifically
-    const firecrawlTools = await client.getTools("firecrawl");
+    const firecrawlTools = await client.listTools("firecrawl");
 
     if (firecrawlTools.length === 0) {
       throw new Error("No Firecrawl tools found");

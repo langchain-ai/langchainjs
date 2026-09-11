@@ -1,21 +1,29 @@
-import { z, ZodError as ZodErrorV4 } from "zod/v4";
-import { ZodError as ZodErrorV3 } from "zod/v3";
+import { z } from "zod";
+import { isInteropZodError } from "@langchain/core/utils/types";
+import {
+  toolCallModificationSchema,
+  toolCallResultModificationSchema,
+} from "./hooks.js";
 import type {
   CallToolResult,
   ContentBlock as MCPContentBlock,
   Client as MCPClient,
-  EmbeddedResource,
-  ReadResourceResult,
   Tool as MCPTool,
   ListToolsResult,
   RequestOptions,
+  JSONObject,
+  JSONValue,
 } from "@modelcontextprotocol/client";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import type { ContentBlock } from "@langchain/core/messages";
 import { RunnableConfig } from "@langchain/core/runnables";
 import type { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
 import { ToolMessage } from "@langchain/core/messages";
-import { Command, getCurrentTaskInput } from "@langchain/langgraph";
+import {
+  isCommand,
+  getCurrentTaskInput,
+  type Command,
+} from "@langchain/langgraph";
 
 import type { Notifications } from "./types.js";
 
@@ -26,37 +34,29 @@ import {
   type LoadMcpToolsOptions,
   type OutputHandling,
 } from "./types.js";
-import type { ToolHooks, State } from "./hooks.js";
+import type { ToolHooks } from "./hooks.js";
 import type { Client } from "./connection.js";
 import { getDebugLog } from "./logging.js";
 
 const debugLog = getDebugLog("tools");
 
-/**
- * JSON Schema type definitions for dereferencing $defs.
- */
-type JsonSchemaObject = {
-  type?: string;
-  properties?: Record<string, JsonSchemaObject>;
-  items?: JsonSchemaObject | JsonSchemaObject[];
-  additionalProperties?: boolean | JsonSchemaObject;
-  $ref?: string;
-  $defs?: Record<string, JsonSchemaObject>;
-  definitions?: Record<string, JsonSchemaObject>;
-  allOf?: JsonSchemaObject[];
-  anyOf?: JsonSchemaObject[];
-  oneOf?: JsonSchemaObject[];
-  not?: JsonSchemaObject;
-  if?: JsonSchemaObject;
-  then?: JsonSchemaObject;
-  else?: JsonSchemaObject;
-  required?: string[];
-  description?: string;
-  default?: unknown;
-  enum?: unknown[];
-  const?: unknown;
-  [key: string]: unknown;
-};
+// Decode JSON once at discovery; only parse the schema keywords this
+// simplifier consumes. Extension keywords remain intact.
+const jsonObjectSchema = z.record(z.string(), z.json());
+
+const schemaKeywordsSchema = z
+  .object({
+    properties: jsonObjectSchema.optional(),
+    required: z.array(z.string()).optional(),
+    allOf: z.array(z.json()).optional(),
+    anyOf: z.array(z.json()).optional(),
+    oneOf: z.array(z.json()).optional(),
+  })
+  .catchall(z.json());
+
+function isSchemaRecord(value: JSONValue | undefined): value is JSONObject {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
 
 /**
  * Dereferences $ref pointers in a JSON Schema by inlining the definitions from $defs.
@@ -66,17 +66,18 @@ type JsonSchemaObject = {
  * @param schema - The JSON Schema to dereference
  * @returns A new schema with all $ref pointers resolved
  */
-function dereferenceJsonSchema(schema: JsonSchemaObject): JsonSchemaObject {
-  const definitions = schema.$defs ?? schema.definitions ?? {};
+function dereferenceJsonSchema(schema: JSONObject): JSONObject {
+  const rawDefinitions = schema.$defs ?? schema.definitions;
+  const definitions = isSchemaRecord(rawDefinitions) ? rawDefinitions : {};
 
   /**
    * Recursively resolve $ref pointers in the schema.
    * Tracks visited refs to prevent infinite recursion with circular references.
    */
   function resolveRefs(
-    obj: JsonSchemaObject,
+    obj: JSONObject,
     visitedRefs: Set<string> = new Set()
-  ): JsonSchemaObject {
+  ): JSONObject {
     if (typeof obj !== "object" || obj === null) {
       return obj;
     }
@@ -94,7 +95,7 @@ function dereferenceJsonSchema(schema: JsonSchemaObject): JsonSchemaObject {
         const defName = match[1];
         const definition = definitions[defName];
 
-        if (definition) {
+        if (isSchemaRecord(definition)) {
           // Check for circular reference
           if (visitedRefs.has(refPath)) {
             // Return a placeholder for circular refs to avoid infinite loop
@@ -122,7 +123,7 @@ function dereferenceJsonSchema(schema: JsonSchemaObject): JsonSchemaObject {
     }
 
     // Recursively process all properties
-    const result: JsonSchemaObject = {};
+    const result: JSONObject = {};
 
     for (const [key, value] of Object.entries(obj)) {
       // Skip $defs and definitions as they're no longer needed after dereferencing
@@ -132,12 +133,10 @@ function dereferenceJsonSchema(schema: JsonSchemaObject): JsonSchemaObject {
 
       if (Array.isArray(value)) {
         result[key] = value.map((item) =>
-          typeof item === "object" && item !== null
-            ? resolveRefs(item as JsonSchemaObject, visitedRefs)
-            : item
+          isSchemaRecord(item) ? resolveRefs(item, visitedRefs) : item
         );
-      } else if (typeof value === "object" && value !== null) {
-        result[key] = resolveRefs(value as JsonSchemaObject, visitedRefs);
+      } else if (isSchemaRecord(value)) {
+        result[key] = resolveRefs(value, visitedRefs);
       } else {
         result[key] = value;
       }
@@ -158,27 +157,26 @@ function dereferenceJsonSchema(schema: JsonSchemaObject): JsonSchemaObject {
  * @param source - The source schema to merge from
  * @returns A new merged schema
  */
-function deepMergeSchemas(
-  target: JsonSchemaObject,
-  source: JsonSchemaObject
-): JsonSchemaObject {
-  const result: JsonSchemaObject = { ...target };
+function deepMergeSchemas(target: JSONObject, source: JSONObject): JSONObject {
+  const result: JSONObject = { ...target };
 
   for (const [key, sourceValue] of Object.entries(source)) {
     const targetValue = result[key];
 
-    if (key === "required" && Array.isArray(targetValue)) {
+    if (
+      key === "required" &&
+      Array.isArray(targetValue) &&
+      Array.isArray(sourceValue)
+    ) {
       // Concatenate and deduplicate required arrays
-      result[key] = [
-        ...new Set([...targetValue, ...(sourceValue as string[])]),
-      ];
+      result[key] = [...new Set([...targetValue, ...sourceValue])];
     } else if (key === "const") {
       // When merging const values, convert to enum to allow multiple values
       const existingConst = result.const;
-      const existingEnum = result.enum as unknown[] | undefined;
-      const values = new Set<unknown>();
+      const existingEnum = result.enum;
+      const values = new Set<JSONValue>();
 
-      if (existingEnum) {
+      if (Array.isArray(existingEnum)) {
         for (const v of existingEnum) values.add(v);
       }
       if (existingConst !== undefined) {
@@ -191,7 +189,8 @@ function deepMergeSchemas(
       result.enum = [...values];
     } else if (key === "enum" && Array.isArray(sourceValue)) {
       // Merge enum values (union of all possible values)
-      const values = new Set<unknown>();
+      const values = new Set<JSONValue>();
+
       if (Array.isArray(targetValue)) {
         for (const v of targetValue) values.add(v);
       }
@@ -204,21 +203,14 @@ function deepMergeSchemas(
       result[key] = [...values];
     } else if (
       key === "properties" &&
-      typeof targetValue === "object" &&
-      targetValue !== null
+      isSchemaRecord(targetValue) &&
+      isSchemaRecord(sourceValue)
     ) {
       // Recursively merge properties - merge each property individually
-      const mergedProps: Record<string, JsonSchemaObject> = {
-        ...(targetValue as Record<string, JsonSchemaObject>),
-      };
-      for (const [propKey, propValue] of Object.entries(
-        sourceValue as Record<string, JsonSchemaObject>
-      )) {
-        if (
-          mergedProps[propKey] &&
-          typeof mergedProps[propKey] === "object" &&
-          typeof propValue === "object"
-        ) {
+      const mergedProps: JSONObject = { ...targetValue };
+
+      for (const [propKey, propValue] of Object.entries(sourceValue)) {
+        if (isSchemaRecord(mergedProps[propKey]) && isSchemaRecord(propValue)) {
           mergedProps[propKey] = deepMergeSchemas(
             mergedProps[propKey],
             propValue
@@ -231,19 +223,9 @@ function deepMergeSchemas(
     } else if (Array.isArray(sourceValue) && Array.isArray(targetValue)) {
       // Concatenate arrays
       result[key] = [...targetValue, ...sourceValue];
-    } else if (
-      typeof sourceValue === "object" &&
-      sourceValue !== null &&
-      !Array.isArray(sourceValue) &&
-      typeof targetValue === "object" &&
-      targetValue !== null &&
-      !Array.isArray(targetValue)
-    ) {
+    } else if (isSchemaRecord(sourceValue) && isSchemaRecord(targetValue)) {
       // Recursively merge objects
-      result[key] = deepMergeSchemas(
-        targetValue as JsonSchemaObject,
-        sourceValue as JsonSchemaObject
-      );
+      result[key] = deepMergeSchemas(targetValue, sourceValue);
     } else {
       // Overwrite primitives or when types don't match
       result[key] = sourceValue;
@@ -260,33 +242,39 @@ function deepMergeSchemas(
  * @param schema - A schema that may contain if/then/else
  * @returns Properties extracted from both then and else branches
  */
-function extractPropertiesFromConditional(
-  schema: JsonSchemaObject
-): JsonSchemaObject {
-  let result: JsonSchemaObject = {};
+function extractPropertiesFromConditional(schema: JSONObject): JSONObject {
+  let result: JSONObject = {};
 
   // Extract properties from 'then' branch
-  if (schema.then && typeof schema.then === "object") {
-    const thenSchema = schema.then as JsonSchemaObject;
+  if (isSchemaRecord(schema.then)) {
+    const thenSchema = schemaKeywordsSchema.parse(schema.then);
+
     if (thenSchema.properties) {
       result = deepMergeSchemas(result, { properties: thenSchema.properties });
     }
     if (thenSchema.required) {
       result.required = [
-        ...new Set([...(result.required || []), ...thenSchema.required]),
+        ...new Set([
+          ...(Array.isArray(result.required) ? result.required : []),
+          ...thenSchema.required,
+        ]),
       ];
     }
   }
 
   // Extract properties from 'else' branch
-  if (schema.else && typeof schema.else === "object") {
-    const elseSchema = schema.else as JsonSchemaObject;
+  if (isSchemaRecord(schema.else)) {
+    const elseSchema = schemaKeywordsSchema.parse(schema.else);
+
     if (elseSchema.properties) {
       result = deepMergeSchemas(result, { properties: elseSchema.properties });
     }
     if (elseSchema.required) {
       result.required = [
-        ...new Set([...(result.required || []), ...elseSchema.required]),
+        ...new Set([
+          ...(Array.isArray(result.required) ? result.required : []),
+          ...elseSchema.required,
+        ]),
       ];
     }
   }
@@ -309,7 +297,7 @@ function extractPropertiesFromConditional(
  * @param schema - The JSON Schema to simplify
  * @returns A new simplified schema compatible with LLM tool calling APIs
  */
-function simplifyJsonSchemaForLLM(schema: JsonSchemaObject): JsonSchemaObject {
+function simplifyJsonSchemaForLLM(schema: JSONObject): JSONObject {
   if (typeof schema !== "object" || schema === null) {
     return schema;
   }
@@ -326,9 +314,9 @@ function simplifyJsonSchemaForLLM(schema: JsonSchemaObject): JsonSchemaObject {
     $schema: _$schema,
     unevaluatedProperties: _unevaluatedProperties,
     ...baseSchema
-  } = schema;
+  } = schemaKeywordsSchema.parse(schema);
 
-  let result: JsonSchemaObject = { ...baseSchema };
+  let result: JSONObject = { ...baseSchema };
 
   // Handle if/then/else at the current level by extracting properties
   if (schemaIf || schemaThen || schemaElse) {
@@ -336,7 +324,8 @@ function simplifyJsonSchemaForLLM(schema: JsonSchemaObject): JsonSchemaObject {
       if: schemaIf,
       then: schemaThen,
       else: schemaElse,
-    } as JsonSchemaObject);
+    });
+
     result = deepMergeSchemas(result, conditionalProps);
     debugLog(`INFO: Extracted properties from if/then/else conditional`);
   }
@@ -344,6 +333,8 @@ function simplifyJsonSchemaForLLM(schema: JsonSchemaObject): JsonSchemaObject {
   // Handle allOf by merging all schemas into the base
   if (Array.isArray(allOf)) {
     for (const subSchema of allOf) {
+      if (!isSchemaRecord(subSchema)) continue;
+
       // First extract properties from any if/then/else in this subschema
       if (subSchema.if || subSchema.then || subSchema.else) {
         const conditionalProps = extractPropertiesFromConditional(subSchema);
@@ -361,34 +352,29 @@ function simplifyJsonSchemaForLLM(schema: JsonSchemaObject): JsonSchemaObject {
   // Handle anyOf/oneOf by attempting to merge object schemas or picking first viable option
   // Note: When merging anyOf/oneOf, we only merge properties but NOT required arrays,
   // because the union semantics mean any ONE of the schemas should match, not all.
-  const unionSchemas = anyOf || oneOf;
-  if (Array.isArray(unionSchemas) && unionSchemas.length > 0) {
-    // Check if all schemas in the union are object-like (have type: object or have properties)
-    const allAreObjects = unionSchemas.every(
-      (s) =>
-        typeof s === "object" &&
-        s !== null &&
-        (s.type === "object" || s.properties)
-    );
+  const rawUnionSchemas = anyOf || oneOf;
 
+  const unionSchemas = Array.isArray(rawUnionSchemas)
+    ? rawUnionSchemas.filter(isSchemaRecord)
+    : [];
+
+  if (unionSchemas.length > 0) {
     // Collect all properties from all schemas, but only keep required fields
     // that are common to ALL schemas (intersection)
-    const mergedProperties: Record<string, JsonSchemaObject> = {};
+    const mergedProperties: JSONObject = {};
     const requiredSets: Set<string>[] = [];
 
-    const schemasToMerge = allAreObjects
-      ? unionSchemas
-      : unionSchemas.filter(
-          (s) =>
-            typeof s === "object" &&
-            s !== null &&
-            (s.type === "object" || s.properties)
-        );
+    const schemasToMerge = unionSchemas.filter(
+      (schema) => schema.type === "object" || isSchemaRecord(schema.properties)
+    );
 
     for (const subSchema of schemasToMerge) {
-      const simplified = simplifyJsonSchemaForLLM(subSchema);
+      const simplified = schemaKeywordsSchema.parse(
+        simplifyJsonSchemaForLLM(subSchema)
+      );
+
       // Merge properties
-      if (simplified.properties) {
+      if (isSchemaRecord(simplified.properties)) {
         Object.assign(mergedProperties, simplified.properties);
       }
       // Collect required sets for intersection
@@ -403,10 +389,9 @@ function simplifyJsonSchemaForLLM(schema: JsonSchemaObject): JsonSchemaObject {
 
     // Merge the collected properties
     if (Object.keys(mergedProperties).length > 0) {
-      result.properties = {
-        ...(result.properties as Record<string, JsonSchemaObject>),
-        ...mergedProperties,
-      };
+      result.properties = isSchemaRecord(result.properties)
+        ? { ...result.properties, ...mergedProperties }
+        : { ...mergedProperties };
     }
 
     // Only add required fields that are common to ALL schemas (intersection)
@@ -416,7 +401,10 @@ function simplifyJsonSchemaForLLM(schema: JsonSchemaObject): JsonSchemaObject {
       });
       if (commonRequired.size > 0) {
         result.required = [
-          ...new Set([...(result.required || []), ...commonRequired]),
+          ...new Set([
+            ...(Array.isArray(result.required) ? result.required : []),
+            ...commonRequired,
+          ]),
         ];
       }
     }
@@ -432,15 +420,14 @@ function simplifyJsonSchemaForLLM(schema: JsonSchemaObject): JsonSchemaObject {
   }
 
   // Recursively simplify nested schemas in properties
-  if (result.properties) {
-    const simplifiedProperties: Record<string, JsonSchemaObject> = {};
+  if (isSchemaRecord(result.properties)) {
+    const simplifiedProperties: JSONObject = {};
+
     for (const [propName, propSchema] of Object.entries(result.properties)) {
-      if (typeof propSchema === "object" && propSchema !== null) {
-        simplifiedProperties[propName] = simplifyJsonSchemaForLLM(
-          propSchema as JsonSchemaObject
-        );
+      if (isSchemaRecord(propSchema)) {
+        simplifiedProperties[propName] = simplifyJsonSchemaForLLM(propSchema);
       } else {
-        simplifiedProperties[propName] = propSchema as JsonSchemaObject;
+        simplifiedProperties[propName] = propSchema;
       }
     }
     result.properties = simplifiedProperties;
@@ -450,22 +437,17 @@ function simplifyJsonSchemaForLLM(schema: JsonSchemaObject): JsonSchemaObject {
   if (result.items) {
     if (Array.isArray(result.items)) {
       result.items = result.items.map((item) =>
-        typeof item === "object" && item !== null
-          ? simplifyJsonSchemaForLLM(item as JsonSchemaObject)
-          : item
+        isSchemaRecord(item) ? simplifyJsonSchemaForLLM(item) : item
       );
-    } else if (typeof result.items === "object") {
-      result.items = simplifyJsonSchemaForLLM(result.items as JsonSchemaObject);
+    } else if (isSchemaRecord(result.items)) {
+      result.items = simplifyJsonSchemaForLLM(result.items);
     }
   }
 
   // Simplify additionalProperties if it's a schema
-  if (
-    typeof result.additionalProperties === "object" &&
-    result.additionalProperties !== null
-  ) {
+  if (isSchemaRecord(result.additionalProperties)) {
     result.additionalProperties = simplifyJsonSchemaForLLM(
-      result.additionalProperties as JsonSchemaObject
+      result.additionalProperties
     );
   }
 
@@ -482,30 +464,50 @@ function simplifyJsonSchemaForLLM(schema: JsonSchemaObject): JsonSchemaObject {
  */
 type MCPInstance = Client | MCPClient;
 
+// Parse only the Zod issue fields needed for formatting, without depending
+// on a particular Zod version or constructor.
+const errorPathKeySchema = z.union([z.string(), z.number(), z.symbol()]);
+
+const zodErrorDetailsSchema = z.object({
+  stack: z.string().optional().catch(undefined),
+  issues: z.array(
+    z.object({
+      message: z.string(),
+      path: z.array(errorPathKeySchema).optional(),
+    })
+  ),
+});
+
+function parseZodErrorDetails(error: unknown) {
+  if (!isInteropZodError(error)) return undefined;
+  const parsed = zodErrorDetailsSchema.safeParse(error);
+
+  return parsed.success ? parsed.data : undefined;
+}
+
 /**
  * Custom error class for tool exceptions
  */
 export class ToolException extends Error {
-  constructor(message: string, cause?: Error) {
+  constructor(message: string, cause?: unknown) {
     super(message);
     this.name = "ToolException";
 
-    /**
-     * don't display the large ZodError stack trace
-     */
-    if (
-      cause &&
-      // oxlint-disable-next-line no-instanceof/no-instanceof
-      (cause instanceof ZodErrorV4 || cause instanceof ZodErrorV3)
-    ) {
-      const minifiedZodError = new Error(z.prettifyError(cause));
-      const stackByLine = cause.stack?.split("\n") || [];
-      minifiedZodError.stack = cause.stack
-        ?.split("\n")
-        .slice(stackByLine.findIndex((l) => l.includes("    at")))
-        .join("\n");
+    const details = parseZodErrorDetails(cause);
+
+    if (details) {
+      const minifiedZodError = new Error(z.prettifyError(details));
+
+      const stackLines = details.stack?.split("\n") ?? [];
+
+      const firstFrame = stackLines.findIndex((line) =>
+        line.includes("    at")
+      );
+
+      minifiedZodError.stack =
+        firstFrame < 0 ? undefined : stackLines.slice(firstFrame).join("\n");
       this.cause = minifiedZodError;
-    } else if (cause) {
+    } else if (cause !== undefined) {
       this.cause = cause;
     }
   }
@@ -520,200 +522,77 @@ export function isToolException(error: unknown): error is ToolException {
   );
 }
 
-function isResourceReference(
-  resource:
-    | EmbeddedResource["resource"]
-    | ReadResourceResult["contents"][number]
-): boolean {
-  return (
-    typeof resource === "object" &&
-    resource !== null &&
-    "uri" in resource &&
-    typeof (resource as { uri?: unknown }).uri === "string" &&
-    (!("blob" in resource) || resource.blob == null) &&
-    (!("text" in resource) || resource.text == null)
-  );
-}
+/** Terminal conversion never dereferences resource URIs or performs network IO. */
+function _toolOutputToContentBlocks(
+  content: MCPContentBlock,
+  toolName: string,
+  serverName: string
+): ContentBlock[] {
+  const contentType = content.type;
 
-async function* _embeddedResourceToStandardFileBlocks(
-  resource:
-    | EmbeddedResource["resource"]
-    | ReadResourceResult["contents"][number],
-  client: MCPInstance
-): AsyncGenerator<
-  | (ContentBlock.Data.StandardFileBlock & ContentBlock.Data.Base64ContentBlock)
-  | (ContentBlock.Data.StandardFileBlock &
-      ContentBlock.Data.PlainTextContentBlock)
-> {
-  if (isResourceReference(resource)) {
-    const response: ReadResourceResult = await client.readResource({
-      uri: resource.uri,
-    });
-    for (const content of response.contents) {
-      yield* _embeddedResourceToStandardFileBlocks(content, client);
-    }
-    return;
-  }
-
-  if ("blob" in resource && resource.blob != null) {
-    yield {
-      type: "file",
-      source_type: "base64",
-      data: resource.blob,
-      mime_type: resource.mimeType,
-      ...(resource.uri != null ? { metadata: { uri: resource.uri } } : {}),
-    } as ContentBlock.Data.StandardFileBlock &
-      ContentBlock.Data.Base64ContentBlock;
-  }
-  if ("text" in resource && resource.text != null) {
-    yield {
-      type: "file",
-      source_type: "text",
-      mime_type: resource.mimeType,
-      text: resource.text,
-      ...(resource.uri != null ? { metadata: { uri: resource.uri } } : {}),
-    } as ContentBlock.Data.StandardFileBlock &
-      ContentBlock.Data.PlainTextContentBlock;
-  }
-}
-
-async function _toolOutputToContentBlocks(
-  content: MCPContentBlock,
-  useStandardContentBlocks: true,
-  client: MCPInstance,
-  toolName: string,
-  serverName: string
-): Promise<ContentBlock.Multimodal.Standard[]>;
-async function _toolOutputToContentBlocks(
-  content: MCPContentBlock,
-  useStandardContentBlocks: false | undefined,
-  client: MCPInstance,
-  toolName: string,
-  serverName: string
-): Promise<ContentBlock[]>;
-async function _toolOutputToContentBlocks(
-  content: MCPContentBlock,
-  useStandardContentBlocks: boolean | undefined,
-  client: MCPInstance,
-  toolName: string,
-  serverName: string
-): Promise<(ContentBlock | ContentBlock.Multimodal.Standard)[]>;
-async function _toolOutputToContentBlocks(
-  content: MCPContentBlock,
-  useStandardContentBlocks: boolean | undefined,
-  client: MCPInstance,
-  toolName: string,
-  serverName: string
-): Promise<(ContentBlock | ContentBlock.Multimodal.Standard)[]> {
-  const blocks: ContentBlock.Data.StandardFileBlock[] = [];
   switch (content.type) {
     case "text":
-      return [
-        {
-          type: "text",
-          ...(useStandardContentBlocks
-            ? {
-                source_type: "text",
-              }
-            : {}),
-          text: content.text,
-        } as ContentBlock.Text,
-      ];
+      return [{ type: "text", text: content.text }];
     case "image":
-      if (useStandardContentBlocks) {
-        return [
-          {
-            type: "image",
-            source_type: "base64",
-            data: content.data,
-            mime_type: content.mimeType,
-          } as ContentBlock.Data.StandardImageBlock,
-        ];
-      }
       return [
         {
-          type: "image_url",
-          image_url: {
-            url: `data:${content.mimeType};base64,${content.data}`,
-          },
-        } as ContentBlock,
+          type: "image",
+          data: content.data,
+          mimeType: content.mimeType,
+        } satisfies ContentBlock.Multimodal.Image,
       ];
     case "audio":
-      // We don't check `useStandardContentBlocks` here because we only support audio via
-      // standard content blocks
       return [
         {
           type: "audio",
-          source_type: "base64",
           data: content.data,
-          mime_type: content.mimeType,
-        } as ContentBlock.Data.StandardAudioBlock,
+          mimeType: content.mimeType,
+        } satisfies ContentBlock.Multimodal.Audio,
       ];
-    case "resource":
-      for await (const block of _embeddedResourceToStandardFileBlocks(
-        content.resource,
-        client
-      )) {
-        blocks.push(block);
+    case "resource": {
+      const resource = content.resource;
+      const metadata = { uri: resource.uri };
+
+      if ("text" in resource) {
+        return [{ type: "text", text: resource.text, metadata }];
       }
-      return blocks;
+
+      const mimeType = resource.mimeType ?? "application/octet-stream";
+
+      return [
+        {
+          type: mimeType.startsWith("image/")
+            ? "image"
+            : mimeType.startsWith("audio/")
+              ? "audio"
+              : "file",
+          data: resource.blob,
+          mimeType,
+          metadata,
+        } satisfies ContentBlock.Multimodal.Standard,
+      ];
+    }
+
     case "resource_link": {
+      const metadata =
+        content.title === undefined
+          ? { uri: content.uri, name: content.name }
+          : { uri: content.uri, name: content.name, title: content.title };
+
       return [
         {
           type: "file",
-          source_type: "url",
           url: content.uri,
-          mime_type: content.mimeType,
-        } as ContentBlock.Data.StandardFileBlock &
-          ContentBlock.Data.URLContentBlock,
+          mimeType: content.mimeType,
+          metadata,
+        } satisfies ContentBlock.Multimodal.File,
       ];
     }
     default:
       throw new ToolException(
-        `MCP tool '${toolName}' on server '${serverName}' returned a content block with unexpected type "${
-          (content as { type: string }).type
-        }." Expected one of ${callToolResultContentTypes.map((t: string) => `"${t}"`).join(", ")}.`
+        `MCP tool '${toolName}' on server '${serverName}' returned unexpected content type "${contentType}". Expected ${callToolResultContentTypes.join(", ")}.`
       );
   }
-}
-
-async function _embeddedResourceToArtifact(
-  resource: EmbeddedResource,
-  useStandardContentBlocks: boolean | undefined,
-  client: MCPInstance,
-  toolName: string,
-  serverName: string
-): Promise<(EmbeddedResource | ContentBlock.Multimodal.Standard)[]> {
-  if (useStandardContentBlocks) {
-    return _toolOutputToContentBlocks(
-      resource,
-      useStandardContentBlocks,
-      client,
-      toolName,
-      serverName
-    );
-  }
-
-  if (
-    (!("blob" in resource) || resource.blob == null) &&
-    (!("text" in resource) || resource.text == null) &&
-    "uri" in resource &&
-    typeof resource.uri === "string"
-  ) {
-    const response: ReadResourceResult = await client.readResource({
-      uri: resource.uri,
-    });
-
-    return response.contents.map(
-      (content: ReadResourceResult["contents"][number]) => ({
-        type: "resource",
-        resource: {
-          ...content,
-        },
-      })
-    );
-  }
-  return [resource];
 }
 
 /**
@@ -739,8 +618,8 @@ type MCPMetaArtifact = {
  * @internal
  */
 type ExtendedArtifact =
-  | EmbeddedResource
-  | ContentBlock.Multimodal.Standard
+  | MCPContentBlock
+  | ContentBlock
   | MCPStructuredContentArtifact
   | MCPMetaArtifact;
 
@@ -772,15 +651,6 @@ type ConvertCallToolResultArgs = {
    * The result from the MCP tool call
    */
   result: CallToolResult;
-  /**
-   * The MCP client that was used to call the tool
-   */
-  client: Client | MCPClient;
-  /**
-   * If true, the tool will use LangChain's standard multimodal content blocks for tools that output
-   * image or audio content. This option has no effect on handling of embedded resource tool output.
-   */
-  useStandardContentBlocks?: boolean;
   /**
    * Defines where to place each tool output type in the LangChain ToolMessage.
    */
@@ -816,8 +686,6 @@ async function _convertCallToolResult({
   serverName,
   toolName,
   result,
-  client,
-  useStandardContentBlocks,
   outputHandling,
 }: ConvertCallToolResultArgs): Promise<[ExtendedContent, ExtendedArtifact[]]> {
   if (!result) {
@@ -852,37 +720,15 @@ async function _convertCallToolResult({
               "content"
           )
           .map((content: MCPContentBlock) =>
-            _toolOutputToContentBlocks(
-              content,
-              useStandardContentBlocks,
-              client,
-              toolName,
-              serverName
-            )
+            _toolOutputToContentBlocks(content, toolName, serverName)
           )
       )
     ).flat();
 
-  // Create the text content output
-  const artifacts = (
-    await Promise.all(
-      (
-        result.content.filter(
-          (content: MCPContentBlock) =>
-            _getOutputTypeForContentType(content.type, outputHandling) ===
-            "artifact"
-        ) as EmbeddedResource[]
-      ).map((content: EmbeddedResource) => {
-        return _embeddedResourceToArtifact(
-          content,
-          useStandardContentBlocks,
-          client,
-          toolName,
-          serverName
-        );
-      })
-    )
-  ).flat();
+  const artifacts = result.content.filter(
+    (content) =>
+      _getOutputTypeForContentType(content.type, outputHandling) === "artifact"
+  );
 
   // Extract structuredContent and _meta from result
   // These are optional fields that are part of the CallToolResult type
@@ -904,27 +750,26 @@ async function _convertCallToolResult({
     });
   }
 
-  // If we have structuredContent or meta, create an enhanced content that includes all info
-  if (convertedContent.length === 1 && convertedContent[0].type === "text") {
-    const textBlock = convertedContent[0] as ContentBlock.Text;
+  const firstBlock = convertedContent[0];
+
+  if (
+    convertedContent.length === 1 &&
+    firstBlock.type === "text" &&
+    "text" in firstBlock &&
+    typeof firstBlock.text === "string"
+  ) {
+    const textBlock = {
+      ...firstBlock,
+      type: "text",
+      text: firstBlock.text,
+    } satisfies ContentBlock.Text;
+
     const textContent = textBlock.text;
 
-    // If we have structuredContent or meta, wrap the content with additional info
-    if (structuredContent || meta) {
-      return [
-        {
-          ...textBlock,
-          ...(structuredContent ? { structuredContent } : {}),
-          ...(meta ? { meta } : {}),
-        } as ExtendedContent,
-        enhancedArtifacts,
-      ];
-    }
-
-    return [textContent as ExtendedContent, enhancedArtifacts];
+    return [textContent, enhancedArtifacts];
   }
 
-  return [convertedContent as ExtendedContent, enhancedArtifacts];
+  return [convertedContent, enhancedArtifacts];
 }
 
 /**
@@ -951,11 +796,6 @@ type CallToolArgs = {
    * Optional RunnableConfig with timeout settings
    */
   config?: RunnableConfig;
-  /**
-   * If true, the tool will use LangChain's standard multimodal content blocks for tools that output
-   * image or audio content. This option has no effect on handling of embedded resource tool output.
-   */
-  useStandardContentBlocks?: boolean;
   /**
    * Defines where to place each tool output type in the LangChain ToolMessage.
    */
@@ -996,7 +836,6 @@ async function _callTool({
   client,
   args,
   config,
-  useStandardContentBlocks,
   outputHandling,
   onProgress,
   beforeToolCall,
@@ -1010,7 +849,9 @@ async function _callTool({
     // To preserve the numeric timeout for SDKs that accept an explicit timeout value, we read
     // it from metadata.timeoutMs if present, falling back to any direct timeout.
     const numericTimeout =
-      (config?.metadata?.timeoutMs as number | undefined) ?? config?.timeout;
+      z.number().nullish().parse(config?.metadata?.timeoutMs) ??
+      config?.timeout;
+
     const requestOptions: RequestOptions = {
       ...(numericTimeout ? { timeout: numericTimeout } : {}),
       ...(config?.signal ? { signal: config.signal } : {}),
@@ -1029,41 +870,45 @@ async function _callTool({
         : {}),
     };
 
-    let state: State = {};
+    let state: unknown = {};
+
     try {
-      state = getCurrentTaskInput(config) as State;
+      state = getCurrentTaskInput(config);
     } catch (error) {
-      debugLog(
-        `State can't be derrived as LangGraph is not used: ${String(error)}`
-      );
+      debugLog(`LangGraph task input is unavailable: ${String(error)}`);
     }
 
-    const beforeToolCallInterception = await beforeToolCall?.(
-      {
-        name: toolName,
-        args,
-        serverName,
-      },
-      state,
-      config ?? {}
-    );
+    const beforeToolCallInterception = toolCallModificationSchema
+      .optional()
+      .parse(
+        await beforeToolCall?.(
+          {
+            name: toolName,
+            args,
+            serverName,
+          },
+          state,
+          config ?? {}
+        )
+      );
 
-    const finalArgs = Object.assign(
-      args,
-      beforeToolCallInterception?.args || {}
-    );
+    const finalArgs = { ...args, ...beforeToolCallInterception?.args };
 
     const headers = beforeToolCallInterception?.headers || {};
     const hasHeaderChanges = Object.entries(headers).length > 0;
-    if (hasHeaderChanges && typeof (client as Client).fork !== "function") {
+
+    if (
+      hasHeaderChanges &&
+      !("fork" in client && typeof client.fork === "function")
+    ) {
       throw new ToolException(
         `MCP client for server "${serverName}" does not support header changes`
       );
     }
 
     const finalClient =
-      hasHeaderChanges && typeof (client as Client).fork === "function"
-        ? await (client as Client).fork(headers)
+      hasHeaderChanges && "fork" in client && typeof client.fork === "function"
+        ? await client.fork(headers)
         : client;
 
     // v2 callTool(params, options?) — no result-schema argument in between.
@@ -1078,15 +923,12 @@ async function _callTool({
       callToolArgs.push(requestOptions);
     }
 
-    const result = (await finalClient.callTool(
-      ...callToolArgs
-    )) as CallToolResult;
+    const result = await finalClient.callTool(...callToolArgs);
+
     const [content, artifacts] = await _convertCallToolResult({
       serverName,
       toolName,
       result,
-      client: finalClient,
-      useStandardContentBlocks,
       outputHandling,
     });
 
@@ -1099,40 +941,27 @@ async function _callTool({
       typeof content === "string"
         ? content
         : Array.isArray(content)
-          ? (content as (ContentBlock | ContentBlock.Data.DataContentBlock)[])
-          : ([content] as (
-              | ContentBlock
-              | ContentBlock.Data.DataContentBlock
-            )[]);
+          ? content
+          : [content];
 
-    // Filter artifacts to only include types expected by afterToolCall
-    // afterToolCall expects: (EmbeddedResource | ContentBlock.Multimodal.Standard)[]
-    // ExtendedArtifact includes additional types (MCPStructuredContentArtifact, MCPMetaArtifact)
-    // which need to be filtered out
-    const normalizedArtifacts: (
-      | EmbeddedResource
-      | ContentBlock.Multimodal.Standard
-    )[] = artifacts.filter(
-      (
-        artifact
-      ): artifact is EmbeddedResource | ContentBlock.Multimodal.Standard =>
-        artifact.type === "resource" ||
-        (artifact.type !== "mcp_structured_content" &&
-          artifact.type !== "mcp_meta" &&
-          typeof artifact === "object" &&
-          artifact !== null &&
-          "source_type" in artifact)
-    ) as (EmbeddedResource | ContentBlock.Multimodal.Standard)[];
+    // Expose artifact-routed MCP blocks while keeping internal metadata out of hooks.
+    const normalizedArtifacts = artifacts.filter(
+      (artifact) =>
+        artifact.type !== "mcp_structured_content" &&
+        artifact.type !== "mcp_meta"
+    );
 
-    const interceptedResult = await afterToolCall?.(
-      {
-        name: toolName,
-        args: finalArgs,
-        result: [normalizedContent, normalizedArtifacts],
-        serverName,
-      },
-      state,
-      config ?? {}
+    const interceptedResult = toolCallResultModificationSchema.optional().parse(
+      await afterToolCall?.(
+        {
+          name: toolName,
+          args: finalArgs,
+          result: [normalizedContent, normalizedArtifacts],
+          serverName,
+        },
+        state,
+        config ?? {}
+      )
     );
 
     if (!interceptedResult) {
@@ -1144,15 +973,14 @@ async function _callTool({
     }
 
     if (Array.isArray(interceptedResult.result)) {
-      return interceptedResult.result as ContentBlocksWithArtifacts;
+      return interceptedResult.result;
     }
 
     if (ToolMessage.isInstance(interceptedResult.result)) {
       return [interceptedResult.result.contentBlocks, []];
     }
 
-    // oxlint-disable-next-line no-instanceof/no-instanceof
-    if (interceptedResult?.result instanceof Command) {
+    if (isCommand(interceptedResult.result)) {
       return interceptedResult.result;
     }
 
@@ -1160,9 +988,10 @@ async function _callTool({
       `Unexpected result value type from afterToolCall: expected either a Command, a ToolMessage or a tuple of ContentBlock and Artifact, but got ${interceptedResult.result}`
     );
   } catch (error) {
-    // oxlint-disable-next-line no-instanceof/no-instanceof
-    if (error instanceof ZodErrorV4 || error instanceof ZodErrorV3) {
-      throw new ToolException(z.prettifyError(error), error);
+    const details = parseZodErrorDetails(error);
+
+    if (details) {
+      throw new ToolException(z.prettifyError(details), error);
     }
 
     debugLog(`Error calling tool ${toolName}: ${String(error)}`);
@@ -1177,7 +1006,6 @@ const defaultLoadMcpToolsOptions: LoadMcpToolsOptions = {
   throwOnLoadError: true,
   prefixToolNameWithServerName: false,
   additionalToolNamePrefix: "",
-  useStandardContentBlocks: false,
 };
 
 /**
@@ -1196,7 +1024,6 @@ export async function loadMcpTools(
     throwOnLoadError,
     prefixToolNameWithServerName,
     additionalToolNamePrefix,
-    useStandardContentBlocks,
     outputHandling,
     defaultToolTimeout,
   } = {
@@ -1240,7 +1067,7 @@ export async function loadMcpTools(
             // Dereference $defs/$ref in the schema to support Pydantic v2 schemas
             // and other JSON schemas that use $defs for nested type definitions
             const dereferencedSchema = dereferenceJsonSchema(
-              tool.inputSchema as JsonSchemaObject
+              jsonObjectSchema.parse(tool.inputSchema)
             );
 
             // Simplify schema for LLM compatibility by removing allOf, anyOf, oneOf,
@@ -1268,7 +1095,6 @@ export async function loadMcpTools(
                   client,
                   args,
                   config,
-                  useStandardContentBlocks,
                   outputHandling,
                   onProgress: options?.onProgress,
                   beforeToolCall: options?.beforeToolCall,
@@ -1287,5 +1113,5 @@ export async function loadMcpTools(
           }
         })
     )
-  ).filter(Boolean) as DynamicStructuredTool[];
+  ).filter((tool) => tool !== null);
 }

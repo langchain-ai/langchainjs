@@ -9,7 +9,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, createAgent } from "langchain";
 import dotenv from "dotenv";
 
-import { ClientConfig, MultiServerMCPClient } from "../src/index.js";
+import { MCPAdapterConfig, MCPAdapter } from "../src/index.js";
 
 // Load environment variables from .env file
 dotenv.config();
@@ -17,9 +17,10 @@ dotenv.config();
 /**
  * Configuration for multiple MCP servers
  */
-const multipleServersConfig: ClientConfig = {
-  mcpServers: {
+const multipleServersConfig: MCPAdapterConfig = {
+  servers: {
     firecrawl: {
+      mode: "legacy",
       transport: "stdio",
       command: "npx",
       args: ["-y", "firecrawl-mcp"],
@@ -30,12 +31,12 @@ const multipleServersConfig: ClientConfig = {
     },
     // Math server configuration
     math: {
+      mode: "legacy",
       transport: "stdio",
       command: "npx",
       args: ["-y", "@modelcontextprotocol/server-math"],
     },
   },
-  useStandardContentBlocks: true,
 };
 
 /**
@@ -43,7 +44,7 @@ const multipleServersConfig: ClientConfig = {
  * This example creates and loads a configuration file with multiple servers
  */
 async function runExample() {
-  let client: MultiServerMCPClient | null = null;
+  let client: MCPAdapter | null = null;
 
   try {
     console.log(
@@ -51,12 +52,12 @@ async function runExample() {
     );
 
     // Create a client from the configuration file
-    client = new MultiServerMCPClient(multipleServersConfig);
+    client = new MCPAdapter(multipleServersConfig);
 
     console.log("Connected to servers from multiple servers configuration");
 
     // Get all tools from all servers
-    const mcpTools = await client.getTools();
+    const mcpTools = await client.listTools();
 
     if (mcpTools.length === 0) {
       throw new Error("No tools found");
