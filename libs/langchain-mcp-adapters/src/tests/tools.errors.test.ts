@@ -109,10 +109,13 @@ describe("tool invocation errors", () => {
 describe("MCP client errors", () => {
   test("preserves Zod causes and rejects name-only lookalikes", () => {
     const parsed = z.number().safeParse("invalid");
+
     if (parsed.success) throw new Error("Expected invalid input");
+
     const error = new MCPClientError("Failed", "server", {
       cause: parsed.error,
     });
+
     expect(error.cause).toBe(parsed.error);
     expect(error.serverName).toBe("server");
     expect(MCPClientError.isInstance(error)).toBe(true);

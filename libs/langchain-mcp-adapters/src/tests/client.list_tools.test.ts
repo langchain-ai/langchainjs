@@ -28,6 +28,7 @@ describe("adapter tool listing", () => {
         });
 
         clients.set(serverName, connected);
+
         return connected;
       }
     );

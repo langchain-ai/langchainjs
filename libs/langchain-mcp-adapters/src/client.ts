@@ -146,6 +146,7 @@ export class MCPAdapter {
     this.#mcpServers = parsedServerConfig.mcpServers;
     this.#clientConnections = new ConnectionManager((options) => {
       const client = this.#clientConnections.get(options);
+
       if (client) this.#toolsByClient.delete(client);
     });
     this.#onConnectionError = parsedServerConfig.onConnectionError;
@@ -708,6 +709,7 @@ export class MCPAdapter {
         );
       } catch (error) {
         const code = getHttpErrorCode(error);
+
         if (automaticSSEFallback && code != null && code >= 400 && code < 500) {
           // Streamable HTTP error is a 4xx, so fall back to SSE
           try {
