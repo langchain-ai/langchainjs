@@ -522,50 +522,23 @@ New in v0.4.6.
 
 ### Basic OAuth Setup
 
+Supply an application-owned provider that implements the SDK 2
+`OAuthClientProvider` contract. The provider owns credential storage and redirect
+handling; see [OAuth responsibilities](#oauth-responsibilities) and
+[callback completion](#complete-an-oauth-callback).
+
 ```ts
-import type { OAuthClientProvider } from "@langchain/mcp-adapters";
+import { MCPAdapter, type OAuthClientProvider } from "@langchain/mcp-adapters";
 
-class MyOAuthProvider implements OAuthClientProvider {
-  constructor(
-    private config: {
-      redirectUrl: string;
-      clientMetadata: OAuthClientMetadata;
-    }
-  ) {}
-
-  get redirectUrl() {
-    return this.config.redirectUrl;
-  }
-  get clientMetadata() {
-    return this.config.clientMetadata;
-  }
-
-  // Implement token storage (localStorage, database, etc.)
-  tokens(): OAuthTokens | undefined {
-    const stored = localStorage.getItem("mcp_tokens");
-    return stored ? JSON.parse(stored) : undefined;
-  }
-
-  async saveTokens(tokens: OAuthTokens): Promise<void> {
-    localStorage.setItem("mcp_tokens", JSON.stringify(tokens));
-  }
-
-  // Implement other required methods...
-  // See MCP SDK documentation for complete examples
-}
+// Implement this provider in your application's authentication layer.
+declare const authProvider: OAuthClientProvider;
 
 const client = new MCPAdapter({
   servers: {
     "secure-server": {
+      transport: "http",
       url: "https://secure-mcp-server.example.com/mcp",
-      authProvider: new MyOAuthProvider({
-        redirectUrl: "https://myapp.com/oauth/callback",
-        clientMetadata: {
-          redirect_uris: ["https://myapp.com/oauth/callback"],
-          client_name: "My MCP Client",
-          scope: "mcp:read mcp:write",
-        },
-      }),
+      authProvider,
     },
   },
 });
@@ -832,7 +805,8 @@ server's requested JSON Schema. URL answers contain an action without form conte
 your application decides whether and how to open the URL. URL elicitation is separate
 from the OAuth flow used to authorize an MCP connection.
 
-The adapter advertises elicitation only when a callback is configured. It supplies the
+The adapter advertises elicitation when `onElicitation` is configured or the
+connection uses `elicitationMode: "interrupt"`. It supplies the
 server name and cancellation signal to the callback and validates the answer before
 sending it. The SDK handles legacy reverse requests and modern `input_required` rounds,
 including continuation state. The round limit bounds input exchanges; it does not enable

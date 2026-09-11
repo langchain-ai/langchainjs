@@ -178,7 +178,6 @@ errors reject instead of appearing as an empty catalog. Resource conversion
 never performs implicit reads; explicitly call
 `readResource` if needed.
 
-
 ### Discovery freshness
 
 `getTools()` consults the SDK cache each time and reuses adapted tools when the
@@ -187,7 +186,6 @@ cache hints and TTL. Pass `getTools([], { cacheMode: "refresh" })` to fetch and
 update the cache, or `"bypass"` to fetch without updating it. Existing tools held
 by an agent are not mutated. Close and recreate the adapter when changing the
 account associated with an OAuth provider.
-
 
 ## Protocol negotiation and callbacks
 
@@ -206,3 +204,34 @@ Modern catalog-change callbacks open an SDK subscription when the server
 advertises support; subscription setup failures reject the connection. Set
 `logLevel` globally or per server to request modern tool-call logs.
 `setLoggingLevel()` is legacy-only and rejects modern connections.
+
+## Checkpointed elicitation
+
+For modern tools, set `elicitationMode: "interrupt"` on the connection and invoke
+the tool inside a checkpointed LangGraph run. Resume with one answer for each
+pending question key. Legacy fallback still requires `onElicitation`; a pending
+legacy reverse request cannot be resumed through this bridge.
+
+Keep authentication and headers in connection configuration. Durable mode
+rejects `beforeToolCall` header overrides. Preserve the same server, tool, and
+authenticated account when reconstructing the adapter. The application owns
+checkpoint storage and thread access. `MemorySaver` is an in-process example;
+process recovery needs a persistent checkpointer. No exactly-once guarantee is
+made for work performed before a checkpoint is saved. See the
+[complete interrupt example](../README.md#durable-langgraph-elicitation).
+
+## Completing OAuth authorization
+
+Use `await adapter.finishAuth(serverName, callbackParams, expectedState)` with
+the full redirect query parameters, including `iss` when present. The configured
+provider must persist discovery state and the PKCE verifier. The adapter checks
+state, delegates callback completion to the SDK, and clears the old connection
+and catalog after success; call `getTools()` again to reconnect.
+
+The application owns the redirect endpoint, one-time state consumption, user
+binding, and credential storage. Keep each provider bound to one account and
+preserve issuer information in storage. Local fixtures cover refresh, DCR/CIMD,
+callback validation, and scope step-up; production identity-provider
+interoperability is not implied. URL elicitation is separate from OAuth. See
+[OAuth responsibilities](../README.md#oauth-responsibilities) and
+[callback completion](../README.md#complete-an-oauth-callback).
