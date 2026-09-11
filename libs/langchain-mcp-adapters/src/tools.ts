@@ -38,9 +38,9 @@ import {
 } from "./types.js";
 import type { ToolHooks } from "./hooks.js";
 import type { Client } from "./connection.js";
-import { getDebugLog } from "./logging.js";
+import debug from "debug";
 
-const debugLog = getDebugLog("tools");
+const debugLog = debug("@langchain/mcp-adapters:tools");
 
 // Decode JSON once at discovery; only parse the schema keywords this
 // simplifier consumes. Extension keywords remain intact.
@@ -466,6 +466,7 @@ type MCPInstance = Client | MCPClient;
 const errorPathKeySchema = z.union([z.string(), z.number(), z.symbol()]);
 
 const zodErrorDetailsSchema = z.object({
+  stack: z.string().optional().catch(undefined),
   issues: z.array(
     z.object({
       message: z.string(),
@@ -497,13 +498,7 @@ export class ToolException extends Error {
     if (details) {
       const minifiedZodError = new Error(z.prettifyError(details));
 
-      const stackLines =
-        typeof cause === "object" &&
-        cause !== null &&
-        "stack" in cause &&
-        typeof cause.stack === "string"
-          ? cause.stack.split("\n")
-          : [];
+      const stackLines = details.stack?.split("\n") ?? [];
 
       const firstFrame = stackLines.findIndex((line) =>
         line.includes("    at")
