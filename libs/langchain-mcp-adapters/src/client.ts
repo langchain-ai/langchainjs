@@ -5,7 +5,6 @@ import {
 } from "@modelcontextprotocol/client";
 import type {
   CacheMode,
-  ListToolsResult,
   OAuthClientProvider,
   LoggingLevel,
 } from "@modelcontextprotocol/client";
@@ -62,7 +61,7 @@ export class MCPAdapter {
   #toolsByClient = new WeakMap<
     Client,
     {
-      descriptors: ListToolsResult["tools"];
+      descriptorKey: string;
       tools: Promise<DynamicStructuredTool[]>;
     }
   >();
@@ -930,7 +929,9 @@ export class MCPAdapter {
       const { tools: descriptors } = await client.listTools(undefined, {
         cacheMode,
       });
-      if (existing?.descriptors === descriptors) return await existing.tools;
+      const descriptorKey = JSON.stringify(descriptors);
+      if (existing?.descriptorKey === descriptorKey)
+        return await existing.tools;
       const tools = convertMcpTools(
         serverName,
         client,
@@ -938,7 +939,7 @@ export class MCPAdapter {
         this.#loadToolsOptions[serverName]
       );
       if (cacheMode !== "bypass")
-        this.#toolsByClient.set(client, { descriptors, tools });
+        this.#toolsByClient.set(client, { descriptorKey, tools });
       return await tools;
     } catch (error) {
       this.#toolsByClient.delete(client);
