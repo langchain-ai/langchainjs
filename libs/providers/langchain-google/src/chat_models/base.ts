@@ -699,18 +699,67 @@ export abstract class BaseChatGoogle<
     const url = await this.buildUrl("streamGenerateContent?alt=sse");
     const headers = this.getHeaders(options);
 
-    const response = await this.apiClient.fetch(
-      new Request(url, {
-        method: "POST",
+    const requestEvent: ChatModelStreamEvent = {
+      event: "provider",
+      provider: "google",
+      name: "request",
+      payload: {
+        url,
         headers,
-        body: JSON.stringify(body),
-        signal: options.signal,
-      })
-    );
+        body,
+      },
+    };
+    this.notifyStreamEvent(requestEvent, options);
+    yield requestEvent;
 
-    if (!response.ok) {
-      throw await RequestError.fromResponse(response);
+    let response: Response;
+    try {
+      response = await this.caller.callWithOptions(
+        { signal: options.signal, maxRetries: options.maxRetries },
+        async () => {
+          const nextResponse = await this.apiClient.fetch(
+            new Request(url, {
+              method: "POST",
+              headers,
+              body: JSON.stringify(body),
+              signal: options.signal,
+            })
+          );
+
+          if (!nextResponse.ok) {
+            throw await RequestError.fromResponse(nextResponse);
+          }
+
+          return nextResponse;
+        }
+      );
+    } catch (error) {
+      const errorResponseEvent: ChatModelStreamEvent = {
+        event: "provider",
+        provider: "google",
+        name: "response",
+        payload: {
+          error,
+        },
+      };
+      this.notifyStreamEvent(errorResponseEvent, options);
+      yield errorResponseEvent;
+      throw error;
     }
+
+    const responseEvent: ChatModelStreamEvent = {
+      event: "provider",
+      provider: "google",
+      name: "response",
+      payload: {
+        url: response.url,
+        headers: response.headers,
+        status: response.status,
+        statusText: response.statusText,
+      },
+    };
+    this.notifyStreamEvent(responseEvent, options);
+    yield responseEvent;
 
     if (!response.body) {
       return;
@@ -749,12 +798,64 @@ export abstract class BaseChatGoogle<
       }
     }
 
-    yield* convertGoogleGeminiStream(
+    for await (const event of convertGoogleGeminiStream(
       geminiChunks(eventStream, options.signal),
       {
         streamUsage: shouldStreamUsage,
       }
+    )) {
+      this.notifyStreamEvent(event, options);
+      yield event;
+    }
+  }
+
+  private notifyStreamEvent(
+    event: ChatModelStreamEvent,
+    options?: this["ParsedCallOptions"]
+  ): void {
+    const rawHandlers: unknown[] = [];
+    const collectHandlers = (cb: unknown) => {
+      if (!cb) return;
+      if (Array.isArray(cb)) {
+        rawHandlers.push(...cb);
+      } else if (
+        typeof cb === "object" &&
+        cb !== null &&
+        "handlers" in cb &&
+        Array.isArray((cb as { handlers: unknown[] }).handlers)
+      ) {
+        rawHandlers.push(...(cb as { handlers: unknown[] }).handlers);
+      } else {
+        rawHandlers.push(cb);
+      }
+    };
+
+    collectHandlers(this.callbacks);
+    collectHandlers(
+      (options as Record<string, unknown> | undefined)?.callbacks
     );
+
+    for (const handler of rawHandlers) {
+      if (
+        handler &&
+        typeof (handler as { handleStreamEvent?: unknown })
+          .handleStreamEvent === "function"
+      ) {
+        (
+          handler as { handleStreamEvent: (e: ChatModelStreamEvent) => void }
+        ).handleStreamEvent(event);
+      } else if (
+        handler &&
+        typeof (handler as { handleChatModelStreamEvent?: unknown })
+          .handleChatModelStreamEvent === "function"
+      ) {
+        (
+          handler as {
+            handleChatModelStreamEvent: (e: ChatModelStreamEvent) => void;
+          }
+        ).handleChatModelStreamEvent(event);
+      }
+    }
   }
 
   async *_streamResponseChunks(

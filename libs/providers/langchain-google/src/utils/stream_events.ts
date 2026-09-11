@@ -51,6 +51,13 @@ export async function* convertGoogleGeminiStream(
   };
 
   for await (const response of source) {
+    yield {
+      event: "provider" as const,
+      provider: "google",
+      name: "chunk",
+      payload: { chunk: response },
+    };
+
     if (!messageStarted) {
       messageStarted = true;
       yield { event: "message-start" as const };
