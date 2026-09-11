@@ -17,7 +17,6 @@ import type {
 } from "@langchain/core/messages";
 
 import { z } from "zod";
-import type { ToolHooks } from "../hooks.js";
 import { loadMcpTools } from "../tools.js";
 
 vi.mock(
@@ -116,10 +115,9 @@ describe("Simplified Tool Adapter Tests", () => {
       "validates before hooks after awaiting them (async=%s)",
       async (asyncHook) => {
         const invalid = { headers: { test: 42 } };
-        const beforeToolCall = (asyncHook
-          ? async () => invalid
-          : () => invalid) as unknown as ToolHooks["beforeToolCall"];
+        const beforeToolCall = asyncHook ? async () => invalid : () => invalid;
         const [tool] = await loadMcpTools("test", mockClient, {
+          // @ts-expect-error Exercise malformed JavaScript callback results.
           beforeToolCall,
         });
         await expect(tool.invoke({})).rejects.toThrow(/string/);
@@ -130,10 +128,11 @@ describe("Simplified Tool Adapter Tests", () => {
     test.each([false, true])(
       "validates after hooks after awaiting them (async=%s)",
       async (asyncHook) => {
-        const afterToolCall = (asyncHook
+        const afterToolCall = asyncHook
           ? async () => ({ result: 42 })
-          : () => ({ result: 42 })) as unknown as ToolHooks["afterToolCall"];
+          : () => ({ result: 42 });
         const [tool] = await loadMcpTools("test", mockClient, {
+          // @ts-expect-error Exercise malformed JavaScript callback results.
           afterToolCall,
         });
         await expect(tool.invoke({})).rejects.toThrow();
