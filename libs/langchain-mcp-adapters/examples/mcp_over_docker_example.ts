@@ -10,13 +10,14 @@
  * 3. Structured handling of complex multi-file operations
  */
 
-import { MultiServerMCPClient } from "../src/index.js";
+import { MCPAdapter } from "../src/index.js";
 import { runExample as runFileSystemExample } from "./filesystem_langgraph_example.js";
 
 async function runExample() {
-  const client = new MultiServerMCPClient({
-    mcpServers: {
+  const client = new MCPAdapter({
+    servers: {
       filesystem: {
+        mode: "legacy",
         transport: "stdio" as const,
         command: "docker",
         args: [

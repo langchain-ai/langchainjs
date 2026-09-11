@@ -34,7 +34,7 @@ import { ToolNode } from "@langchain/langgraph/prebuilt";
 import dotenv from "dotenv";
 
 // MCP client imports
-import { MultiServerMCPClient } from "../src/index.js";
+import { MCPAdapter } from "../src/index.js";
 
 // Load environment variables from .env file
 dotenv.config();
@@ -44,15 +44,16 @@ dotenv.config();
  * This example connects to a everything server and uses its tools
  */
 async function runExample() {
-  let client: MultiServerMCPClient | null = null;
+  let client: MCPAdapter | null = null;
 
   try {
     console.log("Initializing MCP client...");
 
     // Create a client with configurations for the everything server only
-    client = new MultiServerMCPClient({
-      mcpServers: {
+    client = new MCPAdapter({
+      servers: {
         everything: {
+          mode: "legacy",
           transport: "stdio" as const,
           command: "npx",
           args: ["-y", "@modelcontextprotocol/server-everything"],
@@ -61,7 +62,7 @@ async function runExample() {
     });
 
     // Get the tools (flattened array is the default now)
-    const mcpTools = await client.getTools();
+    const mcpTools = await client.listTools();
 
     if (mcpTools.length === 0) {
       throw new Error("No tools found");

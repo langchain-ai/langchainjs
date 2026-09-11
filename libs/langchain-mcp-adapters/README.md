@@ -67,6 +67,7 @@ const client = new MCPAdapter({
   servers: {
     // adds a STDIO connection to a server named "math"
     math: {
+      mode: "legacy",
       transport: "stdio",
       command: "npx",
       args: ["-y", "@modelcontextprotocol/server-math"],
@@ -80,18 +81,18 @@ const client = new MCPAdapter({
 
     // here's a filesystem server
     filesystem: {
+      mode: "legacy",
       transport: "stdio",
       command: "npx",
       args: ["-y", "@modelcontextprotocol/server-filesystem"],
     },
 
-    // Streamable HTTP transport example, with auth headers and automatic SSE fallback disabled (defaults to enabled)
+    // Modern Streamable HTTP transport with authentication headers
     weather: {
       url: "https://example.com/weather/mcp",
       headers: {
         Authorization: "Bearer token123",
       },
-      automaticSSEFallback: false,
     },
 
     // OAuth 2.0 authentication (recommended for secure servers)
@@ -104,8 +105,9 @@ const client = new MCPAdapter({
       },
     },
 
-    // how to force SSE, for old servers that are known to only support SSE (streamable HTTP falls back automatically if unsure)
+    // Explicit legacy SSE endpoint
     github: {
+      mode: "legacy",
       transport: "sse", // also works with "type" field instead of "transport"
       url: "https://example.com/mcp",
       reconnect: {
@@ -117,7 +119,7 @@ const client = new MCPAdapter({
   },
 });
 
-const tools = await client.getTools();
+const tools = await client.listTools();
 
 // Create an OpenAI model
 const model = new ChatOpenAI({
@@ -143,13 +145,14 @@ try {
 ```
 
 Construction validates configuration; discovery and invocation open connections.
-No MCP SDK import is needed for this workflow. Use `transport: "sse"` for a
-known legacy SSE endpoint. The current default still uses legacy negotiation;
-modern request rounds and elicitation are separate work in this release stack.
+No MCP SDK import is needed for this workflow. Connections default to `mode: "modern"`
+and require the current modern protocol. Set `mode: "legacy"` for a legacy
+stdio, Streamable HTTP, or SSE server. Modern connections never fall back to SSE.
 
 `MultiServerMCPClient` is a deprecated alias of `MCPAdapter`. Existing
 `mcpServers` and direct server-map configurations remain accepted; new code
-should use `servers`. Do not combine `servers` with `mcpServers`, or conflicting
+should use `servers` and `listTools()`. `getTools()` remains a compatibility alias.
+The old constructor names use the same mode validation. Do not combine `servers` with `mcpServers`, or conflicting
 `transport` and legacy `type` values. See the [migration guide](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-mcp-adapters/docs/sdk-v2-migration.md)
 for Zod4, callback and configuration changes.
 
@@ -223,7 +226,7 @@ For more detailed examples, see the [examples](./examples) directory.
 
 ## Notifications and Progress
 
-You can subscribe to server notifications and tool progress events directly on the `MCPAdapter` via top‑level callbacks.
+You can subscribe to server notifications and tool progress events on the server configuration that owns them. Callbacks are not top-level adapter options.
 
 ```ts
 import { MCPAdapter } from "@langchain/mcp-adapters";
@@ -231,37 +234,39 @@ import { MCPAdapter } from "@langchain/mcp-adapters";
 const client = new MCPAdapter({
   servers: {
     everything: {
+      mode: "legacy",
       transport: "stdio",
+      // Receive log/notification messages from the server
+      onMessage: (log, source) => {
+        console.log(`[${source.server}] ${log.data}`);
+      },
+
+      // Receive progress updates (e.g. from long‑running tool calls)
+      onProgress: (progress, source) => {
+        const pct =
+          progress.progress != null && progress.total
+            ? Math.round((progress.progress / progress.total) * 100)
+            : undefined;
+        if (pct != null) {
+          const origin =
+            source.type === "tool"
+              ? `${source.server}/${source.name}`
+              : "unknown";
+          console.log(`[progress:${origin}] ${pct}%`);
+        }
+      },
+
+      // Optional: react to server-side list changes
+      onToolsListChanged: (source) => {
+        console.log(`[${source.server}] tools changed`);
+      },
       command: "npx",
       args: ["-y", "@modelcontextprotocol/server-everything"],
     },
   },
-
-  // Receive log/notification messages from the server
-  onMessage: (log, source) => {
-    console.log(`[${source.server}] ${log.data}`);
-  },
-
-  // Receive progress updates (e.g. from long‑running tool calls)
-  onProgress: (progress, source) => {
-    const pct =
-      progress.progress != null && progress.total
-        ? Math.round((progress.progress / progress.total) * 100)
-        : undefined;
-    if (pct != null) {
-      const origin =
-        source.type === "tool" ? `${source.server}/${source.name}` : "unknown";
-      console.log(`[progress:${origin}] ${pct}%`);
-    }
-  },
-
-  // Optional: react to server-side list changes
-  onToolsListChanged: (source) => {
-    console.log(`[${source.server}] tools changed`);
-  },
 });
 
-const tools = await client.getTools();
+const tools = await client.listTools();
 // ... invoke tools as usual ...
 await client.close();
 ```
@@ -270,8 +275,13 @@ Available notification callbacks you can register:
 
 - **onMessage**: server log/diagnostic messages
 - **onProgress**: progress events (`progress` and optional `total`) with `source` describing origin (e.g., tool name/server)
-- **onInitialized**, **onCancelled**
-- **onPromptsListChanged**, **onResourcesListChanged**, **onResourcesUpdated**, **onRootsListChanged**, **onToolsListChanged**
+- **onInitialized**: legacy only; **onCancelled**: cancellation notifications not consumed by the SDK
+- **onPromptsListChanged**, **onResourcesListChanged**, **onResourcesUpdated**, **onToolsListChanged**
+
+`onRootsListChanged` was removed: roots changes are sent by clients, not observed
+from servers. Pass workspace paths through tool arguments, resource URIs, or
+server configuration. Modern subscription cancellation is handled by the SDK;
+`onCancelled` observes notifications the SDK does not consume.
 
 ## Tool Hooks (modify args/results)
 
@@ -283,6 +293,7 @@ import { MCPAdapter } from "@langchain/mcp-adapters";
 const client = new MCPAdapter({
   servers: {
     math: {
+      mode: "legacy",
       transport: "stdio",
       command: "npx",
       args: ["-y", "@modelcontextprotocol/server-math"],
@@ -315,7 +326,7 @@ const client = new MCPAdapter({
   },
 });
 
-const tools = await client.getTools();
+const tools = await client.listTools();
 const t = tools.find((tool) => tool.name.includes("add"));
 const out = await t?.invoke({ a: 1, b: 2 });
 ```
@@ -459,7 +470,7 @@ const client = new MCPAdapter({
   defaultToolTimeout: 10000, // 10 seconds
 });
 
-const tools = await client.getTools();
+const tools = await client.listTools();
 const slowTool = tools.find((t) => t.name.includes("process_large_dataset"));
 
 // Will timeout after 30 seconds (defaultToolTimeout)
@@ -480,7 +491,7 @@ const client = new MCPAdapter({
   },
 });
 
-const tools = await client.getTools();
+const tools = await client.listTools();
 const slowTool = tools.find((t) => t.name.includes("process_large_dataset"));
 
 // You can use withConfig to set tool-specific timeouts before handing
@@ -616,6 +627,7 @@ Both transport types support automatic reconnection:
 
 ```ts
 {
+  mode: "legacy",
   transport: "sse",
   url: "https://example.com/mcp-server",
   headers: { "Authorization": "Bearer token123" },
@@ -646,13 +658,14 @@ try {
   adapter = new MCPAdapter({
     servers: {
       math: {
+        mode: "legacy",
         transport: "stdio",
         command: "node",
         args: ["./math-server.js"],
       },
     },
   });
-  const tools = await adapter.getTools();
+  const tools = await adapter.listTools();
   await tools[0].invoke({ expression: "1 + 2" });
 } catch (error) {
   if (isToolException(error)) {
@@ -719,7 +732,7 @@ const client = new MCPAdapter({
 });
 
 // This won't throw even though "broken-server" fails to connect
-const tools = await client.getTools(); // Only tools from "working-server"
+const tools = await client.listTools(); // Only tools from "working-server"
 
 // You can check which servers are actually connected
 const workingClient = await client.getClient("working-server"); // Returns client
