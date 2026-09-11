@@ -1,0 +1,24 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "text": "1 + 1 = 2"
+          }
+        ],
+        "role": "model"
+      },
+      "finishReason": "STOP",
+      "index": 0
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 9,
+    "candidatesTokenCount": 7,
+    "totalTokenCount": 16,
+    "trafficType": "PROVISIONED_THROUGHPUT"
+  },
+  "modelVersion": "gemini-3-flash-preview",
+  "responseId": "ZFtQaYfhHvnm_uMPzdv0iAk"
+}
