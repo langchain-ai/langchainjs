@@ -8,6 +8,7 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 
 const serverName = process.argv[2] ?? "sdk1";
+
 const elicitation = process.argv.includes("--elicitation");
 
 const server = new Server(
@@ -40,8 +41,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         required: ["confirm"],
       },
     });
+
     return { content: [{ type: "text", text: answer.action }] };
   }
+
   return {
     content: [
       {

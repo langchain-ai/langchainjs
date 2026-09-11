@@ -450,6 +450,7 @@ it.each(["state-only", "limit", "abort", "transport"])(
 it("resumes a modern stdio interrupt after reconstructing the adapter and server process", async () => {
   const before = vi.fn();
   const after = vi.fn();
+
   const createAdapter = () =>
     new MCPAdapter({
       servers: {
@@ -467,19 +468,24 @@ it("resumes a modern stdio interrupt after reconstructing the adapter and server
       beforeToolCall: before,
       afterToolCall: after,
     });
+
   let adapter = createAdapter();
   const State = Annotation.Root({ done: Annotation<string>() });
   const checkpointer = new MemorySaver();
+
   const graph = () =>
     new StateGraph(State)
       .addNode("call", async () => {
         const [tool] = await adapter.getTools();
+
         return { done: await tool.invoke({}) };
       })
       .addEdge(START, "call")
       .addEdge("call", END)
       .compile({ checkpointer });
+
   const config = { configurable: { thread_id: "stdio-reconstruction" } };
+
   try {
     const pending = await graph().invoke({}, config);
     expect(pending).toHaveProperty("__interrupt__.length", 1);
@@ -487,6 +493,7 @@ it("resumes a modern stdio interrupt after reconstructing the adapter and server
     expect(after).not.toHaveBeenCalled();
     await adapter.close();
     adapter = createAdapter();
+
     const result = await graph().invoke(
       new Command({
         resume: {
@@ -495,6 +502,7 @@ it("resumes a modern stdio interrupt after reconstructing the adapter and server
       }),
       config
     );
+
     expect(result.done).toBe("accept");
     expect(before).toHaveBeenCalledTimes(1);
     expect(after).toHaveBeenCalledTimes(1);

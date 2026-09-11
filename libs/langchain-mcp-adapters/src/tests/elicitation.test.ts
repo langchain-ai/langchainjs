@@ -360,8 +360,10 @@ it.each(["legacy", "modern", "mixed"])(
         ],
       },
     } satisfies Record<string, StdioConnection>;
+
     const names = mode === "mixed" ? ["legacy", "modern"] : [mode];
     const callback = vi.fn<MCPElicitationHandler>();
+
     const adapter = new MCPAdapter({
       servers: Object.fromEntries(
         Object.entries(servers).filter(([name]) => names.includes(name))
@@ -369,15 +371,20 @@ it.each(["legacy", "modern", "mixed"])(
       prefixToolNameWithServerName: true,
       onElicitation: callback,
     });
+
     try {
       const tools = await adapter.getTools();
       expect(tools).toHaveLength(names.length);
+
       for (const name of names) {
         expect((await adapter.getClient(name))?.getProtocolEra()).toBe(name);
+
         const tool = tools.find(
           (candidate) => candidate.name === `${name}__approve`
         );
+
         if (!tool) throw new Error("Missing server tool");
+
         for (const action of [
           "accept",
           "decline",
@@ -395,6 +402,7 @@ it.each(["legacy", "modern", "mixed"])(
           );
         }
       }
+
       expect(callback).toHaveBeenCalledTimes(names.length * 3);
     } finally {
       await adapter.close();

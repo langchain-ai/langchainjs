@@ -11,6 +11,7 @@ serveStdio(
       { inputSchema: z.object({}) },
       async (_, context) => {
         const answer = context.mcpReq.inputResponses?.confirmation;
+
         if (!answer) {
           return inputRequired({
             requestState: "stdio-fixture-state",
@@ -26,14 +27,18 @@ serveStdio(
             },
           });
         }
+
         if (context.mcpReq.requestState() !== "stdio-fixture-state") {
           throw new Error("Missing continuation state");
         }
+
         if (!isSpecType.ElicitResult(answer))
           throw new Error("Invalid elicitation answer");
+
         return { content: [{ type: "text", text: answer.action }] };
       }
     );
+
     return server;
   },
   { legacy: "reject" }
