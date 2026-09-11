@@ -41,17 +41,19 @@ export type ResponseFormatUndefined = {
 const PROVIDER_STRATEGY_DEFAULT_STRICT = true;
 
 /**
- * This is a global counter for generating unique names for tools.
- */
-let bindingIdentifier = 0;
-
-/**
  * Information for tracking structured output tool metadata.
  * This contains all necessary information to handle structured responses generated
  * via tool calls, including the original schema, its type classification, and the
  * corresponding tool implementation used by the tools strategy.
  */
 export class ToolStrategy<_T = unknown> {
+  /**
+   * Whether the tool's name was generated here because the schema carried no
+   * title, rather than chosen by the caller. Only generated names may be
+   * renumbered by {@link ToolStrategy._assignGeneratedNames}.
+   */
+  #hasGeneratedName: boolean;
+
   private constructor(
     /**
      * The original JSON Schema provided for structured output
@@ -69,11 +71,88 @@ export class ToolStrategy<_T = unknown> {
     /**
      * The options to use for the tool output.
      */
-    public readonly options?: ToolStrategyOptions
-  ) {}
+    public readonly options?: ToolStrategyOptions,
+
+    hasGeneratedName: boolean = false
+  ) {
+    this.#hasGeneratedName = hasGeneratedName;
+  }
 
   get name() {
     return this.tool.function.name;
+  }
+
+  /**
+   * Returns a copy of this strategy whose tool carries `name`, or `this` if it
+   * already does.
+   *
+   * Copies rather than mutates: a strategy can be constructed once and reused
+   * across several agents, where it may sit at a different position in each.
+   */
+  #withName(name: string): ToolStrategy<_T> {
+    if (this.tool.function.name === name) {
+      return this;
+    }
+    return new ToolStrategy(
+      this.schema,
+      { ...this.tool, function: { ...this.tool.function, name } },
+      this.options,
+      this.#hasGeneratedName
+    );
+  }
+
+  /**
+   * Numbers the structured output tools that had to generate their own name,
+   * by their position among the other generated names in the assembled list.
+   *
+   * Naming has to happen here rather than at construction because a strategy is
+   * built before it knows what it will sit alongside: `toolStrategy` sees only
+   * its own arguments, so two strategies built separately and composed into one
+   * `responseFormat` would both be `extract-1`, and the agent - which keys its
+   * strategies by tool name - would bind only one of them.
+   *
+   * A titled schema keeps its name and does not consume a number, so a list of
+   * one titled and one anonymous schema yields `extract-1` rather than an
+   * `extract-2` with nothing before it.
+   *
+   * Numbering steps over any name the caller chose, so a schema titled
+   * `extract-1` alongside an anonymous one leaves the anonymous one as
+   * `extract-2` rather than colliding with it - the agent keys its strategies
+   * by name, so a collision would drop one of the two schemas. Only the
+   * response format list is in scope; a regular tool sharing a generated name
+   * is not visible at this layer.
+   *
+   * Entries that are not a `ToolStrategy`, such as a `ProviderStrategy`, pass
+   * through untouched.
+   *
+   * @internal
+   */
+  static _assignGeneratedNames(formats: ResponseFormat[]): ResponseFormat[] {
+    const taken = new Set(
+      formats
+        .filter(
+          (format): format is ToolStrategy<any> =>
+            format instanceof ToolStrategy && !format.#hasGeneratedName
+        )
+        .map((format) => format.name)
+    );
+
+    // Counts generated names, not list positions: titled schemas are skipped,
+    // so this deliberately diverges from the index once one appears.
+    let generatedCount = 0;
+    function nextName() {
+      let name: string;
+      do {
+        name = `extract-${++generatedCount}`;
+      } while (taken.has(name));
+      return name;
+    }
+
+    return formats.map((format) =>
+      format instanceof ToolStrategy && format.#hasGeneratedName
+        ? format.#withName(nextName())
+        : format
+    );
   }
 
   static fromSchema<S extends InteropZodObject>(
@@ -98,9 +177,14 @@ export class ToolStrategy<_T = unknown> {
     /**
      * It is required for tools to have a name so we can map the tool call to the correct tool
      * when parsing the response.
+     *
+     * A schema with no title cannot name itself, and this is the wrong place to
+     * number it: only the assembled `responseFormat` list knows how many other
+     * anonymous schemas it sits alongside. It is numbered by position in
+     * {@link ToolStrategy._assignGeneratedNames}; this is the single-entry case.
      */
     function getFunctionName(name?: string) {
-      return name ?? `extract-${++bindingIdentifier}`;
+      return name ?? "extract-1";
     }
 
     if (isSerializableSchema(schema) || isInteropZodSchema(schema)) {
@@ -116,29 +200,45 @@ export class ToolStrategy<_T = unknown> {
           parameters: asJsonSchema,
         },
       };
-      return new ToolStrategy(asJsonSchema, tool, outputOptions);
+      return new ToolStrategy(
+        asJsonSchema,
+        tool,
+        outputOptions,
+        asJsonSchema.title == null
+      );
     }
 
     let functionDefinition: FunctionDefinition;
+    let hasGeneratedName: boolean;
     if (
       typeof schema.name === "string" &&
       typeof schema.parameters === "object" &&
       schema.parameters != null
     ) {
+      /**
+       * The caller passed a function definition, so the name is theirs.
+       */
       functionDefinition = schema as unknown as FunctionDefinition;
+      hasGeneratedName = false;
     } else {
       functionDefinition = {
         name: getFunctionName(schema.title as string),
         description: (schema.description as string) ?? "",
         parameters: schema.schema || (schema as Record<string, unknown>),
       };
+      hasGeneratedName = schema.title == null;
     }
     const asJsonSchema = toJsonSchema(schema);
     const tool = {
       type: "function" as const,
       function: functionDefinition,
     };
-    return new ToolStrategy(asJsonSchema, tool, outputOptions);
+    return new ToolStrategy(
+      asJsonSchema,
+      tool,
+      outputOptions,
+      hasGeneratedName
+    );
   }
 
   /**
@@ -320,6 +420,16 @@ export type ResponseFormatInput<
  * @returns
  */
 export function transformResponseFormat(
+  responseFormat?: ResponseFormatInput,
+  options?: ToolStrategyOptions,
+  model?: LanguageModelLike
+): ResponseFormat[] {
+  return ToolStrategy._assignGeneratedNames(
+    resolveResponseFormat(responseFormat, options, model)
+  );
+}
+
+function resolveResponseFormat(
   responseFormat?: ResponseFormatInput,
   options?: ToolStrategyOptions,
   model?: LanguageModelLike
