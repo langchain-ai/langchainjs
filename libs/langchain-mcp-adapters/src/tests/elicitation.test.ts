@@ -84,10 +84,13 @@ it.each(["accept", "decline", "cancel", "invalid", "throws", "missing"])(
                   expect(context.server).toBe("legacy");
                   expect(context.signal.aborted).toBe(false);
                   questions.push(request.message);
+
                   if (scenario === "throws")
                     throw new Error("Application rejected input");
+
                   if (scenario === "decline" || scenario === "cancel")
                     return { action: scenario };
+
                   return {
                     action: "accept",
                     content: { confirm: scenario === "invalid" ? "yes" : true },
@@ -98,6 +101,7 @@ it.each(["accept", "decline", "cancel", "invalid", "throws", "missing"])(
     });
     try {
       const [tool] = await adapter.listTools();
+
       if (["accept", "decline", "cancel"].includes(scenario)) {
         expect(await tool.invoke({})).toBe(scenario);
         expect(questions).toEqual(["Approve legacy?"]);
@@ -230,6 +234,7 @@ it.each([true, false])(
       expect(requests).toBe(beforeCache);
       toolName = "second";
       await handler.notify.toolsChanged();
+
       if (externalObserver) await notification;
       await vi.waitFor(async () =>
         expect((await adapter.listTools())[0].name).toContain("second")
@@ -265,10 +270,13 @@ describe("elicitation and logging configuration", () => {
         servers: { modern: { url: "http://localhost/mcp", logLevel: "info" } },
       }).success
     ).toBe(true);
+
     const invalid = adapterConfigSchema.safeParse({
       servers: { modern: { url: "http://localhost/mcp", logLevel: "trace" } },
     });
+
     expect(invalid.success).toBe(false);
+
     if (!invalid.success)
       expect(JSON.stringify(invalid.error.issues)).toContain(
         "Invalid MCP logging level"
@@ -312,6 +320,7 @@ describe("elicitation and logging configuration", () => {
   ])("rejects unsupported server policy with Zod errors: %j", (input) => {
     const parsed = adapterConfigSchema.safeParse(input);
     expect(parsed.success).toBe(false);
+
     if (!parsed.success) expect(parsed.error.issues.length).toBeGreaterThan(0);
   });
 });

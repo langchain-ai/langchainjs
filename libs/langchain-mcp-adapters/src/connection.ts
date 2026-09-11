@@ -68,6 +68,7 @@ function protocolClientOptions(
         capabilities: { elicitation: { form: {}, url: {} } },
       };
     }
+
     return { versionNegotiation: { mode: "legacy" } };
   }
 
