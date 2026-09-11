@@ -96,7 +96,7 @@ export async function* convertBedrockConverseStream(
           },
         };
       } else if (delta.reasoningContent) {
-        const text = delta.reasoningContent.text;
+        const { text, signature } = delta.reasoningContent;
         if (typeof text === "string") {
           if (!blockAccumulators.has(index)) {
             const initial = { type: "reasoning" as const, reasoning: "" };
@@ -113,6 +113,29 @@ export async function* convertBedrockConverseStream(
             event: "content-block-delta" as const,
             index,
             delta: { type: "reasoning-delta" as const, reasoning: text },
+          };
+        } else if (typeof signature === "string") {
+          if (!blockAccumulators.has(index)) {
+            const initial = { type: "reasoning" as const, reasoning: "" };
+            blockAccumulators.set(index, { ...initial });
+            yield {
+              event: "content-block-start" as const,
+              index,
+              content: initial as ContentBlock,
+            };
+          }
+          const acc = blockAccumulators.get(index)!;
+          acc.signature = (acc.signature ?? "") + signature;
+          yield {
+            event: "content-block-delta" as const,
+            index,
+            delta: {
+              type: "block-delta" as const,
+              fields: {
+                type: "reasoning",
+                signature: acc.signature,
+              },
+            },
           };
         }
       }
