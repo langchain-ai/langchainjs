@@ -442,7 +442,9 @@ Similarly, when calling tools on the `microphone` MCP server, the following `out
 
 You can configure a global timeout for all tools by setting the `defaultToolTimeout` field in the client params. You can include a `defaultToolTimeout` field in the server config to set the timeout for all tools for that server, or globally for the entire client by setting it in the top-level config.
 
-This timeout will be used as the default timeout for all tools unless overridden by a tool-specific timeout.
+A top-level `defaultToolTimeout` takes precedence over server-level defaults.
+When the top-level setting is omitted, each server uses its own default. A
+tool-specific timeout can override the resulting default.
 
 ```typescript
 const client = new MCPAdapter({
@@ -450,7 +452,7 @@ const client = new MCPAdapter({
     "data-processor": {
       command: "python",
       args: ["data_server.py"],
-      defaultToolTimeout: 30000, // timeout will be 30 seconds
+      defaultToolTimeout: 30000, // used when no top-level default is set
     },
     "image-processor": {
       transport: "stdio",
@@ -465,7 +467,7 @@ const client = new MCPAdapter({
 const tools = await client.listTools();
 const slowTool = tools.find((t) => t.name.includes("process_large_dataset"));
 
-// Will timeout after 30 seconds (defaultToolTimeout)
+// Will timeout after 10 seconds (the top-level defaultToolTimeout)
 const result = await slowTool.invoke({ dataset: "huge_file.csv" });
 ```
 
