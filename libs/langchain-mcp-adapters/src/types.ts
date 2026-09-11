@@ -925,4 +925,5 @@ export const toolDiscoveryOptionsSchema =
       .enum(["use", "refresh", "bypass"] satisfies CacheMode[])
       .optional(),
   });
+
 export type ToolDiscoveryOptions = z.input<typeof toolDiscoveryOptionsSchema>;

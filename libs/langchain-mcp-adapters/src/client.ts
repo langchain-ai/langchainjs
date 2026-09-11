@@ -840,6 +840,7 @@ export class MCPAdapter {
 
     try {
       await this.#clientConnections.createClient("sse", serverName, connection);
+
       const transport = this.#clientConnections.getTransport({
         serverName,
         headers,
@@ -929,17 +930,22 @@ export class MCPAdapter {
       const { tools: descriptors } = await client.listTools(undefined, {
         cacheMode,
       });
+
       const descriptorKey = JSON.stringify(descriptors);
+
       if (existing?.descriptorKey === descriptorKey)
         return await existing.tools;
+
       const tools = convertMcpTools(
         serverName,
         client,
         descriptors,
         this.#loadToolsOptions[serverName]
       );
+
       if (cacheMode !== "bypass")
         this.#toolsByClient.set(client, { descriptorKey, tools });
+
       return await tools;
     } catch (error) {
       this.#toolsByClient.delete(client);

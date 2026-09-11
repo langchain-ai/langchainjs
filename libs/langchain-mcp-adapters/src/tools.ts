@@ -1023,6 +1023,7 @@ export async function loadMcpTools(
   options?: LoadMcpToolsOptions
 ): Promise<DynamicStructuredTool[]> {
   const { tools } = await client.listTools();
+
   return convertMcpTools(serverName, client, tools, options);
 }
 
