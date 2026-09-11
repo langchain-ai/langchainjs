@@ -10,6 +10,7 @@ const stdioClientTransportPrototype = {
   send: vi.fn<SDKTransport["send"]>().mockResolvedValue(undefined),
   close: vi.fn<SDKTransport["close"]>().mockResolvedValue(undefined),
 };
+
 function mockStdioClientTransport(
   ...[config]: ConstructorParameters<
     typeof import("@modelcontextprotocol/client/stdio").StdioClientTransport
@@ -20,6 +21,7 @@ function mockStdioClientTransport(
     config,
   };
 }
+
 export const StdioClientTransport: Mock<typeof mockStdioClientTransport> =
   vi.fn(mockStdioClientTransport);
 

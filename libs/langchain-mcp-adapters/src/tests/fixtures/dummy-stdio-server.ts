@@ -35,6 +35,7 @@ server.registerTool(
 
     // Simulate progress updates using progressToken if present
     const progressToken = extra.mcpReq._meta?.progressToken;
+
     if (progressToken !== undefined) {
       const steps = 3;
       for (let i = 1; i <= steps; i++) {

@@ -8,6 +8,7 @@ import { vi, type Mock } from "vitest";
 const actual = await vi.importActual<
   typeof import("@modelcontextprotocol/client")
 >("@modelcontextprotocol/client");
+
 export const SdkHttpError = actual.SdkHttpError;
 
 export const isSpecType = actual.isSpecType;
@@ -45,6 +46,7 @@ const clientPrototype = {
     .fn<InstanceType<typeof actual.Client>["close"]>()
     .mockResolvedValue(undefined),
 };
+
 function mockClient(
   ...[clientInfo, options]: ConstructorParameters<typeof actual.Client>
 ) {
@@ -54,6 +56,7 @@ function mockClient(
     options,
   };
 }
+
 export const Client: Mock<typeof mockClient> = vi.fn(mockClient);
 
 Client.prototype = clientPrototype;
@@ -69,6 +72,7 @@ const sseClientTransportPrototype = {
     .fn<InstanceType<typeof actual.SSEClientTransport>["close"]>()
     .mockResolvedValue(undefined),
 };
+
 function mockSSEClientTransport(
   ...[url, options]: ConstructorParameters<typeof actual.SSEClientTransport>
 ) {
@@ -78,6 +82,7 @@ function mockSSEClientTransport(
     options,
   };
 }
+
 export const SSEClientTransport: Mock<typeof mockSSEClientTransport> = vi.fn(
   mockSSEClientTransport
 );
@@ -95,6 +100,7 @@ const streamableHTTPClientTransportPrototype = {
     .fn<InstanceType<typeof actual.StreamableHTTPClientTransport>["close"]>()
     .mockResolvedValue(undefined),
 };
+
 function mockStreamableHTTPClientTransport(
   ...[url, options]: ConstructorParameters<
     typeof actual.StreamableHTTPClientTransport
@@ -106,6 +112,7 @@ function mockStreamableHTTPClientTransport(
     options,
   };
 }
+
 export const StreamableHTTPClientTransport: Mock<
   typeof mockStreamableHTTPClientTransport
 > = vi.fn(mockStreamableHTTPClientTransport);

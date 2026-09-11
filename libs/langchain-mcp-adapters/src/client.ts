@@ -687,13 +687,16 @@ export class MCPAdapter {
 
     // SDK 2 HTTP errors use status; SSE errors use a numeric code.
     if ("status" in error && isHttpStatus(error.status)) return error.status;
+
     if ("code" in error && isHttpStatus(error.code)) return error.code;
 
     if (!("message" in error) || typeof error.message !== "string") {
       return undefined;
     }
+
     const match = error.message.match(/\(HTTP (\d{3})\)/);
     const status = match ? Number(match[1]) : undefined;
+
     return isHttpStatus(status) ? status : undefined;
   }
 

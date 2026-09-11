@@ -113,9 +113,11 @@ describe("MultiServerMCPClient", () => {
       "handles %j without losing the original transport failure",
       async (error, fallsBack) => {
         vi.mocked(Client.prototype.connect).mockRejectedValueOnce(error);
+
         const client = new MultiServerMCPClient({
           remote: { transport: "http", url: "https://example.com/mcp" },
         });
+
         try {
           if (fallsBack) {
             await client.initializeConnections();
