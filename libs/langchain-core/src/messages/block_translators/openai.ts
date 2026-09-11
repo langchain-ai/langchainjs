@@ -200,7 +200,7 @@ function convertResponsesAnnotation(
   return annotation;
 }
 
-// Builds a reasoning content block, including id/encrypted_content when present.
+/** Builds a reasoning content block, including id/encrypted_content when present. */
 function mapReasoningItemToV1(
   item: Record<string, unknown>
 ): ContentBlock.Standard | undefined {
@@ -226,12 +226,6 @@ function* mapToolOutputToV1Blocks(
   toolOutput: unknown
 ): Iterable<ContentBlock.Standard> {
   if (_isContentBlock(toolOutput, "web_search_call")) {
-    /**
-     * Build args from available action data.
-     * The ResponseFunctionWebSearch base type only has id, status, type.
-     * The action field (with query, sources, etc.) may be present at
-     * runtime when the `include` parameter includes "web_search_call.action.sources".
-     */
     const webSearchArgs: Record<string, unknown> = {};
     if (_isObject(toolOutput.action) && _isString(toolOutput.action.query)) {
       webSearchArgs.query = toolOutput.action.query;
