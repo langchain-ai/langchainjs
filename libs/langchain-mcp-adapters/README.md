@@ -40,7 +40,25 @@ npm install @langchain/mcp-adapters
 
 ## Connect to one or more servers
 
-The library allows you to connect to one or more MCP servers and load tools from them, without needing to manage your own MCP client instances.
+Start with a named server and load its LangChain tools:
+
+```ts
+import { MCPAdapter } from "@langchain/mcp-adapters";
+
+const adapter = new MCPAdapter({
+  servers: { workspace: { url: "https://example.com/mcp" } },
+});
+const tools = await adapter.listTools();
+// Pass tools to your agent. When it finishes:
+await adapter.close();
+```
+
+Add more entries to `servers` to connect to several servers. Each defaults to modern
+MCP; add `mode: "legacy"` only to older servers. The same schema validates each entry,
+so one server and a mixed server map follow the same path. Empty maps and incompatible
+options fail before connecting.
+
+The following example includes model integration and optional configuration:
 
 ```ts
 import { createAgent } from "langchain";
@@ -608,7 +626,13 @@ The `authProvider` automatically handles:
 
 ## Reconnection Strategies
 
-Both transport types support automatic reconnection:
+Modern calls do not replay lost response streams. `reconnect` is accepted only
+for legacy servers. Retrying a failed tool call starts a new request and can repeat
+side effects; the application must decide whether that operation is safe to retry.
+Modern subscription streams also require an explicit new connection after they close.
+
+The settings below concern legacy recovery and process lifecycle; neither promises
+exactly-once tool execution:
 
 ### Stdio Transport Restart
 
@@ -809,20 +833,68 @@ Big thanks to [@vrknetha](https://github.com/vrknetha), [@knacklabs](https://www
 
 Contributions are welcome! Please check out our [contributing guidelines](CONTRIBUTING.md) for more information.
 
+## Protocol negotiation and elicitation
+
+Connections default to the modern protocol. Use `mode: "legacy"` for a legacy
+stdio, HTTP, or SSE server. Each server is validated independently, so one adapter
+can connect to both generations without silently falling back between them.
+
+Legacy servers can ask for form input or completion of an action at a URL. Put
+`onElicitation` on that server:
+
+```typescript
+const adapter = new MCPAdapter({
+  servers: {
+    workspace: {
+      mode: "legacy",
+      url: "http://localhost:3000/mcp",
+      onElicitation: async (request, { server, signal }) => {
+        return requestUserInput({ server, request, signal });
+      },
+    },
+  },
+});
+```
+
+Your application owns `requestUserInput`, consent, and presentation. Return
+`{ action: "accept", content: { ... } }`, `{ action: "decline" }`, or
+`{ action: "cancel" }`. Accepted form content must match the server's JSON Schema;
+URL answers have no form content. Invalid answers produce Zod validation errors.
+The callback receives the server name and cancellation signal.
+
+Legacy callbacks wait within the running request. They cannot survive a process
+restart; do not call LangGraph `interrupt()` inside them. Modern callback configuration
+is rejected. This layer does not advertise modern elicitation; checkpointed modern
+interrupt support is added in the following layer.
+
 ### Discovery freshness
 
-`getTools()` consults the SDK cache on each discovery. The SDK owns cache hints,
+`listTools()` consults the SDK cache on each discovery. The SDK owns cache hints,
 TTL, and pagination; the adapter reuses adapted tools while the cached descriptors
 remain the same. Tools already returned to a running agent are not mutated.
 
 ```typescript
-const tools = await adapter.getTools([], { cacheMode: "refresh" });
+const tools = await adapter.listTools([], { cacheMode: "refresh" });
 ```
 
 Use `"use"` (default) to honor the SDK cache, `"refresh"` to fetch and update it,
 or `"bypass"` to fetch without reading or updating it. Keep each OAuth provider
 bound to one authorization identity; close and recreate the adapter when changing
 accounts, rather than changing the identity behind an existing provider.
+
+### Modern notifications and logging
+
+When a modern server advertises catalog change notifications, the adapter opens
+an SDK subscription for tool-cache invalidation and configured list-change callbacks. Closing the adapter
+closes its subscription; legacy servers continue using their existing notifications.
+A subscription setup failure rejects the connection rather than silently disabling
+requested callbacks.
+
+Set `logLevel: "info"` on a modern server to request tool-call logs.
+`logLevel` and `maxElicitationRounds` are rejected on legacy servers and at the
+adapter root; they apply only to modern requests.
+Without a level, modern servers omit request logs. `setLoggingLevel()` remains a
+legacy-only operation and rejects for modern connections before sending an RPC.
 
 ## Server tool schemas
 
@@ -840,3 +912,39 @@ arguments against an independent copy of the original server schema.
 `ToolException` requires `@langchain/core ^1.2.6`. Use
 `ToolException.isInstance(error)` or `isToolException(error)` to identify it;
 name-only objects are not treated as adapter errors.
+
+## Watch resource changes
+
+Configure the URIs and callback together on the server:
+
+```ts
+const adapter = new MCPAdapter({
+  servers: {
+    workspace: {
+      url: "https://example.com/mcp",
+      resourceSubscriptions: ["file:///workspace/README.md"],
+      onResourcesUpdated: ({ uri }) => console.log("Changed:", uri),
+    },
+  },
+});
+await adapter.listResources(); // Connect and start watching.
+// Later: await adapter.close();
+```
+
+Modern servers use `subscriptions/listen`; explicit legacy servers use
+`resources/subscribe`. The server must advertise resource subscription support.
+The callback alone does not select resources. Closing the adapter closes its
+subscriptions; no automatic re-listen or tool replay is promised after disconnection.
+
+## Deprecated protocol features
+
+SSE transport and protocol logging (`logLevel`, `onMessage`, and `setLoggingLevel`)
+remain compatibility features. Prefer Streamable HTTP and OpenTelemetry or stderr.
+Roots and sampling are deprecated; this adapter does not add new APIs for them.
+Experimental tasks are a separate protocol extension, not implied by modern mode.
+
+OAuth Dynamic Client Registration (DCR) is deprecated in favor of Client ID Metadata
+Documents (CIMD), but remains necessary for some authorization servers. Registration
+selection follows the authorization server's capabilities, independently of the MCP
+server's modern/legacy mode. Keep credentials scoped to their issuing authorization
+server and account.

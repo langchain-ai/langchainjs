@@ -8,7 +8,7 @@ mean a server uses the modern wire protocol.
 
 ## Applications using the adapter
 
-The names `MultiServerMCPClient`, `mcpServers`, and `listTools()` remain compatibility
+The names `MultiServerMCPClient`, `mcpServers`, and `getTools()` remain compatibility
 aliases, but their configurations follow the same new mode validation. Applications using these APIs do not need to construct an SDK client.
 
 ## Applications supplying an SDK client
@@ -236,3 +236,33 @@ that should receive them. Global LangChain tool hooks and naming/output policies
 remain available. `onRootsListChanged` has been removed: roots notifications
 originate from the client. Use tool arguments, resource URIs, or server
 configuration to supply workspace paths instead.
+
+## Elicitation and request logging
+
+Move `onElicitation` onto each legacy server that handles user input. Modern server
+configuration rejects this callback; durable modern elicitation belongs to the
+following interruption layer. Legacy callbacks execute within the active request.
+Their answers are parsed with SDK schemas, with Zod issues preserving validation
+paths. They cannot be resumed after the underlying connection closes.
+
+Modern `logLevel` and `maxElicitationRounds` are server options, not adapter-wide
+policies. Legacy configurations reject them; use `setLoggingLevel` for legacy
+logging. Tool-catalog subscriptions keep caches fresh even without an application
+notification callback.
+
+## Resource subscriptions and reconnection
+
+Move resource URI selection into each server's `resourceSubscriptions` array and
+receive notifications through its `onResourcesUpdated` callback. The adapter uses
+modern `subscriptions/listen` or legacy `resources/subscribe` according to server
+mode, and rejects subscriptions when the server does not advertise support.
+
+`reconnect` is now legacy-only. Modern MCP removed event replay and stream
+resumption. A lost tool response is not proof that the operation did not execute;
+retry only when application/server semantics make that safe. Modern subscription
+streams are not automatically reopened; close and reconnect explicitly.
+
+Protocol logging and SSE remain deprecated compatibility features. Prefer
+OpenTelemetry/stderr and Streamable HTTP. DCR is also deprecated, but keep SDK
+fallback for authorization servers without CIMD support; it is not a legacy-MCP-only
+setting. Roots/sampling and experimental task extensions are not new adapter APIs.

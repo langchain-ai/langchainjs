@@ -1,5 +1,9 @@
+import type { MCPElicitationHandler } from "./elicitation.js";
 import { z } from "zod";
+import { isSpecType } from "@modelcontextprotocol/client";
 import type {
+  SubscriptionFilter,
+  LoggingLevel,
   CacheMode,
   CallToolResult,
   ListResourcesResult,
@@ -125,6 +129,12 @@ export const oAuthClientProviderSchema = z
     z.property("saveCodeVerifier", z.function()),
     z.property("codeVerifier", z.function())
   );
+
+/** SDK logging levels, exposed as an adapter request option. */
+export const loggingLevelSchema = z.custom<LoggingLevel>(
+  isSpecType.LoggingLevel,
+  "Invalid MCP logging level"
+);
 
 export const baseConfigSchema = z.object({
   /**
@@ -365,6 +375,7 @@ export interface ServerMessageSource {
 // services; parsing a function schema would replace their identity with a wrapper.
 const notifications = z.object({
   /**
+   * @deprecated Protocol logging is deprecated; prefer OpenTelemetry or stderr.
    * Called when a log message is received.
    *
    * @param logMessage - The log message
@@ -604,11 +615,30 @@ const removedRootsObserver = z
   })
   .optional();
 
-const serverNotifications = notifications.omit({ onInitialized: true });
+const resourceSubscriptionsSchema = z
+  .custom<NonNullable<SubscriptionFilter["resourceSubscriptions"]>>(
+    (value) => isSpecType.SubscriptionFilter({ resourceSubscriptions: value }),
+    "Expected resource subscription URIs"
+  )
+  .transform((uris) => [...uris]);
+
+const serverNotifications = notifications.omit({ onInitialized: true }).extend({
+  /** Resource URIs to watch; updates are delivered to onResourcesUpdated. */
+  resourceSubscriptions: resourceSubscriptionsSchema.optional(),
+});
 
 const modernPolicy = z
   .object({
     mode: z.literal("modern").optional().default("modern"),
+    /** @deprecated Protocol logging is deprecated; prefer OpenTelemetry or stderr. */
+    logLevel: loggingLevelSchema.optional(),
+    maxElicitationRounds: z.int().positive().default(32),
+    onElicitation: z
+      .never({
+        error:
+          "onElicitation requires mode: legacy; modern elicitation uses LangGraph interrupts",
+      })
+      .optional(),
     onInitialized: z
       .never({ error: "onInitialized requires mode: legacy" })
       .optional(),
@@ -622,9 +652,25 @@ const modernPolicy = z
 const legacyPolicy = z
   .object({
     mode: z.literal("legacy"),
+    onElicitation: z
+      .custom<MCPElicitationHandler>(
+        (value) => typeof value === "function",
+        "Expected an elicitation callback"
+      )
+      .optional(),
+    maxElicitationRounds: z
+      .never({ error: "maxElicitationRounds requires mode: modern" })
+      .optional(),
+    logLevel: z
+      .never({
+        error:
+          "logLevel requires mode: modern; use setLoggingLevel for legacy servers",
+      })
+      .optional(),
     onRootsListChanged: removedRootsObserver,
   })
-  .extend(notifications.shape);
+  .extend(notifications.shape)
+  .extend({ resourceSubscriptions: resourceSubscriptionsSchema.optional() });
 
 /** Transport aliases are normalized once; every public entry uses the same mode rules. */
 export const stdioConnectionSchema = z
@@ -645,7 +691,17 @@ const httpTransport = httpOptionsSchema
       .optional(),
   });
 
-const modernHttp = httpTransport.extend(modernPolicy.shape).strict();
+const modernHttp = httpTransport
+  .extend(modernPolicy.shape)
+  .extend({
+    reconnect: z
+      .never({
+        error:
+          "reconnect is legacy-only; modern streams cannot replay lost requests",
+      })
+      .optional(),
+  })
+  .strict();
 
 const legacyHttp = httpTransport
   .extend(legacyPolicy.shape)
@@ -687,6 +743,17 @@ const serverOnlyCallback = z
 
 const clientOptionsSchema = z
   .object({
+    onElicitation: z
+      .never({ error: "Move onElicitation into a legacy server definition" })
+      .optional(),
+    maxElicitationRounds: z
+      .never({
+        error: "Move maxElicitationRounds into a modern server definition",
+      })
+      .optional(),
+    logLevel: z
+      .never({ error: "Move logLevel into a modern server definition" })
+      .optional(),
     /**
      * Whether to throw an error if a tool fails to load
      *
@@ -745,6 +812,7 @@ const clientOptionsSchema = z
   .extend(baseConfigSchema.shape)
   .extend(toolHooksSchema.shape)
   .extend({
+    resourceSubscriptions: serverOnlyCallback,
     onMessage: serverOnlyCallback,
     onProgress: serverOnlyCallback,
     onCancelled: serverOnlyCallback,
@@ -869,7 +937,8 @@ export const loadMcpToolsOptionsSchema = clientOptionsSchema
     afterToolCall: true,
   })
   .partial()
-  .extend(notifications.pick({ onProgress: true }).shape);
+  .extend(notifications.pick({ onProgress: true }).shape)
+  .extend({ logLevel: loggingLevelSchema.optional() });
 
 export type LoadMcpToolsOptions = z.input<typeof loadMcpToolsOptionsSchema>;
 
