@@ -8,7 +8,6 @@ import type { RunnableConfig } from "@langchain/core/runnables";
 
 import { createDummyHttpServer } from "./fixtures/dummy-http-server.js";
 import { MultiServerMCPClient } from "../client.js";
-import type { State } from "../hooks.js";
 import type { ClientConfig } from "../types.js";
 
 type TransportKind = "stdio" | "http" | "sse";
@@ -295,7 +294,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
     const { baseUrl } = await servers.createHTTP("http-interceptor", {
       testHeaders: true,
     });
-    const stateCalls: State[] = [];
+    const stateCalls: unknown[] = [];
     const runtimeCalls: RunnableConfig[] = [];
     const client = new MultiServerMCPClient({
       mcpServers: {

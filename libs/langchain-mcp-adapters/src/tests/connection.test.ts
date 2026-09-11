@@ -4,6 +4,8 @@ import {
   Client as SDKClient,
   SSEClientTransport,
   StreamableHTTPClientTransport,
+  type NotificationMethod,
+  type NotificationTypeMap,
 } from "@modelcontextprotocol/client";
 import type { ResolvedConnection, ServerMessageSource } from "../types.js";
 import { ConnectionManager, type Client } from "../connection.js";
@@ -78,37 +80,34 @@ describe("ConnectionManager", () => {
         if ("command" in options)
           await manager.createClient("stdio", "test", options);
         else await manager.createClient("http", "test", options);
-        const handlers = vi.mocked(SDKClient.prototype.setNotificationHandler)
-          .mock.calls;
-        const message = handlers.find(
-          ([method]) => method === "notifications/message"
-        )![1];
-        const changed = handlers.find(
-          ([method]) => method === "notifications/resources/list_changed"
-        )![1];
-        // The SDK overload also accepts a schema argument in this position.
-        if (typeof message !== "function" || typeof changed !== "function") {
+        const registerNotification: <M extends NotificationMethod>(
+          method: M,
+          handler: (
+            notification: NotificationTypeMap[M]
+          ) => void | Promise<void>
+        ) => void = SDKClient.prototype.setNotificationHandler;
+        const message = vi
+          .mocked(registerNotification<"notifications/message">)
+          .mock.calls.find(
+            ([method]) => method === "notifications/message"
+          )?.[1];
+        const changed = vi
+          .mocked(registerNotification<"notifications/resources/list_changed">)
+          .mock.calls.find(
+            ([method]) => method === "notifications/resources/list_changed"
+          )?.[1];
+        if (!message || !changed) {
           throw new Error("Expected registered notification handlers");
         }
         const params = {
           level: "info",
           data: "test",
           _meta: { extension: true },
-        };
+        } satisfies Parameters<typeof message>[0]["params"];
         try {
-          // Exercise the actual registered dispatch functions with an unused SDK context.
-          await Reflect.apply(message, undefined, [
-            { method: "notifications/message", params },
-            {},
-          ]);
-          await Reflect.apply(message, undefined, [
-            { method: "notifications/message", params },
-            {},
-          ]);
-          await Reflect.apply(changed, undefined, [
-            { method: "notifications/resources/list_changed" },
-            {},
-          ]);
+          await message({ method: "notifications/message", params });
+          await message({ method: "notifications/message", params });
+          await changed({ method: "notifications/resources/list_changed" });
           expect(onMessage.mock.calls[0][0]).toBe(params);
           expect(options.outputHandling).toEqual({ text: "content" });
           expect(observed).toHaveLength(3);

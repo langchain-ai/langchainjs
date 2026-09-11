@@ -13,6 +13,8 @@ import type {
   Tool as MCPTool,
   ListToolsResult,
   RequestOptions,
+  JSONObject,
+  JSONValue,
 } from "@modelcontextprotocol/client";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import type { ContentBlock } from "@langchain/core/messages";
@@ -34,26 +36,27 @@ import {
   type LoadMcpToolsOptions,
   type OutputHandling,
 } from "./types.js";
-import type { ToolHooks, State } from "./hooks.js";
+import type { ToolHooks } from "./hooks.js";
 import type { Client } from "./connection.js";
 import { getDebugLog } from "./logging.js";
 
 const debugLog = getDebugLog("tools");
 
-/**
- * JSON Schema type definitions for dereferencing $defs.
- */
-type JsonSchemaObject = Record<string, unknown>;
+// Decode JSON once at discovery; only parse the schema keywords this
+// simplifier consumes. Extension keywords remain intact.
+const jsonObjectSchema = z.record(z.string(), z.json());
+const schemaKeywordsSchema = z
+  .object({
+    properties: jsonObjectSchema.optional(),
+    required: z.array(z.string()).optional(),
+    allOf: z.array(z.json()).optional(),
+    anyOf: z.array(z.json()).optional(),
+    oneOf: z.array(z.json()).optional(),
+  })
+  .catchall(z.json());
 
-function isSchemaRecord(value: unknown): value is JsonSchemaObject {
+function isSchemaRecord(value: JSONValue | undefined): value is JSONObject {
   return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-const requiredFieldsSchema = z.array(z.string());
-
-function requiredFields(value: unknown): string[] {
-  const result = requiredFieldsSchema.safeParse(value);
-  return result.success ? result.data : [];
 }
 
 /**
@@ -64,7 +67,7 @@ function requiredFields(value: unknown): string[] {
  * @param schema - The JSON Schema to dereference
  * @returns A new schema with all $ref pointers resolved
  */
-function dereferenceJsonSchema(schema: JsonSchemaObject): JsonSchemaObject {
+function dereferenceJsonSchema(schema: JSONObject): JSONObject {
   const rawDefinitions = schema.$defs ?? schema.definitions;
   const definitions = isSchemaRecord(rawDefinitions) ? rawDefinitions : {};
 
@@ -73,9 +76,9 @@ function dereferenceJsonSchema(schema: JsonSchemaObject): JsonSchemaObject {
    * Tracks visited refs to prevent infinite recursion with circular references.
    */
   function resolveRefs(
-    obj: JsonSchemaObject,
+    obj: JSONObject,
     visitedRefs: Set<string> = new Set()
-  ): JsonSchemaObject {
+  ): JSONObject {
     if (typeof obj !== "object" || obj === null) {
       return obj;
     }
@@ -121,7 +124,7 @@ function dereferenceJsonSchema(schema: JsonSchemaObject): JsonSchemaObject {
     }
 
     // Recursively process all properties
-    const result: JsonSchemaObject = {};
+    const result: JSONObject = {};
 
     for (const [key, value] of Object.entries(obj)) {
       // Skip $defs and definitions as they're no longer needed after dereferencing
@@ -155,11 +158,8 @@ function dereferenceJsonSchema(schema: JsonSchemaObject): JsonSchemaObject {
  * @param source - The source schema to merge from
  * @returns A new merged schema
  */
-function deepMergeSchemas(
-  target: JsonSchemaObject,
-  source: JsonSchemaObject
-): JsonSchemaObject {
-  const result: JsonSchemaObject = { ...target };
+function deepMergeSchemas(target: JSONObject, source: JSONObject): JSONObject {
+  const result: JSONObject = { ...target };
 
   for (const [key, sourceValue] of Object.entries(source)) {
     const targetValue = result[key];
@@ -175,7 +175,7 @@ function deepMergeSchemas(
       // When merging const values, convert to enum to allow multiple values
       const existingConst = result.const;
       const existingEnum = result.enum;
-      const values = new Set<unknown>();
+      const values = new Set<JSONValue>();
 
       if (Array.isArray(existingEnum)) {
         for (const v of existingEnum) values.add(v);
@@ -190,7 +190,7 @@ function deepMergeSchemas(
       result.enum = [...values];
     } else if (key === "enum" && Array.isArray(sourceValue)) {
       // Merge enum values (union of all possible values)
-      const values = new Set<unknown>();
+      const values = new Set<JSONValue>();
       if (Array.isArray(targetValue)) {
         for (const v of targetValue) values.add(v);
       }
@@ -207,7 +207,7 @@ function deepMergeSchemas(
       isSchemaRecord(sourceValue)
     ) {
       // Recursively merge properties - merge each property individually
-      const mergedProps: JsonSchemaObject = { ...targetValue };
+      const mergedProps: JSONObject = { ...targetValue };
       for (const [propKey, propValue] of Object.entries(sourceValue)) {
         if (isSchemaRecord(mergedProps[propKey]) && isSchemaRecord(propValue)) {
           mergedProps[propKey] = deepMergeSchemas(
@@ -241,22 +241,20 @@ function deepMergeSchemas(
  * @param schema - A schema that may contain if/then/else
  * @returns Properties extracted from both then and else branches
  */
-function extractPropertiesFromConditional(
-  schema: JsonSchemaObject
-): JsonSchemaObject {
-  let result: JsonSchemaObject = {};
+function extractPropertiesFromConditional(schema: JSONObject): JSONObject {
+  let result: JSONObject = {};
 
   // Extract properties from 'then' branch
   if (isSchemaRecord(schema.then)) {
-    const thenSchema = schema.then;
+    const thenSchema = schemaKeywordsSchema.parse(schema.then);
     if (thenSchema.properties) {
       result = deepMergeSchemas(result, { properties: thenSchema.properties });
     }
     if (thenSchema.required) {
       result.required = [
         ...new Set([
-          ...requiredFields(result.required),
-          ...requiredFields(thenSchema.required),
+          ...(Array.isArray(result.required) ? result.required : []),
+          ...thenSchema.required,
         ]),
       ];
     }
@@ -264,15 +262,15 @@ function extractPropertiesFromConditional(
 
   // Extract properties from 'else' branch
   if (isSchemaRecord(schema.else)) {
-    const elseSchema = schema.else;
+    const elseSchema = schemaKeywordsSchema.parse(schema.else);
     if (elseSchema.properties) {
       result = deepMergeSchemas(result, { properties: elseSchema.properties });
     }
     if (elseSchema.required) {
       result.required = [
         ...new Set([
-          ...requiredFields(result.required),
-          ...requiredFields(elseSchema.required),
+          ...(Array.isArray(result.required) ? result.required : []),
+          ...elseSchema.required,
         ]),
       ];
     }
@@ -296,7 +294,7 @@ function extractPropertiesFromConditional(
  * @param schema - The JSON Schema to simplify
  * @returns A new simplified schema compatible with LLM tool calling APIs
  */
-function simplifyJsonSchemaForLLM(schema: JsonSchemaObject): JsonSchemaObject {
+function simplifyJsonSchemaForLLM(schema: JSONObject): JSONObject {
   if (typeof schema !== "object" || schema === null) {
     return schema;
   }
@@ -313,9 +311,9 @@ function simplifyJsonSchemaForLLM(schema: JsonSchemaObject): JsonSchemaObject {
     $schema: _$schema,
     unevaluatedProperties: _unevaluatedProperties,
     ...baseSchema
-  } = schema;
+  } = schemaKeywordsSchema.parse(schema);
 
-  let result: JsonSchemaObject = { ...baseSchema };
+  let result: JSONObject = { ...baseSchema };
 
   // Handle if/then/else at the current level by extracting properties
   if (schemaIf || schemaThen || schemaElse) {
@@ -356,7 +354,7 @@ function simplifyJsonSchemaForLLM(schema: JsonSchemaObject): JsonSchemaObject {
   if (unionSchemas.length > 0) {
     // Collect all properties from all schemas, but only keep required fields
     // that are common to ALL schemas (intersection)
-    const mergedProperties: JsonSchemaObject = {};
+    const mergedProperties: JSONObject = {};
     const requiredSets: Set<string>[] = [];
 
     const schemasToMerge = unionSchemas.filter(
@@ -364,14 +362,16 @@ function simplifyJsonSchemaForLLM(schema: JsonSchemaObject): JsonSchemaObject {
     );
 
     for (const subSchema of schemasToMerge) {
-      const simplified = simplifyJsonSchemaForLLM(subSchema);
+      const simplified = schemaKeywordsSchema.parse(
+        simplifyJsonSchemaForLLM(subSchema)
+      );
       // Merge properties
       if (isSchemaRecord(simplified.properties)) {
         Object.assign(mergedProperties, simplified.properties);
       }
       // Collect required sets for intersection
       if (simplified.required && Array.isArray(simplified.required)) {
-        requiredSets.push(new Set(requiredFields(simplified.required)));
+        requiredSets.push(new Set(simplified.required));
       }
       // Merge type if present
       if (simplified.type && !result.type) {
@@ -394,7 +394,10 @@ function simplifyJsonSchemaForLLM(schema: JsonSchemaObject): JsonSchemaObject {
       });
       if (commonRequired.size > 0) {
         result.required = [
-          ...new Set([...requiredFields(result.required), ...commonRequired]),
+          ...new Set([
+            ...(Array.isArray(result.required) ? result.required : []),
+            ...commonRequired,
+          ]),
         ];
       }
     }
@@ -411,7 +414,7 @@ function simplifyJsonSchemaForLLM(schema: JsonSchemaObject): JsonSchemaObject {
 
   // Recursively simplify nested schemas in properties
   if (isSchemaRecord(result.properties)) {
-    const simplifiedProperties: JsonSchemaObject = {};
+    const simplifiedProperties: JSONObject = {};
     for (const [propName, propSchema] of Object.entries(result.properties)) {
       if (isSchemaRecord(propSchema)) {
         simplifiedProperties[propName] = simplifyJsonSchemaForLLM(propSchema);
@@ -1031,7 +1034,7 @@ async function _callTool({
         : {}),
     };
 
-    let state: State = {};
+    let state: unknown = {};
     try {
       state = getCurrentTaskInput(config);
     } catch (error) {
@@ -1230,7 +1233,9 @@ export async function loadMcpTools(
 
             // Dereference $defs/$ref in the schema to support Pydantic v2 schemas
             // and other JSON schemas that use $defs for nested type definitions
-            const dereferencedSchema = dereferenceJsonSchema(tool.inputSchema);
+            const dereferencedSchema = dereferenceJsonSchema(
+              jsonObjectSchema.parse(tool.inputSchema)
+            );
 
             // Simplify schema for LLM compatibility by removing allOf, anyOf, oneOf,
             // if/then/else, not, and other patterns that OpenAI doesn't support

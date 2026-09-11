@@ -8,13 +8,6 @@ import type { ContentBlock } from "@langchain/core/messages";
 import type { RunnableConfig } from "@langchain/core/runnables";
 import { ToolMessage } from "@langchain/core/messages";
 
-/**
- * Application-owned LangGraph task input, forwarded unchanged to hooks.
- * Functional entrypoints may receive records, arrays, or primitives.
- * Outside LangGraph, hooks receive an empty object.
- */
-export type State = unknown;
-
 const toolCallRequestSchema = z.object({
   serverName: z.string(),
   name: z.string(),
@@ -116,7 +109,8 @@ export const toolHooksSchema = z.object({
     .custom<
       (
         request: ToolCallRequest,
-        state: State,
+        /** Application-owned task input, unchanged; `{}` outside LangGraph. */
+        state: unknown,
         config: RunnableConfig
       ) => ToolCallModification | void | Promise<ToolCallModification | void>
     >(
@@ -152,7 +146,8 @@ export const toolHooksSchema = z.object({
     .custom<
       (
         request: ToolCallRequest & { result: ToolResultBefore },
-        state: State,
+        /** Application-owned task input, unchanged; `{}` outside LangGraph. */
+        state: unknown,
         config: RunnableConfig
       ) =>
         | z.output<typeof toolCallResultModificationSchema>

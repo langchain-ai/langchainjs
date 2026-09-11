@@ -4,6 +4,7 @@ import type {
   EmbeddedResource,
   ImageContent,
   TextContent,
+  Tool,
 } from "@modelcontextprotocol/client";
 import {
   StructuredTool,
@@ -39,6 +40,39 @@ describe("Simplified Tool Adapter Tests", () => {
     } as MockedObject<Client>;
 
     vi.clearAllMocks();
+  });
+
+  test("schema parsing preserves boolean schemas and extension values", async () => {
+    const inputSchema = {
+      type: "object",
+      properties: {
+        anything: true,
+        never: false,
+        value: { type: ["string", "null"] },
+      },
+      "x-provider": { choices: [1, "two", null, { enabled: true }] },
+    } satisfies Tool["inputSchema"];
+    mockClient.listTools.mockResolvedValue({
+      tools: [{ name: "schema", inputSchema }],
+    });
+    const [tool] = await loadMcpTools("test", mockClient);
+    expect(tool.schema).toEqual(inputSchema);
+  });
+
+  test("rejects invalid consumed schema keywords instead of dropping them", async () => {
+    mockClient.listTools.mockResolvedValue({
+      tools: [
+        {
+          name: "schema",
+          inputSchema: {
+            type: "object",
+            properties: {},
+            allOf: [{ required: [42] }],
+          },
+        },
+      ],
+    });
+    await expect(loadMcpTools("test", mockClient)).rejects.toThrow(z.ZodError);
   });
 
   describe("hook return validation", () => {
