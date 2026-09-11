@@ -531,3 +531,20 @@ export function convertToolChoiceToGeminiConfig(
     functionCallingConfig,
   };
 }
+
+/**
+ * Checks whether a tools array mixes server-side built-in tools (e.g.
+ * `googleSearch`, `codeExecution`) with function-declaration tools.
+ *
+ * Gemini rejects such a mix with a 400 unless
+ * `toolConfig.includeServerSideToolInvocations` is set.
+ * See https://ai.google.dev/gemini-api/docs/tool-combination
+ */
+export function mixesBuiltinAndFunctionTools(tools: Gemini.Tool[]): boolean {
+  const isFunctionDeclarationTool = (tool: Gemini.Tool) =>
+    "functionDeclarations" in tool && !!tool.functionDeclarations?.length;
+  return (
+    tools.some(isFunctionDeclarationTool) &&
+    tools.some((tool) => !isFunctionDeclarationTool(tool))
+  );
+}

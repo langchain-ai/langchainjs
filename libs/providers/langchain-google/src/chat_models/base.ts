@@ -55,6 +55,7 @@ import {
 import {
   convertToolsToGeminiTools,
   convertToolChoiceToGeminiConfig,
+  mixesBuiltinAndFunctionTools,
   schemaToGeminiParameters,
 } from "../converters/tools.js";
 import {
@@ -454,10 +455,19 @@ export abstract class BaseChatGoogle<
       : undefined;
 
     // Convert tool choice to Gemini function calling config
-    const toolConfig = convertToolChoiceToGeminiConfig(
+    let toolConfig = convertToolChoiceToGeminiConfig(
       options.tool_choice,
       !!(tools && tools.length > 0)
     );
+
+    // Gemini rejects a mix of built-in and function-declaration tools unless
+    // this is set. See mixesBuiltinAndFunctionTools's docstring.
+    if (tools && mixesBuiltinAndFunctionTools(tools)) {
+      toolConfig = {
+        ...toolConfig,
+        includeServerSideToolInvocations: true,
+      };
+    }
 
     let responseJsonSchema:
       | JsonSchema7Type
