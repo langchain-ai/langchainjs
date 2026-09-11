@@ -135,3 +135,28 @@ test("canonical adapter API retains typed SDK callbacks and native tools", () =>
   expectTypeOf(adapter).toEqualTypeOf<MultiServerMCPClient>();
   expectTypeOf(adapter.close()).toEqualTypeOf<Promise<void>>();
 });
+
+test("elicitation uses SDK answers and adapter-owned source context", () => {
+  new MCPAdapter({
+    servers: {
+      modern: {
+        transport: "http",
+        url: "https://example.com/mcp",
+        elicitationMode: "interrupt",
+      },
+      legacy: {
+        transport: "stdio",
+        command: "server",
+        args: [],
+        protocolVersion: "legacy",
+      },
+    },
+    onElicitation: (request, context) => {
+      expectTypeOf(context.server).toEqualTypeOf<string>();
+      expectTypeOf(context.signal).toEqualTypeOf<AbortSignal>();
+      expectTypeOf(request.message).toEqualTypeOf<string>();
+
+      return { action: "cancel" };
+    },
+  });
+});

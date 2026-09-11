@@ -841,3 +841,92 @@ retries after transport failures.
 A callback waits inside a running invocation. It is not a durable LangGraph pause: do not
 call `interrupt()` from this callback or assume a pending legacy request survives process
 restart. Durable interruption needs a checkpointed continuation boundary.
+
+## Durable LangGraph elicitation
+
+Set `elicitationMode: "interrupt"` on a modern server connection to pause a graph for
+input. The graph must use a checkpointer and a stable thread ID:
+
+```typescript
+import { MCPAdapter, type MCPElicitationResume } from "@langchain/mcp-adapters";
+import {
+  Annotation,
+  Command,
+  END,
+  MemorySaver,
+  START,
+  StateGraph,
+} from "@langchain/langgraph";
+
+const adapter = new MCPAdapter({
+  servers: {
+    workspace: {
+      transport: "http",
+      url: "http://localhost:3000/mcp",
+      elicitationMode: "interrupt",
+    },
+  },
+});
+const State = Annotation.Root({ done: Annotation<boolean>() });
+const graph = new StateGraph(State)
+  .addNode("call", async () => {
+    const tools = await adapter.getTools("workspace");
+    const deploy = tools.find((tool) => tool.name === "deploy");
+    if (!deploy) throw new Error("Deploy tool unavailable");
+    await deploy.invoke({ environment: "staging" });
+    return { done: true };
+  })
+  .addEdge(START, "call")
+  .addEdge("call", END)
+  .compile({ checkpointer: new MemorySaver() });
+
+const config = { configurable: { thread_id: "deployment-123" } };
+await graph.invoke({ done: false }, config);
+const snapshot = await graph.getState(config);
+// Present snapshot.tasks' interrupts using your application's input flow.
+// Each MCP interrupt has { type: "mcp_elicitation", server, tool, requests }.
+
+// Use the actual keys from requests and answers explicitly supplied by the user.
+const answers: MCPElicitationResume = {
+  confirmation: { action: "accept", content: { confirm: true } },
+};
+await graph.invoke(new Command({ resume: answers }), config);
+await adapter.close();
+```
+
+The adapter checkpoints each tool-call round. Resuming a saved round reuses its effective
+arguments and opaque server continuation instead of starting the tool again. The initial
+`beforeToolCall` and terminal `afterToolCall` hooks are part of those checkpointed rounds.
+Answers must contain exactly the pending question keys and pass the server's form schema.
+State-only rounds do not ask the user a question and remain bounded by `maxElicitationRounds`.
+
+`MemorySaver` demonstrates the flow in one process. To survive a process restart, use a
+persistent LangGraph checkpointer and reconstruct the graph and adapter with the same tool,
+server, and authenticated account. Your application must enforce thread ownership. Keep
+checkpoints private: tool arguments, results, and opaque server continuation can be sensitive.
+They are not included in the public interrupt value. This does not guarantee exactly-once
+execution if a process fails after a server performs work but before the round is checkpointed;
+the server must make side-effectful operations safe to resume.
+
+Configure durable-call authentication and headers on the connection. `beforeToolCall` header
+overrides are rejected in interrupt mode so credentials are not saved as continuation data.
+Provider objects, access tokens, and PKCE state stay in the application/provider, not the graph's
+interrupt payload. Keep the authenticated account stable when reconstructing a client.
+
+Legacy requests still use `onElicitation`. If an interrupt-enabled connection negotiates a
+legacy server, a callback is required. Ordinary legacy connections can remain in callback mode
+alongside modern interrupt-enabled connections in the same adapter. Sampling and roots input
+requests are not advertised or handled by this elicitation bridge.
+
+### OAuth responsibilities
+
+Continue passing an `authProvider` for OAuth. The SDK owns protected-resource and authorization
+server discovery, client registration selection, token exchange, and refresh. The provider owns
+credential storage, issuer/account isolation, PKCE state, and handing authorization URLs to the
+application. The adapter does not open a browser or host an authorization callback.
+
+The local acceptance suite verifies refresh, dynamic client registration (DCR), and selection of
+a client ID metadata document (CIMD) when advertised by the authorization server. Registration
+tests stop at the application authorization handoff; they do not claim an end-to-end login against
+a production identity provider. URL elicitation is a tool interaction and is separate from OAuth
+connection authorization.

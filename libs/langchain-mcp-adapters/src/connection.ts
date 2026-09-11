@@ -1,3 +1,4 @@
+import { InterruptMCPClient } from "./continuation.js";
 import { configureElicitation } from "./elicitation.js";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import {
@@ -176,15 +177,19 @@ export class ConnectionManager {
           ? await this.#createSSETransport(serverName, options)
           : await this.#createStdioTransport(options);
 
-    const mcpClient = new MCPClient(
+    const ClientClass =
+      options.elicitationMode === "interrupt" ? InterruptMCPClient : MCPClient;
+
+    const mcpClient = new ClientClass(
       { name: packageJson.name, version: packageJson.version },
       {
         versionNegotiation: {
           mode: options.protocolVersion ?? (type === "sse" ? "legacy" : "auto"),
         },
-        capabilities: this.#hooks.onElicitation
-          ? { elicitation: { form: {}, url: {} } }
-          : {},
+        capabilities:
+          this.#hooks.onElicitation || options.elicitationMode === "interrupt"
+            ? { elicitation: { form: {}, url: {} } }
+            : {},
         inputRequired: { maxRounds: this.#hooks.maxElicitationRounds ?? 32 },
       }
     );
@@ -291,6 +296,16 @@ export class ConnectionManager {
 
     try {
       await mcpClient.connect(transport);
+
+      if (
+        options.elicitationMode === "interrupt" &&
+        mcpClient.getProtocolEra() === "legacy" &&
+        !this.#hooks.onElicitation
+      ) {
+        throw new Error(
+          "Legacy MCP elicitation requires onElicitation; durable interrupts require a modern server"
+        );
+      }
     } catch (error) {
       await Promise.allSettled([mcpClient.close(), transport.close()]);
       throw error;

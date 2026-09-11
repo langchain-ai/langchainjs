@@ -268,7 +268,10 @@ const stdioOptionsSchema = z
     restart: stdioRestartSchema.optional(),
   })
   .extend(baseConfigSchema.shape)
-  .extend({ protocolVersion: protocolVersionSchema.optional() })
+  .extend({
+    protocolVersion: protocolVersionSchema.optional(),
+    elicitationMode: z.enum(["callback", "interrupt"]).optional(),
+  })
   .describe("Configuration for stdio transport connection");
 
 /**
@@ -345,7 +348,10 @@ const httpOptionsSchema = z
     automaticSSEFallback: z.boolean().optional().default(true),
   })
   .extend(baseConfigSchema.shape)
-  .extend({ protocolVersion: protocolVersionSchema.optional() })
+  .extend({
+    protocolVersion: protocolVersionSchema.optional(),
+    elicitationMode: z.enum(["callback", "interrupt"]).optional(),
+  })
   .describe("Configuration for streamable HTTP transport connection");
 
 /** Parse legacy aliases once and retain a concrete transport discriminator. */

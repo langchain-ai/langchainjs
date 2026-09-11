@@ -1,3 +1,9 @@
+import {
+  InterruptMCPClient,
+  PendingMCPInput,
+  withMCPInterrupts,
+  type MCPContinuation,
+} from "./continuation.js";
 import { z } from "zod";
 import { fromJsonSchema } from "@modelcontextprotocol/client";
 import { DefaultJsonSchemaValidator } from "@modelcontextprotocol/client/_shims";
@@ -823,6 +829,8 @@ type CallToolArgs = {
    */
   afterToolCall?: ToolHooks["afterToolCall"];
   inputValidator: ReturnType<typeof fromJsonSchema>;
+  continuation?: MCPContinuation;
+  hookState?: unknown;
 };
 
 type ContentBlocksWithArtifacts = [
@@ -850,6 +858,8 @@ async function _callTool({
   beforeToolCall,
   afterToolCall,
   inputValidator,
+  continuation,
+  hookState,
 }: CallToolArgs): Promise<ContentBlocksWithArtifacts> {
   try {
     debugLog(`INFO: Calling tool ${toolName}(${JSON.stringify(args)})`);
@@ -883,7 +893,7 @@ async function _callTool({
     let state: unknown = {};
 
     try {
-      state = getCurrentTaskInput(config);
+      state = hookState === undefined ? getCurrentTaskInput(config) : hookState;
     } catch (error) {
       debugLog(`LangGraph task input is unavailable: ${String(error)}`);
     }
@@ -917,6 +927,16 @@ async function _callTool({
 
     if (
       hasHeaderChanges &&
+      client instanceof InterruptMCPClient &&
+      client.getProtocolEra() === "modern"
+    ) {
+      throw new ToolException(
+        "Durable MCP calls require authentication and headers in the server connection configuration, not beforeToolCall header overrides"
+      );
+    }
+
+    if (
+      hasHeaderChanges &&
       !("fork" in client && typeof client.fork === "function")
     ) {
       throw new ToolException(
@@ -939,6 +959,16 @@ async function _callTool({
 
     if (Object.keys(requestOptions).length > 0) {
       callToolArgs.push(requestOptions);
+    }
+
+    if (continuation) {
+      const resumedParams = {
+        ...callToolArgs[0],
+        inputResponses: continuation.inputResponses,
+        requestState: continuation.requestState,
+      };
+
+      callToolArgs[0] = resumedParams;
     }
 
     const result = await finalClient.callTool(...callToolArgs);
@@ -987,7 +1017,12 @@ async function _callTool({
       `Unexpected result value type from afterToolCall: expected either a Command, a ToolMessage or a tuple of ContentBlock and Artifact, but got ${interceptedResult.result}`
     );
   } catch (error) {
-    if (isGraphInterrupt(error) || config?.signal?.aborted) throw error;
+    if (
+      isGraphInterrupt(error) ||
+      error instanceof PendingMCPInput ||
+      config?.signal?.aborted
+    )
+      throw error;
     const details = parseZodErrorDetails(error);
 
     if (details) {
@@ -1084,18 +1119,45 @@ export async function loadMcpTools(
                 _runManager?: CallbackManagerForToolRun,
                 config?: RunnableConfig
               ) => {
-                return _callTool({
-                  serverName,
-                  inputValidator,
-                  toolName: tool.name,
-                  client,
-                  args,
-                  config,
-                  outputHandling,
-                  onProgress: options?.onProgress,
-                  beforeToolCall: options?.beforeToolCall,
-                  afterToolCall: options?.afterToolCall,
-                });
+                const call = (
+                  continuation?: MCPContinuation,
+                  hookState?: unknown
+                ) =>
+                  _callTool({
+                    serverName,
+                    inputValidator,
+                    toolName: tool.name,
+                    client,
+                    args: continuation?.request.arguments ?? args,
+                    continuation,
+                    hookState,
+                    config,
+                    outputHandling,
+                    onProgress: options?.onProgress,
+                    beforeToolCall: continuation
+                      ? undefined
+                      : options?.beforeToolCall,
+                    afterToolCall: options?.afterToolCall,
+                  });
+
+                if (
+                  client instanceof InterruptMCPClient &&
+                  client.getProtocolEra() === "modern"
+                ) {
+                  const hookState = getCurrentTaskInput(config);
+
+                  return withMCPInterrupts(
+                    (continuation) => call(continuation, hookState),
+                    {
+                      server: serverName,
+                      tool: tool.name,
+                      maxRounds: client.maxElicitationRounds,
+                      signal: config?.signal,
+                    }
+                  );
+                }
+
+                return call();
               },
             });
             debugLog(`INFO: Successfully loaded tool: ${dst.name}`);
