@@ -856,3 +856,15 @@ Use `"use"` (default) to honor the SDK cache, `"refresh"` to fetch and update it
 or `"bypass"` to fetch without reading or updating it. Keep each OAuth provider
 bound to one authorization identity; close and recreate the adapter when changing
 accounts, rather than changing the identity behind an existing provider.
+
+### Modern notifications and logging
+
+When a modern server advertises catalog change notifications, the adapter opens
+an SDK subscription for configured list-change callbacks. Closing the adapter
+closes its subscription; legacy servers continue using their existing notifications.
+A subscription setup failure rejects the connection rather than silently disabling
+requested callbacks.
+
+Set `logLevel: "info"` globally or per server to request modern tool-call logs.
+Without a level, modern servers omit request logs. `setLoggingLevel()` remains a
+legacy-only operation and rejects for modern connections before sending an RPC.

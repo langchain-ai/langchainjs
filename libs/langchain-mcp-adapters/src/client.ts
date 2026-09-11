@@ -30,6 +30,7 @@ import {
   toolDiscoveryOptionsSchema,
   type ToolDiscoveryOptions,
   adapterConfigSchema,
+  loggingLevelSchema,
   type LoadMcpToolsOptions,
   _resolveAndApplyOverrideHandlingOverrides,
 } from "./types.js";
@@ -135,6 +136,7 @@ export class MCPAdapter {
         serverConfig.defaultToolTimeout;
 
       this.#loadToolsOptions[serverName] = {
+        logLevel: serverConfig.logLevel ?? parsedServerConfig.logLevel,
         throwOnLoadError: parsedServerConfig.throwOnLoadError,
         prefixToolNameWithServerName:
           parsedServerConfig.prefixToolNameWithServerName,
@@ -318,20 +320,32 @@ export class MCPAdapter {
    */
   async setLoggingLevel(serverName: string, level: LoggingLevel): Promise<void>;
   async setLoggingLevel(...args: unknown[]): Promise<void> {
-    if (args.length === 1 && typeof args[0] === "string") {
-      const level = args[0] as LoggingLevel;
-      await Promise.all(
-        this.#clientConnections
-          .getAllClients()
-          .map((client) => client.setLoggingLevel(level))
+    const parsed = z
+      .union([
+        z
+          .tuple([loggingLevelSchema])
+          .transform(([level]) => ({ serverName: undefined, level })),
+        z
+          .tuple([z.string(), loggingLevelSchema])
+          .transform(([serverName, level]) => ({ serverName, level })),
+      ])
+      .parse(args);
+    const clients =
+      parsed.serverName === undefined
+        ? this.#clientConnections.getAllClients()
+        : [
+            this.#clientConnections.get(
+              this.#transportOptions(parsed.serverName)
+            ),
+          ].filter((client) => client !== undefined);
+    if (clients.some((client) => client.getProtocolEra() === "modern")) {
+      throw new MCPClientError(
+        "setLoggingLevel is legacy-only; configure logLevel for modern tool requests"
       );
-      return;
     }
-
-    const [serverName, level] = args as [string, LoggingLevel];
-    await this.#clientConnections
-      .get(this.#transportOptions(serverName))
-      ?.setLoggingLevel(level);
+    await Promise.all(
+      clients.map((client) => client.setLoggingLevel(parsed.level))
+    );
   }
 
   /**

@@ -7,6 +7,7 @@ import {
   toolCallResultModificationSchema,
 } from "./hooks.js";
 import type {
+  LoggingLevel,
   CallToolResult,
   ContentBlock as MCPContentBlock,
   Client as MCPClient,
@@ -781,6 +782,7 @@ function _convertCallToolResult({
  * @internal
  */
 type CallToolArgs = {
+  logLevel?: LoggingLevel;
   /**
    * The name of the server to call the tool on (used for error messages and logging)
    */
@@ -838,6 +840,7 @@ type ContentBlocksWithArtifacts = [
  * @returns A tuple of [textContent, nonTextContent]
  */
 async function _callTool({
+  logLevel,
   serverName,
   toolName,
   client,
@@ -932,6 +935,10 @@ async function _callTool({
       {
         name: toolName,
         arguments: finalArgs,
+        _meta:
+          logLevel !== undefined && finalClient.getProtocolEra() === "modern"
+            ? { "io.modelcontextprotocol/logLevel": logLevel }
+            : undefined,
       },
     ];
 
@@ -1092,6 +1099,7 @@ export async function convertMcpTools(
                 config?: RunnableConfig
               ) => {
                 return _callTool({
+                  logLevel: options?.logLevel,
                   serverName,
                   inputValidator,
                   toolName: tool.name,

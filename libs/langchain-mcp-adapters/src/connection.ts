@@ -291,6 +291,23 @@ export class ConnectionManager {
 
     try {
       await mcpClient.connect(transport);
+      if (mcpClient.getProtocolEra() === "modern") {
+        const capabilities = mcpClient.getServerCapabilities();
+        const filter = {
+          toolsListChanged: Boolean(
+            this.#hooks.onToolsListChanged && capabilities?.tools?.listChanged
+          ),
+          promptsListChanged: Boolean(
+            this.#hooks.onPromptsListChanged &&
+            capabilities?.prompts?.listChanged
+          ),
+          resourcesListChanged: Boolean(
+            this.#hooks.onResourcesListChanged &&
+            capabilities?.resources?.listChanged
+          ),
+        };
+        if (Object.values(filter).some(Boolean)) await mcpClient.listen(filter);
+      }
     } catch (error) {
       await Promise.allSettled([mcpClient.close(), transport.close()]);
       throw error;

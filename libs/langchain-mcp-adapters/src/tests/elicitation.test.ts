@@ -224,3 +224,85 @@ it("answers legacy reverse requests using the same callback contract", async () 
     await server.close();
   }
 });
+
+it("subscribes to modern catalog changes and honors SDK cache policy", async () => {
+  let toolName = "first";
+  let requests = 0;
+  const logs: unknown[] = [];
+  let changed: () => void = () => {};
+  const notification = new Promise<void>((resolve) => {
+    changed = resolve;
+  });
+  const handler = createMcpHandler(
+    () => {
+      const server = new McpServer(
+        { name: "catalog", version: "1" },
+        {
+          capabilities: { tools: { listChanged: true }, logging: {} },
+          cacheHints: {
+            "tools/list": { ttlMs: 60_000, cacheScope: "private" },
+          },
+        }
+      );
+      requests += 1;
+      server.registerTool(
+        toolName,
+        { inputSchema: z.object({}) },
+        async (_args, context) => {
+          await context.mcpReq.log("info", "catalog invoked");
+          return { content: [] };
+        }
+      );
+      return server;
+    },
+    { legacy: "reject" }
+  );
+  const http = createServer(toNodeHandler(handler));
+  http.listen(0, "127.0.0.1");
+  await once(http, "listening");
+  const address = z.object({ port: z.number() }).parse(http.address());
+  const adapter = new MCPAdapter({
+    servers: {
+      catalog: {
+        transport: "http",
+        url: `http://127.0.0.1:${address.port}/mcp`,
+      },
+    },
+    logLevel: "info",
+    onMessage: (message) => {
+      logs.push(message.data);
+    },
+    onToolsListChanged: changed,
+  });
+  try {
+    const [first] = await adapter.getTools();
+    await first.invoke({});
+    expect(logs).toEqual(["catalog invoked"]);
+    await expect(adapter.setLoggingLevel("debug")).rejects.toThrow(
+      /legacy-only/
+    );
+    const beforeCache = requests;
+    expect((await adapter.getTools())[0]).toBe(first);
+    expect(requests).toBe(beforeCache);
+    toolName = "second";
+    await handler.notify.toolsChanged();
+    await notification;
+    expect((await adapter.getTools())[0].name).toContain("second");
+    toolName = "third";
+    expect(
+      (await adapter.getTools([], { cacheMode: "bypass" }))[0].name
+    ).toContain("third");
+    expect((await adapter.getTools())[0].name).toContain("second");
+    expect(
+      (await adapter.getTools([], { cacheMode: "refresh" }))[0].name
+    ).toContain("third");
+    expect(first.name).toContain("first");
+  } finally {
+    await adapter.close();
+    await handler.close();
+    http.closeAllConnections();
+    await new Promise<void>((resolve, reject) =>
+      http.close((error) => (error ? reject(error) : resolve()))
+    );
+  }
+});

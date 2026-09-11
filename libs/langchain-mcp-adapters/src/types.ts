@@ -1,6 +1,7 @@
 import type { MCPElicitationHandler } from "./elicitation.js";
 import { z } from "zod";
 import type {
+  LoggingLevel,
   CacheMode,
   CallToolResult,
   ListResourcesResult,
@@ -128,7 +129,21 @@ export const oAuthClientProviderSchema = z
     z.property("codeVerifier", z.function())
   );
 
+/** SDK logging levels, exposed as an adapter request option. */
+export const loggingLevelSchema = z.enum([
+  "debug",
+  "info",
+  "notice",
+  "warning",
+  "error",
+  "critical",
+  "alert",
+  "emergency",
+] satisfies LoggingLevel[]);
+
 export const baseConfigSchema = z.object({
+  /** Minimum level for modern tool-request logs; omitted means no logs. */
+  logLevel: loggingLevelSchema.optional(),
   /**
    * Defines where to place each tool output type in the LangChain ToolMessage.
    *
@@ -797,6 +812,7 @@ export type ConnectionErrorHandler = (params: {
 }) => void;
 
 export type LoadMcpToolsOptions = {
+  logLevel?: z.output<typeof loggingLevelSchema>;
   /**
    * If true, throw an error if a tool fails to load.
    *
