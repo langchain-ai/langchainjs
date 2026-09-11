@@ -213,7 +213,7 @@ it.each([
         expect(after).toHaveBeenCalledTimes(2);
       }
     } else {
-      await expect(pending).rejects.toThrow(/MCP/);
+      await expect(pending).rejects.toBeInstanceOf(z.ZodError);
       expect(calls).toEqual(["effective"]);
       expect(after).not.toHaveBeenCalled();
     }

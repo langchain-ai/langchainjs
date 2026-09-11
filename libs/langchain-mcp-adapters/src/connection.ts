@@ -327,6 +327,23 @@ export class ConnectionManager {
     return client;
   }
 
+  /** Complete an application-owned redirect using the SDK's callback and issuer checks. */
+  async finishAuth(
+    serverName: string,
+    options: ResolvedStreamableHTTPConnection,
+    callbackParams: URLSearchParams
+  ): Promise<void> {
+    const transport =
+      options.transport === "sse"
+        ? await this.#createSSETransport(serverName, options)
+        : await this.#createStreamableHTTPTransport(serverName, options);
+    try {
+      await transport.finishAuth(callbackParams);
+    } finally {
+      await transport.close();
+    }
+  }
+
   /**
    * Allows to fork a client with a new set of headers
    */

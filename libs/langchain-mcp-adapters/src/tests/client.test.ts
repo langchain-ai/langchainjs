@@ -2785,171 +2785,207 @@ describe("server tool schemas", () => {
 });
 
 describe("modern OAuth acceptance", () => {
-  it.each(["refresh", "dcr", "cimd"])(
-    "delegates %s to the SDK/provider",
-    async (scenario) => {
-      let registrations = 0;
-      let refreshes = 0;
-      let redirected = false;
-      let savedIssuer: string | undefined;
-      let base = "";
+  it.each([
+    "refresh",
+    "dcr",
+    "cimd",
+    "callback",
+    "wrong-state",
+    "wrong-issuer",
+  ])("delegates %s to the SDK/provider", async (scenario) => {
+    let registrations = 0;
+    let refreshes = 0;
+    let redirected = false;
+    let savedIssuer: string | undefined;
+    let base = "";
 
-      const handler = createMcpHandler(
-        () => {
-          const server = new McpServer({ name: "oauth-modern", version: "1" });
-          server.registerTool(
-            "echo",
-            { inputSchema: z.object({}) },
-            async () => ({ content: [{ type: "text", text: "authorized" }] })
-          );
+    const handler = createMcpHandler(
+      () => {
+        const server = new McpServer({ name: "oauth-modern", version: "1" });
+        server.registerTool(
+          "echo",
+          { inputSchema: z.object({}) },
+          async () => ({ content: [{ type: "text", text: "authorized" }] })
+        );
 
-          return server;
-        },
-        { legacy: "reject" }
-      );
+        return server;
+      },
+      { legacy: "reject" }
+    );
 
-      const serveMCP = toNodeHandler(handler);
+    const serveMCP = toNodeHandler(handler);
 
-      const http = createServer((request, response) => {
-        const send = (body: JSONObject) => {
-          response.writeHead(200, { "content-type": "application/json" });
-          response.end(JSON.stringify(body));
-        };
-
-        if (request.url?.startsWith("/.well-known/oauth-protected-resource")) {
-          send({
-            resource: `${base}/mcp`,
-            authorization_servers: [base],
-            scopes_supported: ["read"],
-          });
-        } else if (
-          request.url?.startsWith("/.well-known/oauth-authorization-server")
-        ) {
-          send({
-            issuer: base,
-            authorization_endpoint: `${base}/authorize`,
-            token_endpoint: `${base}/token`,
-            registration_endpoint: `${base}/register`,
-            response_types_supported: ["code"],
-            grant_types_supported: ["authorization_code", "refresh_token"],
-            code_challenge_methods_supported: ["S256"],
-            token_endpoint_auth_methods_supported: ["none"],
-            client_id_metadata_document_supported: scenario === "cimd",
-          });
-        } else if (request.url === "/register") {
-          registrations += 1;
-          send({
-            client_id: "fixture-client",
-            redirect_uris: [`${base}/callback`],
-            token_endpoint_auth_method: "none",
-          });
-        } else if (request.url === "/token") {
-          refreshes += 1;
-          // Synthetic credentials used only by this isolated local fixture.
-          send({
-            access_token: "fixture-access",
-            token_type: "Bearer",
-            expires_in: 3600,
-          });
-        } else if (
-          request.url === "/mcp" &&
-          request.headers.authorization === "Bearer fixture-access"
-        ) {
-          serveMCP(request, response);
-        } else if (request.url === "/mcp") {
-          response.writeHead(401, {
-            "WWW-Authenticate": `Bearer resource_metadata="${base}/.well-known/oauth-protected-resource"`,
-          });
-          response.end();
-        } else {
-          response.writeHead(404).end();
-        }
-      });
-
-      http.listen(0, "127.0.0.1");
-      await once(http, "listening");
-      const address = http.address();
-
-      if (!address || typeof address === "string")
-        throw new Error("Missing local OAuth address");
-      base = `http://127.0.0.1:${address.port}`;
-
-      let stored: Awaited<ReturnType<OAuthClientProvider["tokens"]>> =
-        scenario === "refresh"
-          ? {
-              access_token: "fixture-expired",
-              refresh_token: "fixture-refresh",
-              token_type: "Bearer",
-              issuer: base,
-            }
-          : undefined;
-
-      const provider: OAuthClientProvider = {
-        redirectUrl: `${base}/callback`,
-        clientMetadataUrl:
-          scenario === "cimd"
-            ? "https://example.com/mcp-client.json"
-            : undefined,
-        clientMetadata: {
-          redirect_uris: [`${base}/callback`],
-          token_endpoint_auth_method: "none",
-        },
-        clientInformation: () =>
-          scenario === "refresh"
-            ? { client_id: "fixture-client", issuer: base }
-            : undefined,
-        saveClientInformation: (_info, context) => {
-          savedIssuer = context?.issuer;
-        },
-        tokens: () => stored,
-        saveTokens: (tokens, context) => {
-          stored = tokens;
-          savedIssuer = context?.issuer;
-        },
-        saveCodeVerifier: () => {},
-        codeVerifier: () => "fixture-verifier",
-        redirectToAuthorization: (url) => {
-          redirected = true;
-          expect(url.origin).toBe(base);
-          expect(url.searchParams.get("client_id")).toBe(
-            scenario === "cimd"
-              ? "https://example.com/mcp-client.json"
-              : "fixture-client"
-          );
-          throw new Error("Fixture authorization handed to application");
-        },
+    const http = createServer((request, response) => {
+      const send = (body: JSONObject) => {
+        response.writeHead(200, { "content-type": "application/json" });
+        response.end(JSON.stringify(body));
       };
 
-      const adapter = new MCPAdapter({
-        servers: {
-          oauth: {
-            transport: "http",
-            url: `${base}/mcp`,
-            authProvider: provider,
-          },
-        },
-      });
-
-      try {
-        if (scenario === "refresh") {
-          const [tool] = await adapter.getTools();
-          expect(await tool.invoke({})).toBe("authorized");
-          expect(refreshes).toBe(1);
-          expect(redirected).toBe(false);
-        } else {
-          await expect(adapter.getTools()).rejects.toThrow();
-          expect(redirected).toBe(true);
-          expect(registrations).toBe(scenario === "dcr" ? 1 : 0);
-        }
-
-        expect(savedIssuer).toBe(base);
-      } finally {
-        await adapter.close();
-        await handler.close();
-        http.close();
-        http.closeAllConnections();
-        await once(http, "close");
+      if (request.url?.startsWith("/.well-known/oauth-protected-resource")) {
+        send({
+          resource: `${base}/mcp`,
+          authorization_servers: [base],
+          scopes_supported: ["read"],
+        });
+      } else if (
+        request.url?.startsWith("/.well-known/oauth-authorization-server")
+      ) {
+        send({
+          issuer: base,
+          authorization_endpoint: `${base}/authorize`,
+          token_endpoint: `${base}/token`,
+          registration_endpoint: `${base}/register`,
+          response_types_supported: ["code"],
+          authorization_response_iss_parameter_supported: true,
+          grant_types_supported: ["authorization_code", "refresh_token"],
+          code_challenge_methods_supported: ["S256"],
+          token_endpoint_auth_methods_supported: ["none"],
+          client_id_metadata_document_supported: scenario === "cimd",
+        });
+      } else if (request.url === "/register") {
+        registrations += 1;
+        send({
+          client_id: "fixture-client",
+          redirect_uris: [`${base}/callback`],
+          token_endpoint_auth_method: "none",
+        });
+      } else if (request.url === "/token") {
+        refreshes += 1;
+        // Synthetic credentials used only by this isolated local fixture.
+        send({
+          access_token: "fixture-access",
+          token_type: "Bearer",
+          expires_in: 3600,
+        });
+      } else if (
+        request.url === "/mcp" &&
+        request.headers.authorization === "Bearer fixture-access"
+      ) {
+        serveMCP(request, response);
+      } else if (request.url === "/mcp") {
+        response.writeHead(401, {
+          "WWW-Authenticate": `Bearer resource_metadata="${base}/.well-known/oauth-protected-resource"`,
+        });
+        response.end();
+      } else {
+        response.writeHead(404).end();
       }
+    });
+
+    http.listen(0, "127.0.0.1");
+    await once(http, "listening");
+    const address = http.address();
+
+    if (!address || typeof address === "string")
+      throw new Error("Missing local OAuth address");
+    base = `http://127.0.0.1:${address.port}`;
+
+    let stored: Awaited<ReturnType<OAuthClientProvider["tokens"]>> =
+      scenario === "refresh"
+        ? {
+            access_token: "fixture-expired",
+            refresh_token: "fixture-refresh",
+            token_type: "Bearer",
+            issuer: base,
+          }
+        : undefined;
+
+    let discovery: Awaited<
+      ReturnType<NonNullable<OAuthClientProvider["discoveryState"]>>
+    >;
+    let clientInformation: Awaited<
+      ReturnType<OAuthClientProvider["clientInformation"]>
+    >;
+    let verifier = "fixture-verifier";
+    const provider: OAuthClientProvider = {
+      state: () => "fixture-state",
+      discoveryState: () => discovery,
+      saveDiscoveryState: (state) => {
+        discovery = state;
+      },
+      redirectUrl: `${base}/callback`,
+      clientMetadataUrl:
+        scenario === "cimd" ? "https://example.com/mcp-client.json" : undefined,
+      clientMetadata: {
+        redirect_uris: [`${base}/callback`],
+        token_endpoint_auth_method: "none",
+      },
+      clientInformation: () =>
+        scenario === "refresh"
+          ? { client_id: "fixture-client", issuer: base }
+          : clientInformation,
+      saveClientInformation: (info, context) => {
+        clientInformation = { ...info, issuer: context?.issuer };
+        savedIssuer = context?.issuer;
+      },
+      tokens: () => stored,
+      saveTokens: (tokens, context) => {
+        stored = { ...tokens, issuer: context?.issuer };
+        savedIssuer = context?.issuer;
+      },
+      saveCodeVerifier: (value) => {
+        verifier = value;
+      },
+      codeVerifier: () => verifier,
+      redirectToAuthorization: (url) => {
+        redirected = true;
+        expect(url.origin).toBe(base);
+        expect(url.searchParams.get("client_id")).toBe(
+          scenario === "cimd"
+            ? "https://example.com/mcp-client.json"
+            : "fixture-client"
+        );
+        throw new Error("Fixture authorization handed to application");
+      },
+    };
+
+    const adapter = new MCPAdapter({
+      servers: {
+        oauth: {
+          transport: "http",
+          url: `${base}/mcp`,
+          authProvider: provider,
+        },
+      },
+    });
+
+    try {
+      if (scenario === "refresh") {
+        const [tool] = await adapter.getTools();
+        expect(await tool.invoke({})).toBe("authorized");
+        expect(refreshes).toBe(1);
+        expect(redirected).toBe(false);
+      } else {
+        await expect(adapter.getTools()).rejects.toThrow();
+        expect(redirected).toBe(true);
+        expect(registrations).toBe(scenario === "cimd" ? 0 : 1);
+        if (["callback", "wrong-state", "wrong-issuer"].includes(scenario)) {
+          const callback = new URLSearchParams({
+            code: "fixture-code",
+            state: scenario === "wrong-state" ? "other-state" : "fixture-state",
+            iss: scenario === "wrong-issuer" ? "https://other.example" : base,
+          });
+          if (scenario === "callback") {
+            await adapter.finishAuth("oauth", callback, "fixture-state");
+            const [tool] = await adapter.getTools();
+            expect(await tool.invoke({})).toBe("authorized");
+            expect(refreshes).toBe(1);
+          } else {
+            await expect(
+              adapter.finishAuth("oauth", callback, "fixture-state")
+            ).rejects.toThrow();
+            expect(refreshes).toBe(0);
+          }
+        }
+      }
+
+      expect(savedIssuer).toBe(base);
+    } finally {
+      await adapter.close();
+      await handler.close();
+      http.close();
+      http.closeAllConnections();
+      await once(http, "close");
     }
-  );
+  });
 });

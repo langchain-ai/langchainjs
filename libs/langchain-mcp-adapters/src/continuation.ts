@@ -7,8 +7,10 @@ import {
 import { interrupt, task } from "@langchain/langgraph";
 import { z } from "zod";
 import {
-  validateElicitationAnswer,
-  type MCPElicitationRequest,
+  sdkSchema,
+  elicitationAnswerSchema,
+  elicitationRequestSchema,
+  elicitationAnswerFor,
 } from "./elicitation.js";
 
 type PendingInput = Parameters<Client["_resolveNonCompleteResult"]>[0];
@@ -31,39 +33,42 @@ export class InterruptMCPClient extends Client {
     this.maxElicitationRounds = options?.inputRequired?.maxRounds ?? 32;
   }
 
-  protected override _resolveNonCompleteResult(
+  protected override async _resolveNonCompleteResult(
     ...[decoded, flow]: Parameters<Client["_resolveNonCompleteResult"]>
   ): Promise<unknown> {
     if (flow.request.method !== "tools/call") {
       return super._resolveNonCompleteResult(decoded, flow);
     }
 
-    const parsed = specTypeSchemas.CallToolRequest["~standard"].validate(
+    const request = await sdkSchema(specTypeSchemas.CallToolRequest).parseAsync(
       flow.request
     );
-
-    if (parsed.issues)
-      return Promise.reject(new Error("Invalid suspended MCP tool request"));
-
-    return Promise.reject(new PendingMCPInput(decoded, parsed.value.params));
+    throw new PendingMCPInput(decoded, request.params);
   }
 }
 
 export interface MCPContinuation {
   request: CallToolRequest["params"];
-  inputResponses: Record<string, ElicitResult>;
-  requestState?: string;
+  inputResponses: MCPElicitationResume;
+  requestState?: PendingInput["requestState"];
 }
 
 /** User-facing questions. Server continuation data stays in the checkpointed round. */
-export interface MCPElicitationInterrupt {
-  type: "mcp_elicitation";
-  server: string;
-  tool: string;
-  requests: Record<string, MCPElicitationRequest>;
-}
+const elicitationInterruptSchema = z.object({
+  type: z.literal("mcp_elicitation"),
+  server: z.string(),
+  tool: z.string(),
+  requests: z.record(z.string(), elicitationRequestSchema),
+});
+export type MCPElicitationInterrupt = z.output<
+  typeof elicitationInterruptSchema
+>;
 
-export type MCPElicitationResume = Record<string, ElicitResult>;
+const elicitationResponsesSchema = z.record(
+  z.string(),
+  elicitationAnswerSchema
+);
+export type MCPElicitationResume = z.output<typeof elicitationResponsesSchema>;
 
 type RoundResult<T> =
   | { kind: "complete"; value: T }
@@ -115,56 +120,57 @@ export async function withMCPInterrupts<T>(
     if (round === source.maxRounds)
       throw new Error("MCP elicitation round limit exceeded");
 
-    const requests = Object.fromEntries(
-      Object.entries(result.pending.inputRequests).map(([key, value]) => {
-        const parsed =
-          specTypeSchemas.ElicitRequest["~standard"].validate(value);
-
-        if (parsed.issues)
-          throw new Error(
-            "Only elicitation is supported by MCP graph interrupts"
-          );
-
-        return [key, parsed.value.params] satisfies [
-          string,
-          MCPElicitationRequest,
-        ];
-      })
-    );
+    const elicitation = await elicitationInterruptSchema.parseAsync({
+      type: "mcp_elicitation",
+      server: source.server,
+      tool: source.tool,
+      requests: result.pending.inputRequests,
+    });
+    const { requests } = elicitation;
 
     const keys = Object.keys(requests);
     let responses: Record<string, ElicitResult> = {};
 
     if (keys.length > 0) {
-      const answer = z.record(z.string(), z.unknown()).parse(
-        interrupt({
-          type: "mcp_elicitation",
-          server: source.server,
-          tool: source.tool,
-          requests,
-        } satisfies MCPElicitationInterrupt)
-      );
-
-      if (
-        Object.keys(answer).length !== keys.length ||
-        keys.some((key) => !Object.hasOwn(answer, key))
-      ) {
-        throw new Error(
-          "MCP resume answers must match the pending request keys exactly"
-        );
-      }
-
-      responses = Object.fromEntries(
-        await Promise.all(
-          keys.map(
-            async (key) =>
-              [
-                key,
-                await validateElicitationAnswer(requests[key], answer[key]),
-              ] satisfies [string, ElicitResult]
-          )
-        )
-      );
+      const resumeSchema = z
+        .record(z.string(), z.unknown())
+        .check((ctx) => {
+          if (
+            Object.keys(ctx.value).length !== keys.length ||
+            keys.some((key) => !Object.hasOwn(ctx.value, key))
+          ) {
+            ctx.issues.push({
+              code: "custom",
+              input: ctx.value,
+              message:
+                "MCP resume answers must match the pending request keys exactly",
+            });
+          }
+        })
+        .transform(async (answers, ctx) => {
+          const parsed = await Promise.all(
+            keys.map(async (key) => {
+              const result = await elicitationAnswerFor(
+                requests[key]
+              ).safeParseAsync(answers[key]);
+              if (result.success)
+                return [key, result.data] satisfies [string, ElicitResult];
+              for (const issue of result.error.issues)
+                ctx.issues.push({
+                  code: "custom",
+                  message: issue.message,
+                  input: answers[key],
+                  path: [key, ...issue.path],
+                });
+              return undefined;
+            })
+          );
+          if (ctx.issues.length) return z.NEVER;
+          return Object.fromEntries(
+            parsed.filter((entry) => entry !== undefined)
+          );
+        });
+      responses = await resumeSchema.parseAsync(interrupt(elicitation));
     } else {
       // A state-only response is progress, not a user question. Avoid a tight polling loop.
       await new Promise<void>((resolve) => setTimeout(resolve, 100));
