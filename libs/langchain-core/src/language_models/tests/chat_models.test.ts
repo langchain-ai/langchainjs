@@ -722,3 +722,63 @@ test("Test ChatModel .invoke() with a streaming-preferring callback builds llmOu
     totalTokens: 22,
   });
 });
+
+test("Test ChatModel tracing converts every media content block in a message", async () => {
+  class CaptureInputHandler extends BaseCallbackHandler {
+    name = "capture-input";
+
+    messages: BaseMessage[] | undefined;
+
+    async handleChatModelStart(
+      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+      _llm: any,
+      messages: BaseMessage[][],
+    ): Promise<void> {
+      this.messages = messages[0];
+    }
+  }
+
+  const message = new HumanMessage({
+    content: [
+      { type: "text", text: "two PDFs" },
+      {
+        type: "file",
+        source_type: "base64",
+        mime_type: "application/pdf",
+        data: "JVBERi0xLjQK",
+      },
+      {
+        type: "file",
+        source_type: "base64",
+        mime_type: "application/pdf",
+        data: "JVBERi0xLjUK",
+      },
+    ],
+  });
+
+  const handler = new CaptureInputHandler();
+  const model = new FakeListChatModel({ responses: ["ok"] });
+  await model.invoke([message], { callbacks: [handler] });
+
+  const tracedContent = handler.messages?.[0]?.content;
+  expect(Array.isArray(tracedContent)).toBe(true);
+  expect(tracedContent).toEqual([
+    { type: "text", text: "two PDFs" },
+    {
+      type: "image_url",
+      image_url: { url: "data:application/pdf;base64,JVBERi0xLjQK" },
+    },
+    {
+      type: "image_url",
+      image_url: { url: "data:application/pdf;base64,JVBERi0xLjUK" },
+    },
+  ]);
+
+  // tracing must not mutate the original message
+  expect((message.content as Array<Record<string, unknown>>)[1]).toEqual({
+    type: "file",
+    source_type: "base64",
+    mime_type: "application/pdf",
+    data: "JVBERi0xLjQK",
+  });
+});
