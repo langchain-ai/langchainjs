@@ -9,12 +9,11 @@ import type { RunnableConfig } from "@langchain/core/runnables";
 import { ToolMessage } from "@langchain/core/messages";
 
 /**
- * state messages
- *
- * Note: this may not be defined in cases you don't use LangGraph or a LangGraph implementation like `createAgent`.
- * Also state can be defined arbitrarily by the user.
+ * Application-owned LangGraph task input, forwarded unchanged to hooks.
+ * Functional entrypoints may receive records, arrays, or primitives.
+ * Outside LangGraph, hooks receive an empty object.
  */
-export type State = Record<string, unknown>;
+export type State = unknown;
 
 const toolCallRequestSchema = z.object({
   serverName: z.string(),

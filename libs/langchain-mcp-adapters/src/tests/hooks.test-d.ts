@@ -19,7 +19,7 @@ test("check tool hooks types", () => {
       },
     },
     beforeToolCall: (toolCallRequest, state, runtime) => {
-      expectTypeOf(state).toEqualTypeOf<Record<string, unknown>>();
+      expectTypeOf(state).toEqualTypeOf<unknown>();
       expectTypeOf(runtime).toEqualTypeOf<RunnableConfig>();
       expectTypeOf(toolCallRequest).toEqualTypeOf<{
         name: string;
@@ -28,7 +28,7 @@ test("check tool hooks types", () => {
       }>();
     },
     afterToolCall: (toolCallResult, state, runtime) => {
-      expectTypeOf(state).toEqualTypeOf<Record<string, unknown>>();
+      expectTypeOf(state).toEqualTypeOf<unknown>();
       expectTypeOf(runtime).toEqualTypeOf<RunnableConfig>();
       expectTypeOf(toolCallResult.name).toEqualTypeOf<string>();
       expectTypeOf(toolCallResult.args).toEqualTypeOf<unknown>();

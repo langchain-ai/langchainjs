@@ -1033,13 +1033,9 @@ async function _callTool({
 
     let state: State = {};
     try {
-      state = z
-        .record(z.string(), z.unknown())
-        .parse(getCurrentTaskInput(config));
+      state = getCurrentTaskInput(config);
     } catch (error) {
-      debugLog(
-        `State can't be derrived as LangGraph is not used: ${String(error)}`
-      );
+      debugLog(`LangGraph task input is unavailable: ${String(error)}`);
     }
 
     const beforeToolCallInterception = toolCallModificationSchema

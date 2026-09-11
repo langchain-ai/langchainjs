@@ -125,3 +125,8 @@ event. Mutating that snapshot cannot reconfigure the adapter or alter the next
 notification's options. OAuth providers retain their application-owned identity.
 Direct legacy server maps can still contain a server named `servers`; the
 constructor distinguishes a connection definition from the canonical wrapper.
+
+Hook `state` is typed `unknown`: it is the unchanged LangGraph task input,
+including arrays and primitives from functional entrypoints. Narrow or parse it
+using your application schema before accessing fields. Calls outside LangGraph
+continue to receive `{}`.

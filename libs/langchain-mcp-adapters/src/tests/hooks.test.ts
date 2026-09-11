@@ -3,6 +3,7 @@ import { Server } from "node:http";
 import { join } from "node:path";
 import { ToolMessage, BaseMessage } from "@langchain/core/messages";
 import { createAgent, FakeToolCallingModel } from "langchain";
+import { entrypoint } from "@langchain/langgraph";
 import type { RunnableConfig } from "@langchain/core/runnables";
 
 import { createDummyHttpServer } from "./fixtures/dummy-http-server.js";
@@ -327,6 +328,43 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
         recursionLimit: 25,
         runName: "test_tool",
       });
+    } finally {
+      await client.close();
+    }
+  });
+
+  test("hooks preserve arbitrary functional entrypoint inputs", async () => {
+    const { baseUrl } = await servers.createHTTP("entrypoint-input");
+    const observed: unknown[] = [];
+    const client = new MultiServerMCPClient({
+      mcpServers: { http: { url: `${baseUrl}/mcp` } },
+      beforeToolCall: (_, state) => {
+        observed.push(state);
+      },
+      afterToolCall: (_, state) => {
+        observed.push(state);
+      },
+    });
+
+    try {
+      const [tool] = await client.getTools();
+      const workflow = entrypoint("hook-input", async (input: unknown) => {
+        await tool.invoke({ input: "orig" });
+        return input;
+      });
+      for (const input of [
+        ["retained-input"],
+        "text",
+        0,
+        false,
+        { value: 1 },
+      ]) {
+        observed.length = 0;
+        await workflow.invoke(input);
+        expect(observed).toHaveLength(2);
+        expect(observed[0]).toBe(input);
+        expect(observed[1]).toBe(input);
+      }
     } finally {
       await client.close();
     }
