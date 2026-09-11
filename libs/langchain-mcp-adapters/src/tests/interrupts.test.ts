@@ -41,6 +41,7 @@ it.each([
   "headers",
   "outside-graph",
   "outside-graph-complete",
+  "outside-graph-headers",
   "without-checkpointer",
 ])("resumes a reconstructed adapter: %s", async (scenario) => {
   const calls: string[] = [];
@@ -71,7 +72,11 @@ it.each([
         async ({ label }, context) => {
           calls.push(label);
 
-          if (scenario === "outside-graph-complete") {
+          if (
+            ["outside-graph-complete", "outside-graph-headers"].includes(
+              scenario
+            )
+          ) {
             return {
               content: [{ type: "text", text: "approved" }],
               structuredContent: { approved: true },
@@ -128,7 +133,9 @@ it.each([
 
   const before = vi.fn(() => ({
     args: { label: "effective" },
-    headers: scenario === "headers" ? { "X-Test": "fixture" } : undefined,
+    headers: ["headers", "outside-graph-headers"].includes(scenario)
+      ? { "X-Test": "fixture" }
+      : undefined,
   }));
 
   const after = vi.fn();
@@ -198,7 +205,9 @@ it.each([
       return;
     }
 
-    if (scenario === "outside-graph-complete") {
+    if (
+      ["outside-graph-complete", "outside-graph-headers"].includes(scenario)
+    ) {
       const [tool] = await adapter.getTools();
       await expect(tool.invoke({ label: "original" })).resolves.toBeDefined();
       expect(calls).toHaveLength(1);

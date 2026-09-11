@@ -397,6 +397,17 @@ type InvokeToolRound = (
 ) => Promise<ContentBlocksWithArtifacts>;
 
 /** Choose interaction and header policies once for this connected tool. */
+function toolExecutionContext(config?: RunnableConfig) {
+  try {
+    return { kind: "graph", state: getCurrentTaskInput(config) } satisfies {
+      kind: "graph";
+      state: unknown;
+    };
+  } catch {
+    return { kind: "direct" } satisfies { kind: "direct" };
+  }
+}
+
 function createToolInvocation(
   client: MCPInstance,
   serverName: string,
@@ -423,8 +434,8 @@ function createToolInvocation(
   const direct = executor(client, modern);
   const durable = client instanceof InterruptMCPClient && modern;
 
-  function selectHeaderPolicy() {
-    if (durable) {
+  function selectHeaderPolicy(config?: RunnableConfig) {
+    if (durable && toolExecutionContext(config).kind === "graph") {
       return async (_headers: NonNullable<ToolCallModification["headers"]>) => {
         throw new ToolException(
           "Durable MCP calls require authentication and headers in the server connection configuration, not beforeToolCall header overrides"
@@ -452,16 +463,15 @@ function createToolInvocation(
     };
   }
 
-  const withHeaders = selectHeaderPolicy();
-
   const execute = async (
     request: CallToolRequest["params"],
     options: RequestOptions,
-    headers: ToolCallModification["headers"]
+    headers: ToolCallModification["headers"],
+    config?: RunnableConfig
   ) => {
     if (!headers || Object.keys(headers).length === 0)
       return direct(request, options);
-    const call = await withHeaders(headers);
+    const call = await selectHeaderPolicy(config)(headers);
 
     return call(request, options);
   };
@@ -470,11 +480,9 @@ function createToolInvocation(
     return {
       execute,
       async run(call: InvokeToolRound, config?: RunnableConfig) {
-        let state: unknown;
+        const context = toolExecutionContext(config);
 
-        try {
-          state = getCurrentTaskInput(config);
-        } catch {
+        if (context.kind === "direct") {
           try {
             return await call();
           } catch (error) {
@@ -489,12 +497,15 @@ function createToolInvocation(
           }
         }
 
-        return withMCPInterrupts((continuation) => call(continuation, state), {
-          server: serverName,
-          tool: toolName,
-          maxRounds: client.maxElicitationRounds,
-          signal: config?.signal,
-        });
+        return withMCPInterrupts(
+          (continuation) => call(continuation, context.state),
+          {
+            server: serverName,
+            tool: toolName,
+            maxRounds: client.maxElicitationRounds,
+            signal: config?.signal,
+          }
+        );
       },
     };
   }
@@ -623,7 +634,8 @@ async function _callTool(
     const result = await invocation.execute(
       prepared.request,
       prepared.requestOptions,
-      prepared.headers
+      prepared.headers,
+      config
     );
 
     const { args: finalArgs, state } = prepared;
