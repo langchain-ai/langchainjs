@@ -25,6 +25,49 @@ export interface GenerativeAIJsonSchemaDirty extends GenerativeAIJsonSchema {
   additionalProperties?: boolean;
 }
 
+/**
+ * Gemini's Schema proto `type` is a single enum, not a repeating field.
+ * JSON Schema (and Zod 3 via zod-to-json-schema) often emit list-valued
+ * `type` such as `["string","null"]`, which the API rejects with
+ * "Proto field is not repeating, cannot start list".
+ *
+ * Same rewrite as `adjustObjectType` in `@langchain/google-common` and
+ * `@langchain/google`.
+ */
+function adjustObjectType(
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+  obj: Record<string, any>
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+): Record<string, any> {
+  if (!Array.isArray(obj.type)) {
+    return obj;
+  }
+
+  const len = obj.type.length;
+  const nullIndex = obj.type.indexOf("null");
+  if (len === 2 && nullIndex >= 0) {
+    // There are only two values set for the type, and one of them is "null".
+    // Set the type to the other one and set nullable to true.
+    const typeIndex = nullIndex === 0 ? 1 : 0;
+    obj.type = obj.type[typeIndex];
+    obj.nullable = true;
+  } else if (len === 1 && nullIndex === 0) {
+    // This is nullable only without a type, which doesn't
+    // make sense for Gemini
+    throw new Error("zod_to_genai_parameters: Gemini cannot handle null type");
+  } else if (len === 1) {
+    // Although an array, it has only one value.
+    // So set it to the string to match what Gemini expects.
+    obj.type = obj.type[0];
+  } else {
+    // Anything else could be a union type, so reject it.
+    throw new Error(
+      "zod_to_genai_parameters: Gemini cannot handle union types"
+    );
+  }
+  return obj;
+}
+
 export function removeAdditionalProperties(
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   obj: Record<string, any>
@@ -41,6 +84,10 @@ export function removeAdditionalProperties(
     if ("strict" in newObj) {
       delete newObj.strict;
     }
+
+    // Zod / JSON Schema sometimes make `type` an array (e.g. `.nullable()`),
+    // which needs cleaning up before we recurse into nested schemas.
+    adjustObjectType(newObj);
 
     for (const key in newObj) {
       if (key in newObj) {
@@ -69,6 +116,8 @@ export function schemaToGenerativeAIParameters<
 ): GenerativeAIFunctionDeclarationSchema {
   // GenerativeAI doesn't accept either the $schema or additionalProperties
   // attributes, so we need to explicitly remove them.
+  // Zod sometimes also makes an array of type (because of .nullable()/.nullish()),
+  // which needs cleaning up.
   const jsonSchema = removeAdditionalProperties(
     isInteropZodSchema(schema) || isSerializableSchema(schema)
       ? toJsonSchema(schema)
