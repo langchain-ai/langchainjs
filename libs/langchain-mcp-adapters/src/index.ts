@@ -1,6 +1,7 @@
 import { type StreamableHTTPConnection } from "./types.js";
 
 export { MultiServerMCPClient } from "./client.js";
+
 export type { OAuthClientProvider } from "@modelcontextprotocol/client";
 
 export type {
