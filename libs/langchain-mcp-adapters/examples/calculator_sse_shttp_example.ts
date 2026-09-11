@@ -54,6 +54,8 @@ export async function runExample(client?: MCPAdapter) {
       new MCPAdapter({
         servers: {
           calculator: {
+            mode: "legacy",
+            transport: transportType,
             url: `http://localhost:3000/${
               transportType === "sse" ? "sse" : "mcp"
             }`,
