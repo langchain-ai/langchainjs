@@ -296,6 +296,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
     const { baseUrl } = await servers.createHTTP("http-interceptor", {
       testHeaders: true,
     });
+
     const stateCalls: unknown[] = [];
     const runtimeCalls: RunnableConfig[] = [];
     const client = new MultiServerMCPClient({
@@ -337,6 +338,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
   test("hooks preserve arbitrary functional entrypoint inputs", async () => {
     const { baseUrl } = await servers.createHTTP("entrypoint-input");
     const observed: unknown[] = [];
+
     const client = new MultiServerMCPClient({
       mcpServers: { http: { url: `${baseUrl}/mcp` } },
       beforeToolCall: (_, state) => {
@@ -349,10 +351,13 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
 
     try {
       const [tool] = await client.getTools();
+
       const workflow = entrypoint("hook-input", async (input: unknown) => {
         await tool.invoke({ input: "orig" });
+
         return input;
       });
+
       for (const input of [
         ["retained-input"],
         "text",

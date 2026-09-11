@@ -1,6 +1,7 @@
 import { type StreamableHTTPConnection } from "./types.js";
 
 export { MCPAdapter, MultiServerMCPClient } from "./client.js";
+
 export type { OAuthClientProvider } from "@modelcontextprotocol/client";
 
 export type {
@@ -29,4 +30,5 @@ export type {
   ToolCallModification,
   ToolResult,
 } from "./hooks.js";
+
 export type { Notifications, ConnectionErrorHandler } from "./types.js";

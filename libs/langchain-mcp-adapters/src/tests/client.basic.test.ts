@@ -78,6 +78,7 @@ describe("MultiServerMCPClient", () => {
       const provider = Object.assign(new Provider(), { [method]: 42 });
       const result = oAuthClientProviderSchema.safeParse(provider);
       expect(result.success).toBe(false);
+
       if (!result.success) {
         expect(result.error.issues[0].path).toEqual([method]);
       }
@@ -1026,9 +1027,11 @@ describe("MCPAdapter configuration boundary", () => {
   test("shares the implementation and normalizes legacy transport names without connecting", () => {
     vi.clearAllMocks();
     expect(MCPAdapter).toBe(MultiServerMCPClient);
+
     const adapter = new MCPAdapter({
       servers: { remote: { type: "sse", url: "https://example.com/mcp" } },
     });
+
     expect(adapter.config.mcpServers.remote).toMatchObject({
       transport: "sse",
     });
@@ -1044,6 +1047,7 @@ describe("MCPAdapter configuration boundary", () => {
       servers: connection,
       other: { url: "https://example.com/other" },
     });
+
     expect(Object.keys(adapter.config.mcpServers)).toEqual([
       "servers",
       "other",
@@ -1059,6 +1063,7 @@ describe("MCPAdapter configuration boundary", () => {
         servers: { url: "https://example.com/other" },
       },
     });
+
     expect(Object.keys(adapter.config.mcpServers)).toEqual([
       "url",
       "command",
@@ -1076,6 +1081,7 @@ describe("MCPAdapter configuration boundary", () => {
       },
       outputHandling: { text: undefined, audio: "artifact" },
     });
+
     expect(adapter.config.outputHandling).toEqual({
       text: undefined,
       audio: "artifact",
@@ -1111,6 +1117,7 @@ describe("MCPAdapter configuration boundary", () => {
         remote: { command: "node", args: [], url: "https://example.com/mcp" },
       },
     };
+
     // @ts-expect-error A command and URL cannot belong to the same connection.
     expect(() => new MCPAdapter(ambiguous)).toThrow(/command or an HTTP URL/);
   });
@@ -1118,6 +1125,7 @@ describe("MCPAdapter configuration boundary", () => {
   test("retains callback identity and isolates mutable configuration snapshots", () => {
     const onMessage = vi.fn();
     const beforeToolCall = vi.fn();
+
     const adapter = new MCPAdapter({
       servers: {
         local: {
@@ -1136,15 +1144,18 @@ describe("MCPAdapter configuration boundary", () => {
       onMessage,
       beforeToolCall,
     });
+
     const snapshot = adapter.config;
     expect(snapshot.onMessage).toBe(onMessage);
     expect(snapshot.beforeToolCall).toBe(beforeToolCall);
     const local = snapshot.mcpServers.local;
+
     if (local.transport !== "stdio") throw new Error("Expected stdio config");
     local.args.push("changed");
     local.env!.MODE = "changed";
     local.restart!.enabled = true;
     const remote = snapshot.mcpServers.remote;
+
     if (remote.transport !== "http") throw new Error("Expected HTTP config");
     remote.headers!["X-Test"] = "changed";
     remote.reconnect!.enabled = true;

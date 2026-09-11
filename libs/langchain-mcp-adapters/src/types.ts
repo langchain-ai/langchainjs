@@ -32,17 +32,21 @@ const callToolResultContentTypeSchema = z.enum([
   "resource_link",
   "text",
 ]);
+
 export const callToolResultContentTypes =
   callToolResultContentTypeSchema.options;
+
 export type CallToolResultContentType = z.output<
   typeof callToolResultContentTypeSchema
 >;
 
 const outputTypesUnion = z.enum(["content", "artifact"]);
+
 const detailedOutputHandlingSchema = z.partialRecord(
   callToolResultContentTypeSchema,
   outputTypesUnion.optional()
 );
+
 export type DetailedOutputHandling = z.output<
   typeof detailedOutputHandlingSchema
 >;
@@ -365,6 +369,7 @@ export const streamableHttpConnectionSchema = z.union([
   httpConnectionSchema,
   sseConnectionSchema,
 ]);
+
 export const connectionSchema = z.union([
   stdioConnectionSchema,
   streamableHttpConnectionSchema,
@@ -525,6 +530,7 @@ const clientOptionsSchema = z
   .describe("Configuration for the MCP client");
 
 const serverMapSchema = z.record(z.string(), connectionSchema);
+
 const exclusiveServerMap = z
   .never({ error: "Specify servers or legacy mcpServers, not both" })
   .optional();

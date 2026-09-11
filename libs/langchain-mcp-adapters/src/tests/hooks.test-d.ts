@@ -127,9 +127,11 @@ test("canonical adapter API retains typed SDK callbacks and native tools", () =>
     },
     beforeToolCall: async ({ args }) => {
       expectTypeOf(args).toEqualTypeOf<unknown>();
+
       return { args: { value: 1 } };
     },
   });
+
   expectTypeOf(adapter).toEqualTypeOf<MultiServerMCPClient>();
   expectTypeOf(adapter.close()).toEqualTypeOf<Promise<void>>();
 });

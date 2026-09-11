@@ -303,6 +303,7 @@ export class ConnectionManager {
     if (Object.keys(headers).length === 0)
       return Promise.resolve(connection.client);
     const options = connection.transportOptions;
+
     if (options.transport === "stdio") {
       throw new Error("Forking stdio transport is not supported");
     }
