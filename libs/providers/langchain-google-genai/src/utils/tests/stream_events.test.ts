@@ -1,18 +1,27 @@
 import { describe, test, expect } from "vitest";
 import type { EnhancedGenerateContentResponse } from "@google/generative-ai";
 import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
+import { ChatModelStream } from "@langchain/core/language_models/stream";
 import { convertGoogleGenAIStream } from "../stream_events.js";
+import {
+  _FUNCTION_CALL_THOUGHT_SIGNATURES_MAP_KEY,
+  convertMessageContentToParts,
+} from "../common.js";
 
-async function collectEvents(
-  chunks: Record<string, unknown>[]
-): Promise<ChatModelStreamEvent[]> {
-  const out: ChatModelStreamEvent[] = [];
+function streamResponses(chunks: Record<string, unknown>[]) {
   async function* source() {
     for (const chunk of chunks) {
       yield chunk as unknown as EnhancedGenerateContentResponse;
     }
   }
-  for await (const event of convertGoogleGenAIStream(source())) {
+  return convertGoogleGenAIStream(source());
+}
+
+async function collectEvents(
+  chunks: Record<string, unknown>[]
+): Promise<ChatModelStreamEvent[]> {
+  const out: ChatModelStreamEvent[] = [];
+  for await (const event of streamResponses(chunks)) {
     out.push(event);
   }
   return out;
@@ -85,5 +94,94 @@ describe("convertGoogleGenAIStream", () => {
     ).toMatchObject({
       content: { reasoning: "Let me think" },
     });
+  });
+
+  test("preserves thought signatures and tool call ids", async () => {
+    const message = await new ChatModelStream(
+      streamResponses([
+        {
+          candidates: [
+            {
+              content: {
+                parts: [
+                  {
+                    text: "planning",
+                    thought: true,
+                    thoughtSignature: "THOUGHT_SIG",
+                  },
+                  {
+                    functionCall: {
+                      name: "get_weather",
+                      args: { city: "Paris" },
+                    },
+                    thoughtSignature: "FC_SIG",
+                  },
+                ],
+              },
+              finishReason: "STOP",
+            },
+          ],
+        },
+      ])
+    );
+
+    expect(message.content).toEqual([
+      {
+        type: "reasoning",
+        reasoning: "planning",
+        signature: "THOUGHT_SIG",
+      },
+      {
+        type: "tool_call",
+        id: expect.any(String),
+        name: "get_weather",
+        args: { city: "Paris" },
+      },
+    ]);
+
+    const toolCallId = message.tool_calls?.[0]?.id;
+    expect(toolCallId).toEqual(expect.any(String));
+    expect(message.response_metadata).toMatchObject({
+      [_FUNCTION_CALL_THOUGHT_SIGNATURES_MAP_KEY]: {
+        [toolCallId!]: "FC_SIG",
+      },
+    });
+  });
+
+  test("replays streamed tool calls with their thought signature", async () => {
+    const message = await new ChatModelStream(
+      streamResponses([
+        {
+          candidates: [
+            {
+              content: {
+                parts: [
+                  {
+                    functionCall: {
+                      name: "get_weather",
+                      args: { city: "Paris" },
+                    },
+                    thoughtSignature: "FC_SIG",
+                  },
+                ],
+              },
+              finishReason: "STOP",
+            },
+          ],
+        },
+      ])
+    );
+
+    expect(
+      convertMessageContentToParts(message, false, [], "gemini-3.1-pro-preview")
+    ).toEqual([
+      {
+        functionCall: {
+          name: "get_weather",
+          args: { city: "Paris" },
+        },
+        thoughtSignature: "FC_SIG",
+      },
+    ]);
   });
 });
