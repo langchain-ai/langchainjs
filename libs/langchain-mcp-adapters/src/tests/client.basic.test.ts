@@ -1207,6 +1207,7 @@ describe("MCPAdapter configuration boundary", () => {
           restart: { enabled: false },
         },
         remote: {
+          mode: "legacy",
           url: "https://example.com/mcp",
           headers: { "X-Test": "original" },
           reconnect: { enabled: false },

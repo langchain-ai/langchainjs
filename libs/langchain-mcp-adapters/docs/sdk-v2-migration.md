@@ -291,3 +291,37 @@ callback validation, and scope step-up; production identity-provider
 interoperability is not implied. URL elicitation is separate from OAuth. See
 [OAuth responsibilities](../README.md#oauth-responsibilities) and
 [callback completion](../README.md#complete-an-oauth-callback).
+
+## Resource subscriptions and reconnection
+
+Move resource URI selection into each server's `resourceSubscriptions` array and
+receive notifications through its `onResourcesUpdated` callback. The adapter uses
+modern `subscriptions/listen` or legacy `resources/subscribe` according to server
+mode, and rejects subscriptions when the server does not advertise support.
+
+`reconnect` is now legacy-only. Modern MCP removed event replay and stream
+resumption. A lost tool response is not proof that the operation did not execute;
+retry only when application/server semantics make that safe. Modern subscription
+streams are not automatically reopened; close and reconnect explicitly.
+
+Protocol logging and SSE remain deprecated compatibility features. Prefer
+OpenTelemetry/stderr and Streamable HTTP. DCR is also deprecated, but keep SDK
+fallback for authorization servers without CIMD support; it is not a legacy-MCP-only
+setting. Roots/sampling and experimental task extensions are not new adapter APIs.
+
+## Release prerequisite: public revision-specific elicitation schemas
+
+SDK 2.0.0's neutral URL validator still requires the legacy elicitationId. The
+adapter currently isolates a modern URL schema exception. The major release is
+blocked on a published SDK API that exposes revision-specific elicitation
+validators through its public client entry point, followed by removal of that
+exception. Private SDK imports and an invented elicitationId are not acceptable
+substitutes.
+
+The prepared upstream proposal exposes Standard Schema validators for Request,
+FormParams, URLParams, and Result, selected by protocol revision. It reuses the
+SDK's frozen schema builders and preserves lazy construction. Upstream review,
+package/export verification, and a published version are still required. Before
+release, switch the adapter to that public API and rerun legacy/modern form and
+URL validation, graph continuation, and ESM/CommonJS package checks. Do not claim
+that the current workaround closes this release prerequisite.

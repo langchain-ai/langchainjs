@@ -2,6 +2,7 @@ import type { MCPElicitationHandler } from "./elicitation.js";
 import { z } from "zod";
 import { isSpecType } from "@modelcontextprotocol/client";
 import type {
+  SubscriptionFilter,
   LoggingLevel,
   CacheMode,
   CallToolResult,
@@ -374,6 +375,7 @@ export interface ServerMessageSource {
 // services; parsing a function schema would replace their identity with a wrapper.
 const notifications = z.object({
   /**
+   * @deprecated Protocol logging is deprecated; prefer OpenTelemetry or stderr.
    * Called when a log message is received.
    *
    * @param logMessage - The log message
@@ -613,11 +615,22 @@ const removedRootsObserver = z
   })
   .optional();
 
-const serverNotifications = notifications.omit({ onInitialized: true });
+const resourceSubscriptionsSchema = z
+  .custom<NonNullable<SubscriptionFilter["resourceSubscriptions"]>>(
+    (value) => isSpecType.SubscriptionFilter({ resourceSubscriptions: value }),
+    "Expected resource subscription URIs"
+  )
+  .transform((uris) => [...uris]);
+
+const serverNotifications = notifications.omit({ onInitialized: true }).extend({
+  /** Resource URIs to watch; updates are delivered to onResourcesUpdated. */
+  resourceSubscriptions: resourceSubscriptionsSchema.optional(),
+});
 
 const modernPolicy = z
   .object({
     mode: z.literal("modern").optional().default("modern"),
+    /** @deprecated Protocol logging is deprecated; prefer OpenTelemetry or stderr. */
     logLevel: loggingLevelSchema.optional(),
     maxElicitationRounds: z.int().positive().default(32),
     onElicitation: z
@@ -656,7 +669,8 @@ const legacyPolicy = z
       .optional(),
     onRootsListChanged: removedRootsObserver,
   })
-  .extend(notifications.shape);
+  .extend(notifications.shape)
+  .extend({ resourceSubscriptions: resourceSubscriptionsSchema.optional() });
 
 /** Transport aliases are normalized once; every public entry uses the same mode rules. */
 export const stdioConnectionSchema = z
@@ -677,7 +691,17 @@ const httpTransport = httpOptionsSchema
       .optional(),
   });
 
-const modernHttp = httpTransport.extend(modernPolicy.shape).strict();
+const modernHttp = httpTransport
+  .extend(modernPolicy.shape)
+  .extend({
+    reconnect: z
+      .never({
+        error:
+          "reconnect is legacy-only; modern streams cannot replay lost requests",
+      })
+      .optional(),
+  })
+  .strict();
 
 const legacyHttp = httpTransport
   .extend(legacyPolicy.shape)
@@ -788,6 +812,7 @@ const clientOptionsSchema = z
   .extend(baseConfigSchema.shape)
   .extend(toolHooksSchema.shape)
   .extend({
+    resourceSubscriptions: serverOnlyCallback,
     onMessage: serverOnlyCallback,
     onProgress: serverOnlyCallback,
     onCancelled: serverOnlyCallback,

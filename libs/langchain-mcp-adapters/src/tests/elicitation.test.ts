@@ -1,4 +1,10 @@
-import { createServer } from "node:http";
+import { Server as LegacyServer } from "@modelcontextprotocol/sdk/server/index.js";
+import { StreamableHTTPServerTransport as LegacyTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import {
+  ListResourcesRequestSchema,
+  SubscribeRequestSchema,
+} from "@modelcontextprotocol/sdk/types.js";
+import { createServer, type ServerResponse } from "node:http";
 import { once } from "node:events";
 import { join } from "node:path";
 import { createMcpHandler, McpServer } from "@modelcontextprotocol/server";
@@ -9,9 +15,7 @@ import { MCPAdapter } from "../index.js";
 
 import { describe, expect, it, vi } from "vitest";
 import { sdkSchema, validateElicitationAnswer } from "../elicitation.js";
-import type {
-  MCPElicitationRequest,
-} from "../elicitation.js";
+import type { MCPElicitationRequest } from "../elicitation.js";
 
 const form = {
   message: "Approve deployment?",
@@ -336,4 +340,206 @@ it("composes Standard Schema defaults and issue paths through Zod", async () => 
   expect(result.success).toBe(false);
 
   if (!result.success) expect(result.error.issues[0].path).toEqual(["label"]);
+});
+
+it.each([true, false])(
+  "watches configured modern resource URIs (supported: %s)",
+  async (supported) => {
+    const updated = vi.fn();
+
+    const handler = createMcpHandler(
+      () => {
+        const server = new McpServer(
+          { name: "resources", version: "1" },
+          {
+            capabilities: { resources: { subscribe: supported } },
+          }
+        );
+
+        server.registerResource("watched", "test://watched", {}, async () => ({
+          contents: [{ uri: "test://watched", text: "value" }],
+        }));
+
+        return server;
+      },
+      { legacy: "reject" }
+    );
+
+    const http = createServer(toNodeHandler(handler));
+    http.listen(0, "127.0.0.1");
+    await once(http, "listening");
+    const { port } = z.object({ port: z.number() }).parse(http.address());
+
+    const adapter = new MCPAdapter({
+      servers: {
+        resources: {
+          url: `http://127.0.0.1:${port}/mcp`,
+          resourceSubscriptions: ["test://watched"],
+          onResourcesUpdated: updated,
+        },
+      },
+    });
+
+    try {
+      if (!supported) {
+        await expect(adapter.listResources()).rejects.toThrow(
+          /does not support resource subscriptions/
+        );
+
+        return;
+      }
+
+      await adapter.listResources();
+      await handler.notify.resourceUpdated("test://ignored");
+      await handler.notify.resourceUpdated("test://watched");
+      await vi.waitFor(() => expect(updated).toHaveBeenCalledTimes(1));
+      expect(updated.mock.calls[0][0]).toMatchObject({ uri: "test://watched" });
+      await adapter.close();
+      await handler.notify.resourceUpdated("test://watched");
+      expect(updated).toHaveBeenCalledTimes(1);
+    } finally {
+      await adapter.close();
+      http.close();
+      http.closeAllConnections();
+      await once(http, "close");
+    }
+  }
+);
+
+it("rejects modern reconnect settings and invalid resource subscriptions", () => {
+  for (const options of [
+    { reconnect: { enabled: true } },
+    { resourceSubscriptions: [42] },
+  ]) {
+    expect(
+      adapterConfigSchema.safeParse({
+        servers: {
+          server: {
+            url: "https://example.com/mcp",
+            ...options,
+          },
+        },
+      }).success
+    ).toBe(false);
+  }
+
+  expect(
+    adapterConfigSchema.parse({
+      servers: {
+        server: {
+          mode: "legacy",
+          url: "https://example.com/mcp",
+          reconnect: { enabled: false },
+        },
+      },
+    }).mcpServers.server.mode
+  ).toBe("legacy");
+});
+
+it("routes legacy resource subscriptions through resources/subscribe", async () => {
+  const subscribed: string[] = [];
+  const updated = vi.fn();
+
+  const server = new LegacyServer(
+    { name: "legacy-resources", version: "1" },
+    {
+      capabilities: { resources: { subscribe: true } },
+    }
+  );
+
+  server.setRequestHandler(ListResourcesRequestSchema, async () => ({
+    resources: [],
+  }));
+  server.setRequestHandler(SubscribeRequestSchema, async ({ params }) => {
+    subscribed.push(params.uri);
+
+    return {};
+  });
+
+  const transport = new LegacyTransport({
+    sessionIdGenerator: () => "resource-subscription-test",
+  });
+
+  await server.connect(transport);
+
+  const http = createServer((req, res) => {
+    transport.handleRequest(req, res);
+  });
+
+  http.listen(0, "127.0.0.1");
+  await once(http, "listening");
+  const { port } = z.object({ port: z.number() }).parse(http.address());
+
+  const adapter = new MCPAdapter({
+    servers: {
+      resources: {
+        mode: "legacy",
+        url: `http://127.0.0.1:${port}/mcp`,
+        automaticSSEFallback: false,
+        resourceSubscriptions: ["test://watched"],
+        onResourcesUpdated: updated,
+      },
+    },
+  });
+
+  try {
+    await adapter.listResources();
+    expect(subscribed).toEqual(["test://watched"]);
+  } finally {
+    await adapter.close();
+    await server.close();
+    http.close();
+    http.closeAllConnections();
+    await once(http, "close");
+  }
+});
+
+it("does not replay a modern tool whose response stream is lost", async () => {
+  let response: ServerResponse | undefined;
+  let executions = 0;
+
+  const handler = createMcpHandler(
+    () => {
+      const server = new McpServer({ name: "disconnect", version: "1" });
+      server.registerTool(
+        "disconnect",
+        { inputSchema: z.object({}) },
+        async () => {
+          executions += 1;
+          response?.destroy();
+
+          return { content: [] };
+        }
+      );
+
+      return server;
+    },
+    { legacy: "reject" }
+  );
+
+  const serve = toNodeHandler(handler);
+
+  const http = createServer((req, res) => {
+    response = res;
+    serve(req, res);
+  });
+
+  http.listen(0, "127.0.0.1");
+  await once(http, "listening");
+  const { port } = z.object({ port: z.number() }).parse(http.address());
+
+  const adapter = new MCPAdapter({
+    servers: { server: { url: `http://127.0.0.1:${port}/mcp` } },
+  });
+
+  try {
+    const [tool] = await adapter.listTools();
+    await expect(tool.invoke({})).rejects.toThrow();
+    expect(executions).toBe(1);
+  } finally {
+    await adapter.close();
+    http.close();
+    http.closeAllConnections();
+    await once(http, "close");
+  }
 });

@@ -289,6 +289,7 @@ export class MCPAdapter {
   }
 
   /**
+   * @deprecated Protocol logging is deprecated; prefer OpenTelemetry or stderr.
    * Set the logging level for all servers
    * @param level - The logging level
    *
@@ -299,6 +300,7 @@ export class MCPAdapter {
    */
   async setLoggingLevel(level: LoggingLevel): Promise<void>;
   /**
+   * @deprecated Protocol logging is deprecated; prefer OpenTelemetry or stderr.
    * Set the logging level for a specific server
    * @param serverName - The name of the server
    * @param level - The logging level

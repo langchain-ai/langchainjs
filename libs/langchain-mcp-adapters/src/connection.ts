@@ -1,4 +1,6 @@
 import { InterruptMCPClient } from "./continuation.js";
+
+import { MCPClientError } from "./utils/errors.js";
 import { configureElicitation } from "./elicitation.js";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import {
@@ -299,6 +301,18 @@ export class ConnectionManager {
     try {
       await mcpClient.connect(transport);
 
+      const resourceSubscriptions = options.resourceSubscriptions ?? [];
+
+      if (
+        resourceSubscriptions.length > 0 &&
+        !mcpClient.getServerCapabilities()?.resources?.subscribe
+      ) {
+        throw new MCPClientError(
+          `MCP server "${serverName}" does not support resource subscriptions`,
+          serverName
+        );
+      }
+
       if (mcpClient.getProtocolEra() === "modern") {
         const capabilities = mcpClient.getServerCapabilities();
 
@@ -316,7 +330,18 @@ export class ConnectionManager {
           ),
         };
 
-        if (Object.values(filter).some(Boolean)) await mcpClient.listen(filter);
+        if (
+          Object.values(filter).some(Boolean) ||
+          resourceSubscriptions.length > 0
+        ) {
+          await mcpClient.listen({ ...filter, resourceSubscriptions });
+        }
+      } else {
+        await Promise.all(
+          resourceSubscriptions.map((uri) =>
+            mcpClient.subscribeResource({ uri })
+          )
+        );
       }
     } catch (error) {
       await Promise.allSettled([mcpClient.close(), transport.close()]);
@@ -551,7 +576,14 @@ export class ConnectionManager {
       ...(headers ? { requestInit: { headers } } : {}),
     };
 
-    if (reconnect != null) {
+    if (args.mode === "modern") {
+      options.reconnectionOptions = {
+        maxRetries: 0,
+        initialReconnectionDelay: 1000,
+        maxReconnectionDelay: 30000,
+        reconnectionDelayGrowFactor: 1.5,
+      };
+    } else if (reconnect != null) {
       const reconnectionOptions: StreamableHTTPReconnectionOptions = {
         initialReconnectionDelay: reconnect?.delayMs ?? 1000, // MCP default
         maxReconnectionDelay: reconnect?.delayMs ?? 30000, // MCP default
