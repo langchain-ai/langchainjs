@@ -157,8 +157,25 @@ failures retain their original cause. Catch using exported `isToolException`.
 Arguments modified by `beforeToolCall` are now checked against the **original
 server JSON Schema** before being sent. For example, a hook adding an undeclared
 property fails if the server declares `additionalProperties: false`, even if the
-model-facing projection accepts it. Projection cannot remove server constraints.
-Original descriptors are not mutated.
+model-facing schema override accepts it. Original descriptors are not mutated.
+
+The adapter no longer flattens `allOf`/`anyOf`/`oneOf`, inlines `$ref`, or removes
+conditional keywords. `tool.schema` preserves the server's JSON Schema. Your
+model provider must support that schema: the Anthropic integration, for example,
+omits tools containing root-level composition keywords. Publish a compatible
+schema on the server, or explicitly set `tool.schema` before binding the tool to
+your model. That override does not weaken post-hook validation against the
+original server schema.
+
+Core validates initial arguments against `tool.schema` before hooks run. Inputs
+that previously passed a simplified schema may now fail before `beforeToolCall`.
+Do not rely on hooks to repair initially invalid input unless you intentionally
+provide a different model-facing schema.
+
+The minimum core version is now `1.2.6`. `ToolException` extends core's branded
+`LangChainError`; use `ToolException.isInstance(error)` or `isToolException(error)`
+to narrow it. Both recognize errors from duplicate adapter modules but reject
+name-only lookalikes. Zod issue formatting, `cause`, and `result` are preserved.
 
 ## Connection and discovery behavior
 
