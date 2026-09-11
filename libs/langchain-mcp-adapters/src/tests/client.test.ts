@@ -1512,7 +1512,6 @@ describe("MultiServerMCPClient Integration Tests", () => {
             },
           },
           // Ensure we test with standard content blocks as per README recommendation for new apps
-          useStandardContentBlocks: true,
         });
 
         try {
@@ -1547,8 +1546,8 @@ describe("MultiServerMCPClient Integration Tests", () => {
             (c) => c.type === "audio"
           ) as ContentBlock.Multimodal.Audio;
           expect(audioBlock).toBeDefined();
-          expect(audioBlock.source_type).toBe("base64");
-          expect(audioBlock.mime_type).toBe("audio/wav");
+          expect(audioBlock.source_type).toBeUndefined();
+          expect(audioBlock.mimeType).toBe("audio/wav");
           expect(typeof audioBlock.data).toBe("string");
           expect(audioBlock.data?.length).toBeGreaterThan(10);
         } finally {
@@ -1558,7 +1557,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
     );
   });
 
-  describe("useStandardContentBlocks Configuration", () => {
+  describe("Standard content blocks", () => {
     const serverName = "content-block-test-server";
     const toolInput = { input: "test standard blocks" };
     const fakeToolCallBase = {
@@ -1567,7 +1566,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
     };
 
     it.each(["http", "sse"] as const)(
-      "should use Standard Content Blocks when useStandardContentBlocks is true (%s)",
+      "should use Standard Content Blocks by default (%s)",
       async (transport) => {
         const { baseUrl } = await testServers.createHTTPServer(
           "http-std-true",
@@ -1583,7 +1582,6 @@ describe("MultiServerMCPClient Integration Tests", () => {
               url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
             },
           },
-          useStandardContentBlocks: true,
         });
 
         try {
@@ -1612,8 +1610,9 @@ describe("MultiServerMCPClient Integration Tests", () => {
           const imgBlock = imgContentArray.find(
             (c) => c.type === "image"
           ) as ContentBlock.Multimodal.Data;
-          expect(imgBlock.source_type).toBe("base64");
-          expect(imgBlock.mime_type).toBe("image/png");
+
+          expect(imgBlock.source_type).toBeUndefined();
+          expect(imgBlock.mimeType).toBe("image/png");
           expect(typeof imgBlock.data).toBe("string");
 
           // Test Audio Tool (should always use StandardAudioBlock)
@@ -1635,78 +1634,9 @@ describe("MultiServerMCPClient Integration Tests", () => {
           const audioBlock = audioContentArray.find(
             (c) => c.type === "audio"
           ) as ContentBlock.Multimodal.Audio;
-          expect(audioBlock.source_type).toBe("base64");
-          expect(audioBlock.mime_type).toBe("audio/wav");
-        } finally {
-          await client.close();
-        }
-      }
-    );
 
-    it.each(["http", "sse"] as const)(
-      "should use legacy ImageUrl when useStandardContentBlocks is false (%s)",
-      async (transport) => {
-        const { baseUrl } = await testServers.createHTTPServer(
-          "http-std-false",
-          {
-            disableStreamableHttp: transport === "sse",
-            supportSSEFallback: transport === "sse",
-          }
-        );
-        const client = new MultiServerMCPClient({
-          mcpServers: {
-            [serverName]: {
-              url: `${baseUrl}/${transport === "http" ? "mcp" : "sse"}`,
-            },
-          },
-          /* useStandardContentBlocks: false */ // defaults to false
-        });
-
-        try {
-          const tools = await client.getTools();
-          const imageTool = tools.find((t) => t.name.includes("image_tool"));
-          expect(imageTool).toBeDefined();
-
-          const { content: imgContent, artifact: imgArtifact } =
-            await imageTool!.invoke({
-              ...fakeToolCallBase,
-              name: imageTool!.name,
-              args: toolInput,
-            });
-          expect(imgArtifact).toEqual([]);
-          const imgContentArray = imgContent as ContentBlock[];
-
-          const imgTextBlock = imgContentArray.find(
-            (c) => c.type === "text"
-          ) as ContentBlock.Text;
-          expect(imgTextBlock.text).toContain(
-            "Image input was: test standard blocks"
-          );
-          // Check for legacy image_url format
-          const imgUrlBlock = imgContentArray.find(
-            (c) => c.type === "image_url"
-          ) as ContentBlock.Multimodal.Data;
-          expect(imgUrlBlock).toBeDefined();
-          // @ts-expect-error image_url is unknown
-          const imageUrl = imgUrlBlock.image_url?.url;
-          expect(imageUrl).toMatch(/^data:image\/png;base64,/);
-
-          // Audio should still use StandardAudioBlock
-          const audioTool = tools.find((t) => t.name.includes("audio_tool"));
-          expect(audioTool).toBeDefined();
-          const { content: audioContent, artifact: audioArtifact } =
-            await audioTool!.invoke({
-              ...fakeToolCallBase,
-              name: audioTool!.name,
-              args: toolInput,
-            });
-          expect(audioArtifact).toEqual([]);
-          const audioContentArray = audioContent as ContentBlock[];
-          const audioBlock = audioContentArray.find(
-            (c) => c.type === "audio"
-          ) as ContentBlock.Multimodal.Audio;
-          expect(audioBlock.source_type).toBe("base64");
-          expect(audioBlock.mime_type).toBe("audio/wav");
+          expect(audioBlock.source_type).toBeUndefined();
+          expect(audioBlock.mimeType).toBe("audio/wav");
         } finally {
           await client.close();
         }
@@ -1783,10 +1713,9 @@ describe("MultiServerMCPClient Integration Tests", () => {
                 ),
               }),
               expect.objectContaining({
-                type: "image_url",
-                image_url: expect.objectContaining({
-                  url: expect.stringMatching(/^data:image\/png;base64,/),
-                }),
+                type: "image",
+                mimeType: "image/png",
+                data: expect.any(String),
               }),
             ])
           );
@@ -1844,7 +1773,6 @@ describe("MultiServerMCPClient Integration Tests", () => {
             },
           },
           outputHandling: "artifact",
-          useStandardContentBlocks: false,
         });
 
         try {
@@ -1934,7 +1862,6 @@ describe("MultiServerMCPClient Integration Tests", () => {
             },
           },
           outputHandling: "content",
-          useStandardContentBlocks: false,
         });
 
         try {
@@ -1957,10 +1884,9 @@ describe("MultiServerMCPClient Integration Tests", () => {
                 ),
               }),
               expect.objectContaining({
-                type: "image_url",
-                image_url: expect.objectContaining({
-                  url: expect.stringMatching(/^data:image\/png;base64,/),
-                }),
+                type: "image",
+                mimeType: "image/png",
+                data: expect.any(String),
               }),
             ])
           );
@@ -1980,9 +1906,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
                 ),
               }),
               expect.objectContaining({
-                type: "file",
-                source_type: "text",
-                mime_type: "text/plain",
+                type: "text",
                 text: "This is a test resource.",
                 metadata: { uri: "mem://test.txt" },
               }),
@@ -2015,7 +1939,6 @@ describe("MultiServerMCPClient Integration Tests", () => {
             audio: "content",
             resource: "content",
           },
-          useStandardContentBlocks: false,
         });
 
         try {
@@ -2050,7 +1973,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
             expect.arrayContaining([
               expect.objectContaining({ type: "text" }),
               expect.objectContaining({
-                type: "file",
+                type: "text",
                 metadata: { uri: "mem://test.txt" },
               }),
             ])
@@ -2081,7 +2004,6 @@ describe("MultiServerMCPClient Integration Tests", () => {
             },
           },
           outputHandling: "artifact",
-          useStandardContentBlocks: false,
         };
         const client = new MultiServerMCPClient(clientConfig);
 
@@ -2095,10 +2017,9 @@ describe("MultiServerMCPClient Integration Tests", () => {
           const imgContentArray = imgContent as ContentBlock[];
           expect(imgContentArray).toHaveLength(1);
           expect(imgContentArray[0]).toEqual({
-            image_url: {
-              url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
-            },
-            type: "image_url",
+            type: "image",
+            mimeType: "image/png",
+            data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
           });
           expect(imgArtifact).toHaveLength(1);
           expect(imgArtifact[0]).toEqual({
@@ -2126,7 +2047,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
     );
 
     it.each(["http", "sse"] as const)(
-      "should respect outputHandling with useStandardContentBlocks=true (%s)",
+      "should respect outputHandling with standard content (%s)",
       async (transport) => {
         const serverName = `${serverNameBase}-std-blocks-${transport}`;
         const { baseUrl } = await testServers.createHTTPServer(serverName, {
@@ -2146,7 +2067,6 @@ describe("MultiServerMCPClient Integration Tests", () => {
             audio: "content",
             resource: "artifact",
           },
-          useStandardContentBlocks: true,
         });
 
         try {
@@ -2163,7 +2083,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
             const imgContentArray = imgContent as ContentBlock[];
             expect(imgContentArray).toHaveLength(1);
             expect(imgContentArray[0]).toEqual(
-              expect.objectContaining({ type: "text", source_type: "text" })
+              expect.objectContaining({ type: "text" })
             );
           } else {
             expect(imgContent).toEqual([]);
@@ -2172,8 +2092,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
           expect(imgArtifact[0]).toEqual(
             expect.objectContaining({
               type: "image",
-              source_type: "base64",
-              mime_type: "image/png",
+              mimeType: "image/png",
             })
           );
 
@@ -2184,11 +2103,10 @@ describe("MultiServerMCPClient Integration Tests", () => {
           expect(audioContentArray).toHaveLength(2);
           expect(audioContentArray).toEqual(
             expect.arrayContaining([
-              expect.objectContaining({ type: "text", source_type: "text" }),
+              expect.objectContaining({ type: "text" }),
               expect.objectContaining({
                 type: "audio",
-                source_type: "base64",
-                mime_type: "audio/wav",
+                mimeType: "audio/wav",
               }),
             ])
           );
@@ -2201,7 +2119,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
             const resContentArray = resContent as ContentBlock[];
             expect(resContentArray).toHaveLength(1);
             expect(resContentArray[0]).toEqual(
-              expect.objectContaining({ type: "text", source_type: "text" })
+              expect.objectContaining({ type: "text" })
             );
           } else {
             expect(resContent).toEqual([]);
@@ -2209,10 +2127,12 @@ describe("MultiServerMCPClient Integration Tests", () => {
           expect(resArtifact).toHaveLength(1);
           expect(resArtifact[0]).toEqual(
             expect.objectContaining({
-              type: "file",
-              source_type: "text",
-              mime_type: "text/plain",
-              metadata: { uri: "mem://test.txt" },
+              type: "resource",
+              resource: {
+                uri: "mem://test.txt",
+                mimeType: "text/plain",
+                text: "This is a test resource.",
+              },
             })
           );
         } finally {

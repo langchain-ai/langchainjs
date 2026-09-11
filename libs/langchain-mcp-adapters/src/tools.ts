@@ -8,8 +8,6 @@ import type {
   CallToolResult,
   ContentBlock as MCPContentBlock,
   Client as MCPClient,
-  EmbeddedResource,
-  ReadResourceResult,
   Tool as MCPTool,
   ListToolsResult,
   RequestOptions,
@@ -530,202 +528,78 @@ export function isToolException(error: unknown): error is ToolException {
   );
 }
 
-function isResourceReference(
-  resource:
-    | EmbeddedResource["resource"]
-    | ReadResourceResult["contents"][number]
-): boolean {
-  return (
-    typeof resource === "object" &&
-    resource !== null &&
-    "uri" in resource &&
-    typeof resource.uri === "string" &&
-    (!("blob" in resource) || resource.blob == null) &&
-    (!("text" in resource) || resource.text == null)
-  );
-}
-
-async function* _embeddedResourceToStandardFileBlocks(
-  resource:
-    | EmbeddedResource["resource"]
-    | ReadResourceResult["contents"][number],
-  client: MCPInstance
-): AsyncGenerator<
-  | (ContentBlock.Data.StandardFileBlock & ContentBlock.Data.Base64ContentBlock)
-  | (ContentBlock.Data.StandardFileBlock &
-      ContentBlock.Data.PlainTextContentBlock)
-> {
-  if (isResourceReference(resource)) {
-    const response: ReadResourceResult = await client.readResource({
-      uri: resource.uri,
-    });
-    for (const content of response.contents) {
-      yield* _embeddedResourceToStandardFileBlocks(content, client);
-    }
-    return;
-  }
-
-  if ("blob" in resource && resource.blob != null) {
-    yield {
-      type: "file",
-      source_type: "base64",
-      data: resource.blob,
-      mime_type: resource.mimeType,
-      ...(resource.uri != null ? { metadata: { uri: resource.uri } } : {}),
-    } satisfies ContentBlock.Data.StandardFileBlock &
-      ContentBlock.Data.Base64ContentBlock;
-  }
-  if ("text" in resource && resource.text != null) {
-    yield {
-      type: "file",
-      source_type: "text",
-      mime_type: resource.mimeType,
-      text: resource.text,
-      ...(resource.uri != null ? { metadata: { uri: resource.uri } } : {}),
-    } satisfies ContentBlock.Data.StandardFileBlock &
-      ContentBlock.Data.PlainTextContentBlock;
-  }
-}
-
-async function _toolOutputToContentBlocks(
+/** Terminal conversion never dereferences resource URIs or performs network IO. */
+function _toolOutputToContentBlocks(
   content: MCPContentBlock,
-  useStandardContentBlocks: true,
-  client: MCPInstance,
   toolName: string,
   serverName: string
-): Promise<ContentBlock.Multimodal.Standard[]>;
-async function _toolOutputToContentBlocks(
-  content: MCPContentBlock,
-  useStandardContentBlocks: false | undefined,
-  client: MCPInstance,
-  toolName: string,
-  serverName: string
-): Promise<ContentBlock[]>;
-async function _toolOutputToContentBlocks(
-  content: MCPContentBlock,
-  useStandardContentBlocks: boolean | undefined,
-  client: MCPInstance,
-  toolName: string,
-  serverName: string
-): Promise<(ContentBlock | ContentBlock.Multimodal.Standard)[]>;
-async function _toolOutputToContentBlocks(
-  content: MCPContentBlock,
-  useStandardContentBlocks: boolean | undefined,
-  client: MCPInstance,
-  toolName: string,
-  serverName: string
-): Promise<(ContentBlock | ContentBlock.Multimodal.Standard)[]> {
-  const blocks: ContentBlock.Data.StandardFileBlock[] = [];
+): ContentBlock[] {
   const contentType = content.type;
 
   switch (content.type) {
     case "text":
-      return [
-        {
-          type: "text",
-          ...(useStandardContentBlocks
-            ? {
-                source_type: "text",
-              }
-            : {}),
-          text: content.text,
-        } satisfies ContentBlock.Text,
-      ];
+      return [{ type: "text", text: content.text }];
     case "image":
-      if (useStandardContentBlocks) {
-        return [
-          {
-            type: "image",
-            source_type: "base64",
-            data: content.data,
-            mime_type: content.mimeType,
-          } satisfies ContentBlock.Data.StandardImageBlock,
-        ];
-      }
       return [
         {
-          type: "image_url",
-          image_url: {
-            url: `data:${content.mimeType};base64,${content.data}`,
-          },
-        } satisfies ContentBlock,
+          type: "image",
+          data: content.data,
+          mimeType: content.mimeType,
+        } satisfies ContentBlock.Multimodal.Image,
       ];
     case "audio":
-      // We don't check `useStandardContentBlocks` here because we only support audio via
-      // standard content blocks
       return [
         {
           type: "audio",
-          source_type: "base64",
           data: content.data,
-          mime_type: content.mimeType,
-        } satisfies ContentBlock.Data.StandardAudioBlock,
+          mimeType: content.mimeType,
+        } satisfies ContentBlock.Multimodal.Audio,
       ];
-    case "resource":
-      for await (const block of _embeddedResourceToStandardFileBlocks(
-        content.resource,
-        client
-      )) {
-        blocks.push(block);
+    case "resource": {
+      const resource = content.resource;
+      const metadata = { uri: resource.uri };
+
+      if ("text" in resource) {
+        return [{ type: "text", text: resource.text, metadata }];
       }
-      return blocks;
+
+      const mimeType = resource.mimeType ?? "application/octet-stream";
+
+      return [
+        {
+          type: mimeType.startsWith("image/")
+            ? "image"
+            : mimeType.startsWith("audio/")
+              ? "audio"
+              : "file",
+          data: resource.blob,
+          mimeType,
+          metadata,
+        } satisfies ContentBlock.Multimodal.Standard,
+      ];
+    }
+
     case "resource_link": {
+      const metadata = {
+        uri: content.uri,
+        name: content.name,
+        ...(content.title !== undefined ? { title: content.title } : {}),
+      };
+
       return [
         {
           type: "file",
-          source_type: "url",
           url: content.uri,
-          mime_type: content.mimeType,
-        } satisfies ContentBlock.Data.StandardFileBlock &
-          ContentBlock.Data.URLContentBlock,
+          mimeType: content.mimeType,
+          metadata,
+        } satisfies ContentBlock.Multimodal.File,
       ];
     }
     default:
       throw new ToolException(
-        `MCP tool '${toolName}' on server '${serverName}' returned a content block with unexpected type "${
-          contentType
-        }." Expected one of ${callToolResultContentTypes.map((t: string) => `"${t}"`).join(", ")}.`
+        `MCP tool '${toolName}' on server '${serverName}' returned unexpected content type "${contentType}". Expected ${callToolResultContentTypes.join(", ")}.`
       );
   }
-}
-
-async function _embeddedResourceToArtifact(
-  resource: MCPContentBlock,
-  useStandardContentBlocks: boolean | undefined,
-  client: MCPInstance,
-  toolName: string,
-  serverName: string
-): Promise<(MCPContentBlock | ContentBlock)[]> {
-  if (useStandardContentBlocks) {
-    return _toolOutputToContentBlocks(
-      resource,
-      useStandardContentBlocks,
-      client,
-      toolName,
-      serverName
-    );
-  }
-
-  if (
-    (!("blob" in resource) || resource.blob == null) &&
-    (!("text" in resource) || resource.text == null) &&
-    "uri" in resource &&
-    typeof resource.uri === "string"
-  ) {
-    const response: ReadResourceResult = await client.readResource({
-      uri: resource.uri,
-    });
-
-    return response.contents.map(
-      (content: ReadResourceResult["contents"][number]) => ({
-        type: "resource",
-        resource: {
-          ...content,
-        },
-      })
-    );
-  }
-  return [resource];
 }
 
 /**
@@ -785,15 +659,6 @@ type ConvertCallToolResultArgs = {
    */
   result: CallToolResult;
   /**
-   * The MCP client that was used to call the tool
-   */
-  client: Client | MCPClient;
-  /**
-   * If true, the tool will use LangChain's standard multimodal content blocks for tools that output
-   * image or audio content. This option has no effect on handling of embedded resource tool output.
-   */
-  useStandardContentBlocks?: boolean;
-  /**
    * Defines where to place each tool output type in the LangChain ToolMessage.
    */
   outputHandling?: OutputHandling;
@@ -828,8 +693,6 @@ async function _convertCallToolResult({
   serverName,
   toolName,
   result,
-  client,
-  useStandardContentBlocks,
   outputHandling,
 }: ConvertCallToolResultArgs): Promise<[ExtendedContent, ExtendedArtifact[]]> {
   if (!result) {
@@ -864,37 +727,15 @@ async function _convertCallToolResult({
               "content"
           )
           .map((content: MCPContentBlock) =>
-            _toolOutputToContentBlocks(
-              content,
-              useStandardContentBlocks,
-              client,
-              toolName,
-              serverName
-            )
+            _toolOutputToContentBlocks(content, toolName, serverName)
           )
       )
     ).flat();
 
-  // Create the text content output
-  const artifacts = (
-    await Promise.all(
-      result.content
-        .filter(
-          (content: MCPContentBlock) =>
-            _getOutputTypeForContentType(content.type, outputHandling) ===
-            "artifact"
-        )
-        .map((content) => {
-          return _embeddedResourceToArtifact(
-            content,
-            useStandardContentBlocks,
-            client,
-            toolName,
-            serverName
-          );
-        })
-    )
-  ).flat();
+  const artifacts = result.content.filter(
+    (content) =>
+      _getOutputTypeForContentType(content.type, outputHandling) === "artifact"
+  );
 
   // Extract structuredContent and _meta from result
   // These are optional fields that are part of the CallToolResult type
@@ -976,11 +817,6 @@ type CallToolArgs = {
    */
   config?: RunnableConfig;
   /**
-   * If true, the tool will use LangChain's standard multimodal content blocks for tools that output
-   * image or audio content. This option has no effect on handling of embedded resource tool output.
-   */
-  useStandardContentBlocks?: boolean;
-  /**
    * Defines where to place each tool output type in the LangChain ToolMessage.
    */
   outputHandling?: OutputHandling;
@@ -1020,7 +856,6 @@ async function _callTool({
   client,
   args,
   config,
-  useStandardContentBlocks,
   outputHandling,
   onProgress,
   beforeToolCall,
@@ -1114,8 +949,6 @@ async function _callTool({
       serverName,
       toolName,
       result,
-      client: finalClient,
-      useStandardContentBlocks,
       outputHandling,
     });
 
@@ -1196,7 +1029,6 @@ const defaultLoadMcpToolsOptions: LoadMcpToolsOptions = {
   throwOnLoadError: true,
   prefixToolNameWithServerName: false,
   additionalToolNamePrefix: "",
-  useStandardContentBlocks: false,
 };
 
 /**
@@ -1215,7 +1047,6 @@ export async function loadMcpTools(
     throwOnLoadError,
     prefixToolNameWithServerName,
     additionalToolNamePrefix,
-    useStandardContentBlocks,
     outputHandling,
     defaultToolTimeout,
   } = {
@@ -1287,7 +1118,6 @@ export async function loadMcpTools(
                   client,
                   args,
                   config,
-                  useStandardContentBlocks,
                   outputHandling,
                   onProgress: options?.onProgress,
                   beforeToolCall: options?.beforeToolCall,

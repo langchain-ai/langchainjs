@@ -130,3 +130,12 @@ Hook `state` is typed `unknown`: it is the unchanged LangGraph task input,
 including arrays and primitives from functional entrypoints. Narrow or parse it
 using your application schema before accessing fields. Calls outside LangGraph
 continue to receive `{}`.
+
+## Standard tool content
+
+Remove `useStandardContentBlocks` from adapter and `loadMcpTools` options. Tool
+content always uses standard LangChain blocks: images and audio expose `data`
+and `mimeType`, replacing `image_url`, `source_type`, and `mime_type` shapes.
+`outputHandling` still selects content versus artifact destinations. Artifact
+blocks retain their MCP representation. Resource conversion no longer fetches
+URIs implicitly; use `readResource` explicitly when needed.

@@ -35,7 +35,6 @@ const multipleServersConfig: ClientConfig = {
       args: ["-y", "@modelcontextprotocol/server-math"],
     },
   },
-  useStandardContentBlocks: true,
 };
 
 /**

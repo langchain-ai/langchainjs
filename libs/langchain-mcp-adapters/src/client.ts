@@ -127,7 +127,6 @@ export class MCPAdapter {
         prefixToolNameWithServerName:
           parsedServerConfig.prefixToolNameWithServerName,
         additionalToolNamePrefix: parsedServerConfig.additionalToolNamePrefix,
-        useStandardContentBlocks: parsedServerConfig.useStandardContentBlocks,
         ...(Object.keys(outputHandling).length > 0 ? { outputHandling } : {}),
         ...(defaultToolTimeout ? { defaultToolTimeout } : {}),
         onProgress: parsedServerConfig.onProgress,

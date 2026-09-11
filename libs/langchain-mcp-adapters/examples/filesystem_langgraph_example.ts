@@ -63,7 +63,6 @@ export async function runExample(client?: MultiServerMCPClient) {
           },
         },
         onConnectionError: "ignore",
-        useStandardContentBlocks: true,
       });
 
     console.log("Connected to servers");

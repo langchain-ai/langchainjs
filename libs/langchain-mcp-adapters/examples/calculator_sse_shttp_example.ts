@@ -59,7 +59,6 @@ export async function runExample(client?: MCPAdapter) {
             }`,
           },
         },
-        useStandardContentBlocks: true,
       });
 
     console.log("Connected to server");

@@ -648,26 +648,6 @@ const clientOptionsSchema = z
       .optional()
       .default(""),
     /**
-     * If true, the tool will use LangChain's standard multimodal content blocks for tools that output
-     * image or audio content, and embedded resources will be converted to `StandardFileBlock` objects.
-     * When `false`, all artifacts are left in their MCP format, but embedded resources will be
-     * converted to `StandardFileBlock` objects if {@link ClientConfig#outputHandling} causes embedded resources to
-     * be treated as content, as otherwise ChatModel providers will not be able to interpret them.
-     *
-     * @default false
-     */
-    useStandardContentBlocks: z
-      .boolean()
-      .describe(
-        "If true, the tool will use LangChain's standard multimodal content blocks for tools that output\n" +
-          "image or audio content. When true, embedded resources will be converted to `StandardFileBlock`\n" +
-          "objects. When `false`, all artifacts are left in their MCP format, but embedded resources will\n" +
-          "be converted to `StandardFileBlock` objects if `outputHandling` causes embedded resources to be\n" +
-          "treated as content, as otherwise ChatModel providers will not be able to interpret them."
-      )
-      .optional()
-      .default(false),
-    /**
      * Behavior when a server fails to connect.
      * - "throw": Throw an error immediately if any server fails to connect (default)
      * - "ignore": Skip failed servers and continue with successfully connected ones
@@ -821,17 +801,6 @@ export type LoadMcpToolsOptions = {
    * @default ""
    */
   additionalToolNamePrefix?: string;
-
-  /**
-   * If true, the tool will use LangChain's standard multimodal content blocks for tools that output
-   * image or audio content, and embedded resources will be converted to `StandardFileBlock` objects.
-   * When `false`, all artifacts are left in their MCP format, but embedded resources will be
-   * converted to `StandardFileBlock` objects if {@link outputHandling} causes embedded resources to
-   * be treated as content, as otherwise ChatModel providers will not be able to interpret them.
-   *
-   * @default false
-   */
-  useStandardContentBlocks?: boolean;
 
   /**
    * Defines where to place each tool output type in the LangChain ToolMessage.

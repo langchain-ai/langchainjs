@@ -11,3 +11,5 @@ Parse configuration into connections with a required transport discriminator. In
 Parse error formatting data without asserting a Zod error version, check hook content/artifact elements, and validate required OAuth methods without replacing the provider. Remove type assertions from tool invocation and schema traversal.
 
 Hook callbacks receive the current LangGraph task input unchanged, or `{}` outside a graph. The `state` parameter is now `unknown` because a task can receive an object, array, or primitive; applications must narrow it before accessing properties.
+
+Remove `useStandardContentBlocks`: always emit standard LangChain content blocks, keep artifact-routed blocks in MCP format, and require explicit resource reads. Migrate image/audio consumers to `data` and `mimeType`.
