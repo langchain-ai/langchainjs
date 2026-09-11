@@ -2622,6 +2622,52 @@ describe("server tool schemas", () => {
   }
 
   describe("original server schema", () => {
+    it("preserves recursive references and compositions through provider formatting", async () => {
+      const schema = {
+        type: "object",
+        properties: { node: { $ref: "#/$defs/node" } },
+        $defs: {
+          node: {
+            type: "object",
+            properties: { next: { $ref: "#/$defs/node" } },
+          },
+        },
+        allOf: [{ required: ["node"] }],
+        "x-provider": { retained: true },
+      } satisfies Tool["inputSchema"];
+
+      const snapshot = structuredClone(schema);
+      const [tool] = await loadMcpTools("test", mockClient(schema));
+      expect(tool.schema).toEqual(snapshot);
+
+      const { convertToOpenAITool } =
+        await import("@langchain/core/utils/function_calling");
+
+      expect(convertToOpenAITool(tool).function.parameters).toEqual(snapshot);
+      expect(schema).toEqual(snapshot);
+    });
+
+    it("keeps model-facing schema overrides separate from invocation constraints", async () => {
+      const schema = {
+        type: "object",
+        properties: { value: { type: "number", minimum: 1 } },
+        required: ["value"],
+      } satisfies Tool["inputSchema"];
+
+      const client = mockClient(schema);
+      const [tool] = await loadMcpTools("test", client);
+      tool.schema = {
+        type: "object",
+        properties: { value: { type: "number" } },
+      };
+      await expect(tool.invoke({ value: 0 })).rejects.toThrow(
+        /Invalid arguments/
+      );
+      expect(client.callTool).not.toHaveBeenCalled();
+      expect(schema.properties.value.minimum).toBe(1);
+      await expect(tool.invoke({ value: 1 })).resolves.toBeDefined();
+    });
+
     it("does not mutate descriptors without properties", async () => {
       const schema = Object.freeze({
         type: "object",
@@ -2633,7 +2679,7 @@ describe("server tool schemas", () => {
       expect(schema).toEqual({ type: "object" });
     });
 
-    it("validates hook overrides against constraints removed from model projection", async () => {
+    it("validates hook overrides against the original server schema", async () => {
       const client = mockClient({
         type: "object",
         properties: { value: { type: "number" } },
@@ -2772,11 +2818,15 @@ describe("server tool schemas", () => {
       const secondClient = mockClient(descriptor(id, 1));
       const [first] = await loadMcpTools("first", firstClient);
       const [second] = await loadMcpTools("second", secondClient);
-      await expect(second.invoke({ value: 1 })).rejects.toThrow(/arguments/);
+      await expect(second.invoke({ value: 1 })).rejects.toThrow(
+        /input did not match expected schema/
+      );
       expect(secondClient.callTool).not.toHaveBeenCalled();
       expect(await second.invoke({ value: 2 })).toBe("ok");
       expect(await first.invoke({ value: 1 })).toBe("ok");
-      await expect(first.invoke({ value: 2 })).rejects.toThrow(/arguments/);
+      await expect(first.invoke({ value: 2 })).rejects.toThrow(
+        /input did not match expected schema/
+      );
     });
 
     it("recompiles changed constraints on rediscovery without changing existing tools", async () => {
@@ -2787,11 +2837,15 @@ describe("server tool schemas", () => {
         tools: [{ name: "echo", inputSchema: descriptor(id, 1) }],
       });
       const [refreshed] = await loadMcpTools("test", client);
-      await expect(refreshed.invoke({ value: 1 })).rejects.toThrow(/arguments/);
+      await expect(refreshed.invoke({ value: 1 })).rejects.toThrow(
+        /input did not match expected schema/
+      );
       expect(client.callTool).not.toHaveBeenCalled();
       expect(await refreshed.invoke({ value: 2 })).toBe("ok");
       expect(await original.invoke({ value: 1 })).toBe("ok");
-      await expect(original.invoke({ value: 2 })).rejects.toThrow(/arguments/);
+      await expect(original.invoke({ value: 2 })).rejects.toThrow(
+        /input did not match expected schema/
+      );
     });
   });
 

@@ -59,7 +59,7 @@ describe("Simplified Tool Adapter Tests", () => {
     expect(tool.schema).toEqual(inputSchema);
   });
 
-  test("rejects invalid consumed schema keywords instead of dropping them", async () => {
+  test("preserves malformed constraints and rejects their input without a wire call", async () => {
     mockClient.listTools.mockResolvedValue({
       tools: [
         {
@@ -72,7 +72,9 @@ describe("Simplified Tool Adapter Tests", () => {
         },
       ],
     });
-    await expect(loadMcpTools("test", mockClient)).rejects.toThrow(z.ZodError);
+    const [tool] = await loadMcpTools("test", mockClient);
+    await expect(tool.invoke({})).rejects.toThrow();
+    expect(mockClient.callTool).not.toHaveBeenCalled();
   });
 
   describe("hook return validation", () => {
@@ -450,7 +452,7 @@ describe("Simplified Tool Adapter Tests", () => {
       expect(tools.length).toBe(1);
       expect(tools[0].name).toBe("query_data");
 
-      // Invoke the tool with valid input matching the dereferenced schema
+      // Invoke the tool with valid input matching the referenced schema.
       const result = await tools[0].invoke({
         items: [{ id: "1", name: "Test", value: 100.0 }],
         metadata: { total_count: 1, timestamp: "2024-01-01" },
@@ -743,7 +745,7 @@ describe("Simplified Tool Adapter Tests", () => {
       expect(toolMessageResult.artifact).toEqual(expectedArtifacts);
     });
 
-    test("should simplify schemas with allOf at top level for OpenAI compatibility", async () => {
+    test("preserves allOf and conditional schemas", async () => {
       // Schema with allOf containing if/then/else (like the bug report)
       const schemaWithAllOf = {
         $schema: "https://json-schema.org/draft/2020-12/schema",
@@ -816,9 +818,9 @@ describe("Simplified Tool Adapter Tests", () => {
         });
       });
 
-      // This should not throw - the schema should be simplified
+      // Discovery preserves the server schema without rewriting it.
       const tools = await loadMcpTools(
-        "mockServer(allOf simplification)",
+        "mockServer(allOf)",
         mockClient as Client
       );
 
@@ -834,10 +836,10 @@ describe("Simplified Tool Adapter Tests", () => {
       expect(result).toBe("Event created");
     });
 
-    test("should simplify schemas with anyOf at top level", async () => {
+    test("preserves anyOf schemas", async () => {
       // Test anyOf at the TOP level (where OpenAI restriction applies)
       // Note: type: "object" is added to the anyOf items, and the final schema
-      // should have type: "object" at the top level after simplification
+      // retains the server's top-level object type and alternatives
       const schemaWithAnyOf = {
         type: "object" as const,
         anyOf: [
@@ -877,13 +879,13 @@ describe("Simplified Tool Adapter Tests", () => {
       });
 
       const tools = await loadMcpTools(
-        "mockServer(anyOf simplification)",
+        "mockServer(anyOf)",
         mockClient as Client
       );
 
       expect(tools.length).toBe(1);
 
-      // The tool should work with merged properties from all variants
+      // The input satisfies one of the original schema alternatives.
       const result = await tools[0].invoke({
         mode: "simple",
         value: "test",
@@ -892,7 +894,7 @@ describe("Simplified Tool Adapter Tests", () => {
       expect(result).toBe("Configured");
     });
 
-    test("should simplify schemas with oneOf at top level by merging object schemas", async () => {
+    test("preserves exclusive oneOf schemas", async () => {
       // Test oneOf at the TOP level (where OpenAI restriction applies)
       const schemaWithOneOf = {
         type: "object" as const,
@@ -933,7 +935,7 @@ describe("Simplified Tool Adapter Tests", () => {
       });
 
       const tools = await loadMcpTools(
-        "mockServer(oneOf simplification)",
+        "mockServer(oneOf)",
         mockClient as Client
       );
 
@@ -945,7 +947,7 @@ describe("Simplified Tool Adapter Tests", () => {
           paymentType: "credit_card",
           cardNumber: "1234-5678-9012-3456",
         })
-      ).rejects.toThrow(/exactly one/);
+      ).rejects.toThrow(ToolInputParsingException);
       expect(mockClient.callTool).not.toHaveBeenCalled();
     });
 
@@ -1108,7 +1110,7 @@ describe("Simplified Tool Adapter Tests", () => {
           attendees: [{ email: "test@example.com", displayName: "Test User" }],
           status: "confirmed",
         })
-      ).rejects.toThrow(/additional properties/);
+      ).rejects.toThrow(ToolInputParsingException);
       expect(mockClient.callTool).not.toHaveBeenCalled();
     });
 

@@ -816,3 +816,20 @@ Use `"use"` (default) to honor the SDK cache, `"refresh"` to fetch and update it
 or `"bypass"` to fetch without reading or updating it. Keep each OAuth provider
 bound to one authorization identity; close and recreate the adapter when changing
 accounts, rather than changing the identity behind an existing provider.
+
+## Server tool schemas
+
+Tools expose the server's JSON Schema unchanged, including references, unions,
+and conditional constraints. The adapter does not simplify schemas for a model
+provider. Check the chosen provider's supported schema subset before binding
+tools; the Anthropic integration omits tools with root-level `allOf`, `anyOf`, or
+`oneOf`.
+
+Prefer a compatible schema on the server. If the model needs a different schema,
+set the returned tool's `schema` explicitly before binding it. Core uses that
+schema for initial input validation; the adapter still validates post-hook
+arguments against an independent copy of the original server schema.
+
+`ToolException` requires `@langchain/core ^1.2.6`. Use
+`ToolException.isInstance(error)` or `isToolException(error)` to identify it;
+name-only objects are not treated as adapter errors.
