@@ -379,14 +379,38 @@ export type EventContext =
   | { type: "tool"; name: string; args: unknown; server: string }
   | { type: "unknown" };
 
+/** Origin of a server notification. */
 export interface ServerMessageSource {
+  /** Configured server name, rather than the server's self-reported name. */
   server: string;
+  /** A per-notification snapshot; callbacks and OAuth providers retain identity. */
   options: ResolvedConnection;
 }
 
 // SDK payloads are already parsed by the SDK. Keep callbacks as opaque runtime
 // services; parsing a function schema would replace their identity with a wrapper.
 const notifications = z.object({
+  /**
+   * Called when a log message is received.
+   *
+   * @param logMessage - The log message
+   * @param logMessage.message - The log message
+   * @param logMessage.level - The log level
+   * @param logMessage.timestamp - The log timestamp
+   * @param source - The source of the log message
+   * @param source.server - The server of the source, e.g. "my-server"
+   * @param source.option - The connection options of the source, e.g. `{ transport: "stdio", command: "node", args: ["server.js"] }`
+   *
+   * @example
+   * ```ts
+   * const client = new MCPAdapter({
+   *   servers: { local: { command: "node", args: ["server.js"] } },
+   *   onLog: (logMessage) => {
+   *     console.log(logMessage);
+   *   },
+   * });
+   * ```
+   */
   onMessage: z
     .custom<
       (
@@ -395,12 +419,42 @@ const notifications = z.object({
       ) => void | Promise<void>
     >((value) => typeof value === "function", "Expected a callback")
     .optional(),
+  /**
+   * Called when a progress message is received.
+   *
+   * @param progress - The progress message
+   * @param progress.progress - Progress completed so far
+   * @param progress.total - Total progress, if known
+   * @param progress.message - Optional progress message
+   * @param source - The source of the progress message
+   * @param source.type - The type of the source, e.g. "tool"
+   * @param source.server - The server of the source, e.g. "my-server"
+   * @param source.name - The name of the source, e.g. "my-name"
+   * @param source.args - The arguments of the source, e.g. { a: 1, b: 2 }
+   *
+   * @example
+   * ```ts
+   * const client = new MCPAdapter({
+   *   servers: { local: { command: "node", args: ["server.js"] } },
+   *   onProgress: (progress, source) => {
+   *     if (source.type === "tool") {
+   *       console.log(source.name, progress.progress, progress.total);
+   *     }
+   *   },
+   * });
+   * ```
+   */
   onProgress: z
     .custom<(progress: Progress, source: EventContext) => void | Promise<void>>(
       (value) => typeof value === "function",
       "Expected a callback"
     )
     .optional(),
+  /**
+   * Observes server cancellation of a request it previously issued.
+   * @param notification - Request ID and optional cancellation reason
+   * @param source - Server identity and connection-options snapshot
+   */
   onCancelled: z
     .custom<
       (
@@ -409,24 +463,95 @@ const notifications = z.object({
       ) => void | Promise<void>
     >((value) => typeof value === "function", "Expected a callback")
     .optional(),
+  /**
+   * Called when an initialized notification is received from the server.
+   * This is a notification observer, not a connection-ready callback.
+   *
+   * @param source - The source of the initialized message
+   * @param source.server - The server of the source, e.g. "my-server"
+   * @param source.options - The connection options of the source, e.g. `{ transport: "stdio", command: "node", args: ["server.js"] }`, see {@link ServerMessageSource}
+   *
+   * @example
+   * ```ts
+   * const client = new MCPAdapter({
+   *   servers: { local: { command: "node", args: ["server.js"] } },
+   *   onInitialized: (source) => {
+   *     console.log(source);
+   *   },
+   * });
+   * ```
+   */
   onInitialized: z
     .custom<(source: ServerMessageSource) => void | Promise<void>>(
       (value) => typeof value === "function",
       "Expected a callback"
     )
     .optional(),
+  /**
+   * Called when the prompts list is changed.
+   *
+   * @param source - The source of the prompts list changed message
+   * @param source.server - The server of the source, e.g. "my-server"
+   * @param source.options - The connection options of the source, e.g. `{ transport: "stdio", command: "node", args: ["server.js"] }`, see {@link ServerMessageSource}
+   *
+   * @example
+   * ```ts
+   * const client = new MCPAdapter({
+   *   servers: { local: { command: "node", args: ["server.js"] } },
+   *   onPromptsListChanged: (source) => {
+   *     console.log(source);
+   *   },
+   * });
+   * ```
+   */
   onPromptsListChanged: z
     .custom<(source: ServerMessageSource) => void | Promise<void>>(
       (value) => typeof value === "function",
       "Expected a callback"
     )
     .optional(),
+  /**
+   * Called when the resources list is changed.
+   *
+   * @param source - The source of the resources list changed message
+   * @param source.server - The server of the source, e.g. "my-server"
+   * @param source.options - The connection options of the source, e.g. `{ transport: "stdio", command: "node", args: ["server.js"] }`, see {@link ServerMessageSource}
+   *
+   * @example
+   * ```ts
+   * const client = new MCPAdapter({
+   *   servers: { local: { command: "node", args: ["server.js"] } },
+   *   onResourcesListChanged: (source) => {
+   *     console.log(source);
+   *   },
+   * });
+   * ```
+   */
   onResourcesListChanged: z
     .custom<(source: ServerMessageSource) => void | Promise<void>>(
       (value) => typeof value === "function",
       "Expected a callback"
     )
     .optional(),
+  /**
+   * Called when the resources are updated.
+   *
+   * @param updatedResource - The updated resource
+   * @param updatedResource.uri - The URI of the resource that has been updated. This might be a sub-resource of the one that the client actually subscribed to.
+   * @param source - The source of the resources updated message
+   * @param source.server - The server of the source, e.g. "my-server"
+   * @param source.options - The connection options of the source, e.g. `{ transport: "stdio", command: "node", args: ["server.js"] }`, see {@link ServerMessageSource}
+   *
+   * @example
+   * ```ts
+   * const client = new MCPAdapter({
+   *   servers: { local: { command: "node", args: ["server.js"] } },
+   *   onResourcesUpdated: (updatedResource, source) => {
+   *     console.log(`Resource ${updatedResource.uri} updated`);
+   *   },
+   * });
+   * ```
+   */
   onResourcesUpdated: z
     .custom<
       (
@@ -435,12 +560,46 @@ const notifications = z.object({
       ) => void | Promise<void>
     >((value) => typeof value === "function", "Expected a callback")
     .optional(),
+  /**
+   * Called when the roots list is changed.
+   *
+   * @param source - The source of the roots list changed message
+   * @param source.server - The server of the source, e.g. "my-server"
+   * @param source.options - The connection options of the source, e.g. `{ transport: "stdio", command: "node", args: ["server.js"] }`, see {@link ServerMessageSource}
+   *
+   * @example
+   * ```ts
+   * const client = new MCPAdapter({
+   *   servers: { local: { command: "node", args: ["server.js"] } },
+   *   onRootsListChanged: (source) => {
+   *     console.log(source);
+   *   },
+   * });
+   * ```
+   */
   onRootsListChanged: z
     .custom<(source: ServerMessageSource) => void | Promise<void>>(
       (value) => typeof value === "function",
       "Expected a callback"
     )
     .optional(),
+  /**
+   * Called when the tools list is changed.
+   *
+   * @param source - The source of the tools list changed message
+   * @param source.server - The server of the source, e.g. "my-server"
+   * @param source.options - The connection options of the source, e.g. `{ transport: "stdio", command: "node", args: ["server.js"] }`, see {@link ServerMessageSource}
+   *
+   * @example
+   * ```ts
+   * const client = new MCPAdapter({
+   *   servers: { local: { command: "node", args: ["server.js"] } },
+   *   onToolsListChanged: (source) => {
+   *     console.log(source);
+   *   },
+   * });
+   * ```
+   */
   onToolsListChanged: z
     .custom<(source: ServerMessageSource) => void | Promise<void>>(
       (value) => typeof value === "function",
