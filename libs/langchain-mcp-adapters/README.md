@@ -38,29 +38,110 @@ This library provides a lightweight wrapper that makes [Anthropic Model Context 
 npm install @langchain/mcp-adapters
 ```
 
-## Connect servers and use their tools
+## Connect to one or more servers
+
+The library allows you to connect to one or more MCP servers and load tools from them, without needing to manage your own MCP client instances.
 
 ```ts
-import { MCPAdapter } from "@langchain/mcp-adapters";
 import { createAgent } from "langchain";
+import { ChatOpenAI } from "@langchain/openai";
+import { MCPAdapter, type OAuthClientProvider } from "@langchain/mcp-adapters";
 
-const adapter = new MCPAdapter({
-  servers: {
-    weather: { transport: "http", url: "https://example.com/weather/mcp" },
-    local: { transport: "stdio", command: "node", args: ["./server.js"] },
-  },
+// Supply your application-owned OAuth provider; see OAuth setup below.
+declare const authProvider: OAuthClientProvider;
+
+// Create client and connect to server
+const client = new MCPAdapter({
+  // Global tool configuration options
+  // Whether to throw on errors if a tool fails to load (optional, default: true)
+  throwOnLoadError: true,
+  // Avoid tool-name collisions when servers expose tools with the same name
   prefixToolNameWithServerName: true,
+  // Optional additional prefix for tool names (optional, default: "")
+  additionalToolNamePrefix: "",
+
+  // Use standardized content block format in tool outputs
+  useStandardContentBlocks: true,
+
+  // Behavior when a server fails to connect: "throw" (default) or "ignore"
+  onConnectionError: "ignore",
+
+  // Server configuration
+  servers: {
+    // adds a STDIO connection to a server named "math"
+    math: {
+      transport: "stdio",
+      command: "npx",
+      args: ["-y", "@modelcontextprotocol/server-math"],
+      // Restart configuration for stdio transport
+      restart: {
+        enabled: true,
+        maxAttempts: 3,
+        delayMs: 1000,
+      },
+    },
+
+    // here's a filesystem server
+    filesystem: {
+      transport: "stdio",
+      command: "npx",
+      args: ["-y", "@modelcontextprotocol/server-filesystem"],
+    },
+
+    // Streamable HTTP transport example, with auth headers and automatic SSE fallback disabled (defaults to enabled)
+    weather: {
+      url: "https://example.com/weather/mcp",
+      headers: {
+        Authorization: "Bearer token123",
+      },
+      automaticSSEFallback: false,
+    },
+
+    // OAuth 2.0 authentication (recommended for secure servers)
+    "oauth-protected-server": {
+      url: "https://protected.example.com/mcp",
+      authProvider,
+      // Can still include custom headers for non-auth purposes
+      headers: {
+        "User-Agent": "My-MCP-Client/1.0"
+      }
+    },
+
+    // how to force SSE, for old servers that are known to only support SSE (streamable HTTP falls back automatically if unsure)
+    github: {
+      transport: "sse", // also works with "type" field instead of "transport"
+      url: "https://example.com/mcp",
+      reconnect: {
+        enabled: true,
+        maxAttempts: 5,
+        delayMs: 2000,
+      },
+    },
+  },
 });
 
+const tools = await client.getTools();
+
+// Create an OpenAI model
+const model = new ChatOpenAI({
+  model: "gpt-4o-mini",
+  temperature: 0,
+});
+
+// Create the React agent
+const agent = createAgent({
+  model,
+  tools,
+});
+
+// Run the agent
 try {
-  const tools = await adapter.getTools();
-  const agent = createAgent({ model: "openai:gpt-4.1-mini", tools });
-  const result = await agent.invoke({
-    messages: [{ role: "user", content: "What is the weather in Paris?" }],
+  const mathResponse = await agent.invoke({
+    messages: [{ role: "user", content: "what's (3 + 5) x 12?" }],
   });
-  console.log(result.messages);
+  console.log(mathResponse);
 } finally {
-  await adapter.close();
+  await client.close();
 }
 ```
 
@@ -79,7 +160,7 @@ for Zod4, callback and configuration changes.
 
 This example shows how you can manage your own MCP client and use it to get LangChain tools. These tools can be used anywhere LangChain tools are used, including with LangGraph prebuilt agents, as shown below.
 
-This is an optional advanced API. `MultiServerMCPClient` manages the SDK client
+This is an optional advanced API. `MCPAdapter` manages the SDK client
 for you and does not require a separate SDK installation. Install
 `@modelcontextprotocol/client` directly only when your application imports and
 constructs its own SDK client, as this example does.
@@ -130,7 +211,7 @@ try {
   });
 
   // Create and run the agent
-  const agent = createAgent({ llm: model, tools });
+  const agent = createAgent({ model, tools });
   const agentResponse = await agent.invoke({
     messages: [{ role: "user", content: "what's (3 + 5) x 12?" }],
   });
@@ -147,13 +228,13 @@ For more detailed examples, see the [examples](./examples) directory.
 
 ## Notifications and Progress
 
-You can subscribe to server notifications and tool progress events directly on the `MultiServerMCPClient` via top‑level callbacks.
+You can subscribe to server notifications and tool progress events directly on the `MCPAdapter` via top‑level callbacks.
 
 ```ts
-import { MultiServerMCPClient } from "@langchain/mcp-adapters";
+import { MCPAdapter } from "@langchain/mcp-adapters";
 
-const client = new MultiServerMCPClient({
-  mcpServers: {
+const client = new MCPAdapter({
+  servers: {
     everything: {
       transport: "stdio",
       command: "npx",
@@ -169,7 +250,6 @@ const client = new MultiServerMCPClient({
   // Receive progress updates (e.g. from long‑running tool calls)
   onProgress: (progress, source) => {
     const pct =
-      progress.percentage ??
       (progress.progress != null && progress.total
         ? Math.round((progress.progress / progress.total) * 100)
         : undefined);
@@ -181,8 +261,8 @@ const client = new MultiServerMCPClient({
   },
 
   // Optional: react to server-side list changes
-  onToolsListChanged: (evt, source) => {
-    console.log(`[${source.server}] tools changed (${evt.tools?.length ?? 0})`);
+  onToolsListChanged: (source) => {
+    console.log(`[${source.server}] tools changed`);
   },
 });
 
@@ -194,7 +274,7 @@ await client.close();
 Available notification callbacks you can register:
 
 - **onMessage**: server log/diagnostic messages
-- **onProgress**: progress events (includes `percentage` or `progress`/`total`) with `source` describing origin (e.g., tool name/server)
+- **onProgress**: progress events (`progress` and optional `total`) with `source` describing origin (e.g., tool name/server)
 - **onInitialized**, **onCancelled**
 - **onPromptsListChanged**, **onResourcesListChanged**, **onResourcesUpdated**, **onRootsListChanged**, **onToolsListChanged**
 
@@ -203,10 +283,10 @@ Available notification callbacks you can register:
 Use hooks to customize tool calls:
 
 ```ts
-import { MultiServerMCPClient } from "@langchain/mcp-adapters";
+import { MCPAdapter } from "@langchain/mcp-adapters";
 
-const client = new MultiServerMCPClient({
-  mcpServers: {
+const client = new MCPAdapter({
+  servers: {
     math: {
       transport: "stdio",
       command: "npx",
@@ -215,12 +295,11 @@ const client = new MultiServerMCPClient({
   },
 
   // Change args/headers before the tool call
-  beforeToolCall: ({ serverName, name, args }) => {
-    // Add/override an argument
-    const nextArgs = { ...(args as Record<string, unknown>), injected: true };
+  beforeToolCall: () => {
+    // Overrides are merged with the original arguments by the adapter.
     // For HTTP/SSE transports, you may also add per-call headers
     return {
-      args: nextArgs,
+      args: { injected: true },
       headers: { "X-Request-ID": crypto.randomUUID() },
     };
   },
@@ -249,14 +328,14 @@ const out = await t?.invoke({ a: 1, b: 2 });
 Notes:
 
 - **beforeToolCall** can return `{ args?, headers? }`. Headers are supported for HTTP/SSE. Stdio connections do not support custom headers.
-- **afterToolCall** may return either a 2‑tuple `[content, artifact]`, a `ToolMessage`, a `Command` instance, or nothing (to keep the original result).
+- **afterToolCall** may return `{ result }`, where `result` is a string, a 2‑tuple `[content, artifact]`, a `ToolMessage`, or a `Command`. Return nothing to keep the original result.
 
 ## Tool Configuration Options
 
 > [!TIP]
 > `useStandardContentBlocks` defaults to `true`. Set it to `false` only when migrating code that expects legacy image/audio/file shapes.
 
-When loading MCP tools either directly through `loadMcpTools` or via `MultiServerMCPClient`, you can configure the following options:
+When loading MCP tools either directly through `loadMcpTools` or via `MCPAdapter`, you can configure the following options:
 
 | Option                         | Type                                   | Default                                               | Description                                                                                          |
 | ------------------------------ | -------------------------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
@@ -308,7 +387,7 @@ The `outputHandling` option allows you to determine which tool output types are 
 
 The `outputHandling` option can be assigned to `"content"`, `"artifact"`, or an object that maps MCP content block types to either `content` or `artifact`.
 
-When working with `MultiServerMCPClient`, the `outputHandling` field can be assigned to the top-level config object and/or to individual server entries in `mcpServers`. Entries in `mcpServers` override those in the top-level config, and entries in the top-level config override the defaults.
+When working with `MCPAdapter`, the `outputHandling` field can be assigned to the top-level config object and/or to individual server entries in `servers`. Entries in `servers` override those in the top-level config, and entries in the top-level config override the defaults.
 
 For example, consider the following configuration:
 
@@ -319,7 +398,7 @@ const clientConfig = {
     image: "artifact",
     audio: "artifact",
   },
-  mcpServers: {
+  servers: {
     camera-server: {
       url: "...",
       outputHandling: {
@@ -367,8 +446,8 @@ You can configure a global timeout for all tools by setting the `defaultToolTime
 This timeout will be used as the default timeout for all tools unless overridden by a tool-specific timeout.
 
 ```typescript
-const client = new MultiServerMCPClient({
-  mcpServers: {
+const client = new MCPAdapter({
+  servers: {
     "data-processor": {
       command: "python",
       args: ["data_server.py"],
@@ -396,8 +475,8 @@ const result = await slowTool.invoke({ dataset: "huge_file.csv" });
 MCP tools support timeout configuration through LangChain's standard `RunnableConfig` interface. This allows you to set custom timeouts on a per-tool-call basis:
 
 ```typescript
-const client = new MultiServerMCPClient({
-  mcpServers: {
+const client = new MCPAdapter({
+  servers: {
     "data-processor": {
       command: "python",
       args: ["data_server.py"],
@@ -480,8 +559,8 @@ class MyOAuthProvider implements OAuthClientProvider {
   // See MCP SDK documentation for complete examples
 }
 
-const client = new MultiServerMCPClient({
-  mcpServers: {
+const client = new MCPAdapter({
+  servers: {
     "secure-server": {
       url: "https://secure-mcp-server.example.com/mcp",
       authProvider: new MyOAuthProvider({
@@ -566,8 +645,8 @@ Example error handling:
 
 ```ts
 try {
-  const client = new MultiServerMCPClient({
-    mcpServers: {
+  const client = new MCPAdapter({
+    servers: {
       math: {
         transport: "stdio",
         command: "npx",
@@ -626,7 +705,7 @@ Example Zod error for an invalid SSE URL:
 
 ### Connection Error Handling
 
-By default, the `MultiServerMCPClient` will throw an error if any server fails to connect (`onConnectionError: "throw"`). You can change this behavior by setting `onConnectionError: "ignore"` to skip failed servers, or provide a custom error handler function:
+By default, the `MCPAdapter` will throw an error if any server fails to connect (`onConnectionError: "throw"`). You can change this behavior by setting `onConnectionError: "ignore"` to skip failed servers, or provide a custom error handler function:
 
 - `"throw"` (default): Throw an error immediately if any server fails to connect
 - `"ignore"`: Skip failed servers and continue with successfully connected ones
@@ -640,8 +719,8 @@ When set to `"ignore"` or a custom handler that doesn't throw:
 - If no servers successfully connect, a warning is logged but no error is thrown
 
 ```ts
-const client = new MultiServerMCPClient({
-  mcpServers: {
+const client = new MCPAdapter({
+  servers: {
     "working-server": {
       transport: "stdio",
       command: "npx",
@@ -667,8 +746,8 @@ const brokenClient = await client.getClient("broken-server"); // Returns undefin
 You can also provide a custom error handler function for more control:
 
 ```ts
-const client = new MultiServerMCPClient({
-  mcpServers: {
+const client = new MCPAdapter({
+  servers: {
     "critical-server": {
       transport: "http",
       url: "http://localhost:8000/mcp",
