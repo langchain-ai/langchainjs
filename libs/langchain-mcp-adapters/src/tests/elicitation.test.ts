@@ -63,6 +63,7 @@ it.each(["accept", "decline", "cancel", "invalid", "throws", "missing"])(
   "handles legacy adapter elicitation: %s",
   async (scenario) => {
     const questions: string[] = [];
+
     const adapter = new MCPAdapter({
       servers: {
         legacy: {
@@ -99,6 +100,7 @@ it.each(["accept", "decline", "cancel", "invalid", "throws", "missing"])(
         },
       },
     });
+
     try {
       const [tool] = await adapter.listTools();
 
