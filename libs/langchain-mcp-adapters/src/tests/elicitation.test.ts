@@ -11,7 +11,7 @@ import { z } from "zod";
 import { MCPAdapter } from "../index.js";
 
 import { describe, expect, it } from "vitest";
-import { validateElicitationAnswer } from "../elicitation.js";
+import { sdkSchema, validateElicitationAnswer } from "../elicitation.js";
 import type { MCPElicitationRequest } from "../elicitation.js";
 
 const form = {
@@ -305,4 +305,12 @@ it("subscribes to modern catalog changes and honors SDK cache policy", async () 
       http.close((error) => (error ? reject(error) : resolve()))
     );
   }
+});
+
+it("composes Standard Schema defaults and issue paths through Zod", async () => {
+  const parser = sdkSchema(z.object({ label: z.string().default("default") }));
+  expect(await parser.parseAsync({})).toEqual({ label: "default" });
+  const result = await parser.safeParseAsync({ label: 42 });
+  expect(result.success).toBe(false);
+  if (!result.success) expect(result.error.issues[0].path).toEqual(["label"]);
 });

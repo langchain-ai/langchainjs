@@ -32,6 +32,7 @@ import { MCPAdapter } from "../index.js";
 
 it.each([
   "accept",
+  "state-only",
   "bad-content",
   "wrong-key",
   "extra-key",
@@ -66,6 +67,18 @@ it.each([
         },
         async ({ label }, context) => {
           calls.push(label);
+
+          if (scenario === "state-only") {
+            return calls.length === 1
+              ? inputRequired({
+                  requestState: "opaque:+/%==",
+                  inputRequests: {},
+                })
+              : {
+                  content: [{ type: "text", text: "approved" }],
+                  structuredContent: { approved: true },
+                };
+          }
 
           if (!context.mcpReq.inputResponses?.confirmation) {
             return inputRequired({
@@ -143,6 +156,14 @@ it.each([
 
   try {
     const graph = createGraph();
+
+    if (scenario === "state-only") {
+      expect((await graph.invoke({ done: false }, config)).done).toBe(true);
+      expect(calls).toHaveLength(2);
+      expect(before).toHaveBeenCalledTimes(1);
+      expect(after).toHaveBeenCalledTimes(1);
+      return;
+    }
 
     if (scenario === "headers") {
       await expect(graph.invoke({ done: false }, config)).rejects.toThrow(

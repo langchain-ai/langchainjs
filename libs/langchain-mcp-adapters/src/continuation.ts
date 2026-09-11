@@ -132,44 +132,17 @@ export async function withMCPInterrupts<T>(
     let responses: Record<string, ElicitResult> = {};
 
     if (keys.length > 0) {
-      const resumeSchema = z
-        .record(z.string(), z.unknown())
-        .check((ctx) => {
-          if (
-            Object.keys(ctx.value).length !== keys.length ||
-            keys.some((key) => !Object.hasOwn(ctx.value, key))
-          ) {
-            ctx.issues.push({
-              code: "custom",
-              input: ctx.value,
-              message:
-                "MCP resume answers must match the pending request keys exactly",
-            });
-          }
-        })
-        .transform(async (answers, ctx) => {
-          const parsed = await Promise.all(
-            keys.map(async (key) => {
-              const result = await elicitationAnswerFor(
-                requests[key]
-              ).safeParseAsync(answers[key]);
-              if (result.success)
-                return [key, result.data] satisfies [string, ElicitResult];
-              for (const issue of result.error.issues)
-                ctx.issues.push({
-                  code: "custom",
-                  message: issue.message,
-                  input: answers[key],
-                  path: [key, ...issue.path],
-                });
-              return undefined;
-            })
-          );
-          if (ctx.issues.length) return z.NEVER;
-          return Object.fromEntries(
-            parsed.filter((entry) => entry !== undefined)
-          );
-        });
+      const resumeSchema = z.strictObject(
+        Object.fromEntries(
+          keys.map(
+            (key) =>
+              [key, elicitationAnswerFor(requests[key])] satisfies [
+                string,
+                ReturnType<typeof elicitationAnswerFor>,
+              ]
+          )
+        )
+      );
       responses = await resumeSchema.parseAsync(interrupt(elicitation));
     } else {
       // A state-only response is progress, not a user question. Avoid a tight polling loop.

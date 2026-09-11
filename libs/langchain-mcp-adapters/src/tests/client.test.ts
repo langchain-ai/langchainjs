@@ -2785,17 +2785,20 @@ describe("server tool schemas", () => {
 });
 
 describe("modern OAuth acceptance", () => {
-  it.each([
+  const scenarios = [
     "refresh",
     "dcr",
     "cimd",
     "callback",
     "wrong-state",
     "wrong-issuer",
-  ])("delegates %s to the SDK/provider", async (scenario) => {
+    "scope-stepup",
+  ];
+  it.each(scenarios)("delegates %s to the SDK/provider", async (scenario) => {
     let registrations = 0;
     let refreshes = 0;
     let redirected = false;
+    let expandedScope = false;
     let savedIssuer: string | undefined;
     let base = "";
 
@@ -2850,6 +2853,7 @@ describe("modern OAuth acceptance", () => {
           token_endpoint_auth_method: "none",
         });
       } else if (request.url === "/token") {
+        expandedScope = true;
         refreshes += 1;
         // Synthetic credentials used only by this isolated local fixture.
         send({
@@ -2857,6 +2861,17 @@ describe("modern OAuth acceptance", () => {
           token_type: "Bearer",
           expires_in: 3600,
         });
+      } else if (
+        request.url === "/mcp" &&
+        scenario === "scope-stepup" &&
+        !expandedScope &&
+        request.headers.authorization === "Bearer fixture-access"
+      ) {
+        response.writeHead(403, {
+          "WWW-Authenticate":
+            'Bearer error="insufficient_scope", scope="read write"',
+        });
+        response.end();
       } else if (
         request.url === "/mcp" &&
         request.headers.authorization === "Bearer fixture-access"
@@ -2888,7 +2903,14 @@ describe("modern OAuth acceptance", () => {
             token_type: "Bearer",
             issuer: base,
           }
-        : undefined;
+        : scenario === "scope-stepup"
+          ? {
+              access_token: "fixture-access",
+              token_type: "Bearer",
+              issuer: base,
+              scope: "read",
+            }
+          : undefined;
 
     let discovery: Awaited<
       ReturnType<NonNullable<OAuthClientProvider["discoveryState"]>>
@@ -2911,7 +2933,7 @@ describe("modern OAuth acceptance", () => {
         token_endpoint_auth_method: "none",
       },
       clientInformation: () =>
-        scenario === "refresh"
+        scenario === "refresh" || scenario === "scope-stepup"
           ? { client_id: "fixture-client", issuer: base }
           : clientInformation,
       saveClientInformation: (info, context) => {
@@ -2928,6 +2950,8 @@ describe("modern OAuth acceptance", () => {
       },
       codeVerifier: () => verifier,
       redirectToAuthorization: (url) => {
+        if (scenario === "scope-stepup")
+          expect(url.searchParams.get("scope")).toContain("write");
         redirected = true;
         expect(url.origin).toBe(base);
         expect(url.searchParams.get("client_id")).toBe(
@@ -2958,14 +2982,20 @@ describe("modern OAuth acceptance", () => {
       } else {
         await expect(adapter.getTools()).rejects.toThrow();
         expect(redirected).toBe(true);
-        expect(registrations).toBe(scenario === "cimd" ? 0 : 1);
-        if (["callback", "wrong-state", "wrong-issuer"].includes(scenario)) {
+        expect(registrations).toBe(
+          ["cimd", "scope-stepup"].includes(scenario) ? 0 : 1
+        );
+        if (
+          ["callback", "wrong-state", "wrong-issuer", "scope-stepup"].includes(
+            scenario
+          )
+        ) {
           const callback = new URLSearchParams({
             code: "fixture-code",
             state: scenario === "wrong-state" ? "other-state" : "fixture-state",
             iss: scenario === "wrong-issuer" ? "https://other.example" : base,
           });
-          if (scenario === "callback") {
+          if (scenario === "callback" || scenario === "scope-stepup") {
             await adapter.finishAuth("oauth", callback, "fixture-state");
             const [tool] = await adapter.getTools();
             expect(await tool.invoke({})).toBe("authorized");
