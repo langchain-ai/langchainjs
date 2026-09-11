@@ -178,7 +178,6 @@ errors reject instead of appearing as an empty catalog. Resource conversion
 never performs implicit reads; explicitly call
 `readResource` if needed.
 
-
 ### Discovery freshness
 
 `getTools()` consults the SDK cache each time and reuses adapted tools when the
