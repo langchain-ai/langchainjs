@@ -133,9 +133,10 @@ continue to receive `{}`.
 
 ## Tool results, hooks and schemas
 
-Standard LangChain content blocks now default to `true`. Images/audio use
-`data` and `mimeType`; set `useStandardContentBlocks: false` temporarily if your
-application reads the old `image_url` or `source_type` shapes.
+Tool content always uses standard LangChain blocks. Remove the
+`useStandardContentBlocks` option from configuration. Images/audio use `data`
+and `mimeType`; update code that reads the old `image_url`, `source_type`, or
+`mime_type` fields. Artifact-routed blocks retain their original MCP shapes.
 
 Keep protocol data in `ToolMessage.artifact`, not model-visible content:
 

@@ -28,7 +28,6 @@ const config: ClientConfig = {
       },
     },
   },
-  useStandardContentBlocks: true,
 };
 
 /**

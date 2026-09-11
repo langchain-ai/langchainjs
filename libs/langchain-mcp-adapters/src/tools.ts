@@ -531,7 +531,6 @@ export function isToolException(error: unknown): error is ToolException {
 /** Terminal conversion never dereferences resource URIs or performs network IO. */
 function _toolOutputToContentBlocks(
   content: MCPContentBlock,
-  useStandardContentBlocks: boolean,
   toolName: string,
   serverName: string
 ): ContentBlock[] {
@@ -541,81 +540,43 @@ function _toolOutputToContentBlocks(
     case "text":
       return [{ type: "text", text: content.text }];
     case "image":
-      return useStandardContentBlocks
-        ? [
-            {
-              type: "image",
-              data: content.data,
-              mimeType: content.mimeType,
-            } satisfies ContentBlock.Multimodal.Image,
-          ]
-        : [
-            {
-              type: "image_url",
-              image_url: {
-                url: `data:${content.mimeType};base64,${content.data}`,
-              },
-            },
-          ];
+      return [
+        {
+          type: "image",
+          data: content.data,
+          mimeType: content.mimeType,
+        } satisfies ContentBlock.Multimodal.Image,
+      ];
     case "audio":
-      return useStandardContentBlocks
-        ? [
-            {
-              type: "audio",
-              data: content.data,
-              mimeType: content.mimeType,
-            } satisfies ContentBlock.Multimodal.Audio,
-          ]
-        : [
-            {
-              type: "audio",
-              source_type: "base64",
-              data: content.data,
-              mime_type: content.mimeType,
-            },
-          ];
+      return [
+        {
+          type: "audio",
+          data: content.data,
+          mimeType: content.mimeType,
+        } satisfies ContentBlock.Multimodal.Audio,
+      ];
     case "resource": {
       const resource = content.resource;
       const metadata = { uri: resource.uri };
 
       if ("text" in resource) {
-        return useStandardContentBlocks
-          ? [{ type: "text", text: resource.text, metadata }]
-          : [
-              {
-                type: "file",
-                source_type: "text",
-                text: resource.text,
-                mime_type: resource.mimeType,
-                metadata,
-              },
-            ];
+        return [{ type: "text", text: resource.text, metadata }];
       }
 
       const mimeType = resource.mimeType ?? "application/octet-stream";
 
-      return useStandardContentBlocks
-        ? [
-            {
-              type: mimeType.startsWith("image/")
-                ? "image"
-                : mimeType.startsWith("audio/")
-                  ? "audio"
-                  : "file",
-              data: resource.blob,
-              mimeType,
-              metadata,
-            } satisfies ContentBlock.Multimodal.Standard,
-          ]
-        : [
-            {
-              type: "file",
-              source_type: "base64",
-              data: resource.blob,
-              mime_type: resource.mimeType,
-              metadata,
-            },
-          ];
+      return [
+        {
+          type: mimeType.startsWith("image/")
+            ? "image"
+            : mimeType.startsWith("audio/")
+              ? "audio"
+              : "file",
+          data: resource.blob,
+          mimeType,
+          metadata,
+        } satisfies ContentBlock.Multimodal.Standard,
+      ];
     }
 
     case "resource_link": {
@@ -625,24 +586,14 @@ function _toolOutputToContentBlocks(
         ...(content.title !== undefined ? { title: content.title } : {}),
       };
 
-      return useStandardContentBlocks
-        ? [
-            {
-              type: "file",
-              url: content.uri,
-              mimeType: content.mimeType,
-              metadata,
-            } satisfies ContentBlock.Multimodal.File,
-          ]
-        : [
-            {
-              type: "file",
-              source_type: "url",
-              url: content.uri,
-              mime_type: content.mimeType,
-              metadata,
-            },
-          ];
+      return [
+        {
+          type: "file",
+          url: content.uri,
+          mimeType: content.mimeType,
+          metadata,
+        } satisfies ContentBlock.Multimodal.File,
+      ];
     }
     default:
       throw new ToolException(
@@ -703,10 +654,6 @@ type ConvertCallToolResultArgs = {
    */
   result: CallToolResult;
   /**
-   * Use native LangChain content blocks; artifacts retain their MCP data.
-   */
-  useStandardContentBlocks?: boolean;
-  /**
    * Defines where to place each tool output type in the LangChain ToolMessage.
    */
   outputHandling?: OutputHandling;
@@ -741,7 +688,6 @@ function _convertCallToolResult({
   serverName,
   toolName,
   result,
-  useStandardContentBlocks = true,
   outputHandling,
 }: ConvertCallToolResultArgs): [ExtendedContent, ExtendedArtifact[]] {
   if (!result) {
@@ -774,12 +720,7 @@ function _convertCallToolResult({
         _getOutputTypeForContentType(block.type, outputHandling) === "content"
     )
     .flatMap((block) =>
-      _toolOutputToContentBlocks(
-        block,
-        useStandardContentBlocks,
-        toolName,
-        serverName
-      )
+      _toolOutputToContentBlocks(block, toolName, serverName)
     );
 
   const artifacts = result.content.filter(
@@ -863,10 +804,6 @@ type CallToolArgs = {
    */
   config?: RunnableConfig;
   /**
-   * Use native LangChain content blocks; artifacts retain their MCP data.
-   */
-  useStandardContentBlocks?: boolean;
-  /**
    * Defines where to place each tool output type in the LangChain ToolMessage.
    */
   outputHandling?: OutputHandling;
@@ -908,7 +845,6 @@ async function _callTool({
   client,
   args,
   config,
-  useStandardContentBlocks,
   outputHandling,
   onProgress,
   beforeToolCall,
@@ -1011,7 +947,6 @@ async function _callTool({
       serverName,
       toolName,
       result,
-      useStandardContentBlocks,
       outputHandling,
     });
 
@@ -1075,7 +1010,6 @@ const defaultLoadMcpToolsOptions: LoadMcpToolsOptions = {
   throwOnLoadError: true,
   prefixToolNameWithServerName: false,
   additionalToolNamePrefix: "",
-  useStandardContentBlocks: true,
 };
 
 /**
@@ -1094,7 +1028,6 @@ export async function loadMcpTools(
     throwOnLoadError,
     prefixToolNameWithServerName,
     additionalToolNamePrefix,
-    useStandardContentBlocks,
     outputHandling,
     defaultToolTimeout,
   } = {
@@ -1158,7 +1091,6 @@ export async function loadMcpTools(
                   client,
                   args,
                   config,
-                  useStandardContentBlocks,
                   outputHandling,
                   onProgress: options?.onProgress,
                   beforeToolCall: options?.beforeToolCall,

@@ -528,53 +528,49 @@ describe("tool hook results", () => {
 
     await expect(tool.invoke({})).rejects.toBe(interrupt);
   });
-  test.each([true, false])(
-    "preserves resource provenance without reading resources (standard=%s)",
-    async (useStandardContentBlocks) => {
-      const client = mockClient();
-      const read = vi.spyOn(client, "readResource");
+  test("preserves resource provenance without reading resources", async () => {
+    const client = mockClient();
+    const read = vi.spyOn(client, "readResource");
 
-      const content = [
-        {
-          type: "resource",
-          resource: {
-            uri: "memory://embedded",
-            text: "embedded",
-            mimeType: "text/plain",
-            _meta: { private: true },
-          },
-        },
-        {
-          type: "resource_link",
-          uri: "memory://reference",
-          name: "reference",
+    const content = [
+      {
+        type: "resource",
+        resource: {
+          uri: "memory://embedded",
+          text: "embedded",
+          mimeType: "text/plain",
           _meta: { private: true },
         },
-      ] satisfies Awaited<ReturnType<Client["callTool"]>>["content"];
+      },
+      {
+        type: "resource_link",
+        uri: "memory://reference",
+        name: "reference",
+        _meta: { private: true },
+      },
+    ] satisfies Awaited<ReturnType<Client["callTool"]>>["content"];
 
-      vi.mocked(client.callTool).mockResolvedValue({ content });
+    vi.mocked(client.callTool).mockResolvedValue({ content });
 
-      const [tool] = await loadMcpTools("test", client, {
-        useStandardContentBlocks,
-        outputHandling: "content",
-        afterToolCall: ({ result }) => ({ result }),
-      });
+    const [tool] = await loadMcpTools("test", client, {
+      outputHandling: "content",
+      afterToolCall: ({ result }) => ({ result }),
+    });
 
-      const output = await tool.invoke({
-        type: "tool_call",
-        name: "echo",
-        id: "call",
-        args: {},
-      });
+    const output = await tool.invoke({
+      type: "tool_call",
+      name: "echo",
+      id: "call",
+      args: {},
+    });
 
-      expect(output.artifact).toEqual(
-        content.map((data) => ({ type: "mcp_content", data }))
-      );
-      expect(JSON.stringify(output.content)).not.toContain("private");
-      expect(JSON.stringify(output.content)).toContain("memory://embedded");
-      expect(read).not.toHaveBeenCalled();
-    }
-  );
+    expect(output.artifact).toEqual(
+      content.map((data) => ({ type: "mcp_content", data }))
+    );
+    expect(JSON.stringify(output.content)).not.toContain("private");
+    expect(JSON.stringify(output.content)).toContain("memory://embedded");
+    expect(read).not.toHaveBeenCalled();
+  });
 
   test("does not invent structured output when it is absent", async () => {
     const client = mockClient();

@@ -489,19 +489,6 @@ const clientOptionsSchema = z
       .optional()
       .default(""),
     /**
-     * Use native LangChain image/audio/file content blocks. Artifacts remain
-     * in MCP format. Set false for legacy content shapes; conversion never fetches resources.
-     *
-     * @default true
-     */
-    useStandardContentBlocks: z
-      .boolean()
-      .describe(
-        "Use native LangChain content blocks; artifacts retain MCP data"
-      )
-      .optional()
-      .default(true),
-    /**
      * Behavior when a server fails to connect.
      * - "throw": Throw an error immediately if any server fails to connect (default)
      * - "ignore": Skip failed servers and continue with successfully connected ones
@@ -655,14 +642,6 @@ export type LoadMcpToolsOptions = {
    * @default ""
    */
   additionalToolNamePrefix?: string;
-
-  /**
-   * Use native LangChain image/audio/file content blocks. Artifacts remain
-   * in MCP format. Set false for legacy content shapes; conversion never fetches resources.
-   *
-   * @default true
-   */
-  useStandardContentBlocks?: boolean;
 
   /**
    * Defines where to place each tool output type in the LangChain ToolMessage.

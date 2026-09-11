@@ -60,8 +60,6 @@ const client = new MCPAdapter({
   // Optional additional prefix for tool names (optional, default: "")
   additionalToolNamePrefix: "",
 
-  // Use standardized content block format in tool outputs
-  useStandardContentBlocks: true,
 
   // Behavior when a server fails to connect: "throw" (default) or "ignore"
   onConnectionError: "ignore",
@@ -206,8 +204,6 @@ try {
     prefixToolNameWithServerName: false,
     // Optional additional prefix for tool names (optional, default: "")
     additionalToolNamePrefix: "",
-    // Use native LangChain content blocks (default: true)
-    useStandardContentBlocks: true,
   });
 
   // Create and run the agent
@@ -333,7 +329,7 @@ Notes:
 ## Tool Configuration Options
 
 > [!TIP]
-> `useStandardContentBlocks` defaults to `true`. Set it to `false` only when migrating code that expects legacy image/audio/file shapes.
+> Tool content uses standard LangChain blocks. Use `outputHandling` to choose which outputs reach the model.
 
 When loading MCP tools either directly through `loadMcpTools` or via `MCPAdapter`, you can configure the following options:
 
@@ -342,7 +338,6 @@ When loading MCP tools either directly through `loadMcpTools` or via `MCPAdapter
 | `throwOnLoadError`             | `boolean`                              | `true`                                                | Whether to throw an error if a tool fails to load                                                    |
 | `prefixToolNameWithServerName` | `boolean`                              | `false`                                               | If true, prefixes all tool names with the server name (e.g., `serverName__toolName`)                 |
 | `additionalToolNamePrefix`     | `string`                               | `""`                                                  | Additional prefix to add to tool names (e.g., `prefix__serverName__toolName`)                        |
-| `useStandardContentBlocks`     | `boolean`                              | `true`                                                | See [Tool Output Mapping](#tool-output-mapping); set true for new applications                       |
 | `outputHandling`               | `"content"`, `"artifact"`, or `object` | `resource` -> `"artifact"`, all others -> `"content"` | See [Tool Output Mapping](#tool-output-mapping)                                                      |
 | `defaultToolTimeout`           | `number`                               | `0`                                                   | Default timeout for all tools (overridable on a per-tool basis)                                      |
 | `onConnectionError`            | `"throw"` \| `"ignore"` \| `Function`  | `"throw"`                                             | Behavior when a server fails to connect. See [Connection Error Handling](#connection-error-handling) |
@@ -350,21 +345,24 @@ When loading MCP tools either directly through `loadMcpTools` or via `MCPAdapter
 ## Tool Output Mapping
 
 > [!TIP]
-> This section is important if you are working with multimodal tools, tools that produce embedded resources, or tools that produce large outputs that you may not want to be included in LLM input context. If you are writing a new application that only works with tools that produce simple text or JSON output, we recommend setting `useStandardContentBlocks` to `true` and leaving `outputHandling` undefined (will use defaults).
+> This section is important if you are working with multimodal tools, tools that produce embedded resources, or tools that produce large outputs that you may not want to be included in LLM input context. If you are writing a new application that only works with tools that produce simple text or JSON output, leave `outputHandling` undefined to use the defaults.
 
-MCP tools return arrays of content blocks. A content block can contain text, an image, audio, or an embedded resource. The right way to map these outputs into LangChain `ToolMessage` objects can differ based on the needs of your application, which is why we introduced the `useStandardContentBlocks` and `outputHandling` configuration options.
+MCP tools return arrays of content blocks. A content block can contain text, an image, audio, or an embedded resource. The right way to map these outputs into LangChain `ToolMessage` objects can differ based on the needs of your application, which is why the adapter provides the `outputHandling` configuration option.
 
-The `useStandardContentBlocks` field determines how individual MCP content blocks are transformed into a structure recognized by LangChain ChatModel providers (e.g. `ChatOpenAI`, `ChatAnthropic`, etc). The `outputHandling` field allows you to specify whether a given type of content should be sent to the LLM, or set aside for some other part of your application to use in some future processing step (e.g. to use a dataframe from a database query in a code execution environment).
+Content blocks use the standard LangChain format recognized by chat model integrations. The `outputHandling` field allows you to specify whether a given type of content should be sent to the LLM, or set aside for some other part of your application to use in some future processing step (e.g. to use a dataframe from a database query in a code execution environment).
 
 ### Standardizing the Format of Tool Outputs
 
-By default, model-visible images and audio use LangChain's native blocks:
+LangChain core introduced standard multimodal content blocks in version 0.3.48.
+Earlier adapter releases offered `useStandardContentBlocks` to opt into those
+formats while retaining older provider-specific shapes. This major release
+removes that toggle. Model-visible images and audio use LangChain's native blocks:
 `{ type: "image", data, mimeType }` and `{ type: "audio", data, mimeType }`.
 A single plain text result remains a string. Embedded text retains its resource
 URI in metadata; binary resources become image, audio or file blocks by MIME type.
 
 `outputHandling` selects what reaches the model. Artifact-routed blocks retain
-their MCP shape regardless of `useStandardContentBlocks`. Converted resources
+their MCP shape. Converted resources
 and blocks with extra protocol fields retain an original copy in an
 `{ type: "mcp_content", data }` artifact. Structured data and result metadata use
 `mcp_structured_content` and `mcp_meta` artifacts, including `false`, `0`, `null`
@@ -373,14 +371,14 @@ and empty arrays. Result `_meta` is never appended to model-visible text.
 Conversion does not fetch resource links. Use `adapter.readResource(server, uri)`
 explicitly when your application needs a resource's contents.
 
-For migration, `useStandardContentBlocks: false` keeps legacy `image_url` and
-`source_type`/`mime_type` content shapes. It does not restore implicit fetching.
+When upgrading, remove `useStandardContentBlocks` from configuration and update
+code that reads `image_url`, `source_type`, or `mime_type` to the standard fields.
 
 ### Determining Which Tool Outputs will be Visible to the LLM
 
 The `outputHandling` option allows you to determine which tool output types are assigned to `ToolMessage.content`, and which are assigned to `ToolMessage.artifact`. Data in [`ToolMessage.content`](https://v03.api.js.langchain.com/classes/_langchain_core.messages_tool.ToolMessage.html#content) is used as input context when the LLM is invoked, while [`ToolMessage.artifact`](https://v03.api.js.langchain.com/classes/_langchain_core.messages_tool.ToolMessage.html#artifact) is not.
 
-**By default** `@langchain/mcp-adapters` maps MCP `resource` content blocks to `ToolMessage.artifact`, and maps all other MCP content block types to `ToolMessage.content`. The value of [`useStandardContentBlocks`](#standardizing-the-format-of-tool-outputs) determines how the structure of each content block is transformed during this process.
+**By default** `@langchain/mcp-adapters` maps MCP `resource` content blocks to `ToolMessage.artifact`, and maps all other MCP content block types to `ToolMessage.content`. See [Standardizing the Format of Tool Outputs](#standardizing-the-format-of-tool-outputs) for the resulting shapes.
 
 > [!TIP]
 > Examples where `ToolMessage.artifact` can be useful include cases when you need to send multimodal tool outputs via `HumanMessage` or `SystemMessage` because the LLM provider API doesn't accept multimodal tool outputs, or cases where one tool might produce a large output to be indirectly manipulated by some other tool (e.g. a query tool that loads dataframes into a Python code execution environment).
@@ -393,7 +391,6 @@ For example, consider the following configuration:
 
 ```typescript
 const clientConfig = {
-  useStandardContentBlocks: true,
   outputHandling: {
     image: "artifact",
     audio: "artifact",
@@ -482,7 +479,6 @@ const client = new MCPAdapter({
       args: ["data_server.py"],
     },
   },
-  useStandardContentBlocks: true,
 });
 
 const tools = await client.getTools();
@@ -573,7 +569,6 @@ const client = new MCPAdapter({
       }),
     },
   },
-  useStandardContentBlocks: true,
 });
 ```
 
@@ -653,7 +648,6 @@ try {
         args: ["-y", "@modelcontextprotocol/server-math"],
       },
     },
-    useStandardContentBlocks: true,
   });
 
   const tools = await client.getTools();
@@ -732,7 +726,6 @@ const client = new MCPAdapter({
     },
   },
   onConnectionError: "ignore", // Skip failed connections
-  useStandardContentBlocks: true,
 });
 
 // This won't throw even though "broken-server" fails to connect
@@ -765,7 +758,6 @@ const client = new MCPAdapter({
     // For optional servers, just log and continue
     console.warn(`Optional server ${serverName} failed, continuing...`);
   },
-  useStandardContentBlocks: true,
 });
 ```
 

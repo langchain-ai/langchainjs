@@ -58,7 +58,6 @@ async function runExample() {
           args: ["-y", "@modelcontextprotocol/server-everything"],
         },
       },
-      useStandardContentBlocks: true,
     });
 
     // Get the tools (flattened array is the default now)

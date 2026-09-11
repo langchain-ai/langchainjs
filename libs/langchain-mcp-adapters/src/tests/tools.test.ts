@@ -657,7 +657,7 @@ describe("Simplified Tool Adapter Tests", () => {
       const tools = await loadMcpTools(
         "mockServer(should load tools with specified response format)",
         mockClient,
-        { useStandardContentBlocks: false }
+        {}
       );
 
       // Verify tool was loaded
@@ -699,10 +699,9 @@ describe("Simplified Tool Adapter Tests", () => {
           text: "Here is your image",
         },
         {
-          type: "image_url",
-          image_url: {
-            url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
-          },
+          type: "image",
+          mimeType: "image/png",
+          data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
         },
       ];
 

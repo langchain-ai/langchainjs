@@ -30,7 +30,6 @@ async function runExample() {
         ],
       },
     },
-    useStandardContentBlocks: true,
   });
 
   await runFileSystemExample(client);
