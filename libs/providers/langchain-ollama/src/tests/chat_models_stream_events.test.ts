@@ -96,4 +96,52 @@ describe("ChatOllama.streamEvents", () => {
       total_tokens: 13,
     });
   });
+
+  test("passes the final usage chunk to handleLLMNewToken callbacks", async () => {
+    const originalBackground = process.env.LANGCHAIN_CALLBACKS_BACKGROUND;
+    process.env.LANGCHAIN_CALLBACKS_BACKGROUND = "false";
+
+    try {
+      const model = mockOllama(ollamaUsageChunks());
+
+      const callbackChunks: unknown[] = [];
+
+      await model.invoke("Hello", {
+        callbacks: [
+          {
+            handleLLMNewToken(
+              _token: string,
+              _idx,
+              _runId,
+              _parentRunId,
+              _tags,
+              fields
+            ) {
+              callbackChunks.push(fields?.chunk);
+            },
+          },
+        ],
+      });
+
+      // The final content-empty chunk carries the aggregated usage_metadata.
+      // on_chat_model_stream events (streamEvents v2, LangGraph's "messages"
+      // stream mode) are built from these callbacks, so without it usage is
+      // invisible to streaming consumers.
+      expect(callbackChunks.length).toBeGreaterThan(0);
+      expect(callbackChunks).toContainEqual(
+        expect.objectContaining({
+          text: "",
+          message: expect.objectContaining({
+            usage_metadata: {
+              input_tokens: 10,
+              output_tokens: 3,
+              total_tokens: 13,
+            },
+          }),
+        })
+      );
+    } finally {
+      process.env.LANGCHAIN_CALLBACKS_BACKGROUND = originalBackground;
+    }
+  });
 });
