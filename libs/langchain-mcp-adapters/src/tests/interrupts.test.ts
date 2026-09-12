@@ -776,7 +776,7 @@ it.each(["modern", "mixed"])(
 );
 
 it("retains per-call headers across direct rounds without sharing them between invocations", async () => {
-  const observed: { account: string; header: string }[] = [];
+  const observed: { account: string; header: string; parameter: string }[] = [];
 
   const handler = createMcpHandler(
     (request) => {
@@ -791,12 +791,22 @@ it("retains per-call headers across direct rounds without sharing them between i
 
       server.registerTool(
         "account",
-        { inputSchema: z.object({ account: z.string() }) },
+        {
+          inputSchema: z.object({
+            account: z.string().meta({ "x-mcp-header": "Account" }),
+          }),
+        },
         async ({ account }, context) => {
           const header =
             request.requestInfo?.headers.get("x-test-account") ?? "missing";
 
-          observed.push({ account, header });
+          observed.push({
+            account,
+            header,
+            parameter:
+              request.requestInfo?.headers.get("mcp-param-account") ??
+              "missing",
+          });
 
           if (!context.mcpReq.inputResponses) {
             return inputRequired({ requestState: account, inputRequests: {} });
@@ -822,7 +832,10 @@ it("retains per-call headers across direct rounds without sharing them between i
     args.account === "default"
       ? undefined
       : {
-          headers: { "X-Test-Account": z.string().parse(args.account) },
+          args: { account: `${z.string().parse(args.account)}-effective` },
+          headers: {
+            "X-Test-Account": `${z.string().parse(args.account)}-effective`,
+          },
         }
   );
 
@@ -846,13 +859,13 @@ it("retains per-call headers across direct rounds without sharing them between i
         tool.invoke({ account: "alpha" }),
         tool.invoke({ account: "beta" }),
       ])
-    ).resolves.toEqual(["alpha", "beta"]);
+    ).resolves.toEqual(["alpha-effective", "beta-effective"]);
     await expect(tool.invoke({ account: "default" })).resolves.toBe("default");
 
-    for (const account of ["alpha", "beta", "default"]) {
+    for (const account of ["alpha-effective", "beta-effective", "default"]) {
       expect(observed.filter((call) => call.account === account)).toEqual([
-        { account, header: account },
-        { account, header: account },
+        { account, header: account, parameter: account },
+        { account, header: account, parameter: account },
       ]);
     }
 

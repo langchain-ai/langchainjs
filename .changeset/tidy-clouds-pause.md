@@ -23,3 +23,5 @@ provider must persist discovery state, PKCE, and issuer-scoped credentials.
 Continue state-only modern responses outside LangGraph without requesting user input. Direct and graph calls share bounded continuation handling, preserving effective arguments and cancellation; actual questions still require a checkpointed graph.
 
 Preserve per-call header overrides across direct continuation rounds, keeping concurrent invocations isolated.
+
+Verify registration application types and issuer-bound re-registration, modern wire metadata and errors, legacy result compatibility, JSON output fidelity, resource caching, and continuation parameter headers with local fixtures. Clarify discovery-cache ownership and the tool-only graph interruption boundary.

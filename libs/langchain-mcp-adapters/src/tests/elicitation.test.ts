@@ -393,7 +393,10 @@ it.each([true, false])(
       await handler.notify.resourceUpdated("test://ignored");
       await handler.notify.resourceUpdated("test://watched");
       await vi.waitFor(() => expect(updated).toHaveBeenCalledTimes(1));
-      expect(updated.mock.calls[0][0]).toMatchObject({ uri: "test://watched" });
+      expect(updated.mock.calls[0][0]).toMatchObject({
+        uri: "test://watched",
+        _meta: { "io.modelcontextprotocol/subscriptionId": expect.any(String) },
+      });
       await adapter.close();
       await handler.notify.resourceUpdated("test://watched");
       expect(updated).toHaveBeenCalledTimes(1);

@@ -286,7 +286,12 @@ and catalog after success; call `listTools()` again to reconnect.
 
 The application owns the redirect endpoint, one-time state consumption, user
 binding, and credential storage. Keep each provider bound to one account and
-preserve issuer information in storage. Local fixtures cover refresh, DCR/CIMD,
+preserve issuer information in storage. Providers also own discovery-cache freshness.
+The SDK can reuse saved discovery without fetching new authorization-server metadata.
+Expire that cache when starting a new authorization attempt if rediscovery is needed;
+retain the recorded discovery and PKCE state for an in-flight callback. After fresh
+discovery selects a different issuer, the SDK rejects the old issuer's registration
+and registers with the new issuer. Local fixtures cover refresh, DCR/CIMD,
 callback validation, and scope step-up; production identity-provider
 interoperability is not implied. URL elicitation is separate from OAuth. See
 [OAuth responsibilities](../README.md#oauth-responsibilities) and
@@ -307,7 +312,16 @@ streams are not automatically reopened; close and reconnect explicitly.
 Protocol logging and SSE remain deprecated compatibility features. Prefer
 OpenTelemetry/stderr and Streamable HTTP. DCR is also deprecated, but keep SDK
 fallback for authorization servers without CIMD support; it is not a legacy-MCP-only
-setting. Roots/sampling and experimental task extensions are not new adapter APIs.
+setting. For static pre-registration, supply issuer-bound client information through
+the SDK OAuth provider. For DCR, the SDK derives `application_type` from redirect URIs;
+set `clientMetadata.application_type` when the application's redirect setup needs an
+explicit choice.
+
+Roots/sampling and experimental task extensions are not new adapter APIs. Sampling
+`includeContext: "thisServer"` and `"allServers"` are deprecated; omit the field or
+use `"none"` in low-level integrations. The LangGraph interrupt bridge handles
+`tools/call` elicitation. Prompts, resource operations, and other input-request
+methods do not gain graph interruption through this bridge.
 
 ## Release prerequisite: public revision-specific elicitation schemas
 

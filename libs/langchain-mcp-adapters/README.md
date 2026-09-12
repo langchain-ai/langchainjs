@@ -1032,9 +1032,20 @@ SSE transport and protocol logging (`logLevel`, `onMessage`, and `setLoggingLeve
 remain compatibility features. Prefer Streamable HTTP and OpenTelemetry or stderr.
 Roots and sampling are deprecated; this adapter does not add new APIs for them.
 Experimental tasks are a separate protocol extension, not implied by modern mode.
+Sampling's `includeContext: "thisServer"` and `"allServers"` values are also deprecated;
+omit the field or use `"none"` in low-level integrations. The graph interrupt bridge
+handles tool elicitation; it does not add interruption to prompt or resource operations.
 
 OAuth Dynamic Client Registration (DCR) is deprecated in favor of Client ID Metadata
 Documents (CIMD), but remains necessary for some authorization servers. Registration
 selection follows the authorization server's capabilities, independently of the MCP
 server's modern/legacy mode. Keep credentials scoped to their issuing authorization
-server and account.
+server and account. Static pre-registration remains available through the SDK OAuth
+provider. The SDK derives DCR `application_type` from redirect URIs; use
+`clientMetadata.application_type` for an explicit override.
+
+Providers own discovery-cache freshness as well as credential storage. Saved
+discovery can avoid a fresh metadata request. Refresh it when a new authorization
+attempt needs rediscovery; preserve the original discovery and PKCE state for an
+in-flight callback. After rediscovery selects a different issuer, the SDK discards
+registration from the previous issuer.
