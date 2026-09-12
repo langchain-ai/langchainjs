@@ -1,11 +1,14 @@
 import {
   Client as SDKClient,
   type Tool,
+  type JSONObject,
   InMemoryTransport,
+  specTypeSchemas,
 } from "@modelcontextprotocol/client";
 import { createMcpHandler, McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { MCPAdapter, loadMcpTools } from "../index.js";
+import { sdkSchema } from "../elicitation.js";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { createServer, Server } from "node:http";
 import { once } from "node:events";
@@ -2524,6 +2527,72 @@ describe("MultiServerMCPClient Integration Tests", () => {
       }
     }
 
+    it("completes legacy wire results without resultType", async () => {
+      await withClient(
+        (server) =>
+          server.registerTool(
+            "legacy_result",
+            { inputSchema: z.object({}) },
+            async () => ({
+              content: [{ type: "text", text: "legacy complete" }],
+            })
+          ),
+        async (client, transport) => {
+          expect(client.getProtocolEra()).toBe("legacy");
+          const sent = vi.spyOn(transport, "send");
+          const [tool] = await loadMcpTools("legacy", client);
+          await expect(tool.invoke({})).resolves.toBe("legacy complete");
+
+          const legacyResult = z.object({
+            result: z.object({
+              resultType: z.never().optional(),
+              content: z.tuple([
+                z.object({
+                  type: z.literal("text"),
+                  text: z.literal("legacy complete"),
+                }),
+              ]),
+            }),
+          });
+
+          expect(
+            sent.mock.calls.some(
+              ([message]) => legacyResult.safeParse(message).success
+            )
+          ).toBe(true);
+        }
+      );
+    });
+
+    it("preserves fractional schema bounds and defaults", async () => {
+      await withClient(
+        (server) =>
+          server.registerTool(
+            "fraction",
+            {
+              inputSchema: z.object({
+                value: z.number().min(0.25).max(0.75).default(0.5),
+              }),
+              outputSchema: z.object({ value: z.number().min(0.25).max(0.75) }),
+            },
+            async ({ value }) => ({
+              content: [{ type: "text", text: String(value) }],
+              structuredContent: { value },
+            })
+          ),
+        async (client) => {
+          const [tool] = await loadMcpTools("fraction", client);
+          await expect(tool.invoke({})).resolves.toBe("0.5");
+          await expect(tool.invoke({ value: 0.25 })).resolves.toBe("0.25");
+          await expect(tool.invoke({ value: 0.75 })).resolves.toBe("0.75");
+          const call = vi.spyOn(client, "callTool");
+          await expect(tool.invoke({ value: 0.1 })).rejects.toThrow();
+          await expect(tool.invoke({ value: 0.9 })).rejects.toThrow();
+          expect(call).not.toHaveBeenCalled();
+        }
+      );
+    });
+
     it("preserves SDK output schema validation", async () => {
       await withClient(
         (server) => {
@@ -2968,4 +3037,577 @@ describe("explicit protocol modes with live HTTP servers", () => {
       );
     }
   });
+});
+
+describe("modern OAuth acceptance", () => {
+  const scenarios = [
+    "refresh",
+    "dcr",
+    "dcr-web",
+    "dcr-explicit",
+    "issuer-switch",
+    "cimd",
+    "callback",
+    "wrong-state",
+    "wrong-issuer",
+    "scope-stepup",
+  ];
+
+  it.each(scenarios)("delegates %s to the SDK/provider", async (scenario) => {
+    let registrations = 0;
+    let refreshes = 0;
+    let redirected = false;
+    let expandedScope = false;
+    let savedIssuer: string | undefined;
+    let base = "";
+    let issuer = "";
+    const registeredTypes: string[] = [];
+
+    const handler = createMcpHandler(
+      () => {
+        const server = new McpServer({ name: "oauth-modern", version: "1" });
+        server.registerTool(
+          "echo",
+          { inputSchema: z.object({}) },
+          async () => ({ content: [{ type: "text", text: "authorized" }] })
+        );
+
+        return server;
+      },
+      { legacy: "reject" }
+    );
+
+    const serveMCP = toNodeHandler(handler);
+
+    const http = createServer((request, response) => {
+      const send = (body: JSONObject) => {
+        response.writeHead(200, { "content-type": "application/json" });
+        response.end(JSON.stringify(body));
+      };
+
+      if (request.url?.startsWith("/.well-known/oauth-protected-resource")) {
+        send({
+          resource: `${base}/mcp`,
+          authorization_servers: [issuer],
+          scopes_supported: ["read"],
+        });
+      } else if (
+        request.url?.startsWith("/.well-known/oauth-authorization-server")
+      ) {
+        send({
+          issuer,
+          authorization_endpoint: `${base}/authorize`,
+          token_endpoint: `${base}/token`,
+          registration_endpoint: `${base}/register`,
+          response_types_supported: ["code"],
+          authorization_response_iss_parameter_supported: true,
+          grant_types_supported: ["authorization_code", "refresh_token"],
+          code_challenge_methods_supported: ["S256"],
+          token_endpoint_auth_methods_supported: ["none"],
+          client_id_metadata_document_supported: scenario === "cimd",
+        });
+      } else if (request.url === "/register") {
+        registrations += 1;
+        const chunks: Buffer[] = [];
+        request.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
+        request.on("end", () => {
+          const metadata = z
+            .object({ application_type: z.string() })
+            .parse(JSON.parse(Buffer.concat(chunks).toString()));
+
+          registeredTypes.push(metadata.application_type);
+          send({
+            client_id:
+              issuer === base ? "fixture-client" : "fixture-other-client",
+            redirect_uris: [`${base}/callback`],
+            token_endpoint_auth_method: "none",
+          });
+        });
+      } else if (request.url === "/token") {
+        expandedScope = true;
+        refreshes += 1;
+        // Synthetic credentials used only by this isolated local fixture.
+        send({
+          access_token: "fixture-access",
+          token_type: "Bearer",
+          expires_in: 3600,
+        });
+      } else if (
+        request.url === "/mcp" &&
+        scenario === "scope-stepup" &&
+        !expandedScope &&
+        request.headers.authorization === "Bearer fixture-access"
+      ) {
+        response.writeHead(403, {
+          "WWW-Authenticate":
+            'Bearer error="insufficient_scope", scope="read write"',
+        });
+        response.end();
+      } else if (
+        request.url === "/mcp" &&
+        request.headers.authorization === "Bearer fixture-access"
+      ) {
+        serveMCP(request, response);
+      } else if (request.url === "/mcp") {
+        response.writeHead(401, {
+          "WWW-Authenticate": `Bearer resource_metadata="${base}/.well-known/oauth-protected-resource"`,
+        });
+        response.end();
+      } else {
+        response.writeHead(404).end();
+      }
+    });
+
+    http.listen(0, "127.0.0.1");
+    await once(http, "listening");
+    const address = http.address();
+
+    if (!address || typeof address === "string")
+      throw new Error("Missing local OAuth address");
+    base = `http://127.0.0.1:${address.port}`;
+    issuer = base;
+
+    let stored: Awaited<ReturnType<OAuthClientProvider["tokens"]>> =
+      scenario === "refresh"
+        ? {
+            access_token: "fixture-expired",
+            refresh_token: "fixture-refresh",
+            token_type: "Bearer",
+            issuer: base,
+          }
+        : scenario === "scope-stepup"
+          ? {
+              access_token: "fixture-access",
+              token_type: "Bearer",
+              issuer: base,
+              scope: "read",
+            }
+          : undefined;
+
+    let discovery: Awaited<
+      ReturnType<NonNullable<OAuthClientProvider["discoveryState"]>>
+    >;
+
+    let clientInformation: Awaited<
+      ReturnType<OAuthClientProvider["clientInformation"]>
+    >;
+
+    let verifier = "fixture-verifier";
+
+    const redirectUrl =
+      scenario === "dcr-web"
+        ? "https://app.example/callback"
+        : `${base}/callback`;
+
+    const provider: OAuthClientProvider = {
+      state: () => "fixture-state",
+      discoveryState: () => discovery,
+      saveDiscoveryState: (state) => {
+        discovery = state;
+      },
+      redirectUrl,
+      clientMetadataUrl:
+        scenario === "cimd" ? "https://example.com/mcp-client.json" : undefined,
+      clientMetadata: {
+        redirect_uris: [redirectUrl],
+        application_type: scenario === "dcr-explicit" ? "web" : undefined,
+        token_endpoint_auth_method: "none",
+      },
+      clientInformation: () =>
+        scenario === "refresh" || scenario === "scope-stepup"
+          ? { client_id: "fixture-client", issuer: base }
+          : clientInformation,
+      saveClientInformation: (info, context) => {
+        clientInformation = { ...info, issuer: context?.issuer };
+        savedIssuer = context?.issuer;
+      },
+      tokens: () => stored,
+      saveTokens: (tokens, context) => {
+        stored = { ...tokens, issuer: context?.issuer };
+        savedIssuer = context?.issuer;
+      },
+      saveCodeVerifier: (value) => {
+        verifier = value;
+      },
+      codeVerifier: () => verifier,
+      redirectToAuthorization: (url) => {
+        if (scenario === "scope-stepup")
+          expect(url.searchParams.get("scope")).toContain("write");
+        redirected = true;
+        expect(url.origin).toBe(base);
+        expect(url.searchParams.get("client_id")).toBe(
+          scenario === "cimd"
+            ? "https://example.com/mcp-client.json"
+            : issuer === base
+              ? "fixture-client"
+              : "fixture-other-client"
+        );
+        throw new Error("Fixture authorization handed to application");
+      },
+    };
+
+    const adapter = new MCPAdapter({
+      servers: {
+        oauth: {
+          transport: "http",
+          url: `${base}/mcp`,
+          authProvider: provider,
+        },
+      },
+    });
+
+    try {
+      if (scenario === "refresh") {
+        const [tool] = await adapter.listTools();
+        expect(await tool.invoke({})).toBe("authorized");
+        expect(refreshes).toBe(1);
+        expect(redirected).toBe(false);
+      } else {
+        await expect(adapter.listTools()).rejects.toThrow();
+        expect(redirected).toBe(true);
+        expect(registrations).toBe(
+          ["cimd", "scope-stepup"].includes(scenario) ? 0 : 1
+        );
+
+        if (
+          ["callback", "wrong-state", "wrong-issuer", "scope-stepup"].includes(
+            scenario
+          )
+        ) {
+          const callback = new URLSearchParams({
+            code: "fixture-code",
+            state: scenario === "wrong-state" ? "other-state" : "fixture-state",
+            iss: scenario === "wrong-issuer" ? "https://other.example" : base,
+          });
+
+          if (scenario === "callback" || scenario === "scope-stepup") {
+            await adapter.finishAuth("oauth", callback, "fixture-state");
+            const [tool] = await adapter.listTools();
+            expect(await tool.invoke({})).toBe("authorized");
+            expect(refreshes).toBe(1);
+          } else {
+            await expect(
+              adapter.finishAuth("oauth", callback, "fixture-state")
+            ).rejects.toThrow();
+            expect(refreshes).toBe(0);
+          }
+        }
+      }
+
+      expect(savedIssuer).toBe(base);
+
+      if (registrations > 0) {
+        expect(registeredTypes).toEqual([
+          ["dcr-web", "dcr-explicit"].includes(scenario) ? "web" : "native",
+        ]);
+      }
+
+      if (scenario === "issuer-switch") {
+        await adapter.close();
+        issuer = `${base}/other`;
+        // Expire discovery, retaining the credentials stamped with the old issuer.
+        discovery = undefined;
+        await expect(adapter.listTools()).rejects.toThrow();
+        expect(registrations).toBe(2);
+        expect(savedIssuer).toBe(issuer);
+        expect(refreshes).toBe(0);
+      }
+    } finally {
+      await adapter.close();
+      await handler.close();
+      http.close();
+      http.closeAllConnections();
+      await once(http, "close");
+    }
+  });
+});
+
+describe("modern wire boundaries", () => {
+  it("preserves JSON output and protocol metadata while excluding invalid header declarations", async () => {
+    const requests: string[] = [];
+
+    const values = [0, false, null, [1, "value"], "text"];
+
+    const handler = createMcpHandler(
+      () => {
+        const server = new McpServer({ name: "wire-boundary", version: "1" });
+        values.forEach((value, index) =>
+          server.registerTool(
+            `json_${index}`,
+            { inputSchema: z.object({}) },
+            async () => ({ content: [], structuredContent: value })
+          )
+        );
+        server.registerTool(
+          "invalid_header",
+          {
+            inputSchema: z.object({
+              region: z.string().meta({ "x-mcp-header": "bad header" }),
+            }),
+          },
+          async () => ({ content: [] })
+        );
+
+        return server;
+      },
+      { legacy: "reject" }
+    );
+
+    const serve = toNodeHandler(handler);
+
+    const wireHeaders: {
+      method: string | string[] | undefined;
+      name: string | string[] | undefined;
+      session: boolean;
+      replay: boolean;
+    }[] = [];
+
+    const http = createServer((request, response) => {
+      const chunks: Buffer[] = [];
+      request.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
+      request.on("end", () => {
+        requests.push(Buffer.concat(chunks).toString());
+        wireHeaders.push({
+          method: request.headers["mcp-method"],
+          name: request.headers["mcp-name"],
+          session: "mcp-session-id" in request.headers,
+          replay: "last-event-id" in request.headers,
+        });
+      });
+      serve(request, response);
+    });
+
+    http.listen(0, "127.0.0.1");
+    await once(http, "listening");
+    const { port } = z.object({ port: z.number() }).parse(http.address());
+
+    const adapter = new MCPAdapter({
+      servers: { test: { url: `http://127.0.0.1:${port}/mcp` } },
+    });
+
+    try {
+      const tools = await adapter.listTools();
+      expect(tools.map((tool) => tool.name)).toEqual(
+        values.map((_, index) => `json_${index}`)
+      );
+
+      for (const [index, tool] of tools.entries()) {
+        const result = await tool.invoke({
+          type: "tool_call",
+          id: `call_${index}`,
+          name: tool.name,
+          args: {},
+        });
+
+        expect(result.artifact).toContainEqual({
+          type: "mcp_structured_content",
+          data: values[index],
+        });
+      }
+
+      expect(requests.length).toBeGreaterThan(values.length);
+
+      for (const [index, body] of requests.entries()) {
+        const request = await sdkSchema(
+          specTypeSchemas.JSONRPCRequest
+        ).parseAsync(JSON.parse(body));
+
+        expect(request.method).not.toMatch(/initialize/);
+        expect(wireHeaders[index]).toMatchObject({
+          method: request.method,
+          session: false,
+          replay: false,
+        });
+
+        if (request.method === "tools/call")
+          expect(wireHeaders[index].name).toMatch(/^json_/);
+
+        if (request.method !== "server/discover")
+          expect(request.params?._meta).toMatchObject({
+            "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+            "io.modelcontextprotocol/clientCapabilities": {
+              elicitation: { form: {}, url: {} },
+            },
+            "io.modelcontextprotocol/clientInfo": {
+              name: "@langchain/mcp-adapters",
+            },
+          });
+      }
+    } finally {
+      await adapter.close();
+      await handler.close();
+      http.close();
+      http.closeAllConnections();
+      await once(http, "close");
+    }
+  });
+
+  it.each([-32020, -32021, -32022, -32602, "invalid-result"])(
+    "preserves protocol errors and rejects malformed results: %s",
+    async (outcome) => {
+      const handler = createMcpHandler(
+        () => {
+          const server = new McpServer({ name: "wire-error", version: "1" });
+          server.registerTool(
+            "raw",
+            { inputSchema: z.object({}) },
+            async () => ({ content: [] })
+          );
+
+          return server;
+        },
+        { legacy: "reject" }
+      );
+
+      const serve = toNodeHandler(handler);
+
+      const http = createServer((request, response) => {
+        if (request.headers["mcp-method"] !== "tools/call") {
+          serve(request, response);
+
+          return;
+        }
+
+        const chunks: Buffer[] = [];
+        request.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
+        request.on("end", () => {
+          const { id } = z
+            .object({ id: z.union([z.string(), z.number()]) })
+            .parse(JSON.parse(Buffer.concat(chunks).toString()));
+
+          response.writeHead(200, { "content-type": "application/json" });
+          response.end(
+            JSON.stringify({
+              jsonrpc: "2.0",
+              id,
+              ...(outcome === "invalid-result"
+                ? { result: { resultType: "unknown", content: [] } }
+                : {
+                    error: {
+                      code: outcome,
+                      message: "Fixture protocol rejection",
+                    },
+                  }),
+            })
+          );
+        });
+      });
+
+      http.listen(0, "127.0.0.1");
+      await once(http, "listening");
+      const { port } = z.object({ port: z.number() }).parse(http.address());
+
+      const adapter = new MCPAdapter({
+        servers: { test: { url: `http://127.0.0.1:${port}/mcp` } },
+      });
+
+      try {
+        const [tool] = await adapter.listTools();
+
+        if (outcome === "invalid-result") {
+          await expect(tool.invoke({})).rejects.toThrow();
+        } else {
+          await expect(tool.invoke({})).rejects.toMatchObject({
+            cause: { code: outcome },
+          });
+        }
+      } finally {
+        await adapter.close();
+        await handler.close();
+        http.close();
+        http.closeAllConnections();
+        await once(http, "close");
+      }
+    }
+  );
+});
+
+it("honors resource cache policy without sharing private results between header contexts", async () => {
+  let revision = 1;
+  let timestamp = Date.now();
+  const clock = vi.spyOn(Date, "now").mockImplementation(() => timestamp);
+
+  const handler = createMcpHandler(
+    (request) => {
+      const account =
+        request.requestInfo?.headers.get("x-test-account") ?? "default";
+
+      const server = new McpServer(
+        { name: "resource-cache", version: "1" },
+        {
+          cacheHints: {
+            "resources/list": { ttlMs: 60_000, cacheScope: "private" },
+            "resources/read": { ttlMs: 0, cacheScope: "private" },
+          },
+        }
+      );
+
+      server.registerResource(
+        `${account}-${revision}`,
+        "test://item",
+        {},
+        async () => ({
+          contents: [{ uri: "test://item", text: `${account}-${revision}` }],
+        })
+      );
+
+      return server;
+    },
+    { legacy: "reject" }
+  );
+
+  const http = createServer(toNodeHandler(handler));
+  http.listen(0, "127.0.0.1");
+  await once(http, "listening");
+  const { port } = z.object({ port: z.number() }).parse(http.address());
+
+  const adapter = new MCPAdapter({
+    servers: { test: { url: `http://127.0.0.1:${port}/mcp` } },
+  });
+
+  const alpha = { headers: { "X-Test-Account": "alpha" } };
+  const beta = { headers: { "X-Test-Account": "beta" } };
+
+  try {
+    expect((await adapter.listResources([], alpha)).test[0].name).toBe(
+      "alpha-1"
+    );
+    expect((await adapter.listResources([], beta)).test[0].name).toBe("beta-1");
+    revision = 2;
+    expect((await adapter.listResources([], alpha)).test[0].name).toBe(
+      "alpha-1"
+    );
+    const client = await adapter.getClient("test", alpha);
+    expect(
+      (await client?.listResources(undefined, { cacheMode: "bypass" }))
+        ?.resources[0].name
+    ).toBe("alpha-2");
+    expect((await adapter.listResources([], alpha)).test[0].name).toBe(
+      "alpha-1"
+    );
+    expect(
+      (await client?.listResources(undefined, { cacheMode: "refresh" }))
+        ?.resources[0].name
+    ).toBe("alpha-2");
+    expect((await adapter.listResources([], beta)).test[0].name).toBe("beta-1");
+    timestamp += 60_001;
+    expect((await adapter.listResources([], beta)).test[0].name).toBe("beta-2");
+    expect(
+      await adapter.readResource("test", "test://item", alpha)
+    ).toMatchObject([{ text: "alpha-2" }]);
+    revision = 3;
+    expect(
+      await adapter.readResource("test", "test://item", alpha)
+    ).toMatchObject([{ text: "alpha-3" }]);
+    await expect(
+      adapter.readResource("test", "test://missing", alpha)
+    ).rejects.toMatchObject({ cause: { code: -32602 } });
+  } finally {
+    clock.mockRestore();
+    await adapter.close();
+    await handler.close();
+    http.close();
+    http.closeAllConnections();
+    await once(http, "close");
+  }
 });

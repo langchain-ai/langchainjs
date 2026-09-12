@@ -14,7 +14,7 @@ import { adapterConfigSchema } from "../types.js";
 import { MCPAdapter } from "../index.js";
 
 import { describe, expect, it, vi } from "vitest";
-import { validateElicitationAnswer } from "../elicitation.js";
+import { sdkSchema, validateElicitationAnswer } from "../elicitation.js";
 import type { MCPElicitationRequest } from "../elicitation.js";
 
 const form = {
@@ -333,6 +333,15 @@ describe("elicitation and logging configuration", () => {
   });
 });
 
+it("composes Standard Schema defaults and issue paths through Zod", async () => {
+  const parser = sdkSchema(z.object({ label: z.string().default("default") }));
+  expect(await parser.parseAsync({})).toEqual({ label: "default" });
+  const result = await parser.safeParseAsync({ label: 42 });
+  expect(result.success).toBe(false);
+
+  if (!result.success) expect(result.error.issues[0].path).toEqual(["label"]);
+});
+
 it.each([true, false])(
   "watches configured modern resource URIs (supported: %s)",
   async (supported) => {
@@ -384,7 +393,10 @@ it.each([true, false])(
       await handler.notify.resourceUpdated("test://ignored");
       await handler.notify.resourceUpdated("test://watched");
       await vi.waitFor(() => expect(updated).toHaveBeenCalledTimes(1));
-      expect(updated.mock.calls[0][0]).toMatchObject({ uri: "test://watched" });
+      expect(updated.mock.calls[0][0]).toMatchObject({
+        uri: "test://watched",
+        _meta: { "io.modelcontextprotocol/subscriptionId": expect.any(String) },
+      });
       await adapter.close();
       await handler.notify.resourceUpdated("test://watched");
       expect(updated).toHaveBeenCalledTimes(1);

@@ -184,7 +184,8 @@ name-only lookalikes. Zod issue formatting, `cause`, and `result` are preserved.
 
 Tools and connections are isolated by server name, effective headers and OAuth
 provider identity. Configured headers take precedence over discovery overrides;
-an invocation hook's headers override its existing connection's headers. Empty
+a direct invocation hook's headers override its existing connection's headers.
+Modern graph executions reject hook header overrides. Empty
 fork overrides reuse the existing client. Default lookups cannot select another
 request's identity. A tools-list notification invalidates only that connection's
 catalog; separate OAuth providers remain separate even if their headers match.
@@ -197,7 +198,7 @@ Tool, resource, and template discovery delegates pagination to the SDK. Server
 errors reject instead of appearing as an empty catalog. Resource conversion
 never performs implicit reads; explicitly call
 `readResource` if needed. Modern servers use the current revision by default; legacy servers require
-`mode: "legacy"`. Durable modern elicitation is introduced separately.
+`mode: "legacy"`. Modern elicitation uses LangGraph interrupts by default.
 
 ### Discovery freshness
 
@@ -235,13 +236,15 @@ Move notification and progress callbacks from the adapter root into each server
 that should receive them. Global LangChain tool hooks and naming/output policies
 remain available. `onRootsListChanged` has been removed: roots notifications
 originate from the client. Use tool arguments, resource URIs, or server
-configuration to supply workspace paths instead.
+configuration to supply workspace paths instead. The protocol deprecates roots;
+removing this observer does not mean the roots feature was removed from every
+protocol implementation.
 
 ## Elicitation and request logging
 
 Move `onElicitation` onto each legacy server that handles user input. Modern server
-configuration rejects this callback; durable modern elicitation belongs to the
-following interruption layer. Legacy callbacks execute within the active request.
+configuration rejects this callback and uses LangGraph interrupts by default.
+Legacy callbacks execute within the active request.
 Their answers are parsed with SDK schemas, with Zod issues preserving validation
 paths. They cannot be resumed after the underlying connection closes.
 
@@ -249,6 +252,50 @@ Modern `logLevel` and `maxElicitationRounds` are server options, not adapter-wid
 policies. Legacy configurations reject them; use `setLoggingLevel` for legacy
 logging. Tool-catalog subscriptions keep caches fresh even without an application
 notification callback.
+
+## Checkpointed elicitation
+
+Remove `elicitationMode`; modern tools use interrupts by default. Invoke the tool
+inside a checkpointed LangGraph run when it can ask for input, and resume with
+one answer for each pending question key. Direct calls outside a graph still work
+when no input is requested. If the server asks for input, an outside-graph call
+raises a helpful error; a graph without a checkpointer cannot resume that request.
+Modern URL questions may omit legacy `elicitationId` values; use the pending
+question key when answering them.
+
+Legacy servers require explicit `mode: "legacy"` and a per-server `onElicitation`
+callback. A pending legacy request cannot be resumed through this bridge, and
+modern connections never fall back to legacy.
+
+Keep authentication and headers in connection configuration for graph execution.
+Modern tools running inside a graph reject `beforeToolCall` header overrides
+before sending the request. Direct HTTP calls can still override headers. Preserve the same server, tool, and
+authenticated account when reconstructing the adapter. The application owns
+checkpoint storage and thread access. `MemorySaver` is an in-process example;
+process recovery needs a persistent checkpointer. No exactly-once guarantee is
+made for work performed before a checkpoint is saved. See the
+[complete interrupt example](../README.md#durable-langgraph-elicitation).
+
+## Completing OAuth authorization
+
+Use `await adapter.finishAuth(serverName, callbackParams, expectedState)` with
+the full redirect query parameters, including `iss` when present. The configured
+provider must persist discovery state and the PKCE verifier. The adapter checks
+state, delegates callback completion to the SDK, and clears the old connection
+and catalog after success; call `listTools()` again to reconnect.
+
+The application owns the redirect endpoint, one-time state consumption, user
+binding, and credential storage. Keep each provider bound to one account and
+preserve issuer information in storage. Providers also own discovery-cache freshness.
+The SDK can reuse saved discovery without fetching new authorization-server metadata.
+Expire that cache when starting a new authorization attempt if rediscovery is needed;
+retain the recorded discovery and PKCE state for an in-flight callback. After fresh
+discovery selects a different issuer, the SDK rejects the old issuer's registration
+and registers with the new issuer. Local fixtures cover refresh, DCR/CIMD,
+callback validation, and scope step-up; production identity-provider
+interoperability is not implied. URL elicitation is separate from OAuth. See
+[OAuth responsibilities](../README.md#oauth-responsibilities) and
+[callback completion](../README.md#complete-an-oauth-callback).
 
 ## Resource subscriptions and reconnection
 
@@ -265,4 +312,30 @@ streams are not automatically reopened; close and reconnect explicitly.
 Protocol logging and SSE remain deprecated compatibility features. Prefer
 OpenTelemetry/stderr and Streamable HTTP. DCR is also deprecated, but keep SDK
 fallback for authorization servers without CIMD support; it is not a legacy-MCP-only
-setting. Roots/sampling and experimental task extensions are not new adapter APIs.
+setting. For static pre-registration, supply issuer-bound client information through
+the SDK OAuth provider. For DCR, the SDK derives `application_type` from redirect URIs;
+set `clientMetadata.application_type` when the application's redirect setup needs an
+explicit choice.
+
+Roots/sampling and experimental task extensions are not new adapter APIs. Sampling
+`includeContext: "thisServer"` and `"allServers"` are deprecated; omit the field or
+use `"none"` in low-level integrations. The LangGraph interrupt bridge handles
+`tools/call` elicitation. Prompts, resource operations, and other input-request
+methods do not gain graph interruption through this bridge.
+
+## Release prerequisite: public revision-specific elicitation schemas
+
+SDK 2.0.0's neutral URL validator still requires the legacy elicitationId. The
+adapter currently isolates a modern URL schema exception. The major release is
+blocked on a published SDK API that exposes revision-specific elicitation
+validators through its public client entry point, followed by removal of that
+exception. Private SDK imports and an invented elicitationId are not acceptable
+substitutes.
+
+The prepared upstream proposal exposes Standard Schema validators for Request,
+FormParams, URLParams, and Result, selected by protocol revision. It reuses the
+SDK's frozen schema builders and preserves lazy construction. Upstream review,
+package/export verification, and a published version are still required. Before
+release, switch the adapter to that public API and rerun legacy/modern form and
+URL validation, graph continuation, and ESM/CommonJS package checks. Do not claim
+that the current workaround closes this release prerequisite.

@@ -4,6 +4,7 @@ import {
   specTypeSchemas,
   type Client,
   type ElicitRequest,
+  type ElicitRequestURLParams,
   type ElicitResult,
 } from "@modelcontextprotocol/client";
 import { DefaultJsonSchemaValidator } from "@modelcontextprotocol/client/_shims";
@@ -40,6 +41,29 @@ export const elicitationRequestSchema = sdkSchema(
   specTypeSchemas.ElicitRequest
 ).transform((request) => request.params);
 
+// The SDK's neutral URL schema requires legacy elicitationId. Until revision-specific
+// schemas are public, define only the modern URL fields and keep SDK envelope validation.
+const modernURLRequestSchema = z.looseObject({
+  mode: z.literal("url"),
+  message: z.string(),
+  url: z.url(),
+}) satisfies z.ZodType<Omit<ElicitRequestURLParams, "elicitationId">>;
+
+export const modernElicitationRequestSchema = z
+  .intersection(
+    sdkSchema(specTypeSchemas.Request),
+    z.object({
+      method: z.literal("elicitation/create"),
+      params: z.union([
+        sdkSchema(specTypeSchemas.ElicitRequestFormParams),
+        modernURLRequestSchema,
+      ]),
+    })
+  )
+  .transform((request) => request.params);
+
+type ModernElicitationRequest = z.output<typeof modernElicitationRequestSchema>;
+
 /** SDK-owned form or URL request. The application owns presentation. */
 export type MCPElicitationRequest = ElicitRequest["params"];
 
@@ -58,7 +82,9 @@ export type MCPElicitationHandler = (
 ) => MCPElicitationAnswer | Promise<MCPElicitationAnswer>;
 
 /** Parse application answers without duplicating the protocol's schemas. */
-export function elicitationAnswerFor(request: MCPElicitationRequest) {
+export function elicitationAnswerFor(
+  request: MCPElicitationRequest | ModernElicitationRequest
+) {
   return elicitationAnswerSchema.check(async (ctx) => {
     const answer = ctx.value;
 

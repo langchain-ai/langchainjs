@@ -361,6 +361,58 @@ export class MCPAdapter {
   }
 
   /**
+   * Complete an OAuth redirect, then reconnect on the next operation.
+   * The host must bind expectedState to the initiating user and consume it once.
+   * The provider must persist discovery state and issuer-scoped credentials.
+   */
+  async finishAuth(
+    serverName: string,
+    callbackParams: URLSearchParams,
+    expectedState: string
+  ): Promise<void> {
+    const state = z.string().min(1).parse(expectedState);
+
+    if (
+      callbackParams.getAll("state").length !== 1 ||
+      callbackParams.get("state") !== state
+    ) {
+      throw new MCPClientError(
+        "OAuth callback state does not match the authorization attempt",
+        serverName
+      );
+    }
+
+    const connection = this.#config.mcpServers[serverName];
+
+    if (
+      !connection ||
+      connection.transport === "stdio" ||
+      !connection.authProvider
+    ) {
+      throw new MCPClientError(
+        "OAuth completion requires a configured HTTP/SSE authProvider",
+        serverName
+      );
+    }
+
+    if (!(await connection.authProvider.discoveryState?.())) {
+      throw new MCPClientError(
+        "OAuth completion requires provider discoveryState from the authorization attempt",
+        serverName
+      );
+    }
+
+    await this.#clientConnections.finishAuth(
+      serverName,
+      connection,
+      callbackParams
+    );
+    const options = this.#transportOptions(serverName);
+    await this.#cleanupServerResources(options);
+    this.#failedServers.delete(this.#clientConnections.identity(options));
+  }
+
+  /**
    * List resources from specified servers.
    *
    * @param servers - Optional array of server names to filter resources by.

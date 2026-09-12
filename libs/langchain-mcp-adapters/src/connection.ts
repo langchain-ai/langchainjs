@@ -1,3 +1,5 @@
+import { InterruptMCPClient } from "./continuation.js";
+
 import { MCPClientError } from "./utils/errors.js";
 import { configureElicitation } from "./elicitation.js";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
@@ -78,6 +80,7 @@ function protocolClientOptions(
   return {
     versionNegotiation: { mode: { pin: "2026-07-28" } },
     inputRequired: { maxRounds: options.maxElicitationRounds },
+    capabilities: { elicitation: { form: {}, url: {} } },
   };
 }
 
@@ -182,10 +185,13 @@ export class ConnectionManager {
           ? await this.#createSSETransport(serverName, options)
           : await this.#createStdioTransport(options);
 
-    const mcpClient = new MCPClient(
-      { name: packageJson.name, version: packageJson.version },
-      protocolClientOptions(options)
-    );
+    const identity = { name: packageJson.name, version: packageJson.version };
+    const clientOptions = protocolClientOptions(options);
+
+    const mcpClient =
+      options.mode === "modern"
+        ? new InterruptMCPClient(identity, clientOptions)
+        : new MCPClient(identity, clientOptions);
 
     if (options.mode === "legacy")
       configureElicitation(mcpClient, serverName, options.onElicitation);
@@ -356,6 +362,24 @@ export class ConnectionManager {
     });
 
     return client;
+  }
+
+  /** Complete an application-owned redirect using the SDK's callback and issuer checks. */
+  async finishAuth(
+    serverName: string,
+    options: ResolvedStreamableHTTPConnection,
+    callbackParams: URLSearchParams
+  ): Promise<void> {
+    const transport =
+      options.transport === "sse"
+        ? await this.#createSSETransport(serverName, options)
+        : await this.#createStreamableHTTPTransport(serverName, options);
+
+    try {
+      await transport.finishAuth(callbackParams);
+    } finally {
+      await transport.close();
+    }
   }
 
   /**

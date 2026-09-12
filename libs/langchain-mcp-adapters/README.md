@@ -3,7 +3,7 @@
 > This version uses the stable MCP TypeScript SDK 2.x. Legacy MCP servers remain
 > supported. Applications supplying their own SDK client must migrate to
 > `@modelcontextprotocol/client`; see [the SDK migration guide](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-mcp-adapters/docs/sdk-v2-migration.md).
-> Upgrading the SDK alone does not enable modern stateless elicitation.
+> Modern tools use LangGraph interrupts for user input. Legacy servers use per-server callbacks.
 
 [![npm version](https://img.shields.io/npm/v/@langchain/mcp-adapters.svg)](https://www.npmjs.com/package/@langchain/mcp-adapters)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -351,7 +351,7 @@ const out = await t?.invoke({ a: 1, b: 2 });
 
 Notes:
 
-- **beforeToolCall** can return `{ args?, headers? }`. Headers are supported for HTTP/SSE. Stdio connections do not support custom headers.
+- **beforeToolCall** can return `{ args?, headers? }`. Headers are supported for HTTP/SSE calls. Modern tools running inside LangGraph reject header overrides; configure their headers on the connection. Stdio connections do not support custom headers.
 - **afterToolCall** may return `{ result }`, where `result` is a string, a 2‑tuple `[content, artifact]`, a `ToolMessage`, or a `Command`. Return nothing to keep the original result.
 
 ## Tool Configuration Options
@@ -553,50 +553,23 @@ New in v0.4.6.
 
 ### Basic OAuth Setup
 
+Supply an application-owned provider that implements the SDK 2
+`OAuthClientProvider` contract. The provider owns credential storage and redirect
+handling; see [OAuth responsibilities](#oauth-responsibilities) and
+[callback completion](#complete-an-oauth-callback).
+
 ```ts
-import type { OAuthClientProvider } from "@langchain/mcp-adapters";
+import { MCPAdapter, type OAuthClientProvider } from "@langchain/mcp-adapters";
 
-class MyOAuthProvider implements OAuthClientProvider {
-  constructor(
-    private config: {
-      redirectUrl: string;
-      clientMetadata: OAuthClientMetadata;
-    }
-  ) {}
-
-  get redirectUrl() {
-    return this.config.redirectUrl;
-  }
-  get clientMetadata() {
-    return this.config.clientMetadata;
-  }
-
-  // Implement token storage (localStorage, database, etc.)
-  tokens(): OAuthTokens | undefined {
-    const stored = localStorage.getItem("mcp_tokens");
-    return stored ? JSON.parse(stored) : undefined;
-  }
-
-  async saveTokens(tokens: OAuthTokens): Promise<void> {
-    localStorage.setItem("mcp_tokens", JSON.stringify(tokens));
-  }
-
-  // Implement other required methods...
-  // See MCP SDK documentation for complete examples
-}
+// Implement this provider in your application's authentication layer.
+declare const authProvider: OAuthClientProvider;
 
 const client = new MCPAdapter({
   servers: {
     "secure-server": {
+      transport: "http",
       url: "https://secure-mcp-server.example.com/mcp",
-      authProvider: new MyOAuthProvider({
-        redirectUrl: "https://myapp.com/oauth/callback",
-        clientMetadata: {
-          redirect_uris: ["https://myapp.com/oauth/callback"],
-          client_name: "My MCP Client",
-          scope: "mcp:read mcp:write",
-        },
-      }),
+      authProvider,
     },
   },
 });
@@ -863,9 +836,107 @@ URL answers have no form content. Invalid answers produce Zod validation errors.
 The callback receives the server name and cancellation signal.
 
 Legacy callbacks wait within the running request. They cannot survive a process
-restart; do not call LangGraph `interrupt()` inside them. Modern callback configuration
-is rejected. This layer does not advertise modern elicitation; checkpointed modern
-interrupt support is added in the following layer.
+restart; do not call LangGraph `interrupt()` inside them. Modern configurations
+reject `onElicitation` and use LangGraph interrupts by default.
+
+## Durable LangGraph elicitation
+
+Modern tools pause a LangGraph run when the server asks for input. No elicitation
+option is needed. Use a checkpointer and a stable thread ID to resume the run.
+Direct calls outside LangGraph still work when the server does not ask for input;
+if it does, the call raises an error explaining that a checkpointed graph is required.
+A graph without a checkpointer also fails when it reaches the input request.
+
+For example, a deployment tool can ask for approval before it continues:
+
+```typescript
+import { MCPAdapter, type MCPElicitationResume } from "@langchain/mcp-adapters";
+import {
+  Annotation,
+  Command,
+  END,
+  MemorySaver,
+  START,
+  StateGraph,
+} from "@langchain/langgraph";
+
+const adapter = new MCPAdapter({
+  servers: {
+    workspace: {
+      transport: "http",
+      url: "http://localhost:3000/mcp",
+    },
+  },
+});
+const State = Annotation.Root({ done: Annotation<boolean>() });
+const graph = new StateGraph(State)
+  .addNode("call", async () => {
+    const tools = await adapter.listTools("workspace");
+    const deploy = tools.find((tool) => tool.name === "deploy");
+    if (!deploy) throw new Error("Deploy tool unavailable");
+    await deploy.invoke({ environment: "staging" });
+    return { done: true };
+  })
+  .addEdge(START, "call")
+  .addEdge("call", END)
+  .compile({ checkpointer: new MemorySaver() });
+
+const config = { configurable: { thread_id: "deployment-123" } };
+try {
+  await graph.invoke({ done: false }, config);
+  const snapshot = await graph.getState(config);
+  // Present these interrupts using your application's input flow.
+  // Each MCP interrupt has { type: "mcp_elicitation", server, tool, requests }.
+  console.log(snapshot.tasks);
+
+  // Use the actual keys from requests and answers explicitly supplied by the user.
+  const answers: MCPElicitationResume = {
+    confirmation: { action: "accept", content: { confirm: true } },
+  };
+  await graph.invoke(new Command({ resume: answers }), config);
+} finally {
+  await adapter.close();
+}
+```
+
+The adapter checkpoints each tool-call round. Resuming a saved round reuses its effective
+arguments and opaque server continuation instead of starting the tool again. The initial
+`beforeToolCall` and terminal `afterToolCall` hooks are part of those checkpointed rounds.
+Answers must contain exactly the pending question keys and pass the server's form schema.
+Use those keys to identify URL questions too: modern URL requests need not include
+legacy `elicitationId` values.
+State-only rounds do not ask the user a question and remain bounded by `maxElicitationRounds`.
+
+`MemorySaver` demonstrates the flow in one process. To survive a process restart, use a
+persistent LangGraph checkpointer and reconstruct the graph and adapter with the same tool,
+server, and authenticated account. Your application must enforce thread ownership. Keep
+checkpoints private: tool arguments, results, and opaque server continuation can be sensitive.
+They are not included in the public interrupt value. This does not guarantee exactly-once
+execution if a process fails after a server performs work but before the round is checkpointed;
+the server must make side-effectful operations safe to resume.
+
+Configure authentication and headers on the connection when running modern tools
+inside LangGraph. These graph executions reject `beforeToolCall` header overrides
+before sending the tool request, so headers are not saved as continuation data.
+Direct HTTP calls outside the graph can still override headers. Provider objects,
+access tokens, and PKCE state stay in the application/provider, not the graph's
+interrupt payload. Keep the authenticated account stable when reconstructing a client.
+
+Legacy servers use their own `onElicitation` callbacks alongside modern servers in
+the same adapter. Each connection keeps its configured protocol mode; modern
+connections never fall back to legacy. MCP deprecates sampling and roots, and this
+adapter does not advertise or handle those input requests.
+
+### OAuth responsibilities
+
+Continue passing an `authProvider` for OAuth. The SDK owns protected-resource and authorization
+server discovery, client registration selection, token exchange, and refresh. The provider owns
+credential storage, issuer/account isolation, PKCE state, and handing authorization URLs to the
+application. The adapter does not open a browser or host an authorization callback.
+
+The local acceptance suite verifies refresh, dynamic client registration (DCR), and selection of
+a client ID metadata document (CIMD) when advertised by the authorization server. Local tests also complete the authorization-code callback and reject mismatched state or issuer before token exchange; they do not claim interoperability with a production identity provider. URL elicitation is a tool interaction and is separate from OAuth
+connection authorization.
 
 ### Discovery freshness
 
@@ -895,6 +966,25 @@ Set `logLevel: "info"` on a modern server to request tool-call logs.
 adapter root; they apply only to modern requests.
 Without a level, modern servers omit request logs. `setLoggingLevel()` remains a
 legacy-only operation and rejects for modern connections before sending an RPC.
+
+### Complete an OAuth callback
+
+The application owns the redirect endpoint and a one-time state value bound to the
+initiating user. The provider must persist `saveDiscoveryState`/`discoveryState`,
+the PKCE verifier, and issuer-scoped client information and tokens.
+
+```typescript
+// callbackParams comes from your redirect URL. expectedState is retrieved from
+// your application's authorization attempt, bound to this user and consumed once.
+await adapter.finishAuth("oauth", callbackParams, expectedState);
+const tools = await adapter.listTools();
+```
+
+`finishAuth` checks state, delegates the full callback parameters (including `iss`)
+to the SDK, and discards the old connection/catalog after success. It never opens
+a browser or stores credentials. Start with a provider dedicated to this user;
+do not reuse one provider across accounts. URL elicitation remains separate from
+connection authorization.
 
 ## Server tool schemas
 
@@ -942,9 +1032,20 @@ SSE transport and protocol logging (`logLevel`, `onMessage`, and `setLoggingLeve
 remain compatibility features. Prefer Streamable HTTP and OpenTelemetry or stderr.
 Roots and sampling are deprecated; this adapter does not add new APIs for them.
 Experimental tasks are a separate protocol extension, not implied by modern mode.
+Sampling's `includeContext: "thisServer"` and `"allServers"` values are also deprecated;
+omit the field or use `"none"` in low-level integrations. The graph interrupt bridge
+handles tool elicitation; it does not add interruption to prompt or resource operations.
 
 OAuth Dynamic Client Registration (DCR) is deprecated in favor of Client ID Metadata
 Documents (CIMD), but remains necessary for some authorization servers. Registration
 selection follows the authorization server's capabilities, independently of the MCP
 server's modern/legacy mode. Keep credentials scoped to their issuing authorization
-server and account.
+server and account. Static pre-registration remains available through the SDK OAuth
+provider. The SDK derives DCR `application_type` from redirect URIs; use
+`clientMetadata.application_type` for an explicit override.
+
+Providers own discovery-cache freshness as well as credential storage. Saved
+discovery can avoid a fresh metadata request. Refresh it when a new authorization
+attempt needs rediscovery; preserve the original discovery and PKCE state for an
+in-flight callback. After rediscovery selects a different issuer, the SDK discards
+registration from the previous issuer.
