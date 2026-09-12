@@ -502,6 +502,8 @@ export class ChatPerplexity
     this.client = new OpenAI({
       apiKey: this.apiKey,
       baseURL: "https://api.perplexity.ai",
+      timeout: this.timeout,
+      maxRetries: fields.maxRetries,
     });
   }
 
@@ -686,16 +688,20 @@ export class ChatPerplexity
       });
       // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       const response = await (this.client as any).responses.create(
-        responsesPayload
+        responsesPayload,
+        { signal: options.signal }
       );
       return convertResponsesToChatResult(response);
     }
 
-    const response = await this.client.chat.completions.create({
-      messages: messagesList,
-      ...this.invocationParams(options),
-      stream: false,
-    });
+    const response = await this.client.chat.completions.create(
+      {
+        messages: messagesList,
+        ...this.invocationParams(options),
+        stream: false,
+      },
+      { signal: options.signal }
+    );
 
     const { message } = response.choices[0];
 
@@ -745,11 +751,14 @@ export class ChatPerplexity
       return;
     }
 
-    const stream = await this.client.chat.completions.create({
-      messages: messagesList,
-      ...this.invocationParams(options),
-      stream: true,
-    });
+    const stream = await this.client.chat.completions.create(
+      {
+        messages: messagesList,
+        ...this.invocationParams(options),
+        stream: true,
+      },
+      { signal: options.signal }
+    );
     const abortableStream = async function* (
       source: AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>,
       signal?: AbortSignal
@@ -789,7 +798,8 @@ export class ChatPerplexity
       });
       // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       const responsesStream = await (this.client as any).responses.create(
-        responsesPayload
+        responsesPayload,
+        { signal: options.signal }
       );
       for await (const event of responsesStream as AsyncIterable<
         // oxlint-disable-next-line @typescript-eslint/no-explicit-any
@@ -805,11 +815,14 @@ export class ChatPerplexity
       return;
     }
 
-    const stream = await this.client.chat.completions.create({
-      messages: messagesList,
-      ...this.invocationParams(options),
-      stream: true,
-    });
+    const stream = await this.client.chat.completions.create(
+      {
+        messages: messagesList,
+        ...this.invocationParams(options),
+        stream: true,
+      },
+      { signal: options.signal }
+    );
 
     let firstChunk = true;
     for await (const chunk of stream) {
