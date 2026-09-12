@@ -15,30 +15,41 @@ const isWhitespace = (char: string): boolean =>
 
 const stripThinkTags = (text: string): string => {
   let cleanedText = "";
-  let searchStart = 0;
+  let inString = false;
+  let escaped = false;
 
-  while (searchStart < text.length) {
-    const openTagIndex = text.indexOf(THINK_OPEN_TAG, searchStart);
-    if (openTagIndex === -1) {
-      cleanedText += text.slice(searchStart);
-      break;
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index];
+    if (inString) {
+      cleanedText += char;
+      if (escaped) {
+        escaped = false;
+      } else if (char === "\\") {
+        escaped = true;
+      } else if (char === '"') {
+        inString = false;
+      }
+      continue;
     }
 
-    cleanedText += text.slice(searchStart, openTagIndex);
-
-    const closeTagIndex = text.indexOf(
-      THINK_CLOSE_TAG,
-      openTagIndex + THINK_OPEN_TAG.length
-    );
-    if (closeTagIndex === -1) {
-      cleanedText += text.slice(openTagIndex);
-      break;
+    if (text.startsWith(THINK_OPEN_TAG, index)) {
+      const closeTagIndex = text.indexOf(
+        THINK_CLOSE_TAG,
+        index + THINK_OPEN_TAG.length
+      );
+      if (closeTagIndex === -1) {
+        cleanedText += text.slice(index);
+        break;
+      }
+      index = closeTagIndex + THINK_CLOSE_TAG.length - 1;
+      while (index + 1 < text.length && isWhitespace(text[index + 1])) {
+        index += 1;
+      }
+      continue;
     }
 
-    searchStart = closeTagIndex + THINK_CLOSE_TAG.length;
-    while (searchStart < text.length && isWhitespace(text[searchStart])) {
-      searchStart += 1;
-    }
+    cleanedText += char;
+    inString = char === '"';
   }
 
   return cleanedText.trim();
