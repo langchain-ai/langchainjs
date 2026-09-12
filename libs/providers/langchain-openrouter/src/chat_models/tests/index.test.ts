@@ -8,7 +8,7 @@ import {
   vi,
   test,
 } from "vitest";
-import { AIMessage } from "@langchain/core/messages";
+import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { OutputParserException } from "@langchain/core/output_parsers";
 import { ChatOpenRouter } from "../index.js";
 import type { ChatOpenRouterCallOptions } from "../types.js";
@@ -761,4 +761,82 @@ describe("withStructuredOutput with SerializableSchema", () => {
       await structured.invoke("What is your name?");
     }).rejects.toThrow(OutputParserException);
   });
+});
+
+it("replays reasoning details when continuing a tool call", async () => {
+  const reasoningDetails = [
+    { type: "reasoning.text", text: "Check the weather", index: 0 },
+    {
+      type: "reasoning.encrypted",
+      data: "opaque",
+      id: "reasoning_1",
+      index: 1,
+    },
+  ];
+  const toolCalls = [
+    {
+      id: "call_1",
+      type: "function",
+      function: {
+        name: "weather",
+        arguments: "{}",
+      },
+    },
+  ];
+  const fetchSpy = vi
+    .spyOn(globalThis, "fetch")
+    .mockResolvedValueOnce(
+      Response.json({
+        id: "response_1",
+        model: "test-model",
+        choices: [
+          {
+            index: 0,
+            finish_reason: "tool_calls",
+            message: {
+              role: "assistant",
+              content: "",
+              reasoning: "Check the weather",
+              reasoning_details: reasoningDetails,
+              tool_calls: toolCalls,
+            },
+          },
+        ],
+      })
+    )
+    .mockResolvedValueOnce(
+      Response.json({
+        id: "response_2",
+        model: "test-model",
+        choices: [
+          {
+            index: 0,
+            finish_reason: "stop",
+            message: { role: "assistant", content: "Sunny" },
+          },
+        ],
+      })
+    );
+  try {
+    const model = new ChatOpenRouter({ model: "test-model", maxRetries: 0 });
+    const user = new HumanMessage("Get the weather");
+    const first = await model.invoke([user]);
+    const snapshot = JSON.stringify(first);
+    await model.invoke([
+      user,
+      first,
+      new ToolMessage({ content: "Sunny", tool_call_id: "call_1" }),
+    ]);
+    const body = JSON.parse(fetchSpy.mock.calls[1][1]?.body as string);
+    expect(body.messages[1]).toEqual({
+      role: "assistant",
+      content: "",
+      tool_calls: toolCalls,
+      reasoning: "Check the weather",
+      reasoning_details: reasoningDetails,
+    });
+    expect(JSON.stringify(first)).toBe(snapshot);
+  } finally {
+    fetchSpy.mockRestore();
+  }
 });
