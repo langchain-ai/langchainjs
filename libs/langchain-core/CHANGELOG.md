@@ -1,5 +1,19 @@
 # @langchain/core
 
+## 1.2.11
+
+### Patch Changes
+
+- [#11603](https://github.com/langchain-ai/langchainjs/pull/11603) [`fec9cd8`](https://github.com/langchain-ai/langchainjs/commit/fec9cd87b01976014dd549bd2cf7849aee89a566) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - fix(core): build streaming `llmOutput.tokenUsage` from the fully-accumulated chunk instead of whichever individual chunk's `usage_metadata` arrived last
+
+  Affects both core streaming paths — `.stream()`/`.streamEvents()` (`_streamIterator`) and `.invoke()`/`.generate()` when a streaming-preferring callback is attached (`_generateWithCache`'s `hasStreamingHandler` branch). Previously, `llmOutput.tokenUsage` was overwritten by each chunk in turn, so only the last chunk carrying `usage_metadata` won — correct for providers that emit one cumulative total on a final chunk, but wrong for providers (e.g. `@langchain/google`, `@langchain/anthropic`) that emit `usage_metadata` as a per-chunk delta across multiple chunks, where the values must be summed.
+
+  Note for provider authors: this assumes each streamed chunk's `usage_metadata` is either a per-chunk delta or appears only on a single final chunk. A provider that instead repeats a cumulative total on every chunk will now see it summed (and inflated) in `llmOutput.tokenUsage`, matching the existing behavior of the correctly-working `message.usage_metadata` field.
+
+  Also fixes `@langchain/google`'s `invoke({streaming: true})` path (no streaming-preferring callback attached), where `llmOutput` was never populated at all.
+
+- [#11590](https://github.com/langchain-ai/langchainjs/pull/11590) [`ffebdc2`](https://github.com/langchain-ai/langchainjs/commit/ffebdc2f00f3290d19f85e5afd6a297920ae584c) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Fix OpenAI Responses API replay under Zero Data Retention when a response contains more than one reasoning item, for both v0 and v1. In v0, the default replay path now reuses `response_metadata.output` directly, preserving every reasoning item's `id`/`encrypted_content` in original order. In v1, `AIMessage.contentBlocks` (`outputVersion: "v1"`) is fixed the same way. `additional_kwargs.reasoning` is unchanged.
+
 ## 1.2.10
 
 ### Patch Changes
