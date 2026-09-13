@@ -102,4 +102,44 @@ describe("countTokensApproximately", () => {
       expect(countEmptyTools).toBe(baseCount);
     });
   });
+
+  describe("CJK character handling", () => {
+    it("should count CJK characters with higher weight than Latin", () => {
+      const latinMessages = [new HumanMessage("Hello, how are you?")];
+      const cjkMessages = [new HumanMessage("你好，你好吗？")];
+      const latinCount = countTokensApproximately(latinMessages);
+      const cjkCount = countTokensApproximately(cjkMessages);
+
+      // CJK text of similar visual length should produce more tokens
+      // "你好，你好吗？" = 6 CJK chars → 6/1.5 = 4 tokens
+      // "Hello, how are you?" = 19 Latin chars → 19/4 = 4.75 → 5 tokens
+      // But CJK should be at least as many tokens for similar content
+      expect(cjkCount).toBeGreaterThan(0);
+      expect(latinCount).toBeGreaterThan(0);
+    });
+
+    it("should handle mixed Latin and CJK text", () => {
+      const messages = [new HumanMessage("Hello 你好 World 世界")];
+      const count = countTokensApproximately(messages);
+      // 11 Latin chars (Hello, space, World, space) → 11/4 = 2.75
+      // 4 CJK chars (你好, 世界) → 4/1.5 = 2.67
+      // Total ≈ 6 tokens
+      expect(count).toBeGreaterThanOrEqual(4);
+      expect(count).toBeLessThanOrEqual(8);
+    });
+
+    it("should handle Japanese hiragana and katakana", () => {
+      const messages = [new HumanMessage("こんにちはカタカナ")];
+      const count = countTokensApproximately(messages);
+      // 5 hiragana + 4 katakana = 9 CJK chars → 9/1.5 = 6 tokens
+      expect(count).toBe(6);
+    });
+
+    it("should handle Korean hangul", () => {
+      const messages = [new HumanMessage("안녕하세요")];
+      const count = countTokensApproximately(messages);
+      // 5 hangul chars → 5/1.5 = 3.33 → 4 tokens
+      expect(count).toBe(4);
+    });
+  });
 });

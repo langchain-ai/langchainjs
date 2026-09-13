@@ -16,6 +16,10 @@ import { JumpToTarget } from "../constants.js";
 /**
  * Default token counter that approximates based on character count.
  *
+ * Uses different character-to-token ratios for Latin vs CJK scripts:
+ * - Latin/ASCII: ~4 characters per token
+ * - CJK (Chinese, Japanese, Korean): ~1.5 characters per token
+ *
  * If tools are provided, the token count also includes stringified tool schemas.
  *
  * @param messages Messages to count tokens for
@@ -29,8 +33,10 @@ export function countTokensApproximately(
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   tools?: Array<Record<string, any>> | null
 ): number {
-  const charsPerToken = 4;
-  let totalChars = 0;
+  const latinCharsPerToken = 4;
+  const cjkCharsPerToken = 1.5;
+  let latinChars = 0;
+  let cjkChars = 0;
 
   // Count tokens for tools if provided
   if (tools && tools.length > 0) {
@@ -39,7 +45,7 @@ export function countTokensApproximately(
       const toolDict = isLangChainTool(tool) ? convertToOpenAITool(tool) : tool;
       toolsChars += JSON.stringify(toolDict).length;
     }
-    totalChars += toolsChars;
+    latinChars += toolsChars;
   }
 
   for (const msg of messages) {
@@ -70,10 +76,28 @@ export function countTokensApproximately(
       textContent += msg.tool_call_id ?? "";
     }
 
-    totalChars += textContent.length;
+    // Split text into CJK and non-CJK characters for more accurate counting
+    for (const char of textContent) {
+      const code = char.codePointAt(0)!;
+      // CJK Unified Ideographs and extensions, Hangul, Katakana, Hiragana
+      if (
+        (code >= 0x4e00 && code <= 0x9fff) || // CJK Unified Ideographs
+        (code >= 0x3400 && code <= 0x4dbf) || // CJK Extension A
+        (code >= 0xf900 && code <= 0xfaff) || // CJK Compatibility Ideographs
+        (code >= 0xac00 && code <= 0xd7af) || // Hangul Syllables
+        (code >= 0x3040 && code <= 0x309f) || // Hiragana
+        (code >= 0x30a0 && code <= 0x30ff) // Katakana
+      ) {
+        cjkChars += 1;
+      } else {
+        latinChars += 1;
+      }
+    }
   }
-  // Approximate 1 token = 4 characters
-  return Math.ceil(totalChars / charsPerToken);
+
+  const latinTokens = latinChars / latinCharsPerToken;
+  const cjkTokens = cjkChars / cjkCharsPerToken;
+  return Math.ceil(latinTokens + cjkTokens);
 }
 
 export function getHookConstraint(
