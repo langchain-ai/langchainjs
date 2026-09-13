@@ -117,6 +117,31 @@ describe("ChatGoogleTranslator", () => {
     ]);
   });
 
+  it("should preserve functionCall ids on tool_call content blocks", () => {
+    const message = new AIMessage({
+      content: [
+        {
+          type: "functionCall",
+          functionCall: {
+            id: "call_abc123",
+            name: "calculator",
+            args: { expression: "1 + 1" },
+          },
+        },
+      ],
+      response_metadata: { model_provider: "google" },
+    });
+
+    expect(message.contentBlocks).toEqual([
+      {
+        type: "tool_call",
+        id: "call_abc123",
+        name: "calculator",
+        args: { expression: "1 + 1" },
+      },
+    ]);
+  });
+
   it("should handle array content with only thinking blocks (no text target)", () => {
     // Edge case: all blocks are thinking blocks, no non-thinking text block
     // to attach the signature to. Should fall through gracefully.

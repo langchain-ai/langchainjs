@@ -69,6 +69,7 @@ describe("ChatGoogleGenAITranslator", () => {
         {
           type: "functionCall",
           functionCall: {
+            id: "call_123",
             name: "get_weather",
             args: { location: "San Francisco" },
           },
@@ -109,7 +110,7 @@ describe("ChatGoogleGenAITranslator", () => {
       { type: "file", mimeType: "text/plain", data: "Hello from Google" },
       {
         type: "tool_call",
-        id: undefined,
+        id: "call_123",
         name: "get_weather",
         args: { location: "San Francisco" },
       },
