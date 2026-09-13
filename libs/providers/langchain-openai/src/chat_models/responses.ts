@@ -305,7 +305,9 @@ export class ChatOpenAIResponses<
         if (options.signal?.aborted) {
           return;
         }
-        const chunk = convertResponsesDeltaToChatGenerationChunk(data);
+        const chunk = convertResponsesDeltaToChatGenerationChunk(data, {
+          modelName: this.model,
+        });
         if (chunk == null) continue;
         yield chunk;
         await runManager?.handleLLMNewToken(

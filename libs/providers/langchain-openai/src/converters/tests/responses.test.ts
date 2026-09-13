@@ -414,6 +414,43 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
     expect(aggregated.response_metadata.id).toBe("resp_top_level");
   });
 
+  it("includes model_name in response_metadata for all chunks when modelName is provided", () => {
+    const textDelta = convertResponsesDeltaToChatGenerationChunk(
+      {
+        type: "response.output_text.delta",
+        output_index: 0,
+        content_index: 0,
+        delta: "Hello!",
+      } as any,
+      { modelName: "gpt-4o" }
+    );
+
+    const meta = textDelta?.message.response_metadata as Record<string, unknown>;
+    expect(meta.model_name).toBe("gpt-4o");
+    expect(meta.model).toBe("gpt-4o");
+    expect(meta.model_provider).toBe("openai");
+  });
+
+  it("overrides response.created model_name with provided modelName", () => {
+    const created = convertResponsesDeltaToChatGenerationChunk(
+      {
+        type: "response.created",
+        response: {
+          id: "resp_1",
+          model: "gpt-4o-mini",
+          object: "response",
+          status: "in_progress",
+          output: [],
+        },
+      } as any,
+      { modelName: "gpt-4o" }
+    );
+
+    const meta = created?.message.response_metadata as Record<string, unknown>;
+    expect(meta.model_name).toBe("gpt-4o");
+    expect(meta.model).toBe("gpt-4o");
+  });
+
   describe("custom tool streaming delta handling", () => {
     it("should preserve custom tool metadata from response.output_item.added events", () => {
       const customToolStart = {

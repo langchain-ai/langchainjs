@@ -656,16 +656,19 @@ export const convertReasoningSummaryToResponsesReasoningItem: Converter<
  * - Usage metadata is only available in `response.completed` events
  * - Partial images are intentionally ignored to prevent memory bloat in conversation history
  */
-export const convertResponsesDeltaToChatGenerationChunk: Converter<
-  OpenAIClient.Responses.ResponseStreamEvent,
-  ChatGenerationChunk | null
-> = (event) => {
+export const convertResponsesDeltaToChatGenerationChunk: (
+  event: OpenAIClient.Responses.ResponseStreamEvent,
+  options?: { modelName?: string }
+) => ChatGenerationChunk | null = (event, options) => {
   const content: ContentBlock[] = [];
   let generationInfo: Record<string, unknown> = {};
   let usage_metadata: UsageMetadata | undefined;
   const tool_call_chunks: ToolCallChunk[] = [];
   const response_metadata: Record<string, unknown> = {
     model_provider: "openai",
+    ...(options?.modelName
+      ? { model_name: options.modelName, model: options.modelName }
+      : {}),
   };
   const additional_kwargs: {
     [key: string]: unknown;
