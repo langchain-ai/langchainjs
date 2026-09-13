@@ -120,6 +120,47 @@ describe("convertOpenRouterResponseToBaseMessage metadata", () => {
     expect(meta.model_name).toBe("anthropic/claude-4-sonnet");
     expect(meta.finish_reason).toBe("stop");
   });
+
+  it("includes provider field from OpenRouter response", () => {
+    const choice: OpenRouter.ChatResponseChoice = {
+      index: 0,
+      finish_reason: "stop",
+      message: { role: "assistant", content: "hello" },
+    };
+    const rawResponse: OpenRouter.ChatResponse = {
+      id: "gen-123",
+      choices: [choice],
+      created: 0,
+      model: "anthropic/claude-4-sonnet",
+      object: "chat.completion",
+      provider: "Anthropic",
+    };
+
+    const msg = convertOpenRouterResponseToBaseMessage(choice, rawResponse);
+
+    const meta = msg.response_metadata as Record<string, unknown>;
+    expect(meta.provider).toBe("Anthropic");
+  });
+
+  it("omits provider field when not present in response", () => {
+    const choice: OpenRouter.ChatResponseChoice = {
+      index: 0,
+      finish_reason: "stop",
+      message: { role: "assistant", content: "hello" },
+    };
+    const rawResponse: OpenRouter.ChatResponse = {
+      id: "gen-123",
+      choices: [choice],
+      created: 0,
+      model: "anthropic/claude-4-sonnet",
+      object: "chat.completion",
+    };
+
+    const msg = convertOpenRouterResponseToBaseMessage(choice, rawResponse);
+
+    const meta = msg.response_metadata as Record<string, unknown>;
+    expect(meta.provider).toBeUndefined();
+  });
 });
 
 describe("convertOpenRouterDeltaToBaseMessageChunk metadata", () => {
@@ -144,6 +185,56 @@ describe("convertOpenRouterDeltaToBaseMessageChunk metadata", () => {
 
     const meta = chunk.response_metadata as Record<string, unknown>;
     expect(meta.model_provider).toBe("openrouter");
+  });
+
+  it("includes model and provider fields in streaming response_metadata", () => {
+    const delta: OpenRouter.ChatStreamingMessageChunk = {
+      role: "assistant",
+      content: "hi",
+    };
+    const rawChunk = {
+      id: "gen-456",
+      choices: [{ delta, finish_reason: null, index: 0 }],
+      created: 0,
+      model: "anthropic/claude-4-sonnet",
+      object: "chat.completion.chunk" as const,
+      provider: "Anthropic",
+    };
+
+    const chunk = convertOpenRouterDeltaToBaseMessageChunk(
+      delta,
+      rawChunk,
+      "assistant"
+    );
+
+    const meta = chunk.response_metadata as Record<string, unknown>;
+    expect(meta.model).toBe("anthropic/claude-4-sonnet");
+    expect(meta.model_name).toBe("anthropic/claude-4-sonnet");
+    expect(meta.model_provider).toBe("openrouter");
+    expect(meta.provider).toBe("Anthropic");
+  });
+
+  it("omits provider in streaming when not present in chunk", () => {
+    const delta: OpenRouter.ChatStreamingMessageChunk = {
+      role: "assistant",
+      content: "hi",
+    };
+    const rawChunk = {
+      id: "gen-456",
+      choices: [{ delta, finish_reason: null, index: 0 }],
+      created: 0,
+      model: "openai/gpt-4o",
+      object: "chat.completion.chunk" as const,
+    };
+
+    const chunk = convertOpenRouterDeltaToBaseMessageChunk(
+      delta,
+      rawChunk,
+      "assistant"
+    );
+
+    const meta = chunk.response_metadata as Record<string, unknown>;
+    expect(meta.provider).toBeUndefined();
   });
 });
 

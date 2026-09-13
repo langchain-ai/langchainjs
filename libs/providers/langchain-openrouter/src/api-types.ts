@@ -545,6 +545,7 @@ export namespace OpenRouter {
     created: number;
     model: string;
     object: "chat.completion";
+    provider?: string;
     system_fingerprint?: string | null;
     usage?: ChatGenerationTokenUsage;
   }
@@ -576,6 +577,7 @@ export namespace OpenRouter {
       created: number;
       model: string;
       object: "chat.completion.chunk";
+      provider?: string;
       system_fingerprint?: string | null;
       error?: { message: string; code: number };
       usage?: ChatGenerationTokenUsage;

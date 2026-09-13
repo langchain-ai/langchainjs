@@ -88,6 +88,7 @@ export function convertOpenRouterResponseToBaseMessage(
     model_provider: "openrouter",
     model_name: rawResponse.model,
     finish_reason: choice.finish_reason,
+    ...(rawResponse.provider ? { provider: rawResponse.provider } : {}),
   };
 
   return message;
@@ -133,7 +134,10 @@ export function convertOpenRouterDeltaToBaseMessageChunk(
 
   chunk.response_metadata = {
     ...chunk.response_metadata,
+    model: rawChunk.model,
     model_provider: "openrouter",
+    model_name: rawChunk.model,
+    ...(rawChunk.provider ? { provider: rawChunk.provider } : {}),
   };
 
   return chunk;
