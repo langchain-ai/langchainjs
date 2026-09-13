@@ -25,7 +25,6 @@ import {
 } from "../utils/types/zod.js";
 
 import { JSONSchema } from "../utils/json_schema.js";
-import type { BaseStore } from "../stores.js";
 
 export type ResponseFormat = "content" | "content_and_artifact" | string;
 
@@ -481,7 +480,7 @@ export function isLangChainTool(tool?: unknown): tool is StructuredToolParams {
  * - `toolCallId`: The ID of the current tool call
  * - `config`: `RunnableConfig` for the current execution
  * - `context`: Runtime context
- * - `store`: `BaseStore` instance for persistent storage
+ * - `store`: Persistent store injected by the runtime (e.g. LangGraph's `BaseStore`)
  * - `writer`: Stream writer for streaming output
  *
  * No `Annotated` wrapper is needed - just use `runtime: ToolRuntime`
@@ -511,8 +510,9 @@ export function isLangChainTool(tool?: unknown): tool is StructuredToolParams {
  *     // Access runtime context
  *     const userId = runtime.context?.userId;
  *
- *     // Access store
- *     await runtime.store?.mset([["key", "value"]]);
+ *     // Access store (narrow to the store your runtime provides — e.g.
+ *     // LangGraph's `BaseStore` from `@langchain/langgraph`).
+ *     await (runtime.store as BaseStore | null)?.put(["ns"], "key", { hello: "world" });
  *
  *     // Stream output
  *     runtime.writer?.("Processing...");
@@ -571,9 +571,14 @@ export type ToolRuntime<
       ? TContext
       : unknown;
   /**
-   * BaseStore instance for persistent storage (from langgraph `Runtime`).
+   * Persistent store injected by the runtime that hosts the tool call
+   * (e.g. the `BaseStore` LangGraph attaches to its `Runtime`). The concrete
+   * shape is decided by the runtime — LangGraph's store, for example, exposes
+   * `get`/`put`/`search`, not the `mget`/`mset` API of `@langchain/core`'s
+   * `BaseStore` — so this is left as `unknown` and callers should narrow it
+   * to their expected type. `null` when no store is configured.
    */
-  store: BaseStore<string, unknown> | null;
+  store: unknown;
   /**
    * Stream writer for streaming output (from langgraph `Runtime`).
    */
