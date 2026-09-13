@@ -76,6 +76,7 @@ type ModelInfoConfig = {
   hasImageThoughts?: boolean; // Is this an image model that has thinking output?
   isTts?: boolean; // Is this a TTS model?
   isAudio?: boolean; // Is this an audio generation model?
+  hasMediaProcessing?: boolean; // Does this model support agentic video understanding / mediaProcessing?
 };
 
 type DefaultGoogleParams = Omit<
@@ -122,18 +123,28 @@ const allModelInfo: ModelInfo[] = [
     model: "gemini-3.5-flash-lite",
     testConfig: {
       isThinking: true,
+      hasMediaProcessing: true,
     },
   },
   {
     model: "gemini-3.6-flash",
     testConfig: {
       isThinking: true,
+      hasMediaProcessing: true,
     },
   },
   {
     model: "gemini-3.7-flash",
     testConfig: {
       isThinking: true,
+      hasMediaProcessing: true,
+    },
+  },
+  {
+    model: "gemini-3.8-flash",
+    testConfig: {
+      isThinking: true,
+      hasMediaProcessing: true,
     },
   },
   {
@@ -1372,7 +1383,7 @@ describe.each(coreModelInfo)(
       const videoTokens1 = aiMessage1?.usage_metadata?.input_token_details
         ?.video as number;
       expect(typeof videoTokens1).toEqual("number");
-      expect(videoTokens1).toBeGreaterThan(712);
+      expect(videoTokens1).toBeGreaterThanOrEqual(528);
       expect(
         aiMessage1?.usage_metadata?.input_token_details?.video ?? 0
       ).toBeGreaterThan(0);
@@ -1460,7 +1471,9 @@ describe.each(coreModelInfo)(
       const videoTokens1 = aiMessage1?.usage_metadata?.input_token_details
         ?.video as number;
       expect(typeof videoTokens1).toEqual("number");
-      expect(videoTokens1).toBeGreaterThan(712);
+      // For Gemini 3 models, AI Studio API seems to use 713 tokens,
+      // while Vertex/GEAP API seems to use 528.
+      expect(videoTokens1).toBeGreaterThanOrEqual(528);
       expect(
         aiMessage1?.usage_metadata?.input_token_details?.video ?? 0
       ).toBeGreaterThan(0);
@@ -1513,6 +1526,145 @@ describe.each(coreModelInfo)(
       expect(typeof videoTokens2).toEqual("number");
       expect(videoTokens2).toBeGreaterThan(videoTokens1);
     }, 90000);
+
+    test.runIf(testConfig?.hasMediaProcessing)(
+      "video - ContentBlock.Standard - mediaProcessing AGENTIC",
+      async () => {
+        const model = newChatGoogle({});
+
+        const dataPath = "src/chat_models/tests/data/rainbow.mp4";
+        const dataType = "video/mp4";
+        const data = await fs.readFile(dataPath);
+        const data64 = data.toString("base64");
+
+        const message1: ContentBlock.Standard[] = [
+          {
+            type: "text",
+            text: "Describe this video in detail.",
+          },
+          {
+            type: "video",
+            data: data64,
+            mimeType: dataType,
+            mediaProcessing: "AGENTIC",
+          },
+        ];
+
+        const messages1: BaseMessage[] = [
+          new HumanMessageChunk({ contentBlocks: message1 }),
+        ];
+
+        const res1 = await model.invoke(messages1);
+
+        expect(res1).toBeDefined();
+        expect(res1._getType()).toEqual("ai");
+
+        const aiMessage1 = res1 as AIMessageChunk;
+        expect(aiMessage1.content).toBeDefined();
+
+        // Verify that mediaProcessing: "AGENTIC" was sent in the request
+        const sentContents1 = recorder.request?.body?.contents as
+          | Gemini.Content[]
+          | undefined;
+        expect(sentContents1).toBeDefined();
+        const videoPart1 = sentContents1?.[0]?.parts?.find(
+          (p: any) => p.inlineData || p.fileData
+        ) as any;
+        expect(videoPart1?.mediaProcessing).toBe("AGENTIC");
+
+        const text1 = (
+          typeof aiMessage1.content === "string"
+            ? aiMessage1.content
+            : (aiMessage1.text ?? "")
+        ) as string;
+        expect(text1.toLowerCase()).toMatch(/rainbow/);
+
+        // Verify multi-turn replay succeeds and drops media_processing server tool steps
+        const messages2: BaseMessage[] = [
+          ...messages1,
+          aiMessage1,
+          new HumanMessage("What colors did you see?"),
+        ];
+
+        const res2 = await model.invoke(messages2);
+        expect(res2).toBeDefined();
+        expect(res2._getType()).toEqual("ai");
+
+        const sentContents2 = recorder.request?.body?.contents as
+          | Gemini.Content[]
+          | undefined;
+        expect(sentContents2).toBeDefined();
+        expect(sentContents2?.length).toBe(3);
+
+        const modelParts = sentContents2?.[1]?.parts ?? [];
+        for (const part of modelParts as any[]) {
+          expect(part.toolCall?.toolName).not.toBe("media_processing");
+          expect(part.toolCall?.toolType).not.toBe("MEDIA_PROCESSING");
+          expect(part.toolResponse?.toolType).not.toBe("MEDIA_PROCESSING");
+        }
+      },
+      90000
+    );
+
+    test.runIf(testConfig?.hasMediaProcessing)(
+      "video - ContentBlock.Standard - mediaProcessing STATIC",
+      async () => {
+        const model = newChatGoogle({});
+
+        const dataPath = "src/chat_models/tests/data/rainbow.mp4";
+        const dataType = "video/mp4";
+        const data = await fs.readFile(dataPath);
+        const data64 = data.toString("base64");
+        const dataUri = `data:${dataType};base64,${data64}`;
+
+        const message: ContentBlock.Standard[] = [
+          {
+            type: "text",
+            text: "Describe this video in detail.",
+          },
+          {
+            type: "video",
+            url: dataUri,
+            mediaProcessing: "STATIC",
+          },
+        ];
+
+        const messages: BaseMessage[] = [
+          new HumanMessageChunk({ contentBlocks: message }),
+        ];
+
+        const res = await model.invoke(messages);
+
+        expect(res).toBeDefined();
+        expect(res._getType()).toEqual("ai");
+
+        const aiMessage = res as AIMessageChunk;
+        expect(aiMessage.content).toBeDefined();
+
+        // Verify that mediaProcessing: "STATIC" was sent in the request
+        const sentContents = recorder.request?.body?.contents as
+          | Gemini.Content[]
+          | undefined;
+        expect(sentContents).toBeDefined();
+        const videoPart = sentContents?.[0]?.parts?.find(
+          (p: any) => p.inlineData || p.fileData
+        ) as any;
+        expect(videoPart?.mediaProcessing).toBe("STATIC");
+
+        const text = (
+          typeof aiMessage.content === "string"
+            ? aiMessage.content
+            : (aiMessage.text ?? "")
+        ) as string;
+        expect(text.toLowerCase()).toMatch(/rainbow/);
+
+        const videoTokens = aiMessage?.usage_metadata?.input_token_details
+          ?.video as number;
+        expect(typeof videoTokens).toEqual("number");
+        expect(videoTokens).toBeGreaterThanOrEqual(528);
+      },
+      90000
+    );
 
     test("audio - legacy", async () => {
       // Update this with the correct path to an audio file on your machine.
