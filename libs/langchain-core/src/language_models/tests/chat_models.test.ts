@@ -20,6 +20,7 @@ import type { ChatModelStream } from "../stream.js";
 import type { IterableReadableStream } from "../../utils/stream.js";
 import type { StreamEvent } from "../../tracers/event_stream.js";
 import type { LangSmithTracingClientInterface } from "langsmith";
+import type { Serialized } from "../../load/serializable.js";
 
 test("Test ChatModel accepts array shorthand for messages", async () => {
   const model = new FakeChatModel({});
@@ -730,8 +731,7 @@ test("Test ChatModel tracing converts every media content block in a message", a
     messages: BaseMessage[] | undefined;
 
     async handleChatModelStart(
-      // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-      _llm: any,
+      _llm: Serialized,
       messages: BaseMessage[][],
     ): Promise<void> {
       this.messages = messages[0];
