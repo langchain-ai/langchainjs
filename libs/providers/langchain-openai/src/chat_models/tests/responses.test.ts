@@ -133,6 +133,33 @@ describe("service_tier configuration", () => {
     const params = model.invocationParams({});
     expect(params.service_tier).toBe("auto");
   });
+
+  it("per-call service_tier overrides instance service_tier", () => {
+    const model = new ChatOpenAIResponses({
+      model: "gpt-4o",
+      service_tier: "default",
+    });
+
+    const params = model.invocationParams({ service_tier: "flex" });
+    expect(params.service_tier).toBe("flex");
+  });
+
+  it("falls back to instance service_tier when per-call is not provided", () => {
+    const model = new ChatOpenAIResponses({
+      model: "gpt-4o",
+      service_tier: "priority",
+    });
+
+    const params = model.invocationParams({});
+    expect(params.service_tier).toBe("priority");
+  });
+
+  it("omits service_tier when neither instance nor per-call is set", () => {
+    const model = new ChatOpenAIResponses({ model: "gpt-4o" });
+
+    const params = model.invocationParams({});
+    expect(params.service_tier).toBeUndefined();
+  });
 });
 
 describe("streaming errors", () => {
