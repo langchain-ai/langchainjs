@@ -722,3 +722,76 @@ test("Test ChatModel .invoke() with a streaming-preferring callback builds llmOu
     totalTokens: 22,
   });
 });
+
+import { _formatForTracing } from "../chat_models.js";
+
+describe("_formatForTracing", () => {
+  it("converts all base64 content blocks, not just the first", () => {
+    const message = new HumanMessage({
+      content: [
+        { type: "text", text: "Look at these images:" },
+        {
+          type: "image",
+          source_type: "base64",
+          data: "abc123",
+          mime_type: "image/png",
+        },
+        { type: "text", text: "and" },
+        {
+          type: "image",
+          source_type: "base64",
+          data: "def456",
+          mime_type: "image/png",
+        },
+      ],
+    });
+
+    const result = _formatForTracing([message]);
+    const content = result[0].content as Array<Record<string, unknown>>;
+
+    // Both base64 blocks should be converted to image_url format
+    expect(content).toHaveLength(4);
+    expect(content[0]).toEqual({ type: "text", text: "Look at these images:" });
+    expect(content[1]).toHaveProperty("type", "image_url");
+    expect(content[1]).toHaveProperty("image_url");
+    expect(content[2]).toEqual({ type: "text", text: "and" });
+    expect(content[3]).toHaveProperty("type", "image_url");
+    expect(content[3]).toHaveProperty("image_url");
+  });
+
+  it("converts all URL content blocks", () => {
+    const message = new HumanMessage({
+      content: [
+        {
+          type: "image",
+          source_type: "url",
+          url: "https://example.com/img1.png",
+        },
+        {
+          type: "image",
+          source_type: "url",
+          url: "https://example.com/img2.png",
+        },
+      ],
+    });
+
+    const result = _formatForTracing([message]);
+    const content = result[0].content as Array<Record<string, unknown>>;
+
+    expect(content).toHaveLength(2);
+    expect(content[0]).toHaveProperty("type", "image_url");
+    expect(content[1]).toHaveProperty("type", "image_url");
+  });
+
+  it("does not modify messages without data content blocks", () => {
+    const message = new HumanMessage({
+      content: [
+        { type: "text", text: "Hello" },
+        { type: "text", text: "World" },
+      ],
+    });
+
+    const result = _formatForTracing([message]);
+    expect(result[0]).toBe(message);
+  });
+});
