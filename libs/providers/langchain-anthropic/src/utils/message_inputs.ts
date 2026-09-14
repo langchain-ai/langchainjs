@@ -479,9 +479,7 @@ export function _convertMessagesToAnthropicPayload(
     } else if (message._getType() === "tool") {
       role = "user" as const;
     } else if (message._getType() === "system") {
-      throw new Error(
-        "System messages are only permitted as the first passed message."
-      );
+      role = "system" as const;
     } else {
       throw new Error(`Message type "${message.type}" is not supported.`);
     }
