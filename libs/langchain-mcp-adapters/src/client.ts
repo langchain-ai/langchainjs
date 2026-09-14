@@ -159,7 +159,9 @@ export class MCPAdapter {
     this.#clientConnections = new ConnectionManager((options) => {
       const client = this.#clientConnections.get(options);
 
-      if (client) this.#toolsByClient.delete(client);
+      if (client) {
+        this.#toolsByClient.delete(client);
+      }
     });
     this.#onConnectionError = parsedServerConfig.onConnectionError;
   }
@@ -196,7 +198,9 @@ export class MCPAdapter {
       throw new MCPClientError("No connections to initialize");
     }
 
-    if (this.#closing) throw new MCPClientError("MCP connections are closing");
+    if (this.#closing) {
+      throw new MCPClientError("MCP connections are closing");
+    }
     const generation = this.#generation;
     const catalog: Record<string, DynamicStructuredTool[]> = {};
 
@@ -205,7 +209,9 @@ export class MCPAdapter {
         this.#transportOptions(serverName, customTransportOptions)
       );
 
-      if (this.#failedServers.has(key)) continue;
+      if (this.#failedServers.has(key)) {
+        continue;
+      }
 
       try {
         await this._initializeConnection(
@@ -218,17 +224,21 @@ export class MCPAdapter {
           this.#transportOptions(serverName, customTransportOptions)
         );
 
-        if (client)
+        if (client) {
           catalog[serverName] = await this._loadToolsForServer(
             serverName,
             client,
             customTransportOptions?.cacheMode
           );
+        }
       } catch (error) {
-        if (this.#onConnectionError === "throw") throw error;
+        if (this.#onConnectionError === "throw") {
+          throw error;
+        }
 
-        if (typeof this.#onConnectionError === "function")
+        if (typeof this.#onConnectionError === "function") {
           this.#onConnectionError({ serverName, error });
+        }
         this.#failedServers.add(key);
         debugLog(
           `WARN: Failed to initialize connection to server "${serverName}": ${String(error)}`
@@ -236,8 +246,9 @@ export class MCPAdapter {
       }
     }
 
-    if (generation !== this.#generation)
+    if (generation !== this.#generation) {
       throw new MCPClientError("MCP connections closed during discovery");
+    }
 
     return catalog;
   }
@@ -949,8 +960,9 @@ export class MCPAdapter {
 
       const descriptorKey = JSON.stringify(descriptors);
 
-      if (existing?.descriptorKey === descriptorKey)
+      if (existing?.descriptorKey === descriptorKey) {
         return await existing.tools;
+      }
 
       const tools = convertMcpTools(
         serverName,
@@ -959,8 +971,9 @@ export class MCPAdapter {
         this.#loadToolsOptions[serverName]
       );
 
-      if (cacheMode !== "bypass")
+      if (cacheMode !== "bypass") {
         this.#toolsByClient.set(client, { descriptorKey, tools });
+      }
 
       return await tools;
     } catch (error) {
@@ -1029,7 +1042,9 @@ export class MCPAdapter {
           });
         }
 
-        if (generation !== this.#generation || this.#closing) return;
+        if (generation !== this.#generation || this.#closing) {
+          return;
+        }
 
         // Initialize just this connection based on its type
         if (connection.transport === "stdio") {
@@ -1086,7 +1101,9 @@ export class MCPAdapter {
     const { serverName, authProvider, headers } = transportOptions;
     const client = this.#clientConnections.get(transportOptions);
 
-    if (client) this.#toolsByClient.delete(client);
+    if (client) {
+      this.#toolsByClient.delete(client);
+    }
     await this.#clientConnections.delete({ serverName, authProvider, headers });
   }
 }
