@@ -147,7 +147,7 @@ including arrays and primitives from functional entrypoints. Narrow or parse it
 using your application schema before accessing fields. Calls outside LangGraph
 continue to receive `{}`.
 
-## Tool results, hooks and schemas
+## Tool results and hooks
 
 Tool content always uses standard LangChain blocks. Remove the
 `useStandardContentBlocks` option from configuration. Images/audio use `data`
@@ -171,29 +171,6 @@ failures retain their original cause. Validation failures retain the original Zo
 `error.cause`, including its structured `issues`. SDK argument-validation issues
 are represented as Zod4 custom issues, preserving messages and paths. Catch the
 outer tool failure using exported `isToolException`.
-
-Arguments modified by `beforeToolCall` are now checked against the **original
-server JSON Schema** before being sent. For example, a hook adding an undeclared
-property fails if the server declares `additionalProperties: false`, even if the
-model-facing schema override accepts it. Original descriptors are not mutated.
-
-The adapter no longer flattens `allOf`/`anyOf`/`oneOf`, inlines `$ref`, or removes
-conditional keywords. `tool.schema` preserves the server's JSON Schema. Your
-model provider must support that schema: the Anthropic integration, for example,
-omits tools containing root-level composition keywords. Publish a compatible
-schema on the server, or explicitly set `tool.schema` before binding the tool to
-your model. That override does not weaken post-hook validation against the
-original server schema.
-
-Core validates initial arguments against `tool.schema` before hooks run. Inputs
-that previously passed a simplified schema may now fail before `beforeToolCall`.
-Do not rely on hooks to repair initially invalid input unless you intentionally
-provide a different model-facing schema.
-
-The minimum core version is now `1.2.6`. `ToolException` extends core's branded
-`LangChainError`; use `ToolException.isInstance(error)` or `isToolException(error)`
-to narrow it. Both recognize errors from duplicate adapter modules but reject
-name-only lookalikes. Zod issue formatting, `cause`, and `result` are preserved.
 
 ## Connection and discovery behavior
 
@@ -222,6 +199,34 @@ cache hints and TTL. Pass `listTools([], { cacheMode: "refresh" })` to fetch and
 update the cache, or `"bypass"` to fetch without updating it. Existing tools held
 by an agent are not mutated. Close and recreate the adapter when changing the
 account associated with an OAuth provider.
+
+## Tool schemas and errors
+
+Arguments modified by `beforeToolCall` are now checked against the **original
+server JSON Schema** before being sent. For example, a hook adding an undeclared
+property fails if the server declares `additionalProperties: false`, even if the
+model-facing schema override accepts it. Original descriptors are not mutated.
+
+The adapter no longer flattens `allOf`/`anyOf`/`oneOf`, inlines `$ref`, or removes
+conditional keywords. `tool.schema` preserves the server's JSON Schema. Your
+model provider must support that schema: the Anthropic integration, for example,
+omits tools containing root-level composition keywords. Publish a compatible
+schema on the server, or explicitly set `tool.schema` before binding the tool to
+your model. That override does not weaken post-hook validation against the
+original server schema.
+
+Core validates initial arguments against `tool.schema` before hooks run. Inputs
+that previously passed a simplified schema may now fail before `beforeToolCall`.
+Do not rely on hooks to repair initially invalid input unless you intentionally
+provide a different model-facing schema.
+
+The minimum core version is now `1.2.6`. `ToolException` and `MCPClientError`
+extend core's branded `LangChainError`. Their `isInstance()` methods recognize
+errors from duplicate adapter modules and reject name-only lookalikes.
+`isToolException()` remains available. Both error types preserve original
+causes; tool failures retain the server's error response in `error.result`.
+SDK argument-validation issues become Zod4 errors with structured issues in
+`error.cause`. See the [error-handling example](client-reference.md#error-handling).
 
 ## Separate modern and legacy server options
 
