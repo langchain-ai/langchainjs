@@ -1,9 +1,6 @@
 import { z } from "zod";
 import { isCommand, type Command } from "@langchain/langgraph";
-import {
-  isSpecType,
-  type EmbeddedResource,
-} from "@modelcontextprotocol/client";
+import { EmbeddedResourceSchema } from "@modelcontextprotocol/core";
 import type { ContentBlock } from "@langchain/core/messages";
 import type { RunnableConfig } from "@langchain/core/runnables";
 import { ToolMessage } from "@langchain/core/messages";
@@ -27,7 +24,17 @@ const toolContentSchema = z.union([z.string(), z.array(contentBlockSchema)]);
 // MCP owns embedded resource semantics. Other artifacts include both legacy
 // data blocks and current LangChain blocks, so validate their shared boundary.
 const toolArtifactSchema = z.union([
-  z.custom<EmbeddedResource>(isSpecType.EmbeddedResource),
+  EmbeddedResourceSchema.extend({
+    resource: z.union(
+      EmbeddedResourceSchema.shape.resource.options.map((schema) =>
+        schema.loose()
+      )
+    ),
+    annotations: EmbeddedResourceSchema.shape.annotations
+      .unwrap()
+      .loose()
+      .optional(),
+  }).loose(),
   contentBlockSchema.refine((block) => block.type !== "resource", {
     error: "Expected a valid MCP embedded resource",
   }),

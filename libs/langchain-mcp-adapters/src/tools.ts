@@ -22,9 +22,8 @@ import { DynamicStructuredTool } from "@langchain/core/tools";
 import type { ContentBlock } from "@langchain/core/messages";
 import { RunnableConfig } from "@langchain/core/runnables";
 import type { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
-import { ToolMessage } from "@langchain/core/messages";
+import type { ToolMessage } from "@langchain/core/messages";
 import {
-  isCommand,
   isGraphInterrupt,
   getCurrentTaskInput,
   type Command,
@@ -344,7 +343,7 @@ type CallToolArgs = {
    * `afterToolCall` callbacks used for tool calls.
    */
   afterToolCall?: ToolHooks["afterToolCall"];
-  inputValidator: ReturnType<typeof fromJsonSchema>;
+  inputValidator: ReturnType<typeof fromJsonSchema<Record<string, unknown>>>;
 };
 
 type ContentBlocksWithArtifacts = [
@@ -425,9 +424,10 @@ async function _callTool({
         )
       );
 
-    const finalArgs = { ...args, ...beforeToolCallInterception?.args };
-
-    const validation = await inputValidator["~standard"].validate(finalArgs);
+    const validation = await inputValidator["~standard"].validate({
+      ...args,
+      ...beforeToolCallInterception?.args,
+    });
 
     if (validation.issues) {
       throw new ToolException(
@@ -445,22 +445,19 @@ async function _callTool({
       );
     }
 
+    const finalArgs = validation.value;
     const headers = beforeToolCallInterception?.headers || {};
-    const hasHeaderChanges = Object.entries(headers).length > 0;
+    let finalClient = client;
 
-    if (
-      hasHeaderChanges &&
-      !("fork" in client && typeof client.fork === "function")
-    ) {
-      throw new ToolException(
-        `MCP client for server "${serverName}" does not support header changes`
-      );
+    if (Object.keys(headers).length > 0) {
+      if (!("fork" in client && typeof client.fork === "function")) {
+        throw new ToolException(
+          `MCP client for server "${serverName}" does not support header changes`
+        );
+      }
+
+      finalClient = await client.fork(headers);
     }
-
-    const finalClient =
-      hasHeaderChanges && "fork" in client && typeof client.fork === "function"
-        ? await client.fork(headers)
-        : client;
 
     // v2 callTool(params, options?) — no result-schema argument in between.
     const callToolArgs: Parameters<typeof finalClient.callTool> = [
@@ -504,25 +501,11 @@ async function _callTool({
       return [content, artifacts];
     }
 
-    if (typeof interceptedResult.result === "string") {
-      return [interceptedResult.result, []];
-    }
-
     if (Array.isArray(interceptedResult.result)) {
       return interceptedResult.result;
     }
 
-    if (ToolMessage.isInstance(interceptedResult.result)) {
-      return [interceptedResult.result, []];
-    }
-
-    if (isCommand(interceptedResult.result)) {
-      return [interceptedResult.result, []];
-    }
-
-    throw new Error(
-      `Unexpected result value type from afterToolCall: expected either a Command, a ToolMessage or a tuple of ContentBlock and Artifact, but got ${interceptedResult.result}`
-    );
+    return [interceptedResult.result, []];
   } catch (error) {
     if (isGraphInterrupt(error) || config?.signal?.aborted) throw error;
 
@@ -599,7 +582,7 @@ export async function convertMcpTools(
 
             // Scope the SDK engine to this descriptor: its default shared cache keys by $id.
             // The SDK export selects the same engine as Client for Node/browser/workerd.
-            const inputValidator = fromJsonSchema(
+            const inputValidator = fromJsonSchema<Record<string, unknown>>(
               originalSchema,
               new DefaultJsonSchemaValidator()
             );
