@@ -20,8 +20,9 @@ npm install @langchain/mcp-adapters @langchain/langgraph @langchain/core langcha
 Start the [local modern server](../examples/modern_server.ts) and configure
 `OPENAI_API_KEY` before running this agent example.
 
-When constructing the SDK client directly, select the modern protocol explicitly;
-`MCPAdapter` selects it by default.
+When constructing the SDK client directly, configure protocol negotiation
+explicitly. `MCPAdapter` uses automatic negotiation by default; this example pins
+modern MCP because it connects to the local modern server.
 
 ```ts
 import {
@@ -648,8 +649,9 @@ Schema; URL answers cannot contain form content. Invalid answers produce Zod
 validation errors. See the [legacy elicitation example](../examples/legacy_elicitation.ts).
 
 Legacy callbacks depend on the active request and cannot survive a process
-restart. Do not invoke LangGraph `interrupt()` inside them. Modern server
-definitions reject `onElicitation`; this callback API is legacy-only.
+restart. Do not invoke LangGraph `interrupt()` inside them. Modern and automatic
+configurations reject `onElicitation`; this callback API requires
+explicit `mode: "legacy"`.
 
 For modern servers, `logLevel` controls request logs and `resourceSubscriptions`
 selects resource URIs to watch. Configure `onResourcesUpdated` on the same server

@@ -45,9 +45,7 @@ the adapter open until the agent finishes using its tools.
 
 ## Mix modern and legacy servers
 
-Each server has its own protocol mode. Omitting `mode` selects MCP revision
-[`2026-07-28`](https://modelcontextprotocol.io/specification/2026-07-28).
-Set `mode: "legacy"` for servers using earlier revisions, including legacy SSE:
+Omit `mode` to let the SDK negotiate with each server automatically:
 
 ```ts
 const adapter = new MCPAdapter({
@@ -55,7 +53,6 @@ const adapter = new MCPAdapter({
   servers: {
     modern: { url: "https://example.com/mcp" },
     legacy: {
-      mode: "legacy",
       command: "node",
       args: ["./legacy-server.js"],
     },
@@ -63,9 +60,11 @@ const adapter = new MCPAdapter({
 });
 ```
 
-Prefix names when servers expose identically named tools. Modern connections
-never silently fall back to legacy. The SDK package version does not determine
-the server's wire protocol: SDK 2 also supports legacy servers.
+Prefix names when servers expose identically named tools. Set `mode: "legacy"`
+to skip probing and enable legacy options such as `onElicitation` and
+`onInitialized`. Set `mode: "modern"` to require MCP revision
+[`2026-07-28`](https://modelcontextprotocol.io/specification/2026-07-28)
+without fallback. SDK 2 can serve either protocol.
 
 ## Configuration and lifecycle
 

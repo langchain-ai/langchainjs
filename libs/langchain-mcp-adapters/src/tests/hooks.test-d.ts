@@ -169,7 +169,9 @@ test("public transport types distinguish SSE from Streamable HTTP", () => {
   const config = { servers: { sse, http } } satisfies MCPAdapterConfig;
   expectTypeOf(config).toMatchTypeOf<MCPAdapterConfig>();
   expectTypeOf<SSEConnection>().not.toMatchTypeOf<StreamableHTTPConnection>();
-  expectTypeOf<NonNullable<SSEConnection["mode"]>>().toEqualTypeOf<"legacy">();
+  expectTypeOf<NonNullable<SSEConnection["mode"]>>().toEqualTypeOf<
+    "auto" | "legacy"
+  >();
 });
 
 test("resource and content types follow the SDK", () => {

@@ -5,9 +5,9 @@ compared with adapter 1.x on SDK 1.
 
 The adapter uses the stable `@modelcontextprotocol/client` 2.x package. Existing
 legacy MCP servers remain supported over stdio, Streamable HTTP, and legacy SSE.
-Connections now default to modern protocol negotiation. Add `mode: "legacy"`
-to each existing legacy server configuration; SDK package version 2 does not
-mean a server uses the modern wire protocol.
+Connections negotiate automatically by default. Add `mode: "legacy"` when using
+legacy callbacks or connection options, or to skip probing. SDK package version
+2 does not mean a server uses the modern wire protocol.
 
 ## Applications using the adapter
 
@@ -193,8 +193,8 @@ fails. Clients supplied to `loadMcpTools` remain owned by the caller.
 Tool, resource, and template discovery delegates pagination to the SDK. Server
 errors reject instead of appearing as an empty catalog. Resource conversion
 never performs implicit reads; explicitly call
-`readResource` if needed. Modern servers use the current revision by default; legacy servers require
-`mode: "legacy"`.
+`readResource` if needed. The SDK detects each server's protocol when `mode` is
+omitted, including in mixed-server configurations.
 
 ### Discovery freshness
 
@@ -250,12 +250,16 @@ const adapter = new MCPAdapter({
 });
 ```
 
-Omitting `mode` means `"modern"`. Modern connections require the SDK's current
-modern protocol revision; there is no automatic fallback into legacy behavior.
-Explicit legacy mode supports stdio, Streamable HTTP, and SSE. `transport: "sse"`,
-`automaticSSEFallback`, and `onInitialized` require legacy mode. Invalid mode and
-transport combinations, unknown options, and empty server maps fail with Zod
-errors before opening a connection.
+Omitting `mode` resolves to `"auto"`. The SDK probes for modern MCP and falls back
+to the legacy handshake when appropriate. HTTP authentication and network failures
+remain errors. If an HTTP endpoint returns 404 or 405, the adapter also tries
+legacy SSE. An explicit `transport: "sse"` uses the legacy handshake directly.
+
+Set `mode: "modern"` to require revision `2026-07-28` without fallback. Set
+`mode: "legacy"` to skip probing and enable `onElicitation`, `onInitialized`,
+`reconnect`, or `automaticSSEFallback`. Automatic negotiation does not enable
+these legacy-only options. Invalid combinations, unknown options, and empty
+server maps fail with Zod errors before opening a connection.
 
 Move notification and progress callbacks from the adapter root into each server
 that should receive them. Global LangChain tool hooks and naming/output policies
@@ -265,8 +269,8 @@ configuration to supply workspace paths instead.
 
 ## Elicitation and request logging
 
-Move `onElicitation` onto each legacy server that handles user input. Modern server
-configuration rejects this callback. Legacy callbacks execute within the active request.
+Move `onElicitation` onto each server configured with `mode: "legacy"` that handles
+user input. Automatic and modern configurations reject this callback. Legacy callbacks execute within the active request.
 Their answers are parsed with SDK schemas, with Zod issues preserving validation
 paths. They cannot be resumed after the underlying connection closes.
 
@@ -280,7 +284,7 @@ notification callback.
 Move resource URI selection into each server's `resourceSubscriptions` array and
 receive notifications through its `onResourcesUpdated` callback. The adapter uses
 modern `subscriptions/listen` or legacy `resources/subscribe` according to server
-mode, and rejects subscriptions when the server does not advertise support.
+negotiation, and rejects subscriptions when the server does not advertise support.
 
 `reconnect` is now legacy-only. Modern MCP removed event replay and stream
 resumption. A lost tool response is not proof that the operation did not execute;
