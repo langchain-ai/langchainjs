@@ -4,17 +4,10 @@ import {
   type ElicitRequest,
   type ElicitResult,
 } from "@modelcontextprotocol/client";
-import {
-  ElicitRequestSchema,
-  ElicitResultSchema,
-} from "@modelcontextprotocol/core";
+import { ElicitResultSchema } from "@modelcontextprotocol/core";
 import { DefaultJsonSchemaValidator } from "@modelcontextprotocol/client/_shims";
 
 export const elicitationAnswerSchema = ElicitResultSchema;
-
-export const elicitationRequestSchema = ElicitRequestSchema.transform(
-  (request) => request.params
-);
 
 /** SDK-owned form or URL request. The application owns presentation. */
 export type MCPElicitationRequest = ElicitRequest["params"];

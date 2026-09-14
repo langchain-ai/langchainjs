@@ -1,6 +1,9 @@
 import { ToolException, isToolException } from "./utils/errors.js";
 import { z } from "zod";
-import { fromJsonSchema } from "@modelcontextprotocol/client";
+import {
+  fromJsonSchema,
+  LOG_LEVEL_META_KEY,
+} from "@modelcontextprotocol/client";
 import { JSONObjectSchema } from "@modelcontextprotocol/core";
 import { DefaultJsonSchemaValidator } from "@modelcontextprotocol/client/_shims";
 import {
@@ -466,7 +469,7 @@ async function _callTool({
         arguments: finalArgs,
         _meta:
           logLevel !== undefined && finalClient.getProtocolEra() === "modern"
-            ? { "io.modelcontextprotocol/logLevel": logLevel }
+            ? { [LOG_LEVEL_META_KEY]: logLevel }
             : undefined,
       },
     ];
