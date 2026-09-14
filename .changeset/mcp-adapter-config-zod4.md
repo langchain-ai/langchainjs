@@ -35,3 +35,6 @@ Both errors are exported and preserve original causes. Tool failures retain MCP
 error responses in `result`; SDK argument-validation issues become Zod4 errors.
 Use `isToolException()` or the error classes' `isInstance()` methods to narrow
 errors across module copies. Name-only lookalikes no longer match.
+
+Tool-error messages retain the original error text without custom Zod formatting.
+Structured issues, paths and stacks remain available in the original `cause`.

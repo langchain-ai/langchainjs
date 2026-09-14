@@ -1,8 +1,4 @@
-import {
-  ToolException,
-  isToolException,
-  parseZodErrorDetails,
-} from "./utils/errors.js";
+import { ToolException, isToolException } from "./utils/errors.js";
 import { z } from "zod";
 import { fromJsonSchema } from "@modelcontextprotocol/client";
 import { JSONObjectSchema } from "@modelcontextprotocol/core";
@@ -519,12 +515,6 @@ async function _callTool({
     );
   } catch (error) {
     if (isGraphInterrupt(error) || config?.signal?.aborted) throw error;
-
-    const details = parseZodErrorDetails(error);
-
-    if (details) {
-      throw new ToolException(z.prettifyError(details), error);
-    }
 
     debugLog(`Error calling tool ${toolName}: ${String(error)}`);
     if (isToolException(error)) {
