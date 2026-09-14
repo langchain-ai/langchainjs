@@ -11,7 +11,11 @@ import type {
   FinishReason,
 } from "@langchain/core/language_models/event";
 import type { ContentBlock, UsageMetadata } from "@langchain/core/messages";
-import { convertUsageMetadata } from "./common.js";
+import { v4 as uuidv4 } from "@langchain/core/utils/uuid";
+import {
+  _FUNCTION_CALL_THOUGHT_SIGNATURES_MAP_KEY,
+  convertUsageMetadata,
+} from "./common.js";
 
 export interface ConvertGoogleGenAIStreamOptions {
   streamUsage?: boolean;
@@ -31,6 +35,7 @@ export async function* convertGoogleGenAIStream(
     Record<string, any>
   >();
   const blockKeyToIndex = new Map<BlockKey, number>();
+  const functionThoughtSignatures: Record<string, string> = {};
   let nextBlockIndex = 0;
   let messageStarted = false;
   let usageSnapshot: UsageMetadata | undefined;
@@ -84,15 +89,21 @@ export async function* convertGoogleGenAIStream(
           const { index, isNew } = getOrCreateBlockIndex(key, {
             type: "reasoning",
             reasoning: "",
+            ...(part.thoughtSignature
+              ? { signature: part.thoughtSignature }
+              : {}),
           });
+          const acc = blockAccumulators.get(index)!;
+          if (part.thoughtSignature) {
+            acc.signature = part.thoughtSignature;
+          }
           if (isNew) {
             yield {
               event: "content-block-start" as const,
               index,
-              content: { type: "reasoning", reasoning: "" } as ContentBlock,
+              content: { ...acc } as ContentBlock,
             };
           }
-          const acc = blockAccumulators.get(index)!;
           acc.reasoning = (acc.reasoning ?? "") + part.text;
           yield {
             event: "content-block-delta" as const,
@@ -123,25 +134,30 @@ export async function* convertGoogleGenAIStream(
       } else if ("functionCall" in part && part.functionCall) {
         const key: BlockKey = `tool:${toolIdx}`;
         const args = JSON.stringify(part.functionCall.args ?? {});
+        const functionCallId =
+          "id" in part.functionCall &&
+          typeof part.functionCall.id === "string" &&
+          part.functionCall.id
+            ? part.functionCall.id
+            : uuidv4();
         const { index, isNew } = getOrCreateBlockIndex(key, {
           type: "tool_call_chunk",
+          id: functionCallId,
           name: part.functionCall.name,
           args: "",
           index: toolIdx,
         });
+        const acc = blockAccumulators.get(index)!;
+        if (part.thoughtSignature) {
+          functionThoughtSignatures[acc.id] = part.thoughtSignature;
+        }
         if (isNew) {
           yield {
             event: "content-block-start" as const,
             index,
-            content: {
-              type: "tool_call_chunk",
-              name: part.functionCall.name,
-              args: "",
-              index: toolIdx,
-            } as ContentBlock,
+            content: { ...acc } as ContentBlock,
           };
         }
-        const acc = blockAccumulators.get(index)!;
         acc.args = args;
         yield {
           event: "content-block-delta" as const,
@@ -150,6 +166,7 @@ export async function* convertGoogleGenAIStream(
             type: "block-delta" as const,
             fields: {
               type: "tool_call_chunk",
+              id: acc.id,
               name: acc.name,
               args: acc.args,
             },
@@ -172,7 +189,15 @@ export async function* convertGoogleGenAIStream(
     event: "message-finish" as const,
     reason: finishReason,
     ...(usageSnapshot ? { usage: usageSnapshot } : {}),
-    responseMetadata: { model_provider: "google-genai" },
+    responseMetadata: {
+      model_provider: "google-genai",
+      ...(Object.keys(functionThoughtSignatures).length
+        ? {
+            [_FUNCTION_CALL_THOUGHT_SIGNATURES_MAP_KEY]:
+              functionThoughtSignatures,
+          }
+        : {}),
+    },
   };
 }
 
