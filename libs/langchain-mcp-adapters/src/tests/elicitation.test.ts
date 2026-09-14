@@ -15,7 +15,6 @@ import { MCPAdapter } from "../index.js";
 
 import { describe, expect, it, vi } from "vitest";
 import {
-  sdkSchema,
   modernElicitationRequestSchema,
   elicitationRequestSchema,
   validateElicitationAnswer,
@@ -400,15 +399,6 @@ describe("elicitation and logging configuration", () => {
 
     if (!parsed.success) expect(parsed.error.issues.length).toBeGreaterThan(0);
   });
-});
-
-it("composes Standard Schema defaults and issue paths through Zod", async () => {
-  const parser = sdkSchema(z.object({ label: z.string().default("default") }));
-  expect(await parser.parseAsync({})).toEqual({ label: "default" });
-  const result = await parser.safeParseAsync({ label: 42 });
-  expect(result.success).toBe(false);
-
-  if (!result.success) expect(result.error.issues[0].path).toEqual(["label"]);
 });
 
 it.each([true, false])(

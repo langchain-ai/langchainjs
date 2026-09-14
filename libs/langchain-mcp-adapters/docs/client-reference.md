@@ -3,6 +3,31 @@
 For setup and a direct tool call, start with the [README](../README.md).
 For breaking changes and compatibility aliases, see the [migration guide](sdk-v2-migration.md).
 
+## Python API differences
+
+Python has two MCP integrations: the separate `langchain-mcp-adapters` package
+with `MultiServerMCPClient`, and [`langchain.mcp.MCPAdapter`](https://github.com/langchain-ai/langchain/pull/39939).
+When porting an application, check which integration it uses.
+
+- TypeScript uses `MCPAdapter({ servers })`, `listTools()` and `close()`.
+  Python's `MCPAdapter` accepts FastMCP targets or clients, exposes `list_tools()`,
+  and supports `async with`. The separate Python client uses `get_tools()`.
+- TypeScript selects protocol revision `2026-07-28` by default and requires
+  `mode: "legacy"` for earlier servers. Each server in a mixed map keeps its mode.
+  Python's `MCPAdapter` delegates protocol selection to FastMCP.
+- Both `MCPAdapter` implementations use LangGraph interrupts for modern
+  elicitation. TypeScript checkpoints completed request rounds and resumes with
+  a map of answers keyed by question key. Python's implementation in #39939
+  replays calls from the first round and expects `{ responses: ... }` on resume.
+  TypeScript legacy servers use a per-server `onElicitation` callback.
+- Both convert tool content into LangChain content blocks and keep structured
+  output in artifacts. Artifact and interrupt payloads have language-specific
+  shapes; use each package's types when handling them.
+- TypeScript accepts SDK `AuthProvider` or `OAuthClientProvider` objects on each
+  HTTP server. Python's `MCPAdapter` accepts authentication configured on a
+  FastMCP client. TypeScript's `finishAuth()` completes an SDK OAuth callback;
+  your application owns redirects, account binding and credential storage.
+
 ## Manage the MCP client yourself
 
 Use `loadMcpTools()` when your application owns the SDK client lifecycle.

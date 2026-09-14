@@ -3,12 +3,11 @@ import {
   type Tool,
   type JSONObject,
   InMemoryTransport,
-  specTypeSchemas,
 } from "@modelcontextprotocol/client";
+import { JSONRPCRequestSchema } from "@modelcontextprotocol/core";
 import { createMcpHandler, McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { MCPAdapter, loadMcpTools } from "../index.js";
-import { sdkSchema } from "../elicitation.js";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { createServer, Server } from "node:http";
 import { once } from "node:events";
@@ -3492,9 +3491,7 @@ describe("modern wire boundaries", () => {
       expect(requests.length).toBeGreaterThan(values.length);
 
       for (const [index, body] of requests.entries()) {
-        const request = await sdkSchema(
-          specTypeSchemas.JSONRPCRequest
-        ).parseAsync(JSON.parse(body));
+        const request = JSONRPCRequestSchema.parse(JSON.parse(body));
 
         expect(request.method).not.toMatch(/initialize/);
         expect(wireHeaders[index]).toMatchObject({
