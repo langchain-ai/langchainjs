@@ -4,6 +4,8 @@ import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { HumanMessage, AIMessageChunk } from "@langchain/core/messages";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { ChatOpenAICompletions } from "../completions.js";
+import { AIMessage } from "@langchain/core/messages";
+import { ChatOpenAI } from "../index.js";
 
 describe("ChatOpenAICompletions constructor", () => {
   it("supports string model shorthand", () => {
@@ -373,5 +375,36 @@ describe("ChatOpenAICompletions strict tools for structured output", () => {
     expect(
       toolStrict({ response_format: { type: "json_object" } })
     ).toBeUndefined();
+  });
+
+  it("should parse structured output when content is an array of content blocks", async () => {
+    const schema = z.object({ answer: z.string() });
+
+    const message = new AIMessage({
+      content: [{ type: "text", text: '{"answer":"ok"}' }],
+      response_metadata: { output_version: "v1" },
+    });
+
+    const mockCompletions = {
+      getLsParams: () => ({}),
+      invocationParams: () => ({}),
+      async _generate() {
+        return {
+          generations: [{ text: message.text, message }],
+        };
+      },
+    };
+
+    const model = new ChatOpenAI({
+      apiKey: "test",
+      model: "gpt-5",
+      completions: mockCompletions as any,
+    });
+
+    const res = await model
+      .withStructuredOutput(schema, { method: "jsonSchema" })
+      .invoke("Return JSON");
+
+    expect(res).toEqual({ answer: "ok" });
   });
 });
