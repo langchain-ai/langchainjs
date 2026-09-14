@@ -394,4 +394,35 @@ describe("bedrockPromptCachingMiddleware", () => {
       ._lastBindToolsOptions;
     expect(bindToolsOptions?.cache_control).toBeUndefined();
   });
+
+  it("should honor configurable.middleware_context enableCaching override", async () => {
+    const model = createMockModel();
+    const middleware = bedrockPromptCachingMiddleware();
+
+    const agent = createAgent({
+      model,
+      middleware: [middleware],
+    });
+
+    const messages = [
+      new HumanMessage("Hello"),
+      new AIMessage("Hi there!"),
+      new HumanMessage("How are you?"),
+      new AIMessage("I'm doing well, thanks!"),
+      new HumanMessage("What's the weather like?"),
+    ];
+
+    await agent.invoke(
+      { messages },
+      {
+        configurable: {
+          middleware_context: { enableCaching: false },
+        },
+      }
+    );
+
+    const bindToolsOptions = (model as ReturnType<typeof createMockModel>)
+      ._lastBindToolsOptions;
+    expect(bindToolsOptions?.cache_control).toBeUndefined();
+  });
 });
