@@ -443,9 +443,8 @@ export class MCPAdapter {
       }
 
       try {
-        const { resources } = await client.listResources();
-
-        result[serverName] = resources.map((resource) => ({
+        const resourcesList = await client.listResources();
+        result[serverName] = resourcesList.resources.map((resource) => ({
           ...resource,
           uri: resource.uri,
           name: resource.title ?? resource.name,
@@ -516,16 +515,16 @@ export class MCPAdapter {
       }
 
       try {
-        const { resourceTemplates: templates } =
-          await client.listResourceTemplates();
-
-        result[serverName] = templates.map((template) => ({
-          ...template,
-          uriTemplate: template.uriTemplate,
-          name: template.title ?? template.name,
-          description: template.description,
-          mimeType: template.mimeType,
-        }));
+        const templatesList = await client.listResourceTemplates();
+        result[serverName] = templatesList.resourceTemplates.map(
+          (template) => ({
+            ...template,
+            uriTemplate: template.uriTemplate,
+            name: template.title ?? template.name,
+            description: template.description,
+            mimeType: template.mimeType,
+          })
+        );
         debugLog(
           `INFO: Listed ${result[serverName].length} resource templates from server "${serverName}"`
         );
@@ -765,7 +764,6 @@ export class MCPAdapter {
         );
       } catch (error) {
         const code = getHttpErrorCode(error);
-
         if (automaticSSEFallback && code != null && code >= 400 && code < 500) {
           // Streamable HTTP error is a 4xx, so fall back to SSE
           try {
@@ -870,7 +868,6 @@ export class MCPAdapter {
 
     try {
       await this.#clientConnections.createClient("sse", serverName, connection);
-
       const transport = this.#clientConnections.getTransport({
         serverName,
         headers,
