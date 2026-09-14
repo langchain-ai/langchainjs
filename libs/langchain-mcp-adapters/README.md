@@ -77,8 +77,8 @@ Use `listToolsets()` for a map of server names to tools. Both discovery methods
 accept SDK cache controls; see the [discovery reference](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-mcp-adapters/docs/client-reference.md#discovery-and-grouped-tools).
 
 `adapter.config.servers` exposes an isolated configuration snapshot. Changing
-the snapshot does not reconfigure the adapter. Callback functions and auth
-provider instances retain their identity; the snapshot is runtime configuration,
+the snapshot does not reconfigure the adapter. Notification callbacks, tool hooks,
+and auth provider instances retain their identity; the snapshot is runtime configuration,
 not a redacted diagnostic object.
 
 Put notification and progress callbacks on the server that should receive them.

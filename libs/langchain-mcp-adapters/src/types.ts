@@ -819,10 +819,10 @@ const clientOptionsSchema = z
     onConnectionError: z
       .union([
         z.enum(["throw", "ignore"]),
-        z.custom<ConnectionErrorHandler>(
-          (value) => typeof value === "function",
-          "Expected a connection error handler"
-        ),
+        z.function({
+          input: [z.object({ serverName: z.string(), error: z.unknown() })],
+          output: z.void(),
+        }),
       ])
       .describe(
         "Behavior when a server fails to connect: 'throw' to error immediately, 'ignore' to skip failed servers, or a function for custom error handling"
@@ -952,10 +952,10 @@ export type ResolvedClientConfig = z.output<typeof clientConfigSchema>;
  * @param params.serverName - The name of the server that failed to connect
  * @param params.error - The error that occurred during connection
  */
-export type ConnectionErrorHandler = (params: {
-  serverName: string;
-  error: unknown;
-}) => void;
+export type ConnectionErrorHandler = Exclude<
+  ResolvedMCPAdapterConfig["onConnectionError"],
+  string
+>;
 
 export const loadMcpToolsOptionsSchema = clientOptionsSchema
   .pick({
