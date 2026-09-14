@@ -44,6 +44,13 @@ import {
 
 const debugLog = debug("@langchain/mcp-adapters:client");
 
+const toolSelectionSchema = createServerSelectionSchema(
+  toolDiscoveryOptionsSchema
+);
+const transportSelectionSchema = createServerSelectionSchema(
+  customHTTPTransportOptionsSchema
+);
+
 export { MCPClientError } from "./utils/errors.js";
 
 /**
@@ -156,9 +163,8 @@ export class MCPAdapter {
   }
 
   /**
-   * Proactively initialize connections to all servers. This will be called automatically when
-   * methods requiring an active connection (like {@link getTools} or {@link getClient}) are called,
-   * but you can call it directly to ensure all connections are established before using the tools.
+   * Discover executable LangChain tools grouped by server name.
+   * Opens connections as needed and honors the SDK discovery cache.
    *
    * When a server fails to connect, the client will throw an error if `onConnectionError` is "throw",
    * otherwise it will skip the server and continue with the remaining servers.
@@ -166,7 +172,22 @@ export class MCPAdapter {
    * @returns A map of server names to arrays of tools
    * @throws {MCPClientError} If initialization fails and `onConnectionError` is "throw" (default)
    */
+  async listToolsets(
+    customTransportOptions?: ToolDiscoveryOptions
+  ): Promise<Record<string, DynamicStructuredTool[]>> {
+    return this.#discoverToolsets(
+      toolDiscoveryOptionsSchema.parse(customTransportOptions ?? {})
+    );
+  }
+
+  /** @deprecated Use listToolsets(). This method also discovers tools. */
   async initializeConnections(
+    options?: ToolDiscoveryOptions
+  ): Promise<Record<string, DynamicStructuredTool[]>> {
+    return this.listToolsets(options);
+  }
+
+  async #discoverToolsets(
     customTransportOptions?: ToolDiscoveryOptions
   ): Promise<Record<string, DynamicStructuredTool[]>> {
     if (!this.#mcpServers || Object.keys(this.#mcpServers).length === 0) {
@@ -280,8 +301,8 @@ export class MCPAdapter {
   }
 
   async #listTools(args: unknown[]): Promise<DynamicStructuredTool[]> {
-    const { servers, options } = parseServerSelection(args);
-    const catalog = await this.initializeConnections(options);
+    const { servers, options } = toolSelectionSchema.parse(args);
+    const catalog = await this.#discoverToolsets(options);
 
     return (servers.length ? servers : Object.keys(catalog)).flatMap(
       (name) => catalog[name] ?? []
@@ -336,10 +357,11 @@ export class MCPAdapter {
     serverName: string,
     options?: CustomHTTPTransportOptions
   ): Promise<Client | undefined> {
-    await this.initializeConnections(options);
+    const parsedOptions = customHTTPTransportOptionsSchema.parse(options ?? {});
+    await this.#discoverToolsets(parsedOptions);
 
     return this.#clientConnections.get(
-      this.#transportOptions(serverName, options)
+      this.#transportOptions(serverName, parsedOptions)
     );
   }
 
@@ -373,8 +395,8 @@ export class MCPAdapter {
   async listResources(
     ...args: unknown[]
   ): Promise<Record<string, MCPResource[]>> {
-    const { servers, options } = parseServerSelection(args);
-    await this.initializeConnections(options);
+    const { servers, options } = transportSelectionSchema.parse(args);
+    await this.#discoverToolsets(options);
 
     const targetServers =
       servers.length > 0 ? servers : Object.keys(this.#config.servers);
@@ -382,7 +404,9 @@ export class MCPAdapter {
     const result: Record<string, MCPResource[]> = {};
 
     for (const serverName of targetServers) {
-      const client = await this.getClient(serverName, options);
+      const client = this.#clientConnections.get(
+        this.#transportOptions(serverName, options)
+      );
       if (!client) {
         debugLog(`WARN: Server "${serverName}" not found or not connected`);
         continue;
@@ -444,8 +468,8 @@ export class MCPAdapter {
   async listResourceTemplates(
     ...args: unknown[]
   ): Promise<Record<string, MCPResourceTemplate[]>> {
-    const { servers, options } = parseServerSelection(args);
-    await this.initializeConnections(options);
+    const { servers, options } = transportSelectionSchema.parse(args);
+    await this.#discoverToolsets(options);
 
     const targetServers =
       servers.length > 0 ? servers : Object.keys(this.#config.servers);
@@ -453,7 +477,9 @@ export class MCPAdapter {
     const result: Record<string, MCPResourceTemplate[]> = {};
 
     for (const serverName of targetServers) {
-      const client = await this.getClient(serverName, options);
+      const client = this.#clientConnections.get(
+        this.#transportOptions(serverName, options)
+      );
       if (!client) {
         debugLog(`WARN: Server "${serverName}" not found or not connected`);
         continue;
@@ -502,8 +528,6 @@ export class MCPAdapter {
     uri: string,
     options?: CustomHTTPTransportOptions
   ): Promise<MCPResourceContent[]> {
-    await this.initializeConnections(options);
-
     const client = await this.getClient(serverName, options);
     if (!client) {
       throw new MCPClientError(
@@ -1051,13 +1075,15 @@ export class MCPAdapter {
 /** @deprecated Use MCPAdapter. This alias shares the same implementation. */
 export { MCPAdapter as MultiServerMCPClient };
 
-const serverSelectionSchema = z.union([
-  z.array(z.string()).transform((servers) => ({ servers, options: undefined })),
-  z
-    .tuple([z.array(z.string()), toolDiscoveryOptionsSchema.optional()])
-    .transform(([servers, options]) => ({ servers, options })),
-]);
-
-function parseServerSelection(args: unknown[]) {
-  return serverSelectionSchema.parse(args);
+function createServerSelectionSchema<Options extends z.ZodType>(
+  optionsSchema: Options
+) {
+  return z.union([
+    z
+      .array(z.string())
+      .transform((servers) => ({ servers, options: undefined })),
+    z
+      .tuple([z.array(z.string()), optionsSchema.optional()])
+      .transform(([servers, options]) => ({ servers, options })),
+  ]);
 }

@@ -590,19 +590,22 @@ To output debug logs only from the `tools` module:
 DEBUG='@langchain/mcp-adapters:tools'
 ```
 
-## License
+## Discovery and grouped tools
 
-MIT
+`listTools()` returns a flat array of executable LangChain tools.
+`listToolsets(options?)` returns the same tools grouped by server name. Both
+open connections as needed and support the SDK discovery cache. The deprecated
+`initializeConnections(options?)` method delegates to `listToolsets()`.
 
-## Acknowledgements
-
-Big thanks to [@vrknetha](https://github.com/vrknetha), [@knacklabs](https://www.knacklabs.ai) for the initial implementation!
-
-## Contributing
-
-Contributions are welcome! Please check out our [contributing guidelines](CONTRIBUTING.md) for more information.
-
-### Discovery freshness
+```ts
+const toolsets = await adapter.listToolsets({ cacheMode: "refresh" });
+for (const [server, tools] of Object.entries(toolsets)) {
+  console.log(
+    server,
+    tools.map((tool) => tool.name)
+  );
+}
+```
 
 `listTools()` consults the SDK cache on each discovery. The SDK owns cache hints,
 TTL, and pagination; the adapter reuses adapted tools while the cached descriptors

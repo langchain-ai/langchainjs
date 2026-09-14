@@ -150,7 +150,7 @@ export class ConnectionManager {
   async #connect(
     args:
       | ["stdio", string, ResolvedStdioConnection]
-      | ["sse", string, ResolvedStreamableHTTPConnection]
+      | ["sse", string, ResolvedSSEConnection]
       | ["http", string, ResolvedStreamableHTTPConnection],
     key: ClientKeyObject
   ): Promise<Client> {

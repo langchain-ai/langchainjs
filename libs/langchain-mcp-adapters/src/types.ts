@@ -1,7 +1,7 @@
 import { z } from "zod";
+import { ContentBlockSchema } from "@modelcontextprotocol/core";
 import type {
   CacheMode,
-  CallToolResult,
   ListResourcesResult,
   ListResourceTemplatesResult,
   ReadResourceResult,
@@ -30,13 +30,9 @@ export type {
   CommandParams,
 };
 
-const callToolResultContentTypeSchema = z.enum([
-  "audio",
-  "image",
-  "resource",
-  "resource_link",
-  "text",
-] satisfies CallToolResult["content"][number]["type"][]);
+const callToolResultContentTypeSchema = z.enum(
+  ContentBlockSchema.options.map((schema) => schema.shape.type.value)
+);
 
 export const callToolResultContentTypes =
   callToolResultContentTypeSchema.options;
@@ -942,10 +938,9 @@ export function _resolveAndApplyOverrideHandlingOverrides(
   };
 }
 
-export const customHTTPTransportOptionsSchema = httpOptionsSchema.pick({
-  authProvider: true,
-  headers: true,
-});
+export const customHTTPTransportOptionsSchema = httpOptionsSchema
+  .pick({ authProvider: true, headers: true })
+  .strict();
 
 export type CustomHTTPTransportOptions = z.input<
   typeof customHTTPTransportOptionsSchema

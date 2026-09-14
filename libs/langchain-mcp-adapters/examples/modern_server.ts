@@ -11,6 +11,18 @@ const handler = createMcpHandler(
       { inputSchema: z.object({ message: z.string() }) },
       ({ message }) => ({ content: [{ type: "text", text: message }] })
     );
+    server.registerTool("inspect", { inputSchema: z.object({}) }, () => ({
+      content: [
+        { type: "text", text: "One pixel" },
+        {
+          type: "image",
+          mimeType: "image/png",
+          data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aFz8AAAAASUVORK5CYII=",
+        },
+      ],
+      structuredContent: { width: 1, height: 1 },
+      _meta: { source: "modern-example" },
+    }));
     return server;
   },
   { legacy: "reject" }

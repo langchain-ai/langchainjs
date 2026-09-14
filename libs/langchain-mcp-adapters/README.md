@@ -72,6 +72,9 @@ Construction validates options with Zod 4 and opens no connections. Discovery
 and invocation open connections as needed. Use `listTools("serverName")` to
 select tools and always await `close()` when finished.
 
+Use `listToolsets()` for a map of server names to tools. Both discovery methods
+accept SDK cache controls; see the [discovery reference](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-mcp-adapters/docs/client-reference.md#discovery-and-grouped-tools).
+
 `adapter.config.servers` exposes an isolated configuration snapshot. Changing
 the snapshot does not reconfigure the adapter. Callback functions and auth
 provider instances retain their identity; the snapshot is runtime configuration,

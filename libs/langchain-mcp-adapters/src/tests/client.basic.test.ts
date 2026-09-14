@@ -95,6 +95,37 @@ describe("MultiServerMCPClient", () => {
   });
 
   describe("HTTP error handling", () => {
+    test("rejects unknown public options before opening a connection", async () => {
+      const adapter = new MCPAdapter({
+        servers: { modern: { url: "https://example.com/mcp" } },
+      });
+      const options = { headers: {}, cacheMdoe: "refresh" };
+      await expect(adapter.listToolsets(options)).rejects.toThrow(ZodError);
+      await expect(adapter.initializeConnections(options)).rejects.toThrow(
+        ZodError
+      );
+      await expect(adapter.listTools([], options)).rejects.toThrow(ZodError);
+      await expect(adapter.listResources([], options)).rejects.toThrow(
+        ZodError
+      );
+      await expect(adapter.listResourceTemplates([], options)).rejects.toThrow(
+        ZodError
+      );
+      await expect(adapter.getClient("modern", options)).rejects.toThrow(
+        ZodError
+      );
+      await expect(
+        adapter.readResource("modern", "file:///test", options)
+      ).rejects.toThrow(ZodError);
+      const discoveryOnly = {
+        cacheMode: "refresh",
+      } satisfies import("../index.js").ToolDiscoveryOptions;
+      // @ts-expect-error Resource methods accept transport options, not discovery cache options.
+      await expect(adapter.listResources([], discoveryOnly)).rejects.toThrow(
+        ZodError
+      );
+      expect(Client.prototype.connect).not.toHaveBeenCalled();
+    });
     test("does not fall back to SSE for a default modern connection", async () => {
       vi.mocked(Client.prototype.connect).mockRejectedValueOnce({
         status: 404,

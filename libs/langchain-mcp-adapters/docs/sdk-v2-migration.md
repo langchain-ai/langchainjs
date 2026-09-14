@@ -120,13 +120,14 @@ are copied; callback functions and OAuth provider instances retain their
 identity. Treat this as runtime configuration, not a JSON-serializable or
 redacted diagnostic object. Changing a snapshot does not reconfigure the adapter.
 
-| Previous API                   | Canonical API      | Compatibility                          |
-| ------------------------------ | ------------------ | -------------------------------------- |
-| `MultiServerMCPClient`         | `MCPAdapter`       | Deprecated alias                       |
-| `mcpServers` constructor input | `servers`          | Deprecated input still accepted        |
-| `getTools()`                   | `listTools()`      | Deprecated alias; same LangChain tools |
-| `config.mcpServers`            | `config.servers`   | Getter shape changed for all inputs    |
-| `ClientConfig`                 | `MCPAdapterConfig` | Old type retains legacy input shape    |
+| Previous API                   | Canonical API      | Compatibility                                        |
+| ------------------------------ | ------------------ | ---------------------------------------------------- |
+| `MultiServerMCPClient`         | `MCPAdapter`       | Deprecated alias                                     |
+| `mcpServers` constructor input | `servers`          | Deprecated input still accepted                      |
+| `getTools()`                   | `listTools()`      | Deprecated alias; same LangChain tools               |
+| `initializeConnections()`      | `listToolsets()`   | Deprecated alias; connects and returns grouped tools |
+| `config.mcpServers`            | `config.servers`   | Getter shape changed for all inputs                  |
+| `ClientConfig`                 | `MCPAdapterConfig` | Old type retains legacy input shape                  |
 
 `SSEConnection` now describes only legacy SSE; it is no longer an alias of
 `StreamableHTTPConnection`. Use `Connection` when accepting any supported
