@@ -99,8 +99,8 @@ export class ConnectionManager {
           ? await this.#createSSETransport(serverName, options)
           : await this.#createStdioTransport(options);
 
-    // SDK LATEST_PROTOCOL_VERSION still names the legacy revision; pin the
-    // modern revision explicitly so negotiation cannot fall back to legacy.
+    // The SDK defaults to legacy, and "auto" permits legacy fallback.
+    // Pin modern connections to preserve the configured protocol mode.
     const mcpClient = new MCPClient(
       {
         name: packageJson.name,
