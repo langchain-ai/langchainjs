@@ -8,7 +8,7 @@ mean a server uses the modern wire protocol.
 
 ## Applications using the adapter
 
-The names `MultiServerMCPClient`, `mcpServers`, and `listTools()` remain compatibility
+The names `MultiServerMCPClient`, `mcpServers`, and `getTools()` remain compatibility
 aliases, but their configurations follow the same new mode validation. Applications using these APIs do not need to construct an SDK client.
 
 ## Applications supplying an SDK client
