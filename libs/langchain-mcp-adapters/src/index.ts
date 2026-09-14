@@ -1,5 +1,3 @@
-import { type StreamableHTTPConnection } from "./types.js";
-
 export { MCPAdapter, MultiServerMCPClient } from "./client.js";
 
 export type { OAuthClientProvider } from "@modelcontextprotocol/client";
@@ -7,20 +5,19 @@ export type { OAuthClientProvider } from "@modelcontextprotocol/client";
 export type {
   ClientConfig,
   MCPAdapterConfig,
+  ResolvedMCPAdapterConfig,
   Connection,
   LoadMcpToolsOptions,
   OutputHandling,
   StdioConnection,
   StreamableHTTPConnection,
+  ResolvedStreamableHTTPConnection,
+  SSEConnection,
+  ResolvedSSEConnection,
   MCPResource,
   MCPResourceTemplate,
   MCPResourceContent,
 } from "./types.js";
-
-/**
- * Type alias for backward compatibility with previous versions of the package.
- */
-export type SSEConnection = StreamableHTTPConnection;
 
 export { loadMcpTools } from "./tools.js";
 

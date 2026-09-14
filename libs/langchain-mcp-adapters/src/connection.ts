@@ -14,6 +14,7 @@ import { connectionSchema } from "./types.js";
 import { getDebugLog } from "./logging.js";
 import type {
   ResolvedStreamableHTTPConnection,
+  ResolvedSSEConnection,
   ResolvedStdioConnection,
 } from "./types.js";
 
@@ -50,7 +51,10 @@ export interface Connection {
     | SSEClientTransport
     | StdioClientTransport;
   client: Client;
-  transportOptions: ResolvedStdioConnection | ResolvedStreamableHTTPConnection;
+  transportOptions:
+    | ResolvedStdioConnection
+    | ResolvedStreamableHTTPConnection
+    | ResolvedSSEConnection;
   closeCallback: () => Promise<void>;
 }
 
@@ -68,14 +72,19 @@ export class ConnectionManager {
     options: ResolvedStdioConnection
   ): Promise<Client>;
   async createClient(
-    type: "http" | "sse",
+    type: "http",
     serverName: string,
     options: ResolvedStreamableHTTPConnection
   ): Promise<Client>;
   async createClient(
+    type: "sse",
+    serverName: string,
+    options: ResolvedSSEConnection
+  ): Promise<Client>;
+  async createClient(
     ...args:
       | ["stdio", string, ResolvedStdioConnection]
-      | ["sse", string, ResolvedStreamableHTTPConnection]
+      | ["sse", string, ResolvedSSEConnection]
       | ["http", string, ResolvedStreamableHTTPConnection]
   ): Promise<Client> {
     const [type, serverName, options] = args;
@@ -240,7 +249,13 @@ export class ConnectionManager {
       throw new Error("Forking stdio transport is not supported");
     }
 
-    return this.createClient(options.transport, key.serverName, {
+    if (options.transport === "sse")
+      return this.createClient("sse", key.serverName, {
+        ...options,
+        headers,
+      });
+
+    return this.createClient("http", key.serverName, {
       ...options,
       headers,
     });
@@ -461,7 +476,7 @@ export class ConnectionManager {
    */
   async #createSSETransport(
     serverName: string,
-    args: ResolvedStreamableHTTPConnection
+    args: ResolvedSSEConnection
   ): Promise<SSEClientTransport> {
     const { url, headers, authProvider } = args;
     const options: SSEClientTransportOptions = {};

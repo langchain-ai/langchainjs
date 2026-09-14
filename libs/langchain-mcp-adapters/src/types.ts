@@ -177,7 +177,8 @@ export const stdioRestartSchema = z
      * Maximum number of restart attempts
      */
     maxAttempts: z
-      .number()
+      .int()
+      .nonnegative()
       .describe("The maximum number of restart attempts")
       .optional(),
     /**
@@ -185,6 +186,7 @@ export const stdioRestartSchema = z
      */
     delayMs: z
       .number()
+      .nonnegative()
       .describe("The delay in milliseconds between restart attempts")
       .optional(),
   })
@@ -225,12 +227,11 @@ const stdioOptionsSchema = z
       .record(z.string(), z.string())
       .describe("The environment to use when spawning the process")
       .optional(),
-    /**
-     * The encoding to use when reading from the process
-     */
+    /** @deprecated SDK 2 stdio does not support overriding the encoding. */
     encoding: z
-      .string()
-      .describe("The encoding to use when reading from the process")
+      .never({
+        error: "SDK 2 stdio does not support encoding; remove this option",
+      })
       .optional(),
     /**
      * How to handle stderr of the child process. This matches the semantics of Node's `child_process.spawn`
@@ -282,7 +283,8 @@ export const streamableHttpReconnectSchema = z
      * Maximum number of reconnection attempts
      */
     maxAttempts: z
-      .number()
+      .int()
+      .nonnegative()
       .describe("The maximum number of reconnection attempts")
       .optional(),
     /**
@@ -290,6 +292,7 @@ export const streamableHttpReconnectSchema = z
      */
     delayMs: z
       .number()
+      .nonnegative()
       .describe("The delay in milliseconds between reconnection attempts")
       .optional(),
   })
@@ -666,12 +669,17 @@ const legacySse = httpOptionsSchema
   .strict();
 
 export const streamableHttpConnectionSchema = z
-  .union([z.discriminatedUnion("mode", [modernHttp, legacyHttp]), legacySse])
+  .discriminatedUnion("mode", [modernHttp, legacyHttp])
   .transform(({ type: _type, command: _command, ...options }) => options);
+
+export const sseConnectionSchema = legacySse.transform(
+  ({ type: _type, command: _command, ...options }) => options
+);
 
 export const connectionSchema = z.union([
   stdioConnectionSchema,
   streamableHttpConnectionSchema,
+  sseConnectionSchema,
 ]);
 
 /**
@@ -700,7 +708,7 @@ const clientOptionsSchema = z
      * Whether to prefix tool names with the server name. Prefixes are separated by double
      * underscores (example: `calculator_server_1__add`).
      *
-     * @default true
+     * @default false
      */
     prefixToolNameWithServerName: z
       .boolean()
@@ -711,7 +719,7 @@ const clientOptionsSchema = z
      * An additional prefix to add to the tool name Prefixes are separated by double underscores
      * (example: `mcp__add`).
      *
-     * @default "mcp"
+     * @default ""
      */
     additionalToolNamePrefix: z
       .string()
@@ -767,32 +775,33 @@ const exclusiveServerMap = z
   .never({ error: "Specify servers or legacy mcpServers, not both" })
   .optional();
 
-/** Resolved legacy-shaped configuration also provides isolated public snapshots. */
+/** @deprecated Use mcpAdapterConfigSchema for canonical configuration. */
 export const clientConfigSchema = clientOptionsSchema.extend({
   mcpServers: serverMapSchema,
 });
 
-const canonicalConfigSchema = clientOptionsSchema.extend({
+export const mcpAdapterConfigSchema = clientOptionsSchema.extend({
   servers: serverMapSchema,
-  mcpServers: exclusiveServerMap,
 });
+
+const canonicalConfigSchema = mcpAdapterConfigSchema
+  .extend({ mcpServers: exclusiveServerMap })
+  .transform(({ mcpServers: _legacy, ...options }) => options);
 
 const legacyConfigSchema = clientConfigSchema
   .extend({ servers: exclusiveServerMap })
-  .transform(({ servers: _canonical, ...options }) => options);
+  .transform(({ mcpServers, servers: _canonical, ...options }) => ({
+    ...options,
+    servers: mcpServers,
+  }));
 
 /** All supported external shapes produce the same resolved configuration. */
 export const adapterConfigSchema = z.union([
-  canonicalConfigSchema.transform(
-    ({ servers, mcpServers: _legacy, ...options }) => ({
-      ...options,
-      mcpServers: servers,
-    })
-  ),
+  canonicalConfigSchema,
   legacyConfigSchema,
-  serverMapSchema.transform((mcpServers) => ({
+  serverMapSchema.transform((servers) => ({
     ...clientOptionsSchema.parse({}),
-    mcpServers,
+    servers,
   })),
 ]);
 
@@ -820,18 +829,27 @@ export type ResolvedStreamableHTTPConnection = z.output<
   typeof streamableHttpConnectionSchema
 >;
 
+/** Legacy SSE transport options. Modern servers use Streamable HTTP. */
+export type SSEConnection = z.input<typeof sseConnectionSchema>;
+
+/** Legacy SSE transport options with defaults applied. */
+export type ResolvedSSEConnection = z.output<typeof sseConnectionSchema>;
+
 /**
  * Union type for all transport connection types
  */
 export type Connection = z.input<typeof connectionSchema>;
 
 /**
- * Type for {@link MultiServerMCPClient} configuration
+ * @deprecated Use MCPAdapterConfig with a servers map.
  */
 export type ClientConfig = z.input<typeof clientConfigSchema>;
 
 /** Canonical adapter options. */
 export type MCPAdapterConfig = z.input<typeof canonicalConfigSchema>;
+
+/** Canonical configuration snapshot with defaults applied. */
+export type ResolvedMCPAdapterConfig = z.output<typeof mcpAdapterConfigSchema>;
 
 /**
  * Type for {@link Connection} with default values applied.
@@ -839,7 +857,7 @@ export type MCPAdapterConfig = z.input<typeof canonicalConfigSchema>;
 export type ResolvedConnection = z.output<typeof connectionSchema>;
 
 /**
- * Type for {@link MultiServerMCPClient} configuration, with default values applied.
+ * @deprecated The adapter config getter now returns ResolvedMCPAdapterConfig.
  */
 export type ResolvedClientConfig = z.output<typeof clientConfigSchema>;
 

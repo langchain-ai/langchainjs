@@ -16,17 +16,19 @@ import {
   type ClientConfig,
   type MCPAdapterConfig,
   type Connection,
-  type ResolvedClientConfig,
+  type ResolvedMCPAdapterConfig,
   type ResolvedConnection,
   type ResolvedStdioConnection,
   type ResolvedStreamableHTTPConnection,
+  type ResolvedSSEConnection,
   type CustomHTTPTransportOptions,
   type MCPResource,
   type MCPResourceTemplate,
   type MCPResourceContent,
   type ConnectionErrorHandler,
-  clientConfigSchema,
+  mcpAdapterConfigSchema,
   adapterConfigSchema,
+  sseConnectionSchema,
   customHTTPTransportOptionsSchema,
   type LoadMcpToolsOptions,
   _resolveAndApplyOverrideHandlingOverrides,
@@ -81,7 +83,7 @@ export class MCPAdapter {
   /**
    * Resolved client config
    */
-  #config: ResolvedClientConfig;
+  #config: ResolvedMCPAdapterConfig;
 
   /**
    * Behavior when a server fails to connect
@@ -99,8 +101,8 @@ export class MCPAdapter {
    *
    * Client does not support config modifications.
    */
-  get config(): ResolvedClientConfig {
-    return clientConfigSchema.parse(this.#config);
+  get config(): ResolvedMCPAdapterConfig {
+    return mcpAdapterConfigSchema.parse(this.#config);
   }
 
   /**
@@ -117,7 +119,7 @@ export class MCPAdapter {
     const parsedServerConfig = adapterConfigSchema.parse(config);
 
     for (const [serverName, serverConfig] of Object.entries(
-      parsedServerConfig.mcpServers
+      parsedServerConfig.servers
     )) {
       const outputHandling = _resolveAndApplyOverrideHandlingOverrides(
         parsedServerConfig.outputHandling,
@@ -146,7 +148,7 @@ export class MCPAdapter {
     }
 
     this.#config = parsedServerConfig;
-    this.#mcpServers = parsedServerConfig.mcpServers;
+    this.#mcpServers = parsedServerConfig.servers;
     this.#clientConnections = new ConnectionManager();
     this.#onConnectionError = parsedServerConfig.onConnectionError;
   }
@@ -381,7 +383,7 @@ export class MCPAdapter {
     }
 
     const targetServers =
-      servers.length > 0 ? servers : Object.keys(this.#config.mcpServers);
+      servers.length > 0 ? servers : Object.keys(this.#config.servers);
 
     const result: Record<string, MCPResource[]> = {};
 
@@ -461,7 +463,7 @@ export class MCPAdapter {
     }
 
     const targetServers =
-      servers.length > 0 ? servers : Object.keys(this.#config.mcpServers);
+      servers.length > 0 ? servers : Object.keys(this.#config.servers);
 
     const result: Record<string, MCPResourceTemplate[]> = {};
 
@@ -595,7 +597,7 @@ export class MCPAdapter {
         return;
       }
 
-      if (connection.transport === "sse") {
+      if (updatedConnection.transport === "sse") {
         await this._initializeSSEConnection(serverName, updatedConnection);
       } else {
         await this._initializeStreamableHTTPConnection(
@@ -761,17 +763,24 @@ export class MCPAdapter {
         if (automaticSSEFallback && code != null && code >= 400 && code < 500) {
           // Streamable HTTP error is a 4xx, so fall back to SSE
           try {
-            await this._initializeSSEConnection(serverName, connection);
+            await this._initializeSSEConnection(
+              serverName,
+              sseConnectionSchema.parse({ ...connection, transport: "sse" })
+            );
           } catch (firstSSEError) {
             // try one more time, but modify the URL to end with `/sse`
             const sseUrl = this._toSSEConnectionURL(url);
 
             if (sseUrl !== url) {
               try {
-                await this._initializeSSEConnection(serverName, {
-                  ...connection,
-                  url: sseUrl,
-                });
+                await this._initializeSSEConnection(
+                  serverName,
+                  sseConnectionSchema.parse({
+                    ...connection,
+                    transport: "sse",
+                    url: sseUrl,
+                  })
+                );
               } catch (secondSSEError) {
                 // Provide specific error message for authentication failures
                 if (code === 401) {
@@ -843,7 +852,7 @@ export class MCPAdapter {
    */
   private async _initializeSSEConnection(
     serverName: string,
-    connection: ResolvedStreamableHTTPConnection // used for both SSE and streamable HTTP
+    connection: ResolvedSSEConnection
   ): Promise<void> {
     const { url, headers, reconnect, authProvider } = connection;
 
@@ -900,8 +909,8 @@ export class MCPAdapter {
   private _setupSSEReconnect(
     serverName: string,
     transport: SSEClientTransport | StreamableHTTPClientTransport,
-    connection: ResolvedStreamableHTTPConnection,
-    reconnect: NonNullable<ResolvedStreamableHTTPConnection["reconnect"]>
+    connection: ResolvedSSEConnection,
+    reconnect: NonNullable<ResolvedSSEConnection["reconnect"]>
   ): void {
     const originalOnClose = transport.onclose;
     // oxlint-disable-next-line @typescript-eslint/no-misused-promises

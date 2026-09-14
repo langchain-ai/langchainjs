@@ -1076,6 +1076,74 @@ describe("MultiServerMCPClient", () => {
 });
 
 describe("MCPAdapter configuration boundary", () => {
+  test.each([
+    () =>
+      new MCPAdapter({
+        servers: { remote: { url: "https://example.com/mcp" } },
+      }),
+    () =>
+      new MCPAdapter({
+        mcpServers: { remote: { url: "https://example.com/mcp" } },
+      }),
+    () => new MCPAdapter({ remote: { url: "https://example.com/mcp" } }),
+  ])(
+    "exposes the same canonical snapshot for every input shape",
+    (createAdapter) => {
+      const adapter = createAdapter();
+      expect(adapter.config.servers.remote.mode).toBe("modern");
+      expect(adapter.config).not.toHaveProperty("mcpServers");
+    }
+  );
+
+  test.each([
+    { command: "node", args: [], encoding: "utf8" },
+    { command: "node", args: [], restart: { maxAttempts: -1 } },
+    { command: "node", args: [], restart: { maxAttempts: 0.5 } },
+    { command: "node", args: [], restart: { delayMs: -1 } },
+    {
+      mode: "legacy",
+      url: "https://example.com/mcp",
+      reconnect: { maxAttempts: -1 },
+    },
+    {
+      mode: "legacy",
+      url: "https://example.com/mcp",
+      reconnect: { maxAttempts: 0.5 },
+    },
+    {
+      mode: "legacy",
+      url: "https://example.com/mcp",
+      reconnect: { delayMs: -1 },
+    },
+  ])(
+    "rejects unsupported transport settings before connecting: %j",
+    (server) => {
+      vi.clearAllMocks();
+      expect(() =>
+        adapterConfigSchema.parse({ servers: { test: server } })
+      ).toThrow(ZodError);
+      expect(Client.prototype.connect).not.toHaveBeenCalled();
+    }
+  );
+
+  test("allows zero retries and zero delay", () => {
+    const adapter = new MCPAdapter({
+      servers: {
+        local: {
+          command: "node",
+          args: [],
+          restart: { maxAttempts: 0, delayMs: 0 },
+        },
+        remote: {
+          mode: "legacy",
+          url: "https://example.com/mcp",
+          reconnect: { maxAttempts: 0, delayMs: 0 },
+        },
+      },
+    });
+    expect(Object.keys(adapter.config.servers)).toEqual(["local", "remote"]);
+  });
+
   test("shares the implementation and normalizes legacy transport names without connecting", () => {
     vi.clearAllMocks();
     expect(MCPAdapter).toBe(MultiServerMCPClient);
@@ -1086,11 +1154,11 @@ describe("MCPAdapter configuration boundary", () => {
       },
     });
 
-    expect(adapter.config.mcpServers.remote).toMatchObject({
+    expect(adapter.config.servers.remote).toMatchObject({
       mode: "legacy",
       transport: "sse",
     });
-    expect(adapter.config.mcpServers.remote).not.toHaveProperty("type");
+    expect(adapter.config.servers.remote).not.toHaveProperty("type");
     expect(Client.prototype.connect).not.toHaveBeenCalled();
   });
 
@@ -1103,11 +1171,8 @@ describe("MCPAdapter configuration boundary", () => {
       other: { url: "https://example.com/other" },
     });
 
-    expect(Object.keys(adapter.config.mcpServers)).toEqual([
-      "servers",
-      "other",
-    ]);
-    expect(adapter.config.mcpServers.servers).toMatchObject(connection);
+    expect(Object.keys(adapter.config.servers)).toEqual(["servers", "other"]);
+    expect(adapter.config.servers.servers).toMatchObject(connection);
   });
 
   test("keeps canonical server names independent of connection field names", () => {
@@ -1119,7 +1184,7 @@ describe("MCPAdapter configuration boundary", () => {
       },
     });
 
-    expect(Object.keys(adapter.config.mcpServers)).toEqual([
+    expect(Object.keys(adapter.config.servers)).toEqual([
       "url",
       "command",
       "servers",
@@ -1141,7 +1206,7 @@ describe("MCPAdapter configuration boundary", () => {
       text: undefined,
       audio: "artifact",
     });
-    expect(adapter.config.mcpServers.remote.outputHandling).toEqual({
+    expect(adapter.config.servers.remote.outputHandling).toEqual({
       image: undefined,
     });
   });
@@ -1202,25 +1267,25 @@ describe("MCPAdapter configuration boundary", () => {
     });
 
     const snapshot = adapter.config;
-    expect(snapshot.mcpServers.local.onMessage).toBe(onMessage);
+    expect(snapshot.servers.local.onMessage).toBe(onMessage);
     expect(snapshot.beforeToolCall).toBe(beforeToolCall);
-    const local = snapshot.mcpServers.local;
+    const local = snapshot.servers.local;
 
     if (local.transport !== "stdio") throw new Error("Expected stdio config");
     local.args.push("changed");
     local.env!.MODE = "changed";
     local.restart!.enabled = true;
-    const remote = snapshot.mcpServers.remote;
+    const remote = snapshot.servers.remote;
 
     if (remote.transport !== "http") throw new Error("Expected HTTP config");
     remote.headers!["X-Test"] = "changed";
     remote.reconnect!.enabled = true;
-    expect(adapter.config.mcpServers.local).toMatchObject({
+    expect(adapter.config.servers.local).toMatchObject({
       args: ["server.js"],
       env: { MODE: "test" },
       restart: { enabled: false },
     });
-    expect(adapter.config.mcpServers.remote).toMatchObject({
+    expect(adapter.config.servers.remote).toMatchObject({
       headers: { "X-Test": "original" },
       reconnect: { enabled: false },
     });
@@ -1253,7 +1318,7 @@ describe("protocol-specific server configuration", () => {
       { mcpServers: { remote: { url: "https://example.com/mcp" } } },
       { remote: { url: "https://example.com/mcp" } },
     ]) {
-      expect(adapterConfigSchema.parse(config).mcpServers.remote.mode).toBe(
+      expect(adapterConfigSchema.parse(config).servers.remote.mode).toBe(
         "modern"
       );
     }
@@ -1274,9 +1339,9 @@ describe("protocol-specific server configuration", () => {
       },
     });
 
-    expect(client.config.mcpServers.modern.onMessage).toBe(onMessage);
-    expect(client.config.mcpServers.legacy.onMessage).toBeUndefined();
-    expect(client.config.mcpServers.legacy.onInitialized).toBe(onInitialized);
+    expect(client.config.servers.modern.onMessage).toBe(onMessage);
+    expect(client.config.servers.legacy.onMessage).toBeUndefined();
+    expect(client.config.servers.legacy.onInitialized).toBe(onInitialized);
   });
 
   test.each([
