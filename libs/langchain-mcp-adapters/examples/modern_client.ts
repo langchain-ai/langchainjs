@@ -6,7 +6,7 @@ const servers: MCPAdapterConfig["servers"] = {
 
 // Start calculator_server_shttp_sse.ts too, then pass --mixed.
 if (process.argv.includes("--mixed")) {
-  servers.legacy = { mode: "legacy", url: "http://localhost:3000/mcp" };
+  servers.legacy = { url: "http://localhost:3000/mcp" };
 }
 
 const adapter = new MCPAdapter({ servers, prefixToolNameWithServerName: true });

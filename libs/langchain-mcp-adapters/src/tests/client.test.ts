@@ -3015,10 +3015,17 @@ describe("server tool schemas", () => {
   afterEach(() => vi.restoreAllMocks());
 });
 
-describe("explicit protocol modes with live HTTP servers", () => {
-  it("connects a default modern server and an explicit legacy server in one adapter", async () => {
+describe("protocol negotiation with live servers", () => {
+  it("detects modern HTTP, legacy HTTP and SDK 1 stdio in one adapter", async () => {
     const legacyServers = new TestMCPServers();
     const { baseUrl } = await legacyServers.createHTTPServer("legacy-mode");
+    const { baseUrl: sseUrl } = await legacyServers.createHTTPServer(
+      "sse-mode",
+      {
+        disableStreamableHttp: true,
+        supportSSEFallback: true,
+      }
+    );
 
     const handler = createMcpHandler(
       () => {
@@ -3045,12 +3052,15 @@ describe("explicit protocol modes with live HTTP servers", () => {
     const adapter = new MCPAdapter({
       servers: {
         modern: { url: `http://127.0.0.1:${address.port}` },
-        legacy: { mode: "legacy", url: `${baseUrl}/mcp` },
+        legacy: { url: `${baseUrl}/mcp` },
+        stdio: legacyServers.createStdioServer("sdk1-auto", 1),
+        sse: { transport: "sse", url: `${sseUrl}/sse` },
+        fallback: { url: `${sseUrl}/mcp` },
       },
     });
 
     const mismatch = new MCPAdapter({
-      servers: { wrong: { url: `${baseUrl}/mcp` } },
+      servers: { wrong: { mode: "modern", url: `${baseUrl}/mcp` } },
     });
 
     try {
@@ -3067,6 +3077,27 @@ describe("explicit protocol modes with live HTTP servers", () => {
       expect((await adapter.getClient("legacy"))?.getProtocolEra()).toBe(
         "legacy"
       );
+      const stdio = (await adapter.listToolsets()).stdio.find(
+        (tool) => tool.name === "legacy_tool"
+      );
+      if (!stdio) {
+        throw new Error("SDK 1 tool was not discovered");
+      }
+      expect(await stdio.invoke({ input: "automatic" })).toBe(
+        "sdk1-auto:automatic"
+      );
+      expect((await adapter.getClient("stdio"))?.getProtocolEra()).toBe(
+        "legacy"
+      );
+      for (const name of ["legacy", "sse", "fallback"]) {
+        const [tool] = await adapter.listTools(name);
+        expect(await tool.invoke({ input: "automatic" })).toContain(
+          "automatic"
+        );
+        expect((await adapter.getClient(name))?.getProtocolEra()).toBe(
+          "legacy"
+        );
+      }
       await expect(mismatch.listTools()).rejects.toThrow(/modern mode/);
     } finally {
       await Promise.all([adapter.close(), mismatch.close()]);

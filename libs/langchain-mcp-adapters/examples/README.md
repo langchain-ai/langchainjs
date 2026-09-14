@@ -27,7 +27,8 @@ connection. The server uses modern MCP with a fresh server instance per request.
 
 To try mixed modes, also run `pnpm exec tsx calculator_server_shttp_sse.ts` and then
 `pnpm exec tsx modern_client.ts --mixed`. The client invokes modern `echo` and legacy
-`add`, printing `Hello MCP` and `5`. Stop servers with Ctrl-C.
+`add`, printing `Hello MCP` and `5`. Neither server needs a `mode`; the SDK detects
+their protocols. Stop servers with Ctrl-C.
 
 ## Modern elicitation with LangGraph
 
@@ -67,7 +68,7 @@ with the legacy filesystem server.
 ## Legacy and agent examples
 
 The calculator server uses legacy sessions, even though it imports SDK 2.
-Its clients must explicitly set `mode: "legacy"`.
+Clients can negotiate automatically, or set `mode: "legacy"` to skip probing.
 
 ### Filesystem LangGraph Example (`filesystem_langgraph_example.ts`)
 

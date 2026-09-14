@@ -643,7 +643,8 @@ const serverNotifications = notifications.omit({ onInitialized: true }).extend({
 
 const modernPolicy = z
   .object({
-    mode: z.literal("modern").optional().default("modern"),
+    /** Negotiate automatically unless modern MCP is explicitly required. */
+    mode: z.enum(["auto", "modern"]).optional().default("auto"),
     /** @deprecated Protocol logging is deprecated; prefer OpenTelemetry or stderr. */
     logLevel: loggingLevelSchema.optional(),
     maxElicitationRounds: z.int().positive().default(32),
@@ -742,9 +743,15 @@ export const streamableHttpConnectionSchema = z
   .discriminatedUnion("mode", [modernHttp, legacyHttp])
   .transform(({ type: _type, command: _command, ...options }) => options);
 
-export const sseConnectionSchema = legacySse.transform(
-  ({ type: _type, command: _command, ...options }) => options
-);
+export const sseConnectionSchema = z
+  .discriminatedUnion("mode", [
+    legacySse,
+    legacySse.extend(modernPolicy.shape).extend({
+      mode: z.literal("auto").optional().default("auto"),
+      reconnect: modernHttp.shape.reconnect,
+    }),
+  ])
+  .transform(({ type: _type, command: _command, ...options }) => options);
 
 export const connectionSchema = z.union([
   stdioConnectionSchema,

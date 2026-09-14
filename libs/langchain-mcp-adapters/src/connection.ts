@@ -69,7 +69,7 @@ const transportTypes = ["http", "sse", "stdio"] as const;
 function protocolClientOptions(
   options: ResolvedConnection
 ): ConstructorParameters<typeof MCPClient>[1] {
-  if (options.mode === "legacy") {
+  if (options.mode === "legacy" || options.transport === "sse") {
     if (options.onElicitation) {
       return {
         versionNegotiation: { mode: "legacy" },
@@ -80,12 +80,11 @@ function protocolClientOptions(
     return { versionNegotiation: { mode: "legacy" } };
   }
 
-  // The SDK defaults to legacy, and "auto" permits legacy fallback.
-  // Pin modern connections to preserve the configured protocol mode.
   return {
-    versionNegotiation: { mode: { pin: "2026-07-28" } },
+    versionNegotiation: {
+      mode: options.mode === "modern" ? { pin: "2026-07-28" } : "auto",
+    },
     inputRequired: { maxRounds: options.maxElicitationRounds },
-    capabilities: { elicitation: { form: {}, url: {} } },
   };
 }
 
@@ -199,9 +198,9 @@ export class ConnectionManager {
     const clientOptions = protocolClientOptions(options);
 
     const mcpClient =
-      options.mode === "modern"
-        ? new InterruptMCPClient(identity, clientOptions)
-        : new MCPClient(identity, clientOptions);
+      options.mode === "legacy"
+        ? new MCPClient(identity, clientOptions)
+        : new InterruptMCPClient(identity, clientOptions);
 
     if (options.mode === "legacy")
       configureElicitation(mcpClient, serverName, options.onElicitation);
@@ -592,7 +591,7 @@ export class ConnectionManager {
       ...(headers ? { requestInit: { headers } } : {}),
     };
 
-    if (args.mode === "modern") {
+    if (args.mode !== "legacy") {
       options.reconnectionOptions = {
         maxRetries: 0,
         initialReconnectionDelay: 1000,

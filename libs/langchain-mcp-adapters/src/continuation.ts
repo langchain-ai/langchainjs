@@ -3,7 +3,10 @@ import {
   type CallToolRequest,
   type ElicitResult,
 } from "@modelcontextprotocol/client";
-import { CallToolRequestSchema } from "@modelcontextprotocol/core";
+import {
+  CallToolRequestSchema,
+  ClientCapabilitiesSchema,
+} from "@modelcontextprotocol/core";
 import { ns, LangChainError } from "@langchain/core/errors";
 import { interrupt, task } from "@langchain/langgraph";
 import { z } from "zod";
@@ -30,6 +33,26 @@ export class PendingMCPInput extends ns
 /** Keep callTool's header handling and output validation around each suspended response. */
 export class InterruptMCPClient extends Client {
   readonly maxElicitationRounds: number;
+
+  /** Advertise in-band input on modern requests without enabling legacy callbacks. */
+  protected override _outboundMetaEnvelope() {
+    const envelope = super._outboundMetaEnvelope();
+    if (this.getProtocolEra() !== "modern") {
+      return envelope;
+    }
+    const key = "io.modelcontextprotocol/clientCapabilities";
+    const capabilities = ClientCapabilitiesSchema.parse(envelope?.[key] ?? {});
+    return {
+      ...envelope,
+      [key]: {
+        ...capabilities,
+        elicitation: {
+          form: capabilities.elicitation?.form ?? {},
+          url: capabilities.elicitation?.url ?? {},
+        },
+      },
+    };
+  }
 
   constructor(...[info, options]: ConstructorParameters<typeof Client>) {
     super(info, options);

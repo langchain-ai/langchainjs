@@ -12,8 +12,9 @@ When porting an application, check which integration it uses.
 - TypeScript uses `MCPAdapter({ servers })`, `listTools()` and `close()`.
   Python's `MCPAdapter` accepts FastMCP targets or clients, exposes `list_tools()`,
   and supports `async with`. The separate Python client uses `get_tools()`.
-- TypeScript selects protocol revision `2026-07-28` by default and requires
-  `mode: "legacy"` for earlier servers. Each server in a mixed map keeps its mode.
+- TypeScript delegates automatic protocol negotiation to the MCP SDK. Explicit
+  `mode: "legacy"` enables legacy callbacks and skips probing; `mode: "modern"`
+  requires revision `2026-07-28`. Each server negotiates independently.
   Python's `MCPAdapter` delegates protocol selection to FastMCP.
 - Both `MCPAdapter` implementations use LangGraph interrupts for modern
   elicitation. TypeScript checkpoints completed request rounds and resumes with
@@ -45,8 +46,9 @@ npm install @langchain/mcp-adapters @langchain/langgraph @langchain/core langcha
 Start the [local modern server](../examples/modern_server.ts) and configure
 `OPENAI_API_KEY` before running this agent example.
 
-When constructing the SDK client directly, select the modern protocol explicitly;
-`MCPAdapter` selects it by default.
+When constructing the SDK client directly, configure protocol negotiation
+explicitly. `MCPAdapter` uses automatic negotiation by default; this example pins
+modern MCP because it connects to the local modern server.
 
 ```ts
 import {
@@ -708,8 +710,9 @@ Schema; URL answers cannot contain form content. Invalid answers produce Zod
 validation errors. See the [legacy elicitation example](../examples/legacy_elicitation.ts).
 
 Legacy callbacks depend on the active request and cannot survive a process
-restart. Do not invoke LangGraph `interrupt()` inside them. Modern server
-definitions reject `onElicitation`; this callback API is legacy-only.
+restart. Do not invoke LangGraph `interrupt()` inside them. Modern and automatic
+configurations reject `onElicitation`; this callback API requires
+explicit `mode: "legacy"`.
 
 For modern servers, `logLevel` controls request logs and `resourceSubscriptions`
 selects resource URIs to watch. Configure `onResourcesUpdated` on the same server

@@ -81,6 +81,9 @@ it.each([
           outputSchema: z.object({ approved: z.boolean() }),
         },
         async ({ label }, context) => {
+          expect(server.server.getClientCapabilities()).toMatchObject({
+            elicitation: { form: {}, url: {} },
+          });
           calls.push(label);
 
           if (

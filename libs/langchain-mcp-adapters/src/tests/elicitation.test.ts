@@ -498,7 +498,7 @@ it("rejects modern reconnect settings and invalid resource subscriptions", () =>
   ).toBe("legacy");
 });
 
-it("routes legacy resource subscriptions through resources/subscribe", async () => {
+it("auto-detects legacy subscriptions without advertising callback elicitation", async () => {
   const subscribed: string[] = [];
   const updated = vi.fn();
 
@@ -535,9 +535,7 @@ it("routes legacy resource subscriptions through resources/subscribe", async () 
   const adapter = new MCPAdapter({
     servers: {
       resources: {
-        mode: "legacy",
         url: `http://127.0.0.1:${port}/mcp`,
-        automaticSSEFallback: false,
         resourceSubscriptions: ["test://watched"],
         onResourcesUpdated: updated,
       },
@@ -547,6 +545,7 @@ it("routes legacy resource subscriptions through resources/subscribe", async () 
   try {
     await adapter.listResources();
     expect(subscribed).toEqual(["test://watched"]);
+    expect(server.getClientCapabilities()).not.toHaveProperty("elicitation");
   } finally {
     await adapter.close();
     await server.close();

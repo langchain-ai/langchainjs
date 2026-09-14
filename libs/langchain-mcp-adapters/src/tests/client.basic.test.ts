@@ -136,13 +136,15 @@ describe("MultiServerMCPClient", () => {
       );
       expect(Client.prototype.connect).not.toHaveBeenCalled();
     });
-    test("does not fall back to SSE for a default modern connection", async () => {
+    test("does not fall back to SSE for an explicit modern connection", async () => {
       vi.mocked(Client.prototype.connect).mockRejectedValueOnce({
         status: 404,
       });
 
       const client = new MCPAdapter({
-        servers: { remote: { url: "https://example.com/mcp" } },
+        servers: {
+          remote: { mode: "modern", url: "https://example.com/mcp" },
+        },
       });
 
       try {
@@ -152,6 +154,22 @@ describe("MultiServerMCPClient", () => {
         await client.close();
       }
     });
+
+    test.each([401, 403, 503])(
+      "does not retry automatic negotiation over SSE after HTTP %s",
+      async (status) => {
+        vi.mocked(Client.prototype.connect).mockRejectedValueOnce({ status });
+        const adapter = new MCPAdapter({
+          servers: { remote: { url: "https://example.com/mcp" } },
+        });
+        try {
+          await expect(adapter.listTools()).rejects.toThrow();
+          expect(SSEClientTransport).not.toHaveBeenCalled();
+        } finally {
+          await adapter.close();
+        }
+      }
+    );
 
     test.each([
       [{ status: 404, code: "HTTP_ERROR" }, true],
@@ -1171,7 +1189,7 @@ describe("MCPAdapter configuration boundary", () => {
     "exposes the same canonical snapshot for every input shape",
     (createAdapter) => {
       const adapter = createAdapter();
-      expect(adapter.config.servers.remote.mode).toBe("modern");
+      expect(adapter.config.servers.remote.mode).toBe("auto");
       expect(adapter.config).not.toHaveProperty("mcpServers");
     }
   );
@@ -1394,14 +1412,14 @@ describe("MCPAdapter configuration boundary", () => {
 });
 
 describe("protocol-specific server configuration", () => {
-  test("defaults each connection to modern without changing compatibility aliases", () => {
+  test("defaults each connection to auto without changing compatibility aliases", () => {
     for (const config of [
       { servers: { remote: { url: "https://example.com/mcp" } } },
       { mcpServers: { remote: { url: "https://example.com/mcp" } } },
       { remote: { url: "https://example.com/mcp" } },
     ]) {
       expect(adapterConfigSchema.parse(config).servers.remote.mode).toBe(
-        "modern"
+        "auto"
       );
     }
   });

@@ -805,7 +805,8 @@ export class MCPAdapter {
     const { url, transport: transportType } = connection;
 
     const automaticSSEFallback =
-      connection.mode === "legacy" && connection.automaticSSEFallback;
+      connection.mode === "auto" ||
+      (connection.mode === "legacy" && connection.automaticSSEFallback);
 
     debugLog(
       `DEBUG: Creating Streamable HTTP transport for server "${serverName}" with URL: ${url}`
@@ -820,7 +821,13 @@ export class MCPAdapter {
         );
       } catch (error) {
         const code = getHttpErrorCode(error);
-        if (automaticSSEFallback && code != null && code >= 400 && code < 500) {
+        if (
+          automaticSSEFallback &&
+          code != null &&
+          (connection.mode === "auto"
+            ? code === 404 || code === 405
+            : code >= 400 && code < 500)
+        ) {
           // Streamable HTTP error is a 4xx, so fall back to SSE
           try {
             await this._initializeSSEConnection(
