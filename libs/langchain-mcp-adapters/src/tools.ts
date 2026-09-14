@@ -4,11 +4,7 @@ import {
   type MCPContinuation,
 } from "./continuation.js";
 
-import {
-  ToolException,
-  isToolException,
-  parseZodErrorDetails,
-} from "./utils/errors.js";
+import { ToolException, isToolException } from "./utils/errors.js";
 
 import { z } from "zod";
 import { fromJsonSchema } from "@modelcontextprotocol/client";
@@ -655,12 +651,6 @@ async function _callTool(
       config?.signal?.aborted
     )
       throw error;
-
-    const details = parseZodErrorDetails(error);
-
-    if (details) {
-      throw new ToolException(z.prettifyError(details), error);
-    }
 
     debugLog(`Error calling tool ${toolName}: ${String(error)}`);
     if (isToolException(error)) {

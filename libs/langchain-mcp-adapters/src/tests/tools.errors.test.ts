@@ -6,7 +6,7 @@ import { MCPClientError } from "../client.js";
 import { getHttpErrorCode } from "../utils/errors.js";
 import { ToolException, isToolException, loadMcpTools } from "../tools.js";
 
-describe("ToolException error formatting", () => {
+describe("ToolException", () => {
   test("uses core error branding instead of accepting name-only lookalikes", () => {
     const error = new ToolException("Failure", new Error("Cause"));
     expect(ToolException.isInstance(error)).toBe(true);
@@ -75,6 +75,18 @@ describe("tool invocation errors", () => {
     await expect(tool.invoke({})).rejects.toMatchObject({
       name: "ToolException",
       cause: failure,
+    });
+
+    const validation = z
+      .object({ count: z.number() })
+      .safeParse({ count: "one" });
+
+    if (validation.success) throw new Error("Expected invalid input");
+
+    vi.mocked(client.callTool).mockRejectedValueOnce(validation.error);
+    await expect(tool.invoke({})).rejects.toMatchObject({
+      message: `Error calling tool echo: ${String(validation.error)}`,
+      cause: validation.error,
     });
   });
 

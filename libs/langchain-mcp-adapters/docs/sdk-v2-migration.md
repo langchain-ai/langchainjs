@@ -232,7 +232,8 @@ errors from duplicate adapter modules and reject name-only lookalikes.
 `isToolException()` remains available. Both error types preserve original
 causes; tool failures retain the server's error response in `error.result`.
 SDK argument-validation issues become Zod4 errors with structured issues in
-`error.cause`. See the [error-handling example](client-reference.md#error-handling).
+`error.cause`. Tool-error messages use the original error text without custom
+Zod formatting. See the [error-handling example](client-reference.md#error-handling).
 
 ## Separate modern and legacy server options
 
