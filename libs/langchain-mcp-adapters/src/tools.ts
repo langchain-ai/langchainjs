@@ -18,9 +18,8 @@ import { DynamicStructuredTool } from "@langchain/core/tools";
 import type { ContentBlock } from "@langchain/core/messages";
 import { RunnableConfig } from "@langchain/core/runnables";
 import type { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
-import { ToolMessage } from "@langchain/core/messages";
+import type { ToolMessage } from "@langchain/core/messages";
 import {
-  isCommand,
   isGraphInterrupt,
   getCurrentTaskInput,
   type Command,
@@ -494,25 +493,11 @@ async function _callTool({
       return [content, artifacts];
     }
 
-    if (typeof interceptedResult.result === "string") {
-      return [interceptedResult.result, []];
-    }
-
     if (Array.isArray(interceptedResult.result)) {
       return interceptedResult.result;
     }
 
-    if (ToolMessage.isInstance(interceptedResult.result)) {
-      return [interceptedResult.result, []];
-    }
-
-    if (isCommand(interceptedResult.result)) {
-      return [interceptedResult.result, []];
-    }
-
-    throw new Error(
-      `Unexpected result value type from afterToolCall: expected either a Command, a ToolMessage or a tuple of ContentBlock and Artifact, but got ${interceptedResult.result}`
-    );
+    return [interceptedResult.result, []];
   } catch (error) {
     if (isGraphInterrupt(error) || config?.signal?.aborted) throw error;
 
