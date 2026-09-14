@@ -554,6 +554,148 @@ describe("ChatModelStream", () => {
       ]);
     });
 
+    test("replaces a blank text block with a tool call delta", async () => {
+      const stream = new ChatModelStream(
+        iterEvents([
+          {
+            event: "content-block-start",
+            index: 0,
+            content: { type: "text", text: "\n\n" },
+          },
+          {
+            event: "content-block-delta",
+            index: 0,
+            delta: {
+              type: "block-delta",
+              fields: {
+                type: "tool_call_chunk",
+                id: "call_1",
+                name: "ls",
+                args: '{"path":"/"}',
+              },
+            },
+          },
+          { event: "message-finish", reason: "tool_use" },
+        ])
+      );
+
+      const message = await stream.output;
+
+      expect(message.tool_calls).toEqual([
+        {
+          type: "tool_call",
+          id: "call_1",
+          name: "ls",
+          args: { path: "/" },
+        },
+      ]);
+      expect(message.content).toEqual([
+        {
+          type: "tool_call",
+          id: "call_1",
+          name: "ls",
+          args: { path: "/" },
+        },
+      ]);
+    });
+
+    test("normalizes a finalized tool call mislabeled as blank text", async () => {
+      const stream = new ChatModelStream(
+        iterEvents([
+          {
+            event: "content-block-start",
+            index: 0,
+            content: { type: "text", text: "\n\n" },
+          },
+          {
+            event: "content-block-finish",
+            index: 0,
+            content: {
+              type: "text",
+              text: "\n\n",
+              id: "call_1",
+              name: "ls",
+              args: '{"path":"/"}',
+            } as unknown as ContentBlock,
+          },
+          { event: "message-finish", reason: "tool_use" },
+        ])
+      );
+
+      const [message, toolCalls] = await Promise.all([
+        stream.output,
+        stream.toolCalls,
+      ]);
+
+      expect(message.tool_calls).toEqual([
+        {
+          type: "tool_call",
+          id: "call_1",
+          name: "ls",
+          args: { path: "/" },
+        },
+      ]);
+      expect(toolCalls).toEqual([
+        {
+          type: "tool_call",
+          id: "call_1",
+          name: "ls",
+          args: { path: "/" },
+        },
+      ]);
+    });
+
+    test("preserves tool-call identity when finish content is empty", async () => {
+      const stream = new ChatModelStream(
+        iterEvents([
+          {
+            event: "content-block-start",
+            index: 0,
+            content: {
+              type: "tool_call_chunk",
+              id: "call_abb153f2f925412ca16f7b64",
+              name: "read_file",
+              args: "",
+            },
+          },
+          {
+            event: "content-block-delta",
+            index: 0,
+            delta: {
+              type: "block-delta",
+              fields: {
+                type: "tool_call_chunk",
+                id: "",
+                name: "",
+                args: '{"path":"/tmp/notes.md"}',
+              },
+            },
+          },
+          {
+            event: "content-block-finish",
+            index: 0,
+            content: {
+              type: "tool_call",
+              id: "",
+              name: "",
+            } as unknown as ContentBlock,
+          },
+          { event: "message-finish", reason: "stop" },
+        ])
+      );
+
+      const message = await stream.output;
+
+      expect(message.tool_calls).toEqual([
+        {
+          type: "tool_call",
+          id: "call_abb153f2f925412ca16f7b64",
+          name: "read_file",
+          args: { path: "/tmp/notes.md" },
+        },
+      ]);
+    });
+
     test("assembles multimodal data chunks", async () => {
       const stream = new ChatModelStream(
         iterEvents([
