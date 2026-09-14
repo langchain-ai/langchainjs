@@ -1415,6 +1415,7 @@ describe("audio content block conversion", () => {
 describe("applicationInferenceProfile parameter", () => {
   const baseConstructorArgs = {
     region: "us-east-1",
+    maxRetries: 0,
     credentials: {
       secretAccessKey: "test-secret-key",
       accessKeyId: "test-access-key",
