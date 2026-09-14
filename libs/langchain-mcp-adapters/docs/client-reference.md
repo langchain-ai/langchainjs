@@ -20,6 +20,9 @@ npm install @langchain/mcp-adapters @langchain/langgraph @langchain/core langcha
 Start the [local modern server](../examples/modern_server.ts) and configure
 `OPENAI_API_KEY` before running this agent example.
 
+When constructing the SDK client directly, select the modern protocol explicitly;
+`MCPAdapter` selects it by default.
+
 ```ts
 import {
   Client,
@@ -38,10 +41,17 @@ const transport = new StreamableHTTPClientTransport(
 );
 
 // Initialize the client
-const client = new Client({
-  name: "example-client",
-  version: "1.0.0",
-});
+const client = new Client(
+  {
+    name: "example-client",
+    version: "1.0.0",
+  },
+  {
+    versionNegotiation: {
+      mode: { pin: "2026-07-28" },
+    },
+  }
+);
 
 try {
   // Connect to the transport
