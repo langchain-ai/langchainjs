@@ -519,6 +519,7 @@ async function _callTool({
     );
   } catch (error) {
     if (isGraphInterrupt(error) || config?.signal?.aborted) throw error;
+
     const details = parseZodErrorDetails(error);
 
     if (details) {
