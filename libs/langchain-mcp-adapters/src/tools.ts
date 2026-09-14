@@ -655,6 +655,7 @@ async function _callTool(
       config?.signal?.aborted
     )
       throw error;
+
     const details = parseZodErrorDetails(error);
 
     if (details) {
