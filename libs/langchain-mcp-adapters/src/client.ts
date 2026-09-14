@@ -250,7 +250,6 @@ export class MCPAdapter {
    * ```ts
    * // Get tools from specific servers with custom connection options
    * const tools = await client.listTools(["server1", "server2"], {
-   *   authProvider: new OAuthClientProvider(),
    *   headers: { "X-Custom-Header": "value" },
    * });
    * ```
