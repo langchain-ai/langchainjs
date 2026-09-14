@@ -670,7 +670,13 @@ export const convertStandardContentMessageToCompletionsMessage: Converter<
       completionParam.tool_calls = message.tool_calls.map(
         convertLangChainToolCallToOpenAI
       ) as OpenAIClient.Chat.Completions.ChatCompletionMessageToolCall[];
-    } else if (message.additional_kwargs.tool_calls != null) {
+    } else if (
+      message.additional_kwargs.tool_calls != null &&
+      !(
+        AIMessage.isInstance(message) &&
+        (message.invalid_tool_calls?.length ?? 0) > 0
+      )
+    ) {
       completionParam.tool_calls = message.additional_kwargs
         .tool_calls as OpenAIClient.Chat.Completions.ChatCompletionMessageToolCall[];
     }
@@ -861,7 +867,13 @@ export const convertMessagesToCompletionsMessageParams: Converter<
         convertLangChainToolCallToOpenAI
       );
     } else {
-      if (message.additional_kwargs.tool_calls != null) {
+      if (
+        message.additional_kwargs.tool_calls != null &&
+        !(
+          AIMessage.isInstance(message) &&
+          (message.invalid_tool_calls?.length ?? 0) > 0
+        )
+      ) {
         completionParam.tool_calls = message.additional_kwargs.tool_calls;
       }
       if (ToolMessage.isInstance(message) && message.tool_call_id != null) {
