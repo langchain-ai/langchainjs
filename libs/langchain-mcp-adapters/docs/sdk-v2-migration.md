@@ -289,15 +289,22 @@ authenticated account when reconstructing the adapter. The application owns
 checkpoint storage and thread access. `MemorySaver` is an in-process example;
 process recovery needs a persistent checkpointer. No exactly-once guarantee is
 made for work performed before a checkpoint is saved. See the
-[complete interrupt example](../README.md#durable-langgraph-elicitation).
+[complete interrupt example](../examples/modern_elicitation.ts).
 
 ## Completing OAuth authorization
 
+`authProvider` accepts SDK `AuthProvider` and `OAuthClientProvider`, both exported
+by the adapter. Token brokers provide `token()` and optional `onUnauthorized()`;
+they manage authorization externally. `finishAuth()` requires an
+`OAuthClientProvider` and rejects token-only providers.
+
 Use `await adapter.finishAuth(serverName, callbackParams, expectedState)` with
 the full redirect query parameters, including `iss` when present. The configured
-provider must persist discovery state and the PKCE verifier. The adapter checks
-state, delegates callback completion to the SDK, and clears the old connection
-and catalog after success; call `listTools()` again to reconnect.
+provider must persist discovery state and the Proof Key for Code Exchange (PKCE)
+verifier. Restore that provider from the saved authorization attempt if the
+callback arrives on another worker. The adapter checks state, delegates callback
+completion to the SDK, and clears the connection and catalog after success;
+call `listTools()` again to reconnect.
 
 The application owns the redirect endpoint, one-time state consumption, user
 binding, and credential storage. Keep each provider bound to one account and
@@ -306,11 +313,10 @@ The SDK can reuse saved discovery without fetching new authorization-server meta
 Expire that cache when starting a new authorization attempt if rediscovery is needed;
 retain the recorded discovery and PKCE state for an in-flight callback. After fresh
 discovery selects a different issuer, the SDK rejects the old issuer's registration
-and registers with the new issuer. Local fixtures cover refresh, DCR/CIMD,
-callback validation, and scope step-up; production identity-provider
-interoperability is not implied. URL elicitation is separate from OAuth. See
-[OAuth responsibilities](../README.md#oauth-responsibilities) and
-[callback completion](../README.md#complete-an-oauth-callback).
+and registers with the new issuer. URL elicitation is separate from connection
+OAuth. See the [OAuth recipe](../examples/oauth.ts) and
+[authentication reference](client-reference.md#oauth-20-authentication) for
+provider responsibilities and registration choices.
 
 ## Resource subscriptions and reconnection
 
@@ -325,14 +331,15 @@ retry only when application/server semantics make that safe. Modern subscription
 streams are not automatically reopened; close and reconnect explicitly.
 
 Protocol logging and SSE remain deprecated compatibility features. Prefer
-OpenTelemetry/stderr and Streamable HTTP. DCR is also deprecated, but keep SDK
-fallback for authorization servers without CIMD support; it is not a legacy-MCP-only
-setting. For static pre-registration, supply issuer-bound client information through
+OpenTelemetry/stderr and Streamable HTTP. Dynamic Client Registration (DCR) is
+also deprecated, but the SDK retains it for authorization servers without
+Client ID Metadata Documents (CIMD) support. Registration is independent of MCP
+mode. For static pre-registration, supply issuer-bound client information through
 the SDK OAuth provider. For DCR, the SDK derives `application_type` from redirect URIs;
 set `clientMetadata.application_type` when the application's redirect setup needs an
 explicit choice.
 
-Roots/sampling and experimental task extensions are not new adapter APIs. Sampling
+Roots, sampling and experimental tasks have no adapter facade. Sampling
 `includeContext: "thisServer"` and `"allServers"` are deprecated; omit the field or
 use `"none"` in low-level integrations. The LangGraph interrupt bridge handles
 `tools/call` elicitation. Prompts, resource operations, and other input-request
@@ -344,21 +351,8 @@ Protocol payloads use public Zod schemas from `@modelcontextprotocol/core` 2.x.
 The adapter derives the modern URL request from `ElicitRequestURLParamsSchema`
 by selecting `mode`, `message` and `url`, then extends the SDK request envelope.
 Legacy URL requests retain the native `elicitationId` requirement. There is no
-private SDK import or invented identifier. Resume answers select the native
-action/content fields and strip envelope keys that could change routing.
+adapter-generated identifier. Resume answers select the native action/content
+fields and strip envelope keys that could change routing.
 
 Adapter configuration and LangGraph interrupt envelopes remain adapter-owned
 schemas. Dynamic server tool/form schemas use the SDK JSON Schema validator.
-
-## Token brokers and OAuth callback reconstruction
-
-`authProvider` accepts SDK `AuthProvider` and `OAuthClientProvider`, both exported
-by the adapter. Token brokers provide `token()` and optional `onUnauthorized()`;
-they own authorization externally. Full OAuth providers delegate protocol work
-to the SDK and persist discovery, PKCE and issuer-bound credentials.
-
-An application can reconstruct the adapter/provider before calling `finishAuth`,
-using the saved authorization attempt and the full redirect parameters.
-`finishAuth` rejects token-only providers. The application remains responsible
-for user binding, one-time state consumption and callback delivery. See the
-[OAuth recipe](../examples/oauth.ts) and [client reference](client-reference.md).
