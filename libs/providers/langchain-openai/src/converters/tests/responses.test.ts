@@ -683,6 +683,76 @@ describe("convertResponsesDeltaToChatGenerationChunk", () => {
       ]);
     });
 
+    it("v0: additional_kwargs.reasoning stays a single, last-write-wins object with two reasoning items (accepted limitation)", () => {
+      // v0 stays a single object forever (array would break existing
+      // readers/merges); multi-item support is v1's job, tested below.
+      const events = [
+        {
+          type: "response.output_item.added",
+          output_index: 0,
+          item: {
+            type: "reasoning",
+            id: "rs_first",
+            summary: [],
+          },
+        },
+        {
+          type: "response.output_item.done",
+          output_index: 0,
+          item: {
+            type: "reasoning",
+            id: "rs_first",
+            summary: [],
+            encrypted_content: "canonical_payload_1",
+          },
+        },
+        {
+          type: "response.output_item.added",
+          output_index: 1,
+          item: {
+            type: "reasoning",
+            id: "rs_second",
+            summary: [],
+          },
+        },
+        {
+          type: "response.output_item.done",
+          output_index: 1,
+          item: {
+            type: "reasoning",
+            id: "rs_second",
+            summary: [],
+            encrypted_content: "canonical_payload_2",
+          },
+        },
+      ];
+
+      const chunks = events.map((event) => {
+        const chunk = convertResponsesDeltaToChatGenerationChunk(event as any);
+        expect(chunk).not.toBeNull();
+        return chunk!.message as AIMessageChunk;
+      });
+
+      const streamedMessage = chunks.reduce((acc, chunk) => acc.concat(chunk));
+
+      const replayInput = convertMessagesToResponsesInput({
+        messages: [streamedMessage],
+        zdrEnabled: true,
+        model: "o3",
+      });
+
+      // The known existing gap: wrong id, concatenated ciphertext.
+      // Fixed in V1
+      expect(replayInput).toEqual([
+        {
+          id: "rs_second",
+          type: "reasoning",
+          summary: [],
+          encrypted_content: "canonical_payload_1canonical_payload_2",
+        },
+      ]);
+    });
+
     it("should elevate reasoning to content on response.output_item.added with reasoning", () => {
       const event = {
         type: "response.output_item.added",
@@ -1637,6 +1707,68 @@ describe("convertMessagesToResponsesInput", () => {
       expect(result).toEqual(output);
     });
 
+    it("preserves multiple ordered reasoning items from response_metadata.output in ZDR mode", () => {
+      const output = [
+        {
+          type: "reasoning",
+          id: "rs_first",
+          summary: [{ type: "summary_text", text: "First" }],
+          encrypted_content: "encrypted_first",
+          created_by: "provider",
+        },
+        {
+          type: "function_call",
+          id: "fc_first",
+          call_id: "call_first",
+          name: "add",
+          arguments: '{"a":1,"b":2}',
+          created_by: "provider",
+        },
+        {
+          type: "reasoning",
+          id: "rs_second",
+          summary: [{ type: "summary_text", text: "Second" }],
+          encrypted_content: "encrypted_second",
+          created_by: "provider",
+        },
+        {
+          type: "function_call",
+          id: "fc_second",
+          call_id: "call_second",
+          name: "multiply",
+          arguments: '{"a":3,"b":4}',
+          created_by: "provider",
+        },
+      ];
+      const message = new AIMessage({
+        content: [],
+        tool_calls: [
+          { name: "add", args: { a: 1, b: 2 }, id: "call_first" },
+          {
+            name: "multiply",
+            args: { a: 3, b: 4 },
+            id: "call_second",
+          },
+        ],
+        additional_kwargs: {
+          // The legacy field can only retain one reasoning item. The original
+          // output must take precedence when it is available.
+          reasoning: output[2],
+        },
+        response_metadata: { output },
+      });
+
+      const result = convertMessagesToResponsesInput({
+        messages: [message],
+        zdrEnabled: true,
+        model: "o3-mini",
+      });
+
+      expect(result).toEqual(
+        output.map(({ created_by: _createdBy, ...item }) => item)
+      );
+    });
+
     it("round-trips reasoning + tool calls through AIMessage", () => {
       const response = {
         id: "resp_123",
@@ -1673,6 +1805,104 @@ describe("convertMessagesToResponsesInput", () => {
 
       // Should preserve the full output array including reasoning + function_call pairing
       expect(input).toEqual(response.output);
+    });
+  });
+
+  describe("v1 content-block replay (multi-reasoning-item ordering, ZDR)", () => {
+    it('both the default (v0) path and opting into outputVersion "v1" replay multiple reasoning items correctly under ZDR', () => {
+      const response = {
+        id: "resp_123",
+        model: "gpt-5.6",
+        created_at: 0,
+        object: "response",
+        status: "completed",
+        output: [
+          {
+            type: "reasoning",
+            id: "rs_first",
+            summary: [{ type: "summary_text", text: "First" }],
+            encrypted_content: "enc_1",
+          },
+          {
+            type: "function_call",
+            id: "fc_1",
+            call_id: "call_1",
+            name: "add",
+            arguments: '{"a":1,"b":2}',
+          },
+          {
+            type: "reasoning",
+            id: "rs_second",
+            summary: [{ type: "summary_text", text: "Second" }],
+            encrypted_content: "enc_2",
+          },
+          {
+            type: "function_call",
+            id: "fc_2",
+            call_id: "call_2",
+            name: "multiply",
+            arguments: '{"a":3,"b":4}',
+          },
+        ],
+        usage: { input_tokens: 10, output_tokens: 20, total_tokens: 30 },
+      };
+
+      const message = convertResponsesMessageToAIMessage(response as any);
+
+      // --- Default (v0) path: additional_kwargs.reasoning only ever holds
+      // one item, but replay now reuses response_metadata.output directly
+      // (normalized via the SDK's toResponseInputItems), so every reasoning
+      // item is preserved in its original position.
+      const defaultReplay = (
+        convertMessagesToResponsesInput({
+          messages: [message],
+          zdrEnabled: true,
+          model: "gpt-5.6",
+        }) as unknown as Array<Record<string, unknown>>
+      )
+        .filter(
+          (item) => item.type === "reasoning" || item.type === "function_call"
+        )
+        .map((item) =>
+          item.type === "reasoning"
+            ? `reasoning:${item.id}:${item.encrypted_content}`
+            : `function_call:${item.call_id}`
+        );
+      expect(defaultReplay).toEqual([
+        "reasoning:rs_first:enc_1",
+        "function_call:call_1",
+        "reasoning:rs_second:enc_2",
+        "function_call:call_2",
+      ]);
+
+      const standardizedMessage = new AIMessage({
+        ...message,
+        content: message.contentBlocks,
+        response_metadata: {
+          ...message.response_metadata,
+          output_version: "v1",
+        },
+      });
+
+      const v1Replay = (
+        convertMessagesToResponsesInput({
+          messages: [standardizedMessage],
+          zdrEnabled: true,
+          model: "gpt-5.6",
+        }) as unknown as Array<Record<string, unknown>>
+      ).map((item) =>
+        item.type === "reasoning"
+          ? `reasoning:${item.id}:${item.encrypted_content}`
+          : item.type === "function_call"
+            ? `function_call:${item.call_id}`
+            : item.type
+      );
+      expect(v1Replay).toEqual([
+        "reasoning:rs_first:enc_1",
+        "function_call:call_1",
+        "reasoning:rs_second:enc_2",
+        "function_call:call_2",
+      ]);
     });
   });
 
