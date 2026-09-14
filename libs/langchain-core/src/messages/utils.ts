@@ -447,30 +447,57 @@ function mapV1MessageToStoredMessage(
   }
 }
 
+/**
+ * A message constructed via the `contentBlocks` input field persists its
+ * content under the snake-cased `content_blocks` key, because serialization is
+ * driven by the constructor's `lc_kwargs` (see `BaseMessage`). The full
+ * `load()` reviver remaps snake_case keys back to camelCase, but this lighter
+ * stored-message path passes the data straight to the constructor, which only
+ * recognizes `content` and `contentBlocks`. Without this remap, `content_blocks`
+ * is ignored and the message round-trips to empty content. Map it back to
+ * `contentBlocks` so the content survives.
+ */
+function restoreContentBlocksField(
+  data: StoredMessage["data"]
+): StoredMessage["data"] {
+  if (!("content_blocks" in data)) {
+    return data;
+  }
+  const { content_blocks, ...rest } = data as StoredMessage["data"] & {
+    content_blocks?: BaseMessageFields["contentBlocks"];
+  };
+  // Prefer an explicit `contentBlocks` if one is already present.
+  if ((rest as BaseMessageFields).contentBlocks !== undefined) {
+    return rest;
+  }
+  return { ...rest, contentBlocks: content_blocks } as StoredMessage["data"];
+}
+
 export function mapStoredMessageToChatMessage(message: StoredMessage) {
   const storedMessage = mapV1MessageToStoredMessage(message);
+  const data = restoreContentBlocksField(storedMessage.data);
   switch (storedMessage.type) {
     case "human":
-      return new HumanMessage(storedMessage.data);
+      return new HumanMessage(data);
     case "ai":
-      return new AIMessage(storedMessage.data);
+      return new AIMessage(data);
     case "system":
-      return new SystemMessage(storedMessage.data);
+      return new SystemMessage(data);
     case "function":
-      if (storedMessage.data.name === undefined) {
+      if (data.name === undefined) {
         throw new Error("Name must be defined for function messages");
       }
-      return new FunctionMessage(storedMessage.data as FunctionMessageFields);
+      return new FunctionMessage(data as FunctionMessageFields);
     case "tool":
-      if (storedMessage.data.tool_call_id === undefined) {
+      if (data.tool_call_id === undefined) {
         throw new Error("Tool call ID must be defined for tool messages");
       }
-      return new ToolMessage(storedMessage.data as ToolMessageFields);
+      return new ToolMessage(data as ToolMessageFields);
     case "generic": {
-      if (storedMessage.data.role === undefined) {
+      if (data.role === undefined) {
         throw new Error("Role must be defined for chat messages");
       }
-      return new ChatMessage(storedMessage.data as ChatMessageFields);
+      return new ChatMessage(data as ChatMessageFields);
     }
     default:
       throw new Error(`Got unexpected type: ${storedMessage.type}`);
