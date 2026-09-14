@@ -14,7 +14,12 @@ import { adapterConfigSchema } from "../types.js";
 import { MCPAdapter } from "../index.js";
 
 import { describe, expect, it, vi } from "vitest";
-import { sdkSchema, validateElicitationAnswer } from "../elicitation.js";
+import {
+  sdkSchema,
+  modernElicitationRequestSchema,
+  elicitationRequestSchema,
+  validateElicitationAnswer,
+} from "../elicitation.js";
 import type { MCPElicitationRequest } from "../elicitation.js";
 
 const form = {
@@ -27,6 +32,57 @@ const form = {
 } satisfies MCPElicitationRequest;
 
 describe("elicitation answers", () => {
+  it("projects modern URL requests without weakening legacy validation", () => {
+    const request = {
+      method: "elicitation/create",
+      params: {
+        mode: "url",
+        message: "Continue in browser",
+        url: "https://example.com/authorize",
+      },
+    };
+    expect(modernElicitationRequestSchema.parse(request)).toEqual(
+      request.params
+    );
+    expect(() => elicitationRequestSchema.parse(request)).toThrow(z.ZodError);
+    expect(
+      modernElicitationRequestSchema.parse({
+        ...request,
+        params: {
+          ...request.params,
+          elicitationId: "legacy",
+          task: { ttl: 1000 },
+          _meta: { application: "example" },
+          extension: true,
+        },
+      })
+    ).toEqual(request.params);
+    for (const invalid of [
+      { ...request, method: "tools/call" },
+      { ...request, params: { ...request.params, url: "invalid" } },
+      { ...request, params: { ...request.params, message: 42 } },
+    ])
+      expect(() => modernElicitationRequestSchema.parse(invalid)).toThrow(
+        z.ZodError
+      );
+  });
+  it("retains the SDK-required legacy URL identifier", () => {
+    const params = {
+      mode: "url",
+      message: "Continue in browser",
+      url: "https://example.com/approve",
+      elicitationId: "approval",
+    };
+    expect(
+      elicitationRequestSchema.parse({ method: "elicitation/create", params })
+    ).toEqual(params);
+    expect(() =>
+      elicitationRequestSchema.parse({
+        method: "elicitation/create",
+        params: { ...params, elicitationId: undefined },
+      })
+    ).toThrow(z.ZodError);
+  });
   it("accepts schema-valid form content", async () => {
     const answer = { action: "accept", content: { confirm: false } };
     expect(await validateElicitationAnswer(form, answer)).toEqual(answer);
@@ -286,9 +342,7 @@ describe("elicitation and logging configuration", () => {
     expect(invalid.success).toBe(false);
 
     if (!invalid.success)
-      expect(JSON.stringify(invalid.error.issues)).toContain(
-        "Invalid MCP logging level"
-      );
+      expect(JSON.stringify(invalid.error.issues)).toContain('"logLevel"');
   });
 
   it.each([
@@ -435,7 +489,7 @@ it("rejects modern reconnect settings and invalid resource subscriptions", () =>
           reconnect: { enabled: false },
         },
       },
-    }).mcpServers.server.mode
+    }).servers.server.mode
   ).toBe("legacy");
 });
 

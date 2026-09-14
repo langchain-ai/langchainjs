@@ -12,6 +12,7 @@ import {
 
 import { z } from "zod";
 import { fromJsonSchema } from "@modelcontextprotocol/client";
+import { JSONObjectSchema } from "@modelcontextprotocol/core";
 import { DefaultJsonSchemaValidator } from "@modelcontextprotocol/client/_shims";
 import {
   toolCallModificationSchema,
@@ -43,6 +44,7 @@ import type { Notifications } from "./types.js";
 import {
   _resolveDetailedOutputHandling,
   callToolResultContentTypes,
+  loadMcpToolsOptionsSchema,
   type CallToolResultContentType,
   type LoadMcpToolsOptions,
   type OutputHandling,
@@ -689,9 +691,10 @@ export async function loadMcpTools(
   client: MCPInstance,
   options?: LoadMcpToolsOptions
 ): Promise<DynamicStructuredTool[]> {
+  const parsedOptions = loadMcpToolsOptionsSchema.parse(options ?? {});
   const { tools } = await client.listTools();
 
-  return convertMcpTools(serverName, client, tools, options);
+  return convertMcpTools(serverName, client, tools, parsedOptions);
 }
 
 /** @internal Adapt SDK-validated descriptors without issuing another discovery request. */
@@ -727,9 +730,7 @@ export async function convertMcpTools(
         .filter((tool: MCPTool) => !!tool.name)
         .map(async (tool: MCPTool) => {
           try {
-            const originalSchema = z
-              .record(z.string(), z.json())
-              .parse(tool.inputSchema);
+            const originalSchema = JSONObjectSchema.parse(tool.inputSchema);
 
             // Scope the SDK engine to this descriptor: its default shared cache keys by $id.
             // The SDK export selects the same engine as Client for Node/browser/workerd.

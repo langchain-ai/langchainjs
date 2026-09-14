@@ -2,7 +2,16 @@
 "@langchain/mcp-adapters": minor
 ---
 
-Use checkpointed LangGraph elicitation by default for modern MCP tools, preserving effective arguments and validating resumed answers and terminal output. Verify SDK-owned OAuth refresh, DCR, and CIMD selection with local acceptance fixtures.
+Use checkpointed LangGraph elicitation by default for modern MCP tools, preserving effective arguments and validating resumed answers and terminal output.
+
+Derive modern form and URL requests from the official SDK core schemas. Modern
+URL questions use the pending request key and omit legacy-only `elicitationId`;
+legacy callbacks retain the SDK identifier requirement. Strip answer envelope
+fields before resuming so they cannot replace continuation routing.
+
+Accept the SDK `AuthProvider` token-broker contract alongside `OAuthClientProvider`
+for modern HTTP and legacy HTTP/SSE. Token-only providers manage authorization
+externally and cannot be used with `finishAuth()`.
 
 Remove `elicitationMode`; modern tools interrupt a checkpointed graph when the
 server asks for input. Direct calls outside a graph still work without user input;

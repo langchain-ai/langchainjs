@@ -1,15 +1,14 @@
 import {
   Client,
-  specTypeSchemas,
   type CallToolRequest,
   type ElicitResult,
 } from "@modelcontextprotocol/client";
+import { CallToolRequestSchema } from "@modelcontextprotocol/core";
 import { ns, LangChainError } from "@langchain/core/errors";
 import { interrupt, task } from "@langchain/langgraph";
 import { z } from "zod";
 import {
-  sdkSchema,
-  elicitationAnswerSchema,
+  modernElicitationAnswerSchema,
   modernElicitationRequestSchema,
   elicitationAnswerFor,
 } from "./elicitation.js";
@@ -59,9 +58,7 @@ export class InterruptMCPClient extends Client {
       return super._resolveNonCompleteResult(decoded, flow);
     }
 
-    const request = await sdkSchema(specTypeSchemas.CallToolRequest).parseAsync(
-      flow.request
-    );
+    const request = CallToolRequestSchema.parse(flow.request);
 
     throw new PendingMCPInput(decoded, request.params);
   }
@@ -96,7 +93,7 @@ export type MCPElicitationInterrupt = z.output<
 
 const elicitationResponsesSchema = z.record(
   z.string(),
-  elicitationAnswerSchema
+  modernElicitationAnswerSchema
 );
 
 export type MCPElicitationResume = z.output<typeof elicitationResponsesSchema>;
@@ -183,10 +180,13 @@ export async function withMCPInterrupts<T>(
         Object.fromEntries(
           keys.map(
             (key) =>
-              [key, elicitationAnswerFor(requests[key])] satisfies [
-                string,
-                ReturnType<typeof elicitationAnswerFor>,
-              ]
+              [
+                key,
+                elicitationAnswerFor(
+                  requests[key],
+                  modernElicitationAnswerSchema
+                ),
+              ] satisfies [string, ReturnType<typeof elicitationAnswerFor>]
           )
         )
       );

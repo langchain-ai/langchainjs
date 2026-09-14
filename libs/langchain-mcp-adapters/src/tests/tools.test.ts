@@ -42,6 +42,18 @@ describe("Simplified Tool Adapter Tests", () => {
     vi.clearAllMocks();
   });
 
+  test.each([
+    { defaultToolTimeout: -1 },
+    { defaultToolTimeout: 1000, timeoutTypo: 1000 },
+  ])("rejects invalid loader options before discovery: %j", async (options) => {
+    mockClient.listTools.mockResolvedValue({ tools: [] });
+
+    await expect(loadMcpTools("test", mockClient, options)).rejects.toThrow(
+      z.ZodError
+    );
+    expect(mockClient.listTools).not.toHaveBeenCalled();
+  });
+
   test("schema parsing preserves boolean schemas and extension values", async () => {
     const inputSchema = {
       type: "object",
@@ -952,16 +964,16 @@ describe("Simplified Tool Adapter Tests", () => {
       expect(mockClient.callTool).not.toHaveBeenCalled();
     });
 
-    test("should remove $schema and unevaluatedProperties from schemas", async () => {
+    test("preserves $schema and unevaluatedProperties in tool schemas", async () => {
       const schemaWithMetadata = {
         $schema: "https://json-schema.org/draft/2020-12/schema",
-        type: "object" as const,
+        type: "object",
         properties: {
           name: { type: "string" },
         },
         required: ["name"],
         unevaluatedProperties: false,
-      };
+      } satisfies Tool["inputSchema"];
 
       mockClient.listTools.mockReturnValueOnce(
         Promise.resolve({
@@ -982,11 +994,12 @@ describe("Simplified Tool Adapter Tests", () => {
       });
 
       const tools = await loadMcpTools(
-        "mockServer(metadata removal)",
-        mockClient as Client
+        "mockServer(schema preservation)",
+        mockClient
       );
 
       expect(tools.length).toBe(1);
+      expect(tools[0].schema).toEqual(schemaWithMetadata);
 
       const result = await tools[0].invoke({ name: "World" });
       expect(result).toBe("Hello!");

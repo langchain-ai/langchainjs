@@ -35,6 +35,8 @@ import type { StdioConnection } from "../types.js";
 
 it.each([
   "accept",
+  "answer-method",
+  "answer-result",
   "url",
   "url-content",
   "state-only",
@@ -313,6 +315,10 @@ it.each([
             content: { confirm: scenario === "bad-content" ? "yes" : true },
           };
 
+    if (scenario === "answer-method")
+      Object.assign(answer, { method: "elicitation/create" });
+    if (scenario === "answer-result") Object.assign(answer, { result: {} });
+
     const resume =
       scenario === "wrong-key"
         ? { wrong: answer }
@@ -322,7 +328,15 @@ it.each([
 
     const pending = createGraph().invoke(new Command({ resume }), config);
 
-    if (["accept", "url", "concurrent"].includes(scenario)) {
+    if (
+      [
+        "accept",
+        "answer-method",
+        "answer-result",
+        "url",
+        "concurrent",
+      ].includes(scenario)
+    ) {
       const resumed = await pending;
       expect(resumed.done).toBe(true);
       expect(calls).toHaveLength(scenario === "concurrent" ? 3 : 2);

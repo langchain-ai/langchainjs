@@ -754,7 +754,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       const client = new MultiServerMCPClient(config);
 
       const inspectedConfig = client.config;
-      expect(inspectedConfig.mcpServers["test-server"]).toBeDefined();
+      expect(inspectedConfig.servers["test-server"]).toBeDefined();
       expect(inspectedConfig.throwOnLoadError).toBe(false);
       expect(inspectedConfig.prefixToolNameWithServerName).toBe(true);
 
@@ -767,6 +767,46 @@ describe("MultiServerMCPClient Integration Tests", () => {
   });
 
   describe("OAuth Authentication", () => {
+    it.each(["http", "sse"])(
+      "uses an SDK token provider with legacy %s and custom headers",
+      async (protocol) => {
+        const { baseUrl } = await testServers.createHTTPServer(
+          "token-provider",
+          {
+            requireAuth: true,
+            supportSSEFallback: true,
+          }
+        );
+        let token = "expired-fixture-token";
+        const onUnauthorized = vi.fn(async () => {
+          token = "test-token";
+        });
+        const adapter = new MCPAdapter({
+          servers: {
+            legacy: {
+              mode: "legacy",
+              transport: protocol === "sse" ? "sse" : "http",
+              url: `${baseUrl}/${protocol === "sse" ? "sse" : "mcp"}`,
+              headers: { "X-Test": "token-provider" },
+              authProvider: { token: async () => token, onUnauthorized },
+            },
+          },
+        });
+
+        try {
+          const tools = await adapter.listTools();
+          const tool = tools.find((entry) => entry.name.includes("test_tool"));
+          if (!tool) throw new Error("Missing fixture tool");
+          expect(await tool.invoke({ input: "token-provider" })).toContain(
+            "token-provider"
+          );
+          expect(onUnauthorized).toHaveBeenCalledTimes(1);
+        } finally {
+          await adapter.close();
+        }
+      }
+    );
+
     it("should use OAuth provider for HTTP transport authentication", async () => {
       const { baseUrl } = await testServers.createHTTPServer("http-oauth", {
         requireAuth: true,
@@ -3048,6 +3088,8 @@ describe("modern OAuth acceptance", () => {
     "issuer-switch",
     "cimd",
     "callback",
+    "reconstructed-callback",
+    "token-provider",
     "wrong-state",
     "wrong-issuer",
     "scope-stepup",
@@ -3199,7 +3241,7 @@ describe("modern OAuth acceptance", () => {
         ? "https://app.example/callback"
         : `${base}/callback`;
 
-    const provider: OAuthClientProvider = {
+    const createProvider = (): OAuthClientProvider => ({
       state: () => "fixture-state",
       discoveryState: () => discovery,
       saveDiscoveryState: (state) => {
@@ -3244,20 +3286,46 @@ describe("modern OAuth acceptance", () => {
         );
         throw new Error("Fixture authorization handed to application");
       },
-    };
-
-    const adapter = new MCPAdapter({
-      servers: {
-        oauth: {
-          transport: "http",
-          url: `${base}/mcp`,
-          authProvider: provider,
-        },
-      },
     });
 
+    let provider = createProvider();
+    let token = "fixture-expired";
+    const onUnauthorized = vi.fn(async () => {
+      token = "fixture-access";
+    });
+    const tokenProvider = { token: async () => token, onUnauthorized };
+    const createAdapter = () =>
+      new MCPAdapter({
+        servers: {
+          oauth: {
+            transport: "http",
+            url: `${base}/mcp`,
+            authProvider:
+              scenario === "token-provider" ? tokenProvider : provider,
+          },
+        },
+      });
+    let adapter = createAdapter();
+
     try {
-      if (scenario === "refresh") {
+      if (scenario === "token-provider") {
+        const [tool] = await adapter.listTools();
+        expect(await tool.invoke({})).toBe("authorized");
+        expect(onUnauthorized).toHaveBeenCalledTimes(1);
+        expect(registrations).toBe(0);
+        expect(refreshes).toBe(0);
+        expect(redirected).toBe(false);
+        await expect(
+          adapter.finishAuth(
+            "oauth",
+            new URLSearchParams({
+              state: "fixture-state",
+              code: "fixture-code",
+            }),
+            "fixture-state"
+          )
+        ).rejects.toThrow(/requires an OAuthClientProvider/);
+      } else if (scenario === "refresh") {
         const [tool] = await adapter.listTools();
         expect(await tool.invoke({})).toBe("authorized");
         expect(refreshes).toBe(1);
@@ -3270,9 +3338,13 @@ describe("modern OAuth acceptance", () => {
         );
 
         if (
-          ["callback", "wrong-state", "wrong-issuer", "scope-stepup"].includes(
-            scenario
-          )
+          [
+            "callback",
+            "reconstructed-callback",
+            "wrong-state",
+            "wrong-issuer",
+            "scope-stepup",
+          ].includes(scenario)
         ) {
           const callback = new URLSearchParams({
             code: "fixture-code",
@@ -3280,7 +3352,19 @@ describe("modern OAuth acceptance", () => {
             iss: scenario === "wrong-issuer" ? "https://other.example" : base,
           });
 
-          if (scenario === "callback" || scenario === "scope-stepup") {
+          if (scenario === "reconstructed-callback") {
+            await adapter.close();
+            const previousProvider = provider;
+            provider = createProvider();
+            expect(provider).not.toBe(previousProvider);
+            adapter = createAdapter();
+          }
+
+          if (
+            ["callback", "reconstructed-callback", "scope-stepup"].includes(
+              scenario
+            )
+          ) {
             await adapter.finishAuth("oauth", callback, "fixture-state");
             const [tool] = await adapter.listTools();
             expect(await tool.invoke({})).toBe("authorized");
@@ -3294,7 +3378,7 @@ describe("modern OAuth acceptance", () => {
         }
       }
 
-      expect(savedIssuer).toBe(base);
+      if (scenario !== "token-provider") expect(savedIssuer).toBe(base);
 
       if (registrations > 0) {
         expect(registeredTypes).toEqual([

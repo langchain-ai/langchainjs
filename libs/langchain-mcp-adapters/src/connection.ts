@@ -10,15 +10,17 @@ import {
   Client as MCPClient,
 } from "@modelcontextprotocol/client";
 import type {
-  OAuthClientProvider,
   StreamableHTTPClientTransportOptions,
   StreamableHTTPReconnectionOptions,
 } from "@modelcontextprotocol/client";
-import { connectionSchema } from "./types.js";
+import { connectionSchema, isOAuthClientProvider } from "./types.js";
 import debug from "debug";
 import type {
   ResolvedStreamableHTTPConnection,
+  ResolvedSSEConnection,
   ResolvedStdioConnection,
+  ResolvedConnection,
+  CustomHTTPTransportOptions,
 } from "./types.js";
 
 /**
@@ -41,7 +43,7 @@ export interface Client extends MCPClient {
 export interface TransportOptions {
   serverName: string;
   headers?: Record<string, string>;
-  authProvider?: OAuthClientProvider;
+  authProvider?: CustomHTTPTransportOptions["authProvider"];
 }
 
 type ClientKeyObject = Omit<TransportOptions, "headers"> & {
@@ -54,7 +56,10 @@ export interface Connection {
     | SSEClientTransport
     | StdioClientTransport;
   client: Client;
-  transportOptions: ResolvedStdioConnection | ResolvedStreamableHTTPConnection;
+  transportOptions:
+    | ResolvedStdioConnection
+    | ResolvedStreamableHTTPConnection
+    | ResolvedSSEConnection;
   closeCallback: () => Promise<void>;
 }
 
@@ -62,7 +67,7 @@ const transportTypes = ["http", "sse", "stdio"] as const;
 
 /** Resolve only the SDK features supported by the parsed server mode. */
 function protocolClientOptions(
-  options: ResolvedStdioConnection | ResolvedStreamableHTTPConnection
+  options: ResolvedConnection
 ): ConstructorParameters<typeof MCPClient>[1] {
   if (options.mode === "legacy") {
     if (options.onElicitation) {
@@ -127,14 +132,19 @@ export class ConnectionManager {
     options: ResolvedStdioConnection
   ): Promise<Client>;
   async createClient(
-    type: "http" | "sse",
+    type: "http",
     serverName: string,
     options: ResolvedStreamableHTTPConnection
   ): Promise<Client>;
   async createClient(
+    type: "sse",
+    serverName: string,
+    options: ResolvedSSEConnection
+  ): Promise<Client>;
+  async createClient(
     ...args:
       | ["stdio", string, ResolvedStdioConnection]
-      | ["sse", string, ResolvedStreamableHTTPConnection]
+      | ["sse", string, ResolvedSSEConnection]
       | ["http", string, ResolvedStreamableHTTPConnection]
   ): Promise<Client> {
     if (this.#closing) throw new Error("MCP connections are closing");
@@ -169,7 +179,7 @@ export class ConnectionManager {
   async #connect(
     args:
       | ["stdio", string, ResolvedStdioConnection]
-      | ["sse", string, ResolvedStreamableHTTPConnection]
+      | ["sse", string, ResolvedSSEConnection]
       | ["http", string, ResolvedStreamableHTTPConnection],
     key: ClientKeyObject
   ): Promise<Client> {
@@ -367,7 +377,7 @@ export class ConnectionManager {
   /** Complete an application-owned redirect using the SDK's callback and issuer checks. */
   async finishAuth(
     serverName: string,
-    options: ResolvedStreamableHTTPConnection,
+    options: ResolvedStreamableHTTPConnection | ResolvedSSEConnection,
     callbackParams: URLSearchParams
   ): Promise<void> {
     const transport =
@@ -404,7 +414,13 @@ export class ConnectionManager {
       throw new Error("Forking stdio transport is not supported");
     }
 
-    return this.createClient(options.transport, key.serverName, {
+    if (options.transport === "sse")
+      return this.createClient("sse", key.serverName, {
+        ...options,
+        headers,
+      });
+
+    return this.createClient("http", key.serverName, {
       ...options,
       headers: mergeHeaders(options.headers, headers),
     });
@@ -639,7 +655,7 @@ export class ConnectionManager {
    */
   async #createSSETransport(
     serverName: string,
-    args: ResolvedStreamableHTTPConnection
+    args: ResolvedSSEConnection
   ): Promise<SSEClientTransport> {
     const { url, headers, authProvider } = args;
     const options: SSEClientTransportOptions = {};
@@ -661,12 +677,11 @@ export class ConnectionManager {
           // Add OAuth token if authProvider is available
           // This is necessary because setting eventSourceInit.fetch prevents automatic Authorization header
           if (authProvider) {
-            const tokens = await authProvider.tokens();
-            if (tokens) {
-              requestHeaders.set(
-                "Authorization",
-                `Bearer ${tokens.access_token}`
-              );
+            const token = isOAuthClientProvider(authProvider)
+              ? (await authProvider.tokens())?.access_token
+              : await authProvider.token();
+            if (token) {
+              requestHeaders.set("Authorization", `Bearer ${token}`);
             }
           }
 
