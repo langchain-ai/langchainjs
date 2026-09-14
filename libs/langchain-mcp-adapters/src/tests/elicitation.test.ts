@@ -10,13 +10,13 @@ import { join } from "node:path";
 import { createMcpHandler, McpServer } from "@modelcontextprotocol/server";
 import { toNodeHandler } from "@modelcontextprotocol/node";
 import { z } from "zod";
+import { ElicitRequestSchema } from "@modelcontextprotocol/core";
 import { adapterConfigSchema } from "../types.js";
 import { MCPAdapter } from "../index.js";
 
 import { describe, expect, it, vi } from "vitest";
 import {
   modernElicitationRequestSchema,
-  elicitationRequestSchema,
   validateElicitationAnswer,
 } from "../elicitation.js";
 import type { MCPElicitationRequest } from "../elicitation.js";
@@ -61,7 +61,7 @@ describe("elicitation answers", () => {
     expect(modernElicitationRequestSchema.parse(request)).toEqual(
       request.params
     );
-    expect(() => elicitationRequestSchema.parse(request)).toThrow(z.ZodError);
+    expect(() => ElicitRequestSchema.parse(request)).toThrow(z.ZodError);
     expect(
       modernElicitationRequestSchema.parse({
         ...request,
@@ -91,10 +91,10 @@ describe("elicitation answers", () => {
       elicitationId: "approval",
     };
     expect(
-      elicitationRequestSchema.parse({ method: "elicitation/create", params })
+      ElicitRequestSchema.parse({ method: "elicitation/create", params }).params
     ).toEqual(params);
     expect(() =>
-      elicitationRequestSchema.parse({
+      ElicitRequestSchema.parse({
         method: "elicitation/create",
         params: { ...params, elicitationId: undefined },
       })

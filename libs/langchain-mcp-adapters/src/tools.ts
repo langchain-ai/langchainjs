@@ -7,7 +7,10 @@ import {
 import { ToolException, isToolException } from "./utils/errors.js";
 
 import { z } from "zod";
-import { fromJsonSchema } from "@modelcontextprotocol/client";
+import {
+  fromJsonSchema,
+  LOG_LEVEL_META_KEY,
+} from "@modelcontextprotocol/client";
 import { JSONObjectSchema } from "@modelcontextprotocol/core";
 import { DefaultJsonSchemaValidator } from "@modelcontextprotocol/client/_shims";
 import {
@@ -27,9 +30,8 @@ import { DynamicStructuredTool } from "@langchain/core/tools";
 import type { ContentBlock } from "@langchain/core/messages";
 import { RunnableConfig } from "@langchain/core/runnables";
 import type { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
-import { ToolMessage } from "@langchain/core/messages";
+import type { ToolMessage } from "@langchain/core/messages";
 import {
-  isCommand,
   isGraphInterrupt,
   getCurrentTaskInput,
   type Command,
@@ -345,7 +347,7 @@ type CallToolArgs = {
    * `afterToolCall` callbacks used for tool calls.
    */
   afterToolCall?: ToolHooks["afterToolCall"];
-  inputValidator: ReturnType<typeof fromJsonSchema>;
+  inputValidator: ReturnType<typeof fromJsonSchema<Record<string, unknown>>>;
   continuation?: MCPContinuation;
   hookState?: unknown;
 };
@@ -383,7 +385,7 @@ function createToolInvocationFactory(
   function executor(connectedClient: MCPInstance, modernProtocol: boolean) {
     const metadata =
       logLevel !== undefined && modernProtocol
-        ? { "io.modelcontextprotocol/logLevel": logLevel }
+        ? { [LOG_LEVEL_META_KEY]: logLevel }
         : undefined;
 
     return (request: CallToolRequest["params"], options: RequestOptions) => {
@@ -533,9 +535,10 @@ async function prepareToolCall({
       )
     );
 
-  const finalArgs = { ...args, ...beforeToolCallInterception?.args };
-
-  const validation = await inputValidator["~standard"].validate(finalArgs);
+  const validation = await inputValidator["~standard"].validate({
+    ...args,
+    ...beforeToolCallInterception?.args,
+  });
 
   if (validation.issues) {
     throw new ToolException(
@@ -553,6 +556,7 @@ async function prepareToolCall({
     );
   }
 
+  const finalArgs = validation.value;
   const initialRequest = {
     name: toolName,
     arguments: finalArgs,
@@ -625,25 +629,11 @@ async function _callTool(
       return [content, artifacts];
     }
 
-    if (typeof interceptedResult.result === "string") {
-      return [interceptedResult.result, []];
-    }
-
     if (Array.isArray(interceptedResult.result)) {
       return interceptedResult.result;
     }
 
-    if (ToolMessage.isInstance(interceptedResult.result)) {
-      return [interceptedResult.result, []];
-    }
-
-    if (isCommand(interceptedResult.result)) {
-      return [interceptedResult.result, []];
-    }
-
-    throw new Error(
-      `Unexpected result value type from afterToolCall: expected either a Command, a ToolMessage or a tuple of ContentBlock and Artifact, but got ${interceptedResult.result}`
-    );
+    return [interceptedResult.result, []];
   } catch (error) {
     if (
       isGraphInterrupt(error) ||
@@ -725,7 +715,7 @@ export async function convertMcpTools(
 
             // Scope the SDK engine to this descriptor: its default shared cache keys by $id.
             // The SDK export selects the same engine as Client for Node/browser/workerd.
-            const inputValidator = fromJsonSchema(
+            const inputValidator = fromJsonSchema<Record<string, unknown>>(
               originalSchema,
               new DefaultJsonSchemaValidator()
             );

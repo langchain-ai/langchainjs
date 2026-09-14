@@ -71,10 +71,8 @@ describe("MultiServerMCPClient", () => {
         if (!result.success) {
           expect(result.error.issues).toEqual([
             expect.objectContaining({
-              code: "invalid_union",
-              errors: expect.arrayContaining([
-                [expect.objectContaining({ path: ["onUnauthorized"] })],
-              ]),
+              code: "custom",
+              path: ["onUnauthorized"],
             }),
           ]);
         }

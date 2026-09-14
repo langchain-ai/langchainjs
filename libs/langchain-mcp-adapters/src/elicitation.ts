@@ -15,10 +15,6 @@ import { DefaultJsonSchemaValidator } from "@modelcontextprotocol/client/_shims"
 
 export const elicitationAnswerSchema = ElicitResultSchema;
 
-export const elicitationRequestSchema = ElicitRequestSchema.transform(
-  (request) => request.params
-);
-
 export const modernElicitationAnswerSchema = ElicitResultSchema.pick({
   action: true,
   content: true,
