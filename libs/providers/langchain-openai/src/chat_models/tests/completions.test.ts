@@ -4,6 +4,7 @@ import { toJsonSchema } from "@langchain/core/utils/json_schema";
 import { HumanMessage, AIMessageChunk } from "@langchain/core/messages";
 import { CallbackManagerForLLMRun } from "@langchain/core/callbacks/manager";
 import { ChatOpenAICompletions } from "../completions.js";
+import { AzureChatOpenAICompletions } from "../../azure/chat_models/completions.js";
 
 describe("ChatOpenAICompletions constructor", () => {
   it("supports string model shorthand", () => {
@@ -115,6 +116,134 @@ describe("ChatOpenAICompletions streaming usage_metadata callback", () => {
     expect(lastCallFields.chunk.message.usage_metadata).toBeDefined();
     expect(lastCallFields.chunk.message.usage_metadata?.input_tokens).toBe(10);
   });
+});
+
+describe("Chat Completions streaming usage metadata deduplication", () => {
+  const cumulativeUsage = {
+    prompt_tokens: 100,
+    completion_tokens: 5,
+    total_tokens: 105,
+    prompt_tokens_details: { cached_tokens: 50, cache_write_tokens: 20 },
+    completion_tokens_details: { reasoning_tokens: 2 },
+  };
+
+  const providers = [
+    {
+      name: "OpenAI",
+      create: () =>
+        new ChatOpenAICompletions({
+          model: "gpt-4o-mini",
+          apiKey: "test-key",
+          configuration: { baseURL: "https://api.openai.com/v1" },
+          streaming: true,
+          streamUsage: true,
+          __includeRawResponse: true,
+        }),
+    },
+    {
+      name: "Azure OpenAI",
+      create: () =>
+        new AzureChatOpenAICompletions({
+          model: "gpt-4o-mini",
+          apiKey: "test-key",
+          azureOpenAIApiVersion: "2024-10-21",
+          azureOpenAIApiDeploymentName: "gpt-4o-mini",
+          azureOpenAIEndpoint: "https://example.openai.azure.com",
+          streaming: true,
+          streamUsage: true,
+          __includeRawResponse: true,
+        }),
+    },
+    {
+      name: "LiteLLM-compatible",
+      create: () =>
+        new ChatOpenAICompletions({
+          model: "gpt-5.6-luna",
+          apiKey: "test-key",
+          configuration: { baseURL: "http://litellm.example.test/v1" },
+          streaming: true,
+          streamUsage: true,
+          __includeRawResponse: true,
+        }),
+    },
+  ] as const;
+
+  it.each(providers)(
+    "$name keeps repeated cumulative usage snapshots from being summed",
+    async ({ create }) => {
+      const model = create();
+      const fakeStream = (async function* () {
+        // Some OpenAI-compatible servers attach the same cumulative usage
+        // snapshot to more than one choice-bearing chunk.
+        yield {
+          choices: [
+            {
+              index: 0,
+              delta: { role: "assistant" as const, content: "Hello" },
+              finish_reason: null,
+              logprobs: null,
+            },
+          ],
+          usage: cumulativeUsage,
+          system_fingerprint: null,
+          model: "provider-model",
+          service_tier: null,
+        };
+        yield {
+          choices: [
+            {
+              index: 0,
+              delta: { content: "" },
+              finish_reason: "stop",
+              logprobs: null,
+            },
+          ],
+          usage: cumulativeUsage,
+          system_fingerprint: null,
+          model: "provider-model",
+          service_tier: null,
+        };
+      })();
+
+      model.completionWithRetry = vi
+        .fn()
+        .mockResolvedValue(fakeStream) as typeof model.completionWithRetry;
+
+      const chunks = [];
+      for await (const chunk of model._streamResponseChunks(
+        [new HumanMessage("test")],
+        {}
+      )) {
+        chunks.push(chunk);
+      }
+
+      const firstMessage = chunks[0].message as AIMessageChunk;
+      expect(firstMessage.response_metadata.usage).toBeUndefined();
+      expect(
+        (firstMessage.additional_kwargs.__raw_response as { usage: unknown })
+          .usage
+      ).toEqual(cumulativeUsage);
+
+      const finalMessage = chunks
+        .slice(1)
+        .reduce(
+          (message, chunk) => message.concat(chunk.message as AIMessageChunk),
+          firstMessage
+        );
+
+      expect(finalMessage.response_metadata.usage).toEqual(cumulativeUsage);
+      expect(finalMessage.usage_metadata).toEqual({
+        input_tokens: 100,
+        output_tokens: 5,
+        total_tokens: 105,
+        input_token_details: {
+          cache_read: 50,
+          cache_creation: 20,
+        },
+        output_token_details: { reasoning: 2 },
+      });
+    }
+  );
 });
 
 describe("ChatOpenAICompletions cache token usage_metadata", () => {
