@@ -1,11 +1,14 @@
 import { z } from "zod";
 import {
   fromJsonSchema,
-  specTypeSchemas,
   type Client,
   type ElicitRequest,
   type ElicitResult,
 } from "@modelcontextprotocol/client";
+import {
+  ElicitRequestSchema,
+  ElicitResultSchema,
+} from "@modelcontextprotocol/core";
 import { DefaultJsonSchemaValidator } from "@modelcontextprotocol/client/_shims";
 
 /** @internal Compose an SDK Standard Schema parser without recreating its wire schema. */
@@ -34,11 +37,11 @@ export function sdkSchema<Output>(schema: {
   });
 }
 
-export const elicitationAnswerSchema = sdkSchema(specTypeSchemas.ElicitResult);
+export const elicitationAnswerSchema = ElicitResultSchema;
 
-export const elicitationRequestSchema = sdkSchema(
-  specTypeSchemas.ElicitRequest
-).transform((request) => request.params);
+export const elicitationRequestSchema = ElicitRequestSchema.transform(
+  (request) => request.params
+);
 
 /** SDK-owned form or URL request. The application owns presentation. */
 export type MCPElicitationRequest = ElicitRequest["params"];

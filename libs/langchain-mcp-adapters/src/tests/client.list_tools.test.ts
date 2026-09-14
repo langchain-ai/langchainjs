@@ -46,6 +46,11 @@ describe("adapter tool listing", () => {
         "second",
       ]);
       const [selected] = await adapter.listTools("second");
+      const toolsets = await adapter.listToolsets();
+      expect(Object.keys(toolsets)).toEqual(["first", "second"]);
+      expect(Object.values(toolsets).flat()).toEqual(await adapter.listTools());
+      expect(await adapter.initializeConnections()).toEqual(toolsets);
+      expect(await toolsets.second[0].invoke({})).toBe("second");
       expect(selected.name).toBe("second");
       expect(await selected.invoke({})).toBe("second");
       expect(

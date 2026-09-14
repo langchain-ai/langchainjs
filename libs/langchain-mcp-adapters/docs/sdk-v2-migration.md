@@ -1,5 +1,8 @@
 # Migrating to MCP SDK 2
 
+This guide covers the adapter's major release adopting MCP TypeScript SDK 2,
+compared with adapter 1.x on SDK 1.
+
 The adapter uses the stable `@modelcontextprotocol/client` 2.x package. Existing
 legacy MCP servers remain supported over stdio, Streamable HTTP, and legacy SSE.
 Connections now default to modern protocol negotiation. Add `mode: "legacy"`
@@ -88,7 +91,7 @@ normalized to a required `transport` discriminator in the resolved configuration
 Use `connection.transport` to narrow resolved stdio, HTTP, or SSE options;
 resolved connections no longer expose the legacy `type` alias.
 
-The adapter now requires Zod `^4.2.0`; its configuration validation errors are
+The adapter now requires Zod `^4.4.3`; its configuration validation errors are
 Zod4 errors. Remove v3-only dependency overrides for this package. LangChain core
 may still use Zod3 transitively. Tool failures preserve caller-originated Zod
 errors in `cause`, including their structured issues.
@@ -110,10 +113,28 @@ be callable. Metadata getters remain lazy. Numeric timeout overrides in
 `outputHandling` objects reject unknown content-type keys instead of silently
 ignoring typos; explicit `undefined` destinations remain valid. Callback request `args` is a present field typed `unknown`.
 
-`config` remains a snapshot using the legacy `mcpServers` field. Mutable options
+The `config` getter now returns `ResolvedMCPAdapterConfig` with a `servers` field,
+including when constructed with deprecated inputs or `MultiServerMCPClient`.
+Replace `adapter.config.mcpServers` with `adapter.config.servers`. Mutable options
 are copied; callback functions and OAuth provider instances retain their
 identity. Treat this as runtime configuration, not a JSON-serializable or
 redacted diagnostic object. Changing a snapshot does not reconfigure the adapter.
+
+| Previous API                   | Canonical API      | Compatibility                                        |
+| ------------------------------ | ------------------ | ---------------------------------------------------- |
+| `MultiServerMCPClient`         | `MCPAdapter`       | Deprecated alias                                     |
+| `mcpServers` constructor input | `servers`          | Deprecated input still accepted                      |
+| `getTools()`                   | `listTools()`      | Deprecated alias; same LangChain tools               |
+| `initializeConnections()`      | `listToolsets()`   | Deprecated alias; connects and returns grouped tools |
+| `config.mcpServers`            | `config.servers`   | Getter shape changed for all inputs                  |
+| `ClientConfig`                 | `MCPAdapterConfig` | Old type retains legacy input shape                  |
+
+`SSEConnection` now describes only legacy SSE; it is no longer an alias of
+`StreamableHTTPConnection`. Use `Connection` when accepting any supported
+transport. Both types have corresponding resolved types with defaults applied.
+
+Remove stdio `encoding`: SDK 2 does not support overriding it. Retry counts must
+be nonnegative integers and delays must be nonnegative numbers; zero is valid.
 
 Notification callbacks receive a fresh connection-options snapshot for each
 event. Mutating that snapshot cannot reconfigure the adapter or alter the next

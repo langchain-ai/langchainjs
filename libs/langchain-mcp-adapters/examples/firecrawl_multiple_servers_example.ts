@@ -40,7 +40,7 @@ const multipleServersConfig: MCPAdapterConfig = {
 };
 
 /**
- * Example demonstrating how to use multiple MCP servers with React agent
+ * Example demonstrating how to use multiple MCP servers with agent
  * This example creates and loads a configuration file with multiple servers
  */
 async function runExample() {
@@ -76,11 +76,11 @@ async function runExample() {
     });
 
     // ================================================
-    // Create a React agent
+    // Create a agent
     // ================================================
     console.log("\n=== CREATING REACT AGENT ===");
 
-    // Create the React agent
+    // Create the agent
     const agent = createAgent({
       model,
       tools: mcpTools,
@@ -93,13 +93,13 @@ async function runExample() {
       "If I have 42 items and each costs $7.50, what is the total cost?",
     ];
 
-    // Test the React agent with the queries
+    // Test the agent with the queries
     console.log("\n=== RUNNING REACT AGENT ===");
 
     for (const query of queries) {
       console.log(`\nQuery: ${query}`);
 
-      // Run the React agent with the query
+      // Run the agent with the query
       const result = await agent.invoke({
         messages: [new HumanMessage(query)],
       });

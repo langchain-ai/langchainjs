@@ -2,14 +2,20 @@
 "@langchain/mcp-adapters": major
 ---
 
+Use `listToolsets()` to discover executable LangChain tools grouped by server.
+`initializeConnections()` remains a deprecated wrapper with the same result.
+Public loader and discovery options reject invalid values and unknown fields
+before connecting. Tool JSON objects and MCP content tags derive from the
+official SDK core schemas.
+
 Preserve structured output, resource provenance and protocol metadata in artifacts. Preserve native ToolMessage/Command results and graph interrupts. Expose semantic tool error envelopes through ToolException and retain transport causes.
 
 Validate effective post-hook arguments against the original server JSON Schema without mutating descriptors. Expose the original JSON Schema without flattening unions, inlining references, or dropping conditional constraints. Model-facing schema overrides remain separate from invocation validation.
 
 Isolate catalogs and connections by effective headers and OAuth provider identity. Deduplicate acquisitions, install handlers before connection, clean up failed handshakes/discovery, and settle every owned close. Delegate tools/resources/templates pagination to the SDK and propagate discovery errors instead of returning empty catalogs. Test SDK 1.30 stdio alongside SDK 2 HTTP/SSE servers; protocol negotiation remains unchanged.
 
-Honor SDK discovery TTL and cache hints on each `getTools()` call. Use
-`getTools([], { cacheMode: "refresh" })` to refresh the catalog, or `"bypass"` to
+Honor SDK discovery TTL and cache hints on each `listTools()` call. Use
+`listTools([], { cacheMode: "refresh" })` to refresh the catalog, or `"bypass"` to
 fetch without updating it. Previously returned tools remain unchanged. Close and
 recreate the adapter when switching the account behind an OAuth provider.
 

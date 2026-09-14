@@ -751,7 +751,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       const client = new MultiServerMCPClient(config);
 
       const inspectedConfig = client.config;
-      expect(inspectedConfig.mcpServers["test-server"]).toBeDefined();
+      expect(inspectedConfig.servers["test-server"]).toBeDefined();
       expect(inspectedConfig.throwOnLoadError).toBe(false);
       expect(inspectedConfig.prefixToolNameWithServerName).toBe(true);
 
