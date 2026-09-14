@@ -247,6 +247,13 @@ export interface BaseChatOpenAIFields
   extends Partial<OpenAIChatInput>, BaseChatModelParams {
   /**
    * Optional configuration options for the OpenAI client.
+   *
+   * Base URL resolution order (first match wins):
+   * 1. `configuration.baseURL` (explicit client option)
+   * 2. `baseUrl` (serialized/loaded compatibility field)
+   * 3. `OPENAI_API_BASE` environment variable (read by LangChain — takes precedence over `OPENAI_BASE_URL`)
+   * 4. `OPENAI_BASE_URL` environment variable (read by the underlying OpenAI SDK)
+   * 5. Default OpenAI API base URL (`https://api.openai.com/v1`)
    */
   configuration?: ClientOptions;
 }
