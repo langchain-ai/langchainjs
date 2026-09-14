@@ -187,7 +187,6 @@ export abstract class MiddlewareNode<
   get nodeOptions() {
     return {
       input: derivePrivateState(this.middleware.stateSchema),
-      tracePolicy: this.middleware.tracePolicy,
     };
   }
 }

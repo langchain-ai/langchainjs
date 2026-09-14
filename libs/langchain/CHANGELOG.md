@@ -1,5 +1,11 @@
 # langchain
 
+## 1.5.11
+
+### Patch Changes
+
+- [#11436](https://github.com/langchain-ai/langchainjs/pull/11436) [`702be70`](https://github.com/langchain-ai/langchainjs/commit/702be70bcaadbfe9a47a3fcccbb75bdea17cae04) Thanks [@chiliec](https://github.com/chiliec)! - fix(agents): ignore thought/reasoning text blocks when parsing structured output in `ProviderStrategy`
+
 ## 1.5.11-rc.0
 
 ### Patch Changes

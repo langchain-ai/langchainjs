@@ -1,6 +1,6 @@
 {
   "name": "langchain",
-  "version": "1.5.11-rc.0",
+  "version": "1.5.11",
   "description": "Typescript bindings for langchain",
   "author": "LangChain",
   "license": "MIT",
@@ -67,14 +67,14 @@
     "tinybench": "^6.1.4",
     "typeorm": "^1.1.0",
     "typescript": "~7.0.2",
-    "vitest": "^4.1.8",
+    "vitest": "^4.1.11",
     "yaml": "^2.9.0"
   },
   "peerDependencies": {
     "@langchain/core": "workspace:^"
   },
   "dependencies": {
-    "@langchain/langgraph": "1.4.15-rc.0",
+    "@langchain/langgraph": "^1.4.13",
     "@langchain/langgraph-checkpoint": "^1.1.5",
     "langsmith": ">=0.5.0 <1.0.0",
     "zod": "^3.25.76 || ^4"

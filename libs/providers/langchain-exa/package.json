@@ -44,7 +44,7 @@
     "eslint": "^9.39.5",
     "prettier": "^3.9.6",
     "typescript": "~7.0.2",
-    "vitest": "^4.1.8"
+    "vitest": "^4.1.11"
   },
   "publishConfig": {
     "access": "public"

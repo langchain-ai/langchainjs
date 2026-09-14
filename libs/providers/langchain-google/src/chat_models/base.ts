@@ -55,6 +55,7 @@ import {
 import {
   convertToolsToGeminiTools,
   convertToolChoiceToGeminiConfig,
+  mixesBuiltinAndFunctionTools,
   schemaToGeminiParameters,
 } from "../converters/tools.js";
 import {
@@ -360,6 +361,8 @@ export abstract class BaseChatGoogle<
     } else if (this.location === "global") {
       // See https://docs.cloud.google.com/vertex-ai/generative-ai/docs/learn/locations#use_the_global_endpoint
       return "aiplatform.googleapis.com";
+    } else if (!this.location.includes("-")) {
+      return `aiplatform.${this.location}.rep.googleapis.com`;
     } else {
       return `${this.location}-aiplatform.googleapis.com`;
     }
@@ -452,10 +455,19 @@ export abstract class BaseChatGoogle<
       : undefined;
 
     // Convert tool choice to Gemini function calling config
-    const toolConfig = convertToolChoiceToGeminiConfig(
+    let toolConfig = convertToolChoiceToGeminiConfig(
       options.tool_choice,
       !!(tools && tools.length > 0)
     );
+
+    // Gemini rejects a mix of built-in and function-declaration tools unless
+    // this is set. See mixesBuiltinAndFunctionTools's docstring.
+    if (tools && mixesBuiltinAndFunctionTools(tools)) {
+      toolConfig = {
+        ...toolConfig,
+        includeServerSideToolInvocations: true,
+      };
+    }
 
     let responseJsonSchema:
       | JsonSchema7Type
@@ -568,8 +580,17 @@ export abstract class BaseChatGoogle<
             .originalTextContentBlock as Record<string, unknown>
         ).text = finalChunk.message.content;
       }
+      const usageMetadata = finalChunk?.message?.usage_metadata;
       return {
         generations: finalChunk ? [finalChunk] : [],
+        ...(usageMetadata
+          ? {
+              llmOutput: {
+                tokenUsage: usageMetadataToTokenUsage(usageMetadata),
+                usageMetadata,
+              },
+            }
+          : {}),
       };
     }
 
@@ -901,6 +922,17 @@ export abstract class BaseChatGoogle<
                       }),
                       ...(candidate.safetyRatings && {
                         safetyRatings: candidate.safetyRatings,
+                      }),
+                      ...(candidate.citationMetadata && {
+                        citationMetadata: candidate.citationMetadata,
+                      }),
+                      ...(candidate.groundingMetadata && {
+                        groundingMetadata: candidate.groundingMetadata,
+                        // Support entries for the first content part only (matches messages.ts).
+                        groundingSupport:
+                          candidate.groundingMetadata.groundingSupports?.filter(
+                            (s) => (s?.segment?.partIndex ?? 0) === 0
+                          ),
                       }),
                     },
                   })

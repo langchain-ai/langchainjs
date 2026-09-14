@@ -48,7 +48,7 @@
     "eslint": "^9.39.5",
     "prettier": "^3.9.6",
     "typescript": "~7.0.2",
-    "vitest": "^4.1.8",
+    "vitest": "^4.1.11",
     "zod": "^3.25.76"
   },
   "publishConfig": {

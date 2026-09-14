@@ -36,7 +36,7 @@
     "dotenv": "^17.4.2",
     "dpdm": "^4.3.0",
     "testcontainers": "^12.1.0",
-    "vitest": "^4.1.8",
+    "vitest": "^4.1.11",
     "typescript": "~7.0.2"
   },
   "publishConfig": {
