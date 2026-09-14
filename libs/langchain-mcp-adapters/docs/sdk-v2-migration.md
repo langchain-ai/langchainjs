@@ -212,7 +212,7 @@ Tool, resource, and template discovery delegates pagination to the SDK. Server
 errors reject instead of appearing as an empty catalog. Resource conversion
 never performs implicit reads; explicitly call
 `readResource` if needed. Modern servers use the current revision by default; legacy servers require
-`mode: "legacy"`. Durable modern elicitation is introduced separately.
+`mode: "legacy"`.
 
 ### Discovery freshness
 

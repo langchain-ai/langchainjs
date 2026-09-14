@@ -45,8 +45,9 @@ the adapter open until the agent finishes using its tools.
 
 ## Mix modern and legacy servers
 
-Each server has its own protocol mode. Omitting `mode` means modern MCP;
-set `mode: "legacy"` for existing legacy servers, including legacy SSE:
+Each server has its own protocol mode. Omitting `mode` selects MCP revision
+[`2026-07-28`](https://modelcontextprotocol.io/specification/2026-07-28).
+Set `mode: "legacy"` for servers using earlier revisions, including legacy SSE:
 
 ```ts
 const adapter = new MCPAdapter({
