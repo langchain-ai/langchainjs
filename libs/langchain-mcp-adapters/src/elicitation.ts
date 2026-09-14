@@ -1,4 +1,3 @@
-import { z } from "zod";
 import {
   fromJsonSchema,
   type Client,
@@ -12,32 +11,6 @@ import {
   ElicitResultSchema,
 } from "@modelcontextprotocol/core";
 import { DefaultJsonSchemaValidator } from "@modelcontextprotocol/client/_shims";
-
-/** @internal Compose an SDK Standard Schema parser without recreating its wire schema. */
-export function sdkSchema<Output>(schema: {
-  "~standard": Pick<z.ZodType<Output>["~standard"], "validate">;
-}) {
-  return z.unknown().transform(async (input, ctx) => {
-    const parsed = await schema["~standard"].validate(input);
-
-    if (parsed.issues) {
-      for (const issue of parsed.issues) {
-        ctx.issues.push({
-          code: "custom",
-          message: issue.message,
-          input,
-          path: issue.path?.map((segment) =>
-            typeof segment === "object" ? segment.key : segment
-          ),
-        });
-      }
-
-      return z.NEVER;
-    }
-
-    return parsed.value;
-  });
-}
 
 export const elicitationAnswerSchema = ElicitResultSchema;
 
@@ -98,22 +71,28 @@ export function elicitationAnswerFor(
         });
       }
     } else if (answer.action === "accept") {
+      // Keep schema IDs isolated while using the SDK's runtime-selected validator.
       const validator = fromJsonSchema(
         request.requestedSchema,
         new DefaultJsonSchemaValidator()
       );
 
-      const parsed = await sdkSchema(validator).safeParseAsync(
+      const parsed = await validator["~standard"].validate(
         answer.content ?? {}
       );
 
-      if (!parsed.success) {
-        for (const issue of parsed.error.issues) {
+      if (parsed.issues) {
+        for (const issue of parsed.issues) {
           ctx.issues.push({
             code: "custom",
             message: issue.message,
             input: answer.content,
-            path: ["content", ...issue.path],
+            path: [
+              "content",
+              ...(issue.path?.map((segment) =>
+                typeof segment === "object" ? segment.key : segment
+              ) ?? []),
+            ],
           });
         }
       }

@@ -103,7 +103,22 @@ describe("elicitation answers", () => {
     { action: "accept" },
     { action: "accept", content: { confirm: "yes" } },
   ])("rejects invalid answers: %j", async (answer) => {
-    await expect(validateElicitationAnswer(form, answer)).rejects.toThrow();
+    await expect(validateElicitationAnswer(form, answer)).rejects.toThrow(
+      z.ZodError
+    );
+  });
+
+  it("reports SDK form validation errors under content", async () => {
+    await expect(
+      validateElicitationAnswer(form, {
+        action: "accept",
+        content: { confirm: "yes" },
+      })
+    ).rejects.toMatchObject({
+      issues: [
+        { path: ["content"], message: expect.stringContaining("confirm") },
+      ],
+    });
   });
 
   it("rejects form content in URL answers", async () => {
