@@ -67,7 +67,7 @@ export declare interface OpenAIBaseInput {
 
   /**
    * Whether or not to include token usage data in streamed chunks.
-   * @default true
+   * Defaults to `true` for the OpenAI endpoint and `false` when a custom base URL is configured.
    */
   streamUsage?: boolean;
 
