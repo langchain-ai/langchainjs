@@ -5,7 +5,8 @@ For breaking changes and compatibility aliases, see the [migration guide](sdk-v2
 
 ## Manage the MCP client yourself
 
-This example shows how you can manage your own MCP client and use it to get LangChain tools. These tools can be used anywhere LangChain tools are used, including with LangGraph prebuilt agents, as shown below.
+Use `loadMcpTools()` when your application owns the SDK client lifecycle.
+It returns executable LangChain tools that can be passed to `createAgent`.
 
 This is an optional advanced API. `MCPAdapter` manages the SDK client
 for you and does not require a separate SDK installation. Install
@@ -13,31 +14,32 @@ for you and does not require a separate SDK installation. Install
 constructs its own SDK client, as this example does.
 
 ```bash
-npm install @langchain/mcp-adapters @langchain/langgraph @langchain/core @langchain/openai @modelcontextprotocol/client
-
-export OPENAI_API_KEY=<your_api_key>
+npm install @langchain/mcp-adapters @langchain/langgraph @langchain/core langchain @langchain/openai @modelcontextprotocol/client
 ```
 
+Start the [local modern server](../examples/modern_server.ts) and configure
+`OPENAI_API_KEY` before running this agent example.
+
 ```ts
-import { Client } from "@modelcontextprotocol/client";
-import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
+import {
+  Client,
+  StreamableHTTPClientTransport,
+} from "@modelcontextprotocol/client";
 
 import { createAgent } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
 import { loadMcpTools } from "@langchain/mcp-adapters";
 
 // Initialize the ChatOpenAI model
-const model = new ChatOpenAI({ model: "gpt-4" });
+const model = new ChatOpenAI({ model: "gpt-4o-mini" });
 
-// Automatically starts and connects to a MCP reference server
-const transport = new StdioClientTransport({
-  command: "npx",
-  args: ["-y", "@modelcontextprotocol/server-math"],
-});
+const transport = new StreamableHTTPClientTransport(
+  new URL("http://127.0.0.1:3001/mcp")
+);
 
 // Initialize the client
 const client = new Client({
-  name: "math-client",
+  name: "example-client",
   version: "1.0.0",
 });
 
@@ -46,7 +48,7 @@ try {
   await client.connect(transport);
 
   // Get tools with custom configuration
-  const tools = await loadMcpTools("math", client, {
+  const tools = await loadMcpTools("local", client, {
     // Whether to throw errors if a tool fails to load (optional, default: true)
     throwOnLoadError: true,
     // Whether to prefix tool names with the server name (optional, default: false)
@@ -58,7 +60,7 @@ try {
   // Create and run the agent
   const agent = createAgent({ model, tools });
   const agentResponse = await agent.invoke({
-    messages: [{ role: "user", content: "what's (3 + 5) x 12?" }],
+    messages: [{ role: "user", content: "Use echo to say Hello MCP." }],
   });
   console.log(agentResponse);
 } catch (e) {
@@ -69,7 +71,7 @@ try {
 }
 ```
 
-For more detailed examples, see the [examples](./examples) directory.
+For runnable clients and servers, see the [examples](../examples) directory.
 
 ## Notifications and Progress
 
@@ -127,27 +129,24 @@ Available notification callbacks you can register:
 
 ## Tool Hooks (modify args/results)
 
-Use hooks to customize tool calls:
+Use hooks to customize tool calls. This example uses the local modern server's
+`echo` tool and invokes it directly:
 
 ```ts
 import { MCPAdapter } from "@langchain/mcp-adapters";
 
 const client = new MCPAdapter({
   servers: {
-    math: {
-      mode: "legacy",
-      transport: "stdio",
-      command: "npx",
-      args: ["-y", "@modelcontextprotocol/server-math"],
-    },
+    local: { url: "http://127.0.0.1:3001/mcp" },
   },
 
   // Change args/headers before the tool call
-  beforeToolCall: () => {
+  beforeToolCall: ({ name }) => {
+    if (name !== "echo") return;
     // Overrides are merged with the original arguments by the adapter.
     // For HTTP/SSE transports, you may also add per-call headers
     return {
-      args: { injected: true },
+      args: { message: "Hello from the hook" },
       headers: { "X-Request-ID": crypto.randomUUID() },
     };
   },
@@ -168,9 +167,14 @@ const client = new MCPAdapter({
   },
 });
 
-const tools = await client.listTools();
-const t = tools.find((tool) => tool.name.includes("add"));
-const out = await t?.invoke({ a: 1, b: 2 });
+try {
+  const tools = await client.listTools();
+  const echo = tools.find((tool) => tool.name === "echo");
+  if (!echo) throw new Error("The server did not provide echo");
+  console.log(await echo.invoke({ message: "Hello MCP" }));
+} finally {
+  await client.close();
+}
 ```
 
 Notes:
@@ -183,7 +187,8 @@ Notes:
 > [!TIP]
 > Tool content always uses standard LangChain blocks. Use `outputHandling` to choose which outputs reach the model.
 
-When loading MCP tools either directly through `loadMcpTools` or via `MCPAdapter`, you can configure the following options:
+These tool options work with `loadMcpTools` and `MCPAdapter`.
+`onConnectionError` is an adapter-only option because the adapter owns connections.
 
 | Option                         | Type                                   | Default                                               | Description                                                                                          |
 | ------------------------------ | -------------------------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
@@ -197,7 +202,7 @@ When loading MCP tools either directly through `loadMcpTools` or via `MCPAdapter
 ## Tool Output Mapping
 
 > [!TIP]
-> This section is important if you are working with multimodal tools, tools that produce embedded resources, or tools that produce large outputs that you may not want to be included in LLM input context. If you are writing a new application that only works with tools that produce simple text or JSON output, leave `outputHandling` undefined to use the defaults.
+> Leave `outputHandling` undefined for the defaults. Configure it when large outputs or media should be available to your application without being sent to the model.
 
 MCP tools return arrays of content blocks. A content block can contain text, an image, audio, or an embedded resource. The right way to map these outputs into LangChain `ToolMessage` objects can differ based on the needs of your application, which is why the adapter provides the `outputHandling` option.
 
@@ -237,20 +242,20 @@ const clientConfig = {
     audio: "artifact",
   },
   servers: {
-    camera-server: {
-      url: "...",
+    camera: {
+      url: "https://camera.example.com/mcp",
       outputHandling: {
-        image: content
+        image: "content",
       },
     },
     microphone: {
-      url: "...",
+      url: "https://microphone.example.com/mcp",
       outputHandling: {
-        audio: content
+        audio: "content",
       },
     },
   },
-}
+};
 ```
 
 When calling tools from the `camera` MCP server, the following `outputHandling` config will be used:
@@ -279,7 +284,7 @@ Similarly, when calling tools on the `microphone` MCP server, the following `out
 
 ### Using `defaultToolTimeout`
 
-You can configure a global timeout for all tools by setting the `defaultToolTimeout` field in the client params. You can include a `defaultToolTimeout` field in the server config to set the timeout for all tools for that server, or globally for the entire client by setting it in the top-level config.
+Set `defaultToolTimeout` on the adapter or an individual server, in milliseconds.
 
 A top-level `defaultToolTimeout` takes precedence over server-level defaults.
 When the top-level setting is omitted, each server uses its own default. A
@@ -305,9 +310,12 @@ const client = new MCPAdapter({
 
 const tools = await client.listTools();
 const slowTool = tools.find((t) => t.name.includes("process_large_dataset"));
+if (!slowTool)
+  throw new Error("The server did not provide process_large_dataset");
 
 // Will timeout after 10 seconds (the top-level defaultToolTimeout)
 const result = await slowTool.invoke({ dataset: "huge_file.csv" });
+await client.close();
 ```
 
 ### Using `withConfig`
@@ -326,6 +334,8 @@ const client = new MCPAdapter({
 
 const tools = await client.listTools();
 const slowTool = tools.find((t) => t.name.includes("process_large_dataset"));
+if (!slowTool)
+  throw new Error("The server did not provide process_large_dataset");
 
 // You can use withConfig to set tool-specific timeouts before handing
 // the tool off to a LangGraph ToolNode or some other part of your
@@ -341,14 +351,7 @@ const directResult = await slowTool.invoke(
   { timeout: 300000 }
 );
 
-// Quick timeout for fast operations
-const quickResult = await fastTool.invoke(
-  { query: "simple_lookup" },
-  { timeout: 5000 } // 5 seconds
-);
-
-// Default timeout (60 seconds from MCP SDK) when no config provided
-const normalResult = await tool.invoke({ input: "normal_processing" });
+await client.close();
 ```
 
 Timeouts can be configured using the following `RunnableConfig` fields:
@@ -382,8 +385,9 @@ function createAuthenticatedAdapter(authProvider: OAuthClientProvider) {
 
 Create a provider for the authenticated user and server. Keep it bound to that
 account for the adapter's lifetime. The provider owns credential storage,
-issuer/account isolation, PKCE state, and handing authorization URLs to the
-application. The adapter does not open a browser or host an authorization callback.
+issuer/account isolation, Proof Key for Code Exchange (PKCE) state, and handing
+authorization URLs to the application. The adapter does not open a browser or
+host an authorization callback.
 
 ## Reconnection Strategies
 
@@ -412,7 +416,6 @@ Both transport types support automatic reconnection:
   mode: "legacy",
   transport: "sse",
   url: "https://example.com/mcp-server",
-  headers: { "Authorization": "Bearer token123" },
   reconnect: {
     enabled: true,      // Enable automatic reconnection
     maxAttempts: 5,     // Maximum reconnection attempts
@@ -488,17 +491,14 @@ When set to `"ignore"` or a custom handler that doesn't throw:
 
 - Servers that fail to connect are skipped and logged as warnings
 - The client continues to work with only the servers that successfully connected
-- Failed servers are removed from the connection list and won't be retried
+- Failed servers are skipped until the adapter is closed and reopened
 - If no servers successfully connect, a warning is logged but no error is thrown
 
 ```ts
 const client = new MCPAdapter({
   servers: {
     "working-server": {
-      mode: "legacy",
-      transport: "stdio",
-      command: "npx",
-      args: ["-y", "@modelcontextprotocol/server-math"],
+      url: "http://127.0.0.1:3001/mcp", // Start modern_server.ts first
     },
     "broken-server": {
       transport: "http",
