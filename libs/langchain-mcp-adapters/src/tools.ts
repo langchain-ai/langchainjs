@@ -342,7 +342,7 @@ type CallToolArgs = {
    * `afterToolCall` callbacks used for tool calls.
    */
   afterToolCall?: ToolHooks["afterToolCall"];
-  inputValidator: ReturnType<typeof fromJsonSchema>;
+  inputValidator: ReturnType<typeof fromJsonSchema<Record<string, unknown>>>;
 };
 
 type ContentBlocksWithArtifacts =
@@ -421,9 +421,10 @@ async function _callTool({
         )
       );
 
-    const finalArgs = { ...args, ...beforeToolCallInterception?.args };
-
-    const validation = await inputValidator["~standard"].validate(finalArgs);
+    const validation = await inputValidator["~standard"].validate({
+      ...args,
+      ...beforeToolCallInterception?.args,
+    });
 
     if (validation.issues) {
       throw new ToolException(
@@ -441,22 +442,19 @@ async function _callTool({
       );
     }
 
+    const finalArgs = validation.value;
     const headers = beforeToolCallInterception?.headers || {};
-    const hasHeaderChanges = Object.entries(headers).length > 0;
+    let finalClient = client;
 
-    if (
-      hasHeaderChanges &&
-      !("fork" in client && typeof client.fork === "function")
-    ) {
-      throw new ToolException(
-        `MCP client for server "${serverName}" does not support header changes`
-      );
+    if (Object.keys(headers).length > 0) {
+      if (!("fork" in client && typeof client.fork === "function")) {
+        throw new ToolException(
+          `MCP client for server "${serverName}" does not support header changes`
+        );
+      }
+
+      finalClient = await client.fork(headers);
     }
-
-    const finalClient =
-      hasHeaderChanges && "fork" in client && typeof client.fork === "function"
-        ? await client.fork(headers)
-        : client;
 
     // v2 callTool(params, options?) — no result-schema argument in between.
     const callToolArgs: Parameters<typeof finalClient.callTool> = [
@@ -611,7 +609,7 @@ export async function loadMcpTools(
 
             // Scope the SDK engine to this descriptor: its default shared cache keys by $id.
             // The SDK export selects the same engine as Client for Node/browser/workerd.
-            const inputValidator = fromJsonSchema(
+            const inputValidator = fromJsonSchema<Record<string, unknown>>(
               originalSchema,
               new DefaultJsonSchemaValidator()
             );
