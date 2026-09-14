@@ -212,7 +212,7 @@ Tool, resource, and template discovery delegates pagination to the SDK. Server
 errors reject instead of appearing as an empty catalog. Resource conversion
 never performs implicit reads; explicitly call
 `readResource` if needed. Modern servers use the current revision by default; legacy servers require
-`mode: "legacy"`. Durable modern elicitation is introduced separately.
+`mode: "legacy"`.
 
 ### Discovery freshness
 
@@ -255,8 +255,7 @@ configuration to supply workspace paths instead.
 ## Elicitation and request logging
 
 Move `onElicitation` onto each legacy server that handles user input. Modern server
-configuration rejects this callback; durable modern elicitation belongs to the
-following interruption layer. Legacy callbacks execute within the active request.
+configuration rejects this callback. Legacy callbacks execute within the active request.
 Their answers are parsed with SDK schemas, with Zod issues preserving validation
 paths. They cannot be resumed after the underlying connection closes.
 
@@ -278,6 +277,7 @@ retry only when application/server semantics make that safe. Modern subscription
 streams are not automatically reopened; close and reconnect explicitly.
 
 Protocol logging and SSE remain deprecated compatibility features. Prefer
-OpenTelemetry/stderr and Streamable HTTP. DCR is also deprecated, but keep SDK
-fallback for authorization servers without CIMD support; it is not a legacy-MCP-only
-setting. Roots/sampling and experimental task extensions are not new adapter APIs.
+OpenTelemetry/stderr and Streamable HTTP. Dynamic Client Registration (DCR) is
+also deprecated, but the SDK retains it for authorization servers without
+Client ID Metadata Documents (CIMD) support. Registration is independent of MCP
+mode. Roots, sampling and experimental tasks have no adapter facade.

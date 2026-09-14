@@ -2,7 +2,10 @@
 "@langchain/mcp-adapters": major
 ---
 
-Scope elicitation callbacks to explicitly legacy servers. Parse requests and answers through native SDK core schemas and preserve Zod validation issues. Modern configurations reject callback elicitation. Logging levels and resource subscription filters also derive from the SDK core schemas.
+For applications upgrading from adapter 1.x, scope elicitation callbacks to
+explicitly legacy servers. Requests and answers use native SDK core schemas and
+preserve Zod validation issues. Modern configurations reject callback elicitation.
+Logging levels and resource subscription filters also derive from SDK core schemas.
 
 Scope modern request logging and round limits to each modern server. Reject these options on legacy connections and at the adapter root. Keep tool catalogs current through SDK subscriptions even when no application observer is configured.
 

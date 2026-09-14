@@ -2,7 +2,8 @@
 "@langchain/mcp-adapters": major
 ---
 
-Use `listToolsets()` to discover executable LangChain tools grouped by server.
+For applications upgrading from adapter 1.x, use `listToolsets()` to discover
+executable LangChain tools grouped by server.
 `initializeConnections()` remains a deprecated wrapper with the same result.
 Public loader and discovery options reject invalid values and unknown fields
 before connecting. Tool JSON objects and MCP content tags derive from the
@@ -12,7 +13,12 @@ Preserve structured output, resource provenance and protocol metadata in artifac
 
 Validate effective post-hook arguments against the original server JSON Schema without mutating descriptors. Expose the original JSON Schema without flattening unions, inlining references, or dropping conditional constraints. Model-facing schema overrides remain separate from invocation validation.
 
-Isolate catalogs and connections by effective headers and OAuth provider identity. Deduplicate acquisitions, install handlers before connection, clean up failed handshakes/discovery, and settle every owned close. Delegate tools/resources/templates pagination to the SDK and propagate discovery errors instead of returning empty catalogs. Test SDK 1.30 stdio alongside SDK 2 HTTP/SSE servers; protocol negotiation remains unchanged.
+Isolate catalogs and connections by effective headers and OAuth provider identity.
+Share concurrent connection attempts, register handlers before connecting, and
+release failed connections. Closing attempts every owned connection even if one
+fails. The SDK handles tool, resource and template pagination; discovery failures
+propagate to the caller. Local interoperability tests cover SDK 1.30 stdio and
+SDK 2 HTTP/SSE servers.
 
 Honor SDK discovery TTL and cache hints on each `listTools()` call. Use
 `listTools([], { cacheMode: "refresh" })` to refresh the catalog, or `"bypass"` to
