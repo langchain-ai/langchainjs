@@ -22,28 +22,67 @@ describe("hook result parsing", () => {
     );
   });
 
-  test("accepts MCP resources through the SDK schema", () => {
-    const modification = {
+  test.each([{ text: "hello" }, { blob: "aGVsbG8=" }])(
+    "preserves MCP resource extensions through the SDK schema: %j",
+    (content) => {
+      const modification = {
+        result: [
+          "result",
+          [
+            {
+              type: "resource",
+              resource: {
+                uri: "file:///test.txt",
+                ...content,
+                extension: { value: 42 },
+              },
+              annotations: { priority: 0.5, extension: "annotation" },
+              extension: "resource",
+            },
+          ],
+        ],
+      };
+
+      expect(toolCallResultModificationSchema.parse(modification)).toEqual(
+        modification
+      );
+    }
+  );
+
+  test.each([
+    { result: [[42], []] },
+    { result: ["result", [null]] },
+    { result: ["result", [{ type: "resource", resource: {} }]] },
+    {
+      result: [
+        "result",
+        [{ type: "resource", resource: { uri: 42, text: "hello" } }],
+      ],
+    },
+    {
+      result: [
+        "result",
+        [{ type: "resource", resource: { uri: "file:///test.txt", text: 42 } }],
+      ],
+    },
+    {
+      result: [
+        "result",
+        [{ type: "resource", resource: { uri: "file:///test.txt", blob: 42 } }],
+      ],
+    },
+    {
       result: [
         "result",
         [
           {
             type: "resource",
             resource: { uri: "file:///test.txt", text: "hello" },
+            annotations: { priority: "high" },
           },
         ],
       ],
-    };
-
-    expect(toolCallResultModificationSchema.parse(modification)).toEqual(
-      modification
-    );
-  });
-
-  test.each([
-    { result: [[42], []] },
-    { result: ["result", [null]] },
-    { result: ["result", [{ type: "resource", resource: {} }]] },
+    },
     { result: ["result", [{ data: "missing type" }]] },
     { result: [[{ type: "text", id: 42 }], []] },
   ])("rejects malformed result blocks: %j", (modification) => {
