@@ -63,7 +63,7 @@ async function runExample() {
       temperature: 0,
     });
 
-    // Create a React agent using LangGraph's createReactAgent
+    // Create a agent using LangChain's createAgent
     const agent = createAgent({
       model,
       tools: firecrawlTools,

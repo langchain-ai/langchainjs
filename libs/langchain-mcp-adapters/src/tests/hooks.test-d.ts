@@ -1,4 +1,10 @@
-import { MCPAdapter } from "../index.js";
+import {
+  MCPAdapter,
+  type MCPAdapterConfig,
+  type ResolvedMCPAdapterConfig,
+  type SSEConnection,
+  type StreamableHTTPConnection,
+} from "../index.js";
 import type {
   CallToolResult,
   ListResourcesResult,
@@ -15,8 +21,7 @@ import type {
   MCPResourceTemplate,
   MCPResourceContent,
   CallToolResultContentType,
-  ResolvedStreamableHTTPConnection,
-  ResolvedStdioConnection,
+  ResolvedConnection,
 } from "../types.js";
 
 test("check tool hooks types", () => {
@@ -29,7 +34,7 @@ test("check tool hooks types", () => {
           expectTypeOf(message.logger).toEqualTypeOf<string | undefined>();
           expectTypeOf(server).toEqualTypeOf<{
             server: string;
-            options: ResolvedStreamableHTTPConnection | ResolvedStdioConnection;
+            options: ResolvedConnection;
           }>();
         },
         onProgress: (progress, eventSource) => {
@@ -55,28 +60,28 @@ test("check tool hooks types", () => {
           expectTypeOf(notification.reason).toEqualTypeOf<string | undefined>();
           expectTypeOf(server).toEqualTypeOf<{
             server: string;
-            options: ResolvedStreamableHTTPConnection | ResolvedStdioConnection;
+            options: ResolvedConnection;
           }>();
         },
 
         onInitialized: (server) => {
           expectTypeOf(server).toEqualTypeOf<{
             server: string;
-            options: ResolvedStreamableHTTPConnection | ResolvedStdioConnection;
+            options: ResolvedConnection;
           }>();
         },
 
         onPromptsListChanged: (server) => {
           expectTypeOf(server).toEqualTypeOf<{
             server: string;
-            options: ResolvedStreamableHTTPConnection | ResolvedStdioConnection;
+            options: ResolvedConnection;
           }>();
         },
 
         onResourcesListChanged: (server) => {
           expectTypeOf(server).toEqualTypeOf<{
             server: string;
-            options: ResolvedStreamableHTTPConnection | ResolvedStdioConnection;
+            options: ResolvedConnection;
           }>();
         },
 
@@ -84,14 +89,14 @@ test("check tool hooks types", () => {
           expectTypeOf(notification.uri).toEqualTypeOf<string>();
           expectTypeOf(server).toEqualTypeOf<{
             server: string;
-            options: ResolvedStreamableHTTPConnection | ResolvedStdioConnection;
+            options: ResolvedConnection;
           }>();
         },
 
         onToolsListChanged: (server) => {
           expectTypeOf(server).toEqualTypeOf<{
             server: string;
-            options: ResolvedStreamableHTTPConnection | ResolvedStdioConnection;
+            options: ResolvedConnection;
           }>();
         },
         command: "npx",
@@ -144,7 +149,24 @@ test("canonical adapter API retains typed SDK callbacks and native tools", () =>
   });
 
   expectTypeOf(adapter).toEqualTypeOf<MultiServerMCPClient>();
+  expectTypeOf(adapter.config).toEqualTypeOf<ResolvedMCPAdapterConfig>();
+  expectTypeOf(adapter.config).not.toHaveProperty("mcpServers");
   expectTypeOf(adapter.close()).toEqualTypeOf<Promise<void>>();
+});
+
+test("public transport types distinguish SSE from Streamable HTTP", () => {
+  const sse = {
+    mode: "legacy",
+    transport: "sse",
+    url: "https://example.com/sse",
+  } satisfies SSEConnection;
+  const http = {
+    url: "https://example.com/mcp",
+  } satisfies StreamableHTTPConnection;
+  const config = { servers: { sse, http } } satisfies MCPAdapterConfig;
+  expectTypeOf(config).toMatchTypeOf<MCPAdapterConfig>();
+  expectTypeOf<SSEConnection>().not.toMatchTypeOf<StreamableHTTPConnection>();
+  expectTypeOf<NonNullable<SSEConnection["mode"]>>().toEqualTypeOf<"legacy">();
 });
 
 test("resource and content types follow the SDK", () => {

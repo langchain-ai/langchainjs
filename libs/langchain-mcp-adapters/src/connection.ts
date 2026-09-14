@@ -14,6 +14,7 @@ import { connectionSchema } from "./types.js";
 import debug from "debug";
 import type {
   ResolvedStreamableHTTPConnection,
+  ResolvedSSEConnection,
   ResolvedStdioConnection,
 } from "./types.js";
 
@@ -50,7 +51,10 @@ export interface Connection {
     | SSEClientTransport
     | StdioClientTransport;
   client: Client;
-  transportOptions: ResolvedStdioConnection | ResolvedStreamableHTTPConnection;
+  transportOptions:
+    | ResolvedStdioConnection
+    | ResolvedStreamableHTTPConnection
+    | ResolvedSSEConnection;
   closeCallback: () => Promise<void>;
 }
 
@@ -99,14 +103,19 @@ export class ConnectionManager {
     options: ResolvedStdioConnection
   ): Promise<Client>;
   async createClient(
-    type: "http" | "sse",
+    type: "http",
     serverName: string,
     options: ResolvedStreamableHTTPConnection
   ): Promise<Client>;
   async createClient(
+    type: "sse",
+    serverName: string,
+    options: ResolvedSSEConnection
+  ): Promise<Client>;
+  async createClient(
     ...args:
       | ["stdio", string, ResolvedStdioConnection]
-      | ["sse", string, ResolvedStreamableHTTPConnection]
+      | ["sse", string, ResolvedSSEConnection]
       | ["http", string, ResolvedStreamableHTTPConnection]
   ): Promise<Client> {
     if (this.#closing) throw new Error("MCP connections are closing");
@@ -318,7 +327,13 @@ export class ConnectionManager {
       throw new Error("Forking stdio transport is not supported");
     }
 
-    return this.createClient(options.transport, key.serverName, {
+    if (options.transport === "sse")
+      return this.createClient("sse", key.serverName, {
+        ...options,
+        headers,
+      });
+
+    return this.createClient("http", key.serverName, {
       ...options,
       headers: mergeHeaders(options.headers, headers),
     });
@@ -546,7 +561,7 @@ export class ConnectionManager {
    */
   async #createSSETransport(
     serverName: string,
-    args: ResolvedStreamableHTTPConnection
+    args: ResolvedSSEConnection
   ): Promise<SSEClientTransport> {
     const { url, headers, authProvider } = args;
     const options: SSEClientTransportOptions = {};

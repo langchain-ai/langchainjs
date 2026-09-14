@@ -6,6 +6,13 @@ Use `MCPAdapter({ servers })` as the canonical client API. `MultiServerMCPClient
 
 Upgrade to Zod 4. Configuration now rejects conflicting options and unknown output-handling keys. Hook argument overrides must be objects. Configuration snapshots preserve callbacks and OAuth provider identity.
 
+Read configuration through `adapter.config.servers` for every constructor form;
+the getter no longer exposes `mcpServers`. `ResolvedMCPAdapterConfig` describes
+this snapshot. `SSEConnection` now accepts only legacy SSE; use
+`StreamableHTTPConnection` for HTTP or `Connection` for any supported transport.
+Remove unsupported stdio `encoding`; retry counts must be nonnegative integers
+and delays must be nonnegative.
+
 Hook `state` is now typed as `unknown` rather than an object record. Its runtime value is unchanged. Applications must narrow it before accessing properties.
 
 Remove `useStandardContentBlocks`; tool content always uses standard LangChain blocks. Update image/audio consumers to use `data` and `mimeType`. Artifact-routed blocks keep their MCP format, including when passed through `afterToolCall`; resource reads remain explicit.
