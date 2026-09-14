@@ -1,5 +1,6 @@
 /* oxlint-disable @typescript-eslint/no-explicit-any */
 import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
+import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 
 export interface GoogleCustomEventInfo {
   subEvent: string;
@@ -10,8 +11,8 @@ export abstract class GoogleRequestCallbackHandler extends BaseCallbackHandler {
   customEventInfo(eventName: string): GoogleCustomEventInfo {
     const names = eventName.split("-");
     return {
-      subEvent: names[1],
-      module: names[2],
+      subEvent: names[1] ?? names[0],
+      module: names.slice(2).join("-") || "ChatGoogle",
     };
   }
 
@@ -42,6 +43,52 @@ export abstract class GoogleRequestCallbackHandler extends BaseCallbackHandler {
     metadata?: Record<string, any>
   ): any;
 
+  handleStreamEvent(event: ChatModelStreamEvent): void {
+    if (event.event === "provider" && event.provider === "google") {
+      const eventInfo: GoogleCustomEventInfo = {
+        subEvent: event.name,
+        module: "ChatGoogle",
+      };
+      const eventName = `google-${event.name}-ChatGoogle`;
+      switch (event.name) {
+        case "request":
+          this.handleCustomRequestEvent(
+            eventName,
+            eventInfo,
+            event.payload,
+            ""
+          );
+          break;
+        case "response":
+          this.handleCustomResponseEvent(
+            eventName,
+            eventInfo,
+            event.payload,
+            ""
+          );
+          break;
+        case "chunk":
+          this.handleCustomChunkEvent(eventName, eventInfo, event.payload, "");
+          break;
+        default:
+          break;
+      }
+    }
+  }
+
+  handleChatModelStreamEvent(event: ChatModelStreamEvent): void {
+    this.handleStreamEvent(event);
+  }
+
+  async *tap(
+    stream: AsyncIterable<ChatModelStreamEvent>
+  ): AsyncGenerator<ChatModelStreamEvent> {
+    for await (const event of stream) {
+      this.handleStreamEvent(event);
+      yield event;
+    }
+  }
+
   handleCustomEvent(
     eventName: string,
     data: any,
@@ -49,7 +96,7 @@ export abstract class GoogleRequestCallbackHandler extends BaseCallbackHandler {
     tags?: string[],
     metadata?: Record<string, any>
   ): any {
-    if (!eventName) {
+    if (!eventName || !eventName.startsWith("google-")) {
       return undefined;
     }
     const eventInfo = this.customEventInfo(eventName);
@@ -160,6 +207,22 @@ export class GoogleRequestRecorder extends GoogleRequestCallbackHandler {
 
   chunk: any[] = [];
 
+  requests: any[] = [];
+
+  responses: any[] = [];
+
+  get chunks(): any[] {
+    return this.chunk;
+  }
+
+  reset(): void {
+    this.request = {};
+    this.response = {};
+    this.chunk = [];
+    this.requests = [];
+    this.responses = [];
+  }
+
   handleCustomRequestEvent(
     _eventName: string,
     _eventInfo: GoogleCustomEventInfo,
@@ -169,6 +232,7 @@ export class GoogleRequestRecorder extends GoogleRequestCallbackHandler {
     _metadata?: Record<string, any>
   ): any {
     this.request = data;
+    this.requests.push(data);
   }
 
   handleCustomResponseEvent(
@@ -180,6 +244,7 @@ export class GoogleRequestRecorder extends GoogleRequestCallbackHandler {
     _metadata?: Record<string, any>
   ): any {
     this.response = data;
+    this.responses.push(data);
   }
 
   handleCustomChunkEvent(
