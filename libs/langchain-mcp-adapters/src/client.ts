@@ -35,7 +35,7 @@ import {
   loggingLevelSchema,
   sseConnectionSchema,
   customHTTPTransportOptionsSchema,
-  isOAuthClientProvider,
+  oAuthClientProviderSchema,
   type LoadMcpToolsOptions,
   _resolveAndApplyOverrideHandlingOverrides,
 } from "./types.js";
@@ -427,14 +427,18 @@ export class MCPAdapter {
       );
     }
 
-    if (!isOAuthClientProvider(connection.authProvider)) {
+    const provider = oAuthClientProviderSchema.safeParse(
+      connection.authProvider
+    );
+    if (!provider.success) {
       throw new MCPClientError(
         "OAuth completion requires an OAuthClientProvider; token providers manage authorization externally",
-        serverName
+        serverName,
+        { cause: provider.error }
       );
     }
 
-    if (!(await connection.authProvider.discoveryState?.())) {
+    if (!(await provider.data.discoveryState?.())) {
       throw new MCPClientError(
         "OAuth completion requires provider discoveryState from the authorization attempt",
         serverName

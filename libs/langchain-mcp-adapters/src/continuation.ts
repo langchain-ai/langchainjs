@@ -1,5 +1,6 @@
 import {
   Client,
+  CLIENT_CAPABILITIES_META_KEY,
   type CallToolRequest,
   type ElicitResult,
 } from "@modelcontextprotocol/client";
@@ -40,11 +41,12 @@ export class InterruptMCPClient extends Client {
     if (this.getProtocolEra() !== "modern") {
       return envelope;
     }
-    const key = "io.modelcontextprotocol/clientCapabilities";
-    const capabilities = ClientCapabilitiesSchema.parse(envelope?.[key] ?? {});
+    const capabilities = ClientCapabilitiesSchema.parse(
+      envelope?.[CLIENT_CAPABILITIES_META_KEY] ?? {}
+    );
     return {
       ...envelope,
-      [key]: {
+      [CLIENT_CAPABILITIES_META_KEY]: {
         ...capabilities,
         elicitation: {
           form: capabilities.elicitation?.form ?? {},
@@ -188,10 +190,10 @@ export async function withMCPInterrupts<T>(
 
     const { requests } = elicitation;
 
-    const keys = Object.keys(requests);
+    const entries = Object.entries(requests);
     let responses: Record<string, ElicitResult> = {};
 
-    if (keys.length > 0) {
+    if (entries.length > 0) {
       if (source.execution === "direct") {
         throw new ToolException(
           "This MCP tool requested user input. Invoke it inside a LangGraph with a checkpointer to pause and resume elicitation.",
@@ -201,14 +203,11 @@ export async function withMCPInterrupts<T>(
 
       const resumeSchema = z.strictObject(
         Object.fromEntries(
-          keys.map(
-            (key) =>
+          entries.map(
+            ([key, request]) =>
               [
                 key,
-                elicitationAnswerFor(
-                  requests[key],
-                  modernElicitationAnswerSchema
-                ),
+                elicitationAnswerFor(request, modernElicitationAnswerSchema),
               ] satisfies [string, ReturnType<typeof elicitationAnswerFor>]
           )
         )

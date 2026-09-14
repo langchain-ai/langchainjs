@@ -13,7 +13,7 @@ import type {
   StreamableHTTPClientTransportOptions,
   StreamableHTTPReconnectionOptions,
 } from "@modelcontextprotocol/client";
-import { connectionSchema, isOAuthClientProvider } from "./types.js";
+import { connectionSchema } from "./types.js";
 import debug from "debug";
 import type {
   ResolvedStreamableHTTPConnection,
@@ -667,38 +667,6 @@ export class ConnectionManager {
     }
 
     if (headers) {
-      // For SSE, we need to pass headers via eventSourceInit.fetch for the initial connection
-      // and also via requestInit.headers for subsequent POST requests
-      options.eventSourceInit = {
-        fetch: async (url, init) => {
-          const requestHeaders = new Headers(init?.headers);
-
-          // Add OAuth token if authProvider is available
-          // This is necessary because setting eventSourceInit.fetch prevents automatic Authorization header
-          if (authProvider) {
-            const token = isOAuthClientProvider(authProvider)
-              ? (await authProvider.tokens())?.access_token
-              : await authProvider.token();
-            if (token) {
-              requestHeaders.set("Authorization", `Bearer ${token}`);
-            }
-          }
-
-          // Add our custom headers
-          Object.entries(headers).forEach(([key, value]) => {
-            requestHeaders.set(key, value);
-          });
-          // Always include Accept header for SSE
-          requestHeaders.set("Accept", "text/event-stream");
-
-          return fetch(url, {
-            ...init,
-            headers: requestHeaders,
-          });
-        },
-      };
-
-      // Also include headers for POST requests
       options.requestInit = { headers };
 
       debugLog(

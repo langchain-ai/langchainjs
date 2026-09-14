@@ -145,13 +145,6 @@ export const authProviderSchema = z.union([
   tokenProviderSchema,
 ]);
 
-/** @internal Narrow an SDK service without cloning it or invoking its methods. */
-export function isOAuthClientProvider(
-  provider: z.output<typeof authProviderSchema>
-): provider is OAuthClientProvider {
-  return oAuthClientProviderSchema.safeParse(provider).success;
-}
-
 /** SDK logging levels, exposed as an adapter request option. */
 export const loggingLevelSchema = LoggingLevelSchema;
 

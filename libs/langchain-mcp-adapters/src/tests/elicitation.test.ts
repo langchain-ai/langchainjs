@@ -31,6 +31,24 @@ const form = {
 } satisfies MCPElicitationRequest;
 
 describe("elicitation answers", () => {
+  it("projects modern form requests without legacy task metadata", () => {
+    const request = {
+      method: "elicitation/create",
+      params: { mode: "form", ...form },
+    };
+    expect(
+      modernElicitationRequestSchema.parse({
+        ...request,
+        params: {
+          ...request.params,
+          task: { ttl: 1000 },
+          _meta: { application: "example" },
+          extension: true,
+        },
+      })
+    ).toEqual(request.params);
+  });
+
   it("projects modern URL requests without weakening legacy validation", () => {
     const request = {
       method: "elicitation/create",

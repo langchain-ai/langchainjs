@@ -24,7 +24,13 @@ export const modernElicitationAnswerSchema = ElicitResultSchema.pick({
   content: true,
 }).strip();
 
-// Derive the modern URL request by omitting the deprecated legacy-only fields.
+// Keep the modern question fields from the SDK's legacy-compatible schemas.
+const modernFormRequestSchema = ElicitRequestFormParamsSchema.pick({
+  mode: true,
+  message: true,
+  requestedSchema: true,
+});
+
 const modernURLRequestSchema = ElicitRequestURLParamsSchema.pick({
   mode: true,
   message: true,
@@ -32,7 +38,7 @@ const modernURLRequestSchema = ElicitRequestURLParamsSchema.pick({
 });
 
 export const modernElicitationRequestSchema = ElicitRequestSchema.extend({
-  params: z.union([ElicitRequestFormParamsSchema, modernURLRequestSchema]),
+  params: z.union([modernFormRequestSchema, modernURLRequestSchema]),
 }).transform((request) => request.params);
 
 type ModernElicitationRequest = z.output<typeof modernElicitationRequestSchema>;

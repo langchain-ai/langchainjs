@@ -1285,6 +1285,9 @@ describe("MultiServerMCPClient Integration Tests", () => {
         },
       });
 
+      const readTokens = vi.spyOn(mockAuthProvider, "tokens");
+      const fetchRequests = vi.spyOn(globalThis, "fetch");
+
       try {
         const tools = await client.getTools();
         expect(tools.length).toBeGreaterThan(0);
@@ -1317,8 +1320,13 @@ describe("MultiServerMCPClient Integration Tests", () => {
           headerName: "Authorization",
         });
         expect(authHeaderResult).toBe("Bearer test-token");
+        expect(readTokens).toHaveBeenCalledTimes(
+          fetchRequests.mock.calls.length
+        );
       } finally {
         await client.close();
+        readTokens.mockRestore();
+        fetchRequests.mockRestore();
       }
     });
 

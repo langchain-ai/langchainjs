@@ -15,7 +15,11 @@ import {
   StreamableHTTPClientTransport,
 } from "@modelcontextprotocol/client";
 import { MCPAdapter, MultiServerMCPClient, MCPClientError } from "../client.js";
-import { adapterConfigSchema, oAuthClientProviderSchema } from "../types.js";
+import {
+  adapterConfigSchema,
+  authProviderSchema,
+  oAuthClientProviderSchema,
+} from "../types.js";
 
 vi.mock(
   "@modelcontextprotocol/client",
@@ -47,6 +51,36 @@ describe("MultiServerMCPClient", () => {
       expect(config.servers.modern).toHaveProperty("authProvider", provider);
       expect(Client.prototype.connect).not.toHaveBeenCalled();
     });
+
+    test.each([undefined, () => Promise.resolve()])(
+      "preserves a token provider with optional onUnauthorized %s",
+      (onUnauthorized) => {
+        const provider = { token: async () => undefined, onUnauthorized };
+        expect(authProviderSchema.parse(provider)).toBe(provider);
+      }
+    );
+
+    test.each([null, 42])(
+      "rejects a non-callable onUnauthorized %s with its issue path",
+      (onUnauthorized) => {
+        const result = authProviderSchema.safeParse({
+          token: async () => undefined,
+          onUnauthorized,
+        });
+        expect(result.success).toBe(false);
+        if (!result.success) {
+          expect(result.error.issues).toEqual([
+            expect.objectContaining({
+              code: "invalid_union",
+              errors: expect.arrayContaining([
+                [expect.objectContaining({ path: ["onUnauthorized"] })],
+              ]),
+            }),
+          ]);
+        }
+      }
+    );
+
     class Provider {
       get redirectUrl(): undefined {
         throw new Error("Read redirectUrl only during authorization");
