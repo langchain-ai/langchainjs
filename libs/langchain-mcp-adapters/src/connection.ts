@@ -78,8 +78,8 @@ function protocolClientOptions(
     return { versionNegotiation: { mode: "legacy" } };
   }
 
-  // SDK LATEST_PROTOCOL_VERSION still names a legacy revision. Pin modern
-  // explicitly so the configured mode cannot silently fall back to legacy.
+  // The SDK defaults to legacy, and "auto" permits legacy fallback.
+  // Pin modern connections to preserve the configured protocol mode.
   return {
     versionNegotiation: { mode: { pin: "2026-07-28" } },
     inputRequired: { maxRounds: options.maxElicitationRounds },
