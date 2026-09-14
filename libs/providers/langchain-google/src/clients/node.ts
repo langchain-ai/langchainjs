@@ -240,7 +240,7 @@ export class NodeApiClient extends ApiClient {
   constructor(protected params: NodeApiClientParams = {}) {
     super();
 
-    this.apiKey = params.apiKey ?? getEnvironmentVariable("GOOGLE_API_KEY");
+    this.apiKey = this.resolveApiKey(params);
     this.credentials = iife(() => {
       if (params.credentials) {
         return normalizeGCPCredentials(params.credentials);
@@ -260,6 +260,25 @@ export class NodeApiClient extends ApiClient {
       }
       return undefined;
     });
+  }
+
+  /**
+   * Resolves which API key applies, in priority order:
+   *
+   * 1. An explicit `apiKey` param.
+   * 2. Nothing, when the caller chose OAuth via `googleAuthOptions` — an
+   *    ambient `GOOGLE_API_KEY` (possibly belonging to an unrelated service)
+   *    must never override that choice.
+   * 3. The ambient `GOOGLE_API_KEY` environment variable.
+   */
+  private resolveApiKey(params: NodeApiClientParams): string | undefined {
+    if (params.apiKey !== undefined) {
+      return params.apiKey;
+    }
+    if (params.googleAuthOptions) {
+      return undefined;
+    }
+    return getEnvironmentVariable("GOOGLE_API_KEY");
   }
 
   /**
