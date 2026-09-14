@@ -10,28 +10,6 @@
 
 This library provides a lightweight wrapper that makes [Anthropic Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) tools compatible with [LangChain.js](https://github.com/langchain-ai/langchainjs) and [LangGraph.js](https://github.com/langchain-ai/langgraphjs).
 
-## Features
-
-- 🔌 **Transport Options**
-  - Connect to MCP servers via stdio (local) or Streamable HTTP (remote)
-    - Streamable HTTP automatically falls back to SSE for compatibility with legacy MCP server implementations
-  - Support for custom headers in SSE connections for authentication
-  - Configurable reconnection strategies for both transport types
-
-- 🔄 **Multi-Server Management**
-  - Connect to multiple MCP servers simultaneously
-  - Auto-organize tools by server or access them as a flattened collection
-
-- 🧩 **Agent Integration**
-  - Compatible with LangChain.js and LangGraph.js
-  - Optimized for OpenAI, Anthropic, and Google models
-  - Supports rich content responses including text, images, and embedded resources
-
-- 🛠️ **Development Features**
-  - Uses `debug` package for debug logging
-  - Flexible configuration options
-  - Robust error handling
-
 ## Installation
 
 ```bash
@@ -40,141 +18,55 @@ npm install @langchain/mcp-adapters
 
 ## Connect to one or more servers
 
-Start with a named server and load its LangChain tools:
+Connect a server and pass its tools to a LangChain agent:
 
 ```ts
+import { createAgent } from "langchain";
 import { MCPAdapter } from "@langchain/mcp-adapters";
 
 const adapter = new MCPAdapter({
   servers: { workspace: { url: "https://example.com/mcp" } },
 });
-const tools = await adapter.listTools();
-// Pass tools to your agent. When it finishes:
-await adapter.close();
-```
 
-Add more entries to `servers` to connect to several servers. Each defaults to modern
-MCP; add `mode: "legacy"` only to older servers. The same schema validates each entry,
-so one server and a mixed server map follow the same path. Empty maps and incompatible
-options fail before connecting.
-
-The following example includes model integration and optional configuration:
-
-```ts
-import { createAgent } from "langchain";
-import { ChatOpenAI } from "@langchain/openai";
-import { MCPAdapter, type OAuthClientProvider } from "@langchain/mcp-adapters";
-
-// Supply your application-owned OAuth provider; see OAuth setup below.
-declare const authProvider: OAuthClientProvider;
-
-// Create client and connect to server
-const client = new MCPAdapter({
-  // Global tool configuration options
-  // Whether to throw on errors if a tool fails to load (optional, default: true)
-  throwOnLoadError: true,
-  // Avoid tool-name collisions when servers expose tools with the same name
-  prefixToolNameWithServerName: true,
-  // Optional additional prefix for tool names (optional, default: "")
-  additionalToolNamePrefix: "",
-
-  // Behavior when a server fails to connect: "throw" (default) or "ignore"
-  onConnectionError: "ignore",
-
-  // Server configuration
-  servers: {
-    // adds a STDIO connection to a server named "math"
-    math: {
-      mode: "legacy",
-      transport: "stdio",
-      command: "npx",
-      args: ["-y", "@modelcontextprotocol/server-math"],
-      // Restart configuration for stdio transport
-      restart: {
-        enabled: true,
-        maxAttempts: 3,
-        delayMs: 1000,
-      },
-    },
-
-    // here's a filesystem server
-    filesystem: {
-      mode: "legacy",
-      transport: "stdio",
-      command: "npx",
-      args: ["-y", "@modelcontextprotocol/server-filesystem"],
-    },
-
-    // Modern Streamable HTTP transport with authentication headers
-    weather: {
-      url: "https://example.com/weather/mcp",
-      headers: {
-        Authorization: "Bearer token123",
-      },
-    },
-
-    // OAuth 2.0 authentication (recommended for secure servers)
-    "oauth-protected-server": {
-      url: "https://protected.example.com/mcp",
-      authProvider,
-      // Can still include custom headers for non-auth purposes
-      headers: {
-        "User-Agent": "My-MCP-Client/1.0",
-      },
-    },
-
-    // Explicit legacy SSE endpoint
-    github: {
-      mode: "legacy",
-      transport: "sse", // also works with "type" field instead of "transport"
-      url: "https://example.com/mcp",
-      reconnect: {
-        enabled: true,
-        maxAttempts: 5,
-        delayMs: 2000,
-      },
-    },
-  },
-});
-
-const tools = await client.listTools();
-
-// Create an OpenAI model
-const model = new ChatOpenAI({
-  model: "gpt-4o-mini",
-  temperature: 0,
-});
-
-// Create the React agent
-const agent = createAgent({
-  model,
-  tools,
-});
-
-// Run the agent
 try {
-  const mathResponse = await agent.invoke({
-    messages: [{ role: "user", content: "what's (3 + 5) x 12?" }],
+  const agent = createAgent({
+    model: "openai:gpt-4o-mini",
+    tools: await adapter.listTools(),
   });
-  console.log(mathResponse);
+  const result = await agent.invoke({
+    messages: [{ role: "user", content: "What tools can help me here?" }],
+  });
+  console.log(result);
 } finally {
-  await client.close();
+  await adapter.close();
 }
 ```
 
+Replace the URL with your MCP endpoint and configure credentials for your model.
 Construction validates configuration; discovery and invocation open connections.
-No MCP SDK import is needed for this workflow. Connections default to `mode: "modern"`
-and require the current modern protocol. Set `mode: "legacy"` for a legacy
-stdio, Streamable HTTP, or SSE server. Modern connections never fall back to SSE.
+Servers default to modern MCP. Use `mode: "legacy"` for a legacy server:
 
-`MultiServerMCPClient` is a deprecated alias of `MCPAdapter`. Existing
-`mcpServers` and direct server-map configurations remain accepted; new code
-should use `servers` and `listTools()`. `getTools()` remains a compatibility alias.
-The old constructor names use the same mode validation. Do not combine `servers` with `mcpServers`, or conflicting
-`transport` and legacy `type` values. See the [migration guide](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-mcp-adapters/docs/sdk-v2-migration.md)
-for Zod4, callback and configuration changes.
+```ts
+const adapter = new MCPAdapter({
+  prefixToolNameWithServerName: true,
+  servers: {
+    workspace: { url: "https://example.com/mcp" },
+    local: {
+      mode: "legacy",
+      transport: "stdio",
+      command: "node",
+      args: ["./server.js"],
+    },
+  },
+});
+```
 
-# Example: Manage the MCP Client yourself
+Each server keeps its own protocol mode. Modern connections never fall back to
+legacy or SSE. Prefix tool names when different servers expose the same name.
+For constructor aliases and upgrade steps, see the
+[migration guide](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-mcp-adapters/docs/sdk-v2-migration.md).
+
+## Manage the MCP client yourself
 
 This example shows how you can manage your own MCP client and use it to get LangChain tools. These tools can be used anywhere LangChain tools are used, including with LangGraph prebuilt agents, as shown below.
 
@@ -296,11 +188,6 @@ Available notification callbacks you can register:
 - **onInitialized**: legacy only; **onCancelled**: cancellation notifications not consumed by the SDK
 - **onPromptsListChanged**, **onResourcesListChanged**, **onResourcesUpdated**, **onToolsListChanged**
 
-`onRootsListChanged` was removed: roots changes are sent by clients, not observed
-from servers. Pass workspace paths through tool arguments, resource URIs, or
-server configuration. Modern subscription cancellation is handled by the SDK;
-`onCancelled` observes notifications the SDK does not consume.
-
 ## Tool Hooks (modify args/results)
 
 Use hooks to customize tool calls:
@@ -381,10 +268,7 @@ Content blocks use the standard LangChain format recognized by chat model integr
 
 ### Standardizing the Format of Tool Outputs
 
-LangChain core introduced standard multimodal content blocks in version 0.3.48.
-Earlier adapter releases offered `useStandardContentBlocks` to opt into those
-formats while retaining older provider-specific shapes. This major release
-removes that toggle. Model-visible images and audio use LangChain's native blocks:
+Model-visible images and audio use LangChain's native blocks:
 `{ type: "image", data, mimeType }` and `{ type: "audio", data, mimeType }`.
 A single plain text result remains a string. Embedded text retains its resource
 URI in metadata; binary resources become image, audio or file blocks by MIME type.
@@ -398,9 +282,6 @@ and empty arrays. Result `_meta` is never appended to model-visible text.
 
 Conversion does not fetch resource links. Use `adapter.readResource(server, uri)`
 explicitly when your application needs a resource's contents.
-
-When upgrading, remove `useStandardContentBlocks` from configuration and update
-code that reads `image_url`, `source_type`, or `mime_type` to the standard fields.
 
 ### Determining Which Tool Outputs will be Visible to the LLM
 
@@ -547,82 +428,30 @@ Timeouts can be configured using the following `RunnableConfig` fields:
 
 ## OAuth 2.0 Authentication
 
-For secure MCP servers that require OAuth 2.0 authentication, you can use the `authProvider` option instead of manually managing headers. This provides automatic token refresh, error handling, and standards-compliant OAuth flows.
-
-New in v0.4.6.
-
-### Basic OAuth Setup
+Pass an `authProvider` implementing the SDK's `OAuthClientProvider` contract.
+The SDK handles discovery, registration, token exchange, and refresh. Your
+application supplies storage and redirect handling. `OAuthClientProvider` is an
+interface; supply your application's implementation:
 
 ```ts
-import type { OAuthClientProvider } from "@langchain/mcp-adapters";
+import { MCPAdapter, type OAuthClientProvider } from "@langchain/mcp-adapters";
 
-class MyOAuthProvider implements OAuthClientProvider {
-  constructor(
-    private config: {
-      redirectUrl: string;
-      clientMetadata: OAuthClientMetadata;
-    }
-  ) {}
-
-  get redirectUrl() {
-    return this.config.redirectUrl;
-  }
-  get clientMetadata() {
-    return this.config.clientMetadata;
-  }
-
-  // Implement token storage (localStorage, database, etc.)
-  tokens(): OAuthTokens | undefined {
-    const stored = localStorage.getItem("mcp_tokens");
-    return stored ? JSON.parse(stored) : undefined;
-  }
-
-  async saveTokens(tokens: OAuthTokens): Promise<void> {
-    localStorage.setItem("mcp_tokens", JSON.stringify(tokens));
-  }
-
-  // Implement other required methods...
-  // See MCP SDK documentation for complete examples
-}
-
-const client = new MCPAdapter({
-  servers: {
-    "secure-server": {
-      url: "https://secure-mcp-server.example.com/mcp",
-      authProvider: new MyOAuthProvider({
-        redirectUrl: "https://myapp.com/oauth/callback",
-        clientMetadata: {
-          redirect_uris: ["https://myapp.com/oauth/callback"],
-          client_name: "My MCP Client",
-          scope: "mcp:read mcp:write",
-        },
-      }),
+function createAuthenticatedAdapter(authProvider: OAuthClientProvider) {
+  return new MCPAdapter({
+    servers: {
+      secure: {
+        url: "https://secure-mcp-server.example.com/mcp",
+        authProvider,
+      },
     },
-  },
-});
+  });
+}
 ```
 
-### OAuth Features
-
-The `authProvider` automatically handles:
-
-- ✅ **Token Refresh**: Automatically refreshes expired access tokens using refresh tokens
-- ✅ **401 Error Recovery**: Automatically retries requests after successful authentication
-- ✅ **PKCE Security**: Uses Proof Key for Code Exchange for enhanced security
-- ✅ **Standards Compliance**: Follows OAuth 2.0 and RFC 6750 specifications
-- ✅ **Transport Compatibility**: Works with both StreamableHTTP and SSE transports
-
-### OAuth vs Manual Headers
-
-| Aspect            | OAuth Provider          | Manual Headers                    |
-| ----------------- | ----------------------- | --------------------------------- |
-| **Token Refresh** | ✅ Automatic            | ❌ Manual implementation required |
-| **401 Handling**  | ✅ Automatic retry      | ❌ Manual error handling required |
-| **Security**      | ✅ PKCE, secure flows   | ⚠️ Depends on implementation      |
-| **Standards**     | ✅ RFC 6750 compliant   | ⚠️ Requires manual compliance     |
-| **Complexity**    | ✅ Simple configuration | ❌ Complex implementation         |
-
-**Recommendation**: Use `authProvider` for production OAuth servers, and `headers` only for simple token-based auth or debugging.
+Create a provider for the authenticated user and server. Keep it bound to that
+account for the adapter's lifetime. The provider owns credential storage,
+issuer/account isolation, PKCE state, and handing authorization URLs to the
+application. The adapter does not open a browser or host an authorization callback.
 
 ## Reconnection Strategies
 
@@ -677,7 +506,11 @@ Example error handling:
 
 ```ts
 import { isInteropZodError } from "@langchain/core/utils/types";
-import { MCPAdapter, isToolException } from "@langchain/mcp-adapters";
+import {
+  MCPAdapter,
+  MCPClientError,
+  isToolException,
+} from "@langchain/mcp-adapters";
 
 let adapter: MCPAdapter | undefined;
 try {
@@ -691,9 +524,10 @@ try {
       },
     },
   });
-  const [tool] = await adapter.listTools();
-  if (!tool) throw new Error("No tools available");
-  await tool.invoke({ expression: "1 + 2" });
+  const tools = await adapter.listTools();
+  if (!tools[0]) throw new Error("No tools available");
+  const result = await tools[0].invoke({ expression: "1 + 2" });
+  console.log(result);
 } catch (error) {
   if (isToolException(error)) {
     console.error("Tool execution failed:", error.message);
@@ -702,8 +536,10 @@ try {
     }
   } else if (isInteropZodError(error)) {
     console.error("Configuration error:", error);
+  } else if (MCPClientError.isInstance(error)) {
+    console.error(`Connection error (${error.serverName}):`, error.message);
   } else {
-    console.error("Connection or other error:", error);
+    console.error("Unexpected error:", error);
   }
 } finally {
   await adapter?.close();
