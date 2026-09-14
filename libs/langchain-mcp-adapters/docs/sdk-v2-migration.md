@@ -55,12 +55,7 @@ For custom providers, follow the SDK 2 provider contract and preserve all fields
 passed to storage callbacks, including issuer information. Applications continue
 to own credential storage, authorization redirects, and callback handling.
 
-## Local server examples and runtimes
-
-Server examples use `@modelcontextprotocol/server`, `@modelcontextprotocol/node`,
-and `@modelcontextprotocol/server-legacy`. These are development dependencies of
-the adapter, not runtime dependencies required by its consumers. The legacy SSE
-package is used to exercise legacy-server interoperability.
+## Runtime support
 
 Both the SDK client and adapter provide ESM and CommonJS exports. The adapter's
-existing Node version requirement remains unchanged.
+Node.js requirement remains `>=20.10.0`.
