@@ -869,6 +869,31 @@ describe("MultiServerMCPClient", () => {
       expect(client2).toBeUndefined();
     });
 
+    test("validates custom error handler arguments and return values", () => {
+      const errorHandler = vi.fn(() => "unexpected return");
+      const adapter = new MCPAdapter({
+        servers: { remote: { url: "https://example.com/mcp" } },
+        onConnectionError: errorHandler,
+      });
+      const handler = adapter.config.onConnectionError;
+      const error = new Error("Connection failed");
+
+      if (typeof handler !== "function") throw new Error("Expected a handler");
+
+      expect(() =>
+        Reflect.apply(handler, undefined, [{ serverName: 123, error }])
+      ).toThrow(/expected string/);
+      expect(errorHandler).not.toHaveBeenCalled();
+
+      expect(() => handler({ serverName: "remote", error })).toThrow(
+        /expected void/
+      );
+      expect(errorHandler).toHaveBeenCalledExactlyOnceWith({
+        serverName: "remote",
+        error,
+      });
+    });
+
     test("should call custom error handler and ignore if handler doesn't throw", async () => {
       let clientCallCount = 0;
       const errorHandler = vi.fn(({ serverName, error }) => {

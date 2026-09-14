@@ -74,8 +74,8 @@ and invocation open connections as needed. Use `listTools("serverName")` to
 select tools and always await `close()` when finished.
 
 `adapter.config.servers` exposes an isolated configuration snapshot. Changing
-the snapshot does not reconfigure the adapter. Callback functions and auth
-provider instances retain their identity; the snapshot is runtime configuration,
+the snapshot does not reconfigure the adapter. Notification callbacks, tool hooks,
+and auth provider instances retain their identity; the snapshot is runtime configuration,
 not a redacted diagnostic object.
 
 Put notification and progress callbacks on the server that should receive them.
