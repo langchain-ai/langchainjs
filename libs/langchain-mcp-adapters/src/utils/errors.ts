@@ -1,5 +1,4 @@
 import { ns, LangChainError } from "@langchain/core/errors";
-import { isInteropZodError } from "@langchain/core/utils/types";
 import type { CallToolResult } from "@modelcontextprotocol/client";
 import { z } from "zod";
 
@@ -18,26 +17,6 @@ export class MCPClientError extends ns
 
     if (options && "cause" in options) this.cause = options.cause;
   }
-}
-
-// Parse only the Zod issue fields needed for formatting, without depending
-// on a particular Zod version or constructor.
-const errorPathKeySchema = z.union([z.string(), z.number(), z.symbol()]);
-
-const zodErrorDetailsSchema = z.object({
-  issues: z.array(
-    z.object({
-      message: z.string(),
-      path: z.array(errorPathKeySchema).optional(),
-    })
-  ),
-});
-
-export function parseZodErrorDetails(error: unknown) {
-  if (!isInteropZodError(error)) return undefined;
-  const parsed = zodErrorDetailsSchema.safeParse(error);
-
-  return parsed.success ? parsed.data : undefined;
 }
 
 /**
