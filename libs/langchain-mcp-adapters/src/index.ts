@@ -1,5 +1,7 @@
 export { MCPAdapter, MultiServerMCPClient } from "./client.js";
 
+export { MCPClientError } from "./utils/errors.js";
+
 export type { OAuthClientProvider } from "@modelcontextprotocol/client";
 
 export type {
@@ -19,7 +21,7 @@ export type {
   MCPResourceContent,
 } from "./types.js";
 
-export { loadMcpTools } from "./tools.js";
+export { loadMcpTools, ToolException, isToolException } from "./tools.js";
 
 export type {
   ToolHooks,

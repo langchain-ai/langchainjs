@@ -445,37 +445,51 @@ The library provides different error types to help with debugging:
 Example error handling:
 
 ```ts
-import { MCPAdapter } from "@langchain/mcp-adapters";
 import { isInteropZodError } from "@langchain/core/utils/types";
+import {
+  MCPAdapter,
+  MCPClientError,
+  isToolException,
+} from "@langchain/mcp-adapters";
 
-let client: MCPAdapter | undefined;
+let adapter: MCPAdapter | undefined;
 try {
-  client = new MCPAdapter({
+  adapter = new MCPAdapter({
     servers: {
       math: {
         mode: "legacy",
         transport: "stdio",
-        command: "npx",
-        args: ["-y", "@modelcontextprotocol/server-math"],
+        command: "node",
+        args: ["./math-server.js"],
       },
     },
   });
-
-  const tools = await client.listTools();
+  const tools = await adapter.listTools();
   if (!tools[0]) throw new Error("No tools available");
   const result = await tools[0].invoke({ expression: "1 + 2" });
   console.log(result);
 } catch (error) {
-  if (isInteropZodError(error)) {
+  if (isToolException(error)) {
+    console.error("Tool execution failed:", error.message);
+    if (isInteropZodError(error.cause)) {
+      console.error("Validation details:", error.cause);
+    }
+  } else if (isInteropZodError(error)) {
     console.error("Configuration error:", error);
+  } else if (MCPClientError.isInstance(error)) {
+    console.error(`Connection error (${error.serverName}):`, error.message);
   } else {
-    // Connection and tool errors retain their original cause for inspection.
-    console.error("MCP operation failed:", error);
+    console.error("Unexpected error:", error);
   }
 } finally {
-  await client?.close();
+  await adapter?.close();
 }
 ```
+
+Configuration validation throws Zod4 errors directly. Tool execution wraps
+validation failures in `ToolException`, preserving the original Zod error as
+`cause`. SDK argument-validation issues become Zod4 custom issues with their
+messages and paths. Server and transport failures are not Zod validation errors.
 
 ### Common Zod Validation Errors
 
@@ -580,3 +594,20 @@ To output debug logs only from the `tools` module:
 ```bash
 DEBUG='@langchain/mcp-adapters:tools'
 ```
+
+## Server tool schemas
+
+Tools expose the server's JSON Schema unchanged, including references, unions,
+and conditional constraints. The adapter does not simplify schemas for a model
+provider. Check the chosen provider's supported schema subset before binding
+tools; the Anthropic integration omits tools with root-level `allOf`, `anyOf`, or
+`oneOf`.
+
+Prefer a compatible schema on the server. If the model needs a different schema,
+set the returned tool's `schema` explicitly before binding it. Core uses that
+schema for initial input validation; the adapter still validates post-hook
+arguments against an independent copy of the original server schema.
+
+`ToolException` requires `@langchain/core ^1.2.6`. Use
+`ToolException.isInstance(error)` or `isToolException(error)` to identify it;
+name-only objects are not treated as adapter errors.

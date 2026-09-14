@@ -1071,6 +1071,9 @@ importers:
       '@modelcontextprotocol/client':
         specifier: ^2.0.0
         version: 2.0.0
+      '@modelcontextprotocol/core':
+        specifier: ^2.0.0
+        version: 2.0.0
       debug:
         specifier: ^4.4.3
         version: 4.4.3

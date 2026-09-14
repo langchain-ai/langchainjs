@@ -93,8 +93,8 @@ resolved connections no longer expose the legacy `type` alias.
 
 The adapter now requires Zod `^4.4.3`; its configuration validation errors are
 Zod4 errors. Remove v3-only dependency overrides for this package. LangChain core
-may still use Zod3 transitively. Recognition of caller-originated Zod errors uses
-core's interoperability helper and does not import the v3 runtime here.
+may still use Zod3 transitively. Tool failures preserve caller-originated Zod
+errors in `cause`, including their structured issues.
 
 Callbacks are checked for callability during configuration. Notification
 payloads use the SDK's types and validation; the adapter no longer reconstructs
@@ -154,6 +154,34 @@ and `mimeType`, replacing `image_url`, `source_type`, and `mime_type` shapes.
 `outputHandling` still selects content versus artifact destinations. Artifact
 blocks retain their MCP representation. Resource conversion no longer fetches
 URIs implicitly; use `readResource` explicitly when needed.
+
+## Tool schemas and errors
+
+Arguments modified by `beforeToolCall` are now checked against the **original
+server JSON Schema** before being sent. For example, a hook adding an undeclared
+property fails if the server declares `additionalProperties: false`, even if the
+model-facing schema override accepts it. Original descriptors are not mutated.
+
+The adapter no longer flattens `allOf`/`anyOf`/`oneOf`, inlines `$ref`, or removes
+conditional keywords. `tool.schema` preserves the server's JSON Schema. Your
+model provider must support that schema: the Anthropic integration, for example,
+omits tools containing root-level composition keywords. Publish a compatible
+schema on the server, or explicitly set `tool.schema` before binding the tool to
+your model. That override does not weaken post-hook validation against the
+original server schema.
+
+Core validates initial arguments against `tool.schema` before hooks run. Inputs
+that previously passed a simplified schema may now fail before `beforeToolCall`.
+Do not rely on hooks to repair initially invalid input unless you intentionally
+provide a different model-facing schema.
+
+The minimum core version is now `1.2.6`. `ToolException` and `MCPClientError`
+extend core's branded `LangChainError`. Their `isInstance()` methods recognize
+errors from duplicate adapter modules and reject name-only lookalikes.
+`isToolException()` remains available. Both error types preserve original
+causes; tool failures retain the server's error response in `error.result`.
+SDK argument-validation issues become Zod4 errors with structured issues in
+`error.cause`. See the [error-handling example](client-reference.md#error-handling).
 
 ## Separate modern and legacy server options
 
