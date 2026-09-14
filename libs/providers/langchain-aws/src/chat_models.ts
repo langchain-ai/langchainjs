@@ -29,7 +29,6 @@ import {
 } from "@aws-sdk/client-bedrock-runtime";
 import { ChatGenerationChunk, ChatResult } from "@langchain/core/outputs";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
-import { resolveLangSmithGatewayConfig } from "@langchain/core/utils/gateway";
 import {
   defaultProvider,
   DefaultProviderInit,
@@ -76,6 +75,7 @@ import {
   AWS_BEARER_TOKEN_BEDROCK,
   createBedrockBearerTokenClientConfig,
   resolveBedrockBearerToken,
+  resolveBedrockGatewayConfig,
 } from "./utils/bedrock_auth.js";
 import {
   isSerializableSchema,
@@ -854,12 +854,9 @@ export class ChatBedrockConverse
     const bedrockApiSessionToken =
       rest?.bedrockApiSessionToken ??
       getEnvironmentVariable("BEDROCK_AWS_SESSION_TOKEN");
-    const gatewayConfig = resolveLangSmithGatewayConfig({
-      baseURL: rest?.endpointHost ? `https://${rest.endpointHost}` : undefined,
-      providerPath: "bedrock",
-    });
+    const gatewayConfig = resolveBedrockGatewayConfig(rest?.endpointHost);
     const bedrockBearerToken = resolveBedrockBearerToken(
-      rest?.bedrockBearerToken ?? gatewayConfig.apiKey
+      rest?.bedrockBearerToken ?? gatewayConfig.bearerToken
     );
 
     let credentials: CredentialType | undefined;
@@ -903,7 +900,7 @@ export class ChatBedrockConverse
         ...createBedrockBearerTokenClientConfig(bedrockBearerToken),
         region,
         credentials,
-        endpoint: gatewayConfig.baseURL,
+        endpoint: gatewayConfig.endpoint,
       });
 
     if (rest?.defaultHeaders && Object.keys(rest.defaultHeaders).length > 0) {

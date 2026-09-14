@@ -391,21 +391,21 @@ export abstract class BaseChatGoogle<
     return url.toString();
   }
 
-  protected async buildUrlVertexExpress(urlMethod?: string): Promise<string> {
-    const endpoint = this.endpoint.includes("://")
+  protected get endpointUrl(): string {
+    return this.endpoint.includes("://")
       ? this.endpoint
       : `https://${this.endpoint}`;
-    return `${endpoint}/${this.apiVersion}/publishers/${
+  }
+
+  protected async buildUrlVertexExpress(urlMethod?: string): Promise<string> {
+    return `${this.endpointUrl}/${this.apiVersion}/publishers/${
       this.publisher
     }/models/${this.model}:${urlMethod ?? this.urlMethod}`;
   }
 
   protected async buildUrlVertexLocation(urlMethod?: string): Promise<string> {
     const projectId = await this.apiClient.getProjectId();
-    const endpoint = this.endpoint.includes("://")
-      ? this.endpoint
-      : `https://${this.endpoint}`;
-    return `${endpoint}/${
+    return `${this.endpointUrl}/${
       this.apiVersion
     }/projects/${projectId}/locations/${this.location}/publishers/${
       this.publisher

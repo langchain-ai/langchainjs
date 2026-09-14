@@ -110,14 +110,16 @@ describe("applyGeminiGatewayParams", () => {
     vi.stubEnv("LANGSMITH_GATEWAY", "true");
     vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
 
+    const googleAuthOptions = { projectId: "test-project" };
     const params = applyGeminiGatewayParams({
       model: "gemini-2.5-flash",
-      credentials: { client_email: "svc@example.iam.gserviceaccount.com" },
+      googleAuthOptions,
     });
 
     expect(params.endpoint).toBe("gateway.smith.langchain.com/vertex");
     expect(params.apiKey).toBe("gateway-key");
     expect(params.platformType).toBe("gcp");
+    expect(params.googleAuthOptions).toBe(googleAuthOptions);
   });
 
   test("a non-https custom gateway keeps its scheme", () => {
