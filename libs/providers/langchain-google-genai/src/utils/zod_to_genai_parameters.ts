@@ -42,6 +42,31 @@ export function removeAdditionalProperties(
       delete newObj.strict;
     }
 
+    // Gemini's responseSchema does not support exclusiveMinimum /
+    // exclusiveMaximum. For integer schemas we can losslessly remap to
+    // minimum / maximum; for other types we drop the keyword so the
+    // request is not rejected with a 400.
+    if ("exclusiveMinimum" in newObj) {
+      const exclusiveMin = newObj.exclusiveMinimum;
+      if (newObj.type === "integer" && typeof exclusiveMin === "number") {
+        const remapped = exclusiveMin + 1;
+        if (typeof newObj.minimum !== "number" || newObj.minimum < remapped) {
+          newObj.minimum = remapped;
+        }
+      }
+      delete newObj.exclusiveMinimum;
+    }
+    if ("exclusiveMaximum" in newObj) {
+      const exclusiveMax = newObj.exclusiveMaximum;
+      if (newObj.type === "integer" && typeof exclusiveMax === "number") {
+        const remapped = exclusiveMax - 1;
+        if (typeof newObj.maximum !== "number" || newObj.maximum > remapped) {
+          newObj.maximum = remapped;
+        }
+      }
+      delete newObj.exclusiveMaximum;
+    }
+
     for (const key in newObj) {
       if (key in newObj) {
         if (Array.isArray(newObj[key])) {
