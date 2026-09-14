@@ -6,7 +6,7 @@ For applications upgrading from adapter 1.x, use `new MCPAdapter({ servers })`
 as the canonical client API. `MultiServerMCPClient` and existing server-map
 configurations remain supported; the class alias is deprecated.
 
-Upgrade to Zod 4. Configuration now rejects conflicting options and unknown output-handling keys. Hook argument overrides must be objects. Configuration snapshots preserve callbacks and OAuth provider identity.
+Upgrade to Zod 4. Configuration now rejects conflicting options and unknown output-handling keys. Hook argument overrides must be objects. Configuration snapshots preserve notification callbacks, tool hooks and OAuth provider identity. Connection-error handlers retain native Zod function validation.
 
 Read configuration through `adapter.config.servers` for every constructor form;
 the getter no longer exposes `mcpServers`. `ResolvedMCPAdapterConfig` describes

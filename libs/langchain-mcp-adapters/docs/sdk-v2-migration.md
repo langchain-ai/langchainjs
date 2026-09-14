@@ -96,9 +96,9 @@ Zod4 errors. Remove v3-only dependency overrides for this package. LangChain cor
 may still use Zod3 transitively. Tool failures preserve caller-originated Zod
 errors in `cause`, including their structured issues.
 
-Callbacks are checked for callability during configuration. Notification
-payloads use the SDK's types and validation; the adapter no longer reconstructs
-and strips their fields through duplicate schemas. Hook modifications are
+Notification callbacks and tool hooks are checked for callability during
+configuration. Notification payloads use the SDK's types and validation; the
+adapter no longer reconstructs and strips their fields through duplicate schemas. Hook modifications are
 validated after awaiting the callback, for both synchronous and asynchronous
 implementations. Return `undefined` for no change, `{ args, headers }` before a
 call, or `{ result }` after it. Argument overrides must be objects and are merged
@@ -107,6 +107,11 @@ without mutating the original request arguments. Invalid return containers now f
 Content and artifact arrays now check each block's extensible `type`/optional
 `id` boundary; embedded resource artifacts use the SDK's resource guard.
 Provider-specific fields and existing data-block formats remain supported.
+
+`onConnectionError` uses a Zod function wrapper that validates its arguments and
+requires a synchronous `void` return. The wrapper preserves handler-thrown errors
+but does not preserve the original function reference.
+
 OAuth providers retain their identity, but their six required SDK methods must
 be callable. Metadata getters remain lazy. Numeric timeout overrides in
 `metadata.timeoutMs` are parsed before invoking the SDK. Detailed
@@ -116,8 +121,8 @@ ignoring typos; explicit `undefined` destinations remain valid. Callback request
 The `config` getter now returns `ResolvedMCPAdapterConfig` with a `servers` field,
 including when constructed with deprecated inputs or `MultiServerMCPClient`.
 Replace `adapter.config.mcpServers` with `adapter.config.servers`. Mutable options
-are copied; callback functions and OAuth provider instances retain their
-identity. Treat this as runtime configuration, not a JSON-serializable or
+are copied; notification callbacks, tool hooks and OAuth provider instances
+retain their identity. Treat this as runtime configuration, not a JSON-serializable or
 redacted diagnostic object. Changing a snapshot does not reconfigure the adapter.
 
 | Previous API                   | Canonical API      | Compatibility                                        |
