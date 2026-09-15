@@ -6,7 +6,13 @@ import { Server } from "node:http";
 import { join } from "node:path";
 import { ToolMessage, BaseMessage } from "@langchain/core/messages";
 import { createAgent, FakeToolCallingModel } from "langchain";
-import { Command, GraphInterrupt, entrypoint } from "@langchain/langgraph";
+import {
+  Command,
+  GraphInterrupt,
+  entrypoint,
+  MemorySaver,
+} from "@langchain/langgraph";
+import { InterruptMCPClient } from "../continuation.js";
 import type { RunnableConfig } from "@langchain/core/runnables";
 
 import { createDummyHttpServer } from "./fixtures/dummy-http-server.js";
@@ -646,4 +652,71 @@ describe("tool hook results", () => {
   });
 
   afterEach(() => vi.restoreAllMocks());
+});
+
+describe("negotiated tool invocation policy", () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  test.each([
+    { ClientType: Client, era: "legacy", durable: false },
+    { ClientType: Client, era: "modern", durable: false },
+    { ClientType: InterruptMCPClient, era: "legacy", durable: false },
+    { ClientType: InterruptMCPClient, era: "modern", durable: true },
+  ] satisfies {
+    ClientType: typeof Client;
+    era: ReturnType<Client["getProtocolEra"]>;
+    durable: boolean;
+  }[])(
+    "$era client with durable=$durable",
+    async ({ ClientType, era, durable }) => {
+      const client = new ClientType({ name: "policy-test", version: "1" });
+      const protocol = vi.spyOn(client, "getProtocolEra").mockReturnValue(era);
+      vi.spyOn(client, "listTools").mockResolvedValue({
+        tools: [{ name: "echo", inputSchema: { type: "object" } }],
+      });
+
+      const call = vi.spyOn(client, "callTool").mockResolvedValue({
+        content: [{ type: "text", text: "done" }],
+      });
+
+      const before = vi.fn(() => ({ args: { effective: true } }));
+
+      const [tool] = await loadMcpTools("test", client, {
+        beforeToolCall: before,
+        logLevel: "info",
+      });
+
+      protocol.mockClear();
+
+      if (durable) {
+        await expect(tool.invoke({})).resolves.toBe("done");
+        expect(call).toHaveBeenCalledTimes(1);
+        call.mockClear();
+        before.mockClear();
+
+        const graph = entrypoint(
+          { name: "policy-test", checkpointer: new MemorySaver() },
+          async () => tool.invoke({})
+        );
+
+        await expect(
+          graph.invoke({}, { configurable: { thread_id: "policy" } })
+        ).resolves.toBe("done");
+      } else {
+        await expect(tool.invoke({})).resolves.toBe("done");
+      }
+
+      expect(protocol).not.toHaveBeenCalled();
+      expect(before).toHaveBeenCalledTimes(1);
+      expect(call).toHaveBeenCalledTimes(1);
+      expect(call.mock.calls[0][0]).toEqual({
+        name: "echo",
+        arguments: { effective: true },
+        _meta:
+          era === "modern"
+            ? { "io.modelcontextprotocol/logLevel": "info" }
+            : undefined,
+      });
+    }
+  );
 });

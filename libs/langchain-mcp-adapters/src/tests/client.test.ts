@@ -3168,6 +3168,9 @@ describe("modern wire boundaries", () => {
         if (request.method !== "server/discover")
           expect(request.params?._meta).toMatchObject({
             "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+            "io.modelcontextprotocol/clientCapabilities": {
+              elicitation: { form: {}, url: {} },
+            },
             "io.modelcontextprotocol/clientInfo": {
               name: "@langchain/mcp-adapters",
             },

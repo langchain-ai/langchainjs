@@ -677,6 +677,22 @@ these rounds up to `maxElicitationRounds`, preserving effective arguments and pe
 headers. Cancellation and transport errors stop the call. A request for user input
 requires an elicitation handler; state-only responses do not.
 
+## Modern tool interrupts and resume
+
+Modern tools pause a LangGraph run when the server returns an input request.
+Use a checkpointer and stable thread ID; no elicitation callback is required.
+Each interrupt contains `type: "mcp_elicitation"`, `server`, `tool` and a `requests`
+map. Resume with `Command({ resume: answers })`, supplying exactly the pending
+question keys. Accepted forms must match the requested schema. URL answers contain
+an action without form content; their question key replaces legacy `elicitationId`.
+
+The adapter checkpoints completed rounds, effective arguments and opaque server
+state. A crash after server work but before checkpoint commit can repeat that work.
+Keep headers and authentication on the connection for graph calls; per-call header
+overrides are rejected. Preserve the server, tool and account when resuming, and
+enforce ownership of checkpoint threads. The public interrupt contains questions;
+opaque server continuation stays in the checkpoint.
+
 ## Server tool schemas
 
 Tools expose the server's JSON Schema unchanged, including references, unions,

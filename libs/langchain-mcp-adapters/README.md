@@ -96,6 +96,10 @@ for hook signatures, output routing, timeouts, notifications and errors.
 
 ## Elicitation
 
+Modern tools use LangGraph interrupts by default when a server asks for input.
+Run them in a graph with a checkpointer and resume with the same thread ID.
+Direct calls work without a graph when the server needs no user input.
+
 Legacy servers can request form or URL input through a per-server
 `onElicitation` callback. See the [elicitation reference](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-mcp-adapters/docs/client-reference.md#elicitation-notifications-and-protocol-capabilities)
 and [working example](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-mcp-adapters/examples/legacy_elicitation.ts).

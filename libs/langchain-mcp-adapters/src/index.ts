@@ -39,3 +39,8 @@ export type {
   MCPElicitationContext,
   MCPElicitationHandler,
 } from "./elicitation.js";
+
+export type {
+  MCPElicitationInterrupt,
+  MCPElicitationResume,
+} from "./continuation.js";

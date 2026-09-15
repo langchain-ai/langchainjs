@@ -1,10 +1,20 @@
-import { Client, type CallToolRequest } from "@modelcontextprotocol/client";
-import { CallToolRequestSchema } from "@modelcontextprotocol/core";
+import {
+  Client,
+  CLIENT_CAPABILITIES_META_KEY,
+  type CallToolRequest,
+  type ElicitResult,
+} from "@modelcontextprotocol/client";
+import {
+  CallToolRequestSchema,
+  ClientCapabilitiesSchema,
+} from "@modelcontextprotocol/core";
 import { ns, LangChainError } from "@langchain/core/errors";
+import { interrupt, task } from "@langchain/langgraph";
 import { z } from "zod";
 import {
   modernElicitationAnswerSchema,
   modernElicitationRequestSchema,
+  elicitationAnswerFor,
 } from "./elicitation.js";
 import { ToolException } from "./utils/errors.js";
 
@@ -25,6 +35,27 @@ export class PendingMCPInput extends ns
 export class InterruptMCPClient extends Client {
   readonly maxElicitationRounds: number;
 
+  /** Advertise in-band input on modern requests without enabling legacy callbacks. */
+  protected override _outboundMetaEnvelope() {
+    const envelope = super._outboundMetaEnvelope();
+    if (this.getProtocolEra() !== "modern") {
+      return envelope;
+    }
+    const capabilities = ClientCapabilitiesSchema.parse(
+      envelope?.[CLIENT_CAPABILITIES_META_KEY] ?? {}
+    );
+    return {
+      ...envelope,
+      [CLIENT_CAPABILITIES_META_KEY]: {
+        ...capabilities,
+        elicitation: {
+          form: capabilities.elicitation?.form ?? {},
+          url: capabilities.elicitation?.url ?? {},
+        },
+      },
+    };
+  }
+
   constructor(...[info, options]: ConstructorParameters<typeof Client>) {
     super(info, options);
     this.maxElicitationRounds = options?.inputRequired?.maxRounds ?? 32;
@@ -36,6 +67,7 @@ export class InterruptMCPClient extends Client {
       server: string;
       tool: string;
       signal?: AbortSignal;
+      execution?: "direct" | "graph";
     }
   ): Promise<T> {
     return withMCPInterrupts(invoke, {
@@ -99,13 +131,14 @@ type RoundResult<T> =
       request: CallToolRequest["params"];
     };
 
-/** Continue state-only responses without replaying the initial hook or losing call headers. */
+/** Drive bounded continuation rounds; graph calls checkpoint each round before interrupting. */
 export async function withMCPInterrupts<T>(
   invoke: (continuation?: MCPContinuation) => Promise<T>,
   source: {
     server: string;
     tool: string;
     maxRounds: number;
+    execution?: "direct" | "graph";
     signal?: AbortSignal;
   }
 ): Promise<T> {
@@ -129,11 +162,19 @@ export async function withMCPInterrupts<T>(
     }
   };
 
+  const callRound =
+    source.execution === "direct"
+      ? invokeRound
+      : task(
+          { name: "mcp.tool.round", retry: { maxAttempts: 1 } },
+          invokeRound
+        );
+
   let continuation: MCPContinuation | undefined;
 
   for (let round = 0; round <= source.maxRounds; round += 1) {
     source.signal?.throwIfAborted();
-    const result = await invokeRound(continuation);
+    const result = await callRound(continuation);
 
     if (result.kind === "complete") return result.value;
 
@@ -149,11 +190,30 @@ export async function withMCPInterrupts<T>(
 
     const { requests } = elicitation;
 
-    if (Object.keys(requests).length > 0) {
-      throw new ToolException(
-        "This MCP tool requested user input, but no elicitation handler is available.",
-        new PendingMCPInput(result.pending, result.request)
+    const entries = Object.entries(requests);
+    let responses: Record<string, ElicitResult> = {};
+
+    if (entries.length > 0) {
+      if (source.execution === "direct") {
+        throw new ToolException(
+          "This MCP tool requested user input. Invoke it inside a LangGraph with a checkpointer to pause and resume elicitation.",
+          new PendingMCPInput(result.pending, result.request)
+        );
+      }
+
+      const resumeSchema = z.strictObject(
+        Object.fromEntries(
+          entries.map(
+            ([key, request]) =>
+              [
+                key,
+                elicitationAnswerFor(request, modernElicitationAnswerSchema),
+              ] satisfies [string, ReturnType<typeof elicitationAnswerFor>]
+          )
+        )
       );
+
+      responses = await resumeSchema.parseAsync(interrupt(elicitation));
     } else {
       // A state-only response is progress, not a user question. Avoid a tight polling loop.
       await new Promise<void>((resolve) => setTimeout(resolve, 100));
@@ -161,7 +221,7 @@ export async function withMCPInterrupts<T>(
 
     continuation = {
       request: result.request,
-      inputResponses: {},
+      inputResponses: responses,
       requestState: result.pending.requestState,
     };
   }
