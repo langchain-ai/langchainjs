@@ -41,9 +41,6 @@ import {
 } from "./types.js";
 import type { ToolHooks } from "./hooks.js";
 import type { Client } from "./connection.js";
-import debug from "debug";
-
-const debugLog = debug("@langchain/mcp-adapters:tools");
 
 type MCPInstance = Client | MCPClient;
 
@@ -162,7 +159,7 @@ type ExtendedContent = ContentBlock[] | string;
  */
 type ConvertCallToolResultArgs = {
   /**
-   * The name of the server to call the tool on (used for error messages and logging)
+   * The name of the server to call the tool on (used for error messages)
    */
   serverName: string;
   /**
@@ -374,8 +371,6 @@ async function _callTool({
   inputValidator,
 }: CallToolArgs): Promise<ContentBlocksWithArtifacts> {
   try {
-    debugLog(`INFO: Calling tool ${toolName}(${JSON.stringify(args)})`);
-
     // Extract timeout from RunnableConfig and pass to MCP SDK
     // Note: ensureConfig() converts timeout into an AbortSignal and deletes the timeout field.
     // To preserve the numeric timeout for SDKs that accept an explicit timeout value, we read
@@ -406,8 +401,8 @@ async function _callTool({
 
     try {
       state = getCurrentTaskInput(config);
-    } catch (error) {
-      debugLog(`LangGraph task input is unavailable: ${String(error)}`);
+    } catch {
+      // Direct tool calls have no LangGraph task state.
     }
 
     const beforeToolCallInterception = toolCallModificationSchema
@@ -459,7 +454,6 @@ async function _callTool({
       finalClient = await client.fork(headers);
     }
 
-    // v2 callTool(params, options?) — no result-schema argument in between.
     const callToolArgs: Parameters<typeof finalClient.callTool> = [
       {
         name: toolName,
@@ -509,7 +503,6 @@ async function _callTool({
   } catch (error) {
     if (isGraphInterrupt(error) || config?.signal?.aborted) throw error;
 
-    debugLog(`Error calling tool ${toolName}: ${String(error)}`);
     if (isToolException(error)) {
       throw error;
     }
@@ -563,8 +556,6 @@ export async function convertMcpTools(
     ...(options ?? {}),
   };
 
-  debugLog(`INFO: Found ${mcpTools.length} MCP tools`);
-
   const initialPrefix = additionalToolNamePrefix
     ? `${additionalToolNamePrefix}__`
     : "";
@@ -587,7 +578,7 @@ export async function convertMcpTools(
               new DefaultJsonSchemaValidator()
             );
 
-            const dst = new DynamicStructuredTool({
+            return new DynamicStructuredTool({
               name: `${toolNamePrefix}${tool.name}`,
               description: tool.description || "",
               schema: structuredClone(originalSchema),
@@ -616,10 +607,7 @@ export async function convertMcpTools(
                 });
               },
             });
-            debugLog(`INFO: Successfully loaded tool: ${dst.name}`);
-            return dst;
           } catch (error) {
-            debugLog(`ERROR: Failed to load tool "${tool.name}":`, error);
             if (throwOnLoadError) {
               throw error;
             }

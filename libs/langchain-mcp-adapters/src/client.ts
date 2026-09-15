@@ -299,21 +299,6 @@ export class MCPAdapter {
     options?: ToolDiscoveryOptions
   ): Promise<DynamicStructuredTool[]>;
   async listTools(...args: unknown[]): Promise<DynamicStructuredTool[]> {
-    return this.#listTools(args);
-  }
-
-  /** @deprecated Use listTools(). Returns the same LangChain tools. */
-  async getTools(...servers: string[]): Promise<DynamicStructuredTool[]>;
-  /** @deprecated Use listTools(). */
-  async getTools(
-    servers: string[],
-    options?: ToolDiscoveryOptions
-  ): Promise<DynamicStructuredTool[]>;
-  async getTools(...args: unknown[]): Promise<DynamicStructuredTool[]> {
-    return this.#listTools(args);
-  }
-
-  async #listTools(args: unknown[]): Promise<DynamicStructuredTool[]> {
     const { servers, options } = toolSelectionSchema.parse(args);
     const catalog = await this.#discoverToolsets(options);
 

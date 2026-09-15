@@ -108,7 +108,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        const tools = await client.getTools();
+        const tools = await client.listTools();
         expect(tools.length).toBeGreaterThan(0);
 
         const testTool = tools.find((t) => t.name.includes("test_tool"));
@@ -145,7 +145,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        const tools = await client.getTools();
+        const tools = await client.listTools();
         expect(tools.length).toBeGreaterThan(0);
       } finally {
         await client.close();
@@ -168,7 +168,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        const tools = await client.getTools();
+        const tools = await client.listTools();
         expect(tools.length).toBeGreaterThan(0);
 
         const testTool = tools.find((t) => t.name.includes("test_tool"));
@@ -198,7 +198,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        const tools = await client.getTools();
+        const tools = await client.listTools();
         expect(tools.length).toBeGreaterThan(0);
       } finally {
         await client.close();
@@ -222,7 +222,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
       try {
         try {
-          await client.getTools();
+          await client.listTools();
           expect.fail("Expected authentication error but got success");
         } catch (error) {
           expect(error).toEqual(
@@ -260,7 +260,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        const tools = await client.getTools();
+        const tools = await client.listTools();
         expect(tools.length).toBeGreaterThan(0);
 
         const testTool = tools.find((t) => t.name.includes("test_tool"));
@@ -302,7 +302,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        await expect(client.getTools()).rejects.toThrow(
+        await expect(client.listTools()).rejects.toThrow(
           expect.objectContaining({
             name: "MCPClientError",
             message: expect.stringMatching(
@@ -335,7 +335,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
       try {
         // This should fail on streamable HTTP and fallback to SSE
-        const tools = await client.getTools();
+        const tools = await client.listTools();
         expect(tools.length).toBeGreaterThan(0);
       } finally {
         await client.close();
@@ -358,7 +358,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        const tools = await client.getTools();
+        const tools = await client.listTools();
         expect(tools.length).toBeGreaterThan(0);
 
         const testTool = tools.find((t) => t.name.includes("test_tool"));
@@ -394,7 +394,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        const tools = await client.getTools();
+        const tools = await client.listTools();
         expect(tools.length).toBeGreaterThan(0);
 
         const headerTool = tools.find((t) => t.name.includes("check_headers"));
@@ -432,7 +432,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        await expect(client.getTools()).rejects.toThrow(
+        await expect(client.listTools()).rejects.toThrow(
           expect.objectContaining({
             name: "MCPClientError",
             message: expect.stringMatching(
@@ -460,7 +460,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        const tools = await client.getTools();
+        const tools = await client.listTools();
         expect(tools.length).toBeGreaterThan(0);
 
         const testTool = tools.find((t) => t.name.includes("test_tool"));
@@ -515,7 +515,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
         });
 
         try {
-          const tools = await client.getTools();
+          const tools = await client.listTools();
 
           // Check tools from each server
           const stdioTools = tools.filter((t) =>
@@ -606,9 +606,9 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        const allTools = await client.getTools();
-        const stdioTools = await client.getTools("stdio-server");
-        const httpTools = await client.getTools("http-server");
+        const allTools = await client.listTools();
+        const stdioTools = await client.listTools("stdio-server");
+        const httpTools = await client.listTools("http-server");
 
         expect(allTools.length).toBe(stdioTools.length + httpTools.length);
         expect(stdioTools.every((t) => t.name.includes("stdio-server"))).toBe(
@@ -655,7 +655,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        await expect(client.getTools()).rejects.toThrow(
+        await expect(client.listTools()).rejects.toThrow(
           expect.objectContaining({
             name: "MCPClientError",
             message: expect.stringMatching(
@@ -677,7 +677,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        await expect(client.getTools()).rejects.toThrow(
+        await expect(client.listTools()).rejects.toThrow(
           expect.objectContaining({
             name: "MCPClientError",
             message: expect.stringMatching(
@@ -718,8 +718,8 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        const toolsWithPrefix = await clientWithPrefix.getTools();
-        const toolsWithoutPrefix = await clientWithoutPrefix.getTools();
+        const toolsWithPrefix = await clientWithPrefix.listTools();
+        const toolsWithoutPrefix = await clientWithoutPrefix.listTools();
 
         const prefixedTool = toolsWithPrefix.find((t) =>
           t.name.includes("custom__test-server__")
@@ -815,7 +815,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        const tools = await client.getTools();
+        const tools = await client.listTools();
         expect(tools.length).toBeGreaterThan(0);
 
         const testTool = tools.find((t) => t.name.includes("test_tool"));
@@ -881,7 +881,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        const tools = await client.getTools();
+        const tools = await client.listTools();
         expect(tools.length).toBeGreaterThan(0);
 
         const testTool = tools.find((t) => t.name.includes("test_tool"));
@@ -949,7 +949,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        await expect(client.getTools()).rejects.toThrow(
+        await expect(client.listTools()).rejects.toThrow(
           expect.objectContaining({
             name: "MCPClientError",
             message: expect.stringMatching(
@@ -1012,7 +1012,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        await expect(client.getTools()).rejects.toThrow(
+        await expect(client.listTools()).rejects.toThrow(
           expect.objectContaining({
             name: "MCPClientError",
             message: expect.stringMatching(
@@ -1077,7 +1077,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        await expect(client.getTools()).rejects.toThrow(
+        await expect(client.listTools()).rejects.toThrow(
           expect.objectContaining({
             name: "MCPClientError",
             message: expect.stringMatching(
@@ -1149,7 +1149,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        const tools = await client.getTools();
+        const tools = await client.listTools();
         expect(tools.length).toBeGreaterThan(0);
 
         const testTool = tools.find((t) => t.name.includes("test_tool"));
@@ -1244,7 +1244,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        const tools = await client.getTools();
+        const tools = await client.listTools();
         expect(tools.length).toBeGreaterThan(0);
 
         const testTool = tools.find((t) => t.name.includes("test_tool"));
@@ -1336,7 +1336,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        await expect(client.getTools()).rejects.toThrow(
+        await expect(client.listTools()).rejects.toThrow(
           expect.objectContaining({
             name: "MCPClientError",
             message: expect.stringMatching(
@@ -1369,7 +1369,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
       });
 
       try {
-        const tools = await client.getTools();
+        const tools = await client.listTools();
         const testTool = tools.find((t) => t.name.includes("sleep_tool"));
         expect(testTool).toBeDefined();
 
@@ -1406,7 +1406,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
         });
 
         try {
-          const tools = await client.getTools();
+          const tools = await client.listTools();
           const testTool = tools.find((t) => t.name.includes("sleep_tool"));
           expect(testTool).toBeDefined();
 
@@ -1442,7 +1442,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
         });
 
         try {
-          const tools = await client.getTools();
+          const tools = await client.listTools();
           const testTool = tools.find((t) => t.name.includes("sleep_tool"));
           expect(testTool).toBeDefined();
 
@@ -1478,7 +1478,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
         });
 
         try {
-          const tools = await client.getTools();
+          const tools = await client.listTools();
           const testTool = tools.find((t) => t.name.includes("sleep_tool"));
           expect(testTool).toBeDefined();
 
@@ -1509,7 +1509,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
         });
 
         try {
-          const tools = await client.getTools();
+          const tools = await client.listTools();
           const testTool = tools.find((t) => t.name.includes("sleep_tool"));
           expect(testTool).toBeDefined();
 
@@ -1541,7 +1541,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
         });
 
         try {
-          const tools = await client.getTools();
+          const tools = await client.listTools();
           const testTool = tools.find((t) => t.name.includes("sleep_tool"));
           expect(testTool).toBeDefined();
 
@@ -1578,7 +1578,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
         });
 
         try {
-          const tools = await client.getTools();
+          const tools = await client.listTools();
           const testTool = tools.find((t) => t.name.includes("sleep_tool"));
           expect(testTool).toBeDefined();
 
@@ -1618,7 +1618,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
         });
 
         try {
-          const tools = await client.getTools();
+          const tools = await client.listTools();
           const audioTool = tools.find((t) => t.name.includes("audio_tool"));
           expect(audioTool).toBeDefined();
           const fakeToolCall: ToolCall = {
@@ -1689,7 +1689,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
         });
 
         try {
-          const tools = await client.getTools();
+          const tools = await client.listTools();
           const imageTool = tools.find((t) => t.name.includes("image_tool"));
           const audioTool = tools.find((t) => t.name.includes("audio_tool"));
           expect(imageTool).toBeDefined();
@@ -1796,7 +1796,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
         });
 
         try {
-          const tools = await client.getTools();
+          const tools = await client.listTools();
           const imageTool = findTool(tools, "image_tool");
           const resourceTool = findTool(tools, "resource_tool");
 
@@ -1882,7 +1882,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
         });
 
         try {
-          const tools = await client.getTools();
+          const tools = await client.listTools();
           const imageTool = findTool(tools, "image_tool");
           const resourceTool = findTool(tools, "resource_tool");
           const audioTool = findTool(tools, "audio_tool");
@@ -1972,7 +1972,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
         });
 
         try {
-          const tools = await client.getTools();
+          const tools = await client.listTools();
           const imageTool = findTool(tools, "image_tool");
           const resourceTool = findTool(tools, "resource_tool");
 
@@ -2063,7 +2063,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
         });
 
         try {
-          const tools = await client.getTools();
+          const tools = await client.listTools();
           const imageTool = findTool(tools, "image_tool");
           const resourceTool = findTool(tools, "resource_tool");
 
@@ -2143,7 +2143,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
         const client = new MultiServerMCPClient(clientConfig);
 
         try {
-          const tools = await client.getTools();
+          const tools = await client.listTools();
           const imageTool = findTool(tools, "image_tool");
           const resourceTool = findTool(tools, "resource_tool");
 
@@ -2206,7 +2206,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
         });
 
         try {
-          const tools = await client.getTools();
+          const tools = await client.listTools();
           const imageTool = findTool(tools, "image_tool");
           const audioTool = findTool(tools, "audio_tool");
           const resourceTool = findTool(tools, "resource_tool");
@@ -2439,7 +2439,7 @@ describe("MultiServerMCPClient Integration Tests", () => {
         });
 
         try {
-          const tools = await client.getTools();
+          const tools = await client.listTools();
           const structuredTool = tools.find((t: { name: string }) =>
             t.name.includes("structured_tool")
           );

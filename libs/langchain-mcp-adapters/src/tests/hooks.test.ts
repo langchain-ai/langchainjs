@@ -57,9 +57,9 @@ class TestServers {
   }
 }
 
-test.each(["sync", "async"])(
-  "preserves MCP artifacts through a %s pass-through hook",
-  async (mode) => {
+test.each(["value", "promise"])(
+  "preserves MCP artifacts when afterToolCall returns a %s",
+  async (returnType) => {
     const client = new Client({ name: "artifact-test", version: "1" });
 
     const artifacts = [
@@ -86,7 +86,9 @@ test.each(["sync", "async"])(
       }: Parameters<NonNullable<ClientConfig["afterToolCall"]>>[0]) => {
         expect(result).toEqual([expect.anything(), artifacts]);
 
-        return mode === "async" ? Promise.resolve({ result }) : { result };
+        return returnType === "promise"
+          ? Promise.resolve({ result })
+          : { result };
       }
     );
 
@@ -224,7 +226,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
       });
 
       try {
-        const tools1 = await client.getTools();
+        const tools1 = await client.listTools();
         const t1 = tools1.find((tool) => tool.name.includes("test_tool"))!;
         const out1 = (await t1.invoke({ input: "orig" })) as string;
         const parsed1 = JSON.parse(out1);
@@ -237,7 +239,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
       const { client } = await setup();
 
       try {
-        const tools = await client.getTools();
+        const tools = await client.listTools();
         const t = tools.find((tool) => tool.name.includes("test_tool"))!;
         const res = await t.invoke({ input: "orig" });
         expect(res).toBe("global-after");
@@ -255,13 +257,13 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
       });
       try {
         if (!supportsHeaders) {
-          const stdioTools = await client.getTools();
+          const stdioTools = await client.listTools();
           const t = stdioTools.find((tool) => tool.name.includes("test_tool"))!;
           await expect(t.invoke({ input: "x" })).rejects.toThrow(
             /Forking stdio transport is not supported/
           );
         } else {
-          const ts = await client.getTools();
+          const ts = await client.listTools();
           const chk = ts.find((tool) => tool.name.includes("check_headers"));
           // call header checker
           const out = await chk!.invoke({ headerName: "X-Check" });
@@ -283,7 +285,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
       });
 
       try {
-        const tools = await client.getTools();
+        const tools = await client.listTools();
         const t = tools.find((tool) => tool.name.includes("test_tool"))!;
         const res = await t.invoke({ input: "orig" });
         expect(ToolMessage.isInstance(res)).toBe(true);
@@ -302,7 +304,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
       });
 
       try {
-        const tools = await client.getTools();
+        const tools = await client.listTools();
         const t = tools.find((tool) => tool.name.includes("test_tool"))!;
         const res = await t.invoke({ input: "orig" });
         expect(res).toEqual("foobar");
@@ -337,7 +339,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
       },
     });
     try {
-      const tools = await client.getTools();
+      const tools = await client.listTools();
       const t = tools.find((tool) => tool.name.includes("test_tool"))!;
       await t.invoke({ input: "evt" });
       expect(logs.some((m) => m.includes("test_tool invoked"))).toBe(true);
@@ -374,7 +376,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
     });
 
     try {
-      const tools = await client.getTools();
+      const tools = await client.listTools();
       const t = tools.find((tool) => tool.name.includes("test_tool"))!;
       await t.invoke({ input: "orig" });
       expect(stateCalls).toHaveLength(2);
@@ -406,7 +408,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
     });
 
     try {
-      const [tool] = await client.getTools();
+      const [tool] = await client.listTools();
 
       const workflow = entrypoint("hook-input", async (input: unknown) => {
         await tool.invoke({ input: "orig" });
@@ -466,7 +468,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
     });
 
     try {
-      const tools = await client.getTools();
+      const tools = await client.listTools();
       const agent = createAgent({
         model,
         tools: tools,
