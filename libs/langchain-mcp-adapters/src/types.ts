@@ -1,5 +1,5 @@
 import { z } from "zod/v3";
-import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
+import type { OAuthClientProvider } from "@modelcontextprotocol/client";
 import type {
   ContentBlock,
   ToolMessage,
