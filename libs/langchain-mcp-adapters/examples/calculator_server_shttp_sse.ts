@@ -15,6 +15,32 @@ export async function main() {
   const calcSchema = z.object({ a: z.number(), b: z.number() });
 
   server.registerTool(
+    "approve",
+    { inputSchema: z.object({ mode: z.enum(["form", "url"]) }) },
+    async ({ mode }, context) => {
+      const answer = await context.mcpReq.elicitInput(
+        mode === "url"
+          ? {
+              mode: "url",
+              message: "Confirm completion of the example URL action",
+              url: "https://example.com/authorize",
+              elicitationId: "example-url-action",
+            }
+          : {
+              mode: "form",
+              message: "Approve the example action?",
+              requestedSchema: {
+                type: "object",
+                properties: { confirm: { type: "boolean" } },
+                required: ["confirm"],
+              },
+            }
+      );
+      return { content: [{ type: "text", text: answer.action }] };
+    }
+  );
+
+  server.registerTool(
     "add",
     { description: "Adds two numbers together", inputSchema: calcSchema },
     async ({ a, b }) => {

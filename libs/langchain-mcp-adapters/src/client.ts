@@ -36,6 +36,7 @@ import {
   toolDiscoveryOptionsSchema,
   type ToolDiscoveryOptions,
   adapterConfigSchema,
+  loggingLevelSchema,
   sseConnectionSchema,
   customHTTPTransportOptionsSchema,
   type LoadMcpToolsOptions,
@@ -135,6 +136,7 @@ export class MCPAdapter {
         serverConfig.defaultToolTimeout;
 
       this.#loadToolsOptions[serverName] = {
+        logLevel: serverConfig.logLevel,
         throwOnLoadError: parsedServerConfig.throwOnLoadError,
         prefixToolNameWithServerName:
           parsedServerConfig.prefixToolNameWithServerName,
@@ -306,6 +308,7 @@ export class MCPAdapter {
   }
 
   /**
+   * @deprecated Protocol logging is deprecated; prefer OpenTelemetry or stderr.
    * Set the logging level for all servers
    * @param level - The logging level
    *
@@ -316,6 +319,7 @@ export class MCPAdapter {
    */
   async setLoggingLevel(level: LoggingLevel): Promise<void>;
   /**
+   * @deprecated Protocol logging is deprecated; prefer OpenTelemetry or stderr.
    * Set the logging level for a specific server
    * @param serverName - The name of the server
    * @param level - The logging level
@@ -327,20 +331,35 @@ export class MCPAdapter {
    */
   async setLoggingLevel(serverName: string, level: LoggingLevel): Promise<void>;
   async setLoggingLevel(...args: unknown[]): Promise<void> {
-    if (args.length === 1 && typeof args[0] === "string") {
-      const level = args[0] as LoggingLevel;
-      await Promise.all(
-        this.#clientConnections
-          .getAllClients()
-          .map((client) => client.setLoggingLevel(level))
+    const parsed = z
+      .union([
+        z
+          .tuple([loggingLevelSchema])
+          .transform(([level]) => ({ serverName: undefined, level })),
+        z
+          .tuple([z.string(), loggingLevelSchema])
+          .transform(([serverName, level]) => ({ serverName, level })),
+      ])
+      .parse(args);
+
+    const clients =
+      parsed.serverName === undefined
+        ? this.#clientConnections.getAllClients()
+        : [
+            this.#clientConnections.get(
+              this.#transportOptions(parsed.serverName)
+            ),
+          ].filter((client) => client !== undefined);
+
+    if (clients.some((client) => client.getProtocolEra() === "modern")) {
+      throw new MCPClientError(
+        "setLoggingLevel is legacy-only; configure logLevel for modern tool requests"
       );
-      return;
     }
 
-    const [serverName, level] = args as [string, LoggingLevel];
-    await this.#clientConnections
-      .get(this.#transportOptions(serverName))
-      ?.setLoggingLevel(level);
+    await Promise.all(
+      clients.map((client) => client.setLoggingLevel(parsed.level))
+    );
   }
 
   /**
@@ -715,7 +734,8 @@ export class MCPAdapter {
     const { url, transport: transportType } = connection;
 
     const automaticSSEFallback =
-      connection.mode === "legacy" && connection.automaticSSEFallback;
+      connection.mode === "auto" ||
+      (connection.mode === "legacy" && connection.automaticSSEFallback);
 
     debugLog(
       `DEBUG: Creating Streamable HTTP transport for server "${serverName}" with URL: ${url}`
@@ -730,7 +750,13 @@ export class MCPAdapter {
         );
       } catch (error) {
         const code = getHttpErrorCode(error);
-        if (automaticSSEFallback && code != null && code >= 400 && code < 500) {
+        if (
+          automaticSSEFallback &&
+          code != null &&
+          (connection.mode === "auto"
+            ? code === 404 || code === 405
+            : code >= 400 && code < 500)
+        ) {
           // Streamable HTTP error is a 4xx, so fall back to SSE
           try {
             await this._initializeSSEConnection(
