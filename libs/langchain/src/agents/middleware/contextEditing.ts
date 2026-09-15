@@ -289,48 +289,26 @@ export class ClearToolUsesEdit implements ContextEdit {
     const { messages, model, countTokens } = params;
     const tokens = await countTokens(messages);
 
-    /**
-     * Always remove orphaned tool messages (those without corresponding AI messages)
-     * regardless of whether editing is triggered
-     */
-    const orphanedIndices: number[] = [];
+    /** Drop tool messages that do not immediately follow their matching AI tool call. */
+    const invalidToolIndices: number[] = [];
     for (let i = 0; i < messages.length; i++) {
-      const msg = messages[i];
-      if (ToolMessage.isInstance(msg)) {
-        // Check if this tool message has a corresponding AI message
-        const aiMessage = this.#findAIMessageForToolCall(
-          messages.slice(0, i),
-          msg.tool_call_id
-        );
-
-        if (!aiMessage) {
-          // Orphaned tool message - mark for removal
-          orphanedIndices.push(i);
-        } else {
-          // Check if the AI message actually has this tool call
-          const toolCall = aiMessage.tool_calls?.find(
-            (call) => call.id === msg.tool_call_id
-          );
-          if (!toolCall) {
-            // Orphaned tool message - mark for removal
-            orphanedIndices.push(i);
-          }
-        }
+      if (this.#isInvalidToolMessagePlacement(messages, i)) {
+        invalidToolIndices.push(i);
       }
     }
 
     /**
-     * Remove orphaned tool messages in reverse order to maintain indices
+     * Remove invalid tool messages in reverse order to maintain indices
      */
-    for (let i = orphanedIndices.length - 1; i >= 0; i--) {
-      messages.splice(orphanedIndices[i]!, 1);
+    for (let i = invalidToolIndices.length - 1; i >= 0; i--) {
+      messages.splice(invalidToolIndices[i]!, 1);
     }
 
     /**
-     * Recalculate tokens after removing orphaned messages
+     * Recalculate tokens after removing invalid tool messages
      */
     let currentTokens = tokens;
-    if (orphanedIndices.length > 0) {
+    if (invalidToolIndices.length > 0) {
       currentTokens = await countTokens(messages);
     }
 
@@ -701,6 +679,31 @@ export class ClearToolUsesEdit implements ContextEdit {
     }
 
     return DEFAULT_KEEP;
+  }
+
+  /** True when the tool message is missing id or not right after its AI tool call. */
+  #isInvalidToolMessagePlacement(
+    messages: BaseMessage[],
+    index: number
+  ): boolean {
+    const msg = messages[index];
+    if (!ToolMessage.isInstance(msg)) {
+      return false;
+    }
+
+    const toolCallId = msg.tool_call_id;
+    if (!toolCallId) {
+      return true;
+    }
+
+    const previousMessage = messages[index - 1];
+    if (!previousMessage || !AIMessage.isInstance(previousMessage)) {
+      return true;
+    }
+
+    return !previousMessage.tool_calls?.some((call) => {
+      return call.id === toolCallId;
+    });
   }
 
   #findAIMessageForToolCall(
