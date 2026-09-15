@@ -72,9 +72,6 @@ Construction validates options with Zod 4 and opens no connections. Discovery
 and invocation open connections as needed. Use `listTools("serverName")` to
 select tools and always await `close()` when finished.
 
-Use `listToolsets()` for a map of server names to tools. Both discovery methods
-accept SDK cache controls; see the [discovery reference](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-mcp-adapters/docs/client-reference.md#discovery-and-grouped-tools).
-
 `adapter.config.servers` exposes an isolated configuration snapshot. Changing
 the snapshot does not reconfigure the adapter. Notification callbacks, tool hooks,
 and auth provider instances retain their identity; the snapshot is runtime configuration,
@@ -91,22 +88,8 @@ Tool content uses standard LangChain blocks. Images and audio expose `data` and
 `outputHandling` controls what reaches the model versus the tool artifact.
 
 Use `beforeToolCall` and `afterToolCall` to modify arguments or results. See the
-[reference](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-mcp-adapters/docs/client-reference.md)
-for hook signatures, output routing, timeouts, notifications and errors.
-
-## Elicitation
-
-Modern tools use LangGraph interrupts by default when a server asks for input.
-Run them in a graph with a checkpointer and resume with the same thread ID.
-Direct calls work without a graph when the server needs no user input.
-
-The [modern elicitation example](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-mcp-adapters/examples/modern_elicitation.ts)
-answers two forms and a URL request, rebuilding the adapter between resumes.
-It runs against the local example server without an LLM or external credentials.
-
-Legacy servers can request form or URL input through a per-server
-`onElicitation` callback. See the [elicitation reference](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-mcp-adapters/docs/client-reference.md#elicitation-notifications-and-protocol-capabilities)
-and [working example](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-mcp-adapters/examples/legacy_elicitation.ts).
+[hooks example](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-mcp-adapters/examples/hooks.ts)
+for argument and result hooks.
 
 ## Authentication
 
@@ -115,16 +98,13 @@ Supply an application-owned `authProvider` implementing the exported
 registration, exchange and refresh. Your application owns credential storage,
 account binding, redirects and callback handling.
 
-See the [authentication reference](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-mcp-adapters/docs/client-reference.md#oauth-20-authentication).
+## Examples
 
-## Upgrade and examples
-
-- [Migration guide](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-mcp-adapters/docs/sdk-v2-migration.md): old/new names, protocol modes, removed options and result changes.
 - [Examples](https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-mcp-adapters/examples): local servers, mixed modes, agents and hooks.
-- [Client reference](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-mcp-adapters/docs/client-reference.md): detailed behavior and advanced SDK access.
 
-`MultiServerMCPClient`, `mcpServers` input and `getTools()` remain deprecated
-compatibility APIs. Use `MCPAdapter`, `servers` and `listTools()` for new code.
+`MultiServerMCPClient` and `mcpServers` input remain deprecated compatibility APIs.
+Use `MCPAdapter` and `servers` for new code. Replace `getTools()` with `listTools()`
+when upgrading from adapter 1.x.
 
 MIT licensed. Originally adapted from
 [Julien Blanchon's implementation](https://github.com/JulienBlanchon/langchain-mcp-adapter).
