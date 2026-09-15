@@ -1,4 +1,5 @@
 import { ToolException, isToolException } from "./utils/errors.js";
+
 import { z } from "zod";
 import {
   fromJsonSchema,
@@ -12,6 +13,7 @@ import {
 } from "./hooks.js";
 import type {
   LoggingLevel,
+  CallToolRequest,
   CallToolResult,
   ContentBlock as MCPContentBlock,
   Client as MCPClient,
@@ -39,7 +41,7 @@ import {
   type LoadMcpToolsOptions,
   type OutputHandling,
 } from "./types.js";
-import type { ToolHooks } from "./hooks.js";
+import type { ToolHooks, ToolCallModification } from "./hooks.js";
 import type { Client } from "./connection.js";
 import debug from "debug";
 
@@ -303,7 +305,7 @@ function _convertCallToolResult({
  * @internal
  */
 type CallToolArgs = {
-  logLevel?: LoggingLevel;
+  invocation: ReturnType<ReturnType<typeof createToolInvocationFactory>>;
   /**
    * The name of the server to call the tool on (used for error messages and logging)
    */
@@ -312,10 +314,6 @@ type CallToolArgs = {
    * The name of the tool to call
    */
   toolName: string;
-  /**
-   * The MCP client to call the tool on
-   */
-  client: Client | MCPClient;
   /**
    * The arguments to pass to the tool - must conform to the tool's input schema
    */
@@ -351,131 +349,187 @@ type ContentBlocksWithArtifacts = [
   ExtendedArtifact[],
 ];
 
-/**
- * Call an MCP tool.
- *
- * Use this with `.bind` to capture the fist three arguments, then pass to the constructor of DynamicStructuredTool.
- *
- * @internal
- * @param args - The arguments to pass to the tool
- * @returns A tuple of [textContent, nonTextContent]
- */
-async function _callTool({
-  logLevel,
-  serverName,
-  toolName,
-  client,
-  args,
-  config,
-  outputHandling,
-  onProgress,
-  beforeToolCall,
-  afterToolCall,
-  inputValidator,
-}: CallToolArgs): Promise<ContentBlocksWithArtifacts> {
-  try {
-    debugLog(`INFO: Calling tool ${toolName}(${JSON.stringify(args)})`);
+function createToolInvocationFactory(
+  client: MCPInstance,
+  serverName: string,
+  logLevel?: LoggingLevel
+) {
+  const modern = client.getProtocolEra() === "modern";
 
-    // Extract timeout from RunnableConfig and pass to MCP SDK
-    // Note: ensureConfig() converts timeout into an AbortSignal and deletes the timeout field.
-    // To preserve the numeric timeout for SDKs that accept an explicit timeout value, we read
-    // it from metadata.timeoutMs if present, falling back to any direct timeout.
-    const numericTimeout =
-      z.number().nullish().parse(config?.metadata?.timeoutMs) ??
-      config?.timeout;
+  function executor(connectedClient: MCPInstance, modernProtocol: boolean) {
+    const metadata =
+      logLevel !== undefined && modernProtocol
+        ? { [LOG_LEVEL_META_KEY]: logLevel }
+        : undefined;
 
-    const requestOptions: RequestOptions = {
-      ...(numericTimeout ? { timeout: numericTimeout } : {}),
-      ...(config?.signal ? { signal: config.signal } : {}),
-      ...(onProgress
-        ? {
-            onprogress: (progress) => {
-              // oxlint-disable-next-line @typescript-eslint/no-floating-promises
-              onProgress?.(progress, {
-                type: "tool",
-                name: toolName,
-                args,
-                server: serverName,
-              });
-            },
-          }
-        : {}),
+    return (request: CallToolRequest["params"], options: RequestOptions) => {
+      const params = { ...request, _meta: metadata };
+
+      return Object.keys(options).length > 0
+        ? connectedClient.callTool(params, options)
+        : connectedClient.callTool(params);
     };
+  }
 
-    let state: unknown = {};
+  const direct = executor(client, modern);
 
-    try {
-      state = getCurrentTaskInput(config);
-    } catch (error) {
-      debugLog(`LangGraph task input is unavailable: ${String(error)}`);
-    }
+  function selectHeaderPolicy() {
+    if ("fork" in client && typeof client.fork === "function") {
+      const fork = client.fork.bind(client);
 
-    const beforeToolCallInterception = toolCallModificationSchema
-      .optional()
-      .parse(
-        await beforeToolCall?.(
-          {
-            name: toolName,
-            args,
-            serverName,
-          },
-          state,
-          config ?? {}
-        )
-      );
+      return async (headers: NonNullable<ToolCallModification["headers"]>) => {
+        const connectedClient = await fork(headers);
 
-    const validation = await inputValidator["~standard"].validate({
-      ...args,
-      ...beforeToolCallInterception?.args,
-    });
-
-    if (validation.issues) {
-      throw new ToolException(
-        `Invalid arguments for MCP tool "${toolName}": ${validation.issues.map((issue) => issue.message).join("; ")}`,
-        new z.ZodError(
-          validation.issues.map((issue) => ({
-            code: "custom",
-            message: issue.message,
-            path:
-              issue.path?.map((segment) =>
-                typeof segment === "object" ? segment.key : segment
-              ) ?? [],
-          }))
-        )
-      );
-    }
-
-    const finalArgs = validation.value;
-    const headers = beforeToolCallInterception?.headers || {};
-    let finalClient = client;
-
-    if (Object.keys(headers).length > 0) {
-      if (!("fork" in client && typeof client.fork === "function")) {
-        throw new ToolException(
-          `MCP client for server "${serverName}" does not support header changes`
+        return executor(
+          connectedClient,
+          connectedClient.getProtocolEra() === "modern"
         );
+      };
+    }
+
+    return async (_headers: NonNullable<ToolCallModification["headers"]>) => {
+      throw new ToolException(
+        `MCP client for server "${serverName}" does not support header changes`
+      );
+    };
+  }
+
+  return () => {
+    let executeRound = direct;
+
+    const execute = async (
+      request: CallToolRequest["params"],
+      options: RequestOptions,
+      headers: ToolCallModification["headers"]
+    ) => {
+      if (headers && Object.keys(headers).length > 0) {
+        executeRound = await selectHeaderPolicy()(headers);
       }
 
-      finalClient = await client.fork(headers);
-    }
+      return executeRound(request, options);
+    };
 
-    // v2 callTool(params, options?) — no result-schema argument in between.
-    const callToolArgs: Parameters<typeof finalClient.callTool> = [
-      {
+    return { execute };
+  };
+}
+
+/** Parse hook output and validate effective arguments before choosing a wire request. */
+async function prepareToolCall({
+  serverName,
+  toolName,
+  args,
+  config,
+  onProgress,
+  beforeToolCall,
+  inputValidator,
+}: CallToolArgs) {
+  // Extract timeout from RunnableConfig and pass to MCP SDK
+  // Note: ensureConfig() converts timeout into an AbortSignal and deletes the timeout field.
+  // To preserve the numeric timeout for SDKs that accept an explicit timeout value, we read
+  // it from metadata.timeoutMs if present, falling back to any direct timeout.
+  const numericTimeout =
+    z.number().nullish().parse(config?.metadata?.timeoutMs) ?? config?.timeout;
+
+  const requestOptions: RequestOptions = {};
+
+  if (numericTimeout) requestOptions.timeout = numericTimeout;
+
+  if (config?.signal) requestOptions.signal = config.signal;
+
+  if (onProgress) {
+    requestOptions.onprogress = (progress) => {
+      // oxlint-disable-next-line @typescript-eslint/no-floating-promises
+      onProgress(progress, {
+        type: "tool",
         name: toolName,
-        arguments: finalArgs,
-        _meta:
-          logLevel !== undefined && finalClient.getProtocolEra() === "modern"
-            ? { [LOG_LEVEL_META_KEY]: logLevel }
-            : undefined,
-      },
-    ];
+        args,
+        server: serverName,
+      });
+    };
+  }
 
-    if (Object.keys(requestOptions).length > 0) {
-      callToolArgs.push(requestOptions);
-    }
+  let state: unknown = {};
 
-    const result = await finalClient.callTool(...callToolArgs);
+  try {
+    state = getCurrentTaskInput(config);
+  } catch (error) {
+    debugLog(`LangGraph task input is unavailable: ${String(error)}`);
+  }
+
+  const beforeToolCallInterception = toolCallModificationSchema
+    .optional()
+    .parse(
+      await beforeToolCall?.(
+        {
+          name: toolName,
+          args,
+          serverName,
+        },
+        state,
+        config ?? {}
+      )
+    );
+
+  const validation = await inputValidator["~standard"].validate({
+    ...args,
+    ...beforeToolCallInterception?.args,
+  });
+
+  if (validation.issues) {
+    throw new ToolException(
+      `Invalid arguments for MCP tool "${toolName}": ${validation.issues.map((issue) => issue.message).join("; ")}`,
+      new z.ZodError(
+        validation.issues.map((issue) => ({
+          code: "custom",
+          message: issue.message,
+          path:
+            issue.path?.map((segment) =>
+              typeof segment === "object" ? segment.key : segment
+            ) ?? [],
+        }))
+      )
+    );
+  }
+
+  const finalArgs = validation.value;
+  const request = {
+    name: toolName,
+    arguments: finalArgs,
+  } satisfies CallToolRequest["params"];
+
+  return {
+    request,
+    requestOptions,
+    headers: beforeToolCallInterception?.headers,
+    args: finalArgs,
+    state,
+  };
+}
+
+/** Execute a prepared call; only terminal SDK results reach content conversion. */
+async function _callTool(
+  call: CallToolArgs
+): Promise<ContentBlocksWithArtifacts> {
+  const {
+    serverName,
+    toolName,
+    invocation,
+    config,
+    outputHandling,
+    afterToolCall,
+  } = call;
+
+  try {
+    debugLog(`INFO: Calling tool ${toolName}(${JSON.stringify(call.args)})`);
+    const prepared = await prepareToolCall(call);
+
+    const result = await invocation.execute(
+      prepared.request,
+      prepared.requestOptions,
+      prepared.headers
+    );
+
+    const { args: finalArgs, state } = prepared;
 
     const [content, artifacts] = _convertCallToolResult({
       serverName,
@@ -587,6 +641,12 @@ export async function convertMcpTools(
               new DefaultJsonSchemaValidator()
             );
 
+            const createInvocation = createToolInvocationFactory(
+              client,
+              serverName,
+              options?.logLevel
+            );
+
             const dst = new DynamicStructuredTool({
               name: `${toolNamePrefix}${tool.name}`,
               description: tool.description || "",
@@ -601,12 +661,13 @@ export async function convertMcpTools(
                 _runManager?: CallbackManagerForToolRun,
                 config?: RunnableConfig
               ) => {
+                const invocation = createInvocation();
+
                 return _callTool({
-                  logLevel: options?.logLevel,
+                  invocation,
                   serverName,
                   inputValidator,
                   toolName: tool.name,
-                  client,
                   args,
                   config,
                   outputHandling,
