@@ -89,8 +89,8 @@ Tool content uses standard LangChain blocks. Images and audio expose `data` and
 `outputHandling` controls what reaches the model versus the tool artifact.
 
 Use `beforeToolCall` and `afterToolCall` to modify arguments or results. See the
-[reference](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-mcp-adapters/docs/client-reference.md)
-for hook signatures, output routing, timeouts, notifications and errors.
+[hooks example](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-mcp-adapters/examples/hooks.ts)
+for argument and result hooks.
 
 ## Authentication
 
@@ -99,16 +99,13 @@ Supply an application-owned `authProvider` implementing the exported
 registration, exchange and refresh. Your application owns credential storage,
 account binding, redirects and callback handling.
 
-See the [authentication reference](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-mcp-adapters/docs/client-reference.md#oauth-20-authentication).
+## Examples
 
-## Upgrade and examples
-
-- [Migration guide](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-mcp-adapters/docs/sdk-v2-migration.md): old/new names, protocol modes, removed options and result changes.
 - [Examples](https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-mcp-adapters/examples): local servers, mixed modes, agents and hooks.
-- [Client reference](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-mcp-adapters/docs/client-reference.md): detailed behavior and advanced SDK access.
 
-`MultiServerMCPClient`, `mcpServers` input and `getTools()` remain deprecated
-compatibility APIs. Use `MCPAdapter`, `servers` and `listTools()` for new code.
+`MultiServerMCPClient` and `mcpServers` input remain deprecated compatibility APIs.
+Use `MCPAdapter` and `servers` for new code. Replace `getTools()` with `listTools()`
+when upgrading from adapter 1.x.
 
 MIT licensed. Originally adapted from
 [Julien Blanchon's implementation](https://github.com/JulienBlanchon/langchain-mcp-adapter).

@@ -149,7 +149,7 @@ export class MCPAdapter {
 
   /**
    * Proactively initialize connections to all servers. This will be called automatically when
-   * methods requiring an active connection (like {@link getTools} or {@link getClient}) are called,
+   * methods requiring an active connection (like {@link listTools} or {@link getClient}) are called,
    * but you can call it directly to ensure all connections are established before using the tools.
    *
    * When a server fails to connect, the client will throw an error if `onConnectionError` is "throw",
@@ -256,21 +256,6 @@ export class MCPAdapter {
     options?: CustomHTTPTransportOptions
   ): Promise<DynamicStructuredTool[]>;
   async listTools(...args: unknown[]): Promise<DynamicStructuredTool[]> {
-    return this.#listTools(args);
-  }
-
-  /** @deprecated Use listTools(). Returns the same LangChain tools. */
-  async getTools(...servers: string[]): Promise<DynamicStructuredTool[]>;
-  /** @deprecated Use listTools(). */
-  async getTools(
-    servers: string[],
-    options?: CustomHTTPTransportOptions
-  ): Promise<DynamicStructuredTool[]>;
-  async getTools(...args: unknown[]): Promise<DynamicStructuredTool[]> {
-    return this.#listTools(args);
-  }
-
-  async #listTools(args: unknown[]): Promise<DynamicStructuredTool[]> {
     const { servers, options } = serverSelectionSchema.parse(args);
     await this.initializeConnections(options);
     return servers.length === 0

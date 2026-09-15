@@ -456,7 +456,6 @@ async function _callTool({
       finalClient = await client.fork(headers);
     }
 
-    // v2 callTool(params, options?) — no result-schema argument in between.
     const callToolArgs: Parameters<typeof finalClient.callTool> = [
       {
         name: toolName,

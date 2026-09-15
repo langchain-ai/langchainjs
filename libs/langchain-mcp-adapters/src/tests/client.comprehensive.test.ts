@@ -358,7 +358,7 @@ describe("MultiServerMCPClient", () => {
       expect(conf.prefixToolNameWithServerName).toBe(false);
 
       await client.initializeConnections();
-      const tools = await client.getTools();
+      const tools = await client.listTools();
 
       // Should have 2 tools
       expect(tools.length).toBe(2);

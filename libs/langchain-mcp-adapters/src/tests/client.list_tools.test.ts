@@ -6,7 +6,7 @@ import { ConnectionManager } from "../connection.js";
 describe("adapter tool listing", () => {
   afterEach(() => vi.restoreAllMocks());
 
-  test("listTools and the deprecated alias share selection and invocation behavior", async () => {
+  test("listTools supports server selection and tool invocation", async () => {
     vi.spyOn(ConnectionManager.prototype, "createClient").mockImplementation(
       async (_transport, serverName) => {
         const client = new Client({ name: serverName, version: "1" });
@@ -42,7 +42,7 @@ describe("adapter tool listing", () => {
       expect(selected.name).toBe("second");
       expect(await selected.invoke({})).toBe("second");
       expect(
-        (await adapter.getTools(["second"])).map((tool) => tool.name)
+        (await adapter.listTools(["second"])).map((tool) => tool.name)
       ).toEqual(["second"]);
       expect(
         (await adapter.listTools(["first"], { headers: {} })).map(
