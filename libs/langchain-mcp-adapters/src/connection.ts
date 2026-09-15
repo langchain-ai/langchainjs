@@ -10,11 +10,12 @@ import type {
   StreamableHTTPClientTransportOptions,
   StreamableHTTPReconnectionOptions,
 } from "@modelcontextprotocol/client";
+import { connectionSchema } from "./types.js";
 import { getDebugLog } from "./logging.js";
 import type {
   ResolvedStreamableHTTPConnection,
+  ResolvedSSEConnection,
   ResolvedStdioConnection,
-  ResolvedClientConfig,
 } from "./types.js";
 
 /**
@@ -50,23 +51,14 @@ export interface Connection {
     | SSEClientTransport
     | StdioClientTransport;
   client: Client;
-  transportOptions: ResolvedStdioConnection | ResolvedStreamableHTTPConnection;
+  transportOptions:
+    | ResolvedStdioConnection
+    | ResolvedStreamableHTTPConnection
+    | ResolvedSSEConnection;
   closeCallback: () => Promise<void>;
 }
 
 const transportTypes = ["http", "sse", "stdio"] as const;
-
-type ConnectionManagerConfig = Pick<
-  ResolvedClientConfig,
-  | "onCancelled"
-  | "onInitialized"
-  | "onMessage"
-  | "onPromptsListChanged"
-  | "onResourcesListChanged"
-  | "onResourcesUpdated"
-  | "onRootsListChanged"
-  | "onToolsListChanged"
->;
 
 /**
  * Manages a pool of MCP clients with different transport, server name and connection configurations.
@@ -74,12 +66,6 @@ type ConnectionManagerConfig = Pick<
  */
 export class ConnectionManager {
   #connections: Map<ClientKeyObject, Connection> = new Map();
-  #hooks: ConnectionManagerConfig;
-
-  constructor(hooks: ConnectionManagerConfig = {}) {
-    this.#hooks = hooks;
-  }
-
   async createClient(
     type: "stdio",
     serverName: string,
@@ -93,12 +79,12 @@ export class ConnectionManager {
   async createClient(
     type: "sse",
     serverName: string,
-    options: ResolvedStreamableHTTPConnection
+    options: ResolvedSSEConnection
   ): Promise<Client>;
   async createClient(
     ...args:
       | ["stdio", string, ResolvedStdioConnection]
-      | ["sse", string, ResolvedStreamableHTTPConnection]
+      | ["sse", string, ResolvedSSEConnection]
       | ["http", string, ResolvedStreamableHTTPConnection]
   ): Promise<Client> {
     const [type, serverName, options] = args;
@@ -112,33 +98,44 @@ export class ConnectionManager {
         : type === "sse"
           ? await this.#createSSETransport(serverName, options)
           : await this.#createStdioTransport(options);
-    const mcpClient = new MCPClient({
-      name: packageJson.name,
-      version: packageJson.version,
-    });
+
+    // The SDK defaults to legacy, and "auto" permits legacy fallback.
+    // Pin modern connections to preserve the configured protocol mode.
+    const mcpClient = new MCPClient(
+      {
+        name: packageJson.name,
+        version: packageJson.version,
+      },
+      {
+        versionNegotiation: {
+          mode: options.mode === "legacy" ? "legacy" : { pin: "2026-07-28" },
+        },
+      }
+    );
+
     await mcpClient.connect(transport);
 
-    if (this.#hooks.onMessage) {
+    if (options.onMessage) {
       mcpClient.setNotificationHandler(
         "notifications/message",
         (notification) =>
-          this.#hooks.onMessage?.(notification.params, {
+          options.onMessage?.(notification.params, {
             server: serverName,
-            options,
+            options: connectionSchema.parse(options),
           })
       );
     }
 
-    if (this.#hooks.onInitialized) {
+    if (options.onInitialized) {
       mcpClient.setNotificationHandler("notifications/initialized", () =>
-        this.#hooks.onInitialized?.({
+        options.onInitialized?.({
           server: serverName,
-          options,
+          options: connectionSchema.parse(options),
         })
       );
     }
 
-    if (this.#hooks.onCancelled) {
+    if (options.onCancelled) {
       mcpClient.setNotificationHandler(
         "notifications/cancelled",
         (notification) => {
@@ -148,11 +145,11 @@ export class ConnectionManager {
             return;
           }
 
-          const result = this.#hooks.onCancelled?.(
+          const result = options.onCancelled?.(
             { requestId, reason },
             {
               server: serverName,
-              options,
+              options: connectionSchema.parse(options),
             }
           );
 
@@ -165,53 +162,44 @@ export class ConnectionManager {
       );
     }
 
-    if (this.#hooks.onPromptsListChanged) {
+    if (options.onPromptsListChanged) {
       mcpClient.setNotificationHandler(
         "notifications/prompts/list_changed",
         () =>
-          this.#hooks.onPromptsListChanged?.({
+          options.onPromptsListChanged?.({
             server: serverName,
-            options,
+            options: connectionSchema.parse(options),
           })
       );
     }
 
-    if (this.#hooks.onResourcesListChanged) {
+    if (options.onResourcesListChanged) {
       mcpClient.setNotificationHandler(
         "notifications/resources/list_changed",
         () =>
-          this.#hooks.onResourcesListChanged?.({
+          options.onResourcesListChanged?.({
             server: serverName,
-            options,
+            options: connectionSchema.parse(options),
           })
       );
     }
 
-    if (this.#hooks.onResourcesUpdated) {
+    if (options.onResourcesUpdated) {
       mcpClient.setNotificationHandler(
         "notifications/resources/updated",
         (notification) =>
-          this.#hooks.onResourcesUpdated?.(notification.params, {
+          options.onResourcesUpdated?.(notification.params, {
             server: serverName,
-            options,
+            options: connectionSchema.parse(options),
           })
       );
     }
 
-    if (this.#hooks.onRootsListChanged) {
-      mcpClient.setNotificationHandler("notifications/roots/list_changed", () =>
-        this.#hooks.onRootsListChanged?.({
-          server: serverName,
-          options,
-        })
-      );
-    }
-
-    if (this.#hooks.onToolsListChanged) {
+    if (options.onToolsListChanged) {
       mcpClient.setNotificationHandler("notifications/tools/list_changed", () =>
-        this.#hooks.onToolsListChanged?.({
+        options.onToolsListChanged?.({
           server: serverName,
-          options,
+          options: connectionSchema.parse(options),
         })
       );
     }
@@ -229,15 +217,7 @@ export class ConnectionManager {
       return this.#forkClient(key, headers);
     };
 
-    const client = new Proxy(mcpClient, {
-      get(target, prop) {
-        if (prop === "fork") {
-          return forkClient.bind(this);
-        }
-
-        return target[prop as keyof MCPClient];
-      },
-    }) as Client;
+    const client = Object.assign(mcpClient, { fork: forkClient });
 
     this.#connections.set(key, {
       transport,
@@ -263,16 +243,22 @@ export class ConnectionManager {
       throw new Error("Transport not found");
     }
 
-    const type =
-      connection.transportOptions.type ?? connection.transportOptions.transport;
-    if (type === "stdio") {
+    const options = connection.transportOptions;
+
+    if (options.transport === "stdio") {
       throw new Error("Forking stdio transport is not supported");
     }
 
-    return this.createClient(type as "http", key.serverName, {
-      ...connection.transportOptions,
+    if (options.transport === "sse")
+      return this.createClient("sse", key.serverName, {
+        ...options,
+        headers,
+      });
+
+    return this.createClient("http", key.serverName, {
+      ...options,
       headers,
-    } as ResolvedStreamableHTTPConnection);
+    });
   }
 
   /**
@@ -490,7 +476,7 @@ export class ConnectionManager {
    */
   async #createSSETransport(
     serverName: string,
-    args: ResolvedStreamableHTTPConnection
+    args: ResolvedSSEConnection
   ): Promise<SSEClientTransport> {
     const { url, headers, authProvider } = args;
     const options: SSEClientTransportOptions = {};

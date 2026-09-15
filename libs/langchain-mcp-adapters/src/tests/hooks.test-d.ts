@@ -1,32 +1,119 @@
+import {
+  MCPAdapter,
+  type MCPAdapterConfig,
+  type ResolvedMCPAdapterConfig,
+  type SSEConnection,
+  type StreamableHTTPConnection,
+} from "../index.js";
+import type {
+  CallToolResult,
+  ListResourcesResult,
+  ListResourceTemplatesResult,
+  ReadResourceResult,
+  LoggingMessageNotificationParams,
+} from "@modelcontextprotocol/client";
 import { test, expectTypeOf } from "vitest";
 import { ToolMessage } from "@langchain/core/messages";
 import { RunnableConfig } from "@langchain/core/runnables";
 import { MultiServerMCPClient } from "../client.js";
 import type {
-  ResolvedStreamableHTTPConnection,
-  ResolvedStdioConnection,
+  MCPResource,
+  MCPResourceTemplate,
+  MCPResourceContent,
+  CallToolResultContentType,
+  ResolvedConnection,
 } from "../types.js";
 
 test("check tool hooks types", () => {
   new MultiServerMCPClient({
     mcpServers: {
       filesystem: {
+        mode: "legacy",
         transport: "stdio",
+        onMessage: (message, server) => {
+          expectTypeOf(message.logger).toEqualTypeOf<string | undefined>();
+          expectTypeOf(server).toEqualTypeOf<{
+            server: string;
+            options: ResolvedConnection;
+          }>();
+        },
+        onProgress: (progress, eventSource) => {
+          expectTypeOf(progress).toMatchTypeOf<{
+            percentage?: number;
+            progress?: number;
+            total?: number;
+            message?: string;
+          }>();
+          expectTypeOf(eventSource).toEqualTypeOf<
+            | {
+                type: "tool";
+                name: string;
+                server: string;
+                args: unknown;
+              }
+            | {
+                type: "unknown";
+              }
+          >();
+        },
+        onCancelled: (notification, server) => {
+          expectTypeOf(notification.reason).toEqualTypeOf<string | undefined>();
+          expectTypeOf(server).toEqualTypeOf<{
+            server: string;
+            options: ResolvedConnection;
+          }>();
+        },
+
+        onInitialized: (server) => {
+          expectTypeOf(server).toEqualTypeOf<{
+            server: string;
+            options: ResolvedConnection;
+          }>();
+        },
+
+        onPromptsListChanged: (server) => {
+          expectTypeOf(server).toEqualTypeOf<{
+            server: string;
+            options: ResolvedConnection;
+          }>();
+        },
+
+        onResourcesListChanged: (server) => {
+          expectTypeOf(server).toEqualTypeOf<{
+            server: string;
+            options: ResolvedConnection;
+          }>();
+        },
+
+        onResourcesUpdated: (notification, server) => {
+          expectTypeOf(notification.uri).toEqualTypeOf<string>();
+          expectTypeOf(server).toEqualTypeOf<{
+            server: string;
+            options: ResolvedConnection;
+          }>();
+        },
+
+        onToolsListChanged: (server) => {
+          expectTypeOf(server).toEqualTypeOf<{
+            server: string;
+            options: ResolvedConnection;
+          }>();
+        },
         command: "npx",
         args: ["-y", "@modelcontextprotocol/server-filesystem", "./"],
       },
     },
     beforeToolCall: (toolCallRequest, state, runtime) => {
-      expectTypeOf(state).toEqualTypeOf<Record<string, unknown>>();
+      expectTypeOf(state).toEqualTypeOf<unknown>();
       expectTypeOf(runtime).toEqualTypeOf<RunnableConfig>();
       expectTypeOf(toolCallRequest).toEqualTypeOf<{
         name: string;
         serverName: string;
-        args?: unknown;
+        args: unknown;
       }>();
     },
     afterToolCall: (toolCallResult, state, runtime) => {
-      expectTypeOf(state).toEqualTypeOf<Record<string, unknown>>();
+      expectTypeOf(state).toEqualTypeOf<unknown>();
       expectTypeOf(runtime).toEqualTypeOf<RunnableConfig>();
       expectTypeOf(toolCallResult.name).toEqualTypeOf<string>();
       expectTypeOf(toolCallResult.args).toEqualTypeOf<unknown>();
@@ -38,81 +125,78 @@ test("check tool hooks types", () => {
         }),
       };
     },
-    onMessage: (message, server) => {
-      expectTypeOf(message.logger).toEqualTypeOf<string | undefined>();
-      expectTypeOf(server).toEqualTypeOf<{
-        server: string;
-        options: ResolvedStreamableHTTPConnection | ResolvedStdioConnection;
-      }>();
-    },
-    onProgress: (progress, eventSource) => {
-      expectTypeOf(progress).toMatchTypeOf<{
-        percentage?: number;
-        progress?: number;
-        total?: number;
-        message?: string;
-      }>();
-      expectTypeOf(eventSource).toEqualTypeOf<
-        | {
-            type: "tool";
-            name: string;
-            server: string;
-            args?: unknown;
-          }
-        | {
-            type: "unknown";
-          }
-      >();
-    },
-    onCancelled: (notification, server) => {
-      expectTypeOf(notification.reason).toEqualTypeOf<string | undefined>();
-      expectTypeOf(server).toEqualTypeOf<{
-        server: string;
-        options: ResolvedStreamableHTTPConnection | ResolvedStdioConnection;
-      }>();
-    },
+  });
+});
 
-    onInitialized: (server) => {
-      expectTypeOf(server).toEqualTypeOf<{
-        server: string;
-        options: ResolvedStreamableHTTPConnection | ResolvedStdioConnection;
-      }>();
+test("canonical adapter API retains typed SDK callbacks and native tools", () => {
+  const adapter = new MCPAdapter({
+    servers: {
+      remote: {
+        transport: "http",
+        url: "https://example.com/mcp",
+        onMessage: (message) => {
+          expectTypeOf(
+            message
+          ).toEqualTypeOf<LoggingMessageNotificationParams>();
+        },
+      },
     },
+    beforeToolCall: async ({ args }) => {
+      expectTypeOf(args).toEqualTypeOf<unknown>();
 
-    onPromptsListChanged: (server) => {
-      expectTypeOf(server).toEqualTypeOf<{
-        server: string;
-        options: ResolvedStreamableHTTPConnection | ResolvedStdioConnection;
-      }>();
-    },
-
-    onResourcesListChanged: (server) => {
-      expectTypeOf(server).toEqualTypeOf<{
-        server: string;
-        options: ResolvedStreamableHTTPConnection | ResolvedStdioConnection;
-      }>();
-    },
-
-    onResourcesUpdated: (notification, server) => {
-      expectTypeOf(notification.uri).toEqualTypeOf<string>();
-      expectTypeOf(server).toEqualTypeOf<{
-        server: string;
-        options: ResolvedStreamableHTTPConnection | ResolvedStdioConnection;
-      }>();
-    },
-
-    onRootsListChanged: (server) => {
-      expectTypeOf(server).toEqualTypeOf<{
-        server: string;
-        options: ResolvedStreamableHTTPConnection | ResolvedStdioConnection;
-      }>();
-    },
-
-    onToolsListChanged: (server) => {
-      expectTypeOf(server).toEqualTypeOf<{
-        server: string;
-        options: ResolvedStreamableHTTPConnection | ResolvedStdioConnection;
-      }>();
+      return { args: { value: 1 } };
     },
   });
+
+  expectTypeOf(adapter).toEqualTypeOf<MultiServerMCPClient>();
+  expectTypeOf(adapter.config).toEqualTypeOf<ResolvedMCPAdapterConfig>();
+  expectTypeOf(adapter.config).not.toHaveProperty("mcpServers");
+  expectTypeOf(adapter.close()).toEqualTypeOf<Promise<void>>();
+});
+
+test("public transport types distinguish SSE from Streamable HTTP", () => {
+  const sse = {
+    mode: "legacy",
+    transport: "sse",
+    url: "https://example.com/sse",
+  } satisfies SSEConnection;
+  const http = {
+    url: "https://example.com/mcp",
+  } satisfies StreamableHTTPConnection;
+  const config = { servers: { sse, http } } satisfies MCPAdapterConfig;
+  expectTypeOf(config).toMatchTypeOf<MCPAdapterConfig>();
+  expectTypeOf<SSEConnection>().not.toMatchTypeOf<StreamableHTTPConnection>();
+  expectTypeOf<NonNullable<SSEConnection["mode"]>>().toEqualTypeOf<"legacy">();
+});
+
+test("resource and content types follow the SDK", () => {
+  expectTypeOf<MCPResource>().toEqualTypeOf<
+    ListResourcesResult["resources"][number]
+  >();
+  expectTypeOf<MCPResourceTemplate>().toEqualTypeOf<
+    ListResourceTemplatesResult["resourceTemplates"][number]
+  >();
+  expectTypeOf<MCPResourceContent>().toEqualTypeOf<
+    ReadResourceResult["contents"][number]
+  >();
+  expectTypeOf<CallToolResultContentType>().toEqualTypeOf<
+    CallToolResult["content"][number]["type"]
+  >();
+});
+
+test("protocol modes reject fields belonging to the other server interface", () => {
+  // @ts-expect-error Legacy initialization observers are forbidden without legacy mode.
+  const modern: import("../types.js").Connection = {
+    url: "https://example.com/mcp",
+    onInitialized: () => undefined,
+  };
+
+  const legacy: import("../types.js").Connection = {
+    mode: "legacy",
+    url: "https://example.com/mcp",
+    onInitialized: () => undefined,
+  };
+
+  expectTypeOf(modern).toMatchTypeOf<import("../types.js").Connection>();
+  expectTypeOf(legacy).toMatchTypeOf<import("../types.js").Connection>();
 });

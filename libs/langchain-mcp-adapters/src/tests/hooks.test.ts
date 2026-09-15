@@ -1,13 +1,16 @@
-import { describe, test, expect, beforeEach, afterEach } from "vitest";
+import { z } from "zod";
+import { Client } from "@modelcontextprotocol/client";
+import { loadMcpTools } from "../tools.js";
+import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import { Server } from "node:http";
 import { join } from "node:path";
 import { ToolMessage, BaseMessage } from "@langchain/core/messages";
 import { createAgent, FakeToolCallingModel } from "langchain";
+import { entrypoint } from "@langchain/langgraph";
 import type { RunnableConfig } from "@langchain/core/runnables";
 
 import { createDummyHttpServer } from "./fixtures/dummy-http-server.js";
 import { MultiServerMCPClient } from "../client.js";
-import type { State } from "../hooks.js";
 import type { ClientConfig } from "../types.js";
 
 type TransportKind = "stdio" | "http" | "sse";
@@ -54,6 +57,63 @@ class TestServers {
   }
 }
 
+test.each(["value", "promise"])(
+  "preserves MCP artifacts when afterToolCall returns a %s",
+  async (returnType) => {
+    const client = new Client({ name: "artifact-test", version: "1" });
+
+    const artifacts = [
+      { type: "image", data: "aW1hZ2U=", mimeType: "image/png" },
+      { type: "audio", data: "YXVkaW8=", mimeType: "audio/wav" },
+      { type: "text", text: "artifact text" },
+      { type: "resource_link", uri: "memory://linked", name: "linked" },
+      {
+        type: "resource",
+        resource: { uri: "memory://embedded", text: "embedded" },
+      },
+    ] satisfies Awaited<ReturnType<Client["callTool"]>>["content"];
+
+    vi.spyOn(client, "listTools").mockResolvedValue({
+      tools: [
+        { name: "echo", inputSchema: { type: "object", properties: {} } },
+      ],
+    });
+    vi.spyOn(client, "callTool").mockResolvedValue({ content: artifacts });
+
+    const afterToolCall = vi.fn(
+      ({
+        result,
+      }: Parameters<NonNullable<ClientConfig["afterToolCall"]>>[0]) => {
+        expect(result).toEqual([expect.anything(), artifacts]);
+
+        return returnType === "promise"
+          ? Promise.resolve({ result })
+          : { result };
+      }
+    );
+
+    try {
+      const [tool] = await loadMcpTools("test", client, {
+        outputHandling: "artifact",
+        afterToolCall,
+      });
+
+      const output = await tool.invoke({
+        type: "tool_call",
+        id: "call",
+        name: "echo",
+        args: {},
+      });
+
+      expect(output.artifact).toEqual(artifacts);
+      expect(afterToolCall).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.restoreAllMocks();
+      await client.close();
+    }
+  }
+);
+
 describe("Interceptor hooks (stdio/http/sse)", () => {
   let servers: TestServers;
 
@@ -79,6 +139,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
         const client = new MultiServerMCPClient({
           mcpServers: {
             stdio: {
+              mode: "legacy",
               transport: "stdio",
               command,
               args,
@@ -107,6 +168,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
         const client = new MultiServerMCPClient({
           mcpServers: {
             http: {
+              mode: "legacy",
               transport: "http",
               url: `${baseUrl}/mcp`,
               automaticSSEFallback: true,
@@ -136,6 +198,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
         const client = new MultiServerMCPClient({
           mcpServers: {
             sse: {
+              mode: "legacy",
               transport: "sse",
               url: `${baseUrl}/sse`,
             },
@@ -163,7 +226,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
       });
 
       try {
-        const tools1 = await client.getTools();
+        const tools1 = await client.listTools();
         const t1 = tools1.find((tool) => tool.name.includes("test_tool"))!;
         const out1 = (await t1.invoke({ input: "orig" })) as string;
         const parsed1 = JSON.parse(out1);
@@ -176,7 +239,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
       const { client } = await setup();
 
       try {
-        const tools = await client.getTools();
+        const tools = await client.listTools();
         const t = tools.find((tool) => tool.name.includes("test_tool"))!;
         const res = await t.invoke({ input: "orig" });
         expect(res).toBe("global-after");
@@ -194,13 +257,13 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
       });
       try {
         if (!supportsHeaders) {
-          const stdioTools = await client.getTools();
+          const stdioTools = await client.listTools();
           const t = stdioTools.find((tool) => tool.name.includes("test_tool"))!;
           await expect(t.invoke({ input: "x" })).rejects.toThrow(
             /Forking stdio transport is not supported/
           );
         } else {
-          const ts = await client.getTools();
+          const ts = await client.listTools();
           const chk = ts.find((tool) => tool.name.includes("check_headers"));
           // call header checker
           const out = await chk!.invoke({ headerName: "X-Check" });
@@ -222,7 +285,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
       });
 
       try {
-        const tools = await client.getTools();
+        const tools = await client.listTools();
         const t = tools.find((tool) => tool.name.includes("test_tool"))!;
         const res = await t.invoke({ input: "orig" });
         expect(res).toEqual([{ type: "text", text: "server-after" }]);
@@ -239,7 +302,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
       });
 
       try {
-        const tools = await client.getTools();
+        const tools = await client.listTools();
         const t = tools.find((tool) => tool.name.includes("test_tool"))!;
         const res = await t.invoke({ input: "orig" });
         expect(res).toEqual("foobar");
@@ -258,29 +321,23 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
     const client = new MultiServerMCPClient({
       mcpServers: {
         http: {
+          mode: "legacy",
           transport: "http",
           url: `${baseUrl}/mcp`,
+          onMessage: (log) => {
+            logs.push(z.string().parse(log.data));
+          },
+          onProgress: (p) => {
+            progresses.push(
+              p.total ? Math.round((p.progress / p.total) * 100) : p.progress
+            );
+          },
           automaticSSEFallback: true,
         },
       },
-      onMessage: (log) => {
-        logs.push((log.data as string) ?? "");
-      },
-      onProgress: (p) => {
-        const anyP = p as unknown as {
-          percentage?: number;
-          progress?: number;
-          total?: number;
-        };
-        let pct = anyP.percentage;
-        if (pct == null && anyP.progress != null && anyP.total) {
-          pct = Math.round((anyP.progress / anyP.total) * 100);
-        }
-        progresses.push(Number(pct ?? 0));
-      },
     });
     try {
-      const tools = await client.getTools();
+      const tools = await client.listTools();
       const t = tools.find((tool) => tool.name.includes("test_tool"))!;
       await t.invoke({ input: "evt" });
       expect(logs.some((m) => m.includes("test_tool invoked"))).toBe(true);
@@ -294,11 +351,13 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
     const { baseUrl } = await servers.createHTTP("http-interceptor", {
       testHeaders: true,
     });
-    const stateCalls: State[] = [];
+
+    const stateCalls: unknown[] = [];
     const runtimeCalls: RunnableConfig[] = [];
     const client = new MultiServerMCPClient({
       mcpServers: {
         http: {
+          mode: "legacy",
           transport: "http",
           url: `${baseUrl}/mcp`,
           automaticSSEFallback: true,
@@ -315,7 +374,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
     });
 
     try {
-      const tools = await client.getTools();
+      const tools = await client.listTools();
       const t = tools.find((tool) => tool.name.includes("test_tool"))!;
       await t.invoke({ input: "orig" });
       expect(stateCalls).toHaveLength(2);
@@ -327,6 +386,47 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
         recursionLimit: 25,
         runName: "test_tool",
       });
+    } finally {
+      await client.close();
+    }
+  });
+
+  test("hooks preserve arbitrary functional entrypoint inputs", async () => {
+    const { baseUrl } = await servers.createHTTP("entrypoint-input");
+    const observed: unknown[] = [];
+
+    const client = new MultiServerMCPClient({
+      mcpServers: { http: { mode: "legacy", url: `${baseUrl}/mcp` } },
+      beforeToolCall: (_, state) => {
+        observed.push(state);
+      },
+      afterToolCall: (_, state) => {
+        observed.push(state);
+      },
+    });
+
+    try {
+      const [tool] = await client.listTools();
+
+      const workflow = entrypoint("hook-input", async (input: unknown) => {
+        await tool.invoke({ input: "orig" });
+
+        return input;
+      });
+
+      for (const input of [
+        ["retained-input"],
+        "text",
+        0,
+        false,
+        { value: 1 },
+      ]) {
+        observed.length = 0;
+        await workflow.invoke(input);
+        expect(observed).toHaveLength(2);
+        expect(observed[0]).toBe(input);
+        expect(observed[1]).toBe(input);
+      }
     } finally {
       await client.close();
     }
@@ -344,6 +444,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
     const client = new MultiServerMCPClient({
       mcpServers: {
         http: {
+          mode: "legacy",
           transport: "http",
           url: `${baseUrl}/mcp`,
           automaticSSEFallback: true,
@@ -365,7 +466,7 @@ describe("Interceptor hooks (stdio/http/sse)", () => {
     });
 
     try {
-      const tools = await client.getTools();
+      const tools = await client.listTools();
       const agent = createAgent({
         model,
         tools: tools,
