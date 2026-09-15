@@ -408,6 +408,8 @@ const notifications = z.object({
     .optional(),
   /**
    * Called when a progress message is received.
+   * Observers do not block tool execution. Callback failures are caught and
+   * reported through the adapter's debug logger.
    *
    * @param progress - The progress message
    * @param progress.progress - Progress completed so far

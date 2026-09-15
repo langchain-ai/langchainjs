@@ -52,6 +52,7 @@ import debug from "debug";
 const debugLog = debug("@langchain/mcp-adapters:tools");
 
 type MCPInstance = Client | MCPClient;
+type ToolArguments = NonNullable<CallToolRequest["params"]["arguments"]>;
 
 export { ToolException, isToolException } from "./utils/errors.js";
 
@@ -60,7 +61,7 @@ function _toolOutputToContentBlocks(
   content: MCPContentBlock,
   toolName: string,
   serverName: string
-): ContentBlock[] {
+): ContentBlock.Standard[] {
   const contentType = content.type;
 
   switch (content.type) {
@@ -216,18 +217,6 @@ function _convertCallToolResult({
   result,
   outputHandling,
 }: ConvertCallToolResultArgs): [ExtendedContent, ExtendedArtifact[]] {
-  if (!result) {
-    throw new ToolException(
-      `MCP tool '${toolName}' on server '${serverName}' returned an invalid result - tool call response was undefined`
-    );
-  }
-
-  if (!Array.isArray(result.content)) {
-    throw new ToolException(
-      `MCP tool '${toolName}' on server '${serverName}' returned an invalid result - expected an array of content, but was ${typeof result.content}`
-    );
-  }
-
   if (result.isError) {
     throw new ToolException(
       `MCP tool '${toolName}' on server '${serverName}' returned an error: ${result.content
@@ -295,8 +284,6 @@ function _convertCallToolResult({
   if (
     convertedContent.length === 1 &&
     firstBlock.type === "text" &&
-    "text" in firstBlock &&
-    typeof firstBlock.text === "string" &&
     !("metadata" in firstBlock)
   ) {
     return [firstBlock.text, enhancedArtifacts];
@@ -321,7 +308,7 @@ type CallToolArgs = {
   /**
    * The arguments to pass to the tool - must conform to the tool's input schema
    */
-  args: Record<string, unknown>;
+  args: ToolArguments;
   /**
    * Optional RunnableConfig with timeout settings
    */
@@ -345,7 +332,7 @@ type CallToolArgs = {
    * `afterToolCall` callbacks used for tool calls.
    */
   afterToolCall?: ToolHooks["afterToolCall"];
-  inputValidator: ReturnType<typeof fromJsonSchema<Record<string, unknown>>>;
+  inputSchema: ReturnType<typeof createToolInputSchema>;
   continuation?: MCPContinuation;
   hookState?: unknown;
 };
@@ -443,7 +430,41 @@ function createToolInvocationFactory(
   };
 }
 
-/** Parse hook output and validate effective arguments before choosing a wire request. */
+/** Keep the SDK's JSON Schema semantics while exposing a Zod parsing boundary. */
+function createToolInputSchema(jsonSchema: z.output<typeof JSONObjectSchema>) {
+  // Scope the SDK engine to this descriptor: its shared cache keys by $id.
+  const validator = fromJsonSchema<ToolArguments>(
+    jsonSchema,
+    new DefaultJsonSchemaValidator()
+  );
+
+  return z.transform(async (input: ToolArguments, ctx) => {
+    const result = await validator["~standard"].validate(input);
+
+    if (result.issues) {
+      ctx.issues.push(
+        ...result.issues.map(
+          (issue) =>
+            ({
+              code: "custom",
+              input,
+              message: issue.message,
+              path:
+                issue.path?.map((segment) =>
+                  typeof segment === "object" ? segment.key : segment
+                ) ?? [],
+            }) satisfies z.core.$ZodRawIssue
+        )
+      );
+
+      return z.NEVER;
+    }
+
+    return result.value;
+  });
+}
+
+/** Parse hook output and effective arguments before choosing a wire request. */
 async function prepareToolCall({
   serverName,
   toolName,
@@ -451,7 +472,7 @@ async function prepareToolCall({
   config,
   onProgress,
   beforeToolCall,
-  inputValidator,
+  inputSchema,
   continuation,
   hookState,
 }: CallToolArgs) {
@@ -470,13 +491,21 @@ async function prepareToolCall({
 
   if (onProgress) {
     requestOptions.onprogress = (progress) => {
-      // oxlint-disable-next-line @typescript-eslint/no-floating-promises
-      onProgress(progress, {
-        type: "tool",
-        name: toolName,
-        args,
-        server: serverName,
-      });
+      Promise.resolve()
+        .then(() =>
+          onProgress(progress, {
+            type: "tool",
+            name: toolName,
+            args,
+            server: serverName,
+          })
+        )
+        .catch((error) => {
+          debugLog(
+            `Progress callback failed for tool "${toolName}" on server "${serverName}":`,
+            error
+          );
+        });
     };
   }
 
@@ -502,28 +531,19 @@ async function prepareToolCall({
       )
     );
 
-  const validation = await inputValidator["~standard"].validate({
+  const parsed = await inputSchema.safeParseAsync({
     ...args,
     ...beforeToolCallInterception?.args,
   });
 
-  if (validation.issues) {
+  if (!parsed.success) {
     throw new ToolException(
-      `Invalid arguments for MCP tool "${toolName}": ${validation.issues.map((issue) => issue.message).join("; ")}`,
-      new z.ZodError(
-        validation.issues.map((issue) => ({
-          code: "custom",
-          message: issue.message,
-          path:
-            issue.path?.map((segment) =>
-              typeof segment === "object" ? segment.key : segment
-            ) ?? [],
-        }))
-      )
+      `Invalid arguments for MCP tool "${toolName}": ${parsed.error.issues.map((issue) => issue.message).join("; ")}`,
+      parsed.error
     );
   }
 
-  const finalArgs = validation.value;
+  const finalArgs = parsed.data;
   const initialRequest = {
     name: toolName,
     arguments: finalArgs,
@@ -659,7 +679,7 @@ export async function convertMcpTools(
     defaultToolTimeout,
   } = {
     ...defaultLoadMcpToolsOptions,
-    ...(options ?? {}),
+    ...options,
   };
 
   debugLog(`INFO: Found ${mcpTools.length} MCP tools`);
@@ -679,12 +699,7 @@ export async function convertMcpTools(
           try {
             const originalSchema = JSONObjectSchema.parse(tool.inputSchema);
 
-            // Scope the SDK engine to this descriptor: its default shared cache keys by $id.
-            // The SDK export selects the same engine as Client for Node/browser/workerd.
-            const inputValidator = fromJsonSchema<Record<string, unknown>>(
-              originalSchema,
-              new DefaultJsonSchemaValidator()
-            );
+            const inputSchema = createToolInputSchema(originalSchema);
 
             const createInvocation = createToolInvocationFactory(
               client,
@@ -703,7 +718,7 @@ export async function convertMcpTools(
                 ? { timeout: defaultToolTimeout }
                 : undefined,
               func: async (
-                args: Record<string, unknown>,
+                args: ToolArguments,
                 _runManager?: CallbackManagerForToolRun,
                 config?: RunnableConfig
               ) => {
@@ -716,7 +731,7 @@ export async function convertMcpTools(
                   _callTool({
                     invocation,
                     serverName,
-                    inputValidator,
+                    inputSchema,
                     toolName: tool.name,
                     args: continuation?.request.arguments ?? args,
                     continuation,
