@@ -301,6 +301,7 @@ describe("MultiServerMCPClient", () => {
           restart: {
             enabled: true,
             maxAttempts,
+            delayMs: 10,
           },
         },
       });
@@ -326,11 +327,10 @@ describe("MultiServerMCPClient", () => {
       expect(onclose).toBeDefined();
       await onclose?.();
 
-      // Wait for reconnection attempts to complete
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
       // Should attempt to create a new transport exactly maxAttempts times
-      expect(StdioClientTransport).toHaveBeenCalledTimes(maxAttempts);
+      await vi.waitFor(() =>
+        expect(StdioClientTransport).toHaveBeenCalledTimes(maxAttempts)
+      );
     });
   });
 
