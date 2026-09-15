@@ -15,7 +15,10 @@ import { adapterConfigSchema } from "../types.js";
 import { MCPAdapter } from "../index.js";
 
 import { describe, expect, it, vi } from "vitest";
-import { validateElicitationAnswer } from "../elicitation.js";
+import {
+  modernElicitationRequestSchema,
+  validateElicitationAnswer,
+} from "../elicitation.js";
 import type { MCPElicitationRequest } from "../elicitation.js";
 
 const form = {
@@ -28,6 +31,58 @@ const form = {
 } satisfies MCPElicitationRequest;
 
 describe("elicitation answers", () => {
+  it("projects modern form requests without legacy task metadata", () => {
+    const request = {
+      method: "elicitation/create",
+      params: { mode: "form", ...form },
+    };
+    expect(
+      modernElicitationRequestSchema.parse({
+        ...request,
+        params: {
+          ...request.params,
+          task: { ttl: 1000 },
+          _meta: { application: "example" },
+          extension: true,
+        },
+      })
+    ).toEqual(request.params);
+  });
+
+  it("projects modern URL requests without weakening legacy validation", () => {
+    const request = {
+      method: "elicitation/create",
+      params: {
+        mode: "url",
+        message: "Continue in browser",
+        url: "https://example.com/authorize",
+      },
+    };
+    expect(modernElicitationRequestSchema.parse(request)).toEqual(
+      request.params
+    );
+    expect(() => ElicitRequestSchema.parse(request)).toThrow(z.ZodError);
+    expect(
+      modernElicitationRequestSchema.parse({
+        ...request,
+        params: {
+          ...request.params,
+          elicitationId: "legacy",
+          task: { ttl: 1000 },
+          _meta: { application: "example" },
+          extension: true,
+        },
+      })
+    ).toEqual(request.params);
+    for (const invalid of [
+      { ...request, method: "tools/call" },
+      { ...request, params: { ...request.params, url: "invalid" } },
+      { ...request, params: { ...request.params, message: 42 } },
+    ])
+      expect(() => modernElicitationRequestSchema.parse(invalid)).toThrow(
+        z.ZodError
+      );
+  });
   it("retains the SDK-required legacy URL identifier", () => {
     const params = {
       mode: "url",
@@ -415,7 +470,10 @@ it.each([true, false])(
       await handler.notify.resourceUpdated("test://ignored");
       await handler.notify.resourceUpdated("test://watched");
       await vi.waitFor(() => expect(updated).toHaveBeenCalledTimes(1));
-      expect(updated.mock.calls[0][0]).toMatchObject({ uri: "test://watched" });
+      expect(updated.mock.calls[0][0]).toMatchObject({
+        uri: "test://watched",
+        _meta: { "io.modelcontextprotocol/subscriptionId": expect.any(String) },
+      });
       await adapter.close();
       await handler.notify.resourceUpdated("test://watched");
       expect(updated).toHaveBeenCalledTimes(1);
@@ -458,7 +516,7 @@ it("rejects modern reconnect settings and invalid resource subscriptions", () =>
   ).toBe("legacy");
 });
 
-it("routes legacy resource subscriptions through resources/subscribe", async () => {
+it("auto-detects legacy subscriptions without advertising callback elicitation", async () => {
   const subscribed: string[] = [];
   const updated = vi.fn();
 
@@ -495,9 +553,7 @@ it("routes legacy resource subscriptions through resources/subscribe", async () 
   const adapter = new MCPAdapter({
     servers: {
       resources: {
-        mode: "legacy",
         url: `http://127.0.0.1:${port}/mcp`,
-        automaticSSEFallback: false,
         resourceSubscriptions: ["test://watched"],
         onResourcesUpdated: updated,
       },
@@ -507,6 +563,7 @@ it("routes legacy resource subscriptions through resources/subscribe", async () 
   try {
     await adapter.listResources();
     expect(subscribed).toEqual(["test://watched"]);
+    expect(server.getClientCapabilities()).not.toHaveProperty("elicitation");
   } finally {
     await adapter.close();
     await server.close();

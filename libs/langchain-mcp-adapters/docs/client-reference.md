@@ -670,6 +670,13 @@ tasks require a separate protocol extension. OAuth registration follows the
 authorization server's capabilities: Client ID Metadata Documents (CIMD) are
 preferred, with Dynamic Client Registration (DCR) compatibility where needed.
 
+## Direct continuation rounds
+
+Modern tools can return server state without asking a question. The adapter continues
+these rounds up to `maxElicitationRounds`, preserving effective arguments and per-call
+headers. Cancellation and transport errors stop the call. A request for user input
+requires an elicitation handler; state-only responses do not.
+
 ## Server tool schemas
 
 Tools expose the server's JSON Schema unchanged, including references, unions,
