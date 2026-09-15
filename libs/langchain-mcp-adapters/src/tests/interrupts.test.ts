@@ -228,8 +228,14 @@ it.each([
     }
 
     if (scenario === "headers") {
-      await expect(graph.invoke({ done: false }, config)).rejects.toThrow(
-        /header overrides/
+      await expect(graph.invoke({ done: false }, config)).rejects.toMatchObject(
+        {
+          errors: expect.arrayContaining([
+            expect.objectContaining({
+              message: expect.stringMatching(/header overrides/),
+            }),
+          ]),
+        }
       );
       expect(calls).toHaveLength(0);
 
@@ -342,9 +348,31 @@ it.each([
         expect(after).toHaveBeenCalledTimes(2);
       }
     } else {
-      await expect(pending).rejects.toBeInstanceOf(z.ZodError);
+      await pending;
+      const retry = await createGraph().getState(config);
+      const retryQuestions = retry.tasks.flatMap(
+        (entry) => entry.interrupts ?? []
+      );
+      expect(retryQuestions).toHaveLength(1);
+      expect(retryQuestions[0].value).toMatchObject({
+        validationError: expect.any(String),
+      });
       expect(calls).toEqual(["effective"]);
       expect(after).not.toHaveBeenCalled();
+      const corrected = await createGraph().invoke(
+        new Command({
+          resume: {
+            confirmation:
+              scenario === "url-content"
+                ? { action: "accept" }
+                : { action: "accept", content: { confirm: true } },
+          },
+        }),
+        config
+      );
+      expect(corrected.done).toBe(true);
+      expect(calls).toEqual(["effective", "effective"]);
+      expect(after).toHaveBeenCalledTimes(1);
     }
 
     expect(before).toHaveBeenCalledTimes(scenario === "concurrent" ? 2 : 1);
@@ -355,6 +383,94 @@ it.each([
     http.closeAllConnections();
     await once(http, "close");
   }
+});
+
+it("routes parallel same-tool answers by invocation when rounds finish out of order", async () => {
+  const calls: string[] = [];
+  const answers: string[] = [];
+  const State = Annotation.Root({ results: Annotation<string[]>() });
+  const invoke = (label: string) =>
+    withMCPInterrupts(
+      async (continuation) => {
+        if (continuation) {
+          expect(continuation.inputResponses).toEqual({
+            confirmation: { action: "accept", content: { label } },
+          });
+          answers.push(label);
+          return label;
+        }
+        calls.push(label);
+        if (label === "slow") {
+          await new Promise((resolve) => setTimeout(resolve, 30));
+        }
+        throw new PendingMCPInput(
+          {
+            kind: "input_required",
+            inputRequests: {
+              confirmation: inputRequired.elicit({
+                message: label,
+                requestedSchema: {
+                  type: "object",
+                  properties: { label: { type: "string" } },
+                  required: ["label"],
+                },
+              }),
+            },
+          },
+          { name: "approve", arguments: { label } }
+        );
+      },
+      { server: "modern", tool: "approve", maxRounds: 2 }
+    );
+  const graph = new StateGraph(State)
+    .addNode("call", async () => ({
+      results: await Promise.all([invoke("slow"), invoke("fast")]),
+    }))
+    .addEdge(START, "call")
+    .addEdge("call", END)
+    .compile({ checkpointer: new MemorySaver() });
+  const config = { configurable: { thread_id: "parallel-same-tool" } };
+  await graph.invoke({ results: [] }, config);
+  const first = (await graph.getState(config)).tasks.flatMap(
+    (entry) => entry.interrupts ?? []
+  );
+  expect(first).toHaveLength(1);
+  expect(first[0].value).toMatchObject({
+    requests: { confirmation: { message: "fast" } },
+  });
+  const fastId = z.string().parse(first[0].id);
+  await graph.invoke(
+    new Command({
+      resume: {
+        [fastId]: {
+          confirmation: { action: "accept", content: { label: "fast" } },
+        },
+      },
+    }),
+    config
+  );
+  const second = (await graph.getState(config)).tasks.flatMap(
+    (entry) => entry.interrupts ?? []
+  );
+  expect(second).toHaveLength(1);
+  expect(second[0].value).toMatchObject({
+    requests: { confirmation: { message: "slow" } },
+  });
+  const slowId = z.string().parse(second[0].id);
+  expect(slowId).not.toBe(fastId);
+  const result = await graph.invoke(
+    new Command({
+      resume: {
+        [slowId]: {
+          confirmation: { action: "accept", content: { label: "slow" } },
+        },
+      },
+    }),
+    config
+  );
+  expect(result.results).toEqual(["slow", "fast"]);
+  expect(answers).toEqual(["fast", "slow"]);
+  expect(calls).toEqual(["slow", "fast"]);
 });
 
 it.each(["state-only", "limit", "abort", "transport"])(
@@ -409,13 +525,16 @@ it.each(["state-only", "limit", "abort", "transport"])(
     if (scenario === "state-only") {
       expect((await invocation).result).toBe("done");
       expect(calls).toBe(2);
+    } else if (scenario === "transport") {
+      await expect(invocation).rejects.toMatchObject({
+        errors: expect.arrayContaining([
+          expect.objectContaining({ message: "transport failure" }),
+        ]),
+      });
+      expect(calls).toBe(1);
     } else {
       await expect(invocation).rejects.toThrow(
-        scenario === "limit"
-          ? /round limit/
-          : scenario === "transport"
-            ? /transport/
-            : /abort/i
+        scenario === "limit" ? /round limit/ : /abort/i
       );
       expect(calls).toBe(scenario === "limit" ? 3 : 1);
     }

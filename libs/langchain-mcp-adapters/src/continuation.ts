@@ -110,6 +110,7 @@ const elicitationInterruptSchema = z.object({
   server: z.string(),
   tool: z.string(),
   requests: z.record(z.string(), modernElicitationRequestSchema),
+  validationError: z.string().optional(),
 });
 
 export type MCPElicitationInterrupt = z.output<
@@ -131,16 +132,32 @@ type RoundResult<T> =
       request: CallToolRequest["params"];
     };
 
-/** Drive bounded continuation rounds; graph calls checkpoint each round before interrupting. */
+type MCPInvocationContext = {
+  server: string;
+  tool: string;
+  maxRounds: number;
+  execution?: "direct" | "graph";
+  signal?: AbortSignal;
+};
+
+/** Give parallel tool calls separate interrupt namespaces, including calls to the same tool. */
 export async function withMCPInterrupts<T>(
   invoke: (continuation?: MCPContinuation) => Promise<T>,
-  source: {
-    server: string;
-    tool: string;
-    maxRounds: number;
-    execution?: "direct" | "graph";
-    signal?: AbortSignal;
+  source: MCPInvocationContext
+): Promise<T> {
+  if (source.execution === "direct") {
+    return runMCPContinuation(invoke, source);
   }
+
+  return task({ name: "mcp.tool.invocation", retry: { maxAttempts: 1 } }, () =>
+    runMCPContinuation(invoke, source)
+  )();
+}
+
+/** Drive bounded continuation rounds; graph calls checkpoint each round before interrupting. */
+async function runMCPContinuation<T>(
+  invoke: (continuation?: MCPContinuation) => Promise<T>,
+  source: MCPInvocationContext
 ): Promise<T> {
   const invokeRound = async (
     continuation?: MCPContinuation
@@ -213,7 +230,20 @@ export async function withMCPInterrupts<T>(
         )
       );
 
-      responses = await resumeSchema.parseAsync(interrupt(elicitation));
+      let question = elicitation;
+
+      while (true) {
+        const answer = await resumeSchema.safeParseAsync(interrupt(question));
+        if (answer.success) {
+          responses = answer.data;
+          break;
+        }
+
+        question = {
+          ...elicitation,
+          validationError: z.prettifyError(answer.error),
+        };
+      }
     } else {
       // A state-only response is progress, not a user question. Avoid a tight polling loop.
       await new Promise<void>((resolve) => setTimeout(resolve, 100));

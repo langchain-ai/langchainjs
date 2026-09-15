@@ -686,6 +686,12 @@ map. Resume with `Command({ resume: answers })`, supplying exactly the pending
 question keys. Accepted forms must match the requested schema. URL answers contain
 an action without form content; their question key replaces legacy `elicitationId`.
 
+Invalid answers reissue the questions with a `validationError` message; correct
+them on the same thread. Parallel calls have separate interrupt IDs. Resume a
+specific call with `Command({ resume: { [interrupt.id]: answers } })`.
+LangGraph can group a failed request and task cancellation in an `AggregateError`;
+its `errors` array retains the underlying failure.
+
 The adapter checkpoints completed rounds, effective arguments and opaque server
 state. A crash after server work but before checkpoint commit can repeat that work.
 Keep headers and authentication on the connection for graph calls; per-call header
