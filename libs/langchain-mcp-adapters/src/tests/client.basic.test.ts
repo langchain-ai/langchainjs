@@ -584,7 +584,7 @@ describe("MultiServerMCPClient", () => {
   });
 
   // Tool Management tests
-  describe("getTools", () => {
+  describe("listTools", () => {
     test("should get all tools as a flattened array", async () => {
       // Mock tool response
       const mockTools = [
@@ -618,7 +618,7 @@ describe("MultiServerMCPClient", () => {
         },
       });
 
-      const tools = await client.getTools();
+      const tools = await client.listTools();
 
       // Expect tools from both servers in a flat array
       expect(tools.length).toBeGreaterThan(0);
@@ -645,7 +645,7 @@ describe("MultiServerMCPClient", () => {
           },
           prefixToolNameWithServerName: true,
         });
-        const tools = await client.getTools();
+        const tools = await client.listTools();
 
         expect(tools.length).toBe(2);
         expect(tools[0].name).toBe("test-server__tool1");
@@ -663,7 +663,7 @@ describe("MultiServerMCPClient", () => {
           },
           additionalToolNamePrefix: "mcp",
         });
-        const tools = await client.getTools();
+        const tools = await client.listTools();
 
         expect(tools.length).toBe(2);
         expect(tools[0].name).toBe("mcp__tool1");
@@ -682,7 +682,7 @@ describe("MultiServerMCPClient", () => {
           prefixToolNameWithServerName: true,
           additionalToolNamePrefix: "mcp",
         });
-        const tools = await client.getTools();
+        const tools = await client.listTools();
 
         expect(tools.length).toBe(2);
         expect(tools[0].name).toBe("mcp__test-server__tool1");
@@ -697,7 +697,7 @@ describe("MultiServerMCPClient", () => {
             args: ["./script.py"],
           },
         });
-        const tools = await client.getTools();
+        const tools = await client.listTools();
 
         expect(tools.length).toBe(2);
         expect(tools[0].name).toBe("tool1");
@@ -813,7 +813,7 @@ describe("MultiServerMCPClient", () => {
       expect(StdioClientTransport).toHaveBeenCalled();
 
       // Get tools from all servers
-      const tools = await client.getTools();
+      const tools = await client.listTools();
       expect(tools.length).toBeGreaterThan(0);
     });
 
@@ -972,7 +972,7 @@ describe("MultiServerMCPClient", () => {
       });
 
       // Should not throw, even though all servers fail
-      const tools = await client.getTools();
+      const tools = await client.listTools();
       expect(tools).toEqual([]);
 
       // Both servers should be inaccessible
