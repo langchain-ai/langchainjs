@@ -706,6 +706,12 @@ exactly the pending keys. Accepted forms must match the requested schema; URL
 answers contain an action and no form content. Modern URL requests use the map
 key for correlation, with no legacy `elicitationId` requirement.
 
+Invalid answers reissue the questions with a `validationError` message; correct
+them on the same thread. Parallel calls have separate interrupt IDs. Resume a
+specific call with `Command({ resume: { [interrupt.id]: answers } })`.
+LangGraph can group a failed request and task cancellation in an `AggregateError`;
+its `errors` array retains the underlying failure.
+
 The [working example](../examples/modern_elicitation.ts) completes two form
 rounds and a URL round with a reconstructed adapter. `MemorySaver` keeps its
 checkpoints in one process. Use a persistent checkpointer to survive a process
