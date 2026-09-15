@@ -27,13 +27,20 @@ import { type ClientConfig } from "../types.js";
 class TestMCPServers {
   private _httpServers: Server[] = [];
 
-  createStdioServer(name: string): { command: string; args: string[] } {
+  createStdioServer(
+    name: string,
+    sdk = 2
+  ): { command: string; args: string[] } {
     // Use the fixture file instead of inline server code
-    const fixturePath = join(__dirname, "fixtures", "dummy-stdio-server.ts");
+    const fixturePath = join(
+      __dirname,
+      "fixtures",
+      sdk === 1 ? "sdk1-stdio-server.ts" : "dummy-stdio-server.ts"
+    );
 
     return {
       command: "node",
-      args: ["--loader", "tsx", "--no-warnings", fixturePath, name],
+      args: ["--import", "tsx", "--no-warnings", fixturePath, name],
     };
   }
 
@@ -469,64 +476,116 @@ describe("MultiServerMCPClient Integration Tests", () => {
   });
 
   describe("Multiple Servers", () => {
-    it.skip("should connect to multiple servers of different transport types", async () => {
-      const { command, args } = testServers.createStdioServer("multi-stdio");
-      const { baseUrl: streamableHttpBaseUrl } =
-        await testServers.createHTTPServer("multi-http");
-      const { baseUrl: sseBaseUrl } = await testServers.createHTTPServer(
-        "multi-sse",
-        {
-          supportSSEFallback: true,
-        }
-      );
-
-      const client = new MultiServerMCPClient({
-        mcpServers: {
-          "stdio-server": {
-            mode: "legacy",
-            command,
-            args,
-          },
-          "http-server": {
-            mode: "legacy",
-            url: `${streamableHttpBaseUrl}/mcp`,
-          },
-          "sse-server": {
-            mode: "legacy",
-            url: `${sseBaseUrl}/sse`,
-            transport: "sse",
-          },
-        },
-        prefixToolNameWithServerName: true,
-      });
-
-      try {
-        const tools = await client.listTools();
-        // Check tools from each server
-        const stdioTools = tools.filter((t) => t.name.includes("stdio-server"));
-        const httpTools = tools.filter((t) => t.name.includes("http-server"));
-        const sseTools = tools.filter((t) => t.name.includes("sse-server"));
-
-        expect(stdioTools.length).toBe(2);
-        expect(httpTools.length).toBe(5);
-        expect(sseTools.length).toBe(5);
-
-        expect(tools.length).toBe(12);
-
-        // Test tool from each server
-        const stdioTestTool = tools.find(
-          (t) => t.name.includes("stdio-server") && t.name.includes("test_tool")
+    it.each([1, 2])(
+      "connects SDK %s stdio alongside SDK 2 HTTP and SSE",
+      async (sdk) => {
+        const { command, args } = testServers.createStdioServer(
+          "multi-stdio",
+          sdk
         );
-        const result = await stdioTestTool!.invoke({
-          input: "multi-server test",
-        });
-        expect(result).toContain("multi-stdio");
-      } finally {
-        await client.close();
-      }
-    });
 
-    it.skip("should filter tools by server name", async () => {
+        const { baseUrl: streamableHttpBaseUrl } =
+          await testServers.createHTTPServer("multi-http");
+
+        const { baseUrl: sseBaseUrl } = await testServers.createHTTPServer(
+          "multi-sse",
+          {
+            supportSSEFallback: true,
+          }
+        );
+
+        const client = new MultiServerMCPClient({
+          mcpServers: {
+            "stdio-server": {
+              mode: "legacy",
+              command,
+              args,
+            },
+            "http-server": {
+              mode: "legacy",
+              url: `${streamableHttpBaseUrl}/mcp`,
+            },
+            "sse-server": {
+              mode: "legacy",
+              url: `${sseBaseUrl}/sse`,
+              transport: "sse",
+            },
+          },
+          prefixToolNameWithServerName: true,
+        });
+
+        try {
+          const tools = await client.listTools();
+
+          // Check tools from each server
+          const stdioTools = tools.filter((t) =>
+            t.name.includes("stdio-server")
+          );
+
+          const httpTools = tools.filter((t) => t.name.includes("http-server"));
+          const sseTools = tools.filter((t) => t.name.includes("sse-server"));
+
+          expect(stdioTools.length).toBe(2);
+          expect(httpTools.length).toBeGreaterThanOrEqual(5);
+          expect(sseTools.length).toBe(httpTools.length);
+
+          expect(tools.length).toBe(
+            stdioTools.length + httpTools.length + sseTools.length
+          );
+
+          // Test tool from each server
+          const stdioTestTool = tools.find(
+            (t) =>
+              t.name.includes("stdio-server") && t.name.includes("test_tool")
+          );
+
+          const result = await stdioTestTool!.invoke({
+            input: "multi-server test",
+          });
+
+          expect(result).toContain("multi-stdio");
+
+          if (sdk === 1) {
+            expect(
+              (await client.getClient("stdio-server"))?.getServerVersion()
+                ?.version
+            ).toBe("1.30.0");
+            expect(
+              (await client.listResources("stdio-server"))["stdio-server"][0]
+                .uri
+            ).toBe("test://legacy");
+            expect(
+              (await client.readResource("stdio-server", "test://legacy"))[0]
+            ).toMatchObject({ text: "multi-stdio" });
+          }
+
+          for (const [server, label] of [
+            ["http-server", "multi-http"],
+            ["sse-server", "multi-sse"],
+          ]) {
+            const selected = tools.find(
+              (tool) => tool.name === `${server}__test_tool`
+            );
+
+            expect(selected).toBeDefined();
+            expect(await selected!.invoke({ input: "routing" })).toContain(
+              label
+            );
+          }
+
+          const resources = await client.listResources(
+            "http-server",
+            "sse-server"
+          );
+
+          expect(Object.keys(resources)).toEqual(["http-server", "sse-server"]);
+        } finally {
+          await client.close();
+        }
+      }
+    );
+
+    it("should filter tools by server name", async () => {
       const { command, args } = testServers.createStdioServer("filter-stdio");
       const { baseUrl: streamableHttpBaseUrl } =
         await testServers.createHTTPServer("filter-http");
@@ -1941,7 +2000,20 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
           const { content: resContent, artifact: resArtifact } =
             await resourceTool.invoke(resourceToolInput);
-          expect(resArtifact).toEqual([]);
+
+          expect(resArtifact).toEqual([
+            {
+              type: "mcp_content",
+              data: {
+                type: "resource",
+                resource: {
+                  uri: "mem://test.txt",
+                  mimeType: "text/plain",
+                  text: "This is a test resource.",
+                },
+              },
+            },
+          ]);
           expect(Array.isArray(resContent)).toBe(true);
           const resContentArray = resContent as ContentBlock[];
           expect(resContentArray).toHaveLength(2);
@@ -2015,7 +2087,20 @@ describe("MultiServerMCPClient Integration Tests", () => {
 
           const { content: resContent, artifact: resArtifact } =
             await resourceTool.invoke(resourceToolInput);
-          expect(resArtifact).toEqual([]);
+
+          expect(resArtifact).toEqual([
+            {
+              type: "mcp_content",
+              data: {
+                type: "resource",
+                resource: {
+                  uri: "mem://test.txt",
+                  mimeType: "text/plain",
+                  text: "This is a test resource.",
+                },
+              },
+            },
+          ]);
           const resContentArray = resContent as ContentBlock[];
           expect(resContentArray).toHaveLength(2);
           expect(resContentArray).toEqual(
@@ -2874,7 +2959,7 @@ describe("explicit protocol modes with live HTTP servers", () => {
       expect((await adapter.getClient("legacy"))?.getProtocolEra()).toBe(
         "legacy"
       );
-      await expect(mismatch.listTools()).rejects.toThrow();
+      await expect(mismatch.listTools()).rejects.toThrow(/modern mode/);
     } finally {
       await Promise.all([adapter.close(), mismatch.close()]);
       await legacyServers.cleanup();

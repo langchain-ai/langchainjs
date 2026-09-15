@@ -86,7 +86,9 @@ describe("MultiServerMCPClient", () => {
         new URL(config["test-server"].url),
         expect.objectContaining({
           requestInit: {
-            headers: config["test-server"].headers,
+            headers: Object.fromEntries(
+              new Headers(config["test-server"].headers)
+            ),
           },
         })
       );

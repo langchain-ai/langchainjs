@@ -12,16 +12,14 @@ import type {
   ContentBlock as MCPContentBlock,
   Client as MCPClient,
   Tool as MCPTool,
-  ListToolsResult,
   RequestOptions,
 } from "@modelcontextprotocol/client";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import type { ContentBlock } from "@langchain/core/messages";
 import { RunnableConfig } from "@langchain/core/runnables";
 import type { CallbackManagerForToolRun } from "@langchain/core/callbacks/manager";
-import { ToolMessage } from "@langchain/core/messages";
+import type { ToolMessage } from "@langchain/core/messages";
 import {
-  isCommand,
   isGraphInterrupt,
   getCurrentTaskInput,
   type Command,
@@ -39,9 +37,6 @@ import {
 } from "./types.js";
 import type { ToolHooks } from "./hooks.js";
 import type { Client } from "./connection.js";
-import { getDebugLog } from "./logging.js";
-
-const debugLog = getDebugLog("tools");
 
 type MCPInstance = Client | MCPClient;
 
@@ -126,7 +121,7 @@ function _toolOutputToContentBlocks(
  */
 type MCPStructuredContentArtifact = {
   type: "mcp_structured_content";
-  data: NonNullable<CallToolResult["structuredContent"]>;
+  data: Exclude<CallToolResult["structuredContent"], undefined>;
 };
 
 /**
@@ -145,27 +140,22 @@ type MCPMetaArtifact = {
 type ExtendedArtifact =
   | MCPContentBlock
   | ContentBlock
+  | { type: "mcp_content"; data: MCPContentBlock }
   | MCPStructuredContentArtifact
   | MCPMetaArtifact;
 
 /**
- * Content type that may include structuredContent and meta
+ * Model-visible content; protocol metadata belongs in artifacts.
  * @internal
  */
-type ExtendedContent =
-  | (ContentBlock | ContentBlock.Multimodal.Standard)[]
-  | (ContentBlock.Text & {
-      structuredContent?: NonNullable<CallToolResult["structuredContent"]>;
-      meta?: NonNullable<CallToolResult["_meta"]>;
-    })
-  | string;
+type ExtendedContent = ContentBlock[] | string;
 
 /**
  * @internal
  */
 type ConvertCallToolResultArgs = {
   /**
-   * The name of the server to call the tool on (used for error messages and logging)
+   * The name of the server to call the tool on (used for error messages)
    */
   serverName: string;
   /**
@@ -207,12 +197,12 @@ function _getOutputTypeForContentType(
  * @param args - The arguments to pass to the tool
  * @returns A tuple of [textContent, nonTextContent]
  */
-async function _convertCallToolResult({
+function _convertCallToolResult({
   serverName,
   toolName,
   result,
   outputHandling,
-}: ConvertCallToolResultArgs): Promise<[ExtendedContent, ExtendedArtifact[]]> {
+}: ConvertCallToolResultArgs): [ExtendedContent, ExtendedArtifact[]] {
   if (!result) {
     throw new ToolException(
       `MCP tool '${toolName}' on server '${serverName}' returned an invalid result - tool call response was undefined`
@@ -237,24 +227,18 @@ async function _convertCallToolResult({
     );
   }
 
-  const convertedContent: (ContentBlock | ContentBlock.Multimodal.Standard)[] =
-    (
-      await Promise.all(
-        result.content
-          .filter(
-            (content: MCPContentBlock) =>
-              _getOutputTypeForContentType(content.type, outputHandling) ===
-              "content"
-          )
-          .map((content: MCPContentBlock) =>
-            _toolOutputToContentBlocks(content, toolName, serverName)
-          )
-      )
-    ).flat();
+  const convertedContent = result.content
+    .filter(
+      (block) =>
+        _getOutputTypeForContentType(block.type, outputHandling) === "content"
+    )
+    .flatMap((block) =>
+      _toolOutputToContentBlocks(block, toolName, serverName)
+    );
 
   const artifacts = result.content.filter(
-    (content) =>
-      _getOutputTypeForContentType(content.type, outputHandling) === "artifact"
+    (block) =>
+      _getOutputTypeForContentType(block.type, outputHandling) === "artifact"
   );
 
   // Extract structuredContent and _meta from result
@@ -264,7 +248,22 @@ async function _convertCallToolResult({
 
   // Add structuredContent and meta as special artifacts
   const enhancedArtifacts: ExtendedArtifact[] = [...artifacts];
-  if (structuredContent) {
+
+  for (const block of result.content) {
+    const retainedKeys =
+      block.type === "text" ? ["type", "text"] : ["type", "data", "mimeType"];
+
+    if (
+      !artifacts.includes(block) &&
+      (block.type === "resource" ||
+        block.type === "resource_link" ||
+        Object.keys(block).some((key) => !retainedKeys.includes(key)))
+    ) {
+      enhancedArtifacts.push({ type: "mcp_content", data: block });
+    }
+  }
+
+  if (structuredContent !== undefined) {
     enhancedArtifacts.push({
       type: "mcp_structured_content",
       data: structuredContent,
@@ -277,23 +276,17 @@ async function _convertCallToolResult({
     });
   }
 
+  // Preserve the plain-text convenience without dropping resource provenance.
   const firstBlock = convertedContent[0];
 
   if (
     convertedContent.length === 1 &&
     firstBlock.type === "text" &&
     "text" in firstBlock &&
-    typeof firstBlock.text === "string"
+    typeof firstBlock.text === "string" &&
+    !("metadata" in firstBlock)
   ) {
-    const textBlock = {
-      ...firstBlock,
-      type: "text",
-      text: firstBlock.text,
-    } satisfies ContentBlock.Text;
-
-    const textContent = textBlock.text;
-
-    return [textContent, enhancedArtifacts];
+    return [firstBlock.text, enhancedArtifacts];
   }
 
   return [convertedContent, enhancedArtifacts];
@@ -345,9 +338,10 @@ type CallToolArgs = {
   inputValidator: ReturnType<typeof fromJsonSchema<Record<string, unknown>>>;
 };
 
-type ContentBlocksWithArtifacts =
-  | [ExtendedContent, ExtendedArtifact[]]
-  | Command;
+type ContentBlocksWithArtifacts = [
+  ExtendedContent | ToolMessage | Command,
+  ExtendedArtifact[],
+];
 
 /**
  * Call an MCP tool.
@@ -371,8 +365,6 @@ async function _callTool({
   inputValidator,
 }: CallToolArgs): Promise<ContentBlocksWithArtifacts> {
   try {
-    debugLog(`INFO: Calling tool ${toolName}(${JSON.stringify(args)})`);
-
     // Extract timeout from RunnableConfig and pass to MCP SDK
     // Note: ensureConfig() converts timeout into an AbortSignal and deletes the timeout field.
     // To preserve the numeric timeout for SDKs that accept an explicit timeout value, we read
@@ -403,8 +395,8 @@ async function _callTool({
 
     try {
       state = getCurrentTaskInput(config);
-    } catch (error) {
-      debugLog(`LangGraph task input is unavailable: ${String(error)}`);
+    } catch {
+      // Direct tool calls have no LangGraph task state.
     }
 
     const beforeToolCallInterception = toolCallModificationSchema
@@ -469,38 +461,19 @@ async function _callTool({
 
     const result = await finalClient.callTool(...callToolArgs);
 
-    const [content, artifacts] = await _convertCallToolResult({
+    const [content, artifacts] = _convertCallToolResult({
       serverName,
       toolName,
       result,
       outputHandling,
     });
 
-    // Convert ExtendedContent to the format expected by afterToolCall
-    // afterToolCall expects: string | (ContentBlock | ContentBlock.Data.DataContentBlock)[]
-    // ExtendedContent can be: string | ContentBlock[] | (ContentBlock.Text & {...})
-    const normalizedContent:
-      | string
-      | (ContentBlock | ContentBlock.Data.DataContentBlock)[] =
-      typeof content === "string"
-        ? content
-        : Array.isArray(content)
-          ? content
-          : [content];
-
-    // Expose artifact-routed MCP blocks while keeping internal metadata out of hooks.
-    const normalizedArtifacts = artifacts.filter(
-      (artifact) =>
-        artifact.type !== "mcp_structured_content" &&
-        artifact.type !== "mcp_meta"
-    );
-
     const interceptedResult = toolCallResultModificationSchema.optional().parse(
       await afterToolCall?.(
         {
           name: toolName,
           args: finalArgs,
-          result: [normalizedContent, normalizedArtifacts],
+          result: [content, artifacts],
           serverName,
         },
         state,
@@ -512,29 +485,14 @@ async function _callTool({
       return [content, artifacts];
     }
 
-    if (typeof interceptedResult.result === "string") {
-      return [interceptedResult.result, []];
-    }
-
     if (Array.isArray(interceptedResult.result)) {
       return interceptedResult.result;
     }
 
-    if (ToolMessage.isInstance(interceptedResult.result)) {
-      return [interceptedResult.result.contentBlocks, []];
-    }
-
-    if (isCommand(interceptedResult.result)) {
-      return interceptedResult.result;
-    }
-
-    throw new Error(
-      `Unexpected result value type from afterToolCall: expected either a Command, a ToolMessage or a tuple of ContentBlock and Artifact, but got ${interceptedResult.result}`
-    );
+    return [interceptedResult.result, []];
   } catch (error) {
     if (isGraphInterrupt(error) || config?.signal?.aborted) throw error;
 
-    debugLog(`Error calling tool ${toolName}: ${String(error)}`);
     if (isToolException(error)) {
       throw error;
     }
@@ -565,6 +523,18 @@ export async function loadMcpTools(
   options?: LoadMcpToolsOptions
 ): Promise<DynamicStructuredTool[]> {
   const parsedOptions = loadMcpToolsOptionsSchema.parse(options ?? {});
+  const { tools } = await client.listTools();
+
+  return convertMcpTools(serverName, client, tools, parsedOptions);
+}
+
+/** @internal Adapt SDK-validated descriptors without issuing another discovery request. */
+export async function convertMcpTools(
+  serverName: string,
+  client: MCPInstance,
+  mcpTools: MCPTool[],
+  options?: LoadMcpToolsOptions
+): Promise<DynamicStructuredTool[]> {
   const {
     throwOnLoadError,
     prefixToolNameWithServerName,
@@ -573,23 +543,8 @@ export async function loadMcpTools(
     defaultToolTimeout,
   } = {
     ...defaultLoadMcpToolsOptions,
-    ...parsedOptions,
+    ...(options ?? {}),
   };
-
-  const mcpTools: MCPTool[] = [];
-
-  // Get tools in a single operation
-  let toolsResponse: ListToolsResult | undefined;
-  do {
-    toolsResponse = await client.listTools({
-      ...(toolsResponse?.nextCursor
-        ? { cursor: toolsResponse.nextCursor }
-        : {}),
-    });
-    mcpTools.push(...(toolsResponse.tools || []));
-  } while (toolsResponse.nextCursor);
-
-  debugLog(`INFO: Found ${mcpTools.length} MCP tools`);
 
   const initialPrefix = additionalToolNamePrefix
     ? `${additionalToolNamePrefix}__`
@@ -613,7 +568,7 @@ export async function loadMcpTools(
               new DefaultJsonSchemaValidator()
             );
 
-            const dst = new DynamicStructuredTool({
+            return new DynamicStructuredTool({
               name: `${toolNamePrefix}${tool.name}`,
               description: tool.description || "",
               schema: structuredClone(originalSchema),
@@ -635,16 +590,13 @@ export async function loadMcpTools(
                   args,
                   config,
                   outputHandling,
-                  onProgress: parsedOptions.onProgress,
-                  beforeToolCall: parsedOptions.beforeToolCall,
-                  afterToolCall: parsedOptions.afterToolCall,
+                  onProgress: options?.onProgress,
+                  beforeToolCall: options?.beforeToolCall,
+                  afterToolCall: options?.afterToolCall,
                 });
               },
             });
-            debugLog(`INFO: Successfully loaded tool: ${dst.name}`);
-            return dst;
           } catch (error) {
-            debugLog(`ERROR: Failed to load tool "${tool.name}":`, error);
             if (throwOnLoadError) {
               throw error;
             }
