@@ -139,15 +139,15 @@ describe("catalog identity", () => {
     });
 
     const [[first], [second]] = await Promise.all([
-      adapter.getTools(["test"], {
+      adapter.listTools(["test"], {
         headers: { tenant: "one", fixed: "override" },
       }),
-      adapter.getTools(["test"], { headers: { tenant: "two" } }),
+      adapter.listTools(["test"], { headers: { tenant: "two" } }),
     ]);
 
     expect(first).not.toBe(second);
     expect(
-      (await adapter.getTools(["test"], { headers: { tenant: "one" } }))[0]
+      (await adapter.listTools(["test"], { headers: { tenant: "one" } }))[0]
     ).toBe(first);
     expect(list).toHaveBeenCalledTimes(3);
     await first.invoke({});
@@ -172,10 +172,10 @@ describe("catalog identity", () => {
     });
 
     expect(
-      await adapter.getTools(["test"], { headers: { tenant: "failed" } })
+      await adapter.listTools(["test"], { headers: { tenant: "failed" } })
     ).toEqual([]);
     expect(
-      await adapter.getTools(["test"], { headers: { tenant: "working" } })
+      await adapter.listTools(["test"], { headers: { tenant: "working" } })
     ).toHaveLength(1);
     await adapter.close();
   });
@@ -203,17 +203,17 @@ test("partitions catalogs by OAuth provider identity even with identical headers
   const secondProvider = makeProvider();
   const adapter = new MCPAdapter({ servers: { test: connection } });
 
-  const [first] = await adapter.getTools(["test"], {
+  const [first] = await adapter.listTools(["test"], {
     authProvider: firstProvider,
   });
 
-  const [second] = await adapter.getTools(["test"], {
+  const [second] = await adapter.listTools(["test"], {
     authProvider: secondProvider,
   });
 
   expect(first).not.toBe(second);
   expect(
-    (await adapter.getTools(["test"], { authProvider: firstProvider }))[0]
+    (await adapter.listTools(["test"], { authProvider: firstProvider }))[0]
   ).toBe(first);
   expect(list).toHaveBeenCalledTimes(3);
   await adapter.close();
@@ -234,11 +234,11 @@ test("tool catalog notifications invalidate only their connection identity", asy
 
   const adapter = new MCPAdapter({ servers: { test: connection } });
 
-  const [first] = await adapter.getTools(["test"], {
+  const [first] = await adapter.listTools(["test"], {
     headers: { tenant: "one" },
   });
 
-  const [second] = await adapter.getTools(["test"], {
+  const [second] = await adapter.listTools(["test"], {
     headers: { tenant: "two" },
   });
 
@@ -250,10 +250,10 @@ test("tool catalog notifications invalidate only their connection identity", asy
 
   await handlers[0][1]({ method: "notifications/tools/list_changed" });
   expect(
-    (await adapter.getTools(["test"], { headers: { tenant: "one" } }))[0]
+    (await adapter.listTools(["test"], { headers: { tenant: "one" } }))[0]
   ).not.toBe(first);
   expect(
-    (await adapter.getTools(["test"], { headers: { tenant: "two" } }))[0]
+    (await adapter.listTools(["test"], { headers: { tenant: "two" } }))[0]
   ).toBe(second);
   expect(list).toHaveBeenCalledTimes(4);
   await adapter.close();
@@ -265,9 +265,9 @@ test("failed discovery releases its client and can be retried", async () => {
     .mockRejectedValueOnce(new Error("discovery failed"))
     .mockResolvedValue({ tools: [] });
   const adapter = new MCPAdapter({ servers: { test: connection } });
-  await expect(adapter.getTools()).rejects.toThrow(/discovery failed/);
+  await expect(adapter.listTools()).rejects.toThrow(/discovery failed/);
   expect(SDKClient.prototype.close).toHaveBeenCalledTimes(1);
-  expect(await adapter.getTools()).toEqual([]);
+  expect(await adapter.listTools()).toEqual([]);
   expect(connect).toHaveBeenCalledTimes(2);
   await adapter.close();
 });
@@ -296,11 +296,11 @@ test("consults SDK discovery again and preserves already-issued tools", async ()
   const adapter = new MCPAdapter({ servers: { test: connection } });
 
   try {
-    const [before] = await adapter.getTools();
+    const [before] = await adapter.listTools();
     list.mockResolvedValue({
       tools: [{ name: "after", inputSchema: { type: "object" } }],
     });
-    const [after] = await adapter.getTools();
+    const [after] = await adapter.listTools();
     expect(after.name).toContain("after");
     expect(before.name).toContain("before");
   } finally {
@@ -324,7 +324,7 @@ test.each([
     const adapter = new MCPAdapter({ servers: { test: connection } });
 
     try {
-      await adapter.getTools([], { cacheMode });
+      await adapter.listTools([], { cacheMode });
       expect(list).toHaveBeenCalledWith(undefined, { cacheMode });
     } finally {
       await adapter.close();

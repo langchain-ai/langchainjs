@@ -164,7 +164,7 @@ type ExtendedContent = ContentBlock[] | string;
  */
 type ConvertCallToolResultArgs = {
   /**
-   * The name of the server to call the tool on (used for error messages and logging)
+   * The name of the server to call the tool on (used for error messages)
    */
   serverName: string;
   /**
@@ -480,8 +480,8 @@ async function prepareToolCall({
 
   try {
     state = getCurrentTaskInput(config);
-  } catch (error) {
-    debugLog(`LangGraph task input is unavailable: ${String(error)}`);
+  } catch {
+    // Direct tool calls have no LangGraph task state.
   }
 
   const beforeToolCallInterception = toolCallModificationSchema
@@ -539,7 +539,6 @@ async function _callTool(
   } = call;
 
   try {
-    debugLog(`INFO: Calling tool ${toolName}(${JSON.stringify(call.args)})`);
     const prepared = await prepareToolCall(call);
 
     const result = await invocation.execute(
@@ -582,7 +581,6 @@ async function _callTool(
   } catch (error) {
     if (isGraphInterrupt(error) || config?.signal?.aborted) throw error;
 
-    debugLog(`Error calling tool ${toolName}: ${String(error)}`);
     if (isToolException(error)) {
       throw error;
     }
@@ -636,8 +634,6 @@ export async function convertMcpTools(
     ...options,
   };
 
-  debugLog(`INFO: Found ${mcpTools.length} MCP tools`);
-
   const initialPrefix = additionalToolNamePrefix
     ? `${additionalToolNamePrefix}__`
     : "";
@@ -661,7 +657,7 @@ export async function convertMcpTools(
               options?.logLevel
             );
 
-            const dst = new DynamicStructuredTool({
+            return new DynamicStructuredTool({
               name: `${toolNamePrefix}${tool.name}`,
               description: tool.description || "",
               schema: structuredClone(originalSchema),
@@ -691,10 +687,7 @@ export async function convertMcpTools(
                 });
               },
             });
-            debugLog(`INFO: Successfully loaded tool: ${dst.name}`);
-            return dst;
           } catch (error) {
-            debugLog(`ERROR: Failed to load tool "${tool.name}":`, error);
             if (throwOnLoadError) {
               throw error;
             }
