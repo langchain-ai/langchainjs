@@ -1,3 +1,8 @@
+import {
+  supportsMCPInterrupts,
+  PendingMCPInput,
+  type MCPContinuation,
+} from "./continuation.js";
 import { ToolException, isToolException } from "./utils/errors.js";
 import { z } from "zod";
 import {
@@ -328,6 +333,8 @@ type CallToolArgs = {
    */
   afterToolCall?: ToolHooks["afterToolCall"];
   inputSchema: ReturnType<typeof createToolInputSchema>;
+  continuation?: MCPContinuation;
+  hookState?: unknown;
 };
 
 type ContentBlocksWithArtifacts = [
@@ -335,9 +342,15 @@ type ContentBlocksWithArtifacts = [
   ExtendedArtifact[],
 ];
 
+type InvokeToolRound = (
+  continuation?: MCPContinuation,
+  hookState?: unknown
+) => Promise<ContentBlocksWithArtifacts>;
+
 function createToolInvocationFactory(
   client: MCPInstance,
   serverName: string,
+  toolName: string,
   logLevel?: LoggingLevel
 ) {
   const modern = client.getProtocolEra() === "modern";
@@ -358,6 +371,11 @@ function createToolInvocationFactory(
   }
 
   const direct = executor(client, modern);
+
+  const runInterrupts =
+    modern && supportsMCPInterrupts(client)
+      ? client.withInterrupts.bind(client)
+      : undefined;
 
   function selectHeaderPolicy() {
     if ("fork" in client && typeof client.fork === "function") {
@@ -395,7 +413,20 @@ function createToolInvocationFactory(
       return executeRound(request, options);
     };
 
-    return { execute };
+    if (runInterrupts) {
+      return {
+        execute,
+        async run(call: InvokeToolRound, config?: RunnableConfig) {
+          return runInterrupts((continuation) => call(continuation), {
+            server: serverName,
+            tool: toolName,
+            signal: config?.signal,
+          });
+        },
+      };
+    }
+
+    return { execute, run: (call: InvokeToolRound) => call() };
   };
 }
 
@@ -442,6 +473,8 @@ async function prepareToolCall({
   onProgress,
   beforeToolCall,
   inputSchema,
+  continuation,
+  hookState,
 }: CallToolArgs) {
   // Extract timeout from RunnableConfig and pass to MCP SDK
   // Note: ensureConfig() converts timeout into an AbortSignal and deletes the timeout field.
@@ -479,7 +512,7 @@ async function prepareToolCall({
   let state: unknown = {};
 
   try {
-    state = getCurrentTaskInput(config);
+    state = hookState === undefined ? getCurrentTaskInput(config) : hookState;
   } catch {
     // Direct tool calls have no LangGraph task state.
   }
@@ -511,10 +544,18 @@ async function prepareToolCall({
   }
 
   const finalArgs = parsed.data;
-  const request = {
+  const initialRequest = {
     name: toolName,
     arguments: finalArgs,
   } satisfies CallToolRequest["params"];
+
+  const request = continuation
+    ? {
+        ...initialRequest,
+        inputResponses: continuation.inputResponses,
+        requestState: continuation.requestState,
+      }
+    : initialRequest;
 
   return {
     request,
@@ -579,7 +620,12 @@ async function _callTool(
 
     return [interceptedResult.result, []];
   } catch (error) {
-    if (isGraphInterrupt(error) || config?.signal?.aborted) throw error;
+    if (
+      isGraphInterrupt(error) ||
+      PendingMCPInput.isInstance(error) ||
+      config?.signal?.aborted
+    )
+      throw error;
 
     if (isToolException(error)) {
       throw error;
@@ -654,6 +700,7 @@ export async function convertMcpTools(
             const createInvocation = createToolInvocationFactory(
               client,
               serverName,
+              tool.name,
               options?.logLevel
             );
 
@@ -673,18 +720,28 @@ export async function convertMcpTools(
               ) => {
                 const invocation = createInvocation();
 
-                return _callTool({
-                  invocation,
-                  serverName,
-                  inputSchema,
-                  toolName: tool.name,
-                  args,
-                  config,
-                  outputHandling,
-                  onProgress: options?.onProgress,
-                  beforeToolCall: options?.beforeToolCall,
-                  afterToolCall: options?.afterToolCall,
-                });
+                const call = (
+                  continuation?: MCPContinuation,
+                  hookState?: unknown
+                ) =>
+                  _callTool({
+                    invocation,
+                    serverName,
+                    inputSchema,
+                    toolName: tool.name,
+                    args: continuation?.request.arguments ?? args,
+                    continuation,
+                    hookState,
+                    config,
+                    outputHandling,
+                    onProgress: options?.onProgress,
+                    beforeToolCall: continuation
+                      ? undefined
+                      : options?.beforeToolCall,
+                    afterToolCall: options?.afterToolCall,
+                  });
+
+                return invocation.run(call, config);
               },
             });
           } catch (error) {

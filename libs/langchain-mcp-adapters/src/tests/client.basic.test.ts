@@ -8,6 +8,7 @@ import {
   type Mock,
 } from "vitest";
 import { ZodError } from "zod";
+import debug from "debug";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import {
   Client,
@@ -16,6 +17,7 @@ import {
 } from "@modelcontextprotocol/client";
 import { MCPAdapter, MultiServerMCPClient, MCPClientError } from "../client.js";
 import { adapterConfigSchema, oAuthClientProviderSchema } from "../types.js";
+import { ConnectionManager } from "../connection.js";
 
 vi.mock(
   "@modelcontextprotocol/client",
@@ -381,6 +383,60 @@ describe("MultiServerMCPClient", () => {
 
     // Reconnection Logic tests
     describe("reconnection", () => {
+      test.each(["stdio", "sse"])(
+        "handles background %s reconnection failures",
+        async (transportType) => {
+          const namespaces = debug.disable();
+          debug.enable("@langchain/mcp-adapters:client");
+          const log = vi.spyOn(debug, "log").mockImplementation(() => {});
+          const lookup = vi.spyOn(ConnectionManager.prototype, "getTransport");
+          const client = new MCPAdapter({
+            servers: {
+              test:
+                transportType === "stdio"
+                  ? {
+                      mode: "legacy",
+                      command: "node",
+                      args: [],
+                      restart: { enabled: true, delayMs: 0 },
+                    }
+                  : {
+                      mode: "legacy",
+                      transport: "sse",
+                      url: "http://localhost/sse",
+                      reconnect: { enabled: true, delayMs: 0 },
+                    },
+            },
+          });
+
+          try {
+            await client.initializeConnections();
+            const transport = lookup.mock.results.find(
+              (result) => result.type === "return"
+            )?.value;
+            if (!transport?.onclose) {
+              throw new Error("Expected a transport close handler");
+            }
+            const failure = new Error("cleanup failed");
+            vi.mocked(Client.prototype.close).mockRejectedValueOnce(failure);
+            const result = transport.onclose();
+            await expect(Promise.resolve(result)).resolves.toBeUndefined();
+            expect(result).toBeUndefined();
+            await vi.waitFor(() =>
+              expect(log).toHaveBeenCalledWith(
+                expect.stringContaining("Reconnection failed"),
+                failure
+              )
+            );
+          } finally {
+            await client.close();
+            lookup.mockRestore();
+            log.mockRestore();
+            debug.enable(namespaces);
+          }
+        }
+      );
+
       test("should attempt to reconnect stdio transport when enabled", async () => {
         const client = new MultiServerMCPClient({
           "test-server": {

@@ -1,3 +1,4 @@
+import { InterruptMCPClient } from "./continuation.js";
 import { MCPClientError } from "./utils/errors.js";
 import { configureElicitation } from "./elicitation.js";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
@@ -192,10 +193,13 @@ export class ConnectionManager {
           ? await this.#createSSETransport(serverName, options)
           : await this.#createStdioTransport(options);
 
-    const mcpClient = new MCPClient(
-      { name: packageJson.name, version: packageJson.version },
-      protocolClientOptions(options)
-    );
+    const identity = { name: packageJson.name, version: packageJson.version };
+    const clientOptions = protocolClientOptions(options);
+
+    const mcpClient =
+      options.mode === "legacy"
+        ? new MCPClient(identity, clientOptions)
+        : new InterruptMCPClient(identity, clientOptions);
 
     if (options.mode === "legacy")
       configureElicitation(mcpClient, serverName, options.onElicitation);
@@ -694,10 +698,9 @@ export class ConnectionManager {
     return new StdioClientTransport({
       command,
       args,
+      env,
       stderr,
       cwd,
-      // oxlint-disable-next-line no-process-env
-      ...(env ? { env: { PATH: process.env.PATH!, ...env } } : {}),
     });
   }
 }
