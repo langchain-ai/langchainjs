@@ -1,5 +1,4 @@
 import { InterruptMCPClient } from "./continuation.js";
-
 import { MCPClientError } from "./utils/errors.js";
 import { configureElicitation } from "./elicitation.js";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
