@@ -698,10 +698,9 @@ export class ConnectionManager {
     return new StdioClientTransport({
       command,
       args,
+      env,
       stderr,
       cwd,
-      // oxlint-disable-next-line no-process-env
-      ...(env ? { env: { PATH: process.env.PATH!, ...env } } : {}),
     });
   }
 }

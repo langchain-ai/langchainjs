@@ -5,3 +5,4 @@
 Continue modern state-only tool responses within the configured round limit.
 Retain effective arguments and per-call headers across rounds, preserve cancellation
 and SDK output validation, and reject requests for user input without a handler.
+Handle background reconnection failures and use the SDK's stdio environment defaults.
