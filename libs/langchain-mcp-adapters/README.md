@@ -73,9 +73,6 @@ Construction validates options with Zod 4 and opens no connections. Discovery
 and invocation open connections as needed. Use `listTools("serverName")` to
 select tools and always await `close()` when finished.
 
-Use `listToolsets()` for a map of server names to tools. Both discovery methods
-accept SDK cache controls.
-
 `adapter.config.servers` exposes an isolated configuration snapshot. Changing
 the snapshot does not reconfigure the adapter. Notification callbacks, tool hooks,
 and auth provider instances retain their identity; the snapshot is runtime configuration,
