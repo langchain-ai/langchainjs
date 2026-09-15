@@ -181,7 +181,8 @@ outer tool failure using exported `isToolException`.
 
 Tools and connections are isolated by server name, effective headers and OAuth
 provider identity. Configured headers take precedence over discovery overrides;
-an invocation hook's headers override its existing connection's headers. Empty
+a direct invocation hook's headers override its existing connection's headers.
+Modern graph executions reject hook header overrides. Empty
 fork overrides reuse the existing client. Default lookups cannot select another
 request's identity. A tools-list notification invalidates only that connection's
 catalog; separate OAuth providers remain separate even if their headers match.
@@ -194,7 +195,8 @@ Tool, resource, and template discovery delegates pagination to the SDK. Server
 errors reject instead of appearing as an empty catalog. Resource conversion
 never performs implicit reads; explicitly call
 `readResource` if needed. The SDK detects each server's protocol when `mode` is
-omitted, including in mixed-server configurations.
+omitted, including in mixed-server configurations. Modern elicitation uses
+LangGraph interrupts by default.
 
 ### Discovery freshness
 
@@ -265,12 +267,16 @@ Move notification and progress callbacks from the adapter root into each server
 that should receive them. Global LangChain tool hooks and naming/output policies
 remain available. `onRootsListChanged` has been removed: roots notifications
 originate from the client. Use tool arguments, resource URIs, or server
-configuration to supply workspace paths instead.
+configuration to supply workspace paths instead. The protocol deprecates roots;
+removing this observer does not mean the roots feature was removed from every
+protocol implementation.
 
 ## Elicitation and request logging
 
 Move `onElicitation` onto each server configured with `mode: "legacy"` that handles
-user input. Automatic and modern configurations reject this callback. Legacy callbacks execute within the active request.
+user input. Automatic and modern configurations reject this callback. When the
+server negotiates modern MCP, elicitation uses LangGraph interrupts by default.
+Legacy callbacks execute within the active request.
 Their answers are parsed with SDK schemas, with Zod issues preserving validation
 paths. They cannot be resumed after the underlying connection closes.
 
@@ -278,6 +284,30 @@ Modern `logLevel` and `maxElicitationRounds` are server options, not adapter-wid
 policies. Legacy configurations reject them; use `setLoggingLevel` for legacy
 logging. Tool-catalog subscriptions keep caches fresh even without an application
 notification callback.
+
+## Checkpointed elicitation
+
+Modern tools use interrupts by default. Invoke the tool
+inside a checkpointed LangGraph run when it can ask for input, and resume with
+one answer for each pending question key. Direct calls outside a graph still work
+when no input is requested. If the server asks for input, an outside-graph call
+raises a helpful error; a graph without a checkpointer cannot resume that request.
+Modern URL questions may omit legacy `elicitationId` values; use the pending
+question key when answering them.
+
+Legacy elicitation requires explicit `mode: "legacy"` and a per-server
+`onElicitation` callback. A pending legacy request cannot be resumed through this
+bridge. Automatic negotiation can connect to legacy servers, but does not enable
+legacy elicitation callbacks.
+
+Keep authentication and headers in connection configuration for graph execution.
+Modern tools running inside a graph reject `beforeToolCall` header overrides
+before sending the request. Direct HTTP calls can still override headers. Preserve the same server, tool, and
+authenticated account when reconstructing the adapter. The application owns
+checkpoint storage and thread access. `MemorySaver` is an in-process example;
+process recovery needs a persistent checkpointer. No exactly-once guarantee is
+made for work performed before a checkpoint is saved. See the
+[complete interrupt example](../examples/modern_elicitation.ts).
 
 ## Resource subscriptions and reconnection
 
@@ -295,4 +325,25 @@ Protocol logging and SSE remain deprecated compatibility features. Prefer
 OpenTelemetry/stderr and Streamable HTTP. Dynamic Client Registration (DCR) is
 also deprecated, but the SDK retains it for authorization servers without
 Client ID Metadata Documents (CIMD) support. Registration is independent of MCP
-mode. Roots, sampling and experimental tasks have no adapter facade.
+mode.
+
+Roots, sampling and experimental tasks have no adapter facade. Sampling
+`includeContext: "thisServer"` and `"allServers"` are deprecated; omit the field or
+use `"none"` in low-level integrations. The LangGraph interrupt bridge handles
+`tools/call` elicitation. Prompts, resource operations, and other input-request
+methods do not gain graph interruption through this bridge.
+
+## Protocol schema ownership
+
+Protocol payloads use public Zod schemas from `@modelcontextprotocol/core` 2.x.
+The adapter selects modern question fields from `ElicitRequestFormParamsSchema`
+and `ElicitRequestURLParamsSchema`, then extends the SDK request envelope.
+Legacy URL requests retain the native `elicitationId` requirement. There is no
+adapter-generated identifier. Resume answers select the native action/content
+fields and strip envelope keys that could change routing.
+
+Adapter configuration and LangGraph interrupt envelopes remain adapter-owned
+schemas. Dynamic server tool/form schemas use the SDK JSON Schema validator.
+
+Replacing the modern elicitation field projections with revision-specific public
+SDK validators remains a prerequisite for the adapter's major release.

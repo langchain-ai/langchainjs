@@ -1,5 +1,10 @@
 import { createServer } from "node:http";
-import { createMcpHandler, McpServer } from "@modelcontextprotocol/server";
+import {
+  createMcpHandler,
+  inputRequired,
+  McpServer,
+} from "@modelcontextprotocol/server";
+import { ElicitResultSchema } from "@modelcontextprotocol/core";
 import { toNodeHandler } from "@modelcontextprotocol/node";
 import { z } from "zod";
 
@@ -23,6 +28,70 @@ const handler = createMcpHandler(
       structuredContent: { width: 1, height: 1 },
       _meta: { source: "modern-example" },
     }));
+    server.registerTool(
+      "approve",
+      { inputSchema: z.object({}) },
+      (_, context) => {
+        const phase = z
+          .enum(["profile", "confirmation", "authorization"])
+          .optional()
+          .parse(context.mcpReq.requestState());
+        if (phase) {
+          const answer = ElicitResultSchema.parse(
+            context.mcpReq.inputResponses?.[phase]
+          );
+          if (answer.action !== "accept") {
+            return { content: [{ type: "text", text: answer.action }] };
+          }
+        }
+        if (!phase) {
+          return inputRequired({
+            requestState: "profile",
+            inputRequests: {
+              profile: inputRequired.elicit({
+                message: "What name should the demo use?",
+                requestedSchema: {
+                  type: "object",
+                  properties: { name: { type: "string" } },
+                  required: ["name"],
+                },
+              }),
+            },
+          });
+        }
+        if (phase === "profile") {
+          return inputRequired({
+            requestState: "confirmation",
+            inputRequests: {
+              confirmation: inputRequired.elicit({
+                message: "Approve the demo action?",
+                requestedSchema: {
+                  type: "object",
+                  properties: { confirm: { type: "boolean" } },
+                  required: ["confirm"],
+                },
+              }),
+            },
+          });
+        }
+        if (phase === "confirmation") {
+          return inputRequired({
+            requestState: "authorization",
+            inputRequests: {
+              authorization: inputRequired.elicitUrl({
+                message: "Confirm completion of the example URL action",
+                url: "https://example.com/authorize",
+              }),
+            },
+          });
+        }
+        return {
+          content: [
+            { type: "text", text: "Completed two forms and one URL action" },
+          ],
+        };
+      }
+    );
     return server;
   },
   { legacy: "reject" }

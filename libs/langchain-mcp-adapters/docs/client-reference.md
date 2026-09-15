@@ -3,6 +3,28 @@
 For setup and a direct tool call, start with the [README](../README.md).
 For breaking changes and compatibility aliases, see the [migration guide](sdk-v2-migration.md).
 
+## Python API differences
+
+Python has two MCP integrations: the separate `langchain-mcp-adapters` package
+with `MultiServerMCPClient`, and [`langchain.mcp.MCPAdapter`](https://github.com/langchain-ai/langchain/pull/39939).
+When porting an application, check which integration it uses.
+
+- TypeScript uses `MCPAdapter({ servers })`, `listTools()` and `close()`.
+  Python's `MCPAdapter` accepts FastMCP targets or clients, exposes `list_tools()`,
+  and supports `async with`. The separate Python client uses `get_tools()`.
+- TypeScript delegates automatic protocol negotiation to the MCP SDK. Explicit
+  `mode: "legacy"` enables legacy callbacks and skips probing; `mode: "modern"`
+  requires revision `2026-07-28`. Each server negotiates independently.
+  Python's `MCPAdapter` delegates protocol selection to FastMCP.
+- Both `MCPAdapter` implementations use LangGraph interrupts for modern
+  elicitation. TypeScript checkpoints completed request rounds and resumes with
+  a map of answers keyed by question key. Python's implementation in #39939
+  replays calls from the first round and expects `{ responses: ... }` on resume.
+  TypeScript legacy servers use a per-server `onElicitation` callback.
+- Both convert tool content into LangChain content blocks and keep structured
+  output in artifacts. Artifact and interrupt payloads have language-specific
+  shapes; use each package's types when handling them.
+
 ## Manage the MCP client yourself
 
 Use `loadMcpTools()` when your application owns the SDK client lifecycle.
@@ -190,7 +212,7 @@ try {
 
 Notes:
 
-- **beforeToolCall** can return `{ args?, headers? }`. Headers are supported for HTTP/SSE. Stdio connections do not support custom headers.
+- **beforeToolCall** can return `{ args?, headers? }`. Direct HTTP/SSE calls support headers. Modern tools in LangGraph require headers on the connection and reject per-call header overrides. Stdio does not support custom headers.
 - **afterToolCall** may return `{ result }`, where `result` is a string, a 2‑tuple `[content, artifact]`, a `ToolMessage`, or a `Command`. Return nothing to keep the original result.
 
 ## Tool Configuration Options
@@ -670,28 +692,41 @@ tasks require a separate protocol extension. OAuth registration follows the
 authorization server's capabilities: Client ID Metadata Documents (CIMD) are
 preferred, with Dynamic Client Registration (DCR) compatibility where needed.
 
-## Direct continuation rounds
-
-Modern tools can return server state without asking a question. The adapter continues
-these rounds up to `maxElicitationRounds`, preserving effective arguments and per-call
-headers. Cancellation and transport errors stop the call. A request for user input
-requires an elicitation handler; state-only responses do not.
-
 ## Modern tool interrupts and resume
 
 Modern tools pause a LangGraph run when the server returns an input request.
-Use a checkpointer and stable thread ID; no elicitation callback is required.
-Each interrupt contains `type: "mcp_elicitation"`, `server`, `tool` and a `requests`
-map. Resume with `Command({ resume: answers })`, supplying exactly the pending
-question keys. Accepted forms must match the requested schema. URL answers contain
-an action without form content; their question key replaces legacy `elicitationId`.
+No elicitation callback is required. Use a checkpointer and stable thread ID;
+without them, a request for user input fails with a configuration error. Ordinary
+direct calls can finish without a graph when they require no user input.
 
-The adapter checkpoints completed rounds, effective arguments and opaque server
-state. A crash after server work but before checkpoint commit can repeat that work.
-Keep headers and authentication on the connection for graph calls; per-call header
-overrides are rejected. Preserve the server, tool and account when resuming, and
-enforce ownership of checkpoint threads. The public interrupt contains questions;
-opaque server continuation stays in the checkpoint.
+Each public MCP interrupt contains `type: "mcp_elicitation"`, `server`, `tool`
+and a `requests` map. Present those requests through the application's input
+flow and resume with `Command({ resume: answers })`. `answers` must contain
+exactly the pending keys. Accepted forms must match the requested schema; URL
+answers contain an action and no form content. Modern URL requests use the map
+key for correlation, with no legacy `elicitationId` requirement.
+
+The [working example](../examples/modern_elicitation.ts) completes two form
+rounds and a URL round with a reconstructed adapter. `MemorySaver` keeps its
+checkpoints in one process. Use a persistent checkpointer to survive a process
+restart, preserving the thread, graph, server and authenticated account.
+
+The adapter checkpoints completed call rounds, effective arguments and opaque
+server continuation data. The initial `beforeToolCall` and terminal
+`afterToolCall` hooks participate in these rounds. Resuming a saved round reuses
+that result. A crash after server work but before checkpoint commit can repeat
+work, so this is not an exactly-once execution guarantee. State-only rounds
+continue without prompting and remain bounded by `maxElicitationRounds`.
+
+Configure graph-call authentication and headers on the connection. Per-call
+header overrides are rejected before sending the tool request. Provider objects,
+OAuth credentials and PKCE state stay outside graph continuation. Checkpoints
+can contain tool arguments, results and opaque server state; enforce thread
+ownership and keep that storage private. The public interrupt exposes questions,
+not the opaque server state.
+
+The interrupt integration covers tool elicitation. Prompt/resource operations,
+sampling and experimental tasks do not gain graph interruption through it.
 
 ## Server tool schemas
 

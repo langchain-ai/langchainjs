@@ -30,6 +30,19 @@ To try mixed modes, also run `pnpm exec tsx calculator_server_shttp_sse.ts` and 
 `add`, printing `Hello MCP` and `5`. Neither server needs a `mode`; the SDK detects
 their protocols. Stop servers with Ctrl-C.
 
+## Modern elicitation with LangGraph
+
+For modern input, start `modern_server.ts` and run
+`pnpm exec tsx modern_elicitation.ts`. It prints three successive interruptions
+(two forms and a URL), reconstructs the adapter between rounds, and completes.
+Pass `decline` or `cancel` to stop at the first question. Answers and the URL are
+scripted demo data; a production application collects consent and verifies URL
+completion. `MemorySaver` survives adapter reconstruction in this process, not
+a process restart; use a persistent checkpointer for that.
+
+If you copy this example into your application, install `@langchain/mcp-adapters`,
+`@langchain/core`, `@langchain/langgraph` and `zod`.
+
 ## Legacy elicitation
 
 Start `calculator_server_shttp_sse.ts`, then run
