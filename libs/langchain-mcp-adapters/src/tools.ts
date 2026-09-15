@@ -347,6 +347,18 @@ type InvokeToolRound = (
   hookState?: unknown
 ) => Promise<ContentBlocksWithArtifacts>;
 
+/** Read graph context for this invocation; direct calls have no task state. */
+function toolExecutionContext(config?: RunnableConfig) {
+  try {
+    return { kind: "graph", state: getCurrentTaskInput(config) } satisfies {
+      kind: "graph";
+      state: unknown;
+    };
+  } catch {
+    return { kind: "direct" } satisfies { kind: "direct" };
+  }
+}
+
 function createToolInvocationFactory(
   client: MCPInstance,
   serverName: string,
@@ -377,7 +389,15 @@ function createToolInvocationFactory(
       ? client.withInterrupts.bind(client)
       : undefined;
 
-  function selectHeaderPolicy() {
+  function selectHeaderPolicy(config?: RunnableConfig) {
+    if (runInterrupts && toolExecutionContext(config).kind === "graph") {
+      return async (_headers: NonNullable<ToolCallModification["headers"]>) => {
+        throw new ToolException(
+          "Durable MCP calls require authentication and headers in the server connection configuration, not beforeToolCall header overrides"
+        );
+      };
+    }
+
     if ("fork" in client && typeof client.fork === "function") {
       const fork = client.fork.bind(client);
 
@@ -404,10 +424,11 @@ function createToolInvocationFactory(
     const execute = async (
       request: CallToolRequest["params"],
       options: RequestOptions,
-      headers: ToolCallModification["headers"]
+      headers: ToolCallModification["headers"],
+      config?: RunnableConfig
     ) => {
       if (headers && Object.keys(headers).length > 0) {
-        executeRound = await selectHeaderPolicy()(headers);
+        executeRound = await selectHeaderPolicy(config)(headers);
       }
 
       return executeRound(request, options);
@@ -417,11 +438,21 @@ function createToolInvocationFactory(
       return {
         execute,
         async run(call: InvokeToolRound, config?: RunnableConfig) {
-          return runInterrupts((continuation) => call(continuation), {
-            server: serverName,
-            tool: toolName,
-            signal: config?.signal,
-          });
+          const context = toolExecutionContext(config);
+
+          return runInterrupts(
+            (continuation) =>
+              call(
+                continuation,
+                context.kind === "graph" ? context.state : undefined
+              ),
+            {
+              server: serverName,
+              tool: toolName,
+              signal: config?.signal,
+              execution: context.kind,
+            }
+          );
         },
       };
     }
@@ -585,7 +616,8 @@ async function _callTool(
     const result = await invocation.execute(
       prepared.request,
       prepared.requestOptions,
-      prepared.headers
+      prepared.headers,
+      config
     );
 
     const { args: finalArgs, state } = prepared;

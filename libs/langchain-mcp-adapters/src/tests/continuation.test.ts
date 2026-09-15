@@ -52,7 +52,13 @@ it.each(["state-only", "limit", "abort", "transport"])(
           { name: "tool", arguments: {} }
         );
       },
-      { server: "test", tool: "tool", maxRounds: 2, signal: controller.signal }
+      {
+        server: "test",
+        tool: "tool",
+        maxRounds: 2,
+        signal: controller.signal,
+        execution: "direct",
+      }
     );
     if (scenario === "state-only") {
       expect(await invocation).toBe("done");
