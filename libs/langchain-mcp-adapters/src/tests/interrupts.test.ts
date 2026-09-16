@@ -1,6 +1,7 @@
 import { PendingMCPInput, withMCPInterrupts } from "../continuation.js";
 import { createServer } from "node:http";
 import { once } from "node:events";
+import { join } from "node:path";
 import {
   createMcpHandler,
   inputRequired,
@@ -19,6 +20,8 @@ import {
 import { z } from "zod";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MCPAdapter } from "../index.js";
+import type { MCPElicitationHandler } from "../elicitation.js";
+import type { StdioConnection } from "../types.js";
 
 const cleanups: (() => Promise<void> | void)[] = [];
 
@@ -617,3 +620,169 @@ describe("bounding a continuation the adapter drives itself", () => {
     expect(calls).toBe(6);
   });
 });
+it("resumes a modern stdio interrupt after reconstructing the adapter and server process", async () => {
+  const before = vi.fn();
+  const after = vi.fn();
+
+  const createAdapter = () =>
+    new MCPAdapter({
+      servers: {
+        modern: {
+          transport: "stdio",
+          command: process.execPath,
+          args: [
+            "--import",
+            "tsx",
+            join(__dirname, "fixtures", "modern-stdio-server.ts"),
+          ],
+        },
+      },
+      beforeToolCall: before,
+      afterToolCall: after,
+    });
+
+  let adapter = createAdapter();
+  const State = Annotation.Root({ done: Annotation<string>() });
+  const checkpointer = new MemorySaver();
+
+  const graph = () =>
+    new StateGraph(State)
+      .addNode("call", async () => {
+        const [tool] = await adapter.listTools();
+
+        return { done: await tool.invoke({}) };
+      })
+      .addEdge(START, "call")
+      .addEdge("call", END)
+      .compile({ checkpointer });
+
+  const config = { configurable: { thread_id: "stdio-reconstruction" } };
+
+  try {
+    const pending = await graph().invoke({}, config);
+    expect(pending).toHaveProperty("__interrupt__.length", 1);
+    expect(before).toHaveBeenCalledTimes(1);
+    expect(after).not.toHaveBeenCalled();
+    await adapter.close();
+    adapter = createAdapter();
+
+    const result = await graph().invoke(
+      new Command({
+        resume: {
+          responses: {
+            confirmation: { action: "accept", content: { confirm: true } },
+          },
+        },
+      }),
+      config
+    );
+
+    expect(result.done).toBe("accept");
+    // The resume replays the tool node against the rebuilt adapter and a
+    // fresh server process, so beforeToolCall runs once per execution.
+    expect(before).toHaveBeenCalledTimes(2);
+    expect(after).toHaveBeenCalledTimes(1);
+  } finally {
+    await adapter.close();
+  }
+});
+
+it.each(["modern", "mixed"])(
+  "resumes accept/decline/cancel against real %s stdio servers",
+  async (mode) => {
+    const legacyCallback = vi.fn<MCPElicitationHandler>(() => ({
+      action: "decline",
+    }));
+
+    const servers = {
+      legacy: {
+        mode: "legacy",
+        transport: "stdio",
+        command: process.execPath,
+        args: [
+          "--import",
+          "tsx",
+          join(__dirname, "fixtures", "sdk1-stdio-server.ts"),
+          "legacy",
+          "--elicitation",
+        ],
+        onElicitation: legacyCallback,
+      },
+      modern: {
+        transport: "stdio",
+        command: process.execPath,
+        args: [
+          "--import",
+          "tsx",
+          join(__dirname, "fixtures", "modern-stdio-server.ts"),
+        ],
+      },
+    } satisfies Record<string, StdioConnection>;
+
+    const adapter = new MCPAdapter({
+      servers: Object.fromEntries(
+        Object.entries(servers).filter(
+          ([name]) => mode === "mixed" || name === "modern"
+        )
+      ),
+      prefixToolNameWithServerName: true,
+    });
+
+    try {
+      const tools = await adapter.listTools();
+      expect(tools).toHaveLength(mode === "mixed" ? 2 : 1);
+      const modern = tools.find((tool) => tool.name === "modern__approve");
+
+      if (!modern) {
+        throw new Error("Missing modern tool");
+      }
+
+      for (const action of ["accept", "decline", "cancel"]) {
+        const State = Annotation.Root({ result: Annotation<string>() });
+
+        const graph = new StateGraph(State)
+          .addNode("call", async () => ({ result: await modern.invoke({}) }))
+          .addEdge(START, "call")
+          .addEdge("call", END)
+          .compile({ checkpointer: new MemorySaver() });
+
+        const config = { configurable: { thread_id: `${mode}-${action}` } };
+        await graph.invoke({ result: "" }, config);
+        const state = await graph.getState(config);
+        expect(
+          state.tasks.flatMap((task) => task.interrupts ?? [])
+        ).toHaveLength(1);
+
+        const result = await graph.invoke(
+          new Command({
+            resume: {
+              responses: {
+                confirmation:
+                  action === "accept"
+                    ? { action, content: { confirm: true } }
+                    : { action },
+              },
+            },
+          }),
+          config
+        );
+
+        expect(result.result).toBe(action);
+      }
+
+      expect(legacyCallback).not.toHaveBeenCalled();
+
+      if (mode === "mixed") {
+        const legacy = tools.find((tool) => tool.name === "legacy__approve");
+
+        if (!legacy) {
+          throw new Error("Missing legacy tool");
+        }
+        expect(await legacy.invoke({})).toBe("decline");
+        expect(legacyCallback).toHaveBeenCalledTimes(1);
+      }
+    } finally {
+      await adapter.close();
+    }
+  }
+);

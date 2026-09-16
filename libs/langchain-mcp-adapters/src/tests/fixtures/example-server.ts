@@ -2,17 +2,20 @@ import { pathToFileURL } from "node:url";
 import { resolve } from "node:path";
 
 const name = process.argv[2];
-if (name !== "calculator") {
-  throw new Error("Expected calculator example name");
+if (name !== "calculator" && name !== "modern") {
+  throw new Error("Expected calculator or modern example name");
 }
 
 const file = resolve(
   import.meta.dirname,
   "../../../examples",
-  "calculator_server_shttp_sse.ts"
+  name === "calculator" ? "calculator_server_shttp_sse.ts" : "modern_server.ts"
 );
 const module = await import(pathToFileURL(file).href);
-const server = await module.listenCalculatorServer(0);
+const server =
+  name === "calculator"
+    ? await module.listenCalculatorServer(0)
+    : await module.listenModernServer(0);
 const address = server.address();
 if (!address || typeof address === "string") {
   throw new Error("Example server did not listen");

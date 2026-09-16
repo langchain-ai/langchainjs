@@ -157,6 +157,30 @@ test("canonical adapter API retains typed SDK callbacks and native tools", () =>
   expectTypeOf(adapter.close()).toEqualTypeOf<Promise<void>>();
 });
 
+test("elicitation uses SDK answers and adapter-owned source context", () => {
+  new MCPAdapter({
+    servers: {
+      modern: {
+        transport: "http",
+        url: "https://example.com/mcp",
+      },
+      legacy: {
+        transport: "stdio",
+        command: "server",
+        args: [],
+        mode: "legacy",
+        onElicitation: (request, context) => {
+          expectTypeOf(context.server).toEqualTypeOf<string>();
+          expectTypeOf(context.signal).toEqualTypeOf<AbortSignal>();
+          expectTypeOf(request.message).toEqualTypeOf<string>();
+
+          return { action: "cancel" };
+        },
+      },
+    },
+  });
+});
+
 test("public transport types distinguish SSE from Streamable HTTP", () => {
   const sse = {
     mode: "legacy",

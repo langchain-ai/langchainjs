@@ -1,14 +1,18 @@
 import { spawn, type ChildProcess } from "node:child_process";
+import { once } from "node:events";
 import {
   Client,
   SSEClientTransport,
   StreamableHTTPClientTransport,
+  isInputRequiredResult,
+  specTypeSchemas,
+  withInputRequired,
 } from "@modelcontextprotocol/client";
 import { expect, it } from "vitest";
 
 const fixture = new URL("./fixtures/example-server.ts", import.meta.url);
 
-type Example = "calculator";
+type Example = "calculator" | "modern";
 
 async function stopExample(
   child: ChildProcess,
@@ -127,3 +131,162 @@ it("serves concurrent streamable HTTP and SSE calculator sessions", async () => 
   if (failures.length)
     throw new AggregateError(failures, "Client cleanup failed");
 });
+
+it("rejects forged modern phases and preserves approval outcomes", async () => {
+  const { child, baseUrl, closed } = await startExample("modern");
+  const client = new Client(
+    { name: "approval", version: "1" },
+    {
+      versionNegotiation: { mode: "auto" },
+      capabilities: { elicitation: { form: {}, url: {} } },
+      inputRequired: { autoFulfill: false },
+    }
+  );
+  const call = (extra: Record<string, unknown> = {}) =>
+    client.request(
+      {
+        method: "tools/call",
+        params: { name: "approve", arguments: {}, ...extra },
+      },
+      withInputRequired(specTypeSchemas.CallToolResult),
+      { allowInputRequired: true }
+    );
+  const round = async (extra: Record<string, unknown> = {}) => {
+    const result = await call(extra);
+    if (!isInputRequiredResult(result) || !result.requestState) {
+      throw new Error("Expected an input-required result");
+    }
+    return result;
+  };
+  const text = async (extra: Record<string, unknown> = {}) => {
+    const result = await call(extra);
+    if (isInputRequiredResult(result) || result.content?.[0]?.type !== "text") {
+      throw new Error("Expected a text completion");
+    }
+    return result.content[0].text;
+  };
+
+  try {
+    await client.connect(
+      new StreamableHTTPClientTransport(new URL(`${baseUrl}/mcp`))
+    );
+    await expect(
+      call({
+        requestState: "authorization",
+        inputResponses: { authorization: { action: "accept" } },
+      })
+    ).rejects.toThrow();
+
+    const declined = await round();
+    expect(
+      await text({
+        requestState: declined.requestState,
+        inputResponses: { profile: { action: "decline" } },
+      })
+    ).toBe("decline");
+
+    const profile = await round();
+    const confirmation = await round({
+      requestState: profile.requestState,
+      inputResponses: {
+        profile: { action: "accept", content: { name: "Ada" } },
+      },
+    });
+    expect(
+      await text({
+        requestState: confirmation.requestState,
+        inputResponses: {
+          confirmation: { action: "accept", content: { confirm: false } },
+        },
+      })
+    ).toBe("decline");
+
+    const acceptedProfile = await round();
+    const acceptedConfirmation = await round({
+      requestState: acceptedProfile.requestState,
+      inputResponses: {
+        profile: { action: "accept", content: { name: "Ada" } },
+      },
+    });
+    const authorization = await round({
+      requestState: acceptedConfirmation.requestState,
+      inputResponses: {
+        confirmation: { action: "accept", content: { confirm: true } },
+      },
+    });
+    expect(
+      await text({
+        requestState: authorization.requestState,
+        inputResponses: { authorization: { action: "accept" } },
+      })
+    ).toBe("Completed two forms and one URL action");
+
+    const cancelled = await round();
+    expect(
+      await text({
+        requestState: cancelled.requestState,
+        inputResponses: { profile: { action: "cancel" } },
+      })
+    ).toBe("cancel");
+  } finally {
+    try {
+      await client.close();
+    } finally {
+      await stopExample(child, closed);
+    }
+  }
+});
+
+const elicitationExample = new URL(
+  "../../examples/modern_elicitation.ts",
+  import.meta.url
+);
+
+/** Run the runnable elicitation example against a server on an ephemeral port. */
+async function runElicitationExample(baseUrl: string, action: string) {
+  const child = spawn(
+    process.execPath,
+    ["--import", "tsx", elicitationExample.pathname, action],
+    {
+      stdio: ["ignore", "pipe", "pipe"],
+      env: { ...process.env, MCP_EXAMPLE_URL: `${baseUrl}/mcp` },
+    }
+  );
+  let stdout = "";
+  let stderr = "";
+  child.stdout.on("data", (chunk: Buffer) => {
+    stdout = `${stdout}${chunk.toString()}`.slice(-32_768);
+  });
+  child.stderr.on("data", (chunk: Buffer) => {
+    stderr = `${stderr}${chunk.toString()}`.slice(-32_768);
+  });
+  // This deadline bounds a real subprocess; fake timers cannot drive one.
+  const force = setTimeout(() => child.kill("SIGKILL"), 30_000);
+  try {
+    const [code] = (await once(child, "close")) as [number | null];
+    return { code, stdout, stderr };
+  } finally {
+    clearTimeout(force);
+  }
+}
+
+it.each([
+  { action: "accept", expected: "Completed two forms and one URL action" },
+  { action: "decline", expected: "decline" },
+  { action: "cancel", expected: "cancel" },
+])(
+  "runs the createAgent elicitation example with $action",
+  async ({ action, expected }) => {
+    const { child, baseUrl, closed } = await startExample("modern");
+    try {
+      const run = await runElicitationExample(baseUrl, action);
+      expect(run.code === 0 ? "" : `exit ${run.code}: ${run.stderr}`).toBe("");
+      // The example answers each question through a reconstructed adapter, so
+      // reaching the result also proves a resume survives losing the client.
+      expect(run.stdout).toContain(`Result: ${expected}`);
+    } finally {
+      await stopExample(child, closed);
+    }
+  },
+  60_000
+);

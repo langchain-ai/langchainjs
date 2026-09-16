@@ -30,6 +30,43 @@ To try mixed modes, also run `pnpm exec tsx calculator_server_shttp_sse.ts` and 
 `add`, printing `Hello MCP` and `5`. Neither server needs a `mode`; the SDK detects
 their protocols. Stop servers with Ctrl-C.
 
+## Modern elicitation with LangGraph
+
+For modern input, start `modern_server.ts` and run
+`pnpm exec tsx modern_elicitation.ts`. The example builds a `createAgent` run
+over the MCP tools, prints three successive interruptions (two forms and a URL),
+reconstructs the adapter between rounds, and completes. Pass `decline` or
+`cancel` to stop at the first question. Answers and the URL are scripted demo
+data; a production application collects consent and verifies URL completion.
+`MemorySaver` survives adapter reconstruction in this process, not a process
+restart; use a persistent checkpointer for that.
+
+Answer with
+`new Command({ resume: createMCPElicitationResume(pending, responses) })`, where
+`pending` is the surfaced MCP interrupt and `responses` maps its request keys to
+answers. The helper produces `{ [pending.id]: { responses } }` so the answer
+reaches the question it was written for; a flat answer map is rejected. An
+invalid answer reissues the question with a validation error instead of being
+sent to the server.
+
+**Resuming replays the tool call.** The agent re-runs its tool node from the
+top, the adapter re-issues the initial `tools/call`, and only then sends the
+answered follow-up — carrying the request state returned by the response that
+execution just replayed. Rounds already answered are replayed too, so work the
+server performed before asking happens again and `beforeToolCall` runs once per
+execution. There are no exactly-once effects: keep server handlers and hooks
+replay-safe.
+
+The modern approval flow signs its retry state with an ephemeral key for this
+single-process demo and binds it to the MCP method, because replayed state
+travels over the wire on every round and must not be trusted as received. A
+production application must supply a stable shared key and bind retry state to
+its authenticated principal; this example does not implement external
+authentication.
+
+If you copy this example into your application, install `@langchain/mcp-adapters`,
+`@langchain/core`, `@langchain/langgraph`, `langchain` and `zod`.
+
 ## Legacy elicitation
 
 Start `calculator_server_shttp_sse.ts`, then run
