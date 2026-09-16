@@ -1,6 +1,9 @@
 import { ToolException, isToolException } from "./utils/errors.js";
 import { z } from "zod";
-import { fromJsonSchema } from "@modelcontextprotocol/client";
+import {
+  fromJsonSchema,
+  LOG_LEVEL_META_KEY,
+} from "@modelcontextprotocol/client";
 import { JSONObjectSchema } from "@modelcontextprotocol/core";
 import { DefaultJsonSchemaValidator } from "@modelcontextprotocol/client/_shims";
 import {
@@ -8,6 +11,7 @@ import {
   toolCallResultModificationSchema,
 } from "./hooks.js";
 import type {
+  LoggingLevel,
   CallToolRequestOptions,
   CallToolResult,
   ContentBlock as MCPContentBlock,
@@ -297,6 +301,7 @@ function _convertCallToolResult({
  * @internal
  */
 type CallToolArgs = {
+  logLevel?: LoggingLevel;
   /**
    * The name of the server to call the tool on (used for error messages and logging)
    */
@@ -361,6 +366,7 @@ type ContentBlocksWithArtifacts = [
  * @returns A tuple of [textContent, nonTextContent]
  */
 async function _callTool({
+  logLevel,
   serverName,
   toolName,
   descriptor,
@@ -466,6 +472,10 @@ async function _callTool({
       {
         name: toolName,
         arguments: finalArgs,
+        _meta:
+          logLevel !== undefined && finalClient.getProtocolEra() === "modern"
+            ? { [LOG_LEVEL_META_KEY]: logLevel }
+            : undefined,
       },
       callToolOptions
     );
@@ -592,6 +602,7 @@ export async function convertMcpTools(
                 config?: RunnableConfig
               ) => {
                 return _callTool({
+                  logLevel: options?.logLevel,
                   serverName,
                   inputValidator,
                   toolName: tool.name,

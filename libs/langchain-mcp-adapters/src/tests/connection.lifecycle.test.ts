@@ -209,7 +209,7 @@ describe("connection ownership", () => {
     const firstClient = await adapter.getClient("test");
     await adapter.close();
 
-    // `close()` bumps `#generation` and clears the caches but keeps the server
+    // `close()` cancels the epoch and clears the caches but keeps the server
     // configuration, so discovery runs again against fresh clients rather than
     // restoring the old ones.
     const [after] = await adapter.listTools(["test"]);

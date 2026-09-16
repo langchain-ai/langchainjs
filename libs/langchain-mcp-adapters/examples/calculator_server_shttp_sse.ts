@@ -1,3 +1,4 @@
+import { once } from "node:events";
 import express from "express";
 
 import { McpServer, isInitializeRequest } from "@modelcontextprotocol/server";
@@ -6,13 +7,39 @@ import { NodeStreamableHTTPServerTransport } from "@modelcontextprotocol/node";
 import { SSEServerTransport } from "@modelcontextprotocol/server-legacy/sse";
 import { z } from "zod";
 
-export async function main() {
+function createCalculatorServer() {
   const server = new McpServer({
     name: "backwards-compatible-server",
     version: "1.0.0",
   });
 
   const calcSchema = z.object({ a: z.number(), b: z.number() });
+
+  server.registerTool(
+    "approve",
+    { inputSchema: z.object({ mode: z.enum(["form", "url"]) }) },
+    async ({ mode }, context) => {
+      const answer = await context.mcpReq.elicitInput(
+        mode === "url"
+          ? {
+              mode: "url",
+              message: "Confirm completion of the example URL action",
+              url: "https://example.com/authorize",
+              elicitationId: "example-url-action",
+            }
+          : {
+              mode: "form",
+              message: "Approve the example action?",
+              requestedSchema: {
+                type: "object",
+                properties: { confirm: { type: "boolean" } },
+                required: ["confirm"],
+              },
+            }
+      );
+      return { content: [{ type: "text", text: answer.action }] };
+    }
+  );
 
   server.registerTool(
     "add",
@@ -46,6 +73,10 @@ export async function main() {
     async ({ a, b }) => ({ content: [{ type: "text", text: `${a / b}` }] })
   );
 
+  return server;
+}
+
+export function createCalculatorApp() {
   const app = express();
   app.use(express.json());
 
@@ -80,8 +111,8 @@ export async function main() {
         }
       };
 
-      // Connect to the MCP server
-      await server.connect(transport);
+      // Each transport needs its own server because a protocol instance owns one transport.
+      await createCalculatorServer().connect(transport);
     } else {
       // Invalid request
       console.error(
@@ -135,7 +166,8 @@ export async function main() {
       delete transports.sse[transport.sessionId];
     });
 
-    await server.connect(transport);
+    // Each transport needs its own server because a protocol instance owns one transport.
+    await createCalculatorServer().connect(transport);
   });
 
   // Legacy message endpoint for older clients
@@ -150,7 +182,17 @@ export async function main() {
     }
   });
 
-  app.listen(3000);
+  return app;
+}
+
+export async function listenCalculatorServer(port = 3000) {
+  const http = createCalculatorApp().listen(port);
+  await once(http, "listening");
+  return http;
+}
+
+export async function main() {
+  await listenCalculatorServer();
 }
 
 if (typeof require !== "undefined" && require.main === module) {
