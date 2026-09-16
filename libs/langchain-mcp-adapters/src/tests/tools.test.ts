@@ -114,10 +114,15 @@ describe("Simplified Tool Adapter Tests", () => {
 
       await tool.invoke({});
       expect(observed).toEqual({});
-      expect(mockClient.callTool).toHaveBeenCalledWith({
-        name: "echo",
-        arguments: { value: "effective" },
-      });
+      expect(mockClient.callTool).toHaveBeenCalledWith(
+        {
+          name: "echo",
+          arguments: { value: "effective" },
+        },
+        expect.objectContaining({
+          toolDefinition: expect.objectContaining({ name: "echo" }),
+        })
+      );
     });
 
     test("rejects scalar argument overrides before issuing a request", async () => {
@@ -170,10 +175,15 @@ describe("Simplified Tool Adapter Tests", () => {
       });
 
       expect(await tool.invoke({})).toBe("changed");
-      expect(mockClient.callTool).toHaveBeenCalledWith({
-        name: "echo",
-        arguments: { value: "effective" },
-      });
+      expect(mockClient.callTool).toHaveBeenCalledWith(
+        {
+          name: "echo",
+          arguments: { value: "effective" },
+        },
+        expect.objectContaining({
+          toolDefinition: expect.objectContaining({ name: "echo" }),
+        })
+      );
 
       const [invalid] = await loadMcpTools("test", mockClient, {
         beforeToolCall: () => {
@@ -277,12 +287,17 @@ describe("Simplified Tool Adapter Tests", () => {
         "It is currently 70 degrees and cloudy in New York."
       );
 
-      expect(mockClient.callTool).toHaveBeenCalledWith({
-        arguments: {
-          city: "New York",
+      expect(mockClient.callTool).toHaveBeenCalledWith(
+        {
+          arguments: {
+            city: "New York",
+          },
+          name: "weather",
         },
-        name: "weather",
-      });
+        expect.objectContaining({
+          toolDefinition: expect.objectContaining({ name: "weather" }),
+        })
+      );
     });
 
     test("should load tool with no input parameters", async () => {
@@ -329,10 +344,15 @@ describe("Simplified Tool Adapter Tests", () => {
         "It is currently 70 degrees and cloudy."
       );
 
-      expect(mockClient.callTool).toHaveBeenCalledWith({
-        arguments: {},
-        name: "weather",
-      });
+      expect(mockClient.callTool).toHaveBeenCalledWith(
+        {
+          arguments: {},
+          name: "weather",
+        },
+        expect.objectContaining({
+          toolDefinition: expect.objectContaining({ name: "weather" }),
+        })
+      );
     });
 
     test("should handle empty tool list", async () => {
@@ -471,13 +491,18 @@ describe("Simplified Tool Adapter Tests", () => {
       });
 
       expect(result).toBe("Received 1 items with total_count=1");
-      expect(mockClient.callTool).toHaveBeenCalledWith({
-        name: "query_data",
-        arguments: {
-          items: [{ id: "1", name: "Test", value: 100.0 }],
-          metadata: { total_count: 1, timestamp: "2024-01-01" },
+      expect(mockClient.callTool).toHaveBeenCalledWith(
+        {
+          name: "query_data",
+          arguments: {
+            items: [{ id: "1", name: "Test", value: 100.0 }],
+            metadata: { total_count: 1, timestamp: "2024-01-01" },
+          },
         },
-      });
+        expect.objectContaining({
+          toolDefinition: expect.objectContaining({ name: "query_data" }),
+        })
+      );
     });
 
     test("should handle JSON schemas with definitions (older JSON Schema style)", async () => {

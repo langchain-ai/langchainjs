@@ -86,7 +86,9 @@ describe("MultiServerMCPClient", () => {
         new URL(config["test-server"].url),
         expect.objectContaining({
           requestInit: {
-            headers: config["test-server"].headers,
+            headers: Object.fromEntries(
+              new Headers(config["test-server"].headers)
+            ),
           },
         })
       );
@@ -244,6 +246,49 @@ describe("MultiServerMCPClient", () => {
       expect(StdioClientTransport).toHaveBeenCalledTimes(1);
       // And connect
       expect(Client.prototype.connect).toHaveBeenCalled();
+    });
+
+    test("a close during the reconnect backoff cancels the reconnect", async () => {
+      const client = new MultiServerMCPClient({
+        "test-server": {
+          mode: "legacy",
+          transport: "stdio" as const,
+          command: "python",
+          args: ["./script.py"],
+          restart: {
+            enabled: true,
+            maxAttempts: 3,
+            delayMs: 100,
+          },
+        },
+      });
+
+      await client.initializeConnections();
+
+      const stdioInstance = (StdioClientTransport as Mock).mock.results[0]
+        ?.value as { onclose?: () => Promise<void> | void };
+      expect(stdioInstance).toBeDefined();
+
+      (StdioClientTransport as Mock).mockClear();
+      (Client.prototype.connect as Mock).mockClear();
+
+      // Drop the transport so a reconnect is scheduled, let it reach its
+      // backoff, then close while it is waiting there.
+      const reconnecting = stdioInstance.onclose?.();
+      await new Promise((resolve) => {
+        setTimeout(resolve, 10);
+      });
+      await client.close();
+      await reconnecting;
+
+      // Past the backoff window: the aborted epoch must have cancelled it, so
+      // no connection is rebuilt behind a closed adapter.
+      await new Promise((resolve) => {
+        setTimeout(resolve, 200);
+      });
+
+      expect(StdioClientTransport as Mock).not.toHaveBeenCalled();
+      expect(Client.prototype.connect as Mock).not.toHaveBeenCalled();
     });
 
     test("should attempt to reconnect SSE transport when enabled", async () => {

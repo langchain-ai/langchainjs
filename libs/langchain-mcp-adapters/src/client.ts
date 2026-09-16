@@ -9,14 +9,14 @@ import {
   StreamableHTTPClientTransport,
 } from "@modelcontextprotocol/client";
 import type {
+  CacheMode,
   OAuthClientProvider,
   LoggingLevel,
 } from "@modelcontextprotocol/client";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import type { DynamicStructuredTool } from "@langchain/core/tools";
-import { loadMcpTools } from "./tools.js";
-import { ConnectionManager, type Client } from "./connection.js";
-import { getDebugLog } from "./logging.js";
+import { convertMcpTools } from "./tools.js";
+import { ConnectionManager, mergeHeaders, type Client } from "./connection.js";
 import {
   type ClientConfig,
   type MCPAdapterConfig,
@@ -32,6 +32,8 @@ import {
   type MCPResourceContent,
   type ConnectionErrorHandler,
   mcpAdapterConfigSchema,
+  toolDiscoveryOptionsSchema,
+  type ToolDiscoveryOptions,
   adapterConfigSchema,
   sseConnectionSchema,
   customHTTPTransportOptionsSchema,
@@ -39,14 +41,12 @@ import {
   _resolveAndApplyOverrideHandlingOverrides,
 } from "./types.js";
 
-const serverSelectionSchema = z.union([
-  z.array(z.string()).transform((servers) => ({ servers, options: undefined })),
-  z
-    .tuple([z.array(z.string()), customHTTPTransportOptionsSchema.optional()])
-    .transform(([servers, options]) => ({ servers, options })),
-]);
-
-const debugLog = getDebugLog();
+const toolSelectionSchema = createServerSelectionSchema(
+  toolDiscoveryOptionsSchema
+);
+const transportSelectionSchema = createServerSelectionSchema(
+  customHTTPTransportOptionsSchema
+);
 
 export { MCPClientError } from "./utils/errors.js";
 
@@ -55,9 +55,38 @@ export { MCPClientError } from "./utils/errors.js";
  */
 export class MCPAdapter {
   /**
-   * Cached map of server names to tools
+   * Cancellation for the current connection epoch. `close()` aborts it, which
+   * cancels in-flight SDK requests and wakes any pending reconnect backoff, and
+   * installs a fresh controller so a reused adapter starts a clean epoch.
    */
-  #serverNameToTools: Record<string, DynamicStructuredTool[]> = {};
+  #epoch = new AbortController();
+  /**
+   * The in-flight `close()`, so a concurrent close reuses it rather than
+   * tearing down twice, and work arriving mid-close can wait for the new epoch
+   * instead of failing.
+   */
+  #closing?: Promise<void>;
+  /**
+   * Cached tools per connected client, keyed by the descriptor set they were
+   * built from.
+   */
+  #toolsByClient = new WeakMap<
+    Client,
+    {
+      descriptorKey: string;
+      tools: Promise<DynamicStructuredTool[]>;
+    }
+  >();
+  /**
+   * Per-client discovery bookkeeping. `inFlight` counts concurrent
+   * `_loadToolsForServer` calls; `ready` records whether any of them has
+   * handed tools to a caller. A client is only released when the last
+   * discovery fails and none ever succeeded.
+   */
+  #toolDiscoveryState = new WeakMap<
+    Client,
+    { inFlight: number; ready: boolean }
+  >();
 
   /**
    * Configured MCP servers
@@ -87,7 +116,7 @@ export class MCPAdapter {
   /**
    * Set of server names that have failed to connect (when onConnectionError is "ignore")
    */
-  #failedServers: Set<string> = new Set();
+  #failedServers = new Set<ReturnType<ConnectionManager["identity"]>>();
 
   /**
    * Returns a configuration snapshot. Callbacks and OAuth providers retain their identity.
@@ -143,14 +172,19 @@ export class MCPAdapter {
 
     this.#config = parsedServerConfig;
     this.#mcpServers = parsedServerConfig.servers;
-    this.#clientConnections = new ConnectionManager();
+    this.#clientConnections = new ConnectionManager((options) => {
+      const client = this.#clientConnections.get(options);
+
+      if (client) {
+        this.#toolsByClient.delete(client);
+      }
+    });
     this.#onConnectionError = parsedServerConfig.onConnectionError;
   }
 
   /**
-   * Proactively initialize connections to all servers. This will be called automatically when
-   * methods requiring an active connection (like {@link listTools} or {@link getClient}) are called,
-   * but you can call it directly to ensure all connections are established before using the tools.
+   * Discover executable LangChain tools grouped by server name.
+   * Opens connections as needed and honors the SDK discovery cache.
    *
    * When a server fails to connect, the client will throw an error if `onConnectionError` is "throw",
    * otherwise it will skip the server and continue with the remaining servers.
@@ -158,20 +192,44 @@ export class MCPAdapter {
    * @returns A map of server names to arrays of tools
    * @throws {MCPClientError} If initialization fails and `onConnectionError` is "throw" (default)
    */
+  async listToolsets(
+    customTransportOptions?: ToolDiscoveryOptions
+  ): Promise<Record<string, DynamicStructuredTool[]>> {
+    return this.#discoverToolsets(
+      toolDiscoveryOptionsSchema.parse(customTransportOptions ?? {})
+    );
+  }
+
+  /** @deprecated Use listToolsets(). This method also discovers tools. */
   async initializeConnections(
-    customTransportOptions?: CustomHTTPTransportOptions
+    options?: ToolDiscoveryOptions
+  ): Promise<Record<string, DynamicStructuredTool[]>> {
+    return this.listToolsets(options);
+  }
+
+  async #discoverToolsets(
+    customTransportOptions?: ToolDiscoveryOptions
   ): Promise<Record<string, DynamicStructuredTool[]>> {
     if (!this.#mcpServers || Object.keys(this.#mcpServers).length === 0) {
       throw new MCPClientError("No connections to initialize");
     }
 
+    // A discovery that arrives mid-close waits for teardown and then runs
+    // against the fresh epoch, which matches the documented reuse contract
+    // better than failing a caller for a close it never saw.
+    if (this.#closing) {
+      await this.#closing.catch(() => undefined);
+    }
+
+    const { signal } = this.#epoch;
+    const catalog: Record<string, DynamicStructuredTool[]> = {};
+
     for (const [serverName, connection] of Object.entries(this.#mcpServers)) {
-      // Skip servers that have already failed (when onConnectionError is "ignore")
-      if (
-        (this.#onConnectionError === "ignore" ||
-          typeof this.#onConnectionError === "function") &&
-        this.#failedServers.has(serverName)
-      ) {
+      const key = this.#clientConnections.identity(
+        this.#transportOptions(serverName, customTransportOptions)
+      );
+
+      if (this.#failedServers.has(key)) {
         continue;
       }
 
@@ -181,45 +239,55 @@ export class MCPAdapter {
           connection,
           customTransportOptions
         );
-        // If we successfully initialized, remove from failed set (in case it was there before)
-        this.#failedServers.delete(serverName);
+
+        const client = this.#clientConnections.get(
+          this.#transportOptions(serverName, customTransportOptions)
+        );
+
+        if (client) {
+          catalog[serverName] = await this._loadToolsForServer(
+            serverName,
+            client,
+            customTransportOptions?.cacheMode,
+            signal
+          );
+        }
       } catch (error) {
         if (this.#onConnectionError === "throw") {
           throw error;
         }
 
-        // Handle custom error handler function
         if (typeof this.#onConnectionError === "function") {
           this.#onConnectionError({ serverName, error });
-          // If we get here, the handler didn't throw, so treat as ignored
-          this.#failedServers.add(serverName);
-          debugLog(
-            `WARN: Failed to initialize connection to server "${serverName}": ${String(error)}`
-          );
-          continue;
         }
-
-        // Default "ignore" behavior
-        // Mark this server as failed so we don't try again
-        this.#failedServers.add(serverName);
-        debugLog(
-          `WARN: Failed to initialize connection to server "${serverName}": ${String(error)}`
-        );
-        continue;
+        this.#failedServers.add(key);
       }
     }
 
-    // Warn if no servers successfully connected when using "ignore" mode
-    if (
-      this.#onConnectionError === "ignore" &&
-      Object.keys(this.#serverNameToTools).length === 0
-    ) {
-      debugLog(
-        `WARN: No servers successfully connected. All connection attempts failed.`
+    // The per-server policy above swallows failures, an aborted request
+    // included, so cancellation has to be re-checked here or a close during
+    // discovery would surface as a successful partial catalog.
+    if (signal.aborted) {
+      throw new MCPClientError(
+        "MCP connections closed during discovery",
+        undefined,
+        { cause: signal.reason }
       );
     }
 
-    return this.#serverNameToTools;
+    return catalog;
+  }
+
+  #transportOptions(serverName: string, options?: CustomHTTPTransportOptions) {
+    const connection = this.#config.servers[serverName];
+
+    return !connection || connection.transport === "stdio"
+      ? { serverName }
+      : {
+          serverName,
+          headers: mergeHeaders(options?.headers, connection.headers),
+          authProvider: options?.authProvider ?? connection.authProvider,
+        };
   }
 
   /**
@@ -253,14 +321,15 @@ export class MCPAdapter {
   async listTools(...servers: string[]): Promise<DynamicStructuredTool[]>;
   async listTools(
     servers: string[],
-    options?: CustomHTTPTransportOptions
+    options?: ToolDiscoveryOptions
   ): Promise<DynamicStructuredTool[]>;
   async listTools(...args: unknown[]): Promise<DynamicStructuredTool[]> {
-    const { servers, options } = serverSelectionSchema.parse(args);
-    await this.initializeConnections(options);
-    return servers.length === 0
-      ? this._getAllToolsAsFlatArray()
-      : this._getToolsFromServers(servers);
+    const { servers, options } = toolSelectionSchema.parse(args);
+    const catalog = await this.#discoverToolsets(options);
+
+    return (servers.length ? servers : Object.keys(catalog)).flatMap(
+      (name) => catalog[name] ?? []
+    );
   }
 
   /**
@@ -296,7 +365,9 @@ export class MCPAdapter {
     }
 
     const [serverName, level] = args as [string, LoggingLevel];
-    await this.#clientConnections.get(serverName)?.setLoggingLevel(level);
+    await this.#clientConnections
+      .get(this.#transportOptions(serverName))
+      ?.setLoggingLevel(level);
   }
 
   /**
@@ -309,12 +380,12 @@ export class MCPAdapter {
     serverName: string,
     options?: CustomHTTPTransportOptions
   ): Promise<Client | undefined> {
-    await this.initializeConnections(options);
-    return this.#clientConnections.get({
-      serverName,
-      headers: options?.headers,
-      authProvider: options?.authProvider,
-    });
+    const parsedOptions = customHTTPTransportOptionsSchema.parse(options ?? {});
+    await this.#discoverToolsets(parsedOptions);
+
+    return this.#clientConnections.get(
+      this.#transportOptions(serverName, parsedOptions)
+    );
   }
 
   /**
@@ -347,19 +418,8 @@ export class MCPAdapter {
   async listResources(
     ...args: unknown[]
   ): Promise<Record<string, MCPResource[]>> {
-    let servers: string[];
-    let options: CustomHTTPTransportOptions | undefined;
-
-    if (args.length === 0 || args.every((arg) => typeof arg === "string")) {
-      servers = args as string[];
-      await this.initializeConnections();
-    } else {
-      [servers, options] = args as [
-        string[],
-        CustomHTTPTransportOptions | undefined,
-      ];
-      await this.initializeConnections(options);
-    }
+    const { servers, options } = transportSelectionSchema.parse(args);
+    await this.#discoverToolsets(options);
 
     const targetServers =
       servers.length > 0 ? servers : Object.keys(this.#config.servers);
@@ -367,29 +427,21 @@ export class MCPAdapter {
     const result: Record<string, MCPResource[]> = {};
 
     for (const serverName of targetServers) {
-      const client = await this.getClient(serverName, options);
+      const client = this.#clientConnections.get(
+        this.#transportOptions(serverName, options)
+      );
       if (!client) {
-        debugLog(`WARN: Server "${serverName}" not found or not connected`);
         continue;
       }
 
-      try {
-        const resourcesList = await client.listResources();
-        result[serverName] = resourcesList.resources.map((resource) => ({
-          uri: resource.uri,
-          name: resource.title ?? resource.name,
-          description: resource.description,
-          mimeType: resource.mimeType,
-        }));
-        debugLog(
-          `INFO: Listed ${result[serverName].length} resources from server "${serverName}"`
-        );
-      } catch (error) {
-        debugLog(
-          `ERROR: Failed to list resources from server "${serverName}": ${error}`
-        );
-        result[serverName] = [];
-      }
+      const resourcesList = await client.listResources();
+      result[serverName] = resourcesList.resources.map((resource) => ({
+        ...resource,
+        uri: resource.uri,
+        name: resource.title ?? resource.name,
+        description: resource.description,
+        mimeType: resource.mimeType,
+      }));
     }
 
     return result;
@@ -427,19 +479,8 @@ export class MCPAdapter {
   async listResourceTemplates(
     ...args: unknown[]
   ): Promise<Record<string, MCPResourceTemplate[]>> {
-    let servers: string[];
-    let options: CustomHTTPTransportOptions | undefined;
-
-    if (args.length === 0 || args.every((arg) => typeof arg === "string")) {
-      servers = args as string[];
-      await this.initializeConnections();
-    } else {
-      [servers, options] = args as [
-        string[],
-        CustomHTTPTransportOptions | undefined,
-      ];
-      await this.initializeConnections(options);
-    }
+    const { servers, options } = transportSelectionSchema.parse(args);
+    await this.#discoverToolsets(options);
 
     const targetServers =
       servers.length > 0 ? servers : Object.keys(this.#config.servers);
@@ -447,31 +488,21 @@ export class MCPAdapter {
     const result: Record<string, MCPResourceTemplate[]> = {};
 
     for (const serverName of targetServers) {
-      const client = await this.getClient(serverName, options);
+      const client = this.#clientConnections.get(
+        this.#transportOptions(serverName, options)
+      );
       if (!client) {
-        debugLog(`WARN: Server "${serverName}" not found or not connected`);
         continue;
       }
 
-      try {
-        const templatesList = await client.listResourceTemplates();
-        result[serverName] = templatesList.resourceTemplates.map(
-          (template) => ({
-            uriTemplate: template.uriTemplate,
-            name: template.title ?? template.name,
-            description: template.description,
-            mimeType: template.mimeType,
-          })
-        );
-        debugLog(
-          `INFO: Listed ${result[serverName].length} resource templates from server "${serverName}"`
-        );
-      } catch (error) {
-        debugLog(
-          `ERROR: Failed to list resource templates from server "${serverName}": ${error}`
-        );
-        result[serverName] = [];
-      }
+      const templatesList = await client.listResourceTemplates();
+      result[serverName] = templatesList.resourceTemplates.map((template) => ({
+        ...template,
+        uriTemplate: template.uriTemplate,
+        name: template.title ?? template.name,
+        description: template.description,
+        mimeType: template.mimeType,
+      }));
     }
 
     return result;
@@ -495,8 +526,6 @@ export class MCPAdapter {
     uri: string,
     options?: CustomHTTPTransportOptions
   ): Promise<MCPResourceContent[]> {
-    await this.initializeConnections(options);
-
     const client = await this.getClient(serverName, options);
     if (!client) {
       throw new MCPClientError(
@@ -506,7 +535,6 @@ export class MCPAdapter {
     }
 
     try {
-      debugLog(`INFO: Reading resource "${uri}" from server "${serverName}"`);
       const result = await client.readResource({ uri });
 
       return result.contents;
@@ -520,14 +548,54 @@ export class MCPAdapter {
   }
 
   /**
-   * Close all connections.
+   * Close all connections and clear the discovery caches.
+   *
+   * Cancels the current epoch, so in-flight requests reject and a reconnect
+   * waiting on its backoff wakes and gives up instead of resurrecting a
+   * connection. Concurrent calls share one teardown.
+   *
+   * The adapter stays usable afterwards: the server configuration survives, so
+   * a later `listTools()` discovers again and builds fresh clients rather than
+   * restoring the closed ones. A discovery that arrives mid-close waits for
+   * teardown and then runs in the new epoch.
    */
   async close(): Promise<void> {
-    debugLog(`INFO: Closing all MCP connections...`);
-    this.#serverNameToTools = {};
-    this.#failedServers.clear();
-    await this.#clientConnections.delete();
-    debugLog(`INFO: All MCP connections closed`);
+    if (this.#closing) {
+      return this.#closing;
+    }
+
+    this.#closing = (async () => {
+      try {
+        // Abort before draining so in-flight requests reject here rather than
+        // completing against connections that are going away.
+        this.#epoch.abort(new MCPClientError("MCP adapter closed"));
+        await this.#clientConnections.delete();
+      } finally {
+        this.#toolsByClient = new WeakMap();
+        this.#failedServers.clear();
+        this.#epoch = new AbortController();
+        this.#closing = undefined;
+      }
+    })();
+
+    return this.#closing;
+  }
+
+  /** Sleep that resolves early when `signal` aborts. */
+  static #sleep(ms: number, signal: AbortSignal): Promise<void> {
+    if (signal.aborted) return Promise.resolve();
+
+    return new Promise<void>((resolve) => {
+      const pending: { timer?: ReturnType<typeof setTimeout> } = {};
+      const settle = () => {
+        clearTimeout(pending.timer);
+        signal.removeEventListener("abort", settle);
+        resolve();
+      };
+
+      pending.timer = setTimeout(settle, ms);
+      signal.addEventListener("abort", settle, { once: true });
+    });
   }
 
   /**
@@ -539,10 +607,6 @@ export class MCPAdapter {
     customTransportOptions?: CustomHTTPTransportOptions
   ): Promise<void> {
     if (connection.transport === "stdio") {
-      debugLog(
-        `INFO: Initializing stdio connection to server "${serverName}"...`
-      );
-
       /**
        * check if we already initialized this stdio connection
        */
@@ -562,7 +626,7 @@ export class MCPAdapter {
       const updatedConnection = {
         ...connection,
         authProvider: authProvider ?? connection.authProvider,
-        headers: { ...headers, ...connection.headers },
+        headers: mergeHeaders(headers, connection.headers),
       };
 
       /**
@@ -601,16 +665,10 @@ export class MCPAdapter {
     serverName: string,
     connection: ResolvedStdioConnection
   ): Promise<void> {
-    const { command, args, restart } = connection;
-
-    debugLog(
-      `DEBUG: Creating stdio transport for server "${serverName}" with command: ${command} ${args.join(
-        " "
-      )}`
-    );
+    const { restart } = connection;
 
     try {
-      const client = await this.#clientConnections.createClient(
+      await this.#clientConnections.createClient(
         "stdio",
         serverName,
         connection
@@ -623,12 +681,9 @@ export class MCPAdapter {
       if (restart?.enabled) {
         this._setupStdioRestart(serverName, transport, connection, restart);
       }
-
-      // Load tools for this server
-      await this._loadToolsForServer(serverName, client);
     } catch (error) {
       throw new MCPClientError(
-        `Failed to connect to stdio server "${serverName}": ${error}`,
+        `Failed to connect to stdio server "${serverName}" in ${connection.mode} mode: ${error}`,
         serverName,
         { cause: error }
       );
@@ -653,9 +708,6 @@ export class MCPAdapter {
 
       // Only attempt restart if we haven't cleaned up
       if (this.#clientConnections.get(serverName)) {
-        debugLog(
-          `INFO: Process for server "${serverName}" exited, attempting to restart...`
-        );
         await this._attemptReconnect(
           serverName,
           connection,
@@ -689,19 +741,13 @@ export class MCPAdapter {
     const automaticSSEFallback =
       connection.mode === "legacy" && connection.automaticSSEFallback;
 
-    debugLog(
-      `DEBUG: Creating Streamable HTTP transport for server "${serverName}" with URL: ${url}`
-    );
-
     if (transportType === "http" || transportType == null) {
       try {
-        const client = await this.#clientConnections.createClient(
+        await this.#clientConnections.createClient(
           "http",
           serverName,
           connection
         );
-
-        await this._loadToolsForServer(serverName, client);
       } catch (error) {
         const code = getHttpErrorCode(error);
         if (automaticSSEFallback && code != null && code >= 400 && code < 500) {
@@ -781,7 +827,7 @@ export class MCPAdapter {
             );
           }
           throw new MCPClientError(
-            `Failed to connect to streamable HTTP server "${serverName}, url: ${url}": ${error}`,
+            `Failed to connect to streamable HTTP server "${serverName}, url: ${url}" in ${connection.mode} mode: ${error}`,
             serverName,
             { cause: error }
           );
@@ -807,11 +853,7 @@ export class MCPAdapter {
     const { url, headers, reconnect, authProvider } = connection;
 
     try {
-      const client = await this.#clientConnections.createClient(
-        "sse",
-        serverName,
-        connection
-      );
+      await this.#clientConnections.createClient("sse", serverName, connection);
       const transport = this.#clientConnections.getTransport({
         serverName,
         headers,
@@ -822,9 +864,6 @@ export class MCPAdapter {
       if (reconnect?.enabled) {
         this._setupSSEReconnect(serverName, transport, connection, reconnect);
       }
-
-      // Load tools for this server
-      await this._loadToolsForServer(serverName, client);
     } catch (error) {
       // Check if this is already a wrapped error that should be re-thrown
       if (MCPClientError.isInstance(error)) {
@@ -874,9 +913,6 @@ export class MCPAdapter {
           authProvider: connection.authProvider,
         })
       ) {
-        debugLog(
-          `INFO: HTTP connection for server "${serverName}" closed, attempting to reconnect...`
-        );
         await this._attemptReconnect(
           serverName,
           connection,
@@ -892,26 +928,88 @@ export class MCPAdapter {
    */
   private async _loadToolsForServer(
     serverName: string,
-    client: Client
-  ): Promise<void> {
+    client: Client,
+    cacheMode: CacheMode = "use",
+    signal?: AbortSignal
+  ): Promise<DynamicStructuredTool[]> {
+    const existing = this.#toolsByClient.get(client);
+    let previous = existing;
+    let replacement:
+      | { descriptorKey: string; tools: Promise<DynamicStructuredTool[]> }
+      | undefined;
+    const state = this.#toolDiscoveryState.get(client) ?? {
+      inFlight: 0,
+      ready: false,
+    };
+    let failure: unknown;
+    state.inFlight += 1;
+    this.#toolDiscoveryState.set(client, state);
+
     try {
-      debugLog(`DEBUG: Loading tools for server "${serverName}"...`);
-      const tools = await loadMcpTools(
+      const { tools: descriptors } = await client.listTools(undefined, {
+        cacheMode,
+        signal,
+      });
+
+      const descriptorKey = JSON.stringify(descriptors);
+
+      if (existing?.descriptorKey === descriptorKey) {
+        const tools = await existing.tools;
+        state.ready = true;
+        return tools;
+      }
+
+      const tools = convertMcpTools(
         serverName,
         client,
+        descriptors,
         this.#loadToolsOptions[serverName]
       );
-      this.#serverNameToTools[serverName] = tools;
-      debugLog(
-        `INFO: Successfully loaded ${tools.length} tools from server "${serverName}"`
-      );
+
+      if (cacheMode !== "bypass") {
+        previous = this.#toolsByClient.get(client);
+        replacement = { descriptorKey, tools };
+        this.#toolsByClient.set(client, replacement);
+      }
+
+      const loaded = await tools;
+      state.ready = true;
+      return loaded;
     } catch (error) {
-      throw new MCPClientError(
-        `Failed to load tools from server "${serverName}": ${error}`,
-        serverName,
-        { cause: error }
-      );
+      failure = error;
+      // Only roll back the cache entry this call installed; a concurrent
+      // discovery may have replaced it with a working catalog.
+      if (replacement && this.#toolsByClient.get(client) === replacement) {
+        if (previous) {
+          this.#toolsByClient.set(client, previous);
+        } else {
+          this.#toolsByClient.delete(client);
+        }
+      }
+    } finally {
+      state.inFlight -= 1;
     }
+
+    // Keep the connection alive while another discovery is still running, or
+    // when tools from this client were already issued to a caller.
+    if (state.inFlight === 0 && !state.ready) {
+      this.#toolDiscoveryState.delete(client);
+
+      try {
+        await this.#clientConnections.release(client);
+      } catch (cleanupError) {
+        throw new AggregateError(
+          [failure, cleanupError],
+          `MCP discovery and cleanup failed for "${serverName}"`
+        );
+      }
+    }
+
+    throw new MCPClientError(
+      `Failed to load tools from server "${serverName}": ${failure}`,
+      serverName,
+      { cause: failure }
+    );
   }
 
   /**
@@ -929,6 +1027,7 @@ export class MCPAdapter {
     maxAttempts = 3,
     delayMs = 1000
   ): Promise<void> {
+    const { signal } = this.#epoch;
     let connected = false;
     let attempts = 0;
 
@@ -945,18 +1044,16 @@ export class MCPAdapter {
       (maxAttempts === undefined || attempts < maxAttempts)
     ) {
       attempts += 1;
-      debugLog(
-        `INFO: Reconnection attempt ${attempts}${
-          maxAttempts ? `/${maxAttempts}` : ""
-        } for server "${serverName}"`
-      );
 
       try {
-        // Wait before attempting to reconnect
+        // Wait before attempting to reconnect. A close during the backoff
+        // wakes this immediately rather than letting the delay run out.
         if (delayMs) {
-          await new Promise((resolve) => {
-            setTimeout(resolve, delayMs);
-          });
+          await MCPAdapter.#sleep(delayMs, signal);
+        }
+
+        if (signal.aborted) {
+          return;
         }
 
         // Initialize just this connection based on its type
@@ -987,19 +1084,8 @@ export class MCPAdapter {
             : { serverName };
         if (this.#clientConnections.has(key)) {
           connected = true;
-          debugLog(`INFO: Successfully reconnected to server "${serverName}"`);
         }
-      } catch (error) {
-        debugLog(
-          `ERROR: Failed to reconnect to server "${serverName}" (attempt ${attempts}): ${error}`
-        );
-      }
-    }
-
-    if (!connected) {
-      debugLog(
-        `ERROR: Failed to reconnect to server "${serverName}" after ${attempts} attempts`
-      );
+      } catch {}
     }
   }
 
@@ -1012,40 +1098,27 @@ export class MCPAdapter {
     headers?: Record<string, string>;
   }): Promise<void> {
     const { serverName, authProvider, headers } = transportOptions;
-    delete this.#serverNameToTools[serverName];
+    const client = this.#clientConnections.get(transportOptions);
+
+    if (client) {
+      this.#toolsByClient.delete(client);
+    }
     await this.#clientConnections.delete({ serverName, authProvider, headers });
-  }
-
-  /**
-   * Get all tools from all servers as a flat array.
-   *
-   * @returns A flattened array of all tools
-   */
-  private _getAllToolsAsFlatArray(): DynamicStructuredTool[] {
-    const allTools: DynamicStructuredTool[] = [];
-    for (const tools of Object.values(this.#serverNameToTools)) {
-      allTools.push(...tools);
-    }
-    return allTools;
-  }
-
-  /**
-   * Get tools from specific servers as a flat array.
-   *
-   * @param serverNames - Names of servers to get tools from
-   * @returns A flattened array of tools from the specified servers
-   */
-  private _getToolsFromServers(serverNames: string[]): DynamicStructuredTool[] {
-    const allTools: DynamicStructuredTool[] = [];
-    for (const serverName of serverNames) {
-      const tools = this.#serverNameToTools[serverName];
-      if (tools) {
-        allTools.push(...tools);
-      }
-    }
-    return allTools;
   }
 }
 
 /** @deprecated Use MCPAdapter. This alias shares the same implementation. */
 export { MCPAdapter as MultiServerMCPClient };
+
+function createServerSelectionSchema<Options extends z.ZodType>(
+  optionsSchema: Options
+) {
+  return z.union([
+    z
+      .array(z.string())
+      .transform((servers) => ({ servers, options: undefined })),
+    z
+      .tuple([z.array(z.string()), optionsSchema.optional()])
+      .transform(([servers, options]) => ({ servers, options })),
+  ]);
+}

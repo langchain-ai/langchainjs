@@ -29,6 +29,14 @@ To try mixed modes, also run `pnpm exec tsx calculator_server_shttp_sse.ts` and 
 `pnpm exec tsx modern_client.ts --mixed`. The client invokes modern `echo` and legacy
 `add`, printing `Hello MCP` and `5`. Stop servers with Ctrl-C.
 
+## Standard tool content
+
+For content conversion, start `modern_server.ts` and run
+`pnpm exec tsx content.ts`. The hook prints standard text/image blocks separately
+from the `mcp_structured_content` and `mcp_meta` artifacts. The metadata does not
+appear in model-facing text. `hooks.ts` demonstrates argument/result changes
+with the legacy filesystem server.
+
 ## Legacy and agent examples
 
 The calculator server uses legacy sessions, even though it imports SDK 2.
