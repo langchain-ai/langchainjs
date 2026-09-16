@@ -1,4 +1,10 @@
 import {
+  MCPClientError,
+  getHttpErrorCode,
+  createAuthenticationErrorMessage,
+} from "./utils/errors.js";
+import { z } from "zod";
+import {
   SSEClientTransport,
   StreamableHTTPClientTransport,
 } from "@modelcontextprotocol/client";
@@ -8,117 +14,46 @@ import type {
 } from "@modelcontextprotocol/client";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import type { DynamicStructuredTool } from "@langchain/core/tools";
-import { z } from "zod/v3";
 import { loadMcpTools } from "./tools.js";
 import { ConnectionManager, type Client } from "./connection.js";
 import { getDebugLog } from "./logging.js";
 import {
   type ClientConfig,
+  type MCPAdapterConfig,
   type Connection,
-  type ResolvedClientConfig,
+  type ResolvedMCPAdapterConfig,
   type ResolvedConnection,
   type ResolvedStdioConnection,
   type ResolvedStreamableHTTPConnection,
+  type ResolvedSSEConnection,
   type CustomHTTPTransportOptions,
   type MCPResource,
   type MCPResourceTemplate,
   type MCPResourceContent,
   type ConnectionErrorHandler,
-  clientConfigSchema,
-  connectionSchema,
+  mcpAdapterConfigSchema,
+  adapterConfigSchema,
+  sseConnectionSchema,
+  customHTTPTransportOptionsSchema,
   type LoadMcpToolsOptions,
   _resolveAndApplyOverrideHandlingOverrides,
 } from "./types.js";
 
+const serverSelectionSchema = z.union([
+  z.array(z.string()).transform((servers) => ({ servers, options: undefined })),
+  z
+    .tuple([z.array(z.string()), customHTTPTransportOptionsSchema.optional()])
+    .transform(([servers, options]) => ({ servers, options })),
+]);
+
 const debugLog = getDebugLog();
 
-/**
- * Error class for MCP client operations
- */
-export class MCPClientError extends Error {
-  constructor(
-    message: string,
-    public readonly serverName?: string
-  ) {
-    super(message);
-    this.name = "MCPClientError";
-  }
-}
-
-/**
- * Checks if the connection configuration is for a stdio transport
- * @param connection - The connection configuration
- * @returns True if the connection configuration is for a stdio transport
- */
-function isResolvedStdioConnection(
-  connection: unknown
-): connection is ResolvedStdioConnection {
-  if (
-    typeof connection !== "object" ||
-    connection === null ||
-    Array.isArray(connection)
-  ) {
-    return false;
-  }
-
-  if ("transport" in connection && connection.transport === "stdio") {
-    return true;
-  }
-
-  if ("type" in connection && connection.type === "stdio") {
-    return true;
-  }
-
-  if ("command" in connection && typeof connection.command === "string") {
-    return true;
-  }
-
-  return false;
-}
-
-/**
- * Checks if the connection configuration is for a streamable HTTP transport
- * @param connection - The connection configuration
- * @returns True if the connection configuration is for a streamable HTTP transport
- */
-function isResolvedStreamableHTTPConnection(
-  connection: unknown
-): connection is ResolvedStreamableHTTPConnection {
-  if (
-    typeof connection !== "object" ||
-    connection === null ||
-    Array.isArray(connection)
-  ) {
-    return false;
-  }
-
-  if (
-    ("transport" in connection &&
-      typeof connection.transport === "string" &&
-      ["http", "sse"].includes(connection.transport)) ||
-    ("type" in connection &&
-      typeof connection.type === "string" &&
-      ["http", "sse"].includes(connection.type))
-  ) {
-    return true;
-  }
-
-  if ("url" in connection && typeof connection.url === "string") {
-    try {
-      new URL(connection.url);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  return false;
-}
+export { MCPClientError } from "./utils/errors.js";
 
 /**
  * Client for connecting to multiple MCP servers and loading LangChain-compatible tools.
  */
-export class MultiServerMCPClient {
+export class MCPAdapter {
   /**
    * Cached map of server names to tools
    */
@@ -142,7 +77,7 @@ export class MultiServerMCPClient {
   /**
    * Resolved client config
    */
-  #config: ResolvedClientConfig;
+  #config: ResolvedMCPAdapterConfig;
 
   /**
    * Behavior when a server fails to connect
@@ -155,40 +90,30 @@ export class MultiServerMCPClient {
   #failedServers: Set<string> = new Set();
 
   /**
-   * Returns clone of server config for inspection purposes.
+   * Returns a configuration snapshot. Callbacks and OAuth providers retain their identity.
+   * This is runtime configuration, not a redacted or JSON-serializable diagnostic view.
    *
    * Client does not support config modifications.
    */
-  get config(): ClientConfig {
-    // clone config so it can't be mutated
-    return JSON.parse(JSON.stringify(this.#config));
+  get config(): ResolvedMCPAdapterConfig {
+    return mcpAdapterConfigSchema.parse(this.#config);
   }
 
   /**
-   * Create a new MultiServerMCPClient.
+   * Create an MCP adapter. Construction does not open connections.
    *
    * @param config - Configuration object
    */
-  constructor(config: ClientConfig | Record<string, Connection>) {
-    let parsedServerConfig: ResolvedClientConfig;
-
-    const configSchema = clientConfigSchema;
-
-    if ("mcpServers" in config) {
-      parsedServerConfig = configSchema.parse(config);
-    } else {
-      // two step parse so parse errors are referencing the correct object paths
-      const parsedMcpServers = z.record(connectionSchema).parse(config);
-
-      parsedServerConfig = configSchema.parse({ mcpServers: parsedMcpServers });
-    }
-
-    if (Object.keys(parsedServerConfig.mcpServers).length === 0) {
-      throw new MCPClientError("No MCP servers provided");
-    }
+  constructor(config: MCPAdapterConfig);
+  /** @deprecated Use `{ servers: { ... } }`. */
+  constructor(config: ClientConfig | Record<string, Connection>);
+  constructor(
+    config: MCPAdapterConfig | ClientConfig | Record<string, Connection>
+  ) {
+    const parsedServerConfig = adapterConfigSchema.parse(config);
 
     for (const [serverName, serverConfig] of Object.entries(
-      parsedServerConfig.mcpServers
+      parsedServerConfig.servers
     )) {
       const outputHandling = _resolveAndApplyOverrideHandlingOverrides(
         parsedServerConfig.outputHandling,
@@ -203,10 +128,9 @@ export class MultiServerMCPClient {
         prefixToolNameWithServerName:
           parsedServerConfig.prefixToolNameWithServerName,
         additionalToolNamePrefix: parsedServerConfig.additionalToolNamePrefix,
-        useStandardContentBlocks: parsedServerConfig.useStandardContentBlocks,
         ...(Object.keys(outputHandling).length > 0 ? { outputHandling } : {}),
         ...(defaultToolTimeout ? { defaultToolTimeout } : {}),
-        onProgress: parsedServerConfig.onProgress,
+        onProgress: serverConfig.onProgress,
         /**
          * make sure to place global hooks (e.g. parsedServerConfig) first before
          * server-specific hooks (e.g. serverConfig) so they can override tool call
@@ -218,14 +142,14 @@ export class MultiServerMCPClient {
     }
 
     this.#config = parsedServerConfig;
-    this.#mcpServers = parsedServerConfig.mcpServers;
-    this.#clientConnections = new ConnectionManager(parsedServerConfig);
+    this.#mcpServers = parsedServerConfig.servers;
+    this.#clientConnections = new ConnectionManager();
     this.#onConnectionError = parsedServerConfig.onConnectionError;
   }
 
   /**
    * Proactively initialize connections to all servers. This will be called automatically when
-   * methods requiring an active connection (like {@link getTools} or {@link getClient}) are called,
+   * methods requiring an active connection (like {@link listTools} or {@link getClient}) are called,
    * but you can call it directly to ensure all connections are established before using the tools.
    *
    * When a server fails to connect, the client will throw an error if `onConnectionError` is "throw",
@@ -309,43 +233,30 @@ export class MultiServerMCPClient {
    * @example
    * ```ts
    * // Get tools from all servers
-   * const tools = await client.getTools();
+   * const tools = await client.listTools();
    * ```
    *
    * @example
    * ```ts
    * // Get tools from specific servers
-   * const tools = await client.getTools("server1", "server2");
+   * const tools = await client.listTools("server1", "server2");
    * ```
    *
    * @example
    * ```ts
    * // Get tools from specific servers with custom connection options
-   * const tools = await client.getTools(["server1", "server2"], {
-   *   authProvider: new OAuthClientProvider(),
+   * const tools = await client.listTools(["server1", "server2"], {
    *   headers: { "X-Custom-Header": "value" },
    * });
    * ```
    */
-  async getTools(...servers: string[]): Promise<DynamicStructuredTool[]>;
-  async getTools(
+  async listTools(...servers: string[]): Promise<DynamicStructuredTool[]>;
+  async listTools(
     servers: string[],
     options?: CustomHTTPTransportOptions
   ): Promise<DynamicStructuredTool[]>;
-  async getTools(...args: unknown[]): Promise<DynamicStructuredTool[]> {
-    if (args.length === 0 || args.every((arg) => typeof arg === "string")) {
-      await this.initializeConnections();
-
-      const servers = args as string[];
-      return servers.length === 0
-        ? this._getAllToolsAsFlatArray()
-        : this._getToolsFromServers(servers);
-    }
-
-    const [servers, options] = args as [
-      string[],
-      CustomHTTPTransportOptions | undefined,
-    ];
+  async listTools(...args: unknown[]): Promise<DynamicStructuredTool[]> {
+    const { servers, options } = serverSelectionSchema.parse(args);
     await this.initializeConnections(options);
     return servers.length === 0
       ? this._getAllToolsAsFlatArray()
@@ -451,7 +362,7 @@ export class MultiServerMCPClient {
     }
 
     const targetServers =
-      servers.length > 0 ? servers : Object.keys(this.#config.mcpServers);
+      servers.length > 0 ? servers : Object.keys(this.#config.servers);
 
     const result: Record<string, MCPResource[]> = {};
 
@@ -531,7 +442,7 @@ export class MultiServerMCPClient {
     }
 
     const targetServers =
-      servers.length > 0 ? servers : Object.keys(this.#config.mcpServers);
+      servers.length > 0 ? servers : Object.keys(this.#config.servers);
 
     const result: Record<string, MCPResourceTemplate[]> = {};
 
@@ -597,16 +508,13 @@ export class MultiServerMCPClient {
     try {
       debugLog(`INFO: Reading resource "${uri}" from server "${serverName}"`);
       const result = await client.readResource({ uri });
-      return result.contents.map((content) => ({
-        uri: content.uri,
-        mimeType: content.mimeType,
-        text: "text" in content ? content.text : undefined,
-        blob: "blob" in content ? content.blob : undefined,
-      }));
+
+      return result.contents;
     } catch (error) {
       throw new MCPClientError(
         `Failed to read resource "${uri}" from server "${serverName}": ${error}`,
-        serverName
+        serverName,
+        { cause: error }
       );
     }
   }
@@ -630,7 +538,7 @@ export class MultiServerMCPClient {
     connection: ResolvedConnection,
     customTransportOptions?: CustomHTTPTransportOptions
   ): Promise<void> {
-    if (isResolvedStdioConnection(connection)) {
+    if (connection.transport === "stdio") {
       debugLog(
         `INFO: Initializing stdio connection to server "${serverName}"...`
       );
@@ -643,7 +551,10 @@ export class MultiServerMCPClient {
       }
 
       await this._initializeStdioConnection(serverName, connection);
-    } else if (isResolvedStreamableHTTPConnection(connection)) {
+    } else if (
+      connection.transport === "http" ||
+      connection.transport === "sse"
+    ) {
       /**
        * Users may want to use different connection options for tool calls or tool discovery.
        */
@@ -666,7 +577,7 @@ export class MultiServerMCPClient {
         return;
       }
 
-      if (connection.type === "sse" || connection.transport === "sse") {
+      if (updatedConnection.transport === "sse") {
         await this._initializeSSEConnection(serverName, updatedConnection);
       } else {
         await this._initializeStreamableHTTPConnection(
@@ -718,7 +629,8 @@ export class MultiServerMCPClient {
     } catch (error) {
       throw new MCPClientError(
         `Failed to connect to stdio server "${serverName}": ${error}`,
-        serverName
+        serverName,
+        { cause: error }
       );
     }
   }
@@ -754,43 +666,6 @@ export class MultiServerMCPClient {
     };
   }
 
-  private _getHttpErrorCode(error: unknown): number | undefined {
-    if (typeof error !== "object" || error === null) return undefined;
-
-    const isHttpStatus = (value: unknown): value is number =>
-      typeof value === "number" &&
-      Number.isInteger(value) &&
-      value >= 100 &&
-      value <= 599;
-
-    // SDK 2 HTTP errors use status; SSE errors use a numeric code.
-    if ("status" in error && isHttpStatus(error.status)) return error.status;
-
-    if ("code" in error && isHttpStatus(error.code)) return error.code;
-
-    if (!("message" in error) || typeof error.message !== "string") {
-      return undefined;
-    }
-
-    const match = error.message.match(/\(HTTP (\d{3})\)/);
-    const status = match ? Number(match[1]) : undefined;
-
-    return isHttpStatus(status) ? status : undefined;
-  }
-
-  private _createAuthenticationErrorMessage(
-    serverName: string,
-    url: string,
-    transport: "HTTP" | "SSE",
-    originalError: string
-  ): string {
-    return (
-      `Authentication failed for ${transport} server "${serverName}" at ${url}. ` +
-      `Please check your credentials, authorization headers, or OAuth configuration. ` +
-      `Original error: ${originalError}`
-    );
-  }
-
   private _toSSEConnectionURL(url: string): string {
     const urlObj = new URL(url);
     const pathnameParts = urlObj.pathname.split("/");
@@ -809,9 +684,10 @@ export class MultiServerMCPClient {
     serverName: string,
     connection: ResolvedStreamableHTTPConnection
   ): Promise<void> {
-    const { url, type: typeField, transport: transportField } = connection;
-    const automaticSSEFallback = connection.automaticSSEFallback ?? true;
-    const transportType = typeField || transportField;
+    const { url, transport: transportType } = connection;
+
+    const automaticSSEFallback =
+      connection.mode === "legacy" && connection.automaticSSEFallback;
 
     debugLog(
       `DEBUG: Creating Streamable HTTP transport for server "${serverName}" with URL: ${url}`
@@ -827,55 +703,66 @@ export class MultiServerMCPClient {
 
         await this._loadToolsForServer(serverName, client);
       } catch (error) {
-        const code = this._getHttpErrorCode(error);
+        const code = getHttpErrorCode(error);
         if (automaticSSEFallback && code != null && code >= 400 && code < 500) {
           // Streamable HTTP error is a 4xx, so fall back to SSE
           try {
-            await this._initializeSSEConnection(serverName, connection);
+            await this._initializeSSEConnection(
+              serverName,
+              sseConnectionSchema.parse({ ...connection, transport: "sse" })
+            );
           } catch (firstSSEError) {
             // try one more time, but modify the URL to end with `/sse`
             const sseUrl = this._toSSEConnectionURL(url);
 
             if (sseUrl !== url) {
               try {
-                await this._initializeSSEConnection(serverName, {
-                  ...connection,
-                  url: sseUrl,
-                });
+                await this._initializeSSEConnection(
+                  serverName,
+                  sseConnectionSchema.parse({
+                    ...connection,
+                    transport: "sse",
+                    url: sseUrl,
+                  })
+                );
               } catch (secondSSEError) {
                 // Provide specific error message for authentication failures
                 if (code === 401) {
                   throw new MCPClientError(
-                    this._createAuthenticationErrorMessage(
+                    createAuthenticationErrorMessage(
                       serverName,
                       url,
                       "HTTP",
                       `${error}. Also tried SSE fallback at ${url} and ${sseUrl}, but both failed with authentication errors.`
                     ),
-                    serverName
+                    serverName,
+                    { cause: secondSSEError }
                   );
                 }
                 throw new MCPClientError(
                   `Failed to connect to streamable HTTP server "${serverName}, url: ${url}": ${error}. Additionally, tried falling back to SSE at ${url} and ${sseUrl}, but this also failed: ${secondSSEError}`,
-                  serverName
+                  serverName,
+                  { cause: secondSSEError }
                 );
               }
             } else {
               // Provide specific error message for authentication failures
               if (code === 401) {
                 throw new MCPClientError(
-                  this._createAuthenticationErrorMessage(
+                  createAuthenticationErrorMessage(
                     serverName,
                     url,
                     "HTTP",
                     `${error}. Also tried SSE fallback at ${url}, but it failed with authentication error: ${firstSSEError}`
                   ),
-                  serverName
+                  serverName,
+                  { cause: firstSSEError }
                 );
               }
               throw new MCPClientError(
                 `Failed to connect to streamable HTTP server after trying to fall back to SSE: "${serverName}, url: ${url}": ${error} (SSE fallback failed with error ${firstSSEError})`,
-                serverName
+                serverName,
+                { cause: firstSSEError }
               );
             }
           }
@@ -883,18 +770,20 @@ export class MultiServerMCPClient {
           // Provide specific error message for authentication failures
           if (code === 401) {
             throw new MCPClientError(
-              this._createAuthenticationErrorMessage(
+              createAuthenticationErrorMessage(
                 serverName,
                 url,
                 "HTTP",
                 `${error}`
               ),
-              serverName
+              serverName,
+              { cause: error }
             );
           }
           throw new MCPClientError(
             `Failed to connect to streamable HTTP server "${serverName}, url: ${url}": ${error}`,
-            serverName
+            serverName,
+            { cause: error }
           );
         }
       }
@@ -913,7 +802,7 @@ export class MultiServerMCPClient {
    */
   private async _initializeSSEConnection(
     serverName: string,
-    connection: ResolvedStreamableHTTPConnection // used for both SSE and streamable HTTP
+    connection: ResolvedSSEConnection
   ): Promise<void> {
     const { url, headers, reconnect, authProvider } = connection;
 
@@ -938,28 +827,25 @@ export class MultiServerMCPClient {
       await this._loadToolsForServer(serverName, client);
     } catch (error) {
       // Check if this is already a wrapped error that should be re-thrown
-      if (error && (error as Error).name === "MCPClientError") {
+      if (MCPClientError.isInstance(error)) {
         throw error;
       }
 
       // Check if this is an authentication error that needs better messaging
-      const isAuthError = error && this._getHttpErrorCode(error) === 401;
+      const isAuthError = error && getHttpErrorCode(error) === 401;
 
       if (isAuthError) {
         throw new MCPClientError(
-          this._createAuthenticationErrorMessage(
-            serverName,
-            url,
-            "SSE",
-            `${error}`
-          ),
-          serverName
+          createAuthenticationErrorMessage(serverName, url, "SSE", `${error}`),
+          serverName,
+          { cause: error }
         );
       }
 
       throw new MCPClientError(
         `Failed to create SSE transport for server "${serverName}, url: ${url}": ${error}`,
-        serverName
+        serverName,
+        { cause: error }
       );
     }
   }
@@ -970,8 +856,8 @@ export class MultiServerMCPClient {
   private _setupSSEReconnect(
     serverName: string,
     transport: SSEClientTransport | StreamableHTTPClientTransport,
-    connection: ResolvedStreamableHTTPConnection,
-    reconnect: NonNullable<ResolvedStreamableHTTPConnection["reconnect"]>
+    connection: ResolvedSSEConnection,
+    reconnect: NonNullable<ResolvedSSEConnection["reconnect"]>
   ): void {
     const originalOnClose = transport.onclose;
     // oxlint-disable-next-line @typescript-eslint/no-misused-promises
@@ -1021,7 +907,9 @@ export class MultiServerMCPClient {
       );
     } catch (error) {
       throw new MCPClientError(
-        `Failed to load tools from server "${serverName}": ${error}`
+        `Failed to load tools from server "${serverName}": ${error}`,
+        serverName,
+        { cause: error }
       );
     }
   }
@@ -1072,10 +960,13 @@ export class MultiServerMCPClient {
         }
 
         // Initialize just this connection based on its type
-        if (isResolvedStdioConnection(connection)) {
+        if (connection.transport === "stdio") {
           await this._initializeStdioConnection(serverName, connection);
-        } else if (isResolvedStreamableHTTPConnection(connection)) {
-          if (connection.type === "sse" || connection.transport === "sse") {
+        } else if (
+          connection.transport === "http" ||
+          connection.transport === "sse"
+        ) {
+          if (connection.transport === "sse") {
             await this._initializeSSEConnection(serverName, connection);
           } else {
             await this._initializeStreamableHTTPConnection(
@@ -1155,3 +1046,6 @@ export class MultiServerMCPClient {
     return allTools;
   }
 }
+
+/** @deprecated Use MCPAdapter. This alias shares the same implementation. */
+export { MCPAdapter as MultiServerMCPClient };

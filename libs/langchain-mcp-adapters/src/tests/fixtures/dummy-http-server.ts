@@ -277,6 +277,7 @@ export function createDummyHttpServer(
               uri: "mem://test.txt",
               mimeType: "text/plain",
               text: "This is a test resource content.",
+              _meta: { revision: "test-revision" },
             },
           ],
         };

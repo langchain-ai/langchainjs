@@ -4,6 +4,7 @@ import type {
   EmbeddedResource,
   ImageContent,
   TextContent,
+  Tool,
 } from "@modelcontextprotocol/client";
 import {
   StructuredTool,
@@ -15,6 +16,7 @@ import type {
   ToolMessage,
 } from "@langchain/core/messages";
 
+import { z } from "zod";
 import { loadMcpTools } from "../tools.js";
 
 vi.mock(
@@ -37,6 +39,150 @@ describe("Simplified Tool Adapter Tests", () => {
     } as MockedObject<Client>;
 
     vi.clearAllMocks();
+  });
+
+  test.each([
+    { defaultToolTimeout: -1 },
+    { defaultToolTimeout: 1000, timeoutTypo: 1000 },
+  ])("rejects invalid loader options before discovery: %j", async (options) => {
+    mockClient.listTools.mockResolvedValue({ tools: [] });
+
+    await expect(loadMcpTools("test", mockClient, options)).rejects.toThrow(
+      z.ZodError
+    );
+    expect(mockClient.listTools).not.toHaveBeenCalled();
+  });
+
+  test("schema parsing preserves boolean schemas and extension values", async () => {
+    const inputSchema = {
+      type: "object",
+      properties: {
+        anything: true,
+        never: false,
+        value: { type: ["string", "null"] },
+      },
+      "x-provider": { choices: [1, "two", null, { enabled: true }] },
+    } satisfies Tool["inputSchema"];
+
+    mockClient.listTools.mockResolvedValue({
+      tools: [{ name: "schema", inputSchema }],
+    });
+    const [tool] = await loadMcpTools("test", mockClient);
+    expect(tool.schema).toEqual(inputSchema);
+  });
+
+  test("preserves malformed constraints and rejects their input without a wire call", async () => {
+    mockClient.listTools.mockResolvedValue({
+      tools: [
+        {
+          name: "schema",
+          inputSchema: {
+            type: "object",
+            properties: {},
+            allOf: [{ required: [42] }],
+          },
+        },
+      ],
+    });
+    const [tool] = await loadMcpTools("test", mockClient);
+    await expect(tool.invoke({})).rejects.toThrow();
+    expect(mockClient.callTool).not.toHaveBeenCalled();
+  });
+
+  describe("hook return validation", () => {
+    beforeEach(() => {
+      mockClient.listTools.mockResolvedValue({
+        tools: [
+          { name: "echo", inputSchema: { type: "object", properties: {} } },
+        ],
+      });
+      mockClient.callTool.mockResolvedValue({
+        content: [{ type: "text", text: "original" }],
+      });
+    });
+
+    test("does not mutate the arguments previously passed to a hook", async () => {
+      let observed: unknown;
+
+      const [tool] = await loadMcpTools("test", mockClient, {
+        beforeToolCall: ({ args }) => {
+          observed = args;
+
+          return { args: { value: "effective" } };
+        },
+      });
+
+      await tool.invoke({});
+      expect(observed).toEqual({});
+      expect(mockClient.callTool).toHaveBeenCalledWith({
+        name: "echo",
+        arguments: { value: "effective" },
+      });
+    });
+
+    test("rejects scalar argument overrides before issuing a request", async () => {
+      const [tool] = await loadMcpTools("test", mockClient, {
+        // @ts-expect-error Invalid JavaScript callback input is rejected at runtime too.
+        beforeToolCall: () => ({ args: "invalid" }),
+      });
+
+      await expect(tool.invoke({})).rejects.toThrow();
+      expect(mockClient.callTool).not.toHaveBeenCalled();
+    });
+
+    test.each([false, true])(
+      "validates before hooks after awaiting them (async=%s)",
+      async (asyncHook) => {
+        const invalid = { headers: { test: 42 } };
+        const beforeToolCall = asyncHook ? async () => invalid : () => invalid;
+
+        const [tool] = await loadMcpTools("test", mockClient, {
+          // @ts-expect-error Exercise malformed JavaScript callback results.
+          beforeToolCall,
+        });
+
+        await expect(tool.invoke({})).rejects.toThrow(/string/);
+        expect(mockClient.callTool).not.toHaveBeenCalled();
+      }
+    );
+
+    test.each([false, true])(
+      "validates after hooks after awaiting them (async=%s)",
+      async (asyncHook) => {
+        const afterToolCall = asyncHook
+          ? async () => ({ result: 42 })
+          : () => ({ result: 42 });
+
+        const [tool] = await loadMcpTools("test", mockClient, {
+          // @ts-expect-error Exercise malformed JavaScript callback results.
+          afterToolCall,
+        });
+
+        await expect(tool.invoke({})).rejects.toThrow();
+        expect(mockClient.callTool).toHaveBeenCalledTimes(1);
+      }
+    );
+
+    test("preserves successful async modifications and formats Zod4 hook failures", async () => {
+      const [tool] = await loadMcpTools("test", mockClient, {
+        beforeToolCall: async () => ({ args: { value: "effective" } }),
+        afterToolCall: async () => ({ result: "changed" }),
+      });
+
+      expect(await tool.invoke({})).toBe("changed");
+      expect(mockClient.callTool).toHaveBeenCalledWith({
+        name: "echo",
+        arguments: { value: "effective" },
+      });
+
+      const [invalid] = await loadMcpTools("test", mockClient, {
+        beforeToolCall: () => {
+          z.string().parse(123);
+        },
+      });
+
+      await expect(invalid.invoke({})).rejects.toThrow(/string/);
+    });
   });
 
   describe("loadMcpTools", () => {
@@ -318,7 +464,7 @@ describe("Simplified Tool Adapter Tests", () => {
       expect(tools.length).toBe(1);
       expect(tools[0].name).toBe("query_data");
 
-      // Invoke the tool with valid input matching the dereferenced schema
+      // Invoke the tool with valid input matching the referenced schema.
       const result = await tools[0].invoke({
         items: [{ id: "1", name: "Test", value: 100.0 }],
         metadata: { total_count: 1, timestamp: "2024-01-01" },
@@ -524,7 +670,8 @@ describe("Simplified Tool Adapter Tests", () => {
       // Load tools with content_and_artifact response format
       const tools = await loadMcpTools(
         "mockServer(should load tools with specified response format)",
-        mockClient as Client
+        mockClient,
+        {}
       );
 
       // Verify tool was loaded
@@ -566,10 +713,9 @@ describe("Simplified Tool Adapter Tests", () => {
           text: "Here is your image",
         },
         {
-          type: "image_url",
-          image_url: {
-            url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
-          },
+          type: "image",
+          mimeType: "image/png",
+          data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
         },
       ];
 
@@ -611,7 +757,7 @@ describe("Simplified Tool Adapter Tests", () => {
       expect(toolMessageResult.artifact).toEqual(expectedArtifacts);
     });
 
-    test("should simplify schemas with allOf at top level for OpenAI compatibility", async () => {
+    test("preserves allOf and conditional schemas", async () => {
       // Schema with allOf containing if/then/else (like the bug report)
       const schemaWithAllOf = {
         $schema: "https://json-schema.org/draft/2020-12/schema",
@@ -684,9 +830,9 @@ describe("Simplified Tool Adapter Tests", () => {
         });
       });
 
-      // This should not throw - the schema should be simplified
+      // Discovery preserves the server schema without rewriting it.
       const tools = await loadMcpTools(
-        "mockServer(allOf simplification)",
+        "mockServer(allOf)",
         mockClient as Client
       );
 
@@ -702,10 +848,10 @@ describe("Simplified Tool Adapter Tests", () => {
       expect(result).toBe("Event created");
     });
 
-    test("should simplify schemas with anyOf at top level", async () => {
+    test("preserves anyOf schemas", async () => {
       // Test anyOf at the TOP level (where OpenAI restriction applies)
       // Note: type: "object" is added to the anyOf items, and the final schema
-      // should have type: "object" at the top level after simplification
+      // retains the server's top-level object type and alternatives
       const schemaWithAnyOf = {
         type: "object" as const,
         anyOf: [
@@ -745,13 +891,13 @@ describe("Simplified Tool Adapter Tests", () => {
       });
 
       const tools = await loadMcpTools(
-        "mockServer(anyOf simplification)",
+        "mockServer(anyOf)",
         mockClient as Client
       );
 
       expect(tools.length).toBe(1);
 
-      // The tool should work with merged properties from all variants
+      // The input satisfies one of the original schema alternatives.
       const result = await tools[0].invoke({
         mode: "simple",
         value: "test",
@@ -760,7 +906,7 @@ describe("Simplified Tool Adapter Tests", () => {
       expect(result).toBe("Configured");
     });
 
-    test("should simplify schemas with oneOf at top level by merging object schemas", async () => {
+    test("preserves exclusive oneOf schemas", async () => {
       // Test oneOf at the TOP level (where OpenAI restriction applies)
       const schemaWithOneOf = {
         type: "object" as const,
@@ -801,31 +947,32 @@ describe("Simplified Tool Adapter Tests", () => {
       });
 
       const tools = await loadMcpTools(
-        "mockServer(oneOf simplification)",
+        "mockServer(oneOf)",
         mockClient as Client
       );
 
       expect(tools.length).toBe(1);
 
-      // The merged schema should allow properties from any variant
-      const result = await tools[0].invoke({
-        paymentType: "credit_card",
-        cardNumber: "1234-5678-9012-3456",
-      });
-
-      expect(result).toBe("Payment processed");
+      // Projection can merge variants, but invocation must satisfy exactly one.
+      await expect(
+        tools[0].invoke({
+          paymentType: "credit_card",
+          cardNumber: "1234-5678-9012-3456",
+        })
+      ).rejects.toThrow(ToolInputParsingException);
+      expect(mockClient.callTool).not.toHaveBeenCalled();
     });
 
-    test("should remove $schema and unevaluatedProperties from schemas", async () => {
+    test("preserves $schema and unevaluatedProperties in tool schemas", async () => {
       const schemaWithMetadata = {
         $schema: "https://json-schema.org/draft/2020-12/schema",
-        type: "object" as const,
+        type: "object",
         properties: {
           name: { type: "string" },
         },
         required: ["name"],
         unevaluatedProperties: false,
-      };
+      } satisfies Tool["inputSchema"];
 
       mockClient.listTools.mockReturnValueOnce(
         Promise.resolve({
@@ -846,11 +993,12 @@ describe("Simplified Tool Adapter Tests", () => {
       });
 
       const tools = await loadMcpTools(
-        "mockServer(metadata removal)",
-        mockClient as Client
+        "mockServer(schema preservation)",
+        mockClient
       );
 
       expect(tools.length).toBe(1);
+      expect(tools[0].schema).toEqual(schemaWithMetadata);
 
       const result = await tools[0].invoke({ name: "World" });
       expect(result).toBe("Hello!");
@@ -964,17 +1112,19 @@ describe("Simplified Tool Adapter Tests", () => {
       expect(tools.length).toBe(1);
       expect(tools[0].name).toBe("createEvent");
 
-      const result = await tools[0].invoke({
-        calendarId: "primary",
-        summary: "Team Meeting",
-        startDate: "2024-01-15T10:00:00Z",
-        endDate: "2024-01-15T11:00:00Z",
-        allDay: false,
-        attendees: [{ email: "test@example.com", displayName: "Test User" }],
-        status: "confirmed",
-      });
-
-      expect(result).toBe("Event created successfully");
+      // Projection loads, but the original additionalProperties constraint rejects dates.
+      await expect(
+        tools[0].invoke({
+          calendarId: "primary",
+          summary: "Team Meeting",
+          startDate: "2024-01-15T10:00:00Z",
+          endDate: "2024-01-15T11:00:00Z",
+          allDay: false,
+          attendees: [{ email: "test@example.com", displayName: "Test User" }],
+          status: "confirmed",
+        })
+      ).rejects.toThrow(ToolInputParsingException);
+      expect(mockClient.callTool).not.toHaveBeenCalled();
     });
 
     test("should handle allOf with multiple schemas to merge", async () => {
