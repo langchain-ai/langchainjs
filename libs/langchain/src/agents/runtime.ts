@@ -8,6 +8,7 @@ import type {
 } from "@langchain/langgraph";
 import type { BaseMessage } from "@langchain/core/messages";
 import type { BaseCallbackConfig } from "@langchain/core/callbacks/manager";
+import type { ClientTool, ServerTool } from "@langchain/core/tools";
 
 import type { ResponseFormatUndefined } from "./responses.js";
 
@@ -61,13 +62,23 @@ export type WithMaybeContext<TContext> = undefined extends TContext
  * Runtime information available to middleware (readonly).
  */
 export type Runtime<TContext = unknown> = Partial<
-  Omit<LangGraphRuntime<TContext>, "context" | "configurable">
+  Omit<LangGraphRuntime<TContext>, "context" | "configurable" | "tools">
 > &
   WithMaybeContext<TContext> & {
     configurable?: {
       thread_id?: string;
       [key: string]: unknown;
     };
+    /**
+     * The tools registered with the agent (both the tools passed to
+     * `createAgent` and any tools contributed by middleware).
+     *
+     * This reflects the statically registered tool set, so middleware hooks
+     * can resolve a tool instance by name to read its metadata, description, or
+     * schema. It is `undefined` for tools that are only registered dynamically
+     * at request time and were not declared upfront.
+     */
+    tools?: readonly (ClientTool | ServerTool)[];
   };
 
 export type InternalAgentState<
