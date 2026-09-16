@@ -13,8 +13,16 @@ import { applyGeminiGatewayParams } from "../base.js";
 class RecordingApiClient extends ApiClient {
   request?: Request;
 
+  constructor(private projectId = "test-project") {
+    super();
+  }
+
   hasApiKey(): boolean {
     return true;
+  }
+
+  async getProjectId(): Promise<string> {
+    return this.projectId;
   }
 
   async fetch(request: Request): Promise<Response> {
@@ -173,6 +181,24 @@ describe("ChatGoogle gateway routing (end to end)", () => {
 
     expect(apiClient.request?.url).toBe(
       "https://gateway.smith.langchain.com/vertex/v1/publishers/google/models/gemini-2.5-flash:generateContent"
+    );
+  });
+
+  test("node wrapper preserves regional Vertex routing", async () => {
+    vi.stubEnv("LANGSMITH_GATEWAY", "true");
+    vi.stubEnv("LANGSMITH_GATEWAY_API_KEY", "gateway-key");
+
+    const apiClient = new RecordingApiClient();
+    const model = new ChatGoogleNode({
+      model: "gemini-2.5-flash",
+      location: "europe-west4",
+      googleAuthOptions: {},
+      apiClient,
+    });
+    await model.invoke("hi");
+
+    expect(apiClient.request?.url).toBe(
+      "https://gateway.smith.langchain.com/vertex/v1/projects/test-project/locations/europe-west4/publishers/google/models/gemini-2.5-flash:generateContent"
     );
   });
 

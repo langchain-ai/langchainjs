@@ -313,7 +313,11 @@ export abstract class BaseChatGoogle<
   }
 
   protected get isVertexExpress(): boolean {
-    return this.platform === "gcp" && this.apiClient.hasApiKey();
+    return (
+      this.platform === "gcp" &&
+      this.apiClient.hasApiKey() &&
+      !hasVertexCredentials(this.params)
+    );
   }
 
   protected get apiVersion(): string {
