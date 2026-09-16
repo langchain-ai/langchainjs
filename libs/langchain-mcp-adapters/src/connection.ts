@@ -1,3 +1,4 @@
+import { InterruptMCPClient } from "./continuation.js";
 import { MCPClientError } from "./utils/errors.js";
 import {
   CancellationObserverMCPClient,
@@ -192,6 +193,9 @@ export class ConnectionManager {
           ? await this.#createSSETransport(options)
           : await this.#createStdioTransport(options);
 
+    const identity = { name: packageJson.name, version: packageJson.version };
+    const clientOptions = protocolClientOptions(options);
+
     const onCancelled: ConstructorParameters<
       typeof CancellationObserverMCPClient
     >[2] = options.onCancelled
@@ -204,9 +208,12 @@ export class ConnectionManager {
           );
         }
       : undefined;
-    const mcpClient = new CancellationObserverMCPClient(
-      { name: packageJson.name, version: packageJson.version },
-      protocolClientOptions(options),
+    // `InterruptMCPClient` only adds a non-complete-result override, and
+    // `tools.ts` already gates the interrupt path on a modern protocol era, so
+    // there is nothing for a legacy connection to opt out of by construction.
+    const mcpClient = new InterruptMCPClient(
+      identity,
+      clientOptions,
       onCancelled
     );
 
@@ -646,10 +653,9 @@ export class ConnectionManager {
     return new StdioClientTransport({
       command,
       args,
+      env,
       stderr,
       cwd,
-      // oxlint-disable-next-line no-process-env
-      ...(env ? { env: { PATH: process.env.PATH!, ...env } } : {}),
     });
   }
 }

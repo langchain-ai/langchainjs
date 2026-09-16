@@ -719,8 +719,7 @@ export class MCPAdapter {
     restart: NonNullable<ResolvedStdioConnection["restart"]>
   ): void {
     const originalOnClose = transport.onclose;
-    // oxlint-disable-next-line @typescript-eslint/no-misused-promises
-    transport.onclose = async () => {
+    const handleClose = async () => {
       if (originalOnClose) {
         await originalOnClose();
       }
@@ -734,6 +733,9 @@ export class MCPAdapter {
           restart.delayMs
         );
       }
+    };
+    transport.onclose = () => {
+      handleClose().catch(() => {});
     };
   }
 
@@ -925,8 +927,7 @@ export class MCPAdapter {
     reconnect: NonNullable<ResolvedSSEConnection["reconnect"]>
   ): void {
     const originalOnClose = transport.onclose;
-    // oxlint-disable-next-line @typescript-eslint/no-misused-promises
-    transport.onclose = async () => {
+    const handleClose = async () => {
       if (originalOnClose) {
         await originalOnClose();
       }
@@ -946,6 +947,9 @@ export class MCPAdapter {
           reconnect.delayMs
         );
       }
+    };
+    transport.onclose = () => {
+      handleClose().catch(() => {});
     };
   }
 

@@ -1,3 +1,4 @@
+import { z } from "zod";
 import {
   Client,
   fromJsonSchema,
@@ -9,6 +10,9 @@ import {
 } from "@modelcontextprotocol/client";
 import {
   CancelledNotificationParamsSchema,
+  ElicitRequestFormParamsSchema,
+  ElicitRequestSchema,
+  ElicitRequestURLParamsSchema,
   ElicitResultSchema,
 } from "@modelcontextprotocol/core";
 import { DefaultJsonSchemaValidator } from "@modelcontextprotocol/client/_shims";
@@ -55,6 +59,30 @@ export class CancellationObserverMCPClient extends Client {
 
 export const elicitationAnswerSchema = ElicitResultSchema;
 
+export const modernElicitationAnswerSchema = ElicitResultSchema.pick({
+  action: true,
+  content: true,
+}).strip();
+
+// Keep the modern question fields from the SDK's legacy-compatible schemas.
+const modernFormRequestSchema = ElicitRequestFormParamsSchema.pick({
+  mode: true,
+  message: true,
+  requestedSchema: true,
+});
+
+const modernURLRequestSchema = ElicitRequestURLParamsSchema.pick({
+  mode: true,
+  message: true,
+  url: true,
+});
+
+export const modernElicitationRequestSchema = ElicitRequestSchema.extend({
+  params: z.union([modernFormRequestSchema, modernURLRequestSchema]),
+}).transform((request) => request.params);
+
+type ModernElicitationRequest = z.output<typeof modernElicitationRequestSchema>;
+
 /** SDK-owned form or URL request. The application owns presentation. */
 export type MCPElicitationRequest = ElicitRequest["params"];
 
@@ -73,8 +101,11 @@ export type MCPElicitationHandler = (
 ) => MCPElicitationAnswer | Promise<MCPElicitationAnswer>;
 
 /** Parse application answers without duplicating the protocol's schemas. */
-export function elicitationAnswerFor(request: MCPElicitationRequest) {
-  return elicitationAnswerSchema.check(async (ctx) => {
+export function elicitationAnswerFor(
+  request: MCPElicitationRequest | ModernElicitationRequest,
+  schema: z.ZodType<ElicitResult> = elicitationAnswerSchema
+) {
+  return schema.check(async (ctx) => {
     const answer = ctx.value;
 
     if (request.mode === "url") {

@@ -90,6 +90,37 @@ describe("Simplified Tool Adapter Tests", () => {
     expect(mockClient.callTool).not.toHaveBeenCalled();
   });
 
+  test.each([
+    { era: "legacy", interrupts: false },
+    { era: "modern", interrupts: true },
+  ] as const)(
+    "routes tool calls through the interrupt boundary only on a $era server",
+    async ({ era, interrupts }) => {
+      const withInterrupts = vi.fn(
+        (invoke: (continuation?: unknown) => Promise<unknown>) => invoke()
+      );
+
+      const client = {
+        callTool: vi.fn().mockResolvedValue({
+          content: [{ type: "text", text: "ok" }],
+        }),
+        listTools: vi.fn().mockResolvedValue({
+          tools: [{ name: "echo", inputSchema: { type: "object" } }],
+        }),
+        getProtocolEra: vi.fn(() => era),
+        withInterrupts,
+      } as unknown as MockedObject<Client>;
+
+      const [tool] = await loadMcpTools("test", client);
+      await tool.invoke({});
+
+      // A legacy server never returns an `input_required` result, so the
+      // boundary must stay out of its path even though the client exposes it.
+      expect(withInterrupts).toHaveBeenCalledTimes(interrupts ? 1 : 0);
+      expect(client.callTool).toHaveBeenCalledTimes(1);
+    }
+  );
+
   describe("hook return validation", () => {
     beforeEach(() => {
       mockClient.listTools.mockResolvedValue({
