@@ -1,3 +1,8 @@
+import { MCPClientError } from "./utils/errors.js";
+import {
+  CancellationObserverMCPClient,
+  configureElicitation,
+} from "./elicitation.js";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import {
   SSEClientTransport,
@@ -15,6 +20,7 @@ import type {
   ResolvedStreamableHTTPConnection,
   ResolvedSSEConnection,
   ResolvedStdioConnection,
+  ResolvedConnection,
 } from "./types.js";
 
 /**
@@ -56,6 +62,29 @@ export interface Connection {
 }
 
 const transportTypes = ["http", "sse", "stdio"] as const;
+
+/** Resolve only the SDK features supported by the parsed server mode. */
+function protocolClientOptions(
+  options: ResolvedConnection
+): ConstructorParameters<typeof MCPClient>[1] {
+  if (options.mode === "legacy" || options.transport === "sse") {
+    if (options.onElicitation) {
+      return {
+        versionNegotiation: { mode: "legacy" },
+        capabilities: { elicitation: { form: {}, url: {} } },
+      };
+    }
+
+    return { versionNegotiation: { mode: "legacy" } };
+  }
+
+  return {
+    versionNegotiation: {
+      mode: options.mode === "modern" ? { pin: "2026-07-28" } : "auto",
+    },
+    inputRequired: { maxRounds: options.maxElicitationRounds },
+  };
+}
 
 /**
  * Manages a pool of MCP clients with different transport, server name and connection configurations.
@@ -163,19 +192,26 @@ export class ConnectionManager {
           ? await this.#createSSETransport(options)
           : await this.#createStdioTransport(options);
 
-    // The SDK defaults to legacy, and "auto" permits legacy fallback.
-    // Pin modern connections to preserve the configured protocol mode.
-    const mcpClient = new MCPClient(
-      {
-        name: packageJson.name,
-        version: packageJson.version,
-      },
-      {
-        versionNegotiation: {
-          mode: options.mode === "legacy" ? "legacy" : { pin: "2026-07-28" },
-        },
-      }
+    const onCancelled: ConstructorParameters<
+      typeof CancellationObserverMCPClient
+    >[2] = options.onCancelled
+      ? (notification) => {
+          const { requestId, reason } = notification;
+          if (requestId == null) return;
+          return options.onCancelled?.(
+            { requestId, reason },
+            { server: serverName, options: connectionSchema.parse(options) }
+          );
+        }
+      : undefined;
+    const mcpClient = new CancellationObserverMCPClient(
+      { name: packageJson.name, version: packageJson.version },
+      protocolClientOptions(options),
+      onCancelled
     );
+
+    if (options.mode === "legacy")
+      configureElicitation(mcpClient, serverName, options.onElicitation);
 
     if (options.onMessage) {
       mcpClient.setNotificationHandler(
@@ -194,33 +230,6 @@ export class ConnectionManager {
           server: serverName,
           options: connectionSchema.parse(options),
         })
-      );
-    }
-
-    if (options.onCancelled) {
-      mcpClient.setNotificationHandler(
-        "notifications/cancelled",
-        (notification) => {
-          const { requestId, reason } = notification.params;
-
-          if (requestId == null) {
-            return;
-          }
-
-          const result = options.onCancelled?.(
-            { requestId, reason },
-            {
-              server: serverName,
-              options: connectionSchema.parse(options),
-            }
-          );
-
-          if (result && typeof result.catch === "function") {
-            result.catch(() => {
-              /* ignore hook errors */
-            });
-          }
-        }
       );
     }
 
@@ -281,6 +290,49 @@ export class ConnectionManager {
 
     try {
       await mcpClient.connect(transport);
+
+      const resourceSubscriptions = options.resourceSubscriptions ?? [];
+
+      if (
+        resourceSubscriptions.length > 0 &&
+        !mcpClient.getServerCapabilities()?.resources?.subscribe
+      ) {
+        throw new MCPClientError(
+          `MCP server "${serverName}" does not support resource subscriptions`,
+          serverName
+        );
+      }
+
+      if (mcpClient.getProtocolEra() === "modern") {
+        const capabilities = mcpClient.getServerCapabilities();
+
+        const filter = {
+          toolsListChanged: Boolean(
+            (this.onToolsChanged || options.onToolsListChanged) &&
+            capabilities?.tools?.listChanged
+          ),
+          promptsListChanged: Boolean(
+            options.onPromptsListChanged && capabilities?.prompts?.listChanged
+          ),
+          resourcesListChanged: Boolean(
+            options.onResourcesListChanged &&
+            capabilities?.resources?.listChanged
+          ),
+        };
+
+        if (
+          Object.values(filter).some(Boolean) ||
+          resourceSubscriptions.length > 0
+        ) {
+          await mcpClient.listen({ ...filter, resourceSubscriptions });
+        }
+      } else {
+        await Promise.all(
+          resourceSubscriptions.map((uri) =>
+            mcpClient.subscribeResource({ uri })
+          )
+        );
+      }
     } catch (error) {
       await Promise.allSettled([mcpClient.close(), transport.close()]);
       throw error;
@@ -501,7 +553,14 @@ export class ConnectionManager {
       ...(headers ? { requestInit: { headers } } : {}),
     };
 
-    if (reconnect != null) {
+    if (args.mode !== "legacy") {
+      options.reconnectionOptions = {
+        maxRetries: 0,
+        initialReconnectionDelay: 1000,
+        maxReconnectionDelay: 30000,
+        reconnectionDelayGrowFactor: 1.5,
+      };
+    } else if (reconnect != null) {
       const reconnectionOptions: StreamableHTTPReconnectionOptions = {
         initialReconnectionDelay: reconnect?.delayMs ?? 1000, // MCP default
         maxReconnectionDelay: reconnect?.delayMs ?? 30000, // MCP default
