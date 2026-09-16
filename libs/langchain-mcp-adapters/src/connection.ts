@@ -124,10 +124,17 @@ export class ConnectionManager {
         : type === "sse"
           ? await this.#createSSETransport(serverName, options)
           : await this.#createStdioTransport(options);
-    const mcpClient = new MCPClient({
+    const clientInfo = {
       name: packageJson.name,
       version: packageJson.version,
-    });
+    };
+    // Only pass client options when the caller actually declared capabilities, so the
+    // construction of a client without them stays exactly as it was.
+    const mcpClient = options.clientCapabilities
+      ? new MCPClient(clientInfo, {
+          capabilities: options.clientCapabilities,
+        })
+      : new MCPClient(clientInfo);
     await mcpClient.connect(transport);
 
     if (this.#hooks.onMessage) {
