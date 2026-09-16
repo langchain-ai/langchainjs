@@ -3,6 +3,7 @@ import {
   type Tool,
   InMemoryTransport,
 } from "@modelcontextprotocol/client";
+import { JSONRPCRequestSchema } from "@modelcontextprotocol/core";
 import { createMcpHandler, McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { MCPAdapter, loadMcpTools } from "../index.js";
@@ -2524,6 +2525,72 @@ describe("MultiServerMCPClient Integration Tests", () => {
       }
     }
 
+    it("completes legacy wire results without resultType", async () => {
+      await withClient(
+        (server) =>
+          server.registerTool(
+            "legacy_result",
+            { inputSchema: z.object({}) },
+            async () => ({
+              content: [{ type: "text", text: "legacy complete" }],
+            })
+          ),
+        async (client, transport) => {
+          expect(client.getProtocolEra()).toBe("legacy");
+          const sent = vi.spyOn(transport, "send");
+          const [tool] = await loadMcpTools("legacy", client);
+          await expect(tool.invoke({})).resolves.toBe("legacy complete");
+
+          const legacyResult = z.object({
+            result: z.object({
+              resultType: z.never().optional(),
+              content: z.tuple([
+                z.object({
+                  type: z.literal("text"),
+                  text: z.literal("legacy complete"),
+                }),
+              ]),
+            }),
+          });
+
+          expect(
+            sent.mock.calls.some(
+              ([message]) => legacyResult.safeParse(message).success
+            )
+          ).toBe(true);
+        }
+      );
+    });
+
+    it("preserves fractional schema bounds and defaults", async () => {
+      await withClient(
+        (server) =>
+          server.registerTool(
+            "fraction",
+            {
+              inputSchema: z.object({
+                value: z.number().min(0.25).max(0.75).default(0.5),
+              }),
+              outputSchema: z.object({ value: z.number().min(0.25).max(0.75) }),
+            },
+            async ({ value }) => ({
+              content: [{ type: "text", text: String(value) }],
+              structuredContent: { value },
+            })
+          ),
+        async (client) => {
+          const [tool] = await loadMcpTools("fraction", client);
+          await expect(tool.invoke({})).resolves.toBe("0.5");
+          await expect(tool.invoke({ value: 0.25 })).resolves.toBe("0.25");
+          await expect(tool.invoke({ value: 0.75 })).resolves.toBe("0.75");
+          const call = vi.spyOn(client, "callTool");
+          await expect(tool.invoke({ value: 0.1 })).rejects.toThrow();
+          await expect(tool.invoke({ value: 0.9 })).rejects.toThrow();
+          expect(call).not.toHaveBeenCalled();
+        }
+      );
+    });
+
     it("preserves SDK output schema validation", async () => {
       await withClient(
         (server) => {
@@ -3004,4 +3071,288 @@ describe("protocol negotiation with live servers", () => {
       );
     }
   });
+});
+describe("modern wire boundaries", () => {
+  it("preserves JSON output and protocol metadata while excluding invalid header declarations", async () => {
+    const requests: string[] = [];
+
+    const values = [0, false, null, [1, "value"], "text"];
+
+    const handler = createMcpHandler(
+      () => {
+        const server = new McpServer({ name: "wire-boundary", version: "1" });
+        values.forEach((value, index) =>
+          server.registerTool(
+            `json_${index}`,
+            { inputSchema: z.object({}) },
+            async () => ({ content: [], structuredContent: value })
+          )
+        );
+        server.registerTool(
+          "invalid_header",
+          {
+            inputSchema: z.object({
+              region: z.string().meta({ "x-mcp-header": "bad header" }),
+            }),
+          },
+          async () => ({ content: [] })
+        );
+
+        return server;
+      },
+      { legacy: "reject" }
+    );
+
+    const serve = toNodeHandler(handler);
+
+    const wireHeaders: {
+      method: string | string[] | undefined;
+      name: string | string[] | undefined;
+      session: boolean;
+      replay: boolean;
+    }[] = [];
+
+    const http = createServer((request, response) => {
+      const chunks: Buffer[] = [];
+      request.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
+      request.on("end", () => {
+        requests.push(Buffer.concat(chunks).toString());
+        wireHeaders.push({
+          method: request.headers["mcp-method"],
+          name: request.headers["mcp-name"],
+          session: "mcp-session-id" in request.headers,
+          replay: "last-event-id" in request.headers,
+        });
+      });
+      serve(request, response);
+    });
+
+    http.listen(0, "127.0.0.1");
+    await once(http, "listening");
+    const { port } = z.object({ port: z.number() }).parse(http.address());
+
+    const adapter = new MCPAdapter({
+      servers: { test: { url: `http://127.0.0.1:${port}/mcp` } },
+    });
+
+    try {
+      const tools = await adapter.listTools();
+      expect(tools.map((tool) => tool.name)).toEqual(
+        values.map((_, index) => `json_${index}`)
+      );
+
+      for (const [index, tool] of tools.entries()) {
+        const result = await tool.invoke({
+          type: "tool_call",
+          id: `call_${index}`,
+          name: tool.name,
+          args: {},
+        });
+
+        expect(result.artifact).toContainEqual({
+          type: "mcp_structured_content",
+          data: values[index],
+        });
+      }
+
+      expect(requests.length).toBeGreaterThan(values.length);
+
+      for (const [index, body] of requests.entries()) {
+        const request = JSONRPCRequestSchema.parse(JSON.parse(body));
+
+        expect(request.method).not.toMatch(/initialize/);
+        expect(wireHeaders[index]).toMatchObject({
+          method: request.method,
+          session: false,
+          replay: false,
+        });
+
+        if (request.method === "tools/call")
+          expect(wireHeaders[index].name).toMatch(/^json_/);
+
+        if (request.method !== "server/discover")
+          expect(request.params?._meta).toMatchObject({
+            "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+            "io.modelcontextprotocol/clientInfo": {
+              name: "@langchain/mcp-adapters",
+            },
+          });
+      }
+    } finally {
+      await adapter.close();
+      await handler.close();
+      http.close();
+      http.closeAllConnections();
+      await once(http, "close");
+    }
+  });
+
+  it.each([-32020, -32021, -32022, -32602, "invalid-result"])(
+    "preserves protocol errors and rejects malformed results: %s",
+    async (outcome) => {
+      const handler = createMcpHandler(
+        () => {
+          const server = new McpServer({ name: "wire-error", version: "1" });
+          server.registerTool(
+            "raw",
+            { inputSchema: z.object({}) },
+            async () => ({ content: [] })
+          );
+
+          return server;
+        },
+        { legacy: "reject" }
+      );
+
+      const serve = toNodeHandler(handler);
+
+      const http = createServer((request, response) => {
+        if (request.headers["mcp-method"] !== "tools/call") {
+          serve(request, response);
+
+          return;
+        }
+
+        const chunks: Buffer[] = [];
+        request.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
+        request.on("end", () => {
+          const { id } = z
+            .object({ id: z.union([z.string(), z.number()]) })
+            .parse(JSON.parse(Buffer.concat(chunks).toString()));
+
+          response.writeHead(200, { "content-type": "application/json" });
+          response.end(
+            JSON.stringify({
+              jsonrpc: "2.0",
+              id,
+              ...(outcome === "invalid-result"
+                ? { result: { resultType: "unknown", content: [] } }
+                : {
+                    error: {
+                      code: outcome,
+                      message: "Fixture protocol rejection",
+                    },
+                  }),
+            })
+          );
+        });
+      });
+
+      http.listen(0, "127.0.0.1");
+      await once(http, "listening");
+      const { port } = z.object({ port: z.number() }).parse(http.address());
+
+      const adapter = new MCPAdapter({
+        servers: { test: { url: `http://127.0.0.1:${port}/mcp` } },
+      });
+
+      try {
+        const [tool] = await adapter.listTools();
+
+        if (outcome === "invalid-result") {
+          await expect(tool.invoke({})).rejects.toThrow();
+        } else {
+          await expect(tool.invoke({})).rejects.toMatchObject({
+            cause: { code: outcome },
+          });
+        }
+      } finally {
+        await adapter.close();
+        await handler.close();
+        http.close();
+        http.closeAllConnections();
+        await once(http, "close");
+      }
+    }
+  );
+});
+
+it("honors resource cache policy without sharing private results between header contexts", async () => {
+  let revision = 1;
+  let timestamp = Date.now();
+  const clock = vi.spyOn(Date, "now").mockImplementation(() => timestamp);
+
+  const handler = createMcpHandler(
+    (request) => {
+      const account =
+        request.requestInfo?.headers.get("x-test-account") ?? "default";
+
+      const server = new McpServer(
+        { name: "resource-cache", version: "1" },
+        {
+          cacheHints: {
+            "resources/list": { ttlMs: 60_000, cacheScope: "private" },
+            "resources/read": { ttlMs: 0, cacheScope: "private" },
+          },
+        }
+      );
+
+      server.registerResource(
+        `${account}-${revision}`,
+        "test://item",
+        {},
+        async () => ({
+          contents: [{ uri: "test://item", text: `${account}-${revision}` }],
+        })
+      );
+
+      return server;
+    },
+    { legacy: "reject" }
+  );
+
+  const http = createServer(toNodeHandler(handler));
+  http.listen(0, "127.0.0.1");
+  await once(http, "listening");
+  const { port } = z.object({ port: z.number() }).parse(http.address());
+
+  const adapter = new MCPAdapter({
+    servers: { test: { url: `http://127.0.0.1:${port}/mcp` } },
+  });
+
+  const alpha = { headers: { "X-Test-Account": "alpha" } };
+  const beta = { headers: { "X-Test-Account": "beta" } };
+
+  try {
+    expect((await adapter.listResources([], alpha)).test[0].name).toBe(
+      "alpha-1"
+    );
+    expect((await adapter.listResources([], beta)).test[0].name).toBe("beta-1");
+    revision = 2;
+    expect((await adapter.listResources([], alpha)).test[0].name).toBe(
+      "alpha-1"
+    );
+    const client = await adapter.getClient("test", alpha);
+    expect(
+      (await client?.listResources(undefined, { cacheMode: "bypass" }))
+        ?.resources[0].name
+    ).toBe("alpha-2");
+    expect((await adapter.listResources([], alpha)).test[0].name).toBe(
+      "alpha-1"
+    );
+    expect(
+      (await client?.listResources(undefined, { cacheMode: "refresh" }))
+        ?.resources[0].name
+    ).toBe("alpha-2");
+    expect((await adapter.listResources([], beta)).test[0].name).toBe("beta-1");
+    timestamp += 60_001;
+    expect((await adapter.listResources([], beta)).test[0].name).toBe("beta-2");
+    expect(
+      await adapter.readResource("test", "test://item", alpha)
+    ).toMatchObject([{ text: "alpha-2" }]);
+    revision = 3;
+    expect(
+      await adapter.readResource("test", "test://item", alpha)
+    ).toMatchObject([{ text: "alpha-3" }]);
+    await expect(
+      adapter.readResource("test", "test://missing", alpha)
+    ).rejects.toMatchObject({ cause: { code: -32602 } });
+  } finally {
+    clock.mockRestore();
+    await adapter.close();
+    await handler.close();
+    http.close();
+    http.closeAllConnections();
+    await once(http, "close");
+  }
 });
