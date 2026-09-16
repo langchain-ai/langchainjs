@@ -11,7 +11,6 @@ import type {
   StreamableHTTPReconnectionOptions,
 } from "@modelcontextprotocol/client";
 import { connectionSchema } from "./types.js";
-import { getDebugLog } from "./logging.js";
 import type {
   ResolvedStreamableHTTPConnection,
   ResolvedSSEConnection,
@@ -23,8 +22,6 @@ import type {
  * within ESM and CJS modules.
  */
 import packageJson from "../package.json" with { type: "json" };
-
-const debugLog = getDebugLog("connection");
 
 export interface Client extends MCPClient {
   /**
@@ -66,6 +63,37 @@ const transportTypes = ["http", "sse", "stdio"] as const;
  */
 export class ConnectionManager {
   #connections: Map<ClientKeyObject, Connection> = new Map();
+  #identities: ClientKeyObject[] = [];
+  #pending = new Map<ClientKeyObject, Promise<Client>>();
+  #closing?: Promise<void>;
+
+  constructor(
+    private readonly onToolsChanged?: (options: TransportOptions) => void
+  ) {}
+
+  identity(options: TransportOptions): ClientKeyObject {
+    const headers = serializeHeaders(options.headers);
+
+    const existing = this.#identities.find(
+      (key) =>
+        key.serverName === options.serverName &&
+        key.headers === headers &&
+        key.authProvider === options.authProvider
+    );
+
+    if (existing) return existing;
+
+    const key = {
+      serverName: options.serverName,
+      headers,
+      authProvider: options.authProvider,
+    };
+
+    this.#identities.push(key);
+
+    return key;
+  }
+
   async createClient(
     type: "stdio",
     serverName: string,
@@ -87,6 +115,42 @@ export class ConnectionManager {
       | ["sse", string, ResolvedSSEConnection]
       | ["http", string, ResolvedStreamableHTTPConnection]
   ): Promise<Client> {
+    if (this.#closing) throw new Error("MCP connections are closing");
+    const [type, serverName, options] = args;
+
+    const key = this.identity(
+      type === "stdio"
+        ? { serverName }
+        : {
+            serverName,
+            headers: options.headers,
+            authProvider: options.authProvider,
+          }
+    );
+
+    const existing = this.#connections.get(key)?.client;
+
+    if (existing) return existing;
+    const pending = this.#pending.get(key);
+
+    if (pending) return pending;
+    const acquisition = this.#connect(args, key);
+    this.#pending.set(key, acquisition);
+
+    try {
+      return await acquisition;
+    } finally {
+      this.#pending.delete(key);
+    }
+  }
+
+  async #connect(
+    args:
+      | ["stdio", string, ResolvedStdioConnection]
+      | ["sse", string, ResolvedSSEConnection]
+      | ["http", string, ResolvedStreamableHTTPConnection],
+    key: ClientKeyObject
+  ): Promise<Client> {
     const [type, serverName, options] = args;
     if (!transportTypes.includes(type)) {
       throw new Error(`Invalid transport type: ${type}`);
@@ -94,9 +158,9 @@ export class ConnectionManager {
 
     const transport =
       type === "http"
-        ? await this.#createStreamableHTTPTransport(serverName, options)
+        ? await this.#createStreamableHTTPTransport(options)
         : type === "sse"
-          ? await this.#createSSETransport(serverName, options)
+          ? await this.#createSSETransport(options)
           : await this.#createStdioTransport(options);
 
     // The SDK defaults to legacy, and "auto" permits legacy fallback.
@@ -112,8 +176,6 @@ export class ConnectionManager {
         },
       }
     );
-
-    await mcpClient.connect(transport);
 
     if (options.onMessage) {
       mcpClient.setNotificationHandler(
@@ -195,23 +257,34 @@ export class ConnectionManager {
       );
     }
 
-    if (options.onToolsListChanged) {
-      mcpClient.setNotificationHandler("notifications/tools/list_changed", () =>
-        options.onToolsListChanged?.({
-          server: serverName,
-          options: connectionSchema.parse(options),
-        })
+    if (options.onToolsListChanged || this.onToolsChanged) {
+      mcpClient.setNotificationHandler(
+        "notifications/tools/list_changed",
+        () => {
+          this.onToolsChanged?.(
+            options.transport === "stdio"
+              ? { serverName }
+              : {
+                  serverName,
+                  headers: options.headers,
+                  authProvider: options.authProvider,
+                }
+          );
+
+          return options.onToolsListChanged?.({
+            server: serverName,
+            options: connectionSchema.parse(options),
+          });
+        }
       );
     }
 
-    const key: ClientKeyObject =
-      type === "stdio"
-        ? { serverName }
-        : {
-            serverName,
-            headers: serializeHeaders(options.headers),
-            authProvider: options.authProvider,
-          };
+    try {
+      await mcpClient.connect(transport);
+    } catch (error) {
+      await Promise.allSettled([mcpClient.close(), transport.close()]);
+      throw error;
+    }
 
     const forkClient = (headers: Record<string, string>): Promise<Client> => {
       return this.#forkClient(key, headers);
@@ -243,6 +316,8 @@ export class ConnectionManager {
       throw new Error("Transport not found");
     }
 
+    if (Object.keys(headers).length === 0)
+      return Promise.resolve(connection.client);
     const options = connection.transportOptions;
 
     if (options.transport === "stdio") {
@@ -257,7 +332,7 @@ export class ConnectionManager {
 
     return this.createClient("http", key.serverName, {
       ...options,
-      headers,
+      headers: mergeHeaders(options.headers, headers),
     });
   }
 
@@ -297,35 +372,10 @@ export class ConnectionManager {
   #queryConnection(
     options: TransportOptions
   ): { key: ClientKeyObject; connection: Connection } | undefined {
-    const headers = serializeHeaders(options.headers);
-    const [key, connection] =
-      [...this.#connections.entries()].find(([key]) => {
-        if (options.headers && options.authProvider) {
-          return (
-            key.serverName === options.serverName &&
-            key.headers === headers &&
-            key.authProvider === options.authProvider
-          );
-        }
-        if (options.headers && !options.authProvider) {
-          return (
-            key.serverName === options.serverName && key.headers === headers
-          );
-        }
-        if (options.authProvider && !options.headers) {
-          return (
-            key.serverName === options.serverName &&
-            key.authProvider === options.authProvider
-          );
-        }
-        return key.serverName === options.serverName;
-      }) ?? [];
+    const key = this.identity(options);
+    const connection = this.#connections.get(key);
 
-    if (key && connection) {
-      return { key, connection };
-    }
-
-    return undefined;
+    return connection ? { key, connection } : undefined;
   }
 
   /**
@@ -345,22 +395,54 @@ export class ConnectionManager {
    * Delete the transport based on server name and connection configuration.
    * @param options - The options for the transport, if not provided, all transports are deleted
    */
-  async delete(options?: TransportOptions) {
-    if (!options) {
-      await Promise.all(
-        Array.from(this.#connections.values()).map((connection) =>
-          connection.closeCallback()
-        )
-      );
-      this.#connections.clear();
+  async delete(options?: TransportOptions): Promise<void> {
+    if (this.#closing) return this.#closing;
+
+    if (options) {
+      const key = this.identity(options);
+      await this.#pending.get(key)?.catch(() => undefined);
+      const connection = this.#connections.get(key);
+      this.#connections.delete(key);
+      await connection?.closeCallback();
+
       return;
     }
 
-    const result = this.#queryConnection(options);
-    if (result) {
-      await result.connection.closeCallback();
-      this.#connections.delete(result.key);
+    this.#closing = this.#closeAll();
+
+    try {
+      await this.#closing;
+    } finally {
+      this.#closing = undefined;
     }
+  }
+
+  async release(client: Client): Promise<void> {
+    const entry = [...this.#connections.entries()].find(
+      ([, connection]) => connection.client === client
+    );
+
+    if (!entry) return;
+    this.#connections.delete(entry[0]);
+    await entry[1].closeCallback();
+  }
+
+  async #closeAll(): Promise<void> {
+    await Promise.allSettled(this.#pending.values());
+    const connections = [...this.#connections.values()];
+    this.#connections.clear();
+    this.#identities = [];
+
+    const results = await Promise.allSettled(
+      connections.map((connection) => connection.closeCallback())
+    );
+
+    const errors = results.flatMap((result) =>
+      result.status === "rejected" ? [result.reason] : []
+    );
+
+    if (errors.length)
+      throw new AggregateError(errors, "Failed to close MCP connections");
   }
 
   /**
@@ -410,7 +492,6 @@ export class ConnectionManager {
   }
 
   async #createStreamableHTTPTransport(
-    serverName: string,
     args: ResolvedStreamableHTTPConnection
   ): Promise<StreamableHTTPClientTransport> {
     const { url, headers, reconnect, authProvider } = args;
@@ -435,30 +516,6 @@ export class ConnectionManager {
       options.reconnectionOptions = reconnectionOptions;
     }
 
-    if (options.requestInit?.headers) {
-      debugLog(
-        `DEBUG: Using custom headers for SSE transport to server "${serverName}"`
-      );
-    }
-
-    if (options.authProvider) {
-      debugLog(
-        `DEBUG: Using OAuth authentication for Streamable HTTP transport to server "${serverName}"`
-      );
-    }
-
-    if (options.reconnectionOptions) {
-      if (options.reconnectionOptions.maxRetries === 0) {
-        debugLog(
-          `DEBUG: Disabling reconnection for Streamable HTTP transport to server "${serverName}"`
-        );
-      } else {
-        debugLog(
-          `DEBUG: Using custom reconnection options for Streamable HTTP transport to server "${serverName}"`
-        );
-      }
-    }
-
     // Only pass options if there are any, otherwise use default constructor
     return Object.keys(options).length > 0
       ? new StreamableHTTPClientTransport(new URL(url), options)
@@ -468,14 +525,12 @@ export class ConnectionManager {
   /**
    * Create an SSE transport with appropriate EventSource implementation
    *
-   * @param serverName - The name of the server
    * @param url - The URL of the server
    * @param headers - The headers to send with the request
    * @param authProvider - The OAuth client provider to use for authentication
    * @returns The SSE transport
    */
   async #createSSETransport(
-    serverName: string,
     args: ResolvedSSEConnection
   ): Promise<SSEClientTransport> {
     const { url, headers, authProvider } = args;
@@ -483,9 +538,6 @@ export class ConnectionManager {
 
     if (authProvider) {
       options.authProvider = authProvider;
-      debugLog(
-        `DEBUG: Using OAuth authentication for SSE transport to server "${serverName}"`
-      );
     }
 
     if (headers) {
@@ -523,10 +575,6 @@ export class ConnectionManager {
 
       // Also include headers for POST requests
       options.requestInit = { headers };
-
-      debugLog(
-        `DEBUG: Using custom headers for SSE transport to server "${serverName}"`
-      );
     }
 
     return new SSEClientTransport(new URL(url), options);
@@ -557,11 +605,22 @@ export class ConnectionManager {
 function serializeHeaders(
   headers?: Record<string, string>
 ): string | undefined {
-  if (!headers) {
+  if (!headers || Object.keys(headers).length === 0) {
     return;
   }
-  return Object.entries(headers)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([key, value]) => `${key}: ${value}`)
-    .join("\n");
+
+  return JSON.stringify([...new Headers(headers)]);
+}
+
+/** HTTP header names are case-insensitive; later sources take precedence. */
+export function mergeHeaders(
+  base: Record<string, string> | undefined,
+  overrides: Record<string, string> | undefined
+): Record<string, string> {
+  const headers = new Headers(base);
+
+  for (const [name, value] of Object.entries(overrides ?? {}))
+    headers.set(name, value);
+
+  return Object.fromEntries(headers);
 }

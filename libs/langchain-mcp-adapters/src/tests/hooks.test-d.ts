@@ -151,6 +151,9 @@ test("canonical adapter API retains typed SDK callbacks and native tools", () =>
   expectTypeOf(adapter).toEqualTypeOf<MultiServerMCPClient>();
   expectTypeOf(adapter.config).toEqualTypeOf<ResolvedMCPAdapterConfig>();
   expectTypeOf(adapter.config).not.toHaveProperty("mcpServers");
+  expectTypeOf(adapter.listToolsets).toEqualTypeOf<
+    typeof adapter.initializeConnections
+  >();
   expectTypeOf(adapter.close()).toEqualTypeOf<Promise<void>>();
 });
 

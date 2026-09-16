@@ -1,6 +1,7 @@
 import { z } from "zod";
+import { ContentBlockSchema } from "@modelcontextprotocol/core";
 import type {
-  CallToolResult,
+  CacheMode,
   ListResourcesResult,
   ListResourceTemplatesResult,
   ReadResourceResult,
@@ -29,13 +30,9 @@ export type {
   CommandParams,
 };
 
-const callToolResultContentTypeSchema = z.enum([
-  "audio",
-  "image",
-  "resource",
-  "resource_link",
-  "text",
-] satisfies CallToolResult["content"][number]["type"][]);
+const callToolResultContentTypeSchema = z.enum(
+  ContentBlockSchema.options.map((schema) => schema.shape.type.value)
+);
 
 export const callToolResultContentTypes =
   callToolResultContentTypeSchema.options;
@@ -941,10 +938,9 @@ export function _resolveAndApplyOverrideHandlingOverrides(
   };
 }
 
-export const customHTTPTransportOptionsSchema = httpOptionsSchema.pick({
-  authProvider: true,
-  headers: true,
-});
+export const customHTTPTransportOptionsSchema = httpOptionsSchema
+  .pick({ authProvider: true, headers: true })
+  .strict();
 
 export type CustomHTTPTransportOptions = z.input<
   typeof customHTTPTransportOptionsSchema
@@ -966,3 +962,13 @@ export type MCPResourceTemplate =
  * Represents the content of a resource retrieved from an MCP server.
  */
 export type MCPResourceContent = ReadResourceResult["contents"][number];
+
+/** SDK cache policy for discovery; the SDK owns TTL and storage semantics. */
+export const toolDiscoveryOptionsSchema =
+  customHTTPTransportOptionsSchema.extend({
+    cacheMode: z
+      .enum(["use", "refresh", "bypass"] satisfies CacheMode[])
+      .optional(),
+  });
+
+export type ToolDiscoveryOptions = z.input<typeof toolDiscoveryOptionsSchema>;
