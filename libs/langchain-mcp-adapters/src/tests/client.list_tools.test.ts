@@ -1,12 +1,17 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { Client } from "@modelcontextprotocol/client";
 import { MCPAdapter } from "../client.js";
+import type { Client as ConnectedClient } from "../connection.js";
 import { ConnectionManager } from "../connection.js";
 
 describe("adapter tool listing", () => {
   afterEach(() => vi.restoreAllMocks());
 
   test("listTools supports server selection and tool invocation", async () => {
+    const clients = new Map<string, ConnectedClient>();
+    vi.spyOn(ConnectionManager.prototype, "get").mockImplementation((key) =>
+      clients.get(typeof key === "string" ? key : key.serverName)
+    );
     vi.spyOn(ConnectionManager.prototype, "createClient").mockImplementation(
       async (_transport, serverName) => {
         const client = new Client({ name: serverName, version: "1" });
@@ -21,6 +26,8 @@ describe("adapter tool listing", () => {
         vi.spyOn(client, "callTool").mockResolvedValue({
           content: [{ type: "text", text: serverName }],
         });
+
+        clients.set(serverName, connected);
 
         return connected;
       }
@@ -39,6 +46,11 @@ describe("adapter tool listing", () => {
         "second",
       ]);
       const [selected] = await adapter.listTools("second");
+      const toolsets = await adapter.listToolsets();
+      expect(Object.keys(toolsets)).toEqual(["first", "second"]);
+      expect(Object.values(toolsets).flat()).toEqual(await adapter.listTools());
+      expect(await adapter.initializeConnections()).toEqual(toolsets);
+      expect(await toolsets.second[0].invoke({})).toBe("second");
       expect(selected.name).toBe("second");
       expect(await selected.invoke({})).toBe("second");
       expect(

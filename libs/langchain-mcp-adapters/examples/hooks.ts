@@ -8,35 +8,35 @@
  * - afterToolCall: modifying the tool result after invocation
  */
 import { MCPAdapter } from "../src/index.js";
+import { z } from "zod";
 
 // Create MCP client with global interceptors
 const client = new MCPAdapter({
   servers: {
     filesystem: {
       mode: "legacy",
-      transport: "stdio" as const,
+      transport: "stdio",
       command: "npx",
       args: ["-y", "@modelcontextprotocol/server-filesystem", "./"],
     },
   },
-  // Global hook runs before every tool call. Here we add default args for list_directory
+  // Parse the application boundary before reading tool arguments.
   beforeToolCall: ({ name, args }) => {
     if (name.includes("list_directory")) {
+      const { path } = z.object({ path: z.string() }).parse(args);
       return {
-        args: {
-          ...(args as Record<string, unknown>),
-          // If caller didn't specify a path, default to the test dir
-          path: (args as Record<string, unknown>)?.path,
-        },
+        args: { path },
       };
     }
-    return {};
+    return undefined;
   },
   // Global hook runs after every tool call. Here we override the result shape
   // to something easy to print so you can see the hook in action.
   afterToolCall: ({ name, result }) => {
     if (name.includes("list_directory")) {
       // Replace the text/content part, keep artifacts unchanged
+      // result[0] contains model-facing LangChain content. result[1] keeps
+      // MCP artifacts such as mcp_structured_content, mcp_meta and mcp_content.
       return { result: ["(modified by afterToolCall)", result[1]] };
     }
     // Return nothing for other tools
