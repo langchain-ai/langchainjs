@@ -359,6 +359,22 @@ interface ToolInvocation {
   ): Promise<ContentBlocksWithArtifacts>;
 }
 
+/**
+ * Graph task state for this invocation, or `undefined` outside a graph.
+ *
+ * Wrapped because a graph's own state may be `undefined`, which a bare value
+ * could not tell apart from having no graph.
+ */
+function graphTaskState(
+  config?: RunnableConfig
+): { state: unknown } | undefined {
+  try {
+    return { state: getCurrentTaskInput(config) };
+  } catch {
+    return undefined;
+  }
+}
+
 function createToolInvocationFactory(
   client: MCPInstance,
   serverName: string,
@@ -394,6 +410,14 @@ function createToolInvocationFactory(
       ? client.withInterrupts.bind(client)
       : undefined;
 
+  /**
+   * Dynamic headers are applied per execution through the client's own fork.
+   *
+   * Graph calls are not treated differently: `beforeToolCall` runs again on
+   * every replayed execution, so the headers it returns are recomputed for that
+   * execution rather than restored from a checkpoint. Nothing about a forked
+   * client's credentials is persisted between executions.
+   */
   function selectHeaderPolicy() {
     if ("fork" in client && typeof client.fork === "function") {
       const fork = client.fork.bind(client);
@@ -434,11 +458,17 @@ function createToolInvocationFactory(
       return {
         execute,
         async run(call: InvokeToolRound, config?: RunnableConfig) {
-          return runInterrupts((continuation) => call(continuation), {
-            server: serverName,
-            tool: toolName,
-            signal: config?.signal,
-          });
+          const graph = graphTaskState(config);
+
+          return runInterrupts(
+            (continuation) => call(continuation, graph?.state),
+            {
+              server: serverName,
+              tool: toolName,
+              signal: config?.signal,
+              direct: graph === undefined,
+            }
+          );
         },
       };
     }

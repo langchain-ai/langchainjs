@@ -1,10 +1,11 @@
 /**
- * Suspend a tool call the server cannot finish without more input.
+ * Suspend a tool call the server cannot finish without more input, and answer
+ * it with a graph interrupt.
  *
  * A modern server needing input mid-call answers `tools/call` with an
- * `input_required` result and expects the call to be retried carrying the
- * answers. A *continuation* is that retry: the original request plus the
- * answers it was missing.
+ * `input_required` result and expects the call retried carrying the answers.
+ * A *continuation* is that retry: the original request plus the answers it was
+ * missing.
  *
  * The SDK can drive those rounds itself — `inputRequired.autoFulfill` answers
  * from registered elicitation handlers and retries through `flow.retry`. The
@@ -12,24 +13,31 @@
  * request concurrently, `Promise.all` over `inputRequests`, while LangGraph
  * matches resume values to `interrupt()` calls by order, so answering from
  * those callbacks scrambles the matching. The Python adapter bypasses its
- * equivalent driver for the same reason. Interception happens at the
- * invocation boundary instead, where rounds surface one at a time.
+ * equivalent driver for the same reason. Driving the rounds here keeps one
+ * `interrupt()` per round, raised from the frame that issued the call.
  *
- * This module is that boundary and nothing more. `InterruptMCPClient` turns a
- * non-complete result into `PendingMCPInput`, and `withMCPInterrupts` reports
- * it as a `ToolException` saying no handler is available. Raising the questions
- * as a graph interrupt and resuming with the answers builds on the
- * `MCPContinuation`, `MCPElicitationInterrupt` and `MCPElicitationResume`
- * shapes declared here, and lands in the graph elicitation layer.
+ * Each round surfaces the server's questions as an `MCPElicitationInterrupt`
+ * and resumes with `MCPElicitationResponses`, bounded by
+ * `maxElicitationRounds` so a server cannot keep a run suspended forever.
  */
-import { Client, type CallToolRequest } from "@modelcontextprotocol/client";
-import { CallToolRequestSchema } from "@modelcontextprotocol/core";
+import {
+  Client,
+  CLIENT_CAPABILITIES_META_KEY,
+  type CallToolRequest,
+  type ElicitResult,
+} from "@modelcontextprotocol/client";
+import {
+  CallToolRequestSchema,
+  ClientCapabilitiesSchema,
+} from "@modelcontextprotocol/core";
 import { ns, LangChainError } from "@langchain/core/errors";
+import { interrupt, type Interrupt } from "@langchain/langgraph";
 import { z } from "zod";
 import {
   CancellationObserverMCPClient,
   modernElicitationAnswerSchema,
   modernElicitationRequestSchema,
+  elicitationAnswerFor,
 } from "./elicitation.js";
 import { ToolException } from "./utils/errors.js";
 
@@ -48,15 +56,58 @@ export class PendingMCPInput extends ns
 
 /** Keep callTool's header handling and output validation around each suspended response. */
 export class InterruptMCPClient extends CancellationObserverMCPClient {
+  readonly maxElicitationRounds: number;
+
+  /**
+   * Advertise in-band input on modern requests, per request.
+   *
+   * Not a declared capability: those are sent during initialization, before
+   * negotiation settles the era, so an `auto` connection landing on legacy
+   * would advertise elicitation to a server that must not see it.
+   */
+  protected override _outboundMetaEnvelope() {
+    const envelope = super._outboundMetaEnvelope();
+    if (this.getProtocolEra() !== "modern") {
+      return envelope;
+    }
+    const capabilities = ClientCapabilitiesSchema.parse(
+      envelope?.[CLIENT_CAPABILITIES_META_KEY] ?? {}
+    );
+    return {
+      ...envelope,
+      [CLIENT_CAPABILITIES_META_KEY]: {
+        ...capabilities,
+        elicitation: {
+          form: capabilities.elicitation?.form ?? {},
+          url: capabilities.elicitation?.url ?? {},
+        },
+      },
+    };
+  }
+
+  constructor(
+    info: ConstructorParameters<typeof Client>[0],
+    options?: ConstructorParameters<typeof Client>[1],
+    onCancelled?: ConstructorParameters<typeof CancellationObserverMCPClient>[2]
+  ) {
+    super(info, options, onCancelled);
+    this.maxElicitationRounds = options?.inputRequired?.maxRounds ?? 32;
+  }
+
   withInterrupts<T>(
     invoke: (continuation?: MCPContinuation) => Promise<T>,
     source: {
       server: string;
       tool: string;
       signal?: AbortSignal;
+      /** No graph to interrupt, so questions are reported instead of asked. */
+      direct?: boolean;
     }
   ): Promise<T> {
-    return withMCPInterrupts(invoke, source);
+    return withMCPInterrupts(invoke, {
+      ...source,
+      maxRounds: this.maxElicitationRounds,
+    });
   }
 
   protected override async _resolveNonCompleteResult(
@@ -83,16 +134,18 @@ export function supportsMCPInterrupts(
 
 export interface MCPContinuation {
   request: CallToolRequest["params"];
-  inputResponses: MCPElicitationResume;
+  inputResponses: MCPElicitationResponses;
+  /** Echoed unchanged from the response this execution just received. */
   requestState?: PendingInput["requestState"];
 }
 
-/** User-facing questions. Server continuation data stays in the checkpointed round. */
+/** User-facing questions only. Server continuation data never leaves the execution. */
 const elicitationInterruptSchema = z.object({
   type: z.literal("mcp_elicitation"),
   server: z.string(),
   tool: z.string(),
   requests: z.record(z.string(), modernElicitationRequestSchema),
+  validationError: z.string().optional(),
 });
 
 export type MCPElicitationInterrupt = z.output<
@@ -104,51 +157,177 @@ const elicitationResponsesSchema = z.record(
   modernElicitationAnswerSchema
 );
 
-export type MCPElicitationResume = z.output<typeof elicitationResponsesSchema>;
+/** Answers to one question set, keyed by the server's input-request keys. */
+export type MCPElicitationResponses = z.output<
+  typeof elicitationResponsesSchema
+>;
+
+/** Complete `Command.resume` value, keyed by the observed LangGraph interrupt ID. */
+export type MCPElicitationResume = Record<
+  string,
+  { responses: MCPElicitationResponses }
+>;
+
+const elicitationTargetSchema = z.object({
+  id: z.string().regex(/^[0-9a-f]{32}$/, "Expected a LangGraph interrupt ID"),
+  value: z.object({ type: z.literal("mcp_elicitation") }),
+});
 
 /**
- * Surface an incomplete tool response at the invocation boundary.
+ * Build a resume value aimed at one MCP question.
  *
- * The adapter runs a tool call once. An `input_required` response cannot be
- * answered here: answering needs a LangGraph interrupt, which is why the
- * interception boundary exists at all. So this rejects with the pending
- * response attached rather than continuing the call itself.
+ * Keying by the interrupt's own ID keeps answers from being delivered to an
+ * unrelated interrupt that happens to be paused in the same run. It does not
+ * make replayed server work idempotent, and it does not isolate arbitrary
+ * `Promise.all` calls inside a single user node.
+ */
+export function createMCPElicitationResume(
+  pending: Interrupt<unknown>,
+  responses: MCPElicitationResponses
+): MCPElicitationResume {
+  const { id } = elicitationTargetSchema.parse(pending);
+  return { [id]: { responses } };
+}
+
+type RoundResult<T> =
+  | { kind: "complete"; value: T }
+  | {
+      kind: "pending";
+      pending: PendingInput;
+      request: CallToolRequest["params"];
+    };
+
+type MCPInvocationContext = {
+  server: string;
+  tool: string;
+  maxRounds: number;
+  /** No graph to interrupt, so questions are reported instead of asked. */
+  direct?: boolean;
+  signal?: AbortSignal;
+};
+
+/**
+ * Drive elicitation rounds for one tool call, aligned with the Python adapter.
  *
- * In particular a state-only response — `input_required` carrying no input
- * requests — is rejected instead of being retried. The adapter does not poll a
- * server for completion, and it makes no guarantee about reusing request state
- * across calls.
+ * The adapter owns no durable record of a round. When a graph resumes, the tool
+ * node re-runs from the top: the initial `tools/call` is issued again, the
+ * server answers with the same question, and `interrupt()` returns the answer
+ * that was supplied instead of pausing. Only then is the answered follow-up
+ * sent, carrying the `requestState` returned by the response this execution
+ * just replayed — never a value saved from an earlier one.
+ *
+ * Consequences worth stating plainly: work the server performed before asking
+ * runs again on resume, `beforeToolCall` runs again, and the adapter promises
+ * no exactly-once effects. Servers and hooks must be replay-safe.
  */
 export async function withMCPInterrupts<T>(
   invoke: (continuation?: MCPContinuation) => Promise<T>,
-  source: {
-    server: string;
-    tool: string;
-    signal?: AbortSignal;
-  }
+  source: MCPInvocationContext
 ): Promise<T> {
-  source.signal?.throwIfAborted();
+  const invokeRound = async (
+    continuation?: MCPContinuation
+  ): Promise<RoundResult<T>> => {
+    source.signal?.throwIfAborted();
 
-  try {
-    return await invoke();
-  } catch (error) {
-    if (!PendingMCPInput.isInstance(error)) throw error;
+    try {
+      return { kind: "complete", value: await invoke(continuation) };
+    } catch (error) {
+      if (PendingMCPInput.isInstance(error)) {
+        return {
+          kind: "pending",
+          pending: error.pending,
+          request: error.request,
+        };
+      }
+
+      throw error;
+    }
+  };
+
+  let continuation: MCPContinuation | undefined;
+
+  for (let round = 0; round <= source.maxRounds; round += 1) {
+    source.signal?.throwIfAborted();
+    const result = await invokeRound(continuation);
+
+    if (result.kind === "complete") return result.value;
 
     // An aborted call reports the abort, not the response it happened to get.
     source.signal?.throwIfAborted();
 
-    const { requests } = await elicitationInterruptSchema.parseAsync({
+    if (round === source.maxRounds)
+      throw new Error("MCP elicitation round limit exceeded");
+
+    const elicitation = await elicitationInterruptSchema.parseAsync({
       type: "mcp_elicitation",
       server: source.server,
       tool: source.tool,
-      requests: error.pending.inputRequests,
+      requests: result.pending.inputRequests,
     });
 
-    throw new ToolException(
-      Object.keys(requests).length === 0
-        ? `MCP tool "${source.tool}" on server "${source.server}" returned a state-only continuation, which is not supported.`
-        : `MCP tool "${source.tool}" on server "${source.server}" requested user input, but no elicitation handler is available.`,
-      error
-    );
+    const { requests } = elicitation;
+
+    const entries = Object.entries(requests);
+    let responses: Record<string, ElicitResult> = {};
+
+    if (entries.length > 0) {
+      if (source.direct) {
+        throw new ToolException(
+          "This MCP tool requested user input. Invoke it inside a LangGraph with a checkpointer to pause and resume elicitation.",
+          new PendingMCPInput(result.pending, result.request)
+        );
+      }
+
+      const resumeSchema = z.strictObject({
+        responses: z.strictObject(
+          Object.fromEntries(
+            entries.map(
+              ([key, request]) =>
+                [
+                  key,
+                  elicitationAnswerFor(request, modernElicitationAnswerSchema),
+                ] satisfies [string, ReturnType<typeof elicitationAnswerFor>]
+            )
+          )
+        ),
+      });
+
+      let question = elicitation;
+      let answered = false;
+
+      // Bounded like the server's rounds: a caller resuming with an invalid
+      // answer would otherwise hold the run open forever.
+      for (let attempt = 0; attempt <= source.maxRounds; attempt += 1) {
+        const answer = await resumeSchema.safeParseAsync(interrupt(question));
+
+        if (answer.success) {
+          responses = answer.data.responses;
+          answered = true;
+          break;
+        }
+
+        question = {
+          ...elicitation,
+          validationError: z.prettifyError(answer.error),
+        };
+      }
+
+      if (!answered) throw new Error("MCP elicitation answer limit exceeded");
+    } else {
+      // A state-only response carries no question, so nothing can advance it.
+      // The adapter does not poll a server for completion.
+      throw new ToolException(
+        `MCP tool "${source.tool}" on server "${source.server}" returned a state-only continuation, which is not supported.`,
+        new PendingMCPInput(result.pending, result.request)
+      );
+    }
+
+    continuation = {
+      request: result.request,
+      inputResponses: responses,
+      requestState: result.pending.requestState,
+    };
   }
+
+  throw new Error("MCP elicitation round limit exceeded");
 }

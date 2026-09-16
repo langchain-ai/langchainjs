@@ -63,14 +63,20 @@ it.each(["state-only", "questions", "abort", "transport"])(
           { name: "tool", arguments: {} }
         );
       },
-      { server: "test", tool: "tool", signal: controller.signal }
+      {
+        server: "test",
+        tool: "tool",
+        maxRounds: 2,
+        signal: controller.signal,
+        direct: true,
+      }
     );
 
     await expect(invocation).rejects.toThrow(
       scenario === "state-only"
         ? /returned a state-only continuation, which is not supported/
         : scenario === "questions"
-          ? /requested user input, but no elicitation handler is available/
+          ? /requested user input\. Invoke it inside a LangGraph/
           : scenario === "transport"
             ? /transport failure/
             : /abort/i
@@ -94,7 +100,7 @@ it("keeps the pending response on the rejection it raises", async () => {
       async () => {
         throw new PendingMCPInput(pending, request);
       },
-      { server: "test", tool: "tool" }
+      { server: "test", tool: "tool", maxRounds: 2, direct: true }
     ).catch((error: unknown) => {
       // The interception boundary is preserved: the raw response travels with
       // the error so a graph-aware caller can still act on it.
