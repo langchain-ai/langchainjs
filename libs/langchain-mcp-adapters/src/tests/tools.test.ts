@@ -36,6 +36,7 @@ describe("Simplified Tool Adapter Tests", () => {
     mockClient = {
       callTool: vi.fn(),
       listTools: vi.fn(),
+      getProtocolEra: vi.fn(() => "legacy"),
     } as MockedObject<Client>;
 
     vi.clearAllMocks();
@@ -134,6 +135,52 @@ describe("Simplified Tool Adapter Tests", () => {
       await expect(tool.invoke({})).rejects.toThrow();
       expect(mockClient.callTool).not.toHaveBeenCalled();
     });
+
+    test("rejects invalid effective arguments with a ZodError cause", async () => {
+      mockClient.listTools.mockResolvedValue({
+        tools: [
+          {
+            name: "echo",
+            inputSchema: {
+              type: "object",
+              properties: { value: { type: "integer", minimum: 1 } },
+            },
+          },
+        ],
+      });
+      const [tool] = await loadMcpTools("test", mockClient, {
+        beforeToolCall: () => ({ args: { value: -1 } }),
+      });
+
+      await expect(tool.invoke({ value: 1 })).rejects.toMatchObject({
+        message: expect.stringContaining(
+          'Invalid arguments for MCP tool "echo"'
+        ),
+        cause: expect.any(z.ZodError),
+      });
+      expect(mockClient.callTool).not.toHaveBeenCalled();
+    });
+
+    test.each([false, true])(
+      "handles progress observer failures without failing the tool (async=%s)",
+      async (asyncObserver) => {
+        const fail = () => {
+          throw new Error("progress observer failed");
+        };
+        const onProgress = vi.fn(asyncObserver ? async () => fail() : fail);
+        mockClient.callTool.mockImplementation(async (_request, options) => {
+          options?.onprogress?.({ progress: 1, total: 1 });
+          return { content: [{ type: "text", text: "completed" }] };
+        });
+
+        const [tool] = await loadMcpTools("test", mockClient, { onProgress });
+        await expect(tool.invoke({})).resolves.toBe("completed");
+        expect(onProgress).toHaveBeenCalledWith(
+          { progress: 1, total: 1 },
+          { type: "tool", name: "echo", args: {}, server: "test" }
+        );
+      }
+    );
 
     test.each([false, true])(
       "validates before hooks after awaiting them (async=%s)",
