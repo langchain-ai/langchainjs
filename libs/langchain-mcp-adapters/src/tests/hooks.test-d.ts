@@ -169,7 +169,9 @@ test("public transport types distinguish SSE from Streamable HTTP", () => {
   const config = { servers: { sse, http } } satisfies MCPAdapterConfig;
   expectTypeOf(config).toMatchTypeOf<MCPAdapterConfig>();
   expectTypeOf<SSEConnection>().not.toMatchTypeOf<StreamableHTTPConnection>();
-  expectTypeOf<NonNullable<SSEConnection["mode"]>>().toEqualTypeOf<"legacy">();
+  expectTypeOf<NonNullable<SSEConnection["mode"]>>().toEqualTypeOf<
+    "auto" | "legacy"
+  >();
 });
 
 test("resource and content types follow the SDK", () => {
@@ -202,4 +204,41 @@ test("protocol modes reject fields belonging to the other server interface", () 
 
   expectTypeOf(modern).toMatchTypeOf<import("../types.js").Connection>();
   expectTypeOf(legacy).toMatchTypeOf<import("../types.js").Connection>();
+});
+
+test("server resource subscriptions and modern reconnect boundaries", () => {
+  new MCPAdapter({
+    servers: {
+      modern: {
+        url: "https://example.com/mcp",
+        resourceSubscriptions: ["test://resource"],
+        onResourcesUpdated: ({ uri }) => {
+          expectTypeOf(uri).toBeString();
+        },
+      },
+      legacy: {
+        mode: "legacy",
+        url: "https://example.com/legacy",
+        resourceSubscriptions: ["test://resource"],
+        reconnect: { enabled: true },
+      },
+    },
+  });
+
+  const invalidModern = {
+    servers: {
+      modern: { url: "https://example.com/mcp", reconnect: { enabled: true } },
+    },
+  };
+
+  // @ts-expect-error Modern transports cannot resume/replay lost streams.
+  new MCPAdapter(invalidModern);
+
+  const misplaced = {
+    servers: { modern: { url: "https://example.com/mcp" } },
+    resourceSubscriptions: ["test://resource"],
+  };
+
+  // @ts-expect-error Resource selection belongs to an individual server.
+  new MCPAdapter(misplaced);
 });

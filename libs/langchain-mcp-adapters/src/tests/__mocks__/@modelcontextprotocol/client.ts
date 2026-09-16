@@ -11,14 +11,21 @@ const actual = await vi.importActual<
 
 export const SdkHttpError = actual.SdkHttpError;
 
+export const specTypeSchemas = actual.specTypeSchemas;
+
 export const isSpecType = actual.isSpecType;
 
 export const fromJsonSchema = actual.fromJsonSchema;
 
 const clientPrototype = {
+  getProtocolEra: vi
+    .fn<InstanceType<typeof actual.Client>["getProtocolEra"]>()
+    .mockReturnValue("legacy"),
   connect: vi
     .fn<InstanceType<typeof actual.Client>["connect"]>()
     .mockResolvedValue(undefined),
+  setRequestHandler:
+    vi.fn<InstanceType<typeof actual.Client>["setRequestHandler"]>(),
   setNotificationHandler:
     vi.fn<InstanceType<typeof actual.Client>["setNotificationHandler"]>(),
   listTools: vi
