@@ -1,5 +1,3 @@
-import { getEnv } from "@langchain/core/utils/env";
-
 import {
   classificationResponseSchema,
   withAnswerAccessors,
@@ -14,32 +12,18 @@ export const SYSTEMONE_PATH = "/v1/systemone";
 
 const CLIENT_ID = `langchainjs-typesafe/${__PKG_VERSION__}`;
 
-let cachedRuntime: string | undefined;
-
-/**
- * Describes the host runtime for the `X-TypeSafe-Runtime` header.
- *
- * Core's `getRuntimeEnvironment()` is not usable here: it returns only
- * `{library, runtime}` and never populates a version, platform or arch.
- * This mirrors `@langchain/openai`'s `getFormattedEnv()` instead, minus
- * that function's double-parenthesis bug.
- */
-export function describeRuntime(): string {
-  if (cachedRuntime === undefined) {
-    const env = getEnv();
-    cachedRuntime =
-      env === "node" || env === "deno"
-        ? `${env}/${process.version} (${process.platform}; ${process.arch})`
-        : env;
-  }
-  return cachedRuntime;
-}
-
 /**
  * Builds the request headers.
  *
- * Matches the official SDK's set, substituting our own identity. The
- * retry-count header is omitted on the first attempt, as the SDK does.
+ * Deliberately the same three the Python package sends, with our own
+ * identity in the User-Agent so the vendor can separate JS from Python
+ * traffic. An earlier version also sent `X-TypeSafe-SDK` (a duplicate of
+ * the User-Agent) and `X-TypeSafe-Runtime`; neither has a Python
+ * counterpart and neither is needed to distinguish the two clients.
+ *
+ * The retry-count header is the one addition, and only because this
+ * package retries where the Python one does not — it lets the vendor
+ * tell a retry storm from organic load. Omitted on the first attempt.
  */
 export function buildHeaders(options: {
   apiKey: string;
@@ -48,10 +32,7 @@ export function buildHeaders(options: {
   const headers = new Headers({
     Authorization: `Bearer ${options.apiKey}`,
     "Content-Type": "application/json",
-    Accept: "application/json",
     "User-Agent": CLIENT_ID,
-    "X-TypeSafe-SDK": CLIENT_ID,
-    "X-TypeSafe-Runtime": describeRuntime(),
   });
   if (options.retryCount !== undefined && options.retryCount > 0) {
     headers.set("X-TypeSafe-Retry-Count", String(options.retryCount));

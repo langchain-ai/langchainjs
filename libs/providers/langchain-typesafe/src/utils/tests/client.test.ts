@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import { TypeSafeAPIResponseValidationError } from "../errors.js";
-import { buildHeaders, describeRuntime, parseResponse } from "../client.js";
+import { buildHeaders, parseResponse } from "../client.js";
 
 const ENDPOINT = "POST https://api.typesafe.ai/v1/systemone";
 
@@ -10,14 +10,16 @@ describe("buildHeaders", () => {
     const headers = buildHeaders({ apiKey: "test-api-key" });
     expect(headers.get("authorization")).toBe("Bearer test-api-key");
     expect(headers.get("content-type")).toBe("application/json");
-    expect(headers.get("accept")).toBe("application/json");
     expect(headers.get("user-agent")).toBe(
       `langchainjs-typesafe/${__PKG_VERSION__}`
     );
-    expect(headers.get("x-typesafe-sdk")).toBe(
-      `langchainjs-typesafe/${__PKG_VERSION__}`
-    );
-    expect(headers.get("x-typesafe-runtime")).toBe(describeRuntime());
+    // The same three the Python package sends, plus the retry-count header
+    // below. Pinned as a set so an invented header cannot creep back in.
+    expect([...headers.keys()].sort()).toEqual([
+      "authorization",
+      "content-type",
+      "user-agent",
+    ]);
   });
 
   test("omits the retry-count header on the first attempt", () => {
@@ -30,14 +32,6 @@ describe("buildHeaders", () => {
     expect(
       buildHeaders({ apiKey: "k", retryCount: 1 }).get("x-typesafe-retry-count")
     ).toBe("1");
-  });
-});
-
-describe("describeRuntime", () => {
-  test("reports runtime, version, platform and arch on node", () => {
-    expect(describeRuntime()).toBe(
-      `node/${process.version} (${process.platform}; ${process.arch})`
-    );
   });
 });
 

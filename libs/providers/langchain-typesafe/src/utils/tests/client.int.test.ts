@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { buildHeaders, describeRuntime, parseResponse } from "../client.js";
+import { buildHeaders, parseResponse } from "../client.js";
 
 const BASE_URL = (
   process.env.TYPESAFE_BASE_URL ?? "https://api.typesafe.ai"
@@ -16,20 +16,16 @@ const PROBE_QUESTIONS = {
 describe.skipIf(!process.env.TYPESAFE_API_KEY)(
   "client against the live TypeSafe API",
   () => {
-    test("the full SDK-parity header set is accepted and the response parses", async () => {
+    test("the Python-parity header set is accepted and the response parses", async () => {
       const headers = buildHeaders({
         apiKey: process.env.TYPESAFE_API_KEY as string,
         retryCount: 1,
       });
-      // The live proof that all seven headers — including both
-      // `X-TypeSafe-*` identity headers and the retry-count header — are
-      // accepted by the real API, not merely plausible.
+      // Live proof that the header set the Python package sends, plus the
+      // retry-count header this package adds, is accepted by the real API.
       expect(headers.get("authorization")).toMatch(/^Bearer /);
       expect(headers.get("content-type")).toBe("application/json");
-      expect(headers.get("accept")).toBe("application/json");
-      expect(headers.get("user-agent")).toBeTruthy();
-      expect(headers.get("x-typesafe-sdk")).toBeTruthy();
-      expect(headers.get("x-typesafe-runtime")).toBeTruthy();
+      expect(headers.get("user-agent")).toMatch(/^langchainjs-typesafe\//);
       expect(headers.get("x-typesafe-retry-count")).toBe("1");
 
       const response = await fetch(`${BASE_URL}/v1/systemone`, {
@@ -46,10 +42,6 @@ describe.skipIf(!process.env.TYPESAFE_API_KEY)(
       const parsed = await parseResponse(response, ENDPOINT);
       expect(parsed.model).toMatch(/^jev-/);
       expect(parsed.requestId).toBeTruthy();
-    });
-
-    test("describeRuntime reports a non-empty string on this platform", () => {
-      expect(describeRuntime().length).toBeGreaterThan(0);
     });
   }
 );

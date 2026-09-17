@@ -147,7 +147,7 @@ describe("invoke", () => {
 
     const headers = new Headers(init.headers);
     expect(headers.get("authorization")).toBe(`Bearer ${API_KEY}`);
-    expect(headers.get("accept")).toBe("application/json");
+    expect(headers.get("content-type")).toBe("application/json");
 
     expect(JSON.parse(init.body as string)).toEqual({
       state: { message: "help" },

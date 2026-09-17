@@ -35,7 +35,6 @@ async function post(
     headers: {
       Authorization: authorization,
       "Content-Type": "application/json",
-      Accept: "application/json",
     },
     body: JSON.stringify(body),
   });
