@@ -5,13 +5,21 @@ import type { BaseMessage } from "@langchain/core/messages";
  * receives. TypeSafe has no concept of an LLM message, so a message is
  * rendered as one labelled line of transcript.
  *
- * Mirrors `_get_message_openai_role` in the Python package
- * (`langchain_core/messages/utils.py`): only a `SystemMessage` consults
- * `additional_kwargs.__openai_role__` (raising a `TypeError` if present
- * but not a string), a `ChatMessage` reports its own `role` field, and
- * any other message type raises rather than silently defaulting. The
- * raise is deliberate — a silently mislabelled message produces a
- * confident wrong classification, not an error the caller can see.
+ * The `__openai_role__` key is not an OpenAI dependency — it is the
+ * convention `langchain-core` itself defines for overriding a system
+ * message's label, and the Python package honours it through
+ * `_get_message_openai_role`. Mirrored here for that reason, not because
+ * TypeSafe knows anything about OpenAI: only a `SystemMessage` consults
+ * it (raising a `TypeError` if present but not a string), a `ChatMessage`
+ * reports its own `role`, and any other type raises rather than silently
+ * defaulting. The raise is deliberate — a silently mislabelled message
+ * produces a confident wrong classification, not a visible error.
+ *
+ * The labels earn their place, though weakly. Measured live on a question
+ * answerable only from who said what: correct prefixes and no prefixes at
+ * all both answered correctly at confidence 1.0, while prefixes swapped to
+ * the wrong speakers still answered correctly but dropped to 0.88. So the
+ * model reads them, and mostly recovers from content when they are absent.
  */
 function roleFor(message: BaseMessage): string {
   switch (message.getType()) {

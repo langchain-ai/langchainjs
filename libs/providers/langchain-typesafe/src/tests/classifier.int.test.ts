@@ -125,5 +125,75 @@ describe.skipIf(!process.env.TYPESAFE_API_KEY)(
       expect(withArgsProb).toBeGreaterThan(0.9);
       expect(withoutArgsProb).toBeLessThan(0.5);
     });
+
+    test("retries a 500 and stamps the retry-count header on the second attempt", async () => {
+      // The retry path is unit-tested with mocks, but the header is only
+      // worth sending if the real API accepts a request carrying it. One
+      // injected 500, then the genuine endpoint.
+      const realFetch = globalThis.fetch;
+      const retryCounts: (string | null)[] = [];
+      const classifier = new TypeSafeClassifier({
+        questions: QUESTIONS,
+        apiKey: process.env.TYPESAFE_API_KEY,
+        baseUrl: process.env.TYPESAFE_BASE_URL,
+        maxRetries: 2,
+        fetch: async (input, init) => {
+          retryCounts.push(
+            new Headers(init?.headers).get("x-typesafe-retry-count")
+          );
+          if (retryCounts.length === 1) {
+            return new Response(JSON.stringify({ detail: "transient" }), {
+              status: 500,
+              headers: { "content-type": "application/json" },
+            });
+          }
+          return realFetch(input, init);
+        },
+      });
+
+      const result = await classifier.invoke(
+        "My payments keep failing and nobody has replied."
+      );
+
+      expect(result.model).toMatch(/^jev-/);
+      // Omitted on the first attempt, present on the retry.
+      expect(retryCounts).toEqual([null, "1"]);
+    });
+
+    test("accepts structured, non-string instructions", async () => {
+      // `QuestionContent` allows an object or array, which the compact HTTP
+      // reference does not show. Pinned live so the wider type is not
+      // narrowed back to `string` on the assumption it was speculative.
+      const classifier = new TypeSafeClassifier({
+        questions: {
+          angry: {
+            type: "noul",
+            instructions: {
+              goal: "decide whether the customer is angry",
+              signals: ["profanity", "repeated punctuation", "all caps"],
+            },
+          },
+          listed: {
+            type: "noul",
+            instructions: ["is the customer angry?", "weigh the punctuation"],
+          },
+        },
+        apiKey: process.env.TYPESAFE_API_KEY,
+        baseUrl: process.env.TYPESAFE_BASE_URL,
+      });
+
+      const result = await classifier.invoke(
+        "THIS IS THE THIRD TIME you have charged me twice!!!"
+      );
+
+      expect(result.answers.angry.type).toBe("noul");
+      expect(result.answers.listed.type).toBe("noul");
+      expect((result.answers.angry as { noul: number }).noul).toBeGreaterThan(
+        0.5
+      );
+      expect((result.answers.listed as { noul: number }).noul).toBeGreaterThan(
+        0.5
+      );
+    });
   }
 );

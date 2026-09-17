@@ -1,3 +1,5 @@
+import * as z from "zod/v4";
+
 import {
   ns as baseNs,
   LangChainError,
@@ -310,42 +312,47 @@ export function sanitizeEndpoint(method: string, url: string): string {
 }
 
 /**
- * Extracts a safe, human-useful detail from an error body.
+ * The two error-body shapes the live API actually returns, as observed
+ * against `POST /v1/systemone`:
  *
- * Returns undefined for anything that could contain caller data; the
- * cases are annotated inline below.
+ *   `{"detail": "Too many score levels. Must have at most 10 levels."}`
+ *   `{"detail": {"error_type": "api_usage_error", "message": "Unknown model"}}`
  *
- * Deliberately hand-rolled rather than a zod schema: a union over these
- * three body shapes yields `invalid_union` with an empty path, which is
- * worse diagnostics than surfacing no detail at all.
+ * A third shape exists and is deliberately NOT modelled: FastAPI's
+ * validation errors return `detail` as an ARRAY whose `input` field
+ * echoes the entire request, including the `state` being classified.
+ * Neither schema below matches an array, so that shape falls through to
+ * `undefined` — which is the point.
+ */
+const stringDetailSchema = z.object({ detail: z.string() });
+const objectDetailSchema = z.object({
+  detail: z.object({
+    error_type: z.string().optional(),
+    message: z.string().optional(),
+  }),
+});
+
+/**
+ * Extracts a safe, human-useful detail from an error body, or `undefined`
+ * when the body is any shape that could carry caller data.
  *
  * Wired only into `apiErrorFromResponse`'s default/`ByStatus` path (see
  * below) — never into the 429 or >=500 branches, so a rate-limit or
  * server-error message keeps its `STATUS_PHRASES` phrase (e.g. "529
  * Overloaded") rather than an incidental body-shaped `detail`.
  */
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
-
 function safeDetail(body: unknown): string | undefined {
-  const detail = isRecord(body) ? body.detail : undefined;
-
-  // The API's own human-readable message.
-  if (typeof detail === "string") {
-    return detail;
+  const asString = stringDetailSchema.safeParse(body);
+  if (asString.success) {
+    return asString.data.detail;
   }
-
-  // SECURITY: an array `detail` is FastAPI's validation shape. Its
-  // `input` field echoes the entire request, including the `state` being
-  // classified — verified live against a 422. Never surface it.
-  if (Array.isArray(detail) || !isRecord(detail)) {
+  const asObject = objectDetailSchema.safeParse(body);
+  if (!asObject.success) {
     return undefined;
   }
-
-  // An object `detail` carries `{error_type, message}`; take whichever
-  // are strings and drop anything else, which could be caller data.
-  const parts = [detail.error_type, detail.message].filter(
-    (part): part is string => typeof part === "string"
+  const { error_type: errorType, message } = asObject.data.detail;
+  const parts = [errorType, message].filter(
+    (part): part is string => part !== undefined
   );
   return parts.length > 0 ? parts.join(": ") : undefined;
 }

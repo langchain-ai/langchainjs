@@ -103,6 +103,17 @@ function replacer(this: Record<string, unknown>, key: string, value: unknown) {
  * messages are the common unit of context in LangChain and TypeSafe has
  * no message concept of its own.
  *
+ * Both guards below mirror the Python package's `_serialize_state_value`
+ * one for one, including the wording of their errors: it rejects a scalar
+ * or None at the root, and raises `Unsupported TypeSafe state value:
+ * <type>` for anything that is not a dict, sequence or JSON scalar. The
+ * root guard is also matched by live behaviour — the server answers 422
+ * for `state: null` ("Field required") and for `state: 42` ("Input should
+ * be a valid string") — so rejecting locally turns a round trip into an
+ * immediate error. The type guard has no live counterpart, because
+ * `JSON.stringify` would already have flattened a Map to `{}` before the
+ * request left; that silent flattening is exactly what it prevents.
+ *
  * Cycles are detected by `JSON.stringify` itself rather than by a walker
  * of our own. Its error is NOT safe to propagate — V8 appends the
  * offending property's name, and state keys are caller data — so it is
