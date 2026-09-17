@@ -13,9 +13,6 @@ observer cannot fail a tool call that already completed.
 `logLevel` now says it requires `mode: auto or modern` rather than only
 `modern`, which is what the schema accepts.
 
-Document elicitation and the error surface in the package README: answering an
-`input_required` result with `createMCPElicitationResume`, the checkpointer
-requirement, the replay contract, and how `ToolException`, `MCPClientError`,
-`isToolException()` and `onConnectionError` relate. Correct the negotiation
-description, which did not say that SSE always speaks legacy and rejects
-`mode: "modern"`.
+Correct the negotiation release note, which did not say that SSE always speaks
+legacy and rejects `mode: "modern"`. Point the package README at the MCP
+documentation page, as the sibling packages do.
