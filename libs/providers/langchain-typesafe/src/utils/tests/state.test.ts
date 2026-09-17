@@ -166,9 +166,10 @@ describe("serializeState", () => {
   });
 
   test("does not false-positive on a non-cyclic DAG: the same object as two siblings", () => {
-    // The easy thing to break when adding cycle detection: a WeakSet that
-    // tracks "ever visited" rather than "on the current path" would wrongly
-    // reject this, since `shared` legitimately appears twice.
+    // `JSON.stringify` rejects only a reference to one of a value's own
+    // ancestors, so a shared reference appearing twice as siblings is fine.
+    // Pinned because any hand-rolled replacement for it would have to get
+    // that distinction right, and the obvious "ever visited" set does not.
     const shared = { note: "hi" };
     const sharedMessages = [new HumanMessage("hi")];
     expect(
