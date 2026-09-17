@@ -4,6 +4,9 @@ Use tools from [Model Context Protocol](https://modelcontextprotocol.io) servers
 in LangChain and LangGraph. `MCPAdapter` manages connections to one or more
 servers and returns executable LangChain tools.
 
+**Documentation**: To learn more about using MCP servers with LangChain, check
+out [the docs](https://docs.langchain.com/oss/javascript/langchain/mcp).
+
 ## Install
 
 ```bash

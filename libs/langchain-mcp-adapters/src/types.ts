@@ -408,8 +408,9 @@ const notifications = z.object({
     .optional(),
   /**
    * Called when a progress message is received.
-   * Observers do not block tool execution. Callback failures are caught and
-   * reported through the adapter's debug logger.
+   * Observers do not block tool execution. A callback that throws or rejects
+   * is ignored rather than failing a tool call that already completed, and
+   * nothing is logged: the adapter carries no logger of its own.
    *
    * @param progress - The progress message
    * @param progress.progress - Progress completed so far
@@ -652,12 +653,12 @@ const legacyPolicy = z
       )
       .optional(),
     maxElicitationRounds: z
-      .never({ error: "maxElicitationRounds requires mode: modern" })
+      .never({ error: "maxElicitationRounds requires mode: auto or modern" })
       .optional(),
     logLevel: z
       .never({
         error:
-          "logLevel requires mode: modern; use setLoggingLevel for legacy servers",
+          "logLevel requires mode: auto or modern; use setLoggingLevel for legacy servers",
       })
       .optional(),
     onRootsListChanged: removedRootsObserver,
