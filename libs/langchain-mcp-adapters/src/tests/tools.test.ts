@@ -18,6 +18,7 @@ import type {
 
 import { z } from "zod";
 import { loadMcpTools } from "../tools.js";
+import { PendingMCPInput } from "../elicitation.js";
 
 vi.mock(
   "@modelcontextprotocol/client",
@@ -89,6 +90,57 @@ describe("Simplified Tool Adapter Tests", () => {
     await expect(tool.invoke({})).rejects.toThrow();
     expect(mockClient.callTool).not.toHaveBeenCalled();
   });
+
+  test.each([
+    { era: "legacy", answers: false },
+    { era: "modern", answers: true },
+  ] as const)(
+    "answers an incomplete response only on a $era server",
+    async ({ era, answers }) => {
+      const pending = new PendingMCPInput(
+        {
+          kind: "input_required",
+          inputRequests: {
+            confirm: {
+              method: "elicitation/create",
+              params: {
+                mode: "form",
+                message: "Confirm?",
+                requestedSchema: {
+                  type: "object",
+                  properties: { confirmed: { type: "boolean" } },
+                  required: ["confirmed"],
+                },
+              },
+            },
+          },
+          requestState: "opaque-state",
+        },
+        { name: "echo", arguments: {} }
+      );
+
+      const client = {
+        callTool: vi.fn().mockRejectedValue(pending),
+        listTools: vi.fn().mockResolvedValue({
+          tools: [{ name: "echo", inputSchema: { type: "object" } }],
+        }),
+        getProtocolEra: vi.fn(() => era),
+        maxElicitationRounds: 2,
+      } as unknown as MockedObject<Client>;
+
+      const [tool] = await loadMcpTools("test", client);
+
+      // A legacy server never returns an `input_required` result, so the
+      // elicitation path must stay out of its way even though the client
+      // carries a rounds budget. Outside a graph the modern path reports how
+      // to answer, while the legacy path lets the response surface as a
+      // generic tool failure.
+      await expect(tool.invoke({})).rejects.toThrow(
+        answers ? /Invoke it inside a LangGraph/ : /Error calling tool echo/
+      );
+      expect(client.callTool).toHaveBeenCalledTimes(1);
+    }
+  );
 
   describe("hook return validation", () => {
     beforeEach(() => {

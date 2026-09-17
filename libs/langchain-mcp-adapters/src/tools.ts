@@ -1,3 +1,7 @@
+import {
+  callToolWithElicitation,
+  type InterruptMCPClient,
+} from "./elicitation.js";
 import { ToolException, isToolException } from "./utils/errors.js";
 import { z } from "zod";
 import {
@@ -326,6 +330,8 @@ type CallToolArgs = {
    */
   afterToolCall?: ToolHooks["afterToolCall"];
   inputSchema: ToolInputSchema;
+  /** Graph task state for this execution, or absent outside a graph. */
+  graph?: { state: unknown };
 };
 
 type ContentBlocksWithArtifacts = [
@@ -335,12 +341,32 @@ type ContentBlocksWithArtifacts = [
 
 type ToolInputSchema = z.ZodTransform<ToolArguments, ToolArguments>;
 
+type ToolRound = (
+  params: CallToolRequest["params"],
+  options: CallToolRequestOptions
+) => Promise<CallToolResult>;
+
 interface ToolInvocation {
-  execute(
-    request: CallToolRequest["params"],
-    options: CallToolRequestOptions,
-    headers: ToolCallModification["headers"]
-  ): Promise<CallToolResult>;
+  /** Rounds budget when this connection answers elicitation in band. */
+  readonly elicitationRounds?: number;
+  /** Fork for these headers once, then run every round against the result. */
+  bind(headers: ToolCallModification["headers"]): Promise<ToolRound>;
+}
+
+/**
+ * Graph task state for this invocation, or `undefined` outside a graph.
+ *
+ * Wrapped because a graph's own state may be `undefined`, which a bare value
+ * could not tell apart from having no graph.
+ */
+function graphTaskState(
+  config?: RunnableConfig
+): { state: unknown } | undefined {
+  try {
+    return { state: getCurrentTaskInput(config) };
+  } catch {
+    return undefined;
+  }
 }
 
 function createToolInvocationFactory(
@@ -370,8 +396,21 @@ function createToolInvocationFactory(
     };
   }
 
-  const direct = executor(client, modern);
+  const unbound = executor(client, modern);
 
+  // Structural, not `instanceof`: duplicate module copies would break identity.
+  const rounds = (client as Partial<InterruptMCPClient>).maxElicitationRounds;
+  const elicitationRounds =
+    modern && typeof rounds === "number" ? rounds : undefined;
+
+  /**
+   * Dynamic headers are applied per execution through the client's own fork.
+   *
+   * Graph calls are not treated differently: `beforeToolCall` runs again on
+   * every replayed execution, so the headers it returns are recomputed for that
+   * execution rather than restored from a checkpoint. Nothing about a forked
+   * client's credentials is persisted between executions.
+   */
   function selectHeaderPolicy() {
     if ("fork" in client && typeof client.fork === "function") {
       const fork = client.fork.bind(client);
@@ -393,23 +432,15 @@ function createToolInvocationFactory(
     };
   }
 
-  return () => {
-    let executeRound = direct;
+  return () => ({
+    elicitationRounds,
+    async bind(headers: ToolCallModification["headers"]) {
+      if (headers && Object.keys(headers).length > 0)
+        return selectHeaderPolicy()(headers);
 
-    const execute = async (
-      request: CallToolRequest["params"],
-      options: CallToolRequestOptions,
-      headers: ToolCallModification["headers"]
-    ) => {
-      if (headers && Object.keys(headers).length > 0) {
-        executeRound = await selectHeaderPolicy()(headers);
-      }
-
-      return executeRound(request, options);
-    };
-
-    return { execute };
-  };
+      return unbound;
+    },
+  });
 }
 
 /** Keep the SDK's JSON Schema semantics while exposing a Zod parsing boundary. */
@@ -457,6 +488,7 @@ async function prepareToolCall({
   onProgress,
   beforeToolCall,
   inputSchema,
+  graph,
 }: CallToolArgs) {
   // Extract timeout from RunnableConfig and pass to MCP SDK
   // Note: ensureConfig() converts timeout into an AbortSignal and deletes the timeout field.
@@ -486,13 +518,8 @@ async function prepareToolCall({
     };
   }
 
-  let state: unknown = {};
-
-  try {
-    state = getCurrentTaskInput(config);
-  } catch {
-    // Direct tool calls have no LangGraph task state.
-  }
+  // Direct tool calls have no LangGraph task state.
+  const state: unknown = graph ? graph.state : {};
 
   const beforeToolCallInterception = toolCallModificationSchema
     .optional()
@@ -521,13 +548,13 @@ async function prepareToolCall({
   }
 
   const finalArgs = parsed.data;
-  const request = {
+  const initialRequest = {
     name: toolName,
     arguments: finalArgs,
   } satisfies CallToolRequest["params"];
 
   return {
-    request,
+    request: initialRequest,
     requestOptions,
     headers: beforeToolCallInterception?.headers,
     args: finalArgs,
@@ -549,13 +576,23 @@ async function _callTool(
   } = call;
 
   try {
-    const prepared = await prepareToolCall(call);
+    const graph = graphTaskState(config);
+    const prepared = await prepareToolCall({ ...call, graph });
+    const execute = await invocation.bind(prepared.headers);
 
-    const result = await invocation.execute(
-      prepared.request,
-      prepared.requestOptions,
-      prepared.headers
-    );
+    const round = (params: CallToolRequest["params"]) =>
+      execute(params, prepared.requestOptions);
+
+    const result =
+      invocation.elicitationRounds === undefined
+        ? await round(prepared.request)
+        : await callToolWithElicitation(round, prepared.request, {
+            server: serverName,
+            tool: toolName,
+            maxRounds: invocation.elicitationRounds,
+            direct: graph === undefined,
+            signal: config?.signal,
+          });
 
     const { args: finalArgs, state } = prepared;
 
@@ -682,10 +719,8 @@ export async function convertMcpTools(
                 _runManager?: CallbackManagerForToolRun,
                 config?: RunnableConfig
               ) => {
-                const invocation = createInvocation();
-
                 return _callTool({
-                  invocation,
+                  invocation: createInvocation(),
                   serverName,
                   inputSchema,
                   toolName: tool.name,
