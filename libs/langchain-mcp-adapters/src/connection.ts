@@ -2,6 +2,7 @@ import { MCPClientError } from "./utils/errors.js";
 import {
   CancellationObserverMCPClient,
   configureElicitation,
+  InterruptMCPClient,
 } from "./elicitation.js";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import {
@@ -192,6 +193,9 @@ export class ConnectionManager {
           ? await this.#createSSETransport(options)
           : await this.#createStdioTransport(options);
 
+    const identity = { name: packageJson.name, version: packageJson.version };
+    const clientOptions = protocolClientOptions(options);
+
     const onCancelled: ConstructorParameters<
       typeof CancellationObserverMCPClient
     >[2] = options.onCancelled
@@ -204,9 +208,13 @@ export class ConnectionManager {
           );
         }
       : undefined;
-    const mcpClient = new CancellationObserverMCPClient(
-      { name: packageJson.name, version: packageJson.version },
-      protocolClientOptions(options),
+    // `InterruptMCPClient` adds two overrides, and each self-gates on the
+    // negotiated modern era: the outbound `_meta` envelope and the
+    // non-complete-result seam. `tools.ts` gates the interrupt path the same
+    // way, so a legacy connection has nothing to opt out of by construction.
+    const mcpClient = new InterruptMCPClient(
+      identity,
+      clientOptions,
       onCancelled
     );
 
@@ -646,10 +654,9 @@ export class ConnectionManager {
     return new StdioClientTransport({
       command,
       args,
+      env,
       stderr,
       cwd,
-      // oxlint-disable-next-line no-process-env
-      ...(env ? { env: { PATH: process.env.PATH!, ...env } } : {}),
     });
   }
 }
