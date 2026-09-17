@@ -73,20 +73,10 @@ function replacer(this: Record<string, unknown>, key: string, value: unknown) {
   if (raw === undefined) {
     return null;
   }
-  if (typeof raw === "object" && raw !== null) {
-    const proto = Object.getPrototypeOf(raw);
-    if (!Array.isArray(raw) && proto !== Object.prototype && proto !== null) {
-      reject(
-        `Unsupported TypeSafe state value: ${
-          (raw as { constructor?: { name?: string } }).constructor?.name ??
-          "object"
-        }.`
-      );
-    }
-    return raw;
+  if (raw === null || typeof raw === "object") {
+    return value;
   }
   if (
-    raw !== null &&
     typeof raw !== "string" &&
     typeof raw !== "number" &&
     typeof raw !== "boolean"
@@ -103,16 +93,22 @@ function replacer(this: Record<string, unknown>, key: string, value: unknown) {
  * messages are the common unit of context in LangChain and TypeSafe has
  * no message concept of its own.
  *
- * Both guards below mirror the Python package's `_serialize_state_value`
- * one for one, including the wording of their errors: it rejects a scalar
- * or None at the root, and raises `Unsupported TypeSafe state value:
- * <type>` for anything that is not a dict, sequence or JSON scalar. The
- * root guard is also matched by live behaviour — the server answers 422
- * for `state: null` ("Field required") and for `state: 42` ("Input should
- * be a valid string") — so rejecting locally turns a round trip into an
- * immediate error. The type guard has no live counterpart, because
- * `JSON.stringify` would already have flattened a Map to `{}` before the
- * request left; that silent flattening is exactly what it prevents.
+ * The root guard mirrors the Python package's `_serialize_state_value`,
+ * including its wording, and is matched by live behaviour: the server
+ * answers 422 for `state: null` ("Field required") and for `state: 42`
+ * ("Input should be a valid string"), so rejecting locally turns a round
+ * trip into an immediate error.
+ *
+ * Nested values are NOT prototype-checked, which is a deliberate
+ * divergence from Python. Python has no static types, so its runtime
+ * check is the only thing standing between a `datetime` and a crash;
+ * here the `State` type already rejects Date, Map and Set at compile
+ * time, so the equivalent guard only ever fired for JavaScript callers
+ * and `as any` casts. Dropping it also bought two conversions that the
+ * check was suppressing — a Date now becomes an ISO string and a class
+ * instance its own fields, both useful classifier input. The cost is
+ * that a Map or Set becomes `{}` silently, the same as everywhere else
+ * in JavaScript; `state.test.ts` pins all three.
  *
  * Cycles are detected by `JSON.stringify` itself rather than by a walker
  * of our own. Its error is NOT safe to propagate — V8 appends the

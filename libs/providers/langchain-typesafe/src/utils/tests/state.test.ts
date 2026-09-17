@@ -17,11 +17,43 @@ describe("serializeState", () => {
     }
   });
 
-  test("rejects unsupported values anywhere", () => {
-    expect(() =>
-      serializeState({ ticket: { attachment: new Set([1]) } } as never)
-    ).toThrow(/Unsupported TypeSafe state value/);
+  test("rejects values JSON cannot express at all, anywhere", () => {
+    // bigint, function and symbol have no JSON form, so `JSON.stringify`
+    // either throws or drops them silently. Rejecting them by name is the
+    // only way the caller learns the value never reached the classifier.
+    for (const bad of [10n, () => 1, Symbol("s")]) {
+      expect(() =>
+        serializeState({ ticket: { attachment: bad } } as never)
+      ).toThrow(/Unsupported TypeSafe state value/);
+    }
+    // A non-plain object at the ROOT is still rejected, because the API
+    // requires a string, object or array there.
     expect(() => serializeState(new Map() as never)).toThrow(/TypeSafe state/);
+  });
+
+  test("nested non-plain objects serialize the way JSON.stringify does", () => {
+    // Deliberate: this used to reject every non-plain object by prototype.
+    // The `State` type already rejects Date, Map and Set at compile time,
+    // so that guard only ever fired for JavaScript callers and `as any`
+    // casts — and it cost two useful conversions. Measured before the
+    // change, and pinned here so the tradeoff stays visible:
+    //   Date           -> ISO string   (was: threw)
+    //   class instance -> own fields   (was: threw)
+    //   Map / Set      -> {}           (was: threw) — silent, the cost
+    expect(serializeState({ when: new Date("2026-01-02T03:04:05Z") })).toEqual({
+      when: "2026-01-02T03:04:05.000Z",
+    });
+    class Ticket {
+      id = 7;
+
+      note = "late";
+    }
+    expect(serializeState({ t: new Ticket() } as never)).toEqual({
+      t: { id: 7, note: "late" },
+    });
+    expect(serializeState({ tags: new Set([1, 2]) } as never)).toEqual({
+      tags: {},
+    });
   });
 
   test("has no non-string-key case to reject, unlike Python", () => {
