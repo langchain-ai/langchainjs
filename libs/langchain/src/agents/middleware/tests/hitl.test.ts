@@ -2190,4 +2190,180 @@ describe("humanInTheLoopMiddleware", () => {
       expect(request.runtime.configurable?.thread_id).toBe("test-when-args");
     });
   });
+
+  describe("mixed tool calls with rejection", () => {
+    it("should execute auto-approved tools even when another tool is rejected", async () => {
+      // Configure HITL middleware - only write_file requires approval
+      const hitlMiddleware = humanInTheLoopMiddleware({
+        interruptOn: {
+          write_file: {
+            allowedDecisions: ["approve", "reject"],
+            description: "File write requires approval",
+          },
+        },
+      });
+
+      // Create agent with mocked LLM that calls both tools simultaneously
+      const model = new FakeToolCallingModel({
+        toolCalls: [
+          // First call: both calculator (auto-approved) and write_file (needs approval)
+          [
+            {
+              id: "call_1",
+              name: "calculator",
+              args: { a: 42, b: 17, operation: "multiply" },
+            },
+            {
+              id: "call_2",
+              name: "write_file",
+              args: { filename: "test.txt", content: "test" },
+            },
+          ],
+          // Second call: final response after tools execute
+          [],
+        ],
+      });
+
+      const checkpointer = new MemorySaver();
+      const agent = createAgent({
+        model,
+        checkpointer,
+        systemPrompt: "You are a helpful assistant.",
+        tools: [calculateTool, writeFileTool],
+        middleware: [hitlMiddleware],
+      });
+
+      const config = {
+        configurable: {
+          thread_id: "test-mixed-rejection",
+        },
+      };
+
+      // First invocation - should interrupt for write_file
+      const result = await agent.invoke(
+        {
+          messages: [new HumanMessage("Calculate 42 * 17 and write the result to test.txt")],
+        },
+        config
+      );
+
+      // Should have interrupt
+      expect(result).toHaveProperty("__interrupt__");
+      expect(result.__interrupt__).toHaveLength(1);
+
+      // Resume with rejection of write_file
+      const resume = await agent.invoke(
+        new Command({
+          resume: {
+            decisions: [{ type: "reject", message: "Do not write the file" }],
+          },
+        }),
+        config
+      );
+
+      // The calculator tool should have been called (auto-approved)
+      expect(calculatorFn).toHaveBeenCalledTimes(1);
+      expect(calculatorFn).toHaveBeenCalledWith(
+        { a: 42, b: 17, operation: "multiply" },
+        expect.anything()
+      );
+
+      // The write_file tool should NOT have been called (rejected)
+      expect(writeFileFn).not.toHaveBeenCalled();
+
+      // Final result should include the calculator result and the rejection message
+      const toolMessages = resume.messages.filter(ToolMessage.isInstance);
+      expect(toolMessages).toHaveLength(1);
+      expect(toolMessages[0].status).toBe("error");
+      expect(toolMessages[0].content).toContain("Do not write the file");
+
+      // The AI message should have been called again with the tool results
+      const aiMessages = resume.messages.filter(AIMessage.isInstance);
+      // Should have at least 2 AI messages: first with tool calls, second with final response
+      expect(aiMessages.length).toBeGreaterThanOrEqual(2);
+    });
+  });
+
+  describe("mixed tool calls with rejection", () => {
+    it("should execute auto-approved tools even when another tool is rejected", async () => {
+      const hitlMiddleware = humanInTheLoopMiddleware({
+        interruptOn: {
+          write_file: {
+            allowedDecisions: ["approve", "reject"],
+            description: "File write requires approval",
+          },
+        },
+      });
+
+      const model = new FakeToolCallingModel({
+        toolCalls: [
+          [
+            {
+              id: "call_1",
+              name: "calculator",
+              args: { a: 42, b: 17, operation: "multiply" },
+            },
+            {
+              id: "call_2",
+              name: "write_file",
+              args: { filename: "test.txt", content: "test" },
+            },
+          ],
+          [],
+        ],
+      });
+
+      const checkpointer = new MemorySaver();
+      const agent = createAgent({
+        model,
+        checkpointer,
+        systemPrompt: "You are a helpful assistant.",
+        tools: [calculateTool, writeFileTool],
+        middleware: [hitlMiddleware],
+      });
+
+      const config = { configurable: { thread_id: "test-mixed-rejection" } };
+
+      const result = await agent.invoke(
+        { messages: [new HumanMessage("Calculate 42 * 17 and write to file")] },
+        config
+      );
+
+      expect(result).toHaveProperty("__interrupt__");
+      expect(result.__interrupt__).toHaveLength(1);
+
+      const resume = await agent.invoke(
+        new Command({
+          resume: { decisions: [{ type: "reject", message: "Do not write the file" }] },
+        }),
+        config
+      );
+
+      // Auto-approved calculator tool should still execute
+      expect(calculatorFn).toHaveBeenCalledTimes(1);
+      expect(calculatorFn).toHaveBeenCalledWith(
+        { a: 42, b: 17, operation: "multiply" },
+        expect.anything()
+      );
+
+      // Rejected write_file tool should NOT execute
+      expect(writeFileFn).not.toHaveBeenCalled();
+
+      // Verify tool messages include both calculator result and rejection
+      const toolMessages = resume.messages.filter(ToolMessage.isInstance);
+      expect(toolMessages.length).toBeGreaterThanOrEqual(2);
+
+      const calculatorMessages = toolMessages.filter((tm) => tm.name === "calculator");
+      expect(calculatorMessages).toHaveLength(1);
+
+      const rejectionMessages = toolMessages.filter(
+        (tm) => tm.status === "error" && String(tm.content).includes("Do not write the file")
+      );
+      expect(rejectionMessages).toHaveLength(1);
+
+      // Model should be called again with tool results
+      const aiMessages = resume.messages.filter(AIMessage.isInstance);
+      expect(aiMessages.length).toBeGreaterThanOrEqual(2);
+    });
+  });
 });
