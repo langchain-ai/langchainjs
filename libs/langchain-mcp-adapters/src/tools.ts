@@ -1,7 +1,4 @@
-import {
-  callToolWithElicitation,
-  type InterruptMCPClient,
-} from "./elicitation.js";
+import { callToolWithElicitation } from "./elicitation.js";
 import { ToolException, isToolException } from "./utils/errors.js";
 import { z } from "zod";
 import {
@@ -399,9 +396,12 @@ function createToolInvocationFactory(
   const unbound = executor(client, modern);
 
   // Structural, not `instanceof`: duplicate module copies would break identity.
-  const rounds = (client as Partial<InterruptMCPClient>).maxElicitationRounds;
   const elicitationRounds =
-    modern && typeof rounds === "number" ? rounds : undefined;
+    modern &&
+    "maxElicitationRounds" in client &&
+    typeof client.maxElicitationRounds === "number"
+      ? client.maxElicitationRounds
+      : undefined;
 
   /**
    * Dynamic headers are applied per execution through the client's own fork.
