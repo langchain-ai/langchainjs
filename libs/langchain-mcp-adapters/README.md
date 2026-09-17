@@ -66,6 +66,10 @@ to skip probing and enable legacy options such as `onElicitation` and
 [`2026-07-28`](https://modelcontextprotocol.io/specification/2026-07-28)
 without fallback. SDK 2 can serve either protocol.
 
+Negotiation applies to HTTP and stdio. SSE always speaks legacy whatever the
+mode and rejects `mode: "modern"`; set `mode: "legacy"` on an SSE server only
+to reach the legacy callbacks or `automaticSSEFallback`.
+
 ## Configuration and lifecycle
 
 Construction validates options with Zod 4 and opens no connections. Discovery
@@ -90,6 +94,81 @@ Tool content uses standard LangChain blocks. Images and audio expose `data` and
 Use `beforeToolCall` and `afterToolCall` to modify arguments or results. See the
 [hooks example](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-mcp-adapters/examples/hooks.ts)
 for argument and result hooks.
+
+## Answering elicitation
+
+A modern server that needs input mid-call answers `tools/call` with an
+`input_required` result instead of a result, and expects the call retried with
+the answers. The adapter raises each question as a LangGraph
+[interrupt](https://docs.langchain.com/oss/javascript/langgraph/interrupts), so
+a human or an agent answers it and the run resumes:
+
+```ts
+import { Command } from "@langchain/langgraph";
+import { createMCPElicitationResume } from "@langchain/mcp-adapters";
+
+const paused = await agent.invoke({ messages }, config);
+const [question] = paused.__interrupt__;
+
+await agent.invoke(
+  new Command({
+    resume: createMCPElicitationResume(question, {
+      confirmation: { action: "accept", content: { confirm: true } },
+    }),
+  }),
+  config
+);
+```
+
+`createMCPElicitationResume` keys the answer by the interrupt it came from, so
+it cannot be delivered to an unrelated question paused in the same run. The
+interrupt value carries `server`, `tool` and a `requests` map describing what
+the server asked, including a `validationError` when a previous answer did not
+match the requested schema.
+
+Pausing needs a checkpointer. Calling such a tool outside a graph reports how
+to answer it rather than hanging, and `maxElicitationRounds` bounds how many
+questions one call may ask.
+
+**Resuming replays the tool call.** The original request is issued again, the
+server repeats its question, and the interrupt returns the stored answer
+instead of pausing — so work a server performs before asking runs again, and
+`beforeToolCall` runs once per execution. Servers and hooks must be
+replay-safe; the adapter promises no exactly-once effects.
+
+Only elicitation on a tool call is answered this way. Legacy servers ask over a
+reverse request that the per-server `onElicitation` callback answers inline,
+without interrupting.
+
+## Errors
+
+Tool failures throw `ToolException`, with the MCP error response preserved on
+`result`. Connection and adapter failures throw `MCPClientError`, which carries
+the `serverName` it came from. Both preserve the original cause.
+
+Narrow with `isToolException()` or the classes' `isInstance()` methods rather
+than `instanceof`, which fails when two copies of a module are installed:
+
+```ts
+import { isToolException, MCPClientError } from "@langchain/mcp-adapters";
+
+try {
+  await tool.invoke(args);
+} catch (error) {
+  if (isToolException(error)) {
+    // The server reported a tool error; error.result holds its response.
+  } else if (MCPClientError.isInstance(error)) {
+    // The adapter could not reach or drive error.serverName.
+  }
+}
+```
+
+`onConnectionError` decides what a failed server does to discovery: `"throw"`
+(the default) fails the call, `"ignore"` skips that server, and a handler
+receives `{ serverName, error }` and then skips it. It also reports a
+background reconnection that exhausted its attempts. Set
+`throwOnLoadError: false` to skip tools whose schemas fail to load instead of
+failing discovery.
 
 ## Authentication
 

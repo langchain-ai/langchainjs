@@ -344,6 +344,7 @@ describe("MultiServerMCPClient", () => {
           restart: {
             enabled: true,
             maxAttempts,
+            delayMs: 10,
           },
         },
       });
@@ -369,11 +370,55 @@ describe("MultiServerMCPClient", () => {
       expect(onclose).toBeDefined();
       await onclose?.();
 
-      // Wait for reconnection attempts to complete
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
       // Should attempt to create a new transport exactly maxAttempts times
-      expect(StdioClientTransport).toHaveBeenCalledTimes(maxAttempts);
+      await vi.waitFor(() =>
+        expect(StdioClientTransport).toHaveBeenCalledTimes(maxAttempts)
+      );
+    });
+
+    test("reports an exhausted reconnection budget through onConnectionError", async () => {
+      const onConnectionError = vi.fn();
+      const client = new MultiServerMCPClient({
+        servers: {
+          "test-server": {
+            mode: "legacy",
+            transport: "stdio" as const,
+            command: "python",
+            args: ["./script.py"],
+            restart: { enabled: true, maxAttempts: 2, delayMs: 10 },
+          },
+        },
+        onConnectionError,
+      });
+
+      await client.initializeConnections();
+
+      const stdioInstance = (StdioClientTransport as Mock).mock.results[0]
+        ?.value as { onclose?: () => Promise<void> | void };
+      (StdioClientTransport as Mock).mockClear();
+      (Client.prototype.connect as Mock)
+        .mockImplementationOnce(() =>
+          Promise.reject(new Error("reconnect fail 1"))
+        )
+        .mockImplementationOnce(() =>
+          Promise.reject(new Error("reconnect fail 2"))
+        );
+
+      await stdioInstance.onclose?.();
+
+      // Reconnection runs detached, so an exhausted budget has to reach the
+      // handler; otherwise a server that never comes back fails silently.
+      // Reconnection runs detached, so an exhausted budget has to reach the
+      // handler; otherwise a server that never comes back fails silently.
+      await vi.waitFor(() =>
+        expect(onConnectionError).toHaveBeenCalledWith({
+          serverName: "test-server",
+          error: expect.objectContaining({
+            name: "MCPClientError",
+            message: expect.stringContaining("reconnect fail 2"),
+          }),
+        })
+      );
     });
   });
 
