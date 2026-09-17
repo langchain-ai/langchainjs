@@ -33,9 +33,14 @@ class ChatGoogleNode extends BaseChatGoogle {
       params.apiKey = params.apiKey ?? getEnvironmentVariable("GOOGLE_API_KEY");
     }
     const requiredScopes: string[] = getRequiredAuthScopes(params);
-    if (params.googleAuthOptions) {
+    const usesImplicitGoogleAuth =
+      !params.apiClient &&
+      !params.apiKey &&
+      !params.credentials &&
+      !getEnvironmentVariable("GOOGLE_CLOUD_CREDENTIALS");
+    if (params.googleAuthOptions || usesImplicitGoogleAuth) {
       params.googleAuthOptions = ensureAuthScopes(
-        params.googleAuthOptions,
+        params.googleAuthOptions ?? {},
         requiredScopes
       );
     }
