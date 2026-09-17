@@ -1,3 +1,4 @@
+import { PendingMCPInput, withMCPInterrupts } from "../continuation.js";
 import { createServer } from "node:http";
 import { once } from "node:events";
 import {
@@ -503,5 +504,116 @@ describe("thread isolation", () => {
     expect(h.calls).toHaveLength(6);
     expect(h.after).toHaveBeenCalledTimes(2);
     expect(h.before).toHaveBeenCalledTimes(4);
+  });
+});
+
+describe("bounding a continuation the adapter drives itself", () => {
+  it.each(["state-only", "abort", "transport"])(
+    "rejects a graph continuation it cannot answer: %s",
+    async (scenario) => {
+      const controller = new AbortController();
+      let calls = 0;
+      const State = Annotation.Root({ result: Annotation<string>() });
+
+      const graph = new StateGraph(State)
+        .addNode("call", async () => ({
+          result: await withMCPInterrupts(
+            async (continuation) => {
+              calls += 1;
+
+              if (scenario === "transport")
+                throw new Error("transport failure");
+
+              // Nothing can answer a response with no questions, so the
+              // adapter never produces a continuation for one.
+              expect(continuation).toBeUndefined();
+
+              if (scenario === "abort") controller.abort();
+              throw new PendingMCPInput(
+                {
+                  kind: "input_required",
+                  inputRequests: {},
+                  requestState: "opaque-state",
+                },
+                { name: "tool", arguments: {} }
+              );
+            },
+            {
+              server: "test",
+              tool: "tool",
+              maxRounds: 2,
+              signal: controller.signal,
+            }
+          ),
+        }))
+        .addEdge(START, "call")
+        .addEdge("call", END)
+        .compile({ checkpointer: new MemorySaver() });
+
+      const invocation = graph.invoke(
+        { result: "" },
+        { configurable: { thread_id: scenario } }
+      );
+
+      // Without a task wrapper the failure is no longer repackaged as a task
+      // error, so each of these surfaces its own message directly.
+      await expect(invocation).rejects.toThrow(
+        scenario === "transport"
+          ? /transport failure/
+          : scenario === "abort"
+            ? /abort/i
+            : /state-only continuation/
+      );
+      expect(calls).toBe(1);
+    }
+  );
+
+  it("bounds answered elicitation rounds, replaying each earlier request", async () => {
+    let calls = 0;
+    const State = Annotation.Root({ result: Annotation<string>() });
+
+    const graph = new StateGraph(State)
+      .addNode("call", async () => ({
+        result: await withMCPInterrupts<string>(
+          async (continuation) => {
+            calls += 1;
+
+            if (continuation)
+              expect(continuation.inputResponses).toEqual({
+                confirmation: { action: "decline" },
+              });
+            throw new PendingMCPInput(
+              {
+                kind: "input_required",
+                inputRequests: {
+                  confirmation: inputRequired.elicit({
+                    message: "Continue?",
+                    requestedSchema: { type: "object", properties: {} },
+                  }),
+                },
+              },
+              { name: "repeat", arguments: {} }
+            );
+          },
+          { server: "modern", tool: "repeat", maxRounds: 2 }
+        ),
+      }))
+      .addEdge(START, "call")
+      .addEdge("call", END)
+      .compile({ checkpointer: new MemorySaver() });
+
+    const config = { configurable: { thread_id: "answered-round-limit" } };
+    await graph.invoke({ result: "" }, config);
+    expect(calls).toBe(1);
+    const resume = { responses: { confirmation: { action: "decline" } } };
+    // Each resume replays the initial request and every round already answered,
+    // then issues one new round: 1 -> 3 -> 6 requests. The round limit still
+    // bounds the answered loop inside a single execution.
+    await graph.invoke(new Command({ resume }), config);
+    expect(calls).toBe(3);
+    await expect(graph.invoke(new Command({ resume }), config)).rejects.toThrow(
+      /round limit/
+    );
+    expect(calls).toBe(6);
   });
 });
