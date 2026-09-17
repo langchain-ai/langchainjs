@@ -31,45 +31,52 @@ describe("serializeState", () => {
     expect(() => serializeState(new Map() as never)).toThrow(/TypeSafe state/);
   });
 
-  test("nested non-plain objects serialize the way JSON.stringify does", () => {
-    // Deliberate: this used to reject every non-plain object by prototype.
-    // The `State` type already rejects Date, Map and Set at compile time,
-    // so that guard only ever fired for JavaScript callers and `as any`
-    // casts — and it cost two useful conversions. Measured before the
-    // change, and pinned here so the tradeoff stays visible:
-    //   Date           -> ISO string   (was: threw)
-    //   class instance -> own fields   (was: threw)
-    //   Map / Set      -> {}           (was: threw) — silent, the cost
+  test("converts a Date and rejects every other non-plain object by name", () => {
+    // A Date has one unambiguous JSON form and is useful context, so the
+    // schema converts it. Everything else without a JSON form is rejected
+    // rather than silently flattened: `JSON.stringify` turns a Map into
+    // `{}`, which would shrink the classifier's input with no error.
     expect(serializeState({ when: new Date("2026-01-02T03:04:05Z") })).toEqual({
       when: "2026-01-02T03:04:05.000Z",
     });
     class Ticket {
       id = 7;
-
-      note = "late";
     }
-    expect(serializeState({ t: new Ticket() } as never)).toEqual({
-      t: { id: 7, note: "late" },
-    });
-    expect(serializeState({ tags: new Set([1, 2]) } as never)).toEqual({
-      tags: {},
-    });
+    const rejected: [string, unknown][] = [
+      ["Map", new Map([["a", 1]])],
+      ["Set", new Set([1])],
+      ["Ticket", new Ticket()],
+      ["bigint", 10n],
+      ["function", () => 1],
+    ];
+    for (const [name, value] of rejected) {
+      expect(() => serializeState({ k: value } as never)).toThrow(
+        `Unsupported TypeSafe state value: ${name}.`
+      );
+    }
+    // The name is the deepest failure, not the outermost container.
+    expect(() => serializeState({ a: [[{ b: new Set() }]] } as never)).toThrow(
+      "Unsupported TypeSafe state value: Set."
+    );
   });
 
-  test("has no non-string-key case to reject, unlike Python", () => {
-    // Python must reject dicts with non-string keys. JavaScript cannot
-    // have them: every object key is a string or a symbol, and
-    // Object.entries skips symbols entirely. Both cases are pinned here
-    // so nobody adds a key-type check that can never fire.
-    const numericLooking = { 1: "one", nested: { 2: "two" } };
-    expect(serializeState(numericLooking)).toEqual({
+  test("numeric-looking keys pass through; a symbol key is rejected", () => {
+    // Object keys are always strings in JavaScript, so Python's
+    // non-string-key check has no counterpart — a numeric-looking key is
+    // already a string and survives unchanged.
+    expect(serializeState({ 1: "one", nested: { 2: "two" } })).toEqual({
       "1": "one",
       nested: { "2": "two" },
     });
 
+    // A symbol key has no JSON form. `JSON.stringify` drops it silently;
+    // the schema rejects the object instead, because a silent drop is the
+    // failure this package exists to avoid.
     const withSymbol: Record<string | symbol, unknown> = { kept: "yes" };
     withSymbol[Symbol("dropped")] = "no";
-    expect(serializeState(withSymbol as never)).toEqual({ kept: "yes" });
+    expect(() => serializeState(withSymbol as never)).toThrow(
+      /Unsupported TypeSafe state value/
+    );
   });
 
   test("accepts a null-prototype object at the root and when nested", () => {

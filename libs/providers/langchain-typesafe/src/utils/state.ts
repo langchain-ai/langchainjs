@@ -1,14 +1,22 @@
 import { BaseMessage } from "@langchain/core/messages";
+import * as z from "zod/v4";
 
 import type { JsonValue } from "../types.js";
 import { renderMessage } from "./messages.js";
 
-/** A value legal anywhere below the root of a state payload. */
+/**
+ * A value legal anywhere below the root of a state payload.
+ *
+ * `Date` is included because the schema converts it to an ISO string; a
+ * timestamp is ordinary state, and leaving it out of the type would make
+ * that conversion unreachable for TypeScript callers.
+ */
 export type StateValue =
   | string
   | number
   | boolean
   | null
+  | Date
   | BaseMessage
   | StateValue[]
   | { [key: string]: StateValue };
@@ -16,8 +24,9 @@ export type StateValue =
 /**
  * Input accepted by `TypeSafeClassifier`.
  *
- * Note this is narrower than `StateValue`: the API requires the root to be
- * a string, object or array. Bare scalars and `null` are rejected at the
+ * Narrower than `StateValue`: the API requires the root to be a string,
+ * object or array — verified live, the server answers 422 for
+ * `state: null` and for `state: 42`. Bare scalars are rejected at the
  * root but legal when nested.
  */
 export type State =
@@ -30,96 +39,145 @@ const ROOT_ERROR =
   "TypeSafe state must be a string, object, array, BaseMessage, or sequence of BaseMessage objects.";
 
 /**
- * Deliberately names no value and no content: `state` is the sensitive
- * payload this package classifies, so the error must stay safe to log.
+ * Names no value and no content: `state` is the payload this package
+ * classifies, so the error must stay safe to log.
  */
 const CIRCULAR_ERROR = "Circular reference detected in TypeSafe state.";
 
-/** Marks errors we raised ourselves, so the catch below rethrows them as-is. */
-const OURS = Symbol("typesafe.state.error");
-
-function reject(message: string): never {
-  const error = new TypeError(message);
-  Object.defineProperty(error, OURS, { value: true });
-  throw error;
-}
-
 /**
- * Converts `BaseMessage` values and rejects anything not JSON-expressible.
+ * A `BaseMessage`, rendered to a transcript line.
  *
- * Reads `this[key]` rather than `value`: `JSON.stringify` calls a value's
- * own `toJSON()` BEFORE handing it to the replacer, and `BaseMessage` has
- * one, so `value` is already LangChain's serialization envelope by the
- * time we see it. The holder is still the original object, so `this[key]`
- * is the untouched instance.
+ * Listed before `z.record` in both unions below, because a message is
+ * also an object and the record branch would otherwise claim it.
+ * `z.custom` receives the untouched instance — unlike a `JSON.stringify`
+ * replacer, which is handed `toJSON()`'s envelope instead.
  */
-function replacer(this: Record<string, unknown>, key: string, value: unknown) {
-  // Uniform `this[key]`, including the root: `JSON.stringify` wraps the
-  // root value as `{ "": state }`, so `this[""]` is the untouched input
-  // while `value` is already its `toJSON()` envelope.
-  const raw = this[key];
-  if (BaseMessage.isInstance(raw)) {
-    // Mark so the catch below rethrows rather than relabelling this as a
-    // circular reference — an unsupported message type must stay loud.
+const RENDER_FAILURE = Symbol("typesafe.state.renderFailure");
+
+const messageSchema = z
+  .custom<BaseMessage>((value) => BaseMessage.isInstance(value))
+  .transform((message) => {
     try {
-      return renderMessage(raw);
+      return renderMessage(message);
     } catch (error) {
+      // Marked so the catch in `serializeState` can tell a real failure
+      // (an unsupported message type) from a stack exhausted by a cycle.
       if (error !== null && typeof error === "object") {
-        Object.defineProperty(error, OURS, { value: true });
+        Object.defineProperty(error, RENDER_FAILURE, { value: true });
       }
       throw error;
     }
+  });
+
+/** Parses any value legal below the root, converting as it goes. */
+const stateValueSchema: z.ZodType<JsonValue> = z.lazy(() =>
+  z.union([
+    messageSchema,
+    z.string(),
+    z.number(),
+    z.boolean(),
+    z.null(),
+    // Absent is not the same as missing: dropping the key would shrink the
+    // classifier's input without telling anyone.
+    z.undefined().transform(() => null),
+    // A Date has an unambiguous JSON form and is useful context.
+    z.date().transform((value) => value.toISOString()),
+    z.array(stateValueSchema),
+    z.record(z.string(), stateValueSchema),
+  ])
+);
+
+/** The root accepts only what the API accepts there. */
+const rootSchema: z.ZodType<JsonValue> = z.union([
+  messageSchema,
+  z.string(),
+  z.array(stateValueSchema),
+  z.record(z.string(), stateValueSchema),
+]);
+
+/**
+ * Names the type of the value that failed, without naming the value or
+ * the key that held it.
+ *
+ * `issue.path` is the caller's own key names, so it is used to walk to
+ * the offending value and then discarded — only `typeof` (or the
+ * constructor name) reaches the message. Both are fixed in the caller's
+ * source, never per-request content.
+ */
+function deepestPath(issues: readonly unknown[]): PropertyKey[] {
+  let deepest: PropertyKey[] = [];
+  // A failed union reports itself with an empty path and nests one issue
+  // list per member, each addressed relative to the union — so the
+  // absolute location is the prefix accumulated on the way down.
+  const visit = (list: readonly unknown[], prefix: PropertyKey[]): void => {
+    for (const issue of list) {
+      const { path, errors } = issue as {
+        path?: PropertyKey[];
+        errors?: readonly unknown[][];
+      };
+      const absolute = path ? [...prefix, ...path] : prefix;
+      if (absolute.length > deepest.length) {
+        deepest = absolute;
+      }
+      if (Array.isArray(errors)) {
+        for (const nested of errors) {
+          visit(nested, absolute);
+        }
+      }
+    }
+  };
+  visit(issues, []);
+  return deepest;
+}
+
+function describeFailure(state: unknown, path: PropertyKey[]): string {
+  let value: unknown = state;
+  for (const segment of path) {
+    if (value === null || typeof value !== "object") break;
+    value = (value as Record<PropertyKey, unknown>)[segment];
   }
-  if (raw === undefined) {
-    return null;
+  if (typeof value === "object" && value !== null) {
+    return value.constructor?.name ?? "object";
   }
-  if (raw === null || typeof raw === "object") {
-    return value;
-  }
-  if (
-    typeof raw !== "string" &&
-    typeof raw !== "number" &&
-    typeof raw !== "boolean"
-  ) {
-    reject(`Unsupported TypeSafe state value: ${typeof raw}.`);
-  }
-  return value;
+  return typeof value;
 }
 
 /**
  * Normalizes classifier input into the JSON `state` payload.
  *
- * `BaseMessage` instances are converted at any nesting depth, because
- * messages are the common unit of context in LangChain and TypeSafe has
- * no message concept of its own.
+ * Parses rather than validates: the schema's output IS the payload, so
+ * there is no second pass that could disagree with the check.
  *
- * The root guard mirrors the Python package's `_serialize_state_value`,
- * including its wording, and is matched by live behaviour: the server
- * answers 422 for `state: null` ("Field required") and for `state: 42`
- * ("Input should be a valid string"), so rejecting locally turns a round
- * trip into an immediate error.
+ * Messages are converted at any nesting depth, because messages are the
+ * common unit of context in LangChain and TypeSafe has no message
+ * concept of its own.
  *
- * Nested values are NOT prototype-checked, which is a deliberate
- * divergence from Python. Python has no static types, so its runtime
- * check is the only thing standing between a `datetime` and a crash;
- * here the `State` type already rejects Date, Map and Set at compile
- * time, so the equivalent guard only ever fired for JavaScript callers
- * and `as any` casts. Dropping it also bought two conversions that the
- * check was suppressing — a Date now becomes an ISO string and a class
- * instance its own fields, both useful classifier input. The cost is
- * that a Map or Set becomes `{}` silently, the same as everywhere else
- * in JavaScript; `state.test.ts` pins all three.
- *
- * Cycles are detected by `JSON.stringify` itself rather than by a walker
- * of our own. Its error is NOT safe to propagate — V8 appends the
- * offending property's name, and state keys are caller data — so it is
- * caught and discarded in favour of a fixed, content-free message.
- *
- * @throws TypeError if the root is a scalar, `null`, or `undefined`, if any
- *   nested value is not JSON-expressible, or if `state` contains a circular
- *   reference.
+ * @throws TypeError if the root is a scalar, `null` or `undefined`, if any
+ *   nested value cannot be expressed as JSON, or if `state` is cyclic.
  */
 export function serializeState(state: State): JsonValue {
+  let result: z.ZodSafeParseResult<JsonValue>;
+  try {
+    result = rootSchema.safeParse(state);
+  } catch (error) {
+    if (
+      error !== null &&
+      typeof error === "object" &&
+      RENDER_FAILURE in error
+    ) {
+      throw error;
+    }
+    // Everything else escaping `safeParse` is a stack exhausted by a cycle:
+    // zod recurses, and the limit is as likely to land mid-expression
+    // (a TypeError from inside `isInstance`) as on a clean RangeError, so
+    // matching on the error type does not work. The `memoizer` config would
+    // parse cycles instead, but that yields a cyclic object the API cannot
+    // receive — rejecting is the right outcome.
+    throw new TypeError(CIRCULAR_ERROR);
+  }
+  if (result.success) {
+    return result.data;
+  }
   if (
     state === null ||
     state === undefined ||
@@ -128,26 +186,10 @@ export function serializeState(state: State): JsonValue {
   ) {
     throw new TypeError(ROOT_ERROR);
   }
-  if (typeof state === "string") {
-    return state;
-  }
-  const proto = Object.getPrototypeOf(state);
-  if (
-    !BaseMessage.isInstance(state) &&
-    !Array.isArray(state) &&
-    proto !== Object.prototype &&
-    proto !== null
-  ) {
-    throw new TypeError(ROOT_ERROR);
-  }
-  let json: string;
-  try {
-    json = JSON.stringify(state, replacer) as string;
-  } catch (error) {
-    if (error !== null && typeof error === "object" && OURS in error) {
-      throw error;
-    }
-    throw new TypeError(CIRCULAR_ERROR);
-  }
-  return JSON.parse(json) as JsonValue;
+  throw new TypeError(
+    `Unsupported TypeSafe state value: ${describeFailure(
+      state,
+      deepestPath(result.error.issues)
+    )}.`
+  );
 }
