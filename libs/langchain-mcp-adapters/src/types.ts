@@ -641,13 +641,13 @@ const legacyPolicy = z
     elicitation: z
       .never({
         error:
-          "elicitation requires mode: modern; legacy servers use onElicitation",
+          "elicitation requires mode: auto or modern; legacy servers use onElicitation",
       })
       .optional(),
     logLevel: z
       .never({
         error:
-          "logLevel requires mode: modern; use setLoggingLevel for legacy servers",
+          "logLevel requires mode: auto or modern; use setLoggingLevel for legacy servers",
       })
       .optional(),
     onRootsListChanged: removedRootsObserver,

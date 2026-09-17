@@ -720,8 +720,7 @@ export class MCPAdapter {
     restart: NonNullable<ResolvedStdioConnection["restart"]>
   ): void {
     const originalOnClose = transport.onclose;
-    // oxlint-disable-next-line @typescript-eslint/no-misused-promises
-    transport.onclose = async () => {
+    const handleClose = async () => {
       if (originalOnClose) {
         await originalOnClose();
       }
@@ -735,6 +734,9 @@ export class MCPAdapter {
           restart.delayMs
         );
       }
+    };
+    transport.onclose = () => {
+      handleClose().catch(() => {});
     };
   }
 
@@ -935,8 +937,7 @@ export class MCPAdapter {
     reconnect: NonNullable<ResolvedSSEConnection["reconnect"]>
   ): void {
     const originalOnClose = transport.onclose;
-    // oxlint-disable-next-line @typescript-eslint/no-misused-promises
-    transport.onclose = async () => {
+    const handleClose = async () => {
       if (originalOnClose) {
         await originalOnClose();
       }
@@ -956,6 +957,9 @@ export class MCPAdapter {
           reconnect.delayMs
         );
       }
+    };
+    transport.onclose = () => {
+      handleClose().catch(() => {});
     };
   }
 
@@ -1066,6 +1070,7 @@ export class MCPAdapter {
     const { signal } = this.#epoch;
     let connected = false;
     let attempts = 0;
+    let lastError: unknown;
 
     // Clean up previous connection resources
     if ("headers" in connection || "authProvider" in connection) {
@@ -1121,7 +1126,28 @@ export class MCPAdapter {
         if (this.#clientConnections.has(key)) {
           connected = true;
         }
-      } catch {}
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    // Reconnection runs detached, so there is no caller to throw at and a
+    // string policy has nowhere to surface this. Report an exhausted budget
+    // through the handler when one is configured rather than failing silently.
+    if (
+      !connected &&
+      !signal.aborted &&
+      typeof this.#onConnectionError === "function"
+    ) {
+      this.#onConnectionError({
+        serverName,
+        error:
+          lastError ??
+          new MCPClientError(
+            `Failed to reconnect to MCP server "${serverName}" after ${attempts} attempts`,
+            serverName
+          ),
+      });
     }
   }
 

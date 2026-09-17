@@ -66,6 +66,10 @@ to skip probing and enable legacy options such as `onElicitation` and
 [`2026-07-28`](https://modelcontextprotocol.io/specification/2026-07-28)
 without fallback. SDK 2 can serve either protocol.
 
+Negotiation applies to HTTP and stdio. SSE always speaks legacy whatever the
+mode and rejects `mode: "modern"`; set `mode: "legacy"` on an SSE server only
+to reach the legacy callbacks or `automaticSSEFallback`.
+
 ## Modern elicitation
 
 Modern servers can return `input_required` from a tool call. Opt a server in
@@ -161,6 +165,36 @@ Tool content uses standard LangChain blocks. Images and audio expose `data` and
 Use `beforeToolCall` and `afterToolCall` to modify arguments or results. See the
 [hooks example](https://github.com/langchain-ai/langchainjs/blob/main/libs/langchain-mcp-adapters/examples/hooks.ts)
 for argument and result hooks.
+
+## Errors
+
+Tool failures throw `ToolException`, with the MCP error response preserved on
+`result`. Connection and adapter failures throw `MCPClientError`, which carries
+the `serverName` it came from. Both preserve the original cause.
+
+Narrow with `isToolException()` or the classes' `isInstance()` methods rather
+than `instanceof`, which fails when two copies of a module are installed:
+
+```ts
+import { isToolException, MCPClientError } from "@langchain/mcp-adapters";
+
+try {
+  await tool.invoke(args);
+} catch (error) {
+  if (isToolException(error)) {
+    // The server reported a tool error; error.result holds its response.
+  } else if (MCPClientError.isInstance(error)) {
+    // The adapter could not reach or drive error.serverName.
+  }
+}
+```
+
+`onConnectionError` decides what a failed server does to discovery: `"throw"`
+(the default) fails the call, `"ignore"` skips that server, and a handler
+receives `{ serverName, error }` and then skips it. It also reports a
+background reconnection that exhausted its attempts. Set
+`throwOnLoadError: false` to skip tools whose schemas fail to load instead of
+failing discovery.
 
 ## Authentication
 
