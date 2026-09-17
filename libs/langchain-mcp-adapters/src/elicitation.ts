@@ -357,6 +357,166 @@ type ElicitationRoundParams = CallToolRequest["params"] & {
   requestState?: string;
 };
 
+/** A round's outcome: the tool finished, or the server asked for input. */
+type ElicitationRound =
+  | { done: true; result: CallToolResult }
+  | { done: false; pending: PendingMCPInput };
+
+/** Everything the round loop needs to know about the call it is answering. */
+export interface MCPElicitationSource {
+  server: string;
+  tool: string;
+  maxRounds: number;
+  /** No graph to interrupt, so questions are reported instead of asked. */
+  direct?: boolean;
+  signal?: AbortSignal;
+}
+
+/**
+ * Questions asked so far against one call's allowance.
+ *
+ * Server rounds and re-asked answers spend the same budget, so neither a
+ * server nor a caller resuming with invalid answers can hold a run open.
+ */
+interface ElicitationBudget {
+  asks: number;
+  readonly max: number;
+}
+
+/**
+ * Issue one `tools/call`, turning the SDK's pending-input throw into a value.
+ *
+ * `_resolveNonCompleteResult` reports a request for input by throwing, so that
+ * the response escapes `callTool`'s output-schema validation. Converting it
+ * back to a value here lets the round loop test a condition rather than carry
+ * a sentinel across passes.
+ */
+async function sendElicitationRound(
+  execute: (params: ElicitationRoundParams) => Promise<CallToolResult>,
+  request: ElicitationRoundParams,
+  signal?: AbortSignal
+): Promise<ElicitationRound> {
+  signal?.throwIfAborted();
+
+  try {
+    return { done: true, result: await execute(request) };
+  } catch (error) {
+    if (!PendingMCPInput.isInstance(error)) throw error;
+
+    // An aborted call reports the abort, not the response it happened to get.
+    signal?.throwIfAborted();
+
+    return { done: false, pending: error };
+  }
+}
+
+/** Refuse what an interrupt cannot answer; otherwise render the question. */
+async function elicitationQuestionFor(
+  pending: PendingMCPInput,
+  source: MCPElicitationSource,
+  budget: ElicitationBudget
+): Promise<{ question: MCPElicitationInterrupt; state?: string }> {
+  const inputRequests = pending.pending.inputRequests ?? {};
+
+  // Nothing can advance a response that carries no question, and the adapter
+  // does not poll a server for completion.
+  if (Object.keys(inputRequests).length === 0)
+    throw new ToolException(
+      `MCP tool "${source.tool}" on server "${source.server}" returned a state-only response, which is not supported.`,
+      pending
+    );
+
+  if (source.direct)
+    throw new ToolException(
+      "This MCP tool requested user input. Invoke it inside a LangGraph with a checkpointer to pause and resume elicitation.",
+      pending
+    );
+
+  // Never pause for an answer the budget can no longer spend: pausing and then
+  // failing would cost a human round trip for nothing.
+  if (budget.asks >= budget.max)
+    throw new ToolException(
+      `MCP tool "${source.tool}" on server "${source.server}" exceeded ${budget.max} elicitation rounds.`,
+      pending
+    );
+
+  // Only elicitation can be answered from an interrupt. Sampling and roots
+  // requests are refused by name rather than half-served, so the caller sees
+  // which method it was instead of a schema parse failure. The Python adapter
+  // refuses the same two.
+  const unsupported = Object.entries(inputRequests)
+    .filter(
+      ([, request]) =>
+        (request as { method?: string }).method !== "elicitation/create"
+    )
+    .map(
+      ([key, request]) =>
+        `${key} (${(request as { method?: string }).method ?? "unknown"})`
+    );
+
+  if (unsupported.length > 0)
+    throw new ToolException(
+      `MCP tool "${source.tool}" on server "${source.server}" requested input this adapter cannot answer: ${unsupported.join(", ")}. Only elicitation is answered through a graph interrupt.`,
+      pending
+    );
+
+  return {
+    // Parsing unwraps each `{ method, params }` envelope, so the answer schema
+    // in `askUntilAnswered` is built from the schema the server requested.
+    question: await elicitationInterruptSchema.parseAsync({
+      type: "mcp_elicitation",
+      server: source.server,
+      tool: source.tool,
+      requests: inputRequests,
+    }),
+    state: pending.pending.requestState,
+  };
+}
+
+/**
+ * Raise one question until it comes back with usable answers.
+ *
+ * A rejected answer is re-asked on the same thread with the reason attached
+ * and costs no further round trip to the server: that question and its
+ * `requestState` are still current. Every attempt spends the shared budget,
+ * so the loop is bounded by it rather than running until something throws.
+ */
+async function askUntilAnswered(
+  question: MCPElicitationInterrupt,
+  source: MCPElicitationSource,
+  budget: ElicitationBudget
+): Promise<MCPElicitationResponses> {
+  // The requested schemas do not change between re-asks, so bind them once.
+  const answerSchema = z.strictObject({
+    responses: z.strictObject(
+      Object.fromEntries(
+        Object.entries(question.requests).map(([key, requested]) => [
+          key,
+          elicitationAnswerFor(requested, modernElicitationAnswerSchema),
+        ])
+      )
+    ),
+  });
+
+  let asked = question;
+
+  while (budget.asks < budget.max) {
+    source.signal?.throwIfAborted();
+    budget.asks += 1;
+
+    const answer = await answerSchema.safeParseAsync(interrupt(asked));
+    if (answer.success) return answer.data.responses;
+
+    asked = { ...asked, validationError: z.prettifyError(answer.error) };
+  }
+
+  // Re-asking spends a question too, and the same rule applies: fail now
+  // rather than pausing for a correction that cannot be used.
+  throw new ToolException(
+    `MCP tool "${source.tool}" on server "${source.server}" exceeded ${budget.max} elicitation rounds while correcting an answer.`
+  );
+}
+
 /**
  * Answer one tool call's elicitation rounds with graph interrupts.
  *
@@ -372,140 +532,35 @@ type ElicitationRoundParams = CallToolRequest["params"] & {
  * exactly-once effects. Servers and hooks must be replay-safe; Mastra's
  * server-side implementation of this protocol leg documents the same
  * constraint.
- *
- * One budget spans server rounds and re-asked answers together, so neither a
- * server nor a caller resuming with invalid answers can hold a run open.
  */
 export async function callToolWithElicitation(
   execute: (params: ElicitationRoundParams) => Promise<CallToolResult>,
   params: CallToolRequest["params"],
-  source: {
-    server: string;
-    tool: string;
-    maxRounds: number;
-    /** No graph to interrupt, so questions are reported instead of asked. */
-    direct?: boolean;
-    signal?: AbortSignal;
-  }
+  source: MCPElicitationSource
 ): Promise<CallToolResult> {
-  let request: ElicitationRoundParams = params;
-  let asked: { question: MCPElicitationInterrupt; state?: string } | undefined;
+  const budget: ElicitationBudget = { asks: 0, max: source.maxRounds };
 
-  // Each pass raises exactly one interrupt. The server is called only when
-  // there is something new to send it, so a rejected answer is re-asked
-  // without a further round trip. The budget counts questions asked rather
-  // than bounding the loop, so an accepted answer is always delivered before
-  // the budget can end the run.
-  let asks = 0;
+  let round = await sendElicitationRound(execute, params, source.signal);
 
-  for (;;) {
-    source.signal?.throwIfAborted();
+  // The server is called only when there is something new to send it, so each
+  // pass answers exactly one of its questions. An accepted answer is always
+  // delivered before the budget can end the run, because delivery happens at
+  // the bottom of the same pass that collected it.
+  while (!round.done) {
+    const { question, state } = await elicitationQuestionFor(
+      round.pending,
+      source,
+      budget
+    );
 
-    if (asked === undefined) {
-      let pending: PendingMCPInput;
+    const responses = await askUntilAnswered(question, source, budget);
 
-      try {
-        return await execute(request);
-      } catch (error) {
-        if (!PendingMCPInput.isInstance(error)) throw error;
-        pending = error;
-      }
-
-      // An aborted call reports the abort, not the response it happened to get.
-      source.signal?.throwIfAborted();
-
-      const inputRequests = pending.pending.inputRequests ?? {};
-
-      // Nothing can advance a response that carries no question, and the
-      // adapter does not poll a server for completion.
-      if (Object.keys(inputRequests).length === 0)
-        throw new ToolException(
-          `MCP tool "${source.tool}" on server "${source.server}" returned a state-only response, which is not supported.`,
-          pending
-        );
-
-      if (source.direct)
-        throw new ToolException(
-          "This MCP tool requested user input. Invoke it inside a LangGraph with a checkpointer to pause and resume elicitation.",
-          pending
-        );
-
-      // Never pause for an answer the budget can no longer spend: pausing and
-      // then failing would cost a human round trip for nothing.
-      if (asks >= source.maxRounds)
-        throw new ToolException(
-          `MCP tool "${source.tool}" on server "${source.server}" exceeded ${source.maxRounds} elicitation rounds.`,
-          pending
-        );
-
-      // Only elicitation can be answered from an interrupt. Sampling and
-      // roots requests are refused by name rather than half-served, so the
-      // caller sees which method it was instead of a schema parse failure.
-      // The Python adapter refuses the same two.
-      const unsupported = Object.entries(inputRequests)
-        .filter(
-          ([, request]) =>
-            (request as { method?: string }).method !== "elicitation/create"
-        )
-        .map(
-          ([key, request]) =>
-            `${key} (${(request as { method?: string }).method ?? "unknown"})`
-        );
-
-      if (unsupported.length > 0)
-        throw new ToolException(
-          `MCP tool "${source.tool}" on server "${source.server}" requested input this adapter cannot answer: ${unsupported.join(", ")}. Only elicitation is answered through a graph interrupt.`,
-          pending
-        );
-
-      // Parsing unwraps each `{ method, params }` envelope, so the answer
-      // schemas below are built from the schema the server requested.
-      asked = {
-        question: await elicitationInterruptSchema.parseAsync({
-          type: "mcp_elicitation",
-          server: source.server,
-          tool: source.tool,
-          requests: inputRequests,
-        }),
-        state: pending.pending.requestState,
-      };
-    }
-
-    asks += 1;
-
-    const answer = await z
-      .strictObject({
-        responses: z.strictObject(
-          Object.fromEntries(
-            Object.entries(asked.question.requests).map(([key, requested]) => [
-              key,
-              elicitationAnswerFor(requested, modernElicitationAnswerSchema),
-            ])
-          )
-        ),
-      })
-      .safeParseAsync(interrupt(asked.question));
-
-    if (!answer.success) {
-      // Re-asking spends a question too, and the same rule applies: fail now
-      // rather than pausing for a correction that cannot be used.
-      if (asks >= source.maxRounds)
-        throw new ToolException(
-          `MCP tool "${source.tool}" on server "${source.server}" exceeded ${source.maxRounds} elicitation rounds while correcting an answer.`
-        );
-
-      asked.question = {
-        ...asked.question,
-        validationError: z.prettifyError(answer.error),
-      };
-      continue;
-    }
-
-    request = {
-      ...params,
-      inputResponses: answer.data.responses,
-      requestState: asked.state,
-    };
-    asked = undefined;
+    round = await sendElicitationRound(
+      execute,
+      { ...params, inputResponses: responses, requestState: state },
+      source.signal
+    );
   }
+
+  return round.result;
 }
