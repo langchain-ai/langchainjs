@@ -1,6 +1,6 @@
 {
   "name": "@langchain/typesafe",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "TypeSafe System One integration for LangChain.js (Jev classifier).",
   "author": "LangChain",
   "license": "MIT",
