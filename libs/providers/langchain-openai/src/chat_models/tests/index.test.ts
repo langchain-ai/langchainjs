@@ -899,8 +899,14 @@ describe("ChatOpenAI", () => {
       expect(isReasoningModel("gpt-5.3-codex")).toBe(true);
     });
 
+    it("should return true for gpt-6 family models", () => {
+      expect(isReasoningModel("gpt-6-astra")).toBe(true);
+      expect(isReasoningModel("gpt-6")).toBe(true);
+    });
+
     it("should return false for gpt-5-chat models", () => {
       expect(isReasoningModel("gpt-5-chat-latest")).toBe(false);
+      expect(isReasoningModel("gpt-6-chat-latest")).toBe(false);
     });
 
     it("should return false for non-reasoning models", () => {
@@ -1486,6 +1492,40 @@ describe("ChatOpenAI", () => {
         const body = JSON.parse(options.body);
         // reasoning.effort should take precedence
         expect(body.reasoning_effort).toBe("high");
+      } else {
+        throw new Error("Body not found in request.");
+      }
+    });
+
+    it("should forward explicit reasoning for gpt-6-astra on the Responses API", async () => {
+      const mockFetch = vi.fn<(url: any, options?: any) => Promise<any>>();
+      mockFetch.mockImplementation((url, options) => {
+        mockFetch.mock.calls.push([url, options]);
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({}),
+        });
+      });
+
+      const model = new ChatOpenAI({
+        model: "gpt-6-astra",
+        apiKey: "test-key",
+        useResponsesApi: true,
+        reasoning: { effort: "high", summary: "auto" },
+        configuration: {
+          fetch: mockFetch,
+        },
+        maxRetries: 0,
+      });
+
+      await expect(model.invoke("Test message")).rejects.toThrow();
+
+      expect(mockFetch).toHaveBeenCalled();
+      const [_url, options] = mockFetch.mock.calls[0];
+
+      if (options && options.body) {
+        const body = JSON.parse(options.body);
+        expect(body.reasoning).toEqual({ effort: "high", summary: "auto" });
       } else {
         throw new Error("Body not found in request.");
       }
