@@ -13,7 +13,10 @@ import {
   AZURE_SECRETS,
   AZURE_SERIALIZABLE_KEYS,
   AzureChatOpenAIFields,
+  getAzureChatOpenAIInvocationParams,
   getAzureChatOpenAIParams,
+  getAzureChatOpenAILsParams,
+  wasModelExplicitlyConfigured,
 } from "./common.js";
 
 export class AzureChatOpenAICompletions<
@@ -36,6 +39,8 @@ export class AzureChatOpenAICompletions<
   azureOpenAIBasePath?: string;
 
   azureOpenAIEndpoint?: string;
+
+  private readonly modelWasExplicitlyConfigured: boolean;
 
   _llmType(): string {
     return "azure_openai";
@@ -60,9 +65,22 @@ export class AzureChatOpenAICompletions<
   }
 
   getLsParams(options: this["ParsedCallOptions"]): LangSmithParams {
-    const params = super.getLsParams(options);
-    params.ls_provider = "azure";
-    return params;
+    return getAzureChatOpenAILsParams(
+      super.getLsParams(options),
+      this.azureOpenAIApiDeploymentName,
+      this.modelWasExplicitlyConfigured
+    );
+  }
+
+  override invocationParams(
+    options?: this["ParsedCallOptions"],
+    extra?: { streaming?: boolean }
+  ) {
+    return getAzureChatOpenAIInvocationParams(
+      super.invocationParams(options, extra),
+      this.azureOpenAIApiDeploymentName,
+      this.modelWasExplicitlyConfigured
+    );
   }
 
   constructor(
@@ -82,6 +100,7 @@ export class AzureChatOpenAICompletions<
   ) {
     const fields = getAzureChatOpenAIParams(deploymentOrFields, fieldsArg);
     super(fields);
+    this.modelWasExplicitlyConfigured = wasModelExplicitlyConfigured(fields);
     _constructAzureFields.call(this, fields);
   }
 
