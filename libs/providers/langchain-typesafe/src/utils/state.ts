@@ -4,13 +4,7 @@ import * as z from "zod/v4";
 import type { JsonValue } from "../types.js";
 import { renderMessage } from "./messages.js";
 
-/**
- * A value legal anywhere below the root of a state payload.
- *
- * `Date` is included because the schema converts it to an ISO string; a
- * timestamp is ordinary state, and leaving it out of the type would make
- * that conversion unreachable for TypeScript callers.
- */
+/** A value legal anywhere below the root. `Date` becomes an ISO string. */
 export type StateValue =
   | string
   | number
@@ -22,12 +16,9 @@ export type StateValue =
   | { [key: string]: StateValue };
 
 /**
- * Input accepted by `TypeSafeClassifier`.
- *
- * Narrower than `StateValue`: the API requires the root to be a string,
- * object or array — verified live, the server answers 422 for
- * `state: null` and for `state: 42`. Bare scalars are rejected at the
- * root but legal when nested.
+ * Input accepted by `TypeSafeClassifier`. Narrower than `StateValue`: the
+ * API 422s on a bare scalar or null at the root, though both are legal
+ * nested.
  */
 export type State =
   | string
@@ -38,19 +29,14 @@ export type State =
 const ROOT_ERROR =
   "TypeSafe state must be a string, object, array, BaseMessage, or sequence of BaseMessage objects.";
 
-/**
- * Names no value and no content: `state` is the payload this package
- * classifies, so the error must stay safe to log.
- */
+/** Names no value: `state` is caller data, so this must be safe to log. */
 const CIRCULAR_ERROR = "Circular reference detected in TypeSafe state.";
 
 /**
- * A `BaseMessage`, rendered to a transcript line.
- *
- * Listed before `z.record` in both unions below, because a message is
- * also an object and the record branch would otherwise claim it.
- * `z.custom` receives the untouched instance — unlike a `JSON.stringify`
- * replacer, which is handed `toJSON()`'s envelope instead.
+ * A message, rendered to a transcript line. Listed before `z.record` in
+ * both unions, or the record branch would claim it — a message is also an
+ * object. `z.custom` sees the untouched instance, where a
+ * `JSON.stringify` replacer would get `toJSON()`'s envelope.
  */
 const RENDER_FAILURE = Symbol("typesafe.state.renderFailure");
 
@@ -96,13 +82,9 @@ const rootSchema: z.ZodType<JsonValue> = z.union([
 ]);
 
 /**
- * Names the type of the value that failed, without naming the value or
- * the key that held it.
- *
- * `issue.path` is the caller's own key names, so it is used to walk to
- * the offending value and then discarded — only `typeof` (or the
- * constructor name) reaches the message. Both are fixed in the caller's
- * source, never per-request content.
+ * Names the failing value's TYPE, never the value or its key. `path` is
+ * caller key names, so it is walked and discarded — only `typeof` or the
+ * constructor name reaches the message.
  */
 function deepestPath(issues: readonly unknown[]): PropertyKey[] {
   let deepest: PropertyKey[] = [];
@@ -145,14 +127,10 @@ function describeFailure(state: unknown, path: PropertyKey[]): string {
 /**
  * Normalizes classifier input into the JSON `state` payload.
  *
- * Parses rather than validates: the schema's output IS the payload, so
- * there is no second pass that could disagree with the check.
+ * Parses rather than validates: the schema's output IS the payload, so no
+ * second pass can disagree with the check. Messages convert at any depth.
  *
- * Messages are converted at any nesting depth, because messages are the
- * common unit of context in LangChain and TypeSafe has no message
- * concept of its own.
- *
- * @throws TypeError if the root is a scalar, `null` or `undefined`, if any
+ * @throws TypeError if the root is a scalar, `null` or `undefined`, if a
  *   nested value cannot be expressed as JSON, or if `state` is cyclic.
  */
 export function serializeState(state: State): JsonValue {
@@ -167,12 +145,9 @@ export function serializeState(state: State): JsonValue {
     ) {
       throw error;
     }
-    // Everything else escaping `safeParse` is a stack exhausted by a cycle:
-    // zod recurses, and the limit is as likely to land mid-expression
-    // (a TypeError from inside `isInstance`) as on a clean RangeError, so
-    // matching on the error type does not work. The `memoizer` config would
-    // parse cycles instead, but that yields a cyclic object the API cannot
-    // receive — rejecting is the right outcome.
+    // Anything else escaping `safeParse` is a stack exhausted by a cycle.
+    // Do NOT match on the error type: the limit lands mid-expression (a
+    // TypeError from inside `isInstance`) as often as on a RangeError.
     throw new TypeError(CIRCULAR_ERROR);
   }
   if (result.success) {

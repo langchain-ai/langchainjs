@@ -1,7 +1,5 @@
 import * as z from "zod/v4";
 
-// zod ships this exact recursive union as `z.json()`; the hand-rolled
-// `z.lazy` version it replaces was a duplicate of it.
 const jsonValueSchema = z.json();
 
 const questionContentSchema = z.union([
@@ -104,21 +102,16 @@ export const classificationResponseSchema = z
     } satisfies Usage,
   }));
 
-/**
- * Every public type below is inferred from the zod schema above it, so a
- * schema and its type cannot drift apart. The schemas are the single
- * source of truth; these aliases exist to give them names and docs.
- */
+// Every type below is inferred from the schema above it, so the two
+// cannot drift. The aliases exist to give the schemas names and docs.
 
 /** Any value expressible in JSON. */
 export type JsonValue = z.infer<typeof jsonValueSchema>;
 
 /**
- * Content accepted for a question's `instructions` or `criteria`.
- *
- * Deliberately not narrowed to `string`: the API accepts structured
- * instructions (live-verified), even though the compact HTTP reference
- * only shows strings.
+ * Content accepted for a question's `instructions` or `criteria`. Not
+ * narrowed to `string`: the API accepts structured instructions, verified
+ * live, though the compact HTTP reference shows only strings.
  */
 export type QuestionContent = z.infer<typeof questionContentSchema>;
 
@@ -141,11 +134,9 @@ export type Score = z.infer<typeof scoreQuestionSchema>;
 export type Question = z.infer<typeof questionSchema>;
 
 /**
- * A Noul answer.
- *
- * Carries only a probability: the API returns no `confidence` and no
- * `probabilities` for this type. For a binary question the probability
- * *is* the confidence, and a value near 0.5 is the "uncertain" signal.
+ * A Noul answer: a bare probability, with no `confidence` and no
+ * `probabilities`. For a binary question the probability IS the
+ * confidence, and a value near 0.5 is the uncertainty signal.
  */
 export type NoulAnswer = z.infer<typeof noulAnswerSchema>;
 
@@ -153,13 +144,10 @@ export type NoulAnswer = z.infer<typeof noulAnswerSchema>;
 export type ChoiceAnswer = z.infer<typeof choiceAnswerSchema>;
 
 /**
- * A Score answer.
- *
- * `legend` and `probabilities` are keyed by level index. JSON object keys
- * are always strings, so these are `Record<string, ...>` — but TypeScript
- * permits numeric indexing, so `answer.legend[0]` works as it does in the
- * Python package. Do not "fix" these to `Record<number, ...>`: that would
- * be a type-level fiction, since `Object.keys` yields strings regardless.
+ * A Score answer. `legend` and `probabilities` are keyed by level index,
+ * typed `Record<string, ...>` because JSON keys are strings —
+ * `answer.legend[0]` still works. Do not "fix" them to `Record<number>`:
+ * `Object.keys` yields strings regardless, so that would be fiction.
  */
 export type ScoreAnswer = z.infer<typeof scoreAnswerSchema>;
 

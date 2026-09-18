@@ -1,25 +1,18 @@
-import type { BaseMessage } from "@langchain/core/messages";
+import {
+  AIMessage,
+  ChatMessage,
+  ToolMessage,
+  type BaseMessage,
+} from "@langchain/core/messages";
 
 /**
- * Maps a LangChain message type to the role prefix the TypeSafe API
- * receives. TypeSafe has no concept of an LLM message, so a message is
- * rendered as one labelled line of transcript.
+ * The role label a message is rendered under.
  *
- * The `__openai_role__` key is not an OpenAI dependency — it is the
- * convention `langchain-core` itself defines for overriding a system
- * message's label, and the Python package honours it through
- * `_get_message_openai_role`. Mirrored here for that reason, not because
- * TypeSafe knows anything about OpenAI: only a `SystemMessage` consults
- * it (raising a `TypeError` if present but not a string), a `ChatMessage`
- * reports its own `role`, and any other type raises rather than silently
- * defaulting. The raise is deliberate — a silently mislabelled message
- * produces a confident wrong classification, not a visible error.
- *
- * The labels earn their place, though weakly. Measured live on a question
- * answerable only from who said what: correct prefixes and no prefixes at
- * all both answered correctly at confidence 1.0, while prefixes swapped to
- * the wrong speakers still answered correctly but dropped to 0.88. So the
- * model reads them, and mostly recovers from content when they are absent.
+ * `__openai_role__` is not an OpenAI dependency: it is the key
+ * `langchain-core` defines for overriding a system message's label, and
+ * the Python package honours it too. An unsupported type raises rather
+ * than defaulting — a mislabelled message yields a confident wrong
+ * classification instead of a visible error.
  */
 function roleFor(message: BaseMessage): string {
   switch (message.getType()) {
@@ -29,6 +22,13 @@ function roleFor(message: BaseMessage): string {
       return "assistant";
     case "tool":
       return "tool";
+    case "function":
+      return "function";
+    case "generic":
+      if (!ChatMessage.isInstance(message)) {
+        break;
+      }
+      return message.role;
     case "system": {
       const explicit = message.additional_kwargs?.__openai_role__;
       if (explicit === undefined) {
@@ -41,98 +41,75 @@ function roleFor(message: BaseMessage): string {
       }
       return explicit;
     }
-    case "function":
-      return "function";
-    case "generic":
-      // `generic` is ChatMessage, which carries its own `role`; the
-      // BaseMessage type has no such field, hence the double assertion.
-      return (message as unknown as { role: string }).role;
     default:
-      throw new Error(
-        `Unsupported message type for TypeSafe state: "${message.getType()}".`
-      );
+      break;
   }
+  throw new Error(
+    `Unsupported message type for TypeSafe state: "${message.getType()}".`
+  );
 }
 
-/**
- * Names no value and no content: tool-call arguments are classifier
- * input, potentially sensitive, exactly like `state` itself.
- */
-const UNSERIALIZABLE_ARGS_ERROR =
-  "TypeSafe tool-call arguments could not be serialized " +
-  "(circular reference or unsupported value).";
+/** Names no value: tool-call arguments are caller data, like `state`. */
+const ARGS_ERROR = "TypeSafe tool-call arguments could not be serialized.";
 
 /**
- * Serializes tool-call arguments, converting any failure into a
- * content-free error.
+ * Serializes a value, turning any failure into a content-free error.
  *
- * The caught error is discarded outright — never rethrown, never chained
- * as `cause`. `JSON.stringify`'s own circular-structure `TypeError`
- * embeds the offending property's NAME (V8: `property 'ssn' -> object
- * with constructor 'Object'`), and tool-call arguments are caller data,
- * so that name is caller data too.
+ * The caught error is discarded, never chained: `JSON.stringify`'s own
+ * circular-structure message names the offending property (V8: `property
+ * 'ssn' closes the circle`), and that name is caller data.
  */
-function renderArgs(args: unknown): string {
+function renderJson(value: unknown): string {
   try {
-    return JSON.stringify(args) ?? "{}";
+    return JSON.stringify(value) ?? "{}";
   } catch {
-    throw new TypeError(UNSERIALIZABLE_ARGS_ERROR);
+    throw new TypeError(ARGS_ERROR);
   }
 }
 
+/** True for a `{ type: "text", text }` content block. */
+function isTextBlock(block: unknown): block is { text?: string } {
+  return (
+    typeof block === "object" &&
+    block !== null &&
+    (block as { type?: unknown }).type === "text"
+  );
+}
+
 /**
- * Renders message content as text.
- *
- * A string stays as-is. A list of blocks that are all text is joined with
- * a newline, matching the Python package. Any other block is serialized
- * rather than dropped — an unrecognized block is still context.
+ * Renders content as text. All-text block lists join with a newline,
+ * matching the Python package; any other block is serialized rather than
+ * dropped, since an unrecognized block is still context.
  */
 function renderContent(content: BaseMessage["content"]): string {
   if (typeof content === "string") {
     return content;
   }
   if (!Array.isArray(content)) {
-    return renderArgs(content);
+    return renderJson(content);
   }
   return content
     .map((block) => {
       if (typeof block === "string") {
         return block;
       }
-      if (
-        typeof block === "object" &&
-        block !== null &&
-        (block as { type?: unknown }).type === "text"
-      ) {
-        return (block as { text?: string }).text ?? "";
-      }
-      return renderArgs(block);
+      return isTextBlock(block) ? (block.text ?? "") : renderJson(block);
     })
     .join("\n");
 }
 
-interface ToolCallLike {
-  id?: string;
-  name: string;
-  args?: Record<string, unknown>;
-}
-
 /**
- * Renders a `BaseMessage` as a single line of labelled transcript, e.g.
- * `assistant: [called issue_refund with {"amount":250}]`.
+ * Renders a message as one line of labelled transcript, e.g.
+ * `assistant: [called issue_refund#c1 with {"amount":250}]`.
  *
- * Measured against the live API (jev-1.13.0, 2026-09-17, two independent
- * runs of three rounds): this flat form and the full OpenAI message
- * envelope classify identically (0.97-0.98 on a question answerable only
- * from a tool-call argument), so the envelope bought nothing. What IS
- * load-bearing is the tool name and its arguments — dropping the
- * arguments moved the same question to 0.13-0.35 against a ground truth
- * of yes. That is a confidently WRONG answer rather than an error, which
- * is why `renderArgs` must never silently omit them.
+ * Measured live: this flat form classifies identically to the full
+ * OpenAI message envelope, so the envelope was dropped. The tool name
+ * and its arguments are what carry the answer — omitting the arguments
+ * produces a confidently WRONG result, not an error — and a call's id is
+ * what links a result back to it, since order does not.
  */
 export function renderMessage(message: BaseMessage): string {
-  // Resolved first so an unsupported message type raises before any
-  // caller-supplied content is touched.
+  // First, so an unsupported type raises before any content is touched.
   const role = roleFor(message);
   const parts: string[] = [];
 
@@ -141,30 +118,23 @@ export function renderMessage(message: BaseMessage): string {
     parts.push(content);
   }
 
-  // A refusal lives in additional_kwargs, not content, so an assistant
-  // message that only refuses has empty content. Dropping it renders
-  // `assistant: ` and destroys the one thing worth classifying about that
-  // turn.
+  // A refusal lives outside content, so a refusal-only turn would
+  // otherwise render as a bare `assistant: `.
   const refusal = message.additional_kwargs?.refusal;
   if (typeof refusal === "string" && refusal.length > 0) {
     parts.push(`[refused: ${refusal}]`);
   }
 
-  const toolCalls = (message as { tool_calls?: ToolCallLike[] }).tool_calls;
-  if (Array.isArray(toolCalls)) {
-    for (const call of toolCalls) {
-      // The id is what links a result back to its call. Order does not:
-      // two calls to the same tool are distinguished only by id, so
-      // dropping it makes two different conversations render identically.
+  if (AIMessage.isInstance(message)) {
+    for (const call of message.tool_calls ?? []) {
       const id = call.id ? `#${call.id}` : "";
-      parts.push(
-        `[called ${call.name}${id} with ${renderArgs(call.args ?? {})}]`
-      );
+      parts.push(`[called ${call.name}${id} with ${renderJson(call.args)}]`);
     }
   }
 
-  const toolCallId = (message as { tool_call_id?: string }).tool_call_id;
-  const correlation = toolCallId ? `#${toolCallId}` : "";
+  const correlation = ToolMessage.isInstance(message)
+    ? `#${message.tool_call_id}`
+    : "";
   const name = message.name ? ` (${message.name})` : "";
   return `${role}${correlation}${name}: ${parts.join(" ")}`;
 }

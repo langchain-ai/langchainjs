@@ -31,14 +31,11 @@ const STATUS_PHRASES: Record<number, string> = {
 };
 
 /**
- * Attaches a non-enumerable property: `Object.keys`, `JSON.stringify`,
- * object spread, and `util.inspect` (at any depth) all skip it.
+ * Attaches a non-enumerable property, which `Object.keys`,
+ * `JSON.stringify`, spread and `util.inspect` all skip.
  *
- * Does NOT hide `cause`. Node's `util.inspect` — and therefore
- * `console.log`, the primary way a developer observes an error — special-
- * cases `Error.prototype.cause` and prints it regardless of enumerability.
- * Use this only for properties Node has no such special case for (e.g.
- * `body`/`headers` below); assign `cause` as a normal property instead.
+ * Not for `cause`: `util.inspect` special-cases `Error.prototype.cause`
+ * and prints it whatever its descriptor says. Assign that one plainly.
  */
 function defineHidden(target: object, key: string, value: unknown): void {
   Object.defineProperty(target, key, {
@@ -201,13 +198,10 @@ export class TypeSafeAPIConnectionError extends ns.brand(
   }
 
   /**
-   * Keeps `cause` out of `JSON.stringify(error)` — a structured logger's
-   * usual path — mirroring `TypeSafeAPIError.toJSON()`. `cause` can hold
-   * arbitrary transport detail (e.g. a URL with embedded credentials, or
-   * the request body), so it must never serialize implicitly just
-   * because it's an enumerable property (see the constructor's comment
-   * for why it has to be enumerable in the first place). `util.inspect`/
-   * `console.log` still show it: that split is deliberate.
+   * Keeps `cause` out of `JSON.stringify(error)`, mirroring
+   * `TypeSafeAPIError.toJSON()`: it can hold a URL with credentials or
+   * the request body, and it must stay enumerable (see the constructor).
+   * `util.inspect` still shows it — that split is deliberate.
    */
   toJSON(): Record<string, unknown> {
     return {
@@ -312,17 +306,14 @@ export function sanitizeEndpoint(method: string, url: string): string {
 }
 
 /**
- * The two error-body shapes the live API actually returns, as observed
- * against `POST /v1/systemone`:
+ * The two error-body shapes the live API returns:
  *
- *   `{"detail": "Too many score levels. Must have at most 10 levels."}`
- *   `{"detail": {"error_type": "api_usage_error", "message": "Unknown model"}}`
+ *   `{"detail": "Too many score levels."}`
+ *   `{"detail": {"error_type": "api_usage_error", "message": "..."}}`
  *
- * A third shape exists and is deliberately NOT modelled: FastAPI's
- * validation errors return `detail` as an ARRAY whose `input` field
- * echoes the entire request, including the `state` being classified.
- * Neither schema below matches an array, so that shape falls through to
- * `undefined` — which is the point.
+ * A third is deliberately NOT modelled: FastAPI validation errors return
+ * `detail` as an ARRAY whose `input` echoes the whole request, `state`
+ * included. Neither schema matches an array, which is the point.
  */
 const stringDetailSchema = z.object({ detail: z.string() });
 const objectDetailSchema = z.object({
