@@ -46,24 +46,6 @@ function defineHidden(target: object, key: string, value: unknown): void {
   });
 }
 
-/**
- * The only fields any error in this package puts into `JSON.stringify`.
- *
- * An allowlist rather than a denylist: `cause` can hold a URL with
- * credentials or the request body, and `body` can hold a 422 whose
- * `detail[].input` is the entire request including the classified
- * `state`. This is a separate control from `defineHidden` — `toJSON`
- * governs `JSON.stringify`, non-enumerability governs `util.inspect`
- * at depth, `Object.keys` and spread. Neither covers the other's
- * surface, so both are load-bearing.
- */
-function errorToJSON(
-  error: { name: string; message: string },
-  extra?: Record<string, unknown>
-): Record<string, unknown> {
-  return { name: error.name, message: error.message, ...extra };
-}
-
 /** Base class for every error this package throws. */
 export class TypeSafeError extends ns.brand(LangChainError) {
   readonly name: string = "TypeSafeError";
@@ -125,9 +107,19 @@ export class TypeSafeAPIError extends ns.brand(TypeSafeError, "api") {
     return this.headers.get(REQUEST_ID_HEADER) ?? undefined;
   }
 
-  /** Keeps the body out of `JSON.stringify(error)`. */
+  /**
+   * An allowlist, not a denylist: `body` can hold a 422 whose
+   * `detail[].input` is the whole request, including the classified `state`.
+   * Separate control from `defineHidden`, which covers `util.inspect` and
+   * `Object.keys` — neither reaches the other's surface.
+   */
   toJSON(): Record<string, unknown> {
-    return errorToJSON(this, { status: this.status, requestId: this.requestId });
+    return {
+      name: this.name,
+      message: this.message,
+      status: this.status,
+      requestId: this.requestId,
+    };
   }
 }
 
@@ -211,13 +203,12 @@ export class TypeSafeAPIConnectionError extends ns.brand(
   }
 
   /**
-   * Keeps `cause` out of `JSON.stringify(error)`, mirroring
-   * `TypeSafeAPIError.toJSON()`: it can hold a URL with credentials or
-   * the request body, and it must stay enumerable (see the constructor).
-   * `util.inspect` still shows it — that split is deliberate.
+   * Keeps `cause` out of `JSON.stringify(error)` — it can hold a URL with
+   * credentials. It stays enumerable (see the constructor), so
+   * `util.inspect` still shows it; that split is deliberate.
    */
   toJSON(): Record<string, unknown> {
-    return errorToJSON(this);
+    return { name: this.name, message: this.message };
   }
 }
 

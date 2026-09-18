@@ -6,21 +6,14 @@ import {
 } from "@langchain/core/messages";
 
 /**
- * The role label a message is rendered under.
+ * The role label a message is rendered under. `__openai_role__` is
+ * `langchain-core`'s key for overriding a system message's label, not an
+ * OpenAI dependency.
  *
- * `__openai_role__` is not an OpenAI dependency: it is the key
- * `langchain-core` defines for overriding a system message's label, and
- * the Python package honours it too.
- *
- * The label itself is inert at the model: the same text scores within
- * noise under `user:`, `human:`, `assistant:` or no label at all. The
- * mapping exists for parity with the Python package and for trace
- * legibility, not for correctness.
- *
- * The exhaustiveness check IS load-bearing. An unsupported type raises
- * rather than defaulting, because an unhandled type risks contributing
- * no content at all — and the server answers a content-free state with
- * a confident, meaningless number rather than an error.
+ * The label is inert at the model, so the mapping is for parity and trace
+ * legibility. The exhaustiveness raise is the load-bearing part: an
+ * unhandled type can contribute no content, and the server answers a
+ * content-free state confidently rather than erroring.
  */
 function roleFor(message: BaseMessage): string {
   switch (message.getType()) {
@@ -126,12 +119,10 @@ export function renderMessage(message: BaseMessage): string {
     parts.push(content);
   }
 
-  // A refusal lives outside content, so a refusal-only turn would
-  // otherwise render as a bare `assistant: `. Populated only by the
-  // OpenAI-compatible providers (openai, azure, xai, openrouter, ibm);
-  // absent from anthropic, google, bedrock and mistral. The guard is
-  // defensive rather than universal, and costs nothing where the field
-  // never appears.
+  // A refusal lives outside content, so a refusal-only turn would otherwise
+  // render as a bare `assistant: `. Only the OpenAI-compatible providers
+  // populate it (openai, azure, xai, openrouter, ibm), so the guard is
+  // defensive rather than universal.
   const refusal = message.additional_kwargs?.refusal;
   if (typeof refusal === "string" && refusal.length > 0) {
     parts.push(`[refused: ${refusal}]`);
