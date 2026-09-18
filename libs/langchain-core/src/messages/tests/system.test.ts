@@ -69,8 +69,7 @@ describe("SystemMessage", () => {
       });
       const result = message.concat(" world");
       expect(result.content).toEqual([
-        { type: "text", text: "Hello" },
-        { type: "text", text: " world" },
+        { type: "text", text: "Hello world" },
       ]);
     });
 
