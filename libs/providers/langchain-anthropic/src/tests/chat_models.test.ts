@@ -276,7 +276,6 @@ test("Can properly format anthropic messages when given two tool results", async
         ],
       },
     ],
-    system: undefined,
   });
 });
 
@@ -332,7 +331,6 @@ test("Can properly format anthropic messages when AIMessage content is an empty 
         ],
       },
     ],
-    system: undefined,
   });
 });
 
@@ -537,7 +535,6 @@ test("Can properly format messages with container_upload blocks", async () => {
         ],
       },
     ],
-    system: undefined,
   });
 });
 
@@ -560,7 +557,6 @@ test("Drop content blocks that we don't know how to handle", async () => {
         content: [{ type: "text", text: "Hello" }],
       },
     ],
-    system: undefined,
   });
 });
 
@@ -616,7 +612,6 @@ test("Can properly format messages with bash_code_execution_tool_result blocks",
         ],
       },
     ],
-    system: undefined,
   });
 });
 
@@ -674,7 +669,6 @@ test("Can properly format messages with text_editor_code_execution_tool_result b
         ],
       },
     ],
-    system: undefined,
   });
 });
 
