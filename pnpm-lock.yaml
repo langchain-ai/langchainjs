@@ -2320,6 +2320,31 @@ importers:
         specifier: ^3.25.76 || ^4
         version: 4.3.6
 
+  libs/providers/langchain-typesafe:
+    dependencies:
+      zod:
+        specifier: ^4
+        version: 4.4.3
+    devDependencies:
+      '@langchain/core':
+        specifier: workspace:^
+        version: link:../../langchain-core
+      '@langchain/tsconfig':
+        specifier: workspace:*
+        version: link:../../../internal/tsconfig
+      '@tsconfig/recommended':
+        specifier: ^1.0.3
+        version: 1.0.13
+      dotenv:
+        specifier: ^17.4.2
+        version: 17.4.2
+      typescript:
+        specifier: ~7.0.2
+        version: 7.0.2
+      vitest:
+        specifier: ^4.1.11
+        version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.4.1)(@vitest/coverage-v8@4.1.11)(vite@7.3.5(@types/node@26.4.1)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.12)(yaml@2.9.0))
+
   libs/providers/langchain-weaviate:
     dependencies:
       weaviate-client:
