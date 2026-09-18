@@ -11,7 +11,6 @@ import { describe, expect, test } from "vitest";
 import { renderMessage } from "../messages.js";
 
 describe("renderMessage", () => {
-
   test("does NOT honour __openai_role__; a SystemMessage stays `system`", () => {
     // Pinned so the branch is not restored as an apparent oversight.
     const message = new SystemMessage({
@@ -164,12 +163,10 @@ describe("renderMessage", () => {
     );
   });
 
-
-
-
   test("throws for an unsupported message type, naming only the type", () => {
-    // Raising rather than defaulting to a role is deliberate: a silently
-    // mislabelled message yields a confident wrong classification.
+    // Raising rather than defaulting to a role is deliberate: the role
+    // label is inert at the model, but `MessageType` is open, so defaulting
+    // here would silently drop this message's content instead.
     const message = new RemoveMessage({ id: "MARKER_REMOVE_MESSAGE_ID" });
     let thrown: unknown;
     try {

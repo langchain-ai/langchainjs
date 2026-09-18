@@ -3,6 +3,25 @@ import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { modelRouterMiddleware } from "../modelRouter.js";
 
 /**
+ * `BeforeAgentHook` (langchain's `types.ts`) is a union of a bare handler
+ * function and `{ hook, canJumpTo? }`, so `mw.beforeAgent!(...)` is not
+ * directly callable — unlike `WrapToolCallHook`, which is a bare function
+ * type. Unwrap either shape and invoke the underlying handler.
+ */
+function callBeforeAgent(
+  mw: { beforeAgent?: unknown },
+  state: unknown,
+  runtime: unknown
+) {
+  const hook = mw.beforeAgent as
+    | ((s: unknown, r: unknown) => Promise<unknown>)
+    | { hook: (s: unknown, r: unknown) => Promise<unknown> };
+  return typeof hook === "function"
+    ? hook(state, runtime)
+    : hook.hook(state, runtime);
+}
+
+/**
  * A `fetch` stub, not a classifier stub: questions are fixed at construction
  * (see Step 7), so the middleware builds its own classifier and the only
  * injection point is transport. A FRESH Response per call is required — a
@@ -15,7 +34,8 @@ function stubFetch(
   capture?: (body: unknown) => void
 ): typeof fetch {
   return (async (_url: unknown, init?: { body?: string }) => {
-    if (capture && typeof init?.body === "string") capture(JSON.parse(init.body));
+    if (capture && typeof init?.body === "string")
+      capture(JSON.parse(init.body));
     return new Response(
       JSON.stringify({
         model: "jev-1.13.0",
@@ -28,14 +48,22 @@ function stubFetch(
 }
 
 function choiceAnswer(choice: string) {
-  return { type: "choice", choice, probabilities: { [choice]: 1 }, confidence: 1 };
+  return {
+    type: "choice",
+    choice,
+    probabilities: { [choice]: 1 },
+    confidence: 1,
+  };
 }
 
 const OPTS = { apiKey: "test-key" } as const;
 
 const CHOICES = {
   fast: { model: "openai:gpt-5-mini", criteria: "Simple, well-scoped tasks." },
-  powerful: { model: "openai:gpt-5", criteria: "Complex tasks requiring deeper reasoning." },
+  powerful: {
+    model: "openai:gpt-5",
+    criteria: "Complex tasks requiring deeper reasoning.",
+  },
 };
 
 describe("modelRouterMiddleware", () => {
@@ -43,28 +71,47 @@ describe("modelRouterMiddleware", () => {
     const mw = modelRouterMiddleware({
       choices: CHOICES,
       instructions: "Choose the least costly model suited to the task.",
-      classifierOptions: { ...OPTS, fetch: stubFetch({ model_route: choiceAnswer("powerful") }) },
+      classifierOptions: {
+        ...OPTS,
+        fetch: stubFetch({ model_route: choiceAnswer("powerful") }),
+      },
     });
-    const update = await mw.beforeAgent!(
+    const update = await callBeforeAgent(
+      mw,
       { messages: [new HumanMessage("Design a consensus protocol.")] } as never,
       {} as never
     );
     expect(update).toEqual({
-      modelRoute: { type: "choice", choice: "powerful", probabilities: { powerful: 1 }, confidence: 1 },
+      modelRoute: {
+        type: "choice",
+        choice: "powerful",
+        probabilities: { powerful: 1 },
+        confidence: 1,
+      },
     });
   });
 
   test("classifies the LATEST human message, not the first", async () => {
     let body: { state?: unknown } = {};
     const mw = modelRouterMiddleware({
-      choices: CHOICES, instructions: "Pick.",
+      choices: CHOICES,
+      instructions: "Pick.",
       classifierOptions: {
         ...OPTS,
-        fetch: stubFetch({ model_route: choiceAnswer("fast") }, (b) => { body = b as typeof body; }),
+        fetch: stubFetch({ model_route: choiceAnswer("fast") }, (b) => {
+          body = b as typeof body;
+        }),
       },
     });
-    await mw.beforeAgent!(
-      { messages: [new HumanMessage("first"), new AIMessage("reply"), new HumanMessage("second")] } as never,
+    await callBeforeAgent(
+      mw,
+      {
+        messages: [
+          new HumanMessage("first"),
+          new AIMessage("reply"),
+          new HumanMessage("second"),
+        ],
+      } as never,
       {} as never
     );
     // The rendered state must carry the latest human turn and not the first.
@@ -73,15 +120,24 @@ describe("modelRouterMiddleware", () => {
   });
 
   test("sends the choices as the Choice criteria under the model_route id", async () => {
-    let body: { questions?: Record<string, { criteria?: Record<string, unknown> }> } = {};
+    let body: {
+      questions?: Record<string, { criteria?: Record<string, unknown> }>;
+    } = {};
     const mw = modelRouterMiddleware({
-      choices: CHOICES, instructions: "Choose the least costly model suited to the task.",
+      choices: CHOICES,
+      instructions: "Choose the least costly model suited to the task.",
       classifierOptions: {
         ...OPTS,
-        fetch: stubFetch({ model_route: choiceAnswer("fast") }, (b) => { body = b as typeof body; }),
+        fetch: stubFetch({ model_route: choiceAnswer("fast") }, (b) => {
+          body = b as typeof body;
+        }),
       },
     });
-    await mw.beforeAgent!({ messages: [new HumanMessage("hi")] } as never, {} as never);
+    await callBeforeAgent(
+      mw,
+      { messages: [new HumanMessage("hi")] } as never,
+      {} as never
+    );
     expect(Object.keys(body.questions ?? {})).toEqual(["model_route"]);
     expect(body.questions!.model_route.criteria).toEqual({
       fast: "Simple, well-scoped tasks.",
@@ -91,28 +147,47 @@ describe("modelRouterMiddleware", () => {
 
   test("throws a named error when state has no human message", async () => {
     const mw = modelRouterMiddleware({
-      choices: CHOICES, instructions: "Pick.",
-      classifierOptions: { ...OPTS, fetch: stubFetch({ model_route: choiceAnswer("fast") }) },
+      choices: CHOICES,
+      instructions: "Pick.",
+      classifierOptions: {
+        ...OPTS,
+        fetch: stubFetch({ model_route: choiceAnswer("fast") }),
+      },
     });
     await expect(
-      mw.beforeAgent!({ messages: [new AIMessage("only ai")] } as never, {} as never)
+      callBeforeAgent(
+        mw,
+        { messages: [new AIMessage("only ai")] } as never,
+        {} as never
+      )
     ).rejects.toThrow(/modelRouterMiddleware.*no human message/i);
   });
 
   test("rejects an empty choices map", () => {
     expect(() =>
-      modelRouterMiddleware({ choices: {}, instructions: "Pick.", classifierOptions: OPTS })
+      modelRouterMiddleware({
+        choices: {},
+        instructions: "Pick.",
+        classifierOptions: OPTS,
+      })
     ).toThrow(/at least one/i);
   });
 
   test("a classifier failure propagates rather than defaulting", async () => {
-    const boom = (async () => { throw new Error("transport down"); }) as unknown as typeof fetch;
+    const boom = (async () => {
+      throw new Error("transport down");
+    }) as unknown as typeof fetch;
     const mw = modelRouterMiddleware({
-      choices: CHOICES, instructions: "Pick.",
+      choices: CHOICES,
+      instructions: "Pick.",
       classifierOptions: { ...OPTS, fetch: boom, maxRetries: 0 },
     });
     await expect(
-      mw.beforeAgent!({ messages: [new HumanMessage("hi")] } as never, {} as never)
+      callBeforeAgent(
+        mw,
+        { messages: [new HumanMessage("hi")] } as never,
+        {} as never
+      )
     ).rejects.toThrow();
   });
 });

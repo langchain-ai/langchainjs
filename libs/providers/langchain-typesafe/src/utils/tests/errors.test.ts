@@ -230,9 +230,11 @@ describe("connection, timeout and validation errors", () => {
     const apiError = apiErrorFromResponse(
       422,
       { secret: "HIDDEN_BODY_VALUE" },
-      headers()
+      headers({ authorization: "Bearer HEADER_SECRET_VALUE" })
     );
-    expect(inspect(apiError, { depth: 10 })).not.toContain("HIDDEN_BODY_VALUE");
+    const inspected = inspect(apiError, { depth: 10 });
+    expect(inspected).not.toContain("HIDDEN_BODY_VALUE");
+    expect(inspected).not.toContain("HEADER_SECRET_VALUE");
   });
 
   test("cause does NOT leak through JSON.stringify, on both the connection error and the timeout error that inherits its toJSON", () => {

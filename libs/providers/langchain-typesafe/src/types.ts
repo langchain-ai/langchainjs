@@ -13,6 +13,8 @@ const noulCriteriaSchema = z.object({
   false: jsonValueSchema.optional(),
 });
 
+// Not `.strict()`: `validateQuestions` splices a zod issue's `message`
+// into a thrown error, and `.strict()` would embed a caller's key name.
 const noulQuestionSchema = z.object({
   type: z.literal("noul"),
   instructions: questionContentSchema.optional(),

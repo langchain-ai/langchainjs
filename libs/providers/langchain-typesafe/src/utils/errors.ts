@@ -108,8 +108,12 @@ export class TypeSafeAPIError extends ns.brand(TypeSafeError, "api") {
   }
 
   /**
-   * An allowlist: `body` can hold a 422 echoing the whole request. Separate
-   * control from `defineHidden`, which covers `util.inspect` and spread.
+   * An allowlist: `body` is already non-enumerable via `defineHidden`, so
+   * this method's real job is excluding the ENUMERABLE fields that would
+   * otherwise leak through `JSON.stringify` — `endpoint` here, and
+   * `retryAfterMs`/`fieldPath` on this class's subclasses (`timeoutMs`, on
+   * `TypeSafeAPITimeoutError`, is excluded by its own inherited `toJSON`
+   * on `TypeSafeAPIConnectionError` instead).
    */
   toJSON(): Record<string, unknown> {
     return {

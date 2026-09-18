@@ -61,7 +61,9 @@ export function modelRouterMiddleware(config: ModelRouterMiddlewareConfig) {
   const { choices, instructions, classifierOptions } = config;
   const routes = Object.keys(choices);
   if (routes.length === 0) {
-    throw new Error("modelRouterMiddleware requires at least one entry in `choices`.");
+    throw new Error(
+      "modelRouterMiddleware requires at least one entry in `choices`."
+    );
   }
 
   const classifier = new TypeSafeClassifier({
@@ -70,7 +72,9 @@ export function modelRouterMiddleware(config: ModelRouterMiddlewareConfig) {
       [QUESTION_ID]: {
         type: "choice",
         instructions,
-        criteria: Object.fromEntries(routes.map((r) => [r, choices[r].criteria])),
+        criteria: Object.fromEntries(
+          routes.map((r) => [r, choices[r].criteria])
+        ),
       },
     },
   });
@@ -88,7 +92,8 @@ export function modelRouterMiddleware(config: ModelRouterMiddlewareConfig) {
         `modelRouterMiddleware: TypeSafe selected route "${route}", which is not in \`choices\`.`
       );
     }
-    const model = typeof declared === "string" ? await initChatModel(declared) : declared;
+    const model =
+      typeof declared === "string" ? await initChatModel(declared) : declared;
     resolved.set(route, model);
     return model;
   }
@@ -110,10 +115,18 @@ export function modelRouterMiddleware(config: ModelRouterMiddlewareConfig) {
       if (latest === undefined) {
         // Python uses a bare `next()` here, which raises StopIteration - not a
         // usable diagnostic. Name the middleware instead.
-        throw new Error("modelRouterMiddleware: state contains no human message to route on.");
+        throw new Error(
+          "modelRouterMiddleware: state contains no human message to route on."
+        );
       }
       const response = await classifier.invoke(latest);
-      return { modelRoute: response.choices[QUESTION_ID] };
+      const answer = response.choices[QUESTION_ID];
+      if (answer === undefined) {
+        throw new Error(
+          `modelRouterMiddleware: TypeSafe returned no answer for question "${QUESTION_ID}".`
+        );
+      }
+      return { modelRoute: answer };
     },
 
     async wrapModelCall(request, handler) {
