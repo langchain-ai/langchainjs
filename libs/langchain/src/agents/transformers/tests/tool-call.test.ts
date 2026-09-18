@@ -722,4 +722,95 @@ describe("streamEvents", () => {
     expect(await pendingCall.value.output).toBe("serialized result");
     expect(await iterator.next()).toEqual({ done: true, value: undefined });
   });
+
+  it("does not emit an unhandled rejection when a failing tool call's output is never consumed", async () => {
+    const transformer = createToolCallTransformer([])();
+    // Deliberately do not iterate `projection.toolCalls`, mirroring a caller
+    // that only reads `run.messages` — nothing ever awaits `output`.
+    transformer.init();
+    const toolEvent = (data: Record<string, unknown>): ProtocolEvent =>
+      ({
+        method: "tools",
+        params: {
+          namespace: ["tools"],
+          data,
+        },
+      }) as ProtocolEvent;
+
+    const rejections: unknown[] = [];
+    const onUnhandled = (reason: unknown) => rejections.push(reason);
+    process.on("unhandledRejection", onUnhandled);
+
+    try {
+      transformer.process(
+        toolEvent({
+          event: "tool-started",
+          tool_call_id: "call_1",
+          tool_name: "search",
+          input: {},
+        })
+      );
+
+      transformer.process(
+        toolEvent({
+          event: "tool-error",
+          tool_call_id: "call_1",
+          message: "ENOTFOUND api.example.com",
+        })
+      );
+
+      transformer.finalize?.();
+
+      // `unhandledRejection` fires once the microtask queue has drained, so
+      // yield a macrotask before asserting.
+      await new Promise((resolve) => {
+        setTimeout(resolve, 10);
+      });
+
+      expect(rejections).toEqual([]);
+    } finally {
+      process.off("unhandledRejection", onUnhandled);
+    }
+  });
+
+  it("still rejects output for callers that do consume a failing tool call", async () => {
+    const transformer = createToolCallTransformer([])();
+    const projection = transformer.init();
+    const toolEvent = (data: Record<string, unknown>): ProtocolEvent =>
+      ({
+        method: "tools",
+        params: {
+          namespace: ["tools"],
+          data,
+        },
+      }) as ProtocolEvent;
+
+    transformer.process(
+      toolEvent({
+        event: "tool-started",
+        tool_call_id: "call_1",
+        tool_name: "search",
+        input: {},
+      })
+    );
+
+    const iterator = projection.toolCalls[Symbol.asyncIterator]();
+    const pendingCall = await iterator.next();
+
+    transformer.process(
+      toolEvent({
+        event: "tool-error",
+        tool_call_id: "call_1",
+        message: "ENOTFOUND api.example.com",
+      })
+    );
+
+    transformer.finalize?.();
+
+    expect(await pendingCall.value.status).toBe("error");
+    expect(await pendingCall.value.error).toBe("ENOTFOUND api.example.com");
+    await expect(pendingCall.value.output).rejects.toThrow(
+      "ENOTFOUND api.example.com"
+    );
+  });
 });
