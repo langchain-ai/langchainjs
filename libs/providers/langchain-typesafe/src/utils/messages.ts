@@ -6,14 +6,16 @@ import {
 } from "@langchain/core/messages";
 
 /**
- * The role label a message is rendered under. `__openai_role__` is
- * `langchain-core`'s key for overriding a system message's label; core sets
- * it to OpenAI's `"developer"` role, so the name is OpenAI-flavoured even
- * though the key is core's.
+ * The role label a message is rendered under.
  *
  * The label is inert at the model — the same text scores the same under
- * `user:`, `human:`, a wrong label, a nonsense label, or none — so the
- * mapping is for parity and trace legibility, not correctness.
+ * `user:`, `human:`, a wrong label, a nonsense label, or none — so this
+ * mapping exists for trace legibility, not correctness. It deliberately
+ * does NOT honour `__openai_role__`: that marker exists so OpenAI's
+ * `developer` role survives a round trip through `SystemMessage`, and
+ * TypeSafe has no `developer` role to round-trip to. Every other use of
+ * the key in this repo writes it; nothing reads it, and `langchain-openai`
+ * decides its own outbound `developer` role from model capability instead.
  *
  * The exhaustiveness raise is what matters. `MessageType` is open
  * (`| (string & NonNullable<unknown>)`), so an unrecognised type is
@@ -39,18 +41,8 @@ function roleFor(message: BaseMessage): string {
         break;
       }
       return message.role;
-    case "system": {
-      const explicit = message.additional_kwargs?.__openai_role__;
-      if (explicit === undefined) {
-        return "system";
-      }
-      if (typeof explicit !== "string") {
-        throw new TypeError(
-          `Expected "__openai_role__" to be a string, got ${typeof explicit}.`
-        );
-      }
-      return explicit;
-    }
+    case "system":
+      return "system";
     default:
       break;
   }

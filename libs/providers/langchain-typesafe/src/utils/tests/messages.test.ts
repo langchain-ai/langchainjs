@@ -11,6 +11,17 @@ import { describe, expect, test } from "vitest";
 import { renderMessage } from "../messages.js";
 
 describe("renderMessage", () => {
+
+  test("does NOT honour __openai_role__; a SystemMessage stays `system`", () => {
+    // The marker exists so OpenAI's `developer` role survives a round trip
+    // through SystemMessage. TypeSafe has no `developer` role, the label is
+    // inert at the model, and nothing else in this repo reads the key.
+    const message = new SystemMessage({
+      content: "be terse",
+      additional_kwargs: { __openai_role__: "developer" },
+    });
+    expect(renderMessage(message)).toBe("system: be terse");
+  });
   test("maps roles and keeps string content", () => {
     expect(renderMessage(new HumanMessage("Please help immediately."))).toBe(
       "user: Please help immediately."
@@ -155,30 +166,8 @@ describe("renderMessage", () => {
     );
   });
 
-  test("honors __openai_role__ on a SystemMessage", () => {
-    const message = new SystemMessage({
-      content: "Be terse.",
-      additional_kwargs: { __openai_role__: "developer" },
-    });
-    expect(renderMessage(message)).toBe("developer: Be terse.");
-  });
 
-  test("ignores __openai_role__ on a ToolMessage; role stays tool", () => {
-    const message = new ToolMessage({
-      content: "ok",
-      tool_call_id: "call_1",
-      additional_kwargs: { __openai_role__: "developer" },
-    });
-    expect(renderMessage(message)).toBe("tool#call_1: ok");
-  });
 
-  test("throws a TypeError when a SystemMessage's __openai_role__ is not a string", () => {
-    const message = new SystemMessage({
-      content: "Be terse.",
-      additional_kwargs: { __openai_role__: 42 },
-    });
-    expect(() => renderMessage(message)).toThrow(TypeError);
-  });
 
   test("throws for an unsupported message type, naming only the type", () => {
     // Raising rather than defaulting to a role is deliberate: a silently
