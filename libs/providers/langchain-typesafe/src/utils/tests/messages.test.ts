@@ -13,9 +13,7 @@ import { renderMessage } from "../messages.js";
 describe("renderMessage", () => {
 
   test("does NOT honour __openai_role__; a SystemMessage stays `system`", () => {
-    // The marker exists so OpenAI's `developer` role survives a round trip
-    // through SystemMessage. TypeSafe has no `developer` role, the label is
-    // inert at the model, and nothing else in this repo reads the key.
+    // Pinned so the branch is not restored as an apparent oversight.
     const message = new SystemMessage({
       content: "be terse",
       additional_kwargs: { __openai_role__: "developer" },

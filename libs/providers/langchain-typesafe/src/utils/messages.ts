@@ -8,23 +8,13 @@ import {
 /**
  * The role label a message is rendered under.
  *
- * The label is inert at the model — the same text scores the same under
- * `user:`, `human:`, a wrong label, a nonsense label, or none — so this
- * mapping exists for trace legibility, not correctness. It deliberately
- * does NOT honour `__openai_role__`: that marker exists so OpenAI's
+ * The label is inert at the model, so this is for trace legibility only.
+ * `__openai_role__` is deliberately not honoured: it exists so OpenAI's
  * `developer` role survives a round trip through `SystemMessage`, and
- * TypeSafe has no `developer` role to round-trip to. Every other use of
- * the key in this repo writes it; nothing reads it, and `langchain-openai`
- * decides its own outbound `developer` role from model capability instead.
+ * nothing else in this repo reads it.
  *
- * The exhaustiveness raise is what matters. `MessageType` is open
- * (`| (string & NonNullable<unknown>)`), so an unrecognised type is
- * reachable, and returning a default would silently drop that message's
- * content. Dropping content changes answers materially in either
- * direction: a frustration question falls from 0.94 to near zero, and a
- * benign tool call whose authorizing user message is lost rises from 0.03
- * to 0.51 — across a 0.2 block threshold. Failing loudly beats degrading
- * quietly.
+ * The raise matters. `MessageType` is open, so an unrecognised type is
+ * reachable, and defaulting would silently drop that message's content.
  */
 function roleFor(message: BaseMessage): string {
   switch (message.getType()) {
@@ -121,9 +111,7 @@ export function renderMessage(message: BaseMessage): string {
   }
 
   // A refusal lives outside content, so a refusal-only turn would otherwise
-  // render as a bare `assistant: `. Only the OpenAI-compatible providers
-  // populate it (openai, azure, xai, openrouter, ibm), so the guard is
-  // defensive rather than universal.
+  // render as a bare `assistant: `. Only the OpenAI-family providers set it.
   const refusal = message.additional_kwargs?.refusal;
   if (typeof refusal === "string" && refusal.length > 0) {
     parts.push(`[refused: ${refusal}]`);

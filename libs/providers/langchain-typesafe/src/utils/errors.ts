@@ -108,10 +108,8 @@ export class TypeSafeAPIError extends ns.brand(TypeSafeError, "api") {
   }
 
   /**
-   * An allowlist, not a denylist: `body` can hold a 422 whose
-   * `detail[].input` is the whole request, including the classified `state`.
-   * Separate control from `defineHidden`, which covers `util.inspect` and
-   * `Object.keys` — neither reaches the other's surface.
+   * An allowlist: `body` can hold a 422 echoing the whole request. Separate
+   * control from `defineHidden`, which covers `util.inspect` and spread.
    */
   toJSON(): Record<string, unknown> {
     return {
@@ -202,11 +200,7 @@ export class TypeSafeAPIConnectionError extends ns.brand(
     stampRetryable(this, true);
   }
 
-  /**
-   * Keeps `cause` out of `JSON.stringify(error)` — it can hold a URL with
-   * credentials. It stays enumerable (see the constructor), so
-   * `util.inspect` still shows it; that split is deliberate.
-   */
+  /** Keeps `cause` out of `JSON.stringify`; `util.inspect` still shows it. */
   toJSON(): Record<string, unknown> {
     return { name: this.name, message: this.message };
   }
