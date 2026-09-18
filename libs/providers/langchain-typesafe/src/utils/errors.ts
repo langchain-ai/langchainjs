@@ -46,6 +46,24 @@ function defineHidden(target: object, key: string, value: unknown): void {
   });
 }
 
+/**
+ * The only fields any error in this package puts into `JSON.stringify`.
+ *
+ * An allowlist rather than a denylist: `cause` can hold a URL with
+ * credentials or the request body, and `body` can hold a 422 whose
+ * `detail[].input` is the entire request including the classified
+ * `state`. This is a separate control from `defineHidden` — `toJSON`
+ * governs `JSON.stringify`, non-enumerability governs `util.inspect`
+ * at depth, `Object.keys` and spread. Neither covers the other's
+ * surface, so both are load-bearing.
+ */
+function errorToJSON(
+  error: { name: string; message: string },
+  extra?: Record<string, unknown>
+): Record<string, unknown> {
+  return { name: error.name, message: error.message, ...extra };
+}
+
 /** Base class for every error this package throws. */
 export class TypeSafeError extends ns.brand(LangChainError) {
   readonly name: string = "TypeSafeError";
@@ -109,12 +127,7 @@ export class TypeSafeAPIError extends ns.brand(TypeSafeError, "api") {
 
   /** Keeps the body out of `JSON.stringify(error)`. */
   toJSON(): Record<string, unknown> {
-    return {
-      name: this.name,
-      message: this.message,
-      status: this.status,
-      requestId: this.requestId,
-    };
+    return errorToJSON(this, { status: this.status, requestId: this.requestId });
   }
 }
 
@@ -204,10 +217,7 @@ export class TypeSafeAPIConnectionError extends ns.brand(
    * `util.inspect` still shows it — that split is deliberate.
    */
   toJSON(): Record<string, unknown> {
-    return {
-      name: this.name,
-      message: this.message,
-    };
+    return errorToJSON(this);
   }
 }
 
