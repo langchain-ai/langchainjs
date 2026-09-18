@@ -37,6 +37,7 @@
     "@langchain/core": "workspace:^",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
+    "@types/node": "^26.4.0",
     "dotenv": "^17.4.2",
     "langchain": "workspace:*",
     "typescript": "~7.0.2",

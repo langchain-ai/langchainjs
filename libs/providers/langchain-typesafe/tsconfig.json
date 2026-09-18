@@ -2,7 +2,15 @@
   "extends": "@langchain/tsconfig/base.json",
   "compilerOptions": {
     "rootDir": "src",
-    "outDir": "dist"
+    "outDir": "dist",
+    // Sibling providers don't set `types`, but they don't need to: those that
+    // use `process` pull Node's ambient globals transitively through a larger
+    // dependency graph. This package's graph is small enough that TypeScript's
+    // automatic `@types/*` inclusion never fires, so tsc reported 33 errors for
+    // bare `process` / `node:util` in the tests. Listing `node` explicitly is
+    // what makes `tsc --noEmit` — and therefore vitest's typecheck — actually
+    // pass here. Add to this array rather than relying on auto-inclusion.
+    "types": ["node"]
   },
   "include": ["src/**/*"],
   "exclude": ["dist", "node_modules"],
