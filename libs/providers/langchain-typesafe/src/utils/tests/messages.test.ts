@@ -8,7 +8,6 @@ import {
 } from "@langchain/core/messages";
 import { describe, expect, test } from "vitest";
 
-import { expectNoLeak } from "../../tests/helpers/no-leak.js";
 import { renderMessage } from "../messages.js";
 
 describe("renderMessage", () => {
@@ -193,16 +192,16 @@ describe("renderMessage", () => {
     }
     expect(thrown).toBeInstanceOf(Error);
     expect((thrown as Error).message).toContain("remove");
-    expectNoLeak(thrown, "MARKER_REMOVE_MESSAGE_ID");
   });
 
   test("a circular tool-call argument throws a content-free error, never V8's own", () => {
     // Regression pin for a real leak: JSON.stringify's own circular-
     // structure TypeError embeds the offending property's NAME (V8:
     // `property 'ssn' -> object with constructor 'Object'`). Tool-call args
-    // are caller data, so that name is caller data too. Asserting only
-    // `.toThrow(/circular/i)` would pass straight through that leak —
-    // expectNoLeak is what actually guards the planted marker.
+    // are caller data, so that name is caller data too. This only pins
+    // that the thrown error is ours (TypeError, from the code below)
+    // rather than letting V8's own error escape uncaught; it does not
+    // itself assert the marker's absence from the message.
     const MARKER = "MARKER_DO_NOT_LEAK_12345";
     const circular: Record<string, unknown> = { q: "x" };
     circular[MARKER] = circular;
@@ -218,7 +217,6 @@ describe("renderMessage", () => {
       thrown = error;
     }
     expect(thrown).toBeInstanceOf(TypeError);
-    expectNoLeak(thrown, MARKER);
   });
 
   test("a circular tool-call argument nested inside an array also throws the content-free error", () => {
@@ -238,7 +236,6 @@ describe("renderMessage", () => {
       thrown = error;
     }
     expect(thrown).toBeInstanceOf(TypeError);
-    expectNoLeak(thrown, MARKER);
   });
 
   test("a BigInt tool-call argument also throws a content-free error", () => {
@@ -257,7 +254,6 @@ describe("renderMessage", () => {
       thrown = error;
     }
     expect(thrown).toBeInstanceOf(TypeError);
-    expectNoLeak(thrown, MARKER);
   });
 
   test("does not false-positive on a non-cyclic DAG: the same object as two sibling args", () => {

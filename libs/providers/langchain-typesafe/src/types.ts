@@ -13,6 +13,13 @@ const noulCriteriaSchema = z.object({
   false: jsonValueSchema.optional(),
 });
 
+// Do NOT make these schemas strict. `z.strictObject` (or `.strict()`)
+// emits an `unrecognized_keys` issue whose message embeds the caller's
+// own key name, and `validateQuestions` interpolates `issue.message`
+// straight into the thrown error — verified to produce
+// `Unrecognized key: "<caller key>"`. Unknown keys are ignored here on
+// purpose: silently dropping an unrecognized field is preferable to
+// naming it in an error that reaches logs and traces.
 const noulQuestionSchema = z.object({
   type: z.literal("noul"),
   instructions: questionContentSchema.optional(),

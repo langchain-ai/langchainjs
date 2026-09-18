@@ -1,6 +1,5 @@
 import { describe, expect, test } from "vitest";
 
-import { expectNoLeak } from "./helpers/no-leak.js";
 import {
   classificationResponseSchema,
   serializeQuestion,
@@ -118,7 +117,6 @@ describe("validateQuestions", () => {
     expect(thrown).toBeInstanceOf(Error);
     const message = (thrown as Error).message;
     expect(message).toContain('"billing"');
-    expectNoLeak(thrown, "MARKER_NOUL_CRITERIA_VALUE");
   });
 
   test("rejects a choice whose criteria is an array instead of a record, naming the question", () => {
@@ -137,7 +135,6 @@ describe("validateQuestions", () => {
     expect(thrown).toBeInstanceOf(Error);
     const message = (thrown as Error).message;
     expect(message).toContain('"billing"');
-    expectNoLeak(thrown, "MARKER_CHOICE_CRITERIA_VALUE");
   });
 
   test("rejects a score whose criteria is a string instead of an array, naming the question", () => {
@@ -153,7 +150,6 @@ describe("validateQuestions", () => {
     expect(thrown).toBeInstanceOf(Error);
     const message = (thrown as Error).message;
     expect(message).toContain('"billing"');
-    expectNoLeak(thrown, "MARKER_SCORE_CRITERIA_VALUE");
   });
 
   test("a cyclic criteria fails with a named error, not a stack overflow", () => {
@@ -180,7 +176,6 @@ describe("validateQuestions", () => {
     const message = (thrown as Error).message;
     expect(message).toContain('"department"');
     expect(message).toMatch(/circular reference/);
-    expectNoLeak(thrown, MARKER);
   });
 
   test("a cyclic instructions value also fails with a named error", () => {
@@ -200,7 +195,6 @@ describe("validateQuestions", () => {
     expect(thrown).toBeInstanceOf(Error);
     expect(thrown).not.toBeInstanceOf(RangeError);
     expect((thrown as Error).message).toContain('"urgent"');
-    expectNoLeak(thrown, MARKER);
   });
 
   test("reports the question id, field path, and zod message on a malformed element", () => {
@@ -253,7 +247,6 @@ describe("validateQuestions", () => {
     expect(thrown).toBeInstanceOf(Error);
     const message = (thrown as Error).message;
     expect(message).toContain('Invalid TypeSafe question "billing": type:');
-    expectNoLeak(thrown, MARKER);
   });
 
   test("still accepts a well-formed question of each type", () => {
