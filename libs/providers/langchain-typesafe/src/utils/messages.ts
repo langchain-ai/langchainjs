@@ -7,13 +7,22 @@ import {
 
 /**
  * The role label a message is rendered under. `__openai_role__` is
- * `langchain-core`'s key for overriding a system message's label, not an
- * OpenAI dependency.
+ * `langchain-core`'s key for overriding a system message's label; core sets
+ * it to OpenAI's `"developer"` role, so the name is OpenAI-flavoured even
+ * though the key is core's.
  *
- * The label is inert at the model, so the mapping is for parity and trace
- * legibility. The exhaustiveness raise is the load-bearing part: an
- * unhandled type can contribute no content, and the server answers a
- * content-free state confidently rather than erroring.
+ * The label is inert at the model — the same text scores the same under
+ * `user:`, `human:`, a wrong label, a nonsense label, or none — so the
+ * mapping is for parity and trace legibility, not correctness.
+ *
+ * The exhaustiveness raise is what matters. `MessageType` is open
+ * (`| (string & NonNullable<unknown>)`), so an unrecognised type is
+ * reachable, and returning a default would silently drop that message's
+ * content. Dropping content changes answers materially in either
+ * direction: a frustration question falls from 0.94 to near zero, and a
+ * benign tool call whose authorizing user message is lost rises from 0.03
+ * to 0.51 — across a 0.2 block threshold. Failing loudly beats degrading
+ * quietly.
  */
 function roleFor(message: BaseMessage): string {
   switch (message.getType()) {
