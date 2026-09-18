@@ -48,7 +48,7 @@ export class MongoDBCache extends BaseCache {
       generations.map((g) => JSON.stringify(serializeGeneration(g)))
     );
     await this.collection.updateOne(
-      { [this.PROMPT]: prompt, [this.LLM]: llmKey },
+      { [this.PROMPT]: { $eq: prompt }, [this.LLM]: { $eq: llmKey } },
       { $set: { [this.RETURN_VAL]: serialized } },
       { upsert: true }
     );
