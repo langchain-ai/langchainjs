@@ -1,14 +1,14 @@
 import { describe, test, expect, beforeEach, vi, MockedObject } from "vitest";
-import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import type {
+  Client,
+  EmbeddedResource,
+  ImageContent,
+  TextContent,
+} from "@modelcontextprotocol/client";
 import {
   StructuredTool,
   ToolInputParsingException,
 } from "@langchain/core/tools";
-import type {
-  EmbeddedResource,
-  ImageContent,
-  TextContent,
-} from "@modelcontextprotocol/sdk/types.js";
 import type {
   AIMessage,
   MessageContentComplex,
@@ -18,20 +18,12 @@ import type {
 import { loadMcpTools } from "../tools.js";
 
 vi.mock(
-  "@modelcontextprotocol/sdk/client/index.js",
-  () => import("./__mocks__/@modelcontextprotocol/sdk/client/index.js")
+  "@modelcontextprotocol/client",
+  () => import("./__mocks__/@modelcontextprotocol/client.js")
 );
 vi.mock(
-  "@modelcontextprotocol/sdk/client/stdio.js",
-  () => import("./__mocks__/@modelcontextprotocol/sdk/client/stdio.js")
-);
-vi.mock(
-  "@modelcontextprotocol/sdk/client/sse.js",
-  () => import("./__mocks__/@modelcontextprotocol/sdk/client/sse.js")
-);
-vi.mock(
-  "@modelcontextprotocol/sdk/client/streamableHttp.js",
-  () => import("./__mocks__/@modelcontextprotocol/sdk/client/streamableHttp.js")
+  "@modelcontextprotocol/client/stdio",
+  () => import("./__mocks__/@modelcontextprotocol/client/stdio.js")
 );
 
 // Create a mock client

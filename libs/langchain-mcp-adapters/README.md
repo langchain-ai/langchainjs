@@ -155,17 +155,20 @@ await client.close();
 
 This example shows how you can manage your own MCP client and use it to get LangChain tools. These tools can be used anywhere LangChain tools are used, including with LangGraph prebuilt agents, as shown below.
 
-The example below requires some prerequisites:
+This is an optional advanced API. `MultiServerMCPClient` manages the SDK client
+for you and does not require a separate SDK installation. Install
+`@modelcontextprotocol/client` directly only when your application imports and
+constructs its own SDK client, as this example does.
 
 ```bash
-npm install @langchain/mcp-adapters @langchain/langgraph @langchain/core @langchain/openai
+npm install @langchain/mcp-adapters @langchain/langgraph @langchain/core @langchain/openai @modelcontextprotocol/client
 
 export OPENAI_API_KEY=<your_api_key>
 ```
 
 ```ts
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { Client } from "@modelcontextprotocol/client";
+import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 
 import { createAgent } from "langchain";
 import { ChatOpenAI } from "@langchain/openai";
@@ -526,7 +529,7 @@ New in v0.4.6.
 ### Basic OAuth Setup
 
 ```ts
-import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
+import type { OAuthClientProvider } from "@langchain/mcp-adapters";
 
 class MyOAuthProvider implements OAuthClientProvider {
   constructor(
