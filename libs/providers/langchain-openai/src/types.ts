@@ -126,6 +126,13 @@ export interface OpenAICallOptions extends BaseLanguageModelCallOptions {
    * Additional options to pass to the underlying axios request.
    */
   options?: OpenAICoreRequestOptions;
+
+  /**
+   * When provided, the completions API will make a best effort to sample
+   * deterministically, such that repeated requests with the same `seed`
+   * and parameters should return the same result.
+   */
+  seed?: number;
 }
 
 /**
@@ -137,9 +144,19 @@ export declare interface OpenAIInput extends OpenAIBaseInput {
 
   /** Batch size to use when passing multiple documents to generate */
   batchSize: number;
+
+  /**
+   * A seed for deterministic sampling.
+   */
+  seed?: number;
 }
 
 export interface OpenAIChatInput extends OpenAIBaseInput {
+  /**
+   * A seed for deterministic sampling.
+   */
+  seed?: number;
+
   /**
    * Whether to return log probabilities of the output tokens or not.
    * If true, returns the log probabilities of each output token returned in the content of message.
