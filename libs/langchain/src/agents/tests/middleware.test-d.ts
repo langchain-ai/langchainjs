@@ -243,6 +243,11 @@ describe("middleware types", () => {
             customDefaultContextProp: string;
             customOptionalContextProp?: string;
           }>();
+          // The registered tool set is exposed to middleware hooks via
+          // `runtime.tools` (undefined when the agent registered no tools).
+          expectTypeOf(runtime.tools).toEqualTypeOf<
+            readonly (ClientTool | ServerTool)[] | undefined
+          >();
         },
         wrapModelCall: async (request, handler) => {
           expectTypeOf(request.tools).toEqualTypeOf<
