@@ -1,5 +1,69 @@
 # @langchain/google
 
+## 0.2.6
+
+### Patch Changes
+
+- [#11433](https://github.com/langchain-ai/langchainjs/pull/11433) [`bc88b75`](https://github.com/langchain-ai/langchainjs/commit/bc88b750499ece71315ff3aa31309280bc0423f6) Thanks [@jackjin1997](https://github.com/jackjin1997)! - Fix Vertex AI endpoint routing for multi-region locations such as `eu` and `us`.
+
+- [#11606](https://github.com/langchain-ai/langchainjs/pull/11606) [`194a063`](https://github.com/langchain-ai/langchainjs/commit/194a06348b8f7ef0ecf76c0c72096ef453d1166a) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - fix: allowlist JSON Schema keywords for Gemini function/response schemas instead of denylisting, fixing `propertyNames`/`exclusiveMinimum`/etc. 400s ([#8584](https://github.com/langchain-ai/langchainjs/issues/8584))
+
+- [#11611](https://github.com/langchain-ai/langchainjs/pull/11611) [`c9ae847`](https://github.com/langchain-ai/langchainjs/commit/c9ae84784f14d735108feefac991723fbefbde11) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - fix(google): set `toolConfig.includeServerSideToolInvocations` when mixing built-in and function-declaration tools, which Gemini otherwise rejects with a 400
+
+- [#11616](https://github.com/langchain-ai/langchainjs/pull/11616) [`35368db`](https://github.com/langchain-ai/langchainjs/commit/35368db8b942a353c71a3f4c64b04defeb481000) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - fix(google): surface `groundingMetadata`/`groundingSupport`/`citationMetadata` on `.stream()` and `.streamEvents()`, matching what `.invoke()` already returns
+
+- [#11603](https://github.com/langchain-ai/langchainjs/pull/11603) [`fec9cd8`](https://github.com/langchain-ai/langchainjs/commit/fec9cd87b01976014dd549bd2cf7849aee89a566) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - fix(core): build streaming `llmOutput.tokenUsage` from the fully-accumulated chunk instead of whichever individual chunk's `usage_metadata` arrived last
+
+  Affects both core streaming paths — `.stream()`/`.streamEvents()` (`_streamIterator`) and `.invoke()`/`.generate()` when a streaming-preferring callback is attached (`_generateWithCache`'s `hasStreamingHandler` branch). Previously, `llmOutput.tokenUsage` was overwritten by each chunk in turn, so only the last chunk carrying `usage_metadata` won — correct for providers that emit one cumulative total on a final chunk, but wrong for providers (e.g. `@langchain/google`, `@langchain/anthropic`) that emit `usage_metadata` as a per-chunk delta across multiple chunks, where the values must be summed.
+
+  Note for provider authors: this assumes each streamed chunk's `usage_metadata` is either a per-chunk delta or appears only on a single final chunk. A provider that instead repeats a cumulative total on every chunk will now see it summed (and inflated) in `llmOutput.tokenUsage`, matching the existing behavior of the correctly-working `message.usage_metadata` field.
+
+  Also fixes `@langchain/google`'s `invoke({streaming: true})` path (no streaming-preferring callback attached), where `llmOutput` was never populated at all.
+
+- [#11602](https://github.com/langchain-ai/langchainjs/pull/11602) [`78b2923`](https://github.com/langchain-ai/langchainjs/commit/78b29235cb1adf341fce97884f9ff558cd38b079) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - fix(google): preserve tool call `id` and `thoughtSignature` in native stream events
+
+  Preserves tool call `id` and Gemini's `thoughtSignature` through `@langchain/google`'s native `streamEvents()` path.
+
+## 0.2.5
+
+### Patch Changes
+
+- [#10047](https://github.com/langchain-ai/langchainjs/pull/10047) [`ff1248f`](https://github.com/langchain-ai/langchainjs/commit/ff1248fd49dacdb35f5da128278cd777068481d7) Thanks [@afirstenberg](https://github.com/afirstenberg)! - fix(core): BaseMessage.text use contentBlocks
+
+- [#11574](https://github.com/langchain-ai/langchainjs/pull/11574) [`5c89094`](https://github.com/langchain-ai/langchainjs/commit/5c8909465416c4751a58552dbc29257e2f19b051) Thanks [@afirstenberg](https://github.com/afirstenberg)! - This addresses four specific issues:
+
+  - "thought" and "thoughtSignature" not being present in the conversation
+    history sent to Gemini when using v0 messages
+  - "thought" and "thoughtSignature" not being present in the conversation history sent to Gemini when using v1 messages
+  - "thoughtSignature" not being present in v1 tool calls specifically
+  - ContentBlock.Reasoning not being handled in v1 at all
+
+  It does so by, largely, keeping the existing logic converting from LangChain representation to a Google.Part in both the v0 (legacy) and v1 (standard) paths intact. (This is done in both in the messages.ts file.)
+
+  - In convertLegacyContentMessageToGeminiContent(), the conversion is moved to a new function: convertLegacyPartToGeminiPart() for consistency with the standard path and to standardize where and how the thought/thoughtSignature fields are added
+  - Both convertLegacyPartToGeminiPart() and convertStandardContentBlockToGeminiPart() get a baseGeminiPart() function that returns the Gemini.Part without the thought or thoughtSignature fields
+  - Both then add the additional fields, if necessary, independent of what the underlying Gemini.Part is.
+
+  The last point is done because Gemini can attach "thought" or "thoughtSignature" to any block type. Not just text.
+
+## 0.2.4
+
+### Patch Changes
+
+- [#11426](https://github.com/langchain-ai/langchainjs/pull/11426) [`2e865ea`](https://github.com/langchain-ai/langchainjs/commit/2e865ea06047d6a71e9fb694dfb0dee5c1a46f4b) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - fix: keep image/audio/video content in ToolMessages as sibling Gemini parts instead of losing it inside functionResponse.response.result JSON, and stop double-stringifying non-string tool results ([#10297](https://github.com/langchain-ai/langchainjs/issues/10297), [#10439](https://github.com/langchain-ai/langchainjs/issues/10439))
+
+- [#11477](https://github.com/langchain-ai/langchainjs/pull/11477) [`9a0f244`](https://github.com/langchain-ai/langchainjs/commit/9a0f244c161412ba54c7308e635ce773abc88c4a) Thanks [@hntrl](https://github.com/hntrl)! - Fix `convertMessagesToGeminiContents` merging a `ToolMessage` (functionResponse)
+  with a following `HumanMessage` (text) into one `user` content. Both map to the
+  `user` role, and Vertex/Gemini rejects a single `user` content that mixes a
+  `functionResponse` with text, so a tool result followed by a user message would
+  fail with a 400. Merging is now limited to runs of adjacent tool results
+  (parallel tool calls), which the API requires to be grouped into one content;
+  all other same-role contents stay separate.
+
+  Also fixes the v1 standard-content path, where a single `ToolMessage` could emit
+  a `user` content mixing its `functionResponse` part with text parts; tool turns
+  now carry only their functionResponse part(s), mirroring the legacy path.
+
 ## 0.2.3
 
 ### Patch Changes
