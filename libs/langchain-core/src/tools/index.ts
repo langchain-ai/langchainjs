@@ -301,7 +301,12 @@ export abstract class StructuredTool<
       undefined,
       undefined,
       config.runName,
-      toolCallId
+      toolCallId,
+      typeof inputForValidation === "object" &&
+        inputForValidation !== null &&
+        !Array.isArray(inputForValidation)
+        ? (inputForValidation as Record<string, unknown>)
+        : undefined
     );
     delete config.runId;
 

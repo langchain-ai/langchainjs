@@ -1073,7 +1073,8 @@ export class CallbackManager
     _tags: string[] | undefined = undefined,
     _metadata: Record<string, unknown> | undefined = undefined,
     runName: string | undefined = undefined,
-    toolCallId: string | undefined = undefined
+    toolCallId: string | undefined = undefined,
+    inputs: Record<string, unknown> | undefined = undefined
   ): Promise<CallbackManagerForToolRun> {
     await Promise.all(
       this.handlers.map((handler) => {
@@ -1091,7 +1092,8 @@ export class CallbackManager
             this._parentRunId,
             this.tags,
             this.metadata,
-            runName
+            runName,
+            inputs
           );
         }
         return consumeCallback(async () => {
@@ -1104,7 +1106,8 @@ export class CallbackManager
               this.tags,
               this.metadata,
               runName,
-              toolCallId
+              toolCallId,
+              inputs
             );
           } catch (err) {
             const logFunction = handler.raiseError

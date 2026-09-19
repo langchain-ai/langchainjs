@@ -195,7 +195,8 @@ abstract class BaseCallbackHandlerMethodsClass {
     tags?: string[],
     metadata?: Record<string, unknown>,
     runName?: string,
-    toolCallId?: string
+    toolCallId?: string,
+    inputs?: Record<string, unknown>
   ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     Promise<any> | any;
 
