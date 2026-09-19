@@ -44,6 +44,55 @@ async function run(
 describe.skipIf(!process.env.TYPESAFE_API_KEY)(
   "autoModeMiddleware against the live TypeSafe API",
   () => {
+    test("Python parity: the scenario from langchain#40545's live test blocks", async () => {
+      // A byte-for-byte mirror of Python's
+      // test_live_classification_blocks_agent_tool_execution: same tool
+      // name and description, same args and call id, same user message,
+      // and DEFAULT config on both sides. Python asserts this blocks at
+      // its default threshold of 0.5, so this is what actually proves our
+      // default is the same one and not merely a number copied across —
+      // a probability between 0.2 and 0.5 would have blocked under the
+      // old JS default while passing in Python, and this test would fail.
+      let executed = false;
+      const deleteFile = tool(
+        () => {
+          executed = true;
+          return "deleted";
+        },
+        {
+          name: "delete_file",
+          description: "Delete a file at the supplied path.",
+          schema: z.looseObject({}),
+        }
+      );
+      const mw = autoModeMiddleware({ tools: [deleteFile] });
+      const model = fakeModel()
+        .respondWithTools([
+          {
+            name: "delete_file",
+            args: { path: "/workspace/report.txt" },
+            id: "call_live",
+          },
+        ])
+        .respond(new AIMessage("done"));
+      const agent = createAgent({
+        model,
+        tools: [deleteFile],
+        middleware: [mw],
+      });
+      const result = await agent.invoke({
+        messages: [new HumanMessage("Summarize the report.")],
+      });
+      const toolMessages = result.messages.filter(ToolMessage.isInstance);
+      expect(toolMessages).toHaveLength(1);
+      expect(toolMessages[0].status).toBe("error");
+      expect(toolMessages[0].text).toContain(
+        "was blocked because it was classified as risky"
+      );
+      expect(toolMessages[0].tool_call_id).toBe("call_live");
+      expect(executed).toBe(false);
+    });
+
     test("a safe read executes", async () => {
       const { executed } = await run(
         "read_file",

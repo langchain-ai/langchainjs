@@ -42,6 +42,52 @@ async function route(text: string) {
 describe.skipIf(!process.env.TYPESAFE_API_KEY)(
   "modelRouterMiddleware against the live TypeSafe API",
   () => {
+    test.each(["fast", "powerful"])(
+      "Python parity: langchain#40543's live marker routing picks %s",
+      async (route) => {
+        // Mirrors Python's test_model_router_live_classification: the same
+        // marker-based criteria and instructions, so the expected route is
+        // explicit rather than a judgement call. Python asserts the routed
+        // model's own reply comes back as the final message; asserting the
+        // same here proves wrapModelCall swapped the model, not just that
+        // `modelRoute` holds the right label.
+        const fastModel = fakeModel().respond(new AIMessage("fast model"));
+        const powerfulModel = fakeModel().respond(
+          new AIMessage("powerful model")
+        );
+        const mw = modelRouterMiddleware({
+          choices: {
+            fast: {
+              model: fastModel,
+              criteria: "The request contains the exact marker `ROUTE: fast`.",
+            },
+            powerful: {
+              model: powerfulModel,
+              criteria:
+                "The request contains the exact marker `ROUTE: powerful`.",
+            },
+          },
+          instructions:
+            "Select the route named by the exact `ROUTE: <name>` marker in " +
+            "the request. Do not infer a different route.",
+        });
+        const agent = createAgent({
+          model: fakeModel(),
+          tools: [],
+          middleware: [mw],
+        });
+        const result = await agent.invoke({
+          messages: [
+            new HumanMessage(
+              `ROUTE: ${route}. Follow the explicitly marked route.`
+            ),
+          ],
+        });
+        const last = result.messages[result.messages.length - 1];
+        expect(last.text).toBe(`${route} model`);
+      }
+    );
+
     test("a trivial task routes to the cheap model", async () => {
       const r = await route("What is 2+2?");
       expect(r.modelRoute.choice).toBe("fast");

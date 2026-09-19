@@ -64,7 +64,7 @@ const toolsSchema = z
 const configSchema = z.object({
   tools: toolsSchema,
   instructions: z.custom<QuestionContent>().default(DEFAULT_INSTRUCTIONS),
-  criteria: z.custom<NoulCriteria>().default({
+  criteria: z.custom<NoulCriteria | null>().default({
     true: DEFAULT_TRUE_CRITERIA,
     false: DEFAULT_FALSE_CRITERIA,
   }),
@@ -86,7 +86,11 @@ export interface AutoModeMiddlewareConfig {
   /** Tools to check. Non-empty; anything not listed is never classified. */
   tools: (string | { name: string })[];
   instructions?: QuestionContent;
-  criteria?: NoulCriteria;
+  /**
+   * Descriptions for the two outcomes. Pass `null` to classify on
+   * `instructions` alone, as Python's `criteria=None` does.
+   */
+  criteria?: NoulCriteria | null;
   /** Blocked at or above this probability. Defaults to 0.5, as Python does. */
   threshold?: number;
   /** Supports `{tool_name}` and `{probability}`. */
@@ -150,6 +154,13 @@ export function renderBlockedMessage(
  * replacing it. Fails closed — a classifier error propagates and the tool
  * does not run.
  *
+ * One Python behaviour has no equivalent here: `AutoModeMiddleware` there
+ * sets a `trace_policy` that omits the classifier's inputs from traces.
+ * JS `createMiddleware` has no trace-policy option and `TracePolicy` does
+ * not exist in the JS agent stack or in langgraph's public types, so the
+ * conversation window and raw tool-call arguments this middleware sends
+ * DO appear in traces. Redact at the tracer if that matters.
+ *
  * Note for callers catching that error: the agent wraps anything thrown from
  * `wrapToolCall` in `MiddlewareError` (`agents/utils.ts:632`), so a
  * `TypeSafeAPIError.isInstance(err)` check fails and must read `err.cause`.
@@ -176,7 +187,16 @@ export function autoModeMiddleware(config: AutoModeMiddlewareConfig) {
 
   const classifier = new TypeSafeClassifier({
     ...classifierOptions,
-    questions: { [RISK_QUESTION_ID]: { type: "noul", instructions, criteria } },
+    questions: {
+      // `null` means "no criteria", matching Python. An absent field is how
+      // that reaches the wire: `serializeQuestion` omits `criteria` when it
+      // is `undefined`, and a Noul is valid on instructions alone.
+      [RISK_QUESTION_ID]: {
+        type: "noul",
+        instructions,
+        criteria: criteria ?? undefined,
+      },
+    },
   });
 
   return createMiddleware({
