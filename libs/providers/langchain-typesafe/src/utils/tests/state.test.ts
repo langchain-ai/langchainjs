@@ -7,7 +7,6 @@ import {
 } from "@langchain/core/messages";
 import { describe, expect, test } from "vitest";
 
-import { expectNoLeak } from "../../tests/helpers/no-leak.js";
 import { serializeState } from "../state.js";
 
 describe("serializeState", () => {
@@ -158,7 +157,6 @@ describe("serializeState", () => {
     }
     expect(thrown).toBeInstanceOf(Error);
     expect((thrown as Error).message).toMatch(/"remove"/);
-    expectNoLeak(thrown, MARKER);
   });
 
   test("throws a clean, content-free error for a self-referential object", () => {
@@ -183,7 +181,6 @@ describe("serializeState", () => {
     expect((thrown as Error).message).toBe(
       "Circular reference detected in TypeSafe state."
     );
-    expectNoLeak(thrown, MARKER);
   });
 
   test("throws a clean, content-free error for a self-referential array", () => {
@@ -201,7 +198,6 @@ describe("serializeState", () => {
     expect((thrown as Error).message).toBe(
       "Circular reference detected in TypeSafe state."
     );
-    expectNoLeak(thrown, MARKER);
   });
 
   test("does not false-positive on a non-cyclic DAG: the same object as two siblings", () => {

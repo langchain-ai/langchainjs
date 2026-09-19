@@ -13,38 +13,78 @@ const noulCriteriaSchema = z.object({
   false: jsonValueSchema.optional(),
 });
 
-const noulQuestionSchema = z.object({
-  type: z.literal("noul"),
-  instructions: questionContentSchema.optional(),
-  criteria: noulCriteriaSchema.optional(),
-});
+// Not `.strict()`: `parseQuestions` splices a zod issue's `message`
+// into a thrown error, and `.strict()` would embed a caller's key name.
+const noulQuestionSchema = z
+  .object({
+    type: z.literal("noul"),
+    instructions: questionContentSchema.optional(),
+    criteria: noulCriteriaSchema.optional(),
+  })
+  // Cardinality rule, not shape: a Noul with neither field is well-typed
+  // but meaningless, so it belongs in the schema alongside the shape
+  // checks rather than as a separate manual check after parsing.
+  .refine(
+    (noul) => noul.instructions !== undefined || noul.criteria !== undefined,
+    {
+      message: "Noul question must have criteria or instructions.",
+    }
+  );
 
 const choiceQuestionSchema = z.object({
   type: z.literal("choice"),
-  criteria: z.record(z.string(), jsonValueSchema),
+  // At least one option: matches the server, which also requires one.
+  criteria: z
+    .custom<Record<string, JsonValue>>(
+      (criteria) =>
+        typeof criteria === "object" &&
+        criteria !== null &&
+        !Array.isArray(criteria) &&
+        Object.keys(criteria).length >= 1,
+      { message: "Choice question must have at least 1 option." }
+    )
+    .pipe(z.record(z.string(), jsonValueSchema)),
   instructions: questionContentSchema.optional(),
 });
 
 const scoreQuestionSchema = z.object({
   type: z.literal("score"),
-  criteria: z.array(jsonValueSchema),
+  // Stricter than the server, deliberately: the API accepts a one-level
+  // Score and answers with a meaningless `confidence: 1.0` rather than
+  // erroring.
+  criteria: z
+    .array(jsonValueSchema)
+    .min(2, "Score question must have at least 2 ordered levels."),
   instructions: questionContentSchema.optional(),
 });
 
 /**
  * Validates the shape of a single question, mirroring the `Question` union
- * member-for-member.
+ * member-for-member, and enforces each variant's cardinality rule (Noul
+ * needs criteria or instructions; Choice needs at least one option; Score
+ * needs at least two ordered levels).
  *
- * Used by `validateQuestions` to catch a malformed `criteria`/`instructions`
- * from untrusted input (e.g. parsed JSON/YAML) with a clean, named error
- * instead of a bare runtime `TypeError` from the cardinality checks that
- * follow.
+ * Used by `parseQuestions` to catch a malformed or under-specified
+ * `criteria`/`instructions` from untrusted input (e.g. parsed JSON/YAML)
+ * with a clean, named error instead of a bare runtime `TypeError`.
  */
 export const questionSchema = z.discriminatedUnion("type", [
   noulQuestionSchema,
   choiceQuestionSchema,
   scoreQuestionSchema,
 ]);
+
+// Checks cardinality without rebuilding the map: `z.record` would
+// reconstruct the object and drop an own `__proto__` key, which this
+// package preserves. Each question is parsed individually against
+// `questionSchema` by `parseQuestions`, the only place that may produce
+// this brand.
+const questionsMapSchema = z
+  .custom<Record<string, Question>>()
+  .refine((questions) => Object.keys(questions).length >= 1, {
+    message: "TypeSafe requires at least one question.",
+  })
+  .brand<"ValidatedQuestions">();
 
 const noulAnswerSchema = z.object({
   type: z.literal("noul"),
@@ -132,6 +172,15 @@ export type Choice = z.infer<typeof choiceQuestionSchema>;
 export type Score = z.infer<typeof scoreQuestionSchema>;
 
 export type Question = z.infer<typeof questionSchema>;
+
+/**
+ * A questions map that has been through `parseQuestions`: every entry
+ * matches `questionSchema` — cardinality rules included — and the map has
+ * at least one entry. Branded so a plain, unparsed `Record<string,
+ * Question>` cannot be assigned where this type is required; only
+ * `parseQuestions` can produce one.
+ */
+export type ValidatedQuestions = z.infer<typeof questionsMapSchema>;
 
 /**
  * A Noul answer: a bare probability, with no `confidence` and no
@@ -272,23 +321,17 @@ export function serializeQuestion(question: Question): Record<string, unknown> {
 }
 
 /**
- * Validates a questions map before it reaches the network.
+ * Parses a questions map, returning it branded as `ValidatedQuestions`.
  *
- * Each question's shape is checked against `questionSchema` first, so
- * malformed input (e.g. from parsed JSON/YAML rather than a hand-written TS
- * literal) fails with a clean, named error instead of a bare runtime
- * `TypeError` from the cardinality checks below.
- *
- * The Score lower bound is stricter than the server, deliberately: the API
- * accepts a one-level Score and answers with a meaningless `confidence: 1.0`
- * rather than erroring. Choice matches the server (at least one option).
+ * Each question goes through `questionSchema`, so malformed or
+ * under-specified input — e.g. from parsed JSON/YAML rather than a
+ * hand-written literal — fails with an error naming the question id
+ * instead of a bare `TypeError` at request time.
  */
-export function validateQuestions(questions: Record<string, Question>): void {
-  const ids = Object.keys(questions);
-  if (ids.length === 0) {
-    throw new Error("TypeSafe requires at least one question.");
-  }
-  for (const id of ids) {
+export function parseQuestions(
+  questions: Record<string, Question>
+): ValidatedQuestions {
+  for (const id of Object.keys(questions)) {
     const question = questions[id];
     let shape: ReturnType<typeof questionSchema.safeParse>;
     try {
@@ -318,27 +361,16 @@ export function validateQuestions(questions: Record<string, Question>): void {
         `Invalid TypeSafe question "${id}": ${prefix}${issue.message}`
       );
     }
-    if (question.type === "noul") {
-      if (
-        question.instructions === undefined &&
-        question.criteria === undefined
-      ) {
-        throw new Error(
-          `Noul question must have criteria or instructions: ${id}`
-        );
-      }
-      continue;
-    }
-    if (question.type === "choice") {
-      if (Object.keys(question.criteria).length < 1) {
-        throw new Error(`Choice question "${id}" must have at least 1 option.`);
-      }
-      continue;
-    }
-    if (question.criteria.length < 2) {
-      throw new Error(
-        `Score question "${id}" must have at least 2 ordered levels.`
-      );
-    }
+    // `shape.data` is deliberately unused. `questionSchema` has no
+    // transform or default, so it differs from the input only where zod
+    // loses something — its `record` parser drops a key named
+    // `__proto__`, which would delete a Choice option so labelled.
   }
+  // Brands the caller's own map. Nothing is copied, so every key survives,
+  // and the brand comes from a parse rather than a cast.
+  const map = questionsMapSchema.safeParse(questions);
+  if (!map.success) {
+    throw new Error(map.error.issues[0].message);
+  }
+  return map.data;
 }

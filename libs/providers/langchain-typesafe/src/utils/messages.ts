@@ -8,11 +8,13 @@ import {
 /**
  * The role label a message is rendered under.
  *
- * `__openai_role__` is not an OpenAI dependency: it is the key
- * `langchain-core` defines for overriding a system message's label, and
- * the Python package honours it too. An unsupported type raises rather
- * than defaulting — a mislabelled message yields a confident wrong
- * classification instead of a visible error.
+ * The label is inert at the model, so this is for trace legibility only.
+ * `__openai_role__` is deliberately not honoured: it exists so OpenAI's
+ * `developer` role survives a round trip through `SystemMessage`, and
+ * nothing else in this repo reads it.
+ *
+ * The raise matters. `MessageType` is open, so an unrecognised type is
+ * reachable, and defaulting would silently drop that message's content.
  */
 function roleFor(message: BaseMessage): string {
   switch (message.getType()) {
@@ -29,18 +31,8 @@ function roleFor(message: BaseMessage): string {
         break;
       }
       return message.role;
-    case "system": {
-      const explicit = message.additional_kwargs?.__openai_role__;
-      if (explicit === undefined) {
-        return "system";
-      }
-      if (typeof explicit !== "string") {
-        throw new TypeError(
-          `Expected "__openai_role__" to be a string, got ${typeof explicit}.`
-        );
-      }
-      return explicit;
-    }
+    case "system":
+      return "system";
     default:
       break;
   }
@@ -77,9 +69,9 @@ function isTextBlock(block: unknown): block is { text?: string } {
 }
 
 /**
- * Renders content as text. All-text block lists join with a newline,
- * matching the Python package; any other block is serialized rather than
- * dropped, since an unrecognized block is still context.
+ * Renders content as text. All-text block lists join with a newline. Any other
+ * block is serialized rather than dropped, since an unrecognized block is still
+ * context.
  */
 function renderContent(content: BaseMessage["content"]): string {
   if (typeof content === "string") {
@@ -118,8 +110,8 @@ export function renderMessage(message: BaseMessage): string {
     parts.push(content);
   }
 
-  // A refusal lives outside content, so a refusal-only turn would
-  // otherwise render as a bare `assistant: `.
+  // A refusal lives outside content, so a refusal-only turn would otherwise
+  // render as a bare `assistant: `. Only the OpenAI-family providers set it.
   const refusal = message.additional_kwargs?.refusal;
   if (typeof refusal === "string" && refusal.length > 0) {
     parts.push(`[refused: ${refusal}]`);

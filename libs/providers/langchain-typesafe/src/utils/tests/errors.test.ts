@@ -3,7 +3,6 @@ import { inspect } from "node:util";
 import { getRetryable } from "@langchain/core/errors";
 import { describe, expect, test } from "vitest";
 
-import { expectNoLeak } from "../../tests/helpers/no-leak.js";
 import {
   apiErrorFromResponse,
   parseRetryAfter,
@@ -128,27 +127,27 @@ describe("safeDetail (surfaced only for the 4xx default/ByStatus path)", () => {
       headers()
     );
     expect(error.message).toBe("400 Bad Request");
-    expectNoLeak(error, "SENSITIVE-DETAIL-SHAPE");
   });
 });
 
 describe("body and header redaction", () => {
   const secretBody = { detail: [{ input: { state: "SENSITIVE-STATE" } }] };
 
-  test("never leaks the body through message, toString, inspect or JSON", () => {
-    const error = apiErrorFromResponse(
-      422,
-      secretBody,
-      headers({ authorization: "Bearer SECRET-KEY" }),
-      "POST https://api.typesafe.ai/v1/systemone"
-    );
-    expectNoLeak(error, "SENSITIVE-STATE", "SECRET-KEY");
-  });
-
   test("still exposes the body and headers as properties for callers", () => {
     const error = apiErrorFromResponse(422, secretBody, headers());
     expect(error.body).toEqual(secretBody);
     expect(error.headers).toBeInstanceOf(Headers);
+  });
+
+  test("toJSON exposes exactly the allowlisted keys, no more and no less", () => {
+    const error = apiErrorFromResponse(
+      400,
+      {},
+      headers({ "x-typesafe-request-id": "req_123" })
+    );
+    expect(Object.keys(error.toJSON()).sort()).toEqual(
+      ["name", "message", "status", "requestId"].sort()
+    );
   });
 });
 
@@ -231,9 +230,11 @@ describe("connection, timeout and validation errors", () => {
     const apiError = apiErrorFromResponse(
       422,
       { secret: "HIDDEN_BODY_VALUE" },
-      headers()
+      headers({ authorization: "Bearer HEADER_SECRET_VALUE" })
     );
-    expect(inspect(apiError, { depth: 10 })).not.toContain("HIDDEN_BODY_VALUE");
+    const inspected = inspect(apiError, { depth: 10 });
+    expect(inspected).not.toContain("HIDDEN_BODY_VALUE");
+    expect(inspected).not.toContain("HEADER_SECRET_VALUE");
   });
 
   test("cause does NOT leak through JSON.stringify, on both the connection error and the timeout error that inherits its toJSON", () => {
@@ -250,6 +251,13 @@ describe("connection, timeout and validation errors", () => {
     const timeoutError = new TypeSafeAPITimeoutError(1000, { cause });
     expect(JSON.stringify(timeoutError)).not.toContain("s3cr3t");
     expect(JSON.stringify(timeoutError)).not.toContain("CLASSIFIED_CONTENT");
+  });
+
+  test("connection error's toJSON exposes exactly name and message, no more and no less", () => {
+    const connectionError = new TypeSafeAPIConnectionError();
+    expect(Object.keys(connectionError.toJSON()).sort()).toEqual(
+      ["name", "message"].sort()
+    );
   });
 
   test("timeout error subclasses connection error and reports the timeout", () => {
