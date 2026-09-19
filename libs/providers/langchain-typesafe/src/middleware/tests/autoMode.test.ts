@@ -184,7 +184,7 @@ describe("autoModeMiddleware", () => {
     });
     const mw = autoModeMiddleware({
       tools: ["run_sql"],
-      classifierOptions: opts(stubFetch(0.2)),
+      classifierOptions: opts(stubFetch(0.5)),
     });
     const model = fakeModel()
       .respondWithTools([{ name: "run_sql", args: { query: "q" }, id: "c1" }])
