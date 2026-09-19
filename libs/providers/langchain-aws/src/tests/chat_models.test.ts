@@ -711,6 +711,35 @@ describe("convertToConverseMessages", () => {
       expect(converseSystem).toEqual(tc.output.converseSystem);
     }
   );
+
+  test("preserves Bedrock guard content blocks from user messages", () => {
+    const guardContent = {
+      text: {
+        text: "What is the enrollment target?",
+      },
+    };
+
+    const result = convertToConverseMessages([
+      new HumanMessage({
+        content: [
+          { type: "text", text: "Untrusted RAG context" },
+          { guardContent },
+          { type: "guard_content", guardContent },
+        ],
+      }),
+    ]);
+
+    expect(result.converseMessages).toEqual([
+      {
+        role: BedrockConversationRole.USER,
+        content: [
+          { text: "Untrusted RAG context" },
+          { guardContent },
+          { guardContent },
+        ],
+      },
+    ]);
+  });
 });
 
 describe("reasoning content replay", () => {
