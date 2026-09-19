@@ -365,6 +365,27 @@ function simplifyJsonSchemaForLLM(schema: JsonSchemaObject): JsonSchemaObject {
   // because the union semantics mean any ONE of the schemas should match, not all.
   const unionSchemas = anyOf || oneOf;
   if (Array.isArray(unionSchemas) && unionSchemas.length > 0) {
+    // Common "Optional[T]" pattern from Pydantic/JSON Schema: anyOf: [T, {type: "null"}].
+    // Use the single non-null variant directly instead of running it through the
+    // object-merge logic below, which only knows how to combine object-like schemas
+    // and would otherwise drop T's type/items entirely.
+    const nonNullSchemas = unionSchemas.filter(
+      (s) => !(typeof s === "object" && s !== null && s.type === "null")
+    );
+    if (
+      nonNullSchemas.length === 1 &&
+      nonNullSchemas.length < unionSchemas.length
+    ) {
+      result = deepMergeSchemas(
+        result,
+        simplifyJsonSchemaForLLM(nonNullSchemas[0])
+      );
+      debugLog(
+        `INFO: Resolved optional (T | null) ${anyOf ? "anyOf" : "oneOf"} to its non-null variant`
+      );
+      return result;
+    }
+
     // Check if all schemas in the union are object-like (have type: object or have properties)
     const allAreObjects = unionSchemas.every(
       (s) =>
