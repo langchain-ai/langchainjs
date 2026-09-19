@@ -18,10 +18,13 @@ export {
 export {
   piiMiddleware,
   type PIIMiddlewareConfig,
+  type PIIOptions,
   type PIIMatch,
   type PIIStrategy,
   type BuiltInPIIType,
   type PIIDetector,
+  type Detector,
+  type RedactionMap,
   type RedactionRuleConfig,
   type ResolvedRedactionRule,
   PIIDetectionError,
@@ -32,6 +35,8 @@ export {
   detectUrl,
   applyStrategy,
   resolveRedactionRule,
+  restoreRedactedText,
+  restoreRedactedMessage,
 } from "./pii.js";
 export {
   piiRedactionMiddleware,
