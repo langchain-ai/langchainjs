@@ -1067,14 +1067,13 @@ export class CallbackManager
 
   async handleToolStart(
     tool: Serialized,
-    input: string,
+    input: string | Record<string, unknown>,
     runId = uuidv7(),
     _parentRunId: string | undefined = undefined,
     _tags: string[] | undefined = undefined,
     _metadata: Record<string, unknown> | undefined = undefined,
     runName: string | undefined = undefined,
-    toolCallId: string | undefined = undefined,
-    inputs: Record<string, unknown> | undefined = undefined
+    toolCallId: string | undefined = undefined
   ): Promise<CallbackManagerForToolRun> {
     await Promise.all(
       this.handlers.map((handler) => {
@@ -1092,8 +1091,7 @@ export class CallbackManager
             this._parentRunId,
             this.tags,
             this.metadata,
-            runName,
-            inputs
+            runName
           );
         }
         return consumeCallback(async () => {
@@ -1106,8 +1104,7 @@ export class CallbackManager
               this.tags,
               this.metadata,
               runName,
-              toolCallId,
-              inputs
+              toolCallId
             );
           } catch (err) {
             const logFunction = handler.raiseError

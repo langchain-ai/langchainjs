@@ -189,14 +189,13 @@ abstract class BaseCallbackHandlerMethodsClass {
    */
   handleToolStart?(
     tool: Serialized,
-    input: string,
+    input: string | Record<string, unknown>,
     runId: string,
     parentRunId?: string,
     tags?: string[],
     metadata?: Record<string, unknown>,
     runName?: string,
-    toolCallId?: string,
-    inputs?: Record<string, unknown>
+    toolCallId?: string
   ): // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     Promise<any> | any;
 
