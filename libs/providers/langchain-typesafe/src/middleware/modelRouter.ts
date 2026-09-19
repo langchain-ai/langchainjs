@@ -7,7 +7,6 @@ import { TypeSafeClassifier } from "../classifier.js";
 import type { TypeSafeClassifierFields } from "../classifier.js";
 import type { ChoiceAnswer, JsonValue, QuestionContent } from "../types.js";
 
-/** Question id sent to TypeSafe. Matches the Python package's `_QUESTION_ID`. */
 const QUESTION_ID = "model_route";
 
 /** A model available to the router, with the criterion for selecting it. */
@@ -104,11 +103,6 @@ export async function resolveModel(
 /**
  * Wraps `resolveModel` in a per-route cache.
  *
- * A cache is needed because `initChatModel` is async in JS while Python's
- * `init_chat_model` is sync, so a name cannot be resolved eagerly in the
- * synchronous factory the way the Python constructor does. Without it,
- * `wrapModelCall` would build a fresh client on every turn of every run.
- *
  * It caches the promise, not the model, so two concurrent runs on the same
  * route share one `initChatModel` call instead of both starting one. A
  * rejection is evicted, so a failure is not cached.
@@ -131,9 +125,6 @@ export function createModelResolver(
 
 /**
  * The most recent human message, or `undefined`.
- *
- * Python uses a bare `next()`, whose `StopIteration` is not a usable
- * diagnostic; the caller raises a named error instead.
  */
 export function latestHumanMessage(
   messages: BaseMessage[]
@@ -162,6 +153,8 @@ export function latestHumanMessage(
  * this package's own error types. A failure in `wrapModelCall` — an
  * unresolvable model, say — is wrapped in `MiddlewareError`
  * (`agents/nodes/AgentNode.ts:701`) and must be read via `err.cause`.
+ *
+ * @experimental
  */
 export function modelRouterMiddleware(config: ModelRouterMiddlewareConfig) {
   const { choices: choicesInput, instructions, classifierOptions } = config;
@@ -211,8 +204,6 @@ export function modelRouterMiddleware(config: ModelRouterMiddlewareConfig) {
           "modelRouterMiddleware: no routing answer in state. `beforeAgent` must run first."
         );
       }
-      // JS has no `request.override(...)`; the convention is object spread.
-      // See libs/langchain/src/agents/middleware/modelFallback.ts:63.
       return handler({ ...request, model: await modelFor(answer.choice) });
     },
   });

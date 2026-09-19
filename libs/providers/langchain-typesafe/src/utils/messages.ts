@@ -69,9 +69,9 @@ function isTextBlock(block: unknown): block is { text?: string } {
 }
 
 /**
- * Renders content as text. All-text block lists join with a newline,
- * matching the Python package; any other block is serialized rather than
- * dropped, since an unrecognized block is still context.
+ * Renders content as text. All-text block lists join with a newline. Any other
+ * block is serialized rather than dropped, since an unrecognized block is still
+ * context.
  */
 function renderContent(content: BaseMessage["content"]): string {
   if (typeof content === "string") {

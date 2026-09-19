@@ -34,12 +34,6 @@ const noulQuestionSchema = z
 const choiceQuestionSchema = z.object({
   type: z.literal("choice"),
   // At least one option: matches the server, which also requires one.
-  //
-  // Counted BEFORE the record parse, not with a `.refine` after it: zod's
-  // `record` parser drops an own `__proto__` key, so counting the parsed
-  // result would reject a Choice whose only option is labelled
-  // `__proto__` — a label `parseQuestions` otherwise preserves all the way
-  // to the wire, and a route name `parseChoices` preserves too.
   criteria: z
     .custom<Record<string, JsonValue>>(
       (criteria) =>

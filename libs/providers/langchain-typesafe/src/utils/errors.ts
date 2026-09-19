@@ -10,10 +10,6 @@ const ns = baseNs.sub("typesafe");
 
 const REQUEST_ID_HEADER = "x-typesafe-request-id";
 
-/**
- * Status reason phrases. JS has no stdlib equivalent of Python's
- * `HTTPStatus(...).phrase`, so we carry the ones we surface.
- */
 const STATUS_PHRASES: Record<number, string> = {
   400: "Bad Request",
   401: "Unauthorized",
@@ -98,7 +94,6 @@ export class TypeSafeAPIError extends ns.brand(TypeSafeError, "api") {
     defineHidden(this, "headers", headers);
   }
 
-  /** Alias for `status`, for parity with the Python package. */
   get statusCode(): number {
     return this.status;
   }

@@ -125,11 +125,6 @@ need it, so install it alongside if you use this entrypoint:
 npm install @langchain/typesafe langchain
 ```
 
-Without it, importing this entrypoint fails with
-`Cannot find package 'langchain'`. The Python package raises a friendlier
-`ImportError` here, but ESM cannot intercept a static import without making
-these factories async, which is a worse trade.
-
 ### `modelRouterMiddleware`
 
 Classifies the latest human message ONCE per agent run with a TypeSafe `Choice`, then routes every model call in that run to the selected model:
@@ -172,7 +167,6 @@ const agent = createAgent({
   middleware: [
     autoModeMiddleware({
       tools: ["run_sql", "send_email"],
-      threshold: 0.5, // default
     }),
   ],
 });

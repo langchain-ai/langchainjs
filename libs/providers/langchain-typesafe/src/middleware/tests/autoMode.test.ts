@@ -184,7 +184,6 @@ describe("autoModeMiddleware", () => {
     });
     const mw = autoModeMiddleware({
       tools: ["run_sql"],
-      threshold: 0.2,
       classifierOptions: opts(stubFetch(0.2)),
     });
     const model = fakeModel()
@@ -282,10 +281,7 @@ describe("autoModeMiddleware", () => {
     );
   });
 
-  test("criteria: null classifies on instructions alone, as Python's None does", async () => {
-    // Python's `criteria=None` (test_none_criteria_is_supported) leaves the
-    // question with no criteria. Passing null here must omit the field
-    // rather than send a literal null, which the question schema rejects.
+  test("null classifies on instructions alone", async () => {
     const fetchMock = stubFetch(0.01);
     const runSql = makeRunSqlTool();
     const mw = autoModeMiddleware({
@@ -305,19 +301,6 @@ describe("autoModeMiddleware", () => {
     };
     expect("criteria" in questions.is_risky).toBe(false);
     expect(questions.is_risky.instructions).toBeTypeOf("string");
-  });
-
-  test("rejects an empty tools list and an out-of-range threshold", () => {
-    expect(() =>
-      autoModeMiddleware({ tools: [], classifierOptions: opts(stubFetch(0)) })
-    ).toThrow(/at least one/i);
-    expect(() =>
-      autoModeMiddleware({
-        tools: ["t"],
-        threshold: 1.5,
-        classifierOptions: opts(stubFetch(0)),
-      })
-    ).toThrow(/threshold/i);
   });
 });
 

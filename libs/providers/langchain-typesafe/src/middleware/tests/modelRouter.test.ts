@@ -11,14 +11,6 @@ import {
 } from "../modelRouter.js";
 import { TypeSafeError } from "../../index.js";
 
-/**
- * A `fetch` stub, not a classifier stub: questions are fixed at construction,
- * so the middleware builds its own classifier and the only injection point
- * is transport. A FRESH Response per call is required — a body can be read
- * once, and a shared instance fails the second attempt with "body already
- * used", which is non-retryable and would make a test pass for the wrong
- * reason.
- */
 function stubFetch(answers: Record<string, unknown>) {
   return vi.fn(
     async (_url: unknown, _init?: { body?: string }) =>

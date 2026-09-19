@@ -10,7 +10,7 @@ import {
 
 export const SYSTEMONE_PATH = "/v1/systemone";
 
-const CLIENT_ID = `langchainjs-typesafe/${__PKG_VERSION__}`;
+const CLIENT_ID = `langchainjs-typesafe/dev`;
 
 /**
  * Builds the request headers.

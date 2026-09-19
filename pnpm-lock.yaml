@@ -2329,6 +2329,9 @@ importers:
       '@langchain/core':
         specifier: workspace:^
         version: link:../../langchain-core
+      '@langchain/openai':
+        specifier: ^1.5.13
+        version: 1.5.13(@aws-sdk/credential-provider-node@3.972.82)(@langchain/core@libs+langchain-core)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.3)(undici@8.10.1)(ws@8.21.3(bufferutil@4.1.0))
       '@langchain/tsconfig':
         specifier: workspace:*
         version: link:../../../internal/tsconfig
@@ -3936,6 +3939,12 @@ packages:
     peerDependencies:
       '@langchain/core': workspace:^
       zod: ^3.25.32 || ^4.2.0
+
+  '@langchain/openai@1.5.13':
+    resolution: {integrity: sha512-SA1QWNgM/p8xhdwU82CJ7OofhHEExpAaIwJ7j9ELIyVW795Mn0jDRQO/5yChawLcPhuLkeL+jMesi0FnXbImSg==}
+    engines: {node: '>=22'}
+    peerDependencies:
+      '@langchain/core': workspace:^
 
   '@langchain/protocol@0.0.18':
     resolution: {integrity: sha512-XW1egQtPfsGI41w2AMZNFZrUIwFSQHTjVMZs0OaTpCAvht/QLoaPN8FQcsysMVypOhupG28J29yOorrc70otBQ==}
@@ -13396,6 +13405,19 @@ snapshots:
       - react
       - react-dom
 
+  '@langchain/openai@1.5.13(@aws-sdk/credential-provider-node@3.972.82)(@langchain/core@libs+langchain-core)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.3)(undici@8.10.1)(ws@8.21.3(bufferutil@4.1.0))':
+    dependencies:
+      '@langchain/core': link:libs/langchain-core
+      js-tiktoken: 1.0.21
+      openai: 7.10.0(@aws-sdk/credential-provider-node@3.972.82)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.3)(undici@8.10.1)(ws@8.21.3(bufferutil@4.1.0))(zod@4.4.3)
+      zod: 4.4.3
+    transitivePeerDependencies:
+      - '@aws-sdk/credential-provider-node'
+      - '@smithy/hash-node'
+      - '@smithy/signature-v4'
+      - undici
+      - ws
+
   '@langchain/protocol@0.0.18': {}
 
   '@langchain/protocol@0.0.19': {}
@@ -19052,6 +19074,15 @@ snapshots:
       undici: 8.10.1
       ws: 8.21.3(bufferutil@4.1.0)
       zod: 4.3.6
+
+  openai@7.10.0(@aws-sdk/credential-provider-node@3.972.82)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.3)(undici@8.10.1)(ws@8.21.3(bufferutil@4.1.0))(zod@4.4.3):
+    optionalDependencies:
+      '@aws-sdk/credential-provider-node': 3.972.82
+      '@smithy/hash-node': 4.5.2
+      '@smithy/signature-v4': 5.7.3
+      undici: 8.10.1
+      ws: 8.21.3(bufferutil@4.1.0)
+      zod: 4.4.3
 
   openai@7.8.0(@aws-sdk/credential-provider-node@3.972.82)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.3)(undici@8.10.1)(ws@5.2.7(bufferutil@4.1.0))(zod@4.3.6):
     optionalDependencies:
