@@ -107,7 +107,14 @@ export class TypeSafeAPIError extends ns.brand(TypeSafeError, "api") {
     return this.headers.get(REQUEST_ID_HEADER) ?? undefined;
   }
 
-  /** Keeps the body out of `JSON.stringify(error)`. */
+  /**
+   * An allowlist: `body` is already non-enumerable via `defineHidden`, so
+   * this method's real job is excluding the ENUMERABLE fields that would
+   * otherwise leak through `JSON.stringify` — `endpoint` here, and
+   * `retryAfterMs`/`fieldPath` on this class's subclasses (`timeoutMs`, on
+   * `TypeSafeAPITimeoutError`, is excluded by its own inherited `toJSON`
+   * on `TypeSafeAPIConnectionError` instead).
+   */
   toJSON(): Record<string, unknown> {
     return {
       name: this.name,
@@ -197,17 +204,9 @@ export class TypeSafeAPIConnectionError extends ns.brand(
     stampRetryable(this, true);
   }
 
-  /**
-   * Keeps `cause` out of `JSON.stringify(error)`, mirroring
-   * `TypeSafeAPIError.toJSON()`: it can hold a URL with credentials or
-   * the request body, and it must stay enumerable (see the constructor).
-   * `util.inspect` still shows it — that split is deliberate.
-   */
+  /** Keeps `cause` out of `JSON.stringify`; `util.inspect` still shows it. */
   toJSON(): Record<string, unknown> {
-    return {
-      name: this.name,
-      message: this.message,
-    };
+    return { name: this.name, message: this.message };
   }
 }
 

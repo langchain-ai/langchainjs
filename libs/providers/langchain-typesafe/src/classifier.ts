@@ -6,10 +6,11 @@ import {
 import { getEnvironmentVariable, isBrowser } from "@langchain/core/utils/env";
 
 import {
+  parseQuestions,
   serializeQuestion,
-  validateQuestions,
   type ClassificationResponse,
   type Question,
+  type ValidatedQuestions,
 } from "./types.js";
 import { buildHeaders, parseResponse, SYSTEMONE_PATH } from "./utils/client.js";
 import {
@@ -84,7 +85,7 @@ export class TypeSafeClassifier extends Runnable<
     return { apiKey: "TYPESAFE_API_KEY" };
   }
 
-  readonly questions: Record<string, Question>;
+  readonly questions: ValidatedQuestions;
 
   readonly model: string;
 
@@ -136,12 +137,13 @@ export class TypeSafeClassifier extends Runnable<
       throw new TypeSafeError("TypeSafe model must not be empty.");
     }
 
-    // `validateQuestions` throws a plain `Error` (it predates this
-    // package's branded error subtree). Rethrown here as a `TypeSafeError`
-    // so the whole constructor surface stays catchable via
+    // `parseQuestions` throws a plain `Error` (it predates this package's
+    // branded error subtree). Rethrown here as a `TypeSafeError` so the
+    // whole constructor surface stays catchable via
     // `TypeSafeError.isInstance()`. The original message is preserved.
+    let questions: ValidatedQuestions;
     try {
-      validateQuestions(fields.questions);
+      questions = parseQuestions(fields.questions);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       throw new TypeSafeError(message);
@@ -165,7 +167,7 @@ export class TypeSafeClassifier extends Runnable<
       configurable: true,
     });
     this.model = model;
-    this.questions = fields.questions;
+    this.questions = questions;
     let baseUrl =
       fields.baseUrl ??
       getEnvironmentVariable("TYPESAFE_BASE_URL") ??

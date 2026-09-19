@@ -114,6 +114,72 @@ Errors carry `status`, `requestId`, `body` and `headers` as properties, but neve
 
 Retries are handled by LangChain's `AsyncCaller`; configure them with `maxRetries` and `maxConcurrency` on the constructor.
 
+## `@langchain/typesafe/middleware`
+
+Two `createMiddleware`-based factories for use with LangChain agents.
+
+`langchain` is an **optional** peer dependency — the base package does not
+need it, so install it alongside if you use this entrypoint:
+
+```bash
+npm install @langchain/typesafe langchain
+```
+
+Without it, importing this entrypoint fails with
+`Cannot find package 'langchain'`. The Python package raises a friendlier
+`ImportError` here, but ESM cannot intercept a static import without making
+these factories async, which is a worse trade.
+
+### `modelRouterMiddleware`
+
+Classifies the latest human message ONCE per agent run with a TypeSafe `Choice`, then routes every model call in that run to the selected model:
+
+```ts
+import { modelRouterMiddleware } from "@langchain/typesafe/middleware";
+import { createAgent } from "langchain";
+
+const agent = createAgent({
+  model: "openai:gpt-5-mini",
+  middleware: [
+    modelRouterMiddleware({
+      choices: {
+        fast: {
+          model: "openai:gpt-5-mini",
+          criteria: "Simple, well-scoped tasks.",
+        },
+        powerful: {
+          model: "openai:gpt-5",
+          criteria: "Complex tasks requiring deeper reasoning.",
+        },
+      },
+      instructions: "Choose the least costly model suited to the task.",
+    }),
+  ],
+});
+```
+
+### `autoModeMiddleware`
+
+Blocks a tool call before it runs when a TypeSafe `Noul` scores it above a risk threshold. It blocks rather than asking, and composes with `humanInTheLoopMiddleware` rather than replacing it:
+
+```ts
+import { autoModeMiddleware } from "@langchain/typesafe/middleware";
+import { createAgent } from "langchain";
+
+const agent = createAgent({
+  model: "openai:gpt-5",
+  tools: [runSqlTool, sendEmailTool],
+  middleware: [
+    autoModeMiddleware({
+      tools: ["run_sql", "send_email"],
+      threshold: 0.5, // default
+    }),
+  ],
+});
+```
+
+Both middlewares build their own `TypeSafeClassifier` internally; pass `classifierOptions` (everything `TypeSafeClassifier` accepts except `questions`) to configure transport and model settings.
+
 ## Development
 
 ```bash
