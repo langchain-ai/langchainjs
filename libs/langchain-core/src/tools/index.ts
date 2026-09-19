@@ -292,15 +292,18 @@ export abstract class StructuredTool<
       toolCallId = config.toolCall.id;
     }
 
+    let callbackInput: string | Record<string, unknown> =
+      typeof arg === "string" ? arg : JSON.stringify(arg);
+    if (
+      typeof inputForValidation === "object" &&
+      inputForValidation !== null &&
+      !Array.isArray(inputForValidation)
+    ) {
+      callbackInput = inputForValidation as Record<string, unknown>;
+    }
     const runManager = await callbackManager_?.handleToolStart(
       this.toJSON(),
-      typeof inputForValidation === "object" &&
-        inputForValidation !== null &&
-        !Array.isArray(inputForValidation)
-        ? (inputForValidation as Record<string, unknown>)
-        : typeof arg === "string"
-          ? arg
-          : JSON.stringify(arg),
+      callbackInput,
       config.runId,
       undefined,
       undefined,
