@@ -1227,7 +1227,7 @@ export const convertStandardContentMessageToResponsesInput: Converter<
     });
 
     const convertFunctionCallOutput = (
-      block: ContentBlock.Tools.ServerToolCallResult
+      block: ContentBlock.Tools.ServerToolResult
     ): OpenAIClient.Responses.ResponseInputItem.FunctionCallOutput => {
       const output = toJsonString(block.output);
       const status =
@@ -1305,7 +1305,7 @@ export const convertStandardContentMessageToResponsesInput: Converter<
           if (block.args) existing.args.push(block.args);
           pendingServerFunctionChunks.set(block.id, existing);
         }
-      } else if (block.type === "server_tool_call_result") {
+      } else if (block.type === "server_tool_result") {
         yield* flushMessage();
         yield convertFunctionCallOutput(block);
       } else if (block.type === "audio") {
