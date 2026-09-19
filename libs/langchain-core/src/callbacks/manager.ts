@@ -1098,7 +1098,7 @@ export class CallbackManager
           try {
             await handler.handleToolStart?.(
               tool,
-              input,
+              typeof input === "string" ? input : JSON.stringify(input),
               runId,
               this._parentRunId,
               this.tags,

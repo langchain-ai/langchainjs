@@ -189,7 +189,7 @@ abstract class BaseCallbackHandlerMethodsClass {
    */
   handleToolStart?(
     tool: Serialized,
-    input: string | Record<string, unknown>,
+    input: string,
     runId: string,
     parentRunId?: string,
     tags?: string[],
