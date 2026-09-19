@@ -25,9 +25,6 @@ const MESSAGE_WINDOW = 30;
 
 const DEFAULT_THRESHOLD = 0.5;
 
-const THRESHOLD_RANGE_ERROR =
-  "autoModeMiddleware: `threshold` must be between 0 and 1 inclusive.";
-
 const toolEntrySchema = z.union([z.string(), z.object({ name: z.string() })]);
 
 const toolsSchema = z
