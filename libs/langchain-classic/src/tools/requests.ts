@@ -1,4 +1,5 @@
 import { Tool } from "@langchain/core/tools";
+import { validateSafeUrl } from "@langchain/core/utils/ssrf";
 
 export interface Headers {
   [key: string]: string;
@@ -38,6 +39,7 @@ export class RequestsGetTool extends Tool implements RequestTool {
 
   /** @ignore */
   async _call(input: string) {
+    validateSafeUrl(input, { allowHttp: false });
     const res = await fetch(input, {
       headers: this.headers,
     });
@@ -77,6 +79,7 @@ export class RequestsPostTool extends Tool implements RequestTool {
   async _call(input: string) {
     try {
       const { url, data } = JSON.parse(input);
+      validateSafeUrl(url, { allowHttp: false });
       const res = await fetch(url, {
         method: "POST",
         headers: this.headers,
