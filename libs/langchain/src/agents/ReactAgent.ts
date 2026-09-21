@@ -1219,7 +1219,6 @@ export class ReactAgent<
       mergedConfig as RunnableConfig
     );
 
-    // The graph merges bound callbacks with invocation callbacks.
     return this.#graph.invoke(initializedState, {
       ...mergedConfig,
       callbacks: config?.callbacks,
