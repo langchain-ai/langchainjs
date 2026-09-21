@@ -1,6 +1,6 @@
 {
   "name": "@langchain/typesafe",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "TypeSafe System One integration for LangChain.js (Jev classifier).",
   "author": "LangChain",
   "license": "MIT",
@@ -25,13 +25,21 @@
     "zod": "^4"
   },
   "peerDependencies": {
-    "@langchain/core": "^1.0.0"
+    "@langchain/core": "^1.0.0",
+    "langchain": "^1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "langchain": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@langchain/core": "workspace:^",
+    "@langchain/openai": "^1.5.13",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
     "dotenv": "^17.4.2",
+    "langchain": "workspace:^",
     "typescript": "~7.0.2",
     "vitest": "^4.1.11"
   },
@@ -50,6 +58,17 @@
       "import": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
+      }
+    },
+    "./middleware": {
+      "input": "./src/middleware/index.ts",
+      "require": {
+        "types": "./dist/middleware/index.d.cts",
+        "default": "./dist/middleware/index.cjs"
+      },
+      "import": {
+        "types": "./dist/middleware/index.d.ts",
+        "default": "./dist/middleware/index.js"
       }
     },
     "./package.json": "./package.json"

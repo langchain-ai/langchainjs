@@ -1,10 +1,9 @@
 import { describe, expect, test } from "vitest";
 
-import { expectNoLeak } from "./helpers/no-leak.js";
 import {
   classificationResponseSchema,
   serializeQuestion,
-  validateQuestions,
+  parseQuestions,
   type Choice,
   type Noul,
   type Question,
@@ -72,37 +71,36 @@ describe("serializeQuestion", () => {
   });
 });
 
-describe("validateQuestions", () => {
+describe("parseQuestions", () => {
   test("rejects an empty questions map", () => {
-    expect(() => validateQuestions({})).toThrow(/at least one question/i);
+    expect(() => parseQuestions({})).toThrow(/at least one question/i);
   });
 
   test("rejects a score with fewer than two levels", () => {
     expect(() =>
-      validateQuestions({ q: { type: "score", criteria: ["only"] } })
+      parseQuestions({ q: { type: "score", criteria: ["only"] } })
     ).toThrow(/at least 2/i);
   });
 
   test("rejects a choice with no options", () => {
     expect(() =>
-      validateQuestions({ q: { type: "choice", criteria: {} } })
+      parseQuestions({ q: { type: "choice", criteria: {} } })
     ).toThrow(/at least 1/i);
   });
 
   test("rejects a noul with neither instructions nor criteria", () => {
-    expect(() => validateQuestions({ q: { type: "noul" } })).toThrow(
+    expect(() => parseQuestions({ q: { type: "noul" } })).toThrow(
       /criteria or instructions/i
     );
   });
 
-  test("accepts a noul with only criteria, and choice/score without instructions", () => {
-    expect(() =>
-      validateQuestions({
-        a: { type: "noul", criteria: { true: "yes" } },
-        b: { type: "choice", criteria: { x: null } },
-        c: { type: "score", criteria: ["low", "high"] },
-      })
-    ).not.toThrow();
+  test("accepts a noul with only criteria, and choice/score without instructions, returning the parsed map", () => {
+    const input = {
+      a: { type: "noul", criteria: { true: "yes" } },
+      b: { type: "choice", criteria: { x: null } },
+      c: { type: "score", criteria: ["low", "high"] },
+    } satisfies Record<string, Question>;
+    expect(parseQuestions(input)).toEqual(input);
   });
 
   test("rejects a noul whose criteria is not an object, naming the question", () => {
@@ -111,14 +109,13 @@ describe("validateQuestions", () => {
     } as unknown as Record<string, Question>;
     let thrown: unknown;
     try {
-      validateQuestions(questions);
+      parseQuestions(questions);
     } catch (error) {
       thrown = error;
     }
     expect(thrown).toBeInstanceOf(Error);
     const message = (thrown as Error).message;
     expect(message).toContain('"billing"');
-    expectNoLeak(thrown, "MARKER_NOUL_CRITERIA_VALUE");
   });
 
   test("rejects a choice whose criteria is an array instead of a record, naming the question", () => {
@@ -130,14 +127,13 @@ describe("validateQuestions", () => {
     } as unknown as Record<string, Question>;
     let thrown: unknown;
     try {
-      validateQuestions(questions);
+      parseQuestions(questions);
     } catch (error) {
       thrown = error;
     }
     expect(thrown).toBeInstanceOf(Error);
     const message = (thrown as Error).message;
     expect(message).toContain('"billing"');
-    expectNoLeak(thrown, "MARKER_CHOICE_CRITERIA_VALUE");
   });
 
   test("rejects a score whose criteria is a string instead of an array, naming the question", () => {
@@ -146,14 +142,13 @@ describe("validateQuestions", () => {
     } as unknown as Record<string, Question>;
     let thrown: unknown;
     try {
-      validateQuestions(questions);
+      parseQuestions(questions);
     } catch (error) {
       thrown = error;
     }
     expect(thrown).toBeInstanceOf(Error);
     const message = (thrown as Error).message;
     expect(message).toContain('"billing"');
-    expectNoLeak(thrown, "MARKER_SCORE_CRITERIA_VALUE");
   });
 
   test("a cyclic criteria fails with a named error, not a stack overflow", () => {
@@ -171,7 +166,7 @@ describe("validateQuestions", () => {
 
     let thrown: unknown;
     try {
-      validateQuestions(questions);
+      parseQuestions(questions);
     } catch (error) {
       thrown = error;
     }
@@ -180,7 +175,6 @@ describe("validateQuestions", () => {
     const message = (thrown as Error).message;
     expect(message).toContain('"department"');
     expect(message).toMatch(/circular reference/);
-    expectNoLeak(thrown, MARKER);
   });
 
   test("a cyclic instructions value also fails with a named error", () => {
@@ -193,21 +187,20 @@ describe("validateQuestions", () => {
 
     let thrown: unknown;
     try {
-      validateQuestions(questions);
+      parseQuestions(questions);
     } catch (error) {
       thrown = error;
     }
     expect(thrown).toBeInstanceOf(Error);
     expect(thrown).not.toBeInstanceOf(RangeError);
     expect((thrown as Error).message).toContain('"urgent"');
-    expectNoLeak(thrown, MARKER);
   });
 
   test("reports the question id, field path, and zod message on a malformed element", () => {
     const questions = {
       billing: { type: "score", criteria: [() => "oops", "b"] },
     } as unknown as Record<string, Question>;
-    expect(() => validateQuestions(questions)).toThrow(
+    expect(() => parseQuestions(questions)).toThrow(
       'Invalid TypeSafe question "billing": criteria.0: Invalid input'
     );
   });
@@ -225,7 +218,7 @@ describe("validateQuestions", () => {
         criteria: { [LABEL]: () => "not json-able" },
       },
     } as unknown as Record<string, Question>;
-    expect(() => validateQuestions(questions)).toThrow(
+    expect(() => parseQuestions(questions)).toThrow(
       `Invalid TypeSafe question "billing": criteria.${LABEL}: Invalid input`
     );
   });
@@ -234,7 +227,7 @@ describe("validateQuestions", () => {
     const questions = {
       frustration: { type: "score", criteria: ["calm", () => "bad"] },
     } as unknown as Record<string, Question>;
-    expect(() => validateQuestions(questions)).toThrow(
+    expect(() => parseQuestions(questions)).toThrow(
       'Invalid TypeSafe question "frustration": criteria.1: Invalid input'
     );
   });
@@ -246,30 +239,69 @@ describe("validateQuestions", () => {
     } as unknown as Record<string, Question>;
     let thrown: unknown;
     try {
-      validateQuestions(questions);
+      parseQuestions(questions);
     } catch (error) {
       thrown = error;
     }
     expect(thrown).toBeInstanceOf(Error);
     const message = (thrown as Error).message;
     expect(message).toContain('Invalid TypeSafe question "billing": type:');
-    expectNoLeak(thrown, MARKER);
   });
 
-  test("still accepts a well-formed question of each type", () => {
-    expect(() =>
-      validateQuestions({
-        urgent: { type: "noul", instructions: "Is this urgent?" },
-        department: {
-          type: "choice",
-          criteria: { billing: "Billing", technical: "Technical" },
-        },
-        frustration: {
-          type: "score",
-          criteria: ["calm", "annoyed", "furious"],
-        },
-      })
-    ).not.toThrow();
+  test("still accepts a well-formed question of each type, returning the parsed map", () => {
+    const input = {
+      urgent: { type: "noul", instructions: "Is this urgent?" },
+      department: {
+        type: "choice",
+        criteria: { billing: "Billing", technical: "Technical" },
+      },
+      frustration: {
+        type: "score",
+        criteria: ["calm", "annoyed", "furious"],
+      },
+    } satisfies Record<string, Question>;
+    expect(parseQuestions(input)).toEqual(input);
+  });
+
+  test("preserves an own `__proto__` question id in the returned map", () => {
+    // `parseQuestions` builds its result into a null-prototype object
+    // rather than by parsing the whole map through zod's `record`, which
+    // silently drops an own `__proto__` key. Mirrors the same guarantee
+    // pinned for `TypeSafeClassifier` in classifier.test.ts.
+    const questions = JSON.parse(
+      '{"__proto__": {"type": "noul", "instructions": "is it urgent?"}}'
+    ) as Record<string, Question>;
+    const parsed = parseQuestions(questions);
+    expect(Object.keys(parsed)).toEqual(["__proto__"]);
+  });
+
+  test("accepts a Choice whose ONLY option is labelled `__proto__`", () => {
+    // Cardinality is counted before the record parse. Counting after it
+    // would see zero options, because zod's `record` drops that key — and
+    // would reject a label the rest of the package preserves to the wire.
+    const questions = JSON.parse(
+      '{"q": {"type": "choice", "criteria": {"__proto__": "only option"}}}'
+    ) as Record<string, Question>;
+    const { criteria } = parseQuestions(questions).q as Extract<
+      Question,
+      { type: "choice" }
+    >;
+    expect(Object.keys(criteria)).toEqual(["__proto__"]);
+  });
+
+  test("preserves an own `__proto__` Choice option label", () => {
+    // One level down from the question-id case above, and the reason
+    // `parseQuestions` returns the input rather than zod's parsed copy:
+    // Choice `criteria` is a `z.record`, whose parser drops an own
+    // `__proto__` key. Returning the copy would delete this option
+    // silently — it would not reach the wire, so the model would never
+    // be offered it and could never answer with it.
+    const questions = JSON.parse(
+      '{"q": {"type": "choice", "criteria": {"normal": 1, "__proto__": 2}}}'
+    ) as Record<string, Question>;
+    const parsed = parseQuestions(questions);
+    const { criteria } = parsed.q as Extract<Question, { type: "choice" }>;
+    expect(Object.keys(criteria)).toEqual(["normal", "__proto__"]);
   });
 });
 

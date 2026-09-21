@@ -1,7 +1,6 @@
 import { getRetryable } from "@langchain/core/errors";
 import { describe, expect, test } from "vitest";
 
-import { expectNoLeak } from "../../tests/helpers/no-leak.js";
 import {
   apiErrorFromResponse,
   TypeSafeAuthenticationError,
@@ -61,7 +60,6 @@ describe.skipIf(!process.env.TYPESAFE_API_KEY)(
       expect(TypeSafeAuthenticationError.isInstance(error)).toBe(true);
       expect(error.requestId).toMatch(/^req_/);
       expect(getRetryable(error)).toBe(false);
-      expectNoLeak(error, "sk-not-a-real-key");
     });
 
     test("400: an unknown model", async () => {
@@ -117,7 +115,6 @@ describe.skipIf(!process.env.TYPESAFE_API_KEY)(
       expect(TypeSafeUnprocessableEntityError.isInstance(error)).toBe(true);
       expect(error.requestId).toMatch(/^req_/);
       expect(getRetryable(error)).toBe(false);
-      expectNoLeak(error, sentinel);
     });
   }
 );

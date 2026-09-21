@@ -1,5 +1,11 @@
 # @langchain/core
 
+## 1.2.12
+
+### Patch Changes
+
+- [#11675](https://github.com/langchain-ai/langchainjs/pull/11675) [`030a726`](https://github.com/langchain-ai/langchainjs/commit/030a726639e0147488bc8c23c063a2e72b004c2e) Thanks [@hntrl](https://github.com/hntrl)! - Preserve structured tool arguments in tracer run inputs.
+
 ## 1.2.11
 
 ### Patch Changes

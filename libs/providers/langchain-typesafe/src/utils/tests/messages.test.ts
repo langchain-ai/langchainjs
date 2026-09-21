@@ -8,7 +8,6 @@ import {
 } from "@langchain/core/messages";
 import { describe, expect, test } from "vitest";
 
-import { expectNoLeak } from "../../tests/helpers/no-leak.js";
 import { renderMessage } from "../messages.js";
 
 describe("renderMessage", () => {
@@ -156,34 +155,10 @@ describe("renderMessage", () => {
     );
   });
 
-  test("honors __openai_role__ on a SystemMessage", () => {
-    const message = new SystemMessage({
-      content: "Be terse.",
-      additional_kwargs: { __openai_role__: "developer" },
-    });
-    expect(renderMessage(message)).toBe("developer: Be terse.");
-  });
-
-  test("ignores __openai_role__ on a ToolMessage; role stays tool", () => {
-    const message = new ToolMessage({
-      content: "ok",
-      tool_call_id: "call_1",
-      additional_kwargs: { __openai_role__: "developer" },
-    });
-    expect(renderMessage(message)).toBe("tool#call_1: ok");
-  });
-
-  test("throws a TypeError when a SystemMessage's __openai_role__ is not a string", () => {
-    const message = new SystemMessage({
-      content: "Be terse.",
-      additional_kwargs: { __openai_role__: 42 },
-    });
-    expect(() => renderMessage(message)).toThrow(TypeError);
-  });
-
   test("throws for an unsupported message type, naming only the type", () => {
-    // Raising rather than defaulting to a role is deliberate: a silently
-    // mislabelled message yields a confident wrong classification.
+    // Raising rather than defaulting to a role is deliberate: the role
+    // label is inert at the model, but `MessageType` is open, so defaulting
+    // here would silently drop this message's content instead.
     const message = new RemoveMessage({ id: "MARKER_REMOVE_MESSAGE_ID" });
     let thrown: unknown;
     try {
@@ -193,16 +168,17 @@ describe("renderMessage", () => {
     }
     expect(thrown).toBeInstanceOf(Error);
     expect((thrown as Error).message).toContain("remove");
-    expectNoLeak(thrown, "MARKER_REMOVE_MESSAGE_ID");
   });
 
   test("a circular tool-call argument throws a content-free error, never V8's own", () => {
     // Regression pin for a real leak: JSON.stringify's own circular-
     // structure TypeError embeds the offending property's NAME (V8:
     // `property 'ssn' -> object with constructor 'Object'`). Tool-call args
-    // are caller data, so that name is caller data too. Asserting only
-    // `.toThrow(/circular/i)` would pass straight through that leak —
-    // expectNoLeak is what actually guards the planted marker.
+    // are caller data, so that name is caller data too. `toBeInstanceOf`
+    // alone can't tell our error from V8's own — both are TypeErrors — so
+    // the exact-message assertion below is what actually distinguishes
+    // them: only `renderJson`'s static ARGS_ERROR matches it, never a
+    // message built from the circular value.
     const MARKER = "MARKER_DO_NOT_LEAK_12345";
     const circular: Record<string, unknown> = { q: "x" };
     circular[MARKER] = circular;
@@ -218,7 +194,9 @@ describe("renderMessage", () => {
       thrown = error;
     }
     expect(thrown).toBeInstanceOf(TypeError);
-    expectNoLeak(thrown, MARKER);
+    expect((thrown as Error).message).toBe(
+      "TypeSafe tool-call arguments could not be serialized."
+    );
   });
 
   test("a circular tool-call argument nested inside an array also throws the content-free error", () => {
@@ -238,12 +216,15 @@ describe("renderMessage", () => {
       thrown = error;
     }
     expect(thrown).toBeInstanceOf(TypeError);
-    expectNoLeak(thrown, MARKER);
+    expect((thrown as Error).message).toBe(
+      "TypeSafe tool-call arguments could not be serialized."
+    );
   });
 
   test("a BigInt tool-call argument also throws a content-free error", () => {
     // JSON.stringify rejects BigInt too. The same catch covers it, so the
-    // message must not claim the cause was specifically a cycle.
+    // message below must be the same static ARGS_ERROR, not one claiming
+    // the cause was specifically a cycle.
     const MARKER = "MARKER_BIGINT_KEY";
     const message = new AIMessage({
       content: "",
@@ -257,7 +238,9 @@ describe("renderMessage", () => {
       thrown = error;
     }
     expect(thrown).toBeInstanceOf(TypeError);
-    expectNoLeak(thrown, MARKER);
+    expect((thrown as Error).message).toBe(
+      "TypeSafe tool-call arguments could not be serialized."
+    );
   });
 
   test("does not false-positive on a non-cyclic DAG: the same object as two sibling args", () => {
