@@ -69,18 +69,24 @@ describe("what the transports send", () => {
 
       // `mergeHeaders` lowercases every key, so this is the spelling that
       // actually reaches a transport.
-      await manager
-        .createClient(transport, "svc", {
-          mode: "legacy",
-          transport,
-          url,
-          automaticSSEFallback: false,
-          headers: { authorization: "Bearer from-config" },
-          authProvider: staticProvider("from-provider"),
-        } as never)
-        .catch(() => {
-          // The recording server speaks no MCP; the request is what matters.
-        });
+      const connection = {
+        mode: "legacy",
+        transport,
+        url,
+        automaticSSEFallback: false,
+        headers: { authorization: "Bearer from-config" },
+        authProvider: staticProvider("from-provider"),
+      } as never;
+
+      // `createClient` is overloaded per transport, so the literal has to
+      // reach it narrowed rather than as the union this table iterates.
+      await (
+        transport === "sse"
+          ? manager.createClient("sse", "svc", connection)
+          : manager.createClient("http", "svc", connection)
+      ).catch(() => {
+        // The recording server speaks no MCP; the request is what matters.
+      });
 
       await manager.delete();
       server.close();
