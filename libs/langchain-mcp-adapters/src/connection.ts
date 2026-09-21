@@ -533,7 +533,9 @@ export class ConnectionManager {
 
     const options: StreamableHTTPClientTransportOptions = {
       ...(authProvider ? { authProvider } : {}),
-      ...(headers ? { requestInit: { headers } } : {}),
+      ...(headers
+        ? { requestInit: { headers: matchSdkHeaderCase(headers) } }
+        : {}),
     };
 
     if (args.mode !== "legacy") {
@@ -576,48 +578,17 @@ export class ConnectionManager {
     args: ResolvedSSEConnection
   ): Promise<SSEClientTransport> {
     const { url, headers, authProvider } = args;
-    const options: SSEClientTransportOptions = {};
 
-    if (authProvider) {
-      options.authProvider = authProvider;
-    }
-
-    if (headers) {
-      // For SSE, we need to pass headers via eventSourceInit.fetch for the initial connection
-      // and also via requestInit.headers for subsequent POST requests
-      options.eventSourceInit = {
-        fetch: async (url, init) => {
-          const requestHeaders = new Headers(init?.headers);
-
-          // Add OAuth token if authProvider is available
-          // This is necessary because setting eventSourceInit.fetch prevents automatic Authorization header
-          if (authProvider) {
-            const tokens = await authProvider.tokens();
-            if (tokens) {
-              requestHeaders.set(
-                "Authorization",
-                `Bearer ${tokens.access_token}`
-              );
-            }
-          }
-
-          // Add our custom headers
-          Object.entries(headers).forEach(([key, value]) => {
-            requestHeaders.set(key, value);
-          });
-          // Always include Accept header for SSE
-          requestHeaders.set("Accept", "text/event-stream");
-
-          return fetch(url, {
-            ...init,
-            headers: requestHeaders,
-          });
-        },
-      };
-
-      // Also include headers for POST requests
-      options.requestInit = { headers };
-    }
+    // The transport authorizes the stream, applies `requestInit.headers` and
+    // sets `Accept: text/event-stream` itself. SDK 1 skipped all three when a
+    // caller supplied `eventSourceInit.fetch`, so the adapter reproduced them
+    // by hand; SDK 2 wraps that fetch instead of replacing it.
+    const options: SSEClientTransportOptions = {
+      ...(authProvider ? { authProvider } : {}),
+      ...(headers
+        ? { requestInit: { headers: matchSdkHeaderCase(headers) } }
+        : {}),
+    };
 
     return new SSEClientTransport(new URL(url), options);
   }
@@ -651,6 +622,35 @@ function serializeHeaders(
   }
 
   return JSON.stringify([...new Headers(headers)]);
+}
+
+/**
+ * Spell a header the way the SDK spells the ones it sets itself.
+ *
+ * A transport builds its request headers as `{ Authorization, ...ours }` — a
+ * plain-object spread, so a key of ours differing only in case survives as a
+ * second entry and `new Headers()` joins the two values with a comma. Since
+ * `mergeHeaders` lowercases every key, an `Authorization` configured next to
+ * an `authProvider` reached the wire as `Bearer <provider>, Bearer <ours>`,
+ * which a server rejects. Matching the SDK's spelling makes the spread a
+ * replacement again — what configuring both is asking for.
+ */
+const SDK_HEADER_SPELLING = new Map(
+  ["Authorization", "mcp-protocol-version"].map((name) => [
+    name.toLowerCase(),
+    name,
+  ])
+);
+
+function matchSdkHeaderCase(
+  headers: Record<string, string>
+): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(headers).map(([name, value]) => [
+      SDK_HEADER_SPELLING.get(name.toLowerCase()) ?? name,
+      value,
+    ])
+  );
 }
 
 /** HTTP header names are case-insensitive; later sources take precedence. */
