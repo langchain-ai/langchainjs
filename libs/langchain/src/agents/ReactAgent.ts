@@ -1219,15 +1219,11 @@ export class ReactAgent<
       mergedConfig as RunnableConfig
     );
 
-    return this.#graph.invoke(initializedState, {
-      ...mergedConfig,
-      callbacks: config?.callbacks,
-    } as unknown as InferContextInput<
-      Types["Context"] extends AnyAnnotationRoot | InteropZodObject
-        ? Types["Context"]
-        : AnyAnnotationRoot
-    > &
-      InferMiddlewareContextInputs<Types["Middleware"]>) as Promise<FullState>;
+    const graphConfig = { ...mergedConfig, callbacks: config?.callbacks };
+    return this.#graph.invoke(
+      initializedState,
+      graphConfig
+    ) as Promise<FullState>;
   }
 
   /**
@@ -1295,10 +1291,8 @@ export class ReactAgent<
       state,
       mergedConfig as RunnableConfig
     );
-    return this.#graph.stream(initializedState, {
-      ...mergedConfig,
-      callbacks: config?.callbacks,
-    } as Record<string, any>) as Promise<
+    const graphConfig = { ...mergedConfig, callbacks: config?.callbacks };
+    return this.#graph.stream(initializedState, graphConfig) as Promise<
       IterableReadableStream<
         StreamOutputMap<
           TStreamMode,
