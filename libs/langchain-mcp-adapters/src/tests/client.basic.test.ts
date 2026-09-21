@@ -1467,11 +1467,9 @@ describe("MultiServerMCPClient", () => {
       expect(SSEClientTransport).toHaveBeenCalledWith(
         new URL(config["test-server"].url),
         expect.objectContaining({
-          requestInit: {
-            headers: Object.fromEntries(
-              new Headers(config["test-server"].headers)
-            ),
-          },
+          // Spelled the way the SDK spells the header it sets itself, so its
+          // own spread replaces ours rather than appending a second entry.
+          requestInit: { headers: { Authorization: "Bearer token" } },
         })
       );
       expect(Client).toHaveBeenCalled();
