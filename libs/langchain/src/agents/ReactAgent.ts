@@ -1219,15 +1219,16 @@ export class ReactAgent<
       mergedConfig as RunnableConfig
     );
 
-    return this.#graph.invoke(
-      initializedState,
-      mergedConfig as unknown as InferContextInput<
-        Types["Context"] extends AnyAnnotationRoot | InteropZodObject
-          ? Types["Context"]
-          : AnyAnnotationRoot
-      > &
-        InferMiddlewareContextInputs<Types["Middleware"]>
-    ) as Promise<FullState>;
+    // The graph merges bound callbacks with invocation callbacks.
+    return this.#graph.invoke(initializedState, {
+      ...mergedConfig,
+      callbacks: config?.callbacks,
+    } as unknown as InferContextInput<
+      Types["Context"] extends AnyAnnotationRoot | InteropZodObject
+        ? Types["Context"]
+        : AnyAnnotationRoot
+    > &
+      InferMiddlewareContextInputs<Types["Middleware"]>) as Promise<FullState>;
   }
 
   /**
@@ -1295,10 +1296,10 @@ export class ReactAgent<
       state,
       mergedConfig as RunnableConfig
     );
-    return this.#graph.stream(
-      initializedState,
-      mergedConfig as Record<string, any>
-    ) as Promise<
+    return this.#graph.stream(initializedState, {
+      ...mergedConfig,
+      callbacks: config?.callbacks,
+    } as Record<string, any>) as Promise<
       IterableReadableStream<
         StreamOutputMap<
           TStreamMode,
@@ -1488,6 +1489,7 @@ export class ReactAgent<
               "text/event-stream"
             >
           >),
+          callbacks: config?.callbacks,
           version,
         },
         streamOptions
@@ -1521,6 +1523,7 @@ export class ReactAgent<
 
       return (await this.#graph.streamEvents(initializedState, {
         ...(mergedConfig as Record<string, any>),
+        callbacks: restConfig.callbacks,
         version: "v3",
         transformers: callSiteTransformers,
       })) as unknown as AgentRunStream<
