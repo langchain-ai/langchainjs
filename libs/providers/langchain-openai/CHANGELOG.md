@@ -1,5 +1,27 @@
 # @langchain/openai
 
+## 1.5.13
+
+### Patch Changes
+
+- [#11590](https://github.com/langchain-ai/langchainjs/pull/11590) [`ffebdc2`](https://github.com/langchain-ai/langchainjs/commit/ffebdc2f00f3290d19f85e5afd6a297920ae584c) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Fix OpenAI Responses API replay under Zero Data Retention when a response contains more than one reasoning item, for both v0 and v1. In v0, the default replay path now reuses `response_metadata.output` directly, preserving every reasoning item's `id`/`encrypted_content` in original order. In v1, `AIMessage.contentBlocks` (`outputVersion: "v1"`) is fixed the same way. `additional_kwargs.reasoning` is unchanged.
+
+## 1.5.12
+
+### Patch Changes
+
+- [#11560](https://github.com/langchain-ai/langchainjs/pull/11560) [`6bd3a18`](https://github.com/langchain-ai/langchainjs/commit/6bd3a182a4dc558f3a5d3c87da69f17d9a35f934) Thanks [@thushanth-bengre-langchain](https://github.com/thushanth-bengre-langchain)! - Support `configuration_update` content blocks for changing reasoning effort mid-conversation without invalidating the cached prompt prefix.
+
+- [#11588](https://github.com/langchain-ai/langchainjs/pull/11588) [`7d6e1b0`](https://github.com/langchain-ai/langchainjs/commit/7d6e1b098723690bd1b98bc36ed18c75fa5a85ed) Thanks [@jacoblee93](https://github.com/jacoblee93)! - fix(openai): Fix base url deserialization
+
+- [#11534](https://github.com/langchain-ai/langchainjs/pull/11534) [`80c5c93`](https://github.com/langchain-ai/langchainjs/commit/80c5c934d7768c842598c808b2c13a0a1b03e96a) Thanks [@chiliec](https://github.com/chiliec)! - Route gpt-5.6-sol to the Responses API so function tools work with reasoning.
+
+## 1.5.12-rc.0
+
+### Patch Changes
+
+- [#11534](https://github.com/langchain-ai/langchainjs/pull/11534) [`80c5c93`](https://github.com/langchain-ai/langchainjs/commit/80c5c934d7768c842598c808b2c13a0a1b03e96a) Thanks [@chiliec](https://github.com/chiliec)! - Route gpt-5.6-sol to the Responses API so function tools work with reasoning.
+
 ## 1.5.11
 
 ### Patch Changes

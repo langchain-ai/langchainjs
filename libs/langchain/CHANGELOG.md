@@ -1,5 +1,17 @@
 # langchain
 
+## 1.5.11
+
+### Patch Changes
+
+- [#11436](https://github.com/langchain-ai/langchainjs/pull/11436) [`702be70`](https://github.com/langchain-ai/langchainjs/commit/702be70bcaadbfe9a47a3fcccbb75bdea17cae04) Thanks [@chiliec](https://github.com/chiliec)! - fix(agents): ignore thought/reasoning text blocks when parsing structured output in `ProviderStrategy`
+
+## 1.5.11-rc.0
+
+### Patch Changes
+
+- [#11568](https://github.com/langchain-ai/langchainjs/pull/11568) [`fbc3206`](https://github.com/langchain-ai/langchainjs/commit/fbc32067aee6068dd7f96aff1889deba76d5c838) Thanks [@hntrl](https://github.com/hntrl)! - Add opt-in middleware `tracePolicy` support for transforming hook span input and output payloads, plus re-exports of LangGraph's `TracePolicy` and `omitPayload`.
+
 ## 1.5.10
 
 ### Patch Changes

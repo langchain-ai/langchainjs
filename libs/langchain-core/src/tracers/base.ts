@@ -525,7 +525,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
    */
   _createRunForToolStart(
     tool: Serialized,
-    input: string,
+    input: string | Record<string, unknown>,
     runId: string,
     parentRunId?: string,
     tags?: string[],
@@ -546,7 +546,7 @@ export abstract class BaseTracer extends BaseCallbackHandler {
           time: new Date(start_time).toISOString(),
         },
       ],
-      inputs: { input },
+      inputs: typeof input === "string" ? { input } : input,
       execution_order,
       child_execution_order: execution_order,
       run_type: "tool",
@@ -559,12 +559,13 @@ export abstract class BaseTracer extends BaseCallbackHandler {
 
   async handleToolStart(
     tool: Serialized,
-    input: string,
+    input: string | Record<string, unknown>,
     runId: string,
     parentRunId?: string,
     tags?: string[],
     metadata?: KVMap,
-    name?: string
+    name?: string,
+    _toolCallId?: string
   ): Promise<Run> {
     const run =
       this.getRunById(runId) ??

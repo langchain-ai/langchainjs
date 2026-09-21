@@ -456,6 +456,75 @@ describe("OpenAI Reasoning elevation to message.content", () => {
   });
 });
 
+const FARMER_PROBLEM =
+  "A farmer has chickens and cows totaling 30 heads and 74 legs. How many of each?";
+const FARMER_FOLLOWUP =
+  "Now solve the same style of problem for 40 heads and 100 legs.";
+
+describe("OpenAI configuration_update", () => {
+  test("invoke: configuration_update block switches reasoning effort mid-conversation", async () => {
+    const llm = new ChatOpenAI({
+      model: "gpt-6-astra",
+      reasoning: { effort: "low", summary: "auto" },
+      useResponsesApi: true,
+    });
+
+    const first = await llm.invoke(FARMER_PROBLEM);
+    expect(first).toBeInstanceOf(AIMessage);
+    expect(first.additional_kwargs.reasoning).toBeDefined();
+
+    // A second configuration_update block would be rejected as adjacent, so this
+    // also exercises that the hoisted item only appears once per eligible message.
+    const second = await llm.invoke([
+      new HumanMessage(FARMER_PROBLEM),
+      first,
+      new HumanMessage({
+        content: [
+          { type: "configuration_update", reasoning: { effort: "high" } },
+          { type: "text", text: FARMER_FOLLOWUP },
+        ],
+      }),
+    ]);
+
+    expect(second).toBeInstanceOf(AIMessage);
+    expect(Array.isArray(second.content)).toBe(true);
+    const textBlocks = (second.content as ContentBlock[]).filter(
+      (block) => block.type === "text"
+    );
+    expect(textBlocks.length).toBeGreaterThan(0);
+  }, 60000);
+
+  test("stream: configuration_update block switches reasoning effort mid-conversation", async () => {
+    const llm = new ChatOpenAI({
+      model: "gpt-6-astra",
+      reasoning: { effort: "low", summary: "auto" },
+      useResponsesApi: true,
+    });
+
+    const first = await concatStream(llm.stream(FARMER_PROBLEM));
+    expect(first.additional_kwargs.reasoning).toBeDefined();
+
+    const second = await concatStream(
+      llm.stream([
+        new HumanMessage(FARMER_PROBLEM),
+        first,
+        new HumanMessage({
+          content: [
+            { type: "configuration_update", reasoning: { effort: "high" } },
+            { type: "text", text: FARMER_FOLLOWUP },
+          ],
+        }),
+      ])
+    );
+
+    expect(Array.isArray(second.content)).toBe(true);
+    const textBlocks = (second.content as ContentBlock[]).filter(
+      (block) => block.type === "text"
+    );
+    expect(textBlocks.length).toBeGreaterThan(0);
+  }, 60000);
+});
+
 test("Test stateful API", async () => {
   const llm = new ChatOpenAI({
     model: "gpt-4o-mini",
@@ -894,6 +963,64 @@ describe("reasoning summaries", () => {
     ]);
     expect(replay).toBeInstanceOf(AIMessage);
     expect(replay.content).toBeTruthy();
+  });
+
+  test("replays interleaved reasoning and tool calls under ZDR", async () => {
+    const model = new ChatOpenAI({
+      model: "gpt-5.6",
+      useResponsesApi: true,
+      zdrEnabled: true,
+      reasoning: { effort: "high", summary: "detailed" },
+      maxRetries: 0,
+    }).bindTools([
+      { type: "web_search" },
+      { type: "code_interpreter", container: { type: "auto" } },
+    ]);
+    const prompt = [
+      "Search the web for the current populations of San Francisco and San Jose.",
+      "Then use the code interpreter to calculate the difference between them.",
+      "You must use web_search first and code_interpreter second.",
+    ].join("\n");
+
+    const firstResponse = await model.invoke(prompt);
+    const output = firstResponse.response_metadata.output;
+    expect(Array.isArray(output)).toBe(true);
+    if (!Array.isArray(output)) {
+      throw new Error("Expected response_metadata.output to be an array");
+    }
+
+    const reasoningAndToolCalls = output.filter(
+      (item) =>
+        typeof item === "object" &&
+        item != null &&
+        "type" in item &&
+        (item.type === "reasoning" ||
+          item.type === "web_search_call" ||
+          item.type === "code_interpreter_call")
+    ) as Array<{
+      type: "reasoning" | "web_search_call" | "code_interpreter_call";
+      encrypted_content?: string;
+    }>;
+    expect(reasoningAndToolCalls.map((item) => item.type)).toEqual([
+      "reasoning",
+      "web_search_call",
+      "reasoning",
+      "code_interpreter_call",
+    ]);
+    for (const reasoningItem of reasoningAndToolCalls.filter(
+      (item) => item.type === "reasoning"
+    )) {
+      expect(reasoningItem.encrypted_content).toEqual(expect.any(String));
+      expect(reasoningItem.encrypted_content).not.toHaveLength(0);
+    }
+
+    const followUp = await model.invoke([
+      new HumanMessage(prompt),
+      firstResponse,
+      new HumanMessage("What difference did you calculate?"),
+    ]);
+    expect(followUp).toBeInstanceOf(AIMessage);
+    expect(followUp.content).toBeTruthy();
   });
 
   test.each(["stream", "invoke"])(
