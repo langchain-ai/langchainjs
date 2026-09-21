@@ -1107,6 +1107,165 @@ describe("createAgent", () => {
   });
 
   describe("withConfig", () => {
+    describe.each(["array", "manager"] as const)("%s callbacks", (kind) => {
+      const callbacks = (handler: BaseCallbackHandler, format = kind) => {
+        if (format === "array") return [handler];
+        const manager = new CallbackManager();
+        manager.addHandler(handler);
+        return manager;
+      };
+
+      it.each([
+        [false, "invoke"],
+        [true, "invoke"],
+        [true, "streamEvents"],
+      ] as const)(
+        "preserves callbacks on the extracted graph (copy: %s, method: %s)",
+        async (copy, method) => {
+          const existing = BaseCallbackHandler.fromMethods({
+            handleChatModelStart: vi.fn(),
+          });
+          const bound = BaseCallbackHandler.fromMethods({
+            handleChatModelStart: vi.fn(),
+          });
+          const invoked = BaseCallbackHandler.fromMethods({
+            handleChatModelStart: vi.fn(),
+          });
+          const original = createAgent({ model: new FakeToolCallingModel() });
+          let agent = original
+            .withConfig({ callbacks: callbacks(existing) })
+            .withConfig({ callbacks: callbacks(bound), recursionLimit: 100 });
+          if (copy) agent = agent.withConfig({ tags: ["copied"] });
+
+          const graph = agent.graph.withConfig({
+            metadata: { extracted: true },
+          });
+          const input = { messages: [new HumanMessage("hello")] };
+          const config = { callbacks: callbacks(invoked) };
+          if (method === "invoke") {
+            await graph.invoke(input, config);
+          } else {
+            for await (const _chunk of graph.streamEvents(input, {
+              ...config,
+              version: "v2",
+            })) {
+              // Consume the stream to complete callback delivery.
+            }
+          }
+
+          for (const handler of [existing, bound, invoked]) {
+            expect(handler.handleChatModelStart).toHaveBeenCalledTimes(1);
+          }
+          expect(original.graph.config?.callbacks).toBeUndefined();
+          expect(graph.config?.recursionLimit).toBe(100);
+          expect(graph.config?.metadata).toMatchObject({
+            ls_integration: "langchain_create_agent",
+            extracted: true,
+          });
+          if (copy) expect(graph.config?.tags).toContain("copied");
+        }
+      );
+
+      describe.each(["array", "manager", undefined] as const)(
+        "with %s invocation callbacks",
+        (invocationKind) => {
+          it.each([
+            "invoke",
+            "stream",
+            "streamEvents",
+            "streamEventsV3",
+          ] as const)("calls each handler once through %s", async (method) => {
+            const bound = BaseCallbackHandler.fromMethods({
+              handleChainStart: vi.fn(),
+              handleChainEnd: vi.fn(),
+              handleChatModelStart: vi.fn(),
+            });
+            const invoked = BaseCallbackHandler.fromMethods({
+              handleChainStart: vi.fn(),
+              handleChainEnd: vi.fn(),
+              handleChatModelStart: vi.fn(),
+            });
+            const agent = createAgent({ model: new FakeToolCallingModel() })
+              .withConfig({ callbacks: callbacks(bound) })
+              .withConfig({ tags: ["copied"] });
+            const input = { messages: [new HumanMessage("hello")] };
+            const config = {
+              callbacks: invocationKind
+                ? callbacks(invoked, invocationKind)
+                : undefined,
+            };
+
+            if (method === "invoke") {
+              await agent.invoke(input, config);
+            } else if (method === "streamEventsV3") {
+              const stream = await agent.streamEvents(input, {
+                ...config,
+                version: "v3",
+              });
+              await stream.output;
+            } else {
+              const stream =
+                method === "stream"
+                  ? await agent.stream(input, config)
+                  : agent.streamEvents(input, { ...config, version: "v2" });
+              for await (const _chunk of stream) {
+                // Consume the stream to complete callback delivery.
+              }
+            }
+
+            for (const handler of invocationKind ? [bound, invoked] : [bound]) {
+              expect(handler.handleChatModelStart).toHaveBeenCalledTimes(1);
+              const starts = vi.mocked(handler.handleChainStart!).mock.calls;
+              const ends = vi.mocked(handler.handleChainEnd!).mock.calls;
+              expect(starts.length).toBeGreaterThan(0);
+              expect(new Set(starts.map((call) => call[2])).size).toBe(
+                starts.length
+              );
+              expect(new Set(ends.map((call) => call[1])).size).toBe(
+                ends.length
+              );
+              expect(ends).toHaveLength(starts.length);
+            }
+          });
+        }
+      );
+    });
+
+    it.each(["invoke", "stream", "streamEventsV3"] as const)(
+      "preserves middleware state initialization through %s with callbacks",
+      async (method) => {
+        const beforeModel = vi.fn();
+        const handler = BaseCallbackHandler.fromMethods({
+          handleChatModelStart: vi.fn(),
+        });
+        const agent = createAgent({
+          model: new FakeToolCallingModel(),
+          middleware: [
+            createMiddleware({
+              name: "defaults",
+              stateSchema: z.object({ count: z.number().default(7) }),
+              beforeModel: (state) => {
+                beforeModel(state.count);
+              },
+            }),
+          ],
+        }).withConfig({ callbacks: [handler] });
+        const input = { messages: [new HumanMessage("hello")] };
+        if (method === "invoke") {
+          await agent.invoke(input);
+        } else if (method === "stream") {
+          for await (const _chunk of await agent.stream(input)) {
+            // Consume the stream to complete callback delivery.
+          }
+        } else {
+          const stream = await agent.streamEvents(input, { version: "v3" });
+          await stream.output;
+        }
+        expect(beforeModel).toHaveBeenCalledExactlyOnceWith(7);
+        expect(handler.handleChatModelStart).toHaveBeenCalledTimes(1);
+      }
+    );
+
     it("should return a new ReactAgent instance", () => {
       const model = new FakeToolCallingModel();
       const agent = createAgent({
