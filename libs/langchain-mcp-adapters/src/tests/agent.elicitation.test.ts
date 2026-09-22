@@ -1,5 +1,9 @@
+import { execFile } from "node:child_process";
 import { randomUUID } from "node:crypto";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { promisify } from "node:util";
 
 import { Command, MemorySaver, type Interrupt } from "@langchain/langgraph";
 import { createAgent, FakeToolCallingModel } from "langchain";
@@ -107,8 +111,8 @@ function resuming(resume: MCPElicitationResume): AgentInput {
   return new Command({ resume }) as unknown as AgentInput;
 }
 
-describe("replay on resume", () => {
-  it("replays the initial request, then answers it with that response's state", async () => {
+describe("durable rounds", () => {
+  it("answers the saved question without repeating its request", async () => {
     const { agent, server, config } = await environment();
 
     const first = await agent.invoke(input, config);
@@ -120,18 +124,14 @@ describe("replay on resume", () => {
       config
     );
 
-    // Resuming re-runs the tool node from the top: the initial request is
-    // issued again, and only then is the answered follow-up sent, carrying the
-    // requestState returned by the response this execution just replayed.
     expect(server.calls).toEqual([
-      { tool: "ask", label: "q", round: 0 },
       { tool: "ask", label: "q", round: 0 },
       { tool: "ask", label: "q", round: 1, action: "accept" },
     ]);
     expect(server.completed).toEqual([{ label: "q", action: "accept" }]);
   });
 
-  it("replays earlier answered rounds across a multi-round elicitation", async () => {
+  it("retrieves earlier completed rounds across a multi-round elicitation", async () => {
     const { agent, server, config } = await environment([
       [{ id: "c1", name: "ask", args: { label: "r", rounds: 2 } }],
       [],
@@ -147,20 +147,138 @@ describe("replay on resume", () => {
       config
     );
 
-    // The second resume replays round 0 and round 1 before reaching round 2.
-    // Pre-elicitation work repeats; the adapter promises no exactly-once
-    // effects. Each round's state comes from the response preceding it in the
-    // same execution, so the rounds still advance 0 -> 1 -> 2.
     expect(server.calls).toEqual([
-      { tool: "ask", label: "r", round: 0 },
-      { tool: "ask", label: "r", round: 0 },
-      { tool: "ask", label: "r", round: 1, action: "accept" },
       { tool: "ask", label: "r", round: 0 },
       { tool: "ask", label: "r", round: 1, action: "accept" },
       { tool: "ask", label: "r", round: 2, action: "accept" },
     ]);
     expect(server.completed).toEqual([{ label: "r", action: "accept" }]);
   });
+});
+
+describe("process recovery", () => {
+  const day = 24 * 60 * 60 * 1000;
+
+  async function processEnvironment(
+    serverOptions: Parameters<typeof startAgentMcpServer>[0] = {},
+    settings: { rounds?: number; maxRounds?: number } = {}
+  ) {
+    const server = await startAgentMcpServer(serverOptions);
+    cleanups.push(() => server.close());
+    const directory = await mkdtemp(join(tmpdir(), "mcp-agent-recovery-"));
+    cleanups.push(() => rm(directory, { recursive: true, force: true }));
+    const args = [
+      "--import",
+      "tsx",
+      join(__dirname, "fixtures", "durable-agent.ts"),
+      server.url,
+      join(directory, "checkpoint.bin"),
+    ];
+    const execute = promisify(execFile);
+    return {
+      server,
+      async run(resume?: MCPElicitationResume, maxRounds = settings.maxRounds) {
+        const result = await execute(
+          process.execPath,
+          [
+            ...args,
+            resume ? JSON.stringify(resume) : "",
+            JSON.stringify({ ...settings, maxRounds }),
+          ],
+          { timeout: 30_000 }
+        );
+        return JSON.parse(result.stdout) as unknown;
+      },
+    };
+  }
+
+  it("resumes in a new process after three simulated days within server validity", async () => {
+    const { server, run } = await processEnvironment({
+      continuationLifetimeMs: 7 * day,
+    });
+    const pending = onlyInterrupt(await run());
+    expect(server.calls).toEqual([{ tool: "ask", label: "restart", round: 0 }]);
+
+    server.advanceTime(3 * day);
+    const done = await run(createMCPElicitationResume(pending, accept()));
+
+    expect(mcpInterrupts(done)).toHaveLength(0);
+    expect(JSON.stringify(done)).toContain("restart:accept");
+    expect(server.calls).toEqual([
+      { tool: "ask", label: "restart", round: 0 },
+      { tool: "ask", label: "restart", round: 1, action: "accept" },
+    ]);
+    expect(server.continuations).toEqual(["restart:1"]);
+    expect(server.completed).toEqual([{ label: "restart", action: "accept" }]);
+  }, 60_000);
+
+  it("reports an expired continuation without restarting or performing the action", async () => {
+    const { server, run } = await processEnvironment({
+      continuationLifetimeMs: day,
+    });
+    const pending = onlyInterrupt(await run());
+
+    server.advanceTime(3 * day);
+    await expect(
+      run(createMCPElicitationResume(pending, accept()))
+    ).rejects.toThrow("Invalid or expired requestState");
+    expect(server.continuations).toEqual(["restart:1"]);
+    expect(server.calls).toEqual([{ tool: "ask", label: "restart", round: 0 }]);
+    expect(server.completed).toEqual([]);
+    expect(server.accepted).toEqual([]);
+  }, 60_000);
+
+  it.each([true, false])(
+    "reconstructs the original allowance through four processes: last answer valid=%s",
+    async (valid) => {
+      const { server, run } = await processEnvironment(
+        {},
+        { rounds: 2, maxRounds: 3 }
+      );
+      const first = onlyInterrupt(await run());
+      const invalid: MCPElicitationResponses = {
+        confirmation: { action: "accept", content: {} },
+      };
+      const correction = onlyInterrupt(
+        await run(createMCPElicitationResume(first, invalid))
+      );
+      expect(correction.value).toMatchObject({
+        questionId: (first.value as { questionId: string }).questionId,
+        attempt: 2,
+        validationError: expect.any(String),
+      });
+      expect(server.calls).toHaveLength(1);
+
+      const next = onlyInterrupt(
+        await run(createMCPElicitationResume(correction, accept()))
+      );
+      expect(next.value).toMatchObject({ attempt: 3 });
+      expect(server.calls).toHaveLength(2);
+
+      const done = await run(
+        createMCPElicitationResume(next, valid ? accept() : invalid),
+        32
+      );
+      expect(mcpInterrupts(done)).toHaveLength(0);
+      if (valid) {
+        expect(JSON.stringify(done)).toContain("restart:accept");
+        expect(server.calls).toHaveLength(3);
+        expect(server.completed).toEqual([
+          { label: "restart", action: "accept" },
+        ]);
+      } else {
+        expect(JSON.stringify(done)).toContain(
+          "exceeded 3 elicitation rounds while correcting an answer"
+        );
+        expect(server.calls).toHaveLength(2);
+        expect(server.completed).toEqual([]);
+      }
+      expect(
+        server.calls.filter((call) => call.tool === "ask" && call.round === 0)
+      ).toHaveLength(1);
+    },
+    120_000
+  );
 });
 
 describe("answer validation", () => {
@@ -178,12 +296,7 @@ describe("answer validation", () => {
       config
     );
 
-    // The malformed answer never reaches the server: the replayed initial
-    // request is the only call it saw.
-    expect(server.calls).toEqual([
-      { tool: "ask", label: "q", round: 0 },
-      { tool: "ask", label: "q", round: 0 },
-    ]);
+    expect(server.calls).toEqual([{ tool: "ask", label: "q", round: 0 }]);
     expect(onlyInterrupt(corrected).value).toMatchObject({
       type: "mcp_elicitation",
       validationError: expect.stringContaining("must be boolean"),
@@ -305,8 +418,6 @@ describe("end to end over stdio", () => {
       config
     );
 
-    // The fixture echoes the action, and throws unless the replayed round
-    // carried its `requestState` back unchanged.
     expect(toolOutput(done)).toContain("accept");
   });
 

@@ -36,23 +36,39 @@ export type AgentMcpServer = {
   authorizations: string[];
   accepted: string[];
   completed: Completion[];
+  continuations: string[];
+  advanceTime(milliseconds: number): void;
   close(): Promise<void>;
 };
 
-export async function startAgentMcpServer(): Promise<AgentMcpServer> {
+export async function startAgentMcpServer(
+  options: { continuationLifetimeMs?: number } = {}
+): Promise<AgentMcpServer> {
   const calls: AgentMcpCall[] = [];
   const echoes: string[] = [];
   const authorizations: string[] = [];
   const accepted: string[] = [];
   const completed: Completion[] = [];
+  const continuations: string[] = [];
+  const expiresAt = new Map<string, number>();
   const authorized = new Set<string>();
+  let now = 0;
   let url = "";
 
   const handler = createMcpHandler(
     () => {
       const server = new McpServer(
         { name: "agent-integration", version: "1" },
-        { requestState: { verify: async (state) => state } }
+        {
+          requestState: {
+            verify: async (state) => {
+              continuations.push(state);
+              if (now >= (expiresAt.get(state) ?? Infinity))
+                throw new Error("expired");
+              return state;
+            },
+          },
+        }
       );
 
       server.registerTool(
@@ -96,8 +112,13 @@ export async function startAgentMcpServer(): Promise<AgentMcpServer> {
           });
 
           if (!answer || (answer.action === "accept" && round < rounds)) {
+            const requestState = `${label}:${round + 1}`;
+            expiresAt.set(
+              requestState,
+              now + (options.continuationLifetimeMs ?? Infinity)
+            );
             return inputRequired({
-              requestState: `${label}:${round + 1}`,
+              requestState,
               inputRequests: {
                 confirmation:
                   kind === "url"
@@ -182,6 +203,10 @@ export async function startAgentMcpServer(): Promise<AgentMcpServer> {
     authorizations,
     accepted,
     completed,
+    continuations,
+    advanceTime(milliseconds) {
+      now += milliseconds;
+    },
     async close() {
       await handler.close();
       http.closeAllConnections();

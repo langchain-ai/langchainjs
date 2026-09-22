@@ -22,7 +22,14 @@ import {
 } from "@modelcontextprotocol/core";
 import { DefaultJsonSchemaValidator } from "@modelcontextprotocol/client/_shims";
 import { ns, LangChainError } from "@langchain/core/errors";
-import { interrupt, type Interrupt } from "@langchain/langgraph";
+import { compare } from "@langchain/core/utils/json_patch";
+import { v4 as uuid } from "@langchain/core/utils/uuid";
+import {
+  getConfig,
+  interrupt,
+  task,
+  type Interrupt,
+} from "@langchain/langgraph";
 import { MCPClientError, ToolException } from "./utils/errors.js";
 
 /** Observe validated cancellations without replacing the SDK handler. */
@@ -293,11 +300,13 @@ export class InterruptMCPClient extends CancellationObserverMCPClient {
   }
 }
 
-/** User-facing questions only. Server round state never leaves the execution. */
+/** Public questions omit the checkpointed server continuation. */
 const elicitationInterruptSchema = z.object({
   type: z.literal("mcp_elicitation"),
   server: z.string(),
   tool: z.string(),
+  questionId: z.string(),
+  attempt: z.number().int().positive(),
   requests: z.record(z.string(), modernElicitationRequestSchema),
   validationError: z.string().optional(),
 });
@@ -316,134 +325,115 @@ export type MCPElicitationResponses = z.output<
   typeof elicitationResponsesSchema
 >;
 
-/** Complete `Command.resume` value, keyed by the observed LangGraph interrupt ID. */
+/** Resume values target both the graph task and the displayed question attempt. */
 export type MCPElicitationResume = Record<
   string,
-  { responses: MCPElicitationResponses }
+  { questionId: string; attempt: number; responses: MCPElicitationResponses }
 >;
 
 const elicitationTargetSchema = z.object({
-  // LangGraph builds interrupt IDs with XXH3 but does not export its own
-  // validator from any entrypoint, so the shape is matched here rather than
-  // deep-importing its internals.
   id: z.string().regex(/^[0-9a-f]{32}$/, "Expected a LangGraph interrupt ID"),
-  value: z.object({ type: z.literal("mcp_elicitation") }),
+  value: elicitationInterruptSchema.pick({
+    type: true,
+    questionId: true,
+    attempt: true,
+  }),
 });
 
-/**
- * Build a resume value aimed at one MCP question.
- *
- * Keying by the interrupt's own ID keeps answers from being delivered to an
- * unrelated interrupt that happens to be paused in the same run. It does not
- * make replayed server work idempotent, and it does not isolate arbitrary
- * `Promise.all` calls inside a single user node.
- */
+/** Build an answer bound to the observed task and question attempt. */
 export function createMCPElicitationResume(
   pending: Interrupt<unknown>,
   responses: MCPElicitationResponses
 ): MCPElicitationResume {
-  const { id } = elicitationTargetSchema.parse(pending);
-  return { [id]: { responses } };
+  const { id, value } = elicitationTargetSchema.parse(pending);
+  return {
+    [id]: { questionId: value.questionId, attempt: value.attempt, responses },
+  };
 }
 
-/**
- * `tools/call` params plus the 2026 retry channel.
- *
- * The revision layers `inputResponses` and `requestState` onto the request
- * params for a retry; they are not part of `CallToolRequestParams` itself.
- */
 type ElicitationRoundParams = CallToolRequest["params"] & {
   inputResponses?: MCPElicitationResponses;
   requestState?: string;
 };
 
-/** A round's outcome: the tool finished, or the server asked for input. */
-type ElicitationRound =
-  | { done: true; result: CallToolResult }
-  | { done: false; pending: PendingMCPInput };
+type UncachedInvocation = {
+  uncached: true;
+  server: string;
+  request: ElicitationRoundParams;
+  hasHeaderOverrides: true;
+};
 
-/** Everything the round loop needs to know about the call it is answering. */
+type ElicitationRound = {
+  server: string;
+  request: ElicitationRoundParams;
+  maxRounds: number;
+  hasHeaderOverrides: boolean;
+} & (
+  | { done: true; result: CallToolResult }
+  | {
+      done: false;
+      questionId: string;
+      pending: Pick<PendingInput, "inputRequests" | "requestState">;
+    }
+);
+
 export interface MCPElicitationSource {
   server: string;
   tool: string;
   maxRounds: number;
-  /** No graph to interrupt, so questions are reported instead of asked. */
   direct?: boolean;
+  hasHeaderOverrides?: boolean;
   signal?: AbortSignal;
 }
 
-/**
- * Questions asked so far against one call's allowance.
- *
- * Server rounds and re-asked answers spend the same budget, so neither a
- * server nor a caller resuming with invalid answers can hold a run open.
- */
-interface ElicitationBudget {
-  asks: number;
-  readonly max: number;
-}
-
-/**
- * Issue one `tools/call`, turning the SDK's pending-input throw into a value.
- *
- * `_resolveNonCompleteResult` reports a request for input by throwing, so that
- * the response escapes `callTool`'s output-schema validation. Converting it
- * back to a value here lets the round loop test a condition rather than carry
- * a sentinel across passes.
- */
+/** Complete one wire exchange as serializable data before any human pause. */
 async function sendElicitationRound(
   execute: (params: ElicitationRoundParams) => Promise<CallToolResult>,
   request: ElicitationRoundParams,
-  signal?: AbortSignal
+  source: MCPElicitationSource
 ): Promise<ElicitationRound> {
-  signal?.throwIfAborted();
+  source.signal?.throwIfAborted();
+  const operation = {
+    server: source.server,
+    request,
+    maxRounds: source.maxRounds,
+    hasHeaderOverrides: source.hasHeaderOverrides === true,
+  };
 
   try {
-    return { done: true, result: await execute(request) };
+    const result = await execute(request);
+    source.signal?.throwIfAborted();
+    return { ...operation, done: true, result };
   } catch (error) {
     if (!PendingMCPInput.isInstance(error)) throw error;
-
-    // An aborted call reports the abort, not the response it happened to get.
-    signal?.throwIfAborted();
-
-    return { done: false, pending: error };
+    source.signal?.throwIfAborted();
+    return {
+      ...operation,
+      done: false,
+      questionId: uuid(),
+      pending: {
+        inputRequests: error.pending.inputRequests,
+        requestState: error.pending.requestState,
+      },
+    };
   }
 }
 
-/** Refuse what an interrupt cannot answer; otherwise render the question. */
+/** Validate answerable input without exposing the server continuation. */
 async function elicitationQuestionFor(
-  pending: PendingMCPInput,
+  round: Extract<ElicitationRound, { done: false }>,
   source: MCPElicitationSource,
-  budget: ElicitationBudget
-): Promise<{ question: MCPElicitationInterrupt; state?: string }> {
-  const inputRequests = pending.pending.inputRequests ?? {};
+  asks: number,
+  maxRounds: number,
+  durable: boolean
+): Promise<MCPElicitationInterrupt> {
+  const inputRequests = round.pending.inputRequests ?? {};
 
-  // Nothing can advance a response that carries no question, and the adapter
-  // does not poll a server for completion.
   if (Object.keys(inputRequests).length === 0)
     throw new ToolException(
-      `MCP tool "${source.tool}" on server "${source.server}" returned a state-only response, which is not supported.`,
-      pending
+      `MCP tool "${source.tool}" on server "${source.server}" returned a state-only response, which is not supported.`
     );
 
-  if (source.direct)
-    throw new ToolException(
-      "This MCP tool requested user input. Invoke it inside a LangGraph with a checkpointer to pause and resume elicitation.",
-      pending
-    );
-
-  // Never pause for an answer the budget can no longer spend: pausing and then
-  // failing would cost a human round trip for nothing.
-  if (budget.asks >= budget.max)
-    throw new ToolException(
-      `MCP tool "${source.tool}" on server "${source.server}" exceeded ${budget.max} elicitation rounds.`,
-      pending
-    );
-
-  // Only elicitation can be answered from an interrupt. Sampling and roots
-  // requests are refused by name rather than half-served, so the caller sees
-  // which method it was instead of a schema parse failure. The Python adapter
-  // refuses the same two.
   const unsupported = Object.entries(inputRequests)
     .filter(
       ([, request]) =>
@@ -456,110 +446,143 @@ async function elicitationQuestionFor(
 
   if (unsupported.length > 0)
     throw new ToolException(
-      `MCP tool "${source.tool}" on server "${source.server}" requested input this adapter cannot answer: ${unsupported.join(", ")}. Only elicitation is answered through a graph interrupt.`,
-      pending
+      `MCP tool "${source.tool}" on server "${source.server}" requested input this adapter cannot answer: ${unsupported.join(", ")}. Only elicitation is answered through a graph interrupt.`
     );
 
-  return {
-    // Parsing unwraps each `{ method, params }` envelope, so the answer schema
-    // in `askUntilAnswered` is built from the schema the server requested.
-    question: await elicitationInterruptSchema.parseAsync({
-      type: "mcp_elicitation",
-      server: source.server,
-      tool: source.tool,
-      requests: inputRequests,
-    }),
-    state: pending.pending.requestState,
-  };
+  if (!durable)
+    throw new ToolException(
+      "This MCP tool requested user input. Invoke it inside a LangGraph with a checkpointer to pause and resume elicitation."
+    );
+
+  if (source.hasHeaderOverrides || round.hasHeaderOverrides)
+    throw new ToolException(
+      "Durable MCP elicitation does not support beforeToolCall header overrides. Configure a stable server authentication identity instead."
+    );
+
+  if (asks >= maxRounds)
+    throw new ToolException(
+      `MCP tool "${source.tool}" on server "${source.server}" exceeded ${maxRounds} elicitation rounds.`
+    );
+
+  return elicitationInterruptSchema.parseAsync({
+    type: "mcp_elicitation",
+    server: source.server,
+    tool: source.tool,
+    questionId: round.questionId,
+    attempt: asks + 1,
+    requests: inputRequests,
+  });
 }
 
-/**
- * Raise one question until it comes back with usable answers.
- *
- * A rejected answer is re-asked on the same thread with the reason attached
- * and costs no further round trip to the server: that question and its
- * `requestState` are still current. Every attempt spends the shared budget,
- * so the loop is bounded by it rather than running until something throws.
- */
+/** Reconstruct question-attempt spending from saved answers, without network IO. */
 async function askUntilAnswered(
   question: MCPElicitationInterrupt,
   source: MCPElicitationSource,
-  budget: ElicitationBudget
-): Promise<MCPElicitationResponses> {
-  // The requested schemas do not change between re-asks, so bind them once.
-  const answerSchema = z.strictObject({
-    responses: z.strictObject(
-      Object.fromEntries(
-        Object.entries(question.requests).map(([key, requested]) => [
-          key,
-          elicitationAnswerFor(requested, modernElicitationAnswerSchema),
-        ])
-      )
-    ),
-  });
-
+  maxRounds: number
+): Promise<{ responses: MCPElicitationResponses; asks: number }> {
+  const responsesSchema = z.strictObject(
+    Object.fromEntries(
+      Object.entries(question.requests).map(([key, requested]) => [
+        key,
+        elicitationAnswerFor(requested, modernElicitationAnswerSchema),
+      ])
+    )
+  );
   let asked = question;
 
-  while (budget.asks < budget.max) {
+  while (asked.attempt <= maxRounds) {
     source.signal?.throwIfAborted();
-    budget.asks += 1;
+    const envelope = z
+      .strictObject({
+        questionId: z.literal(asked.questionId),
+        attempt: z.literal(asked.attempt),
+        responses: z.unknown(),
+      })
+      .safeParse(interrupt(asked));
 
-    const answer = await answerSchema.safeParseAsync(interrupt(asked));
-    if (answer.success) return answer.data.responses;
+    if (!envelope.success)
+      throw new ToolException(
+        "MCP elicitation answer does not match the pending question attempt. Use createMCPElicitationResume with the latest interrupt."
+      );
 
-    asked = { ...asked, validationError: z.prettifyError(answer.error) };
+    const answer = await responsesSchema.safeParseAsync(
+      envelope.data.responses
+    );
+    if (answer.success) return { responses: answer.data, asks: asked.attempt };
+
+    asked = {
+      ...asked,
+      attempt: asked.attempt + 1,
+      validationError: z.prettifyError(answer.error),
+    };
   }
 
-  // Re-asking spends a question too, and the same rule applies: fail now
-  // rather than pausing for a correction that cannot be used.
   throw new ToolException(
-    `MCP tool "${source.tool}" on server "${source.server}" exceeded ${budget.max} elicitation rounds while correcting an answer.`
+    `MCP tool "${source.tool}" on server "${source.server}" exceeded ${maxRounds} elicitation rounds while correcting an answer.`
   );
 }
 
-/**
- * Answer one tool call's elicitation rounds with graph interrupts.
- *
- * The adapter keeps no durable record of a round. When a graph resumes, the
- * tool node re-runs from the top: the initial `tools/call` is issued again, the
- * server answers with the same question, and `interrupt()` returns the supplied
- * answer instead of pausing. Only then is the answered follow-up sent, carrying
- * the `requestState` from the response this execution just replayed — never a
- * value saved from an earlier one.
- *
- * Work the server performed before asking therefore runs again on resume,
- * `beforeToolCall` runs once per execution, and the adapter promises no
- * exactly-once effects. Servers and hooks must be replay-safe; Mastra's
- * server-side implementation of this protocol leg documents the same
- * constraint.
- */
+/** Resume completed rounds from checkpoints; remote effects still require idempotency. */
 export async function callToolWithElicitation(
   execute: (params: ElicitationRoundParams) => Promise<CallToolResult>,
   params: CallToolRequest["params"],
   source: MCPElicitationSource
 ): Promise<CallToolResult> {
-  const budget: ElicitationBudget = { asks: 0, max: source.maxRounds };
+  const checkpointer = getConfig()?.configurable?.__pregel_checkpointer;
+  const durable =
+    !source.direct &&
+    checkpointer != null &&
+    typeof checkpointer.putWrites === "function";
+  const nextRound = async (request: ElicitationRoundParams) => {
+    source.signal?.throwIfAborted();
+    const sendRound = (): Promise<ElicitationRound> =>
+      sendElicitationRound(execute, request, source);
+    const recordRound = (): Promise<ElicitationRound | UncachedInvocation> =>
+      source.hasHeaderOverrides
+        ? Promise.resolve({
+            uncached: true,
+            server: source.server,
+            request,
+            hasHeaderOverrides: true,
+          })
+        : sendRound();
+    const round = durable
+      ? await task(
+          { name: "mcp.tool.round", retry: { maxAttempts: 1 } },
+          recordRound
+        )()
+      : await sendRound();
+    source.signal?.throwIfAborted();
+    if (
+      round.server !== source.server ||
+      compare(round.request, request).length ||
+      round.hasHeaderOverrides !== (source.hasHeaderOverrides === true)
+    )
+      throw new ToolException(
+        "MCP tool operation changed while paused. Start a new operation instead of reusing its elicitation answers."
+      );
+    return "uncached" in round ? sendRound() : round;
+  };
 
-  let round = await sendElicitationRound(execute, params, source.signal);
+  let round = await nextRound(params);
+  const maxRounds = round.maxRounds;
+  let asks = 0;
 
-  // The server is called only when there is something new to send it, so each
-  // pass answers exactly one of its questions. An accepted answer is always
-  // delivered before the budget can end the run, because delivery happens at
-  // the bottom of the same pass that collected it.
   while (!round.done) {
-    const { question, state } = await elicitationQuestionFor(
-      round.pending,
+    const question = await elicitationQuestionFor(
+      round,
       source,
-      budget
+      asks,
+      maxRounds,
+      durable
     );
-
-    const responses = await askUntilAnswered(question, source, budget);
-
-    round = await sendElicitationRound(
-      execute,
-      { ...params, inputResponses: responses, requestState: state },
-      source.signal
-    );
+    const answer = await askUntilAnswered(question, source, maxRounds);
+    asks = answer.asks;
+    round = await nextRound({
+      ...params,
+      inputResponses: answer.responses,
+      requestState: round.pending.requestState,
+    });
   }
 
   return round.result;

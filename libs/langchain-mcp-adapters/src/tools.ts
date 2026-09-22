@@ -346,7 +346,7 @@ type ToolRound = (
 interface ToolInvocation {
   /** Rounds budget when this connection answers elicitation in band. */
   readonly elicitationRounds?: number;
-  /** Fork for these headers once, then run every round against the result. */
+  /** Resolve the runtime binding only when a wire round executes. */
   bind(headers: ToolCallModification["headers"]): Promise<ToolRound>;
 }
 
@@ -403,25 +403,20 @@ function createToolInvocationFactory(
       ? client.maxElicitationRounds
       : undefined;
 
-  /**
-   * Dynamic headers are applied per execution through the client's own fork.
-   *
-   * Graph calls are not treated differently: `beforeToolCall` runs again on
-   * every replayed execution, so the headers it returns are recomputed for that
-   * execution rather than restored from a checkpoint. Nothing about a forked
-   * client's credentials is persisted between executions.
-   */
+  /** Header-bound clients remain runtime resources, never checkpointed state. */
   function selectHeaderPolicy() {
     if ("fork" in client && typeof client.fork === "function") {
       const fork = client.fork.bind(client);
 
       return async (headers: NonNullable<ToolCallModification["headers"]>) => {
         const connectedClient = await fork(headers);
+        const connectedModern = connectedClient.getProtocolEra() === "modern";
+        if (connectedModern !== modern)
+          throw new ToolException(
+            `MCP connection for server "${serverName}" changed protocol era after tool discovery.`
+          );
 
-        return executor(
-          connectedClient,
-          connectedClient.getProtocolEra() === "modern"
-        );
+        return executor(connectedClient, connectedModern);
       };
     }
 
@@ -578,10 +573,12 @@ async function _callTool(
   try {
     const graph = graphTaskState(config);
     const prepared = await prepareToolCall({ ...call, graph });
-    const execute = await invocation.bind(prepared.headers);
-
-    const round = (params: CallToolRequest["params"]) =>
-      execute(params, prepared.requestOptions);
+    const round = async (params: CallToolRequest["params"]) => {
+      config?.signal?.throwIfAborted();
+      const execute = await invocation.bind(prepared.headers);
+      config?.signal?.throwIfAborted();
+      return execute(params, prepared.requestOptions);
+    };
 
     const result =
       invocation.elicitationRounds === undefined
@@ -591,6 +588,9 @@ async function _callTool(
             tool: toolName,
             maxRounds: invocation.elicitationRounds,
             direct: graph === undefined,
+            hasHeaderOverrides:
+              prepared.headers !== undefined &&
+              Object.keys(prepared.headers).length > 0,
             signal: config?.signal,
           });
 

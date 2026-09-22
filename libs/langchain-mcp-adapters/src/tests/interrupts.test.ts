@@ -21,13 +21,16 @@ import {
   START,
   END,
   Command,
+  interrupt,
   type Interrupt,
 } from "@langchain/langgraph";
+import type { RunnableConfig } from "@langchain/core/runnables";
 import { z } from "zod";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MCPAdapter } from "../index.js";
 import {
   callToolWithElicitation,
+  createMCPElicitationResume,
   InterruptMCPClient,
   PendingMCPInput,
 } from "../elicitation.js";
@@ -62,11 +65,25 @@ function questionsIn(snapshot: {
 }
 
 /** Resume params for one answered question set. */
-function answering(responses: Record<string, unknown>) {
-  return { resume: { responses } };
+async function answering(
+  graph: {
+    getState(
+      config: RunnableConfig
+    ): Promise<Parameters<typeof questionsIn>[0]>;
+  },
+  config: RunnableConfig,
+  responses: Record<string, unknown>
+) {
+  const [pending] = questionsIn(await graph.getState(config));
+  const resume = createMCPElicitationResume(pending, {});
+  return {
+    resume: Object.fromEntries(
+      Object.entries(resume).map(([id, value]) => [id, { ...value, responses }])
+    ),
+  };
 }
 
-const formAnswer = { action: "accept", content: { confirm: true } };
+const formAnswer = { action: "accept" as const, content: { confirm: true } };
 
 /**
  * A modern HTTP MCP server whose `approve` tool elicits input, wired to an
@@ -255,11 +272,15 @@ describe("answering a modern question", () => {
 
     const resumed = await h
       .createGraph()
-      .invoke(new Command(answering({ confirmation: answer })), h.config);
+      .invoke(
+        new Command(
+          await answering(h.createGraph(), h.config, { confirmation: answer })
+        ),
+        h.config
+      );
 
     expect(resumed.done).toBe(true);
-    // Resuming replays the initial request before sending the answer.
-    expect(h.calls).toHaveLength(3);
+    expect(h.calls).toHaveLength(2);
     expect(h.after).toHaveBeenCalledTimes(1);
     // beforeToolCall runs once per execution, and a replayed execution runs it
     // again. The adapter makes no once-only guarantee for hooks.
@@ -280,15 +301,17 @@ describe("answering a modern question", () => {
     expect(JSON.stringify(questions)).not.toContain("elicitationId");
 
     await h.reconstructAdapter();
-    const resumed = await h
-      .createGraph()
-      .invoke(
-        new Command(answering({ confirmation: { action: "accept" } })),
-        h.config
-      );
+    const resumed = await h.createGraph().invoke(
+      new Command(
+        await answering(h.createGraph(), h.config, {
+          confirmation: { action: "accept" },
+        })
+      ),
+      h.config
+    );
 
     expect(resumed.done).toBe(true);
-    expect(h.calls).toHaveLength(3);
+    expect(h.calls).toHaveLength(2);
     expect(h.after).toHaveBeenCalledTimes(1);
   });
 });
@@ -312,32 +335,32 @@ describe("rejecting a malformed answer", () => {
 
     await h.createGraph().invoke({ done: false }, h.config);
     await h.reconstructAdapter();
-    await h.createGraph().invoke(new Command(answering(bad)), h.config);
+    await h
+      .createGraph()
+      .invoke(
+        new Command(await answering(h.createGraph(), h.config, bad)),
+        h.config
+      );
 
     const retry = questionsIn(await h.createGraph().getState(h.config));
     expect(retry).toHaveLength(1);
     expect(retry[0].value).toMatchObject({
       validationError: expect.any(String),
     });
-    // The malformed answer never reached the server, but the initial request
-    // was replayed before it was rejected.
-    expect(h.calls).toEqual(["effective", "effective"]);
+    expect(h.calls).toEqual(["effective"]);
     expect(h.after).not.toHaveBeenCalled();
 
-    const corrected = await h
-      .createGraph()
-      .invoke(
-        new Command(answering({ confirmation: { ...formAnswer } })),
-        h.config
-      );
+    const corrected = await h.createGraph().invoke(
+      new Command(
+        await answering(h.createGraph(), h.config, {
+          confirmation: { ...formAnswer },
+        })
+      ),
+      h.config
+    );
 
     expect(corrected.done).toBe(true);
-    expect(h.calls).toEqual([
-      "effective",
-      "effective",
-      "effective",
-      "effective",
-    ]);
+    expect(h.calls).toEqual(["effective", "effective"]);
     expect(h.after).toHaveBeenCalledTimes(1);
     expect(h.before).toHaveBeenCalledTimes(3);
   });
@@ -347,24 +370,28 @@ describe("rejecting a malformed answer", () => {
 
     await h.createGraph().invoke({ done: false }, h.config);
     await h.reconstructAdapter();
-    await h
-      .createGraph()
-      .invoke(
-        new Command(answering({ confirmation: { ...formAnswer } })),
-        h.config
-      );
+    await h.createGraph().invoke(
+      new Command(
+        await answering(h.createGraph(), h.config, {
+          confirmation: { ...formAnswer },
+        })
+      ),
+      h.config
+    );
 
     const retry = questionsIn(await h.createGraph().getState(h.config));
     expect(retry[0].value).toMatchObject({
       validationError: expect.any(String),
     });
 
-    const corrected = await h
-      .createGraph()
-      .invoke(
-        new Command(answering({ confirmation: { action: "accept" } })),
-        h.config
-      );
+    const corrected = await h.createGraph().invoke(
+      new Command(
+        await answering(h.createGraph(), h.config, {
+          confirmation: { action: "accept" },
+        })
+      ),
+      h.config
+    );
 
     expect(corrected.done).toBe(true);
     expect(h.after).toHaveBeenCalledTimes(1);
@@ -379,21 +406,124 @@ describe("rejecting a malformed answer", () => {
     // A form answer never satisfies a URL question, so every resume is
     // rejected. One budget covers the first question and its re-ask, so the
     // second correction has nothing left to spend.
-    await h
-      .createGraph()
-      .invoke(
-        new Command(answering({ confirmation: { ...formAnswer } })),
-        h.config
-      );
+    await h.createGraph().invoke(
+      new Command(
+        await answering(h.createGraph(), h.config, {
+          confirmation: { ...formAnswer },
+        })
+      ),
+      h.config
+    );
 
     await expect(
-      h
-        .createGraph()
-        .invoke(
-          new Command(answering({ confirmation: { ...formAnswer } })),
-          h.config
-        )
+      h.createGraph().invoke(
+        new Command(
+          await answering(h.createGraph(), h.config, {
+            confirmation: { ...formAnswer },
+          })
+        ),
+        h.config
+      )
     ).rejects.toThrow(/exceeded 2 elicitation rounds/);
+  });
+});
+
+describe("binding answers to the saved operation", () => {
+  it.each([
+    {
+      name: "changed effective arguments",
+      modification: { args: { label: "different operation" } },
+      error: /operation changed while paused/,
+    },
+    {
+      name: "new header overrides",
+      modification: {
+        args: { label: "effective" },
+        headers: { "X-Test": "different-account" },
+      },
+      error: /operation changed while paused/,
+    },
+  ])(
+    "rejects $name before sending consent",
+    async ({ modification, error }) => {
+      const h = await harness();
+      const graph = h.createGraph();
+      await graph.invoke({ done: false }, h.config);
+      const answer = await answering(graph, h.config, {
+        confirmation: formAnswer,
+      });
+      h.before.mockImplementation(() => ({
+        headers: undefined,
+        ...modification,
+      }));
+
+      await expect(graph.invoke(new Command(answer), h.config)).rejects.toThrow(
+        error
+      );
+      expect(h.calls).toEqual(["effective"]);
+      expect(h.after).not.toHaveBeenCalled();
+    }
+  );
+
+  it("rejects an answer targeting a different question", async () => {
+    const h = await harness();
+    const graph = h.createGraph();
+    await graph.invoke({ done: false }, h.config);
+    const [pending] = questionsIn(await graph.getState(h.config));
+    const resume = createMCPElicitationResume(pending, {
+      confirmation: formAnswer,
+    });
+    resume[pending.id!].questionId = "another-question";
+
+    await expect(
+      graph.invoke(new Command({ resume }), h.config)
+    ).rejects.toThrow(/does not match the pending question attempt/);
+    expect(h.calls).toEqual(["effective"]);
+    expect(h.after).not.toHaveBeenCalled();
+  });
+
+  it("rejects an earlier attempt after re-asking the same question", async () => {
+    const h = await harness();
+    const graph = h.createGraph();
+    await graph.invoke({ done: false }, h.config);
+    const [original] = questionsIn(await graph.getState(h.config));
+    const stale = createMCPElicitationResume(original, {
+      confirmation: formAnswer,
+    });
+    await graph.invoke(
+      new Command(await answering(graph, h.config, {})),
+      h.config
+    );
+    const [correction] = questionsIn(await graph.getState(h.config));
+    const identity = z.object({ questionId: z.string(), attempt: z.number() });
+    const first = identity.parse(original.value);
+    expect(correction.value).toMatchObject({
+      questionId: first.questionId,
+      attempt: first.attempt + 1,
+    });
+
+    await expect(
+      graph.invoke(new Command({ resume: stale }), h.config)
+    ).rejects.toThrow(/does not match the pending question attempt/);
+    expect(h.calls).toEqual(["effective"]);
+    expect(h.after).not.toHaveBeenCalled();
+  });
+
+  it("uses the saved question even when the server would now ask a different one", async () => {
+    const options = { urlQuestion: false };
+    const h = await harness(options);
+    const graph = h.createGraph();
+    await graph.invoke({ done: false }, h.config);
+    const answer = await answering(graph, h.config, {
+      confirmation: formAnswer,
+    });
+    options.urlQuestion = true;
+    await h.reconstructAdapter();
+
+    const result = await h.createGraph().invoke(new Command(answer), h.config);
+    expect(result.done).toBe(true);
+    expect(h.calls).toEqual(["effective", "effective"]);
+    expect(h.after).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -414,7 +544,7 @@ describe("rejecting what cannot be answered", () => {
 
     await expect(
       h.createGraph().invoke({ done: false }, h.config)
-    ).rejects.toThrow(/No checkpointer set/);
+    ).rejects.toThrow(/with a checkpointer/);
     expect(h.calls).toHaveLength(1);
   });
 });
@@ -468,15 +598,86 @@ describe("invoking outside a graph", () => {
 });
 
 describe("dynamic headers", () => {
-  it("applies beforeToolCall headers to a graph call", async () => {
-    // Headers are applied through the client's own fork for this execution
-    // only. beforeToolCall runs again on replay, so nothing is carried over.
+  it.each([
+    { name: "changed tenant", initial: "A", next: "B", rejected: false },
+    { name: "removed headers", initial: "A", next: undefined, rejected: true },
+    { name: "added headers", initial: undefined, next: "B", rejected: true },
+  ])(
+    "handles $name after a later node interrupt",
+    async ({ initial, next, rejected }) => {
+      const observed: string[] = [];
+      let tenant = initial;
+      const handler = createMcpHandler(
+        (request) => {
+          const server = new McpServer({ name: "tenant", version: "1" });
+          server.registerTool(
+            "account",
+            { inputSchema: z.object({}) },
+            async () => {
+              const account =
+                request.requestInfo?.headers.get("x-test-account") ?? "default";
+              observed.push(account);
+              return { content: [{ type: "text", text: account }] };
+            }
+          );
+          return server;
+        },
+        { legacy: "reject" }
+      );
+      const http = createServer(toNodeHandler(handler));
+      http.listen(0, "127.0.0.1");
+      await once(http, "listening");
+      const { port } = z.object({ port: z.number() }).parse(http.address());
+      const adapter = new MCPAdapter({
+        servers: { modern: { url: `http://127.0.0.1:${port}/mcp` } },
+        beforeToolCall: () =>
+          tenant ? { headers: { "X-Test-Account": tenant } } : undefined,
+      });
+      cleanups.push(async () => {
+        await adapter.close();
+        await handler.close();
+        http.close();
+        http.closeAllConnections();
+        await once(http, "close");
+      });
+      const [tool] = await adapter.listTools();
+      const State = Annotation.Root({ result: Annotation<string>() });
+      const graph = new StateGraph(State)
+        .addNode("call", async () => {
+          const result = await tool.invoke({});
+          interrupt("Continue after the account lookup?");
+          return { result };
+        })
+        .addEdge(START, "call")
+        .addEdge("call", END)
+        .compile({ checkpointer: new MemorySaver() });
+      const config = { configurable: { thread_id: "header-replay" } };
+
+      await graph.invoke({ result: "" }, config);
+      expect(questionsIn(await graph.getState(config))).toHaveLength(1);
+      expect(observed).toEqual([initial ?? "default"]);
+      tenant = next;
+
+      const resumed = graph.invoke(new Command({ resume: true }), config);
+      if (rejected) {
+        await expect(resumed).rejects.toThrow(/operation changed while paused/);
+        expect(observed).toEqual([initial ?? "default"]);
+      } else {
+        await expect(resumed).resolves.toMatchObject({ result: "B" });
+        expect(observed).toEqual(["A", "B"]);
+      }
+    }
+  );
+
+  it("refuses durable elicitation with beforeToolCall headers", async () => {
     const h = await harness({ dynamicHeaders: true });
     const graph = h.createGraph();
 
-    await graph.invoke({ done: false }, h.config);
+    await expect(graph.invoke({ done: false }, h.config)).rejects.toThrow(
+      /does not support beforeToolCall header overrides/
+    );
 
-    expect(questionsIn(await graph.getState(h.config))).toHaveLength(1);
+    expect(questionsIn(await graph.getState(h.config))).toHaveLength(0);
     expect(h.calls).toEqual(["effective"]);
     expect(h.before).toHaveBeenCalledTimes(1);
   });
@@ -493,31 +694,35 @@ describe("thread isolation", () => {
 
     await h.reconstructAdapter();
 
-    const resumed = await h
-      .createGraph()
-      .invoke(
-        new Command(answering({ confirmation: { ...formAnswer } })),
-        h.config
-      );
+    const resumed = await h.createGraph().invoke(
+      new Command(
+        await answering(h.createGraph(), h.config, {
+          confirmation: { ...formAnswer },
+        })
+      ),
+      h.config
+    );
     expect(resumed.done).toBe(true);
-    expect(h.calls).toHaveLength(4);
+    expect(h.calls).toHaveLength(3);
     expect(h.after).toHaveBeenCalledTimes(1);
 
-    const peerResult = await h
-      .createGraph()
-      .invoke(
-        new Command(answering({ confirmation: { action: "cancel" } })),
-        peerConfig
-      );
+    const peerResult = await h.createGraph().invoke(
+      new Command(
+        await answering(h.createGraph(), peerConfig, {
+          confirmation: { action: "cancel" },
+        })
+      ),
+      peerConfig
+    );
     expect(peerResult.done).toBe(true);
-    expect(h.calls).toHaveLength(6);
+    expect(h.calls).toHaveLength(4);
     expect(h.after).toHaveBeenCalledTimes(2);
     expect(h.before).toHaveBeenCalledTimes(4);
   });
 });
 
 describe("the interception boundary", () => {
-  it("keeps the pending response on the rejection it raises", async () => {
+  it("does not expose the pending continuation on its rejection", async () => {
     const pending = {
       kind: "input_required",
       inputRequests: {},
@@ -533,11 +738,8 @@ describe("the interception boundary", () => {
         request,
         { server: "test", tool: "tool", maxRounds: 2, direct: true }
       ).catch((error: unknown) => {
-        // The interception boundary is preserved: the raw response travels with
-        // the error so a graph-aware caller can still act on it.
-        expect(
-          PendingMCPInput.isInstance((error as { cause?: unknown }).cause)
-        ).toBe(true);
+        expect((error as { cause?: unknown }).cause).toBeUndefined();
+        expect(JSON.stringify(error)).not.toContain("opaque-state");
         throw error;
       })
     ).rejects.toThrow(/state-only/);
@@ -930,14 +1132,14 @@ describe("bounding rounds the adapter drives itself", () => {
     // The budget is spent, so the run fails here rather than pausing again and
     // then discarding whatever answer came back.
     await expect(
-      graph.invoke(new Command({ resume: { responses: {} } }), config)
+      graph.invoke(new Command(await answering(graph, config, {})), config)
     ).rejects.toThrow(/while correcting an answer/);
 
     // The rejected answer never reached the server.
-    expect(calls).toBe(2);
+    expect(calls).toBe(1);
   });
 
-  it("bounds answered rounds, replaying each earlier request", async () => {
+  it("bounds answered rounds without repeating completed requests", async () => {
     let calls = 0;
     const State = Annotation.Root({ result: Annotation<string>() });
 
@@ -979,17 +1181,20 @@ describe("bounding rounds the adapter drives itself", () => {
     await graph.invoke({ result: "" }, config);
     expect(calls).toBe(1);
 
-    const resume = { responses: { confirmation: { action: "decline" } } };
-    // Each resume replays the initial request and every round already
-    // answered, then issues one new round: 1 -> 3 -> 6 requests. The budget
-    // still bounds the answered loop inside a single execution.
-    await graph.invoke(new Command({ resume }), config);
-    expect(calls).toBe(3);
-
-    await expect(graph.invoke(new Command({ resume }), config)).rejects.toThrow(
-      /exceeded 2 elicitation rounds/
+    const responses = { confirmation: { action: "decline" } };
+    await graph.invoke(
+      new Command(await answering(graph, config, responses)),
+      config
     );
-    expect(calls).toBe(6);
+    expect(calls).toBe(2);
+
+    await expect(
+      graph.invoke(
+        new Command(await answering(graph, config, responses)),
+        config
+      )
+    ).rejects.toThrow(/exceeded 2 elicitation rounds/);
+    expect(calls).toBe(3);
   });
 });
 
@@ -1041,13 +1246,11 @@ describe("real stdio servers", () => {
       adapter = createAdapter();
 
       const result = await graph().invoke(
-        new Command({
-          resume: {
-            responses: {
-              confirmation: { action: "accept", content: { confirm: true } },
-            },
-          },
-        }),
+        new Command(
+          await answering(graph(), config, {
+            confirmation: { action: "accept", content: { confirm: true } },
+          })
+        ),
         config
       );
 
@@ -1128,16 +1331,14 @@ describe("real stdio servers", () => {
           ).toHaveLength(1);
 
           const result = await graph.invoke(
-            new Command({
-              resume: {
-                responses: {
-                  confirmation:
-                    action === "accept"
-                      ? { action, content: { confirm: true } }
-                      : { action },
-                },
-              },
-            }),
+            new Command(
+              await answering(graph, config, {
+                confirmation:
+                  action === "accept"
+                    ? { action, content: { confirm: true } }
+                    : { action },
+              })
+            ),
             config
           );
 

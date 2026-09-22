@@ -66,6 +66,76 @@ to skip probing and enable legacy options such as `onElicitation` and
 [`2026-07-28`](https://modelcontextprotocol.io/specification/2026-07-28)
 without fallback. SDK 2 can serve either protocol.
 
+## Durable modern elicitation
+
+Modern servers can return `input_required` from a tool call. Inside a LangGraph
+with a checkpointer, the adapter records each completed MCP round in a LangGraph
+task, then interrupts with the form or URL question. Legacy `onElicitation`
+callbacks remain separate and do not become durable graph interrupts.
+
+Resume using the latest interrupt and the same thread:
+
+```ts
+import { Command } from "@langchain/langgraph";
+import { createMCPElicitationResume } from "@langchain/mcp-adapters";
+
+const paused = await agent.invoke(input, config);
+const pending = paused.__interrupt__[0];
+
+await agent.invoke(
+  new Command({
+    resume: createMCPElicitationResume(pending, {
+      confirmation: { action: "accept", content: { confirmed: true } },
+    }),
+  }),
+  config
+);
+```
+
+Here `agent`, `input`, and `config` are application-owned; `confirmation` and
+`confirmed` must match the server's input-request key and form schema. The helper
+binds answers to both the graph interrupt and the displayed question attempt.
+Invalid form answers produce another interrupt without another MCP request;
+use that latest interrupt for the correction. `maxElicitationRounds` bounds all
+question attempts, including corrections, and defaults to 32.
+
+### Recovery after a long pause
+
+No JavaScript stack, loop counter, adapter instance, or live connection is saved.
+A new process reconstructs the adapter, tools, and graph from configuration and
+resumes the same thread against the same persistent checkpointer. Completed
+rounds come from saved task results; earlier answers reconstruct progression and
+the original allowance. The initial MCP request is not repeated merely to
+recover the pending question. `MemorySaver` alone cannot survive process loss.
+
+For multi-day pauses:
+
+- Retain checkpoints and pending task writes for longer than the pause, and await
+  persistence before acknowledging it. Use LangGraph's `durability: "sync"` when
+  synchronous checkpoint boundaries are required.
+- Preserve compatible graph/task ordering and the same logical server endpoint,
+  tool, and authorization scope across reconstruction. Changed effective tool
+  arguments are rejected; server names alone do not establish authorization
+  identity.
+- Ensure the MCP server's continuation lifetime, retained state, and verification
+  keys support the pause. Graph persistence does not extend `requestState`
+  expiry. An invalid or expired continuation surfaces the server failure; the
+  adapter does not silently restart the operation using old consent.
+- An application request or other external event must invoke resume. A paused
+  thread is stored data, not a worker waiting in memory.
+
+`beforeToolCall` remains an execution-attempt hook and can run again on resume;
+`afterToolCall` is not an exactly-once transaction. Hook-supplied header overrides
+are supported for ordinary completed calls but not durable elicitation; configure
+stable server authentication instead. A crash after a remote effect but before
+its result is persisted can still repeat that effect. Servers must use idempotency
+or reconciliation where exactly-once effects matter.
+
+Continuation data is omitted from the public interrupt, but saved task results
+can appear in internal graph streams and tracing. Treat these as execution data
+and project only appropriate events to end-user interfaces. Credentials and live
+client objects are not stored in round records.
+
 ## Configuration and lifecycle
 
 Construction validates options with Zod 4 and opens no connections. Discovery
