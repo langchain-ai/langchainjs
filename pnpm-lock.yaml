@@ -236,7 +236,7 @@ importers:
         version: link:../libs/providers/langchain-xai
       '@layerup/layerup-security':
         specifier: ^1.6.0
-        version: 1.6.0(encoding@0.1.13)(ws@8.21.3(bufferutil@4.1.0))(zod@4.3.6)
+        version: 1.6.0(encoding@0.1.13)(ws@5.2.7(bufferutil@4.1.0))(zod@4.3.6)
       '@opensearch-project/opensearch':
         specifier: ^3.6.0
         version: 3.6.0
@@ -329,7 +329,7 @@ importers:
         version: 2.2.7
       exa-js:
         specifier: ^1.10.3
-        version: 1.10.3(encoding@0.1.13)(ws@8.21.3(bufferutil@4.1.0))
+        version: 1.10.3(encoding@0.1.13)(ws@5.2.7(bufferutil@4.1.0))
       firebase-admin:
         specifier: ^14.3.0
         version: 14.3.0(encoding@0.1.13)
@@ -350,25 +350,25 @@ importers:
         version: link:../libs/langchain
       langsmith:
         specifier: ^0.9.0
-        version: 0.9.0(@opentelemetry/api@1.9.1)(openai@7.8.0(@aws-sdk/credential-provider-node@3.972.82)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.3)(undici@8.10.1)(ws@8.21.3(bufferutil@4.1.0))(zod@4.3.6))(ws@8.21.3(bufferutil@4.1.0))
+        version: 0.9.0(@opentelemetry/api@1.9.1)(openai@7.8.0(@aws-sdk/credential-provider-node@3.972.82)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.3)(undici@8.10.1)(ws@5.2.7(bufferutil@4.1.0))(zod@4.3.6))(ws@5.2.7(bufferutil@4.1.0))
       lorem-ipsum:
         specifier: ^3.0.0
         version: 3.0.0
       lunary:
         specifier: ^1.0.18
-        version: 1.0.18(openai@7.8.0(@aws-sdk/credential-provider-node@3.972.82)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.3)(undici@8.10.1)(ws@8.21.3(bufferutil@4.1.0))(zod@4.3.6))(react@19.2.5)
+        version: 1.0.18(openai@7.8.0(@aws-sdk/credential-provider-node@3.972.82)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.3)(undici@8.10.1)(ws@5.2.7(bufferutil@4.1.0))(zod@4.3.6))(react@19.2.5)
       mariadb:
         specifier: ^3.5.3
         version: 3.5.3
       mem0ai:
         specifier: ^3.1.7
-        version: 3.1.7(85b98f10b2272d0a1e4c70716255ee99)
+        version: 3.1.7(b3c9ace6b1cd74fb5e55b3544b0965f3)
       mongodb:
         specifier: ^7.1.1
         version: 7.2.0(@aws-sdk/credential-providers@3.1034.0)(socks@2.8.9)
       openai:
         specifier: ^7.8.0
-        version: 7.8.0(@aws-sdk/credential-provider-node@3.972.82)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.3)(undici@8.10.1)(ws@8.21.3(bufferutil@4.1.0))(zod@4.3.6)
+        version: 7.8.0(@aws-sdk/credential-provider-node@3.972.82)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.3)(undici@8.10.1)(ws@5.2.7(bufferutil@4.1.0))(zod@4.3.6)
       peggy:
         specifier: ^5.1.0
         version: 5.1.0
@@ -837,7 +837,7 @@ importers:
         version: link:../providers/langchain-xai
       '@layerup/layerup-security':
         specifier: ^1.5.12
-        version: 1.6.0(encoding@0.1.13)(ws@5.2.7(bufferutil@4.1.0))(zod@4.3.6)
+        version: 1.6.0(encoding@0.1.13)(ws@8.21.3(bufferutil@4.1.0))(zod@4.3.6)
       '@opensearch-project/opensearch':
         specifier: ^3.6.0
         version: 3.6.0
@@ -924,7 +924,7 @@ importers:
         version: 2.2.7
       exa-js:
         specifier: ^1.10.3
-        version: 1.10.3(encoding@0.1.13)(ws@5.2.7(bufferutil@4.1.0))
+        version: 1.10.3(encoding@0.1.13)(ws@8.21.3(bufferutil@4.1.0))
       firebase-admin:
         specifier: ^14.3.0
         version: 14.3.0(encoding@0.1.13)
@@ -945,19 +945,19 @@ importers:
         version: 3.0.0
       lunary:
         specifier: ^1.0.18
-        version: 1.0.18(openai@7.8.0(@aws-sdk/credential-provider-node@3.972.82)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.3)(undici@8.10.1)(ws@5.2.7(bufferutil@4.1.0))(zod@4.3.6))(react@19.2.5)
+        version: 1.0.18(openai@7.8.0(@aws-sdk/credential-provider-node@3.972.82)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.3)(undici@8.10.1)(ws@8.21.3(bufferutil@4.1.0))(zod@4.3.6))(react@19.2.5)
       mariadb:
         specifier: ^3.5.3
         version: 3.5.3
       mem0ai:
         specifier: ^3.1.7
-        version: 3.1.7(e298e812ac4b91d1b01b2760cf99513f)
+        version: 3.1.7(9d0a31c64fe5b85bed0deb61e7d2aa03)
       mongodb:
         specifier: ^6.17.0
         version: 6.21.0(@aws-sdk/credential-providers@3.1034.0)(socks@2.8.9)
       openai:
         specifier: ^7.8.0
-        version: 7.8.0(@aws-sdk/credential-provider-node@3.972.82)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.3)(undici@8.10.1)(ws@5.2.7(bufferutil@4.1.0))(zod@4.3.6)
+        version: 7.8.0(@aws-sdk/credential-provider-node@3.972.82)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.3)(undici@8.10.1)(ws@8.21.3(bufferutil@4.1.0))(zod@4.3.6)
       peggy:
         specifier: ^5.1.0
         version: 5.1.0
@@ -1009,7 +1009,7 @@ importers:
     optionalDependencies:
       langsmith:
         specifier: '>=0.4.0 <1.0.0'
-        version: 0.9.0(@opentelemetry/api@1.9.1)(openai@7.8.0(@aws-sdk/credential-provider-node@3.972.82)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.3)(undici@8.10.1)(ws@5.2.7(bufferutil@4.1.0))(zod@4.3.6))(ws@5.2.7(bufferutil@4.1.0))
+        version: 0.9.0(@opentelemetry/api@1.9.1)(openai@7.8.0(@aws-sdk/credential-provider-node@3.972.82)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.3)(undici@8.10.1)(ws@8.21.3(bufferutil@4.1.0))(zod@4.3.6))(ws@8.21.3(bufferutil@4.1.0))
 
   libs/langchain-core:
     dependencies:
@@ -1247,6 +1247,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.4.0
+        version: 26.4.1
       '@vitest/coverage-v8':
         specifier: ^4.1.11
         version: 4.1.11(vitest@4.1.11)
@@ -1283,6 +1286,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.4.0
+        version: 26.4.1
       '@vitest/coverage-v8':
         specifier: ^4.1.11
         version: 4.1.11(vitest@4.1.11)
@@ -1320,6 +1326,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.4.0
+        version: 26.4.1
       '@vitest/coverage-v8':
         specifier: ^4.1.11
         version: 4.1.11(vitest@4.1.11)
@@ -1363,6 +1372,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.4.0
+        version: 26.4.1
       '@vitest/coverage-v8':
         specifier: ^4.1.11
         version: 4.1.11(vitest@4.1.11)
@@ -1434,6 +1446,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.4.0
+        version: 26.4.1
       '@vitest/coverage-v8':
         specifier: ^4.1.11
         version: 4.1.11(vitest@4.1.11)
@@ -1640,6 +1655,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.4.0
+        version: 26.4.1
       dotenv:
         specifier: ^17.4.2
         version: 17.4.2
@@ -1683,6 +1701,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.4.0
+        version: 26.4.1
       dotenv:
         specifier: ^17.4.2
         version: 17.4.2
@@ -1723,6 +1744,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.4.0
+        version: 26.4.1
       '@vitest/coverage-v8':
         specifier: ^4.1.11
         version: 4.1.11(vitest@4.1.11)
@@ -1806,6 +1830,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.4.0
+        version: 26.4.1
       '@vitest/coverage-v8':
         specifier: ^4.1.11
         version: 4.1.11(vitest@4.1.11)
@@ -2024,6 +2051,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.10
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.4.0
+        version: 26.4.1
       dpdm:
         specifier: ^4.3.0
         version: 4.3.0
@@ -2061,6 +2091,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.4.0
+        version: 26.4.1
       '@vitest/coverage-v8':
         specifier: ^4.1.11
         version: 4.1.11(vitest@4.1.11)
@@ -2147,6 +2180,9 @@ importers:
       '@types/flat':
         specifier: ^5.0.5
         version: 5.0.5
+      '@types/node':
+        specifier: ^26.4.0
+        version: 26.4.1
       '@vitest/coverage-v8':
         specifier: ^4.1.11
         version: 4.1.11(vitest@4.1.11)
@@ -2190,6 +2226,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.4.0
+        version: 26.4.1
       '@vitest/coverage-v8':
         specifier: ^4.1.11
         version: 4.1.11(vitest@4.1.11)
@@ -2261,6 +2300,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.4.0
+        version: 26.4.1
       '@vitest/coverage-v8':
         specifier: ^4.1.11
         version: 4.1.11(vitest@4.1.11)
@@ -2301,6 +2343,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.4.0
+        version: 26.4.1
       '@vitest/coverage-v8':
         specifier: ^4.1.11
         version: 4.1.11(vitest@4.1.11)
@@ -2338,6 +2383,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.4.0
+        version: 26.4.1
       dotenv:
         specifier: ^17.4.2
         version: 17.4.2
@@ -2412,6 +2460,9 @@ importers:
       '@tsconfig/recommended':
         specifier: ^1.0.3
         version: 1.0.13
+      '@types/node':
+        specifier: ^26.4.0
+        version: 26.4.1
       '@vitest/coverage-v8':
         specifier: ^4.1.11
         version: 4.1.11(vitest@4.1.11)
@@ -5675,20 +5726,8 @@ packages:
   '@types/node@24.13.3':
     resolution: {integrity: sha512-Dh8vAsV36ig5wa9OX4pXvMc9D3Veibfw2wix0CUwYODLD8nkj9UsLjASr49nPg+2eKzxhBV+v7L8pXvT4e639Q==}
 
-  '@types/node@25.6.0':
-    resolution: {integrity: sha512-+qIYRKdNYJwY3vRCZMdJbPLJAtGjQBudzZzdzwQYkEPQd+PJGixUL5QfvCLDaULoLv+RhT3LDkwEfKaAkgSmNQ==}
-
   '@types/node@25.9.5':
     resolution: {integrity: sha512-OScDchr2fwuUmWdf4kZ9h7PcJiYDVInhJizG/biAq3cAvqwYktuy/TYGGdZNMtNTFUP7rnb0NU4TUdm82kt4Rg==}
-
-  '@types/node@26.1.2':
-    resolution: {integrity: sha512-Vu4a5UFA9rIIFJ7rB/Vaafh9lrCQszopTCx6KjFboXTGQbPNasehVR5TEiithSDGyd1DEiUByggTZsg8jukeIg==}
-
-  '@types/node@26.3.0':
-    resolution: {integrity: sha512-L3fgrnchriRC2ExBflb8j4uZZURHZfQsmQeyVzhjcHW4kkwVyo8/0h1B2MVzMTrYUJYu6G7EWs14hW/L9putqw==}
-
-  '@types/node@26.4.0':
-    resolution: {integrity: sha512-faiGnoIrLH/V8cibOMEAZ8pMw6oXqSukl29ra4mN8GdaB2ZewzeaLj+INpV5N+Z1eKWzY+IzaIZH2EIR6YZRNQ==}
 
   '@types/node@26.4.1':
     resolution: {integrity: sha512-k97ENvZWtvA6yqz5/FS6a7duDgOPEeOQOc2iKS/nY6mX6qJUKtLnWzQS+Xj6tXweyj6ZcTAK2Qecetnvi9nCLA==}
@@ -10903,9 +10942,6 @@ packages:
   undici-types@7.18.2:
     resolution: {integrity: sha512-AsuCzffGHJybSaRrmr5eHr81mwJU3kjw6M+uprWvCXiNeN9SOGwQ3Jn8jb8m3Z6izVgknn1R0FTCEAP2QrLY/w==}
 
-  undici-types@7.19.2:
-    resolution: {integrity: sha512-qYVnV5OEm2AW8cJMCpdV20CDyaN3g0AjDlOGf1OW4iaDEx8MwdtChUp4zu4H0VP3nDRF/8RKWH+IPp9uW0YGZg==}
-
   undici-types@7.24.6:
     resolution: {integrity: sha512-WRNW+sJgj5OBN4/0JpHFqtqzhpbnV0GuB+OozA9gCL7a993SmU+1JBZCzLNxYsbMfIeDL+lTsphD5jN5N+n0zg==}
 
@@ -14898,7 +14934,7 @@ snapshots:
 
   '@types/jsdom@30.0.0':
     dependencies:
-      '@types/node': 26.3.0
+      '@types/node': 26.4.1
       '@types/tough-cookie': 4.0.5
       parse5: 8.0.1
       undici-types: 8.10.0
@@ -14939,25 +14975,9 @@ snapshots:
     dependencies:
       undici-types: 7.18.2
 
-  '@types/node@25.6.0':
-    dependencies:
-      undici-types: 7.19.2
-
   '@types/node@25.9.5':
     dependencies:
       undici-types: 7.24.6
-
-  '@types/node@26.1.2':
-    dependencies:
-      undici-types: 8.3.0
-
-  '@types/node@26.3.0':
-    dependencies:
-      undici-types: 8.3.0
-
-  '@types/node@26.4.0':
-    dependencies:
-      undici-types: 8.3.0
 
   '@types/node@26.4.1':
     dependencies:
@@ -14971,7 +14991,7 @@ snapshots:
 
   '@types/pg@8.23.1':
     dependencies:
-      '@types/node': 26.4.0
+      '@types/node': 26.4.1
       pg-protocol: 1.16.0
       pg-types: 2.2.0
 
@@ -15059,7 +15079,7 @@ snapshots:
 
   '@types/ws@8.18.1':
     dependencies:
-      '@types/node': 25.6.0
+      '@types/node': 26.4.1
 
   '@types/yargs-parser@21.0.3': {}
 
@@ -18232,7 +18252,6 @@ snapshots:
       '@opentelemetry/api': 1.9.1
       openai: 7.8.0(@aws-sdk/credential-provider-node@3.972.82)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.3)(undici@8.10.1)(ws@5.2.7(bufferutil@4.1.0))(zod@4.3.6)
       ws: 5.2.7(bufferutil@4.1.0)
-    optional: true
 
   langsmith@0.9.0(@opentelemetry/api@1.9.1)(openai@7.8.0(@aws-sdk/credential-provider-node@3.972.82)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.3)(undici@8.10.1)(ws@8.21.3(bufferutil@4.1.0))(zod@4.3.6))(ws@8.21.3(bufferutil@4.1.0)):
     dependencies:
@@ -18454,7 +18473,7 @@ snapshots:
   mariadb@3.5.3:
     dependencies:
       '@types/geojson': 7946.0.16
-      '@types/node': 26.1.2
+      '@types/node': 26.4.1
       denque: 2.1.0
       iconv-lite: 0.7.3
       lru-cache: 11.5.2
@@ -18470,7 +18489,7 @@ snapshots:
 
   media-typer@1.1.0: {}
 
-  mem0ai@3.1.7(85b98f10b2272d0a1e4c70716255ee99):
+  mem0ai@3.1.7(9d0a31c64fe5b85bed0deb61e7d2aa03):
     dependencies:
       '@cloudflare/workers-types': 5.20260830.1
       '@types/jest': 30.0.0
@@ -18499,7 +18518,7 @@ snapshots:
       chromadb: 3.5.0
       cloudflare: 4.5.0(encoding@0.1.13)
       cohere-ai: 8.1.0(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/credential-providers@3.1034.0)(@smithy/protocol-http@5.3.14)(@smithy/signature-v4@5.7.3)
-      mongodb: 7.2.0(@aws-sdk/credential-providers@3.1034.0)(socks@2.8.9)
+      mongodb: 6.21.0(@aws-sdk/credential-providers@3.1034.0)(socks@2.8.9)
       mysql2: 3.24.3(@types/node@26.4.1)
       redis: 6.2.1(@opentelemetry/api@1.9.1)
       weaviate-client: 3.14.0
@@ -18509,7 +18528,7 @@ snapshots:
       - supports-color
       - ws
 
-  mem0ai@3.1.7(e298e812ac4b91d1b01b2760cf99513f):
+  mem0ai@3.1.7(b3c9ace6b1cd74fb5e55b3544b0965f3):
     dependencies:
       '@cloudflare/workers-types': 5.20260830.1
       '@types/jest': 30.0.0
@@ -18538,7 +18557,7 @@ snapshots:
       chromadb: 3.5.0
       cloudflare: 4.5.0(encoding@0.1.13)
       cohere-ai: 8.1.0(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/credential-providers@3.1034.0)(@smithy/protocol-http@5.3.14)(@smithy/signature-v4@5.7.3)
-      mongodb: 6.21.0(@aws-sdk/credential-providers@3.1034.0)(socks@2.8.9)
+      mongodb: 7.2.0(@aws-sdk/credential-providers@3.1034.0)(socks@2.8.9)
       mysql2: 3.24.3(@types/node@26.4.1)
       redis: 6.2.1(@opentelemetry/api@1.9.1)
       weaviate-client: 3.14.0
@@ -20777,8 +20796,6 @@ snapshots:
   undici-types@5.26.5: {}
 
   undici-types@7.18.2: {}
-
-  undici-types@7.19.2: {}
 
   undici-types@7.24.6: {}
 
