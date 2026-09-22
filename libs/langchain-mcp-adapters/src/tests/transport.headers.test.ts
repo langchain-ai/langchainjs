@@ -61,20 +61,29 @@ describe("what the transports send", () => {
     expect(seen[0].accept).toContain("text/event-stream");
   });
 
-  it.each(["sse", "http"] as const)(
-    "%s: a configured Authorization replaces the provider's, never joins it",
-    async (transport) => {
+  // Every spelling must land on the SDK's own, or the spread that builds a
+  // transport's headers appends instead of replacing. Lower case is what
+  // `mergeHeaders` produces; the others prove the fix canonicalises rather
+  // than happening to agree.
+  it.each([
+    ["sse", "authorization"],
+    ["sse", "Authorization"],
+    ["sse", "AUTHORIZATION"],
+    ["http", "authorization"],
+    ["http", "Authorization"],
+    ["http", "AUTHORIZATION"],
+  ] as const)(
+    "%s: a configured %s replaces the provider's, never joins it",
+    async (transport, spelling) => {
       const { url, seen, server } = await recordingServer(true);
       const manager = new ConnectionManager();
 
-      // `mergeHeaders` lowercases every key, so this is the spelling that
-      // actually reaches a transport.
       const connection = {
         mode: "legacy",
         transport,
         url,
         automaticSSEFallback: false,
-        headers: { authorization: "Bearer from-config" },
+        headers: { [spelling]: "Bearer from-config" },
         authProvider: staticProvider("from-provider"),
       } as never;
 

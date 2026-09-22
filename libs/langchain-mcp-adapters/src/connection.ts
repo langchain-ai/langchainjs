@@ -625,29 +625,31 @@ function serializeHeaders(
 }
 
 /**
- * Spell a header the way the SDK spells the ones it sets itself.
+ * Spell `Authorization` the way the SDK spells it.
  *
- * A transport builds its request headers as `{ Authorization, ...ours }` — a
- * plain-object spread, so a key of ours differing only in case survives as a
- * second entry and `new Headers()` joins the two values with a comma. Since
- * `mergeHeaders` lowercases every key, an `Authorization` configured next to
- * an `authProvider` reached the wire as `Bearer <provider>, Bearer <ours>`,
- * which a server rejects. Matching the SDK's spelling makes the spread a
- * replacement again — what configuring both is asking for.
+ * A transport builds its request headers as
+ * `new Headers({ Authorization, ...ours })` — a case-sensitive spread over a
+ * case-insensitive namespace. `mergeHeaders` lowercases every key, so ours
+ * survives as a *second* entry and the `Headers` constructor appends rather
+ * than replaces: an `Authorization` configured next to an `authProvider`
+ * reached the wire as `Bearer <provider>, Bearer <ours>`, which a server
+ * rejects. Spelling it the SDK's way makes the spread a replacement again.
+ *
+ * Only this one header can collide. The SDK spells every header it sets in
+ * lower case except `Authorization`, and a lower-case name already replaces
+ * cleanly — so `mcp-session-id` and `mcp-protocol-version` need nothing. A
+ * future capitalised SDK header would need adding here.
+ *
+ * Deferring to the caller's own spelling instead would not work: it only
+ * helps a caller who happens to type `Authorization`, and leaves
+ * `authorization` and `AUTHORIZATION` joined.
  */
-const SDK_HEADER_SPELLING = new Map(
-  ["Authorization", "mcp-protocol-version"].map((name) => [
-    name.toLowerCase(),
-    name,
-  ])
-);
-
 function matchSdkHeaderCase(
   headers: Record<string, string>
 ): Record<string, string> {
   return Object.fromEntries(
     Object.entries(headers).map(([name, value]) => [
-      SDK_HEADER_SPELLING.get(name.toLowerCase()) ?? name,
+      name.toLowerCase() === "authorization" ? "Authorization" : name,
       value,
     ])
   );
