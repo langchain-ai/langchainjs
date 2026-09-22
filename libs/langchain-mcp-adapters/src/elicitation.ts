@@ -43,28 +43,29 @@ const modernURLRequestSchema = ElicitRequestURLParamsSchema.pick({
   url: true,
 });
 
-const canonical = (value: unknown): string =>
-  JSON.stringify(value, (_key, entry: unknown) =>
-    entry !== null && typeof entry === "object" && !Array.isArray(entry)
-      ? Object.fromEntries(
-          Object.entries(entry as Record<string, unknown>).sort(
-            ([left], [right]) => (left < right ? -1 : 1)
-          )
-        )
-      : entry
-  ) ?? "null";
-
 /**
- * Compare two checkpointed values.
+ * Compare two questions structurally, using JSON as the notion of equality.
  *
- * Both sides of this reach us through JSON — one from a checkpoint, one from
- * a server response — so JSON is the right notion of equality: comparing the
- * canonical form ignores key order, which no server guarantees, and ignores
- * the distinctions JSON has already erased. `isDeepStrictEqual` would
- * separate `undefined` from a missing key and refuse a question that only
- * round-tripped.
+ * `JSON.stringify` with a sorting replacer, rather than `node:util`'s
+ * `isDeepStrictEqual`. The build externalizes `node:` imports rather than
+ * bundling them, so one here reaches the consumer verbatim, and a bundler
+ * targeting the browser rejects it — which LangGraph supports, publishing a
+ * `browser` condition for the graph this runs inside. Sorting is the part
+ * the built-in lacks anyway: a server may emit a schema's keys in any order,
+ * and Go servers genuinely do, but it is the question the human answered.
  */
 function sameJSON(left: unknown, right: unknown): boolean {
+  const canonical = (value: unknown): string =>
+    JSON.stringify(value, (_key, entry: unknown) =>
+      entry !== null && typeof entry === "object" && !Array.isArray(entry)
+        ? Object.fromEntries(
+            Object.entries(entry as Record<string, unknown>).sort(([a], [b]) =>
+              a < b ? -1 : 1
+            )
+          )
+        : entry
+    ) ?? "null";
+
   return canonical(left) === canonical(right);
 }
 
@@ -332,7 +333,12 @@ export async function callToolWithElicitation(
       type: "mcp_elicitation",
       server,
       tool,
-      arguments: params.arguments,
+      // Omitted, never undefined: JSON drops an undefined-valued key, so
+      // writing one here would make the question differ from its own
+      // checkpointed copy.
+      ...(params.arguments === undefined
+        ? {}
+        : { arguments: params.arguments }),
       requests: requests.data,
     });
 

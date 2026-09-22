@@ -175,8 +175,8 @@ describe("multiple sequential rounds", () => {
     expect(mcpInterrupts(done)).toHaveLength(0);
     expect(server.completed).toEqual([{ label: "q", action: "accept" }]);
 
-    // Both questions carry the same message, so they share a questionId. The
-    // answers still land in order, because LangGraph matches resumes to
+    // Both questions carry the same message, so they are indistinguishable.
+    // The answers still land in order, because LangGraph matches resumes to
     // `interrupt()` calls positionally within the task — and two questions
     // with identical content have interchangeable answers anyway.
     //

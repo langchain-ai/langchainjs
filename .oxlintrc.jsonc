@@ -118,6 +118,17 @@
       },
     },
     {
+      // This package's runtime source is reachable from a browser bundle —
+      // LangGraph publishes a `browser` condition and this package has no
+      // node-only entry to hide behind. Tests are exempt.
+      "files": ["libs/langchain-mcp-adapters/src/**/*.ts"],
+      "excludeFiles": ["libs/langchain-mcp-adapters/src/tests/**"],
+      "plugins": ["import"],
+      "rules": {
+        "import/no-nodejs-modules": "error",
+      },
+    },
+    {
       "files": ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
       "rules": {
         "constructor-super": "off",

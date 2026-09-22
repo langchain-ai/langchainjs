@@ -20,18 +20,19 @@ again before it is answered and remote effects must be idempotent. Because the
 server therefore issues a fresh continuation on every resume, a pause cannot
 outlive a `requestState` lifetime.
 
-Each interrupt carries a `questionId` derived from the question's content and
-the call's effective arguments, and `createMCPElicitationResume` binds the
-answer to it. If the replayed round asks something different under the same
-keys and schema — "approve $1,000" where the human approved "approve $10" — or
-`beforeToolCall` resolves different arguments, the identity no longer matches
-and the saved answer is refused rather than applied to an operation nobody
-agreed to. The refused run is rolled back, leaving the original question
-pending.
+The answer travels with the question it answers: `createMCPElicitationResume`
+copies the pending question into the resume, and the adapter accepts the answer
+only if that question still matches the one now being asked. If the replayed
+round asks something different under the same keys and schema — "approve
+$1,000" where the human approved "approve $10" — or `beforeToolCall` resolves
+different arguments, the saved answer is refused rather than applied to an
+operation nobody agreed to. The refused run is rolled back, leaving the
+original question pending. Questions are compared structurally, so a server
+that reorders a schema's keys between rounds is still answerable.
 `beforeToolCall` runs once per execution, including replays, and any header
 identity it supplies is re-derived rather than reused from the pause. A resume
 is parsed as a whole against the question it answers — exact keys, the server's
-requested schemas, and the matching `questionId` — so a missing, unexpected or
+requested schemas, and that question itself — so a missing, unexpected or
 malformed answer fails the call rather than re-asking, since the caller
 resuming the graph is code and not the human who filled the form. Sampling and roots
 requests are refused by name, state-only responses are refused instead of

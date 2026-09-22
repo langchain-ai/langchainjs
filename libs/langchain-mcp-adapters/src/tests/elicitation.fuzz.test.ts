@@ -8,6 +8,7 @@ import {
   type Interrupt,
 } from "@langchain/langgraph";
 import type {
+  CallToolRequest,
   CallToolResult,
   InputRequest,
   InputRequiredResult,
@@ -82,18 +83,16 @@ const completed: CallToolResult = {
 /** Drive one tool call inside a graph so `interrupt()` has somewhere to land. */
 function graphFor(
   round: Parameters<typeof callToolWithElicitation>[0],
-  args: Record<string, unknown> = { label: "operation" }
+  params: CallToolRequest["params"] = {
+    name: "approve",
+    arguments: { label: "operation" },
+  }
 ) {
   const State = Annotation.Root({ done: Annotation<boolean>() });
 
   return new StateGraph(State)
     .addNode("call", async () => {
-      await callToolWithElicitation(
-        round,
-        { name: "approve", arguments: args },
-        "modern",
-        "approve"
-      );
+      await callToolWithElicitation(round, params, "modern", "approve");
       return { done: true };
     })
     .addEdge(START, "call")
@@ -249,6 +248,45 @@ describe("question identity is order-blind but content-sensitive", () => {
       }
     }
   );
+
+  it("builds a question that survives a checkpoint round-trip", async () => {
+    const round: Round = async (params) =>
+      params.inputResponses
+        ? completed
+        : {
+            resultType: "input_required" as const,
+            requestState: "opaque",
+            inputRequests: { confirmation: question("approve") },
+          };
+
+    const graph = graphFor(round, { name: "approve" });
+    const config = { configurable: { thread_id: "no-arguments" } };
+    await graph.invoke({ done: false }, config);
+
+    // `MemorySaver` hands the question back as it was raised, but a
+    // checkpointer that persists round-trips it through JSON, which drops
+    // undefined-valued keys. The question is built without any, so the two
+    // copies stay identical and a plain deep equality can compare them —
+    // `toStrictEqual`, because `toEqual` ignores exactly that difference.
+    const [raised] = pending(await graph.getState(config));
+    const durable = {
+      ...raised,
+      value: JSON.parse(JSON.stringify(raised.value)) as unknown,
+    };
+    expect(raised.value).toStrictEqual(durable.value);
+
+    // So an answer built from the persisted copy still binds.
+    await expect(
+      graph.invoke(
+        new Command({
+          resume: createMCPElicitationResume(durable, {
+            confirmation: accepted,
+          }),
+        }),
+        config
+      )
+    ).resolves.toMatchObject({ done: true });
+  });
 });
 
 describe("the round loop always terminates", () => {
