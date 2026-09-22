@@ -21,7 +21,6 @@ import {
   isGraphInterrupt,
   type Interrupt,
 } from "@langchain/langgraph";
-import { compare } from "@langchain/core/utils/json_patch";
 import { ToolException } from "./utils/errors.js";
 
 export const elicitationAnswerSchema = ElicitResultSchema;
@@ -43,6 +42,31 @@ const modernURLRequestSchema = ElicitRequestURLParamsSchema.pick({
   message: true,
   url: true,
 });
+
+const canonical = (value: unknown): string =>
+  JSON.stringify(value, (_key, entry: unknown) =>
+    entry !== null && typeof entry === "object" && !Array.isArray(entry)
+      ? Object.fromEntries(
+          Object.entries(entry as Record<string, unknown>).sort(
+            ([left], [right]) => (left < right ? -1 : 1)
+          )
+        )
+      : entry
+  ) ?? "null";
+
+/**
+ * Compare two checkpointed values.
+ *
+ * Both sides of this reach us through JSON — one from a checkpoint, one from
+ * a server response — so JSON is the right notion of equality: comparing the
+ * canonical form ignores key order, which no server guarantees, and ignores
+ * the distinctions JSON has already erased. `isDeepStrictEqual` would
+ * separate `undefined` from a missing key and refuse a question that only
+ * round-tripped.
+ */
+function sameJSON(left: unknown, right: unknown): boolean {
+  return canonical(left) === canonical(right);
+}
 
 /** A modern question: the shape an `elicitation/create` request carries. */
 const modernQuestionSchema = z.union([
@@ -251,12 +275,10 @@ async function answerFor(
 
   const answered = await z
     .object({
-      question: z
-        .looseObject({})
-        .refine((saved) => compare(saved, question).length === 0, {
-          error:
-            "answers a question that is no longer the one this tool call is asking",
-        }),
+      question: z.looseObject({}).refine((saved) => sameJSON(saved, question), {
+        error:
+          "answers a question that is no longer the one this tool call is asking",
+      }),
       responses: z.strictObject(
         Object.fromEntries(
           Object.entries(question.requests).map(([key, request]) => [
