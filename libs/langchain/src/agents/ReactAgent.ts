@@ -763,6 +763,13 @@ export class ReactAgent<
     );
   }
 
+  #getGraphConfig(config?: RunnableConfig) {
+    return mergeConfigs(
+      { ...this.#defaultConfig, callbacks: undefined },
+      config
+    );
+  }
+
   /**
    * Get possible edge destinations from model node.
    * @param toolClasses names of tools to call
@@ -1213,7 +1220,7 @@ export class ReactAgent<
     >
   ) {
     type FullState = MergedAgentState<Types>;
-    const mergedConfig = mergeConfigs(this.#defaultConfig, config);
+    const mergedConfig = this.#getGraphConfig(config);
     const initializedState = await this.#initializeMiddlewareStates(
       state,
       mergedConfig as RunnableConfig
@@ -1221,12 +1228,7 @@ export class ReactAgent<
 
     return this.#graph.invoke(
       initializedState,
-      mergedConfig as unknown as InferContextInput<
-        Types["Context"] extends AnyAnnotationRoot | InteropZodObject
-          ? Types["Context"]
-          : AnyAnnotationRoot
-      > &
-        InferMiddlewareContextInputs<Types["Middleware"]>
+      mergedConfig
     ) as Promise<FullState>;
   }
 
@@ -1290,15 +1292,12 @@ export class ReactAgent<
       TEncoding
     >
   ) {
-    const mergedConfig = mergeConfigs(this.#defaultConfig, config);
+    const mergedConfig = this.#getGraphConfig(config);
     const initializedState = await this.#initializeMiddlewareStates(
       state,
       mergedConfig as RunnableConfig
     );
-    return this.#graph.stream(
-      initializedState,
-      mergedConfig as Record<string, any>
-    ) as Promise<
+    return this.#graph.stream(initializedState, mergedConfig) as Promise<
       IterableReadableStream<
         StreamOutputMap<
           TStreamMode,
@@ -1470,7 +1469,7 @@ export class ReactAgent<
       >
     | IterableReadableStream<StreamEvent> {
     if (config?.version !== "v3" || streamOptions != null) {
-      const mergedConfig = mergeConfigs(this.#defaultConfig, config);
+      const mergedConfig = this.#getGraphConfig(config);
       const version =
         config?.version === "v1" || config?.version === "v2"
           ? config.version
@@ -1513,7 +1512,7 @@ export class ReactAgent<
         version: _version,
         ...restConfig
       } = agentConfig ?? {};
-      const mergedConfig = mergeConfigs(this.#defaultConfig, restConfig);
+      const mergedConfig = this.#getGraphConfig(restConfig);
       const initializedState = await this.#initializeMiddlewareStates(
         state,
         mergedConfig as RunnableConfig
