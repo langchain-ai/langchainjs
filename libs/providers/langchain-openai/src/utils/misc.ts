@@ -12,6 +12,7 @@ export function isReasoningModel(model?: string) {
   if (!model) return false;
   if (/^o\d/.test(model ?? "")) return true;
   if (model.startsWith("gpt-5") && !model.startsWith("gpt-5-chat")) return true;
+  if (model.startsWith("gpt-6") && !model.startsWith("gpt-6-chat")) return true;
   return false;
 }
 
