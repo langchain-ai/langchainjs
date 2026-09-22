@@ -16,8 +16,9 @@
   "scripts": {
     "build": "turbo build:compile --filter @langchain/mistralai --output-logs new-only",
     "build:compile": "tsdown",
-    "clean": "rm -rf .turbo dist/",
+    "clean": "rm -rf .turbo dist/ .tsc-types/",
     "test": "vitest run",
+    "typecheck": "tsc --build",
     "test:watch": "vitest",
     "test:int": "vitest run --mode int",
     "test:standard:unit": "vitest run --mode standard-unit",

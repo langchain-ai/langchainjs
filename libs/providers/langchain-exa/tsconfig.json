@@ -2,7 +2,7 @@
   "extends": "@langchain/tsconfig/base.json",
   "compilerOptions": {
     "rootDir": "src",
-    "outDir": "dist",
+    "outDir": ".tsc-types",
     "types": ["vitest/globals"]
   },
   "include": ["src/**/*"],
