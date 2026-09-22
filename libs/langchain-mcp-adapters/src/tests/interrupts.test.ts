@@ -877,7 +877,8 @@ describe("refusing what an interrupt cannot carry", () => {
       callToolWithElicitation(
         round as never,
         { name: "approve", arguments: {} },
-        { server: "modern", tool: "approve" }
+        "modern",
+        "approve"
       )
     ).rejects.toThrow(
       new RegExp(`cannot answer: ask \\(${method.replace("/", "\\/")}\\)`)
@@ -903,7 +904,8 @@ describe("refusing what an interrupt cannot carry", () => {
       callToolWithElicitation(
         round as never,
         { name: "approve", arguments: {} },
-        { server: "modern", tool: "approve" }
+        "modern",
+        "approve"
       )
     ).rejects.toThrow(
       /cannot answer: sample \(sampling\/createMessage\)$|sample \(sampling\/createMessage\)/

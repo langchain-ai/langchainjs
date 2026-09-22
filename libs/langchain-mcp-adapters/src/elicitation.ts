@@ -21,7 +21,7 @@ import {
   isGraphInterrupt,
   type Interrupt,
 } from "@langchain/langgraph";
-import { sha256 } from "@langchain/core/utils/hash";
+import { compare } from "@langchain/core/utils/json_patch";
 import { ToolException } from "./utils/errors.js";
 
 export const elicitationAnswerSchema = ElicitResultSchema;
@@ -44,8 +44,14 @@ const modernURLRequestSchema = ElicitRequestURLParamsSchema.pick({
   url: true,
 });
 
+/** A modern question: the shape an `elicitation/create` request carries. */
+const modernQuestionSchema = z.union([
+  modernFormRequestSchema,
+  modernURLRequestSchema,
+]);
+
 export const modernElicitationRequestSchema = ElicitRequestSchema.extend({
-  params: z.union([modernFormRequestSchema, modernURLRequestSchema]),
+  params: modernQuestionSchema,
 }).transform((request) => request.params);
 
 type ModernElicitationRequest = z.output<typeof modernElicitationRequestSchema>;
@@ -141,61 +147,20 @@ export function configureElicitation(
 }
 
 /**
- * Identity of the consent a question asks for.
+ * The interrupt payload raised while an MCP tool call waits on input.
  *
- * Derived from content, not generated, so replaying the call reproduces it.
- * Resuming re-issues the tool call and the server answers with a *fresh*
- * question; the human approved the one they were shown. If the server now asks
- * something else under the same keys and schema — "approve $10" becoming
- * "approve $1,000" — or `beforeToolCall` resolves different effective
- * arguments, the identity changes and the saved answer is refused instead of
- * being applied to an operation nobody agreed to.
+ * It carries the effective arguments as well as the questions, because both
+ * are what the human is consenting to.
  */
-function questionIdFor(
-  params: CallToolRequest["params"],
-  requests: Record<string, ModernElicitationRequest>,
-  source: MCPElicitationSource
-): string {
-  return sha256(
-    canonicalJSON({
-      server: source.server,
-      tool: source.tool,
-      arguments: params.arguments ?? {},
-      requests,
-    })
-  );
-}
-
-/**
- * Key-order-independent serialization, so reordering cannot fake a match.
- *
- * `JSON.stringify` walks the value; the replacer only sorts each object's keys
- * on the way past. Core's own prior art sorts with the replacer *array* form
- * (`indexing/base.ts`), which filters every level to the top-level key set and
- * so cannot be reused for nested content.
- */
-function canonicalJSON(value: unknown): string {
-  return (
-    JSON.stringify(value, (_key, entry: unknown) =>
-      entry !== null && typeof entry === "object" && !Array.isArray(entry)
-        ? Object.fromEntries(
-            Object.entries(entry as Record<string, unknown>).sort(
-              ([left], [right]) => (left < right ? -1 : 1)
-            )
-          )
-        : entry
-    ) ?? "null"
-  );
-}
-
-/** The interrupt payload raised while an MCP tool call waits on input. */
 const elicitationInterruptSchema = z.object({
   type: z.literal("mcp_elicitation"),
   server: z.string(),
   tool: z.string(),
-  /** Content identity of this question and the operation it belongs to. */
-  questionId: z.string(),
-  requests: z.record(z.string(), modernElicitationRequestSchema),
+  arguments: z.record(z.string(), z.unknown()).optional(),
+  // The payload carries each request's params, which is what
+  // `modernElicitationRequestSchema` transforms a wire request *into* — so the
+  // payload is described by that output shape, not by the wire schema again.
+  requests: z.record(z.string(), modernQuestionSchema),
 });
 
 export type MCPElicitationInterrupt = z.output<
@@ -208,25 +173,31 @@ export type MCPElicitationResponses = Record<
   z.output<typeof modernElicitationAnswerSchema>
 >;
 
-/** Resume values target the graph task and the question they answer. */
+/** Resume values carry the question they answer, keyed by graph task. */
 export type MCPElicitationResume = Record<
   string,
-  { questionId: string; responses: MCPElicitationResponses }
+  { question: MCPElicitationInterrupt; responses: MCPElicitationResponses }
 >;
 
 const elicitationTargetSchema = z.object({
   // LangGraph derives this from the node's checkpoint namespace.
   id: z.string().regex(/^[0-9a-f]{32}$/, "Expected a LangGraph interrupt ID"),
-  value: elicitationInterruptSchema.pick({ type: true, questionId: true }),
+  value: elicitationInterruptSchema,
 });
 
-/** Build an answer addressed to the task and question that raised `pending`. */
+/**
+ * Build an answer addressed to the task and question that raised `pending`.
+ *
+ * The question travels with the answer because resuming replays the tool call:
+ * the server is asked again and may answer differently, so the driver compares
+ * what the human saw against what it now has.
+ */
 export function createMCPElicitationResume(
   pending: Interrupt<unknown>,
   responses: MCPElicitationResponses
 ): MCPElicitationResume {
   const { id, value } = elicitationTargetSchema.parse(pending);
-  return { [id]: { questionId: value.questionId, responses } };
+  return { [id]: { question: value, responses } };
 }
 
 /** `tools/call` params plus the 2026-07-28 retry channel. */
@@ -245,40 +216,6 @@ export type ElicitationRound = (
   params: ElicitationRoundParams
 ) => Promise<CallToolResult | InputRequiredResult>;
 
-export interface MCPElicitationSource {
-  /** Configured server name, for error messages. */
-  server: string;
-  /** Tool name as this adapter published it. */
-  tool: string;
-  /** No graph to interrupt, so a question is refused rather than asked. */
-  direct?: boolean;
-  signal?: AbortSignal;
-}
-
-function noWayToAnswer(cause?: unknown): ToolException {
-  return new ToolException(
-    "This MCP tool requested user input. Invoke it inside a LangGraph with a checkpointer to pause and resume elicitation.",
-    cause
-  );
-}
-
-/**
- * Raise one question, translating LangGraph's own refusals.
- *
- * `interrupt()` rejects a call made outside a graph, and a graph compiled
- * without a checkpointer, before it ever suspends. Both mean the same thing
- * here, so the refusal is read off the pause rather than probed for with a
- * private config key.
- */
-function ask(question: MCPElicitationInterrupt): unknown {
-  try {
-    return interrupt<MCPElicitationInterrupt, unknown>(question);
-  } catch (error) {
-    if (isGraphInterrupt(error)) throw error;
-    throw noWayToAnswer(error);
-  }
-}
-
 /**
  * Narrow a round's requests to elicitations a human can answer.
  *
@@ -289,13 +226,14 @@ function ask(question: MCPElicitationInterrupt): unknown {
  */
 function elicitationRequestsOf(
   result: InputRequiredResult,
-  source: MCPElicitationSource
+  server: string,
+  tool: string
 ): Record<string, ModernElicitationRequest> {
   const requests = Object.entries(result.inputRequests ?? {});
 
   if (requests.length === 0)
     throw new ToolException(
-      `MCP tool "${source.tool}" on server "${source.server}" returned a state-only response, which is not supported.`
+      `MCP tool "${tool}" on server "${server}" returned a state-only response, which is not supported.`
     );
 
   const unsupported = requests
@@ -304,7 +242,7 @@ function elicitationRequestsOf(
 
   if (unsupported.length > 0)
     throw new ToolException(
-      `MCP tool "${source.tool}" on server "${source.server}" requested input this adapter cannot answer: ${unsupported.join(", ")}. Only elicitation is answered through a graph interrupt.`
+      `MCP tool "${tool}" on server "${server}" requested input this adapter cannot answer: ${unsupported.join(", ")}. Only elicitation is answered through a graph interrupt.`
     );
 
   return Object.fromEntries(
@@ -316,28 +254,62 @@ function elicitationRequestsOf(
 }
 
 /**
- * The exact resume this question accepts.
+ * Raise one question and parse the answer that comes back.
  *
- * Every rule lives in the schema rather than in checks around it: the question
- * identity is a literal, the answer keys are exactly the server's keys, and
- * each answer is parsed against the schema that question requested. A resume
- * that does not parse is not an answer to this question.
+ * `interrupt()` rejects a call made outside a graph, and a graph compiled
+ * without a checkpointer, before it ever suspends — both mean the same thing
+ * here, so the refusal is read off the pause rather than probed for.
+ *
+ * The answer is parsed as a whole against the question it claims to answer:
+ * the saved question must still match the one now pending, the keys must be
+ * exactly the server's, and each answer must satisfy the schema that question
+ * requested. A malformed answer fails the call rather than re-asking, since
+ * the caller resuming the graph is code, not the human who filled the form.
  */
-function resumeSchemaFor(
-  questionId: string,
-  requests: Record<string, ModernElicitationRequest>
-) {
-  return z.object({
-    questionId: z.literal(questionId),
-    responses: z.strictObject(
-      Object.fromEntries(
-        Object.entries(requests).map(([key, request]) => [
-          key,
-          elicitationAnswerFor(request, modernElicitationAnswerSchema),
-        ])
-      )
-    ),
-  });
+async function answerFor(
+  question: MCPElicitationInterrupt
+): Promise<MCPElicitationResponses> {
+  let resumed: unknown;
+
+  try {
+    resumed = interrupt<MCPElicitationInterrupt, unknown>(question);
+  } catch (error) {
+    if (isGraphInterrupt(error)) throw error;
+    throw new ToolException(
+      "This MCP tool requested user input. Invoke it inside a LangGraph with a checkpointer to pause and resume elicitation.",
+      error
+    );
+  }
+
+  const answered = await z
+    .object({
+      // Replaying the call can surface a different question under the same
+      // keys and schema — "approve $1,000" where the human approved "approve
+      // $10" — or different effective arguments. Consent covers what was
+      // shown, so the answer is refused rather than applied to it.
+      question: z
+        .looseObject({})
+        .refine((saved) => compare(saved, question).length === 0, {
+          error:
+            "answers a question that is no longer the one this tool call is asking",
+        }),
+      responses: z.strictObject(
+        Object.fromEntries(
+          Object.entries(question.requests).map(([key, request]) => [
+            key,
+            elicitationAnswerFor(request, modernElicitationAnswerSchema),
+          ])
+        )
+      ),
+    })
+    .safeParseAsync(resumed);
+
+  if (!answered.success)
+    throw new ToolException(
+      `Resuming MCP tool "${question.tool}" on server "${question.server}" needs answers built by createMCPElicitationResume() from the latest interrupt: ${z.prettifyError(answered.error)}`
+    );
+
+  return answered.data.responses;
 }
 
 /**
@@ -351,38 +323,26 @@ function resumeSchemaFor(
 export async function callToolWithElicitation(
   round: ElicitationRound,
   params: CallToolRequest["params"],
-  source: MCPElicitationSource
+  server: string,
+  tool: string,
+  signal?: AbortSignal
 ): Promise<CallToolResult> {
-  source.signal?.throwIfAborted();
+  signal?.throwIfAborted();
   let result = await round(params);
 
   while (isInputRequiredResult(result)) {
-    const requests = elicitationRequestsOf(result, source);
-    if (source.direct) throw noWayToAnswer();
+    const responses = await answerFor({
+      type: "mcp_elicitation",
+      server,
+      tool,
+      arguments: params.arguments,
+      requests: elicitationRequestsOf(result, server, tool),
+    });
 
-    const questionId = questionIdFor(params, requests, source);
-    const answered = await resumeSchemaFor(questionId, requests).safeParseAsync(
-      ask({
-        type: "mcp_elicitation",
-        server: source.server,
-        tool: source.tool,
-        questionId,
-        requests,
-      })
-    );
-
-    // A malformed answer fails the call rather than re-asking: the caller
-    // resuming the graph is code, not the human who filled the form, so the
-    // same question would come back wrong.
-    if (!answered.success)
-      throw new ToolException(
-        `Resuming MCP tool "${source.tool}" on server "${source.server}" needs answers built by createMCPElicitationResume() from the latest interrupt: ${z.prettifyError(answered.error)}`
-      );
-
-    source.signal?.throwIfAborted();
+    signal?.throwIfAborted();
     result = await round({
       ...params,
-      inputResponses: answered.data.responses,
+      inputResponses: responses,
       requestState: result.requestState,
     });
   }

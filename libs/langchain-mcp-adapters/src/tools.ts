@@ -332,9 +332,10 @@ type CallToolArgs = {
    */
   afterToolCall?: ToolHooks["afterToolCall"];
   inputSchema: ToolInputSchema;
-  /** Graph task state for this execution, or absent outside a graph. */
-  graph?: { state: unknown };
 };
+
+/** A call plus the graph task state `_callTool` resolves for its hooks. */
+type PreparedCallArgs = CallToolArgs & { state: unknown };
 
 type ContentBlocksWithArtifacts = [
   ExtendedContent | ToolMessage | Command,
@@ -357,19 +358,12 @@ interface ToolInvocation {
   bind(headers: ToolCallModification["headers"]): Promise<ToolRound>;
 }
 
-/**
- * Graph task state for this invocation, or `undefined` outside a graph.
- *
- * Wrapped because a graph's own state may be `undefined`, which a bare value
- * could not tell apart from having no graph.
- */
-function graphTaskState(
-  config?: RunnableConfig
-): { state: unknown } | undefined {
+/** Graph task state for this invocation; `{}` for a direct tool call. */
+function graphTaskState(config?: RunnableConfig): unknown {
   try {
-    return { state: getCurrentTaskInput(config) };
+    return getCurrentTaskInput(config);
   } catch {
-    return undefined;
+    return {};
   }
 }
 
@@ -391,46 +385,46 @@ function createToolInvocationFactory(
   const roundDefinition =
     inBand && outputSchema ? withoutOutputSchema : descriptor;
 
-  function executor(connectedClient: MCPInstance, modernProtocol: boolean) {
-    const inBandHere = inBand && modernProtocol;
-    const metadata = {
-      ...(logLevel !== undefined && modernProtocol
-        ? { [LOG_LEVEL_META_KEY]: logLevel }
-        : {}),
-      // Advertised per request rather than as a declared capability: declared
-      // capabilities are sent during initialization, before negotiation settles
-      // the era, so an `auto` connection landing on legacy would advertise
-      // elicitation to a server that must not see it. A user-supplied `_meta`
-      // key takes precedence over the SDK's auto-attached envelope.
-      ...(inBandHere
-        ? {
-            [CLIENT_CAPABILITIES_META_KEY]: {
-              elicitation: { form: {}, url: {} },
-            },
-          }
-        : {}),
-    };
+  // Advertised per request rather than as a declared capability: declared
+  // capabilities are sent during initialization, before negotiation settles
+  // the era, so an `auto` connection landing on legacy would advertise
+  // elicitation to a server that must not see it. A user-supplied `_meta` key
+  // takes precedence over the SDK's auto-attached envelope.
+  const metadata = {
+    ...(logLevel !== undefined && modern
+      ? { [LOG_LEVEL_META_KEY]: logLevel }
+      : {}),
+    ...(inBand
+      ? {
+          [CLIENT_CAPABILITIES_META_KEY]: {
+            elicitation: { form: {}, url: {} },
+          },
+        }
+      : {}),
+  };
+  const _meta = Object.keys(metadata).length > 0 ? metadata : undefined;
 
-    return (
-      request: ElicitationRoundParams,
-      options: CallToolRequestOptions
-    ) => {
-      const params = {
-        ...request,
-        _meta: Object.keys(metadata).length > 0 ? metadata : undefined,
-      };
-
+  /**
+   * Bind the wire call to a client.
+   *
+   * Only the client varies: a forked connection must serve the era tools were
+   * discovered under, which `selectHeaderPolicy` enforces before calling here.
+   */
+  const executor =
+    (connectedClient: MCPInstance): ToolRound =>
+    (request, options) =>
       // `callTool` deliberately does not widen its return type for
-      // `allowInputRequired`, so narrow with the SDK's own `isInputRequiredResult`.
-      return connectedClient.callTool(params, {
-        ...options,
-        toolDefinition: roundDefinition,
-        ...(inBandHere ? { allowInputRequired: true } : {}),
-      }) as Promise<CallToolResult | InputRequiredResult>;
-    };
-  }
+      // `allowInputRequired`; `isInputRequiredResult` does the narrowing.
+      connectedClient.callTool(
+        { ...request, _meta },
+        {
+          ...options,
+          toolDefinition: roundDefinition,
+          ...(inBand ? { allowInputRequired: true } : {}),
+        }
+      ) as Promise<CallToolResult | InputRequiredResult>;
 
-  const unbound = executor(client, modern);
+  const unbound = executor(client);
 
   /** Header-bound clients remain runtime resources, never checkpointed state. */
   function selectHeaderPolicy() {
@@ -445,7 +439,7 @@ function createToolInvocationFactory(
             `MCP connection for server "${serverName}" changed protocol era after tool discovery.`
           );
 
-        return executor(connectedClient, connectedModern);
+        return executor(connectedClient);
       };
     }
 
@@ -552,8 +546,8 @@ async function prepareToolCall({
   onProgress,
   beforeToolCall,
   inputSchema,
-  graph,
-}: CallToolArgs) {
+  state,
+}: PreparedCallArgs) {
   // Extract timeout from RunnableConfig and pass to MCP SDK
   // Note: ensureConfig() converts timeout into an AbortSignal and deletes the timeout field.
   // To preserve the numeric timeout for SDKs that accept an explicit timeout value, we read
@@ -581,9 +575,6 @@ async function prepareToolCall({
         .catch(() => {});
     };
   }
-
-  // Direct tool calls have no LangGraph task state.
-  const state: unknown = graph ? graph.state : {};
 
   const beforeToolCallInterception = toolCallModificationSchema
     .optional()
@@ -640,8 +631,10 @@ async function _callTool(
   } = call;
 
   try {
-    const graph = graphTaskState(config);
-    const prepared = await prepareToolCall({ ...call, graph });
+    const prepared = await prepareToolCall({
+      ...call,
+      state: graphTaskState(config),
+    });
     const round = async (params: ElicitationRoundParams) => {
       config?.signal?.throwIfAborted();
       const execute = await invocation.bind(prepared.headers);
@@ -650,12 +643,13 @@ async function _callTool(
     };
 
     const result = invocation.elicitation
-      ? await callToolWithElicitation(round, prepared.request, {
-          server: serverName,
-          tool: toolName,
-          direct: graph === undefined,
-          signal: config?.signal,
-        })
+      ? await callToolWithElicitation(
+          round,
+          prepared.request,
+          serverName,
+          toolName,
+          config?.signal
+        )
       : ((await round(prepared.request)) as CallToolResult);
 
     await assertStructuredOutput({
