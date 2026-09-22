@@ -4,6 +4,7 @@ import type {
 } from "@langchain/core/language_models/chat_models";
 import { getEnvironmentVariable } from "@langchain/core/utils/env";
 import {
+  type BaseChatOpenAIFields,
   type ChatOpenAICallOptions,
   ChatOpenAICompletions,
   type OpenAIChatInput,
@@ -32,6 +33,8 @@ export interface ChatTogetherAICallOptions extends Omit<
 export interface ChatTogetherAIInput
   extends
     Omit<OpenAIChatInput, "openAIApiKey" | TogetherAIUnsupportedArgs>,
+    // `configuration` moved from OpenAIChatInput to BaseChatOpenAIFields.
+    Pick<BaseChatOpenAIFields, "configuration">,
     BaseChatModelParams {
   /**
    * The Together AI API key to use for requests.
