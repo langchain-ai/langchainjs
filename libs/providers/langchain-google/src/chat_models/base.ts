@@ -272,7 +272,12 @@ export abstract class BaseChatGoogle<
 
   protected apiClient: ApiClient;
 
-  constructor(protected params: BaseChatGoogleParams) {
+  constructor(
+    protected params: BaseChatGoogleParams & {
+      credentials?: unknown;
+      googleAuthOptions?: unknown;
+    }
+  ) {
     super(params);
     this._addVersion("@langchain/google", __PKG_VERSION__);
 
