@@ -388,7 +388,8 @@ function createToolInvocationFactory(
   // output validator rejects before the caller can see the question. Withhold
   // the schema from the rounds and validate the terminal result here instead.
   const { outputSchema, ...withoutOutputSchema } = descriptor;
-  const roundDefinition = inBand && outputSchema ? withoutOutputSchema : descriptor;
+  const roundDefinition =
+    inBand && outputSchema ? withoutOutputSchema : descriptor;
 
   function executor(connectedClient: MCPInstance, modernProtocol: boolean) {
     const inBandHere = inBand && modernProtocol;
@@ -494,7 +495,9 @@ async function assertStructuredOutput({
 
   // Scope the SDK engine to this descriptor: its shared cache keys by $id.
   const validator = fromJsonSchema(schema, new DefaultJsonSchemaValidator());
-  const parsed = await validator["~standard"].validate(result.structuredContent);
+  const parsed = await validator["~standard"].validate(
+    result.structuredContent
+  );
 
   if (parsed.issues)
     throw new ToolException(

@@ -123,7 +123,6 @@ identity it supplies is re-derived on resume rather than reused from the pause.
 other external event must invoke resume: a paused thread is stored data, not a
 worker waiting in memory.
 
-
 ## Configuration and lifecycle
 
 Construction validates options with Zod 4 and opens no connections. Discovery

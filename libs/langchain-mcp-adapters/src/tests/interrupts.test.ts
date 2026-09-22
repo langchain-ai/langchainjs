@@ -349,7 +349,6 @@ describe("rejecting a malformed answer", () => {
 
     expect(h.after).not.toHaveBeenCalled();
   });
-
 });
 
 describe("rejecting what cannot be answered", () => {
@@ -495,7 +494,6 @@ describe("dynamic headers", () => {
       expect(observed).toEqual([initial ?? "default", expected]);
     }
   );
-
 });
 
 describe("thread isolation", () => {
@@ -538,7 +536,6 @@ describe("thread isolation", () => {
 });
 
 describe("the interception boundary", () => {
-
   it.each([true, false])(
     "preserves output validation across manual continuation: %s",
     async (validOutput) => {
@@ -765,7 +762,6 @@ describe("the interception boundary", () => {
 });
 
 describe("real stdio servers", () => {
-
   it.each(["modern", "mixed"])(
     "resumes accept/decline/cancel against real %s stdio servers",
     async (mode) => {
@@ -909,7 +905,9 @@ describe("refusing what an interrupt cannot carry", () => {
         { name: "approve", arguments: {} },
         { server: "modern", tool: "approve" }
       )
-    ).rejects.toThrow(/cannot answer: sample \(sampling\/createMessage\)$|sample \(sampling\/createMessage\)/);
+    ).rejects.toThrow(
+      /cannot answer: sample \(sampling\/createMessage\)$|sample \(sampling\/createMessage\)/
+    );
   });
 
   it("rejects a resume that is not shaped like an answer", async () => {
