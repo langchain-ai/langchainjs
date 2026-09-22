@@ -11,93 +11,53 @@ import { z } from "zod";
 
 export type ElicitationAction = "accept" | "decline" | "cancel";
 
-type ElicitationAnswer = {
-  action: ElicitationAction;
-};
+type ElicitationAnswer = { action: ElicitationAction };
 
-type AgentMcpCall =
-  | { tool: "echo"; label: string }
-  | {
-      tool: "ask";
-      label: string;
-      round: number;
-      action?: ElicitationAction;
-    };
-
-type Completion = {
+type AgentMcpCall = {
   label: string;
-  action: ElicitationAction;
+  /** Which elicitation round of this call the server is serving, from 0. */
+  round: number;
+  action?: ElicitationAction;
 };
+
+type Completion = { label: string; action: ElicitationAction };
 
 export type AgentMcpServer = {
   url: string;
   calls: AgentMcpCall[];
-  echoes: string[];
-  authorizations: string[];
-  accepted: string[];
   completed: Completion[];
-  continuations: string[];
-  advanceTime(milliseconds: number): void;
   close(): Promise<void>;
 };
 
-export async function startAgentMcpServer(
-  options: { continuationLifetimeMs?: number } = {}
-): Promise<AgentMcpServer> {
+/**
+ * A modern HTTP server whose `ask` tool elicits before completing.
+ *
+ * `interrupts.test.ts` owns the protocol surface — refusals, answer parsing,
+ * headers, URL questions, real stdio servers — against its own harness. This
+ * one exists for what needs a real agent turn, so it carries only what those
+ * tests read: how many rounds to ask for, and what the server saw.
+ */
+export async function startAgentMcpServer(): Promise<AgentMcpServer> {
   const calls: AgentMcpCall[] = [];
-  const echoes: string[] = [];
-  const authorizations: string[] = [];
-  const accepted: string[] = [];
   const completed: Completion[] = [];
-  const continuations: string[] = [];
-  const expiresAt = new Map<string, number>();
-  const authorized = new Set<string>();
-  let now = 0;
-  let url = "";
 
   const handler = createMcpHandler(
     () => {
-      const server = new McpServer(
-        { name: "agent-integration", version: "1" },
-        {
-          requestState: {
-            verify: async (state) => {
-              continuations.push(state);
-              if (now >= (expiresAt.get(state) ?? Infinity))
-                throw new Error("expired");
-              return state;
-            },
-          },
-        }
-      );
-
-      server.registerTool(
-        "echo",
-        { inputSchema: z.object({ label: z.string() }) },
-        ({ label }) => {
-          calls.push({ tool: "echo", label });
-          echoes.push(label);
-
-          return {
-            content: [{ type: "text", text: `echo:${label}` }],
-            structuredContent: { label },
-          };
-        }
-      );
+      const server = new McpServer({ name: "agent-integration", version: "1" });
 
       server.registerTool(
         "ask",
         {
           inputSchema: z.object({
             label: z.string(),
-            kind: z.enum(["form", "url"]).default("form"),
             rounds: z.number().int().min(1).max(2).default(1),
           }),
         },
-        ({ label, kind, rounds }, context) => {
+        ({ label, rounds }, context) => {
           const answer = context.mcpReq.inputResponses?.confirmation as
             | ElicitationAnswer
             | undefined;
+          // The round is carried by the continuation the server itself issued.
           const state = context.mcpReq.requestState();
           const round =
             typeof state === "string" && state.startsWith(`${label}:`)
@@ -105,53 +65,27 @@ export async function startAgentMcpServer(
               : 0;
 
           calls.push({
-            tool: "ask",
             label,
             round,
             ...(answer ? { action: answer.action } : {}),
           });
 
-          if (!answer || (answer.action === "accept" && round < rounds)) {
-            const requestState = `${label}:${round + 1}`;
-            expiresAt.set(
-              requestState,
-              now + (options.continuationLifetimeMs ?? Infinity)
-            );
+          if (!answer || (answer.action === "accept" && round < rounds))
             return inputRequired({
-              requestState,
+              requestState: `${label}:${round + 1}`,
               inputRequests: {
-                confirmation:
-                  kind === "url"
-                    ? inputRequired.elicitUrl({
-                        message: label,
-                        url: `${url}/authorize?label=${encodeURIComponent(label)}`,
-                      })
-                    : inputRequired.elicit({
-                        message: label,
-                        requestedSchema: {
-                          type: "object",
-                          properties: { confirm: { type: "boolean" } },
-                          required: ["confirm"],
-                        },
-                      }),
+                confirmation: inputRequired.elicit({
+                  message: label,
+                  requestedSchema: {
+                    type: "object",
+                    properties: { confirm: { type: "boolean" } },
+                    required: ["confirm"],
+                  },
+                }),
               },
             });
-          }
-
-          if (
-            kind === "url" &&
-            answer.action === "accept" &&
-            !authorized.has(label)
-          ) {
-            throw new Error(
-              "URL elicitation must be completed before acceptance"
-            );
-          }
 
           completed.push({ label, action: answer.action });
-          if (answer.action === "accept") {
-            accepted.push(label);
-          }
 
           return {
             content: [{ type: "text", text: `${label}:${answer.action}` }],
@@ -165,48 +99,18 @@ export async function startAgentMcpServer(
     { legacy: "reject" }
   );
 
-  const http = createServer(
-    toNodeHandler({
-      fetch: async (request) => {
-        const requestUrl = new URL(request.url);
-
-        if (requestUrl.pathname === "/authorize") {
-          const label = requestUrl.searchParams.get("label");
-          if (!label) {
-            return new Response("missing label", { status: 400 });
-          }
-
-          authorized.add(label);
-          authorizations.push(label);
-          return new Response("authorized");
-        }
-
-        return handler.fetch(request);
-      },
-    })
-  );
-
+  const http = createServer(toNodeHandler(handler));
   http.listen(0, "127.0.0.1");
   await once(http, "listening");
   const address = http.address();
 
-  if (!address || typeof address === "string") {
+  if (!address || typeof address === "string")
     throw new Error("Missing HTTP address");
-  }
-
-  url = `http://127.0.0.1:${address.port}`;
 
   return {
-    url,
+    url: `http://127.0.0.1:${address.port}`,
     calls,
-    echoes,
-    authorizations,
-    accepted,
     completed,
-    continuations,
-    advanceTime(milliseconds) {
-      now += milliseconds;
-    },
     async close() {
       await handler.close();
       http.closeAllConnections();

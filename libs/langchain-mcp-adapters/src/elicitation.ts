@@ -157,9 +157,6 @@ const elicitationInterruptSchema = z.object({
   server: z.string(),
   tool: z.string(),
   arguments: z.record(z.string(), z.unknown()).optional(),
-  // The payload carries each request's params, which is what
-  // `modernElicitationRequestSchema` transforms a wire request *into* — so the
-  // payload is described by that output shape, not by the wire schema again.
   requests: z.record(z.string(), modernQuestionSchema),
 });
 
@@ -179,9 +176,9 @@ export type MCPElicitationResume = Record<
   { question: MCPElicitationInterrupt; responses: MCPElicitationResponses }
 >;
 
+/** `Interrupt` types `id` as optional and `value` as `any`, so parse both. */
 const elicitationTargetSchema = z.object({
-  // LangGraph derives this from the node's checkpoint namespace.
-  id: z.string().regex(/^[0-9a-f]{32}$/, "Expected a LangGraph interrupt ID"),
+  id: z.string().min(1),
   value: elicitationInterruptSchema,
 });
 
@@ -207,51 +204,18 @@ export type ElicitationRoundParams = CallToolRequest["params"] & {
 };
 
 /**
- * Issue one `tools/call` that may answer with `input_required`.
+ * Questions a graph interrupt can carry.
  *
- * Callers opt in per call with the SDK's `allowInputRequired` request option,
- * which is what widens the result beyond {@link CallToolResult}.
+ * Sampling and roots fail the `elicitation/create` literal, naming the key
+ * that asked. A round with no questions is refused too: nothing can advance a
+ * response that asks nothing, and the adapter does not poll for completion.
+ * The Python adapter refuses the same three.
  */
-export type ElicitationRound = (
-  params: ElicitationRoundParams
-) => Promise<CallToolResult | InputRequiredResult>;
-
-/**
- * Narrow a round's requests to elicitations a human can answer.
- *
- * Sampling and roots are refused by name rather than half-served, and a round
- * carrying only a `requestState` is refused too: nothing can advance a response
- * with no question in it, and the adapter does not poll a server for
- * completion. The Python adapter refuses the same three.
- */
-function elicitationRequestsOf(
-  result: InputRequiredResult,
-  server: string,
-  tool: string
-): Record<string, ModernElicitationRequest> {
-  const requests = Object.entries(result.inputRequests ?? {});
-
-  if (requests.length === 0)
-    throw new ToolException(
-      `MCP tool "${tool}" on server "${server}" returned a state-only response, which is not supported.`
-    );
-
-  const unsupported = requests
-    .filter(([, request]) => request.method !== "elicitation/create")
-    .map(([key, request]) => `${key} (${request.method})`);
-
-  if (unsupported.length > 0)
-    throw new ToolException(
-      `MCP tool "${tool}" on server "${server}" requested input this adapter cannot answer: ${unsupported.join(", ")}. Only elicitation is answered through a graph interrupt.`
-    );
-
-  return Object.fromEntries(
-    requests.map(([key, request]) => [
-      key,
-      modernElicitationRequestSchema.parse(request),
-    ])
-  );
-}
+const answerableRequestsSchema = z
+  .record(z.string(), modernElicitationRequestSchema)
+  .refine((requests) => Object.keys(requests).length > 0, {
+    error: "a state-only response carries no question to ask",
+  });
 
 /**
  * Raise one question and parse the answer that comes back.
@@ -263,8 +227,12 @@ function elicitationRequestsOf(
  * The answer is parsed as a whole against the question it claims to answer:
  * the saved question must still match the one now pending, the keys must be
  * exactly the server's, and each answer must satisfy the schema that question
- * requested. A malformed answer fails the call rather than re-asking, since
- * the caller resuming the graph is code, not the human who filled the form.
+ * requested. Replay can surface a different question under the same keys and
+ * schema — "approve $1,000" where the human approved "approve $10" — or
+ * different effective arguments; consent covers what was shown, so the answer
+ * is refused rather than applied to it. A malformed answer fails the call
+ * rather than re-asking, since the caller resuming the graph is code, not the
+ * human who filled the form.
  */
 async function answerFor(
   question: MCPElicitationInterrupt
@@ -283,10 +251,6 @@ async function answerFor(
 
   const answered = await z
     .object({
-      // Replaying the call can surface a different question under the same
-      // keys and schema — "approve $1,000" where the human approved "approve
-      // $10" — or different effective arguments. Consent covers what was
-      // shown, so the answer is refused rather than applied to it.
       question: z
         .looseObject({})
         .refine((saved) => compare(saved, question).length === 0, {
@@ -321,7 +285,9 @@ async function answerFor(
  * that work once per round, so effects must be idempotent.
  */
 export async function callToolWithElicitation(
-  round: ElicitationRound,
+  round: (
+    params: ElicitationRoundParams
+  ) => Promise<CallToolResult | InputRequiredResult>,
   params: CallToolRequest["params"],
   server: string,
   tool: string,
@@ -331,12 +297,21 @@ export async function callToolWithElicitation(
   let result = await round(params);
 
   while (isInputRequiredResult(result)) {
+    const requests = answerableRequestsSchema.safeParse(
+      result.inputRequests ?? {}
+    );
+
+    if (!requests.success)
+      throw new ToolException(
+        `MCP tool "${tool}" on server "${server}" asked for input this adapter cannot answer: ${z.prettifyError(requests.error)}`
+      );
+
     const responses = await answerFor({
       type: "mcp_elicitation",
       server,
       tool,
       arguments: params.arguments,
-      requests: elicitationRequestsOf(result, server, tool),
+      requests: requests.data,
     });
 
     signal?.throwIfAborted();

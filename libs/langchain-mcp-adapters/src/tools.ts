@@ -334,9 +334,6 @@ type CallToolArgs = {
   inputSchema: ToolInputSchema;
 };
 
-/** A call plus the graph task state `_callTool` resolves for its hooks. */
-type PreparedCallArgs = CallToolArgs & { state: unknown };
-
 type ContentBlocksWithArtifacts = [
   ExtendedContent | ToolMessage | Command,
   ExtendedArtifact[],
@@ -482,36 +479,29 @@ async function assertStructuredOutput({
 }): Promise<void> {
   if (schema === undefined || result.isError) return;
 
-  if (result.structuredContent === undefined)
-    throw new ToolException(
-      `MCP tool "${toolName}" on server "${serverName}" has an output schema but returned no structured content.`
-    );
+  const parsed = await z
+    .object({
+      structuredContent: jsonSchemaParser(JSONObjectSchema.parse(schema)),
+    })
+    .safeParseAsync(result);
 
-  // Scope the SDK engine to this descriptor: its shared cache keys by $id.
-  const validator = fromJsonSchema(schema, new DefaultJsonSchemaValidator());
-  const parsed = await validator["~standard"].validate(
-    result.structuredContent
-  );
-
-  if (parsed.issues)
+  if (!parsed.success)
     throw new ToolException(
-      `MCP tool "${toolName}" on server "${serverName}" returned structured content that does not match its output schema: ${parsed.issues
-        .map((issue) => issue.message)
-        .join("; ")}`
+      `MCP tool "${toolName}" on server "${serverName}" returned output its schema rejects: ${z.prettifyError(parsed.error)}`
     );
 }
 
 /** Keep the SDK's JSON Schema semantics while exposing a Zod parsing boundary. */
-function createToolInputSchema(
+function jsonSchemaParser<T>(
   jsonSchema: z.output<typeof JSONObjectSchema>
-): ToolInputSchema {
+): z.ZodTransform<T, T> {
   // Scope the SDK engine to this descriptor: its shared cache keys by $id.
-  const validator = fromJsonSchema<ToolArguments>(
+  const validator = fromJsonSchema<T>(
     jsonSchema,
     new DefaultJsonSchemaValidator()
   );
 
-  return z.transform(async (input: ToolArguments, ctx) => {
+  return z.transform(async (input: T, ctx) => {
     const result = await validator["~standard"].validate(input);
 
     if (result.issues) {
@@ -538,16 +528,18 @@ function createToolInputSchema(
 }
 
 /** Parse hook output and effective arguments before choosing a wire request. */
-async function prepareToolCall({
-  serverName,
-  toolName,
-  args,
-  config,
-  onProgress,
-  beforeToolCall,
-  inputSchema,
-  state,
-}: PreparedCallArgs) {
+async function prepareToolCall(
+  {
+    serverName,
+    toolName,
+    args,
+    config,
+    onProgress,
+    beforeToolCall,
+    inputSchema,
+  }: CallToolArgs,
+  state: unknown
+) {
   // Extract timeout from RunnableConfig and pass to MCP SDK
   // Note: ensureConfig() converts timeout into an AbortSignal and deletes the timeout field.
   // To preserve the numeric timeout for SDKs that accept an explicit timeout value, we read
@@ -631,10 +623,7 @@ async function _callTool(
   } = call;
 
   try {
-    const prepared = await prepareToolCall({
-      ...call,
-      state: graphTaskState(config),
-    });
+    const prepared = await prepareToolCall(call, graphTaskState(config));
     const round = async (params: ElicitationRoundParams) => {
       config?.signal?.throwIfAborted();
       const execute = await invocation.bind(prepared.headers);
@@ -761,7 +750,7 @@ export async function convertMcpTools(
           try {
             const originalSchema = JSONObjectSchema.parse(tool.inputSchema);
 
-            const inputSchema = createToolInputSchema(originalSchema);
+            const inputSchema = jsonSchemaParser<ToolArguments>(originalSchema);
 
             const createInvocation = createToolInvocationFactory(
               client,

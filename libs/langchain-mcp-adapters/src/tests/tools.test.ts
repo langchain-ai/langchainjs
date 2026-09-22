@@ -149,12 +149,12 @@ describe("Simplified Tool Adapter Tests", () => {
         content: [{ type: "text", text: "done" }],
         structuredContent: { approved: "yes" },
       },
-      error: /does not match its output schema/,
+      error: /schema rejects: [\s\S]*approved must be boolean/,
     },
     {
       name: "no structured content at all",
       result: { content: [{ type: "text", text: "done" }] },
-      error: /has an output schema but returned no structured content/,
+      error: /schema rejects: [\s\S]*must be object/,
     },
   ])(
     "validates the terminal result itself when a tool elicits: $name",

@@ -1,9 +1,17 @@
+/**
+ * Elicitation through a real agent.
+ *
+ * `interrupts.test.ts` drives the adapter from a one-node graph and owns the
+ * protocol surface: refusals, answer parsing, headers, and real stdio servers.
+ * This file exists only for what needs an actual agent turn — `ToolNode`
+ * fanning several tool calls out at once, and a call whose rounds outlive one
+ * resume.
+ */
 import { randomUUID } from "node:crypto";
-import { join } from "node:path";
 
 import { Command, MemorySaver, type Interrupt } from "@langchain/langgraph";
 import { createAgent, FakeToolCallingModel } from "langchain";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import { MCPAdapter, createMCPElicitationResume } from "../index.js";
 import type {
@@ -109,52 +117,6 @@ function resuming(resume: MCPElicitationResume): AgentInput {
   return new Command({ resume }) as unknown as AgentInput;
 }
 
-describe("answer validation", () => {
-  it("fails the call when an answer violates the requested schema", async () => {
-    const { agent, server, config } = await environment();
-
-    const first = await agent.invoke(input, config);
-
-    // Re-asking would not help: the caller resuming the graph is code, not the
-    // human who filled the form, so the same question would come back wrong.
-    const failed = await agent.invoke(
-      resuming(
-        createMCPElicitationResume(onlyInterrupt(first), {
-          // `confirm` is declared boolean by the server's requestedSchema.
-          confirmation: { action: "accept", content: { confirm: "yes" } },
-        } as unknown as MCPElicitationResponses)
-      ),
-      config
-    );
-
-    expect(mcpInterrupts(failed)).toHaveLength(0);
-    expect(JSON.stringify(failed.messages)).toContain(
-      "data/confirm must be boolean"
-    );
-    expect(server.completed).toEqual([]);
-  });
-
-  it("fails the call for an answer under the wrong request key", async () => {
-    const { agent, config } = await environment();
-
-    const first = await agent.invoke(input, config);
-
-    const failed = await agent.invoke(
-      resuming(
-        createMCPElicitationResume(onlyInterrupt(first), {
-          wrong: { action: "accept", content: { confirm: true } },
-        })
-      ),
-      config
-    );
-
-    expect(mcpInterrupts(failed)).toHaveLength(0);
-    expect(JSON.stringify(failed.messages)).toContain(
-      "needs answers built by createMCPElicitationResume()"
-    );
-  });
-});
-
 describe("answer targeting", () => {
   it("answers one parallel question without answering its sibling", async () => {
     const { agent, server, config } = await environment([
@@ -186,106 +148,6 @@ describe("answer targeting", () => {
       "alpha",
       "beta",
     ]);
-  });
-});
-
-/** Tool output text for the single tool call the fake model issues. */
-function toolOutput(result: unknown): string {
-  const { messages } = result as { messages: { content?: unknown }[] };
-  return messages
-    .map((message) => message.content)
-    .filter((content): content is string => typeof content === "string")
-    .join("|");
-}
-
-describe("end to end over stdio", () => {
-  it("interrupts a modern stdio server, then completes it on resume", async () => {
-    const adapter = new MCPAdapter({
-      servers: {
-        modern: {
-          transport: "stdio",
-          command: process.execPath,
-          args: [
-            "--import",
-            "tsx",
-            join(__dirname, "fixtures", "modern-stdio-server.ts"),
-          ],
-          elicitation: true,
-        },
-      },
-    });
-    cleanups.push(() => adapter.close());
-
-    const tools = await adapter.listTools();
-    const agent = createAgent({
-      model: new FakeToolCallingModel({
-        toolCalls: [[{ id: "c1", name: tools[0].name, args: {} }], []],
-      }),
-      tools,
-      checkpointer: new MemorySaver(),
-    });
-    const config = { configurable: { thread_id: randomUUID() } };
-
-    const paused = await agent.invoke(input, config);
-    const question = onlyInterrupt(paused);
-    expect(question.value).toMatchObject({
-      type: "mcp_elicitation",
-      server: "modern",
-      requests: { confirmation: { message: "Approve modern?" } },
-    });
-
-    const done = await agent.invoke(
-      resuming(createMCPElicitationResume(question, accept())),
-      config
-    );
-
-    expect(toolOutput(done)).toContain("accept");
-  });
-
-  it("answers a legacy stdio server from its callback without interrupting", async () => {
-    const onElicitation = vi.fn(() => ({
-      action: "accept" as const,
-      content: { confirm: true },
-    }));
-
-    const adapter = new MCPAdapter({
-      servers: {
-        legacy: {
-          mode: "legacy",
-          transport: "stdio",
-          command: process.execPath,
-          args: [
-            "--import",
-            "tsx",
-            "--no-warnings",
-            join(__dirname, "fixtures", "sdk1-stdio-server.ts"),
-            "legacy",
-            "--elicitation",
-          ],
-          onElicitation,
-        },
-      },
-    });
-    cleanups.push(() => adapter.close());
-
-    const tools = await adapter.listTools();
-    const agent = createAgent({
-      model: new FakeToolCallingModel({
-        toolCalls: [[{ id: "c1", name: tools[0].name, args: {} }], []],
-      }),
-      tools,
-      checkpointer: new MemorySaver(),
-    });
-
-    const done = await agent.invoke(input, {
-      configurable: { thread_id: randomUUID() },
-    });
-
-    // A legacy server asks over a reverse request its own callback answers, so
-    // the agent never pauses and the interrupt boundary stays out of the path.
-    expect(mcpInterrupts(done)).toHaveLength(0);
-    expect(onElicitation).toHaveBeenCalledTimes(1);
-    expect(toolOutput(done)).toContain("accept");
   });
 });
 
@@ -321,10 +183,6 @@ describe("multiple sequential rounds", () => {
     // Each resume replays every answered round before reaching the new one,
     // so N questions cost O(N^2) requests. This is the price of not
     // checkpointing the server's continuation.
-    expect(
-      server.calls
-        .filter((call) => call.tool === "ask")
-        .map((call) => call.round)
-    ).toEqual([0, 0, 1, 0, 1, 2]);
+    expect(server.calls.map((call) => call.round)).toEqual([0, 0, 1, 0, 1, 2]);
   });
 });

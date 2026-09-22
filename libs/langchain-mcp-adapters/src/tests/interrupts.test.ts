@@ -390,7 +390,7 @@ describe("invoking outside a graph", () => {
 
     await expect(
       tool.invoke({ label: "original" }, { signal: h.controller.signal })
-    ).rejects.toThrow(/state-only response, which is not supported/);
+    ).rejects.toThrow(/a state-only response carries no question to ask/);
     expect(h.calls).toEqual(["effective"]);
     expect(h.after).not.toHaveBeenCalled();
   });
@@ -880,9 +880,7 @@ describe("refusing what an interrupt cannot carry", () => {
         "modern",
         "approve"
       )
-    ).rejects.toThrow(
-      new RegExp(`cannot answer: ask \\(${method.replace("/", "\\/")}\\)`)
-    );
+    ).rejects.toThrow(/cannot answer: [\s\S]*expected "elicitation\/create"/);
 
     // Refused before pausing, so the server is never asked a second time.
     expect(round).toHaveBeenCalledTimes(1);
@@ -907,9 +905,7 @@ describe("refusing what an interrupt cannot carry", () => {
         "modern",
         "approve"
       )
-    ).rejects.toThrow(
-      /cannot answer: sample \(sampling\/createMessage\)$|sample \(sampling\/createMessage\)/
-    );
+    ).rejects.toThrow(/cannot answer: [\s\S]*expected "elicitation\/create"/);
   });
 
   it("rejects a resume that is not shaped like an answer", async () => {
