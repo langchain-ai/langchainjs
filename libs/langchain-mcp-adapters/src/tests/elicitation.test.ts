@@ -153,6 +153,18 @@ describe("elicitation answers", () => {
   });
 });
 
+/** Why each failing scenario is refused, and whether it reached the callback. */
+const legacyFailures: Record<string, { reason: string; asked: string[] }> = {
+  // The requested schema, not just the result envelope, rejects the answer.
+  invalid: {
+    reason: "data/confirm must be boolean",
+    asked: ["Approve legacy?"],
+  },
+  throws: { reason: "Application rejected input", asked: ["Approve legacy?"] },
+  // Refused before the question reaches an application that cannot answer it.
+  missing: { reason: "Client does not support form elicitation", asked: [] },
+};
+
 it.each(["accept", "decline", "cancel", "invalid", "throws", "missing"])(
   "handles legacy adapter elicitation: %s",
   async (scenario) => {
@@ -202,7 +214,13 @@ it.each(["accept", "decline", "cancel", "invalid", "throws", "missing"])(
         expect(await tool.invoke({})).toBe(scenario);
         expect(questions).toEqual(["Approve legacy?"]);
       } else {
-        await expect(tool.invoke({})).rejects.toThrow();
+        const { reason, asked } = legacyFailures[scenario];
+        const failure = await tool.invoke({}).catch((error: unknown) => error);
+
+        expect(failure).toBeInstanceOf(Error);
+        expect((failure as Error).message).toContain(reason);
+        // Whether the application was consulted at all is part of the contract.
+        expect(questions).toEqual(asked);
       }
     } finally {
       await adapter.close();
@@ -324,6 +342,7 @@ it.each([true, false])(
     const notification = new Promise<void>((resolve) => {
       changed = resolve;
     });
+    const observer = vi.fn(() => changed());
 
     const handler = createMcpHandler(
       () => {
@@ -369,7 +388,7 @@ it.each([true, false])(
           onMessage: (message) => {
             logs.push(message.data);
           },
-          onToolsListChanged: externalObserver ? changed : undefined,
+          onToolsListChanged: externalObserver ? observer : undefined,
         },
       },
     });
@@ -391,6 +410,8 @@ it.each([true, false])(
       await vi.waitFor(async () =>
         expect((await adapter.listTools())[0].name).toContain("second")
       );
+      // The catalog refreshes either way; only a configured observer is told.
+      expect(observer).toHaveBeenCalledTimes(externalObserver ? 1 : 0);
       toolName = "third";
       expect(
         (await adapter.listTools([], { cacheMode: "bypass" }))[0].name

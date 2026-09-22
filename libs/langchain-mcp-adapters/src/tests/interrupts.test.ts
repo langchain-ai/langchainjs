@@ -321,16 +321,23 @@ describe("rejecting a malformed answer", () => {
     {
       name: "content that violates the requested schema",
       bad: { confirmation: { action: "accept", content: { confirm: "yes" } } },
+      // The requested schema, not just the envelope, is what rejects it.
+      reasons: [
+        "data/confirm must be boolean",
+        "responses.confirmation.content",
+      ],
     },
     {
       name: "an answer under an unrequested key",
       bad: { wrong: { ...formAnswer } },
+      reasons: ['Unrecognized key: "wrong"'],
     },
     {
       name: "an extra key alongside the requested one",
       bad: { confirmation: { ...formAnswer }, extra: { ...formAnswer } },
+      reasons: ['Unrecognized key: "extra"'],
     },
-  ])("fails the call for $name", async ({ bad }) => {
+  ])("fails the call for $name", async ({ bad, reasons }) => {
     const h = await harness();
 
     await h.createGraph().invoke({ done: false }, h.config);
@@ -338,14 +345,21 @@ describe("rejecting a malformed answer", () => {
 
     // Re-asking would not help: the caller resuming the graph is code, not the
     // human who filled the form, so the same question would come back wrong.
-    await expect(
-      h
-        .createGraph()
-        .invoke(
-          new Command(await answering(h.createGraph(), h.config, bad)),
-          h.config
-        )
-    ).rejects.toThrow(/Resuming MCP tool|Elicitation answer for/);
+    const failure = await h
+      .createGraph()
+      .invoke(
+        new Command(await answering(h.createGraph(), h.config, bad)),
+        h.config
+      )
+      .catch((error: unknown) => error);
+
+    expect(failure).toBeInstanceOf(Error);
+    expect((failure as Error).message).toContain(
+      'Resuming MCP tool "approve" on server "modern" needs answers built by createMCPElicitationResume()'
+    );
+    // Each case is refused for its own reason, naming the offending key.
+    for (const reason of reasons)
+      expect((failure as Error).message).toContain(reason);
 
     expect(h.after).not.toHaveBeenCalled();
   });
@@ -416,8 +430,11 @@ describe("invoking outside a graph", () => {
     const h = await harness(options);
     const [tool] = await h.live.adapter.listTools();
 
-    await expect(tool.invoke({ label: "original" })).resolves.toBeDefined();
-    expect(h.calls).toHaveLength(1);
+    // The completed call returns the server's content, under the effective
+    // arguments the before hook supplied -- headers or not.
+    await expect(tool.invoke({ label: "original" })).resolves.toBe("approved");
+    expect(h.calls).toEqual(["effective"]);
+    expect(h.after).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -630,7 +647,11 @@ describe("the interception boundary", () => {
           await client.listTools()
         ).tools.find((tool) => tool.name === "confirm")!;
 
-        expect(outputSchema).toBeDefined();
+        expect(outputSchema).toMatchObject({
+          type: "object",
+          properties: { confirmed: { type: "boolean" } },
+        });
+        expect(withoutSchema).not.toHaveProperty("outputSchema");
 
         const answered = await client.callTool(
           {
@@ -645,14 +666,12 @@ describe("the interception boundary", () => {
         );
 
         // Withholding the schema means the SDK validates nothing, so a server
-        // that breaks its contract only fails once the adapter checks.
+        // that breaks its contract only fails once the adapter checks: the
+        // contract-breaking value arrives verbatim rather than being rejected.
         expect(isInputRequiredResult(answered)).toBe(false);
-
-        if (validOutput) {
-          expect(answered.structuredContent).toEqual({ confirmed: true });
-        } else {
-          expect(answered.structuredContent).not.toEqual({ confirmed: true });
-        }
+        expect(answered.structuredContent).toEqual({
+          confirmed: validOutput ? true : "invalid",
+        });
       } finally {
         await client.close();
         await handler.close();
@@ -873,14 +892,23 @@ describe("refusing what an interrupt cannot carry", () => {
       inputRequests: { ask: { method, params: {} } },
     }));
 
-    await expect(
-      callToolWithElicitation(
-        round as never,
-        { name: "approve", arguments: {} },
-        "modern",
-        "approve"
-      )
-    ).rejects.toThrow(/cannot answer: [\s\S]*expected "elicitation\/create"/);
+    const failure = await callToolWithElicitation(
+      round as never,
+      { name: "approve", arguments: {} },
+      "modern",
+      "approve"
+    ).catch((error: unknown) => error);
+
+    expect(failure).toBeInstanceOf(Error);
+    expect((failure as Error).message).toContain(
+      'MCP tool "approve" on server "modern" asked for input this adapter cannot answer'
+    );
+    // Named by key, so the caller can see which request it was: the refusal
+    // is attributed to `ask`, not reported as a bare protocol mismatch.
+    expect((failure as Error).message).toContain("ask.method");
+    expect((failure as Error).message).toContain(
+      'expected "elicitation/create"'
+    );
 
     // Refused before pausing, so the server is never asked a second time.
     expect(round).toHaveBeenCalledTimes(1);
@@ -892,20 +920,37 @@ describe("refusing what an interrupt cannot carry", () => {
       inputRequests: {
         confirmation: {
           method: "elicitation/create",
-          params: { mode: "form", message: "ok?", requestedSchema: {} },
+          params: {
+            mode: "form",
+            message: "ok?",
+            requestedSchema: {
+              type: "object",
+              properties: { confirm: { type: "boolean" } },
+              required: ["confirm"],
+            },
+          },
         },
         sample: { method: "sampling/createMessage", params: {} },
       },
     }));
 
-    await expect(
-      callToolWithElicitation(
-        round as never,
-        { name: "approve", arguments: {} },
-        "modern",
-        "approve"
-      )
-    ).rejects.toThrow(/cannot answer: [\s\S]*expected "elicitation\/create"/);
+    const failure = await callToolWithElicitation(
+      round as never,
+      { name: "approve", arguments: {} },
+      "modern",
+      "approve"
+    ).catch((error: unknown) => error);
+
+    expect(failure).toBeInstanceOf(Error);
+    expect((failure as Error).message).toContain(
+      'MCP tool "approve" on server "modern" asked for input this adapter cannot answer'
+    );
+    expect((failure as Error).message).toContain("sample.method");
+    expect((failure as Error).message).toContain(
+      'expected "elicitation/create"'
+    );
+    // Only what it cannot answer: the answerable question goes unmentioned.
+    expect((failure as Error).message).not.toContain("confirmation");
   });
 
   it("rejects a resume that is not shaped like an answer", async () => {

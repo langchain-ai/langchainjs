@@ -86,7 +86,8 @@ describe("Simplified Tool Adapter Tests", () => {
       ],
     });
     const [tool] = await loadMcpTools("test", mockClient);
-    await expect(tool.invoke({})).rejects.toThrow();
+    // Rejected by the preserved constraint, not by some unrelated failure.
+    await expect(tool.invoke({})).rejects.toThrow(ToolInputParsingException);
     expect(mockClient.callTool).not.toHaveBeenCalled();
   });
 
@@ -149,16 +150,16 @@ describe("Simplified Tool Adapter Tests", () => {
         content: [{ type: "text", text: "done" }],
         structuredContent: { approved: "yes" },
       },
-      error: /schema rejects: [\s\S]*approved must be boolean/,
+      errors: ["data/approved must be boolean", "at structuredContent"],
     },
     {
       name: "no structured content at all",
       result: { content: [{ type: "text", text: "done" }] },
-      error: /schema rejects: [\s\S]*must be object/,
+      errors: ["data must be object", "at structuredContent"],
     },
   ])(
     "validates the terminal result itself when a tool elicits: $name",
-    async ({ result, error }) => {
+    async ({ result, errors }) => {
       const client = {
         callTool: vi.fn().mockResolvedValue(result),
         listTools: vi.fn().mockResolvedValue({
@@ -179,7 +180,15 @@ describe("Simplified Tool Adapter Tests", () => {
 
       const [tool] = await loadMcpTools("test", client, { elicitation: true });
 
-      await expect(tool.invoke({})).rejects.toThrow(error);
+      const failure = await tool.invoke({}).catch((thrown: unknown) => thrown);
+
+      expect(failure).toBeInstanceOf(Error);
+      expect((failure as Error).message).toContain(
+        'MCP tool "approve" on server "test" returned output its schema rejects'
+      );
+      // Each case names its own defect, attributed to `structuredContent`.
+      for (const error of errors)
+        expect((failure as Error).message).toContain(error);
 
       // The schema is withheld from the round so an `input_required` survives.
       expect(client.callTool.mock.calls[0][1]).toMatchObject({
@@ -306,7 +315,11 @@ describe("Simplified Tool Adapter Tests", () => {
         beforeToolCall: () => ({ args: "invalid" }),
       });
 
-      await expect(tool.invoke({})).rejects.toThrow();
+      await expect(tool.invoke({})).rejects.toMatchObject({
+        message: expect.stringContaining(
+          "Invalid input: expected record, received string"
+        ),
+      });
       expect(mockClient.callTool).not.toHaveBeenCalled();
     });
 
@@ -384,7 +397,10 @@ describe("Simplified Tool Adapter Tests", () => {
           afterToolCall,
         });
 
-        await expect(tool.invoke({})).rejects.toThrow();
+        // The wire call already happened; only the hook's result is refused.
+        await expect(tool.invoke({})).rejects.toThrow(
+          /expected string, received number/
+        );
         expect(mockClient.callTool).toHaveBeenCalledTimes(1);
       }
     );
