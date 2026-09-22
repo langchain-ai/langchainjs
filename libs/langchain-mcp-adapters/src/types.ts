@@ -305,6 +305,38 @@ export const streamableHttpReconnectSchema = z
 /**
  * Streamable HTTP transport connection
  */
+/**
+ * Headers, spelled the way the MCP SDK spells the ones it sets itself.
+ *
+ * A transport builds its request headers as
+ * `new Headers({ Authorization, ...ours })` — a case-sensitive spread over a
+ * case-insensitive namespace. A header of ours differing only in case
+ * survives that spread as a *second* key and the `Headers` constructor
+ * appends, so an `Authorization` configured beside an `authProvider` reached
+ * the wire as `Bearer <provider>, Bearer <ours>`, which a server rejects.
+ *
+ * Canonicalising as they are parsed means every header the adapter holds is
+ * already spelled the SDK's way, so nothing downstream has to remember — a
+ * connection reaches a transport through several paths and only some of them
+ * merge. `Authorization` is the only name affected: the SDK spells everything
+ * else it sets in lower case, where any case of ours already replaces
+ * cleanly. A future capitalised SDK header would be added here.
+ */
+export const sdkHeaderCase = (
+  headers: Record<string, string>
+): Record<string, string> =>
+  Object.fromEntries(
+    Object.entries(headers).map(([name, value]) => [
+      name.toLowerCase() === "authorization" ? "Authorization" : name,
+      value,
+    ])
+  );
+
+const headersSchema = z
+  .record(z.string(), z.string())
+  .transform(sdkHeaderCase)
+  .optional();
+
 const httpOptionsSchema = z
   .object({
     /**
@@ -327,7 +359,7 @@ const httpOptionsSchema = z
     /**
      * Additional headers to send with the request, useful for authentication
      */
-    headers: z.record(z.string(), z.string()).optional(),
+    headers: headersSchema,
     /**
      * OAuth client provider for automatic authentication handling.
      * When provided, the transport will automatically handle token refresh,

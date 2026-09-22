@@ -12,7 +12,7 @@ import type {
   StreamableHTTPClientTransportOptions,
   StreamableHTTPReconnectionOptions,
 } from "@modelcontextprotocol/client";
-import { connectionSchema } from "./types.js";
+import { connectionSchema, sdkHeaderCase } from "./types.js";
 import type {
   ResolvedStreamableHTTPConnection,
   ResolvedSSEConnection,
@@ -359,16 +359,21 @@ export class ConnectionManager {
       throw new Error("Forking stdio transport is not supported");
     }
 
-    if (options.transport === "sse")
-      return this.createClient("sse", key.serverName, {
-        ...options,
-        headers,
-      });
+    // Both transports merge. SSE used to replace the whole set, so forking an
+    // SSE connection to add one header silently dropped its credentials.
+    // `createClient` is overloaded per transport, so the literal has to reach
+    // it narrowed rather than through a shared variable.
+    const merged = mergeHeaders(options.headers, headers);
 
-    return this.createClient("http", key.serverName, {
-      ...options,
-      headers: mergeHeaders(options.headers, headers),
-    });
+    return options.transport === "sse"
+      ? this.createClient("sse", key.serverName, {
+          ...options,
+          headers: merged,
+        })
+      : this.createClient("http", key.serverName, {
+          ...options,
+          headers: merged,
+        });
   }
 
   /**
@@ -533,9 +538,7 @@ export class ConnectionManager {
 
     const options: StreamableHTTPClientTransportOptions = {
       ...(authProvider ? { authProvider } : {}),
-      ...(headers
-        ? { requestInit: { headers: matchSdkHeaderCase(headers) } }
-        : {}),
+      ...(headers ? { requestInit: { headers } } : {}),
     };
 
     if (args.mode !== "legacy") {
@@ -585,9 +588,7 @@ export class ConnectionManager {
     // by hand; SDK 2 wraps that fetch instead of replacing it.
     const options: SSEClientTransportOptions = {
       ...(authProvider ? { authProvider } : {}),
-      ...(headers
-        ? { requestInit: { headers: matchSdkHeaderCase(headers) } }
-        : {}),
+      ...(headers ? { requestInit: { headers } } : {}),
     };
 
     return new SSEClientTransport(new URL(url), options);
@@ -625,37 +626,12 @@ function serializeHeaders(
 }
 
 /**
- * Spell `Authorization` the way the SDK spells it.
+ * Merge header sets; later sources win.
  *
- * A transport builds its request headers as
- * `new Headers({ Authorization, ...ours })` — a case-sensitive spread over a
- * case-insensitive namespace. `mergeHeaders` lowercases every key, so ours
- * survives as a *second* entry and the `Headers` constructor appends rather
- * than replaces: an `Authorization` configured next to an `authProvider`
- * reached the wire as `Bearer <provider>, Bearer <ours>`, which a server
- * rejects. Spelling it the SDK's way makes the spread a replacement again.
- *
- * Only this one header can collide. The SDK spells every header it sets in
- * lower case except `Authorization`, and a lower-case name already replaces
- * cleanly — so `mcp-session-id` and `mcp-protocol-version` need nothing. A
- * future capitalised SDK header would need adding here.
- *
- * Deferring to the caller's own spelling instead would not work: it only
- * helps a caller who happens to type `Authorization`, and leaves
- * `authorization` and `AUTHORIZATION` joined.
+ * `Headers` deduplicates case-insensitively, which also lower-cases, so the
+ * result is respelled with {@link sdkHeaderCase} — a merge produces headers
+ * that never passed through the connection schema.
  */
-function matchSdkHeaderCase(
-  headers: Record<string, string>
-): Record<string, string> {
-  return Object.fromEntries(
-    Object.entries(headers).map(([name, value]) => [
-      name.toLowerCase() === "authorization" ? "Authorization" : name,
-      value,
-    ])
-  );
-}
-
-/** HTTP header names are case-insensitive; later sources take precedence. */
 export function mergeHeaders(
   base: Record<string, string> | undefined,
   overrides: Record<string, string> | undefined
@@ -665,5 +641,5 @@ export function mergeHeaders(
   for (const [name, value] of Object.entries(overrides ?? {}))
     headers.set(name, value);
 
-  return Object.fromEntries(headers);
+  return sdkHeaderCase(Object.fromEntries(headers));
 }
