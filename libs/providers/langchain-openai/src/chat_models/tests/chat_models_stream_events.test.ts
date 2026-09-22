@@ -1,9 +1,11 @@
 import { describe, test, expect } from "vitest";
 import type { ChatModelStreamEvent } from "@langchain/core/language_models/event";
 import { ChatModelStream } from "@langchain/core/language_models/stream";
-import type { BaseChatModelCallOptions } from "@langchain/core/language_models/chat_models";
 import { OpenAI as OpenAIClient } from "openai";
-import { ChatOpenAICompletions } from "../completions.js";
+import {
+  ChatOpenAICompletions,
+  type ChatOpenAICompletionsCallOptions,
+} from "../completions.js";
 
 type RawChunk = OpenAIClient.Chat.Completions.ChatCompletionChunk;
 
@@ -41,7 +43,6 @@ function textOnlyChunks(): RawChunk[] {
       created: 0,
       model: "gpt-4o-mini",
       service_tier: null,
-      system_fingerprint: null,
       choices: [
         {
           index: 0,
@@ -57,7 +58,6 @@ function textOnlyChunks(): RawChunk[] {
       created: 0,
       model: "gpt-4o-mini",
       service_tier: null,
-      system_fingerprint: null,
       choices: [
         {
           index: 0,
@@ -94,7 +94,6 @@ function reasoningPlusTextChunks(): RawChunk[] {
       created: 0,
       model: "gpt-5.4",
       service_tier: null,
-      system_fingerprint: null,
       choices: [
         {
           index: 0,
@@ -114,7 +113,6 @@ function reasoningPlusTextChunks(): RawChunk[] {
       created: 0,
       model: "gpt-5.4",
       service_tier: null,
-      system_fingerprint: null,
       choices: [
         {
           index: 0,
@@ -130,7 +128,6 @@ function reasoningPlusTextChunks(): RawChunk[] {
       created: 0,
       model: "gpt-5.4",
       service_tier: null,
-      system_fingerprint: null,
       choices: [
         {
           index: 0,
@@ -146,7 +143,6 @@ function reasoningPlusTextChunks(): RawChunk[] {
       created: 0,
       model: "gpt-5.4",
       service_tier: null,
-      system_fingerprint: null,
       choices: [
         {
           index: 0,
@@ -167,7 +163,6 @@ function toolCallChunks(): RawChunk[] {
       created: 0,
       model: "gpt-4o-mini",
       service_tier: null,
-      system_fingerprint: null,
       choices: [
         {
           index: 0,
@@ -183,7 +178,6 @@ function toolCallChunks(): RawChunk[] {
       created: 0,
       model: "gpt-4o-mini",
       service_tier: null,
-      system_fingerprint: null,
       choices: [
         {
           index: 0,
@@ -208,7 +202,6 @@ function toolCallChunks(): RawChunk[] {
       created: 0,
       model: "gpt-4o-mini",
       service_tier: null,
-      system_fingerprint: null,
       choices: [
         {
           index: 0,
@@ -231,7 +224,6 @@ function toolCallChunks(): RawChunk[] {
       created: 0,
       model: "gpt-4o-mini",
       service_tier: null,
-      system_fingerprint: null,
       choices: [
         {
           index: 0,
@@ -252,7 +244,6 @@ function invalidToolCallChunks(): RawChunk[] {
       created: 0,
       model: "gpt-4o-mini",
       service_tier: null,
-      system_fingerprint: null,
       choices: [
         {
           index: 0,
@@ -278,7 +269,6 @@ function invalidToolCallChunks(): RawChunk[] {
       created: 0,
       model: "gpt-4o-mini",
       service_tier: null,
-      system_fingerprint: null,
       choices: [
         {
           index: 0,
@@ -299,7 +289,6 @@ function usageChunks(): RawChunk[] {
       created: 0,
       model: "gpt-4o-mini",
       service_tier: null,
-      system_fingerprint: null,
       choices: [
         {
           index: 0,
@@ -315,7 +304,6 @@ function usageChunks(): RawChunk[] {
       created: 0,
       model: "gpt-4o-mini",
       service_tier: null,
-      system_fingerprint: null,
       choices: [
         {
           index: 0,
@@ -331,7 +319,6 @@ function usageChunks(): RawChunk[] {
       created: 0,
       model: "gpt-4o-mini",
       service_tier: null,
-      system_fingerprint: null,
       choices: [],
       usage: {
         prompt_tokens: 100,
@@ -355,7 +342,6 @@ function parallelToolCallChunks(): RawChunk[] {
       created: 0,
       model: "gpt-4o-mini",
       service_tier: null,
-      system_fingerprint: null,
       choices: [
         {
           index: 0,
@@ -387,7 +373,6 @@ function parallelToolCallChunks(): RawChunk[] {
       created: 0,
       model: "gpt-4o-mini",
       service_tier: null,
-      system_fingerprint: null,
       choices: [
         {
           index: 0,
@@ -407,7 +392,7 @@ describe("ChatOpenAICompletions._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents(
         [],
-        {} as BaseChatModelCallOptions
+        {} as ChatOpenAICompletionsCallOptions
       )) {
         events.push(event);
       }
@@ -425,7 +410,7 @@ describe("ChatOpenAICompletions._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents(
         [],
-        {} as BaseChatModelCallOptions
+        {} as ChatOpenAICompletionsCallOptions
       )) {
         events.push(event);
       }
@@ -440,7 +425,7 @@ describe("ChatOpenAICompletions._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents(
         [],
-        {} as BaseChatModelCallOptions
+        {} as ChatOpenAICompletionsCallOptions
       )) {
         events.push(event);
       }
@@ -465,7 +450,7 @@ describe("ChatOpenAICompletions._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents(
         [],
-        {} as BaseChatModelCallOptions
+        {} as ChatOpenAICompletionsCallOptions
       )) {
         events.push(event);
       }
@@ -482,7 +467,7 @@ describe("ChatOpenAICompletions._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents(
         [],
-        {} as BaseChatModelCallOptions
+        {} as ChatOpenAICompletionsCallOptions
       )) {
         events.push(event);
       }
@@ -502,7 +487,7 @@ describe("ChatOpenAICompletions._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents(
         [],
-        {} as BaseChatModelCallOptions
+        {} as ChatOpenAICompletionsCallOptions
       )) {
         events.push(event);
       }
@@ -538,7 +523,7 @@ describe("ChatOpenAICompletions._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents(
         [],
-        {} as BaseChatModelCallOptions
+        {} as ChatOpenAICompletionsCallOptions
       )) {
         events.push(event);
       }
@@ -559,7 +544,7 @@ describe("ChatOpenAICompletions._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents(
         [],
-        {} as BaseChatModelCallOptions
+        {} as ChatOpenAICompletionsCallOptions
       )) {
         events.push(event);
       }
@@ -591,7 +576,7 @@ describe("ChatOpenAICompletions._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents(
         [],
-        {} as BaseChatModelCallOptions
+        {} as ChatOpenAICompletionsCallOptions
       )) {
         events.push(event);
       }
@@ -617,7 +602,7 @@ describe("ChatOpenAICompletions._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents(
         [],
-        {} as BaseChatModelCallOptions
+        {} as ChatOpenAICompletionsCallOptions
       )) {
         events.push(event);
       }
@@ -641,7 +626,7 @@ describe("ChatOpenAICompletions._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents(
         [],
-        {} as BaseChatModelCallOptions
+        {} as ChatOpenAICompletionsCallOptions
       )) {
         events.push(event);
       }
@@ -659,7 +644,7 @@ describe("ChatOpenAICompletions._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents(
         [],
-        {} as BaseChatModelCallOptions
+        {} as ChatOpenAICompletionsCallOptions
       )) {
         events.push(event);
       }
@@ -682,7 +667,7 @@ describe("ChatOpenAICompletions._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents([], {
         streamUsage: true,
-      } as BaseChatModelCallOptions)) {
+      } as ChatOpenAICompletionsCallOptions)) {
         events.push(event);
       }
 
@@ -708,7 +693,7 @@ describe("ChatOpenAICompletions._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents([], {
         streamUsage: true,
-      } as BaseChatModelCallOptions)) {
+      } as ChatOpenAICompletionsCallOptions)) {
         events.push(event);
       }
 
@@ -724,7 +709,7 @@ describe("ChatOpenAICompletions._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents([], {
         streamUsage: false,
-      } as BaseChatModelCallOptions)) {
+      } as ChatOpenAICompletionsCallOptions)) {
         events.push(event);
       }
 
@@ -742,7 +727,7 @@ describe("ChatOpenAICompletions._streamChatModelEvents (native)", () => {
       const events: ChatModelStreamEvent[] = [];
       for await (const event of model._streamChatModelEvents(
         [],
-        {} as BaseChatModelCallOptions
+        {} as ChatOpenAICompletionsCallOptions
       )) {
         events.push(event);
       }
@@ -761,7 +746,7 @@ describe("ChatOpenAICompletions._streamChatModelEvents (native)", () => {
     test("text sub-stream works end-to-end", async () => {
       const model = new MockStreamChatOpenAICompletions(textOnlyChunks());
       const stream = new ChatModelStream(
-        model._streamChatModelEvents([], {} as BaseChatModelCallOptions)
+        model._streamChatModelEvents([], {} as ChatOpenAICompletionsCallOptions)
       );
       expect(await stream.text).toBe("Hello world");
     });
@@ -769,7 +754,7 @@ describe("ChatOpenAICompletions._streamChatModelEvents (native)", () => {
     test("toolCalls sub-stream works end-to-end", async () => {
       const model = new MockStreamChatOpenAICompletions(toolCallChunks());
       const stream = new ChatModelStream(
-        model._streamChatModelEvents([], {} as BaseChatModelCallOptions)
+        model._streamChatModelEvents([], {} as ChatOpenAICompletionsCallOptions)
       );
       const calls = await stream.toolCalls;
       expect(calls.length).toBe(1);
@@ -782,7 +767,7 @@ describe("ChatOpenAICompletions._streamChatModelEvents (native)", () => {
         reasoningPlusTextChunks()
       );
       const stream = new ChatModelStream(
-        model._streamChatModelEvents([], {} as BaseChatModelCallOptions)
+        model._streamChatModelEvents([], {} as ChatOpenAICompletionsCallOptions)
       );
       expect(await stream.reasoning).toBe("Let me reason...");
     });
@@ -792,7 +777,7 @@ describe("ChatOpenAICompletions._streamChatModelEvents (native)", () => {
       const stream = new ChatModelStream(
         model._streamChatModelEvents([], {
           streamUsage: true,
-        } as BaseChatModelCallOptions)
+        } as ChatOpenAICompletionsCallOptions)
       );
       expect(await stream.usage).toMatchObject({
         input_tokens: 100,
@@ -804,7 +789,7 @@ describe("ChatOpenAICompletions._streamChatModelEvents (native)", () => {
     test("output assembles correct AIMessage", async () => {
       const model = new MockStreamChatOpenAICompletions(toolCallChunks());
       const stream = new ChatModelStream(
-        model._streamChatModelEvents([], {} as BaseChatModelCallOptions)
+        model._streamChatModelEvents([], {} as ChatOpenAICompletionsCallOptions)
       );
       const message = await stream.output;
 
@@ -828,7 +813,7 @@ describe("ChatOpenAICompletions._streamChatModelEvents (native)", () => {
     test("await stream returns AIMessage directly", async () => {
       const model = new MockStreamChatOpenAICompletions(textOnlyChunks());
       const message = await new ChatModelStream(
-        model._streamChatModelEvents([], {} as BaseChatModelCallOptions)
+        model._streamChatModelEvents([], {} as ChatOpenAICompletionsCallOptions)
       );
       expect(message._getType()).toBe("ai");
       expect(message.id).toBe("chatcmpl-abc");
