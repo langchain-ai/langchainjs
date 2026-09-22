@@ -58,6 +58,36 @@ const model = new ChatOpenAI({
 const response = await model.invoke(new HumanMessage("Hello world!"));
 ```
 
+### Reasoning for custom or newly released models
+
+By default, reasoning settings are forwarded only for recognized reasoning model
+names. Set the constructor option `reasoningParameterPolicy: "passthrough"` to
+forward explicit settings without waiting for a model-name update, including for
+custom Azure deployments.
+
+```typescript
+const model = new ChatOpenAI({
+  model: "my-reasoning-model",
+  useResponsesApi: true,
+  reasoningParameterPolicy: "passthrough",
+  reasoning: { effort: "high", summary: "auto" },
+});
+```
+
+The default policy, `"auto"`, retains model-name detection, including recognition
+of non-chat GPT-6 models. Selecting passthrough changes only reasoning forwarding:
+it does not add reasoning when none is configured, change system-message roles or token-limit
+fields, or change endpoint selection. A reasoning summary still selects the
+Responses API; effort alone does not. The provider validates support and may
+reject unsupported settings. Previously ignored settings can affect latency and
+cost when enabled. This option does not guarantee all other compatibility
+requirements for a custom model are met.
+
+Invocation `reasoning` overrides matching constructor fields. The legacy
+`reasoningEffort` call option fills an effort only when none is specified. Typed
+reasoning takes precedence over `modelKwargs`: it replaces the raw Responses
+reasoning object, or overrides raw `reasoning_effort` for Chat Completions.
+
 ### Streaming
 
 ```typescript

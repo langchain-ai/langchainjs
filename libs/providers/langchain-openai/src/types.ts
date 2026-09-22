@@ -192,9 +192,12 @@ export interface OpenAIChatInput extends OpenAIBaseInput {
    * Options for reasoning models.
    *
    * Note that some options, like reasoning summaries, are only available when using the responses
-   * API. This option is ignored when not using a reasoning model.
+   * API. Unrecognized models ignore this option unless reasoningParameterPolicy is "passthrough".
    */
   reasoning?: OpenAIClient.Reasoning;
+
+  /** Forward explicit reasoning for any model with "passthrough"; "auto" (default) uses model-name detection. */
+  reasoningParameterPolicy?: "auto" | "passthrough";
 
   /**
    * Should be set to `true` in tenancies with Zero Data Retention

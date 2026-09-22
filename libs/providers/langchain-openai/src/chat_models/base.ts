@@ -183,7 +183,7 @@ export interface BaseChatOpenAICallOptions
    * Note that some options, like reasoning summaries, are only available when using the responses
    * API. If these options are set, the responses API will be used to fulfill the request.
    *
-   * These options will be ignored when not using a reasoning model.
+   * These options are ignored for unrecognized models unless reasoningParameterPolicy is "passthrough".
    *
    * Changing this value part-way through a conversation changes a request-level
    * parameter, which invalidates the cached prompt prefix. Models that support it (currently GPT-6)
@@ -329,6 +329,8 @@ export abstract class BaseChatOpenAI<
 
   reasoning?: OpenAIClient.Reasoning;
 
+  reasoningParameterPolicy: "auto" | "passthrough" = "auto";
+
   /**
    * Must be set to `true` in tenancies with Zero Data Retention. Setting to `true` will disable
    * output storage in the Responses API, but this DOES NOT enable Zero Data Retention in your
@@ -445,6 +447,7 @@ export abstract class BaseChatOpenAI<
       "disableStreaming",
       "zdrEnabled",
       "reasoning",
+      "reasoningParameterPolicy",
       "promptCacheKey",
       "promptCacheRetention",
       "verbosity",
@@ -590,6 +593,7 @@ export abstract class BaseChatOpenAI<
     this.audio = fields?.audio;
     this.modalities = fields?.modalities;
     this.reasoning = fields?.reasoning;
+    this.reasoningParameterPolicy = fields?.reasoningParameterPolicy ?? "auto";
     this.maxTokens = fields?.maxCompletionTokens ?? fields?.maxTokens;
     this.promptCacheKey = fields?.promptCacheKey ?? this.promptCacheKey;
     this.promptCacheRetention =
@@ -635,7 +639,10 @@ export abstract class BaseChatOpenAI<
   protected _getReasoningParams(
     options?: this["ParsedCallOptions"]
   ): OpenAIClient.Reasoning | undefined {
-    if (!isReasoningModel(this.model)) {
+    if (
+      this.reasoningParameterPolicy !== "passthrough" &&
+      !isReasoningModel(this.model)
+    ) {
       return;
     }
 
