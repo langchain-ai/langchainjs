@@ -2,29 +2,27 @@
 "@langchain/mcp-adapters": minor
 ---
 
-Answer modern MCP elicitation with durable LangGraph interrupts. Each completed
-`tools/call` round is recorded as plain task data before pausing, so resuming
-retrieves the exact saved question and continuation instead of reissuing earlier
-requests. Legacy elicitation callbacks remain unchanged.
+Answer modern MCP elicitation with LangGraph interrupts, opt in per server with
+`elicitation: true`. A modern server that needs input answers `tools/call` with
+an `input_required` result; the adapter raises each round as an `interrupt()`
+and resumes with `createMCPElicitationResume(interrupt, responses)`. Legacy
+elicitation callbacks remain unchanged, and a connection that does not opt in
+behaves exactly as before.
 
-Use `createMCPElicitationResume(interrupt, responses)` with the latest interrupt.
-Answers target both the graph task and the displayed question attempt. Invalid
-form answers re-ask without another MCP request, and one allowance counts server
-questions and corrections. The original allowance survives reconstructed runs;
-changed effective tool arguments and stale answers are rejected.
+Rounds are driven through the SDK's own manual input-required path — the
+per-call `allowInputRequired` request option — rather than a client subclass, so
+`Mcp-Param-*` header mirroring and descriptor forwarding are unchanged. The
+elicitation capability is advertised per request instead of at initialization,
+so an `auto` connection that negotiates legacy never advertises it.
 
-Recovery does not depend on the original process, client, or loop counter. Use a
-persistent checkpointer and reconstruct compatible tools/graph against the same
-thread and logical server/authentication identity. Server continuation expiry is
-independent of checkpoint retention: an expired continuation fails rather than
-silently restarting with old consent. Remote effects still require idempotency
-across the server-success/checkpoint-write crash window.
-
-`beforeToolCall` remains attempt-level. Hook-supplied header overrides continue to
-work for ordinary calls but are refused for durable elicitation. SDK output
-validation, descriptor forwarding, and header behavior remain intact. Unsupported
-input requests and state-only responses fail clearly rather than being polled.
-
-Public interrupts omit server continuation data; internal task streams and traces
-can contain saved protocol data and require application-appropriate access and
-projection policies.
+Resuming replays the tool call from its first round, so the server is asked
+again before it is answered and remote effects must be idempotent.
+`beforeToolCall` runs once per execution, including replays, and any header
+identity it supplies is re-derived rather than reused from the pause. Answers
+are validated against the server's requested schemas; a missing, unexpected or
+malformed answer fails the call rather than re-asking, since the caller resuming
+the graph is code and not the human who filled the form. Sampling and roots
+requests are refused by name, state-only responses are refused instead of
+polled, and calling such a tool outside a graph — or inside one with no
+checkpointer — explains how to answer it instead of hanging. Interrupt payloads
+carry the server's questions and never its opaque continuation state.

@@ -1,9 +1,5 @@
 import { MCPClientError } from "./utils/errors.js";
-import {
-  CancellationObserverMCPClient,
-  configureElicitation,
-  InterruptMCPClient,
-} from "./elicitation.js";
+import { configureElicitation } from "./elicitation.js";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import {
   SSEClientTransport,
@@ -83,7 +79,6 @@ function protocolClientOptions(
     versionNegotiation: {
       mode: options.mode === "modern" ? { pin: "2026-07-28" } : "auto",
     },
-    inputRequired: { maxRounds: options.maxElicitationRounds },
   };
 }
 
@@ -196,27 +191,7 @@ export class ConnectionManager {
     const identity = { name: packageJson.name, version: packageJson.version };
     const clientOptions = protocolClientOptions(options);
 
-    const onCancelled: ConstructorParameters<
-      typeof CancellationObserverMCPClient
-    >[2] = options.onCancelled
-      ? (notification) => {
-          const { requestId, reason } = notification;
-          if (requestId == null) return;
-          return options.onCancelled?.(
-            { requestId, reason },
-            { server: serverName, options: connectionSchema.parse(options) }
-          );
-        }
-      : undefined;
-    // `InterruptMCPClient` adds two overrides, and each self-gates on the
-    // negotiated modern era: the outbound `_meta` envelope and the
-    // non-complete-result seam. `tools.ts` gates the interrupt path the same
-    // way, so a legacy connection has nothing to opt out of by construction.
-    const mcpClient = new InterruptMCPClient(
-      identity,
-      clientOptions,
-      onCancelled
-    );
+    const mcpClient = new MCPClient(identity, clientOptions);
 
     if (options.mode === "legacy")
       configureElicitation(mcpClient, serverName, options.onElicitation);

@@ -18,7 +18,6 @@ import type {
 
 import { z } from "zod";
 import { loadMcpTools } from "../tools.js";
-import { PendingMCPInput } from "../elicitation.js";
 
 vi.mock(
   "@modelcontextprotocol/client",
@@ -97,50 +96,173 @@ describe("Simplified Tool Adapter Tests", () => {
   ] as const)(
     "answers an incomplete response only on a $era server",
     async ({ era, answers }) => {
-      const pending = new PendingMCPInput(
-        {
-          kind: "input_required",
-          inputRequests: {
-            confirm: {
-              method: "elicitation/create",
-              params: {
-                mode: "form",
-                message: "Confirm?",
-                requestedSchema: {
-                  type: "object",
-                  properties: { confirmed: { type: "boolean" } },
-                  required: ["confirmed"],
-                },
+      // `allowInputRequired` makes this a resolved value rather than a throw.
+      const pending = {
+        resultType: "input_required",
+        inputRequests: {
+          confirm: {
+            method: "elicitation/create",
+            params: {
+              mode: "form",
+              message: "Confirm?",
+              requestedSchema: {
+                type: "object",
+                properties: { confirmed: { type: "boolean" } },
+                required: ["confirmed"],
               },
             },
           },
-          requestState: "opaque-state",
         },
-        { name: "echo", arguments: {} }
-      );
+        requestState: "opaque-state",
+      };
 
       const client = {
-        callTool: vi.fn().mockRejectedValue(pending),
+        callTool: vi.fn().mockResolvedValue(pending),
         listTools: vi.fn().mockResolvedValue({
           tools: [{ name: "echo", inputSchema: { type: "object" } }],
         }),
         getProtocolEra: vi.fn(() => era),
-        maxElicitationRounds: 2,
       } as unknown as MockedObject<Client>;
 
-      const [tool] = await loadMcpTools("test", client);
+      const [tool] = await loadMcpTools("test", client, {
+        elicitation: true,
+      });
 
       // A legacy server never returns an `input_required` result, so the
-      // elicitation path must stay out of its way even though the client
-      // carries a rounds budget. Outside a graph the modern path reports how
-      // to answer, while the legacy path lets the response surface as a
-      // generic tool failure.
+      // elicitation path stays out of its way even when the server opted in.
+      // Outside a graph the modern path reports how to answer, while the
+      // legacy path lets the response surface as a generic tool failure.
       await expect(tool.invoke({})).rejects.toThrow(
         answers ? /Invoke it inside a LangGraph/ : /Error calling tool echo/
       );
       expect(client.callTool).toHaveBeenCalledTimes(1);
     }
   );
+
+  // A conforming server validates its own structured output before sending it,
+  // so these only arise from a server that does not — which is exactly what the
+  // SDK's own validator covered before the rounds withheld the schema from it.
+  test.each([
+    {
+      name: "content that violates the schema",
+      result: {
+        content: [{ type: "text", text: "done" }],
+        structuredContent: { approved: "yes" },
+      },
+      error: /does not match its output schema/,
+    },
+    {
+      name: "no structured content at all",
+      result: { content: [{ type: "text", text: "done" }] },
+      error: /has an output schema but returned no structured content/,
+    },
+  ])(
+    "validates the terminal result itself when a tool elicits: $name",
+    async ({ result, error }) => {
+      const client = {
+        callTool: vi.fn().mockResolvedValue(result),
+        listTools: vi.fn().mockResolvedValue({
+          tools: [
+            {
+              name: "approve",
+              inputSchema: { type: "object" },
+              outputSchema: {
+                type: "object",
+                properties: { approved: { type: "boolean" } },
+                required: ["approved"],
+              },
+            },
+          ],
+        }),
+        getProtocolEra: vi.fn(() => "modern" as const),
+      } as unknown as MockedObject<Client>;
+
+      const [tool] = await loadMcpTools("test", client, { elicitation: true });
+
+      await expect(tool.invoke({})).rejects.toThrow(error);
+
+      // The schema is withheld from the round so an `input_required` survives.
+      expect(client.callTool.mock.calls[0][1]).toMatchObject({
+        allowInputRequired: true,
+      });
+      expect(
+        client.callTool.mock.calls[0][1]?.toolDefinition
+      ).not.toHaveProperty("outputSchema");
+    }
+  );
+
+  test("reports a client that cannot rebind headers", async () => {
+    const client = {
+      callTool: vi.fn().mockResolvedValue({ content: [] }),
+      listTools: vi.fn().mockResolvedValue({
+        tools: [{ name: "echo", inputSchema: { type: "object" } }],
+      }),
+      getProtocolEra: vi.fn(() => "modern" as const),
+    } as unknown as MockedObject<Client>;
+
+    const [tool] = await loadMcpTools("test", client, {
+      beforeToolCall: () => ({ headers: { "X-Tenant": "a" } }),
+    });
+
+    await expect(tool.invoke({})).rejects.toThrow(
+      /does not support header changes/
+    );
+    expect(client.callTool).not.toHaveBeenCalled();
+  });
+
+  test("refuses a forked connection that changed protocol era", async () => {
+    const forked = {
+      callTool: vi.fn().mockResolvedValue({ content: [] }),
+      getProtocolEra: vi.fn(() => "legacy" as const),
+    };
+    const client = {
+      callTool: vi.fn().mockResolvedValue({ content: [] }),
+      listTools: vi.fn().mockResolvedValue({
+        tools: [{ name: "echo", inputSchema: { type: "object" } }],
+      }),
+      getProtocolEra: vi.fn(() => "modern" as const),
+      fork: vi.fn(async () => forked),
+    } as unknown as MockedObject<Client>;
+
+    const [tool] = await loadMcpTools("test", client, {
+      beforeToolCall: () => ({ headers: { "X-Tenant": "a" } }),
+    });
+
+    // Tool schemas and the elicitation decision were both fixed at discovery.
+    await expect(tool.invoke({})).rejects.toThrow(
+      /changed protocol era after tool discovery/
+    );
+    expect(forked.callTool).not.toHaveBeenCalled();
+  });
+
+  test("leaves an error result to the adapter rather than schema validation", async () => {
+    const client = {
+      callTool: vi.fn().mockResolvedValue({
+        content: [{ type: "text", text: "upstream exploded" }],
+        isError: true,
+      }),
+      listTools: vi.fn().mockResolvedValue({
+        tools: [
+          {
+            name: "approve",
+            inputSchema: { type: "object" },
+            outputSchema: {
+              type: "object",
+              properties: { approved: { type: "boolean" } },
+              required: ["approved"],
+            },
+          },
+        ],
+      }),
+      getProtocolEra: vi.fn(() => "modern" as const),
+    } as unknown as MockedObject<Client>;
+
+    const [tool] = await loadMcpTools("test", client, { elicitation: true });
+
+    // An error result carries no structured content by design; reporting a
+    // schema violation would bury the server's own message.
+    await expect(tool.invoke({})).rejects.toThrow(/upstream exploded/);
+  });
 
   describe("hook return validation", () => {
     beforeEach(() => {

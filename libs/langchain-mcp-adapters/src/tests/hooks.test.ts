@@ -12,7 +12,6 @@ import {
   entrypoint,
   MemorySaver,
 } from "@langchain/langgraph";
-import { InterruptMCPClient } from "../elicitation.js";
 import type { RunnableConfig } from "@langchain/core/runnables";
 
 import { createDummyHttpServer } from "./fixtures/dummy-http-server.js";
@@ -653,19 +652,21 @@ describe("tool hook results", () => {
 describe("negotiated tool invocation policy", () => {
   afterEach(() => vi.restoreAllMocks());
 
+  // Elicitation is opt-in per server and modern-only, so the interrupt path
+  // engages on exactly one of these four.
   test.each([
-    { ClientType: Client, era: "legacy", durable: false },
-    { ClientType: Client, era: "modern", durable: false },
-    { ClientType: InterruptMCPClient, era: "legacy", durable: false },
-    { ClientType: InterruptMCPClient, era: "modern", durable: true },
+    { elicitation: false, era: "legacy", durable: false },
+    { elicitation: false, era: "modern", durable: false },
+    { elicitation: true, era: "legacy", durable: false },
+    { elicitation: true, era: "modern", durable: true },
   ] satisfies {
-    ClientType: typeof Client;
+    elicitation: boolean;
     era: ReturnType<Client["getProtocolEra"]>;
     durable: boolean;
   }[])(
-    "$era client with durable=$durable",
-    async ({ ClientType, era, durable }) => {
-      const client = new ClientType({ name: "policy-test", version: "1" });
+    "$era client with elicitation=$elicitation drives interrupts: $durable",
+    async ({ elicitation, era, durable }) => {
+      const client = new Client({ name: "policy-test", version: "1" });
       const protocol = vi.spyOn(client, "getProtocolEra").mockReturnValue(era);
       vi.spyOn(client, "listTools").mockResolvedValue({
         tools: [{ name: "echo", inputSchema: { type: "object" } }],
@@ -680,6 +681,7 @@ describe("negotiated tool invocation policy", () => {
       const [tool] = await loadMcpTools("test", client, {
         beforeToolCall: before,
         logLevel: "info",
+        elicitation,
       });
 
       protocol.mockClear();
@@ -710,7 +712,16 @@ describe("negotiated tool invocation policy", () => {
         arguments: { effective: true },
         _meta:
           era === "modern"
-            ? { "io.modelcontextprotocol/logLevel": "info" }
+            ? {
+                "io.modelcontextprotocol/logLevel": "info",
+                ...(durable
+                  ? {
+                      "io.modelcontextprotocol/clientCapabilities": {
+                        elicitation: { form: {}, url: {} },
+                      },
+                    }
+                  : {}),
+              }
             : undefined,
       });
     }

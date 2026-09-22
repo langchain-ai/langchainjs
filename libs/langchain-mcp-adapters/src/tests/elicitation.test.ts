@@ -10,14 +10,12 @@ import { join } from "node:path";
 import { createMcpHandler, McpServer } from "@modelcontextprotocol/server";
 import { toNodeHandler } from "@modelcontextprotocol/node";
 import { z } from "zod";
-import { InMemoryTransport } from "@modelcontextprotocol/client";
 import { ElicitRequestSchema } from "@modelcontextprotocol/core";
 import { adapterConfigSchema } from "../types.js";
 import { MCPAdapter } from "../index.js";
 
 import { describe, expect, it, vi } from "vitest";
 import {
-  CancellationObserverMCPClient,
   modernElicitationRequestSchema,
   validateElicitationAnswer,
 } from "../elicitation.js";
@@ -259,10 +257,8 @@ it("answers legacy reverse requests using the same callback contract", async () 
   }
 });
 
-it.each([false, true])(
-  "keeps SDK cancellation active while observing it: %s",
-  async (observeCancellation) => {
-    const cancelled = vi.fn();
+it("aborts an in-flight elicitation when the server cancels it", async () => {
+  {
     let resolveElicitationStarted: () => void = () => {};
     const elicitationStarted = new Promise<void>((resolve) => {
       resolveElicitationStarted = resolve;
@@ -284,7 +280,6 @@ it.each([false, true])(
             "--elicitation",
             "--cancel-elicitation",
           ],
-          ...(observeCancellation ? { onCancelled: cancelled } : {}),
           onElicitation: async (_, { signal }) => {
             elicitationSignal = signal;
             resolveElicitationStarted();
@@ -312,142 +307,9 @@ it.each([false, true])(
       await expect(invocation).resolves.toEqual(
         expect.objectContaining({ status: "rejected" })
       );
-      if (observeCancellation)
-        expect(cancelled).toHaveBeenCalledWith(
-          expect.objectContaining({
-            requestId: 1,
-            reason: "cancel elicitation",
-          }),
-          expect.objectContaining({ server: "legacy" })
-        );
     } finally {
       await adapter.close();
     }
-  }
-);
-
-it.each(["auto", "modern"] as const)(
-  "observes validated cancellation notifications in %s mode",
-  async (mode) => {
-    const cancelled = vi.fn();
-    const handler = createMcpHandler(
-      () => {
-        const server = new McpServer({ name: "cancelled", version: "1" });
-        server.registerTool(
-          "notify",
-          { inputSchema: z.object({}) },
-          async (_, context) => {
-            await context.mcpReq.notify({
-              method: "notifications/cancelled",
-              params: { requestId: "valid", reason: "server cancelled" },
-            });
-
-            return { content: [{ type: "text", text: "done" }] };
-          }
-        );
-
-        return server;
-      },
-      { legacy: "reject" }
-    );
-    const http = createServer(toNodeHandler(handler));
-    http.listen(0, "127.0.0.1");
-    await once(http, "listening");
-    const { port } = z.object({ port: z.number() }).parse(http.address());
-    const adapter = new MCPAdapter({
-      servers: {
-        cancelled: {
-          mode,
-          url: `http://127.0.0.1:${port}/mcp`,
-          onCancelled: cancelled,
-        },
-      },
-    });
-
-    try {
-      const [tool] = await adapter.listTools();
-      expect(await tool.invoke({})).toBe("done");
-      await vi.waitFor(() => expect(cancelled).toHaveBeenCalledTimes(1));
-      expect(cancelled).toHaveBeenCalledWith(
-        { requestId: "valid", reason: "server cancelled" },
-        expect.objectContaining({ server: "cancelled" })
-      );
-    } finally {
-      await adapter.close();
-      await handler.close();
-      const closed = once(http, "close");
-      http.close();
-      http.closeAllConnections();
-      await closed;
-    }
-  }
-);
-
-it("ignores malformed cancellation observer input", async () => {
-  const cancelled = vi.fn();
-  const errors = vi.fn();
-  const server = new McpServer({ name: "malformed-peer", version: "1" });
-  const client = new CancellationObserverMCPClient(
-    { name: "consumer", version: "1" },
-    { versionNegotiation: { mode: "legacy" } },
-    cancelled
-  );
-  const [clientTransport, serverTransport] =
-    InMemoryTransport.createLinkedPair();
-  client.onerror = errors;
-
-  try {
-    await Promise.all([
-      server.connect(serverTransport),
-      client.connect(clientTransport),
-    ]);
-    await serverTransport.send({
-      jsonrpc: "2.0",
-      method: "notifications/cancelled",
-      params: { requestId: {} },
-    });
-    await vi.waitFor(() => expect(errors).toHaveBeenCalledTimes(1));
-    expect(cancelled).not.toHaveBeenCalled();
-  } finally {
-    await client.close();
-    await server.close();
-  }
-});
-
-it.each([
-  () => {
-    throw new Error("observer failure");
-  },
-  () => Promise.reject(new Error("observer rejection")),
-])("isolates cancellation observer failure", async (onCancelled) => {
-  const observer = vi.fn(onCancelled);
-  const errors = vi.fn();
-  const server = new McpServer({ name: "observer-peer", version: "1" });
-  const client = new CancellationObserverMCPClient(
-    { name: "consumer", version: "1" },
-    { versionNegotiation: { mode: "legacy" } },
-    observer
-  );
-  const [clientTransport, serverTransport] =
-    InMemoryTransport.createLinkedPair();
-  client.onerror = errors;
-
-  try {
-    await Promise.all([
-      server.connect(serverTransport),
-      client.connect(clientTransport),
-    ]);
-    await serverTransport.send({
-      jsonrpc: "2.0",
-      method: "notifications/cancelled",
-      params: { requestId: 1 },
-    });
-    await vi.waitFor(() => expect(observer).toHaveBeenCalledTimes(1));
-    await expect(client.ping()).resolves.toEqual({});
-    expect(errors).not.toHaveBeenCalled();
-  } finally {
-    await client.close();
-    await server.close();
   }
 });
 
@@ -587,7 +449,7 @@ describe("elicitation and logging configuration", () => {
           mode: "legacy",
           command: "node",
           args: [],
-          maxElicitationRounds: 2,
+          elicitation: true,
         },
       },
     },
@@ -602,7 +464,7 @@ describe("elicitation and logging configuration", () => {
     },
     {
       servers: { modern: { command: "node", args: [] } },
-      maxElicitationRounds: 2,
+      elicitation: true,
     },
     { servers: { modern: { command: "node", args: [] } }, logLevel: "info" },
   ])("rejects unsupported server policy with Zod errors: %j", (input) => {

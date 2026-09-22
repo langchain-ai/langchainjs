@@ -56,14 +56,6 @@ test("check tool hooks types", () => {
               }
           >();
         },
-        onCancelled: (notification, server) => {
-          expectTypeOf(notification.reason).toEqualTypeOf<string | undefined>();
-          expectTypeOf(server).toEqualTypeOf<{
-            server: string;
-            options: ResolvedConnection;
-          }>();
-        },
-
         onInitialized: (server) => {
           expectTypeOf(server).toEqualTypeOf<{
             server: string;

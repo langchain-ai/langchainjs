@@ -66,12 +66,18 @@ to skip probing and enable legacy options such as `onElicitation` and
 [`2026-07-28`](https://modelcontextprotocol.io/specification/2026-07-28)
 without fallback. SDK 2 can serve either protocol.
 
-## Durable modern elicitation
+## Modern elicitation
 
-Modern servers can return `input_required` from a tool call. Inside a LangGraph
-with a checkpointer, the adapter records each completed MCP round in a LangGraph
-task, then interrupts with the form or URL question. Legacy `onElicitation`
-callbacks remain separate and do not become durable graph interrupts.
+Modern servers can return `input_required` from a tool call. Opt a server in
+with `elicitation: true`; inside a LangGraph with a checkpointer the adapter
+raises the form or URL question as an `interrupt()`. Legacy `onElicitation`
+callbacks remain separate and do not become graph interrupts.
+
+```ts
+const adapter = new MCPAdapter({
+  servers: { modern: { url: "http://localhost:8000/mcp", elicitation: true } },
+});
+```
 
 Resume using the latest interrupt and the same thread:
 
@@ -93,48 +99,30 @@ await agent.invoke(
 ```
 
 Here `agent`, `input`, and `config` are application-owned; `confirmation` and
-`confirmed` must match the server's input-request key and form schema. The helper
-binds answers to both the graph interrupt and the displayed question attempt.
-Invalid form answers produce another interrupt without another MCP request;
-use that latest interrupt for the correction. `maxElicitationRounds` bounds all
-question attempts, including corrections, and defaults to 32.
+`confirmed` must match the server's input-request key and form schema. Answers
+are validated against the server's requested schema. A missing, unexpected, or
+malformed answer fails the tool call rather than re-asking: the caller resuming
+the graph is code, not the human who filled the form.
 
-### Recovery after a long pause
+### Resuming replays the call
 
-No JavaScript stack, loop counter, adapter instance, or live connection is saved.
-A new process reconstructs the adapter, tools, and graph from configuration and
-resumes the same thread against the same persistent checkpointer. Completed
-rounds come from saved task results; earlier answers reconstruct progression and
-the original allowance. The initial MCP request is not repeated merely to
-recover the pending question. `MemorySaver` alone cannot survive process loss.
+Resuming re-issues the tool call from its first round, so the server is asked
+again before it is answered and each round trip costs one extra request. A
+server that asks before doing work repeats nothing; one that works first repeats
+that work. Remote effects must be idempotent.
 
-For multi-day pauses:
+Because the call is replayed rather than restored, the server always issues a
+fresh continuation, so a pause cannot outlive a `requestState` lifetime. Nothing
+about the pending question is checkpointed beyond the interrupt payload itself,
+and that payload carries the server's questions but never its opaque
+continuation state.
 
-- Retain checkpoints and pending task writes for longer than the pause, and await
-  persistence before acknowledging it. Use LangGraph's `durability: "sync"` when
-  synchronous checkpoint boundaries are required.
-- Preserve compatible graph/task ordering and the same logical server endpoint,
-  tool, and authorization scope across reconstruction. Changed effective tool
-  arguments are rejected; server names alone do not establish authorization
-  identity.
-- Ensure the MCP server's continuation lifetime, retained state, and verification
-  keys support the pause. Graph persistence does not extend `requestState`
-  expiry. An invalid or expired continuation surfaces the server failure; the
-  adapter does not silently restart the operation using old consent.
-- An application request or other external event must invoke resume. A paused
-  thread is stored data, not a worker waiting in memory.
+`beforeToolCall` runs once per execution, replays included, so any header
+identity it supplies is re-derived on resume rather than reused from the pause.
+`afterToolCall` is not an exactly-once transaction. An application request or
+other external event must invoke resume: a paused thread is stored data, not a
+worker waiting in memory.
 
-`beforeToolCall` remains an execution-attempt hook and can run again on resume;
-`afterToolCall` is not an exactly-once transaction. Hook-supplied header overrides
-are supported for ordinary completed calls but not durable elicitation; configure
-stable server authentication instead. A crash after a remote effect but before
-its result is persisted can still repeat that effect. Servers must use idempotency
-or reconciliation where exactly-once effects matter.
-
-Continuation data is omitted from the public interrupt, but saved task results
-can appear in internal graph streams and tracing. Treat these as execution data
-and project only appropriate events to end-user interfaces. Credentials and live
-client objects are not stored in round records.
 
 ## Configuration and lifecycle
 

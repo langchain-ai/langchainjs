@@ -17,6 +17,12 @@ export const isSpecType = actual.isSpecType;
 
 export const fromJsonSchema = actual.fromJsonSchema;
 
+export const isInputRequiredResult = actual.isInputRequiredResult;
+
+export const CLIENT_CAPABILITIES_META_KEY = actual.CLIENT_CAPABILITIES_META_KEY;
+
+export const LOG_LEVEL_META_KEY = actual.LOG_LEVEL_META_KEY;
+
 const clientPrototype = {
   getProtocolEra: vi
     .fn<InstanceType<typeof actual.Client>["getProtocolEra"]>()

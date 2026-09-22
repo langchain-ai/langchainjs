@@ -3171,15 +3171,22 @@ describe("modern wire boundaries", () => {
           expect(wireHeaders[index].name).toMatch(/^json_/);
 
         if (request.method !== "server/discover")
+          // Elicitation is opt-in per server, so this connection advertises
+          // no elicitation capability on any request.
           expect(request.params?._meta).toMatchObject({
             "io.modelcontextprotocol/protocolVersion": "2026-07-28",
-            "io.modelcontextprotocol/clientCapabilities": {
-              elicitation: { form: {}, url: {} },
-            },
             "io.modelcontextprotocol/clientInfo": {
               name: "@langchain/mcp-adapters",
             },
           });
+        if (request.method !== "server/discover")
+          expect(
+            JSON.stringify(
+              request.params?._meta?.[
+                "io.modelcontextprotocol/clientCapabilities"
+              ] ?? {}
+            )
+          ).not.toContain("elicitation");
       }
     } finally {
       await adapter.close();

@@ -155,6 +155,7 @@ export class MCPAdapter {
 
       this.#loadToolsOptions[serverName] = {
         logLevel: serverConfig.logLevel,
+        elicitation: serverConfig.elicitation,
         throwOnLoadError: parsedServerConfig.throwOnLoadError,
         prefixToolNameWithServerName:
           parsedServerConfig.prefixToolNameWithServerName,
