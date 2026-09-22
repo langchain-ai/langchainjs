@@ -16,7 +16,7 @@
   "scripts": {
     "build": "turbo build:compile --filter @langchain/cloudflare --output-logs new-only",
     "build:compile": "tsdown",
-    "clean": "rm -rf .turbo dist/",
+    "clean": "rm -rf .turbo dist/ .tsc-types/",
     "test:watch": "vitest",
     "typecheck": "tsc --build",
     "test:int": "vitest run --mode int",

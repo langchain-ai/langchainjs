@@ -16,7 +16,7 @@
   "scripts": {
     "build": "turbo build:compile --filter @langchain/neo4j --output-logs new-only",
     "build:compile": "tsdown",
-    "clean": "rm -rf .turbo dist/",
+    "clean": "rm -rf .turbo dist/ .tsc-types/",
     "test": "vitest run",
     "typecheck": "tsc --build",
     "test:watch": "vitest",
