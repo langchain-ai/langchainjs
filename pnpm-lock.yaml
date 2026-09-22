@@ -1024,7 +1024,7 @@ importers:
         version: 1.0.21
       langsmith:
         specifier: '>=0.5.0 <1.0.0'
-        version: 0.9.0(@opentelemetry/api@1.9.1)(openai@7.10.0(@aws-sdk/credential-provider-node@3.972.82)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.3)(undici@8.10.1)(ws@8.21.3(bufferutil@4.1.0))(zod@4.3.6))(ws@8.21.3(bufferutil@4.1.0))
+        version: 0.9.0(@opentelemetry/api@1.9.1)(openai@7.22.0(@aws-sdk/credential-provider-node@3.972.82)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.3)(undici@8.10.1)(ws@8.21.3(bufferutil@4.1.0))(zod@4.3.6))(ws@8.21.3(bufferutil@4.1.0))
       mustache:
         specifier: ^4.2.0
         version: 4.2.0
@@ -1171,8 +1171,8 @@ importers:
   libs/providers/langchain-anthropic:
     dependencies:
       '@anthropic-ai/sdk':
-        specifier: ^0.122.0
-        version: 0.122.0(zod@4.3.6)
+        specifier: ^0.128.0
+        version: 0.128.0(zod@4.3.6)
       zod:
         specifier: ^3.25.76 || ^4
         version: 4.3.6
@@ -1954,8 +1954,8 @@ importers:
         specifier: ^1.0.12
         version: 1.0.21
       openai:
-        specifier: ^7.10.0
-        version: 7.10.0(@aws-sdk/credential-provider-node@3.972.82)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.3)(undici@8.10.1)(ws@8.21.3(bufferutil@4.1.0))(zod@4.3.6)
+        specifier: ^7.22.0
+        version: 7.22.0(@aws-sdk/credential-provider-node@3.972.82)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.3)(undici@8.10.1)(ws@8.21.3(bufferutil@4.1.0))(zod@4.3.6)
       zod:
         specifier: ^3.25.76 || ^4
         version: 4.3.6
@@ -2440,8 +2440,8 @@ packages:
   '@andrewbranch/untar.js@1.0.3':
     resolution: {integrity: sha512-Jh15/qVmrLGhkKJBdXlK1+9tY4lZruYjsgkDFj08ZmDiWVBLJcqkok7Z0/R0In+i1rScBpJlSvrTS2Lm41Pbnw==}
 
-  '@anthropic-ai/sdk@0.122.0':
-    resolution: {integrity: sha512-GGPNftt0caaz9MDlmNQGHX8855Ojaduyy5pm9Sm1h7HalCn0cWNb5/bweadJF+4yzbal+QL6ztBa09WAAOzLmQ==}
+  '@anthropic-ai/sdk@0.128.0':
+    resolution: {integrity: sha512-tl5cBFZC1jVFrTuQyvQObA4WmuNgcYVeXfriqOumgtLAHUm4gPUj18YnszBW60v0PrjDB8nBDOC6wd9CmHQFlA==}
     hasBin: true
     peerDependencies:
       zod: ^3.25.0 || ^4.0.0
@@ -9473,8 +9473,8 @@ packages:
       zod:
         optional: true
 
-  openai@7.10.0:
-    resolution: {integrity: sha512-sn9t2Kls7O52PwuF9BUTYNu4Gk/r0lXJyrgaNht4TNRlZFb3dJIGO0RciSgjARGCBRtWjySubAQFJttlzUvGQQ==}
+  openai@7.22.0:
+    resolution: {integrity: sha512-C4bv09YtQQb1qcFrEAENJXkuCZA72kGRwws6QIXgf0oJW6pDOmDC2WaZpQVII3Rl+RNE3Z+TQI92uNfetGwY3w==}
     engines: {node: '>=22.0.0'}
     peerDependencies:
       '@aws-sdk/credential-provider-node': '>=3.972.0 <4'
@@ -11442,7 +11442,7 @@ snapshots:
 
   '@andrewbranch/untar.js@1.0.3': {}
 
-  '@anthropic-ai/sdk@0.122.0(zod@4.3.6)':
+  '@anthropic-ai/sdk@0.128.0(zod@4.3.6)':
     dependencies:
       json-schema-to-ts: 3.1.1
       standardwebhooks: 1.1.1
@@ -11451,7 +11451,7 @@ snapshots:
 
   '@anthropic-ai/vertex-sdk@0.19.6(zod@4.3.6)':
     dependencies:
-      '@anthropic-ai/sdk': 0.122.0(zod@4.3.6)
+      '@anthropic-ai/sdk': 0.128.0(zod@4.3.6)
       google-auth-library: 10.9.1
     transitivePeerDependencies:
       - supports-color
@@ -13409,7 +13409,7 @@ snapshots:
     dependencies:
       '@langchain/core': link:libs/langchain-core
       js-tiktoken: 1.0.21
-      openai: 7.10.0(@aws-sdk/credential-provider-node@3.972.82)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.3)(undici@8.10.1)(ws@8.21.3(bufferutil@4.1.0))(zod@4.4.3)
+      openai: 7.22.0(@aws-sdk/credential-provider-node@3.972.82)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.3)(undici@8.10.1)(ws@8.21.3(bufferutil@4.1.0))(zod@4.4.3)
       zod: 4.4.3
     transitivePeerDependencies:
       - '@aws-sdk/credential-provider-node'
@@ -18217,12 +18217,12 @@ snapshots:
 
   kuler@2.0.0: {}
 
-  langsmith@0.9.0(@opentelemetry/api@1.9.1)(openai@7.10.0(@aws-sdk/credential-provider-node@3.972.82)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.3)(undici@8.10.1)(ws@8.21.3(bufferutil@4.1.0))(zod@4.3.6))(ws@8.21.3(bufferutil@4.1.0)):
+  langsmith@0.9.0(@opentelemetry/api@1.9.1)(openai@7.22.0(@aws-sdk/credential-provider-node@3.972.82)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.3)(undici@8.10.1)(ws@8.21.3(bufferutil@4.1.0))(zod@4.3.6))(ws@8.21.3(bufferutil@4.1.0)):
     dependencies:
       p-queue: 6.6.2
     optionalDependencies:
       '@opentelemetry/api': 1.9.1
-      openai: 7.10.0(@aws-sdk/credential-provider-node@3.972.82)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.3)(undici@8.10.1)(ws@8.21.3(bufferutil@4.1.0))(zod@4.3.6)
+      openai: 7.22.0(@aws-sdk/credential-provider-node@3.972.82)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.3)(undici@8.10.1)(ws@8.21.3(bufferutil@4.1.0))(zod@4.3.6)
       ws: 8.21.3(bufferutil@4.1.0)
 
   langsmith@0.9.0(@opentelemetry/api@1.9.1)(openai@7.8.0(@aws-sdk/credential-provider-node@3.972.82)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.3)(undici@8.10.1)(ws@5.2.7(bufferutil@4.1.0))(zod@4.3.6))(ws@5.2.7(bufferutil@4.1.0)):
@@ -19066,7 +19066,7 @@ snapshots:
       ws: 8.21.3(bufferutil@4.1.0)
       zod: 3.25.76
 
-  openai@7.10.0(@aws-sdk/credential-provider-node@3.972.82)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.3)(undici@8.10.1)(ws@8.21.3(bufferutil@4.1.0))(zod@4.3.6):
+  openai@7.22.0(@aws-sdk/credential-provider-node@3.972.82)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.3)(undici@8.10.1)(ws@8.21.3(bufferutil@4.1.0))(zod@4.3.6):
     optionalDependencies:
       '@aws-sdk/credential-provider-node': 3.972.82
       '@smithy/hash-node': 4.5.2
@@ -19075,7 +19075,7 @@ snapshots:
       ws: 8.21.3(bufferutil@4.1.0)
       zod: 4.3.6
 
-  openai@7.10.0(@aws-sdk/credential-provider-node@3.972.82)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.3)(undici@8.10.1)(ws@8.21.3(bufferutil@4.1.0))(zod@4.4.3):
+  openai@7.22.0(@aws-sdk/credential-provider-node@3.972.82)(@smithy/hash-node@4.5.2)(@smithy/signature-v4@5.7.3)(undici@8.10.1)(ws@8.21.3(bufferutil@4.1.0))(zod@4.4.3):
     optionalDependencies:
       '@aws-sdk/credential-provider-node': 3.972.82
       '@smithy/hash-node': 4.5.2

@@ -58,7 +58,7 @@ export interface ImageGenerationOptions {
    * The image generation model to use.
    * @default "gpt-image-1"
    */
-  model?: "gpt-image-1" | "gpt-image-1-mini" | "gpt-image-1.5";
+  model?: ImageGenerationTool["model"];
 
   /**
    * Moderation level for the generated image.
@@ -97,7 +97,7 @@ export interface ImageGenerationOptions {
    * - `auto`: Let the model decide based on the prompt
    * @default "auto"
    */
-  quality?: "low" | "medium" | "high" | "auto";
+  quality?: ImageGenerationTool["quality"];
 
   /**
    * The size of the generated image.
@@ -107,7 +107,7 @@ export interface ImageGenerationOptions {
    * - `auto`: Let the model decide based on the prompt
    * @default "auto"
    */
-  size?: "1024x1024" | "1024x1536" | "1536x1024" | "auto";
+  size?: ImageGenerationTool["size"];
 }
 
 /**

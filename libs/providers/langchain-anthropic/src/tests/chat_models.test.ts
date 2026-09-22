@@ -2129,7 +2129,174 @@ describe("Opus 4.6", () => {
     });
   });
 
+  describe("recent SDK parameters", () => {
+    test.each(["claude-opus-5-5", "claude-opus-5-5-20260922"])(
+      "%s requires adaptive thinking and automatic tool selection",
+      (model) => {
+        const chat = new ChatAnthropic({ apiKey: "testing", model });
+        expect(chat.invocationParams().thinking).toBeUndefined();
+        expect(chat.invocationParams().max_tokens).toBe(16384);
+        expect(() =>
+          new ChatAnthropic({
+            apiKey: "testing",
+            model,
+            thinking: { type: "disabled" },
+          }).invocationParams()
+        ).toThrow('thinking.type="disabled" is not supported');
+        expect(() =>
+          new ChatAnthropic({
+            apiKey: "testing",
+            model,
+            thinking: { type: "enabled", budget_tokens: 1024 },
+          }).invocationParams()
+        ).toThrow('thinking.type="enabled" is not supported');
+        const tools = [
+          { name: "lookup", input_schema: { type: "object" as const } },
+        ];
+        for (const tool_choice of ["any", "lookup"]) {
+          expect(() => chat.invocationParams({ tools, tool_choice })).toThrow(
+            'use tool_choice="auto" with strict tool use instead'
+          );
+        }
+        expect(
+          chat.invocationParams({ tools, tool_choice: "auto" }).tool_choice
+        ).toEqual({ type: "auto" });
+      }
+    );
+    test("forwards workspace selection with call options taking precedence", () => {
+      const model = new ChatAnthropic({
+        apiKey: "testing",
+        workspaceId: "wrkspc_constructor",
+        invocationKwargs: { workspace_id: "wrkspc_kwargs" },
+      });
+      expect(model.invocationParams().workspace_id).toBe("wrkspc_constructor");
+      expect(
+        model.invocationParams({ workspaceId: "wrkspc_call" }).workspace_id
+      ).toBe("wrkspc_call");
+      const fallback = new ChatAnthropic({
+        apiKey: "testing",
+        invocationKwargs: { workspace_id: "wrkspc_kwargs" },
+      });
+      expect(fallback.invocationParams().workspace_id).toBe("wrkspc_kwargs");
+      expect(
+        new ChatAnthropic({ apiKey: "testing" }).invocationParams().workspace_id
+      ).toBeUndefined();
+    });
+
+    test("forwards opt-in thinking block binding controls", () => {
+      const model = new ChatAnthropic({
+        apiKey: "testing",
+        model: "claude-opus-5-5",
+        thinking: {
+          type: "adaptive",
+          block_binding: { prefix_mismatch_behavior: "error" },
+        },
+        betas: ["thinking-binding-controls-2026-08-01"],
+      });
+      expect(model.invocationParams().thinking).toEqual({
+        type: "adaptive",
+        block_binding: { prefix_mismatch_behavior: "error" },
+      });
+      expect(model.invocationParams().betas).toContain(
+        "thinking-binding-controls-2026-08-01"
+      );
+    });
+
+    test("preserves inline tool directives and pinned MCP listings", () => {
+      const blocks = [
+        {
+          type: "tool_addition",
+          tool: {
+            type: "tool_definition",
+            definition: { name: "lookup", input_schema: { type: "object" } },
+          },
+        },
+        {
+          type: "tool_removal",
+          tool: { type: "tool_reference", name: "lookup" },
+        },
+        {
+          type: "mcp_tool_listing",
+          mcp_server_name: "docs",
+          tools: [{ name: "lookup", input_schema: { type: "object" } }],
+        },
+      ];
+      const formatted = _convertMessagesToAnthropicPayload([
+        new AIMessage({
+          content: blocks.map((block, index) => ({ ...block, index })),
+        }),
+      ]);
+      expect(formatted.messages[0].content).toEqual(blocks);
+    });
+  });
+
   describe("Compaction API", () => {
+    test("streams on-demand compaction without discarding signed blocks", async () => {
+      const block = {
+        type: "compaction",
+        content: "Summary",
+        encrypted_content: "opaque",
+        signature: "signed",
+      };
+      const events = [
+        { type: "content_block_start", index: 0, content_block: block },
+        { type: "content_block_stop", index: 0 },
+        { type: "message_stop" },
+      ];
+      const fetch = vi.fn(
+        async () =>
+          new Response(
+            events
+              .map(
+                (event) =>
+                  `event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`
+              )
+              .join(""),
+            { headers: { "content-type": "text/event-stream" } }
+          )
+      );
+      const model = new ChatAnthropic({
+        apiKey: "testing",
+        model: "claude-opus-5-5",
+        betas: ["compact-2026-09-04"],
+        invocationKwargs: { compaction: { type: "summarize" } },
+        clientOptions: { fetch },
+        maxRetries: 0,
+      });
+      expect(model.invocationParams().compaction).toEqual({
+        type: "summarize",
+      });
+      const chunks = [];
+      for await (const chunk of await model.stream("Summarize the history")) {
+        chunks.push(chunk);
+      }
+      const result = chunks.reduce((left, right) => left.concat(right));
+      expect(result.content).toEqual([{ index: 0, ...block }]);
+      expect(
+        _convertMessagesToAnthropicPayload([result]).messages[0].content
+      ).toEqual([block]);
+    });
+    test.each(["encrypted-summary", null])(
+      "preserves signed compaction metadata with encrypted_content %s",
+      (encrypted_content) => {
+        const block = {
+          type: "compaction",
+          content: "Summary",
+          encrypted_content,
+          signature: "signed-summary",
+          tool_changes: [
+            {
+              type: "tool_addition",
+              tool: { type: "tool_reference", name: "lookup" },
+            },
+          ],
+        };
+        const formatted = _convertMessagesToAnthropicPayload([
+          new AIMessage({ content: [{ ...block, index: 0 }] }),
+        ]);
+        expect(formatted.messages[0].content).toEqual([block]);
+      }
+    );
     test("auto-adds compact beta header when compaction edit is present", () => {
       const model = new ChatAnthropic({
         model: "claude-opus-4-6",

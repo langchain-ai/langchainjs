@@ -60,6 +60,40 @@ const response = await model.invoke({
 });
 ```
 
+### Claude Opus 5.5
+
+Use `model: "claude-opus-5-5"` with thinking omitted or set to
+`{ type: "adaptive" }`. This model rejects disabled or budget-based thinking,
+non-default sampling parameters, and forced tool selection (`"any"` or a named
+tool). Use automatic tool selection with strict tools. For structured output,
+use `withStructuredOutput(schema, { method: "jsonSchema" })` rather than forcing
+a tool call.
+
+### Workspace selection and beta message compatibility
+
+For credentials that can access multiple Anthropic workspaces, set `workspaceId`
+on `ChatAnthropic` or on an individual invocation. The SDK sends it as the
+`anthropic-workspace-id` header; the invocation value overrides the constructor.
+
+```typescript
+const model = new ChatAnthropic({ workspaceId: "wrkspc_example" });
+await model.invoke("Hello", { workspaceId: "wrkspc_other" });
+```
+
+Thinking block-binding controls are available through
+`thinking.block_binding.prefix_mismatch_behavior` with the
+`thinking-binding-controls-2026-08-01` beta. Keep `"error"` (the API default) to
+reject mismatched conversation prefixes; explicitly choosing `"drop_block"`
+lets the API discard the mismatched reasoning instead. Beta headers remain
+opt-in through `betas`.
+
+Native `tool_addition`, `tool_removal`, and `mcp_tool_listing` content blocks are
+preserved when replaying messages. Inline tool definitions require
+`inline-tools-2026-09-15`; MCP listing pinning requires
+`mcp-client-2026-09-15`. Return signed compaction blocks unchanged, including
+`encrypted_content`, `signature`, and `tool_changes`, so the API can validate
+and restore the compacted conversation.
+
 ### Streaming
 
 ```typescript

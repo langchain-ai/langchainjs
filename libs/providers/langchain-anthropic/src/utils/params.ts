@@ -10,6 +10,7 @@ type InvocationCompatibilityFields = {
   model?: string;
   thinking: AnthropicThinkingConfigParam;
   thinkingExplicitlySet?: boolean;
+  toolChoice?: AnthropicInvocationParams["tool_choice"];
   outputConfig?: AnthropicOutputConfig;
   topK?: number;
   topP?: number;
@@ -78,7 +79,20 @@ export function validateInvocationParamCompatibility(
   const fableModel = modelStartsWithAnyPrefix(model, FABLE_MODEL_PREFIXES);
   const modelName = model ?? "this model";
 
-  if (fableModel && thinkingExplicitlySet && thinking.type === "disabled") {
+  const opus55Model = modelStartsWithAnyPrefix(model, ["claude-opus-5-5"]);
+  if (
+    opus55Model &&
+    (fields.toolChoice?.type === "any" || fields.toolChoice?.type === "tool")
+  ) {
+    throw new Error(
+      `tool_choice.type="${fields.toolChoice.type}" is not supported for ${modelName}; use tool_choice="auto" with strict tool use instead`
+    );
+  }
+  if (
+    (fableModel || opus55Model) &&
+    thinkingExplicitlySet &&
+    thinking.type === "disabled"
+  ) {
     throw new Error(
       `thinking.type="disabled" is not supported for ${modelName}; omit thinking to use adaptive thinking instead`
     );

@@ -376,6 +376,8 @@ export const convertResponsesMessageToAIMessage: Converter<
     status: response.status,
     user: response.user,
     service_tier: response.service_tier,
+    prompt_cache_options: response.prompt_cache_options,
+    prompt_cache_diagnostics: response.prompt_cache_diagnostics,
     // for compatibility with chat completion calls.
     model_name: response.model,
   };

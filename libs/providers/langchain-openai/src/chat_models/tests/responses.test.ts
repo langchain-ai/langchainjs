@@ -2,6 +2,7 @@ import { ContextOverflowError } from "@langchain/core/errors";
 import { HumanMessage } from "@langchain/core/messages";
 import { describe, it, expect, vi } from "vitest";
 import { ChatOpenAIResponses } from "../responses.js";
+import { ChatOpenAI } from "../index.js";
 
 class TraceableChatOpenAIResponses extends ChatOpenAIResponses {
   traceParams(options: Parameters<ChatOpenAIResponses["invocationParams"]>[0]) {
@@ -246,5 +247,26 @@ describe("tool search support", () => {
     expect(tools[1]).toHaveProperty("defer_loading", true);
     expect(tools[1]).toHaveProperty("type", "function");
     expect(tools[1]).toHaveProperty("name", "get_weather");
+  });
+});
+
+describe("prompt cache options", () => {
+  it("routes diagnostics and prewarming options to Responses", () => {
+    const model = new ChatOpenAI({ model: "gpt-5.6" });
+    const prompt_cache_options = {
+      mode: "explicit" as const,
+      ttl: "30m" as const,
+      comparison_response_id: "resp_previous",
+      prewarm: true,
+    };
+    const params = model.invocationParams({ prompt_cache_options });
+    expect(params).toHaveProperty("prompt_cache_options", prompt_cache_options);
+    expect(params).toHaveProperty("max_output_tokens");
+    expect(model.callKeys).toContain("prompt_cache_options");
+  });
+
+  it("omits prompt cache options when not provided", () => {
+    const model = new ChatOpenAIResponses({ model: "gpt-5.6" });
+    expect(model.invocationParams().prompt_cache_options).toBeUndefined();
   });
 });

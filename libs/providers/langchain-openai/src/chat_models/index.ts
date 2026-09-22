@@ -608,7 +608,7 @@ export class ChatOpenAI<
   }
 
   get callKeys(): string[] {
-    return [...super.callKeys, "useResponsesApi"];
+    return [...super.callKeys, "useResponsesApi", "prompt_cache_options"];
   }
 
   protected fields?: ChatOpenAIFields;
@@ -634,6 +634,7 @@ export class ChatOpenAI<
       options?.text != null ||
       options?.truncation != null ||
       options?.include != null ||
+      options?.prompt_cache_options != null ||
       options?.reasoning?.summary != null ||
       this.reasoning?.summary != null;
     const hasCustomTools =

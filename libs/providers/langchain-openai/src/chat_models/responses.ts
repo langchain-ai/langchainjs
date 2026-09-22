@@ -36,6 +36,9 @@ export interface ChatOpenAIResponsesCallOptions extends BaseChatOpenAICallOption
    */
   text?: OpenAIClient.Responses.ResponseCreateParams["text"];
 
+  /** Prompt cache configuration, including diagnostics and prewarming. */
+  prompt_cache_options?: OpenAIClient.Responses.ResponseCreateParams["prompt_cache_options"];
+
   /**
    * The truncation strategy to use for the model response.
    */
@@ -74,6 +77,10 @@ export class ChatOpenAIResponses<
   CallOptions extends ChatOpenAIResponsesCallOptions =
     ChatOpenAIResponsesCallOptions,
 > extends BaseChatOpenAI<CallOptions> {
+  get callKeys(): string[] {
+    return [...super.callKeys, "prompt_cache_options"];
+  }
+
   constructor(model: string, fields?: Omit<BaseChatOpenAIFields, "model">);
   constructor(fields?: BaseChatOpenAIFields);
   constructor(
@@ -106,6 +113,7 @@ export class ChatOpenAIResponses<
       previous_response_id: options?.previous_response_id,
       truncation: options?.truncation,
       include: options?.include,
+      prompt_cache_options: options?.prompt_cache_options,
       tools: options?.tools?.length
         ? this._reduceChatOpenAITools(options.tools, {
             stream: this.streaming,

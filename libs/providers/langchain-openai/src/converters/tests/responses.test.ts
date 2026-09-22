@@ -3473,3 +3473,35 @@ describe("phase parameter support", () => {
     });
   });
 });
+
+it("preserves prompt cache diagnostics in invoke and stream metadata", () => {
+  const response = {
+    id: "resp_cache",
+    model: "gpt-5.6",
+    created_at: 0,
+    object: "response",
+    status: "completed",
+    output: [],
+    prompt_cache_options: { mode: "implicit", ttl: "30m" },
+    prompt_cache_diagnostics: {
+      type: "cache_miss",
+      reason: "input_changed",
+      cache_missed_tokens: 20,
+    },
+  } as OpenAIClient.Responses.Response;
+  const message = convertResponsesMessageToAIMessage(response);
+  const chunk = convertResponsesDeltaToChatGenerationChunk({
+    type: "response.completed",
+    sequence_number: 1,
+    response,
+  });
+  for (const metadata of [
+    message.response_metadata,
+    chunk?.message.response_metadata,
+  ]) {
+    expect(metadata).toMatchObject({
+      prompt_cache_options: response.prompt_cache_options,
+      prompt_cache_diagnostics: response.prompt_cache_diagnostics,
+    });
+  }
+});
