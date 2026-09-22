@@ -378,6 +378,31 @@ describe("MultiServerMCPClient", () => {
   });
 
   describe("Tool Management", () => {
+    /**
+     * Queue one mock MCP client per server, in the order the servers are
+     * declared, each advertising its own tool list. Per-instance mocks (rather
+     * than one queued `Client.prototype.listTools`) keep the tool list stable
+     * across repeated discovery calls.
+     */
+    function mockClientsWithTools(
+      ...toolsPerServer: {
+        name: string;
+        description: string;
+        inputSchema: Record<string, unknown>;
+      }[][]
+    ) {
+      for (const tools of toolsPerServer) {
+        (Client as Mock).mockImplementationOnce(function mockClient() {
+          return {
+            ...Client.prototype,
+            connect: vi.fn().mockReturnValue(Promise.resolve()),
+            setNotificationHandler: vi.fn().mockReturnValue(Promise.resolve()),
+            listTools: vi.fn().mockReturnValue(Promise.resolve({ tools })),
+          };
+        });
+      }
+    }
+
     test("should get all tools as a flattened array", async () => {
       // Mock tool response
       (Client.prototype.listTools as Mock).mockImplementationOnce(() =>
@@ -412,13 +437,84 @@ describe("MultiServerMCPClient", () => {
     });
 
     test("should get tools from a specific server", async () => {
-      // Skip actual implementation and just test the concept
-      expect(true).toBe(true);
+      mockClientsWithTools(
+        [{ name: "tool1", description: "Tool 1", inputSchema: {} }],
+        [
+          { name: "tool2", description: "Tool 2", inputSchema: {} },
+          { name: "tool3", description: "Tool 3", inputSchema: {} },
+        ]
+      );
+
+      const client = new MultiServerMCPClient({
+        server1: {
+          mode: "legacy",
+          transport: "stdio" as const,
+          command: "python",
+          args: ["./script1.py"],
+        },
+        server2: {
+          mode: "legacy",
+          transport: "stdio" as const,
+          command: "python",
+          args: ["./script2.py"],
+        },
+      });
+
+      await client.initializeConnections();
+
+      // Naming a server keeps only that server's tools.
+      const server2Tools = await client.listTools("server2");
+      expect(server2Tools.map((tool) => tool.name)).toEqual(["tool2", "tool3"]);
+
+      const server1Tools = await client.listTools("server1");
+      expect(server1Tools.map((tool) => tool.name)).toEqual(["tool1"]);
+
+      // The filtered result matches that server's group in the toolset map.
+      const toolsets = await client.listToolsets();
+      expect(toolsets.server2.map((tool) => tool.name)).toEqual([
+        "tool2",
+        "tool3",
+      ]);
+
+      // Unfiltered discovery still spans every server.
+      expect((await client.listTools()).map((tool) => tool.name)).toEqual([
+        "tool1",
+        "tool2",
+        "tool3",
+      ]);
     });
 
     test("should handle empty tool lists correctly", async () => {
-      // Skip actual implementation and just test the concept
-      expect(true).toBe(true);
+      mockClientsWithTools(
+        [],
+        [{ name: "tool1", description: "Tool 1", inputSchema: {} }]
+      );
+
+      const client = new MultiServerMCPClient({
+        emptyServer: {
+          mode: "legacy",
+          transport: "stdio" as const,
+          command: "python",
+          args: ["./empty.py"],
+        },
+        server1: {
+          mode: "legacy",
+          transport: "stdio" as const,
+          command: "python",
+          args: ["./script1.py"],
+        },
+      });
+
+      const toolsets = await client.initializeConnections();
+
+      // A server that advertises no tools is still connected and listed.
+      expect(Object.keys(toolsets).sort()).toEqual(["emptyServer", "server1"]);
+      expect(toolsets.emptyServer).toEqual([]);
+
+      // It contributes nothing to the flattened list, and no undefined holes.
+      const tools = await client.listTools();
+      expect(tools.map((tool) => tool.name)).toEqual(["tool1"]);
+      expect(await client.listTools("emptyServer")).toEqual([]);
     });
 
     test("should get client for a specific server", async () => {

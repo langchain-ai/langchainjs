@@ -2446,17 +2446,42 @@ describe("MultiServerMCPClient Integration Tests", () => {
           );
           expect(structuredTool).toBeDefined();
 
-          const result = await structuredTool!.invoke({ input: "test input" });
-          expect(result).toBeDefined();
+          const fakeToolCall: ToolCall = {
+            name: structuredTool!.name,
+            args: { input: "test input" },
+            id: "structured-tool-call-id",
+            type: "tool_call",
+          };
 
-          // Check if structuredContent and meta are accessible
-          // The result should be a string or content blocks
-          if (typeof result === "string") {
-            expect(result).toContain("test input");
-          } else if (Array.isArray(result)) {
-            // If it's an array, check for structured content in artifacts
-            expect(result.length).toBeGreaterThan(0);
-          }
+          const { content, artifact } =
+            await structuredTool!.invoke(fakeToolCall);
+
+          // The text block still reaches the model unchanged...
+          expect(content).toBe("Structured input was: test input");
+
+          // ...while structuredContent and _meta are preserved as artifacts
+          // instead of being dropped on the floor.
+          const artifacts = artifact as { type: string; data: unknown }[];
+
+          expect(artifacts.map((entry) => entry.type)).toEqual([
+            "mcp_structured_content",
+            "mcp_meta",
+          ]);
+
+          const structured = artifacts.find(
+            (entry) => entry.type === "mcp_structured_content"
+          );
+          expect(structured!.data).toMatchObject({
+            type: "object",
+            data: { result: "success", value: "test input" },
+          });
+
+          const meta = artifacts.find((entry) => entry.type === "mcp_meta");
+          expect(meta!.data).toMatchObject({
+            toolVersion: "1.0.0",
+            serverName,
+            executionTime: 100,
+          });
         } finally {
           await client.close();
         }

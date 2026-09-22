@@ -205,9 +205,8 @@ describe("ConnectionManager", () => {
       const mgr = new ConnectionManager();
       const headers = { Authorization: "Bearer token", "X-Test": "1" };
       // minimal authProvider mock
-      const authProvider = {
-        tokens: vi.fn().mockResolvedValue({ access_token: "abc" }),
-      } as never;
+      const tokens = vi.fn().mockResolvedValue({ access_token: "abc" });
+      const authProvider = { tokens } as never;
 
       await mgr.createClient("sse", "sse-server", {
         mode: "legacy",
@@ -227,6 +226,31 @@ describe("ConnectionManager", () => {
           authProvider,
         })
       );
+
+      // the event stream is opened through a custom fetch that injects the
+      // provider token first; a configured Authorization header has to replace
+      // that token rather than be appended to it ("Bearer abc, Bearer token")
+      let sent = new Headers();
+      const fetchSpy = vi
+        .spyOn(globalThis, "fetch")
+        .mockImplementation(async (_url, init) => {
+          sent = new Headers(init?.headers);
+          return new Response();
+        });
+
+      try {
+        await sseCall[1].eventSourceInit.fetch(
+          new URL("http://localhost:8000/sse"),
+          {}
+        );
+      } finally {
+        fetchSpy.mockRestore();
+      }
+
+      expect(tokens).toHaveBeenCalled();
+      expect(sent.get("authorization")).toBe("Bearer token");
+      expect(sent.get("x-test")).toBe("1");
+      expect(sent.get("accept")).toBe("text/event-stream");
     });
   });
 
@@ -317,13 +341,53 @@ describe("ConnectionManager", () => {
         transport: "http",
         url: "http://localhost:8000/mcp",
         automaticSSEFallback: true,
-        headers: { A: "1" },
+        headers: { A: "1", "X-Keep": "base" },
       });
 
       const forked = await (base as Client).fork({ A: "2" });
-      expect(forked).toBeDefined();
+      expect(forked).not.toBe(base);
       expect(StreamableHTTPClientTransport).toHaveBeenCalledTimes(2);
       expect(mgr.getAllClients().length).toBe(2);
+
+      const [baseCall, forkedCall] = (StreamableHTTPClientTransport as Mock).mock
+        .calls;
+
+      // the forked transport overrides the header it was handed and keeps the
+      // rest of the base headers; header names normalise to lower case
+      expect(forkedCall[0]).toEqual(new URL("http://localhost:8000/mcp"));
+      expect(forkedCall[1].requestInit.headers).toEqual({
+        a: "2",
+        "x-keep": "base",
+      });
+
+      // the original connection keeps its own headers and stays reachable
+      expect(baseCall[1].requestInit.headers).toEqual({
+        A: "1",
+        "X-Keep": "base",
+      });
+      expect(
+        mgr.get({ serverName: "svc", headers: { A: "1", "X-Keep": "base" } })
+      ).toBe(base);
+      expect(
+        mgr.get({ serverName: "svc", headers: { A: "2", "X-Keep": "base" } })
+      ).toBe(forked);
+    });
+
+    test("forking with equivalent headers reuses the existing connection", async () => {
+      const mgr = new ConnectionManager();
+      const base = await mgr.createClient("http", "svc", {
+        mode: "legacy",
+        transport: "http",
+        url: "http://localhost:8000/mcp",
+        automaticSSEFallback: true,
+        headers: { A: "1" },
+      });
+
+      // header names are case-insensitive, so this resolves to the same identity
+      expect(await (base as Client).fork({ a: "1" })).toBe(base);
+
+      expect(StreamableHTTPClientTransport).toHaveBeenCalledTimes(1);
+      expect(mgr.getAllClients().length).toBe(1);
     });
 
     test("forking stdio client is not supported", async () => {

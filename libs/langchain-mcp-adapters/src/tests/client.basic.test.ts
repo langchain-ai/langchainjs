@@ -191,10 +191,36 @@ describe("MultiServerMCPClient", () => {
         try {
           if (fallsBack) {
             await client.initializeConnections();
+
+            // HTTP was attempted first, then retried once over SSE at the
+            // same URL rather than the server being reported as unreachable.
+            expect(StreamableHTTPClientTransport).toHaveBeenCalledTimes(1);
             expect(SSEClientTransport).toHaveBeenCalledTimes(1);
+            expect(
+              (SSEClientTransport as Mock).mock.calls[0][0].toString()
+            ).toBe("https://example.com/mcp");
           } else {
-            await expect(client.initializeConnections()).rejects.toThrow();
+            const failure = await client.initializeConnections().then(
+              () => {
+                throw new Error("initializeConnections should have rejected");
+              },
+              (thrown: unknown) => thrown
+            );
+
             expect(SSEClientTransport).not.toHaveBeenCalled();
+            expect(MCPClientError.isInstance(failure)).toBe(true);
+
+            const clientError = failure as MCPClientError;
+
+            // This row's transport failure survives verbatim as the cause...
+            expect(Object.hasOwn(clientError, "cause")).toBe(true);
+            expect(clientError.cause).toBe(error);
+
+            // ...and is rendered into the message with the server context.
+            expect(clientError.serverName).toBe("remote");
+            expect(clientError.message).toBe(
+              `Failed to connect to streamable HTTP server "remote, url: https://example.com/mcp" in legacy mode: ${error}`
+            );
           }
         } finally {
           await client.close();
@@ -210,7 +236,7 @@ describe("MultiServerMCPClient", () => {
     });
 
     test("should process valid stdio connection config", () => {
-      new MultiServerMCPClient({
+      const client = new MultiServerMCPClient({
         "test-server": {
           mode: "legacy",
           transport: "stdio",
@@ -218,10 +244,19 @@ describe("MultiServerMCPClient", () => {
           args: ["./script.py"],
         },
       });
+
+      // The flat config form is lifted under `servers` and stdio defaults applied.
+      expect(client.config.servers["test-server"]).toEqual({
+        mode: "legacy",
+        transport: "stdio",
+        command: "python",
+        args: ["./script.py"],
+        stderr: "inherit",
+      });
     });
 
     test("should process valid SSE connection config", () => {
-      new MultiServerMCPClient({
+      const client = new MultiServerMCPClient({
         "test-server": {
           mode: "legacy",
           transport: "sse",
@@ -229,15 +264,30 @@ describe("MultiServerMCPClient", () => {
           headers: { Authorization: "Bearer token" },
         },
       });
+
+      expect(client.config.servers["test-server"]).toEqual({
+        mode: "legacy",
+        transport: "sse",
+        url: "http://localhost:8000/sse",
+        headers: { Authorization: "Bearer token" },
+        automaticSSEFallback: true,
+      });
     });
 
     test("should process valid streamable HTTP connection config", () => {
-      new MultiServerMCPClient({
+      const client = new MultiServerMCPClient({
         "test-server": {
           mode: "legacy",
           transport: "http",
           url: "http://localhost:8000/mcp",
         },
+      });
+
+      expect(client.config.servers["test-server"]).toEqual({
+        mode: "legacy",
+        transport: "http",
+        url: "http://localhost:8000/mcp",
+        automaticSSEFallback: true,
       });
     });
 
@@ -529,6 +579,29 @@ describe("MultiServerMCPClient", () => {
 
   // Tool Management tests
   describe("listTools", () => {
+    /**
+     * Queue one mock MCP client per server, in the order the servers are
+     * declared, each advertising its own tool list.
+     */
+    function mockClientsWithTools(
+      ...toolsPerServer: {
+        name: string;
+        description: string;
+        inputSchema: Record<string, unknown>;
+      }[][]
+    ) {
+      for (const tools of toolsPerServer) {
+        (Client as Mock).mockImplementationOnce(function mockClient() {
+          return {
+            ...Client.prototype,
+            connect: vi.fn().mockReturnValue(Promise.resolve()),
+            setNotificationHandler: vi.fn().mockReturnValue(Promise.resolve()),
+            listTools: vi.fn().mockReturnValue(Promise.resolve({ tools })),
+          };
+        });
+      }
+    }
+
     test("should get all tools as a flattened array", async () => {
       // Mock tool response
       const mockTools = [
@@ -569,11 +642,96 @@ describe("MultiServerMCPClient", () => {
     });
 
     test("should get tools from specific servers", async () => {
-      // Mock implementation similar to above
+      mockClientsWithTools(
+        [{ name: "alpha1", description: "Alpha 1", inputSchema: {} }],
+        [
+          { name: "beta1", description: "Beta 1", inputSchema: {} },
+          { name: "beta2", description: "Beta 2", inputSchema: {} },
+        ]
+      );
+
+      const client = new MultiServerMCPClient({
+        alpha: {
+          mode: "legacy",
+          transport: "stdio",
+          command: "python",
+          args: ["./alpha.py"],
+        },
+        beta: {
+          mode: "legacy",
+          transport: "stdio",
+          command: "python",
+          args: ["./beta.py"],
+        },
+      });
+
+      try {
+        // A single server name keeps that server's tools and drops the rest.
+        expect((await client.listTools("beta")).map((t) => t.name)).toEqual([
+          "beta1",
+          "beta2",
+        ]);
+        expect((await client.listTools("alpha")).map((t) => t.name)).toEqual([
+          "alpha1",
+        ]);
+
+        // The array overload filters and preserves the requested order.
+        expect(
+          (await client.listTools(["beta", "alpha"])).map((t) => t.name)
+        ).toEqual(["beta1", "beta2", "alpha1"]);
+
+        // Unfiltered discovery still returns every server's tools.
+        expect((await client.listTools()).map((t) => t.name)).toEqual([
+          "alpha1",
+          "beta1",
+          "beta2",
+        ]);
+
+        // An unknown server name contributes nothing instead of throwing.
+        expect(await client.listTools("missing")).toEqual([]);
+      } finally {
+        await client.close();
+      }
     });
 
     test("should handle empty tool lists correctly", async () => {
-      // Mock implementation similar to above
+      mockClientsWithTools(
+        [],
+        [{ name: "beta1", description: "Beta 1", inputSchema: {} }]
+      );
+
+      const client = new MultiServerMCPClient({
+        empty: {
+          mode: "legacy",
+          transport: "stdio",
+          command: "python",
+          args: ["./empty.py"],
+        },
+        beta: {
+          mode: "legacy",
+          transport: "stdio",
+          command: "python",
+          args: ["./beta.py"],
+        },
+      });
+
+      try {
+        // A server advertising no tools is still listed, with an empty group.
+        const toolsets = await client.listToolsets();
+        expect(Object.keys(toolsets).sort()).toEqual(["beta", "empty"]);
+        expect(toolsets.empty).toEqual([]);
+
+        // It contributes no entries to the flattened list, and no holes either.
+        expect((await client.listTools()).map((t) => t.name)).toEqual([
+          "beta1",
+        ]);
+        expect(await client.listTools("empty")).toEqual([]);
+        expect(
+          (await client.listTools(["empty", "beta"])).map((t) => t.name)
+        ).toEqual(["beta1"]);
+      } finally {
+        await client.close();
+      }
     });
 
     describe("should apply tool name prefixes correctly", () => {
