@@ -22,6 +22,7 @@
     "lint:fix": "pnpm lint:eslint --fix && pnpm lint:dpdm",
     "clean": "rm -rf .turbo dist/",
     "test": "vitest run",
+    "typecheck": "tsc --build",
     "test:watch": "vitest",
     "test:int": "vitest run --mode int",
     "format": "prettier --write \"src\"",
