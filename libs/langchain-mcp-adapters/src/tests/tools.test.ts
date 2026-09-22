@@ -710,6 +710,58 @@ describe("Simplified Tool Adapter Tests", () => {
       expect(result).toBe("Event created");
     });
 
+    test("drops regex patterns that fail to compile under the Unicode flag", async () => {
+      // `\:` is a legal identity escape in a plain RegExp but throws under the
+      // "u" flag that @cfworker/json-schema compiles patterns with, which
+      // previously made every invocation of a tool carrying such a pattern fail
+      // with a SyntaxError. See issue #11351.
+      const schemaWithInvalidUnicodePattern = {
+        type: "object" as const,
+        additionalProperties: false,
+        properties: {
+          ratio: {
+            type: "string",
+            pattern: "^\\d+\\:\\d+$",
+          },
+        },
+        patternProperties: {
+          "^x\\:": { type: "string" },
+        },
+        required: ["ratio"],
+      };
+
+      mockClient.listTools.mockReturnValueOnce(
+        Promise.resolve({
+          tools: [
+            {
+              name: "set_ratio",
+              description: "Set an aspect ratio",
+              inputSchema: schemaWithInvalidUnicodePattern,
+            },
+          ],
+        })
+      );
+
+      mockClient.callTool.mockImplementation(() => {
+        return Promise.resolve({
+          content: [{ type: "text", text: "Ratio set" }],
+        });
+      });
+
+      const tools = await loadMcpTools(
+        "mockServer(invalid unicode pattern)",
+        mockClient as Client
+      );
+
+      expect(tools.length).toBe(1);
+
+      // Before the fix this threw a SyntaxError while compiling the `\:` pattern
+      // under the "u" flag; the unenforceable pattern is now dropped so the call
+      // succeeds.
+      const result = await tools[0].invoke({ ratio: "16:9" });
+      expect(result).toBe("Ratio set");
+    });
+
     test("should simplify schemas with anyOf at top level", async () => {
       // Test anyOf at the TOP level (where OpenAI restriction applies)
       // Note: type: "object" is added to the anyOf items, and the final schema
