@@ -30,6 +30,7 @@
     "google-auth-library": "^11.0.2"
   },
   "devDependencies": {
+    "@langchain/core": "workspace:^",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
     "dotenv": "^17.4.2",

@@ -36,6 +36,7 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^10.5.0",
+    "@langchain/classic": "workspace:^",
     "@langchain/core": "workspace:^",
     "@langchain/openai": "workspace:*",
     "@langchain/tsconfig": "workspace:*",

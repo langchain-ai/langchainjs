@@ -38,6 +38,7 @@
     "@langchain/core": "workspace:^"
   },
   "devDependencies": {
+    "@langchain/classic": "workspace:^",
     "@langchain/core": "workspace:^",
     "@langchain/openai": "workspace:^",
     "@langchain/tsconfig": "workspace:*",
