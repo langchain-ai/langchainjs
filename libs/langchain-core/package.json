@@ -18,6 +18,7 @@
     "build:compile": "tsdown",
     "clean": "rm -rf .turbo dist/",
     "test": "vitest run",
+    "typecheck": "tsc --build",
     "test:watch": "vitest watch",
     "test:int": "vitest run --mode int"
   },

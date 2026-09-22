@@ -18,6 +18,11 @@
       "inputs": ["src/**", "tests/**", "**/*.test.ts", "vitest.config.ts"],
       "outputs": []
     },
+    "typecheck": {
+      "dependsOn": ["^typecheck"],
+      "inputs": ["src/**", "tsconfig.json", "package.json"],
+      "outputs": ["dist/**", "*.tsbuildinfo"]
+    },
     "test:single": {
       "dependsOn": ["build:compile"],
       "cache": false
