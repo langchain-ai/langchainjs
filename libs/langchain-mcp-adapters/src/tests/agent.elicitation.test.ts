@@ -288,3 +288,43 @@ describe("end to end over stdio", () => {
     expect(toolOutput(done)).toContain("accept");
   });
 });
+
+describe("multiple sequential rounds", () => {
+  it("answers each question and replays the answered ones", async () => {
+    const { agent, server, config } = await environment([
+      [{ id: "c1", name: "ask", args: { label: "q", rounds: 2 } }],
+      [],
+    ]);
+
+    const first = await agent.invoke(input, config);
+    expect(mcpInterrupts(first)).toHaveLength(1);
+
+    const second = await agent.invoke(
+      resuming(createMCPElicitationResume(onlyInterrupt(first), accept())),
+      config
+    );
+    expect(mcpInterrupts(second)).toHaveLength(1);
+
+    const done = await agent.invoke(
+      resuming(createMCPElicitationResume(onlyInterrupt(second), accept())),
+      config
+    );
+
+    expect(mcpInterrupts(done)).toHaveLength(0);
+    expect(server.completed).toEqual([{ label: "q", action: "accept" }]);
+
+    // Both questions carry the same message, so they share a questionId. The
+    // answers still land in order, because LangGraph matches resumes to
+    // `interrupt()` calls positionally within the task — and two questions
+    // with identical content have interchangeable answers anyway.
+    //
+    // Each resume replays every answered round before reaching the new one,
+    // so N questions cost O(N^2) requests. This is the price of not
+    // checkpointing the server's continuation.
+    expect(
+      server.calls
+        .filter((call) => call.tool === "ask")
+        .map((call) => call.round)
+    ).toEqual([0, 0, 1, 0, 1, 2]);
+  });
+});

@@ -166,17 +166,26 @@ function questionIdFor(
   );
 }
 
-/** Key-order-independent serialization, so reordering cannot fake a match. */
+/**
+ * Key-order-independent serialization, so reordering cannot fake a match.
+ *
+ * `JSON.stringify` walks the value; the replacer only sorts each object's keys
+ * on the way past. Core's own prior art sorts with the replacer *array* form
+ * (`indexing/base.ts`), which filters every level to the top-level key set and
+ * so cannot be reused for nested content.
+ */
 function canonicalJSON(value: unknown): string {
-  if (Array.isArray(value)) return `[${value.map(canonicalJSON).join(",")}]`;
-
-  if (value !== null && typeof value === "object")
-    return `{${Object.entries(value as Record<string, unknown>)
-      .sort(([left], [right]) => (left < right ? -1 : 1))
-      .map(([key, entry]) => `${JSON.stringify(key)}:${canonicalJSON(entry)}`)
-      .join(",")}}`;
-
-  return JSON.stringify(value) ?? "null";
+  return (
+    JSON.stringify(value, (_key, entry: unknown) =>
+      entry !== null && typeof entry === "object" && !Array.isArray(entry)
+        ? Object.fromEntries(
+            Object.entries(entry as Record<string, unknown>).sort(
+              ([left], [right]) => (left < right ? -1 : 1)
+            )
+          )
+        : entry
+    ) ?? "null"
+  );
 }
 
 /** The interrupt payload raised while an MCP tool call waits on input. */
