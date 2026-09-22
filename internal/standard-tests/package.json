@@ -18,7 +18,8 @@
   "homepage": "https://github.com/langchain-ai/langchainjs/tree/main/libs/langchain-standard-tests/",
   "scripts": {
     "build": "exit 0",
-    "clean": "rm -rf .turbo"
+    "clean": "rm -rf .turbo",
+    "typecheck": "tsc --build"
   },
   "dependencies": {
     "@jest/globals": "^30.5.0",
