@@ -18,6 +18,7 @@
     "build:compile": "tsdown",
     "clean": "rm -rf .turbo dist/",
     "test": "vitest run",
+    "typecheck": "tsc --build",
     "test:watch": "vitest",
     "test:int": "vitest run --mode int"
   },
@@ -38,6 +39,7 @@
     "@langchain/openai": "^1.5.13",
     "@langchain/tsconfig": "workspace:*",
     "@tsconfig/recommended": "^1.0.3",
+    "@types/node": "^26.4.0",
     "dotenv": "^17.4.2",
     "langchain": "workspace:^",
     "typescript": "~7.0.2",
