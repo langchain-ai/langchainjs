@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["typescript", "unicorn", "node"],
+  "plugins": ["typescript", "unicorn", "node", "vitest"],
   "categories": {
     "correctness": "off",
   },
@@ -106,6 +106,17 @@
     "typescript/triple-slash-reference": "error",
   },
   "overrides": [
+    {
+      // A test with no assertion executes the code and therefore reports full
+      // coverage, so coverage cannot see it. This package has shipped five of
+      // them at once. Scoped: the rule fires ~209 times across the repo.
+      "files": ["libs/langchain-mcp-adapters/src/tests/**/*.ts"],
+      "rules": {
+        "vitest/expect-expect": "error",
+        "vitest/valid-expect-in-promise": "error",
+        "vitest/require-to-throw-message": "warn",
+      },
+    },
     {
       "files": ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
       "rules": {

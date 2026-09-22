@@ -349,8 +349,8 @@ describe("ConnectionManager", () => {
       expect(StreamableHTTPClientTransport).toHaveBeenCalledTimes(2);
       expect(mgr.getAllClients().length).toBe(2);
 
-      const [baseCall, forkedCall] = (StreamableHTTPClientTransport as Mock).mock
-        .calls;
+      const [baseCall, forkedCall] = (StreamableHTTPClientTransport as Mock)
+        .mock.calls;
 
       // the forked transport overrides the header it was handed and keeps the
       // rest of the base headers; header names normalise to lower case

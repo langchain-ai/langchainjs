@@ -130,8 +130,9 @@ describe("resuming never applies an answer to the wrong question", () => {
     });
     const [[id, body]] = Object.entries(valid);
 
-    // Each mutation keeps the resume plausible and breaks exactly one thing.
-    const corrupt = pick(random, [
+    // Every mutation, not a sample: picking one leaves most of them — the
+    // changed-question case above all — never executed by any seed.
+    const corruptions = [
       () => ({ [id]: { ...body, responses: {} } }),
       () => ({ [id]: { ...body, responses: { wrong: accepted } } }),
       () => ({
@@ -160,18 +161,35 @@ describe("resuming never applies an answer to the wrong question", () => {
           question: { ...body.question, tool: "something-else" },
         },
       }),
+      () => ({
+        [id]: {
+          ...body,
+          question: {
+            ...body.question,
+            arguments: { label: "a different operation" },
+          },
+        },
+      }),
       () => ({ [id]: { responses: body.responses } }),
       () => ({ [id]: body.responses }),
       () => ({ [id]: null }),
       () => ({ [id]: "not an answer" }),
-    ])();
+    ];
 
-    await expect(
-      graph.invoke(new Command({ resume: corrupt }), config),
-      `seed ${seed} accepted a resume it should have refused`
-    ).rejects.toSatisfy(isToolException);
+    // The seed shuffles the order, so a failure that depends on sequencing
+    // still surfaces, but every case runs on every seed.
+    const order = [...corruptions.keys()].sort(() => random() - 0.5);
 
-    // The refused run must not have reached the server with an answer.
+    for (const index of order) {
+      const corrupt = corruptions[index]();
+
+      await expect(
+        graph.invoke(new Command({ resume: corrupt }), config),
+        `seed ${seed} accepted corruption #${index}, which it should refuse`
+      ).rejects.toSatisfy(isToolException);
+    }
+
+    // No refused resume may have reached the server carrying an answer.
     expect(served.filter(Boolean)).toEqual([]);
   });
 });
