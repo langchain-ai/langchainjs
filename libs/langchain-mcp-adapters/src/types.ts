@@ -1,5 +1,6 @@
 import { z } from "zod/v3";
 import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
+import type { ClientCapabilities } from "@modelcontextprotocol/sdk/types.js";
 import type {
   ContentBlock,
   ToolMessage,
@@ -206,6 +207,35 @@ export const baseConfigSchema = z.object({
    * If not specified, tools will use their own configured timeout values.
    */
   defaultToolTimeout: z.number().min(1).optional(),
+
+  /**
+   * Capabilities this client advertises to the server during `initialize`.
+   *
+   * Servers are allowed to tailor their responses to what the client says it supports, so a
+   * capability that is never announced can result in the server legitimately withholding data.
+   * For example, a server implementing the MCP Apps extension
+   * ([SEP-1865](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/1865)) may omit
+   * a tool's `_meta` UI reference when the client never declared it could render one.
+   *
+   * @example
+   * ```ts
+   * const client = new MultiServerMCPClient({
+   *   mcpServers: {
+   *     myServer: {
+   *       url: "https://example.com/mcp",
+   *       clientCapabilities: {
+   *         extensions: {
+   *           "io.modelcontextprotocol/ui": {
+   *             mimeTypes: ["text/html;profile=mcp-app"],
+   *           },
+   *         },
+   *       },
+   *     },
+   *   },
+   * });
+   * ```
+   */
+  clientCapabilities: z.custom<ClientCapabilities>().optional(),
 });
 
 /**

@@ -1255,7 +1255,15 @@ export async function loadMcpTools(
               description: tool.description || "",
               schema: simplifiedSchema,
               responseFormat: "content_and_artifact",
-              metadata: { annotations: tool.annotations },
+              metadata: {
+                annotations: tool.annotations,
+                // Preserve the tool definition's `_meta` from `tools/list`. This is distinct
+                // from the `_meta` on a `tools/call` RESULT (surfaced as an `mcp_meta`
+                // artifact): it is static metadata the server attaches to the tool itself,
+                // and extensions rely on it — e.g. MCP Apps (SEP-1865) points at the tool's
+                // UI resource from here. Dropping it leaves consumers no way to recover it.
+                ...(tool._meta === undefined ? {} : { _meta: tool._meta }),
+              },
               defaultConfig: defaultToolTimeout
                 ? { timeout: defaultToolTimeout }
                 : undefined,

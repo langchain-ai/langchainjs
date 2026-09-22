@@ -211,6 +211,49 @@ describe("ConnectionManager", () => {
       expect(mgr.getAllClients().length).toBe(2);
     });
 
+    test("advertises clientCapabilities to the server when provided", async () => {
+      const mgr = new ConnectionManager();
+      const clientCapabilities = {
+        extensions: {
+          "io.modelcontextprotocol/ui": {
+            mimeTypes: ["text/html;profile=mcp-app"],
+          },
+        },
+      };
+
+      await mgr.createClient("http", "ui-server", {
+        transport: "http",
+        url: "https://example.com/mcp",
+        automaticSSEFallback: true,
+        clientCapabilities,
+      });
+
+      expect(SDKClient).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: expect.any(String),
+          version: expect.any(String),
+        }),
+        { capabilities: clientCapabilities }
+      );
+    });
+
+    test("omits client options when no clientCapabilities are provided", async () => {
+      const mgr = new ConnectionManager();
+
+      await mgr.createClient("http", "plain-server", {
+        transport: "http",
+        url: "https://example.com/mcp",
+        automaticSSEFallback: true,
+      });
+
+      expect(SDKClient).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: expect.any(String),
+          version: expect.any(String),
+        })
+      );
+    });
+
     test("forking stdio client is not supported", async () => {
       const mgr = new ConnectionManager();
       const stdio = await mgr.createClient("stdio", "svc", {

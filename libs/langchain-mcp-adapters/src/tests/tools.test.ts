@@ -79,6 +79,40 @@ describe("Simplified Tool Adapter Tests", () => {
       expect(tools[1].name).toBe("tool2");
     });
 
+    test("should preserve the tool definition's _meta on tool metadata", async () => {
+      const toolMeta = {
+        "io.modelcontextprotocol/ui": {
+          uri: "ui://example/widget",
+          mimeType: "text/html;profile=mcp-app",
+        },
+      };
+      mockClient.listTools.mockReturnValueOnce(
+        Promise.resolve({
+          tools: [
+            {
+              name: "withMeta",
+              description: "Tool carrying extension metadata",
+              inputSchema: { type: "object", properties: {}, required: [] },
+              _meta: toolMeta,
+            },
+            {
+              name: "withoutMeta",
+              description: "Tool carrying no extension metadata",
+              inputSchema: { type: "object", properties: {}, required: [] },
+            },
+          ],
+        })
+      );
+
+      const tools = await loadMcpTools(
+        "mockServer(should preserve _meta)",
+        mockClient as Client
+      );
+
+      expect(tools[0].metadata?._meta).toEqual(toolMeta);
+      expect(tools[1].metadata).not.toHaveProperty("_meta");
+    });
+
     test("should validate tool input against input schema", async () => {
       // Set up mock response
       mockClient.listTools.mockReturnValueOnce(
