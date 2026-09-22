@@ -1,7 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi } from "vitest";
 import { ChatCompletionMessage } from "openai/resources";
-import { AIMessage, AIMessageChunk } from "@langchain/core/messages";
+import {
+  AIMessage,
+  AIMessageChunk,
+  HumanMessage,
+  ToolMessage,
+} from "@langchain/core/messages";
 import {
   completionsApiContentBlockConverter,
   convertCompletionsDeltaToBaseMessageChunk,
@@ -417,6 +422,253 @@ describe("convertCompletionsMessageToBaseMessage", () => {
           name: "myFunction",
           arguments: '{"arg":"value"}',
         },
+      });
+    });
+    describe("tool messages with attachments", () => {
+      const toolCall = new AIMessage({
+        content: "",
+        tool_calls: [{ id: "call_1", name: "read_file", args: {} }],
+      });
+      const note = {
+        type: "text",
+        text: "Attachments from this tool result are provided in the next user message.",
+      };
+      const imagePart = {
+        type: "image_url",
+        image_url: { url: "data:image/png;base64,AAA" },
+      };
+
+      it("moves a v1 image into a user message after the tool result", () => {
+        const result = convertMessagesToCompletionsMessageParams({
+          messages: [
+            toolCall,
+            new ToolMessage({
+              tool_call_id: "call_1",
+              content: [{ type: "image", mimeType: "image/png", data: "AAA" }],
+            }),
+          ],
+        });
+
+        expect(result.slice(1)).toEqual([
+          { role: "tool", tool_call_id: "call_1", content: [note] },
+          {
+            role: "user",
+            content: [
+              { type: "text", text: "Attachments from tool call call_1:" },
+              imagePart,
+            ],
+          },
+        ]);
+      });
+
+      it("moves a source_type image block", () => {
+        const result = convertMessagesToCompletionsMessageParams({
+          messages: [
+            toolCall,
+            new ToolMessage({
+              tool_call_id: "call_1",
+              content: [
+                {
+                  type: "image",
+                  source_type: "base64",
+                  mime_type: "image/png",
+                  data: "AAA",
+                },
+              ],
+            }),
+          ],
+        });
+
+        expect(result[2]).toEqual({
+          role: "user",
+          content: [
+            { type: "text", text: "Attachments from tool call call_1:" },
+            imagePart,
+          ],
+        });
+      });
+
+      it("keeps text in the tool message", () => {
+        const result = convertMessagesToCompletionsMessageParams({
+          messages: [
+            toolCall,
+            new ToolMessage({
+              tool_call_id: "call_1",
+              content: [
+                { type: "text", text: "Read /a.png" },
+                { type: "image", mimeType: "image/png", data: "AAA" },
+              ],
+            }),
+          ],
+        });
+
+        expect(result[1]).toEqual({
+          role: "tool",
+          tool_call_id: "call_1",
+          content: [{ type: "text", text: "Read /a.png" }, note],
+        });
+      });
+
+      it("adds one user message after parallel tool results", () => {
+        const result = convertMessagesToCompletionsMessageParams({
+          messages: [
+            new AIMessage({
+              content: "",
+              tool_calls: [
+                { id: "call_1", name: "read_file", args: {} },
+                { id: "call_2", name: "read_file", args: {} },
+              ],
+            }),
+            new ToolMessage({
+              tool_call_id: "call_1",
+              content: [{ type: "image", mimeType: "image/png", data: "AAA" }],
+            }),
+            new ToolMessage({
+              tool_call_id: "call_2",
+              content: [{ type: "image", mimeType: "image/png", data: "BBB" }],
+            }),
+            new HumanMessage("Compare them."),
+          ],
+        });
+
+        expect(result.map((param) => param.role)).toEqual([
+          "assistant",
+          "tool",
+          "tool",
+          "user",
+          "user",
+        ]);
+        expect(result[3]).toEqual({
+          role: "user",
+          content: [
+            { type: "text", text: "Attachments from tool call call_1:" },
+            imagePart,
+            { type: "text", text: "Attachments from tool call call_2:" },
+            {
+              type: "image_url",
+              image_url: { url: "data:image/png;base64,BBB" },
+            },
+          ],
+        });
+      });
+
+      it("keeps non-image blocks in the tool message as JSON text", () => {
+        const file = { type: "file", mimeType: "application/zip", data: "BBB" };
+        const result = convertMessagesToCompletionsMessageParams({
+          messages: [
+            toolCall,
+            new ToolMessage({
+              tool_call_id: "call_1",
+              content: [
+                { type: "image", mimeType: "image/png", data: "AAA" },
+                file,
+              ],
+            }),
+          ],
+        });
+
+        expect(result[1]).toEqual({
+          role: "tool",
+          tool_call_id: "call_1",
+          content: [{ type: "text", text: JSON.stringify(file) }, note],
+        });
+        expect(result[2]).toEqual({
+          role: "user",
+          content: [
+            { type: "text", text: "Attachments from tool call call_1:" },
+            imagePart,
+          ],
+        });
+      });
+
+      it("does not move file-only tool results", () => {
+        const result = convertMessagesToCompletionsMessageParams({
+          messages: [
+            toolCall,
+            new ToolMessage({
+              tool_call_id: "call_1",
+              content: [
+                {
+                  type: "file",
+                  mimeType: "application/pdf",
+                  data: "AAA",
+                  metadata: { filename: "a.pdf" },
+                },
+              ],
+            }),
+          ],
+        });
+
+        expect(result.map((param) => param.role)).toEqual([
+          "assistant",
+          "tool",
+        ]);
+      });
+
+      it("moves v1 images for models that accept images", () => {
+        const result = convertMessagesToCompletionsMessageParams({
+          model: "gpt-5.5",
+          messages: [
+            toolCall,
+            new ToolMessage({
+              tool_call_id: "call_1",
+              content: [{ type: "image", mimeType: "image/png", data: "AAA" }],
+              response_metadata: { output_version: "v1" },
+            }),
+          ],
+        });
+
+        expect(result.slice(1)).toEqual([
+          { role: "tool", tool_call_id: "call_1", content: [note] },
+          {
+            role: "user",
+            content: [
+              { type: "text", text: "Attachments from tool call call_1:" },
+              imagePart,
+            ],
+          },
+        ]);
+      });
+
+      it.each([
+        { label: "without an image profile", model: "deepseek-chat" },
+        { label: "without a model", model: undefined },
+      ])("keeps dropping v1 images $label", ({ model }) => {
+        const result = convertMessagesToCompletionsMessageParams({
+          model,
+          messages: [
+            toolCall,
+            new ToolMessage({
+              tool_call_id: "call_1",
+              content: [{ type: "image", mimeType: "image/png", data: "AAA" }],
+              response_metadata: { output_version: "v1" },
+            }),
+          ],
+        });
+
+        expect(result.slice(1)).toEqual([
+          { role: "tool", tool_call_id: "call_1", content: [] },
+        ]);
+      });
+
+      it("leaves text-only tool results unchanged", () => {
+        const result = convertMessagesToCompletionsMessageParams({
+          messages: [
+            toolCall,
+            new ToolMessage({
+              tool_call_id: "call_1",
+              content: [{ type: "text", text: "42" }],
+            }),
+          ],
+        });
+
+        expect(result.slice(1)).toEqual([
+          {
+            role: "tool",
+            tool_call_id: "call_1",
+            content: [{ type: "text", text: "42" }],
+          },
+        ]);
       });
     });
   });

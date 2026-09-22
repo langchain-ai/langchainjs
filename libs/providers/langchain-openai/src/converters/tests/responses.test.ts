@@ -1642,6 +1642,115 @@ describe("convertMessagesToResponsesInput", () => {
         },
       ]);
     });
+    it("converts a v1 image into native input_image output", () => {
+      const result = convertMessagesToResponsesInput({
+        messages: [
+          new ToolMessage({
+            tool_call_id: "call_img",
+            content: [{ type: "image", mimeType: "image/png", data: "AAA" }],
+          }),
+        ],
+        zdrEnabled: false,
+        model: "gpt-5.5",
+      });
+
+      expect(result).toEqual([
+        {
+          type: "function_call_output",
+          call_id: "call_img",
+          id: undefined,
+          output: [
+            {
+              type: "input_image",
+              detail: "auto",
+              image_url: "data:image/png;base64,AAA",
+            },
+          ],
+        },
+      ]);
+    });
+
+    it("converts a source_type image with text", () => {
+      const result = convertMessagesToResponsesInput({
+        messages: [
+          new ToolMessage({
+            tool_call_id: "call_img",
+            content: [
+              { type: "text", text: "Read /a.png" },
+              {
+                type: "image",
+                source_type: "base64",
+                mime_type: "image/png",
+                data: "AAA",
+              },
+            ],
+          }),
+        ],
+        zdrEnabled: false,
+        model: "gpt-5.5",
+      });
+
+      expect(result[0]).toMatchObject({
+        type: "function_call_output",
+        output: [
+          { type: "input_text", text: "Read /a.png" },
+          {
+            type: "input_image",
+            detail: "auto",
+            image_url: "data:image/png;base64,AAA",
+          },
+        ],
+      });
+    });
+
+    it("keeps file-only tool content unchanged", () => {
+      const content = [
+        {
+          type: "file",
+          mimeType: "application/zip",
+          data: "AAA",
+        },
+      ];
+      const result = convertMessagesToResponsesInput({
+        messages: [new ToolMessage({ tool_call_id: "call_file", content })],
+        zdrEnabled: false,
+        model: "gpt-5.5",
+      });
+
+      expect(result[0]).toMatchObject({
+        type: "function_call_output",
+        output: JSON.stringify(content),
+      });
+    });
+
+    it("keeps non-image blocks as JSON text next to images", () => {
+      const file = { type: "file", mimeType: "application/zip", data: "BBB" };
+      const result = convertMessagesToResponsesInput({
+        messages: [
+          new ToolMessage({
+            tool_call_id: "call_img",
+            content: [
+              { type: "image", mimeType: "image/png", data: "AAA" },
+              file,
+            ],
+          }),
+        ],
+        zdrEnabled: false,
+        model: "gpt-5.5",
+      });
+
+      expect(result[0]).toMatchObject({
+        type: "function_call_output",
+        output: [
+          {
+            type: "input_image",
+            detail: "auto",
+            image_url: "data:image/png;base64,AAA",
+          },
+          { type: "input_text", text: JSON.stringify(file) },
+        ],
+      });
+    });
   });
 
   describe("assistant reasoning conversion", () => {

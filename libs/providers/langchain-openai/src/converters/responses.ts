@@ -955,6 +955,68 @@ export const convertResponsesDeltaToChatGenerationChunk: Converter<
   });
 };
 
+function resolveImageItem(
+  block: ContentBlock.Multimodal.Image
+): OpenAIClient.Responses.ResponseInputImage | undefined {
+  const detail = iife(() => {
+    const raw = block.metadata?.detail;
+    if (raw === "low" || raw === "high" || raw === "auto") {
+      return raw;
+    }
+    return "auto";
+  });
+  if (block.fileId) {
+    return {
+      type: "input_image",
+      detail,
+      file_id: block.fileId,
+    };
+  }
+  if (block.url) {
+    return {
+      type: "input_image",
+      detail,
+      image_url: block.url,
+    };
+  }
+  if (block.data) {
+    const base64Data =
+      typeof block.data === "string"
+        ? block.data
+        : Buffer.from(block.data).toString("base64");
+    const mimeType = block.mimeType ?? "image/png";
+    return {
+      type: "input_image",
+      detail,
+      image_url: `data:${mimeType};base64,${base64Data}`,
+    };
+  }
+  return undefined;
+}
+
+type ToolOutputItem =
+  OpenAIClient.Responses.ResponseFunctionCallOutputItemList[number];
+
+/** Converts tool content with images into a native `function_call_output` list. */
+function convertToolContentToResponsesOutput(
+  message: ToolMessage
+): OpenAIClient.Responses.ResponseFunctionCallOutputItemList | undefined {
+  if (!Array.isArray(message.content)) {
+    return undefined;
+  }
+  const blocks = message.contentBlocks;
+  if (!blocks.some((block) => block.type === "image")) {
+    return undefined;
+  }
+  return blocks.map((block): ToolOutputItem => {
+    if (block.type === "text") {
+      return { type: "input_text", text: block.text };
+    }
+    const image = block.type === "image" ? resolveImageItem(block) : undefined;
+    return image ?? { type: "input_text", text: JSON.stringify(block) };
+  });
+}
+
 /**
  * Converts a single LangChain BaseMessage to OpenAI Responses API input format.
  *
@@ -1091,45 +1153,6 @@ export const convertStandardContentMessageToResponsesInput: Converter<
       } catch {
         return "{}";
       }
-    };
-
-    const resolveImageItem = (
-      block: ContentBlock.Multimodal.Image
-    ): OpenAIClient.Responses.ResponseInputImage | undefined => {
-      const detail = iife(() => {
-        const raw = block.metadata?.detail;
-        if (raw === "low" || raw === "high" || raw === "auto") {
-          return raw;
-        }
-        return "auto";
-      });
-      if (block.fileId) {
-        return {
-          type: "input_image",
-          detail,
-          file_id: block.fileId,
-        };
-      }
-      if (block.url) {
-        return {
-          type: "input_image",
-          detail,
-          image_url: block.url,
-        };
-      }
-      if (block.data) {
-        const base64Data =
-          typeof block.data === "string"
-            ? block.data
-            : Buffer.from(block.data).toString("base64");
-        const mimeType = block.mimeType ?? "image/png";
-        return {
-          type: "input_image",
-          detail,
-          image_url: `data:${mimeType};base64,${base64Data}`,
-        };
-      }
-      return undefined;
     };
 
     const resolveFileItem = (
@@ -1510,15 +1533,20 @@ export const convertMessagesToResponsesInput: Converter<
                 item.type === "input_text")
           );
 
+        const attachmentOutput = isProviderNativeContent
+          ? undefined
+          : convertToolContentToResponsesOutput(toolMessage);
+
         return {
           type: "function_call_output",
           call_id: toolMessage.tool_call_id,
           id: toolMessage.id?.startsWith("fc_") ? toolMessage.id : undefined,
           output: isProviderNativeContent
             ? (toolMessage.content as OpenAIClient.Responses.ResponseFunctionCallOutputItemList)
-            : typeof toolMessage.content !== "string"
-              ? JSON.stringify(toolMessage.content)
-              : toolMessage.content,
+            : (attachmentOutput ??
+              (typeof toolMessage.content !== "string"
+                ? JSON.stringify(toolMessage.content)
+                : toolMessage.content)),
         };
       }
 
