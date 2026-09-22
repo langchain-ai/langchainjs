@@ -40,7 +40,13 @@ export interface OpenAICompletionsUsage {
 export interface OpenAICompletionsToolCallDelta {
   index?: number;
   id?: string;
-  type?: "function";
+  /**
+   * Mirrors the OpenAI SDK, which widened this to include custom tool calls.
+   * The converter never reads it — tool call chunks are built from `id`,
+   * `index` and `function` — so this exists only so provider adapters can pass
+   * SDK chunks through without narrowing them first.
+   */
+  type?: "function" | "custom";
   function?: {
     name?: string;
     arguments?: string;
