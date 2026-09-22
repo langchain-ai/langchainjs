@@ -1,6 +1,7 @@
 {
   "extends": "@langchain/tsconfig/base.json",
   "compilerOptions": {
+    "emitDeclarationOnly": false,
     "rootDir": "src",
     "outDir": "dist",
     "composite": false,

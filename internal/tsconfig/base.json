@@ -23,6 +23,13 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "composite": true
+    "composite": true,
+    // tsdown owns dist/: it bundles the JavaScript and substitutes defines such
+    // as __PKG_VERSION__. `tsc --build` (the typecheck task) must not emit over
+    // it. The declarations still have to land in outDir -- TypeScript maps a
+    // referenced project's output back to its source to resolve imports, and
+    // the packages' exports maps point at dist/ -- so only the JavaScript is
+    // suppressed. Configs whose tsc genuinely emits JavaScript opt out.
+    "emitDeclarationOnly": true
   }
 }
