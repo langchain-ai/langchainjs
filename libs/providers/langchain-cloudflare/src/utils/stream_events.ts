@@ -8,7 +8,7 @@ import type {
   ChatModelStreamEvent,
   FinishReason,
 } from "@langchain/core/language_models/event";
-import type { ContentBlock } from "@langchain/core/messages/content";
+import type { ContentBlock } from "@langchain/core/messages";
 
 export interface CloudflareStreamChunk {
   response?: string;

@@ -14,7 +14,7 @@ class MockStreamCloudflare extends ChatCloudflareWorkersAI {
     this.chunks = chunks;
   }
 
-  protected override async _request(
+  override async _request(
     _messages: unknown,
     _options: unknown,
     stream: boolean

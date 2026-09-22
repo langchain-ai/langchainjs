@@ -181,7 +181,7 @@ describe("constructMetadataFilter", () => {
   });
 
   test("should handle $and logical operator", () => {
-    const [query, params] = constructMetadataFilter({
+    const [query] = constructMetadataFilter({
       $and: [{ name: "Alice" }, { age: { $gt: 18 } }],
     });
     expect(query).toContain("AND");
